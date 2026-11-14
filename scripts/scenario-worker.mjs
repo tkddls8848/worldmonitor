@@ -224,8 +224,9 @@ export function physicalImpact(score, severity, multiplier) {
  * @param {string} scenarioId
  * @param {string | null} iso2
  * @param {number | undefined} [disruptionPct]
+ * @param {{ get: (key: string) => Promise<any>, getMany: (keys: string[], deadline: number) => Promise<any[]> }} [store]
  */
-export async function computeScenario(scenarioId, iso2, disruptionPct) {
+export async function computeScenario(scenarioId, iso2, disruptionPct, store = { get: redisGet, getMany: redisPipelineGet }) {
   const template = SCENARIO_TEMPLATES.find(t => t.id === scenarioId);
   if (!template) throw new Error(`Unknown scenario: ${scenarioId}`);
   const isTariffShock = template.affectedChokepointIds.length === 0;
@@ -236,7 +237,7 @@ export async function computeScenario(scenarioId, iso2, disruptionPct) {
     throw new Error('Invalid disruption override');
   }
   const severity = disruptionPct ?? template.disruptionPct;
-  const manifest = await redisGet('seed-meta:supply_chain:chokepoint-exposure').catch(() => null);
+  const manifest = await store.get('seed-meta:supply_chain:chokepoint-exposure').catch(() => null);
   const validIds = (values, pattern, limit) => Array.isArray(values) && values.length > 0
     && values.length <= limit && values.every(v => typeof v === 'string' && pattern.test(v))
     && new Set(values).size === values.length;
@@ -284,7 +285,7 @@ export async function computeScenario(scenarioId, iso2, disruptionPct) {
     const batch = pending.slice(offset, offset + EXPOSURE_BATCH_SIZE);
     let values;
     try {
-      values = await redisPipelineGet(batch.map(r => `supply-chain:exposure:${r.iso2}:${r.hs2}:v1`), deadline);
+      values = await store.getMany(batch.map(r => `supply-chain:exposure:${r.iso2}:${r.hs2}:v1`), deadline);
     } catch (err) {
       if (Date.now() >= deadline) break;
       throw err;

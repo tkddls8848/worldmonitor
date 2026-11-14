@@ -1,4 +1,7 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import i18next from 'i18next';
+import en from '@/locales/en.json';
+import ko from '@/locales/ko.json';
 import { createOperationalExposureForm } from '@/components/OperationalExposureForm';
 import type { OperationalSnapshot } from '@/types/operational-balance';
 
@@ -7,7 +10,25 @@ const fill = (root: HTMLElement, label: string, value: string) => {
   const input = root.querySelector<HTMLInputElement>(`input[aria-label="${label}"]`)!;
   input.value = value; input.dispatchEvent(new Event('input', { bubbles: true }));
 };
+beforeEach(async () => {
+  await i18next.init({ lng: 'en', fallbackLng: 'en', resources: { en: { translation: en }, ko: { translation: ko } }, interpolation: { escapeValue: false } });
+});
 afterEach(() => { document.body.replaceChildren(); vi.restoreAllMocks(); });
+
+it('renders and edits the Korean worksheet with translated validation and unchanged calculations', async () => {
+  await i18next.changeLanguage('ko');
+  const root = createOperationalExposureForm(() => {});
+  document.body.append(root);
+  expect(root.lang).toBe('ko');
+  expect(root.textContent).toContain('기준안 최초 부족: 8일차');
+  expect(root.textContent).not.toContain('Baseline');
+  click(root, '대안 배송 추가');
+  expect(root.textContent).toContain('필수 수량을 모두 입력하세요');
+  fill(root, '대안 배송 날짜', '2026-09-17');
+  fill(root, '대안 배송 수량', '40');
+  expect(root.textContent).toContain('대안 최초 부족: 10일차');
+  expect(root.querySelector('.operational-result')?.getAttribute('lang')).toBe('ko');
+});
 
 describe('operational form', () => {
   it('edits the example through day 8/day 10, clears invalid results and exports actual balances', async () => {

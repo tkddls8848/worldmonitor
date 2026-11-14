@@ -1,3 +1,4 @@
+import { PERSONAL_MODE } from '@/config/personal-mode';
 /**
  * Clerk JS initialization and thin wrapper.
  *
@@ -39,7 +40,7 @@ function readPublishableKey(): string | undefined {
   }
 }
 
-const PUBLISHABLE_KEY = readPublishableKey();
+const PUBLISHABLE_KEY = PERSONAL_MODE ? undefined : readPublishableKey();
 
 /**
  * True when a Clerk publishable key is configured. Used by surfaces that must

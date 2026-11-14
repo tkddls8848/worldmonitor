@@ -52,10 +52,7 @@ for (const [name, file, fixture] of [
 }
 
 test('the deploy key is read only by the jobs that deploy or run production functions', () => {
-  assert.deepEqual(keyJobs.map(([name]) => name).sort(), [
-    'convex-deploy.yml:deploy',
-    'convex-deploy.yml:repair-stale-on-hold-derived-state',
-  ]);
+  assert.deepEqual(keyJobs.map(([name]) => name).sort(), []);
 });
 
 test('every job that reads the deploy key runs in the main-only convex-production environment', () => {

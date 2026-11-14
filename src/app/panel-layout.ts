@@ -1310,9 +1310,9 @@ export class PanelLayoutManager implements AppModule {
                class="variant-option ${SITE_VARIANT === 'happy' ? 'active' : ''}"
                data-variant="happy"
                ${vTarget('happy')}
-               title="Good News${SITE_VARIANT === 'happy' ? ` ${t('common.currentVariant')}` : ''}">
+               title="${escapeHtml(t('personalChrome.goodNews'))}${SITE_VARIANT === 'happy' ? ` ${t('common.currentVariant')}` : ''}">
               <span class="variant-icon">☀️</span>
-              <span class="variant-label">Good News</span>
+              <span class="variant-label">${escapeHtml(t('personalChrome.goodNews'))}</span>
             </a>`;
       })()}</div>
           <span class="logo">MONITOR</span><span class="logo-mobile">World Monitor</span><span class="version">v${__APP_VERSION__}</span>${BETA_MODE ? '<span class="beta-badge">BETA</span>' : ''}
@@ -1379,7 +1379,7 @@ export class PanelLayoutManager implements AppModule {
           { key: 'finance', icon: '📈', label: t('header.finance') },
           { key: 'commodity', icon: '⛏️', label: t('header.commodity') },
           { key: 'energy', icon: '⚡', label: t('header.energy') },
-          { key: 'happy', icon: '☀️', label: 'Good News' },
+          { key: 'happy', icon: '☀️', label: t('personalChrome.goodNews') },
         ];
         return variants.map(v =>
           `<button class="mobile-menu-item mobile-menu-variant ${v.key === SITE_VARIANT ? 'active' : ''}" data-variant="${v.key}">
@@ -1397,7 +1397,7 @@ export class PanelLayoutManager implements AppModule {
         </button>
         <button class="mobile-menu-item" id="mobileMenuMission">
           <span class="mobile-menu-item-icon">◎</span>
-          <span class="mobile-menu-item-label">Mission</span>
+          <span class="mobile-menu-item-label">${escapeHtml(t('personalChrome.mission'))}</span>
           <span class="mobile-menu-chevron">▸</span>
         </button>
         <div class="mobile-menu-divider"></div>
@@ -1478,21 +1478,21 @@ export class PanelLayoutManager implements AppModule {
         <div class="map-width-resize-handle" id="mapWidthResizeHandle"></div>
         <div class="panels-grid" id="panelsGrid" role="tabpanel" aria-label="Dashboard panels"></div>
       </main>
-      <nav class="mobile-tab-bar" id="mobileTabBar" aria-label="Primary">
+      <nav class="mobile-tab-bar" id="mobileTabBar" aria-label="${escapeHtml(t('mobileNavigation.primary'))}">
         <button class="mobile-tab active" type="button" data-mobile-tab="today" aria-current="page">
-          <span class="mobile-tab-icon" aria-hidden="true">◉</span><span>Today</span>
+          <span class="mobile-tab-icon" aria-hidden="true">◉</span><span>${escapeHtml(t('mobileNavigation.today'))}</span>
         </button>
         <button class="mobile-tab" type="button" data-mobile-tab="map">
-          <span class="mobile-tab-icon" aria-hidden="true">◎</span><span>Map</span>
+          <span class="mobile-tab-icon" aria-hidden="true">◎</span><span>${escapeHtml(t('mobileNavigation.map'))}</span>
         </button>
         <button class="mobile-tab" type="button" data-mobile-tab="search">
-          <span class="mobile-tab-icon" aria-hidden="true">⌕</span><span>Search</span>
+          <span class="mobile-tab-icon" aria-hidden="true">⌕</span><span>${escapeHtml(t('mobileNavigation.search'))}</span>
         </button>
         <button class="mobile-tab" type="button" data-mobile-tab="alerts">
-          <span class="mobile-tab-icon" aria-hidden="true">△</span><span>Alerts</span>
+          <span class="mobile-tab-icon" aria-hidden="true">△</span><span>${escapeHtml(t('mobileNavigation.alerts'))}</span>
         </button>
         <button class="mobile-tab" type="button" data-mobile-tab="more">
-          <span class="mobile-tab-icon" aria-hidden="true">•••</span><span>More</span>
+          <span class="mobile-tab-icon" aria-hidden="true">•••</span><span>${escapeHtml(t('mobileNavigation.more'))}</span>
         </button>
       </nav>
       <footer class="site-footer" aria-label="World Monitor status">

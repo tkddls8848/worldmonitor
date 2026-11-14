@@ -163,11 +163,14 @@ export async function initI18n({ waitForFullTranslation = false }: { waitForFull
   //   /dashboard?lang=fa. These remain base-canonical and are not advertised
   //   as separately indexable hreflang documents.
   // - wmExplicit reads ONLY the explicit-choice key. Returns undefined when
-  //   unset so detection falls through to navigator. This replaces the default
-  //   `localStorage` step (which would read i18next's auto-cache key) so a user
-  //   whose browser is French always lands on French unless they've explicitly
-  //   chosen otherwise via Settings → Language.
+  //   unset so this personal installation starts in Korean, regardless of the
+  //   browser language. Explicit URL and Settings choices still take priority.
   const detector = new LanguageDetector();
+  detector.addDetector({
+    name: 'wmDefault',
+    lookup: () => 'ko',
+    cacheUserLanguage: () => { /* the default is not an explicit choice */ },
+  });
   detector.addDetector({
     name: 'wmQuery',
     lookup: () => readQueryLanguage(window.location.href),
@@ -196,7 +199,7 @@ export async function initI18n({ waitForFullTranslation = false }: { waitForFull
         escapeValue: false, // not needed for these simple strings
       },
       detection: {
-        order: ['wmQuery', 'wmExplicit', 'navigator'],
+        order: ['wmQuery', 'wmExplicit', 'wmDefault'],
         caches: [], // never auto-write — only changeLanguage() persists
       },
     });

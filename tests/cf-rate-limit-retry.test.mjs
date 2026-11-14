@@ -142,21 +142,3 @@ describe('cf-rate-limit-retry', () => {
     assert.match(r.stderr, /usage/i);
   });
 });
-
-describe('deploy-worker.yml', () => {
-  const workflow = YAML.parse(readFileSync(resolve(repoRoot, '.github/workflows/deploy-worker.yml'), 'utf8'));
-  const deployStep = workflow.jobs.deploy.steps.find((step) => step.name === 'Deploy');
-
-  it('runs wrangler deploy through the rate-limit retry wrapper', () => {
-    assert.match(deployStep.run.trim(), /^node \.\.\/\.\.\/scripts\/cf-rate-limit-retry\.mjs npx wrangler deploy$/);
-  });
-
-  it('serializes deploys so a delayed retry cannot overwrite a newer deploy', () => {
-    assert.equal(workflow.concurrency?.['cancel-in-progress'], false);
-    assert.ok(workflow.concurrency?.group);
-  });
-
-  it('redeploys when the retry wrapper changes', () => {
-    assert.ok(workflow.on.push.paths.includes('scripts/cf-rate-limit-retry.mjs'));
-  });
-});

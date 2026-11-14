@@ -1,3 +1,4 @@
+import { t, getCurrentLanguageTag } from '@/services/i18n';
 import type { OperationalInput, OperationalSnapshot } from '@/types/operational-balance';
 import { calculateOperationalBalance, importOperationalWorksheet, MAX_OPERATIONAL_DELIVERIES, MAX_OPERATIONAL_JSON_BYTES, operationalExample } from '@/utils/operational-balance';
 import { h } from '@/utils/dom-utils';
@@ -14,40 +15,66 @@ export interface OperationalWorksheetSession {
   draft?: OperationalDraft;
 }
 
+function worksheetError(cause: unknown): string {
+  const message = cause instanceof Error ? cause.message : '';
+  const errors: Record<string, string> = {
+    'Expected a worksheet object.': 'objectError',
+    'Use a valid date from 1900 through 9998.': 'dateError',
+    'Enter an operation name of 1-100 characters.': 'operationError',
+    'Enter one quantity unit of 1-24 characters.': 'unitError',
+    'Horizon must be 1-90 whole days.': 'horizonError',
+    'Input basis must be example or user.': 'basisError',
+    'Use at most 30 deliveries per list.': 'deliveryLimit',
+    'Delivery dates must be inside the selected horizon.': 'deliveryDateError',
+    'Worksheet JSON must be no larger than 64 KiB.': 'fileLimit',
+    'Unsupported worksheet format.': 'formatError',
+  };
+  if (errors[message]) return t(`components.operationalWorksheet.${errors[message]}`);
+  // Local validation failures are already translated before being thrown.
+  if ([t('components.operationalWorksheet.fileLimit'), t('components.operationalWorksheet.inputsChanged')].includes(message)) return message;
+  if (getCurrentLanguageTag().startsWith('ko')) {
+    if (message.endsWith('is required.')) return t('components.operationalWorksheet.requiredError');
+    if (message.includes('must be between 0 and 1 million')) return t('components.operationalWorksheet.numberError');
+    if (message.startsWith('Every delivery must use')) return t('components.operationalWorksheet.mixedUnitError');
+    return t('components.operationalWorksheet.invalidError');
+  }
+  return message || t('components.operationalWorksheet.invalidError');
+}
+
 export function renderOperationalWorksheet(snapshot: OperationalSnapshot): HTMLElement {
   const { input, baseline, alternative } = snapshot;
-  const gap = (day: number | null) => day === null ? 'None within horizon' : `Day ${day}`;
-  const root = h('section', { className: 'operational-result', 'aria-label': 'Daily operational balance', lang: 'en' },
-    h('div', { className: 'operational-result-heading' }, h('h3', {}, 'Daily balance'), h('span', {}, `${input.horizonDays} days · ${input.unit}`)),
+  const gap = (day: number | null) => day === null ? t('components.operationalWorksheet.noGap') : t('components.operationalWorksheet.day', { day });
+  const root = h('section', { className: 'operational-result', 'aria-label': t('components.operationalWorksheet.balanceAria'), lang: getCurrentLanguageTag() },
+    h('div', { className: 'operational-result-heading' }, h('h3', {}, t('components.operationalWorksheet.balanceTitle')), h('span', {}, t('components.operationalWorksheet.horizon', { days: input.horizonDays, unit: input.unit }))),
     h('p', { className: 'operational-operation' }, input.operation),
     h('div', { className: 'operational-summary' },
-      h('p', { className: 'operational-scenario' }, h('span', {}, 'Baseline first gap: '), h('strong', {}, `${gap(baseline.firstGapDay)}. `)),
-      h('p', { className: 'operational-scenario operational-scenario-alt' }, h('span', {}, 'Alternative first gap: '), h('strong', {}, `${gap(alternative.firstGapDay)}. `)),
-      h('p', { className: 'operational-unmet' }, `Total unmet demand: ${baseline.totalUnmetDemand} → ${alternative.totalUnmetDemand} ${input.unit}. `,
-        h('span', {}, `Avoided unmet demand: ${snapshot.avoidedUnmetDemand} ${input.unit}.`))),
-    h('p', { className: 'operational-cost' }, snapshot.additionalDeliveryCostUsd === null ? 'Delivery cost comparison unavailable. One or more prices are unknown.' : `Additional delivery spending: ${snapshot.additionalDeliveryCostUsd} USD. This excludes operating costs and the value of unmet demand.`),
+      h('p', { className: 'operational-scenario' }, h('span', {}, t('components.operationalWorksheet.baselineGap')), h('strong', {}, `${gap(baseline.firstGapDay)}. `)),
+      h('p', { className: 'operational-scenario operational-scenario-alt' }, h('span', {}, t('components.operationalWorksheet.alternativeGap')), h('strong', {}, `${gap(alternative.firstGapDay)}. `)),
+      h('p', { className: 'operational-unmet' }, t('components.operationalWorksheet.unmet', { baseline: baseline.totalUnmetDemand, alternative: alternative.totalUnmetDemand, unit: input.unit }),
+        h('span', {}, t('components.operationalWorksheet.avoided', { quantity: snapshot.avoidedUnmetDemand, unit: input.unit })))),
+    h('p', { className: 'operational-cost' }, snapshot.additionalDeliveryCostUsd === null ? t('components.operationalWorksheet.costUnknown') : t('components.operationalWorksheet.cost', { cost: snapshot.additionalDeliveryCostUsd })),
   );
-  const assumptions = h('details', { className: 'operational-method' }, h('summary', {}, 'Assumptions & delivery details'),
-    h('p', {}, input.basis === 'example' ? 'Labeled example. Edit these assumptions; actual operating data is optional.' : 'User assumptions. These values are not WorldMonitor observations.'),
-    h('p', {}, `Unit: ${input.unit}. Starting usable stock: ${input.startingStock}. Start: ${input.startDate}. Horizon: ${input.horizonDays} days.`),
-    h('p', {}, 'Deliveries become usable at the start of the selected day. Remaining stock carries forward. Unmet demand is recorded daily and is not carried as backlog; later deliveries cannot erase an earlier gap.'),
-    h('p', {}, 'Alternative includes baseline deliveries plus additional deliveries and the selected alternative daily demand. This is a conditional stock balance, not a shutdown forecast. Delivery feasibility and supplier capacity remain unverified. WorldMonitor country and route context is separate from these assumptions.'));
-  for (const [label, rows] of [['Baseline deliveries', input.deliveries], ['Additional alternative deliveries', input.alternativeDeliveries]] as const) {
-    assumptions.append(h('h4', {}, label), h('ul', {}, ...(rows.length ? rows.map(row => h('li', {}, `${row.date}: ${row.quantity} ${row.unit}; total cost ${row.costUsd === null ? 'unknown' : `${row.costUsd} USD`}`)) : [h('li', {}, 'None')])));
+  const assumptions = h('details', { className: 'operational-method' }, h('summary', {}, t('components.operationalWorksheet.assumptions')),
+    h('p', {}, input.basis === 'example' ? t('components.operationalWorksheet.exampleBasis') : t('components.operationalWorksheet.userBasis')),
+    h('p', {}, t('components.operationalWorksheet.inputs', { unit: input.unit, stock: input.startingStock, date: input.startDate, days: input.horizonDays })),
+    h('p', {}, t('components.operationalWorksheet.stockMethod')),
+    h('p', {}, t('components.operationalWorksheet.alternativeMethod')));
+  for (const [label, rows] of [[t('components.operationalWorksheet.baselineDeliveries'), input.deliveries], [t('components.operationalWorksheet.additionalDeliveries'), input.alternativeDeliveries]] as const) {
+    assumptions.append(h('h4', {}, label), h('ul', {}, ...(rows.length ? rows.map(row => h('li', {}, t('components.operationalWorksheet.delivery', { date: row.date, quantity: row.quantity, unit: row.unit, cost: row.costUsd === null ? t('components.operationalWorksheet.unknown') : `${row.costUsd} USD` }))) : [h('li', {}, t('components.operationalWorksheet.none'))])));
   }
-  const table = h('table', {}, h('caption', {}, `Daily balance in ${input.unit}`),
-    h('thead', {}, h('tr', {}, ...['Day / date', 'Baseline arrivals', 'Baseline demand', 'Baseline stock', 'Baseline unmet', 'Alternative arrivals', 'Alternative demand', 'Alternative stock', 'Alternative unmet'].map(label => h('th', { scope: 'col' }, label)))));
+  const table = h('table', {}, h('caption', {}, t('components.operationalWorksheet.caption', { unit: input.unit })),
+    h('thead', {}, h('tr', {}, ...[t('components.operationalWorksheet.dayDate'), t('components.operationalWorksheet.baselineArrivals'), t('components.operationalWorksheet.baselineDemand'), t('components.operationalWorksheet.baselineStock'), t('components.operationalWorksheet.baselineUnmet'), t('components.operationalWorksheet.alternativeArrivals'), t('components.operationalWorksheet.alternativeDemand'), t('components.operationalWorksheet.alternativeStock'), t('components.operationalWorksheet.alternativeUnmet')].map(label => h('th', { scope: 'col' }, label)))));
   table.append(h('tbody', {}, ...baseline.days.map((day, index) => {
     const alt = alternative.days[index]!;
     return h('tr', { 'data-day': day.day }, h('th', { scope: 'row' }, `${day.day} / ${day.date}`), ...[day.arrivals, day.demand, day.closingStock, day.unmetDemand, alt.arrivals, alt.demand, alt.closingStock, alt.unmetDemand].map(value => h('td', {}, String(value))));
   })));
-  root.append(h('div', { className: 'operational-table', tabindex: 0, role: 'region', 'aria-label': 'Scrollable daily balance' }, table),
-    h('p', { className: 'operational-note' }, 'User assumptions · Conditional stock balance, not a shutdown forecast.'), assumptions);
+  root.append(h('div', { className: 'operational-table', tabindex: 0, role: 'region', 'aria-label': t('components.operationalWorksheet.scrollAria') }, table),
+    h('p', { className: 'operational-note' }, t('components.operationalWorksheet.note')), assumptions);
   return root;
 }
 
 export function createOperationalExposureForm(onChange: (snapshot: OperationalSnapshot | null) => void, session: OperationalWorksheetSession = {}, signal?: AbortSignal): HTMLElement {
-  const root = h('section', { className: 'operational-worksheet', 'aria-label': 'Operational what-if worksheet', lang: 'en' });
+  const root = h('section', { className: 'operational-worksheet', 'aria-label': t('components.operationalWorksheet.worksheetAria'), lang: getCurrentLanguageTag() });
   const fields = h('div', { className: 'operational-fields' });
   const editor = h('div', { className: 'operational-editor' });
   const actions = h('div', { className: 'operational-actions' });
@@ -63,7 +90,7 @@ export function createOperationalExposureForm(onChange: (snapshot: OperationalSn
   let importGeneration = 0;
   const setNumber = (field: HTMLInputElement, value: number | null) => {
     field.value = value === null || Number.isNaN(value) ? '' : String(value);
-    field.setCustomValidity(Number.isNaN(value) ? 'Enter a valid number.' : '');
+    field.setCustomValidity(Number.isNaN(value) ? t('components.operationalWorksheet.validNumber') : '');
   };
   const input = (label: string, type: string, parent: HTMLElement, value = '') => {
     const field = h('input', { type, value, 'aria-label': label, ...(type === 'number' ? { min: 0, max: 1e6, step: 'any' } : {}) }) as HTMLInputElement;
@@ -71,22 +98,22 @@ export function createOperationalExposureForm(onChange: (snapshot: OperationalSn
     parent.append(h('label', {}, h('span', {}, label), field));
     return field;
   };
-  const operation = input('Operation name', 'text', fields);
+  const operation = input(t('components.operationalWorksheet.operation'), 'text', fields);
   operation.maxLength = 100;
-  const unit = input('Quantity unit', 'text', fields);
+  const unit = input(t('components.operationalWorksheet.unit'), 'text', fields);
   unit.maxLength = 24;
-  const start = input('Start date', 'date', fields);
-  const horizon = input('Horizon days', 'number', fields);
+  const start = input(t('components.operationalWorksheet.startDate'), 'date', fields);
+  const horizon = input(t('components.operationalWorksheet.horizonDays'), 'number', fields);
   horizon.max = '90'; horizon.min = '1'; horizon.step = '1';
-  const stock = input('Starting usable stock', 'number', fields);
-  const demand = input('Daily demand', 'number', fields);
-  const alternativeDemand = input('Alternative daily demand (blank keeps baseline)', 'number', alternativeFields);
+  const stock = input(t('components.operationalWorksheet.startingStock'), 'number', fields);
+  const demand = input(t('components.operationalWorksheet.dailyDemand'), 'number', fields);
+  const alternativeDemand = input(t('components.operationalWorksheet.alternativeDailyDemand'), 'number', alternativeFields);
   const numeric = (field: HTMLInputElement) => field.validity.badInput || field.validity.customError ? NaN : field.value === '' ? null : Number(field.value);
   const rows = (parent: HTMLElement) => Array.from(parent.children).map(row => {
     const [date, quantity, cost] = Array.from(row.querySelectorAll('input'));
     return { date: date!.value, quantity: numeric(quantity!), unit: unit.value.trim(), costUsd: numeric(cost!) };
   });
-  const exportButton = h('button', { type: 'button', className: 'cdp-action-btn cdp-export-primary' }, 'Export worksheet JSON') as HTMLButtonElement;
+  const exportButton = h('button', { type: 'button', className: 'cdp-action-btn cdp-export-primary' }, t('components.operationalWorksheet.exportJson')) as HTMLButtonElement;
   const update = () => {
     revision++;
     session.draft = { operation: operation.value, basis, unit: unit.value, startDate: start.value, horizonDays: numeric(horizon), startingStock: numeric(stock), dailyDemand: numeric(demand), alternativeDailyDemand: numeric(alternativeDemand), deliveries: rows(baselineRows), alternativeDeliveries: rows(alternativeRows) };
@@ -94,17 +121,17 @@ export function createOperationalExposureForm(onChange: (snapshot: OperationalSn
       snapshot = calculateOperationalBalance(session.draft);
       result.replaceChildren(renderOperationalWorksheet(snapshot)); error.textContent = ''; exportButton.disabled = false;
     } catch (cause) {
-      snapshot = null; result.replaceChildren(); error.textContent = `Worksheet incomplete or invalid. ${cause instanceof Error ? cause.message : 'Check the inputs.'}`; exportButton.disabled = true;
+      snapshot = null; result.replaceChildren(); error.textContent = t('components.operationalWorksheet.invalidWorksheet', { reason: worksheetError(cause) }); exportButton.disabled = true;
     }
     onChange(snapshot);
   };
   const addRow = (parent: HTMLElement, label: string, row?: OperationalDraft['deliveries'][number]) => {
-    if (parent.children.length >= MAX_OPERATIONAL_DELIVERIES) { importStatus.textContent = 'Use at most 30 deliveries per list.'; return; }
+    if (parent.children.length >= MAX_OPERATIONAL_DELIVERIES) { importStatus.textContent = t('components.operationalWorksheet.deliveryLimit'); return; }
     const group = h('div', { className: 'operational-delivery' });
-    input(`${label} date`, 'date', group, row?.date ?? start.value);
-    input(`${label} quantity`, 'number', group, row?.quantity == null ? '' : String(row.quantity));
-    input(`${label} total cost USD (optional)`, 'number', group, row?.costUsd == null ? '' : String(row.costUsd));
-    const remove = h('button', { type: 'button', className: 'cdp-action-btn', 'aria-label': `Remove ${label.toLowerCase()}` }, 'Remove');
+    input(t('components.operationalWorksheet.date', { label }), 'date', group, row?.date ?? start.value);
+    input(t('components.operationalWorksheet.quantity', { label }), 'number', group, row?.quantity == null ? '' : String(row.quantity));
+    input(t('components.operationalWorksheet.deliveryCost', { label }), 'number', group, row?.costUsd == null ? '' : String(row.costUsd));
+    const remove = h('button', { type: 'button', className: 'cdp-action-btn', 'aria-label': t('components.operationalWorksheet.remove', { label: label.toLowerCase() }) }, t('components.operationalWorksheet.removeButton'));
     remove.addEventListener('click', () => { group.remove(); basis = 'user'; update(); });
     group.append(remove); parent.append(group);
   };
@@ -115,28 +142,28 @@ export function createOperationalExposureForm(onChange: (snapshot: OperationalSn
     setNumber(demand, data.dailyDemand);
     setNumber(alternativeDemand, data.alternativeDailyDemand);
     baselineRows.replaceChildren(); alternativeRows.replaceChildren();
-    data.deliveries.forEach(row => addRow(baselineRows, 'Baseline delivery', row));
-    data.alternativeDeliveries.forEach(row => addRow(alternativeRows, 'Alternative delivery', row));
+    data.deliveries.forEach(row => addRow(baselineRows, t('components.operationalWorksheet.baselineDelivery'), row));
+    data.alternativeDeliveries.forEach(row => addRow(alternativeRows, t('components.operationalWorksheet.alternativeDelivery'), row));
     update();
   };
-  for (const [parent, label] of [[baselineRows, 'Baseline delivery'], [alternativeRows, 'Alternative delivery']] as const) {
-    const add = h('button', { type: 'button', className: 'cdp-action-btn' }, `Add ${label.toLowerCase()}`);
+  for (const [parent, label] of [[baselineRows, t('components.operationalWorksheet.baselineDelivery')], [alternativeRows, t('components.operationalWorksheet.alternativeDelivery')]] as const) {
+    const add = h('button', { type: 'button', className: 'cdp-action-btn' }, t('components.operationalWorksheet.add', { label: label.toLowerCase() }));
     add.addEventListener('click', () => { addRow(parent, label); basis = 'user'; update(); });
     const section = h('section', { className: 'operational-input-section' },
-      h('div', { className: 'operational-section-heading' }, h('h3', {}, label === 'Baseline delivery' ? 'Baseline deliveries' : 'Alternative plan'), add));
+      h('div', { className: 'operational-section-heading' }, h('h3', {}, label === t('components.operationalWorksheet.baselineDelivery') ? t('components.operationalWorksheet.baselineDeliveries') : t('components.operationalWorksheet.alternativePlan')), add));
     if (parent === alternativeRows) section.append(alternativeFields);
     section.append(parent);
     editor.append(section);
   }
-  editor.prepend(h('section', { className: 'operational-input-section' }, h('h3', {}, 'Operation inputs'), fields));
+  editor.prepend(h('section', { className: 'operational-input-section' }, h('h3', {}, t('components.operationalWorksheet.operationInputs')), fields));
   root.append(h('header', { className: 'operational-header' },
-    h('p', { className: 'operational-eyebrow' }, 'LOCAL WORKSHEET'),
-    h('h2', { className: 'cdp-card-title' }, 'Operational what-if'),
-    h('p', { className: 'cdp-section-description' }, 'Compare usable stock, daily demand and delivery timing. Edit the labeled example to test your assumptions.')));
+    h('p', { className: 'operational-eyebrow' }, t('components.operationalWorksheet.localWorksheet')),
+    h('h2', { className: 'cdp-card-title' }, t('components.operationalWorksheet.title')),
+    h('p', { className: 'cdp-section-description' }, t('components.operationalWorksheet.description'))));
   root.addEventListener('input', event => {
     if (event.target instanceof HTMLInputElement && event.target.type !== 'file') { event.target.setCustomValidity(''); basis = 'user'; update(); }
   });
-  const file = input('Import worksheet JSON', 'file', actions);
+  const file = input(t('components.operationalWorksheet.importJson'), 'file', actions);
   file.accept = '.json,application/json';
   file.addEventListener('change', async () => {
     const selected = file.files?.[0];
@@ -144,13 +171,13 @@ export function createOperationalExposureForm(onChange: (snapshot: OperationalSn
     const current = revision;
     const generation = ++importGeneration;
     try {
-      if (selected.size > MAX_OPERATIONAL_JSON_BYTES) throw new Error('Worksheet JSON must be no larger than 64 KiB.');
+      if (selected.size > MAX_OPERATIONAL_JSON_BYTES) throw new Error(t('components.operationalWorksheet.fileLimit'));
       const imported = importOperationalWorksheet(await selected.text());
       if (signal?.aborted || generation !== importGeneration) return;
-      if (current !== revision) throw new Error('Inputs changed while reading. Select the file again to import.');
-      populate(imported.input); importStatus.textContent = 'Worksheet imported. Results recalculated from its inputs.';
+      if (current !== revision) throw new Error(t('components.operationalWorksheet.inputsChanged'));
+      populate(imported.input); importStatus.textContent = t('components.operationalWorksheet.imported');
     } catch (cause) {
-      importStatus.textContent = `Import rejected; your inputs are unchanged. ${cause instanceof Error ? cause.message : 'Invalid JSON.'}`;
+      importStatus.textContent = t('components.operationalWorksheet.importRejected', { reason: worksheetError(cause) });
     } finally { if (generation === importGeneration) file.value = ''; }
   });
   exportButton.addEventListener('click', () => {
@@ -161,9 +188,15 @@ export function createOperationalExposureForm(onChange: (snapshot: OperationalSn
   });
   actions.append(exportButton);
   root.append(actions, importStatus,
-    h('details', { className: 'operational-method operational-input-help' }, h('summary', {}, 'How this worksheet works'),
-      h('p', {}, 'Actual operating data is optional. Inputs stay in browser memory until page reload; export JSON to keep them. Use one unit for all quantities. Changing the unit relabels all quantities; it does not convert them. Up to 90 days and 30 deliveries per list. Quantities and costs allow 0-1 million with up to 6 decimal places.')),
+    h('details', { className: 'operational-method operational-input-help' }, h('summary', {}, t('components.operationalWorksheet.helpTitle')),
+      h('p', {}, t('components.operationalWorksheet.help'))),
     h('div', { className: 'operational-workspace' }, editor, h('div', { className: 'operational-results' }, error, result)));
-  populate(session.draft ?? operationalExample());
+  const example = operationalExample();
+  if (getCurrentLanguageTag().startsWith('ko')) {
+    example.operation = t('components.operationalWorksheet.exampleOperation');
+    example.unit = t('components.operationalWorksheet.exampleUnit');
+    example.deliveries.forEach(row => { row.unit = example.unit; });
+  }
+  populate(session.draft ?? example);
   return root;
 }

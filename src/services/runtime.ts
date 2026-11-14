@@ -1,5 +1,6 @@
 import { createTimeoutSignal } from '@/services/timeout-signal';
 import { SITE_VARIANT } from '@/config/variant';
+import { PERSONAL_MODE } from '@/config/personal-mode';
 import { safeStorageGet } from '@/utils/safe-storage';
 import { getClerkToken } from '@/services/clerk';
 import { sleepBeforeRetry, withBillingVerificationRetry } from '@/services/billing-retry';
@@ -143,6 +144,7 @@ function suppressesRemoteBase(configuredBaseUrl: string): boolean {
 }
 
 export function getConfiguredWebApiBaseUrl(): string {
+  if (PERSONAL_MODE) return '';
   if (WS_API_URL) {
     const configured = normalizeBaseUrl(WS_API_URL);
     return suppressesRemoteBase(configured) ? '' : configured;
@@ -165,10 +167,12 @@ export function getConfiguredWebApiBaseUrl(): string {
 }
 
 export function getCanonicalApiOrigin(): string {
+  if (PERSONAL_MODE) return typeof window === 'undefined' ? '' : window.location.origin;
   return getConfiguredWebApiBaseUrl() || DEFAULT_WEB_API_URL;
 }
 
 export function getRemoteApiBaseUrl(): string {
+  if (PERSONAL_MODE) return '';
   const configuredRemoteBase = ENV.VITE_TAURI_REMOTE_API_BASE_URL;
   if (configuredRemoteBase) {
     return normalizeBaseUrl(configuredRemoteBase);

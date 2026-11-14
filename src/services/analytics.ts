@@ -1,3 +1,4 @@
+import { PERSONAL_MODE } from '@/config/personal-mode';
 import { bucketPanelKeyForAnalytics } from '@/utils/analytics-panel-key';
 import { isViewportBand, viewportAnalyticsFields, type ViewportBand } from '../../shared/analytics-viewport';
 export { bucketPanelKeyForAnalytics } from '@/utils/analytics-panel-key';
@@ -85,6 +86,7 @@ const UMAMI_QUEUE_LIMIT = 50;
  * analytics use this to keep Sentry on the hosts analytics cannot see.
  */
 export function isAnalyticsHost(hostname: string = typeof location === 'undefined' ? '' : location.hostname): boolean {
+  if (PERSONAL_MODE) return false;
   return UMAMI_DOMAINS.split(',').includes(hostname);
 }
 const UMAMI_BEFORE_SEND_HOOK = '__wmUmamiBeforeSend';
@@ -459,6 +461,7 @@ function isReplayedCheckoutStart(requestBody: string | undefined): boolean {
 }
 
 function queueUmamiCall(call: QueuedUmamiCall): void {
+  if (PERSONAL_MODE) return;
   // Identity is a latest-snapshot write, not an append-only event. Auth and
   // billing can both publish before the deferred tracker loads; replaying every
   // intermediate snapshot concurrently is both wasteful and the trigger for
@@ -621,6 +624,7 @@ function clearUnobservableCriticalMarker(call: Extract<QueuedUmamiCall, { kind: 
 }
 
 function sendUmamiCall(call: QueuedUmamiCall): boolean {
+  if (PERSONAL_MODE) return true;
   if (typeof window === 'undefined') return false;
   const umami = window.umami;
   if (!umami) return false;
@@ -716,6 +720,7 @@ function loadUmamiScript(): void {
 
 /** Type-safe Umami wrapper. Safe to call even if the script hasn't loaded. */
 export function track(event: UmamiEvent, data?: Record<string, unknown>): void {
+  if (PERSONAL_MODE) return;
   if (event === 'checkout-start' || event === 'checkout-success' || event === 'variant-switch') {
     const viewport = data?.replayed === true && isViewportBand(data.vw)
       ? { vw: data.vw }
@@ -750,6 +755,7 @@ export function trackContentHandoff(): void {
 }
 
 export function initAnalytics(): void {
+  if (PERSONAL_MODE) return;
   if (umamiLoadScheduled || typeof window === 'undefined' || typeof document === 'undefined') return;
   umamiLoadScheduled = true;
   scheduleAfterFirstPaint(loadUmamiScript, 3000);

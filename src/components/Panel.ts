@@ -1,3 +1,4 @@
+import { PERSONAL_MODE } from '@/config/personal-mode';
 import { isDesktopRuntime } from '../services/runtime';
 import { invokeTauri } from '../services/tauri-bridge';
 import { t } from '../services/i18n';
@@ -1226,7 +1227,7 @@ export class Panel {
 
     const lockedChildren: (HTMLElement | string)[] = [
       iconEl,
-      h('div', { className: 'panel-locked-desc' }, t('premium.lockedDesc')),
+      h('div', { className: 'panel-locked-desc' }, PERSONAL_MODE ? '? ??? ?? ???? ?????. ??? ????? ??? ? ????.' : t('premium.lockedDesc')),
     ];
 
     if (features.length > 0) {
@@ -1246,7 +1247,7 @@ export class Panel {
         window.open('https://worldmonitor.app/pro', '_blank', 'noopener,noreferrer');
       });
     });
-    lockedChildren.push(ctaBtn);
+    if (!PERSONAL_MODE) lockedChildren.push(ctaBtn);
 
     this.replaceContent(h('div', { className: 'panel-locked-state' }, ...lockedChildren));
   }
@@ -1306,6 +1307,7 @@ export class Panel {
   }
 
   public showGatedCta(reason: PanelGateReason, onAction: () => void): void {
+    if (PERSONAL_MODE) { this.showLocked(); return; }
     const entry = Panel.gatedCtaEntry(reason);
     if (!entry) return; // PanelGateReason.NONE should never reach here
 
