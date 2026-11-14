@@ -75,10 +75,30 @@ export async function createPersonalIngress({ password, username = 'owner', dist
   });
 }
 
+// WM_PERSONAL_STORE=embedded runs the data store inside this process, at the
+// loopback address the collectors already read from UPSTASH_REDIS_REST_URL.
+export async function startPersonalStore(env = process.env) {
+  if (env.WM_PERSONAL_STORE !== 'embedded') return null;
+  const url = new URL(env.UPSTASH_REDIS_REST_URL || 'http://127.0.0.1:8079');
+  if (url.protocol !== 'http:' || !['127.0.0.1', 'localhost'].includes(url.hostname)) {
+    throw new Error('WM_PERSONAL_STORE=embedded requires UPSTASH_REDIS_REST_URL=http://127.0.0.1:<port>');
+  }
+  const { startEmbeddedStore } = await import('./local/embedded-store.mjs');
+  const store = await startEmbeddedStore({
+    token: env.UPSTASH_REDIS_REST_TOKEN,
+    host: url.hostname,
+    port: Number(url.port || 80),
+    file: path.resolve(ROOT, env.WM_PERSONAL_STORE_FILE || '.personal/store.ndjson'),
+  });
+  env.UPSTASH_REDIS_REST_URL = url.origin;
+  console.log(`내장 저장소: ${url.origin} (복원된 키 ${store.loaded}개)`);
+  return store;
+}
+
 export async function startPersonalServer() {
   loadEnvFile(import.meta.url);
   validatePersonalStore(process.env.UPSTASH_REDIS_REST_URL);
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+  if (process.env.WM_PERSONAL_STORE !== 'embedded' && (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN)) {
     console.warn('로컬 데이터 저장소가 설정되지 않았습니다. Redis 기반 수집 데이터와 시나리오 작업은 사용할 수 없습니다.');
   }
   if (!process.env.WM_PERSONAL_PASSWORD || process.env.WM_PERSONAL_PASSWORD.length < 16) throw new Error('Set WM_PERSONAL_PASSWORD (at least 16 characters) in .env.local');
@@ -87,20 +107,24 @@ export async function startPersonalServer() {
   process.env.WORLDMONITOR_SELFHOST_RELAY = 'off';
   process.env.LOCAL_API_TOKEN = randomBytes(32).toString('hex');
   if (!process.env.WM_SESSION_SECRET || process.env.WM_SESSION_SECRET.length < 32) throw new Error('Set WM_SESSION_SECRET (at least 32 characters) in .env.local');
-  const { createLocalApiServer } = await import('../src-tauri/sidecar/local-api-server.mjs');
-  const api = await createLocalApiServer({ port: 0, mode: 'docker', resourceDir: ROOT, cloudFallback: false, selfHostRelay: 'off' });
-  const { port: apiPort } = await api.start();
+  // Started only after every setting above is known good: a listening store
+  // would otherwise keep a misconfigured process alive.
+  const store = await startPersonalStore();
+  let api;
   try {
+    const { createLocalApiServer } = await import('../src-tauri/sidecar/local-api-server.mjs');
+    api = await createLocalApiServer({ port: 0, mode: 'docker', resourceDir: ROOT, cloudFallback: false, selfHostRelay: 'off' });
+    const { port: apiPort } = await api.start();
     const server = await createPersonalIngress({ password: process.env.WM_PERSONAL_PASSWORD, username: process.env.WM_PERSONAL_USERNAME || 'owner', distDir: path.join(ROOT, 'dist'), apiPort, token: process.env.LOCAL_API_TOKEN });
     const port = Number(process.env.WM_PERSONAL_PORT || 3000);
     const host = process.env.WM_PERSONAL_HOST || '127.0.0.1';
     await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, host, resolve); });
-    const close = async () => { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); await api.close(); };
+    const close = async () => { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); await api.close(); await store?.close(); };
     process.once('SIGINT', () => void close());
     process.once('SIGTERM', () => void close());
     console.log(`개인용 WorldMonitor: http://${host}:${port} (외부 접속에는 HTTPS 프록시를 사용하세요)`);
     return { server, close };
-  } catch (error) { await api.close(); throw error; }
+  } catch (error) { await api?.close(); await store?.close(); throw error; }
 }
 
 if (process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url) {

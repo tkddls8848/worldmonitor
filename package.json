@@ -22,6 +22,8 @@
     "build:personal": "node scripts/build-sidecar-sebuf.mjs && node scripts/build-sidecar-handlers.mjs && cross-env VITE_PERSONAL_MODE=true VITE_VARIANT=full vite build",
     "start:personal": "node scripts/personal-server.mjs",
     "start:local-store": "node scripts/local/redis-rest-proxy.mjs",
+    "collect:personal": "node scripts/personal-collect.mjs",
+    "tui:personal": "node scripts/personal-tui.mjs",
     "scenario:local": "node scripts/run-local-scenario.mjs",
     "lint": "biome lint ./src ./server ./api ./tests ./e2e ./scripts ./middleware.ts && npm run lint:safe-html",
     "lint:fix": "biome check ./src ./server ./api ./tests ./e2e ./scripts ./middleware.ts --fix",
