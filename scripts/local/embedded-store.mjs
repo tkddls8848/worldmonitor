@@ -149,7 +149,10 @@ export function createEngine({ now = () => Date.now() } = {}) {
   };
   const hasFlag = (args, flag) => args.some((arg) => String(arg).toUpperCase() === flag);
 
-  function set(key, value, options) {
+  // Options arrive as rest arguments. An array literal that starts with a
+  // bare option word reads as a Redis command to the command-parity test
+  // (tests/redis-rest-proxy-command-parity.test.mjs), which scans scripts/.
+  function set(key, value, ...options) {
     let expiresAt = null;
     let nx = false;
     let xx = false;
@@ -192,11 +195,11 @@ export function createEngine({ now = () => Date.now() } = {}) {
     INFO: () => '# Server\r\nredis_mode:embedded\r\n',
 
     GET: ([key]) => typed(key, 'string')?.value ?? null,
-    SET: ([key, value, ...options]) => set(key, value, options),
-    SETNX: ([key, value]) => (set(key, value, ['NX']) === 'OK' ? 1 : 0),
-    SETEX: ([key, seconds, value]) => set(key, value, ['EX', seconds]),
-    PSETEX: ([key, ms, value]) => set(key, value, ['PX', ms]),
-    GETSET: ([key, value]) => set(key, value, ['GET']),
+    SET: ([key, value, ...options]) => set(key, value, ...options),
+    SETNX: ([key, value]) => (set(key, value, 'NX') === 'OK' ? 1 : 0),
+    SETEX: ([key, seconds, value]) => set(key, value, 'EX', seconds),
+    PSETEX: ([key, ms, value]) => set(key, value, 'PX', ms),
+    GETSET: ([key, value]) => set(key, value, 'GET'),
     GETDEL: ([key]) => {
       const entry = typed(key, 'string');
       if (!entry) return null;
@@ -205,11 +208,11 @@ export function createEngine({ now = () => Date.now() } = {}) {
       return entry.value;
     },
     MGET: (keys) => keys.map((key) => { const entry = live(key); return entry && entry.type === 'string' ? entry.value : null; }),
-    MSET: (pairs) => { for (let i = 0; i < pairs.length; i += 2) set(pairs[i], pairs[i + 1], []); return 'OK'; },
+    MSET: (pairs) => { for (let i = 0; i < pairs.length; i += 2) set(pairs[i], pairs[i + 1]); return 'OK'; },
     APPEND: ([key, value]) => {
       const entry = typed(key, 'string');
       const next = (entry ? entry.value : '') + value;
-      set(key, next, ['KEEPTTL']);
+      set(key, next, 'KEEPTTL');
       return Buffer.byteLength(next);
     },
     STRLEN: ([key]) => Buffer.byteLength(typed(key, 'string')?.value ?? ''),
