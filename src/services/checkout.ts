@@ -1,3 +1,4 @@
+import { PERSONAL_MODE } from '@/config/personal-mode';
 /**
  * Checkout orchestration service (vanilla TS dashboard).
  *
@@ -492,6 +493,7 @@ export async function startCheckout(
     checkoutContext?: CheckoutContext;
   },
 ): Promise<boolean> {
+  if (PERSONAL_MODE) return false;
   if (_checkoutInFlight) return false;
   const fallbackToPricingPage = behavior?.fallbackToPricingPage ?? true;
   const desktopRuntime = isDesktopRuntime();

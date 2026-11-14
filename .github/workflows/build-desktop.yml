@@ -617,32 +617,3 @@ jobs:
           echo "Published $TAG"
           echo "published=true" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-
-      - name: Publish the Docker image
-        # A release published with GITHUB_TOKEN raises no `release` event for
-        # other workflows, so docker-publish.yml's release trigger never fires
-        # from here. workflow_dispatch is exempt, so dispatch it on the tag.
-        if: steps.publish.outputs.published == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ steps.publish.outputs.tag }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          gh workflow run docker-publish.yml --ref "$TAG"
-          echo "Dispatched docker-publish.yml on $TAG"
-
-      - name: Publish the self-hosted Docker images
-        # Same GITHUB_TOKEN rule as above, for the images docker-compose.yml
-        # pulls (worldmonitor-selfhosted, -ais-relay, -redis-rest).
-        # !cancelled() so a failed docker-publish.yml dispatch above does not
-        # skip this one through the implicit success() check.
-        if: ${{ !cancelled() && steps.publish.outputs.published == 'true' }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ steps.publish.outputs.tag }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          gh workflow run docker-publish-self-hosted.yml --ref "$TAG"
-          echo "Dispatched docker-publish-self-hosted.yml on $TAG"

@@ -121,16 +121,3 @@ jobs:
             --title "chore(geo): refresh github-stars snapshot ${snapshot_date}" \
             --body "Monthly public GitHub star-count freeze for the homepage InteractionCounter (#7641).")
           gh pr merge --auto --squash "$pr_url"
-
-  # Dispatches Deploy Gate for the new PR directly rather than waiting on the
-  # workflow_run event or the gate's 30-minute sweep.
-  deploy-gate:
-    needs: refresh
-    if: (github.event_name != 'schedule' || github.repository == 'koala73/worldmonitor')
-    permissions:
-      actions: write
-      contents: read
-      pull-requests: read
-    uses: ./.github/workflows/bot-pr-deploy-gate.yml
-    with:
-      branch: ${{ needs.refresh.outputs.branch }}

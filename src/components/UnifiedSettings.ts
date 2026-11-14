@@ -1,3 +1,4 @@
+import { PERSONAL_MODE } from '@/config/personal-mode';
 import { CANONICAL_FEEDS, INTEL_SOURCES, SOURCE_REGION_MAP } from '@/config/feeds';
 import { WEB_APP_ORIGIN } from '@/config/web-origin';
 import { openExternalUrl } from '@/services/external-navigation';
@@ -737,6 +738,7 @@ export class UnifiedSettings {
   }
 
   public open(section?: SettingsSectionId, replaceOverlayId?: OverlayId): void {
+    if (PERSONAL_MODE && section === 'account') section = undefined;
     const reentrant = this.overlay.classList.contains('active');
     this.resetPanelDraft();
     // Only on a FRESH session. open() is re-entrant on an overlay that is
@@ -1127,6 +1129,7 @@ export class UnifiedSettings {
 
   private renderNavGroup(group: NavGroup): string {
     const rows = group.rows.map((row) => {
+      if (PERSONAL_MODE && (row.kind === 'sign-in' || ('id' in row && row.id === 'account'))) return '';
       if (row.kind === 'sign-in') {
         return `
           <button type="button" class="us-account-card us-signin-row" data-settings-signin>

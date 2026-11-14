@@ -1,3 +1,4 @@
+import { PERSONAL_MODE } from '@/config/personal-mode';
 import { trackGateHit, trackProBannerClick } from '@/services/analytics';
 import {
   onEntitlementChange,
@@ -214,6 +215,7 @@ function resolveEffectiveBannerPremium(): EffectiveBannerPremium {
 }
 
 export function showProBanner(container: HTMLElement): void {
+  if (PERSONAL_MODE) return;
   // Cache container even on early-return paths so the entitlement-change
   // listener can re-mount on a downgrade. App.ts calls this once at init
   // regardless of premium state, so caching here covers both "initially

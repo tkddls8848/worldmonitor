@@ -4,6 +4,7 @@ import './bootstrap/abort-signal-fallbacks';
 import './bootstrap/dom-fallbacks';
 import { initPwaInstall } from '@/services/pwa-install';
 import { SITE_VARIANT } from '@/config/variant';
+import { PERSONAL_MODE } from '@/config/personal-mode';
 import { installLcpAttributionDebug } from '@/bootstrap/lcp-attribution';
 import { markLcpDebug } from '@/utils/lcp-debug';
 import { registerWebMcpTools, type WebMcpAppBindings } from '@/services/webmcp';
@@ -756,7 +757,7 @@ if (isDesktopRuntime()) {
 // property exists but reading it throws SecurityError (WORLDMONITOR-Y5), which
 // at module scope aborts every top-level statement below. Read it once, safely.
 const swContainer = readServiceWorkerContainer();
-if (!isDesktopRuntime() && swContainer) {
+if (!PERSONAL_MODE && !isDesktopRuntime() && swContainer) {
   installSwUpdateHandler({ version: __APP_VERSION__, swContainer });
 
   const SW_UPDATE_SUCCESS_INTERVAL_MS = 60 * 60 * 1000;

@@ -1,3 +1,4 @@
+import { PERSONAL_MODE } from '@/config/personal-mode';
 /**
  * Defer Sentry SDK init off the critical path.
  *
@@ -271,6 +272,7 @@ function buildQueuedUnhandledRejectionEvent(reason: unknown): SentryEvent | null
  * synchronously at the very top of the entry point.
  */
 export function installPreInitErrorQueue(): void {
+  if (PERSONAL_MODE) return;
   if (queueInstalled || typeof window === 'undefined') return;
   queueInstalled = true;
   window.addEventListener('error', onError);
@@ -284,6 +286,7 @@ export function installPreInitErrorQueue(): void {
  * unbounded growth during a stalled init.
  */
 export function enqueueSentryCall(fn: SentryCall): void {
+  if (PERSONAL_MODE) return;
   if (sentryNs) {
     try { fn(sentryNs); } catch { /* user-supplied closure; never break the caller */ }
     return;
@@ -373,6 +376,7 @@ async function loadAndInit(): Promise<void> {
  * can `await` defensively).
  */
 export function scheduleSentryInit(): Promise<void> {
+  if (PERSONAL_MODE) return Promise.resolve();
   if (initPromise) return initPromise;
   if (typeof window === 'undefined') return Promise.resolve();
 

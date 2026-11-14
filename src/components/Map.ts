@@ -603,7 +603,7 @@ export class MapComponent {
     ];
 
     setTrustedHtml(slider, trustedHtml(`
-      <span class="time-slider-label">TIME RANGE</span>
+      <span class="time-slider-label">${escapeHtml(t('personalChrome.timeRange'))}</span>
       <div class="time-slider-buttons">
         ${ranges
         .map(

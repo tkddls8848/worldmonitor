@@ -1071,7 +1071,7 @@ export class EventHandlerManager implements AppModule {
     if (!mount) return;
 
     const active = loadStoredMissionPreset();
-    const label = active?.shortLabel ?? 'Mission';
+    const label = active?.shortLabel ?? t('personalChrome.mission');
     const icon = active?.icon ?? '◎';
     const activeClass = active ? ' mission-preset-button--active' : '';
     const suggestedClass = !active && !isMissionPresetPromptDismissed() ? ' mission-preset-button--suggested' : '';
@@ -1100,7 +1100,7 @@ export class EventHandlerManager implements AppModule {
   private updateMobileMissionLabel(active: MissionPreset | null = loadStoredMissionPreset()): void {
     const item = document.getElementById('mobileMenuMission');
     const label = item?.querySelector('.mobile-menu-item-label');
-    if (label) label.textContent = active ? `Mission: ${active.shortLabel}` : 'Mission';
+    if (label) label.textContent = active ? t('personalChrome.activeMission', { name: active.shortLabel }) : t('personalChrome.mission');
   }
 
   private toggleMissionPresetPopover(anchor: HTMLElement | null, mobile: boolean): void {
@@ -1161,7 +1161,7 @@ export class EventHandlerManager implements AppModule {
     setTrustedHtml(popover, trustedHtml(`
       <div class="mission-preset-popover__header">
         <div>
-          <span>Mission</span>
+          <span>${escapeHtml(t('personalChrome.mission'))}</span>
           <strong>${escapeHtml(active?.label ?? 'Choose Workspace')}</strong>
         </div>
         <div class="mission-preset-popover__actions">

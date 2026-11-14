@@ -177,16 +177,3 @@ jobs:
           path: ${{ runner.temp }}/resilience-snapshot.patch
           retention-days: 30
           if-no-files-found: error
-
-  # Dispatches Deploy Gate for the new PR directly rather than waiting on the
-  # workflow_run event or the gate's 30-minute sweep.
-  deploy-gate:
-    needs: refresh
-    if: (github.event_name != 'schedule' || github.repository == 'koala73/worldmonitor')
-    permissions:
-      actions: write
-      contents: read
-      pull-requests: read
-    uses: ./.github/workflows/bot-pr-deploy-gate.yml
-    with:
-      branch: ${{ needs.refresh.outputs.branch }}

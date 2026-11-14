@@ -1,3 +1,4 @@
+import { PERSONAL_MODE } from '@/config/personal-mode';
 /**
  * Shared ConvexClient singleton for frontend services.
  *
@@ -279,6 +280,7 @@ async function createConvexClient(): Promise<ConvexClient | null> {
 }
 
 export async function getConvexClient(): Promise<ConvexClient | null> {
+  if (PERSONAL_MODE) return null;
   if (client) return client;
   if (clientInitPromise) return clientInitPromise;
 

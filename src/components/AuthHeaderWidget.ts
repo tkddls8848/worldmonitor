@@ -1,3 +1,4 @@
+import { PERSONAL_MODE } from '@/config/personal-mode';
 import { subscribeAuthState, type AuthSession } from '@/services/auth-state';
 import { isClerkAuthEnabled, mountUserButton, openSignIn } from '@/services/clerk';
 import { t } from '@/services/i18n';
@@ -21,6 +22,7 @@ export class AuthHeaderWidget {
     this.onBillingClick = onBillingClick;
     this.container = document.createElement('div');
     this.container.className = 'auth-header-widget';
+    if (PERSONAL_MODE) { this.container.hidden = true; return; }
 
     this.unsubscribeAuth = subscribeAuthState((state: AuthSession) => {
       if (state.isPending) {
