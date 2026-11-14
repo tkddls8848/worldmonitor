@@ -1113,7 +1113,7 @@ describe('EVALSHA-unsupported fallback (#7c — self-hosted redis-rest proxy blo
   });
 
   // Faithful in-memory INCR + EXPIRE-NX + TTL, gated by the same command
-  // allowlist docker/redis-rest-proxy.mjs enforces. @upstash/redis
+  // allowlist scripts/local/redis-rest-proxy.mjs enforces. @upstash/redis
   // auto-pipelines every command (including a bare `.evalsha()`) through
   // POST /pipeline, so the real proxy's per-command `{error}` entries — not
   // an HTTP-level rejection — are what @upstash/ratelimit actually sees.

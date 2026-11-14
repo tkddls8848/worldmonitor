@@ -7,7 +7,6 @@ import {
   FRED_RATES_ACTIVATION_KEY,
 } from '../scripts/seed-fred-rates.mjs';
 import { FRED_TTL } from '../scripts/_fred-seeder.mjs';
-import { auditRailwayServiceConfig } from '../scripts/audit-railway-watch-paths.mjs';
 
 describe('FRED/rates seeder isolation', () => {
   it('has a FRED-owned canonical key and TTL', () => {
@@ -34,45 +33,6 @@ describe('FRED/rates seeder isolation', () => {
     ]);
     assert.ok(service.watchPatterns.includes('scripts/_fred-seeder.mjs'));
     assert.ok(!service.watchPatterns.includes('scripts/seed-economy.mjs'));
-  });
-  it('fails the live Railway audit unless all required variables are configured', () => {
-    const registry = JSON.parse(fs.readFileSync(new URL('../scripts/railway-services.json', import.meta.url), 'utf8'));
-    const fred = registry.find((item) => item.service === 'seed-fred-rates');
-    assert.ok(fred);
-
-    const liveService = (variables) => ({
-      source: { repo: 'koala73/worldmonitor', rootDirectory: 'scripts' },
-      build: { watchPatterns: fred.watchPatterns },
-      deploy: { cronSchedule: fred.cronSchedule, startCommand: 'node seed-fred-rates.mjs' },
-      variables,
-    });
-    const serviceIds = new Map([['seed-fred-rates', 'svc-fred']]);
-    const requiredVariables = {
-      FRED_API_KEY: 'configured',
-      UPSTASH_REDIS_REST_URL: 'configured',
-      UPSTASH_REDIS_REST_TOKEN: 'configured',
-      PROXY_URL: 'configured',
-    };
-
-    for (const missing of Object.keys(requiredVariables)) {
-      const variables = { ...requiredVariables };
-      delete variables[missing];
-      const drift = auditRailwayServiceConfig(
-        { services: { 'svc-fred': liveService(variables) } },
-        serviceIds,
-        [fred],
-      );
-      assert.deepEqual(drift[0]?.missingRequiredEnv, [missing]);
-    }
-
-    assert.deepEqual(
-      auditRailwayServiceConfig(
-        { services: { 'svc-fred': liveService(requiredVariables) } },
-        serviceIds,
-        [fred],
-      ),
-      [],
-    );
   });
   it('writes its durable activation marker only from runSeed afterPublish', () => {
     const source = fs.readFileSync(new URL('../scripts/seed-fred-rates.mjs', import.meta.url), 'utf8');

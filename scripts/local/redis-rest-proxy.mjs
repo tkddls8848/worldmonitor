@@ -10,9 +10,9 @@
  *   POST /multi-exec                  → JSON body [["CMD1",...], ["CMD2",...]]
  *
  * Env:
- *   REDIS_URL           - Redis connection string (default: redis://redis:6379)
+ *   REDIS_URL           - Redis connection string (default: redis://127.0.0.1:6379)
  *   SRH_TOKEN           - Required bearer token (nonempty visible ASCII, no spaces)
- *   PORT                - Listen port (default: 80)
+ *   PORT                - Listen port (default: 8079)
  *   SRH_MAX_BODY_BYTES  - Max request body size (default: 16777216 / 16 MB)
  */
 
@@ -20,13 +20,11 @@ import http from 'node:http';
 import crypto from 'node:crypto';
 import { createClient } from 'redis';
 
-const REDIS_URL = process.env.SRH_CONNECTION_STRING || process.env.REDIS_URL || 'redis://redis:6379';
+const REDIS_URL = process.env.SRH_CONNECTION_STRING || process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 const TOKEN = process.env.SRH_TOKEN || '';
-const PORT = parseInt(process.env.PORT || '80', 10);
-// All interfaces by default: inside Docker the container network is the
-// boundary and compose publishes only 127.0.0.1:8079. A native install has no
-// such boundary, so it sets SRH_BIND_HOST=127.0.0.1.
-const BIND_HOST = (process.env.SRH_BIND_HOST || '').trim() || '0.0.0.0';
+const PORT = parseInt(process.env.PORT || '8079', 10);
+// Local-only by default; external callers must go through the authenticated app.
+const BIND_HOST = (process.env.SRH_BIND_HOST || '').trim() || '127.0.0.1';
 
 // Reject unusable HTTP credentials before creating a Redis client or listener.
 if (!/^[\x21-\x7e]+$/.test(TOKEN)) {

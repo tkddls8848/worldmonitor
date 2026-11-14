@@ -412,8 +412,6 @@ const WEBMCP_MAINTAINER_SOURCES = [
   'src/components/GlobalProcurementPanel.ts',
   'pro-test/welcome.html',
   'vercel.json',
-  'docker/nginx-security-headers.conf',
-  'docker/nginx-embed-security-headers.conf',
   'vite.config.ts',
   'pro-test/vite.config.ts',
   'tests/webmcp*.test.*',

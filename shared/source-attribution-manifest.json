@@ -943,9 +943,6 @@
           "path": "scripts/freeze-github-stars.mjs"
         },
         {
-          "path": "scripts/resolve-railway-reconcile-control.mjs"
-        },
-        {
           "path": "scripts/seed-fuel-prices.mjs"
         },
         {
@@ -1600,9 +1597,6 @@
         },
         {
           "path": "scripts/audit-resilience-cohorts.mjs"
-        },
-        {
-          "path": "scripts/capture-seed-recovery.mjs"
         },
         {
           "path": "scripts/freeze-resilience-ranking.mjs"
@@ -6524,6 +6518,9 @@
       "references": [
         {
           "path": "scripts/ais-relay.cjs"
+        },
+        {
+          "path": "scripts/local/redis-rest-proxy.mjs"
         },
         {
           "path": "server/worldmonitor/research/v1/list-tech-events.ts"

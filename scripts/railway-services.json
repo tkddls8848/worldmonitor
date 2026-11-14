@@ -1,16 +1,13 @@
 [
   {
     "entry": "scripts/ais-relay.cjs",
-    "deployMode": "dockerfile",
-    "dockerfile": "Dockerfile.relay",
+    "deployMode": "local-process",
     "service": "ais-relay",
     "requiredEnv": [
       "X_BEARER_TOKEN",
       "X_CURATED_LIST_ID"
     ],
     "watchPatterns": [
-      ".dockerignore",
-      "Dockerfile.relay",
       "data/israeli-localities-he-en.json",
       "data/oref-threat-translations-he-en.json",
       "data/telegram-channels.json",
@@ -144,7 +141,7 @@
       "shared/stocks.json",
       "scripts/shared/pizzint-location.cjs"
     ],
-    "documentedAt": "Dockerfile.relay"
+    "documentedAt": "scripts/ais-relay.cjs"
   },
   {
     "entry": "scripts/company-monitoring-worker.mjs",
@@ -321,16 +318,13 @@
   },
   {
     "entry": "scripts/seed-digest-notifications.mjs",
-    "deployMode": "dockerfile",
-    "dockerfile": "Dockerfile.digest-notifications",
+    "deployMode": "local-process",
     "service": "digest-notifications",
     "requiredEnv": [
       "USAGE_TELEMETRY",
       "AXIOM_API_TOKEN"
     ],
     "watchPatterns": [
-      ".dockerignore",
-      "Dockerfile.digest-notifications",
       "api/_seed-envelope.js",
       "api/_upstash-json.js",
       "scripts/_digest-markdown.mjs",
@@ -414,31 +408,11 @@
       "shared/url-classifier.js",
       "scripts/_env-file.mjs"
     ],
-    "documentedAt": "Dockerfile.digest-notifications"
-  },
-  {
-    "entry": "scripts/publish-bootstrap-tiers.mjs",
-    "deployMode": "dockerfile",
-    "dockerfile": "Dockerfile.publish-bootstrap-tiers",
-    "service": "publish-bootstrap-tiers",
-    "startCommand": "node scripts/publish-bootstrap-tiers.mjs --loop",
-    "requiredEnv": [
-      "UPSTASH_REDIS_REST_URL",
-      "UPSTASH_REDIS_REST_TOKEN",
-      "IRAN_EVENTS_ENABLED",
-      "R2_ACCOUNT_ID",
-      "R2_BOOTSTRAP_BUCKET",
-      "R2_BOOTSTRAP_ACCESS_KEY_ID",
-      "R2_BOOTSTRAP_SECRET_ACCESS_KEY"
-    ],
-    "watchPatterns": [],
-    "cronSchedule": null,
-    "documentedAt": "issue #5300 U3 Railway provisioning contract"
+    "documentedAt": "scripts/seed-digest-notifications.mjs"
   },
   {
     "entry": "scripts/seed-bundle-portwatch-port-activity.mjs",
-    "deployMode": "dockerfile",
-    "dockerfile": "Dockerfile.seed-bundle-portwatch-port-activity",
+    "deployMode": "local-process",
     "service": "seed-bundle-portwatch-port-activity",
     "requiredEnv": [
       "UPSTASH_REDIS_REST_URL",
@@ -446,8 +420,6 @@
       "PROXY_URL"
     ],
     "watchPatterns": [
-      ".dockerignore",
-      "Dockerfile.seed-bundle-portwatch-port-activity",
       "scripts/_bundle-runner.mjs",
       "scripts/_country-resolver.mjs",
       "scripts/_env-file.mjs",
@@ -468,7 +440,7 @@
       "shared/iso3-to-iso2.json"
     ],
     "cronSchedule": "0 */12 * * *",
-    "documentedAt": "Dockerfile.seed-bundle-portwatch-port-activity"
+    "documentedAt": "scripts/seed-bundle-portwatch-port-activity.mjs"
   },
   {
     "entry": "scripts/scenario-worker.mjs",
@@ -1309,8 +1281,7 @@
   },
   {
     "entry": "scripts/seed-bundle-portwatch-port-activity.mjs",
-    "deployMode": "dockerfile",
-    "dockerfile": "Dockerfile.seed-bundle-portwatch-port-activity",
+    "deployMode": "local-process",
     "service": "seed-bundle-portwatch-port-activity",
     "requiredEnv": [
       "UPSTASH_REDIS_REST_URL",
@@ -1318,8 +1289,6 @@
       "PROXY_URL"
     ],
     "watchPatterns": [
-      ".dockerignore",
-      "Dockerfile.seed-bundle-portwatch-port-activity",
       "scripts/_bundle-runner.mjs",
       "scripts/_country-resolver.mjs",
       "scripts/_env-file.mjs",
@@ -1340,7 +1309,7 @@
       "shared/iso3-to-iso2.json"
     ],
     "cronSchedule": "0 */12 * * *",
-    "documentedAt": "Dockerfile.seed-bundle-portwatch-port-activity"
+    "documentedAt": "scripts/seed-bundle-portwatch-port-activity.mjs"
   },
   {
     "entry": "scripts/seed-bundle-regional.mjs",
@@ -1554,12 +1523,9 @@
   },
   {
     "entry": "scripts/seed-bundle-resilience-validation.mjs",
-    "deployMode": "dockerfile",
-    "dockerfile": "Dockerfile.seed-bundle-resilience-validation",
+    "deployMode": "local-process",
     "service": "seed-bundle-resilience-validation",
     "watchPatterns": [
-      ".dockerignore",
-      "Dockerfile.seed-bundle-resilience-validation",
       "scripts/_bundle-runner.mjs",
       "scripts/_country-resolver.mjs",
       "scripts/_proxy-utils.cjs",
@@ -1610,7 +1576,7 @@
       "tsconfig.api.json",
       "tsconfig.json"
     ],
-    "documentedAt": "Dockerfile.seed-bundle-resilience-validation"
+    "documentedAt": "scripts/seed-bundle-resilience-validation.mjs"
   },
   {
     "entry": "scripts/seed-bundle-static-ref.mjs",
@@ -2550,56 +2516,8 @@
     "documentedAt": "tests/scripts-railway-nixpacks-no-escape-import.test.mts (pre-registry ENTRY_POINTS)"
   },
   {
-    "entry": "Dockerfile.umami",
-    "deployMode": "dockerfile",
-    "dockerfile": "Dockerfile.umami",
-    "service": "umami",
-    "requiredEnv": [
-      "APP_SECRET",
-      "DATABASE_URL"
-    ],
-    "watchPatterns": [
-      ".dockerignore",
-      "Dockerfile.umami",
-      "docker/umami/21_update_session_data/migration.sql",
-      "docker/umami/runtime/21-update-session-data-prefix.sql",
-      "docker/umami/runtime/21-update-session-data-suffix.sql",
-      "docker/umami/runtime/package.json",
-      "docker/umami/runtime/pnpm-lock.yaml",
-      "docker/umami/runtime/pnpm-workspace.yaml",
-      "docker/umami/runtime/session-data-upsert.sql",
-      "docker/umami/runtime/upstream-23-update-session-data.sql",
-      "docker/umami/session-data-upsert.patch",
-      "docker/umami/v320-compat.patch"
-    ],
-    "cronSchedule": null,
-    "documentedAt": "docs/analytics-collector-operations.md#patched-runtime-image"
-  },
-  {
-    "entry": "scripts/umami-retention.sql",
-    "deployMode": "dockerfile",
-    "dockerfile": "Dockerfile.umami-retention",
-    "service": "umami-retention",
-    "lifecycle": "active",
-    "requiredEnv": [
-      "PGHOST",
-      "PGPORT",
-      "PGDATABASE",
-      "PGUSER",
-      "PGPASSWORD"
-    ],
-    "watchPatterns": [
-      ".dockerignore",
-      "scripts/umami-retention.sql",
-      "Dockerfile.umami-retention"
-    ],
-    "cronSchedule": "7,22,37,52 * * * *",
-    "documentedAt": "docs/analytics-collector-operations.md#retention-runner"
-  },
-  {
     "entry": "demos/verification-desk/server.mjs",
-    "deployMode": "dockerfile",
-    "dockerfile": "demos/verification-desk/Dockerfile",
+    "deployMode": "local-process",
     "service": "verification-desk",
     "requiredEnv": [
       "DESK_PASSWORD",
@@ -2610,7 +2528,6 @@
       "ANTHROPIC_API_KEY"
     ],
     "watchPatterns": [
-      ".dockerignore",
       "demos/verification-desk/**",
       "package.json",
       "src/locales/en.json",
@@ -2647,7 +2564,7 @@
       "shared/x-account-trust.ts"
     ],
     "cronSchedule": null,
-    "documentedAt": "demos/verification-desk/README.md#run-it-from-any-computer-hosted-with-a-login"
+    "documentedAt": "demos/verification-desk/server.mjs"
   },
   {
     "entry": "scripts/seed-ukmto-incidents.mjs",

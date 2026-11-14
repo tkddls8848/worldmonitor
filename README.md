@@ -96,20 +96,24 @@ Issues filed against any of the above are triaged from the same backlog — see 
 
 ## Quick Start
 
-**One-line install** (self-host the full stack with Docker — dashboard, Redis, AIS relay, seeded public data):
+**개인용 실행** (Node.js 24, Docker 불필요):
 
 ```bash
-curl -fsSL https://www.worldmonitor.app/install.sh | bash
+npm ci
+npm run build:personal
+npm run start:personal
 ```
 
-This clones into `./worldmonitor` (or reuses your checkout), generates the required secrets, starts the stack, and seeds data. Then open [localhost:3000](http://localhost:3000). Options: `--dir`, `--port`, `--no-seed`, `--no-build`, passed after `bash -s --` (see `scripts/install.sh --help`). API keys are optional. Details, production notes, and uninstall: [SELF_HOSTING.md](./SELF_HOSTING.md).
+실행 전에 `.env.local`에 개인 접속 비밀번호 `WM_PERSONAL_PASSWORD`와
+`WM_SESSION_SECRET`을 설정합니다. [개인용 실행 안내](./SELF_HOSTING.md)를 참고하세요.
+데이터 소스별 키와 로컬 저장소 설정은 별도이며, 없는 데이터를 수집 완료로 표시하지 않습니다.
 
 **Local development** (hot-reload Vite server):
 
 Requires Node.js 24, the version pinned in `.nvmrc`. Distribution packages are often older. Debian 12 and Raspberry Pi OS ship Node.js 18 with npm 9.2.0, where `npm install` stops with `Invalid comparator: file:vendor/braces`. Install Node.js 24 with [nvm](https://github.com/nvm-sh/nvm) (`nvm install` inside the checkout reads `.nvmrc`) or from [nodejs.org](https://nodejs.org/en/download).
 
 ```bash
-git clone https://github.com/koala73/worldmonitor.git
+git clone https://github.com/tkddls8848/worldmonitor.git
 cd worldmonitor
 npm install
 npm run dev
@@ -129,7 +133,7 @@ npm run dev:happy      # happy.worldmonitor.app
 npm run dev:energy     # energy.worldmonitor.app
 ```
 
-See the **[self-hosting guide](https://www.worldmonitor.app/docs/getting-started)** for deployment options (Vercel, Docker, static).
+실행 구성은 [개인용 실행 안내](./SELF_HOSTING.md)를 참고하세요.
 
 ---
 

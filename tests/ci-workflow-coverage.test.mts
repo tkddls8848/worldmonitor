@@ -561,7 +561,6 @@ const GATE_CHECK_EXEMPTIONS: Record<string, { workflow: string; coveredBy: strin
 };
 
 const REQUIRED_RESILIENCE_VALIDATION_INPUTS = [
-  'Dockerfile.seed-bundle-resilience-validation',
   'docs/methodology/country-resilience-index/validation/',
   'scripts/benchmark-resilience-external.mjs',
   'scripts/backtest-resilience-outcomes.mjs',
@@ -1905,33 +1904,6 @@ describe('CI workflow coverage', () => {
     );
   });
 
-  it('does not rebuild Umami images for an unrelated Test workflow edit', () => {
-    const umamiFilter = shellAwkAssignmentBlock('UMAMI');
-    assert.equal(
-      evaluateAwkAssignmentBlock(umamiFilter, ['.github/workflows/test.yml']),
-      0,
-      'editing test.yml must not set umami=true — unit pins the job shape',
-    );
-    assert.ok(
-      evaluateAwkAssignmentBlock(umamiFilter, ['Dockerfile.umami']) > 0,
-      'Dockerfile.umami must still set umami=true',
-    );
-    assert.ok(
-      evaluateAwkAssignmentBlock(umamiFilter, ['scripts/umami-retention.sql']) > 0,
-      'the retention SQL must still set umami=true',
-    );
-  });
-
-  it('routes the root Docker context policy into image build jobs', () => {
-    for (const variable of ['DIGEST', 'UMAMI']) {
-      const awkBlock = shellAwkAssignmentBlock(variable);
-      assert.ok(
-        evaluateAwkAssignmentBlock(awkBlock, ['.dockerignore']) > 0,
-        `.dockerignore must set ${variable.toLowerCase()}=true`,
-      );
-    }
-  });
-
   it('keeps desktop drift-gate inputs in the CI change filter (#5902)', () => {
     assert.ok(
       testWorkflow.includes('desktop_config: ${{ steps.diff.outputs.desktop_config }}'),
@@ -2367,46 +2339,6 @@ describe('CI workflow coverage', () => {
       securityAuditScript,
       /collectIntroducedIds/,
       'the audit gate must compute which advisories the change introduced',
-    );
-  });
-
-  it('keeps Docker base images pinned to immutable digests', () => {
-    const failures: string[] = [];
-
-    for (const dockerfile of collectDockerfiles()) {
-      const aliases = new Set<string>();
-      const source = readFileSync(resolve(root, dockerfile), 'utf8');
-      const lines = source.split('\n');
-
-      lines.forEach((line, index) => {
-        const match = line.match(/^FROM\s+(.+)$/i);
-        if (!match) return;
-
-        const parts = match[1].trim().split(/\s+/);
-        while (parts[0]?.startsWith('--')) {
-          parts.shift();
-        }
-
-        const image = parts[0];
-        const asIndex = parts.findIndex((part) => part.toUpperCase() === 'AS');
-        const alias = asIndex >= 0 ? parts[asIndex + 1] : undefined;
-        const isKnownStage = image ? aliases.has(image) : false;
-        if (alias) {
-          aliases.add(alias);
-        }
-
-        if (!image || image === 'scratch' || isKnownStage) return;
-
-        if (!/@sha256:[0-9a-f]{64}$/i.test(image)) {
-          failures.push(`${dockerfile}:${index + 1} ${line.trim()}`);
-        }
-      });
-    }
-
-    assert.deepEqual(
-      failures,
-      [],
-      `Docker FROM images must be pinned with full @sha256:<64 hex> digests:\n${failures.join('\n')}`,
     );
   });
 

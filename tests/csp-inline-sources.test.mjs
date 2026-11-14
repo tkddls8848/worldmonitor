@@ -164,7 +164,6 @@ const ROUTE_PAGES = [
   {
     name: 'OAuth consent page',
     routes: ROUTE_CSP_FILES['api/oauth/authorize.js'],
-    nginx: 'docker/nginx-oauth-authorize-security-headers.conf',
     render: () => consentPage({ client_name: 'Claude', redirect_uri: 'https://claude.ai/api/mcp/auth_callback' }, 'n').text(),
   },
   {
@@ -172,28 +171,19 @@ const ROUTE_PAGES = [
     // it runs under the consent page's CSP: the same route rule.
     name: 'OAuth error page',
     routes: ROUTE_CSP_FILES['api/oauth/authorize.js'],
-    nginx: 'docker/nginx-oauth-authorize-security-headers.conf',
     render: async () => (await authorizeHandler(new Request('https://api.worldmonitor.app/oauth/authorize'))).text(),
   },
   {
     name: 'Pro OAuth error page',
     routes: ROUTE_CSP_FILES['api/oauth/authorize-pro.ts'],
-    nginx: 'docker/nginx-oauth-authorize-security-headers.conf',
     render: async () => (await authorizeProHandler(new Request('https://api.worldmonitor.app/oauth/authorize-pro'), {})).text(),
   },
   {
     name: 'YouTube embed page',
     routes: ROUTE_CSP_FILES['api/youtube/embed.js'],
-    nginx: 'docker/nginx-youtube-embed-security-headers.conf',
     render: async () => (await youtubeEmbedHandler(new Request('https://worldmonitor.app/api/youtube/embed?videoId=iEpJwprxDdk'))).text(),
   },
 ];
-
-function nginxCsp(file) {
-  const line = readFileSync(new URL(file, ROOT), 'utf8').split('\n')
-    .find((l) => l.startsWith('add_header Content-Security-Policy "'));
-  return line?.match(/^add_header Content-Security-Policy "(.*)" always;/)?.[1];
-}
 
 // Everything but script-src must stay the site-wide policy, so the route
 // rules cannot drift from it.
@@ -214,12 +204,7 @@ describe('route CSPs allow their page scripts by hash', () => {
       }
     });
 
-    it(`${page.name}: docker nginx mirrors the route script-src`, () => {
-      const csp = nginxCsp(page.nginx);
-      assert.ok(csp, `${page.nginx} must set a Content-Security-Policy`);
-      assert.equal(directive(csp, 'script-src'), directive(effectiveCsp(page.routes[0]), 'script-src'));
-      assert.equal(withoutScriptSrc(csp), withoutScriptSrc(nginxCsp('docker/nginx-security-headers.conf')));
-    });
+
   }
 
   it('YouTube embed lists the hosts its player script loads from, for browsers without strict-dynamic', async () => {
@@ -237,18 +222,4 @@ describe('route CSPs allow their page scripts by hash', () => {
     }
   });
 
-  it('docker nginx serves the route header sets on the proxied routes', () => {
-    const template = readFileSync(new URL('docker/nginx.conf.template', ROOT), 'utf8');
-    const dockerfile = readFileSync(new URL('docker/Dockerfile', ROOT), 'utf8');
-    assert.match(template, /location ~ \^\/api\/oauth\/\(authorize\|authorize-pro\)\$ \{\n\s+include \/etc\/nginx\/oauth_authorize_security_headers\.conf;/);
-    assert.match(template, /location = \/api\/youtube\/embed \{\n\s+include \/etc\/nginx\/youtube_embed_security_headers\.conf;/);
-    assert.match(dockerfile, /COPY docker\/nginx-oauth-authorize-security-headers\.conf \/etc\/nginx\/oauth_authorize_security_headers\.conf/);
-    assert.match(dockerfile, /COPY docker\/nginx-youtube-embed-security-headers\.conf \/etc\/nginx\/youtube_embed_security_headers\.conf/);
-    // Every other header must match the site-wide nginx set.
-    const otherHeaders = (file) => readFileSync(new URL(file, ROOT), 'utf8').split('\n')
-      .filter((l) => l.startsWith('add_header ') && !l.startsWith('add_header Content-Security-Policy '));
-    for (const file of ['docker/nginx-oauth-authorize-security-headers.conf', 'docker/nginx-youtube-embed-security-headers.conf']) {
-      assert.deepEqual(otherHeaders(file), otherHeaders('docker/nginx-security-headers.conf'), file);
-    }
-  });
 });

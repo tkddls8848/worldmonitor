@@ -286,7 +286,7 @@ describe('api/mcp/quota.ts — reserveQuota honours the resolved plan limit', ()
   });
 
   it('keeps the Docker redis-rest proxy allowlist copy byte-identical to the reserve EVAL', () => {
-    const proxy = readFileSync(fileURLToPath(new URL('../docker/redis-rest-proxy.mjs', import.meta.url)), 'utf8');
+    const proxy = readFileSync(fileURLToPath(new URL('../scripts/local/redis-rest-proxy.mjs', import.meta.url)), 'utf8');
     const block = proxy.match(/const MCP_QUOTA_RESERVE_SCRIPT = (\[[\s\S]*?\])\.join\('\\n'\);/);
     assert.ok(block, 'the proxy must carry a pinned MCP quota reserve script copy');
     const proxyScript = (new Function(`return ${block[1]};`)()).join('\n');
@@ -297,7 +297,7 @@ describe('api/mcp/quota.ts — reserveQuota honours the resolved plan limit', ()
 
   it('keeps free-account allowance EVAL copies byte-identical and allowlisted', async () => {
     const { RESERVE_FREE_ACCOUNT_ALLOWANCE_SCRIPT, READ_FREE_ACCOUNT_ALLOWANCE_SCRIPT } = await import('../shared/free-account-allowance-scripts.mjs');
-    const proxy = readFileSync(fileURLToPath(new URL('../docker/redis-rest-proxy.mjs', import.meta.url)), 'utf8');
+    const proxy = readFileSync(fileURLToPath(new URL('../scripts/local/redis-rest-proxy.mjs', import.meta.url)), 'utf8');
     const allowlist = proxy.match(/const ALLOWED_EVAL_SCRIPTS = new Set\(\[([\s\S]*?)\]\);/);
     assert.ok(allowlist, 'the proxy must declare ALLOWED_EVAL_SCRIPTS');
     const pinned = (name) => {

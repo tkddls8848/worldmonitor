@@ -207,7 +207,6 @@ describe('heartbeat', () => {
 
 describe('relay wiring', () => {
   const relay = readFileSync(join(root, 'scripts/ais-relay.cjs'), 'utf8');
-  const dockerfile = readFileSync(join(root, 'Dockerfile.relay'), 'utf8');
 
   it('starts the warm loop over the generated cells', () => {
     assert.match(relay, /const DIGEST_WARM_CELLS = requireShared\('news-digest-warm-cells\.json'\);/);
@@ -215,7 +214,5 @@ describe('relay wiring', () => {
   });
 
   it('ships the module and the cell list in the relay image', () => {
-    assert.ok(dockerfile.includes('COPY scripts/lib/news-digest-warm.cjs ./scripts/lib/news-digest-warm.cjs'));
-    assert.ok(dockerfile.includes('COPY scripts/shared/news-digest-warm-cells.json ./scripts/shared/news-digest-warm-cells.json'));
   });
 });

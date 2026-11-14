@@ -351,15 +351,6 @@ describe('Product catalog freshness', () => {
     assert.doesNotMatch(edgeSrc, /MANUAL MIRROR/);
     assert.doesNotMatch(relaySrc, /MANUAL MIRROR/);
 
-    const dockerfile = readFileSync(join(ROOT, 'Dockerfile.relay'), 'utf8');
-    assert.match(dockerfile, /^RUN node scripts\/generate-inventory-facts\.mjs$/m);
-    assert.match(
-      dockerfile,
-      /^COPY --from=inventory-builder \/workspace\/scripts\/shared\/inventory-facts\.generated\.json \.\/scripts\/shared\/inventory-facts\.generated\.json$/m,
-    );
-    const dockerignore = readFileSync(join(ROOT, '.dockerignore'), 'utf8');
-    assert.match(dockerignore, /^\.env\*$/m, 'Docker build context must exclude local environment files');
-
     const relayService = JSON.parse(
       readFileSync(join(ROOT, 'scripts/railway-services.json'), 'utf8'),
     ).find((entry) => entry.entry === 'scripts/ais-relay.cjs');

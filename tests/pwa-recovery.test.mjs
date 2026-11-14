@@ -165,27 +165,14 @@ describe('offline Retry CSP', () => {
     assert.match(inlineScripts[0][1], /getElementById\('t-retry'\)\.addEventListener\('click'/);
   });
 
-  it('ships the Retry script hash on Vercel and both nginx dashboard CSP surfaces', () => {
+  it('ships the Retry script hash on the configured dashboard CSP', () => {
     const vercel = JSON.parse(readFileSync(resolve(ROOT, 'vercel.json'), 'utf8'));
     const vercelCsp = vercel.headers
       .find((entry) => entry.headers?.some(
         (header) => header.key === 'X-Frame-Options' && header.value === 'SAMEORIGIN',
       ))
       ?.headers.find((header) => header.key === 'Content-Security-Policy')?.value;
-    const nginxSources = [
-      readFileSync(resolve(ROOT, 'docker/nginx-security-headers.conf'), 'utf8'),
-      readFileSync(resolve(ROOT, 'docker/nginx.conf'), 'utf8'),
-    ];
-    const nginxCsps = nginxSources.flatMap((source) =>
-      [...source.matchAll(/add_header Content-Security-Policy "([^"]+)"/g)]
-        .map((match) => match[1])
-        .filter((csp) => csp.includes("'strict-dynamic'")),
-    );
-
     assert.ok(vercelCsp?.includes(scriptHash), `Vercel CSP is missing ${scriptHash}`);
-    assert.equal(nginxCsps.length, 2, 'expected both nginx dashboard CSP surfaces');
-    for (const csp of nginxCsps) {
-      assert.ok(csp.includes(scriptHash), `nginx CSP is missing ${scriptHash}`);
-    }
+
   });
 });

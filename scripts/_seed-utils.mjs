@@ -494,7 +494,7 @@ export async function releaseLock(domain, runId) {
 // holds ARGV[1] (and renew it for ARGV[2] ms), or {0, <current holder or ''>}
 // when the lock is gone, so the caller can tell a takeover from an expiry.
 // The redis-rest proxy pins both texts byte for byte
-// (docker/redis-rest-proxy.mjs, tests/redis-rest-proxy-command-parity.test.mjs).
+// (scripts/local/redis-rest-proxy.mjs, tests/redis-rest-proxy-command-parity.test.mjs).
 export const SEED_LOCK_RENEW_SCRIPT = [
   "local current = redis.call('GET', KEYS[1])",
   'if current ~= ARGV[1] then',

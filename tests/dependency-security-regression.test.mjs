@@ -63,12 +63,6 @@ it('KaTeX ignores inherited trust while preserving explicit trusted rendering', 
   assert.match(katex.renderToString('x^2 + 1'), /katex/);
 });
 
-it('Umami selects only Hono versions with the JSX escaping fix', () => {
-  const lock = load(readFileSync(new URL('../docker/umami/runtime/pnpm-lock.yaml', import.meta.url), 'utf8'));
-  const versions = Object.keys(lock.packages).filter((key) => key.startsWith('hono@')).map((key) => key.slice(5));
-  assert.ok(versions.length > 0);
-  for (const version of versions) assert.ok(semver.gte(version, '4.13.7'));
-});
 
 function npmLockVersions(path, name) {
   const lock = JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
@@ -91,8 +85,6 @@ const patchedLocks = [
   ['sharp', '0.35.5', npmLockVersions, '../workers/railway-reconcile-control/package-lock.json'],
   ['shell-quote', '1.11.0', npmLockVersions, '../package-lock.json'],
   ['shell-quote', '1.11.0', npmLockVersions, '../pro-test/package-lock.json'],
-  ['shell-quote', '1.11.0', pnpmLockVersions, '../docker/umami/runtime/pnpm-lock.yaml'],
-  ['hono', '4.13.11', pnpmLockVersions, '../docker/umami/runtime/pnpm-lock.yaml'],
   ['markdown-it', '14.3.3', npmLockVersions, '../package-lock.json'],
   ['@vitest/mocker', '4.1.12', npmLockVersions, '../package-lock.json'],
   ['@vitest/mocker', '4.1.12', npmLockVersions, '../consumer-prices-core/package-lock.json'],
@@ -107,7 +99,6 @@ const patchedLocks = [
   ['serialize-javascript', '7.0.5', npmLockVersions, '../integrations/zapier/package-lock.json'],
   ['postcss-selector-parser', '7.1.6', npmLockVersions, '../integrations/zapier/package-lock.json'],
   ['fast-uri', '3.1.9', npmLockVersions, '../package-lock.json'],
-  ['fast-uri', '3.1.9', pnpmLockVersions, '../docker/umami/runtime/pnpm-lock.yaml'],
   ['undici', '7.30.1', npmLockVersions, '../workers/api-cors-preflight/package-lock.json'],
   ['undici', '7.30.1', npmLockVersions, '../workers/railway-reconcile-control/package-lock.json'],
 ];

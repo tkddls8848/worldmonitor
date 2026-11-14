@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import crypto from 'node:crypto';
 
 // Execute the full startup and request handler with only external I/O mocked.
-const source = readFileSync(new URL('../docker/redis-rest-proxy.mjs', import.meta.url), 'utf8')
+const source = readFileSync(new URL('../scripts/local/redis-rest-proxy.mjs', import.meta.url), 'utf8')
   .replace(/^#!.*\n/, '')
   .replace(/^import .*;\n/gm, '');
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
@@ -52,11 +52,11 @@ for (const token of [undefined, '', ' ', '\t', ' token', 'token ', 'to ken', 'to
   });
 }
 
-it('requires authentication for welcome and health requests and keeps container binding', async () => {
+it('requires authentication for welcome and health requests and keeps loopback binding', async () => {
   const token = 'a'.repeat(64);
   const app = await boot(token);
   await app.started;
-  assert.deepEqual(app.calls, ['createClient', 'connect', ['listen', 80, '0.0.0.0']]);
+  assert.deepEqual(app.calls, ['createClient', 'connect', ['listen', 8079, '127.0.0.1']]);
   for (const path of ['/', '/ping']) {
     for (const header of [undefined, '', 'Basic abc', 'Bearer wrong', `Bearer ${'a'.repeat(63)}ÿ`]) {
       assert.equal((await app.request(path, header)).status, 401);
@@ -75,19 +75,11 @@ it('binds to SRH_BIND_HOST for native installs that must stay on loopback', asyn
   // install (the FreeBSD port) needs to keep the proxy on 127.0.0.1.
   const app = await boot('a'.repeat(64), { SRH_BIND_HOST: '127.0.0.1' });
   await app.started;
-  assert.deepEqual(app.calls, ['createClient', 'connect', ['listen', 80, '127.0.0.1']]);
+  assert.deepEqual(app.calls, ['createClient', 'connect', ['listen', 8079, '127.0.0.1']]);
 });
 
-it('falls back to all interfaces when SRH_BIND_HOST is blank', async () => {
+it('falls back to loopback when SRH_BIND_HOST is blank', async () => {
   const app = await boot('a'.repeat(64), { SRH_BIND_HOST: '  ' });
   await app.started;
-  assert.deepEqual(app.calls.at(-1), ['listen', 80, '0.0.0.0']);
-});
-
-it('ships a required token and loopback-only host exposure', () => {
-  const compose = readFileSync(new URL('../docker-compose.yml', import.meta.url), 'utf8');
-  const service = compose.slice(compose.indexOf('\n  redis-rest:\n'));
-  assert.match(service, /SRH_TOKEN: "\$\{REDIS_TOKEN:\?/);
-  assert.match(service, /ports:\s*\n\s*- "127\.0\.0\.1:8079:80"/);
-  assert.match(compose, /UPSTASH_REDIS_REST_URL: "http:\/\/redis-rest:80"/);
+  assert.deepEqual(app.calls.at(-1), ['listen', 8079, '127.0.0.1']);
 });

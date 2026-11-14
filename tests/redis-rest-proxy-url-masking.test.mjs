@@ -1,4 +1,4 @@
-// docker/redis-rest-proxy.mjs connects to Redis (and calls server.listen) as a
+// scripts/local/redis-rest-proxy.mjs connects to Redis (and calls server.listen) as a
 // top-level side effect on import, so it can't be required directly in a unit
 // test — same constraint as scripts/ais-relay.cjs (see
 // relay-boot-seed-freshness-guard.test.mjs). Extract maskRedisUrl's real
@@ -10,7 +10,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const proxySrc = readFileSync(resolve(here, '../docker/redis-rest-proxy.mjs'), 'utf8');
+const proxySrc = readFileSync(resolve(here, '../scripts/local/redis-rest-proxy.mjs'), 'utf8');
 
 const helperSrc = proxySrc.match(/function maskRedisUrl\([\s\S]*?\n\}/)?.[0];
 
@@ -21,7 +21,7 @@ function buildMaskRedisUrl() {
 
 describe('maskRedisUrl (redis-rest-proxy)', () => {
   it('is defined in redis-rest-proxy.mjs', () => {
-    assert.ok(helperSrc, 'maskRedisUrl not found in docker/redis-rest-proxy.mjs');
+    assert.ok(helperSrc, 'maskRedisUrl not found in scripts/local/redis-rest-proxy.mjs');
   });
 
   it('redacts the password from a SRH_CONNECTION_STRING-shaped URL', () => {

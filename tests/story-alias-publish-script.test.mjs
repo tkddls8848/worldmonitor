@@ -120,7 +120,7 @@ describe('story alias fenced publish script', () => {
 
   it('keeps the proxy allowlist copy byte-identical to the shared script', () => {
     const here = dirname(fileURLToPath(import.meta.url));
-    const proxy = readFileSync(resolve(here, '../docker/redis-rest-proxy.mjs'), 'utf8');
+    const proxy = readFileSync(resolve(here, '../scripts/local/redis-rest-proxy.mjs'), 'utf8');
     const block = proxy.match(/const STORY_ALIAS_PUBLISH_SCRIPT = (\[[\s\S]*?\])\.join\('\\n'\);/);
     assert.ok(block, 'the proxy must carry a pinned story-alias script copy');
     const proxyScript = (new Function(`return ${block[1]};`)()).join('\n');

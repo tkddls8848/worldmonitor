@@ -49,7 +49,7 @@ import { createTenderReceipt, writeTenderReceipt } from '../scripts/_global-tend
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '..');
-const proxyPath = resolve(repoRoot, 'docker/redis-rest-proxy.mjs');
+const proxyPath = resolve(repoRoot, 'scripts/local/redis-rest-proxy.mjs');
 const proxySrc = readFileSync(proxyPath, 'utf8');
 
 // Pull the real gate plus everything it closes over. Each piece is asserted
@@ -57,7 +57,7 @@ const proxySrc = readFileSync(proxyPath, 'utf8');
 // silently degrading into "nothing is allowed" or "nothing is emitted".
 function extract(pattern, label) {
   const hit = proxySrc.match(pattern)?.[0];
-  assert.ok(hit, `${label} not found in docker/redis-rest-proxy.mjs`);
+  assert.ok(hit, `${label} not found in scripts/local/redis-rest-proxy.mjs`);
   return hit;
 }
 

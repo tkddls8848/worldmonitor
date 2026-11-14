@@ -26,9 +26,7 @@ jobs:
     outputs:
       code: ${{ steps.diff.outputs.code }}
       browser: ${{ steps.diff.outputs.browser }}
-      digest: ${{ steps.diff.outputs.digest }}
       validation: ${{ steps.diff.outputs.validation }}
-      umami: ${{ steps.diff.outputs.umami }}
       consumer_prices: ${{ steps.diff.outputs.consumer_prices }}
       desktop_config: ${{ steps.diff.outputs.desktop_config }}
       desktop_rust: ${{ steps.diff.outputs.desktop_rust }}
@@ -68,9 +66,7 @@ jobs:
           emit_all_true() {
             echo "browser=true" >> "$GITHUB_OUTPUT"
             echo "code=true" >> "$GITHUB_OUTPUT"
-            echo "digest=true" >> "$GITHUB_OUTPUT"
             echo "validation=true" >> "$GITHUB_OUTPUT"
-            echo "umami=true" >> "$GITHUB_OUTPUT"
             echo "consumer_prices=true" >> "$GITHUB_OUTPUT"
             echo "desktop_config=true" >> "$GITHUB_OUTPUT"
             echo "desktop_rust=true" >> "$GITHUB_OUTPUT"
@@ -207,21 +203,10 @@ jobs:
             END { print count + 0 }
           ')
           echo "browser=$( [ "$BROWSER" -gt 0 ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
-          # digest-image job: build Dockerfile.digest-notifications when a PR
-          # touches its inputs (scripts/, shared/, server/_shared/, api/, the
-          # Dockerfile itself, or the root package manifest). Catches the
-          # cross-directory-import + native-dep breakage class documented in
-          # tests/dockerfile-digest-notifications-imports.test.mjs.
-          DIGEST=$(printf '%s\n' "$FILES" | awk '
-            /^(scripts\/|shared\/|server\/_shared\/|api\/|\.dockerignore$|Dockerfile\.digest-notifications|package\.json|package-lock\.json)/ { count++ }
-            END { print count + 0 }
-          ')
-          echo "digest=$( [ "$DIGEST" -gt 0 ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
           # resilience-validation-smoke job: run the no-secrets artifact/schema
-          # and script-contract gate when the validation bundle, its Dockerfile,
+          # and script-contract gate when the validation bundle,
           # its committed artifacts, or its focused tests change.
           VALIDATION=$(printf '%s\n' "$FILES" | awk '
-            /^Dockerfile\.seed-bundle-resilience-validation$/ { count++ }
             /^docs\/methodology\/country-resilience-index\/validation\// { count++ }
             /^package\.json$/ || /^package-lock\.json$/ { count++ }
             /^scripts\/benchmark-resilience-external\.mjs$/ { count++ }
@@ -233,21 +218,6 @@ jobs:
             END { print count + 0 }
           ')
           echo "validation=$( [ "$VALIDATION" -gt 0 ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
-          # Umami's database race cannot be covered by the normal no-Docker
-          # unit suite. Run a real PostgreSQL gate only when its managed image,
-          # migration, patch, or focused tests change. Do not trigger on every
-          # Test workflow edit: unit already pins the job shape, and rebuilding
-          # two Umami images is the cost that made this look like a per-PR tax.
-          UMAMI=$(printf '%s\n' "$FILES" | awk '
-            /^\.dockerignore$/ { count++ }
-            /^Dockerfile\.umami$/ { count++ }
-            /^Dockerfile\.umami-retention$/ { count++ }
-            /^docker\/umami\// { count++ }
-            /^scripts\/umami-retention\.sql$/ { count++ }
-            /^tests\/umami-(runtime-remediation\.test|postgres-integration|runtime-write-probe)\.mjs$/ { count++ }
-            END { print count + 0 }
-          ')
-          echo "umami=$( [ "$UMAMI" -gt 0 ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
           # Consumer-prices-core has its own lockfile and Vitest suite, so run
           # it whenever package code, tests, or its CI definition changes.
           CONSUMER_PRICES=$(printf '%s\n' "$FILES" | awk '
@@ -768,47 +738,6 @@ jobs:
       - uses: ./.github/actions/install-redis
       - run: npm ci --prefix consumer-prices-core
       - run: npm test --prefix consumer-prices-core
-
-  umami-postgres:
-    needs: changes
-    if: needs.changes.outputs.umami == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    services:
-      postgres:
-        image: postgres:17-alpine@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193
-        env:
-          POSTGRES_DB: umami_integration
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready --username=postgres --dbname=umami_integration"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: '24'
-      - name: Install PostgreSQL client
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes postgresql-client
-      - name: Build managed Umami images
-        run: |
-          docker build --file Dockerfile.umami --tag worldmonitor/umami:ci .
-          docker build --file Dockerfile.umami-retention --tag worldmonitor/umami-retention:ci .
-      - name: Exercise Umami migration and concurrent upserts
-        env:
-          UMAMI_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/umami_integration
-        run: node tests/umami-postgres-integration.mjs
-      - name: Probe the running image's write path (identify, concurrent upsert, event)
-        env:
-          UMAMI_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/umami_integration
-        run: node tests/umami-runtime-write-probe.mjs
 
   sidecar:
     needs: changes
@@ -1437,24 +1366,3 @@ jobs:
           node-version: '24'
       - uses: ./.github/actions/install-root-deps
       - run: npm run test:resilience-validation-smoke
-
-  digest-image:
-    needs: changes
-    if: needs.changes.outputs.digest == 'true'
-    runs-on: ubuntu-latest
-    # docker build with the warm runner cache typically lands in ~90s.
-    # 20min cap catches base-image-pull stalls, npm-registry flakes, and
-    # native-dep compile failures without letting one bad PR check block
-    # the queue for an hour. The static BFS import test in test:data
-    # remains the load-bearing gate; this job is the integration smoke.
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Build digest-notifications image (smoke)
-        # No push, no tag publish. Catches cross-directory-import breakage
-        # before it reaches main. Pairs with the BFS import test in
-        # tests/dockerfile-digest-notifications-imports.test.mjs — that test
-        # walks the import graph statically; this job actually executes the
-        # COPY+install steps and surfaces native-dep / package-lock issues
-        # the static walk can't see.
-        run: docker build -f Dockerfile.digest-notifications -t wm-digest .

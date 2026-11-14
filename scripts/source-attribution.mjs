@@ -1413,7 +1413,7 @@ function isGeneratedSourcePath(rootDir, relativePath) {
   // gitignored. Scanning them after a Docker/local generate step invents
   // references the committed manifest was never built against (#7435).
   if (/\.generated\./.test(base)) return true;
-  // docker/build-handlers.mjs emits a .js sibling next to each api/**/*.ts
+  // scripts/local/build-handlers.mjs emits a .js sibling next to each api/**/*.ts
   // handler. The TypeScript source is the authority; the bundle just repeats
   // its URLs (and any inlined deps). Restrict the sibling skip to api/:
   // authored JS under scripts/, server/, or src/ stays in the inventory even

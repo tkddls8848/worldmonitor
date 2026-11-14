@@ -5665,7 +5665,7 @@ describe('bounded JSON-list history storage', { concurrency: 1 }, () => {
         ['LTRIM', 'history:key', '0', '15'],
         ['EXPIRE', 'history:key', '600'],
       ]);
-      const proxy = readFileSync(resolve(root, 'docker/redis-rest-proxy.mjs'), 'utf8');
+      const proxy = readFileSync(resolve(root, 'scripts/local/redis-rest-proxy.mjs'), 'utf8');
       assert.match(proxy, /'LREM'/);
     } finally {
       globalThis.fetch = originalFetch;
@@ -5743,7 +5743,7 @@ describe('allowlisted Redis transactions', { concurrency: 1 }, () => {
         ['SET', 'preview:abcdef12:generation:data', '{}', 'EX', 600],
         ['DEL', 'preview:abcdef12:generation:old'],
       ]);
-      const proxy = readFileSync(resolve(root, 'docker/redis-rest-proxy.mjs'), 'utf8');
+      const proxy = readFileSync(resolve(root, 'scripts/local/redis-rest-proxy.mjs'), 'utf8');
       assert.match(proxy, /req\.url === '\/multi-exec'/);
       const allowlist = proxy.match(/const ALLOWED_COMMANDS = new Set\(\[([\s\S]*?)\]\);/)?.[1] ?? '';
       const commands = new Set([...allowlist.matchAll(/'([A-Z]+)'/g)].map((match) => match[1]));

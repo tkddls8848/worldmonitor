@@ -1,4 +1,4 @@
-// #7099 — docker/redis-rest-proxy.mjs capped request bodies at 1MB and answered
+// #7099 — scripts/local/redis-rest-proxy.mjs capped request bodies at 1MB and answered
 // an over-cap body with `req.destroy()` and NO HTTP response. Two failures in one:
 //
 //   1. Every stock seeder may publish up to MAX_PAYLOAD_BYTES (5MB, see
@@ -29,7 +29,7 @@ import { fileURLToPath } from 'node:url';
 import { MAX_PAYLOAD_BYTES } from '../scripts/_seed-utils.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const proxySrc = readFileSync(resolve(here, '../docker/redis-rest-proxy.mjs'), 'utf8');
+const proxySrc = readFileSync(resolve(here, '../scripts/local/redis-rest-proxy.mjs'), 'utf8');
 
 // Comments are stripped only for the wiring assertions, so a commented-out call
 // site can never satisfy a "this is actually wired up" check. BOTH forms must go:
@@ -85,7 +85,7 @@ const BODY_ROUTES = ['/', '/pipeline', '/multi-exec'];
 function startProbeServer({ limit, drainLimit, env } = {}) {
   const helpers = buildHelpers(env);
   // `useModuleDefaults` calls readBody(req) with NO size arguments, exactly as
-  // docker/redis-rest-proxy.mjs's handlers do. Tests that inject limit/drainLimit
+  // scripts/local/redis-rest-proxy.mjs's handlers do. Tests that inject limit/drainLimit
   // run fast but never execute the binding between the module constants and
   // runtime behaviour — so a one-line change to either constant could reintroduce
   // #7099 for every over-cap body while the suite stayed green.
@@ -188,7 +188,7 @@ function seedCommandBody(payloadBytes) {
 describe('redis-rest proxy body limit (#7099)', () => {
   it('exposes every body-limit helper the tests drive', () => {
     for (const [name, src] of Object.entries(sources)) {
-      assert.ok(src, `${name} not found in docker/redis-rest-proxy.mjs`);
+      assert.ok(src, `${name} not found in scripts/local/redis-rest-proxy.mjs`);
     }
   });
 

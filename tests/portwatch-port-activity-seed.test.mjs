@@ -17,7 +17,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
 
 const bundleSrc = readFileSync(resolve(root, 'scripts/seed-bundle-portwatch-port-activity.mjs'), 'utf-8');
-const dockerfileSrc = readFileSync(resolve(root, 'Dockerfile.seed-bundle-portwatch-port-activity'), 'utf-8');
 
 // ── deployment wiring ────────────────────────────────────────────────────────
 //
@@ -28,15 +27,6 @@ const dockerfileSrc = readFileSync(resolve(root, 'Dockerfile.seed-bundle-portwat
 // else. Seeder behaviour is covered by the runtime sections below.
 
 describe('standalone Railway cron service', () => {
-  it('starts the dedicated bundle from the image entrypoint', () => {
-    assert.match(dockerfileSrc, /CMD\s*\["node",\s*"scripts\/seed-bundle-portwatch-port-activity\.mjs"\]/);
-    assert.match(bundleSrc, /runBundle\('portwatch-port-activity'/);
-  });
-
-  it('ships the runtime directories the bundle imports from', () => {
-    assert.match(dockerfileSrc, /COPY\s+scripts\/\s+\.\/scripts\//);
-    assert.match(dockerfileSrc, /COPY\s+shared\/\s+\.\/shared\//);
-  });
 
   it('declares the 12-hour recovery cadence and its required credentials', () => {
     const registry = JSON.parse(readFileSync(resolve(root, 'scripts/railway-services.json'), 'utf8'));

@@ -6,7 +6,7 @@
  *   1. TypeScript handlers (api/**\/*.ts) → bundled .js at same path
  *   2. Plain JS handlers (api/*.js root level) → bundled in-place to inline npm deps
  *
- * Run: node docker/build-handlers.mjs
+ * Run: node scripts/local/build-handlers.mjs
  */
 
 import { build } from 'esbuild';
@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const projectRoot = path.resolve(__dirname, '..');
+const projectRoot = path.resolve(__dirname, '../..');
 const apiRoot = path.join(projectRoot, 'api');
 
 // ── Pass 1: TypeScript handlers in subdirectories ─────────────────────────

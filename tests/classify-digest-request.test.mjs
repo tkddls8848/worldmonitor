@@ -35,7 +35,6 @@ const {
 } = require('../scripts/lib/classify-digest-request.cjs');
 
 const relaySrc = readFileSync(resolve(__dirname, '..', 'scripts', 'ais-relay.cjs'), 'utf8');
-const dockerfileSrc = readFileSync(resolve(__dirname, '..', 'Dockerfile.relay'), 'utf8');
 
 function classifyFnSrc() {
   const start = relaySrc.indexOf('async function seedClassifyForVariant');
@@ -167,12 +166,5 @@ describe('ais-relay Classify wiring (#7437)', () => {
     assert.match(relaySrc, /shouldWriteClassifySeedMeta\(\{ fetchOk, fetchFailed \}\)/);
     assert.match(classifyFn, /classifyDigestRetryDecision\(/);
     assert.match(classifyFn, /CLASSIFY_DIGEST_RETRY_DELAYS_MS\.length \+ 1/);
-  });
-
-  it('copies the helper into the relay image next to digest-stale-gate.cjs', () => {
-    assert.match(
-      dockerfileSrc,
-      /COPY scripts\/lib\/classify-digest-request\.cjs \.\/scripts\/lib\/classify-digest-request\.cjs/,
-    );
   });
 });

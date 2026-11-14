@@ -415,7 +415,7 @@ describe('country panel admission and work ceiling, real Lua', () => {
     assert.equal(reserve({ script: PANEL_REQUEST_READ_SCRIPT, keys: [marker, reads], argv: [64, 300, Number(expires) + 1], initial: { [marker]: expires } }).status, -1);
   });
   it('the self-hosted proxy allows the exact executed scripts', () => {
-    const source = readFileSync(new URL('../docker/redis-rest-proxy.mjs', import.meta.url), 'utf8');
+    const source = readFileSync(new URL('../scripts/local/redis-rest-proxy.mjs', import.meta.url), 'utf8');
     const start = source.indexOf('const MCP_QUOTA_RESERVE_SCRIPT =');
     const end = source.indexOf('const ALLOWED_EVAL_SCRIPTS', start);
     const pinned = runInNewContext(`${source.slice(start, end)}; ({PANEL_REQUEST_READ_SCRIPT, PANEL_REQUEST_RESERVE_SCRIPT})`);

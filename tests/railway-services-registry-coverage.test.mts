@@ -22,7 +22,7 @@
 
 import { strict as assert } from 'node:assert';
 import { describe, it } from 'node:test';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -31,7 +31,7 @@ const repoRoot = resolve(__dirname, '..');
 
 interface RailwayServiceEntry {
   entry: string;
-  deployMode: 'nixpacks-root-scripts' | 'nixpacks-root-repo' | 'dockerfile';
+  deployMode: 'nixpacks-root-scripts' | 'nixpacks-root-repo' | 'dockerfile' | 'local-process';
   dockerfile?: string;
   service: string;
   startCommand?: string;
@@ -74,42 +74,6 @@ const RUNBOOK_SERVICE_ROW_RE = /^\|\s*seed-[a-z0-9-]+\s*\|\s*`node\s+(scripts\/[
 const SCRIPT_HEADER_SERVICE_RE = /^\s*\/\/\s*-\s*Service name:\s*([a-z0-9-]+)\s*$/m;
 
 describe('Railway service registry coverage', () => {
-  it('pins the bootstrap publisher deployment contract', () => {
-    const publisher = registry.find(
-      (entry) => entry.entry === 'scripts/publish-bootstrap-tiers.mjs',
-    );
-
-    assert.ok(publisher, 'bootstrap publisher must be registered as a Railway service');
-    assert.equal(publisher.deployMode, 'dockerfile');
-    assert.equal(publisher.dockerfile, 'Dockerfile.publish-bootstrap-tiers');
-    const publisherDockerfile = readFileSync(
-      resolve(repoRoot, publisher.dockerfile),
-      'utf8',
-    );
-    assert.match(publisherDockerfile, /^COPY scripts\/ \.\/scripts\/$/m);
-    assert.match(publisherDockerfile, /^COPY shared\/ \.\/shared\/$/m);
-    assert.match(
-      publisherDockerfile,
-      /^CMD \["node", "scripts\/publish-bootstrap-tiers\.mjs", "--loop"\]$/m,
-    );
-    assert.equal(publisher.service, 'publish-bootstrap-tiers');
-    assert.equal(publisher.startCommand, 'node scripts/publish-bootstrap-tiers.mjs --loop');
-    assert.deepEqual(publisher.requiredEnv, [
-      'UPSTASH_REDIS_REST_URL',
-      'UPSTASH_REDIS_REST_TOKEN',
-      'IRAN_EVENTS_ENABLED',
-      'R2_ACCOUNT_ID',
-      'R2_BOOTSTRAP_BUCKET',
-      'R2_BOOTSTRAP_ACCESS_KEY_ID',
-      'R2_BOOTSTRAP_SECRET_ACCESS_KEY',
-    ]);
-    assert.deepEqual(
-      publisher.watchPatterns,
-      [],
-      'empty watch paths intentionally rebuild the publisher for any repository change',
-    );
-    assert.equal(publisher.cronSchedule, null, 'publisher must be always-on, never a Railway cron');
-  });
 
   it('required environment declarations use canonical unique variable names', () => {
     for (const entry of registry) {
@@ -203,37 +167,6 @@ describe('Railway service registry coverage', () => {
       !requiredNames.includes('HAPI_PROXY_URL'),
       'seed-conflict-intel must not report a removed HAPI proxy route as a Railway dependency',
     );
-  });
-
-  it('every Dockerfile.* CMD has a matching registry entry', () => {
-    const dockerfiles = readdirSync(repoRoot)
-      .filter((f) => f.startsWith('Dockerfile.'))
-      .sort();
-
-    const missing: string[] = [];
-    for (const df of dockerfiles) {
-      const src = readFileSync(resolve(repoRoot, df), 'utf8');
-      const m = src.match(DOCKERFILE_CMD_RE);
-      if (!m) continue; // Dockerfile without a scripts/ CMD (e.g., relay multi-stage doesn't apply)
-      const entry = m[1]!;
-      const registered = dockerfileMap.get(df);
-      if (registered !== entry) {
-        missing.push(
-          `${df} runs '${entry}' but registry has ` +
-            (registered ? `'${registered}' for ${df}` : `no entry for ${df}`),
-        );
-      }
-    }
-
-    if (missing.length > 0) {
-      assert.fail(
-        `Dockerfile CMD lines drift from scripts/railway-services.json:\n` +
-          missing.map((m) => `  - ${m}`).join('\n') +
-          `\n\nEither add the missing entry to the registry (deployMode: ` +
-          `"dockerfile", dockerfile: "<Dockerfile.*>") or update the CMD ` +
-          `to match the registered script.`,
-      );
-    }
   });
 
   it('every runbook Railway command references a registered script', () => {
@@ -372,21 +305,13 @@ describe('Railway service registry coverage', () => {
   });
 });
 
-// The live audit gives an unregistered service a watch-path contract only when
-// its start command is a seeder (`node seed-*`): it must watch scripts/** and
-// shared/**. Any other live service outside the registry keeps whatever
-// patterns were set by hand, and nothing checks them against its imports.
-// notification-relay (`npm run notification-relay`) watched six paths while
-// seventeen files it requires went unwatched, so fixes to those never deployed (#9265).
-describe('Railway fleet registry coverage', () => {
-  it('registers every live non-seeder service', () => {
-    const fleet = JSON.parse(
-      readFileSync(resolve(repoRoot, 'scripts/railway-native-autodeploy-fleet.json'), 'utf8'),
-    ) as { services: { id: string; name: string }[] };
-    const registered = new Set(registry.map((entry) => entry.service));
-    const unregistered = fleet.services
-      .map((service) => service.name)
-      .filter((name) => !name.startsWith('seed-') && !registered.has(name));
-    assert.deepEqual(unregistered, [], 'register these services in scripts/railway-services.json');
+
+describe('personal source registry', () => {
+  it('keeps local source entrypoints without retired image contracts', () => {
+    for (const row of registry) {
+      assert.equal(row.dockerfile, undefined);
+      assert.notEqual(row.deployMode, 'dockerfile');
+      assert.ok(existsSync(resolve(repoRoot, row.entry)), row.entry);
+    }
   });
 });

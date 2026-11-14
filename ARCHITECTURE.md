@@ -68,29 +68,19 @@ World Monitor is a real-time global intelligence dashboard built as a TypeScript
 
 ---
 
-## 2. Deployment Topology
+## 2. Personal runtime topology
 
-| Service | Platform | Role |
-|---------|----------|------|
-| SPA + Edge Functions | Vercel | Static files, API endpoints, middleware (bot filtering, social OG) |
-| CORS Preflight Worker | Cloudflare | Edge CORS for `api.worldmonitor.app` — short-circuits OPTIONS, stamps CORS headers on responses |
-| AIS Relay | Railway | WebSocket proxy (AIS stream), seed loops (market, aviation, GPSJAM, risk scores, UCDP, positive events), RSS proxy, OREF polling |
-| Macro Seed Bundle | Railway | Daily SGE physical-premium cohort, bounded histories, physical-divergence read model, health metadata, and transition cooldowns |
-| Resilience Seed Bundle | Railway | Resilience/static/food seeds plus the daily five-factor scorecard cohort and read-model publisher |
-| Consumer Prices | Railway | Containerized price scrapers (Playwright, per-country baskets) + Redis publisher for the consumer-prices dataset |
-| Redis | Upstash | Cache layer with stampede protection, seed-meta freshness tracking, rate limiting |
-| Convex | Convex Cloud | Billing/entitlements (Dodo), user state and API keys, broadcast/email, contact + waitlist forms, historical intelligence memory (vector search) |
-| Documentation | Mintlify | Public docs, proxied through Vercel at `/docs` |
-| Desktop App | Tauri 2.x | macOS (ARM64, x64), Windows (x64), Linux (x64, ARM64) with bundled Node.js sidecar |
-| Container Image | GHCR | Multi-arch Docker image (nginx serving built SPA, proxies API to upstream) |
+| Process | Role |
+|---------|------|
+| Node.js personal server | Password-protected static dashboard and loopback API |
+| Local data collectors | Fetch enabled providers using the operator's credentials |
+| Local persistent data store | Preserve source datasets, timestamps and analysis history |
+| Optional HTTPS proxy | Private external access to the same personal server |
 
-**Source files**: `vercel.json`, `docker/Dockerfile`, `scripts/ais-relay.cjs`, `consumer-prices-core/Dockerfile`, `workers/api-cors-preflight/wrangler.toml`, `convex/schema.ts`, `src-tauri/tauri.conf.json`
-
-**Cloudflare zone config (dashboard-managed, NOT in this repo):** the apex `worldmonitor.app` → `www` 301 is a Cloudflare Dynamic Redirect rule ("apex to www (exclude agent-discoverable paths)") whose exemption list is load-bearing: `/.well-known/*`, `/robots.txt`, `/auth.md`, `/security.txt`, `/mcp`, `/mcp/*`, `/oauth/*`, and `/agent/auth` are served on the apex, never redirected. Dropping the `/mcp*` exemptions breaks every apex-URL MCP client; dropping `/oauth/*` re-breaks OAuth dynamic client registration — a redirected POST becomes a GET and dies with 405 (issue #4938); dropping `/auth.md` breaks the `agent_auth.skill` link, which readiness scanners require to equal `<issuer>/auth.md`. When editing the rule, mind expression precedence: `and` binds tighter than `or`, so a new exemption must be added as its own `or` term **inside** the `not (…)` group (appending `and not …` after the last term is a silent no-op). `mcp-live-smoke.yml` probes the MCP/OAuth members of this list (`/mcp`, `/.well-known/oauth-authorization-server`, its `agent_auth.skill` `/auth.md`, and the OAuth endpoints it declares) every 15 minutes and fails on the redirect fingerprint; the `robots.txt` / `security.txt` exemptions are crawler-facing and have no automated probe.
-
-**Cloudflare cache rules (zone-side, one of them generated here):** the zone's cache phase carries a blanket `Bypass cache - WWW documents` rule that makes every extensionless/HTML path on `www` ineligible for the edge cache. A cache rule outranks origin cache headers, so a correct `CDN-Cache-Control` on a document route buys nothing on its own — that is why the crawlable corpus answered `cf-cache-status: DYNAMIC` on every route for months while `tests/deploy-config.test.mjs` stayed green (issue #7659). Cloudflare evaluates matching cache rules in order and the last one to set a field wins, so eligibility is restored by *appending* a later rule, `WWW corpus HTML …`, which claims the `CONTENT_CORPUS_PREFIXES` families, since #7747 the blog, the Mintlify-proxied docs and the root agent text files (`EDGE_CACHED_FAMILIES` / `AGENT_TEXT_FILES`), and since #7804 the entry documents `/` and `/dashboard` (`ENTRY_DOCUMENTS`) — admitting an HTML document only for requests that want the HTML representation (no RSC headers, no markdown/plain media type in any `Accept` value, and on `/` none of the AI User-Agents `middleware.ts` routes to `/home.md`), because those URLs negotiate on request headers Cloudflare cannot key on; `.md`/`.txt`/`.xml` files are single-representation and exempt. The dashboard-managed `WWW entry HTML …` rule that used to cover `/` and `/dashboard` with no such guard sat one position earlier and, as the last matching writer, re-admitted every request the guard declined (#7804); it is listed in `RETIRED_CACHE_RULES`, reported by `--check` as drift wherever it sits, and deleted by `--apply` once the claim has landed. The rule is generated from that surface model by `scripts/cloudflare-cache-rule.mjs` (`--print` / `--check` / `--apply`) so it cannot drift from the vercel.json header rules it mirrors; `tests/cloudflare-cache-rule.test.mjs` pins its shape offline and `--check` compares it against the live zone.
-
----
+Container images, Compose, nginx packaging and supervisor configuration are removed.
+The remaining legacy data readers still require the local Redis compatibility adapter;
+it is source-data storage, not permission to reconnect a shared hosted cache.
+Source-only collector metadata lives in `scripts/railway-services.json` while its local scheduler replacement is developed.
 
 ## 3. Frontend Architecture
 
@@ -434,7 +424,6 @@ Runs before every `git push`:
 | `security-audit.yml` | PR, push to main, daily cron, manual | Audit-specific sparse checkouts preserve each workspace's npm configuration for production lockfile audits, including Railway scripts and the Zapier integration, plus RustSec Cargo.lock advisories; fixable Rust findings block, dated decisions/no-fix findings remain visible, and daily sweeps require database availability |
 | `codeql.yml` | Daily cron (03:23 UTC, all six languages), manual; not on PRs or pushes | Advanced CodeQL scans; init and analyze share one release pin and Dependabot update group. Skips only the generated `vendor/vercel-og/dist` bundle (`paths-ignore`). Findings reach Code scanning when the next daily scan after a change lands on main completes. Default-branch runs then delete all but the newest overlay-base cache per job and language. Requires the default-setup handover in CONTRIBUTING.md |
 | `analytics-collector-monitor.yml` | 15-minute cron, manual | Probes the self-hosted Umami collector directly (heartbeat, tracker script, ingest route) and fails when events are being dropped — Railway reported a green deployment through the 4-day #5565 blackout, so deployment status is not trusted here |
-| `umami-storage-monitor.yml` | 15-minute cron, manual | Reads the Umami Postgres Railway volume and the `umami-retention` deployment history without mutation, carries a bounded history between runs as an artifact, and fails on capacity or projected days-to-full thresholds, or when the retention runner's newest deployment that ran is `CRASHED`. Installs the pinned Railway CLI through `scripts/install-railway-cli.mjs`, which retries a failed binary download from GitHub releases twice. |
 | `sentry-resolve-pin-audit.yml` | Daily cron, manual | Read-only audit of resolved Sentry issues (#7838): fails when a resolution carries an `inRelease`, `inNextRelease` or `inCommit` pin instead of a plain resolve. The GitHub integration adds such a pin whenever a commit body says `Fixes WORLDMONITOR-XX`, and browser events all carry a static semver release, so a pinned issue can never reopen and reads resolved forever while the bug keeps firing. It reports only the short ID, permalink and pin value, never the resolver identity Sentry attaches alongside the pin |
 | `ci-health-scan.yml` | Weekly cron (Monday 06:23 UTC), manual | Scans Test, Typecheck, Lint Code and Proto Generation Check (`scripts/check-ci-health.mjs`) for four deterministic findings: a job that failed then passed on a re-run (flaky), a job cancelled on `main` after 10+ minutes in any attempt (timeout), a workflow's two newest decided `main` runs failing (on a corroborated run listing), and a job whose median on successful `main` runs rose 20% and 30s+ week over week (naming any steps new that week). Each finding is one rolling issue titled `CI health (<kind>): <workflow> / <job>`, updated while open and never closed automatically; only issues opened by `github-actions[bot]` are rewritten, and workflow/job names are reduced to plain labels because fork PR runs control them. Read-only apart from issue writes |
 | `perf-style-layout-budget.yml` | Twice-daily cron, manual (URL + budget inputs) | The #4536 forced-reflow gate the desktop main-thread baseline named but nothing enforced: captures `/dashboard` with the Playwright harness and fails when the `styleLayout` share of attributed main-thread self-time exceeds budget. Gates the *share*, not absolute ms, and runs scheduled rather than per-PR because lab absolutes are host-contention contaminated (KTD1) while the decomposition is stable. A report that measured nothing returns `unmeasured`, never a pass |
@@ -455,13 +444,7 @@ Runs before every `git push`:
 | `mirror-claude-plugin.yml` | Push to main (`claude-plugin/**`, this workflow), manual | Copies `claude-plugin/` to `koala73/worldmonitor-plugins`, the repository the Claude directory tracks (its validator rejects this repository's size); pushes with the `PLUGINS_MIRROR_DEPLOY_KEY` write deploy key and skips when the mirror already matches |
 | `test-linux-app.yml` | Twice-weekly schedule (Mon/Thu 05:23 UTC), manual | Desktop Canary (Linux): installed-app build + launch, hard-fails on crashed app, unreachable sidecar, or blank render (#5902). The blank-render gate counts unique screenshot colors with `identify -format %k`, because `identify -verbose` omits `Colors:` above 1024 colors (#10008). Builds with the same pinned Rust release as `build-desktop.yml`, and prefetches the AppImage tools the same way, so a GitHub download outage no longer fails the bundle step (run 42567226797) |
 
-The Railway `umami` runtime is built from `Dockerfile.umami`, which pins the
-upstream v3.2.0 release and applies the reviewed session-data upsert fix.
-The separate `umami-retention` cron uses `Dockerfile.umami-retention` and the
-bounded SQL contract. The old collector is drained to zero before the patched
-image runs its schema migration as a monitored one-off; schema verification,
-patched-runtime write acceptance, and retention are independent operational
-gates.
+Personal builds do not build or publish container images. The Test workflow no longer runs the digest-image or Umami image/PostgreSQL jobs; data-worker source checks remain.
 
 **Source files**: `.github/workflows/`, `.husky/pre-push`. The workflow list is CI-checked against `.github/workflows/*.yml` by `npm run docs:check` — a new workflow file must be added to this table.
 
@@ -476,10 +459,9 @@ gates.
 │   └── <domain>/           Domain endpoints (aviation/, climate/, conflict/, ...)
 ├── blog-site/              Static blog (built into public/blog/)
 ├── cli/                    Official `worldmonitor` npm CLI (zero-dep ESM, MCP-first; published via cli-v* tag)
-├── consumer-prices-core/   Consumer-price collection service (Playwright scrapers, per-country baskets; Railway/Docker)
+├── consumer-prices-core/   Consumer-price collection service (Playwright scrapers, per-country baskets; local process)
 ├── convex/                 Convex backend (billing/entitlements, user state, broadcast, forms, intel history)
 ├── data/                   Static data (telegram channels, X accounts, OREF threat translations, forecast cohorts)
-├── docker/                 Dockerfile + nginx config for Railway
 ├── docs/                   Mintlify documentation site
 ├── e2e/                    Playwright E2E specs
 ├── pro-test/               Standalone Pro QA app (separate package)

@@ -117,7 +117,6 @@ describe('market quote refresh resilience', () => {
   it('wires last-good merging into both market publishers', () => {
     const relay = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
     const standalone = readFileSync(new URL('../scripts/seed-market-quotes.mjs', import.meta.url), 'utf8');
-    const compose = readFileSync(new URL('../docker-compose.yml', import.meta.url), 'utf8');
     const envExample = readFileSync(new URL('../.env.example', import.meta.url), 'utf8');
 
     assert.match(relay, /previousPayloadPromise = envelopeRead\('market:stocks-bootstrap:v1'\)/);
@@ -127,7 +126,6 @@ describe('market quote refresh resilience', () => {
     assert.match(standalone, /resolveMergedQuotesAsOf\(quotes, mergedQuotes, previousPayload\?\.asOf, fetchedAt\)/);
     assert.match(standalone, /previousPayloadPromise = readSeedSnapshot\(CANONICAL_KEY\)/);
     assert.match(standalone, /mergeLastGoodQuotes\(MARKET_SYMBOLS, quotes, previousQuotes\)/);
-    assert.match(compose, /MARKET_YAHOO_REFRESH_INTERVAL_MS:/);
     assert.match(envExample, /MARKET_YAHOO_REFRESH_INTERVAL_MS=/);
   });
 });

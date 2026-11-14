@@ -416,7 +416,7 @@ if (RELAY_SHARED_SECRET && ALLOW_UNAUTHENTICATED_RELAY) {
 const UPSTASH_REDIS_REST_URL = process.env.UPSTASH_REDIS_REST_URL || '';
 const UPSTASH_REDIS_REST_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || '';
 // Self-hosted deployments front Redis with a plain-http REST proxy
-// (docker/redis-rest-proxy.mjs) reachable only inside the compose network —
+// (scripts/local/redis-rest-proxy.mjs) reachable only inside the compose network —
 // there's no TLS to terminate and no public exposure, so the https-only
 // requirement below (which exists to stop a *real* Upstash bearer token from
 // transiting the public internet in cleartext) doesn't apply there. This

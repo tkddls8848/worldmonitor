@@ -30,7 +30,7 @@ import { readFileSync } from 'node:fs';
 
 import { STORY_ALIAS_PUBLISH_SCRIPT } from '../shared/story-alias-publish-script.mjs';
 
-const source = readFileSync(new URL('../docker/redis-rest-proxy.mjs', import.meta.url), 'utf8')
+const source = readFileSync(new URL('../scripts/local/redis-rest-proxy.mjs', import.meta.url), 'utf8')
   .replace(/^#!.*\n/, '')
   .replace(/^import .*;\n/gm, '');
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
@@ -184,7 +184,7 @@ describe('redis-rest-proxy POST /multi-exec', () => {
 
     assert.ok(called.length > 0, 'found no multi.<method>() call sites — the scan broke, not the proxy');
     assert.deepEqual(called, [...MULTI_V4_METHODS_USED].sort(),
-      `docker/redis-rest-proxy.mjs calls multi.${called.join('(), multi.')}() on the transaction chain; `
+      `scripts/local/redis-rest-proxy.mjs calls multi.${called.join('(), multi.')}() on the transaction chain; `
       + `node-redis v4 provides ${[...MULTI_V4_METHODS_USED].join(', ')} (sendCommand is a CLIENT method — #8265)`);
 
     // And the fixture must expose exactly that surface: a stub richer than the

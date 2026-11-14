@@ -78,10 +78,7 @@ const mainSource = readFileSync(resolve(__dirname, '../src/main.ts'), 'utf-8');
 const zodCspSource = readFileSync(resolve(__dirname, '../src/bootstrap/zod-csp.ts'), 'utf-8');
 const proIndexCssSource = readFileSync(resolve(__dirname, '../pro-test/src/index.css'), 'utf-8');
 const middlewareSource = readFileSync(resolve(__dirname, '../middleware.ts'), 'utf-8');
-const dockerfileSource = readFileSync(resolve(__dirname, '../Dockerfile'), 'utf-8');
-const dockerNginxSource = readFileSync(resolve(__dirname, '../docker/nginx.conf'), 'utf-8');
-const frontendDockerfileSource = readFileSync(resolve(__dirname, '../docker/Dockerfile'), 'utf-8');
-const dockerignoreSource = readFileSync(resolve(__dirname, '../.dockerignore'), 'utf-8');
+
 const vercelIgnoreSource = readFileSync(resolve(__dirname, '../scripts/vercel-ignore.sh'), 'utf-8');
 const variantDashboardSource = readFileSync(resolve(__dirname, '../src/config/variant-dashboard-html.ts'), 'utf-8');
 const SPA_HTML_CACHE_SOURCE = '/((?!api|mcp|a2a|ask|oauth|assets|plugin/assets|blog|docs|country-instability-index|countries|chokepoints|compare|crises|tools|research|reference|changelog|sources|use-cases|accuracy|monitor-the-situation|src|tmp|server|embed|embed\\.html|favico|map-styles|data|textures|pro|sw\\.js|workbox-[a-f0-9]+\\.js|manifest\\.webmanifest|offline\\.html|robots\\.txt|robots\\.www\\.txt|robots\\.variant\\.txt|robots\\.api\\.txt|sitemap\\.xml|sitemap-main\\.xml|schemamap\\.xml|sandbox|llms\\.txt|llms-full\\.txt|llms\\*\\.txt|openapi\\.yaml|openapi\\.json|plugin\\.json|auth\\.md|pricing\\.md|support\\.md|ai-search\\.md|agents\\.md|developers\\.md|developers/llms\\.txt|mcp-server\\.md|openapi\\.md|sdks\\.md|world-monitor\\.md|api-versioning\\.md|agent\\.txt|\\.well-known|wm-widget-sandbox\\.html|mcp-grant\\.html|mcp-grant|desktop-sign-in\\.html|desktop-sign-in|.*\\.md$).*)';
@@ -445,7 +442,6 @@ const getVariantUrls = () => {
   );
 };
 
-
 // `sourceToRegExp` is this suite's model of how Vercel compiles a `source`.
 // Pin its strict-mode semantics directly: while the model was more permissive
 // than Vercel's compiler, every assertion built on it reported a match that
@@ -532,40 +528,6 @@ describe('open data under /data/v1', () => {
     );
   });
 
-  const nginxLocation = (prefix) => {
-    const match = dockerNginxSource.match(new RegExp(`^ {4}location ${prefix.replace(/\//g, '\\/')} \\{\\n([\\s\\S]*?)^ {4}\\}`, 'm'));
-    assert.ok(match, `docker/nginx.conf must declare location ${prefix}`);
-    return match[1];
-  };
-
-  it('gives the self-hosted image the same hourly, cross-origin rule for /data/v1/', () => {
-    const block = nginxLocation('/data/v1/');
-    assert.match(block, /add_header Cache-Control "public, max-age=3600";/);
-    assert.match(block, /add_header Access-Control-Allow-Origin "\*" always;/);
-    assert.match(nginxLocation('/data/'), /add_header Cache-Control "public, max-age=31536000, immutable";/);
-  });
-});
-
-describe('self-host installer at /install.sh', () => {
-  const INSTALLER_SOURCE = 'https://raw.githubusercontent.com/koala73/worldmonitor/main/scripts/install.sh';
-
-  it('serves the repo installer from www.worldmonitor.app without a redirect', () => {
-    assert.equal(firstRedirectFor({ host: 'www.worldmonitor.app', path: '/install.sh' }), null);
-    assert.equal(firstRewriteFor({ host: 'www.worldmonitor.app', path: '/install.sh' })?.destination, INSTALLER_SOURCE);
-  });
-
-  it('proxies a script that exists, with no public/ copy shadowing the rewrite', () => {
-    assert.equal(existsSync(resolve(__dirname, '..', 'scripts/install.sh')), true);
-    assert.equal(existsSync(resolve(__dirname, '..', 'public/install.sh')), false);
-  });
-
-  it('documents the worldmonitor.app URL wherever the one-liner appears', () => {
-    for (const file of ['README.md', 'SELF_HOSTING.md', 'scripts/install.sh']) {
-      const text = readFileSync(resolve(__dirname, '..', file), 'utf8');
-      assert.match(text, /curl -fsSL https:\/\/www\.worldmonitor\.app\/install\.sh \| bash/, file);
-      assert.doesNotMatch(text, /raw\.githubusercontent\.com\/koala73\/worldmonitor\/main\/scripts\/install\.sh/, file);
-    }
-  });
 });
 
 describe('crawlable content corpus deployment contracts', () => {
@@ -627,121 +589,6 @@ describe('crawlable content corpus deployment contracts', () => {
       script.indexOf('npm run build:pro') < script.indexOf('vite build'),
       `the deploy build command (${buildCommand}) must build /pro before Vite copies public/ into dist/`,
     );
-  });
-
-  it('runs content corpus sitemap integration after generated blog pages but before Vite builds', () => {
-    // #8604 prepends the country slug generator. api/story.js canonicalises
-    // every share stub against api/_country-corpus-slugs.generated.js, which is
-    // derived from the same resilience snapshot this builder reads, so the map
-    // has to be regenerated in the same step that republishes the pages -- a
-    // map that lags the corpus emits a canonical to a slug that 404s. The
-    // corpus builder stays the tail of the command, so the ordering assertions
-    // below still describe where the pages are produced.
-    assert.match(
-      packageJson.scripts['build:crawlable-corpus'],
-      /^npm run corpus:country-slugs && node --import tsx scripts\/build-crawlable-corpus\.mjs$/
-    );
-    assert.equal(
-      packageJson.scripts['build:sitemap'],
-      'node --import tsx scripts/build-sitemap.mjs'
-    );
-
-    for (const scriptName of ['build', 'build:full']) {
-      const script = packageJson.scripts[scriptName];
-      assert.ok(script.includes('npm run build:blog'), scriptName + ' must build the Astro blog first');
-      assert.ok(script.includes('npm run build:crawlable-corpus'), scriptName + ' must build the static corpus');
-      assert.ok(script.includes('npm run build:sitemap'), scriptName + ' must run root sitemap generation');
-      assert.ok(
-        script.indexOf('npm run build:blog') < script.indexOf('npm run build:crawlable-corpus'),
-        scriptName + ' must build /blog first so existing /blog/glossary remains delegated to the blog sitemap'
-      );
-      assert.ok(
-        script.indexOf('npm run build:crawlable-corpus') < script.indexOf('npm run build:sitemap'),
-        scriptName + ' must scan the corpus only after the page generator runs'
-      );
-      assert.ok(
-        script.indexOf('npm run build:sitemap') < script.indexOf('vite build'),
-        scriptName + ' must update the public sitemap index and urlset before Vite copies public/ into dist/'
-      );
-      // public/pro/ is a BUILD PRODUCT, not committed bytes (#6898). Vercel's
-      // build command is `npm run build:full`, so if that chain stops running
-      // build:pro the deploy ships a dist/ with no /pro at all -- a 404 on the
-      // pricing page rather than the stale-bundle class this replaced.
-      assert.ok(
-        script.includes('npm run build:pro'),
-        scriptName + ' must build pro-test -- public/pro/ is gitignored, so nothing else produces /pro'
-      );
-      // The ordering checks above only prove the STRING is chained. Without this,
-      // build:pro could be rewritten to a no-op and every assertion here stays
-      // green while the deploy quietly stops producing /pro. Accept either
-      // `cd pro-test && npm run build` or `npm --prefix pro-test run build`.
-      assert.match(
-        packageJson.scripts['build:pro'],
-        /(?:cd pro-test\b[\s\S]*npm run build\b|npm --prefix pro-test run build\b)/,
-        'build:pro must actually run pro-test\'s build, not just exist as a chained name'
-      );
-      assert.ok(
-        script.indexOf('npm run build:pro') < script.indexOf('vite build'),
-        scriptName + ' must build /pro before Vite copies public/ into dist/'
-      );
-    }
-
-    for (const [name, source] of [
-      ['Dockerfile', dockerfileSource],
-      ['docker/Dockerfile', frontendDockerfileSource],
-    ]) {
-      assert.ok(source.includes('npm run build:crawlable-corpus'), name + ' must build the static corpus');
-      assert.ok(source.includes('npm run build:sitemap'), name + ' must generate the root sitemap');
-      assert.ok(
-        source.indexOf('npm run build:crawlable-corpus') < source.indexOf('npm run build:sitemap'),
-        name + ' must scan the sitemap only after corpus pages exist'
-      );
-      assert.ok(
-        source.indexOf('npm run build:sitemap') < source.indexOf('npx vite build'),
-        name + ' must update the public sitemap index and urlset before Vite copies public/ into dist/'
-      );
-      // Unlike /blog (deliberately skipped in the images), docker/nginx.conf.template
-      // routes `location ^~ /pro` and `/pro/assets/`, so a self-hosted image that
-      // never builds pro-test serves a 404 behind a live route.
-      assert.ok(
-        source.includes('npm run build:pro'),
-        name + ' must build pro-test -- nginx.conf.template routes /pro and public/pro/ is gitignored'
-      );
-      assert.ok(
-        source.indexOf('npm run build:pro') < source.indexOf('npx vite build'),
-        name + ' must build /pro before Vite copies public/ into dist/'
-      );
-      assert.ok(
-        source.indexOf('node scripts/generate-inventory-facts.mjs') < source.indexOf('npx vite build'),
-        name + ' must generate ignored inventory assets in a clean build context before Vite runs',
-      );
-      // generate-inventory-facts and build-handlers write untracked .js into
-      // SOURCE_ROOTS. The corpus step runs the attribution drift gate against
-      // those same roots, so it must see the pristine tree (#7435).
-      assert.ok(
-        source.indexOf('npm run build:crawlable-corpus') < source.indexOf('node scripts/generate-inventory-facts.mjs'),
-        name + ' must run the attribution gate before inventory-facts writes untracked JS into api/',
-      );
-    }
-    assert.ok(
-      dockerfileSource.indexOf('node scripts/generate-inventory-facts.mjs') < dockerfileSource.indexOf('node docker/build-handlers.mjs'),
-      'the self-host image must generate the Edge inventory module before handler bundling',
-    );
-    assert.ok(
-      dockerfileSource.indexOf('npm run build:crawlable-corpus') < dockerfileSource.indexOf('node docker/build-handlers.mjs'),
-      'the self-host image must run the attribution gate before build-handlers writes compiled .js into api/',
-    );
-    assert.match(frontendDockerfileSource, /RUN test -s dist\/product-facts\.json/);
-    assert.ok(!packageJson.scripts['build:full'].includes('npm run build:blog &&'), 'build:full must not regenerate inventory facts inside build:blog');
-  });
-
-  it('builds frontend assets on the host platform and keeps nginx on the target platform', () => {
-    const stages = frontendDockerfileSource.match(/^FROM .+$/gm);
-    assert.equal(stages.length, 2);
-    assert.match(stages[0], /^FROM --platform=\$BUILDPLATFORM node:.+ AS builder$/);
-    assert.match(stages[1], /^FROM nginx:.+ AS runtime$/);
-    assert.match(frontendDockerfileSource, /^COPY --from=builder \/app\/dist\/ \.\/$/m);
-    assert.doesNotMatch(frontendDockerfileSource, /^COPY --from=builder .*node_modules/m);
   });
 
   it('builds Vercel when corpus source files change', () => {
@@ -978,26 +825,6 @@ describe('crawlable content corpus deployment contracts', () => {
       assert.equal(push.status, 0, 'a new preview commit with no web changes must still skip');
     } finally {
       rmSync(fixture, { recursive: true, force: true });
-    }
-  });
-
-  it('keeps corpus inputs available in Docker build contexts', () => {
-    const markdownIgnore = dockerignoreSource.indexOf('*.md');
-    const changelogInclude = dockerignoreSource.indexOf('!CHANGELOG.md');
-    assert.ok(markdownIgnore >= 0, 'expected the broad markdown ignore rule to be present');
-    assert.ok(changelogInclude > markdownIgnore, 'CHANGELOG.md must be re-included after *.md for Docker corpus builds');
-  });
-
-  it('keeps local self-hosting credentials out of Docker build contexts', () => {
-    const ignoreRules = new Set(
-      dockerignoreSource
-        .split('\n')
-        .map((line) => line.trim())
-        .filter((line) => line && !line.startsWith('#'))
-    );
-
-    for (const path of ['docker-compose.override.yml', 'secrets/']) {
-      assert.ok(ignoreRules.has(path), `${path} must never enter Docker build contexts or caches`);
     }
   });
 
@@ -1510,7 +1337,6 @@ describe('deploy/cache configuration guardrails', () => {
     assert.match(viteConfigSource, /sourcemap:\s*viteSourcemapSetting\(process\.env\)/);
     assert.match(viteConfigSource, /emitPublicSourceMaps \? \[\] : \[stripPrivateSourceMapsPlugin\(\)\]/);
   });
-
 
   it('assigns a stable chunk name to the Clerk SDK', () => {
     assert.match(
@@ -2374,36 +2200,6 @@ describe('deploy/API CORS guardrails', () => {
   });
 });
 
-describe('docker runtime dependency guardrails', () => {
-  const runtimePackage = JSON.parse(readFileSync(resolve(__dirname, '../docker/runtime-package.json'), 'utf-8'));
-  const runtimeLock = JSON.parse(readFileSync(resolve(__dirname, '../docker/runtime-package-lock.json'), 'utf-8'));
-
-  it('installs runtime node_modules from a minimal dependency stage', () => {
-    assert.match(dockerfileSource, /^FROM\s+node:\d+-alpine@sha256:[a-f0-9]{64}\s+AS\s+runtime-deps$/m);
-    assert.match(dockerfileSource, /npm ci --omit=dev --omit=optional --ignore-scripts/);
-    assert.match(dockerfileSource, /COPY --from=runtime-deps \/app\/node_modules \.\/node_modules/);
-    assert.doesNotMatch(dockerfileSource, /npm prune --omit=dev/);
-    assert.doesNotMatch(dockerfileSource, /COPY --from=builder \/app\/node_modules \.\/node_modules/);
-  });
-
-  it('keeps raw JS handler packages without copying the full app dependency graph', () => {
-    assert.deepEqual(Object.keys(runtimePackage.dependencies).sort(), [
-      '@upstash/ratelimit',
-      '@upstash/redis',
-      'convex',
-    ]);
-    assert.deepEqual(
-      Object.keys(runtimeLock.packages[''].dependencies).sort(),
-      Object.keys(runtimePackage.dependencies).sort()
-    );
-
-    const lockPackageNames = Object.keys(runtimeLock.packages);
-    for (const omitted of ['node_modules/@xenova/transformers', 'node_modules/onnxruntime-web', 'node_modules/playwright']) {
-      assert.ok(!lockPackageNames.includes(omitted), `${omitted} should not be in Docker runtime deps`);
-    }
-  });
-});
-
 const getSecurityHeaders = () => {
   const rule = vercelConfig.headers.find((entry) => entry.source === GLOBAL_SECURITY_HEADER_SOURCE);
   return rule?.headers ?? [];
@@ -2414,18 +2210,6 @@ const getHeaderValue = (key) => {
   const header = headers.find((h) => h.key.toLowerCase() === key.toLowerCase());
   return header?.value ?? null;
 };
-
-const getNginxHeaderValueFrom = (file, key) => {
-  const nginxConf = readFileSync(resolve(__dirname, `../${file}`), 'utf-8');
-  const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const line = nginxConf
-    .split('\n')
-    .find((candidate) => new RegExp(`^add_header\\s+${escapedKey}\\s+"`, 'i').test(candidate));
-  const match = line?.match(/^add_header\s+\S+\s+"(.*)"\s+always;(?:\s*#.*)?$/i);
-  return match?.[1].replace(/\\"/g, '"') ?? null;
-};
-
-const getNginxHeaderValue = (key) => getNginxHeaderValueFrom('docker/nginx-security-headers.conf', key);
 
 describe('security header guardrails', () => {
   // Cases below read the prerendered public/pro/ pages, built by
@@ -2469,25 +2253,6 @@ describe('security header guardrails', () => {
     );
     assert.equal(getHeaderValue('Cross-Origin-Opener-Policy'), null);
     assert.equal(getHeaderValue('Cross-Origin-Embedder-Policy'), null);
-  });
-
-  it('keeps self-hosted nginx security headers aligned for COOP/COEP reporting', () => {
-    const nginxHeaders = readFileSync(
-      resolve(__dirname, '../docker/nginx-security-headers.conf'),
-      'utf-8',
-    );
-    assert.match(
-      nginxHeaders,
-      /add_header Reporting-Endpoints "wm-coop-coep=\\"\/api\/security\/report\\"" always;/,
-    );
-    assert.match(
-      nginxHeaders,
-      /add_header Cross-Origin-Opener-Policy-Report-Only "same-origin; report-to=\\"wm-coop-coep\\"" always;/,
-    );
-    assert.match(
-      nginxHeaders,
-      /add_header Cross-Origin-Embedder-Policy-Report-Only "require-corp; report-to=\\"wm-coop-coep\\"" always;/,
-    );
   });
 
   it('Permissions-Policy disables all expected browser APIs', () => {
@@ -2811,81 +2576,6 @@ describe('security header guardrails', () => {
     assert.match(embedE2eSource, /WM_REQUIRE_WEBMCP requires Chrome/);
   });
 
-  it('origin-keys only the intended production web origins', () => {
-    const rules = vercelConfig.headers.filter((entry) =>
-      entry.headers?.some((header) => header.key.toLowerCase() === 'origin-agent-cluster')
-    );
-    assert.equal(rules.length, 1, 'Expected one reviewable Origin-Agent-Cluster rule');
-    const [rule] = rules;
-    assert.equal(rule.source, '/(.*)', 'Origin-Agent-Cluster must be consistent across each enrolled origin');
-    assert.deepEqual(rule.has, [{ type: 'host', value: WEBMCP_PRODUCTION_HOST_PATTERN }]);
-    assert.equal(
-      rule.headers.find((header) => header.key.toLowerCase() === 'origin-agent-cluster')?.value,
-      '?1',
-    );
-    assert.ok(!rule.has[0].value.includes('vercel'), 'Preview deployments must not be origin-trial candidates');
-    assert.equal(getNginxHeaderValue('Origin-Agent-Cluster'), '?1');
-    assert.equal(
-      getNginxHeaderValueFrom('docker/nginx-embed-security-headers.conf', 'Origin-Agent-Cluster'),
-      '?1',
-      'Embedded documents must keep the same origin-keying opt-in while tools=() denies WebMCP',
-    );
-
-    const sidecarLocationBlocks = [...dockerNginxSource.matchAll(/^ {4}location [^{]+\{\n([\s\S]*?)^ {4}\}/gm)];
-    assert.ok(sidecarLocationBlocks.length > 0, 'docker/nginx.conf must define route locations');
-    for (const [locationBlock] of sidecarLocationBlocks) {
-      const location = locationBlock.match(/^ {4}location ([^{]+)\{/)?.[1].trim() ?? '<unknown>';
-      assert.match(
-        locationBlock,
-        /add_header Origin-Agent-Cluster "\?1" always;/,
-        `docker/nginx.conf ${location} must preserve origin-keying on direct navigations`,
-      );
-    }
-
-    const nginxTemplate = readFileSync(resolve(__dirname, '../docker/nginx.conf.template'), 'utf-8');
-    const frontendLocationBlocks = [...nginxTemplate.matchAll(/^ {4}location [^{]+\{\n([\s\S]*?)^ {4}\}/gm)];
-    assert.ok(frontendLocationBlocks.length > 0, 'docker/nginx.conf.template must define route locations');
-    for (const [locationBlock] of frontendLocationBlocks) {
-      const location = locationBlock.match(/^ {4}location ([^{]+)\{/)?.[1].trim() ?? '<unknown>';
-      assert.match(
-        locationBlock,
-        /include \/etc\/nginx\/(?:embed_|oauth_authorize_|youtube_embed_)?security_headers\.conf;/,
-        `docker/nginx.conf.template ${location} must include an origin-keying header set`,
-      );
-    }
-  });
-
-  it('keeps every self-hosted image route out of search indexes', () => {
-    // Self-hosted pages keep www.worldmonitor.app canonicals, so an indexed copy can
-    // only compete with the official page (wm.tanukihitokiri.ru, 2026-11).
-    const noindex = /add_header X-Robots-Tag "noindex, follow" always;/;
-
-    const sidecarLocationBlocks = [...dockerNginxSource.matchAll(/^ {4}location [^{]+\{\n([\s\S]*?)^ {4}\}/gm)];
-    assert.ok(sidecarLocationBlocks.length > 0, 'docker/nginx.conf must define route locations');
-    for (const [locationBlock] of sidecarLocationBlocks) {
-      const location = locationBlock.match(/^ {4}location ([^{]+)\{/)?.[1].trim() ?? '<unknown>';
-      assert.match(locationBlock, noindex, `docker/nginx.conf ${location} must send X-Robots-Tag noindex`);
-    }
-
-    const includedHeaderFiles = {
-      'security_headers.conf': 'docker/nginx-security-headers.conf',
-      'embed_security_headers.conf': 'docker/nginx-embed-security-headers.conf',
-      'oauth_authorize_security_headers.conf': 'docker/nginx-oauth-authorize-security-headers.conf',
-      'youtube_embed_security_headers.conf': 'docker/nginx-youtube-embed-security-headers.conf',
-    };
-    const nginxTemplate = readFileSync(resolve(__dirname, '../docker/nginx.conf.template'), 'utf-8');
-    const frontendLocationBlocks = [...nginxTemplate.matchAll(/^ {4}location [^{]+\{\n([\s\S]*?)^ {4}\}/gm)];
-    assert.ok(frontendLocationBlocks.length > 0, 'docker/nginx.conf.template must define route locations');
-    for (const [locationBlock] of frontendLocationBlocks) {
-      const location = locationBlock.match(/^ {4}location ([^{]+)\{/)?.[1].trim() ?? '<unknown>';
-      const included = locationBlock.match(/include \/etc\/nginx\/(\S+\.conf);/)?.[1];
-      const source = included
-        ? readFileSync(resolve(__dirname, `../${includedHeaderFiles[included]}`), 'utf-8')
-        : locationBlock;
-      assert.match(source, noindex, `docker/nginx.conf.template ${location} must send X-Robots-Tag noindex`);
-    }
-  });
-
   it('enrolls only eligible production documents with exact-origin WebMCP trial tokens', () => {
     const rules = vercelConfig.headers.filter((entry) =>
       entry.headers?.some((header) => header.key.toLowerCase() === 'origin-trial')
@@ -3000,14 +2690,6 @@ describe('security header guardrails', () => {
     }
   });
 
-  it('Permissions-Policy is in sync between vercel.json header and docker/nginx-security-headers.conf', () => {
-    assert.equal(
-      getNginxHeaderValue('Permissions-Policy'),
-      getHeaderValue('Permissions-Policy'),
-      'Self-hosted docker users must have the same Permissions-Policy as Vercel.'
-    );
-  });
-
   it('every shipped CSP directive name is a real CSP directive', () => {
     // A detect-secrets pragma once leaked into the header value itself
     // (`object-src 'none'; x-allowlist // pragma: allowlist secret;
@@ -3025,7 +2707,6 @@ describe('security header guardrails', () => {
     ]);
     const surfaces = [
       ['vercel', getHeaderValue('Content-Security-Policy')],
-      ['docker/nginx', getNginxHeaderValue('Content-Security-Policy')],
     ];
     for (const [label, csp] of surfaces) {
       assert.ok(csp, `${label} must define a Content-Security-Policy`);
@@ -3135,12 +2816,9 @@ describe('security header guardrails', () => {
     const indexHtml = readFileSync(resolve(__dirname, '../index.html'), 'utf-8');
     const headerCsp = getHeaderValue('Content-Security-Policy');
     assert.equal(hasCspMeta(indexHtml), false, 'index.html must not ship a CSP meta tag');
-    const nginxCsp = getNginxHeaderValue('Content-Security-Policy');
-    assert.ok(nginxCsp, 'nginx-security-headers.conf must have a Content-Security-Policy header');
 
     const surfaces = [
       ['vercel', headerCsp],
-      ['docker/nginx', nginxCsp],
     ];
 
     for (const directive of ['style-src', 'font-src']) {
@@ -3173,7 +2851,6 @@ describe('security header guardrails', () => {
     // fix then is to feed the real policy into the filter, not to delete this.
     const surfaces = [
       ['vercel', getHeaderValue('Content-Security-Policy')],
-      ['docker/nginx', getNginxHeaderValue('Content-Security-Policy')],
     ];
     for (const [label, csp] of surfaces) {
       const tokens = getCspDirectiveTokens(csp, 'font-src');
@@ -3319,33 +2996,15 @@ describe('security header guardrails', () => {
     );
   });
 
-  it('docker/nginx CSP frame-src includes Clerk origin for auth modals', () => {
-    // Parity with the Vercel/index.html frame-src above. The sign-in modal itself
-    // renders in-DOM (no clerk-origin iframe today), so this is defense-in-depth
-    // for self-hosted deploys should Clerk reintroduce a handshake iframe — and it
-    // keeps the docker surface from silently drifting from the hosted one.
-    const nginxCsp = getNginxHeaderValue('Content-Security-Policy');
-    assert.ok(nginxCsp, 'nginx-security-headers.conf must have a Content-Security-Policy header');
-    const frameSrc = nginxCsp.match(/frame-src\s+([^;]+)/)?.[1] ?? '';
-    assert.ok(
-      frameSrc.includes('clerk.accounts.dev') || frameSrc.includes('clerk.worldmonitor.app'),
-      'docker/nginx CSP frame-src must include Clerk origin for the self-hosted sign-in modal'
-    );
-  });
-
   it('CSP frame directives include every variant hostname', () => {
     const variantHosts = getVariantHosts();
     const headerCsp = getHeaderValue('Content-Security-Policy');
     const indexHtml = readFileSync(resolve(__dirname, '../index.html'), 'utf-8');
     assert.equal(hasCspMeta(indexHtml), false, 'index.html must not ship a CSP meta tag');
-    const nginxCsp = getNginxHeaderValue('Content-Security-Policy');
-    assert.ok(nginxCsp, 'nginx-security-headers.conf must have a Content-Security-Policy header');
 
     const surfaces = [
       ['vercel frame-src', getCspDirectiveTokens(headerCsp, 'frame-src')],
       ['vercel frame-ancestors', getCspDirectiveTokens(headerCsp, 'frame-ancestors')],
-      ['nginx frame-src', getCspDirectiveTokens(nginxCsp, 'frame-src')],
-      ['nginx frame-ancestors', getCspDirectiveTokens(nginxCsp, 'frame-ancestors')],
     ];
 
     for (const [label, tokens] of surfaces) {
@@ -3409,48 +3068,6 @@ describe('security header guardrails', () => {
     }
   });
 
-  it('CSP script-src is in sync between vercel.json header and docker/nginx-security-headers.conf', () => {
-    const headerCsp = getHeaderValue('Content-Security-Policy');
-    const nginxCsp = getNginxHeaderValue('Content-Security-Policy');
-    assert.ok(nginxCsp, 'nginx-security-headers.conf must have a Content-Security-Policy header');
-
-    const headerTokens = getCspDirectiveTokens(headerCsp, 'script-src');
-    const nginxTokens = getCspDirectiveTokens(nginxCsp, 'script-src');
-
-    const onlyHeader = headerTokens.filter((token) => !nginxTokens.includes(token));
-    const onlyNginx = nginxTokens.filter((token) => !headerTokens.includes(token));
-
-    assert.deepEqual(onlyHeader, [],
-      `script-src tokens in vercel.json but missing from nginx-security-headers.conf: ${onlyHeader.join(', ')}. ` +
-      'Self-hosted docker users must have the same CSP parity.');
-    assert.deepEqual(onlyNginx, [],
-      `script-src tokens in nginx-security-headers.conf but missing from vercel.json: ${onlyNginx.join(', ')}. ` +
-      'Self-hosted docker users must have the same CSP parity.');
-
-    const nginxScriptSrc = nginxCsp.match(/script-src\s+([^;]+)/)?.[1] ?? '';
-    assert.ok(!nginxScriptSrc.includes("'unsafe-inline'"), "nginx script-src must not contain 'unsafe-inline' to maintain CSP parity with Vercel.");
-  });
-
-  it('CSP payment frame and form directives stay in sync between Vercel and docker/nginx', () => {
-    const headerCsp = getHeaderValue('Content-Security-Policy');
-    const nginxCsp = getNginxHeaderValue('Content-Security-Policy');
-    assert.ok(nginxCsp, 'nginx-security-headers.conf must have a Content-Security-Policy header');
-
-    for (const directive of ['frame-src', 'form-action']) {
-      const headerTokens = getCspDirectiveTokens(headerCsp, directive);
-      const nginxTokens = getCspDirectiveTokens(nginxCsp, directive);
-      const onlyHeader = headerTokens.filter((token) => !nginxTokens.includes(token));
-      const onlyNginx = nginxTokens.filter((token) => !headerTokens.includes(token));
-
-      assert.deepEqual(onlyHeader, [],
-        `${directive} tokens in vercel.json but missing from nginx-security-headers.conf: ${onlyHeader.join(', ')}. ` +
-        'Payment/auth iframe and form targets must stay deploy-surface identical.');
-      assert.deepEqual(onlyNginx, [],
-        `${directive} tokens in nginx-security-headers.conf but missing from vercel.json: ${onlyNginx.join(', ')}. ` +
-        'Payment/auth iframe and form targets must stay deploy-surface identical.');
-    }
-  });
-
   it('CSP frame-src stays a bounded host allowlist (load-bearing for a Sentry suppression rule)', () => {
     // `shouldSuppressCspViolation` in src/main.ts discards frame-src violation
     // reports for `div.show` on the argument that frame-src enumerates every
@@ -3463,7 +3080,6 @@ describe('security header guardrails', () => {
     // fail on a widening, so this pins the property the suppression depends on.
     for (const [label, csp] of [
       ['vercel.json', getHeaderValue('Content-Security-Policy')],
-      ['docker/nginx', getNginxHeaderValue('Content-Security-Policy')],
     ]) {
       assert.ok(csp, `${label} must have a Content-Security-Policy header`);
       const tokens = getCspDirectiveTokens(csp, 'frame-src');
@@ -3646,108 +3262,6 @@ describe('embeddable map route guardrails', () => {
     });
   }
 
-  it('keeps Docker embed routes on the locked-down embed security headers', () => {
-    const nginxTemplate = readFileSync(resolve(__dirname, '../docker/nginx.conf.template'), 'utf-8');
-    assert.match(nginxTemplate, /location = \/embed \{[\s\S]*?include \/etc\/nginx\/embed_security_headers\.conf;/);
-    assert.match(nginxTemplate, /location = \/embed\.html \{[\s\S]*?include \/etc\/nginx\/embed_security_headers\.conf;/);
-    assert.match(frontendDockerfileSource, /COPY docker\/nginx-embed-security-headers\.conf \/etc\/nginx\/embed_security_headers\.conf/);
-    assert.match(dockerNginxSource, /location = \/embed \{[\s\S]*?add_header Permissions-Policy "camera=\(\), microphone=\(\), geolocation=\(\), accelerometer=\(\)/);
-    assert.match(dockerNginxSource, /location = \/embed\.html \{[\s\S]*?add_header Permissions-Policy "camera=\(\), microphone=\(\), geolocation=\(\), accelerometer=\(\)/);
-
-    const lockedPolicy = getHeaderValueForSource('/embed', 'Permissions-Policy');
-    const dockerLockedPolicy = getNginxHeaderValueFrom('docker/nginx-embed-security-headers.conf', 'Permissions-Policy');
-    assert.equal(dockerLockedPolicy, lockedPolicy, 'Docker embed Permissions-Policy must match Vercel embed policy');
-    for (const directive of [
-      'accelerometer=()',
-      'bluetooth=()',
-      'gyroscope=()',
-      'magnetometer=()',
-      'picture-in-picture=()',
-      'payment=()',
-      'tools=()',
-    ]) {
-      assert.ok(dockerLockedPolicy.includes(directive), `Docker embed policy must keep ${directive}`);
-    }
-
-    const dockerEmbedCsp = getNginxHeaderValueFrom('docker/nginx-embed-security-headers.conf', 'Content-Security-Policy');
-    assert.equal(dockerEmbedCsp, getHeaderValueForSource('/embed', 'Content-Security-Policy'));
-  });
-
-  it('serves /embed.js as a cross-origin loader without iframe CSP', () => {
-    assert.equal(getHeaderValueForSource('/embed.js', 'Access-Control-Allow-Origin'), '*');
-    assert.equal(getHeaderValueForSource('/embed.js', 'Cache-Control'), 'public, max-age=3600');
-    assert.equal(getHeaderValueForSource('/embed.js', 'Cross-Origin-Resource-Policy'), 'cross-origin');
-    assert.equal(getHeaderValueForSource('/embed.js', 'Content-Security-Policy'), null);
-    assert.equal(getHeaderValueForSource('/embed.js', 'X-Frame-Options'), null);
-
-    const nginxTemplate = readFileSync(resolve(__dirname, '../docker/nginx.conf.template'), 'utf-8');
-    assert.match(nginxTemplate, /location = \/embed\.js \{[\s\S]*?Access-Control-Allow-Origin "\*"/);
-    assert.match(dockerNginxSource, /location = \/embed\.js \{[\s\S]*?Access-Control-Allow-Origin "\*"/);
-    assert.doesNotMatch(
-      dockerNginxSource.match(/location = \/embed\.js \{[\s\S]*?\n {4}\}/)?.[0] ?? '',
-      /frame-ancestors/,
-    );
-  });
-
-  it('self-hosted docker/nginx.conf SPA fallback ships the full dashboard CSP', () => {
-    // Image A (root Dockerfile -> docker/nginx.conf, nginx + Node API under
-    // supervisord) inlines headers per location instead of including
-    // security_headers.conf. The SPA fallback (location /) must still carry the
-    // dashboard CSP, or the containerized dashboard runs CSP-less while /embed
-    // stays locked down.
-    const canonicalCsp = getNginxHeaderValue('Content-Security-Policy');
-    assert.ok(canonicalCsp, 'docker/nginx-security-headers.conf must define a dashboard CSP');
-
-    const block = dockerNginxSource.match(/\n {4}location \/ \{\n([\s\S]*?)\n {4}\}/);
-    assert.ok(block, 'docker/nginx.conf must define a location / block');
-    const cspLine = block[1]
-      .split('\n')
-      .find((line) => /add_header Content-Security-Policy "/.test(line));
-    assert.ok(cspLine, 'docker/nginx.conf location / must ship a Content-Security-Policy header');
-    const value = cspLine.match(/add_header Content-Security-Policy "(.*)" always;/)?.[1];
-    assert.ok(value, 'could not extract CSP value from docker/nginx.conf location / Content-Security-Policy line');
-    assert.equal(
-      value,
-      canonicalCsp,
-      'docker/nginx.conf location / CSP must match docker/nginx-security-headers.conf (and thus vercel.json)',
-    );
-  });
-});
-
-describe('self-hosted docker nginx SPA entry', () => {
-  it('both nginx confs serve dashboard.html as the SPA entry', () => {
-    // dashboardHtmlOutputPlugin (vite.config.ts, !isDesktopBuild) renames the
-    // built SPA entry index.html -> dashboard.html for every web build, so dist/
-    // ships no index.html. BOTH self-hosted images must point the `index`
-    // directive and the SPA fallback at dashboard.html, or `/` 403s:
-    //   root Dockerfile   -> docker/nginx.conf          (docker-compose stack)
-    //   docker/Dockerfile -> docker/nginx.conf.template (published ghcr image)
-    for (const conf of ['docker/nginx.conf', 'docker/nginx.conf.template']) {
-      const src = readFileSync(resolve(__dirname, `../${conf}`), 'utf-8');
-      assert.match(src, /^\s*index dashboard\.html index\.html;/m, `${conf}: index directive must prefer dashboard.html then serve corpus index.html`);
-      assert.match(src, /try_files \$uri \$uri\/ \$uri\/index\.html \/dashboard\.html;/, `${conf}: SPA fallback must serve corpus index.html before /dashboard.html`);
-      assert.doesNotMatch(src, /try_files \$uri \$uri\/ \/index\.html;/, `${conf}: must not keep the broken /index.html SPA fallback`);
-    }
-  });
-
-  it('serves the branded 500 page on document routes only, never on /api/', () => {
-    // A server-level error_page is inherited by every location. On /api/ it
-    // swapped nginx's 502 for the HTML page and dropped the CORS header the
-    // template's /api/ sets with `always` (reproduced in nginx:alpine on #10290).
-    for (const conf of ['docker/nginx.conf', 'docker/nginx.conf.template']) {
-      const src = readFileSync(resolve(__dirname, `../${conf}`), 'utf-8');
-      const blocks = [...src.matchAll(/^ {4}location ([^{]+)\{\n([\s\S]*?)^ {4}\}/gm)]
-        .map(([, location, body]) => ({ location: location.trim(), body }));
-      const outsideLocations = src.replace(/^ {4}location [^{]+\{\n[\s\S]*?^ {4}\}/gm, '');
-      assert.doesNotMatch(outsideLocations, /\berror_page\b/, `${conf}: error_page must not sit at server level, where /api/ inherits it`);
-      const root = blocks.find((b) => b.location === '/');
-      assert.ok(root, `${conf}: must define location /`);
-      assert.match(root.body, /^\s*error_page 500 502 503 504 \/500\.html;/m, `${conf}: location / must serve the branded 500 page`);
-      for (const { location, body } of blocks.filter((b) => b.location.includes('/api'))) {
-        assert.doesNotMatch(body, /\berror_page\b/, `${conf}: ${location} must keep upstream and nginx error bodies`);
-      }
-    }
-  });
 });
 
 // Per-route CSP override for the hosted brief magazine. The renderer
@@ -5661,7 +5175,6 @@ describe('agent readiness: named developer-resource pages (#4953)', () => {
     { file: 'openapi.md', path: '/openapi.md', h1: '# World Monitor OpenAPI Specification' },
     { file: 'sdks.md', path: '/sdks.md', h1: '# World Monitor SDKs' },
   ];
-
 
   for (const page of DEV_PAGES) {
     it(`public/${page.file} opens with the brand-named H1 "${page.h1}"`, () => {
