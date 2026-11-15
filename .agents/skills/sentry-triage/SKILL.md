@@ -129,7 +129,7 @@ State one class before touching code or Sentry status:
     | grep -Eio '(fix|fixes|fixed|close|closes|closed|resolve|resolves|resolved)[[:space:]]+WORLDMONITOR-[A-Z0-9]+'
   ```
 
-- Follow WorldMonitor delivery rules (preflight, no `--no-verify`, no merge unless asked).
+- Follow WorldMonitor delivery rules (preflight, no `--no-verify`, commit to `main`).
 
 **Archive / mute (any class)**
 
