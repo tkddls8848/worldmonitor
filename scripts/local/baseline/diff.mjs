@@ -52,6 +52,9 @@ export function countErrors({ exitCode, output }, pattern) {
 
 // Parses node:test JUnit output into Record<"<test path>", 'pass'|'fail'>.
 // Ancestor suite names are joined with ' > '; repeated names get a '#n' suffix.
+// Skipped and todo tests count as 'pass' (env-dependent skips are common here;
+// only an explicit failure is a regression). A <failure>/<error> directly under
+// a <testsuite> (not inside a testcase) is recorded against the suite path.
 export function parseJunit(xml) {
   const decode = (s) => s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&');
   const out = {};
@@ -74,8 +77,9 @@ export function parseJunit(xml) {
       const path = [...stack, decode(name ?? '')].join(' > ');
       const status = /\bfailure="/.test(attrs) ? 'fail' : 'pass';
       if (selfClose) add(path, status); else current = { path, status };
-    } else if (!closing && current) {
-      current.status = 'fail';
+    } else if (!closing) {
+      if (current) current.status = 'fail';
+      else add(stack.join(' > ') || '<file-load>', 'fail');
     }
   }
   return out;

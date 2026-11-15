@@ -91,6 +91,11 @@ function healthKeys(h) {
 }
 
 save('tests.json', await runTests());
+{
+  // The full test run can rewrite or delete tracked files (public/llms.txt, .antigravity-plugin/).
+  const dirty = sh('git status --porcelain').split(/\r?\n/).filter((l) => l && !l.startsWith('??'));
+  if (dirty.length) console.log('WARNING: tests changed tracked files (restore with git checkout -- <path>):\n' + dirty.join('\n'));
+}
 
 save('checks.json', {
   typecheckErrors: countErrors(run('npm run typecheck'), /error TS\d+/),

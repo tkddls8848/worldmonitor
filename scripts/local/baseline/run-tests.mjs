@@ -25,23 +25,27 @@ export function listTestFiles(root = ROOT) {
 
 // Returns Record<"<file> :: <test path>", 'pass'|'fail'> for one file. A file
 // that cannot be loaded, crashes, or times out gets "<file> :: <file-load>".
-function runFile(file, root) {
+export function runFile(file, root) {
   return new Promise((done) => {
     const dir = mkdtempSync(join(tmpdir(), 'wm-junit-'));
     const report = join(dir, 'report.xml');
     const args = [...(file.endsWith('.mts') ? ['--import', 'tsx'] : []), '--test',
       '--test-reporter=junit', '--test-reporter-destination=' + report, file];
-    const child = spawn(process.execPath, args, { cwd: root, stdio: 'ignore' });
+    const env = { ...process.env };
+    delete env.NODE_TEST_CONTEXT; // set when we are ourselves inside node --test
+    const child = spawn(process.execPath, args, { cwd: root, stdio: 'ignore', env });
     let timedOut = false;
     const timer = setTimeout(() => { timedOut = true; child.kill(); }, 120_000);
     const finish = (code) => {
       clearTimeout(timer);
       let tests = {};
-      try { tests = parseJunit(readFileSync(report, 'utf8')); } catch { /* no report */ }
+      let reportMissing = false;
+      try { tests = parseJunit(readFileSync(report, 'utf8')); } catch { reportMissing = true; }
       rmSync(dir, { recursive: true, force: true });
       const out = {};
       for (const [name, status] of Object.entries(tests)) out[file + ' :: ' + name] = status;
-      if (timedOut || Object.keys(out).length === 0) out[file + ' :: <file-load>'] = code === 0 && !timedOut ? 'pass' : 'fail';
+      if (timedOut || reportMissing) out[file + ' :: <file-load>'] = 'fail';
+      else if (Object.keys(out).length === 0) out[file + ' :: <file-load>'] = code === 0 ? 'pass' : 'fail';
       else if (code !== 0 && !Object.values(out).includes('fail')) out[file + ' :: <file-load>'] = 'fail';
       done(out);
     };

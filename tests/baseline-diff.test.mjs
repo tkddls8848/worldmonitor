@@ -1,6 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { diffScenarioRuns, diffKeySets, diffTestRuns, countErrors, parseJunit } from '../scripts/local/baseline/diff.mjs';
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { runFile } from '../scripts/local/baseline/run-tests.mjs';
 
 test('diffScenarioRuns ignores computedAt', () => {
   const a = [{ computedAt: 1, records: [{ impactPct: 40 }] }];
@@ -45,4 +49,27 @@ test('parseJunit flattens suites, marks failures, and dedupes names', () => {
     '<testcase name="b &amp; c" classname="s"><failure message="x">boom</failure></testcase>' +
     '</testsuite><testcase name="top"/><testcase name="top"/></testsuites>';
   assert.deepEqual(parseJunit(xml), { 's > a': 'pass', 's > b & c': 'fail', top: 'pass', 'top #2': 'pass' });
+});
+
+test('parseJunit records a suite-level failure that sits outside any testcase', () => {
+  const xml = '<testsuites><testsuite name="s"><testcase name="a"/><failure message="x">boom</failure></testsuite>' +
+    '<failure message="y"/></testsuites>';
+  assert.deepEqual(parseJunit(xml), { 's > a': 'pass', s: 'fail', '<file-load>': 'fail' });
+});
+
+test('runFile reports pass, exit-nonzero-after-tests, and import-time throw', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'wm-runfile-'));
+  try {
+    const write = (n, body) => writeFileSync(join(dir, n), body);
+    write('ok.test.mjs', "import {test} from 'node:test'; test('a',()=>{});\n");
+    write('exit.test.mjs', "import {test} from 'node:test'; test('a',()=>{}); process.exitCode = 1;\n");
+    write('throw.test.mjs', "throw new Error('boom');\n");
+    assert.deepEqual(await runFile('ok.test.mjs', dir), { 'ok.test.mjs :: a': 'pass' });
+    const exit = await runFile('exit.test.mjs', dir);
+    assert.equal(exit['exit.test.mjs :: a'], 'pass');
+    assert.ok(Object.entries(exit).some(([k, v]) => k !== 'exit.test.mjs :: a' && v === 'fail'));
+    const thrown = await runFile('throw.test.mjs', dir);
+    assert.ok(Object.values(thrown).includes('fail'));
+    // Timeout path (120 s) is not exercised here: it would make the test slow.
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });
