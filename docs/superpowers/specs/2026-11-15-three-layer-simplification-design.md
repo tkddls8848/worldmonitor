@@ -191,7 +191,7 @@ connectors/   외부 API 연결 계층: 수집기, 외부 소스별 연결 코�
 - **저장소**: 소유자 결정으로 Convex를 두지 않는다. 결제·계정 데이터는 버린다.
 - **정보 이력**: `scripts/_seed-history.mjs`가 Convex에 쓰고, `search-intel-history`·`get-intel-timeline`·`get-similar-events`가 읽는다. 이 쓰기와 읽기를 `shared/personal-store.mjs`의 SQLite 파일로 옮긴다. 쓰는 소스와 내용은 바꾸지 않는다.
 - **비슷한 사건 검색**: 저장된 벡터를 전부 읽어 코사인 유사도를 직접 계산한다. 개인용 규모에서는 이것으로 충분하고, 벡터 검색 확장이나 별도 서버를 들이지 않는다.
-- **임베딩**: 지금은 OpenRouter의 `openai/text-embedding-3-small`(512차원)로 만든다. 소유자에게 OpenRouter 키가 없고 Anthropic에는 임베딩 API가 없으므로, 프로젝트가 이미 브라우저에서 쓰는 로컬 MiniLM 모델(`@xenova/transformers`, `src/workers/ml.worker.ts`)을 Node에서 돌려 만든다(설계자 판단). 키가 필요 없다. 같은 임베더를 매일 AI 브리프의 기사 중복 제거(`scripts/lib/brief-embedding.mjs`)에도 쓴다. 유사도 기준값은 모델이 바뀌므로 다시 맞춘다.
+- **임베딩**: 지금은 OpenRouter의 `openai/text-embedding-3-small`(512차원)로 만든다. 소유자에게 OpenRouter 키가 없고 Anthropic에는 임베딩 API가 없으므로, 프로젝트가 이미 브라우저에서 쓰는 로컬 MiniLM 모델(`@xenova/transformers`, `src/workers/ml.worker.ts`)을 Node에서 돌려 만든다(소유자 결정). 키도, 따로 켜 둘 프로그램도 필요 없다. 같은 임베더를 매일 AI 브리프의 기사 중복 제거(`scripts/lib/brief-embedding.mjs`)에도 쓴다. 유사도 기준값은 모델이 바뀌므로 다시 맞추고, 캐시 키의 버전(`CACHE_VERSION`, `scripts/lib/brief-dedup-consts.mjs`)도 올린다. 모델을 불러오지 못하면 중복 제거는 기존 단어 겹침(Jaccard) 방식으로 넘어간다. 검토한 대안인 Ollama(`bge-m3` 등 다국어 모델)는 별도 프로그램을 켜 둬야 해서 택하지 않았다.
 - **"수집기를 그대로 둔다"의 범위**: 외부 소스, 받아오는 내용, 변환 논리를 바꾸지 않는다는 뜻이다. 저장 위치나 지운 인프라와의 연결 같은 배관은 고칠 수 있다.
 - **알림 큐**(`wm:events:queue`): 꺼내 발송하는 쪽이 지워지므로, 수집기의 큐 쓰기는 남겨 두되 소비자는 두지 않는다. 큐가 무한히 쌓이지 않도록 길이 상한이 있는지 확인한다. 개인 알림은 이후 과제다.
 
