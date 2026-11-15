@@ -49,3 +49,34 @@ export function countErrors({ exitCode, output }, pattern) {
   if (n === 0 && exitCode !== 0) return null;
   return n;
 }
+
+// Parses node:test JUnit output into Record<"<test path>", 'pass'|'fail'>.
+// Ancestor suite names are joined with ' > '; repeated names get a '#n' suffix.
+export function parseJunit(xml) {
+  const decode = (s) => s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&');
+  const out = {};
+  const stack = [];
+  let current = null;
+  const add = (path, status) => {
+    let key = path, n = 1;
+    while (key in out) key = `${path} #${++n}`;
+    out[key] = status;
+  };
+  const tagRe = /<(\/?)(testsuite|testcase|failure|error)\b([^>]*?)(\/?)>/g;
+  let m;
+  while ((m = tagRe.exec(xml))) {
+    const [, closing, tag, attrs, selfClose] = m;
+    const name = /\bname="([^"]*)"/.exec(attrs)?.[1];
+    if (tag === 'testsuite') {
+      if (closing) stack.pop(); else if (!selfClose) stack.push(decode(name ?? ''));
+    } else if (tag === 'testcase') {
+      if (closing) { add(current.path, current.status); current = null; continue; }
+      const path = [...stack, decode(name ?? '')].join(' > ');
+      const status = /\bfailure="/.test(attrs) ? 'fail' : 'pass';
+      if (selfClose) add(path, status); else current = { path, status };
+    } else if (!closing && current) {
+      current.status = 'fail';
+    }
+  }
+  return out;
+}
