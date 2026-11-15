@@ -191,7 +191,9 @@ connectors/   외부 API 연결 계층: 수집기, 외부 소스별 연결 코�
 - **저장소**: 소유자 결정으로 Convex를 두지 않는다. 결제·계정 데이터는 버린다.
 - **정보 이력**: `scripts/_seed-history.mjs`가 Convex에 쓰고, `search-intel-history`·`get-intel-timeline`·`get-similar-events`가 읽는다. 이 쓰기와 읽기를 `shared/personal-store.mjs`의 SQLite 파일로 옮긴다. 쓰는 소스와 내용은 바꾸지 않는다.
 - **비슷한 사건 검색**: 저장된 벡터를 전부 읽어 코사인 유사도를 직접 계산한다. 개인용 규모에서는 이것으로 충분하고, 벡터 검색 확장이나 별도 서버를 들이지 않는다.
-- **임베딩**: 지금은 OpenRouter의 `openai/text-embedding-3-small`(512차원)로 만든다. 소유자에게 OpenRouter 키가 없고 Anthropic에는 임베딩 API가 없으므로, 프로젝트가 이미 브라우저에서 쓰는 로컬 MiniLM 모델(`@xenova/transformers`, `src/workers/ml.worker.ts`)을 Node에서 돌려 만든다(소유자 결정). 키도, 따로 켜 둘 프로그램도 필요 없다. 같은 임베더를 매일 AI 브리프의 기사 중복 제거(`scripts/lib/brief-embedding.mjs`)에도 쓴다. 유사도 기준값은 모델이 바뀌므로 다시 맞추고, 캐시 키의 버전(`CACHE_VERSION`, `scripts/lib/brief-dedup-consts.mjs`)도 올린다. 모델을 불러오지 못하면 중복 제거는 기존 단어 겹침(Jaccard) 방식으로 넘어간다. 검토한 대안인 Ollama(`bge-m3` 등 다국어 모델)는 별도 프로그램을 켜 둬야 해서 택하지 않았다.
+- **임베딩**: 원본 그대로 OpenRouter의 `openai/text-embedding-3-small`(512차원)을 쓴다(소유자 결정, 2026-11-15). 소유자가 OpenRouter 키를 만들었다. 비슷한 사건 검색과 매일 AI 브리프의 기사 중복 제거(`scripts/lib/brief-embedding.mjs`)가 같은 임베더를 쓰며, 모델·차원·기준값(0.60, 0.45)·캐시 버전·이력 행의 모델 표시(`openai/text-embedding-3-small@512`)를 바꾸지 않는다.
+  - 검토한 대안: 로컬 MiniLM(`Xenova/all-MiniLM-L6-v2`)을 이 PC에서 뉴스 제목 쌍으로 측정했다. 같은 사건(0.38~0.75)과 다른 사건(최고 0.62, 일본·페루 지진)의 점수가 겹쳐 하나의 기준값으로 가를 수 없었고, 영어 기사와 같은 사건의 한국어·러시아어 기사는 0.04~0.07로 무관하게 나왔다. 영어 전용 모델이라 다국어 피드에 맞지 않아 택하지 않았다. Ollama의 다국어 모델은 별도 프로그램을 켜 둬야 하고 기준값을 다시 맞춰야 해서 택하지 않았다.
+  - 키가 없거나 호출이 실패하면 원본 동작대로 중복 제거는 단어 겹침(Jaccard) 방식으로 넘어간다.
 - **"수집기를 그대로 둔다"의 범위**: 외부 소스, 받아오는 내용, 변환 논리를 바꾸지 않는다는 뜻이다. 저장 위치나 지운 인프라와의 연결 같은 배관은 고칠 수 있다.
 - **알림 큐**(`wm:events:queue`): 꺼내 발송하는 쪽이 지워지므로, 수집기의 큐 쓰기는 남겨 두되 소비자는 두지 않는다. 큐가 무한히 쌓이지 않도록 길이 상한이 있는지 확인한다. 개인 알림은 이후 과제다.
 
@@ -216,7 +218,7 @@ connectors/   외부 API 연결 계층: 수집기, 외부 소스별 연결 코�
 **8.6 원본 저장소와 결별한다** (소유자 결정, 2026-11-15)
 `upstream`(koala73)의 이후 변경은 받아오지 않는다. 따라서 공유 파일(`server/gateway.ts` 등)을 과감하게 고쳐 쓰고 지워도 된다. 원본에 새 수집기가 생겨도 자동으로 들어오지 않는다.
 
-**8.7 사용할 수 있는 키는 Anthropic뿐이다** (소유자 답변, 2026-11-15)
+**8.7 사용할 수 있는 AI 키는 Anthropic과 OpenRouter다** (소유자 답변, 2026-11-15. OpenRouter 키는 임베딩용으로 추가)
 - **AI 기능**: 지금 기본 AI 호출 순서는 Ollama → OpenRouter → 무료 OpenRouter → 일반 엔드포인트이고, Anthropic은 호출하는 쪽이 지정할 때만 쓰인다(`server/_shared/llm.ts`, `scripts/lib/llm-chain.cjs`). 매일 AI 브리프는 OpenRouter로 고정돼 있다(`scripts/lib/brief-llm.mjs`). 개인용에서는 기본 순서의 첫 자리를 Anthropic으로 바꾸고 브리프 고정도 Anthropic으로 옮긴다(설계자 판단).
 - **모델**: 기본 모델은 비용을 고려해 요약·분류처럼 자주 부르는 작업에 작은 모델을 쓰고, 브리프처럼 하루 몇 번인 작업만 큰 모델을 쓴다. 모델 이름은 환경 변수로 바꿀 수 있게 둔다(설계자 판단).
 - **데이터 키**: ACLED, EIA, FRED, Finnhub 등 데이터 키가 없으므로, 기준선은 키 없이 받을 수 있는 입력만 담는다. 위험도 점수 입력 중 무엇이 기준선에 들어갔는지 기록한다. 원본도 2026년 7월부터 ACLED 없이 GDELT로 대체해 계산하고 있다.
