@@ -14,6 +14,9 @@
           "path": "scripts/measure-trade-animation-rebuild.mjs"
         },
         {
+          "path": "scripts/personal-server.mjs"
+        },
+        {
           "path": "scripts/profile-news-hybrid-clustering-7782-dashboard.mjs"
         },
         {
@@ -6518,6 +6521,9 @@
       "references": [
         {
           "path": "scripts/ais-relay.cjs"
+        },
+        {
+          "path": "scripts/local/embedded-store.mjs"
         },
         {
           "path": "scripts/local/redis-rest-proxy.mjs"

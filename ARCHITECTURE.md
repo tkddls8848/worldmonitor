@@ -10,6 +10,10 @@ External access uses an HTTPS reverse proxy in front of the loopback listener.
 
 Seeded datasets still use the existing transactional store contracts; personal startup accepts only a loopback Redis REST endpoint.
 No storage configuration means those datasets are unavailable, not empty observations.
+
+`WM_PERSONAL_STORE=embedded` starts that endpoint inside the personal server (`scripts/local/embedded-store.mjs`), so no Redis is installed or run.
+It keeps data in memory, snapshots it to `.personal/store.ndjson`, and implements only the commands and pinned scripts the collectors and handlers use; any other `EVAL` script is refused.
+`npm run collect:personal` runs the existing collectors against it in place of the Railway cron services, and `npm run tui:personal` opens the terminal dashboard (`cli/src/tui`) against the personal server with the owner's password.
 `npm run scenario:local` evaluates a supplied exposure snapshot without a queue, Railway, or Redis.
 This CLI is separate from the browser's existing asynchronous scenario route.
 The deployment workflows removed from this fork are no longer part of its runtime or release procedure.

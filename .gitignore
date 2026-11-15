@@ -168,3 +168,6 @@ src-tauri/notices/*
 !src-tauri/notices/.gitkeep
 
 !vendor/vercel-og/dist/
+
+# Personal-mode embedded store snapshot
+.personal/
