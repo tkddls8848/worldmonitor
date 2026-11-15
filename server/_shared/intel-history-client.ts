@@ -1,80 +1,61 @@
 /**
- * Convex transport for the historical intelligence memory (#5694).
+ * Store reader for the historical intelligence memory (#5694).
  *
  * Shared by the three Pro-gated RPCs in
  * server/worldmonitor/intelligence/v1/{search-intel-history,get-intel-timeline,
- * get-similar-events}.ts. Owns one concern: reading convex/intelHistory.ts
- * through its two secret-guarded internal HTTP routes, and adapting stored
- * records to the wire shape. Query embedding lives in
+ * get-similar-events}.ts. Owns one concern: reading the local SQLite history
+ * store (shared/intel-history-store.mjs) that the collectors append to, and
+ * adapting stored records to the wire shape. Query embedding lives in
  * ./intel-history-embed.ts — a different upstream with its own budget and
  * failure mode.
  *
- * Every function returns `null` rather than throwing, so a store outage
+ * Every function returns `null` rather than throwing, so a store failure
  * surfaces as `upstream_unavailable: true` on a 200 — the gateway reads that
  * flag out of the body and drops the response to Cache-Control: no-store
  * (server/_shared/cache-contract.ts) instead of pinning a false-empty result
- * for the cache tier's full TTL.
+ * for the cache tier's full TTL. The one exception is an invalid timeline
+ * cursor, which is the caller's error and throws a ValidationError.
  */
 
 // @ts-expect-error — JS module, no declaration file
 import { captureSilentError } from '../../api/_sentry-edge.js';
 import { ValidationError } from '../../src/generated/server/worldmonitor/intelligence/v1/service_server';
+import type { IntelHistoryStore } from '../../shared/intel-history-store.mjs';
 
-const CONVEX_INTERNAL_SEARCH_PATH = '/api/internal-intel-search';
-const CONVEX_INTERNAL_TIMELINE_PATH = '/api/internal-intel-timeline';
-
-/** Convex read budget, matching the entitlement gate's posture. */
-const CONVEX_TIMEOUT_MS = 5_000;
-
-let _didWarnMissingConvexSiteUrl = false;
-let _didWarnMissingConvexSharedSecret = false;
+type ReadStore = Pick<IntelHistoryStore, 'timeline' | 'search'>;
 
 /**
- * Warn once per missing variable rather than per request. Mirrors
- * server/_shared/entitlement-check.ts: a deploy missing only one of the pair
- * would otherwise disable these routes with no signal in the logs.
+ * One read-only connection per process, opened on first use. Loaded lazily so
+ * modules that only need the normalizers below (the MCP registry) never load
+ * node:sqlite. A failed open is not cached: the database may simply not exist
+ * until the first collector run, and the next request retries.
  */
-function getConvexSiteUrl(): string {
-  const siteUrl = process.env.CONVEX_SITE_URL ?? '';
-  if (!siteUrl && !_didWarnMissingConvexSiteUrl) {
-    _didWarnMissingConvexSiteUrl = true;
-    console.warn('[intel-history] CONVEX_SITE_URL not set; history reads disabled');
+let storePromise: Promise<ReadStore> | null = null;
+
+function getStore(): Promise<ReadStore> {
+  if (!storePromise) {
+    storePromise = import('../../shared/intel-history-store.mjs')
+      .then(({ openIntelHistoryStore, resolveIntelHistoryDbPath }) =>
+        openIntelHistoryStore(resolveIntelHistoryDbPath(process.env), { readOnly: true }))
+      .catch((err: unknown) => {
+        storePromise = null;
+        throw err;
+      });
   }
-  return siteUrl;
+  return storePromise;
 }
 
-function getConvexSharedSecret(): string {
-  const secret = process.env.CONVEX_SERVER_SHARED_SECRET ?? '';
-  if (!secret && !_didWarnMissingConvexSharedSecret) {
-    _didWarnMissingConvexSharedSecret = true;
-    console.warn('[intel-history] CONVEX_SERVER_SHARED_SECRET not set; history reads disabled');
-  }
-  return secret;
+/** Test seam: serve reads from `store` instead of the database (null resets). */
+export function setIntelHistoryStoreForTests(store: ReadStore | null): void {
+  storePromise = store ? Promise.resolve(store) : null;
 }
+
+/** Scope normalizers live in a dependency-free module so Edge code can use them. */
+export { normalizeCountry, normalizeDomain } from './intel-history-scope';
 
 /**
- * Scope values are compared with `eq` against what the seeders wrote, so the
- * caller's casing and padding decide whether anything matches at all. A
- * request for country "ua " silently returns nothing against stored "UA" —
- * indistinguishable, to the caller, from "we have no history for Ukraine".
- * Normalize to the stored form instead of trusting the wire.
- *
- * buf.validate documents these shapes in the proto but does not run: the
- * gateway supplies no `validateRequest` (server/gateway.ts), so this is the
- * only place the contract is actually applied.
- */
-export function normalizeCountry(value: unknown): string {
-  return typeof value === 'string' ? value.trim().toUpperCase() : '';
-}
-
-export function normalizeDomain(value: unknown): string {
-  return typeof value === 'string' ? value.trim().toLowerCase() : '';
-}
-
-/**
- * Scope accepted by both read routes. Absent fields are omitted from the
- * request body entirely: convex/http.ts distinguishes "field absent" from
- * "field present but empty", and the timeline route rejects an unscoped read.
+ * Scope accepted by both reads. Absent fields are omitted from the store
+ * arguments entirely, and the timeline rejects an unscoped read.
  */
 export interface IntelHistoryScope {
   domain?: string;
@@ -84,7 +65,7 @@ export interface IntelHistoryScope {
   limit: number;
 }
 
-/** One record as convex/intelHistory.ts:projectRecord emits it. */
+/** One record as the store's projection emits it. */
 interface WireRecord {
   id?: unknown;
   domain?: unknown;
@@ -96,7 +77,7 @@ interface WireRecord {
   sourceUrl?: unknown;
   occurredAt?: unknown;
   ingestedAt?: unknown;
-  _score?: unknown;
+  score?: unknown;
 }
 
 /**
@@ -129,7 +110,7 @@ function num(value: unknown): number {
 }
 
 /**
- * Adapt one stored record to the wire shape. `_score` is present only on the
+ * Adapt one stored record to the wire shape. `score` is present only on the
  * vector path; a chronological read leaves it 0, which the proto documents as
  * "no similarity applies" rather than "no similarity".
  */
@@ -145,15 +126,15 @@ function toIntelHistoryRecord(raw: WireRecord): IntelHistoryRecordView {
     sourceUrl: str(raw.sourceUrl),
     occurredAt: num(raw.occurredAt),
     ingestedAt: num(raw.ingestedAt),
-    score: num(raw._score),
+    score: num(raw.score),
   };
 }
 
 /**
  * Resolve a request limit: the server-side default when omitted or <= 0,
  * otherwise the requested value capped at the route's ceiling. The ceilings
- * mirror the clamps in convex/intelHistory.ts, so a caller never receives
- * fewer rows than the API documents without an explanation.
+ * mirror the clamps in the store, so a caller never receives fewer rows than
+ * the API documents without an explanation.
  */
 export function resolveLimit(requested: unknown, fallback: number, max: number): number {
   const value = Number(requested);
@@ -161,65 +142,43 @@ export function resolveLimit(requested: unknown, fallback: number, max: number):
 }
 
 /**
- * Drop empty scope fields so convex/http.ts sees them as absent.
+ * Drop empty scope fields so the store sees them as absent.
  *
  * `0` means "no bound" per the published contract, so it is omitted rather
  * than sent. Any other finite value is forwarded verbatim — including a
  * negative, which is a legitimate pre-1970 epoch bound and which the MCP tool
- * layer explicitly forwards on the promise that the route is the sole
+ * layer explicitly forwards on the promise that the store is the sole
  * authority on bounds. Silently discarding it here would break that promise.
  */
-function scopeBody(scope: IntelHistoryScope): Record<string, unknown> {
-  const body: Record<string, unknown> = {};
-  if (scope.domain) body.domain = scope.domain;
-  if (scope.country) body.country = scope.country;
+function scopeArgs(scope: IntelHistoryScope): IntelHistoryScope {
+  const args: IntelHistoryScope = { limit: scope.limit };
+  if (scope.domain) args.domain = scope.domain;
+  if (scope.country) args.country = scope.country;
   if (typeof scope.from === 'number' && Number.isFinite(scope.from) && scope.from !== 0) {
-    body.from = scope.from;
+    args.from = scope.from;
   }
   if (typeof scope.to === 'number' && Number.isFinite(scope.to) && scope.to !== 0) {
-    body.to = scope.to;
+    args.to = scope.to;
   }
-  body.limit = scope.limit;
-  return body;
+  return args;
 }
 
+const isStoreCursorError = (err: unknown): boolean =>
+  err instanceof Error && err.name === 'ValidationError' && (err as { field?: unknown }).field === 'cursor';
+
 /**
- * POST one of the two secret-guarded internal read routes. Returns null on a
- * missing configuration, a non-2xx, a malformed body, or a timeout — the
- * caller turns that into `upstream_unavailable`.
+ * Run one store read. Returns null when the database cannot be opened, the
+ * read throws, or the result is malformed — the caller turns that into
+ * `upstream_unavailable`.
  */
 async function readIntelHistory(
-  path: string,
-  payload: Record<string, unknown>,
-): Promise<{ records: IntelHistoryRecordView[]; partial: boolean; nextCursor?: string } | null> {
-  const siteUrl = getConvexSiteUrl();
-  const sharedSecret = getConvexSharedSecret();
-  if (!siteUrl || !sharedSecret) return null;
-
+  operation: 'timeline' | 'search',
+  read: (store: ReadStore) => { records?: unknown; partial?: unknown; nextCursor?: unknown },
+): Promise<{ records: IntelHistoryRecordView[]; partial: boolean; nextCursor?: string | null } | null> {
   try {
-    const resp = await fetch(`${siteUrl}${path}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'worldmonitor-gateway/1.0',
-        'x-convex-shared-secret': sharedSecret,
-      },
-      body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(CONVEX_TIMEOUT_MS),
-    });
-    if (!resp.ok) {
-      if (path === CONVEX_INTERNAL_TIMELINE_PATH && resp.status === 400) {
-        const error = await resp.json() as { error?: string };
-        if (error.error === 'INVALID_CURSOR') {
-          throw new ValidationError([{ field: 'cursor', description: 'Invalid cursor. Restart from the first page with unchanged filters.' }]);
-        }
-      }
-      console.warn(`[intel-history] ${path} returned HTTP ${resp.status}`);
-      return null;
-    }
-    const body = (await resp.json()) as { records?: unknown; partial?: unknown; nextCursor?: unknown };
+    const body = read(await getStore());
     if (!Array.isArray(body?.records)) {
-      console.warn(`[intel-history] ${path} returned no records array`);
+      console.warn(`[intel-history] ${operation} returned no records array`);
       return null;
     }
     return {
@@ -227,55 +186,52 @@ async function readIntelHistory(
         .filter((rec): rec is WireRecord => rec !== null && typeof rec === 'object')
         .map(toIntelHistoryRecord),
       partial: body.partial === true,
-      ...(typeof body.nextCursor === 'string' ? { nextCursor: body.nextCursor } : {}),
+      ...(typeof body.nextCursor === 'string' || body.nextCursor === null
+        ? { nextCursor: body.nextCursor as string | null }
+        : {}),
     };
   } catch (err) {
-    if (err instanceof ValidationError) throw err;
-    // Same reasoning as the embed path: a Convex outage surfaces to the caller
-    // as an empty 200, so it has to reach Sentry to be distinguishable.
-    // AbortSignal.timeout(CONVEX_TIMEOUT_MS) surfaces as TimeoutError /
-    // AbortError when Convex is slow. The read already fails open as
-    // upstreamUnavailable; downgrade the Sentry capture to warning so
-    // one-shot timeouts stay queryable without drowning real bugs
-    // (unexpected throws). Same gate as api/miit-news and
-    // api/notification-channels (Sentry WORLDMONITOR-187).
+    if (isStoreCursorError(err)) {
+      throw new ValidationError([{ field: 'cursor', description: 'Invalid cursor. Restart from the first page with unchanged filters.' }]);
+    }
+    // A store failure surfaces to the caller as an empty 200, so it has to
+    // reach Sentry to be distinguishable from "no history".
     const msg = err instanceof Error ? err.message : String(err);
-    console.warn(`[intel-history] ${path} failed: ${msg}`);
-    const errName = err instanceof Error ? err.name : '';
-    const isTransientTimeout = errName === 'AbortError' || errName === 'TimeoutError';
+    console.warn(`[intel-history] ${operation} failed: ${msg}`);
     captureSilentError(err, {
-      tags: { surface: 'server', component: 'intel-history', stage: 'convex-read' },
-      fingerprint: ['intel-history', 'convex-read-error', path],
-      ...(isTransientTimeout ? { level: 'warning' } : {}),
+      tags: { surface: 'server', component: 'intel-history', stage: 'store-read' },
+      fingerprint: ['intel-history', 'store-read-error', operation],
     });
     return null;
   }
 }
 
 /** Semantic read: rank stored history against a query vector. */
-export function intelHistorySearch(
+export async function intelHistorySearch(
   params: IntelHistoryScope & { embedding: number[]; minScore?: number },
 ): Promise<{ records: IntelHistoryRecordView[]; partial: boolean } | null> {
   const { embedding, minScore, ...scope } = params;
-  return readIntelHistory(CONVEX_INTERNAL_SEARCH_PATH, {
-    embedding,
-    ...scopeBody(scope),
+  const result = await readIntelHistory('search', (store) => store.search({
+    vector: embedding,
+    ...scopeArgs(scope),
     ...(typeof minScore === 'number' ? { minScore } : {}),
-  });
+  }));
+  return result && { records: result.records, partial: result.partial };
 }
 
 /**
  * Chronological read. At least one of domain/country must be set — the caller
- * enforces that and returns 400, because Convex answers an unscoped read with
- * a 500 that this layer could only report as an outage.
+ * enforces that and returns 400, because the store answers an unscoped read
+ * with an error that this layer could only report as an outage.
  */
 export async function intelHistoryTimeline(
   scope: IntelHistoryScope & { cursor?: string },
 ): Promise<{ records: IntelHistoryRecordView[]; partial: boolean; nextCursor: string } | null> {
-  const result = await readIntelHistory(CONVEX_INTERNAL_TIMELINE_PATH, {
-    ...scopeBody(scope), ...(scope.cursor ? { cursor: scope.cursor } : {}),
-  });
-  // An older Convex reader cannot prove that a bounded page exhausts history.
-  if (!result || typeof result.nextCursor !== 'string') return null;
-  return { ...result, nextCursor: result.nextCursor };
+  const result = await readIntelHistory('timeline', (store) => store.timeline({
+    ...scopeArgs(scope), ...(scope.cursor ? { cursor: scope.cursor } : {}),
+  }));
+  // A reader that cannot say whether more pages exist cannot prove that a
+  // bounded page exhausts history.
+  if (!result || result.nextCursor === undefined) return null;
+  return { records: result.records, partial: result.partial, nextCursor: result.nextCursor ?? '' };
 }

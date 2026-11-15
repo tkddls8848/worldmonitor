@@ -8,14 +8,16 @@ import { join } from 'node:path';
 import { embedBatch } from '../scripts/lib/brief-embedding.mjs';
 import { appendSeedHistory } from '../scripts/_seed-history.mjs';
 import { recordHistoryCost, historyCostKey, HISTORY_COST_UPDATE_SCRIPT } from '../scripts/lib/intel-history-cost.mjs';
-import { readHistoryCost } from '../scripts/measure-intel-history.mjs';
 
 const vector = Array(512).fill(0.125);
 const env = {
-  CONVEX_SITE_URL: 'https://convex.test',
-  RELAY_SHARED_SECRET: 'relay-test',
   OPENROUTER_API_KEY: 'embedding-test',
 };
+
+/** An intel-history store stub: every append returns `counts` or throws `error`. */
+function historyStore({ counts = { inserted: 1, skipped: 0, retracted: 0 }, error } = {}) {
+  return { append() { if (error) throw error; return counts; } };
+}
 
 function embedDeps({ usage = { prompt_tokens: 7, cost: 0.00000014 }, cached = false, invalid = false } = {}) {
   const observed = [];
@@ -90,7 +92,7 @@ test('a transport failure has unknown spend and an observer failure preserves em
   assert.deepEqual(await embedBatch(['one'], throwing), [vector]);
 });
 
-test('history preserves paid embedding usage when every relay chunk fails', async () => {
+test('history preserves paid embedding usage when every store chunk fails', async () => {
   const observed = [];
   await assert.rejects(appendSeedHistory({
     domain: 'energy', resource: 'intelligence', runId: 'failed-run',
@@ -103,10 +105,9 @@ test('history preserves paid embedding usage when every relay chunk fails', asyn
         knownPromptTokens: 7, unknownTokenRequests: 0 });
       return [vector];
     },
-    fetchImpl: async () => new Response('relay unavailable', { status: 503 }),
-    sleep: async () => {},
+    store: historyStore({ error: new Error('database is locked') }),
     recordCost: async observation => observed.push(observation),
-  }), /503/);
+  }), /database is locked/);
   assert.equal(observed.length, 1);
   assert.equal(observed[0].knownCostUsd, 0.01);
   assert.equal(observed[0].failedRuns, 1);
@@ -121,7 +122,7 @@ test('telemetry persistence failure cannot reject a successful history append', 
   }, {
     env,
     embed: async () => [vector],
-    fetchImpl: async () => Response.json({ inserted: 1, skipped: 0, retracted: 0 }),
+    store: historyStore(),
     recordCost: async () => { throw new Error('Redis unavailable'); },
   });
   assert.equal(result.inserted, 1);
@@ -203,21 +204,14 @@ test('real Redis accumulates concurrent observations atomically and rejects corr
         env: { ...env, ...deps.env },
         embed: (texts, options) => embedBatch(texts, { ...embedDeps(),
           wallClockMs: options.wallClockMs, onUsage: options.onUsage }),
-        fetchImpl: (url, init) => url === deps.env.UPSTASH_REDIS_REST_URL
-          ? deps.fetchImpl(url, init)
-          : Promise.resolve(Response.json({ inserted: 1, skipped: 0, retracted: 0 })),
+        fetchImpl: deps.fetchImpl,
+        store: historyStore(),
       });
       assert.equal(result.inserted, 1);
-      const measured = await readHistoryCost({ domain: 'energy', resource: 'intelligence',
-        day: new Date(at).toISOString().slice(0, 10) }, {
-        ...deps,
-        fetchImpl: async (_url, init) => Response.json({ result: (await command(...JSON.parse(init.body))).split('\n') }),
-      });
-      assert.equal(measured.reportedUsageComplete, true);
-      assert.equal(measured.counters.runs, 17);
-      assert.equal(measured.counters.knownPromptTokens, 119);
-      assert.equal(measured.counters.inserted, 1);
-      assert.ok(Math.abs(measured.counters.knownCostUsd - 17 * 0.00000014) < 1e-15);
+      assert.equal(await command('HGET', key, 'runs'), '17');
+      assert.equal(await command('HGET', key, 'knownPromptTokens'), '119');
+      assert.equal(await command('HGET', key, 'inserted'), '1');
+      assert.ok(Math.abs(Number(await command('HGET', key, 'knownCostUsd')) - 17 * 0.00000014) < 1e-15);
 
       await command('HSET', key, 'knownPromptTokens', 'corrupt');
       const before = await command('HGETALL', key);

@@ -2,18 +2,17 @@
  * Seeder-side helper for the historical intelligence memory (#5694).
  *
  * Seeders call `appendSeedHistory` from their `afterPublish` hook to
- * embed a run's noteworthy records and append them to the Convex
- * intel-history store via the authenticated `/relay/intel-history`
- * HTTP action.
+ * embed a run's noteworthy records and append them to the local SQLite
+ * intel-history store (scripts/lib/intel-history-store.mjs, at
+ * WM_INTEL_HISTORY_DB or <repo>/.personal/intel-history.sqlite).
  *
  * FAIL-OPEN BY DESIGN. History is a secondary artefact of a seed run —
  * a history failure must never fail the run. Two layers enforce that:
  *
- *   1. Missing configuration is NOT an error. Any of CONVEX_SITE_URL
- *      (or CONVEX_URL), RELAY_SHARED_SECRET, OPENROUTER_API_KEY absent
- *      → one warn, `{ skipped: 'unconfigured' }`, zero network calls.
- *      Local runs and un-provisioned Railway services stay silent-ish.
- *   2. Hard runtime failures (embedder outage, relay 5xx after retries)
+ *   1. Missing configuration is NOT an error. OPENROUTER_API_KEY absent
+ *      → one warn, `{ skipped: 'unconfigured' }`, no embedding and no
+ *      database write.
+ *   2. Hard runtime failures (embedder outage, every store write failing)
  *      throw a SeedHistoryError. Callers MUST wrap the call in
  *      try/catch — this module deliberately does not swallow real
  *      failures, so the seeder decides whether to log or ignore.
@@ -32,10 +31,10 @@
  * See tests/scripts-railway-nixpacks-no-escape-import.test.mts.
  */
 
-import { httpRetryError, resolveConvexSiteUrl } from './_seed-utils.mjs';
 import { embedBatch, normalizeForEmbedding } from './lib/brief-embedding.mjs';
 import { EMBED_MODEL } from './lib/brief-dedup-consts.mjs';
 import { HISTORY_COST_TIMEOUT_MS, recordHistoryCost } from './lib/intel-history-cost.mjs';
+import { openIntelHistoryStore, resolveIntelHistoryDbPath } from './lib/intel-history-store.mjs';
 
 // Per-run cap. A seed tick that suddenly emits thousands of "historic"
 // rows is a bug upstream, not a reason to spend the embedding budget —
@@ -44,15 +43,12 @@ import { HISTORY_COST_TIMEOUT_MS, recordHistoryCost } from './lib/intel-history-
 // postflight as lossless; it does not mean recovery may drop the tail.
 export const HISTORY_MAX_RECORDS_PER_RUN = 150;
 
-// Records per POST. Matches the batch sizes used by the other relay
-// importers (import-bounced-emails.mjs uses 100 for a much smaller
-// row); 50 × (512 floats + text) keeps a chunk body around 500KB.
+// Records per store.append call (the store accepts up to 100). Each chunk is
+// one write transaction, so a failing chunk costs at most 50 records.
 export const HISTORY_CHUNK_SIZE = 50;
 
-// Wire limits. These MUST NOT exceed what the relay route accepts
-// (INTEL_HISTORY_MAX_* in convex/http.ts): a record this sanitizer lets
-// through but the route rejects fails its entire chunk with a 400, so a
-// single over-long field would silently cost a whole batch of history.
+// Field limits, kept from the former relay contract: over-long records are
+// dropped here rather than stored.
 const DEDUPE_KEY_MAX_CHARS = 256;
 const TITLE_MAX_CHARS = 500;
 const SUMMARY_MAX_CHARS = 2000;
@@ -64,21 +60,12 @@ const SOURCE_URL_MAX_CHARS = 2048;
 const EMBED_TEXT_MAX_CHARS = 300;
 const EMBED_TEXT_SEPARATOR = ' — ';
 
-const RELAY_PATH = '/relay/intel-history';
-const RELAY_TIMEOUT_MS = 10_000;
-const RELAY_MAX_RETRIES = 2;
-const RELAY_RETRY_DELAY_MS = 1000;
-// History is best-effort; a relay asking for a minute-long backoff should not
-// hold the seed run's process open that long.
-const RELAY_RETRY_AFTER_CAP_MS = 10_000;
-const ERROR_SNIPPET_MAX_CHARS = 200;
-
 /**
  * Aggregate wall-clock budget for the whole append, mirroring the fetch
  * phase's own deadline in _seed-utils.mjs.
  *
- * Without it, a degraded relay costs chunks x attempts x timeout — around 99s
- * for a full run — all of it spent AFTER the canonical publish but BEFORE
+ * Without it, a slow embedder or a locked database could stall the run — all
+ * of it spent AFTER the canonical publish but BEFORE
  * runSeed writes seed-meta. A SIGTERM landing in that window kills the process
  * before the freshness write, so the run publishes fresh data that health then
  * reads as stale: precisely the failure the fail-open try/catch exists to
@@ -221,108 +208,17 @@ export function buildHistoryEmbeddingText(record) {
   return normalizeForEmbedding(text.slice(0, EMBED_TEXT_MAX_CHARS));
 }
 
-/** Best-effort body snippet for an error message; never throws. */
-async function readErrorSnippet(response) {
-  try {
-    const body = await response.text();
-    return typeof body === 'string' ? body.slice(0, ERROR_SNIPPET_MAX_CHARS) : '';
-  } catch {
-    return '';
-  }
-}
-
 /**
- * Resolve the relay config from an env bag. Returns `null` plus the
- * list of missing names so the caller can emit exactly one warn.
+ * Resolve the history config from an env bag. Returns the list of missing
+ * names so the caller can emit exactly one warn. The store itself is local,
+ * so the embedding key is the only requirement.
  */
-function resolveRelayConfig(env) {
-  const siteUrl = resolveConvexSiteUrl(env);
-  const secret = env.RELAY_SHARED_SECRET ?? '';
+function resolveHistoryConfig(env) {
   const openrouterKey = env.OPENROUTER_API_KEY ?? '';
-
   const missing = [];
-  if (!siteUrl) missing.push('CONVEX_SITE_URL (or CONVEX_URL)');
-  if (!secret) missing.push('RELAY_SHARED_SECRET');
   if (!openrouterKey) missing.push('OPENROUTER_API_KEY');
   if (missing.length > 0) return { missing };
-
-  return { siteUrl, secret, openrouterKey, missing };
-}
-
-/**
- * POST one chunk, with deadline-aware retry. HTTP classification comes from
- * `httpRetryError`, the convention every other retrying POST in scripts/ uses: permanent
- * statuses (4xx that aren't 408/429) are tagged `nonRetryable` so a
- * misconfigured secret fails in ~10ms instead of burning 3s of the
- * seeder's budget, and a `Retry-After` header is honored rather than
- * overridden by bare exponential backoff. The cap keeps a long
- * server-suggested delay from eating the run's remaining budget.
- */
-async function postHistoryChunk({
-  fetchImpl,
-  url,
-  secret,
-  payload,
-  deadline,
-  now,
-  sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-}) {
-  let lastError;
-  for (let attempt = 0; attempt <= RELAY_MAX_RETRIES; attempt++) {
-    const remainingMs = deadline - now();
-    if (remainingMs <= 0) {
-      throw new SeedHistoryError('intel-history relay budget exhausted', {
-        cause: lastError,
-        budgetExhausted: true,
-      });
-    }
-
-    try {
-      const response = await fetchImpl(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${secret}`,
-        },
-        body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(Math.max(1, Math.min(RELAY_TIMEOUT_MS, remainingMs))),
-      });
-
-      if (!response.ok) {
-        const snippet = await readErrorSnippet(response);
-        const retry = httpRetryError(response, { capMs: RELAY_RETRY_AFTER_CAP_MS });
-        const error = new SeedHistoryError(
-          `intel-history relay returned HTTP ${response.status}: ${snippet}`,
-          { status: response.status },
-        );
-        error.nonRetryable = retry.nonRetryable;
-        if (retry.retryAfterMs != null) error.retryAfterMs = retry.retryAfterMs;
-        throw error;
-      }
-
-      return await response.json();
-    } catch (err) {
-      lastError = err;
-      if (err?.nonRetryable || attempt >= RELAY_MAX_RETRIES) throw err;
-
-      const baseWait = RELAY_RETRY_DELAY_MS * 2 ** attempt;
-      const requestedWait = err?.retryAfterMs
-        ? Math.max(baseWait, err.retryAfterMs)
-        : baseWait;
-      const wait = Math.min(requestedWait, Math.max(0, deadline - now()));
-      if (wait <= 0) {
-        throw new SeedHistoryError('intel-history relay budget exhausted before retry', {
-          cause: err,
-          budgetExhausted: true,
-        });
-      }
-      console.warn(
-        `  Retry ${attempt + 1}/${RELAY_MAX_RETRIES} in ${wait}ms: ${err?.message || err}`,
-      );
-      await sleep(wait);
-    }
-  }
-  throw lastError;
+  return { openrouterKey, missing };
 }
 
 /**
@@ -826,12 +722,13 @@ export async function recordHistoryIngestHealth({ domain, resource, runId, resul
  * @param {string} [args.runId]    seed run identifier, echoed to the store
  * @param {unknown[]} args.records candidate records (see normalizeHistoryRecords)
  * @param {object} [deps]
- * @param {typeof fetch} [deps.fetchImpl]
+ * @param {typeof fetch} [deps.fetchImpl]  used only by the cost recorder
+ * @param {{append: Function}} [deps.store]  an open store; when omitted the
+ *   default database is opened, and closed again after the run
  * @param {(texts: string[], budget: {deadline: number, now: () => number,
  *   wallClockMs: number, onUsage: (usage: object) => void}) => Promise<number[][]>} [deps.embed]
  * @param {Record<string, string | undefined>} [deps.env]
  * @param {() => number} [deps.now]        clock seam for the budget
- * @param {(ms: number) => Promise<void>} [deps.sleep] retry-delay seam
  * @param {number} [deps.budgetMs]         aggregate wall-clock budget override
  * @param {(observation: object, deps: object) => Promise<boolean>} [deps.recordCost]
  * @returns {Promise<{inserted: number, skipped: number, retracted: number,
@@ -839,7 +736,7 @@ export async function recordHistoryIngestHealth({ domain, resource, runId, resul
  *   inputRecords: number, normalizedRecords: number, droppedRecords: number}
  *   | {skipped: 'unconfigured', missing: string[]}>}
  *
- * Throws SeedHistoryError on a hard runtime failure; propagates the
+ * Throws SeedHistoryError (or the store's own error) on a hard runtime failure; propagates the
  * embedder's own EmbeddingProviderError / EmbeddingTimeoutError. Never
  * throws for missing configuration.
  */
@@ -851,7 +748,7 @@ export async function appendSeedHistory({ domain, resource, runId, records }, de
     unknownEmbeddingRuns: 0,
   };
   const env = deps.env ?? process.env;
-  const configured = resolveRelayConfig(env).missing.length === 0;
+  const configured = resolveHistoryConfig(env).missing.length === 0;
   try {
     return await appendHistoryWithCost({ domain, resource, runId, records }, {
       ...deps,
@@ -875,7 +772,7 @@ export async function appendSeedHistory({ domain, resource, runId, records }, de
 async function appendHistoryWithCost({ domain, resource, runId, records }, deps, cost) {
   const env = deps.env ?? process.env;
 
-  const config = resolveRelayConfig(env);
+  const config = resolveHistoryConfig(env);
   if (config.missing.length > 0) {
     console.warn(
       `[seed-history] not configured — skipping history append (missing: ${config.missing.join(', ')})`,
@@ -914,9 +811,6 @@ async function appendHistoryWithCost({ domain, resource, runId, records }, deps,
   const now = deps.now ?? (() => Date.now());
   const deadline = now() + (deps.budgetMs ?? HISTORY_TOTAL_BUDGET_MS);
 
-  // Wrap rather than capture: a bare `fetch` default would bind the
-  // global at module load and miss later instrumentation shims.
-  const fetchImpl = deps.fetchImpl ?? ((...args) => globalThis.fetch(...args));
   const embed =
     deps.embed ??
     ((texts, options) =>
@@ -962,7 +856,16 @@ async function appendHistoryWithCost({ domain, resource, runId, records }, deps,
     };
   }
 
-  const url = `${config.siteUrl}${RELAY_PATH}`;
+  let store = deps.store;
+  const ownsStore = !store;
+  if (ownsStore) {
+    try {
+      store = openIntelHistoryStore(resolveIntelHistoryDbPath(env));
+    } catch (err) {
+      throw new SeedHistoryError(`intel-history store unavailable: ${err?.message || err}`, { cause: err });
+    }
+  }
+
   let inserted = 0;
   let skipped = 0;
   let retracted = 0;
@@ -975,7 +878,7 @@ async function appendHistoryWithCost({ domain, resource, runId, records }, deps,
     const count = (name, defaultValue) => {
       const value = body?.[name] ?? defaultValue;
       if (!Number.isSafeInteger(value) || value < 0) {
-        throw new SeedHistoryError(`intel-history relay returned an invalid ${name} count`);
+        throw new SeedHistoryError(`intel-history store returned an invalid ${name} count`);
       }
       return value;
     };
@@ -985,55 +888,46 @@ async function appendHistoryWithCost({ domain, resource, runId, records }, deps,
       retracted: count('retracted', 0),
     };
     if (counts.inserted + counts.skipped + counts.retracted !== expectedRecords) {
-      throw new SeedHistoryError('intel-history relay counters did not account for the submitted chunk');
+      throw new SeedHistoryError('intel-history store counters did not account for the submitted chunk');
     }
     return counts;
   };
 
-  for (let start = 0; start < sanitized.length; start += HISTORY_CHUNK_SIZE) {
-    const chunk = sanitized
-      .slice(start, start + HISTORY_CHUNK_SIZE)
-      .map((record, i) => ({ ...record, embedding: vectors[start + i] }));
+  try {
+    for (let start = 0; start < sanitized.length; start += HISTORY_CHUNK_SIZE) {
+      const chunk = sanitized
+        .slice(start, start + HISTORY_CHUNK_SIZE)
+        .map((record, i) => ({ ...record, embedding: vectors[start + i] }));
 
-    if (now() >= deadline) {
-      abandoned = sanitized.length - start;
-      console.warn(
-        `[seed-history] budget exhausted after ${chunks} chunk(s); abandoning ${abandoned} record(s)`,
-      );
-      break;
-    }
-
-    // Chunks are independent POSTs, and the slice is ordered newest-first, so
-    // letting one rejection unwind the loop would discard the OLDER history
-    // that a later chunk would have stored fine. Isolate the failure and keep
-    // going; if every chunk fails the error still surfaces below, because a
-    // systemic outage must not be reported as a successful no-op run.
-    try {
-      const body = await postHistoryChunk({
-        fetchImpl,
-        url,
-        secret: config.secret,
-        payload: { domain, resource, runId, records: chunk },
-        deadline,
-        now,
-        sleep: deps.sleep,
-      });
-      const counts = validatedChunkCounts(body, chunk.length);
-      inserted += counts.inserted;
-      skipped += counts.skipped;
-      retracted += counts.retracted;
-      chunks += 1;
-    } catch (err) {
-      if (err?.budgetExhausted || now() >= deadline) {
+      if (now() >= deadline) {
         abandoned = sanitized.length - start;
         console.warn(
-          `[seed-history] budget exhausted during relay; abandoning ${abandoned} record(s)`,
+          `[seed-history] budget exhausted after ${chunks} chunk(s); abandoning ${abandoned} record(s)`,
         );
         break;
       }
-      failedChunks += 1;
-      lastError = err;
-      console.warn(`[seed-history] chunk ${chunks + failedChunks} failed: ${err?.message || err}`);
+
+      // Chunks are independent transactions over a newest-first slice, so
+      // letting one failure unwind the loop would discard the OLDER history a
+      // later chunk would have stored fine. Isolate the failure and keep
+      // going; if every chunk fails the error still surfaces below, because a
+      // systemic failure must not be reported as a successful no-op run.
+      try {
+        const body = await store.append({ domain, resource, runId, records: chunk });
+        const counts = validatedChunkCounts(body, chunk.length);
+        inserted += counts.inserted;
+        skipped += counts.skipped;
+        retracted += counts.retracted;
+        chunks += 1;
+      } catch (err) {
+        failedChunks += 1;
+        lastError = err;
+        console.warn(`[seed-history] chunk ${chunks + failedChunks} failed: ${err?.message || err}`);
+      }
+    }
+  } finally {
+    if (ownsStore) {
+      try { store.close(); } catch { /* best-effort */ }
     }
   }
 

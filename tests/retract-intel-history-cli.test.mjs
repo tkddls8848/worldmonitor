@@ -10,7 +10,10 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { describe, it } from 'node:test';
+import { afterEach, describe, it } from 'node:test';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 import {
   RETRACT_MAX_IDENTIFIERS,
@@ -18,25 +21,9 @@ import {
   resolveRetractTarget,
   runRetractCli,
 } from '../scripts/retract-intel-history.mjs';
+import { INTEL_HISTORY_DIMS, openIntelHistoryStore } from '../shared/intel-history-store.mjs';
 
-const ENV = {
-  CONVEX_SITE_URL: 'https://example-deployment.convex.site',
-  RELAY_RETRACT_SECRET: 'relay-secret',
-};
-
-/** Capture the outgoing request without touching the network. */
-function stubFetch({ status = 200, body = { deleted: 1, tombstoned: 1 } } = {}) {
-  const calls = [];
-  const fetchImpl = async (url, init) => {
-    calls.push({ url, init });
-    return {
-      ok: status >= 200 && status < 300,
-      status,
-      text: async () => JSON.stringify(body),
-    };
-  };
-  return { fetchImpl, calls };
-}
+const ENV = {};
 
 describe('parseRetractArgs', () => {
   it('builds a retract payload from mixed ids and dedupe keys', () => {
@@ -176,99 +163,111 @@ describe('parseRetractArgs', () => {
 });
 
 describe('resolveRetractTarget', () => {
-  it('derives the site URL from CONVEX_URL and trims trailing slashes', () => {
-    const target = resolveRetractTarget({
-      CONVEX_URL: 'https://example-deployment.convex.cloud/',
-      RELAY_RETRACT_SECRET: 's',
+  it('uses WM_INTEL_HISTORY_DB and needs no credential', () => {
+    assert.deepEqual(resolveRetractTarget({ WM_INTEL_HISTORY_DB: 'C:/data/history.sqlite' }), {
+      ok: true,
+      dbPath: 'C:/data/history.sqlite',
     });
-    assert.equal(target.ok, true);
-    assert.equal(target.siteUrl, 'https://example-deployment.convex.site');
   });
 
-  it('names every missing variable at once', () => {
+  it('falls back to the repo .personal database', () => {
     const target = resolveRetractTarget({});
-    assert.equal(target.ok, false);
-    assert.deepEqual(target.missing, [
-      'CONVEX_SITE_URL (or CONVEX_URL)',
-      'RELAY_RETRACT_SECRET',
-    ]);
-  });
-
-  it('requires the retraction-scoped secret and ignores the seeder fleet secret', () => {
-    const both = resolveRetractTarget({
-      CONVEX_SITE_URL: ENV.CONVEX_SITE_URL,
-      RELAY_SHARED_SECRET: 'fleet-secret',
-      RELAY_RETRACT_SECRET: 'retract-only-secret',
-    });
-    assert.equal(both.secret, 'retract-only-secret');
-
-    const fleetOnly = resolveRetractTarget({
-      CONVEX_SITE_URL: ENV.CONVEX_SITE_URL,
-      RELAY_SHARED_SECRET: 'fleet-secret',
-    });
-    assert.equal(fleetOnly.ok, false);
-    assert.deepEqual(fleetOnly.missing, ['RELAY_RETRACT_SECRET']);
+    assert.equal(target.ok, true);
+    assert.match(target.dbPath.replaceAll('\\', '/'), /\/\.personal\/intel-history\.sqlite$/);
   });
 });
 
 describe('runRetractCli', () => {
-  it('posts a retraction to the retract route with the bearer secret', async () => {
-    const { fetchImpl, calls } = stubFetch();
+  const dirs = [];
+  afterEach(() => { while (dirs.length) rmSync(dirs.pop(), { recursive: true, force: true }); });
+
+  /** A temp database seeded with one stored record; returns the CLI env. */
+  function seededEnv() {
+    const dir = mkdtempSync(join(tmpdir(), 'retract-cli-'));
+    dirs.push(dir);
+    const file = join(dir, 'history.sqlite');
+    const store = openIntelHistoryStore(file);
+    try {
+      store.append({
+        domain: 'energy',
+        resource: 'intelligence',
+        runId: 'run-1',
+        records: [{
+          dedupeKey: 'energy:intelligence:abc',
+          title: 'Poisoned headline',
+          occurredAt: Date.now(),
+          embedding: new Array(INTEL_HISTORY_DIMS).fill(0.1),
+        }],
+      });
+    } finally {
+      store.close();
+    }
+    return { env: { WM_INTEL_HISTORY_DB: file }, file };
+  }
+
+  function rows(file) {
+    const store = openIntelHistoryStore(file, { readOnly: true });
+    try {
+      return store.timeline({ domain: 'energy' }).records;
+    } finally {
+      store.close();
+    }
+  }
+
+  it('retracts a stored record by dedupe key and keeps it out', async () => {
+    const { env, file } = seededEnv();
 
     const { code, lines } = await runRetractCli(
       ['--dedupe-key', 'energy:intelligence:abc', '--reason', 'poisoned'],
-      { env: ENV, fetchImpl },
+      { env },
     );
 
-    assert.equal(code, 0);
-    assert.equal(calls.length, 1);
-    assert.equal(
-      calls[0].url,
-      'https://example-deployment.convex.site/relay/intel-history/retract',
-    );
-    assert.equal(calls[0].init.headers.Authorization, 'Bearer relay-secret');
-    assert.deepEqual(JSON.parse(calls[0].init.body), {
-      ids: [],
-      dedupeKeys: ['energy:intelligence:abc'],
-      reason: 'poisoned',
-    });
+    assert.equal(code, 0, lines.join('\n'));
     assert.match(lines.join('\n'), /"tombstoned": 1/);
-    // An operator who re-queries immediately will still see the record; if the
-    // tool does not say why, the obvious read is "the retraction failed".
+    assert.match(lines.join('\n'), /"deleted": 1/);
+    // An operator who re-queries immediately may still see the record through
+    // the read cache; if the tool does not say why, the obvious read is "the
+    // retraction failed".
     assert.match(lines.join('\n'), /Allow ~1 hour/);
+    assert.equal(rows(file).length, 0);
   });
 
-  it('does not print the cache caveat on restore or list', async () => {
-    for (const argv of [['--restore', '--dedupe-key', 'k'], ['--list']]) {
-      const { fetchImpl } = stubFetch({ body: { removed: 1, notRetracted: [] } });
-      const { lines } = await runRetractCli(argv, { env: ENV, fetchImpl });
-      assert.doesNotMatch(lines.join('\n'), /Allow ~1 hour/);
-    }
+  it('retracts by record id', async () => {
+    const { env, file } = seededEnv();
+    const [record] = rows(file);
+
+    const { code, lines } = await runRetractCli(['--id', record.id, '--reason', 'wrong'], { env });
+
+    assert.equal(code, 0, lines.join('\n'));
+    assert.match(lines.join('\n'), /energy:intelligence:abc/);
+    assert.equal(rows(file).length, 0);
   });
 
-  it('routes --restore and --list to their own paths', async () => {
-    for (const [argv, path] of [
-      [['--restore', '--dedupe-key', 'k'], '/relay/intel-history/restore'],
-      [['--list'], '/relay/intel-history/retractions'],
-    ]) {
-      const { fetchImpl, calls } = stubFetch({ body: { removed: 1, notRetracted: [] } });
-      const { code } = await runRetractCli(argv, { env: ENV, fetchImpl });
-      assert.equal(code, 0);
-      assert.equal(calls[0].url, `https://example-deployment.convex.site${path}`);
-      assert.equal(
-        calls[0].init.headers['User-Agent'],
-        'worldmonitor-retract-intel-history/1.0',
-      );
-    }
+  it('restores and lists through the same database', async () => {
+    const { env } = seededEnv();
+    await runRetractCli(['--dedupe-key', 'energy:intelligence:abc', '--reason', 'poisoned'], { env });
+
+    const listed = await runRetractCli(['--list'], { env });
+    assert.equal(listed.code, 0);
+    assert.match(listed.lines.join('\n'), /"reason": "poisoned"/);
+    assert.doesNotMatch(listed.lines.join('\n'), /Allow ~1 hour/);
+
+    const restored = await runRetractCli(['--restore', '--dedupe-key', 'energy:intelligence:abc'], { env });
+    assert.equal(restored.code, 0);
+    assert.match(restored.lines.join('\n'), /"restored": 1/);
+    assert.doesNotMatch(restored.lines.join('\n'), /Allow ~1 hour/);
+
+    const after = await runRetractCli(['--list'], { env });
+    assert.match(after.lines.join('\n'), /"records": \[\]/);
   });
 
   it('exits non-zero when restore leaves requested keys untouched', async () => {
-    const { fetchImpl } = stubFetch({
-      body: { removed: 1, notRetracted: ['missing-key'] },
-    });
+    const { env } = seededEnv();
+    await runRetractCli(['--dedupe-key', 'restored-key', '--reason', 'r'], { env });
+
     const { code, lines } = await runRetractCli(
       ['--restore', '--dedupe-key', 'restored-key', '--dedupe-key', 'missing-key'],
-      { env: ENV, fetchImpl },
+      { env },
     );
 
     assert.equal(code, 1);
@@ -276,90 +275,60 @@ describe('runRetractCli', () => {
     assert.match(lines.join('\n'), /partial/);
   });
 
-  it('sends nothing on --dry-run', async () => {
-    const { fetchImpl, calls } = stubFetch();
+  it('changes nothing on --dry-run', async () => {
+    const { env, file } = seededEnv();
+    let opened = 0;
 
     const { code, lines } = await runRetractCli(
-      ['--dedupe-key', 'k', '--reason', 'why', '--dry-run'],
-      { env: ENV, fetchImpl },
+      ['--dedupe-key', 'energy:intelligence:abc', '--reason', 'why', '--dry-run'],
+      { env, openStore: () => { opened += 1; throw new Error('must not open'); } },
     );
 
     assert.equal(code, 0);
-    assert.equal(calls.length, 0, 'a dry run must not reach the relay');
-    assert.match(lines.join('\n'), /\[dry-run\] POST \/relay\/intel-history\/retract/);
+    assert.equal(opened, 0, 'a dry run must not open the store');
+    assert.match(lines.join('\n'), /\[dry-run\] retract on /);
+    assert.equal(rows(file).length, 1);
   });
 
-  it('fails before sending when the environment is incomplete', async () => {
-    const { fetchImpl, calls } = stubFetch();
+  it('surfaces a store rejection as a non-zero exit', async () => {
+    const { env } = seededEnv();
 
-    const { code, lines } = await runRetractCli(['--dedupe-key', 'k', '--reason', 'why'], {
-      env: { CONVEX_SITE_URL: ENV.CONVEX_SITE_URL },
-      fetchImpl,
-    });
+    const { code, lines } = await runRetractCli(['--id', '999999', '--reason', 'why'], { env });
 
     assert.equal(code, 1);
-    assert.equal(calls.length, 0);
-    assert.match(lines.join('\n'), /RELAY_RETRACT_SECRET/);
-  });
-
-  it('surfaces a relay rejection as a non-zero exit with the body', async () => {
-    const { fetchImpl } = stubFetch({ status: 400, body: { error: 'MISSING_REASON' } });
-
-    const { code, lines } = await runRetractCli(['--dedupe-key', 'k', '--reason', 'why'], {
-      env: ENV,
-      fetchImpl,
-    });
-
-    assert.equal(code, 1);
-    assert.match(lines.join('\n'), /HTTP 400/);
-    assert.match(lines.join('\n'), /MISSING_REASON/);
-  });
-
-  it('treats an unparseable 200 as a failure, not a completed retraction', async () => {
-    // A 200 whose body will not parse is a proxy/gateway interstitial in front
-    // of the Convex site domain. Exiting 0 would let a scripted
-    // `retract ... || alert` report success for a request that never landed.
-    const calls = [];
-    const fetchImpl = async (url, init) => {
-      calls.push({ url, init });
-      return { ok: true, status: 200, text: async () => '<html>gateway error</html>' };
-    };
-
-    const { code, lines } = await runRetractCli(['--dedupe-key', 'k', '--reason', 'why'], {
-      env: ENV,
-      fetchImpl,
-    });
-
-    assert.equal(code, 1);
-    assert.match(lines.join('\n'), /UNPARSEABLE_RESPONSE/);
+    assert.match(lines.join('\n'), /retract failed/);
+    assert.match(lines.join('\n'), /no identifier resolved/);
     assert.doesNotMatch(lines.join('\n'), /Allow ~1 hour/, 'no reassurance on a failed request');
   });
 
-  it('returns its failure result when the request itself throws', async () => {
-    // DNS failure, connection reset, or AbortSignal.timeout firing. Without a
-    // catch this escapes as an unhandled rejection and the operator gets a
-    // stack trace instead of the exit code the tool exists to return.
-    for (const err of [new Error('getaddrinfo ENOTFOUND'), new DOMException('t', 'TimeoutError')]) {
-      const fetchImpl = async () => { throw err; };
+  it('returns its failure result when the database cannot be opened', async () => {
+    for (const err of [new Error('unable to open database file'), new Error('database is locked')]) {
       const { code, lines } = await runRetractCli(
         ['--dedupe-key', 'k', '--reason', 'why'],
-        { env: ENV, fetchImpl },
+        { env: { WM_INTEL_HISTORY_DB: 'C:/nowhere/history.sqlite' }, openStore: () => { throw err; } },
       );
       assert.equal(code, 1);
-      assert.match(lines.join('\n'), /request failed:/);
+      assert.match(lines.join('\n'), /retract failed on /);
     }
   });
 
+  it('a review never creates a missing database', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'retract-cli-'));
+    dirs.push(dir);
+    const file = join(dir, 'absent.sqlite');
+
+    const { code } = await runRetractCli(['--list'], { env: { WM_INTEL_HISTORY_DB: file } });
+
+    assert.equal(code, 1);
+    assert.equal(existsSync(file), false);
+  });
+
   it('warns loudly about ids that resolved to nothing', async () => {
-    // A mixed batch succeeds while leaving those identities unsuppressed, and
-    // the cache note would otherwise be the last thing the operator reads.
-    const { fetchImpl } = stubFetch({
-      body: { deleted: 1, tombstoned: 1, refreshed: 0, keys: ['k'], unresolvedIds: ['gone-1'] },
-    });
+    const { env } = seededEnv();
 
     const { code, lines } = await runRetractCli(
-      ['--id', 'gone-1', '--dedupe-key', 'k', '--reason', 'mixed'],
-      { env: ENV, fetchImpl },
+      ['--id', '424242', '--dedupe-key', 'energy:intelligence:abc', '--reason', 'mixed'],
+      { env },
     );
 
     const out = lines.join('\n');
@@ -367,13 +336,15 @@ describe('runRetractCli', () => {
     // a scripted `retract ... || alert` must not stay silent on that.
     assert.equal(code, 1);
     assert.match(out, /FAILED: 1 id\(s\) did not resolve and were NOT tombstoned/);
-    assert.match(out, /gone-1/);
+    assert.match(out, /424242/);
     assert.match(out, /partial/i);
   });
 
   it('tells the operator when the retraction list was truncated', async () => {
-    const { fetchImpl } = stubFetch({ body: { retractions: [{ dedupeKey: 'a' }], partial: true } });
-    const { lines } = await runRetractCli(['--list', '--limit', '1'], { env: ENV, fetchImpl });
+    const { env } = seededEnv();
+    await runRetractCli(['--dedupe-key', 'a', '--dedupe-key', 'b', '--reason', 'r'], { env });
+
+    const { lines } = await runRetractCli(['--list', '--limit', '1'], { env });
     assert.match(lines.join('\n'), /raise --limit/);
   });
 });

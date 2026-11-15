@@ -6,19 +6,18 @@
  * so a poisoned or factually wrong feed item is retrievable — by semantic
  * search, timeline read, and precedent match — for months after the live
  * snapshot that produced it has rolled over. This is the supported way to take
- * one back. Before it existed the only path was a hand-run Convex console
- * operation, which is not something anyone should be improvising mid-incident.
+ * one back.
  *
  * A retraction does two things: it deletes the stored rows, and it tombstones
  * their `dedupeKey` so the producing seeder — still reading the same unchanged
  * upstream feed — cannot re-add them on its next tick. Deleting alone is
- * undone within the hour. See `retract` in convex/intelHistory.ts.
+ * undone within the hour. See `retract` in scripts/lib/intel-history-store.mjs.
  *
  * Usage:
  *   # find the record first — every retrieval path projects `id` and the
  *   # seeder-side `dedupeKey` convention is ${domain}:${resource}:${stableId}
  *   node scripts/retract-intel-history.mjs \
- *     --id <convex-doc-id> --reason "poisoned RSS item, #5743"
+ *     --id <record-id> --reason "poisoned RSS item, #5743"
  *   node scripts/retract-intel-history.mjs \
  *     --dedupe-key energy:intelligence:oilprice-9f3a-1780000000000 \
  *     --reason "instruction-shaped headline"
@@ -31,43 +30,36 @@
  *   node scripts/retract-intel-history.mjs --list
  *
  * Both --id and --dedupe-key are repeatable and may be combined. --dry-run
- * prints the resolved request without sending it.
+ * prints the resolved request without applying it.
  *
- * Environment: CONVEX_SITE_URL (or CONVEX_URL), plus RELAY_RETRACT_SECRET —
- * read from the checkout's `.env.local`
- * exactly as every seeder does. Without that load the runbook command above
- * fails with "missing environment" on a normal developer checkout, which is
- * the worst possible moment to discover a tooling gap.
- *
- * Boundary rules: `scripts/**` ships to Railway via nixpacks with
- * `root_dir=scripts`, so this file may only import from within `scripts/`,
- * `node:*`, and bare packages in scripts/package.json.
+ * Environment: WM_INTEL_HISTORY_DB (optional; defaults to
+ * <repo>/.personal/intel-history.sqlite), read from the checkout's `.env.local`
+ * exactly as every seeder does.
  */
 
-import { loadEnvFile, resolveConvexSiteUrl } from './_seed-utils.mjs';
+import { loadEnvFile } from './_seed-utils.mjs';
+import { openIntelHistoryStore, resolveIntelHistoryDbPath } from './lib/intel-history-store.mjs';
 
-/** Matches the per-call cap the relay route enforces (convex/intelHistory.ts). */
+/** Matches the per-call cap the store enforces (scripts/lib/intel-history-store.mjs). */
 export const RETRACT_MAX_IDENTIFIERS = 100;
 
-const ROUTES = {
-  retract: '/relay/intel-history/retract',
-  restore: '/relay/intel-history/restore',
-  list: '/relay/intel-history/retractions',
+const OPERATIONS = {
+  retract: 'retract',
+  restore: 'restore',
+  list: 'listRetractions',
 };
-
-const REQUEST_TIMEOUT_MS = 15_000;
 
 export const USAGE = `Usage:
   retract   node scripts/retract-intel-history.mjs --reason <why> (--id <id> | --dedupe-key <key>)...
   restore   node scripts/retract-intel-history.mjs --restore (--dedupe-key <key>)...
   review    node scripts/retract-intel-history.mjs --list [--limit <n>]
 
-  --dry-run  print the resolved request instead of sending it`;
+  --dry-run  print the resolved request instead of applying it`;
 
 /**
  * Parse argv into a request plan. Pure — no env, no clock, no network — so the
  * argument rules that decide whether an intelligence record gets deleted are
- * testable without a Convex deployment behind them.
+ * testable without a database behind them.
  *
  * Returns `{ ok: false, error }` rather than throwing or exiting: the failure
  * text is what an operator reads at 3am, and it belongs in one place that a
@@ -137,8 +129,8 @@ export function parseRetractArgs(argv) {
 
   // An untrimmed identifier looks up an identity that does not exist: the
   // retraction deletes nothing, tombstones the typo, and reports success while
-  // the record it was called about stays live. The relay rejects these too;
-  // catching them here turns a confusing 400 into an actionable message.
+  // the record it was called about stays live. The store rejects these too;
+  // catching them here turns a store error into an actionable message.
   for (const [flag, values] of [['--id', ids], ['--dedupe-key', dedupeKeys]]) {
     const untrimmed = values.find((value) => value !== value.trim());
     if (untrimmed !== undefined) {
@@ -202,107 +194,60 @@ export function parseRetractArgs(argv) {
 }
 
 /**
- * Resolve the relay target from an env bag. Mirrors `resolveRelayConfig` in
- * _seed-history.mjs minus the embedding key — retraction never embeds.
+ * Resolve the history database from an env bag. The store is local, so no
+ * credential is involved; the path is reported so an operator can see which
+ * database a command acted on.
  *
  * @param {Record<string, string | undefined>} env
  */
 export function resolveRetractTarget(env) {
-  const siteUrl = resolveConvexSiteUrl(env);
-  // Retraction is intentionally isolated from the widely distributed seeder
-  // credential. The relay routes fail closed on the same dedicated variable.
-  const secret = env.RELAY_RETRACT_SECRET || '';
-
-  const missing = [];
-  if (!siteUrl) missing.push('CONVEX_SITE_URL (or CONVEX_URL)');
-  if (!secret) missing.push('RELAY_RETRACT_SECRET');
-  if (missing.length > 0) return { ok: false, missing };
-
-  return { ok: true, siteUrl, secret };
-}
-
-/** POST one request to the relay and return its parsed body. */
-export async function sendRetractRequest(
-  { mode, payload, siteUrl, secret },
-  { fetchImpl = (...args) => globalThis.fetch(...args) } = {},
-) {
-  const url = `${siteUrl}${ROUTES[mode]}`;
-  const response = await fetchImpl(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${secret}`,
-      'User-Agent': 'worldmonitor-retract-intel-history/1.0',
-    },
-    body: JSON.stringify(payload),
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
-
-  const text = await response.text();
-  let body;
-  try {
-    body = JSON.parse(text);
-  } catch {
-    body = { error: 'UNPARSEABLE_RESPONSE', snippet: text.slice(0, 200) };
-  }
-  return { status: response.status, ok: response.ok, body };
+  return { ok: true, dbPath: resolveIntelHistoryDbPath(env) };
 }
 
 /**
  * Wire the pieces together. Separated from the process-level entry point below
- * so a test can drive the whole flow with an injected env and fetch.
+ * so a test can drive the whole flow with an injected env and store opener.
  *
  * @returns {Promise<{code: number, lines: string[]}>}
  */
-export async function runRetractCli(argv, { env = process.env, fetchImpl } = {}) {
+export async function runRetractCli(
+  argv,
+  { env = process.env, openStore = (dbPath, options) => openIntelHistoryStore(dbPath, options) } = {},
+) {
   const parsed = parseRetractArgs(argv);
   if (!parsed.ok) return { code: parsed.help ? 0 : 1, lines: [parsed.error] };
+
+  const target = resolveRetractTarget(env);
 
   if (parsed.dryRun) {
     return {
       code: 0,
-      lines: [`[dry-run] POST ${ROUTES[parsed.mode]}`, JSON.stringify(parsed.payload, null, 2)],
+      lines: [`[dry-run] ${OPERATIONS[parsed.mode]} on ${target.dbPath}`, JSON.stringify(parsed.payload, null, 2)],
     };
   }
 
-  const target = resolveRetractTarget(env);
-  if (!target.ok) {
-    return { code: 1, lines: [`missing environment: ${target.missing.join(', ')}`] };
-  }
-
-  // A network failure, DNS failure, or the request timeout firing rejects
-  // here. Without this catch the rejection escapes runRetractCli, the
-  // top-level await turns it into an unhandled rejection, and the operator
-  // gets a stack trace instead of the exit code this function exists to
-  // return — the one moment a scripted `retract … || alert` must fire.
-  let response;
+  // Opening a missing database, a locked file, or the store refusing the
+  // request all land here. The operator gets the exit code this function
+  // exists to return — the one moment a scripted `retract … || alert` must
+  // fire — instead of a stack trace.
+  let body;
+  let store;
   try {
-    response = await sendRetractRequest(
-      { mode: parsed.mode, payload: parsed.payload, siteUrl: target.siteUrl, secret: target.secret },
-      { fetchImpl },
-    );
+    // A review never creates the database; a retraction may (it tombstones a
+    // key before the seeder has ever written).
+    store = openStore(target.dbPath, { readOnly: parsed.mode === 'list' });
+    body = store[OPERATIONS[parsed.mode]](parsed.payload);
   } catch (err) {
-    return { code: 1, lines: [`request failed: ${err?.message || err}`] };
-  }
-  const { status, ok, body } = response;
-
-  if (!ok) {
-    return { code: 1, lines: [`relay returned HTTP ${status}`, JSON.stringify(body, null, 2)] };
+    return { code: 1, lines: [`${OPERATIONS[parsed.mode]} failed on ${target.dbPath}: ${err?.message || err}`] };
+  } finally {
+    try { store?.close(); } catch { /* best-effort */ }
   }
 
   const lines = [JSON.stringify(body, null, 2)];
 
-  // A 200 whose body will not parse is a gateway or proxy interstitial in
-  // front of the Convex site domain, not a completed retraction. Exiting 0
-  // here would let a scripted retraction report success for a request that
-  // never reached the store.
-  if (body?.error === 'UNPARSEABLE_RESPONSE') {
-    return { code: 1, lines };
-  }
-
   if (parsed.mode === 'retract') {
-    // Ids that did not resolve tombstoned NOTHING. The mutation now rejects
-    // the all-unresolved case outright, but a mixed batch still succeeds while
+    // Ids that did not resolve tombstoned NOTHING. The store rejects the
+    // all-unresolved case outright, but a mixed batch still succeeds while
     // silently leaving those identities unsuppressed — and the reassuring
     // cache note below would otherwise be the last thing the operator reads.
     const unresolved = Array.isArray(body?.unresolvedIds) ? body.unresolvedIds : [];
@@ -324,16 +269,16 @@ export async function runRetractCli(argv, { env = process.env, fetchImpl } = {})
       return { code: 1, lines };
     }
 
-    // The store is clean immediately; the read caches in front of it are not,
-    // and neither can be purged for a single record (their keys are hashes of
-    // the request, not of the rows in the response). An operator who checks
+    // The store is clean immediately; the read cache in front of it is not,
+    // and it cannot be purged for a single record (its keys are hashes of the
+    // request, not of the rows in the response). An operator who checks
     // straight away and still sees the record would otherwise conclude the
     // retraction failed and start retrying.
     lines.push(
       '',
-      'Note: two read caches sit in front of the store — a 30-minute Redis',
-      'success cache and, for get-intel-timeline only, a CDN tier up to 1 hour.',
-      'Allow ~1 hour before concluding a record is still retrievable. See',
+      'Note: a 30-minute success cache sits in front of the store, so a record',
+      'can stay visible in RPC reads for up to 30 minutes. Allow ~1 hour before',
+      'concluding a record is still retrievable. See',
       'docs/architecture/intel-history-untrusted-text.md § Propagation.',
     );
   }
@@ -366,7 +311,7 @@ export async function runRetractCli(argv, { env = process.env, fetchImpl } = {})
 if (process.argv[1]?.endsWith('retract-intel-history.mjs')) {
   // Only when actually run, never on import — the same contract every seeder
   // follows, and the reason a test importing this module does not pick up a
-  // developer's production credentials.
+  // developer's database path.
   loadEnvFile(import.meta.url);
   const { code, lines } = await runRetractCli(process.argv.slice(2));
   for (const line of lines) {

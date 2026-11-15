@@ -1,17 +1,21 @@
 /**
  * Unit tests for scripts/_seed-history.mjs — the seeder-side helper that
- * embeds and appends historical intelligence records to the Convex
- * intel-history relay.
+ * embeds and appends historical intelligence records to the local SQLite
+ * intel-history store.
  *
- * Everything is exercised through the `deps` DI seam (fetch / embed /
+ * Everything is exercised through the `deps` DI seam (store / embed /
  * env), mirroring the stub-embedder pattern in
- * tests/brief-dedup-embedding.test.mjs. No network, no seeder imports.
+ * tests/brief-dedup-embedding.test.mjs. No network, no seeder imports; the
+ * real-store tests use a temp database via WM_INTEL_HISTORY_DB.
  *
  * Run: ./node_modules/.bin/tsx --test tests/seed-history.test.mjs
  */
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 import {
   HISTORY_CHUNK_SIZE,
@@ -20,14 +24,19 @@ import {
   buildHistoryEmbeddingText,
   normalizeHistoryRecords,
 } from '../scripts/_seed-history.mjs';
+import { INTEL_HISTORY_DIMS, openIntelHistoryStore } from '../shared/intel-history-store.mjs';
 
 // ── Fixtures / harness ────────────────────────────────────────────────────────
 
 const ENV = {
-  CONVEX_SITE_URL: 'https://example.convex.site',
-  RELAY_SHARED_SECRET: 'test-secret',
   OPENROUTER_API_KEY: 'sk-test',
 };
+
+function unitVector(axis) {
+  const v = new Array(INTEL_HISTORY_DIMS).fill(0);
+  v[axis] = 1;
+  return v;
+}
 
 const BASE_AT = Date.UTC(2026, 6, 1);
 
@@ -45,24 +54,22 @@ function record(i, overrides = {}) {
 }
 
 /**
- * Fetch stub. `plan` maps a 0-based call index to a response spec; any
- * index without an entry falls back to `fallback`. Captures every call.
+ * Store stub. `plan` maps a 0-based append index to the counts it returns
+ * (or `{ throws }`); any index without an entry falls back to `fallback`.
+ * Captures every append.
  */
-function stubFetch(fallback, plan = {}) {
+function stubStore(fallback, plan = {}) {
   const calls = [];
-  async function fetchImpl(url, init) {
-    const index = calls.length;
-    calls.push({ url, init, body: init?.body ? JSON.parse(init.body) : null });
-    const spec = plan[index] ?? fallback;
-    const status = spec.status ?? 200;
-    return {
-      ok: status >= 200 && status < 300,
-      status,
-      json: async () => spec.body ?? {},
-      text: async () => spec.text ?? JSON.stringify(spec.body ?? {}),
-    };
-  }
-  return { fetchImpl, calls };
+  const store = {
+    append(args) {
+      const index = calls.length;
+      calls.push(args);
+      const spec = plan[index] ?? fallback;
+      if (spec.throws) throw spec.throws;
+      return spec;
+    },
+  };
+  return { store, calls };
 }
 
 /** Deterministic embedder that records the exact texts it was handed. */
@@ -249,60 +256,32 @@ describe('buildHistoryEmbeddingText', () => {
 // ── appendSeedHistory — env guard ─────────────────────────────────────────────
 
 describe('appendSeedHistory env guard', () => {
-  it('returns the unconfigured skip plus the missing names, with one warn and no fetch', async () => {
-    const { fetchImpl, calls } = stubFetch({ body: { inserted: 1, skipped: 0 } });
+  it('returns the unconfigured skip plus the missing names, with one warn and no write', async () => {
+    const { store, calls } = stubStore({ inserted: 1, skipped: 0 });
     const { embed, batches } = stubEmbed();
 
     const { result, warns } = await withCapturedWarn(() =>
       appendSeedHistory(
         { domain: 'conflict', resource: 'acled', runId: 'run-1', records: [record(1)] },
-        { fetchImpl, embed, env: {} },
+        { store, embed, env: {} },
       ),
     );
 
     // `missing` feeds the ingest-health record's `missingConfig` (#5736), so an
     // operator reading /api/health learns WHICH variable is absent.
-    assert.deepEqual(result, {
-      skipped: 'unconfigured',
-      missing: ['CONVEX_SITE_URL (or CONVEX_URL)', 'RELAY_SHARED_SECRET', 'OPENROUTER_API_KEY'],
-    });
+    assert.deepEqual(result, { skipped: 'unconfigured', missing: ['OPENROUTER_API_KEY'] });
     assert.equal(calls.length, 0);
     assert.equal(batches.length, 0);
     assert.equal(warns.length, 1);
   });
 
-  it('names every missing variable in the single warn', async () => {
-    const { fetchImpl } = stubFetch({ body: {} });
-    const { embed } = stubEmbed();
-
-    const { warns } = await withCapturedWarn(() =>
-      appendSeedHistory(
-        { domain: 'conflict', resource: 'acled', runId: 'run-1', records: [record(1)] },
-        { fetchImpl, embed, env: { CONVEX_SITE_URL: ENV.CONVEX_SITE_URL } },
-      ),
-    );
-
-    assert.equal(warns.length, 1);
-    assert.match(warns[0], /RELAY_SHARED_SECRET/);
-    assert.match(warns[0], /OPENROUTER_API_KEY/);
-    assert.doesNotMatch(warns[0], /CONVEX_SITE_URL/);
-  });
-
-  it('derives CONVEX_SITE_URL from CONVEX_URL (.convex.cloud → .convex.site)', async () => {
-    const { fetchImpl, calls } = stubFetch({ body: { inserted: 1, skipped: 0 } });
+  it('needs no Convex or relay variables once the embedding key is set', async () => {
+    const { store, calls } = stubStore({ inserted: 1, skipped: 0 });
     const { embed } = stubEmbed();
 
     const result = await appendSeedHistory(
       { domain: 'conflict', resource: 'acled', runId: 'run-1', records: [record(1)] },
-      {
-        fetchImpl,
-        embed,
-        env: {
-          CONVEX_URL: 'https://fearless-otter-42.convex.cloud',
-          RELAY_SHARED_SECRET: ENV.RELAY_SHARED_SECRET,
-          OPENROUTER_API_KEY: ENV.OPENROUTER_API_KEY,
-        },
-      },
+      { store, embed, env: { OPENROUTER_API_KEY: 'sk-test' } },
     );
 
     assert.deepEqual(result, {
@@ -316,15 +295,67 @@ describe('appendSeedHistory env guard', () => {
       normalizedRecords: 1,
       droppedRecords: 0,
     });
-    assert.equal(calls[0].url, 'https://fearless-otter-42.convex.site/relay/intel-history');
+    assert.equal(calls.length, 1);
   });
 });
 
-// ── appendSeedHistory — happy path ────────────────────────────────────────────
+// ── appendSeedHistory — the real SQLite store ─────────────────────────────────
+
+describe('appendSeedHistory against the SQLite store', () => {
+  it('writes to WM_INTEL_HISTORY_DB, creating it, and dedupes a re-run', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'seed-history-'));
+    const file = join(dir, 'nested', 'history.sqlite');
+    const env = { ...ENV, WM_INTEL_HISTORY_DB: file };
+    const embed = async (texts) => texts.map((_, i) => unitVector(i % INTEL_HISTORY_DIMS));
+    try {
+      const records = Array.from({ length: 60 }, (_, i) => record(i));
+      const first = await appendSeedHistory({ domain: 'conflict', resource: 'acled', runId: 'run-1', records }, { embed, env });
+      assert.equal(first.inserted, 60);
+      assert.equal(first.chunks, 2, '60 records go in as 50 + 10');
+      assert.ok(existsSync(file));
+
+      const second = await appendSeedHistory({ domain: 'conflict', resource: 'acled', runId: 'run-2', records }, { embed, env });
+      assert.equal(second.inserted, 0);
+      assert.equal(second.skipped, 60);
+
+      const reader = openIntelHistoryStore(file, { readOnly: true });
+      try {
+        const { records: stored } = reader.timeline({ domain: 'conflict', limit: 200 });
+        assert.equal(stored.length, 60);
+        assert.equal(stored[0].dedupeKey, 'conflict:acled:evt-59', 'newest first');
+        assert.equal(stored[0].runId, 'run-1');
+        assert.equal(stored[0].country, 'LB');
+      } finally {
+        reader.close();
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('surfaces the store rejection when every chunk is refused', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'seed-history-'));
+    const env = { ...ENV, WM_INTEL_HISTORY_DB: join(dir, 'history.sqlite') };
+    try {
+      // The stub embedder returns 4-dim vectors; the store requires 512.
+      const { embed } = stubEmbed();
+      await withCapturedWarn(async () => {
+        await assert.rejects(
+          appendSeedHistory({ domain: 'conflict', resource: 'acled', runId: 'run-1', records: [record(1)] }, { embed, env }),
+          /INVALID_RECORD/,
+        );
+      });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+// ── appendSeedHistory — chunking and failure isolation ────────────────────────
 
 describe('appendSeedHistory', () => {
-  it('returns zeros without fetching when nothing survives normalization', async () => {
-    const { fetchImpl, calls } = stubFetch({ body: {} });
+  it('returns zeros without writing when nothing survives normalization', async () => {
+    const { store, calls } = stubStore({});
     const { embed, batches } = stubEmbed();
 
     const result = await appendSeedHistory(
@@ -334,7 +365,7 @@ describe('appendSeedHistory', () => {
         runId: 'run-1',
         records: [record(1, { dedupeKey: null }), null],
       },
-      { fetchImpl, embed, env: ENV },
+      { store, embed, env: ENV },
     );
 
     assert.deepEqual(result, {
@@ -352,13 +383,13 @@ describe('appendSeedHistory', () => {
     assert.equal(batches.length, 0);
   });
 
-  it('chunks 120 records into 50/50/20 POSTs and aggregates the counters', async () => {
-    const { fetchImpl, calls } = stubFetch(
-      { body: { inserted: 0, skipped: 0 } },
+  it('chunks 120 records into 50/50/20 appends and aggregates the counters', async () => {
+    const { store, calls } = stubStore(
+      { inserted: 0, skipped: 0 },
       {
-        0: { body: { inserted: 40, skipped: 10 } },
-        1: { body: { inserted: 45, skipped: 5 } },
-        2: { body: { inserted: 18, skipped: 2 } },
+        0: { inserted: 40, skipped: 10 },
+        1: { inserted: 45, skipped: 5 },
+        2: { inserted: 18, skipped: 2 },
       },
     );
     const { embed } = stubEmbed();
@@ -368,7 +399,7 @@ describe('appendSeedHistory', () => {
 
     const result = await appendSeedHistory(
       { domain: 'conflict', resource: 'acled', runId: 'run-42', records },
-      { fetchImpl, embed, env: ENV },
+      { store, embed, env: ENV },
     );
 
     assert.deepEqual(result, {
@@ -384,19 +415,15 @@ describe('appendSeedHistory', () => {
     });
     assert.equal(calls.length, 3);
     assert.deepEqual(
-      calls.map((c) => c.body.records.length),
+      calls.map((c) => c.records.length),
       [HISTORY_CHUNK_SIZE, HISTORY_CHUNK_SIZE, 20],
     );
 
     for (const call of calls) {
-      assert.equal(call.url, 'https://example.convex.site/relay/intel-history');
-      assert.equal(call.init.method, 'POST');
-      assert.equal(call.init.headers.Authorization, 'Bearer test-secret');
-      assert.equal(call.init.headers['Content-Type'], 'application/json');
-      assert.equal(call.body.domain, 'conflict');
-      assert.equal(call.body.resource, 'acled');
-      assert.equal(call.body.runId, 'run-42');
-      for (const r of call.body.records) {
+      assert.equal(call.domain, 'conflict');
+      assert.equal(call.resource, 'acled');
+      assert.equal(call.runId, 'run-42');
+      for (const r of call.records) {
         assert.ok(Array.isArray(r.embedding), 'each record carries its embedding');
         assert.equal(typeof r.dedupeKey, 'string');
       }
@@ -404,12 +431,11 @@ describe('appendSeedHistory', () => {
 
     // Chunk boundaries must not shuffle: the vector attached to a record
     // is the one embedded for that record's own text.
-    const firstRecord = calls[0].body.records[0];
-    assert.equal(firstRecord.embedding[1], 0, 'first record gets the first vector');
+    assert.equal(calls[0].records[0].embedding[1], 0, 'first record gets the first vector');
   });
 
   it('reports records removed by validation or the per-run cap', async () => {
-    const { fetchImpl } = stubFetch({ body: { inserted: 50, skipped: 0 } });
+    const { store } = stubStore({ inserted: 50, skipped: 0 });
     const { embed } = stubEmbed();
     const records = Array.from(
       { length: HISTORY_MAX_RECORDS_PER_RUN + 1 },
@@ -418,7 +444,7 @@ describe('appendSeedHistory', () => {
 
     const result = await appendSeedHistory(
       { domain: 'conflict', resource: 'acled', runId: 'run-capped', records },
-      { fetchImpl, embed, env: ENV },
+      { store, embed, env: ENV },
     );
 
     assert.equal(result.inputRecords, HISTORY_MAX_RECORDS_PER_RUN + 1);
@@ -426,7 +452,7 @@ describe('appendSeedHistory', () => {
     assert.equal(result.droppedRecords, 1);
   });
 
-  it('rejects malformed or incomplete relay counters', async () => {
+  it('rejects malformed or incomplete store counters', async () => {
     for (const body of [
       { inserted: -1, skipped: 2, retracted: 0 },
       { inserted: 0.5, skipped: 0.5, retracted: 0 },
@@ -434,31 +460,31 @@ describe('appendSeedHistory', () => {
       { inserted: 2, skipped: 0, retracted: 0 },
       { inserted: 0, skipped: 0, retracted: 0 },
     ]) {
-      const { fetchImpl } = stubFetch({ body });
+      const { store } = stubStore(body);
       const { embed } = stubEmbed();
       await withCapturedWarn(async () => {
         await assert.rejects(
           appendSeedHistory(
             { domain: 'conflict', resource: 'acled', runId: 'run-bad-counts', records: [record(1)] },
-            { fetchImpl, embed, env: ENV },
+            { store, embed, env: ENV },
           ),
-          /relay (?:returned an invalid|counters did not account)/,
+          /store (?:returned an invalid|counters did not account)/,
         );
       });
     }
   });
 
-  it('continues after one successful response has malformed counters', async () => {
-    const { fetchImpl, calls } = stubFetch(
-      { body: { inserted: 10, skipped: 0 } },
-      { 0: { body: { inserted: 49, skipped: 0 } } },
+  it('continues after one chunk returns malformed counters', async () => {
+    const { store, calls } = stubStore(
+      { inserted: 10, skipped: 0 },
+      { 0: { inserted: 49, skipped: 0 } },
     );
     const { embed } = stubEmbed();
     const records = Array.from({ length: 60 }, (_, index) => record(index));
 
     const { result } = await withCapturedWarn(() => appendSeedHistory(
       { domain: 'conflict', resource: 'acled', runId: 'run-partial-counts', records },
-      { fetchImpl, embed, env: ENV },
+      { store, embed, env: ENV },
     ));
 
     assert.equal(calls.length, 2);
@@ -468,7 +494,7 @@ describe('appendSeedHistory', () => {
   });
 
   it('embeds "title — summary" normalized and capped at 300 chars', async () => {
-    const { fetchImpl } = stubFetch({ body: { inserted: 2, skipped: 0 } });
+    const { store } = stubStore({ inserted: 2, skipped: 0 });
     const { embed, batches } = stubEmbed();
 
     await appendSeedHistory(
@@ -489,7 +515,7 @@ describe('appendSeedHistory', () => {
           }),
         ],
       },
-      { fetchImpl, embed, env: ENV },
+      { store, embed, env: ENV },
     );
 
     assert.equal(batches.length, 1);
@@ -502,7 +528,7 @@ describe('appendSeedHistory', () => {
   });
 
   it('omits the separator when the record has no summary', async () => {
-    const { fetchImpl } = stubFetch({ body: { inserted: 1, skipped: 0 } });
+    const { store } = stubStore({ inserted: 1, skipped: 0 });
     const { embed, batches } = stubEmbed();
 
     await appendSeedHistory(
@@ -512,43 +538,41 @@ describe('appendSeedHistory', () => {
         runId: 'run-1',
         records: [record(1, { title: 'Bare Title', summary: undefined })],
       },
-      { fetchImpl, embed, env: ENV },
+      { store, embed, env: ENV },
     );
 
     assert.deepEqual(batches[0], ['bare title']);
   });
 
   // The append runs AFTER the canonical publish but BEFORE runSeed writes
-  // seed-meta. A degraded relay that stalls this loop (3 chunks x 3 attempts x
-  // a 10s timeout) risks a SIGTERM landing before the freshness write, which
-  // would publish fresh data that health then reads as stale. The budget stops
-  // issuing chunks instead of stalling; whatever already committed is kept.
+  // seed-meta. The budget stops issuing chunks instead of stalling; whatever
+  // already committed is kept.
   it('abandons remaining chunks once the aggregate budget is spent', async () => {
-    const { fetchImpl, calls } = stubFetch({ body: { inserted: 50, skipped: 0 } });
+    const { store, calls } = stubStore({ inserted: 50, skipped: 0 });
     const { embed } = stubEmbed();
 
     const records = [];
     for (let i = 0; i < 120; i++) records.push(record(i));
 
-    // Deadline, embed allowance, post-embed guard, first chunk guard, and the
-    // first request all stay inside the budget. The second chunk sees expiry.
+    // Deadline, embed allowance, post-embed guard, and the first chunk guard
+    // stay inside the budget. The second chunk sees expiry.
     let ticks = 0;
-    const now = () => (ticks++ < 5 ? 0 : 999_999);
+    const now = () => (ticks++ < 4 ? 0 : 999_999);
 
     const result = await appendSeedHistory(
       { domain: 'conflict', resource: 'acled', runId: 'run-budget', records },
-      { fetchImpl, embed, env: ENV, now, budgetMs: 30_000 },
+      { store, embed, env: ENV, now, budgetMs: 30_000 },
     );
 
-    assert.equal(calls.length, 1, 'only the pre-deadline chunk is sent');
+    assert.equal(calls.length, 1, 'only the pre-deadline chunk is written');
     assert.equal(result.chunks, 1);
     assert.equal(result.inserted, 50, 'the committed chunk still counts');
-    assert.equal(result.abandoned, 70, 'the untried remainder (120 - the 50 sent) is reported');
+    assert.equal(result.abandoned, 70, 'the untried remainder (120 - the 50 written) is reported');
     assert.equal(result.failedChunks, 0);
   });
 
-  it('includes embedding in the aggregate budget and sends no relay request after expiry', async () => {
-    const { fetchImpl, calls } = stubFetch({ body: { inserted: 1, skipped: 0 } });
+  it('includes embedding in the aggregate budget and writes nothing after expiry', async () => {
+    const { store, calls } = stubStore({ inserted: 1, skipped: 0 });
     let currentTime = 0;
     let receivedOptions;
     const embed = async (texts, options) => {
@@ -561,7 +585,7 @@ describe('appendSeedHistory', () => {
       appendSeedHistory(
         { domain: 'conflict', resource: 'acled', runId: 'run-slow-embed', records: [record(1)] },
         {
-          fetchImpl,
+          store,
           embed,
           env: ENV,
           now: () => currentTime,
@@ -587,60 +611,15 @@ describe('appendSeedHistory', () => {
     assert.ok(warns.some((w) => w.includes('budget exhausted during embedding')));
   });
 
-  it('does not retry a relay failure after the shared deadline expires', async () => {
-    let currentTime = 0;
-    const calls = [];
-    const fetchImpl = async (url, init) => {
-      calls.push({ url, init });
-      currentTime = 501;
-      return {
-        ok: false,
-        status: 500,
-        headers: {},
-        json: async () => ({ error: 'slow failure' }),
-        text: async () => 'slow failure',
-      };
-    };
-    const { embed } = stubEmbed();
-
-    const { result, warns } = await withCapturedWarn(() =>
-      appendSeedHistory(
-        { domain: 'conflict', resource: 'acled', runId: 'run-relay-budget', records: [record(1)] },
-        {
-          fetchImpl,
-          embed,
-          env: ENV,
-          now: () => currentTime,
-          sleep: async () => assert.fail('retry sleep must not run after deadline'),
-          budgetMs: 500,
-        },
-      ),
-    );
-
-    assert.equal(calls.length, 1);
-    assert.deepEqual(result, {
-      inserted: 0,
-      skipped: 0,
-      retracted: 0,
-      chunks: 0,
-      abandoned: 1,
-      failedChunks: 0,
-      inputRecords: 1,
-      normalizedRecords: 1,
-      droppedRecords: 0,
-    });
-    assert.ok(warns.some((w) => w.includes('budget exhausted during relay')));
-  });
-
-  // Chunks are independent POSTs over a newest-first slice, so letting one
-  // rejection unwind the loop would discard the OLDER history the remaining
+  // Chunks are independent transactions over a newest-first slice, so letting
+  // one failure unwind the loop would discard the OLDER history the remaining
   // chunks would have stored fine.
-  it('keeps going when a middle chunk fails permanently', async () => {
-    const { fetchImpl, calls } = stubFetch(
-      { body: { inserted: 50, skipped: 0 } },
+  it('keeps going when a middle chunk fails', async () => {
+    const { store, calls } = stubStore(
+      { inserted: 50, skipped: 0 },
       {
-        1: { status: 400, body: { error: 'INVALID_RECORD' }, text: 'INVALID_RECORD' },
-        2: { body: { inserted: 20, skipped: 0 } },
+        1: { throws: new Error('INVALID_RECORD: record 3 needs a title') },
+        2: { inserted: 20, skipped: 0 },
       },
     );
     const { embed } = stubEmbed();
@@ -651,7 +630,7 @@ describe('appendSeedHistory', () => {
     const { result, warns } = await withCapturedWarn(() =>
       appendSeedHistory(
         { domain: 'conflict', resource: 'acled', runId: 'run-partial', records },
-        { fetchImpl, embed, env: ENV },
+        { store, embed, env: ENV },
       ),
     );
 
@@ -662,121 +641,62 @@ describe('appendSeedHistory', () => {
     assert.ok(warns.some((w) => w.includes('chunk 2 failed')));
   });
 
-  // A systemic outage (bad secret, relay down) must not be reported as a
-  // successful no-op run — every chunk failing still surfaces the error.
+  // A systemic failure (locked or unwritable database) must not be reported as
+  // a successful no-op run — every chunk failing still surfaces the error.
   it('throws when every chunk fails', async () => {
-    const { fetchImpl } = stubFetch({ status: 500, body: { error: 'boom' }, text: 'boom' });
+    const { store } = stubStore({ throws: new Error('database is locked') });
     const { embed } = stubEmbed();
 
     await withCapturedWarn(async () => {
       await assert.rejects(
         appendSeedHistory(
           { domain: 'conflict', resource: 'acled', runId: 'run-dead', records: [record(1)] },
-          { fetchImpl, embed, env: ENV },
+          { store, embed, env: ENV },
         ),
-        /HTTP 500/,
+        /database is locked/,
       );
     });
   });
 
-  it('retries a 500 chunk and still aggregates the full result', async () => {
-    const { fetchImpl, calls } = stubFetch(
-      { body: { inserted: 0, skipped: 0 } },
-      {
-        0: { status: 500, text: 'upstream boom' },
-        1: { body: { inserted: 3, skipped: 1 } },
-      },
-    );
-    const { embed } = stubEmbed();
-
-    const { result } = await withCapturedWarn(() =>
-      appendSeedHistory(
-        {
-          domain: 'conflict',
-          resource: 'acled',
-          runId: 'run-1',
-          records: [record(1), record(2), record(3), record(4)],
-        },
-        { fetchImpl, embed, env: ENV },
-      ),
-    );
-
-    assert.deepEqual(result, {
-      inserted: 3,
-      skipped: 1,
-      retracted: 0,
-      chunks: 1,
-      abandoned: 0,
-      failedChunks: 0,
-      inputRecords: 4,
-      normalizedRecords: 4,
-      droppedRecords: 0,
-    });
-    assert.equal(calls.length, 2, 'one failed attempt + one successful retry');
-  });
-
-  it('throws with the status and a body snippet on a persistent non-ok response', async () => {
-    const { fetchImpl, calls } = stubFetch({ status: 401, text: 'bad relay secret' });
-    const { embed } = stubEmbed();
-
-    await assert.rejects(
-      () =>
-        appendSeedHistory(
-          { domain: 'conflict', resource: 'acled', runId: 'run-1', records: [record(1)] },
-          { fetchImpl, embed, env: ENV },
-        ),
-      (err) => {
-        assert.match(err.message, /401/);
-        assert.match(err.message, /bad relay secret/);
-        assert.equal(err.status, 401);
-        return true;
-      },
-    );
-    // 401 is permanent — no point burning the seeder's budget on backoff.
-    assert.equal(calls.length, 1);
-  });
-
-  it('truncates the error body snippet to 200 chars', async () => {
-    const { fetchImpl } = stubFetch({ status: 403, text: 'x'.repeat(5000) });
-    const { embed } = stubEmbed();
-
-    await assert.rejects(
-      () =>
-        appendSeedHistory(
-          { domain: 'conflict', resource: 'acled', runId: 'run-1', records: [record(1)] },
-          { fetchImpl, embed, env: ENV },
-        ),
-      (err) => {
-        assert.ok(err.message.length < 400, `message too long: ${err.message.length}`);
-        return true;
-      },
-    );
+  it('reports an unopenable database as a SeedHistoryError', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'seed-history-'));
+    try {
+      // A directory where the database file should be cannot be opened.
+      const env = { ...ENV, WM_INTEL_HISTORY_DB: dir };
+      const embed = async (texts) => texts.map(() => unitVector(0));
+      await assert.rejects(
+        appendSeedHistory({ domain: 'conflict', resource: 'acled', runId: 'run-1', records: [record(1)] }, { embed, env }),
+        (err) => err.name === 'SeedHistoryError' && /store unavailable/.test(err.message),
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it('throws when the embedder returns the wrong number of vectors', async () => {
-    const { fetchImpl, calls } = stubFetch({ body: { inserted: 1, skipped: 0 } });
+    const { store, calls } = stubStore({ inserted: 1, skipped: 0 });
 
     await assert.rejects(
       () =>
         appendSeedHistory(
           { domain: 'conflict', resource: 'acled', runId: 'run-1', records: [record(1), record(2)] },
-          { fetchImpl, embed: async () => [[1, 2, 3]], env: ENV },
+          { store, embed: async () => [[1, 2, 3]], env: ENV },
         ),
       /embedding/i,
     );
-    assert.equal(calls.length, 0, 'nothing is POSTed when the embed batch is short');
+    assert.equal(calls.length, 0, 'nothing is written when the embed batch is short');
   });
 
   it('rejects a missing domain or resource before doing any work', async () => {
-    const { fetchImpl, calls } = stubFetch({ body: {} });
+    const { store, calls } = stubStore({});
     const { embed } = stubEmbed();
 
     await assert.rejects(
-      () => appendSeedHistory({ resource: 'acled', records: [record(1)] }, { fetchImpl, embed, env: ENV }),
+      () => appendSeedHistory({ resource: 'acled', records: [record(1)] }, { store, embed, env: ENV }),
       /domain/i,
     );
     await assert.rejects(
-      () => appendSeedHistory({ domain: 'conflict', records: [record(1)] }, { fetchImpl, embed, env: ENV }),
+      () => appendSeedHistory({ domain: 'conflict', records: [record(1)] }, { store, embed, env: ENV }),
       /resource/i,
     );
     assert.equal(calls.length, 0);

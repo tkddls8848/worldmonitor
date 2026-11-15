@@ -22,6 +22,10 @@
 
 import { describe, it, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { IntelHistoryStoreError, openIntelHistoryStore } from '../shared/intel-history-store.mjs';
 import sovereignStatus from '../scripts/shared/sovereign-status.json' with { type: 'json' };
 import { CII_RISK_SCORES_META_KEY, healthyCiiInputs } from './helpers/health-pipeline-fixture.mjs';
 
@@ -731,12 +735,11 @@ describe('makeSeedHistoryAfterPublish', () => {
 // drifts — a renamed counter, a path that starts resolving where it used to
 // throw — the projection keeps reading a shape the producer no longer emits and
 // the alarm goes quiet with every test still green. These drive the REAL
-// producer, with only the network stubbed, into the REAL reducer.
+// producer, with only the embedder and the store stubbed (or a temp SQLite
+// store), into the REAL reducer.
 
 describe('appendSeedHistory outcomes reach the projection intact', () => {
-  const RELAY_ENV = {
-    CONVEX_SITE_URL: 'https://example.convex.site',
-    RELAY_SHARED_SECRET: 'test-secret',
+  const HISTORY_ENV = {
     OPENROUTER_API_KEY: 'sk-test',
   };
 
@@ -754,7 +757,7 @@ describe('appendSeedHistory outcomes reach the projection intact', () => {
     try {
       result = await appendSeedHistory(
         { domain: DOMAIN, resource: RESOURCE, runId: 'run-1', records: candidates },
-        { env: RELAY_ENV, embed: stubEmbed, ...deps },
+        { env: HISTORY_ENV, embed: stubEmbed, ...deps },
       );
     } catch (err) {
       error = err;
@@ -768,19 +771,15 @@ describe('appendSeedHistory outcomes reach the projection intact', () => {
     });
   }
 
-  it('a relay rejecting every chunk lands as failing with the HTTP code', async () => {
+  it('a store rejecting every chunk lands as failing with the store error code', async () => {
     const { record, meta } = await withCapturedWarn(() => runProducerThenProject({
-      fetchImpl: async () => ({
-        ok: false,
-        status: 401,
-        text: async () => 'unauthorized',
-        json: async () => ({}),
-      }),
-      sleep: async () => {},
+      store: {
+        append() { throw new IntelHistoryStoreError('INVALID_RECORD', 'record 0 needs a title'); },
+      },
     })).then((r) => r.value);
 
     assert.equal(record.state, 'failing');
-    assert.equal(record.lastErrorCode, 'http_401');
+    assert.equal(record.lastErrorCode, 'intel_history_store_error');
     assert.equal(meta.fetchedAt, null);
     assert.equal(meta.sourceState, 'ok', 'one failed run is below the alarm threshold');
   });
@@ -794,8 +793,8 @@ describe('appendSeedHistory outcomes reach the projection intact', () => {
       // sends anything and the run is reported as fully abandoned.
       now: () => (calls++ === 0 ? AT : AT + 10 * MINUTE),
       budgetMs: 1_000,
-      fetchImpl: async () => {
-        throw new Error('the relay must never be contacted in this scenario');
+      store: {
+        append() { throw new Error('the store must never be written in this scenario'); },
       },
     }));
 
@@ -805,19 +804,25 @@ describe('appendSeedHistory outcomes reach the projection intact', () => {
     assert.match(warns.join(' '), /budget exhausted/);
   });
 
-  it('a fully accepted run lands as healthy with the relay-accepted volume', async () => {
-    const { record, meta } = await runProducerThenProject({
-      fetchImpl: async () => ({
-        ok: true,
-        status: 200,
-        json: async () => ({ inserted: 2, skipped: 1 }),
-      }),
-    });
+  it('a fully accepted run lands as healthy with the store-accepted volume', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ingest-health-'));
+    const store = openIntelHistoryStore(join(dir, 'history.sqlite'));
+    try {
+      // One of the three is already stored, so the run reports 2 + 1 deduped.
+      const embedding = new Array(512).fill(0.1);
+      store.append({ domain: DOMAIN, resource: RESOURCE, runId: 'run-0', records: [{ ...candidates[0], embedding }] });
+      const { record, meta } = await runProducerThenProject({ store });
 
-    assert.equal(record.state, 'healthy');
-    assert.equal(meta.fetchedAt, AT);
-    assert.equal(meta.recordCount, 3, 'inserted + deduped, straight from the relay');
-    assert.equal(meta.sourceState, 'ok');
+      assert.equal(record.state, 'healthy');
+      assert.equal(record.lastInserted, 2);
+      assert.equal(record.lastDeduped, 1);
+      assert.equal(meta.fetchedAt, AT);
+      assert.equal(meta.recordCount, 3, 'inserted + deduped, straight from the store');
+      assert.equal(meta.sourceState, 'ok');
+    } finally {
+      store.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it('carries every counter the relay reports into the record', () => {
@@ -841,20 +846,16 @@ describe('appendSeedHistory outcomes reach the projection intact', () => {
     );
   });
 
-  it('an unconfigured relay lands as unconfigured and names the missing variable', async () => {
+  it('an unconfigured history ingest lands as unconfigured and names the missing variable', async () => {
     const { value: projected } = await withCapturedWarn(() => runProducerThenProject({
       env: {},
-      fetchImpl: async () => {
-        throw new Error('no network when unconfigured');
+      store: {
+        append() { throw new Error('no write when unconfigured'); },
       },
     }));
 
     assert.equal(projected.record.state, 'unconfigured');
-    assert.deepEqual(projected.record.missingConfig, [
-      'CONVEX_SITE_URL (or CONVEX_URL)',
-      'RELAY_SHARED_SECRET',
-      'OPENROUTER_API_KEY',
-    ]);
+    assert.deepEqual(projected.record.missingConfig, ['OPENROUTER_API_KEY']);
     assert.equal(projected.meta.sourceState, 'unavailable');
   });
 });

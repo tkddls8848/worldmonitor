@@ -36,7 +36,7 @@ import { describedPanelReceipt } from './news-dashboard';
 import { panelAdmissionSchema } from '../../../shared/country-brief-host';
 import { worldBriefPanelAdmissionSchema } from '../../../shared/panel-admission';
 import filterParamContracts from '../../../shared/openapi-filter-param-contracts.json';
-import { normalizeCountry } from '../../../server/_shared/intel-history-client';
+import { normalizeCountry } from '../../../server/_shared/intel-history-scope';
 import { normalizePassengerCount } from '../../../server/_shared/passenger-count';
 import { normalizeFoodStocksCommodity } from '../../../server/worldmonitor/resilience/v1/_food-stocks-query';
 import {
@@ -661,7 +661,7 @@ function addStringParam(query: URLSearchParams, name: string, value: unknown): v
 }
 
 // Intel-history `country` filters are normalized through the canonical
-// `normalizeCountry` (server/_shared/intel-history-client.ts): the generated
+// `normalizeCountry` (server/_shared/intel-history-scope.ts): the generated
 // validator enabled by GHSA-cmj5-cfhr-w964 requires `^([A-Z]{2})?$`, and an
 // LLM sending "ua" earned a 400 round-trip (WORLDMONITOR-10R / -10Q). At the
 // POST call sites below, `|| undefined` keeps a blank/non-string filter

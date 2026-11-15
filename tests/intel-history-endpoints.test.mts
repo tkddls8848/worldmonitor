@@ -4,24 +4,25 @@
 //   POST /api/intelligence/v1/get-similar-events
 //
 // Two layers, mirroring the sibling suites:
-//   - behavioural handler tests (fetch stubbed) modelled on
+//   - behavioural handler tests (store and fetch stubbed) modelled on
 //     tests/china-decision-signals-handler.test.mts
 //   - structural wiring assertions (proto → handler → registries) modelled on
 //     tests/regional-snapshot-weekly-brief.test.mjs
 //
-// No network: every test stubs globalThis.fetch. Run via `npm run test:data`.
+// No network: every test stubs globalThis.fetch (embeddings + Redis cache) and
+// replaces the history store through setIntelHistoryStoreForTests. One suite
+// reads a real temporary SQLite store end to end. Run via `npm run test:data`.
 
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 
 // The client resolves every environment variable at call time, so setting them
 // here (module body runs after the import graph is evaluated, before any test
 // callback) is sufficient.
-process.env.CONVEX_SITE_URL = 'https://fake-convex.convex.site';
-process.env.CONVEX_SERVER_SHARED_SECRET = 'test-shared-secret';
 process.env.OPENROUTER_API_KEY = 'test-openrouter-key';
 process.env.UPSTASH_REDIS_REST_URL = 'https://fake-upstash.upstash.io';
 process.env.UPSTASH_REDIS_REST_TOKEN = 'test-upstash-token';
@@ -32,6 +33,12 @@ import {
   EMBED_MODEL,
   OPENROUTER_EMBEDDINGS_URL,
 } from '../scripts/lib/brief-dedup-consts.mjs';
+import {
+  INTEL_HISTORY_DIMS,
+  INTEL_HISTORY_EMBED_MODEL,
+  openIntelHistoryStore,
+} from '../shared/intel-history-store.mjs';
+import { setIntelHistoryStoreForTests } from '../server/_shared/intel-history-client';
 import { normalizeQueryText } from '../server/_shared/intel-history-embed';
 import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths.ts';
 import { getIntelTimeline } from '../server/worldmonitor/intelligence/v1/get-intel-timeline';
@@ -44,10 +51,7 @@ const root = resolve(__dirname, '..');
 
 const ctx = {} as never;
 
-const CONVEX_SEARCH_URL = 'https://fake-convex.convex.site/api/internal-intel-search';
-const CONVEX_TIMELINE_URL = 'https://fake-convex.convex.site/api/internal-intel-timeline';
-
-// ── fetch harness ───────────────────────────────────────────────────────────
+// ── fetch harness (embeddings provider + Redis cache) ───────────────────────
 
 interface RecordedCall {
   url: string;
@@ -97,8 +101,34 @@ function embeddingsOk(): Response {
   return jsonResponse({ data: [{ index: 0, embedding: vector() }] });
 }
 
-const convexRecord = {
-  id: 'doc-1',
+// ── store harness ───────────────────────────────────────────────────────────
+
+type StoreArgs = Record<string, unknown>;
+type StoreResult = Record<string, unknown>;
+let storeCalls: Array<{ op: 'timeline' | 'search'; args: StoreArgs }> = [];
+
+/** Replace the history store; each op returns its result or throws. */
+function stubStore(ops: {
+  timeline?: (args: StoreArgs) => StoreResult;
+  search?: (args: StoreArgs) => StoreResult;
+}): void {
+  const unexpected = (op: string) => () => { throw new Error(`unexpected store ${op}`); };
+  setIntelHistoryStoreForTests({
+    timeline: ((args: StoreArgs) => {
+      storeCalls.push({ op: 'timeline', args });
+      return (ops.timeline ?? unexpected('timeline'))(args);
+    }) as never,
+    search: ((args: StoreArgs) => {
+      storeCalls.push({ op: 'search', args });
+      return (ops.search ?? unexpected('search'))(args);
+    }) as never,
+  });
+}
+
+const lastStoreCall = (op: 'timeline' | 'search') => storeCalls.filter((c) => c.op === op).at(-1);
+
+const storeRecord = {
+  id: '1',
   domain: 'conflict',
   resource: 'acled-events',
   country: 'UA',
@@ -108,15 +138,21 @@ const convexRecord = {
   sourceUrl: 'https://example.test/a',
   occurredAt: 1_750_000_000_000,
   ingestedAt: 1_750_000_060_000,
-  _score: 0.83,
+  runId: 'run-1',
+  dedupeKey: 'conflict:acled:1',
+  score: 0.83,
 };
 
 beforeEach(() => {
   calls = [];
+  storeCalls = [];
+  // Unstubbed store reads fail loudly rather than touching a real database.
+  stubStore({});
 });
 
 afterEach(() => {
   globalThis.fetch = realFetch;
+  setIntelHistoryStoreForTests(null);
 });
 
 // ── normalization parity ────────────────────────────────────────────────────
@@ -143,38 +179,32 @@ describe('query-time normalization parity', () => {
   }
 });
 
-// ── SearchIntelHistory ──────────────────────────────────────────────────────
-
 // ── scope normalization ─────────────────────────────────────────────────────
 
 describe('scope normalization', () => {
-  // Convex compares scope values with eq against what the seeders wrote, so a
-  // lower-case or padded country silently matches nothing — indistinguishable,
+  // The store compares scope values with = against what the seeders wrote, so
+  // a lower-case or padded country silently matches nothing — indistinguishable,
   // to the caller, from "we have no history for that country".
   it('upper-cases and trims country before querying', async () => {
-    stubFetch({
-      [CONVEX_TIMELINE_URL]: () => jsonResponse({ records: [convexRecord], nextCursor: '' }),
-    });
+    stubFetch({});
+    stubStore({ timeline: () => ({ records: [storeRecord], partial: false, nextCursor: null }) });
 
     await getIntelTimeline(ctx, { domain: '', country: ' ua ', from: 0, to: 0, limit: 0 });
 
-    const call = calls.find((c) => c.url === CONVEX_TIMELINE_URL);
-    assert.equal(call?.body?.country, 'UA');
+    assert.equal(lastStoreCall('timeline')?.args.country, 'UA');
   });
 
   it('lower-cases and trims domain before querying', async () => {
-    stubFetch({
-      [CONVEX_TIMELINE_URL]: () => jsonResponse({ records: [], nextCursor: '' }),
-    });
+    stubFetch({});
+    stubStore({ timeline: () => ({ records: [], partial: false, nextCursor: null }) });
 
     await getIntelTimeline(ctx, { domain: ' Conflict ', country: '', from: 0, to: 0, limit: 0 });
 
-    const call = calls.find((c) => c.url === CONVEX_TIMELINE_URL);
-    assert.equal(call?.body?.domain, 'conflict');
+    assert.equal(lastStoreCall('timeline')?.args.domain, 'conflict');
   });
 
-  it('rejects negative bounds before contacting Convex', async () => {
-    stubFetch({ [CONVEX_TIMELINE_URL]: () => jsonResponse({ records: [], nextCursor: '' }) });
+  it('rejects negative bounds before reading the store', async () => {
+    stubFetch({});
     await assert.rejects(getIntelTimeline(ctx, {
       domain: 'conflict',
       country: '',
@@ -183,6 +213,7 @@ describe('scope normalization', () => {
       limit: 0,
     }), validationFailure('from', /must be an integer/i));
     assert.equal(calls.length, 0);
+    assert.equal(storeCalls.length, 0);
   });
 
   // Whitespace must not satisfy the "at least one scope" requirement and then
@@ -194,6 +225,7 @@ describe('scope normalization', () => {
       validationFailure('domain', /at least one of domain or country/i),
     );
     assert.equal(calls.length, 0, 'no upstream call for an unscoped read');
+    assert.equal(storeCalls.length, 0);
   });
 
   it('rejects invalid domains, countries, inverted bounds, and excessive limits', async () => {
@@ -208,39 +240,25 @@ describe('scope normalization', () => {
       await assert.rejects(getIntelTimeline(ctx, request), validationFailure(field));
     }
     assert.equal(calls.length, 0);
+    assert.equal(storeCalls.length, 0);
   });
 });
 
 // ── embedding dimension parity ──────────────────────────────────────────────
 
 describe('embedding dimension contract', () => {
-  // Three independent literals must agree or the store silently breaks: the
-  // seeder embeds at EMBED_DIMS, Convex validates against
-  // INTEL_HISTORY_EMBED_DIMS, and the vector index is declared with a hardcoded
-  // `dimensions:`. A mismatch is not a type error — it surfaces as every insert
-  // being rejected at runtime, after deploy.
-  it('pins EMBED_DIMS, INTEL_HISTORY_EMBED_DIMS, and the vector index together', () => {
-    const convexSrc = readFileSync(resolve(root, 'convex/intelHistory.ts'), 'utf8');
-    const convexDims = convexSrc.match(/INTEL_HISTORY_EMBED_DIMS\s*=\s*(\d+)/);
-    assert.ok(convexDims, 'INTEL_HISTORY_EMBED_DIMS must be a numeric literal');
-    assert.equal(Number(convexDims[1]), EMBED_DIMS);
-
-    const schemaSrc = readFileSync(resolve(root, 'convex/schema.ts'), 'utf8');
-    const indexBlock = schemaSrc.match(
-      /vectorIndex\("by_embedding",\s*\{[\s\S]*?dimensions:\s*(\d+)/,
-    );
-    assert.ok(indexBlock, 'the by_embedding vector index must declare dimensions');
-    assert.equal(Number(indexBlock[1]), EMBED_DIMS);
+  // The seeder embeds at EMBED_DIMS and the store validates every stored and
+  // query vector against INTEL_HISTORY_DIMS. A mismatch is not a type error —
+  // it surfaces as every insert being rejected at runtime.
+  it('pins EMBED_DIMS and INTEL_HISTORY_DIMS together', () => {
+    assert.equal(INTEL_HISTORY_DIMS, EMBED_DIMS);
   });
 
   // The per-row stamp (#5742) names the space every stored vector lives in.
   // It must be the seeder's model@dims literally, or a model swap on one side
   // would stamp rows as current while embedding them in another space.
   it('pins INTEL_HISTORY_EMBED_MODEL to the seeder model and dimension', () => {
-    const convexSrc = readFileSync(resolve(root, 'convex/intelHistory.ts'), 'utf8');
-    const stamp = convexSrc.match(/INTEL_HISTORY_EMBED_MODEL\s*=\s*"([^"]+)"/);
-    assert.ok(stamp, 'INTEL_HISTORY_EMBED_MODEL must be a string literal');
-    assert.equal(stamp[1], `${EMBED_MODEL}@${EMBED_DIMS}`);
+    assert.equal(INTEL_HISTORY_EMBED_MODEL, `${EMBED_MODEL}@${EMBED_DIMS}`);
   });
 });
 
@@ -250,7 +268,7 @@ describe('query-vector cache', () => {
   // Every miss spends a paid OpenRouter call on an interactive request, so the
   // hit path has to actually skip the provider — and a cache entry that no
   // longer matches the index contract has to be ignored rather than forwarded
-  // to Convex, which would reject it and surface as a false outage.
+  // to the store, which would reject it and surface as a false outage.
   const upstashGet = (key: string) =>
     `https://fake-upstash.upstash.io/get/${encodeURIComponent(key)}`;
   // The query text is hashed into the key, never stored verbatim — what an
@@ -269,8 +287,8 @@ describe('query-vector cache', () => {
     stubFetch({
       [upstashGet(await cacheKeyFor(query))]: () =>
         jsonResponse({ result: JSON.stringify(vector(0.25)) }),
-      [CONVEX_SEARCH_URL]: () => jsonResponse({ records: [convexRecord] }),
     });
+    stubStore({ search: () => ({ records: [storeRecord], partial: false }) });
 
     const res = await searchIntelHistory(ctx, {
       query,
@@ -287,8 +305,7 @@ describe('query-vector cache', () => {
       0,
       'a cache hit must not reach the embeddings provider',
     );
-    const search = calls.find((c) => c.url === CONVEX_SEARCH_URL);
-    assert.deepEqual(search?.body?.embedding, vector(0.25));
+    assert.deepEqual(lastStoreCall('search')?.args.vector, vector(0.25));
   });
 
   it('writes the provider vector back to the cache on a miss', async () => {
@@ -306,9 +323,9 @@ describe('query-vector cache', () => {
         return jsonResponse({ result: 'OK' });
       }
       if (url === OPENROUTER_EMBEDDINGS_URL) return embeddingsOk();
-      if (url === CONVEX_SEARCH_URL) return jsonResponse({ records: [] });
       throw new Error(`unstubbed fetch: ${url}`);
     }) as typeof globalThis.fetch;
+    stubStore({ search: () => ({ records: [], partial: false }) });
 
     const res = await searchIntelHistory(ctx, {
       query,
@@ -337,8 +354,8 @@ describe('query-vector cache', () => {
       [upstashGet(await cacheKeyFor(query))]: () =>
         jsonResponse({ result: JSON.stringify([0.1, 0.2, 0.3]) }),
       [OPENROUTER_EMBEDDINGS_URL]: embeddingsOk,
-      [CONVEX_SEARCH_URL]: () => jsonResponse({ records: [] }),
     });
+    stubStore({ search: () => ({ records: [], partial: false }) });
 
     const res = await searchIntelHistory(ctx, {
       query,
@@ -355,10 +372,11 @@ describe('query-vector cache', () => {
       1,
       'an unusable cache entry must fall through to the provider',
     );
-    const search = calls.find((c) => c.url === CONVEX_SEARCH_URL);
-    assert.equal((search?.body?.embedding as number[])?.length, EMBED_DIMS);
+    assert.equal((lastStoreCall('search')?.args.vector as number[])?.length, EMBED_DIMS);
   });
 });
+
+// ── SearchIntelHistory ──────────────────────────────────────────────────────
 
 describe('searchIntelHistory handler', () => {
   it('rejects missing or oversized query text before invoking paid upstreams', async () => {
@@ -370,12 +388,12 @@ describe('searchIntelHistory handler', () => {
       query: 'x'.repeat(501), domain: '', country: '', from: 0, to: 0, limit: 0,
     }), validationFailure('query', /must be between/i));
     assert.equal(calls.length, 0);
+    assert.equal(storeCalls.length, 0);
   });
-  it('embeds the query and maps Convex records onto the proto shape', async () => {
-    stubFetch({
-      [OPENROUTER_EMBEDDINGS_URL]: embeddingsOk,
-      [CONVEX_SEARCH_URL]: () => jsonResponse({ records: [convexRecord] }),
-    });
+
+  it('embeds the query and maps store records onto the proto shape', async () => {
+    stubFetch({ [OPENROUTER_EMBEDDINGS_URL]: embeddingsOk });
+    stubStore({ search: () => ({ records: [storeRecord], partial: false }) });
 
     const res = await searchIntelHistory(ctx, {
       query: 'artillery strikes near Kharkiv',
@@ -390,7 +408,7 @@ describe('searchIntelHistory handler', () => {
     assert.equal(res.query, 'artillery strikes near Kharkiv');
     assert.equal(res.records.length, 1);
     assert.deepEqual(res.records[0], {
-      id: 'doc-1',
+      id: '1',
       domain: 'conflict',
       resource: 'acled-events',
       country: 'UA',
@@ -404,11 +422,9 @@ describe('searchIntelHistory handler', () => {
     });
   });
 
-  it('sends the shared secret and the resolved scope to the Convex search route', async () => {
-    stubFetch({
-      [OPENROUTER_EMBEDDINGS_URL]: embeddingsOk,
-      [CONVEX_SEARCH_URL]: () => jsonResponse({ records: [] }),
-    });
+  it('passes the query vector and the resolved scope to the store search', async () => {
+    stubFetch({ [OPENROUTER_EMBEDDINGS_URL]: embeddingsOk });
+    stubStore({ search: () => ({ records: [], partial: false }) });
 
     await searchIntelHistory(ctx, {
       query: 'grain corridor disruption',
@@ -419,12 +435,8 @@ describe('searchIntelHistory handler', () => {
       limit: 5,
     });
 
-    const convexCall = calls.find((c) => c.url === CONVEX_SEARCH_URL);
-    assert.ok(convexCall, 'expected a Convex search call');
-    assert.equal(convexCall.method, 'POST');
-    assert.equal(convexCall.headers['x-convex-shared-secret'], 'test-shared-secret');
-    assert.deepEqual(convexCall.body, {
-      embedding: vector(),
+    assert.deepEqual(lastStoreCall('search')?.args, {
+      vector: vector(),
       domain: 'conflict',
       country: 'UA',
       from: 1_700_000_000_000,
@@ -433,14 +445,21 @@ describe('searchIntelHistory handler', () => {
     });
   });
 
+  it('passes the store partial flag through', async () => {
+    stubFetch({ [OPENROUTER_EMBEDDINGS_URL]: embeddingsOk });
+    stubStore({ search: () => ({ records: [storeRecord], partial: true }) });
+
+    const res = await searchIntelHistory(ctx, { query: 'artillery', domain: '', country: '', from: 0, to: 0, limit: 0 });
+    assert.equal(res.partial, true);
+    assert.equal(res.upstreamUnavailable, false);
+  });
+
   it('defaults limit to 20 and rejects values above 64', async () => {
-    stubFetch({
-      [OPENROUTER_EMBEDDINGS_URL]: embeddingsOk,
-      [CONVEX_SEARCH_URL]: () => jsonResponse({ records: [] }),
-    });
+    stubFetch({ [OPENROUTER_EMBEDDINGS_URL]: embeddingsOk });
+    stubStore({ search: () => ({ records: [], partial: false }) });
 
     await searchIntelHistory(ctx, { query: 'ab', domain: '', country: '', from: 0, to: 0, limit: 0 });
-    assert.equal(calls.find((c) => c.url === CONVEX_SEARCH_URL)?.body?.limit, 20);
+    assert.equal(lastStoreCall('search')?.args.limit, 20);
 
     calls = [];
     await assert.rejects(
@@ -449,25 +468,18 @@ describe('searchIntelHistory handler', () => {
     );
   });
 
-  it('omits empty optional scope fields from the Convex body', async () => {
-    stubFetch({
-      [OPENROUTER_EMBEDDINGS_URL]: embeddingsOk,
-      [CONVEX_SEARCH_URL]: () => jsonResponse({ records: [] }),
-    });
+  it('omits empty optional scope fields from the store arguments', async () => {
+    stubFetch({ [OPENROUTER_EMBEDDINGS_URL]: embeddingsOk });
+    stubStore({ search: () => ({ records: [], partial: false }) });
 
     await searchIntelHistory(ctx, { query: 'anything', domain: '', country: '', from: 0, to: 0, limit: 3 });
 
-    assert.deepEqual(Object.keys(calls.find((c) => c.url === CONVEX_SEARCH_URL)?.body ?? {}).sort(), [
-      'embedding',
-      'limit',
-    ]);
+    assert.deepEqual(Object.keys(lastStoreCall('search')?.args ?? {}).sort(), ['limit', 'vector']);
   });
 
   it('reports upstreamUnavailable when the embeddings provider fails', async () => {
-    stubFetch({
-      [OPENROUTER_EMBEDDINGS_URL]: () => jsonResponse({ error: 'nope' }, 502),
-      [CONVEX_SEARCH_URL]: () => jsonResponse({ records: [convexRecord] }),
-    });
+    stubFetch({ [OPENROUTER_EMBEDDINGS_URL]: () => jsonResponse({ error: 'nope' }, 502) });
+    stubStore({ search: () => ({ records: [storeRecord], partial: false }) });
 
     const res = await searchIntelHistory(ctx, {
       query: 'artillery strikes',
@@ -480,16 +492,14 @@ describe('searchIntelHistory handler', () => {
 
     assert.equal(res.upstreamUnavailable, true);
     assert.deepEqual(res.records, []);
-    // The Convex read must never run on an embedding failure — a zero vector
+    // The store read must never run on an embedding failure — a zero vector
     // would return arbitrary "most similar" rows presented as real matches.
-    assert.equal(calls.some((c) => c.url === CONVEX_SEARCH_URL), false);
+    assert.equal(storeCalls.length, 0);
   });
 
-  it('reports upstreamUnavailable when the Convex read is non-ok', async () => {
-    stubFetch({
-      [OPENROUTER_EMBEDDINGS_URL]: embeddingsOk,
-      [CONVEX_SEARCH_URL]: () => jsonResponse({ error: 'UNAUTHORIZED' }, 401),
-    });
+  it('reports upstreamUnavailable when the store read throws', async () => {
+    stubFetch({ [OPENROUTER_EMBEDDINGS_URL]: embeddingsOk });
+    stubStore({ search: () => { throw new Error('database disk image is malformed'); } });
 
     const res = await searchIntelHistory(ctx, {
       query: 'artillery strikes',
@@ -504,34 +514,19 @@ describe('searchIntelHistory handler', () => {
     assert.deepEqual(res.records, []);
   });
 
-  it('reports upstreamUnavailable when the Convex read throws (timeout/network)', async () => {
-    stubFetch({
-      [OPENROUTER_EMBEDDINGS_URL]: embeddingsOk,
-      [CONVEX_SEARCH_URL]: () => {
-        const err = new Error('The operation was aborted due to timeout');
-        err.name = 'TimeoutError';
-        throw err;
-      },
-    });
+  it('reports upstreamUnavailable when the store returns a malformed body', async () => {
+    stubFetch({ [OPENROUTER_EMBEDDINGS_URL]: embeddingsOk });
+    stubStore({ search: () => ({ partial: false }) });
 
-    const res = await searchIntelHistory(ctx, {
-      query: 'artillery strikes',
-      domain: '',
-      country: '',
-      from: 0,
-      to: 0,
-      limit: 0,
-    });
-
+    const res = await searchIntelHistory(ctx, { query: 'artillery', domain: '', country: '', from: 0, to: 0, limit: 0 });
     assert.equal(res.upstreamUnavailable, true);
-    assert.deepEqual(res.records, []);
   });
 
-  it('rejects a wrong-dimension embedding rather than sending it to Convex', async () => {
+  it('rejects a wrong-dimension embedding rather than sending it to the store', async () => {
     stubFetch({
       [OPENROUTER_EMBEDDINGS_URL]: () => jsonResponse({ data: [{ index: 0, embedding: [1, 2, 3] }] }),
-      [CONVEX_SEARCH_URL]: () => jsonResponse({ records: [convexRecord] }),
     });
+    stubStore({ search: () => ({ records: [storeRecord], partial: false }) });
 
     const res = await searchIntelHistory(ctx, {
       query: 'artillery strikes',
@@ -543,7 +538,7 @@ describe('searchIntelHistory handler', () => {
     });
 
     assert.equal(res.upstreamUnavailable, true);
-    assert.equal(calls.some((c) => c.url === CONVEX_SEARCH_URL), false);
+    assert.equal(storeCalls.length, 0);
   });
 });
 
@@ -551,27 +546,32 @@ describe('searchIntelHistory handler', () => {
 
 describe('getIntelTimeline handler', () => {
   it('forwards continuation cursors and returns the next page cursor', async () => {
-    stubFetch({
-      [CONVEX_TIMELINE_URL]: () => jsonResponse({ records: [convexRecord], partial: true, nextCursor: 'next-page' }),
-    });
+    stubFetch({});
+    stubStore({ timeline: () => ({ records: [storeRecord], partial: true, nextCursor: 'next-page' }) });
     const res = await getIntelTimeline(ctx, {
       domain: 'conflict', country: '', from: 0, to: 0, limit: 2, cursor: 'previous-page',
     });
-    assert.equal(calls.find((call) => call.url === CONVEX_TIMELINE_URL)?.body?.cursor, 'previous-page');
+    assert.equal(lastStoreCall('timeline')?.args.cursor, 'previous-page');
     assert.equal(res.nextCursor, 'next-page');
     assert.equal(res.partial, true);
   });
 
-  it('rejects oversized cursors before any upstream call', async () => {
+  it('rejects oversized cursors before any store read', async () => {
     stubFetch({});
     await assert.rejects(getIntelTimeline(ctx, {
       domain: 'conflict', country: '', from: 0, to: 0, limit: 0, cursor: 'x'.repeat(4097),
     }), validationFailure('cursor', /4096/));
     assert.equal(calls.length, 0);
+    assert.equal(storeCalls.length, 0);
   });
 
   it('reports an invalid store cursor as a request error', async () => {
-    stubFetch({ [CONVEX_TIMELINE_URL]: () => jsonResponse({ error: 'INVALID_CURSOR' }, 400) });
+    stubFetch({});
+    stubStore({
+      timeline: () => {
+        throw Object.assign(new Error('Invalid cursor.'), { name: 'ValidationError', field: 'cursor' });
+      },
+    });
     for (let attempt = 0; attempt < 2; attempt++) {
       await assert.rejects(getIntelTimeline(ctx, {
         domain: 'conflict', country: '', from: 0, to: 0, limit: 0, cursor: 'invalid',
@@ -579,40 +579,18 @@ describe('getIntelTimeline handler', () => {
     }
   });
 
-  it('rejects a malformed cursor and still paginates a valid one', async () => {
-    stubFetch({
-      [CONVEX_TIMELINE_URL]: (call) => {
-        if (call.body?.cursor === 'not-a-cursor') return jsonResponse({ error: 'INVALID_CURSOR' }, 400);
-        if (call.body?.cursor === 'page-2') {
-          return jsonResponse({ records: [{ ...convexRecord, title: 'older' }], partial: false, nextCursor: '' });
-        }
-        return jsonResponse({ records: [convexRecord], partial: true, nextCursor: 'page-2' });
-      },
-    });
-
-    await assert.rejects(getIntelTimeline(ctx, {
-      domain: 'conflict', country: 'UA', from: 0, to: 0, limit: 1, cursor: 'not-a-cursor',
-    }), validationFailure('cursor', /invalid/i));
-
-    const first = await getIntelTimeline(ctx, {
-      domain: 'conflict', country: 'UA', from: 0, to: 0, limit: 1, cursor: '',
-    });
-    assert.equal(first.upstreamUnavailable, false);
-    assert.equal(first.partial, true);
-    assert.equal(first.nextCursor, 'page-2');
-    assert.deepEqual(first.records.map((record) => record.title), ['Shelling near Kharkiv']);
-
-    const second = await getIntelTimeline(ctx, {
-      domain: 'conflict', country: 'UA', from: 0, to: 0, limit: 1, cursor: first.nextCursor,
-    });
-    assert.equal(second.upstreamUnavailable, false);
-    assert.equal(second.partial, false);
-    assert.equal(second.nextCursor, '');
-    assert.deepEqual(second.records.map((record) => record.title), ['older']);
+  it('maps the final page (null cursor) to an empty nextCursor', async () => {
+    stubFetch({});
+    stubStore({ timeline: () => ({ records: [storeRecord], partial: false, nextCursor: null }) });
+    const res = await getIntelTimeline(ctx, { domain: 'conflict', country: '', from: 0, to: 0, limit: 2 });
+    assert.equal(res.upstreamUnavailable, false);
+    assert.equal(res.nextCursor, '');
+    assert.equal(res.records.length, 1);
   });
 
   it('keeps continuation pages in separate opaque cache keys', async () => {
-    stubFetch({ [CONVEX_TIMELINE_URL]: () => jsonResponse({ records: [], partial: false, nextCursor: '' }) });
+    stubFetch({});
+    stubStore({ timeline: () => ({ records: [], partial: false, nextCursor: null }) });
     const scope = { domain: 'conflict', country: 'UA', from: 0, to: 0, limit: 2 };
     await getIntelTimeline(ctx, scope);
     await getIntelTimeline(ctx, { ...scope, cursor: 'opaque-next' });
@@ -623,24 +601,25 @@ describe('getIntelTimeline handler', () => {
   });
 
   it('preserves continuation after an empty bounded page', async () => {
-    stubFetch({ [CONVEX_TIMELINE_URL]: () => jsonResponse({ records: [], partial: true, nextCursor: 'older-events' }) });
+    stubFetch({});
+    stubStore({ timeline: () => ({ records: [], partial: true, nextCursor: 'older-events' }) });
     const res = await getIntelTimeline(ctx, { domain: 'conflict', country: 'UA', from: 0, to: 0, limit: 1 });
     assert.equal(res.upstreamUnavailable, false);
     assert.deepEqual(res.records, []);
     assert.equal(res.nextCursor, 'older-events');
   });
 
-  it('fails closed when an older store omits continuation metadata', async () => {
-    stubFetch({ [CONVEX_TIMELINE_URL]: () => jsonResponse({ records: [convexRecord], partial: false }) });
+  it('fails closed when a store omits continuation metadata', async () => {
+    stubFetch({});
+    stubStore({ timeline: () => ({ records: [storeRecord], partial: false }) });
     const res = await getIntelTimeline(ctx, { domain: 'conflict', country: '', from: 0, to: 0, limit: 2 });
     assert.deepEqual(res, { records: [], partial: false, upstreamUnavailable: true, nextCursor: '' });
   });
 
-  it('reads Convex chronologically without paying for an embedding', async () => {
-    const { _score, ...timelineRecord } = convexRecord;
-    stubFetch({
-      [CONVEX_TIMELINE_URL]: () => jsonResponse({ records: [timelineRecord], nextCursor: '' }),
-    });
+  it('reads the store chronologically without paying for an embedding', async () => {
+    const { score: _score, ...timelineRecord } = storeRecord;
+    stubFetch({});
+    stubStore({ timeline: () => ({ records: [timelineRecord], partial: false, nextCursor: null }) });
 
     const res = await getIntelTimeline(ctx, {
       domain: 'conflict',
@@ -654,12 +633,11 @@ describe('getIntelTimeline handler', () => {
     assert.equal(res.records.length, 1);
     // No similarity applies to a chronological read.
     assert.equal(res.records[0]?.score, 0);
-    const convexCall = calls.find((call) => call.url === CONVEX_TIMELINE_URL);
-    assert.equal(convexCall?.headers['x-convex-shared-secret'], 'test-shared-secret');
-    assert.deepEqual(convexCall?.body, { domain: 'conflict', limit: 50 });
+    assert.equal(calls.some((c) => c.url === OPENROUTER_EMBEDDINGS_URL), false);
+    assert.deepEqual(lastStoreCall('timeline')?.args, { domain: 'conflict', limit: 50 });
   });
 
-  it('rejects an unscoped read with a field-level validation error before any upstream call', async () => {
+  it('rejects an unscoped read with a field-level validation error before any store read', async () => {
     stubFetch({});
 
     await assert.rejects(
@@ -667,20 +645,23 @@ describe('getIntelTimeline handler', () => {
       validationFailure('domain', /domain or country/i),
     );
     assert.equal(calls.length, 0);
+    assert.equal(storeCalls.length, 0);
   });
 
   it('accepts a country-only scope', async () => {
-    stubFetch({ [CONVEX_TIMELINE_URL]: () => jsonResponse({ records: [], nextCursor: '' }) });
+    stubFetch({});
+    stubStore({ timeline: () => ({ records: [], partial: false, nextCursor: null }) });
 
     await getIntelTimeline(ctx, { domain: '', country: 'UA', from: 0, to: 0, limit: 0 });
-    assert.deepEqual(calls.find((call) => call.url === CONVEX_TIMELINE_URL)?.body, { country: 'UA', limit: 50 });
+    assert.deepEqual(lastStoreCall('timeline')?.args, { country: 'UA', limit: 50 });
   });
 
   it('defaults limit to 50 and rejects values above 200', async () => {
-    stubFetch({ [CONVEX_TIMELINE_URL]: () => jsonResponse({ records: [], nextCursor: '' }) });
+    stubFetch({});
+    stubStore({ timeline: () => ({ records: [], partial: false, nextCursor: null }) });
 
     await getIntelTimeline(ctx, { domain: 'energy', country: '', from: 0, to: 0, limit: 0 });
-    assert.equal(calls.find((call) => call.url === CONVEX_TIMELINE_URL)?.body?.limit, 50);
+    assert.equal(lastStoreCall('timeline')?.args.limit, 50);
 
     calls = [];
     await assert.rejects(
@@ -689,8 +670,9 @@ describe('getIntelTimeline handler', () => {
     );
   });
 
-  it('reports upstreamUnavailable when the Convex read is non-ok', async () => {
-    stubFetch({ [CONVEX_TIMELINE_URL]: () => jsonResponse({ error: 'MISSING_SCOPE' }, 400) });
+  it('reports upstreamUnavailable when the store read throws', async () => {
+    stubFetch({});
+    stubStore({ timeline: () => { throw new Error('unable to open database file'); } });
 
     const res = await getIntelTimeline(ctx, {
       domain: 'energy',
@@ -716,12 +698,12 @@ describe('getSimilarEvents handler', () => {
       situation: 'x'.repeat(1001), domain: '', country: '', limit: 0,
     }), validationFailure('situation', /must be between/i));
     assert.equal(calls.length, 0);
+    assert.equal(storeCalls.length, 0);
   });
+
   it('embeds the situation text and echoes it back with the matches', async () => {
-    stubFetch({
-      [OPENROUTER_EMBEDDINGS_URL]: embeddingsOk,
-      [CONVEX_SEARCH_URL]: () => jsonResponse({ records: [convexRecord] }),
-    });
+    stubFetch({ [OPENROUTER_EMBEDDINGS_URL]: embeddingsOk });
+    stubStore({ search: () => ({ records: [storeRecord], partial: false }) });
 
     const situation = 'A naval blockade closes a major grain export corridor for several weeks.';
     const res = await getSimilarEvents(ctx, { situation, domain: '', country: '', limit: 0 });
@@ -732,15 +714,13 @@ describe('getSimilarEvents handler', () => {
     assert.equal(res.records[0]?.score, 0.83);
     // Default limit is 10 — half of search's default, since precedent lookups
     // are read by a human or an LLM rather than scrolled.
-    assert.equal(calls.find((c) => c.url === CONVEX_SEARCH_URL)?.body?.limit, 10);
-    assert.equal(calls.find((c) => c.url === CONVEX_SEARCH_URL)?.body?.minScore, 0.55);
+    assert.equal(lastStoreCall('search')?.args.limit, 10);
+    assert.equal(lastStoreCall('search')?.args.minScore, 0.55);
   });
 
   it('rejects limits above 32', async () => {
-    stubFetch({
-      [OPENROUTER_EMBEDDINGS_URL]: embeddingsOk,
-      [CONVEX_SEARCH_URL]: () => jsonResponse({ records: [] }),
-    });
+    stubFetch({ [OPENROUTER_EMBEDDINGS_URL]: embeddingsOk });
+    stubStore({ search: () => ({ records: [], partial: false }) });
 
     await assert.rejects(getSimilarEvents(ctx, {
       situation: 'A naval blockade closes a grain export corridor.',
@@ -755,8 +735,8 @@ describe('getSimilarEvents handler', () => {
       [OPENROUTER_EMBEDDINGS_URL]: () => {
         throw new TypeError('fetch failed');
       },
-      [CONVEX_SEARCH_URL]: () => jsonResponse({ records: [convexRecord] }),
     });
+    stubStore({ search: () => ({ records: [storeRecord], partial: false }) });
 
     const res = await getSimilarEvents(ctx, {
       situation: 'A naval blockade closes a grain export corridor.',
@@ -766,6 +746,74 @@ describe('getSimilarEvents handler', () => {
     });
     assert.equal(res.upstreamUnavailable, true);
     assert.deepEqual(res.records, []);
+  });
+});
+
+// ── Real SQLite store, end to end ───────────────────────────────────────────
+
+describe('handlers over a real SQLite store', () => {
+  const T = 1_780_000_000_000;
+  let dir = '';
+
+  afterEach(() => {
+    if (dir) rmSync(dir, { recursive: true, force: true });
+    dir = '';
+  });
+
+  function seededStore() {
+    dir = mkdtempSync(join(tmpdir(), 'intel-history-endpoints-'));
+    const file = join(dir, 'history.sqlite');
+    const writer = openIntelHistoryStore(file, { now: () => T });
+    const axis = (i: number) => { const v = new Array(INTEL_HISTORY_DIMS).fill(0); v[i] = 1; return v; };
+    writer.append({
+      domain: 'conflict',
+      resource: 'acled',
+      runId: 'run-1',
+      records: [
+        { dedupeKey: 'c:1', title: 'Missile strike on port', country: 'UA', occurredAt: T - 3, embedding: vector() },
+        { dedupeKey: 'c:2', title: 'Ceasefire talks', country: 'UA', occurredAt: T - 2, embedding: axis(7) },
+        { dedupeKey: 'c:3', title: 'Border clash', country: 'IN', occurredAt: T - 1, embedding: axis(9) },
+      ],
+    });
+    writer.close();
+    const reader = openIntelHistoryStore(file, { readOnly: true });
+    setIntelHistoryStoreForTests(reader);
+    return reader;
+  }
+
+  it('pages the timeline through opaque cursors to the end', async () => {
+    const reader = seededStore();
+    // A scope no other test uses: the read cache keeps process-local copies.
+    const scope = { domain: 'conflict', country: '', from: T - 10, to: T, limit: 2 };
+    try {
+      stubFetch({});
+      const first = await getIntelTimeline(ctx, scope);
+      assert.deepEqual(first.records.map((r) => r.title), ['Border clash', 'Ceasefire talks']);
+      assert.notEqual(first.nextCursor, '');
+      const second = await getIntelTimeline(ctx, { ...scope, cursor: first.nextCursor });
+      assert.deepEqual(second.records.map((r) => r.title), ['Missile strike on port']);
+      assert.equal(second.nextCursor, '');
+      await assert.rejects(
+        getIntelTimeline(ctx, { ...scope, cursor: 'forged' }),
+        validationFailure('cursor', /invalid/i),
+      );
+    } finally {
+      reader.close();
+    }
+  });
+
+  it('ranks search results by cosine similarity to the query vector', async () => {
+    const reader = seededStore();
+    try {
+      stubFetch({ [OPENROUTER_EMBEDDINGS_URL]: embeddingsOk });
+      const res = await searchIntelHistory(ctx, { query: 'missile strike', domain: 'conflict', country: 'UA', from: 0, to: 0, limit: 0 });
+      assert.equal(res.upstreamUnavailable, false);
+      assert.deepEqual(res.records.map((r) => r.title), ['Missile strike on port', 'Ceasefire talks']);
+      assert.ok(Math.abs((res.records[0]?.score ?? 0) - 1) < 1e-6);
+      assert.equal(res.partial, false);
+    } finally {
+      reader.close();
+    }
   });
 });
 
@@ -841,7 +889,7 @@ describe('proto definitions', () => {
     assert.match(similarProtoSrc, /\(buf\.validate\.field\)\.string\.max_len = 1000/);
   });
 
-  it('caps limit at the ceilings convex/intelHistory.ts enforces', () => {
+  it('caps limit at the ceilings the history store enforces', () => {
     assert.match(searchProtoSrc, /\(buf\.validate\.field\)\.int32\.lte = 64/);
     assert.match(timelineProtoSrc, /\(buf\.validate\.field\)\.int32\.lte = 200/);
     assert.match(similarProtoSrc, /\(buf\.validate\.field\)\.int32\.lte = 32/);
@@ -906,15 +954,13 @@ describe('generated OpenAPI', () => {
   }
 });
 
-// captureSilentError is a no-op under NODE_TEST_CONTEXT, so pin the timeout
-// warning gate in source the same way api/miit-news.test.mjs does. Envelope
-// delivery for this gate is covered by tests/intel-history-sentry.test.mjs.
-describe('Sentry TimeoutError warning gate', () => {
-  it('downgrades AbortSignal.timeout captures on the Convex read path', () => {
+// captureSilentError is a no-op under NODE_TEST_CONTEXT, so pin the Sentry
+// tagging in source the same way api/miit-news.test.mjs does.
+describe('Sentry capture gates', () => {
+  it('tags store read failures for Sentry', () => {
     const src = readFileSync(resolve(root, 'server/_shared/intel-history-client.ts'), 'utf8');
-    assert.match(src, /errName === 'AbortError' \|\| errName === 'TimeoutError'/);
-    assert.match(src, /isTransientTimeout \? \{ level: 'warning' \} : \{\}/);
-    assert.match(src, /stage: 'convex-read'/);
+    assert.match(src, /captureSilentError\(err/);
+    assert.match(src, /stage: 'store-read'/);
   });
 
   it('downgrades AbortSignal.timeout captures on the embeddings path', () => {

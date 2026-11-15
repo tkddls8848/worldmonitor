@@ -190,6 +190,7 @@ connectors/   외부 API 연결 계층: 수집기, 외부 소스별 연결 코�
 **8.2 Convex는 지우고, 정보 이력은 SQLite로 옮긴다** (소유자 결정 + 설계자 판단, 2026-11-15)
 - **저장소**: 소유자 결정으로 Convex를 두지 않는다. 결제·계정 데이터는 버린다.
 - **정보 이력**: `scripts/_seed-history.mjs`가 Convex에 쓰고, `search-intel-history`·`get-intel-timeline`·`get-similar-events`가 읽는다. 이 쓰기와 읽기를 `shared/personal-store.mjs`의 SQLite 파일로 옮긴다. 쓰는 소스와 내용은 바꾸지 않는다.
+  - 이력 테이블은 키·값 저장소인 `shared/personal-store.mjs`가 아니라 같은 `node:sqlite`를 쓰는 별도 모듈 `shared/intel-history-store.mjs`에 둔다(설계자 판단). 파일은 `WM_INTEL_HISTORY_DB`, 비우면 `.personal/intel-history.sqlite`다. 구현 코드는 `scripts/lib/intel-history-store.mjs`에 있고 `shared/` 모듈은 그것을 다시 내보낸다. 수집기는 `scripts/` 밖을 import하지 못하기 때문이다(`tests/scripts-railway-nixpacks-no-escape-import.test.mts`).
 - **비슷한 사건 검색**: 저장된 벡터를 전부 읽어 코사인 유사도를 직접 계산한다. 개인용 규모에서는 이것으로 충분하고, 벡터 검색 확장이나 별도 서버를 들이지 않는다.
 - **임베딩**: 원본 그대로 OpenRouter의 `openai/text-embedding-3-small`(512차원)을 쓴다(소유자 결정, 2026-11-15). 소유자가 OpenRouter 키를 만들었다. 비슷한 사건 검색과 매일 AI 브리프의 기사 중복 제거(`scripts/lib/brief-embedding.mjs`)가 같은 임베더를 쓰며, 모델·차원·기준값(0.60, 0.45)·캐시 버전·이력 행의 모델 표시(`openai/text-embedding-3-small@512`)를 바꾸지 않는다.
   - 검토한 대안: 로컬 MiniLM(`Xenova/all-MiniLM-L6-v2`)을 이 PC에서 뉴스 제목 쌍으로 측정했다. 같은 사건(0.38~0.75)과 다른 사건(최고 0.62, 일본·페루 지진)의 점수가 겹쳐 하나의 기준값으로 가를 수 없었고, 영어 기사와 같은 사건의 한국어·러시아어 기사는 0.04~0.07로 무관하게 나왔다. 영어 전용 모델이라 다국어 피드에 맞지 않아 택하지 않았다. Ollama의 다국어 모델은 별도 프로그램을 켜 둬야 하고 기준값을 다시 맞춰야 해서 택하지 않았다.
