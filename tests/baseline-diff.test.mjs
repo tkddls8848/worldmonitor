@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { diffScenarioRuns, diffKeySets, diffTestRuns } from '../scripts/local/baseline/diff.mjs';
+import { diffScenarioRuns, diffKeySets, diffTestRuns, countErrors } from '../scripts/local/baseline/diff.mjs';
 
 test('diffScenarioRuns ignores computedAt', () => {
   const a = [{ computedAt: 1, records: [{ impactPct: 40 }] }];
@@ -24,4 +24,11 @@ test('diffTestRuns', () => {
   const r = diffTestRuns({ x: 'pass', y: 'fail' }, { x: 'fail', y: 'fail', z: 'fail' });
   assert.deepEqual(r.newlyFailing, ['x', 'z']);
   assert.deepEqual(r.removedFiles, []);
+});
+
+test('countErrors counts matches, and returns null for a silent failure', () => {
+  const re = /error TS\d+/;
+  assert.equal(countErrors({ exitCode: 0, output: 'ok' }, re), 0);
+  assert.equal(countErrors({ exitCode: 2, output: 'a error TS1\nb error TS2' }, re), 2);
+  assert.equal(countErrors({ exitCode: 1, output: 'tsc crashed' }, re), null);
 });

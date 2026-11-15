@@ -34,7 +34,7 @@ const bc = load(baseLabel, 'checks.json');
 const ac = load(afterLabel, 'checks.json');
 for (const k of ['typecheckErrors', 'boundaryErrors']) {
   console.log(`${k}: ${bc[k]} -> ${ac[k]}`);
-  if (ac[k] > bc[k]) { ok = false; console.log(`  ${k} increased`); }
+  if (bc[k] === null || ac[k] === null || ac[k] > bc[k]) { ok = false; console.log(`  ${k} increased or unknown (null)`); }
 }
 const bl = load(baseLabel, 'loc.json');
 const al = load(afterLabel, 'loc.json');

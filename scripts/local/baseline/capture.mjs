@@ -8,6 +8,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runLocalScenario } from '../../run-local-scenario.mjs';
 import { SCENARIO_TEMPLATES } from '../../scenario-worker.mjs';
+import { countErrors } from './diff.mjs';
 import { runTests } from './run-tests.mjs';
 
 const ROOT = resolve(fileURLToPath(import.meta.url), '../../../..');
@@ -25,13 +26,15 @@ function readEnv(file) {
   }
   return env;
 }
-function sh(cmd) {
+// Returns { exitCode, output }; a failing command is never silently treated as clean.
+function run(cmd) {
   try {
-    return execSync(cmd, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 1 << 28 });
+    return { exitCode: 0, output: execSync(cmd, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 1 << 28 }) };
   } catch (e) {
-    return `${e.stdout ?? ''}${e.stderr ?? ''}`;
+    return { exitCode: typeof e.status === 'number' ? e.status : 1, output: `${e.stdout ?? ''}${e.stderr ?? ''}` };
   }
 }
+const sh = (cmd) => run(cmd).output;
 
 save('meta.json', {
   commit: sh('git rev-parse HEAD').trim(), node: process.version, capturedAt: new Date().toISOString(),
@@ -85,10 +88,9 @@ function healthKeys(h) {
 
 save('tests.json', await runTests());
 
-const count = (text, re) => text.split(/\r?\n/).filter((l) => re.test(l)).length;
 save('checks.json', {
-  typecheckErrors: count(sh('npm run typecheck'), /error TS\d+/),
-  boundaryErrors: count(sh('npm run lint:boundaries'), /\b(error|violation)\b/i),
+  typecheckErrors: countErrors(run('npm run typecheck'), /error TS\d+/),
+  boundaryErrors: countErrors(run('npm run lint:boundaries'), /\b(error|violation)\b/i),
 });
 
 const files = sh('git ls-files').split(/\r?\n/).filter((f) =>

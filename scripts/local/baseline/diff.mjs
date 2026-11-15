@@ -41,3 +41,11 @@ export function diffTestRuns(base, after) {
   const removedFiles = Object.keys(base).filter((f) => !(f in after));
   return { newlyFailing, removedFiles };
 }
+
+// Error count from a command result, or null when the command failed without
+// printing any recognisable error line (crash, missing script, OOM).
+export function countErrors({ exitCode, output }, pattern) {
+  const n = output.split(/\r?\n/).filter((l) => pattern.test(l)).length;
+  if (n === 0 && exitCode !== 0) return null;
+  return n;
+}
