@@ -14,7 +14,7 @@ import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
   CII_FIXTURE_DIR,
@@ -49,8 +49,8 @@ async function loadBaseScorer(ref: string): Promise<{ module: any; cleanup: () =
   const dir = mkdtempSync(join(tmpdir(), 'cii-table-diff-'));
   const archive = execFileSync('git', ['archive', '--format=tar', ref, ...ARCHIVE_PATHS], { cwd: REPO_ROOT, maxBuffer: 1 << 30 });
   execFileSync('tar', ['-x', '-C', dir], { input: archive });
-  symlinkSync(join(REPO_ROOT, 'node_modules'), join(dir, 'node_modules'));
-  const module = await import(join(dir, SCORER_PATH));
+  symlinkSync(join(REPO_ROOT, 'node_modules'), join(dir, 'node_modules'), 'junction'); // junction: no admin rights needed on Windows
+  const module = await import(pathToFileURL(join(dir, SCORER_PATH)).href);
   return { module, cleanup: () => rmSync(dir, { recursive: true, force: true }) };
 }
 

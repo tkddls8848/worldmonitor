@@ -42,7 +42,7 @@ const COMPUTE_BUDGET_MS = 45_000;
  *
  * @type {Array<{ id: string; affectedChokepointIds: string[]; disruptionPct: number; durationDays: number; affectedHs2: string[] | null; costShockMultiplier: number }>}
  */
-const SCENARIO_TEMPLATES = [
+export const SCENARIO_TEMPLATES = [
   {
     id: 'taiwan-strait-full-closure',
     affectedChokepointIds: ['taiwan_strait'],
