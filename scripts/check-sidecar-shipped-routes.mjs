@@ -61,7 +61,7 @@ export function stageShippedResources(root, stageDir) {
   }
 }
 
-/** Mirrors buildRouteTable() in src-tauri/sidecar/local-api-server.mjs. */
+/** Mirrors buildRouteTable() in scripts/local/local-api-server.mjs. */
 export function listRouteModules(apiDir) {
   const files = [];
   const walk = (dir) => {
@@ -129,7 +129,7 @@ function parseArgs(argv) {
 
 if (isMainModule(import.meta.url, process.argv[1])) {
   const { root } = parseArgs(process.argv.slice(2));
-  const { __testing__ } = await import(pathToFileURL(path.join(root, 'src-tauri/sidecar/local-api-server.mjs')).href);
+  const { __testing__ } = await import(pathToFileURL(path.join(root, 'scripts/local/local-api-server.mjs')).href);
   const { routes, missingBundles, failures } = await checkShippedRoutes(root, { isCloudPreferred: __testing__.isCloudPreferred });
   let failed = false;
   if (missingBundles.length > 0) {

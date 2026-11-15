@@ -5,7 +5,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { runInNewContext } from 'node:vm';
 import { Window } from 'happy-dom';
-import { createLocalApiServer } from './local-api-server.mjs';
+import { createLocalApiServer } from '../scripts/local/local-api-server.mjs';
 
 function executeBridge(html) {
   const parserWindow = new Window();

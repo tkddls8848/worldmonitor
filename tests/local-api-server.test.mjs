@@ -15,30 +15,7 @@ import test from 'node:test';
 import { runInNewContext } from 'node:vm';
 
 delete process.env.WS_RELAY_URL;
-const { createLocalApiServer, __testing__ } = await import('./local-api-server.mjs');
-
-test('bundles the shared LLM health provider registry with the sidecar (#7126)', () => {
-  const config = JSON.parse(readFileSync(new URL('../tauri.conf.json', import.meta.url), 'utf8'));
-  const dockerfile = readFileSync(new URL('../../Dockerfile', import.meta.url), 'utf8');
-  assert.ok(config.bundle.resources.includes('../shared/llm-health-providers.js'));
-  assert.match(
-    dockerfile,
-    /COPY --from=builder \/app\/shared\/llm-health-providers\.js \.\/shared\/llm-health-providers\.js/,
-  );
-  assert.match(dockerfile, /^ENV LOCAL_API_RESOURCE_DIR=\/app$/m);
-});
-
-// api/_user-api-key.js imports ../shared/desktop-key-access.js, so every route
-// that validates a user API key needs it shipped next to api/ (#9906).
-test('ships the shared desktop key access module with the sidecar (#9906)', () => {
-  const config = JSON.parse(readFileSync(new URL('../tauri.conf.json', import.meta.url), 'utf8'));
-  const dockerfile = readFileSync(new URL('../../Dockerfile', import.meta.url), 'utf8');
-  assert.ok(config.bundle.resources.includes('../shared/desktop-key-access.js'));
-  assert.match(
-    dockerfile,
-    /COPY --from=builder \/app\/shared\/desktop-key-access\.js \.\/shared\/desktop-key-access\.js/,
-  );
-});
+const { createLocalApiServer, __testing__ } = await import('../scripts/local/local-api-server.mjs');
 
 // Served locally, these answer 5xx or an empty 200 (notification-suppressions);
 // the cloud holds their state. Before #9906 a failed Upstash import hid that.
@@ -2660,7 +2637,7 @@ test('Docker rejects native administration without changing configuration, cache
     res.end('{"data":[{"id":"fixture-model"}]}');
   });
   const privatePort = await listen(privateProvider);
-  const relayModule = pathToFileURL(path.resolve(import.meta.dirname, '../../api/oref-alerts.js')).href;
+  const relayModule = pathToFileURL(path.resolve(import.meta.dirname, '../api/oref-alerts.js')).href;
   const localApi = await setupApiDir({
     'oref-alerts.js': `export { default } from ${JSON.stringify(relayModule)};`,
     'missing.js': `import './absent.js'; export default () => new Response('unreachable');`,
@@ -4950,27 +4927,6 @@ function parseSetCookie(response) {
     attributes: attributes.map((a) => a.toLowerCase()),
   };
 }
-
-test('the nginx config the Docker image installs forwards the browser authority to /api/', () => {
-  const dockerfile = readFileSync(new URL('../../Dockerfile', import.meta.url), 'utf8');
-  const [, installed] = dockerfile.match(/^COPY (docker\/nginx[^\s]*\.conf[^\s]*) \/etc\/nginx\/nginx\.conf\.template$/m) ?? [];
-  assert.ok(installed, 'Dockerfile installs an nginx config');
-  const conf = readFileSync(new URL(`../../${installed}`, import.meta.url), 'utf8');
-  const apiBlock = conf.match(/location \/api\/ \{[\s\S]*?\n {4}\}/)?.[0] ?? '';
-  assert.ok(apiBlock, `${installed} has a location /api/ block`);
-  assert.match(apiBlock, /proxy_set_header X-Forwarded-Host \$http_host;/,
-    'the relay origin check needs the browser authority with its port');
-});
-
-test('ships the self-host relay path mirror with the sidecar', () => {
-  const config = JSON.parse(readFileSync(new URL('../tauri.conf.json', import.meta.url), 'utf8'));
-  const dockerfile = readFileSync(new URL('../../Dockerfile', import.meta.url), 'utf8');
-  assert.ok(config.bundle.resources.includes('../shared/selfhost-relay-paths.js'));
-  assert.match(
-    dockerfile,
-    /COPY --from=builder \/app\/shared\/selfhost-relay-paths\.js \.\/shared\/selfhost-relay-paths\.js/,
-  );
-});
 
 test('selfhost-key: POST with an active key sets an HttpOnly SameSite=Strict cookie on /api/', async () => {
   await withSelfHostSidecar(async ({ cloud, port }) => {

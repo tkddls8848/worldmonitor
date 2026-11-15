@@ -42,7 +42,7 @@ export const DESKTOP_PARITY_FEATURES: DesktopParityFeature[] = [
     serviceFiles: ['src/services/live-video/session.ts', 'src/live-channels-window.ts'],
     // The session plays YouTube through the sidecar player; channel management names an added video through /api/youtube/live.
     apiRoutes: ['/api/youtube-embed', '/api/youtube/live'],
-    apiHandlers: ['src-tauri/sidecar/local-api-server.mjs', 'api/youtube/live.js'],
+    apiHandlers: ['scripts/local/local-api-server.mjs', 'api/youtube/live.js'],
     locality: 'fully-local',
     fallback: 'Each channel tries its broadcaster stream, then verified YouTube streams; a channel with nothing live says why.',
     priority: 1,

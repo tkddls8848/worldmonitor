@@ -20,7 +20,7 @@ const root = resolve(__dirname, '..');
  */
 
 const buildScript = readFileSync(resolve(root, 'scripts/build-sidecar-handlers.mjs'), 'utf-8');
-const sidecar = readFileSync(resolve(root, 'src-tauri/sidecar/local-api-server.mjs'), 'utf-8');
+const sidecar = readFileSync(resolve(root, 'scripts/local/local-api-server.mjs'), 'utf-8');
 
 it('cloud-prefers cyber feed and authorized enrichment with or without a relay', () => {
   const declarations = sidecar.slice(sidecar.indexOf('const cloudPreferred ='), sidecar.indexOf('async function isLocalOnlyRequest'));

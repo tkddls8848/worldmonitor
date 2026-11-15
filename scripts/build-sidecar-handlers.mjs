@@ -69,7 +69,7 @@ if (undeclaredFamilies.length > 0) {
   console.error(
     `build:sidecar-handlers  undeclared versioned route family: ${undeclaredFamilies.join(', ')}\n` +
     '  Either bundle it for the desktop sidecar or add it to CLOUD_ONLY_ROUTE_FAMILIES ' +
-    'here AND to cloudOnlyRouteFamilyPrefixes in src-tauri/sidecar/local-api-server.mjs (#5907).',
+    'here AND to cloudOnlyRouteFamilyPrefixes in scripts/local/local-api-server.mjs (#5907).',
   );
   process.exit(1);
 }
