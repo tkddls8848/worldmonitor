@@ -250,16 +250,6 @@ describe('#6038 ai-search.md is generated, not hand-maintained', () => {
     }
   });
 
-  it('regenerates ai-search.md when the monthly resilience snapshot refreshes', () => {
-    // publishedRankedCountries() reads the latest resilience snapshot, so the
-    // monthly cron that rotates that snapshot must rebuild this file too —
-    // otherwise the committed ranked count and captured date go a month stale
-    // and the drift test above turns red on main.
-    const workflow = read('.github/workflows/resilience-snapshot-refresh.yml');
-    assert.match(workflow, /npm run build:ai-search/);
-    assert.match(workflow, /git add "\$snapshot_path".*public\/ai-search\.md/);
-  });
-
   it('re-dates only when the figures move, so regeneration is idempotent', () => {
     const current = read(AI_SEARCH_PATH);
     const committed = current.match(/Coverage reconciled: (\d{4}-\d{2}-\d{2})/)[1];

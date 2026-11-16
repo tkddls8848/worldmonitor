@@ -19,7 +19,6 @@ import {
   inventoryGenerationSkipReason,
   parseArgs,
   prepareInventoryFacts,
-  prAlignment,
   probeDependencies,
   runAgentPreflight,
   supportedNode,
@@ -32,7 +31,7 @@ const headOid = 'a'.repeat(40);
 
 function readyChecks() {
   return {
-    source: { ok: true, headOid, prHeadOid: headOid },
+    source: { ok: true, headOid },
     execution: { trustedTarget: true },
     worktree: { ok: true, dirty: false, detached: false, unmerged: false },
     node: { ok: true },
@@ -41,8 +40,6 @@ function readyChecks() {
     inventoryFacts: { ok: true, attempted: true, required: true },
     credentials: { github: { available: true }, requiredEnv: {} },
     originMain: { fetched: true, headContainsOriginMain: true },
-    prAlignment: { ok: true, stateOpen: true },
-    duplicatePullRequests: { ok: true },
     worktrees: { ok: true, collisions: [] },
     bootstrap: { ok: true },
   };
@@ -248,16 +245,14 @@ describe('agent preflight', () => {
     for (const origin of [null, 'https://example.invalid/owner/repo.git']) {
       const options = localFixture({ inventory: true });
       const { calls, runner } = localRunner(options.rootDir, { origin, offline: false });
-      const result = runAgentPreflight({ ...options, mode: 'review', pr: '123', issue: '123' }, runner);
+      const result = runAgentPreflight({ ...options, mode: 'review', issue: '123' }, runner);
       assert.equal(result.status, 'ready');
       assert.equal(result.schema, 'worldmonitor-agent-preflight/v2');
       assert.equal(result.repository, null);
       assert.equal(result.checks.source.headOid, headOid);
       assert.equal(result.checks.source.scope, 'local_commit');
-      assert.equal(result.coverage.livePrState, false);
       assert.ok(result.coverage.gaps.some(gap => /origin/.test(gap)));
       assert.equal(result.checks.originMain.fetched, false);
-      assert.equal(result.checks.duplicatePullRequests.checked, false);
       assert.equal(result.readiness.repair.ready, false);
       assert.equal(result.expensiveTestsAllowed, false);
       assert.equal(calls.some(call => /git fetch| api | pr list|npm ci|generate-inventory-facts\.mjs/.test(call)), false);
@@ -287,7 +282,6 @@ describe('agent preflight', () => {
     const checks = readyChecks();
     checks.worktree = { ok: false, detached: true, dirty: false };
     checks.originMain.headContainsOriginMain = false;
-    checks.prAlignment = { ok: false, baseAligned: false, stateOpen: true };
     checks.worktrees = { ok: false, collisions: [{ path: '/other/branch' }] };
     const result = actionReadiness(checks);
     assert.equal(result.sourceReview.ready, true);
@@ -304,9 +298,7 @@ describe('agent preflight', () => {
       ['dependencies', { ok: false }, true, false],
       ['credentials', { github: { available: false }, requiredEnv: {} }, true, true],
       ['credentials', { github: { available: true }, requiredEnv: { TEST_KEY: false } }, true, false],
-      ['source', { ok: false, headOid: null, prHeadOid: null }, false, false],
-      ['source', { ok: true, headOid, prHeadOid: 'b'.repeat(40) }, false, false],
-      ['prAlignment', { ok: false, stateOpen: false }, true, true],
+      ['source', { ok: false, headOid: null }, false, false],
       ['originMain', { fetched: false, error: 'offline' }, true, true],
       ['worktree', { ok: false, dirty: true }, true, false],
       ['worktree', { ok: true, dirty: true, intentionalDirty: true, unmerged: true }, true, false],
@@ -323,31 +315,16 @@ describe('agent preflight', () => {
     assert.equal(actionReadiness(readyChecks()).repair.ready, true);
   });
 
-  it('permits verification and repair of local fix commits ahead of the confirmed PR head', () => {
-    const checks = readyChecks();
-    checks.source.headOid = 'b'.repeat(40);
-    checks.prAlignment = { ok: true, headRelation: 'ahead', remoteAligned: true, stateOpen: true };
-    const result = actionReadiness(checks);
-    assert.equal(result.sourceReview.ready, false);
-    assert.equal(result.tests.ready, true);
-    assert.equal(result.repair.ready, true);
-    checks.prAlignment.remoteAligned = false;
-    checks.prAlignment.ok = false;
-    assert.equal(actionReadiness(checks).tests.ready, false);
-    assert.equal(actionReadiness(checks).repair.ready, false);
-  });
-
   it('inspects a local commit offline without installing dependencies or running target scripts', () => {
     const options = localFixture({ inventory: true });
     const { calls, runner } = localRunner(options.rootDir, { status: ' M file.mjs\0', detached: true });
-    const result = runAgentPreflight({ ...options, mode: 'review', pr: '123', issue: '123' }, runner);
+    const result = runAgentPreflight({ ...options, mode: 'review', issue: '123' }, runner);
     assert.equal(result.schema, 'worldmonitor-agent-preflight/v2');
     assert.equal(result.status, 'ready');
     assert.equal(result.expensiveTestsAllowed, false);
     assert.equal(result.readiness.repair.ready, false);
     assert.equal(result.checks.source.headOid, headOid);
     assert.equal(result.checks.source.scope, 'local_commit');
-    assert.equal(result.coverage.livePrState, false);
     assert.ok(result.coverage.gaps.some(gap => gap.includes('uncommitted')));
     assert.equal(result.checks.worktrees.collisions[0].writerActivity, 'unknown');
     assert.equal(result.checks.worktrees.registeredCount, 2);
@@ -726,59 +703,6 @@ describe('agent preflight', () => {
     assert.equal(receivedOptions.timeout, 180_000);
     assert.equal(result.ok, false);
     assert.match(result.error, /timed out after 180000ms/);
-  });
-
-  it('requires the checked-out branch to own the PR head', () => {
-    const snapshot = {
-      base: { oid: headOid, ref: 'main' },
-      head: { ref: 'codex/expected' },
-      pullRequest: { state: 'OPEN' },
-      remoteState: {
-        graphQlMatchesRemote: true,
-        localBranch: 'codex/unrelated',
-        relation: 'exact',
-      },
-    };
-    const runner = (_file, args) => {
-      const command = args.join(' ');
-      if (command.startsWith('fetch ')) return { status: 0, stderr: '', stdout: '' };
-      if (command === 'rev-parse origin/main') {
-        return { status: 0, stderr: '', stdout: `${headOid}\n` };
-      }
-      throw new Error(`Unexpected command: ${command}`);
-    };
-
-    const result = prAlignment(snapshot, '/repo', runner);
-    assert.equal(result.branchAligned, false);
-    assert.equal(result.ok, false);
-  });
-
-  it('accepts the fetched live base when the PR object base OID is stale', () => {
-    const snapshot = {
-      base: {
-        oid: headOid,
-        ref: 'main',
-        state: {
-          fetchedOid: headOid,
-          graphQlMatchesFetched: false,
-          localContainsBase: true,
-          pullRequestOid: 'b'.repeat(40),
-        },
-      },
-      head: { ref: 'codex/agent-tools' },
-      pullRequest: { state: 'OPEN' },
-      remoteState: {
-        graphQlMatchesRemote: true,
-        localBranch: 'codex/agent-tools',
-        relation: 'ahead',
-      },
-    };
-
-    const result = prAlignment(snapshot, '/repo', () => {
-      throw new Error('runner should not be called');
-    });
-    assert.equal(result.baseAligned, true);
-    assert.equal(result.ok, true);
   });
 
   it('bounds a safe bootstrap and disables lifecycle scripts', () => {

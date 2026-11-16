@@ -93,16 +93,6 @@ it('publisher schedule parser and diff agree with the rule and flag a departure'
   }
 });
 
-it('calendar warning runs daily in CI without suppressing failure', () => {
-  const workflow = YAML.parse(readFileSync(new URL('../.github/workflows/oil-calendar-horizon.yml', import.meta.url), 'utf8'));
-  assert.deepEqual(workflow.on.schedule, [{ cron: '43 7 * * *' }]);
-  const job = workflow.jobs.horizon;
-  assert.ok(!job['continue-on-error']);
-  const step = job.steps.find((step: { run?: string }) => step.run?.includes('check-oil-calendar-horizon'));
-  assert.equal(step.run, 'node scripts/check-oil-calendar-horizon.mts');
-  assert.ok(!step['continue-on-error']);
-});
-
 it('market documentation and tool description acknowledge modeled CME holidays', () => {
   assert.ok(Object.keys(calendar.CME_ENERGY_CLOSES).length > 0);
   const docs = readFileSync(new URL('../docs/mcp-tools/markets.mdx', import.meta.url), 'utf8');

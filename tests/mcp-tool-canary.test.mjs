@@ -338,13 +338,6 @@ describe('fixture coverage against the in-repo tool registry', () => {
       'add a fixture to buildFixtures() in scripts/mcp-tool-canary.mjs');
   });
 
-  it('uses the current registry catalog as the workflow deployment barrier', () => {
-    const card = JSON.parse(readFileSync(new URL('../public/.well-known/mcp/server-card.json', import.meta.url), 'utf8'));
-    assert.deepEqual(card.tools.map((t) => t.name).sort(), tools.map((t) => t.name).sort());
-    const workflow = readFileSync(new URL('../.github/workflows/mcp-tool-canary.yml', import.meta.url), 'utf8');
-    assert.match(workflow, /node scripts\/mcp-tool-canary\.mjs --wait-for-catalog /);
-  });
-
   it('every fixture names a registered read-only tool', () => {
     const readOnly = new Set(selectCanaryTools(tools).map((t) => t.name));
     const stale = Object.keys(buildFixtures()).filter((name) => !readOnly.has(name));

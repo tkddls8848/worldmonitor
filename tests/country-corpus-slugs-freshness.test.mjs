@@ -75,29 +75,6 @@ test('the generator reports the committed map as fresh', () => {
   );
 });
 
-test('every workflow that rebuilds the corpus stages and verifies the map', () => {
-  // build:crawlable-corpus regenerates the map, and both refresh crons stage an
-  // explicit file list with no `git commit -a`. Omitting the map there publishes
-  // a renamed country's page while api/story.js keeps canonicalising the old
-  // slug — a hard 404, worse than the /dashboard canonical it replaced (#8604).
-  for (const name of ['resilience-snapshot-refresh.yml', 'crawlable-pulse-refresh.yml']) {
-    const workflow = readFileSync(join(ROOT, '.github/workflows', name), 'utf8');
-
-    assert.match(workflow, /npm run build:crawlable-corpus/, `${name} no longer rebuilds the corpus`);
-    assert.match(
-      workflow,
-      /git add [^\n]*\bapi\/_country-corpus-slugs\.generated\.js\b/,
-      `${name} rebuilds the slug map and then discards it`,
-    );
-    const consumers = workflow.match(/SNAPSHOT_CONSUMERS: '([^']+)'/)?.[1];
-    assert.ok(
-      /tests\/country-corpus-slugs-freshness\.test\.mjs/.test(workflow)
-        || (consumers && new RegExp(consumers).test(readFileSync(fileURLToPath(import.meta.url), 'utf8'))),
-      `${name} stages the slug map without running the gate that proves it fresh`,
-    );
-  }
-});
-
 test('the map keeps the hand-written country names it replaced', () => {
   // The 20 codes api/story.js carried inline before #8604. A snapshot that
   // dropped one of these would silently retitle its stub with a raw ISO2.

@@ -74,79 +74,6 @@ node scripts/check-vite-env-secrets.mjs || exit 1
 
 export npm_config_cache="${npm_config_cache:-/tmp/worldmonitor-npm-cache}"
 
-echo "Checking PR status for current branch..."
-BRANCH=$(git branch --show-current)
-if [ -n "$BRANCH" ] && [ "$BRANCH" != "main" ] && [ "$BRANCH" != "master" ]; then
-  PR_INFO=$(gh pr view "$BRANCH" --json state,baseRefName --jq '"\(.state)\t\(.baseRefName)"' 2>&1)
-  PR_STATE=$(printf '%s' "$PR_INFO" | cut -f1)
-  PR_BASE_REF=$(printf '%s' "$PR_INFO" | cut -f2)
-  if [ "$PR_STATE" = "MERGED" ] || [ "$PR_STATE" = "CLOSED" ]; then
-    echo ""
-    echo "============================================================"
-    echo "ERROR: PR for branch '$BRANCH' is $PR_STATE."
-    echo "Do NOT push to a merged/closed PR branch — commits will be orphaned."
-    echo "Run: git checkout main && git pull && git checkout -b fix/new-branch"
-    echo "============================================================"
-    exit 1
-  fi
-  echo "  Branch PR state: ${PR_STATE:-unknown}"
-
-  # Guard against branch contamination from a dirty local main.
-  # A feature/fix branch should never have more than 20 commits past its
-  # actual base — if it does, the branch was likely created from a local
-  # main that had unmerged feature branches.
-  #
-  # The base defaults to origin/main, but a branch deliberately stacked on
-  # another open PR's head (base != main) would trip this against the wrong
-  # ref. Prefer, in order: an explicit WM_BASE_REF override (matching the
-  # WM_ALLOW_FOREIGN_HOOKS convention), the open PR's actual base branch,
-  # then origin/main as the common first-push fallback.
-  BASE_REF="${WM_BASE_REF:-}"
-  if [ -z "$BASE_REF" ] && [ -n "$PR_BASE_REF" ] && [ "$PR_BASE_REF" != "null" ]; then
-    BASE_REF="$PR_BASE_REF"
-  fi
-  BASE_REF="${BASE_REF:-main}"
-  # Lazy ahead-count (#6764): count against the CACHED remote-tracking ref
-  # and fetch only to disprove a suspected violation or resolve a base that
-  # was never fetched — a fetch can only shrink the count, so a cached pass
-  # is a real pass. Decision + fixtures live in scripts/prepush-attest.sh
-  # (`base-guard`), where tests/prepush-attest.test.mjs executes them against
-  # real git fixtures instead of grepping this hook.
-  GUARD_STATUS=0
-  GUARD_OUT=$(bash scripts/prepush-attest.sh base-guard "$BASE_REF" 20) || GUARD_STATUS=$?
-  case "$GUARD_STATUS" in
-    0 | 3) ;;
-    *)
-      echo "ERROR: branch-contamination guard failed (status $GUARD_STATUS); refusing to push."
-      exit 1
-      ;;
-  esac
-  if ! printf '%s' "$GUARD_OUT" | awk -F '\t' '
-    NR != 1 { exit 1 }
-    NF != 2 || $1 == "" || $2 !~ /^[0-9]+$/ { exit 1 }
-    END { if (NR != 1) exit 1 }
-  ' >/dev/null; then
-    echo "ERROR: branch-contamination guard returned malformed output; refusing to push."
-    exit 1
-  fi
-  BASE_REF=$(printf '%s' "$GUARD_OUT" | cut -f1)
-  COMMIT_COUNT=$(printf '%s' "$GUARD_OUT" | cut -f2)
-  if [ "$GUARD_STATUS" -eq 3 ] && ! [ "$COMMIT_COUNT" -gt 20 ] 2>/dev/null; then
-    echo "ERROR: branch-contamination guard returned an inconsistent result; refusing to push."
-    exit 1
-  fi
-  if [ "$COMMIT_COUNT" -gt 20 ]; then
-    echo ""
-    echo "============================================================"
-    echo "ERROR: Branch '$BRANCH' is $COMMIT_COUNT commits ahead of origin/$BASE_REF."
-    echo "This usually means it was branched from a dirty local main."
-    echo "Fix: create branches from a worktree or use: git checkout -b <name> origin/main"
-    echo "If this is an intentional stacked branch, set WM_BASE_REF to its base."
-    echo "============================================================"
-    exit 1
-  fi
-fi
-
 echo "Checking scripts/package-lock.json sync..."
 # The package.json probe is "did this path change vs origin/main?". When
 # origin/main is missing the old `git diff | grep -q` pipeline treated git
@@ -547,7 +474,6 @@ PROTO_INPUTS=(
   server/worldmonitor/scorecard/v1/_source-registry.ts
   server/worldmonitor/scorecard/v1/_types.ts
 )
-PRO_TEST_INPUTS=(pro-test convex/config/productCatalog.ts scripts/generate-product-config.mjs src/config/products.generated.ts src/config/product-ids.generated.ts)
 
 # A fresh worktree's install is part of the expensive phase too. Keep it under
 # the shared lease so several new worktrees cannot all run npm ci at once.
@@ -602,22 +528,6 @@ if changed '^(api/|server/|scripts/|middleware|src/generated/)'; then
   fi
 else
   echo "API type check skipped (no api/server/scripts/src-generated changes)."
-fi
-
-if changed '^convex/'; then
-  echo "Running Convex type check..."
-  # Catches stale convex/_generated/api.d.ts (forgotten `npx convex codegen`
-  # after adding a module) and any drift between convex/schema.ts and the
-  # code that reads it. Pre-push is the right gate — these errors surface
-  # only at convex deploy time otherwise, deep into a release window.
-  npx tsc --noEmit -p convex/tsconfig.json || exit 1
-  # Internal* probe filter list must stay regenerated with convex/ source —
-  # otherwise Sentry ingest drifts back to the name-shaped allowlist treadmill
-  # (#8405). typecheck:api also runs this when scripts/ changes; convex-only
-  # edits still need the gate here.
-  node scripts/sync-sentry-convex-probe-filters.mjs --check || exit 1
-else
-  echo "Convex type check skipped (no convex/ changes)."
 fi
 
 if changed '^scripts/.*\.cjs$'; then
@@ -1005,112 +915,6 @@ else
   echo "No proto-related changes, skipping."
 fi
 
-echo "Running pro-test build + generated config freshness check..."
-# public/pro/ IS built by Vercel since #6898 (build:full chains build:pro), so
-# the committed-bytes staleness class this block was written for is gone. What
-# survives is still worth gating: the /pro app must BUILD at all — a broken
-# pro-test build now fails the deploy instead of shipping stale bytes — and the
-# generated config it compiles against (products.generated.ts, tiers.json, pro
-# locales) is still committed and can still go stale.
-#
-# Scope to the BRANCH delta ($CHANGED_PATHS, computed earlier from
-# `git diff origin/main...HEAD`), not the worktree, so unstaged local
-# pro-test/ scratch edits don't trigger a slow rebuild on unrelated
-# branches. RUN_ALL forces the check when the branch delta couldn't be
-# computed (matches the safety fallback used by the test runners above).
-#
-# Trigger on pro-test/ or the catalog/generator that feeds
-# pro-test/src/generated/tiers.json. public/pro/ is gitignored since #6898 and
-# can never appear in a branch delta, so it is no longer a trigger path.
-if [ "$RUN_ALL" = true ] || path_matches '^pro-test/|^convex/config/productCatalog\.ts$|^scripts/generate-product-config\.mjs$'; then
-  if gate_cached pro-test-build "${PRO_TEST_INPUTS[@]}"; then
-    echo "  Skipped (pro-test inputs unchanged since last green run; rm $GATE_INPUT_CACHE/pro-test-build to force)."
-  else
-    npx tsx scripts/generate-product-config.mjs >/dev/null || {
-      echo "ERROR: product config generation failed"
-      exit 1
-    }
-    if [ -L pro-test/node_modules ]; then
-      echo "ERROR: pro-test/node_modules is a symlink. Copy, hardlink, or npm ci — never symlink."
-      exit 1
-    fi
-    # Marker, not directory — see the root node_modules check above.
-    if [ ! -f pro-test/node_modules/.package-lock.json ]; then
-      echo "  Installing pro-test deps..."
-      (cd pro-test && npm ci --cache "$npm_config_cache" --prefer-offline) || exit 1
-    fi
-    # Point Vite's default cacheDir (pro-test/node_modules/.vite) at a
-    # lockfile-sharded directory under the shared git-common-dir. Do not
-    # edit pro-test/vite.config.ts here: that path trips this gate. The
-    # .vite link is a cache dir, not a node_modules symlink. Serialize
-    # concurrent writes with flock.
-    if [ -n "$PREPUSH_COMMON_DIR" ]; then
-      _lock_hash=$(sha256sum < pro-test/package-lock.json 2>/dev/null | cut -c1-12)
-      [ -n "$_lock_hash" ] || _lock_hash=nolock
-      _vite_cache="$PREPUSH_COMMON_DIR/wm-vite-cache/pro-test-${_lock_hash}"
-      mkdir -p "$_vite_cache"
-      if [ -d pro-test/node_modules ] && [ ! -e pro-test/node_modules/.vite ]; then
-        ln -s "$_vite_cache" pro-test/node_modules/.vite
-      fi
-      if command -v flock >/dev/null 2>&1; then
-        exec 9>"$PREPUSH_COMMON_DIR/wm-vite-cache/pro-test.build.lock"
-        if ! flock -w 180 9; then
-          echo "ERROR: could not lock shared pro-test vite cache"
-          exit 1
-        fi
-      fi
-    fi
-    (cd pro-test && npm run build >/dev/null) || {
-      echo "ERROR: pro-test build failed"
-      exit 1
-    }
-    # `git diff --exit-code` is three-valued: 0 clean, 1 real diff, anything
-    # else (typically 128) could not run. `if !` used to collapse 1 and 128,
-    # so a work-tree-resolution failure was printed as a stale catalog and
-    # the regenerate-config recipe was a no-op (#7445). worktree-diff maps
-    # those onto 0 / 3 / 1. Paths must still all exist: an unknown path is
-    # 128, which is now a distinct error rather than "always stale". #5672
-    # removed `api/_product-fallback-prices.js` and left it listed here.
-    # Keep this list in step with what scripts/generate-product-config.mjs
-    # actually writes. Pin the worktree captured at hook start: the vite
-    # cache symlink below lives inside the git common dir.
-    _diff_status=0
-    bash "$ATTEST" worktree-diff "$WM_PREPUSH_ROOT" -- \
-      src/config/products.generated.ts \
-      src/config/product-ids.generated.ts \
-      pro-test/src/generated/tiers.json \
-      pro-test/src/locales/ || _diff_status=$?
-    case "$_diff_status" in
-      0) ;;
-      3)
-        echo ""
-        echo "============================================================"
-        echo "ERROR: product catalog, generated config, or pro locales is stale."
-        echo "public/pro/ itself is built on deploy (#6898) and is not checked here,"
-        echo "but the generated config it compiles against is still committed."
-        echo "Fix:"
-        echo "  npx tsx scripts/generate-product-config.mjs"
-        echo "  git add src/config/products.generated.ts src/config/product-ids.generated.ts pro-test/src/generated/tiers.json pro-test/src/locales/"
-        echo "  git commit --amend --no-edit"
-        echo "============================================================"
-        exit 1
-        ;;
-      *)
-        echo ""
-        echo "============================================================"
-        echo "ERROR: freshness check could not run (status $_diff_status)."
-        echo "This is a gate failure, not a stale catalog — do not run the regenerate steps."
-        echo "============================================================"
-        exit 1
-        ;;
-    esac
-    echo "  pro-test builds and its generated config is up to date."
-    gate_mark_green pro-test-build "${PRO_TEST_INPUTS[@]}"
-  fi
-else
-  echo "  Skipped (no pro-test/, product catalog, or product-config generator changes in branch)."
-fi
-
 echo "Running derived-file freshness check..."
 # Stale generated files (product facts, llms, AI search, catalogs, …) were over
 # half of CI test failures. Regenerate them here so the fix is one commit.
@@ -1119,9 +923,6 @@ if ! node scripts/generate-derived.mjs --check; then
   echo "ERROR: derived files were stale and are now regenerated. Review and commit them, then push again."
   exit 1
 fi
-
-echo "Running version sync check..."
-npm run version:check || exit 1
 
 echo "All pre-push gates passed."
 

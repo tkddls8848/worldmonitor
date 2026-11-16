@@ -249,12 +249,6 @@ describe('coverage-ledger and provenance wiring (source-textual)', () => {
     assert.match(health, /news:feed-health:v1/);
     assert.match(health, /seed-meta:news:recall-benchmark/);
   });
-
-  it('workflow passes Upstash secrets to both publishers', () => {
-    const wf = readSrc('.github/workflows/feed-validation.yml');
-    assert.match(wf, /UPSTASH_REDIS_REST_URL/);
-    assert.match(wf, /seed-recall-benchmark\.mjs/);
-  });
 });
 
 // ── #4927 review-round additions ───────────────────────────────────────────

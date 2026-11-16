@@ -15,11 +15,23 @@ import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve, win32 } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import {
-  createPrSnapshot,
-  parseGitHubRemote,
-  resolveGhBinary,
-} from './agent-pr-snapshot.mjs';
+function resolveGhBinary(env = process.env) {
+  return env.WM_GH_BIN || 'gh';
+}
+
+export function parseGitHubRemote(remoteUrl) {
+  const normalized = remoteUrl.trim().replace(/\.git$/, '');
+  const match = normalized.match(
+    /^(?:https?:\/\/(?:[^/@]+@)?github\.com\/|ssh:\/\/git@github\.com\/|git@github\.com:)([^/]+)\/([^/]+)$/,
+  );
+  if (!match) throw new Error('origin is not a supported GitHub repository');
+  return {
+    canonicalUrl: `https://github.com/${match[1]}/${match[2]}`,
+    name: match[2],
+    nameWithOwner: `${match[1]}/${match[2]}`,
+    owner: match[1],
+  };
+}
 
 const SCHEMA = 'worldmonitor-agent-preflight/v1';
 const ACTION_SCHEMA = 'worldmonitor-agent-preflight/v2';
@@ -47,7 +59,6 @@ export function parseArgs(argv = []) {
     issue: '',
     mode: null,
     npmCacheDir: process.env.WM_AGENT_NPM_CACHE || DEFAULT_NPM_CACHE,
-    pr: '',
     requireEnv: [],
     rootDir: process.cwd(),
     skipBootstrap: false,
@@ -75,8 +86,6 @@ export function parseArgs(argv = []) {
     }
     else if (arg === '--issue') options.issue = next();
     else if (arg.startsWith('--issue=')) options.issue = arg.slice('--issue='.length);
-    else if (arg === '--pr') options.pr = next();
-    else if (arg.startsWith('--pr=')) options.pr = arg.slice('--pr='.length);
     else if (arg === '--require-env') options.requireEnv.push(next());
     else if (arg.startsWith('--require-env=')) options.requireEnv.push(arg.slice('--require-env='.length));
     else if (arg === '--cache') options.cacheDir = next();
@@ -118,8 +127,7 @@ Options:
                        tests: prepare a trusted checkout for local tests.
                        repair: require safe branch writes and verification.
                        Omit to retain the original v1 all-gates contract.
-  --issue <number>      Check open PRs and worktrees for duplicate issue work.
-  --pr <number-or-url>  Check alignment with this pull request.
+  --issue <number>      Check worktrees for duplicate issue work.
   --require-env <name>  Require an environment variable without printing its value.
                         Repeat for multiple variables.
   --allow-dirty         Mark the current dirty worktree as intentional.
@@ -505,79 +513,6 @@ export function findWorktreeCollisions(worktrees, {
   });
 }
 
-function duplicatePrState({ currentPr, ghBin, issue, repo, rootDir, runner }) {
-  if (!issue) return { checked: false, duplicates: [], ok: true, reason: 'no issue number supplied' };
-  const result = runCommand(
-    runner,
-    ghBin,
-    [
-      'pr', 'list', '--repo', repo.nameWithOwner, '--state', 'open', '--limit', '1000',
-      '--json', 'number,title,body,url,headRefName,headRefOid,author',
-    ],
-    { cwd: rootDir },
-  );
-  if (result.status !== 0) {
-    return { checked: true, duplicates: [], error: 'open PR query failed', ok: false };
-  }
-  let prs;
-  try {
-    prs = JSON.parse(output(result));
-  } catch {
-    return { checked: true, duplicates: [], error: 'open PR query returned invalid JSON', ok: false };
-  }
-  if (prs.length >= 1000) {
-    return {
-      checked: true,
-      duplicates: [],
-      error: 'open PR query reached its 1000-result safety limit',
-      ok: false,
-    };
-  }
-  const issuePattern = new RegExp(`(?:#|issues/|issue[-_/ ]?)${issue}(?:[^0-9]|$)`, 'i');
-  const branchPattern = new RegExp(`(?:^|[-_/])${issue}(?:[-_/]|$)`);
-  const matches = prs.filter(pr => (
-    issuePattern.test(`${pr.title || ''}\n${pr.body || ''}`)
-    || branchPattern.test(pr.headRefName || '')
-  ));
-  const summarize = pr => ({
-    author: pr.author?.login || null,
-    headRefName: pr.headRefName,
-    headRefOid: pr.headRefOid,
-    number: pr.number,
-    url: pr.url,
-  });
-  const duplicates = matches.filter(pr => pr.number !== currentPr).map(summarize);
-  return { checked: true, duplicates, matchCount: matches.length, ok: duplicates.length === 0 };
-}
-
-export function prAlignment(snapshot, rootDir, runner, { allowDetached = false } = {}) {
-  if (!snapshot) return { applicable: false, ok: true };
-  void rootDir;
-  void runner;
-  const localBaseOid = snapshot.base.state?.fetchedOid || null;
-  const headRelation = snapshot.remoteState.relation;
-  const headAligned = headRelation === 'exact' || headRelation === 'ahead';
-  const localBranch = snapshot.remoteState.localBranch;
-  const branchAligned = localBranch === snapshot.head.ref
-    || (localBranch === null && allowDetached && headRelation === 'exact');
-  const baseAligned = snapshot.base.oid === localBaseOid
-    && snapshot.base.state?.localContainsBase === true;
-  const remoteAligned = snapshot.remoteState.graphQlMatchesRemote === true;
-  const stateOpen = snapshot.pullRequest.state === 'OPEN';
-  return {
-    applicable: true,
-    baseAligned,
-    branchAligned,
-    headAligned,
-    headRelation,
-    localBaseOid,
-    localBranch,
-    ok: baseAligned && branchAligned && headAligned && remoteAligned && stateOpen,
-    remoteAligned,
-    stateOpen,
-  };
-}
-
 function repoIdentity(rootDir, runner) {
   const remote = git(runner, rootDir, ['remote', 'get-url', 'origin']);
   if (!remote.ok) throw new Error(remote.stderr || 'origin remote is unavailable');
@@ -692,17 +627,12 @@ function safeTestWorktree(worktree) {
 }
 
 export function actionReadiness(checks) {
-  const { source, worktree, prAlignment: alignment, originMain, credentials, storage } = checks;
+  const { source, worktree, originMain, credentials, storage } = checks;
   const issue = (check, reason, nextAction) => ({ check, reason, nextAction });
   const sourceBlockers = [];
   if (!source.ok) sourceBlockers.push(issue('source', 'local_revision_unavailable', 'resolve_local_commit'));
-  if (source.prHeadOid && source.headOid !== source.prHeadOid) {
-    sourceBlockers.push(issue('source', 'pr_head_mismatch', 'inspect_exact_pr_head'));
-  }
 
-  const testBlockers = sourceBlockers.filter(blocker => !(
-    blocker.reason === 'pr_head_mismatch' && alignment.headRelation === 'ahead' && alignment.remoteAligned
-  ));
+  const testBlockers = [...sourceBlockers];
   if (!checks.execution.trustedTarget) {
     testBlockers.push(issue('execution', 'alternate_target', 'use_trusted_test_checkout'));
   }
@@ -732,13 +662,6 @@ export function actionReadiness(checks) {
   }
   if (!credentials.github.available) {
     repairBlockers.push(issue('credentials.github', 'github_unavailable', 'restore_github_access'));
-  }
-  if (!alignment.ok) {
-    repairBlockers.push(issue('prAlignment', alignment.stateOpen === false ? 'pr_closed' : 'pr_alignment_failed',
-      alignment.stateOpen === false ? 'stop_closed_pr_delivery' : 'refresh_and_align_pr_branch'));
-  }
-  if (!checks.duplicatePullRequests.ok) {
-    repairBlockers.push(issue('duplicatePullRequests', 'duplicate_check_failed', 'inspect_existing_prs'));
   }
   if (!checks.worktrees.ok) {
     repairBlockers.push(issue('worktrees', checks.worktrees.collisions.length ? 'writer_activity_unknown' : 'worktree_inventory_unavailable',
@@ -825,44 +748,12 @@ export function runAgentPreflight(options = {}, runner = createPreflightRunner()
     ? currentOriginMain(rootDir, runner, options.allowStaleMain)
     : { error: repoError, fetched: false, ok: false };
 
-  let prSnapshot = null;
-  let prSnapshotError = repoError;
-  if (repo && credentials.github.available) {
-    try {
-      prSnapshot = createPrSnapshot({
-        cacheDir: options.cacheDir,
-        ghBin: credentials.github.binary,
-        phase: 'task-start',
-        pr: options.pr,
-        rootDir,
-        runner,
-      });
-    } catch (error) {
-      prSnapshotError = error.message;
-    }
-  }
-
-  const alignment = prSnapshotError || (mode && options.pr && !prSnapshot)
-    ? { applicable: Boolean(options.pr), error: prSnapshotError, ok: false }
-    : prAlignment(prSnapshot, rootDir, runner, { allowDetached: options.allowDetached });
-  const duplicates = repo ? duplicatePrState({
-    currentPr: prSnapshot?.pullRequest.number || null,
-    ghBin: credentials.github.binary,
-    issue: options.issue,
-    repo,
-    rootDir,
-    runner,
-  }) : { checked: false, duplicates: [], error: repoError, ok: false };
   const listedWorktrees = git(runner, rootDir, ['worktree', 'list', '--porcelain']);
   const worktrees = listedWorktrees.ok ? parseWorktrees(listedWorktrees.value) : [];
-  const watchedBranches = [
-    prSnapshot?.head.ref,
-    ...duplicates.duplicates.map(pr => pr.headRefName),
-  ];
   const collisions = findWorktreeCollisions(worktrees, {
     currentRoot: rootDir,
     issue: options.issue,
-    watchedBranches,
+    watchedBranches: [],
   });
   const worktreeInventory = {
     [mode ? 'registeredCount' : 'activeCount']: worktrees.filter(item => !item.prunable).length,
@@ -878,8 +769,6 @@ export function runAgentPreflight(options = {}, runner = createPreflightRunner()
     worktree.ok,
     originMain.ok,
     credentials.ok,
-    alignment.ok,
-    duplicates.ok,
     worktreeInventory.ok,
   ].every(Boolean);
 
@@ -887,20 +776,9 @@ export function runAgentPreflight(options = {}, runner = createPreflightRunner()
     bootstrap,
     credentials,
     dependencies: dependencyReport(dependencies),
-    duplicatePullRequests: duplicates,
     inventoryFacts,
     node,
     originMain,
-    prAlignment: alignment,
-    prSnapshot: prSnapshot
-      ? {
-          baseOid: prSnapshot.base.oid,
-          cachePath: prSnapshot.cache.path,
-          capturedAt: prSnapshot.capturedAt,
-          headOid: prSnapshot.head.oid,
-          number: prSnapshot.pullRequest.number,
-        }
-      : null,
     storage: { npmCache, snapshotCache, temp },
     worktree,
     worktrees: worktreeInventory,
@@ -913,18 +791,14 @@ export function runAgentPreflight(options = {}, runner = createPreflightRunner()
     checks.source = {
       ok: head.ok && /^[0-9a-f]{40}$/.test(head.value),
       headOid: head.ok ? head.value : null,
-      prHeadOid: prSnapshot?.head.oid ?? null,
-      scope: prSnapshot?.head.oid === head.value ? 'pull_request_head' : 'local_commit',
+      scope: 'local_commit',
       readFrom: 'git_objects',
     };
     checks.execution = { trustedTarget, includesUncommittedChanges: worktree.dirty === true };
     checks.worktrees.collisions = collisions.map(collision => ({ ...collision, writerActivity: 'unknown' }));
     coverage = {
-      requestedPr: options.pr || null,
-      livePrState: prSnapshot !== null,
       gaps: [
         ...(repoError ? [`Repository identity could not be verified: ${repoError}`] : []),
-        ...(!prSnapshot ? ['Live PR state and feedback are not verified. Inspect only the recorded local commit.'] : []),
         ...(!originMain.fetched || originMain.error ? ['Current base could not be verified.'] : []),
         ...(worktree.dirty ? ['Committed source excludes uncommitted worktree changes.'] : []),
       ],

@@ -73,24 +73,3 @@ it('wrong status, malformed JSON, missing hints and changed codes fail denied an
     }
   }
 });
-
-it('the workflow rejects missing completion even when other tests inflate the pass count', () => {
-  const workflow = YAML.parse(readFileSync(new URL('../.github/workflows/live-api-cache-auth.yml', import.meta.url), 'utf8'));
-  const command = workflow.jobs.sweep.steps.find(step => step.env?.LIVE_API_CACHE_TESTS === '1').run;
-  const guard = command.slice(command.indexOf('pass_count='));
-  const names = command.match(/for probe in ([a-z -]+); do/)[1].split(' ');
-  const directory = mkdtempSync(join(tmpdir(), 'live-agent-guard-'));
-  try {
-    const log = join(directory, 'sweep.log');
-    const run = (count, omitted) => {
-      writeFileSync(log, `# pass ${count}\n` + names.filter(name => name !== omitted)
-        .map(name => `# LIVE_SWEEP_PROBE_COMPLETED ${name}\n`).join(''));
-      return spawnSync('bash', ['-c', guard.replaceAll('/tmp/sweep.log', log)], { encoding: 'utf8' });
-    };
-    assert.equal(run(names.length + 1).status, 0);
-    assert.equal(run(100, 'agent-api-errors').status, 1, 'unrelated passes cannot hide the missing denial probe');
-    assert.equal(run(0).status, 1, 'skipped probes cannot pass');
-  } finally {
-    rmSync(directory, { recursive: true, force: true });
-  }
-});

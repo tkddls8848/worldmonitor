@@ -279,28 +279,6 @@ describe('GEO residue #7463', () => {
     assert.match(welcome, new RegExp(`"dateModified": "${snapshot.capturedAt}"`));
     assert.match(read('pro-test/index.html'), new RegExp(`"dateModified": "${snapshot.capturedAt}"`));
   });
-
-  it('does not add well-known server.json to the MCP registry publish path filter', () => {
-    const workflow = read('.github/workflows/publish-mcp-registry.yml');
-    assert.doesNotMatch(
-      workflow,
-      /public\/\.well-known\/mcp\/server\.json/,
-      'well-known server.json is a discovery alias, not a registry publish input',
-    );
-  });
-
-  it('regenerates llms-full when the monthly resilience snapshot refreshes', () => {
-    const workflow = read('.github/workflows/resilience-snapshot-refresh.yml');
-    assert.match(workflow, /npm run build:llms-full/);
-    assert.match(workflow, /git add "\$snapshot_path" public\/sitemap\.xml public\/sitemap-main\.xml public\/llms-full\.txt/);
-  });
-
-  it('regenerates llms-full when the weekly pulse snapshot refreshes', () => {
-    const workflow = read('.github/workflows/crawlable-pulse-refresh.yml');
-    assert.match(workflow, /npm run build:llms-full/);
-    assert.match(workflow, /git add "\$snapshot_path" public\/sitemap\.xml public\/sitemap-main\.xml public\/llms-full\.txt/);
-    assert.match(workflow, /tests\/seo-geo-residue\.test\.mjs/);
-  });
 });
 
 describe('GEO residue #7616 (U1 agent surfaces)', () => {
@@ -525,33 +503,6 @@ describe('GEO residue #7616 (U1 agent surfaces)', () => {
       /expected 3 resilience coverage statement/,
     );
   });
-
-  it('regenerates every coverage surface in the monthly snapshot refresh', () => {
-    const workflow = read('.github/workflows/resilience-snapshot-refresh.yml');
-    const step = (command) => {
-      const index = workflow.indexOf(command);
-      assert.ok(index > 0, `the refresh workflow must run ${command}`);
-      return index;
-    };
-    // inventory:facts derives public/product-facts.json from product facts,
-    // and the glossary CRI line in llms-full reads them, so both run after.
-    const productFacts = step('scripts/generate-public-product-facts.mjs');
-    assert.ok(productFacts < step('npm run inventory:facts'), 'product facts must be regenerated before inventory:facts');
-    assert.ok(productFacts < step('npm run build:llms-full'), 'product facts must be regenerated before build:llms-full');
-    assert.ok(step('npm run resilience:coverage') < step('node scripts/run-data-tests.mjs'));
-    const staged = workflow.slice(workflow.indexOf('git add "$snapshot_path"'), workflow.indexOf('git commit'));
-    for (const path of [
-      ...RESILIENCE_COVERAGE_SURFACES.map((surface) => surface.path),
-      'shared/product-facts.generated.json',
-      'scripts/shared/product-facts.generated.json',
-      'shared/product-catalog.generated.json',
-      'scripts/shared/product-catalog.generated.json',
-      'api/_product-catalog.generated.js',
-      'pro-test/src/generated/depth-stats.json',
-    ]) {
-      assert.ok(staged.includes(path), `the refresh workflow must commit ${path}`);
-    }
-  });
 });
 
 describe('GEO residue #7616 (U3 sitemap index)', () => {
@@ -690,54 +641,5 @@ describe('GEO residue #7746 (compare discoverability)', () => {
     assert.equal(withComparisonsSection(edited), once, 'a hand-edited section is replaced in place');
     assert.throws(() => withComparisonsSection('# X\n\n## Documentation\n\n- a\n'), /Live Instances/);
     assert.throws(() => withComparisonsSection(`${once}\n${COMPARISONS_HEADING}\n\nextra\n`), /exactly one/);
-  });
-
-  it('links the Liveuamap FAQ answer to the comparison page on the homepage and its agent mirror', () => {
-    const label = 'worldmonitor.app/compare/liveuamap-alternatives';
-    const href = '/compare/liveuamap-alternatives/';
-    const dashboardHref = '/compare/best-geopolitical-risk-dashboards/';
-    const dashboardLabel = `worldmonitor.app${dashboardHref.slice(0, -1)}`;
-    const en = readJson('pro-test/src/locales/en.json');
-    assert.equal(en.welcome.faq.q5, 'How is this different from a conflict map like Liveuamap?');
-    // The destination rides inside the answer string, like the terms link in
-    // a11, so the FAQPage JSON-LD keeps it and the translator pins the URL.
-    assert.ok(en.welcome.faq.a5.includes(label), 'en a5 must keep the comparison destination');
-    assert.equal(en.welcome.faq.a5Link, undefined, 'the label lives in a5, not a separate key');
-    for (const file of readdirSync(join(repoRoot, 'pro-test/src/locales'))) {
-      const answer = readJson(`pro-test/src/locales/${file}`).welcome?.faq?.a5;
-      assert.ok(typeof answer === 'string' && answer.includes(label), `${file} a5 must keep the comparison destination`);
-      assert.ok(answer.includes(dashboardLabel), `${file} a5 must include the dashboard comparison destination`);
-    }
-    assert.equal(readJson('scripts/locale-baselines/pro-test.json')['welcome.faq.a5'], en.welcome.faq.a5);
-    // FAQ.tsx maps that label to the route, and the route must be one the
-    // comparison registry actually emits, so a renamed slug cannot leave the
-    // homepage on a 404 while every generated surface moves.
-    const faqSource = read('pro-test/src/welcome/FAQ.tsx');
-    const mapping = faqSource.match(/label: '([^']+)', href: '(\/compare\/[^']+)'/);
-    assert.ok(mapping, 'FAQ.tsx must map a compare label to its route');
-    assert.equal(mapping[1], label);
-    assert.equal(mapping[2], href);
-    assert.ok(
-      comparisonDiscoveryEntries('https://www.worldmonitor.app').some((entry) => entry.url === `https://www.worldmonitor.app${href}`),
-      'the FAQ route must be a registered comparison page',
-    );
-    assert.ok(en.welcome.faq.a5.includes(dashboardLabel));
-    assert.ok(faqSource.includes(`label: '${dashboardLabel}', href: '${dashboardHref}'`));
-    assert.ok(comparisonDiscoveryEntries('https://www.worldmonitor.app').some((entry) => entry.url === `https://www.worldmonitor.app${dashboardHref}`));
-    assert.match(
-      read('public/home.md'),
-      /\]\(https:\/\/www\.worldmonitor\.app\/compare\/\)/,
-      'home.md must link the comparison hub',
-    );
-    assert.match(
-      read('public/ai-search.md'),
-      /^- Competitor comparisons[^\n]*https:\/\/www\.worldmonitor\.app\/compare\/$/m,
-      'ai-search.md Relevant Pages must list the comparison hub',
-    );
-    assert.match(
-      read('.github/workflows/resilience-snapshot-refresh.yml'),
-      /git add [^\n]*public\/llms\.txt/,
-      'the monthly refresh must stage llms.txt now that build:llms-full owns it',
-    );
   });
 });

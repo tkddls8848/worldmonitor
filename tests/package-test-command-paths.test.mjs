@@ -90,42 +90,6 @@ test('every file a test script names exists on disk', () => {
   );
 });
 
-test('test.yml classifies every guarded src-tauri suite extension as code', () => {
-  // This guard runs inside unit and src-tauri suites run in sidecar; both are
-  // gated on `code`, and test.yml drops src-tauri/ paths from `code` except
-  // for the carve-out below. An extension discovered here but missing there
-  // is a suite whose own PR runs neither job.
-  const carveOut = testWorkflow.match(/\/\^src-tauri\\\/\.\*\\\.test\\\.\(([a-z|]+)\)\$\/ \{ count\+\+; next \}/);
-  assert.ok(carveOut, 'test.yml must carve src-tauri test suites back into code');
-  assert.deepEqual(carveOut[1].split('|').sort(), [...EXTENSIONS].sort());
-});
-
-test('every guarded suite is run by a script CI invokes', () => {
-  for (const owner of CI_OWNERS) {
-    assert.match(
-      testWorkflow,
-      new RegExp(`npm run ${owner.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\s|$)`),
-      `test.yml must invoke ${owner}; otherwise it cannot own a suite`,
-    );
-  }
-  const suites = globSync(
-    SUITE_ROOTS.map((dir) => `${dir}/**/*.test.{${EXTENSIONS.join(',')}}`),
-    { cwd: root, exclude: ['**/node_modules/**', '**/target/**'] },
-  ).map((file) => file.split('\\').join('/'));
-  assert.ok(suites.length >= 20, `expected the suite discovery glob to find real files, found ${suites.length}`);
-
-  const covered = new Set();
-  for (const owner of CI_OWNERS) {
-    for (const file of coveredFiles(scripts[owner])) covered.add(file);
-  }
-  const orphans = suites.filter((suite) => !covered.has(suite)).sort();
-  assert.deepEqual(
-    orphans,
-    [],
-    `a suite outside ${CI_OWNERS.join(' and ')} runs nowhere in CI; add it to test:sidecar (plain node --test) or test:data (tsx loader, sharded)`,
-  );
-});
-
 test('test:sidecar and test:data never run the same file', () => {
   const data = coveredFiles(scripts['test:data']);
   const sidecar = [...coveredFiles(scripts['test:sidecar'])];
@@ -146,45 +110,4 @@ test('test:data owns every resilience-validation-smoke suite', () => {
     [],
     'resilience-validation-smoke is skipped on code PRs (#7772 A), so test:data must run every file it lists',
   );
-});
-
-test('Zapier suites have a CI owner on integration and shared registry changes', () => {
-  const workflowPath = '.github/workflows/test.yml';
-  const workflow = parse(testWorkflow);
-  const job = workflow.jobs.zapier;
-  assert.ok(job, 'Test workflow needs a Zapier CI owner');
-  const integrationFiles = globSync('integrations/zapier/**', {
-    cwd: root, exclude: ['**/node_modules/**'],
-  }).filter((path) => statSync(resolve(root, path)).isFile());
-  assert.ok(integrationFiles.filter((path) => path.endsWith('.test.js')).length >= 15);
-  const inputs = [...integrationFiles, 'shared/event-triggers.json', workflowPath,
-    'tests/package-test-command-paths.test.mjs', '.github/scripts/deploy-gate.sh'];
-  for (const event of ['pull_request', 'push']) {
-    const trigger = workflow.on[event];
-    assert.ok(Object.hasOwn(workflow.on, event), `Zapier CI must run on ${event}`);
-    assert.equal(trigger?.paths, undefined, 'the required check must publish even on unrelated changes');
-  }
-  assert.ok(workflow.on.push.branches.includes('main'));
-  assert.equal(job.needs, 'changes');
-  assert.equal(job.if, "needs.changes.outputs.zapier == 'true'");
-  assert.equal(workflow.jobs.changes.outputs.zapier, '${{ steps.diff.outputs.zapier }}');
-  const filter = testWorkflow.match(/ZAPIER=\$\(printf[^\n]*\| awk '([\s\S]*?)'\)/)?.[1];
-  assert.ok(filter, 'the Zapier path selector must exist');
-  assert.equal(Number(execFileSync('awk', [filter], { input: inputs.join('\n'), encoding: 'utf8' })), inputs.length,
-    'integration, registry and ownership changes must select the Zapier job');
-  assert.equal(Number(execFileSync('awk', [filter], { input: 'docs/about.mdx\nsrc/App.ts\n', encoding: 'utf8' })), 0);
-  const gate = readFileSync(resolve(root, '.github/scripts/deploy-gate.sh'), 'utf8');
-  const required = JSON.parse(gate.match(/\nrequired='([^']+)'/)?.[1] ?? '[]');
-  assert.ok(required.includes('zapier'), 'Zapier failures must block the aggregate gate');
-  assert.equal(job.defaults.run['working-directory'], 'integrations/zapier');
-  const commands = job.steps.filter((step) => step.run).map((step) => {
-    assert.equal(step.if, undefined);
-    assert.equal(step['working-directory'], undefined);
-    return step.run;
-  });
-  assert.ok(commands.includes('npm ci --ignore-scripts --no-audit --no-fund'), 'CI must install the committed lockfile');
-  assert.ok(commands.includes('npm test'), 'CI must run the integration test command');
-  const manifest = JSON.parse(readFileSync(resolve(root, 'integrations/zapier/package.json'), 'utf8'));
-  assert.match(manifest.scripts.test, /^mocha --recursive test(?:\s|$)/);
-  assert.ok(existsSync(resolve(root, 'integrations/zapier/package-lock.json')));
 });

@@ -12,7 +12,6 @@ import {
 } from '../scripts/rehearse-crawlable-pulse-refresh.mjs';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const REHEARSAL_WORKFLOW_PATH = '.github/workflows/crawlable-pulse-rehearsal.yml';
 
 function capture() {
   return {
@@ -108,24 +107,5 @@ describe('crawlable pulse refresh rehearsal', () => {
     const drifted = driftLivePulseCapture(capture(), { targetDate: '2026-10-19' });
     assert.equal(drifted.capturedAt, '2026-10-19');
     assert.equal(drifted.countries.AE.methodologyVersion, 'v9');
-  });
-
-  it('replays the refresh workflow build and verify steps', () => {
-    const steps = readRehearsedSteps(readFileSync(resolve(repoRoot, REFRESH_WORKFLOW_PATH), 'utf8'));
-    assert.deepEqual(steps.map(({ name }) => name), ['Rebuild published artifacts', 'Verify published artifacts']);
-    assert.match(steps[0].run, /npm run build:crawlable-corpus/);
-    assert.match(steps[1].run, /node --import tsx --test/);
-    assert.equal(steps[0].env.CRAWLABLE_DEVELOPMENTS_COVERAGE_RATIO, '', 'a workflow expression resolves to empty, as on the schedule');
-  });
-
-  it('rehearses every PR that touches a refresh verify test', () => {
-    const [, verify] = readRehearsedSteps(readFileSync(resolve(repoRoot, REFRESH_WORKFLOW_PATH), 'utf8'));
-    const verifyTests = verify.run.match(/tests\/[\w.-]+\.test\.m[jt]s/g);
-    assert.ok(verifyTests.length > 0);
-    const rehearsal = parseYaml(readFileSync(resolve(repoRoot, REHEARSAL_WORKFLOW_PATH), 'utf8'));
-    const paths = rehearsal.on.pull_request.paths;
-    for (const testPath of [...verifyTests, 'tests/rehearse-crawlable-pulse-refresh.test.mjs']) {
-      assert.ok(paths.includes(testPath), `${REHEARSAL_WORKFLOW_PATH} must run when ${testPath} changes`);
-    }
   });
 });

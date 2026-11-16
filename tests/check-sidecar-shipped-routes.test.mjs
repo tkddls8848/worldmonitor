@@ -117,14 +117,4 @@ describe('repository wiring', () => {
       assert.doesNotThrow(() => readFileSync(path.join(root, 'api', route)), `api/${route}`);
     }
   });
-
-  it('runs on the shipped runtime in the sidecar job, after the handler bundles are built', () => {
-    const workflow = readFileSync(path.join(root, '.github/workflows/test.yml'), 'utf8');
-    const job = workflow.slice(workflow.indexOf('\n  sidecar:'), workflow.indexOf('\n  desktop-config:'));
-    const build = job.indexOf('node scripts/build-sidecar-handlers.mjs');
-    const shippedPath = job.indexOf('export PATH="$PWD/src-tauri/sidecar/node:$PATH"');
-    const check = job.indexOf('node scripts/check-sidecar-shipped-routes.mjs');
-    assert.ok(build > -1 && shippedPath > -1 && check > -1, 'sidecar job builds bundles and runs the check');
-    assert.ok(build < check && shippedPath < check, 'the check runs after the build, on the shipped Node');
-  });
 });

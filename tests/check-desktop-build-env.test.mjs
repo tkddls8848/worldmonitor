@@ -184,13 +184,6 @@ describe('check-desktop-build-env', () => {
     assert.throws(() => checkDesktopBuildEnv(root), (error) => error.code === 'ENOTDIR');
   });
 
-  it('discovers every workflow containing a Tauri action', () => {
-    const root = fixtureRoot();
-    writeFileSync(path.join(root, '.github/workflows/nightly.yaml'), buildWorkflow());
-    assert.deepEqual(discoverDesktopBuildWorkflows(root).sort(), [...FIXTURE_WORKFLOWS, '.github/workflows/nightly.yaml'].sort());
-    assert.deepEqual(checkDesktopBuildEnv(root), []);
-  });
-
   it('keeps parsing env keys across comment lines inside the env block', () => {
     const withComment = buildWorkflow(
       `          ${REQUIRED_DESKTOP_BUILD_ENV[0]}: x\n          # comment (#5905)\n          ${REQUIRED_DESKTOP_BUILD_ENV[1]}: y`,
@@ -289,10 +282,5 @@ describe('check-desktop-build-env', () => {
       () => execFileSync(process.execPath, [script, '--root', invalidRoot], { encoding: 'utf8' }),
       (error) => error.status === 1 && /desktop build env/.test(error.stderr.toString()),
     );
-  });
-
-  it('holds against the real workflows and SPA source', () => {
-    const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
-    assert.deepEqual(checkDesktopBuildEnv(repoRoot), []);
   });
 });

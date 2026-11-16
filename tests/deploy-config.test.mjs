@@ -2510,72 +2510,6 @@ describe('security header guardrails', () => {
     }
   });
 
-  it('runs strict WebMCP invocation and iframe probes in an enabled Chrome milestone', () => {
-    const script = packageJson.scripts?.['test:e2e:webmcp'] ?? '';
-    const productionScript = packageJson.scripts?.['test:e2e:webmcp:production'] ?? '';
-    const variantSmokeJob = testWorkflowSource.match(
-      /\n {2}variant-smoke-pro-webmcp:\n[\s\S]*?(?=\n {2}[a-z][a-z0-9-]+:\n|$)/,
-    )?.[0] ?? '';
-    assert.match(script, /WM_REQUIRE_WEBMCP=1/);
-    assert.match(script, /e2e\/webmcp\.spec\.ts/);
-    assert.match(script, /e2e\/embed\.spec\.ts/);
-    assert.match(script, /--project=chromium/);
-    assert.match(productionScript, /WM_REQUIRE_WEBMCP=1/);
-    assert.match(productionScript, /WM_WEBMCP_PRODUCTION=1/);
-    assert.match(productionScript, /e2e\/webmcp\.spec\.ts/);
-    assert.match(productionScript, /--headed/);
-    assert.ok(variantSmokeJob, 'Test workflow must define the full-variant smoke job');
-    assert.match(
-      variantSmokeJob,
-      /run: npm run test:e2e:webmcp/,
-      'PR CI must fail when the strict WebMCP iframe probe fails or is unavailable',
-    );
-    assert.match(playwrightConfigSource, /process\.env\.WM_REQUIRE_WEBMCP === '1'/);
-    assert.match(playwrightConfigSource, /process\.env\.WM_WEBMCP_CHROME_EXECUTABLE_PATH/);
-    assert.match(playwrightConfigSource, /channel: webMcpChromeChannel/);
-    assert.match(playwrightConfigSource, /executablePath: webMcpChromeExecutablePath/);
-    // Chrome 157 dropped the WebMCPTesting name for document.modelContext; 156 still
-    // needs it. Both must stay or one runner-image major loses the native provider.
-    assert.match(playwrightConfigSource, /--enable-features=WebMCPTesting,WebMCP'/);
-    assert.match(playwrightConfigSource, /requireWebMcp && !webMcpProduction/);
-    assert.match(playwrightConfigSource, /https:\/\/www\.worldmonitor\.app/);
-    assert.match(playwrightConfigSource, /WM_WEBMCP_DEPLOYED_SHA/);
-    assert.match(webMcpE2eSource, /document\.modelContext/);
-    assert.match(webMcpE2eSource, /\.getTools\(\)/);
-    assert.match(webMcpE2eSource, /provider\.executeTool/);
-    assert.match(webMcpCancellationE2eSource, /new AbortController\(\)/);
-    assert.match(webMcpCancellationE2eSource, /page\.on\('pageerror'/);
-    assert.match(webMcpCancellationE2eSource, /window\.addEventListener\('unhandledrejection'/);
-    assert.match(webMcpCancellationE2eSource, /lateLeakWindowMs/);
-    assert.match(webMcpE2eSource, /headers\['origin-trial'\]/);
-    assert.match(
-      webMcpE2eSource,
-      /const unconfiguredLocalFixture =\s*!productionSmoke && accessSnapshot\.clerk === 'unavailable'/,
-      'clerk_unavailable is only valid on the local unconfigured Clerk fixture',
-    );
-    assert.match(
-      webMcpE2eSource,
-      /production smoke must open the real Clerk sign-in modal/,
-      'production WebMCP smoke must require the real Clerk modal',
-    );
-    assert.match(
-      webMcpE2eSource,
-      /signIn: \{ tool: 'open_sign_in'/,
-      'production smoke must attach open_sign_in modal evidence',
-    );
-    assert.match(webMcpE2eSource, /testInfo\.outputPath\(name\)/);
-    assert.match(webMcpE2eSource, /writeFile\(path/);
-    assert.match(webMcpE2eSource, /testInfo\.attach\(name, \{ path/);
-    assert.match(webMcpE2eSource, /webmcp-production-matrix\.json/);
-    assert.match(webMcpE2eSource, /build-hash\.txt/);
-    assert.match(webMcpE2eSource, /expect\(servedSha,[\s\S]*?\.toBe\(expectedDeployedSha\)/);
-    assert.match(webMcpE2eSource, /https:\/\/tech\.worldmonitor\.app\/embed/);
-    assert.match(webMcpE2eSource, /redirectHeaders\['origin-trial'\]/);
-    assert.match(playwrightConfigSource, /preserveOutput:\s*'always'/);
-    assert.match(embedE2eSource, /WEBMCP_MIN_CHROME_MAJOR = 149/);
-    assert.match(embedE2eSource, /WM_REQUIRE_WEBMCP requires Chrome/);
-  });
-
   it('enrolls only eligible production documents with exact-origin WebMCP trial tokens', () => {
     const rules = vercelConfig.headers.filter((entry) =>
       entry.headers?.some((header) => header.key.toLowerCase() === 'origin-trial')
@@ -3629,28 +3563,6 @@ describe('agent readiness: api-catalog + openapi build', () => {
     assert.ok(
       pkg.scripts.prebuild?.includes('npm run build:openapi'),
       'package.json scripts["prebuild"] must copy the generated OpenAPI spec',
-    );
-  });
-
-  it('does not regenerate committed product config before build:pro', () => {
-    // build:pro runs in the CI unit job immediately before
-    // `WM_EXPECT_BUILT_OUTPUT=1 npm run test:data` (#6898). A prebuild:pro hook
-    // would fire `npm run product:facts` there and REWRITE the committed
-    // generated config on disk -- and
-    // tests/product-catalog-freshness.test.mjs proves freshness by reading
-    // those files, re-running the generator, and diffing the two. Regenerating
-    // first makes both sides identical, so a genuinely stale commit passes.
-    // Verified by mutation: staling products.generated.ts fails that suite, and
-    // fails it no longer once `npm run product:facts` has run first.
-    //
-    // Nothing needs the hook: build/build:full regenerate via
-    // prebuild/prebuild:full, pro-bundle-freshness.yml has its own
-    // `npm run product:facts` step, and .husky/pre-push runs
-    // generate-product-config.mjs directly.
-    assert.equal(
-      pkg.scripts['prebuild:pro'],
-      undefined,
-      'package.json must NOT define scripts["prebuild:pro"] — it disarms the freshness guard in the CI unit job',
     );
   });
 

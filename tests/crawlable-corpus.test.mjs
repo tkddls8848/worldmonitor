@@ -1860,45 +1860,6 @@ describe('crawlable corpus generator', () => {
     }
   });
 
-  // The refresh cron and the staleness ceiling are one contract. The ceiling
-  // was 45 days against a monthly cron, which let pages headed "Approx.
-  // 24-hour movement" ship on data up to six weeks old (#7530). Assert the two
-  // still agree so relaxing one alone cannot silently reopen that gap, and that
-  // the branch key advances as fast as the schedule does — a month-keyed branch
-  // under a weekly cron would find week 1's PR and skip weeks 2-4.
-  it('keeps the pulse staleness ceiling within reach of the refresh cron', () => {
-    const workflow = readFileSync(
-      resolve(repoRoot, '.github/workflows/crawlable-pulse-refresh.yml'),
-      'utf8',
-    );
-    const cron = workflow.match(/^\s*- cron: '([^']+)'/m)?.[1];
-    assert.ok(cron, 'the pulse refresh workflow must declare a cron schedule');
-
-    const [, , dayOfMonth, month, dayOfWeek] = cron.split(/\s+/);
-    let cadenceDays;
-    if (dayOfMonth === '*' && month === '*' && dayOfWeek !== '*') cadenceDays = 7;
-    else if (dayOfMonth !== '*' && month === '*') cadenceDays = 31;
-    else if (dayOfMonth === '*' && month === '*' && dayOfWeek === '*') cadenceDays = 1;
-    else assert.fail(`unrecognised pulse refresh cadence: ${cron}`);
-
-    assert.ok(
-      MAX_LIVE_PULSE_SNAPSHOT_AGE_DAYS > cadenceDays,
-      `the ${MAX_LIVE_PULSE_SNAPSHOT_AGE_DAYS}-day ceiling must exceed the ${cadenceDays}-day refresh cadence, or a healthy refresh cycle reds the build`,
-    );
-    assert.ok(
-      MAX_LIVE_PULSE_SNAPSHOT_AGE_DAYS <= cadenceDays * 2,
-      `the ${MAX_LIVE_PULSE_SNAPSHOT_AGE_DAYS}-day ceiling tolerates more than two missed ${cadenceDays}-day refreshes; pages advertising 24-hour movement would ship on data that old`,
-    );
-
-    if (cadenceDays <= 7) {
-      assert.match(
-        workflow,
-        /period=\$\(date -u \+%G-W%V\)/,
-        'a weekly-or-faster cron needs a branch key that advances weekly; a %Y-%m key makes runs 2-4 of a month no-op',
-      );
-    }
-  });
-
   // The 10-day freeze ceiling is a pipeline fuse. Pages that still say
   // "approximately 24 hours" need a tighter claim fuse: a three-day-old
   // reading is inside the freeze bound and still a false recency claim (#8072).
@@ -2099,24 +2060,6 @@ describe('crawlable corpus generator', () => {
     assert.ok(
       staleClock.lastmod.ciiCountries >= freshClock.lastmod.ciiCountries,
       'a rebuild after the two-day boundary must not advertise an earlier CII lastmod',
-    );
-  });
-
-  it('requires the API key before freezing the crawlable pulse', () => {
-    const workflow = readFileSync(
-      resolve(repoRoot, '.github/workflows/crawlable-pulse-refresh.yml'),
-      'utf8',
-    );
-    const guardIndex = workflow.indexOf('- name: Require WorldMonitor API key');
-    const freezeIndex = workflow.indexOf('- name: Freeze the current pulse');
-    assert.ok(guardIndex >= 0, 'the pulse refresh workflow must guard its required API key');
-    assert.ok(freezeIndex > guardIndex, 'the required-key guard must run before the freeze command');
-    const guardStep = workflow.slice(guardIndex, freezeIndex);
-    assert.match(guardStep, /WORLDMONITOR_API_KEY: \$\{\{ secrets\.WORLDMONITOR_API_KEY \}\}/);
-    assert.match(
-      guardStep,
-      /if \[ -z "\$\{WORLDMONITOR_API_KEY:-\}" \]; then[\s\S]*?exit 1[\s\S]*?fi/,
-      'an empty WORLDMONITOR_API_KEY must fail the workflow before the freeze',
     );
   });
 

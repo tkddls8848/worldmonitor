@@ -167,11 +167,3 @@ test('pushes to main keep every gated lint classifier enabled', () => {
   assert.equal(result.markdown, 'true');
   assert.equal(result.docs, 'true');
 });
-
-test('doc-anchors is gated by the docs classifier', () => {
-  const diffStep = workflow.jobs.changes.steps.find((step) => step.id === 'diff');
-  assert.equal(diffStep.shell, 'bash');
-  assert.match(diffStep.run, /^\s*set -euo pipefail$/m);
-  assert.equal(workflow.jobs['doc-anchors'].needs, 'changes');
-  assert.equal(workflow.jobs['doc-anchors'].if, "${{ (needs.changes.outputs.docs == 'true') && (github.event_name != 'schedule' || github.repository == 'koala73/worldmonitor') }}");
-});

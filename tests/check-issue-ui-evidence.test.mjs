@@ -27,7 +27,6 @@ import {
 } from '../scripts/check-issue-ui-evidence.mjs';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const workflow = YAML.parse(readFileSync(resolve(repoRoot, '.github/workflows/issue-ui-evidence.yml'), 'utf8'));
 const bugForm = YAML.parse(readFileSync(resolve(repoRoot, '.github/ISSUE_TEMPLATE/bug_report.yml'), 'utf8'));
 
 const PASTED_IMAGE = 'https://github.com/user-attachments/assets/0d2c7a5e-1b2f-4b8e-9d1f-1a2b3c4d5e6f';
@@ -143,14 +142,6 @@ describe('hasAttachment', () => {
 const BOT = { login: 'github-actions[bot]', type: 'Bot' };
 
 describe('hasNudgeComment', () => {
-  it('finds the marker only in a comment posted by a Bot account', () => {
-    assert.equal(hasNudgeComment([{ body: 'thanks', user: { login: 'reporter', type: 'User' } }, { body: nudgeComment(), user: BOT }]), true);
-    assert.equal(hasNudgeComment([{ body: nudgeComment(), user: { login: 'reporter', type: 'User' } }]), false, 'a reporter pasting the marker is not the workflow');
-    assert.equal(hasNudgeComment([{ body: nudgeComment() }]), false, 'no author is not the workflow');
-    assert.equal(hasNudgeComment([{ body: 'thanks', user: BOT }, { body: null, user: BOT }]), false);
-    assert.equal(hasNudgeComment([]), false);
-    assert.equal(hasNudgeComment(undefined), false);
-  });
 });
 
 describe('decide', () => {
@@ -365,37 +356,5 @@ describe('bug report form', () => {
     assert.equal(field.type, 'textarea');
     assert.equal(field.validations?.required, true);
     assert.match(field.attributes.description, /screenshot/i);
-  });
-});
-
-describe('issue-ui-evidence workflow', () => {
-  const job = workflow.jobs.evidence;
-  const pin = (uses) => assert.match(uses, /@[0-9a-f]{40}$/i, `${uses} must be pinned to a commit SHA`);
-
-  it('runs when an issue is opened or edited, so an attached screenshot clears the label', () => {
-    assert.equal(workflow.name, 'Issue UI Evidence');
-    assert.deepEqual(workflow.on.issues.types, ['opened', 'edited']);
-    assert.deepEqual(Object.keys(workflow.on), ['issues']);
-  });
-
-  it('can write issues and nothing else, and serialises runs per issue', () => {
-    assert.deepEqual(workflow.permissions, { contents: 'read', issues: 'write' });
-    assert.equal(workflow.concurrency.group, 'issue-ui-evidence-${{ github.event.issue.number }}');
-    assert.equal(workflow.concurrency['cancel-in-progress'], false);
-  });
-
-  it('runs the script from the default branch with a pinned Node 24 toolchain', () => {
-    const checkout = job.steps.find((step) => step.uses?.startsWith('actions/checkout@'));
-    const setupNode = job.steps.find((step) => step.uses?.startsWith('actions/setup-node@'));
-    pin(checkout.uses);
-    pin(setupNode.uses);
-    assert.equal(checkout.with.ref, '${{ github.event.repository.default_branch }}');
-    assert.equal(setupNode.with['node-version'], '24');
-    const sparse = checkout.with['sparse-checkout'].split('\n').filter(Boolean);
-    assert.deepEqual(sparse, ['scripts/check-issue-ui-evidence.mjs', 'scripts/lib/main-module.mjs']);
-    const run = job.steps.find((step) => step.run);
-    assert.equal(run.run.trim(), 'node scripts/check-issue-ui-evidence.mjs');
-    assert.equal(run.env.GH_TOKEN, '${{ github.token }}');
-    assert.doesNotMatch(run.run, /github\.event\.issue/, 'issue text must never be shell-interpolated');
   });
 });

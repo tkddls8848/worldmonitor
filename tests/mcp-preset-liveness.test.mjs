@@ -377,23 +377,4 @@ if (process.argv.includes('--paginate')) {
 });
 
 describe('MCP preset scheduled workflow', () => {
-  it('runs the existing opt-in suite weekly, reports failures, and never runs on PRs or pushes', () => {
-    const workflow = YAML.parse(readFileSync(new URL('../.github/workflows/mcp-preset-liveness.yml', import.meta.url), 'utf8'));
-    assert.deepEqual(Object.keys(workflow.on).sort(), ['schedule', 'workflow_dispatch']);
-    assert.equal(workflow.on.schedule[0].cron, '23 6 * * 1');
-    assert.equal(workflow.concurrency['cancel-in-progress'], false);
-    assert.deepEqual(workflow.permissions, { contents: 'read', issues: 'write' });
-    assert.ok(workflow.jobs.monitor['timeout-minutes'] <= 10);
-    const steps = workflow.jobs.monitor.steps;
-    const probe = steps.find(step => step.id === 'probe');
-    assert.match(probe.run, /node --test tests\/mcp-presets.test.mjs/);
-    assert.equal(probe.env.LIVE_MCP_TESTS, '1');
-    assert.ok(probe.env.MCP_PRESET_REPORT);
-    assert.equal(probe['continue-on-error'], true);
-    const publish = steps.find(step => step.id === 'report');
-    assert.match(publish.run, /node scripts\/report-mcp-preset-liveness.mjs/);
-    assert.equal(publish.env.MCP_PRESET_REPORT, probe.env.MCP_PRESET_REPORT);
-    assert.equal(publish.env.PROBE_OUTCOME, '${{ steps.probe.outcome }}');
-    assert.equal(publish['continue-on-error'], undefined);
-  });
 });

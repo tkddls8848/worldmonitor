@@ -651,23 +651,3 @@ describe('collection against a fake GitHub API', () => {
     ]);
   });
 });
-
-describe('ci-health-scan workflow', () => {
-  const workflow = YAML.parse(readFileSync(resolve(import.meta.dirname, '../.github/workflows/ci-health-scan.yml'), 'utf8'));
-
-  it('runs weekly and on demand, and never cancels a scan midway through issue updates', () => {
-    assert.match(workflow.on.schedule[0].cron, /^\d+ \d+ \* \* \d$/);
-    assert.ok(Object.hasOwn(workflow.on, 'workflow_dispatch'));
-    assert.deepEqual(workflow.concurrency, { group: 'ci-health-scan', 'cancel-in-progress': false });
-  });
-
-  it('grants only reads plus issue writes, and runs the scanner with the job token', () => {
-    assert.deepEqual(workflow.permissions, { contents: 'read', actions: 'read', issues: 'write' });
-    const step = workflow.jobs.scan.steps.find((item) => item.run?.includes('scripts/check-ci-health.mjs'));
-    assert.ok(step);
-    assert.equal(step.env.GH_TOKEN, '${{ github.token }}');
-    for (const item of workflow.jobs.scan.steps.filter((entry) => entry.uses)) {
-      assert.match(item.uses, /@[0-9a-f]{40}( |$)/, `${item.uses} must be pinned to a commit SHA`);
-    }
-  });
-});

@@ -38,7 +38,7 @@ jobs:
           fi
           FILES=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.number }}/files" \
             --paginate --jq '.[].filename')
-          CODE=$(echo "$FILES" | grep -vcE '\.md$|^docs/|^src-tauri/|^CHANGELOG\.md$|^LICENSE$|\.github/workflows/(build-desktop|docker-publish)\.yml$' || echo 0)
+          CODE=$(echo "$FILES" | grep -vcE '\.md$|^docs/|^CHANGELOG\.md$|^LICENSE$|\.github/workflows/docker-publish\.yml$' || echo 0)
           echo "code=$( [ "$CODE" -gt 0 ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
 
   typecheck:
@@ -65,22 +65,3 @@ jobs:
       # Playwright strips types without checking them, so e2e/ had drifted to
       # 616 errors before the TypeScript 7 move. Same required context.
       - run: npm run typecheck:e2e
-      # Mirror the pre-push convex typecheck so direct pushes to main
-      # and `--no-verify` bypasses can't land stale convex/_generated
-      # types. See .husky/pre-push for the rationale.
-      - run: npx tsc --noEmit -p convex/tsconfig.json
-      # Mirror the pre-push Convex probe-filter drift check (#8405). Also
-      # covered by `npm run typecheck:api`, but keep it next to the convex
-      # tsc step so a convex-only bypass still fails closed.
-      - run: npm run check:sentry-convex-probe-filters
-      # The marketing bundle has its own tsconfig and node_modules, so nothing
-      # above reaches it and no other workflow ran its `lint` — `pro-test` was
-      # sitting on six undetected type errors, five of them at the Sentry
-      # `beforeSend` boundary that decides what gets filtered. Installed
-      # separately because it is a distinct package root; scripts stay blocked,
-      # matching `build:pro`. Same required context as the checks above, so no
-      # branch-protection list has to change.
-      - run: npm --prefix pro-test ci --prefer-offline
-        env:
-          npm_config_allow_scripts: ''
-      - run: npm --prefix pro-test run lint

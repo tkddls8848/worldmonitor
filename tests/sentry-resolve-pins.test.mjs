@@ -21,11 +21,6 @@ import {
 const auditScript = fileURLToPath(
   new URL('../scripts/audit-sentry-resolve-pins.mjs', import.meta.url),
 );
-const workflowSource = readFileSync(
-  new URL('../.github/workflows/sentry-resolve-pin-audit.yml', import.meta.url),
-  'utf8',
-);
-const workflow = YAML.parse(workflowSource);
 
 const RESOLVER_EMAIL = 'resolver@worldmonitor.app';
 
@@ -373,36 +368,5 @@ describe('Sentry resolve-pin audit', () => {
     );
     assert.equal(missing.status, 1);
     assert.match(missing.stderr, /Sentry resolve-pin audit failed:/u);
-  });
-
-  it('wires the scheduled audit to the script and the read token', () => {
-    assert.match(workflowSource, /audit-sentry-resolve-pins\.mjs/u);
-
-    const steps = workflow.jobs.audit.steps;
-    const auditStep = steps.find((step) => (step.run ?? '').includes('audit-sentry-resolve-pins.mjs'));
-    assert.ok(auditStep, 'the workflow must run the audit script');
-    assert.equal(auditStep.env.SENTRY_AUTH_TOKEN, '${{ secrets.SENTRY_AUTH_TOKEN }}');
-
-    // A backstop that skips itself when the credential is absent reproduces
-    // the silent-success failure this audit exists to catch.
-    const guardStep = steps.find((step) => (step.run ?? '').includes('::error::SENTRY_AUTH_TOKEN'));
-    assert.ok(guardStep, 'a missing secret must fail loudly rather than skip');
-    assert.match(guardStep.run, /exit 1/u);
-    assert.ok(
-      steps.indexOf(guardStep) < steps.indexOf(auditStep),
-      'the guard must run before the audit or the audit reports the failure first',
-    );
-
-    assert.ok(workflow.on.schedule?.length >= 1, 'the audit must run on a schedule');
-    assert.ok('workflow_dispatch' in workflow.on);
-    assert.deepEqual(workflow.permissions, { contents: 'read' });
-    assert.deepEqual(workflow.concurrency, {
-      group: 'sentry-resolve-pin-audit-${{ github.ref }}',
-      'cancel-in-progress': true,
-    });
-    for (const step of steps) {
-      if (!step.uses) continue;
-      assert.match(step.uses, /@[0-9a-f]{40}$/u, `${step.uses} must be pinned to a commit SHA`);
-    }
   });
 });

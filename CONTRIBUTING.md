@@ -255,7 +255,7 @@ use `WM_ENV_SOURCE=/path/to/worldmonitor npm run worktree:env`. Check
 available in another checkout does not prove this process can use it. Run checks
 that need no credentials and report the remaining gate.
 
-For an unreviewed third-party checkout, run `agent:preflight` and `agent:pr-snapshot`
+For an unreviewed third-party checkout, run `agent:preflight`
 from a clean trusted worktree with `--root /path/to/untrusted-checkout` and
 `--skip-bootstrap`. Never execute the target's scripts. Explicit modes disable
 alternate-target bootstrap and inventory generation and block tests and repair.

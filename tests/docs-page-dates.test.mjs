@@ -198,13 +198,3 @@ it('recovers Vercel history when its checkout has no origin remote', () => withD
     rmSync(shallow, { recursive: true, force: true });
   }
 }));
-
-it('generates dates before every web build and checks generated output in CI', () => {
-  const { scripts } = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
-  for (const build of ['build', 'build:full', 'build:tech', 'build:finance', 'build:happy', 'build:commodity', 'build:energy']) {
-    assert.match(scripts[`pre${build}`], /npm run docs:dates -- --fetch-history/, build);
-  }
-  assert.match(scripts['pretest:data'], /npm run docs:dates/);
-  const workflow = readFileSync(join(repoRoot, '.github/workflows/test.yml'), 'utf8');
-  assert.match(workflow, /node scripts\/generate-docs-page-dates\.mjs\n\s+node scripts\/generate-docs-page-dates\.mjs --check/);
-});

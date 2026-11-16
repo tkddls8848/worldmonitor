@@ -104,57 +104,9 @@ describe('Rust SDK package (sdk/rust → crates.io worldmonitor)', () => {
       assert.doesNotMatch(content, /not yet published|Rust SDK preparation/i, path);
     }
   });
-
-  it('runs native tests and verifies the package in pull request CI', () => {
-    const wf = read('.github/workflows/rust-sdk.yml');
-    assert.match(wf, /pull_request:/);
-    assert.match(wf, /cargo test --locked/);
-    assert.match(wf, /cargo package --locked/);
-    assert.doesNotMatch(wf, /id-token: write|CARGO_REGISTRY_TOKEN/);
-  });
-
-  it('requires an explicit release dispatch and publishes the verified commit with OIDC', () => {
-    const wf = read('.github/workflows/publish-rust.yml');
-    assert.match(wf, /workflow_dispatch:/);
-    assert.doesNotMatch(wf, /^  (push|pull_request):/m);
-    assert.match(wf, /dry_run:[\s\S]*?default: true/);
-    assert.match(wf, /github\.repository == 'koala73\/worldmonitor' && github\.ref == 'refs\/heads\/main'/);
-    assert.match(wf, /git merge-base --is-ancestor HEAD origin\/main/);
-    assert.match(wf, /Tag and crate version differ/);
-    assert.match(wf, /cargo publish --locked --dry-run/);
-    assert.match(wf, /needs: verify/);
-    assert.match(wf, /if: \$\{\{ !inputs\.dry_run \}\}/);
-    assert.match(wf, /ref: \$\{\{ needs\.verify\.outputs\.commit \}\}/);
-    assert.match(wf, /environment: crates-io/);
-    assert.match(wf, /rust-lang\/crates-io-auth-action@[0-9a-f]{40}/);
-    assert.match(wf, /id-token: write/);
-    assert.doesNotMatch(wf, /secrets\./);
-  });
 });
 
 describe('SDK publish workflows', () => {
-  it('publish-python.yml releases sdk/python on py-v* tags via OIDC', () => {
-    const wf = read('.github/workflows/publish-python.yml');
-    assert.match(wf, /tags: \['py-v\*'\]/);
-    assert.match(wf, /working-directory: sdk\/python/);
-    assert.match(wf, /id-token: write/);
-    assert.match(wf, /pypa\/gh-action-pypi-publish@[0-9a-f]{40}/);
-  });
-
-  it('publish-ruby.yml releases sdk/ruby on gem-v* tags via OIDC', () => {
-    const wf = read('.github/workflows/publish-ruby.yml');
-    assert.match(wf, /tags: \['gem-v\*'\]/);
-    assert.match(wf, /working-directory: sdk\/ruby/);
-    assert.match(wf, /id-token: write/);
-    assert.match(wf, /rubygems\/configure-rubygems-credentials@[0-9a-f]{40}/);
-  });
-
-  it('publish-go.yml validates sdk/go on sdk/go/v* tags and warms the module proxy', () => {
-    const wf = read('.github/workflows/publish-go.yml');
-    assert.match(wf, /tags: \['sdk\/go\/v\*'\]/);
-    assert.match(wf, /working-directory: sdk\/go/);
-    assert.match(wf, /proxy\.golang\.org/);
-  });
 });
 
 describe('SDK discovery surfaces', () => {

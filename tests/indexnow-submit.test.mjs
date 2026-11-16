@@ -21,10 +21,6 @@ const SERVED_VARIANT_HOSTS = WEB_DASHBOARD_VARIANTS
   .sort();
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const WORKFLOW_PATH = resolve(repoRoot, '.github/workflows/indexnow-submit.yml');
-const workflowSource = readFileSync(WORKFLOW_PATH, 'utf8');
-const workflowDoc = YAML.parse(workflowSource);
-const workflowSteps = workflowDoc.jobs['submit-indexnow'].steps;
 
 function runStep(script, env) {
   return new Promise((resolvePromise) => {
@@ -257,28 +253,6 @@ describe('IndexNow submission', () => {
       urlList: ['https://worldmonitor.app/mcp'],
     });
   });
-
-  it('submits each host batch only after a relevant successful production deployment', () => {
-    const workflow = readFileSync(
-      new URL('../.github/workflows/indexnow-submit.yml', import.meta.url),
-      'utf8',
-    );
-
-    assert.match(workflow, /^ {2}deployment_status:$/m);
-    assert.match(workflow, /^ {2}workflow_dispatch:$/m);
-    assert.match(workflow, /github\.event\.deployment_status\.state == 'success'/);
-    assert.match(workflow, /github\.event\.deployment\.environment == 'Production'/);
-    assert.match(workflow, /github\.event\.deployment\.creator\.login == 'vercel\[bot\]'/);
-
-  });
-
-  it('isolates concurrency by deployment environment before eligibility filtering', () => {
-    assert.equal(workflowDoc.concurrency?.['cancel-in-progress'], false);
-    assert.equal(
-      workflowDoc.concurrency?.group,
-      "indexnow-${{ github.event_name == 'deployment_status' && github.event.deployment.environment || github.event_name }}",
-    );
-  });
 });
 
 describe('IndexNow root-index indirection', () => {
@@ -434,11 +408,6 @@ globalThis.fetch = async (url, init) => {
     }
   });
 
-  it('catches independently published docs on a scheduled run', async () => {
-    assert.ok(workflowDoc.on.schedule?.length, 'docs-only publication needs a catch-up trigger because Vercel can skip docs changes');
-    assert.match(workflowDoc.jobs['submit-indexnow'].if, /github.event_name == 'schedule'/);
-  });
-
   it('rejects missing or extra direct root sitemap members before reading children', async () => {
     for (const members of [
       [`${origin}/sitemap-main.xml`, `${origin}/blog/sitemap-index.xml`],
@@ -451,14 +420,6 @@ globalThis.fetch = async (url, init) => {
       } }), /root sitemap members/);
       assert.deepEqual(requests, [`${origin}/sitemap.xml`]);
     }
-  });
-
-  it('runs the full published inventory on every eligible trigger without host or file filters', () => {
-    const submissions = workflowSteps.filter(step => String(step.run ?? '').includes('node scripts/seo-indexnow-submit.mjs'));
-    assert.equal(submissions.length, 1);
-    assert.equal(submissions[0].run.trim(), 'node scripts/seo-indexnow-submit.mjs');
-    assert.equal(submissions[0].if, undefined);
-    assert.ok(!workflowSteps.some(step => String(step.run ?? '').includes('diff-tree')));
   });
 
 

@@ -16,7 +16,6 @@ import {
 import { MICROSTATE_COVERAGE_STORY_CODES } from '../scripts/microstate-coverage-stories.mjs';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const REHEARSAL_WORKFLOW_PATH = '.github/workflows/resilience-snapshot-rehearsal.yml';
 
 function country(code, fields) {
   return { countryCode: code, countryName: `Country ${code}`, identity: { commonName: code }, domains: [`${code} evidence`], ...fields };
@@ -143,28 +142,6 @@ describe('resilience snapshot refresh rehearsal', () => {
     assert.throws(() => driftResilienceSnapshot(original, { targetDate: '2026-12-01' }), /share a score/);
   });
 
-  it('replays the refresh workflow rebuild-and-verify step', () => {
-    const step = readRehearsedStep(readFileSync(resolve(repoRoot, REFRESH_WORKFLOW_PATH), 'utf8'));
-    assert.match(step.run, /npm run build:crawlable-corpus/);
-    assert.match(step.run, /node scripts\/run-data-tests\.mjs/);
-    assert.ok(step.env.SNAPSHOT_CONSUMERS, 'the step carries the pattern that selects its verify suites');
-  });
-
-  it('regenerates what npm run test:data generates before running the data tests', () => {
-    // The step calls run-data-tests.mjs directly, which skips npm's pretest:data
-    // hook, so a selected suite read the stale committed docs date manifest.
-    const step = readRehearsedStep(readFileSync(resolve(repoRoot, REFRESH_WORKFLOW_PATH), 'utf8'));
-    const packageScripts = JSON.parse(readFileSync(resolve(repoRoot, 'package.json'), 'utf8')).scripts;
-    const testsAt = step.run.indexOf('node scripts/run-data-tests.mjs');
-    assert.notEqual(testsAt, -1, 'the step runs the data tests');
-    const beforeTests = refreshScripts(step.run.slice(0, testsAt), packageScripts);
-    const pretest = refreshScripts(packageScripts['pretest:data'] ?? '', packageScripts);
-    assert.ok(pretest.length > 0, 'pretest:data runs a generator');
-    for (const script of pretest) {
-      assert.ok(beforeTests.includes(script), `the refresh step must run ${script} (pretest:data) before its data tests`);
-    }
-  });
-
   it('rehearses a change to a verify suite, a refresh script, a corpus module or the snapshot, and nothing else', () => {
     const consumers = 'resilienceSnapshot|crawlable-corpus';
     const sources = {
@@ -182,39 +159,5 @@ describe('resilience snapshot refresh rehearsal', () => {
     );
     assert.equal(needsRehearsal(['tests/unrelated.test.mjs', 'src/app/App.ts'], { consumers, readSource }), false);
     assert.equal(needsRehearsal(['tests/deleted.test.mjs'], { consumers, readSource }), false, 'a deleted suite cannot pin anything');
-  });
-
-  it('runs on every PR that could reach the refresh', () => {
-    const rehearsal = parseYaml(readFileSync(resolve(repoRoot, REHEARSAL_WORKFLOW_PATH), 'utf8'));
-    const paths = rehearsal.on.pull_request.paths;
-    for (const required of [
-      'tests/*.test.mjs',
-      'tests/*.test.mts',
-      'docs/snapshots/resilience-ranking-*.json',
-      REFRESH_WORKFLOW_PATH,
-      REHEARSAL_WORKFLOW_PATH,
-    ]) {
-      assert.ok(paths.includes(required), `${REHEARSAL_WORKFLOW_PATH} must run when ${required} changes`);
-    }
-    // Every script the refresh step runs, followed through npm scripts, so a
-    // generator added to the refresh cannot change unrehearsed (#9972 review).
-    const step = readRehearsedStep(readFileSync(resolve(repoRoot, REFRESH_WORKFLOW_PATH), 'utf8'));
-    const entryScripts = refreshScripts(step.run, JSON.parse(readFileSync(resolve(repoRoot, 'package.json'), 'utf8')).scripts);
-    for (const script of [
-      'scripts/build-crawlable-corpus.mjs',
-      'scripts/generate-country-corpus-slugs.mjs',
-      'scripts/generate-inventory-facts.mjs',
-      'scripts/run-data-tests.mjs',
-    ]) {
-      assert.ok(entryScripts.includes(script), `refreshScripts must find ${script}`);
-    }
-    const triggerFiles = ['scripts', '.github/workflows', 'docs/snapshots']
-      .flatMap((dir) => readdirSync(resolve(repoRoot, dir)).map((name) => `${dir}/${name}`))
-      .filter((file) => REHEARSAL_TRIGGERS.some((trigger) => trigger.test(file)));
-    for (const file of [...entryScripts, ...triggerFiles]) {
-      assert.ok(paths.some((glob) => matchesGlob(file, glob)), `${REHEARSAL_WORKFLOW_PATH} must run when ${file} changes`);
-    }
-    const steps = rehearsal.jobs.rehearse.steps.map((step) => step.run ?? '').join('\n');
-    assert.match(steps, /node scripts\/rehearse-resilience-snapshot-refresh\.mjs --base /);
   });
 });

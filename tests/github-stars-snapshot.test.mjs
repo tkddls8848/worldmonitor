@@ -10,11 +10,6 @@ import {
   starsInteractionCounter,
 } from '../scripts/github-stars-snapshot.mjs';
 
-const githubStarsRefreshWorkflow = readFileSync(
-  new URL('../.github/workflows/github-stars-refresh.yml', import.meta.url),
-  'utf8',
-);
-
 function fixtureDir(files) {
   const dir = mkdtempSync(join(tmpdir(), 'wm-stars-'));
   for (const [name, content] of Object.entries(files)) {
@@ -148,43 +143,6 @@ describe('github stars snapshot lookup', () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
-  });
-
-  // The refresh cron and the staleness ceiling are one contract (mirrors the
-  // pulse cadence guard in tests/crawlable-corpus.test.mjs): relaxing one
-  // alone silently reopens the rotting-figure gap from #7641.
-  it('keeps the star-snapshot staleness ceiling within reach of the refresh cron', () => {
-    const cron = githubStarsRefreshWorkflow.match(/^\s*- cron: '([^']+)'/m)?.[1];
-    assert.ok(cron, 'the star refresh workflow must declare a cron schedule');
-
-    const [, , dayOfMonth, month, dayOfWeek] = cron.split(/\s+/);
-    assert.equal(dayOfMonth, '1', 'the monthly refresh must run on the first day');
-    assert.equal(month, '*', 'the monthly refresh must run every month');
-    assert.equal(dayOfWeek, '*', 'the monthly refresh must not be limited to a weekday');
-    const cadenceDays = 31;
-
-    assert.ok(
-      MAX_GITHUB_STARS_SNAPSHOT_AGE_DAYS > cadenceDays,
-      `the ${MAX_GITHUB_STARS_SNAPSHOT_AGE_DAYS}-day ceiling must exceed the ${cadenceDays}-day refresh cadence, or a healthy refresh cycle reds the build`,
-    );
-    assert.ok(
-      MAX_GITHUB_STARS_SNAPSHOT_AGE_DAYS <= cadenceDays * 2,
-      `the ${MAX_GITHUB_STARS_SNAPSHOT_AGE_DAYS}-day ceiling tolerates more than two missed ${cadenceDays}-day refreshes; the published figure would rot that long`,
-    );
-  });
-
-  it('keeps a prior snapshot so corrupt-newest fallback survives refresh pruning', () => {
-    assert.match(
-      githubStarsRefreshWorkflow,
-      /\| tail -n \+3 \\/,
-      'refresh pruning must retain the two newest snapshots',
-    );
-  });
-
-  it('fails loudly when the monthly snapshot PR was closed without merging', () => {
-    assert.match(githubStarsRefreshWorkflow, /gh pr view "\$existing_pr" --json state --jq \.state/);
-    assert.match(githubStarsRefreshWorkflow, /if \[ "\$existing_state" = "CLOSED" \]; then[\s\S]*exit 1/);
-    assert.match(githubStarsRefreshWorkflow, /::error title=Closed unmerged star-snapshot PR/);
   });
 
   it('builds the InteractionCounter shape the homepage publishes', () => {

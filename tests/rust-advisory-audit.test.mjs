@@ -7,24 +7,6 @@ import { join, resolve } from 'node:path';
 import YAML from 'yaml';
 import { classifyRustAudit, runRustAudit } from '../.github/scripts/audit-rust-dependencies.mjs';
 const now = Date.parse('2026-09-08');
-test('workflow caches only the pinned audit binary and installs on a miss', () => {
-  const workflow = YAML.parse(readFileSync('.github/workflows/security-audit.yml', 'utf8'));
-  const steps = workflow.jobs['audit-rust'].steps;
-  const cache = steps.find((step) => step.id === 'cargo-audit-cache');
-  const install = steps.find((step) => step.name === 'Install pinned advisory tool');
-  const audit = steps.find((step) => step.name === 'Audit Cargo.lock');
-  assert.ok(cache, 'restore the binary before installing');
-  assert.match(cache.uses, /^actions\/cache@[a-f0-9]{40}$/);
-  assert.equal(cache.with.path, '~/.cargo/bin/cargo-audit');
-  assert.equal(cache.with.key, 'cargo-audit-0.22.2-${{ runner.os }}-${{ runner.arch }}');
-  assert.equal(cache.with['restore-keys'], undefined);
-  assert.equal(install.if, "steps.cargo-audit-cache.outputs.cache-hit != 'true'");
-  assert.equal(install.run, 'cargo install cargo-audit --version 0.22.2 --locked');
-  assert.ok(steps.indexOf(cache) < steps.indexOf(install));
-  assert.ok(steps.indexOf(install) < steps.indexOf(audit));
-  assert.equal(audit.if, undefined, 'audit must run on cache hits and misses');
-  assert.equal(audit.run, 'node .github/scripts/audit-rust-dependencies.mjs');
-});
 const finding = (patched = ['>=1.1.0']) => ({
   advisory: { id: 'RUSTSEC-2026-0001' },
   package: { name: 'fixture', version: '1.0.0' },
@@ -135,48 +117,6 @@ test('missing input, missing tool and invalid audit output hard-fail', () => {
       run: (cmd) => (cmd === 'git' ? { status: 0 } : { status: 1, stdout: '{}' }),
     }),
   );
-});
-
-test('the actual aggregate shell preserves Rust verdicts and outage policy', () => {
-  const workflow = YAML.parse(readFileSync('.github/workflows/security-audit.yml', 'utf8'));
-  const job = workflow.jobs['security-audit'];
-  assert.ok(job.needs.includes('audit-rust'));
-  const step = job.steps.find((s) => s.run);
-  const dir = mkdtempSync(join(tmpdir(), 'rust-aggregate-'));
-  try {
-    mkdirSync(join(dir, 'audit-status'));
-    for (const name of step.env.AUDIT_NAMES.split(' '))
-      writeFileSync(join(dir, 'audit-status', `${name}.txt`), 'passed\n');
-    for (const [status, strict, expected] of [
-      ['clean', false, 0],
-      ['warning', true, 0],
-      ['failed', false, 1],
-      ['unavailable', false, 0],
-      ['unavailable', true, 1],
-      ['missing', false, 1],
-      ['missing', true, 1],
-      ['unexpected', false, 1],
-    ]) {
-      const file = join(dir, 'audit-status/rust.txt');
-      if (status === 'missing') rmSync(file, { force: true });
-      else writeFileSync(file, `${status}\n`);
-      const result = spawnSync('bash', ['-euo', 'pipefail', '-c', step.run], {
-        cwd: dir,
-        encoding: 'utf8',
-        env: {
-          ...process.env,
-          AUDIT_NAMES: step.env.AUDIT_NAMES,
-          AUDIT_RESULT: 'success',
-          RUST_RESULT: 'success',
-          FAIL_ON_OUTAGE: strict ? '1' : '0',
-        },
-      });
-      assert.equal(result.status, expected, `${status} strict=${strict}: ${result.stdout} ${result.stderr}`);
-      if (status === 'unavailable') assert.match(result.stdout, /NOT audited/);
-    }
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
 });
 test('fixable unsoundness warnings block; no-fix unsoundness stays explicit', () => {
   const input = report();

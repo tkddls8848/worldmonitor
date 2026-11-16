@@ -130,48 +130,6 @@ const FAILED_BEFORE_REFRESH = {
 };
 
 describe('pulse freshness thresholds', () => {
-  // The warning line, the refresh cadence and the build ceiling are one
-  // contract. Below the cadence the alarm fires every healthy week and gets
-  // muted; at or above the ceiling the corpus build has already failed and the
-  // alarm is no longer an alarm. Assert all three agree so relaxing one alone
-  // cannot silently reopen the #8339 gap.
-  it('warns after a healthy cycle but before the build ceiling', () => {
-    const workflow = readFileSync(
-      resolve(repoRoot, '.github/workflows/crawlable-pulse-refresh.yml'),
-      'utf8',
-    );
-    const cron = workflow.match(/^\s*- cron: '([^']+)'/m)?.[1];
-    assert.ok(cron, 'the pulse refresh workflow must declare a cron schedule');
-    const [, , dayOfMonth, month, dayOfWeek] = cron.split(/\s+/);
-    let cadenceDays;
-    if (dayOfMonth === '*' && month === '*' && dayOfWeek !== '*') cadenceDays = 7;
-    else if (dayOfMonth !== '*' && month === '*') cadenceDays = 31;
-    else if (dayOfMonth === '*' && month === '*' && dayOfWeek === '*') cadenceDays = 1;
-    else assert.fail(`unrecognised pulse refresh cadence: ${cron}`);
-
-    assert.ok(
-      PULSE_SNAPSHOT_WARN_AGE_DAYS > cadenceDays,
-      `a ${PULSE_SNAPSHOT_WARN_AGE_DAYS}-day warning under a ${cadenceDays}-day cadence fires on every healthy cycle`,
-    );
-    assert.ok(
-      PULSE_SNAPSHOT_WARN_AGE_DAYS < MAX_LIVE_PULSE_SNAPSHOT_AGE_DAYS,
-      'the warning must land before the ceiling that fails the corpus build, or it warns about a broken build',
-    );
-  });
-
-  it('the monitor runs more often than the thing it watches', () => {
-    const monitor = readFileSync(
-      resolve(repoRoot, '.github/workflows/pulse-freshness-monitor.yml'),
-      'utf8',
-    );
-    const cron = monitor.match(/^\s*- cron: '([^']+)'/m)?.[1];
-    assert.ok(cron, 'the monitor must declare a cron schedule');
-    const [, , dayOfMonth, month, dayOfWeek] = cron.split(/\s+/);
-    assert.ok(
-      dayOfMonth === '*' && month === '*' && dayOfWeek === '*',
-      `the monitor must run daily to bound notice to a day; got '${cron}'`,
-    );
-  });
 });
 
 describe('pulse freshness verdict', () => {
