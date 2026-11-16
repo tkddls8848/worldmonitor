@@ -117,10 +117,27 @@ describe('AI routing policy on Railway jobs', () => {
   });
 
   describe('llm-chain', () => {
-    it('never reaches anthropic from the default chain', async () => {
+    it('reaches anthropic first on the default chain', async () => {
       const { llmHosts } = stubFetch();
       assert.ok(await callLLM('sys', 'user'));
+      assert.deepEqual(llmHosts, ['api.anthropic.com']);
+    });
+
+    it('falls back to openrouter when ANTHROPIC_API_KEY is unset', async () => {
+      const { llmHosts } = stubFetch();
+      delete process.env.ANTHROPIC_API_KEY;
+      try {
+        assert.ok(await callLLM('sys', 'user'));
+      } finally {
+        process.env.ANTHROPIC_API_KEY = ENV.ANTHROPIC_API_KEY;
+      }
       assert.deepEqual(llmHosts, ['openrouter.ai']);
+    });
+
+    it('falls back to openrouter when anthropic returns 529', async () => {
+      const { llmHosts } = stubFetch({ anthropicStatus: 529 });
+      assert.ok(await callLLM('sys', 'user'));
+      assert.deepEqual(llmHosts, ['api.anthropic.com', 'openrouter.ai']);
     });
 
     it('sends an allowlisted anthropic call as a Messages API request', async () => {
@@ -129,7 +146,7 @@ describe('AI routing policy on Railway jobs', () => {
       assert.equal(out, 'Answer');
       assert.deepEqual(llmHosts, ['api.anthropic.com']);
       const body = llmBodies[0];
-      assert.equal(body.model, 'claude-opus-5-5');
+      assert.equal(body.model, 'claude-haiku-5-5');
       assert.equal(body.system, 'sys');
       assert.equal('temperature' in body, false);
       assert.deepEqual(body.output_config, { effort: 'low' });
@@ -220,7 +237,7 @@ describe('AI routing policy on Railway jobs', () => {
     it('keeps an unrestricted user on the default chain and shared key', async () => {
       const { llmHosts, redisPaths } = stubFetch();
       await generateEventImpact(EVENT, { userId: 'user-open', variant: 'full' });
-      assert.deepEqual(llmHosts, ['openrouter.ai']);
+      assert.deepEqual(llmHosts, ['api.anthropic.com']);
       assert.ok(redisPaths.filter((p) => p.includes('impact:ai:')).every((p) => !p.includes(':ai=')));
     });
 

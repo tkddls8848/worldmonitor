@@ -1,8 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 
-// Direct Anthropic Messages API provider for llm.ts. It is never part of the
-// default provider chain: callers reach it only through a customer AI routing
-// policy (server/_shared/ai-routing-policy.ts) or an explicit provider name.
+// Direct Anthropic Messages API provider for llm.ts. It is first in the default
+// provider chain (personal fork); OpenRouter and the rest are the fallback.
 //
 // Current models reject `temperature`, and thinking cannot be disabled on
 // Claude Opus 5.5, so the adapter sends neither and controls depth with effort.
@@ -10,7 +9,8 @@ import Anthropic from '@anthropic-ai/sdk';
 // budget gets fixed headroom on top; the prompts already bound answer length.
 
 export const ANTHROPIC_MESSAGES_URL = 'https://api.anthropic.com/v1/messages';
-export const ANTHROPIC_DEFAULT_MODEL = 'claude-opus-5-5';
+export const ANTHROPIC_DEFAULT_REASONING_MODEL = 'claude-sonnet-5-5';
+export const ANTHROPIC_DEFAULT_MODEL = 'claude-haiku-5-5';
 const THINKING_HEADROOM_TOKENS = 4_096;
 // Server-side refusal fallback stays on Anthropic models, so it is policy-safe.
 const FALLBACK_BETA = 'server-side-fallback-2026-07-01';
@@ -35,8 +35,9 @@ export function getAnthropicApiKey(): string | null {
 }
 
 export function getAnthropicModel(enableReasoning: boolean): string {
-  const reasoningModel = process.env.ANTHROPIC_REASONING_MODEL?.trim();
-  if (enableReasoning && reasoningModel) return reasoningModel;
+  if (enableReasoning) {
+    return process.env.ANTHROPIC_REASONING_MODEL?.trim() || ANTHROPIC_DEFAULT_REASONING_MODEL;
+  }
   return process.env.ANTHROPIC_MODEL?.trim() || ANTHROPIC_DEFAULT_MODEL;
 }
 

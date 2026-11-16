@@ -8,6 +8,7 @@ const originalFetch = globalThis.fetch;
 const originalAbortSignalTimeout = AbortSignal.timeout;
 const originalDateNow = Date.now;
 const originalOpenRouterApiKey = process.env.OPENROUTER_API_KEY;
+const originalAnthropicApiKey = process.env.ANTHROPIC_API_KEY;
 const originalOllamaApiUrl = process.env.OLLAMA_API_URL;
 const originalLlmApiUrl = process.env.LLM_API_URL;
 const originalLlmApiKey = process.env.LLM_API_KEY;
@@ -37,6 +38,9 @@ afterEach(() => {
 
   if (originalLlmToolProvider === undefined) delete process.env.LLM_TOOL_PROVIDER;
   else process.env.LLM_TOOL_PROVIDER = originalLlmToolProvider;
+
+  if (originalAnthropicApiKey === undefined) delete process.env.ANTHROPIC_API_KEY;
+  else process.env.ANTHROPIC_API_KEY = originalAnthropicApiKey;
 
   if (originalOpenRouterApiKey === undefined) delete process.env.OPENROUTER_API_KEY;
   else process.env.OPENROUTER_API_KEY = originalOpenRouterApiKey;
@@ -219,7 +223,8 @@ describe('callLlm', () => {
     assert.equal('reasoning' in (bodies[1] ?? {}), false);
   });
 
-  it('preserves the default provider order (openrouter-first since #4944)', async () => {
+  it('keeps openrouter ahead of generic when ANTHROPIC_API_KEY is unset (anthropic is skipped, not required)', async () => {
+    delete process.env.ANTHROPIC_API_KEY;
     process.env.LLM_API_URL = GENERIC_URL;
     process.env.LLM_API_KEY = 'generic-test-key';
     process.env.LLM_MODEL = GENERIC_MODEL;
@@ -1069,6 +1074,7 @@ describe('a stale groq provider setting (#8885)', () => {
 
   beforeEach(() => {
     process.env.OPENROUTER_API_KEY = 'or-test-key';
+    process.env.ANTHROPIC_API_KEY = 'sk-ant-test';
     process.env.GROQ_API_KEY = 'groq-test-key';
     delete process.env.OLLAMA_API_URL;
     delete process.env.LLM_API_URL;
@@ -1082,6 +1088,27 @@ describe('a stale groq provider setting (#8885)', () => {
       const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
       if ((init?.method || 'GET') === 'GET') return new Response('', { status: 200 });
       posts.push(url);
+      if (url.includes('api.anthropic.com')) {
+        if ((JSON.parse(String(init?.body || '{}')) as { stream?: boolean }).stream) {
+          const ev = (type: string, data: unknown) => `event: ${type}
+data: ${JSON.stringify({ type, ...(data as object) })}
+
+`;
+          return new Response([
+            ev('message_start', { message: { id: 'msg_1', type: 'message', role: 'assistant', model: 'claude-haiku-5-5', content: [], stop_reason: null, stop_sequence: null, usage: { input_tokens: 5, output_tokens: 0 } } }),
+            ev('content_block_start', { index: 0, content_block: { type: 'text', text: '' } }),
+            ev('content_block_delta', { index: 0, delta: { type: 'text_delta', text: 'streamed' } }),
+            ev('content_block_stop', { index: 0 }),
+            ev('message_delta', { delta: { stop_reason: 'end_turn', stop_sequence: null }, usage: { output_tokens: 5 } }),
+            ev('message_stop', {}),
+          ].join(''), { status: 200, headers: { 'content-type': 'text/event-stream' } });
+        }
+        return new Response(JSON.stringify({
+          id: 'msg_1', type: 'message', role: 'assistant', model: 'claude-haiku-5-5',
+          content: [{ type: 'text', text: 'anthropic answer' }], stop_reason: 'end_turn', stop_sequence: null,
+          usage: { input_tokens: 5, output_tokens: 5 },
+        }), { status: 200, headers: { 'content-type': 'application/json' } });
+      }
       if ((JSON.parse(String(init?.body || '{}')) as { stream?: boolean }).stream) {
         return new Response('data: {"choices":[{"delta":{"content":"streamed"}}]}\n\ndata: [DONE]\n\n', {
           status: 200,
@@ -1102,27 +1129,27 @@ describe('a stale groq provider setting (#8885)', () => {
   it('LLM_TOOL_PROVIDER=groq degrades to the normal chain instead of throwing', async () => {
     process.env.LLM_TOOL_PROVIDER = 'groq';
     const result = await callLlmTool({ messages: [{ role: 'user', content: 'x' }] });
-    assert.equal(result?.provider, 'openrouter');
-    assert.deepEqual(posts, ['https://openrouter.ai/api/v1/chat/completions']);
+    assert.equal(result?.provider, 'anthropic');
+    assert.deepEqual(posts, ['https://api.anthropic.com/v1/messages']);
     assert.ok(warns.some((w) => w.includes('LLM_TOOL_PROVIDER="groq" is not a known provider')));
   });
 
-  it('LLM_TOOL_PROVIDER unset defaults to openrouter ahead of every other configured provider', async () => {
+  it('LLM_TOOL_PROVIDER unset defaults to anthropic ahead of every other configured provider', async () => {
     delete process.env.LLM_TOOL_PROVIDER;
     process.env.LLM_API_URL = GENERIC_URL;
     process.env.LLM_API_KEY = 'generic-test-key';
     const result = await callLlmTool({ messages: [{ role: 'user', content: 'x' }] });
-    assert.equal(result?.provider, 'openrouter');
-    assert.deepEqual(posts, ['https://openrouter.ai/api/v1/chat/completions']);
+    assert.equal(result?.provider, 'anthropic');
+    assert.deepEqual(posts, ['https://api.anthropic.com/v1/messages']);
   });
 
   it('LLM_REASONING_PROVIDER=groq degrades to the normal chain', async () => {
     process.env.LLM_REASONING_PROVIDER = 'groq';
     const result = await callLlmReasoning({ messages: [{ role: 'user', content: 'x' }] });
-    assert.equal(result?.provider, 'openrouter');
+    assert.equal(result?.provider, 'anthropic');
     const output = await new Response(callLlmReasoningStream({ messages: [{ role: 'user', content: 'y' }] })).text();
     assert.match(output, /"done":true/);
-    assert.ok(posts.every((url) => url === 'https://openrouter.ai/api/v1/chat/completions'), posts.join(', '));
+    assert.ok(posts.length > 0 && posts.every((url) => url === 'https://api.anthropic.com/v1/messages'), posts.join(', '));
   });
 
   it('drops groq from an explicit provider order and never contacts it', async () => {

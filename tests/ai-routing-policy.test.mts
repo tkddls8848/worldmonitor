@@ -149,8 +149,8 @@ describe('AI routing policy', () => {
       assert.deepEqual(resolveProviderChain({ forcedProvider: 'ollama', routingPolicy }), ['anthropic', 'openrouter']);
     });
 
-    it('leaves anthropic out of the default chain', () => {
-      assert.equal(resolveProviderChain({}).includes('anthropic'), false);
+    it('puts anthropic first in the default chain', () => {
+      assert.equal(resolveProviderChain({})[0], 'anthropic');
     });
   });
 
@@ -204,7 +204,7 @@ describe('AI routing policy', () => {
       });
       assert.equal(result?.content, 'An answer');
       assert.equal(result?.provider, 'anthropic');
-      assert.equal(result?.model, 'claude-opus-5-5');
+      assert.equal(result?.model, 'claude-haiku-5-5');
       assert.equal(result?.tokens, 28);
       assert.equal(sent.length, 1);
       const body = sent[0]!.body!;
@@ -303,7 +303,7 @@ describe('AI routing policy', () => {
       await classifyEvent(ctxFor('/api/intelligence/v1/classify-event', OPEN_USER), {
         title: 'Senate passes sanctions package', description: '', source: '', country: '',
       });
-      assert.deepEqual(hosts(sent), ['openrouter.ai']);
+      assert.deepEqual(hosts(sent), ['api.anthropic.com']);
       const classifyKeys = redisKeysRead.filter((k) => k.includes('classify:sebuf:'));
       assert.ok(classifyKeys.length > 0);
       assert.ok(classifyKeys.every((k) => !k.includes(':ai=')), classifyKeys.join(','));
@@ -363,14 +363,13 @@ describe('AI routing policy', () => {
       }
     });
 
-    it('summarize_article: an unrestricted caller cannot name the opt-in anthropic provider', async () => {
-      const { sent } = stubUpstreams();
+    it('summarize_article: anthropic is a default-chain provider, so an unrestricted caller may name it', async () => {
+      stubUpstreams();
       const res = await summarizeArticle(ctxFor('/api/news/v1/summarize-article'), {
         provider: 'anthropic', headlines: ['Senate passes sanctions package'], mode: 'translate',
         geoContext: '', variant: 'fr', lang: 'en', systemAppend: '', bodies: [],
       } as never);
-      assert.equal(res.status, 'SUMMARIZE_STATUS_SKIPPED');
-      assert.deepEqual(sent, []);
+      assert.notEqual(res.status, 'SUMMARIZE_STATUS_SKIPPED');
     });
 
     it('summarize_article: a restricted caller falls back along the policy chain', async () => {

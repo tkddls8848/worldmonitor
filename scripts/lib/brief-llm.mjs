@@ -15,13 +15,13 @@
 //     through to the original stub — the brief must always ship.
 //
 // Cache semantics:
-//   - brief:llm:whymatters:v7:{storyHash} — 24h, shared across users
+//   - brief:llm:whymatters:v8:{storyHash} — 24h, shared across users
 //     for the same story. v4 bumped from v3 alongside the F6
 //     date-grounding line: every v3 row was produced from a prompt
 //     with no notion of "today" and may state a fabricated year, so
 //     v3 rows must not survive the deploy. v2 rows were lead-blind.
 //     v7 bumped from v6 with the gemini-3.5-flash-lite move.
-//   - brief:llm:digest:v9:{userId|public}:{sensitivity}:{poolHash}
+//   - brief:llm:digest:v10:{userId|public}:{sensitivity}:{poolHash}
 //     — 4h. The canonical synthesis is now ALWAYS produced through
 //     this path (formerly split with `generateAISummary` in the
 //     digest cron). Material includes profile-SHA, greeting bucket,
@@ -128,7 +128,7 @@ const WHY_MATTERS_CONCURRENCY = 5;
 // Pin to openrouter. Ollama isn't deployed in Railway, and pinning keeps the
 // brief's editorial voice on one model across environments instead of drifting
 // to a fallback provider.
-const BRIEF_LLM_ALLOWED_PROVIDERS = ['openrouter'];
+const BRIEF_LLM_ALLOWED_PROVIDERS = ['anthropic', 'openrouter'];
 
 // The brief names its own model rather than inheriting the llm-chain default
 // (still google/gemini-2.5-flash for every other consumer). The #4944 bakeoff
@@ -138,7 +138,12 @@ const BRIEF_LLM_ALLOWED_PROVIDERS = ['openrouter'];
 // #4944 U4 brief-voice cutover moves the brief to DeepSeek by editing this
 // constant. Any change here bumps all three model-fed cache generations below.
 const BRIEF_LLM_OPENROUTER_MODEL = process.env.BRIEF_LLM_OPENROUTER_MODEL || 'google/gemini-3.5-flash-lite';
-const BRIEF_LLM_MODEL_OVERRIDES = { openrouter: BRIEF_LLM_OPENROUTER_MODEL };
+// Anthropic is tried first: the small model serves the per-story calls
+// (whyMatters, description), the large model writes the digest paragraph.
+const BRIEF_LLM_ANTHROPIC_SMALL_MODEL = process.env.BRIEF_LLM_ANTHROPIC_SMALL_MODEL || 'claude-haiku-5-5';
+const BRIEF_LLM_ANTHROPIC_LARGE_MODEL = process.env.BRIEF_LLM_ANTHROPIC_LARGE_MODEL || 'claude-sonnet-5-5';
+const BRIEF_LLM_STORY_MODEL_OVERRIDES = { anthropic: BRIEF_LLM_ANTHROPIC_SMALL_MODEL, openrouter: BRIEF_LLM_OPENROUTER_MODEL };
+const BRIEF_LLM_DIGEST_MODEL_OVERRIDES = { anthropic: BRIEF_LLM_ANTHROPIC_LARGE_MODEL, openrouter: BRIEF_LLM_OPENROUTER_MODEL };
 
 // ── whyMatters (per story) ─────────────────────────────────────────────────
 // The pure helpers (`WHY_MATTERS_SYSTEM`, `buildWhyMattersUserPrompt` (aliased
@@ -253,7 +258,7 @@ export async function generateWhyMatters(story, deps) {
   // google/gemini-2.5-flash to google/gemini-3.5-flash-lite. Every v6 row
   // holds the old model's prose, fabricated actor names included, and would
   // keep shipping it for the full 24h TTL.
-  const key = `brief:llm:whymatters:v7:${storyHash}`;
+  const key = `brief:llm:whymatters:v8:${storyHash}`;
   try {
     const hit = await deps.cacheGet(key);
     const parsedHit = parseWhyMatters(hit);
@@ -268,9 +273,9 @@ export async function generateWhyMatters(story, deps) {
     text = await deps.callLLM(system, user, {
       maxTokens: 120,
       temperature: 0.4,
-      timeoutMs: 10_000,
+      timeoutMs: 30_000,
       allowedProviders: BRIEF_LLM_ALLOWED_PROVIDERS,
-      modelOverrides: BRIEF_LLM_MODEL_OVERRIDES,
+      modelOverrides: BRIEF_LLM_STORY_MODEL_OVERRIDES,
       stage: 'brief-whymatters-cron',
     });
   } catch {
@@ -408,7 +413,7 @@ export async function generateStoryDescription(story, deps) {
   // v3→v4: 2026-09-21 issue #4944. The brief's prose model moved from
   // google/gemini-2.5-flash to google/gemini-3.5-flash-lite. Every v3 row
   // holds the old model's prose and would serve it for the full 24h TTL.
-  const key = `brief:llm:description:v4:${await hashBriefStory(story)}`;
+  const key = `brief:llm:description:v5:${await hashBriefStory(story)}`;
   try {
     const hit = await deps.cacheGet(key);
     if (typeof hit === 'string') {
@@ -428,9 +433,9 @@ export async function generateStoryDescription(story, deps) {
     text = await deps.callLLM(system, user, {
       maxTokens: 140,
       temperature: 0.4,
-      timeoutMs: 10_000,
+      timeoutMs: 30_000,
       allowedProviders: BRIEF_LLM_ALLOWED_PROVIDERS,
-      modelOverrides: BRIEF_LLM_MODEL_OVERRIDES,
+      modelOverrides: BRIEF_LLM_STORY_MODEL_OVERRIDES,
       stage: 'brief-description-cron',
     });
   } catch {
@@ -1029,7 +1034,7 @@ export async function generateDigestProse(userId, stories, sensitivity, deps, ct
   // google/gemini-2.5-flash to google/gemini-3.5-flash-lite (#4944 bakeoff).
   // v8 rows hold the old model's prose — including the fabricated-actor leads
   // the move is meant to end — and would serve it for the full 4h TTL.
-  const key = `brief:llm:digest:v9:${hashDigestInput(userId, stories, sensitivity, ctx)}`;
+  const key = `brief:llm:digest:v10:${hashDigestInput(userId, stories, sensitivity, ctx)}`;
   try {
     const hit = await deps.cacheGet(key);
     // CRITICAL: re-run the shape+grounding validator on cache hits.
@@ -1050,9 +1055,9 @@ export async function generateDigestProse(userId, stories, sensitivity, deps, ct
     text = await deps.callLLM(system, user, {
       maxTokens: 900,
       temperature: 0.4,
-      timeoutMs: 15_000,
+      timeoutMs: 60_000,
       allowedProviders: BRIEF_LLM_ALLOWED_PROVIDERS,
-      modelOverrides: BRIEF_LLM_MODEL_OVERRIDES,
+      modelOverrides: BRIEF_LLM_DIGEST_MODEL_OVERRIDES,
       stage: 'brief-digest-cron',
     });
   } catch (err) {

@@ -28,7 +28,7 @@ function stripReasoningPreamble(text) {
 // edge adapter (server/_shared/llm-anthropic.ts): current models reject
 // `temperature`, thinking tokens count against max_tokens (so the visible
 // budget gets headroom), and the refusal fallback stays on Anthropic models.
-const ANTHROPIC_DEFAULT_MODEL = 'claude-opus-5-5';
+const ANTHROPIC_DEFAULT_MODEL = 'claude-haiku-5-5';
 const ANTHROPIC_THINKING_HEADROOM_TOKENS = 4_096;
 
 async function callAnthropic({ apiKey, model, systemPrompt, userPrompt, maxTokens, timeout }) {
@@ -67,7 +67,6 @@ const LLM_PROVIDERS = [
   {
     name: 'anthropic',
     envKey: 'ANTHROPIC_API_KEY',
-    optIn: true,
     model: () => process.env.ANTHROPIC_MODEL || ANTHROPIC_DEFAULT_MODEL,
     invoke: callAnthropic,
     timeout: 25_000,

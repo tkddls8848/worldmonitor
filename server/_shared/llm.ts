@@ -45,6 +45,7 @@ export interface ProviderCredentials {
 }
 
 const PROVIDER_CHAIN = [
+  'anthropic',
   'ollama',
   'openrouter',
   'openrouter-free',
@@ -52,10 +53,9 @@ const PROVIDER_CHAIN = [
   'generic',
 ] as const;
 
-// Providers that are never in the default chain. A caller reaches them only by
-// naming them: an explicit provider, a providerOrder entry, or a customer AI
-// routing policy (server/_shared/ai-routing-policy.ts).
-const OPT_IN_PROVIDERS = ['anthropic'] as const;
+// Providers that are never in the default chain; a caller reaches one only by
+// naming it. Empty in the personal fork: anthropic is first in PROVIDER_CHAIN.
+const OPT_IN_PROVIDERS = [] as const;
 
 export type LlmProviderName = typeof PROVIDER_CHAIN[number] | typeof OPT_IN_PROVIDERS[number];
 
@@ -394,7 +394,7 @@ function callLlmProfile(
 
 /** Cheap/fast model for extraction and parsing tasks. Configurable via LLM_TOOL_PROVIDER / LLM_TOOL_MODEL. */
 export const callLlmTool = (opts: Omit<LlmCallOptions, 'providerOrder' | 'modelOverrides'>) =>
-  callLlmProfile(opts, 'LLM_TOOL_PROVIDER', 'LLM_TOOL_MODEL', 'openrouter');
+  callLlmProfile(opts, 'LLM_TOOL_PROVIDER', 'LLM_TOOL_MODEL', 'anthropic');
 
 /**
  * Powerful model for synthesis and reasoning tasks. Configurable via
@@ -406,7 +406,7 @@ export const callLlmTool = (opts: Omit<LlmCallOptions, 'providerOrder' | 'modelO
  * budget on hidden reasoning tokens and return empty content (#4983).
  */
 export const callLlmReasoning = (opts: Omit<LlmCallOptions, 'providerOrder' | 'modelOverrides'>) =>
-  callLlmProfile({ enableReasoning: true, ...opts }, 'LLM_REASONING_PROVIDER', 'LLM_REASONING_MODEL', 'openrouter', USER_TEXT_EXCLUDED_PROVIDERS);
+  callLlmProfile({ enableReasoning: true, ...opts }, 'LLM_REASONING_PROVIDER', 'LLM_REASONING_MODEL', 'anthropic', USER_TEXT_EXCLUDED_PROVIDERS);
 
 // enableReasoning defaults to ON here (the stream is the reasoning profile);
 // a caller with a small max_tokens budget opts out, as callLlmReasoning
@@ -431,7 +431,7 @@ export type LlmStreamOptions = Omit<LlmCallOptions, 'stripThinkingTags' | 'valid
  */
 export function callLlmReasoningStream(opts: LlmStreamOptions): ReadableStream<Uint8Array> {
   const envProvider = process.env.LLM_REASONING_PROVIDER;
-  const provider = (envProvider && PROVIDER_SET.has(envProvider) ? envProvider : 'openrouter') as LlmProviderName;
+  const provider = (envProvider && PROVIDER_SET.has(envProvider) ? envProvider : 'anthropic') as LlmProviderName;
   const model = process.env.LLM_REASONING_MODEL;
   const remaining = fallbackProviders(provider, USER_TEXT_EXCLUDED_PROVIDERS);
   const providerOrder = opts.routingPolicy

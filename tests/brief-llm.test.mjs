@@ -213,8 +213,8 @@ describe('generateWhyMatters', () => {
     const real = makeLLM('Closure would freeze a fifth of seaborne crude within days.');
     const first = await generateWhyMatters(story(), { ...cache, callLLM: real.callLLM });
     assert.ok(first);
-    const cachedKey = [...cache.store.keys()].find((k) => k.startsWith('brief:llm:whymatters:v7:'));
-    assert.ok(cachedKey, 'expected a whymatters cache entry under the v7 completion-safe namespace');
+    const cachedKey = [...cache.store.keys()].find((k) => k.startsWith('brief:llm:whymatters:v8:'));
+    assert.ok(cachedKey, 'expected a whymatters cache entry under the v8 completion-safe namespace');
 
     // Second call: responder throws — cache must prevent the call
     llm.calls.length = 0;
@@ -246,10 +246,10 @@ describe('generateWhyMatters', () => {
     assert.equal(out, null);
   });
 
-  it('revalidates the current v7 cache row and replaces rejected prose', async () => {
+  it('revalidates the current v8 cache row and replaces rejected prose', async () => {
     const cache = makeCache();
     const hash = await hashBriefStory(story());
-    const key = `brief:llm:whymatters:v7:${hash}`;
+    const key = `brief:llm:whymatters:v8:${hash}`;
     cache.store.set(key, MAX_TOKEN_CLIP);
     const fresh = 'Closure of the Strait of Hormuz would spike oil prices globally.';
     const llm = makeLLM(fresh);
@@ -257,8 +257,8 @@ describe('generateWhyMatters', () => {
     const out = await generateWhyMatters(story(), { ...cache, callLLM: llm.callLLM });
 
     assert.equal(out, fresh);
-    assert.equal(llm.calls.length, 1, 'invalid current-v7 prose must not short-circuit regeneration');
-    assert.equal(cache.store.get(key), fresh, 'fresh prose must replace the rejected v7 row');
+    assert.equal(llm.calls.length, 1, 'invalid current-v8 prose must not short-circuit regeneration');
+    assert.equal(cache.store.get(key), fresh, 'fresh prose must replace the rejected v8 row');
   });
 
   it('returns null and writes no cache for complete-looking v1 prose without terminal punctuation', async () => {
@@ -287,7 +287,7 @@ describe('generateWhyMatters', () => {
     assert.equal(cache.store.size, 0, 'overlong v1 prose must not be cached');
   });
 
-  it('ignores a clipped legacy v5 cache row and regenerates it under v7', async () => {
+  it('ignores a clipped legacy v5 cache row and regenerates it under v8', async () => {
     const cache = makeCache();
     const hash = await hashBriefStory(story());
     cache.store.set(
@@ -300,7 +300,7 @@ describe('generateWhyMatters', () => {
     assert.equal(out, fresh);
     assert.equal(llm.calls.length, 1, 'clipped v5 cache row must not short-circuit regeneration');
     assert.equal(
-      [...cache.store.keys()].some((key) => key.startsWith('brief:llm:whymatters:v7:')),
+      [...cache.store.keys()].some((key) => key.startsWith('brief:llm:whymatters:v8:')),
       true,
     );
   });
@@ -326,8 +326,8 @@ describe('generateWhyMatters', () => {
     const out = await generateWhyMatters(story(), { ...cache, callLLM: llm.callLLM });
 
     assert.equal(out, complete);
-    const v7Value = [...cache.store.entries()].find(([key]) => key.startsWith('brief:llm:whymatters:v7:'))?.[1];
-    assert.equal(v7Value, complete);
+    const v8Value = [...cache.store.entries()].find(([key]) => key.startsWith('brief:llm:whymatters:v8:'))?.[1];
+    assert.equal(v8Value, complete);
   });
 
   it('returns null instead of stale prose when clipped legacy regeneration fails', async () => {
@@ -341,13 +341,14 @@ describe('generateWhyMatters', () => {
     assert.equal(llm.calls.length, 1, 'clipped v5 cache row must attempt regeneration');
   });
 
-  it('pins the provider chain to paid openrouter with an exact allowlist', async () => {
+  it('pins the provider chain to anthropic then openrouter with an exact allowlist', async () => {
     const cache = makeCache();
     const llm = makeLLM('Closure of the Strait of Hormuz would spike oil prices globally.');
     await generateWhyMatters(story(), { ...cache, callLLM: llm.callLLM });
     assert.ok(llm.calls[0]);
-    assert.deepEqual(llm.calls[0].opts.allowedProviders, ['openrouter']);
-    assert.deepEqual(llm.calls[0].opts.modelOverrides, { openrouter: 'google/gemini-3.5-flash-lite' });
+    assert.deepEqual(llm.calls[0].opts.allowedProviders, ['anthropic', 'openrouter']);
+    assert.deepEqual(llm.calls[0].opts.modelOverrides, { anthropic: 'claude-haiku-5-5', openrouter: 'google/gemini-3.5-flash-lite' });
+    assert.equal(llm.calls[0].opts.timeoutMs, 30_000);
   });
 
   it('caches shared story-hash across users (no per-user key)', async () => {
@@ -799,7 +800,7 @@ describe('generateDigestProse', () => {
     const llm1 = makeLLM(validJson);
     await generateDigestProse('user_a', stories, 'all', { ...cache, callLLM: llm1.callLLM });
 
-    const badKey = [...cache.store.keys()].find((k) => k.startsWith('brief:llm:digest:v9:'));
+    const badKey = [...cache.store.keys()].find((k) => k.startsWith('brief:llm:digest:v10:'));
     assert.ok(badKey, 'expected a digest prose cache entry');
     // Overwrite with a payload whose content has zero proper-noun
     // overlap with `stories` (Iran Hormuz / Gaza). Shape is impeccable.
@@ -829,7 +830,7 @@ describe('generateDigestProse', () => {
     // (2026-05-14) when buildDigestPrompt gained the F6 date-grounding
     // line. v4 rows ignored at v5 rollout; v5 rows ignored at v6
     // rollout — see generateDigestProse header comment.
-    const badKey = [...cache.store.keys()].find((k) => k.startsWith('brief:llm:digest:v9:'));
+    const badKey = [...cache.store.keys()].find((k) => k.startsWith('brief:llm:digest:v10:'));
     assert.ok(badKey, 'expected a digest prose cache entry');
     cache.store.set(badKey, { lead: 'short', /* missing threads + signals */ });
     const llm2 = makeLLM(validJson);
@@ -1461,13 +1462,13 @@ describe('generateDigestProsePublic — public cache shared across users', () =>
     assert.equal(llm2.calls.length, 1, 'profile change re-keys the cache');
   });
 
-  it('writes to cache under brief:llm:digest:v9 prefix (v8/v7/v6/v5/v4/v3/v2 evicted)', async () => {
+  it('writes to cache under brief:llm:digest:v10 prefix (v9/v8/v7/v6/v5/v4/v3/v2 evicted)', async () => {
     const cache = makeCache();
     const llm = makeLLM(validJson);
     await generateDigestProse('user_a', stories, 'all', { ...cache, callLLM: llm.callLLM });
     const keys = [...cache.store.keys()];
-    assert.deepEqual(llm.calls[0].opts.modelOverrides, { openrouter: 'google/gemini-3.5-flash-lite' });
-    assert.ok(keys.some((k) => k.startsWith('brief:llm:digest:v9:')), 'v9 prefix used');
+    assert.deepEqual(llm.calls[0].opts.modelOverrides, { anthropic: 'claude-sonnet-5-5', openrouter: 'google/gemini-3.5-flash-lite' });
+    assert.ok(keys.some((k) => k.startsWith('brief:llm:digest:v10:')), 'v10 prefix used');
     assert.ok(!keys.some((k) => k.startsWith('brief:llm:digest:v8:')), 'no v8 writes (bumped for the gemini-3.5-flash-lite move — #4944)');
     assert.ok(!keys.some((k) => k.startsWith('brief:llm:digest:v7:')), 'no v7 writes (bumped for anti-stitching prompt — May 2026)');
     assert.ok(!keys.some((k) => k.startsWith('brief:llm:digest:v6:')), 'no v6 writes (bumped for category persistence — PR #3751)');
@@ -1605,8 +1606,8 @@ describe('generateStoryDescription', () => {
     assert.equal(setCalls.length, 1);
     assert.equal(setCalls[0].ttlSec, 24 * 60 * 60);
     assert.equal(setCalls[0].value, good);
-    assert.match(setCalls[0].key, /^brief:llm:description:v4:/);
-    assert.deepEqual(llm.calls[0].opts.modelOverrides, { openrouter: 'google/gemini-3.5-flash-lite' });
+    assert.match(setCalls[0].key, /^brief:llm:description:v5:/);
+    assert.deepEqual(llm.calls[0].opts.modelOverrides, { anthropic: 'claude-haiku-5-5', openrouter: 'google/gemini-3.5-flash-lite' });
   });
 });
 
@@ -1968,7 +1969,7 @@ describe('generateStoryDescription — sanitisation + prefix bump (U5)', () => {
     };
     await generateStoryDescription(story(), { ...cache, callLLM: llm.callLLM });
     assert.strictEqual(setCalls.length, 1);
-    assert.match(setCalls[0].key, /^brief:llm:description:v4:/, 'cache prefix must be v4 post-bump (gemini-3.5-flash-lite move — #4944)');
+    assert.match(setCalls[0].key, /^brief:llm:description:v5:/, 'cache prefix must be v5 post-bump (gemini-3.5-flash-lite move — #4944)');
   });
 
   it('ignores legacy v1 / v2 cache entries (prefix bump forces cold start)', async () => {
@@ -1992,8 +1993,8 @@ describe('generateStoryDescription — sanitisation + prefix bump (U5)', () => {
     );
     assert.strictEqual(out, fresh, 'legacy v1/v2 rows must NOT be served post-bump');
     // And the freshly-written row lands under v4.
-    const v4Keys = [...store.keys()].filter((k) => k.startsWith('brief:llm:description:v4:'));
-    assert.strictEqual(v4Keys.length, 1);
+    const v5Keys = [...store.keys()].filter((k) => k.startsWith('brief:llm:description:v5:'));
+    assert.strictEqual(v5Keys.length, 1);
   });
 });
 
@@ -2336,7 +2337,7 @@ describe('stitching-phrase gate on the email brief (Sep 20 "This development com
     const stories = pool.map((s) => story(s));
     const cache = makeCache();
     await generateDigestProse('user_a', stories, 'all', { ...cache, callLLM: makeLLM(groundedJson).callLLM });
-    const key = [...cache.store.keys()].find((k) => k.startsWith('brief:llm:digest:v9:'));
+    const key = [...cache.store.keys()].find((k) => k.startsWith('brief:llm:digest:v10:'));
     assert.ok(key, 'expected a digest prose cache entry');
     cache.store.set(key, {
       lead: capturedLead,
@@ -2355,7 +2356,7 @@ describe('stitching-phrase gate on the email brief (Sep 20 "This development com
     const stories = pool.map((s) => story(s));
     const cache = makeCache();
     await generateDigestProse('user_a', stories, 'all', { ...cache, callLLM: makeLLM(groundedJson).callLLM });
-    const key = [...cache.store.keys()].find((k) => k.startsWith('brief:llm:digest:v9:'));
+    const key = [...cache.store.keys()].find((k) => k.startsWith('brief:llm:digest:v10:'));
     assert.ok(key, 'expected a digest prose cache entry');
     cache.store.set(key, {
       lead: 'This development comes as former President Trump returns to the UN amid shipping chokepoint attacks across the Persian Gulf.',
