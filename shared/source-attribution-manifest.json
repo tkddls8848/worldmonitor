@@ -11493,9 +11493,6 @@
           "path": "scripts/publish-mcp-registry.mjs"
         },
         {
-          "path": "scripts/seed-digest-notifications.mjs"
-        },
-        {
           "path": "scripts/seed-five-factor-scorecard.mjs"
         },
         {
