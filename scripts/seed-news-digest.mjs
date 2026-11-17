@@ -58,8 +58,15 @@ async function main() {
     console.error(`[news-digest] ${REQUIRED_CELL} was not rebuilt; is npm run start:personal running?`);
     process.exitCode = 1;
   }
+  return summary.ok;
 }
 
 if (process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url) {
-  main().catch((error) => { console.error(error.message); process.exitCode = 1; });
+  const startedAt = Date.now();
+  main().then(
+    // Printed only after a successful pass, as its last act
+    // (tests/railway-entrypoint-terminal-marker.test.mts).
+    (ok) => { if (ok) console.log(`\n=== Done (${Date.now() - startedAt}ms) ===`); },
+    (error) => { console.error(error.message); process.exitCode = 1; },
+  );
 }

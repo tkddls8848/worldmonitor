@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { before, describe, it } from 'node:test';
+import { after, before, describe, it } from 'node:test';
 import nodePath, { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
@@ -277,7 +277,18 @@ describe('durable last-good wiring (#7084)', () => {
   const smembersCalls = () =>
     stub.pipelineCalls.flat().filter((cmd: any) => Array.isArray(cmd) && cmd[0] === 'SMEMBERS');
 
+  // The personal server's embedded store has no Lua, so with this set the
+  // publish takes the step-by-step path. Every test here pins the Redis path
+  // (or sets the sidecar mode itself); a shell with .env.local loaded must not
+  // change which one runs.
+  const personalStore = process.env.WM_PERSONAL_STORE;
+  after(() => {
+    if (personalStore === undefined) delete process.env.WM_PERSONAL_STORE;
+    else process.env.WM_PERSONAL_STORE = personalStore;
+  });
+
   before(async () => {
+    delete process.env.WM_PERSONAL_STORE;
     (globalThis as any).__digestRedisStub = stub;
     const shim = [
       'const s = globalThis.__digestRedisStub;',
