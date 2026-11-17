@@ -297,6 +297,9 @@
     "convex": {
       "esbuild": "0.28.1"
     },
+    "@vercel/cli-config": {
+      "zod": "$zod"
+    },
     "js-yaml@4": "$js-yaml",
     "fast-xml-parser": "$fast-xml-parser",
     "serialize-javascript": "^7.0.4",
