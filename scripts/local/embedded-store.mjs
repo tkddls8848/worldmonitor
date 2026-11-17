@@ -62,6 +62,13 @@ function toFloat(value) {
   return n;
 }
 
+// Blocking-command timeout in seconds (fractions allowed); 0 waits forever.
+function blockTimeoutMs(raw) {
+  const seconds = Number(raw);
+  if (raw === undefined || !Number.isFinite(seconds)) throw new Error('ERR timeout is not a float or out of range');
+  return seconds * 1000;
+}
+
 function globToRegExp(glob) {
   let out = '^';
   for (const ch of String(glob)) {
@@ -179,6 +186,29 @@ export function createEngine({ now = () => Date.now() } = {}) {
     return returnOld ? old : 'OK';
   }
 
+  const listEnd = (raw) => {
+    const end = String(raw).toUpperCase();
+    if (end !== 'LEFT' && end !== 'RIGHT') throw new Error('ERR syntax error');
+    return end;
+  };
+
+  // Non-blocking core of LMOVE and BLMOVE. The HTTP layer below makes BLMOVE
+  // wait; inside a pipeline or transaction it answers at once, as in Redis.
+  function lmove(source, destination, fromRaw, toRaw) {
+    const from = listEnd(fromRaw);
+    const to = listEnd(toRaw);
+    const src = typed(source, 'list');
+    if (!src || src.value.length === 0) return null;
+    typed(destination, 'list'); // WRONGTYPE before anything moves
+    const value = from === 'LEFT' ? src.value.shift() : src.value.pop();
+    touch();
+    if (source !== destination) dropIfEmpty(source, src);
+    const dst = ensure(destination, 'list', () => []);
+    if (to === 'LEFT') dst.value.unshift(value);
+    else dst.value.push(value);
+    return value;
+  }
+
   function incrBy(key, delta) {
     const entry = typed(key, 'string');
     const next = (entry ? toInt(entry.value) : 0) + delta;
@@ -251,6 +281,11 @@ export function createEngine({ now = () => Date.now() } = {}) {
     RPUSH: ([key, ...values]) => { const entry = ensure(key, 'list', () => []); entry.value.push(...values); return entry.value.length; },
     LPOP: ([key]) => { const entry = typed(key, 'list'); if (!entry) return null; const value = entry.value.shift(); touch(); dropIfEmpty(key, entry); return value ?? null; },
     RPOP: ([key]) => { const entry = typed(key, 'list'); if (!entry) return null; const value = entry.value.pop(); touch(); dropIfEmpty(key, entry); return value ?? null; },
+    LMOVE: ([source, destination, from, to]) => lmove(source, destination, from, to),
+    BLMOVE: ([source, destination, from, to, timeout]) => {
+      if (blockTimeoutMs(timeout) < 0) throw new Error('ERR timeout is negative');
+      return lmove(source, destination, from, to);
+    },
     LLEN: ([key]) => typed(key, 'list')?.value.length ?? 0,
     LRANGE: ([key, start, stop]) => {
       const entry = typed(key, 'list');
@@ -564,11 +599,53 @@ export async function startEmbeddedStore({ token, file, port = 8079, host = '127
   const authorized = (req) => crypto.timingSafeEqual(crypto.createHash('sha256').update(req.headers.authorization || '').digest(), expected);
   const send = (res, status, body) => { res.writeHead(status, { 'content-type': 'application/json' }); res.end(JSON.stringify(body)); };
 
+  // Clients held by a blocking command (the scenario worker's BLMOVE), oldest
+  // first. Every request that could have pushed retries them.
+  /** @type {Array<{ retry: string[], resolve: (value: unknown) => void, reject: (error: unknown) => void, timer: NodeJS.Timeout | null }>} */
+  let waiters = [];
+  const release = (waiter) => {
+    if (waiter.timer) clearTimeout(waiter.timer);
+    waiters = waiters.filter((w) => w !== waiter);
+  };
+  const wake = () => {
+    let moved = true;
+    while (moved && waiters.length) {
+      moved = false;
+      for (const waiter of [...waiters]) {
+        let result;
+        try { result = engine.exec(waiter.retry); } catch (error) { release(waiter); waiter.reject(error); continue; }
+        if (result !== null) { release(waiter); waiter.resolve(result); moved = true; }
+      }
+    }
+  };
+  const execSingle = (args, res) => {
+    const result = engine.exec(args);
+    const name = String(args[0]).toUpperCase();
+    // BLMOVE is the one blocking command (the scenario worker's dequeue). The
+    // engine answers it without waiting, so a held client retries the same call.
+    if (result !== null || name !== 'BLMOVE') return result;
+    const timeoutMs = blockTimeoutMs(args.at(-1));
+    return new Promise((resolve, reject) => {
+      const waiter = { retry: args, resolve, reject, timer: null };
+      if (timeoutMs > 0) waiter.timer = setTimeout(() => { release(waiter); resolve(null); }, timeoutMs);
+      // A client that gave up must not receive, and so lose, the next element.
+      res.once('close', () => { if (waiters.includes(waiter)) { release(waiter); resolve(null); } });
+      waiters.push(waiter);
+    });
+  };
+
   const server = http.createServer(async (req, res) => {
     if (!authorized(req)) { send(res, 401, { error: 'Unauthorized' }); return; }
     try {
+      await handle(req, res);
+    } finally {
+      wake();
+    }
+  });
+  const handle = async (req, res) => {
+    try {
       const pathname = new URL(req.url || '/', 'http://localhost').pathname;
-      if (req.method === 'POST' && pathname === '/') { send(res, 200, { result: engine.exec(await readJsonBody(req, maxBodyBytes)) }); return; }
+      if (req.method === 'POST' && pathname === '/') { send(res, 200, { result: await execSingle(await readJsonBody(req, maxBodyBytes), res) }); return; }
       if (req.method === 'POST' && pathname === '/pipeline') {
         const batch = await readJsonBody(req, maxBodyBytes);
         send(res, 200, batch.map((args) => { try { return { result: engine.exec(args) }; } catch (error) { return { error: error.message }; } }));
@@ -582,7 +659,7 @@ export async function startEmbeddedStore({ token, file, port = 8079, host = '127
       if (req.method === 'GET' && pathname === '/') { send(res, 200, 'Welcome to the WorldMonitor embedded store'); return; }
       if (req.method === 'GET' || req.method === 'POST') {
         req.resume();
-        send(res, 200, { result: engine.exec(pathname.slice(1).split('/').map(decodeURIComponent)) });
+        send(res, 200, { result: await execSingle(pathname.slice(1).split('/').map(decodeURIComponent), res) });
         return;
       }
       send(res, 404, { error: 'Not found' });
@@ -592,7 +669,7 @@ export async function startEmbeddedStore({ token, file, port = 8079, host = '127
       if (!res.headersSent) send(res, status, { error: error.message });
       else res.destroy();
     }
-  });
+  };
 
   let savedVersion = engine.version();
   let saving = null;
@@ -616,6 +693,9 @@ export async function startEmbeddedStore({ token, file, port = 8079, host = '127
     save,
     async close() {
       clearInterval(timer);
+      // Blocked clients are disconnected below; nothing may move for them now.
+      for (const waiter of waiters) if (waiter.timer) clearTimeout(waiter.timer);
+      waiters = [];
       server.closeAllConnections();
       await new Promise((resolve) => server.close(resolve));
       await saving;

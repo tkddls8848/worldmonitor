@@ -1,6 +1,7 @@
 // Container-free, password-protected ingress. Use an HTTPS reverse proxy for
 // remote access; the default listener is deliberately loopback-only.
 import http from 'node:http';
+import { spawn } from 'node:child_process';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { readFile, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
@@ -95,6 +96,43 @@ export async function startPersonalStore(env = process.env) {
   return store;
 }
 
+// run-scenario only enqueues on scenario-queue:pending. Upstream an always-on
+// Railway service runs scripts/scenario-worker.mjs; here it lives and dies with
+// this server and reads the same store through UPSTASH_REDIS_REST_URL. A crash
+// is restarted after a pause; the worker requeues its own orphaned jobs.
+export function startScenarioWorker({ env = process.env, spawnImpl = spawn, restartDelayMs = 5_000, log = console } = {}) {
+  const childEnv = { ...env };
+  delete childEnv.LOCAL_API_TOKEN; // authenticates ingress -> API only
+  let child = null;
+  let closed = false;
+  let restartTimer = null;
+  const launch = () => {
+    child = spawnImpl(process.execPath, [path.join(ROOT, 'scripts', 'scenario-worker.mjs')], { env: childEnv, stdio: ['ignore', 'inherit', 'inherit'] });
+    child.once('exit', (code, signal) => {
+      child = null;
+      if (closed) return;
+      log.warn(`시나리오 작업자가 종료되었습니다(${code ?? signal}). ${restartDelayMs / 1000}초 뒤 다시 시작합니다.`);
+      restartTimer = setTimeout(launch, restartDelayMs);
+    });
+  };
+  launch();
+  return {
+    async close() {
+      closed = true;
+      clearTimeout(restartTimer);
+      const running = child;
+      if (!running) return;
+      const exited = new Promise((resolve) => running.once('exit', resolve));
+      running.kill('SIGTERM');
+      // SIGTERM lets a computing job finish, but an idle worker sits in a
+      // 30 s BLMOVE before it looks at the flag, so it is forced after 3 s.
+      const forced = setTimeout(() => running.kill('SIGKILL'), 3_000);
+      await exited;
+      clearTimeout(forced);
+    },
+  };
+}
+
 export async function startPersonalServer() {
   loadEnvFile(import.meta.url);
   validatePersonalStore(process.env.UPSTASH_REDIS_REST_URL);
@@ -111,6 +149,7 @@ export async function startPersonalServer() {
   // would otherwise keep a misconfigured process alive.
   const store = await startPersonalStore();
   let api;
+  let worker = null;
   try {
     const { createLocalApiServer } = await import('./local/local-api-server.mjs');
     api = await createLocalApiServer({ port: 0, mode: 'docker', resourceDir: ROOT, cloudFallback: false, selfHostRelay: 'off' });
@@ -119,12 +158,14 @@ export async function startPersonalServer() {
     const port = Number(process.env.WM_PERSONAL_PORT || 3000);
     const host = process.env.WM_PERSONAL_HOST || '127.0.0.1';
     await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, host, resolve); });
-    const close = async () => { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); await api.close(); await store?.close(); };
+    // Only with a store to read jobs from; the warning above covers the rest.
+    worker = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN ? startScenarioWorker() : null;
+    const close = async () => { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); await worker?.close(); await api.close(); await store?.close(); };
     process.once('SIGINT', () => void close());
     process.once('SIGTERM', () => void close());
     console.log(`개인용 WorldMonitor: http://${host}:${port} (외부 접속에는 HTTPS 프록시를 사용하세요)`);
     return { server, close };
-  } catch (error) { await api?.close(); await store?.close(); throw error; }
+  } catch (error) { await worker?.close(); await api?.close(); await store?.close(); throw error; }
 }
 
 if (process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url) {

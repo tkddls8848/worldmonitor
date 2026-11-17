@@ -75,3 +75,36 @@ test('personal ingress challenges every method and path before the API sees it',
 test('personal ingress refuses a missing or weak password', async () => {
   await assert.rejects(createPersonalIngress({ password: 'short' }), /at least 16/);
 });
+
+// run-scenario only enqueues; without a worker every job stays pending.
+test('the scenario worker runs with the server, against its store, and stops with it', async () => {
+  const { EventEmitter } = await import('node:events');
+  const { startScenarioWorker } = await import('../scripts/personal-server.mjs');
+  const spawned = [];
+  const spawnImpl = (command, args, options) => {
+    const child = new EventEmitter();
+    child.signals = [];
+    child.kill = (signal = 'SIGTERM') => { child.signals.push(signal); setImmediate(() => child.emit('exit', null, signal)); return true; };
+    spawned.push({ command, args, options, child });
+    return child;
+  };
+  const env = { UPSTASH_REDIS_REST_URL: 'http://127.0.0.1:8079', UPSTASH_REDIS_REST_TOKEN: 'store-token-store-token', LOCAL_API_TOKEN: 'per-process-secret', PATH: 'x' };
+  const warnings = [];
+  const worker = startScenarioWorker({ env, spawnImpl, restartDelayMs: 10, log: { warn: (m) => warnings.push(m), log() {} } });
+  assert.equal(spawned.length, 1);
+  assert.equal(spawned[0].command, process.execPath);
+  assert.match(spawned[0].args[0], /scripts[\\/]scenario-worker\.mjs$/);
+  assert.equal(spawned[0].options.env.UPSTASH_REDIS_REST_URL, 'http://127.0.0.1:8079');
+  assert.equal(spawned[0].options.env.UPSTASH_REDIS_REST_TOKEN, 'store-token-store-token');
+  assert.equal(spawned[0].options.env.LOCAL_API_TOKEN, undefined, 'the API transport token stays in the server');
+
+  // A crash is restarted; a close is not.
+  spawned[0].child.emit('exit', 1, null);
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  assert.equal(spawned.length, 2);
+  assert.equal(warnings.length, 1);
+  await worker.close();
+  assert.deepEqual(spawned[1].child.signals, ['SIGTERM']);
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  assert.equal(spawned.length, 2);
+});
