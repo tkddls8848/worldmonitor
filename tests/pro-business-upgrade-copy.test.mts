@@ -1,6 +1,5 @@
 /**
- * Locks the in-place Pro → Pro Business upgrade dialog copy and keeps the
- * dashboard (src/) and /pro (pro-test/, a sealed build) wording in step.
+ * Locks the in-place Pro → Pro Business upgrade dialog copy.
  */
 
 import { describe, it } from 'node:test';
@@ -11,10 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 import {
   IN_PLACE_UPGRADE_SOURCE_PLANS,
-  UPGRADE_ACCOUNT_CHANGED_BODY,
-  UPGRADE_CANCEL_SCHEDULED_BODY,
   UPGRADE_FAILED_BODY,
-  UPGRADE_SUCCESS_BODY,
   buildUpgradePreviewBody,
   formatMinorAmount,
 } from '../src/services/pro-business-upgrade-copy.ts';
@@ -113,29 +109,5 @@ describe('buildUpgradePreviewBody', () => {
     const billing = readFileSync(resolve(root, 'convex/payments/billing.ts'), 'utf8');
     assert.match(billing, /pro_monthly: "pro_business_monthly"/);
     assert.match(billing, /pro_annual: "pro_business_annual"/);
-  });
-});
-
-describe('cross-app copy parity (dashboard vs /pro)', () => {
-  const proSource = readFileSync(resolve(root, 'pro-test/src/services/pro-business-upgrade.ts'), 'utf8');
-  const shared = [
-    'subscription moves to Pro Business now. ',
-    'today and your billing period restarts today. ',
-    'If the payment fails, you stay on Pro.',
-    'the Pro Business price',
-    "new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })",
-    "preview.renewalAmount === null || !preview.renewalCurrency",
-    UPGRADE_SUCCESS_BODY,
-    UPGRADE_CANCEL_SCHEDULED_BODY,
-    UPGRADE_FAILED_BODY,
-    UPGRADE_ACCOUNT_CHANGED_BODY,
-  ];
-  for (const sentence of shared) {
-    it(`/pro mirrors: ${sentence.slice(0, 48)}`, () => {
-      assert.ok(proSource.includes(sentence), `pro-test copy drifted from src copy: ${sentence}`);
-    });
-  }
-  it('/pro upgrades the same source plans', () => {
-    assert.match(proSource, /new Set\(\['pro_monthly', 'pro_annual'\]\)/);
   });
 });

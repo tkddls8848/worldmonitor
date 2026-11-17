@@ -54,10 +54,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Specialized jobs (umami, digest, …) are path-filtered
-          # on PRs. Do the same on push to main. Forcing them true here used to
-          # compile the Tauri crate and rebuild Umami images on every merge —
-          # weather, news, embed — which is not a desktop or analytics gate.
+          # Specialized jobs are path-filtered on PRs. Do the same on push to
+          # main so an unrelated merge does not run every job.
           # Fail open (run everything) only when we cannot see the file list:
           # a zero parent SHA, a compare error, or GitHub's 300-file cap.
           emit_all_true() {
@@ -171,11 +169,9 @@ jobs:
           # Only proven non-browser inputs may skip this job. New paths run it
           # until their owner can establish that they cannot affect the smoke.
           BROWSER=$(printf '%s\n' "$FILES" | awk '
-            /^(src\/|api\/|server\/|shared\/|public\/|pro-test\/|e2e\/)/ { count++; next }
+            /^(src\/|api\/|server\/|shared\/|public\/|e2e\/)/ { count++; next }
             /^docs\// { next }
             /^tests\/.*\.test\.(mjs|mts)$/ { next }
-            /^scripts\/(audit-railway-watch-paths|run-railway-registry-sync|railway-services)\.(mjs|json)$/ { next }
-            /^\.github\/workflows\/(railway-registry-sync|seed-freshness)\.yml$/ { next }
             /^\.husky\// { next }
             /\.md$/ || /^LICENSE$/ { next }
             { count++ }
@@ -325,11 +321,10 @@ jobs:
         if: steps.nested-deps.outputs.cache-hit != 'true'
         run: npm run ci:blog-site
       - name: Install scripts/ deps for the seeder link check
-        # Railway seeders install scripts/package-lock.json, not the root tree.
-        # tests/nixpacks-seeder-import-graph.test.mjs links their named package
-        # imports against this install (#9608 shipped an undici 8 import to an
-        # undici 7 container with every suite green). WM_EXPECT_SCRIPTS_DEPS
-        # below fails the shard if a restored tree is missing it.
+        # Seeders install scripts/package-lock.json, not the root tree. Suites
+        # that load seeder package imports resolve them from this install.
+        # WM_EXPECT_SCRIPTS_DEPS below fails the shard if a restored tree is
+        # missing it.
         if: steps.nested-deps.outputs.cache-hit != 'true'
         run: npm ci --prefix scripts --ignore-scripts --no-audit --no-fund
       - name: Save blog-site and scripts/ dependencies
@@ -351,7 +346,7 @@ jobs:
           key: ${{ needs.changes.outputs.durations_key }}
           fail-on-cache-miss: true
       - name: Data tests without built output
-        # No build here: the unit-built-output job builds dist/ and public/pro/
+        # No build here: the unit-built-output job builds dist/
         # once and runs every suite that names them. The marker stays set, so a
         # guarded suite that lands in a shard fails instead of skipping.
         env:
@@ -436,8 +431,8 @@ jobs:
       # all three lockfiles (6-9s, most of it the root's), and the install
       # still took a few seconds. The key hashes every
       # file that decides their contents (the tree links packages from
-      # vendor/); bump the version when an install command below, ci:blog-site,
-      # or the install half of build:pro in package.json changes.
+      # vendor/); bump the version when an install command below or ci:blog-site
+      # in package.json changes.
       - name: Restore blog-site dependencies
         id: built-output-deps
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
@@ -550,7 +545,6 @@ jobs:
         # seconds, not the full test:data run.
         run: |
           npm run bundle:check
-          npm run bundle:check:pro
           npm run bundle:check:embed
       - run: WM_EXPECT_BUILT_OUTPUT=1 npm run test:data -- --built-output=only --concurrency=4 --timings=${{ runner.temp }}/data-test-timings.jsonl
       - name: Upload data test timings

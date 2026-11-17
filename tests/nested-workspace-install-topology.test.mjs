@@ -1,4 +1,4 @@
-// Nested workspaces (blog-site, pro-test) carry their own lockfiles, and
+// Nested workspaces (blog-site) carry their own lockfiles, and
 // installing one takes minutes. Whichever script installs them decides how many
 // CI jobs pay that cost.
 //
@@ -23,7 +23,6 @@ const { scripts } = JSON.parse(readFileSync(resolve(repoRoot, 'package.json'), '
 
 const NESTED_WORKSPACES = [
   { name: 'blog-site', installedBy: 'build:blog:raw' },
-  { name: 'pro-test', installedBy: 'build:pro' },
 ];
 
 describe('nested workspace install topology', () => {

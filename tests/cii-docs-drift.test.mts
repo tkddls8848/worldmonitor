@@ -521,7 +521,6 @@ describe('CII docs drift guards', () => {
       'docs/country-instability-index.mdx',
       'blog-site/src/content/blog/country-instability-index-methodology-explained.md',
       'blog-site/src/data/glossary.ts',
-      'skills/check-country-risk/SKILL.md',
     ];
 
     for (const path of surfaces) {

@@ -257,10 +257,6 @@ describe('defense-patents deployment wiring', () => {
     assert.match(source, /canonicalKey:\s*'patents:defense:latest'/);
     assert.match(source, /intervalMs:\s*WEEK/);
     assert.match(source, /requiredEnv:\s*\['USPTO_API_KEY'\]/);
-
-    const registry = JSON.parse(readFileSync(join(here, '..', 'scripts', 'railway-services.json'), 'utf8'));
-    const service = registry.find((entry) => entry.service === 'seed-bundle-static-ref');
-    assert.deepEqual(service?.requiredEnv, ['USPTO_API_KEY']);
   });
 
   it('keeps the empty abstract compatibility contract explicit in generated API docs', () => {

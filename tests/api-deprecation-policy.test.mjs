@@ -69,27 +69,6 @@ describe('REST API versioning and deprecation policy', () => {
     assert.ok(pages.includes('api-versioning'), 'English nav must link the policy page');
     assert.ok(pages.includes('zh/api-versioning'), 'Chinese nav must link the policy page');
   });
-
-  it('advertises an absolute policy-discovery Link on homepage and /api/(.*) Vercel rules', () => {
-    const vercel = JSON.parse(read('vercel.json'));
-    const homepageLinks = vercel.headers
-      .filter((rule) => rule.source === '/')
-      .flatMap((rule) => rule.headers ?? [])
-      .filter((header) => header.key === 'Link')
-      .map((header) => header.value);
-    assert.ok(
-      homepageLinks.some((value) => /<\/api-versioning\.md>; rel="deprecation"; type="text\/markdown"/.test(value)),
-      'a / homepage Link header must advertise the static REST deprecation policy',
-    );
-
-    const apiRule = vercel.headers.find((rule) => rule.source === '/api/(.*)');
-    const apiLink = apiRule?.headers.find((header) => header.key === 'Link')?.value;
-    assert.equal(
-      apiLink,
-      `<${staticPolicyUrl}>; rel="deprecation"; type="text/markdown"`,
-      '/api/(.*) must use the absolute www policy URL so api.worldmonitor.app callers do not follow a root-relative 404',
-    );
-  });
 });
 
 describe('appendDeprecationPolicyLink', () => {

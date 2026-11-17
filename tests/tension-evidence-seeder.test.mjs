@@ -70,13 +70,4 @@ describe('tension evidence seeder', () => {
     assert.match(line, /intervalMs: 15 \* MIN/);
     assert.match(line, /timeoutMs: 60_000/);
   });
-
-  it('redeploys the derived-signals service when the evidence code changes', () => {
-    const services = JSON.parse(read('scripts/railway-services.json'));
-    const entry = (Array.isArray(services) ? services : services.services).find(s => s.service === 'seed-bundle-derived-signals');
-    const patterns = entry.watchPatterns ?? entry.watchPaths;
-    for (const file of ['scripts/seed-tension-evidence.mjs', 'scripts/_tension-evidence.mjs']) {
-      assert.ok(patterns.includes(file), `${file} is a watch path`);
-    }
-  });
 });

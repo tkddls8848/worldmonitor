@@ -18,27 +18,15 @@ const root = resolve(__dirname, '..');
 
 const bundleSrc = readFileSync(resolve(root, 'scripts/seed-bundle-portwatch-port-activity.mjs'), 'utf-8');
 
-// ── deployment wiring ────────────────────────────────────────────────────────
+// ── bundle cadence ───────────────────────────────────────────────────────────
 //
-// Port activity runs as its own Railway cron service. Nothing executable can
-// observe whether the image starts the right script or whether the schedule is
-// registered, so these read the deployment artefacts directly — a wrong CMD or
-// a missing cron entry is a silently dead service, not a test failure anywhere
-// else. Seeder behaviour is covered by the runtime sections below.
+// Seeder behaviour is covered by the runtime sections below.
 
-describe('standalone Railway cron service', () => {
+describe('port activity bundle cadence', () => {
 
-  it('declares the 12-hour recovery cadence and its required credentials', () => {
-    const registry = JSON.parse(readFileSync(resolve(root, 'scripts/railway-services.json'), 'utf8'));
-    const service = registry.find((entry) => entry.service === 'seed-bundle-portwatch-port-activity');
-    assert.equal(service?.cronSchedule, '0 */12 * * *');
+  it('declares the 12-hour recovery cadence', () => {
     assert.match(bundleSrc, /intervalMs:\s*12\s*\*\s*HOUR/);
     assert.equal(PORTWATCH_CONTENT_FRESHNESS_CADENCE_MINUTES, 12 * 60);
-    assert.deepEqual(service?.requiredEnv, [
-      'UPSTASH_REDIS_REST_URL',
-      'UPSTASH_REDIS_REST_TOKEN',
-      'PROXY_URL',
-    ]);
   });
 });
 
@@ -328,15 +316,11 @@ describe('resolveArcgisDateField (runtime, schema-flap defence)', () => {
 // (slightly-stale) cache rather than dropping them. Full rotation across
 // ~ceil(N / cap) runs.
 describe('cold-fetch cap prevents 174-country cliff (WM 2026-05-13)', () => {
-  // Hours between runs, taken from the deployed cron rather than a copy of it,
-  // so re-cadencing the service re-checks the rotation invariant below.
+  // Hours between runs, taken from the bundle's interval rather than a copy of
+  // it, so re-cadencing the bundle re-checks the rotation invariant below.
   const cronIntervalMs = (() => {
-    const registry = JSON.parse(readFileSync(resolve(root, 'scripts/railway-services.json'), 'utf8'));
-    const schedule = registry.find(
-      (entry) => entry.service === 'seed-bundle-portwatch-port-activity',
-    )?.cronSchedule;
-    const everyNHours = schedule?.match(/^0 \*\/(\d+) \* \* \*$/);
-    assert.ok(everyNHours, `unhandled cron schedule: ${schedule}`);
+    const everyNHours = bundleSrc.match(/intervalMs:\s*(\d+)\s*\*\s*HOUR/);
+    assert.ok(everyNHours, 'unhandled bundle interval');
     return Number(everyNHours[1]) * 3_600_000;
   })();
 

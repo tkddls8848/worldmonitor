@@ -7,18 +7,6 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
 
-interface RailwayServiceEntry {
-  entry: string;
-  deployMode: 'nixpacks-root-scripts' | 'dockerfile';
-  dockerfile?: string;
-  service: string;
-  documentedAt: string;
-}
-
-const registry = JSON.parse(
-  readFileSync(resolve(repoRoot, 'scripts/railway-services.json'), 'utf8'),
-) as RailwayServiceEntry[];
-
 const seedSrc = readFileSync(resolve(repoRoot, 'scripts/seed-military-cii.mjs'), 'utf8');
 const healthSrc = readFileSync(resolve(repoRoot, 'api/health.js'), 'utf8');
 
@@ -59,16 +47,6 @@ function cronIntervalMin(schedule: string): number {
 }
 
 describe('seed-military-cii production registration', () => {
-  it('is registered as a standalone Railway nixpacks service', () => {
-    const entries = registry.filter((entry) => entry.entry === 'scripts/seed-military-cii.mjs');
-    assert.equal(entries.length, 1, 'scripts/seed-military-cii.mjs must have exactly one Railway registry entry');
-
-    const entry = entries[0]!;
-    assert.equal(entry.deployMode, 'nixpacks-root-scripts');
-    assert.equal(entry.service, 'seed-military-cii');
-    assert.match(entry.documentedAt, /scripts\/seed-military-cii\.mjs/);
-  });
-
   it('documents the Railway cron config that matches the health freshness budget', () => {
     assert.match(seedSrc, /Service name:\s*seed-military-cii/);
     assert.match(seedSrc, /rootDirectory:\s*scripts/);

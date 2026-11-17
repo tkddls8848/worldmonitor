@@ -375,18 +375,6 @@ test('BC Open511 shares canadaRoads and does not invent a second MapLayers key',
   assert.match(core, /key: 'bcOpen511', source: 'bc-open511'/);
 });
 
-test('bc open511 runs as a bundle member, not its own */15 service', () => {
-  // seed-bundle-canada (#6711) owns this seeder gated on intervalMs 30min.
-  // DriveBC returned the full active set in a single page, so a tick is one
-  // request, not MAX_PAGES — halving 84 MB/day costs nothing in coverage.
-  const registry = JSON.parse(readFileSync(new URL('../scripts/railway-services.json', import.meta.url), 'utf8'));
-  assert.equal(
-    registry.some((s) => s.service === 'seed-open511'),
-    false,
-    'a standalone row would claim a slot the bundle already covers',
-  );
-});
-
 test('bootstrap fetches bcOpen511 and its Ontario sibling on demand, never on a tier', () => {
   // Was: 'keeps canadaRoads on the fast tier; bcOpen511 is on-demand (~797 KB)'.
   // Holding BC back while Ontario rode FAST was the #6763 bug — a tier is not

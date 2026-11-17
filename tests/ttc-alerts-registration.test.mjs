@@ -66,19 +66,6 @@ describe('TTC service-alerts production registration (#6623)', () => {
     assert.equal(healthTesting.BOOTSTRAP_KEYS.ttcAlerts, undefined);
   });
 
-  it('runs as a bundle member, not its own Railway service', () => {
-    // TTC is one of six Canada seeders. Six services against a fleet whose
-    // runbook targets 65 is the wrong trade for ~1s of tick work, so this
-    // seeder has NO standalone row: seed-bundle-canada (#6711) owns it and
-    // gates it on a per-member intervalMs of 5 minutes.
-    const railway = JSON.parse(read('scripts/railway-services.json'));
-    assert.equal(
-      railway.some((entry) => entry.service === 'seed-ttc-alerts'),
-      false,
-      'a standalone row here would claim a Railway slot the bundle already covers',
-    );
-  });
-
   it('probes the same seed-meta key from every health surface', () => {
     // Three carriers, and all three had the colon form. A probe on an unwritten
     // key is invisible, not loud — so pin them together rather than one by one.

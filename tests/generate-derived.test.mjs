@@ -9,14 +9,11 @@ const scripts = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
 // leaves out. Anything else with a freshness check belongs in STEPS.
 const NOT_DERIVED = new Map([
   ['scripts/generate-derived.mjs', 'the runner itself'],
-  ['scripts/check-build-prereqs.mjs', 'validator'],
   ['scripts/bundle-budgets.mjs', 'validator over build output'],
   ['scripts/check-no-public-source-maps.mjs', 'deploy gate over build output'],
   ['scripts/docs-stats.mjs', 'validator'],
   ['scripts/generate-inventory-facts.mjs', 'gitignored build input; the runner refreshes it before the checks'],
-  ['scripts/generate-third-party-notices.mjs', 'gitignored desktop build output'],
   ['scripts/check-live-video-sources.mjs', 'network probe'],
-  ['scripts/sync-desktop-version.mjs', 'desktop app (src-tauri) leaves the personal build'],
   ['scripts/sync-sentry-convex-probe-filters.mjs', 'Sentry and Convex leave the personal build'],
   ['scripts/generate-docs-page-dates.mjs', "follows main's commit dates; regenerated before tests and builds"],
 ]);

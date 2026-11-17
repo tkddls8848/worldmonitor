@@ -3,7 +3,7 @@ import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { VitePWA } from 'vite-plugin-pwa';
 import { appChunkRuntimeCache, createDashboardPrecache } from './shared/pwa-precache';
 import type { OutputBundle } from 'rollup';
-import { resolve, dirname, extname, basename, posix } from 'path';
+import { resolve, dirname, extname, posix } from 'path';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { brotliCompress } from 'zlib';
 import { promisify } from 'util';
@@ -253,16 +253,11 @@ function stripPrivateSourceMapsPlugin(): Plugin {
   };
 }
 
-// Pages whose title, description and canonical are their own; the dashboard
-// brand meta below would otherwise mark them duplicates of /dashboard, or title
-// the desktop sign-in tab as the dashboard.
-const PAGES_WITH_OWN_HEAD_META = new Set(['verify.html', 'desktop-sign-in.html']);
-
 function htmlVariantPlugin(activeMeta: VariantMeta, activeVariant: string, isDesktopBuild: boolean): Plugin {
   return {
     name: 'html-variant',
-    transformIndexHtml(html, ctx) {
-      let result = PAGES_WITH_OWN_HEAD_META.has(basename(ctx.filename)) ? html : html
+    transformIndexHtml(html) {
+      let result = html
         .replace(/<title>.*?<\/title>/, `<title>${activeMeta.title}</title>`)
         .replace(/<meta name="title" content=".*?" \/>/, `<meta name="title" content="${activeMeta.title}" />`)
         .replace(/<meta name="description" content=".*?" \/>/, `<meta name="description" content="${activeMeta.description}" />`)
@@ -1005,12 +1000,11 @@ function webMcpDevSecurityHeadersPlugin(): Plugin {
         let pathname = (req.url ?? '/').split(/[?#]/, 1)[0];
         try { pathname = decodeURI(pathname); } catch { /* Vite handles malformed paths. */ }
         pathname = posix.normalize(pathname).replace(/\/$/, '') || '/';
-        const isEmbedDocument = pathname === '/embed' || pathname === '/embed.html';
         if (pathname === '/wm-widget-sandbox.html') {
           res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox allow-scripts; script-src 'unsafe-inline' https://cdn.jsdelivr.net https://static.cloudflareinsights.com; style-src 'unsafe-inline'; img-src data:; connect-src https://cdn.jsdelivr.net;");
         }
         res.setHeader('Origin-Agent-Cluster', '?1');
-        res.setHeader('Permissions-Policy', isEmbedDocument ? 'tools=()' : 'tools=(self)');
+        res.setHeader('Permissions-Policy', 'tools=(self)');
         next();
       });
     },
@@ -1348,12 +1342,6 @@ export default defineConfig(({ mode }) => {
         },
         input: {
           main: resolve(__dirname, 'index.html'),
-          embed: resolve(__dirname, 'embed.html'),
-          settings: resolve(__dirname, 'settings.html'),
-          liveChannels: resolve(__dirname, 'live-channels.html'),
-          mcpGrant: resolve(__dirname, 'mcp-grant.html'),
-          verify: resolve(__dirname, 'verify.html'),
-          desktopSignIn: resolve(__dirname, 'desktop-sign-in.html'),
         },
         output: {
           // onlyExplicitManualChunks keeps the panel clusters from forming
@@ -1557,8 +1545,6 @@ export default defineConfig(({ mode }) => {
           '**/test-results/**',
           '**/playwright-report/**',
           '**/.playwright-mcp/**',
-          // Cargo output; watching it on Windows fails with EBUSY during `tauri dev` builds.
-          '**/src-tauri/target/**',
         ],
       },
       proxy: {

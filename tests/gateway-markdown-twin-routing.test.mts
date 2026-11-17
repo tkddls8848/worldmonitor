@@ -1,8 +1,5 @@
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { createDomainGateway } from '../server/gateway.ts';
 import { __resetRateLimitForTest } from '../server/_shared/rate-limit.ts';
@@ -10,7 +7,6 @@ import { __resetRateLimitForTest as __resetLegacyRateLimitForTest } from '../api
 import { isPageTwinSibling } from '../api/_md-url-twin.ts';
 import mdTwinHandler from '../api/md-twin.ts';
 import notFoundHandler from '../api/not-found.ts';
-import middleware from '../middleware';
 import { createRedisFetch } from './helpers/fake-upstash-redis.mts';
 
 const TWIN_TEST_KEY = 'markdown-twin-test-operator-key';
@@ -334,49 +330,6 @@ describe('gateway markdown twins run every gate the direct route runs', () => {
   });
 });
 
-describe('middleware bot gate on /api/**/*.md twins', () => {
-  const call = (path: string, ua: string, method = 'GET') =>
-    middleware(new Request(`https://www.worldmonitor.app${path}`, { method, headers: ua ? { 'user-agent': ua } : {} }));
-
-  for (const ua of ['curl/8.7.1', 'python-requests/2.31', '']) {
-    it(`403s ${ua || 'an empty UA'} on a gateway twin exactly as on the direct route`, () => {
-      const direct = call(FACT, ua);
-      const md = call(`${FACT}.md`, ua);
-      assert.ok(direct instanceof Response && direct.status === 403);
-      assert.ok(md instanceof Response, 'the twin is gated');
-      assert.equal(md.status, 403);
-    });
-  }
-
-  for (const ua of [
-    'Mozilla/5.0 (compatible; GPTBot/1.2; +https://openai.com/gptbot)',
-    'Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)',
-    'anthropic-ai/1.0',
-    'Mozilla/5.0 (compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)',
-    'Google-Extended',
-    'CCBot/2.0 (https://commoncrawl.org/faq/)',
-    'Mozilla/5.0 (compatible; OAI-SearchBot/1.0; +https://openai.com/searchbot)',
-    'Mozilla/5.0 (compatible; ChatGPT-User/1.0; +https://openai.com/bot)',
-    'Claude-User/1.0',
-    'Mozilla/5.0 (compatible; Applebot-Extended/0.1)',
-  ]) {
-    it(`lets AI crawler ${ua.slice(0, 40)} read a twin`, () => {
-      assert.equal(call(`${FACT}.md`, ua), undefined);
-    });
-  }
-
-  it('keeps public bot-gate bypasses public on their twin', () => {
-    assert.equal(call('/api/health.md', 'curl/8.7.1'), undefined);
-    assert.equal(call('/api/download.md', 'curl/8.7.1'), undefined);
-  });
-
-  it('does not extend the crawler allowance to other methods', () => {
-    const res = call(`${FACT}.md`, 'CCBot/2.0 (https://commoncrawl.org/faq/)', 'POST');
-    assert.ok(res instanceof Response);
-    assert.equal(res.status, 403);
-  });
-});
-
 describe('legacy /api/*.md twins (api/not-found.ts)', () => {
   let siblingFetches: string[] = [];
   let limiterKeys: string[] = [];
@@ -520,19 +473,7 @@ describe('page twins (api/md-twin.ts) never hop into an API function', () => {
     assert.equal(siblingFetches[0], '/pricing');
   });
 
-  it('covers every vercel.json rewrite whose destination is an API function', () => {
-    const vercel = JSON.parse(readFileSync(
-      resolve(dirname(fileURLToPath(import.meta.url)), '../vercel.json'),
-      'utf-8',
-    )) as { rewrites: Array<{ source: string; destination: string }> };
-    const apiRewrites = vercel.rewrites.filter((rule) =>
-      rule.destination.startsWith('/api/') && !rule.destination.startsWith('/api/md-twin'));
-    assert.ok(apiRewrites.length > 5);
-    for (const { source } of apiRewrites) {
-      const literal = source.split('/:')[0]!;
-      assert.equal(isPageTwinSibling(literal), false, `${source} rewrites into /api/ and must not be a page twin sibling`);
-      assert.equal(isPageTwinSibling(`${literal}/`), false, `${source}/ must not be a page twin sibling`);
-    }
+  it('classifies encoded traversal and ordinary pages as page twin siblings correctly', () => {
     assert.equal(isPageTwinSibling('/x/%2e%2e/api/health'), false);
     assert.equal(isPageTwinSibling('/x/%252e%252e/api/health'), false);
     assert.equal(isPageTwinSibling('/pricing'), true);

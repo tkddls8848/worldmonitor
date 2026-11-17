@@ -43,9 +43,7 @@ const INLINE_TOKENS = {
 
 /** Standalone pages: sheet -> the other sheets its entry point loads (see src/*-main.ts). */
 const STANDALONE = {
-  'styles/plugin-market.css': [],
   'styles/plugin.css': ['styles/base-layer.css'],
-  'styles/plugin-country.css': ['styles/base-layer.css'],
   'styles/embed.css': ['styles/base-layer.css', 'styles/happy-theme.css'],
 };
 const VARIANT_ONLY = new Set(['styles/happy-theme.css']);

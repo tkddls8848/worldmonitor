@@ -278,22 +278,10 @@ describe('every published MCP endpoint is the canonical one (#9722)', () => {
   const PUBLISHED_ROOTS = [
     'public',
     'blog-site/src/content/blog',
-    'skills',
     'cli/README.md',
     'cli/src',
-    'sdk/go',
-    'sdk/python/README.md',
-    'sdk/python/src',
-    'sdk/ruby/README.md',
-    'sdk/ruby/lib',
-    'sdk/rust/README.md',
-    'sdk/rust/src',
     'src',
-    'pro-test/src',
     'README.md',
-    'server.json',
-    'mcp.json',
-    'vercel.json',
   ];
   const SOURCE_EXTENSIONS = /\.(?:txt|md|mdx|json|yaml|yml|xml|html|ts|tsx|js|mjs|go|py|rb|rs)$/;
   const SKIP = new Set([...SKIP_DIRS, 'generated']);
@@ -401,18 +389,9 @@ describe('every published MCP endpoint is the canonical one (#9722)', () => {
   it('covers the onboarding surfaces the issue named', () => {
     const scanned = new Set(files.map((file) => relative(ROOT, file)));
     for (const required of [
-      'vercel.json',
       'README.md',
-      'server.json',
-      'mcp.json',
       'cli/src/core.mjs',
-      'sdk/go/worldmonitor.go',
-      'sdk/python/src/worldmonitor_sdk/__init__.py',
-      'sdk/ruby/lib/worldmonitor.rb',
-      'sdk/rust/src/lib.rs',
-      'skills/check-country-risk/SKILL.md',
       'src/components/UnifiedSettings.ts',
-      'pro-test/src/welcome/Agents.tsx',
       'public/agent/index.html',
       'public/.well-known/mcp/server-card.json',
       'docs/mcp-quickstart.mdx',

@@ -117,22 +117,6 @@ describe('Toronto safety qualification wiring (#7012)', () => {
     }
   });
 
-  it('registers TPS watch paths on the Canada service and no GTA cron or path', () => {
-    const railway = JSON.parse(read('scripts/railway-services.json'));
-    assert.equal(railway.some((row) => GTA_HINT.test(row.service || '')), false);
-    const canada = railway.find((row) => row.service === 'seed-bundle-canada');
-    assert.ok(canada);
-    const patterns = canada.watchPatterns || [];
-    assert.equal(patterns.some((pattern) => GTA_HINT.test(pattern)), false);
-    // A member whose sources are not watched deploys stale code on merge.
-    for (const script of [...TPS_BUNDLE_SCRIPTS, 'lib/tps-open-data.mjs', 'lib/tps-seed-runner.mjs']) {
-      assert.ok(
-        patterns.includes(`scripts/${script}`),
-        `scripts/${script} must be a seed-bundle-canada watch path`,
-      );
-    }
-  });
-
   it('keeps startup FAST/SLOW bootstrap keys unchanged and free of GTA/TPS', () => {
     const fast = bootstrapTierKeyNames('fast');
     const slow = bootstrapTierKeyNames('slow');
@@ -166,8 +150,6 @@ describe('Toronto safety qualification wiring (#7012)', () => {
     assert.equal(/gtaupdate\.com|gta-update-police|safety:toronto:gta-update/.test(healthSrc), false);
     const seedHealth = read('api/seed-health.js');
     assert.equal(SAFETY_HINT.test(seedHealth) && /gta-update/.test(seedHealth), false);
-    const mcpGrant = read('src/mcp-grant-main.ts');
-    assert.equal(/gtaupdate|gta-update/.test(mcpGrant), false);
     const mcpApi = read('api/mcp.ts');
     assert.equal(/gtaupdate|gta-update|safety:toronto:gta-update/.test(mcpApi), false);
   });

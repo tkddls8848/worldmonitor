@@ -179,19 +179,9 @@ describe('published MCP URLs are the canonical endpoint (#9722)', () => {
   // The places a user copies the URL from when setting up a connector. Each
   // must carry the canonical endpoint itself, not merely avoid a wrong one.
   it('connector setup surfaces carry the canonical endpoint', () => {
-    const plugin = JSON.parse(readFileSync(join(ROOT, 'claude-plugin/.mcp.json'), 'utf8'));
-    assert.equal(plugin.mcpServers.worldmonitor.url, MCP_CANONICAL_ENDPOINT);
-
-    const registry = JSON.parse(readFileSync(join(ROOT, 'server.json'), 'utf8'));
-    assert.ok(registry.remotes?.length, 'server.json lists its remotes');
-    for (const remote of registry.remotes) assert.equal(remote.url, MCP_CANONICAL_ENDPOINT);
-
     for (const file of [
       // Settings → AI Agents renders its URL and install links from this catalog.
       'src/config/mcp-agent-clients.ts',
-      'pro-test/src/welcome/Agents.tsx',
-      'claude-plugin/README.md',
-      '.antigravity-plugin/README.md',
       'README.md',
     ]) {
       assert.ok(

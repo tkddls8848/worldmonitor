@@ -430,13 +430,11 @@ describe('publisher deployment boundaries', () => {
     assert.doesNotMatch(source, /from ['"]\.\.\/(?:api|src|server|workers)\//);
   });
 
-  it('publisher and Worker share one envelope schema version', async () => {
+  it('publisher uses the shared envelope schema version', async () => {
     const shared = await import('../shared/bootstrap-tier-envelope.js');
-    const shadow = await readFile(new URL('../workers/api-cors-preflight/src/kv-shadow.js', import.meta.url), 'utf8');
     const publisher = await readFile(new URL('../scripts/publish-bootstrap-tiers.mjs', import.meta.url), 'utf8');
     assert.equal(shared.BOOTSTRAP_TIER_ENVELOPE_SCHEMA_VERSION, 2);
     assert.match(publisher, /from '\.\.\/shared\/bootstrap-tier-envelope\.js'/);
-    assert.match(shadow, /from '\.\.\/\.\.\/\.\.\/shared\/bootstrap-tier-envelope\.js'/);
   });
 
   it('keeps canadaAlerts cutover helpers in lockstep with origin', async () => {

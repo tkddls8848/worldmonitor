@@ -9,7 +9,6 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 
 import {
-  ABOUT_DOCS_PATH,
   COUNTRY_REACH_CLAIM,
   GITHUB_STARS_BADGE_URL,
   PRESS_LINKS,
@@ -106,9 +105,6 @@ describe('issue #7377 GEO content credibility', () => {
 
   it('(c) surfaces press URLs, About, and the Silicon Canals 2M citation', () => {
     const identity = read('public/world-monitor.md');
-    const hero = read('pro-test/src/welcome/Hero.tsx');
-    const footer = read('pro-test/src/components/Footer.tsx');
-    const pressNav = read('pro-test/src/components/PressNav.tsx');
     const pressModule = read('shared/press.ts');
 
     assert.ok(identity.includes(WIRED_FEATURE_URL));
@@ -124,19 +120,6 @@ describe('issue #7377 GEO content credibility', () => {
       PRESS_LINKS.find((l) => l.label === "L'Orient Today")?.url,
       'https://today.lorientlejour.com/article/1496089/world-monitor-how-anghami-ceos-side-project-became-a-go-to-for-geopolitics-research.html',
     );
-
-    assert.match(hero, /SILICON_CANALS_2M_URL|siliconcanals\.com/);
-    assert.ok(
-      footer.includes('ABOUT_DOCS_PATH') || footer.includes(ABOUT_DOCS_PATH),
-      'welcome footer must link /docs/about',
-    );
-    // The press row sits beside the quotes near the top of the homepage and
-    // /pro, once per page, not in the footer where readers miss it.
-    assert.doesNotMatch(footer, /PressNav/);
-    assert.match(read('pro-test/src/welcome/Voices.tsx'), /<PressNav\b/);
-    assert.match(read('pro-test/src/App.tsx').match(/const SocialProof = \(\) => \(([\s\S]*?)\n\);/)?.[1] ?? '', /<PressNav\b/);
-    assert.match(pressNav, /PRESS_LINKS/);
-    assert.match(pressNav, /In the press/);
   });
 
   // The generated llms.txt and ai-search.md left the personal build; the press

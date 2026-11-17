@@ -150,9 +150,6 @@ describe('defense-industrial deployment wiring', () => {
     const root = join(dirname(fileURLToPath(import.meta.url)), '..');
     const light = readFileSync(join(root, 'scripts/seed-bundle-static-ref.mjs'), 'utf8');
     const heavy = readFileSync(join(root, 'scripts/seed-bundle-static-ref-heavy.mjs'), 'utf8');
-    const registry = JSON.parse(readFileSync(join(root, 'scripts/railway-services.json'), 'utf8'));
-    const lightService = registry.find((entry) => entry.service === 'seed-bundle-static-ref');
-    const heavyService = registry.find((entry) => entry.service === 'seed-bundle-static-ref-heavy');
 
     assert.match(heavy, /label:\s*'Arms-Suppliers'/);
     assert.match(heavy, /script:\s*'seed-defense-industrial-suppliers\.mjs'/);
@@ -165,18 +162,6 @@ describe('defense-industrial deployment wiring', () => {
     assert.match(light, /label:\s*'Defense-Industrial'/);
     assert.match(light, /script:\s*'seed-defense-industrial\.mjs'/);
     assert.match(light, /maxBundleMs:\s*570_000/);
-
-    // Both seeders import _defense-industrial-source.mjs, so BOTH closures need
-    // it. Dropping it from either side ships a service that cannot redeploy when
-    // the shared source changes.
-    for (const service of [lightService, heavyService]) {
-      assert.ok(service, 'both SIPRI bundles must be registered');
-      assert.ok(service.watchPatterns.includes('scripts/_defense-industrial-source.mjs'));
-    }
-    assert.ok(lightService.watchPatterns.includes('scripts/seed-defense-industrial.mjs'));
-    assert.ok(heavyService.watchPatterns.includes('scripts/seed-defense-industrial-suppliers.mjs'));
-    assert.equal(lightService.cronSchedule, '0 3 * * *');
-    assert.equal(heavyService.cronSchedule, '0 4 * * *');
 
     const supplierSeeder = readFileSync(join(root, 'scripts/seed-defense-industrial-suppliers.mjs'), 'utf8');
     assert.match(supplierSeeder, /contentMeta:\s*supplierContentMeta/);

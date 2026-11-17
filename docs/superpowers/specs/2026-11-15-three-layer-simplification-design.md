@@ -233,6 +233,7 @@ connectors/   외부 API 연결 계층: 수집기, 외부 소스별 연결 코�
 
 - `tech`·`finance`·`happy`·`commodity`·`energy` 변형은 각자 뉴스 피드를 갖고 있어, 지우면 데이터 폭이 줄 수 있다. 1단계에서는 그대로 두고, 2단계에서 피드를 하나로 합칠지 정한다.
 - `market.html`, `country.html`, `settings.html`, `live-channels.html`은 대시보드 기능이라 남긴다. `index.html`이 공개 랜딩 페이지라면 지운다.
+  - 정정(작업 6, 2026-11-17): 확인해 보니 `country.html`, `market.html`은 플러그인용 페이지(`plugin-country-main.ts`, `plugin-market-main.ts`)였고, `settings.html`, `live-channels.html`은 데스크톱(Tauri) 창(`settings-main.ts`, `live-channels-main.ts`, `tauri-bridge` 사용)이었다. 그래서 작업 6에서 네 페이지와 진입 파일을 지웠다. 웹 대시보드의 같은 기능은 `src/main.ts`의 쿼리 경로 `?settings=1`(`settings-window.ts`)과 `?live-channels=1`(`live-channels-window.ts`)로 남는다. `index.html`은 대시보드 자체이므로 남는다.
 - `api/ask.ts`, `api/chat-analyst.ts`, `api/travel-risk-assessment.ts`는 고유 논리로 보고 남긴다.
 - `leads`, `feedback`, `giving` 도메인은 빌더가 데이터 소스인지 확인해서, 데이터 소스면 남기고 영업·문의용이면 지운다.
 

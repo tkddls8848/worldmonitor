@@ -148,8 +148,8 @@ describe('one sensitive-param list for every telemetry vendor', () => {
     assert.equal(urlCarriesSensitiveParams(undefined), false);
   });
 
-  it('Vercel, Umami, and both DebugBear loaders import the shared list', () => {
-    for (const rel of ['src/bootstrap/secondary-startup.ts', 'src/services/analytics.ts', 'src/bootstrap/debugbear-rum.ts', 'pro-test/src/debugbear-rum.ts']) {
+  it('Vercel, Umami, and the DebugBear loader import the shared list', () => {
+    for (const rel of ['src/bootstrap/secondary-startup.ts', 'src/services/analytics.ts', 'src/bootstrap/debugbear-rum.ts']) {
       assert.match(read(rel), /sensitive-url-params/, `${rel} must use the shared list`);
     }
     assert.ok(SENSITIVE_URL_PARAM_RE.test('__clerk_db_jwt'));

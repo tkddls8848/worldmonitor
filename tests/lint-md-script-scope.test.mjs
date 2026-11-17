@@ -19,7 +19,6 @@ describe('markdown lint script scope', () => {
     assert.match(lintMdScript, /'!\.claude\/\*\*'/);
     assert.match(lintMdScript, /'!\.factory\/\*\*'/);
     assert.match(lintMdScript, /'!\.windsurf\/\*\*'/);
-    assert.match(lintMdScript, /'!skills\/\*\*'/);
     assert.match(lintMdScript, /'!docs\/internal\/\*\*'/);
     assert.match(lintMdScript, /'!docs\/Docs_To_Review\/\*\*'/);
   });

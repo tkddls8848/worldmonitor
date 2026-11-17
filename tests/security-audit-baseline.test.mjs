@@ -330,7 +330,6 @@ describe('baseline entry validation', () => {
   it('does not suppress the backported braces and http-cache-semantics advisories', () => {
     for (const [lockfile, id] of [
       ['package-lock.json', 'GHSA-vfj7-8cjw-p6xm'],
-      ['pro-test/package-lock.json', 'GHSA-vfj7-8cjw-p6xm'],
       ['blog-site/package-lock.json', 'GHSA-ch52-4w7c-c8xp'],
     ]) {
       assert.equal(baselineEntriesFor(lockfile).some((entry) => entry.id === id), false);
@@ -396,7 +395,6 @@ describe('baseline entry validation', () => {
       'consumer-prices-core/package-lock.json',
       'docker/runtime-package-lock.json',
       'package-lock.json',
-      'pro-test/package-lock.json',
       'scripts/package-lock.json',
     ]);
   });
@@ -427,7 +425,7 @@ describe('security audit baseline', () => {
       url: 'https://github.com/advisories/GHSA-395f-4hp3-45gv',
     });
 
-    assert.deepEqual(collectUnbaselinedFindings(report, 'pro-test/package-lock.json'), [
+    assert.deepEqual(collectUnbaselinedFindings(report, 'scripts/package-lock.json'), [
       {
         id: 'GHSA-395f-4hp3-45gv',
         name: 'shell-quote',
@@ -642,7 +640,7 @@ describe('npm audit failure reporting', () => {
 
 
 describe('Dependabot image-size and fast-uri remediation', () => {
-  for (const lockPath of ['package-lock.json', 'pro-test/package-lock.json']) {
+  for (const lockPath of ['package-lock.json']) {
     it(`excludes vulnerable image-size copies from ${lockPath}`, () => {
       const entries = Object.entries(readRepoJson(lockPath).packages)
         .filter(([path]) => path.endsWith('/image-size'));

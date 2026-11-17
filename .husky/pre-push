@@ -57,10 +57,9 @@ done
 unset _git_env
 
 # Absolute worktree root, captured while cwd-based discovery still works.
-# Later gates must not re-discover from cwd: the pro-test block symlinks
-# `pro-test/node_modules/.vite` into `$common/wm-vite-cache/`, and a git
-# invocation whose cwd resolves through that link is physically inside .git
-# (`fatal: this operation must be run in a work tree`, exit 128). #7445.
+# Later gates must not re-discover from cwd: a git invocation whose cwd
+# resolves through a link into .git fails with `fatal: this operation must be
+# run in a work tree` (exit 128). #7445.
 WM_PREPUSH_ROOT=$(git rev-parse --show-toplevel) || {
   echo "ERROR: could not resolve the work tree for pre-push."
   exit 1
@@ -245,8 +244,8 @@ fi
 
 # Everything below runs against the WORKTREE, git pushes HEAD, and the cache at
 # the end stamps HEAD^{tree}. Those are the same bytes only when the worktree
-# matches HEAD, so measure that NOW — before `make generate` and the pro-test
-# build touch anything.
+# matches HEAD, so measure that NOW — before `make generate` touches
+# anything.
 #
 # Two tiers, because they cost differently. Drift INSIDE the branch diff is the
 # dangerous one and blocks the push: an unstaged fix makes the suite pass over
@@ -347,11 +346,11 @@ gate_mark_green() {
 # Declared inputs per gate, as git pathspecs. SUPERSETS of what a gate reads
 # are sound (worst case a spurious re-run); subsets are not (a false skip) —
 # when in doubt, widen. Only side-effect-free gates are cacheable; the proto
-# and pro-test gates regenerate their own CHECKED outputs in place (byte-
+# gate regenerates its own CHECKED outputs in place (byte-
 # identical on a green run), so those outputs are part of their keys — a
 # hand-edit to src/generated must change the key and re-run the gate.
-TYPECHECK_INPUTS=(src shared tests e2e types scripts middleware.ts index.html vite.config.ts vitest.dom.config.mts 'tsconfig*.json' package.json package-lock.json)
-TYPECHECK_API_INPUTS=(api server shared src/generated scripts middleware.ts 'tsconfig*.json' package.json package-lock.json)
+TYPECHECK_INPUTS=(src shared tests e2e types scripts index.html vite.config.ts vitest.dom.config.mts 'tsconfig*.json' package.json package-lock.json)
+TYPECHECK_API_INPUTS=(api server shared src/generated scripts 'tsconfig*.json' package.json package-lock.json)
 LINT_MD_INPUTS=(':(glob)**/*.md' '.markdownlint*' package.json)
 # `make generate` also runs every OpenAPI injector, and those injectors
 # read shared and gateway-adjacent generation contracts. Listing only
@@ -500,7 +499,7 @@ if changed '^(\.github/workflows/[^/]+\.ya?ml|ARCHITECTURE\.md|scripts/docs-stat
   npm run docs:check || exit 1
 fi
 
-if changed '^(src/|tests/|e2e/|middleware|index\.html|vite\.config|vitest\.dom\.config|scripts/|types/)'; then
+if changed '^(src/|tests/|e2e/|index\.html|vite\.config|vitest\.dom\.config|scripts/|types/)'; then
   if gate_cached typecheck "${TYPECHECK_INPUTS[@]}"; then
     echo "Type check skipped (these exact inputs already passed; rm $GATE_INPUT_CACHE/typecheck to force)."
   else
@@ -516,7 +515,7 @@ else
   echo "Type check skipped (no frontend-surface changes)."
 fi
 
-if changed '^(api/|server/|scripts/|middleware|src/generated/)'; then
+if changed '^(api/|server/|scripts/|src/generated/)'; then
   # tsconfig.api.json includes api, src/generated, AND server — a generated
   # client/contract change alone can break API compilation.
   if gate_cached typecheck-api "${TYPECHECK_API_INPUTS[@]}"; then
@@ -604,7 +603,7 @@ if changed '^(src/|api/|scripts/enforce-premium-fetch\.mjs$)'; then
   npm run lint:premium-fetch || exit 1
 fi
 
-if changed '^(src/|api/|server/|scripts/|convex/|middleware\.ts$)'; then
+if changed '^(src/|api/|server/|scripts/|convex/)'; then
   echo "Running outbound-deadline check (fetch without a signal)..."
   npm run lint:outbound-deadlines || exit 1
 fi
@@ -773,44 +772,6 @@ if [ "$RUN_ALL" != true ]; then
     && [ "${#TESTS_CHANGED[@]}" -eq 0 ] && [ "${#DOM_TESTS_CHANGED[@]}" -eq 0 ]; then
     echo "Skipping unit tests (frontend-only changes; CI runs the full suite on PR open)."
   fi
-fi
-
-# A /pro built-output suite skips EVERY assertion when public/pro/ is absent,
-# which is now the default state of a fresh checkout (#6898 gitignored it). This
-# dispatch runs ~90 lines BEFORE the pro build gate below, and that gate keys on
-# ^pro-test/ paths, not tests/ -- so a push that changes only such a suite would
-# run it, skip all of it, and report the changed test as passing. Build the
-# artifact first so the assertions actually execute.
-#
-# Deliberately does NOT set WM_EXPECT_BUILT_OUTPUT: that marker is shared with
-# the dist/dashboard.html guards, and exporting it here would red those suites
-# in a checkout that has no dashboard build. Building the artifact is what makes
-# the /pro assertions run; the marker is CI's separate "I built it" assertion.
-# An EXISTING public/pro/ is not necessarily a CURRENT one: the directory is
-# ignored, so output from another branch can survive a checkout. First find an
-# affected changed test, then always rebuild once before dispatching it.
-PRO_BUILT_OUTPUT_TEST=""
-for candidate in "${TESTS_CHANGED[@]}"; do
-  if grep -q "_lib/pro-built-output" "$candidate" 2>/dev/null; then
-    PRO_BUILT_OUTPUT_TEST="$candidate"
-    break
-  fi
-done
-
-if [ -n "$PRO_BUILT_OUTPUT_TEST" ]; then
-  echo "Building /pro ($PRO_BUILT_OUTPUT_TEST reads its built output)..."
-  if [ -L pro-test/node_modules ]; then
-    echo "ERROR: pro-test/node_modules is a symlink. Copy, hardlink, or npm ci — never symlink."
-    exit 1
-  fi
-  # Marker, not directory — see the root node_modules check above.
-  if [ ! -f pro-test/node_modules/.package-lock.json ]; then
-    (cd pro-test && npm ci --cache "$npm_config_cache" --prefer-offline) || exit 1
-  fi
-  (cd pro-test && npm run build >/dev/null) || {
-    echo "ERROR: pro-test build failed, so $PRO_BUILT_OUTPUT_TEST cannot run its assertions."
-    exit 1
-  }
 fi
 
 # Both dispatches are UNCONDITIONAL: the "is this list empty" test and the

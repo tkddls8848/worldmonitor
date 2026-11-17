@@ -5818,7 +5818,7 @@ async function probeRelayGatewayGate({
       ...base,
       status: 'RELAY_GATE_MISCONFIGURED',
       missing,
-      hint: `This production build cannot see ${missing.map((name) => (name === 'CONVEX_SITE_URL' ? 'CONVEX_SITE_URL (or CONVEX_URL)' : name)).join(', ')}; the gateways answer 503 before reaching Convex. Set the value, then redeploy production; scripts/vercel-ignore.sh builds a same-commit redeploy on main (#8216).`,
+      hint: `This production build cannot see ${missing.map((name) => (name === 'CONVEX_SITE_URL' ? 'CONVEX_SITE_URL (or CONVEX_URL)' : name)).join(', ')}; the gateways answer 503 before reaching Convex. Set the value, then restart the server so it reads the new environment.`,
     };
   }
   // The bearer is the tenant secret, so it never leaves over anything but

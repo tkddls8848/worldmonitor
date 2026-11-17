@@ -31,8 +31,6 @@ const read = (relativePath) => readFileSync(join(root, relativePath), 'utf8');
 const COLLECTOR_CALL_SITES = [
   'src/bootstrap/debugbear-rum.ts',
   'src/services/analytics.ts',
-  'pro-test/src/debugbear-rum.ts',
-  'pro-test/welcome.html',
 ];
 
 // host -> how the privacy policy must account for it.
@@ -113,15 +111,22 @@ describe('privacy policy discloses every live collector', () => {
 /**
  * Server-side subprocessors, by the integration that proves each one is live.
  *
- * The browser-collector sweep above cannot see these: Upstash, Railway and
- * Mintlify never touch the page, they process personal data behind us — an IP
- * inside a rate-limit key, the analytics database, the docs origin that serves
- * this very page. All three were missing from a table that claims to be
- * complete (#6978), which is why the anchor is a code fact rather than a name.
+ * The browser-collector sweep above cannot see these: Upstash and Mintlify
+ * never touch the page, they process personal data behind us — an IP inside a
+ * rate-limit key, the docs origin that serves this very page. Both were missing
+ * from a table that claims to be complete (#6978), which is why the anchor is a
+ * code fact rather than a name.
  *
  * Each entry pairs a provider with a grep that is true only while the
  * integration exists, so the table has to change in both directions: adopt the
  * provider and it must be disclosed; drop it and the stale row must go.
+ *
+ * Railway is no longer listed: the personal fork has no Railway deployment
+ * (the service registry scripts/railway-services.json and the nixpacks configs
+ * were deleted in phase 1, and the umami service left the registry before
+ * that), so nothing in the code proves that row any more. docs/privacy.mdx is
+ * the upstream operator's public policy; phase 2 decides the public docs, and
+ * its Railway row is recorded there as stale for this fork.
  */
 const SERVER_SUBPROCESSORS = [
   {
@@ -131,15 +136,12 @@ const SERVER_SUBPROCESSORS = [
     why: 'rate-limit keys are derived from the client IP',
   },
   {
-    name: /Railway/,
-    proof: 'scripts/railway-services.json',
-    pattern: /"service":\s*"umami"/,
-    why: 'hosts the analytics service and notification delivery',
-  },
-  {
+    // The docs site, including this policy, is a Mintlify project. vercel.json
+    // (which proxied /docs to worldmonitor.mintlify.dev) is gone, so the proof
+    // is the project's own Mintlify configuration.
     name: /Mintlify/,
-    proof: 'vercel.json',
-    pattern: /worldmonitor\.mintlify\.dev/,
+    proof: 'docs/docs.json',
+    pattern: /"\$schema":\s*"https:\/\/mintlify\.com\/schema\.json"/,
     why: 'serves worldmonitor.app/docs, including the privacy policy itself',
   },
 ];

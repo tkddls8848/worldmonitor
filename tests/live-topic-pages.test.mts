@@ -1,9 +1,6 @@
-import { afterEach, describe, it, mock } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync, statSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
 
-import middleware from '../middleware';
 import {
   LIVE_TOPIC_PAGES,
   liveTopicPageForPath,
@@ -360,90 +357,5 @@ describe('live topic public shapes', () => {
       assert.ok(!isPublicSharedRpcRequest(`https://www.worldmonitor.app${topic.statusPath}&country=US`));
       assert.equal(liveTopicPageForPath(topic.path), topic);
     }
-  });
-});
-
-describe('live topic pages through the middleware', () => {
-  const topic = page('fear-and-greed-index');
-  const pageUrl = `https://www.worldmonitor.app${topic.path}`;
-  const builtUrl = `${pageUrl}?wm-built=1`;
-  const builtHtml = `<!doctype html><html><body><main><h1>${topic.h1}</h1>
-${topic.renderSection(null, { live: false })}
-</main></body></html>`;
-
-  afterEach(() => mock.restoreAll());
-
-  function stubFetch(statusResponse: () => Response) {
-    const calls: string[] = [];
-    mock.method(globalThis, 'fetch', async (input: RequestInfo | URL) => {
-      const url = String(input instanceof Request ? input.url : input);
-      calls.push(url);
-      if (url === builtUrl) {
-        return new Response(builtHtml, { status: 200, headers: { 'content-type': 'text/html', 'cache-control': 'public, max-age=3600', etag: 'W/"b"' } });
-      }
-      if (url.includes(liveTopicRpcPath(topic))) return statusResponse();
-      throw new Error(`unexpected fetch ${url}`);
-    });
-    return calls;
-  }
-
-  function request(method = 'GET') {
-    return new Request(pageUrl, { method, headers: { accept: 'text/html', 'user-agent': 'Mozilla/5.0 (compatible; OAI-SearchBot/1.0)' } });
-  }
-
-  it('serves the current reading with the short cache policy', async () => {
-    const calls = stubFetch(() => Response.json(fearGreedPayload(new Date(Date.now() - HOUR).toISOString())));
-    const response = await middleware(request());
-    assert.ok(response instanceof Response);
-    const html = await response.text();
-    assert.equal(response.headers.get('x-wm-live-page'), topic.slug);
-    assert.equal(response.headers.get('cache-control'), 'public, max-age=300, must-revalidate');
-    assert.equal(response.headers.get('etag'), null);
-    assert.match(html, /World Monitor Fear &amp; Greed Index reads 56\.8 out of 100/);
-    const statusCall = calls.find((url) => url.includes(liveTopicRpcPath(topic)));
-    assert.equal(new URL(statusCall!).search, '?public=1');
-  });
-
-  it('keeps the built page when the reading is stale or the read fails', async () => {
-    stubFetch(() => Response.json(fearGreedPayload(new Date(Date.now() - 30 * HOUR).toISOString())));
-    let response = await middleware(request());
-    assert.equal(await response!.text(), builtHtml);
-    assert.equal(response!.headers.get('x-wm-live-page'), null);
-    mock.restoreAll();
-    stubFetch(() => new Response('nope', { status: 503 }));
-    response = await middleware(request());
-    assert.equal(await response!.text(), builtHtml);
-    assert.equal(response!.headers.get('cache-control'), 'public, max-age=300, must-revalidate');
-  });
-
-  it('leaves HEAD and the built-page fetch alone', async () => {
-    stubFetch(() => Response.json(fearGreedPayload()));
-    assert.equal(await middleware(request('HEAD')), undefined);
-    assert.equal(await middleware(new Request(builtUrl, { headers: { accept: 'text/html' } })), undefined);
-  });
-});
-
-describe('live topic modules in the middleware bundle', () => {
-  // Vercel's middleware bundler rejects import attributes
-  // (`with { type: 'json' }`): "Expected ";" but found "with"" failed the
-  // #9367 preview build, while Node and tsx load them fine.
-  it('uses no import attributes anywhere in the middleware import graph', () => {
-    const root = resolve(import.meta.dirname, '..');
-    const seen = new Set<string>();
-    const pending = [join(root, 'middleware.ts')];
-    while (pending.length > 0) {
-      const file = pending.pop()!;
-      if (seen.has(file)) continue;
-      seen.add(file);
-      const source = readFileSync(file, 'utf8');
-      assert.doesNotMatch(source, /\bfrom\s+['"][^'"]+['"]\s+(?:with|assert)\s*\{/, `${file.slice(root.length + 1)} uses an import attribute`);
-      for (const [, specifier] of source.matchAll(/\bfrom\s+['"](\.{1,2}\/[^'"]+)['"]/g)) {
-        const target = [specifier, `${specifier}.ts`, `${specifier}/index.ts`]
-          .map((candidate) => join(dirname(file), candidate))
-          .find((candidate) => existsSync(candidate) && statSync(candidate).isFile() && !candidate.endsWith('.json'));
-        if (target) pending.push(target);
-      }
-    }
-    assert.ok([...seen].some((file) => file.endsWith('national-debt.mjs')), 'the walk reaches the topic modules');
   });
 });

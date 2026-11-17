@@ -4,7 +4,6 @@
  * must honor a cached entitlement hint.
  */
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { describe, it } from 'node:test';
@@ -568,17 +567,5 @@ describe('wiring contracts (#5728)', () => {
       new RegExp(`localStorage\\.getItem\\('${PRO_BANNER_ENTITLEMENT_HINT_KEY}'\\)==='${PRO_BANNER_ENTITLEMENT_HINT_VALUE}'`),
     );
     assert.match(script, /!entitledHint\)document\.documentElement\.classList\.add\('wm-pro-banner-reserved'\)/);
-  });
-
-  it('CSP script-src still pins the updated pre-paint script hash', () => {
-    const html = readFileSync(resolve(root, 'index.html'), 'utf-8');
-    const script = html.match(/<script data-wm-prepaint>([\s\S]*?)<\/script>/)?.[1];
-    assert.ok(script);
-    const hash = createHash('sha256').update(script!).digest('base64');
-    const vercel = readFileSync(resolve(root, 'vercel.json'), 'utf-8');
-    assert.ok(
-      vercel.includes(`'sha256-${hash}'`),
-      `vercel.json CSP must include sha256-${hash} for the pre-paint script`,
-    );
   });
 });

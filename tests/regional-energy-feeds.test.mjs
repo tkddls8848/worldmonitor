@@ -57,12 +57,6 @@ describe('regional energy source observations', () => {
 
     const energy = readFileSync(new URL('../scripts/seed-bundle-energy-sources.mjs', import.meta.url), 'utf8');
     assert.doesNotMatch(energy, /Regional-Energy-|seed-regional-energy-/, 'regional feeds must not ride the daily energy-sources bundle');
-    const registry = JSON.parse(readFileSync(new URL('../scripts/railway-services.json', import.meta.url), 'utf8'));
-    const service = registry.find(entry => entry.service === 'seed-bundle-regional-energy');
-    assert.equal(service?.entry, 'scripts/seed-bundle-regional-energy.mjs');
-    assert.equal(service.cronSchedule, '*/15 * * * *');
-    assert.equal(registry.find(entry => entry.service === 'seed-bundle-energy-sources').cronSchedule, undefined);
-    for (const feed of feeds) assert.ok(service.watchPatterns.includes(`scripts/${feed.script}`));
     // Health tolerates three intervals; the cron must leave room for a late tick.
     assert.ok(Math.min(...feeds.map(feed => feed.intervalMin)) * 3 >= 3 * 15);
 

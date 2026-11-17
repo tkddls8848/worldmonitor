@@ -1,13 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import handler from '../api/agent-auth.ts';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const vercelConfig = JSON.parse(readFileSync(resolve(__dirname, '../vercel.json'), 'utf-8'));
 
 const call = (host, init) =>
   handler(new Request('https://' + host + '/agent/auth', { headers: { host }, ...init }));
@@ -59,22 +53,5 @@ describe('agent-auth WWW-Authenticate challenge (/agent/auth)', () => {
     const res = await call('worldmonitor.app', { method: 'OPTIONS' });
     assert.equal(res.status, 204);
     assert.equal(res.headers.get('access-control-allow-methods'), 'GET, HEAD, POST, OPTIONS');
-  });
-
-  it('is wired in vercel.json ahead of the SPA catch-all', () => {
-    const rewrite = vercelConfig.rewrites.find((r) => r.source === '/agent/auth');
-    assert.ok(rewrite, 'expected a rewrite for /agent/auth');
-    assert.equal(rewrite.destination, '/api/agent-auth');
-
-    // #6575: the dashboard catch-all rewrite is gone — unknown paths 404.
-    // /agent/auth keeps its explicit endpoint rewrite, which cannot be shadowed.
-    const catchAll = vercelConfig.rewrites.find(
-      (r) => r.destination === '/dashboard.html' && r.source.startsWith('/((?!'),
-    );
-    assert.equal(catchAll, undefined, 'dashboard catch-all rewrite must stay removed (#6575)');
-    const dashboardShadow = vercelConfig.rewrites.find(
-      (r) => r.destination === '/dashboard.html' && r.source === '/agent/auth',
-    );
-    assert.equal(dashboardShadow, undefined, '/agent/auth must not be rewritten to the dashboard');
   });
 });

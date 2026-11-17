@@ -70,7 +70,6 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 CATALOGUES = (
     ("src", REPO_ROOT / "src/locales"),
-    ("pro-test", REPO_ROOT / "pro-test/src/locales"),
 )
 
 # Applied to every value, longest match first. Each entry is a term OpenCC
@@ -114,12 +113,6 @@ KEY_OVERRIDES = {
         # right (a deity, a diva) — here it is 天 + 后 meaning "days after".
         "popups.techEvent.days.inDays": {
             "天后": "天後",
-        },
-    },
-    "pro-test": {
-        # "Is this only for conflict monitoring?" — 只 as "only", not a measure word.
-        "faq.q5": {
-            "這隻": "這只",
         },
     },
 }

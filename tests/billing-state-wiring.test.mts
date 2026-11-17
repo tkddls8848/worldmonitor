@@ -275,10 +275,4 @@ describe('returning-subscriber surfaces (#4799)', () => {
     assert.match(src, /components\.billingState\.resubscribe/);
     assert.match(src, /getReactivationHref\(/);
   });
-
-  it('lets the pricing page honor a returning subscriber plan preference', async () => {
-    const src = await read('pro-test/src/components/PricingSection.tsx');
-    assert.match(src, /wm_reactivate_plan/);
-    assert.match(src, /endsWith\('_annual'\)/);
-  });
 });

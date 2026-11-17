@@ -16,7 +16,6 @@ const originalEnv = { ...process.env };
 const sha = '0123456789abcdef0123456789abcdef01234567';
 let scratch: string;
 let loadDashboard: (env: ConfigEnv) => UserConfig;
-let marketingConfigUrl: string;
 const initializers: Array<() => Promise<BrowserOptions>> = [];
 type UploadOptions = NonNullable<Parameters<typeof sentryVitePlugin>[0]>;
 
@@ -32,16 +31,16 @@ function uploadOptions(config: UserConfig): NonNullable<UploadOptions['release']
 before(async () => {
   const { version } = JSON.parse(await readFile(resolve('package.json'), 'utf8'));
   assert.equal(typeof version, 'string');
-  const cache = resolve('pro-test/node_modules/.cache');
+  const cache = resolve('node_modules/.cache');
   await mkdir(cache, { recursive: true });
   scratch = await mkdtemp(join(cache, 'sentry-release-test-'));
-  // Execute both real configs, replacing only the upload boundary. No token
+  // Execute the real config, replacing only the upload boundary. No token
   // or network access is needed to observe what we pass to the Sentry plugin.
-  for (const [name, entry] of [['dashboard', 'vite.config.ts'], ['marketing', 'pro-test/vite.config.ts']]) {
+  for (const [name, entry] of [['dashboard', 'vite.config.ts']]) {
     await build({
       entryPoints: [entry], outfile: join(scratch, `${name}.mjs`),
       bundle: true, platform: 'node', format: 'esm', packages: 'external',
-      define: { __dirname: JSON.stringify(resolve(name === 'dashboard' ? '.' : 'pro-test')) },
+      define: { __dirname: JSON.stringify(resolve('.')) },
       plugins: [{
         name: 'capture-sentry-upload-options',
         setup(bundler) {
@@ -54,10 +53,8 @@ before(async () => {
     });
   }
   loadDashboard = (await import(pathToFileURL(join(scratch, 'dashboard.mjs')).href)).default;
-  marketingConfigUrl = pathToFileURL(join(scratch, 'marketing.mjs')).href;
   for (const [name, entry, initialize] of [
     ['dashboard', 'src/bootstrap/sentry-init.ts', 'loadAndInitSentry'],
-    ['marketing', 'pro-test/src/sentry.ts', 'initSentry'],
   ]) {
     const outfile = join(scratch, `${name}-init.mjs`);
     await build({
@@ -125,13 +122,12 @@ describe('Sentry build and event release contract', () => {
   });
 
   for (const target of ['production', 'preview', 'development']) {
-    it(`aligns both bundles and source-map uploads in ${target}`, async () => {
+    it(`aligns the bundle and source-map uploads in ${target}`, async () => {
       process.env.SENTRY_AUTH_TOKEN = 'test-only-never-sent';
       process.env.VERCEL_GIT_COMMIT_SHA = sha;
       process.env.VERCEL_ENV = target;
       const configs = [
         await loadDashboard({ mode: 'production', command: 'build' }),
-        (await import(`${marketingConfigUrl}?target=${target}`)).default,
       ];
       for (const [index, config] of configs.entries()) {
         assert.equal(JSON.parse(String(config.define?.__BUILD_HASH__)), sha);

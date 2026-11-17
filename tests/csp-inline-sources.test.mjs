@@ -1,74 +1,36 @@
 // Every HTML page we serve under the site-wide CSP must be able to run its
-// own scripts. That CSP (vercel.json catch-all) uses 'strict-dynamic' with no
-// 'unsafe-inline', so the browser silently drops:
-//   - an inline <script> without an allowed nonce or a listed SHA-256 hash,
+// own scripts. That CSP uses 'strict-dynamic' with no 'unsafe-inline', so the
+// browser silently drops:
 //   - a `javascript:` URL,
 //   - an inline event-handler attribute (onclick=, onload=, …).
 // Each of these shipped once and left a dead control in production (the MCP
 // consent page's "Use API key instead", the OAuth error pages' "go back", the
 // hosted YouTube embed's player). This sweep reads the served sources so the
 // next one fails here instead.
+//
+// The script-src nonce/hash checks and the per-route CSP checks read the
+// deployment's CSP rules, which left this personal build with vercel.json.
 
 import { strict as assert } from 'node:assert';
-import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 
-import authorizeHandler, { consentPage } from '../api/oauth/authorize.js';
-import { authorizeProHandler } from '../api/oauth/authorize-pro.ts';
-import youtubeEmbedHandler from '../api/youtube/embed.js';
-
 const ROOT = new URL('..', import.meta.url);
-const STATIC_NONCE = "'nonce-wm-static-bootstrap'";
 
 // Served under a different CSP, or not served as a page under ours.
 const EXEMPT = {
-  // Own CSP rules in vercel.json.
+  // Own CSP rules in the deployment config.
   'api/slack/oauth/callback.ts': '/api/slack/oauth/callback',
   'api/discord/oauth/callback.ts': '/api/discord/oauth/callback',
   'public/wm-widget-sandbox.html': '/wm-widget-sandbox.html',
-  'embed.html': '/embed.html',
-  // MCP App resources: the MCP server inlines them and the host renders them
-  // in its own sandbox, under the host's CSP.
-  'plugin.html': null,
-  'market.html': null,
-  'country.html': null,
 };
 const EXEMPT_DIRS = ['api/mcp/ui/'];
 
-// Handlers whose inline scripts are allowed by hash under their own route CSP.
-// Their scripts are checked against that CSP from the rendered page below.
-const ROUTE_CSP_FILES = {
-  'api/oauth/authorize.js': ['/oauth/authorize', '/api/oauth/authorize'],
-  'api/oauth/authorize-pro.ts': ['/oauth/authorize-pro', '/api/oauth/authorize-pro'],
-  'api/youtube/embed.js': ['/api/youtube/embed'],
-};
-
-// Vite source pages for /pro and /welcome; the build adds the script nonces,
-// so only handlers and javascript: URLs are checked in the source.
-const PRO_SOURCES = ['pro-test/index.html', 'pro-test/welcome.html'];
-
-const vercel = JSON.parse(readFileSync(new URL('vercel.json', ROOT), 'utf8'));
-const cspRules = vercel.headers
-  .map((rule) => ({ source: rule.source, csp: rule.headers.find((h) => h.key === 'Content-Security-Policy')?.value }))
-  .filter((rule) => rule.csp);
-// Vercel applies every matching rule in order, so the last one sets the header.
-const effectiveCsp = (path) => cspRules.findLast((rule) => new RegExp(`^${rule.source}$`).test(path))?.csp;
-const directive = (csp, name) => csp?.split(';').map((d) => d.trim()).find((d) => d.startsWith(`${name} `)) ?? '';
-const tokens = (csp, name) => directive(csp, name).split(/\s+/).slice(1);
-const siteCsp = cspRules.find((rule) => rule.source.startsWith('/((?!docs|embed'))?.csp;
-const scriptSrc = tokens(siteCsp, 'script-src');
-
-const SCRIPT_TAG = /<script\b([^>]*)>([\s\S]*?)<\/script[^>]*>/gi;
 const JAVASCRIPT_URL = /\b(?:href|src|action)\s*=\s*["']?\s*javascript:/gi;
 // A tag, then whole attributes (quoted values are skipped, so text such as
 // aria-label="turn on x=1" is not read as a handler), then an on* attribute.
 const INLINE_HANDLER = /<[a-zA-Z][^\s/>]*(?:\s+[^\s"'<>/=]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'<>`]+))?)*?\s+on[a-z]+\s*=/gi;
-
-const sha256Token = (body) => `'sha256-${createHash('sha256').update(body).digest('base64')}'`;
-const executableScripts = (html) => [...html.matchAll(SCRIPT_TAG)]
-  .filter(([, attrs]) => !/\btype=["']?application\/(ld\+)?json/i.test(attrs));
 
 function servedSources() {
   const files = execFileSync('git', ['ls-files', '*.html', 'public/*.html', 'api/**.js', 'api/**.ts', 'server/**.ts'], {
@@ -114,112 +76,13 @@ describe('inline handler and javascript: URL detection', () => {
 });
 
 describe('served HTML runs under the site-wide CSP', () => {
-  it('reads the site-wide script-src', () => {
-    assert.ok(scriptSrc.includes("'strict-dynamic'"), 'the sweep assumes the strict-dynamic catch-all CSP');
-    assert.ok(!scriptSrc.includes("'unsafe-inline'"));
-  });
-
-  it('every exemption still exists and, when it claims its own CSP, has one', () => {
-    for (const [file, route] of Object.entries(EXEMPT)) {
-      assert.ok(existsSync(new URL(file, ROOT)), `stale exemption: ${file}`);
-      if (route) assert.ok(cspRules.some((rule) => rule.source === route), `${file} claims its own CSP at ${route}`);
-    }
-    for (const [file, routes] of Object.entries(ROUTE_CSP_FILES)) {
-      assert.ok(existsSync(new URL(file, ROOT)), `stale route-CSP entry: ${file}`);
-      for (const route of routes) assert.notEqual(effectiveCsp(route), siteCsp, `${file} claims its own CSP at ${route}`);
-    }
-  });
-
-  it('no inline script, javascript: URL or inline event handler is blocked', () => {
+  it('no javascript: URL or inline event handler is blocked', () => {
     const failures = [];
     for (const file of servedSources()) {
       const text = readFileSync(new URL(file, ROOT), 'utf8');
       if (!/<script\b|javascript:|<[a-z]/i.test(text)) continue;
-      const isTemplate = /\.(js|ts)$/.test(file);
-
-      if (!(file in ROUTE_CSP_FILES)) {
-        for (const m of text.matchAll(SCRIPT_TAG)) {
-          const [, attrs, body] = m;
-          if (/\btype=["']?application\/(ld\+)?json/i.test(attrs)) continue; // data, never executed
-          const nonce = /\bnonce=["']([^"']+)["']/.exec(attrs)?.[1];
-          if (nonce && scriptSrc.includes(`'nonce-${nonce}'`)) continue;
-          // A template's script body is filled per request, so only a nonce can match it.
-          if (!isTemplate && scriptSrc.includes(sha256Token(body))) continue;
-          failures.push(`${file}:${lineOf(text, m.index)} <script${attrs}> has no allowed nonce${isTemplate ? '' : ' or hash'}`);
-        }
-      }
       failures.push(...blockedMarkup(file, text));
-    }
-    for (const file of PRO_SOURCES) {
-      failures.push(...blockedMarkup(file, readFileSync(new URL(file, ROOT), 'utf8')));
     }
     assert.deepEqual(failures, [], `blocked by the site-wide CSP:\n  ${failures.join('\n  ')}`);
   });
-});
-
-// Pages whose inline scripts are allowed by hash under a route CSP. The hash
-// is computed from the rendered page, so editing a script without updating
-// vercel.json (and the docker nginx copy) fails here.
-const ROUTE_PAGES = [
-  {
-    name: 'OAuth consent page',
-    routes: ROUTE_CSP_FILES['api/oauth/authorize.js'],
-    render: () => consentPage({ client_name: 'Claude', redirect_uri: 'https://claude.ai/api/mcp/auth_callback' }, 'n').text(),
-  },
-  {
-    // Also document.write()n into the consent page after a failed POST, where
-    // it runs under the consent page's CSP: the same route rule.
-    name: 'OAuth error page',
-    routes: ROUTE_CSP_FILES['api/oauth/authorize.js'],
-    render: async () => (await authorizeHandler(new Request('https://api.worldmonitor.app/oauth/authorize'))).text(),
-  },
-  {
-    name: 'Pro OAuth error page',
-    routes: ROUTE_CSP_FILES['api/oauth/authorize-pro.ts'],
-    render: async () => (await authorizeProHandler(new Request('https://api.worldmonitor.app/oauth/authorize-pro'), {})).text(),
-  },
-  {
-    name: 'YouTube embed page',
-    routes: ROUTE_CSP_FILES['api/youtube/embed.js'],
-    render: async () => (await youtubeEmbedHandler(new Request('https://worldmonitor.app/api/youtube/embed?videoId=iEpJwprxDdk'))).text(),
-  },
-];
-
-// Everything but script-src must stay the site-wide policy, so the route
-// rules cannot drift from it.
-const withoutScriptSrc = (csp) => csp.split(';').map((d) => d.trim()).filter((d) => !d.startsWith('script-src ')).join('; ');
-
-describe('route CSPs allow their page scripts by hash', () => {
-  for (const page of ROUTE_PAGES) {
-    it(`${page.name}: every inline script is listed by hash, with no static nonce`, async () => {
-      const scripts = executableScripts(await page.render());
-      assert.ok(scripts.length > 0, `${page.name} must render its inline script`);
-      for (const route of page.routes) {
-        const routeScriptSrc = tokens(effectiveCsp(route), 'script-src');
-        assert.ok(!routeScriptSrc.includes(STATIC_NONCE), `${route} must not trust the static nonce`);
-        for (const [, attrs, body] of scripts) {
-          assert.doesNotMatch(attrs, /\bnonce=/, `${page.name} must not carry the static nonce`);
-          assert.ok(routeScriptSrc.includes(sha256Token(body)), `${route} CSP must list ${sha256Token(body)}`);
-        }
-      }
-    });
-
-
-  }
-
-  it('YouTube embed lists the hosts its player script loads from, for browsers without strict-dynamic', async () => {
-    const html = await youtubeEmbedHandler(new Request('https://worldmonitor.app/api/youtube/embed?videoId=iEpJwprxDdk')).then((r) => r.text());
-    const loaded = [...html.matchAll(/\.src\s*=\s*'(https:\/\/[^/']+)\//g)].map((m) => m[1]);
-    assert.deepEqual(loaded, ['https://www.youtube.com']);
-    const routeScriptSrc = tokens(effectiveCsp('/api/youtube/embed'), 'script-src');
-    assert.ok(routeScriptSrc.includes("'strict-dynamic'"));
-    for (const host of loaded) assert.ok(routeScriptSrc.includes(host), `/api/youtube/embed script-src must list ${host}`);
-  });
-
-  it('route rules differ from the site-wide CSP only in script-src', () => {
-    for (const route of Object.values(ROUTE_CSP_FILES).flat()) {
-      assert.equal(withoutScriptSrc(effectiveCsp(route)), withoutScriptSrc(siteCsp), route);
-    }
-  });
-
 });

@@ -77,17 +77,6 @@ test('/api/download accepts exactly the variants the in-app switcher offers', ()
   );
 });
 
-test('exactly one Tauri bundle config exists, anywhere under src-tauri', () => {
-  const confs = readdirSync(resolve(root, 'src-tauri'), { recursive: true })
-    .map((entry) => String(entry).split('\\').join('/'))
-    .filter((f) => !f.startsWith('target/') && /(^|\/)tauri.*\.conf\.json$/.test(f));
-  assert.deepEqual(
-    confs,
-    ['tauri.conf.json'],
-    'A per-variant Tauri config is a binary nothing publishes — exactly the orphaned state #5908 removed. The scan is recursive so a nested config cannot hide.'
-  );
-});
-
 test('no npm script builds or packages a per-variant desktop binary', () => {
   const offenders = Object.entries(pkg.scripts)
     .filter(([name, body]) => {

@@ -3,7 +3,6 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import type { GetChokepointStatusResponse } from '@/generated/client/worldmonitor/supply_chain/v1/service_client';
 import { ChokepointStripPanel } from '@/components/ChokepointStripPanel';
 import { SupplyChainPanel } from '@/components/SupplyChainPanel';
-import { mountEmbedChokepointStrip } from '@/embed/panels/chokepoint-strip';
 import { getChokepointStatus } from '../../server/worldmonitor/supply-chain/v1/get-chokepoint-status';
 import capture from '../fixtures/chokepoints-routing-advice-2026-09-10.json';
 import { initTestI18n } from './helpers/i18n.mts';
@@ -95,16 +94,6 @@ describe('chokepoint partial coverage', () => {
     expect(warning?.textContent).toContain('Supply chain data temporarily unavailable');
   });
 
-  it('shows the warning in the partner embed', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json(partialResponse));
-    const root = document.createElement('div');
-
-    await mountEmbedChokepointStrip(root, 'wm_test_key');
-
-    const warning = root.querySelector('.wm-embed-cp-warning');
-    expect(warning?.textContent).toContain('Supply chain data temporarily unavailable');
-  });
-
   const CANONICAL: Array<[string, string]> = [
     ['suez', 'Suez Canal'], ['malacca_strait', 'Strait of Malacca'], ['hormuz_strait', 'Strait of Hormuz'],
     ['bab_el_mandeb', 'Bab el-Mandeb'], ['panama', 'Panama Canal'], ['taiwan_strait', 'Taiwan Strait'],
@@ -136,13 +125,9 @@ describe('chokepoint partial coverage', () => {
     harness.data = data;
     harness.render();
     await vi.advanceTimersByTimeAsync(151);
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json(data));
-    const root = document.createElement('div');
-    await mountEmbedChokepointStrip(root, 'wm_test_key');
     const banners = [
       supplyChain.getElement().querySelector('.economic-warning')?.textContent ?? null,
       strip.getElement().querySelector('.cp-strip-warning')?.textContent ?? null,
-      root.querySelector('.wm-embed-cp-warning')?.textContent ?? null,
     ].map((text) => (text ?? '<none>').trim());
     supplyChain.destroy();
     strip.destroy();
@@ -151,12 +136,12 @@ describe('chokepoint partial coverage', () => {
 
   it('names the missing chokepoint instead of the outage banner when the rest are current', async () => {
     const banners = await coverageBanners(coverageResponse(new Set(['korea_strait'])));
-    expect(banners).toEqual(Array(3).fill('Korea Strait transit data unavailable'));
+    expect(banners).toEqual(Array(2).fill('Korea Strait transit data unavailable'));
   });
 
   it('names every missing chokepoint when more than one lacks transit data', async () => {
     const banners = await coverageBanners(coverageResponse(new Set(['korea_strait', 'kerch_strait'])));
-    expect(banners).toEqual(Array(3).fill('Korea Strait, Kerch Strait transit data unavailable'));
+    expect(banners).toEqual(Array(2).fill('Korea Strait, Kerch Strait transit data unavailable'));
   });
 
   for (const [source, flags] of [
@@ -169,13 +154,13 @@ describe('chokepoint partial coverage', () => {
         ...data,
         chokepoints: data.chokepoints.map((cp) => ({ ...cp, ...flags })),
       });
-      expect(banners).toEqual(Array(3).fill('Supply chain data temporarily unavailable — showing cached data'));
+      expect(banners).toEqual(Array(2).fill('Supply chain data temporarily unavailable — showing cached data'));
     });
   }
 
   it('keeps the outage banner when no chokepoint has transit data', async () => {
     const banners = await coverageBanners(coverageResponse('all'));
-    expect(banners).toEqual(Array(3).fill('Supply chain data temporarily unavailable — showing cached data'));
+    expect(banners).toEqual(Array(2).fill('Supply chain data temporarily unavailable — showing cached data'));
   });
 
   // Nonzero counters are what make this meaningful: with zeros, a surface that
@@ -235,17 +220,5 @@ describe('chokepoint partial coverage', () => {
 
     expect(await render(countersResponse(true))).toEqual({ warn: String(WARNINGS), aisSample: String(AIS) });
     expect(await render(countersResponse(false))).toEqual({ warn: null, aisSample: null });
-  });
-
-  it('withholds a nonzero warning count in the partner embed when navigational warnings are unavailable', async () => {
-    const mount = async (data: GetChokepointStatusResponse) => {
-      vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json(data));
-      const root = document.createElement('div');
-      await mountEmbedChokepointStrip(root, 'wm_test_key');
-      return root.querySelector('.wm-embed-cp-warn')?.textContent ?? null;
-    };
-
-    expect(await mount(countersResponse(true))).toBe(String(WARNINGS));
-    expect(await mount(countersResponse(false))).toBeNull();
   });
 });

@@ -19,29 +19,6 @@ import {
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
-describe('GDELT bulk materializer deployment contract', () => {
-  it('runs the materializer on the existing 15-minute GDELT Railway service without proxy credentials', () => {
-    const services = JSON.parse(read('scripts/railway-services.json'));
-    const materializer = services.find((service) =>
-      service.entry === 'scripts/seed-gdelt-bulk-materializer.mjs');
-
-    assert.ok(materializer, 'bulk materializer must be registered');
-    assert.equal(materializer.service, 'seed-gdelt-intel');
-    assert.equal(materializer.cronSchedule, '*/15 * * * *');
-    assert.deepEqual(materializer.requiredEnv, [
-      'UPSTASH_REDIS_REST_URL',
-      'UPSTASH_REDIS_REST_TOKEN',
-    ]);
-    assert.ok(materializer.watchPatterns.includes('scripts/_gdelt-bulk-contract.mjs'));
-    assert.ok(materializer.watchPatterns.includes('scripts/_gdelt-bulk-materializer.mjs'));
-    assert.equal(
-      services.some((service) => service.entry === 'scripts/seed-gdelt-intel.mjs'),
-      false,
-      'the DOC seeder must no longer be an active Railway service',
-    );
-  });
-});
-
 describe('GDELT consumers read materialized Redis products', () => {
   it('conflict accepts the exact export-age boundary and preserves its source timestamp', async () => {
     const nowMs = Date.parse('2026-07-30T15:00:00.000Z');

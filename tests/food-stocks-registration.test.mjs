@@ -26,15 +26,11 @@ describe('food stocks production registration (#6440)', () => {
     assert.match(read('api/seed-health.js'), /'resilience:food-stocks':\s*\{ key: 'seed-meta:resilience:food-stocks',\s*intervalMin: 43200/);
   });
 
-  it('schedules the seeder in the resilience bundle and watches its files', () => {
+  it('schedules the seeder in the resilience bundle', () => {
     assert.match(
       read('scripts/seed-bundle-resilience.mjs'),
       /label: 'Food-Stocks'[\s\S]*script: 'seed-food-stocks\.mjs'[\s\S]*seedMetaKey: 'resilience:food-stocks'[\s\S]*intervalMs: 30 \* DAY/,
     );
-    const railway = JSON.parse(read('scripts/railway-services.json'));
-    const bundle = railway.find((entry) => entry.service === 'seed-bundle-resilience');
-    assert.ok(bundle?.watchPatterns.includes('scripts/seed-food-stocks.mjs'));
-    assert.ok(bundle?.watchPatterns.includes('scripts/_food-stocks-helpers.mjs'));
     assert.match(read('scripts/seed-food-stocks.mjs'), /lockTtlMs:\s*540_000/);
     // fetchPhaseTimeoutMs must stay STRICTLY below lockTtlMs so the lock still
     // covers the publish phase after a full-budget fetch.

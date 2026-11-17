@@ -144,7 +144,6 @@ describe('offline Retry CSP', () => {
   const offlineHtml = readFileSync(resolve(ROOT, 'public/offline.html'), 'utf8');
   const inlineScripts = [...offlineHtml.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)];
   const retryButton = offlineHtml.match(/<button\b[^>]*\bid=["']t-retry["'][^>]*>/i)?.[0] ?? '';
-  const scriptHash = browserInlineScriptHash(inlineScripts[0]?.[1] ?? '');
 
   it('hashes LF, CRLF, and CR script text the same and rejects a script edit', () => {
     const script = inlineScripts[0][1];
@@ -163,16 +162,5 @@ describe('offline Retry CSP', () => {
     assert.equal(inlineScripts.length, 1, 'offline page should contain one CSP-hashed inline script');
     assert.doesNotMatch(retryButton, /\son\w+\s*=/i);
     assert.match(inlineScripts[0][1], /getElementById\('t-retry'\)\.addEventListener\('click'/);
-  });
-
-  it('ships the Retry script hash on the configured dashboard CSP', () => {
-    const vercel = JSON.parse(readFileSync(resolve(ROOT, 'vercel.json'), 'utf8'));
-    const vercelCsp = vercel.headers
-      .find((entry) => entry.headers?.some(
-        (header) => header.key === 'X-Frame-Options' && header.value === 'SAMEORIGIN',
-      ))
-      ?.headers.find((header) => header.key === 'Content-Security-Policy')?.value;
-    assert.ok(vercelCsp?.includes(scriptHash), `Vercel CSP is missing ${scriptHash}`);
-
   });
 });

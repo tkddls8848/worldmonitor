@@ -127,8 +127,6 @@ describe('check-no-public-source-maps deploy gate', () => {
 
   it('runs at the end of the Vercel build command', async () => {
     const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
-    const vercel = JSON.parse(await readFile(join(root, 'vercel.json'), 'utf8'));
-    assert.equal(vercel.buildCommand, 'npm run build:full');
     assert.match(pkg.scripts['build:full'], /&& npm run check:source-maps$/);
     assert.match(pkg.scripts['check:source-maps'], /scripts\/check-no-public-source-maps\.mjs dist$/);
   });
@@ -137,7 +135,7 @@ describe('check-no-public-source-maps deploy gate', () => {
 describe('bundler configs that ship to production', () => {
   // Every config here was reviewed for source-map output. A new bundler
   // config must follow shared/source-map-policy.ts before it joins this list.
-  const REVIEWED = ['blog-site/astro.config.mjs', 'pro-test/vite.config.ts', 'vite.config.ts', 'vite.plugin.config.ts'];
+  const REVIEWED = ['blog-site/astro.config.mjs', 'vite.config.ts'];
 
   it('has no unreviewed bundler config', () => {
     const tracked = execFileSync('git', ['ls-files'], { cwd: root, encoding: 'utf8' }).split('\n');
@@ -153,8 +151,6 @@ describe('bundler configs that ship to production', () => {
     assert.match(main, /sourcemap:\s*viteSourcemapSetting\(process\.env\)/);
     assert.match(main, /sourcemap:\s*emitPublicSourceMaps,\n\s*globPatterns/);
     assert.match(main, /emitPublicSourceMaps \? \[\] : \[stripPrivateSourceMapsPlugin\(\)\]/);
-    assert.match(await read('pro-test/vite.config.ts'), /sourcemap:\s*uploadSourceMapsToSentry \? 'hidden' : false/);
-    assert.doesNotMatch(await read('vite.plugin.config.ts'), /sourcemap/i);
     assert.doesNotMatch(await read('blog-site/astro.config.mjs'), /sourcemap/i);
   });
 });

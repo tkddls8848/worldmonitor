@@ -1,7 +1,7 @@
 /**
  * WM_DESKTOP_SHARED_SECRET and WM_DESKTOP_AUTH_ALLOW_LEGACY must stay deleted.
  *
- * src-tauri/src/main.rs once read the shared secret with `option_env!`, so any
+ * The removed desktop app (src-tauri/src/main.rs) once read the shared secret with `option_env!`, so any
  * value present when a release compiled was baked into every shipped binary,
  * where `strings` recovers it. The cloud handler trusted an HMAC from that key
  * to skip Turnstile on waitlist sign-ups, so one leaked copy was a captcha
@@ -17,7 +17,7 @@ import { describe, it } from 'node:test';
 
 const root = join(import.meta.dirname, '..');
 const FORBIDDEN = ['WM_DESKTOP_SHARED_SECRET', 'WM_DESKTOP_AUTH_ALLOW_LEGACY'];
-const SCANNED = ['src-tauri', 'server', 'api', '.github', 'docs', '.env.example'];
+const SCANNED = ['server', 'api', '.github', 'docs', '.env.example'];
 const SKIPPED_DIRS = new Set(['node_modules', 'target', 'dist', 'gen', 'solutions']);
 const MAX_BYTES = 2 * 1024 * 1024;
 
@@ -47,11 +47,5 @@ describe('desktop shared secret stays deleted', () => {
       }
     }
     assert.deepEqual(offenders, []);
-  });
-
-  it('main.rs embeds no desktop secret at compile time', () => {
-    const main = readFileSync(join(root, 'src-tauri', 'src', 'main.rs'), 'utf8');
-    const embedded = [...main.matchAll(/option_env!\("([A-Z0-9_]+)"\)/g)].map((match) => match[1]);
-    assert.deepEqual(embedded, ['CONVEX_URL']);
   });
 });

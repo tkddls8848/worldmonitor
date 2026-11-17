@@ -537,34 +537,6 @@ describe('content-freshness constant parity', () => {
     );
   });
 
-  it('keeps the content budget at two producer rotations', () => {
-    const seeder = read('scripts/seed-portwatch-port-activity.mjs');
-    const targetCountries = Number(
-      seeder.match(/PORTWATCH_PORT_ACTIVITY_TARGET_COUNTRIES\s*=\s*(\d+)/)?.[1],
-    );
-    const coldFetchCap = Number(
-      seeder.match(/MAX_COLD_FETCH_PER_RUN\s*=\s*(\d+)/)?.[1],
-    );
-    const registry = JSON.parse(read('scripts/railway-services.json'));
-    const service = registry.find(
-      (entry) => entry.service === 'seed-bundle-portwatch-port-activity',
-    );
-    const cadenceHours = Number(service?.cronSchedule?.match(/\*\/(\d+)/)?.[1]);
-    const fullRotationMinutes = Math.ceil(targetCountries / coldFetchCap)
-      * cadenceHours * 60;
-    const minimumBudgetMinutes = 2 * fullRotationMinutes;
-
-    assert.ok(
-      Number.isFinite(fullRotationMinutes),
-      'producer target, cap, and cron cadence must remain machine-readable',
-    );
-    assert.ok(
-      PORTWATCH_CONTENT_FRESHNESS_BUDGET_MINUTES >= minimumBudgetMinutes,
-      `content budget ${PORTWATCH_CONTENT_FRESHNESS_BUDGET_MINUTES}min must cover `
-        + `two ${fullRotationMinutes}min producer rotations`,
-    );
-  });
-
   it('matches the China activity nowcast PortWatch budget', () => {
     const registry = read('shared/china-activity-nowcast-registry.ts');
     const definition = registry.match(

@@ -130,9 +130,8 @@ export function suggestNotFoundSection(path: string): NotFoundSection | null {
 }
 
 // Prefix match is `path === prefix || path.startsWith(prefix + '/')`.
-// Keep this list in the same place as the drift test in
-// tests/agent-friendly-404.test.mts so a new vercel.json route cannot
-// silently 404.
+// The personal fork deleted the deploy routing that kept this list in step,
+// and the standalone embed, MCP-grant, desktop sign-in and verify pages.
 export const AGENT_NOT_FOUND_PASSTHROUGH_PREFIXES = [
   '/CLERK-ROUTER',
   '/a2a',
@@ -155,7 +154,6 @@ export const AGENT_NOT_FOUND_PASSTHROUGH_PREFIXES = [
   '/data',
   '/developers',
   '/docs',
-  '/embed',
   '/end-user-license-agreement',
   '/eula',
   '/favico',
@@ -163,9 +161,7 @@ export const AGENT_NOT_FOUND_PASSTHROUGH_PREFIXES = [
   '/legal',
   '/map-styles',
   '/mcp',
-  '/mcp-grant',
   '/monitor-the-situation',
-  '/desktop-sign-in',
   '/oauth',
   '/pricing',
   '/privacy',
@@ -188,7 +184,6 @@ export const AGENT_NOT_FOUND_PASSTHROUGH_PREFIXES = [
   '/tools',
   '/trust',
   '/use-cases',
-  '/verify',
   '/welcome',
   ...indexableLandingPassthroughPrefixes(),
   '/zh',

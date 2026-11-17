@@ -11,7 +11,7 @@ const require = createRequire(import.meta.url);
 const merge = require('deepmerge');
 const semver = require('semver');
 
-for (const file of ['package-lock.json', 'pro-test/package-lock.json', 'scripts/package-lock.json', 'integrations/zapier/package-lock.json']) {
+for (const file of ['package-lock.json', 'scripts/package-lock.json']) {
   it(`${file} excludes the affected glob, minimatch, and uuid versions`, () => {
     const lock = JSON.parse(readFileSync(new URL(`../${file}`, import.meta.url), 'utf8'));
     for (const [path, entry] of Object.entries(lock.packages)) {

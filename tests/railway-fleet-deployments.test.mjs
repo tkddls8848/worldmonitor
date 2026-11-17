@@ -182,14 +182,6 @@ describe('immutable native-autodeploy fleet', () => {
     );
   });
 
-  it('keeps planned services out of the active fleet', () => {
-    const registry = JSON.parse(readFileSync(new URL('../scripts/railway-services.json', import.meta.url), 'utf8'));
-    const fleet = readExpectedRepositoryFleet();
-    for (const entry of registry.filter((entry) => entry.lifecycle === 'planned')) {
-      assert.ok(!fleet.some((service) => service.name === entry.service), `${entry.service} is not provisioned`);
-    }
-  });
-
   it('rejects malformed immutable fleet manifests', () => {
     const directory = mkdtempSync(join(tmpdir(), 'railway-fleet-manifest-'));
     const path = join(directory, 'fleet.json');

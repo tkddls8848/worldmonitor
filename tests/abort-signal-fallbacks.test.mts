@@ -146,8 +146,10 @@ describe('every page entry installs the fallbacks first', () => {
 
   it('finds the page entries', () => {
     // Without this, a broken HTML scan would leave the check below vacuously green.
-    assert.ok(scripts.length >= 10, `expected at least 10 entry scripts, found ${scripts.join(', ')}`);
-    assert.ok(scripts.includes('src/main.ts'));
+    // The personal build ships one HTML entry (index.html -> src/main.ts); the
+    // plugin, embed, desktop and verify pages were deleted.
+    assert.ok(scripts.length >= 1, `expected at least one entry script, found ${scripts.join(', ')}`);
+    assert.ok(scripts.includes('src/main.ts'), `expected src/main.ts among ${scripts.join(', ')}`);
   });
 
   it('reads the first import, ignoring comments', () => {

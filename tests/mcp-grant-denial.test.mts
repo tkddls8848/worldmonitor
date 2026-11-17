@@ -16,9 +16,6 @@
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import {
   classifyGrantDenial,
@@ -257,138 +254,6 @@ describe('routeGrantContextDenial', () => {
 // ---------------------------------------------------------------------------
 
 /**
- * The page builds its DOM against real elements, so there is no jsdom here to
- * drive it end-to-end. Deliberately NOT a proximity regex on the retry branch —
- * that shape has been demonstrated to pass with the bug restored verbatim
- * (memory: source-regex wiring guards false-pass). What is pinned instead is
- * structural and countable: the page routes both fetches through the classifier
- * and no longer holds its own copy of the mapping.
- */
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const pageSource = readFileSync(resolve(root, 'src/mcp-grant-main.ts'), 'utf8');
-
-describe('mcp-grant page routes denials through the shared classifier', () => {
-  it('classifies both the context load and the mint click', () => {
-    const calls = [...pageSource.matchAll(/classifyGrantDenial\(/g)];
-    assert.equal(
-      calls.length,
-      2,
-      'expected exactly two call sites — loadContext and onAuthorizeClick. '
-      + 'A third means a new fetch, a missing one means a path went unclassified.',
-    );
-  });
-
-  it('no longer carries its own error-code switch', () => {
-    assert.doesNotMatch(
-      pageSource,
-      /function errorCodeToMessage/,
-      'a second copy of the mapping is how the two drift',
-    );
-  });
-
-  it('re-enables the Authorize button through one shared helper', () => {
-    // A retryable denial is worthless if the button stays disabled.
-    assert.equal(
-      [...pageSource.matchAll(/btn\.disabled = false/g)].length,
-      1,
-      'button re-enabling must stay in the single `reenable` helper',
-    );
-    // Four immediate call sites (network-error catch, sign_in, unparseable mint
-    // response, and the too-long-to-wait retryable branch which hands the button
-    // straight back rather than parking it for up to 60s) plus one DEFERRED
-    // hand-back for the short retryable branch, which waits out Retry-After
-    // first. Counting both forms keeps a future branch that forgets either one
-    // from passing.
-    const immediate = [...pageSource.matchAll(/reenable\(\)/g)].length;
-    const deferred = [...pageSource.matchAll(/setTimeout\(reenable\b/g)].length;
-    assert.equal(immediate, 4, 'the four immediate exits must hand the button back');
-    assert.equal(deferred, 1, 'the retryable exit must hand it back after the advertised delay');
-  });
-
-  it('tracks the mint cooldown phase and timeout so Clerk reloads cannot strand consent', () => {
-    assert.match(pageSource, /let mintPhase: GrantMintPhase = 'idle'/);
-    assert.match(pageSource, /mintPhase = 'retry_cooldown'/);
-    assert.match(pageSource, /let mintRetryTimeout: number \| null = null/);
-    assert.match(pageSource, /mintRetryTimeout = window\.setTimeout\(reenable, waitMs\)/);
-    assert.match(pageSource, /window\.clearTimeout\(mintRetryTimeout\)/);
-    assert.doesNotMatch(pageSource, /mintInFlight/);
-  });
-
-  it('uses one Retry-After delay before rendering a non-expired manual retry view', () => {
-    assert.match(pageSource, /const CONTEXT_AUTO_RETRY_BUDGET = 1/);
-    assert.equal(
-      [...pageSource.matchAll(/retryableGrantDelayMs\(resp\.headers\.get\('Retry-After'\)\)/g)]
-        .length,
-      2,
-      'both the context auto-retry and mint cooldown must honor Retry-After',
-    );
-    assert.match(pageSource, /showRetryableContextView\(verdict\.message\)/);
-    assert.match(pageSource, /'retryContextBtn'\)\.addEventListener\('click'/);
-
-    const html = readFileSync(resolve(root, 'mcp-grant.html'), 'utf8');
-    assert.match(html, /<main class="card" id="card">/);
-    assert.match(html, /<h1 class="client-name"><span id="clientName"><\/span> wants access<\/h1>/);
-    assert.match(html, /<h1 class="client-name" id="errorTitle"/);
-    assert.match(html, /id="mintError" role="alert"/);
-    assert.match(html, /id="errorTitle"/);
-    assert.match(html, /id="retryContextBtn" hidden>Try again<\/button>/);
-    assert.doesNotMatch(
-      pageSource.match(/function showRetryableContextView[\s\S]*?\n}/)?.[0] ?? '',
-      /expired/i,
-      'a transient context failure must not be labelled as an expired request',
-    );
-  });
-
-  /**
-   * WHAT THESE PINS DO NOT COVER — stated so nobody mistakes green for covered.
-   *
-   * They assert occurrence counts, not the verdict -> DOM mapping. Swapping the
-   * bodies of the `retryable` and `terminal` branches in onAuthorizeClick would
-   * leave every count identical and every pin green, while the user got a torn-down
-   * page for a transient blip and a stuck consent card for a dead nonce.
-   *
-   * That mapping is genuinely uncovered: the page manipulates real elements, this
-   * repo has no jsdom, and there is no e2e spec for /mcp-grant. The decision it
-   * routes on IS unit-tested (classifyGrantDenial above), so what is missing is
-   * only the wiring — which is exactly the class a regex cannot honestly pin
-   * (memory: source-regex wiring guards false-pass). Tracked in #5654.
-   */
-  it('never renders an error view without saying what the error is', () => {
-    // The heading is required, so a new error path cannot inherit a stale
-    // default. Assert no call site relies on one-argument form.
-    const singleArg = [...pageSource.matchAll(/showErrorView\((?:[^(),]|\([^)]*\))*\)/g)]
-      .map((m) => m[0])
-      .filter((call) => !call.includes(','));
-    assert.deepEqual(
-      singleArg,
-      [],
-      'every showErrorView call must pass an explicit title — the removed default '
-      + 'said "Authorization request expired" above bodies that were not expiries',
-    );
-  });
-
-  it('wires the recovery controls before the first load can reject', () => {
-    // `void bootstrap()` swallows a rejection, so listeners attached after the
-    // first await can be skipped entirely — leaving a visible "Try again" button
-    // that does nothing.
-    const retryWiring = pageSource.indexOf("$('retryContextBtn').addEventListener");
-    const authorizeWiring = pageSource.indexOf("$('authorizeBtn').addEventListener");
-    const firstLoad = pageSource.indexOf('await reactToAuth()');
-    assert.ok(retryWiring > 0 && authorizeWiring > 0 && firstLoad > 0, 'anchors must exist');
-    assert.ok(retryWiring < firstLoad, 'retry button must be wired before the first load');
-    assert.ok(authorizeWiring < firstLoad, 'authorize button must be wired before the first load');
-  });
-
-  it('documents the uncovered verdict-to-DOM wiring rather than implying it is pinned', () => {
-    // A canary, not a guard: if the page stops routing through the classifier at
-    // all, the count pin above already fails. This exists so the limitation is
-    // visible in the suite output rather than only in a comment.
-    assert.match(pageSource, /verdict\.action === 'retryable'/);
-    assert.match(pageSource, /showErrorView\(verdict\.message, verdict\.title\)/);
-  });
-});
-
-/**
  * #5622 review — the inline-wait budget.
  *
  * The server may legitimately ask for a full minute: `renewal_verification_failed`
@@ -432,10 +297,6 @@ describe('inline-wait budget (#5622 review)', () => {
     assert.equal(describeGrantDelay(1_000), 'about 1 second');
     // Sub-second never rounds to "about 0 seconds".
     assert.equal(describeGrantDelay(200), 'about 1 second');
-  });
-
-  it('the page routes the too-long case to the manual retry instead of sleeping', () => {
-    assert.match(pageSource, /if \(!shouldWaitInline\(waitMs\)\)/);
   });
 });
 

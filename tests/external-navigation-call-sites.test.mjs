@@ -12,7 +12,6 @@ const callSiteFiles = [
   'src/services/upgrade-flow.ts',
   'src/app/event-handlers.ts',
   'src/app/desktop-updater.ts',
-  'src/settings-main.ts',
   'src/components/RuntimeConfigPanel.ts',
   'src/App.ts', // followed-countries cap-drop toast upgrade action (#5911)
 ];
@@ -44,8 +43,8 @@ describe('external navigation call-site contract (#6120)', () => {
   /**
    * The three arms above are all satisfied by "the file mentions the helper
    * somewhere", so a file with two call sites could regress one and stay
-   * green — proven by restoring the pre-fix `window.open` in settings-main.ts
-   * and RuntimeConfigPanel.ts simultaneously. The bug shape is `window.open`,
+   * green — proven by restoring the pre-fix `window.open` in two call sites
+   * simultaneously. The bug shape is `window.open`,
    * so that is what this asserts, with the legitimate web-branch sites named
    * explicitly rather than allowed by omission.
    */
@@ -58,7 +57,6 @@ describe('external navigation call-site contract (#6120)', () => {
       ['src/services/upgrade-flow.ts', 0],
       ['src/app/event-handlers.ts', 2], //          download-banner links
       ['src/app/desktop-updater.ts', 1], //         non-desktop update link
-      ['src/settings-main.ts', 0],
       ['src/components/RuntimeConfigPanel.ts', 0],
       ['src/App.ts', 0],
     ]);

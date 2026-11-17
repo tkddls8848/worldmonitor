@@ -231,10 +231,7 @@ export function installDependencies({
   log = console.log,
   rootDir = process.cwd(),
 } = {}) {
-  assertNodeModulesNotSymlink(
-    rootDir,
-    basename(rootDir) === 'pro-test' ? 'pro-test/node_modules' : 'node_modules',
-  );
+  assertNodeModulesNotSymlink(rootDir, 'node_modules');
   const args = ['ci', '--cache', cacheDir, '--prefer-offline'];
   if (ignoreScripts) args.push('--ignore-scripts');
 
@@ -527,16 +524,6 @@ export function bootstrapWorktree(options = {}) {
       // A kept install may come from an --ignore-scripts run that predates
       // the postinstall step, so its generated files can be missing.
       if (options.ignoreScripts) runOwnPostinstall({ dryRun: options.dryRun, log, rootDir });
-    }
-
-    const proTestRoot = resolve(rootDir, 'pro-test');
-    if (existsSync(resolve(proTestRoot, 'package.json'))) {
-      if (shouldInstallDependencies({ forceInstall: options.forceInstall, rootDir: proTestRoot })) {
-        installDependencies({ ...installOpts, rootDir: proTestRoot });
-      } else {
-        assertNodeModulesNotSymlink(proTestRoot, 'pro-test/node_modules');
-        log('[worktree] verified pro-test npm install present; skipping npm ci');
-      }
     }
   }
 

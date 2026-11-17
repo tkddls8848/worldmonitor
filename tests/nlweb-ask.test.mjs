@@ -1,13 +1,5 @@
 import { describe, it, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __filename = fileURLToPath(import.meta.url);
-const ROOT = resolve(dirname(__filename), '..');
-
-const vercelConfig = JSON.parse(readFileSync(join(ROOT, 'vercel.json'), 'utf-8'));
 
 // Guards for the NLWeb surface (orank Access `nlweb-ask` + `nlweb-streaming`):
 // POST /ask must return NLWeb-conformant JSON with the `_meta`
@@ -164,23 +156,5 @@ describe('nlweb: /ask endpoint', () => {
     const options = await handler(new Request('https://worldmonitor.app/ask', { method: 'OPTIONS' }));
     assert.equal(options.status, 204);
     assert.equal(options.headers.get('Access-Control-Allow-Origin'), '*');
-  });
-
-  it('vercel.json routes /ask to the endpoint and shields it from the SPA catch-all', () => {
-    const rewrite = vercelConfig.rewrites.find((r) => r.source === '/ask');
-    assert.ok(rewrite, 'missing /ask rewrite');
-    assert.equal(rewrite.destination, '/api/ask');
-    // #6575: the dashboard catch-all rewrite is gone — unknown paths 404.
-    // /ask keeps its explicit endpoint rewrite, which cannot be shadowed.
-    const catchAll = vercelConfig.rewrites.find(
-      (r) => r.destination === '/dashboard.html' && r.source.startsWith('/((?!'),
-    );
-    assert.equal(catchAll, undefined, 'dashboard catch-all rewrite must stay removed (#6575)');
-    const dashboardShadow = vercelConfig.rewrites.find(
-      (r) => r.destination === '/dashboard.html' && r.source === '/ask',
-    );
-    assert.equal(dashboardShadow, undefined, '/ask must not be rewritten to the dashboard');
-    const corsBlock = vercelConfig.headers.find((h) => h.source === '/ask');
-    assert.ok(corsBlock, 'missing /ask headers block');
   });
 });

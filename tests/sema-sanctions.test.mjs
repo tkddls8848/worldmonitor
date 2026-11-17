@@ -41,10 +41,6 @@ const seedSrc = readFileSync(
   'utf8',
 );
 const testSrc = readFileSync(fileURLToPath(import.meta.url), 'utf8');
-const railwaySrc = readFileSync(
-  new URL('../scripts/railway-services.json', import.meta.url),
-  'utf8',
-);
 const healthSrc = readFileSync(new URL('../api/health.js', import.meta.url), 'utf8');
 const seedHealthSrc = readFileSync(new URL('../api/seed-health.js', import.meta.url), 'utf8');
 const panelSrc = readFileSync(
@@ -583,15 +579,6 @@ describe('seeder merge, health, railway, no new surface', () => {
     assert.match(healthSrc, /sanctionsPressure:\s*'sanctions:pressure:v1'/);
     assert.doesNotMatch(healthSrc, /sema-ca:pressure/);
     assert.match(seedHealthSrc, /'sanctions:pressure'/);
-  });
-
-  it('extends the sanctions Railway service watchPatterns', () => {
-    const registry = JSON.parse(railwaySrc);
-    const service = registry.find((entry) => entry.service === 'seed-sanctions-pressure');
-    assert.ok(service, 'seed-sanctions-pressure must be registry-managed');
-    assert.ok(service.watchPatterns.includes('scripts/seed-sanctions-pressure.mjs'));
-    assert.ok(service.watchPatterns.includes('scripts/_sema-sanctions.mjs'));
-    assert.ok(service.watchPatterns.includes('scripts/_sanctions-source.mjs'));
   });
 });
 

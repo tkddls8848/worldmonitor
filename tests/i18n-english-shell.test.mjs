@@ -27,7 +27,6 @@ function tsFilesUnder(dir) {
 const EAGER_CHROME_FILES = [
   'src/App.ts',
   'src/app/panel-layout.ts',
-  'src/settings-main.ts',
   'src/settings-window.ts',
   ...tsFilesUnder(COMPONENTS_DIR),
 ];

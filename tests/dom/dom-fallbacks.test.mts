@@ -127,7 +127,8 @@ describe('every page entry installs the DOM fallbacks before the app graph', () 
   const scripts = entryScripts();
 
   it('finds the page entries', () => {
-    expect(scripts.length).toBeGreaterThanOrEqual(10);
+    // The personal build ships one HTML entry (index.html -> src/main.ts).
+    expect(scripts.length).toBeGreaterThanOrEqual(1);
     expect(scripts).toContain('src/main.ts');
   });
 

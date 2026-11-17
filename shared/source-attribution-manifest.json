@@ -26,9 +26,6 @@
           "path": "scripts/profile-news-hybrid-clustering-7782-dashboard.mjs"
         },
         {
-          "path": "src/services/desktop-sign-in-page.ts"
-        },
-        {
           "path": "src/services/runtime.ts"
         }
       ]
@@ -691,9 +688,6 @@
         },
         {
           "path": "scripts/_r2-storage.mjs"
-        },
-        {
-          "path": "scripts/cloudflare-cache-rule.mjs"
         },
         {
           "path": "scripts/local/local-api-server.mjs"
@@ -1656,9 +1650,6 @@
         },
         {
           "path": "src/app/desktop-updater.ts"
-        },
-        {
-          "path": "src/mcp-grant-main.ts"
         },
         {
           "path": "src/services/runtime.ts"
@@ -8677,15 +8668,10 @@
       "host": "registry.modelcontextprotocol.io",
       "provider": "registry.modelcontextprotocol.io",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: first-party, control-plane, UI, or rendering transport",
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "scripts/publish-mcp-registry.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "reliefweb.int",
@@ -11490,9 +11476,6 @@
           "path": "scripts/measure-mobile-mainthread.mjs"
         },
         {
-          "path": "scripts/publish-mcp-registry.mjs"
-        },
-        {
           "path": "scripts/seed-five-factor-scorecard.mjs"
         },
         {
@@ -11554,9 +11537,6 @@
         },
         {
           "path": "src/services/runtime.ts"
-        },
-        {
-          "path": "src/settings-main.ts"
         }
       ]
     },
@@ -15514,15 +15494,10 @@
       "host": "www.w3.org",
       "provider": "W3C schema reference",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: schema/standards reference",
       "attribution": "Excluded from the provider count: standards reference, not an ingested source.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "src/embed/panels/fear-greed.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "www.war.gov",
@@ -15820,9 +15795,6 @@
         },
         {
           "path": "src/embed/embed-url.ts"
-        },
-        {
-          "path": "src/plugin-country-main.ts"
         },
         {
           "path": "src/services/country-brief-host-transport.ts"

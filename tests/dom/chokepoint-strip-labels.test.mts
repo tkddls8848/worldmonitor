@@ -2,7 +2,6 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import type { GetChokepointStatusResponse } from '@/generated/client/worldmonitor/supply_chain/v1/service_client';
 import { ChokepointStripPanel } from '@/components/ChokepointStripPanel';
-import { mountEmbedChokepointStrip } from '@/embed/panels/chokepoint-strip';
 import { initTestI18n } from './helpers/i18n.mts';
 
 const STRIP_ROWS: Array<[string, string, string]> = [
@@ -70,15 +69,5 @@ describe('chokepoint strip labels', () => {
     } finally {
       vi.useRealTimers();
     }
-  });
-
-  it('names the Dover Strait chip Dover Strait in the partner embed', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json(response));
-    const root = document.createElement('div');
-
-    await mountEmbedChokepointStrip(root, 'wm_test_key');
-
-    expect(chipLabels(root, '.wm-embed-cp-chip', '.wm-embed-cp-name')).toEqual(expected);
-    expect(root.textContent).not.toContain('Danish');
   });
 });

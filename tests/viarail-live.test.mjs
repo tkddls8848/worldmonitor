@@ -298,12 +298,6 @@ describe('VIA Rail live registration (no bootstrap / seeder import / ais-relay)'
     // seeder is a seed-bundle-canada (#6711) member gated on intervalMs 15min,
     // which is the cadence its standalone cron had. The freshness anchor must
     // therefore clear on BUNDLE provisioning, not on this branch deploying.
-    const railway = JSON.parse(read('scripts/railway-services.json'));
-    assert.equal(
-      railway.some((entry) => entry.service === 'seed-viarail-live'),
-      false,
-      'a standalone row would claim a slot the bundle already covers',
-    );
     // The bundle must actually own it, or the probe has no producer at all.
     const bundle = read('scripts/seed-bundle-canada.mjs');
     assert.match(bundle, /seedMetaKey:\s*'seed-meta:transit:viarail-live'/);

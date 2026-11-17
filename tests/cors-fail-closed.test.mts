@@ -10,11 +10,6 @@ import {
   getPublicCorsHeaders as getPublicCorsHeadersJs,
   isDisallowedOrigin as isDisallowedOriginJs,
 } from '../api/_cors.js';
-import {
-  default as corsWorker,
-  buildCorsHeaders as buildCorsHeadersWorker,
-  isAllowedOrigin as isAllowedOriginWorker,
-} from '../workers/api-cors-preflight/src/index.js';
 
 // Regression coverage for issue #3705: CORS-header generation errors must
 // fail closed rather than fall back to a wildcard ACAO.
@@ -48,7 +43,6 @@ const CORS_SURFACES: Array<[string, () => Record<string, string>]> = [
   ['server/cors.ts getCorsHeaders', () => getCorsHeaders(corsRequest())],
   ['api/_cors.js getCorsHeaders', () => getCorsHeadersJs(corsRequest())],
   ['api/_cors.js getPublicCorsHeaders', () => getPublicCorsHeadersJs()],
-  ['workers/api-cors-preflight buildCorsHeaders', () => buildCorsHeadersWorker('https://worldmonitor.app')],
 ];
 
 describe('cors helper', () => {
@@ -331,7 +325,6 @@ describe('CORS triplet parity — Google Translate + trailing-dot helpers stay i
   const TWINS = [
     '../server/cors.ts',
     '../api/_cors.js',
-    '../workers/api-cors-preflight/src/index.js',
   ];
 
   for (const rel of TWINS) {
@@ -369,7 +362,6 @@ describe('bounded CORS Origin validation (#9315)', () => {
   const surfaces = [
     ['API', (origin: string) => !isDisallowedOriginJs(new Request('https://api.worldmonitor.app/x', { headers: { Origin: origin } }))],
     ['gateway', isAllowedOrigin],
-    ['Worker', isAllowedOriginWorker],
   ] as const;
 
   for (const [surface, allows] of surfaces) {
@@ -392,7 +384,7 @@ describe('bounded CORS Origin validation (#9315)', () => {
       for (const origin of ['https://worldmonitor.app...', 'https://tech-worldmonitor-app.translate.goog...']) {
         assert.equal(allows(origin), true);
         const req = new Request('https://api.worldmonitor.app/x', { headers: { Origin: origin } });
-        for (const headers of [getCorsHeaders(req), getCorsHeadersJs(req), buildCorsHeadersWorker(origin)]) {
+        for (const headers of [getCorsHeaders(req), getCorsHeadersJs(req)]) {
           assert.equal(headers['Access-Control-Allow-Origin'], origin);
         }
       }
@@ -408,7 +400,7 @@ describe('bounded CORS Origin validation (#9315)', () => {
     });
   }
 
-  it('rejects oversized origins before URL parsing in all three implementations', () => {
+  it('rejects oversized origins before URL parsing in both implementations', () => {
     const origin = 'https://worldmonitor.app' + '.'.repeat(300);
     const req = new Request('https://api.worldmonitor.app/x', { headers: { Origin: origin } });
     const OriginalURL = globalThis.URL;
@@ -422,20 +414,10 @@ describe('bounded CORS Origin validation (#9315)', () => {
     try {
       assert.equal(isDisallowedOriginJs(req), true);
       assert.equal(isAllowedOrigin(origin), false);
-      assert.equal(isAllowedOriginWorker(origin), false);
       assert.equal(parses, 0);
     } finally {
       globalThis.URL = OriginalURL;
     }
-  });
-
-  it('Worker keeps oversized preflight denials readable without granting successful responses', async () => {
-    const origin = 'https://worldmonitor.app' + '.'.repeat(300);
-    const req = new Request('https://api.worldmonitor.app/api/test', { method: 'OPTIONS', headers: { Origin: origin } });
-    const response = await corsWorker.fetch(req, {}, {});
-    assert.equal(response.status, 204);
-    assert.equal(response.headers.get('Access-Control-Allow-Origin'), origin);
-    assert.equal(buildCorsHeadersWorker(origin)['Access-Control-Allow-Origin'], 'https://worldmonitor.app');
   });
 });
 
@@ -446,7 +428,6 @@ describe('CORS triplet parity — no vercel.app name pattern in any twin', () =>
   const TWINS = [
     '../server/cors.ts',
     '../api/_cors.js',
-    '../workers/api-cors-preflight/src/index.js',
   ];
 
   for (const rel of TWINS) {
@@ -456,64 +437,6 @@ describe('CORS triplet parity — no vercel.app name pattern in any twin', () =>
         !/\\\.vercel\\\.app/.test(source),
         `${rel} must not allowlist Vercel previews by name pattern`,
       );
-    });
-  }
-
-  it('Worker rejects a third-party eliewm-shaped project and falls back to the canonical origin', () => {
-    const origin = 'https://worldmonitor-attacker-eliewm.vercel.app';
-    assert.equal(isAllowedOriginWorker(origin), false);
-    const headers = buildCorsHeadersWorker(origin);
-    assert.equal(headers['Access-Control-Allow-Origin'], 'https://worldmonitor.app');
-  });
-});
-
-describe('CORS Worker superset invariant — edge allowlist ⊇ function allowlist', () => {
-  // The api-cors-preflight Worker (workers/api-cors-preflight) short-circuits
-  // OPTIONS preflights at the edge, so its allowlist MUST be a superset of
-  // api/_cors.js. If the Worker rejects an origin the function would accept,
-  // the preflight echoes the canonical worldmonitor.app fallback and the
-  // browser blocks the request before it reaches Vercel.
-  //
-  // The Worker suites also run in test:data. This cross-boundary check catches
-  // function/Worker drift when either allowlist changes.
-  //
-  // Localhost/127 are intentionally omitted: they are DEV-only on the function
-  // side (NODE_ENV-gated) and never reach the prod-only Worker.
-  const fnAllows = (origin: string) =>
-    !isDisallowedOriginJs(new Request('https://worldmonitor.app/x', { headers: { Origin: origin } }));
-
-  const PROD_ORIGINS = [
-    'https://worldmonitor.app',
-    'https://www.worldmonitor.app',
-    'https://tech.worldmonitor.app',
-    'https://worldmonitor.app.',
-    'https://tech.worldmonitor.app.',
-    'https://www-worldmonitor-app.translate.goog',
-    'https://worldmonitor-app.translate.goog',
-    'https://tech-worldmonitor-app.translate.goog',
-    'tauri://localhost',
-    'asset://localhost',
-    // Negatives — the function rejects these, so the superset assertion is a
-    // no-op for them; included to document the boundary.
-    'https://worldmonitor-git-feature-eliewm.vercel.app',
-    'https://worldmonitor-attacker-eliewm.vercel.app',
-    'https://some-other-app-eliewm.vercel.app',
-    'https://worldmonitor-git-feature-attacker.vercel.app',
-    'https://worldmonitor-feature-elie-abc123.vercel.app',
-    'https://evil.com',
-    'https://evil-example-com.translate.goog',
-    'https://evil--worldmonitor-app.translate.goog',
-  ];
-
-  for (const origin of PROD_ORIGINS) {
-    it(`Worker allows everything the function allows: ${origin}`, () => {
-      if (fnAllows(origin)) {
-        assert.equal(
-          isAllowedOriginWorker(origin),
-          true,
-          `Worker rejects ${origin} that api/_cors.js accepts — its OPTIONS preflight will echo the worldmonitor.app fallback and the browser will block it`,
-        );
-      }
     });
   }
 });
@@ -576,7 +499,6 @@ describe('credentialed CORS app-host boundary', () => {
   const checks = [
     ['Edge', (origin: string) => !isDisallowedOriginJs(new Request('https://api.worldmonitor.app/x', { headers: { Origin: origin } }))],
     ['gateway', isAllowedOrigin],
-    ['Worker', isAllowedOriginWorker],
   ] as const;
   for (const [surface, allows] of checks) {
     it(`${surface} retains every supported app host and its translated form`, () => {
@@ -598,7 +520,7 @@ describe('credentialed CORS app-host boundary', () => {
         for (const origin of [`https://${host}`, `https://${host}.`, `https://${host.replaceAll('.', '-')}.translate.goog`]) {
           assert.equal(allows(origin), false, origin);
           const request = new Request('https://api.worldmonitor.app/x', { headers: { Origin: origin } });
-          for (const headers of [getCorsHeaders(request), getCorsHeadersJs(request), buildCorsHeadersWorker(origin)]) {
+          for (const headers of [getCorsHeaders(request), getCorsHeadersJs(request)]) {
             assert.notEqual(headers['Access-Control-Allow-Origin'], origin, 'successful responses must not grant the refused origin');
           }
         }

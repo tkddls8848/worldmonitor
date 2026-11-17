@@ -7,16 +7,10 @@
  * pricing-page footer"; /pro actually renders the shared `<Footer />`, and that
  * second footer belongs to the `#enterprise` route. Both are covered.)
  *
- * This suite reads the PRERENDERED pages, not the JSX: `public/pro/*.html` is
- * what a buyer and a crawler actually receive, so a link that a refactor drops
- * from the render fails here even if the constant survives in source. The
- * dashboard's own legal row is built at runtime by `legalLinksHtml()`, which is
- * asserted directly.
- *
- * Built pages follow the repo convention (#6898): skip when the checkout has
- * not run `npm run build:pro`, FAIL when WM_EXPECT_BUILT_OUTPUT=1 says CI did.
+ * The /pro and welcome pages were removed with pro-test/; what remains is the
+ * shared legal cluster and the dashboard's own legal row, which is built at
+ * runtime by `legalLinksHtml()` and asserted directly.
  */
-import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -29,20 +23,6 @@ import {
   TRADEMARK_PATH,
 } from '../shared/legal.ts';
 import { legalLinksHtml } from '../src/utils/legal-links.ts';
-// @ts-expect-error — JS helper, no declaration file
-import { guardProBuiltOutput, shouldSkipProBuiltOutput } from './_lib/pro-built-output.mjs';
-
-const skip = shouldSkipProBuiltOutput();
-guardProBuiltOutput();
-
-const read = (rel: string) => readFileSync(new URL(`../${rel}`, import.meta.url), 'utf8');
-
-/** The rendered <footer> of a prerendered page. */
-function footerOf(html: string, label: string): string {
-  const match = html.match(/<footer[\s\S]*<\/footer>/);
-  assert.ok(match, `${label} should render a <footer>`);
-  return match[0];
-}
 
 const REQUIRED = [EULA_PATH, TERMS_PATH, PRIVACY_PATH, LICENSE_PATH, TRADEMARK_PATH];
 
@@ -55,44 +35,6 @@ describe('legal links are reachable in one click', () => {
     for (const link of LEGAL_FOOTER_LINKS) {
       assert.ok(link.label.length > 0, `${link.path} needs a label`);
     }
-  });
-
-  it('the welcome page footer links every legal document', { skip }, () => {
-    const footer = footerOf(read('public/pro/welcome.html'), 'the welcome page');
-    for (const path of REQUIRED) {
-      assert.ok(
-        footer.includes(`href="${path}"`),
-        `public/pro/welcome.html footer is missing href="${path}"`,
-      );
-    }
-  });
-
-  /**
-   * Only welcome.html is prerendered — `pro-test/prerender.mjs` renders
-   * index.html with empty content, so the Enterprise footer exists only after
-   * hydration and no built artifact can be read for it. Rather than assert a
-   * second hand-written row by regex, both footers render the SAME component,
-   * whose anchors the prerender case above proves for real. What is left to
-   * check here is only that this footer still mounts it.
-   *
-   * /pro itself needs no separate case: it renders the shared `<Footer />`,
-   * the same component welcome.html prerenders. Verified in a browser at
-   * /pro/#pricing, /pro/#enterprise, and /pro/welcome.html.
-   */
-  it('the Enterprise page footer mounts the same legal nav', () => {
-    const app = read('pro-test/src/App.tsx');
-    const footer = footerOf(app, 'pro-test/src/App.tsx');
-    assert.match(
-      footer,
-      /<LegalFooterNav\s*\/>/,
-      'the Enterprise footer must render <LegalFooterNav />, not a copy of the links',
-    );
-    assert.match(app, /import \{ LegalFooterNav \}/);
-  });
-
-  it('the shared footer (welcome + /pro) mounts the same legal nav', () => {
-    const footer = footerOf(read('pro-test/src/components/Footer.tsx'), 'Footer.tsx');
-    assert.match(footer, /<LegalFooterNav\s*\/>/);
   });
 
   it('the dashboard legal row carries the same four documents', () => {

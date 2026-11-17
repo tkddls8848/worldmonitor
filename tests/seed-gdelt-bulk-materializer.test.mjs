@@ -1000,16 +1000,6 @@ describe('gdelt materializer freshness constants stay in lockstep (#5864)', () =
   const read = (rel) => readFileSync(new URL(rel, import.meta.url), 'utf8');
 
   it('cron cadence, RUN_SEED_OPTS.maxStaleMin, health and seed-health agree', () => {
-    const registry = JSON.parse(read('../scripts/railway-services.json'));
-    const entry = registry.find((service) => service.service === 'seed-gdelt-intel');
-    assert.ok(entry, 'the materializer service entry must exist');
-    assert.match(entry.cronSchedule, /^\*\/15 /, 'the materializer runs every 15 minutes');
-    assert.equal(
-      entry.entry,
-      'scripts/seed-gdelt-bulk-materializer.mjs',
-      'the service must run the materializer, not the retired DOC seeder',
-    );
-
     const cronMin = 15;
     const maxStaleMin = RUN_SEED_OPTS.maxStaleMin;
     assert.ok(

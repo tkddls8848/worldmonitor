@@ -41,7 +41,6 @@ const firmsModuleSrc = readFileSync(resolve(here, '../scripts/wildfire/firms-are
 const testSrc = readFileSync(fileURLToPath(import.meta.url), 'utf8');
 const seederSrc = readFileSync(resolve(here, '../scripts/seed-fire-detections.mjs'), 'utf8');
 const aisRelaySrc = readFileSync(resolve(here, '../scripts/ais-relay.cjs'), 'utf8');
-const railwaySrc = readFileSync(resolve(here, '../scripts/railway-services.json'), 'utf8');
 
 function firmsDetection(overrides = {}) {
   return {
@@ -1141,7 +1140,7 @@ describe('module import contract', () => {
     assert.doesNotMatch(aisRelaySrc, /bc-wildfire/);
   });
 
-  it('seeder merges BC into the canonical wildfire key and Railway watches the module', () => {
+  it('seeder merges BC into the canonical wildfire key', () => {
     assert.match(seederSrc, /mergeWildfireSourcesWithBc/);
     assert.match(seederSrc, /fetchBcFirePoints/);
     assert.match(seederSrc, /fetchCwfisFires/);
@@ -1153,8 +1152,5 @@ describe('module import contract', () => {
     assert.doesNotMatch(seederSrc, /fetch\.bind/);
     assert.match(firmsModuleSrc, /firms\.modaps\.eosdis\.nasa\.gov/);
     assert.doesNotMatch(firmsModuleSrc, /firms2\.modaps\.eosdis\.nasa\.gov/);
-    assert.match(railwaySrc, /scripts\/wildfire\/bc-fire-points\.mjs/);
-    assert.match(railwaySrc, /scripts\/wildfire\/cwfis-wfs\.mjs/);
-    assert.match(railwaySrc, /scripts\/wildfire\/firms-area\.mjs/);
   });
 });

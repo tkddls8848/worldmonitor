@@ -364,22 +364,6 @@ const VALID_INPUTS: Record<string, Record<string, unknown>> = {
   open_sign_in: {},
 };
 
-interface HomepageTool {
-  name: string;
-  title?: string;
-  description: string;
-  inputSchema: Record<string, unknown>;
-  annotations?: WebMCP.ToolAnnotations;
-  execute(args: Record<string, unknown>): unknown;
-}
-
-const HOMEPAGE_VALID_INPUTS: Record<string, Record<string, unknown>> = {
-  open_dashboard: { monitor: 'world' },
-  getWorldMonitorMcpEndpoint: {},
-  listCountryScorecards: { countryCodes: ['DE'] },
-  getCountryScorecard: { countryCode: 'DE' },
-};
-
 const WEBMCP_MAINTAINER_SOURCES = [
   'src/config/webmcp.ts',
   'src/services/webmcp.ts',
@@ -410,10 +394,7 @@ const WEBMCP_MAINTAINER_SOURCES = [
   'src/services/tab-store.ts',
   'src/services/dashboard-tab-actions.ts',
   'src/components/GlobalProcurementPanel.ts',
-  'pro-test/welcome.html',
-  'vercel.json',
   'vite.config.ts',
-  'pro-test/vite.config.ts',
   'tests/webmcp*.test.*',
   'tests/dom/*webmcp*.test.*',
   'tests/deploy-config.test.mjs',
@@ -421,7 +402,6 @@ const WEBMCP_MAINTAINER_SOURCES = [
   'scripts/evaluate-webmcp-evals.mjs',
   'e2e/webmcp.spec.ts',
   'e2e/webmcp-cancellation.spec.ts',
-  'e2e/embed.spec.ts',
 ] as const;
 
 const WEBMCP_FOCUSED_VERIFICATION_TESTS = [
@@ -580,31 +560,8 @@ function assertGuideContract(
   assert.match(maintainerGuide, /--test-concurrency=1/);
 }
 
-function homepageTools(): HomepageTool[] {
-  const html = readFileSync(resolve(ROOT, 'pro-test/welcome.html'), 'utf8');
-  const script = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)]
-    .map((match) => match[1] ?? '')
-    .find((body) => body.includes('document.modelContext'));
-  const iife = script?.match(/\(function \(\) \{[\s\S]*?\}\)\(\);/)?.[0];
-  assert.ok(iife, 'homepage WebMCP registration IIFE must exist');
-  const tools: HomepageTool[] = [];
-  const document = {
-    modelContext: {
-      registerTool(tool: HomepageTool) {
-        tools.push(tool);
-        return Promise.resolve();
-      },
-    },
-    addEventListener() {},
-  };
-  const window = { location: { assign() {} }, addEventListener() {} };
-  new Function('window', 'document', iife)(window, document);
-  return tools;
-}
-
 describe('WebMCP canonical inventories', () => {
-  it('locks exact homepage, SPA, and declarative namespaces', () => {
-    assert.deepEqual(homepageTools().map(({ name }) => name), WEBMCP_HOMEPAGE_TOOL_NAMES);
+  it('locks exact SPA and declarative namespaces, disjoint from the homepage names', () => {
     assert.deepEqual(
       buildWebMcpTools(createBindings(), () => {}).map(({ name }) => name),
       WEBMCP_SPA_TOOL_NAMES,
@@ -625,56 +582,6 @@ describe('WebMCP canonical inventories', () => {
           `WebMCP namespaces ${left} and ${right} overlap`,
         );
       }
-    }
-  });
-
-  it('keeps homepage metadata, schemas, annotations, and outputs inside the shared budgets', async (t) => {
-    // The scorecard tools read the public scorecard routes. Serve the largest
-    // realistic shapes: 196 countries, five pillars, long source names.
-    const pillars = ['food', 'energy', 'demographics', 'technology', 'defense'].map((pillar) => ({
-      pillar,
-      hasScore: true,
-      score: 5,
-      band: 'strong-capability',
-      inputCoverage: 0.75,
-      inputs: Array.from({ length: 8 }, (_, i) => ({ source: `${'Very long statistical source name '.repeat(4)}${i}` })),
-    }));
-    const countries = Array.from({ length: 196 }, (_, i) => `${String.fromCharCode(65 + (i % 26))}${String.fromCharCode(65 + Math.floor(i / 26))}`);
-    t.mock.method(globalThis, 'fetch', async (url: string) => {
-      const body = url.includes('list-five-factor-scorecards')
-        ? { scorecards: countries.map((countryCode) => ({ countryCode, pillars })), computedAt: '2026-11-10T12:00:00.000Z' }
-        : { scorecard: { countryCode: 'DE', methodologyVersion: '1.0.0', computedAt: '2026-11-10T12:00:00.000Z', pillars } };
-      return new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    });
-    const ajv = new Ajv2020({ allErrors: true, strict: true });
-    for (const tool of homepageTools()) {
-      assert.ok(tool.name.length <= WEBMCP_TOOL_BUDGETS.nameChars, `${tool.name}: name`);
-      assert.ok((tool.title?.length ?? 0) > 0, `${tool.name}: title is required`);
-      assert.ok((tool.title?.length ?? 0) <= WEBMCP_TOOL_BUDGETS.titleChars, `${tool.name}: title`);
-      assert.ok(tool.description.length <= WEBMCP_TOOL_BUDGETS.descriptionChars, `${tool.name}: description`);
-      assert.ok(tool.annotations, `${tool.name}: annotations are required`);
-      assert.ok(
-        JSON.stringify(tool.inputSchema).length <= WEBMCP_TOOL_BUDGETS.inputSchemaJsonChars,
-        `${tool.name}: input schema`,
-      );
-      const properties = tool.inputSchema.properties;
-      if (properties && typeof properties === 'object') {
-        for (const property of Object.values(properties)) {
-          if (property && typeof property === 'object' && 'description' in property) {
-            assert.ok(
-              String(property.description).length <= WEBMCP_TOOL_BUDGETS.propertyDescriptionChars,
-              `${tool.name}: property description`,
-            );
-          }
-        }
-      }
-      const validate = ajv.compile(tool.inputSchema);
-      const input = HOMEPAGE_VALID_INPUTS[tool.name]!;
-      assert.equal(validate(input), true, `${tool.name}: ${ajv.errorsText(validate.errors)}`);
-      const output = await tool.execute(input);
-      const serialized = JSON.stringify(output);
-      assert.equal(typeof serialized, 'string', `${tool.name}: output must be JSON serializable`);
-      assert.ok(serialized.length <= WEBMCP_TOOL_BUDGETS.outputJsonChars, `${tool.name}: output`);
     }
   });
 

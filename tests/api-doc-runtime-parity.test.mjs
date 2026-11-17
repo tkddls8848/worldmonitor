@@ -5,7 +5,6 @@ import { describe, it } from 'node:test';
 import analyticsHealthHandler from '../api/analytics-health.js';
 import correlationRuntimeModeHandler from '../api/correlation-runtime-mode.js';
 import securityReportHandler from '../api/security/report.js';
-import middleware from '../middleware.ts';
 import { checkProMcpAccess } from '../server/_shared/pro-mcp-gate.ts';
 import { ENDPOINT_RATE_POLICIES } from '../server/_shared/rate-limit.ts';
 
@@ -88,23 +87,5 @@ describe('API documentation stays aligned with runtime policy boundaries', () =>
     assert.match(usageErrors, /\/api\/seed-contract-probe[\s\S]*x-probe-secret: \$RELAY_SHARED_SECRET/i);
     assert.match(usageErrors, /\/api\/internal\/brief-why-matters[\s\S]*Authorization: Bearer \$RELAY_SHARED_SECRET/i);
     assert.doesNotMatch(usageErrors, /Exact public paths/i);
-  });
-
-  it('describes method-aware markdown and social-preview bot-gate carve-outs', () => {
-    const callMiddleware = (path, { method = 'GET', userAgent } = {}) => middleware(new Request(
-      `https://worldmonitor.app${path}`,
-      { method, headers: userAgent ? { 'user-agent': userAgent } : {} },
-    ));
-    assert.equal(callMiddleware('/api/health.md', { userAgent: 'curl/8.7.1' }), undefined);
-    assert.equal(callMiddleware('/api/health.md', { method: 'HEAD', userAgent: 'curl/8.7.1' }), undefined);
-    assert.equal(callMiddleware('/api/story', { userAgent: 'Twitterbot/1.0' }), undefined);
-    assert.equal(
-      callMiddleware('/api/brief/carousel/user_abc/2026-08-24-1200/0', { userAgent: 'TelegramBot/1.0' }),
-      undefined,
-    );
-
-    assert.match(usageErrors, /`GET`\/`HEAD`[^\n]*markdown twins/i);
-    assert.match(usageErrors, /social preview[^\n]*(?:image|carousel)/i);
-    assert.doesNotMatch(usageErrors, /Everything else[^\n]*is behind it/i);
   });
 });

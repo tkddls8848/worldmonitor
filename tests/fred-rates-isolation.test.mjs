@@ -20,20 +20,6 @@ describe('FRED/rates seeder isolation', () => {
     assert.doesNotMatch(source, /seed-economy\.mjs/);
     assert.match(source, /FRED_API_KEY/);
   });
-  it('is independently scheduled in the Railway registry', () => {
-    const registry = JSON.parse(fs.readFileSync(new URL('../scripts/railway-services.json', import.meta.url), 'utf8'));
-    const service = registry.find((item) => item.service === 'seed-fred-rates');
-    assert.equal(service?.entry, 'scripts/seed-fred-rates.mjs');
-    assert.equal(service?.cronSchedule, '0 * * * *');
-    assert.deepEqual(service?.requiredEnv, [
-      'FRED_API_KEY',
-      'UPSTASH_REDIS_REST_URL',
-      'UPSTASH_REDIS_REST_TOKEN',
-      'PROXY_URL',
-    ]);
-    assert.ok(service.watchPatterns.includes('scripts/_fred-seeder.mjs'));
-    assert.ok(!service.watchPatterns.includes('scripts/seed-economy.mjs'));
-  });
   it('writes its durable activation marker only from runSeed afterPublish', () => {
     const source = fs.readFileSync(new URL('../scripts/seed-fred-rates.mjs', import.meta.url), 'utf8');
     assert.match(source, /afterPublish:\s*markFredRatesActivated/);

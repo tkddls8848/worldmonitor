@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { installRedis } from './helpers/fake-upstash-redis.mts';
@@ -167,17 +166,4 @@ test('an unchanged old source cannot keep re-anchoring success metadata', () => 
   assert.deepEqual(result.redis[KEY], fresh.redis[KEY]);
   assert.deepEqual(result.redis[META], fresh.redis[META]);
   assert.equal(health(result.redis, '2026-09-10T02:00:00Z').status, 'STALE_CONTENT');
-});
-
-test('the desired cron retries after a missed run or Saturday repair within 18 hours', () => {
-  const registry = JSON.parse(readFileSync(new URL('../scripts/railway-services.json', import.meta.url), 'utf8'));
-  const entries = Array.isArray(registry) ? registry : registry.services;
-  const service = entries.find((s: { service: string }) => s.service === 'seed-market-breadth');
-  assert.equal(service.cronSchedule, '0 2,8 * * *');
-  const hours = service.cronSchedule.split(' ')[1].split(',').map(Number);
-  const ticks: number[] = [];
-  for (let day = 5; day <= 9; day++) for (const hour of hours) ticks.push(Date.parse(`2026-09-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:00:00Z`));
-  for (const trigger of [Date.parse('2026-09-05T02:00:00Z'), Date.parse('2026-09-05T15:40:00Z')]) {
-    assert.ok(ticks.find((time) => time > trigger)! - trigger <= 18 * 3600_000);
-  }
 });

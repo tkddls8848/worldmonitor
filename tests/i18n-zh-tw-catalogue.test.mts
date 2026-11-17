@@ -35,7 +35,6 @@ const s2tw = OpenCC.Converter({ from: 'cn', to: 'tw' });
 
 const CATALOGUES = [
   { name: 'src', simplified: 'src/locales/zh.json', traditional: 'src/locales/zh-TW.json' },
-  { name: 'pro-test', simplified: 'pro-test/src/locales/zh.json', traditional: 'pro-test/src/locales/zh-TW.json' },
 ];
 
 /**
@@ -57,16 +56,13 @@ const CATALOGUES = [
  */
 const EXPECTED_TESTS = [
   'src: no value is left in Simplified',
-  'pro-test: no value is left in Simplified',
   'catches a Simplified value planted in the Traditional catalogue',
   'the generator table still holds every term enforced here',
   'every replacement is itself Traditional and settles the rule that produced it',
   'src: carries none of the rejected terms',
-  'pro-test: carries none of the rejected terms',
   'the generator table still holds every rule enforced here',
   'every per-entry source term has a decided allow-list',
   'src: every per-entry override is applied',
-  'pro-test: every per-entry override is applied',
   'keeps generated locales inside LOCALES',
   'runs --check in the unit job, with nothing in front of it',
   'the npm scripts invoke the same generator CI does',
@@ -162,16 +158,15 @@ interface KeyRule {
 /** The per-entry rules, written out for the same reason as EXPECTED_BANNED. */
 const EXPECTED_KEY_RULES: KeyRule[] = [
   { catalogue: 'src', path: 'popups.techEvent.days.inDays', from: '天后', to: '天後' },
-  { catalogue: 'pro-test', path: 'faq.q5', from: '這隻', to: '這只' },
 ];
 
 /**
  * Dotted paths where a KEY_OVERRIDES source term is the right answer rather than
- * residue, per term. 天后 is a deity and a diva, 這隻 is correct before an
- * animal — that ambiguity is why those rules are per-entry rather than global.
+ * residue, per term. 天后 is a deity and a diva — that ambiguity is why the
+ * rule is per-entry rather than global.
  *
- * The lists are nonetheless empty, because neither sense occurs in either
- * catalogue: the terms are banned everywhere until one does. Scoping the guard
+ * The list is nonetheless empty, because neither sense occurs in the
+ * catalogue: the term is banned everywhere until one does. Scoping the guard
  * to the three entries the rules name instead leaves every other entry open —
  * a new key holding "3天后" converts to 天后 and the suite stays green — and
  * scoping it to the sense the entry has is not something a substring can do.
@@ -179,7 +174,6 @@ const EXPECTED_KEY_RULES: KeyRule[] = [
  */
 const KEY_OVERRIDE_ALLOWED_PATHS = new Map<string, readonly string[]>([
   ['天后', []],
-  ['這隻', []],
 ]);
 
 /** Field by field, so reordering the Python table is not a failure. */
@@ -527,8 +521,6 @@ describe('zh-TW catalogues — the generator is the freshness gate', () => {
     const inputs = [
       'src/locales/zh.json',
       'src/locales/zh-TW.json',
-      'pro-test/src/locales/zh.json',
-      'pro-test/src/locales/zh-TW.json',
       'scripts/convert-zh-tw.py',
       'tests/i18n-zh-tw-catalogue.test.mts',
     ];

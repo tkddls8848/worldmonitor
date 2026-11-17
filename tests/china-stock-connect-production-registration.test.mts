@@ -36,28 +36,6 @@ describe('China Stock Connect production registration (#6155)', () => {
       bundle,
       /'China-Stock-Connect'[^}]*canonicalKey:\s*'market:china:stock-connect:v1'/,
     );
-    // The bundle-wide requiredEnv no longer carries RELAY_SHARED_SECRET since
-    // the China Corporate Disclosures edge hop was retired. SZSE_PROXY_URL
-    // stays undeclared because the adapter falls back to PROXY_URL.
-    const railwayServices = JSON.parse(read('scripts/railway-services.json')) as Array<{
-      service: string;
-      requiredEnv?: (string | string[])[];
-      watchPatterns?: string[];
-    }>;
-    const marketBackup = railwayServices.find(
-      (entry) => entry.service === 'seed-bundle-market-backup',
-    );
-    assert.deepEqual(marketBackup?.requiredEnv, ['PROXY_URL']);
-    for (const path of [
-      'scripts/_china-exchange-transport.mjs',
-      'scripts/china-stock-connect/adapters.mjs',
-      'scripts/seed-china-stock-connect.mjs',
-    ]) {
-      assert.ok(
-        marketBackup?.watchPatterns?.includes(path),
-        `${path} must be watched or Railway will not redeploy on a change to it`,
-      );
-    }
   });
 
   it('resolves the SZSE proxy through the shared fallback the registry declares', () => {

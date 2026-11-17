@@ -29,20 +29,9 @@ describe('physical premium production registration', () => {
       bundle,
       /label: 'Physical-Premiums'.*timeoutMs: PHYSICAL_PREMIUM_SECTION_TIMEOUT_MS/s,
     );
-
-    const registry = JSON.parse(read('scripts/railway-services.json'));
-    const macro = registry.find((entry) => entry.entry === 'scripts/seed-bundle-macro.mjs');
-    assert.ok(macro);
-    assert.equal(macro.requiredEnv, undefined);
-    assert.ok(macro.watchPatterns.includes('scripts/seed-physical-premiums.mjs'));
-    assert.ok(macro.watchPatterns.includes('scripts/lib/main-module.mjs'));
-    assert.ok(macro.watchPatterns.includes('scripts/lib/physical-divergence.mjs'));
-    assert.ok(macro.watchPatterns.includes('scripts/shared/physical-divergence-contract.js'));
   });
 
   it('protects the physical publisher with an early slot and one retry window', () => {
-    const registry = JSON.parse(read('scripts/railway-services.json'));
-    const macro = registry.find((entry) => entry.entry === 'scripts/seed-bundle-macro.mjs');
     const orderAt = (instant) => orderMacroSections(
       new Date(instant),
       'Education',
@@ -50,7 +39,6 @@ describe('physical premium production registration', () => {
       ['BIS', 'China'],
     );
 
-    assert.equal(macro?.cronSchedule, '0 8,9,10 * * *');
     assert.equal(EDUCATION_PRIORITY_UTC_DAY, 0);
     assert.equal(EDUCATION_PRIORITY_UTC_HOUR, 8);
     assert.deepEqual(orderAt('2026-09-06T08:00:00Z'), ['Education', 'Physical', 'BIS', 'China']);

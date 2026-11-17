@@ -35,7 +35,6 @@ describe('unicode safety scan scope', () => {
       'scripts',
       'tests',
       'e2e',
-      'pro-test',
       '.github',
       '.husky',
     ]);
@@ -65,7 +64,6 @@ describe('unicode safety scan scope', () => {
       'scripts/translate-locales.mjs',
       'tests/locale-staleness.test.mjs',
       'e2e/pricing.spec.ts',
-      'pro-test/src/i18n.ts',
       '.github/workflows/ci.yml',
       '.husky/pre-commit',
     ]) {
@@ -107,7 +105,7 @@ describe('unicode safety locale allowance', () => {
 
   it('allows the joiners Persian and Devanagari require', () => {
     const persian = 'MCP ' + ZWNJ + ' SDK';
-    assert.deepEqual(scanText('pro-test/src/locales/fa.json', persian), []);
+    assert.deepEqual(scanText('src/locales/fa.json', persian), []);
     assert.deepEqual(scanText('src/locales/hi.json', 'a' + ZWJ + 'b'), []);
   });
 
@@ -116,7 +114,7 @@ describe('unicode safety locale allowance', () => {
     // reverses a rendered digit run, so "$39.99" can display as something else
     // while the JSON a reviewer reads looks correct.
     const spoofed = '$39.99' + RLO + '/mo';
-    const found = scanText('pro-test/src/locales/fa.json', spoofed);
+    const found = scanText('src/locales/fa.json', spoofed);
     assert.equal(found.length, 1);
     assert.equal(found[0].kind, 'bidi-control');
   });
@@ -181,7 +179,7 @@ describe('unicode safety real tree', () => {
     };
     walk(ROOT);
 
-    assert.ok(localeDirs.length >= 2, 'expected to find the app and pro-test locale directories');
+    assert.ok(localeDirs.length >= 1, 'expected to find the app locale directory');
     for (const dir of localeDirs) {
       assert.ok(
         LOCALE_DATA_PREFIXES.includes(dir) || EXCLUDED_PREFIXES.includes(dir),

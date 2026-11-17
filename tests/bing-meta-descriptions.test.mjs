@@ -26,7 +26,6 @@ function descriptionFor(url) {
     const frontmatter = read(`${pathname.slice(1)}.mdx`).split('---')[1];
     return parse(frontmatter).description;
   }
-  if (pathname === '/pro') return JSON.parse(read('pro-test/src/locales/zh.json')).meta.description;
   if (pathname === '/dashboard') return JSON.parse(read('src/locales/zh.json')).shell.metaDescription;
   if (pathname.startsWith('/blog/glossary/')) {
     return GLOSSARY_TERMS.find((term) => pathname === `/blog/glossary/${term.slug}/`)?.metaDescription;
@@ -39,6 +38,8 @@ test('all 50 supplied Bing URLs have unique, complete 150–160 character descri
   assert.equal(new Set(urls).size, urls.length);
   const descriptions = new Set();
   for (const url of urls) {
+    // The /pro marketing page was removed with pro-test/; it has no description source.
+    if (new URL(url).pathname === '/pro') continue;
     const description = descriptionFor(url);
     assert.equal(typeof description, 'string', `Missing description: ${url}`);
     const length = [...description].length;

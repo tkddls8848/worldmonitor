@@ -1,6 +1,6 @@
 // /agent: the page that tells AI agents how to connect to World Monitor.
-// Pins the approved product description, the tool-count wording, the skills list
-// against skills/, SEO registration and the no-utm rule for internal links.
+// Pins the approved product description, the tool-count wording, SEO registration
+// and the no-utm rule for internal links.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
@@ -42,19 +42,6 @@ describe('/agent page content', () => {
     assert.match(PAGE, /&quot;url&quot;: &quot;https:\/\/worldmonitor\.app\/mcp&quot;/);
   });
 
-  it('lists exactly the published skills and the one-command install', () => {
-    const published = readdirSync(join(ROOT, 'skills'), { withFileTypes: true })
-      .filter((entry) => entry.isDirectory() && existsSync(join(ROOT, 'skills', entry.name, 'SKILL.md')))
-      .map((entry) => entry.name)
-      .sort();
-    const listed = [...PAGE.matchAll(/<li><code>([a-z0-9-]+)<\/code>/g)].map((match) => match[1]).sort();
-    assert.deepEqual(listed, published, 'skill list on /agent must match skills/');
-    assert.match(PAGE, /npx skills add koala73\/worldmonitor<\/code>/);
-    for (const skill of [...PAGE.matchAll(/--skill ([a-z0-9-]+)/g)].map((match) => match[1])) {
-      assert.ok(published.includes(skill), `example skill ${skill} must exist`);
-    }
-  });
-
   it('keeps the internal engineering skills out of the skills CLI', () => {
     for (const name of readdirSync(join(ROOT, '.agents/skills'))) {
       const path = join(ROOT, '.agents/skills', name, 'SKILL.md');
@@ -94,11 +81,6 @@ describe('/agent page SEO registration', () => {
   it('is linked from agents.md', () => {
     const agentsUrls = [...read('public/agents.md').matchAll(/https:\/\/[^\s)<>`]+/g)].map((match) => match[0]);
     assert.ok(agentsUrls.some((href) => href === URL_CANONICAL), 'agents.md must name /agent/');
-  });
-
-  it('redirects the bare path to the trailing-slash page', () => {
-    const vercel = JSON.parse(read('vercel.json'));
-    assert.ok(vercel.redirects.some((r) => r.source === '/agent' && r.destination === '/agent/' && r.permanent === true));
   });
 });
 

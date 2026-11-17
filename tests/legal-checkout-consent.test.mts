@@ -141,28 +141,9 @@ describe('every checkout entry point presents the Terms first', () => {
   }
 });
 
-describe('/pro presents the Terms before payment', () => {
-  it('the tier CTA renders the assent line immediately above the button', () => {
-    const source = read('pro-test/src/components/PricingSection.tsx');
-    assert.match(source, /import \{ CheckoutConsent \}/);
-    const consentAt = source.indexOf('<CheckoutConsent />');
-    const buttonAt = source.indexOf('<button\n      onClick={() => onCheckout(cta.productId)}');
-    assert.ok(consentAt > 0, 'PricingSection must render <CheckoutConsent />');
-    assert.ok(buttonAt > 0, 'PricingSection checkout button not found — update this anchor');
-    assert.ok(consentAt < buttonAt, 'the assent line must precede the checkout button');
-  });
-
-  it('the /pro consent component links both documents', () => {
-    const source = read('pro-test/src/components/CheckoutConsent.tsx');
-    assert.match(source, /href=\{EULA_PATH\}/);
-    assert.match(source, /href=\{PRIVACY_PATH\}/);
-  });
-});
-
 describe('sign-up presents the licence too', () => {
   for (const file of [
     'src/services/clerk.ts',
-    'pro-test/src/services/clerk.ts',
   ]) {
     it(`${file} passes Clerk the licence and Privacy page URLs`, () => {
       const source = read(file);

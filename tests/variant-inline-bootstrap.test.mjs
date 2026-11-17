@@ -1,25 +1,16 @@
 // Committed-HTML contract by design (#8690, section 2): this suite pins
-// variant-host declarations and the inline script's CSP hash in vercel.json.
-// Runtime module tests do not check the committed HTML and header policy
-// that the browser reads before those modules run.
+// variant-host declarations in the inline pre-paint script. Runtime module
+// tests do not check the committed HTML that the browser reads before those
+// modules run. (The CSP hash check left with vercel.json.)
 //
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const indexHtml = readFileSync(resolve(__dirname, '../index.html'), 'utf-8');
-const vercelConfig = JSON.parse(readFileSync(resolve(__dirname, '../vercel.json'), 'utf-8'));
-const csp = vercelConfig.headers
-  .find((entry) => entry.headers?.some(
-    (header) => header.key === 'X-Frame-Options' && header.value === 'SAMEORIGIN',
-  ))
-  ?.headers
-  ?.find((header) => header.key === 'Content-Security-Policy')
-  ?.value ?? '';
 const variantBootstrapScript = indexHtml.match(/<script data-wm-prepaint>([\s\S]*?)<\/script>/)?.[1];
 
 describe('variant inline bootstrap', () => {
@@ -32,17 +23,11 @@ describe('variant inline bootstrap', () => {
     }
   });
 
-  it('allows the inline variant bootstrap through the CSP', () => {
+  it('keeps variant bootstrapping in the marked inline pre-paint script', () => {
     assert.ok(variantBootstrapScript, 'index.html must include the inline variant bootstrap script');
     assert.ok(
       variantBootstrapScript.includes('worldmonitor-variant') && variantBootstrapScript.includes('document.documentElement.dataset.variant'),
       'the marked pre-paint script must retain variant bootstrapping',
-    );
-
-    const hash = createHash('sha256').update(variantBootstrapScript).digest('base64');
-    assert.ok(
-      csp.includes(`'sha256-${hash}'`),
-      `Vercel Content-Security-Policy must include sha256-${hash} for the inline variant bootstrap script`,
     );
   });
 });

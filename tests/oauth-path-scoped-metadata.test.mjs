@@ -16,16 +16,9 @@
 
 import { strict as assert } from 'node:assert';
 import { describe, it } from 'node:test';
-import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import prmHandler from '../api/oauth-protected-resource.ts';
 import asHandler from '../api/oauth-authorization-server.ts';
-
-const vercelConfig = JSON.parse(
-  readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), '../vercel.json'), 'utf-8'),
-);
 
 const HOSTS = ['worldmonitor.app', 'www.worldmonitor.app', 'api.worldmonitor.app'];
 const get = (handler, host, path) => handler(new Request(`https://${host}${path}`, { headers: { host } }));
@@ -249,38 +242,4 @@ describe('the MCP 401 challenge points at the path-scoped document', () => {
     assert.equal(res.status, 410);
     assert.equal((await res.json()).error?.data?.reason, 'canonical_endpoint_required');
   });
-
-  // The edge function observes the original path: production serves markdown at
-  // /mcp and the JSON card at /.well-known/mcp, and both are rewritten to
-  // /api/mcp — handler.ts picks between them by pathname. So the transport path
-  // is read from the pathname alone, with no tag on the rewrite.
-  it('the /mcp rewrite stays a plain path rewrite', () => {
-    const rewrite = vercelConfig.rewrites.find((r) => r.source === '/mcp');
-    assert.ok(rewrite, 'expected the /mcp rewrite');
-    assert.equal(rewrite.destination, '/api/mcp');
-  });
-});
-
-describe('routing', () => {
-  // Every suffix reaches the handler, so an unsupported one gets the handler's
-  // JSON 404 rather than the SPA's HTML 404 — an exact-match rewrite per
-  // transport path would let unknown suffixes fall through to the filesystem.
-  it('any protected-resource suffix reaches the handler, carrying the suffix', () => {
-    const rewrite = vercelConfig.rewrites.find((r) => r.source.startsWith('/.well-known/oauth-protected-resource/'));
-    assert.ok(rewrite, 'expected a protected-resource suffix rewrite');
-    assert.match(rewrite.source, /:\w+\*?$/, 'the rewrite must capture any suffix');
-    assert.match(rewrite.destination, /^\/api\/oauth-protected-resource\?resource=:/);
-  });
-
-  for (const source of [
-    '/.well-known/oauth-authorization-server/mcp',
-    '/.well-known/oauth-authorization-server/api/mcp',
-  ]) {
-    it(`${source} is rewritten to its handler ahead of the SPA catch-all`, () => {
-      const index = vercelConfig.rewrites.findIndex((r) => r.source === source);
-      assert.ok(index >= 0, `expected a rewrite for ${source}`);
-      const catchAll = vercelConfig.rewrites.findIndex((r) => r.source === '/(.*)' || r.source === '/:path*');
-      if (catchAll >= 0) assert.ok(index < catchAll, `${source} must precede the SPA catch-all`);
-    });
-  }
 });

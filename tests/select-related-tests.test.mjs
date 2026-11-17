@@ -207,9 +207,9 @@ describe('changedFiles', () => {
 
 describe('the repository inventory', () => {
   it('includes every pattern test:data runs, not only tests/', () => {
-    assert.deepEqual(testDataPatterns(), ['tests/*.test.mjs', 'tests/*.test.mts', 'cli/test/*.test.mjs', 'api/security/report.test.mjs', 'workers/api-cors-preflight/*.test.mjs']);
+    assert.deepEqual(testDataPatterns(), ['tests/*.test.mjs', 'tests/*.test.mts', 'cli/test/*.test.mjs', 'api/security/report.test.mjs']);
     const inventory = listInventory();
-    for (const prefix of ['tests/', 'cli/test/', 'api/security/', 'workers/api-cors-preflight/']) {
+    for (const prefix of ['tests/', 'cli/test/', 'api/security/']) {
       assert.ok(inventory.some((file) => file.startsWith(prefix)), prefix);
     }
   });

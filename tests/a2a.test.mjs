@@ -11,11 +11,9 @@ const ROOT = resolve(dirname(__filename), '..');
 
 const CARD_PATH = join(ROOT, 'public/.well-known/agent-card.json');
 const SERVER_CARD_PATH = join(ROOT, 'public/.well-known/mcp/server-card.json');
-const VERCEL_JSON_PATH = join(ROOT, 'vercel.json');
 
 const card = JSON.parse(readFileSync(CARD_PATH, 'utf-8'));
 const serverCard = JSON.parse(readFileSync(SERVER_CARD_PATH, 'utf-8'));
-const vercelConfig = JSON.parse(readFileSync(VERCEL_JSON_PATH, 'utf-8'));
 const originalEnv = { ...process.env };
 const originalSlidingWindow = Ratelimit.slidingWindow;
 
@@ -94,23 +92,6 @@ describe('a2a: agent card contract', () => {
 
   it('shares branding with the MCP server card (same icon)', () => {
     assert.equal(card.iconUrl, serverCard.icon);
-  });
-
-  it('vercel.json routes /a2a to the endpoint and shields it from the SPA catch-all', () => {
-    const rewrite = vercelConfig.rewrites.find((r) => r.source === '/a2a');
-    assert.ok(rewrite, 'missing /a2a rewrite');
-    assert.equal(rewrite.destination, '/api/a2a');
-
-    // #6575: the dashboard catch-all rewrite is gone — unknown paths 404.
-    // /a2a keeps its explicit endpoint rewrite, which is now structurally
-    // incapable of being shadowed by a SPA fallback.
-    const catchAll = vercelConfig.rewrites.find((r) => r.destination === '/dashboard.html' && r.source.startsWith('/((?!'));
-    assert.equal(catchAll, undefined, 'dashboard catch-all rewrite must stay removed (#6575)');
-
-    const corsBlock = vercelConfig.headers.find((h) => h.source === '/a2a');
-    assert.ok(corsBlock, 'missing /a2a headers block');
-    const acao = corsBlock.headers.find((h) => h.key === 'Access-Control-Allow-Origin');
-    assert.equal(acao?.value, '*');
   });
 });
 

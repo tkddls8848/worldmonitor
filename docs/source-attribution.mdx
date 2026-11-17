@@ -59,7 +59,7 @@ This generated inventory covers **882 active source hosts** representing **859 a
 | api.aviationstack.com (api.aviationstack.com) | structured — scripts/ais-relay.cjs, scripts/local/local-api-server.mjs, scripts/seed-aviation.mjs |
 | api.axios.com (api.axios.com) | feed — shared/news-catalog.json |
 | api.cammesa.com (api.cammesa.com) | structured — scripts/_regional-energy-source.mjs, scripts/shared/regional-energy-feeds.json |
-| api.cloudflare.com (api.cloudflare.com) | structured — scripts/_kv-storage.mjs, scripts/_r2-storage.mjs, scripts/cloudflare-cache-rule.mjs, scripts/local/local-api-server.mjs, +2 more |
+| api.cloudflare.com (api.cloudflare.com) | structured — scripts/_kv-storage.mjs, scripts/_r2-storage.mjs, scripts/local/local-api-server.mjs, scripts/seed-internet-outages.mjs, +1 more |
 | api.coingecko.com (api.coingecko.com) | structured — scripts/ais-relay.cjs |
 | api.data.gov.my (api.data.gov.my) | structured — scripts/_dosm-product-demand.mjs, scripts/backfill-fuel-prices-prev.mjs, scripts/seed-fuel-prices.mjs |
 | api.datos.gob.mx (api.datos.gob.mx) | structured — scripts/backfill-fuel-prices-prev.mjs |
@@ -457,7 +457,7 @@ This generated inventory covers **882 active source hosts** representing **859 a
 | lnc-abc-news.tubi.video (lnc-abc-news.tubi.video) | Excluded / candidate — No current fetch observed |
 | lobste.rs (lobste.rs) | feed — shared/news-catalog.json |
 | Local development transport (localhost) | structured — scripts/ais-relay.cjs, scripts/local/embedded-store.mjs, scripts/local/local-api-server.mjs, scripts/local/redis-rest-proxy.mjs, +3 more |
-| Local loopback transport (127.0.0.1) | structured — scripts/local/baseline/capture.mjs, scripts/local/local-api-server.mjs, scripts/measure-trade-animation-rebuild.mjs, scripts/personal-server.mjs, +3 more |
+| Local loopback transport (127.0.0.1) | structured — scripts/local/baseline/capture.mjs, scripts/local/local-api-server.mjs, scripts/measure-trade-animation-rebuild.mjs, scripts/personal-server.mjs, +2 more |
 | lowyinstitute.org (lowyinstitute.org) | feed — shared/news-catalog.json |
 | lustat.statec.lu (lustat.statec.lu) | structured — scripts/lib/food-prices-adapters/statec.mjs |
 | macleans.ca (macleans.ca) | feed — shared/news-catalog.json |
@@ -597,7 +597,7 @@ This generated inventory covers **882 active source hosts** representing **859 a
 | raw.githubusercontent.com (raw.githubusercontent.com) | structured — scripts/ais-relay.cjs, scripts/build-plane-alert-watchlist.mjs, scripts/fetch-country-boundary-overrides.mjs, scripts/generate-airline-codes.mjs, +4 more |
 | reasonstobecheerful.world (reasonstobecheerful.world) | feed — shared/news-catalog.json |
 | reddit.com (reddit.com) | structured — scripts/ais-relay.cjs, src/services/story-share.ts |
-| registry.modelcontextprotocol.io (registry.modelcontextprotocol.io) | structured — scripts/publish-mcp-registry.mjs |
+| registry.modelcontextprotocol.io (registry.modelcontextprotocol.io) | Excluded / candidate — No current fetch observed |
 | ReliefWeb (UN OCHA) (api.reliefweb.int) | structured — scripts/seed-climate-disasters.mjs |
 | reliefweb.int (reliefweb.int) | structured — scripts/seed-climate-news.mjs |
 | renaissancecapital.com (renaissancecapital.com) | feed — shared/news-catalog.json |
@@ -797,7 +797,7 @@ This generated inventory covers **882 active source hosts** representing **859 a
 | vs-hls-push-uk.live.fastly.md.bbci.co.uk (vs-hls-push-uk.live.fastly.md.bbci.co.uk) | feed — src/config/live-video-sources.ts |
 | vscode.dev (vscode.dev) | structured — src/config/mcp-agent-clients.ts |
 | vsquare.org (vsquare.org) | feed — shared/news-catalog.json |
-| W3C schema reference (www.w3.org) | structured — src/embed/panels/fear-greed.ts |
+| W3C schema reference (www.w3.org) | Excluded / candidate — No current fetch observed |
 | wa.me (wa.me) | structured — server/worldmonitor/leads/v1/register-interest.ts, src/services/story-share.ts |
 | wabi-europe-north-b-api.analysis.windows.net (wabi-europe-north-b-api.analysis.windows.net) | structured — scripts/seed-hormuz.mjs |
 | WAFA English (english.wafa.ps) | feed — shared/news-catalog.json |
@@ -819,10 +819,10 @@ This generated inventory covers **882 active source hosts** representing **859 a
 | World Air Quality Index (WAQI) (api.waqi.info) | structured — scripts/seed-health-air-quality.mjs |
 | World Bank Open Data (api.worldbank.org) | structured — scripts/_defense-industrial-source.mjs, scripts/_demographics-capability-source.mjs, scripts/ais-relay.cjs, scripts/seed-bis-lbs.mjs, +14 more |
 | World Bank Open Data (datacatalogfiles.worldbank.org) | structured — scripts/seed-cii-structural-prior.mjs |
-| World Monitor hosted API (api.worldmonitor.app) | feed+structured — api/a2a.ts, api/internal/mcp-grant-mint.ts, api/mcp/downstream.ts, api/mcp/skill-extension/generated.ts, +22 more |
+| World Monitor hosted API (api.worldmonitor.app) | feed+structured — api/a2a.ts, api/internal/mcp-grant-mint.ts, api/mcp/downstream.ts, api/mcp/skill-extension/generated.ts, +21 more |
 | World Monitor proxy (proxy.worldmonitor.app) | structured — api/widget-agent.ts, scripts/seed-security-advisories.mjs, src/utils/proxy.ts |
-| World Monitor web app (worldmonitor.app) | structured — api/_agent-metadata.ts, api/a2a.ts, api/ask.ts, api/mcp/skill-extension/generated.ts, +49 more |
-| World Monitor web app (www.worldmonitor.app) | structured — api/_cors.js, api/a2a.ts, api/ask.ts, api/customer-portal.ts, +49 more |
+| World Monitor web app (worldmonitor.app) | structured — api/_agent-metadata.ts, api/a2a.ts, api/ask.ts, api/mcp/skill-extension/generated.ts, +47 more |
+| World Monitor web app (www.worldmonitor.app) | structured — api/_cors.js, api/a2a.ts, api/ask.ts, api/customer-portal.ts, +48 more |
 | WorldMonitor test origin (worldmonitor.invalid) | structured — api/_md-url-twin.ts, src/shared/public-rpc-cache.ts, src/utils/dom-utils.ts |
 | worldmonitor.mintlify.dev (worldmonitor.mintlify.dev) | structured — api/docs-mcp.ts, src/config/docs-locale-seo.ts |
 | ws.cso.ie (ws.cso.ie) | structured — scripts/lib/food-prices-adapters/cso.mjs |

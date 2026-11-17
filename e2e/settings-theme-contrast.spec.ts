@@ -9,8 +9,8 @@ function contrast(a: number[], b: number[]): number {
   return (values[0]! + 0.05) / (values[1]! + 0.05);
 }
 
-for (const theme of ['light', 'dark']) for (const standalone of [false, true]) {
-  test(`notification text contrast in ${theme} ${standalone ? 'standalone' : 'dashboard'} Settings`, async ({ page }) => {
+for (const theme of ['light', 'dark']) {
+  test(`notification text contrast in ${theme} dashboard Settings`, async ({ page }) => {
     await page.setViewportSize({ width: 1000, height: 900 });
     await page.addInitScript(themeValue => {
       localStorage.setItem('worldmonitor-theme', themeValue);
@@ -26,13 +26,10 @@ for (const theme of ['light', 'dark']) for (const standalone of [false, true]) {
       expect(body).not.toBe(source);
       await route.fulfill({ response, body });
     });
-    await page.goto(standalone ? '/settings.html' : '/dashboard');
-    if (standalone) await expect(page.locator('.settings-shell')).toBeVisible();
-    else {
-      await page.waitForFunction(() => document.documentElement.dataset.wmEventHandlersReady === 'true');
-      await page.locator('#unifiedSettingsBtn').click();
-      await page.locator('[data-settings-nav="notifications"]').click();
-    }
+    await page.goto('/dashboard');
+    await page.waitForFunction(() => document.documentElement.dataset.wmEventHandlersReady === 'true');
+    await page.locator('#unifiedSettingsBtn').click();
+    await page.locator('[data-settings-nav="notifications"]').click();
     await page.evaluate(async ({ channelPath, rendererPath, selector }) => {
       const channels = await import(channelPath);
       channels.__setNotificationChannelsClientDepsForTests({
@@ -44,7 +41,7 @@ for (const theme of ['light', 'dark']) for (const standalone of [false, true]) {
       const rendered = renderNotificationsSettings({ isSignedIn: true });
       container.innerHTML = rendered.html;
       rendered.attach(container);
-    }, { channelPath: '/src/services/notification-channels.ts', rendererPath: '/src/services/notifications-settings.ts', selector: standalone ? '#contentArea' : '#us-page-notifications' });
+    }, { channelPath: '/src/services/notification-channels.ts', rendererPath: '/src/services/notifications-settings.ts', selector: '#us-page-notifications' });
     const channel = page.locator('.us-notif-ch-row[data-channel-type="telegram"]');
     await expect(channel).toHaveCount(1);
     await expect(channel.locator('.us-notif-ch-name')).toHaveText('Telegram');
@@ -54,18 +51,6 @@ for (const theme of ['light', 'dark']) for (const standalone of [false, true]) {
         return { text: rgb(getComputedStyle(el).color), background: rgb(getComputedStyle(el.closest('.us-notif-ch-row')!).backgroundColor) };
       });
       expect(contrast(colors.text, colors.background), selector).toBeGreaterThanOrEqual(4.5);
-    }
-    if (standalone) {
-      const colors = await page.locator('#contentArea').evaluate(container => {
-        const row = document.createElement('div');
-        row.className = 'settings-secret-row';
-        row.innerHTML = '<select data-model-select><option>Controlled model choice</option></select>';
-        container.append(row);
-        const style = getComputedStyle(row.querySelector('option')!);
-        const rgb = (value: string) => value.match(/[\d.]+/g)!.slice(0, 3).map(Number);
-        return { text: rgb(style.color), background: rgb(style.backgroundColor) };
-      });
-      expect(contrast(colors.text, colors.background), 'model option').toBeGreaterThanOrEqual(4.5);
     }
   });
 }

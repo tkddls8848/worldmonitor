@@ -27,8 +27,8 @@ function propertyNames(schema) {
 }
 
 describe('event registry shape', () => {
-  it('mirrors byte-for-byte where the worker and the Zapier app read it', () => {
-    for (const mirror of ['scripts/shared/event-triggers.json', 'integrations/zapier/event-triggers.json']) {
+  it('mirrors byte-for-byte where the worker reads it', () => {
+    for (const mirror of ['scripts/shared/event-triggers.json']) {
       assert.equal(readFileSync(resolve(root, mirror), 'utf8'), canonicalRaw, `run: cp shared/event-triggers.json ${mirror}`);
     }
   });

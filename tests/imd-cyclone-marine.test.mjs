@@ -508,9 +508,6 @@ test('the seeder publishes to its own key with no API credentials or proxy', () 
   for (const source of [seeder, lib]) {
     assert.doesNotMatch(source, /IMD_API_KEY|IMD_API_EMAIL|IMD_API_PASSWORD|PROXY_URL|_proxy-utils|oauth/);
   }
-  const registry = JSON.parse(readFileSync(join(root, 'scripts/railway-services.json'), 'utf8'));
-  const service = registry.find((entry) => entry.service === 'seed-imd-cyclone-marine');
-  assert.deepEqual(service.requiredEnv, ['UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN']);
 });
 
 test('a complete official Kerala PDF recovers an incomplete HTML bulletin without renewing its source clocks', async (t) => {

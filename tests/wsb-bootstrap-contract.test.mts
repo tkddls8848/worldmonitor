@@ -5,7 +5,6 @@ import rpc from '../api/infrastructure/v1/[rpc].ts';
 import intelligence from '../api/intelligence/v1/[rpc].ts';
 import bootstrap from '../api/bootstrap.js';
 import { issueSessionToken } from '../api/_session.js';
-import worker from '../workers/api-cors-preflight/src/index.js';
 const PATH = 'https://api.worldmonitor.app/api/infrastructure/v1/get-bootstrap-data';
 const SEED = 'intelligence:wsb-tickers:v1';
 const fixture = { tickers: [{ symbol: 'SYNTH', mentionCount: 12, uniquePosts: 3, totalScore: 40, avgUpvoteRatio: 0.8, subreddits: ['synthetic'], velocityScore: 25 }], fetchedAt: 1 };
@@ -63,37 +62,6 @@ test('public WSB bootstrap denies anonymous callers and sessions cannot read its
   const rpcResponse = await request('?keys=wsbTickers');
   assert.doesNotMatch(await rpcResponse.text(), /SYNTH/);
   assert.ok(!reads.includes(SEED));
-});
-
-test('Worker blocks retired WSB bootstrap before any cached origin read', async t => {
-  let reads = 0;
-  t.mock.method(globalThis, 'fetch', async () => { reads++; return Response.json({ data: { wsbTickers: fixture } }); });
-  for (const query of ['?keys=wsbTickers&public=1', '?keys=wsbTickers', '?keys=insights,wsbTickers&public=1', '?keys=%20wsbTickers%20&public=1', '?keys=insights&keys=wsbTickers&public=1']) {
-    const response = await worker.fetch(new Request('https://api.worldmonitor.app/api/bootstrap' + query), {}, {});
-    assert.equal(response.status, 401); assert.equal(response.headers.get('Cache-Control'), 'no-store');
-    assert.doesNotMatch(await response.text(), /SYNTH/);
-  }
-  assert.equal(reads, 0);
-});
-
-test('retired WSB bootstrap permits preflight but rejects GET without reading origin', async t => {
-  let reads = 0;
-  t.mock.method(globalThis, 'fetch', async () => { reads++; return Response.json({ data: { wsbTickers: fixture } }); });
-  const url = 'https://api.worldmonitor.app/api/bootstrap?keys=wsbTickers';
-  const origin = 'https://worldmonitor.app';
-  const preflight = await worker.fetch(new Request(url, {
-    method: 'OPTIONS',
-    headers: { Origin: origin, 'Access-Control-Request-Method': 'GET', 'Access-Control-Request-Headers': 'X-WorldMonitor-Key' },
-  }), {}, {});
-  assert.equal(preflight.status, 204);
-  assert.equal(preflight.headers.get('Access-Control-Allow-Origin'), origin);
-  assert.match(preflight.headers.get('Access-Control-Allow-Headers') || '', /X-WorldMonitor-Key/i);
-  const response = await worker.fetch(new Request(url, { headers: { Origin: origin, 'X-WorldMonitor-Key': 'synthetic' } }), {}, {});
-  assert.equal(response.status, 401);
-  assert.equal(response.headers.get('Access-Control-Allow-Origin'), origin);
-  assert.equal(response.headers.get('Cache-Control'), 'no-store');
-  assert.doesNotMatch(await response.text(), /SYNTH/);
-  assert.equal(reads, 0);
 });
 
 test('WSB RPC rejects public callers and serves enterprise callers without shared caching', async t => {

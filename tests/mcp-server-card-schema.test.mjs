@@ -58,8 +58,4 @@ describe('MCP server card schema conformance', () => {
       assert.ok(card.metadata.mcpApps.uiResources.includes(uri), `${uri} must be a listed ui resource`);
     }
   });
-
-  it('the product card name matches the MCP Registry server.json name', () => {
-    assert.equal(readJson('../public/.well-known/mcp/server-card.json').name, readJson('../server.json').name);
-  });
 });

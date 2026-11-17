@@ -316,16 +316,11 @@ describe('api/mcp.ts — capability parity (advertised AND non-empty)', () => {
 
   // The card carries identity fields BOTH top-level (the Server Card schema
   // shape scanners read) AND nested under serverInfo (what initialize returns).
-  // The Server Card schema requires a reverse-DNS top-level name and a short
-  // description, so those follow the MCP Registry server.json; serverInfo keeps
-  // the initialize name and full description. Guard both from drifting.
-  it('top-level server-card identity mirrors the registry and serverInfo (no drift)', () => {
+  // Guard the serverInfo mirror from drifting.
+  it('top-level server-card identity mirrors serverInfo (no drift)', () => {
     const card = JSON.parse(
       readFileSync(new URL('../public/.well-known/mcp/server-card.json', import.meta.url), 'utf8'),
     );
-    const registry = JSON.parse(readFileSync(new URL('../server.json', import.meta.url), 'utf8'));
-    assert.equal(card.name, registry.name, 'top-level name must mirror server.json name');
-    assert.equal(card.description, registry.description, 'top-level description must mirror server.json description');
     assert.equal(card.serverInfo?.name, 'worldmonitor', 'serverInfo.name must match the initialize serverInfo');
     assert.equal(card.version, card.serverInfo?.version, 'top-level version must mirror serverInfo.version');
     assert.equal(card.serverUrl, card.transport?.endpoint, 'top-level serverUrl must mirror transport.endpoint');

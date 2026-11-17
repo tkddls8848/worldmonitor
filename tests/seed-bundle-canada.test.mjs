@@ -91,9 +91,6 @@ test('Manitoba cutover acknowledgement reaches the first eligible Provincial-511
   const freshnessRatio = Number(freshnessGuard[1]);
   assert.ok(freshnessRatio > 0 && freshnessRatio <= 1, 'freshness admission ratio must be in (0, 1]');
 
-  const service = JSON.parse(readFileSync(join(root, 'scripts/railway-services.json'), 'utf8'))
-    .find((row) => row.service === 'seed-bundle-canada');
-  assert.equal(service?.cronSchedule, '*/5 * * * *');
   const cronIntervalMs = 5 * MIN;
 
   // The ack itself is gone — manitobaRoads publishes and #6622 was pruned on
@@ -224,44 +221,6 @@ test('skips a member whose script is absent instead of failing the whole bundle'
   // deployed yet. The filter must be on existsSync, and it must log.
   assert.match(src, /existsSync\(join\(here, section\.script\)\)/);
   assert.match(src, /SKIPPING \$\{section\.label\}/);
-});
-
-test('is registered as an active service now that it is provisioned', () => {
-  // Was: asserted lifecycle 'planned' with no watchPatterns and no cron, which
-  // is what keeps an unprovisioned row out of the live audit. The service now
-  // exists on Railway (0a4b8757, cron */5), so the row has to say so — a
-  // 'planned' row for a service that IS running hides it from the very drift
-  // and watch-path audits that would catch it deploying stale code.
-  const registry = JSON.parse(readFileSync(join(root, 'scripts/railway-services.json'), 'utf8'));
-  const entry = registry.find((row) => row.service === 'seed-bundle-canada');
-  assert.ok(entry, 'seed-bundle-canada must be in the Railway registry');
-  assert.equal(Object.hasOwn(entry, 'lifecycle'), false, 'an active service carries no lifecycle marker');
-  assert.equal(entry.cronSchedule, '*/5 * * * *', 'must match the cron configured on Railway');
-  assert.ok(Array.isArray(entry.watchPatterns) && entry.watchPatterns.length > 0);
-  assert.deepEqual(
-    entry.requiredEnv,
-    ['UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN', 'MANITOBA_511_KEY', 'ALBERTA_511_KEY', 'ONTARIO_511_KEY'],
-    'members publish through runSeed (Upstash REST pair); all three provincial 511 sources need their own key',
-  );
-});
-
-test('every member script and its bundle entry is a watch path', () => {
-  // A member whose script is missing from watchPatterns does not redeploy when
-  // it changes: the service keeps running the previously-built copy, silently,
-  // with a green cron. The bundle spawns members as child processes, so their
-  // paths are NOT reachable from the entry's own import graph — nothing else
-  // forces them into this list.
-  const registry = JSON.parse(readFileSync(join(root, 'scripts/railway-services.json'), 'utf8'));
-  const entry = registry.find((row) => row.service === 'seed-bundle-canada');
-  const patterns = new Set(entry.watchPatterns);
-  assert.ok(patterns.has('scripts/seed-bundle-canada.mjs'), 'the bundle entry must be a watch path');
-  assert.ok(patterns.has('scripts/_bundle-runner.mjs'), 'the shared runner must be a watch path');
-  for (const s of sections) {
-    assert.ok(
-      patterns.has(`scripts/${s.script}`),
-      `${s.label}: scripts/${s.script} must be a watch path, or a change to it never redeploys`,
-    );
-  }
 });
 
 // A member's cadence is not just a cost knob: the Redis TTL and the health

@@ -605,27 +605,6 @@ function npmRuns(invocations) {
   return runs;
 }
 
-describe('Pro built-output tests rebuild before dispatch', () => {
-  test('does not trust a stale ignored artifact for a test-only branch delta', () => {
-    const fixture = makeFixture({
-      branchFiles: {
-        'tests/pro-built-output.test.mjs': "import './_lib/pro-built-output.mjs';\n",
-      },
-    });
-    mkdirSync(join(fixture.root, 'public', 'pro'), { recursive: true });
-    writeFileSync(join(fixture.root, 'public', 'pro', 'welcome.html'), 'stale branch output\n');
-    assert.equal(fixture.git(['check-ignore', 'public/pro/welcome.html']).trim(), 'public/pro/welcome.html');
-
-    const { status, stdout, invocations } = fixture.run();
-    assert.equal(status, 0, stdout);
-    const buildIndex = invocations.indexOf('== npm\n>run\n>build\n');
-    const testIndex = invocations.indexOf('== npx\n>tsx\n>--test\n');
-    assert.notEqual(buildIndex, -1, `expected the Pro build, got:\n${invocations}`);
-    assert.notEqual(testIndex, -1, `expected the changed test dispatch, got:\n${invocations}`);
-    assert.ok(buildIndex < testIndex, `expected the Pro build before test dispatch, got:\n${invocations}`);
-  });
-});
-
 describe('the gate does not fail closed on its own edge cases', () => {
   test('a repo with no scripts/*.cjs does not fail the RUN_ALL push', () => {
     // `for f in scripts/*.cjs; do [ -f "$f" ] && node -c "$f" || exit 1; done`

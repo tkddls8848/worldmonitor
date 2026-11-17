@@ -576,14 +576,6 @@ describe('demographics production registration', () => {
       bundle,
       /label: 'Demographics-Capability'[\s\S]*freshnessMetaKey: 'seed-meta:demographics:capability'[\s\S]*completionMetaKey: 'seed-meta:demographics:capability-complete'[\s\S]*requireCanonical: true[\s\S]*intervalMs: 20 \* DAY[\s\S]*timeoutMs: 65_000/,
     );
-    const service = JSON.parse(repoFile('scripts/railway-services.json'))
-      .find((entry) => entry.service === 'seed-bundle-static-ref');
-    for (const path of [
-      'scripts/_demographics-capability-source.mjs',
-      'scripts/seed-demographics-capability.mjs',
-      'scripts/shared/iso3-to-iso2.json',
-      'scripts/shared/un-to-iso2.json',
-    ]) assert.ok(service.watchPatterns.includes(path), `static-ref must watch ${path}`);
   });
 
   it('classifies the ILO source catalog origin as International', () => {

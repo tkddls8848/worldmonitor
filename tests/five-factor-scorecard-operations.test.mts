@@ -84,21 +84,4 @@ describe('five-factor operational wiring', () => {
     assert.ok(scoresReservation + scorecardReservation + admissionHeadroomMs < maxBundleMs,
       'scorecard must fit on the next normal tick when long-cadence sections skip');
   });
-
-  it('deploys when the seeder or any of its imported scorecard modules changes', () => {
-    const parsed: unknown = JSON.parse(readFileSync(new URL('../scripts/railway-services.json', import.meta.url), 'utf8'));
-    assert.ok(Array.isArray(parsed));
-    const service = parsed.find((entry): entry is { service: string; watchPatterns: string[] } =>
-      entry != null
-      && typeof entry === 'object'
-      && 'service' in entry
-      && entry.service === 'seed-bundle-resilience'
-      && 'watchPatterns' in entry
-      && Array.isArray(entry.watchPatterns));
-    assert.ok(service);
-    assert.ok(service.watchPatterns.includes('scripts/seed-five-factor-scorecard.mjs'));
-    for (const file of ['_input-registry.mts', '_methodology.mts', '_score-country.mts', '_snapshot.mts', '_source-adapters.mts', '_source-registry.mts', '_types.mts']) {
-      assert.ok(service.watchPatterns.includes(`scripts/scorecard/v1/${file}`), file);
-    }
-  });
 });

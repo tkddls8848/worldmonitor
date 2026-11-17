@@ -4,7 +4,6 @@ import { dirname, resolve } from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import middleware from '../middleware';
 import { INDEXABLE_ROBOTS_CONTENT } from '../src/config/seo-robots';
 import {
   VARIANT_SEO_PARAGRAPHS,
@@ -26,13 +25,11 @@ describe('SEO crawl-directive hygiene (#7380)', () => {
     assert.match(INDEXABLE_ROBOTS_CONTENT, /max-snippet:-1/);
   });
 
-  it('ships uncapped snippet directives on homepage, /pro, and dashboard shells', () => {
+  it('ships uncapped snippet directives on homepage and dashboard shells', () => {
     const robotsRe = new RegExp(
       `name="robots" content="${INDEXABLE_ROBOTS_CONTENT.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`,
     );
     assert.match(read('index.html'), robotsRe);
-    assert.match(read('pro-test/welcome.html'), robotsRe);
-    assert.match(read('pro-test/index.html'), robotsRe);
     assert.match(read('public/agent/index.html'), robotsRe);
     assert.match(read('public/security/index.html'), robotsRe);
     assert.match(read('public/trust/index.html'), robotsRe);
@@ -42,8 +39,6 @@ describe('SEO crawl-directive hygiene (#7380)', () => {
   it('declares our large square favicons, Open Graph, and X cards across static templates', () => {
     for (const path of [
       'index.html',
-      'pro-test/welcome.html',
-      'pro-test/index.html',
       'blog-site/src/layouts/Base.astro',
       'public/agent/index.html',
       'public/security/index.html',
@@ -121,9 +116,7 @@ describe('SEO crawl-directive hygiene (#7380)', () => {
   });
 
   it('ships no crawler-only prerender block or hide contract in committed HTML shells', () => {
-    // The built public/pro pages derive from the pro-test sources; their prerendered root is
-    // checked in tests/pro-welcome-prerender.test.mjs.
-    for (const path of ['index.html', 'pro-test/index.html', 'pro-test/welcome.html']) {
+    for (const path of ['index.html']) {
       const html = read(path);
       assert.doesNotMatch(html, /id=["']seo-prerender["']/i, `${path} must not ship #seo-prerender`);
       assert.doesNotMatch(html, /html\.js\s+#seo-prerender/i, `${path} must not CSS-hide crawler copy`);
@@ -162,39 +155,5 @@ describe('SEO crawl-directive hygiene (#7380)', () => {
     ]) {
       assert.ok(noScript.includes(`href="${href}`), `no-JavaScript fallback should link to ${href}`);
     }
-  });
-
-  it('308-redirects bots away from ?ref= / utm_* duplicate dashboard URLs', () => {
-    const res = middleware(
-      new Request('https://finance.worldmonitor.app/dashboard?ref=welcome-pricing-free', {
-        headers: { 'user-agent': 'Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)' },
-      }),
-    );
-    assert.ok(res instanceof Response);
-    assert.equal(res.status, 308);
-    assert.equal(res.headers.get('location'), 'https://finance.worldmonitor.app/dashboard');
-    assert.equal(res.headers.get('vary'), 'User-Agent');
-    assert.equal(res.headers.get('cache-control'), 'private, no-store');
-  });
-
-  it('leaves human traffic with referral params untouched for client capture', () => {
-    const res = middleware(
-      new Request('https://finance.worldmonitor.app/dashboard?ref=partner123', {
-        headers: {
-          'user-agent':
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
-        },
-      }),
-    );
-    assert.equal(res, undefined);
-  });
-
-  it('passes AI crawlers through to the canonical variant dashboard', () => {
-    const res = middleware(
-      new Request('https://tech.worldmonitor.app/', {
-        headers: { 'user-agent': 'Mozilla/5.0 GPTBot/1.1' },
-      }),
-    );
-    assert.equal(res, undefined);
   });
 });

@@ -1,5 +1,4 @@
 import { describe, it } from 'node:test';
-import { guardProBuiltOutput, shouldSkipProBuiltOutput } from './_lib/pro-built-output.mjs';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -15,7 +14,6 @@ const serverCard = JSON.parse(
 const agentCard = JSON.parse(
   readFileSync(join(ROOT, 'public/.well-known/agent-card.json'), 'utf-8'),
 );
-const vercelConfig = JSON.parse(readFileSync(join(ROOT, 'vercel.json'), 'utf-8'));
 const productFacts = JSON.parse(readFileSync(join(ROOT, 'public/product-facts.json'), 'utf-8'));
 
 // Guards for the ?mode=agent machine-readable homepage view (orank Identity
@@ -23,7 +21,6 @@ const productFacts = JSON.parse(readFileSync(join(ROOT, 'public/product-facts.js
 // discovery artifacts it summarizes, and the query-gated rewrite must fire
 // BEFORE the / → welcome rewrite or the marketing page wins.
 describe('agent-mode view (/?mode=agent)', () => {
-  guardProBuiltOutput();
   it('agent-view.json carries the machine-readable essentials', () => {
     assert.equal(view.kind, 'agent-view');
     for (const key of ['product', 'url', 'description', 'endpoints', 'authentication', 'rateLimits', 'documentation', 'capabilities', 'discovery']) {
@@ -60,31 +57,6 @@ describe('agent-mode view (/?mode=agent)', () => {
     assert.match(sdks.go.install, /^go get github\.com\/koala73\/worldmonitor\/sdk\/go$/);
     for (const key of ['javascript', 'python', 'ruby', 'go']) {
       assert.match(sdks[key].url, /^https:\/\//, `sdks.${key}.url must be a registry URL`);
-    }
-    // The SDK sources these advertise must exist in-repo.
-    for (const dir of ['sdk/python', 'sdk/ruby', 'sdk/go']) {
-      assert.doesNotThrow(() => readFileSync(join(ROOT, dir, 'README.md')), `${dir} must exist`);
-    }
-  });
-
-  it('the marketing homepage advertises its machine-readable alternate views', { skip: shouldSkipProBuiltOutput() }, () => {
-    // Source/build pair: public/pro/welcome.html is produced by
-    // `npm run build:pro` rather than committed (#6898), so this asserts the
-    // pointer survives the prerender rather than that two committed files agree.
-    const alternateLinks = [
-      ['application/json', 'https://www.worldmonitor.app/?mode=agent'],
-      ['text/plain', '/llms.txt'],
-      ['text/markdown', '/index.md'],
-      ['text/markdown', '/world-monitor.md'],
-    ];
-    for (const path of ['pro-test/welcome.html', 'public/pro/welcome.html']) {
-      const html = readFileSync(join(ROOT, path), 'utf-8');
-      for (const [type, href] of alternateLinks) {
-        assert.ok(
-          html.includes(`<link rel="alternate" type="${type}" href="${href}"`),
-          `${path} must advertise ${href} via <link rel="alternate">`,
-        );
-      }
     }
   });
 
@@ -147,23 +119,6 @@ describe('agent-mode view (/?mode=agent)', () => {
     );
   });
 
-  it('vercel.json serves it for /?mode=agent ahead of the welcome rewrite', () => {
-    const rewrites = vercelConfig.rewrites;
-    const agentIdx = rewrites.findIndex(
-      (r) =>
-        r.source === '/' &&
-        Array.isArray(r.has) &&
-        r.has.some((h) => h.type === 'query' && h.key === 'mode' && h.value === 'agent') &&
-        r.destination === '/agent-view.json',
-    );
-    const welcomeIdx = rewrites.findIndex(
-      (r) => r.source === '/' && r.destination === '/pro/welcome.html',
-    );
-    assert.ok(agentIdx >= 0, 'missing /?mode=agent rewrite to /agent-view.json');
-    assert.ok(welcomeIdx >= 0, 'welcome rewrite missing');
-    assert.ok(agentIdx < welcomeIdx, '?mode=agent rewrite must precede the welcome rewrite (first match wins)');
-  });
-
   it('every discovery URL it advertises resolves to a tracked file or a live rewrite', () => {
     // Static, repo-tracked surfaces — a typo here ships a dead link to agents.
     // Host split is the Cloudflare apex-exemption list (ARCHITECTURE.md §2):
@@ -185,8 +140,5 @@ describe('agent-mode view (/?mode=agent)', () => {
       );
       assert.doesNotThrow(() => readFileSync(join(ROOT, path)), `${path} must exist for ${url}`);
     }
-    // /index.md is rewrite-served (public/home.md) since #4830.
-    const mdRewrite = vercelConfig.rewrites.find((r) => r.source === '/index.md');
-    assert.ok(mdRewrite, 'markdownHomepage advertised but /index.md rewrite is gone');
   });
 });

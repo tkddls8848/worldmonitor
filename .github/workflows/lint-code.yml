@@ -75,7 +75,7 @@ jobs:
             emit_all_true
             exit 0
           fi
-          CODE=$(echo "$FILES" | grep -vcE '\.md$|^docs/|^src-tauri/|^CHANGELOG\.md$|^LICENSE$|\.github/workflows/(build-desktop|docker-publish)\.yml$' || echo 0)
+          CODE=$(echo "$FILES" | grep -vcE '\.md$|^docs/|^CHANGELOG\.md$|^LICENSE$|\.github/workflows/docker-publish\.yml$' || echo 0)
           echo "code=$( [ "$CODE" -gt 0 ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
           # markdown job: only the lint:md inputs (the markdown, its config, and
           # package.json, which holds the command and pins markdownlint-cli2), so

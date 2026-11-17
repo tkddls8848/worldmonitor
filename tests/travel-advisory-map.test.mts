@@ -1,9 +1,8 @@
-import { afterEach, describe, it, mock } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import middleware from '../middleware';
-import { liveTopicPageForPath, liveTopicReading, liveTopicRpcPath } from '../scripts/live-pages/index.mjs';
+import { liveTopicPageForPath, liveTopicReading } from '../scripts/live-pages/index.mjs';
 import { MIN_REGISTER_COUNTRIES, travelAdvisoriesAnswer, travelAdvisoriesPage } from '../scripts/live-pages/travel-advisories.mjs';
 import { renderWorldMapSvg, worldMapShapes } from '../scripts/live-pages-world-map.mjs';
 import { renderLiveTopicPage } from '../scripts/build-live-topic-pages.mjs';
@@ -414,51 +413,5 @@ describe('travel advisory map page', () => {
     assert.ok(isPublicSharedRpcRequest('https://www.worldmonitor.app/api/intelligence/v1/list-security-advisories?public=1'));
     assert.ok(!isPublicSharedRpcRequest('https://www.worldmonitor.app/api/intelligence/v1/list-security-advisories'));
     assert.ok(!isPublicSharedRpcRequest('https://www.worldmonitor.app/api/intelligence/v1/list-security-advisories?public=1&country=MX'));
-  });
-});
-
-describe('travel advisory map through the middleware', () => {
-  const pageUrl = 'https://www.worldmonitor.app/tools/travel-advisory-map/';
-  const builtUrl = `${pageUrl}?wm-built=1`;
-  const figure = travelAdvisoriesPage.renderFigure({ worldMapSvg: renderWorldMapSvg });
-  const builtHtml = `<!doctype html><html><body><main><h1>Travel advisory map</h1>
-${figure}
-${travelAdvisoriesPage.renderSection(null, { live: false })}
-</main></body></html>`;
-
-  afterEach(() => mock.restoreAll());
-
-  function stubFetch(status: () => Response) {
-    const calls: string[] = [];
-    mock.method(globalThis, 'fetch', async (input: RequestInfo | URL) => {
-      const url = String(input instanceof Request ? input.url : input);
-      calls.push(url);
-      if (url === builtUrl) return new Response(builtHtml, { status: 200, headers: { 'content-type': 'text/html' } });
-      if (url.includes(liveTopicRpcPath(travelAdvisoriesPage))) return status();
-      throw new Error(`unexpected fetch ${url}`);
-    });
-    return calls;
-  }
-
-  const request = () => new Request(pageUrl, { headers: { accept: 'text/html', 'user-agent': 'Mozilla/5.0 (compatible; Googlebot/2.1)' } });
-
-  it('swaps in the current advice and leaves the map geometry untouched', async () => {
-    const calls = stubFetch(() => Response.json(payload({ fetchedAt: Date.now() - 30 * 60_000 })));
-    const response = await middleware(request());
-    assert.ok(response instanceof Response);
-    const html = await response.text();
-    assert.equal(response.headers.get('x-wm-live-page'), 'travel-advisory-map');
-    assert.ok(html.includes(figure), 'the figure is served as built');
-    assert.match(html, /the US State Department rates 2 countries Level 4: Do Not Travel/);
-    assert.match(html, /\.advisory-figure\[data-view="US"\] :is\(\[data-iso2="AF"\],\[data-iso2="RU"\]\)\{fill:var\(--lvl-4\)\}/);
-    assert.equal(new URL(calls.find((url) => url.includes(liveTopicRpcPath(travelAdvisoriesPage)))!).search, '?public=1');
-  });
-
-  it('keeps the built page when the registers are stale or the read fails', async () => {
-    stubFetch(() => Response.json(payload({ fetchedAt: Date.now() - 6 * HOUR })));
-    assert.equal(await (await middleware(request()))!.text(), builtHtml);
-    mock.restoreAll();
-    stubFetch(() => new Response('unavailable', { status: 503 }));
-    assert.equal(await (await middleware(request()))!.text(), builtHtml);
   });
 });

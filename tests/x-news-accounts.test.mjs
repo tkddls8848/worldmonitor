@@ -317,11 +317,7 @@ describe('exact X List membership gate', () => {
     assert.equal(result.ok, false);
   });
 
-  it('makes both X List settings Railway deployment prerequisites', () => {
-    const services = JSON.parse(readFileSync(join(__dirname, '../scripts/railway-services.json'), 'utf8'));
-    const relay = services.find((service) => service.service === 'ais-relay');
-    assert.deepEqual(relay.requiredEnv, ['X_BEARER_TOKEN', 'X_CURATED_LIST_ID']);
-
+  it('documents both X List settings as deployment prerequisites', () => {
     const envExample = readFileSync(join(__dirname, '../.env.example'), 'utf8');
     const healthDocs = readFileSync(join(__dirname, '../docs/health-endpoints.mdx'), 'utf8');
     assert.match(envExample, /^X_BEARER_TOKEN=$/m);

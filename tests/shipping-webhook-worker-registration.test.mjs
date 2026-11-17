@@ -1,7 +1,4 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, it } from 'node:test';
 
 import { __testing__ as health } from '../api/health.js';
@@ -11,8 +8,6 @@ import {
   WORKER_STATUS_KEY,
 } from '../scripts/shipping-webhook-worker.mjs';
 
-const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const registry = JSON.parse(readFileSync(resolve(repoRoot, 'scripts/railway-services.json'), 'utf8'));
 const now = 1_800_000_000_000;
 
 function classify({ strlen, meta, activated }) {
@@ -32,41 +27,6 @@ function classify({ strlen, meta, activated }) {
 }
 
 describe('shipping webhook worker deployment registration', () => {
-  it('registers an active always-on scripts-root Railway service with its dependency closure', () => {
-    const service = registry.find((entry) => entry.service === 'shipping-webhook-worker');
-    assert.ok(service);
-    assert.equal(service.entry, 'scripts/shipping-webhook-worker.mjs');
-    assert.equal(service.deployMode, 'nixpacks-root-scripts');
-    assert.equal(service.lifecycle, undefined, 'provisioned in Railway production 2026-10-17');
-    assert.equal(service.startCommand, 'node shipping-webhook-worker.mjs');
-    assert.equal(service.cronSchedule, null);
-    assert.deepEqual(service.requiredEnv, [
-      'UPSTASH_REDIS_REST_URL',
-      'UPSTASH_REDIS_REST_TOKEN',
-      'WORLDMONITOR_RELAY_KEY',
-    ]);
-    for (const dependency of [
-      'scripts/shipping-webhook-worker.mjs',
-      'scripts/lib/shipping-webhook-delivery.mjs',
-      'scripts/lib/notification-webhook-ssrf.cjs',
-      'scripts/lib/occurrence-events.cjs',
-      'scripts/lib/point-to-iso2.mjs',
-      'scripts/lib/main-module.mjs',
-      'scripts/_seed-utils.mjs',
-      'scripts/_seed-envelope-source.mjs',
-      'scripts/shared/compare-and-delete-script.cjs',
-      'scripts/shared/event-triggers.json',
-      'scripts/shared/country-bboxes.json',
-      'scripts/shared/country-name-to-iso2.cjs',
-      'scripts/shared/country-names.json',
-      'scripts/nixpacks.toml',
-      'scripts/package.json',
-      'scripts/package-lock.json',
-    ]) {
-      assert.ok(service.watchPatterns.includes(dependency), `${dependency} must trigger a deploy`);
-    }
-  });
-
   it('registers health keys the worker writes', () => {
     assert.equal(health.STANDALONE_KEYS.shippingWebhookWorker, WORKER_STATUS_KEY);
     assert.deepEqual(health.SEED_META.shippingWebhookWorker, {

@@ -10,14 +10,6 @@ import { scheduleAfterFirstPaint } from '../src/utils/after-paint.ts';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
 const indexHtml = readFileSync(resolve(root, 'index.html'), 'utf8');
-const vercelConfig = JSON.parse(readFileSync(resolve(root, 'vercel.json'), 'utf8'));
-const dashboardCsp = vercelConfig.headers
-  .find((entry: { headers?: Array<{ key: string; value: string }> }) => entry.headers?.some(
-    (header) => header.key === 'X-Frame-Options' && header.value === 'SAMEORIGIN',
-  ))
-  ?.headers
-  ?.find((header: { key: string }) => header.key === 'Content-Security-Policy')
-  ?.value ?? '';
 const activeMarkup = indexHtml.replace(/<!--[\s\S]*?-->/g, '');
 
 describe('secondary dashboard startup', () => {
@@ -52,17 +44,6 @@ describe('secondary dashboard startup', () => {
       false,
       'Google Fonts preconnects must be deferred with the narrowed font request',
     );
-  });
-
-  it('keeps secondary startup script hosts out of the dashboard script-src allowlist', () => {
-    const scriptSrc = dashboardCsp.match(/script-src\s+([^;]+)/)?.[1] ?? '';
-    assert.match(scriptSrc, /'strict-dynamic'/);
-    assert.doesNotMatch(scriptSrc, /https:\/\/abacus\.worldmonitor\.app/);
-    assert.doesNotMatch(scriptSrc, /https:\/\/cdn\.debugbear\.com/);
-    assert.doesNotMatch(scriptSrc, /https:\/\/static\.cloudflareinsights\.com/);
-    assert.doesNotMatch(dashboardCsp, /style-src[^;]*https:\/\/fonts\.googleapis\.com/);
-    assert.match(dashboardCsp, /font-src[^;]*'self'/);
-    assert.doesNotMatch(dashboardCsp, /font-src[^;]*https:/);
   });
 
   it('does not load any web font for the default English dashboard', () => {

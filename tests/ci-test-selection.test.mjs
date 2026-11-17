@@ -64,12 +64,10 @@ esac
   }
 }
 
-test('Railway-only changes retain unit proof and intentionally skip the browser', () => {
+test('test-suite and hook-only changes retain unit proof and intentionally skip the browser', () => {
   const files = [
-    '.github/workflows/railway-registry-sync.yml', 'scripts/audit-railway-watch-paths.mjs',
-    'scripts/run-railway-registry-sync.mjs', 'scripts/railway-services.json',
-    'tests/railway-registry-sync-cli.test.mjs', 'tests/railway-registry-sync-runner.test.mjs',
-    'tests/railway-registry-sync-workflow.test.mjs', 'docs/solutions/example.md',
+    'tests/ci-test-selection.test.mjs', 'tests/ci-workflow-coverage.test.mts',
+    '.husky/pre-push', 'docs/solutions/example.md',
   ];
   for (const event of ['pull_request', 'push']) {
     const result = classify(files, { event });
@@ -87,7 +85,7 @@ test('Railway-only changes retain unit proof and intentionally skip the browser'
 test('runtime, browser harness, assets, build inputs and unknown paths run the browser', () => {
   for (const file of [
     'src/app/App.ts', 'api/bootstrap.js', 'server/gateway.ts', 'shared/runtime.ts',
-    'public/ai-search.md', 'pro-test/src/App.tsx', 'e2e/bootstrap-request-budget.spec.ts',
+    'public/ai-search.md', 'e2e/bootstrap-request-budget.spec.ts',
     'tests/map-harness.html', 'tests/fixtures/example.json', 'scripts/generate-product-config.mjs',
     'scripts/new-helper.mjs', 'package.json', 'package-lock.json', 'playwright.config.ts',
     '.github/workflows/test.yml', 'unknown/new-runtime.ts', '-n',
@@ -118,24 +116,6 @@ test('unusable, incomplete and moved diff metadata runs every Test job', () => {
     assert.ok(Object.values(result).every((value) => value === 'true'), JSON.stringify({ files: files.slice(0, 2), options, result }));
     // durations_key is the unit shards' cache lookup, not a path selection.
     assert.equal(Object.keys(result).length, Object.keys(workflow.jobs.changes.outputs).filter((key) => key !== 'durations_key').length);
-  }
-});
-
-test('src-tauri node suites are code, so unit and sidecar run on their own PRs', () => {
-  // tests/package-test-command-paths.test.mjs polices src-tauri/ suites from
-  // inside unit, and sidecar runs them; both are gated on `code`, which the
-  // src-tauri exclusion below would otherwise leave false (#7772).
-  // Every extension the guard discovers must classify as code, or a suite in
-  // that extension is exactly the unowned file the guard cannot see.
-  for (const extension of ['mjs', 'mts', 'cjs', 'js', 'ts', 'tsx']) {
-    assert.equal(classify([`src-tauri/open-url-safety.test.${extension}`]).code, 'true', extension);
-  }
-  for (const event of ['pull_request', 'push']) {
-    assert.equal(classify(['src-tauri/open-url-safety.test.mjs'], { event }).code, 'true', event);
-    assert.equal(classify([
-      { filename: 'src-tauri/open-url-policy.test.mjs', previous_filename: 'src-tauri/open-url-safety.test.mjs', status: 'renamed' },
-    ], { event }).code, 'true', `${event}: rename`);
-    assert.equal(classify(['src-tauri/src/main.rs'], { event }).code, 'false', `${event}: desktop-rust owns Rust sources`);
   }
 });
 

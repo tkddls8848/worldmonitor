@@ -122,7 +122,6 @@ const workflowText = readdirSync(workflowsDir)
 
 const REQUIRED_PR_SCRIPTS = [
   'test:data',
-  'test:sidecar',
   'test:convex',
   'test:resilience-validation-smoke',
 ] as const;
@@ -134,7 +133,6 @@ const REQUIRED_CI_SMOKE_SPECS = [
   'e2e/variant-live-smoke.spec.ts',
   'e2e/country-brief.spec.ts',
   'e2e/country-brief-reports.spec.ts',
-  'e2e/mcp-grant-consent.spec.ts',
   'e2e/dashboard-news-request-budget.spec.ts',
   'e2e/bootstrap-request-budget.spec.ts',
   'e2e/bootstrap-hydration-request-budget.spec.ts',
@@ -148,7 +146,6 @@ const REQUIRED_CI_SMOKE_SPECS = [
   'e2e/map-overlay-marker-budget.spec.ts',
   'e2e/mobile-displacement.spec.ts',
   'e2e/map-distance.spec.ts',
-  'e2e/mcp-market-built.spec.ts',
   'e2e/live-panel-layout-8276.spec.ts',
   'e2e/panel-grid-no-overlap.spec.ts',
   'e2e/panel-table-overflow.spec.ts',
@@ -231,26 +228,6 @@ const REQUIRED_RESILIENCE_VALIDATION_INPUTS = [
   'scripts/validate-resilience-sensitivity.mjs',
   'scripts/seed-bundle-resilience-validation.mjs',
   'scripts/_bundle-runner.mjs',
-] as const;
-
-// Desktop drift gates (#5902): the literal awk patterns each change filter
-// must keep, so a filter refactor cannot silently un-gate a desktop-breaking
-// path class (the exact drift class #5902 exists to close).
-const REQUIRED_DESKTOP_CONFIG_INPUTS = [
-  'src-tauri/',
-  'package.json',
-  'scripts/repack-linux-appimage.sh',
-  'scripts/prefetch-appimage-tools.sh',
-  'scripts/fetch-with-retry.sh',
-  'scripts/sync-desktop-version.mjs',
-  'scripts/check-desktop-build-env.mjs',
-  'scripts/check-rust-security-floors.mjs',
-  'scripts/download-node.sh',
-] as const;
-
-const REQUIRED_DESKTOP_RUST_INPUTS = [
-  'src-tauri/sidecar/',
-  'src-tauri/',
 ] as const;
 
 function escapeRegExp(value: string): string {

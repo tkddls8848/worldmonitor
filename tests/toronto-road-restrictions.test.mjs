@@ -347,19 +347,6 @@ test("toronto restrictions share canadaRoads and do not invent a second MapLayer
   assert.match(client, /ON_DEMAND_LOADERS[\s\S]{0,200}CANADA_ROAD_SOURCES\.map/);
 });
 
-test("toronto roads runs as a bundle member, not its own */15 service", () => {
-  // A 3.62MB construction-permit feed does not earn a dedicated Railway slot,
-  // and */15 on that payload cost 348 MB/day. seed-bundle-canada (#6711) owns
-  // this seeder gated on intervalMs 2h — ~44 MB/day for data that changes on a
-  // permit desk's schedule.
-  const registry = JSON.parse(readFileSync(join(root, "scripts/railway-services.json"), "utf8"));
-  assert.equal(
-    registry.some((s) => s.service === "seed-toronto-road-restrictions"),
-    false,
-    "a standalone row would claim a slot the bundle already covers",
-  );
-});
-
 test("bootstrap fetches every Canada road feed on demand, including Toronto", () => {
   // Was: "keeps Ontario and Alberta fast but fetches Toronto roads on demand".
   // That split was the #6763 bug. A tier is not layer-gated, so keeping the two

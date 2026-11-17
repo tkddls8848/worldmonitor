@@ -3,7 +3,6 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
-import middleware from '../middleware';
 import { rewriteDocsLocaleHtml } from '../src/config/docs-locale-seo';
 import { DOCS_PAGE_DATES } from '../src/config/docs-page-dates.generated';
 // The crawl corpus (scripts/build-crawlable-corpus.mjs) left the personal
@@ -35,16 +34,10 @@ import {
   renderVariantDashboardHtml,
 } from '../src/config/variant-dashboard-html';
 import { VARIANT_META } from '../src/config/variant-meta';
-import {
-  guardProBuiltOutput,
-  shouldSkipProBuiltOutput,
-  withoutUnbuiltProPaths,
-} from './_lib/pro-built-output.mjs';
 
 const ORGANIZATION_ID = 'https://www.worldmonitor.app/#organization';
 const WEBSITE_ID = 'https://www.worldmonitor.app/#website';
 const SOFTWARE_ID = 'https://www.worldmonitor.app/#software';
-const SOURCE_ID = 'https://www.worldmonitor.app/#source';
 const PERSON_ID = 'https://www.worldmonitor.app/blog/authors/elie-habib/#person';
 const CANONICAL_ORIGIN = 'https://www.worldmonitor.app/';
 const PRODUCT_WIKIDATA_URL = 'https://www.wikidata.org/wiki/Q141237754';
@@ -205,8 +198,7 @@ function docsMiddlewareDocuments(): Map<string, string> {
 
 /**
  * Every HTML document that could carry JSON-LD: the committed entry points
- * plus anything generated under public/ (both the crawlable corpus and the
- * /pro build write there). DISCOVERING this population is the point -- a
+ * plus anything generated under public/. DISCOVERING this population is the point -- a
  * hand-listed one cannot notice a NEW surface claiming a canonical `@id`,
  * which is precisely the bug #7611 fixed. Not covered: blog-site/ Astro
  * templates and dist/, neither of which declares a canonical product node
@@ -226,7 +218,6 @@ function jsonLdDocumentPaths(): string[] {
     }
   };
   collect('', false);
-  collect('pro-test/', false);
   collect('public/', true);
   return found.sort();
 }
@@ -247,60 +238,17 @@ function jsonLdDocumentPaths(): string[] {
 const MAY_DIVERGE_ACROSS_SURFACES = new Set(['alternateName', 'featureList', 'keywords', 'offers']);
 
 describe('canonical schema graph', () => {
-  guardProBuiltOutput();
-
-  it('declares one canonical Organization and leaves every other product surface as a reference', {
-    skip: shouldSkipProBuiltOutput(),
-  }, () => {
-    const welcomeBlocks = jsonLdBlocks(read('public/pro/welcome.html'));
-    const proBlocks = jsonLdBlocks(read('public/pro/index.html'));
+  // The canonical Organization was declared by the /pro welcome page
+  // (pro-test/), which left this personal build; the dashboard must still
+  // reference it rather than redeclare it.
+  it('leaves the dashboard product surface as a reference to the canonical Organization', () => {
     const dashboardBlocks = jsonLdBlocks(read('index.html'));
-
-    const organizations = blocksOfType(welcomeBlocks, 'Organization');
-    assert.equal(organizations.length, 1, 'the canonical welcome page must declare Organization once');
-    assert.equal(organizations[0]['@id'], ORGANIZATION_ID);
-    assert.equal(organizations[0].url, CANONICAL_ORIGIN);
-    assert.deepEqual(organizations[0].founder, PERSON_ROLE);
-    assert.equal(organizations[0].foundingDate, '2026-01');
-    assert.equal(blocksOfType(proBlocks, 'Organization').length, 0, '/pro must reference the canonical Organization');
     assert.equal(blocksOfType(dashboardBlocks, 'Organization').length, 0, '/dashboard must reference the canonical Organization');
 
     const dashboardApp = blocksOfType(dashboardBlocks, 'SoftwareApplication')[0];
     const dashboardSite = blocksOfType(dashboardBlocks, 'WebSite')[0];
-    const proApp = blocksOfType(proBlocks, 'SoftwareApplication')[0];
-    const welcomeApp = blocksOfType(welcomeBlocks, 'SoftwareApplication')[0];
     assert.deepEqual(dashboardApp.publisher, { '@id': ORGANIZATION_ID });
     assert.deepEqual(dashboardSite.publisher, { '@id': ORGANIZATION_ID });
-    assert.deepEqual(proApp.publisher, { '@id': ORGANIZATION_ID });
-    assert.ok(proApp.sameAs.includes(PRODUCT_WIKIDATA_URL));
-    assert.ok(welcomeApp.sameAs.includes(PRODUCT_WIKIDATA_URL));
-    assert.doesNotMatch(read('pro-test/prerender.mjs'), /ORGANIZATION_JSONLD|inject Organization JSON-LD/);
-  });
-
-  it('keeps canonical search, product, page, and source-code nodes connected', () => {
-    const welcomeBlocks = jsonLdBlocks(read('pro-test/welcome.html'));
-    const webSite = blocksOfType(welcomeBlocks, 'WebSite')[0];
-    const application = blocksOfType(welcomeBlocks, 'SoftwareApplication')[0];
-    const sourceCode = blocksOfType(welcomeBlocks, 'SoftwareSourceCode')[0];
-
-    assert.equal(webSite['@id'], WEBSITE_ID);
-    assert.deepEqual(webSite.publisher, { '@id': ORGANIZATION_ID });
-    assert.equal(webSite.potentialAction?.['@type'], 'SearchAction');
-    assert.equal(
-      webSite.potentialAction?.target?.urlTemplate,
-      'https://www.worldmonitor.app/dashboard?q={search_term_string}',
-    );
-    const webPage = blocksOfType(welcomeBlocks, 'WebPage')[0];
-    const crumbs = blocksOfType(welcomeBlocks, 'BreadcrumbList')[0];
-    assert.equal(webPage['@id'], `${CANONICAL_ORIGIN}#webpage`);
-    assert.deepEqual(webPage.breadcrumb, { '@id': `${CANONICAL_ORIGIN}#breadcrumb` });
-    assert.equal(crumbs['@id'], `${CANONICAL_ORIGIN}#breadcrumb`);
-    assert.equal(application['@id'], SOFTWARE_ID);
-    assert.deepEqual(application.isBasedOn, { '@id': SOURCE_ID });
-    assert.equal(sourceCode['@id'], SOURCE_ID);
-    assert.equal(sourceCode.codeRepository, 'https://github.com/koala73/worldmonitor');
-    assert.equal(sourceCode.license, 'https://www.gnu.org/licenses/agpl-3.0.html');
-    assert.deepEqual(sourceCode.targetProduct, { '@id': SOFTWARE_ID });
   });
 
   it('connects the canonical dashboard page to its product graph and visible SEO content', () => {
@@ -332,12 +280,8 @@ describe('canonical schema graph', () => {
 
   it('binds every canonical product surface to the World Monitor Wikidata item (#7373)', () => {
     const dashboardBlocks = jsonLdBlocks(read('index.html'));
-    const proBlocks = jsonLdBlocks(read('pro-test/index.html'));
-    const welcomeBlocks = jsonLdBlocks(read('pro-test/welcome.html'));
     const productNodes = [
       ['dashboard', blocksOfType(dashboardBlocks, 'SoftwareApplication')[0]],
-      ['Pro', blocksOfType(proBlocks, 'SoftwareApplication')[0]],
-      ['welcome', blocksOfType(welcomeBlocks, 'SoftwareApplication')[0]],
     ] as const;
 
     for (const [surface, product] of productNodes) {
@@ -348,12 +292,6 @@ describe('canonical schema graph', () => {
         `${surface} must identify the product with Q141237754 exactly once`,
       );
     }
-
-    const organization = blocksOfType(welcomeBlocks, 'Organization')[0];
-    assert.ok(
-      !organization.sameAs?.includes(PRODUCT_WIKIDATA_URL),
-      'the web-application Wikidata item must not be attached to the distinct Organization node',
-    );
   });
 
   // Double entry (#7611). The surfaces are asserted against
@@ -400,19 +338,9 @@ describe('canonical schema graph', () => {
     // Most Dataset nodes lived on the removed crawl corpus pages; whatever
     // Dataset identities the remaining surfaces declare must still agree.
     const pinned: Array<[string, Record<string, unknown>, string[]]> = [
-      [SOFTWARE_ID, SOFTWARE_SHARED_PROPERTIES, withoutUnbuiltProPaths([
-        'index.html',
-        'pro-test/index.html',
-        'pro-test/welcome.html',
-        'public/pro/index.html',
-        'public/pro/welcome.html',
-      ])],
-      [WEBSITE_ID, WEBSITE_SHARED_PROPERTIES, withoutUnbuiltProPaths([
-        'index.html',
-        'pro-test/welcome.html',
-        'public/pro/welcome.html',
-      ])],
-      [ORGANIZATION_ID, {}, ['pro-test/welcome.html']],
+      [SOFTWARE_ID, SOFTWARE_SHARED_PROPERTIES, ['index.html']],
+      [WEBSITE_ID, WEBSITE_SHARED_PROPERTIES, ['index.html']],
+      [ORGANIZATION_ID, {}, []],
       // #7980 put a Person body on the docs middleware output too, so the
       // "one `@id`, one body" invariant has to cover it: if the canonical
       // node at /blog/authors/elie-habib/ is ever renamed or retyped, the
@@ -520,42 +448,7 @@ describe('canonical schema graph', () => {
       assert.ok(crumbs, `${variant} must declare BreadcrumbList`);
       assert.equal(crumbs['@id'], `${VARIANT_META[variant].url}#breadcrumb`);
       assert.equal(crumbs.itemListElement?.[0]?.item, CANONICAL_ORIGIN);
-
-      const host = new URL(VARIANT_META[variant].url).hostname;
-      const browser = middleware(new Request(`https://${host}/`, {
-        headers: { 'user-agent': 'Mozilla/5.0' },
-      }));
-      const crawler = middleware(new Request(`https://${host}/`, {
-        headers: { 'user-agent': 'Mozilla/5.0 GPTBot/1.1' },
-      }));
-      assert.equal(browser, undefined, `${variant} browser must continue to the production redirect`);
-      assert.equal(crawler, undefined, `${variant} crawler must continue to the same production redirect`);
     }
-  });
-
-  it('binds the Pro page to the canonical site and product with speakable content', () => {
-    const blocks = jsonLdBlocks(read('pro-test/index.html'));
-    const application = blocksOfType(blocks, 'SoftwareApplication')[0];
-    const webPage = blocksOfType(blocks, 'WebPage')[0];
-
-    assert.equal(application['@id'], SOFTWARE_ID);
-    assert.deepEqual(application.publisher, { '@id': ORGANIZATION_ID });
-    assert.deepEqual(application.author, PERSON_ROLE);
-    assert.equal(webPage['@id'], 'https://www.worldmonitor.app/pro#webpage');
-    assert.deepEqual(webPage.isPartOf, { '@id': WEBSITE_ID });
-    assert.deepEqual(webPage.mainEntity, { '@id': SOFTWARE_ID });
-    assert.deepEqual(webPage.speakable, {
-      '@type': 'SpeakableSpecification',
-      cssSelector: ['h1', '#pro-overview > p:first-of-type'],
-    });
-    assert.match(
-      read('pro-test/index.html'),
-      /<section id="pro-overview"[^>]*>\s*<p>/,
-      'the Pro speakable paragraph selector must match the static main content',
-    );
-    assert.deepEqual(webPage.breadcrumb, { '@id': 'https://www.worldmonitor.app/pro#breadcrumb' });
-    const crumbs = blocksOfType(blocks, 'BreadcrumbList')[0];
-    assert.equal(crumbs['@id'], 'https://www.worldmonitor.app/pro#breadcrumb');
   });
 
   it('uses bare publisher references in the blog and includes author breadcrumbs', () => {
@@ -602,7 +495,7 @@ describe('canonical schema graph', () => {
       assert.ok(personMatch[1].includes(url), `canonical #person must include ${url}`);
     }
 
-    for (const path of ['index.html', 'pro-test/index.html', 'pro-test/welcome.html']) {
+    for (const path of ['index.html']) {
       const html = read(path);
       assert.match(
         html,
@@ -645,55 +538,5 @@ describe('canonical schema graph', () => {
     // no generated corpus page declares (#7459b).
     assert.equal(WORLD_MONITOR_ORG['@type'], 'Organization');
     assert.ok(WORLD_MONITOR_ORG.name, 'role filler must carry a name so the reference resolves');
-  });
-
-  it('disambiguates the Organization from the live name collisions (#7373)', () => {
-    // Four live confusables share the name: worldmonitor.io, world-monitor.app,
-    // an impersonating "World Monitor Pro" GitHub repo, and three App Store
-    // apps. `alternateName` alone cannot separate them -- it only adds a second
-    // string that all four also match. `disambiguatingDescription` is the
-    // property schema.org defines for exactly this, and it must state the
-    // canonical domain rather than repeat the marketing description.
-    for (const path of withoutUnbuiltProPaths(['pro-test/welcome.html', 'public/pro/welcome.html'])) {
-      const organization = blocksOfType(jsonLdBlocks(read(path)), 'Organization')[0];
-      const disambiguation = organization.disambiguatingDescription;
-
-      assert.equal(typeof disambiguation, 'string', `${path} must carry disambiguatingDescription`);
-      assert.ok(
-        disambiguation.includes('www.worldmonitor.app'),
-        `${path} disambiguation must name the canonical domain, since the collision is on the name`,
-      );
-      assert.ok(
-        disambiguation.includes('Q141237754'),
-        `${path} disambiguation must name the World Monitor product Wikidata item`,
-      );
-      assert.ok(
-        disambiguation !== organization.description,
-        `${path} disambiguatingDescription must distinguish, not restate description`,
-      );
-      assert.ok(
-        /worldmonitor\.io/.test(disambiguation) && /world-monitor\.app/.test(disambiguation)
-          && /world-monitor\.com/.test(disambiguation) && /worldmonitorintel\.com/.test(disambiguation),
-        `${path} disambiguation must name the colliding domains it is disclaiming`,
-      );
-      assert.match(
-        disambiguation,
-        /World Monitor Pro/,
-        `${path} disambiguation must disclaim the similarly named repository`,
-      );
-      assert.match(
-        disambiguation,
-        /unrelated mobile applications/,
-        `${path} disambiguation must disclaim the similarly named mobile applications`,
-      );
-      assert.equal(organization.alternateName, 'WorldMonitor');
-      assert.equal(organization.interactionStatistic, undefined);
-    }
-  });
-
-  it('grounds the source Organization with founder and foundingDate (#7459e)', () => {
-    const welcome = blocksOfType(jsonLdBlocks(read('pro-test/welcome.html')), 'Organization')[0];
-    assert.deepEqual(welcome.founder, PERSON_ROLE);
-    assert.equal(welcome.foundingDate, '2026-01');
   });
 });

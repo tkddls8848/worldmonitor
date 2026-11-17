@@ -1236,16 +1236,12 @@ export const ACQUISITION_CLAIM_ROOTS = [
   'README.md',
   'README.zh-CN.md',
   'README.ja-JP.md',
-  'server.json',
   'cli',
   'docs',
   'public',
   'public/.well-known/ai-catalog.json',
   'public/.well-known/agent-skills',
   'public/api/llms.txt',
-  'pro-test/src/locales',
-  'pro-test/index.html',
-  'pro-test/welcome.html',
   'blog-site/src/content/blog',
 ];
 const ACQUISITION_CLAIM_EXCLUDES = [
@@ -1274,14 +1270,12 @@ const ACQUISITION_CLAIM_EXTENSIONS = /\.(?:astro|html|json|md|mdx|mjs|txt)$/;
 
 function isCurrentAcquisitionClaimSurface(path) {
   return (
-    ['index.html', 'README.md', 'README.zh-CN.md', 'README.ja-JP.md', 'server.json', 'cli/README.md',
-      'pro-test/index.html', 'pro-test/welcome.html'].includes(path)
+    ['index.html', 'README.md', 'README.zh-CN.md', 'README.ja-JP.md', 'cli/README.md'].includes(path)
     || /^docs\/.+\.(?:md|mdx)$/.test(path)
     || /^public\/[^/]+\.(?:md|txt|json)$/.test(path)
     || /^public\/(?:[^/]+\/)*llms\.txt$/.test(path)
     || path === 'public/.well-known/ai-catalog.json'
     || /^public\/\.well-known\/agent-skills\/[^/]+\/SKILL\.md$/.test(path)
-    || /^pro-test\/src\/locales\/[^/]+\.json$/.test(path)
     || /^blog-site\/src\/content\/blog\/[^/]+\.md$/.test(path)
   );
 }
@@ -1411,8 +1405,6 @@ export function validateVolatileInventoryClaims() {
     { path: 'blog-site/src/content/blog/build-supply-chain-early-warning-system-api.md', text: /Three signals, three endpoints/ },
     { path: 'blog-site/src/content/blog/free-geopolitical-data-apis-2026.md', text: /ingest ten feeds/ },
     { path: 'blog-site/src/content/blog/supply-chain-early-warning-dashboard-worldmonitor-api.md', text: /five panels/ },
-    { path: 'pro-test/src/locales/ja.json', text: /25ダッシュボード/ },
-    { path: 'pro-test/src/locales/ja.json', text: /紛争は1つのマップレイヤー/ },
   ];
   const failures = [];
   const observedRetainedContracts = new Set();
@@ -1856,8 +1848,6 @@ export const PLAN_LAYER_COPY_SURFACES = [
   'docs/accounts.mdx',
   'docs/zh/pricing.mdx',
   'docs/zh/accounts.mdx',
-  'pro-test/src/locales/en.json',
-  'pro-test/welcome.html',
   // The category explainer names the free-tier layer boundary too ("Every
   // layer except the Resilience layer is available on the free plan"), so it
   // has to be re-pointed alongside the pricing surfaces when the lock set moves.
