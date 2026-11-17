@@ -5,7 +5,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { registerWebhook, MAX_WEBHOOKS_PER_OWNER } from '../server/worldmonitor/shipping/v2/register-webhook';
-import { ALL_INDEX_KEY, callerFingerprint, ownerIndexKey, webhookKey, WEBHOOK_TTL } from '../server/worldmonitor/shipping/v2/webhook-shared';
+import { ALL_INDEX_KEY, ownerIndexKey, webhookKey, WEBHOOK_TTL } from '../server/worldmonitor/shipping/v2/webhook-shared';
+import { PERSONAL_OWNER_ID } from '../shared/personal-owner.js';
 import unsubscribe from '../api/v2/shipping/webhooks/[subscriberId]';
 import action from '../api/v2/shipping/webhooks/[subscriberId]/[action]';
 
@@ -75,12 +76,12 @@ test('real Redis enforces webhook quotas across concurrency, keys and lifecycle'
       const results = await Promise.allSettled(Array.from({ length: 40 }, () => register()));
       assert.equal(results.filter(r => r.status === 'fulfilled').length, MAX_WEBHOOKS_PER_OWNER);
       for (const result of results) if (result.status === 'rejected') assert.equal(result.reason.statusCode, 429);
-      const owner = await callerFingerprint(request('pro-test-key'));
+      const owner = PERSONAL_OWNER_ID;
       assert.equal(command('SCARD', ownerIndexKey(owner)), 10);
       assert.equal(command('SCARD', ALL_INDEX_KEY), 10);
       assert.equal((command('KEYS', 'webhook:sub:*') as string[]).length, 10);
-      const separate = await register('other-key');
-      assert.ok(command('GET', webhookKey(separate.subscriberId)));
+      // A different key is still the same owner, so the quota holds.
+      await assert.rejects(register('other-key'), (err: { statusCode: number }) => err.statusCode === 429);
     });
 
     await t.test('deletion and expiry free slots; renewal keeps account quota alive', async () => {
@@ -92,7 +93,7 @@ test('real Redis enforces webhook quotas across concurrency, keys and lifecycle'
       const id = records[0].subscriberId;
       const stored = JSON.parse(command('GET', webhookKey(id)) as string);
       const quotaKey = ownerIndexKey(stored.quotaTag);
-      assert.notEqual(stored.quotaTag, stored.ownerTag);
+      assert.equal(stored.quotaTag, PERSONAL_OWNER_ID);
       assert.equal(command('SCARD', quotaKey), 10);
       command('EXPIRE', quotaKey, 60);
       assert.equal((await action(request(keys[0], id, 'POST', '/rotate-secret'))).status, 200);
@@ -109,7 +110,7 @@ test('real Redis enforces webhook quotas across concurrency, keys and lifecycle'
 
     await t.test('legacy oversized indexes reject new registrations', async () => {
       command('FLUSHDB');
-      const owner = await callerFingerprint(request('pro-test-key'));
+      const owner = PERSONAL_OWNER_ID;
       for (let i = 0; i < 11; i++) {
         command('SET', webhookKey(`legacy-${i}`), '{}');
         command('SADD', ownerIndexKey(owner), `legacy-${i}`);
