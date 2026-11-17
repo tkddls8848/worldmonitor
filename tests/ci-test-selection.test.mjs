@@ -10,7 +10,9 @@ import { parse } from 'yaml';
 const root = resolve(import.meta.dirname, '..');
 const workflow = parse(readFileSync(join(root, '.github/workflows/test.yml'), 'utf8'));
 
-test('docs-only PRs and pushes retain the internal-link gate when unit shards skip', () => {
+// The internal-link suite left with the personal build's crawl corpus; the
+// always-on docs job still gates docs-only changes on the doc-claims check.
+test('docs-only PRs and pushes retain the docs gate when unit shards skip', () => {
   for (const event of ['pull_request', 'push']) {
     const result = classify(['docs/data-sources.mdx', 'docs/zh/data-sources.mdx'], { event });
     assert.equal(result.code, 'false');
@@ -19,10 +21,11 @@ test('docs-only PRs and pushes retain the internal-link gate when unit shards sk
   assert.equal(job.if, undefined);
   assert.equal(job.needs, undefined);
   const installIndex = job.steps.findIndex((step) => step.uses === './.github/actions/install-root-deps');
-  const linkIndex = job.steps.findIndex((step) => step.run === 'node --import tsx --test tests/internal-link-redirects.test.mjs');
-  assert.ok(installIndex >= 0 && linkIndex > installIndex, 'the always-on docs job must run the link suite after installing dependencies');
-  assert.equal(job.steps[linkIndex].if, undefined);
-  assert.equal(job.steps[linkIndex]['continue-on-error'], undefined);
+  const docsIndex = job.steps.findIndex((step) => step.run === 'node scripts/docs-stats.mjs --check');
+  assert.ok(installIndex >= 0 && docsIndex > installIndex, 'the always-on docs job must run docs-stats after installing dependencies');
+  assert.equal(job.steps.some((step) => String(step.run ?? '').includes('internal-link-redirects')), false);
+  assert.equal(job.steps[docsIndex].if, undefined);
+  assert.equal(job.steps[docsIndex]['continue-on-error'], undefined);
   assert.equal(job['continue-on-error'], undefined);
 });
 

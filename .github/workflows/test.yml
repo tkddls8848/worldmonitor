@@ -234,12 +234,9 @@ jobs:
         # Docs-only PRs skip the unit shards, so without this step a missing
         # docs/zh mirror surfaces only as a red main after merge (#8968).
         run: node --test tests/docs-i18n-parity.test.mjs
-      - name: Published internal links resolve without redirects
-        run: node --import tsx --test tests/internal-link-redirects.test.mjs
       - name: Derived files are current (npm run generate)
-        # Every committed generated file with a freshness check: product facts,
-        # llms.txt, AI search, source attribution, the homepage teaser strip,
-        # the entitlement crosswalk (exit 2 there means a missing source, and
+        # Every committed generated file with a freshness check: source
+        # attribution, the entitlement crosswalk (exit 2 there means a missing source, and
         # its output is printed), catalogs and notices. Always-on because a
         # docs-only PR skips `unit`, yet docs feed several of these. zh-TW is
         # skipped here (no OpenCC) and checked in unit-built-output.
