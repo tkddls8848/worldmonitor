@@ -3,16 +3,6 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseSupportedLanguages } from '../scripts/docs-stats.mjs';
-import {
-  INDEXABLE_LANDING_LOCALES,
-  landingHreflangCluster,
-} from '../shared/indexable-landing-locales.ts';
-import {
-  guardProBuiltOutput,
-  landingBuiltOutputPath,
-  shouldSkipProBuiltOutput,
-} from './_lib/pro-built-output.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (path: string) => readFileSync(join(ROOT, path), 'utf8');
@@ -35,22 +25,11 @@ interface StaticResponse {
   status: number;
 }
 
-const APPLICATION_ROUTES = new Map<string, string>([
-  ['/dashboard', 'index.html'],
-  ['/pro', 'public/pro/index.html'],
-]);
-
-const DEPLOYED_ROUTES = new Map<string, string>([
-  ...INDEXABLE_LANDING_LOCALES.map((locale): [string, string] => [locale.canonicalPath, landingBuiltOutputPath(locale)]),
-  ...APPLICATION_ROUTES,
-]);
-
+// The /pro app and its prerendered landing locales were built from pro-test/,
+// which left the personal build; the dashboard is the one application document.
 const ENGLISH_ONLY_DOCUMENTS = [
   { path: 'index.html', canonical: 'https://www.worldmonitor.app/dashboard' },
-  { path: 'public/pro/index.html', canonical: 'https://www.worldmonitor.app/pro' },
 ];
-
-const clusterEntries = () => landingHreflangCluster().map(({ hreflang, href }): [string, string] => [hreflang, href]);
 
 function tagText(html: string, tag: string): string {
   const match = html.match(new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'));
@@ -89,23 +68,6 @@ function parseDocument(html: string): ParsedDocument {
     title: tagText(html, 'title'),
     visibleHeading: tagText(html, 'h1'),
   };
-}
-
-function supportedLanguages(): string[] {
-  const languages = parseSupportedLanguages(read('src/services/i18n.ts'));
-  assert.ok(languages, 'src/services/i18n.ts must expose the literal supported-locale registry');
-  return languages;
-}
-
-const staticRouteBodies = new Map<string, string>();
-
-async function fetchStaticRoute(input: string): Promise<StaticResponse> {
-  const url = new URL(input);
-  const file = DEPLOYED_ROUTES.get(url.pathname);
-  if (!file) return { status: 404, body: '' };
-  const body = staticRouteBodies.get(file) ?? read(file);
-  staticRouteBodies.set(file, body);
-  return { status: 200, body };
 }
 
 function discoverySignature(document: ParsedDocument): string {
@@ -184,12 +146,8 @@ async function validateHreflangCluster(
   return failures;
 }
 
-// public/pro/ is built by `npm run build:pro`, not committed (#6898): skip when the
-// checkout has not built it, fail when WM_EXPECT_BUILT_OUTPUT=1 says CI did.
-describe('international SEO application-locale mode (#5666)', { skip: shouldSkipProBuiltOutput() }, () => {
-  guardProBuiltOutput();
-
-  it('publishes only x-default and English at each self-canonical application URL that is not a landing', () => {
+describe('international SEO application-locale mode (#5666)', () => {
+  it('publishes only x-default and English at the dashboard self-canonical application URL', () => {
       for (const { path, canonical } of ENGLISH_ONLY_DOCUMENTS) {
       const document = parseDocument(read(path));
       assert.equal(document.htmlLang, 'en', `${path}: raw document language`);
@@ -201,75 +159,6 @@ describe('international SEO application-locale mode (#5666)', { skip: shouldSkip
       );
       assert.equal(document.indexable, true, `${path}: canonical document remains indexable`);
       assert.ok(document.structuredLanguages.every((language) => language === 'en'), `${path}: structured language must describe the raw English document`);
-    }
-  });
-
-  it('publishes the reciprocal landing cluster on every prerendered homepage locale', () => {
-    for (const locale of INDEXABLE_LANDING_LOCALES) {
-      const path = landingBuiltOutputPath(locale);
-      const document = parseDocument(read(path));
-      assert.equal(document.htmlLang, locale.htmlLang, `${path}: html lang`);
-      assert.equal(document.canonical, locale.canonicalUrl, `${path}: self-canonical`);
-      assert.deepEqual(document.hreflangEntries, clusterEntries(), `${path}: landing hreflang cluster`);
-      assert.equal(document.indexable, true, `${path}: remains indexable`);
-      assert.ok(document.title, `${path}: title`);
-      assert.ok(document.description, `${path}: description`);
-      assert.ok(document.visibleHeading, `${path}: visible heading`);
-      if (!locale.isDefault) {
-        const english = parseDocument(read('public/pro/welcome.html'));
-        assert.notEqual(
-          discoverySignature(document),
-          discoverySignature(english),
-          `${path}: visible content and metadata must differ from English`,
-        );
-        const body = read(path).slice(read(path).search(/<body\b/i));
-        assert.doesNotMatch(
-          body,
-          /<noscript\b/i,
-          `${path}: the English noscript body must not ship on a localized landing`,
-        );
-      }
-    }
-  });
-
-  it('serves LTR, RTL, and every supported ?lang request as 200 application state on the base canonical', async () => {
-    const locales = supportedLanguages();
-    assert.ok(locales.includes('fr'), 'LTR representative locale must stay registered');
-    assert.ok(locales.includes('ar'), 'RTL representative locale must stay registered');
-    const indexableIds = new Set(INDEXABLE_LANDING_LOCALES.map((locale) => locale.id));
-
-    for (const locale of locales) {
-      for (const [route] of DEPLOYED_ROUTES) {
-        const request = new URL(route, 'https://www.worldmonitor.app');
-        request.searchParams.set('lang', locale);
-        const response = await fetchStaticRoute(request.href);
-        assert.equal(response.status, 200, `${request.href}: HTTP status`);
-        const document = parseDocument(response.body);
-        assert.equal(document.canonical, new URL(route, 'https://www.worldmonitor.app').href, `${request.href}: base canonical`);
-        for (const href of document.hreflang.values()) {
-          assert.equal(new URL(href).search, '', `${request.href}: hreflang must not use query-string targets`);
-        }
-        if (!indexableIds.has(locale) && locale !== 'en') {
-          assert.ok(
-            !document.hreflang.has(locale),
-            `${request.href}: non-indexable locale must not be advertised as an alternate`,
-          );
-        }
-      }
-    }
-  });
-
-  it('accepts the deployed landing hreflang clusters', async () => {
-    for (const locale of INDEXABLE_LANDING_LOCALES) {
-      assert.deepEqual(
-        await validateHreflangCluster(locale.canonicalUrl, fetchStaticRoute),
-        [],
-        locale.canonicalUrl,
-      );
-    }
-    for (const route of ['/dashboard', '/pro']) {
-      const url = new URL(route, 'https://www.worldmonitor.app').href;
-      assert.deepEqual(await validateHreflangCluster(url, fetchStaticRoute), [], url);
     }
   });
 

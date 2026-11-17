@@ -72,60 +72,6 @@ function runGuardProbe(expectBuiltOutput) {
 }
 
 describe('built-output guard contract', () => {
-
-  it('wires the /pro guard to the shared primitive and the prerendered page', async () => {
-    // The skip/fail behaviour itself is proven with teeth by the probe cases
-    // below, which exercise the shared primitive. What that probe cannot reach
-    // is the /pro wrapper, because it resolves its own path -- so pin the two
-    // things the wrapper contributes: which file it watches, and that it
-    // delegates rather than reimplementing the skip/fail decision.
-    const proGuard = await import('./_lib/pro-built-output.mjs');
-    assert.match(
-      proGuard.PRO_BUILT_MARKER,
-      /public\/pro\/welcome\.html$/,
-      'the /pro marker must be the prerendered welcome page',
-    );
-
-    const source = readFileSync(resolve(repoRoot, 'tests/_lib/pro-built-output.mjs'), 'utf8');
-    assert.match(
-      source,
-      /from '\.\/built-output-guard\.mjs'/,
-      'the /pro helper must delegate to the shared built-output primitive, not fork it',
-    );
-    assert.match(
-      source,
-      /shouldSkipBuiltOutput\(PRO_BUILT_MARKER\)/,
-      'shouldSkipProBuiltOutput must ask the shared primitive about the /pro marker',
-    );
-    assert.match(
-      source,
-      /guardBuiltOutput\(PRO_BUILT_MARKER/,
-      'guardProBuiltOutput must ask the shared primitive about the /pro marker',
-    );
-
-    const sentrySource = readFileSync(resolve(repoRoot, 'tests/pro-sentry-chunk.test.mjs'), 'utf8');
-    assert.match(
-      sentrySource,
-      /from '\.\/_lib\/built-output-guard\.mjs'/,
-      'the pro Sentry chunk suite must use the shared built-output primitive',
-    );
-    assert.match(
-      sentrySource,
-      /skip: shouldSkipBuiltOutput\(ASSETS_DIR\)/,
-      'the pro Sentry chunk suite must skip specifically when public/pro/assets is absent',
-    );
-    assert.match(
-      sentrySource,
-      /guardBuiltOutput\(ASSETS_DIR, undefined, REBUILD_HINT\)/,
-      'the pro Sentry chunk suite must fail closed on the same assets path when CI expects built output',
-    );
-    assert.match(
-      sentrySource,
-      /Run `npm run build:pro` first/,
-      'the pro Sentry chunk failure must name the /pro build command',
-    );
-  });
-
   it('skips the built-output suite when the marker is absent and output is missing', () => {
     const result = runGuardProbe(false);
 
