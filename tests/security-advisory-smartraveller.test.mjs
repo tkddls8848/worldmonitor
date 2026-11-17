@@ -66,7 +66,8 @@ const STATE_DEPT_RSS = `<rss><channel>${COUNTRY_NAMES.slice(0, 400).map((name, i
 
 function routedFetch(routes) {
   return async (proxyUrl) => {
-    const target = new URL(proxyUrl).searchParams.get('url');
+    // Direct feed URL, or the feed inside a RELAY_URL /rss?url= request.
+    const target = new URL(proxyUrl).searchParams.get('url') ?? proxyUrl;
     const handler = routes[target];
     return handler ? handler() : new Response('', { status: 404 });
   };

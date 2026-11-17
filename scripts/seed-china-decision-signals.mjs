@@ -15,6 +15,7 @@ import {
   emitChinaDecisionAlerts,
   publishChinaDecisionAlertEvents,
 } from './china-decision-alerts.mjs';
+import { wmApiBase, wmApiFetch } from './lib/personal-api.mjs';
 
 // Kept literal because the Railway scripts container cannot import outside its
 // rootDirectory. Registry parity is enforced by audit-china-decision-parity.
@@ -64,8 +65,8 @@ export function validateChinaDecisionSignalSnapshot(value) {
 }
 
 export async function fetchChinaDecisionSignals({
-  fetchImpl = fetch,
-  apiBaseUrl = process.env.API_BASE_URL || 'https://api.worldmonitor.app',
+  fetchImpl = wmApiFetch(),
+  apiBaseUrl = wmApiBase(),
 } = {}) {
   const response = await fetchImpl(`${apiBaseUrl}${CHINA_DECISION_SIGNALS_ROUTE}`, {
     headers: {

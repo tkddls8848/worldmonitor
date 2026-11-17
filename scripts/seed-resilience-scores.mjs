@@ -15,10 +15,12 @@ import {
   computeIntervals,
   createIntervalDiagnostics,
 } from './_resilience-intervals.mjs';
+import { wmApiBase, wmApiFetch } from './lib/personal-api.mjs';
 
 loadEnvFile(import.meta.url);
 
-const API_BASE = process.env.API_BASE_URL || 'https://api.worldmonitor.app';
+const API_BASE = wmApiBase();
+const apiFetch = (url, init) => wmApiFetch()(url, init);
 // Normal premium reads/warmups use the standard API key allowlist.
 const WM_KEY = process.env.WORLDMONITOR_API_KEY
   || (process.env.WORLDMONITOR_VALID_KEYS ?? '').split(',').map((k) => k.trim()).filter(Boolean)[0]
@@ -114,7 +116,7 @@ export async function warmLaggardCountries(stillMissing, {
   budgetMs = LAGGARD_WARMUP_BUDGET_MS,
   batchSize = LAGGARD_WARMUP_BATCH_SIZE,
   apiBase = API_BASE,
-  fetchImpl = (u, i) => globalThis.fetch(u, i),
+  fetchImpl = apiFetch,
 } = {}) {
   if (stillMissing.length === 0) return 0;
   if (!apiKey) {
@@ -208,7 +210,7 @@ async function redisTransaction(url, token, commands) {
   return resp.json();
 }
 
-export async function fetchRuntimeCacheState(fetchFn = globalThis.fetch) {
+export async function fetchRuntimeCacheState(fetchFn = apiFetch) {
   try {
     const resp = await fetchFn(`${API_BASE}/api/resilience/v1/get-runtime-manifest`, {
       headers: { 'User-Agent': SEED_UA, 'Accept': 'application/json' },
@@ -552,7 +554,7 @@ export async function seedResilienceScores({ runtimeCacheState = fetchRuntimeCac
       // through warmMissingResilienceScores and its chunked pipeline SET.
       const headers = { 'User-Agent': SEED_UA, 'Accept': 'application/json' };
       if (WM_REFRESH_KEY) headers['X-WorldMonitor-Key'] = WM_REFRESH_KEY;
-      const resp = await fetch(`${API_BASE}/api/resilience/v1/get-resilience-ranking?refresh=1`, {
+      const resp = await apiFetch(`${API_BASE}/api/resilience/v1/get-resilience-ranking?refresh=1`, {
         headers,
         signal: AbortSignal.timeout(RANKING_REFRESH_TIMEOUT_MS),
       });
@@ -680,7 +682,7 @@ export async function refreshRankingAggregate({ url, token, laggardsWarmed }) {
     const rebuildHeaders = { 'User-Agent': SEED_UA, 'Accept': 'application/json' };
     if (WM_REFRESH_KEY) rebuildHeaders['X-WorldMonitor-Key'] = WM_REFRESH_KEY;
     const requestRebuild = async () => {
-      const resp = await fetch(`${API_BASE}/api/resilience/v1/get-resilience-ranking?refresh=1`, {
+      const resp = await apiFetch(`${API_BASE}/api/resilience/v1/get-resilience-ranking?refresh=1`, {
         headers: rebuildHeaders,
         signal: AbortSignal.timeout(RANKING_REFRESH_TIMEOUT_MS),
       });

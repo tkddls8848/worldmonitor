@@ -21,13 +21,14 @@ function alertFeed(host) {
 }
 
 describe('Southeast Asia US embassy alert feeds', () => {
-  it('fetches each embassy through the RSS relay and tags its alerts with the host country', async () => {
+  it('fetches each allowed embassy feed and tags its alerts with the host country', async () => {
     const requestedFeeds = new Set();
     const doFetch = async (url) => {
-      const relay = new URL(url);
-      const target = relay.searchParams.get('url');
+      // Direct when RELAY_URL is unset, otherwise RELAY_URL/rss?url=<feed>.
+      const requestUrl = new URL(url);
+      const target = requestUrl.pathname === '/rss' ? requestUrl.searchParams.get('url') : url;
       const host = target ? new URL(target).hostname : '';
-      if (relay.pathname === '/rss' && SEA_EMBASSIES.some((e) => e.host === host)) {
+      if (SEA_EMBASSIES.some((e) => e.host === host)) {
         requestedFeeds.add(target);
         return new Response(alertFeed(host), { status: 200 });
       }
@@ -39,7 +40,7 @@ describe('Southeast Asia US embassy alert feeds', () => {
     for (const embassy of SEA_EMBASSIES) {
       assert.ok(
         requestedFeeds.has(`https://${embassy.host}/category/alert/feed/`),
-        `${embassy.host} alert feed requested through the relay allowlist`,
+        `${embassy.host} alert feed requested through the domain allowlist`,
       );
       const alert = report.advisories.find((a) => a.source === embassy.source);
       assert.ok(alert, `${embassy.source} alert stored`);

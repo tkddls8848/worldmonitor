@@ -57,7 +57,9 @@ const ADVISORY_FEEDS = [
   { name: 'WHO Africa Emergencies', sourceCountry: 'INT', sourceCategory: 'health', url: 'https://www.afro.who.int/rss/emergencies.xml' },
 ];
 
-const RELAY_URL = process.env.RELAY_URL || 'https://proxy.worldmonitor.app';
+// An RSS relay is opt-in. This fork has no hosted relay, so with RELAY_URL
+// unset each allowed feed is fetched directly from its publisher.
+const RELAY_URL = process.env.RELAY_URL || '';
 
 export function parseUsLevel(title) {
   const m = title.match(/Level (\d)/i);
@@ -186,7 +188,7 @@ function rssProxyUrl(feedUrl) {
     console.warn(`  Skipping disallowed domain: ${domain}`);
     return null;
   }
-  return `${RELAY_URL}/rss?url=${encodeURIComponent(feedUrl)}`;
+  return RELAY_URL ? `${RELAY_URL}/rss?url=${encodeURIComponent(feedUrl)}` : feedUrl;
 }
 
 export async function readBoundedFeedText(response, maxBytes = MAX_ADVISORY_FEED_BYTES) {

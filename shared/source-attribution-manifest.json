@@ -1616,24 +1616,6 @@
           "path": "scripts/post-pr3487-force-refresh.mjs"
         },
         {
-          "path": "scripts/seed-china-decision-signals.mjs"
-        },
-        {
-          "path": "scripts/seed-infra.mjs"
-        },
-        {
-          "path": "scripts/seed-insights.mjs"
-        },
-        {
-          "path": "scripts/seed-military-maritime-news.mjs"
-        },
-        {
-          "path": "scripts/seed-resilience-scores.mjs"
-        },
-        {
-          "path": "scripts/seed-service-statuses.mjs"
-        },
-        {
           "path": "scripts/shipping-webhook-worker.mjs"
         },
         {
@@ -8313,9 +8295,6 @@
           "path": "api/widget-agent.ts"
         },
         {
-          "path": "scripts/seed-security-advisories.mjs"
-        },
-        {
           "path": "src/utils/proxy.ts"
         }
       ]
@@ -11450,6 +11429,9 @@
         },
         {
           "path": "scripts/lib/company-monitoring-classifier-client.mjs"
+        },
+        {
+          "path": "scripts/lib/personal-api.mjs"
         },
         {
           "path": "scripts/lib/x-news-accounts.cjs"

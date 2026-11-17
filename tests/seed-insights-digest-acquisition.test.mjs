@@ -107,6 +107,42 @@ test('negative sentinels and malformed digests never escape acquisition', async 
   assert.equal(digest, null);
 });
 
+test('with API_BASE_URL unset the digest warm call goes to the personal server with the owner credential', async (t) => {
+  const names = ['API_BASE_URL', 'WM_PERSONAL_HOST', 'WM_PERSONAL_PORT', 'WM_PERSONAL_USERNAME', 'WM_PERSONAL_PASSWORD', 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN'];
+  const previous = Object.fromEntries(names.map((name) => [name, process.env[name]]));
+  t.after(() => {
+    for (const [name, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
+  });
+  delete process.env.API_BASE_URL;
+  delete process.env.WM_PERSONAL_USERNAME;
+  Object.assign(process.env, {
+    WM_PERSONAL_HOST: '127.0.0.1',
+    WM_PERSONAL_PORT: '3999',
+    WM_PERSONAL_PASSWORD: 'p'.repeat(16),
+    UPSTASH_REDIS_REST_URL: 'https://redis.example.test',
+    UPSTASH_REDIS_REST_TOKEN: 'test-token',
+  });
+  const calls = [];
+  t.mock.method(globalThis, 'fetch', async (input, init = {}) => {
+    const url = String(input);
+    calls.push({ origin: new URL(url).origin, authorization: init.headers?.authorization });
+    if (url.startsWith('https://redis.example.test/get/')) return redisResponse(null);
+    if (url.startsWith('http://127.0.0.1:3999/api/news/v1/list-feed-digest')) return new Response(JSON.stringify(ACCEPTED_DIGEST));
+    throw new Error(`Unexpected fetch: ${url}`);
+  });
+
+  const digest = await readOrWarmDigest('en');
+
+  assert.deepEqual(digest, ACCEPTED_DIGEST);
+  assert.deepEqual(calls, [
+    { origin: 'https://redis.example.test', authorization: undefined },
+    { origin: 'http://127.0.0.1:3999', authorization: `Basic ${Buffer.from(`owner:${'p'.repeat(16)}`).toString('base64')}` },
+  ]);
+});
+
 test('accepted digests ignore malformed category buckets during item extraction', () => {
   const validItem = ACCEPTED_DIGEST.categories.politics.items[0];
 

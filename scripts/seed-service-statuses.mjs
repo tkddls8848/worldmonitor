@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Warm-pings the Vercel RPC endpoint to populate the Redis cache.
+ * Warm-pings the WorldMonitor API (the personal server) to populate the Redis cache.
  * The RPC handler (list-service-statuses.ts) does the actual fetching
  * and caching via cachedFetchJson. This script just triggers it.
  *
@@ -9,10 +9,13 @@
  */
 
 import { loadEnvFile, CHROME_UA, getRedisCredentials, logSeedResult, extendExistingTtl } from './_seed-utils.mjs';
+import { wmApiBase, wmApiFetch } from './lib/personal-api.mjs';
 
 loadEnvFile(import.meta.url);
 
-const RPC_URL = 'https://api.worldmonitor.app/api/infrastructure/v1/list-service-statuses';
+// The personal server's own handler fetches the status pages and writes
+// infra:service-statuses:v1 to the local store; the read-back below checks it.
+const RPC_URL = `${wmApiBase()}/api/infrastructure/v1/list-service-statuses`;
 const CANONICAL_KEY = 'infra:service-statuses:v1';
 
 // Defense-in-depth auth — see seed-infra.mjs for the same pattern + rationale.
@@ -38,7 +41,7 @@ async function warmPing() {
 
   let data;
   try {
-    const resp = await fetch(RPC_URL, {
+    const resp = await wmApiFetch()(RPC_URL, {
       method: 'POST',
       headers: warmPingHeaders(),
       body: '{}',

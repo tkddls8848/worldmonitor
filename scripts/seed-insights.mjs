@@ -54,6 +54,7 @@ export {
   resolveInsightsSynthesis,
 };
 import { buildLlmCallEvent, emitLlmEvents, flushPendingLlmEvents } from './lib/llm-telemetry.cjs';
+import { wmApiBase, wmApiFetch } from './lib/personal-api.mjs';
 import {
   OPENROUTER_FREE_BACKUP_MODEL,
   OPENROUTER_FREE_PRIMARY_MODEL,
@@ -774,14 +775,14 @@ function buildImportanceObservability(clusters, topStories) {
 }
 
 async function warmDigestCache(language = 'en') {
-  const apiBase = process.env.API_BASE_URL || 'https://api.worldmonitor.app';
+  const apiBase = wmApiBase();
   const headers = {
     'User-Agent': CHROME_UA,
     Origin: 'https://worldmonitor.app',
   };
   if (RELAY_API_KEY) headers['X-WorldMonitor-Key'] = RELAY_API_KEY;
   try {
-    const resp = await fetch(`${apiBase}/api/news/v1/list-feed-digest?variant=full&lang=${encodeURIComponent(language)}`, {
+    const resp = await wmApiFetch()(`${apiBase}/api/news/v1/list-feed-digest?variant=full&lang=${encodeURIComponent(language)}`, {
       headers,
       signal: AbortSignal.timeout(30_000),
     });

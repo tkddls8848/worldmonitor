@@ -26,10 +26,12 @@
  */
 
 import { loadEnvFile, CHROME_UA } from './_seed-utils.mjs';
+import { wmApiBase, wmApiFetch } from './lib/personal-api.mjs';
 
 loadEnvFile(import.meta.url);
 
-const API_BASE = 'https://api.worldmonitor.app';
+// The personal server; this fork has no hosted API to warm.
+const API_BASE = wmApiBase();
 const TIMEOUT = 30_000;
 
 // Defense-in-depth auth — see seed-infra.mjs for the same pattern + rationale.
@@ -49,7 +51,7 @@ function warmPingHeaders() {
 
 async function warmPing(name, path, body = {}) {
   try {
-    const resp = await fetch(`${API_BASE}${path}`, {
+    const resp = await wmApiFetch()(`${API_BASE}${path}`, {
       method: 'POST',
       headers: warmPingHeaders(),
       body: JSON.stringify(body),
