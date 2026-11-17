@@ -34,6 +34,44 @@ test('personal ingress protects assets/API and strips client transport credentia
   assert.equal(response.headers.get('cache-control'), 'private, no-store');
 });
 
+// The gateway no longer authenticates anything: this check is the only gate in
+// front of every route, so no method or path shape may reach the API without it.
+test('personal ingress challenges every method and path before the API sees it', async t => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'wm-personal-'));
+  await writeFile(path.join(dir, 'dashboard.html'), '<html lang="ko">개인용</html>');
+  let upstreamHits = 0;
+  const api = http.createServer((_req, res) => { upstreamHits += 1; res.end('{}'); });
+  await new Promise(resolve => api.listen(0, '127.0.0.1', resolve));
+  const server = await createPersonalIngress({ password: 'test-password-123456', distDir: dir, apiPort: api.address().port, token: 'internal-only' });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  t.after(async () => { server.closeAllConnections(); api.closeAllConnections(); await Promise.all([new Promise(r => server.close(r)), new Promise(r => api.close(r))]); await rm(dir, { recursive: true }); });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const wrong = { authorization: `Basic ${Buffer.from('owner:not-the-password-0000').toString('base64')}` };
+  const paths = [
+    '/api/supply-chain/v1/get-country-cost-shock?iso2=KR',
+    '/api/scenario/v1/run-scenario',
+    '/api/supply-chain/v1/get-country-cost-shock.md',
+    '/api/chat-analyst',
+    '/api/latest-brief',
+    '/api/bootstrap?tier=fast',
+    '/api/sidecar-health',
+    '/api/service-status',
+    '/api/youtube-embed?videoId=aaaaaaaaaaa',
+    '/dashboard.html',
+  ];
+  for (const p of paths) {
+    for (const method of ['GET', 'HEAD', 'POST', 'OPTIONS', 'PUT', 'DELETE']) {
+      for (const headers of [{}, wrong, { authorization: 'Bearer anything' }]) {
+        const res = await fetch(base + p, { method, headers });
+        assert.equal(res.status, 401, `${method} ${p} ${JSON.stringify(headers)}`);
+        assert.match(res.headers.get('www-authenticate') ?? '', /^Basic /);
+        await res.arrayBuffer();
+      }
+    }
+  }
+  assert.equal(upstreamHits, 0, 'no unauthenticated request may reach the API server');
+});
+
 test('personal ingress refuses a missing or weak password', async () => {
   await assert.rejects(createPersonalIngress({ password: 'short' }), /at least 16/);
 });

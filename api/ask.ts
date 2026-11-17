@@ -15,22 +15,8 @@
 import { readBoundedRequestBody, RequestBodyTooLargeError } from './mcp/bounded-body';
 
 import { suggestTools } from './_agent-tool-suggest';
-import { ENDPOINT_RATE_POLICIES, checkScopedRateLimit, checkIpScopedEdgeProof, getClientIp, rateLimitKeyForIp } from '../server/_shared/rate-limit';
 
 export const config = { runtime: 'edge' };
-
-const RATE_LIMIT_SCOPE = '/api/ask';
-const RATE_LIMIT_POLICY = ENDPOINT_RATE_POLICIES[RATE_LIMIT_SCOPE];
-if (!RATE_LIMIT_POLICY) {
-  // Module-load failure — better to crash the function cold-start with a
-  // loud message than to silently fall back to "no rate limit" if someone
-  // accidentally deletes the registry entry.
-  throw new Error(
-    `[ask] missing ENDPOINT_RATE_POLICIES['${RATE_LIMIT_SCOPE}'] — see server/_shared/rate-limit.ts`,
-  );
-}
-const RATE_LIMIT_MAX = RATE_LIMIT_POLICY.limit;
-const RATE_LIMIT_WINDOW = RATE_LIMIT_POLICY.window;
 
 const NLWEB_VERSION = '0.1';
 const SITE = 'worldmonitor.app';
@@ -192,29 +178,6 @@ export default async function handler(req: Request): Promise<Response> {
     return new Response(
       JSON.stringify({ _meta: buildMeta('error'), error: 'Use GET or POST with a natural-language `query`.' }),
       { status: 405, headers: { ...JSON_HEADERS, Allow: 'GET, POST, OPTIONS' } },
-    );
-  }
-
-  const proofDenied = checkIpScopedEdgeProof(req, CORS_HEADERS);
-  if (proofDenied) {
-    return new Response(JSON.stringify({ _meta: buildMeta('error'), error: 'Cloudflare edge proof required' }), {
-      status: proofDenied.status, headers: proofDenied.headers,
-    });
-  }
-  const ip = getClientIp(req);
-  // Redis-degraded scoped limits intentionally stay availability-first here:
-  // this surface is anonymous, quota-free, and cheap (pure token matching
-  // over the public tool catalog — no gated data, no amplification to
-  // protect). checkScopedRateLimit logs/Sentry-captures the degraded path.
-  const scoped = await checkScopedRateLimit(RATE_LIMIT_SCOPE, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW, rateLimitKeyForIp(ip));
-  if (!scoped.allowed) {
-    const retryAfter = Math.max(1, Math.ceil((scoped.reset - Date.now()) / 1000));
-    return new Response(
-      JSON.stringify({
-        _meta: buildMeta('error'),
-        error: `Rate limit exceeded. Max ${RATE_LIMIT_MAX} requests per ${RATE_LIMIT_WINDOW} per IP.`,
-      }),
-      { status: 429, headers: { ...JSON_HEADERS, 'Retry-After': String(retryAfter) } },
     );
   }
 

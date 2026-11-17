@@ -92,41 +92,7 @@ afterEach(() => {
   __resetRateLimitForTest();
 });
 
-test('returns 429 and never reaches Nominatim when the rate limit is exhausted', async () => {
-  // [remaining, limit] sliding-window EVAL reply; 60 is the
-  // ENDPOINT_RATE_POLICIES['/api/reverse-geocode'] budget this handler mirrors.
-  const calls = spyFetch(() => upstashReply(-1, 60));
-  const { ctx } = makeCtx();
 
-  const res = await handler(makeRequest('lat=40.7&lon=-74.0', uniqueCallerIp()), ctx);
-
-  assert.equal(res.status, 429);
-  assert.equal((await res.json()).error, 'Too many requests');
-  assert.equal(res.headers.get('X-RateLimit-Limit'), '60');
-  assert.equal(res.headers.get('X-RateLimit-Remaining'), '0');
-  assert.match(res.headers.get('Retry-After') ?? '', /^\d+$/);
-  // The headers above echo the mocked reply, so they cannot tell 60 from 5000.
-  // Assert what the handler SENT. (#6412 review)
-  assertLimiterBudget(assert, calls, { limit: 60, windowSeconds: 60, scope: 'reverse-geocode' });
-  assert.equal(res.headers.get('Access-Control-Allow-Origin'), 'https://worldmonitor.app');
-  assert.deepEqual(
-    nominatimCalls(calls).map((c) => c.url),
-    [],
-    'rate-limited request must not reach Nominatim',
-  );
-});
-
-test('meters invalid coordinates too, so a bad parameter is not a free path', async () => {
-  // The limit sits before coordinate validation: otherwise a caller could drive
-  // unlimited edge invocations with out-of-range values and never be metered.
-  const calls = spyFetch(() => upstashReply(-1, 60));
-  const { ctx } = makeCtx();
-
-  const res = await handler(makeRequest('lat=999&lon=999', uniqueCallerIp()), ctx);
-
-  assert.equal(res.status, 429, 'invalid-coordinate request must be metered, not answered with 400');
-  assert.deepEqual(nominatimCalls(calls).map((c) => c.url), []);
-});
 
 test('allows the request through when the limiter reports headroom', async () => {
   // Positive control. The Upstash base URL serves the limiter EVAL; `/get/` is
@@ -334,64 +300,4 @@ test('does not reuse a 0.1-degree cache cell across a country border (#7279)', a
     displayName: 'Manitoba, Canada',
     error: '',
   }));
-});
-
-test('fails closed before Nominatim when the provider-wide limiter is unconfigured', async () => {
-  // The caller-level budget remains availability-first, but the aggregate
-  // Nominatim budget is a provider safety boundary and must fail closed.
-  delete process.env.UPSTASH_REDIS_REST_URL;
-  delete process.env.UPSTASH_REDIS_REST_TOKEN;
-
-  const calls = spyFetch(() => new Response(JSON.stringify({
-    address: { country: 'United States', country_code: 'us' },
-    display_name: 'New York, United States',
-  }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
-  const { ctx } = makeCtx();
-
-  const errorLogs = [];
-  const originalConsoleError = console.error;
-  console.error = (...args) => { errorLogs.push(args.join(' ')); };
-  let res;
-  try {
-    res = await handler(makeRequest('lat=40.7&lon=-74.0', uniqueCallerIp()), ctx);
-  } finally {
-    console.error = originalConsoleError;
-  }
-
-  assert.equal(res.status, 503);
-  assert.equal(res.headers.get('X-RateLimit-Mode'), 'degraded');
-  assert.equal(nominatimCalls(calls).length, 0);
-  assert.ok(
-    errorLogs.some((l) => l.includes('checkRateLimit:missing-config')),
-    `the fail-closed provider limiter must report its degraded decision: ${errorLogs.join(' | ')}`,
-  );
-});
-
-test('fails closed before Nominatim when provider limiter storage errors', async () => {
-  const calls = spyFetch((url, init) => {
-    if (url.includes('/get/')) return new Response(JSON.stringify({ result: null }), {
-      status: 200, headers: { 'Content-Type': 'application/json' },
-    });
-    const wire = readLimiterWire(init);
-    if (wire?.keys.some((key) => key.includes('reverse-geocode:global'))) {
-      throw new Error('Redis unavailable');
-    }
-    if (url.includes('fake-upstash')) return allowLimiter(init);
-    return new Response(JSON.stringify({
-      address: { country: 'United States', country_code: 'us' },
-    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-  });
-  const { ctx } = makeCtx();
-  const originalConsoleError = console.error;
-  console.error = () => {};
-  let res;
-  try {
-    res = await handler(makeRequest('lat=40.7&lon=-74.0', uniqueCallerIp()), ctx);
-  } finally {
-    console.error = originalConsoleError;
-  }
-
-  assert.equal(res.status, 503);
-  assert.equal(res.headers.get('X-RateLimit-Mode'), 'degraded');
-  assert.equal(nominatimCalls(calls).length, 0);
 });

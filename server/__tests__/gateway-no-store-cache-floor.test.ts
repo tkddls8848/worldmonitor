@@ -89,23 +89,6 @@ describe('gateway no-store floor + credentialed privacy (#6771)', () => {
     expect(res.headers.get('CDN-Cache-Control')).toBeNull();
   });
 
-  test('a credentialed non-public GET is marked private and not shared-cacheable', async () => {
-    // list-airport-flights is declared 'static', but a credentialed non-public
-    // GET is forced to slow-browser by the audience overwrite regardless.
-    const path = '/api/aviation/v1/list-airport-flights';
-    const res = await gatewayFor(path, { flights: [{ id: 1 }], totalAvailable: 1, source: 'relay' })(
-      credentialedRequest(path),
-      ctx,
-    );
-
-    expect(res.status).toBe(200);
-    expect(res.headers.get('X-Cache-Tier')).toBe('slow-browser');
-    const cacheControl = res.headers.get('Cache-Control') ?? '';
-    expect(cacheControl).toContain('private');
-    expect(cacheControl).toContain('max-age=300');
-    // Credentialed responses are never handed to the Vercel edge cache.
-    expect(res.headers.get('CDN-Cache-Control')).toBeNull();
-  });
 
   test('an anonymous request to a public route is NOT marked private (no over-broadening)', async () => {
     // Public no-auth route, no credential -> the private gate must not fire, so

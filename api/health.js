@@ -1,6 +1,5 @@
 import { getCorsHeaders, isDisallowedOrigin } from './_cors.js';
 import { jsonResponse } from './_json-response.js';
-import { USER_API_KEY_GATEWAY_VALIDATION_ERROR, validateApiKey } from './_api-key.js';
 import {
   hasPoolCoverageShortfall,
   parsePoolCounts,
@@ -6309,34 +6308,6 @@ export async function handleHealth(req, ctx, options = {}) {
     console.warn('[health] request deadline exhausted; serving the last-known verdict');
     return lastKnownOrRefreshPendingResponse(compact, headers, snapshotNow, budget.fallbackTimeout());
   };
-
-  if (!compact || wantsHistory) {
-    const keyCheck = await validateApiKey(req, { forceKey: true });
-    if (keyCheck.required && !keyCheck.valid) {
-      const error = keyCheck.error === USER_API_KEY_GATEWAY_VALIDATION_ERROR
-        ? 'Invalid API key'
-        : keyCheck.error;
-      // RFC 7235 §3.1 requires WWW-Authenticate on every 401. The challenge
-      // must reflect what this gate actually accepts: validateApiKey reads the
-      // X-WorldMonitor-Key / X-Api-Key headers (or tester cookies) — never
-      // Authorization: Bearer — so advertising a Bearer/OAuth challenge here
-      // sent agents down a flow that cannot succeed (post-#4867 review). The
-      // hint exists because this URL is what old copies of the api-catalog
-      // linkset advertised as the public status endpoint (#4856) — a keyless
-      // caller landing here should learn the public form, not dead-end.
-      return jsonResponse(
-        {
-          error,
-          hint: 'Detailed health requires an operator/enterprise API key. Public status: /api/health?compact=1',
-        },
-        401,
-        {
-          ...headers,
-          'WWW-Authenticate': 'ApiKey realm="worldmonitor-health", header="X-WorldMonitor-Key"',
-        }
-      );
-    }
-  }
 
   // ?history=1 — fast read of the failure-log persisted by previous /api/health
   // probes. Skips the full freshness check (which is expensive — fetches every

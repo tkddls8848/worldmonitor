@@ -223,14 +223,6 @@ test('fast and slow selectors stay within their tier; missing values retain thei
 });
 
 
-test('RPC still requires a session and does not expose arbitrary Redis keys', async t => {
-  const { request, reads } = await setup(t);
-  const anonymous = await rpc(new Request(PATH + '?keys=insights'));
-  assert.equal(anonymous.status, 401);
-  const unknown = await request('?keys=seed-meta%3Aprivate');
-  assert.equal(unknown.status, 400);
-  assert.deepEqual(reads, []);
-});
 
 
 test('published RPC query schema documents the multi-key selector', () => {

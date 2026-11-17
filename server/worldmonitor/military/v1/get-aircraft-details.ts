@@ -1,4 +1,4 @@
-import { ApiError, ValidationError } from '../../../../src/generated/server/worldmonitor/military/v1/service_server';
+import { ValidationError } from '../../../../src/generated/server/worldmonitor/military/v1/service_server';
 import type {
   ServerContext,
   GetAircraftDetailsRequest,
@@ -13,21 +13,11 @@ import {
   fetchWingbitsAircraftDetails,
 } from './_wingbits-aircraft-details';
 import { cachedFetchJson } from '../../../_shared/redis';
-import { requirePremiumRpcAccess } from '../../../_shared/premium-check';
 
 export async function getAircraftDetails(
-  ctx: ServerContext,
+  _ctx: ServerContext,
   req: GetAircraftDetailsRequest,
 ): Promise<GetAircraftDetailsResponse> {
-  // A cache miss can spend the server's Wingbits credential. Gate before
-  // validation-dependent cache work so anonymous callers cannot probe or bill
-  // the provider.
-  await requirePremiumRpcAccess(
-    ctx.request,
-    ApiError,
-    'PRO subscription or API key required for live flight data',
-  );
-
   if (!req.icao24) return { details: undefined, configured: false };
 
   // Normalize BEFORE validating, matching the batch sibling

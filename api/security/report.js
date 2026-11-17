@@ -1,7 +1,6 @@
 export const config = { runtime: 'edge' };
 
 import { jsonResponse } from '../_json-response.js';
-import { checkRateLimit } from '../_rate-limit.js';
 
 const MAX_REPORT_BYTES = 32 * 1024;
 const MAX_REPORT_ITEMS = 20;
@@ -105,9 +104,6 @@ export default async function handler(req) {
   if (req.method !== 'POST') {
     return jsonResponse({ error: 'Method not allowed' }, 405, { ...RESPONSE_HEADERS, Allow: 'POST, OPTIONS' });
   }
-
-  const limited = await checkRateLimit(req, RESPONSE_HEADERS);
-  if (limited) return limited;
 
   if (!isSupportedContentType(req.headers.get('content-type') ?? '')) {
     return jsonResponse({ error: 'Unsupported media type' }, 415, RESPONSE_HEADERS);

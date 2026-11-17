@@ -98,13 +98,6 @@ describe('triggerSimulation handler (#3734 U4)', () => {
     Object.assign(process.env, originalEnv);
   });
 
-  it('rejects free caller with 403', async () => {
-    installFetch(() => ({ result: 0 }));
-    await assert.rejects(
-      () => triggerSimulation(makeCtx(), { clientVersion: '' }),
-      (err) => err instanceof ApiError && err.statusCode === 403 && /Pro subscription/.test(err.message),
-    );
-  });
 
   it('rejects with 429 when queue depth exceeds MAX_QUEUE_DEPTH', async () => {
     installFetch((cmd) => cmd[0] === 'ZCARD' ? { result: 101 } : { result: 0 });

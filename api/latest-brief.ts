@@ -1,7 +1,8 @@
 /**
  * Latest-brief preview endpoint.
  *
- * GET /api/latest-brief (Clerk JWT required, PRO tier gated)
+ * GET /api/latest-brief (access control: the personal server's HTTP Basic
+ * auth; the brief is always the owner's, PERSONAL_OWNER_ID)
  *   -> 200 { status: 'ready', issueDate, issueSlot, dateLong, greeting,
  *      threadCount, magazineUrl } when a composed brief exists for this
  *      user's current/requested slot.
@@ -10,13 +11,9 @@
  *      present when the caller requested a specific ?slot= value. The
  *      dashboard panel uses this to render an empty state instead of an
  *      error.
- *   -> 401 UNAUTHENTICATED on missing/bad JWT
- *   -> 403 pro_required for non-PRO users
- *   -> 503 if BRIEF_URL_SIGNING_SECRET is not configured
  *
- * The returned magazineUrl is freshly signed per request. It is safe
- * to expose to the authenticated client — the HMAC binds {userId,
- * issueSlot} so it is only useful to the owner.
+ * The returned magazineUrl is unsigned: /api/brief/{userId}/{issueSlot}
+ * no longer checks a token.
  *
  * The route does NOT drive composition. It reads the
  * brief:latest:{userId} pointer written by the digest cron to locate
@@ -32,20 +29,17 @@ import { jsonResponse } from './_json-response.js';
 import { readRawJsonFromUpstash } from './_upstash-json.js';
 // @ts-expect-error — JS module, no declaration file
 import { captureSilentError } from './_sentry-edge.js';
-import { validateBearerToken } from '../server/auth-session';
-import { checkProEntitlement } from '../server/_shared/pro-entitlement';
-import { signBriefUrl, BriefUrlError } from '../server/_shared/brief-url';
+import { PERSONAL_OWNER_ID } from '../shared/personal-owner.js';
 import { assertBriefEnvelope } from '../server/_shared/brief-render.js';
 
-// Slot format written by the digest cron. Must match ISSUE_DATE_RE in
-// server/_shared/brief-url.ts — the signer rejects anything else.
+// Slot format written by the digest cron (ISSUE_DATE_RE in
+// server/_shared/brief-url.ts).
 const ISSUE_SLOT_RE = /^\d{4}-\d{2}-\d{2}-\d{4}$/;
 
 // Per-attempt timeouts for the cache-read retry helper. Worst-case wall
 // time = FIRST_ATTEMPT_MS + RETRY_ATTEMPT_MS per read × 2 reads = 18s,
-// which leaves headroom under Vercel Edge's ~25s initial-response cap
-// after `validateBearerToken` + `checkProEntitlement` preflight. Retry uses
-// a shorter budget on the theory that a transient blip clears in <3s; a
+// which leaves headroom under Vercel Edge's ~25s initial-response cap.
+// Retry uses a shorter budget on the theory that a transient blip clears in <3s; a
 // real Upstash outage will time out the retry quickly and fall through
 // to the 503 fallback before the platform kills the function.
 export const FIRST_ATTEMPT_MS = 6_000;
@@ -70,8 +64,8 @@ export const RETRY_ATTEMPT_MS = 3_000;
 // runners where undici's DOMException may differ from globalThis.
 //
 // Exported as a test seam (like `executeTool` in api/mcp/dispatch.ts) so
-// the retry semantics can be asserted directly without standing up Clerk
-// JWT validation + Convex entitlement reads.
+// the retry semantics can be asserted directly without standing up the
+// whole handler.
 export async function readWithOneRetry<T>(
   attempt: (timeoutMs: number) => Promise<T>,
   label: string,
@@ -158,7 +152,7 @@ async function readLatestPointer(userId: string, timeoutMs: number): Promise<str
 }
 
 /**
- * Public base URL for signed magazine links. Pinned to
+ * Public base URL for magazine links. Pinned to
  * WORLDMONITOR_PUBLIC_BASE_URL in production to prevent host-header
  * reflection from minting URLs pointing at preview deploys or other
  * non-canonical origins. Falls back to the request origin only in
@@ -187,46 +181,6 @@ export default async function handler(
     return jsonResponse({ error: 'Method not allowed' }, 405, { ...cors, Allow: 'GET, OPTIONS' });
   }
 
-  const authHeader = req.headers.get('Authorization') ?? '';
-  const jwt = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
-  if (!jwt) {
-    return jsonResponse({ error: 'UNAUTHENTICATED' }, 401, cors);
-  }
-
-  const session = await validateBearerToken(jwt);
-  if (!session.valid || !session.userId) {
-    return jsonResponse({ error: 'UNAUTHENTICATED' }, 401, cors);
-  }
-
-  const proAccess = await checkProEntitlement(session.userId, session.role, cors);
-  if (!proAccess.allowed) {
-    // #5600: an entitlement the backend could not VERIFY is not a confirmed
-    // free user. This is the endpoint the live repro caught rendering "Pro
-    // required. Upgrade to unlock" to a customer who had paid 90 seconds
-    // earlier — answer the shared retryable contract (503 + Retry-After) for
-    // those states before the terminal upsell. Note this covers lookup failure
-    // and renewal verification only; the day-0 poisoned-marker cohort arrives
-    // as a plain tier-0 answer and is bounded by
-    // NOT_APPLICABLE_VERIFICATION_TTL_SECONDS instead.
-    const { billingDenial } = proAccess;
-    if (billingDenial) return billingDenial;
-    return jsonResponse(
-      {
-        error: 'pro_required',
-        message: 'The Brief is available on the Pro plan.',
-        upgradeUrl: 'https://worldmonitor.app/pro',
-      },
-      403,
-      cors,
-    );
-  }
-
-  const secret = process.env.BRIEF_URL_SIGNING_SECRET ?? '';
-  if (!secret) {
-    console.error('[api/latest-brief] BRIEF_URL_SIGNING_SECRET is not configured');
-    return jsonResponse({ error: 'service_unavailable' }, 503, cors);
-  }
-
   // Locate the user's most recent brief via the pointer the digest
   // cron writes. An optional ?slot=YYYY-MM-DD-HHMM lets the client
   // request a specific prior brief (e.g. the dashboard's "compare to
@@ -238,11 +192,7 @@ export default async function handler(
   const requestedSlot =
     slotParam !== null && ISSUE_SLOT_RE.test(slotParam) ? slotParam : null;
 
-  // Hoist the narrowed userId so the retry-helper arrow closures capture a
-  // `string` rather than `string | undefined` — TypeScript's narrowing on
-  // `session.userId` (guarded above at the UNAUTHENTICATED gate) does not
-  // survive into closure capture sites.
-  const userId: string = session.userId;
+  const userId: string = PERSONAL_OWNER_ID;
 
   let issueSlot: string | null = null;
   let preview: BriefPreview | null = null;
@@ -298,24 +248,7 @@ export default async function handler(
     );
   }
 
-  let magazineUrl: string;
-  try {
-    magazineUrl = await signBriefUrl({
-      userId: session.userId,
-      issueDate: issueSlot,
-      baseUrl: publicBaseUrl(req),
-      secret,
-    });
-  } catch (err) {
-    if (err instanceof BriefUrlError && err.code === 'invalid_user_id') {
-      // Clerk userId should always match our shape, but if it does
-      // not we want to log and fail clean rather than expose the raw
-      // id in a stack trace.
-      console.error('[api/latest-brief] Clerk userId failed shape check');
-      return jsonResponse({ error: 'service_unavailable' }, 503, cors);
-    }
-    throw err;
-  }
+  const magazineUrl = `${publicBaseUrl(req)}/api/brief/${encodeURIComponent(userId)}/${encodeURIComponent(issueSlot)}`;
 
   return jsonResponse(
     {

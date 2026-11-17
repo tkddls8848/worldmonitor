@@ -220,34 +220,6 @@ describe('gateway CDN origin policy', () => {
     });
   }
 
-  it('does not widen the public RPC cache contract to legacy or arbitrary query shapes', async () => {
-    const handler = createHandler();
-    for (const path of [
-      '/api/news/v1/list-feed-digest?variant=full&lang=en',
-      '/api/news/v1/list-feed-digest?variant=full&lang=en&public=1&jmespath=categories',
-      '/api/displacement/v1/get-displacement-summary?flow_limit=49&public=1',
-      '/api/displacement/v1/get-displacement-summary?flow_limit=500&public=1',
-      '/api/displacement/v1/get-displacement-summary?flow_limit=50&public=1&year=2026',
-      '/api/displacement/v1/get-displacement-summary?flow_limit=50&public=1&country_limit=50',
-      '/api/displacement/v1/get-displacement-summary?public=1',
-      '/api/displacement/v1/get-displacement-summary?flow_limit=50&public=1&unexpected=1',
-      '/api/displacement/v1/get-displacement-summary?flow_limit=50&flow_limit=50&public=1',
-      '/api/displacement/v1/get-displacement-summary?flow_limit=50&public=1&public=1',
-      '/api/displacement/v1/get-displacement-summary?public=1&flow_limit=50',
-      '/api/displacement/v1/get-displacement-summary?flow_limit=%35%30&public=1',
-      // A caller-supplied ?rpc= that is NOT the router's echo of the final path
-      // segment must still fail the shape check — stripping is not a bypass vector.
-      '/api/news/v1/list-feed-digest?variant=full&lang=en&public=1&rpc=bogus',
-      '/api/displacement/v1/get-displacement-summary?flow_limit=50&public=1&rpc=bogus',
-      '/api/displacement/v1/get-displacement-summary?flow_limit=50&public=1&rpc=list-feed-digest',
-    ]) {
-      const res = await handler(new Request(`https://worldmonitor.app${path}`, {
-        headers: { Origin: 'https://worldmonitor.app' },
-      }));
-      assert.equal(res.status, 401, path);
-      assertNoSharedCacheHeaders(res);
-    }
-  });
 
   it('skips CDN caching for degraded dataAvailable=false 200 responses', async () => {
     const origin = 'https://worldmonitor.app';
@@ -287,62 +259,6 @@ describe('gateway CDN origin policy', () => {
     assert.equal(res.status, 403);
   });
 
-  it('preserves premium auth behavior', async () => {
-    process.env.WORLDMONITOR_VALID_KEYS = 'real-key-123';
-    const handler = createHandler();
 
-    // Use a premium route without its own fail-closed provider budget. The
-    // analyze-stock limiter is covered separately by the rate-limit contract;
-    // this test is scoped to premium auth and CDN behavior with Redis absent.
-    const noCreds = await handler(new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-score?countryCode=US', {
-      headers: { Origin: 'https://worldmonitor.app' },
-    }));
-    assert.equal(noCreds.status, 401);
-    assert.equal(noCreds.headers.get('Cache-Control'), 'no-store');
 
-    const withKey = await handler(new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-score?countryCode=US', {
-      headers: {
-        Origin: 'https://worldmonitor.app',
-        'X-WorldMonitor-Key': 'real-key-123',
-      },
-    }));
-    assert.equal(withKey.status, 200);
-    assert.equal(withKey.headers.get('Access-Control-Allow-Origin'), 'https://worldmonitor.app');
-    assert.equal(withKey.headers.get('Vary'), 'Origin');
-    assert.equal(withKey.headers.get('CDN-Cache-Control'), null, 'premium endpoints must NOT have CDN caching');
-  });
-
-  it('fails closed before unknown wm_ validation when the pre-auth limiter is unavailable', async () => {
-    const handler = createHandler();
-    const res = await handler(new Request('https://worldmonitor.app/api/market/v1/list-gulf-quotes', {
-      headers: {
-        Origin: 'https://worldmonitor.app',
-        'X-WorldMonitor-Key': 'wm_revoked_or_unknown_key',
-      },
-    }));
-    const body = await res.json();
-
-    assert.equal(res.status, 503);
-    assert.equal(res.headers.get('X-RateLimit-Mode'), 'degraded');
-    assertNoSharedCacheHeaders(res);
-    assert.equal(body.error, 'Rate-limit service temporarily unavailable');
-    assert.doesNotMatch(JSON.stringify(body), /gateway validation|Convex|keyHash/i);
-  });
-
-  it('fails closed before unknown wm_ validation on premium RPCs when the limiter is unavailable', async () => {
-    const handler = createHandler();
-    const res = await handler(new Request('https://worldmonitor.app/api/market/v1/analyze-stock?symbol=AAPL', {
-      headers: {
-        Origin: 'https://worldmonitor.app',
-        'X-WorldMonitor-Key': 'wm_revoked_or_unknown_key',
-      },
-    }));
-    const body = await res.json();
-
-    assert.equal(res.status, 503);
-    assert.equal(res.headers.get('X-RateLimit-Mode'), 'degraded');
-    assertNoSharedCacheHeaders(res);
-    assert.equal(body.error, 'Rate-limit service temporarily unavailable');
-    assert.doesNotMatch(JSON.stringify(body), /gateway validation|Convex|keyHash/i);
-  });
 });

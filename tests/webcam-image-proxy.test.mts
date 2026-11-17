@@ -306,34 +306,6 @@ describe('Windy webcam image proxy access contract', () => {
     assert.equal(response.headers.get('X-RateLimit-Mode'), 'degraded');
   });
 
-  it('fails closed at the gateway before route execution when Redis is unavailable', async () => {
-    process.env.WM_SESSION_SECRET = 'webcam-proxy-session-test-secret-at-least-32-chars';
-    delete process.env.UPSTASH_REDIS_REST_URL;
-    delete process.env.UPSTASH_REDIS_REST_TOKEN;
-    __resetRateLimitForTest();
-
-    const { token } = await issueSessionToken();
-    let handlerCalls = 0;
-    const gateway = createDomainGateway([{
-      method: 'GET',
-      path: WEBCAM_IMAGE_PATH,
-      handler: async () => {
-        handlerCalls += 1;
-        return Response.json({ ok: true });
-      },
-    }]);
-
-    const response = await gateway(new Request(`https://worldmonitor.app${WEBCAM_IMAGE_PATH}?webcam_id=camera-123`, {
-      headers: {
-        Origin: 'https://worldmonitor.app',
-        Cookie: `wm-session=${token}`,
-      },
-    }));
-
-    assert.equal(response.status, 503);
-    assert.equal(response.headers.get('X-RateLimit-Mode'), 'degraded');
-    assert.equal(handlerCalls, 0, 'the gateway must reject before route execution');
-  });
 
   it('lets the bundled Tauri sidecar webcam gateway run without Upstash', async () => {
     process.env.LOCAL_API_MODE = 'tauri-sidecar';
@@ -369,83 +341,5 @@ describe('Windy webcam image proxy access contract', () => {
     ]);
   });
 
-  it('keeps other cloud endpoint policies fail closed in Tauri mode', async () => {
-    process.env.LOCAL_API_MODE = 'tauri-sidecar';
-    process.env.WM_SESSION_SECRET = 'webcam-proxy-session-test-secret-at-least-32-chars';
-    delete process.env.UPSTASH_REDIS_REST_URL;
-    delete process.env.UPSTASH_REDIS_REST_TOKEN;
-    __resetRateLimitForTest();
 
-    const { token } = await issueSessionToken();
-    let handlerCalls = 0;
-    const gateway = createDomainGateway([{
-      method: 'GET',
-      path: OTHER_FAIL_CLOSED_PATH,
-      handler: async () => {
-        handlerCalls += 1;
-        return Response.json({ ok: true });
-      },
-    }]);
-
-    const response = await gateway(new Request(`http://127.0.0.1:46123${OTHER_FAIL_CLOSED_PATH}`, {
-      headers: {
-        Origin: 'http://127.0.0.1:46123',
-        Cookie: `wm-session=${token}`,
-      },
-    }));
-
-    assert.equal(response.status, 503);
-    assert.equal(response.headers.get('X-RateLimit-Mode'), 'degraded');
-    assert.equal(handlerCalls, 0, 'only the webcam path may bypass the cloud endpoint limiter');
-  });
-
-  it('admits browser cookies and header fallback through an available limiter, but requires a credential', async () => {
-    process.env.WM_SESSION_SECRET = 'webcam-proxy-session-test-secret-at-least-32-chars';
-    process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example';
-    process.env.UPSTASH_REDIS_REST_TOKEN = 'test-redis-token';
-    const { fetchImpl } = createRedisFetch({});
-    globalThis.fetch = fetchImpl;
-    __resetRateLimitForTest();
-
-    const { token } = await issueSessionToken();
-    let handlerCalls = 0;
-    const gateway = createDomainGateway([{
-      method: 'GET',
-      path: WEBCAM_IMAGE_PATH,
-      handler: async () => {
-        handlerCalls += 1;
-        return Response.json({ ok: true });
-      },
-    }]);
-
-    assert.equal(PUBLIC_NO_AUTH_RPC_PATHS.has(WEBCAM_IMAGE_PATH), false);
-    assert.equal(PREMIUM_RPC_PATHS.has(WEBCAM_IMAGE_PATH), false);
-
-    const response = await gateway(new Request(`https://worldmonitor.app${WEBCAM_IMAGE_PATH}?webcam_id=camera-123`, {
-      headers: {
-        Origin: 'https://worldmonitor.app',
-        'X-WorldMonitor-Key': token,
-      },
-    }));
-
-    assert.equal(response.status, 200);
-    assert.equal(handlerCalls, 1);
-
-    const cookieResponse = await gateway(new Request(`https://worldmonitor.app${WEBCAM_IMAGE_PATH}?webcam_id=camera-123`, {
-      headers: {
-        Origin: 'https://worldmonitor.app',
-        Cookie: `wm-session=${token}`,
-      },
-    }));
-
-    assert.equal(cookieResponse.status, 200);
-    assert.equal(handlerCalls, 2);
-
-    const unauthenticatedResponse = await gateway(new Request(`https://worldmonitor.app${WEBCAM_IMAGE_PATH}?webcam_id=camera-123`, {
-      headers: { Origin: 'https://worldmonitor.app' },
-    }));
-
-    assert.equal(unauthenticatedResponse.status, 401);
-    assert.equal(handlerCalls, 2, 'a credential-less request must not reach the route');
-  });
 });

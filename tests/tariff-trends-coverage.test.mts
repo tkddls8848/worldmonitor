@@ -309,13 +309,6 @@ describe('seeded reporter requests', () => {
     assert.deepEqual(redisReads, []);
   });
 
-  test('free tier returns empty without touching Redis', async () => {
-    seedUs(2015, 2025);
-    const resp = await getTariffTrends(freeCtx(), request());
-    assert.equal(resp.datapoints.length, 0);
-    assert.equal(resp.upstreamUnavailable, true);
-    assert.deepEqual(redisReads, []);
-  });
 });
 
 // ── Naming a miss ─────────────────────────────────────────────────────────

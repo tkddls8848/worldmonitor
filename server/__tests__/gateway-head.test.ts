@@ -128,27 +128,5 @@ describe('gateway HEAD on GET routes (#7275)', () => {
     expect(await res.text()).toBe('');
   });
 
-  test('HEAD shares the GET rate-limit check', async () => {
-    const gateway = createDomainGateway([{ method: 'GET', path: STATIC_PATH, handler: getHandler() }]);
-    await gateway(makeRequest(STATIC_PATH, 'HEAD'), ctx);
 
-    expect(checkRateLimit).toHaveBeenCalledTimes(1);
-    const rateLimitRequest = checkRateLimit.mock.calls[0]?.[0] as Request;
-    expect(rateLimitRequest.method).toBe('HEAD');
-  });
-
-  test('a GET 429 is reproduced on HEAD with an empty body', async () => {
-    checkRateLimit.mockResolvedValue(
-      new Response(JSON.stringify({ error: 'rate_limited' }), {
-        status: 429,
-        headers: { 'Retry-After': '30', 'Content-Type': 'application/json' },
-      }),
-    );
-    const gateway = createDomainGateway([{ method: 'GET', path: STATIC_PATH, handler: getHandler() }]);
-    const res = await gateway(makeRequest(STATIC_PATH, 'HEAD'), ctx);
-
-    expect(res.status).toBe(429);
-    expect(res.headers.get('Retry-After')).toBe('30');
-    expect(await res.text()).toBe('');
-  });
 });

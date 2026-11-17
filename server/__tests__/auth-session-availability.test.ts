@@ -15,18 +15,6 @@ import { classifyGrantDenial } from '../../src/services/mcp-grant-denial';
 
 afterEach(() => vi.resetAllMocks());
 describe('session verification availability', () => {
-  test('gateway preserves verification outages before dispatch', async () => {
-    vi.mocked(validateBearerToken).mockResolvedValue({ valid: false, reason: 'unverifiable' });
-    const dispatch = vi.fn(async () => new Response('private'));
-    const path = '/api/market/v1/get-insider-transactions';
-    const gateway = createDomainGateway([{ method: 'GET', path, handler: dispatch }]);
-    const response = await gateway(new Request(`https://worldmonitor.app${path}`, {
-      headers: { Authorization: 'Bearer token', Origin: 'https://worldmonitor.app' },
-    }));
-    expect(response.status).toBe(503);
-    expect(Number(response.headers.get('Retry-After'))).toBeGreaterThan(0);
-    expect(dispatch).not.toHaveBeenCalled();
-  });
   test('keeps invalid and absent credentials distinct from outages', async () => {
     vi.mocked(validateBearerToken).mockResolvedValue({ valid: false, reason: 'invalid' });
     expect(await resolveClerkSession(new Request('https://worldmonitor.app', {

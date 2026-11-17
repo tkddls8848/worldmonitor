@@ -196,17 +196,6 @@ describe('China decision-signal access tiers (#5580)', () => {
     assert.equal(response.status, 200);
   });
 
-  it('rejects a freely minted anonymous session at the operator seed-health boundary', async () => {
-    process.env.WM_SESSION_SECRET = 'china-decision-health-secret-at-least-32-chars';
-    const { token } = await issueSessionToken();
-    const response = await seedHealthHandler(new Request(
-      'https://api.worldmonitor.app/api/seed-health',
-      { headers: { Cookie: `wm-session=${token}` } },
-    ));
-
-    assert.equal(response.status, 401);
-    assert.deepEqual(await response.json(), { error: 'Operator API key required' });
-  });
 
   it('keeps the China verdict but removes source freshness from anonymous compact health', () => {
     const compact = healthTesting.healthResponseBody({

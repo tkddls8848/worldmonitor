@@ -4,14 +4,9 @@
  * The generic REST batch endpoint (POST /api/batch/v1/execute): agents acting
  * on many items send an array of operations instead of looping single calls.
  * Each operation is re-dispatched as a same-origin GET through the public
- * gateway, so per-endpoint auth, entitlements, caching, and usage telemetry
- * all apply to every sub-request exactly as if it were sent directly (a batch
- * is a transport optimization, not a quota bypass). Rate limits are the one
- * control the re-dispatch cannot inherit — the gateway would key them to the
- * platform's egress IP — so each operation is charged to the CALLER's own
- * budget here, before dispatch, via the shared server-sub-request dispatch
- * path (`dispatchServerSubRequest` in
- * `server/_shared/server-sub-request-dispatch.ts`).
+ * gateway with the caller's Authorization header, so the personal server's
+ * HTTP Basic auth and per-endpoint caching apply to every sub-request exactly
+ * as if it were sent directly.
  */
 
 import type {
@@ -27,13 +22,6 @@ import {
   ApiError,
   ValidationError,
 } from '../../../../src/generated/server/worldmonitor/batch/v1/service_server';
-import {
-  SUB_REQUEST_MARKER_HEADER,
-} from '../../../_shared/rate-limit';
-import {
-  dispatchServerSubRequest,
-  type ServerSubRequestFetch,
-} from '../../../_shared/server-sub-request-dispatch';
 
 export const MAX_BATCH_OPERATIONS = 20;
 export const MAX_OPERATION_ID_LENGTH = 64;
@@ -46,8 +34,7 @@ export const MAX_SUB_RESPONSE_BYTES = 1_048_576;
 // recurse even if path validation regresses.
 export const BATCH_MARKER_HEADER = 'x-wm-batch';
 
-// Re-authenticate each operation. Trusted principal headers stay local; the
-// gateway consumes a separate, request-bound admission token after pre-charge.
+// Re-authenticate each operation. Trusted principal headers stay local.
 const FORWARDED_HEADERS = ['authorization', 'x-worldmonitor-key', 'x-api-key', 'accept-language'] as const;
 
 // A batched path must name a documented RPC: /api/<domain>/v<N>/<rpc> (proto
@@ -61,7 +48,7 @@ const V2_PATH_RE = /^\/api\/v2\/[a-z][a-z0-9-]*\/[a-z][a-z0-9-]*$/;
 const DEFAULT_SUB_REQUEST_USER_AGENT =
   'WorldMonitor-Batch/1.0 (+https://www.worldmonitor.app/openapi.json)';
 
-export type FetchLike = ServerSubRequestFetch;
+export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
 type ValidatedOperation = {
   id: string;
@@ -155,23 +142,20 @@ async function runOperation(
 
   let response: Response;
   try {
-    const dispatched = await dispatchServerSubRequest({
-      inbound,
-      target: op.target,
-      headers,
-      fetchImpl,
-      redirect: 'manual',
-      signal: AbortSignal.timeout(SUB_REQUEST_TIMEOUT_MS),
-    });
-    if (dispatched.kind === 'refused') {
+    if (op.target.origin !== new URL(inbound.url).origin) {
       return {
         id: op.id,
-        status: dispatched.status,
-        body: dispatched.body as BatchOperationBody,
+        status: 400,
+        body: { error: 'Cross-origin sub-requests are not allowed' } as unknown as BatchOperationBody,
         error: '',
       };
     }
-    response = dispatched.response;
+    response = await fetchImpl(op.target.toString(), {
+      method: 'GET',
+      headers,
+      redirect: 'manual',
+      signal: AbortSignal.timeout(SUB_REQUEST_TIMEOUT_MS),
+    });
   } catch (err) {
     const isTimeout = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError');
     return { id: op.id, status: 0, error: isTimeout ? 'timeout' : 'fetch_failed' };
@@ -212,11 +196,8 @@ export function createExecuteBatch(
   ): Promise<ExecuteBatchResponse> {
     // Recursion guard: the gateway forwards the marker untouched, so a batch
     // arriving with it was issued BY a batch — refuse regardless of the
-    // per-path nested_batch check below. The sub-request marker is refused
-    // here too: the outer caller request must never carry it (only
-    // re-dispatched sub-requests may), so a client that forges it cannot
-    // claim server-initiated status to skip the inner limiter.
-    if (ctx.request.headers.has(BATCH_MARKER_HEADER) || ctx.request.headers.has(SUB_REQUEST_MARKER_HEADER)) {
+    // per-path nested_batch check below.
+    if (ctx.request.headers.has(BATCH_MARKER_HEADER)) {
       throw new ApiError(400, 'Nested batch requests are not allowed', '');
     }
 

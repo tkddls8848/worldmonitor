@@ -77,21 +77,6 @@ describe('embed public data auth', () => {
     assert.equal(PUBLIC_NO_AUTH_RPC_PATHS.has('/api/conflict/v1/list-ucdp-events'), false, 'nearby conflict RPCs remain gated');
   });
 
-  it('rejects anonymous callers on the map embed RPCs', async () => {
-    const gateway = makeGateway();
-
-    for (const path of EMBED_PUBLIC_RPC_PATHS) {
-      const res = await gateway(new Request(`https://worldmonitor.app${path}`, {
-        headers: { Origin: 'https://worldmonitor.app' },
-      }));
-      assert.equal(res.status, 401, `${path} must not answer a credential-less request`);
-    }
-
-    const gated = await gateway(new Request('https://worldmonitor.app/api/conflict/v1/list-ucdp-events', {
-      headers: { Origin: 'https://worldmonitor.app' },
-    }));
-    assert.equal(gated.status, 401);
-  });
 
   it('still serves them to the anonymous public site, by cookie or by header', async () => {
     const gateway = makeGateway();

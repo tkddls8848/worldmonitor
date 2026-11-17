@@ -1,16 +1,15 @@
 // Personalized carousel images used @vercel/og's default year-long
-// immutable cache. The HMAC token is the credential and the Redis
-// envelope expires in 7 days, so the image cache must not outlive it
-// and error responses must not be stored.
+// immutable cache. The Redis envelope expires in 7 days, so the image cache
+// must not outlive it and error responses must not be stored.
 
-import { describe, it, afterEach } from 'node:test';
+import { describe, it, afterEach, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const SECRET = 'carousel-cache-test-secret';
-const PATH = 'https://worldmonitor.app/api/brief/carousel/user_test/2026-04-18-0800/0';
+const PATH = 'https://worldmonitor.app/api/brief/carousel/owner/2026-04-18-0800/0';
 
 const originalFetch = globalThis.fetch;
 const originalSecret = process.env.BRIEF_URL_SIGNING_SECRET;
@@ -30,20 +29,10 @@ function restore(key: string, value: string | undefined): void {
 }
 
 describe('api/brief/carousel cache policy', () => {
-  it('does not store a 503 when the signer secret is missing', async () => {
-    delete process.env.BRIEF_URL_SIGNING_SECRET;
-    const { default: handler } = await import('../api/brief/carousel/[userId]/[issueDate]/[page].ts');
-    const res = await handler(new Request(PATH));
-    assert.equal(res.status, 503);
-    assert.equal(res.headers.get('Cache-Control'), 'no-store');
-  });
-
-  it('does not store a 403 for a missing token', async () => {
-    process.env.BRIEF_URL_SIGNING_SECRET = SECRET;
-    const { default: handler } = await import('../api/brief/carousel/[userId]/[issueDate]/[page].ts');
-    const res = await handler(new Request(PATH));
-    assert.equal(res.status, 403);
-    assert.equal(res.headers.get('Cache-Control'), 'no-store');
+  // Load the route with the real fetch: @vercel/og starts its wasm load at
+  // import, and a mocked fetch would hand it a JSON body instead.
+  before(async () => {
+    await import('../api/brief/carousel/[userId]/[issueDate]/[page].ts');
   });
 
   it('does not store a 404 when the envelope is missing', async () => {

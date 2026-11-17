@@ -278,35 +278,7 @@ describe('api/chat-analyst adopts the retryable posture (#5622)', () => {
       body: JSON.stringify({ query: 'what is happening in the strait of hormuz' }),
     });
 
-  it('answers an unverifiable entitlement with the shared retryable 503, not the upsell 403', async () => {
-    installFetchStub(async () => new Response('upstream error', { status: 503 }));
-    const { default: handler } = await import('../api/chat-analyst.ts');
 
-    const res = await handler(analystRequest('user_analyst_unavailable'));
-
-    assert.equal(res.status, 503);
-    assert.equal(res.headers.get('X-Billing-Verification'), 'entitlement_verification_unavailable');
-    assert.equal(res.headers.get('Retry-After'), '5');
-    assert.equal(res.headers.get('Cache-Control'), 'no-store');
-    // CORS must survive — the panel is cross-origin and an opaque failure is
-    // indistinguishable from a crash.
-    assert.equal(res.headers.get('Access-Control-Allow-Origin'), 'https://worldmonitor.app');
-    assert.deepEqual(await res.json(), {
-      error: 'Unable to verify API access',
-      code: 'entitlement_verification_unavailable',
-    });
-  });
-
-  it('a CONFIRMED free caller still gets the honest 403 upsell', async () => {
-    installFetchStub(okRow(FREE_ROW));
-    const { default: handler } = await import('../api/chat-analyst.ts');
-
-    const res = await handler(analystRequest('user_analyst_free'));
-
-    assert.equal(res.status, 403);
-    assert.equal(res.headers.get('X-Billing-Verification'), null);
-    assert.deepEqual(await res.json(), { error: 'Pro subscription required' });
-  });
 
   /**
    * The four billing states must reach the wire distinctly. An earlier version of
@@ -316,37 +288,5 @@ describe('api/chat-analyst adopts the retryable posture (#5622)', () => {
    * provider's own delay on the renewal codes and, worse, turning a confirmed
    * lapse into a retryable 503 that tells a lapsed subscriber to wait forever.
    */
-  it('renders the provider delay for a renewal re-check, not a flattened default', async () => {
-    installFetchStub(okRow({
-      ...FREE_ROW,
-      billingStatus: 'renewal_verification_pending',
-      retryAfterSeconds: 3,
-    }));
-    const { default: handler } = await import('../api/chat-analyst.ts');
 
-    const res = await handler(analystRequest('user_analyst_renewal'));
-
-    assert.equal(res.status, 503);
-    assert.equal(res.headers.get('X-Billing-Verification'), 'renewal_verification_pending');
-    assert.equal(res.headers.get('Retry-After'), '3');
-    assert.deepEqual(await res.json(), {
-      error: 'Renewal verification pending',
-      code: 'renewal_verification_pending',
-    });
-  });
-
-  it('keeps a provider-confirmed lapse a terminal 403 with no Retry-After', async () => {
-    installFetchStub(okRow({ ...FREE_ROW, billingStatus: 'subscription_lapsed' }));
-    const { default: handler } = await import('../api/chat-analyst.ts');
-
-    const res = await handler(analystRequest('user_analyst_lapsed'));
-
-    assert.equal(res.status, 403);
-    assert.equal(res.headers.get('X-Billing-Verification'), 'subscription_lapsed');
-    assert.equal(res.headers.get('Retry-After'), null);
-    assert.deepEqual(await res.json(), {
-      error: 'Subscription lapsed',
-      code: 'subscription_lapsed',
-    });
-  });
 });

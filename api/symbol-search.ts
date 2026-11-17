@@ -5,18 +5,13 @@
  *
  * Thin Finnhub-search wrapper with a short Upstash cache. Used by every user
  * (the market watchlist is not a PRO feature), so there's no entitlement
- * gate. Cached results remain available without upstream work; cold queries
- * require a shared, fail-closed provider budget as well as caller admission.
+ * gate. Access control is the personal server's HTTP Basic auth.
  */
 
 export const config = { runtime: 'edge' };
 
 // @ts-expect-error — JS module, no declaration file
 import { getCorsHeaders, isDisallowedOrigin } from './_cors.js';
-// @ts-expect-error — JS module, no declaration file
-import { validateApiKey } from './_api-key.js';
-// @ts-expect-error — JS module, no declaration file
-import { checkRateLimit } from './_rate-limit.js';
 // @ts-expect-error — JS module, no declaration file
 import { jsonResponse } from './_json-response.js';
 // @ts-expect-error — JS module, no declaration file
@@ -177,14 +172,6 @@ export default async function handler(
   }
   const q = rawQuery.trim();
 
-  const keyCheck = await validateApiKey(req);
-  if (keyCheck.required && !keyCheck.valid) {
-    return jsonResponse({ error: keyCheck.error }, 401, cors);
-  }
-
-  const rateLimitResponse = await checkRateLimit(req, cors);
-  if (rateLimitResponse) return rateLimitResponse;
-
   if (!q) {
     return jsonResponse({ results: [] }, 200, cors);
   }
@@ -225,23 +212,6 @@ export default async function handler(
   } catch {
     // Cache infrastructure is best-effort; fall through to the real upstream.
   }
-
-  // Bound each IP's cold searches before reserving shared provider quota.
-  // Anonymous sessions are freely minted, so token rotation must not reset
-  // this budget. Cache hits above remain available after it is exhausted.
-  const callerQuotaResponse = await checkRateLimit(req, cors, {
-    scope: 'symbol-search:caller', limit: 10, window: '60 s',
-    failClosed: true, ctx,
-  });
-  if (callerQuotaResponse) return callerQuotaResponse;
-
-  // One distributed admission bucket for every cold query and caller.
-  // Keep half of the 60/min provider allowance for other Finnhub consumers.
-  const quotaResponse = await checkRateLimit(req, cors, {
-    scope: 'symbol-search:finnhub', identifier: 'shared', limit: 30, window: '60 s',
-    failClosed: true, ctx,
-  });
-  if (quotaResponse) return quotaResponse;
 
   try {
     const url = `https://finnhub.io/api/v1/search?q=${encodeURIComponent(q)}&token=${encodeURIComponent(apiKey)}`;

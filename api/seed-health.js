@@ -1,5 +1,4 @@
 import { getCorsHeaders, isDisallowedOrigin } from './_cors.js';
-import { validateApiKey } from './_api-key.js';
 import { jsonResponse } from './_json-response.js';
 import {
   hasPoolCoverageShortfall,
@@ -626,10 +625,6 @@ export async function handleSeedHealth(req, options = {}) {
   const cors = getCorsHeaders(req);
   if (req.method === 'OPTIONS')
     return new Response(null, { status: 204, headers: cors });
-
-  const apiKeyResult = await validateApiKey(req, { forceKey: true });
-  if (!apiKeyResult.valid || apiKeyResult.kind !== 'enterprise')
-    return jsonResponse({ error: 'Operator API key required' }, 401, cors);
 
   const entries = Object.entries(SEED_DOMAINS);
 

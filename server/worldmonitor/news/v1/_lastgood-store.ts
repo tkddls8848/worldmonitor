@@ -16,7 +16,6 @@ import {
   setCachedJson,
 } from '../../../_shared/redis';
 import { REVOKED_URLS_KEY, readRevokedUrlSet } from '../../../_shared/digest-revocations';
-import { getUsageScope } from '../../../_shared/usage';
 import {
   ATTEMPT_META_TTL_S,
   LASTGOOD_MAX_AGE_MS,
@@ -116,9 +115,7 @@ export function completeDigestAttempt(variant: string, lang: string, slot: Attem
 }
 
 function scheduleBackground(promise: Promise<unknown>): void {
-  const ctx = getUsageScope()?.ctx;
-  if (ctx) ctx.waitUntil(promise);
-  else void promise;
+  void promise;
 }
 
 function transactionSucceeded(results: Array<{ result?: unknown; error?: string }>, count: number): boolean {
@@ -298,8 +295,7 @@ export async function readAcceptedSnapshot<T extends DigestLike>(variant: string
  *
  * The 120s rejection sentinel is the only backoff for a held snapshot, so a
  * frozen scope rebuilds ~30x/hour in every region. The condition is sustained,
- * not an event: one capture per scope per cooldown, per isolate. The capture
- * rides the request's waitUntil so a frozen isolate cannot drop it mid-incident.
+ * not an event: one capture per scope per cooldown, per isolate.
  */
 function reportGateRejection(variant: string, lang: string): void {
   console.log(`[digest-publication] candidate rejected by acceptance gate variant=${variant} lang=${lang}`);
@@ -312,7 +308,6 @@ function reportGateRejection(variant: string, lang: string): void {
     tags: { surface: 'news', component: 'digest-lastgood', stage: 'publish-gate', variant, lang },
     fingerprint: ['digest-lastgood', 'publish-gate-rejected', variant],
     level: 'warning',
-    ctx: getUsageScope()?.ctx,
   });
 }
 

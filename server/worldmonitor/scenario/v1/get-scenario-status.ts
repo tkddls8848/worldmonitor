@@ -6,9 +6,7 @@ import type {
 } from '../../../../src/generated/server/worldmonitor/scenario/v1/service_server';
 import { ApiError, ValidationError } from '../../../../src/generated/server/worldmonitor/scenario/v1/service_server';
 
-import {
-  requirePremiumRpcAccess,
-} from '../../../_shared/premium-check';
+import { PERSONAL_OWNER_ID } from '../../../../shared/personal-owner.js';
 import { getRawJson } from '../../../_shared/redis';
 import {
   JOB_ID_RE,
@@ -124,20 +122,15 @@ function coerceCoverage(raw: unknown): ScenarioResult['coverage'] {
 }
 
 export async function getScenarioStatus(
-  ctx: ServerContext,
+  _ctx: ServerContext,
   req: GetScenarioStatusRequest,
 ): Promise<GetScenarioStatusResponse> {
-  const identity = await requirePremiumRpcAccess(ctx.request, ApiError, 'PRO subscription required');
-
   const jobId = req.jobId ?? '';
   if (!JOB_ID_RE.test(jobId)) {
     throw new ValidationError([{ field: 'jobId', description: 'Invalid or missing jobId' }]);
   }
 
-  const caller = await scenarioOwnerToken(identity, ctx.request);
-  if (!caller) {
-    throw new ApiError(403, 'PRO subscription required', '');
-  }
+  const caller = await scenarioOwnerToken(PERSONAL_OWNER_ID);
 
   // Owner is written at enqueue. A missing or unreadable binding is pending,
   // not 404, so unknown ids stay indistinguishable from jobs still queued.

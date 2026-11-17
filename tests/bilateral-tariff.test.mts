@@ -385,13 +385,6 @@ describe('getBilateralTariff', () => {
     assert.deepEqual(witsCalls, []);
   });
 
-  test('a free caller gets the entitlement shape and reaches no upstream', async () => {
-    const res = await getBilateralTariff(freeCtx(), request({ partnerCountry: '484' }));
-    assert.equal(res.upstreamUnavailable, true);
-    assert.equal(res.unavailableReason, R.served);
-    assert.equal(res.appliedRate, undefined);
-    assert.deepEqual(witsCalls, []);
-  });
 
   test('a malformed request reaching the handler directly is rejected without a fetch', async () => {
     for (const bad of [

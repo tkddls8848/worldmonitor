@@ -535,12 +535,6 @@ describe('GetUsImportDuty handler', () => {
     assert.deepEqual(res.lines, []);
   });
 
-  test('a free caller gets the entitlement shape and reaches no upstream', async () => {
-    const res = await getUsImportDuty({ request: new Request(`https://api.worldmonitor.app${ROUTE}`) } as ServerContext, { hsCode: '870323', partnerCountry: '156' });
-    assert.equal(res.upstreamUnavailable, true);
-    assert.equal(res.unavailableReason, 'US_IMPORT_DUTY_UNAVAILABLE_REASON_UNSPECIFIED');
-    assert.equal(htsCalls.length, 0);
-  });
 
   test('a malformed request reaching the handler directly is rejected without a fetch', async () => {
     for (const req of [{ hsCode: '8703', partnerCountry: '156' }, { hsCode: '870323', partnerCountry: 'CN' }]) {

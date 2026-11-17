@@ -17,48 +17,14 @@ import {
   neutralizeTranslateText,
   selectUniqueHeadlinePairs,
 } from './_shared';
-import { checkIpScopedEdgeProof, checkScopedRateLimit, getClientRateLimitKey, reportRateLimitDegraded } from '../../../_shared/rate-limit';
 import { CHROME_UA } from '../../../_shared/constants';
 import { isModelUsable, isProviderAvailable, recordModelFailure, recordModelSuccess } from '../../../_shared/llm-health';
 import { sanitizeHeadlinesLight, sanitizeForPrompt, sanitizeForPromptLine } from '../../../_shared/llm-sanitize.js';
 import {
-  getPremiumRpcBillingErrorType,
-  resolvePremiumCallerIdentity,
-} from '../../../_shared/premium-check';
-import {
-  markRetryableResponse,
   markUnservedLlmResponse,
-  setResponseHeader,
 } from '../../../_shared/response-headers';
 import { callLlm, isDefaultChainProvider, resolveProviderChain, stripThinkingTags } from '../../../_shared/llm';
 import { aiRoutingCacheSuffix, resolveAiRouting, toLlmRoutingPolicy } from '../../../_shared/ai-routing-policy';
-import { buildLlmCallEvent, deliverUsageEvents } from '../../../_shared/usage';
-
-// Best-effort llm_call telemetry (#4895). This handler bypasses callLlm (the
-// client picks the provider), so it emits its own events.
-async function emitSummarizeLlmEvent(p: {
-  provider: string; model: string; mode: string; ok: boolean; durationMs: number;
-  promptChars: number; usage?: { total_tokens?: number; prompt_tokens?: number; completion_tokens?: number };
-  reason?: string;
-}): Promise<void> {
-  try {
-    await deliverUsageEvents([buildLlmCallEvent({
-      provider: p.provider,
-      model: p.model,
-      stage: 'summarize-article',
-      mode: p.mode,
-      ok: p.ok,
-      durationMs: p.durationMs,
-      tokensTotal: p.usage?.total_tokens ?? 0,
-      tokensPrompt: p.usage?.prompt_tokens ?? 0,
-      tokensCompletion: p.usage?.completion_tokens ?? 0,
-      promptChars: p.promptChars,
-      maxTokens: 100,
-      fallbackIndex: 0,
-      reason: p.reason,
-    })]);
-  } catch { /* telemetry must never affect the summary */ }
-}
 
 // ======================================================================
 // Reasoning preamble detection
@@ -72,11 +38,10 @@ export function hasReasoningPreamble(text: string): boolean {
   return TASK_NARRATION.test(trimmed) || PROMPT_ECHO.test(trimmed);
 }
 
-// Translate mode is free and skips the gateway's direct-LLM quota, and its
-// `variant` is the target language interpolated into the prompt. Accept only
-// the dashboard's UI languages (the digest set plus Traditional Chinese, which
-// the digest folds into `zh`) so an anonymous caller cannot turn translate into
-// an unmetered general-purpose prompt with a cache-busting key.
+// Translate's `variant` is the target language interpolated into the prompt.
+// Accept only the dashboard's UI languages (the digest set plus Traditional
+// Chinese, which the digest folds into `zh`) so translate cannot become a
+// general-purpose prompt with a cache-busting key.
 export const TRANSLATE_TARGET_LANGUAGES: ReadonlySet<string> = SUMMARY_OUTPUT_LANGUAGES;
 
 // Translate reads one headline; longer text is refused rather than silently
@@ -88,79 +53,6 @@ export const MAX_TRANSLATE_INPUT_LEN = 500;
 // served nor cached. max_tokens (100) bounds the absolute size regardless.
 export function maxTranslateOutputChars(inputChars: number): number {
   return inputChars * 4 + 120;
-}
-
-// Anonymous translate spends provider tokens with no account behind it and
-// skips the gateway's direct-LLM quota, so each provider call it causes (a
-// cache miss) is charged against a daily per-IP budget and a global daily
-// ceiling. Cache hits are free. Sized from Axiom wm_api_usage, 2026-09-27 to
-// 2026-10-27: anonymous summarize-article 200s peaked at 122 per IP per day
-// (p99 86) and 524 in total per day; the defaults leave about 2.5x and 10x
-// headroom. Both are env-overridable.
-export const ANON_TRANSLATE_IP_SCOPE = 'summarize-article:translate-anon-ip';
-export const ANON_TRANSLATE_GLOBAL_SCOPE = 'summarize-article:translate-anon-global';
-const ANON_TRANSLATE_WINDOW = '1 d' as const;
-const DEFAULT_ANON_TRANSLATE_IP_DAILY_MISSES = 300;
-const DEFAULT_ANON_TRANSLATE_GLOBAL_DAILY_MISSES = 5000;
-
-function positiveIntEnv(name: string, fallback: number): number {
-  const parsed = Number.parseInt(process.env[name] ?? '', 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
-}
-
-type ScopedLimiter = typeof checkScopedRateLimit;
-let translateBudgetLimiter: ScopedLimiter = checkScopedRateLimit;
-
-/** Test seam: replaces the scoped limiter the translate budget charges. */
-export function __setTranslateBudgetLimiterForTests(limiter: ScopedLimiter | null): void {
-  translateBudgetLimiter = limiter ?? checkScopedRateLimit;
-}
-
-type TranslateBudgetDecision = 'allowed' | 'exhausted' | 'unavailable';
-
-/**
- * Thrown from the cache-miss fetcher when the caller's budget refuses. It is a
- * caller-local error (isCallerLocalError below): a request coalesced on the
- * same key does not inherit it, but retries as the next leader and is charged
- * against its own budget.
- */
-class TranslateBudgetRefusal extends Error {
-  constructor(readonly decision: Exclude<TranslateBudgetDecision, 'allowed'>) {
-    super(`translate budget ${decision}`);
-    this.name = 'TranslateBudgetRefusal';
-  }
-}
-
-/**
- * Charges one anonymous translate cache miss. Fails closed: an unproven
- * Cloudflare client IP, a degraded or throwing limiter all refuse, because the
- * budget is the only spend bound on this path.
- */
-async function chargeAnonymousTranslateMiss(request: Request): Promise<TranslateBudgetDecision> {
-  if (checkIpScopedEdgeProof(request, {})) return 'unavailable';
-  try {
-    const perIp = await translateBudgetLimiter(
-      ANON_TRANSLATE_IP_SCOPE,
-      positiveIntEnv('TRANSLATE_ANON_IP_DAILY_MISS_LIMIT', DEFAULT_ANON_TRANSLATE_IP_DAILY_MISSES),
-      ANON_TRANSLATE_WINDOW,
-      getClientRateLimitKey(request),
-    );
-    if (perIp.degraded) return 'unavailable';
-    if (!perIp.allowed) return 'exhausted';
-    const global = await translateBudgetLimiter(
-      ANON_TRANSLATE_GLOBAL_SCOPE,
-      positiveIntEnv('TRANSLATE_ANON_GLOBAL_DAILY_MISS_LIMIT', DEFAULT_ANON_TRANSLATE_GLOBAL_DAILY_MISSES),
-      ANON_TRANSLATE_WINDOW,
-      'global',
-    );
-    if (global.degraded) return 'unavailable';
-    return global.allowed ? 'allowed' : 'exhausted';
-  } catch (err) {
-    // checkScopedRateLimit reports its own Redis failures; this covers a throw
-    // past it, through the same per-stage deduped Sentry path.
-    reportRateLimitDegraded('summarize-article:translate-budget', err);
-    return 'unavailable';
-  }
 }
 
 function stripTranslateMarkers(text: string): string {
@@ -176,17 +68,13 @@ export async function summarizeArticle(
   ctx: ServerContext,
   req: SummarizeArticleRequest,
 ): Promise<SummarizeArticleResponse> {
-  const premiumIdentity = await resolvePremiumCallerIdentity(ctx.request);
-  const isPremium = premiumIdentity.isPremium;
   const { provider: requestedProvider, mode = 'brief', geoContext = '', variant = 'full', lang = 'en' } = req;
   // A restricted caller is served by their whole policy chain, in order,
   // whatever provider the client fallback chain named; the default chain is
   // never reached (ai-routing-policy.ts). An unrestricted caller may name only
   // a default-chain provider: opt-in providers (anthropic) are reachable
   // through a policy, never on a request's say-so.
-  // Translate mode is free, so the gateway may not have resolved a Clerk
-  // session; the identity this handler resolved covers that case.
-  const aiRouting = await resolveAiRouting(ctx.request, premiumIdentity.userId);
+  const aiRouting = await resolveAiRouting(ctx.request);
   const routingPolicy = toLlmRoutingPolicy(aiRouting);
   const policyChain = routingPolicy ? resolveProviderChain({ routingPolicy }) : null;
   const provider = policyChain
@@ -198,8 +86,7 @@ export async function summarizeArticle(
   // Bounded like geoContext and the intel-brief framework: the append is
   // free text that the sanitizer scans and the system prompt carries.
   const MAX_SYSTEM_APPEND_LEN = 2000;
-  const systemAppend = isPremium && typeof req.systemAppend === 'string' ? req.systemAppend.slice(0, MAX_SYSTEM_APPEND_LEN) : '';
-  const requiresPremium = mode !== 'translate';
+  const systemAppend = typeof req.systemAppend === 'string' ? req.systemAppend.slice(0, MAX_SYSTEM_APPEND_LEN) : '';
   // Every empty-summary envelope below (denied, skipped, rejected, failed)
   // serves no LLM output; the gateway reserved a daily-quota slot for this
   // call and releases it on this marker. The served and cached paths do not
@@ -208,39 +95,6 @@ export async function summarizeArticle(
     markUnservedLlmResponse(ctx.request);
     return payload;
   };
-
-  if (requiresPremium && !isPremium) {
-    const billingDenial = premiumIdentity.billingDenial;
-    if (billingDenial) {
-      if (billingDenial.retryable) {
-        markRetryableResponse(ctx.request);
-        setResponseHeader(ctx.request, 'Retry-After', String(billingDenial.retryAfterSeconds));
-        setResponseHeader(ctx.request, 'X-Billing-Verification', billingDenial.code);
-      }
-      return unserved({
-        summary: '',
-        model: '',
-        provider,
-        tokens: 0,
-        fallback: true,
-        error: billingDenial.message,
-        errorType: getPremiumRpcBillingErrorType(billingDenial),
-        status: 'SUMMARIZE_STATUS_ERROR',
-        statusDetail: billingDenial.code,
-      });
-    }
-    return unserved({
-      summary: '',
-      model: '',
-      provider: provider,
-      tokens: 0,
-      fallback: true,
-      error: 'Pro subscription required',
-      errorType: 'AuthError',
-      status: 'SUMMARIZE_STATUS_ERROR',
-      statusDetail: 'Pro subscription required',
-    });
-  }
 
   if (mode === 'translate' && !TRANSLATE_TARGET_LANGUAGES.has(variant)) {
     return unserved({
@@ -290,16 +144,6 @@ export async function summarizeArticle(
       statusDetail: 'Text too long to translate',
     });
   }
-
-  // Premium and operator callers are metered by the gateway. A routing policy
-  // exists only for an identified customer account (a verified Clerk subject
-  // or the gateway's trusted user header), never for an anonymous caller. The
-  // desktop sidecar and a self-hosted Ollama spend no shared provider budget.
-  const chargesTranslateBudget = mode === 'translate'
-    && !isPremium
-    && routingPolicy === null
-    && process.env.LOCAL_API_MODE !== 'tauri-sidecar'
-    && provider !== 'ollama';
 
   const MAX_HEADLINES = 10;
   const MAX_HEADLINE_LEN = 500;
@@ -478,13 +322,6 @@ export async function summarizeArticle(
         // the answer is validated, served or cached.
         const cleanAnswer = (text: string): string => (mode === 'translate' ? stripTranslateMarkers(text) : text);
 
-        // Charged here, on the miss path right before the provider call, so
-        // cache hits and requests rejected above never spend the budget.
-        if (chargesTranslateBudget) {
-          const decision = await chargeAnonymousTranslateMiss(ctx.request);
-          if (decision !== 'allowed') throw new TranslateBudgetRefusal(decision);
-        }
-
         if (routingPolicy) {
           // callLlm walks the policy chain with fallback, speaks the Anthropic
           // Messages API, and owns telemetry and model health; the
@@ -505,8 +342,6 @@ export async function summarizeArticle(
             : null;
         }
 
-        const llmStartMs = Date.now();
-        const llmPromptChars = effectiveSystemPrompt.length + userPrompt.length;
         const response = await fetch(apiUrl, {
           method: 'POST',
           headers: { ...providerHeaders, 'User-Agent': CHROME_UA },
@@ -528,7 +363,6 @@ export async function summarizeArticle(
           const errorText = await response.text();
           console.error(`[SummarizeArticle:${provider}] API error:`, response.status, errorText);
           recordModelFailure(apiUrl, model, response.status, errorText);
-          await emitSummarizeLlmEvent({ provider, model, mode, ok: false, durationMs: Date.now() - llmStartMs, promptChars: llmPromptChars, reason: `http_${response.status}` });
           throw new Error(response.status === 429 ? 'Rate limited' : `${provider} API error`);
         }
 
@@ -539,30 +373,25 @@ export async function summarizeArticle(
 
         const data = await response.json() as any;
         const tokens = (data.usage?.total_tokens as number) || 0;
-        const usage = data.usage as { total_tokens?: number; prompt_tokens?: number; completion_tokens?: number } | undefined;
         const message = data.choices?.[0]?.message;
         const rawText = typeof message?.content === 'string' ? message.content.trim() : '';
         const rawContent = cleanAnswer(stripThinkingTags(rawText));
 
         if (['brief', 'analysis'].includes(mode) && rawContent.length < 20) {
           console.warn(`[SummarizeArticle:${provider}] Output too short after stripping (${rawContent.length} chars), rejecting`);
-          await emitSummarizeLlmEvent({ provider, model, mode, ok: false, durationMs: Date.now() - llmStartMs, promptChars: llmPromptChars, usage, reason: 'stripped_empty' });
           return null;
         }
 
         if (['brief', 'analysis'].includes(mode) && hasReasoningPreamble(rawContent)) {
           console.warn(`[SummarizeArticle:${provider}] Reasoning preamble detected, rejecting`);
-          await emitSummarizeLlmEvent({ provider, model, mode, ok: false, durationMs: Date.now() - llmStartMs, promptChars: llmPromptChars, usage, reason: 'validate_reject' });
           return null;
         }
 
         if (mode === 'translate' && rawContent.length > translateOutputCap) {
           console.warn(`[SummarizeArticle:${provider}] Translation far longer than its input (${rawContent.length} > ${translateOutputCap} chars), rejecting`);
-          await emitSummarizeLlmEvent({ provider, model, mode, ok: false, durationMs: Date.now() - llmStartMs, promptChars: llmPromptChars, usage, reason: 'validate_reject' });
           return null;
         }
 
-        await emitSummarizeLlmEvent({ provider, model, mode, ok: Boolean(rawContent), durationMs: Date.now() - llmStartMs, promptChars: llmPromptChars, usage, reason: rawContent ? '' : 'empty' });
         return rawContent ? { summary: rawContent, model, tokens } : null;
       },
       undefined,
@@ -573,7 +402,6 @@ export async function summarizeArticle(
         shouldFetch: () => routingPolicy !== null || isModelUsable(apiUrl, model),
         cacheFailures: false,
         inflightKey: `${cacheKey}:${provider}:${model}`,
-        isCallerLocalError: (err) => err instanceof TranslateBudgetRefusal,
       },
     );
 
@@ -605,26 +433,6 @@ export async function summarizeArticle(
     });
 
   } catch (err: unknown) {
-    if (err instanceof TranslateBudgetRefusal) {
-      const exhausted = err.decision === 'exhausted';
-      if (!exhausted) {
-        markRetryableResponse(ctx.request);
-        setResponseHeader(ctx.request, 'Retry-After', '5');
-      }
-      return unserved({
-        summary: '',
-        model: '',
-        provider,
-        tokens: 0,
-        // Not a provider failure: every budgeted provider shares this budget,
-        // so there is nothing for a fallback to recover.
-        fallback: false,
-        error: exhausted ? 'Daily translation limit reached' : 'Translation temporarily unavailable',
-        errorType: exhausted ? 'RateLimitError' : 'ServiceUnavailable',
-        status: 'SUMMARIZE_STATUS_ERROR',
-        statusDetail: exhausted ? 'translate_daily_budget' : 'translate_budget_unavailable',
-      });
-    }
     // sentry-coverage-ok Provider failures return SUMMARIZE_STATUS_ERROR for the client fallback chain.
     const error = err instanceof Error ? err : new Error(String(err));
     console.error(`[SummarizeArticle:${provider}] Error:`, error.name, error.message);

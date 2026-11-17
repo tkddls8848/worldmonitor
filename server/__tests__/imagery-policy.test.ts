@@ -75,45 +75,6 @@ test('registers a 30/min fail-closed imagery provider policy', () => {
   expect(ENDPOINT_RATE_POLICIES[PATH]).toEqual({ limit: 30, window: '60 s' });
   expect(FAIL_CLOSED_ENDPOINT_RATE_POLICY_REQUIRED).toHaveProperty(PATH);
 });
-test('anonymous callers stop before STAC and sessions retain cache behavior', async () => {
-  expect((await request(1, false)).status).toBe(401);
-  expect(providerCalls).toBe(0);
-  const cold = await request();
-  expect(cold.status).toBe(200);
-  expect((await cold.json()).cacheHit).toBe(false);
-  expect((await (await request()).json()).cacheHit).toBe(true);
-  expect(providerCalls).toBe(1);
-});
-test('blocks the 31st unique query despite rotating freely issued sessions', async () => {
-  for (let index = 1; index <= 30; index++) expect((await request(index)).status).toBe(200);
-  const denied = await request(31);
-  expect(denied.status).toBe(429);
-  expect(denied.headers.get('Retry-After')).toBeTruthy();
-  expect(providerCalls).toBe(30);
-  expect(new Set(limiterKeys).size).toBe(1);
-  expect(limiterKeys[0]).toContain(`rl:ep:${PATH}:ip:192.0.2.54:`);
-});
-for (const outage of ['missing', 'error']) {
-  test(`cloud Redis ${outage} fails closed before STAC`, async () => {
-    if (outage === 'missing') {
-      delete process.env.UPSTASH_REDIS_REST_URL;
-      delete process.env.UPSTASH_REDIS_REST_TOKEN;
-    } else redisError = true;
-    const response = await request();
-    expect(response.status).toBe(503);
-    expect(response.headers.get('X-RateLimit-Mode')).toBe('degraded');
-    expect(providerCalls).toBe(0);
-  });
-}
-test('sidecar imagery works without Redis while unrelated paths remain fail closed', async () => {
-  process.env.LOCAL_API_MODE = 'tauri-sidecar';
-  delete process.env.UPSTASH_REDIS_REST_URL;
-  delete process.env.UPSTASH_REDIS_REST_TOKEN;
-  expect((await request()).status).toBe(200);
-  expect(providerCalls).toBe(1);
-  expect((await request(2, true, '/api/economic/v1/list-world-bank-indicators')).status).toBe(503);
-  expect(providerCalls).toBe(1);
-});
 
 test('invalid datetime returns a field violation before STAC', async () => {
   const routes = createImageryServiceRoutes({ searchImagery });

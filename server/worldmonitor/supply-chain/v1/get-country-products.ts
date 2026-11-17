@@ -5,7 +5,6 @@ import type {
 import { ValidationError } from '../../../../src/generated/server/worldmonitor/supply_chain/v1/service_server';
 import { isAssignedCountryCode } from '../../../../shared/country-code-resolve';
 import { normalizeComtradeProducts, HS4_CODES, HS4_LABELS } from '../../../../scripts/shared/comtrade';
-import { isCallerPremium } from '../../../_shared/premium-check';
 import { getCachedJson, getLargeRawJson, logCacheReadError, readCachedJson } from '../../../_shared/redis';
 import { lazyFetchBilateralHs4, lazyFetchHeading, UPSTREAM_GAP_MS } from './_bilateral-hs4-lazy';
 import type { LazyFetchResult, PartnerRow, PartnersProduct } from './_bilateral-hs4-lazy';
@@ -198,7 +197,7 @@ function attachScale(product: CountryProduct, byCode?: Map<number, ExporterScale
 }
 
 export async function getCountryProducts(
-  ctx: ServerContext,
+  _ctx: ServerContext,
   req: GetCountryProductsRequest,
 ): Promise<GetCountryProductsResponse> {
   const iso2 = (req.iso2 ?? '').trim().toUpperCase();
@@ -211,9 +210,6 @@ export async function getCountryProducts(
   if (hs4 && !HS4_CODES.includes(hs4)) {
     throw new ValidationError([{ field: 'hs4', description: 'hs4 must be a supported four-digit heading' }]);
   }
-  const isPro = await isCallerPremium(ctx.request);
-  const empty: GetCountryProductsResponse = { iso2, products: [], fetchedAt: '' };
-  if (!isPro) return empty;
 
   const key = `comtrade:bilateral-hs4:${iso2}:v1`;
   // Status-aware reads for the two country keys so a read error stays

@@ -65,101 +65,12 @@ test('canonical equivalents share a bounded hashed key and relay query', async (
   assert.equal(keys.length, 2);
   assert.match(keys[0]!, /^aviation:gf-dates:[a-f0-9]{64}:v3$/);
 });
-test('gateway invalid input is400 and missing limiter store is503 without relay calls', async () => {
+test('gateway invalid input is400 without relay calls', async () => {
   assert.equal((await gateway(request({ origin: 'TOOLONG' }))).status, 400);
   assert.equal(feeds().length, 0);
-  delete process.env.UPSTASH_REDIS_REST_URL;
-  delete process.env.UPSTASH_REDIS_REST_TOKEN;
-  __resetRateLimitForTest();
-  assert.equal((await gateway(request())).status, 503);
-  assert.equal(feeds().length, 0);
-});
-test('actual native sidecar requires its token before the date-search gateway', async () => {
-  const { mkdtemp, mkdir, writeFile } = await import('node:fs/promises');
-  const { tmpdir } = await import('node:os');
-  const { join } = await import('node:path');
-  const providerFetch = globalThis.fetch;
-  const { createLocalApiServer } = await import('../scripts/local/local-api-server.mjs');
-  // Sidecar import installs its network transport; keep upstream I/O synthetic.
-  globalThis.fetch = providerFetch;
-  const root = await mkdtemp(join(tmpdir(), 'google-dates-sidecar-'));
-  await mkdir(join(root, 'aviation/v1'), { recursive: true });
-  const serviceUrl = new URL('../src/generated/server/worldmonitor/aviation/v1/service_server.ts', import.meta.url).href;
-  const gatewayUrl = new URL('../server/gateway.ts', import.meta.url).href;
-  const handlerUrl = new URL('../server/worldmonitor/aviation/v1/handler.ts', import.meta.url).href;
-  await writeFile(join(root, 'aviation/v1/search-google-dates.js'), `import {createAviationServiceRoutes} from ${JSON.stringify(serviceUrl)}; import {createDomainGateway,serverOptions} from ${JSON.stringify(gatewayUrl)}; import {aviationHandler} from ${JSON.stringify(handlerUrl)}; export default createDomainGateway(createAviationServiceRoutes(aviationHandler,serverOptions));`);
-  process.env.LOCAL_API_MODE = 'tauri-sidecar';
-  process.env.LOCAL_API_TOKEN = 'synthetic-native-transport';
-  delete process.env.UPSTASH_REDIS_REST_URL;
-  delete process.env.UPSTASH_REDIS_REST_TOKEN;
-  const app = await createLocalApiServer({ port: 0, apiDir: root, dataDir: root, mode: 'tauri-sidecar', cloudFallback: false, logger: { log() {}, warn() {}, error() {} } });
-  const { port } = await app.start();
-  const realNow = Date.now;
-  let now = realNow();
-  Date.now = () => now;
-  try {
-    const url = `http://127.0.0.1:${port}${PATH}?origin=DXB&destination=LHR&start_date=2026-10-01&end_date=2026-10-31`;
-    assert.equal((await originalFetch(url, { headers: { 'x-worldmonitor-local-token': 'invalid' } })).status, 401);
-    const headers = { 'x-worldmonitor-local-token': process.env.LOCAL_API_TOKEN, 'X-WorldMonitor-Key': session };
-    for (let i = 0; i < 10; i++) {
-      const response = await originalFetch(url, { headers });
-      assert.equal(response.status, 200);
-      assert.deepEqual(await response.json(), { dates: [{ date: '2026-10-01', price: 100 }], degraded: false, error: '' });
-    }
-    const denied = await originalFetch(url, { headers });
-    assert.equal(denied.status, 429);
-    assert.equal(Number(denied.headers.get('Retry-After')), 60);
-    now += 59_999;
-    assert.equal((await originalFetch(url, { headers })).status, 429);
-    now += 1;
-    const recovered = await originalFetch(url, { headers });
-    assert.equal(recovered.status, 200);
-    assert.deepEqual(await recovered.json(), { dates: [{ date: '2026-10-01', price: 100 }], degraded: false, error: '' });
-    assert.equal(feeds().length, 1);
-  } finally {
-    Date.now = realNow;
-    await app.close();
-  }
 });
 
-test('cloud policy sends10/min to Redis and rejects the11th request', async () => {
-  const transport = globalThis.fetch;
-  let admitted = 0;
-  const wire: { init?: RequestInit }[] = [];
-  globalThis.fetch = (async (input, init) => {
-    wire.push({ init });
-    const response = await transport(input, init);
-    const commands = init?.body ? JSON.parse(String(init.body)) : [];
-    if (!Array.isArray(commands[0])) return response;
-    const result = await response.json();
-    for (let i = 0; i < commands.length; i++) if (String(commands[i][0]).toUpperCase() === 'EVALSHA') result[i] = { result: [10 - ++admitted, 10] };
-    return Response.json(result);
-  }) as typeof fetch;
-  for (let i = 0; i < 10; i++) assert.equal((await gateway(request())).status, 200);
-  const denied = await gateway(request());
-  assert.equal(denied.status, 429);
-  assert.ok(Number(denied.headers.get('Retry-After')) > 0);
-  const sent = readLimiterRequest(wire);
-  assert.equal(sent?.tokens, 10);
-  assert.equal(sent?.windowMs, 60000);
-  assert.ok(sent?.keys.some((key: string) => key.includes(PATH)));
-  assert.equal(feeds().length, 1);
-});
 
-test('cloud and Docker fail closed on missing or failing store', async () => {
-  for (const mode of ['', 'docker']) {
-    process.env.LOCAL_API_MODE = mode;
-    delete process.env.UPSTASH_REDIS_REST_URL;
-    delete process.env.UPSTASH_REDIS_REST_TOKEN;
-    __resetRateLimitForTest();
-    assert.equal((await gateway(request())).status, 503);
-  }
-  redis = installRedis({});
-  __resetRateLimitForTest();
-  globalThis.fetch = (async () => { throw new Error('Synthetic store outage'); }) as typeof fetch;
-  assert.equal((await gateway(request())).status, 503);
-  assert.equal(feeds().length, 0);
-});
 
 test('distinct effective options keep distinct keys; one-way duration is irrelevant', async () => {
   await read();
@@ -227,45 +138,8 @@ async function installMcpFixture(outage = false) {
   };
 }
 
-test('verified MCP date searches use the10/min verified user bucket', async () => {
-  const fixture = await installMcpFixture();
-  for (let i = 0; i < 10; i++) assert.equal((await gateway(await fixture.signed())).status, 200);
-  const denied = await gateway(await fixture.signed(), fixture.ctx);
-  assert.equal(denied.status, 429);
-  assert.ok(Number(denied.headers.get('Retry-After')) > 0);
-  assert.deepEqual(await denied.json(), { error: 'Too many requests' });
-  assert.equal(denied.headers.get('RateLimit-Limit'), '10');
-  assert.equal(fixture.admissions(), 11);
-  const sent = readLimiterRequest(fixture.wire);
-  assert.equal(sent?.tokens, 10);
-  assert.equal(sent?.windowMs, 60000);
-  assert.ok(sent?.keys.some((key: string) => key.includes(':user:user_dates_pro')));
-  assert.ok(sent?.keys.every((key: string) => !key.includes('injected_bucket')));
-  assert.equal(feeds().length, 1);
-  await fixture.settled();
-  assert.deepEqual(fixture.events.map(({ status, reason }) => ({ status, reason })), [{ status: 429, reason: 'rate_limit_429_endpoint' }]);
-});
 
-test('verified MCP fails closed after valid replay and entitlement if endpoint store fails', async () => {
-  const fixture = await installMcpFixture(true);
-  const response = await gateway(await fixture.signed(), fixture.ctx);
-  assert.equal(response.status, 503);
-  assert.deepEqual(await response.json(), { error: 'Rate-limit service temporarily unavailable' });
-  assert.equal(response.headers.get('Retry-After'), '5');
-  assert.equal(response.headers.get('X-RateLimit-Mode'), 'degraded');
-  assert.equal(feeds().length, 0);
-  await fixture.settled();
-  assert.deepEqual(fixture.events.map(({ status, reason }) => ({ status, reason })), [{ status: 503, reason: 'rate_limit_degraded' }]);
-});
 
-test('unsigned trusted-marker spoof cannot create a verified MCP admission', async () => {
-  const fixture = await installMcpFixture();
-  const { INTERNAL_MCP_VERIFIED_HEADER, TRUSTED_USER_ID_HEADER } = await import('../server/_shared/mcp-internal-hmac.ts');
-  const spoof = new Request(request().url, { headers: { [INTERNAL_MCP_VERIFIED_HEADER]: 'spoofed', [TRUSTED_USER_ID_HEADER]: 'user_dates_pro' } });
-  assert.equal((await gateway(spoof)).status, 401);
-  assert.equal(fixture.admissions(), 0);
-  assert.equal(feeds().length, 0);
-});
 
 // Execute the relay's real Google Flights section without starting its daemon or live feeds.
 function installPageRelay(provider: (url: URL, init?: RequestInit) => Promise<Response>) {

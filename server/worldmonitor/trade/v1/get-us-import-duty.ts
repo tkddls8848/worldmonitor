@@ -38,7 +38,6 @@ import type {
 } from '../../../../src/generated/server/worldmonitor/trade/v1/service_server';
 import { cachedFetchJson, getCachedJson } from '../../../_shared/redis';
 import { CHROME_UA } from '../../../_shared/constants';
-import { isCallerPremium } from '../../../_shared/premium-check';
 
 export const HTS_REST_BASE = 'https://hts.usitc.gov/reststop';
 export const US_IMPORT_DUTY_SOURCE = 'USITC Harmonized Tariff Schedule';
@@ -554,14 +553,12 @@ async function readCatalogAndShard(chapter: string): Promise<{ catalog: UsDutyCa
 }
 
 export async function getUsImportDuty(
-  ctx: ServerContext,
+  _ctx: ServerContext,
   req: GetUsImportDutyRequest,
 ): Promise<GetUsImportDutyResponse> {
   const hsCode = (req.hsCode ?? '').trim();
   const partner = (req.partnerCountry ?? '').trim();
 
-  const isPro = await isCallerPremium(ctx.request);
-  if (!isPro) return emptyResponse(hsCode, partner, REASON.served, true);
   if (!HS.test(hsCode) || !CODE3.test(partner)) return emptyResponse(hsCode, partner, REASON.invalidRequest, false);
 
   const chapter = hsCode.slice(0, 2);

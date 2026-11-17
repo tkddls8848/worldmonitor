@@ -11,7 +11,6 @@ import {
     DEFAULT_WATCHED_AIRPORTS,
     IATA_RE,
     MAX_AIRPORTS_PER_REQUEST,
-    requireLiveAviationAccess,
 } from './_shared';
 import { aviationStackBudgetCycle } from './_avstack-budget';
 import { listAirportFlights } from './list-airport-flights';
@@ -25,10 +24,6 @@ export async function getCarrierOps(
     ctx: ServerContext,
     req: GetCarrierOpsRequest,
 ): Promise<GetCarrierOpsResponse> {
-    // Metered route — gate before anything else, and before the per-airport
-    // fan-out below turns one request into N paid calls.
-    await requireLiveAviationAccess(ctx.request);
-
     const rawAirports = parseStringArray(req.airports);
     const now = Date.now();
 

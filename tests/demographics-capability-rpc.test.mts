@@ -160,28 +160,6 @@ describe('demographics capability access and cache registration', () => {
     assert.match(read('server/gateway.ts'), /'\/api\/resilience\/v1\/get-demographics-capability': 'slow'/);
   });
 
-  test('the generated gateway denies an anonymous caller before the handler', async () => {
-    const originalKeys = process.env.WORLDMONITOR_VALID_KEYS;
-    delete process.env.WORLDMONITOR_VALID_KEYS;
-    try {
-      const [gatewayModule, generated, handlerModule] = await Promise.all([
-        import('../server/gateway.ts'),
-        import('../src/generated/server/worldmonitor/resilience/v1/service_server.ts'),
-        import('../server/worldmonitor/resilience/v1/handler.ts'),
-      ]);
-      const gateway = gatewayModule.createDomainGateway(
-        generated.createResilienceServiceRoutes(handlerModule.resilienceHandler, gatewayModule.serverOptions),
-      );
-      const response = await gateway(new Request(
-        'https://www.worldmonitor.app/api/resilience/v1/get-demographics-capability?countryCode=DE',
-        { headers: { Origin: 'https://worldmonitor.app' } },
-      ));
-      assert.equal(response.status, 401);
-    } finally {
-      if (originalKeys === undefined) delete process.env.WORLDMONITOR_VALID_KEYS;
-      else process.env.WORLDMONITOR_VALID_KEYS = originalKeys;
-    }
-  });
 
   test('generated OpenAPI publishes the required country query and response contract', () => {
     const openapi = JSON.parse(read('docs/api/ResilienceService.openapi.json'));

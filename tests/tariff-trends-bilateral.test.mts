@@ -319,10 +319,4 @@ describe('get-tariff-trends partner and sector answers', () => {
     assert.equal(again.coverageStartYear, 1993);
   });
 
-  test('free callers get the empty gated answer with no WITS call', async () => {
-    const resp = await getTariffTrends(freeCtx(), request());
-    assert.equal(resp.datapoints.length, 0);
-    assert.equal(resp.upstreamUnavailable, true);
-    assert.deepEqual(witsCalls, []);
-  });
 });

@@ -40,7 +40,7 @@ async function sha256Hex(value) {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-const PRO_OWNER = await sha256Hex('key:pro-test-key');
+const PRO_OWNER = await sha256Hex('user:owner'); // scenarioOwnerToken(PERSONAL_OWNER_ID)
 
 function statusFetch(jobId, envelope) {
   return async (url) => {
@@ -87,17 +87,6 @@ describe('ScenarioService handlers', () => {
   });
 
   describe('runScenario', () => {
-    it('rejects non-PRO callers with 403', async () => {
-      const ctx = makeCtx();
-      await assert.rejects(
-        () => runScenario(ctx, { scenarioId: 'taiwan-strait-full-closure', iso2: '' }),
-        (err) => err instanceof ApiError && err.statusCode === 403,
-      );
-      // Error paths must never mark the request for the 202 upgrade.
-      const sideChannel = await import('../server/_shared/response-headers.ts');
-      assert.equal(sideChannel.drainSuccessStatusOverride(ctx.request), undefined);
-      assert.equal(sideChannel.drainResponseHeaders(ctx.request), undefined);
-    });
 
     it('rejects missing scenarioId with ValidationError', async () => {
       await assert.rejects(
@@ -272,12 +261,6 @@ describe('ScenarioService handlers', () => {
   });
 
   describe('getScenarioStatus', () => {
-    it('rejects non-PRO callers with 403', async () => {
-      await assert.rejects(
-        () => getScenarioStatus(makeCtx(), { jobId: 'scenario:1712345678901:abcdefgh' }),
-        (err) => err instanceof ApiError && err.statusCode === 403,
-      );
-    });
 
     it('rejects missing jobId with ValidationError', async () => {
       await assert.rejects(

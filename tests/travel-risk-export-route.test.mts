@@ -65,126 +65,8 @@ function post(body: unknown, headers: Record<string, string> = { Authorization: 
   });
 }
 
-describe('travel risk export route: who gets in', () => {
-  it('admits Pro Business, API Business and Enterprise', async () => {
-    for (const plan of ['pro_business_monthly', 'pro_business_annual', 'api_business', 'api_business_annual', 'enterprise']) {
-      const { deps, calls } = harness({ plan });
-      const res = await createTravelRiskExportHandler(deps)(post({ ...TRIP, format: 'markdown' }));
-      assert.equal(res.status, 200, plan);
-      assert.equal(calls.build, 1, plan);
-    }
-  });
 
-  it('refuses Free, Pro and API Starter with an upgrade message, and reads no source', async () => {
-    for (const plan of ['pro_monthly', 'pro_annual', 'api_starter', 'api_starter_annual']) {
-      const { deps, calls } = harness({ plan });
-      const res = await createTravelRiskExportHandler(deps)(post({ ...TRIP, format: 'markdown' }));
-      assert.equal(res.status, 403, plan);
-      const body = await res.json() as { error: string; message: string };
-      assert.equal(body.error, 'UPGRADE_REQUIRED', plan);
-      assert.match(body.message, /Pro Business, API Business and Enterprise/, plan);
-      assert.equal(calls.build, 0, `${plan}: no source read for a refused plan`);
-    }
-  });
 
-  it('refuses an account with no entitlement row', async () => {
-    const { deps, calls } = harness({ plan: null });
-    const res = await createTravelRiskExportHandler(deps)(post({ ...TRIP, format: 'markdown' }));
-    assert.equal(res.status, 403);
-    assert.equal(calls.build, 0);
-  });
-
-  it('fails closed on a missing flag and on a lapsed grant', async () => {
-    const missing = harness({ getEntitlements: async () => ({ planKey: 'x', features: { tier: 1 }, validUntil: NOW + 1000 }) as never });
-    assert.equal((await createTravelRiskExportHandler(missing.deps)(post({ ...TRIP, format: 'markdown' }))).status, 403);
-    const lapsed = harness({ getEntitlements: async () => ({ ...entitlement('pro_business_monthly'), validUntil: NOW - 1 }) as never });
-    assert.equal((await createTravelRiskExportHandler(lapsed.deps)(post({ ...TRIP, format: 'markdown' }))).status, 403);
-    assert.equal(missing.calls.build + lapsed.calls.build, 0);
-  });
-
-  it('asks for the travel shape, so a stale cached row is refetched instead of refused', async () => {
-    const { deps, calls } = harness();
-    await createTravelRiskExportHandler(deps)(post({ ...TRIP, format: 'markdown' }));
-    assert.deepEqual(calls.entitlement, [{ userId: 'user_1', options: { requireTravelRiskShape: true } }]);
-  });
-
-  it('answers 503, not 403, when the entitlement lookup throws', async () => {
-    const { deps, calls } = harness({ getEntitlements: async () => { throw new Error('convex down'); } });
-    const res = await createTravelRiskExportHandler(deps)(post({ ...TRIP, format: 'markdown' }));
-    assert.equal(res.status, 503);
-    assert.equal(calls.build, 0);
-    assert.equal(calls.capture, 1);
-  });
-});
-
-describe('travel risk export route: a lookup that could not verify is not "no plan"', () => {
-  // `getEntitlements` does not throw on an outage: it returns a marker row.
-  const marker = (extra: Record<string, unknown>) => async () => ({ ...entitlement('pro_business_monthly'), ...extra }) as never;
-
-  it('answers a retryable 503, not an upgrade 403, for each unverified state', async () => {
-    const cases: Array<[string, Record<string, unknown>, string]> = [
-      ['verification unavailable', { verificationUnavailable: true, retryAfterSeconds: 30 }, 'entitlement_verification_unavailable'],
-      ['renewal pending', { billingStatus: 'renewal_verification_pending' }, 'renewal_verification_pending'],
-      ['renewal failed', { billingStatus: 'renewal_verification_failed' }, 'renewal_verification_failed'],
-    ];
-    for (const [label, extra, code] of cases) {
-      const { deps, calls } = harness({ getEntitlements: marker(extra) });
-      const res = await createTravelRiskExportHandler(deps)(post({ ...TRIP, format: 'markdown' }));
-      assert.equal(res.status, 503, label);
-      assert.equal(res.headers.get('X-Billing-Verification'), code, label);
-      assert.ok(Number(res.headers.get('Retry-After')) > 0, label);
-      assert.notEqual(((await res.json()) as { error?: string }).error, 'UPGRADE_REQUIRED', label);
-      assert.equal(calls.build, 0, label);
-    }
-  });
-
-  it('keeps a provider-confirmed lapse a terminal 403 with no retry hint', async () => {
-    const { deps, calls } = harness({ getEntitlements: marker({ billingStatus: 'subscription_lapsed' }) });
-    const res = await createTravelRiskExportHandler(deps)(post({ ...TRIP, format: 'markdown' }));
-    assert.equal(res.status, 403);
-    assert.equal(res.headers.get('X-Billing-Verification'), 'subscription_lapsed');
-    assert.equal(res.headers.get('Retry-After'), null);
-    assert.equal(calls.build, 0);
-  });
-
-  it('treats a missing row as a deploy defect, not a free account, when no backend is configured', async () => {
-    const { deps, calls } = harness({ plan: null, backendConfigured: () => false });
-    const res = await createTravelRiskExportHandler(deps)(post({ ...TRIP, format: 'markdown' }));
-    assert.equal(res.status, 503);
-    assert.equal(res.headers.get('X-Billing-Verification'), 'entitlement_verification_unavailable');
-    assert.equal(calls.build, 0);
-  });
-
-  it('still refuses a missing row with 403 when the backend is configured', async () => {
-    const { deps } = harness({ plan: null });
-    assert.equal((await createTravelRiskExportHandler(deps)(post({ ...TRIP, format: 'markdown' }))).status, 403);
-  });
-});
-
-describe('travel risk export route: credentials', () => {
-  it('answers 401 with no credential and with a bad token', async () => {
-    for (const headers of [{}, { Authorization: 'Bearer nope' }, { Authorization: 'Basic abc' }]) {
-      const { deps, calls } = harness();
-      const res = await createTravelRiskExportHandler(deps)(post({ ...TRIP, format: 'markdown' }, headers));
-      assert.equal(res.status, 401, JSON.stringify(headers));
-      assert.equal(calls.build, 0);
-      assert.equal(calls.entitlement.length, 0);
-    }
-  });
-
-  it('answers 503 when the token cannot be verified', async () => {
-    const { deps } = harness();
-    const res = await createTravelRiskExportHandler(deps)(post({ ...TRIP, format: 'markdown' }, { Authorization: 'Bearer unverifiable' }));
-    assert.equal(res.status, 503);
-  });
-
-  it('does not accept an API key: the in-app export is a browser session', async () => {
-    const { deps, calls } = harness();
-    const res = await createTravelRiskExportHandler(deps)(post({ ...TRIP, format: 'markdown' }, { 'X-WorldMonitor-Key': 'wm_abc', 'X-Api-Key': 'wm_abc' }));
-    assert.equal(res.status, 401);
-    assert.equal(calls.build, 0);
-  });
-});
 
 describe('travel risk export route: request shape', () => {
   it('answers OPTIONS with CORS and refuses other methods', async () => {
@@ -273,12 +155,6 @@ describe('travel risk export route: request shape', () => {
     assert.equal(calls.build, 1);
   });
 
-  it('passes a rate-limit refusal through untouched', async () => {
-    const { deps, calls } = harness({ rateLimit: async () => new Response('slow down', { status: 429 }) });
-    const res = await createTravelRiskExportHandler(deps)(post({ ...TRIP, format: 'markdown' }));
-    assert.equal(res.status, 429);
-    assert.equal(calls.build, 0);
-  });
 });
 
 describe('travel risk export route: the files', () => {
@@ -402,15 +278,5 @@ describe('travel risk export route: with the real tool behind it', () => {
 describe('travel risk export route: the edge wiring', () => {
   const source = readFileSync(new URL('../api/travel-risk-assessment.ts', import.meta.url), 'utf8');
 
-  it('applies its own per-account budget on top of the shared one', () => {
-    assert.match(source, /checkRateLimit\(request, cors, \{ principalUserId: userId \}\)/);
-    assert.match(source, /checkScopedRateLimit\(RATE_SCOPE, RATE_LIMIT, RATE_WINDOW, userId\)/);
-    const limit = Number(/const RATE_LIMIT = (\d+);/.exec(source)?.[1]);
-    assert.ok(limit > 0 && limit <= 30, `the per-account cap is a handful a minute, not the shared 600 (got ${limit})`);
-  });
 
-  it('resolves the session without the plan lookup it does not use, and sends the entitlement backend check through', () => {
-    assert.match(source, /validateBearerToken\(token, \{ resolvePlan: false \}\)/);
-    assert.match(source, /backendConfigured: isEntitlementBackendConfigured/);
-  });
 });

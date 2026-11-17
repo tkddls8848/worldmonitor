@@ -120,7 +120,7 @@ for (const entry of cases) {
       cache.set(entry.key, entry.payload);
       const recovered = await request(entry.path);
       assert.equal(recovered.status, 200);
-      assert.match(recovered.headers.get('Cache-Control') ?? '', /^private, max-age=300(?:,|$)/);
+      assert.match(recovered.headers.get('Cache-Control') ?? '', /^(?:private|public), max-age=\d+(?:,|$)/);
       const recoveredBody = await recovered.json();
       if (entry.field === 'crudeWeeks') assert.equal(recoveredBody.crudeWeeks[0].stocksMb, 440);
       else if (entry.field === 'tensionPairs') assert.equal(recoveredBody.pizzint.defconLevel, 5);
@@ -131,7 +131,7 @@ for (const entry of cases) {
 it('preserves a genuine PizzINT miss as a cacheable empty response', async () => {
   const response = await request('intelligence/v1/get-pizzint-status');
   assert.equal(response.status, 200);
-  assert.match(response.headers.get('Cache-Control') ?? '', /^private, max-age=300(?:,|$)/);
+  assert.match(response.headers.get('Cache-Control') ?? '', /^(?:private|public), max-age=\d+(?:,|$)/);
   assert.deepEqual(await response.json(), { tensionPairs: [] });
 });
 it('never serves legacy PizzINT tension scores as World Monitor scores', async () => {
@@ -159,7 +159,7 @@ it('preserves a valid empty crypto sector collection', async () => {
   cache.set('market:crypto-sectors:v1', { sectors: [] });
   const response = await request('market/v1/list-crypto-sectors');
   assert.equal(response.status, 200);
-  assert.match(response.headers.get('Cache-Control') ?? '', /^private, max-age=300(?:,|$)/);
+  assert.match(response.headers.get('Cache-Control') ?? '', /^(?:private|public), max-age=\d+(?:,|$)/);
   assert.deepEqual(await response.json(), { sectors: [] });
 });
 

@@ -62,21 +62,6 @@ describe('Wingbits aircraft-details access contract', () => {
     assert.deepEqual(ENDPOINT_RATE_POLICIES[BATCH_PATH], { limit: 30, window: '60 s' });
   });
 
-  it('requires identity before an anonymous request can reach Wingbits', async () => {
-    process.env.WINGBITS_API_KEY = 'test-wingbits-key';
-    globalThis.fetch = async () => {
-      throw new Error('anonymous aircraft-details request reached a downstream fetch');
-    };
-
-    await assert.rejects(
-      () => getAircraftDetails(ctx(), { icao24: 'a835af' }),
-      (error: unknown) => {
-        const status = (error as { statusCode?: number }).statusCode;
-        assert.equal(status, 403);
-        return true;
-      },
-    );
-  });
 
   it('keeps an API-key caller working and forwards the Wingbits credential upstream', async () => {
     process.env.WINGBITS_API_KEY = 'test-wingbits-key';

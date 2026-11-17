@@ -3,6 +3,7 @@ import { afterEach, beforeEach, test } from 'node:test';
 import { registerWebhook, REGISTER_WEBHOOK_SCRIPT } from '../server/worldmonitor/shipping/v2/register-webhook';
 import { listWebhooks } from '../server/worldmonitor/shipping/v2/list-webhooks';
 import { callerFingerprint, ownerIndexKey, webhookKey } from '../server/worldmonitor/shipping/v2/webhook-shared';
+import { PERSONAL_OWNER_ID } from '../shared/personal-owner.js';
 
 const originalFetch = globalThis.fetch;
 const originalEnv = { ...process.env };
@@ -28,7 +29,8 @@ test('callerFingerprint refuses to mint an owner tag without a credential', asyn
 
 for (const action of ['list', 'register'] as const) {
   test(`${action} removes confirmed stale members and preserves live records`, async () => {
-    const ownerTag = await callerFingerprint(request, 'pro-test-key');
+    // Personal fork: every webhook belongs to the single owner.
+    const ownerTag = PERSONAL_OWNER_ID;
     const members = new Set(['wh_expired', 'wh_live']);
     const record = { subscriberId: 'wh_live', ownerTag, callbackUrl: 'https://8.8.8.8/hook', chokepointIds: [], alertThreshold: 50, createdAt: '2026-09-01', active: true, secret: 'private' };
     const records = new Map([[webhookKey('wh_live'), JSON.stringify(record)]]);

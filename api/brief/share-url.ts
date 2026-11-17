@@ -1,12 +1,13 @@
 /**
  * POST /api/brief/share-url?slot=YYYY-MM-DD-HHMM
  *   -> 200 { shareUrl, hash, issueSlot }           on success
- *   -> 401 UNAUTHENTICATED                         on missing/bad JWT
- *   -> 403 pro_required                            for non-PRO users
  *   -> 400 invalid_slot_shape / invalid_payload    on bad inputs
  *   -> 404 brief_not_found                         when the per-user
  *            brief key is missing (reader can't share what doesn't exist)
  *   -> 503 service_unavailable                     on env/Upstash failure
+ *
+ * Access control is the personal server's HTTP Basic auth; the brief is
+ * always the owner's (PERSONAL_OWNER_ID, shared/personal-owner.js).
  *
  * Omitting ?slot= defaults to the user's most recent brief via the
  * brief:latest:{userId} pointer the digest cron writes. That covers
@@ -35,8 +36,7 @@ import { jsonResponse } from '../_json-response.js';
 import { readRawJsonFromUpstash, redisPipeline } from '../_upstash-json.js';
 // @ts-expect-error — JS module, no declaration file
 import { captureSilentError } from '../_sentry-edge.js';
-import { validateBearerToken } from '../../server/auth-session';
-import { checkProEntitlement } from '../../server/_shared/pro-entitlement';
+import { PERSONAL_OWNER_ID } from '../../shared/personal-owner.js';
 import {
   BriefShareUrlError,
   BRIEF_PUBLIC_POINTER_PREFIX,
@@ -77,31 +77,7 @@ export default async function handler(
     return jsonResponse({ error: 'Method not allowed' }, 405, { ...cors, Allow: 'POST, OPTIONS' });
   }
 
-  const authHeader = req.headers.get('Authorization') ?? '';
-  const jwt = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
-  if (!jwt) return jsonResponse({ error: 'UNAUTHENTICATED' }, 401, cors);
-
-  const session = await validateBearerToken(jwt);
-  if (!session.valid || !session.userId) {
-    return jsonResponse({ error: 'UNAUTHENTICATED' }, 401, cors);
-  }
-
-  const proAccess = await checkProEntitlement(session.userId, session.role, cors);
-  if (!proAccess.allowed) {
-    // #5600: an entitlement the backend could not VERIFY is not a confirmed
-    // free user. Answer the shared retryable contract (503 + Retry-After) for
-    // those states before falling back to the terminal upsell. Note this covers
-    // lookup failure and renewal verification only — the day-0 poisoned-marker
-    // cohort arrives as a plain tier-0 answer and still gets the 403; that
-    // window is bounded by NOT_APPLICABLE_VERIFICATION_TTL_SECONDS instead.
-    const { billingDenial } = proAccess;
-    if (billingDenial) return billingDenial;
-    return jsonResponse(
-      { error: 'pro_required', message: 'Sharing is available on the Pro plan.' },
-      403,
-      cors,
-    );
-  }
+  const userId: string = PERSONAL_OWNER_ID;
 
   const secret = process.env.BRIEF_SHARE_SECRET ?? '';
   if (!secret) {
@@ -142,7 +118,7 @@ export default async function handler(
     try {
       // Seeder-owned pointer (#7674): the Railway digest cron writes
       // brief:latest:{userId} bare — read it raw in every environment.
-      const latest = await readRawJsonFromUpstash(`brief:latest:${session.userId}`, 3_000, true);
+      const latest = await readRawJsonFromUpstash(`brief:latest:${userId}`, 3_000, true);
       const slot = (latest as { issueSlot?: unknown } | null)?.issueSlot;
       if (typeof slot === 'string' && ISSUE_SLOT_RE.test(slot)) {
         issueSlot = slot;
@@ -173,7 +149,7 @@ export default async function handler(
   try {
     // Seeder-owned envelope (#7674): the Railway digest composer writes it
     // bare — read it raw in every environment.
-    existing = await readRawJsonFromUpstash(`brief:${session.userId}:${issueSlot}`, 3_000, true);
+    existing = await readRawJsonFromUpstash(`brief:${userId}:${issueSlot}`, 3_000, true);
   } catch (err) {
     console.error('[api/brief/share-url] Upstash read failed:', (err as Error).message);
     captureSilentError(err, { tags: { route: 'api/brief/share-url', step: 'envelope-read' }, fingerprint: ['api/brief/share-url', 'envelope-read', err instanceof Error ? err.name : 'Error'], ctx });
@@ -187,7 +163,7 @@ export default async function handler(
   let hash: string;
   try {
     const built = await buildPublicBriefUrl({
-      userId: session.userId,
+      userId,
       issueDate: issueSlot,
       baseUrl: publicBaseUrl(req),
       secret,
@@ -219,7 +195,7 @@ export default async function handler(
   // their deployment origin and pins production to the canonical origin,
   // which keeps every returned URL in the pointer's namespace.
   const pointerKey = `${BRIEF_PUBLIC_POINTER_PREFIX}${hash}`;
-  const pointerValue = JSON.stringify(encodePublicPointer(session.userId, issueSlot));
+  const pointerValue = JSON.stringify(encodePublicPointer(userId, issueSlot));
   const writeResult = await redisPipeline([
     ['SET', pointerKey, pointerValue, 'EX', String(BRIEF_TTL_SECONDS)],
   ]);

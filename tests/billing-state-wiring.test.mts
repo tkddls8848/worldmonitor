@@ -143,19 +143,9 @@ describe('Pro-gated endpoint policy and billing denial ordering (#5600, #5646)',
     decisionHelper?: string;
   }> = [
     {
-      file: 'api/latest-brief.ts',
-      decisionCall: 'checkProEntitlement(session.userId, session.role, cors)',
-      decisionHelper: 'checkProEntitlement',
-    },
-    {
       file: 'api/notify.ts',
       decisionCall: 'checkTierProEntitlement(session.userId, cors)',
       decisionHelper: 'checkTierProEntitlement',
-    },
-    {
-      file: 'api/brief/share-url.ts',
-      decisionCall: 'checkProEntitlement(session.userId, session.role, cors)',
-      decisionHelper: 'checkProEntitlement',
     },
     {
       file: 'api/slack/oauth/start.ts',

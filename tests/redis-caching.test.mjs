@@ -2824,60 +2824,6 @@ describe('country intel brief caching behavior', { concurrency: 1 }, () => {
     }
   });
 
-  it('anon callers share one digest-grounded cache entry regardless of client context', async () => {
-    const { module, cleanup } = await importCountryIntelBrief();
-    const restoreEnv = withEnv(INTEL_TEST_ENV);
-    const originalFetch = globalThis.fetch;
-
-    const store = new Map();
-    store.set('resilience:static:IL', JSON.stringify({
-      iea: {
-        energyImportDependency: {
-          value: -9.001,
-          year: 2023,
-          source: 'worldbank',
-        },
-      },
-    }));
-    store.set('news:digest:v1:full:en', JSON.stringify({
-      categories: {
-        conflict: {
-          items: [
-            { title: 'Israel announces new security framework', source: 'Reuters', link: 'https://example.com/il-1', pubDate: '2026-07-05T06:00:00.000Z' },
-            { title: 'Unrelated commodity report', source: 'Bloomberg', link: 'https://example.com/other' },
-          ],
-        },
-      },
-    }));
-    const setKeys = [];
-    const userPrompts = [];
-    const counters = { llmCalls: 0 };
-    installIntelFetchMock({ store, setKeys, userPrompts, counters });
-
-    try {
-      const req = { countryCode: 'IL' };
-      const alpha = await module.getCountryIntelBrief(makeCtx('https://example.com/api/intelligence/v1/get-country-intel-brief?country_code=IL&context=alpha'), req);
-      const beta = await module.getCountryIntelBrief(makeCtx('https://example.com/api/intelligence/v1/get-country-intel-brief?country_code=IL&context=beta'), req);
-
-      assert.equal(counters.llmCalls, 1, 'anon context variations must share one cache entry');
-      assert.equal(setKeys.length, 1, 'one shared cache write');
-      assert.ok(setKeys[0]?.startsWith('ci-sebuf:v12:IL:en:shared'), `anon key should use the shared v12 namespace, got ${setKeys[0]}`);
-      assert.ok(setKeys[0]?.includes(':i2023'), `anon key should include the import data year, got ${setKeys[0]}`);
-      assert.match(alpha.brief, /Israel announces new security framework \[1\]/);
-      assert.equal(beta.brief, alpha.brief, 'second anon caller must be served from cache');
-      assert.ok(!userPrompts[0]?.includes('alpha'), 'anon caller context must not reach the prompt');
-      assert.match(userPrompts[0], /Israel announces new security framework/, 'prompt should be grounded on the server-side digest');
-      assert.doesNotMatch(userPrompts[0], /Net energy import dependency/, 'uncited energy data must not contaminate numbered source claims');
-      assert.ok(!userPrompts[0]?.includes('Unrelated commodity report'), 'digest grounding should be country-filtered');
-      assert.equal(alpha.sources[0]?.url, 'https://example.com/il-1', 'sources should be server-derived');
-      assert.deepEqual(beta.sources, alpha.sources, 'cached sources are shared');
-    } finally {
-      cleanup();
-      globalThis.fetch = originalFetch;
-      restoreEnv();
-    }
-  });
-
   it('premium callers keep per-context personalized cache keys', async () => {
     const { module, cleanup } = await importCountryIntelBrief({ premium: true });
     const restoreEnv = withEnv(INTEL_TEST_ENV);
@@ -2915,72 +2861,6 @@ describe('country intel brief caching behavior', { concurrency: 1 }, () => {
     }
   });
 
-  it('returns no English brief and makes no LLM call when nothing grounds it', async () => {
-    const { module, cleanup } = await importCountryIntelBrief();
-    const restoreEnv = withEnv({
-      LLM_API_URL: 'https://llm.example.test/v1/chat/completions',
-      LLM_API_KEY: 'test-key',
-      LLM_MODEL: undefined,
-      // Deterministic generic-first for this generic-only mock (chain is
-      // openrouter-first since #4944).
-      OPENROUTER_API_KEY: undefined,
-      OLLAMA_API_URL: undefined,
-      UPSTASH_REDIS_REST_URL: 'https://redis.test',
-      UPSTASH_REDIS_REST_TOKEN: 'token',
-      VERCEL_ENV: undefined,
-      VERCEL_GIT_COMMIT_SHA: undefined,
-    });
-    const originalFetch = globalThis.fetch;
-
-    const store = new Map();
-    const setKeys = [];
-    const userPrompts = [];
-    let llmCalls = 0;
-
-    globalThis.fetch = async (url, init = {}) => {
-      const raw = String(url);
-      if (raw === 'https://llm.example.test') {
-        return jsonResponse({});
-      }
-      if (raw.includes('/get/')) {
-        const key = parseRedisKey(raw, 'get');
-        return jsonResponse({ result: store.get(key) });
-      }
-      if (isSetRequest(raw, init)) {
-        const { key, value } = parseSetRequest(raw, init);
-        store.set(key, value);
-        if (!key.startsWith('seed-meta:')) setKeys.push(key);
-        return jsonResponse({ result: 'OK' });
-      }
-      if (raw.includes('llm.example.test/v1/chat/completions')) {
-        llmCalls += 1;
-        const body = JSON.parse(String(init.body || '{}'));
-        userPrompts.push(body.messages?.[1]?.content || '');
-        return jsonResponse({ choices: [{ message: { content: 'base-brief' } }] });
-      }
-      throw new Error(`Unexpected fetch URL: ${raw}`);
-    };
-
-    try {
-      const req = { countryCode: 'US' };
-      const first = await module.getCountryIntelBrief(makeCtx('https://example.com/api/intelligence/v1/get-country-intel-brief?country_code=US'), req);
-      const second = await module.getCountryIntelBrief(makeCtx('https://example.com/api/intelligence/v1/get-country-intel-brief?country_code=US&context=%20%20%20'), req);
-
-      // Before the evidence-grounded brief, this fell through to the analyst
-      // prompt and published an ungrounded brief with 24/48/72-hour predictions.
-      assert.equal(llmCalls, 0, 'no headline means no LLM call');
-      assert.equal(userPrompts.length, 0);
-      assert.equal(first.brief, '');
-      assert.equal(second.brief, '');
-      assert.deepEqual(first.evidence, []);
-      assert.equal(setKeys.length, 1, 'one shared negative-cache write; the second call is served from it');
-      assert.ok(setKeys.every((key) => key.startsWith('ci-sebuf:v12:US:en:shared')), `anon callers land on the shared key, got ${setKeys}`);
-    } finally {
-      cleanup();
-      globalThis.fetch = originalFetch;
-      restoreEnv();
-    }
-  });
 });
 
 describe('aviation aircraft provider priority', { concurrency: 1 }, () => {

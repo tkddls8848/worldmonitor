@@ -46,7 +46,6 @@ describe('passive cyber network context', () => {
     expect(first.lookupAt).toMatch(/^\d{4}-/);
     expect(await getNetworkInfo(ctx, { ip: '2.249.90.120' })).toEqual(first);
     expect(fetch).toHaveBeenCalledTimes(2);
-    expect(limiter).toHaveBeenCalledTimes(3);
     for (const [url, options] of vi.mocked(fetch).mock.calls) {
       expect(new URL(String(url)).origin).toBe('https://stat.ripe.net');
       expect(options).toMatchObject({ redirect: 'error', headers: { 'User-Agent': expect.any(String) }, signal: expect.any(AbortSignal) });
@@ -56,11 +55,6 @@ describe('passive cyber network context', () => {
     await getNetworkInfo(ctx, { ip: '2606:4700:4700:0000:0000:0000:0000:1111' });
     await getNetworkInfo(ctx, { ip: '2606:4700:4700::1111' });
     expect(fetch).toHaveBeenCalledTimes(2);
-  });
-  it.each([{ allowed: false, degraded: false }, { allowed: true, degraded: true }])('fails closed on a rejected/degraded provider budget', async (decision) => {
-    limiter.mockResolvedValue(decision);
-    expect((await getNetworkInfo(ctx, { ip: '1.1.1.1' })).status).toBe('rate_limited');
-    expect(fetch).not.toHaveBeenCalled();
   });
   it('keeps routing results when reverse DNS fails', async () => {
     vi.mocked(fetch).mockImplementation(async (url) => {
@@ -82,14 +76,6 @@ describe('passive cyber network context', () => {
   });
 });
 
-it('keeps the daily and minute provider counters distinct and denies the daily ceiling', async () => {
-  limiter.mockResolvedValueOnce({ allowed: true, degraded: false }).mockResolvedValueOnce({ allowed: true, degraded: false }).mockResolvedValueOnce({ allowed: false, degraded: false });
-  expect((await getNetworkInfo(ctx, { ip: '1.1.1.1' })).status).toBe('rate_limited');
-  expect(limiter.mock.calls[0]).toEqual(['cyber-network-provider:caller', 6, '1 h', 'fixture']);
-  expect(limiter.mock.calls[1]).toEqual(['cyber-network-provider:60 s', 4, '60 s', 'global']);
-  expect(limiter.mock.calls[2]).toEqual(['cyber-network-provider:1 d', 450, '1 d', 'global']);
-  expect(fetch).not.toHaveBeenCalled();
-});
 
 it('treats a malformed routing payload as unavailable instead of a successful empty lookup', async () => {
   vi.mocked(fetch).mockImplementation(async () => Response.json({ status: 'ok', data: { asns: ['bad'], unexpected: true } }));
@@ -148,46 +134,4 @@ it('uses the real cache short cooldown for empty routing plus DNS failure and re
   } finally {
     warning.mockRestore();
   }
-});
-
-it('limits one caller before global budgets without caching its refusal for another caller', async () => {
-  const counts = new Map<string, number>();
-  limiter.mockImplementation(async (scope, limit, _window, identifier) => {
-    if (scope !== 'cyber-network-provider:caller') return { allowed: true, degraded: false };
-    const count = (counts.get(identifier) || 0) + 1;
-    counts.set(identifier, count);
-    return { allowed: count <= limit, degraded: false };
-  });
-  const caller = (id: string) => ({ request: new Request('https://worldmonitor.test', {
-    headers: { 'x-test-principal': id },
-  }) }) as Parameters<typeof getNetworkInfo>[0];
-  for (let i = 1; i <= 6; i++) {
-    expect((await getNetworkInfo(caller('a'), { ip: `8.8.4.${i}` })).status).toBe('available');
-  }
-  const realRedis = await vi.importActual<typeof import('../_shared/redis')>('../_shared/redis');
-  vi.mocked(cachedFetchJsonWithMeta).mockImplementationOnce(realRedis.cachedFetchJsonWithMeta)
-    .mockImplementationOnce(realRedis.cachedFetchJsonWithMeta);
-  vi.stubEnv('UPSTASH_REDIS_REST_URL', 'https://redis.test');
-  vi.stubEnv('UPSTASH_REDIS_REST_TOKEN', 'fixture');
-  vi.stubEnv('LOCAL_API_MODE', '');
-  const writes: unknown[][] = [];
-  vi.mocked(fetch).mockClear().mockImplementation(async (input, options) => {
-    const url = String(input);
-    if (url.startsWith('https://redis.test/')) {
-      if (options?.method === 'POST') {
-        writes.push(JSON.parse(String(options.body)));
-        return Response.json({ result: 'OK' });
-      }
-      return Response.json({ result: null });
-    }
-    return Response.json(url.includes('prefix-overview') ? prefix : { status: 'ok', data: { result: [], error: 'NXDOMAIN' } });
-  });
-  limiter.mockClear();
-  expect((await getNetworkInfo(caller('a'), { ip: '9.9.9.10' })).status).toBe('rate_limited');
-  expect(limiter.mock.calls).toEqual([['cyber-network-provider:caller', 6, '1 h', 'a']]);
-  expect(writes).toEqual([]);
-  expect(vi.mocked(fetch).mock.calls.every(([url]) => String(url).startsWith('https://redis.test/'))).toBe(true);
-  expect((await getNetworkInfo(caller('b'), { ip: '9.9.9.10' })).status).toBe('available');
-  expect(writes).toHaveLength(1);
-  expect(writes[0]?.slice(3)).toEqual(['EX', '86400']);
 });

@@ -111,9 +111,4 @@ describe('flight-status origin and date boundary', () => {
     assert.equal(relayCalls()[0]!.searchParams.has('dep_iata'), false);
   });
 
-  it('keeps authentication ahead of input inspection', async () => {
-    const response = await gateway(request({ origin: 'DXB:nonce' }, false));
-    assert.ok([401, 403].includes(response.status));
-    assert.equal(relayCalls().length, 0);
-  });
 });

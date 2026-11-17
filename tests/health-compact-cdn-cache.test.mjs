@@ -57,13 +57,6 @@ test('detailed (key-authenticated) 200 stays no-store', async () => {
   assert.equal(res.headers.get('CDN-Cache-Control'), 'no-store');
 });
 
-test('keyless detailed 401 stays no-store', async () => {
-  mockRedisPipeline();
-  const res = await handler(new Request('https://api.worldmonitor.app/api/health'));
-  assert.equal(res.status, 401);
-  assert.match(res.headers.get('Cache-Control'), /no-store/);
-  assert.equal(res.headers.get('CDN-Cache-Control'), 'no-store');
-});
 
 test('compact REDIS_DOWN 503 stays no-store', async () => {
   globalThis.fetch = async () => { throw new Error('upstash unreachable'); };

@@ -1,15 +1,14 @@
 /**
  * Brief carousel image endpoint (Phase 8).
  *
- * GET /api/brief/carousel/{userId}/{issueSlot}/{page}?t={token}
+ * GET /api/brief/carousel/{userId}/{issueSlot}/{page}
  *   -> 200 image/png   cover | threads | story page. Cache-Control
  *                      is public, max-age=604800 (7 days, matching the
- *                      Redis envelope TTL) and is NOT immutable, so a
- *                      BRIEF_URL_SIGNING_SECRET rotation can revoke the
- *                      image once that window ends. CDN-Cache-Control and
- *                      Vercel-CDN-Cache-Control carry the same policy.
- *   -> 403 on bad token (shared signer with the magazine route)
- *   -> 404 on Redis miss (no brief composed for that user/slot)
+ *                      Redis envelope TTL) and is NOT immutable.
+ *                      CDN-Cache-Control and Vercel-CDN-Cache-Control
+ *                      carry the same policy.
+ *   -> 404 on Redis miss (no brief composed for that user/slot) or a
+ *      userId other than the owner's
  *   -> 404 on invalid page (must be one of 0, 1, 2)
  *   -> 4xx/5xx always Cache-Control: no-store. NEVER returns a
  *      placeholder PNG — a 1x1 blank cached by Telegram + CDN is worse
@@ -18,10 +17,9 @@
  *      long-form text message, and the next cron tick re-renders
  *      with a fresh cold start.
  *
- * The HMAC-signed `?t=` token is the sole credential — same token
- * pattern as the magazine HTML route, same signer secret, same
- * per-(userId, issueSlot) binding. URLs go out over already-authed
- * channels (Telegram, Slack, Discord, email, push).
+ * Access control is the personal server's HTTP Basic auth. A `?t=`
+ * token on older links is ignored. The only brief owner is
+ * PERSONAL_OWNER_ID (shared/personal-owner.js).
  *
  * Runtime: Edge (via @vercel/og). Earlier attempts — direct satori +
  * @resvg/resvg-wasm and satori + @resvg/resvg-js native binding —
@@ -38,10 +36,10 @@ import { getCorsHeaders, isDisallowedOrigin } from '../../../../_cors.js';
 import { readRawJsonFromUpstash } from '../../../../_upstash-json.js';
 // @ts-expect-error — JS module, no declaration file
 import { captureSilentError } from '../../../../_sentry-edge.js';
-import { verifyBriefToken, BriefUrlError } from '../../../../../server/_shared/brief-url';
+import { PERSONAL_OWNER_ID } from '../../../../../shared/personal-owner.js';
 import { renderCarouselImageResponse, pageFromIndex } from '../../../../../server/_shared/brief-carousel-render';
 
-// Matches the signer's slot format (YYYY-MM-DD-HHMM).
+// The digest cron's slot format (YYYY-MM-DD-HHMM).
 const ISSUE_DATE_RE = /^\d{4}-\d{2}-\d{2}-\d{4}$/;
 
 function jsonError(
@@ -61,9 +59,7 @@ function jsonError(
   });
 }
 
-// Matches the 7-day brief envelope TTL. Not immutable: a signing-secret
-// rotation must be able to stop serving an already-fetched capability URL
-// once this window ends. @vercel/og's own Cache-Control is a year-long
+// Matches the 7-day brief envelope TTL. @vercel/og's own Cache-Control is a year-long
 // immutable default and is replaced after ImageResponse construction
 // (passing it via extraHeaders appends a second Cache-Control).
 const CAROUSEL_CACHE_CONTROL = 'public, max-age=604800';
@@ -95,12 +91,6 @@ export default async function handler(
     return jsonError('Method not allowed', 405, { ...cors, Allow: 'GET, HEAD, OPTIONS' });
   }
 
-  const secret = process.env.BRIEF_URL_SIGNING_SECRET ?? '';
-  if (!secret) {
-    console.error('[api/brief/carousel] BRIEF_URL_SIGNING_SECRET is not configured');
-    return jsonError('service_unavailable', 503, cors);
-  }
-
   const url = new URL(req.url);
   const parts = url.pathname.split('/').filter(Boolean);
   // parts = ['api', 'brief', 'carousel', userId, issueSlot, page]
@@ -115,17 +105,7 @@ export default async function handler(
   const page = pageFromIndex(pageIdx);
   if (!page) return jsonError('invalid_page', 404, cors);
 
-  const token = url.searchParams.get('t') ?? '';
-  const prev = process.env.BRIEF_URL_SIGNING_SECRET_PREV ?? undefined;
-  try {
-    const ok = await verifyBriefToken(userId, issueDate, token, secret, prev);
-    if (!ok) return jsonError('forbidden', 403, cors);
-  } catch (err) {
-    if (err instanceof BriefUrlError) {
-      return jsonError('forbidden', 403, cors);
-    }
-    throw err;
-  }
+  if (userId !== PERSONAL_OWNER_ID) return jsonError('not_found', 404, cors);
 
   let envelope;
   try {

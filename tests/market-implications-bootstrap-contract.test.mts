@@ -83,12 +83,9 @@ test('canonical publisher excludes premium cards from both public tier envelopes
   assert.ok(!reads.includes(SEED));
 });
 
-test('premium RPC denies a public session while its handler preserves canonical seed mapping', async t => {
-  const { values, token } = await setup(t);
+test('the RPC handler preserves canonical seed mapping', async t => {
+  const { values } = await setup(t);
   values.set(SEED, fixture);
-  const response = await intelligence(new Request('https://api.worldmonitor.app/api/intelligence/v1/list-market-implications', { headers: { 'X-WorldMonitor-Key': token, Origin: 'https://worldmonitor.app' } }));
-  assert.ok([401, 403].includes(response.status));
-  assert.doesNotMatch(await response.text(), /premium-fixture-only/);
   const data = await listMarketImplications({} as never, { frameworkId: '' });
   assert.equal(data.cards[0]?.title, fixture.cards[0].title);
   assert.equal(data.cards[0]?.riskCaveat, 'test risk');

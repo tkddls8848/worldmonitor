@@ -117,20 +117,4 @@ describe('gateway success-status override', () => {
     expect(res.headers.get('Location')).toBeNull();
   });
 
-  test('idempotent first request stores 202 so a replay reproduces it', async () => {
-    runRedisPipeline
-      .mockResolvedValueOnce([{ result: null }]) // read-only peek miss
-      .mockResolvedValueOnce([{ result: 'OK' }, { result: null }]) // SET NX + GET (claimed)
-      .mockResolvedValueOnce([{ result: 'OK' }]); // store SET
-    const res = await makeGateway()(makeRequest('POST', { [IDEMPOTENCY_HEADER]: 'key-async' }), ctx);
-
-    expect(res.status).toBe(202);
-    expect(res.headers.get(IDEMPOTENT_REPLAYED_HEADER)).toBe('false');
-
-    const storeCmd = runRedisPipeline.mock.calls[2][0][0];
-    expect(storeCmd[0]).toBe('SET');
-    const record = JSON.parse(storeCmd[2] as string);
-    expect(record.state).toBe('completed');
-    expect(record.status).toBe(202);
-  });
 });

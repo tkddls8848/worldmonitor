@@ -38,13 +38,5 @@ describe('five-factor scorecard public gateway', { concurrency: 1 }, () => {
       assert.equal(response.status, 200, await response.clone().text());
       assert.equal((await response.json()).unavailable, true);
     });
-
-    it(`fails closed for ${operation} when Redis is unavailable`, async () => {
-      const gateway = await loadGateway();
-      globalThis.fetch = async () => { throw new Error('Redis unavailable'); };
-      const response = await gateway(new Request(`https://api.worldmonitor.app${path}${query}`));
-      assert.equal(response.status, 503, await response.text());
-      assert.equal(response.headers.get('X-RateLimit-Mode'), 'degraded');
-    });
   }
 });

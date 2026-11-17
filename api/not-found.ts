@@ -17,8 +17,6 @@ export const config = { runtime: 'edge' };
 
 // @ts-expect-error — JS module, no declaration file
 import { getCorsHeaders, getPublicCorsHeaders, isDisallowedOrigin } from './_cors.js';
-// @ts-expect-error — JS module, no declaration file
-import { checkRateLimit } from './_rate-limit.js';
 import { appendDeprecationPolicyLinkToRecord } from '../server/_shared/deprecation-policy';
 import { buildMarkdownTwinResponse, isMarkdownTwinPath } from './_md-url-twin';
 
@@ -53,10 +51,6 @@ async function legacyMarkdownTwin(req: Request, pathname: string): Promise<Respo
     });
   }
   if (!LEGACY_MARKDOWN_TWIN_SIBLINGS.has(pathname.slice(0, -3))) return markdownNotFound(corsHeaders);
-  // The hop is a second function invocation on the caller's behalf: charge the
-  // caller's own default budget for it, as a direct call to a limited sibling would.
-  const limited = await checkRateLimit(req, corsHeaders);
-  if (limited) return limited;
   return buildMarkdownTwinResponse(req, pathname, globalThis.fetch, {
     corsHeaders,
     isAllowedSibling: (sibling) => LEGACY_MARKDOWN_TWIN_SIBLINGS.has(sibling),

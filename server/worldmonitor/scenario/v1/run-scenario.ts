@@ -5,9 +5,7 @@ import type {
 } from '../../../../src/generated/server/worldmonitor/scenario/v1/service_server';
 import { ApiError, ValidationError } from '../../../../src/generated/server/worldmonitor/scenario/v1/service_server';
 
-import {
-  requirePremiumRpcAccess,
-} from '../../../_shared/premium-check';
+import { PERSONAL_OWNER_ID } from '../../../../shared/personal-owner.js';
 import { runRedisPipeline, runRedisTransaction } from '../../../_shared/redis';
 import { setResponseHeader, setSuccessStatusOverride } from '../../../_shared/response-headers';
 import { getScenarioTemplate } from '../../supply-chain/v1/scenario-templates';
@@ -26,8 +24,6 @@ export async function runScenario(
   ctx: ServerContext,
   req: RunScenarioRequest,
 ): Promise<RunScenarioResponse> {
-  const identity = await requirePremiumRpcAccess(ctx.request, ApiError, 'PRO subscription required');
-
   const scenarioId = (req.scenarioId ?? '').trim();
   if (!scenarioId) {
     throw new ValidationError([{ field: 'scenarioId', description: 'scenarioId is required' }]);
@@ -59,10 +55,7 @@ export async function runScenario(
     throw new ApiError(429, 'Scenario queue is at capacity, please try again later', '');
   }
 
-  const owner = await scenarioOwnerToken(identity, ctx.request);
-  if (!owner) {
-    throw new ApiError(403, 'PRO subscription required', '');
-  }
+  const owner = await scenarioOwnerToken(PERSONAL_OWNER_ID);
 
   const jobId = generateScenarioJobId();
   const payload = JSON.stringify({

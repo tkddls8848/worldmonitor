@@ -196,16 +196,6 @@ describe('createRelayHandler', () => {
     assert.equal(res.status, 405);
   });
 
-  it('responds 401 when requireApiKey and no valid key', async () => {
-    process.env.WORLDMONITOR_VALID_KEYS = 'real-key-123';
-    const handler = createRelayHandler({ relayPath: '/test', requireApiKey: true });
-    const res = await handler(makeRequest('https://worldmonitor.app/api/test', {
-      headers: { Origin: 'https://tauri.localhost', 'X-WorldMonitor-Key': 'wrong-key' },
-    }));
-    assert.equal(res.status, 401);
-    const body = await res.json();
-    assert.equal(body.error, 'Invalid API key');
-  });
 
   it('allows request when requireApiKey and key is valid', async () => {
     process.env.WORLDMONITOR_VALID_KEYS = 'real-key-123';

@@ -77,6 +77,25 @@ for (const key of skippedFamilies) {
   console.log(`build:sidecar-handlers  api/${key} declared cloud-only, not bundled (#5907)`);
 }
 
+// Personal fork: the standalone edge routes the dashboard calls on the personal
+// server. The local API server only routes bundled .js files, so without these
+// /api/chat-analyst and /api/latest-brief answer "No local handler". Outputs
+// are gitignored next to their sources.
+export const PERSONAL_EDGE_ENTRIES = [
+  'chat-analyst.ts',
+  'latest-brief.ts',
+  'brief/share-url.ts',
+  'brief/[userId]/[issueDate].ts',
+];
+for (const rel of PERSONAL_EDGE_ENTRIES) {
+  const tsFile = path.join(apiDir, rel);
+  if (!existsSync(tsFile)) {
+    console.error(`build:sidecar-handlers  missing personal edge entry api/${rel}`);
+    process.exit(1);
+  }
+  entries.push(tsFile);
+}
+
 if (entries.length === 0) {
   console.log('build:sidecar-handlers  no domain handlers found, skipping');
   process.exit(0);

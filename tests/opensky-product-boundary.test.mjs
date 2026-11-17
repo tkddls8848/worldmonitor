@@ -29,30 +29,6 @@ describe('OpenSky legacy proxy product boundary', () => {
     else process.env.LOCAL_API_MODE = originalLocalMode;
   });
 
-  it('requires both a product transport and its enterprise credential', async () => {
-    let upstreamCalls = 0;
-    globalThis.fetch = async () => {
-      upstreamCalls += 1;
-      return new Response(JSON.stringify({ states: [] }));
-    };
-
-    for (const headers of [
-      { 'X-WorldMonitor-Key': 'wms_browser-session' },
-      { 'X-Api-Key': 'desktop-product-key' },
-      { Origin: 'https://worldmonitor.app', 'X-WorldMonitor-Key': 'wms_browser-session' },
-      { Origin: 'tauri://localhost' },
-      { Origin: 'tauri://localhost', 'X-WorldMonitor-Key': 'wrong-key' },
-      { Origin: 'tauri://localhost', 'X-WorldMonitor-Key': 'wms_browser-session' },
-      { Origin: 'http://127.0.0.1:43127' },
-      { Origin: 'http://127.0.0.1:43127', 'X-WorldMonitor-Key': 'wrong-key' },
-    ]) {
-      const response = await handler(new Request('https://worldmonitor.app/api/opensky', { headers }));
-      assert.equal(response.status, 404);
-      assert.equal(response.headers.get('Cache-Control'), 'private, no-store');
-      assert.equal(response.headers.get('CDN-Cache-Control'), 'no-store');
-    }
-    assert.equal(upstreamCalls, 0);
-  });
 
   it('keeps the authenticated Tauri desktop product path available', async () => {
     let upstreamUrl = '';

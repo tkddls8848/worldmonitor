@@ -123,13 +123,6 @@ describe('YouTube public RPC input boundary and retired channel detection', () =
     assert.ok([...redis.redis.keys()].every(key => !key.startsWith('aviation:yt-live:')));
   });
 
-  it('fails closed when the lookup limiter store is missing', async () => {
-    delete process.env.UPSTASH_REDIS_REST_URL;
-    delete process.env.UPSTASH_REDIS_REST_TOKEN;
-    const response = await gateway(request({ video_id: VIDEO }));
-    assert.equal(response.status, 503);
-    assert.equal(providers().length, 0);
-  });
 
   it('preserves authenticated requests and case-sensitive video IDs', async () => {
     process.env.WORLDMONITOR_VALID_KEYS = 'synthetic-enterprise-key';
@@ -142,36 +135,5 @@ describe('YouTube public RPC input boundary and retired channel detection', () =
     assert.equal(oembedVideo(providers()[0]!), 'AbCdEfGhIjK');
   });
 
-  it('fails closed when the configured lookup limiter store errors', async () => {
-    const transport = globalThis.fetch;
-    globalThis.fetch = (async (input, init) => {
-      if (new URL(String(input)).hostname === 'redis.example') throw new Error('Synthetic store outage');
-      return transport(input, init);
-    }) as typeof fetch;
-    const response = await gateway(request({ video_id: VIDEO }));
-    assert.equal(response.status, 503);
-    assert.equal(providers().length, 0);
-  });
 
-  it('admits 30 public cache misses, then rejects before another lookup', async () => {
-    assert.equal(ENDPOINT_RATE_POLICIES[PATH]?.limit, 30);
-    const transport = globalThis.fetch;
-    let admitted = 0;
-    globalThis.fetch = (async (input, init) => {
-      const response = await transport(input, init);
-      const commands = init?.body ? JSON.parse(String(init.body)) : [];
-      if (!Array.isArray(commands[0])) return response;
-      const results = await response.json();
-      for (let i = 0; i < commands.length; i++) {
-        if (String(commands[i][0]).toUpperCase() === 'EVALSHA') results[i] = { result: [30 - ++admitted, 60] };
-      }
-      return Response.json(results);
-    }) as typeof fetch;
-    const video = (i: number) => `vid${String(i).padStart(8, '0')}`;
-    for (let i = 0; i < 30; i++) assert.equal((await gateway(request({ video_id: video(i) }))).status, 200);
-    const denied = await gateway(request({ video_id: video(30) }));
-    assert.equal(denied.status, 429);
-    assert.ok(Number(denied.headers.get('Retry-After')) > 0);
-    assert.equal(providers().length, 30);
-  });
 });

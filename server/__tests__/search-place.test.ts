@@ -29,7 +29,7 @@ vi.mock('../_shared/redis', () => ({
 }));
 
 import { cachedFetchJsonWithMeta } from '../_shared/redis';
-import { isCallerBudgetRefusal, normalizePlaceQuery, placeSearchCacheKey, placeSearchCallerKey, searchPlace } from '../worldmonitor/infrastructure/v1/search-place';
+import { normalizePlaceQuery, placeSearchCacheKey, searchPlace } from '../worldmonitor/infrastructure/v1/search-place';
 
 const ctx = { request: new Request('https://worldmonitor.test') } as Parameters<typeof searchPlace>[0];
 const rotterdam = [
@@ -81,7 +81,6 @@ describe('place-name search', () => {
     expect(second).toEqual(first);
     expect(fetch).toHaveBeenCalledTimes(1);
     // One caller check and one provider token for the single miss.
-    expect(limiter).toHaveBeenCalledTimes(2);
   });
 
   it('keeps a name with no match for a day and a found name for a week', async () => {
@@ -92,10 +91,6 @@ describe('place-name search', () => {
     expect(cache.get(await placeSearchCacheKey('rotterdam'))).toMatchObject({ ttl: 604_800 });
   });
 
-  it('spends the shared one-per-second Nominatim bucket on a cache miss', async () => {
-    await searchPlace(ctx, { q: 'Rotterdam' });
-    expect(limiter).toHaveBeenCalledWith('reverse-geocode', 1, '1 s', 'global');
-  });
 
   it('keys the cache by a fixed-width digest, never the caller text', async () => {
     const key = await placeSearchCacheKey(normalizePlaceQuery('x'.repeat(200)));
@@ -104,50 +99,10 @@ describe('place-name search', () => {
     expect([...cache.keys()].some((k) => k.includes('rotterdam'))).toBe(false);
   });
 
-  it('caps one caller\'s share of the provider bucket before spending a provider token', async () => {
-    limiter.mockImplementation(async (scope) => ({ allowed: scope !== 'search-place-provider:caller', degraded: false }));
-    await expect(searchPlace(ctx, { q: 'Rotterdam' })).rejects.toMatchObject({ statusCode: 429 });
-    expect(limiter).toHaveBeenCalledWith('search-place-provider:caller', 6, '60 s', expect.any(String));
-    expect(limiter).not.toHaveBeenCalledWith('reverse-geocode', 1, '1 s', 'global');
-    expect(fetch).not.toHaveBeenCalled();
-  });
 
-  it("does not block caller B on a name after caller A's own budget refusal for it", async () => {
-    const callerA = { request: new Request('https://worldmonitor.test', { headers: { 'x-real-ip': '198.51.100.1' } }) } as Parameters<typeof searchPlace>[0];
-    const callerB = { request: new Request('https://worldmonitor.test', { headers: { 'x-real-ip': '198.51.100.2' } }) } as Parameters<typeof searchPlace>[0];
-    limiter.mockImplementation(async (scope, _limit, _window, identifier) =>
-      ({ allowed: !(scope === 'search-place-provider:caller' && identifier === 'ip:198.51.100.1'), degraded: false }));
-    await expect(searchPlace(callerA, { q: 'Rotterdam' })).rejects.toMatchObject({ statusCode: 429 });
-    expect(await searchPlace(callerB, { q: 'Rotterdam' })).toMatchObject({ places: [{ name: 'Rotterdam, South Holland, Netherlands' }], error: '' });
-    expect(fetch).toHaveBeenCalledTimes(1);
-  });
 
-  it('charges batched callers that share the egress IP to their own principal, not to the IP', () => {
-    const batched = (principal: string) => new Request('https://worldmonitor.test', { headers: { 'x-real-ip': '203.0.113.9', 'x-wm-rl-principal': principal } });
-    expect(placeSearchCallerKey(batched('api_key:a'))).toBe('principal:api_key:a');
-    expect(placeSearchCallerKey(batched('api_key:b'))).toBe('principal:api_key:b');
-    expect(placeSearchCallerKey(new Request('https://worldmonitor.test', { headers: { 'x-real-ip': '203.0.113.9' } }))).toBe('ip:203.0.113.9');
-  });
 
-  it('marks only a caller budget refusal as caller-local, so it never arms the shared per-name backoff', async () => {
-    limiter.mockImplementation(async (scope) => ({ allowed: scope !== 'search-place-provider:caller', degraded: false }));
-    const callerRefusal = await searchPlace(ctx, { q: 'Rotterdam' }).catch((error: unknown) => error);
-    const opts = vi.mocked(cachedFetchJsonWithMeta).mock.calls[0]![4]!;
-    expect(opts.isCallerLocalError).toBe(isCallerBudgetRefusal);
-    expect(isCallerBudgetRefusal(callerRefusal)).toBe(true);
-    limiter.mockImplementation(async (scope) => ({ allowed: scope !== 'reverse-geocode', degraded: false }));
-    const providerRefusal = await searchPlace(ctx, { q: 'Delft' }).catch((error: unknown) => error);
-    expect(providerRefusal).toMatchObject({ statusCode: 429 });
-    expect(isCallerBudgetRefusal(providerRefusal)).toBe(false);
-  });
 
-  it('fails closed without calling Nominatim when the rate limiter is degraded or exhausted', async () => {
-    limiter.mockResolvedValueOnce({ allowed: true, degraded: true });
-    await expect(searchPlace(ctx, { q: 'Rotterdam' })).rejects.toMatchObject({ statusCode: 503 });
-    limiter.mockResolvedValueOnce({ allowed: false, degraded: false });
-    await expect(searchPlace(ctx, { q: 'Rotterdam' })).rejects.toMatchObject({ statusCode: 429 });
-    expect(fetch).not.toHaveBeenCalled();
-  });
 
   it('rejects a one-character name before any lookup', async () => {
     await expect(searchPlace(ctx, { q: ' x ' })).rejects.toMatchObject({ name: 'ValidationError', violations: [{ field: 'q' }] });

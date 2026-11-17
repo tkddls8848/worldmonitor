@@ -115,12 +115,6 @@ describe('get-country-chokepoint-index', () => {
     await assert.rejects(read('ZZ', false), validationFailure('iso2'));
   });
 
-  it('keeps the empty index for a free caller with an assigned code', async () => {
-    const response = await read('iq', false);
-    assert.deepEqual(response.exposures, []);
-    assert.equal(response.iso2, 'iq');
-    assert.deepEqual(sent.filter(entry => entry.startsWith('redis SET')), []);
-  });
 });
 
 describe('get-country-cost-shock', () => {

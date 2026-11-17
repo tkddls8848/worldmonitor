@@ -447,51 +447,6 @@ describe('api/telegram-feed first-party boundary', () => {
     assert.match(await res.text(), /SECRET BODY/);
   });
 
-  it('rejects a credential-less request that sends no Origin at all', async () => {
-    // The reported hole: isDisallowedOrigin returns false on an absent Origin,
-    // so `curl https://worldmonitor.app/api/telegram-feed?limit=200` collected
-    // every body. CORS is browser-enforced only and never gated this.
-    const res = await get({});
-    assert.equal(res.status, 401);
-    assert.equal(res.headers.get('cache-control'), 'no-store');
-    assert.doesNotMatch(await res.text(), /SECRET BODY/);
-  });
-
-  it('rejects a credential-less request that forges an allowed Origin', async () => {
-    // The reason the gate is not Origin-based: Origin is client-controlled at
-    // the wire level, so an Origin-only fix costs an attacker one curl -H.
-    const res = await get({ origin: 'https://worldmonitor.app' });
-    assert.equal(res.status, 401);
-    assert.doesNotMatch(await res.text(), /SECRET BODY/);
-  });
-
-  it('applies the same credential boundary to custom-channel reads', async () => {
-    const handler = (await import(`../api/telegram-feed.js?t=${Date.now()}`)).default;
-    const res = await handler(new Request(
-      'https://worldmonitor.app/api/telegram-feed?mode=channel&username=warintel',
-      { headers: { origin: 'https://worldmonitor.app' } },
-    ));
-
-    assert.equal(res.status, 401);
-    assert.equal(res.headers.get('cache-control'), 'no-store');
-    assert.doesNotMatch(await res.text(), /SECRET BODY/);
-  });
-
-  it('rejects a credential-less request that forges Sec-Fetch-Site: same-origin', async () => {
-    // Issue #3541 / closed PR #3554: no header-only browser signal is trusted.
-    const res = await get({ origin: 'https://worldmonitor.app', 'sec-fetch-site': 'same-origin' });
-    assert.equal(res.status, 401);
-    assert.doesNotMatch(await res.text(), /SECRET BODY/);
-  });
-
-  it('rejects a tampered session token', async () => {
-    const { token } = await issueSessionToken();
-    const tampered = `${token.slice(0, -2)}${token.slice(-2) === 'AA' ? 'BB' : 'AA'}`;
-    const res = await get({ origin: 'https://worldmonitor.app', 'X-WorldMonitor-Key': tampered });
-    assert.equal(res.status, 401);
-    assert.doesNotMatch(await res.text(), /SECRET BODY/);
-  });
-
   it('still answers the CORS preflight without a credential', async () => {
     // The gate sits after the OPTIONS branch on purpose: a browser cannot
     // attach credentials to a preflight, so gating it would break the panel.

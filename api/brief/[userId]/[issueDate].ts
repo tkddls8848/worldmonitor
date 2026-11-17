@@ -1,16 +1,14 @@
 /**
  * Public brief magazine endpoint.
  *
- * GET /api/brief/{userId}/{issueSlot}?t={token}
+ * GET /api/brief/{userId}/{issueSlot}
  *   -> 200 text/html (rendered magazine)
- *   -> 403 on bad token (generic message, no userId echo)
- *   -> 404 on Redis miss (minimal "expired" HTML)
- *   -> 503 if BRIEF_URL_SIGNING_SECRET is not configured
+ *   -> 404 on Redis miss or a userId other than the owner's (minimal
+ *      "expired" HTML)
  *
- * The HMAC-signed token in `?t=` is the sole credential. The route is
- * auth-less in the Clerk sense — whoever holds a valid URL can read
- * the magazine. URLs are delivered to users via already-authenticated
- * channels (push, email, dashboard panel).
+ * Access control is the personal server's HTTP Basic auth. A `?t=`
+ * token on older links is ignored. The only brief owner is
+ * PERSONAL_OWNER_ID (shared/personal-owner.js).
  *
  * The Redis key brief:{userId}:{issueSlot} is per-user and written by
  * the digest composer. The file/variable name still says issueDate for
@@ -27,7 +25,7 @@ import { captureSilentError } from '../../_sentry-edge.js';
 import { renderBriefMagazine } from '../../../server/_shared/brief-render.js';
 import { briefFontPlatform } from '../../../server/_shared/brief-font-platform.js';
 import { readRawJsonFromUpstash, redisPipeline } from '../../_upstash-json.js';
-import { verifyBriefToken, BriefUrlError } from '../../../server/_shared/brief-url';
+import { PERSONAL_OWNER_ID } from '../../../shared/personal-owner.js';
 import {
   BRIEF_PUBLIC_POINTER_PREFIX,
   buildPublicBriefUrl,
@@ -83,11 +81,6 @@ function renderErrorPage(heading: string, body: string): string {
 const EXPIRED_PAGE = renderErrorPage(
   'This brief has expired.',
   'Briefs are kept for seven days after they are issued. Your next brief will be delivered on schedule.',
-);
-
-const FORBIDDEN_PAGE = renderErrorPage(
-  'This link is no longer valid.',
-  "The brief link you followed is incomplete or has been tampered with. Open the most recent notification from WorldMonitor to read today's brief.",
 );
 
 const UNAVAILABLE_PAGE = renderErrorPage(
@@ -169,13 +162,6 @@ export default async function handler(
     return new Response('Method not allowed', { status: 405, headers: { ...cors, Allow: 'GET, HEAD, OPTIONS' } });
   }
 
-  const secret = process.env.BRIEF_URL_SIGNING_SECRET ?? '';
-  const prevSecret = process.env.BRIEF_URL_SIGNING_SECRET_PREV || undefined;
-  if (!secret) {
-    console.error('[api/brief] BRIEF_URL_SIGNING_SECRET is not configured');
-    return htmlResponse(req, 503, UNAVAILABLE_PAGE);
-  }
-
   // Extract path params from URL. Vercel edge functions surface them
   // via the URL pathname; we parse directly to avoid a runtime dep on
   // a route-params helper that may not be available.
@@ -195,20 +181,8 @@ export default async function handler(
   } catch {
     return htmlResponse(req, 404, EXPIRED_PAGE);
   }
-  const token = url.searchParams.get('t') ?? '';
-
-  let verified: boolean;
-  try {
-    verified = await verifyBriefToken(userId, issueDate, token, secret, prevSecret);
-  } catch (err) {
-    if (err instanceof BriefUrlError && err.code === 'missing_secret') {
-      console.error('[api/brief] secret missing after handler start — env misconfigured');
-      return htmlResponse(req, 503, UNAVAILABLE_PAGE);
-    }
-    throw err;
-  }
-  if (!verified) {
-    return htmlResponse(req, 403, FORBIDDEN_PAGE);
+  if (userId !== PERSONAL_OWNER_ID) {
+    return htmlResponse(req, 404, EXPIRED_PAGE);
   }
 
   // U11: start the telemetry-only watchlist lookup before the Redis
@@ -240,9 +214,8 @@ export default async function handler(
   // Prepare the share URL (if BRIEF_SHARE_SECRET is set) so the Share
   // button in the rendered magazine can navigator.share / clipboard
   // the URL without having to make an authenticated fetch at click
-  // time. The HMAC token already verified this reader legitimately
-  // holds the per-user magazine URL, so deriving + materialising the
-  // share pointer here is as safe as rendering the magazine at all.
+  // time. Deriving + materialising the share pointer here is as safe as
+  // rendering the magazine at all.
   //
   // If the secret isn't configured or the pointer write fails, we
   // still render the magazine — the Share button just gracefully

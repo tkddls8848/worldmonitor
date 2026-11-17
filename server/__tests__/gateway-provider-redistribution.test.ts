@@ -57,13 +57,6 @@ beforeEach(() => {
 });
 afterEach(() => { vi.unstubAllEnvs(); vi.clearAllMocks(); });
 
-test.each(['enterprise-test', 'wm_valid_user_key'])('empty primary uses secondary %s through authentication and provider policy', async (key) => {
-  const response = await read({ 'X-WorldMonitor-Key': '', 'X-Api-Key': key });
-  expect(response.status).toBe(200);
-  expect(await response.json()).toMatchObject({ theaters: [] });
-  expect(getCachedJson).toHaveBeenCalled();
-  if (key.startsWith('wm_')) expect(validateUserApiKey).toHaveBeenCalledWith(key);
-});
 test('redistributable data remains available to the secondary enterprise key', async () => {
   vi.mocked(getCachedJson).mockResolvedValue({ ...posture, provider: 'wingbits' });
   const response = await read({ 'X-WorldMonitor-Key': '', 'X-Api-Key': 'enterprise-test' });
@@ -83,29 +76,12 @@ test('nonempty primary retains priority over a secondary enterprise key', async 
   expect(response.status).toBe(200);
   expect((await response.json()).theaters).toHaveLength(1);
 });
-test.each(['invalid', 'wm_invalid_key'])('invalid primary %s cannot borrow a valid secondary credential', async (key) => {
-  const response = await read({ 'X-WorldMonitor-Key': key, 'X-Api-Key': 'enterprise-test' });
-  expect(response.status).toBe(401);
-  expect(getCachedJson).not.toHaveBeenCalled();
-});
-test('signed MCP remains restricted and forged markers cannot grant authority', async () => {
-  const signed = await signInternalMcpRequest({ method: 'GET', url, userId: 'paid-account', secret: process.env.MCP_INTERNAL_HMAC_SECRET! });
-  const response = await read(buildInternalMcpHeaders(signed));
-  expect(response.status).toBe(200);
-  expect(await response.json()).toMatchObject({ theaters: [] });
-  expect((await read({ [INTERNAL_MCP_VERIFIED_HEADER]: 'forged' })).status).toBe(401);
-});
 
 const countryPath = '/api/intelligence/v1/get-country-signal-observations';
 const countryUrl = `https://worldmonitor.app${countryPath}?country_code=IR&family=COUNTRY_SIGNAL_FAMILY_POSTURE`;
 const countryGateway = createDomainGateway(createIntelligenceServiceRoutes({ getCountrySignalObservations } as IntelligenceServiceHandler).filter(route => route.path === countryPath));
 const readCountry = (headers: HeadersInit = {}) => countryGateway(new Request(countryUrl, { headers }), { waitUntil: () => {} });
 
-test.each([{}, { 'x-user-id': 'invented', 'x-pro-user': 'true' }, { [INTERNAL_MCP_VERIFIED_HEADER]: 'forged' }])('country projection rejects unverified authority before source IO: %j', async headers => {
-  const response = await readCountry(headers);
-  expect(response.status).toBe(401);
-  expect(getCachedJson).not.toHaveBeenCalled();
-});
 
 test.each(['header', 'cookie'])('country projection preserves qualified observations for an ordinary %s session', async kind => {
   vi.mocked(getCachedJson).mockResolvedValue({ provider: 'adsb.lol', theaters: [{ theater: 'iran-theater', postureLevel: 'critical', activeFlights: 10, assessedAt: 1792324800000 }] });

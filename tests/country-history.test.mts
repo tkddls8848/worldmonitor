@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
-import { countryHistoryDays, bindCountryHistoryAccess } from '../server/_shared/country-history-access';
+import { countryHistoryDays } from '../server/_shared/country-history-access';
 import { getCountryHistory } from '../server/worldmonitor/intelligence/v1/get-country-history';
 import { getFeaturesForPlan, mergeEntitlementFeatures } from '../convex/lib/entitlements';
 import { __resetKeyPrefixCacheForTests } from '../server/_shared/redis';
@@ -37,18 +37,18 @@ test('reader clamps before Redis, preserves gaps and annotates formula breaks', 
   }) as typeof fetch;
   const request = new Request('https://example.test/api/intelligence/v1/get-country-history?country=US&days=365', { headers: { 'x-history-days': '365', 'x-user-id': 'spoofed' } });
   const ctx = { request, pathParams: {}, headers: {} };
+  // Personal fork: the owner always gets the full year; spoofed headers change nothing.
   const result = await getCountryHistory(ctx, { country: 'US', days: 365 });
-  assert.equal(result.allowedDays, 7);
-  assert.equal(result.effectiveDays, 7);
+  assert.equal(result.allowedDays, 365);
+  assert.equal(result.effectiveDays, 365);
   assert.equal(result.points.length, 3);
   assert.equal(result.points[1].ciiVersionBreak, true);
   assert.equal(commands[0][0][1], 'history:country:US');
   assert.equal(commands[0][1][1], 'seed-meta:history:country');
-  assert.equal(commands[0][0][2], day - 6);
-  bindCountryHistoryAccess(request, 90);
-  const paid = await getCountryHistory(ctx, { country: 'US', days: 365 });
-  assert.equal(paid.allowedDays, 90);
-  assert.equal(commands[1][0][2], day - 89);
+  assert.equal(commands[0][0][2], day - 364);
+  const shorter = await getCountryHistory(ctx, { country: 'US', days: 30 });
+  assert.equal(shorter.effectiveDays, 30);
+  assert.equal(commands[1][0][2], day - 29);
 });
 
 test('reader rejects invalid requests before I/O and distinguishes failed storage from valid empty history', async () => {

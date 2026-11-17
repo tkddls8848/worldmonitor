@@ -531,8 +531,6 @@ describe('premium panels route their denials through the classifier', () => {
  * is genuinely not a statement about the user's plan.
  */
 const DENIAL_SOURCES = [
-  'api/latest-brief.ts',
-  'api/chat-analyst.ts',
   'server/_shared/entitlement-check.ts',
 ];
 

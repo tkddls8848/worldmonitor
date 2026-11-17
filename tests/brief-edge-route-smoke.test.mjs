@@ -198,7 +198,7 @@ describe('infrastructure-error vs miss (both routes must not collapse)', () => {
     try {
       const { default: handler } = await import('../api/brief/[userId]/[issueDate].ts');
       const { signBriefToken } = await import('../server/_shared/brief-url.ts');
-      const userId = 'user_test';
+      const userId = 'owner'; // PERSONAL_OWNER_ID: the route serves only the owner
       const issueDate = '2026-04-17-0800';
       const token = await signBriefToken(userId, issueDate, process.env.BRIEF_URL_SIGNING_SECRET);
       const req = new Request(

@@ -50,26 +50,7 @@ afterEach(() => {
 });
 
 describe("summarizeArticle handler premium mode gate", () => {
-  test("anonymous article summaries are rejected before provider fetch", async () => {
-    const result = await summarizeArticle(makeContext(), request("brief"));
 
-    expect(result).toMatchObject({
-      summary: "",
-      fallback: true,
-      error: "Pro subscription required",
-      errorType: "AuthError",
-      status: "SUMMARIZE_STATUS_ERROR",
-      statusDetail: "Pro subscription required",
-    });
-    expect(globalThis.fetch).not.toHaveBeenCalled();
-  });
-
-  test("anonymous analysis mode is rejected before provider fetch", async () => {
-    const result = await summarizeArticle(makeContext({ "X-WorldMonitor-Key": "wms_basic_session" }), request("analysis"));
-
-    expect(result.error).toBe("Pro subscription required");
-    expect(globalThis.fetch).not.toHaveBeenCalled();
-  });
 
   test("translation mode remains outside the premium summary gate", async () => {
     delete process.env.OPENROUTER_API_KEY;

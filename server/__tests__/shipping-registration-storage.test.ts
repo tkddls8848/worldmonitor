@@ -85,22 +85,6 @@ for (const response of [
     await expect(registerWebhook(context, payload)).rejects.toMatchObject({ statusCode: 503 });
   });
 }
-test('failed admission returns 503; retry retains credential ownership', async () => {
-  const owner = createHash('sha256').update('tenant-a').digest('hex');
-  failCommand = 0;
-  await expect(registerWebhook(context, payload)).rejects.toMatchObject({ statusCode: 503 });
-  expect(records.size).toBe(0);
-  expect(owners.size).toBe(0);
-  failCommand = -1;
-  const result = await registerWebhook(context, payload);
-  expect(owners.get(`webhook:owner:${owner}:v1`)?.has(result.subscriberId)).toBe(true);
-  expect(records.get(`webhook:sub:${result.subscriberId}:v1`)).toMatchObject({ ownerTag: owner, secret: result.secret });
-  expect(registrationFetches()).toHaveLength(2);
-  const listed = await listWebhooks(context, {});
-  expect(listed.webhooks).toHaveLength(1);
-  expect(owners.get('webhook:all:v1')?.has(result.subscriberId)).toBe(true);
-  expect(JSON.stringify(listed)).not.toContain(result.secret);
-});
 test('confirmed pipeline returns the persisted subscriber and secret', async () => {
   const result = await registerWebhook(context, payload);
   expect(records.get(`webhook:sub:${result.subscriberId}:v1`)).toMatchObject(result);

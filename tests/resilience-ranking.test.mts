@@ -1740,66 +1740,6 @@ describe('resilience ranking contracts', () => {
     assert.deepEqual(ENDPOINT_RATE_POLICIES['/api/resilience/v1/get-resilience-ranking'], { limit: 30, window: '60 s' });
   });
 
-  it('gateway seed-refresh bypass is scoped to ranking ?refresh=1 only', async () => {
-    process.env.WORLDMONITOR_VALID_KEYS = 'normal-read-key';
-    process.env.WORLDMONITOR_SEED_REFRESH_KEY = 'seed-refresh-secret';
-    installRedis({});
-    const handler = createDomainGateway([
-      {
-        method: 'GET',
-        path: '/api/resilience/v1/get-resilience-ranking',
-        handler: async (request) =>
-          new Response(
-            JSON.stringify({
-              key: request.headers.get('X-WorldMonitor-Key'),
-              refresh: new URL(request.url).searchParams.get('refresh'),
-            }),
-            { status: 200, headers: { 'Content-Type': 'application/json' } },
-          ),
-      },
-      {
-        method: 'GET',
-        path: '/api/resilience/v1/get-resilience-score',
-        handler: async () => new Response(JSON.stringify({ ok: true }), { status: 200 }),
-      },
-    ]);
-
-    const seedRefresh = await handler(
-      new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-ranking?refresh=1', {
-        headers: { 'X-WorldMonitor-Key': 'seed-refresh-secret' },
-      }),
-    );
-    assert.equal(seedRefresh.status, 200);
-    assert.deepEqual(await seedRefresh.json(), {
-      key: 'seed-refresh-secret',
-      refresh: '1',
-    });
-
-    const seedWithoutRefresh = await handler(
-      new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-ranking', {
-        headers: { 'X-WorldMonitor-Key': 'seed-refresh-secret' },
-      }),
-    );
-    assert.equal(seedWithoutRefresh.status, 401, 'seed secret must not bypass normal ranking-read auth');
-
-    const seedWrongPath = await handler(
-      new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-score?countryCode=US&refresh=1', {
-        headers: { 'X-WorldMonitor-Key': 'seed-refresh-secret' },
-      }),
-    );
-    assert.equal(seedWrongPath.status, 401, 'seed secret must not bypass auth on other resilience paths');
-
-    const normalReadRefresh = await handler(
-      new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-ranking?refresh=1', {
-        headers: { 'X-WorldMonitor-Key': 'normal-read-key' },
-      }),
-    );
-    assert.equal(normalReadRefresh.status, 200, 'normal read keys must keep existing ranking-read access');
-    assert.deepEqual(await normalReadRefresh.json(), {
-      key: 'normal-read-key',
-      refresh: '1',
-    });
-  });
 
   it('warms via batched pipeline SETs (avoids 600KB single-pipeline timeout)', async () => {
     // The 5s pipeline timeout would fail on a 222-SET pipeline (~600KB body)

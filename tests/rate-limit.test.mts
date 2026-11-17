@@ -353,133 +353,8 @@ describe('rate-limit fail-open / fail-closed posture (#3531 M9)', () => {
     });
   }
 
-  it('gateway reverse-geocode RPC is a Nominatim provider route with a matched 60/min fail-closed policy (#6432)', async () => {
-    // #6432 — the second Nominatim caller. The legacy edge route carries a
-    // per-IP 60/min budget (#6234); this RPC must carry the same policy or it
-    // silently inherits the gateway's 600/min availability-first fallback,
-    // leaving half the egress exposure open. Since the RPC has no handler --
-    // checkEndpointRateLimit runs in the gateway before any route logic -- the
-    // policy is the whole metering, so assert it stays registered, stays in
-    // the fail-closed requirement, and degrades to 503.
-    delete process.env.UPSTASH_REDIS_REST_URL;
-    delete process.env.UPSTASH_REDIS_REST_TOKEN;
-    const mod = await importFreshRateLimitModule();
-    const pathname = '/api/infrastructure/v1/reverse-geocode';
 
-    assert.deepEqual(ENDPOINT_RATE_POLICIES[pathname], { limit: 60, window: '60 s' });
-    assert.ok(
-      pathname in FAIL_CLOSED_ENDPOINT_RATE_POLICY_REQUIRED,
-      'reverse-geocode RPC must stay in the fail-closed requirement registry — a Redis outage must 503, not inherit the fail-open 600/min fallback',
-    );
 
-    const res = await mod.checkEndpointRateLimit(
-      makeRequest({ 'cf-connecting-ip': '203.0.113.7' }),
-      pathname,
-      { 'Access-Control-Allow-Origin': 'https://worldmonitor.app' },
-    );
-
-    assert.ok(res, 'expected reverse-geocode RPC policy to fail closed without Redis config');
-    assert.equal(res.status, 503);
-    assert.equal(res.headers.get('X-RateLimit-Mode'), 'degraded');
-
-    process.env.WORLDMONITOR_VALID_KEYS = 'reverse-geocode-gateway-test-key';
-    __resetRateLimitForTest();
-    const { createDomainGateway } = await import('../server/gateway.ts');
-    let handlerCalls = 0;
-    const gateway = createDomainGateway([{
-      method: 'GET',
-      path: pathname,
-      handler: async () => {
-        handlerCalls += 1;
-        return new Response(JSON.stringify({ ok: true }), { status: 200 });
-      },
-    }]);
-    const gatewayRes = await gateway(new Request(
-      `https://worldmonitor.app${pathname}?lat=40.7&lon=-74.0`,
-      {
-        headers: {
-          Origin: 'https://worldmonitor.app',
-          'X-WorldMonitor-Key': 'reverse-geocode-gateway-test-key',
-          'x-real-ip': '203.0.113.7',
-        },
-      },
-    ));
-
-    assert.equal(gatewayRes.status, 503);
-    assert.equal(gatewayRes.headers.get('X-RateLimit-Mode'), 'degraded');
-    assert.equal(handlerCalls, 0, 'the gateway must reject before route execution');
-  });
-
-  it('anonymous crypto quote requests fail closed before cache or provider I/O', async () => {
-    delete process.env.UPSTASH_REDIS_REST_URL;
-    delete process.env.UPSTASH_REDIS_REST_TOKEN;
-    process.env.WM_SESSION_SECRET = 'synthetic-crypto-session-secret-at-least-32-bytes';
-    __resetRateLimitForTest();
-    const { issueSessionToken } = await import('../api/_session.js');
-    const { createDomainGateway } = await import('../server/gateway.ts');
-    const { createMarketServiceRoutes } = await import('../src/generated/server/worldmonitor/market/v1/service_server.ts');
-    const { marketHandler } = await import('../server/worldmonitor/market/v1/handler.ts');
-    const token = (await issueSessionToken()).token;
-    const calls: string[] = [];
-    globalThis.fetch = (async (input) => {
-      calls.push(String(input));
-      return new Response('unexpected I/O', { status: 500 });
-    }) as typeof fetch;
-    const gateway = createDomainGateway(createMarketServiceRoutes(marketHandler));
-    const response = await gateway(new Request(
-      'https://worldmonitor.app/api/market/v1/list-crypto-quotes?ids=dogecoin',
-      { headers: { Origin: 'https://worldmonitor.app', 'X-WorldMonitor-Key': token, 'x-real-ip': '203.0.113.7' } },
-    ));
-    assert.equal(response.status, 503);
-    assert.equal(response.headers.get('X-RateLimit-Mode'), 'degraded');
-    assert.deepEqual(calls, [], 'no cache or provider transport reached');
-  });
-
-  it('crypto quote requests stop at the 60/min budget before additional provider work', async () => {
-    const { installRedis } = await import('./helpers/fake-upstash-redis.mts');
-    const redis = installRedis({ 'market:crypto:v1': { quotes: [] } });
-    process.env.WM_SESSION_SECRET = 'synthetic-crypto-cap-secret-at-least-32-bytes';
-    __resetRateLimitForTest();
-    const { issueSessionToken } = await import('../api/_session.js');
-    const { createDomainGateway } = await import('../server/gateway.ts');
-    const { createMarketServiceRoutes } = await import('../src/generated/server/worldmonitor/market/v1/service_server.ts');
-    const { marketHandler } = await import('../server/worldmonitor/market/v1/handler.ts');
-    let providerCalls = 0;
-    let admissions = 0;
-    globalThis.fetch = (async (input, init) => {
-      if (new URL(String(input)).hostname === 'api.coingecko.com') {
-        providerCalls += 1;
-        return Response.json([{ id: 'budget-coin', name: 'Budget coin', symbol: 'bud', current_price: 1 }]);
-      }
-      const response = await redis.fetchImpl(input, init);
-      if (init?.body) {
-        const commands = JSON.parse(String(init.body));
-        if (Array.isArray(commands[0])) {
-          const results = await response.json();
-          for (let i = 0; i < commands.length; i += 1) {
-            if (String(commands[i][0]).toUpperCase() === 'EVALSHA') {
-              // The shared fake is always-allow. Model the storage reply for
-              // this route so the real SDK/gateway also exercise exhaustion.
-              results[i] = { result: [60 - ++admissions, 60] };
-            }
-          }
-          return Response.json(results);
-        }
-      }
-      return response;
-    }) as typeof fetch;
-    const token = (await issueSessionToken()).token;
-    const gateway = createDomainGateway(createMarketServiceRoutes(marketHandler));
-    const request = () => new Request('https://worldmonitor.app/api/market/v1/list-crypto-quotes?ids=budget-coin', {
-      headers: { Origin: 'https://worldmonitor.app', 'X-WorldMonitor-Key': token, 'x-real-ip': '203.0.113.8' },
-    });
-    for (let i = 0; i < 60; i += 1) assert.equal((await gateway(request())).status, 200);
-    assert.equal(providerCalls, 1, 'successful calls reuse the gap cache');
-    const blocked = await gateway(request());
-    assert.equal(blocked.status, 429);
-    assert.ok(Number(blocked.headers.get('Retry-After')) > 0);
-    assert.equal(providerCalls, 1, 'exhausted callers cannot cause provider work');
-  });
 
   it('paid-provider market routes each have explicit fail-closed policies (#6236)', async () => {
     delete process.env.UPSTASH_REDIS_REST_URL;
@@ -670,7 +545,6 @@ describe('rate-limit fail-closed call-site policy (#3531)', () => {
   // so a future caller reverting to bare `checkRateLimit(req, cors)` is caught
   // in CI rather than during a Redis incident.
   const FAIL_CLOSED_REQUIRED = [
-    'api/chat-analyst.ts', // streaming LLM analyst, Pro-only
     'api/widget-agent.ts', // frontier-model widget proxy
     'api/create-checkout.ts', // paid Dodo checkout relay
   ];
@@ -694,39 +568,9 @@ describe('rate-limit fail-closed call-site policy (#3531)', () => {
 describe('scoped rate-limit degraded call-site policy (#3531)', () => {
   const SCOPED_RATE_LIMIT_CALLERS = [
     {
-      path: 'server/worldmonitor/cyber/v1/get-network-info.ts',
-      expected: /if\s*\(!budget\.allowed \|\| budget\.degraded\) throw new ProviderBudgetError/,
-      reason: 'both provider-wide lookup budgets fail closed on Redis degradation before any RIPEstat work',
-    },
-    {
-      path: 'server/worldmonitor/aviation/v1/track-aircraft.ts',
-      expected: /if\s*\(limit\.degraded\)\s*\{[\s\S]*?throw Object\.assign\(new ApiError\(503,/,
-      reason: 'aircraft identifier lookups must fail closed before cache or provider work when the shared limiter is unavailable',
-    },
-    {
-      path: 'api/reverse-geocode.js',
-      expected: /failClosed:\s*true/,
-      reason: 'the provider-wide Nominatim bucket is shared across both routes and must fail closed before upstream work',
-    },
-    {
-      path: 'server/worldmonitor/infrastructure/v1/reverse-geocode.ts',
-      expected: /if\s*\(\s*providerLimit\.degraded\s*\)\s*\{/,
-      reason: 'the gateway half of the provider-wide Nominatim bucket must fail closed before upstream work',
-    },
-    {
-      path: 'server/worldmonitor/infrastructure/v1/search-place.ts',
-      expected: /if\s*\(\s*providerLimit\.degraded\s*\)\s*throw new ApiError\(503/,
-      reason: 'place-name search spends the provider-wide Nominatim bucket and must fail closed before upstream work',
-    },
-    {
       path: 'api/a2a.ts',
       expected: /Redis-degraded scoped limits intentionally stay availability-first/,
       reason: 'A2A concierge serves only anonymous, quota-free, cheap catalog matching — degradation is logged and stays availability-first',
-    },
-    {
-      path: 'api/ask.ts',
-      expected: /Redis-degraded scoped limits intentionally stay availability-first/,
-      reason: 'NLWeb /ask serves only anonymous, quota-free, cheap catalog matching — degradation is logged and stays availability-first',
     },
     {
       path: 'api/docs-mcp.ts',
@@ -742,11 +586,6 @@ describe('scoped rate-limit degraded call-site policy (#3531)', () => {
       path: 'api/skills/fetch-agentskills.ts',
       expected: /Redis-degraded scoped limits intentionally stay availability-first/,
       reason: 'agent-skills import proxy fetches one public host behind a fixed allowlist and is called by the settings importer - degradation is logged and stays availability-first',
-    },
-    {
-      path: 'api/travel-risk-assessment.ts',
-      expected: /Redis-degraded scoped limits intentionally stay availability-first here/,
-      reason: 'the travel risk export is plan-gated and spends no LLM budget, and its sources live in the same Redis, so a degraded limiter already means a 503 build - degradation is logged and stays availability-first',
     },
     {
       path: 'api/user-prefs.ts',
@@ -885,84 +724,6 @@ describe('slow-Redis timeout is degraded, not a silent allow (#6412 review)', ()
   });
 });
 
-describe('legacy edge-function rate-limit policy mirrors (#6234)', () => {
-  // `api/*.js` edge functions are self-contained JS and cannot import
-  // `../server/` (AGENTS.md, enforced by scripts/lint-boundaries.mjs and the
-  // pre-push esbuild check). So unlike api/mcp-proxy.ts, which reads
-  // ENDPOINT_RATE_POLICIES at module load, these handlers duplicate their
-  // budget as a literal constant and enforce it via api/_rate-limit.js.
-  //
-  // Without this test the registry entry would be decorative: the audit script
-  // (scripts/enforce-rate-limit-policies.mjs) and docs/usage-rate-limits.mdx
-  // would advertise a number no handler enforces, which is exactly the
-  // declare-vs-serve divergence the repo treats as a defect class.
-  const MIRRORED_JS_POLICIES = [
-    { path: 'api/youtube/live.js', route: '/api/youtube/live', scope: 'youtube-live' },
-    { path: 'api/reverse-geocode.js', route: '/api/reverse-geocode', scope: 'reverse-geocode' },
-  ];
-
-  for (const { path, route, scope } of MIRRORED_JS_POLICIES) {
-    it(`${path} enforces the ENDPOINT_RATE_POLICIES['${route}'] budget`, async () => {
-      const fs = await import('node:fs');
-      const src = fs.readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
-      const policy = ENDPOINT_RATE_POLICIES[route];
-      assert.ok(policy, `${route} must stay in ENDPOINT_RATE_POLICIES`);
-
-      const limitMatch = src.match(/const RATE_LIMIT_PER_MINUTE = (\d+);/);
-      assert.ok(limitMatch, `${path} must declare a RATE_LIMIT_PER_MINUTE constant`);
-      assert.equal(
-        Number(limitMatch[1]),
-        policy.limit,
-        `${path} enforces ${limitMatch[1]}/min but ENDPOINT_RATE_POLICIES['${route}'] declares ${policy.limit} — api/*.js cannot import server/_shared/rate-limit.ts, so the budget must be updated in both places`,
-      );
-      assert.equal(
-        policy.window,
-        '60 s',
-        `${route} must stay on a 60 s window while ${path} hard-codes a per-minute budget`,
-      );
-
-      const scopeMatch = src.match(/const RATE_LIMIT_SCOPE = '([^']+)';/);
-      assert.ok(scopeMatch, `${path} must declare a RATE_LIMIT_SCOPE constant`);
-      assert.equal(
-        scopeMatch[1],
-        scope,
-        `${path} rate-limit scope changed — Redis keys are prefixed rl:<scope>, so renaming it silently resets every caller's window`,
-      );
-
-      // Assert the WIRING, not just the declarations. A bare /checkRateLimit\(/
-      // presence check proves neither constant reaches the call: dropping
-      // `limit:` makes api/_rate-limit.js apply `opts.limit ?? DEFAULT_RATE_LIMIT`
-      // (600/min — a 20x silent widening) and dropping `scope:` moves the route
-      // into the shared `rl` global bucket, both while the two constants sit
-      // there unused and every assertion above still passes. Match the option
-      // keys inside the call so the registry entry cannot become decorative.
-      // (#6412 review)
-      const callMatch = src.match(/checkRateLimit\(\s*\w+\s*,\s*\w+\s*,\s*\{([\s\S]*?)\}\s*\)/);
-      assert.ok(callMatch, `${path} must call checkRateLimit with an explicit options object`);
-      const callOptions = callMatch[1] ?? '';
-      assert.match(
-        callOptions,
-        /\blimit:\s*RATE_LIMIT_PER_MINUTE\b/,
-        `${path} must pass limit: RATE_LIMIT_PER_MINUTE to checkRateLimit — without it the call silently falls back to the 600/min global default and the registry entry is decorative`,
-      );
-      assert.match(
-        callOptions,
-        /\bscope:\s*RATE_LIMIT_SCOPE\b/,
-        `${path} must pass scope: RATE_LIMIT_SCOPE to checkRateLimit — without it the route shares the global 'rl' bucket instead of rl:${scope}`,
-      );
-      assert.match(
-        callOptions,
-        /\bwindow:\s*'60 s'/,
-        `${path} must pass window: '60 s' to checkRateLimit so the enforced window matches ENDPOINT_RATE_POLICIES['${route}']`,
-      );
-      assert.match(
-        callOptions,
-        /\bctx\b/,
-        `${path} must forward ctx to checkRateLimit so the degraded-path Sentry envelope survives isolate teardown`,
-      );
-    });
-  }
-});
 
 describe('rate-limit constants', () => {
   it('exposes the degraded marker shape both surfaces depend on', () => {

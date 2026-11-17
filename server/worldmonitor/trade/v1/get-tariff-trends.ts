@@ -21,7 +21,6 @@ import type {
   TariffTrendUnavailableReason,
 } from '../../../../src/generated/server/worldmonitor/trade/v1/service_server';
 import { readCachedJson } from '../../../_shared/redis';
-import { isCallerPremium } from '../../../_shared/premium-check';
 import {
   SIMPLE_INDICATOR,
   readTradestatsSeries,
@@ -308,24 +307,9 @@ function served(
 }
 
 export async function getTariffTrends(
-  ctx: ServerContext,
+  _ctx: ServerContext,
   req: GetTariffTrendsRequest,
 ): Promise<GetTariffTrendsResponse> {
-  const isPro = await isCallerPremium(ctx.request);
-  if (!isPro) {
-    // Free tier: empty series, no seed touch. Match the prior response shape
-    // (upstreamUnavailable true) and leave the reason unspecified — this is an
-    // entitlement gate, not a coverage or cache fault.
-    return {
-      datapoints: [],
-      fetchedAt: '',
-      upstreamUnavailable: true,
-      unavailableReason: REASON.served,
-      coverageStartYear: 0,
-      coverageEndYear: 0,
-    };
-  }
-
   const normalized = normalizeTariffTrendRequest(req);
   if (!normalized) return unavailable(REASON.invalidRequest, false);
   if (isBilateralRequest(normalized)) return getBilateralTrend(normalized);

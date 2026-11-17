@@ -1,5 +1,3 @@
-import type { PremiumCallerIdentity } from '../../../_shared/premium-check';
-
 /**
  * New jobs use a 128-bit hex suffix. The 8-character form stays valid so
  * in-flight jobs and published examples still parse.
@@ -33,21 +31,10 @@ async function sha256Hex(value: string): Promise<string> {
 }
 
 /**
- * Principal token stored beside the job. User-bound callers share one token
- * so a person can poll a job they enqueued with a different credential.
- * Enterprise keys have no user id; hash the presented key instead of writing
- * it raw. SHA-256, not a non-cryptographic hash: the caller chooses the key,
- * so a collision would let them read another principal's job.
+ * Principal token stored beside the job. The personal server has a single
+ * owner behind HTTP Basic auth, so the token hashes that owner id. The
+ * user: prefix keeps the token identical to the one written for a user id.
  */
-export async function scenarioOwnerToken(
-  identity: PremiumCallerIdentity,
-  request: Request,
-): Promise<string | null> {
-  if (!identity.isPremium) return null;
-  const material = identity.userId
-    ? `user:${identity.userId}`
-    : request.headers.get('X-WorldMonitor-Key') ?? request.headers.get('X-Api-Key') ?? '';
-  if (!identity.userId && !material) return null;
-  const token = await sha256Hex(identity.userId ? material : `key:${material}`);
-  return OWNER_TOKEN_RE.test(token) ? token : null;
+export async function scenarioOwnerToken(ownerId: string): Promise<string> {
+  return sha256Hex(`user:${ownerId}`);
 }

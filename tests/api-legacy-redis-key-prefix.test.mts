@@ -519,7 +519,7 @@ describe('brief envelopes stay raw under preview (#7674)', () => {
     process.env.BRIEF_URL_SIGNING_SECRET ??= 'test-secret-prefix-7674';
     const { default: handler } = await import('../api/brief/[userId]/[issueDate].ts');
     const { signBriefToken } = await import('../server/_shared/brief-url.ts');
-    const userId = 'user_prefixtest';
+    const userId = 'owner'; // PERSONAL_OWNER_ID: the brief route serves only the owner
     const issueDate = '2026-04-17-0800';
     const token = await signBriefToken(userId, issueDate, process.env.BRIEF_URL_SIGNING_SECRET);
 

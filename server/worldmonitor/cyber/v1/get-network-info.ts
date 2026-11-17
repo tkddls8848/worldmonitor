@@ -1,6 +1,5 @@
 import type { GetNetworkInfoRequest, GetNetworkInfoResponse, ServerContext } from '../../../../src/generated/server/worldmonitor/cyber/v1/service_server';
 import { cachedFetchJsonWithMeta } from '../../../_shared/redis';
-import { checkScopedRateLimit, getClientRateLimitKey } from '../../../_shared/rate-limit';
 import { isBlockedResolvedAddress } from '../../../_shared/ip-address-classification';
 
 function publicIp(input: string): string | null {
@@ -13,13 +12,6 @@ function publicIp(input: string): string | null {
     ip = input;
   } else return null;
   return isBlockedResolvedAddress(ip) ? null : ip;
-}
-
-class ProviderBudgetError extends Error {
-  constructor(message: string, readonly callerLocal = false) {
-    super(message);
-    this.name = 'ProviderBudgetError';
-  }
 }
 
 const text = (value: unknown, max = 256): string => typeof value === 'string' ? value.trim().slice(0, max) : '';
@@ -40,7 +32,7 @@ async function ripe(endpoint: string, ip: string, signal: AbortSignal): Promise<
   return body.data as Record<string, unknown>;
 }
 
-export async function getNetworkInfo(ctx: ServerContext, req: GetNetworkInfoRequest): Promise<GetNetworkInfoResponse> {
+export async function getNetworkInfo(_ctx: ServerContext, req: GetNetworkInfoRequest): Promise<GetNetworkInfoResponse> {
   const empty = (status: string, ip = ''): GetNetworkInfoResponse => ({
     status, ip, asns: [], prefix: '', isLessSpecific: false, hostnames: [], lookupAt: '', routingAt: '',
   });
@@ -51,15 +43,6 @@ export async function getNetworkInfo(ctx: ServerContext, req: GetNetworkInfoRequ
   if (process.env.RIPESTAT_NETWORK_INFO_ENABLED !== 'true') return empty('disabled', ip);
   try {
     const { data: result } = await cachedFetchJsonWithMeta<GetNetworkInfoResponse>(`cyber:network:v1:${ip}`, 86400, async () => {
-      // A caller cannot consume the deployment's entire provider allowance.
-      const callerBudget = await checkScopedRateLimit('cyber-network-provider:caller', 6, '1 h', getClientRateLimitKey(ctx.request));
-      if (!callerBudget.allowed || callerBudget.degraded) throw new ProviderBudgetError('Caller provider budget unavailable', true);
-      // Two requests per lookup; <=8 concurrent and <=900/day globally. Fail
-      // closed on missing Redis or degraded decisions; cache hits use no budget.
-      for (const [limit, window] of [[4, '60 s'], [450, '1 d']] as const) {
-        const budget = await checkScopedRateLimit(`cyber-network-provider:${window}`, limit, window, 'global');
-        if (!budget.allowed || budget.degraded) throw new ProviderBudgetError('Network provider budget unavailable');
-      }
       const signal = AbortSignal.timeout(5000);
       const [routing, dns] = await Promise.allSettled([
         ripe('prefix-overview', ip, signal), ripe('reverse-dns-ip', ip, signal),
@@ -98,12 +81,9 @@ export async function getNetworkInfo(ctx: ServerContext, req: GetNetworkInfoRequ
       };
     }, 120, {
       timeoutMs: 12000, cacheUpstreamUnavailablePayloads: false,
-      // A caller's refusal must not poison another caller's shared IP cache or
-      // coalesced request. The helper retries followers under their own budget.
-      isCallerLocalError: error => error instanceof ProviderBudgetError && error.callerLocal,
     });
     return result ?? empty('unavailable', ip);
-  } catch (error) {
-    return empty(error instanceof ProviderBudgetError ? 'rate_limited' : 'unavailable', ip);
+  } catch {
+    return empty('unavailable', ip);
   }
 }

@@ -72,12 +72,3 @@ test('preserves anomaly filtering and missing-data response', async () => {
     flows: [older], fetchedAt, upstreamUnavailable: false,
   });
 });
-
-test('premium denial still returns no data without reading Redis', async () => {
-  const { isCallerPremium } = await import('../_shared/premium-check');
-  vi.mocked(isCallerPremium).mockResolvedValueOnce(false);
-  const { listComtradeFlows } = await import('../worldmonitor/trade/v1/list-comtrade-flows');
-  expect(await listComtradeFlows(ctx, request)).toEqual({ flows: [], fetchedAt: '', upstreamUnavailable: true });
-  expect(reads).toEqual([]);
-  expect(writes).toEqual([]);
-});

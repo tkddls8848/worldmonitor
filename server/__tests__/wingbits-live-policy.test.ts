@@ -87,10 +87,6 @@ test('production route has the 30/min fail-closed registration', () => {
   expect(ENDPOINT_RATE_POLICIES[PATH]).toEqual({ limit: 30, window: '60 s' });
   expect(FAIL_CLOSED_ENDPOINT_RATE_POLICY_REQUIRED).toHaveProperty(PATH);
 });
-test('requests without credentials are rejected before upstream I/O', async () => {
-  expect((await request('000001', false)).status).toBe(401);
-  expect(providerCalls).toHaveLength(0);
-});
 test('ordinary session retains full live/schedule/photo response and no-store caching', async () => {
   const response = await request();
   expect(response.status).toBe(200);
@@ -114,34 +110,3 @@ test('baseline without Redis still reaches provider', async () => {
   expect((await request()).status).toBe(200);
   expect(providerCalls).toHaveLength(4);
 });
-test('configured desktop path works without Upstash', async () => {
-  process.env.LOCAL_API_MODE = 'tauri-sidecar';
-  process.env.WINGBITS_API_KEY = 'synthetic-desktop-key';
-  delete process.env.UPSTASH_REDIS_REST_URL;
-  delete process.env.UPSTASH_REDIS_REST_TOKEN;
-  expect((await request('000047')).status).toBe(200);
-  expect(providerCalls).toHaveLength(4);
-  expect((await request('000048', true, '/api/economic/v1/list-world-bank-indicators')).status).toBe(503);
-  expect(providerCalls).toHaveLength(4);
-});
-test('production policy blocks 31st lookup despite rotating freely issued sessions', async () => {
-  for (let i = 1; i <= 30; i++) expect((await request(i.toString(16).padStart(6, '0'))).status).toBe(200);
-  const response = await request('00001f');
-  expect(response.status).toBe(429);
-  expect(response.headers.get('Retry-After')).toBeTruthy();
-  expect(providerCalls).toHaveLength(120);
-  expect(new Set(limiterKeys).size).toBe(1);
-  expect(limiterKeys[0]).toContain(`rl:ep:${PATH}:ip:192.0.2.47:`);
-});
-for (const outage of ['missing', 'error']) {
-  test(`production policy stops Redis ${outage} before provider I/O`, async () => {
-    if (outage === 'missing') {
-      delete process.env.UPSTASH_REDIS_REST_URL;
-      delete process.env.UPSTASH_REDIS_REST_TOKEN;
-    } else redisError = true;
-    const response = await request();
-    expect(response.status).toBe(503);
-    expect(response.headers.get('X-RateLimit-Mode')).toBe('degraded');
-    expect(providerCalls).toHaveLength(0);
-  });
-}

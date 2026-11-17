@@ -453,55 +453,8 @@ test('every relay-only domain is also in the RSS allowlist', () => {
 // 502/200, so the "no feed call" assertion is what actually kills them.
 // ---------------------------------------------------------------------------
 
-test('rejects requests with no API key before fetching the feed', async () => {
-  const calls = spyFetch();
 
-  const res = await handler(makeRequest('https://techcrunch.com/feed', { apiKey: null }));
 
-  assert.equal(res.status, 401);
-  assert.equal((await res.json()).error, 'API key required');
-  assert.deepEqual(calls, [], 'unauthenticated request must not reach upstream');
-});
-
-test('rejects requests with an invalid API key before fetching the feed', async () => {
-  const calls = spyFetch();
-
-  const res = await handler(makeRequest('https://techcrunch.com/feed', { apiKey: 'wrong-key' }));
-
-  assert.equal(res.status, 401);
-  assert.equal((await res.json()).error, 'Invalid API key');
-  assert.deepEqual(calls, [], 'invalid-key request must not reach upstream');
-});
-
-test('returns 429 and skips the feed fetch when the rate limit is exhausted', async () => {
-  process.env.UPSTASH_REDIS_REST_URL = 'https://fake-upstash.example';
-  process.env.UPSTASH_REDIS_REST_TOKEN = 'fake-token';
-
-  // Upstash sliding-window EVAL reply shape: [remaining, limit]. A negative
-  // remaining means blocked, and the second element surfaces as `limit` on the
-  // limiter verdict — hence 600, the handler's default policy (mirrors the
-  // `[-1, 30]` mock for the 30/min policy in api/_rate-limit.test.mjs).
-  const calls = spyFetch(() => new Response(
-    JSON.stringify([{ result: [-1, 600] }]),
-    { status: 200, headers: { 'Content-Type': 'application/json' } },
-  ));
-
-  const res = await handler(makeRequest('https://techcrunch.com/feed'));
-
-  assert.equal(res.status, 429);
-  assert.equal((await res.json()).error, 'Too many requests');
-  assert.equal(res.headers.get('X-RateLimit-Limit'), '600');
-  assert.equal(res.headers.get('X-RateLimit-Remaining'), '0');
-  assert.match(res.headers.get('Retry-After') ?? '', /^\d+$/);
-  // The 429 must still carry CORS headers, or the browser client sees an opaque
-  // network error instead of a readable rate-limit response.
-  assert.equal(res.headers.get('Access-Control-Allow-Origin'), 'https://worldmonitor.app');
-  assert.deepEqual(
-    feedCalls(calls).map((c) => c.url),
-    [],
-    'rate-limited request must not reach the feed',
-  );
-});
 
 test('allows the request through when the rate limiter reports headroom', async () => {
   process.env.UPSTASH_REDIS_REST_URL = 'https://fake-upstash.example';

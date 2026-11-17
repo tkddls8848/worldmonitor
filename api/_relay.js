@@ -1,7 +1,5 @@
 // Edge function copy — canonical version at server/_shared/relay.ts
 import { getCorsHeaders, getPublicCorsHeaders, isDisallowedOrigin } from './_cors.js';
-import { validateApiKey } from './_api-key.js';
-import { checkRateLimit } from './_rate-limit.js';
 import { jsonResponse } from './_json-response.js';
 import { captureSilentError } from './_sentry-edge.js';
 
@@ -72,17 +70,8 @@ export function createRelayHandler(cfg) {
       return jsonResponse({ error: 'Method not allowed' }, 405, { ...corsHeaders, Allow: 'GET, OPTIONS' });
     }
 
-    if (cfg.requireApiKey) {
-      const keyCheck = await validateApiKey(req);
-      if (keyCheck.required && !keyCheck.valid) {
-        return jsonResponse({ error: keyCheck.error }, 401, corsHeaders);
-      }
-    }
-
-    if (cfg.requireRateLimit) {
-      const rateLimitResponse = await checkRateLimit(req, corsHeaders);
-      if (rateLimitResponse) return rateLimitResponse;
-    }
+    // Access control is the personal server's HTTP Basic auth; the legacy
+    // requireApiKey / requireRateLimit options are ignored.
 
     const relayBaseUrl = getRelayBaseUrl();
     if (!relayBaseUrl) {

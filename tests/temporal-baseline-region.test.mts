@@ -79,10 +79,3 @@ test('POST remains disabled before any baseline access', async t => {
  }
  assert.equal(reads.length,0);
 });
-
-test('anonymous callers cannot reach the baseline reader', async t => {
- const {reads}=await setup(t);
- const response=await rpc(new Request(PATH+'?type=military_flights&count=2&region=global'));
- assert.ok([401,403].includes(response.status));
- assert.equal(reads.length,0);
-});

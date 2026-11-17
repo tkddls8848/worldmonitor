@@ -124,7 +124,7 @@ test('Slack requires confirmed SET success before returning an authorization URL
   assert.match(response.headers.get('Set-Cookie'), /^__Secure-wm_slack_oauth_[a-f0-9-]{36}=/);
 });
 
-test('canonical OREF responses retain aggregation and caller admission', async () => {
+test('canonical OREF responses retain aggregation without a caller limiter', async () => {
   const saved = { ...process.env };
   process.env.WS_RELAY_URL = 'https://relay.example';
   process.env.UPSTASH_REDIS_REST_URL = 'https://oref-redis.example';
@@ -147,7 +147,7 @@ test('canonical OREF responses retain aggregation and caller admission', async (
       assert.match(response.headers.get('Cache-Control'), /^public,/);
     }
     assert.deepEqual(relayPaths, ['/oref/alerts', '/oref/history']);
-    assert.equal(rateCalls, 2);
+    assert.equal(rateCalls, 0); // personal fork: no per-caller limiter
   } finally {
     for (const key of ['WS_RELAY_URL', 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN']) {
       if (saved[key] === undefined) delete process.env[key]; else process.env[key] = saved[key];

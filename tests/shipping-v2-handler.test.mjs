@@ -80,12 +80,6 @@ describe('ShippingV2Service handlers', () => {
   });
 
   describe('routeIntelligence', () => {
-    it('rejects non-PRO callers with 403', async () => {
-      await assert.rejects(
-        () => routeIntelligence(makeCtx(), { fromIso2: 'AE', toIso2: 'NL', cargoType: '', hs2: '' }),
-        (err) => err instanceof ApiError && err.statusCode === 403,
-      );
-    });
 
     it('rejects malformed fromIso2 with ValidationError', async () => {
       // Stub redis GET for CHOKEPOINT_STATUS_KEY so the handler never panics.
@@ -202,20 +196,6 @@ describe('ShippingV2Service handlers', () => {
       return calls;
     }
 
-    it('rejects callers without an API key with 401 (tenant-isolation gate)', async () => {
-      // Without this gate, Clerk-authenticated pro callers with no X-WorldMonitor-Key
-      // collapse into a shared 'anon' fingerprint bucket and can see each other's
-      // webhooks. Must fire before any premium check.
-      await assert.rejects(
-        () => registerWebhook(makeCtx(), {
-          callbackUrl: 'https://93.184.216.34/wm',
-          chokepointIds: [],
-          alertThreshold: 50,
-        }),
-        (err) => err instanceof ApiError && err.statusCode === 401,
-      );
-    });
-
     it('rejects missing callbackUrl with ValidationError', async () => {
       await assert.rejects(
         () => registerWebhook(proCtx(), { callbackUrl: '', chokepointIds: [], alertThreshold: 50 }),
@@ -318,7 +298,7 @@ describe('ShippingV2Service handlers', () => {
       assert.equal(cap, '10');
     });
 
-    it('uses the authenticated enterprise cookie for ownership when wms_ is also present', async () => {
+    it('stores every registration under the single owner', async () => {
       const calls = stubRedisOk();
       await registerWebhook(makeCtx({
         'X-WorldMonitor-Key': 'wms_automatic-anonymous-session',
@@ -330,14 +310,7 @@ describe('ShippingV2Service handlers', () => {
       });
 
       const record = JSON.parse(calls[0][0][7]);
-      const expected = await crypto.subtle.digest(
-        'SHA-256',
-        new TextEncoder().encode('pro-test-key'),
-      );
-      const expectedOwner = Array.from(new Uint8Array(expected))
-        .map((byte) => byte.toString(16).padStart(2, '0'))
-        .join('');
-      assert.equal(record.ownerTag, expectedOwner);
+      assert.equal(record.ownerTag, 'owner');
     });
 
     it('alertThreshold omitted (undefined) applies the legacy default of 50', async () => {
@@ -490,15 +463,6 @@ describe('ShippingV2Service handlers', () => {
   });
 
   describe('listWebhooks', () => {
-    it('rejects callers without an API key with 401 (tenant-isolation gate)', async () => {
-      // Mirror of registerWebhook: the defense-in-depth ownerTag check collapses
-      // when callers fall through to 'anon', so we reject unauthenticated callers
-      // before hitting Redis.
-      await assert.rejects(
-        () => listWebhooks(makeCtx(), {}),
-        (err) => err instanceof ApiError && err.statusCode === 401,
-      );
-    });
 
     it('returns empty webhooks array when SMEMBERS is empty', async () => {
       globalThis.fetch = async (_url, init) => {
@@ -543,9 +507,7 @@ describe('ShippingV2Service handlers', () => {
 
     it('omits `secret` from matched records — partner contract invariant', async () => {
       // Build a record whose ownerTag matches the caller's SHA-256 fingerprint.
-      const key = 'pro-test-key';
-      const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(key));
-      const ownerTag = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+      const ownerTag = 'owner'; // PERSONAL_OWNER_ID
 
       const record = {
         subscriberId: 'wh_abc123456789012345678901',
@@ -587,9 +549,7 @@ describe('ShippingV2Service handlers', () => {
     });
 
     it('echoes the stored scope of an occurrence-event record as registered', async () => {
-      const key = 'pro-test-key';
-      const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(key));
-      const ownerTag = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+      const ownerTag = 'owner'; // PERSONAL_OWNER_ID
       const scope = { keywords: ['hormuz'], categories: [], countries: ['IR'], importanceFloor: 69, severityFloor: 'high' };
       const record = {
         subscriberId: 'wh_abc123456789012345678901',

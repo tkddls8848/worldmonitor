@@ -65,11 +65,6 @@ describe('supply-chain handlers: input-shape validation returns 400, not empty-2
       );
     });
 
-    it('PRO-gate deny on a well-formed iso2 still returns empty-200 (not 400) — intentional contract shift preserved', async () => {
-      // No X-WorldMonitor-Key header → isCallerPremium returns false.
-      const res = await getCountryProducts(makeCtx({}, '/api/supply-chain/v1/get-country-products'), { iso2: 'SG' });
-      assert.deepEqual(res, { iso2: 'SG', products: [], fetchedAt: '' });
-    });
   });
 
   describe('getMultiSectorCostShock', () => {

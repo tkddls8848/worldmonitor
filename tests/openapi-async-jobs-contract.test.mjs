@@ -84,10 +84,8 @@ describe('OpenAPI async-job pattern contract (RunScenario 202)', () => {
     assert.match(handler, /setResponseHeader\(ctx\.request,\s*'Location'/, 'run-scenario.ts must set the Location header');
     // …and the gateway drains + applies it (POST-200 only).
     const gateway = readFileSync(resolve(root, 'server/gateway.ts'), 'utf8');
-    // The handler writes on the principal-stamped clone it was given, so the
-    // drain must read that same object (gateway-side-channel-principal.test.ts
-    // proves the runtime behaviour for an authenticated caller).
-    assert.match(gateway, /drainSuccessStatusOverride\(requestForHandler\)/, 'gateway.ts must drain the status override from the request the handler received');
+    // The handler writes on the request object it was given; the drain reads that same object.
+    assert.match(gateway, /drainSuccessStatusOverride\(request\)/, 'gateway.ts must drain the status override from the request the handler received');
     // Location must be CORS-exposed or browser agents cannot read the poll URL.
     const cors = readFileSync(resolve(root, 'server/cors.ts'), 'utf8');
     assert.match(cors, /'Location',/, 'cors.ts EXPOSED_HEADERS must include Location');

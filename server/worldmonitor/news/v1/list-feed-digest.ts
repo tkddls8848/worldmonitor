@@ -44,7 +44,6 @@ import {
   type LastGoodRead,
 } from './_lastgood-store';
 import { markNoCacheResponse } from '../../../_shared/response-headers';
-import { getUsageScope } from '../../../_shared/usage';
 import { sha256Hex } from '../../../_shared/hash';
 import { CHROME_UA } from '../../../_shared/constants';
 import {
@@ -1248,9 +1247,7 @@ async function withRefreshSlot<T>(task: () => Promise<T>): Promise<T> {
 
 function scheduleFeedRefresh(feed: ServerFeed, variant: string, cached: ParseResult): void {
   const refresh = withRefreshSlot(() => refreshFeedCache(feed, variant, cached)).catch(() => 'failed' as const);
-  const ctx = getUsageScope()?.ctx;
-  if (ctx) ctx.waitUntil(refresh);
-  else void refresh;
+  void refresh;
 }
 
 // Date-tag priority lists. RSS feeds typically carry <pubDate>; Atom carries

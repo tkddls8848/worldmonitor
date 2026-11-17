@@ -7,8 +7,6 @@ import type {
 } from '../../../../src/generated/server/worldmonitor/infrastructure/v1/service_server';
 import { ApiError, ValidationError } from '../../../../src/generated/server/worldmonitor/infrastructure/v1/service_server';
 import { cachedFetchJsonWithMeta } from '../../../_shared/redis';
-import { checkScopedRateLimit, readTrustedRateLimitPrincipal } from '../../../_shared/rate-limit';
-import { getClientRateLimitKey } from '../../../_shared/client-ip';
 import { sha256Hex } from '../../../_shared/hash';
 import { isOrbitalWatchEnabled } from '../../orbital/v1/dark-launch';
 
@@ -19,24 +17,6 @@ const MIN_QUERY_CHARS = 2;
 const MAX_QUERY_CHARS = 200;
 const FOUND_TTL_SECONDS = 604_800;
 const NOT_FOUND_TTL_SECONDS = 86_400;
-// Nominatim's usage policy caps the whole application at one request per second, so name
-// search spends the same fail-closed bucket as reverse geocoding.
-const PROVIDER_RATE_LIMIT_SCOPE = 'reverse-geocode';
-const PROVIDER_RATE_LIMIT_IDENTIFIER = 'global';
-// A never-searched name always misses the cache, so one caller may spend only a small share of that bucket.
-const CALLER_MISS_SCOPE = 'search-place-provider:caller';
-const CALLER_MISS_LIMIT = 6;
-
-/** A refusal of one caller's own budget: it must not arm the shared per-name backoff or reach callers coalesced behind it. */
-class CallerBudgetRefusal extends ApiError {
-  constructor(statusCode: number, message: string) {
-    super(statusCode, message, '');
-    this.name = 'CallerBudgetRefusal';
-  }
-}
-
-export const isCallerBudgetRefusal = (error: unknown): boolean => error instanceof CallerBudgetRefusal;
-
 interface NominatimPlace {
   lat?: string;
   lon?: string;
@@ -62,24 +42,7 @@ function toMatch(place: NominatimPlace): PlaceMatch | null {
   return { name, lat, lon, kind: place.addresstype || place.type || '' };
 }
 
-/**
- * The per-caller miss budget must name the caller. A batched sub-request re-derives its IP from the
- * platform egress, so the gateway-stamped principal (client copies are stripped) is preferred.
- */
-export function placeSearchCallerKey(request: Request): string {
-  const principal = readTrustedRateLimitPrincipal(request.headers);
-  if (principal.principalUserId) return `principal:${principal.principalScope ?? 'session'}:${principal.principalUserId}`;
-  return `ip:${getClientRateLimitKey(request)}`;
-}
-
-async function fetchPlaces(query: string, caller: string): Promise<PlaceMatch[] | null> {
-  const callerLimit = await checkScopedRateLimit(CALLER_MISS_SCOPE, CALLER_MISS_LIMIT, '60 s', caller);
-  if (callerLimit.degraded) throw new CallerBudgetRefusal(503, 'Rate-limit service temporarily unavailable');
-  if (!callerLimit.allowed) throw new CallerBudgetRefusal(429, 'Too many requests');
-  const providerLimit = await checkScopedRateLimit(PROVIDER_RATE_LIMIT_SCOPE, 1, '1 s', PROVIDER_RATE_LIMIT_IDENTIFIER);
-  if (providerLimit.degraded) throw new ApiError(503, 'Rate-limit service temporarily unavailable', '');
-  if (!providerLimit.allowed) throw new ApiError(429, 'Too many requests', '');
-
+async function fetchPlaces(query: string): Promise<PlaceMatch[] | null> {
   const params = new URLSearchParams({ q: query, format: 'jsonv2', limit: String(MAX_RESULTS), 'accept-language': 'en' });
   const resp = await fetch(`${NOMINATIM_SEARCH}?${params}`, {
     headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' },
@@ -96,7 +59,7 @@ async function fetchPlaces(query: string, caller: string): Promise<PlaceMatch[] 
 
 /** SearchPlace resolves a submitted place name through OpenStreetMap Nominatim, cached per normalised name. */
 export const searchPlace: InfrastructureServiceHandler['searchPlace'] = async (
-  ctx: ServerContext,
+  _ctx: ServerContext,
   req: SearchPlaceRequest,
 ): Promise<SearchPlaceResponse> => {
   // Place search exists for the Orbital Watch lookup, so it ships dark with it (#10710).
@@ -107,8 +70,8 @@ export const searchPlace: InfrastructureServiceHandler['searchPlace'] = async (
   }
   try {
     const { data: places } = await cachedFetchJsonWithMeta<PlaceMatch[]>(await placeSearchCacheKey(query), FOUND_TTL_SECONDS,
-      () => fetchPlaces(query, placeSearchCallerKey(ctx.request)),
-      NOT_FOUND_TTL_SECONDS, { cacheFetcherErrors: false, isCallerLocalError: isCallerBudgetRefusal });
+      () => fetchPlaces(query),
+      NOT_FOUND_TTL_SECONDS, { cacheFetcherErrors: false });
     return { places: places ?? [], error: '' };
   } catch (error) {
     if (error instanceof ApiError) throw error;

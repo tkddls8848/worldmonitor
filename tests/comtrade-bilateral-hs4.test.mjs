@@ -36,28 +36,6 @@ describe('getCountryProducts sebuf handler (server/worldmonitor/supply-chain/v1/
     );
   });
 
-  it('uses isCallerPremium for PRO gating against ctx.request', () => {
-    assert.ok(
-      src.includes('isCallerPremium'),
-      'must use isCallerPremium for PRO-gating',
-    );
-    assert.ok(
-      src.includes('isCallerPremium(ctx.request)'),
-      'must invoke isCallerPremium(ctx.request) so the sebuf gateway request is authorised',
-    );
-  });
-
-  it('returns the typed empty payload for non-PRO callers after rejecting an invalid iso2', () => {
-    assert.ok(
-      /products: \[\], fetchedAt: ''/.test(src),
-      'empty fallback must have empty products array and empty fetchedAt',
-    );
-    const proIdx = src.indexOf('isPro');
-    const validIdx = src.indexOf('isAssignedCountryCode(iso2)');
-    assert.ok(proIdx !== -1 && validIdx !== -1, 'must reference both PRO and validation gates');
-    assert.ok(validIdx < proIdx, 'an invalid iso2 must be rejected before the PRO gate');
-  });
-
   it('reads from raw Upstash Redis (skip env-prefix) so seeder writes resolve', () => {
     assert.ok(
       /readCachedJson\([^,]+,\s*true\)/.test(src),

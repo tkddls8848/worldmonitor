@@ -5,6 +5,7 @@ import type { LlmRoutingPolicy } from './llm';
 import { TRUSTED_USER_ID_HEADER } from './mcp-internal-hmac';
 import { validateBearerToken, verifiedSubjectIgnoringExpiry } from '../auth-session';
 import { getCachedJson, setCachedJson } from './redis.js';
+import { PERSONAL_OWNER_ID } from '../../shared/personal-owner.js';
 
 // Per-customer AI routing restriction (e.g. a contract that says the
 // customer's AI traffic goes to Anthropic directly and nowhere else).
@@ -54,7 +55,10 @@ function toDecision(allowedProviders: string[] | null): AiRoutingDecision {
 }
 
 export async function getAiRoutingDecisionForUser(userId: string | null | undefined): Promise<AiRoutingDecision> {
-  if (!userId) return DEFAULT_DECISION;
+  // Personal fork: the single owner has no stored routing policy and no Convex
+  // backend to hold one, so a lookup could only fail closed to 'unavailable'
+  // and block every LLM call (same default as the brief path, Ruling 8).
+  if (!userId || userId === PERSONAL_OWNER_ID) return DEFAULT_DECISION;
   try {
     const cached = parsePolicy(await getCachedJson(cacheKey(userId), true));
     if (cached.ok) return toDecision(cached.allowedProviders);

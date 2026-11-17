@@ -41,7 +41,6 @@ import type {
 import { cachedFetchJson } from '../../../_shared/redis';
 import { CHROME_UA } from '../../../_shared/constants';
 import { getRelayBaseUrl, getRelayHeaders } from '../../../_shared/relay';
-import { isCallerPremium } from '../../../_shared/premium-check';
 
 export const WITS_SDMX_BASE = 'https://wits.worldbank.org/API/V1/SDMX/V21/datasource/TRN';
 export const WITS_META_BASE = 'https://wits.worldbank.org/API/V1/wits/datasource/trn';
@@ -428,7 +427,7 @@ function emptyResponse(
 }
 
 export async function getBilateralTariff(
-  ctx: ServerContext,
+  _ctx: ServerContext,
   req: GetBilateralTariffRequest,
 ): Promise<GetBilateralTariffResponse> {
   const reporter = (req.reportingCountry ?? '').trim();
@@ -436,13 +435,6 @@ export async function getBilateralTariff(
   const hsCode = (req.hsCode ?? '').trim();
   const filing = CODE3.test(reporter) ? filingReporter(reporter) : '';
   const echo = { reportingCountry: reporter, partnerCountry: partner, hsCode, filingReporter: filing };
-
-  const isPro = await isCallerPremium(ctx.request);
-  if (!isPro) {
-    // Entitlement gate, not a coverage or upstream fault: same shape as the
-    // other Pro trade routes, reason left unspecified.
-    return emptyResponse(echo, REASON.served, true);
-  }
 
   const requestedYear = req.year;
   if (

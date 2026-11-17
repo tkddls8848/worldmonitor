@@ -61,7 +61,7 @@ describe('DELETE /api/v2/shipping/webhooks/{subscriberId}', () => {
     process.env.WORLDMONITOR_VALID_KEYS = 'pro-test-key,other-tenant-key';
     process.env.UPSTASH_REDIS_REST_URL = 'https://fake-upstash.example';
     process.env.UPSTASH_REDIS_REST_TOKEN = 'fake-token';
-    ownerTag = await sha256Hex('pro-test-key');
+    ownerTag = 'owner'; // PERSONAL_OWNER_ID
     const record = {
       subscriberId: SUB,
       ownerTag,
@@ -112,9 +112,11 @@ describe('DELETE /api/v2/shipping/webhooks/{subscriberId}', () => {
     assert.equal(res.headers.get('Access-Control-Allow-Methods'), 'GET, DELETE, OPTIONS');
   });
 
-  it('refuses another tenant with 403 and deletes nothing', async () => {
+  it('refuses a record that belongs to another owner with 403 and deletes nothing', async () => {
     stubUpstash(store);
-    const res = await handler(request('DELETE', SUB, 'other-tenant-key'));
+    const key = `webhook:sub:${SUB}:v1`;
+    store.set(key, JSON.stringify({ ...JSON.parse(store.get(key)), ownerTag: 'someone-else' }));
+    const res = await handler(request('DELETE', SUB));
     assert.equal(res.status, 403);
     assert.equal(store.has(`webhook:sub:${SUB}:v1`), true);
   });
@@ -166,9 +168,8 @@ describe('DELETE /api/v2/shipping/webhooks/{subscriberId}', () => {
     assert.equal(reads, 3);
   });
 
-  it('still rejects callers without an API key and unsupported methods', async () => {
+  it('still rejects unsupported methods', async () => {
     stubUpstash(store);
-    assert.equal((await handler(request('DELETE', SUB, null))).status, 401);
     assert.equal((await handler(request('PUT'))).status, 405);
   });
 

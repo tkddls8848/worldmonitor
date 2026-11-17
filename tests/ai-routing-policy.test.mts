@@ -161,6 +161,13 @@ describe('AI routing policy', () => {
       assert.equal(sent.length, 0);
     });
 
+    it('gives the personal owner the default routing without a lookup, even with no backend', async () => {
+      delete process.env.CONVEX_SITE_URL;
+      const { sent } = stubUpstreams();
+      assert.deepEqual(await getAiRoutingDecisionForUser('owner'), { kind: 'default' });
+      assert.equal(sent.length, 0);
+    });
+
     it('fails closed when Convex cannot answer for a signed-in caller', async () => {
       stubUpstreams({ policies: { [RESTRICTED_USER]: { status: 500 } } });
       const decision = await getAiRoutingDecisionForUser(RESTRICTED_USER);

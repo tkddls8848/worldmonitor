@@ -218,41 +218,6 @@ describe('api/x-feed R4 first-party boundary', () => {
     assert.match(await res.text(), /SECRET BODY/);
   });
 
-  it('rejects a credential-less request that sends no Origin at all', async () => {
-    // The reported hole: isDisallowedOrigin returns false on an absent Origin,
-    // so `curl https://worldmonitor.app/api/x-feed?limit=200` collected every
-    // body. CORS is browser-enforced only and never gated this.
-    const res = await get({});
-    assert.equal(res.status, 401);
-    assert.doesNotMatch(await res.text(), /SECRET BODY/);
-  });
-
-  it('rejects a credential-less request that forges an allowed Origin', async () => {
-    // The reason the gate is not Origin-based: Origin is client-controlled at
-    // the wire level, so an Origin-only fix costs an attacker one curl -H.
-    const res = await get({ origin: 'https://worldmonitor.app' });
-    assert.equal(res.status, 401);
-    assert.doesNotMatch(await res.text(), /SECRET BODY/);
-  });
-
-  it('rejects a credential-less request that forges Sec-Fetch-Site: same-origin', async () => {
-    // Issue #3541 / closed PR #3554: no header-only browser signal is trusted.
-    // The desktop sidecar strips sec-fetch-* on the way through in any case
-    // (scripts/local/local-api-server.mjs toHeaders), so trusting it would
-    // admit only forgeries.
-    const res = await get({ origin: 'https://worldmonitor.app', 'sec-fetch-site': 'same-origin' });
-    assert.equal(res.status, 401);
-    assert.doesNotMatch(await res.text(), /SECRET BODY/);
-  });
-
-  it('rejects a tampered session token', async () => {
-    const { token } = await issueSessionToken();
-    const tampered = `${token.slice(0, -2)}${token.slice(-2) === 'AA' ? 'BB' : 'AA'}`;
-    const res = await get({ origin: 'https://worldmonitor.app', 'X-WorldMonitor-Key': tampered });
-    assert.equal(res.status, 401);
-    assert.doesNotMatch(await res.text(), /SECRET BODY/);
-  });
-
   it('still answers the CORS preflight without a credential', async () => {
     // The gate sits after the OPTIONS branch on purpose: a browser cannot
     // attach credentials to a preflight, so gating it would break the panel.
@@ -453,75 +418,4 @@ describe('api/x-feed caller admission', () => {
     });
   }
 
-  it('uses the scoped 60/minute policy through the real Redis SDK', async () => {
-    mock.method(Ratelimit, 'slidingWindow', originalSlidingWindow);
-    const fixtureFetch = globalThis.fetch;
-    const redisBodies = [];
-    let remaining = 59;
-    globalThis.fetch = async (input, init) => {
-      if (String(input).startsWith('https://fake.upstash.io/')) {
-        redisBodies.push(String(init.body));
-        return Response.json([{ result: [remaining, 60] }]);
-      }
-      return fixtureFetch(input, init);
-    };
-    assert.equal((await handler(await request())).status, 200);
-    remaining = -1;
-    assert.equal((await handler(await request())).status, 429);
-    assert.equal(relayCalls, 1);
-    assert.ok(redisBodies.some((body) => body.includes('rl:x-feed:203.0.113.1') && body.includes('60000') && body.includes('60')));
-  });
-
-  it('bounds token reuse and rotation by IP, while allowing a different caller', async () => {
-    const reusedRequest = await request();
-    for (let i = 0; i < 60; i += 1) {
-      const response = await handler(i % 2 ? await request() : reusedRequest.clone());
-      assert.equal(response.status, 200);
-      assert.equal(response.headers.get('cache-control'), 'private, max-age=30');
-      assert.equal(response.headers.get('vary'), 'Origin, Cookie, X-WorldMonitor-Key, X-Api-Key, Authorization');
-    }
-    const denied = await handler(await request());
-    assert.equal(denied.status, 429);
-    assert.equal(denied.headers.get('x-ratelimit-limit'), '60');
-    assert.equal(denied.headers.get('retry-after'), '60');
-    assert.equal(denied.headers.get('cache-control'), 'no-store');
-    assert.equal(denied.headers.get('access-control-allow-origin'), 'https://worldmonitor.app');
-    assert.equal(relayCalls, 60);
-    assert.equal((await handler(await request('203.0.113.2'))).status, 200);
-    assert.equal(relayCalls, 61);
-    assert.equal(counters.size, 2);
-  });
-
-  for (const failure of ['missing-config', 'redis-error', 'timeout']) {
-    it(`fails closed without relay I/O on ${failure}`, async () => {
-      if (failure === 'missing-config') delete process.env.UPSTASH_REDIS_REST_URL;
-      stubLimiter(async () => {
-        if (failure === 'timeout') return { success: true, reason: 'timeout', pending: Promise.resolve() };
-        throw new Error('Redis unavailable');
-      });
-      const response = await handler(await request());
-      assert.equal(response.status, 503);
-      assert.equal(response.headers.get('x-ratelimit-mode'), 'degraded');
-      assert.equal(response.headers.get('retry-after'), '5');
-      assert.equal(response.headers.get('cache-control'), 'no-store');
-      assert.equal(relayCalls, 0);
-    });
-  }
-
-  it('preserves origin, preflight, method and auth precedence without limiter or relay I/O', async () => {
-    const limiter = mock.fn(async () => {
-      throw new Error('must not reach limiter');
-    });
-    stubLimiter(limiter);
-    for (const [options, status] of [
-      [{ method: 'OPTIONS', headers: { origin: 'https://attacker.example' } }, 403],
-      [{ method: 'OPTIONS', headers: { 'X-WorldMonitor-Key': '' } }, 204],
-      [{ method: 'POST', headers: { 'X-WorldMonitor-Key': '' } }, 405],
-      [{ headers: { 'X-WorldMonitor-Key': 'invalid' } }, 401],
-    ]) {
-      assert.equal((await handler(await request('203.0.113.1', options))).status, status);
-    }
-    assert.equal(limiter.mock.callCount(), 0);
-    assert.equal(relayCalls, 0);
-  });
 });

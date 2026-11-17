@@ -1,7 +1,6 @@
 import type { IntelligenceServiceHandler, CountryHistoryPoint } from '../../../../src/generated/server/worldmonitor/intelligence/v1/service_server';
 import { ValidationError } from '../../../../src/generated/server/worldmonitor/intelligence/v1/service_server';
 import { isAssignedCountryCode } from '../../../../shared/country-code-resolve';
-import { getCountryHistoryAccess } from '../../../_shared/country-history-access';
 import { runRedisPipeline } from '../../../_shared/redis';
 import { markNoCacheResponse } from '../../../_shared/response-headers';
 
@@ -35,7 +34,7 @@ export const getCountryHistory: IntelligenceServiceHandler['getCountryHistory'] 
   if (!isAssignedCountryCode(country)) throw new ValidationError([{ field: 'country', description: 'Use an assigned ISO alpha-2 country code.' }]);
   if (!Number.isInteger(req.days) || req.days < 0) throw new ValidationError([{ field: 'days', description: 'days must be a non-negative integer.' }]);
   const requestedDays = req.days || 7;
-  const allowedDays = getCountryHistoryAccess(ctx.request);
+  const allowedDays = 365;
   const effectiveDays = Math.min(requestedDays, allowedDays);
   const now = Date.now();
   const start = Math.floor(now / DAY) - effectiveDays + 1;

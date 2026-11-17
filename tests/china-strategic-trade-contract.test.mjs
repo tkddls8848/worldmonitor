@@ -169,11 +169,6 @@ describe('China reporter coverage gate', () => {
 });
 
 describe('existing access and China freight paths', () => {
-  it('keeps detailed bilateral data behind the current premium gate', () => {
-    const handler = read('../server/worldmonitor/supply-chain/v1/get-country-products.ts');
-    assert.match(handler, /isCallerPremium\(ctx\.request\)/);
-    assert.match(handler, /if \(!isPro\) return empty/);
-  });
 
   it('keeps CCFI available through the existing supply-chain seeder', () => {
     const seeder = read('../scripts/seed-supply-chain-trade.mjs');

@@ -292,47 +292,7 @@ describe('resolvePremiumCallerIdentity separates a missing credential from a fre
 });
 
 describe('api/chat-analyst answers a missing credential with 401 (#5619)', () => {
-  it('a signed-out caller is told to sign in, not to subscribe', async () => {
-    installFetchStub(FREE_ROW);
-    const { default: handler } = await import('../api/chat-analyst.ts');
 
-    const res = await handler(anonymousRequest());
 
-    assert.equal(res.status, 401);
-    assert.deepEqual(await res.clone().json(), { error: 'UNAUTHENTICATED' });
-    // The panel is cross-origin: an opaque failure is indistinguishable from a
-    // crash, so CORS must survive the denial.
-    assert.equal(res.headers.get('Access-Control-Allow-Origin'), 'https://worldmonitor.app');
-  });
 
-  it('an invalid bearer token gets the same 401', async () => {
-    installFetchStub(FREE_ROW);
-    const { default: handler } = await import('../api/chat-analyst.ts');
-
-    const res = await handler(badCredentialRequest({ Authorization: 'Bearer not-a-real-jwt' }));
-
-    assert.equal(res.status, 401);
-    assert.deepEqual(await res.json(), { error: 'UNAUTHENTICATED' });
-  });
-
-  it('a CONFIRMED free caller still gets the honest 403 upsell', async () => {
-    installFetchStub(FREE_ROW);
-    const { default: handler } = await import('../api/chat-analyst.ts');
-
-    const res = await handler(confirmedFreeRequest('user_free_route'));
-
-    assert.equal(res.status, 403);
-    assert.deepEqual(await res.json(), { error: 'Pro subscription required' });
-  });
-
-  it("the client's sign_in_required verdict is reachable on this route at last", async () => {
-    installFetchStub(FREE_ROW);
-    const { default: handler } = await import('../api/chat-analyst.ts');
-
-    const res = await handler(anonymousRequest());
-    const verdict = await classifyDenialResponse(res, NO_BELIEF);
-
-    assert.equal(verdict, 'sign_in_required');
-    assert.equal(analystDenialMessage(res.status, verdict), 'Sign in to use the analyst.');
-  });
 });

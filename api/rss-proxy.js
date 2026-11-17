@@ -1,6 +1,4 @@
 import { getCorsHeaders, isDisallowedOrigin } from './_cors.js';
-import { validateApiKey } from './_api-key.js';
-import { checkRateLimit } from './_rate-limit.js';
 import { getRelayBaseUrl, getRelayHeaders } from './_relay.js';
 import { relayFailureLevel } from './_relay-failure-level.js';
 import { isAllowedDomain, hostMatchForms } from './_rss-allowed-domain-match.js';
@@ -273,14 +271,6 @@ export default async function handler(req, ctx) {
     return jsonResponse({ error: 'Method not allowed' }, 405, { ...corsHeaders, Allow: 'GET, OPTIONS' });
   }
 
-  const keyCheck = await validateApiKey(req);
-  if (keyCheck.required && !keyCheck.valid) {
-    return jsonResponse({ error: keyCheck.error }, 401, corsHeaders);
-  }
-
-  const rateLimitResponse = await checkRateLimit(req, corsHeaders);
-  if (rateLimitResponse) return rateLimitResponse;
-
   const requestUrl = new URL(req.url);
   const feedUrl = requestUrl.searchParams.get('url');
 
@@ -424,8 +414,9 @@ export default async function handler(req, ctx) {
         'Content-Type': 'text/plain; charset=utf-8',
         'X-Content-Type-Options': 'nosniff',
         'Content-Security-Policy': "sandbox; default-src 'none'",
-        // validateApiKey() gates every GET. Shared caches do not key on the
-        // credential header, so this must not be public / s-maxage / CDN-cached.
+        // The personal server's Basic auth gates every GET. Shared caches do not
+        // key on the credential header, so this must not be public / s-maxage /
+        // CDN-cached.
         // `private` keeps CDNs out; max-age lets the SPA feedCache persist.
         'Cache-Control': 'private, max-age=180',
         ...(relayCacheState && { 'X-Cache': relayCacheState }),

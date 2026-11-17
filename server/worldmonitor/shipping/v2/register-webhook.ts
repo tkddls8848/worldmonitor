@@ -8,12 +8,7 @@ import {
   ValidationError,
 } from '../../../../src/generated/server/worldmonitor/shipping/v2/service_server';
 
-// @ts-expect-error — JS module, no declaration file
-import { getHeaderApiKey, USER_API_KEY_GATEWAY_VALIDATION_ERROR, validateApiKey } from '../../../../api/_api-key.js';
-import { validateUserApiKey } from '../../../_shared/user-api-key';
-import {
-  requirePremiumRpcAccess,
-} from '../../../_shared/premium-check';
+import { PERSONAL_OWNER_ID } from '../../../../shared/personal-owner.js';
 import { pruneOwnerWebhookIndex } from './webhook-owner-index';
 import { isOccurrenceEvent, normalizeWebhookScope } from './webhook-scope';
 import { runRedisPipeline } from '../../../_shared/redis';
@@ -31,7 +26,6 @@ import {
   generateSubscriberId,
   webhookKey,
   ownerIndexKey,
-  callerFingerprint,
   type WebhookRecord,
 } from './webhook-shared';
 
@@ -50,42 +44,9 @@ export const REGISTER_WEBHOOK_SCRIPT = [
 ].join(' ');
 
 export async function registerWebhook(
-  ctx: ServerContext,
+  _ctx: ServerContext,
   req: RegisterWebhookRequest,
 ): Promise<RegisterWebhookResponse> {
-  // Webhooks are per-tenant keyed on callerFingerprint(), which hashes the
-  // API key. Without forceKey, a Clerk-authenticated pro caller would reach
-  // this handler with no API key; callerFingerprint() now throws 401 there
-  // instead of folding every such caller into a shared 'anon' owner bucket
-  // where one Clerk-session holder could enumerate/overwrite other tenants'
-  // webhooks. forceKey stays the primary gate; the throw is the backstop.
-  // Matches the legacy `api/v2/shipping/webhooks/[subscriberId]{,/[action]}.ts`
-  // gate and the documented "X-WorldMonitor-Key required" contract in
-  // docs/api-shipping-v2.mdx.
-  const apiKeyResult = (await validateApiKey(ctx.request, { forceKey: true })) as {
-    valid: boolean; required: boolean; error?: string; credential?: string;
-  };
-  let quotaUserId: string | undefined;
-  if (apiKeyResult.error === USER_API_KEY_GATEWAY_VALIDATION_ERROR) {
-    const credential = getHeaderApiKey(ctx.request) as string;
-    let userKey;
-    try {
-      userKey = credential ? await validateUserApiKey(credential) : null;
-    } catch {
-      throw new ApiError(503, 'Service temporarily unavailable', '');
-    }
-    if (!userKey) throw new ApiError(401, 'Invalid API key', '');
-    // Revalidate the credential rather than trusting a caller-supplied user ID.
-    apiKeyResult.valid = true;
-    apiKeyResult.credential = credential;
-    quotaUserId = userKey.userId;
-  }
-  if (apiKeyResult.required && !apiKeyResult.valid) {
-    throw new ApiError(401, apiKeyResult.error ?? 'API key required', '');
-  }
-
-  await requirePremiumRpcAccess(ctx.request, ApiError, 'PRO subscription required');
-
   const callbackUrl = (req.callbackUrl ?? '').trim();
   if (!callbackUrl) {
     throw new ValidationError([{ field: 'callbackUrl', description: 'callbackUrl is required' }]);
@@ -158,14 +119,11 @@ export async function registerWebhook(
     ]);
   }
 
-  const ownerTag = await callerFingerprint(ctx.request, apiKeyResult.credential);
-  // Keep CRUD ownership per key, but share admission and delivery budgets across
-  // the validated user's keys. Never trust a client-supplied identity header.
-  const quotaTag = quotaUserId
-    ? await callerFingerprint(ctx.request, `webhook-user:${quotaUserId}`)
-    : ownerTag;
+  // HTTP Basic auth on the personal server is the only access control; every
+  // webhook belongs to the single owner.
+  const ownerTag = PERSONAL_OWNER_ID;
+  const quotaTag = ownerTag;
   await pruneOwnerWebhookIndex(ownerTag);
-  if (quotaTag !== ownerTag) await pruneOwnerWebhookIndex(quotaTag);
   const newSubscriberId = generateSubscriberId();
   const secret = await generateSecret();
 

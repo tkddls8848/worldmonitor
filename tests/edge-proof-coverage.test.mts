@@ -105,7 +105,6 @@ describe('IP-scoped endpoint rate limits reject unproven CF client IP (#8402)', 
 
   for (const [path, module] of [
     ['/api/skills/fetch-agentskills', '../api/skills/fetch-agentskills.ts'],
-    ['/ask', '../api/ask.ts'],
     ['/a2a', '../api/a2a.ts'],
     ['/docs/mcp', '../api/docs-mcp.ts'],
   ]) {

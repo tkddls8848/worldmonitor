@@ -15,7 +15,6 @@ import { UPSTREAM_TIMEOUT_MS, TIER1_COUNTRIES, sha256Hex } from './_shared';
 import { callLlm } from '../../../_shared/llm';
 import { aiRoutingCacheSuffix, resolveAiRouting, toLlmRoutingPolicy } from '../../../_shared/ai-routing-policy';
 import { verifyCitationIndexes, checkLeadGrounding, validateNoHallucinatedProperNouns, validateNoHallucinatedFacts, validateNoHallucinatedStatusQualifiers } from '../../../../shared/brief-llm-core.js';
-import { isCallerPremium } from '../../../_shared/premium-check';
 import { markUnservedLlmResponse } from '../../../_shared/response-headers';
 import { sanitizeForPrompt } from '../../../_shared/llm-sanitize.js';
 import { ENERGY_SPINE_KEY_PREFIX } from '../../../_shared/cache-keys';
@@ -352,34 +351,28 @@ export async function getCountryIntelBrief(
     }]);
   }
 
-  const isPremium = await isCallerPremium(ctx.request);
-
-  // Caller-supplied context only personalizes premium requests. Anonymous
-  // briefs are grounded server-side (news digest) and share one cache entry
-  // per country+lang — hashing anon caller context into the key was the #4892
-  // cost bug (every dashboard visitor minted a fresh key), and folding anon
-  // caller text into a shared entry would let one caller shape everyone's brief.
+  // Caller-supplied context personalizes the brief. Requests without context
+  // or framework are grounded server-side (news digest) and share one cache
+  // entry per country+lang.
   let contextSnapshot = '';
   let lang = 'en';
   try {
     const url = new URL(ctx.request.url);
     const rawLang = (url.searchParams.get('lang') || 'en').toLowerCase();
     lang = LANG_RE.test(rawLang) ? rawLang : 'en';
-    if (isPremium) {
-      // MCP sends `context` in the signed POST body; the gateway promotes scalar
-      // body fields into query params before this generated GET handler runs.
-      const rawContextSnapshot = (url.searchParams.get('context') || '').trim().slice(0, 4000);
-      contextSnapshot = sanitizeForPrompt(rawContextSnapshot.replace(/\r\n?|[\u2028\u2029]/g, '\n'));
-      sources = parseCountryBriefSources(contextSnapshot);
-    }
+    // MCP sends `context` in the signed POST body; the gateway promotes scalar
+    // body fields into query params before this generated GET handler runs.
+    const rawContextSnapshot = (url.searchParams.get('context') || '').trim().slice(0, 4000);
+    contextSnapshot = sanitizeForPrompt(rawContextSnapshot.replace(/\r\n?|[\u2028\u2029]/g, '\n'));
+    sources = parseCountryBriefSources(contextSnapshot);
   } catch {
     contextSnapshot = '';
     sources = [];
   }
   empty.sources = sources;
 
-  const frameworkRaw = isPremium && typeof req.framework === 'string' ? req.framework.slice(0, 2000) : '';
-  const sharedDefault = isPremium && !contextSnapshot && !frameworkRaw;
+  const frameworkRaw = typeof req.framework === 'string' ? req.framework.slice(0, 2000) : '';
+  const sharedDefault = !contextSnapshot && !frameworkRaw;
 
   // Read energy data early so both source years can invalidate cached briefs.
   // Prefer the spine for the OWID mix and use the direct mix key on a miss.
@@ -415,7 +408,7 @@ export async function getCountryIntelBrief(
   const energyImportYear = importDependency.available ? String(importDependency.year) : '';
 
   let cacheContext = '';
-  if (isPremium && !sharedDefault) {
+  if (!sharedDefault) {
     cacheContext = lang === 'en' && !frameworkRaw
       ? JSON.stringify(sources.filter(source => isBriefRelevantTitle(source.title)))
       : JSON.stringify({ contextSnapshot, sources });
@@ -430,7 +423,7 @@ export async function getCountryIntelBrief(
   const cacheKey = deriveCountryIntelCacheKey({
     countryCode: req.countryCode.toUpperCase(),
     lang,
-    isPremium,
+    isPremium: true,
     contextHash: cacheContext ? contextHashFull.slice(0, 16) : 'base',
     // Full digest: the framework is caller-supplied text, and a truncated hash
     // would let a crafted framework collide with another user's cache entry.
@@ -489,7 +482,7 @@ Rules:
       // the digest read only on a cache miss (once per country+lang per TTL).
       let promptContext = contextSnapshot;
       let entrySources = sources;
-      if (!isPremium || sharedDefault) {
+      if (sharedDefault) {
         const shared = await fetchSharedCountryContext(req.countryCode.toUpperCase());
         promptContext = shared.contextSnapshot;
         entrySources = shared.sources;
@@ -508,10 +501,10 @@ Rules:
         // saying anything about it. Filtering here also covers caller-supplied
         // context, which arrives without a news classification.
         entrySources = entrySources.filter((source) => isBriefRelevantTitle(source.title));
-        // A premium caller whose context carries no usable Source lines (the
+        // A caller whose context carries no usable Source lines (the
         // dashboard sends signal context alone when it has no headlines) is
         // grounded on the same server digest a shared caller gets.
-        if (entrySources.length === 0 && isPremium) {
+        if (entrySources.length === 0) {
           const shared = await fetchSharedCountryContext(countryCode);
           entrySources = shared.sources.filter((source) => isBriefRelevantTitle(source.title));
         }
@@ -663,7 +656,7 @@ Rules:
     markUnservedLlmResponse(ctx.request);
     return { ...empty, countryName };
   }
-  if (!isPremium || sharedDefault) {
+  if (sharedDefault) {
     // Shared entries carry server-derived sources; never backfill them with
     // this caller's parsed context (the brief text didn't see it).
     return { ...result, sources: Array.isArray(result.sources) ? result.sources : [] };

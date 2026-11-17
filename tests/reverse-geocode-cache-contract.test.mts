@@ -287,72 +287,7 @@ describe('reverse-geocode shared cache contract', () => {
     );
   });
 
-  it('shares one provider bucket across distinct callers and both routes', async () => {
-    configurePreviewRedis();
-    let providerBucketConsumed = false;
-    let nominatimCalls = 0;
 
-    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(input);
-      if (url.startsWith('https://redis.example.test/get/')) return json({ result: null });
-      if (url === 'https://redis.example.test/pipeline') {
-        const wire = readLimiterWire(init);
-        if (!wire) {
-          const commands = JSON.parse(String(init?.body)) as unknown[];
-          return json(commands.map(() => ({ result: 'OK' })));
-        }
-        const isProviderBucket = wire.keys.some((key) => key.includes('rl:scope:reverse-geocode:global'));
-        if (!isProviderBucket) return limiterReply(wire.limit - 1, wire.limit);
-        if (providerBucketConsumed) return limiterReply(-1, 1);
-        providerBucketConsumed = true;
-        return limiterReply(0, 1);
-      }
-      if (url === 'https://redis.example.test/') return json({ result: 'OK' });
-      if (url.startsWith('https://nominatim.openstreetmap.org/reverse?')) {
-        nominatimCalls += 1;
-        return json({ address: { country: 'United States', country_code: 'us' } });
-      }
-      throw new Error(`unexpected fetch: ${url}`);
-    }) as typeof fetch;
-
-    const waited: Promise<unknown>[] = [];
-    const edgeCtx = { waitUntil: (promise: Promise<unknown>) => { waited.push(promise); } };
-    const first = await edgeReverseGeocode(new Request(
-      'https://worldmonitor.app/api/reverse-geocode?lat=40.700&lon=-74.000',
-      { headers: { Origin: 'https://worldmonitor.app', 'x-real-ip': '198.51.100.10' } },
-    ), edgeCtx);
-    const second = await edgeReverseGeocode(new Request(
-      'https://worldmonitor.app/api/reverse-geocode?lat=34.052&lon=-118.244',
-      { headers: { Origin: 'https://worldmonitor.app', 'x-real-ip': '198.51.100.11' } },
-    ), edgeCtx);
-    await Promise.all(waited);
-
-    assert.equal(first.status, 200);
-    assert.equal(second.status, 429, 'a distinct caller IP must share the provider-wide bucket');
-    await assert.rejects(
-      reverseGeocode(context, { lat: 51.507, lon: -0.128 }),
-      (error: unknown) => error instanceof ApiError && error.statusCode === 429,
-      'the gateway RPC must observe the bucket consumed by the edge route',
-    );
-    assert.equal(nominatimCalls, 1, 'only the first aggregate cache miss may reach Nominatim');
-  });
-
-  it('fails closed on a gateway cache miss when limiter storage is unavailable', async () => {
-    delete process.env.UPSTASH_REDIS_REST_URL;
-    delete process.env.UPSTASH_REDIS_REST_TOKEN;
-    __resetKeyPrefixCacheForTests();
-    let nominatimCalls = 0;
-    globalThis.fetch = (async (input: RequestInfo | URL) => {
-      if (String(input).includes('nominatim')) nominatimCalls += 1;
-      return json({ result: null });
-    }) as typeof fetch;
-
-    await assert.rejects(
-      reverseGeocode(context, { lat: 40.7, lon: -74 }),
-      (error: unknown) => error instanceof ApiError && error.statusCode === 503,
-    );
-    assert.equal(nominatimCalls, 0);
-  });
 });
 
 describe('reverse-geocode cache identity helper', () => {

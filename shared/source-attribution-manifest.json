@@ -11410,9 +11410,6 @@
           "path": "api/og-story.js"
         },
         {
-          "path": "api/opensky.js"
-        },
-        {
           "path": "api/referral/me.ts"
         },
         {
@@ -11423,9 +11420,6 @@
         },
         {
           "path": "api/story.js"
-        },
-        {
-          "path": "api/telegram-feed.js"
         },
         {
           "path": "scripts/_country-stock-index-moex.mjs"
@@ -11516,9 +11510,6 @@
         },
         {
           "path": "server/_shared/notify-fields.ts"
-        },
-        {
-          "path": "server/gateway.ts"
         },
         {
           "path": "server/worldmonitor/infrastructure/v1/reverse-geocode.ts"

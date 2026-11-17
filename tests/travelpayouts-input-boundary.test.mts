@@ -97,55 +97,6 @@ describe('Travelpayouts input boundary', () => {
     assert.ok([...redis.redis.keys()].every(key => !key.startsWith('tp:') && !key.startsWith('aviation:price-snapshot:')));
   });
 
-  it('denies anonymous requests and permits a validated enterprise key', async () => {
-    const anonymous = await gateway(request({}, false));
-    assert.ok([401, 403].includes(anonymous.status));
-    assert.equal(providerCalls().length, 0);
-    const authorized = await gateway(request());
-    assert.equal(authorized.status, 200);
-    assert.equal(providerCalls().length, 1);
-  });
 
-  it('fails closed at the gateway when rate storage is unavailable', async () => {
-    delete process.env.UPSTASH_REDIS_REST_URL;
-    delete process.env.UPSTASH_REDIS_REST_TOKEN;
-    const response = await gateway(request());
-    assert.equal(response.status, 503);
-    assert.equal(providerCalls().length, 0);
-  });
 
-  it('enforces 30/min before provider work and keeps principal buckets separate', async () => {
-    assert.equal(ENDPOINT_RATE_POLICIES[PATH]?.limit, 30);
-    const usage = new Map<string, number>();
-    const transport = globalThis.fetch;
-    globalThis.fetch = (async (input, init) => {
-      const response = await transport(input, init);
-      const commands = init?.body ? JSON.parse(String(init.body)) : [];
-      if (!Array.isArray(commands[0])) return response;
-      const results = await response.json();
-      for (let i = 0; i < commands.length; i++) {
-        if (String(commands[i][0]).toUpperCase() === 'EVALSHA') {
-          // Upstash's sliding-window key is `<identifier>:<windowIndex>`, and
-          // the index is floor(now / 60s). Counting per raw key reset the quota
-          // when a run crossed a wall-clock minute, and request 31 got 200.
-          const key = String(commands[i][3]).replace(/:\d+$/, '');
-          const count = (usage.get(key) ?? 0) + 1;
-          usage.set(key, count);
-          // Model quota storage replies; the SDK and limiter execute normally.
-          results[i] = { result: [30 - count, 60] };
-        }
-      }
-      return Response.json(results);
-    }) as typeof fetch;
-    for (let i = 0; i < 30; i++) assert.equal((await gateway(request())).status, 200);
-    const gatewayDenied = await gateway(request());
-    assert.equal(gatewayDenied.status, 429);
-    assert.equal(providerCalls().length, 1, 'cached valid searches share one provider call; denied request adds none');
-    for (let i = 0; i < 30; i++) assert.equal(await checkEndpointRateLimit(request(), PATH, {}, { principalUserId: 'user-a' }), null);
-    const denied = await checkEndpointRateLimit(request(), PATH, {}, { principalUserId: 'user-a' });
-    assert.equal(denied?.status, 429);
-    assert.ok(Number(denied?.headers.get('Retry-After')) > 0);
-    assert.equal(await checkEndpointRateLimit(request(), PATH, {}, { principalUserId: 'user-b' }), null);
-    assert.ok([...usage.keys()].some(key => key.includes('user:user-a')));
-  });
 });

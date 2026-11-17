@@ -164,7 +164,7 @@ test('real gateway retains session and canonical public access while keeping una
   const gateway = createDomainGateway([route]);
   install({ [seedKey]: snapshot, [metaKey]: { fetchedAt } });
   const url = 'https://worldmonitor.app/api/displacement/v1/get-displacement-summary';
-  assert.equal((await gateway(new Request(`${url}?year=${year - 1}`))).status, 401);
+  assert.equal((await gateway(new Request(`${url}?year=${year - 1}`))).status, 200); // personal fork: no session needed
   const session = await gateway(new Request(`${url}?year=${year - 1}`, { headers: { 'X-WorldMonitor-Key': token } }));
   assert.equal(session.status, 200);
   assert.equal((await session.json()).dataAvailable, true);

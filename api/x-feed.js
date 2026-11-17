@@ -1,18 +1,15 @@
 // @ts-check
 import { getRelayBaseUrl, getRelayHeaders, fetchWithTimeout, buildRelayResponse } from './_relay.js';
 import { getCorsHeaders, isDisallowedOrigin } from './_cors.js';
-import { validateApiKey } from './_api-key.js';
 import { jsonResponse } from './_json-response.js';
 import { captureSilentError } from './_sentry-edge.js';
-import { checkRateLimit } from './_rate-limit.js';
 
 export const config = { runtime: 'edge' };
 
 const EPOCH_ISO = new Date(0).toISOString();
 
-// Every header validateApiKey can read a credential from, plus Origin (still
-// gated by isDisallowedOrigin). Two callers with different credentials must
-// never share a cache entry.
+// Origin plus the credential headers a caller may send. Two callers with
+// different credentials must never share a cache entry.
 const VARY_CREDENTIAL = 'Origin, Cookie, X-WorldMonitor-Key, X-Api-Key, Authorization';
 
 /**
@@ -169,7 +166,7 @@ function normalizeXFeed(parsed) {
   };
 }
 
-export default async function handler(req, ctx) {
+export default async function handler(req, _ctx) {
   const corsHeaders = getCorsHeaders(req, 'GET, OPTIONS');
 
   if (isDisallowedOrigin(req)) {
@@ -183,34 +180,8 @@ export default async function handler(req, ctx) {
   }
 
   // R4 (#6654): this is the ONLY route that serves post bodies, and it must
-  // stay the first-party panel's route. isDisallowedOrigin above cannot hold
-  // that line by itself — it returns false when Origin is absent, so a bare
-  // `curl /api/x-feed?limit=200` collected every body. Origin is not a fix
-  // either: it is client-controlled at the wire level, so a gate built on it
-  // costs an attacker one `-H`. That is the bypass class issue #3541 closed
-  // for validateApiKey, and the reason no header-only browser signal (Origin,
-  // Referer, Sec-Fetch-Site) is trusted anywhere in this file.
-  //
-  // Reuse the credential gate the sibling relay routes already run
-  // (api/rss-proxy.js, _relay.js createRelayHandler({ requireApiKey: true })).
-  // Not forceKey: the panel is anonymous, so the HMAC-signed wms_ session that
-  // the browser mints at boot is the intended credential here; forceKey would
-  // demand user-bound Pro auth and lock the dashboard out of its own panel.
-  const keyCheck = await validateApiKey(req);
-  if (keyCheck.required && !keyCheck.valid) {
-    return jsonResponse({ error: keyCheck.error }, 401, { 'Cache-Control': 'no-store', ...corsHeaders });
-  }
-
-  // Budget token reuse by caller IP; anonymous session tokens are replaceable.
-  // Keep the relay protected when the distributed limiter is unavailable.
-  const rateLimitResponse = await checkRateLimit(req, { ...corsHeaders, 'Cache-Control': 'no-store' }, {
-    scope: 'x-feed',
-    limit: 60,
-    window: '60 s',
-    failClosed: true,
-    ctx,
-  });
-  if (rateLimitResponse) return rateLimitResponse;
+  // stay the first-party panel's route. Access control is the personal
+  // server's HTTP Basic auth.
 
   const relayBaseUrl = getRelayBaseUrl();
   if (!relayBaseUrl) {

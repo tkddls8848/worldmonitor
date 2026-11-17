@@ -3,7 +3,6 @@ import type {
   GetSectorDependencyRequest,
   GetSectorDependencyResponse,
 } from '../../../../src/generated/server/worldmonitor/supply_chain/v1/service_server';
-import { isCallerPremium } from '../../../_shared/premium-check';
 import { markNoStoreFallbackResponse } from '../../../_shared/response-headers';
 
 const HS2_LABELS: Record<string, string> = {
@@ -28,7 +27,6 @@ export async function getSectorDependency(
   ctx: ServerContext,
   req: GetSectorDependencyRequest,
 ): Promise<GetSectorDependencyResponse> {
-  const isPro = await isCallerPremium(ctx.request);
   const empty: GetSectorDependencyResponse = {
     iso2: req.iso2,
     hs2: req.hs2 || '27',
@@ -41,7 +39,6 @@ export async function getSectorDependency(
     hasViableBypass: false,
     fetchedAt: '',
   };
-  if (!isPro) return markNoStoreFallbackResponse(ctx.request, empty);
 
   const iso2 = req.iso2?.trim().toUpperCase();
   const hs2 = req.hs2?.trim().replace(/\D/g, '') || '27';

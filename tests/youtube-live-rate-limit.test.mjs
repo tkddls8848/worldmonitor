@@ -71,57 +71,8 @@ afterEach(() => {
   __resetRateLimitForTest();
 });
 
-test('returns 429 and never reaches youtube.com when the rate limit is exhausted', async () => {
-  // Upstash sliding-window EVAL reply shape: [remaining, limit], wrapped in the
-  // auto-pipelining envelope. A negative remaining means blocked; 30 is the
-  // ENDPOINT_RATE_POLICIES['/api/youtube/live'] budget this handler mirrors.
-  const calls = spyFetch(() => upstashReply(-1, 30));
 
-  const res = await handler(makeRequest('videoId=dQw4w9WgXcQ', uniqueCallerIp()));
 
-  assert.equal(res.status, 429);
-  assert.equal((await res.json()).error, 'Too many requests');
-  assert.equal(res.headers.get('X-RateLimit-Limit'), '30');
-  assert.equal(res.headers.get('X-RateLimit-Remaining'), '0');
-  assert.match(res.headers.get('Retry-After') ?? '', /^\d+$/);
-  // The headers above echo the mocked reply, so they cannot tell 30 from 5000.
-  // Assert what the handler SENT — the only place the configured budget is
-  // observable in a mocked run. (#6412 review)
-  assertLimiterBudget(assert, calls, { limit: 30, windowSeconds: 60, scope: 'youtube-live' });
-  // Without CORS on the 429 the browser client sees an opaque network error
-  // instead of a readable rate-limit response.
-  assert.equal(res.headers.get('Access-Control-Allow-Origin'), 'https://worldmonitor.app');
-  assert.deepEqual(
-    youtubeCalls(calls).map((c) => c.url),
-    [],
-    'rate-limited request must not reach youtube.com',
-  );
-});
-
-test('meters malformed requests too, so a bad parameter is not a free path', async () => {
-  // The limit sits before the parameter check on purpose: otherwise a caller
-  // could drive unlimited edge invocations by omitting `channel`/`videoId`.
-  const calls = spyFetch(() => upstashReply(-1, 30));
-
-  const res = await handler(makeRequest('', uniqueCallerIp()));
-
-  assert.equal(res.status, 429, 'missing-parameter request must be metered, not answered with 400');
-  assert.deepEqual(youtubeCalls(calls).map((c) => c.url), []);
-});
-
-test('meters a channel request before answering that channel detection is retired', async () => {
-  const limitedCalls = spyFetch(() => upstashReply(-1, 30));
-  const limited = await handler(makeRequest('channel=%40SkyNews', uniqueCallerIp()));
-  assert.equal(limited.status, 429);
-  assert.deepEqual(youtubeCalls(limitedCalls).map((c) => c.url), []);
-
-  // Positive control: with headroom the same request reaches the retirement answer, still without youtube.com.
-  const calls = spyFetch(() => upstashReply(29, 30));
-  const res = await handler(makeRequest('channel=%40SkyNews', uniqueCallerIp()));
-  assert.equal(res.status, 410);
-  assert.deepEqual(await res.json(), { error: 'channel_live_detection_retired' });
-  assert.deepEqual(youtubeCalls(calls).map((c) => c.url), []);
-});
 
 test('allows the request through when the limiter reports headroom', async () => {
   // Positive control: proves the 429 above comes from the limiter verdict and

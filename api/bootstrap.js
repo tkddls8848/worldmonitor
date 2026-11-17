@@ -13,21 +13,7 @@ export {
   isPublicWeatherBootstrapRequest,
 } from './_bootstrap-public-tier.js';
 import { getCorsHeaders, getPublicCorsHeaders, isDisallowedOrigin } from './_cors.js';
-import {
-  USER_API_KEY_GATEWAY_VALIDATION_ERROR,
-  getHeaderApiKey,
-  validateApiKey,
-} from './_api-key.js';
 import { jsonResponse } from './_json-response.js';
-import { checkRateLimit } from './_rate-limit.js';
-import {
-  checkBootstrapDesktopKeyBudget,
-  checkBootstrapDesktopKeyClient,
-  checkBootstrapUserApiKeyRateLimit,
-  isCanonicalUserApiKey,
-  resolveBootstrapUserKeyAccess,
-  validateBootstrapUserApiKeyPrincipal,
-} from './_user-api-key.js';
 // @ts-expect-error — JS module, no declaration file
 import { redisPipeline } from './_upstash-json.js';
 import { unwrapEnvelope } from './_seed-envelope.js';
@@ -350,124 +336,17 @@ async function getCachedJsonBatch(keys, shadowMarkerTier = null) {
   return result;
 }
 
-function authFailure(body, status, cors, extraHeaders = {}) {
-  // no-store is spread last so a caller-supplied Cache-Control in extraHeaders
-  // can never weaken the non-cacheable posture of an auth-failure response.
-  return jsonResponse(body, status, {
-    ...cors,
-    ...extraHeaders,
-    'Cache-Control': 'no-store',
-  });
-}
-
-async function validateBootstrapAuth(req, cors) {
-  const headerKey = getHeaderApiKey(req);
-  // The explicit public URL must have one response contract for every request:
-  // Vercel may serve it from cache before cookie/header auth reaches this code.
+// Access control is the personal server's HTTP Basic auth, so every request
+// gets the full payload. The kind only selects cache headers: the marked
+// public URLs stay shared-cacheable, everything else is the owner's no-store
+// read.
+function resolveBootstrapKind(req) {
   const publicBootstrap = classifyPublicBootstrapRequest(req);
-  if (publicBootstrap) {
-    return { ok: true, kind: publicBootstrap.authKind };
+  if (publicBootstrap) return publicBootstrap.authKind;
+  if (!hasBootstrapCredentialCookie(req) && isAnonymousWeatherBootstrapRequest(req)) {
+    return 'anonymous-weather';
   }
-  if (!headerKey && !hasBootstrapCredentialCookie(req)) {
-    if (isAnonymousWeatherBootstrapRequest(req)) {
-      return { ok: true, kind: 'anonymous-weather' };
-    }
-  }
-
-  const apiKeyResult = await validateApiKey(req);
-  if (!apiKeyResult.required || apiKeyResult.valid) {
-    return { ok: true, kind: apiKeyResult.kind || 'unknown' };
-  }
-
-  if (apiKeyResult.error === USER_API_KEY_GATEWAY_VALIDATION_ERROR && headerKey.startsWith('wm_')) {
-    if (!isCanonicalUserApiKey(headerKey)) {
-      return {
-        ok: false,
-        response: authFailure({ error: 'Invalid API key' }, 401, cors),
-      };
-    }
-
-    const rateLimitResult = await checkBootstrapUserApiKeyRateLimit(req);
-    if (!rateLimitResult.ok) {
-      return {
-        ok: false,
-        response: authFailure(
-          { error: rateLimitResult.error },
-          rateLimitResult.status,
-          cors,
-          rateLimitResult.headers,
-        ),
-      };
-    }
-
-    // Propagate the validation result's status/error/headers (all generic,
-    // leak-free strings) rather than hardcoding 401/403: a Convex outage surfaces
-    // as a retryable 503 + Retry-After (status 503, unavailable:true) instead of
-    // a misleading "Invalid API key" 401, mirroring the rate-limit path above.
-    //
-    // Desktop-aware (plan 2026-10-25-001, KTD3): the principal carries its
-    // kind, and resolveBootstrapUserKeyAccess decides whether the owner's
-    // API plan (today's path) or the desktop entitlement admits it. Bootstrap
-    // serves one payload to every credentialed caller, so a desktop principal
-    // gets what a signed-in Pro session gets here — under the desktop meter.
-    const userKeyResult = await validateBootstrapUserApiKeyPrincipal(headerKey);
-    if (!userKeyResult.ok) {
-      return {
-        ok: false,
-        response: authFailure(
-          { error: userKeyResult.error },
-          userKeyResult.status,
-          cors,
-          userKeyResult.headers,
-        ),
-      };
-    }
-
-    const entitlementResult = await resolveBootstrapUserKeyAccess(userKeyResult);
-    if (!entitlementResult.ok) {
-      return {
-        ok: false,
-        response: authFailure(
-          {
-            error: entitlementResult.error,
-            // Billing-verification denials (#4770) expose their machine-readable
-            // code in the body, matching the {error, code} shape the REST
-            // gateway emits for the same statuses.
-            ...(entitlementResult.headers?.['X-Billing-Verification']
-              ? { code: entitlementResult.reason }
-              : {}),
-          },
-          entitlementResult.status,
-          cors,
-          entitlementResult.headers,
-        ),
-      };
-    }
-
-    if (entitlementResult.scope === 'desktop') {
-      const client = checkBootstrapDesktopKeyClient(req);
-      if (!client.ok) {
-        return { ok: false, response: authFailure({ error: client.error }, client.status, cors) };
-      }
-      const budget = await checkBootstrapDesktopKeyBudget(userKeyResult.userId, entitlementResult.entitlement);
-      if (!budget.ok) {
-        return {
-          ok: false,
-          response: authFailure(budget.body ?? { error: budget.error }, budget.status, cors, budget.headers),
-        };
-      }
-    }
-
-    return { ok: true, kind: 'user' };
-  }
-
-  const error = apiKeyResult.error === USER_API_KEY_GATEWAY_VALIDATION_ERROR
-    ? 'Invalid API key'
-    : apiKeyResult.error;
-  return {
-    ok: false,
-    response: authFailure({ error }, 401, cors),
-  };
+  return 'owner';
 }
 
 // Kinds that serve the shared public seed payload with no per-user variation.
@@ -539,9 +418,6 @@ function successCacheHeaders(requestedTier, authKind, cors, onDemandKey = null) 
   };
 }
 
-const SESSION_BOOTSTRAP_RATE_SCOPE = 'bootstrap-session';
-const SESSION_BOOTSTRAP_RATE_LIMIT = 120;
-
 export default async function handler(req, ctx) {
   // no-store because this rejection is decided by the Origin header, which no
   // cache layer here keys on (CF ignores Vary — see TIER_CACHE above). Without
@@ -556,20 +432,7 @@ export default async function handler(req, ctx) {
   if (req.method === 'OPTIONS')
     return new Response(null, { status: 204, headers: cors });
 
-  const auth = await validateBootstrapAuth(req, cors);
-  if (!auth.ok) return auth.response;
-  // Anonymous wms_ sessions are free to mint and their reads are no-store, so
-  // every request is a full Redis read plus egress. Give them a per-address
-  // budget well above a dashboard boot; wm_ user keys have their own limiter.
-  if (auth.kind === 'session') {
-    const limited = await checkRateLimit(req, cors, {
-      ctx,
-      scope: SESSION_BOOTSTRAP_RATE_SCOPE,
-      limit: SESSION_BOOTSTRAP_RATE_LIMIT,
-      window: '60 s',
-    });
-    if (limited) return limited;
-  }
+  const auth = { kind: resolveBootstrapKind(req) };
 
   const url = new URL(req.url);
   const tier = url.searchParams.get('tier');
