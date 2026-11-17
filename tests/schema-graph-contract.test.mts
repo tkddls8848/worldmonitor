@@ -1,17 +1,31 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
 import middleware from '../middleware';
 import { rewriteDocsLocaleHtml } from '../src/config/docs-locale-seo';
 import { DOCS_PAGE_DATES } from '../src/config/docs-page-dates.generated';
-import {
-  buildCorpus,
-  PAGE_TYPES_WITH_ATTRIBUTION,
-  WORLD_MONITOR_ORG,
-} from '../scripts/build-crawlable-corpus.mjs';
+// The crawl corpus (scripts/build-crawlable-corpus.mjs) left the personal
+// build. These are its Organization stub and attributed page types as last
+// published, which the remaining surfaces still have to agree with.
+const WORLD_MONITOR_ORG = Object.freeze({
+  '@id': 'https://www.worldmonitor.app/#organization',
+  '@type': 'Organization',
+  name: 'World Monitor',
+  url: 'https://www.worldmonitor.app/',
+});
+const PAGE_TYPES_WITH_ATTRIBUTION = new Set([
+  'WebPage',
+  'CollectionPage',
+  'ItemPage',
+  'Article',
+  'Report',
+  'BlogPosting',
+  'WebApplication',
+  'FAQPage',
+  'HowTo',
+]);
 import {
   SOFTWARE_SHARED_PROPERTIES,
   WEBSITE_SHARED_PROPERTIES,
@@ -49,29 +63,6 @@ const PERSON_ENTITY_SAME_AS = [
 ];
 
 const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
-
-/**
- * The generated corpus, built once and shared by every test below. CI does not
- * prebuild it, so the real generator runs in a temporary directory; the build
- * costs seconds, so memoize rather than paying it per test.
- */
-let generatedCorpusPromise: Promise<Map<string, string>> | null = null;
-function generatedCorpusDocuments(): Promise<Map<string, string>> {
-  generatedCorpusPromise ??= (async () => {
-    const documents = new Map<string, string>();
-    const corpusDir = mkdtempSync(join(tmpdir(), 'wm-schema-corpus-'));
-    try {
-      await buildCorpus({ outDir: corpusDir });
-      for (const path of readdirSync(corpusDir, { recursive: true }) as string[]) {
-        if (path.endsWith('.html')) documents.set(`public/${path}`, readFileSync(join(corpusDir, path), 'utf8'));
-      }
-    } finally {
-      rmSync(corpusDir, { recursive: true, force: true });
-    }
-    return documents;
-  })();
-  return generatedCorpusPromise;
-}
 
 /**
  * Nodes that stand for the page itself, as opposed to the Dataset/Place/
@@ -386,8 +377,6 @@ describe('canonical schema graph', () => {
   // pinned values AND that no unpinned property diverges either.
   it('serves consistent product, Organization and Dataset bodies across every surface (#7611, #7861)', async () => {
     const documents = new Map(jsonLdDocumentPaths().map((path) => [path, read(path)]));
-    // CI does not prebuild the corpus. Exercise its real generator in isolation.
-    for (const [path, html] of await generatedCorpusDocuments()) documents.set(path, html);
     const docsOrganization = JSON.parse(read('docs/docs.json')).seo.organization;
     const { id, logo, ...properties } = docsOrganization;
     const docsHtml = `<html><head><script type="application/ld+json">${JSON.stringify({
@@ -408,7 +397,8 @@ describe('canonical schema graph', () => {
     }
     const datasetIds = new Set([...documents.values()].flatMap((html) =>
       collectNodesOfType(html, 'Dataset').map((node) => node['@id']).filter((id): id is string => typeof id === 'string')));
-    assert.ok(datasetIds.size > 0, 'build the corpus before checking Dataset identities');
+    // Most Dataset nodes lived on the removed crawl corpus pages; whatever
+    // Dataset identities the remaining surfaces declare must still agree.
     const pinned: Array<[string, Record<string, unknown>, string[]]> = [
       [SOFTWARE_ID, SOFTWARE_SHARED_PROPERTIES, withoutUnbuiltProPaths([
         'index.html',
@@ -481,41 +471,6 @@ describe('canonical schema graph', () => {
         }
       }
     }
-  });
-
-  // #7980: every generated page publishes a risk score, a ranking, or a
-  // reference claim, and none of them named anyone who stands behind it --
-  // `author` was absent at any depth on all 240. `publisher` alone does not
-  // encode that signal, and the docs family already proves the shape. The
-  // population is DISCOVERED from the generator's own output, so a new page
-  // family cannot ship unattributed.
-  it('attributes every generated page body to a canonical author (#7980)', async () => {
-    const corpus = await generatedCorpusDocuments();
-    assert.ok(corpus.size > 200, 'the generated corpus must be built before checking attribution');
-
-    let checked = 0;
-    for (const [path, html] of corpus) {
-      const bodies = PAGE_BODY_TYPES.flatMap((type) => collectNodesOfType(html, type));
-      assert.ok(bodies.length > 0, `${path}: no page-shaped JSON-LD body to attribute`);
-      // The escape hatch check: a top-level node NAMED a page that no one
-      // taught the generator to attribute. Runs over the raw blocks, not the
-      // type list, so it sees what the list does not.
-      for (const block of jsonLdBlocks(html)) {
-        const declared = block['@type'];
-        const types = Array.isArray(declared) ? declared : declared ? [declared] : [];
-        if (!types.some((type: string) => ORPHAN_PAGE_BODY_RE.test(type))) continue;
-        assert.ok(
-          block.author,
-          `${path}: ${JSON.stringify(declared)} names itself a page but carries no author — `
-            + 'add it to PAGE_TYPES_WITH_ATTRIBUTION or exempt it deliberately',
-        );
-      }
-      for (const body of bodies) {
-        checked += 1;
-        assertSelfDescribingAuthor(`${path}: ${JSON.stringify(body['@type'])}`, body.author);
-      }
-    }
-    assert.ok(checked > 200, `expected the whole generated corpus to be checked, saw ${checked} bodies`);
   });
 
   // #8073: the #7980 author guard discovered its population from the corpus

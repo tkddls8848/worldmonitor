@@ -47,7 +47,6 @@ describe('REST API versioning and deprecation policy', () => {
       'docs/agent-discovery.mdx',
       'public/api/llms.txt',
       'public/agents.md',
-      'public/llms.txt',
       'public/.well-known/api-catalog',
     ]) {
       assert.match(read(path), /api-versioning/);

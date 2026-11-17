@@ -60,7 +60,8 @@ test('reduction orders tied creation times by id, attempt and settled status', (
   assert.deepEqual(result, [nextId, settled]);
 });
 
-for (const script of ['check-pulse-freshness.mjs', 'check-railway-reconcile-age.mjs']) {
+// check-pulse-freshness.mjs left the personal build with the live-pulse freeze.
+for (const script of ['check-railway-reconcile-age.mjs']) {
   test(`${script} CLI reports UNKNOWN for contradictory listings`, () => {
     const dir = mkdtempSync(join(tmpdir(), 'run-listing-'));
     try {

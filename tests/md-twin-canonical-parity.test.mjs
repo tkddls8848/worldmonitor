@@ -20,13 +20,6 @@ import { declaredHtmlCanonical, pageCanonicalUrl } from '../shared/page-canonica
 const ORIGIN = 'https://www.worldmonitor.app';
 const root = new URL('../', import.meta.url);
 
-function sitemapPages() {
-  const xml = readFileSync(new URL('public/sitemap-main.xml', root), 'utf8');
-  return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)]
-    .map((m) => m[1])
-    .filter((loc) => loc.startsWith(`${ORIGIN}/`) && loc !== `${ORIGIN}/`);
-}
-
 function blogPages() {
   const content = new URL('blog-site/src/content/', root);
   const posts = readdirSync(new URL('blog/', content))
@@ -39,7 +32,9 @@ function blogPages() {
   return [`${ORIGIN}/blog/`, ...posts, ...guides];
 }
 
-const TWIN_SET = [...new Set([...sitemapPages(), ...blogPages()])];
+// The root sitemap (public/sitemap-main.xml) left the personal build with the
+// crawl corpus, so the twin set is the blog's pages.
+const TWIN_SET = [...new Set(blogPages())];
 
 /**
  * A stand-in for production static hosting: each page answers 200 at both its
@@ -81,10 +76,8 @@ function linkCanonical(response) {
 
 describe('markdown twin canonical parity', () => {
   it('covers the real twin set, trailing-slash blog pages included', () => {
-    assert.ok(TWIN_SET.length > 300, `twin set unexpectedly small: ${TWIN_SET.length}`);
+    assert.ok(TWIN_SET.length > 50, `twin set unexpectedly small: ${TWIN_SET.length}`);
     assert.ok(TWIN_SET.some((u) => u.startsWith(`${ORIGIN}/blog/best/`)));
-    assert.ok(TWIN_SET.some((u) => u.startsWith(`${ORIGIN}/sources/`)));
-    assert.ok(TWIN_SET.some((u) => !u.endsWith('/')), 'slash-less canonicals must be covered too');
   });
 
   const fetchImpl = staticSite(TWIN_SET);

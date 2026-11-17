@@ -60,6 +60,8 @@ const command = ([verb, key, value, ...args]) => {
   }
   if (verb === 'EVAL') { values.delete(args[0]); return 1; }
   if (verb === 'LPUSH') { pushes.push(JSON.parse(value)); return 1; }
+  // Queue pushes carry LTRIM wm:events:queue 0 999 in the same pipeline.
+  if (verb === 'LTRIM') return 'OK';
   if (verb === 'DEL') { values.delete(key); return 1; }
   throw new Error('Unexpected Redis command ' + verb);
 };

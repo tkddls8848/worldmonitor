@@ -14,7 +14,14 @@ import { finiteNumber, liveSectionMarkers, replaceLiveSection } from '../scripts
 import { debtAt } from '../scripts/live-pages/national-debt.mjs';
 import weoFiscalPeriods from '../scripts/shared/weo-fiscal-periods.mjs';
 import { isPublicSharedRpcRequest, LIVE_TOPIC_RPC_PATHS } from '../src/shared/public-rpc-cache.ts';
-import { WORLD_MONITOR_ORG } from '../scripts/build-crawlable-corpus.mjs';
+// The Organization stub the removed crawl corpus published (WORLD_MONITOR_ORG
+// in scripts/build-crawlable-corpus.mjs); live-page FAQs name the same author.
+const WORLD_MONITOR_ORG = Object.freeze({
+  '@id': 'https://www.worldmonitor.app/#organization',
+  '@type': 'Organization',
+  name: 'World Monitor',
+  url: 'https://www.worldmonitor.app/',
+});
 
 const NOW = Date.parse('2026-10-18T09:00:00Z');
 const HOUR = 3_600_000;

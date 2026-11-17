@@ -139,21 +139,13 @@ describe('issue #7377 GEO content credibility', () => {
     assert.match(pressNav, /In the press/);
   });
 
+  // The generated llms.txt and ai-search.md left the personal build; the press
+  // document and the about pages still have to agree.
   it('(c2) keeps the indexed press document and about pages carrying the same outlets', () => {
-    const index = read('public/llms.txt').match(/## Product identity and press references\n([\s\S]*?)(?=\n## |$)/)?.[1];
-    assert.ok(index, 'llms.txt must expose its press references');
-    assert.match(index, /\]\(https:\/\/www\.worldmonitor\.app\/world-monitor\.md\)/);
-    for (const match of index.matchAll(/\]\((https?:\/\/[^)]+)\)/g)) {
-      assert.equal(new URL(match[1]).hostname, 'www.worldmonitor.app', 'the discovery index uses first-party press documents');
-    }
     const sections = {
       'public/world-monitor.md': ['## Press mentions that name World Monitor', /^## /m],
       'docs/about.mdx': ['## In the press', /^## /m],
       'docs/zh/about.mdx': ['## 媒体报道', /^## /m],
-      // #7869: round 7 found the WIRED feature absent from ai-search.md, one of
-      // the two files an assistant is most likely to read for entity grounding.
-      // Listed here rather than merely added, so it cannot drift back out.
-      'public/ai-search.md': ['## Press Coverage', /^## /m],
     };
 
     const urlsIn = (relative, heading) => {
@@ -207,34 +199,6 @@ describe('issue #7377 GEO content credibility', () => {
       `PRESS_LINKS must keep the full press set (>= 8, got ${PRESS_LINKS.length});`
         + ' a shrinking list makes every count assertion in this file vacuous',
     );
-  });
-
-  it('(c3) names the outlets in the llms.txt press section, without leaving the first-party links (#7869)', () => {
-    // Round 7: the WIRED feature is absent from llms.txt, which points at
-    // world-monitor.md and names nobody. A model that reads only the index
-    // learns World Monitor has "external reporting" and no more. The links here
-    // stay first-party — (c2) above enforces that — so the outlets have to be
-    // named in the prose instead.
-    const heading = '## Press mentions that name World Monitor';
-    const identity = read('public/world-monitor.md');
-    const afterHeading = identity.slice(identity.indexOf(heading) + heading.length);
-    const nextHeading = afterHeading.search(/^## /m);
-    const pressBody = nextHeading === -1 ? afterHeading : afterHeading.slice(0, nextHeading);
-    const outlets = [...pressBody.matchAll(/^- \[([^—\]]+) — /gm)].map((match) => match[1].trim());
-    assert.equal(
-      outlets.length,
-      PRESS_LINKS.length,
-      'the identity document must list every press outlet as "Outlet — headline"',
-    );
-
-    const index = read('public/llms.txt').match(/## Product identity and press references\n([\s\S]*?)(?=\n## |$)/)?.[1];
-    assert.ok(index, 'llms.txt must expose its press references');
-    for (const outlet of outlets) {
-      assert.ok(
-        index.includes(outlet),
-        `llms.txt must name ${outlet}; an unnamed "external reporting" pointer grounds nothing`,
-      );
-    }
   });
 
   // (d) pinned a "by Someone.ceo" studio byline into the header/footer lockups.

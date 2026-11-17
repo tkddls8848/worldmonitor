@@ -2,13 +2,8 @@
 // name, generated from the registries the product reads.
 
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { after, before, describe, it } from 'node:test';
+import { describe, it } from 'node:test';
 
-import { buildCorpus } from '../scripts/build-crawlable-corpus.mjs';
 import {
   assertCatalogComplete,
   assertWrittenDescriptionsTargetPanels,
@@ -19,11 +14,7 @@ import {
   PANEL_DESCRIPTIONS_PATH,
   tooltipText,
 } from '../scripts/build-coverage-catalog.mjs';
-import { ALL_PANELS } from '../src/config/panels.ts';
-import { getCompleteLayerCatalogKeys } from '../src/config/map-layer-definitions.ts';
-import { TOOL_REGISTRY } from '../api/mcp/registry/index.ts';
 
-const repoRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
 
 describe('coverage catalog text', () => {
   it('turns a tooltip into plain prose without its title or interaction hints', () => {
@@ -129,64 +120,5 @@ describe('coverage catalog panel groups', () => {
       /lists 3 panels but the panel registry has 4/,
     );
     assert.throws(() => assertWrittenDescriptionsTargetPanels({ gone: 'x' }, allPanels), /unknown panels: gone/);
-  });
-});
-
-describe('coverage catalog page', () => {
-  let outDir;
-  let manifest;
-  let html;
-  let dataset;
-
-  before(async () => {
-    outDir = mkdtempSync(join(tmpdir(), 'wm-coverage-corpus-'));
-    manifest = await buildCorpus({ rootDir: repoRoot, outDir, baseUrl: 'https://www.worldmonitor.app' });
-    html = readFileSync(join(outDir, 'reference', 'coverage', 'index.html'), 'utf8');
-    dataset = JSON.parse(readFileSync(join(outDir, 'reference', 'coverage', 'coverage.json'), 'utf8'));
-  });
-
-  after(() => {
-    if (outDir) rmSync(outDir, { recursive: true, force: true });
-  });
-
-  it('lists every panel, catalog layer and MCP tool in the registries', () => {
-    const panelIds = dataset.panelGroups.flatMap((group) => group.panels.map((panel) => panel.id));
-    assert.deepEqual([...panelIds].sort(), Object.keys(ALL_PANELS).sort());
-    assert.deepEqual(dataset.layers.map((layer) => layer.id), getCompleteLayerCatalogKeys('full'));
-    assert.deepEqual(dataset.tools.map((tool) => tool.name).sort(), TOOL_REGISTRY.map((tool) => tool.name).sort());
-    for (const tool of TOOL_REGISTRY) assert.ok(html.includes(`<code>${tool.name}</code>`), `page lists ${tool.name}`);
-  });
-
-  it('publishes plain-text descriptions and states counts that match the lists', () => {
-    for (const panel of dataset.panelGroups.flatMap((group) => group.panels)) {
-      assert.ok(!/<\/?[a-z]/i.test(panel.description), `${panel.id} description has markup`);
-    }
-    assert.equal(dataset.counts.panels, Object.keys(ALL_PANELS).length);
-    assert.equal(dataset.counts.tools, TOOL_REGISTRY.length);
-    assert.match(html, new RegExp(`${dataset.counts.panels} dashboard panels in ${dataset.counts.panelGroups} groups, ${dataset.counts.layers} map layers and ${dataset.counts.tools} MCP tools`));
-  });
-
-  it('answers "What does World Monitor cover?" in FAQ markup and is linked from every corpus page', () => {
-    const faq = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)]
-      .map(([, raw]) => JSON.parse(raw))
-      .find((entry) => entry['@type'] === 'FAQPage');
-    assert.equal(faq?.mainEntity?.[0]?.name, 'What does World Monitor cover?');
-    assert.match(html, /<link rel="canonical" href="https:\/\/www\.worldmonitor\.app\/reference\/coverage\/">/);
-    assert.equal(manifest.sections.coverage.index, '/reference/coverage/');
-    for (const page of ['chokepoints/index.html', 'sources/index.html', ...manifest.sections.sources.routes.map((route) => `${route.slice(1)}index.html`)]) {
-      const pageHtml = readFileSync(join(outDir, page), 'utf8');
-      assert.ok(pageHtml.includes('<a href="/reference/coverage/">Coverage</a>'), `${page} links the coverage catalog`);
-    }
-  });
-
-  it('lists each panel on the dashboards that register it', () => {
-    const panels = Object.fromEntries(dataset.panelGroups.flatMap((group) => group.panels).map((panel) => [panel.id, panel]));
-    assert.deepEqual(panels['fear-greed'].variants, ['full', 'finance']);
-    assert.ok(!panels['live-news'].variants.includes('happy'));
-  });
-
-  it('keeps written descriptions for panels that exist', () => {
-    const written = JSON.parse(readFileSync(join(repoRoot, PANEL_DESCRIPTIONS_PATH), 'utf8'));
-    assert.doesNotThrow(() => assertWrittenDescriptionsTargetPanels(written, ALL_PANELS));
   });
 });

@@ -66,7 +66,6 @@ describe('generator locale independence', { concurrency: PROBE_CONCURRENCY }, ()
     baseline = await runProbe('en-US');
     if (process.platform !== 'win32') assert.equal(baseline.hostLocale, 'en-US');
     assert.equal(baseline.digest, baseline.reviewedDigest);
-    assert.equal(baseline.corpusCurrent, true);
     assert.ok(baseline.artifacts['shared/iso3-to-iso2.json'].includes('"CHE": "CH"'));
     assert.ok(baseline.artifacts['scripts/data/outbreak-places.json'].includes('Chain'));
     assert.ok(baseline.artifacts.openapi.includes('"$ref"'));
@@ -79,7 +78,6 @@ describe('generator locale independence', { concurrency: PROBE_CONCURRENCY }, ()
       if (process.platform !== 'win32') assert.equal(actual.hostLocale, locale, 'child process must use the requested host locale');
       assert.deepEqual(actual.defaultOrder, [...actual.samples].sort((a, b) => a.localeCompare(b, locale)));
       assert.equal(actual.digest, actual.reviewedDigest);
-      assert.equal(actual.corpusCurrent, true);
       for (const [name, bytes] of Object.entries(baseline.artifacts)) {
         const digest = value => createHash('sha256').update(value).digest('hex');
         assert.equal(digest(actual.artifacts[name]), digest(bytes), `${name} changed under ${locale}`);

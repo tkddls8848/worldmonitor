@@ -1,11 +1,6 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { after, before, describe, it } from 'node:test';
+import { describe, it } from 'node:test';
 
-import { buildCorpus, loadCorpusData } from '../scripts/build-crawlable-corpus.mjs';
 import {
   COUNTRY_PRO_LINK_EVENT,
   COUNTRY_PRO_LINK_HREF,
@@ -20,7 +15,6 @@ import {
   selectRelatedCountries,
 } from '../scripts/country-related-links.mjs';
 
-const repoRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const escapeHtml = (value) => String(value)
   .replaceAll('&', '&amp;')
   .replaceAll('<', '&lt;')
@@ -230,94 +224,5 @@ describe('country Pro/API link', () => {
     // Same-site links take no query tag: any utm_* or ref key is a bot 308 (#8603).
     assert.doesNotMatch(html, /[?&](utm_|ref=|wm_referral=)/);
     assert.equal((html.match(/<a /g) || []).length, 1);
-  });
-});
-
-describe('related countries and the Pro link on the generated corpus', () => {
-  let outDir;
-  let data;
-  before(async () => {
-    outDir = mkdtempSync(join(tmpdir(), 'wm-country-related-'));
-    data = await loadCorpusData({ rootDir: repoRoot });
-    await buildCorpus({ rootDir: repoRoot, outDir, baseUrl: 'https://www.worldmonitor.app' });
-  });
-  after(() => {
-    if (outDir) rmSync(outDir, { recursive: true, force: true });
-  });
-
-  it('gives every country 3-5 existing, non-self targets', () => {
-    const slugs = new Set(data.countries.map((country) => country.slug));
-    assert.equal(data.relatedCountriesByCode.size, data.countries.length);
-    for (const country of data.countries) {
-      const targets = data.relatedCountriesByCode.get(country.code);
-      assert.ok(targets.length >= MIN_RELATED_COUNTRIES && targets.length <= MAX_RELATED_COUNTRIES, `${country.code}: ${targets.length}`);
-      assert.ok(targets.every((target) => target.code !== country.code), `${country.code} links to itself`);
-      assert.ok(targets.every((target) => slugs.has(target.slug)), `${country.code} links to a missing page`);
-    }
-  });
-
-  it('feeds every signal from the real datasets', () => {
-    // The checks above pass even if every input were dropped and all pages
-    // fell back to "nearest". Each signal must reach some page, and the
-    // fallback must stay the exception.
-    const targets = [...data.relatedCountriesByCode.values()].flat();
-    const reasons = new Set(targets.map((target) => target.reason));
-    for (const reason of ['crisis', 'tension', 'nearby', 'region']) {
-      assert.ok(reasons.has(reason), `no country page links by ${reason}`);
-    }
-    const nearest = targets.filter((target) => target.reason === 'nearest').length;
-    assert.ok(nearest * 10 < targets.length, `${nearest} of ${targets.length} links are the nearest-country fallback`);
-  });
-
-  it('keeps far-off territory out of "nearby"', () => {
-    const nearbyCodes = (code) => data.relatedCountriesByCode.get(code)
-      .filter((target) => target.reason === 'nearby')
-      .map((target) => target.code);
-    // French Guiana and Russia's single box once made these "nearby".
-    for (const code of ['LR', 'SL', 'GM', 'CV', 'CA', 'SR', 'MA']) {
-      assert.ok(!nearbyCodes(code).includes('FR'), `${code} calls France nearby`);
-    }
-    for (const code of ['GR', 'AL', 'RS', 'BG', 'RO', 'MD', 'IT']) {
-      assert.ok(!nearbyCodes(code).includes('RU'), `${code} calls Russia nearby`);
-    }
-    // Real neighbours keep the link.
-    assert.ok(nearbyCodes('FI').includes('RU'), 'Finland must keep Russia');
-    assert.ok(nearbyCodes('GE').includes('RU'), 'Georgia must keep Russia');
-    assert.ok(nearbyCodes('MC').includes('FR'), 'Monaco must keep France');
-    assert.ok(nearbyCodes('CU').includes('US'), 'Cuba must keep the United States');
-  });
-
-  it('selects the same targets on a second load', async () => {
-    const again = await loadCorpusData({ rootDir: repoRoot });
-    for (const [code, targets] of data.relatedCountriesByCode) {
-      assert.deepEqual(again.relatedCountriesByCode.get(code), targets, code);
-    }
-  });
-
-  it('renders the related links and exactly one Pro/API link on every country page', () => {
-    for (const country of data.countries) {
-      const html = readFileSync(join(outDir, 'countries', country.slug, 'index.html'), 'utf8');
-      const section = html.match(/<ul class="related-countries" data-related-countries>([\s\S]*?)<\/ul>/)?.[1] || '';
-      const hrefs = [...section.matchAll(/href="\/countries\/([^/"]+)\/"/g)].map((match) => match[1]);
-      assert.deepEqual(hrefs, data.relatedCountriesByCode.get(country.code).map((target) => target.slug), country.code);
-      assert.equal(
-        (html.match(new RegExp(`data-umami-event="${COUNTRY_PRO_LINK_EVENT}" data-umami-event-target="${COUNTRY_PRO_LINK_TARGET}"`, 'g')) || []).length,
-        1,
-        `${country.code} Pro link count`,
-      );
-      assert.ok(html.includes('src="https://abacus.worldmonitor.app/script.js"'), `${country.code} loads no Umami script`);
-    }
-  });
-
-  it('keeps unranked pages free of rank claims in the new sections', () => {
-    const unranked = data.countries.filter((country) => country.rank == null);
-    assert.ok(unranked.length > 0);
-    for (const country of unranked) {
-      const html = readFileSync(join(outDir, 'countries', country.slug, 'index.html'), 'utf8');
-      const section = html.match(/<h2>Related country profiles<\/h2>[\s\S]*?<\/ul>/)?.[0] || '';
-      const proLink = html.match(/<p data-country-pro-link>[\s\S]*?<\/p>/)?.[0] || '';
-      assert.ok(section && proLink, country.code);
-      assert.doesNotMatch(`${section}${proLink}`, /#\d|\branked\b|\brank\b/i, country.code);
-    }
   });
 });

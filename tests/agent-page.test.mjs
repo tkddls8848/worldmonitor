@@ -8,7 +8,6 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { STATIC_ROUTE_MANIFEST } from '../scripts/build-sitemap.mjs';
 import { UMAMI_SCRIPT_TAG } from '../scripts/build-research-reports.mjs';
 import { TOOL_LIST_RESPONSE } from '../api/mcp/registry/index.ts';
 
@@ -91,14 +90,8 @@ describe('/agent page SEO registration', () => {
     }
   });
 
-  it('is in the sitemap manifest and the committed sitemap', () => {
-    assert.ok(STATIC_ROUTE_MANIFEST.some((route) => route.loc === URL_CANONICAL));
-    assert.ok(read('public/sitemap-main.xml').includes(`<loc>${URL_CANONICAL}</loc>`));
-  });
-
-  it('is linked from llms.txt and agents.md', () => {
-    const llmsLinks = [...read('public/llms.txt').matchAll(/\]\((https:\/\/[^)\s]+)\)/g)].map((match) => match[1]);
-    assert.ok(llmsLinks.some((href) => href === URL_CANONICAL), 'llms.txt must link /agent/');
+  // The generated llms.txt and sitemap left the personal build.
+  it('is linked from agents.md', () => {
     const agentsUrls = [...read('public/agents.md').matchAll(/https:\/\/[^\s)<>`]+/g)].map((match) => match[0]);
     assert.ok(agentsUrls.some((href) => href === URL_CANONICAL), 'agents.md must name /agent/');
   });

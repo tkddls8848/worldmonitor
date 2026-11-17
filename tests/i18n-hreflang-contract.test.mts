@@ -312,8 +312,8 @@ describe('international SEO application-locale mode (#5666)', { skip: shouldSkip
     assert.ok(failures.some((failure) => failure.includes('not localized')));
   });
 
-  it('never lists pseudo-localized query URLs in sitemap or robots output', () => {
-    assert.doesNotMatch(read('public/sitemap.xml'), /[?&]lang=/i);
+  // The generated sitemap left the personal build; robots output remains.
+  it('never lists pseudo-localized query URLs in robots output', () => {
     assert.doesNotMatch(read('public/robots.www.txt'), /[?&]lang=/i);
   });
 });

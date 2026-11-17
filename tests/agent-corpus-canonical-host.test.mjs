@@ -243,11 +243,8 @@ describe('published agent corpus names the serving host (#7660)', () => {
       [...scanFiles(PUBLIC_DIR), ...scanFiles(BLOG_SOURCE_DIR)].map((f) => relative(ROOT, f))
     );
     for (const required of [
-      'public/llms.txt',
-      'public/llms-full.txt',
       'public/api/llms.txt',
       'public/developers/llms.txt',
-      'public/ai-search.md',
       'public/agents.md',
       'public/world-monitor.md',
       'public/plugin.json',

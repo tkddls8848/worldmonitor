@@ -112,8 +112,6 @@ const DIGEST_LOOKBACK_MS = 24 * 60 * 60 * 1000; // 24h default lookback on first
 
 // ── Brief composer (consolidation of the retired seed-brief-composer) ──────
 
-const WORLDMONITOR_PUBLIC_BASE_URL =
-  process.env.WORLDMONITOR_PUBLIC_BASE_URL ?? 'https://worldmonitor.app';
 const BRIEF_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 // Brief story window: derived per-rule from the rule's lastSentAt via
 // digestWindowStartMs, identical to the send-loop window. The previous
@@ -154,11 +152,11 @@ const BRIEF_ONLY_COMPOSE_BUDGET_MS = (() => {
 // Phase 3c — analyst-backed whyMatters enrichment via an internal Vercel
 // edge endpoint. When the endpoint is reachable + returns a string, it
 // takes priority over the direct-Gemini path. On any failure the cron
-// falls through to its existing Gemini cache+LLM chain. Env override
-// lets local dev point at a preview deployment or `localhost:3000`.
-const BRIEF_WHY_MATTERS_ENDPOINT_URL =
-  process.env.BRIEF_WHY_MATTERS_ENDPOINT_URL ??
-  `${WORLDMONITOR_PUBLIC_BASE_URL}/api/internal/brief-why-matters`;
+// falls through to its existing Gemini cache+LLM chain. There is no remote
+// default: the personal build calls the endpoint only when
+// BRIEF_WHY_MATTERS_ENDPOINT_URL names one, so RELAY_SHARED_SECRET is never
+// sent to the upstream operator's worldmonitor.app as a Bearer token.
+const BRIEF_WHY_MATTERS_ENDPOINT_URL = process.env.BRIEF_WHY_MATTERS_ENDPOINT_URL ?? '';
 
 /**
  * Lowercase + collapse whitespace to mirror extractor-side gate in
@@ -185,7 +183,7 @@ function normalizeForDescriptionEquality(s) {
  * (See feedback_gate_on_ground_truth_not_configured_state.md.)
  */
 async function callAnalystWhyMatters(story) {
-  if (!ANALYST_RELAY_SECRET) return null;
+  if (!ANALYST_RELAY_SECRET || !BRIEF_WHY_MATTERS_ENDPOINT_URL) return null;
   // Forward a trimmed story payload so the endpoint only sees the
   // fields it validates. `description` is NEW for prompt-v2 — when
   // upstream has a real one (falls back to headline via

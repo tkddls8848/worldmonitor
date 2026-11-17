@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, dirname, relative } from 'node:path';
+import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
@@ -29,7 +29,6 @@ import { GO_FORWARD_SINCE_MS, SKILL_MIN_FAMILIES, SKILL_MIN_OUTCOME_FAMILIES, co
 import { MARKET_ALERT_BASE_RATE_RULE, MARKET_ALERT_RESOLUTION_RULE, buildScorecard } from '../scripts/_market-alert-ledger.mjs';
 import { MARKET_ALERT_TYPES } from '../scripts/shared/market-alert-core.js';
 import { FORECAST_ACCURACY_AUDIT_OVERRIDE, STANDING_ACCURACY_AUDIT } from '../shared/forecast-accuracy-audit.js';
-import { resolveLatestLivePulseSnapshotPath } from '../scripts/build-crawlable-corpus.mjs';
 import { wilsonInterval } from '../scripts/_forecast-scorecard.mjs';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -37,6 +36,16 @@ const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 // audit has lifted; that suite pins the audited state.
 const LIFTED = null;
 const read = (relativePath) => readFileSync(join(repoRoot, relativePath), 'utf8');
+
+// The newest committed live-pulse capture. The weekly freeze and the corpus
+// build that refreshed and age-checked it left the personal build, so this is
+// the last capture as published.
+function resolveLatestLivePulseSnapshotPath(rootDir) {
+  const dir = 'docs/snapshots';
+  const names = readdirSync(join(rootDir, dir)).filter((name) => /^crawlable-live-pulse-\d{4}-\d{2}-\d{2}\.json$/.test(name)).sort();
+  assert.ok(names.length > 0, 'a committed live-pulse capture exists');
+  return join(dir, names.at(-1));
+}
 
 // Issue #7072: the scorecard now carries a bootstrap interval on each mean
 // Brier and the matured-to-scored funnel. Bounds on a mean score cannot be
@@ -1828,13 +1837,7 @@ describe('accuracy page publishing contract', () => {
   // was unwritten. A page nothing links to reproduces the reported bug, so the
   // inbound links are part of the contract rather than a follow-up.
   it('is linked from every surface that carries a score', () => {
-    const nav = read('scripts/build-crawlable-corpus.mjs');
-    assert.match(nav, /<a href="\/accuracy\/">Accuracy<\/a>/, 'the shared corpus nav must carry the page');
-    assert.equal(
-      (nav.match(/href="\/accuracy\/"/g) || []).length >= 4,
-      true,
-      'the nav plus the country, crisis and CII page links must all be present',
-    );
+    // The corpus nav (scripts/build-crawlable-corpus.mjs) left the personal build.
     assert.match(
       read('src/config/dashboard-reference-links.ts'),
       /\{ label: 'Accuracy', path: '\/accuracy\/' \}/,
@@ -2171,14 +2174,12 @@ describe('accuracy record under audit (#8990)', () => {
   // it is held to this only while the audit is on.
   const STATIC_SURFACES = [
     'README.md',
-    'public/llms.txt',
     'public/.well-known/mcp/server-card.json',
     'public/.well-known/agent-skills/check-forecast-signals/SKILL.md',
     'docs/methodology/cii-risk-scores.mdx',
     'docs/zh/methodology/cii-risk-scores.mdx',
     'docs/agent-skills.mdx',
     'docs/mcp-overview.mdx',
-    'scripts/build-crawlable-corpus.mjs',
   ];
   const CLAIM_PHRASES = [
     /carries\s+the\s+Brier/i,
@@ -2197,10 +2198,7 @@ describe('accuracy record under audit (#8990)', () => {
   const claimsIn = (text) => CLAIM_PHRASES.filter((phrase) => phrase.test(text)).map(String);
 
   it('keeps every static surface free of score claims', () => {
-    // llms-full.txt is generated from the committed capture, so it is score-free exactly while that capture holds the audit.
-    const capture = JSON.parse(read(relative(repoRoot, resolveLatestLivePulseSnapshotPath(repoRoot)))).forecastScorecard;
-    const surfaces = accuracyStateAudit(classifyAccuracyState(capture)) ? [...STATIC_SURFACES, 'public/llms-full.txt'] : STATIC_SURFACES;
-    for (const path of surfaces) assert.deepEqual(claimsIn(read(path)), [], `${path} states accuracy as a verdict`);
+    for (const path of STATIC_SURFACES) assert.deepEqual(claimsIn(read(path)), [], `${path} states accuracy as a verdict`);
     const post = read(BLOG);
     const noteAt = post.indexOf(BLOG_NOTE);
     assert.ok(noteAt > 0, 'the July post keeps its dated note');

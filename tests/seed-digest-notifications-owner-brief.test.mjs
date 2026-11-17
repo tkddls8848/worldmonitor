@@ -21,6 +21,8 @@ const ENV_KEYS = [
   'TELEGRAM_BOT_TOKEN',
   'BRIEF_LLM_ENABLED',
   'BRIEF_COMPOSE_ENABLED',
+  'RELAY_SHARED_SECRET',
+  'BRIEF_WHY_MATTERS_ENDPOINT_URL',
 ];
 
 function story(i, overrides = {}) {
@@ -50,6 +52,7 @@ describe('seed-digest-notifications composes the owner brief', () => {
   const savedFetch = globalThis.fetch;
   const store = new Map();
   const hosts = [];
+  const relaySecretSentTo = [];
   let llmCalls = 0;
   let mod;
   let PERSONAL_OWNER_ID;
@@ -74,13 +77,19 @@ describe('seed-digest-notifications composes the owner brief', () => {
     process.env.UPSTASH_REDIS_REST_URL = UPSTASH_URL;
     process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
     process.env.OPENROUTER_API_KEY = 'test-openrouter-key';
-    for (const key of ['ANTHROPIC_API_KEY', 'OLLAMA_API_URL', 'RESEND_API_KEY', 'TELEGRAM_BOT_TOKEN', 'BRIEF_LLM_ENABLED', 'BRIEF_COMPOSE_ENABLED']) {
+    // A relay secret is set but no why-matters endpoint is configured: the
+    // secret must not be sent anywhere (it used to default to the upstream
+    // operator's worldmonitor.app endpoint).
+    process.env.RELAY_SHARED_SECRET = 'relay-secret-for-test';
+    for (const key of ['ANTHROPIC_API_KEY', 'OLLAMA_API_URL', 'RESEND_API_KEY', 'TELEGRAM_BOT_TOKEN', 'BRIEF_LLM_ENABLED', 'BRIEF_COMPOSE_ENABLED', 'BRIEF_WHY_MATTERS_ENDPOINT_URL']) {
       delete process.env[key];
     }
 
     globalThis.fetch = async (input, init = {}) => {
       const url = new URL(typeof input === 'string' ? input : input.url);
       hosts.push(url.hostname);
+      const headers = new Headers(init.headers ?? {});
+      if ((headers.get('authorization') ?? '').includes('relay-secret-for-test')) relaySecretSentTo.push(url.href);
       if (url.origin === UPSTASH_URL) {
         if (url.pathname === '/pipeline') {
           const commands = JSON.parse(String(init.body ?? '[]'));
@@ -154,5 +163,12 @@ describe('seed-digest-notifications composes the owner brief', () => {
 
     const sendHosts = hosts.filter((host) => SEND_HOSTS.test(host));
     assert.deepEqual(sendHosts, [], 'no mail or chat provider may be called');
+  });
+
+  it('sends the relay secret nowhere when no why-matters endpoint is configured', () => {
+    // Runs after the compose above, which enriched every story.
+    assert.ok(hosts.length > 0);
+    assert.deepEqual(relaySecretSentTo, []);
+    assert.ok(!hosts.some((host) => /(^|\.)worldmonitor\.app$/.test(host)), hosts.join(','));
   });
 });
