@@ -14,9 +14,10 @@ const MIN = 60_000;
 // Bundles skip their own members while those are still fresh, so repeating a
 // pass is cheap. Standalone collectors run every pass. digest-notifications
 // composes the owner's daily brief and decides on its own whether to
-// regenerate the prose this pass.
+// regenerate the prose this pass. news-digest builds the news:digest:v1 cells
+// that insights, forecasts and digest-notifications read, so it runs first.
 export const DEFAULT_COLLECTORS = [
-  'earthquakes', 'natural-events', 'weather-alerts', 'internet-outages', 'cyber-threats',
+  'news-digest', 'earthquakes', 'natural-events', 'weather-alerts', 'internet-outages', 'cyber-threats',
   'unrest-events', 'military-flights', 'conflict-intel', 'prediction-markets', 'service-statuses',
   'bundle-market-backup', 'bundle-relay-backup', 'bundle-climate', 'bundle-health',
   'bundle-energy-sources', 'bundle-derived-signals', 'insights', 'forecasts', 'correlation',

@@ -41,6 +41,15 @@ const DIGEST_NEGATIVE_SENTINEL = '__WM_NEG__';
 const DIGEST_CACHE_TTL_S = 900;
 const DIGEST_REJECTION_TTL_S = 120;
 
+// Stores that cannot run the atomic publish script: the desktop sidecar's
+// in-memory cache, and the personal server's embedded store
+// (scripts/local/embedded-store.mjs), which answers EVAL only for scripts it
+// re-implements. Both are written by one process, so the step-by-step gate
+// below stands in for the script.
+function storeRunsPublishScript(): boolean {
+  return process.env.LOCAL_API_MODE !== 'tauri-sidecar' && process.env.WM_PERSONAL_STORE !== 'embedded';
+}
+
 export interface FailedDigestAttempt {
   readonly at: string;
   readonly reason: StaleReason;
@@ -329,7 +338,7 @@ export async function publishAcceptedSnapshot(
   const generatedAtMs = Date.parse(data.generatedAt ?? '');
   const acceptedAt = Number.isFinite(generatedAtMs) ? generatedAtMs : now;
   try {
-    if (process.env.LOCAL_API_MODE === 'tauri-sidecar') {
+    if (!storeRunsPublishScript()) {
       const revoked = await readRevokedUrlSet();
       if (!revoked.readable) {
         console.warn(`[digest-publication] source unavailable variant=${variant} lang=${lang}`);
