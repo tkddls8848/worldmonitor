@@ -58,7 +58,7 @@ const env = readEnv(resolve(ROOT, '.env.local'));
 const auth = `Basic ${Buffer.from(`${env.WM_PERSONAL_USERNAME || 'owner'}:${env.WM_PERSONAL_PASSWORD}`).toString('base64')}`;
 const base = `http://127.0.0.1:${env.WM_PERSONAL_PORT || 3000}`;
 // /api/bootstrap wants an anonymous session token on top of the Basic login.
-const session = await (await fetch(`${base}/api/wm-session`, { method: 'POST', headers: { Authorization: auth } })).json();
+const session = await (await fetch(`${base}/api/wm-session`, { method: 'POST', headers: { Authorization: auth }, signal: AbortSignal.timeout(60_000) })).json();
 async function getJson(path, attempt = 0) {
   const res = await fetch(base + path, { headers: { Authorization: auth, 'X-WorldMonitor-Key': session.token }, signal: AbortSignal.timeout(60_000) });
   if (res.status === 503 && attempt < 12) { // health answers 503 while its background refresh is pending

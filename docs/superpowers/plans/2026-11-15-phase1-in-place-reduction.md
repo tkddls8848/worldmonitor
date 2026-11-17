@@ -54,12 +54,14 @@
 ### Task 0: 기준선 도구와 기준선 기록
 
 **Files:**
+
 - Create: `scripts/local/baseline/capture.mjs`, `scripts/local/baseline/compare.mjs`, `scripts/local/baseline/run-tests.mjs`, `scripts/local/baseline/diff.mjs`
 - Create: `tests/baseline-diff.test.mjs`
 - Create: `tests/fixtures/scenario/baseline-snapshot.json`, `tests/fixtures/cii/<ISO 라벨>.json`(capture가 생성)
 - Modify: `scripts/scenario-worker.mjs`. 기존 `const SCENARIO_TEMPLATES`에 `export`만 붙인다. 동작은 바꾸지 않는다.
 
 **Interfaces:**
+
 - Produces:
   - `diff.mjs`: `diffScenarioRuns(base: object[], after: object[]) → string[]`. 각 결과에서 `computedAt`을 뺀 뒤 깊은 비교하고, 차이마다 한 줄을 돌려준다.
   - `diff.mjs`: `diffKeySets(base: string[], after: string[]) → {removed: string[], added: string[]}`
@@ -106,6 +108,7 @@
 ### Task 1: 로컬 API 서버를 `scripts/local/`로 옮기기
 
 **Files:**
+
 - Move: `src-tauri/sidecar/local-api-server.mjs` → `scripts/local/local-api-server.mjs`
 - Move: `src-tauri/sidecar/local-api-server.test.mjs` → `tests/local-api-server.test.mjs`. `../tauri.conf.json`과 `../../Dockerfile`을 읽는 단언은 지운다(:21, :34 근처).
 - Move: `src-tauri/sidecar/youtube-embed-message.test.mjs` → `tests/youtube-embed-message.test.mjs`
@@ -117,6 +120,7 @@
 - Modify: `package.json`의 `test:sidecar`에서 옮긴 두 테스트 경로를 뺀다. 남은 `src-tauri` 테스트는 작업 6에서 지운다.
 
 **Interfaces:**
+
 - Produces: `scripts/local/local-api-server.mjs`의 `createLocalApiServer(options)`. 시그니처는 그대로다.
   - 파일 안의 기준 폴더 계산(:16-17, `../..`)은 새 위치에서도 저장소 루트를 가리켜야 한다. `scripts/local/`도 루트에서 두 단계 아래이므로 값이 같다.
   - `scripts/`는 루트 `package.json`의 `"type"` 설정을 따른다. ESM이 아니면 확장자 `.mjs`가 ESM을 보장한다.
@@ -129,6 +133,7 @@
 ### Task 2: 정보 이력을 SQLite로 옮기기
 
 **Files:**
+
 - Create: `shared/intel-history-store.mjs`, `tests/intel-history-store.test.mjs`
 - Modify:
   - `scripts/_seed-history.mjs`: 쓰기 경로(:238-326, :874-1016)
@@ -144,6 +149,7 @@
 - 설계 문서 8.2에 "이력 테이블은 키·값 저장소인 `shared/personal-store.mjs`가 아니라 같은 `node:sqlite`를 쓰는 별도 모듈 `shared/intel-history-store.mjs`에 둔다"를 추가한다(설계자 판단).
 
 **Interfaces:**
+
 - Produces (`shared/intel-history-store.mjs`):
   - 상수:
     - `INTEL_HISTORY_DIMS = 512`
@@ -212,6 +218,7 @@
 ### Task 3: AI 호출 순서에서 Anthropic을 첫 자리로
 
 **Files:**
+
 - Modify:
   - `server/_shared/llm.ts`
     - :47-53 `PROVIDER_CHAIN`의 첫 원소를 `'anthropic'`으로 한다.
@@ -237,6 +244,7 @@
   - 자체 OpenRouter 체인을 쓰는 수집기: `seed-insights`, `seed-forecasts`, `regional-snapshot/*`, `ais-relay.cjs`. 설계 8.7의 범위는 기본 체인과 브리프다. 사용량 기록 모듈(`usage.ts`, `llm-telemetry.cjs`)은 `USAGE_TELEMETRY=1`일 때만 동작하므로 둔다.
 
 **Interfaces:**
+
 - Consumes/Produces: `callLlm`, `callLLM`, `generateWhyMatters`, `generateStoryDescription`, `generateDigestProse`의 시그니처는 그대로다.
 
 - [ ] **Step 1: 테스트 기대값을 먼저 고친다.**
@@ -256,6 +264,7 @@
 ### Task 4: CI 워크플로와 PR 운영 장치 정리 (설계 5.2-(8))
 
 **Files:**
+
 - Delete `.github/workflows/`의 45개(남길 4개 외 전부):
   - analytics-collector-monitor, build-desktop, china-decision-parity-live, ci-health-scan, codeql, contributor-trust, crawlable-pulse-refresh, crawlable-pulse-rehearsal, desktop-release-train, e2e-visual
   - feed-validation, github-stars-refresh, indexnow-submit, issue-ui-evidence, live-api-cache-auth, live-video-source-audit, mcp-live-smoke, mcp-preset-liveness, mcp-tool-canary, mirror-claude-plugin
@@ -293,6 +302,7 @@
 ### Task 5: 공개 노출용 생성물과 알림·메일 (설계 5.2-(6)(7), 8.3)
 
 **Files — 생성물:**
+
 - Delete:
   - 스크립트: `scripts/build-crawlable-corpus.mjs`, `scripts/build-sitemap.mjs`, `scripts/build-llms-full.mjs`, `scripts/build-ai-search.mjs`, `scripts/freeze-crawlable-live-pulse.mjs`, `scripts/generate-public-product-facts.mjs`, `scripts/generate-product-config.mjs`, `scripts/build-agent-skills-index.mjs`, `scripts/seo-*.mjs`
   - 스크립트: `scripts/crawlable-*.mjs` 중 `crawlable-live-tools.mjs`와 `crawlable-developments.mjs`를 뺀 나머지. 이 두 파일은 남은 서버 논리 `_country-brief-evidence.ts`의 동등성 테스트 기준이라 남긴다.
@@ -309,6 +319,7 @@
 - Modify: `scripts/vercel-ignore.sh`를 지운다. Vercel이 없다.
 
 **Files — 알림·메일:**
+
 - Create: `shared/personal-owner.js`. `export const PERSONAL_OWNER_ID = 'owner';` 한 줄이다. 형식은 `shared/selfhost-relay-paths.js`와 같은 ESM이다.
 - Modify: `scripts/seed-digest-notifications.mjs`
   - **남길 것**: `fetchLatestBriefEnvelope`(:396), `buildDigest`(:719-1077), `getLastSentAt`(:516), `isDue`(:565), `composeBriefsForRun`(:1570-1680), `composeAndStoreBriefForUser`(:1683-~2118), `main`의 브리프 조립 호출(:2294)과 기본 브리프 패스(:2995-3020)
@@ -343,6 +354,7 @@
 `convex/`는 브라우저·API 코드가 아직 import하므로 작업 10에서 지운다.
 
 **Files:**
+
 - Delete (디렉터리): `src-tauri/`, `workers/`, `sdk/`, `claude-plugin/`, `.antigravity-plugin/`, `skills/`, `integrations/`, `demos/`, `pro-test/`
 - Delete (루트 파일): `gemini-extension.json`, `mcp.json`, `mcp_config.json`, `server.json`, `plugin.json`, `vercel.json`, `middleware.ts`, `nixpacks.toml`, `scripts/nixpacks.toml`, `scripts/railway-services.json`, `vite.plugin.config.ts`
 - Delete (HTML과 진입 파일)
@@ -380,6 +392,7 @@
 ### Task 7: 게이트웨이 단순화와 유료 기능 해제 (설계 5.2-(4), 8.1, 8.3)
 
 **Files:**
+
 - Modify: `server/gateway.ts`. `dispatch`(:1132~)를 다음 순서로 줄인다.
   1. `.md` twin(:1142-1160)
   2. CORS와 origin 검사(:1267-1323)
@@ -425,6 +438,7 @@
 - Create: `tests/gateway-personal.test.mts`
 
 **Interfaces:**
+
 - Consumes: `shared/personal-owner.js`의 `PERSONAL_OWNER_ID`(작업 5)
 - Produces: `createDomainGateway(...)`의 시그니처는 그대로다. 인증 관련 옵션은 받기만 하고 무시한다(호출하는 쪽은 작업 8에서 정리한다).
 
@@ -449,6 +463,7 @@
 ### Task 8: 계정·결제·OAuth·MCP·알림 API와 서버 공용 모듈 삭제 (설계 5.2-(3)(4))
 
 **Files:**
+
 - Delete (`api/`)
   - 결제·계정: `create-checkout.ts`, `customer-portal.ts`, `pro-business-upgrade.ts`, `product-catalog.js`(+ test), `referral/`, `me/`, `user/`, `user-api-keys.ts`, `user-embed-keys.ts`, `user-prefs.ts`, `invalidate-user-api-key-cache.ts`, `desktop-auth/`, `desktop-key/`
   - OAuth·에이전트·MCP: `oauth/`, `oauth-authorization-server.ts`, `oauth-protected-resource.ts`, `agent-auth.ts`, `a2a.ts`, `mcp.ts`, `mcp/`, `mcp-proxy.ts`, `docs-mcp.ts`, `skills/`, `http-message-signatures-directory.ts`, `widget-agent.ts`, `internal/mcp-grant-context.ts`, `internal/mcp-grant-mint.ts`
@@ -479,6 +494,7 @@
 ### Task 9: 브라우저 유료 잠금과 결제 화면 삭제 (설계 5.2-(5) 앞부분, 8.1)
 
 **Files:**
+
 - Modify
   - `src/config/panels.ts`
     - 31개 `premium:` 항목을 지운다.
@@ -509,6 +525,7 @@
 ### Task 10: 로그인·Convex·세션·텔레메트리·데스크톱 분기 삭제와 `convex/` 삭제 (설계 5.2-(5) 나머지, 5.2-(1)의 convex)
 
 **Files:**
+
 - Delete (로그인)
   - services: `clerk.ts`, `auth-state.ts`, `clerk-desktop-relay.ts`, `sign-up-resume.ts`, `sign-in-dismissal.ts`, `passkeys.ts`, `passkey-offer-*.ts`, `account-deletion.ts`, `account-operation.ts`, `browser-key-session.ts`, `desktop-browser-sign-in.ts`, `desktop-sign-in-page.ts`, `desktop-cloud-auth.ts`, `desktop-cloud-access-hint.ts`
   - components: `AuthHeaderWidget.ts`, `AuthLauncher.ts`, `PasskeyOfferPrompt.ts`, `SignUpResumeOverlay.ts`
@@ -554,6 +571,7 @@
 ### Task 11: 남은 참조 정리, 문서 갱신, 1단계 마감 (설계 5.3-8, 5.4 완료 조건)
 
 **Files:**
+
 - Modify
   - `AGENTS.md`
     - 첫 문단을 "개인용 대시보드 + 로컬 API + 내장 저장소 + 수집기"로 바꾼다.

@@ -167,6 +167,7 @@ jobs:
             { count++ }
             END { print count + 0 }
           ')
+          echo "code=$( [ "$CODE" -gt 0 ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
           # Only proven non-browser inputs may skip this job. New paths run it
           # until their owner can establish that they cannot affect the smoke.
           BROWSER=$(printf '%s\n' "$FILES" | awk '
@@ -202,6 +203,8 @@ jobs:
             /^consumer-prices-core\// { count++ }
             /^\.github\/workflows\/test\.yml$/ { count++ }
             END { print count + 0 }
+          ')
+          echo "consumer_prices=$( [ "$CONSUMER_PRICES" -gt 0 ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
 
   docs-stats:
     # Always-on: derives build-owned inventory facts and validates fixed or
