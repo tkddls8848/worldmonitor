@@ -1,7 +1,7 @@
 // Cron-source check by design (#8690, section 2): this suite pins heartbeat
 // keys, error metadata, and nonzero-exit wiring against fixed source patterns.
-// The cron runs main() on import, so checking its declarations without
-// starting the cron requires reading its source.
+// The Convex rule fetch and the send loop are gone in the personal build; the
+// brief-compose gate, the healthy-run stamp and the fatal path remain.
 //
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -44,47 +44,12 @@ describe('digest-notifications last-run health heartbeat', () => {
     assert.match(writer, /\['SET', DIGEST_LAST_RUN_META_KEY, JSON\.stringify\(run\), 'EX', String\(DIGEST_LAST_RUN_TTL_SECONDS\)\]/);
   });
 
-  it('stamps SEED_ERROR metadata for rule-fetch failures, then exits non-zero (#8215)', () => {
-    // Both arms used to `return` after the seed-meta write, which resolved
-    // main() and let the process exit 0: the 2026-09-16 relay 401 (#8208)
-    // showed as a green cron in Railway. The write must still come first
-    // (health reads the reason), then the run must fail loudly.
-    const rulesFetch = sourceBetween(
-      "const res = await fetch(`${CONVEX_SITE_URL}/relay/digest-rules`",
-      'if (!Array.isArray(rules)) {',
-    );
-    assert.match(
-      rulesFetch,
-      /if \(!res\.ok\) \{[\s\S]*?await writeDigestLastRunMeta\(\{[\s\S]*?status: 'error'[\s\S]*?errorReason: `fetch_rules_http_\$\{res\.status\}`,[\s\S]*?\}\);[\s\S]*?await flushPendingLlmEvents\(\);\s*process\.exit\(1\);/,
-    );
-    assert.match(
-      rulesFetch,
-      /catch \(err\) \{[\s\S]*?await writeDigestLastRunMeta\(\{[\s\S]*?status: 'error'[\s\S]*?errorReason: `fetch_rules_failed:\$\{err\.message\}`,[\s\S]*?\}\);[\s\S]*?await flushPendingLlmEvents\(\);\s*process\.exit\(1\);/,
-    );
-    assert.doesNotMatch(
-      rulesFetch,
-      /\breturn;/,
-      'a failed rules fetch must not return from main() — that is the exit-0 path #8215 closes',
-    );
-  });
-
-  it('stamps a healthy run even when there is nothing to send', () => {
-    assert.match(
-      src,
-      /No digest rules found[\s\S]*?await writeDigestLastRunMeta\(\{ startedAtMs: nowMs, sentCount: 0 \}\);[\s\S]*?return;/,
-    );
-    assert.match(
-      src,
-      /No rules matched userId=\$\{onlyUserFilter\.userId\}[\s\S]*?await writeDigestLastRunMeta\(\{ startedAtMs: nowMs, sentCount: 0 \}\);[\s\S]*?return;/,
-    );
-  });
-
   it('stamps brief-compose failures before nonzero exit and healthy runs at the end', () => {
     assert.match(
       src,
-      /if \(shouldExitOnBriefFailures\(\{ success: composeSuccess, failed: composeFailed \}\)\) \{[\s\S]*?await writeDigestLastRunMeta\(\{[\s\S]*?status: 'error'[\s\S]*?sentCount,[\s\S]*?brief_compose_failed:\$\{composeFailed\}:success:\$\{composeSuccess\}[\s\S]*?\}\);[\s\S]*?process\.exit\(1\);/,
+      /if \(shouldExitOnBriefFailures\(\{ success: composeSuccess, failed: composeFailed \}\)\) \{[\s\S]*?await writeDigestLastRunMeta\(\{[\s\S]*?status: 'error'[\s\S]*?brief_compose_failed:\$\{composeFailed\}:success:\$\{composeSuccess\}[\s\S]*?\}\);[\s\S]*?process\.exit\(1\);/,
     );
-    assert.match(src, /await writeDigestLastRunMeta\(\{ startedAtMs: nowMs, sentCount \}\);/);
+    assert.match(src, /await writeDigestLastRunMeta\(\{ startedAtMs: nowMs \}\);/);
   });
 
   it('stamps fatal crashes before process.exit(1)', () => {

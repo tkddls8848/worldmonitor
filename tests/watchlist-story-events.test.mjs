@@ -256,12 +256,12 @@ describe('seed-digest-notifications.mjs — enqueue wiring (source-grep contract
       /await scanAndEnqueueWatchlistStoryEvents\(nowMs\)/,
       'main() must await the watchlist scan',
     );
-    // The scan must run BEFORE the digest-rules fetch so an empty/failed
-    // rules fetch cannot suppress watchlist alerts.
+    // The scan must run BEFORE the owner brief compose so a compose failure
+    // cannot suppress watchlist alerts.
     const scanIdx = digestSrc.indexOf('await scanAndEnqueueWatchlistStoryEvents(nowMs)');
-    const rulesIdx = digestSrc.indexOf("fetch(`${CONVEX_SITE_URL}/relay/digest-rules`");
-    assert.ok(scanIdx > 0 && rulesIdx > 0 && scanIdx < rulesIdx,
-      'watchlist scan must run before the digest-rules fetch in main()');
+    const composeIdx = digestSrc.indexOf('await composeBriefsForRun(ownerRules, nowMs');
+    assert.ok(scanIdx > 0 && composeIdx > 0 && scanIdx < composeIdx,
+      'watchlist scan must run before the owner brief compose in main()');
   });
 
   it('threshold comes from WATCHLIST_STORY_SCORE_MIN via resolveWatchlistScoreMin', () => {

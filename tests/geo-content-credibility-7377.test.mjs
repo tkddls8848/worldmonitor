@@ -94,7 +94,6 @@ describe('issue #7377 GEO content credibility', () => {
   it('(b) unifies country reach and renders GitHub stars from the API badge', () => {
     const about = read('docs/about.mdx');
     const aboutZh = read('docs/zh/about.mdx');
-    const llms = read('public/llms.txt');
 
     assert.doesNotMatch(about, /81,?508/);
     assert.doesNotMatch(aboutZh, /81,?508/);
@@ -102,9 +101,6 @@ describe('issue #7377 GEO content credibility', () => {
     assert.doesNotMatch(aboutZh, /170 多个国家/);
     assert.match(about, new RegExp(COUNTRY_REACH_CLAIM.replace('+', '\\+')));
     assert.match(about, new RegExp(GITHUB_STARS_BADGE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-    assert.match(llms, /2M\+ people/);
-    assert.match(llms, /190\+ countries/);
-    assert.match(llms, /\[product identity document\]\(https:\/\/www\.worldmonitor\.app\/world-monitor\.md\)/);
     assert.ok(read('public/world-monitor.md').includes(SILICON_CANALS_2M_URL));
   });
 

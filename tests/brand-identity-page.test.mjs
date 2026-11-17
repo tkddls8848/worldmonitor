@@ -44,12 +44,6 @@ describe('World Monitor brand-identity page', () => {
     assert.match(body, /\|\s*Country\s*\|\s*AE \(United Arab Emirates\)\s*\|/);
     assert.match(body, /does not publish a street address or telephone number/i);
     assert.match(body, /## Not World Monitor[\s\S]*world-monitor\.com[\s\S]*worldmonitorintel\.com/, 'brand page must name the same-name sites answer engines confuse with it');
-    // The digest email footer linked x.com/worldmonitorapp, an unregistered handle,
-    // while every sameAs list names x.com/worldmonitorai.
-    // The digest HTML template lives in scripts/lib/digest-email-html.mjs.
-    const digest = read('scripts/seed-digest-notifications.mjs') + read('scripts/lib/digest-email-html.mjs');
-    assert.doesNotMatch(digest, /x\.com\/worldmonitorapp\b/, 'digest footer must not link the unregistered X handle');
-    assert.match(digest, /href="https:\/\/x\.com\/worldmonitorai"/, 'digest footer must link the official X account');
     assert.doesNotMatch(body, /streetAddress|tel:|\bfaxNumber\b|\+\d{8,}/);
     assert.doesNotMatch(body, /\|\s*Telephone\s*\|/i);
     assert.doesNotMatch(body, /\|\s*Street\s*\|/i);
@@ -79,15 +73,10 @@ describe('World Monitor brand-identity page', () => {
     );
     assert.ok(hrefs.includes(BRAND_URL), 'api-catalog must advertise world-monitor.md');
 
-    for (const path of ['public/llms.txt', 'public/llms-full.txt', 'public/agents.md', 'public/home.md']) {
+    // The generated llms files and sitemap left the personal build.
+    for (const path of ['public/agents.md', 'public/home.md']) {
       assert.ok(read(path).includes('/world-monitor.md'), `${path} must link world-monitor.md`);
     }
-
-    // A file, not a page: it left the sitemap (#8608) and is announced through
-    // IndexNow and llms.txt instead, still on the www host.
-    const sitemap = read('public/sitemap-main.xml');
-    assert.ok(!sitemap.includes(`<loc>${BRAND_URL}</loc>`), 'sitemap-main.xml must not declare the brand markdown');
-    assert.match(read('scripts/build-sitemap.mjs'), /`\$\{SITE_ORIGIN\}\/world-monitor\.md`/);
   });
 });
 

@@ -390,11 +390,22 @@ async function upstashSetNx(key, value, ttlSeconds) {
   } catch { return 'error'; }
 }
 
+// Only wm:events:queue is pushed here. Nothing consumes that queue in the
+// personal build, so the LPUSH carries an LTRIM in the same pipeline that
+// keeps the newest 1000 entries.
 async function upstashLpush(key, value) {
   try {
     const serialized = typeof value === 'string' ? value : JSON.stringify(value);
-    const result = await upstashCommand(['LPUSH', key, serialized]);
-    return typeof result?.result === 'number' && result.result > 0;
+    const { url, token } = getRedisCredentials();
+    const resp = await fetch(`${url}/pipeline`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify([['LPUSH', key, serialized], ['LTRIM', key, '0', '999']]),
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!resp.ok) return false;
+    const pushed = (await resp.json())?.[0]?.result;
+    return typeof pushed === 'number' && pushed > 0;
   } catch { return false; }
 }
 

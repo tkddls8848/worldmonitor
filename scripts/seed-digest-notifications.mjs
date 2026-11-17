@@ -1,26 +1,18 @@
 #!/usr/bin/env node
 /**
- * Digest notification cron — Railway scheduled job, runs every 30 minutes.
+ * Daily brief composer for the personal build. Each collect pass:
+ *   1. Scans the story accumulator for watchlist ticker stories and enqueues
+ *      them on wm:events:queue (capped; nothing consumes it here).
+ *   2. Composes the owner's brief with the default in-app brief rule:
+ *      ZRANGEBYSCORE digest:accumulator:v1:${variant}:${lang} for the
+ *      window, HMGET story:track:v1:${hash}, derives phase, filters
+ *      fading/non-matching severity, dedups, synthesises the lead and writes
+ *      brief:${PERSONAL_OWNER_ID}:${issueSlot} plus brief:latest:${PERSONAL_OWNER_ID}.
  *
- * For each enabled alert rule with digestMode != "realtime":
- *   1. Checks isDue() against digest:last-sent:v1:${userId}:${variant}
- *   2. ZRANGEBYSCORE digest:accumulator:v1:${variant} to get stories in window
- *   3. Batch HMGET story:track:v1:${hash} for digest metadata
- *   4. Derives phase, filters fading/non-matching severity, sorts by currentScore
- *   5. SMEMBERS story:sources:v1:${hash} for source attribution
- *   6. Formats and dispatches to each configured channel
- *   7. Updates digest:last-sent:v1:${userId}:${variant}
+ * Nothing is delivered: the mail, Telegram, Slack, Discord, Teams and webhook
+ * channels and the Convex user, rule and channel lookups are gone.
  */
-import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
-import {
-  markdownToTelegramHtml,
-  markdownToSlackMrkdwn,
-  markdownToDiscord,
-  truncateDiscordContent,
-  escapeDigestText,
-  formatDigestItemTitle,
-} from './_digest-markdown.mjs';
 import { loadEnvFile } from './_env-file.mjs';
 
 loadEnvFile(import.meta.url);
@@ -32,30 +24,9 @@ const DIGEST_DIPLOMACY_DATA = require('../shared/diplomacy-keywords.json');
 // uses for diplomacy-keywords.json (avoids the two-sided `with {type:
 // 'json'}` bundler/node trap — see vercel-edge-gotchas).
 const WATCHLIST_STOCKS_DATA = require('../shared/stocks.json');
-const { decrypt } = require('./lib/crypto.cjs');
-const {
-  assertNotificationWebhookDeliveryUrlSafe,
-  postJsonWithPinnedAddress,
-} = require('./lib/notification-webhook-ssrf.cjs');
-const {
-  buildWebhookDeliveryHeaders,
-  resolveWebhookSigningSecret,
-} = require('./lib/notification-webhook-signing.cjs');
-const { buildTeamsDigestPayload, sendTeamsPayload } = require('./lib/notification-teams.cjs');
 const { callLLM } = require('./lib/llm-chain.cjs');
-const { createAiRoutingPolicyResolver, withAiRoutingPolicy } = require('./lib/ai-routing-policy.cjs');
+const { withAiRoutingPolicy } = require('./lib/ai-routing-policy.cjs');
 const { flushPendingLlmEvents } = require('./lib/llm-telemetry.cjs');
-const { fetchUserPreferences, extractUserContext, formatUserProfile } = require('./lib/user-context.cjs');
-const { fetchFollowedCountries } = require('./lib/followed-countries-fetch.cjs');
-const { Resend } = require('resend');
-const { normalizeResendSender } = require('./lib/resend-from.cjs');
-const {
-  appendUnsubscribeText,
-  injectUnsubscribeFooterHtml,
-  listUnsubscribeHeaders,
-  unsubscribeUrlFor,
-} = require('./lib/email-unsubscribe.cjs');
-const { sendResendEmail } = require('./lib/resend-send.cjs');
 import { readRawJsonFromUpstash, redisPipeline } from '../api/_upstash-json.js';
 import { classifyFeelGood } from '../server/_shared/feelgood-classifier.js';
 import { classifyEphemeralLiveCoverage } from '../shared/ephemeral-live-classifier.js';
@@ -66,38 +37,22 @@ import { shouldDropOpinionTrack } from './lib/digest-opinion-track-filter.mjs';
 import {
   briefCandidateDue,
   buildBriefOnlyRules,
-  briefComposeTimesFromPointerCells,
-  orderBriefOnlyRulesByStaleness,
   composeBriefFromDigestStories,
-  compareRules,
   deriveThreadsFromOrderedStories,
   digestStoryToSynthesisShape,
   extractInsights,
   groupEligibleRulesByUser,
-  MAX_STORIES_PER_USER,
   shouldExitNonZero as shouldExitOnBriefFailures,
 } from './lib/brief-compose.mjs';
 import {
   applyDigestScoreFloor,
   createDigestMemo,
-  carouselUrlsFrom,
-  digestWindowStartMs,
   getDigestScoreMin,
-  isDigestDeliveryTier,
   pickWinningCandidateWithPool,
   readTimeAgeCutoffMs,
   runSynthesisWithFallback,
-  selectCanonicalSendRule,
   shouldDropTrackByAge,
-  subjectForBrief,
 } from './lib/digest-orchestration-helpers.mjs';
-import {
-  DIGEST_CRITICAL_LIMIT,
-  DIGEST_EMAIL_MAX_HTML_BYTES,
-  DIGEST_HIGH_LIMIT,
-  DIGEST_MEDIUM_LIMIT,
-  renderDigestEmailHtml,
-} from './lib/digest-email-html.mjs';
 import { issueSlotInTz } from '../shared/brief-filter.js';
 import {
   MIN_CORROBORATING_PUBLISHERS,
@@ -105,18 +60,14 @@ import {
 } from '../shared/publisher-families.js';
 import {
   enrichBriefEnvelopeWithLLM,
-  generateDigestProse,
   generateDigestProsePublic,
-  greetingBucket,
   leadGroundsAgainstStory,
 } from './lib/brief-llm.mjs';
-import { parseDigestOnlyUser } from './lib/digest-only-user.mjs';
 import {
   resolveNonDueSynthesisReuse,
   DEFAULT_NONDUE_SYNTHESIS_REUSE_MIN,
 } from './lib/brief-synthesis-reuse.mjs';
 import { assertBriefEnvelope } from '../server/_shared/brief-render.js';
-import { signBriefUrl, BriefUrlError } from './lib/brief-url-sign.mjs';
 import {
   deduplicateStories,
   groupTopicsPostDedup,
@@ -126,22 +77,14 @@ import { stripSourceSuffix } from './lib/brief-dedup-jaccard.mjs';
 import { writeReplayLog } from './lib/brief-dedup-replay-log.mjs';
 import { readStoryTracksChunked } from './lib/story-track-batch-reader.mjs';
 import {
-  aggregateResults as aggregateDeliveredResults,
-  writeDeliveredEntry,
-} from './lib/digest-delivered-log.mjs';
-import { readCooldownConfig } from './lib/digest-cooldown-config.mjs';
-import { evaluateCooldown } from './lib/digest-cooldown-decision.mjs';
-import { emitCooldownShadowLog } from './lib/digest-cooldown-shadow-log.mjs';
-import { buildDigestDeliveryPlan } from './lib/digest-delivery-plan.mjs';
-import {
   attachDigestCorroboration,
-  digestCoverageText,
-  digestWebhookStory,
   readStoryCorroboration,
   storyCorroborationField,
 } from './lib/digest-corroboration.mjs';
 import { buildTickerDictionary } from '../shared/ticker-extract.js';
 import { scanAndEnqueueWatchlistStoryEvents as scanWatchlistStoryEvents } from './lib/watchlist-story-scan.mjs';
+import { isMainModule } from './lib/main-module.mjs';
+import { PERSONAL_OWNER_ID } from '../shared/personal-owner.js';
 
 const EPHEMERAL_LIVE_LOG_TITLE_SAMPLE_LIMIT = 5;
 const EPHEMERAL_LIVE_LOG_TITLE_MAX_CHARS = 160;
@@ -158,53 +101,17 @@ function compactDroppedEphemeralLiveTitle(title) {
 
 const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL ?? '';
 const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN ?? '';
-const CONVEX_SITE_URL =
-  process.env.CONVEX_SITE_URL ??
-  (process.env.CONVEX_URL ?? '').replace('.convex.cloud', '.convex.site');
-const RELAY_SECRET = process.env.CONVEX_NOTIFICATION_RELAY_SECRET ?? '';
 const ANALYST_RELAY_SECRET = process.env.RELAY_SHARED_SECRET ?? '';
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? '';
-const RESEND_API_KEY = process.env.RESEND_API_KEY ?? '';
-// Brief/digest is an editorial daily read, not an incident alarm — route it
-// off the `alerts@` mailbox so recipients don't see a scary "alert" from-name
-// in their inbox. normalizeResendSender coerces a bare email address into a
-// "Name <addr>" wrapper at runtime (with a loud warning), so a Railway env
-// like `RESEND_FROM_BRIEF=brief@worldmonitor.app` can't re-introduce the bug
-// that `.env.example` documents.
-const RESEND_FROM =
-  normalizeResendSender(
-    process.env.RESEND_FROM_BRIEF ?? process.env.RESEND_FROM_EMAIL,
-    'WorldMonitor Brief',
-  ) ?? 'WorldMonitor Brief <brief@worldmonitor.app>';
 const DIGEST_LAST_RUN_KEY = 'digest:last-run';
 const DIGEST_LAST_RUN_META_KEY = 'seed-meta:digest:last-run';
 const DIGEST_LAST_RUN_TTL_SECONDS = 7 * 24 * 60 * 60;
 let digestRunStartedAtMs = null;
 
-if (process.env.DIGEST_CRON_ENABLED === '0') {
-  console.log('[digest] DIGEST_CRON_ENABLED=0 — skipping run');
-  process.exit(0);
-}
-
-if (!UPSTASH_URL || !UPSTASH_TOKEN) {
-  console.error('[digest] UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN not set');
-  process.exit(1);
-}
-if (!CONVEX_SITE_URL || !RELAY_SECRET) {
-  console.error('[digest] CONVEX_SITE_URL / CONVEX_NOTIFICATION_RELAY_SECRET not set');
-  process.exit(1);
-}
-
-const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
-
 const DIGEST_MAX_ITEMS = 30;
 const DIGEST_LOOKBACK_MS = 24 * 60 * 60 * 1000; // 24h default lookback on first send
-const AI_DIGEST_ENABLED = process.env.AI_DIGEST_ENABLED !== '0';
-const ENTITLEMENT_CACHE_TTL = 900; // 15 min
 
 // ── Brief composer (consolidation of the retired seed-brief-composer) ──────
 
-const BRIEF_URL_SIGNING_SECRET = process.env.BRIEF_URL_SIGNING_SECRET ?? '';
 const WORLDMONITOR_PUBLIC_BASE_URL =
   process.env.WORLDMONITOR_PUBLIC_BASE_URL ?? 'https://worldmonitor.app';
 const BRIEF_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
@@ -217,14 +124,10 @@ const BRIEF_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 // lead).
 const INSIGHTS_KEY = 'news:insights:v1';
 
-// Operator kill switch — used to intentionally silence brief compose
-// without surfacing a Railway red flag. Distinguished from "secret
-// missing in a production rollout" which IS worth flagging.
-const BRIEF_COMPOSE_DISABLED_BY_OPERATOR = process.env.BRIEF_COMPOSE_ENABLED === '0';
-const BRIEF_COMPOSE_ENABLED =
-  !BRIEF_COMPOSE_DISABLED_BY_OPERATOR && BRIEF_URL_SIGNING_SECRET !== '';
-const BRIEF_SIGNING_SECRET_MISSING =
-  !BRIEF_COMPOSE_DISABLED_BY_OPERATOR && BRIEF_URL_SIGNING_SECRET === '';
+// Operator kill switch — used to intentionally silence brief compose.
+// The URL signing secret is no longer required: the signed magazine URL only
+// fed the removed delivery channels.
+const BRIEF_COMPOSE_ENABLED = process.env.BRIEF_COMPOSE_ENABLED !== '0';
 
 // Phase 3b LLM enrichment. Kept separate from AI_DIGEST_ENABLED so
 // the email-digest AI summary and the brief editorial prose can be
@@ -241,26 +144,12 @@ const NONDUE_SYNTHESIS_REUSE_MS = (() => {
   return minutes * 60_000;
 })();
 
-// Wall-clock budget for the default-brief pass (#9758), which runs after
-// deliveries. The cron ticks every ~30 min; a cold start needs a fresh
-// synthesis for every default-brief user, so the pass stops starting new
-// users at this budget and the rest are reached on later ticks.
+// Wall-clock budget for the default-brief pass (#9758). The pass stops
+// starting new users at this budget; with one owner it bounds a single compose.
 const BRIEF_ONLY_COMPOSE_BUDGET_MS = (() => {
   const raw = Number.parseInt(process.env.DIGEST_BRIEF_ONLY_BUDGET_MIN ?? '', 10);
   return (Number.isFinite(raw) && raw > 0 ? raw : 8) * 60_000;
 })();
-
-// Free-tier follow limit (PR C / U10). Mirrors the UI cap at
-// `src/components/FollowCountryButton.ts` and the server-side mutation
-// cap at `convex/followedCountries.ts::followCountry`. Three layers
-// total — UI / mutation / composer — per the
-// `paywalled-feature-needs-three-layer-entitlement-gate` pattern. The
-// composer clamp catches the post-downgrade case: a user accumulated
-// >3 follows as Pro then downgraded to free; existing rows are
-// grandfathered (mutation only blocks NEW writes), but the composer
-// must still bias only the first 3 in addedAt order so the soft uplift
-// matches what's gated.
-const FREE_TIER_FOLLOW_LIMIT = 3;
 
 // Phase 3c — analyst-backed whyMatters enrichment via an internal Vercel
 // edge endpoint. When the endpoint is reachable + returns a string, it
@@ -361,10 +250,11 @@ async function callAnalystWhyMatters(story) {
   }
 }
 
-// Personalised digest prose carries the user's profile and greeting, so it
-// honours that user's AI routing policy (docs/internal/ai-routing-policy.md).
-// Story-level calls (why-matters, descriptions) use shared story content only.
-const resolveAiRoutingPolicy = createAiRoutingPolicyResolver({ siteUrl: CONVEX_SITE_URL, secret: RELAY_SECRET });
+// Personalised digest prose honours the user's AI routing policy
+// (docs/internal/ai-routing-policy.md). The policy lived in Convex; the
+// personal build has one owner who picks providers by the API keys they set,
+// so the owner's policy is the default (no provider restriction).
+const resolveAiRoutingPolicy = async () => ({ kind: 'default' });
 
 // Dependencies injected into brief-llm.mjs. Defined near the top so
 // the upstashRest helper below is in scope when this closure runs
@@ -528,14 +418,10 @@ async function getLastSentAt(rule) {
 
 /**
  * Build the synthesis context (profile, greeting) for the canonical
- * synthesis call. profile is the formatted user-context line block;
- * greeting is the time-of-day-appropriate opener. Both are stripped
- * by `generateDigestProsePublic` for the share-URL surface; this
- * function is for the personalised path only.
- *
- * Defensive: prefs lookup failures degrade to a non-personalised
- * synthesis (profile=null) rather than blocking the brief — same
- * pattern the legacy generateAISummary used.
+ * synthesis call. greeting is the time-of-day-appropriate opener. The
+ * user-preferences profile came from Convex; the personal build has no
+ * preferences store, so profile is always null — the same
+ * non-personalised synthesis a failed prefs lookup produced.
  *
  * @param {{ userId: string; variant?: string; digestTimezone?: string }} rule
  * @param {number} nowMs
@@ -543,16 +429,7 @@ async function getLastSentAt(rule) {
  */
 async function buildSynthesisCtx(rule, nowMs) {
   if (!rule?.userId) return { profile: null, greeting: null };
-  let profile = null;
-  try {
-    const { data: prefs } = await fetchUserPreferences(rule.userId, rule.variant ?? 'full');
-    if (prefs) {
-      const ctx = extractUserContext(prefs);
-      profile = formatUserProfile(ctx, rule.variant ?? 'full');
-    }
-  } catch {
-    /* prefs unavailable — degrade to non-personalised */
-  }
+  const profile = null;
   const tz = rule.digestTimezone ?? 'UTC';
   const localHour = toLocalHour(nowMs, tz);
   const greeting = localHour >= 5 && localHour < 12 ? 'Good morning'
@@ -1075,479 +952,7 @@ async function buildDigest(rule, windowStartMs) {
   return top;
 }
 
-// target: 'plain' | 'telegram' | 'slack' | 'discord'. Chat targets return
-// channel-escaped text with each title linked to its original report (#9214).
-function formatDigest(stories, nowMs, target = 'plain') {
-  if (!stories || stories.length === 0) return null;
-  const esc = (text) => escapeDigestText(text, target);
-  const dateStr = new Intl.DateTimeFormat('en-US', {
-    month: 'long', day: 'numeric', year: 'numeric',
-  }).format(new Date(nowMs));
-
-  const lines = [esc(`WorldMonitor Daily Digest — ${dateStr}`), ''];
-
-  const buckets = { critical: [], high: [], medium: [] };
-  for (const s of stories) {
-    const b = buckets[s.severity] ?? buckets.high;
-    b.push(s);
-  }
-
-  const SEVERITY_LIMITS = { critical: DIGEST_CRITICAL_LIMIT, high: DIGEST_HIGH_LIMIT, medium: DIGEST_MEDIUM_LIMIT };
-
-  for (const [level, items] of Object.entries(buckets)) {
-    if (items.length === 0) continue;
-    const limit = SEVERITY_LIMITS[level] ?? DIGEST_MEDIUM_LIMIT;
-    lines.push(esc(`${level.toUpperCase()} (${items.length} event${items.length !== 1 ? 's' : ''})`));
-    for (const item of items.slice(0, limit)) {
-      const src = item.sources.length > 0
-        ? ` [${item.sources.slice(0, 3).join(', ')}${item.sources.length > 3 ? ` +${item.sources.length - 3}` : ''}]`
-        : '';
-      const coverage = digestCoverageText(item);
-      lines.push(`  \u2022 ${formatDigestItemTitle(stripSourceSuffix(item.title), item.link, target)}${esc(src)}${coverage ? esc(` \u00b7 ${coverage}`) : ''}`);
-      // Append the RSS description as a short context line when upstream
-      // persisted one. Truncated at a word boundary to ~200 chars to keep
-      // the plain-text email terse. Empty \u2192 no context line (R6).
-      if (typeof item.description === 'string' && item.description.length > 0) {
-        const trimmed = item.description.length > 200
-          ? item.description.slice(0, 200).replace(/\s+\S*$/, '') + '\u2026'
-          : item.description;
-        lines.push(`    ${esc(trimmed)}`);
-      }
-    }
-    if (items.length > limit) lines.push(esc(`  ... and ${items.length - limit} more`));
-    lines.push('');
-  }
-
-  lines.push(esc('View full dashboard \u2192 worldmonitor.app'));
-  return lines.join('\n');
-}
-
-// ── (Removed) standalone generateAISummary ───────────────────────────────────
-//
-// Prior to 2026-04-25 a separate `generateAISummary()` here ran a
-// second LLM call per send to produce the email's exec-summary
-// block, independent of the brief envelope's `digest.lead`. That
-// asymmetry was the root cause of the email/brief contradiction
-// (different inputs, different leads, different ranked stories).
-//
-// The synthesis is now produced ONCE per user by
-// `generateDigestProse(userId, fullPool, sensitivity, deps, ctx)`
-// in composeAndStoreBriefForUser, written into
-// `envelope.data.digest.lead`, and read by every channel
-// (email HTML, plain-text, Telegram, Slack, Discord, webhook). See
-// docs/plans/2026-04-25-002-fix-brief-email-two-brain-divergence-plan.md.
-//
-// The `digest:ai-summary:v1:*` cache rows from the legacy code path
-// expire on their existing 1h TTL — no cleanup pass needed.
-
-// ── Channel deactivation ──────────────────────────────────────────────────────
-
-async function deactivateChannel(userId, channelType) {
-  try {
-    const res = await fetch(`${CONVEX_SITE_URL}/relay/deactivate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${RELAY_SECRET}`,
-        'User-Agent': 'worldmonitor-digest/1.0',
-      },
-      body: JSON.stringify({ userId, channelType }),
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!res.ok) {
-      console.warn(`[digest] Deactivate failed ${userId}/${channelType}: ${res.status}`);
-    }
-  } catch (err) {
-    console.warn(`[digest] Deactivate request failed for ${userId}/${channelType}:`, err.message);
-  }
-}
-
-// ── Send functions ────────────────────────────────────────────────────────────
-
-const TELEGRAM_MAX_LEN = 4096;
-
-function sanitizeTelegramHtml(html) {
-  let out = html.replace(/<[^>]*$/, '');
-  for (const tag of ['b', 'i', 'u', 's', 'code', 'pre']) {
-    const opens = (out.match(new RegExp(`<${tag}>`, 'g')) || []).length;
-    const closes = (out.match(new RegExp(`</${tag}>`, 'g')) || []).length;
-    for (let i = closes; i < opens; i++) out += `</${tag}>`;
-  }
-  // Digest titles are <a href> links (#9214); a cut inside one must close it.
-  const linkOpens = (out.match(/<a\s/g) || []).length;
-  const linkCloses = (out.match(/<\/a>/g) || []).length;
-  for (let i = linkCloses; i < linkOpens; i++) out += '</a>';
-  return out;
-}
-
-function truncateTelegramHtml(html, limit = TELEGRAM_MAX_LEN) {
-  if (html.length <= limit) {
-    const sanitized = sanitizeTelegramHtml(html);
-    return sanitized.length <= limit ? sanitized : truncateTelegramHtml(sanitized, limit);
-  }
-  const truncated = html.slice(0, limit - 30);
-  const lastNewline = truncated.lastIndexOf('\n');
-  const cutPoint = lastNewline > limit * 0.6 ? lastNewline : truncated.length;
-  return sanitizeTelegramHtml(truncated.slice(0, cutPoint) + '\n\n[truncated]');
-}
-
-/**
- * Send the 3-image brief carousel to a Telegram chat via sendMediaGroup.
- * Telegram fetches each URL server-side, so our carousel edge function
- * has to be publicly reachable (it is — HMAC is the only credential).
- *
- * Caption goes on the FIRST image only (Telegram renders one shared
- * caption beneath the album). The caller still calls sendTelegram()
- * afterward for the long-form text — carousel is the header, text is
- * the body.
- */
-async function sendTelegramBriefCarousel(userId, chatId, caption, magazineUrl) {
-  if (!TELEGRAM_BOT_TOKEN) return false;
-  const urls = carouselUrlsFrom(magazineUrl);
-  if (!urls) return false;
-  const media = urls.map((url, i) => ({
-    type: 'photo',
-    media: url,
-    ...(i === 0 ? { caption, parse_mode: 'HTML' } : {}),
-  }));
-  try {
-    const res = await fetch(
-      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMediaGroup`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'User-Agent': 'worldmonitor-digest/1.0' },
-        body: JSON.stringify({ chat_id: chatId, media }),
-        signal: AbortSignal.timeout(20000),
-      },
-    );
-    if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      console.warn(`[digest] Telegram carousel ${res.status} for ${userId}: ${body.slice(0, 300)}`);
-      return false;
-    }
-    return true;
-  } catch (err) {
-    console.warn(`[digest] Telegram carousel error for ${userId}: ${err.code || err.message}`);
-    return false;
-  }
-}
-
-async function sendTelegram(userId, chatId, text) {
-  if (!TELEGRAM_BOT_TOKEN) {
-    console.warn('[digest] Telegram: TELEGRAM_BOT_TOKEN not set, skipping');
-    return false;
-  }
-  const safeText = truncateTelegramHtml(text);
-  try {
-    const res = await fetch(
-      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'User-Agent': 'worldmonitor-digest/1.0' },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: safeText,
-          parse_mode: 'HTML',
-          disable_web_page_preview: true,
-        }),
-        signal: AbortSignal.timeout(10000),
-      },
-    );
-    if (res.status === 403) {
-      console.warn(`[digest] Telegram 403 for ${userId}, deactivating`);
-      await deactivateChannel(userId, 'telegram');
-      return false;
-    } else if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      console.warn(`[digest] Telegram send failed ${res.status} for ${userId}: ${body.slice(0, 300)}`);
-      return false;
-    }
-    console.log(`[digest] Telegram delivered to ${userId}`);
-    return true;
-  } catch (err) {
-    console.warn(`[digest] Telegram send error for ${userId}: ${err.code || err.message}`);
-    return false;
-  }
-}
-
-const SLACK_RE = /^https:\/\/hooks\.slack\.com\/services\/[A-Z0-9]+\/[A-Z0-9]+\/[a-zA-Z0-9]+$/;
-const DISCORD_RE = /^https:\/\/discord\.com\/api(?:\/v\d+)?\/webhooks\/\d+\/[\w-]+\/?$/;
-
-async function sendSlack(userId, webhookEnvelope, text) {
-  let webhookUrl;
-  try { webhookUrl = decrypt(webhookEnvelope); } catch (err) {
-    console.warn(`[digest] Slack decrypt failed for ${userId}:`, err.message); return false;
-  }
-  if (!SLACK_RE.test(webhookUrl)) { console.warn(`[digest] Slack URL invalid for ${userId}`); return false; }
-  let safeUrl;
-  let resolvedAddresses;
-  try {
-    ({ url: safeUrl, resolvedAddresses } = await assertNotificationWebhookDeliveryUrlSafe(webhookUrl));
-  } catch (err) {
-    console.warn(`[digest] Slack URL rejected for ${userId}:`, err.message);
-    return false;
-  }
-  try {
-    const res = await postJsonWithPinnedAddress(
-      safeUrl,
-      JSON.stringify({ text, unfurl_links: false }),
-      { 'Content-Type': 'application/json', 'User-Agent': 'worldmonitor-digest/1.0' },
-      resolvedAddresses,
-    );
-    if (res.status === 404 || res.status === 410) {
-      console.warn(`[digest] Slack webhook gone for ${userId}, deactivating`);
-      await deactivateChannel(userId, 'slack');
-      return false;
-    } else if (!res.ok) {
-      console.warn(`[digest] Slack send failed ${res.status} for ${userId}`);
-      return false;
-    }
-    console.log(`[digest] Slack delivered to ${userId}`);
-    return true;
-  } catch (err) {
-    console.warn(`[digest] Slack send error for ${userId}: ${err.code || err.message}`);
-    return false;
-  }
-}
-
-async function sendDiscord(userId, webhookEnvelope, text) {
-  let webhookUrl;
-  try { webhookUrl = decrypt(webhookEnvelope); } catch (err) {
-    console.warn(`[digest] Discord decrypt failed for ${userId}:`, err.message); return false;
-  }
-  if (!DISCORD_RE.test(webhookUrl)) { console.warn(`[digest] Discord URL invalid for ${userId}`); return false; }
-  let safeUrl;
-  let resolvedAddresses;
-  try {
-    ({ url: safeUrl, resolvedAddresses } = await assertNotificationWebhookDeliveryUrlSafe(webhookUrl));
-  } catch (err) {
-    console.warn(`[digest] Discord URL rejected for ${userId}:`, err.message);
-    return false;
-  }
-  const content = truncateDiscordContent(text);
-  try {
-    const res = await postJsonWithPinnedAddress(
-      safeUrl,
-      // Headlines can carry @everyone/@here or role mentions; never let a
-      // digest ping anyone. Matches the real-time relay's payload.
-      JSON.stringify({ content, allowed_mentions: { parse: [] } }),
-      { 'Content-Type': 'application/json', 'User-Agent': 'worldmonitor-digest/1.0' },
-      resolvedAddresses,
-    );
-    if (res.status === 404 || res.status === 410) {
-      console.warn(`[digest] Discord webhook gone for ${userId}, deactivating`);
-      await deactivateChannel(userId, 'discord');
-      return false;
-    } else if (!res.ok) {
-      console.warn(`[digest] Discord send failed ${res.status} for ${userId}`);
-      return false;
-    }
-    console.log(`[digest] Discord delivered to ${userId}`);
-    return true;
-  } catch (err) {
-    console.warn(`[digest] Discord send error for ${userId}: ${err.code || err.message}`);
-    return false;
-  }
-}
-
-async function sendTeams(userId, webhookEnvelope, payload) {
-  let webhookUrl;
-  try { webhookUrl = decrypt(webhookEnvelope); } catch (err) {
-    console.warn(`[digest] Teams decrypt failed for ${userId}:`, err.message); return false;
-  }
-  const result = await sendTeamsPayload(webhookUrl, payload, { userAgent: 'worldmonitor-digest/1.0' });
-  if (result.gone) {
-    console.warn(`[digest] Teams workflow gone for ${userId}, deactivating`);
-    await deactivateChannel(userId, 'teams');
-    return false;
-  }
-  if (!result.ok) {
-    console.warn(`[digest] Teams send failed for ${userId}: ${result.error}`);
-    return false;
-  }
-  console.log(`[digest] Teams delivered to ${userId}`);
-  return true;
-}
-
-async function sendEmail(email, subject, text, html, channel = null, occurrence = '') {
-  const unsubscribeUrl = unsubscribeUrlFor(channel, 'brief');
-  const label = 'Unsubscribe from the daily brief';
-  const payload = {
-    from: RESEND_FROM, to: email, subject,
-    text: appendUnsubscribeText(text, unsubscribeUrl, label),
-    html: injectUnsubscribeFooterHtml(html, unsubscribeUrl, label),
-    headers: listUnsubscribeHeaders(unsubscribeUrl),
-  };
-  // sendResendEmail bounds the call at 10s. A send Resend accepted but answered
-  // late reads as a failure, so last-sent stays unwritten and the next tick
-  // re-sends; keying the exact payload lets Resend drop an identical replay
-  // while a re-rendered digest (new content) still goes out under a new key.
-  // The body carries only the date, so `occurrence` (the scheduled local hour)
-  // keeps a twice_daily evening send from colliding with an identical morning one.
-  const idempotencyKey = `digest-${createHash('sha256').update(JSON.stringify([occurrence, payload.to, payload.subject, payload.text, payload.html])).digest('hex')}`;
-  const result = await sendResendEmail(resend, payload, { logPrefix: '[digest]', idempotencyKey });
-  if (result.ok) console.log(`[digest] Email delivered to ${email}`);
-  return result.ok;
-}
-
-async function sendWebhook(userId, webhookEnvelope, stories, aiSummary, webhookSecretEnvelope) {
-  let url;
-  let signingSecret;
-  try {
-    url = decrypt(webhookEnvelope);
-    signingSecret = resolveWebhookSigningSecret(decrypt, webhookSecretEnvelope);
-  } catch (err) {
-    console.warn(`[digest] Webhook decrypt failed for ${userId}:`, err.message);
-    return false;
-  }
-  let safeUrl;
-  let resolvedAddresses;
-  try {
-    ({ url: safeUrl, resolvedAddresses } = await assertNotificationWebhookDeliveryUrlSafe(url));
-  } catch (err) {
-    console.warn(`[digest] Webhook URL rejected for ${userId}:`, err.message);
-    return false;
-  }
-  const payload = JSON.stringify({
-    version: '1',
-    eventType: 'digest',
-    stories: stories.map(digestWebhookStory),
-    summary: aiSummary ?? null,
-    storyCount: stories.length,
-  });
-  try {
-    const resp = await postJsonWithPinnedAddress(
-      safeUrl,
-      payload,
-      {
-        'Content-Type': 'application/json',
-        'User-Agent': 'worldmonitor-digest/1.0',
-        ...buildWebhookDeliveryHeaders({ body: payload, eventType: 'digest', secret: signingSecret }),
-      },
-      resolvedAddresses,
-    );
-    if (resp.status === 404 || resp.status === 410 || resp.status === 403) {
-      console.warn(`[digest] Webhook ${resp.status} for ${userId} — deactivating`);
-      await deactivateChannel(userId, 'webhook');
-      return false;
-    }
-    if (!resp.ok) { console.warn(`[digest] Webhook ${resp.status} for ${userId}`); return false; }
-    console.log(`[digest] Webhook delivered for ${userId}`);
-    return true;
-  } catch (err) {
-    console.warn(`[digest] Webhook error for ${userId}:`, err.message);
-    return false;
-  }
-}
-
-// ── Entitlement check ────────────────────────────────────────────────────────
-
-/**
- * Resolve the caller's entitlement tier (0 = free, 1 = pro, etc).
- * Reads the relay:entitlement:{userId} cache first; falls back to the
- * /relay/entitlement HTTP action and back-fills the cache.
- *
- * Failure mode: returns `null` when neither cache nor relay yields a
- * usable number. Callers MUST treat null as "unknown" — never "free"
- * — so a transient relay outage doesn't accidentally clamp legitimate
- * paying users out of paywalled affordances. The digest cron's
- * `isUserPro` treats null as not-Pro and skips the rule until a later
- * run can resolve the tier (fail-closed, see isDigestDeliveryTier).
- * The followed-country composer clamp uses null → "skip clamp": it only
- * widens a ranking bias, so a transient outage must not demote a
- * paying user's brief.
- */
-async function getUserTier(userId) {
-  const cacheKey = `relay:entitlement:${userId}`;
-  try {
-    const cached = await upstashRest('GET', cacheKey);
-    if (cached !== null) {
-      const n = Number(cached);
-      if (Number.isFinite(n)) return n;
-    }
-  } catch { /* miss */ }
-  try {
-    const res = await fetch(`${CONVEX_SITE_URL}/relay/entitlement`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RELAY_SECRET}`, 'User-Agent': 'worldmonitor-digest/1.0' },
-      body: JSON.stringify({ userId }),
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) return null; // unknown — caller decides fail-open polarity
-    const { tier } = await res.json();
-    const safeTier = Number.isFinite(tier) ? tier : 0;
-    await upstashRest('SET', cacheKey, String(safeTier), 'EX', String(ENTITLEMENT_CACHE_TTL));
-    return safeTier;
-  } catch {
-    return null;
-  }
-}
-
-async function isUserPro(userId) {
-  return isDigestDeliveryTier(await getUserTier(userId));
-}
-
-// ── Per-channel body composition ─────────────────────────────────────────────
-
-const DIVIDER = '─'.repeat(40);
-
-/**
- * Compose the per-channel message bodies for a single digest rule.
- * Keeps the per-channel formatting logic out of main() so its cognitive
- * complexity stays within the lint budget.
- */
-function buildChannelBodies(storyLists, aiSummary, magazineUrl) {
-  // storyLists: formatDigest output per target. The chat lists are already
-  // channel-escaped and carry per-story links, so they are not escaped again.
-  const { plain: storyListPlain, telegram, slack, discord } = storyLists;
-  // The URL is already HMAC-signed and shape-validated at sign time
-  // (userId regex + YYYY-MM-DD), but we still escape it per-target
-  // as defence-in-depth — same discipline injectBriefCta uses for
-  // the email button. Each target has different metacharacter rules.
-  const telegramSafeUrl = magazineUrl
-    ? String(magazineUrl)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-    : '';
-  const slackSafeUrl = magazineUrl
-    ? String(magazineUrl).replace(/[<>|]/g, '')
-    : '';
-  const briefFooterPlain = magazineUrl
-    ? `\n\n${DIVIDER}\n\n📖 Open your WorldMonitor Brief magazine:\n${magazineUrl}`
-    : '';
-  const briefFooterTelegram = magazineUrl
-    ? `\n\n${DIVIDER}\n\n📖 <a href="${telegramSafeUrl}">Open your WorldMonitor Brief magazine</a>`
-    : '';
-  const briefFooterSlack = magazineUrl
-    ? `\n\n${DIVIDER}\n\n📖 <${slackSafeUrl}|Open your WorldMonitor Brief magazine>`
-    : '';
-  const briefFooterDiscord = magazineUrl
-    ? `\n\n${DIVIDER}\n\n📖 [Open your WorldMonitor Brief magazine](${magazineUrl})`
-    : '';
-  if (!aiSummary) {
-    return {
-      text: `${storyListPlain}${briefFooterPlain}`,
-      telegramText: `${telegram}${briefFooterTelegram}`,
-      slackText: `${slack}${briefFooterSlack}`,
-      discordText: `${discord}${briefFooterDiscord}`,
-    };
-  }
-  return {
-    text: `EXECUTIVE SUMMARY\n\n${aiSummary}\n\n${DIVIDER}\n\n${storyListPlain}${briefFooterPlain}`,
-    telegramText: `<b>EXECUTIVE SUMMARY</b>\n\n${markdownToTelegramHtml(aiSummary)}\n\n${DIVIDER}\n\n${telegram}${briefFooterTelegram}`,
-    slackText: `*EXECUTIVE SUMMARY*\n\n${markdownToSlackMrkdwn(aiSummary)}\n\n${DIVIDER}\n\n${slack}${briefFooterSlack}`,
-    discordText: `**EXECUTIVE SUMMARY**\n\n${markdownToDiscord(aiSummary)}\n\n${DIVIDER}\n\n${discord}${briefFooterDiscord}`,
-  };
-}
-
-// injectEmailSummary lives in scripts/lib/email-summary-html.mjs so
-// the multi-section HTML assembly can be unit-tested without
-// dragging the cron's env-checking side effects into the test
-// runtime. Imported at the top alongside the other lib helpers.
-
-// ── Brief composition (runs once per cron tick, before digest loop) ─────────
+// ── Brief composition ────────────────────────────────────────────────────────
 
 /**
  * Write brief:{userId}:{issueSlot} for every eligible user and
@@ -1569,17 +974,6 @@ function buildChannelBodies(storyLists, aiSummary, magazineUrl) {
  */
 async function composeBriefsForRun(rules, nowMs, { deadlineMs } = {}) {
   const briefByUser = new Map();
-  // Missing secret without explicit operator-disable = misconfigured
-  // rollout. Count it as a compose failure so the end-of-run exit
-  // gate trips and Railway flags the run red. Digest send still
-  // proceeds (compose failures must never block notification
-  // delivery to users).
-  if (BRIEF_SIGNING_SECRET_MISSING) {
-    console.error(
-      '[digest] brief: BRIEF_URL_SIGNING_SECRET not configured. Set BRIEF_COMPOSE_ENABLED=0 to silence intentionally.',
-    );
-    return { briefByUser, composeSuccess: 0, composeFailed: 1 };
-  }
   if (!BRIEF_COMPOSE_ENABLED) return { briefByUser, composeSuccess: 0, composeFailed: 0 };
 
   // The brief's story list now comes from the same digest accumulator
@@ -1648,11 +1042,7 @@ async function composeBriefsForRun(rules, nowMs, { deadlineMs } = {}) {
       }
     } catch (err) {
       composeFailed++;
-      if (err instanceof BriefUrlError) {
-        console.warn(`[digest] brief: sign failed for ${userId} (${err.code}): ${err.message}`);
-      } else {
-        console.warn(`[digest] brief: compose failed for ${userId}:`, err.message);
-      }
+      console.warn(`[digest] brief: compose failed for ${userId}:`, err.message);
     }
   }
   console.log(
@@ -1823,31 +1213,10 @@ async function composeAndStoreBriefForUser(userId, annotated, insightsNumbers, d
     }
   }
 
-  // PR C / U10: fetch the user's followed-countries watchlist, then
-  // apply the free-tier safety-net clamp. Three-layer gate: UI cap
-  // (FollowCountryButton) + mutation cap (followedCountries.ts) +
-  // this composer clamp (post-downgrade safety). Memory:
-  // `paywalled-feature-needs-three-layer-entitlement-gate`.
-  //
-  // Failure modes are absorbed by fetchFollowedCountries (it returns
-  // [] on any soft error, never throws) — the bias is purely an
-  // uplift, so missing data degrades to today's behavior, not to a
-  // wrong brief.
-  let followedCountriesUsed = [];
-  try {
-    const followed = await fetchFollowedCountries(userId);
-    if (followed.length > 0) {
-      const tier = await getUserTier(userId);
-      // tier === null (relay unreachable) → fail-open: skip the clamp,
-      // honor the user's full followed list. Same polarity as
-      // isUserPro's fail-open (true = Pro). A transient outage must
-      // not silently demote a paying user's bias.
-      const isFree = tier !== null && tier < 1;
-      followedCountriesUsed = isFree ? followed.slice(0, FREE_TIER_FOLLOW_LIMIT) : followed;
-    }
-  } catch (err) {
-    console.warn(`[digest] brief: followed-countries fetch threw for ${userId}:`, err?.message);
-  }
+  // The followed-countries bias came from Convex. The personal build has no
+  // follow list, so the bias input stays empty — the same input the fetch's
+  // soft-error path produced, which leaves the ranking unbiased.
+  const followedCountriesUsed = [];
 
   // Compose envelope with synthesis pre-baked. The composer applies
   // severity/topic-cluster ordering BEFORE the cap, with
@@ -2083,934 +1452,42 @@ async function composeAndStoreBriefForUser(userId, annotated, insightsNumbers, d
     }
   }
 
-  const magazineUrl = await signBriefUrl({
-    userId,
-    issueDate: issueSlot,
-    baseUrl: WORLDMONITOR_PUBLIC_BASE_URL,
-    secret: BRIEF_URL_SIGNING_SECRET,
-  });
   return {
     envelope: finalEnvelope,
-    magazineUrl,
     chosenVariant: winner.rule.variant,
     // synthesisLevel goes here — NOT in the envelope (renderer's
-    // assertNoExtraKeys would reject it). Read by the send loop for
-    // the email subject-line ternary and the parity log.
+    // assertNoExtraKeys would reject it).
     synthesisLevel,
     // Canonical synthesis ({lead, threads, signals, rankedStoryHashes}
-    // or null for L3 stub / BRIEF_LLM_ENABLED=false). The send pass
-    // reads this DIRECTLY instead of re-synthesising — a second
-    // synthesis call diverges from the compose pass and breaks the
-    // parity contract (the "call site 3" regression). See plan
-    // docs/plans/2026-05-14-001-fix-brief-pipeline-parity-grounding-opinion-plan.md.
+    // or null for L3 stub / BRIEF_LLM_ENABLED=false).
     synthesis,
   };
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
-/**
- * Paid users who need a default in-app brief (Convex `/relay/brief-only-users`).
- * Never fatal: on any failure the run composes for digest rules only, as it
- * did before this list existed.
- *
- * @returns {Promise<string[]>}
- */
-/**
- * Each default-brief user's last compose time, from the brief:latest pointer
- * (one pipeline for all users; parsing in briefComposeTimesFromPointerCells).
- * On a failed pipeline or read the map is empty and the pass keeps the Convex
- * order for this tick.
- *
- * @param {string[]} userIds
- * @returns {Promise<Map<string, number>>}
- */
-async function fetchBriefComposeTimes(userIds) {
-  if (userIds.length === 0) return new Map();
-  // raw = true: the pointer is a bare seeder-owned key (#7674).
-  const cells = await redisPipeline(userIds.map((id) => ['GET', `brief:latest:${id}`]), 5_000, true);
-  const times = briefComposeTimesFromPointerCells(userIds, cells);
-  if (!times) {
-    console.warn('[digest] brief: brief-only staleness read failed; composing in Convex order this tick');
-    return new Map();
-  }
-  return times;
-}
-
-async function fetchBriefOnlyUserIds() {
-  try {
-    const res = await fetch(`${CONVEX_SITE_URL}/relay/brief-only-users`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${RELAY_SECRET}`,
-        'User-Agent': 'worldmonitor-digest/1.0',
-      },
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!res.ok) {
-      console.warn('[digest] brief: brief-only users fetch failed:', res.status);
-      return [];
-    }
-    const body = await res.json();
-    return Array.isArray(body) ? body.filter((id) => typeof id === 'string') : [];
-  } catch (err) {
-    console.warn('[digest] brief: brief-only users fetch threw:', err?.message);
-    return [];
-  }
-}
-
 async function main() {
   const nowMs = Date.now();
   digestRunStartedAtMs = nowMs;
-  console.log('[digest] Cron run start:', new Date(nowMs).toISOString());
+  console.log('[digest] Brief run start:', new Date(nowMs).toISOString());
 
-  // Watchlist story alerts (#4922 U3): enqueue BEFORE the digest-rules fetch
-  // so a failed/empty rules fetch can't suppress the scan, and independent of
-  // whether any story also ships in a digest. Never throws.
+  // Watchlist story alerts (#4922 U3): enqueue BEFORE the brief compose so a
+  // compose failure can't suppress the scan. Never throws.
   await scanAndEnqueueWatchlistStoryEvents(nowMs);
 
-  let rules;
-  try {
-    const res = await fetch(`${CONVEX_SITE_URL}/relay/digest-rules`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${RELAY_SECRET}`,
-        'User-Agent': 'worldmonitor-digest/1.0',
-      },
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!res.ok) {
-      console.error('[digest] Failed to fetch rules:', res.status);
-      await writeDigestLastRunMeta({
-        startedAtMs: nowMs,
-        status: 'error',
-        errorReason: `fetch_rules_http_${res.status}`,
-      });
-      // Not a `return`: a run that never obtained its rules delivered nothing,
-      // and resolving main() here let the process exit 0 — Railway recorded
-      // the 2026-09-16 relay-auth outage (#8208) as a green cron until the
-      // /api/health staleness window elapsed (#8215). Exit non-zero, the same
-      // way the brief-compose gate at the end of main() does, so a 401/5xx
-      // from the relay shows red immediately. The seed-meta write above stays
-      // first so health still sees the reason.
-      await flushPendingLlmEvents();
-      process.exit(1);
-    }
-    rules = await res.json();
-  } catch (err) {
-    console.error('[digest] Fetch rules failed:', err.message);
-    await writeDigestLastRunMeta({
-      startedAtMs: nowMs,
-      status: 'error',
-      errorReason: `fetch_rules_failed:${err.message}`,
-    });
-    // Same contract as the non-ok branch: a network failure or timeout
-    // reaching the relay is a failed run, not a quiet one (#8215).
-    await flushPendingLlmEvents();
-    process.exit(1);
-  }
+  // Default-brief pass for the single owner. The Convex user and rule lookups
+  // are replaced by one compose-only rule carrying the defaults the
+  // default-brief pass gave a paid user without a digest rule
+  // (buildBriefOnlyRules). Whether the prose is regenerated on this pass is
+  // decided inside composeBriefsForRun (briefCandidateDue → isDue, then the
+  // non-due synthesis reuse window).
+  const ownerRules = buildBriefOnlyRules([PERSONAL_OWNER_ID], []);
+  const { composeSuccess, composeFailed } = await composeBriefsForRun(ownerRules, nowMs, {
+    deadlineMs: Date.now() + BRIEF_ONLY_COMPOSE_BUDGET_MS,
+  });
 
-  if (!Array.isArray(rules)) {
-    console.error('[digest] Malformed rules response: expected an array');
-    await writeDigestLastRunMeta({
-      startedAtMs: nowMs,
-      status: 'error',
-      errorReason: 'fetch_rules_malformed',
-    });
-    await flushPendingLlmEvents();
-    process.exit(1);
-  }
-
-  // Paid users without a digest rule still get today's in-app brief (default
-  // compose-only rules, appended before compose). Fetched before the empty and
-  // single-user checks so a run with no digest rules still composes them.
-  let briefOnlyUserIds = await fetchBriefOnlyUserIds();
-
-  if (rules.length === 0 && briefOnlyUserIds.length === 0) {
-    console.log('[digest] No digest rules found — nothing to do');
-    await writeDigestLastRunMeta({ startedAtMs: nowMs, sentCount: 0 });
-    return;
-  }
-
-  // Operator single-user test filter. Self-expiring by design: the env
-  // var MUST carry an `|until=<ISO8601>` suffix within 48h, or it's
-  // IGNORED. Rationale: the naive `DIGEST_ONLY_USER=user_xxx` format
-  // from PR #3255 was a sticky footgun — if an operator set it for a
-  // one-off validation and forgot to unset it, the cron would silently
-  // filter out every other user indefinitely while still completing
-  // normally and exiting 0, creating a prolonged partial outage with
-  // "green" runs. Mandatory expiry + hard 48h cap + loud warn at run
-  // start makes the test surface self-cleanup even if the operator
-  // walks away.
-  //
-  // Format: DIGEST_ONLY_USER=user_xxxxxxxxxxxxxxxxxxxxxx|until=2026-04-22T18:00Z
-  // Legacy bare-userId format is rejected (fall-through to normal
-  // fan-out) with a loud warn explaining the new syntax.
-  const onlyUserFilter = parseDigestOnlyUser(
-    (process.env.DIGEST_ONLY_USER ?? '').trim(),
-    nowMs,
-  );
-  if (onlyUserFilter.kind === 'active') {
-    const remainingMin = Math.round((onlyUserFilter.untilMs - nowMs) / 60_000);
-    console.warn(
-      `⚠️  [digest] DIGEST_ONLY_USER ACTIVE — filtering to userId=${onlyUserFilter.userId}. ` +
-        `Expires in ${remainingMin} min (${new Date(onlyUserFilter.untilMs).toISOString()}). ` +
-        `All other users are EXCLUDED from this run. Unset DIGEST_ONLY_USER after testing.`,
-    );
-    const before = rules.length;
-    rules = rules.filter((r) => r && r.userId === onlyUserFilter.userId);
-    briefOnlyUserIds = briefOnlyUserIds.filter((id) => id === onlyUserFilter.userId);
-    console.log(
-      `[digest] DIGEST_ONLY_USER — filtered ${before} rules → ${rules.length}`,
-    );
-    if (rules.length === 0 && briefOnlyUserIds.length === 0) {
-      console.warn(
-        `[digest] No rules matched userId=${onlyUserFilter.userId} — nothing to do (exiting green).`,
-      );
-      await writeDigestLastRunMeta({ startedAtMs: nowMs, sentCount: 0 });
-      return;
-    }
-  } else if (onlyUserFilter.kind === 'reject') {
-    // Malformed / expired / cap-exceeded — log LOUDLY and fan out normally
-    // so a forgotten flag cannot produce a silent partial outage.
-    console.warn(
-      `[digest] DIGEST_ONLY_USER present but IGNORED: ${onlyUserFilter.reason}. ` +
-        `Proceeding with normal fan-out. Format: ` +
-        `DIGEST_ONLY_USER=user_xxx|until=<ISO8601 within 48h>.`,
-    );
-  }
-  // kind === 'unset' → normal fan-out, no log (production default)
-
-  // Compose per-user brief envelopes once per run (extracted so main's
-  // complexity score stays in the biome budget). Failures MUST NOT
-  // block digest sends — we carry counters forward and apply the
-  // exit-non-zero gate AFTER the digest dispatch so Railway still
-  // surfaces compose-layer breakage without skipping user-visible
-  // digest delivery.
-  // Default compose-only rules for paid users without a digest rule. They never
-  // enter the send loop below (it iterates `rules`), so nothing is delivered;
-  // they are composed after deliveries (see the default-brief pass below).
-  const briefOnlyRules = buildBriefOnlyRules(briefOnlyUserIds, rules);
-  let { briefByUser, composeSuccess, composeFailed } = await composeBriefsForRun(rules, nowMs);
-
-  // Sprint 1 / U2 — option (a) canonical-send mapping. Build a per-user
-  // rule index ONCE so each iteration of the send loop can resolve the
-  // user's canonical winner rule in O(1). The compose phase already
-  // identified the winner via pickWinningCandidateWithPool and stamped
-  // its variant into briefByUser[userId].chosenVariant; we use that as
-  // the per-user filter below to drop non-winner rules from the send
-  // fan-out. Rules without a string userId are skipped here so the
-  // index lookup in the loop is a single map.get() rather than a re-
-  // filter each iteration.
-  const userRulesByUserId = new Map();
-  for (const rule of rules) {
-    if (!rule || typeof rule.userId !== 'string') continue;
-    const list = userRulesByUserId.get(rule.userId);
-    if (list) list.push(rule);
-    else userRulesByUserId.set(rule.userId, [rule]);
-  }
-
-  let sentCount = 0;
-  let sendFailed = 0;
-  // Sprint 1 / U2 hardening — track which users we've already warned
-  // about a compose-miss so each user gets ONE warn per cron tick, not
-  // one per rule iteration. See the briefForUser-missing branch below.
-  const composeMissUsers = new Set();
-
-  // Sprint 1 / U5 — cooldown mode resolved ONCE per cron tick. Operator
-  // surface is `DIGEST_COOLDOWN_MODE` ∈ {shadow, off}; default 'shadow'.
-  // Anything else (typo, garbage, even 'enforce' which Sprint 2 will
-  // introduce) fails closed to 'shadow' with `invalidRaw` populated for
-  // a startup warn — see `feedback_kill_switch_default_on_typo`.
-  //
-  // Resolved at the top of the run (not per rule) because the env value
-  // can't change mid-tick, and we want the typo-warn to fire ONCE per
-  // cron run, not once per user. The decision evaluator below is invoked
-  // with `mode` as a per-call option so a future per-user shadow-subset
-  // gate can short-circuit by passing `mode: 'off'` for excluded users
-  // (decision artifact becomes null → shadow logger silently skips them
-  // per `feedback_gate_on_ground_truth_not_configured_state`).
-  const cooldownConfig = readCooldownConfig(process.env);
-  if (cooldownConfig.invalidRaw !== null) {
-    console.warn(
-      `[digest] cooldown unrecognised DIGEST_COOLDOWN_MODE=${JSON.stringify(cooldownConfig.invalidRaw)} — ` +
-        `falling back to 'shadow' (safe default; Sprint 1 has no enforce mode). Valid: shadow | off.`,
-    );
-  }
-
-  for (const rule of rules) {
-    try {
-      if (!rule.userId || !rule.variant) continue;
-
-      // Sprint 1 / U2 — drop non-winner rules under option (a) WHEN
-      // compose succeeded for this user. The compose phase already
-      // picked ONE rule per user-slot; only that rule drives the send.
-      // Non-winner rules silently fall through here (their pools are
-      // absorbed into the winner's at the accumulator/dedup layer
-      // upstream — see brief-dedup.mjs).
-      //
-      // Codex PR #3614 P1 — composeBriefsForRun returns an empty map
-      // when BRIEF_SIGNING_SECRET is missing OR brief compose is
-      // disabled OR a per-user compose error was caught upstream. The
-      // pre-fix canonical filter dropped EVERY rule for those users —
-      // turning a brief-compose outage / config disable into a digest-
-      // send outage. Now: when briefForUser is missing, the canonical
-      // filter is skipped and we fall through to the legacy per-rule
-      // send path (multi-rule divergence reappears for THAT USER ONLY
-      // for THIS TICK only — acceptable trade-off because silent
-      // suppression of an entire user's digest is worse than a one-
-      // tick divergence on the path back to recovery). magazineUrl
-      // resolves to null at line ~1793 (brief?.magazineUrl ?? null);
-      // the carousel + CTA paths already gate on magazineUrl being
-      // truthy, so this branch produces a brief-less email/text body
-      // that still delivers the curated story list.
-      const briefForUser = briefByUser.get(rule.userId);
-      if (briefForUser) {
-        const canonicalRule = selectCanonicalSendRule(
-          briefForUser,
-          userRulesByUserId.get(rule.userId) ?? [],
-        );
-        if (!canonicalRule || canonicalRule !== rule) continue;
-      } else {
-        if (!composeMissUsers.has(rule.userId)) {
-          console.warn(
-            `[digest] compose-miss user=${rule.userId} — briefByUser has no entry. ` +
-              `Falling through to per-rule send (no magazineUrl, multi-rule users will see ` +
-              `pre-U2 per-rule body divergence for this tick). Investigate: ` +
-              `BRIEF_SIGNING_SECRET unset, brief compose disabled, OR composeBriefForUser ` +
-              `caught a per-user error (Sentry should carry the trace).`,
-          );
-          composeMissUsers.add(rule.userId);
-        }
-        // Fall through — no canonical filter; this rule iterates
-        // through isDue / isUserPro / buildDigest / send normally.
-      }
-
-      const lastSentKey = `digest:last-sent:v1:${rule.userId}:${rule.variant}`;
-      // Reuse the same getLastSentAt helper the compose pass used so
-      // the two flows agree on lastSentAt for every rule. Codex Round-3
-      // High #1 — winner-from-due-candidates pre-condition.
-      const lastSentAt = await getLastSentAt(rule);
-
-      if (!isDue(rule, lastSentAt)) continue;
-
-      const pro = await isUserPro(rule.userId);
-      if (!pro) {
-        console.log(`[digest] Skipping ${rule.userId} — not PRO`);
-        continue;
-      }
-
-      const windowStart = digestWindowStartMs(lastSentAt, nowMs, DIGEST_LOOKBACK_MS);
-      const stories = await buildDigest(rule, windowStart);
-      if (!stories) {
-        console.log(`[digest] No stories in window for ${rule.userId} (${rule.variant})`);
-        continue;
-      }
-
-      let channels = [];
-      try {
-        const chRes = await fetch(`${CONVEX_SITE_URL}/relay/channels`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${RELAY_SECRET}`,
-            'User-Agent': 'worldmonitor-digest/1.0',
-          },
-          body: JSON.stringify({ userId: rule.userId }),
-          signal: AbortSignal.timeout(10000),
-        });
-        if (chRes.ok) channels = await chRes.json();
-      } catch (err) {
-        console.warn(`[digest] Channel fetch failed for ${rule.userId}:`, err.message);
-      }
-
-      const ruleChannelSet = new Set(rule.channels ?? []);
-      const deliverableChannels = channels.filter(ch =>
-        ruleChannelSet.has(ch.channelType) && ch.verified &&
-        (ch.channelType !== 'email' || ch.emailOwnership === 'verified_account') &&
-        (ch.channelType !== 'telegram' || ch.telegramOwnership === 'verified_callback'));
-      if (deliverableChannels.length === 0) {
-        console.log(`[digest] No deliverable channels for ${rule.userId} — skipping`);
-        continue;
-      }
-
-      // Sprint 1 / U2 — option (a) canonical send.
-      //
-      // We are guaranteed to be on the WINNING rule for this user-slot
-      // (the canonical-rule filter above dropped every non-winner). So:
-      //
-      //   - The send pass reads the canonical synthesis the COMPOSE pass
-      //     already produced (carried on the briefByUser entry as
-      //     `synthesis`). It does NOT re-synthesise. A second
-      //     runSynthesisWithFallback call here would diverge from the
-      //     compose pass — different `stories` pool, different ctx,
-      //     temperature 0.4 — and break the compose↔send parity contract
-      //     (the "call site 3" parity regression). See plan
-      //     docs/plans/2026-05-14-001-fix-brief-pipeline-parity-grounding-opinion-plan.md
-      //     (F1) + Codex review.
-      //   - Every channel body — email HTML + plain text + Telegram +
-      //     Slack + Discord + webhook — reads from this single synthesis
-      //     output. There is no per-rule fan-out, no winner-vs-non-winner
-      //     channel divergence, and no separate per-rule magazine URL.
-      //   - The magazine URL (briefByUser[userId].magazineUrl) points at
-      //     the SAME rule's envelope this synthesis was derived from, so
-      //     subscribers experience full email-body ↔ magazine consistency.
-      //
-      // Reuse briefForUser fetched above (Codex PR #3614 P2 — was a
-      // duplicate Map.get on the same key). In the compose-miss
-      // fallback path `brief` is undefined → no synthesis to read → no
-      // editorial block this tick (the story list still ships); the
-      // path is rare and self-healing on the next compose.
-      const brief = briefForUser;
-      let briefSynthesis = null;  // full {lead, threads, signals} when synthesis succeeded
-      let briefLead = null;       // string projection for non-email channels + parity log
-      // synthesisLevel is sourced from the compose pass — not recomputed.
-      const synthesisLevel = brief?.synthesisLevel ?? 3;
-      // Gate: AI_DIGEST_ENABLED + per-rule opt-out + synthesisLevel ∈
-      // {1,2}. For L3 (stub) or opt-out, briefSynthesis/briefLead stay
-      // null and the channel bodies render no editorial block — exactly
-      // today's behaviour. The persisted envelope always carries a
-      // `digest.lead` (even the L3 stub), so reading the synthesis from
-      // the briefByUser entry (NOT the envelope) is what keeps L3 /
-      // opt-out users from getting a fake "Executive Summary".
-      if (AI_DIGEST_ENABLED && rule.aiDigestEnabled !== false && synthesisLevel !== 3) {
-        briefSynthesis = brief?.synthesis ?? null;
-        briefLead = briefSynthesis?.lead ?? null;
-      }
-
-      const deliveryPlan = buildDigestDeliveryPlan({
-        briefStories: brief?.envelope?.data?.stories,
-        rawStories: stories,
-      });
-      const {
-        formatterStories,
-        cooldownIterableStories,
-        sourceCountByClusterId,
-      } = deliveryPlan;
-
-      const storyListPlain = formatDigest(formatterStories, nowMs);
-      if (!storyListPlain) continue;
-
-      const magazineUrl = brief?.magazineUrl ?? null;
-      const { text, telegramText, slackText, discordText } = buildChannelBodies(
-        {
-          plain: storyListPlain,
-          telegram: formatDigest(formatterStories, nowMs, 'telegram'),
-          slack: formatDigest(formatterStories, nowMs, 'slack'),
-          discord: formatDigest(formatterStories, nowMs, 'discord'),
-        },
-        briefLead,
-        magazineUrl,
-      );
-      // Email gets the FULL structured synthesis (lead + threads +
-      // signals) so the editorial block matches the old Brain B
-      // multi-paragraph richness — not just the magazine pull-quote.
-      // Non-email channels (Telegram/Slack/Discord/webhook) keep the
-      // single-string lead since their formats favour brevity. The
-      // canonical-synthesis contract still holds: every channel reads
-      // from the same generateDigestProse output for this rule.
-      //
-      // renderDigestEmailHtml also enforces DIGEST_EMAIL_MAX_HTML_BYTES so
-      // Gmail never clips the message (its cut-off is ~102KB of HTML). Over
-      // the cap it drops the lowest-priority story cards and links to the
-      // full brief instead of cutting markup mid-tag.
-      const unsubscribeBytes = Math.max(0, ...deliverableChannels
-        .filter((ch) => ch.channelType === 'email')
-        .map((ch) => Buffer.byteLength(injectUnsubscribeFooterHtml(
-          '', unsubscribeUrlFor(ch, 'brief'), 'Unsubscribe from the daily brief',
-        ), 'utf8')));
-      const { html, truncated: htmlTruncated, bytes: htmlBytes, shownStories } = renderDigestEmailHtml({
-        stories: formatterStories,
-        nowMs,
-        synthesis: briefSynthesis,
-        magazineUrl,
-        maxBytes: DIGEST_EMAIL_MAX_HTML_BYTES - unsubscribeBytes,
-      });
-      if (htmlTruncated) {
-        console.warn(
-          `[digest] email HTML size-capped for ${rule.userId}: `
-          + `${shownStories}/${formatterStories.length} stories, ${htmlBytes} bytes`,
-        );
-      }
-
-      const shortDate = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date(nowMs));
-      const subject = subjectForBrief({ briefLead, synthesisLevel, shortDate });
-
-      // Sprint 1 / U5 — cooldown shadow-mode evaluation (per-cluster,
-      // per-channel, BEFORE the channel send). The decision is computed
-      // and accumulated; the send loop below is unchanged. Sprint 2 will
-      // wire the decision into the send-loop guard. Until then, the
-      // accumulator's only consumer is the shadow log line emitted after
-      // the send loop completes for this user-rule.
-      //
-      // Why before the send (not after): the U4 delivered-log writes
-      // happen AFTER each channel's send returns true, and we want the
-      // cooldown evaluator to see the previous tick's row, not the row
-      // we're about to write. Moving the GET to "after send" would race
-      // with the writer and turn every re-send into a `conflicts: 1`
-      // observation — masking the real cooldown signal we're trying to
-      // measure.
-      //
-      // The evaluator is short-circuited by `mode === 'off'` (decision
-      // === null). When that happens we skip the per-cluster GET pipeline
-      // entirely — no Upstash traffic, no log line. This makes the
-      // operator-side kill switch instant: flip Railway env to 'off',
-      // next tick spends zero on cooldown.
-      const cooldownDecisions = [];
-      const ruleIdComposite = `${rule.variant ?? 'full'}:${rule.lang ?? 'en'}:${rule.sensitivity ?? 'high'}`;
-      // Slot string mirrors the brief composer: `issueSlotInTz(nowMs, tz)`.
-      // We use the same tz the composer used (rule.digestTimezone, default
-      // 'UTC') so the slot naming aligns 1:1 with the brief envelope's
-      // magazine URL slot. Operators grepping the shadow log by slot get
-      // the same slot string they'd see in `brief:${userId}:${issueSlot}`.
-      const cooldownSlot = issueSlotInTz(nowMs, rule.digestTimezone ?? 'UTC');
-      if (
-        cooldownConfig.mode === 'shadow'
-        && Array.isArray(cooldownIterableStories)
-        && cooldownIterableStories.length > 0
-      ) {
-        // Outer loop: one decision per (channel, cluster) tuple. Same
-        // shape as the U4 writer's iteration so the shadow log's
-        // `total` aligns with the writer's eventual write count under
-        // healthy paths. Sequential awaits — same rationale as the U4
-        // writer (≤12 clusters × ≤5 channels per user = ≤60 GETs;
-        // bursty parallelism would compete with the rest of the cron's
-        // Upstash traffic for no measurable latency win).
-        //
-        // Codex PR #3617 round-4 P2 — iterate cooldownIterableStories
-        // (NOT briefEnvelopeStories) so the compose-miss fallback path
-        // also gets U5 coverage. See the cooldownIterableStories
-        // construction above for the unified-shape rationale.
-        for (const ch of deliverableChannels) {
-          for (const briefStory of cooldownIterableStories) {
-            const clusterId = typeof briefStory?.clusterId === 'string' ? briefStory.clusterId : '';
-            if (!clusterId) {
-              // Same defensive branch as the U4 writer below — a v4
-              // envelope MUST carry clusterId. Skip the GET here so we
-              // don't construct a malformed key; the U4-side warn will
-              // fire on the same iteration when the writer runs.
-              continue;
-            }
-            const key = `digest:sent:v1:${rule.userId}:${ch.channelType}:${ruleIdComposite}:${clusterId}`;
-            let lastDeliveredAt = null;
-            let lastDeliveredSourceCount = null;
-            let lastDeliveredTier = null;
-            // Greptile PR #3617 P2 — read prior headline for the
-            // EVOLUTION_NEW_FACT bypass. Older v4 rows written before
-            // this fix won't carry the field; null is the safe default
-            // (the evaluator skips the bypass when either side is null).
-            let lastDeliveredHeadline = null;
-            try {
-              const raw = await upstashRest('GET', key);
-              if (typeof raw === 'string' && raw.length > 0) {
-                const parsed = JSON.parse(raw);
-                if (parsed && typeof parsed === 'object') {
-                  if (Number.isFinite(parsed.sentAt)) lastDeliveredAt = parsed.sentAt;
-                  if (Number.isFinite(parsed.sourceCount)) lastDeliveredSourceCount = parsed.sourceCount;
-                  if (typeof parsed.severity === 'string') lastDeliveredTier = parsed.severity;
-                  if (typeof parsed.headline === 'string' && parsed.headline.length > 0) {
-                    lastDeliveredHeadline = parsed.headline;
-                  }
-                }
-              }
-            } catch (err) {
-              // GET failed (transient Upstash, JSON parse error). Treat
-              // as "no prior delivery" — the safe default in shadow mode
-              // is `decision='allow'`, which never affects subsequent
-              // sends. A real enforcement path (Sprint 2) will need to
-              // decide whether to fail-open or fail-closed here; shadow
-              // mode is fail-open by definition.
-              console.warn(
-                `[digest] U5 cooldown: GET failed for key=${key}: ${err?.message ?? err} — treating as no prior delivery`,
-              );
-            }
-            const sourceDomain = (() => {
-              const url = typeof briefStory?.sourceUrl === 'string' ? briefStory.sourceUrl : '';
-              if (!url) return '';
-              try {
-                return new URL(url).hostname.toLowerCase();
-              } catch {
-                return '';
-              }
-            })();
-            const severity = typeof briefStory?.threatLevel === 'string' ? briefStory.threatLevel : 'unknown';
-            // Codex PR #3617 P1 — real source count from the raw clustered
-            // story (sources[].length), not the BriefStory.source 0/1 collapse.
-            // Falls back to 0 when the cluster doesn't appear in the raw
-            // stories Map (defensive — shouldn't happen on the option-(a)
-            // canonical-rule path, but a future bug shouldn't crash the cron).
-            const currentSourceCount = sourceCountByClusterId.get(clusterId) ?? 0;
-            const decision = evaluateCooldown({
-              userId: rule.userId,
-              slot: cooldownSlot,
-              clusterId,
-              channel: ch.channelType,
-              ruleId: ruleIdComposite,
-              type: null, // invoke stub classifier
-              severity,
-              currentSourceCount,
-              currentTier: severity,
-              lastDeliveredAt,
-              lastDeliveredSourceCount,
-              lastDeliveredTier,
-              // Greptile PR #3617 P2 — drives EVOLUTION_NEW_FACT bypass.
-              lastDeliveredHeadline,
-              classifierInputs: {
-                sourceDomain,
-                headline: typeof briefStory?.headline === 'string' ? briefStory.headline : '',
-              },
-              options: { mode: cooldownConfig.mode, nowMs },
-            });
-            // `decision === null` is unreachable here (we guarded on
-            // `mode === 'shadow'` at the loop entry) but defensive —
-            // protects the shadow logger from a future code path that
-            // calls evaluateCooldown with mode='off' inside the shadow
-            // branch.
-            if (decision !== null) cooldownDecisions.push(decision);
-          }
-        }
-      }
-
-      let anyDelivered = false;
-      // Sprint 1 / U4 — per-channel/per-cluster delivered-log accumulator.
-      // We aggregate tri-state counts across every (channel, cluster)
-      // write for THIS user-rule send so the post-loop log line can
-      // report a single summary instead of one line per cluster (with
-      // ~12 clusters × ~5 channels that's 60 lines per user otherwise).
-      // This sits ALONGSIDE the existing `anyDelivered` write below — the
-      // delivered-log keys feed U5's cooldown evaluator (per-cluster
-      // grain), the `digest:last-sent:v1:{user}:{variant}` write feeds
-      // the cron's isDue gate (per-rule grain). Two separate concerns;
-      // both writes happen on success.
-      const deliveredLogResults = [];
-
-      for (const ch of deliverableChannels) {
-        let ok = false;
-        if (ch.channelType === 'telegram' && ch.chatId) {
-          // Phase 8: send the 3-image carousel first (best-effort), then
-          // the full text. Caption on the carousel is a short teaser —
-          // the long-form story list goes in the text message below so
-          // it remains forwardable / quotable on its own.
-          if (magazineUrl) {
-            const caption = `<b>WorldMonitor Brief — ${shortDate}</b>\n${formatterStories.length} ${formatterStories.length === 1 ? 'thread' : 'threads'} on the desk today.`;
-            await sendTelegramBriefCarousel(rule.userId, ch.chatId, caption, magazineUrl);
-          }
-          ok = await sendTelegram(rule.userId, ch.chatId, telegramText);
-        } else if (ch.channelType === 'slack' && ch.webhookEnvelope) {
-          ok = await sendSlack(rule.userId, ch.webhookEnvelope, slackText);
-        } else if (ch.channelType === 'discord' && ch.webhookEnvelope) {
-          ok = await sendDiscord(rule.userId, ch.webhookEnvelope, discordText);
-        } else if (ch.channelType === 'teams' && ch.webhookEnvelope) {
-          // Same stories, lead and brief link as the other channels, as an
-          // Adaptive Card (#9215). The card renders its own story list, so it
-          // takes formatterStories rather than a formatDigest text target;
-          // titles get the same source-suffix strip formatDigest applies.
-          ok = await sendTeams(rule.userId, ch.webhookEnvelope, buildTeamsDigestPayload({
-            title: storyListPlain.split('\n')[0],
-            summary: briefLead,
-            stories: formatterStories.map((story) => ({ ...story, title: stripSourceSuffix(story.title) })),
-            briefUrl: magazineUrl,
-          }));
-        } else if (ch.channelType === 'email' && ch.email) {
-          // cooldownSlot is YYYY-MM-DD-HHMM; the hour prefix stays fixed across
-          // retries within one scheduled hour.
-          ok = await sendEmail(ch.email, subject, text, html, ch, cooldownSlot.slice(0, 13));
-        } else if (ch.channelType === 'webhook' && ch.webhookEnvelope) {
-          // Webhook payload's `summary` field reads the canonical
-          // briefLead — same string the email exec block + magazine
-          // pull-quote use. Codex Round-1 Medium #6 (channel-scope
-          // parity).
-          //
-          // Codex PR #3617 round-5 P1 — pass formatterStories (NOT raw
-          // stories). Pre-fix the webhook serialised the full raw pool
-          // (up to DIGEST_MAX_ITEMS=30) while every other channel
-          // consumed formatterStories (post-cap, post-filter — what
-          // U4/U5 also iterate via cooldownIterableStories). Webhook
-          // users were therefore receiving cards that were never
-          // shadow-evaluated and never seeded delivered-log rows for
-          // future cooldown enforcement. Aligning to formatterStories
-          // closes the channel-coverage gap so the webhook payload
-          // exactly matches what U4 stamped + U5 evaluated for that
-          // (user, rule, tick).
-          ok = await sendWebhook(rule.userId, ch.webhookEnvelope, formatterStories, briefLead, ch.webhookSecret);
-        }
-        if (ok) {
-          anyDelivered = true;
-          // Sprint 1 / U4 — record one delivered-log entry per cluster
-          // surfaced in this channel's body. The brief envelope's stories
-          // are the canonical source set (post-cap, post-filter, ⊆ U7
-          // invariant); the formatter shim above maps them into the
-          // raw-shape used by formatDigest, which means the SAME stories
-          // were surfaced to the user.
-          //
-          // Order of operations: send first, write second. If the writer
-          // fails AFTER the channel succeeded, the story is eligible to
-          // re-air on the next tick. We accept that trade-off (extra
-          // edition beats silent suppression of a real delivery
-          // problem) — see digest-delivered-log.mjs's "Failure-mode
-          // trade-off" docblock for the canonical rationale.
-          //
-          // Per-cluster writer is awaited sequentially: under option (a)
-          // we ship ≤12 clusters × ≤5 channels per user, so the
-          // sequential cost is ~bounded at 60 SET commands per user.
-          // Parallelising via Promise.all would add bursty load to the
-          // same Upstash account that's serving the rest of the cron;
-          // sequential is simpler and the latency budget already
-          // tolerates it.
-          // Codex PR #3617 round-4 P2 — iterate cooldownIterableStories
-          // (unified across brief-success + compose-miss). See the
-          // cooldownIterableStories construction above for rationale.
-          if (Array.isArray(cooldownIterableStories) && cooldownIterableStories.length > 0) {
-            for (const briefStory of cooldownIterableStories) {
-              const clusterId = typeof briefStory?.clusterId === 'string'
-                ? briefStory.clusterId
-                : '';
-              if (!clusterId) {
-                // Defensive: a v4 envelope MUST carry clusterId per
-                // assertBriefEnvelope. Under compose-miss, clusterId is
-                // derived from raw mergedHashes[0]/hash — always present
-                // for valid raw stories. Skip the write on missing
-                // clusterId either way (malformed key would throw).
-                console.warn(
-                  `[digest] U4 delivered-log: brief story missing clusterId — ` +
-                    `user=${rule.userId} channel=${ch.channelType} headline=${JSON.stringify(briefStory?.headline ?? '<missing>')}. ` +
-                    `Skipping log write for this cluster.`,
-                );
-                continue;
-              }
-              try {
-                const writeResult = await writeDeliveredEntry({
-                  userId: rule.userId,
-                  channel: ch.channelType,
-                  ruleId: `${rule.variant ?? 'full'}:${rule.lang ?? 'en'}:${rule.sensitivity ?? 'high'}`,
-                  clusterId,
-                  sentAt: nowMs,
-                  // Codex PR #3617 P1 — real source count, not the
-                  // 0/1 collapse from BriefStory.source. See the
-                  // sourceCountByClusterId Map construction above the
-                  // U5 cooldown loop for the full rationale.
-                  sourceCount: sourceCountByClusterId.get(clusterId) ?? 0,
-                  severity: typeof briefStory?.threatLevel === 'string' ? briefStory.threatLevel : 'unknown',
-                  // Greptile PR #3617 P2 — persist headline so the next
-                  // tick's cooldown evaluator can drive the
-                  // EVOLUTION_NEW_FACT bypass via string-equality
-                  // compare. cooldownIterableStories carries the
-                  // canonical headline in both branches (BriefStory
-                  // shape under brief-success; synthesized from raw
-                  // story.title under compose-miss).
-                  headline: typeof briefStory?.headline === 'string' ? briefStory.headline : '',
-                });
-                deliveredLogResults.push(writeResult);
-              } catch (err) {
-                // writeDeliveredEntry only throws on programmer error
-                // (empty key components). Network/Upstash failures map
-                // to {errors: 1} in the tri-state result. A throw here
-                // means a v4 envelope leaked through with bad fields;
-                // record as error in the aggregate so it surfaces in
-                // the summary line below.
-                console.warn(
-                  `[digest] U4 delivered-log: writeDeliveredEntry threw for ` +
-                    `user=${rule.userId} channel=${ch.channelType} clusterId=${clusterId}: ${err?.message ?? err}`,
-                );
-                deliveredLogResults.push({ written: 0, conflicts: 0, errors: 1 });
-              }
-            }
-          }
-        }
-      }
-      // Sprint 1 / U4 summary — one line per user-rule send, not per
-      // (channel, cluster) write. Operators can tail this as a single
-      // line per user. Tri-state counters distinguish:
-      //   - written  = first-time delivered-log entries (cooldown table starts here)
-      //   - conflicts = NX-collide on existing keys (idempotent re-write,
-      //                 happens when the same (channel, rule, cluster)
-      //                 ships twice within the 30d±jitter TTL window —
-      //                 expected for sustained-narrative re-airs)
-      //   - errors   = Upstash transport failure or invariant break —
-      //                next tick re-airs the story to the affected
-      //                channel (see digest-delivered-log.mjs failure-mode
-      //                docblock).
-      if (deliveredLogResults.length > 0) {
-        const aggregate = aggregateDeliveredResults(deliveredLogResults);
-        const logFn = aggregate.errors > 0 ? console.warn : console.log;
-        logFn(
-          `[digest] U4 delivered-log user=${rule.userId} ` +
-            `rule=${rule.variant ?? 'full'}:${rule.lang ?? 'en'}:${rule.sensitivity ?? 'high'} ` +
-            `written=${aggregate.written} conflicts=${aggregate.conflicts} errors=${aggregate.errors} ` +
-            `total=${deliveredLogResults.length}`,
-        );
-      }
-
-      // Sprint 1 / U5 — shadow-mode cooldown summary line. ONE line per
-      // user-rule send (not per cluster, not per channel) so a busy cron
-      // doesn't flood Sentry. Skipped entirely when no decisions were
-      // accumulated (mode='off' OR no brief envelope OR all clusters
-      // missing clusterId). The logger promotes to console.warn when
-      // any decision had `classificationMissing: true` — that's real
-      // signal for Sprint 3's classifier work.
-      //
-      // The line is independent of `anyDelivered` — we want the would-
-      // have-suppressed counter even on no-channel-success ticks (those
-      // are the operator-visible cases where shadow telemetry matters
-      // most: "we'd have suppressed even MORE if the send had succeeded").
-      emitCooldownShadowLog({
-        userId: rule.userId,
-        ruleId: ruleIdComposite,
-        slot: cooldownSlot,
-        decisions: cooldownDecisions,
-      });
-
-      if (anyDelivered) {
-        await upstashRest(
-          'SET', lastSentKey, JSON.stringify({ sentAt: nowMs }), 'EX', '691200', // 8 days
-        );
-        sentCount++;
-        // Story count reports the formatter-shape length (post-cap,
-        // post-filter slice) — what the user actually received in their
-        // digest. Pre-U7-fix this read `stories.length` (raw 30 from
-        // buildDigest), which over-counted by up to ~18 vs the cards
-        // the user saw.
-        console.log(
-          `[digest] Sent ${formatterStories.length} stories to ${rule.userId} (${rule.variant}, ${rule.digestMode})`,
-        );
-        // Parity observability. Gated on AI_DIGEST_ENABLED + per-rule
-        // aiDigestEnabled — without this guard, opt-out users (briefLead
-        // is intentionally null) trigger PARITY REGRESSION every tick
-        // (null !== '<envelope stub lead>'), flooding Sentry with
-        // false positives. Greptile P1 on PR #3396.
-        //
-        // Sprint 1 / U2 — option (a) made `winner_match=true` the
-        // UNIVERSAL invariant: the canonical-rule filter at the top of
-        // the loop ensures every send is the user's winning rule for
-        // this slot. Two consequences:
-        //
-        // 1. `winner_match=false` was previously "expected divergence
-        //    for a non-winner rule send"; under option (a) it can ONLY
-        //    indicate a bug — most likely briefByUser missing the user
-        //    OR chosenVariant drifting between compose and send. Treat
-        //    as a hard alarm, not a periodic mismatch warning.
-        // 2. `channels_equal=false` while `winner_match=true` retains
-        //    its pre-U2 meaning — canonical-synthesis cache row drift.
-        //    Same PARITY REGRESSION alarm semantics.
-        //
-        // Both alarms warn on the same console.warn channel so Sentry's
-        // console-breadcrumb hook surfaces them without explicit
-        // captureMessage calls.
-        if (AI_DIGEST_ENABLED && rule.aiDigestEnabled !== false && !brief) {
-          // Compose-miss path: `briefByUser` had no entry for this user,
-          // so the canonical-rule filter was skipped and this rule fell
-          // through to the legacy per-rule send (see the compose-miss
-          // branch above). There is NO canonical envelope to compare
-          // against — `brief` is undefined — so winner_match and
-          // channels_equal are both n/a. winnerVariant would be '' here,
-          // which would make winner_match=false and trip a FALSE
-          // PARITY REGRESSION every compose-miss tick. The compose-miss
-          // itself is already logged separately (`[digest] compose-miss
-          // user=…`), so emit an informational parity line and skip both
-          // alarms. Plan 2026-05-14-001 F1, Phase 1 step 5.
-          console.log(
-            `[digest] brief lead parity user=${rule.userId} ` +
-              `rule=${rule.variant ?? 'full'}:${rule.sensitivity ?? 'high'}:${rule.lang ?? 'en'} ` +
-              `winner_match=n/a ` +
-              `synthesis_level=${synthesisLevel} ` +
-              `exec_len=${(briefLead ?? '').length} ` +
-              `brief_lead_len=0 ` +
-              `channels_equal=n/a ` +
-              `public_lead_len=0 ` +
-              `reason=compose-miss`,
-          );
-        } else if (AI_DIGEST_ENABLED && rule.aiDigestEnabled !== false) {
-          const envLead = brief?.envelope?.data?.digest?.lead ?? '';
-          const winnerVariant = brief?.chosenVariant ?? '';
-          const winnerMatch = winnerVariant === (rule.variant ?? 'full');
-          // channels_equal is `n/a` when there is no channel synthesis
-          // (L3 stub, aiDigest opt-out, or — defensively — compose-miss):
-          // briefLead is intentionally null and there is nothing to
-          // compare. The persisted envelope ALWAYS carries a
-          // `digest.lead` (the L3 stub included), so comparing null
-          // against it would emit a misleading `channels_equal=false`
-          // and, pre-fix, a false PARITY REGRESSION every tick for
-          // every L3 / opt-out user. See plan
-          // docs/plans/2026-05-14-001-fix-brief-pipeline-parity-grounding-opinion-plan.md
-          // (F1, Phase 1 step 5).
-          const hasChannelSynthesis = briefLead != null;
-          const channelsEqual = hasChannelSynthesis ? (briefLead === envLead) : 'n/a';
-          const publicLead = brief?.envelope?.data?.digest?.publicLead ?? '';
-          console.log(
-            `[digest] brief lead parity user=${rule.userId} ` +
-              `rule=${rule.variant ?? 'full'}:${rule.sensitivity ?? 'high'}:${rule.lang ?? 'en'} ` +
-              `winner_match=${winnerMatch} ` +
-              `synthesis_level=${synthesisLevel} ` +
-              `exec_len=${(briefLead ?? '').length} ` +
-              `brief_lead_len=${envLead.length} ` +
-              `channels_equal=${channelsEqual} ` +
-              `public_lead_len=${publicLead.length}`,
-          );
-          if (!winnerMatch) {
-            // This branch is reached ONLY when `brief` exists (the
-            // compose-miss case is handled in the `!brief` branch
-            // above with winner_match=n/a). Under option (a) it is
-            // unreachable in practice — the canonical-rule filter at
-            // the top of the loop drops every non-winner rule before
-            // this point. If we ever see it in production with a
-            // present `brief`, the canonical-rule filter has been
-            // bypassed OR briefByUser/chosenVariant drifted between
-            // compose and send. Hard alarm.
-            console.warn(
-              `[digest] PARITY REGRESSION user=${rule.userId} — winner_match=false under option (a). ` +
-                `Expected: winner_variant=${winnerVariant || '<missing>'} === rule_variant=${rule.variant ?? 'full'}. ` +
-                `Investigate: canonical-rule filter bypass OR compose↔send chosenVariant drift.`,
-            );
-          } else if (hasChannelSynthesis && channelsEqual === false) {
-            // Channel lead != envelope lead while a channel synthesis
-            // exists — a real contract break. After the Phase-1 parity
-            // fix the send pass reads the SAME synthesis object the
-            // compose pass spliced into the envelope, so for L1/L2 this
-            // is now unreachable UNLESS envelope.data.digest.lead was
-            // mutated after compose (e.g. a stray enrichment path
-            // re-running digest prose). If this fires, that invariant
-            // broke — investigate post-compose envelope mutation.
-            console.warn(
-              `[digest] PARITY REGRESSION user=${rule.userId} — winner-rule channel lead != envelope lead. ` +
-                `Post-Phase-1 the send pass reads the compose-pass synthesis directly; ` +
-                `a mismatch means envelope.data.digest.lead was mutated after compose.`,
-            );
-          }
-        }
-      }
-    } catch (err) {
-      // One user's failure (a transient Upstash or embedding timeout) must
-      // not end the tick for every user after it. last-sent was not
-      // written, so the rule is retried on the next tick while still due.
-      sendFailed++;
-      // Log the error object, as main().catch did, so its stack survives.
-      console.warn(`[digest] send failed user=${rule?.userId} variant=${rule?.variant}:`, err);
-    }
-  }
-
-  console.log(`[digest] Cron run complete: ${sentCount} digest(s) sent`);
-
-  // Default-brief pass: in-app briefs for paid users without a digest rule.
-  // Runs after deliveries so it never delays a scheduled digest, and under a
-  // time budget so a cold start (every user needs a fresh synthesis) cannot
-  // push the run past the next tick. Users are taken stalest first, so whoever
-  // the budget skips is first on the next tick. Its compose results count
-  // toward the failure gate below.
-  if (briefOnlyRules.length) {
-    console.log(`[digest] brief: ${briefOnlyRules.length} paid users without a digest rule get a default in-app brief`);
-    const composedAtByUser = await fetchBriefComposeTimes(briefOnlyRules.map((r) => r.userId));
-    const briefOnly = await composeBriefsForRun(orderBriefOnlyRulesByStaleness(briefOnlyRules, composedAtByUser), nowMs, {
-      deadlineMs: Date.now() + BRIEF_ONLY_COMPOSE_BUDGET_MS,
-    });
-    composeSuccess += briefOnly.composeSuccess;
-    composeFailed += briefOnly.composeFailed;
-  }
-
-  // Brief-compose failure gate. Runs at the very end so a compose-
-  // layer outage (Upstash blip, insights key stale, signing secret
-  // missing) never blocks digest delivery to users — but Railway
-  // still flips the run red so ops see the signal. Denominator is
-  // attempted writes (shouldExitNonZero enforces this).
+  // Brief-compose failure gate. Denominator is attempted writes
+  // (shouldExitNonZero enforces this).
   if (shouldExitOnBriefFailures({ success: composeSuccess, failed: composeFailed })) {
     console.warn(
       `[digest] brief: exiting non-zero — compose_failed=${composeFailed} compose_success=${composeSuccess} crossed the threshold`,
@@ -3018,7 +1495,6 @@ async function main() {
     await writeDigestLastRunMeta({
       startedAtMs: nowMs,
       status: 'error',
-      sentCount,
       errorReason: `brief_compose_failed:${composeFailed}:success:${composeSuccess}`,
     });
     // process.exit does not drain in-flight promises — flush fire-and-forget
@@ -3027,37 +1503,38 @@ async function main() {
     process.exit(1);
   }
 
-  // Per-rule send failures. A partial failure is recorded as a SEED_ERROR
-  // heartbeat but keeps the run green, since the failed rules are retried
-  // on the next tick. A tick where no send succeeded still exits non-zero,
-  // so an Upstash or relay outage keeps Railway red.
-  if (sendFailed > 0) {
-    await writeDigestLastRunMeta({
-      startedAtMs: nowMs,
-      status: 'error',
-      sentCount,
-      errorReason: `send_failed:${sendFailed}:sent:${sentCount}`,
-    });
-    if (sentCount === 0) {
-      console.warn(`[digest] send: exiting non-zero — all ${sendFailed} attempted rule(s) failed`);
-      await flushPendingLlmEvents();
-      process.exit(1);
-    }
-    return;
-  }
-
-  await writeDigestLastRunMeta({ startedAtMs: nowMs, sentCount });
+  await writeDigestLastRunMeta({ startedAtMs: nowMs });
+  console.log(`=== Done (${Date.now() - nowMs}ms) ===`);
 }
 
-main().catch(async (err) => {
-  const finishedAtMs = Date.now();
-  console.error('[digest] Fatal:', err);
-  await writeDigestLastRunMeta({
-    startedAtMs: digestRunStartedAtMs ?? finishedAtMs,
-    finishedAtMs,
-    status: 'error',
-    errorReason: `fatal:${err?.message ?? err}`,
+export {
+  buildDigest,
+  composeAndStoreBriefForUser,
+  composeBriefsForRun,
+  fetchLatestBriefEnvelope,
+  getLastSentAt,
+  isDue,
+};
+
+if (isMainModule(import.meta.url, process.argv[1])) {
+  if (process.env.DIGEST_CRON_ENABLED === '0') {
+    console.log('[digest] DIGEST_CRON_ENABLED=0 — skipping run');
+    process.exit(0);
+  }
+  if (!UPSTASH_URL || !UPSTASH_TOKEN) {
+    console.error('[digest] UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN not set');
+    process.exit(1);
+  }
+  main().catch(async (err) => {
+    const finishedAtMs = Date.now();
+    console.error('[digest] Fatal:', err);
+    await writeDigestLastRunMeta({
+      startedAtMs: digestRunStartedAtMs ?? finishedAtMs,
+      finishedAtMs,
+      status: 'error',
+      errorReason: `fatal:${err?.message ?? err}`,
+    });
+    await flushPendingLlmEvents();
+    process.exit(1);
   });
-  await flushPendingLlmEvents();
-  process.exit(1);
-});
+}

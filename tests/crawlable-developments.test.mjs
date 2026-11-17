@@ -15,7 +15,6 @@ import {
   parseBriefSections,
   registrableDomain,
 } from '../scripts/crawlable-developments.mjs';
-import { isVerifiableArticleUrl as freezeIsVerifiableArticleUrl } from '../scripts/freeze-crawlable-live-pulse.mjs';
 
 // Shapes taken from the 2026-09-04 frozen snapshot: 32 of 40 briefs carried
 // `**` markers, 23 carried the ISO code in the "WHAT THIS MEANS FOR" heading,
@@ -195,7 +194,6 @@ describe('brief grounding floor', () => {
     assert.equal(isVerifiableArticleUrl('https://news.google.com/rss/articles/a'), false);
     assert.equal(isVerifiableArticleUrl('https://www.rnz.co.nz/news/a'), true);
     assert.equal(isVerifiableArticleUrl('http://www.rnz.co.nz/news/a'), false);
-    assert.equal(freezeIsVerifiableArticleUrl, isVerifiableArticleUrl, 'the freeze re-exports the shared rule for the welcome strip');
   });
 
   it('requires a curated row behind a brief: index rows corroborate, they do not ground', () => {

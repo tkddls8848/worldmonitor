@@ -121,8 +121,9 @@ export const COUNTRY_BRIEF_ADVISORY_LABELS: Readonly<Record<string, string>> = O
   normal: 'Exercise Normal Precautions',
 });
 
-// Dimension display names from the resilience pages (DIMENSION_LABELS in
-// scripts/build-crawlable-corpus.mjs; parity-tested against its source).
+// Dimension display names from the resilience pages (DIMENSION_LABELS in the
+// removed scripts/build-crawlable-corpus.mjs; tests/country-brief-evidence.test.mts
+// pins the last published table).
 export const RESILIENCE_DIMENSION_LABELS: Readonly<Record<string, string>> = Object.freeze({
   macroFiscal: 'Macro-fiscal position',
   currencyExternal: 'Currency and external balance',
@@ -223,8 +224,7 @@ function thirdPartyTitle(value: unknown): string {
   return line.length > MAX_TITLE_LENGTH ? `${line.slice(0, MAX_TITLE_LENGTH - 1).trimEnd()}…` : line;
 }
 
-// Same slug rule as the corpus page generator (slugify in
-// scripts/build-crawlable-corpus.mjs; parity-tested).
+// Same slug rule as the corpus page slugs (scripts/slugify.mjs; parity-tested).
 export function chokepointTrackerSlug(displayName: string): string {
   return displayName
     .normalize('NFKD')

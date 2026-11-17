@@ -8,7 +8,7 @@ import { drainResponseHeaders } from '../server/_shared/response-headers';
 import { __resetKeyPrefixCacheForTests } from '../server/_shared/redis';
 import { createNewsServiceRoutes, type ListCountryHeadlinesResponse } from '../src/generated/server/worldmonitor/news/v1/service_server';
 import { validateGeneratedRequest } from '../server/request-validator';
-import { selectCountryHeadlines } from '../scripts/freeze-crawlable-live-pulse.mjs';
+import { selectCountryHeadlines } from './helpers/select-country-headlines.mjs';
 import { briefGroundingGap } from '../scripts/crawlable-developments.mjs';
 
 const route = createNewsServiceRoutes(newsHandler, { validateRequest: validateGeneratedRequest })

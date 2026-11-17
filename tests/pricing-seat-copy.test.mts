@@ -110,7 +110,6 @@ const eula = read('docs/eula.mdx').replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
     );
     const policySources = [
       ['catalog source', read('convex/config/productCatalog.ts')],
-      ['public-facts generator', read('scripts/generate-public-product-facts.mjs')],
       ['generated product catalog', read('shared/product-catalog.generated.json')],
       ['generated product facts', read('shared/product-facts.generated.json')],
       ['public pricing', apiBusinessBlock],

@@ -1247,7 +1247,6 @@ export const ACQUISITION_CLAIM_ROOTS = [
   'pro-test/index.html',
   'pro-test/welcome.html',
   'blog-site/src/content/blog',
-  'scripts/build-agent-skills-index.mjs',
 ];
 const ACQUISITION_CLAIM_EXCLUDES = [
   'docs/audits/',
@@ -1276,7 +1275,7 @@ const ACQUISITION_CLAIM_EXTENSIONS = /\.(?:astro|html|json|md|mdx|mjs|txt)$/;
 function isCurrentAcquisitionClaimSurface(path) {
   return (
     ['index.html', 'README.md', 'README.zh-CN.md', 'README.ja-JP.md', 'server.json', 'cli/README.md',
-      'pro-test/index.html', 'pro-test/welcome.html', 'scripts/build-agent-skills-index.mjs'].includes(path)
+      'pro-test/index.html', 'pro-test/welcome.html'].includes(path)
     || /^docs\/.+\.(?:md|mdx)$/.test(path)
     || /^public\/[^/]+\.(?:md|txt|json)$/.test(path)
     || /^public\/(?:[^/]+\/)*llms\.txt$/.test(path)
@@ -1367,9 +1366,6 @@ export function validateVolatileInventoryClaims() {
     { path: 'docs/documentation.mdx', text: /72 indicators across 21 active dimensions and 6 domains/ },
     { path: 'docs/features.mdx', text: /72 indicators across 21 active dimensions and 6 domains/ },
     { path: 'docs/platform-evaluation.mdx', text: /72 indicators across 21 active dimensions and 6 domains/ },
-    { path: 'public/llms-full.txt', text: /72 indicators across 21 active dimensions, 6 domains/ },
-    { path: 'public/llms.txt', text: /live in 190\+ countries/ },
-    { path: 'public/llms.txt', text: /structural resilience ranked for/ },
     { path: 'index.html', text: /live in 190\+ countries/ },
     { path: 'docs/about.mdx', text: /live in 190\+ countries/ },
     { path: 'blog-site/src/content/blog/country-instability-index-methodology-explained.md', text: /72 indicators, 21 active dimensions, and 6 domains/ },

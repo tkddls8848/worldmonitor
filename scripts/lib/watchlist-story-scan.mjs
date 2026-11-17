@@ -29,9 +29,10 @@ function flatArrayToObject(flat) {
 
 export async function publishWatchlistNotificationEvent(
   { eventType, payload, severity, dedupTtl = WATCHLIST_SCAN_DEDUP_TTL_SECONDS },
-  { upstashRest, nowMs = () => Date.now(), logger = console } = {},
+  { upstashRest, upstashPipeline, nowMs = () => Date.now(), logger = console } = {},
 ) {
   if (typeof upstashRest !== 'function') throw new Error('upstashRest dependency is required');
+  if (typeof upstashPipeline !== 'function') throw new Error('upstashPipeline dependency is required');
   const dedupMaterial = buildDedupMaterial(eventType, payload?.title, payload?.coalesceKey);
   const dedupHash = createHash('sha256').update(dedupMaterial).digest('hex').slice(0, 16);
   const dedupKey = `wm:notif:scan-dedup:${eventType}:${dedupHash}`;
@@ -40,7 +41,13 @@ export async function publishWatchlistNotificationEvent(
   const msg = JSON.stringify({ eventType, payload, severity, publishedAt: nowMs() });
   let pushed;
   try {
-    pushed = await upstashRest('LPUSH', 'wm:events:queue', msg);
+    // Nothing consumes wm:events:queue in the personal build, so each push
+    // trims the list to its newest 1000 entries in the same pipeline.
+    const results = await upstashPipeline([
+      ['LPUSH', 'wm:events:queue', msg],
+      ['LTRIM', 'wm:events:queue', '0', '999'],
+    ]);
+    pushed = Array.isArray(results) ? results[0]?.result : undefined;
   } catch (err) {
     logger.warn?.(`[digest] watchlist LPUSH failed for ${eventType} - rolling back dedup key: ${err?.message ?? err}`);
     try { await upstashRest('DEL', dedupKey); } catch {}
@@ -155,7 +162,7 @@ export async function scanAndEnqueueWatchlistStoryEvents(nowMs, {
 
     const events = eventEntries.map(({ event }) => event);
     const publish = publishNotificationEvent ??
-      ((event) => publishWatchlistNotificationEvent(event, { upstashRest, logger }));
+      ((event) => publishWatchlistNotificationEvent(event, { upstashRest, upstashPipeline, logger }));
     let enqueued = 0;
     for (const ev of events) {
       if (await publish(ev)) enqueued++;

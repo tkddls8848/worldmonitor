@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// Regenerates every committed derived file (product facts, docs stats, llms,
-// AI search, catalogs, locales, legal digests, …) whose freshness check
-// fails. Stale derived files were over half of CI test failures, and fixing
-// one meant finding which of these generators the failing test wanted.
+// Regenerates every committed derived file (docs stats, catalogs, locales,
+// legal digests, …) whose freshness check fails. Stale derived files were
+// over half of CI test failures, and fixing one meant finding which of these
+// generators the failing test wanted.
 //
 //   npm run generate          # rewrite whatever is stale
 //   npm run generate:check    # exit 1 and list the stale steps
@@ -14,9 +14,15 @@
 //
 // Not covered: `make generate` (proto + OpenAPI; the pre-push hook runs it),
 // app translations (scripts/translate-locales.mjs needs ANTHROPIC_API_KEY),
-// scripts/internal-links.mjs (needs TYPESAFE_API_KEY), and the sitemap and
-// docs page dates, which follow main's commit dates and are refreshed on
-// schedule and at build time rather than per branch.
+// scripts/internal-links.mjs (needs TYPESAFE_API_KEY), and the docs page
+// dates, which follow main's commit dates and are refreshed at build time
+// rather than per branch.
+//
+// The personal build removed the public-exposure generators (product facts,
+// country corpus slugs, llms.txt, AI search, agent skills index, welcome
+// teasers, resilience coverage copy) and the steps for removed infrastructure
+// (MCP source providers, Sentry Convex probe filters, desktop version). Their
+// last committed outputs that kept code still reads stay as static files.
 import { spawn, spawnSync } from 'node:child_process';
 import { availableParallelism } from 'node:os';
 import { dirname, resolve } from 'node:path';
@@ -32,21 +38,12 @@ const MAX_PASSES = 3;
 const CHECK_CONCURRENCY = Math.max(1, Math.min(4, availableParallelism()));
 
 // [name, command, write flag]. Every command also accepts --check. Order
-// follows the data flow: the product config feeds the facts, which feed AI
-// search and the crawlable pages.
+// follows the data flow: generators read each other's outputs.
 export const STEPS = [
   ['CII coverage baseline', [NODE, 'scripts/generate-cii-coverage-baseline.mjs']],
   ['browser news catalog', [...TSX, 'scripts/generate-browser-news-catalog.mjs']],
-  ['product facts', [...TSX, 'scripts/generate-public-product-facts.mjs']],
   ['entitlement crosswalk', [NODE, 'scripts/generate-entitlement-crosswalk.mjs']],
-  ['country corpus slugs', [...TSX, 'scripts/generate-country-corpus-slugs.mjs']],
-  ['llms.txt', [...TSX, 'scripts/build-llms-full.mjs']],
-  ['AI search', [...TSX, 'scripts/build-ai-search.mjs']],
-  ['welcome teasers', [NODE, 'scripts/build-welcome-teasers.mjs']],
-  ['resilience coverage', [...TSX, 'scripts/sync-resilience-coverage.mjs']],
-  ['agent skills index', [NODE, 'scripts/build-agent-skills-index.mjs']],
   ['source attribution', [NODE, 'scripts/source-attribution.mjs'], '--write'],
-  ['MCP source providers', [NODE, 'scripts/generate-mcp-source-providers.mjs']],
   ['locale keys', [NODE, 'scripts/sync-locale-keys.mjs']],
   ['zh-TW locales', ['python3', 'scripts/convert-zh-tw.py']],
   ['bootstrap tier keys', [NODE, 'scripts/sync-bootstrap-tier-keys.mjs']],
@@ -56,11 +53,9 @@ export const STEPS = [
   ['orbital watched sites', [...TSX, 'scripts/generate-orbital-watched-sites.mjs']],
   ['population density boundaries', [...TSX, 'scripts/generate-population-density-boundaries.mjs']],
   ['scorecard edge mirrors', [NODE, 'scripts/generate-scorecard-edge-mirrors.mjs']],
-  ['Sentry Convex probe filters', [NODE, 'scripts/sync-sentry-convex-probe-filters.mjs'], '--write'],
   ['legal digests', [NODE, 'scripts/legal-digests.mjs']],
   ['legal PDFs', [NODE, 'scripts/build-legal-pdfs.mjs']],
   ['story phase fading study', [NODE, 'scripts/study-story-phase-fading.mjs']],
-  ['desktop version', [NODE, 'scripts/sync-desktop-version.mjs']],
 ];
 
 function run([cmd, ...args], flag) {
@@ -103,15 +98,6 @@ export async function checkSteps(steps, { concurrency = CHECK_CONCURRENCY, runne
 
 async function main() {
   const checkOnly = process.argv.includes('--check');
-  // The product config has no --check; it is cheap and deterministic, so the
-  // write mode always runs it (the pre-push pro-test gate checks it).
-  if (!checkOnly) {
-    const config = run([...TSX, 'scripts/generate-product-config.mjs']);
-    if (!config.ok) {
-      console.error(`generate: product config failed:\n${config.output}`);
-      return 1;
-    }
-  }
   const hasOpenCC = spawnSync('python3', ['-c', 'import opencc'], { stdio: 'ignore' }).status === 0;
   const steps = STEPS.filter(([name]) => name !== 'zh-TW locales' || hasOpenCC);
   if (!hasOpenCC) console.warn('generate: skipped zh-TW locales (pip install opencc-python-reimplemented==0.1.7)');
@@ -119,7 +105,7 @@ async function main() {
   const regenerated = new Set();
   for (let pass = 0; ; pass++) {
     // Inventory facts are gitignored, read by later steps, and derived from the
-    // product facts, so every pass refreshes them before checking.
+    // committed product facts, so every pass refreshes them before checking.
     const inventory = run([NODE, 'scripts/generate-inventory-facts.mjs']);
     if (!inventory.ok) {
       console.error(`generate: inventory facts failed:\n${inventory.output}`);

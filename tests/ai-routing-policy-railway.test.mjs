@@ -30,7 +30,7 @@ const ENV = {
 const originalEnv = Object.fromEntries(
   [...Object.keys(ENV), 'OLLAMA_API_URL', 'ANTHROPIC_MODEL'].map((k) => [k, process.env[k]]),
 );
-// Module-level constants in the relay and user-context read env at require time.
+// Module-level constants in the LLM chain read env at require time.
 Object.assign(process.env, ENV);
 delete process.env.OLLAMA_API_URL;
 
@@ -40,7 +40,6 @@ const {
   withAiRoutingPolicy,
   aiRoutingCacheSuffix,
 } = require('../scripts/lib/ai-routing-policy.cjs');
-const { generateEventImpact } = require('../scripts/notification-relay.cjs');
 const { runSynthesisWithFallback } = await import('../scripts/lib/digest-orchestration-helpers.mjs');
 
 const originalFetch = globalThis.fetch;
@@ -96,7 +95,6 @@ function stubFetch({ policies = {}, anthropicStatus = 200, text = 'Direct impact
   return { llmHosts, llmBodies, redisPaths, convexCalls };
 }
 
-const EVENT = { eventType: 'rss_alert', severity: 'high', payload: { title: 'Chip export controls widened', source: 'Reuters' } };
 
 describe('AI routing policy on Railway jobs', () => {
   beforeEach(() => {
@@ -218,33 +216,6 @@ describe('AI routing policy on Railway jobs', () => {
       await blocked.callLLM('s', 'u', {});
       assert.deepEqual(calls.at(-1), []);
       assert.equal(aiRoutingCacheSuffix({ kind: 'unavailable' }), ':ai=none');
-    });
-  });
-
-  describe('notification relay AI impact', () => {
-    it('sends a restricted user\'s profile only to Anthropic and caches it apart', async () => {
-      const { llmHosts, redisPaths } = stubFetch({
-        policies: { 'user-restricted': { status: 200, policy: { allowedProviders: ['anthropic'] } } },
-      });
-      const impact = await generateEventImpact(EVENT, { userId: 'user-restricted', variant: 'full' });
-      assert.equal(impact, 'Direct impact on your NVDA position.');
-      assert.deepEqual(llmHosts, ['api.anthropic.com']);
-      const impactKeys = redisPaths.filter((p) => p.includes('impact:ai:'));
-      assert.ok(impactKeys.length >= 2, impactKeys.join(','));
-      assert.ok(impactKeys.every((p) => p.includes(':ai=anthropic')), impactKeys.join(','));
-    });
-
-    it('keeps an unrestricted user on the default chain and shared key', async () => {
-      const { llmHosts, redisPaths } = stubFetch();
-      await generateEventImpact(EVENT, { userId: 'user-open', variant: 'full' });
-      assert.deepEqual(llmHosts, ['api.anthropic.com']);
-      assert.ok(redisPaths.filter((p) => p.includes('impact:ai:')).every((p) => !p.includes(':ai=')));
-    });
-
-    it('sends nothing when the policy cannot be verified', async () => {
-      const { llmHosts } = stubFetch({ policies: { 'user-unknown': { status: 500 } } });
-      assert.equal(await generateEventImpact(EVENT, { userId: 'user-unknown', variant: 'full' }), null);
-      assert.deepEqual(llmHosts, []);
     });
   });
 

@@ -534,10 +534,7 @@ describe('push-handler.js — apex exemption list stays in sync', () => {
 
     const guard = patternsIn(read('./agent-corpus-canonical-host.test.mjs'), 'APEX_SERVED');
     const worker = patternsIn(read('../public/push-handler.js'), 'APEX_SERVED_PATHS');
-    // THREE copies exist, not two: the corpus guard, the worker, and the relay.
-    // Binding only two left the relay's free to drift, reproducing the #4938
-    // POST-to-GET 405 on the half that talks to push services.
-    const relay = patternsIn(read('../scripts/notification-relay.cjs'), 'APEX_SERVED_PATHS');
+    // The notification relay held a third copy; it left the personal build.
 
     assert.ok(guard.length >= 5, 'the corpus guard must still carry the exemption list');
     assert.deepEqual(
@@ -545,28 +542,5 @@ describe('push-handler.js — apex exemption list stays in sync', () => {
       guard,
       'public/push-handler.js must exempt exactly the paths Cloudflare serves on the apex',
     );
-    assert.deepEqual(
-      relay,
-      guard,
-      'scripts/notification-relay.cjs must exempt exactly the same paths',
-    );
-  });
-
-  it('keeps the generic first-party host list identical across both halves', () => {
-    // The other duplicated policy, and the one that decides what counts as
-    // "the dashboard". It had no guard at all: if one side gained a host the
-    // other did not, the relay would relativize a target the worker refuses to
-    // rewrite — the two halves silently disagreeing, which is the bug class
-    // this whole change exists to remove.
-    const read = (rel) => readFileSync(resolve(__dirname, rel), 'utf-8');
-    const hostsIn = (src) => {
-      const block = src.match(/GENERIC_FIRST_PARTY_HOSTS\s*=\s*\[([^\]]*)\]/);
-      assert.ok(block, 'GENERIC_FIRST_PARTY_HOSTS must exist');
-      return (block[1].match(/'[^']+'/g) ?? []).map((h) => h.replace(/'/g, '')).sort();
-    };
-    const worker = hostsIn(read('../public/push-handler.js'));
-    const relay = hostsIn(read('../scripts/notification-relay.cjs'));
-    assert.ok(worker.length >= 2, 'the worker must carry the generic host list');
-    assert.deepEqual(relay, worker, 'both halves must agree on what "the dashboard" means');
   });
 });

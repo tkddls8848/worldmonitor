@@ -1081,6 +1081,13 @@ const PROVIDER_OVERRIDES = {
     attribution: 'Excluded from the provider count: local-only loopback URL.',
     status: 'excluded',
   },
+  // Docker self-host Redis REST proxy, named in scripts/local/local-api-server.mjs.
+  'redis-rest': {
+    provider: 'Docker Redis REST proxy',
+    license: 'Excluded: self-host docker network transport',
+    attribution: 'Excluded from the provider count: private docker-network URL.',
+    status: 'excluded',
+  },
   'worldmonitor.invalid': {
     provider: 'WorldMonitor test origin',
     license: 'Excluded: test-only origin',
@@ -1180,7 +1187,10 @@ const PROVIDER_OVERRIDES = {
 // a provider-bearing override a separate, explicit lifecycle event instead of
 // something `--write` can silently normalize into the manifest.
 export const PROVIDER_IDENTITY_REVIEW = Object.freeze({
-  sha256: '9b147ba2da242b6dd891c82c1beb3f96083c8bd279ce1c3ce24ed3605bb080c3',
+  sha256: '9691312b5fc50afe166ef61105ee8bb3d2ef5cabe57d5d49f554d834a911f9c7',
+  // 2026-11-17: exclude redis-rest, the docker-network Redis REST proxy host
+  // named in scripts/local/local-api-server.mjs (moved from src-tauri/sidecar
+  // into the scanned tree). It is transport, not a data source.
   // 2026-11-13: name CelesTrak as the provider of the orbit elements behind
   // satellite tracking and the point lookup (issue #10615), with its licence.
   // 2026-11-13: add the browser-direct satellite image archives for the point

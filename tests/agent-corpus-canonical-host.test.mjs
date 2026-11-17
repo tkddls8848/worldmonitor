@@ -145,9 +145,6 @@ describe('published agent corpus names the serving host (#7660)', () => {
   });
 
   it('keeps the apex-served discovery paths on the apex', () => {
-    const llms = readFileSync(join(PUBLIC_DIR, 'llms.txt'), 'utf-8');
-    assert.match(llms, /https:\/\/worldmonitor\.app\/mcp(?=[/?#)\s"'`]|$)/);
-
     const card = JSON.parse(readFileSync(join(PUBLIC_DIR, '.well-known/mcp/server-card.json'), 'utf-8'));
     assert.equal(card.url, 'https://worldmonitor.app/mcp');
     assert.equal(card.transport.endpoint, 'https://worldmonitor.app/mcp');

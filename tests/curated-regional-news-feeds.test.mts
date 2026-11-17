@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { bundleFeedsModule } from './_lib/bundle-feeds-module.mts';
 import { VARIANT_FEEDS } from '../server/worldmonitor/news/v1/_feeds';
 import { __testing__ } from '../server/worldmonitor/news/v1/list-feed-digest';
-import { selectCountryHeadlines } from '../scripts/freeze-crawlable-live-pulse.mjs';
+import { selectCountryHeadlines } from './helpers/select-country-headlines.mjs';
 import { briefGroundingGap, briefGroundingPublisherCount } from '../scripts/crawlable-developments.mjs';
 import { isAllowedDomain } from '../api/_rss-allowed-domain-match.js';
 import { SOURCE_PROPAGANDA_RISK, SOURCE_TYPES } from '../shared/source-provenance';

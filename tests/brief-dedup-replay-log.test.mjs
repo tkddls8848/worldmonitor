@@ -30,7 +30,7 @@ import {
   writeReplayLog,
 } from '../scripts/lib/brief-dedup-replay-log.mjs';
 import { cacheKeyFor, normalizeForEmbedding } from '../scripts/lib/brief-embedding.mjs';
-import { DEFAULT_REPLAY_DAYS } from '../scripts/replay-digest-cooldown.mjs';
+import { REPLAY_WINDOW_DAYS } from '../scripts/lib/brief-replay-constants.mjs';
 
 // ── Fixture helpers ───────────────────────────────────────────────────────────
 
@@ -418,9 +418,9 @@ describe('writeReplayLog — behaviour', () => {
     assert.equal(ltrimCmd[3], '-1', 'end index is -1 (last element)');
     assert.equal(expireCmd[0], 'EXPIRE');
     assert.equal(expireCmd[1], 'digest:replay-log:v1:full:en:high:2026-04-23');
-    // The writer and harness share REPLAY_WINDOW_DAYS; this assertion
+    // The writer keeps the shared REPLAY_WINDOW_DAYS retention; this assertion
     // catches a future retention drift at the command boundary.
-    assert.equal(expireCmd[2], String(DEFAULT_REPLAY_DAYS * 24 * 60 * 60));
+    assert.equal(expireCmd[2], String(REPLAY_WINDOW_DAYS * 24 * 60 * 60));
     // Each pushed value is a JSON-stringified record.
     const rec0 = JSON.parse(rpushCmd[2]);
     const rec1 = JSON.parse(rpushCmd[3]);

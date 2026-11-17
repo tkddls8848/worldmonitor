@@ -72,15 +72,8 @@ const scriptDir = dirname(fileURLToPath(import.meta.url));
 export const yamlPath = process.env.OPENAPI_YAML_PATH
   ?? resolve(scriptDir, '../docs/api/worldmonitor.openapi.yaml');
 export const jsonPath = resolve(scriptDir, '../public/openapi.json');
-const llmsPath = resolve(scriptDir, '../public/llms.txt');
-
-export function withOpenApiByteSize(text, yamlBytes) {
-  const annotation = /(\[OpenAPI specification\]\(https:\/\/www\.worldmonitor\.app\/openapi\.yaml\), which is )[\d,]+ bytes/g;
-  if ([...text.matchAll(annotation)].length !== 1) {
-    throw new Error('llms.txt must contain exactly one OpenAPI YAML byte-size annotation');
-  }
-  return text.replace(annotation, (_, prefix) => `${prefix}${yamlBytes.toLocaleString('en-US')} bytes`);
-}
+// The personal build removed public/llms.txt, which used to carry the YAML
+// byte-size annotation this script stamped.
 
 /**
  * protoc-gen-openapiv3 copies wrapped proto comments verbatim, so every wrap
@@ -503,7 +496,6 @@ export function buildBundle({ spec: provided } = {}) {
 
 function main() {
   const yaml = readFileSync(yamlPath);
-  const llms = withOpenApiByteSize(readFileSync(llmsPath, 'utf8'), yaml.byteLength);
   const {
     spec,
     json,
@@ -520,7 +512,6 @@ function main() {
     unreachableStats,
   } = buildBundle({ spec: parseYaml(yaml.toString('utf8')) });
   writeFileSync(jsonPath, json);
-  writeFileSync(llmsPath, llms);
 
   const pathCount = spec.paths ? Object.keys(spec.paths).length : 0;
   console.log(

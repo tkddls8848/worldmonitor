@@ -15,7 +15,6 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import {
   applyDigestScoreFloor,
   digestWindowStartMs,
@@ -755,11 +754,4 @@ describe('isDigestDeliveryTier', () => {
     assert.equal(isDigestDeliveryTier(2), true);
   });
 
-  it('is the gate the cron applies before building a digest', () => {
-    const source = readFileSync(new URL('../scripts/seed-digest-notifications.mjs', import.meta.url), 'utf8');
-    const body = source.match(/async function isUserPro\(userId\) \{([\s\S]*?)\n\}/)?.[1];
-    assert.ok(body, 'isUserPro not found');
-    assert.match(body, /return isDigestDeliveryTier\(await getUserTier\(userId\)\);/);
-    assert.doesNotMatch(body, /return true/);
-  });
 });

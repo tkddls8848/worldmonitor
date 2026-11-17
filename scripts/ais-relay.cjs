@@ -590,12 +590,15 @@ function upstashMGet(keys) {
   });
 }
 
+// Only wm:events:queue is pushed here. Nothing consumes that queue in the
+// personal build, so the LPUSH carries an LTRIM in the same pipeline that
+// keeps the newest 1000 entries.
 function upstashLpush(key, value) {
   return new Promise((resolve) => {
     if (!UPSTASH_ENABLED) return resolve(false);
-    const url = new URL('/', UPSTASH_REDIS_REST_URL);
+    const url = new URL('/pipeline', UPSTASH_REDIS_REST_URL);
     const serialized = typeof value === 'string' ? value : JSON.stringify(value);
-    const body = JSON.stringify(['LPUSH', key, serialized]);
+    const body = JSON.stringify([['LPUSH', key, serialized], ['LTRIM', key, '0', '999']]);
     const req = UPSTASH_HTTP_MODULE.request(url, {
       method: 'POST',
       headers: {
@@ -608,8 +611,8 @@ function upstashLpush(key, value) {
       resp.on('data', (chunk) => { data += chunk; });
       resp.on('end', () => {
         try {
-          const parsed = JSON.parse(data);
-          resolve(typeof parsed?.result === 'number' && parsed.result > 0);
+          const pushed = JSON.parse(data)?.[0]?.result;
+          resolve(typeof pushed === 'number' && pushed > 0);
         } catch { resolve(false); }
       });
     });

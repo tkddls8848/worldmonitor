@@ -2,7 +2,6 @@ import { describe, it } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { createHash } from 'node:crypto';
 import handler from '../api/mcp.ts';
-import { buildResourceContent } from '../scripts/build-agent-skills-index.mjs';
 
 const endpoint = 'https://worldmonitor.app/mcp';
 // The transport challenges an unauthenticated `initialize`; the anonymous
@@ -112,12 +111,6 @@ describe('Skills Over MCP extension', () => {
     assert.equal(missing.status, 200);
     assert.equal(body.error.code, -32602);
     assert.equal(body.id, 9);
-  });
-
-  it('preserves binary resource bytes as an MCP blob', () => {
-    const bytes = Buffer.from([0xff, 0x00, 0x80, 0x41]);
-    const resource = buildResourceContent(bytes, 'application/octet-stream');
-    assert.deepEqual(resource, { mimeType: 'application/octet-stream', blob: bytes.toString('base64') });
   });
 
   it('preserves direct lookup of skills outside the bounded discovery catalog', async () => {

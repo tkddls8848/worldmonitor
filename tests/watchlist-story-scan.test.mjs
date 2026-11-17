@@ -40,17 +40,28 @@ function flatTrack(overrides) {
 }
 
 describe('publishWatchlistNotificationEvent', () => {
-  it('runs SET NX before LPUSH and stamps the queued event', async () => {
+  // SET NX and DEL go through upstashRest; LPUSH (with its LTRIM) goes through
+  // upstashPipeline. Both record into one ordered command log.
+  function fakeRedis({ set = 'OK', lpush = () => 1 } = {}) {
     const calls = [];
     const upstashRest = async (...args) => {
       calls.push(args);
-      if (args[0] === 'SET') return 'OK';
-      if (args[0] === 'LPUSH') return 1;
+      if (args[0] === 'SET') return set;
+      if (args[0] === 'DEL') return 1;
       throw new Error(`unexpected command ${args[0]}`);
     };
+    const upstashPipeline = async (commands) => {
+      calls.push(...commands);
+      return commands.map((cmd) => ({ result: cmd[0] === 'LPUSH' ? lpush() : 'OK' }));
+    };
+    return { calls, upstashRest, upstashPipeline };
+  }
+
+  it('runs SET NX before LPUSH and stamps the queued event', async () => {
+    const { calls, upstashRest, upstashPipeline } = fakeRedis();
 
     assert.equal(
-      await publishWatchlistNotificationEvent(event, { upstashRest, nowMs: () => 1234, logger: silentLogger }),
+      await publishWatchlistNotificationEvent(event, { upstashRest, upstashPipeline, nowMs: () => 1234, logger: silentLogger }),
       true,
     );
 
@@ -63,45 +74,58 @@ describe('publishWatchlistNotificationEvent', () => {
   });
 
   it('treats a non-new SET NX result as a duplicate and does not LPUSH', async () => {
-    const calls = [];
-    const upstashRest = async (...args) => {
-      calls.push(args);
-      return null;
-    };
+    const { calls, upstashRest, upstashPipeline } = fakeRedis({ set: null });
 
-    assert.equal(await publishWatchlistNotificationEvent(event, { upstashRest, logger: silentLogger }), false);
+    assert.equal(await publishWatchlistNotificationEvent(event, { upstashRest, upstashPipeline, logger: silentLogger }), false);
     assert.equal(calls.length, 1);
     assert.equal(calls[0][0], 'SET');
   });
 
   it('rolls back the dedup key when LPUSH returns a non-numeric result', async () => {
-    const calls = [];
-    const upstashRest = async (...args) => {
-      calls.push(args);
-      if (args[0] === 'SET') return 'OK';
-      if (args[0] === 'LPUSH') return 'ERR';
-      if (args[0] === 'DEL') return 1;
-      throw new Error(`unexpected command ${args[0]}`);
-    };
+    const { calls, upstashRest, upstashPipeline } = fakeRedis({ lpush: () => 'ERR' });
 
-    assert.equal(await publishWatchlistNotificationEvent(event, { upstashRest, logger: silentLogger }), false);
-    assert.deepEqual(calls.map((call) => call[0]), ['SET', 'LPUSH', 'DEL']);
-    assert.equal(calls[2][1], calls[0][1], 'rollback must delete the SET NX dedup key');
+    assert.equal(await publishWatchlistNotificationEvent(event, { upstashRest, upstashPipeline, logger: silentLogger }), false);
+    assert.deepEqual(calls.map((call) => call[0]), ['SET', 'LPUSH', 'LTRIM', 'DEL']);
+    assert.equal(calls[3][1], calls[0][1], 'rollback must delete the SET NX dedup key');
   });
 
   it('rolls back the dedup key when LPUSH throws', async () => {
-    const calls = [];
-    const upstashRest = async (...args) => {
-      calls.push(args);
-      if (args[0] === 'SET') return 'OK';
-      if (args[0] === 'LPUSH') throw new Error('timeout');
-      if (args[0] === 'DEL') return 1;
-      throw new Error(`unexpected command ${args[0]}`);
+    const { calls, upstashRest } = fakeRedis();
+    const upstashPipeline = async (commands) => {
+      calls.push(...commands);
+      throw new Error('timeout');
     };
 
-    assert.equal(await publishWatchlistNotificationEvent(event, { upstashRest, logger: silentLogger }), false);
-    assert.deepEqual(calls.map((call) => call[0]), ['SET', 'LPUSH', 'DEL']);
-    assert.equal(calls[2][1], calls[0][1], 'rollback must delete the SET NX dedup key');
+    assert.equal(await publishWatchlistNotificationEvent(event, { upstashRest, upstashPipeline, logger: silentLogger }), false);
+    assert.deepEqual(calls.map((call) => call[0]), ['SET', 'LPUSH', 'LTRIM', 'DEL']);
+    assert.equal(calls[3][1], calls[0][1], 'rollback must delete the SET NX dedup key');
+  });
+
+  // Nothing consumes wm:events:queue in the personal build, so every push
+  // caps the list at 1000 entries in the same pipeline.
+  it('trims the event queue after each push', async () => {
+    const restCommands = [];
+    const pipelineCommands = [];
+    const upstashRest = async (...args) => {
+      restCommands.push(args[0]);
+      if (args[0] === 'SET') return 'OK';
+      throw new Error(`unexpected REST command ${args[0]}`);
+    };
+    const upstashPipeline = async (commands) => {
+      pipelineCommands.push(...commands);
+      return commands.map((cmd) => ({ result: cmd[0] === 'LPUSH' ? 1001 : 'OK' }));
+    };
+
+    assert.equal(
+      await publishWatchlistNotificationEvent(event, { upstashRest, upstashPipeline, logger: silentLogger }),
+      true,
+    );
+
+    const pushAt = pipelineCommands.findIndex((cmd) => cmd[0] === 'LPUSH');
+    assert.notEqual(pushAt, -1, 'LPUSH must be sent through the pipeline');
+    assert.equal(pipelineCommands[pushAt][1], 'wm:events:queue');
+    assert.deepEqual(pipelineCommands[pushAt + 1], ['LTRIM', 'wm:events:queue', '0', '999']);
+    assert.ok(!restCommands.includes('LPUSH'), 'LPUSH must not be sent outside the pipeline');
   });
 });
 
@@ -111,7 +135,8 @@ describe('scanAndEnqueueWatchlistStoryEvents', () => {
     { symbol: 'LLY', name: 'Eli Lilly' },
   ]);
 
-  it('dedupes accumulator hashes, reads tracks, hydrates sources BEFORE building events, gates by score, then publishes', async () => {    const order = [];
+  it('dedupes accumulator hashes, reads tracks, hydrates sources BEFORE building events, gates by score, then publishes', async () => {
+    const order = [];
     const queued = [];
     const pipelineCalls = [];
     const trackReads = [];
@@ -122,13 +147,14 @@ describe('scanAndEnqueueWatchlistStoryEvents', () => {
         return args[1].includes(':full:') ? ['h1', 'low'] : ['h1', 'h2'];
       }
       if (args[0] === 'SET') return 'OK';
-      if (args[0] === 'LPUSH') {
-        queued.push(JSON.parse(args[2]));
-        return 1;
-      }
       throw new Error(`unexpected command ${args[0]}`);
     };
     const upstashPipeline = async (commands) => {
+      if (commands[0][0] === 'LPUSH') {
+        order.push(...commands.map((cmd) => cmd[0]));
+        queued.push(JSON.parse(commands[0][2]));
+        return commands.map((cmd) => ({ result: cmd[0] === 'LPUSH' ? 1 : 'OK' }));
+      }
       order.push('SMEMBERS');
       pipelineCalls.push(commands);
       return commands.map((cmd) => ({ result: [cmd[1].endsWith(':h1') ? 'Reuters' : 'Other Wire'] }));
@@ -154,7 +180,7 @@ describe('scanAndEnqueueWatchlistStoryEvents', () => {
     });
 
     assert.deepEqual(result, { hashes: 3, candidates: 2, events: 1, enqueued: 1, scoreMin: 69 });
-    assert.deepEqual(order, ['ZRANGEBYSCORE', 'ZRANGEBYSCORE', 'track-read', 'SMEMBERS', 'SET', 'LPUSH']);
+    assert.deepEqual(order, ['ZRANGEBYSCORE', 'ZRANGEBYSCORE', 'track-read', 'SMEMBERS', 'SET', 'LPUSH', 'LTRIM']);
     assert.deepEqual(trackReads, [{ hashes: ['h1', 'low', 'h2'], samePipeline: true }]);
     // #8398: sources resolve per CANDIDATE (both survivors) before events
     // are built, so the builder can gate each link against its publisher.
@@ -170,10 +196,6 @@ describe('scanAndEnqueueWatchlistStoryEvents', () => {
     const upstashRest = async (...args) => {
       if (args[0] === 'ZRANGEBYSCORE') return ['h1'];
       if (args[0] === 'SET') return 'OK';
-      if (args[0] === 'LPUSH') {
-        queued.push(JSON.parse(args[2]));
-        return 1;
-      }
       throw new Error(`unexpected command ${args[0]}`);
     };
     // Track row carries the hostile link verbatim (pre-gate residue or a
@@ -186,8 +208,13 @@ describe('scanAndEnqueueWatchlistStoryEvents', () => {
         currentScore: '74',
       }),
     }];
-    const upstashPipeline = async (commands) =>
-      commands.map(() => ({ result: ['Reuters Business'] }));
+    const upstashPipeline = async (commands) => {
+      if (commands[0][0] === 'LPUSH') {
+        queued.push(JSON.parse(commands[0][2]));
+        return commands.map((cmd) => ({ result: cmd[0] === 'LPUSH' ? 1 : 'OK' }));
+      }
+      return commands.map(() => ({ result: ['Reuters Business'] }));
+    };
 
     const result = await scanAndEnqueueWatchlistStoryEvents(10_000, {
       env: { WATCHLIST_STORY_SCORE_MIN: '69' },

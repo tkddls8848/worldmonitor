@@ -5,7 +5,6 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync as originalReadFileSync, existsSync, readdirSync, mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { tmpdir } from 'node:os';
-import { MACHINE_READABLE_URLS } from '../scripts/build-sitemap.mjs';
 import { nonDefaultLandingLocales } from '../shared/indexable-landing-locales.ts';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 function readFileSync(path, options) {
@@ -72,14 +71,12 @@ const webMcpCancellationE2eSource = readFileSync(
   'utf-8',
 );
 const testWorkflowSource = readFileSync(resolve(__dirname, '../.github/workflows/test.yml'), 'utf-8');
-const sitemapSource = readFileSync(resolve(__dirname, '../public/sitemap-main.xml'), 'utf-8');
 const robotsSource = readFileSync(resolve(__dirname, '../public/robots.www.txt'), 'utf-8');
 const mainSource = readFileSync(resolve(__dirname, '../src/main.ts'), 'utf-8');
 const zodCspSource = readFileSync(resolve(__dirname, '../src/bootstrap/zod-csp.ts'), 'utf-8');
 const proIndexCssSource = readFileSync(resolve(__dirname, '../pro-test/src/index.css'), 'utf-8');
 const middlewareSource = readFileSync(resolve(__dirname, '../middleware.ts'), 'utf-8');
 
-const vercelIgnoreSource = readFileSync(resolve(__dirname, '../scripts/vercel-ignore.sh'), 'utf-8');
 const variantDashboardSource = readFileSync(resolve(__dirname, '../src/config/variant-dashboard-html.ts'), 'utf-8');
 const SPA_HTML_CACHE_SOURCE = '/((?!api|mcp|a2a|ask|oauth|assets|plugin/assets|blog|docs|country-instability-index|countries|chokepoints|compare|crises|tools|research|reference|changelog|sources|use-cases|accuracy|monitor-the-situation|src|tmp|server|embed|embed\\.html|favico|map-styles|data|textures|pro|sw\\.js|workbox-[a-f0-9]+\\.js|manifest\\.webmanifest|offline\\.html|robots\\.txt|robots\\.www\\.txt|robots\\.variant\\.txt|robots\\.api\\.txt|sitemap\\.xml|sitemap-main\\.xml|schemamap\\.xml|sandbox|llms\\.txt|llms-full\\.txt|llms\\*\\.txt|openapi\\.yaml|openapi\\.json|plugin\\.json|auth\\.md|pricing\\.md|support\\.md|ai-search\\.md|agents\\.md|developers\\.md|developers/llms\\.txt|mcp-server\\.md|openapi\\.md|sdks\\.md|world-monitor\\.md|api-versioning\\.md|agent\\.txt|\\.well-known|wm-widget-sandbox\\.html|mcp-grant\\.html|mcp-grant|desktop-sign-in\\.html|desktop-sign-in|.*\\.md$).*)';
 const GLOBAL_SECURITY_HEADER_SOURCE = '/((?!docs|embed|embed\\.html|wm-widget-sandbox\\.html).*)';
@@ -553,281 +550,6 @@ describe('crawlable content corpus deployment contracts', () => {
     writeFileSync(target, '<!doctype html><html><head>' + head + '</head><body>fixture</body></html>');
   };
 
-  it('pins the deploy build command in vercel.json to a script that builds /pro', () => {
-    // vercel.json overrides the dashboard's Build Command, which is where this
-    // used to live -- invisible to the repo and changeable without a diff. Since
-    // #6898 stopped committing public/pro/, a dashboard edit away from a
-    // build:pro-chaining script no longer ships a STALE /pro, it ships no /pro:
-    // a 404 on www, and the dashboard SPA shell at 200 in the root Docker image.
-    //
-    // Deliberately resolved through package.json rather than string-matched
-    // against 'npm run build:full'. The property that matters is "the deploy
-    // builds /pro before Vite copies public/ into dist/", so pointing
-    // buildCommand at any other script (build:tech, a bare `vite build`) has to
-    // fail here -- a literal comparison would pass anything spelled right and
-    // prove nothing about what that script does.
-    const buildCommand = vercelConfig.buildCommand;
-    assert.equal(
-      typeof buildCommand,
-      'string',
-      'vercel.json must pin buildCommand so the deploy contract lives in the repo, not the dashboard',
-    );
-
-    const scriptName = buildCommand.match(/^npm run ([\w:-]+)$/)?.[1];
-    assert.ok(
-      scriptName,
-      `vercel.json buildCommand must be a plain "npm run <script>" this test can resolve, got: ${buildCommand}`,
-    );
-
-    const script = packageJson.scripts[scriptName];
-    assert.ok(script, `vercel.json buildCommand names scripts["${scriptName}"], which does not exist`);
-    assert.ok(
-      script.includes('npm run build:pro'),
-      `the deploy build command (${buildCommand}) must chain build:pro — public/pro/ is gitignored, so nothing else produces /pro`,
-    );
-    assert.ok(
-      script.indexOf('npm run build:pro') < script.indexOf('vite build'),
-      `the deploy build command (${buildCommand}) must build /pro before Vite copies public/ into dist/`,
-    );
-  });
-
-  it('builds Vercel when corpus source files change', () => {
-    assert.ok(vercelIgnoreSource.includes("'CHANGELOG.md'"));
-    assert.ok(vercelIgnoreSource.includes("'docs/snapshots/'"));
-    for (const path of [
-      'docs/docs.json',
-      'scripts/build-comparison-pages.mjs',
-      'scripts/comparison-page-narratives.mjs',
-      'scripts/comparison-shortlist.mjs',
-      'scripts/unranked-country-inventory.mjs',
-      'scripts/build-use-cases.mjs',
-      'scripts/data/use-case-workflows.mjs',
-      'scripts/build-accuracy-page.mjs',
-      'scripts/build-situation-page.mjs',
-      'scripts/situation-page/',
-      'scripts/slugify.mjs',
-      'scripts/crawlable-sources-page.mjs',
-      'scripts/source-origin.mjs',
-      'scripts/source-origin.d.mts',
-      'scripts/generate-inventory-facts.mjs',
-      'scripts/docs-stats.mjs',
-      'scripts/source-attribution.mjs',
-      'scripts/country-related-links.mjs',
-      'scripts/data/country-centroids.json',
-      'scripts/related-reading.mjs',
-      'scripts/data/related-reading.json',
-      'scripts/chokepoint-page-content.mjs',
-      'scripts/live-pages/',
-      'scripts/build-live-topic-pages.mjs',
-      'scripts/data/crisis-editorial.json',
-      'scripts/data/search-links/',
-      'scripts/search-links.mjs',
-      'scripts/lib/search-links.mjs',
-      'scripts/lib/main-module.mjs',
-    ]) {
-      assert.equal(vercelIgnoreSource.split(`'${path}'`).length - 1, 2, `${path} must trigger main and preview builds`);
-    }
-  });
-
-  it('builds Vercel on main and preview for generated web-input changes', () => {
-    const fixture = mkdtempSync(join(tmpdir(), 'wm-vercel-ignore-'));
-    try {
-      const fixtureEnv = { ...process.env };
-      for (const key of ['GIT_COMMON_DIR', 'GIT_DIR', 'GIT_INDEX_FILE', 'GIT_OBJECT_DIRECTORY', 'GIT_WORK_TREE']) {
-        delete fixtureEnv[key];
-      }
-      const git = (...args) => execFileSync('git', args, { cwd: fixture, env: fixtureEnv, encoding: 'utf8' });
-
-      git('init', '-q');
-      git('config', 'user.email', 'test@example.com');
-      git('config', 'user.name', 'Test');
-      writeFileSync(join(fixture, 'README.md'), 'base\n');
-      git('add', 'README.md');
-      git('commit', '-qm', 'base');
-
-      for (const path of [
-        'docs/docs.json',
-        'scripts/build-comparison-pages.mjs',
-      'scripts/comparison-page-narratives.mjs',
-      'scripts/comparison-shortlist.mjs',
-        'scripts/unranked-country-inventory.mjs',
-        'scripts/build-use-cases.mjs',
-        'scripts/data/use-case-workflows.mjs',
-        'scripts/build-accuracy-page.mjs',
-        'scripts/build-situation-page.mjs',
-        'scripts/situation-page/sections.mjs',
-        'scripts/slugify.mjs',
-        'scripts/crawlable-sources-page.mjs',
-        'scripts/source-origin.mjs',
-        'scripts/source-origin.d.mts',
-        'scripts/generate-inventory-facts.mjs',
-        'scripts/docs-stats.mjs',
-        'scripts/source-attribution.mjs',
-        'scripts/country-related-links.mjs',
-        'scripts/data/country-centroids.json',
-        'scripts/related-reading.mjs',
-        'scripts/data/related-reading.json',
-        'scripts/chokepoint-page-content.mjs',
-        'scripts/live-pages/related-links.mjs',
-        'scripts/build-live-topic-pages.mjs',
-        'scripts/data/crisis-editorial.json',
-        'scripts/data/search-links/countries.json',
-        'scripts/search-links.mjs',
-        'scripts/lib/search-links.mjs',
-        'scripts/lib/main-module.mjs',
-      ]) {
-        const previous = git('rev-parse', 'HEAD').trim();
-        mkdirSync(dirname(join(fixture, path)), { recursive: true });
-        writeFileSync(join(fixture, path), `${path}\n`);
-        git('add', path);
-        git('commit', '-qm', path);
-        assert.throws(
-          () => execFileSync('/bin/bash', [resolve(__dirname, '../scripts/vercel-ignore.sh')], {
-            cwd: fixture,
-            env: { ...fixtureEnv, VERCEL_GIT_COMMIT_REF: 'main', VERCEL_GIT_PREVIOUS_SHA: previous },
-          }),
-          (error) => error?.status === 1,
-          `${path} must request a Vercel build`,
-        );
-        git('update-ref', 'refs/remotes/origin/main', previous);
-        assert.throws(
-          () => execFileSync('/bin/bash', [resolve(__dirname, '../scripts/vercel-ignore.sh')], {
-            cwd: fixture,
-            env: { ...fixtureEnv, VERCEL_GIT_COMMIT_REF: 'feature/source-catalog' },
-          }),
-          (error) => error?.status === 1,
-          `${path} must request a Vercel preview build`,
-        );
-      }
-    } finally {
-      rmSync(fixture, { recursive: true, force: true });
-    }
-  });
-
-  it('builds the prediction policy merge on main and preview while skipping unrelated scripts and tests', () => {
-    const fixture = mkdtempSync(join(tmpdir(), 'wm-vercel-policy-'));
-    try {
-      const fixtureEnv = { ...process.env };
-      for (const key of ['GIT_COMMON_DIR', 'GIT_DIR', 'GIT_INDEX_FILE', 'GIT_OBJECT_DIRECTORY', 'GIT_WORK_TREE']) {
-        delete fixtureEnv[key];
-      }
-      const git = (...args) => execFileSync('git', args, { cwd: fixture, env: fixtureEnv, encoding: 'utf8' });
-      git('init', '-q');
-      git('config', 'user.email', 'test@example.com');
-      git('config', 'user.name', 'Test');
-      writeFileSync(join(fixture, 'README.md'), 'base\n');
-      git('add', 'README.md');
-      git('commit', '-qm', 'base');
-      const actual = [];
-      const expected = [];
-      for (const { paths, status } of [
-        { paths: ['scripts/shared/prediction-country-language.json', 'tests/prediction-country-index.test.mjs', 'tests/prediction-country-markets-pools.test.mts'], status: 1 },
-        { paths: ['scripts/seed-unrelated.mjs'], status: 0 },
-        { paths: ['tests/unrelated.test.mjs'], status: 0 },
-      ]) {
-        const previous = git('rev-parse', 'HEAD').trim();
-        for (const path of paths) {
-          mkdirSync(dirname(join(fixture, path)), { recursive: true });
-          writeFileSync(join(fixture, path), `${path}\n`);
-        }
-        git('add', '.');
-        git('commit', '-qm', paths.join(', '));
-        git('update-ref', 'refs/remotes/origin/main', previous);
-        for (const ref of ['main', 'feature/prediction-policy']) {
-          const result = spawnSync('/bin/bash', [resolve(__dirname, '../scripts/vercel-ignore.sh')], {
-            cwd: fixture,
-            env: { ...fixtureEnv, VERCEL_GIT_COMMIT_REF: ref, VERCEL_GIT_PREVIOUS_SHA: previous },
-            encoding: 'utf8',
-          });
-          assert.ifError(result.error);
-          actual.push({ paths, ref, status: result.status });
-          expected.push({ paths, ref, status });
-        }
-      }
-      assert.deepEqual(actual, expected);
-    } finally {
-      rmSync(fixture, { recursive: true, force: true });
-    }
-  });
-
-  it('builds a deliberate same-commit redeploy on main so rotated env vars reach production (#8216)', () => {
-    const fixture = mkdtempSync(join(tmpdir(), 'wm-vercel-redeploy-'));
-    try {
-      const fixtureEnv = { ...process.env };
-      for (const key of ['GIT_COMMON_DIR', 'GIT_DIR', 'GIT_INDEX_FILE', 'GIT_OBJECT_DIRECTORY', 'GIT_WORK_TREE']) {
-        delete fixtureEnv[key];
-      }
-      const git = (...args) => execFileSync('git', args, { cwd: fixture, env: fixtureEnv, encoding: 'utf8' });
-      git('init', '-q');
-      git('config', 'user.email', 'test@example.com');
-      git('config', 'user.name', 'Test');
-      writeFileSync(join(fixture, 'README.md'), 'base\n');
-      git('add', 'README.md');
-      git('commit', '-qm', 'base');
-      const deployed = git('rev-parse', 'HEAD').trim();
-      const run = (previous) => spawnSync('/bin/bash', [resolve(__dirname, '../scripts/vercel-ignore.sh')], {
-        cwd: fixture,
-        env: { ...fixtureEnv, VERCEL_GIT_COMMIT_REF: 'main', VERCEL_GIT_PREVIOUS_SHA: previous },
-        encoding: 'utf8',
-      });
-
-      // Vercel sets VERCEL_GIT_PREVIOUS_SHA to the last successful deployment, so it
-      // equals HEAD only when that same commit is redeployed after an env change.
-      const redeploy = run(deployed);
-      assert.ifError(redeploy.error);
-      assert.equal(redeploy.status, 1, 'a same-commit redeploy must build');
-
-      mkdirSync(join(fixture, 'scripts'), { recursive: true });
-      writeFileSync(join(fixture, 'scripts/seed-unrelated.mjs'), 'seed\n');
-      git('add', '.');
-      git('commit', '-qm', 'seed only');
-      const push = run(deployed);
-      assert.ifError(push.error);
-      assert.equal(push.status, 0, 'a new commit with no web changes must still skip');
-    } finally {
-      rmSync(fixture, { recursive: true, force: true });
-    }
-  });
-
-  it('builds a same-commit preview redeploy when the shallow clone has no origin/main', () => {
-    const fixture = mkdtempSync(join(tmpdir(), 'wm-vercel-preview-redeploy-'));
-    try {
-      const fixtureEnv = { ...process.env };
-      for (const key of ['GIT_COMMON_DIR', 'GIT_DIR', 'GIT_INDEX_FILE', 'GIT_OBJECT_DIRECTORY', 'GIT_WORK_TREE']) {
-        delete fixtureEnv[key];
-      }
-      const git = (...args) => execFileSync('git', args, { cwd: fixture, env: fixtureEnv, encoding: 'utf8' });
-      git('init', '-q');
-      git('config', 'user.email', 'test@example.com');
-      git('config', 'user.name', 'Test');
-      writeFileSync(join(fixture, 'README.md'), 'base\n');
-      git('add', 'README.md');
-      git('commit', '-qm', 'base');
-      const deployed = git('rev-parse', 'HEAD').trim();
-      const run = (previous) => spawnSync('/bin/bash', [resolve(__dirname, '../scripts/vercel-ignore.sh')], {
-        cwd: fixture,
-        env: { ...fixtureEnv, VERCEL_GIT_COMMIT_REF: 'feat/env-flag', VERCEL_GIT_PREVIOUS_SHA: previous },
-        encoding: 'utf8',
-      });
-
-      // Vercel's preview clone has no origin/main, so the script falls back to
-      // PREVIOUS_SHA. A redeploy to pick up a preview env var sets it to HEAD.
-      const redeploy = run(deployed);
-      assert.ifError(redeploy.error);
-      assert.equal(redeploy.status, 1, 'a same-commit preview redeploy must build');
-
-      mkdirSync(join(fixture, 'scripts'), { recursive: true });
-      writeFileSync(join(fixture, 'scripts/seed-unrelated.mjs'), 'seed\n');
-      git('add', '.');
-      git('commit', '-qm', 'seed only');
-      const push = run(deployed);
-      assert.ifError(push.error);
-      assert.equal(push.status, 0, 'a new preview commit with no web changes must still skip');
-    } finally {
-      rmSync(fixture, { recursive: true, force: true });
-    }
-  });
-
   it('marks stock workspaces and their markdown twins noindex without breaking deep links (#7905)', () => {
     for (const path of ['/stocks', '/stocks/', '/stocks.md', '/stocks/AAPL', '/stocks/ZZZZFAKE',
       '/stocks/aapl/', '/stocks/BRK.B', '/stocks/7203.T', '/stocks/AAPL.md', '/stocks/ZZZZFAKE.md']) {
@@ -838,99 +560,6 @@ describe('crawlable content corpus deployment contracts', () => {
     }
     for (const symbol of ['AAPL', 'ZZZZFAKE', 'BRK.B', '7203.T']) {
       assert.equal(firstRewriteFor({ host: 'www.worldmonitor.app', path: `/stocks/${symbol}` })?.destination, DASHBOARD_HTML_DESTINATION);
-    }
-  });
-
-  // #8608: the corpus dataset downloads, the OpenAPI/plugin descriptors and the
-  // .well-known JSON descriptors are machine-readable files, not pages. They
-  // answered 200 with no robots directive, which made them the largest
-  // actionable slice of the 2026-09-24 "Crawled - currently not indexed" export
-  // (178 of 1,000 sampled rows, 103 of them /countries/<slug>/resilience.json).
-  // `noindex, follow` keeps them fetchable, which a robots.txt Disallow would
-  // not: every corpus page carries a schema.org DataDownload `contentUrl`
-  // pointing at these files, and a disallowed URL is a claim Google is
-  // forbidden to verify (#7660).
-  it('marks the machine-readable data surface noindex without touching corpus HTML or the AI-citation surface (#8608)', () => {
-    const dataHeaderRules = vercelConfig.headers
-      .filter(({ source }) => /\.(?:json|ya?ml)$/i.test(source))
-      .filter(({ source }) => !source.replaceAll('\\', '').startsWith('/.well-known/'));
-    for (const { source, headers } of dataHeaderRules) {
-      const robotsTag = headers.find(({ key }) => key.toLowerCase() === 'x-robots-tag');
-      assert.equal(robotsTag?.value ?? null, 'noindex, follow', source);
-    }
-
-    const dataFiles = [
-      // Corpus dataset downloads - scripts/build-crawlable-corpus.mjs.
-      '/country-instability-index/cii-ranking.json',
-      '/countries/resilience-ranking.json',
-      '/countries/iran/resilience.json',
-      '/countries/iran/cii.json',
-      '/chokepoints/status.json',
-      '/chokepoints/strait-of-hormuz/reference.json',
-      '/crises/sudan/tracker.json',
-      '/accuracy/scorecard.json',
-      '/sources/search-index.json',
-      '/research/grain-corridor/grain-corridor.json',
-      // Service descriptions.
-      '/openapi.json',
-      '/openapi.yaml',
-      '/plugin.json',
-      '/docs/api/ForecastService.openapi.yaml',
-      '/docs/snapshots/github-stars-2026-09-03.json',
-      // Standalone machine JSON outside the corpus families.
-      '/product-facts.json',
-      '/agent-view.json',
-      '/sandbox/index.json',
-    ];
-    for (const path of dataFiles) {
-      assert.equal(effectiveHeader(path, 'X-Robots-Tag'), 'noindex, follow', path);
-    }
-
-    for (const prefix of CONTENT_CORPUS_PREFIXES) {
-      // Every corpus family, not only the ones shipping a dataset today.
-      for (const file of [`/${prefix}/example.json`, `/${prefix}/example/nested.json`]) {
-        assert.equal(effectiveHeader(file, 'X-Robots-Tag'), 'noindex, follow', file);
-      }
-      // The HTML these files hang off must stay indexable. A rule anchored on
-      // the prefix rather than the extension would de-index the whole corpus.
-      for (const route of [`/${prefix}`, `/${prefix}/`, `/${prefix}/example`, `/${prefix}/example/`]) {
-        assert.equal(effectiveHeader(route, 'X-Robots-Tag'), null, route);
-      }
-    }
-    assert.equal(effectiveHeader('/countries/united-states', 'X-Robots-Tag'), null);
-    assert.equal(effectiveHeader('/countries/united-states/', 'X-Robots-Tag'), null);
-
-    // Scope item 2 of #8608 deliberately leaves the AI-citation surface alone:
-    // it is not established that OAI-SearchBot, PerplexityBot or
-    // Claude-SearchBot read `X-Robots-Tag: noindex` as "do not index" rather
-    // than "do not cite", so noindex here would risk trading a Search Console
-    // count for citability. That stays an owner decision, not a drive-by.
-    // `.well-known` is entirely agent-discovery surface, including the JSON.
-    // agent-skills/index.json is 17 kB whose `instructions` field is prose
-    // written to persuade an agent to call us -- the same citation risk as the
-    // SKILL.md files it lists, not inert data. Sorting this surface by file
-    // extension would have noindexed the pitch and spared the chapters.
-    for (const path of ['/llms.txt', '/llms-full.txt', '/api/llms.txt', '/agents.md', '/developers.md',
-      '/pricing.md', '/openapi.md', '/world-monitor.md', '/.well-known/security.txt',
-      '/.well-known/agent-skills/check-country-risk/SKILL.md',
-      '/.well-known/agent-skills/index.json', '/.well-known/agent-card.json',
-      '/.well-known/ai-catalog.json', '/.well-known/mcp/server-card.json']) {
-      assert.equal(effectiveHeader(path, 'X-Robots-Tag'), null, path);
-    }
-
-    // The matcher must model a pre-escaped dot the way Vercel does. Before
-    // #8608 the helper escaped the backslash itself, so `(.*)\\.json` compiled
-    // to "backslash then any char" and matched nothing at all - which would
-    // have made every null assertion above pass without proving anything.
-    assert.ok(sourceToRegExp('/countries/(.*)\\.json').test('/countries/iran/resilience.json'));
-    assert.ok(!sourceToRegExp('/countries/(.*)\\.json').test('/countries/iran/resilienceXjson'));
-    assert.ok(sourceToRegExp('/countries/(.*).json').test('/countries/iran/resilience.json'));
-    assert.ok(!sourceToRegExp('/countries/(.*).json').test('/countries/united-states'));
-
-    // Sitemaps and robots.txt stay plain - a noindex sitemap is simply dropped,
-    // and #8608 does not touch them.
-    for (const path of ['/robots.txt', '/robots.www.txt', '/sitemap.xml', '/sitemap-main.xml', '/schemamap.xml']) {
-      assert.equal(effectiveHeader(path, 'X-Robots-Tag'), null, path);
     }
   });
 
@@ -1064,91 +693,10 @@ describe('crawlable content corpus deployment contracts', () => {
     }
   });
 
-  it('advertises the edge cache on the blog, the proxied docs and the root agent text files (#7747)', () => {
-    // The vercel.json half of the pair. The Cloudflare half is
-    // scripts/cloudflare-cache-rule.mjs, and tests/cloudflare-cache-rule.test.mjs
-    // fails when the two halves cover different surfaces.
-    for (const route of ['/blog', '/blog/', '/blog/glossary/ais/', '/blog/rss.xml', '/blog/llms.txt', '/blog/sitemap-index.xml']) {
-      assert.equal(effectiveHeader(route, 'CDN-Cache-Control'), HTML_ENTRY_EDGE_CACHE, `${route} must advertise the 600s Cloudflare TTL`);
-      assert.equal(effectiveHeader(route, 'Vercel-CDN-Cache-Control'), HTML_ENTRY_EDGE_CACHE, `${route} must advertise the 600s Vercel TTL`);
-    }
-    // Blog assets keep their own policies: immutable hashed bundles, and the
-    // zone's month-long "Blog" rule for OG and post images. A shared 600s TTL
-    // would shorten Vercel's cache of the bundles and make the document rule the
-    // last writer of edge_ttl for the images.
-    for (const route of ['/blog/_astro/index.abc123.js', '/blog/og/post.png', '/blog/images/post.png']) {
-      assert.equal(effectiveHeader(route, 'CDN-Cache-Control'), null, `${route} must not inherit the document TTL`);
-      assert.equal(effectiveHeader(route, 'Vercel-CDN-Cache-Control'), null, `${route} must not inherit the document TTL`);
-    }
-    assert.equal(effectiveCacheControl('/blog/_astro/index.abc123.js'), 'public, max-age=31536000, immutable');
-
-    // /docs is a proxy to Mintlify, which negotiates markdown on Accept without
-    // a matching Vary and serves RSC flights at the document URL. Cloudflare gets
-    // the TTL and keys the negotiating requests out in the zone rule; Vercel's
-    // own cache must not store these at all, because it would key HTML and
-    // markdown under one URL. Vercel strips Vercel-CDN-Cache-Control before the
-    // response leaves, so the browser never sees the no-store.
-    for (const route of ['/docs/documentation', '/docs/mcp-overview', '/docs/zh/about/', '/docs/documentation.md', '/docs/sitemap.xml']) {
-      assert.equal(effectiveHeader(route, 'CDN-Cache-Control'), HTML_ENTRY_EDGE_CACHE, `${route} must advertise the 600s Cloudflare TTL`);
-      assert.equal(effectiveHeader(route, 'Vercel-CDN-Cache-Control'), 'no-store', `${route} must keep Vercel's cache out of the Mintlify proxy`);
-      assert.equal(effectiveHeader(route, 'X-Content-Type-Options'), 'nosniff', `${route} must still carry the docs security headers`);
-    }
-    for (const route of ['/docs/mcp', '/docs/mcp/', '/docs/mcp/session', '/docs/_next/static/chunks/a.js', '/docs/_mintlify/favicons/a.png']) {
-      assert.equal(effectiveHeader(route, 'CDN-Cache-Control'), null, `${route} is not a document and must not advertise the TTL`);
-      assert.equal(effectiveHeader(route, 'Vercel-CDN-Cache-Control'), null, `${route} is not a document and must not carry a Vercel cache policy`);
-    }
-
-    // The sitemaps joined AGENT_TEXT_FILES in #7869 and keep the stricter
-    // browser policy they have always had — the crawler that re-fetches a
-    // sitemap wants a revalidation, and the shared edge TTL is unaffected.
-    const SITEMAPS = new Set(['sitemap.xml', 'sitemap-main.xml']);
-    for (const file of AGENT_TEXT_FILES) {
-      const route = `/${file}`;
-      assert.equal(effectiveHeader(route, 'CDN-Cache-Control'), HTML_ENTRY_EDGE_CACHE, `${route} must advertise the 600s Cloudflare TTL`);
-      assert.equal(effectiveHeader(route, 'Vercel-CDN-Cache-Control'), HTML_ENTRY_EDGE_CACHE, `${route} must advertise the 600s Vercel TTL`);
-      assert.equal(
-        effectiveCacheControl(route),
-        SITEMAPS.has(file) ? 'public, max-age=3600, must-revalidate' : 'public, max-age=3600',
-        `${route} must keep its browser policy`,
-      );
-      assert.ok(existsSync(resolve(__dirname, '../public', file)), `${route} must be a static file in public/`);
-    }
-    // /index.md reaches the origin under its own name and is rewritten to
-    // /home.md there; robots.txt is left to the zone bypass on purpose (it is
-    // re-fetched rarely and cheap to serve); the nested llms.txt twins are not
-    // root files. /schemamap.xml is not in the sitemap index and no crawler is
-    // pointed at it.
-    for (const route of ['/index.md', '/robots.txt', '/schemamap.xml', '/api/download.md', '/developers/llms.txt']) {
-      assert.equal(effectiveHeader(route, 'CDN-Cache-Control'), null, `${route} must not advertise the document TTL`);
-    }
-  });
-
   it('keeps robots.txt advertising root, blog, and Mintlify docs sitemaps', () => {
     assert.match(robotsSource, /^Sitemap: https:\/\/www\.worldmonitor\.app\/sitemap\.xml$/m);
     assert.match(robotsSource, /^Sitemap: https:\/\/www\.worldmonitor\.app\/blog\/sitemap-index\.xml$/m);
     assert.match(robotsSource, /^Sitemap: https:\/\/www\.worldmonitor\.app\/docs\/sitemap\.xml$/m);
-  });
-
-  // #7749 gave the sitemaps the Vercel half of the pair and deliberately left
-  // the Cloudflare bypass alone. Round 7 then measured both still DYNAMIC under
-  // a GET while every other corpus route hit, which is what the half-pair
-  // predicts: the bypass rule names /sitemap.xml and .xml is outside
-  // Cloudflare's default-cacheable extensions. #7869 completes the pair — the
-  // claim lives in scripts/cloudflare-cache-rule.mjs (AGENT_TEXT_FILES).
-  it('caches root sitemaps at both shared caches (#7869, supersedes #7749)', () => {
-    for (const route of ['/sitemap.xml', '/sitemap-main.xml']) {
-      assert.equal(effectiveCacheControl(route), 'public, max-age=3600, must-revalidate');
-      assert.equal(effectiveHeader(route, 'Vercel-CDN-Cache-Control'), HTML_ENTRY_EDGE_CACHE);
-      assert.equal(effectiveHeader(route, 'CDN-Cache-Control'), HTML_ENTRY_EDGE_CACHE);
-    }
-  });
-
-  it('keeps the root sitemap generated while delegating blog and docs inventories', () => {
-    assert.ok(sitemapSource.includes('Generated by npm run build:sitemap. Do not edit by hand.'));
-    assert.ok(!sitemapSource.includes('https://www.worldmonitor.app/blog/'));
-    assert.ok(!sitemapSource.includes('https://www.worldmonitor.app/docs/'));
-    assert.ok(!sitemapSource.includes('<changefreq>'));
-    assert.ok(!sitemapSource.includes('<priority>'));
   });
 
   it('discovers canonical generated corpus pages and validates changelog pagination links', () => {
@@ -1804,24 +1352,6 @@ describe('welcome landing page routing', () => {
 
   it('starts installed PWAs on /dashboard, not the public welcome page', () => {
     assert.match(viteConfigSource, /start_url:\s*'\/dashboard'/);
-  });
-
-  it('sitemap lists dashboard routes and does not list legacy /welcome', () => {
-    const sitemap = readFileSync(resolve(__dirname, '../public/sitemap-main.xml'), 'utf-8');
-    assert.ok(
-      sitemap.includes('<loc>https://www.worldmonitor.app/dashboard</loc>'),
-      'public/sitemap-main.xml must list https://www.worldmonitor.app/dashboard'
-    );
-    for (const host of ['tech', 'finance', 'commodity', 'happy', 'energy']) {
-      assert.ok(
-        sitemap.includes(`<loc>https://${host}.worldmonitor.app/dashboard</loc>`),
-        `public/sitemap-main.xml must list https://${host}.worldmonitor.app/dashboard`
-      );
-    }
-    assert.ok(
-      !sitemap.includes('<loc>https://www.worldmonitor.app/welcome</loc>'),
-      'public/sitemap-main.xml must not list legacy https://www.worldmonitor.app/welcome'
-    );
   });
 
   it('pins welcome and dashboard SEO canonicals to their new routes', { skip: shouldSkipProBuiltOutput() }, () => {
@@ -3309,7 +2839,7 @@ describe('agent readiness: api-catalog + openapi build', () => {
   // so multi-surface MCP coverage is discoverable.
   it('advertises the docs MCP server on every discovery surface', () => {
     const docsMcpUrl = 'https://www.worldmonitor.app/docs/mcp';
-    for (const surface of ['llms.txt', 'agents.md', 'api/llms.txt']) {
+    for (const surface of ['agents.md', 'api/llms.txt']) {
       const content = readFileSync(resolve(__dirname, `../public/${surface}`), 'utf-8');
       assert.ok(content.includes(docsMcpUrl), `public/${surface} must advertise the docs MCP server`);
     }
@@ -3548,29 +3078,17 @@ describe('agent readiness: api-catalog + openapi build', () => {
         script.includes('npm run build:openapi'),
         `scripts["${buildName}"] must chain "npm run build:openapi" so the web bundle ships the spec; got: ${script}`
       );
-      assert.ok(
-        pkg.scripts[prebuildName]?.split(' && ').includes('npm run product:facts'),
-        `scripts["${prebuildName}"] must regenerate ignored inventory facts before ${buildName}`,
-      );
+      // Inventory facts come from postinstall (npm run inventory:facts); the
+      // personal build dropped the product-facts generator from every prebuild.
+      assert.doesNotMatch(pkg.scripts[prebuildName] ?? '', /product:facts/);
     }
   });
 
   it('keeps a prebuild hook so the default `npm run build` path also copies the spec', () => {
-    assert.ok(
-      pkg.scripts.prebuild?.includes('npm run product:facts'),
-      'package.json scripts["prebuild"] must regenerate ignored product and inventory facts',
-    );
+    assert.doesNotMatch(pkg.scripts.prebuild ?? '', /product:facts/);
     assert.ok(
       pkg.scripts.prebuild?.includes('npm run build:openapi'),
       'package.json scripts["prebuild"] must copy the generated OpenAPI spec',
-    );
-  });
-
-  it('regenerates ignored inventory facts before the Tauri desktop build', () => {
-    assert.equal(
-      pkg.scripts['prebuild:desktop'],
-      'npm run product:facts',
-      'Tauri packages api/ and public/ resources, so build:desktop must regenerate ignored facts',
     );
   });
 
@@ -3997,7 +3515,8 @@ describe('agent readiness: remaining markdown twins', () => {
   // joined the set with its canonical Link header (#4999): it is
   // sitemap-listed, and without the catch-all exclusion the SPA cache-header
   // catch-all (later in the headers array) overrides its max-age rule.
-  for (const mdPath of ['/pricing.md', '/support.md', '/agents.md', '/ai-search.md', '/world-monitor.md', '/api-versioning.md']) {
+  // /ai-search.md left with the personal build's AI-search generator.
+  for (const mdPath of ['/pricing.md', '/support.md', '/agents.md', '/world-monitor.md', '/api-versioning.md']) {
     it(`serves ${mdPath} as markdown, never the app shell`, () => {
       assert.equal(getHeaderValueForSource(mdPath, 'Content-Type'), 'text/markdown; charset=utf-8');
       assert.equal(getHeaderValueForSource(mdPath, 'Access-Control-Allow-Origin'), '*');
@@ -4581,220 +4100,6 @@ describe('agent readiness: crawl-budget disallows (#7660)', () => {
       });
     }
 
-    // Probed against production 2026-09-04: Vercel applies vercel.json
-    // `redirects` BEFORE middleware. On a variant host, `/?ref=x` answers
-    // 308 -> `/dashboard?ref=x` with the param intact, while the same request
-    // on www answers 308 -> `/` with it stripped — so the middleware never
-    // runs for `/` there, and crawlerCanonicalUrl() cannot collapse variant
-    // map-state URLs.
-    //
-    // That makes the variant robots rules load-bearing rather than
-    // belt-and-braces: they are the ONLY thing keeping a compliant crawler off
-    // the variant hosts' share of the space (415 of the 1,000 exported
-    // redirect URLs). If the `/` -> `/dashboard` host redirect is ever
-    // removed, middleware takes over and this coupling changes — so assert the
-    // pair together rather than leaving the dependency unwritten.
-    it('keeps the variant map-state rules load-bearing while the / host redirect exists', () => {
-      const variantRootRedirect = vercelConfig.redirects.find(
-        (r) =>
-          r.source === '/' &&
-          Array.isArray(r.has) &&
-          r.has.some((h) => h.type === 'host' && /tech|finance|commodity|happy|energy/.test(h.value))
-      );
-      if (!variantRootRedirect) return;
-      assert.equal(variantRootRedirect.destination, '/dashboard');
-      for (const path of [
-        '/?lat=20.0000&lon=0.0000&zoom=1.00',
-        '/dashboard?lat=20.0000&lon=0.0000&zoom=1.00',
-      ]) {
-        assert.equal(
-          isCrawlable('robots.variant.txt', path),
-          false,
-          `robots.variant.txt must block ${path} itself — the middleware collapse never runs on a variant host`
-        );
-      }
-    });
-
-    // The sitemap covers the documents we declare. This covers the links those
-    // documents CONTAIN — a different failure, and the one a crawl-budget rule
-    // is most likely to cause: publishing a link on ~240 generated pages while
-    // telling Google it may not follow it. Blocking a link you keep emitting is
-    // the worst of both, and it moves the volume into "Blocked by robots.txt"
-    // rather than removing it.
-    //
-    // Shapes are the ones the corpus builders actually emit: the parameterised
-    // dashboard deep links in scripts/build-crawlable-corpus.mjs and
-    // scripts/build-research-reports.mjs, plus the wm_content_* attribution in
-    // scripts/build-use-cases.mjs. The utm_source wrapper that used to sit on
-    // top of those was deleted in #8603.
-    // `/*?*lat=` is a substring match over the whole query, not a parameter-NAME
-    // match: it also catches any param ending in the token (`?colon=` matches
-    // `/*?*lon=`) and value-side text (`?q=flat=earth` matches `/*?*lat=`).
-    //
-    // That cannot be fixed in robots.txt. Name-anchoring needs `/*&lat=` for a
-    // non-first parameter, and a literal `&` in a rule path never matches —
-    // verified against Protego, which implements Google's spec: `/*&lat=` does
-    // not match `/d?view=g&lat=1` while `/*?*lat=` does. Anchoring would have
-    // silently stopped blocking every map URL whose lat is not the first param.
-    //
-    // So the exposure is real and permanent, and the guard is on the other
-    // side: no parameter this application actually reads may end in one of the
-    // blocked tokens. 96 params read via searchParams today, zero collisions —
-    // this fails the day someone adds `?colon=`, `?salon=`, `?pylon=` or
-    // `?flat=`, which is when it matters.
-    it('has no live collision between a blocked token and a real parameter', () => {
-      const BLOCKED_TOKENS = ['lat', 'lon', 'zoom', 'layers'];
-      const SOURCE_DIRS = ['src', 'server', 'api', 'scripts', 'shared'];
-      // Both spellings: `url.searchParams.get('x')` and the bare
-      // `params.get('x')` / `params.set('x', …)` used once a URLSearchParams is
-      // in a local (src/utils/urlState.ts reads zoom and layers that way).
-      const PARAM_RE = /(?:searchParams|params)\.(?:get|has|set)\(\s*['"]([A-Za-z0-9_]+)['"]/g;
-
-      const collectParams = (dir, acc) => {
-        for (const entry of readdirSync(dir, { withFileTypes: true })) {
-          if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
-          const full = join(dir, entry.name);
-          if (entry.isDirectory()) {
-            collectParams(full, acc);
-            continue;
-          }
-          if (!/\.(ts|tsx|mts|mjs|js|cjs)$/.test(entry.name)) continue;
-          for (const m of readFileSync(full, 'utf-8').matchAll(PARAM_RE)) acc.add(m[1]);
-        }
-        return acc;
-      };
-
-      const params = new Set();
-      for (const dir of SOURCE_DIRS) collectParams(resolve(__dirname, '..', dir), params);
-      assert.ok(params.size > 50, `expected to find the app's query params, got ${params.size}`);
-      for (const token of BLOCKED_TOKENS) assert.ok(params.has(token), `${token} must be a real param`);
-
-      // The bounding-box params collide on the token but never on a crawlable
-      // URL: they exist only on `/api/*` RPC routes, which `Disallow: /api/`
-      // has covered since long before these rules. Allowlisted explicitly, and
-      // re-proved below, so a NEW collision on a crawlable surface still fails.
-      const API_ONLY_COLLISIONS = ['sw_lat', 'sw_lon', 'ne_lat', 'ne_lon'];
-
-      const collisions = [...params].filter(
-        (name) => !BLOCKED_TOKENS.includes(name) && BLOCKED_TOKENS.some((t) => name.endsWith(t))
-      );
-      assert.deepEqual(
-        collisions.filter((name) => !API_ONLY_COLLISIONS.includes(name)).sort(),
-        [],
-        'these parameters end in a blocked token, so `/*?*<token>=` would disallow every URL ' +
-          `carrying them: ${collisions.join(', ')}. Rename the param, or drop the rule.`
-      );
-
-      // The allowlist cannot rot: every file that names one of these must also
-      // name an /api/ path, so the day one is used on a crawlable URL this
-      // fails instead of quietly widening the exemption.
-      const filesNaming = (needle, dir, acc = []) => {
-        for (const entry of readdirSync(dir, { withFileTypes: true })) {
-          if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
-          const full = join(dir, entry.name);
-          if (entry.isDirectory()) {
-            filesNaming(needle, full, acc);
-            continue;
-          }
-          if (!/\.(ts|tsx|mts|mjs|js|cjs)$/.test(entry.name)) continue;
-          const body = readFileSync(full, 'utf-8');
-          // As a query KEY only — quoted, or written into a query string. A
-          // bare prose mention (`// [sw_lat, sw_lon, …]` documenting an array
-          // order) is not a parameter and must not trip this.
-          const asQueryKey = new RegExp(`['"\`]${needle}['"\`]|[?&]${needle}=`);
-          // MCP tool arguments travel in JSON-RPC POST bodies, never in a URL.
-          const mcpArgument = relative(resolve(__dirname, '..'), full).startsWith(join('api', 'mcp') + sep);
-          if (asQueryKey.test(body)) acc.push({ path: full, apiScoped: body.includes('/api/') || mcpArgument });
-        }
-        return acc;
-      };
-      for (const name of API_ONLY_COLLISIONS) {
-        for (const dir of SOURCE_DIRS) {
-          for (const hit of filesNaming(name, resolve(__dirname, '..', dir))) {
-            assert.ok(
-              hit.apiScoped,
-              `${name} is allowlisted as /api/-only, but ${relative(resolve(__dirname, '..'), hit.path)} ` +
-                'names it without any /api/ path — if it now reaches a crawlable URL, `/*?*lat=` disallows that URL'
-            );
-          }
-        }
-      }
-    });
-
-    it('never blocks a link shape our own build emits', () => {
-      // Read the hrefs out of the builders rather than sampling them by hand.
-      // The hand-written sample was the bug: it listed twelve shapes and missed
-      // the two `layers=` dashboard CTAs in build-use-cases.mjs, so the rules
-      // shipped blocking links the site publishes (PR #7689 review).
-      const BUILDERS = [
-        'scripts/build-crawlable-corpus.mjs',
-        'scripts/build-use-cases.mjs',
-        'scripts/crawlable-sources-page.mjs',
-        'scripts/build-research-reports.mjs',
-      ];
-      // A quoted or backticked literal that starts with `/` and has a query.
-      const HREF_RE = /['"`](\/[A-Za-z0-9._\-/${}]*\?[^'"`]*)['"`]/g;
-
-      const emitted = new Map();
-      for (const builder of BUILDERS) {
-        const src = readFileSync(resolve(__dirname, '..', builder), 'utf-8');
-        src.split('\n').forEach((line, index) => {
-          for (const match of line.matchAll(HREF_RE)) {
-            const raw = match[1];
-            if (raw.includes('://')) continue;
-            // Template interpolation stands in as a concrete value; the rules
-            // key on parameter names, so the substituted value is irrelevant.
-            emitted.set(raw.replace(/\$\{[^}]*\}/g, 'X'), `${builder}:${index + 1}`);
-          }
-        });
-      }
-
-      // Six: the parameterised dashboard deep links, including both `layers=`
-      // use-case CTAs this test was written to catch. It was eight until #8603
-      // deleted the two `?utm_source=` literals, which were redirect hops.
-      assert.ok(
-        emitted.size >= 6,
-        `expected to read the corpus builders' query-bearing hrefs, found ${emitted.size} — ` +
-          'the extraction regex probably stopped matching, which would make this test vacuous'
-      );
-
-      // The attribution wrapper build-use-cases.mjs applies on top of those
-      // literals. wm_content_* only: utm_* keys were removed in #8603 because
-      // middleware 308s them away.
-      const TAGGED = (href) =>
-        `${href}${href.includes('?') ? '&' : '?'}wm_content_source=worldmonitor-use-cases`;
-
-      const blocked = [];
-      for (const [href, where] of emitted) {
-        for (const candidate of [href, TAGGED(href)]) {
-          if (!isCrawlable('robots.www.txt', candidate)) blocked.push(`  ${where}  ${candidate}`);
-        }
-      }
-      assert.deepEqual(
-        blocked,
-        [],
-        'robots.www.txt blocks links the build emits on generated pages. Blocking a link you keep ' +
-          'publishing does not remove the crawl volume, it relabels it "Blocked by robots.txt" and ' +
-          `tells Google not to follow your own internal graph:\n${blocked.join('\n')}`
-      );
-    });
-
-    it('blocks nothing we declare in the sitemap', () => {
-      // The failure mode worth guarding: a crawl-budget rule that also deletes
-      // part of the 845-URL declared inventory it exists to protect. Resolved
-      // against every <loc> rather than a sample.
-      const sitemap = readFileSync(resolve(__dirname, '../public/sitemap-main.xml'), 'utf-8');
-      const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-      assert.ok(locs.length > 100, `expected a populated sitemap, got ${locs.length} entries`);
-      for (const loc of locs) {
-        const { pathname, search } = new URL(loc);
-        assert.equal(
-          isCrawlable('robots.www.txt', `${pathname}${search}`),
-          true,
-          `robots.www.txt blocks a sitemap-declared URL: ${loc}`
-        );
-      }
-    });
   });
 });
 
@@ -5060,18 +4365,6 @@ describe('markdown canonical Link headers (#4999)', () => {
     });
   }
 
-  it('every announced .md URL has the canonical Link header rule', () => {
-    // The markdown twins left the sitemap (#8608); MACHINE_READABLE_URLS is
-    // now the list IndexNow announces, so the canonical-header sweep reads it.
-    const mdUrls = MACHINE_READABLE_URLS
-      .map((url) => new URL(url))
-      .filter((url) => url.hostname === 'www.worldmonitor.app' && url.pathname.endsWith('.md'))
-      .map((url) => url.pathname);
-    assert.ok(mdUrls.length > 0, 'expected .md entries in MACHINE_READABLE_URLS');
-    for (const path of mdUrls) {
-      assert.ok(MD_PAGES.includes(path), `${path} is announced but has no canonical Link header rule — add it to vercel.json and this test`);
-    }
-  });
 });
 
 // #4953 — developer-resource discoverability: an agent web-searching "World
@@ -5108,41 +4401,6 @@ describe('agent readiness: named developer-resource pages (#4953)', () => {
     });
   }
 
-  it('advertises the developer portal + resource pages across the discovery chain', () => {
-    // Mirror the #4958 "advertises...on every discovery surface" guard: a page
-    // that is supposed to be advertised everywhere silently going unadvertised
-    // on one surface was a real drift incident. Check the api-catalog plus every
-    // text discovery surface the PR wires (llms.txt, llms-full.txt, agents.md,
-    // api/llms.txt).
-    const catalog = JSON.parse(readFileSync(resolve(__dirname, '../public/.well-known/api-catalog'), 'utf-8'));
-    const catalogHrefs = catalog.linkset.flatMap((ctx) =>
-      Object.values(ctx).flatMap((v) => (Array.isArray(v) ? v.map((e) => e.href) : []))
-    );
-    const surfaces = ['llms.txt', 'llms-full.txt', 'agents.md', 'api/llms.txt'].map((f) => [
-      f,
-      readFileSync(resolve(__dirname, `../public/${f}`), 'utf-8'),
-    ]);
-    // IndexNow and the indexed "Build on World Monitor" blog post are the two
-    // web-search discovery surfaces (candidate fixes #1/#3 of the issue). The
-    // pages left the sitemap in #8608 because they are files, not pages; the
-    // IndexNow list replaced it here.
-    const sitemap = readFileSync(resolve(__dirname, '../public/sitemap-main.xml'), 'utf-8');
-    const blogPost = readFileSync(
-      resolve(__dirname, '../blog-site/src/content/blog/build-on-worldmonitor-developer-api-open-source.md'),
-      'utf-8'
-    );
-    for (const page of DEV_PAGES) {
-      // www, not apex (#7660): the developer-resource pages 301 off the apex.
-      const url = `https://www.worldmonitor.app${page.path}`;
-      assert.ok(catalogHrefs.includes(url), `api-catalog must advertise ${url}`);
-      for (const [name, content] of surfaces) {
-        assert.ok(content.includes(page.path), `public/${name} must link ${page.path}`);
-      }
-      assert.ok(MACHINE_READABLE_URLS.includes(url), `IndexNow must announce ${url}`);
-      assert.ok(!sitemap.includes(`<loc>${url}</loc>`), `sitemap-main.xml must not declare the file ${page.path}`);
-      assert.ok(blogPost.includes(page.path), `the developer blog post must cross-link ${page.path}`);
-    }
-  });
 });
 
 // NLWeb schemamap (orank "NLWeb Schema Feeds"): keep the file published and
@@ -5241,19 +4499,6 @@ describe('section-scoped llms.txt files', () => {
     }
   });
 
-  it('the site-wide llms.txt cross-links every section file and the sandbox', () => {
-    const llms = readFileSync(resolve(__dirname, '../public/llms.txt'), 'utf-8');
-    for (const url of [
-      'https://www.worldmonitor.app/api/llms.txt',
-      'https://www.worldmonitor.app/docs/llms.txt',
-      'https://www.worldmonitor.app/developers/llms.txt',
-      'https://www.worldmonitor.app/blog/llms.txt',
-      'https://www.worldmonitor.app/sandbox/index.json',
-      'https://www.worldmonitor.app/schemamap.xml',
-    ]) {
-      assert.ok(llms.includes(url), `public/llms.txt must link ${url}`);
-    }
-  });
 });
 
 describe('skeleton brand text extraction (#5541)', () => {

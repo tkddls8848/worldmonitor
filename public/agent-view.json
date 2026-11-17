@@ -121,8 +121,6 @@
     "AI world/country briefs, scenario forecasts, prediction markets"
   ],
   "discovery": {
-    "llmsTxt": "https://www.worldmonitor.app/llms.txt",
-    "llmsFullTxt": "https://www.worldmonitor.app/llms-full.txt",
     "sectionLlmsTxt": {
       "api": "https://www.worldmonitor.app/api/llms.txt",
       "docs": "https://www.worldmonitor.app/docs/llms.txt",

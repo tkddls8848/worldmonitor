@@ -11,6 +11,12 @@
       "status": "excluded",
       "references": [
         {
+          "path": "scripts/local/baseline/capture.mjs"
+        },
+        {
+          "path": "scripts/local/local-api-server.mjs"
+        },
+        {
           "path": "scripts/measure-trade-animation-rebuild.mjs"
         },
         {
@@ -138,9 +144,6 @@
           "path": "scripts/check-analytics-collector.mjs"
         },
         {
-          "path": "scripts/seo-umami-collect.mjs"
-        },
-        {
           "path": "src/services/analytics.ts"
         }
       ]
@@ -191,6 +194,9 @@
       "attribution": "Credit acleddata.com and link to the original upstream API/dataset.",
       "status": "terms-review",
       "references": [
+        {
+          "path": "scripts/local/local-api-server.mjs"
+        },
         {
           "path": "scripts/seed-conflict-intel.mjs"
         },
@@ -496,6 +502,9 @@
           "path": "scripts/ais-relay.cjs"
         },
         {
+          "path": "scripts/local/local-api-server.mjs"
+        },
+        {
           "path": "scripts/seed-cyber-threats.mjs"
         }
       ]
@@ -579,6 +588,9 @@
       "references": [
         {
           "path": "scripts/ais-relay.cjs"
+        },
+        {
+          "path": "scripts/local/local-api-server.mjs"
         },
         {
           "path": "scripts/seed-aviation.mjs"
@@ -682,6 +694,9 @@
         },
         {
           "path": "scripts/cloudflare-cache-rule.mjs"
+        },
+        {
+          "path": "scripts/local/local-api-server.mjs"
         },
         {
           "path": "scripts/seed-internet-outages.mjs"
@@ -798,6 +813,9 @@
       "references": [
         {
           "path": "scripts/backfill-fuel-prices-prev.mjs"
+        },
+        {
+          "path": "scripts/local/local-api-server.mjs"
         },
         {
           "path": "scripts/seed-economy.mjs"
@@ -937,9 +955,6 @@
           "path": "api/_github-release.js"
         },
         {
-          "path": "scripts/check-review-pr-token.mjs"
-        },
-        {
           "path": "scripts/dispatch-stale-railway-reconcile.mjs"
         },
         {
@@ -1034,15 +1049,10 @@
       "host": "api.indexnow.org",
       "provider": "api.indexnow.org",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: first-party, control-plane, UI, or rendering transport",
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "scripts/seo-indexnow-submit.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "api.mercadopublico.cl",
@@ -1307,6 +1317,9 @@
       "status": "terms-review",
       "references": [
         {
+          "path": "scripts/local/local-api-server.mjs"
+        },
+        {
           "path": "scripts/seed-economic-calendar.mjs"
         },
         {
@@ -1338,18 +1351,10 @@
       "host": "api.telegram.org",
       "provider": "api.telegram.org",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this upstream API/dataset; verify before redistribution",
       "attribution": "Credit api.telegram.org and link to the original upstream API/dataset.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/notification-relay.cjs"
-        },
-        {
-          "path": "scripts/seed-digest-notifications.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "api.travelpayouts.com",
@@ -1603,6 +1608,9 @@
         },
         {
           "path": "scripts/freeze-resilience-ranking.mjs"
+        },
+        {
+          "path": "scripts/local/local-api-server.mjs"
         },
         {
           "path": "scripts/openapi-inject-servers.mjs"
@@ -1914,6 +1922,9 @@
       "attribution": "Credit auth.opensky-network.org and link to the original upstream API/dataset.",
       "status": "terms-review",
       "references": [
+        {
+          "path": "scripts/local/local-api-server.mjs"
+        },
         {
           "path": "scripts/seed-military-flights.mjs"
         }
@@ -2951,6 +2962,9 @@
       "references": [
         {
           "path": "scripts/ais-relay.cjs"
+        },
+        {
+          "path": "scripts/local/local-api-server.mjs"
         },
         {
           "path": "scripts/seed-military-flights.mjs"
@@ -4763,6 +4777,9 @@
           "path": "scripts/ais-relay.cjs"
         },
         {
+          "path": "scripts/local/local-api-server.mjs"
+        },
+        {
           "path": "scripts/seed-earnings-calendar.mjs"
         },
         {
@@ -4791,6 +4808,9 @@
       "attribution": "Credit NASA FIRMS and link to the original upstream API or dataset.",
       "status": "terms-review",
       "references": [
+        {
+          "path": "scripts/local/local-api-server.mjs"
+        },
         {
           "path": "scripts/wildfire/firms-area.mjs"
         }
@@ -5106,9 +5126,6 @@
         },
         {
           "path": "scripts/build-accuracy-page.mjs"
-        },
-        {
-          "path": "scripts/build-crawlable-corpus.mjs"
         },
         {
           "path": "scripts/build-plane-alert-watchlist.mjs"
@@ -6526,6 +6543,9 @@
           "path": "scripts/local/embedded-store.mjs"
         },
         {
+          "path": "scripts/local/local-api-server.mjs"
+        },
+        {
           "path": "scripts/local/redis-rest-proxy.mjs"
         },
         {
@@ -7539,15 +7559,10 @@
       "host": "oauth2.googleapis.com",
       "provider": "oauth2.googleapis.com",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: first-party, control-plane, UI, or rendering transport",
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "scripts/seo-gsc-collect.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "oc-media.org",
@@ -7782,6 +7797,9 @@
           "path": "scripts/lib/company-monitoring-classifier-client.mjs"
         },
         {
+          "path": "scripts/local/local-api-server.mjs"
+        },
+        {
           "path": "scripts/regional-snapshot/weekly-brief.mjs"
         }
       ]
@@ -7860,6 +7878,9 @@
       "attribution": "Credit otx.alienvault.com and link to the original upstream API/dataset.",
       "status": "terms-review",
       "references": [
+        {
+          "path": "scripts/local/local-api-server.mjs"
+        },
         {
           "path": "scripts/seed-cyber-threats.mjs"
         }
@@ -8639,6 +8660,20 @@
       ]
     },
     {
+      "host": "redis-rest",
+      "provider": "Docker Redis REST proxy",
+      "kind": "structured",
+      "observed": true,
+      "license": "Excluded: self-host docker network transport",
+      "attribution": "Excluded from the provider count: private docker-network URL.",
+      "status": "excluded",
+      "references": [
+        {
+          "path": "scripts/local/local-api-server.mjs"
+        }
+      ]
+    },
+    {
       "host": "registry.modelcontextprotocol.io",
       "provider": "registry.modelcontextprotocol.io",
       "kind": "structured",
@@ -9045,16 +9080,10 @@
           "path": "scripts/build-accuracy-page.mjs"
         },
         {
-          "path": "scripts/build-crawlable-corpus.mjs"
-        },
-        {
           "path": "scripts/build-use-cases.mjs"
         },
         {
           "path": "scripts/comparison-shortlist.mjs"
-        },
-        {
-          "path": "scripts/crawlable-sources-page.mjs"
         }
       ]
     },
@@ -9062,15 +9091,10 @@
       "host": "schemas.agentskills.io",
       "provider": "schemas.agentskills.io",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: first-party, control-plane, UI, or rendering transport",
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "scripts/build-agent-skills-index.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "scmp.com",
@@ -9187,15 +9211,10 @@
       "host": "searchconsole.googleapis.com",
       "provider": "searchconsole.googleapis.com",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: first-party, control-plane, UI, or rendering transport",
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "scripts/seo-gsc-collect.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "secure.toronto.ca",
@@ -9584,15 +9603,10 @@
       "host": "ssl.bing.com",
       "provider": "ssl.bing.com",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: first-party, control-plane, UI, or rendering transport",
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "scripts/seo-bing-collect.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "stat.gov.kg",
@@ -10845,6 +10859,9 @@
           "path": "scripts/ais-relay.cjs"
         },
         {
+          "path": "scripts/local/local-api-server.mjs"
+        },
+        {
           "path": "scripts/seed-ucdp-events.mjs"
         }
       ]
@@ -10972,6 +10989,9 @@
       "references": [
         {
           "path": "scripts/ais-relay.cjs"
+        },
+        {
+          "path": "scripts/local/local-api-server.mjs"
         },
         {
           "path": "scripts/seed-cyber-threats.mjs"
@@ -11428,9 +11448,6 @@
           "path": "scripts/_upstash-rest.mjs"
         },
         {
-          "path": "scripts/build-agent-skills-index.mjs"
-        },
-        {
           "path": "scripts/capture-mcp-fixture.mjs"
         },
         {
@@ -11455,10 +11472,10 @@
           "path": "scripts/lib/company-monitoring-classifier-client.mjs"
         },
         {
-          "path": "scripts/lib/digest-email-html.mjs"
+          "path": "scripts/lib/x-news-accounts.cjs"
         },
         {
-          "path": "scripts/lib/x-news-accounts.cjs"
+          "path": "scripts/local/local-api-server.mjs"
         },
         {
           "path": "scripts/mcp-live-smoke.mjs"
@@ -11498,9 +11515,6 @@
         },
         {
           "path": "scripts/seed-wb-indicators.mjs"
-        },
-        {
-          "path": "scripts/seo-bing-collect.mjs"
         },
         {
           "path": "scripts/shared/notify-fields.cjs"
@@ -13363,15 +13377,10 @@
       "host": "www.googleapis.com",
       "provider": "www.googleapis.com",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: first-party, control-plane, UI, or rendering transport",
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "scripts/seo-gsc-collect.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "www.gov.br",
@@ -15708,15 +15717,6 @@
           "path": "scripts/build-accuracy-page.mjs"
         },
         {
-          "path": "scripts/build-agent-skills-index.mjs"
-        },
-        {
-          "path": "scripts/build-ai-search.mjs"
-        },
-        {
-          "path": "scripts/build-crawlable-corpus.mjs"
-        },
-        {
           "path": "scripts/build-open-data-chokepoints.mjs"
         },
         {
@@ -15724,9 +15724,6 @@
         },
         {
           "path": "scripts/build-research-reports.mjs"
-        },
-        {
-          "path": "scripts/build-sitemap.mjs"
         },
         {
           "path": "scripts/build-un-m49-regions.mjs"
@@ -15753,9 +15750,6 @@
           "path": "scripts/discover-content-corpus-pages.mjs"
         },
         {
-          "path": "scripts/freeze-crawlable-live-pulse.mjs"
-        },
-        {
           "path": "scripts/freeze-resilience-ranking.mjs"
         },
         {
@@ -15763,9 +15757,6 @@
         },
         {
           "path": "scripts/github-stars-snapshot.mjs"
-        },
-        {
-          "path": "scripts/lib/email-unsubscribe.cjs"
         },
         {
           "path": "scripts/lib/grid-clock-sources.mjs"
@@ -15789,22 +15780,13 @@
           "path": "scripts/measure-desktop-mainthread.mjs"
         },
         {
-          "path": "scripts/notification-relay.cjs"
-        },
-        {
           "path": "scripts/seed-no2-activity.mjs"
-        },
-        {
-          "path": "scripts/seo-indexnow-submit.mjs"
         },
         {
           "path": "scripts/syndication-candidates.mjs"
         },
         {
           "path": "scripts/verify-agent-readiness.mjs"
-        },
-        {
-          "path": "scripts/verify-sitemaps.mjs"
         },
         {
           "path": "server/_shared/deprecation-policy.ts"
@@ -16168,15 +16150,10 @@
       "host": "your-app.convex.site",
       "provider": "your-app.convex.site",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this upstream API/dataset; verify before redistribution",
       "attribution": "Credit your-app.convex.site and link to the original upstream API/dataset.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/import-bounced-emails.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "yourstory.com",

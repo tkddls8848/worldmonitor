@@ -2,7 +2,6 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { fetchAll } from '../scripts/seed-security-advisories.mjs';
-import { sourceProviderDisplayName } from '../scripts/crawlable-sources-page.mjs';
 
 const SEA_EMBASSIES = [
   { host: 'vn.usembassy.gov', code: 'VN', source: 'US Embassy Vietnam', page: 'U.S. Embassy & Consulates in Vietnam' },
@@ -49,9 +48,4 @@ describe('Southeast Asia US embassy alert feeds', () => {
     }
   });
 
-  it('names each embassy host on the sources page', () => {
-    for (const embassy of SEA_EMBASSIES) {
-      assert.equal(sourceProviderDisplayName(embassy.host, [embassy.host]), embassy.page);
-    }
-  });
 });

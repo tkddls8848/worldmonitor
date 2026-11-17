@@ -66,7 +66,6 @@ describe('brand spelling', () => {
     for (const path of ['pro-test/src/App.tsx', 'pro-test/src/components/Footer.tsx']) {
       assert.doesNotMatch(read(path), /&copy;[^<]*WorldMonitor/, path);
     }
-    assert.doesNotMatch(read('scripts/generate-product-config.mjs'), /product on WorldMonitor data/);
     assert.doesNotMatch(read('pro-test/src/generated/tiers.json'), /WorldMonitor/);
   });
 });

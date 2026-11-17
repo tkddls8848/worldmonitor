@@ -54,7 +54,9 @@ describe('nested workspace install topology', () => {
   });
 
   it('every blog build path routes through the script that installs the blog', () => {
-    for (const name of ['build', 'build:full', 'build:blog']) {
+    // The personal build's `build` no longer builds the blog.
+    assert.doesNotMatch(scripts.build, /blog/);
+    for (const name of ['build:full', 'build:blog']) {
       assert.match(
         scripts[name],
         /build:blog:raw/,

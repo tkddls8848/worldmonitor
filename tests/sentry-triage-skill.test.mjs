@@ -5,7 +5,19 @@ import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { parseFrontmatter } from '../scripts/build-agent-skills-index.mjs';
+import yaml from 'js-yaml';
+
+// The frontmatter reader of the removed scripts/build-agent-skills-index.mjs.
+const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/;
+function parseFrontmatter(md) {
+  const match = FRONTMATTER_RE.exec(md);
+  if (!match) return {};
+  const parsed = yaml.load(match[1]);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Frontmatter must be a YAML mapping');
+  }
+  return parsed;
+}
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SKILL_DIR = 'sentry-triage';

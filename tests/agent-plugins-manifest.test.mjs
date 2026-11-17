@@ -1,14 +1,9 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import {
-  materializePluginSkills,
-  rewriteWellKnownSkillForPlugin,
-} from '../scripts/build-agent-skills-index.mjs';
-import { createTempDir } from './helpers/temp-dir.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const ROOT = resolve(dirname(__filename), '..');
@@ -31,8 +26,6 @@ const AUTHOR_FIELDS = new Set(['name', 'email', 'url']);
 const WELL_KNOWN_SKILLS_DIR = join(ROOT, 'public/.well-known/agent-skills');
 const PLUGIN_SKILLS_DIR = join(ROOT, 'skills');
 const DISCOVERY_SURFACES = [
-  'public/llms.txt',
-  'public/llms-full.txt',
   'public/agents.md',
   'public/api/llms.txt',
   'public/developers.md',
@@ -217,8 +210,10 @@ describe('agent readiness: Agent Plugins manifest', () => {
     const repositoryPackageSurfaces = DISCOVERY_SURFACES.filter(
       (relativePath) => !relativePath.startsWith('docs/'),
     );
+    // 6 since the personal build removed the generated public/llms.txt and
+    // public/llms-full.txt.
     assert.ok(
-      repositoryPackageSurfaces.length >= 8,
+      repositoryPackageSurfaces.length >= 6,
       'repository-package coverage shrank; every non-docs discovery surface must stay enrolled',
     );
     for (const relativePath of repositoryPackageSurfaces) {
@@ -229,153 +224,6 @@ describe('agent readiness: Agent Plugins manifest', () => {
         `${relativePath} must describe the Agent Plugin as a repository package`,
       );
     }
-  });
-
-  it('every well-known agent skill has a plugin skills/ SKILL.md inside the plugin root', () => {
-    const wellKnown = listSkillDirs(WELL_KNOWN_SKILLS_DIR);
-    const pluginSkills = listSkillDirs(PLUGIN_SKILLS_DIR);
-    assert.deepEqual(
-      pluginSkills,
-      wellKnown,
-      'skills/ must list exactly the published well-known agent skills',
-    );
-    assert.deepEqual(
-      wellKnown,
-      skillIndex.skills.map((skill) => skill.name).sort(),
-      'well-known skill dirs must match the generated index',
-    );
-    for (const name of wellKnown) {
-      const pluginSkill = join(PLUGIN_SKILLS_DIR, name, 'SKILL.md');
-      const canonical = join(WELL_KNOWN_SKILLS_DIR, name, 'SKILL.md');
-      assert.equal(existsSync(pluginSkill), true, `missing skills/${name}/SKILL.md`);
-      const stat = lstatSync(pluginSkill);
-      assert.equal(stat.isSymbolicLink(), false, `skills/${name}/SKILL.md must be a regular file, not a symlink`);
-      assert.equal(stat.isFile(), true, `skills/${name}/SKILL.md must be a regular file`);
-      const indexed = spawnSync('git', ['ls-files', '-s', `skills/${name}/SKILL.md`], {
-        cwd: ROOT,
-        encoding: 'utf8',
-      });
-      assert.match(
-        indexed.stdout,
-        /^100644 /,
-        `git must store skills/${name}/SKILL.md as a regular file (not mode 120000)`,
-      );
-      const body = readFileSync(pluginSkill, 'utf-8');
-      assert.equal(body.startsWith('---\n'), true, `skills/${name}/SKILL.md must open with YAML frontmatter`);
-      assert.equal(
-        body,
-        rewriteWellKnownSkillForPlugin(readFileSync(canonical, 'utf-8')),
-        `skills/${name}/SKILL.md must match the well-known recipe with public-site API origin`,
-      );
-    }
-  });
-
-  it('prunes a deleted well-known skill and converges writer then checker', (t) => {
-    const root = createTempDir('wm-plugin-skill-prune-', t);
-    const skillsDir = join(root, 'public/.well-known/agent-skills');
-    const pluginSkillsDir = join(root, 'skills');
-    const indexPath = join(skillsDir, 'index.json');
-    mkdirSync(skillsDir, { recursive: true });
-    mkdirSync(pluginSkillsDir, { recursive: true });
-
-    const keepBody = [
-      '---',
-      'name: keep-skill',
-      'description: keep this recipe',
-      '---',
-      '',
-      'GET https://edge.worldmonitor.app/api/keep',
-      '',
-    ].join('\n');
-    const retiredBody = [
-      '---',
-      'name: retired-skill',
-      'description: retire this recipe',
-      '---',
-      '',
-      'GET https://edge.worldmonitor.app/api/retired',
-      '',
-    ].join('\n');
-
-    const writeRecipe = (dir, name, body) => {
-      mkdirSync(join(dir, name), { recursive: true });
-      writeFileSync(join(dir, name, 'SKILL.md'), body);
-    };
-    const writeIndex = (names) => {
-      writeFileSync(indexPath, `${JSON.stringify({
-        $schema: 'https://schemas.agentskills.io/discovery/0.2.0/schema.json',
-        instructions: 'test',
-        skills: names.map((name) => ({
-          name,
-          type: 'skill-md',
-          description: `${name} recipe`,
-          url: `https://worldmonitor.app/.well-known/agent-skills/${name}/SKILL.md`,
-          digest: 'sha256:00',
-        })),
-      }, null, 2)}\n`);
-    };
-
-    writeRecipe(skillsDir, 'keep-skill', keepBody);
-    writeRecipe(skillsDir, 'retired-skill', retiredBody);
-    writeIndex(['keep-skill', 'retired-skill']);
-    const paths = { skillsDir, pluginSkillsDir, indexPath };
-    materializePluginSkills(paths);
-
-    mkdirSync(join(pluginSkillsDir, 'local-scratch'), { recursive: true });
-    writeFileSync(join(pluginSkillsDir, 'local-scratch', 'NOTES.md'), 'do not delete\n');
-    mkdirSync(join(pluginSkillsDir, 'third-party-skill'), { recursive: true });
-    writeFileSync(join(pluginSkillsDir, 'third-party-skill', 'SKILL.md'), 'local install\n');
-
-    rmSync(join(skillsDir, 'retired-skill'), { recursive: true, force: true });
-
-    assert.throws(
-      () => materializePluginSkills({ check: true, ...paths }),
-      /retired-skill/,
-    );
-
-    materializePluginSkills(paths);
-
-    assert.equal(existsSync(join(pluginSkillsDir, 'retired-skill', 'SKILL.md')), false);
-    assert.equal(existsSync(join(pluginSkillsDir, 'retired-skill')), false);
-    assert.equal(
-      readFileSync(join(pluginSkillsDir, 'local-scratch', 'NOTES.md'), 'utf-8'),
-      'do not delete\n',
-    );
-    assert.equal(
-      readFileSync(join(pluginSkillsDir, 'third-party-skill', 'SKILL.md'), 'utf-8'),
-      'local install\n',
-    );
-    assert.equal(
-      readFileSync(join(pluginSkillsDir, 'keep-skill', 'SKILL.md'), 'utf-8'),
-      rewriteWellKnownSkillForPlugin(keepBody),
-    );
-
-    writeIndex(['keep-skill']);
-    assert.doesNotThrow(() => materializePluginSkills({ check: true, ...paths }));
-  });
-
-  // Rewrites to www, not the apex (#7660): `/api/*` is not on the Cloudflare
-  // apex-exemption list, so an apex REST example 301s and a plain
-  // `curl -s` (no -L) against the documented URL returns an empty body.
-  it('rewrites worldmonitor API subdomains to the www site origin', () => {
-    assert.equal(
-      rewriteWellKnownSkillForPlugin('GET https://edge.worldmonitor.app/api/foo'),
-      'GET https://www.worldmonitor.app/api/foo',
-    );
-    // The apex is rewritten too — `/api/*` is not on the exemption list, so an
-    // apex REST example 301s exactly like a variant-host one.
-    assert.equal(
-      rewriteWellKnownSkillForPlugin('GET https://worldmonitor.app/api/foo'),
-      'GET https://www.worldmonitor.app/api/foo',
-    );
-    assert.equal(
-      rewriteWellKnownSkillForPlugin('GET https://www.worldmonitor.app/api/foo'),
-      'GET https://www.worldmonitor.app/api/foo',
-    );
-    assert.equal(
-      rewriteWellKnownSkillForPlugin('GET https://earthquake.usgs.gov/api/foo'),
-      'GET https://earthquake.usgs.gov/api/foo',
-    );
   });
 
   it('tracks skills/*/SKILL.md while still ignoring local skills.sh extras', () => {

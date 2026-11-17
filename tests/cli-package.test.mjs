@@ -95,12 +95,3 @@ describe('worldmonitor CLI run() with a mocked transport', () => {
     assert.deepEqual(JSON.parse(out), { ok: true });
   });
 });
-
-describe('llms.txt advertises the CLI', () => {
-  const llms = readFileSync(join(ROOT, 'public/llms.txt'), 'utf-8');
-
-  it('references the npm package so the discovery entry is not dropped', () => {
-    assert.match(llms, /worldmonitor/);
-    assert.match(llms, /npm|npx/i, 'llms.txt should mention how to install/run the CLI');
-  });
-});

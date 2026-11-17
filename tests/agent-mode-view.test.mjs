@@ -139,8 +139,6 @@ describe('agent-mode view (/?mode=agent)', () => {
   it('points agents at derived tool and locale inventories instead of orphaned totals', () => {
     assert.equal(view.endpoints.mcp.tools, undefined);
     assert.match(view.endpoints.mcp.note, /tools\/list.*live tool inventory/i);
-    const llmsFull = readFileSync(join(ROOT, 'public/llms-full.txt'), 'utf-8');
-    assert.match(llmsFull, /product-facts\.json.*capabilities\.localeCodes/);
     assert.ok(productFacts.capabilities.localeCodes.length > 0);
     assert.equal(
       productFacts.capabilities.localeCodes.length,
@@ -178,7 +176,6 @@ describe('agent-mode view (/?mode=agent)', () => {
       'https://worldmonitor.app/.well-known/api-catalog': 'public/.well-known/api-catalog',
       'https://worldmonitor.app/.well-known/ai-catalog.json': 'public/.well-known/ai-catalog.json',
       'https://www.worldmonitor.app/product-facts.json': 'public/product-facts.json',
-      'https://www.worldmonitor.app/llms.txt': 'public/llms.txt',
     };
     for (const [url, path] of Object.entries(trackedPaths)) {
       assert.equal(

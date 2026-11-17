@@ -37,10 +37,6 @@ describe('SEO crawl-directive hygiene (#7380)', () => {
     assert.match(read('public/security/index.html'), robotsRe);
     assert.match(read('public/trust/index.html'), robotsRe);
     assert.match(read('public/mcp-setup.html'), robotsRe);
-    assert.match(
-      read('scripts/build-crawlable-corpus.mjs'),
-      /robots = INDEXABLE_ROBOTS_CONTENT/,
-    );
   });
 
   it('declares our large square favicons, Open Graph, and X cards across static templates', () => {
@@ -49,7 +45,6 @@ describe('SEO crawl-directive hygiene (#7380)', () => {
       'pro-test/welcome.html',
       'pro-test/index.html',
       'blog-site/src/layouts/Base.astro',
-      'scripts/build-crawlable-corpus.mjs',
       'public/agent/index.html',
       'public/security/index.html',
       'public/trust/index.html',

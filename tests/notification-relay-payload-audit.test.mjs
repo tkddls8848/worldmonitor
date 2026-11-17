@@ -94,15 +94,4 @@ describe('notification-relay payload audit', () => {
     );
   });
 
-  it('notification-relay render codepath gates snippet under NOTIFY_RELAY_INCLUDE_SNIPPET', () => {
-    const src = readSrc('scripts/notification-relay.cjs');
-    assert.ok(
-      /NOTIFY_RELAY_INCLUDE_SNIPPET/.test(src),
-      'notification-relay.cjs must reference NOTIFY_RELAY_INCLUDE_SNIPPET — U7 gate for the snippet rendering path.',
-    );
-    assert.ok(
-      /event\.payload\?\.description/.test(src),
-      'notification-relay.cjs must read event.payload?.description in formatMessage so RSS-origin events can surface a context line.',
-    );
-  });
 });

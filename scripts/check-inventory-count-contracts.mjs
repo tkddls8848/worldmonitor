@@ -51,9 +51,6 @@ export const INVENTORY_CONTRACTS = Object.freeze([
     surface('tests/mcp.test.mjs', ['body.result.tools', 'TOOL_REGISTRY']),
     surface('tests/mcp-resources.test.mjs', ['uiUris', 'listedUiUris']),
   ]),
-  contract('llms-mcp-tools', 'api/mcp/registry tool names and public discovery citations', ['named-member', 'parity'], 'replace', 'Registry-to-citation parity plus named critical tools replaces an arbitrary floor.', [
-    surface('tests/llms-txt-mcp-tools.test.mjs', ['registry']),
-  ]),
   contract('openapi-server-specs', 'generated per-service OpenAPI JSON/YAML files', ['parity'], 'replace', 'Exact JSON/YAML sibling and per-spec server coverage protects the full discovered universe.', [
     surface('tests/openapi-servers-contract.test.mjs', ['serviceJsonSpecs', 'serviceYamlSpecs']),
   ]),
@@ -89,20 +86,11 @@ export const INVENTORY_CONTRACTS = Object.freeze([
   contract('market-tape-locales', 'the authoritative locale file registry and market-tape translations', ['parity'], 'replace', 'Exact per-locale translation coverage replaces a locale-count floor.', [
     surface('tests/market-tape-claim.test.mts', ['localeFiles']),
   ]),
-  contract('product-catalog-inventories', 'generated product IDs, tiers and bundle highlights', ['named-member', 'parity'], 'replace', 'Exact catalog-to-generated parity and named sellable products replace arbitrary floors.', [
-    surface('tests/product-catalog-freshness.test.mjs', ['generatedProductIds', 'tiersJson', 'bundleHighlights']),
-  ]),
-  contract('agent-skills-index', 'discovered agent skills and generated skill index', ['parity'], 'replace', 'Exact discovered-skill parity replaces tranche-specific size floors.', [
-    surface('tests/agent-skills-index.test.mjs', ['index.skills']),
-  ]),
   contract('mcp-presets', 'the MCP preset registry', ['named-member', 'parity'], 'replace', 'Exact preset coverage and named required presets replace the preset floor.', [
     surface('tests/mcp-presets.test.mjs', ['presets']),
   ]),
   contract('route-explorer-countries', 'the authoritative country registry used by route explorer pickers', ['parity'], 'replace', 'Exact authoritative country coverage replaces the country floor.', [
     surface('tests/route-explorer-pickers.test.mts', ['getAllCountries']),
-  ]),
-  contract('notification-country-registry', 'the shared country-name to ISO-2 registry', ['parity'], 'replace', 'Exact authoritative country coverage replaces the parser floor.', [
-    surface('tests/notification-relay-country-scope-5359.test.mjs', ['names']),
   ]),
   contract('iso2-country-registry', 'the closed ISO alpha-2 registry and its client mirror', ['exact', 'parity'], 'keep', 'ISO alpha-2 is a closed external standard and the client/server sets must remain identical.', [
     surface('convex/__tests__/followed-countries-mutations.test.ts', ['_ISO2_REGISTRY_FOR_TESTS']),

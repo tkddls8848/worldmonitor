@@ -12,12 +12,15 @@ const SCRIPTS = path.dirname(fileURLToPath(import.meta.url));
 const MIN = 60_000;
 
 // Bundles skip their own members while those are still fresh, so repeating a
-// pass is cheap. Standalone collectors run every pass.
+// pass is cheap. Standalone collectors run every pass. digest-notifications
+// composes the owner's daily brief and decides on its own whether to
+// regenerate the prose this pass.
 export const DEFAULT_COLLECTORS = [
   'earthquakes', 'natural-events', 'weather-alerts', 'internet-outages', 'cyber-threats',
   'unrest-events', 'military-flights', 'conflict-intel', 'prediction-markets', 'service-statuses',
   'bundle-market-backup', 'bundle-relay-backup', 'bundle-climate', 'bundle-health',
   'bundle-energy-sources', 'bundle-derived-signals', 'insights', 'forecasts', 'correlation',
+  'digest-notifications',
 ];
 
 export function collectorScript(name) {

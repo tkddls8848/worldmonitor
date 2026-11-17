@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import { after, before, describe, it, type TestContext } from 'node:test';
 
 import {
@@ -25,7 +24,7 @@ import {
   instabilityBand as liveToolsInstabilityBand,
 } from '../scripts/crawlable-live-tools.mjs';
 import { CHOKEPOINT_CONTENT } from '../scripts/chokepoint-page-content.mjs';
-import { slugify } from '../scripts/build-crawlable-corpus.mjs';
+import { slugify } from '../scripts/slugify.mjs';
 import { CONFIRMED, RAISED, flagAfter, rollupOf, shadowedRollup, siteOf } from './helpers/orbital-country-rollup.mjs';
 import { ROLLUP_MAX_AGE_MS } from '../shared/orbital/country-rollup.js';
 
@@ -531,14 +530,35 @@ describe('mirrors of public page vocabulary stay in sync', () => {
     }
   });
 
+  // The resilience corpus pages (scripts/build-crawlable-corpus.mjs) were
+  // removed from the personal build. This is their DIMENSION_LABELS table as
+  // last published, so the brief keeps the wording readers knew.
   it('dimension labels match the corpus DIMENSION_LABELS table', () => {
-    const source = readFileSync(new URL('../scripts/build-crawlable-corpus.mjs', import.meta.url), 'utf8');
-    const block = /const DIMENSION_LABELS = \{([\s\S]*?)\n\};/.exec(source)?.[1];
-    assert.ok(block, 'corpus DIMENSION_LABELS block found');
-    const corpus = Object.fromEntries(
-      [...block!.matchAll(/^\s*([A-Za-z]+): '([^']+)',$/gm)].map((match) => [match[1], match[2]]),
-    );
-    assert.ok(Object.keys(corpus).length >= 20);
+    const corpus = {
+      macroFiscal: 'Macro-fiscal position',
+      currencyExternal: 'Currency and external balance',
+      tradePolicy: 'Trade policy resilience',
+      financialSystemExposure: 'Financial-system exposure',
+      cyberDigital: 'Cyber and digital capacity',
+      logisticsSupply: 'Logistics and supply chains',
+      infrastructure: 'Core infrastructure',
+      energy: 'Energy system resilience',
+      governanceInstitutional: 'Governance and institutions',
+      socialCohesion: 'Social cohesion',
+      borderSecurity: 'Border security',
+      informationCognitive: 'Information environment',
+      education: 'Education capacity',
+      healthPublicService: 'Health and public services',
+      foodWater: 'Food and water security',
+      fiscalSpace: 'Fiscal space',
+      reserveAdequacy: 'Reserve adequacy',
+      externalDebtCoverage: 'External-debt coverage',
+      importConcentration: 'Import concentration',
+      stateContinuity: 'State continuity',
+      fuelStockDays: 'Fuel-stock buffer',
+      liquidReserveAdequacy: 'Liquid-reserve adequacy',
+      sovereignFiscalBuffer: 'Sovereign fiscal buffer',
+    };
     assert.deepEqual(RESILIENCE_DIMENSION_LABELS, corpus);
   });
 

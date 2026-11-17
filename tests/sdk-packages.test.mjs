@@ -96,7 +96,7 @@ describe('Rust SDK package (sdk/rust → crates.io worldmonitor)', () => {
   });
 
   it('links the published Rust crate and API docs from SDK discovery pages', () => {
-    for (const path of ['docs/sdks.mdx', 'public/sdks.md', 'public/llms.txt', 'public/api/llms.txt']) {
+    for (const path of ['docs/sdks.mdx', 'public/sdks.md', 'public/api/llms.txt']) {
       const content = read(path);
       assert.match(content, /https:\/\/crates\.io\/crates\/worldmonitor/, path);
       assert.match(content, /https:\/\/docs\.rs\/worldmonitor\/0\.1\.0\/worldmonitor\//, path);
@@ -110,13 +110,6 @@ describe('SDK publish workflows', () => {
 });
 
 describe('SDK discovery surfaces', () => {
-  it('llms.txt advertises every registry package', () => {
-    const llms = read('public/llms.txt');
-    assert.match(llms, /pypi\.org\/project\/worldmonitor-sdk/);
-    assert.match(llms, /rubygems\.org\/gems\/worldmonitor/);
-    assert.match(llms, /pkg\.go\.dev\/github\.com\/koala73\/worldmonitor\/sdk\/go/);
-  });
-
   it('api/llms.txt advertises the SDK surface', () => {
     const llms = read('public/api/llms.txt');
     assert.match(llms, /pip install worldmonitor-sdk/);
