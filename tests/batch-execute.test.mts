@@ -20,6 +20,7 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import {
   createExecuteBatch,
   BATCH_MARKER_HEADER,
+  LOCAL_API_TOKEN_HEADER,
   MAX_BATCH_OPERATIONS,
   MAX_SUB_RESPONSE_BYTES,
 } from '../server/worldmonitor/batch/v1/execute-batch.ts';
@@ -146,6 +147,29 @@ describe('executeBatch handler', () => {
     assert.equal(sent.get('x-user-id'), null);
     // Personal fork: no rate-limit admission crosses with the sub-request.
     assert.equal(sent.get(SUB_REQUEST_MARKER_HEADER), null);
+  });
+
+  it('authenticates sub-requests to the local API with the server\'s own token, never the caller\'s', async () => {
+    const op = { operations: [{ id: 'a', path: '/api/market/v1/get-fear-greed-index' }] };
+    const local = (headers: Record<string, string> = {}) => {
+      const request = new Request('http://127.0.0.1:41234/api/batch/v1/execute', { method: 'POST', headers });
+      return { request, pathParams: {}, headers: Object.fromEntries(request.headers.entries()) };
+    };
+
+    const { calls, fetchImpl } = recordingFetch();
+    await createExecuteBatch(fetchImpl, () => 'server-token')(local({ [LOCAL_API_TOKEN_HEADER]: 'caller-token' }), op);
+    assert.equal(calls[0]!.url, 'http://127.0.0.1:41234/api/market/v1/get-fear-greed-index');
+    assert.equal(new Headers(calls[0]!.init.headers as HeadersInit).get(LOCAL_API_TOKEN_HEADER), 'server-token');
+
+    // No server token: nothing is sent, and the caller's value is not relayed.
+    const unset = recordingFetch();
+    await createExecuteBatch(unset.fetchImpl, () => undefined)(local({ [LOCAL_API_TOKEN_HEADER]: 'caller-token' }), op);
+    assert.equal(new Headers(unset.calls[0]!.init.headers as HeadersInit).get(LOCAL_API_TOKEN_HEADER), null);
+
+    // A public origin never receives the local credential.
+    const publicOrigin = recordingFetch();
+    await createExecuteBatch(publicOrigin.fetchImpl, () => 'server-token')(makeCtx(), op);
+    assert.equal(new Headers(publicOrigin.calls[0]!.init.headers as HeadersInit).get(LOCAL_API_TOKEN_HEADER), null);
   });
 
   it('sends a descriptive default User-Agent when the caller omits one (CF WAF rejects generic UAs)', async () => {

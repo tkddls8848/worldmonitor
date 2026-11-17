@@ -3,10 +3,17 @@
  *
  * The generic REST batch endpoint (POST /api/batch/v1/execute): agents acting
  * on many items send an array of operations instead of looping single calls.
- * Each operation is re-dispatched as a same-origin GET through the public
- * gateway with the caller's Authorization header, so the personal server's
- * HTTP Basic auth and per-endpoint caching apply to every sub-request exactly
- * as if it were sent directly.
+ * Each operation is re-dispatched as a same-origin GET to the origin the batch
+ * arrived on, carrying the caller's credential headers and per-endpoint
+ * caching exactly as if it were sent directly.
+ *
+ * Personal server: the batch arrives at the local API (127.0.0.1:<port>) after
+ * the Basic-auth ingress has checked the owner and stripped Authorization, and
+ * the local API refuses any request without its per-process transport token
+ * (x-worldmonitor-local-token), which it removes before a handler runs. So the
+ * sub-requests carry that token from this process's own LOCAL_API_TOKEN, never
+ * a value from the caller, and only to a loopback origin. Sub-request results
+ * return bodies only, so the token never reaches the client.
  */
 
 import type {
@@ -33,6 +40,9 @@ export const MAX_SUB_RESPONSE_BYTES = 1_048_576;
 // Marks gateway-bound sub-requests so a batched /api/batch/* call can never
 // recurse even if path validation regresses.
 export const BATCH_MARKER_HEADER = 'x-wm-batch';
+// The local API's transport credential (scripts/local/local-api-server.mjs).
+export const LOCAL_API_TOKEN_HEADER = 'x-worldmonitor-local-token';
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]']);
 
 // Re-authenticate each operation. Trusted principal headers stay local.
 const FORWARDED_HEADERS = ['authorization', 'x-worldmonitor-key', 'x-api-key', 'accept-language'] as const;
@@ -118,7 +128,7 @@ function validateOperations(operations: BatchOperation[], origin: string): {
   return { validated, violations };
 }
 
-function buildSubRequestHeaders(inbound: Headers): Headers {
+function buildSubRequestHeaders(inbound: Headers, origin: string, localToken: string | undefined): Headers {
   const headers = new Headers();
   for (const name of FORWARDED_HEADERS) {
     const value = inbound.get(name);
@@ -127,6 +137,9 @@ function buildSubRequestHeaders(inbound: Headers): Headers {
   headers.set('accept', 'application/json');
   headers.set('user-agent', inbound.get('user-agent') ?? DEFAULT_SUB_REQUEST_USER_AGENT);
   headers.set(BATCH_MARKER_HEADER, '1');
+  if (localToken && LOOPBACK_HOSTS.has(new URL(origin).hostname)) {
+    headers.set(LOCAL_API_TOKEN_HEADER, localToken);
+  }
   return headers;
 }
 
@@ -189,6 +202,8 @@ async function runOperation(
 
 export function createExecuteBatch(
   fetchImpl: FetchLike = (input, init) => fetch(input, init),
+  // Read per call: the personal server sets it after this module may load.
+  localApiToken: () => string | undefined = () => globalThis.process?.env?.LOCAL_API_TOKEN,
 ) {
   return async function executeBatch(
     ctx: ServerContext,
@@ -215,7 +230,7 @@ export function createExecuteBatch(
       throw new ValidationError(violations);
     }
 
-    const headers = buildSubRequestHeaders(ctx.request.headers);
+    const headers = buildSubRequestHeaders(ctx.request.headers, origin, localApiToken());
     const results = await Promise.all(
       validated.map((op) => runOperation(op, ctx.request, headers, fetchImpl)),
     );
