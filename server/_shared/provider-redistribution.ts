@@ -1,5 +1,3 @@
-// @ts-expect-error — JS module, no declaration file
-import { getHeaderApiKey } from '../../api/_api-key.js';
 export {
   hasRedistributableProviderAttribution,
   isOpenSkyProvider,
@@ -13,7 +11,7 @@ export {
 export function requiresRedistributableProviders(request: Request | undefined): boolean {
   if (!request) return false;
 
-  const apiKey = getHeaderApiKey(request);
+  const apiKey = request.headers.get('X-WorldMonitor-Key') || request.headers.get('X-Api-Key') || '';
   return apiKey.length > 0 && !apiKey.startsWith('wms_');
 }
 

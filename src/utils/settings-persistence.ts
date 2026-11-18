@@ -13,7 +13,12 @@ export interface ImportResult {
 
 import { CLOUD_SYNC_KEYS } from './sync-keys';
 import { invalidatePanelStorageCacheForKeys } from './panel-storage';
-import { safeStorageSnapshot } from './safe-storage';
+import {
+  safeStorageGetChecked,
+  safeStorageRemoveChecked,
+  safeStorageSetChecked,
+  safeStorageSnapshot,
+} from './safe-storage';
 import { PINNED_WEBCAMS_KEY, normalizePinnedWebcamsPreference } from '../../shared/pinned-webcams';
 
 const MAX_IMPORT_SIZE_BYTES = 5 * 1024 * 1024;
@@ -248,6 +253,33 @@ export function exportSettings(): void {
   URL.revokeObjectURL(url);
 }
 
+/** Write a validated backup, rolling every written key back if one write fails. */
+function applyLocalPreferenceImport(entries: Array<[string, string]>): void {
+  const previous = entries.map(([key]) => {
+    const read = safeStorageGetChecked(key);
+    if (!read.ok) throw new Error('Cannot read settings before import.');
+    return [key, read.value] as const;
+  });
+  let written = 0;
+  try {
+    for (const [key, value] of entries) {
+      if (!safeStorageSetChecked(key, value)) throw new Error('Cannot persist imported settings.');
+      written++;
+    }
+  } catch (error) {
+    // Remove replacements first so restoring a larger old value has its original space.
+    let rollbackFailed = false;
+    for (const [key] of previous.slice(0, written)) {
+      if (!safeStorageRemoveChecked(key)) rollbackFailed = true;
+    }
+    for (const [key, value] of previous.slice(0, written)) {
+      if (value !== null && !safeStorageSetChecked(key, value)) rollbackFailed = true;
+    }
+    if (rollbackFailed) throw new Error('Settings rollback failed.');
+    throw error;
+  }
+}
+
 export function importSettings(file: File): Promise<ImportResult> {
   return new Promise((resolve, reject) => {
     if (file.size > MAX_IMPORT_SIZE_BYTES) {
@@ -261,7 +293,6 @@ export function importSettings(file: File): Promise<ImportResult> {
       try {
         const result = e.target?.result as string;
         const entries = await parseImportedEntries(JSON.parse(result));
-        const { applyLocalPreferenceImport } = await import('./cloud-prefs-sync');
         const { invalidateFrameworkCache } = await import('@/services/analysis-framework-store');
 
         applyLocalPreferenceImport(entries);

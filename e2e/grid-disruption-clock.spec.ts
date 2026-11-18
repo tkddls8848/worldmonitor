@@ -1,5 +1,4 @@
 import { expect, test, type Page } from '@playwright/test';
-import { acceptTesterKeySession } from './helpers/accept-tester-key-session';
 import type { GridClockSnapshot } from '../shared/grid-disruption-clock.js';
 
 function fixture(now: number): GridClockSnapshot {
@@ -35,7 +34,6 @@ async function seedDashboard(page: Page): Promise<void> {
     localStorage.setItem('wm-pro-key', 'e2e-grid-clock');
     localStorage.setItem('panel-order', JSON.stringify(['grid-disruption-clock', 'map']));
   });
-  await acceptTesterKeySession(page);
 }
 
 test('enable grid clock, inspect a California warning and Tennessee coverage', async ({ page }, testInfo) => {

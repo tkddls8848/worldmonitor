@@ -430,7 +430,6 @@ PROTO_INPUTS=(
   server/_shared/usage-identity.ts
   server/_shared/usage.ts
   server/_shared/user-api-key.ts
-  server/auth-session.ts
   server/cors.ts
   server/error-mapper.ts
   server/gateway.ts
@@ -460,7 +459,6 @@ PROTO_INPUTS=(
   shared/telegram-channel-trust.ts
   shared/x-account-source-tiers.json
   shared/x-account-trust.ts
-  src/shared/premium-paths.ts
   src/shared/pro-fresh-rpc.ts
   src/shared/public-rpc-cache.ts
   src/generated

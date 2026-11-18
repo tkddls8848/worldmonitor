@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, it, mock } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { createMarketServiceRoutes, ValidationError } from '../src/generated/server/worldmonitor/market/v1/service_server.ts';
-import { issueSessionToken } from '../api/_session.js';
 import marketGateway from '../api/market/v1/[rpc].ts';
 import { marketHandler } from '../server/worldmonitor/market/v1/handler.ts';
 import {
@@ -120,7 +119,6 @@ const ENV_KEYS = [
   'UPSTASH_REDIS_REST_URL',
   'UPSTASH_REDIS_REST_TOKEN',
   'LOCAL_API_MODE',
-  'WM_SESSION_SECRET',
 ] as const;
 
 const originalEnv = new Map<string, string | undefined>();
@@ -261,8 +259,7 @@ describe('ListCommodityQuotes async handler paths (mocked Redis)', () => {
 
 describe('commodity seed cache policy through the market gateway', () => {
   async function request() {
-    process.env.WM_SESSION_SECRET = "synthetic-commodity-cache-session-secret";
-    const { token } = await issueSessionToken();
+    const token = 'wms_test-browser-session';
     return new Request('https://worldmonitor.app/api/market/v1/list-commodity-quotes?_debug=1', {
       headers: { Origin: 'https://worldmonitor.app', 'X-WorldMonitor-Key': token },
     });

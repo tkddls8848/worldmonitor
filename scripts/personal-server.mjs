@@ -150,9 +150,7 @@ export async function startPersonalServer() {
   if (!process.env.WM_PERSONAL_PASSWORD || process.env.WM_PERSONAL_PASSWORD.length < 16) throw new Error('Set WM_PERSONAL_PASSWORD (at least 16 characters) in .env.local');
   process.env.LOCAL_API_MODE = 'docker';
   process.env.LOCAL_API_CLOUD_FALLBACK = 'false';
-  process.env.WORLDMONITOR_SELFHOST_RELAY = 'off';
   process.env.LOCAL_API_TOKEN = randomBytes(32).toString('hex');
-  if (!process.env.WM_SESSION_SECRET || process.env.WM_SESSION_SECRET.length < 32) throw new Error('Set WM_SESSION_SECRET (at least 32 characters) in .env.local');
   // Started only after every setting above is known good: a listening store
   // would otherwise keep a misconfigured process alive.
   const store = await startPersonalStore();

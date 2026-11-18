@@ -196,46 +196,7 @@ installWindow('web');
 const { isOpenableExternalUrl, openExternalUrl, prereserveExternalTab } = await import(
   '../src/services/external-navigation.ts'
 );
-const { __setClerkInstanceForTests } = await import('../src/services/clerk.ts');
-const { __setConvexClientForTests } = await import('../src/services/convex-client.ts');
-
 const PORTAL_URL = 'https://checkout.dodopayments.com/portal/session-abc';
-
-class FakePortalClient {
-  authConfigs: Array<{ onChange: (ok: boolean) => void }> = [];
-  setAuth(_fetchToken: unknown, onChange: (ok: boolean) => void): void {
-    this.authConfigs.push({ onChange });
-  }
-  onUpdate(): (() => void) & { unsubscribe: () => void } {
-    const unsubscribe = () => {};
-    return Object.assign(unsubscribe, { unsubscribe });
-  }
-  async query(): Promise<unknown> {
-    return null;
-  }
-  async mutation(): Promise<unknown> {
-    return null;
-  }
-  async action(): Promise<unknown> {
-    return { portal_url: PORTAL_URL };
-  }
-}
-
-/** Signed-in user whose Convex socket has already confirmed the identity. */
-function installSignedInPortalUser(): void {
-  __setClerkInstanceForTests({
-    session: { getToken: async () => 'token-a' },
-    user: { id: 'A' },
-  } as never);
-  const fake = new FakePortalClient();
-  __setConvexClientForTests(fake as never);
-  fake.authConfigs[0]?.onChange(true);
-}
-
-afterEach(() => {
-  __setClerkInstanceForTests(null);
-  __setConvexClientForTests(null);
-});
 
 describe('openExternalUrl — desktop', () => {
   it('hands the URL to the OS browser and never navigates the WebView', async () => {

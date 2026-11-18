@@ -34,7 +34,7 @@ Treat each WebMCP change as a public UI contract change. Tool names, description
 | `shared/agent-bus-actions.ts`, `shared/agent-bus-contract.ts`, and `src/app/agent-bus-applier.ts` | Typed dashboard action protocol and application through existing UI state. |
 | `src/app/country-map-focus.ts` and `src/app/map-dimension-control.ts` | Country bounding-box focus and the shared 2D or 3D control path. |
 | `src/config/panel-enablement.ts` and `src/app/panel-enablement.ts` | Panel enablement policy and the settings persist and apply path used by `set_panel_enabled`. |
-| `src/app/webmcp-access.ts`, `src/services/webmcp-access-snapshot.ts`, and `src/services/clerk.ts` | Live access context, the PII-free snapshot, and the existing Clerk sign-in dialog. |
+| `src/services/webmcp-access-snapshot.ts` | The PII-free access snapshot. This build has no account, so `open_sign_in` always reports `clerk_unavailable`. |
 | `src/app/webmcp-search-controller.ts`, `src/app/webmcp-search-effects.ts`, and `src/app/search-selection-dispatcher.ts` | Opaque search capabilities, bound effect classes, invalidation, live-state revalidation, and visible result selection. |
 | `src/services/panel-layout-actions.ts`, `src/app/panel-layout.ts`, `src/components/PanelTabBar.ts`, `src/services/tab-store.ts`, and `src/services/dashboard-tab-actions.ts` | Panel layout snapshot/collapse/move/fullscreen policy, dashboard-tab UI, persistence, name and ID limits, and list, select, create, rename, and delete actions. |
 | `src/components/GlobalProcurementPanel.ts` | Conditional declarative `search_procurement` form, visible pending state, reset, cancellation, and bounded result. |

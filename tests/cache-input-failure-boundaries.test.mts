@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import { afterEach, beforeEach, it } from 'node:test';
-import { issueSessionToken } from '../api/_session.js';
 import { createDomainGateway, serverOptions } from '../server/gateway.ts';
 import { createEconomicServiceRoutes, type EconomicServiceHandler } from '../src/generated/server/worldmonitor/economic/v1/service_server.ts';
 import { createIntelligenceServiceRoutes, type IntelligenceServiceHandler } from '../src/generated/server/worldmonitor/intelligence/v1/service_server.ts';
@@ -22,8 +21,7 @@ beforeEach(async () => {
   delete process.env.VERCEL_ENV;
   process.env.UPSTASH_REDIS_REST_URL = redisUrl;
   process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
-  process.env.WM_SESSION_SECRET = 'cache-boundary-session-secret-at-least-32';
-  token = (await issueSessionToken()).token;
+  token = 'wms_test-browser-session';
 });
 
 afterEach(() => {

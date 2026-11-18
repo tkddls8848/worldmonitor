@@ -41,8 +41,6 @@ import { withTimeout } from '@/utils/with-timeout';
 import { CountryIntelManager } from '@/app/country-intel';
 import type { PositionSample } from '@/services/aviation';
 import { fetchAircraftPositions } from '@/services/aviation';
-import { subscribeWidgetAccess } from '@/services/widget-store';
-import { getAuthState, subscribeAuthState } from '@/services/auth-state';
 import { subscribeRuntimeConfig } from '@/services/runtime-config';
 import {
   runWithAgentAnalyticsSuppressed,
@@ -233,10 +231,6 @@ export class SearchManager implements AppModule {
         if (!completed) this.liveFlightLookupGeneration += 1;
       },
       cancelPendingSelection: () => this.searchSelection.cancelPendingProgrammaticSelection(),
-      getAuthContext: () => {
-        const auth = getAuthState();
-        return `${auth.user ? 'signed-in' : 'anonymous'}:${auth.isPending ? 'pending' : 'settled'}`;
-      },
       getVariant: () => SITE_VARIANT,
       isMatchExecutable: (match) => this.isSearchMatchExecutable(match),
       isPanelCurrentlyEnabled: (panelId) => this.ctx.panelSettings[panelId]?.enabled === true,
@@ -245,9 +239,7 @@ export class SearchManager implements AppModule {
         () => this.resolveProgrammaticMatchForCommit(match),
         signal,
       ),
-      subscribeAuth: subscribeAuthState,
       subscribeRuntimeConfig,
-      subscribeWidgetAccess,
     });
   }
 

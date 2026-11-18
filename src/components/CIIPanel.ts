@@ -33,8 +33,8 @@ export class CIIPanel extends Panel {
   private followButtonTeardowns = new Map<string, () => void>();
   // U6 — teardown for the watchlist subscription installed in the
   // constructor. Re-renders the current rows whenever the followed list
-  // changes (anonymous: localStorage write or cross-tab `storage` event;
-  // signed-in: Convex `listFollowed` snapshot). Fired on `destroy()`.
+  // changes (a localStorage write or a cross-tab `storage` event). Fired on
+  // `destroy()`.
   private followedUnsubscribe: (() => void) | null = null;
   // Dashboard focus (#10453): every score carries the ISO code of its country.
   private readonly scopeFilter: PanelScopeFilter;

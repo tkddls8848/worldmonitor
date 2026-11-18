@@ -2,7 +2,6 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { adaptSnapshot } from '../server/worldmonitor/intelligence/v1/get-regional-snapshot';
-import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths.ts';
 
 // ────────────────────────────────────────────────────────────────────────────
 // adaptSnapshot: snake_case -> camelCase adapter (the substantive logic)
@@ -356,11 +355,4 @@ describe('adaptSnapshot', () => {
 // The structural, registration and proto assertions that used to close this
 // file pinned import lines, handler internals, and proto field numbers. Generated
 // clients make an unregistered RPC a typecheck failure, and adaptSnapshot above
-// is the behaviour worth testing. What survives is the premium gate, asserted
-// against the real Set rather than a grep of the module text.
-
-describe('regional snapshot is premium-gated', () => {
-  it('is in PREMIUM_RPC_PATHS', () => {
-    assert.ok(PREMIUM_RPC_PATHS.has('/api/intelligence/v1/get-regional-snapshot'));
-  });
-});
+// is the behaviour worth testing.

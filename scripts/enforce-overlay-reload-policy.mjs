@@ -119,8 +119,9 @@ export const SAFE_DECLARATION_RE = /\bdeclareOverlay\(\s*([^,{]+?)\s*,\s*\{\s*re
 export const SITE_CLUSTER_RADIUS_LINES = 3;
 
 /** 21 sites in 19 files when this gate landed; 22 with the sign-up resume overlay; 21 again once the
- * personal build retired the MCP connect and AI widget chat modals. A scan that finds fewer has drifted. */
-export const MIN_SITE_COUNT = 21;
+ * personal build retired the MCP connect and AI widget chat modals; 19 once it retired sign-in (the
+ * sign-up resume overlay and the account deletion dialog). A scan that finds fewer has drifted. */
+export const MIN_SITE_COUNT = 19;
 
 /** The module that defines the vocabulary; its selector strings are not sites. */
 export const EXCLUDED_FILES = new Set(['src/utils/open-modal.ts']);
@@ -136,13 +137,10 @@ export const RELOAD_GUARD = 'findReloadBlockingModal';
  *
  * chunk-reload.ts reloads once on `vite:preloadError`, when the running bundle
  * can no longer load its own code. It stays immediate: a broken chunk under a
- * modal is worse than the reload, and the one overlay whose work a reload used
- * to destroy for good, the email-code sign-up, now resumes on the same attempt
- * (src/services/sign-up-resume.ts). Deferring it with a retry is optional
- * polish, not a sign-up fix (#8662).
+ * modal is worse than the reload.
  */
 export const RELOAD_GUARD_EXEMPT = new Map([
-  ['src/bootstrap/chunk-reload.ts', 'failure recovery; an interrupted sign-up resumes via sign-up-resume'],
+  ['src/bootstrap/chunk-reload.ts', 'failure recovery; a broken chunk under a modal is worse than the reload'],
 ]);
 
 /**

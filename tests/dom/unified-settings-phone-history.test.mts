@@ -7,7 +7,6 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { initTestI18n } from './helpers/i18n.mts';
-import type { AuthSession } from '@/services/auth-state';
 
 /**
  * A browser history stack. `deviceBack` is the user's Back gesture; a Back the
@@ -51,28 +50,6 @@ vi.mock('@/utils/overlay-history', async (importOriginal) => {
   return { ...actual, overlayHistory: new actual.OverlayHistoryManager(browser.environment) };
 });
 
-let session: AuthSession = { user: null, isPending: false };
-const authSubscribers: Array<(state: AuthSession) => void> = [];
-vi.mock('@/services/auth-state', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/services/auth-state')>()),
-  getAuthState: () => session,
-  subscribeAuthState: (cb: (state: AuthSession) => void) => {
-    authSubscribers.push(cb);
-    cb(session);
-    return () => authSubscribers.splice(authSubscribers.indexOf(cb), 1);
-  },
-}));
-
-function switchAccountTo(next: AuthSession): void {
-  session = next;
-  for (const cb of [...authSubscribers]) cb(next);
-}
-
-const signedIn = (id: string): AuthSession => ({
-  user: { id, name: `User ${id}`, email: `${id}@example.com`, role: 'free' },
-  isPending: false,
-});
-
 const { UnifiedSettings } = await import('@/components/UnifiedSettings');
 const { overlayHistory } = await import('@/utils/overlay-history');
 
@@ -104,8 +81,6 @@ beforeEach(() => {
   localStorage.clear();
   browser.reset();
   overlayHistory.reset();
-  session = { user: null, isPending: false };
-  authSubscribers.length = 0;
   Object.defineProperty(window, 'innerWidth', { configurable: true, value: 393 });
   settings = new UnifiedSettings({
     getPanelSettings: () => structuredClone(PANELS),
@@ -162,7 +137,7 @@ describe('device Back on the phone sheet', () => {
   });
 
   it('opens a requested page with the home list beneath it', () => {
-    settings.open('notifications');
+    settings.open('map');
     expect(browser.depth()).toBe(2);
 
     browser.deviceBack();
@@ -215,19 +190,6 @@ describe('device Back on the phone sheet', () => {
     await vi.waitFor(() => expect($('.confirm-dialog-overlay')).not.toBeNull());
     expect(isOpen()).toBe(true);
     expect(browser.depth()).toBe(1);
-  });
-
-  it('closes the deletion dialog on Back and stays on the Account page', () => {
-    session = signedIn('user_a');
-    settings.open('account');
-    $<HTMLButtonElement>('[data-delete-account]')!.click();
-    expect($('.account-deletion-dialog-overlay')).not.toBeNull();
-
-    browser.deviceBack();
-
-    expect($('.account-deletion-dialog-overlay')).toBeNull();
-    expect(page('account')!.hidden).toBe(false);
-    expect(browser.depth()).toBe(2);
   });
 
   it('drops the page entry when the window widens past the phone layout, and restores it on return', () => {
@@ -298,28 +260,5 @@ describe('scroll on the phone sheet', () => {
     expect(pane().scrollTop).toBe(120);
     row('map').click();
     expect(pane().scrollTop).toBe(60);
-  });
-
-  it('keeps the reader on the same page in place when an account change remounts it', () => {
-    // A browser clamps the offset once the scrolled page leaves the DOM;
-    // happy-dom has no layout, so model that clamp at removal.
-    let offset = 0;
-    Object.defineProperty(modal(), 'scrollTop', {
-      configurable: true,
-      get: () => offset,
-      set: (value: number) => { offset = value; },
-    });
-    const remove = Element.prototype.remove;
-    vi.spyOn(Element.prototype, 'remove').mockImplementation(function (this: Element) {
-      if (this.matches('.us-page:not([hidden])')) offset = 0;
-      remove.call(this);
-    });
-
-    settings.open('display');
-    modal().scrollTop = 240;
-    switchAccountTo(signedIn('user_b'));
-
-    expect(page('display')!.hidden).toBe(false);
-    expect(modal().scrollTop).toBe(240);
   });
 });

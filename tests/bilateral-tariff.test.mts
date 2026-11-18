@@ -33,7 +33,6 @@ import {
   type TrainsRow,
 } from '../server/worldmonitor/trade/v1/get-bilateral-tariff';
 import { validateGeneratedRequest } from '../server/request-validator';
-import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths';
 
 import type {
   GetBilateralTariffRequest,
@@ -513,9 +512,5 @@ describe('GetBilateralTariff contract', () => {
     ]) {
       assert.ok(validateGeneratedRequest('getBilateralTariff', body), `expected a violation for ${JSON.stringify(body)}`);
     }
-  });
-
-  test('the route is Pro-gated at tier 1, which every paid plan including API Starter meets', () => {
-    assert.ok(PREMIUM_RPC_PATHS.has(ROUTE));
   });
 });

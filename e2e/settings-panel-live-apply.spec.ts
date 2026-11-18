@@ -1,5 +1,4 @@
 import { expect, test, type Page } from '@playwright/test';
-import { acceptTesterKeySession } from './helpers/accept-tester-key-session';
 
 /**
  * The Settings modal must apply a panel toggle to the LIVE dashboard on Save.
@@ -39,7 +38,6 @@ async function seedDashboard(page: Page): Promise<void> {
       [panelKey]: { name: 'Threat Timeline', enabled: false, priority: 1 },
     }));
   }, PANEL_KEY);
-  await acceptTesterKeySession(page);
 }
 
 test('email preference link opens Notifications directly', async ({ page }) => {

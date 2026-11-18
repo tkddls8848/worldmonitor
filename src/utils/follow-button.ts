@@ -20,12 +20,6 @@
  * Memory:
  *  - `discriminated-union-over-sentinel-boolean` — branches on
  *    `FollowMutationResult.reason`, never on a boolean.
- *
- * NOTE: cap-drop toast (the `WM_FOLLOWED_COUNTRIES_CAP_DROP` event from
- * U3) is intentionally NOT handled here. The button is a per-country
- * primitive; the toast is App-level UI. TODO(U7+): wire a single
- * cap-drop listener at the App / toast-service level so it doesn't
- * fire once-per-mounted-button.
  */
 
 import {
@@ -282,9 +276,6 @@ async function onClick(
   }
 
   switch (result.reason) {
-    case 'FREE_CAP':
-    case 'HANDOFF_PENDING':
-    case 'ENTITLEMENT_LOADING':
     case 'DISABLED':
       // Defensive: button should have been hidden / disabled. Re-render
       // so the visible state catches up.

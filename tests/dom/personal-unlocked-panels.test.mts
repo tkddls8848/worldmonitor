@@ -2,10 +2,7 @@
  * Personal edition: the three surfaces that used to sit behind the Pro lock
  * (supply-chain cost shock, the chokepoint scenario engine, and the
  * resilience score) must render their real content for the single owner,
- * who has no Clerk session, no entitlement and no API key.
- *
- * The auth state is the one the personal build actually reaches: Clerk is
- * disabled, so the session settles anonymous. Nothing else about access is
+ * who has no account, no entitlement and no API key. Nothing about access is
  * mocked; the components decide on their own.
  */
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -21,18 +18,6 @@ const mocks = vi.hoisted(() => {
   };
 });
 
-vi.mock('@/services/auth-state', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/services/auth-state')>();
-  const session = { user: null, isPending: false };
-  return {
-    ...actual,
-    getAuthState: () => session,
-    subscribeAuthState: (listener: (state: typeof session) => void) => {
-      listener(session);
-      return () => {};
-    },
-  };
-});
 vi.mock('@/services/resilience', () => ({ getResilienceScore: mocks.getResilienceScore }));
 vi.mock('@/services/scenario', () => ({ runScenario: mocks.runScenario, getScenarioStatus: mocks.getScenarioStatus }));
 vi.mock('@/services/supply-chain', () => ({

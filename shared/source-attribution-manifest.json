@@ -650,15 +650,10 @@
       "host": "api.clerk.com",
       "provider": "Clerk identity service",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: authentication/control-plane service",
       "attribution": "Excluded from the provider count: identity-control-plane request.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "server/auth-session.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "api.cloudflare.com",
@@ -6411,9 +6406,6 @@
         },
         {
           "path": "src/config/desktop-runtime.ts"
-        },
-        {
-          "path": "src/services/wm-session.ts"
         }
       ]
     },
@@ -11222,9 +11214,6 @@
         },
         {
           "path": "scripts/lib/x-news-accounts.cjs"
-        },
-        {
-          "path": "scripts/local/local-api-server.mjs"
         },
         {
           "path": "scripts/mcp-live-smoke.mjs"

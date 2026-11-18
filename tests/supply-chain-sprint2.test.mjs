@@ -6,13 +6,11 @@
  * - get-bypass-options handler: unauthenticated returns empty
  * - get-country-cost-shock handler: unauthenticated returns zeros
  * - gateway.ts: new slow-browser entries for both RPCs
- * - premium-paths.ts: both paths registered as PRO-gated
  * - proto: new messages in generated types
  */
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths.ts';
 
 // ========================================================================
 // 1. _insurance-tier.ts pure function
@@ -150,27 +148,4 @@ describe('BYPASS_CORRIDORS_BY_CHOKEPOINT index', () => {
     const total = Object.values(BYPASS_CORRIDORS_BY_CHOKEPOINT).reduce((sum, arr) => sum + arr.length, 0);
     assert.equal(total, BYPASS_CORRIDORS.length, 'Index total does not match BYPASS_CORRIDORS length');
   });
-});
-
-// ========================================================================
-// Premium enforcement. Membership in PREMIUM_RPC_PATHS is what gates these
-// endpoints, so assert against the real Set rather than grepping the module
-// for a path string — a path moved into a comment satisfies the grep.
-//
-// The handler/proto/generated-type/client assertions that used to follow all
-// restated lines of source. Generated clients make an unregistered RPC a
-// typecheck failure, and the dashboard exercises these paths in
-// e2e/variant-live-smoke.spec.ts.
-// ========================================================================
-
-describe('Sprint 2 RPCs are premium-gated', () => {
-  for (const path of [
-    '/api/supply-chain/v1/get-bypass-options',
-    '/api/supply-chain/v1/get-country-cost-shock',
-    '/api/supply-chain/v1/get-sector-dependency',
-  ]) {
-    it(`${path} is in PREMIUM_RPC_PATHS`, () => {
-      assert.ok(PREMIUM_RPC_PATHS.has(path), `${path} is not premium-gated`);
-    });
-  }
 });

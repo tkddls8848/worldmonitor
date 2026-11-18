@@ -13,7 +13,6 @@ import { getTheaterPosture } from '../worldmonitor/military/v1/get-theater-postu
 import { createMilitaryServiceRoutes, type MilitaryServiceHandler } from '../../src/generated/server/worldmonitor/military/v1/service_server';
 import { getCountrySignalObservations } from '../worldmonitor/intelligence/v1/get-country-signal-observations';
 import { createIntelligenceServiceRoutes, type IntelligenceServiceHandler } from '../../src/generated/server/worldmonitor/intelligence/v1/service_server';
-import { issueSessionToken } from '../../api/_session.js';
 
 const path = '/api/military/v1/get-theater-posture';
 const url = `https://worldmonitor.app${path}`;
@@ -23,7 +22,6 @@ const read = (headers: HeadersInit) => gateway(new Request(url, { headers }), { 
 
 beforeEach(() => {
   vi.stubEnv('WORLDMONITOR_VALID_KEYS', 'enterprise-test');
-  vi.stubEnv('WM_SESSION_SECRET', 'synthetic-provider-session-secret');
   vi.stubEnv('LOCAL_API_MODE', '');
   vi.stubEnv('UPSTASH_REDIS_REST_URL', 'https://redis.invalid');
   vi.stubEnv('UPSTASH_REDIS_REST_TOKEN', 'synthetic');
@@ -38,14 +36,14 @@ test('redistributable data remains available to the secondary enterprise key', a
   expect((await response.json()).theaters).toHaveLength(1);
 });
 test.each(['header', 'cookie'])('browser %s session retains display data', async (kind) => {
-  const { token } = await issueSessionToken();
+  const token = 'wms_test-browser-session';
   const headers = kind === 'header' ? { 'X-WorldMonitor-Key': '', 'X-Api-Key': token } : { Cookie: `wm-session=${token}` };
   const response = await read(headers);
   expect(response.status).toBe(200);
   expect((await response.json()).theaters).toHaveLength(1);
 });
 test('nonempty primary retains priority over a secondary enterprise key', async () => {
-  const { token } = await issueSessionToken();
+  const token = 'wms_test-browser-session';
   const response = await read({ 'X-WorldMonitor-Key': token, 'X-Api-Key': 'enterprise-test' });
   expect(response.status).toBe(200);
   expect((await response.json()).theaters).toHaveLength(1);
@@ -59,7 +57,7 @@ const readCountry = (headers: HeadersInit = {}) => countryGateway(new Request(co
 
 test.each(['header', 'cookie'])('country projection preserves qualified observations for an ordinary %s session', async kind => {
   vi.mocked(getCachedJson).mockResolvedValue({ provider: 'adsb.lol', theaters: [{ theater: 'iran-theater', postureLevel: 'critical', activeFlights: 10, assessedAt: 1792324800000 }] });
-  const { token } = await issueSessionToken();
+  const token = 'wms_test-browser-session';
   const response = await readCountry(kind === 'header' ? { 'X-WorldMonitor-Key': token } : { Cookie: `wm-session=${token}` });
   expect(response.status).toBe(200);
   expect(response.headers.get('Cache-Control')).toBe('no-store');

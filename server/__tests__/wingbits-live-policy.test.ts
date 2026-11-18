@@ -4,7 +4,6 @@ import { createDomainGateway } from '../gateway';
 import { getWingbitsLiveFlight } from '../worldmonitor/military/v1/get-wingbits-live-flight';
 import { createMilitaryServiceRoutes, type MilitaryServiceHandler } from '../../src/generated/server/worldmonitor/military/v1/service_server';
 import { __resetKeyPrefixCacheForTests } from '../_shared/redis';
-import { issueSessionToken } from '../../api/_session.js';
 
 const PATH = '/api/military/v1/get-wingbits-live-flight';
 const env = { ...process.env };
@@ -19,7 +18,6 @@ beforeEach(() => {
   cache = new Map(); counters = new Map(); providerCalls = []; limiterKeys = []; redisError = false;
   process.env.UPSTASH_REDIS_REST_URL = 'https://wingbits-redis.invalid';
   process.env.UPSTASH_REDIS_REST_TOKEN = 'synthetic';
-  process.env.WM_SESSION_SECRET = 'synthetic-wingbits-session-secret';
   process.env.VERCEL_ENV = 'production';
   delete process.env.LOCAL_API_MODE;
   delete process.env.AXIOM_TOKEN;
@@ -73,7 +71,7 @@ afterEach(() => {
   __resetKeyPrefixCacheForTests();
 });
 async function request(hex = '000001', session = true, path = PATH) {
-  const cookie = session ? { Cookie: `wm-session=${(await issueSessionToken()).token}` } : {};
+  const cookie = session ? { Cookie: `wm-session=${'wms_test-browser-session'}` } : {};
   return gateway(new Request(`https://worldmonitor.app${path}?icao24=${hex}`, { headers: { 'x-real-ip': '192.0.2.47', ...cookie } }), { waitUntil: () => {} });
 }
 

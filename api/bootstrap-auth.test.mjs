@@ -2,7 +2,6 @@ import { strict as assert } from 'node:assert';
 import test, { mock } from 'node:test';
 import handler from './bootstrap.js';
 import { DESKTOP_KEY_LIMIT_ERROR } from '../shared/desktop-key-access.js';
-import { issueSessionToken } from './_session.js';
 import {
   assertPublicBootstrapCorsHeaders,
   assertPublicBootstrapSharedCacheHeaders,
@@ -35,7 +34,6 @@ async function withMockedBootstrapAuth({
     'CONVEX_SERVER_SHARED_SECRET',
     'UPSTASH_REDIS_REST_URL',
     'UPSTASH_REDIS_REST_TOKEN',
-    'WM_SESSION_SECRET',
     'WORLDMONITOR_VALID_KEYS',
   ]);
   const originalFetch = globalThis.fetch;
@@ -45,7 +43,6 @@ async function withMockedBootstrapAuth({
   process.env.CONVEX_SERVER_SHARED_SECRET = 'shared-secret';
   process.env.UPSTASH_REDIS_REST_URL = 'https://upstash.test';
   process.env.UPSTASH_REDIS_REST_TOKEN = 'redis-token';
-  process.env.WM_SESSION_SECRET = 'test-secret-for-bootstrap-auth-cache-matrix';
   process.env.WORLDMONITOR_VALID_KEYS = ENTERPRISE_KEY;
 
   globalThis.fetch = async (input, init) => {
@@ -272,7 +269,7 @@ test('allowed-Origin valid wm_ user key returns bootstrap data without shared ca
 
 test('session-authenticated bootstrap returns data without shared cache headers', async () => {
   await withMockedBootstrapAuth({ entitlement: activeApiEntitlement() }, async () => {
-    const { token } = await issueSessionToken();
+    const token = 'wms_test-browser-session';
     const resp = await handler(makeBootstrapRequestWithAllowedOrigin({ Cookie: `wm-session=${token}` }));
 
     assert.equal(resp.status, 200);
@@ -283,7 +280,7 @@ test('session-authenticated bootstrap returns data without shared cache headers'
 
 test('session-authenticated weather-only bootstrap is not shared-cacheable', async () => {
   await withMockedBootstrapAuth({ entitlement: activeApiEntitlement() }, async () => {
-    const { token } = await issueSessionToken();
+    const token = 'wms_test-browser-session';
     const resp = await handler(makeWeatherBootstrapRequest({ Cookie: `wm-session=${token}` }));
 
     assert.equal(resp.status, 200);
@@ -427,7 +424,7 @@ test('explicit public weather bootstrap answers a session cookie identically', a
   // otherwise a signed-in browser could mint a session-flavoured entry at the
   // shared cache key.
   await withMockedBootstrapAuth({ entitlement: activeApiEntitlement() }, async () => {
-    const { token } = await issueSessionToken();
+    const token = 'wms_test-browser-session';
     const resp = await handler(makePublicWeatherBootstrapRequest({ Cookie: `wm-session=${token}` }));
 
     assert.equal(resp.status, 200);
@@ -565,7 +562,7 @@ test('session-cookie legacy tier bootstrap stays no-store', async () => {
   // The legacy tier URL remains credentialed and cannot share the explicit
   // public=1 cache entry.
   await withMockedBootstrapAuth({ entitlement: activeApiEntitlement() }, async () => {
-    const { token } = await issueSessionToken();
+    const token = 'wms_test-browser-session';
     const resp = await handler(makeTierBootstrapRequest('fast', { Cookie: `wm-session=${token}` }));
 
     assert.equal(resp.status, 200);
@@ -889,7 +886,6 @@ async function withDesktopBootstrapAuth({ keys, entitlements, seed = {}, failDes
     'CONVEX_SERVER_SHARED_SECRET',
     'UPSTASH_REDIS_REST_URL',
     'UPSTASH_REDIS_REST_TOKEN',
-    'WM_SESSION_SECRET',
     'WORLDMONITOR_VALID_KEYS',
     'VERCEL_ENV',
   ]);
@@ -898,7 +894,6 @@ async function withDesktopBootstrapAuth({ keys, entitlements, seed = {}, failDes
   process.env.CONVEX_SERVER_SHARED_SECRET = 'shared-secret';
   process.env.UPSTASH_REDIS_REST_URL = 'https://upstash.test';
   process.env.UPSTASH_REDIS_REST_TOKEN = 'redis-token';
-  process.env.WM_SESSION_SECRET = 'test-secret-for-bootstrap-desktop-keys';
   process.env.WORLDMONITOR_VALID_KEYS = ENTERPRISE_KEY;
   delete process.env.VERCEL_ENV;
 

@@ -1,7 +1,9 @@
 // HTTP client for the hosted WorldMonitor API. Public reads need no credential;
 // session reads mint an anonymous short-lived token exactly like the browser
 // (POST /api/wm-session) and send it in X-WorldMonitor-Key. A user API key, when
-// configured, is sent instead of the session token.
+// configured, is sent instead of the session token. A server with no session
+// endpoint (the personal server, behind its own login) is read with
+// `anonymousSession: false`: session reads then go out with no credential.
 import { API_KEY_HEADER, DEFAULT_BASE_URL, VERSION } from '../../core.mjs';
 
 export class ApiError extends Error {
@@ -25,6 +27,7 @@ function trimSlash(url) {
 export function createClient(options = {}) {
   const baseUrl = trimSlash(options.baseUrl || DEFAULT_BASE_URL);
   const apiKey = options.apiKey || '';
+  const anonymousSession = options.anonymousSession !== false;
   const userAgent = options.userAgent || `worldmonitor-tui/${VERSION} (+https://worldmonitor.app)`;
   const fetchImpl = options.fetch || globalThis.fetch;
   const timeoutMs = options.timeoutMs || 25000;
@@ -93,7 +96,7 @@ export function createClient(options = {}) {
     baseUrl,
     hasApiKey: Boolean(apiKey),
     async getJson(path, { auth = 'none' } = {}) {
-      if (auth === 'none') return request(path);
+      if (auth === 'none' || (!apiKey && !anonymousSession)) return request(path);
       let token = await credential();
       try {
         return await request(path, { headers: { [API_KEY_HEADER]: token } });

@@ -20,7 +20,6 @@ const walk = dir => readdirSync(dir).flatMap(name => {
 const generatedGetRoutes = walk(join(root, 'src/generated/server'))
   .flatMap(file => [...readFileSync(file, 'utf8').matchAll(/method: "GET",\s*path: "(\/api\/[^"]+)"/g)])
   .map(match => match[1]);
-const premiumPaths = new Set([...read('src/shared/premium-paths.ts').matchAll(/'(\/api\/[^']+)'/g)].map(m => m[1]));
 
 describe('widget data request boundary', () => {
   it('preserves repeated scorecard bloc members advertised to the agent', () => {
@@ -111,14 +110,13 @@ describe('widget data catalog', () => {
     for (const key of listed) assert.ok(Object.hasOwn(active, key), `${key} is disabled in production`);
   });
 
-  it('lists or excludes every generated GET route exactly once, and lists no Pro-only route', () => {
+  it('lists or excludes every generated GET route exactly once', () => {
     const listed = RPCS.map(entry => entry.path);
     assert.equal(new Set(listed).size, listed.length, 'duplicate catalog route');
     for (const route of generatedGetRoutes) {
       assert.ok(listed.includes(route) !== Object.hasOwn(EXCLUDED_RPC_ROUTES, route), `${route} must be listed or excluded, not both`);
     }
     for (const route of [...listed, ...Object.keys(EXCLUDED_RPC_ROUTES)]) assert.ok(generatedGetRoutes.includes(route), `no generated GET route: ${route}`);
-    for (const route of listed) assert.ok(!premiumPaths.has(route), `${route} is Pro-only; the widget session gets 401`);
   });
 
   it('describes every entry and admits every listed source', () => {

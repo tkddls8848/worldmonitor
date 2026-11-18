@@ -5,7 +5,6 @@ import { getAircraftDetails } from '../server/worldmonitor/military/v1/get-aircr
 import { getAircraftDetailsBatch } from '../server/worldmonitor/military/v1/get-aircraft-details-batch.ts';
 import { _resetTrackedAircraftCacheForTests } from '../server/worldmonitor/military/v1/_tracked-aircraft.ts';
 import { sidecarCacheSet } from '../server/_shared/sidecar-cache.ts';
-import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths.ts';
 import { GENERATED_MESSAGE_RULES } from '../src/generated/server/request_validation.ts';
 import { validationFailure } from './helpers/validation-failure.mts';
 
@@ -107,16 +106,6 @@ describe('Wingbits aircraft-details access contract', () => {
       'the ICAO24 shape must stay declared in proto — dropping it back to min_len '
       + 'silently loosens the published contract and the client-side validator',
     );
-  });
-
-  it('registers only the singular route for premium browser credential injection', () => {
-    assert.equal(PREMIUM_RPC_PATHS.has(AIRCRAFT_DETAILS_PATH), true);
-    assert.equal(PREMIUM_RPC_PATHS.has(BATCH_PATH), false);
-    // The browser half of this contract — that the military client actually
-    // attaches the Bearer on the singular path and not on the batch path — is
-    // proven by executing a real call in
-    // tests/military-premium-bearer-wiring.test.mts, not by matching source
-    // text here. A regex over the file can go green while the wiring is dead.
   });
 
   it('normalizes input to the same shape the batch sibling does', async () => {

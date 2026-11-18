@@ -2,13 +2,12 @@ import assert from 'node:assert/strict';
 import test, {type TestContext} from 'node:test';
 import {createRedisFetch} from './helpers/fake-upstash-redis.mts';
 import rpc from '../api/infrastructure/v1/[rpc].ts';
-import {issueSessionToken} from '../api/_session.js';
 import {getTemporalBaseline} from '../server/worldmonitor/infrastructure/v1/get-temporal-baseline.ts';
 import { validationFailure } from './helpers/validation-failure.mts';
 const PATH='https://api.worldmonitor.app/api/infrastructure/v1/get-temporal-baseline';
 async function setup(t: TestContext) {
   for (const [name, value] of Object.entries({
-    WORLDMONITOR_VALID_KEYS: 'synthetic-enterprise', IRAN_EVENTS_ENABLED: 'false', WM_SESSION_SECRET: 'bootstrap-contract-synthetic-secret-32',
+    WORLDMONITOR_VALID_KEYS: 'synthetic-enterprise', IRAN_EVENTS_ENABLED: 'false',
     UPSTASH_REDIS_REST_URL: 'https://redis.test', UPSTASH_REDIS_REST_TOKEN: 'fixture',
     VERCEL_ENV: 'production', VERCEL_GIT_COMMIT_SHA: 'abcdef123456', BOOTSTRAP_R2_SHADOW_MEASURE: '0',
   })) {
@@ -42,7 +41,7 @@ async function setup(t: TestContext) {
       return { result: values.has(key) ? JSON.stringify(values.get(key)) : null };
     }));
   });
-  const token = (await issueSessionToken()).token;
+  const token = 'wms_test-browser-session';
   const request = (query: string, key = token) => rpc(new Request(PATH + query, { headers: { 'X-WorldMonitor-Key': key, Origin: 'https://worldmonitor.app' } }));
   return { values, reads, request, token };
 }

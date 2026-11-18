@@ -4,7 +4,6 @@ import { createRedisFetch } from './helpers/fake-upstash-redis.mts';
 import rpc from '../api/infrastructure/v1/[rpc].ts';
 import intelligence from '../api/intelligence/v1/[rpc].ts';
 import bootstrap from '../api/bootstrap.js';
-import { issueSessionToken } from '../api/_session.js';
 import { publishBootstrapTier } from '../scripts/publish-bootstrap-tiers.mjs';
 import { listMarketImplications } from '../server/worldmonitor/intelligence/v1/list-market-implications.ts';
 const PATH = 'https://api.worldmonitor.app/api/infrastructure/v1/get-bootstrap-data';
@@ -12,7 +11,7 @@ const SEED = 'intelligence:market-implications:v1';
 const fixture = { cards: [{ ticker: 'SYNTH', title: 'premium-fixture-only', risk_caveat: 'test risk' }], generatedAt: '2026-09-11T00:00:00Z' };
 async function setup(t: TestContext) {
   for (const [name, value] of Object.entries({
-    IRAN_EVENTS_ENABLED: 'false', WM_SESSION_SECRET: 'bootstrap-contract-synthetic-secret-32',
+    IRAN_EVENTS_ENABLED: 'false',
     UPSTASH_REDIS_REST_URL: 'https://redis.test', UPSTASH_REDIS_REST_TOKEN: 'fixture',
     VERCEL_ENV: 'production', VERCEL_GIT_COMMIT_SHA: 'abcdef123456', BOOTSTRAP_R2_SHADOW_MEASURE: '0',
   })) {
@@ -46,7 +45,7 @@ async function setup(t: TestContext) {
       return { result: values.has(key) ? JSON.stringify(values.get(key)) : null };
     }));
   });
-  const token = (await issueSessionToken()).token;
+  const token = 'wms_test-browser-session';
   const request = (query: string) => rpc(new Request(PATH + query, { headers: { 'X-WorldMonitor-Key': token, Origin: 'https://worldmonitor.app' } }));
   return { values, reads, request, token };
 }

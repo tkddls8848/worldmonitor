@@ -3,7 +3,6 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 
 import { __testing__ } from '../api/health.js';
-import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths.ts';
 import { PSD_COMMODITIES, normalizePsdCountryCode } from '../scripts/_food-stocks-helpers.mjs';
 import { normalizeFoodStocksCountry } from '../server/worldmonitor/resilience/v1/_food-stocks-query.ts';
 
@@ -44,8 +43,7 @@ describe('food stocks production registration (#6440)', () => {
     assert.match(read('scripts/seed-food-stocks.mjs'), /'X-Api-Key': apiKey/);
   });
 
-  it('gates the RPC as premium + entitlement before generate', () => {
-    assert.ok(PREMIUM_RPC_PATHS.has('/api/resilience/v1/get-food-stocks'));
+  it('registers the RPC in the slow cache tier', () => {
     assert.match(read('server/gateway.ts'), /'\/api\/resilience\/v1\/get-food-stocks': 'slow'/);
   });
 });

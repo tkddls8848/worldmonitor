@@ -16,11 +16,6 @@ for (const consumer of ['deduction', 'tech', 'posture'] as const) {
     let requestBody: { geoContext: string } | undefined;
     await page.route('**/api/**', async route => {
       const path = new URL(route.request().url()).pathname;
-      if (path.endsWith('/api/wm-session')) {
-        // setProKey grants Pro only after the HttpOnly key-session mint
-        // returns a usable expiry (#8269).
-        return route.fulfill({ json: { exp: Date.now() + 3_600_000 } });
-      }
       if (path.endsWith('/deduct-situation')) {
         requestBody = route.request().postDataJSON();
         return route.fulfill({ json: { analysis: 'Fixture response: two supplied news records.', model: 'fixture', provider: 'fixture' } });
@@ -47,8 +42,6 @@ for (const consumer of ['deduction', 'tech', 'posture'] as const) {
       await load('/src/styles/panels.css');
       const { initI18n } = await load('/src/services/i18n.ts');
       await initI18n();
-      const { setProKey } = await load('/src/services/widget-store.ts');
-      if (!(await setProKey('fixture-only'))) throw new Error('fixture Pro key session was not established');
       const { DeductionPanel } = await load('/src/components/DeductionPanel.ts');
       const getNews = () => news;
       const app = document.getElementById('runtime-harness')!;

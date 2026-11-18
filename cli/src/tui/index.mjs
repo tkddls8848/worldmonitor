@@ -19,6 +19,7 @@ export async function launchTui({ options = {}, config = {}, env = process.env, 
   const client = createClient({
     baseUrl: options.baseUrl || env.WORLDMONITOR_TUI_BASE_URL || config.baseUrl || undefined,
     apiKey,
+    anonymousSession: options.anonymousSession,
     userAgent: USER_AGENT.replace('worldmonitor-cli', 'worldmonitor-tui'),
     fetch: fetchImpl,
   });

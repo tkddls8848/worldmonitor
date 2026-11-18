@@ -153,9 +153,7 @@ describe('GetDemographicsCapability handler read behavior', () => {
 });
 
 describe('demographics capability access and cache registration', () => {
-  test('the RPC is premium and slow-cache tiered', async () => {
-    const { PREMIUM_RPC_PATHS } = await import('../src/shared/premium-paths.ts');
-    assert.ok(PREMIUM_RPC_PATHS.has('/api/resilience/v1/get-demographics-capability'));
+  test('the RPC is slow-cache tiered', async () => {
     assert.match(read('server/gateway.ts'), /'\/api\/resilience\/v1\/get-demographics-capability': 'slow'/);
   });
 

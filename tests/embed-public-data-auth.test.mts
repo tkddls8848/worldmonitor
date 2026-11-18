@@ -5,7 +5,6 @@ import bootstrapHandler, {
   isAnonymousWeatherBootstrapRequest,
   isPublicWeatherBootstrapRequest,
 } from '../api/bootstrap.js';
-import { issueSessionToken } from '../api/_session.js';
 import { createDomainGateway, PUBLIC_NO_AUTH_RPC_PATHS } from '../server/gateway.ts';
 
 // The four map RPCs entered PUBLIC_NO_AUTH_RPC_PATHS in #4290 for one reason:
@@ -30,17 +29,13 @@ const EMBED_PUBLIC_RPC_PATHS = [
   '/api/unrest/v1/list-unrest-events',
 ] as const;
 
-const originalSecret = process.env.WM_SESSION_SECRET;
 let sessionToken: string;
 
 before(async () => {
-  process.env.WM_SESSION_SECRET = 'embed-public-data-auth-secret-at-least-32-chars';
-  sessionToken = (await issueSessionToken()).token;
+  sessionToken = 'wms_test-browser-session';
 });
 
 after(() => {
-  if (originalSecret == null) delete process.env.WM_SESSION_SECRET;
-  else process.env.WM_SESSION_SECRET = originalSecret;
 });
 
 function makeGateway() {

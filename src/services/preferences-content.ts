@@ -28,18 +28,9 @@ import {
 import { escapeHtml } from '@/utils/sanitize';
 import { trackLanguageChange } from '@/services/analytics';
 import { exportSettings, importSettings, type ImportResult } from '@/utils/settings-persistence';
-import { getSyncState, getLastSyncAt, syncNow, isCloudSyncEnabled } from '@/utils/cloud-prefs-sync';
 import { declareOverlay } from '@/utils/open-modal';
 import { createFocusTrap } from '@/utils/focus-trap';
 
-const SYNC_STATE_LABELS: Record<string, string> = {
-  synced: 'Synced', pending: 'Pending', syncing: 'Syncing\u2026',
-  conflict: 'Conflict', offline: 'Offline', 'signed-out': 'Signed out', error: 'Error',
-};
-const SYNC_STATE_COLORS: Record<string, string> = {
-  synced: 'var(--color-ok, #34d399)', pending: 'var(--color-warn, #fbbf24)', syncing: 'var(--color-warn, #fbbf24)',
-  conflict: 'var(--color-error, #f87171)', offline: 'var(--text-faint, #888)', 'signed-out': 'var(--text-faint, #888)', error: 'var(--color-error, #f87171)',
-};
 import {
   loadFrameworkLibrary,
   saveImportedFramework,
@@ -58,7 +49,6 @@ export interface PreferencesHost {
   isDesktopApp: boolean;
   onMapProviderChange?: (provider: MapProvider) => void;
   onSettingSaved?: () => void;
-  isSignedIn?: boolean;
 }
 
 export interface PreferencesResult {
@@ -96,20 +86,6 @@ function renderMapThemeDropdown(container: HTMLElement, provider: MapProvider): 
   setTrustedHtml(select, trustedHtml(MAP_THEME_OPTIONS[provider]
     .map(opt => `<option value="${opt.value}"${opt.value === currentTheme ? ' selected' : ''}>${escapeHtml(opt.label)}</option>`)
     .join(''), "legacy direct innerHTML migration"));
-}
-
-function updateSyncStatusUI(container: HTMLElement): void {
-  const dot = container.querySelector<HTMLElement>('#usSyncDot');
-  const label = container.querySelector<HTMLElement>('#usSyncLabel');
-  const time = container.querySelector<HTMLElement>('#usSyncTime');
-  if (!dot || !label || !time) return;
-
-  const state = getSyncState();
-  const lastSync = getLastSyncAt();
-
-  dot.style.background = (SYNC_STATE_COLORS[state] ?? SYNC_STATE_COLORS.error) as string;
-  label.textContent = SYNC_STATE_LABELS[state] ?? 'Unknown';
-  time.textContent = `Last synced: ${lastSync ? new Date(lastSync).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : 'Never'}`;
 }
 
 function updateAiStatus(container: HTMLElement): void {
@@ -482,29 +458,9 @@ const videoSection: PreferenceSectionSpec = {
   },
 };
 
-function showsCloudSync(host: PreferencesHost): boolean {
-  return !host.isDesktopApp && host.isSignedIn === true && isCloudSyncEnabled();
-}
-
 const syncSection: PreferenceSectionSpec = {
-  html(host) {
+  html() {
     let html = '';
-    if (showsCloudSync(host)) {
-      const syncState = getSyncState();
-      const lastSync = getLastSyncAt();
-      const lastSyncStr = lastSync
-        ? new Date(lastSync).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })
-        : 'Never';
-      html += sectionHeading('Cloud Sync');
-      html += `<div class="wm-sync-status-row">
-        <div class="wm-sync-status-info">
-          <span class="wm-sync-status-dot" id="usSyncDot" style="background:${SYNC_STATE_COLORS[syncState] ?? SYNC_STATE_COLORS.error}"></span>
-          <span class="wm-sync-status-label" id="usSyncLabel">${SYNC_STATE_LABELS[syncState] ?? 'Unknown'}</span>
-          <span class="wm-sync-status-time" id="usSyncTime">Last synced: ${escapeHtml(lastSyncStr)}</span>
-        </div>
-        <button type="button" class="btn btn-secondary wm-sync-now-btn" id="usSyncNowBtn">Sync now</button>
-      </div>`;
-    }
     html += sectionHeading(t('preferences.dataAndCommunity'));
     html += `
       <div class="us-data-mgmt">
@@ -529,7 +485,7 @@ const syncSection: PreferenceSectionSpec = {
       return false;
     },
   },
-  attach(root, host, signal) {
+  attach(root, _host, signal) {
     root.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
       if (target.closest('#usExportBtn')) {
@@ -545,20 +501,6 @@ const syncSection: PreferenceSectionSpec = {
         root.querySelector<HTMLInputElement>('#usImportInput')?.click();
       }
     }, { signal });
-
-    if (!showsCloudSync(host)) return;
-    const syncBtn = root.querySelector<HTMLButtonElement>('#usSyncNowBtn');
-    syncBtn?.addEventListener('click', () => {
-      syncBtn.disabled = true;
-      syncBtn.textContent = 'Syncing…';
-      syncNow().finally(() => {
-        syncBtn.disabled = false;
-        syncBtn.textContent = 'Sync now';
-        updateSyncStatusUI(root);
-      });
-    }, { signal });
-    const syncPollId = setInterval(() => updateSyncStatusUI(root), 2000);
-    signal.addEventListener('abort', () => clearInterval(syncPollId));
   },
 };
 

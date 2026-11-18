@@ -7,9 +7,9 @@ for (const count of [12, 50]) {
     await page.goto('/tests/runtime-harness.html');
     await page.evaluate(async (count) => {
       await import('/src/styles/main.css');
-      const [{ DataLoaderManager }, { StockBacktestPanel }, { StockAnalysisPanel }, { setProKey }] = await Promise.all([
+      const [{ DataLoaderManager }, { StockBacktestPanel }, { StockAnalysisPanel }] = await Promise.all([
         import('/src/app/data-loader.ts'), import('/src/components/StockBacktestPanel.ts'),
-        import('/src/components/StockAnalysisPanel.ts'), import('/src/services/widget-store.ts'),
+        import('/src/components/StockAnalysisPanel.ts'),
       ]);
       const { initI18n } = await import('/src/services/i18n.ts');
       await initI18n();
@@ -34,10 +34,7 @@ for (const count of [12, 50]) {
         const raw = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
         const url = new URL(raw, location.origin);
         let body: unknown = {};
-        if (url.pathname === '/api/wm-session') {
-          // setProKey resolves only after the HttpOnly key-session mint succeeds (#8269).
-          body = { exp: Date.now() + 3_600_000 };
-        } else if (url.pathname.endsWith('/get-stock-analysis-history')) {
+        if (url.pathname.endsWith('/get-stock-analysis-history')) {
           body = { items: symbols.map((symbol, i) => ({ symbol, snapshots: [snapshot(symbol, i === count - 1)] })) };
         } else if (url.pathname.endsWith('/list-stored-stock-backtests')) {
           body = { items: symbols.map((symbol, i) => snapshot(symbol, i === count - 1)) };
@@ -49,7 +46,6 @@ for (const count of [12, 50]) {
         }
         return new Response(JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
       };
-      if (!(await setProKey('controlled-fixture-key'))) throw new Error('fixture Pro key session was not established');
       const backtest = new StockBacktestPanel();
       const analysis = new StockAnalysisPanel();
       const ctx = { panels: { 'stock-backtest': backtest, 'stock-analysis': analysis } };

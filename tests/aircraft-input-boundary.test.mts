@@ -6,7 +6,6 @@ import { aviationHandler } from '../server/worldmonitor/aviation/v1/handler.ts';
 import { createDomainGateway, serverOptions } from '../server/gateway.ts';
 import { installRedis } from './helpers/fake-upstash-redis.mts';
 import { readLimiterRequest } from './helpers/upstash-limiter-wire.mjs';
-import { issueSessionToken } from '../api/_session.js';
 import { validationFailure } from './helpers/validation-failure.mts';
 
 const originalFetch = globalThis.fetch;
@@ -27,8 +26,7 @@ beforeEach(async () => {
   delete process.env.VERCEL;
   delete process.env.VERCEL_ENV;
   process.env.WS_RELAY_URL = 'https://relay.example';
-  process.env.WM_SESSION_SECRET = 'synthetic-aircraft-session-secret';
-  session = (await issueSessionToken()).token;
+  session = 'wms_test-browser-session';
   redis = installRedis({});
   calls = [];
   wingbitsStatus = 200;

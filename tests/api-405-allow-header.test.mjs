@@ -9,11 +9,9 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-process.env.WM_SESSION_SECRET ||= 'test-secret-must-be-at-least-32-chars-long-xxx';
 process.env.UPSTASH_REDIS_REST_URL ||= 'https://example.upstash.io';
 process.env.UPSTASH_REDIS_REST_TOKEN ||= 'test-token';
 
-const { default: wmSession } = await import('../api/wm-session.js');
 const { createRelayHandler } = await import('../api/_relay.js');
 const { default: rssProxy } = await import('../api/rss-proxy.js');
 
@@ -21,7 +19,6 @@ const ORIGIN = 'https://worldmonitor.app';
 
 /** @type {Array<{ name: string, path: string, handler: (req: Request, ctx?: unknown) => Promise<Response>, allow: string, refused: string }>} */
 const CASES = [
-  { name: 'wm-session', path: '/api/wm-session', handler: wmSession, allow: 'GET, POST, OPTIONS', refused: 'PATCH' },
   { name: 'relay handler', path: '/api/relay-test', handler: createRelayHandler({ relayPath: '/relay-test' }), allow: 'GET, OPTIONS', refused: 'POST' },
   { name: 'rss-proxy', path: '/api/rss-proxy', handler: rssProxy, allow: 'GET, OPTIONS', refused: 'POST' },
 ];

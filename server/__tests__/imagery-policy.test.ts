@@ -4,7 +4,6 @@ import { createDomainGateway } from '../gateway';
 import { searchImagery } from '../worldmonitor/imagery/v1/search-imagery';
 import { createImageryServiceRoutes } from '../../src/generated/server/worldmonitor/imagery/v1/service_server';
 import { __resetKeyPrefixCacheForTests } from '../_shared/redis';
-import { issueSessionToken } from '../../api/_session.js';
 import { createRedisFetch } from '../../tests/helpers/fake-upstash-redis.mts';
 
 const PATH = '/api/imagery/v1/search-imagery';
@@ -18,7 +17,6 @@ beforeEach(() => {
   providerCalls = 0; redisError = false; limiterKeys = [];
   process.env.UPSTASH_REDIS_REST_URL = 'https://imagery-redis.invalid';
   process.env.UPSTASH_REDIS_REST_TOKEN = 'synthetic';
-  process.env.WM_SESSION_SECRET = 'synthetic-imagery-session-secret';
   process.env.VERCEL_ENV = 'production';
   delete process.env.LOCAL_API_MODE;
   delete process.env.AXIOM_TOKEN;
@@ -61,7 +59,7 @@ afterEach(() => {
 });
 
 async function request(index = 1, session = true, path = PATH) {
-  const cookie = session ? { Cookie: `wm-session=${(await issueSessionToken()).token}` } : {};
+  const cookie = session ? { Cookie: `wm-session=${'wms_test-browser-session'}` } : {};
   const query = new URLSearchParams({ bbox: `${index / 1000},0,1,1`, datetime: '2026-08-01T00:00:00Z' });
   return gateway(new Request(`https://worldmonitor.app${path}?${query}`, {
     headers: { 'x-real-ip': '192.0.2.54', ...cookie },

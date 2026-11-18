@@ -2,12 +2,10 @@ import assert from 'node:assert/strict';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 
 // @ts-expect-error — JS module, no declaration file
-import { issueSessionToken } from '../api/_session.js';
 import type { ServerContext } from '../src/generated/server/worldmonitor/webcam/v1/service_server.ts';
 import { __resetKeyPrefixCacheForTests } from '../server/_shared/redis.ts';
 import { PUBLIC_NO_AUTH_RPC_PATHS, createDomainGateway } from '../server/gateway.ts';
 import { getWebcamImage } from '../server/worldmonitor/webcam/v1/get-webcam-image.ts';
-import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths.ts';
 import { createRedisFetch } from './helpers/fake-upstash-redis.mts';
 import webcamGateway from '../api/webcam/v1/[rpc].ts';
 
@@ -18,7 +16,6 @@ const ENV_KEYS = [
   'UPSTASH_REDIS_REST_URL',
   'UPSTASH_REDIS_REST_TOKEN',
   'WINDY_API_KEY',
-  'WM_SESSION_SECRET',
   'LOCAL_API_MODE',
   'VERCEL_ENV',
   'VERCEL_GIT_COMMIT_SHA',
@@ -280,11 +277,10 @@ describe('Windy webcam image proxy access contract', () => {
 
   it('lets the bundled Tauri sidecar webcam gateway run without Upstash', async () => {
     process.env.LOCAL_API_MODE = 'tauri-sidecar';
-    process.env.WM_SESSION_SECRET = 'webcam-proxy-session-test-secret-at-least-32-chars';
     delete process.env.UPSTASH_REDIS_REST_URL;
     delete process.env.UPSTASH_REDIS_REST_TOKEN;
     const calls = installProviderAndRedisFixture();
-    const { token } = await issueSessionToken();
+    const token = 'wms_test-browser-session';
 
     const response = await webcamGateway(new Request(`http://127.0.0.1:46123${WEBCAM_IMAGE_PATH}?webcam_id=bundled-sidecar-camera-123`, {
       headers: {

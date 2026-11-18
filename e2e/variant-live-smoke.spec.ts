@@ -1,12 +1,10 @@
 import { expect, test, type Request } from '@playwright/test';
-import { assertSignedOutAuthHydrationKeepsHeaderStable } from './header-reservation';
 import {
   apiPath,
   captureLocalApiResponse,
   isLocalApiUrl,
   type ApiDiagnostic,
 } from './variant-live-smoke-response-capture';
-import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths';
 
 type VariantName = 'full' | 'tech' | 'finance' | 'commodity' | 'energy' | 'happy';
 
@@ -36,7 +34,6 @@ const AUTH_OR_PREMIUM_401_PREFIXES = [
   '/api/oauth/',
   '/api/referral/',
   '/api/user/',
-  '/api/wm-session',
 ];
 
 const IGNORABLE_PAGE_ERROR_PATTERNS = [
@@ -58,15 +55,6 @@ const normalizeVariant = (variant: string | undefined): VariantName => {
 };
 
 const isExpected401 = (path: string): boolean => {
-  if (
-    typeof (PREMIUM_RPC_PATHS as { has?: unknown }).has === 'function' &&
-    (PREMIUM_RPC_PATHS as Set<string>).has(path)
-  ) {
-    return true;
-  }
-  if (Array.isArray(PREMIUM_RPC_PATHS) && PREMIUM_RPC_PATHS.includes(path)) {
-    return true;
-  }
   return AUTH_OR_PREMIUM_401_PREFIXES.some((prefix) => path.startsWith(prefix));
 };
 
@@ -143,7 +131,6 @@ test.describe('variant live reliability smoke', () => {
       .toBeGreaterThan(1);
 
     await page.waitForTimeout(10_000);
-    await assertSignedOutAuthHydrationKeepsHeaderStable(page);
 
     const panelDiagnostics = await page.evaluate((ids) => {
       const expected = new Set(ids);

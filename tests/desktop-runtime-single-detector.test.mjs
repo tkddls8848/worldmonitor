@@ -34,7 +34,6 @@ const CONVERGED_CALL_SITES = [
   'src/config/variant.ts',
   'src/config/basemap.ts',
   'src/main.ts',
-  'src/services/push-notifications.ts',
   'src/utils/circuit-breaker.ts',
   'src/bootstrap/sentry-init.ts',
 ];

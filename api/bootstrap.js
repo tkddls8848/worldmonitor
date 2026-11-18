@@ -192,19 +192,6 @@ export function isAnonymousWeatherBootstrapRequest(req) {
   return requested.length === 1 && requested[0] === PUBLIC_WEATHER_BOOTSTRAP_KEY;
 }
 
-const BOOTSTRAP_CREDENTIAL_COOKIES = new Set(['wm-session', '__Host-wm-pro-key', '__Host-wm-widget-key']);
-
-function hasBootstrapCredentialCookie(req) {
-  const raw = req.headers.get('Cookie') || req.headers.get('cookie') || '';
-  if (!raw) return false;
-
-  for (const part of raw.split(';')) {
-    const name = part.trim().split('=', 1)[0];
-    if (BOOTSTRAP_CREDENTIAL_COOKIES.has(name)) return true;
-  }
-  return false;
-}
-
 const NEG_SENTINEL = '__WM_NEG__';
 export const compactWildfireBootstrapPayload = compactWildfireDashboardPayload;
 export { compactNaturalEventsDashboardPayload };
@@ -259,7 +246,7 @@ async function getCachedJsonBatch(keys) {
 function resolveBootstrapKind(req) {
   const publicBootstrap = classifyPublicBootstrapRequest(req);
   if (publicBootstrap) return publicBootstrap.authKind;
-  if (!hasBootstrapCredentialCookie(req) && isAnonymousWeatherBootstrapRequest(req)) {
+  if (isAnonymousWeatherBootstrapRequest(req)) {
     return 'anonymous-weather';
   }
   return 'owner';
@@ -404,9 +391,9 @@ export default async function handler(req, ctx) {
     }
   }
 
-  // The browser runtime sends API requests with credentials so session and
-  // entitlement cookies can ride along. Credentialed requests cannot consume
-  // ACAO: * responses, even for public bootstrap data.
+  // The browser runtime sends API requests with credentials (the owner's
+  // Basic auth). Credentialed requests cannot consume ACAO: * responses, even
+  // for public bootstrap data.
   const onDemandKey = auth.kind === 'public-on-demand' && names.length === 1
     ? names[0]
     : null;

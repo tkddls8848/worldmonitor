@@ -3,9 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getPinnedWebcams, onPinnedChange, type PinnedWebcam } from '@/services/webcams/pinned-store';
 
 // #8367 / #8598: an open PinnedWebcamsPanel must re-render when another tab
-// or a cloud-prefs apply rewrites the stored list.
+// rewrites the stored list.
 const STORAGE_KEY = 'wm-pinned-webcams';
-const CLOUD_PREFS_APPLIED_EVENT = 'wm:cloud-prefs-applied';
 
 const disposers: Array<() => void> = [];
 
@@ -88,28 +87,10 @@ describe('pinned webcams store external sync', () => {
     expect(ids()).toEqual(['old-cam']);
   });
 
-  it('notifies and serves fresh data when cloud prefs apply its key', () => {
-    const { handler } = subscribe();
-    primeThenRewrite();
-    window.dispatchEvent(new CustomEvent(CLOUD_PREFS_APPLIED_EVENT, { detail: { keys: [STORAGE_KEY] } }));
-    expect(handler).toHaveBeenCalledTimes(1);
-    expect(ids()).toEqual(['new-cam']);
-  });
-
-  it('ignores cloud prefs applies that do not include its key', () => {
-    const { handler } = subscribe();
-    primeThenRewrite();
-    window.dispatchEvent(new CustomEvent(CLOUD_PREFS_APPLIED_EVENT, { detail: { keys: ['worldmonitor-theme'] } }));
-    window.dispatchEvent(new CustomEvent(CLOUD_PREFS_APPLIED_EVENT));
-    expect(handler).not.toHaveBeenCalled();
-    expect(ids()).toEqual(['old-cam']);
-  });
-
   it('stops notifying after unsubscribe', () => {
     const { handler, dispose } = subscribe();
     dispose();
     window.dispatchEvent(new StorageEvent('storage', { storageArea: localStorage, key: STORAGE_KEY }));
-    window.dispatchEvent(new CustomEvent(CLOUD_PREFS_APPLIED_EVENT, { detail: { keys: [STORAGE_KEY] } }));
     window.dispatchEvent(new CustomEvent('wm-pinned-webcams-changed'));
     expect(handler).not.toHaveBeenCalled();
   });

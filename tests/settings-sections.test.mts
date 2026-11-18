@@ -24,17 +24,12 @@ import {
 const EN: unknown = JSON.parse(readFileSync(new URL('../src/locales/en.json', import.meta.url), 'utf8'));
 
 const facts = (overrides: Partial<SettingsFacts> = {}): SettingsFacts => ({
-  signedIn: true,
-  canSignIn: true,
   isDesktopApp: false,
-  account: { plan: 'Pro', email: 'a@example.com' },
   panels: { on: 18, total: 64 },
   sourcesOn: 412,
   theme: 'auto',
   ...overrides,
 });
-
-const signedOut = facts({ signedIn: false, account: null });
 
 function at(page: SettingsSectionId | null, f = facts(), layout: NavLayout = 'sheet'): NavState {
   return reduceNav(null, { type: 'open', target: page ?? undefined, layout, recent: null }, f);
@@ -49,14 +44,14 @@ function relayout(prev: NavState, layout: NavLayout, recent: SettingsSectionId |
 }
 
 function rowIds(f: SettingsFacts): string[] {
-  return buildNav(f).flatMap((group) => group.rows.map((row) => (row.kind === 'section' ? row.id : 'sign-in')));
+  return buildNav(f).flatMap((group) => group.rows.map((row) => row.id));
 }
 
 describe('settings sections registry', () => {
   it('declares every section once', () => {
     assert.equal(new Set(SETTINGS_SECTION_IDS).size, SETTINGS_SECTION_IDS.length);
     assert.deepEqual([...SETTINGS_SECTION_IDS], [
-      'account', 'panels', 'sources', 'notifications',
+      'panels', 'sources',
       'display', 'map', 'ai', 'video',
       'sync', 'about',
     ]);
@@ -67,43 +62,20 @@ describe('settings sections registry', () => {
     assert.deepEqual(preference, ['display', 'map', 'ai', 'video', 'sync']);
   });
 
-  it('applies the availability truth table', () => {
-    const cases: Array<[string, SettingsFacts, SettingsSectionId, boolean]> = [
-      ['signed in', facts(), 'account', true],
-      ['signed out', signedOut, 'account', false],
-      ['web', facts(), 'notifications', true],
-      ['desktop', facts({ isDesktopApp: true }), 'notifications', false],
-      ['signed out', signedOut, 'sync', true],
-      ['desktop', facts({ isDesktopApp: true }), 'about', true],
-    ];
-    for (const [label, f, id, expected] of cases) {
-      assert.equal(isAvailable(id, f), expected, `${id} when ${label}`);
+  it('makes every section available', () => {
+    for (const id of SETTINGS_SECTION_IDS) {
+      assert.equal(isAvailable(id, facts()), true, id);
+      assert.equal(isAvailable(id, facts({ isDesktopApp: true })), true, `${id} on desktop`);
     }
   });
 
-  it('shows a sign-in row in place of the account card when signed out', () => {
-    assert.equal(rowIds(facts())[0], 'account');
-    assert.equal(rowIds(signedOut)[0], 'sign-in');
-    assert.ok(!rowIds(signedOut).includes('account'));
-  });
-
-  it('offers no sign-in row when this build cannot sign in', () => {
-    const keyless = rowIds({ ...signedOut, canSignIn: false });
-    assert.ok(!keyless.includes('sign-in'));
-    assert.ok(!keyless.includes('account'));
-    assert.equal(keyless[0], 'panels');
-  });
-
-  it('hides unavailable sections from the home list and keeps registry order', () => {
-    const desktop = rowIds(facts({ isDesktopApp: true }));
-    assert.ok(!desktop.includes('notifications'));
+  it('lists every section in registry order', () => {
     assert.deepEqual(rowIds(facts()), [...SETTINGS_SECTION_IDS]);
   });
 
-  it('groups rows under their headings, with the account card ungrouped', () => {
+  it('groups rows under their headings', () => {
     const groups = buildNav(facts());
     assert.deepEqual(groups.map((g) => [g.id, g.labelKey]), [
-      ['account', null],
       ['dashboard', 'settings.groups.dashboard'],
       ['preferences', 'settings.groups.preferences'],
       ['app', 'settings.groups.app'],
@@ -113,19 +85,18 @@ describe('settings sections registry', () => {
 
   it('summarises rows as data the view formats', () => {
     const rows = new Map(buildNav(facts({ theme: 'dark' })).flatMap((g) => g.rows)
-      .flatMap((row) => (row.kind === 'section' ? [[row.id, row] as const] : [])));
+      .map((row) => [row.id, row] as const));
     assert.deepEqual(rows.get('panels')?.summary, { kind: 'count', on: 18, total: 64 });
     assert.deepEqual(rows.get('sources')?.summary, { kind: 'total', count: 412 });
     assert.deepEqual(rows.get('display')?.summary, { kind: 'text', key: 'preferences.themeDark' });
-    assert.deepEqual(rows.get('account')?.summary, { kind: 'account', plan: 'Pro', email: 'a@example.com' });
     assert.equal(rows.get('map')?.summary, null);
   });
 
   it('follows the theme in the display summary', () => {
     const display = (theme: SettingsFacts['theme']) => {
       const row = buildNav(facts({ theme })).flatMap((g) => g.rows)
-        .find((r) => r.kind === 'section' && r.id === 'display');
-      return row?.kind === 'section' ? row.summary : undefined;
+        .find((r) => r.id === 'display');
+      return row?.summary;
     };
     assert.deepEqual(display('auto'), { kind: 'text', key: 'settings.summary.themeAuto' });
     assert.deepEqual(display('light'), { kind: 'text', key: 'preferences.themeLight' });
@@ -137,22 +108,14 @@ describe('settings navigation reducer', () => {
     assert.equal(at(null).page, null);
   });
 
-  it('opens straight onto an available target', () => {
-    assert.equal(at('notifications').page, 'notifications');
-    assert.equal(at('account').page, 'account');
+  it('opens straight onto a target', () => {
+    assert.equal(at('sources').page, 'sources');
+    assert.equal(at('about').page, 'about');
   });
 
-  it('opens an unavailable target on the home list', () => {
-    assert.equal(at('account', signedOut).page, null);
-    assert.equal(at('notifications', facts({ isDesktopApp: true })).page, null);
-  });
-
-  it('selects an available section and ignores an unavailable one', () => {
-    const desktop = facts({ isDesktopApp: true });
-    const home = at(null, desktop);
-    const panels = reduceNav(home, { type: 'select', id: 'panels' }, desktop);
+  it('selects a section', () => {
+    const panels = reduceNav(at(null), { type: 'select', id: 'panels' }, facts());
     assert.equal(panels.page, 'panels');
-    assert.equal(reduceNav(panels, { type: 'select', id: 'notifications' }, desktop), panels);
   });
 
   it('goes back to the home list', () => {
@@ -167,17 +130,10 @@ describe('settings navigation reducer', () => {
     assert.equal(reduceNav(map, { type: 'facts-changed' }, facts()), map);
   });
 
-  it('evicts a page that became unavailable', () => {
-    const notifications = at('notifications');
-    assert.equal(reduceNav(notifications, { type: 'facts-changed' }, facts({ isDesktopApp: true })).page, null);
-    const account = at('account');
-    assert.equal(reduceNav(account, { type: 'facts-changed' }, signedOut).page, null);
-  });
-
   it('re-opens onto a new target while already open', () => {
     const map = at('map');
     const reopen = (target?: SettingsSectionId) => reduceNav(map, { type: 'open', target, layout: 'sheet', recent: 'map' }, facts());
-    assert.equal(reopen('notifications').page, 'notifications');
+    assert.equal(reopen('sources').page, 'sources');
     assert.equal(reopen().page, null);
   });
 });
@@ -209,21 +165,20 @@ describe('settings navigation effects', () => {
 
 describe('settings page history entry', () => {
   it('holds an entry for an open page on the phone sheet above a Settings entry', () => {
-    assert.equal(pageEntryEffect(at('notifications'), true), 'hold');
+    assert.equal(pageEntryEffect(at('sources'), true), 'hold');
   });
 
   it('releases it on the home list, in the modal, or without a Settings entry beneath', () => {
     assert.equal(pageEntryEffect(at(null), true), 'release');
     assert.equal(pageEntryEffect(null, true), 'release');
-    assert.equal(pageEntryEffect(openIn('modal', 'notifications'), true), 'release');
-    assert.equal(pageEntryEffect(at('notifications'), false), 'release');
+    assert.equal(pageEntryEffect(openIn('modal', 'sources'), true), 'release');
+    assert.equal(pageEntryEffect(at('sources'), false), 'release');
   });
 
-  it('follows navigation: a row holds it, back releases it, an evicted page releases it', () => {
-    const page = reduceNav(at(null), { type: 'select', id: 'account' }, facts());
+  it('follows navigation: a row holds it, back releases it', () => {
+    const page = reduceNav(at(null), { type: 'select', id: 'about' }, facts());
     assert.equal(pageEntryEffect(page, true), 'hold');
     assert.equal(pageEntryEffect(reduceNav(page, { type: 'back' }, facts()), true), 'release');
-    assert.equal(pageEntryEffect(reduceNav(page, { type: 'facts-changed' }, signedOut), true), 'release');
   });
 
   it('keeps holding one entry while the open page changes', () => {
@@ -249,36 +204,19 @@ describe('settings navigation in the two-pane modal', () => {
     assert.equal(openIn('modal', undefined, 'sources').page, 'sources');
   });
 
-  it('opens straight onto an available target', () => {
-    assert.equal(openIn('modal', 'notifications', 'sources').page, 'notifications');
+  it('opens straight onto a target', () => {
+    assert.equal(openIn('modal', 'about', 'sources').page, 'about');
   });
 
-  it('falls back to the recent page, then Display, for an unavailable target', () => {
-    const desktop = facts({ isDesktopApp: true });
-    assert.equal(openIn('modal', 'notifications', 'map', desktop).page, 'map');
-    assert.equal(openIn('modal', 'notifications', null, desktop).page, 'display');
-    assert.equal(openIn('modal', 'account', 'account', signedOut).page, 'display');
-  });
-
-  it('selects an available section and ignores an unavailable one', () => {
-    const desktop = facts({ isDesktopApp: true });
-    const display = openIn('modal', undefined, null, desktop);
-    const about = reduceNav(display, { type: 'select', id: 'about' }, desktop);
+  it('selects a section', () => {
+    const display = openIn('modal');
+    const about = reduceNav(display, { type: 'select', id: 'about' }, facts());
     assert.equal(about.page, 'about');
-    assert.equal(reduceNav(about, { type: 'select', id: 'notifications' }, desktop), about);
   });
 
   it('never shows the home list: back keeps the page', () => {
     const map = openIn('modal', 'map');
     assert.equal(reduceNav(map, { type: 'back' }, facts()), map);
-  });
-
-  it('moves an evicted page to Display, not to a home list', () => {
-    const account = openIn('modal', 'account');
-    const after = reduceNav(account, { type: 'facts-changed' }, signedOut);
-    assert.equal(after.page, 'display');
-    assert.equal(after.layout, 'modal');
-    assert.deepEqual(diffNav(account, after), { leave: 'account', enter: 'display' });
   });
 
   it('keeps the open page when the modal narrows into the sheet', () => {
@@ -301,7 +239,6 @@ describe('settings navigation in the two-pane modal', () => {
     assert.equal(fromHome(null).page, 'display');
     assert.equal(fromHome('about').page, 'about');
     assert.deepEqual(diffNav(at(null), fromHome('about')), { leave: null, enter: 'about' });
-    assert.equal(relayout(at(null, signedOut), 'modal', 'account', signedOut).page, 'display');
   });
 
   it('returns the same state for a relayout that keeps the layout', () => {
@@ -321,7 +258,7 @@ describe('settings sidebar search', () => {
   const text = searchTerms(translate(EN));
 
   const ids = (groups: readonly NavGroup[]) =>
-    groups.flatMap((group) => group.rows.map((row) => (row.kind === 'section' ? row.id : 'sign-in')));
+    groups.flatMap((group) => group.rows.map((row) => row.id));
 
   it('keeps every row for an empty or blank query', () => {
     const all = buildNav(facts());
@@ -330,37 +267,33 @@ describe('settings sidebar search', () => {
   });
 
   it('matches the translated label and description, ignoring case', () => {
-    assert.deepEqual(ids(searchNav(buildNav(facts()), 'PRIVACY', text).groups), ['account', 'about']);
-    assert.deepEqual(ids(searchNav(buildNav(facts()), 'theme', text).groups), ['account', 'display', 'map']);
+    assert.deepEqual(ids(searchNav(buildNav(facts()), 'PRIVACY', text).groups), ['about']);
+    assert.deepEqual(ids(searchNav(buildNav(facts()), 'theme', text).groups), ['display', 'map']);
   });
 
   it('matches registry keywords and needs every word of the query', () => {
     const search = (q: string) => ids(searchNav(buildNav(facts()), q, text).groups);
-    assert.deepEqual(search('ollama'), ['account', 'ai']);
-    assert.deepEqual(search('text size'), ['account', 'panels', 'display']);
-    assert.deepEqual(search('telegram'), ['account', 'notifications']);
-    assert.deepEqual(search('backup'), ['account', 'sync']);
-    assert.deepEqual(search('globe tiles'), ['account', 'map']);
-    assert.deepEqual(search('stream autoplay'), ['account', 'video']);
+    assert.deepEqual(search('ollama'), ['ai']);
+    assert.deepEqual(search('text size'), ['panels', 'display']);
+    assert.deepEqual(search('backup'), ['sync']);
+    assert.deepEqual(search('globe tiles'), ['map']);
+    assert.deepEqual(search('stream autoplay'), ['video']);
   });
 
   it('drops groups left empty and keeps their headings in order', () => {
     const result = searchNav(buildNav(facts()), 'privacy', text);
-    assert.deepEqual(result.groups.map((group) => group.id), ['account', 'app']);
+    assert.deepEqual(result.groups.map((group) => group.id), ['app']);
   });
 
-  it('counts hits so the view can say nothing matched, while the account card stays', () => {
+  it('counts hits so the view can say nothing matched', () => {
     assert.equal(searchNav(buildNav(facts()), 'zzz', text).hits, 0);
-    assert.deepEqual(ids(searchNav(buildNav(facts()), 'zzz', text).groups), ['account']);
-    assert.deepEqual(ids(searchNav(buildNav(signedOut), 'zzz', text).groups), ['sign-in']);
+    assert.deepEqual(ids(searchNav(buildNav(facts()), 'zzz', text).groups), []);
     assert.equal(searchNav(buildNav(facts()), 'privacy', text).hits, 1);
-    assert.equal(searchNav(buildNav(facts()), 'billing', text).hits, 1);
   });
 
   it('gives every section a non-empty keyword list in the English catalogue', () => {
     for (const group of buildNav(facts())) {
       for (const row of group.rows) {
-        if (row.kind !== 'section') continue;
         const keywords = lookup(EN, row.keywordsKey);
         assert.ok(keywords !== null && typeof keywords === 'object', `${row.id} has keywords at ${row.keywordsKey}`);
         const words = Object.values(keywords as object);
@@ -380,8 +313,8 @@ describe('settings sidebar search', () => {
   it('finds a row in another language by its translated keyword and by the English original', () => {
     const fr = { settings: { keywords: { about: { 0: 'mentions légales', 1: 'confidentialité' } } } };
     const search = (q: string) => searchNav(buildNav(facts()), q, searchTerms(translate(fr)));
-    assert.deepEqual(ids(search('MENTIONS légales').groups), ['account', 'about']);
-    assert.deepEqual(ids(search('legal').groups), ['account', 'about']);
+    assert.deepEqual(ids(search('MENTIONS légales').groups), ['about']);
+    assert.deepEqual(ids(search('legal').groups), ['about']);
     assert.equal(search('mentions').hits, 1);
   });
 });

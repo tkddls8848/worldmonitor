@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { afterEach, beforeEach, describe, it, mock } from 'node:test';
 import marketGateway from '../api/market/v1/[rpc].ts';
-import { issueSessionToken } from '../api/_session.js';
 
 const originalEnv = { ...process.env };
 const seed = {
@@ -20,7 +19,6 @@ beforeEach(() => {
   unexpectedFetches = [];
   process.env.UPSTASH_REDIS_REST_URL = 'https://redis.test';
   process.env.UPSTASH_REDIS_REST_TOKEN = 'synthetic-token';
-  process.env.WM_SESSION_SECRET = 'synthetic-market-cache-session-secret';
   process.env.FINNHUB_API_KEY = 'synthetic-finnhub-key';
   delete process.env.ALPHA_VANTAGE_API_KEY;
   delete process.env.LOCAL_API_MODE;
@@ -48,7 +46,7 @@ afterEach(() => {
 });
 
 async function request(symbols = 'AAPL') {
-  const { token } = await issueSessionToken();
+  const token = 'wms_test-browser-session';
   return marketGateway(new Request(`https://worldmonitor.app/api/market/v1/list-market-quotes?symbols=${encodeURIComponent(symbols)}&_debug=1`, {
     headers: { Origin: 'https://worldmonitor.app', 'X-WorldMonitor-Key': token },
   }));

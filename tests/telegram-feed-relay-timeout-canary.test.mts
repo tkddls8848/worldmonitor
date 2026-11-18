@@ -48,7 +48,6 @@ delete process.env.UPSTASH_REDIS_REST_TOKEN;
 process.env.VITE_SENTRY_DSN = 'https://testpublickey@sentry.test/12345';
 process.env.WS_RELAY_URL = 'https://relay.example.com';
 process.env.RELAY_SHARED_SECRET = 'test-secret';
-process.env.WM_SESSION_SECRET = SESSION_SECRET;
 
 // parseDsn() derives `${protocol}//${host}/api/${projectId}/envelope/` from the
 // DSN above → this prefix.
@@ -56,7 +55,6 @@ const ENVELOPE_URL_PREFIX = 'https://sentry.test/api/12345/envelope';
 const RELAY_URL_PREFIX = 'https://relay.example.com';
 
 const { default: handler, relayFailureLevel } = await import('../api/telegram-feed.js');
-const { issueSessionToken } = await import('../api/_session.js');
 
 const originalFetch = globalThis.fetch;
 after(() => {
@@ -107,7 +105,7 @@ async function runWithRelayFailure(path: string, relayError: Error): Promise<{
     throw new Error(`unexpected fetch: ${url}`);
   }) as typeof fetch;
 
-  const { token } = await issueSessionToken();
+  const token = 'wms_test-browser-session';
   const res = await handler(new Request(`https://worldmonitor.app${path}`, {
     method: 'GET',
     headers: { origin: 'https://worldmonitor.app', 'X-WorldMonitor-Key': token },

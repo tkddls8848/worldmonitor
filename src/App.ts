@@ -1,15 +1,12 @@
 import type { Monitor, PanelConfig, MapLayers } from '@/types';
-import { WEB_APP_ORIGIN } from '@/config/web-origin';
 import {
   isStockResearchPath,
   stockResearchSymbolFromPath,
 } from '@/features/stock-research/stock-research-route';
 import { openStockResearchOverlay } from '@/features/stock-research/stock-research-overlay';
-import { openExternalUrl } from '@/services/external-navigation';
 import { normalizeExclusiveChoropleths } from '@/components/resilience-choropleth-utils';
 import type { AppContext } from '@/app/app-context';
 import type { LoadAllDataTrigger } from '@/app/viewport-hydration-ledger';
-import { applyVisibleMapDimension } from '@/app/map-dimension-control';
 import {
   REFRESH_INTERVALS,
   DEFAULT_PANELS,
@@ -30,7 +27,6 @@ import {
   mapLayerStatesEqual,
 } from '@/config/map-layer-definitions';
 import type { MapVariant } from '@/config/map-layer-definitions';
-import { getStoredMapModePreference } from '@/services/map-mode-preference';
 import { applyCanadaRoadsOptInMigration } from '@/services/canada-roads-opt-in';
 import {
   openStorageForBoot,
@@ -43,7 +39,6 @@ import {
   stopFlightHistoryCleanup,
 } from '@/services';
 import { enableVesselRuntime, stopLoadedVesselHistoryCleanup } from '@/services/military-vessels-lazy';
-import { startSelfHostKeyService } from '@/services/self-host-key';
 import { mlWorker } from '@/services/ml-worker';
 import { getAiFlowSettings, subscribeAiFlowChange, isHeadlineMemoryEnabled } from '@/services/ai-flow-settings';
 import { startLearning } from '@/services/country-instability';
@@ -57,7 +52,7 @@ import {
   saveToStorage,
   showToast,
 } from '@/utils';
-import { clearPanelSpans, invalidatePanelStorageCacheForKeys } from '@/utils/panel-storage';
+import { clearPanelSpans } from '@/utils/panel-storage';
 import type { OrbitalShareLink } from '@/utils/urlState';
 import { scheduleOrbitalShareLink, takeOrbitalShareLink } from '@/app/orbital-share-link';
 import { connectOrbitalLookupMap } from '@/services/orbital/lookup-host';
@@ -69,7 +64,6 @@ import { initBreakingNewsAlerts, destroyBreakingNewsAlerts } from '@/services/br
 import { markLcpDebug } from '@/utils/lcp-debug';
 import { safeStorageGet, safeStorageSet } from '@/utils/safe-storage';
 import type { ServiceStatusPanel } from '@/components/ServiceStatusPanel';
-import type { MonitorPanel } from '@/components/MonitorPanel';
 import type { StablecoinPanel } from '@/components/StablecoinPanel';
 import type { EnergyCrisisPanel } from '@/components/EnergyCrisisPanel';
 import type { ETFFlowsPanel } from '@/components/ETFFlowsPanel';
@@ -110,11 +104,10 @@ import type { PositioningPanel } from '@/components/PositioningPanel';
 import type { GoldIntelligencePanel } from '@/components/GoldIntelligencePanel';
 import { isDesktopRuntime, waitForSidecarReady } from '@/services/runtime';
 import { BETA_MODE } from '@/config/beta';
-import { track, trackEvent, trackDeeplinkOpened, initAuthAnalytics, trackMapViewChange } from '@/services/analytics';
+import { track, trackEvent, trackDeeplinkOpened, trackMapViewChange } from '@/services/analytics';
 import { preloadCountryGeometry, isCountryGeometryLoaded, getCountryNameByCode } from '@/services/country-geometry';
 import { initI18n, t, I18N_RESOURCES_LOADED_EVENT, type I18nResourcesLoadedDetail } from '@/services/i18n';
 import { initDeferredDashboardFonts } from '@/bootstrap/secondary-startup';
-import { applyFontScale, FONT_SCALE_STORAGE_KEY } from '@/services/font-scale-settings';
 
 import {
   CANADA_ARCTIC_OPT_IN_SOURCES,
@@ -157,8 +150,6 @@ import {
   waitForBootstrapSlowTier,
   type BootstrapHydrationState,
 } from '@/services/bootstrap';
-import { ensureWmSession, installWmSessionFetchInterceptor, WM_SESSION_DEGRADED_EVENT, type WmSessionDegradedDetail } from '@/services/wm-session';
-import { describeWmSessionDegradation, WM_SESSION_DEGRADED_FALLBACK_COPY } from '@/services/wm-session-copy';
 import { describeFreshness } from '@/services/persistent-cache';
 import { DesktopUpdater } from '@/app/desktop-updater';
 import { CountryIntelManager } from '@/app/country-intel';
@@ -184,7 +175,7 @@ import {
   waitForWebMcpUiReady,
 } from '@/app/webmcp-dashboard';
 import type { MapLayerRuntimeAvailability } from '@/services/map-layer-runtime-availability';
-import { getWebMcpAccessContext, openWebMcpSignIn } from '@/app/webmcp-access';
+import { buildWebMcpAccessContext } from '@/services/webmcp-access-snapshot';
 import { runDashboardActionBinding } from '@/app/dashboard-action-binding';
 import { selectWebMcpPanelTab } from '@/app/webmcp-panel-tab-binding';
 import { refreshDataFreshnessFromHealth } from '@/services/health-freshness';
@@ -196,18 +187,7 @@ import { DataLoaderManager } from '@/app/data-loader';
 import { EventHandlerManager } from '@/app/event-handlers';
 import { isCatalogPanelLive, waitUntilPanelLive } from '@/app/panel-enablement';
 import { replaceRawI18nKeyPlaceholders } from '@/utils/i18n-raw-key-healer';
-import { startAccountAuthHandoff } from '@/app/account-auth-handoff';
 import { initialRegionFromCache, resolveUserRegion, resolvePreciseUserCoordinates, type PreciseCoordinates } from '@/utils/user-location';
-import { getAuthState, initAuthState, subscribeAuthState } from '@/services/auth-state';
-import { installSignUpResume } from '@/services/sign-up-resume';
-import { createSignUpResumeOverlay } from '@/components/SignUpResumeOverlay';
-import {
-  CLOUD_PREFS_APPLIED_EVENT,
-  install as installCloudPrefsSync,
-  onSignIn as cloudPrefsSignIn,
-  onSignOut as cloudPrefsSignOut,
-  type CloudPrefsAppliedDetail,
-} from '@/utils/cloud-prefs-sync';
 import {
   migrateFrontlineEuropeDefaultsV3,
   migrateStrategicDefaultsV4,
@@ -219,42 +199,14 @@ import {
   migrateGermanRssSourcesV10,
 } from '@/utils/cloud-prefs-migrations';
 import {
-  getConvexClient,
-  getConvexApi,
-  invalidateConvexAuthForSignOut,
-  rebindConvexAuthForWatchHandoff,
-  waitForConvexAuthForUser,
-} from '@/services/convex-client';
-import {
-  assertAccountStillCurrent,
-  isAccountStillCurrent,
-  settleAccountOperation,
-} from '@/services/account-operation';
-import type { Id } from '../convex/_generated/dataModel';
-import { watchDesktopCloudAccess } from '@/services/desktop-cloud-auth';
-import {
-  FREE_TIER_FOLLOW_LIMIT,
-  WM_FOLLOWED_COUNTRIES_CAP_DROP,
   addCountry,
   getFollowed,
-  installFollowedCountriesAuthListener,
+  installFollowedCountriesListeners,
   isFollowFeatureEnabled,
   isFollowed,
   removeCountry,
   serviceEntitlementState,
 } from '@/services/followed-countries';
-import {
-  clearStoredAnonIdentity,
-  getFreshStoredAnonClaimToken,
-  getStoredAnonId,
-} from '@/services/anonymous-identity-storage';
-import {
-  businessInviteErrorKind,
-  captureBusinessInviteFromUrl,
-  clearPendingBusinessInvite,
-  keepInviteAfterAttempt,
-  loadPendingBusinessInvite,
-} from '@/services/business-invite-capture';
 import { nextPrimeRetryDelayMs } from '@/utils/prime-retry';
 
 /** Look-ahead margin for viewport-gated panel priming and refresh scheduling. */
@@ -309,8 +261,6 @@ export class App {
 
   private modules: { destroy(): void }[] = [];
   private unsubAiFlow: (() => void) | null = null;
-  private unsubFreeTier: (() => void) | null = null;
-  private unsubDesktopCloudAccess: (() => void) | null = null;
   /**
    * Boot epoch for optional local-AI continuations (#7779). destroy() bumps
    * it first so a stale detached continuation from a torn-down App can never
@@ -352,21 +302,8 @@ export class App {
   private slowTierWaitTimedOut = false;
   /** Scroll/resize register at readiness; marks/primes arm only after fan-out. */
   private viewportTriggersArmed = false;
-  private followedCountriesCapDropToastTimer: number | null = null;
   private bootstrapHydrationState: BootstrapHydrationState = getBootstrapHydrationState();
   private cachedModeBannerEl: HTMLElement | null = null;
-  private readonly handleWmSessionDegraded = (event?: Event): void => {
-    if (!this.state.isDestroyed) {
-      // Pre-#5674 bundles in long-lived tabs can still dispatch a plain Event
-      // with no detail; fall back to the cookie wording those users used to get.
-      const reason = (event as CustomEvent<WmSessionDegradedDetail> | undefined)?.detail?.reason;
-      showToast(
-        reason
-          ? describeWmSessionDegradation(reason)
-          : WM_SESSION_DEGRADED_FALLBACK_COPY,
-      );
-    }
-  };
   private readonly handleViewportPrime = (event?: Event): void => {
     if (!this.viewportHydrationReady || this.state.isDestroyed) return;
     // The catch-up scan after fan-out covers early viewport changes without
@@ -414,97 +351,11 @@ export class App {
     // startup, by which point the full English bundle should already be loaded.
     replaceRawI18nKeyPlaceholders(this.state.container, t);
   };
-  private readonly handleFollowedCountriesCapDrop = (ev: Event): void => {
-    const detail = (ev as CustomEvent<{ kept?: unknown; dropped?: unknown }>).detail;
-    const dropped = typeof detail?.dropped === 'number' ? detail.dropped : 0;
-    const kept = typeof detail?.kept === 'number' ? detail.kept : FREE_TIER_FOLLOW_LIMIT;
-    if (dropped <= 0) return;
-    this.showFollowedCountriesCapDropToast(kept, dropped);
-  };
-  private readonly handleCloudPrefsApplied = (ev: Event): void => {
-    const detail = (ev as CustomEvent<CloudPrefsAppliedDetail>).detail;
-    this.applyCloudSyncedPrefsToRuntime(detail?.keys ?? []);
-  };
   private readonly getMapLayerRuntimeAvailability = (): MapLayerRuntimeAvailability => ({
     cyberLayerEnabled: CYBER_LAYER_ENABLED,
     aisConfigured: isAisConfigured(),
     outagesAvailable: isOutagesConfigured() !== false,
   });
-  private applyCloudSyncedPrefsToRuntime(keys: readonly string[]): void {
-    if (keys.length === 0) return;
-
-    const keySet = new Set(keys);
-    let gatePreferencesRestored = false;
-    invalidatePanelStorageCacheForKeys(keys);
-
-    if (keySet.has(FONT_SCALE_STORAGE_KEY)) {
-      applyFontScale();
-    }
-
-    if (keySet.has(STORAGE_KEYS.panels)) {
-      this.state.panelSettings = loadFromStorage<Record<string, PanelConfig>>(
-        STORAGE_KEYS.panels,
-        this.state.panelSettings,
-      );
-      // A cloud blob can carry panels the retired free-tier clamp hid; put them back.
-      const reconciledPanelSettings = this.restoreGateOwnedPreferences();
-      gatePreferencesRestored = true;
-      if (!reconciledPanelSettings) {
-        this.panelLayout.applyPanelSettings();
-        this.state.unifiedSettings?.refreshPanelToggles();
-      }
-    }
-
-    const panelOrderKey = this.state.PANEL_ORDER_KEY;
-    if (keySet.has(panelOrderKey) || keySet.has(`${panelOrderKey}-bottom-set`)) {
-      this.panelLayout.applySavedPanelOrder();
-    }
-
-    if (
-      (keySet.has(STORAGE_KEYS.mapLayers) || keySet.has(STORAGE_KEYS.mapLayerGateOwnership))
-      && !this.state.initialUrlState?.layers
-    ) {
-      let nextLayers = normalizeExclusiveChoropleths(
-        sanitizeLayersForVariant(
-          loadFromStorage<MapLayers>(STORAGE_KEYS.mapLayers, this.state.mapLayers),
-          SITE_VARIANT as MapVariant,
-        ),
-        this.state.mapLayers,
-      );
-      nextLayers = this.restoreGateOwnedMapLayers(nextLayers);
-      if (!CYBER_LAYER_ENABLED) nextLayers.cyberThreats = false;
-      if (!mapLayerStatesEqual(this.state.mapLayers, nextLayers)) {
-        this.state.mapLayers = nextLayers;
-        this.state.map?.setLayers(nextLayers);
-        this.dataLoader.syncDataFreshnessWithLayers();
-      }
-    }
-
-    if (keySet.has(STORAGE_KEYS.mapMode)) {
-      const mode = getStoredMapModePreference();
-      if (this.state.map) {
-        void applyVisibleMapDimension(this.state, mode === 'globe' ? '3d' : '2d');
-      }
-    }
-
-    if (
-      keySet.has(STORAGE_KEYS.disabledFeeds)
-      || keySet.has(STORAGE_KEYS.sourceGateOwnership)
-    ) {
-      // A cloud generation can contain only source preferences. Restore any
-      // sources the retired cap disabled, then reload storage.
-      if (!gatePreferencesRestored) this.restoreGateOwnedPreferences();
-      this.state.disabledSources = new Set(loadFromStorage<string[]>(STORAGE_KEYS.disabledFeeds, []));
-    }
-
-    if (keySet.has(STORAGE_KEYS.monitors)) {
-      this.state.monitors = loadFromStorage<Monitor[]>(STORAGE_KEYS.monitors, []);
-      const monitorPanel = this.state.panels['monitors'] as MonitorPanel | undefined;
-      monitorPanel?.setMonitors(this.state.monitors);
-      this.dataLoader.updateMonitorResults();
-    }
-  }
-
   private isPanelNearViewport(panelId: string, marginPx = DEFAULT_VIEWPORT_MARGIN_PX): boolean {
     if (marginPx === DEFAULT_VIEWPORT_MARGIN_PX && this.viewportNearCache) {
       const cached = this.viewportNearCache.get(panelId);
@@ -1511,8 +1362,6 @@ export class App {
       digestPanel: null,
       speciesPanel: null,
       renewablePanel: null,
-      authModal: null,
-      authHeaderWidget: null,
       tvMode: null,
       happyAllItems: [],
       isDestroyed: false,
@@ -2234,34 +2083,6 @@ export class App {
               followed,
               message: 'iso2 must identify a supported country.',
             };
-          case 'FREE_CAP':
-            return {
-              ok: false,
-              status: 'denied',
-              iso2: code,
-              followed,
-              reason: 'free_cap',
-              limit: result.limit ?? FREE_TIER_FOLLOW_LIMIT,
-              message: 'The free followed-country limit is already in use.',
-            };
-          case 'ENTITLEMENT_LOADING':
-            return {
-              ok: false,
-              status: 'denied',
-              iso2: code,
-              followed,
-              reason: 'entitlement_loading',
-              message: 'Account access is still loading. Try again after it settles.',
-            };
-          case 'HANDOFF_PENDING':
-            return {
-              ok: false,
-              status: 'denied',
-              iso2: code,
-              followed,
-              reason: 'handoff_pending',
-              message: 'Followed-country state is still syncing. Try again after it settles.',
-            };
           case 'STORAGE_FULL':
             return {
               ok: false,
@@ -2319,7 +2140,7 @@ export class App {
         if (this.state.isDestroyed) {
           throw new DashboardBindingError('app_destroyed', 'Dashboard is no longer available.');
         }
-        return getWebMcpAccessContext({
+        return buildWebMcpAccessContext({
           enabledPanelUsed: Object.values(this.state.panelSettings).filter((panel) => panel.enabled).length,
           dashboardTabCount: this.panelLayout.getDashboardTabCount(),
         });
@@ -2329,7 +2150,8 @@ export class App {
         if (this.state.isDestroyed) {
           throw new DashboardBindingError('app_destroyed', 'Dashboard is no longer available.');
         }
-        return openWebMcpSignIn(execution?.signal);
+        // There is no account to sign in to.
+        return { ok: false, status: 'denied', reason: 'clerk_unavailable' };
       },
     };
   }
@@ -2341,15 +2163,6 @@ export class App {
     // src/main.ts registers WebMCP before loading App. Own its controller before
     // the first await so a failed init unregisters those tools through destroy().
     this.webMcpController = webMcpController;
-
-    // Take a Business seat invite out of the URL before the map URL sync
-    // rewrites the query string. The accept hook in the auth subscription
-    // reads it from here, including after a sign-up that happens later.
-    captureBusinessInviteFromUrl();
-
-    // Self-hosted installs: ask the sidecar for the desktop-key verdict. Never
-    // awaited; a no-op on worldmonitor.app and in the desktop app.
-    startSelfHostKeyService();
 
     window.addEventListener(I18N_RESOURCES_LOADED_EVENT, this.handleI18nResourcesLoaded);
 
@@ -2513,35 +2326,6 @@ export class App {
       }
     }
 
-    // Anonymous browser session token (issue #3541). Server's validateApiKey
-    // no longer trusts header-only signals (Origin / Referer / Sec-Fetch-Site
-    // are all forgeable). Install a fetch interceptor ONCE, then mint a
-    // wms_-prefixed HMAC token before the first API call. Desktop has its own
-    // API key path and doesn't need this; Clerk-authenticated users will pass
-    // their JWT in a Bearer header and the interceptor steps aside.
-    if (!isDesktopRuntime()) {
-      window.addEventListener(WM_SESSION_DEGRADED_EVENT, this.handleWmSessionDegraded);
-      installWmSessionFetchInterceptor();
-      // Guarded like every other call site (the interceptor's own, and both
-      // periodic-refresh handlers). ensureWmSession() genuinely rejects on the
-      // old WebView / Smart-TV engines this module targets — `new
-      // AbortController()` and the timeout setTimeout sit outside mintSession's
-      // try — and init() has no try/catch, so an unguarded await would abort
-      // boot: no bootstrap hydration, no auth, no UI. main.ts catches that with
-      // `.catch(console.error)`, so it would not even reach Sentry. Session
-      // establishment is best-effort at this point; the refresh-on-401 layer is
-      // the safety net.
-      //
-      // Boot does not await the mint. The fast tier is a credential-less public
-      // read the interceptor passes straight through, and every session-bound
-      // call goes through the interceptor, which awaits the in-flight mint.
-      // Awaiting here put a full /api/wm-session round trip in front of the
-      // first dashboard data.
-      void ensureWmSession()
-        .catch(() => false)
-        .then(() => markLcpDebug('wm:boot:session-ready'));
-    }
-
     // Hydrate in-memory cache from bootstrap endpoint. Awaits only the fast tier; the slow
     // tier loads in the background (off the first-paint critical path, #4488) and calls back
     // when it lands so the connectivity indicator re-snapshots (no reactive emitter exists).
@@ -2554,182 +2338,10 @@ export class App {
     markLcpDebug('wm:boot:fast-bootstrap-ready');
     this.bootstrapHydrationState = getBootstrapHydrationState();
 
-    // Verify OAuth OTT and hydrate auth session BEFORE any UI subscribes to auth state
-    await initAuthState();
-    initAuthAnalytics();
-    installSignUpResume(createSignUpResumeOverlay());
-    installCloudPrefsSync(SITE_VARIANT);
-    window.addEventListener(CLOUD_PREFS_APPLIED_EVENT, this.handleCloudPrefsApplied);
-    // Install the followed-countries auth listener once. Drives the
-    // anon→signed-in handoff (mergeAnonymousLocal mutation) and sign-out
-    // cleanup. Idempotent.
-    installFollowedCountriesAuthListener();
-    window.addEventListener(WM_FOLLOWED_COUNTRIES_CAP_DROP, this.handleFollowedCountriesCapDrop);
+    // Install the followed-countries listeners once (picker global and
+    // cross-tab storage fan-out). Idempotent.
+    installFollowedCountriesListeners();
     this.restoreGateOwnedPreferences();
-
-    let _prevUserId: string | null = null;
-    let _convexWatchHandoffGeneration = 0;
-    if (isDesktopRuntime()) {
-      // Desktop cloud data rides the Pro credential (#9396). Requests sent
-      // before it existed got 401s and tripped panel breakers, so start clean.
-      this.unsubDesktopCloudAccess = watchDesktopCloudAccess(() => window.location.reload());
-    }
-    this.unsubFreeTier = subscribeAuthState((session) => {
-      const userId = session.user?.id ?? null;
-      const accountTransition = (
-        (userId !== null && userId !== _prevUserId) ||
-        (userId === null && _prevUserId !== null)
-      );
-      if (userId !== null && userId !== _prevUserId) {
-        const handoffGeneration = ++_convexWatchHandoffGeneration;
-        void startAccountAuthHandoff({
-          userId,
-          isCurrent: () => (
-            !this.state.isDestroyed &&
-            handoffGeneration === _convexWatchHandoffGeneration &&
-            getAuthState().user?.id === userId
-          ),
-          effects: {
-            rebindConvexAuthForWatchHandoff,
-            cloudPrefsSignIn: (nextUserId) => cloudPrefsSignIn(nextUserId, SITE_VARIANT),
-          },
-        });
-
-        // Claim any anonymous purchase made before sign-in (anon → real user migration)
-        const anonId = getStoredAnonId();
-        if (anonId) {
-          void (async () => {
-            const [client, api] = await Promise.all([getConvexClient(), getConvexApi()]);
-            if (!client || !api) return;
-            // Wait for ConvexClient WebSocket auth handshake to complete.
-            // Without this, mutations arrive at Convex before the server
-            // has the JWT → "Authentication required" errors.
-            const ready = await waitForConvexAuthForUser(userId, 10_000);
-            if (!ready) {
-              console.warn('[billing] claimSubscription skipped — Convex auth not ready');
-              return;
-            }
-            const claimToken = getFreshStoredAnonClaimToken() ?? undefined;
-            const result = await settleAccountOperation(
-              userId,
-              'claiming the anonymous subscription',
-              () => client.mutation(api.payments.billing.claimSubscription, {
-                anonId,
-                ...(claimToken ? { claimToken } : {}),
-              }),
-            );
-            assertAccountStillCurrent(userId, 'claiming the anonymous subscription');
-            const claimed = result.claimed;
-            const totalClaimed = claimed.subscriptions + claimed.entitlements +
-                                 claimed.customers + claimed.payments;
-            if (totalClaimed > 0) {
-              console.log('[billing] Claimed anon subscription on sign-in:', claimed);
-            }
-            // Always remove after non-throwing completion — mutation is idempotent.
-            // Prevents cold Convex init + mutation on every sign-in for non-purchasers.
-            clearStoredAnonIdentity();
-          })().catch((err: unknown) => {
-            if (!isAccountStillCurrent(userId)) return;
-            console.warn('[billing] claimSubscription failed:', err);
-            // Non-fatal — anon ID preserved for retry on next page load
-          });
-        }
-
-        // Accept a Business Pro seat invite (mirror of the anon-claim hook).
-        // The invite link is /dashboard?accept-business-invite=<id>&token=<t>;
-        // older emails used /settings, which vercel.json redirects here.
-        // init() captured it before the map URL sync rewrote the query string,
-        // so an invitee who signs up after landing still accepts it here.
-        // Runs after sign-in so the invitee's Clerk email is available server-side.
-        const pendingBusinessInvite = loadPendingBusinessInvite();
-        if (pendingBusinessInvite) {
-          void (async () => {
-            const [client, api] = await Promise.all([getConvexClient(), getConvexApi()]);
-            if (!client || !api) return;
-            const ready = await waitForConvexAuthForUser(userId, 10_000);
-            if (!ready) {
-              console.warn('[business-seats] acceptBusinessInvite skipped — Convex auth not ready');
-              return;
-            }
-            // settleAccountOperation also throws when the server accepted but
-            // Clerk switched accounts meanwhile, so record acceptance here.
-            let acceptedByServer = false;
-            let failureKind: string | null = null;
-            // Enterprise account invites share this capture and lifecycle;
-            // only the mutation and the success copy differ.
-            const isEnterpriseInvite = pendingBusinessInvite.kind === 'enterprise';
-            const operation = isEnterpriseInvite
-              ? 'accepting the Enterprise account invite'
-              : 'accepting the Business Pro seat invite';
-            try {
-              await settleAccountOperation(
-                userId,
-                operation,
-                () => (isEnterpriseInvite
-                  ? client.mutation(api.enterpriseSeats.acceptInvite, {
-                    memberId: pendingBusinessInvite.grantId as Id<'enterpriseMembers'>,
-                    token: pendingBusinessInvite.token,
-                  })
-                  : client.mutation(api.payments.businessSeats.acceptBusinessInvite, {
-                    grantId: pendingBusinessInvite.grantId as Id<'businessProGrants'>,
-                    token: pendingBusinessInvite.token,
-                  })
-                ).then((result) => {
-                  acceptedByServer = true;
-                  return result;
-                }),
-              );
-              assertAccountStillCurrent(userId, operation);
-              showToast(isEnterpriseInvite ? 'You have joined the Enterprise account' : 'Pro seat activated');
-            } catch (err) {
-              const kind = businessInviteErrorKind(err);
-              failureKind = kind;
-              if (!isAccountStillCurrent(userId)) return;
-              if (kind === 'INVITE_EMAIL_MISMATCH') {
-                showToast('This invite is for a different email address');
-              } else if (kind === 'INVITEE_EMAIL_UNVERIFIED') {
-                showToast('Verify your email address to accept this invite');
-              } else if (kind === 'INVITE_EXPIRED') {
-                showToast('This invite has expired');
-              } else if (kind === 'BUSINESS_NOT_ACTIVE') {
-                showToast('The Business plan that sent this invite is no longer active');
-              } else if (kind === 'CONTRACT_ENDED') {
-                showToast('The Enterprise contract that sent this invite has ended');
-              } else if (kind === 'ALREADY_MEMBER_OF_ANOTHER_ACCOUNT') {
-                showToast('This account already belongs to another Enterprise account');
-              } else if (kind === 'INVITE_ALREADY_USED') {
-                showToast('This invite has already been used');
-              } else {
-                showToast('Could not accept invite');
-              }
-              console.warn('[business-seats] acceptBusinessInvite failed:', err);
-            } finally {
-              // Forget the invite once it is settled so a refresh does not retry.
-              // A wrong account or an account switch keeps it for the invited
-              // account to accept in this tab.
-              const keep = keepInviteAfterAttempt({
-                accepted: acceptedByServer,
-                accountChanged: !isAccountStillCurrent(userId),
-                errorKind: failureKind,
-              });
-              if (!keep) clearPendingBusinessInvite(pendingBusinessInvite);
-            }
-          })();
-        }
-      } else if (userId === null && _prevUserId !== null) {
-        // Clerk's mounted UserButton signs out through the SDK directly, so
-        // this observed transition is the authoritative place to invalidate
-        // cached/in-flight HTTP tokens and the authenticated Convex socket.
-        invalidateConvexAuthForSignOut();
-        // Supersede any server-auth wait that was started for the account
-        // being signed out before it gets a chance to attach user watches.
-        _convexWatchHandoffGeneration++;
-        cloudPrefsSignOut();
-      }
-      _prevUserId = userId;
-      if (accountTransition) this.reconcileTierOwnedPreferences();
-    });
-
 
     const geoCoordsPromise: Promise<PreciseCoordinates | null> =
       this.state.isMobile && this.state.initialUrlState?.lat === undefined && this.state.initialUrlState?.lon === undefined
@@ -2811,7 +2423,6 @@ export class App {
     // Correlation engine is constructed lazily at its post-loadAllData run site
     // (Phase 6 below) so its bytes + adapters stay off the eager boot graph (#4486).
     this.eventHandlers.setupUnifiedSettings();
-    this.eventHandlers.setupAuthWidget();
     // Phase 4: MapLayerHandlers, CountryIntel. SearchManager is lazy-loaded
     // on first CMD+K/search-button open so its modal catalog stays off startup.
     this.eventHandlers.setupMapLayerHandlers();
@@ -2828,9 +2439,6 @@ export class App {
     this.pendingDeepLinkExpanded = initState.expanded === true;
     this.pendingDeepLinkChokepoint = initState.chokepoint ?? null;
     const earlyParams = new URLSearchParams(window.location.search);
-    if (earlyParams.get('settings') === 'notifications') {
-      void this.state.unifiedSettings?.open('notifications');
-    }
     this.pendingDeepLinkStoryCode = earlyParams.get('c') ?? null;
     this.pendingDeepLinkSearchQuery = readDashboardSearchQuery(window.location.search);
     this.pendingOrbitalShareLink = ORBITAL_WATCH_ENABLED ? takeOrbitalShareLink() : null;
@@ -2940,15 +2548,6 @@ export class App {
     this.dataLoader.reprioritizeLateRegionPredictions(region);
   }
 
-  /** Reconcile all gate-owned preferences against one settled account view. */
-  private reconcileTierOwnedPreferences(): boolean {
-    this.restoreGateOwnedPreferences();
-    // Stored dashboard-tab snapshots have their own panel copies.
-    this.panelLayout.healStoredTabSnapshots();
-    this.healLockedMapLayers();
-    return true;
-  }
-
   private persistJsonStorageValue<T>(key: string, value: T): boolean {
     try {
       localStorage.setItem(key, JSON.stringify(value));
@@ -2986,29 +2585,6 @@ export class App {
       () => this.persistJsonStorageValue(STORAGE_KEYS.mapLayerGateOwnership, []),
     );
     return persistence.preferencePersisted ? restored : layers;
-  }
-
-  /** Restore gate-owned map layers on the live map and in persisted state. */
-  private healLockedMapLayers(): void {
-    const initialUrlLayers = this.state.initialUrlState?.layers;
-    if (initialUrlLayers) {
-      const healedUrlLayers = this.restoreGateOwnedMapLayers(
-        initialUrlLayers,
-        { ephemeralSnapshot: true },
-      );
-      if (healedUrlLayers !== initialUrlLayers && this.state.initialUrlState) {
-        this.state.initialUrlState.layers = healedUrlLayers;
-      }
-    }
-    // A session booted from a `?layers=` link keeps that view ephemeral.
-    const healed = this.restoreGateOwnedMapLayers(
-      this.state.mapLayers,
-      initialUrlLayers ? { ephemeralSnapshot: true } : {},
-    );
-    if (healed === this.state.mapLayers) return;
-    this.state.mapLayers = healed;
-    this.state.map?.setLayers(healed);
-    this.dataLoader.syncDataFreshnessWithLayers();
   }
 
   /** Put back the panels the retired free-tier gate hid (marked `proGated`). */
@@ -3173,8 +2749,6 @@ export class App {
     window.removeEventListener('online', this.handleConnectivityChange);
     window.removeEventListener('offline', this.handleConnectivityChange);
     window.removeEventListener(I18N_RESOURCES_LOADED_EVENT, this.handleI18nResourcesLoaded);
-    window.removeEventListener(WM_FOLLOWED_COUNTRIES_CAP_DROP, this.handleFollowedCountriesCapDrop);
-    window.removeEventListener(CLOUD_PREFS_APPLIED_EVENT, this.handleCloudPrefsApplied);
     if (this.visiblePanelPrimeRaf !== null) {
       window.cancelAnimationFrame(this.visiblePanelPrimeRaf);
       this.visiblePanelPrimeRaf = null;
@@ -3203,8 +2777,6 @@ export class App {
     } finally {
       // Clean up subscriptions, map, AIS, and breaking news
       this.unsubAiFlow?.();
-      this.unsubFreeTier?.();
-      this.unsubDesktopCloudAccess?.();
       mlWorker.terminate();
       this.state.findingsBadge?.destroy();
       this.state.findingsBadge = null;
@@ -3212,11 +2784,6 @@ export class App {
       destroyBreakingNewsAlerts();
       this.cachedModeBannerEl?.remove();
       this.cachedModeBannerEl = null;
-      window.removeEventListener(WM_SESSION_DEGRADED_EVENT, this.handleWmSessionDegraded);
-      if (this.followedCountriesCapDropToastTimer !== null) {
-        window.clearTimeout(this.followedCountriesCapDropToastTimer);
-        this.followedCountriesCapDropToastTimer = null;
-      }
       this.state.map?.destroy();
       disconnectAisStream();
       stopFlightHistoryCleanup();
@@ -3254,77 +2821,6 @@ export class App {
     } catch (error) {
       console.warn('[IntelligenceGapBadge] Lazy init failed:', error);
     }
-  }
-
-  private showFollowedCountriesCapDropToast(kept: number, dropped: number): void {
-    if (this.followedCountriesCapDropToastTimer !== null) {
-      window.clearTimeout(this.followedCountriesCapDropToastTimer);
-      this.followedCountriesCapDropToastTimer = null;
-    }
-    document.querySelector('.wm-followed-cap-drop-toast')?.remove();
-
-    const toast = document.createElement('div');
-    toast.className = 'wm-followed-cap-drop-toast update-toast';
-    toast.setAttribute('role', 'status');
-    toast.setAttribute('aria-live', 'polite');
-
-    const body = document.createElement('div');
-    body.className = 'update-toast-body';
-
-    const title = document.createElement('div');
-    title.className = 'update-toast-title';
-    title.textContent = 'Follow limit reached';
-
-    const detail = document.createElement('div');
-    detail.className = 'update-toast-detail';
-    const countryWord = dropped === 1 ? 'country was' : 'countries were';
-    detail.textContent = `${kept} kept. ${dropped} ${countryWord} not added because the free plan supports ${FREE_TIER_FOLLOW_LIMIT} followed countries.`;
-
-    body.append(title, detail);
-
-    const action = document.createElement('button');
-    action.type = 'button';
-    action.className = 'update-toast-action';
-    action.dataset.action = 'upgrade';
-    action.textContent = 'Upgrade';
-
-    const dismiss = document.createElement('button');
-    dismiss.type = 'button';
-    dismiss.className = 'update-toast-dismiss';
-    dismiss.dataset.action = 'dismiss';
-    dismiss.setAttribute('aria-label', 'Dismiss');
-    dismiss.textContent = '\u00d7';
-
-    toast.append(body, action, dismiss);
-
-    this.followedCountriesCapDropToastTimer = window.setTimeout(() => {
-      toast.remove();
-      this.followedCountriesCapDropToastTimer = null;
-    }, 8000);
-    toast.addEventListener('click', (e) => {
-      const clickedAction = (e.target as HTMLElement)
-        .closest<HTMLElement>('[data-action]')
-        ?.dataset.action;
-      if (clickedAction === 'upgrade') {
-        // Absolute + routed: the relative form resolved against
-        // tauri://localhost in the desktop WebView (#5911).
-        void openExternalUrl(`${WEB_APP_ORIGIN}/pro#pricing`);
-        if (this.followedCountriesCapDropToastTimer !== null) {
-          window.clearTimeout(this.followedCountriesCapDropToastTimer);
-          this.followedCountriesCapDropToastTimer = null;
-        }
-        toast.remove();
-      } else if (clickedAction === 'dismiss') {
-        if (this.followedCountriesCapDropToastTimer !== null) {
-          window.clearTimeout(this.followedCountriesCapDropToastTimer);
-          this.followedCountriesCapDropToastTimer = null;
-        }
-        toast.remove();
-      }
-    });
-
-    document.body.appendChild(toast);
-    window.requestAnimationFrame(() => toast.classList.add('visible'));
   }
 
   // Waits for Phase-4 UI modules to finish initialising. WebMCP bindings call

@@ -473,8 +473,7 @@ export function adaptSnapshot(raw: PersistedSnapshot): RegionalSnapshot {
  *   - The `:latest` pointer references a snapshot that was pruned or TTL'd
  *   - The snapshot JSON is malformed
  *
- * This handler is premium-gated at the gateway layer (see
- * src/shared/premium-paths.ts and server/gateway.ts RPC_CACHE_TIER).
+ * Its gateway cache tier is in server/gateway.ts RPC_CACHE_TIER.
  */
 export const getRegionalSnapshot: IntelligenceServiceHandler['getRegionalSnapshot'] = async (
   _ctx: ServerContext,

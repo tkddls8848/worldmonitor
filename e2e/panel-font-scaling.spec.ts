@@ -1,7 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { FONT_SCALE_STORAGE_KEY } from '../src/services/font-scale-settings';
 import { LIVE_NEWS_AUTOPLAY_STORAGE_KEY } from '../src/services/live-stream-settings';
-import { acceptTesterKeySession } from './helpers/accept-tester-key-session';
 
 const STEPS = ['0.9', '1', '1.1', '1.25', '1.5', '2'] as const;
 const GLOBAL_STORAGE_KEY = FONT_SCALE_STORAGE_KEY;
@@ -23,7 +22,6 @@ async function seedDashboard(page: Page): Promise<void> {
     // its click-to-play card, whose title is the panel body text measured here.
     localStorage.setItem(autoplayKey, 'false');
   }, LIVE_NEWS_AUTOPLAY_STORAGE_KEY);
-  await acceptTesterKeySession(page);
 
   await page.route('**/api/market/v1/get-fear-greed-index', route => route.fulfill({
     status: 200,

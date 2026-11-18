@@ -71,7 +71,6 @@ import { assessCorroboration, corroborationFlag, evidenceFromCluster, publisherR
 import { describePublisherRoster, renderPublisherRosterElement } from './news/publisher-roster';
 import { decodeHtmlEntities } from '@/utils/html-entities';
 import { renderFollowButton } from '@/utils/follow-button';
-import { renderNotifyCountryLink } from '@/utils/notify-country-link';
 import { ASSUMED_ROUTE_BASIS, MEASURED_LNG_BASIS, SUPPORTED_GAS_MODEL_BASES, lngSharePct, lngWindowLabel } from '@/utils/gas-model-basis';
 import { countryEvidenceMarkdownArtifact } from '@/utils/export';
 import { attemptWebCountryDownload, countryDownloadMessage, type CountryTextDownload } from '@/utils/country-text-download';
@@ -234,7 +233,6 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
   private followButtonTeardown: (() => void) | null = null;
   // Sibling teardown for the U8 "Notify me about this country" sub-action
   // mounted alongside the FollowButton. Same lifecycle constraints.
-  private notifyLinkTeardown: (() => void) | null = null;
 
   private readonly handleGlobalKeydown = (event: KeyboardEvent): void => {
     if (!this.panel.classList.contains('active')) return;
@@ -3475,7 +3473,6 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     // mount a fresh one for the new country.
     const followHost = this.el('span', 'cdp-follow-btn-host');
     followHost.dataset.country = code;
-    const notifyHost = this.el('span', 'cdp-notify-link-host');
     if (this.source?.mode === 'host') {
       const link = this.el('a', 'cdp-action-btn', 'Follow / notifications on WorldMonitor') as HTMLAnchorElement;
       link.href = `https://www.worldmonitor.app/dashboard?c=${encodeURIComponent(code)}`;
@@ -3490,23 +3487,9 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
       });
       setTrustedHtml(followHost, trustedHtml(handle.html, "legacy direct innerHTML migration"));
       this.followButtonTeardown = handle.attach(followHost);
-
-      // U8 (degraded path) — "Notify me about this country" sub-action.
-      // Visible only when the user is currently following this country.
-      // The schema PR for `alertRules.countries` has NOT merged, so the
-      // click just opens the existing notifications settings tab — no
-      // pre-fill. See plan U8 R9 + the TODO inside notify-country-link.ts
-      // for the future pre-fill injection point.
-      notifyHost.dataset.country = code;
-      const notifyHandle = renderNotifyCountryLink({
-        countryCode: code,
-        countryName: country,
-      });
-      setTrustedHtml(notifyHost, trustedHtml(notifyHandle.html, "legacy direct innerHTML migration"));
-      this.notifyLinkTeardown = notifyHandle.attach(notifyHost);
     }
 
-    left.append(flag, titleWrap, followHost, notifyHost);
+    left.append(flag, titleWrap, followHost);
 
     const right = this.el('div', 'cdp-header-right');
 
@@ -4080,14 +4063,6 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
         /* swallow */
       }
       this.followButtonTeardown = null;
-    }
-    if (this.notifyLinkTeardown) {
-      try {
-        this.notifyLinkTeardown();
-      } catch {
-        /* swallow */
-      }
-      this.notifyLinkTeardown = null;
     }
   }
 

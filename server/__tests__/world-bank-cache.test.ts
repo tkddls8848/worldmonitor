@@ -4,7 +4,6 @@ import { listWorldBankIndicators } from '../worldmonitor/economic/v1/list-world-
 import { __resetKeyPrefixCacheForTests } from '../_shared/redis';
 import { createDomainGateway } from '../gateway';
 import { createEconomicServiceRoutes, type EconomicServiceHandler } from '../../src/generated/server/worldmonitor/economic/v1/service_server';
-import { issueSessionToken } from '../../api/_session.js';
 import type { ListWorldBankIndicatorsRequest, ServerContext } from '../../src/generated/server/worldmonitor/economic/v1/service_server';
 import {
   WORLD_BANK_RPC_USER_AGENT,
@@ -26,7 +25,6 @@ beforeEach(() => {
   process.env.UPSTASH_REDIS_REST_URL = 'https://wb-redis.invalid';
   process.env.UPSTASH_REDIS_REST_TOKEN = 'synthetic';
   process.env.VERCEL_ENV = 'production';
-  process.env.WM_SESSION_SECRET = 'synthetic-world-bank-session-secret';
   delete process.env.LOCAL_API_MODE;
   delete process.env.AXIOM_TOKEN;
   __resetKeyPrefixCacheForTests();
@@ -110,7 +108,7 @@ test('preserves first-party session access through the gateway and existing rate
   const path = '/api/economic/v1/list-world-bank-indicators';
   const routes = createEconomicServiceRoutes({ listWorldBankIndicators } as EconomicServiceHandler).filter(route => route.path === path);
   const gateway = createDomainGateway(routes);
-  const token = (await issueSessionToken()).token;
+  const token = 'wms_test-browser-session';
   const response = await gateway(new Request(`https://worldmonitor.app${path}?indicator_code=${indicator}&country_code=US`, {
     headers: { Cookie: `wm-session=${token}`, 'x-real-ip': '192.0.2.52' },
   }), { waitUntil: () => {} });
@@ -160,7 +158,7 @@ test('answers ZZ with a 400 carrying the country_code violation through the gate
   const path = '/api/economic/v1/list-world-bank-indicators';
   const routes = createEconomicServiceRoutes({ listWorldBankIndicators } as EconomicServiceHandler).filter(route => route.path === path);
   const gateway = createDomainGateway(routes);
-  const token = (await issueSessionToken()).token;
+  const token = 'wms_test-browser-session';
   const response = await gateway(new Request(`https://worldmonitor.app${path}?indicator_code=${indicator}&country_code=ZZ`, {
     headers: { Cookie: `wm-session=${token}`, 'x-real-ip': '192.0.2.53' },
   }), { waitUntil: () => {} });

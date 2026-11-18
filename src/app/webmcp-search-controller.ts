@@ -34,7 +34,6 @@ interface IssuedSearchResult {
   query: string;
   scope: DashboardSearchScope;
   identity: string;
-  authContext: string;
   securityEpoch: number;
   variant: string;
   effectClass: SearchResultEffectClass;
@@ -46,14 +45,11 @@ export interface WebMcpSearchControllerBindings {
   refreshIndex(): void;
   getModal(): SearchModal | null | undefined;
   fetchLiveFlight(callsign: string, signal?: AbortSignal): Promise<void>;
-  getAuthContext(): string;
   getVariant(): string;
   isMatchExecutable(match: SearchMatch): boolean;
   isPanelCurrentlyEnabled(panelId: string): boolean;
   selectMatch(match: SearchMatch, signal?: AbortSignal): Promise<boolean>;
-  subscribeAuth(listener: () => void): () => void;
   subscribeRuntimeConfig(listener: () => void): () => void;
-  subscribeWidgetAccess(listener: () => void): () => void;
   cancelPendingSelection(): void;
 }
 
@@ -83,9 +79,7 @@ export class WebMcpSearchController {
       this.cancelPendingOpen();
     };
     this.unsubscribers = [
-      this.subscribeAfterInitial(this.bindings.subscribeAuth, invalidate),
       this.bindings.subscribeRuntimeConfig(invalidate),
-      this.bindings.subscribeWidgetAccess(invalidate),
     ];
   }
 
@@ -160,14 +154,12 @@ export class WebMcpSearchController {
       accepted.push(candidate);
     }
 
-    const authContext = this.bindings.getAuthContext();
     throwIfWebMcpAborted(signal);
     const results: DashboardSearchDescriptor[] = accepted.map(({ match, descriptor }) => ({
       key: this.resultCache.issue({
         query,
         scope,
         identity: searchMatchIdentity(match),
-        authContext,
         securityEpoch: this.securityEpoch,
         variant: this.bindings.getVariant(),
         effectClass: this.classifyMatch(match),
@@ -321,18 +313,6 @@ export class WebMcpSearchController {
       && this.activeOpenOperation?.controller === controller;
   }
 
-  private subscribeAfterInitial(
-    subscribe: (listener: () => void) => () => void,
-    listener: () => void,
-  ): () => void {
-    let subscribing = true;
-    const unsubscribe = subscribe(() => {
-      if (!subscribing) listener();
-    });
-    subscribing = false;
-    return unsubscribe;
-  }
-
   private describeMatch(
     match: SearchMatch,
     targetCancellationSupported: boolean,
@@ -401,7 +381,6 @@ export class WebMcpSearchController {
 
   private isIssuedContextCurrent(issued: IssuedSearchResult): boolean {
     return issued.variant === this.bindings.getVariant()
-      && issued.authContext === this.bindings.getAuthContext()
       && issued.securityEpoch === this.securityEpoch;
   }
 

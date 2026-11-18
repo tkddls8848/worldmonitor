@@ -4,8 +4,6 @@ import { afterEach, describe, it, before, after, mock } from 'node:test';
 import { generateKeyPair, exportJWK, SignJWT } from 'jose';
 
 import { createDomainGateway } from '../server/gateway.ts';
-import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths.ts';
-import { issueSessionToken } from '../api/_session.js';
 import { createRedisFetch } from './helpers/fake-upstash-redis.mts';
 
 // User API keys must be canonical `wm_` + 40 lowercase hex — that is the only
@@ -21,7 +19,6 @@ const PRO_USER_KEY = `wm_${'b'.repeat(40)}`;
 const OWNER_PRO_USER_KEY = `wm_${'c'.repeat(40)}`;
 
 const originalKeys = process.env.WORLDMONITOR_VALID_KEYS;
-const originalSessionSecret = process.env.WM_SESSION_SECRET;
 const originalRedisUrl = process.env.UPSTASH_REDIS_REST_URL;
 const originalRedisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 const originalFetch = globalThis.fetch;
@@ -64,15 +61,11 @@ const ISSUE_4609_GATED_ROUTES = [
   { method: 'GET', path: '/api/market/v1/list-stored-stock-backtests' },
 ] as const;
 
-// Public routes now require a wms_ session token (issue #3541) — header-only
-// origin trust is gone. Mint one for tests that previously relied on
-// "trusted browser origin = anonymous public read."
-process.env.WM_SESSION_SECRET = originalSessionSecret
-  ?? 'test-secret-must-be-at-least-32-chars-long-xxx';
+// A browser-session-shaped key, for tests that send one like the dashboard did.
 let SESSION_TOKEN: string;
 before(async () => {
   installRateLimitRedisFake();
-  SESSION_TOKEN = (await issueSessionToken()).token;
+  SESSION_TOKEN = 'wms_test-browser-session';
 });
 
 after(() => {
@@ -87,9 +80,6 @@ afterEach(() => {
   if (originalKeys == null) delete process.env.WORLDMONITOR_VALID_KEYS;
   else process.env.WORLDMONITOR_VALID_KEYS = originalKeys;
   installRateLimitRedisFake();
-  // Keep the session secret stable across tests so SESSION_TOKEN stays valid.
-  process.env.WM_SESSION_SECRET = originalSessionSecret
-    ?? 'test-secret-must-be-at-least-32-chars-long-xxx';
 });
 
 describe('premium gateway API key enforcement', () => {

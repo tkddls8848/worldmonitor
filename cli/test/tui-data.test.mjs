@@ -85,6 +85,13 @@ describe('client', () => {
     assert.equal(mints, 2, 'the valid session is reused');
     assert.equal(calls.filter((x) => x.url.includes('wm-session'))[0].init.method, 'POST');
   });
+  it('reads session sources with no credential when anonymous sessions are off', async () => {
+    const { fetch, calls } = fakeFetch([['/api/maritime', { body: { snapshot: {} } }]]);
+    const c = createClient({ fetch, anonymousSession: false });
+    await c.getJson('/api/maritime/v1/get-vessel-snapshot', { auth: 'session' });
+    assert.equal(calls.length, 1, 'no session mint');
+    assert.equal(calls[0].init.headers['X-WorldMonitor-Key'], undefined);
+  });
   it('prefers a configured API key over a session', async () => {
     const { fetch, calls } = fakeFetch([['/api/x', { body: {} }]]);
     const c = createClient({ fetch, apiKey: 'wm_abc' });

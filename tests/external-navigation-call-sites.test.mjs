@@ -12,7 +12,6 @@ const callSiteFiles = [
   'src/app/event-handlers.ts',
   'src/app/desktop-updater.ts',
   'src/components/RuntimeConfigPanel.ts',
-  'src/App.ts', // followed-countries cap-drop toast upgrade action (#5911)
 ];
 
 describe('external navigation call-site contract (#6120)', () => {

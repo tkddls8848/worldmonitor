@@ -135,12 +135,11 @@ export function getHydratedData(key: string): unknown | undefined {
 const onDemandInflight = new Map<string, Promise<unknown | undefined>>();
 
 // The on-demand keys `/api/bootstrap?keys=<name>&public=1` will serve without
-// credentials. The ON-DEMAND PORTION cannot drift: this set, the server's
-// allowlist (ON_DEMAND_KEYS, api/bootstrap.js) and the wm-session interceptor's
-// bypass set (PUBLIC_SINGLE_KEY_BOOTSTRAP_KEYS, wm-session.ts) all derive it
-// from the same `bootstrapTierKeyNames('on-demand')` call.
+// credentials. The ON-DEMAND PORTION cannot drift: this set and the server's
+// allowlist (ON_DEMAND_KEYS, api/bootstrap.js) both derive it from the same
+// `bootstrapTierKeyNames('on-demand')` call.
 //
-// The other two additionally accept PUBLIC_WEATHER_BOOTSTRAP_KEY on that URL
+// The server additionally accepts PUBLIC_WEATHER_BOOTSTRAP_KEY on that URL
 // shape (#5386), so they are supersets of this one — that difference is
 // intentional, not drift. weatherAlerts rides the fast tier, so ensureHydrated's
 // tier-hydration path already covers it and its direct reader is
@@ -169,14 +168,10 @@ export async function ensureHydrated(key: string): Promise<unknown | undefined> 
   // The public URL below only serves keys in the on-demand tier
   // (isPublicOnDemandBootstrapRequest, api/bootstrap.js); anything else falls
   // through to validateApiKey, which sees no credential — this request omits
-  // them — and answers 401. Issuing it anyway is not merely wasted: the
-  // wm-session interceptor waves through credential-less bootstrap reads only
-  // for keys on the public single-key URL shape (PUBLIC_SINGLE_KEY_BOOTSTRAP_KEYS,
-  // wm-session.ts), so
-  // a non-on-demand key enters session recovery, which mints a fresh cookie and
-  // replays a request that still omits credentials, draws the same 401, and
-  // reports `wm_session_route_401` — blaming the anonymous session for a
-  // request that never presented one. That was 100% of WORLDMONITOR-XP
+  // them — and answers 401. Issuing it anyway was not merely wasted: the
+  // retired session interceptor sent a non-on-demand key into session
+  // recovery, which replayed a request that still omitted credentials and
+  // drew the same 401. That was 100% of WORLDMONITOR-XP
   // (~125/hr, all route `/api/bootstrap`), via the `slow`-tier key
   // `crossStraitActivity`. Callers already treat undefined as "use your own
   // fallback", which is exactly what the 401 produced.
@@ -339,9 +334,9 @@ async function fetchTier(
     // The omit is now load-bearing for CORS, not just cookie hygiene: since #7308
     // this URL answers ACAO `*` with no Allow-Credentials from both the edge and
     // the origin, which a browser refuses to hand to a credentialed request. Drop
-    // the omit here — or let the wm-session interceptor's `?? 'include'` default
-    // apply by taking this call out of isCredentiallessPublicDataRequest's exact
-    // shape — and hydration fails as an opaque console CORS error, not a test.
+    // the omit here and hydration fails as an opaque console CORS error, not a
+    // test. (Personal builds send it same-origin instead: runtime.ts
+    // withCredentials keeps the owner's Basic login on it.)
     // The dashboard entry may already have started the fast tier
     // (bootstrap-prefetch.ts) before this chunk loaded.
     const primed = tier === 'fast' ? adoptPrimedBootstrapTier(requestUrl, signal) : null;

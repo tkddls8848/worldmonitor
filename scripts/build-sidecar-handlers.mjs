@@ -35,8 +35,8 @@ const SKIP_DIRS = new Set(['[domain]', '[[...path]]']);
  *
  * - v2/shipping — route-intelligence reads seed-owned Redis the desktop has no
  *   credentials for (an empty 200 locally, so the `!ok` fallback would never
- *   fire), and the webhook family persists registrations server-side and is
- *   Pro-gated in src/shared/premium-paths.ts; the gate lives at the cloud.
+ *   fire), and the webhook family persists registrations server-side, in the
+ *   cloud.
  */
 export const CLOUD_ONLY_ROUTE_FAMILIES = new Set(['v2/shipping']);
 

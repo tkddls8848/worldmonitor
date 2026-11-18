@@ -7,7 +7,6 @@ import { getDisplacementSummary } from '../server/worldmonitor/displacement/v1/g
 import { __resetKeyPrefixCacheForTests } from '../server/_shared/redis.ts';
 import { installRedis } from './helpers/fake-upstash-redis.mts';
 import { createDomainGateway, serverOptions } from '../server/gateway.ts';
-import { issueSessionToken } from '../api/_session.js';
 
 const route = createDisplacementServiceRoutes(displacementHandler, serverOptions).find(r => r.path.endsWith('/get-displacement-summary'))!;
 const originalFetch = globalThis.fetch;
@@ -159,8 +158,7 @@ test('stale seed stays readable without a live fallback even when the former fla
 });
 
 test('real gateway retains session and canonical public access while keeping unavailable responses no-store', async () => {
-  process.env.WM_SESSION_SECRET = 'synthetic-displacement-session-secret-at-least32';
-  const token = (await issueSessionToken()).token;
+  const token = 'wms_test-browser-session';
   const gateway = createDomainGateway([route]);
   install({ [seedKey]: snapshot, [metaKey]: { fetchedAt } });
   const url = 'https://worldmonitor.app/api/displacement/v1/get-displacement-summary';

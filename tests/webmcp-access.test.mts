@@ -4,35 +4,8 @@ import { describe, it } from 'node:test';
 import {
   ACCESS_CONTEXT_PRIVACY_KEYS,
   buildWebMcpAccessContext,
-  resolveWebMcpOpenSignIn,
 } from '../src/services/webmcp-access-snapshot.ts';
 import { boundWebMcpAccessContext } from '../src/services/webmcp.ts';
-
-const SIGNED_OUT_AUTH = { user: null, isPending: false } as const;
-const LOADING_AUTH = { user: null, isPending: true } as const;
-const FREE_AUTH = {
-  user: {
-    id: 'user_secret_id',
-    name: 'Ada Lovelace',
-    email: 'ada@example.com',
-    image: 'https://example.com/ada.png',
-    role: 'free' as const,
-  },
-  isPending: false,
-};
-
-function signedOutInput(
-  overrides: Partial<Parameters<typeof buildWebMcpAccessContext>[0]> = {},
-) {
-  return {
-    auth: SIGNED_OUT_AUTH,
-    clerkEnabled: true,
-    clerkReady: true,
-    enabledPanelUsed: 12,
-    dashboardTabCount: 1,
-    ...overrides,
-  };
-}
 
 function assertNoPersonalInformation(value: unknown): void {
   const serialized = JSON.stringify(value);
@@ -50,54 +23,32 @@ function assertNoPersonalInformation(value: unknown): void {
 }
 
 describe('buildWebMcpAccessContext', () => {
-  it('reports every capability open and nothing capped, signed in or not', () => {
-    for (const auth of [SIGNED_OUT_AUTH, FREE_AUTH]) {
-      const snapshot = buildWebMcpAccessContext(signedOutInput({ auth }));
-      assert.equal(snapshot.productTier, 'pro');
-      assert.deepEqual(snapshot.capabilities, {
-        premiumAccess: true,
-        apiAccess: false,
-        mcpAccess: false,
-        dataExport: true,
-      });
-      assert.deepEqual(snapshot.limits, {
-        enabledPanels: { used: 12, cap: null },
-        dashboardTabs: { used: 1, cap: null, canCreate: true },
-      });
-      assertNoPersonalInformation(snapshot);
-    }
-  });
-
-  it('keeps loading and Clerk-unavailable states explicit', () => {
-    const loading = buildWebMcpAccessContext(signedOutInput({
-      auth: LOADING_AUTH,
-      clerkReady: false,
-    }));
-    assert.equal(loading.accountState, 'loading');
-    assert.equal(loading.clerk, 'loading');
-
-    const unavailable = buildWebMcpAccessContext(signedOutInput({
-      clerkEnabled: false,
-      clerkReady: false,
-    }));
-    assert.equal(unavailable.accountState, 'signed_out');
-    assert.equal(unavailable.clerk, 'unavailable');
-  });
-
-  it('treats a configured Clerk that failed to load as unavailable, not loading', () => {
-    const snapshot = buildWebMcpAccessContext(signedOutInput({
-      clerkEnabled: true,
-      clerkReady: false,
-      auth: SIGNED_OUT_AUTH,
-    }));
+  it('reports every capability open and nothing capped, with no account', () => {
+    const snapshot = buildWebMcpAccessContext({ enabledPanelUsed: 12, dashboardTabCount: 1 });
     assert.equal(snapshot.accountState, 'signed_out');
     assert.equal(snapshot.clerk, 'unavailable');
+    assert.equal(snapshot.productTier, 'pro');
+    assert.deepEqual(snapshot.capabilities, {
+      premiumAccess: true,
+      apiAccess: false,
+      mcpAccess: false,
+      dataExport: true,
+    });
+    assert.deepEqual(snapshot.limits, {
+      enabledPanels: { used: 12, cap: null },
+      dashboardTabs: { used: 1, cap: null, canCreate: true },
+    });
+    assertNoPersonalInformation(snapshot);
+  });
+
+  it('clamps counts to non-negative integers', () => {
+    const snapshot = buildWebMcpAccessContext({ enabledPanelUsed: -3, dashboardTabCount: Number.NaN });
+    assert.equal(snapshot.limits.enabledPanels.used, 0);
+    assert.equal(snapshot.limits.dashboardTabs.used, 0);
   });
 
   it('never copies personal fields even when a caller tries to inject them', () => {
-    const snapshot = buildWebMcpAccessContext(signedOutInput({
-      auth: FREE_AUTH,
-    }));
+    const snapshot = buildWebMcpAccessContext({ enabledPanelUsed: 12, dashboardTabCount: 1 });
     const bounded = boundWebMcpAccessContext({
       ...snapshot,
       email: 'ada@example.com',
@@ -106,8 +57,6 @@ describe('buildWebMcpAccessContext', () => {
       token: 'sess_abc',
       sessionId: 'sess_abc',
     } as typeof snapshot & Record<string, string>, true);
-    assert.equal(snapshot.accountState, 'signed_in');
-    assertNoPersonalInformation(snapshot);
     assertNoPersonalInformation(bounded);
     assert.equal(bounded.targetCancellationSupported, true);
     assert.equal(
@@ -120,37 +69,6 @@ describe('buildWebMcpAccessContext', () => {
         'productTier',
         'targetCancellationSupported',
       ].sort().join(','),
-    );
-  });
-});
-
-describe('resolveWebMcpOpenSignIn', () => {
-  it('returns clerk_unavailable when Clerk is not configured or failed to load', () => {
-    assert.deepEqual(
-      resolveWebMcpOpenSignIn({ clerkEnabled: false, clerkReady: false, alreadyOpen: false }),
-      { ok: false, status: 'denied', reason: 'clerk_unavailable' },
-    );
-    assert.deepEqual(
-      resolveWebMcpOpenSignIn({ clerkEnabled: true, clerkReady: false, alreadyOpen: false, loadFailed: true }),
-      { ok: false, status: 'denied', reason: 'clerk_unavailable' },
-    );
-  });
-
-  it('returns already_open when the Clerk modal is already visible', () => {
-    assert.deepEqual(
-      resolveWebMcpOpenSignIn({ clerkEnabled: true, clerkReady: true, alreadyOpen: true }),
-      { ok: true, status: 'already_open', reason: 'already_open' },
-    );
-  });
-
-  it('asks the host to open the existing Clerk modal and never accepts credentials', () => {
-    assert.deepEqual(
-      resolveWebMcpOpenSignIn({ clerkEnabled: true, clerkReady: true, alreadyOpen: false }),
-      { action: 'open' },
-    );
-    assert.deepEqual(
-      resolveWebMcpOpenSignIn({ clerkEnabled: true, clerkReady: false, alreadyOpen: false }),
-      { action: 'load_and_open' },
     );
   });
 });

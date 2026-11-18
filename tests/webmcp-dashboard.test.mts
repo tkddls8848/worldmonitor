@@ -1023,7 +1023,7 @@ describe('WebMCP live dashboard bindings', () => {
     assert.equal(/user|email|plan|account/i.test(result.message), false);
   });
 
-  it('opens settings and alerts without mutating overlay contents', async () => {
+  it('opens settings without mutating overlay contents, and reports alerts unavailable', async () => {
     const calls: string[] = [];
     const ctx = makeContext({ unifiedSettings: makeSettings(calls), isDesktopApp: false });
 
@@ -1035,11 +1035,11 @@ describe('WebMCP live dashboard bindings', () => {
     assert.deepEqual(calls, ['default']);
 
     const alerts = await applyWebMcpOpenAlerts(ctx, 'full');
-    assert.equal(alerts.ok, true);
+    assert.equal(alerts.ok, false);
+    assert.equal(alerts.status, 'denied');
+    assert.equal(alerts.reason, 'unavailable');
     assert.equal(alerts.destination, 'alerts');
-    assert.equal(alerts.overlay, 'open');
-    assert.equal(alerts.tab, 'notifications');
-    assert.deepEqual(calls, ['default', 'notifications']);
+    assert.deepEqual(calls, ['default']);
   });
 
   it('denies settings when the overlay fails to open', async () => {
@@ -1057,7 +1057,7 @@ describe('WebMCP live dashboard bindings', () => {
     assert.notEqual(result.overlay, 'open');
   });
 
-  it('keeps alerts unavailable on desktop without opening settings', async () => {
+  it('keeps alerts unavailable without opening settings', async () => {
     const calls: string[] = [];
     const result = await applyWebMcpOpenAlerts(
       makeContext({ unifiedSettings: makeSettings(calls), isDesktopApp: true }),

@@ -1,12 +1,9 @@
 import { normalizePinnedWebcam, normalizePinnedWebcams, normalizePinnedWebcamList, MAX_PINNED_WEBCAMS, MAX_ACTIVE_WEBCAMS, type PinnedWebcam } from '../../../shared/pinned-webcams';
 import { safeStorageSet } from '../../utils/safe-storage';
-import type { CloudPrefsAppliedDetail } from '../../utils/cloud-prefs-sync';
 export type { PinnedWebcam } from '../../../shared/pinned-webcams';
 
 const STORAGE_KEY = 'wm-pinned-webcams';
 const CHANGE_EVENT = 'wm-pinned-webcams-changed';
-// Mirrors CLOUD_PREFS_APPLIED_EVENT; importing the value would pull clerk and feeds into this store.
-const CLOUD_PREFS_APPLIED_EVENT = 'wm:cloud-prefs-applied';
 const MAX_ACTIVE = MAX_ACTIVE_WEBCAMS;
 
 let _cachedList: PinnedWebcam[] | null = null;
@@ -166,19 +163,10 @@ export function onPinnedChange(handler: () => void): () => void {
     invalidateCache();
     handler();
   };
-  // Cloud sign-in, merge or undo-restore rewrote the list in this tab.
-  const onCloudApplied = (e: Event) => {
-    const keys = (e as CustomEvent<CloudPrefsAppliedDetail>).detail?.keys;
-    if (!keys?.includes(STORAGE_KEY)) return;
-    invalidateCache();
-    handler();
-  };
   window.addEventListener(CHANGE_EVENT, wrapped);
   window.addEventListener('storage', onStorage);
-  window.addEventListener(CLOUD_PREFS_APPLIED_EVENT, onCloudApplied);
   return () => {
     window.removeEventListener(CHANGE_EVENT, wrapped);
     window.removeEventListener('storage', onStorage);
-    window.removeEventListener(CLOUD_PREFS_APPLIED_EVENT, onCloudApplied);
   };
 }

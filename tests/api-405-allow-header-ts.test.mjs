@@ -10,7 +10,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-process.env.WM_SESSION_SECRET ||= 'test-secret-must-be-at-least-32-chars-long-xxx';
 process.env.UPSTASH_REDIS_REST_URL ||= 'https://example.upstash.io';
 process.env.UPSTASH_REDIS_REST_TOKEN ||= 'test-token';
 // widget-agent checks its key before the method guard; notification-channels

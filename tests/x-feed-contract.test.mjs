@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { Ratelimit } from '@upstash/ratelimit';
 
 import { listXFeed } from '../server/worldmonitor/intelligence/v1/list-x-feed.ts';
-import { issueSessionToken } from '../api/_session.js';
 import handler from '../api/x-feed.js';
 
 const originalFetch = globalThis.fetch;
@@ -43,7 +42,7 @@ afterEach(() => {
  * Origin alone is no longer sufficient — see the R4 boundary suite below.
  */
 async function makeRequest(path = '/api/x-feed?limit=50') {
-  const { token } = await issueSessionToken();
+  const token = 'wms_test-browser-session';
   return new Request(`https://worldmonitor.app${path}`, {
     method: 'GET',
     headers: { origin: 'https://worldmonitor.app', 'X-WorldMonitor-Key': token },
@@ -54,7 +53,6 @@ describe('api/x-feed contract normalization', () => {
   beforeEach(() => {
     process.env.WS_RELAY_URL = 'https://relay.example.com';
     process.env.RELAY_SHARED_SECRET = 'test-secret';
-    process.env.WM_SESSION_SECRET = SESSION_SECRET;
   });
 
   afterEach(() => {
@@ -185,7 +183,6 @@ describe('api/x-feed R4 first-party boundary', () => {
   beforeEach(() => {
     process.env.WS_RELAY_URL = 'https://relay.example.com';
     process.env.RELAY_SHARED_SECRET = 'test-secret';
-    process.env.WM_SESSION_SECRET = SESSION_SECRET;
     globalThis.fetch = async () => new Response(RELAY_BODY, {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
@@ -209,7 +206,7 @@ describe('api/x-feed R4 first-party boundary', () => {
   // credential, and the bodies DO come back. If this ever goes red the
   // rejections stop proving anything.
   it('serves post bodies to a credentialed first-party caller', async () => {
-    const { token } = await issueSessionToken();
+    const token = 'wms_test-browser-session';
     const res = await get({ origin: 'https://worldmonitor.app', 'X-WorldMonitor-Key': token });
     assert.equal(res.status, 200);
     assert.match(await res.text(), /SECRET BODY/);
@@ -374,7 +371,6 @@ describe('api/x-feed caller admission', () => {
   let counters;
 
   beforeEach(() => {
-    process.env.WM_SESSION_SECRET = SESSION_SECRET;
     process.env.WS_RELAY_URL = 'https://relay.example.com';
     process.env.RELAY_SHARED_SECRET = 'test-secret';
     relayCalls = 0;
@@ -403,7 +399,7 @@ describe('api/x-feed caller admission', () => {
   });
 
   async function request(ip = '203.0.113.1', options = {}) {
-    const { token } = await issueSessionToken();
+    const token = 'wms_test-browser-session';
     return new Request('https://worldmonitor.app/api/x-feed?limit=50', {
       method: options.method ?? 'GET',
       headers: {

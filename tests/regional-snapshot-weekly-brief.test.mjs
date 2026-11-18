@@ -7,7 +7,6 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths.ts';
 
 import {
   generateWeeklyBrief,
@@ -22,7 +21,6 @@ const root = resolve(__dirname, '..');
 
 const handlerSrc = readFileSync(resolve(root, 'server/worldmonitor/intelligence/v1/get-regional-brief.ts'), 'utf-8');
 const handlerIndexSrc = readFileSync(resolve(root, 'server/worldmonitor/intelligence/v1/handler.ts'), 'utf-8');
-const premiumPathsSrc = readFileSync(resolve(root, 'src/shared/premium-paths.ts'), 'utf-8');
 const gatewaySrc = readFileSync(resolve(root, 'server/gateway.ts'), 'utf-8');
 const protoSrc = readFileSync(resolve(root, 'proto/worldmonitor/intelligence/v1/get_regional_brief.proto'), 'utf-8');
 const serviceProtoSrc = readFileSync(resolve(root, 'proto/worldmonitor/intelligence/v1/service.proto'), 'utf-8');
@@ -258,12 +256,6 @@ describe('get-regional-brief handler', () => {
 // ── Security wiring ─────────────────────────────────────────────────────────
 
 describe('security wiring', () => {
-  it('adds the endpoint to PREMIUM_RPC_PATHS', () => {
-    // Membership in the real Set is what gates the route; a grep of the module
-    // text also matches a path sitting in a comment.
-    assert.ok(PREMIUM_RPC_PATHS.has('/api/intelligence/v1/get-regional-brief'));
-  });
-
   it('has a RPC_CACHE_TIER entry for route-parity', () => {
     assert.match(gatewaySrc, /'\/api\/intelligence\/v1\/get-regional-brief':\s*'slow'/);
   });

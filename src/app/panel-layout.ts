@@ -58,7 +58,6 @@ import { trackCriticalBannerAction, trackMapViewChange, trackLayoutCustomized } 
 import { getStoredMapModePreference } from '@/services/map-mode-preference';
 import { loadWidgets } from '@/services/widget-store';
 import { getAllowedLayerKeys, type MapVariant } from '@/config/map-layer-definitions';
-import { PasskeyOfferBoot } from '@/app/passkey-offer-boot';
 import { PanelTabBar } from '@/components/PanelTabBar';
 import type { FocusBar } from '@/components/FocusBar';
 import { FocusMapSync } from '@/app/focus-map-sync';
@@ -458,7 +457,6 @@ export class PanelLayoutManager implements AppModule {
   private scheduledLoadAllRaf: number | null = null;
   private scheduledLoadAllIdle: number | null = null;
   private responsiveZoneListener: ResponsiveZoneListener | null = null;
-  private readonly passkeyOfferController: PasskeyOfferBoot;
   private pendingStorageFacilityId: string | null = null;
 
   constructor(ctx: AppContext, callbacks: PanelLayoutManagerCallbacks) {
@@ -467,18 +465,10 @@ export class PanelLayoutManager implements AppModule {
     this.applyTimeRangeFilterDebounced = debounce(() => {
       this.applyTimeRangeFilterToNewsPanels();
     }, 120);
-
-    // Boot shim only — the controller, prompt, and passkey services load on
-    // demand, keeping ~12 KB out of the first-paint chunk (see #7353 follow-up).
-    this.passkeyOfferController = new PasskeyOfferBoot(ctx);
   }
 
   async init(): Promise<void> {
     await this.renderLayout();
-    if (this.ctx.isDestroyed) return;
-
-    // Passkey offer: subscribes to auth and evaluates on a genuine sign-in.
-    this.passkeyOfferController.init();
   }
 
   /**
@@ -614,8 +604,6 @@ export class PanelLayoutManager implements AppModule {
     // must reset too: a re-init re-registers from scratch and would otherwise skip
     // recording keys it believes are already mapped.
     this.ctx.newsCategoryPanelKeys.clear();
-
-    this.passkeyOfferController.destroy();
 
     removeResponsiveZoneListener(this.responsiveZoneListener);
     this.responsiveZoneListener = null;
@@ -780,7 +768,6 @@ export class PanelLayoutManager implements AppModule {
           ${this.ctx.isDesktopApp ? '' : `<button class="fullscreen-btn" id="fullscreenBtn" title="${t('header.fullscreen')}" aria-label="${t('header.fullscreen')}">⛶</button>`}
           ${SITE_VARIANT === 'happy' ? `<button class="tv-mode-btn" id="tvModeBtn" title="TV Mode (Shift+T)" aria-label="TV Mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></button>` : ''}
           <span id="unifiedSettingsMount"></span>
-          <span id="authWidgetMount" class="auth-widget-mount"></span>
         </div>
       </div>
       <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
@@ -790,12 +777,6 @@ export class PanelLayoutManager implements AppModule {
           <button class="mobile-menu-close" id="mobileMenuClose" aria-label="Close menu">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
-        </div>
-        <div class="mobile-menu-divider"></div>
-        <div class="mobile-menu-account" aria-label="Account">
-          <span class="mobile-menu-account-icon" aria-hidden="true">◯</span>
-          <div id="mobileAuthWidgetMount"></div>
-          <button class="mobile-auth-fallback" id="mobileAuthFallback" type="button">Sign In</button>
         </div>
         <div class="mobile-menu-divider"></div>
         ${(() => {

@@ -36,12 +36,11 @@ describe('default map mode', () => {
     assert.equal(getStoredMapModePreference(loadValue('globe')), 'globe');
   });
 
-  it('routes App and PanelLayout through the shared preference helper', () => {
+  it('routes PanelLayout through the shared preference helper', () => {
     const panelLayout = readSrc('src/app/panel-layout.ts');
     const app = readSrc('src/App.ts');
 
     assert.match(panelLayout, /getStoredMapModePreference\(\) === 'globe'/);
-    assert.match(app, /const mode = getStoredMapModePreference\(\)/);
 
     assert.doesNotMatch(
       `${panelLayout}\n${app}`,

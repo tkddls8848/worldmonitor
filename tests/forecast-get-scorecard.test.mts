@@ -1,7 +1,6 @@
 import { strict as assert } from 'node:assert';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import forecastRoute from '../api/forecast/v1/[rpc].ts';
-import { issueSessionToken } from '../api/_session.js';
 import { createRedisFetch } from './helpers/fake-upstash-redis.mts';
 import { drainResponseHeaders } from '../server/_shared/response-headers.ts';
 import {
@@ -194,8 +193,7 @@ describe('getForecastScorecard backend status', () => {
   });
 
   it('the public RPC serializes only declared top-level cache fields', async () => {
-    process.env.WM_SESSION_SECRET = 'synthetic-scorecard-session-secret-long-enough';
-    const token = (await issueSessionToken()).token;
+    const token = 'wms_test-browser-session';
     const data = {
       schemaVersion: 1, generatedAt: 456, rollingWindowDays: 180, methodology: 'fixture',
       totals: { entries: 2, resolved: 1, pending: 1, pendingJudge: 0, scored: 1, void: 0, voidRate: 0, publicationCoverage: 0.5 },
@@ -493,8 +491,7 @@ describe('getForecastScorecard backend status', () => {
   });
 
   it('the gateway serves no-store, with no CDN header, when the market-alert block is missing (#8985)', async () => {
-    process.env.WM_SESSION_SECRET = 'synthetic-scorecard-session-secret-long-enough';
-    const token = (await issueSessionToken()).token;
+    const token = 'wms_test-browser-session';
     const { fetchImpl } = createRedisFetch({});
     const throughGateway = async (stored: Record<string, unknown>) => {
       globalThis.fetch = async (input, init) => {

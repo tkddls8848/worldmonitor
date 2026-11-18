@@ -6,28 +6,10 @@
  * real component the way a user does: clicking rows, the back button, the
  * search field and the controls on a page.
  */
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { initTestI18n, restoreEnglish, useCatalogue } from './helpers/i18n.mts';
 import fr from '@/locales/fr.json';
-
-const openSignIn = vi.hoisted(() => vi.fn());
-vi.mock('@/services/clerk', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/services/clerk')>()),
-  isClerkAuthEnabled: () => true,
-  openSignIn,
-}));
-
-const notificationsMount = vi.hoisted(() => ({ attached: 0, detached: 0 }));
-vi.mock('@/services/notifications-settings', () => ({
-  renderNotificationsSettings: () => ({
-    html: '<div data-notifications-stub></div>',
-    attach: () => {
-      notificationsMount.attached += 1;
-      return () => { notificationsMount.detached += 1; };
-    },
-  }),
-}));
 
 const { UnifiedSettings } = await import('@/components/UnifiedSettings');
 
@@ -66,8 +48,8 @@ const back = () => $<HTMLButtonElement>('[data-settings-back]')!;
 const search = () => $<HTMLInputElement>('[data-settings-search]')!;
 const isOpen = () => $('#unifiedSettingsModal.active') !== null;
 const current = () => [...document.querySelectorAll<HTMLElement>('[aria-current="page"]')].map((el) => el.dataset.settingsNav);
-const visibleRows = () => [...document.querySelectorAll<HTMLElement>('[data-settings-rows] [data-settings-nav], [data-settings-rows] [data-settings-signin]')]
-  .map((el) => el.dataset.settingsNav ?? 'sign-in');
+const visibleRows = () => [...document.querySelectorAll<HTMLElement>('[data-settings-rows] [data-settings-nav]')]
+  .map((el) => el.dataset.settingsNav);
 
 /** isMobileDevice() reads innerWidth; 768 and below is the phone sheet. */
 function setWidth(width: number): void {
@@ -97,9 +79,6 @@ beforeAll(async () => {
 beforeEach(() => {
   Object.defineProperty(window, 'innerWidth', { configurable: true, value: 393 });
   localStorage.clear();
-  openSignIn.mockClear();
-  notificationsMount.attached = 0;
-  notificationsMount.detached = 0;
   sourceNames = [];
   disabledSources = new Set<string>();
   settings = createSettings();
@@ -124,34 +103,6 @@ describe('Settings home list', () => {
     expect(document.querySelector('[role="tablist"]')).toBeNull();
   });
 
-  it('offers sign-in in place of the account card when signed out', () => {
-    settings.open();
-
-    expect(row('account')).toBeNull();
-    $<HTMLButtonElement>('[data-settings-signin]')!.click();
-
-    expect(document.querySelector('#unifiedSettingsModal.active')).toBeNull();
-    return vi.waitFor(() => expect(openSignIn).toHaveBeenCalledTimes(1));
-  });
-
-  it('starts sign-in only once unsaved panel changes are discarded', async () => {
-    settings.open('panels');
-    page('panels')!.querySelector<HTMLButtonElement>('.panel-toggle-item.active')!.click();
-    back().click();
-
-    $<HTMLButtonElement>('[data-settings-signin]')!.click();
-    const dialog = await vi.waitFor(() => $('.confirm-dialog-overlay')!);
-    dialog.querySelector<HTMLButtonElement>('.confirm-dialog-cancel')!.click();
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    expect($('#unifiedSettingsModal.active')).not.toBeNull();
-    expect(openSignIn).not.toHaveBeenCalled();
-
-    $<HTMLButtonElement>('[data-settings-signin]')!.click();
-    (await vi.waitFor(() => $('.confirm-dialog-overlay .confirm-dialog-confirm')!)).click();
-    await vi.waitFor(() => expect(openSignIn).toHaveBeenCalledTimes(1));
-    expect($('#unifiedSettingsModal.active')).toBeNull();
-  });
-
   it('drills into a page and returns focus to its row on back', () => {
     settings.open();
     row('map')!.click();
@@ -170,21 +121,20 @@ describe('Settings home list', () => {
   });
 
   it('opens straight onto a requested page', () => {
-    settings.open('notifications');
+    settings.open('about');
 
     expect(home().hidden).toBe(true);
-    expect(page('notifications')!.querySelector('[data-notifications-stub]')).not.toBeNull();
-    expect(notificationsMount.attached).toBe(1);
+    expect(page('about')!.hidden).toBe(false);
   });
 
   it('keeps a visited page mounted until close, then disposes it', () => {
-    settings.open('notifications');
+    settings.open('about');
+    const mounted = page('about');
     back().click();
-    row('notifications')!.click();
-    expect(notificationsMount.attached).toBe(1);
+    row('about')!.click();
+    expect(page('about')).toBe(mounted);
 
     settings.close();
-    expect(notificationsMount.detached).toBe(1);
     expect(document.querySelectorAll('[data-settings-page]')).toHaveLength(0);
 
     settings.open();
@@ -289,19 +239,9 @@ describe('Settings two-pane modal', () => {
     expect(current()).toEqual(['about']);
     settings.close();
 
-    settings.open('notifications');
-    expect(page('notifications')!.hidden).toBe(false);
-    expect(current()).toEqual(['notifications']);
-  });
-
-  it('falls back to the recent page for a target this account cannot open', () => {
-    settings.open();
-    row('map')!.click();
-    settings.close();
-
-    settings.open('account');
+    settings.open('map');
     expect(page('map')!.hidden).toBe(false);
-    expect(page('account')).toBeNull();
+    expect(current()).toEqual(['map']);
   });
 
   it('updates a sidebar summary as soon as the page changes it', () => {
@@ -313,16 +253,16 @@ describe('Settings two-pane modal', () => {
     expect(summary('display')).toBe('Light');
   });
 
-  it('filters rows by label, description and keywords, keeping the sign-in row', () => {
+  it('filters rows by label, description and keywords', () => {
     settings.open();
 
     typeSearch('privacy');
-    expect(visibleRows()).toEqual(['sign-in', 'about']);
+    expect(visibleRows()).toEqual(['about']);
     expect([...document.querySelectorAll('.us-group-label')].map((h) => h.textContent)).toEqual(['App']);
     expect($('[data-settings-empty]')!.textContent).toBe('');
 
     typeSearch('ollama');
-    expect(visibleRows()).toEqual(['sign-in', 'ai']);
+    expect(visibleRows()).toEqual(['ai']);
   });
 
   it('says nothing matches, then restores every row when cleared', () => {
@@ -330,7 +270,7 @@ describe('Settings two-pane modal', () => {
     const all = visibleRows();
 
     typeSearch('zzz');
-    expect(visibleRows()).toEqual(['sign-in']);
+    expect(visibleRows()).toEqual([]);
     expect($('[data-settings-empty]')!.textContent).toBe('No settings match');
 
     typeSearch('');
@@ -462,11 +402,11 @@ describe('Settings sidebar search in French', () => {
     settings.open();
 
     typeSearch('sauvegarde');
-    expect(visibleRows()).toEqual(['sign-in', 'sync']);
+    expect(visibleRows()).toEqual(['sync']);
     expect([...document.querySelectorAll('.us-group-label')].map((h) => h.textContent)).toEqual([fr.settings.groups.app]);
 
     typeSearch('backup');
-    expect(visibleRows()).toEqual(['sign-in', 'sync']);
+    expect(visibleRows()).toEqual(['sync']);
 
     typeSearch('zzz');
     expect($('[data-settings-empty]')!.textContent).toBe(fr.settings.search.empty);

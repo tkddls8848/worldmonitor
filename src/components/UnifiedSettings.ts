@@ -1,4 +1,3 @@
-import { PERSONAL_MODE } from '@/config/personal-mode';
 import { CANONICAL_FEEDS, INTEL_SOURCES, SOURCE_REGION_MAP } from '@/config/feeds';
 import { WEB_APP_ORIGIN } from '@/config/web-origin';
 import { openExternalUrl } from '@/services/external-navigation';
@@ -48,10 +47,6 @@ import { safeStorageRemove, safeStorageSet } from '@/utils/safe-storage';
 import type { PanelConfig } from '@/types';
 import { renderPreferenceSection } from '@/services/preferences-content';
 import { mountInstallEntry } from '@/services/pwa-install';
-import { renderNotificationsSettings } from '@/services/notifications-settings';
-import { getAuthState, subscribeAuthState } from '@/services/auth-state';
-import { isClerkAuthEnabled, signOut } from '@/services/clerk';
-import { requestOwnAccountDeletion } from '@/services/account-deletion';
 import { track } from '@/services/analytics';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 import { legalLinksHtml, LEGAL_LINK_ATTR } from '@/utils/legal-links';
@@ -103,9 +98,6 @@ export interface UnifiedSettingsConfig {
   onSourcesChanged?: () => void;
 }
 
-/** What the user types to confirm account deletion. Not translated: it is a token, not prose. */
-const DELETION_PHRASE = 'DELETE';
-
 export class UnifiedSettings {
   private overlay: HTMLElement;
   private focusTrap: FocusTrap;
@@ -145,13 +137,6 @@ export class UnifiedSettings {
    * net no-op the dashboard must not be asked to reload for.
    */
   private sourceSelectionBaseline: string | null = null;
-  private accountUserId: string | null = getAuthState().user?.id ?? null;
-  private unsubscribeAuth: (() => void) | null = null;
-  private deletionDialog: HTMLElement | null = null;
-  private deletionFocusTrap: FocusTrap | null = null;
-  private deletionBusy = false;
-  private deletionError = '';
-  private deletionPhraseHandler: (() => void) | null = null;
 
   constructor(config: UnifiedSettingsConfig) {
     this.config = config;
@@ -169,19 +154,12 @@ export class UnifiedSettings {
 
     this.escapeHandler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (this.deletionDialog) {
-          e.stopPropagation();
-          if (!this.deletionBusy) this.closeDeletionDialog();
-          return;
-        }
         this.close();
       }
     };
 
     this.overlay.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
-
-      if (this.deletionDialog) return;
 
       if (target === this.overlay) {
         this.close();
@@ -193,11 +171,6 @@ export class UnifiedSettings {
         return;
       }
 
-      if (target.closest('[data-delete-account]')) {
-        this.openDeletionDialog();
-        return;
-      }
-
       const section = target.closest<HTMLElement>('[data-settings-nav]')?.dataset.settingsNav;
       if (isSettingsSectionId(section)) {
         this.dispatch({ type: 'select', id: section });
@@ -206,23 +179,6 @@ export class UnifiedSettings {
 
       if (target.closest('[data-settings-back]')) {
         this.dispatch({ type: 'back' });
-        return;
-      }
-
-      const signOutButton = target.closest<HTMLButtonElement>('[data-settings-signout]');
-      if (signOutButton) {
-        // The auth subscription rebuilds Settings for the signed-out state.
-        signOutButton.disabled = true;
-        signOut().catch(() => {
-          signOutButton.disabled = false;
-          showToast(t('settings.signOutFailed'));
-        });
-        return;
-      }
-
-      if (target.closest('[data-settings-signin]')) {
-        this.afterTeardown = () => { import('@/services/clerk').then(m => m.openSignIn()).catch(() => {}); };
-        this.close();
         return;
       }
 
@@ -383,25 +339,9 @@ export class UnifiedSettings {
 
     this.renderFrame();
     document.body.appendChild(this.overlay);
-    this.unsubscribeAuth = subscribeAuthState((state) => {
-      this.handleAccountIdentityChange(state.user?.id ?? null);
-    });
-  }
-
-  private handleAccountIdentityChange(nextUserId: string | null): void {
-    if (nextUserId === this.accountUserId) return;
-
-    this.closeDeletionDialog();
-    this.accountUserId = nextUserId;
-
-    // Rebuild account-scoped pages for the new identity.
-    if (this.overlay.classList.contains('active')) {
-      this.rebuild(false);
-    }
   }
 
   public open(section?: SettingsSectionId, replaceOverlayId?: OverlayId): void {
-    if (PERSONAL_MODE && section === 'account') section = undefined;
     const reentrant = this.overlay.classList.contains('active');
     this.resetPanelDraft();
     // Only on a FRESH session. open() is re-entrant on an overlay that is
@@ -438,23 +378,6 @@ export class UnifiedSettings {
 
   public close(origin: OverlayCloseOrigin = 'control'): void {
     if (origin === 'history') this.historyRegistered = false;
-    // An in-flight deletion owns the overlay until it settles. The overlay
-    // click handler and escapeHandler already refuse while deletionBusy is
-    // set; without this guard the mobile back gesture reaches teardownSettings
-    // -> closeDeletionDialog, which clears the latch mid-await and re-permits
-    // a second confirmAccountDeletion against the same account. Re-arm the
-    // history entry the gesture just consumed, matching the unsaved-changes
-    // branch below, so a later back press still closes the overlay. This sits
-    // after the flag is cleared above, because that is what makes the
-    // re-registration condition reachable.
-    if (this.deletionBusy) {
-      this.afterTeardown = null;
-      if (origin === 'history' && !this.historyRegistered) {
-        this.historyRegistered = true;
-        overlayHistory.open('settings', (nextOrigin) => this.close(nextOrigin));
-      }
-      return;
-    }
     // Unsaved panel changes → confirm before tearing down. The confirm is a
     // non-blocking in-app dialog (#4559): close() stays synchronous (8 callers)
     // and defers teardown to the user's choice instead of a blocking confirm().
@@ -488,7 +411,6 @@ export class UnifiedSettings {
     this.overlay.classList.remove('active');
     this.focusTrap.deactivate();
     this.endSession();
-    this.closeDeletionDialog();
     this.resetPanelDraft();
     safeStorageRemove('wm-settings-open');
     document.removeEventListener('keydown', this.escapeHandler);
@@ -547,9 +469,6 @@ export class UnifiedSettings {
     this.historyRegistered = false;
     if (this.savedTimeout) clearTimeout(this.savedTimeout);
     this.endSession();
-    this.unsubscribeAuth?.();
-    this.unsubscribeAuth = null;
-    this.closeDeletionDialog();
     document.removeEventListener('keydown', this.escapeHandler);
     window.removeEventListener('resize', this.onResize);
     window.removeEventListener(I18N_RESOURCES_LOADED_EVENT, this.onTranslationsLoaded);
@@ -605,12 +524,8 @@ export class UnifiedSettings {
   }
 
   private readFacts(): SettingsFacts {
-    const user = getAuthState().user;
     return {
-      signedIn: user !== null,
-      canSignIn: isClerkAuthEnabled(),
       isDesktopApp: this.config.isDesktopApp,
-      account: user ? { plan: '', email: user.email } : null,
       panels: this.panelCounts(),
       sourcesOn: (() => {
         const disabled = this.config.getDisabledSources();
@@ -635,8 +550,6 @@ export class UnifiedSettings {
         return new Intl.NumberFormat().format(summary.count);
       case 'text':
         return t(summary.key);
-      case 'account':
-        return [summary.plan, summary.email].filter(Boolean).join(' · ');
     }
   }
 
@@ -666,31 +579,8 @@ export class UnifiedSettings {
 
   private renderNavGroup(group: NavGroup): string {
     const rows = group.rows.map((row) => {
-      if (PERSONAL_MODE && (row.kind === 'sign-in' || ('id' in row && row.id === 'account'))) return '';
-      if (row.kind === 'sign-in') {
-        return `
-          <button type="button" class="us-account-card us-signin-row" data-settings-signin>
-            <span class="us-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span>
-            <span class="us-row-text">
-              <span class="us-row-title">${escapeHtml(t('settings.signIn.label'))}</span>
-              <span class="us-row-desc">${escapeHtml(t('settings.signIn.desc'))}</span>
-            </span>
-            <span class="us-row-chev" aria-hidden="true">›</span>
-          </button>`;
-      }
       const summary = row.summary ? escapeHtml(this.formatSummary(row.summary)) : '';
       const title = escapeHtml(t(row.labelKey));
-      if (row.id === 'account') {
-        return `
-          <button type="button" class="us-account-card" data-settings-nav="account" id="us-nav-account">
-            <span class="us-avatar" aria-hidden="true">${escapeHtml(this.accountInitials())}</span>
-            <span class="us-row-text">
-              <span class="us-row-title">${title}</span>
-              <span class="us-row-desc" data-settings-summary>${summary}</span>
-            </span>
-            <span class="us-row-chev" aria-hidden="true">›</span>
-          </button>`;
-      }
       return `
         <li>
           <button type="button" class="us-row" data-settings-nav="${row.id}" id="us-nav-${row.id}">
@@ -710,13 +600,6 @@ export class UnifiedSettings {
         <h3 class="us-group-label" id="${headingId}">${escapeHtml(t(group.labelKey))}</h3>
         <ul class="us-list" role="list">${rows}</ul>
       </section>`;
-  }
-
-  private accountInitials(): string {
-    const user = getAuthState().user;
-    const source = user?.name?.trim() || user?.email || '';
-    const words = source.split(/[\s@._-]+/).filter(Boolean);
-    return words.slice(0, 2).map((word) => word.charAt(0).toUpperCase()).join('') || '?';
   }
 
   /** Patches each home row's summary in place, so a toggle never re-renders the list. */
@@ -790,12 +673,6 @@ export class UnifiedSettings {
   private readonly onTranslationsLoaded = (): void => {
     this.renderHome();
     replaceRawI18nKeyPlaceholders(this.overlay, t);
-    // The deletion dialog sits on document.body, outside the overlay.
-    if (this.deletionDialog) {
-      replaceRawI18nKeyPlaceholders(this.deletionDialog, t);
-      const label = this.deletionDialog.querySelector('.account-deletion-dialog-label');
-      if (label) label.textContent = t('settings.account.deletion.phraseLabel', { phrase: DELETION_PHRASE });
-    }
   };
 
   /**
@@ -845,41 +722,8 @@ export class UnifiedSettings {
     this.pageEntry = null;
     // A replacement is the tab bar dismissing or replacing Settings next.
     if (origin !== 'history') return;
-    // Back with the deletion dialog up acts like Escape: it closes the dialog
-    // (never mid-deletion) and keeps the Account page.
-    if (this.deletionDialog) {
-      if (!this.deletionBusy) this.closeDeletionDialog();
-      this.syncPageEntry();
-      return;
-    }
     this.dispatch({ type: 'back' });
   };
-
-  /**
-   * Account or entitlement change: every page may render differently, so
-   * remount them all. The current page stays if it is still available.
-   */
-  private rebuild(runEnter: boolean): void {
-    const focusWasInside = this.overlay.contains(document.activeElement);
-    const before = this.nav?.page ?? null;
-    const offset = this.nav ? this.scroller(this.nav).scrollTop : 0;
-    this.disposePages();
-    this.nav = reduceNav(this.nav, { type: 'facts-changed' }, this.readFacts());
-    if (this.nav.page !== null) this.recentPage = this.nav.page;
-    this.renderHome();
-    const page = this.nav.page ? this.ensurePage(this.nav.page) : null;
-    this.reflectNav();
-    // Removing the old page can clamp the scroller's offset. A reader who
-    // stays on the same page keeps their place.
-    this.scroller(this.nav).scrollTop = this.nav.page === before ? offset : this.scrollOffsets.get(this.nav.page ?? 'home') ?? 0;
-    if (runEnter) page?.mounted.enter?.();
-    if (focusWasInside && !this.overlay.contains(document.activeElement)) {
-      const target = page?.el.querySelector<HTMLElement>('.us-page-title')
-        ?? this.overlay.querySelector<HTMLElement>('[data-settings-nav], [data-settings-signin]');
-      target?.focus({ preventScroll: true });
-    }
-    this.syncPageEntry();
-  }
 
   /**
    * Shows what the state says. The sheet shows the home list or one page
@@ -945,7 +789,6 @@ export class UnifiedSettings {
           // The modal's sidebar stays in view, so its summaries follow at once.
           this.refreshSummaries();
         },
-        isSignedIn: getAuthState().user !== null,
       });
       setTrustedHtml(body, trustedHtml(section.html, 'preference section; the renderer escapes every value'));
       return { dispose: section.attach(body) };
@@ -954,19 +797,6 @@ export class UnifiedSettings {
 
   /** One page body per shell section. Keyed by the registry, so a missing page fails the build. */
   private readonly shellMounts: { readonly [K in ShellSectionId]: SectionMount } = {
-    account: (body) => {
-      setTrustedHtml(body, trustedHtml(`
-        <div class="billing-settings-intro">
-          <h3>${escapeHtml(t('auth.planBilling'))}</h3>
-          <p>${escapeHtml(t('settings.account.intro'))}</p>
-        </div>
-        <ul class="us-list us-signout" role="list">
-          <li><button type="button" class="us-row" data-settings-signout><span class="us-row-text"><span class="us-row-title">${escapeHtml(t('settings.signOut'))}</span></span></button></li>
-        </ul>
-        ${this.renderAccountDeletionSection()}
-      `, 'account page; every value escaped'));
-      return { dispose: () => {} };
-    },
     panels: (body) => {
       setTrustedHtml(body, trustedHtml(`
         <div class="unified-settings-region-wrapper">
@@ -1019,13 +849,6 @@ export class UnifiedSettings {
       // A Panels save can add or remove news categories, which changes the source list.
       return { enter: refresh, dispose: () => {} };
     },
-    // Mounting on first entry keeps the getChannelsData() fetch off every
-    // modal open for users who never visit this page.
-    notifications: (body) => {
-      const notifs = renderNotificationsSettings({ isSignedIn: getAuthState().user !== null });
-      setTrustedHtml(body, trustedHtml(notifs.html, 'notifications settings; the renderer escapes every value'));
-      return { dispose: notifs.attach(body) };
-    },
     about: (body) => {
       setTrustedHtml(body, trustedHtml(`
         <div class="us-about">
@@ -1060,153 +883,6 @@ export class UnifiedSettings {
       e.preventDefault();
       void openExternalUrl(href);
     });
-  }
-
-  private renderAccountDeletionSection(): string {
-    return `
-      <section class="account-deletion-zone" data-account-deletion>
-        <h3 class="account-deletion-title">${escapeHtml(t('settings.account.deletion.heading'))}</h3>
-        <p class="account-deletion-desc">${escapeHtml(t('settings.account.deletion.desc'))}</p>
-        <button type="button" class="delete-account-btn" data-delete-account>${escapeHtml(t('settings.account.deletion.heading'))}</button>
-      </section>
-    `;
-  }
-
-  private syncDeletionConfirmEnabled(): void {
-    const overlay = this.deletionDialog;
-    if (!overlay) return;
-    const input = overlay.querySelector<HTMLInputElement>('[data-deletion-phrase]');
-    const confirm = overlay.querySelector<HTMLButtonElement>('[data-deletion-confirm]');
-    if (!input || !confirm) return;
-    confirm.disabled = this.deletionBusy || input.value.trim() !== DELETION_PHRASE;
-    input.disabled = this.deletionBusy;
-    const error = overlay.querySelector('[data-deletion-error]');
-    if (error) error.textContent = this.deletionError;
-  }
-
-  private openDeletionDialog(): void {
-    if (this.deletionDialog || this.deletionBusy) return;
-    this.deletionError = '';
-    const overlay = document.createElement('div');
-    this.deletionDialog = overlay;
-    overlay.className = 'account-deletion-dialog-overlay active';
-    overlay.setAttribute('role', 'dialog');
-    overlay.setAttribute('aria-modal', 'true');
-    declareOverlay(overlay, { reload: 'blocking' });
-    overlay.setAttribute('aria-labelledby', 'account-deletion-dialog-title');
-    setTrustedHtml(
-      overlay,
-      trustedHtml(
-        `
-      <div class="account-deletion-dialog">
-        <h2 id="account-deletion-dialog-title" class="account-deletion-dialog-title">${escapeHtml(t('settings.account.deletion.dialogTitle'))}</h2>
-        <p class="account-deletion-dialog-copy">${escapeHtml(t('settings.account.deletion.dialogCopy'))}</p>
-        <label class="account-deletion-dialog-label" for="account-deletion-phrase">${escapeHtml(t('settings.account.deletion.phraseLabel', { phrase: DELETION_PHRASE }))}</label>
-        <input id="account-deletion-phrase" class="account-deletion-dialog-input" data-deletion-phrase type="text" autocomplete="off" spellcheck="false" />
-        <p class="account-deletion-dialog-error" data-deletion-error role="alert"></p>
-        <div class="account-deletion-dialog-actions">
-          <button type="button" class="confirm-dialog-btn" data-deletion-cancel>${escapeHtml(t('common.cancel'))}</button>
-          <button type="button" class="confirm-dialog-btn confirm-dialog-confirm" data-deletion-confirm disabled>${escapeHtml(t('settings.account.deletion.heading'))}</button>
-        </div>
-      </div>
-    `,
-        'account deletion confirm dialog; escaped translations',
-      ),
-    );
-    overlay.addEventListener('click', (event) => {
-      const target = event.target as HTMLElement;
-      if (target === overlay || target.closest('[data-deletion-cancel]')) {
-        if (!this.deletionBusy) this.closeDeletionDialog();
-        return;
-      }
-      if (target.closest('[data-deletion-confirm]')) {
-        void this.confirmAccountDeletion();
-      }
-    });
-    const input = overlay.querySelector<HTMLInputElement>('[data-deletion-phrase]');
-    this.deletionPhraseHandler = () => this.syncDeletionConfirmEnabled();
-    input?.addEventListener('input', this.deletionPhraseHandler);
-    document.body.appendChild(overlay);
-    this.syncDeletionConfirmEnabled();
-    // aria-modal is a promise to the keyboard: without a trap, Tab walks out
-    // of a destructive-action dialog into the settings modal behind it, which
-    // is still interactive. Escape stays with escapeHandler (no onEscape here)
-    // so an in-flight deletion still cannot be dismissed.
-    this.deletionFocusTrap = createFocusTrap(overlay, { initialFocus: () => input });
-    this.deletionFocusTrap.activate();
-  }
-
-  private closeDeletionDialog(): void {
-    const overlay = this.deletionDialog;
-    if (!overlay) return;
-    const input = overlay.querySelector<HTMLInputElement>('[data-deletion-phrase]');
-    if (input && this.deletionPhraseHandler) {
-      input.removeEventListener('input', this.deletionPhraseHandler);
-    }
-    this.deletionPhraseHandler = null;
-    // Deactivate before the node leaves the document so the trap can hand
-    // focus back to the [data-delete-account] button that opened it.
-    this.deletionFocusTrap?.deactivate();
-    this.deletionFocusTrap = null;
-    overlay.remove();
-    this.deletionDialog = null;
-    this.deletionBusy = false;
-    this.deletionError = '';
-  }
-
-  private async confirmAccountDeletion(): Promise<void> {
-    const overlay = this.deletionDialog;
-    const input = overlay?.querySelector<HTMLInputElement>('[data-deletion-phrase]');
-    if (!overlay || !input || input.value.trim() !== DELETION_PHRASE || this.deletionBusy) return;
-    this.deletionBusy = true;
-    this.deletionError = '';
-    this.syncDeletionConfirmEnabled();
-    try {
-      await requestOwnAccountDeletion();
-      this.closeDeletionDialog();
-      // Tear down directly rather than via close(): the account is gone, so an
-      // unsaved draft in another panel has nothing to be saved to, and close()
-      // would stop to ask "discard changes?" for it while signOut() proceeds.
-      this.teardownSettings('control');
-      await signOut();
-      showToast(t('settings.account.deletion.deleted'));
-    } catch (err) {
-      const message = err instanceof Error ? err.message : t('settings.account.deletion.failed');
-      if (message.includes('Account changed')) {
-        // Only speak if this attempt still owns the dialog. When the account
-        // switch already tore it down, the user has moved on and a late
-        // "Account changed... Try again." is about a request they no longer
-        // remember starting.
-        const stillOurs = this.deletionDialog === overlay;
-        this.closeDeletionDialog();
-        if (stillOurs) showToast(message);
-        return;
-      }
-      // The dialog is the only place the error text renders, and an account
-      // switch can tear it down mid-await. Without this fallback the failure
-      // is written into a detached overlay and the user is told nothing.
-      if (!this.deletionDialog) {
-        showToast(message);
-        return;
-      }
-      // The server is still working when the poll gives up — its external
-      // retry ladder outlasts the client timeout by design. Clearing the
-      // phrase leaves Confirm disabled so the reflex second submission is not
-      // one click away, while still releasing the busy latch so the dialog can
-      // be dismissed; re-submitting takes a deliberate re-type.
-      if (message.includes('still running')) {
-        this.deletionBusy = false;
-        this.deletionError = message;
-        const phrase = this.deletionDialog
-          ?.querySelector<HTMLInputElement>('[data-deletion-phrase]');
-        if (phrase) phrase.value = '';
-        this.syncDeletionConfirmEnabled();
-        return;
-      }
-      this.deletionBusy = false;
-      this.deletionError = message;
-      this.syncDeletionConfirmEnabled();
-    }
   }
 
   private categoryMatchesVariant(catDef: { variants?: string[] }): boolean {

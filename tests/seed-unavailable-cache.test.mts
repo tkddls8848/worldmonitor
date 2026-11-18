@@ -22,7 +22,6 @@ import assert from 'node:assert/strict';
 import { after, before, beforeEach, it } from 'node:test';
 import { createDomainGateway, serverOptions } from '../server/gateway';
 import { createRedisFetch } from './helpers/fake-upstash-redis.mts';
-import { issueSessionToken } from '../api/_session.js';
 import { createMarketServiceRoutes } from '../src/generated/server/worldmonitor/market/v1/service_server';
 import { createClimateServiceRoutes } from '../src/generated/server/worldmonitor/climate/v1/service_server';
 import { createEconomicServiceRoutes } from '../src/generated/server/worldmonitor/economic/v1/service_server';
@@ -54,8 +53,7 @@ const gateway = createDomainGateway([
 ]);
 
 before(async () => {
-  process.env.WM_SESSION_SECRET = 'synthetic-cache-session-secret-at-least-32-characters';
-  token = (await issueSessionToken()).token;
+  token = 'wms_test-browser-session';
 });
 beforeEach(() => {
   cache.clear();

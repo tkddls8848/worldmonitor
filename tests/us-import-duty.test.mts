@@ -58,7 +58,6 @@ import {
   type UsDutyCatalog,
 } from '../server/worldmonitor/trade/v1/get-us-import-duty';
 import { validateGeneratedRequest } from '../server/request-validator';
-import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths';
 
 import type {
   ServerContext,
@@ -558,10 +557,6 @@ describe('GetUsImportDuty contract', () => {
     ]) {
       assert.ok(validateGeneratedRequest('getUsImportDuty', body), `expected a violation for ${JSON.stringify(body)}`);
     }
-  });
-
-  test('the route is Pro-gated at tier 1, which every paid plan including API Starter meets', () => {
-    assert.ok(PREMIUM_RPC_PATHS.has(ROUTE));
   });
 });
 

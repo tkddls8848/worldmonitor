@@ -1,21 +1,15 @@
 /**
- * Tests for the country chip picker (Layer 4 of country-scoping PR).
+ * Tests for the country chip picker (FocusEditor's country scope).
  *
  * Two test surfaces:
- *  1. Source-grep on src/services/notifications-settings.ts: the picker is
- *     mounted, smart-default reads from the window registry, edit-existing
- *     respects stored countries, EVERY alertRules save path sources its
- *     payload from the centralized getCurrentAlertRuleFormState helper.
+ *  1. Source-grep on src/utils/country-chip-picker.ts: the followed list is
+ *     read from the window registry, synchronously.
  *  2. Behavioural unit tests on the pure helpers
  *     (normalizeIso2, mountCountryChipPicker via a minimal DOM stub,
  *     loadFollowedCountriesSafe via a window-registry stub).
  *
  * No JSDOM dependency: we hand-roll a tiny element stub sufficient to drive
- * the picker's render + click logic. Keeps the test footprint small and
- * matches the project convention (vitest + edge-runtime, tsx --test for
- * tests/*.mts).
- *
- * Run: tsx --test tests/notifications-settings-country-picker.test.mts
+ * the picker's render + click logic.
  */
 
 import { describe, it, beforeEach, afterEach } from 'node:test';
@@ -32,227 +26,10 @@ import {
 } from '../src/utils/country-chip-picker.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const settingsSrc = readFileSync(
-  resolve(__dirname, '..', 'src', 'services', 'notifications-settings.ts'),
-  'utf-8',
-);
 const pickerSrc = readFileSync(
   resolve(__dirname, '..', 'src', 'utils', 'country-chip-picker.ts'),
   'utf-8',
 );
-
-// ---------------------------------------------------------------------------
-// Source-grep contract — notifications-settings.ts
-// ---------------------------------------------------------------------------
-
-describe('notifications-settings.ts — country picker integration', () => {
-  it('imports mountCountryChipPicker + loadFollowedCountriesSafe', () => {
-    assert.match(
-      settingsSrc,
-      /from\s+['"]@\/utils\/country-chip-picker['"]/,
-      'must import from country-chip-picker',
-    );
-    assert.match(settingsSrc, /mountCountryChipPicker/, 'must reference mountCountryChipPicker');
-    assert.match(settingsSrc, /loadFollowedCountriesSafe/, 'must reference loadFollowedCountriesSafe');
-  });
-
-  it('renders a #usNotifCountryPicker mount point', () => {
-    assert.match(
-      settingsSrc,
-      /id=["']usNotifCountryPicker["']/,
-      'render must include id="usNotifCountryPicker"',
-    );
-  });
-
-  it('smart-default ONLY when existingRule === null (NEW rule)', () => {
-    assert.match(
-      settingsSrc,
-      /isNewRule\s*=\s*existingRule\s*===\s*null/,
-      'must derive isNewRule from existingRule === null',
-    );
-    // Smart-default load is gated by the isNewRule branch, not unconditional.
-    assert.match(
-      settingsSrc,
-      /if\s*\(\s*isNewRule\s*\)\s*{[\s\S]*?loadFollowedCountriesSafe/,
-      'loadFollowedCountriesSafe must be inside the isNewRule branch',
-    );
-  });
-
-  it('Country scope section header is rendered', () => {
-    assert.match(
-      settingsSrc,
-      /Country scope/,
-      'render must include the "Country scope" section label',
-    );
-  });
-
-  it('hint copy mentions "Leave empty" so users know the empty state means all-countries', () => {
-    assert.match(
-      settingsSrc,
-      /Leave empty to receive alerts from all countries/,
-      'must include the "leave empty" hint',
-    );
-  });
-
-  it('preselectCountry parameter is declared on the host interface (PR B U8 R9 receiver)', () => {
-    assert.match(
-      settingsSrc,
-      /preselectCountry\?:\s*string/,
-      'NotificationsSettingsHost must expose preselectCountry?: string',
-    );
-  });
-
-  it('preselectCountry is normalized via /^[A-Z]{2}$/ regex (defensive validation at the entry point)', () => {
-    assert.match(
-      settingsSrc,
-      /normalizePreselectCountry/,
-      'must define a normalizePreselectCountry helper',
-    );
-    assert.match(
-      settingsSrc,
-      /\/\^\[A-Z\]\{2\}\$\//,
-      'normalizer must validate against /^[A-Z]{2}$/',
-    );
-  });
-
-  it('preselectCountry takes precedence over loadFollowedCountriesSafe on NEW rules (R9 pre-fill wins over watchlist smart-default)', () => {
-    // Verify the if-branch that prioritizes preselectCountry exists inside
-    // the NEW-rule branch.
-    assert.match(
-      settingsSrc,
-      /if\s*\(\s*isNewRule\s*\)\s*{[\s\S]*?if\s*\(\s*preselectCountry\s*\)\s*{[\s\S]*?initial\s*=\s*\[\s*preselectCountry\s*\][\s\S]*?else[\s\S]*?loadFollowedCountriesSafe/,
-      'NEW-rule branch must check preselectCountry before falling back to loadFollowedCountriesSafe',
-    );
-  });
-
-  it('preselectCountry does NOT override existing rule countries (edit-existing respects stored value)', () => {
-    // The preselect-precedence check is gated by `if (isNewRule)`, so
-    // existing-rule path must NOT reference preselectCountry.
-    // Source-grep: between the `existingRule !== null` branch start and the
-    // isNewRule check, no preselectCountry mentions should exist.
-    const existingRulePathMatch = settingsSrc.match(
-      /existingCountries[\s\S]*?const\s+isNewRule\s*=\s*existingRule\s*===\s*null/,
-    );
-    assert.ok(existingRulePathMatch, 'existingCountries → isNewRule region must exist');
-    // Just verify the existing-rule path doesn't snake `preselectCountry` into
-    // its initial assignment — the precedence is one-way (NEW rule only).
-    const existingRuleSlice = existingRulePathMatch[0];
-    assert.ok(
-      !/preselectCountry/.test(existingRuleSlice),
-      'existing-rule path must not reference preselectCountry — preselect ONLY applies on NEW rules',
-    );
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Source-grep contract — centralized save-path helper (countries thread-through)
-// ---------------------------------------------------------------------------
-
-describe('notifications-settings.ts — centralized save state (countries thread-through)', () => {
-  it('declares getCurrentAlertRuleFormState helper', () => {
-    assert.match(
-      settingsSrc,
-      /function\s+getCurrentAlertRuleFormState\s*\(/,
-      'must declare getCurrentAlertRuleFormState helper',
-    );
-  });
-
-  it('helper sources `countries` from countryPicker.getValue() (with undefined fallback)', () => {
-    assert.match(
-      settingsSrc,
-      /countries:\s*countryPicker\s*\?\s*countryPicker\.getValue\(\)\s*:\s*undefined/,
-      'getCurrentAlertRuleFormState must read countries from picker',
-    );
-  });
-
-  it('picker-absent saves intentionally pass countries: undefined for preserve-on-omit', () => {
-    assert.match(
-      settingsSrc,
-      /const\s+alertRuleCountries\s*=\s*countryPicker\s*\?\s*countryPicker\.getValue\(\)\s*:\s*undefined/,
-      'helper must name the picker-absent undefined fallback so preserve-on-omit is deliberate',
-    );
-    assert.match(
-      settingsSrc,
-      /countries:\s*alertRuleCountries/,
-      'helper must pass the named fallback through as countries',
-    );
-  });
-
-  it('saveCurrentAlertRule uses getCurrentAlertRuleFormState (debounced picker save)', () => {
-    assert.match(
-      settingsSrc,
-      /function\s+saveCurrentAlertRule\s*\(\)[\s\S]*?const\s+state\s*=\s*getCurrentAlertRuleFormState\(\)[\s\S]*?saveAlertRules\(/,
-      'saveCurrentAlertRule must source payload from getCurrentAlertRuleFormState',
-    );
-  });
-
-  it('saveRuleWithNewChannel uses getCurrentAlertRuleFormState (channel-connect save path)', () => {
-    // This is the call site that R2 found — connecting a channel raced the
-    // debounced picker save and dropped countries.
-    assert.match(
-      settingsSrc,
-      /function\s+saveRuleWithNewChannel[\s\S]*?const\s+state\s*=\s*getCurrentAlertRuleFormState\(\)[\s\S]*?saveAlertRules\(/,
-      'saveRuleWithNewChannel must source payload from getCurrentAlertRuleFormState',
-    );
-  });
-
-  it('AI digest toggle save path uses getCurrentAlertRuleFormState', () => {
-    // The usAiDigestEnabled change handler used to hand-roll its own payload
-    // and silently dropped countries. Centralized via the helper.
-    assert.match(
-      settingsSrc,
-      /target\.id\s*===\s*'usAiDigestEnabled'[\s\S]*?const\s+state\s*=\s*getCurrentAlertRuleFormState\(\)[\s\S]*?saveAlertRules\(/,
-      'AI digest toggle save must source payload from getCurrentAlertRuleFormState',
-    );
-  });
-
-  it('enable + sensitivity save path uses getCurrentAlertRuleFormState', () => {
-    // The combined usNotifEnabled / usNotifSensitivity change handler used
-    // to hand-roll its own payload and silently dropped countries.
-    assert.match(
-      settingsSrc,
-      /target\.id\s*===\s*'usNotifEnabled'\s*\|\|\s*target\.id\s*===\s*'usNotifSensitivity'[\s\S]*?const\s+state\s*=\s*getCurrentAlertRuleFormState\(\)[\s\S]*?saveAlertRules\(/,
-      'enable/sensitivity save must source payload from getCurrentAlertRuleFormState',
-    );
-  });
-
-  it('quiet-hours, digest, and delivery-mode saves thread picker countries through insert-capable APIs', () => {
-    assert.match(
-      settingsSrc,
-      /setQuietHours\(\{[\s\S]*?countries:\s*countryPicker\s*\?\s*countryPicker\.getValue\(\)\s*:\s*undefined/,
-      'setQuietHours save must include current picker countries',
-    );
-    assert.match(
-      settingsSrc,
-      /setDigestSettings\(\{[\s\S]*?countries:\s*countryPicker\s*\?\s*countryPicker\.getValue\(\)\s*:\s*undefined/,
-      'setDigestSettings save must include current picker countries',
-    );
-    assert.match(
-      settingsSrc,
-      /setNotificationConfig\(\{[\s\S]*?\.\.\.state[\s\S]*?digestMode:/,
-      'setNotificationConfig save must spread current form state, including countries',
-    );
-  });
-
-  it('NO save path hand-rolls its own AlertRule payload (every saveAlertRules call must spread `state`)', () => {
-    // Catch future drift: any direct `saveAlertRules({` block that lists
-    // `enabled, eventTypes, sensitivity, channels, aiDigestEnabled` without
-    // `...state` is a regression of the centralization fix.
-    //
-    // Match every settings-scoped saveAlertRules invocation; each must contain
-    // `...state` and the settings lifecycle signal so a Retry-After wait cannot
-    // outlive the panel that initiated it.
-    const calls = settingsSrc.match(/saveAlertRules\(\{[\s\S]*?\},\s*signal\)/g) ?? [];
-    assert.ok(calls.length >= 4, `expected ≥4 saveAlertRules call sites, found ${calls.length}`);
-    for (const call of calls) {
-      assert.match(
-        call,
-        /\.\.\.state/,
-        `saveAlertRules call must spread getCurrentAlertRuleFormState() result via ...state — found:\n${call}`,
-      );
-    }
-  });
-});
 
 // ---------------------------------------------------------------------------
 // Source-grep contract — country-chip-picker.ts (window-registry pattern)
@@ -300,16 +77,6 @@ describe('country-chip-picker.ts — window-registry pattern (no dynamic import)
       pickerSrc,
       /export\s+async\s+function\s+loadFollowedCountriesSafe/,
       'must not be async',
-    );
-  });
-
-  it('caller does NOT await the synchronous helper', () => {
-    // notifications-settings.ts must call it synchronously. If the call site
-    // still awaits, it's a leftover from the dynamic-import era.
-    assert.doesNotMatch(
-      settingsSrc,
-      /await\s+loadFollowedCountriesSafe/,
-      'caller must not await the synchronous helper',
     );
   });
 });

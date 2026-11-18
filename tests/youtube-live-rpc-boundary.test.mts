@@ -6,7 +6,6 @@ import { createAviationServiceRoutes } from '../src/generated/server/worldmonito
 import { aviationHandler } from '../server/worldmonitor/aviation/v1/handler.ts';
 import { createDomainGateway, serverOptions } from '../server/gateway.ts';
 import { installRedis } from './helpers/fake-upstash-redis.mts';
-import { issueSessionToken } from '../api/_session.js';
 import { validationFailure } from './helpers/validation-failure.mts';
 
 const originalEnv = { ...process.env };
@@ -26,8 +25,7 @@ beforeEach(async () => {
   delete process.env.WORLDMONITOR_VALID_KEYS;
   // A configured relay must never be called: it no longer serves YouTube lookups.
   process.env.WS_RELAY_URL = 'https://relay.example.test';
-  process.env.WM_SESSION_SECRET = 'synthetic-youtube-anonymous-session-secret';
-  session = (await issueSessionToken()).token;
+  session = 'wms_test-browser-session';
   calls = [];
   oembedFails = false;
   redis = installRedis({});

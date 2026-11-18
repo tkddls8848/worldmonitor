@@ -316,45 +316,29 @@ export async function applyWebMcpSwitchMonitor(
 async function openUnifiedSettingsOverlay(
   ctx: AppContext,
   currentVariant: string,
-  destination: 'settings' | 'alerts',
-  tab: 'settings' | 'notifications',
 ): Promise<WebMcpNavigationResult> {
   const context = navigationContext(ctx, currentVariant);
   if (ctx.isDestroyed) return APP_DESTROYED_NAV_RESULT(context);
-  if (!ctx.unifiedSettings) {
-    return {
-      ok: false,
-      status: 'denied',
-      destination,
-      reason: 'unavailable',
-      message: destination === 'alerts'
-        ? 'Alerts are not available on this dashboard.'
-        : 'Settings are not available on this dashboard.',
-      context,
-    };
-  }
-  // `tab` is the agent-facing wire value; 'settings' means the home list.
-  const opened = await Promise.resolve(ctx.unifiedSettings.open(tab === 'settings' ? undefined : tab));
+  const unavailable = (): WebMcpNavigationResult => ({
+    ok: false,
+    status: 'denied',
+    destination: 'settings',
+    reason: 'unavailable',
+    message: 'Settings are not available on this dashboard.',
+    context: navigationContext(ctx, currentVariant),
+  });
+  if (!ctx.unifiedSettings) return unavailable();
+  // 'settings' is the agent-facing wire value for the home list.
+  const opened = await Promise.resolve(ctx.unifiedSettings.open());
   if (ctx.isDestroyed) return APP_DESTROYED_NAV_RESULT(navigationContext(ctx, currentVariant));
-  if (opened === false) {
-    return {
-      ok: false,
-      status: 'denied',
-      destination,
-      reason: 'unavailable',
-      message: destination === 'alerts'
-        ? 'Alerts are not available on this dashboard.'
-        : 'Settings are not available on this dashboard.',
-      context: navigationContext(ctx, currentVariant),
-    };
-  }
+  if (opened === false) return unavailable();
   return {
     ok: true,
     status: 'applied',
-    destination,
+    destination: 'settings',
     overlay: 'open',
-    tab,
-    message: destination === 'alerts' ? 'Opened alerts.' : 'Opened settings.',
+    tab: 'settings',
+    message: 'Opened settings.',
     context: navigationContext(ctx, currentVariant),
   };
 }
@@ -363,26 +347,24 @@ export async function applyWebMcpOpenSettings(
   ctx: AppContext,
   currentVariant: string,
 ): Promise<WebMcpNavigationResult> {
-  return openUnifiedSettingsOverlay(ctx, currentVariant, 'settings', 'settings');
+  return openUnifiedSettingsOverlay(ctx, currentVariant);
 }
 
+/** Alerts (notification channels) have no backend in this build. */
 export async function applyWebMcpOpenAlerts(
   ctx: AppContext,
   currentVariant: string,
 ): Promise<WebMcpNavigationResult> {
   const context = navigationContext(ctx, currentVariant);
   if (ctx.isDestroyed) return APP_DESTROYED_NAV_RESULT(context);
-  if (ctx.isDesktopApp) {
-    return {
-      ok: false,
-      status: 'denied',
-      destination: 'alerts',
-      reason: 'unavailable',
-      message: 'Alerts are not available on this dashboard.',
-      context,
-    };
-  }
-  return openUnifiedSettingsOverlay(ctx, currentVariant, 'alerts', 'notifications');
+  return {
+    ok: false,
+    status: 'denied',
+    destination: 'alerts',
+    reason: 'unavailable',
+    message: 'Alerts are not available on this dashboard.',
+    context,
+  };
 }
 
 export function listWebMcpMissionPresets(

@@ -32,27 +32,6 @@ function restoreGlobal(name: string, snapshot: GlobalSnapshot): void {
 
 const localStorageSnapshot = snapshotGlobal('localStorage');
 
-it('successful nonempty key setters enable access and notify subscribers', async () => {
-  const store = await loadWidgetStore();
-  let changes = 0;
-  const unsubscribe = store.subscribeWidgetAccess(() => { changes++; });
-  try {
-    assert.equal(await store.setWidgetKey('widget-fixture'), true);
-    assert.equal(store.isWidgetFeatureEnabled(), true);
-    assert.equal(changes, 1);
-    assert.equal(await store.setProKey('pro-fixture'), true);
-    assert.equal(store.isProWidgetEnabled(), true);
-    assert.equal(changes, 2);
-    assert.equal(await store.setWidgetKey(''), true);
-    assert.equal(await store.setProKey(''), true);
-    assert.equal(store.isWidgetFeatureEnabled(), false);
-    assert.equal(store.isProWidgetEnabled(), false);
-    assert.equal(changes, 4);
-  } finally {
-    unsubscribe();
-  }
-});
-
 afterEach(() => {
   restoreGlobal('localStorage', localStorageSnapshot);
 });
@@ -87,43 +66,12 @@ async function loadWidgetStore(): Promise<WidgetStore> {
       }
     `],
     ['widget-sanitizer-stub', `export function sanitizeWidgetHtml(html) { return 'sanitized:' + String(html); }`],
-    ['auth-state-stub', `
-      export function getAuthState() {
-        const hooks = globalThis.__wmKeyTest;
-        return { user: hooks ? null : { role: 'pro' }, isPending: false };
-      }
-    `],
-    ['entitlements-stub', `
-      export function isEntitled() { return !globalThis.__wmKeyTest; }
-      export function getEntitlementState() { return { planKey: 'pro' }; }
-    `],
-    // Tests drive the key-session outcomes through globalThis.__wmKeyTest; the
-    // default accepts every submitted key and reports no status.
-    ['browser-key-session-stub', `
-      export function clearBrowserKeySession() { return Promise.resolve(true); }
-      export function migrateLegacyKeysToHttpOnlySession(keys) {
-        const hooks = globalThis.__wmKeyTest;
-        if (hooks?.exchange) return hooks.exchange(keys);
-        const result = { ok: true };
-        if (keys.widgetKey) result.widget = 'accepted';
-        if (keys.proKey) result.pro = 'accepted';
-        return Promise.resolve(result);
-      }
-      export function readLegacySessionKey(name) { return globalThis.__wmKeyTest?.legacy?.[name] ?? ''; }
-      export function readBrowserKeySessionStatus() {
-        const hooks = globalThis.__wmKeyTest;
-        return hooks?.status ? hooks.status() : Promise.resolve(null);
-      }
-    `],
   ]);
 
   const aliasMap = new Map([
     ['@/utils', 'utils-stub'],
     ['@/utils/panel-storage', 'panel-storage-stub'],
     ['@/utils/widget-sanitizer', 'widget-sanitizer-stub'],
-    ['@/services/auth-state', 'auth-state-stub'],
-    ['@/services/entitlements', 'entitlements-stub'],
-    ['@/services/browser-key-session', 'browser-key-session-stub'],
   ]);
 
   const result = await build({
@@ -343,57 +291,4 @@ describe('widget-store PRO persistence', () => {
 
     assert.equal(widgets.length, 0);
   });
-});
-
-type KeyVerdict = 'accepted' | 'rejected' | 'failed';
-type ExchangeResult = { ok: boolean; widget?: KeyVerdict; pro?: KeyVerdict };
-type KeyHooks = {
-  legacy?: Partial<Record<'wm-widget-key' | 'wm-pro-key', string>>;
-  exchange?: (keys: { widgetKey?: string; proKey?: string }) => Promise<ExchangeResult>;
-  status?: () => Promise<{ widget: boolean; pro: boolean } | null>;
-};
-
-function verdictFor(keys: { widgetKey?: string; proKey?: string }, verdict: (key: string) => KeyVerdict): ExchangeResult {
-  const result: ExchangeResult = { ok: true };
-  if (keys.widgetKey) result.widget = verdict(keys.widgetKey);
-  if (keys.proKey) result.pro = verdict(keys.proKey);
-  result.ok = [result.widget, result.pro].every(v => v === undefined || v === 'accepted');
-  return result;
-}
-
-const settle = () => new Promise(resolve => setTimeout(resolve, 0));
-
-describe('widget-store tester-key hints follow the server verdict', () => {
-  const windowSnapshot = snapshotGlobal('window');
-
-  async function loadWithKeys(hooks: KeyHooks): Promise<WidgetStore> {
-    (globalThis as Record<string, unknown>).__wmKeyTest = hooks;
-    Object.defineProperty(globalThis, 'window', { configurable: true, writable: true, value: globalThis });
-    installLocalStorage();
-    return loadWidgetStore();
-  }
-
-  afterEach(() => {
-    delete (globalThis as Record<string, unknown>).__wmKeyTest;
-    restoreGlobal('window', windowSnapshot);
-  });
-
-  it('setProKey with a rejected key does not grant Pro', async () => {
-    const store = await loadWithKeys({ exchange: async keys => verdictFor(keys, () => 'rejected') });
-    let changes = 0;
-    store.subscribeWidgetAccess(() => { changes++; });
-    assert.equal(await store.setProKey('wrong-pro'), false);
-    assert.equal(store.isProWidgetEnabled(), false);
-    assert.equal(await store.setWidgetKey('wrong-widget'), false);
-    assert.equal(store.isWidgetFeatureEnabled(), false);
-    assert.equal(changes, 0);
-  });
-
-  it('setProKey with a rejected key keeps an already accepted session', async () => {
-    const store = await loadWithKeys({ exchange: async keys => verdictFor(keys, key => key === 'good-pro' ? 'accepted' : 'rejected') });
-    assert.equal(await store.setProKey('good-pro'), true);
-    assert.equal(await store.setProKey('wrong-pro'), false);
-    assert.equal(store.isProWidgetEnabled(), true, 'the server kept the previous cookie, so Pro stays');
-  });
-
 });

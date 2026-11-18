@@ -212,7 +212,6 @@ function createHarness(matches: SearchMatch[], enabledPanels: Record<string, boo
     refreshIndex: vi.fn(),
     getModal: () => modal as never,
     fetchLiveFlight: vi.fn(async () => {}),
-    getAuthContext: () => 'anonymous:settled:free',
     getVariant: () => 'full',
     isMatchExecutable: () => true,
     isPanelCurrentlyEnabled: (panelId) => enabledPanels[panelId] === true,
@@ -221,9 +220,7 @@ function createHarness(matches: SearchMatch[], enabledPanels: Record<string, boo
       () => candidate,
       signal,
     ),
-    subscribeAuth: () => () => {},
     subscribeRuntimeConfig: () => () => {},
-    subscribeWidgetAccess: () => () => {},
     cancelPendingSelection: () => dispatcher.cancelPendingProgrammaticSelection(),
   });
   return {

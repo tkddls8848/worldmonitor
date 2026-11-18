@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import { afterEach, describe, it } from 'node:test';
 import sovereignStatus from '../scripts/shared/sovereign-status.json' with { type: 'json' };
 
-import { issueSessionToken } from '../api/_session.js';
 import seedHealthHandler from '../api/seed-health.js';
 import { CII_RISK_SCORES_META_KEY, healthyCiiInputs } from './helpers/health-pipeline-fixture.mjs';
 import { __testing__ as healthTesting } from '../api/health.js';
@@ -25,7 +24,6 @@ const EDUCATION_META_KEY = 'seed-meta:resilience:education-attainment';
 const EDUCATION_DATA_KEY = 'resilience:education-attainment:v1';
 const originalFetch = globalThis.fetch;
 const originalEnv = {
-  WM_SESSION_SECRET: process.env.WM_SESSION_SECRET,
   UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
   UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
   WORLDMONITOR_VALID_KEYS: process.env.WORLDMONITOR_VALID_KEYS,

@@ -36,10 +36,8 @@
 //     OUT=/tmp/audit.md node scripts/audit-resilience-cohorts.mjs
 //   FIXTURE=tests/fixtures/resilience-audit-fixture.json node scripts/audit-resilience-cohorts.mjs
 //
-// Auth: the resilience ranking + score endpoints are in PREMIUM_RPC_PATHS
-// (see src/shared/premium-paths.ts). A valid WORLDMONITOR_API_KEY is
-// required whether running from a trusted browser origin or not — the
-// premium gate forces the key.
+// Auth: the hosted resilience ranking + score endpoints are Pro-gated, so a
+// valid WORLDMONITOR_API_KEY is required against the hosted API.
 //
 // Fixture mode (FIXTURE env): reads a JSON file with shape
 //   { ranking: GetResilienceRankingResponse, scores: { [cc]: GetResilienceScoreResponse } }

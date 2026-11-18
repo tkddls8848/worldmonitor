@@ -30,12 +30,6 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, type Mock, vi }
 
 import { initTestI18n } from './helpers/i18n.mts';
 import type { UnifiedSettingsConfig } from '@/components/UnifiedSettings';
-import type { AuthSession } from '@/services/auth-state';
-
-const session: AuthSession = {
-  user: { id: 'A', name: 'User A', email: 'a@example.com', role: 'pro' },
-  isPending: false,
-};
 
 
 const storageValues = new Map<string, string>();
@@ -48,27 +42,12 @@ const storage: Storage = {
   setItem: (key, value) => { storageValues.set(key, value); },
 };
 
-vi.mock('@/services/auth-state', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/services/auth-state')>()),
-  getAuthState: () => session,
-  subscribeAuthState: () => () => {},
-}));
-
-
-
 vi.mock('@/services/widget-store', () => ({
   isProUser: () => true,
 }));
 
 vi.mock('@/services/preferences-content', () => ({
   renderPreferenceSection: () => ({
-    html: '',
-    attach: () => () => {},
-  }),
-}));
-
-vi.mock('@/services/notifications-settings', () => ({
-  renderNotificationsSettings: () => ({
     html: '',
     attach: () => () => {},
   }),
@@ -273,14 +252,13 @@ describe('UnifiedSettings source selection live apply (#6380)', () => {
   });
 
   it('(e2) a re-entrant open() mid-session does not swallow an earlier toggle', () => {
-    // open() is callable on an overlay that is already up — the deep-dive
-    // "Notify me about this country" jump lands on the notifications tab that
-    // way. Re-snapshotting there would adopt the post-toggle set as the
-    // baseline and close() would see no movement at all.
+    // open() is callable on an overlay that is already up. Re-snapshotting
+    // there would adopt the post-toggle set as the baseline and close() would
+    // see no movement at all.
     settings.open('sources');
     sourceButton(PLAIN_SOURCE).click();
 
-    settings.open('notifications');
+    settings.open('display');
     settings.close();
 
     expect(

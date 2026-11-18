@@ -2,7 +2,6 @@ import { beforeEach, afterEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { listTelegramFeed } from '../server/worldmonitor/intelligence/v1/list-telegram-feed.ts';
-import { issueSessionToken } from '../api/_session.js';
 
 const originalFetch = globalThis.fetch;
 const originalEnv = { ...process.env };
@@ -23,7 +22,7 @@ const SESSION_SECRET = 'x'.repeat(48);
  * Origin alone is no longer sufficient — see the first-party boundary suite.
  */
 async function makeRequest(path = '/api/telegram-feed?limit=50') {
-  const { token } = await issueSessionToken();
+  const token = 'wms_test-browser-session';
   return new Request(`https://worldmonitor.app${path}`, {
     method: 'GET',
     headers: { origin: 'https://worldmonitor.app', 'X-WorldMonitor-Key': token },
@@ -34,7 +33,6 @@ describe('api/telegram-feed contract normalization', () => {
   beforeEach(() => {
     process.env.WS_RELAY_URL = 'https://relay.example.com';
     process.env.RELAY_SHARED_SECRET = 'test-secret';
-    process.env.WM_SESSION_SECRET = SESSION_SECRET;
   });
 
   afterEach(() => {
@@ -417,7 +415,6 @@ describe('api/telegram-feed first-party boundary', () => {
   beforeEach(() => {
     process.env.WS_RELAY_URL = 'https://relay.example.com';
     process.env.RELAY_SHARED_SECRET = 'test-secret';
-    process.env.WM_SESSION_SECRET = SESSION_SECRET;
     globalThis.fetch = async () => new Response(RELAY_BODY, {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
@@ -441,7 +438,7 @@ describe('api/telegram-feed first-party boundary', () => {
   // credential, and the bodies DO come back. If this ever goes red the
   // rejections stop proving anything.
   it('serves post bodies to a credentialed first-party caller', async () => {
-    const { token } = await issueSessionToken();
+    const token = 'wms_test-browser-session';
     const res = await get({ origin: 'https://worldmonitor.app', 'X-WorldMonitor-Key': token });
     assert.equal(res.status, 200);
     assert.match(await res.text(), /SECRET BODY/);

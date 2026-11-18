@@ -2,7 +2,6 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { adaptTransition } from '../server/worldmonitor/intelligence/v1/get-regime-history';
-import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths.ts';
 
 describe('adaptTransition', () => {
   it('maps all fields from persisted shape to proto shape', () => {
@@ -56,11 +55,4 @@ describe('adaptTransition', () => {
 // The handler-internals, registration and proto assertions that used to close
 // this file pinned import lines, Redis key literals and proto field numbers.
 // Generated clients make an unregistered RPC a typecheck failure; adaptTransition
-// above is the behaviour worth testing. The premium gate survives, asserted
-// against the real Set rather than a grep of the module text.
-
-describe('regime history is premium-gated', () => {
-  it('is in PREMIUM_RPC_PATHS', () => {
-    assert.ok(PREMIUM_RPC_PATHS.has('/api/intelligence/v1/get-regime-history'));
-  });
-});
+// above is the behaviour worth testing.

@@ -222,15 +222,3 @@ describe('UnifiedSettings.open', () => {
     assert.equal(instance.sourceSelectionBaseline, STUB_SOURCE_SIGNATURE);
   });
 });
-
-// The avatar menu's Plan & billing entry is the main way in to the account
-// page; the section id it passes is checked by the compiler, the wiring here.
-describe('avatar menu', () => {
-  it('opens Plan & billing on the account page', () => {
-    const handlers = readFileSync(resolve(__dirname, '../src/app/event-handlers.ts'), 'utf8');
-    assert.match(
-      handlers,
-      /new AuthHeaderWidget\(\s*\(\) => modal\.open\(\),\s*\(\) => this\.ctx\.unifiedSettings\?\.open\(\),\s*\(\) => this\.ctx\.unifiedSettings\?\.open\('account'\),\s*\)/,
-    );
-  });
-});

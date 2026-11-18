@@ -11,8 +11,6 @@ export { bucketPanelKeyForAnalytics } from '@/utils/analytics-panel-key';
 
 import { scheduleAfterFirstPaint } from '@/utils/after-paint';
 import { safeStorageGet, safeStorageRemove, safeStorageSet } from '@/utils/safe-storage';
-import { subscribeAuthState, type AuthSession } from './auth-state';
-import { getClerkUserCreatedAt } from './clerk';
 import { DODO_PRODUCT_IDS } from '@/config/product-ids.generated';
 import type { McpAgentClientId } from '@/config/mcp-agent-clients';
 import { SITE_VARIANT, isSiteVariant } from '@/config/variant';
@@ -781,68 +779,6 @@ export function clearIdentity(): void {
   if (!sendUmamiCall(call)) {
     queueUmamiCall(call);
   }
-}
-
-let _unsubAuth: (() => void) | null = null;
-let _lastAuth: AuthSession | null = null;
-
-function _syncIdentity(): void {
-  const user = _lastAuth?.user;
-  if (user) {
-    identifyUser(user.id, user.role);
-  } else {
-    clearIdentity();
-  }
-}
-
-/**
- * Call once after initAuthState() to keep Umami identity in sync with
- * the authenticated user and their subscription status.
- * Re-entrant safe: subsequent calls are no-ops.
- */
-export function initAuthAnalytics(): void {
-  if (_unsubAuth) return;
-
-  _unsubAuth = subscribeAuthState((state) => {
-    const prevUserId = _lastAuth?.user?.id ?? null;
-    const nextUserId = state.user?.id ?? null;
-    if (prevUserId !== nextUserId) {
-      // Detect a genuine sign-UP (not a sign-in). Null→non-null id transition
-      // plus a createdAt within FRESH_SIGNUP_WINDOW_MS of now means Clerk
-      // just created this account. Firing trackSignUp on the button click
-      // would conflate "opened the sign-up modal" with "completed the flow";
-      // gating on createdAt freshness captures the successful-completion
-      // signal we actually want to measure.
-      //
-      // Durable fire-once guard: `_lastAuth` resets to null on every page
-      // load, so without a persisted marker the null→user transition looks
-      // identical on the completion reload and on any reload within the
-      // 60s freshness window. We'd re-fire trackSignUp on every tab
-      // refresh until createdAt ages out, inflating the signup count.
-      // sessionStorage scopes the marker to the browser tab — tight enough
-      // that re-install / new session reliably re-counts, wide enough that
-      // a reload mid-signup doesn't double-count.
-      if (
-        nextUserId !== null &&
-        !hasTrackedSignupInSession(nextUserId) &&
-        isLikelyFreshSignup(prevUserId, nextUserId, getClerkUserCreatedAt(), Date.now())
-      ) {
-        trackSignUp('clerk', { resumed: consumeSignUpResumed() });
-        markSignupTrackedInSession(nextUserId);
-      }
-    }
-    _lastAuth = state;
-    _syncIdentity();
-  });
-
-}
-
-/** Tear down auth listeners. Symmetric with initAuthAnalytics(). */
-export function destroyAuthAnalytics(): void {
-  _unsubAuth?.();
-  _unsubAuth = null;
-  _lastAuth = null;
-  clearIdentity();
 }
 
 // ---------------------------------------------------------------------------

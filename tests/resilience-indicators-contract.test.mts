@@ -7,7 +7,6 @@ import { fileURLToPath } from 'node:url';
 
 import { REST_JMESPATH_MAX_OUTPUT_BYTES } from '../server/_shared/response-projection.ts';
 import { INDICATOR_REGISTRY } from '../server/worldmonitor/resilience/v1/_indicator-registry.ts';
-import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths.ts';
 import { createRedisFetch } from './helpers/fake-upstash-redis.mts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -79,8 +78,7 @@ describe('resilience indicator RPC contract', () => {
     assert.equal(digest, '01fc1918c9f4b1138cea5d93b8453ca07056b964cd84ded7ef27e36db5c827c1');
   });
 
-  it('registers matching legacy premium, modern tier-1 and slow-cache gates', () => {
-    assert.ok(PREMIUM_RPC_PATHS.has(ROUTE));
+  it('registers the slow-cache gate', () => {
     const gateway = read('server/gateway.ts');
     assert.match(gateway, /'\/api\/resilience\/v1\/get-resilience-indicators': 'slow'/);
   });

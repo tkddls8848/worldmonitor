@@ -8,7 +8,6 @@ import { createDomainGateway, serverOptions } from '../server/gateway.ts';
 import { installRedis } from './helpers/fake-upstash-redis.mts';
 import { readLimiterRequest } from './helpers/upstash-limiter-wire.mjs';
 import { decodeTfs, loadGoogleFlightsRelay, pageFixture, relayTransport, resultsPage } from './helpers/google-flights-page.mts';
-import { issueSessionToken } from '../api/_session.js';
 import { RpcValidationError, assertToolFetchOk } from '../api/mcp/billing-denial.ts';
 const originalFetch = globalThis.fetch;
 const originalEnv = { ...process.env };
@@ -23,8 +22,7 @@ beforeEach(async () => {
   delete process.env.VERCEL_ENV;
   process.env.WS_RELAY_URL = 'https://relay.example';
   delete process.env.LOCAL_API_MODE;
-  process.env.WM_SESSION_SECRET = 'synthetic-aviation-news-session-secret';
-  session = (await issueSessionToken()).token;
+  session = 'wms_test-browser-session';
   redis = installRedis({});
   calls = [];
   globalThis.fetch = (async (input, init) => {

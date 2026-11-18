@@ -767,7 +767,7 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
       if (cause === 'security') {
         scenario.runtime.auth = {};
         scenario.runtime.premium = false;
-        for (const listener of scenario.runtime.authListeners) listener();
+        for (const listener of scenario.runtime.runtimeConfigListeners) listener();
       } else {
         scenario.manager.destroy();
       }
@@ -1749,7 +1749,7 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
     assert.deepEqual(scenario.calls.hotspotIds, []);
   });
 
-  it('invalidates capabilities across an A -> signed-out -> A security-context cycle', async () => {
+  it('invalidates capabilities across a runtime-config change and back', async () => {
     const scenario = makeScenario([
       resultMatch('country', 'US', 'United States', { code: 'US', name: 'United States' }),
     ]);
@@ -1760,10 +1760,10 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
 
     scenario.runtime.auth = {};
     scenario.runtime.premium = false;
-    for (const listener of scenario.runtime.authListeners) listener();
+    for (const listener of scenario.runtime.runtimeConfigListeners) listener();
     scenario.runtime.auth = { user: { id: 'user-a', role: 'pro' } };
     scenario.runtime.premium = true;
-    for (const listener of scenario.runtime.authListeners) listener();
+    for (const listener of scenario.runtime.runtimeConfigListeners) listener();
 
     assert.deepEqual(await scenario.manager.openSearchResult(key), {
       ok: false,
@@ -2442,7 +2442,7 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
 
     scenario.runtime.auth = {};
     scenario.runtime.premium = false;
-    for (const listener of scenario.runtime.authListeners) listener();
+    for (const listener of scenario.runtime.runtimeConfigListeners) listener();
     assert.equal(presentationSignal?.aborted, true);
     resolveBrief(true);
 

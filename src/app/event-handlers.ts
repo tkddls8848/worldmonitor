@@ -88,9 +88,6 @@ import { isOpenableExternalUrl, openExternalUrl } from '@/services/external-navi
 import { getCachedGpsInterference } from '@/services/gps-interference';
 import { dataFreshness } from '@/services/data-freshness';
 import { mlWorker } from '@/services/ml-worker';
-import { WM_OPEN_NOTIFICATIONS_FOR_COUNTRY } from '@/utils/notify-country-link';
-import { AuthLauncher } from '@/components/AuthLauncher';
-import { AuthHeaderWidget } from '@/components/AuthHeaderWidget';
 import { t } from '@/services/i18n';
 import { getPanelDisplayName } from '@/services/panel-display-name';
 import { TvModeController } from '@/services/tv-mode';
@@ -317,15 +314,12 @@ export class EventHandlerManager implements AppModule {
   private readonly mobilePrimaryNav: MobilePrimaryNav;
   private boundPanelCloseHandler: ((e: Event) => void) | null = null;
   private boundUndoHandler: ((e: KeyboardEvent) => void) | null = null;
-  private boundNotifyForCountryHandler: ((e: Event) => void) | null = null;
   private boundMissionOutsideHandler: ((e: MouseEvent) => void) | null = null;
   private boundMissionKeydownHandler: ((e: KeyboardEvent) => void) | null = null;
   private boundEmbedModalKeydownHandler: ((e: KeyboardEvent) => void) | null = null;
   private missionPresetPopover: HTMLElement | null = null;
   private missionPresetReturnFocus: HTMLElement | null = null;
   private missionDataRefreshTimer: number | null = null;
-  private authStateUnsubscribers: Array<() => void> = [];
-  private proGateUnsubscribers: Array<() => void> = [];
   private closedPanelStack: string[] = []; // max-items: 20
   private idleTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private snapshotIntervalId: ReturnType<typeof setInterval> | null = null;
@@ -599,30 +593,15 @@ export class EventHandlerManager implements AppModule {
       document.removeEventListener('keydown', this.boundUndoHandler);
       this.boundUndoHandler = null;
     }
-    if (this.boundNotifyForCountryHandler) {
-      window.removeEventListener(
-        WM_OPEN_NOTIFICATIONS_FOR_COUNTRY,
-        this.boundNotifyForCountryHandler,
-      );
-      this.boundNotifyForCountryHandler = null;
-    }
     this.closeMissionPresetPopover();
     if (this.missionDataRefreshTimer) {
       window.clearTimeout(this.missionDataRefreshTimer);
       this.missionDataRefreshTimer = null;
     }
-    for (const unsub of this.authStateUnsubscribers) unsub();
-    this.authStateUnsubscribers = [];
-    for (const unsub of this.proGateUnsubscribers) unsub();
-    this.proGateUnsubscribers = [];
     this.ctx.tvMode?.destroy();
     this.ctx.tvMode = null;
     this.ctx.unifiedSettings?.destroy();
     this.ctx.unifiedSettings = null;
-    this.ctx.authHeaderWidget?.destroy();
-    this.ctx.authHeaderWidget = null;
-    this.ctx.authModal?.destroy();
-    this.ctx.authModal = null;
     overlayHistory.reset();
   }
 
@@ -2069,46 +2048,6 @@ export class EventHandlerManager implements AppModule {
     if (mobileBtn) {
       mobileBtn.addEventListener('click', () => this.ctx.unifiedSettings?.open());
     }
-
-    // U8 (degraded path) — listen for the deep-dive "Notify me about this
-    // country" sub-action and open the notifications tab. Today the
-    // event detail.country is informational only; when the alertRules
-    // schema PR lands, the future PR will read it here and forward to
-    // a pre-filled create-form open. See plan U8 R9 + the TODO inside
-    // src/utils/notify-country-link.ts.
-    //
-    // Stored on a bound handler field so `destroy()` can remove it.
-    // Same-document reinit (HMR, test harnesses, multiple App instances)
-    // would otherwise accumulate anonymous listeners that retain the
-    // stale AppContext closure — every click would fire all of them.
-    this.boundNotifyForCountryHandler = (_e: Event) => {
-      this.ctx.unifiedSettings?.open('notifications');
-    };
-    window.addEventListener(
-      WM_OPEN_NOTIFICATIONS_FOR_COUNTRY,
-      this.boundNotifyForCountryHandler,
-    );
-  }
-
-  setupAuthWidget(): void {
-    const modal = new AuthLauncher();
-    this.ctx.authModal = modal;
-
-    // The standalone gear remains available to every user. Signed-in users
-    // also get explicit Settings and Plan & billing destinations inside the
-    // avatar menu, keeping account and subscription actions in one place.
-    const widget = new AuthHeaderWidget(
-      () => modal.open(),
-      () => this.ctx.unifiedSettings?.open(),
-      () => this.ctx.unifiedSettings?.open('account'),
-    );
-    this.ctx.authHeaderWidget = widget;
-    const mount = document.getElementById('authWidgetMount');
-    if (mount) {
-      mount.appendChild(widget.getElement());
-    }
-
-    this.mobilePrimaryNav.setupAuth(modal);
   }
 
   setupPlaybackControl(): void {

@@ -40,7 +40,6 @@ import {
 } from '../shared/intel-history-store.mjs';
 import { setIntelHistoryStoreForTests } from '../server/_shared/intel-history-client';
 import { normalizeQueryText } from '../server/_shared/intel-history-embed';
-import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths.ts';
 import { getIntelTimeline } from '../server/worldmonitor/intelligence/v1/get-intel-timeline';
 import { getSimilarEvents } from '../server/worldmonitor/intelligence/v1/get-similar-events';
 import { searchIntelHistory } from '../server/worldmonitor/intelligence/v1/search-intel-history';
@@ -827,7 +826,6 @@ const searchProtoSrc = read('proto/worldmonitor/intelligence/v1/search_intel_his
 const timelineProtoSrc = read('proto/worldmonitor/intelligence/v1/get_intel_timeline.proto');
 const similarProtoSrc = read('proto/worldmonitor/intelligence/v1/get_similar_events.proto');
 const handlerIndexSrc = read('server/worldmonitor/intelligence/v1/handler.ts');
-const premiumPathsSrc = read('src/shared/premium-paths.ts');
 const gatewaySrc = read('server/gateway.ts');
 const openApiJson = JSON.parse(read('docs/api/IntelligenceService.openapi.json')) as {
   paths: Record<string, Record<string, unknown>>;
@@ -904,14 +902,6 @@ describe('handler registration', () => {
 });
 
 describe('gateway wiring', () => {
-  for (const { path } of RPCS) {
-    it(`gates ${path} behind Pro in both registries`, () => {
-      // Membership in the real Set is what gates the route; a grep of the
-      // module text also matches a path sitting in a comment.
-      assert.ok(PREMIUM_RPC_PATHS.has(path), `${path} missing from PREMIUM_RPC_PATHS`);
-    });
-  }
-
   it('assigns the GET timeline route a slow gateway cache tier', () => {
     assert.match(
       gatewaySrc,

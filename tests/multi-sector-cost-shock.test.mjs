@@ -13,7 +13,6 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths.ts';
 
 // ========================================================================
 // 1. Pure helper: _multi-sector-shock.ts
@@ -222,21 +221,5 @@ describe('computeMultiSectorShocks', () => {
     // heuristic is ~0.4% x 30 days — well inside the order-of-magnitude band.
     assert.ok(total > heuristic / 10, `cost ${total} too low vs heuristic ${heuristic}`);
     assert.ok(total < heuristic * 10, `cost ${total} too high vs heuristic ${heuristic}`);
-  });
-});
-
-// ========================================================================
-// Premium enforcement. Membership in PREMIUM_RPC_PATHS is what gates the
-// endpoint, so assert against the real Set rather than grepping the module
-// for a path string — a path moved into a comment satisfies the grep.
-//
-// The handler, client-service, panel and country-intel assertions that used to
-// follow all restated lines of source. The panel is exercised by booting the
-// dashboard in e2e/variant-live-smoke.spec.ts.
-// ========================================================================
-
-describe('multi-sector cost shock is premium-gated', () => {
-  it('is in PREMIUM_RPC_PATHS', () => {
-    assert.ok(PREMIUM_RPC_PATHS.has('/api/supply-chain/v1/get-multi-sector-cost-shock'));
   });
 });

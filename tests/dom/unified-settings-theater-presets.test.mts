@@ -21,12 +21,6 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, type Mock, vi }
 
 import { initTestI18n, tt } from './helpers/i18n.mts';
 import type { UnifiedSettingsConfig } from '@/components/UnifiedSettings';
-import type { AuthSession } from '@/services/auth-state';
-
-const session: AuthSession = {
-  user: { id: 'A', name: 'User A', email: 'a@example.com', role: 'pro' },
-  isPending: false,
-};
 
 
 const storageValues = new Map<string, string>();
@@ -39,27 +33,12 @@ const storage: Storage = {
   setItem: (key, value) => { storageValues.set(key, value); },
 };
 
-vi.mock('@/services/auth-state', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/services/auth-state')>()),
-  getAuthState: () => session,
-  subscribeAuthState: () => () => {},
-}));
-
-
-
 vi.mock('@/services/widget-store', () => ({
   isProUser: () => true,
 }));
 
 vi.mock('@/services/preferences-content', () => ({
   renderPreferenceSection: () => ({
-    html: '',
-    attach: () => () => {},
-  }),
-}));
-
-vi.mock('@/services/notifications-settings', () => ({
-  renderNotificationsSettings: () => ({
     html: '',
     attach: () => () => {},
   }),
@@ -99,7 +78,6 @@ const { getTheaterPreset } = await import('@/config/theater-presets');
 
 type SettingsInternals = {
   overlay: HTMLElement;
-  rebuild(runEnter: boolean): void;
 };
 
 // The 'ukraine-war' preset lists 11 sources; the stub catalog knows all of
@@ -271,7 +249,9 @@ describe('UnifiedSettings theater coverage presets', () => {
 
   it('(f) no presets row renders when zero presets resolve', () => {
     config.getAllSourceNames = () => [UNRELATED_SOURCE];
-    internal.rebuild(false);
+    // A fresh session mounts the Sources page again with the new catalogue.
+    settings.close();
+    settings.open('sources');
 
     const chips = internal.overlay.querySelectorAll('.unified-settings-preset-chip');
     expect(chips.length).toBe(0);

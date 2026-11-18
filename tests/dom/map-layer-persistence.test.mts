@@ -135,7 +135,6 @@ describe('open_search_result persists an executable layer result', () => {
       refreshIndex: vi.fn(),
       getModal: () => modal as never,
       fetchLiveFlight: vi.fn(async () => {}),
-      getAuthContext: () => 'anonymous:settled:free',
       getVariant: () => 'full',
       isMatchExecutable: () => true,
       isPanelCurrentlyEnabled: () => false,
@@ -144,9 +143,7 @@ describe('open_search_result persists an executable layer result', () => {
         () => candidate,
         signal,
       ),
-      subscribeAuth: () => () => {},
       subscribeRuntimeConfig: () => () => {},
-      subscribeWidgetAccess: () => () => {},
       cancelPendingSelection: () => dispatcher.cancelPendingProgrammaticSelection(),
     });
 

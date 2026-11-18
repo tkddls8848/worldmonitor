@@ -10,12 +10,7 @@
 
 /** A plain snapshot the shell reads before every navigation event. */
 export interface SettingsFacts {
-  readonly signedIn: boolean;
-  /** isClerkAuthEnabled(). A build without a Clerk key offers no sign-in row. */
-  readonly canSignIn: boolean;
   readonly isDesktopApp: boolean;
-  /** Signed-in account card text. Null when signed out. */
-  readonly account: { readonly plan: string; readonly email: string } | null;
   /** Panels that read as on in the Panels page draft. */
   readonly panels: { readonly on: number; readonly total: number };
   readonly sourcesOn: number;
@@ -26,8 +21,7 @@ export interface SettingsFacts {
 export type RowSummary =
   | { readonly kind: 'count'; readonly on: number; readonly total: number }
   | { readonly kind: 'total'; readonly count: number }
-  | { readonly kind: 'text'; readonly key: string }
-  | { readonly kind: 'account'; readonly plan: string; readonly email: string };
+  | { readonly kind: 'text'; readonly key: string };
 
 interface SectionDef {
   readonly id: string;
@@ -36,8 +30,6 @@ interface SectionDef {
   /** 'preferences' pages are rendered by preferences-content.ts. */
   readonly owner: 'shell' | 'preferences';
   readonly available?: (f: SettingsFacts) => boolean;
-  /** What the home list shows while the section is unavailable. Default 'hide'. */
-  readonly whenUnavailable?: 'hide' | 'sign-in-row';
   readonly summary?: (f: SettingsFacts) => RowSummary | null;
   /** A numbered list in the locale catalogue ({"0": ..., "1": ...}): extra words the sidebar search matches. */
   readonly keywordsKey: string;
@@ -45,7 +37,6 @@ interface SectionDef {
 
 interface GroupDef {
   readonly id: string;
-  /** Null for the account card, which has no group heading. */
   readonly labelKey: string | null;
   readonly sections: readonly SectionDef[];
 }
@@ -58,16 +49,6 @@ const THEME_SUMMARY_KEY = {
 
 export const SETTINGS_GROUPS = [
   {
-    id: 'account', labelKey: null, sections: [
-      {
-        id: 'account', labelKey: 'settings.sections.account', owner: 'shell',
-        available: (f) => f.signedIn, whenUnavailable: 'sign-in-row',
-        keywordsKey: 'settings.keywords.account',
-        summary: (f) => (f.account ? { kind: 'account', plan: f.account.plan, email: f.account.email } : null),
-      },
-    ],
-  },
-  {
     id: 'dashboard', labelKey: 'settings.groups.dashboard', sections: [
       {
         id: 'panels', labelKey: 'header.tabPanels', descKey: 'settings.descriptions.panels', owner: 'shell',
@@ -78,11 +59,6 @@ export const SETTINGS_GROUPS = [
         id: 'sources', labelKey: 'header.tabSources', descKey: 'settings.descriptions.sources', owner: 'shell',
         keywordsKey: 'settings.keywords.sources',
         summary: (f) => ({ kind: 'total', count: f.sourcesOn }),
-      },
-      {
-        id: 'notifications', labelKey: 'header.tabNotifications', descKey: 'settings.descriptions.notifications', owner: 'shell',
-        keywordsKey: 'settings.keywords.notifications',
-        available: (f) => !f.isDesktopApp,
       },
     ],
   },
@@ -150,16 +126,14 @@ export function sectionSummary(id: SettingsSectionId, f: SettingsFacts): RowSumm
   return isAvailable(id, f) ? SECTIONS.get(id)?.summary?.(f) ?? null : null;
 }
 
-export type NavRow =
-  | {
-    readonly kind: 'section';
-    readonly id: SettingsSectionId;
-    readonly labelKey: string;
-    readonly descKey: string | null;
-    readonly summary: RowSummary | null;
-    readonly keywordsKey: string;
-  }
-  | { readonly kind: 'sign-in' };
+export interface NavRow {
+  readonly kind: 'section';
+  readonly id: SettingsSectionId;
+  readonly labelKey: string;
+  readonly descKey: string | null;
+  readonly summary: RowSummary | null;
+  readonly keywordsKey: string;
+}
 
 export interface NavGroup {
   readonly id: string;
@@ -183,8 +157,6 @@ export function buildNav(f: SettingsFacts): readonly NavGroup[] {
           summary: def.summary?.(f) ?? null,
           keywordsKey: def.keywordsKey,
         });
-      } else if (def.whenUnavailable === 'sign-in-row' && f.canSignIn) {
-        rows.push({ kind: 'sign-in' });
       }
     }
     if (rows.length > 0) groups.push({ id: group.id, labelKey: group.labelKey, rows });
@@ -219,8 +191,7 @@ export function searchTerms(translate: Translate): (key: string) => readonly str
 /**
  * Keeps the rows whose label, description or keywords contain every word of
  * `query`, case-insensitively. `terms` gives every rendering of a key (see
- * searchTerms). Groups left empty are dropped. The account card and the
- * sign-in row always stay, so search never hides who is signed in.
+ * searchTerms). Groups left empty are dropped.
  */
 export function searchNav(groups: readonly NavGroup[], query: string, terms: (key: string) => readonly string[]): NavSearch {
   const words = query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
@@ -228,12 +199,11 @@ export function searchNav(groups: readonly NavGroup[], query: string, terms: (ke
   const kept: NavGroup[] = [];
   for (const group of groups) {
     const rows = group.rows.filter((row) => {
-      if (row.kind === 'sign-in') return true;
       const keys = [row.labelKey, row.descKey, row.keywordsKey].filter((key) => key !== null);
       const haystack = keys.flatMap(terms).join('\n').toLocaleLowerCase();
       const matched = words.every((word) => haystack.includes(word));
       if (matched) hits += 1;
-      return matched || row.id === 'account';
+      return matched;
     });
     if (rows.length > 0) kept.push({ ...group, rows });
   }
@@ -245,7 +215,7 @@ declare const resolved: unique symbol;
 /** Where Settings is drawn: the full-height phone 'sheet', or the two-pane 'modal' on wider screens. */
 export type NavLayout = 'sheet' | 'modal';
 
-/** The page the modal shows when nothing else applies. Every account can open it. */
+/** The page the modal shows when nothing else applies. It is always available. */
 const MODAL_FALLBACK_PAGE = 'display' satisfies SettingsSectionId;
 
 /**

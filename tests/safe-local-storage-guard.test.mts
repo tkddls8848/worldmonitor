@@ -155,11 +155,6 @@ describe('raw localStorage guard (#7833)', () => {
       'src/services/runtime.ts',
       'src/services/tv-mode.ts',
       'src/settings-main.ts',
-      // Re-listing this one would mean the private rawGet/rawSet/rawRemove
-      // trio came back. It was added by #7833 itself and removed in review:
-      // its justification (bypassing an own-property override of
-      // `localStorage`) described a threat that exists nowhere in this repo.
-      'src/utils/cloud-prefs-sync.ts',
     ]) {
       assert.equal(
         LEGACY_RAW_LOCAL_STORAGE.some((entry) => entry.startsWith(`${file} ::`)),

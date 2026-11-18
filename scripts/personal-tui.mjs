@@ -37,7 +37,8 @@ export async function startPersonalTui({ argv = process.argv.slice(2), env = pro
     throw new Error(`개인용 서버(${origin})에 연결할 수 없습니다. 먼저 다른 터미널에서 npm run start:personal 을 실행하세요.`);
   }
   const { launchTui } = await import('../cli/src/tui/index.mjs');
-  const options = { baseUrl: origin };
+  // The personal server has no session endpoint; its Basic login is the credential.
+  const options = { baseUrl: origin, anonymousSession: false };
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--theme') options.theme = argv[++i];
     else if (argv[i] === '--fps') options.fps = argv[++i];
