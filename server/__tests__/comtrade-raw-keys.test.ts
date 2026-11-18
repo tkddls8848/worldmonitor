@@ -4,7 +4,6 @@ import { KEY_PREFIX } from '../../scripts/seed-trade-flows.mjs';
 import { writeExtraKey } from '../../scripts/_seed-utils.mjs';
 import type { ComtradeFlowRecord, ServerContext } from '../../src/generated/server/worldmonitor/trade/v1/service_server';
 
-vi.mock('../_shared/premium-check', () => ({ isCallerPremium: vi.fn(async () => true) }));
 
 const key = `${KEY_PREFIX}:842:2709`;
 const fetchedAt = '2026-09-01T00:00:00Z';

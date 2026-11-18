@@ -25,27 +25,9 @@ const load = async (path) => (await import(path)).default;
 const CASES = [
   { name: 'latest-brief', path: '/api/latest-brief', module: '../api/latest-brief.ts', allow: 'GET, OPTIONS', refused: 'POST', preflight: true },
   { name: 'chat-analyst', path: '/api/chat-analyst', module: '../api/chat-analyst.ts', allow: 'POST, OPTIONS', refused: 'GET', preflight: true },
-  { name: 'customer-portal', path: '/api/customer-portal', module: '../api/customer-portal.ts', allow: 'GET, POST, OPTIONS', refused: 'PUT', preflight: true },
-  { name: 'invalidate-user-api-key-cache', path: '/api/invalidate-user-api-key-cache', module: '../api/invalidate-user-api-key-cache.ts', allow: 'POST, OPTIONS', refused: 'GET', preflight: true },
-  { name: 'channel-oauth-bind', path: '/api/channel-oauth-bind', module: '../api/channel-oauth-bind.ts', allow: 'POST', refused: 'GET', preflight: false },
-  { name: 'notify', path: '/api/notify', module: '../api/notify.ts', allow: 'POST, OPTIONS', refused: 'GET', preflight: true },
-  { name: 'create-checkout', path: '/api/create-checkout', module: '../api/create-checkout.ts', allow: 'POST, OPTIONS', refused: 'GET', preflight: true },
-  { name: 'pro-business-upgrade', path: '/api/pro-business-upgrade', module: '../api/pro-business-upgrade.ts', allow: 'POST, OPTIONS', refused: 'GET', preflight: true },
-  { name: 'widget-agent', path: '/api/widget-agent', module: '../api/widget-agent.ts', allow: 'GET, POST, OPTIONS', refused: 'PUT', preflight: true, headers: { 'X-Widget-Key': process.env.WIDGET_AGENT_KEY } },
   { name: 'symbol-search', path: '/api/symbol-search', module: '../api/symbol-search.ts', allow: 'GET, OPTIONS', refused: 'POST', preflight: true },
-  {
-    name: 'notification-channels', path: '/api/notification-channels', module: '../api/notification-channels.ts', allow: 'GET, POST, OPTIONS', refused: 'PUT', preflight: true,
-    headers: { Authorization: 'Bearer allow-test-session' },
-    prepare: async () => {
-      const { __setNotificationChannelsDepsForTests } = await import('../api/notification-channels.ts');
-      __setNotificationChannelsDepsForTests({ validateBearerToken: async () => ({ valid: true, userId: 'allow-test-user' }) });
-    },
-  },
-  { name: 'referral/me', path: '/api/referral/me', module: '../api/referral/me.ts', allow: 'GET, OPTIONS', refused: 'POST', preflight: true },
-  { name: 'oauth/token', path: '/oauth/token', module: '../api/oauth/token.ts', allow: 'POST, OPTIONS', refused: 'GET', preflight: true },
   { name: 'internal/brief-why-matters', path: '/api/internal/brief-why-matters', module: '../api/internal/brief-why-matters.ts', allow: 'POST', refused: 'GET', preflight: false },
   { name: 'brief/share-url', path: '/api/brief/share-url', module: '../api/brief/share-url.ts', allow: 'POST, OPTIONS', refused: 'GET', preflight: true },
-  { name: 'skills/fetch-agentskills', path: '/api/skills/fetch-agentskills', module: '../api/skills/fetch-agentskills.ts', allow: 'POST, OPTIONS', refused: 'GET', preflight: false },
   { name: 'brief/carousel', path: '/api/brief/carousel/user/2026-10-30/1', module: '../api/brief/carousel/[userId]/[issueDate]/[page].ts', allow: 'GET, HEAD, OPTIONS', refused: 'POST', preflight: false },
   { name: 'brief/public', path: '/api/brief/public/abc', module: '../api/brief/public/[hash].ts', allow: 'GET, HEAD, OPTIONS', refused: 'POST', preflight: false },
   { name: 'brief/[userId]', path: '/api/brief/user/2026-10-30', module: '../api/brief/[userId]/[issueDate].ts', allow: 'GET, HEAD, OPTIONS', refused: 'POST', preflight: false },

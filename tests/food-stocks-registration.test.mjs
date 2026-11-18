@@ -46,7 +46,6 @@ describe('food stocks production registration (#6440)', () => {
 
   it('gates the RPC as premium + entitlement before generate', () => {
     assert.ok(PREMIUM_RPC_PATHS.has('/api/resilience/v1/get-food-stocks'));
-    assert.match(read('server/_shared/entitlement-check.ts'), /'\/api\/resilience\/v1\/get-food-stocks': 1/);
     assert.match(read('server/gateway.ts'), /'\/api\/resilience\/v1\/get-food-stocks': 'slow'/);
   });
 });

@@ -34,7 +34,6 @@ import {
 } from '../server/worldmonitor/trade/v1/get-bilateral-tariff';
 import { validateGeneratedRequest } from '../server/request-validator';
 import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths';
-import { getRequiredTier } from '../server/_shared/entitlement-check';
 
 import type {
   GetBilateralTariffRequest,
@@ -518,6 +517,5 @@ describe('GetBilateralTariff contract', () => {
 
   test('the route is Pro-gated at tier 1, which every paid plan including API Starter meets', () => {
     assert.ok(PREMIUM_RPC_PATHS.has(ROUTE));
-    assert.equal(getRequiredTier(ROUTE), 1);
   });
 });

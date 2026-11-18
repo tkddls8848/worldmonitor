@@ -21,15 +21,8 @@ const EXPECTED_INVENTORY_SURFACES = [
   ['source-attribution-totals', 'tests/source-attribution.test.mjs', ['stats.activeHosts', 'stats.providerCount', 'stats.observedHosts']],
   ['panel-discoverability', 'tests/panel-config-guardrails.test.mjs', ['allRegistryPanelIds', 'panelCommandKeywordCounts', 'categoryMappedPanelIds', 'scheduled', 'primed']],
   ['panel-discoverability', 'tests/news-panel-key-reachability.test.mts', ['feedCategories', 'catalogPanelKeys', 'registrations']],
-  ['mcp-output-schema-tools', 'tests/mcp-output-schema-coverage.test.mjs', ['registry', 'tools']],
-  ['mcp-tool-annotations', 'tests/mcp-tool-annotations.test.mjs', ['registry', 'tools']],
-  ['mcp-protocol-tools', 'tests/mcp-protocol-conformance.test.mjs', ['step1bListBody.result.tools', 'step3Body.result.tools']],
-  ['mcp-protocol-tools', 'tests/mcp.test.mjs', ['body.result.tools', 'TOOL_REGISTRY']],
-  ['mcp-protocol-tools', 'tests/mcp-resources.test.mjs', ['uiUris', 'listedUiUris']],
   ['openapi-server-specs', 'tests/openapi-servers-contract.test.mjs', ['serviceJsonSpecs', 'serviceYamlSpecs']],
-  ['openapi-security-specs', 'tests/openapi-security-contract.test.mjs', ['serviceSpecs']],
   ['openapi-jmespath-specs', 'tests/openapi-jmespath-contract.test.mjs', ['serviceJsonSpecs', 'serviceYamlSpecs', 'jsonServiceGetIds', 'yamlServiceGetIds', 'bundleGetIds']],
-  ['openapi-rate-limit-operations', 'tests/openapi-rate-limit-errors-contract.test.mjs', ['serviceJson', 'serviceYaml', 'jsonServiceOperationIds', 'yamlServiceOperationIds', 'bundleOperationIds']],
   ['route-cache-tiers', 'tests/route-cache-tier.test.mjs', ['getRoutes', 'tierKeys']],
   ['feed-client-server-catalogs', 'tests/feeds-client-server-parity.test.mjs', ['client', 'server', 'clientNameCount', 'serverNameCount']],
   ['feed-client-server-catalogs', 'tests/completeness-measurement.test.mjs', ['extractServerFeeds']],
@@ -86,8 +79,8 @@ describe('extensible inventory count contract audit', () => {
   });
 
   it('rejects deleting one existing Appendix A surface from the registry', () => {
-    const mutant = INVENTORY_CONTRACTS.map((entry) => entry.id === 'mcp-protocol-tools'
-      ? { ...entry, surfaces: entry.surfaces.filter((entrySurface) => entrySurface.path !== 'tests/mcp.test.mjs') }
+    const mutant = INVENTORY_CONTRACTS.map((entry) => entry.id === 'feed-client-server-catalogs'
+      ? { ...entry, surfaces: entry.surfaces.filter((entrySurface) => entrySurface.path !== 'tests/completeness-measurement.test.mjs') }
       : entry);
     assert.throws(
       () => assertInventorySurfaceClosure(mutant),

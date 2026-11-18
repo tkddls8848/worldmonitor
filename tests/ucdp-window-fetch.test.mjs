@@ -294,30 +294,4 @@ describe('consumers of the canonical key that do not read the CII aggregates', (
     assert.equal(compact.events.length, 1);
   });
 
-  it('MCP get_conflict_events drops them, so they cannot crowd events out of the output budget', async (t) => {
-    const { executeTool } = await import('../api/mcp/dispatch.ts');
-    const { CACHE_TOOLS } = await import('../api/mcp/registry/cache-tools.ts');
-    const tool = CACHE_TOOLS.find((x) => x.name === 'get_conflict_events');
-    const originalEnv = process.env;
-    process.env = { ...originalEnv, UPSTASH_REDIS_REST_URL: 'https://conflict-redis.test', UPSTASH_REDIS_REST_TOKEN: 'test-token' };
-    t.after(() => { process.env = originalEnv; });
-    const fresh = { fetchedAt: NOW - 60_000, recordCount: 1, status: 'ok' };
-    const values = new Map([
-      ['conflict:ucdp-events:v1', { candidateVersion: '26.0.9', events: [{ id: 'event', country: 'Ukraine', deathsBest: 1 }], ...aggregates }],
-      ['unrest:events:v1', { events: [] }],
-      ['conflict:iran-events:v1', { events: [] }],
-      ...tool._cacheKeys.filter((key) => key.includes('risk:')).map((key) => [key, { ciiScores: [] }]),
-      ['seed-meta:conflict:ucdp-events', fresh], ['seed-meta:unrest:events', fresh],
-    ]);
-    t.mock.method(globalThis, 'fetch', async (url) => {
-      const key = decodeURIComponent(String(url).split('/get/')[1] ?? '');
-      return Response.json({ result: values.get(key) == null ? null : JSON.stringify(values.get(key)) });
-    });
-    const result = await executeTool(tool, { limit: 3 }, NOW);
-    const ucdp = result.data['ucdp-events'];
-    assert.deepEqual(ucdp.events.map((e) => e.id), ['event']);
-    assert.equal('countryDays' in ucdp, false);
-    assert.equal('partyMonths' in ucdp, false);
-    assert.equal('dailyTotals' in ucdp, false);
-  });
 });

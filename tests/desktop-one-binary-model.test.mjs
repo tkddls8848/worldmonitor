@@ -5,7 +5,6 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { load as loadYaml } from 'js-yaml';
 
-import { SUPPORTED_VARIANTS } from '../api/download.js';
 import { SITE_VARIANTS } from '../src/config/variant.ts';
 
 // #5908 was not one bug — it was five surfaces disagreeing about whether the
@@ -66,17 +65,6 @@ function theStepNamed(steps, name) {
   return matches[0];
 }
 
-test('/api/download accepts exactly the variants the in-app switcher offers', () => {
-  // `world` is a legacy alias for `full` kept for existing download links; it is
-  // deliberately not a switcher target.
-  const expected = new Set([...SITE_VARIANTS, 'world']);
-  assert.deepEqual(
-    [...SUPPORTED_VARIANTS].sort(),
-    [...expected].sort(),
-    'A variant the switcher offers but /api/download rejects gives that user a 302 to the releases page instead of a download; the reverse advertises a variant the product does not have.'
-  );
-});
-
 test('no npm script builds or packages a per-variant desktop binary', () => {
   const offenders = Object.entries(pkg.scripts)
     .filter(([name, body]) => {
@@ -110,16 +98,4 @@ test('the desktop updater does not request a per-variant download asset', () => 
   // A query built via URLSearchParams would carry no literal `variant=`, so the
   // regex above would miss it.
   assert.doesNotMatch(updater, /URLSearchParams|searchParams\.(set|append)/);
-});
-
-test('/api/download applies the binary-identity filter on every path', () => {
-  // The updater sends no variant, so a variant-gated filter would leave the
-  // app's own download unfiltered.
-  const handler = readRepoFile('api/download.js');
-  assert.match(handler, /const asset = findDesktopAsset\(assets, matcher\);/);
-  assert.doesNotMatch(
-    handler,
-    /variant\s*\?\s*findDesktopAsset/,
-    'the identity filter must not be conditional on variant'
-  );
 });

@@ -20,7 +20,6 @@ delete process.env.UPSTASH_REDIS_REST_TOKEN;
 delete process.env.WS_RELAY_URL;
 
 const { default: handler } = await import('../api/youtube/live.js');
-const { __resetRateLimitForTest } = await import('../api/_rate-limit.js');
 
 const ENDPOINT = 'https://api.worldmonitor.app/api/youtube/live';
 
@@ -68,7 +67,6 @@ afterEach(() => {
     if (!(key in originalEnv)) delete process.env[key];
   }
   Object.assign(process.env, originalEnv);
-  __resetRateLimitForTest();
 });
 
 

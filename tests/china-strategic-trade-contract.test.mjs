@@ -14,7 +14,6 @@ import {
 } from '../scripts/seed-trade-flows.mjs';
 import { HS4_CODES as bilateralHs4Codes } from '../scripts/seed-comtrade-bilateral-hs4.mjs';
 import strategicProducts from '../scripts/shared/comtrade-strategic-products.json' with { type: 'json' };
-import { CACHE_TOOLS } from '../api/mcp/registry/cache-tools.ts';
 
 const requiredStrategicProducts = [
   'semiconductors',
@@ -174,25 +173,5 @@ describe('existing access and China freight paths', () => {
     const seeder = read('../scripts/seed-supply-chain-trade.mjs');
     assert.match(seeder, /fetchCCFI\(\)/);
     assert.match(seeder, /CCFI_T/);
-  });
-});
-
-describe('agent access to expanded China trade coverage', () => {
-  it('filters MCP Comtrade flows by reporter before applying the default cap', () => {
-    const tool = CACHE_TOOLS.find((candidate) => candidate.name === 'get_supply_chain_data');
-    assert.equal(typeof tool?._postFilter, 'function');
-
-    const usa = Array.from({ length: 24 }, (_, index) => ({
-      reporterCode: '842', reporterName: 'USA', cmdCode: String(1000 + index), cmdDesc: `USA ${index}`,
-    }));
-    const china = Array.from({ length: 24 }, (_, index) => ({
-      reporterCode: '156', reporterName: 'China', cmdCode: String(2000 + index), cmdDesc: `China ${index}`,
-    }));
-    const data = { flows: { flows: [...usa, ...china] } };
-
-    tool._postFilter(data, { reporter: '156' });
-
-    assert.equal(data.flows.flows.length, 24, 'reporter filtering must happen before the default 30-row cap');
-    assert.ok(data.flows.flows.every((flow) => flow.reporterCode === '156'));
   });
 });

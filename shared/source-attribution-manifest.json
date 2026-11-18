@@ -288,15 +288,10 @@
       "host": "agentskills.io",
       "provider": "agentskills.io",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this upstream API/dataset; verify before redistribution",
       "attribution": "Credit agentskills.io and link to the original upstream API/dataset.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "api/skills/fetch-agentskills.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "agriculture.ld.admin.ch",
@@ -604,9 +599,6 @@
       "status": "excluded",
       "references": [
         {
-          "path": "api/_usage-telemetry.js"
-        },
-        {
           "path": "scripts/deploy-error-canary.mjs"
         },
         {
@@ -663,12 +655,6 @@
       "attribution": "Excluded from the provider count: identity-control-plane request.",
       "status": "excluded",
       "references": [
-        {
-          "path": "api/_desktop-auth.ts"
-        },
-        {
-          "path": "api/user/passkey-offer.ts"
-        },
         {
           "path": "server/auth-session.ts"
         }
@@ -856,9 +842,6 @@
       "references": [
         {
           "path": "scripts/ais-relay.cjs"
-        },
-        {
-          "path": "scripts/lib/company-monitoring-exa.mjs"
         },
         {
           "path": "scripts/seed-bigmac.mjs"
@@ -1173,18 +1156,10 @@
       "host": "api.resend.com",
       "provider": "Resend email service",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: transactional email/control-plane service",
       "attribution": "Excluded from the provider count: transactional email delivery.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "server/worldmonitor/leads/v1/register-interest.ts"
-        },
-        {
-          "path": "server/worldmonitor/leads/v1/submit-contact.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "api.riksbank.se",
@@ -1492,12 +1467,6 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "api/mcp/registry/webcam-tools.ts"
-        },
-        {
-          "path": "api/mcp/skill-extension/generated.ts"
-        },
-        {
           "path": "scripts/seed-webcams.mjs"
         },
         {
@@ -1580,18 +1549,6 @@
       "status": "excluded",
       "references": [
         {
-          "path": "api/a2a.ts"
-        },
-        {
-          "path": "api/internal/mcp-grant-mint.ts"
-        },
-        {
-          "path": "api/mcp/downstream.ts"
-        },
-        {
-          "path": "api/mcp/skill-extension/generated.ts"
-        },
-        {
           "path": "scripts/_widget-data-policy.cjs"
         },
         {
@@ -1663,9 +1620,6 @@
       "references": [
         {
           "path": "scripts/cross-strait-activity/japan-x.mjs"
-        },
-        {
-          "path": "scripts/lib/company-monitoring-x-provider.mjs"
         },
         {
           "path": "scripts/lib/x-news-accounts.cjs"
@@ -2403,15 +2357,10 @@
       "host": "challenges.cloudflare.com",
       "provider": "challenges.cloudflare.com",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: first-party, control-plane, UI, or rendering transport",
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "server/_shared/turnstile.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "changelog.com",
@@ -2431,15 +2380,10 @@
       "host": "chatgpt.com",
       "provider": "ChatGPT link",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: documentation/UI link",
       "attribution": "Excluded from the provider count: UI link, not an ingested source.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "api/oauth/_client-metadata.js"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "chathamhouse.org",
@@ -2507,9 +2451,6 @@
       "status": "excluded",
       "references": [
         {
-          "path": "api/oauth/_client-metadata.js"
-        },
-        {
           "path": "src/config/mcp-agent-clients.ts"
         }
       ]
@@ -2537,12 +2478,6 @@
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
       "status": "excluded",
       "references": [
-        {
-          "path": "api/_notification-webhook-ssrf.ts"
-        },
-        {
-          "path": "api/mcp-proxy.ts"
-        },
         {
           "path": "server/_shared/email-validation.ts"
         },
@@ -3518,21 +3453,10 @@
       "host": "discord.com",
       "provider": "discord.com",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: first-party, control-plane, UI, or rendering transport",
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "api/channel-oauth-bind.ts"
-        },
-        {
-          "path": "api/discord/oauth/callback.ts"
-        },
-        {
-          "path": "api/discord/oauth/start.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "discord.gg",
@@ -3729,9 +3653,6 @@
       "attribution": "Credit earthquake.usgs.gov and link to the original upstream API/dataset.",
       "status": "terms-review",
       "references": [
-        {
-          "path": "api/mcp/skill-extension/generated.ts"
-        },
         {
           "path": "scripts/seed-earthquakes.mjs"
         }
@@ -5089,9 +5010,6 @@
       "status": "excluded",
       "references": [
         {
-          "path": "api/download.js"
-        },
-        {
           "path": "api/health.js"
         },
         {
@@ -5108,9 +5026,6 @@
         },
         {
           "path": "scripts/seed-research.mjs"
-        },
-        {
-          "path": "server/_shared/agent-feedback.ts"
         },
         {
           "path": "src/app/desktop-updater.ts"
@@ -5492,9 +5407,6 @@
       "attribution": "Credit the USITC Harmonized Tariff Schedule and name the HTS release the rates come from.",
       "status": "reviewed",
       "references": [
-        {
-          "path": "api/mcp/skill-extension/generated.ts"
-        },
         {
           "path": "scripts/seed-supply-chain-trade.mjs"
         },
@@ -5990,15 +5902,10 @@
       "host": "jmespath.org",
       "provider": "jmespath.org",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: first-party, control-plane, UI, or rendering transport",
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "api/mcp/constants.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "jrj.sh.gov.cn",
@@ -6392,9 +6299,6 @@
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
       "status": "excluded",
       "references": [
-        {
-          "path": "api/product-catalog.js"
-        },
         {
           "path": "scripts/ais-relay.cjs"
         }
@@ -7764,9 +7668,6 @@
           "path": "scripts/lib/brief-dedup-consts.mjs"
         },
         {
-          "path": "scripts/lib/company-monitoring-classifier-client.mjs"
-        },
-        {
           "path": "scripts/local/local-api-server.mjs"
         },
         {
@@ -8109,9 +8010,6 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "api/mcp/skill-extension/generated.ts"
-        },
-        {
           "path": "scripts/_bet-templates-markets.mjs"
         },
         {
@@ -8288,9 +8186,6 @@
       "attribution": "Excluded from the external-provider count: first-party proxy endpoint.",
       "status": "excluded",
       "references": [
-        {
-          "path": "api/widget-agent.ts"
-        },
         {
           "path": "src/utils/proxy.ts"
         }
@@ -9036,9 +8931,6 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "api/ask.ts"
-        },
-        {
           "path": "scripts/build-accuracy-page.mjs"
         },
         {
@@ -9486,21 +9378,10 @@
       "host": "slack.com",
       "provider": "slack.com",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: first-party, control-plane, UI, or rendering transport",
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "api/channel-oauth-bind.ts"
-        },
-        {
-          "path": "api/slack/oauth/callback.ts"
-        },
-        {
-          "path": "api/slack/oauth/start.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "sliderule.slideruleearth.io",
@@ -9998,9 +9879,6 @@
           "path": "scripts/ais-relay.cjs"
         },
         {
-          "path": "server/worldmonitor/leads/v1/register-interest.ts"
-        },
-        {
           "path": "src/services/story-share.ts"
         },
         {
@@ -10258,9 +10136,6 @@
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
       "status": "excluded",
       "references": [
-        {
-          "path": "api/product-catalog.js"
-        },
         {
           "path": "scripts/ais-relay.cjs"
         }
@@ -11150,9 +11025,6 @@
       "status": "excluded",
       "references": [
         {
-          "path": "server/worldmonitor/leads/v1/register-interest.ts"
-        },
-        {
           "path": "src/services/story-share.ts"
         }
       ]
@@ -11325,9 +11197,6 @@
       "status": "reviewed",
       "references": [
         {
-          "path": "api/mcp/skill-extension/generated.ts"
-        },
-        {
           "path": "scripts/ais-relay.cjs"
         },
         {
@@ -11342,15 +11211,10 @@
       "host": "workos.com",
       "provider": "workos.com",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: first-party, control-plane, UI, or rendering transport",
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "api/oauth-authorization-server.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "worldmonitor.app",
@@ -11362,40 +11226,10 @@
       "status": "excluded",
       "references": [
         {
-          "path": "api/_agent-metadata.ts"
-        },
-        {
-          "path": "api/a2a.ts"
-        },
-        {
-          "path": "api/ask.ts"
-        },
-        {
-          "path": "api/mcp/skill-extension/generated.ts"
-        },
-        {
           "path": "api/miit-news.js"
         },
         {
-          "path": "api/notification-suppressions.js"
-        },
-        {
-          "path": "api/oauth/authorize.js"
-        },
-        {
-          "path": "api/og-story.js"
-        },
-        {
-          "path": "api/referral/me.ts"
-        },
-        {
           "path": "api/reverse-geocode.js"
-        },
-        {
-          "path": "api/seed-contract-probe.ts"
-        },
-        {
-          "path": "api/story.js"
         },
         {
           "path": "scripts/_country-stock-index-moex.mjs"
@@ -11423,9 +11257,6 @@
         },
         {
           "path": "scripts/lib/brief-embedding.mjs"
-        },
-        {
-          "path": "scripts/lib/company-monitoring-classifier-client.mjs"
         },
         {
           "path": "scripts/lib/personal-api.mjs"
@@ -11482,13 +11313,7 @@
           "path": "server/_shared/brief-url.ts"
         },
         {
-          "path": "server/_shared/channel-oauth-state.ts"
-        },
-        {
           "path": "server/_shared/intel-history-embed.ts"
-        },
-        {
-          "path": "server/_shared/notify-fields.ts"
         },
         {
           "path": "server/worldmonitor/infrastructure/v1/reverse-geocode.ts"
@@ -11539,9 +11364,6 @@
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
       "status": "excluded",
       "references": [
-        {
-          "path": "api/docs-mcp.ts"
-        },
         {
           "path": "src/config/docs-locale-seo.ts"
         }
@@ -13781,9 +13603,6 @@
           "path": "scripts/comparison-shortlist.mjs"
         },
         {
-          "path": "server/worldmonitor/leads/v1/register-interest.ts"
-        },
-        {
           "path": "src/services/story-share.ts"
         }
       ]
@@ -15555,12 +15374,6 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "api/mcp/registry/webcam-tools.ts"
-        },
-        {
-          "path": "api/mcp/skill-extension/generated.ts"
-        },
-        {
           "path": "server/worldmonitor/webcam/v1/get-webcam-image.ts"
         },
         {
@@ -15623,37 +15436,7 @@
           "path": "api/_cors.js"
         },
         {
-          "path": "api/a2a.ts"
-        },
-        {
-          "path": "api/ask.ts"
-        },
-        {
-          "path": "api/customer-portal.ts"
-        },
-        {
-          "path": "api/mcp/auth.ts"
-        },
-        {
-          "path": "api/mcp/handler.ts"
-        },
-        {
-          "path": "api/mcp/skill-extension/generated.ts"
-        },
-        {
-          "path": "api/mcp/ui/news-dashboard-app.ts"
-        },
-        {
-          "path": "api/mcp/ui/shell.ts"
-        },
-        {
           "path": "api/not-found.ts"
-        },
-        {
-          "path": "api/oauth-protected-resource.ts"
-        },
-        {
-          "path": "api/story.js"
         },
         {
           "path": "scripts/build-accuracy-page.mjs"
@@ -16028,9 +15811,6 @@
         },
         {
           "path": "scripts/cross-strait-activity/japan-x.mjs"
-        },
-        {
-          "path": "server/worldmonitor/leads/v1/register-interest.ts"
         }
       ]
     },

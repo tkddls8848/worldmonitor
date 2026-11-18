@@ -1,8 +1,6 @@
 import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
-import { countryHistoryDays } from '../server/_shared/country-history-access';
 import { getCountryHistory } from '../server/worldmonitor/intelligence/v1/get-country-history';
-import { getFeaturesForPlan, mergeEntitlementFeatures } from '../convex/lib/entitlements';
 import { __resetKeyPrefixCacheForTests } from '../server/_shared/redis';
 
 const now = Date.now();
@@ -11,20 +9,6 @@ const row = (offset = 0, version = 'v11') => ({ countryCode: 'US', date: new Dat
 const fetchOriginal = globalThis.fetch;
 const envOriginal = { ...process.env };
 afterEach(() => { globalThis.fetch = fetchOriginal; process.env = { ...envOriginal }; __resetKeyPrefixCacheForTests(); });
-
-test('catalog and legacy read-time merge give free 7, Pro 90, API and Enterprise 365 days', () => {
-  for (const [plan, expected] of [['free', 7], ['pro_monthly', 90], ['api_starter', 365], ['enterprise', 365]] as const) {
-    const features = getFeaturesForPlan(plan);
-    assert.equal(features.historyDays, expected, plan);
-    assert.equal(countryHistoryDays({ features, validUntil: now + 60000 }), expected);
-  }
-  const legacy = { ...getFeaturesForPlan('pro_monthly') };
-  delete (legacy as Partial<typeof legacy>).historyDays;
-  assert.equal(mergeEntitlementFeatures('pro_monthly', legacy).historyDays, 90);
-  assert.equal(countryHistoryDays({ features: { tier: 3, historyDays: 365 }, validUntil: now - 1 }), 7);
-  assert.equal(countryHistoryDays({ features: { tier: 3, historyDays: 365 }, validUntil: now + 60000, billingStatus: 'subscription_lapsed' }), 7);
-  assert.equal(countryHistoryDays(null), 7);
-});
 
 test('reader clamps before Redis, preserves gaps and annotates formula breaks', async () => {
   Object.assign(process.env, { VERCEL_ENV: 'preview', VERCEL_GIT_COMMIT_SHA: 'fixture-preview', UPSTASH_REDIS_REST_URL: 'https://history.test', UPSTASH_REDIS_REST_TOKEN: 'fixture' });

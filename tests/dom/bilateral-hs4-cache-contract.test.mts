@@ -22,7 +22,6 @@ vi.mock('../../server/_shared/redis', () => ({
   getLargeRawJson: async (key: string) => { redis.reads.push(key); return redis.store.get(key) ?? null; },
   logCacheReadError: () => {},
 }));
-vi.mock('../../server/_shared/premium-check', () => ({ isCallerPremium: async () => true }));
 
 import { lazyFetchBilateralHs4, lazyFetchHeading } from '../../server/worldmonitor/supply-chain/v1/_bilateral-hs4-lazy';
 import { getCountryProducts } from '../../server/worldmonitor/supply-chain/v1/get-country-products';

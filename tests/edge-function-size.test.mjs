@@ -10,7 +10,6 @@ import { build } from 'esbuild';
 // measurement. MCP reserves 24 KiB below the 1 MiB Edge ceiling; displacement
 // gets a separate 300 KiB growth budget even though it has more platform room.
 for (const [entry, budget] of [
-  ['api/mcp.ts', 1024 * 1000],
   ['api/displacement/v1/[rpc].ts', 300 * 1024],
 ]) {
   test(`${entry} stays within its compressed function budget`, async (t) => {

@@ -1,11 +1,6 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { describe, it } from 'node:test';
-import { fileURLToPath } from 'node:url';
 import {
   CompanyMonitoringCurationError,
   auditCompanyMonitoringCurationSplit,
@@ -306,32 +301,5 @@ describe('Company Monitoring public-evidence curation', () => {
       () => compileCompanyMonitoringGoldLabels(input, labels),
       expectCode('gold_label_coverage_mismatch'),
     );
-  });
-});
-
-describe('Company Monitoring public-evidence curation CLI', () => {
-  it('maps unreadable sealed input to an opaque error code', () => {
-    const workspace = mkdtempSync(join(tmpdir(), 'cm-curation-cli-'));
-    const input = join(workspace, 'invalid.json');
-    writeFileSync(input, '{"legalName":"PRIVATE_LEAK_MARKER"');
-    try {
-      const result = spawnSync(
-        fileURLToPath(new URL('../node_modules/.bin/tsx', import.meta.url)),
-        [
-          fileURLToPath(new URL('../scripts/company-monitoring-curation.mts', import.meta.url)),
-          'audit-manifest',
-          input,
-        ],
-        {
-          encoding: 'utf8',
-          env: { ...process.env, NODE_NO_WARNINGS: '1' },
-        },
-      );
-      assert.equal(result.status, 1);
-      assert.equal(result.stderr, 'curation_input_unreadable\n');
-      assert.doesNotMatch(result.stderr, /PRIVATE_LEAK_MARKER/);
-    } finally {
-      rmSync(workspace, { recursive: true, force: true });
-    }
   });
 });

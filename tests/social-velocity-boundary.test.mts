@@ -4,7 +4,6 @@ import { runInNewContext } from 'node:vm';
 import { afterEach, test } from 'node:test';
 import { getSocialVelocity } from '../server/worldmonitor/intelligence/v1/get-social-velocity.ts';
 import { createRedisFetch } from './helpers/fake-upstash-redis.mts';
-import { TOOL_REGISTRY } from '../api/mcp/registry/index.ts';
 import { normalizeSocialVelocity } from '../api/_social-velocity.js';
 import { sanitizeBootstrapValue } from '../api/_bootstrap-public-payload.js';
 import { assembleBootstrapTierPayload } from '../scripts/publish-bootstrap-tiers.mjs';
@@ -62,8 +61,6 @@ test('malformed leading rows do not consume the valid-post limit', async () => {
   const expected = { posts: valid.slice(0, 30), fetchedAt: 123 };
   assert.deepEqual(await read(value), expected);
   assert.deepEqual(sanitizeBootstrapValue('socialVelocity', value), expected);
-  const tool = TOOL_REGISTRY.find(t => t.name === 'get_social_velocity')!;
-  assert.deepEqual(tool._postFilter!({ reddit: value }, {}), { reddit: expected });
   const payload = await assembleBootstrapTierPayload({ socialVelocity: key }, {
     env: { UPSTASH_REDIS_REST_URL: 'https://redis.example', UPSTASH_REDIS_REST_TOKEN: 'synthetic' },
     fetchFn: async () => Response.json([{ result: JSON.stringify(value) }]),
@@ -71,20 +68,14 @@ test('malformed leading rows do not consume the valid-post limit', async () => {
   assert.deepEqual(payload, { data: { socialVelocity: expected }, missing: [] });
 });
 
-test('bootstrap and MCP sanitize the same cached posts while preserving missing data', async () => {
+test('bootstrap sanitizes cached posts while preserving missing data', async () => {
   const bad = { posts: [null, false, { ...post, extra: 'secret' }, ...badUrls.map(url => ({ ...post, url }))], fetchedAt: 123 };
   const expected = { posts: [post], fetchedAt: 123 };
   assert.deepEqual(sanitizeBootstrapValue('socialVelocity', bad), expected);
   assert.equal(sanitizeBootstrapValue('socialVelocity', null), null);
-  const tool = TOOL_REGISTRY.find(t => t.name === 'get_social_velocity');
-  assert.ok(tool?._postFilter);
-  assert.deepEqual(tool._postFilter({ reddit: bad }, {}), { reddit: expected });
-  assert.deepEqual(tool._postFilter({ reddit: null }, {}), { reddit: null });
-  assert.deepEqual(tool._postFilter({ reddit: bad }, { subreddit: 'geopolitics' }), { reddit: { posts: [], fetchedAt: 123 } });
   for (const value of [[], 'bad', { posts: 'bad', fetchedAt: 123 }, { posts: [null], fetchedAt: 123 }, { posts: [], fetchedAt: 123 }]) {
     const normalized = normalizeSocialVelocity(value);
     assert.deepEqual(sanitizeBootstrapValue('socialVelocity', value), normalized);
-    assert.deepEqual(tool._postFilter({ reddit: value }, {}), { reddit: normalized });
   }
 });
 

@@ -1,7 +1,7 @@
 import { COMPARE_AND_DELETE_SCRIPT } from '../../shared/compare-and-delete-script.cjs';
 import { unwrapEnvelope } from './seed-envelope.js';
 import { getRpcNoStoreReasonFromPayload } from './cache-contract.js';
-import { buildUpstreamEvent, getUsageScope, sendToAxiom } from './usage.js';
+import { buildUpstreamEvent, sendToAxiom } from './usage.js';
 
 // Default Upstash REST timeouts are tuned for production (Vercel ↔ Upstash
 // same-datacenter latency is sub-50ms, 1.5s leaves >20× headroom). They
@@ -943,20 +943,14 @@ export async function cachedFetchJson<T extends object>(
  * Per-call usage-telemetry hook for upstream event emission (issue #3381).
  *
  * The only required field is `provider` — its presence is what tells the
- * helper "emit an upstream event for this call." Everything else is filled
- * in by the gateway-set UsageScope (request_id, customer_id, route, tier,
- * ctx) via AsyncLocalStorage. Pass overrides explicitly if you need to.
- *
- * Use this when calling fetchJson / cachedFetchJsonWithMeta from a code
- * path that runs inside a gateway-handled request. For helpers used
- * outside any request (cron, scripts), no scope exists and emission is
- * skipped silently.
+ * helper "emit an upstream event for this call." Emission also needs `ctx`;
+ * without it the event is skipped silently. The other fields default to
+ * empty values.
  */
 export interface UsageHook {
   provider: string;
   operation?: string;
   host?: string;
-  // Overrides — leave unset to inherit from gateway-set UsageScope.
   ctx?: { waitUntil: (p: Promise<unknown>) => void };
   requestId?: string;
   customerId?: string | null;
@@ -1165,14 +1159,13 @@ function emitUpstreamFromHook(usage: UsageHook | undefined, status: number, dura
   // Single waitUntil() registered synchronously here — no nested
   // ctx.waitUntil() inside Axiom delivery. Static import keeps the call
   // synchronous so the runtime registers it during the request phase.
-  const scope = getUsageScope();
-  const ctx = usage.ctx ?? scope?.ctx;
+  const ctx = usage.ctx;
   if (!ctx) return;
   const event = buildUpstreamEvent({
-    requestId: usage.requestId ?? scope?.requestId ?? '',
-    customerId: usage.customerId ?? scope?.customerId ?? null,
-    route: usage.route ?? scope?.route ?? '',
-    tier: usage.tier ?? scope?.tier ?? 0,
+    requestId: usage.requestId ?? '',
+    customerId: usage.customerId ?? null,
+    route: usage.route ?? '',
+    tier: usage.tier ?? 0,
     provider: usage.provider,
     operation: usage.operation ?? 'fetch',
     host: usage.host ?? '',

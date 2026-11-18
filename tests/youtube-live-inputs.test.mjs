@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { afterEach, test } from 'node:test';
 import handler from '../api/youtube/live.js';
-import { __resetRateLimitForTest } from '../api/_rate-limit.js';
 const originalFetch = globalThis.fetch;
 const originalEnv = { ...process.env };
 const relaySource = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
@@ -26,7 +25,6 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
   for (const name of Object.keys(process.env)) if (!(name in originalEnv)) delete process.env[name];
   Object.assign(process.env, originalEnv);
-  __resetRateLimitForTest();
 });
 test('Edge rejects path and query injection before provider work', async () => {
   const surface = edge();

@@ -4,7 +4,6 @@ import { listAviationNews } from '../server/worldmonitor/aviation/v1/list-aviati
 import { createAviationServiceRoutes } from '../src/generated/server/worldmonitor/aviation/v1/service_server.ts';
 import { aviationHandler } from '../server/worldmonitor/aviation/v1/handler.ts';
 import { createDomainGateway, serverOptions } from '../server/gateway.ts';
-import { __resetRateLimitForTest } from '../server/_shared/rate-limit.ts';
 import { installRedis } from './helpers/fake-upstash-redis.mts';
 import { readLimiterRequest } from './helpers/upstash-limiter-wire.mjs';
 import { issueSessionToken } from '../api/_session.js';
@@ -22,7 +21,6 @@ beforeEach(async () => {
   delete process.env.VERCEL_ENV;
   process.env.WM_SESSION_SECRET = 'synthetic-aviation-news-session-secret';
   session = (await issueSessionToken()).token;
-  __resetRateLimitForTest();
   redis = installRedis({});
   calls = [];
   globalThis.fetch = (async (input, init) => {
@@ -37,7 +35,6 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
   for (const key of Object.keys(process.env)) if (!(key in originalEnv)) delete process.env[key];
   Object.assign(process.env, originalEnv);
-  __resetRateLimitForTest();
 });
 const request = (entities: string[] = []) => {
   const params = new URLSearchParams({ window_hours: '24', max_items: '20' });

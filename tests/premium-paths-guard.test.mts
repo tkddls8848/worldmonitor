@@ -1,12 +1,10 @@
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, it } from 'node:test';
 import ts from 'typescript';
 
-import { DIRECT_LLM_GATEWAY_QUOTA_PATHS } from '../server/_shared/direct-llm-quota.ts';
-import { TIER_GATED_PATHS } from '../server/_shared/entitlement-check.ts';
 import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths.ts';
 
 // ---------------------------------------------------------------------------
@@ -31,24 +29,6 @@ import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths.ts';
 // (via `isCallerPremium()` or returns the literal 403 body) but the
 // corresponding route isn't covered by PREMIUM_RPC_PATHS or this file's
 // allowlist.
-
-// ---------------------------------------------------------------------------
-// Allowlist — endpoints whose browser callers deliberately bypass premiumFetch
-// ---------------------------------------------------------------------------
-//
-// Each entry must point to a real file under `api/` and explain WHY path-
-// gated Bearer injection isn't the right mechanism for that endpoint.
-
-const PREMIUM_FETCH_BYPASS_ALLOWLIST: Record<string, string> = {
-  '/api/widget-agent':
-    'WidgetChatModal.ts and McpDataPanel.ts call widgetAgentUrl() via plain ' +
-    'fetch() with their own auth surface (X-Widget-Key / X-Pro-Key / Bearer) ' +
-    'rather than premiumFetch.',
-  '/api/me/entitlement':
-    'checkout.ts attaches the Clerk Bearer ' +
-    'manually. premiumFetch would short-circuit on tester keys and break the ' +
-    'free→pro promotion polling flow.',
-};
 
 // Gateway-level direct-LLM routes also require a Clerk identity before quota
 // reservation. Browser callers must therefore enter through premiumFetch so
@@ -101,134 +81,7 @@ const SESSION_RECOVERY_BYPASS_PROOF: Record<
 // ---------------------------------------------------------------------------
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
-const apiDir = join(repoRoot, 'api');
-
-// Two server-side premium-gate markers:
-//   - isCallerPremium(           — endpoints using the shared check
-//   - "Pro subscription required" — literal 403 body used by hand-rolled gates
-const PREMIUM_GATE_RE = /(isCallerPremium\s*\(|['"`]Pro subscription required['"`])/;
-
-function walkApiFiles(dir: string, out: string[] = []): string[] {
-  for (const entry of readdirSync(dir)) {
-    // Skip private helpers (_cors.js, _api-key.js, _mcp-grant-hmac.ts, etc.)
-    if (entry.startsWith('_')) continue;
-    // Skip internal-only endpoints (api/internal/* — not browser-reachable;
-    // auth via gateway HMAC nonce, not Bearer).
-    if (entry === 'internal') continue;
-    if (entry === 'node_modules') continue;
-    const full = join(dir, entry);
-    const stat = statSync(full);
-    if (stat.isDirectory()) {
-      walkApiFiles(full, out);
-    } else if (entry.endsWith('.ts') && !entry.endsWith('.d.ts')) {
-      out.push(full);
-    }
-  }
-  return out;
-}
-
-// Map a file under api/ to its Vercel route path.
-//   api/foo.ts          → /api/foo
-//   api/foo/bar.ts      → /api/foo/bar
-//   api/foo/index.ts    → /api/foo
-//   api/foo/[id].ts     → null (dynamic route — exact-match set can't represent it;
-//                              parent path is typically separately covered)
-function fileToRoute(absPath: string): string | null {
-  const rel = relative(apiDir, absPath).replace(/\\/g, '/');
-  if (rel.includes('[')) return null;
-  const noExt = rel.replace(/\.ts$/, '');
-  const noIndex = noExt.replace(/\/index$/, '');
-  return `/api/${noIndex}`;
-}
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
-describe('premium-paths guard — every premium-gated direct-edge endpoint is covered', () => {
-  const files = walkApiFiles(apiDir);
-  const gated: { route: string; file: string }[] = [];
-
-  for (const file of files) {
-    const src = readFileSync(file, 'utf8');
-    if (!PREMIUM_GATE_RE.test(src)) continue;
-    const route = fileToRoute(file);
-    if (!route) continue; // dynamic route — skip
-    gated.push({ route, file });
-  }
-
-  it('scan finds at least one premium-gated endpoint — sanity check for regex/walk', () => {
-    assert.ok(
-      gated.length > 0,
-      'Scan found zero premium-gated direct-edge endpoints — regex or walk likely broken',
-    );
-  });
-
-  for (const { route, file } of gated) {
-    const fileRel = relative(repoRoot, file);
-    it(`${route} (${fileRel}) is covered`, () => {
-      if (PREMIUM_RPC_PATHS.has(route)) return;
-      const allowlistReason = PREMIUM_FETCH_BYPASS_ALLOWLIST[route];
-      assert.ok(
-        allowlistReason,
-        [
-          `Endpoint ${route} (${fileRel}) gates on premium auth`,
-          `(matched /${PREMIUM_GATE_RE.source}/) but is NOT in PREMIUM_RPC_PATHS.`,
-          ``,
-          `If a browser caller uses premiumFetch (or wraps a generated client`,
-          `in premiumFetch), add ${JSON.stringify(route)} to`,
-          `src/shared/premium-paths.ts so the Clerk Bearer is attached.`,
-          `Otherwise every Pro user without a tester key will see 403.`,
-          ``,
-          `If the browser caller deliberately bypasses premiumFetch (plain`,
-          `fetch with manually-attached auth), add an entry to`,
-          `PREMIUM_FETCH_BYPASS_ALLOWLIST in this test file with rationale.`,
-        ].join('\n'),
-      );
-    });
-  }
-
-  it('every allowlist entry still points to a real, premium-gated endpoint', () => {
-    const gatedRoutes = new Set(gated.map((g) => g.route));
-    for (const route of Object.keys(PREMIUM_FETCH_BYPASS_ALLOWLIST)) {
-      assert.ok(
-        gatedRoutes.has(route),
-        `Allowlist entry ${route} does not match any premium-gated file under api/. ` +
-        `Either the route was renamed/removed or the gate was lifted — drop the stale allowlist entry.`,
-      );
-    }
-  });
-
-  it('no allowlist entry shadows a PREMIUM_RPC_PATHS member', () => {
-    for (const route of Object.keys(PREMIUM_FETCH_BYPASS_ALLOWLIST)) {
-      assert.equal(
-        PREMIUM_RPC_PATHS.has(route),
-        false,
-        `${route} is BOTH in PREMIUM_RPC_PATHS and in the bypass allowlist. ` +
-        `One of them is wrong — pick the canonical source of truth for this endpoint.`,
-      );
-    }
-  });
-});
-
 describe('premium-paths guard — browser direct-LLM routes cannot trigger wm-session recovery', () => {
-  for (const route of DIRECT_LLM_GATEWAY_QUOTA_PATHS) {
-    it(`${route} is covered by premium auth routing or an explicit mode-specific bypass`, () => {
-      if (PREMIUM_RPC_PATHS.has(route)) return;
-      assert.ok(
-        DIRECT_LLM_PREMIUM_BYPASS_ALLOWLIST[route],
-        [
-          `Direct-LLM route ${route} requires a Clerk identity in the gateway`,
-          `but is NOT in PREMIUM_RPC_PATHS.`,
-          ``,
-          `Anonymous browser calls will receive 401, and the wm-session`,
-          `interceptor will misclassify that expected denial as a rejected`,
-          `fresh cookie, entering the global 15-minute cooldown.`,
-        ].join('\n'),
-      );
-    });
-  }
-
   it('every direct-LLM bypass also proves how its 401s stay out of session recovery', () => {
     // #5674 root cause: the allowlist justified skipping premiumFetch's Bearer
     // injection but said nothing about the interceptor, whose 401 handling
@@ -383,38 +236,6 @@ describe('premium-paths guard — browser direct-LLM routes cannot trigger wm-se
     }
   });
 
-  it('every tier-gated endpoint is also in PREMIUM_RPC_PATHS', () => {
-    // src/services/premium-fetch.ts documents this as true "at the time of
-    // writing" and relies on it — `isPremiumRpcTarget` checks PREMIUM_RPC_PATHS
-    // alone and claims that "one check covers both". Nothing enforced it.
-    //
-    // The gateway sets `forceKey: isTierGated && !sessionUserId`
-    // (server/gateway.ts), and forceKey rejects a perfectly valid anonymous
-    // wms_ token with 401 "Pro authentication required" (api/_api-key.js). So a
-    // route added to ENDPOINT_ENTITLEMENTS but not to PREMIUM_RPC_PATHS 401s
-    // every anonymous browser call while the interceptor still treats that 401
-    // as a dead cookie — the exact fresh-mint-then-401 loop behind #5674 and
-    // #5251, arriving via a one-line map edit in a different directory.
-    const missing = [...TIER_GATED_PATHS].filter((route) => !PREMIUM_RPC_PATHS.has(route));
-    assert.deepEqual(
-      missing,
-      [],
-      [
-        `These endpoints are tier-gated in ENDPOINT_ENTITLEMENTS`,
-        `(server/_shared/entitlement-check.ts) but missing from PREMIUM_RPC_PATHS`,
-        `(src/shared/premium-paths.ts):`,
-        ...missing.map((r) => `  - ${r}`),
-        ``,
-        `The gateway forces an API key on tier-gated routes, so an anonymous`,
-        `browser gets 401 no matter how fresh its session cookie is. The`,
-        `wm-session interceptor then mints, replays, 401s again, and suppresses`,
-        `ALL anonymous API calls for 15 minutes (#5674).`,
-        ``,
-        `Add each route to PREMIUM_RPC_PATHS.`,
-      ].join('\n'),
-    );
-  });
-
   it('every session-recovery-bypass proof still points at a live allowlist entry', () => {
     for (const route of Object.keys(SESSION_RECOVERY_BYPASS_PROOF)) {
       assert.ok(
@@ -427,10 +248,6 @@ describe('premium-paths guard — browser direct-LLM routes cannot trigger wm-se
 
   it('every direct-LLM bypass remains real and intentionally non-premium', () => {
     for (const route of Object.keys(DIRECT_LLM_PREMIUM_BYPASS_ALLOWLIST)) {
-      assert.ok(
-        DIRECT_LLM_GATEWAY_QUOTA_PATHS.has(route),
-        `Stale direct-LLM bypass ${route}: route is no longer quota-gated.`,
-      );
       assert.equal(
         PREMIUM_RPC_PATHS.has(route),
         false,

@@ -4,7 +4,6 @@ import { runInNewContext } from 'node:vm';
 import { EventEmitter } from 'node:events';
 import { afterEach, test } from 'node:test';
 import handler from '../api/polymarket.js';
-import { __resetRateLimitForTest } from '../api/_rate-limit.js';
 const source = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
 const region = source.slice(source.indexOf('const POLYMARKET_ENABLED ='), source.indexOf('// Periodic cache cleanup to prevent memory leaks', source.indexOf('const POLYMARKET_ENABLED =')));
 const originalEnv = { ...process.env };
@@ -43,7 +42,6 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
   for (const name of Object.keys(process.env)) if (!(name in originalEnv)) delete process.env[name];
   Object.assign(process.env, originalEnv);
-  __resetRateLimitForTest();
 });
 
 test('relay restricts endpoint and enum values while canonicalizing tags and limits', async () => {

@@ -6,17 +6,6 @@
 
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-vi.mock("../_shared/premium-check", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../_shared/premium-check")>();
-  return {
-    ...actual,
-    resolvePremiumCallerIdentity: vi.fn(async () => ({
-      isPremium: true,
-      userId: null,
-      kind: "api-key",
-    })),
-  };
-});
 
 import { summarizeArticle } from "../worldmonitor/news/v1/summarize-article";
 

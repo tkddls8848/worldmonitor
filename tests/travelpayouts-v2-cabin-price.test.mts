@@ -4,7 +4,6 @@ import { searchPricesTravelpayouts } from '../server/worldmonitor/aviation/v1/_p
 import { createAviationServiceRoutes } from '../src/generated/server/worldmonitor/aviation/v1/service_server.ts';
 import { aviationHandler } from '../server/worldmonitor/aviation/v1/handler.ts';
 import { createDomainGateway, serverOptions } from '../server/gateway.ts';
-import { __resetRateLimitForTest } from '../server/_shared/rate-limit.ts';
 import { installRedis } from './helpers/fake-upstash-redis.mts';
 
 const originalEnv = { ...process.env };
@@ -34,7 +33,6 @@ beforeEach(() => {
   delete process.env.AVIATION_DEMO_PRICES;
   process.env.WORLDMONITOR_VALID_KEYS = KEY;
   process.env.TRAVELPAYOUTS_API_TOKEN = base.token;
-  __resetRateLimitForTest();
   calls = [];
   upstream = { success: true, data: [] };
   redis = installRedis({});
@@ -50,7 +48,6 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
   for (const key of Object.keys(process.env)) if (!(key in originalEnv)) delete process.env[key];
   Object.assign(process.env, originalEnv);
-  __resetRateLimitForTest();
 });
 
 const providerCalls = () => calls.filter(url => url.hostname === 'api.travelpayouts.com');

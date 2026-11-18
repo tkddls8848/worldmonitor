@@ -593,11 +593,6 @@ else
   echo "Health-probe cutover check skipped (no health registry or cutover-policy changes)."
 fi
 
-if changed '^(api/|server/|scripts/enforce-rate-limit-policies\.mjs$)'; then
-  echo "Running rate-limit policy coverage check..."
-  npm run lint:rate-limit-policies || exit 1
-fi
-
 if changed '^(src/|api/|scripts/enforce-premium-fetch\.mjs$)'; then
   echo "Running premium-fetch parity check..."
   npm run lint:premium-fetch || exit 1

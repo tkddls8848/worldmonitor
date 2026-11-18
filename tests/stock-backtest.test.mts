@@ -2,13 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 
-import {
-  BACKTEST_STOCK_DAILY_PROVIDER_QUOTA_LIMIT,
-  BACKTEST_STOCK_PROVIDER_QUOTA_EXCEEDED_MESSAGE,
-  BACKTEST_STOCK_PROVIDER_QUOTA_UNAVAILABLE_MESSAGE,
-  backtestStockProviderQuotaKey,
-} from '../server/_shared/backtest-stock-quota.ts';
-import { TRUSTED_USER_ID_HEADER } from '../server/_shared/mcp-internal-hmac.ts';
+import { getKeyPrefix } from '../server/_shared/redis.ts';
 import { mapErrorToResponse } from '../server/error-mapper.ts';
 import {
   backtestStock,
@@ -81,6 +75,16 @@ afterEach(() => {
   if (originalRedisToken == null) delete process.env.UPSTASH_REDIS_REST_TOKEN;
   else process.env.UPSTASH_REDIS_REST_TOKEN = originalRedisToken;
 });
+
+// The retired per-user Yahoo provider-work counter key (formerly
+// server/_shared/backtest-stock-quota.ts). Personal fork: nothing writes it any
+// more; the assertions below pin that.
+function backtestStockProviderQuotaKey(userId: string, date = new Date()): string {
+  const day = date.toISOString().slice(0, 10);
+  return `${getKeyPrefix()}provider:backtest-yahoo:${userId}:${day}`;
+}
+
+const TRUSTED_USER_ID_HEADER = 'x-user-id';
 
 function makeBacktestCtx(userId?: string) {
   const headers = userId ? { [TRUSTED_USER_ID_HEADER]: userId } : undefined;
@@ -614,30 +618,6 @@ describe('technical-only backtest disclosure', () => {
     assert.match(storeSource, /market:stock-backtest-store:v3:/);
     assert.match(storeSource, /market:stock-analysis-ledger:index:v2:/);
     assert.match(storeSource, /market:stock-analysis-ledger:item:v2:/);
-  });
-});
-
-describe('backtest-stock rate-limit documentation', () => {
-  it('describes the per-user daily Yahoo provider-work budget', () => {
-    const docs = readFileSync(
-      new URL('../docs/usage-rate-limits.mdx', import.meta.url),
-      'utf8',
-    );
-    const zhDocs = readFileSync(
-      new URL('../docs/zh/usage-rate-limits.mdx', import.meta.url),
-      'utf8',
-    );
-    assert.match(docs, /GET \/api\/market\/v1\/backtest-stock/);
-    assert.match(
-      docs,
-      new RegExp(`\\*\\*${BACKTEST_STOCK_DAILY_PROVIDER_QUOTA_LIMIT}\\*\\* uncached Yahoo-history fetches`),
-    );
-    assert.match(docs, /llm:direct-usage/);
-    assert.match(zhDocs, /GET \/api\/market\/v1\/backtest-stock/);
-    assert.match(
-      zhDocs,
-      new RegExp(`\\*\\*${BACKTEST_STOCK_DAILY_PROVIDER_QUOTA_LIMIT}\\*\\* 次未缓存 Yahoo 历史抓取`),
-    );
   });
 });
 

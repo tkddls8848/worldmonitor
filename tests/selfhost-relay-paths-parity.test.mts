@@ -3,7 +3,17 @@ import { describe, it } from 'node:test';
 
 import { SELFHOST_RELAY_PATHS, isSelfHostRelayPath } from '../shared/selfhost-relay-paths.js';
 import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths.ts';
-import { API_ONLY_EXACT_PATHS, isApiOnlyPath } from '../server/_shared/api-only-paths.ts';
+
+// The API-only surfaces the relay must never forward: the versioned REST v2
+// family and the retired MCP / OAuth key-grant edges (formerly
+// server/_shared/api-only-paths.ts, deleted with the account and MCP APIs).
+const API_ONLY_EXACT_PATHS: ReadonlySet<string> = new Set([
+  '/mcp', '/api/mcp', '/.well-known/mcp', '/.well-known/mcp.json',
+  '/oauth/authorize', '/oauth/authorize-pro', '/oauth/token', '/oauth/register',
+  '/api/oauth/authorize', '/api/oauth/authorize-pro', '/api/oauth/token', '/api/oauth/register',
+]);
+const isApiOnlyPath = (pathname: string): boolean =>
+  API_ONLY_EXACT_PATHS.has(pathname) || pathname.startsWith('/api/v2/');
 
 // The Docker image ships neither src/ nor server/, so the self-host relay reads
 // a JS mirror of "premium paths minus API-only paths" (plan 2026-11-04-001,

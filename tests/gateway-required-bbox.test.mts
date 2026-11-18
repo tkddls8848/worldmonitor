@@ -7,16 +7,11 @@ import {
   REQUIRED_BBOX_QUERY_PARAMS,
   REQUIRED_BBOX_RPC_PATHS,
 } from '../server/gateway.ts';
-import { ENDPOINT_RATE_POLICIES } from '../server/_shared/rate-limit.ts';
 import type { RouteDescriptor } from '../server/router.ts';
 
 const originalValidKeys = process.env.WORLDMONITOR_VALID_KEYS;
 const TEST_KEY = 'bbox-test-key';
 const REQUIRED_BBOX_QUERY = REQUIRED_BBOX_QUERY_PARAMS.join(',');
-const MARITIME_OPTIONAL_BBOX_PATH = '/api/maritime/v1/get-vessel-snapshot';
-const originalMaritimeRatePolicy = ENDPOINT_RATE_POLICIES[MARITIME_OPTIONAL_BBOX_PATH];
-const AIRCRAFT_OPTIONAL_BBOX_PATH = '/api/aviation/v1/track-aircraft';
-const originalAircraftRatePolicy = ENDPOINT_RATE_POLICIES[AIRCRAFT_OPTIONAL_BBOX_PATH];
 
 const OPTIONAL_BBOX_RPC_PATHS = [
   '/api/aviation/v1/track-aircraft',
@@ -28,11 +23,6 @@ const OPTIONAL_BBOX_RPC_PATHS = [
 afterEach(() => {
   if (originalValidKeys == null) delete process.env.WORLDMONITOR_VALID_KEYS;
   else process.env.WORLDMONITOR_VALID_KEYS = originalValidKeys;
-
-  if (originalMaritimeRatePolicy == null) delete ENDPOINT_RATE_POLICIES[MARITIME_OPTIONAL_BBOX_PATH];
-  else ENDPOINT_RATE_POLICIES[MARITIME_OPTIONAL_BBOX_PATH] = originalMaritimeRatePolicy;
-  if (originalAircraftRatePolicy == null) delete ENDPOINT_RATE_POLICIES[AIRCRAFT_OPTIONAL_BBOX_PATH];
-  else ENDPOINT_RATE_POLICIES[AIRCRAFT_OPTIONAL_BBOX_PATH] = originalAircraftRatePolicy;
 });
 
 function createGatewayForPaths(hits: Map<string, number>, paths: readonly string[]) {
@@ -54,16 +44,7 @@ function createBboxGateway(hits: Map<string, number>) {
   return createGatewayForPaths(hits, REQUIRED_BBOX_RPC_PATHS);
 }
 
-// The live tanker endpoint fails closed when Upstash is absent; remove only
-// this unit-test policy so the gateway header merge path is observable locally.
-function bypassMaritimeRateLimitForLocalGatewayTest(pathAndQuery: string): void {
-  if (!pathAndQuery.startsWith(MARITIME_OPTIONAL_BBOX_PATH)) return;
-  delete ENDPOINT_RATE_POLICIES[MARITIME_OPTIONAL_BBOX_PATH];
-}
-
 function makeRequest(pathAndQuery: string): Request {
-  bypassMaritimeRateLimitForLocalGatewayTest(pathAndQuery);
-  if (pathAndQuery.startsWith(AIRCRAFT_OPTIONAL_BBOX_PATH)) delete ENDPOINT_RATE_POLICIES[AIRCRAFT_OPTIONAL_BBOX_PATH];
   process.env.WORLDMONITOR_VALID_KEYS = TEST_KEY;
   return new Request(
     'https://worldmonitor.app' + pathAndQuery,

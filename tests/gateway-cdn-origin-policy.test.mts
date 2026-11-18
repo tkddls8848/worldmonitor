@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import { afterEach, before, describe, it } from 'node:test';
 
 import { createDomainGateway } from '../server/gateway.ts';
-import { __resetRateLimitForTest } from '../server/_shared/rate-limit';
 import { issueSessionToken } from '../api/_session.js';
 
 const originalKeys = process.env.WORLDMONITOR_VALID_KEYS;
@@ -13,7 +12,6 @@ const originalFetch = globalThis.fetch;
 function allowRateAdmission() {
   process.env.UPSTASH_REDIS_REST_URL = 'https://cdn-policy-redis.invalid';
   process.env.UPSTASH_REDIS_REST_TOKEN = 'fixture';
-  __resetRateLimitForTest();
   globalThis.fetch = async (input, init) => {
     assert.equal(new URL(String(input)).hostname, 'cdn-policy-redis.invalid');
     const commands = JSON.parse(String(init?.body));
@@ -36,7 +34,6 @@ afterEach(() => {
     if (originalEnv[key] === undefined) delete process.env[key];
     else process.env[key] = originalEnv[key];
   }
-  __resetRateLimitForTest();
   if (originalKeys == null) delete process.env.WORLDMONITOR_VALID_KEYS;
   else process.env.WORLDMONITOR_VALID_KEYS = originalKeys;
   if (originalSecret == null) delete process.env.WM_SESSION_SECRET;

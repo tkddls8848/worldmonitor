@@ -5,7 +5,6 @@ import { createMarketServiceRoutes } from '../src/generated/server/worldmonitor/
 import { marketHandler } from '../server/worldmonitor/market/v1/handler.ts';
 import { drainResponseHeaders } from '../server/_shared/response-headers.ts';
 import { serverOptions } from '../server/gateway.ts';
-import { CACHE_TOOLS } from '../api/mcp/registry/cache-tools.ts';
 import {
   METHODOLOGY_VERSION,
   buildPhysicalDivergenceReading,
@@ -15,8 +14,6 @@ import {
 const NOW_MS = Date.parse('2026-08-18T12:30:00.000Z');
 const ENV_KEYS = ['UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN'] as const;
 const originalEnv = new Map<string, string | undefined>();
-const marketDataTool = CACHE_TOOLS.find((candidate) => candidate.name === 'get_market_data');
-assert.ok(marketDataTool?._postFilter);
 
 function history(metal: string, count: number) {
   return Array.from({ length: count }, (_, index) => ({
@@ -389,12 +386,6 @@ describe('GetPhysicalDivergenceIndex public contract', () => {
     const body = await response.json();
     assert.equal(response.status, 500);
     assert.equal(body.message, 'Internal server error');
-
-    const filtered = marketDataTool._postFilter?.(
-      { 'physical-divergence': structuredClone(corrupt) },
-      { limit: 0 },
-    );
-    assert.equal(filtered?.['physical-divergence'], undefined);
   });
 
   it('rejects internally consistent indices outside the published zero-to-100 range', async () => {
@@ -409,12 +400,6 @@ describe('GetPhysicalDivergenceIndex public contract', () => {
 
       const response = await routeHandler()(new Request('https://worldmonitor.app/api/market/v1/get-physical-divergence-index'));
       assert.equal(response.status, 500);
-
-      const filtered = marketDataTool._postFilter?.(
-        { 'physical-divergence': structuredClone(corrupt) },
-        { limit: 0 },
-      );
-      assert.equal(filtered?.['physical-divergence'], undefined);
       mock.restoreAll();
       mock.method(Date, 'now', () => NOW_MS);
     }
@@ -429,11 +414,5 @@ describe('GetPhysicalDivergenceIndex public contract', () => {
     const body = await response.json();
     assert.equal(response.status, 500);
     assert.equal(body.message, 'Internal server error');
-
-    const filtered = marketDataTool._postFilter?.(
-      { 'physical-divergence': structuredClone(corrupt) },
-      { limit: 0 },
-    );
-    assert.equal(filtered?.['physical-divergence'], undefined);
   });
 });

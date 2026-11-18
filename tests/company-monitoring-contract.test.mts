@@ -27,10 +27,6 @@ import {
 } from '../shared/company-monitoring-contract.ts';
 import { COMPANY_MONITORING_ROLLOUT_FLAGS } from '../convex/config/productCatalog.ts';
 import {
-  ENDPOINT_RATE_POLICIES,
-  FAIL_CLOSED_ENDPOINT_RATE_POLICY_REQUIRED,
-} from '../server/_shared/rate-limit.ts';
-import {
   GENERATED_MESSAGE_RULES,
   GENERATED_REQUEST_TYPES,
 } from '../src/generated/server/request_validation.ts';
@@ -38,18 +34,6 @@ import {
 const root = resolve(import.meta.dirname, '..');
 
 describe('Company Monitoring RPC contract', () => {
-  it('keeps the self-contained Edge API-key scope mirror in contract parity', () => {
-    const apiKeySource = readFileSync(resolve(root, 'api/_user-api-key.js'), 'utf8');
-    const declaration = apiKeySource.match(
-      /const COMPANY_MONITORING_SCOPES = new Set\(\[([^\]]+)]\);/,
-    );
-    assert.ok(declaration, 'Edge API-key scope mirror must remain a literal Set declaration');
-    const edgeScopes = [...declaration[1]!.matchAll(/'([^']+)'/g)]
-      .map((match) => match[1])
-      .sort();
-    const contractScopes = [...new Set(Object.values(COMPANY_MONITORING_RPC_SCOPES))].sort();
-    assert.deepEqual(edgeScopes, contractScopes);
-  });
 
   it('defines the exact ten account-scoped RPCs with independent read/write scopes', () => {
     assert.deepEqual(COMPANY_MONITORING_RPC_SCOPES, {
@@ -373,19 +357,6 @@ describe('Company Monitoring limits and rollout controls', () => {
       ui: false,
       alerts: false,
     });
-  });
-
-  it('pre-classifies every dark mutation route as fail-closed', () => {
-    const expectedPolicies = {
-      '/api/company-monitoring/v1/create-monitored-company': { limit: 30, window: '60 s' },
-      '/api/company-monitoring/v1/update-monitored-company': { limit: 30, window: '60 s' },
-      '/api/company-monitoring/v1/set-monitored-company-state': { limit: 30, window: '60 s' },
-      '/api/company-monitoring/v1/import-monitored-company-batch': { limit: 10, window: '60 s' },
-    };
-    for (const [path, policy] of Object.entries(expectedPolicies)) {
-      assert.deepEqual(ENDPOINT_RATE_POLICIES[path], policy);
-      assert.ok(path in FAIL_CLOSED_ENDPOINT_RATE_POLICY_REQUIRED);
-    }
   });
 
   it('rejects oversized request bodies before parsing downstream content', () => {

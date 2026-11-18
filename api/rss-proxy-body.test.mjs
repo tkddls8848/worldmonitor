@@ -8,14 +8,12 @@ const originalFetch = globalThis.fetch;
 const TEST_KEY = 'rss-body-test-key';
 process.env.WORLDMONITOR_VALID_KEYS = TEST_KEY;
 const { default: handler } = await import('./rss-proxy.js');
-const { __resetRateLimitForTest } = await import('./_rate-limit.js');
 
 beforeEach(() => {
   process.env.WORLDMONITOR_VALID_KEYS = TEST_KEY;
   delete process.env.UPSTASH_REDIS_REST_URL;
   delete process.env.UPSTASH_REDIS_REST_TOKEN;
   delete process.env.WS_RELAY_URL;
-  __resetRateLimitForTest();
 });
 afterEach(() => {
   globalThis.fetch = originalFetch;
@@ -23,7 +21,6 @@ afterEach(() => {
     if (!(key in originalEnv)) delete process.env[key];
   }
   Object.assign(process.env, originalEnv);
-  __resetRateLimitForTest();
 });
 
 function makeRequest(feedUrl) {

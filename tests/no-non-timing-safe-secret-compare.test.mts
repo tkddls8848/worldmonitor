@@ -295,7 +295,6 @@ describe('no non-timing-safe secret comparison in api/ (#3803)', () => {
 
   it('no `<secretish> (===|!==) (process.env.* | expected* | <secretish>)` comparison exists in any api/ source', async () => {
     const files = await walk(apiDir);
-    assert.ok(files.includes(join(apiDir, 'seed-contract-probe.ts')), 'the real scan must include the original vulnerable endpoint');
     assert.ok(files.length > 50, `the real scan must inspect api/ source files, got ${files.length}`);
     const violations: string[] = [];
 
@@ -390,25 +389,6 @@ describe('no non-timing-safe secret comparison in api/ (#3803)', () => {
       [],
       `The scan failed to detect a planted violation in ${missed.length} file(s): ${missed.slice(0, 5).join(', ')}. ` +
         `Something is dropping real source before the pattern runs — the guard is passing vacuously.`,
-    );
-  });
-
-  it('api/seed-contract-probe.ts uses timingSafeEqual for x-probe-secret (#3803 specific)', async () => {
-    const source = await readFile(
-      new URL('../api/seed-contract-probe.ts', import.meta.url),
-      'utf8',
-    );
-    // Must import the helper.
-    assert.match(
-      source,
-      /import\s*\{[^}]*\btimingSafeEqual\b[^}]*\}\s*from\s*['"][^'"]*internal-auth/,
-      'seed-contract-probe.ts must import timingSafeEqual from internal-auth',
-    );
-    // Must invoke it for the x-probe-secret comparison.
-    assert.match(
-      source,
-      /await\s+timingSafeEqual\s*\(\s*secret/,
-      'seed-contract-probe.ts must call timingSafeEqual(secret, ...) for the x-probe-secret check',
     );
   });
 

@@ -32,7 +32,6 @@ import {
   describePropagandaBadge,
 } from '../shared/source-provenance.ts';
 import { SOURCE_TIERS, getSourceTier } from '../server/_shared/source-tiers.ts';
-import { SOURCE_TOOLS } from '../api/mcp/registry/source-tools.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, '..');
@@ -65,7 +64,6 @@ function clientWouldDropKeywordAlert(sourceName, tiers) {
   return tier >= 3;
 }
 
-const getSources = SOURCE_TOOLS.find((tool) => tool.name === 'get_sources');
 
 describe('Telegram trust registry (#6600)', () => {
   it('ingests the validated additions with their public ratings and state affiliations', () => {
@@ -286,41 +284,6 @@ describe('Telegram trust badges (#6600)', () => {
     assert.ok(badge);
     assert.equal(badge.risk, 'high');
     assert.match(badge.label, /State Media/);
-  });
-});
-
-describe('/sources reflects Telegram provenance (#6600)', () => {
-  it('exposes Telegram outlets through get_sources', async () => {
-    const result = await getSources._execute({ view: 'outlets', query: 'IDF Official', limit: 10 }, '', {}, undefined);
-    const match = result.outlets.find((outlet) => outlet.name === 'IDF Official');
-    assert.ok(match, 'IDF Official must appear in the outlets catalog');
-    assert.equal(match.tier, 1);
-    assert.equal(match.provenance.type, 'gov');
-    assert.equal(match.provenance.risk, 'high');
-    assert.equal(match.provenance.riskReviewed, true);
-    assert.deepEqual(match.platformIdentities, [{ platform: 'telegram', handle: 'IDFofficial' }]);
-  });
-
-  it('enumerates every Telegram source through the platform filter', async () => {
-    const result = await getSources._execute(
-      { view: 'outlets', platform: 'telegram', limit: 100 },
-      '',
-      {},
-      undefined,
-    );
-    assert.equal(result.matched, TELEGRAM_CHANNEL_TRUST.length);
-    assert.deepEqual(
-      result.outlets.map((outlet) => outlet.name).sort(),
-      TELEGRAM_CHANNEL_TRUST.map((entry) => entry.name).sort(),
-    );
-    assert.ok(result.outlets.every((outlet) => (
-      outlet.platformIdentities?.some((identity) => identity.platform === 'telegram')
-    )));
-  });
-
-  it('does not default an unlisted Telegram platform key to a declared outlet', async () => {
-    const result = await getSources._execute({ view: 'outlets', query: 'telegram', limit: 50 }, '', {}, undefined);
-    assert.equal(result.outlets.some((outlet) => outlet.name === 'telegram'), false);
   });
 });
 

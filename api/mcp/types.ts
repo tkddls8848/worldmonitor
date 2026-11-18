@@ -2,10 +2,6 @@
 // Pure types only — no runtime exports — so this module is safe to import
 // from anywhere without creating evaluation-order surprises or cycles.
 
-import type { BillingVerificationStatus } from '../../server/_shared/entitlement-check';
-import type { McpBudget } from './quota';
-import type { SpokenNarrator } from './spoken';
-
 // ---------------------------------------------------------------------------
 // Auth-context shape passed into tool _execute. U7 widened the previous
 // `apiKey: string` to a discriminated union so per-tool fetches can branch
@@ -57,16 +53,12 @@ export type ConflictSourceObservation = {
 };
 
 export interface McpToolExecutionContext {
-  readAccountAllowance?: () => Promise<import('./_account-allowance').McpAllowanceStatus>;
-  // The checkout session dispatch already created for `start_upgrade` (#9144).
-  startUpgradeResult?: import('./checkout').StartUpgradeResult;
   // Set only by dispatch for a host that must not see these tools (ChatGPT,
   // host-policy.ts). describe_tool treats them as unknown.
   hiddenTools?: ReadonlySet<string>;
   // Set with hiddenTools: describe_tool returns the same inform-only schema
   // copy that host's tools/list carries.
   informOnly?: true;
-  panelRequest?: import('./panel-requests').PaidPanelAdmission;
   panelScope?: 'forecasts';
   // Set only by dispatch for an original forecast read billed per tool call.
   perToolForecastRead?: true;
@@ -137,15 +129,6 @@ export interface BaseToolDef {
   // projection cannot separate the values from the attribution that licenses
   // their redistribution.
   _attribution?: string;
-  // `response_mode: "spoken"` (#9722). A tool that declares a narrator
-  // advertises `response_mode` in its input schema and the spoken branch in
-  // its output schema; the dispatcher replaces the finished payload with the
-  // narrator's 2-3 sentence envelope (api/mcp/spoken.ts). Declared HERE, on
-  // the tool, so the roster is the registry itself. The narrator sees the
-  // payload a full call would serialize after filters and presentation but
-  // before any output-budget fit (the envelope is small, so the fit is
-  // skipped), and must read every number it speaks from that payload.
-  _spoken?: SpokenNarrator;
   // U7 (R7, R9): membership in the always-free subset — servable to an
   // uncredentialed caller, consuming no quota for any principal. Declared HERE,
   // on the tool itself, so the roster and the tool definition cannot drift
@@ -482,154 +465,6 @@ export interface PublicToolShape {
 // unprefixed keys through this dep if you also flip the binding — the raw
 // default is deliberate and inverts the shared helpers' prefix-by-default.
 export type PipelineFn = (commands: Array<Array<string | number>>, timeoutMs?: number, raw?: boolean) => Promise<Array<{ result?: unknown; error?: unknown }> | null>;
-
-export interface QuotaReserved {
-  ok: true;
-  newCount: number;
-  /** Roll back the INCR (best-effort). Idempotent — safe to call multiple times. */
-  rollback: () => Promise<void>;
-}
-export type QuotaRejected =
-  | {
-      ok: false;
-      reason: 'cap-exceeded';
-      /**
-       * Count after the rejected reservation was rolled back (i.e. the floor),
-       * which is also the limit that was ENFORCED. Required — the -32029 copy
-       * interpolates it, so the number a capped caller reads can never drift
-       * from the number the reservation actually applied.
-       */
-      floor: number;
-    }
-  | { ok: false; reason: 'redis-unavailable' };
-
-// ---------------------------------------------------------------------------
-// Auth resolution + handler deps
-// ---------------------------------------------------------------------------
-export interface McpHandlerDeps {
-  resolveBearerToContext: (token: string) => Promise<McpAuthContext | null>;
-  validateProMcpToken: (tokenId: string) => Promise<
-    | { userId: string }
-    | { ok: 'valid'; userId: string }
-    | { ok: 'revoked' }
-    | { ok: 'transient' }
-    | null
-  >;
-  getEntitlements: (userId: string, options?: { requireTravelRiskShape?: boolean }) => Promise<{
-    planKey?: string;
-    features: {
-      tier: number;
-      mcpAccess?: boolean;
-      // #10451: read only for prepare_travel_risk_assessment; absent is false.
-      travelRiskAssessment?: boolean;
-      // Mirrors `CachedEntitlements.features.planLimits`. The MCP daily
-      // allowance and the MCP minute burst are read here (plan 2026-07-25-001
-      // U3); the siblings are declared so the shape stays recognisable against
-      // the catalog and a future consumer doesn't have to re-widen the dep
-      // contract. `mcpCallsPerDay` carries the `SHARED_API_BUDGET` marker on the
-      // API tiers — narrowing it back to `number | null` here makes the marker
-      // an impossible value in a mirror that receives it every request.
-      planLimits?: {
-        apiRequestsPerDay?: number | null;
-        apiBurstRequestsPerMinute?: number | null;
-        mcpCallsPerDay?: number | null | 'shared-api-budget';
-        mcpBurstRequestsPerMinute?: number | null;
-        dashboardAiCallsPerDay?: number | null;
-      };
-    };
-    validUntil: number;
-    // Mirrors `CachedEntitlements.account`: present only for an active member
-    // of a live Enterprise contract, whose MCP calls draw on the account pool.
-    account?: {
-      id: string;
-      dailyAllowance: number;
-      perMinuteBurst: number;
-      breakerMultiple: number;
-    };
-    billingStatus?: BillingVerificationStatus;
-    retryAfterSeconds?: number;
-    verificationUnavailable?: boolean;
-  } | null>;
-  // #4859: Convex userApiKeys hash lookup (same shared helper as the REST
-  // gateway). Returns the key owner, or null for unknown/revoked keys. The
-  // production impl fail-softs to null internally; a THROW from a dep is
-  // treated as auth-backend-transient (503), mirroring resolveBearerToContext.
-  validateUserApiKey: (key: string) => Promise<{ userId: string } | null>;
-  // Fail-closed per-IP guard that runs before the unattributed Convex lookup.
-  // Kept injectable so auth ordering and backpressure are testable without
-  // contacting Redis.
-  guardUserApiKeyValidation: (request: Request, corsHeaders: Record<string, string>) => Promise<Response | null>;
-  redisPipeline: PipelineFn;
-  // `start_upgrade` checkout relay (#9144). Optional so existing fixtures keep
-  // compiling; dispatch falls back to the production Convex relay.
-  createCheckout?: import('./checkout').McpCreateCheckout;
-}
-
-export interface AuthResolution {
-  ok: true;
-  context: McpAuthContext;
-}
-export interface AuthResolutionRejected {
-  ok: false;
-  response: Response;
-}
-
-// ---------------------------------------------------------------------------
-// Context pre-check result
-// ---------------------------------------------------------------------------
-// The pre-check is the only place on the gated path that already holds the
-// entitlement object, so it also resolves the caller's daily MCP allowance and
-// hands it to the dispatcher — a second lookup would be an extra Convex
-// round-trip on the hot path (plan 2026-07-25-001 KTD6).
-export interface McpPreCheckPassed {
-  ok: true;
-  /**
-   * Which daily counter this caller's `tools/call`s charge, and its ceiling.
-   * Omitted → the quota layer falls back to the dedicated Pro counter at
-   * `PRO_DAILY_QUOTA_LIMIT`, so an unresolved budget can never widen a cap.
-   * `limit: null` is unlimited (still metered, never rejected).
-   *
-   * Set for both the `pro` and `user_key` contexts: an API-tier subscriber
-   * resolves the same shared REST budget through either door.
-   *
-   * Free-account paid-funnel (#6716): when `freeAccountAllowance` is set, this
-   * carries the free call ceiling and dispatch meters via
-   * `reserveFreeAccountAllowance` instead of `reserveQuota`.
-   */
-  budget?: McpBudget;
-  /**
-   * The caller's per-minute MCP burst threshold, from the same entitlement
-   * read. Omitted → `applyPerMinuteLimit` uses its own default, so an
-   * unresolved pre-check can never widen the burst ceiling either.
-   */
-  burstPerMinute?: number;
-  /**
-   * Authenticated free / insufficient-tier caller admitted at the MCP call
-   * site only (#6716). Must never be set by relaxing `checkProMcpAccess`.
-   */
-  freeAccountAllowance?: true;
-  /**
-   * The entitlement's plan key, from the same read. Lets a denial recommend
-   * the plan one step up (#9144). Omitted when the row carries none.
-   */
-  planKey?: string;
-  /**
-   * The plan includes `prepare_travel_risk_assessment` (#10451), read from the
-   * same entitlement row as `budget`. Never set on the free-account allowance.
-   */
-  travelRiskAssessment?: true;
-}
-
-/** What the caller is about to do, when it changes which entitlement shape a pre-check needs. */
-export interface McpPreCheckOptions {
-  /** Refetch a cached entitlement that predates `travelRiskAssessment` instead of reading it as false. */
-  requireTravelRiskShape?: boolean;
-}
-export interface McpPreCheckRejected {
-  ok: false;
-  response: Response;
-}
-export type McpPreCheckResult = McpPreCheckPassed | McpPreCheckRejected;
 
 // ---------------------------------------------------------------------------
 // Prompts registry types (MCP 2025-03-26 prompts capability)

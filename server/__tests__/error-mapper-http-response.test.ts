@@ -14,39 +14,6 @@ describe('opt-in ApiError HTTP responses', () => {
     vi.restoreAllMocks();
   });
 
-  test('serializes a quota 429 with the public envelope and live rate-limit headers', async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-08-21T12:00:00.000Z'));
-    const resetMs = Date.now() + 120_000;
-    const error = new ApiError(429, 'Stock backtest daily provider quota exceeded', '');
-    (error as ApiError & { retryAfter: number }).retryAfter = 120;
-    attachApiErrorHttpResponseMetadata(error, {
-      envelope: 'error',
-      rateLimit: {
-        limit: 200,
-        remaining: 0,
-        resetMs,
-        windowSec: 86_400,
-      },
-    });
-
-    const response = mapErrorToResponse(error, new Request('https://example.com'));
-
-    expect(response.status).toBe(429);
-    await expect(response.json()).resolves.toEqual({
-      error: 'Stock backtest daily provider quota exceeded',
-    });
-    expect(response.headers.get('Retry-After')).toBe('120');
-    expect(response.headers.get('RateLimit-Policy')).toBe('"default";q=200;w=86400');
-    expect(response.headers.get('RateLimit-Limit')).toBe('200');
-    expect(response.headers.get('RateLimit-Remaining')).toBe('0');
-    expect(response.headers.get('RateLimit-Reset')).toBe('120');
-    expect(response.headers.get('RateLimit')).toBe('"default";r=0;t=120');
-    expect(response.headers.get('X-RateLimit-Limit')).toBe('200');
-    expect(response.headers.get('X-RateLimit-Remaining')).toBe('0');
-    expect(response.headers.get('X-RateLimit-Reset')).toBe(String(resetMs));
-  });
-
   test('serializes an opted-in retryable 503 without rate-limit headers', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const error = new ApiError(503, 'Stock backtest quota service unavailable', '');

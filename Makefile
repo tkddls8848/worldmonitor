@@ -124,7 +124,6 @@ generate: clean ## Generate code from proto definitions
 	@# query parameter requiredness (#4599 root cause #3 / #4604), and
 	@# examples. Apply byte-/format-preserving injectors before deriving
 	@# examples so examples reflect the final schemas.
-	@node scripts/openapi-inject-security.mjs
 	@node scripts/openapi-inject-company-monitoring-contract.mjs
 	@node scripts/apply-openapi-filter-param-schemas.mjs
 	@node scripts/openapi-inject-jmespath.mjs
@@ -133,9 +132,6 @@ generate: clean ## Generate code from proto definitions
 	@node scripts/openapi-inject-servers.mjs
 	@node scripts/openapi-inject-deprecated.mjs
 	@node scripts/openapi-inject-webhooks.mjs
-	@node scripts/openapi-inject-idempotency.mjs
-	@node scripts/openapi-inject-rate-limit-errors.mjs
-	@node scripts/openapi-inject-billing-verification.mjs
 	@node scripts/openapi-inject-async-jobs.mjs
 	@node scripts/openapi-inject-china-corridors.mjs
 	@node scripts/openapi-inject-china-decision-signals.mjs

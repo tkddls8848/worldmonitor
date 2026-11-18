@@ -4,9 +4,6 @@ const { cache, limiter } = vi.hoisted(() => ({
   cache: new Map<string, unknown>(),
   limiter: vi.fn(async (_scope: string, _limit: number, _window: string, _identifier: string) => ({ allowed: true, degraded: false })),
 }));
-vi.mock('../_shared/rate-limit', () => ({ checkScopedRateLimit: limiter,
-  getClientRateLimitKey: (request: Request) => request.headers.get('x-test-principal') || 'fixture',
-}));
 vi.mock('../_shared/redis', () => ({
   cachedFetchJsonWithMeta: vi.fn(async (key: string, _ttl: number, fetcher: () => Promise<unknown>) => {
     if (!cache.has(key)) cache.set(key, await fetcher());

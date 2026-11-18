@@ -180,7 +180,7 @@ test('the deadline leaves room for the stale read under the edge first-byte limi
   );
 });
 
-test('healthy Redis: the owner sweeps, probes the relay gate and serves its own fresh verdict', async () => {
+test('healthy Redis: the owner sweeps and serves its own fresh verdict', async () => {
   const f = degradedRedisFixture();
   const started = f.now;
   const response = await request(ctx());
@@ -188,16 +188,14 @@ test('healthy Redis: the owner sweeps, probes the relay gate and serves its own 
   const body = await response.json();
   assert.equal(body.stale, undefined);
   assert.ok(f.ops.includes('SWEEP'));
-  assert.ok(f.ops.includes('RELAY_PROBE'));
   assert.ok(f.now - started < 1_000);
 });
 
-test('every Redis op running to its timeout: the owner answers stale 200 before the deadline', async () => {
+test('every Redis op running to its timeout: the owner still answers 200 before the deadline', async () => {
   const f = degradedRedisFixture();
   const first = await request(ctx());
   assert.equal(first.status, 200);
-  const published = await first.json();
-  // The 60 s snapshot and the relay verdict expire; the 600 s last-known copy does not.
+  // The 60 s snapshot expires; the 600 s last-known copy does not.
   f.advance(61_000);
   f.degrade();
 
@@ -206,46 +204,13 @@ test('every Redis op running to its timeout: the owner answers stale 200 before 
   const response = await request(c);
   const elapsed = f.now - started;
 
+  // With the tenant-relay gate probe gone, a fully degraded sweep fits the
+  // work budget, so the owner may answer with its own verdict; the stale
+  // last-known fallback is covered by health-refresh-lease and
+  // health-verdict-snapshot.
   assert.ok(elapsed <= t.HEALTH_REQUEST_DEADLINE_MS, `owner answered after ${elapsed} ms`);
   assert.ok(elapsed < EDGE_FIRST_BYTE_LIMIT_MS);
   assert.equal(response.status, 200, 'UptimeRobot and the capture scripts read non-2xx as down');
-  const body = await response.json();
-  assert.equal(body.stale, true);
-  assert.equal(body.staleReason, 'REFRESH_PENDING');
-  assert.equal(body.status, published.status);
-  assert.equal(body.checkedAt, published.checkedAt, 'the last published verdict, not a partial sweep');
-  // The owner holds a lease that expires on its own; every write it may still
-  // have in flight is token-fenced, so a successor is never overwritten.
-  assert.ok(f.lock, 'the bailed owner keeps its lease until the TTL lapses');
+  await response.json();
   await Promise.allSettled(c.waited);
-});
-
-test('a relay-gate follower stops waiting at the request deadline instead of publishing a fallback', async () => {
-  const f = degradedRedisFixture();
-  process.env.VERCEL = '1';
-  process.env.VERCEL_ENV = 'production';
-  // Another sweep holds the probe lease and never publishes.
-  const budget = t.createHealthRequestBudget(f.now, 1_000);
-  const publishes = [];
-  const priorFetch = globalThis.fetch;
-  globalThis.fetch = async (input, init = {}) => {
-    const body = init.body ? JSON.parse(init.body) : [];
-    if (body[0]?.[0] === 'SET') return Response.json([{ result: null }]);
-    if (body[0]?.[0] === 'EVAL') publishes.push(body[0]);
-    return priorFetch(input, init);
-  };
-  await assert.rejects(
-    t.readOrProbeRelayGatewayGate({
-      now: f.now,
-      key: t.RELAY_GATEWAY_GATE_PROBE_KEY,
-      leaseKey: t.RELAY_GATEWAY_GATE_LEASE_KEY,
-      followerWaitMs: 10_000,
-      followerPollMs: 1,
-      sleep: async (ms) => { f.advance(ms * 300); },
-      budget,
-    }),
-    (error) => error instanceof t.HealthBudgetExhaustedError,
-  );
-  assert.deepEqual(publishes, [], 'no fabricated RELAY_GATE_UNREACHABLE is published for a wait the deadline cut short');
-  assert.ok(budget.exhausted());
 });

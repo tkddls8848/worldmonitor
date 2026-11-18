@@ -9,7 +9,6 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { UMAMI_SCRIPT_TAG } from '../scripts/build-research-reports.mjs';
-import { TOOL_LIST_RESPONSE } from '../api/mcp/registry/index.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (path) => readFileSync(join(ROOT, path), 'utf8');
@@ -23,12 +22,6 @@ const metaDescription = (html) => html.match(/<meta name="description" content="
 describe('/agent page content', () => {
   it('shows the approved description word for word', () => {
     assert.ok(PAGE.includes(`<p class="lede" id="approved-description">${APPROVED_DESCRIPTION}</p>`));
-  });
-
-  it('says "90+ MCP tools", never an exact count, and the claim holds', () => {
-    assert.match(PAGE, /90\+ MCP tools/);
-    assert.doesNotMatch(PAGE, /\b\d{2,3} (?:MCP )?tools\b/, 'no exact tool count');
-    assert.ok(TOOL_LIST_RESPONSE.length >= 90, `registry has ${TOOL_LIST_RESPONSE.length} tools; the page promises 90+`);
   });
 
   it('has a setup section for every client the page names', () => {

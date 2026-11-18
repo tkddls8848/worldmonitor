@@ -4,10 +4,8 @@ import { afterEach, describe, it } from 'node:test';
 import type { ServerContext } from '../src/generated/server/worldmonitor/infrastructure/v1/service_server.ts';
 import { ApiError } from '../src/generated/server/worldmonitor/infrastructure/v1/service_server.ts';
 import { __resetKeyPrefixCacheForTests } from '../server/_shared/redis.ts';
-import { __resetRateLimitForTest as resetServerRateLimit } from '../server/_shared/rate-limit.ts';
 import { reverseGeocode } from '../server/worldmonitor/infrastructure/v1/reverse-geocode.ts';
 import edgeReverseGeocode from '../api/reverse-geocode.js';
-import { __resetRateLimitForTest as resetEdgeRateLimit } from '../api/_rate-limit.js';
 import { GEOCODE_CACHE_DECIMALS, geocodeCacheCell, geocodeCacheKey } from '../shared/geocode-cache-key.js';
 import {
   GEOCODE_CACHE_DECIMALS as edgeDecimals,
@@ -79,8 +77,6 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
   restoreEnv();
   __resetKeyPrefixCacheForTests();
-  resetServerRateLimit();
-  resetEdgeRateLimit();
   __resetReverseGeocodeCacheForTests();
 });
 

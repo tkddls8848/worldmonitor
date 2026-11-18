@@ -4,7 +4,6 @@ import { trackAircraft } from '../server/worldmonitor/aviation/v1/track-aircraft
 import { ApiError, createAviationServiceRoutes, type TrackAircraftRequest } from '../src/generated/server/worldmonitor/aviation/v1/service_server.ts';
 import { aviationHandler } from '../server/worldmonitor/aviation/v1/handler.ts';
 import { createDomainGateway, serverOptions } from '../server/gateway.ts';
-import { __resetRateLimitForTest, ENDPOINT_RATE_POLICIES, FAIL_CLOSED_ENDPOINT_RATE_POLICY_REQUIRED } from '../server/_shared/rate-limit.ts';
 import { installRedis } from './helpers/fake-upstash-redis.mts';
 import { readLimiterRequest } from './helpers/upstash-limiter-wire.mjs';
 import { issueSessionToken } from '../api/_session.js';
@@ -30,7 +29,6 @@ beforeEach(async () => {
   process.env.WS_RELAY_URL = 'https://relay.example';
   process.env.WM_SESSION_SECRET = 'synthetic-aircraft-session-secret';
   session = (await issueSessionToken()).token;
-  __resetRateLimitForTest();
   redis = installRedis({});
   calls = [];
   wingbitsStatus = 200;
@@ -49,7 +47,6 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
   for (const key of Object.keys(process.env)) if (!(key in originalEnv)) delete process.env[key];
   Object.assign(process.env, originalEnv);
-  __resetRateLimitForTest();
 });
 const request = (query: Record<string, string> = {}) => new Request(`https://api.worldmonitor.app${PATH}?${new URLSearchParams(query)}`, { headers: { 'X-WorldMonitor-Key': session, 'x-real-ip': '192.0.2.10' } });
 const ctx = () => ({ request: request(), pathParams: {}, headers: {} });

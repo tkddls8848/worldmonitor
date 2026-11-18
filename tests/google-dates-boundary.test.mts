@@ -5,7 +5,6 @@ import { searchGoogleDates } from '../server/worldmonitor/aviation/v1/search-goo
 import { ValidationError, createAviationServiceRoutes } from '../src/generated/server/worldmonitor/aviation/v1/service_server.ts';
 import { aviationHandler } from '../server/worldmonitor/aviation/v1/handler.ts';
 import { createDomainGateway, serverOptions } from '../server/gateway.ts';
-import { __resetRateLimitForTest } from '../server/_shared/rate-limit.ts';
 import { installRedis } from './helpers/fake-upstash-redis.mts';
 import { readLimiterRequest } from './helpers/upstash-limiter-wire.mjs';
 import { decodeTfs, loadGoogleFlightsRelay, pageFixture, relayTransport, resultsPage } from './helpers/google-flights-page.mts';
@@ -26,7 +25,6 @@ beforeEach(async () => {
   delete process.env.LOCAL_API_MODE;
   process.env.WM_SESSION_SECRET = 'synthetic-aviation-news-session-secret';
   session = (await issueSessionToken()).token;
-  __resetRateLimitForTest();
   redis = installRedis({});
   calls = [];
   globalThis.fetch = (async (input, init) => {
@@ -39,7 +37,6 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
   for (const key of Object.keys(process.env)) if (!(key in originalEnv)) delete process.env[key];
   Object.assign(process.env, originalEnv);
-  __resetRateLimitForTest();
 });
 const defaults: SearchGoogleDatesRequest = { origin: 'DXB', destination: 'LHR', startDate: '2026-10-01', endDate: '2026-10-31', tripDuration: 0, isRoundTrip: false, cabinClass: '', maxStops: '', departureWindow: '', airlines: [], sortByPrice: false, passengers: 1 };
 const request = (overrides: Record<string, string> = {}) => new Request(`https://api.worldmonitor.app${PATH}?${new URLSearchParams({ origin: 'DXB', destination: 'LHR', start_date: '2026-10-01', end_date: '2026-10-31', ...overrides })}`, { headers: { 'X-WorldMonitor-Key': session, 'x-vercel-forwarded-for': '192.0.2.8' } });
@@ -90,56 +87,6 @@ test('valid leap day and supported aliases reach only the configured relay', asy
   await read({ startDate: '2028-02-29', endDate: '2028-02-29', maxStops: 'NON_STOP', cabinClass: 'BUSINESS', departureWindow: '0-24', airlines: ['U2'] });
   assert.equal(feeds().length, 1);
 });
-
-async function installMcpFixture(outage = false) {
-  const { signInternalMcpRequest, buildInternalMcpHeaders } = await import('../server/_shared/mcp-internal-hmac.ts');
-  process.env.MCP_INTERNAL_HMAC_SECRET = 'synthetic-mcp-date-secret-32-bytes';
-  process.env.CONVEX_SITE_URL = 'https://convex.example';
-  process.env.CONVEX_SERVER_SHARED_SECRET = 'synthetic-convex-secret';
-  const transport = globalThis.fetch;
-  let admissions = 0;
-  const wire: { init?: RequestInit }[] = [];
-  const events: { status: number; reason: string }[] = [];
-  const pending: Promise<unknown>[] = [];
-  process.env.USAGE_TELEMETRY = '1';
-  process.env.AXIOM_API_TOKEN = 'synthetic-token';
-  globalThis.fetch = (async (input, init) => {
-    const url = new URL(String(input));
-    if (url.hostname === 'api.axiom.co') {
-      events.push(...JSON.parse(String(init?.body)));
-      return Response.json({});
-    }
-    if (url.hostname === 'convex.example') return Response.json({ planKey: 'pro', features: { tier: 1, mcpAccess: true, apiAccess: false, apiRateLimit: 60 }, validUntil: Date.now() + 86400000 });
-    if (url.hostname !== 'redis.example') return transport(input, init);
-    const commands = init?.body ? JSON.parse(String(init.body)) : [];
-    if (!Array.isArray(commands[0])) return transport(input, init);
-    if (commands.some((command: string[]) => String(command[1]).startsWith('internal-mcp-replay:'))) return Response.json(commands.map(() => ({ result: 'OK' })));
-    wire.push({ init });
-    if (commands.some((command: string[]) => command[0].toUpperCase() === 'EVALSHA')) {
-      if (outage) throw new Error('Synthetic endpoint limiter outage');
-      return Response.json(commands.map(() => ({ result: [10 - ++admissions, 10] })));
-    }
-    return transport(input, init);
-  }) as typeof fetch;
-  return {
-    wire,
-    events,
-    ctx: { waitUntil: (promise: Promise<unknown>) => { pending.push(promise); } },
-    settled: () => Promise.all(pending),
-    admissions: () => admissions,
-    signed: async () => {
-      const url = request().url;
-      const signed = await signInternalMcpRequest({ method: 'GET', url, body: '', userId: 'user_dates_pro', secret: process.env.MCP_INTERNAL_HMAC_SECRET! });
-      const headers = new Headers(buildInternalMcpHeaders(signed));
-      const { TRUSTED_USER_ID_HEADER } = await import('../server/_shared/mcp-internal-hmac.ts');
-      headers.set(TRUSTED_USER_ID_HEADER, 'injected_bucket');
-      return new Request(url, { headers });
-    },
-  };
-}
-
-
-
 
 // Execute the relay's real Google Flights section without starting its daemon or live feeds.
 function installPageRelay(provider: (url: URL, init?: RequestInit) => Promise<Response>) {

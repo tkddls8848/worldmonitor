@@ -27,7 +27,6 @@ vi.mock('../../server/_shared/redis', () => ({
     return value;
   },
 }));
-vi.mock('../../server/_shared/premium-check', () => ({ isCallerPremium: async () => harness.premium }));
 vi.mock('../../server/_shared/llm', () => ({ callLlm: (...args: unknown[]) => harness.llm(...args) }));
 vi.mock('../../server/worldmonitor/intelligence/v1/_country-brief-evidence', () => ({ buildCountryBriefEvidence: async () => [], readCountryAirportNotams: async () => [], readCountryImageryFlags: async () => harness.imageryFlags }));
 vi.mock('../../server/worldmonitor/intelligence/v1/_country-brief-context', async importOriginal => ({

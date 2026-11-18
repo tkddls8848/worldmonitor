@@ -13,7 +13,6 @@ import {
   normalizeSummaryLanguage,
 } from '../server/worldmonitor/news/v1/_shared.ts';
 import { TRANSLATE_TARGET_LANGUAGES, summarizeArticle } from '../server/worldmonitor/news/v1/summarize-article.ts';
-import { TOOL_REGISTRY } from '../api/mcp/registry/index.ts';
 
 const ENV_KEYS = ['OPENROUTER_API_KEY', 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN', 'WORLDMONITOR_VALID_KEYS'] as const;
 const originalEnv = new Map<string, string | undefined>();
@@ -97,30 +96,5 @@ describe('summary output language set', () => {
     assert.equal(normalizeSummaryLanguage('zh-CN'), 'zh');
     assert.equal(normalizeSummaryLanguage('xx'), null);
     assert.equal(normalizeSummaryLanguage(INJECTION), null);
-  });
-});
-
-describe('MCP analyze_news_headlines language', () => {
-  const tool = TOOL_REGISTRY.find((t) => t.name === 'analyze_news_headlines')!;
-  const caller = { kind: 'env_key', apiKey: 'fixture-key' } as const;
-
-  it('sends a regional tag as its supported base code', async () => {
-    const bodies: Array<Record<string, unknown>> = [];
-    globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
-      bodies.push(JSON.parse(String(init?.body)));
-      return Response.json({ summary: 'ok', status: 'success' });
-    }) as typeof fetch;
-    await tool._execute!({ headlines: ['A', 'B'], lang: 'pt-BR' }, 'https://www.worldmonitor.app', caller, undefined);
-    await tool._execute!({ headlines: ['A'], mode: 'translate', lang: 'zh-Hant' }, 'https://www.worldmonitor.app', caller, undefined);
-    assert.equal(bodies[0]!.lang, 'pt');
-    assert.equal(bodies[1]!.variant, 'zh-TW');
-  });
-
-  it('refuses an unsupported language before calling the API', async () => {
-    globalThis.fetch = (async () => { throw new Error('must not fetch'); }) as typeof fetch;
-    await assert.rejects(
-      tool._execute!({ headlines: ['A', 'B'], lang: 'xx-YY' }, 'https://www.worldmonitor.app', caller, undefined),
-      { name: 'RpcValidationError' },
-    );
   });
 });

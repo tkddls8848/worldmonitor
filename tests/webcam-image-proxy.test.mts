@@ -5,12 +5,6 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import { issueSessionToken } from '../api/_session.js';
 import type { ServerContext } from '../src/generated/server/worldmonitor/webcam/v1/service_server.ts';
 import { __resetKeyPrefixCacheForTests } from '../server/_shared/redis.ts';
-import {
-  __resetRateLimitForTest,
-  checkEndpointRateLimit,
-  ENDPOINT_RATE_POLICIES,
-  FAIL_CLOSED_ENDPOINT_RATE_POLICY_REQUIRED,
-} from '../server/_shared/rate-limit.ts';
 import { PUBLIC_NO_AUTH_RPC_PATHS, createDomainGateway } from '../server/gateway.ts';
 import { getWebcamImage } from '../server/worldmonitor/webcam/v1/get-webcam-image.ts';
 import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths.ts';
@@ -20,7 +14,6 @@ import webcamGateway from '../api/webcam/v1/[rpc].ts';
 const REDIS_URL = 'https://redis.test';
 const WINDY_URL = 'https://api.windy.com/webcams/api/v3/webcams';
 const WEBCAM_IMAGE_PATH = '/api/webcam/v1/get-webcam-image';
-const OTHER_FAIL_CLOSED_PATH = '/api/news/v1/summarize-article-cache';
 const ENV_KEYS = [
   'UPSTASH_REDIS_REST_URL',
   'UPSTASH_REDIS_REST_TOKEN',
@@ -44,7 +37,6 @@ beforeEach(() => {
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  __resetRateLimitForTest();
   for (const key of ENV_KEYS) {
     const value = originalEnv.get(key);
     if (value === undefined) delete process.env[key];
@@ -284,27 +276,6 @@ describe('Windy webcam image proxy input boundary', () => {
 });
 
 describe('Windy webcam image proxy access contract', () => {
-  it('uses a 30/min fail-closed provider-proxy policy', async () => {
-    assert.deepEqual(ENDPOINT_RATE_POLICIES[WEBCAM_IMAGE_PATH], { limit: 30, window: '60 s' });
-    assert.equal(
-      FAIL_CLOSED_ENDPOINT_RATE_POLICY_REQUIRED[WEBCAM_IMAGE_PATH]?.reason,
-      'Webcam image resolution proxies the Windy provider on cache miss.',
-    );
-
-    delete process.env.UPSTASH_REDIS_REST_URL;
-    delete process.env.UPSTASH_REDIS_REST_TOKEN;
-    __resetRateLimitForTest();
-
-    const response = await checkEndpointRateLimit(
-      new Request(`https://worldmonitor.app${WEBCAM_IMAGE_PATH}`),
-      WEBCAM_IMAGE_PATH,
-      {},
-    );
-
-    assert.ok(response);
-    assert.equal(response.status, 503);
-    assert.equal(response.headers.get('X-RateLimit-Mode'), 'degraded');
-  });
 
 
   it('lets the bundled Tauri sidecar webcam gateway run without Upstash', async () => {
@@ -312,7 +283,6 @@ describe('Windy webcam image proxy access contract', () => {
     process.env.WM_SESSION_SECRET = 'webcam-proxy-session-test-secret-at-least-32-chars';
     delete process.env.UPSTASH_REDIS_REST_URL;
     delete process.env.UPSTASH_REDIS_REST_TOKEN;
-    __resetRateLimitForTest();
     const calls = installProviderAndRedisFixture();
     const { token } = await issueSessionToken();
 

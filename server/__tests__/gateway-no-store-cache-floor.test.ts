@@ -23,17 +23,6 @@ vi.mock('../_shared/redis', async (importActual) => {
   return { ...actual, runRedisPipeline: (...a: unknown[]) => runRedisPipeline(...a) };
 });
 
-const checkRateLimit = vi.fn();
-const checkEndpointRateLimit = vi.fn();
-vi.mock('../_shared/rate-limit', async (importActual) => {
-  const actual = await importActual<typeof import('../_shared/rate-limit')>();
-  return {
-    ...actual,
-    checkRateLimit: (...a: unknown[]) => checkRateLimit(...a),
-    checkEndpointRateLimit: (...a: unknown[]) => checkEndpointRateLimit(...a),
-    hasEndpointRatePolicy: () => false,
-  };
-});
 
 import { createDomainGateway } from '../gateway';
 
@@ -66,8 +55,6 @@ function credentialedRequest(path: string): Request {
 
 beforeEach(() => {
   runRedisPipeline.mockReset().mockResolvedValue([{ result: null }]);
-  checkRateLimit.mockReset().mockResolvedValue(null);
-  checkEndpointRateLimit.mockReset().mockResolvedValue(null);
   process.env.WORLDMONITOR_VALID_KEYS = KEY;
 });
 

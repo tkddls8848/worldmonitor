@@ -19,21 +19,9 @@ vi.mock('../_shared/redis', async (importActual) => {
   return { ...actual, runRedisPipeline: (...a: unknown[]) => runRedisPipeline(...a) };
 });
 
-const checkRateLimit = vi.fn();
-const checkEndpointRateLimit = vi.fn();
-vi.mock('../_shared/rate-limit', async (importActual) => {
-  const actual = await importActual<typeof import('../_shared/rate-limit')>();
-  return {
-    ...actual,
-    checkRateLimit: (...a: unknown[]) => checkRateLimit(...a),
-    checkEndpointRateLimit: (...a: unknown[]) => checkEndpointRateLimit(...a),
-    hasEndpointRatePolicy: () => false,
-  };
-});
 
 import { createDomainGateway } from '../gateway';
 import { setResponseHeader, setSuccessStatusOverride } from '../_shared/response-headers';
-import { IDEMPOTENCY_HEADER, IDEMPOTENT_REPLAYED_HEADER } from '../_shared/idempotency';
 
 const PATH = '/api/leads/v1/submit-contact';
 const STATUS_URL = '/api/scenario/v1/get-scenario-status?jobId=scenario%3A1717200000000%3Aabcd1234';
@@ -68,8 +56,6 @@ function makeRequest(method: 'GET' | 'POST' = 'POST', headers: Record<string, st
 
 beforeEach(() => {
   runRedisPipeline.mockReset();
-  checkRateLimit.mockReset().mockResolvedValue(null);
-  checkEndpointRateLimit.mockReset().mockResolvedValue(null);
   enqueueHandler.mockClear();
 });
 

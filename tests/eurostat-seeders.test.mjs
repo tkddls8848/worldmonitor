@@ -192,21 +192,6 @@ describe('Registry wiring (issue #3028)', () => {
     assert.match(src, /eurostatIndProd:\s*\{[^}]*seed-meta:economic:eurostat-industrial-production/);
   });
 
-  it('MCP serves the three EU overlays as get_country_macro datasets', async () => {
-    const { TOOL_REGISTRY } = await import('../api/mcp/registry/index.ts');
-    const tool = TOOL_REGISTRY.find((entry) => entry.name === 'get_country_macro');
-    const datasets = {
-      'house-prices': 'economic:eurostat:house-prices:v1',
-      'gov-debt-q': 'economic:eurostat:gov-debt-q:v1',
-      'industrial-production': 'economic:eurostat:industrial-production:v1',
-    };
-    for (const [dataset, key] of Object.entries(datasets)) {
-      assert.ok(tool.inputSchema.properties.dataset.items.enum.includes(dataset), dataset);
-      assert.ok(tool._cacheKeys.includes(key), key);
-      assert.ok(tool._datasetKeys[dataset].includes(key), key);
-    }
-  });
-
   it('macro bundle runner includes the three new scripts with distinct seed-meta keys', async () => {
     const src = await readFile(resolve(ROOT, 'scripts/seed-bundle-macro.mjs'), 'utf8');
     assert.match(src, /seed-eurostat-house-prices\.mjs/);

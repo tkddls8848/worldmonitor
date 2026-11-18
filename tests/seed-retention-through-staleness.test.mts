@@ -5,8 +5,6 @@ import { fileURLToPath } from 'node:url';
 
 import { __testing__ } from '../api/health.js';
 import { ANALYSIS_TOOLS } from '../api/mcp/registry/analysis-tools.ts';
-import { CACHE_TOOLS } from '../api/mcp/registry/cache-tools.ts';
-import { evaluateFreshness } from '../api/mcp/freshness.ts';
 import { getOceanIceData } from '../server/worldmonitor/climate/v1/get-ocean-ice-data';
 import * as oceanIce from '../scripts/seed-climate-ocean-ice.mjs';
 import * as submarineCables from '../scripts/seed-submarine-cables.mjs';
@@ -237,20 +235,6 @@ async function consumerHasData(entry: CacheCase, state: FakeRedisState, now: num
   return (await consumerStatus(entry, state, now)).hasData;
 }
 
-function climateToolIsStale(now: number, oceanAgeMs: number) {
-  const tool = CACHE_TOOLS.find((candidate) => candidate.name === 'get_climate_data') as {
-    _freshnessChecks: Array<{ key: string; maxStaleMin: number }>;
-  } | undefined;
-  assert.ok(tool, 'get_climate_data must exist');
-  return evaluateFreshness(
-    tool._freshnessChecks,
-    tool._freshnessChecks.map((check) => ({
-      fetchedAt: now - (check.key === 'seed-meta:climate:ocean-ice' ? oceanAgeMs : 0),
-    })),
-    now,
-  ).stale;
-}
-
 test('ocean ice and submarine reference publications outlive their stale windows', async () => {
   for (const entry of CASES) {
     const first = runProducer(entry.name, START);
@@ -271,20 +255,6 @@ test('ocean ice and submarine reference publications outlive their stale windows
     const observed = await consumerStatus(entry, cache, clock.now);
     assert.equal(observed.hasData, true, `${entry.name} must remain readable at its observed missed-run age`);
     assert.equal((await health(entry, cache, clock.now)).status, 'OK');
-
-    if (entry.name === 'ocean') {
-      const climateTool = CACHE_TOOLS.find((candidate) => candidate.name === 'get_climate_data') as {
-        _freshnessChecks: Array<{ key: string; maxStaleMin: number }>;
-      } | undefined;
-      assert.ok(climateTool, 'get_climate_data must exist');
-      assert.equal(
-        climateTool._freshnessChecks.find((check) => check.key === metaKey)?.maxStaleMin,
-        healthLimitMin,
-      );
-      assert.equal(climateToolIsStale(clock.now, entry.observedAgeMs), false);
-      assert.equal(climateToolIsStale(clock.now, healthLimitMin * MINUTE_MS), false);
-      assert.equal(climateToolIsStale(clock.now, (healthLimitMin + 1) * MINUTE_MS), true);
-    }
 
     const staleAt = START + healthLimitMin * MINUTE_MS;
     for (const [offset, expected] of [[-MINUTE_MS, 'OK'], [0, 'OK'], [MINUTE_MS, 'STALE_SEED']] as const) {

@@ -5,11 +5,12 @@
 // agent loses the retry/billing signal for exactly the window the on-demand
 // renewal verification exists to cover.
 
-import type { BillingVerificationStatus } from '../../server/_shared/entitlement-check';
 import { readBoundedResponseText } from './bounded-body';
 
 export type BillingVerificationCode =
-  | BillingVerificationStatus
+  | 'subscription_lapsed'
+  | 'renewal_verification_pending'
+  | 'renewal_verification_failed'
   // Gateway-synthesized (server/gateway.ts wm_-key branch): backend-unreachable
   // fail-closed 503. Deliberately NOT in the Convex-facing
   // BillingVerificationStatus union — Convex never produces it.

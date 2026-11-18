@@ -13,24 +13,16 @@ process.env.WM_SESSION_SECRET ||= 'test-secret-must-be-at-least-32-chars-long-xx
 process.env.UPSTASH_REDIS_REST_URL ||= 'https://example.upstash.io';
 process.env.UPSTASH_REDIS_REST_TOKEN ||= 'test-token';
 
-const { default: oauthRegister } = await import('../api/oauth/register.js');
 const { default: wmSession } = await import('../api/wm-session.js');
-const { default: analyticsHealth } = await import('../api/analytics-health.js');
 const { createRelayHandler } = await import('../api/_relay.js');
-const { default: userPrefs } = await import('../api/user-prefs.ts');
-const { default: notificationSuppressions } = await import('../api/notification-suppressions.js');
 const { default: rssProxy } = await import('../api/rss-proxy.js');
 
 const ORIGIN = 'https://worldmonitor.app';
 
 /** @type {Array<{ name: string, path: string, handler: (req: Request, ctx?: unknown) => Promise<Response>, allow: string, refused: string }>} */
 const CASES = [
-  { name: 'oauth/register', path: '/oauth/register', handler: oauthRegister, allow: 'POST, OPTIONS', refused: 'PUT' },
   { name: 'wm-session', path: '/api/wm-session', handler: wmSession, allow: 'GET, POST, OPTIONS', refused: 'PATCH' },
-  { name: 'analytics-health', path: '/api/analytics-health', handler: analyticsHealth, allow: 'POST, OPTIONS', refused: 'GET' },
   { name: 'relay handler', path: '/api/relay-test', handler: createRelayHandler({ relayPath: '/relay-test' }), allow: 'GET, OPTIONS', refused: 'POST' },
-  { name: 'user-prefs', path: '/api/user-prefs', handler: userPrefs, allow: 'GET, POST, OPTIONS', refused: 'DELETE' },
-  { name: 'notification-suppressions', path: '/api/notification-suppressions', handler: notificationSuppressions, allow: 'GET, OPTIONS', refused: 'POST' },
   { name: 'rss-proxy', path: '/api/rss-proxy', handler: rssProxy, allow: 'GET, OPTIONS', refused: 'POST' },
 ];
 

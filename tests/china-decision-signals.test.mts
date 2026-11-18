@@ -8,7 +8,6 @@ import {
   composeChinaDecisionSignals,
   isChinaDecisionSignalSnapshot,
 } from '../shared/china-decision-signals';
-import { TOOL_REGISTRY } from '../api/mcp/registry';
 import {
   DECISION_SIGNAL_PROVENANCE_FAMILY_REGISTRATIONS,
   validateDecisionSignalProvenance,
@@ -484,93 +483,4 @@ describe('China decision-signal final composition (#5580)', () => {
     );
   });
 
-  it('bounds the maximum public shape below the MCP tool budget without truncating retained provenance', () => {
-    const generatedAt = '2026-07-26T10:45:00Z';
-    const crossStraitProvenance = retarget(
-      provenance('operational-explicit-unknowns'),
-      'cross-strait:taiwan-mnd:oversized-coverage',
-    );
-    const events = Array.from({ length: 4 }, (_, index) => {
-      const signalId = `policy:samr:oversized-${index}`;
-      return {
-        signalId,
-        lineageId: `samr-oversized-${index}`,
-        titleOriginal: `Oversized policy ${index} ${'政'.repeat(8_000)}`,
-        agency: 'SAMR',
-        actionType: 'announcement_guidance',
-        status: 'announced',
-        supersession: { state: 'current' },
-        sectors: [],
-        entities: [],
-        provenance: retarget(provenance('typed-document-translated'), signalId),
-      };
-    });
-    const input = {
-      generatedAt,
-      policy: {
-        agencies: { SAMR: { status: 'ok' } },
-        events,
-      },
-      crossStrait: {
-        status: 'healthy',
-        coverage: {
-          note: 'coverage'.repeat(20_000),
-        },
-        observations: [{
-          sourceId: 'taiwan-mnd',
-          observationKind: 'official_daily_claim',
-          reportingDay: '2026-07-25',
-          summary: 'Taiwan MND daily activity claim',
-          categories: { plaAircraftSorties: 18, planShips: 7 },
-          provenance: crossStraitProvenance,
-        }],
-      },
-    };
-
-    const snapshot = composeChinaDecisionSignals(input);
-    const repeated = composeChinaDecisionSignals(input);
-    const tool = TOOL_REGISTRY.find((candidate) => candidate.name === 'get_china_decision_signals');
-    assert.ok(tool);
-    assert.equal(
-      tool._outputBudgetBytes,
-      CHINA_DECISION_SIGNAL_MAX_SERIALIZED_BYTES,
-      'the MCP budget covers the canonical composition bound exactly',
-    );
-
-    const serializedBytes = new TextEncoder().encode(JSON.stringify(snapshot)).byteLength;
-    assert.ok(
-      serializedBytes <= tool._outputBudgetBytes,
-      `snapshot ${serializedBytes}B exceeds MCP budget ${tool._outputBudgetBytes}B`,
-    );
-    assert.equal(isChinaDecisionSignalSnapshot(snapshot), true);
-    assert.deepEqual(repeated, snapshot, 'bounded composition remains deterministic');
-
-    const policy = snapshot.groups.find((candidate) => candidate.id === 'policy-enforcement');
-    assert.ok(policy);
-    assert.ok(
-      Number(policy.metadata.omittedItemCount) > 0,
-      'oversized whole items are reported as omitted',
-    );
-    assert.ok(
-      policy.state === 'partial' || policy.state === 'unavailable',
-      'omission remains explicit in group state',
-    );
-    assert.ok(policy.items.length > 0, 'the fixture exercises retained provenance as well as omission');
-    const provenanceBySignal = new Map(events.map((event) => [event.signalId, event.provenance]));
-    for (const item of policy.items) {
-      assert.deepEqual(
-        item.provenance,
-        provenanceBySignal.get(item.id),
-        'retained item provenance is preserved verbatim',
-      );
-    }
-
-    const crossStrait = snapshot.groups.find((candidate) => candidate.id === 'cross-strait-activity');
-    assert.equal(crossStrait?.metadata.metadataOmittedForSerialization, true);
-    // Trimming supplemental metadata to fit the byte budget must not paper
-    // over the fact that the retained item's content timestamp is unknown:
-    // the group stays 'stale', it isn't relabeled 'partial' by the trim.
-    assert.equal(crossStrait?.state, 'stale');
-    assert.match(crossStrait?.reason ?? '', /Supplemental group metadata omitted/);
-  });
 });

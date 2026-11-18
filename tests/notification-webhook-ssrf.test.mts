@@ -3,12 +3,6 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import {
-  assertNotificationWebhookRegistrationUrlSafe,
-  blockedNotificationWebhookUrlReason,
-  blockedTeamsWebhookUrlReason,
-  isBlockedNotificationResolvedAddress,
-} from '../api/_notification-webhook-ssrf';
 
 const require = createRequire(import.meta.url);
 const scriptSsrf = require('../scripts/lib/notification-webhook-ssrf.cjs') as {
@@ -59,10 +53,8 @@ const blockedUrls = [
 describe('notification webhook SSRF guard', () => {
   test('registration rejects literal private, link-local, reserved, metadata, and IPv4-mapped addresses', () => {
     for (const url of blockedUrls) {
-      assert.ok(blockedNotificationWebhookUrlReason(url), `api helper must block ${url}`);
       assert.ok(scriptSsrf.blockedNotificationWebhookUrlReason(url), `script helper must block ${url}`);
     }
-    assert.equal(blockedNotificationWebhookUrlReason('https://example.com/hook'), null);
     assert.equal(scriptSsrf.blockedNotificationWebhookUrlReason('https://example.com/hook'), null);
   });
 
@@ -109,7 +101,6 @@ describe('notification webhook SSRF guard', () => {
       '::ffff:0:a9fe:a9fe',
     ];
     for (const address of blockedAddresses) {
-      assert.equal(isBlockedNotificationResolvedAddress(address), true, `api helper must block ${address}`);
       assert.equal(scriptSsrf.isBlockedResolvedAddress(address), true, `script helper must block ${address}`);
     }
     for (const address of [
@@ -123,7 +114,6 @@ describe('notification webhook SSRF guard', () => {
       '::ffff:0:5db8:d822',
       '2001:200::1',
     ]) {
-      assert.equal(isBlockedNotificationResolvedAddress(address), false, `api helper must allow ${address}`);
       assert.equal(scriptSsrf.isBlockedResolvedAddress(address), false, `script helper must allow ${address}`);
     }
   });
@@ -135,7 +125,6 @@ describe('notification webhook SSRF guard', () => {
       '100::',
       '100::ffff:ffff:ffff:ffff',
     ]) {
-      assert.equal(isBlockedNotificationResolvedAddress(address), true, `api helper must block ${address}`);
       assert.equal(scriptSsrf.isBlockedResolvedAddress(address), true, `script helper must block ${address}`);
     }
 
@@ -143,75 +132,17 @@ describe('notification webhook SSRF guard', () => {
       '64:ff9b:2::',
       '100:0:0:1::',
     ]) {
-      assert.equal(isBlockedNotificationResolvedAddress(address), false, `api helper must allow ${address}`);
       assert.equal(scriptSsrf.isBlockedResolvedAddress(address), false, `script helper must allow ${address}`);
     }
 
     for (const url of ['https://[64:ff9b:1::a9fe:a9fe]/hook', 'https://[100::1]/hook']) {
-      assert.ok(blockedNotificationWebhookUrlReason(url), `api helper must block ${url}`);
       assert.ok(scriptSsrf.blockedNotificationWebhookUrlReason(url), `script helper must block ${url}`);
-    }
-    for (const resolved of ['64:ff9b:1::1', '100::1']) {
-      await assert.rejects(
-        () => assertNotificationWebhookRegistrationUrlSafe('https://webhook.example.test/hook', async () => [resolved]),
-        /private\/local address/,
-        `registration must reject a hostname resolving to ${resolved}`,
-      );
     }
   });
 
   // The Railway relay cannot import TS, so the api/ registration check and the
   // scripts/ delivery check are separate copies. A range added to only one of
   // them lets registration accept a URL that delivery refuses, or the reverse.
-  test('registration and delivery classifiers agree across a generated address corpus', () => {
-    let seed = 0x5eed;
-    const next = (n: number) => {
-      seed = (Math.imul(seed, 1103515245) + 12345) & 0x7fffffff;
-      return seed % n;
-    };
-    const hextet = () => (next(3) === 0 ? 0 : next(0x10000)).toString(16);
-    const octets = () => [next(256), next(256), next(256), next(256)];
-    const dotted = (o: number[]) => o.join('.');
-    const hexPair = (o: number[]) => `${((o[0]! << 8) | o[1]!).toString(16)}:${((o[2]! << 8) | o[3]!).toString(16)}`;
-    const ipv4Prefixes = [[0], [10], [100, 64], [100, 127], [127], [169, 254], [172, 16], [172, 31], [192, 0, 0], [192, 0, 2], [192, 88, 99], [192, 168], [198, 18], [198, 19], [198, 51, 100], [203, 0, 113], [224], [255], [93, 184]];
-    const ipv6Prefixes = ['fc00', 'fdff', 'fe80', 'febf', 'fec0', 'ffff', 'ff02', '2001:db8', '2001:0db8', '64:ff9b:1', '64:ff9b:2', '64:ff9b:0:0:0:0', '100:0:0:0', '100:0:0:1', '2002', '2606:2800', '0:0:0:0:0:ffff', '0:0:0:0:0:0', '0:0:0:0:ffff:0', '2001:0', '2001:1ff', '2001:200'];
-    const specialIpv4 = () => {
-      const o = octets();
-      ipv4Prefixes[next(ipv4Prefixes.length)]!.forEach((value, i) => { o[i] = value; });
-      return o;
-    };
-
-    const corpus: string[] = ['::', '::1', 'localhost', 'example.com', '', '256.1.1.1', '1:2:3:4:5:6:7:8:9', ':::'];
-    for (let i = 0; i < 4000; i += 1) {
-      const embed = next(2) === 0 ? dotted(specialIpv4()) : hexPair(specialIpv4());
-      const prefix = ipv6Prefixes[next(ipv6Prefixes.length)]!;
-      const groups = prefix.split(':').length;
-      const fill = Array.from({ length: Math.max(0, 8 - groups) }, hextet);
-      const candidates = [
-        dotted(specialIpv4()),
-        `::ffff:${embed}`,
-        `::ffff:0:${embed}`,
-        `64:ff9b::${embed}`,
-        `64:ff9b:1::${embed}`,
-        `::${embed}`,
-        `2002:${hexPair(specialIpv4())}::`,
-        [prefix, ...fill].join(':'),
-        `${prefix}::${hextet()}`,
-      ];
-      const address = candidates[next(candidates.length)]!;
-      corpus.push(next(4) === 0 ? `[${address.toUpperCase()}]` : address);
-    }
-
-    const blockedCount = corpus.filter(address => scriptSsrf.isBlockedResolvedAddress(address)).length;
-    assert.ok(blockedCount > 1000 && corpus.length - blockedCount > 200, `corpus must mix blocked and allowed addresses (blocked ${blockedCount}/${corpus.length})`);
-    for (const address of corpus) {
-      assert.equal(
-        isBlockedNotificationResolvedAddress(address),
-        scriptSsrf.isBlockedResolvedAddress(address),
-        `api and script classifiers disagree on ${address}`,
-      );
-    }
-  });
 
   test('delivery rejects DNS rebinding to link-local and reserved addresses', async () => {
     await assert.rejects(
@@ -238,39 +169,6 @@ describe('notification webhook SSRF guard', () => {
     });
   });
 
-  test('registration rejects DNS-resolved private or mixed answers before persisting the webhook', async () => {
-    await assert.rejects(
-      () => assertNotificationWebhookRegistrationUrlSafe(
-        'https://webhook.example.test/hook',
-        async () => ['169.254.169.254'],
-      ),
-      /private\/local address/,
-    );
-    await assert.rejects(
-      () => assertNotificationWebhookRegistrationUrlSafe(
-        'https://webhook.example.test/hook',
-        async () => ['93.184.216.34', '10.0.0.1'],
-      ),
-      /private\/local address/,
-    );
-    await assert.doesNotReject(() => assertNotificationWebhookRegistrationUrlSafe(
-      'https://webhook.example.test/hook',
-      async () => ['93.184.216.34'],
-    ));
-    await assert.doesNotReject(() => assertNotificationWebhookRegistrationUrlSafe(
-      'https://93.184.216.34/hook',
-      async () => { throw new Error('public IP literals must not require DNS'); },
-    ));
-  });
-
-  test('notification channel registration validates every persisted webhook envelope', () => {
-    const source = readFileSync(resolve(process.cwd(), 'api/notification-channels.ts'), 'utf8');
-    assert.doesNotMatch(source, /channelType === 'webhook' && webhookEnvelope/);
-    assert.match(
-      source,
-      /if \(webhookEnvelope !== undefined\) \{\s*try \{\s*await assertNotificationWebhookRegistrationUrlSafe\(webhookEnvelope\)/,
-    );
-  });
   test('pinned delivery helper keeps hard timeout and response body caps', () => {
     const source = readFileSync(resolve(process.cwd(), 'scripts/lib/notification-webhook-ssrf.cjs'), 'utf8');
     assert.match(source, /MAX_WEBHOOK_RESPONSE_BYTES/);
@@ -300,7 +198,6 @@ describe('notification webhook SSRF guard', () => {
       'https://prod-27.westus.logic.azure.com:443/workflows/0a1b2c/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=abc',
     ];
     for (const url of allowed) {
-      assert.equal(blockedTeamsWebhookUrlReason(url), null, `api helper must allow ${url}`);
       assert.equal(scriptSsrf.blockedTeamsWebhookUrlReason(url), null, `script helper must allow ${url}`);
     }
     const rejected = [
@@ -325,10 +222,8 @@ describe('notification webhook SSRF guard', () => {
       `https://abc.environment.api.powerplatform.com/powerautomate/automations/direct/workflows/${'x'.repeat(5000)}`,
     ];
     for (const url of rejected) {
-      assert.ok(blockedTeamsWebhookUrlReason(url), `api helper must reject ${url}`);
       assert.ok(scriptSsrf.blockedTeamsWebhookUrlReason(url), `script helper must reject ${url}`);
-      assert.equal(blockedTeamsWebhookUrlReason(url), scriptSsrf.blockedTeamsWebhookUrlReason(url), `same reason for ${url}`);
     }
-    assert.match(String(blockedTeamsWebhookUrlReason('https://contoso.webhook.office.com/webhookb2/x')), /retired/i);
+    assert.match(String(scriptSsrf.blockedTeamsWebhookUrlReason('https://contoso.webhook.office.com/webhookb2/x')), /retired/i);
   });
 });

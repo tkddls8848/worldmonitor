@@ -13,7 +13,6 @@ delete process.env.UPSTASH_REDIS_REST_TOKEN;
 
 const { default: handler, __testing__ } = await import('./rss-proxy.js');
 const { RELAY_ONLY_DOMAINS, RSS_BROWSER_UA, DIRECT_FETCH_HEADERS } = __testing__;
-const { __resetRateLimitForTest } = await import('./_rate-limit.js');
 const { default: isAllowedDomain } = await import('./_rss-allowed-domain-match.js');
 
 function restoreEnv() {
@@ -74,13 +73,11 @@ beforeEach(() => {
   // getRatelimit() caches limiters in a module-level Map keyed by policy, so a
   // limiter built against the fake Upstash host in one test would survive into
   // the next even after the env vars are deleted. Reset the cache each time.
-  __resetRateLimitForTest();
 });
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
   restoreEnv();
-  __resetRateLimitForTest();
 });
 
 test('rejects allowlisted redirect chains that escape the RSS domain allowlist on a later hop', async () => {

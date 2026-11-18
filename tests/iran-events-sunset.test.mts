@@ -122,10 +122,6 @@ describe('iran-events sunset — backend gates (source guards)', () => {
     assert.match(read('server/worldmonitor/conflict/v1/list-iran-events.ts'), /if \(!IRAN_EVENTS_ENABLED\) return \{ events: \[\], scrapedAt: '0' \}/);
   });
 
-  it('MCP get_conflict_events drops the iran-events cache key when disabled', () => {
-    assert.match(read('api/mcp/registry/cache-tools.ts'), /\.\.\.\(IRAN_EVENTS_ENABLED \? \['conflict:iran-events:v1'\] : \[\]\)/);
-  });
-
   it('seed-forecasts.mjs skips fetching the iran key into the pipeline batch when disabled', () => {
     const previousIranEventsEnabled = process.env.IRAN_EVENTS_ENABLED;
     delete process.env.IRAN_EVENTS_ENABLED;

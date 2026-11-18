@@ -16,14 +16,6 @@ const approved = new Map([
       /assertXPostBudgetAdmission\(url, admission\)[\s\S]{0,100}fetchFn\(url\.href/,
     ],
   }],
-  ['scripts/lib/company-monitoring-x-provider.mjs', {
-    endpoints: ['/2/tweets', '/2/tweets/search/recent'],
-    wrappers: [
-      /const xResponse = async[\s\S]{0,300}assertXPostBudgetAdmission\(/,
-      /trackedUrl[\s\S]{0,1200}xPostsJson\(trackedUrl/,
-      /new URL\('\/2\/tweets\/search\/recent'[\s\S]{0,1200}xPostsJson\(url/,
-    ],
-  }],
   ['scripts/lib/x-news-accounts.cjs', {
     endpoints: ['/2/lists/${encodeURIComponent(id)}/tweets', '/2/tweets'],
     wrappers: [

@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 
 import { createDomainGateway } from '../server/gateway.ts';
 import { mapErrorToResponse } from '../server/error-mapper.ts';
-import { ENDPOINT_RATE_POLICIES } from '../server/_shared/rate-limit.ts';
 import { getResilienceRanking } from '../server/worldmonitor/resilience/v1/get-resilience-ranking.ts';
 import { ApiError } from '../src/generated/server/worldmonitor/resilience/v1/service_server.ts';
 import {
@@ -1374,80 +1373,6 @@ describe('resilience ranking contracts', () => {
     }
   });
 
-  it('?refresh=1 is rejected without the dedicated seed refresh key (Pro bearer/static read keys are NOT enough)', async () => {
-    // A full warm is expensive (~222 score computations + chunked pipeline
-    // SETs). Allowing any Pro user to loop on ?refresh=1 would DoS Upstash
-    // and Edge budget. refresh must be seed-service only — validated against
-    // WORLDMONITOR_SEED_REFRESH_KEY, not the normal premium read keys.
-    process.env.WORLDMONITOR_VALID_KEYS = 'normal-read-key';
-    process.env.WORLDMONITOR_API_KEY = 'legacy-read-key';
-    process.env.WORLDMONITOR_SEED_REFRESH_KEY = 'seed-refresh-secret';
-    const { redis } = installRedis({ ...RESILIENCE_FIXTURES });
-    redis.set(
-      'resilience:static:index:v1',
-      JSON.stringify({
-        countries: ['NO', 'US'],
-        recordCount: 2,
-        failedDatasets: [],
-        seedYear: 2026,
-      }),
-    );
-    // Stale sentinel tagged with the current (flag-off default) formula so
-    // these refresh-auth assertions exercise the refresh gate, not formula
-    // invalidation. NR is rankable but absent from the static-index fixture.
-    const stale = {
-      items: [
-        {
-          countryCode: 'NR',
-          overallScore: 1,
-          level: 'low',
-          lowConfidence: true,
-          overallCoverage: 0.5,
-          headlineEligible: true,
-        },
-      ],
-      greyedOut: [],
-      ...RANKING_META,
-      ...D6_RANKING_CACHE_TAG,
-    };
-    redis.set(RESILIENCE_RANKING_CACHE_KEY, JSON.stringify(stale));
-
-    const assertFallsBackToCache = async (request: Request, message: string) => {
-      const response = await getResilienceRanking({ request } as never, {});
-      assert.equal(response.items.length, 1);
-      assert.equal(response.items[0]?.countryCode, 'NR', message);
-    };
-
-    await assertFallsBackToCache(new Request('https://example.com/api/resilience/v1/get-resilience-ranking?refresh=1'), 'refresh=1 without key must fall back to cached response');
-    await assertFallsBackToCache(
-      new Request('https://example.com/api/resilience/v1/get-resilience-ranking?refresh=1', {
-        headers: { Authorization: 'Bearer pro-session-token' },
-      }),
-      'refresh=1 with Pro bearer must fall back to cached response',
-    );
-    await assertFallsBackToCache(
-      new Request('https://example.com/api/resilience/v1/get-resilience-ranking?refresh=1', {
-        headers: { 'X-WorldMonitor-Key': 'normal-read-key' },
-      }),
-      'refresh=1 with normal static read key must fall back to cached response',
-    );
-    await assertFallsBackToCache(
-      new Request('https://example.com/api/resilience/v1/get-resilience-ranking?refresh=1', {
-        headers: { 'X-WorldMonitor-Key': 'legacy-read-key' },
-      }),
-      'refresh=1 with legacy read key must fall back to cached response',
-    );
-
-    // Dedicated seed refresh key → refresh is honored; NR is not in the
-    // recomputed response because recompute uses static index ['NO','US'].
-    const authed = new Request('https://example.com/api/resilience/v1/get-resilience-ranking?refresh=1', {
-      headers: { 'X-WorldMonitor-Key': 'seed-refresh-secret' },
-    });
-    const authedResp = await getResilienceRanking({ request: authed } as never, {});
-    const codes = authedResp.items.concat(authedResp.greyedOut ?? []).map((i) => i.countryCode);
-    assert.ok(!codes.includes('NR'), 'refresh=1 with dedicated seed refresh key must recompute');
-  });
-
   it('?refresh=1 bypasses the cache-hit early-return and recomputes the ranking (with valid seed key)', async () => {
     // Seeder uses ?refresh=1 on the unconditional per-cron rebuild. Without
     // this bypass, the seeder would have to DEL the ranking before rebuild
@@ -1734,10 +1659,6 @@ describe('resilience ranking contracts', () => {
       message: 'Internal server error',
       retryAfter: 60,
     });
-  });
-
-  it('gateway has a dedicated low-RPM endpoint policy for resilience ranking', () => {
-    assert.deepEqual(ENDPOINT_RATE_POLICIES['/api/resilience/v1/get-resilience-ranking'], { limit: 30, window: '60 s' });
   });
 
 

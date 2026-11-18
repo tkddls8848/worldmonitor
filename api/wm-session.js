@@ -9,9 +9,7 @@
 
 import { getCorsHeaders, getOriginDeniedCorsHeaders, isDisallowedOrigin } from './_cors.js';
 import { timingSafeEqualSecret, timingSafeIncludes } from './_crypto.js';
-import { checkRateLimit } from './_rate-limit.js';
 import { issueSessionToken, validateSessionToken } from './_session.js';
-import { emitWmSessionUsage } from './_usage-telemetry.js';
 
 export const config = { runtime: 'edge' };
 
@@ -20,13 +18,7 @@ const WIDGET_KEY_COOKIE = '__Host-wm-widget-key';
 const PRO_KEY_COOKIE = '__Host-wm-pro-key';
 const COOKIE_MAX_AGE_SECONDS = 12 * 60 * 60;
 const LEGACY_KEY_MAX_LEN = 512;
-const SESSION_RATE_LIMIT_SCOPE = 'wm-session';
-const SESSION_RATE_LIMIT_PER_MINUTE = 30;
-const SESSION_RATE_LIMIT_WINDOW = '60 s';
 // Separate budget so a status read on page load never spends the mint budget.
-const STATUS_RATE_LIMIT_SCOPE = 'wm-session-status';
-const STATUS_RATE_LIMIT_PER_MINUTE = 30;
-const STATUS_RATE_LIMIT_WINDOW = '60 s';
 const ALLOWED_METHODS = 'GET, POST, OPTIONS';
 
 function jsonResponse(body, status, headers) {
@@ -169,12 +161,7 @@ async function readBody(req) {
 }
 
 export default async function handler(req, ctx) {
-  const startedAt = Date.now();
-  const respond = (body, status, headers, reason) => {
-    const response = jsonResponse(body, status, headers);
-    emitWmSessionUsage(ctx, req, response, startedAt, reason);
-    return response;
-  };
+  const respond = (body, status, headers, _reason) => jsonResponse(body, status, headers);
 
   // Preflight must succeed even for origins we refuse on POST — otherwise the
   // browser never sends the actual request and the client sees a network error
@@ -189,9 +176,7 @@ export default async function handler(req, ctx) {
 
   if (isDisallowedOrigin(req)) {
     const deniedCors = getOriginDeniedCorsHeaders(req, ALLOWED_METHODS);
-    const response = new Response('Forbidden', { status: 403, headers: deniedCors });
-    emitWmSessionUsage(ctx, req, response, startedAt, 'origin_403');
-    return response;
+    return new Response('Forbidden', { status: 403, headers: deniedCors });
   }
 
   const cors = getCorsHeaders(req, ALLOWED_METHODS);
@@ -202,21 +187,6 @@ export default async function handler(req, ctx) {
 
   if (req.method !== 'POST') {
     return respond({ error: 'Method not allowed' }, 405, { ...cors, Allow: ALLOWED_METHODS }, 'method_not_allowed');
-  }
-
-  // Rate-limit per IP. Without this, an attacker can farm tokens cheaply.
-  // Token TTL is 12h, so this route uses a lower, fail-closed issuance budget
-  // instead of inheriting the availability-first global fallback.
-  const rl = await checkRateLimit(req, cors, {
-    failClosed: true,
-    ctx,
-    scope: SESSION_RATE_LIMIT_SCOPE,
-    limit: SESSION_RATE_LIMIT_PER_MINUTE,
-    window: SESSION_RATE_LIMIT_WINDOW,
-  });
-  if (rl) {
-    emitWmSessionUsage(ctx, req, rl, startedAt, rl.status === 429 ? 'rate_limit_429' : 'rate_limit_degraded');
-    return rl;
   }
 
   // Before the new Set-Cookie: whether the caller's browser gave the previous
@@ -297,15 +267,6 @@ export default async function handler(req, ctx) {
  * reads false here even though its cookie has not expired yet.
  */
 async function handleStatus(req, ctx, cors, respond) {
-  const limited = await checkRateLimit(req, cors, {
-    failClosed: true,
-    ctx,
-    scope: STATUS_RATE_LIMIT_SCOPE,
-    limit: STATUS_RATE_LIMIT_PER_MINUTE,
-    window: STATUS_RATE_LIMIT_WINDOW,
-  });
-  if (limited) return limited;
-
   const widgetKey = normalizeLegacyKey(readCookie(req, WIDGET_KEY_COOKIE));
   const proKey = normalizeLegacyKey(readCookie(req, PRO_KEY_COOKIE));
   const widget = widgetKey ? await isValidWidgetKey(widgetKey) : false;

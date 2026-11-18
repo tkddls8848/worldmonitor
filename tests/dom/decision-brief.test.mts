@@ -247,7 +247,6 @@ it('commodity denied/failed captures withhold exports and recover with the real 
 
 import { getCountryProducts } from '../../server/worldmonitor/supply-chain/v1/get-country-products';
 import { renderCommodityBrief } from '@/components/CountryBriefOutput';
-vi.mock('../../server/_shared/premium-check', () => ({ isCallerPremium: async () => true }));
 
 it('legacy JP842 survives real reader to builder to preview and embedded export without renormalization', async () => {
   redis.clear();

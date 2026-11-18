@@ -4,7 +4,6 @@ import { Ratelimit } from '@upstash/ratelimit';
 
 import { listXFeed } from '../server/worldmonitor/intelligence/v1/list-x-feed.ts';
 import { issueSessionToken } from '../api/_session.js';
-import { __resetRateLimitForTest } from '../api/_rate-limit.js';
 import handler from '../api/x-feed.js';
 
 const originalFetch = globalThis.fetch;
@@ -27,14 +26,12 @@ function stubLimiter(limit) {
 beforeEach(() => {
   process.env.UPSTASH_REDIS_REST_URL = 'https://fake.upstash.io';
   process.env.UPSTASH_REDIS_REST_TOKEN = 'fake-token';
-  __resetRateLimitForTest();
   stubLimiter(async () => ({ success: true, pending: Promise.resolve() }));
 });
 
 afterEach(() => {
   mock.restoreAll();
   Ratelimit.slidingWindow = originalSlidingWindow;
-  __resetRateLimitForTest();
   globalThis.fetch = originalFetch;
   restoreEnv();
 });

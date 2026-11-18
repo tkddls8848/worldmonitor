@@ -2,7 +2,6 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { listWorldBankIndicators } from '../worldmonitor/economic/v1/list-world-bank-indicators';
 import { __resetKeyPrefixCacheForTests } from '../_shared/redis';
-import { __resetRateLimitForTest } from '../_shared/rate-limit';
 import { createDomainGateway } from '../gateway';
 import { createEconomicServiceRoutes, type EconomicServiceHandler } from '../../src/generated/server/worldmonitor/economic/v1/service_server';
 import { issueSessionToken } from '../../api/_session.js';
@@ -31,7 +30,6 @@ beforeEach(() => {
   delete process.env.LOCAL_API_MODE;
   delete process.env.AXIOM_TOKEN;
   __resetKeyPrefixCacheForTests();
-  __resetRateLimitForTest();
   vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
     const url = new URL(String(input));
     if (url.hostname === 'api.worldbank.org') {

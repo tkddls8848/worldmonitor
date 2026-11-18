@@ -2,7 +2,6 @@ import { afterEach, describe, it } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { requireCountryCode, resolveCountryArg, resolveCountryFilter } from '../api/mcp/_country-args.ts';
-import { TOOL_REGISTRY } from '../api/mcp/registry/index.ts';
 import { normalizeLocalizedCountryToken } from '../shared/country-code-resolve-localized.ts';
 import DATA from '../shared/country-names-localized.json' with { type: 'json' };
 import { assignedCountryCodes } from '../scripts/build-country-names-ar.mjs';
@@ -34,22 +33,6 @@ for (const [locale, names] of Object.entries(locales)) {
       assert.equal(resolveCountryArg(`${names.DE![0]} (FR)`), null);
       assert.equal(resolveCountryArg(`FR (${names.DE![0]})`), null);
       assert.equal(resolveCountryArg(`${names.DE![0]} (DE)`), 'DE');
-    });
-    it('open_country_brief validates the localized name', () => {
-      const tool = TOOL_REGISTRY.find((entry) => entry.name === 'open_country_brief')!;
-      assert.deepEqual(tool._validateArgs!({ country_code: names.DE![0] }), { countryCode: 'DE', topic: 'overview' });
-    });
-    it('summary and translation requests preserve the locale', async () => {
-      const tool = TOOL_REGISTRY.find((entry) => entry.name === 'analyze_news_headlines')!;
-      let sent: Record<string, unknown> = {};
-      globalThis.fetch = async (_input: unknown, init?: { body?: unknown }) => {
-        sent = JSON.parse(String(init?.body));
-        return Response.json({ summary: 'fixture', status: 'success' });
-      };
-      await tool._execute!({ headlines: ['Talks resume'], lang: locale }, 'https://www.worldmonitor.app', { kind: 'env_key', apiKey: 'fixture' }, undefined);
-      assert.equal(sent.lang, locale);
-      await tool._execute!({ headlines: ['Talks resume'], mode: 'translate', lang: locale }, 'https://www.worldmonitor.app', { kind: 'env_key', apiKey: 'fixture' }, undefined);
-      assert.equal(sent.variant, locale);
     });
   });
 }

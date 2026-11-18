@@ -9,7 +9,6 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, it } from 'node:test';
 
-import { TIER_GATED_PATHS } from '../server/_shared/entitlement-check.ts';
 import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths.ts';
 import { __testing__ } from '../scripts/local/local-api-server.mjs';
 
@@ -40,7 +39,6 @@ describe('desktop features that need no local key', () => {
     it(`${feature} is cloud-routed and served to an anonymous session`, () => {
       for (const route of routes) {
         assert.equal(__testing__.isCloudPreferred(route), true, `${route} is cloud-routed`);
-        assert.equal(TIER_GATED_PATHS.has(route), false, `${route} is not tier-gated`);
         assert.equal(PREMIUM_RPC_PATHS.has(route), false, `${route} is not premium`);
       }
     });

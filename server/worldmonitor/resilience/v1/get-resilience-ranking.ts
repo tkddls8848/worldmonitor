@@ -10,7 +10,6 @@ import {
 
 import { compareAndDeleteRedisKey, getCachedJson, runRedisPipeline, runRedisTransaction } from '../../../_shared/redis';
 import { unwrapEnvelope } from '../../../_shared/seed-envelope';
-import { timingSafeEqual } from '../../../_shared/internal-auth';
 import { isInRankableUniverse } from './_rankable-universe';
 import {
   RESILIENCE_INTERVAL_KEY_PREFIX,
@@ -63,13 +62,6 @@ function isRefreshRequested(ctx: ServerContext): boolean {
   } catch {
     return false;
   }
-}
-
-async function isSeedRefreshAuthorized(ctx: ServerContext): Promise<boolean> {
-  const expected = process.env.WORLDMONITOR_SEED_REFRESH_KEY?.trim() ?? '';
-  if (!expected) return false;
-  const candidate = ctx.request.headers.get('X-WorldMonitor-Key') ?? '';
-  return timingSafeEqual(candidate, expected);
 }
 
 function makeLockToken(): string {
@@ -281,19 +273,15 @@ export const getResilienceRanking: ResilienceServiceHandler['getResilienceRankin
   _req: GetResilienceRankingRequest,
 ): Promise<GetResilienceRankingResponse> => {
   // ?refresh=1 forces a full recompute-and-publish instead of returning the
-  // existing cache. It is seed-service-only: a full warm is expensive (~222
-  // score computations + chunked pipeline SETs). Normal premium credentials
-  // (Pro bearer, WORLDMONITOR_VALID_KEYS, WORLDMONITOR_API_KEY) must keep the
-  // standard cache-first read path. Only the dedicated seed refresh secret is
-  // accepted, and a short Redis slot bounds rapid/concurrent refresh attempts.
+  // existing cache. A full warm is expensive (~222 score computations +
+  // chunked pipeline SETs). Personal fork: the personal server's Basic auth is
+  // the only gate, so every refresh request is allowed; a short Redis slot
+  // still bounds rapid/concurrent refresh attempts.
   const refreshRequested = isRefreshRequested(ctx);
-  const refreshAuthorized = refreshRequested && await isSeedRefreshAuthorized(ctx);
   let refreshSlotDenied = false;
   let forceRefresh = false;
   let lockToRelease: { key: string; token: string } | null = null;
-  if (refreshRequested && !refreshAuthorized) {
-    console.warn('[resilience] refresh=1 rejected: dedicated seed refresh secret missing or invalid');
-  } else if (refreshAuthorized) {
+  if (refreshRequested) {
     const token = await tryAcquireRankingLock(RANKING_REFRESH_LOCK_KEY, RANKING_REFRESH_LOCK_TTL_SECONDS);
     forceRefresh = token !== null;
     if (token) lockToRelease = { key: RANKING_REFRESH_LOCK_KEY, token };

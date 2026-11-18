@@ -261,88 +261,6 @@ describe('isAppOwnedRedisKey (#7674)', () => {
   });
 });
 
-describe('mcp get_keyword_spikes reads and writes the preview namespace (#7674)', () => {
-  it('accumulator, story rows, and the spike cache all carry the deployment prefix', async () => {
-    const { NLP_TOOLS } = await import('../api/mcp/registry/nlp-tools.ts');
-    const tool = NLP_TOOLS.find((t) => t.name === 'get_keyword_spikes');
-    assert.ok(tool, 'get_keyword_spikes must stay registered');
-
-    const now = Date.now();
-    const HOUR = 3_600_000;
-    const recentHashes = ['ra'.repeat(32), 'rb'.repeat(32), 'rc'.repeat(32)];
-    const baselineHashes = ['ba'.repeat(32), 'bb'.repeat(32)];
-    const sourcesByHash = new Map([
-      [recentHashes[0], ['Reuters']],
-      [recentHashes[1], ['AP News']],
-      [recentHashes[2], ['BBC']],
-    ]);
-    globalThis.fetch = (async (input, init = {}) => {
-      const url = String(input instanceof Request ? input.url : input);
-      if (url.startsWith(`${UPSTASH}/get/`)) {
-        getPaths.push(decodeURIComponent(url.slice(`${UPSTASH}/get/`.length)));
-        return Response.json({ result: null });
-      }
-      if (url.startsWith(`${UPSTASH}/pipeline`)) {
-        const commands = JSON.parse(init.body);
-        pipelineBodies.push(commands);
-        const verb = commands[0]?.[0];
-        if (verb === 'ZRANGE') {
-          // Two cohorts in one pipeline: recent (3 stories) + baseline (2).
-          // Scores sit well inside each cohort's bounds — the tool re-reads
-          // Date.now() after the fixture captured `now`, so exact-boundary
-          // scores race the tool's own clock.
-          return Response.json(commands.map((command) => {
-            const maxScore = Number(command[2]);
-            const minScore = Number(command[3]);
-            const pairs = [
-              ...recentHashes.map((hash, i) => [hash, String(now - (20 + 10 * i) * 60_000)]),
-              ...baselineHashes.map((hash, i) => [hash, String(now - (30 + 10 * i) * HOUR)]),
-            ];
-            return {
-              result: pairs
-                .filter(([, score]) => Number(score) >= minScore && Number(score) <= maxScore)
-                .flat(),
-            };
-          }));
-        }
-        if (verb === 'HMGET') {
-          return Response.json(commands.map((command) => {
-            const hash = String(command[1]).replace(`${PREFIX}story:track:v1:`, '');
-            if (recentHashes.includes(hash)) return { result: ['Iran closes Strait of Hormuz to tanker traffic', 'https://n/1'] };
-            return { result: ['Wildfire spreads across Tasmania national park', 'https://n/2'] };
-          }));
-        }
-        if (verb === 'SMEMBERS') {
-          // Three distinct publishers across the recent stories — the spike
-          // decision requires MIN_SPIKE_SOURCE_COUNT (2) unique publishers.
-          return Response.json(commands.map((command) => ({
-            result: sourcesByHash.get(String(command[1]).replace(`${PREFIX}story:sources:v1:`, '')) ?? [],
-          })));
-        }
-        return Response.json(commands.map(() => ({ result: 'OK' })));
-      }
-      throw new Error(`unexpected global fetch: ${url}`);
-    }) as typeof fetch;
-
-    const result = await tool._execute({ window_hours: 2, min_count: 2, limit: 10 });
-    assert.ok(Array.isArray(result.spikes), 'the tool must compute from the fixture rows');
-    assert.ok(result.spikes.length > 0, 'two matching recent titles must produce a spike');
-
-    // The cache read happened through the prefixed GET…
-    assert.deepEqual(getPaths, [`${PREFIX}intelligence:keyword-spikes:mcp:v3:2h:2`]);
-    // …every pipeline key is deployment-namespaced…
-    const requestedKeys = pipelineBodies.flat().map((command) => command[1]);
-    assert.ok(requestedKeys.includes(`${PREFIX}digest:accumulator:v1:full:en`), 'accumulator read must be prefixed');
-    assert.ok(requestedKeys.includes(`${PREFIX}story:track:v1:${recentHashes[0]}`), 'story row HMGET must be prefixed');
-    assert.ok(requestedKeys.includes(`${PREFIX}story:sources:v1:${recentHashes[0]}`), 'story sources SMEMBERS must be prefixed');
-    // …and the spike cache write landed in the deployment namespace, not in
-    // the production rows a preview deploy used to leak into.
-    assert.ok(requestedKeys.includes(`${PREFIX}intelligence:keyword-spikes:mcp:v3:2h:2`), 'spike cache write must be prefixed');
-    assert.ok(!requestedKeys.some((key) => key.startsWith('story:') || key.startsWith('digest:')),
-      'no bare story/digest key may be requested under preview');
-  });
-});
-
 describe('health sweep classifies the temporal producer keys into the preview namespace (#7674)', () => {
   it('temporal data + stamp are prefixed; every seeder key and marker stays raw', async () => {
     const { handleHealth, __testing__ } = await import('../api/health.js');
@@ -489,28 +407,6 @@ describe('getRiskScores reads the app-owned temporal snapshot prefixed (#7674)',
     assert.ok(requested.has(`${PREFIX}temporal:anomalies:v1`), 'app-owned snapshot must be prefixed');
     assert.ok(requested.has('news:insights:v1'), 'seeder count sources must stay raw');
     assert.ok(!requested.has('temporal:anomalies:v1'), 'no bare app-owned snapshot read may remain');
-  });
-});
-
-describe('PRODUCTION_DEPS.redisPipeline sends pre-prefixed quota keys verbatim (#7674)', () => {
-  it('raw=true default keeps the envPrefix()-built counters single-prefixed', async () => {
-    const { PRODUCTION_DEPS } = await import('../api/mcp/auth.ts');
-    const { freeAccountCallsKey } = await import('../api/mcp/free-account-allowance.ts');
-    const sent: string[][] = [];
-    const originalFetch = globalThis.fetch;
-    globalThis.fetch = (async (_input, init = {}) => {
-      sent.push(JSON.parse(init.body).map((command) => command[1]));
-      return Response.json(JSON.parse(init.body).map(() => ({ result: 1 })));
-    }) as typeof fetch;
-    try {
-      const counterKey = freeAccountCallsKey('user_quotapin', Date.now());
-      assert.ok(counterKey.startsWith(PREFIX), 'the allowance key builder must pre-prefix');
-      await PRODUCTION_DEPS.redisPipeline([['INCR', counterKey]]);
-      assert.deepEqual(sent, [[counterKey]],
-        'the MCP dep pipeline must send the already-prefixed counter verbatim — exactly one prefix segment');
-    } finally {
-      globalThis.fetch = originalFetch;
-    }
   });
 });
 

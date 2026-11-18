@@ -84,28 +84,6 @@ describe('SEC corporate-intelligence production registration (#5695)', () => {
     );
   });
 
-  it('registers fail-closed 30/min rate policies for the three provider-proxy GETs', () => {
-    const rateLimit = read('server/_shared/rate-limit.ts');
-    for (const route of [
-      '/api/intelligence/v1/get-company-enrichment',
-      '/api/intelligence/v1/list-company-signals',
-      '/api/intelligence/v1/search-sec-filings',
-    ]) {
-      const escaped = route.replace(/\//g, '\\/');
-      assert.match(
-        rateLimit,
-        new RegExp(`'${escaped}':\\s*\\{\\s*limit:\\s*30,\\s*window:\\s*'60 s'\\s*\\}`),
-        `${route} must have a 30/min ENDPOINT_RATE_POLICIES entry`,
-      );
-      // Fail-closed required-policy map (list-material-events is Redis-only and omitted).
-      assert.match(
-        rateLimit,
-        new RegExp(`'${escaped}':\\s*\\{\\s*reason:`),
-        `${route} must be in FAIL_CLOSED_ENDPOINT_RATE_POLICY_REQUIRED`,
-      );
-    }
-  });
-
   it('documents both members in the consolidation runbook', () => {
     const runbook = read('docs/railway-seed-consolidation-runbook.md');
     assert.match(runbook, /SEC CIK Map \(daily\)/);

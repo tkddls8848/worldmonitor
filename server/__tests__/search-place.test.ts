@@ -6,13 +6,6 @@ const { cache, inflight, backoff, limiter } = vi.hoisted(() => ({
   inflight: new Map<string, Promise<unknown>>(),
   limiter: vi.fn(async (_scope: string, _limit: number, _window: string, _identifier: string) => ({ allowed: true, degraded: false })),
 }));
-vi.mock('../_shared/rate-limit', () => ({
-  checkScopedRateLimit: limiter,
-  readTrustedRateLimitPrincipal: (headers: Headers) => {
-    const [scope, id] = (headers.get('x-wm-rl-principal') ?? '').split(':');
-    return id ? { principalScope: scope, principalUserId: id } : {};
-  },
-}));
 vi.mock('../_shared/redis', () => ({
   // Mirrors redis.ts: a fetcher error arms a per-key backoff unless the caller marks it caller-local.
   cachedFetchJsonWithMeta: vi.fn(async (key: string, ttl: number, fetcher: () => Promise<unknown>, negativeTtl: number,

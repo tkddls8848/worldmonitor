@@ -42,14 +42,12 @@ delete process.env.UPSTASH_REDIS_REST_URL;
 delete process.env.UPSTASH_REDIS_REST_TOKEN;
 
 const { default: handler } = await import('./rss-proxy.js');
-const { __resetRateLimitForTest } = await import('./_rate-limit.js');
 
 beforeEach(() => {
   process.env.WORLDMONITOR_VALID_KEYS = TEST_KEY;
   process.env.WS_RELAY_URL = 'wss://relay.example.com';
   delete process.env.UPSTASH_REDIS_REST_URL;
   delete process.env.UPSTASH_REDIS_REST_TOKEN;
-  __resetRateLimitForTest();
 });
 
 afterEach(() => {

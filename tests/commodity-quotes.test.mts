@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, it, mock } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { createMarketServiceRoutes, ValidationError } from '../src/generated/server/worldmonitor/market/v1/service_server.ts';
-import { __resetRateLimitForTest } from '../api/_rate-limit.js';
 import { issueSessionToken } from '../api/_session.js';
 import marketGateway from '../api/market/v1/[rpc].ts';
 import { marketHandler } from '../server/worldmonitor/market/v1/handler.ts';
@@ -176,7 +175,6 @@ function requestFor(path: string): Request {
 const DEFAULT_SEED = ['GC=F', 'CL=F', 'SI=F', 'BZ=F'].map(seedQuote);
 
 beforeEach(() => {
-  __resetRateLimitForTest();
   limiterDecisions = 0;
   for (const key of ENV_KEYS) {
     originalEnv.set(key, process.env[key]);

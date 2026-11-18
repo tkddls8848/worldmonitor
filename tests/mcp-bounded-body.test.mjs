@@ -9,15 +9,8 @@ import {
   RequestBodyTooLargeError,
   ResponseBodyTooLargeError,
 } from '../api/mcp/bounded-body.ts';
-import {
-  MAX_JSON_RPC_BODY_BYTES,
-  MAX_MCP_PROXY_RESPONSE_BYTES,
-} from '../api/mcp/body-limits.ts';
 
 describe('readBoundedRequestBody', () => {
-  it('exports the shared 256 KiB MCP JSON-RPC body cap', () => {
-    assert.equal(MAX_JSON_RPC_BODY_BYTES, 256 * 1024);
-  });
 
   it('returns the full body when under the cap', async () => {
     const payload = new TextEncoder().encode('{"ok":true}');
@@ -221,9 +214,6 @@ describe('readBoundedRequestBody', () => {
 });
 
 describe('readBoundedResponseBody', () => {
-  it('exports the 1 MiB MCP proxy response cap', () => {
-    assert.equal(MAX_MCP_PROXY_RESPONSE_BYTES, 1024 * 1024);
-  });
 
   it('accepts a response whose size equals the cap', async () => {
     const payload = new Uint8Array(32).fill(7);

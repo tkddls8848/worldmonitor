@@ -17,7 +17,6 @@ import {
 } from '../scripts/lib/x-post-budget.cjs';
 import { pollXFeed } from '../scripts/lib/x-news-accounts.cjs';
 import { fetchJapanXOutcome } from '../scripts/cross-strait-activity/japan-x.mjs';
-import { MAX_COMPANY_MONITORING_X_RETURNED_POSTS } from '../scripts/lib/company-monitoring-x-provider.mjs';
 
 const DAY_KEY = 'intelligence:x-post-budget:v1:day:2026-09-02';
 const MONTH_KEY = 'intelligence:x-post-budget:v1:month:2026-09';
@@ -793,30 +792,6 @@ describe('X Post budget key scope', () => {
     coverageId: `japan-mod:slot-${slot}`,
     coverageUnitPosts: JAPAN_MOD_X_SLOT_POSTS,
     previousModelCoverageUnit: false,
-  });
-
-  it('holds two Japan MOD reads a day that company monitoring cannot spend', async () => {
-    const nowMs = Date.parse('2026-09-02T12:00:00.000Z');
-    const redis = makeRedis({}, nowMs);
-    const budget = sharedModelBudget(redis, nowMs);
-    const spare = DEFAULT_X_POST_DAILY_LIMIT - DEFAULT_X_DAILY_COVERAGE_POSTS;
-    assert.equal(spare, MAX_COMPANY_MONITORING_X_RETURNED_POSTS, 'one full Company Monitoring lease fits beside the hold');
-    assert.ok(DEFAULT_X_POST_DAILY_LIMIT * 31 <= DEFAULT_X_POST_MONTHLY_LIMIT, 'the monthly limit never binds before the daily one');
-
-    const company = await budget.reserve({ consumer: 'company-monitoring', operation: 'search', requestedPosts: spare });
-    assert.equal(company.allowed, true);
-    assert.equal(redis.store.get(COVERAGE_MODEL_KEY), `fixed-slots-v1:${DEFAULT_X_DAILY_COVERAGE_POSTS}`);
-    const overflow = await budget.reserve({ consumer: 'company-monitoring', operation: 'search', requestedPosts: 1 });
-    assert.equal(overflow.allowed, false);
-    assert.equal(overflow.reason, 'daily_limit');
-
-    for (const slot of [0, 1]) {
-      const japan = await budget.reserve(japanRead(slot));
-      assert.equal(japan.allowed, true, `slot ${slot}`);
-    }
-    const third = await budget.reserve(japanRead(1));
-    assert.equal(third.allowed, false, 'one read per slot');
-    assert.equal(redis.store.get(COVERAGE_HOLD_KEY), String(DEFAULT_X_CURATED_DAILY_COVERAGE_POSTS));
   });
 
   it('Japan retries a denied read through real admission but never spends an accounted slot twice', async () => {

@@ -3138,40 +3138,6 @@ describe('PRO widget — i18n keys and CSS', () => {
 // and server/gateway.ts:521-526. A regression here surfaces as a misleading
 // "PRO key rejected. Update wm-pro-key…" 403 in the modal — the user has no
 // tester key, so the suggested action is a dead end.
-describe('widget-agent edge proxy — Convex entitlement fallback', () => {
-  const edge = src('api/widget-agent.ts');
-
-  it('imports getEntitlements from server/_shared/entitlement-check', () => {
-    assert.ok(
-      /import\s*\{[^}]*\bgetEntitlements\b[^}]*\}\s*from\s*['"][^'"]*entitlement-check['"]/.test(edge),
-      'api/widget-agent.ts must import getEntitlements for Dodo entitlement fallback',
-    );
-  });
-
-  it('Clerk JWT path falls back to Convex entitlement when role !== "pro"', () => {
-    const bearerIdx = edge.indexOf("authHeader?.startsWith('Bearer ')");
-    assert.ok(bearerIdx !== -1, 'Bearer-token branch not found in api/widget-agent.ts');
-    // Constrain the search to the bearer-token branch only.
-    const region = edge.slice(bearerIdx, bearerIdx + 2000);
-    assert.ok(
-      region.includes('getEntitlements(session.userId)'),
-      'Bearer-token branch must call getEntitlements(session.userId) when Clerk role !== "pro"',
-    );
-    assert.ok(
-      /features\.tier\s*>=\s*1/.test(region),
-      'Bearer-token branch must accept Convex entitlement tier >= 1',
-    );
-  });
-
-  it('does NOT 403 immediately on session.role !== "pro"', () => {
-    // The legacy shape `if (session.role !== 'pro') return 403` is the bug —
-    // it would short-circuit before the Convex fallback. Lock it out.
-    assert.ok(
-      !/if\s*\(\s*session\.role\s*!==\s*['"]pro['"]\s*\)\s*\{\s*return\s+json\([^}]*403/.test(edge),
-      'api/widget-agent.ts must NOT 403 on session.role !== "pro" without checking Convex entitlement',
-    );
-  });
-});
 
 // ---------------------------------------------------------------------------
 // entitlement-check — cache-write failure must NOT collapse to "no entitlement"
@@ -3405,57 +3371,6 @@ describe('panel-layout — Pro add-block gating reacts to entitlement updates', 
   });
 });
 
-describe('entitlement-check — cache-write failure does not collapse confirmed entitlement', () => {
-  const src_ = src('server/_shared/entitlement-check.ts');
-
-  it('setCachedJson call is wrapped in its own try/catch', () => {
-    // Find the success-path block: `if (result) { … setCachedJson(…) … return result }`
-    const successIdx = src_.indexOf('if (result) {');
-    assert.ok(successIdx !== -1, 'success-path "if (result)" branch not found');
-    const region = src_.slice(successIdx, successIdx + 1500);
-
-    const setIdx = region.indexOf('setCachedJson(');
-    assert.ok(setIdx !== -1, 'setCachedJson call missing from success path');
-
-    // Walk backward from setCachedJson to find the nearest enclosing `try {`
-    // BEFORE the outer catch. The outer try is at the top of the function,
-    // far away — we want a LOCAL try/catch around the cache write so the
-    // safety property is explicit at the call site.
-    const beforeSet = region.slice(0, setIdx);
-    const lastTry = beforeSet.lastIndexOf('try {');
-    const lastCatch = beforeSet.lastIndexOf('catch');
-    assert.ok(
-      lastTry !== -1 && lastTry > lastCatch,
-      'setCachedJson must be inside a LOCAL try/catch within the success branch — relying on setCachedJson to swallow its own errors is fragile',
-    );
-
-    // The success-path return must come AFTER the try/catch, not inside the catch.
-    const returnIdx = region.indexOf('return result', setIdx);
-    assert.ok(
-      returnIdx !== -1,
-      '`return result` must follow the cache-write try/catch so a swallowed cache error still returns the confirmed entitlement',
-    );
-  });
-
-  it('cache-write catch logs but does not return null or throw', () => {
-    const successIdx = src_.indexOf('if (result) {');
-    const region = src_.slice(successIdx, successIdx + 1500);
-    // The catch block for cache write must NOT contain `return null` — that
-    // would re-introduce the bug. It also must not rethrow.
-    const cacheCatchMatch = region.match(/catch\s*\(\s*cacheErr[^)]*\)\s*\{([^}]*)\}/);
-    assert.ok(cacheCatchMatch, 'cache-write catch block must be named distinctly (e.g. cacheErr) so future readers see the intent');
-    const cacheCatchBody = cacheCatchMatch[1];
-    assert.ok(
-      !/return\s+null/.test(cacheCatchBody),
-      'cache-write catch must NOT return null — a confirmed entitlement must survive cache-write failure',
-    );
-    assert.ok(
-      !/throw\b/.test(cacheCatchBody),
-      'cache-write catch must NOT rethrow — that would bubble to the outer catch and collapse to null',
-    );
-  });
-});
-
 describe('WidgetChatModal — preflight 403 message branches on auth mode', () => {
   const modal = src('src/components/WidgetChatModal.ts');
   const en = JSON.parse(src('src/locales/en.json'));
@@ -3525,24 +3440,3 @@ describe('WidgetChatModal — preflight 403 message branches on auth mode', () =
 // during a Convex/Upstash outage. Emit a structured log at the 403 site so
 // on-call can grep Vercel logs and disambiguate incident vs not-entitled
 // without waiting for refund tickets.
-describe('widget-agent edge proxy — fail-closed observability', () => {
-  const edge = src('api/widget-agent.ts');
-
-  it('403 site emits a structured log with reason + userId + entitlementTier', () => {
-    const idx = edge.indexOf("error: 'Pro subscription required'");
-    assert.ok(idx !== -1, 'Pro-required 403 site not found');
-    // Walk backward from the 403 to find the preceding console.warn — must
-    // sit in the same allowed-check block, not in some unrelated error path.
-    const before = edge.slice(Math.max(0, idx - 1500), idx);
-    assert.ok(
-      /console\.warn\([^)]*widget-agent[^)]*pro-required/i.test(before),
-      'A console.warn naming "widget-agent" + "pro-required" must precede the 403 return',
-    );
-    assert.ok(before.includes('reason'), 'Structured log must include "reason" field (not_entitled vs service_unavailable)');
-    assert.ok(before.includes('userId'), 'Structured log must include userId for grep/correlation');
-    assert.ok(
-      before.includes('service_unavailable') && before.includes('not_entitled'),
-      'Structured log must distinguish service_unavailable (Convex/Redis down) from not_entitled (real free user)',
-    );
-  });
-});

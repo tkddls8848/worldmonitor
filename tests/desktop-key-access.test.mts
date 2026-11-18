@@ -180,34 +180,5 @@ describe('admitsDesktopKeyPrincipal (R8: kind before plan)', () => {
 });
 
 describe('entitlement crosswalk', () => {
-  it('lists the desktop-key capability against both Pro plans and classifies every desktop field', () => {
-    const out = execFileSync(
-      process.execPath,
-      ['--input-type=module', '-e', `
-        const m = await import('./scripts/generate-entitlement-crosswalk.mjs');
-        process.stdout.write(JSON.stringify(m.MAP.map(([re, v]) => [re.source, v])));
-      `],
-      { encoding: 'utf8' },
-    );
-    const map: Array<[string, { cap?: string; exclude?: string }]> = JSON.parse(out);
-    const classify = (rule: string) => map.find(([src]) => new RegExp(src).test(rule))?.[1];
-    for (const plan of ['PRO', 'PRO_BUSINESS']) {
-      for (const field of ['desktopKeyAccess', 'maxDesktopKeys', 'desktopKeyRequestsPerDay', 'desktopKeyBurstPerMinute']) {
-        assert.equal(classify(`catalog:${plan}.${field}`)?.cap, 'desktop.keys', `${plan}.${field}`);
-      }
-    }
-  });
 
-  it('the generator emits catalog rules for the desktop fields on both Pro plans', () => {
-    execFileSync(process.execPath, ['scripts/generate-entitlement-crosswalk.mjs'], { encoding: 'utf8' });
-    const payload = JSON.parse(readFileSync('docs/generated/entitlement-crosswalk.json', 'utf8'));
-    const cap = payload.capabilities.find((c: { id: string }) => c.id === 'desktop.keys');
-    assert.ok(cap, 'desktop.keys capability is present');
-    const rules = new Set(cap.rules.map((r: { rule: string }) => r.rule));
-    for (const plan of ['PRO', 'PRO_BUSINESS']) {
-      assert.ok(rules.has(`catalog:${plan}.desktopKeyAccess`), `${plan}.desktopKeyAccess`);
-      assert.ok(rules.has(`catalog:${plan}.maxDesktopKeys`), `${plan}.maxDesktopKeys`);
-    }
-    assert.equal(payload.totals.unmappedGates, 0);
-  });
 });

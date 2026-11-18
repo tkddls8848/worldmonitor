@@ -42,7 +42,6 @@ const CHECK_CONCURRENCY = Math.max(1, Math.min(4, availableParallelism()));
 export const STEPS = [
   ['CII coverage baseline', [NODE, 'scripts/generate-cii-coverage-baseline.mjs']],
   ['browser news catalog', [...TSX, 'scripts/generate-browser-news-catalog.mjs']],
-  ['entitlement crosswalk', [NODE, 'scripts/generate-entitlement-crosswalk.mjs']],
   ['source attribution', [NODE, 'scripts/source-attribution.mjs'], '--write'],
   ['locale keys', [NODE, 'scripts/sync-locale-keys.mjs']],
   ['zh-TW locales', ['python3', 'scripts/convert-zh-tw.py']],

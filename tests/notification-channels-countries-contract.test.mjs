@@ -12,23 +12,10 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const edgeSrc = readFileSync(resolve(__dirname, '..', 'api', 'notification-channels.ts'), 'utf-8');
 const convexHttpSrc = readFileSync(resolve(__dirname, '..', 'convex', 'http.ts'), 'utf-8');
 const convexRulesSrc = readFileSync(resolve(__dirname, '..', 'convex', 'alertRules.ts'), 'utf-8');
 
 describe('notification country-scope forwarding contract', () => {
-  it('quiet-hours and digest edge saves forward countries to Convex relay', () => {
-    assert.match(
-      edgeSrc,
-      /action === 'set-quiet-hours'[\s\S]*?countries[\s\S]*?convexRelay\(\{[\s\S]*?countries/,
-      'set-quiet-hours must forward countries',
-    );
-    assert.match(
-      edgeSrc,
-      /action === 'set-digest-settings'[\s\S]*?countries[\s\S]*?convexRelay\(\{[\s\S]*?countries/,
-      'set-digest-settings must forward countries',
-    );
-  });
 
   it('Convex HTTP forwards countries into first-row insert-capable mutations', () => {
     assert.match(
@@ -40,19 +27,6 @@ describe('notification country-scope forwarding contract', () => {
       convexHttpSrc,
       /setDigestSettingsForUser[\s\S]*?countries:\s*Array\.isArray\(body\.countries\)/,
       'setDigestSettingsForUser call must include countries',
-    );
-  });
-
-  it('set-notification-config rejects non-array countries before mutation forwarding', () => {
-    assert.match(
-      edgeSrc,
-      /countries\s*!==\s*undefined\s*&&\s*!Array\.isArray\(countries\)[\s\S]*?COUNTRIES_MUST_BE_ARRAY/,
-      'Vercel edge route must reject non-array countries',
-    );
-    assert.match(
-      convexHttpSrc,
-      /body\.countries\s*!==\s*undefined\s*&&\s*!Array\.isArray\(body\.countries\)[\s\S]*?COUNTRIES_MUST_BE_ARRAY/,
-      'Convex HTTP route must reject non-array countries',
     );
   });
 
@@ -85,20 +59,6 @@ describe('notification country-scope forwarding contract', () => {
   // Review round 2: the Convex-layer 400 is only useful if the public edge
   // forwards it. The set-alert-rules edge handler previously collapsed every
   // non-ok relay response into a generic 500 — mirror set-notification-config.
-  it('edge set-alert-rules forwards relay 400/402 with body intact', () => {
-    // The passthrough lives in one helper shared by every alert-rule action
-    // (the per-account row cap 400 must reach the client from all of them).
-    assert.match(
-      edgeSrc,
-      /async function relayValidationPassthrough\([\s\S]*?resp\.status !== 400 && resp\.status !== 402[\s\S]*?return json\(payload, resp\.status/,
-      'relayValidationPassthrough must forward 400/402 with the relay body',
-    );
-    assert.match(
-      edgeSrc,
-      /action === 'set-alert-rules'[\s\S]*?if \(!resp\.ok\) \{[\s\S]*?await relayValidationPassthrough\(resp, corsHeaders\)[\s\S]*?if \(passthrough\) return finish\(passthrough\)/,
-      'edge set-alert-rules must pass through 400/402 instead of collapsing to 500',
-    );
-  });
 
   // Review round 2: set-notification-config now forwards tickers, so it can
   // throw TICKERS_LIMIT_EXCEEDED; and its catch must decode the JSON-string

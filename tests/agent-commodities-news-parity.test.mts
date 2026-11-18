@@ -23,19 +23,6 @@ describe('commodities news agent parity (#5889)', () => {
     );
   });
 
-  it('gives MCP tools every category each digest edition emits', () => {
-    // nlp-tools.ts builds its category enum from this generated layout.
-    for (const [edition, categories] of Object.entries(NEWS_POOL_LAYOUT.editions)) {
-      const feedKeys = [
-        ...Object.keys(VARIANT_FEEDS[edition] ?? {}),
-        ...(edition === 'full' && INTEL_SOURCES.length > 0 ? ['intel'] : []),
-      ].sort();
-      assert.deepEqual([...categories].sort(), feedKeys, `${edition} categories must match its digest (and no extras)`);
-    }
-    const nlpSrc = readFileSync(join(ROOT, 'api/mcp/registry/nlp-tools.ts'), 'utf8');
-    assert.match(nlpSrc, /const ALL_DIGEST_CATEGORIES = \[\.\.\.new Set\(Object\.values\(NEWS_POOL_LAYOUT\.editions\)/);
-  });
-
   it('keeps the published MCP server card discoverable for category filtering', () => {
     const card = JSON.parse(readFileSync(
       join(ROOT, 'public/.well-known/mcp/server-card.json'),

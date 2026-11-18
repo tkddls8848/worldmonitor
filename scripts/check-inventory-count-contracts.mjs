@@ -40,28 +40,11 @@ export const INVENTORY_CONTRACTS = Object.freeze([
     surface('tests/panel-config-guardrails.test.mjs', ['allRegistryPanelIds', 'panelCommandKeywordCounts', 'categoryMappedPanelIds', 'scheduled', 'primed']),
     surface('tests/news-panel-key-reachability.test.mts', ['feedCategories', 'catalogPanelKeys', 'registrations']),
   ]),
-  contract('mcp-output-schema-tools', 'TOOL_REGISTRY and the tools/list response', ['parity'], 'replace', 'Exact tool/schema set parity makes arbitrary tool floors redundant.', [
-    surface('tests/mcp-output-schema-coverage.test.mjs', ['registry', 'tools']),
-  ]),
-  contract('mcp-tool-annotations', 'TOOL_REGISTRY and the tools/list response', ['parity'], 'replace', 'Every discovered tool must have matching protocol annotations.', [
-    surface('tests/mcp-tool-annotations.test.mjs', ['registry', 'tools']),
-  ]),
-  contract('mcp-protocol-tools', 'the MCP tools/list response', ['parity'], 'replace', 'Protocol assertions cover the complete returned tool set.', [
-    surface('tests/mcp-protocol-conformance.test.mjs', ['step1bListBody.result.tools', 'step3Body.result.tools']),
-    surface('tests/mcp.test.mjs', ['body.result.tools', 'TOOL_REGISTRY']),
-    surface('tests/mcp-resources.test.mjs', ['uiUris', 'listedUiUris']),
-  ]),
   contract('openapi-server-specs', 'generated per-service OpenAPI JSON/YAML files', ['parity'], 'replace', 'Exact JSON/YAML sibling and per-spec server coverage protects the full discovered universe.', [
     surface('tests/openapi-servers-contract.test.mjs', ['serviceJsonSpecs', 'serviceYamlSpecs']),
   ]),
-  contract('openapi-security-specs', 'generated per-service OpenAPI specifications', ['parity'], 'replace', 'Every discovered service and operation receives the security contract.', [
-    surface('tests/openapi-security-contract.test.mjs', ['serviceSpecs']),
-  ]),
   contract('openapi-jmespath-specs', 'generated per-service OpenAPI specifications and their GET operations', ['parity'], 'replace', 'Exact sibling and operation coverage replaces aggregate spec and operation totals.', [
     surface('tests/openapi-jmespath-contract.test.mjs', ['serviceJsonSpecs', 'serviceYamlSpecs', 'jsonServiceGetIds', 'yamlServiceGetIds', 'bundleGetIds']),
-  ]),
-  contract('openapi-rate-limit-operations', 'all operations discovered from generated service OpenAPI specifications', ['parity'], 'replace', 'Classified-operation coverage and bundle parity replace operation floors.', [
-    surface('tests/openapi-rate-limit-errors-contract.test.mjs', ['serviceJson', 'serviceYaml', 'jsonServiceOperationIds', 'yamlServiceOperationIds', 'bundleOperationIds']),
   ]),
   contract('route-cache-tiers', 'generated GET routes and RPC_CACHE_TIER keys', ['parity'], 'replace', 'Exact route-to-tier set parity already detects additions and removals.', [
     surface('tests/route-cache-tier.test.mjs', ['getRoutes', 'tierKeys']),

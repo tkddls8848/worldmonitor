@@ -21,24 +21,6 @@ it.each([401, 403])('clears prior family observations after actual website HTTP 
     expect(next.families.filter(row => row.family !== 'military').every(row => row.state === 'locked')).toBe(true);
   } finally { vi.unstubAllGlobals(); }
 });
-it.each([401, 403])('clears prior observations through the actual MCP HTTP %i carrier and native adapter', async status => {
-  const { COUNTRY_VIEW_TOOLS } = await import('../../api/mcp/registry/country-view');
-  const tool = COUNTRY_VIEW_TOOLS.find(value => value.name === 'get_country_brief_section')!;
-  vi.stubEnv('MCP_INTERNAL_HMAC_SECRET', 'controlled-country-signals-denial-fixture-secret-0123456789abcdef');
-  const previous = projectQualifiedCountrySignals('IR', qualifiedFixtureOutcomes());
-  vi.stubGlobal('fetch', vi.fn(async () => new Response('Denied', { status })));
-  try {
-    const source = await createHostCountryBriefSource(async (_name, args) => {
-      const result = await tool._execute!(args as Record<string, unknown>, 'https://www.worldmonitor.app', { kind: 'pro', userId: 'controlled-user', mcpTokenId: 'controlled-token' }, { countryPanelCode: 'IR', inboundHostClass: 'www', downstreamOrigin: 'https://www.worldmonitor.app', downstreamOriginTag: 'controlled' });
-      expect(result).toMatchObject({ state: 'locked' });
-      return result;
-    });
-    const next = await loadQualifiedCountrySignals(source, 'IR', new AbortController().signal, military(), previous);
-    expect(next.families.find(row => row.family === 'radiation')).toMatchObject({ state: 'locked', observations: [] });
-    expect(next.details?.critical).toBe(0);
-    expect(next.families.filter(row => row.family !== 'military').every(row => row.state === 'locked')).toBe(true);
-  } finally { vi.unstubAllGlobals(); vi.unstubAllEnvs(); }
-});
 describe('qualified country source to rendered view and context', () => {
   it('shows the same populated 1/4/3/2 and top three through website and native generated adapters', async () => {
     const outcomes = qualifiedFixtureOutcomes();

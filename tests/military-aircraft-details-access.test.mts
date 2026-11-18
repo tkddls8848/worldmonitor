@@ -5,10 +5,6 @@ import { getAircraftDetails } from '../server/worldmonitor/military/v1/get-aircr
 import { getAircraftDetailsBatch } from '../server/worldmonitor/military/v1/get-aircraft-details-batch.ts';
 import { _resetTrackedAircraftCacheForTests } from '../server/worldmonitor/military/v1/_tracked-aircraft.ts';
 import { sidecarCacheSet } from '../server/_shared/sidecar-cache.ts';
-import {
-  ENDPOINT_RATE_POLICIES,
-  FAIL_CLOSED_ENDPOINT_RATE_POLICY_REQUIRED,
-} from '../server/_shared/rate-limit.ts';
 import { PREMIUM_RPC_PATHS } from '../src/shared/premium-paths.ts';
 import { GENERATED_MESSAGE_RULES } from '../src/generated/server/request_validation.ts';
 import { validationFailure } from './helpers/validation-failure.mts';
@@ -53,14 +49,6 @@ function ctx(headers: Record<string, string> = {}) {
 }
 
 describe('Wingbits aircraft-details access contract', () => {
-  it('uses the same 30/min fail-closed policy as the batch route', () => {
-    assert.deepEqual(ENDPOINT_RATE_POLICIES[AIRCRAFT_DETAILS_PATH], { limit: 30, window: '60 s' });
-    assert.equal(
-      FAIL_CLOSED_ENDPOINT_RATE_POLICY_REQUIRED[AIRCRAFT_DETAILS_PATH]?.reason,
-      'Single aircraft enrichment proxies the external Wingbits provider on cache miss.',
-    );
-    assert.deepEqual(ENDPOINT_RATE_POLICIES[BATCH_PATH], { limit: 30, window: '60 s' });
-  });
 
 
   it('keeps an API-key caller working and forwards the Wingbits credential upstream', async () => {

@@ -2,11 +2,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 
-import analyticsHealthHandler from '../api/analytics-health.js';
 import correlationRuntimeModeHandler from '../api/correlation-runtime-mode.js';
 import securityReportHandler from '../api/security/report.js';
-import { checkProMcpAccess } from '../server/_shared/pro-mcp-gate.ts';
-import { ENDPOINT_RATE_POLICIES } from '../server/_shared/rate-limit.ts';
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -18,18 +15,6 @@ const mcpErrors = read('docs/mcp-error-catalog.mdx');
 const usageErrors = read('docs/usage-errors.mdx');
 
 describe('API documentation stays aligned with runtime policy boundaries', () => {
-  it('names the rate-limited agent front doors without assigning a limiter to every surface', () => {
-    for (const path of ['/api/ask', '/api/a2a', '/api/docs-mcp']) {
-      assert.deepEqual(ENDPOINT_RATE_POLICIES[path], { limit: 60, window: '60 s' });
-    }
-    for (const path of ['/api/agent-auth', '/api/md-twin']) {
-      assert.equal(ENDPOINT_RATE_POLICIES[path], undefined);
-    }
-
-    assert.match(agentDiscovery, /`\/ask`[^\n]*`\/a2a`[^\n]*`\/docs\/mcp`[^\n]*60\/min\/IP/i);
-    assert.match(agentDiscovery, /`\/agent\/auth`[^\n]*markdown twins[^\n]*do not claim[^\n]*per-IP/i);
-    assert.doesNotMatch(agentDiscovery, /each has its own per-IP rate limit/i);
-  });
 
   it('separates the wildcard-CORS reporting sink from origin-gated operational routes', async () => {
     const reportPreflight = await securityReportHandler(new Request('https://worldmonitor.app/api/security/report', {
@@ -42,7 +27,7 @@ describe('API documentation stays aligned with runtime policy boundaries', () =>
     const hostileRequest = () => new Request('https://worldmonitor.app/api/internal', {
       headers: { Origin: 'https://untrusted.example' },
     });
-    for (const handler of [analyticsHealthHandler, correlationRuntimeModeHandler]) {
+    for (const handler of [correlationRuntimeModeHandler]) {
       const response = await handler(hostileRequest());
       assert.equal(response.status, 403);
       assert.equal(response.headers.get('Access-Control-Allow-Origin'), null);
@@ -51,25 +36,6 @@ describe('API documentation stays aligned with runtime policy boundaries', () =>
     assert.match(apiPlatform, /`POST \/api\/security\/report`[\s\S]*?wildcard CORS/i);
     assert.match(apiPlatform, /analytics-health[\s\S]*?correlation-runtime-mode[\s\S]*?origin-gated/i);
     assert.doesNotMatch(apiPlatform, /Internal ops surfaces[^\n]*origin-gated/i);
-  });
-
-  it('documents a provider-confirmed lapse as the restricted free-account OAuth path', () => {
-    const gate = checkProMcpAccess({
-      planKey: 'pro',
-      features: { tier: 0, mcpAccess: false },
-      validUntil: 0,
-      billingStatus: 'subscription_lapsed',
-    }, Date.now());
-    assert.deepEqual(gate, { kind: 'free_account' });
-
-    for (const doc of [mcpOverview, apiOauth, mcpErrors, usageErrors]) {
-      assert.match(doc, /provider-confirmed[^\n]*(?:lapse|ended coverage)[^\n]*free-account/i);
-    }
-    assert.doesNotMatch(mcpOverview, /lapsed[^\n]*refused at the OAuth step/i);
-    assert.doesNotMatch(apiOauth, /refuses lapsed paid entitlements/i);
-    assert.doesNotMatch(mcpErrors, /provider-confirmed lapses use the more specific `lapsed-subscription` reason/i);
-    assert.doesNotMatch(usageErrors, /Pro-MCP OAuth flow[^\n]*subscription_lapsed[^\n]*verdict/i);
-    assert.doesNotMatch(usageErrors, /INSUFFICIENT_TIER[^.\n]*including[^.\n]*provider-confirmed lapse/i);
   });
 
   it('does not describe confirmed-lapse OAuth identities as revoked', () => {

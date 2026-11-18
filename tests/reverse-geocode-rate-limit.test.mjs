@@ -16,7 +16,6 @@ delete process.env.UPSTASH_REDIS_REST_URL;
 delete process.env.UPSTASH_REDIS_REST_TOKEN;
 
 const { default: handler } = await import('../api/reverse-geocode.js');
-const { __resetRateLimitForTest } = await import('../api/_rate-limit.js');
 
 const ENDPOINT = 'https://api.worldmonitor.app/api/reverse-geocode';
 
@@ -89,7 +88,6 @@ afterEach(() => {
     if (!(key in originalEnv)) delete process.env[key];
   }
   Object.assign(process.env, originalEnv);
-  __resetRateLimitForTest();
 });
 
 

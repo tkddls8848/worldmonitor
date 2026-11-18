@@ -401,28 +401,11 @@ export const PUBLIC_NO_AUTH_RPC_PATHS = new Set<string>([
   '/api/scorecard/v1/list-five-factor-scorecards',
   '/api/intelligence/v1/get-china-decision-signals',
   '/api/resilience/v1/get-runtime-manifest',
-  // Lead-capture RPCs serve ANONYMOUS prospects by definition: the /pro
-  // marketing page contact form and the waitlist/desktop signup both POST
-  // without a wms_ session or API key (see pro-test/src/App.tsx onSubmit and
-  // src/services/runtime.ts isKeyFreeApiTarget). A freely-mintable anonymous
-  // session token would add zero abuse protection here — the real gates live
-  // in the handlers: server-side Turnstile (fails closed in production),
-  // honeypot, free-email-domain rejection, per-IP endpoint rate limits
-  // (server/_shared/rate-limit.ts: 3/h and 5/h), and the Convex per-email
-  // throttle. Pinned by tests/leads-gateway-public.test.mts.
-  '/api/leads/v1/submit-contact',
-  '/api/leads/v1/register-interest',
   // #9093 "Report an error": readers report without an account by design. The
   // gates are the handler's honeypot and validation, a fail-closed per-IP
   // endpoint limit (server/_shared/rate-limit.ts), and a bounded review queue
   // that refuses rather than evicts. Reports are never applied automatically.
   '/api/news/v1/submit-error-report',
-  // #8721 agent feedback: agents without a key are the reporters we most want
-  // (threat model Decision 1), so REST callers are always anonymous. Gates:
-  // the 24 KB body cap, the outer per-IP endpoint limit, and
-  // admitFeedbackReport's fail-closed buckets. Reports are never acted on
-  // automatically.
-  '/api/feedback/v1/submit-report',
   // #9093 /trust page: public label history and today's counts. Read-only,
   // public coverage metadata; a visitor who lands on /trust directly has no
   // session cookie. Bounded by a per-IP endpoint limit and the 'fast' CDN tier.

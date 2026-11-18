@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { afterEach, beforeEach, describe, it, mock } from 'node:test';
 import marketGateway from '../api/market/v1/[rpc].ts';
-import { __resetRateLimitForTest } from '../api/_rate-limit.js';
 import { issueSessionToken } from '../api/_session.js';
 
 const originalEnv = { ...process.env };
@@ -15,7 +14,6 @@ let limiterDecisions: number;
 let unexpectedFetches: string[];
 
 beforeEach(() => {
-  __resetRateLimitForTest();
   snapshot = seed;
   seedFails = false;
   limiterDecisions = 0;

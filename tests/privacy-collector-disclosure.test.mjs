@@ -130,12 +130,6 @@ describe('privacy policy discloses every live collector', () => {
  */
 const SERVER_SUBPROCESSORS = [
   {
-    name: /Upstash/,
-    proof: 'server/_shared/rate-limit.ts',
-    pattern: /@upstash\/ratelimit/,
-    why: 'rate-limit keys are derived from the client IP',
-  },
-  {
     // The docs site, including this policy, is a Mintlify project. vercel.json
     // (which proxied /docs to worldmonitor.mintlify.dev) is gone, so the proof
     // is the project's own Mintlify configuration.

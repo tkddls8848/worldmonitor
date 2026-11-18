@@ -3,12 +3,10 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { createDomainGateway } from '../gateway';
 import { getWingbitsLiveFlight } from '../worldmonitor/military/v1/get-wingbits-live-flight';
 import { createMilitaryServiceRoutes, type MilitaryServiceHandler } from '../../src/generated/server/worldmonitor/military/v1/service_server';
-import { ENDPOINT_RATE_POLICIES, FAIL_CLOSED_ENDPOINT_RATE_POLICY_REQUIRED, __resetRateLimitForTest } from '../_shared/rate-limit';
 import { __resetKeyPrefixCacheForTests } from '../_shared/redis';
 import { issueSessionToken } from '../../api/_session.js';
 
 const PATH = '/api/military/v1/get-wingbits-live-flight';
-const originalPolicy = ENDPOINT_RATE_POLICIES[PATH];
 const env = { ...process.env };
 let cache: Map<string, string>;
 let counters: Map<string, number>;
@@ -27,7 +25,6 @@ beforeEach(() => {
   delete process.env.AXIOM_TOKEN;
   delete process.env.WINGBITS_API_KEY;
   __resetKeyPrefixCacheForTests();
-  __resetRateLimitForTest();
   vi.spyOn(Date, 'now').mockReturnValue(1700000000000);
   vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
     const url = new URL(String(input));
@@ -70,12 +67,9 @@ beforeEach(() => {
   gateway = createDomainGateway([...routes, { ...routes[0]!, path: '/api/economic/v1/list-world-bank-indicators' }]);
 });
 afterEach(() => {
-  if (originalPolicy) ENDPOINT_RATE_POLICIES[PATH] = originalPolicy;
-  else delete ENDPOINT_RATE_POLICIES[PATH];
   vi.restoreAllMocks();
   for (const key of Object.keys(process.env)) if (!(key in env)) delete process.env[key];
   Object.assign(process.env, env);
-  __resetRateLimitForTest();
   __resetKeyPrefixCacheForTests();
 });
 async function request(hex = '000001', session = true, path = PATH) {
@@ -83,10 +77,6 @@ async function request(hex = '000001', session = true, path = PATH) {
   return gateway(new Request(`https://worldmonitor.app${path}?icao24=${hex}`, { headers: { 'x-real-ip': '192.0.2.47', ...cookie } }), { waitUntil: () => {} });
 }
 
-test('production route has the 30/min fail-closed registration', () => {
-  expect(ENDPOINT_RATE_POLICIES[PATH]).toEqual({ limit: 30, window: '60 s' });
-  expect(FAIL_CLOSED_ENDPOINT_RATE_POLICY_REQUIRED).toHaveProperty(PATH);
-});
 test('ordinary session retains full live/schedule/photo response and no-store caching', async () => {
   const response = await request();
   expect(response.status).toBe(200);
@@ -99,12 +89,10 @@ test('ordinary session retains full live/schedule/photo response and no-store ca
   expect(providerCalls).toHaveLength(4);
 });
 test('baseline global policy allows the 31st unique aircraft lookup', async () => {
-  delete ENDPOINT_RATE_POLICIES[PATH];
   for (let i = 1; i <= 31; i++) expect((await request(i.toString(16).padStart(6, '0'))).status).toBe(200);
   expect(providerCalls).toHaveLength(124);
 });
 test('baseline without Redis still reaches provider', async () => {
-  delete ENDPOINT_RATE_POLICIES[PATH];
   delete process.env.UPSTASH_REDIS_REST_URL;
   delete process.env.UPSTASH_REDIS_REST_TOKEN;
   expect((await request()).status).toBe(200);

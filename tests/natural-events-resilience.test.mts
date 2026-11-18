@@ -4,7 +4,6 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createRedisFetch } from './helpers/fake-upstash-redis.mts';
 import { listNaturalEvents } from '../server/worldmonitor/natural/v1/list-natural-events.ts';
-import { CACHE_TOOLS } from '../api/mcp/registry/cache-tools.ts';
 import { sanitizeBootstrapValue } from '../api/_bootstrap-public-payload.js';
 import { projectNaturalEventsRetention } from '../api/_natural-events-dashboard.js';
 import { __testing__ as health } from '../api/health.js';
@@ -101,10 +100,7 @@ test('real seed writes eighteen-hour cache TTL while retained EONET expires abso
   const rpc = await listNaturalEvents({} as never, {});
   const raw = repeated.values[KEY].data;
   const bootstrap = sanitizeBootstrapValue('naturalEvents', raw);
-  const tool = CACHE_TOOLS.find(tool => tool.name === 'get_natural_disasters')!;
-  const mcp = { events: raw };
-  tool._postFilter!(mcp, {});
-  for (const response of [rpc, bootstrap, mcp.events]) {
+  for (const response of [rpc, bootstrap]) {
     assert.equal(response.events.length, 1);
     assert.equal(response.events[0].sourceName, 'GDACS');
     assert.equal(response.fetchedAt, START);

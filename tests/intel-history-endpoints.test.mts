@@ -828,9 +828,7 @@ const timelineProtoSrc = read('proto/worldmonitor/intelligence/v1/get_intel_time
 const similarProtoSrc = read('proto/worldmonitor/intelligence/v1/get_similar_events.proto');
 const handlerIndexSrc = read('server/worldmonitor/intelligence/v1/handler.ts');
 const premiumPathsSrc = read('src/shared/premium-paths.ts');
-const entitlementSrc = read('server/_shared/entitlement-check.ts');
 const gatewaySrc = read('server/gateway.ts');
-const rateLimitSrc = read('server/_shared/rate-limit.ts');
 const openApiJson = JSON.parse(read('docs/api/IntelligenceService.openapi.json')) as {
   paths: Record<string, Record<string, unknown>>;
 };
@@ -911,7 +909,6 @@ describe('gateway wiring', () => {
       // Membership in the real Set is what gates the route; a grep of the
       // module text also matches a path sitting in a comment.
       assert.ok(PREMIUM_RPC_PATHS.has(path), `${path} missing from PREMIUM_RPC_PATHS`);
-      assert.match(entitlementSrc, new RegExp(`'${path}': 1`));
     });
   }
 
@@ -931,17 +928,6 @@ describe('gateway wiring', () => {
     }
   });
 
-  it('fails closed on the two embedding-backed routes', () => {
-    for (const path of [
-      '/api/intelligence/v1/search-intel-history',
-      '/api/intelligence/v1/get-similar-events',
-    ]) {
-      const policyIdx = rateLimitSrc.indexOf('export const ENDPOINT_RATE_POLICIES');
-      const failClosedIdx = rateLimitSrc.indexOf('export const FAIL_CLOSED_ENDPOINT_RATE_POLICY_REQUIRED');
-      assert.ok(rateLimitSrc.slice(policyIdx, failClosedIdx).includes(`'${path}'`), `${path} needs an endpoint policy`);
-      assert.ok(rateLimitSrc.slice(failClosedIdx).includes(`'${path}'`), `${path} needs a fail-closed requirement`);
-    }
-  });
 });
 
 describe('generated OpenAPI', () => {

@@ -16,10 +16,6 @@ import {
   toGetResilienceIndicatorsResponse,
 } from '../server/worldmonitor/resilience/v1/get-resilience-indicators.ts';
 import { __clearLocalUnavailableBackoffForTests } from '../server/_shared/redis.ts';
-import {
-  ENDPOINT_RATE_POLICIES,
-  FAIL_CLOSED_ENDPOINT_RATE_POLICY_REQUIRED,
-} from '../server/_shared/rate-limit.ts';
 import { createRedisFetch } from './helpers/fake-upstash-redis.mts';
 
 function emptyScore(score = 0): ResilienceDimensionScore {
@@ -237,11 +233,6 @@ describe('GetResilienceIndicators materialization', () => {
 });
 
 describe('GetResilienceIndicators handler', () => {
-  test('uses a fail-closed route budget for cold scorer fan-out', () => {
-    const path = '/api/resilience/v1/get-resilience-indicators';
-    assert.deepEqual(ENDPOINT_RATE_POLICIES[path], { limit: 60, window: '60 s' });
-    assert.ok(path in FAIL_CLOSED_ENDPOINT_RATE_POLICY_REQUIRED);
-  });
   test('rejects an invalid country before source reads', async () => {
     let reads = 0;
     const handler = createGetResilienceIndicators({

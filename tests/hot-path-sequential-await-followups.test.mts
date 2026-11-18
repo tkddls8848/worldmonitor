@@ -12,12 +12,6 @@ import { fileURLToPath } from 'node:url';
 import { setImmediate as nextTurn } from 'node:timers/promises';
 
 import { timingSafeIncludes } from '../api/_crypto.js';
-import { peekIdempotency } from '../server/_shared/idempotency.ts';
-import {
-  buildInternalMcpHeaders,
-  signInternalMcpRequest,
-  verifyInternalMcpRequestDetailed,
-} from '../server/_shared/mcp-internal-hmac.ts';
 import {
   _resetTrackedAircraftCacheForTests,
   getTrackedAircraftIcao24s,
@@ -69,49 +63,6 @@ describe('constant-time comparisons hash their inputs in one wave', () => {
     assert.equal(miss.waves, 1);
   });
 
-  it('verifyInternalMcpRequestDetailed compares the signature in one wave', async () => {
-    const url = 'https://api.worldmonitor.app/api/intelligence/v1/get-country-risk?country_code=IR';
-    const signed = await signInternalMcpRequest({
-      method: 'GET',
-      url,
-      userId: 'user_wave_test',
-      secret: 'wave-test-secret',
-    });
-    const request = new Request(url, { method: 'GET', headers: buildInternalMcpHeaders(signed) });
-    const { result, waves } = await countDigestWaves(() => verifyInternalMcpRequestDetailed(request, 'wave-test-secret'));
-    assert.equal(result.ok, true);
-    // One wave for the query and body hashes, one for the constant-time
-    // signature compare. A serialized compare adds a third.
-    assert.equal(waves, 2);
-  });
-});
-
-describe('server/_shared/idempotency.ts hashes body and key together', () => {
-  const savedUrl = process.env.UPSTASH_REDIS_REST_URL;
-  const savedToken = process.env.UPSTASH_REDIS_REST_TOKEN;
-  afterEach(() => {
-    if (savedUrl === undefined) delete process.env.UPSTASH_REDIS_REST_URL;
-    else process.env.UPSTASH_REDIS_REST_URL = savedUrl;
-    if (savedToken === undefined) delete process.env.UPSTASH_REDIS_REST_TOKEN;
-    else process.env.UPSTASH_REDIS_REST_TOKEN = savedToken;
-  });
-
-  it('derives the request hash and the Redis key in one digest wave', async () => {
-    delete process.env.UPSTASH_REDIS_REST_URL;
-    delete process.env.UPSTASH_REDIS_REST_TOKEN;
-    const request = new Request('https://api.worldmonitor.app/api/scenario/v1/run-scenario', {
-      method: 'POST',
-      body: JSON.stringify({ scenarioId: 'wave' }),
-    });
-    const { waves } = await countDigestWaves(() => peekIdempotency({
-      request,
-      pathname: '/api/scenario/v1/run-scenario',
-      scope: 'user:wave',
-      idempotencyKey: 'wave-key-1',
-      corsHeaders: {},
-    }));
-    assert.equal(waves, 1);
-  });
 });
 
 describe('tracked-aircraft snapshot reads', () => {

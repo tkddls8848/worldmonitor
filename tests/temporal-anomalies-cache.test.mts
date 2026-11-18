@@ -7,7 +7,6 @@ import { compactWildfireDashboardPayload, WILDFIRE_CANONICAL_DETECTION_LIMIT } f
 
 import { __testing__ } from '../api/health.js';
 import { evaluateFreshness } from '../api/mcp/freshness.ts';
-import { CACHE_TOOLS } from '../api/mcp/registry/cache-tools.ts';
 import {
   COUNT_SOURCE_KEYS,
   TEMPORAL_ANOMALIES_TTL,
@@ -274,12 +273,10 @@ function altSourcesLiveRedis(now = Date.now()) {
   };
 }
 
+// The freshness check the retired MCP get_temporal_anomalies tool declared;
+// evaluateFreshness (api/mcp/freshness.ts) still applies it the same way.
 function temporalAnomaliesCheck() {
-  const tool = CACHE_TOOLS.find((candidate) => candidate.name === 'get_temporal_anomalies');
-  assert.ok(tool, 'get_temporal_anomalies must exist');
-  const check = tool._freshnessChecks?.find((candidate) => candidate.key === 'seed-meta:temporal:anomalies');
-  assert.ok(check, 'get_temporal_anomalies must declare the temporal-anomalies freshness check');
-  return check;
+  return { key: 'seed-meta:temporal:anomalies', maxStaleMin: 45, honorContentAge: true };
 }
 
 function classifyTemporalMeta(meta: Record<string, unknown>, now: number) {

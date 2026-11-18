@@ -150,8 +150,6 @@ describe('Toronto safety qualification wiring (#7012)', () => {
     assert.equal(/gtaupdate\.com|gta-update-police|safety:toronto:gta-update/.test(healthSrc), false);
     const seedHealth = read('api/seed-health.js');
     assert.equal(SAFETY_HINT.test(seedHealth) && /gta-update/.test(seedHealth), false);
-    const mcpApi = read('api/mcp.ts');
-    assert.equal(/gtaupdate|gta-update|safety:toronto:gta-update/.test(mcpApi), false);
   });
 
   it('registers TPS as on-demand health only, not default bootstrap', () => {

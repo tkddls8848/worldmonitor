@@ -1,32 +1,12 @@
-// ENV_PREFIX is shared with the entitlement cache so Convex's cache delete
-// (convex/payments/cacheActions.ts) and this reader use one namespace.
-import { ENV_PREFIX, getConvexSharedSecret, getConvexSiteUrl } from './entitlement-check';
 import type { LlmRoutingPolicy } from './llm';
-import { TRUSTED_USER_ID_HEADER } from './mcp-internal-hmac';
-import { validateBearerToken, verifiedSubjectIgnoringExpiry } from '../auth-session';
-import { getCachedJson, setCachedJson } from './redis.js';
-import { PERSONAL_OWNER_ID } from '../../shared/personal-owner.js';
 
-// Per-customer AI routing restriction (e.g. a contract that says the
-// customer's AI traffic goes to Anthropic directly and nowhere else).
+// AI routing decision for LLM calls that carry the caller's own input.
 //
-// Scope: LLM calls that carry the caller's own input — their queries, context,
-// framework text, chat messages, submitted text. Shared content generated in
-// the background for everyone stays on the default chain.
-//
-// Source of truth: Convex `aiRoutingPolicies`, or for an Enterprise account
-// member without a row the account's providers (convex/lib/enterpriseAccounts.ts),
-// keyed by the Clerk user id the gateway authenticated (`x-user-id`, which the
-// gateway strips from inbound requests and sets only after auth). Operator keys carry no user id and are
-// never restricted.
-//
-// Fail closed: when the lookup cannot answer for a signed-in caller, the
-// decision is `unavailable`, which maps to an empty provider allowlist, so
-// the call reaches no provider instead of the default chain.
-
-const CACHE_TTL_SECONDS = 60;
-const LOOKUP_TIMEOUT_MS = 3_000;
-const CONVEX_PATH = '/api/internal-ai-routing-policy';
+// Personal fork: the single owner has no per-customer routing policy (the
+// policies lived in Convex, keyed by a Clerk user id), so every call takes the
+// default provider chain. No request header is read: a caller-supplied
+// `x-user-id` or bearer token cannot change the decision. The decision type
+// and the helpers below stay so llm.ts and the handlers keep one contract.
 
 export type AiRoutingDecision =
   | { kind: 'default' }
@@ -34,99 +14,17 @@ export type AiRoutingDecision =
   | { kind: 'unavailable' };
 
 const DEFAULT_DECISION: AiRoutingDecision = { kind: 'default' };
-const UNAVAILABLE_DECISION: AiRoutingDecision = { kind: 'unavailable' };
 
-function cacheKey(userId: string): string {
-  return `ai-routing:${ENV_PREFIX}:${userId}`;
+export async function getAiRoutingDecisionForUser(_userId?: string | null): Promise<AiRoutingDecision> {
+  return DEFAULT_DECISION;
 }
 
-function parsePolicy(value: unknown): { ok: true; allowedProviders: string[] | null } | { ok: false } {
-  if (!value || typeof value !== 'object' || !('policy' in value)) return { ok: false };
-  const policy = (value as { policy: unknown }).policy;
-  if (policy === null) return { ok: true, allowedProviders: null };
-  if (!policy || typeof policy !== 'object') return { ok: false };
-  const providers = (policy as { allowedProviders?: unknown }).allowedProviders;
-  if (!Array.isArray(providers) || !providers.every((p) => typeof p === 'string')) return { ok: false };
-  return { ok: true, allowedProviders: providers as string[] };
-}
-
-function toDecision(allowedProviders: string[] | null): AiRoutingDecision {
-  return allowedProviders === null ? DEFAULT_DECISION : { kind: 'restricted', allowedProviders };
-}
-
-export async function getAiRoutingDecisionForUser(userId: string | null | undefined): Promise<AiRoutingDecision> {
-  // Personal fork: the single owner has no stored routing policy and no Convex
-  // backend to hold one, so a lookup could only fail closed to 'unavailable'
-  // and block every LLM call (same default as the brief path, Ruling 8).
-  if (!userId || userId === PERSONAL_OWNER_ID) return DEFAULT_DECISION;
-  try {
-    const cached = parsePolicy(await getCachedJson(cacheKey(userId), true));
-    if (cached.ok) return toDecision(cached.allowedProviders);
-
-    const siteUrl = getConvexSiteUrl();
-    const secret = getConvexSharedSecret();
-    if (!siteUrl || !secret) return UNAVAILABLE_DECISION;
-
-    const response = await fetch(`${siteUrl}${CONVEX_PATH}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'worldmonitor-gateway/1.0',
-        'x-convex-shared-secret': secret,
-      },
-      body: JSON.stringify({ userId }),
-      signal: AbortSignal.timeout(LOOKUP_TIMEOUT_MS),
-    });
-    if (!response.ok) {
-      console.warn(`[ai-routing] policy lookup HTTP ${response.status}`);
-      return UNAVAILABLE_DECISION;
-    }
-    const body = await response.json();
-    const parsed = parsePolicy(body);
-    if (!parsed.ok) {
-      console.warn('[ai-routing] policy lookup returned an unexpected shape');
-      return UNAVAILABLE_DECISION;
-    }
-    try {
-      await setCachedJson(cacheKey(userId), { policy: parsed.allowedProviders === null ? null : { allowedProviders: parsed.allowedProviders } }, CACHE_TTL_SECONDS, true);
-    } catch { /* a cache write failure must not change the decision */ }
-    return toDecision(parsed.allowedProviders);
-  } catch (err) {
-    // sentry-coverage-ok: fail-closed decision; the caller's LLM call reaches no provider.
-    console.warn('[ai-routing] policy lookup failed:', err instanceof Error ? err.message : String(err));
-    return UNAVAILABLE_DECISION;
-  }
-}
-
-/**
- * Decision for a gateway-routed request. The gateway-set user id wins; a
- * handler that authenticated the caller itself (resolvePremiumCallerIdentity)
- * passes that user id as the fallback, which covers routes where the gateway
- * does not resolve a Clerk session (free modes, cache reads). Otherwise a
- * bearer is verified here before its policy is read: an expired Clerk token
- * still binds its signer's policy, a token Clerk never signed counts as no
- * identity, and an unreachable key set fails closed. A call with no identity
- * at all (an internal invocation, an anonymous caller) is unrestricted, like
- * any other caller without a user id.
- */
+/** Decision for a gateway-routed request: always the default chain. */
 export async function resolveAiRouting(
-  request: Request | undefined,
-  fallbackUserId?: string | null,
+  _request?: Request,
+  _fallbackUserId?: string | null,
 ): Promise<AiRoutingDecision> {
-  const userId = request?.headers?.get(TRUSTED_USER_ID_HEADER) || fallbackUserId;
-  if (userId) return getAiRoutingDecisionForUser(userId);
-  const authorization = request?.headers?.get('Authorization');
-  if (!authorization?.startsWith('Bearer ')) return DEFAULT_DECISION;
-  const token = authorization.slice(7);
-  const session = await validateBearerToken(token);
-  if (session.valid && session.userId) return getAiRoutingDecisionForUser(session.userId);
-  if (session.reason === 'unverifiable') return UNAVAILABLE_DECISION;
-  // Clerk session tokens expire within a minute, so a restricted customer's
-  // request often carries a just-expired one: hold it to its signer's policy.
-  // A token Clerk never signed proves no identity, like an anonymous caller.
-  const subject = await verifiedSubjectIgnoringExpiry(token);
-  if (subject === 'unverifiable') return UNAVAILABLE_DECISION;
-  return subject ? getAiRoutingDecisionForUser(subject) : DEFAULT_DECISION;
+  return DEFAULT_DECISION;
 }
 
 /** The `routingPolicy` to pass to llm.ts. */

@@ -25,12 +25,6 @@ import {
   MAX_SUB_RESPONSE_BYTES,
 } from '../server/worldmonitor/batch/v1/execute-batch.ts';
 import type { FetchLike } from '../server/worldmonitor/batch/v1/execute-batch.ts';
-import {
-  __resetRateLimitForTest,
-  hasEndpointRatePolicy,
-  SUB_REQUEST_MARKER_HEADER,
-  TRUSTED_RATE_LIMIT_PRINCIPAL_HEADER,
-} from '../server/_shared/rate-limit.ts';
 import { installRedis } from './helpers/fake-upstash-redis.mts';
 
 const ORIGIN = 'https://www.worldmonitor.app';
@@ -63,10 +57,6 @@ describe('executeBatch handler', () => {
   const originalEnv = { ...process.env };
 
   beforeEach(() => {
-    // The pre-dispatch caller charge is a real limiter call. The shared fake is
-    // always-allow, so these tests exercise the admitted path; the refusal
-    // paths install their own transport below.
-    __resetRateLimitForTest();
     installRedis({});
   });
 
@@ -76,7 +66,6 @@ describe('executeBatch handler', () => {
       if (!(key in originalEnv)) delete process.env[key];
     }
     Object.assign(process.env, originalEnv);
-    __resetRateLimitForTest();
   });
 
   it('fans out operations as same-origin GETs and aggregates results in order', async () => {
@@ -146,7 +135,7 @@ describe('executeBatch handler', () => {
     assert.equal(sent.get('cookie'), null);
     assert.equal(sent.get('x-user-id'), null);
     // Personal fork: no rate-limit admission crosses with the sub-request.
-    assert.equal(sent.get(SUB_REQUEST_MARKER_HEADER), null);
+    assert.equal(sent.get('x-wm-sub-request'), null);
   });
 
   it('authenticates sub-requests to the local API with the server\'s own token, never the caller\'s', async () => {

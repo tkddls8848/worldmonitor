@@ -8,21 +8,9 @@
  * - Unknown errors -- 500 Internal Server Error
  */
 
-import { isBillingVerificationCode } from './_shared/entitlement-check';
-import { rateLimitHeaders } from './_shared/api-key-rate-limit';
-
-export interface ApiErrorRateLimitMetadata {
-  limit: number;
-  remaining: number;
-  resetMs: number;
-  windowSec?: number;
-}
-
 export interface ApiErrorHttpResponseMetadata {
   /** Opt in to the public REST error envelope instead of the legacy RPC one. */
   envelope: 'error';
-  /** Live quota state for a 429. Ignored for every other status. */
-  rateLimit?: ApiErrorRateLimitMetadata;
 }
 
 type ApiErrorWithHttpResponseMetadata = Error & {
@@ -76,16 +64,6 @@ function getHttpResponseMetadata(error: Error): ApiErrorHttpResponseMetadata | n
   return metadata?.envelope === 'error' ? metadata : null;
 }
 
-function isValidRateLimitMetadata(metadata: ApiErrorRateLimitMetadata): boolean {
-  return Number.isFinite(metadata.limit)
-    && metadata.limit > 0
-    && Number.isFinite(metadata.remaining)
-    && metadata.remaining >= 0
-    && Number.isFinite(metadata.resetMs)
-    && metadata.resetMs >= 0
-    && (metadata.windowSec === undefined || (Number.isFinite(metadata.windowSec) && metadata.windowSec > 0));
-}
-
 export function mapErrorToResponse(error: unknown, _req: Request): Response {
   // ApiError: has statusCode property (e.g., upstream returns 429, 403, etc.)
   if (error instanceof Error && 'statusCode' in error) {
@@ -94,12 +72,6 @@ export function mapErrorToResponse(error: unknown, _req: Request): Response {
     // Only expose error.message for 4xx (client errors). Use generic message for 5xx
     // to avoid leaking internal details like upstream URLs or API key fragments (H-3 fix).
     const retryAfter = (statusCode === 429 || statusCode === 503) && 'retryAfter' in error ? Number((error as Error & { retryAfter: number }).retryAfter) : null;
-    const billingCodeCandidate = 'billingVerificationCode' in error
-      ? (error as Error & { billingVerificationCode: unknown }).billingVerificationCode
-      : null;
-    const billingVerificationCode = isBillingVerificationCode(billingCodeCandidate)
-      ? billingCodeCandidate
-      : null;
     const exposesRetryableUnavailable = statusCode === 503
       && retryAfter != null
       && Number.isFinite(retryAfter)
@@ -113,22 +85,6 @@ export function mapErrorToResponse(error: unknown, _req: Request): Response {
     if (retryAfter != null && Number.isFinite(retryAfter)) {
       extras.retryAfter = retryAfter;
       headers['Retry-After'] = String(retryAfter);
-    }
-    if (billingVerificationCode) {
-      extras.code = billingVerificationCode;
-      headers['X-Billing-Verification'] = billingVerificationCode;
-    }
-    if (
-      statusCode === 429
-      && retryAfter != null
-      && Number.isFinite(retryAfter)
-      && httpResponseMetadata?.rateLimit
-      && isValidRateLimitMetadata(httpResponseMetadata.rateLimit)
-    ) {
-      Object.assign(headers, rateLimitHeaders({
-        ...httpResponseMetadata.rateLimit,
-        retryAfterSec: retryAfter,
-      }));
     }
 
     if (statusCode >= 500) {

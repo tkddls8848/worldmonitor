@@ -2,10 +2,7 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import { strict as assert } from 'node:assert';
 
 import { createDomainGateway } from '../server/gateway.ts';
-import { __resetRateLimitForTest } from '../server/_shared/rate-limit.ts';
-import { __resetRateLimitForTest as __resetLegacyRateLimitForTest } from '../api/_rate-limit.js';
 import { isPageTwinSibling } from '../api/_md-url-twin.ts';
-import mdTwinHandler from '../api/md-twin.ts';
 import notFoundHandler from '../api/not-found.ts';
 import { createRedisFetch } from './helpers/fake-upstash-redis.mts';
 
@@ -58,7 +55,6 @@ function makeGateway(onRpcDispatch: () => void) {
 function countNetworkFetches(): { count: number } {
   process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example';
   process.env.UPSTASH_REDIS_REST_TOKEN = 'token';
-  __resetRateLimitForTest();
   const redis = createRedisFetch({});
   const counter = { count: 0 };
   globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -194,7 +190,6 @@ describe('gateway markdown twins run every gate the direct route runs', () => {
     delete process.env.VERCEL_ENV;
     delete process.env.WORLDMONITOR_VALID_KEYS;
     delete process.env.CF_EDGE_PROOF_SECRET;
-    __resetRateLimitForTest();
     upstreamSpend = 0;
     limiterKeys = [];
     egressFetches = 0;
@@ -232,7 +227,6 @@ describe('gateway markdown twins run every gate the direct route runs', () => {
   });
 
   afterEach(() => {
-    __resetRateLimitForTest();
   });
 
   const call = (path: string, extra: Record<string, string> = {}) =>
@@ -297,7 +291,6 @@ describe('legacy /api/*.md twins (api/not-found.ts)', () => {
     process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example';
     process.env.UPSTASH_REDIS_REST_TOKEN = 'token';
     delete process.env.CF_EDGE_PROOF_SECRET;
-    __resetLegacyRateLimitForTest();
     siblingFetches = [];
     limiterKeys = [];
     exhausted = new Set();
@@ -324,7 +317,6 @@ describe('legacy /api/*.md twins (api/not-found.ts)', () => {
   });
 
   afterEach(() => {
-    __resetLegacyRateLimitForTest();
   });
 
   const call = (path: string, extra: Record<string, string> = {}) =>
@@ -349,80 +341,5 @@ describe('legacy /api/*.md twins (api/not-found.ts)', () => {
     assert.deepEqual(siblingFetches, []);
     const ok = await call('/api/health.md');
     assert.notEqual(ok.headers.get('access-control-allow-origin'), '*');
-  });
-});
-
-describe('page twins (api/md-twin.ts) never hop into an API function', () => {
-  let siblingFetches: string[] = [];
-
-  beforeEach(() => {
-    siblingFetches = [];
-    globalThis.fetch = (async (input: RequestInfo | URL) => {
-      siblingFetches.push(new URL(String(input instanceof Request ? input.url : input)).pathname);
-      return new Response('<html><head><title>x</title></head><body><main><h1>x</h1></main></body></html>', {
-        headers: { 'content-type': 'text/html' },
-      });
-    }) as typeof fetch;
-  });
-
-  for (const query of [
-    '/api/news/v1/search-fact-checks.md',
-    'api/health.md',
-    '%61pi/news/v1/search-fact-checks.md',
-    // Encoded dot segments: the URL parser collapses `%2e%2e` onto `/api/`.
-    'x/%2e%2e/api/news/v1/search-fact-checks.md',
-    'x/%2E%2e/api/news/v1/search-fact-checks.md',
-    'x/%252e%252e/api/news/v1/search-fact-checks.md',
-    'x/%25252e%25252e/api/news/v1/search-fact-checks.md',
-    'x/.%2e/ask.md',
-    'ask.md',
-    'ASK.md',
-    'mcp.md',
-    'oauth/token.md',
-  ]) {
-    it(`404s /api/md-twin?path=${query} without a sibling fetch`, async () => {
-      const res = await mdTwinHandler(new Request(
-        `https://www.worldmonitor.app/api/md-twin?path=${encodeURIComponent(query)}&query=x`,
-      ));
-      assert.equal(res.status, 404);
-      assert.deepEqual(siblingFetches, []);
-    });
-  }
-
-  it('does not follow a page redirect into /api/', async () => {
-    globalThis.fetch = (async (input: RequestInfo | URL) => {
-      const path = new URL(String(input instanceof Request ? input.url : input)).pathname;
-      siblingFetches.push(path);
-      return new Response(null, { status: 308, headers: { location: '/api/news/v1/search-fact-checks?query=x' } });
-    }) as typeof fetch;
-    const res = await mdTwinHandler(new Request('https://www.worldmonitor.app/api/md-twin?path=some-page.md'));
-    assert.equal(res.status, 404);
-    assert.deepEqual(siblingFetches, ['/some-page']);
-  });
-
-  it('keeps a page twin publicly cacheable when the page itself is private, no-cache', async () => {
-    globalThis.fetch = (async (input: RequestInfo | URL) => {
-      siblingFetches.push(new URL(String(input instanceof Request ? input.url : input)).pathname);
-      return new Response('<html><head><title>x</title></head><body><main><h1>x</h1></main></body></html>', {
-        headers: { 'content-type': 'text/html', 'cache-control': 'private, no-cache, must-revalidate' },
-      });
-    }) as typeof fetch;
-    const res = await mdTwinHandler(new Request('https://www.worldmonitor.app/api/md-twin?path=dashboard.md'));
-    assert.equal(res.status, 200);
-    assert.equal(res.headers.get('cache-control'), 'public, max-age=3600');
-  });
-
-  it('still serves an ordinary page twin', async () => {
-    const res = await mdTwinHandler(new Request('https://www.worldmonitor.app/api/md-twin?path=pricing.md'));
-    assert.equal(res.status, 200);
-    assert.equal(res.headers.get('cache-control'), 'public, max-age=3600');
-    assert.equal(siblingFetches[0], '/pricing');
-  });
-
-  it('classifies encoded traversal and ordinary pages as page twin siblings correctly', () => {
-    assert.equal(isPageTwinSibling('/x/%2e%2e/api/health'), false);
-    assert.equal(isPageTwinSibling('/x/%252e%252e/api/health'), false);
-    assert.equal(isPageTwinSibling('/pricing'), true);
-    assert.equal(isPageTwinSibling('/countries/iran/'), true);
   });
 });

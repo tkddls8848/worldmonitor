@@ -3,7 +3,6 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { createDomainGateway } from '../gateway';
 import { searchImagery } from '../worldmonitor/imagery/v1/search-imagery';
 import { createImageryServiceRoutes } from '../../src/generated/server/worldmonitor/imagery/v1/service_server';
-import { ENDPOINT_RATE_POLICIES, FAIL_CLOSED_ENDPOINT_RATE_POLICY_REQUIRED, __resetRateLimitForTest } from '../_shared/rate-limit';
 import { __resetKeyPrefixCacheForTests } from '../_shared/redis';
 import { issueSessionToken } from '../../api/_session.js';
 import { createRedisFetch } from '../../tests/helpers/fake-upstash-redis.mts';
@@ -24,7 +23,6 @@ beforeEach(() => {
   delete process.env.LOCAL_API_MODE;
   delete process.env.AXIOM_TOKEN;
   __resetKeyPrefixCacheForTests();
-  __resetRateLimitForTest();
   vi.spyOn(Date, 'now').mockReturnValue(1700000000000);
   const redis = createRedisFetch({});
   const counters = new Map<string, number>();
@@ -59,7 +57,6 @@ afterEach(() => {
   vi.restoreAllMocks();
   for (const key of Object.keys(process.env)) if (!(key in env)) delete process.env[key];
   Object.assign(process.env, env);
-  __resetRateLimitForTest();
   __resetKeyPrefixCacheForTests();
 });
 
@@ -70,11 +67,6 @@ async function request(index = 1, session = true, path = PATH) {
     headers: { 'x-real-ip': '192.0.2.54', ...cookie },
   }), { waitUntil: () => {} });
 }
-
-test('registers a 30/min fail-closed imagery provider policy', () => {
-  expect(ENDPOINT_RATE_POLICIES[PATH]).toEqual({ limit: 30, window: '60 s' });
-  expect(FAIL_CLOSED_ENDPOINT_RATE_POLICY_REQUIRED).toHaveProperty(PATH);
-});
 
 test('invalid datetime returns a field violation before STAC', async () => {
   const routes = createImageryServiceRoutes({ searchImagery });

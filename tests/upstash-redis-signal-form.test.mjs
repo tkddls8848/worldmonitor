@@ -27,8 +27,8 @@ describe('Upstash Redis clients', () => {
     return [...src.matchAll(/new Redis\(([^)\n]*)/g)].map((match) => ({ file, arg: match[1] }));
   });
 
-  it('finds the limiter and store clients this guard protects', () => {
-    assert.ok(sites.length >= 10, `expected the rate-limit Redis clients, found ${sites.length}`);
+  it('finds the store clients this guard protects', () => {
+    assert.ok(sites.length >= 1, `expected at least one Upstash Redis client, found ${sites.length}`);
   });
 
   it('build every client from upstashRedisOptions, never an inline options object', () => {

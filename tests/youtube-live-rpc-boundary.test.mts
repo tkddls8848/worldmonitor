@@ -5,7 +5,6 @@ import { getYoutubeLiveStreamInfo } from '../server/worldmonitor/aviation/v1/get
 import { createAviationServiceRoutes } from '../src/generated/server/worldmonitor/aviation/v1/service_server.ts';
 import { aviationHandler } from '../server/worldmonitor/aviation/v1/handler.ts';
 import { createDomainGateway, serverOptions } from '../server/gateway.ts';
-import { __resetRateLimitForTest, ENDPOINT_RATE_POLICIES } from '../server/_shared/rate-limit.ts';
 import { installRedis } from './helpers/fake-upstash-redis.mts';
 import { issueSessionToken } from '../api/_session.js';
 import { validationFailure } from './helpers/validation-failure.mts';
@@ -29,7 +28,6 @@ beforeEach(async () => {
   process.env.WS_RELAY_URL = 'https://relay.example.test';
   process.env.WM_SESSION_SECRET = 'synthetic-youtube-anonymous-session-secret';
   session = (await issueSessionToken()).token;
-  __resetRateLimitForTest();
   calls = [];
   oembedFails = false;
   redis = installRedis({});
@@ -49,7 +47,6 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
   for (const key of Object.keys(process.env)) if (!(key in originalEnv)) delete process.env[key];
   Object.assign(process.env, originalEnv);
-  __resetRateLimitForTest();
 });
 function request(params: Record<string, string> = {}) {
   return new Request(`https://api.worldmonitor.app${PATH}?${new URLSearchParams(params)}`, { headers: { 'X-WorldMonitor-Key': session, 'x-vercel-forwarded-for': '192.0.2.1' } });
