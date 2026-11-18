@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 
 import { callLlm, callLlmReasoningStream, resolveProviderChain } from '../server/_shared/llm.ts';
-import { aiRoutingCacheSuffix, getAiRoutingDecisionForUser, toLlmRoutingPolicy } from '../server/_shared/ai-routing-policy.ts';
+import { aiRoutingCacheSuffix, getAiRoutingDecisionForUser, resolveAiRouting, toLlmRoutingPolicy } from '../server/_shared/ai-routing-policy.ts';
 import { toAnthropicMessages } from '../server/_shared/llm-anthropic.ts';
 import { classifyEvent } from '../server/worldmonitor/intelligence/v1/classify-event.ts';
 import { searchIntelHistory } from '../server/worldmonitor/intelligence/v1/search-intel-history.ts';
@@ -166,6 +166,20 @@ describe('AI routing policy', () => {
       const { sent } = stubUpstreams();
       assert.deepEqual(await getAiRoutingDecisionForUser('owner'), { kind: 'default' });
       assert.equal(sent.length, 0);
+    });
+
+    it('ignores a spoofed x-user-id and a bearer token: every request gets the default chain', async () => {
+      // A policy exists for the spoofed user; nothing may look it up.
+      const { sent } = stubUpstreams({ policies: { [RESTRICTED_USER]: { status: 200, policy: { allowedProviders: ['anthropic'] } } } });
+      const spoofed = new Request('https://worldmonitor.app/api/intelligence/v1/classify-event', {
+        headers: { 'x-user-id': RESTRICTED_USER, Authorization: 'Bearer not-a-real-clerk-token' },
+      });
+      assert.deepEqual(await resolveAiRouting(spoofed), { kind: 'default' });
+      assert.deepEqual(await resolveAiRouting(spoofed, RESTRICTED_USER), { kind: 'default' });
+      assert.deepEqual(await getAiRoutingDecisionForUser(RESTRICTED_USER), { kind: 'default' });
+      assert.equal(toLlmRoutingPolicy(await resolveAiRouting(spoofed)), null);
+      assert.equal(aiRoutingCacheSuffix(await resolveAiRouting(spoofed)), '');
+      assert.equal(sent.length, 0, 'no policy lookup or token verification leaves the server');
     });
 
     it('gives unrestricted callers the existing cache namespace', () => {

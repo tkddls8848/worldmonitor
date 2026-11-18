@@ -37,6 +37,13 @@ import {
   collectDeferredServiceViolations,
 } from './lib/sebuf-deferred-services.mjs';
 
+// Services the personal fork retired: their gateways (api/<domain>/v1/[rpc].ts) and
+// handlers were deleted in phase 1, but proto/ and src/generated/ must not change
+// until phase 2 can regenerate them (no buf here). Exactly these two keys are exempt
+// from the "every generated service has a gateway" check. The exemption fails as soon
+// as the generated service is pruned (phase 2: drop the entry) or a gateway comes back.
+const RETIRED_GENERATED_SERVICES = new Set(['leads/v1', 'feedback/v1']);
+
 const VALID_CATEGORIES = new Set([
   'external-protocol',
   'non-json',
@@ -296,7 +303,11 @@ if (existsSync(GEN_SERVER_DIR)) {
       if (!existsSync(serviceServer)) continue;
       const key = `${snakeDomain}/${versionDir.name}`;
       seenGeneratedServices.add(key);
-      if (!seenGatewayDomains.has(key) && !DEFERRED_GENERATED_SERVICES.has(key)) {
+      if (
+        !seenGatewayDomains.has(key)
+        && !DEFERRED_GENERATED_SERVICES.has(key)
+        && !RETIRED_GENERATED_SERVICES.has(key)
+      ) {
         const kebabDomain = snakeDomain.replace(/_/g, '-');
         violation(
           relative(ROOT, serviceServer),
@@ -318,6 +329,24 @@ for (const deferredViolation of collectDeferredServiceViolations({
   today: new Date().toISOString().slice(0, 10),
 })) {
   violation(deferredViolation.file, deferredViolation.message, deferredViolation.remedy);
+}
+
+if (existsSync(GEN_SERVER_DIR)) {
+  for (const key of RETIRED_GENERATED_SERVICES) {
+    if (!seenGeneratedServices.has(key)) {
+      violation(
+        'scripts/enforce-sebuf-api-contract.mjs',
+        `retired generated service ${key} no longer exists`,
+        'Remove its RETIRED_GENERATED_SERVICES entry (phase 2 pruned the generated code).',
+      );
+    } else if (seenGatewayDomains.has(key)) {
+      violation(
+        'scripts/enforce-sebuf-api-contract.mjs',
+        `retired generated service ${key} has an HTTP gateway again`,
+        'Remove its RETIRED_GENERATED_SERVICES entry, or delete the gateway again.',
+      );
+    }
+  }
 }
 
 // --- Proto query-param implementation guard ---

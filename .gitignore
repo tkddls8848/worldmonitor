@@ -109,6 +109,7 @@ api/*/v1/\[rpc\].js
 /api/latest-brief.js
 /api/brief/share-url.js
 /api/brief/\[userId\]/\[issueDate\].js
+/api/travel-risk-assessment.js
 .claudedocs/
 
 # Large generated data files (reproduced by scripts/)

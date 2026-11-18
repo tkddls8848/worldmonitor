@@ -246,9 +246,4 @@ describe('stored fields', () => {
     assert.equal(classifyAgentClient('unknown client'), null);
   });
 
-  it('matches the placeholder the legacy OAuth register endpoint stores', async () => {
-    const { readFile } = await import('node:fs/promises');
-    const register = await readFile(new URL('../api/oauth/register.js', import.meta.url), 'utf8');
-    assert.ok(register.includes(`: '${UNKNOWN_CLIENT_NAME}'`), 'api/oauth/register.js placeholder must equal UNKNOWN_CLIENT_NAME');
-  });
 });

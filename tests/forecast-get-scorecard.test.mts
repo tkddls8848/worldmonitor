@@ -783,4 +783,13 @@ describe('the accuracy audit lifts with the scorecard on every surface (#8990)',
       assert.equal(forecastAccuracyAudit(seed(29, 5), { override: off as never }), STANDING_ACCURACY_AUDIT, `override ${String(off)} cannot lift an unmeasurable record`);
     }
   });
+
+  it('never prints a malformed override: it holds the standing notice instead', () => {
+    for (const bad of [{}, { since: 'yesterday', issue: 1, reason: 'x' }, { since: '2027-01-02', issue: 0, reason: 'x' }, { since: '2027-01-02', issue: 1, reason: ' ' }, true]) {
+      assert.equal(accuracyAuditOverride(bad as never), STANDING_ACCURACY_AUDIT, JSON.stringify(bad));
+      assert.equal(forecastAccuracyAudit(seed(30, 5), { override: bad as never }), STANDING_ACCURACY_AUDIT, JSON.stringify(bad));
+    }
+    assert.equal(accuracyAuditOverride(null), null);
+    if (FORECAST_ACCURACY_AUDIT_OVERRIDE) assert.ok(isAccuracyAudit(FORECAST_ACCURACY_AUDIT_OVERRIDE), 'the configured override is well-formed');
+  });
 });

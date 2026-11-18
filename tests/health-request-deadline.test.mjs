@@ -1,17 +1,16 @@
 /**
  * /api/health refresh owner under a degraded Redis (#8268 follow-up).
  *
- * With every Redis command answering just inside its own timeout, the lease
- * owner's request used to run each timeout back to back (snapshot read, lease,
- * sweep, relay-gate cache/lease/probe/publish, snapshot write): about 30 s in
- * this fixture and ~55 s in production, past the 25 s edge first-byte limit
- * and the 30 s lease TTL. The owner now works against one per-request
- * deadline and, when it runs out, serves the last published verdict as a
- * stale 200 instead of hanging.
+ * With every Redis command running to its own timeout, the lease owner's
+ * request runs each timeout back to back (snapshot read, lease, sweep, snapshot
+ * write), past the 25 s edge first-byte limit and the 30 s lease TTL unless it
+ * stops. The owner works against one per-request deadline and, when it runs
+ * out, serves the last published verdict as a stale 200 instead of hanging.
  *
- * Time is simulated: each outgoing request completes at (its own
- * AbortSignal.timeout − 1 ms) on a discrete-event clock, so concurrent
- * requests overlap as they would in production and the test runs instantly.
+ * Time is simulated on a discrete-event clock, so concurrent requests overlap
+ * as they would in production and the test runs instantly. A healthy request
+ * completes in 1 ms; under degrade() each request completes at its own
+ * AbortSignal.timeout, which the owner clamps to its remaining work budget.
  */
 import { afterEach, beforeEach, test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -19,21 +18,17 @@ import assert from 'node:assert/strict';
 process.env.UPSTASH_REDIS_REST_URL = 'https://mock-upstash.test';
 process.env.UPSTASH_REDIS_REST_TOKEN = 'mock-token';
 
-const { default: handler, __testing__: t } = await import('../api/health.js');
+const { default: handler, handleHealth, __testing__: t } = await import('../api/health.js');
 
-const SITE = 'https://relay-deadline.convex.site';
 const EDGE_FIRST_BYTE_LIMIT_MS = 25_000;
 const realFetch = globalThis.fetch;
 const realNow = Date.now;
 const realTimeout = AbortSignal.timeout;
-const ENV_KEYS = ['CONVEX_SITE_URL', 'CONVEX_URL', 'CONVEX_TENANT_RELAY_SECRET', 'VERCEL', 'VERCEL_ENV'];
+const ENV_KEYS = ['VERCEL', 'VERCEL_ENV'];
 const savedEnv = {};
 
 beforeEach(() => {
   for (const key of ENV_KEYS) savedEnv[key] = process.env[key];
-  // The relay-gate probe applies, so the owner's critical path includes it.
-  process.env.CONVEX_SITE_URL = SITE;
-  process.env.CONVEX_TENANT_RELAY_SECRET = 'deadline-test-secret';
 });
 
 afterEach(() => {
@@ -77,7 +72,7 @@ function degradedRedisFixture() {
     setImmediate(pump);
   };
   const elapse = (signal) => {
-    const latency = slow ? Math.max(0, (timeouts.get(signal) ?? 0) - 1) : 1;
+    const latency = slow ? Math.max(0, timeouts.get(signal) ?? 0) : 1;
     return new Promise((resolve) => {
       pending.push({ at: now + latency, resolve });
       schedulePump();
@@ -122,12 +117,6 @@ function degradedRedisFixture() {
       if (script === t.HEALTH_VERDICT_MUTATION_SCRIPT) {
         return { result: live(keys[0]) === argv[0] ? 'OK' : null };
       }
-      if (count === 2) {
-        // Relay-gate owner publish: fenced on the probe lease.
-        if (live(keys[0]) !== argv[0]) return { result: 0 };
-        set(keys[1], argv[1], argv[2]);
-        return { result: 'OK' };
-      }
       set(keys[0], argv[1], argv[2]);
       return { result: 'OK' };
     }
@@ -146,10 +135,6 @@ function degradedRedisFixture() {
   globalThis.fetch = async (input, init = {}) => {
     const url = String(input instanceof Request ? input.url : input);
     await elapse(init.signal);
-    if (new URL(url).origin === SITE) {
-      ops.push('RELAY_PROBE');
-      return Response.json({ error: 'MISSING_FIELDS' }, { status: 400 });
-    }
     const commands = JSON.parse(init.body);
     ops.push(commands.length > 1 ? 'SWEEP' : commands[0][0]);
     return Response.json(commands.map(run));
@@ -169,6 +154,9 @@ const ctx = () => {
   return { waitUntil: (promise) => { waited.push(promise); }, waited };
 };
 const request = (c) => handler(new Request('https://api.worldmonitor.app/api/health?compact=1'), c);
+// handleHealth's workBudgetMs seam: the same owner path with a shorter work budget.
+const requestWithBudget = (c, workBudgetMs) =>
+  handleHealth(new Request('https://api.worldmonitor.app/api/health?compact=1'), c, { workBudgetMs });
 
 test('the deadline leaves room for the stale read under the edge first-byte limit and the lease TTL', () => {
   assert.ok(t.HEALTH_REQUEST_DEADLINE_MS <= EDGE_FIRST_BYTE_LIMIT_MS - 3_000, 'guard band under the 25 s first byte');
@@ -191,11 +179,13 @@ test('healthy Redis: the owner sweeps and serves its own fresh verdict', async (
   assert.ok(f.now - started < 1_000);
 });
 
-test('every Redis op running to its timeout: the owner still answers 200 before the deadline', async () => {
+test('every Redis op running to its timeout: the owner still answers before the deadline', async () => {
+  // Snapshot read, lease, sweep and snapshot write each run to their own cap
+  // (4 s + 4 s + 8 s + 4 s): exactly the 20 s work budget, so the owner serves
+  // its own verdict inside the 22 s deadline and the 25 s edge first byte.
   const f = degradedRedisFixture();
   const first = await request(ctx());
   assert.equal(first.status, 200);
-  // The 60 s snapshot expires; the 600 s last-known copy does not.
   f.advance(61_000);
   f.degrade();
 
@@ -204,13 +194,39 @@ test('every Redis op running to its timeout: the owner still answers 200 before 
   const response = await request(c);
   const elapsed = f.now - started;
 
-  // With the tenant-relay gate probe gone, a fully degraded sweep fits the
-  // work budget, so the owner may answer with its own verdict; the stale
-  // last-known fallback is covered by health-refresh-lease and
-  // health-verdict-snapshot.
   assert.ok(elapsed <= t.HEALTH_REQUEST_DEADLINE_MS, `owner answered after ${elapsed} ms`);
   assert.ok(elapsed < EDGE_FIRST_BYTE_LIMIT_MS);
   assert.equal(response.status, 200, 'UptimeRobot and the capture scripts read non-2xx as down');
   await response.json();
+  await Promise.allSettled(c.waited);
+});
+
+test('a degraded sweep that outruns the work budget: the owner answers stale 200 before its deadline', async () => {
+  const f = degradedRedisFixture();
+  const first = await request(ctx());
+  assert.equal(first.status, 200);
+  const published = await first.json();
+  // The 60 s snapshot expires; the 600 s last-known copy does not.
+  f.advance(61_000);
+  f.degrade();
+
+  // 12 s of work: the snapshot read and lease (8 s) leave 4 s, so the 8 s
+  // sweep is cut at the work deadline and the owner falls back.
+  const workBudgetMs = 12_000;
+  const c = ctx();
+  const started = f.now;
+  const response = await requestWithBudget(c, workBudgetMs);
+  const elapsed = f.now - started;
+
+  assert.ok(elapsed <= workBudgetMs + t.HEALTH_VERDICT_LAST_KNOWN_READ_TIMEOUT_MS, `owner answered after ${elapsed} ms`);
+  assert.equal(response.status, 200, 'UptimeRobot and the capture scripts read non-2xx as down');
+  const body = await response.json();
+  assert.equal(body.stale, true);
+  assert.equal(body.staleReason, 'REFRESH_PENDING');
+  assert.equal(body.status, published.status);
+  assert.equal(body.checkedAt, published.checkedAt, 'the last published verdict, not a partial sweep');
+  // The owner holds a lease that expires on its own; every write it may still
+  // have in flight is token-fenced, so a successor is never overwritten.
+  assert.ok(f.lock, 'the bailed owner keeps its lease until the TTL lapses');
   await Promise.allSettled(c.waited);
 });

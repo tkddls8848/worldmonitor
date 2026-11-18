@@ -86,6 +86,8 @@ export const PERSONAL_EDGE_ENTRIES = [
   'latest-brief.ts',
   'brief/share-url.ts',
   'brief/[userId]/[issueDate].ts',
+  // The dashboard Trip Assessment dialog (src/services/travel-risk-export.ts).
+  'travel-risk-assessment.ts',
 ];
 for (const rel of PERSONAL_EDGE_ENTRIES) {
   const tsFile = path.join(apiDir, rel);

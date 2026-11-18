@@ -154,22 +154,12 @@ test('shared responses use public CORS and RSS is the private exception (#7216)'
     headers: { 'X-WorldMonitor-Key': 'shared-cors-test-key' },
   }));
 
-  const { default: productCatalog } = await import(moduleUrl('../api/product-catalog.js', suffix));
-  const productCatalogResponse = await productCatalog(request('/api/product-catalog'));
-  const rejectedProductCatalogResponse = await productCatalog(request('/api/product-catalog', {
-    origin: 'https://untrusted.example',
-  }));
-
   const problems = [
     ...sharedCorsProblems('gpsjam', gpsJamResponse),
     ...sharedCorsProblems('reverse-geocode', reverseGeocodeResponse),
     ...privateCorsProblems('rss-proxy', rssProxyResponse),
     ...privateCorsProblems('rss-proxy error response', rssProxyErrorResponse, { expectSuccess: false }),
-    ...sharedCorsProblems('product-catalog', productCatalogResponse),
   ];
-  if (rejectedProductCatalogResponse.status !== 403) {
-    problems.push(`product-catalog: disallowed Origin must be rejected before the shared cacheable GET path (got ${rejectedProductCatalogResponse.status})`);
-  }
 
   assert.deepEqual(problems, []);
 });
