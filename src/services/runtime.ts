@@ -508,8 +508,14 @@ export function installWebApiRedirect(): void {
 
   const nativeFetch = window.fetch.bind(window);
   const shouldRedirectPath = (pathWithQuery: string): boolean => pathWithQuery.startsWith('/api/');
+  // The personal ingress requires the owner's HTTP Basic credentials on every
+  // request. A credentials:'omit' read (written for the public CDN tier) would
+  // drop them and get 401, so personal builds send it same-origin instead.
   const withCredentials = (init?: RequestInit): RequestInit => (
-    { ...(init ?? {}), credentials: init?.credentials ?? 'include' }
+    {
+      ...(init ?? {}),
+      credentials: PERSONAL_MODE && init?.credentials === 'omit' ? 'same-origin' : init?.credentials ?? 'include',
+    }
   );
 
   /**
