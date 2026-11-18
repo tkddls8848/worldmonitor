@@ -6,8 +6,9 @@
 //     .js/.mjs/.cjs/.json modules it imports in scripts/, shared/, server/ and
 //     api/ (TypeScript resolution is out of scope), and
 //   - scans the server-side config of fetch targets: every JSON file under
-//     shared/ and scripts/shared/ (the news catalog and its mirror) and the
-//     server/ TypeScript sources,
+//     shared/ and scripts/shared/ (the news catalog and its mirror), the
+//     server/ TypeScript sources, and the api/ handlers (tracked .ts/.js
+//     sources; tests and gitignored build outputs are skipped),
 // and fails on any upstream API/relay host in code. It matches hosts, not file
 // names, so a new seeder or catalog entry with the same target fails too.
 import assert from 'node:assert/strict';
@@ -102,11 +103,28 @@ function walk(dir, keep) {
   return out;
 }
 
+// Gitignored api/ build outputs (see .gitignore): the sebuf gateway and domain
+// handler bundles, the personal edge bundles written next to their .ts source,
+// and the generated inventory facts. Their sources are scanned instead.
+function isApiBuildOutput(file) {
+  const name = path.basename(file);
+  if (name === '[rpc].js' || name.startsWith('[[')) return true;
+  if (rel(file) === 'api/_inventory-facts.generated.js') return true;
+  return name.endsWith('.js') && existsSync(file.replace(/\.js$/, '.ts'));
+}
+
+function apiHandlers() {
+  return walk(path.join(ROOT, 'api'), (name) => /\.(?:ts|js|mjs|cjs)$/.test(name)
+    && !/\.(?:test|spec)\.[cm]?[jt]s$/.test(name) && !name.endsWith('.d.ts'))
+    .filter((file) => !isApiBuildOutput(file));
+}
+
 function serverSideConfig() {
   return [
     ...walk(path.join(ROOT, 'shared'), (name) => name.endsWith('.json')),
     ...walk(path.join(ROOT, 'scripts', 'shared'), (name) => name.endsWith('.json')),
     ...walk(path.join(ROOT, 'server'), (name) => /\.ts$/.test(name) && !/\.(?:test|spec)\.ts$/.test(name) && !name.endsWith('.d.ts')),
+    ...apiHandlers(),
   ];
 }
 
@@ -149,9 +167,34 @@ test('no server-side config of fetch targets names the upstream API or relay hos
   const files = serverSideConfig().filter((file) => !ATTRIBUTION_LEDGERS.has(rel(file)));
   const names = files.map(rel);
   assert.ok(names.includes('shared/news-catalog.json') && names.includes('scripts/shared/news-catalog.json'), 'the news catalog and its mirror are scanned');
+  // The digest's feed fetcher (own-API path feeds, relay fallback) is scanned.
+  assert.ok(names.includes('server/worldmonitor/news/v1/list-feed-digest.ts'), 'list-feed-digest.ts is scanned');
+  // The api/ handlers are scanned, including the Trip Assessment route and the
+  // MCP travel-risk modules it still runs; tests and build outputs are not.
+  for (const expected of [
+    'api/travel-risk-assessment.ts',
+    'api/mcp/registry/travel-risk-tool.ts',
+    'api/mcp/registry/analysis-tools.ts',
+    'api/bootstrap.js',
+    'api/miit-news.js',
+  ]) {
+    assert.ok(names.includes(expected), `${expected} is scanned`);
+  }
+  assert.ok(!names.some((name) => name.startsWith('api/') && /\.test\./.test(name)), 'api/ tests are not scanned');
+  assert.ok(!names.some((name) => /\[rpc\]\.js$/.test(name)), 'api/ build outputs are not scanned');
   for (const file of ATTRIBUTION_LEDGERS.keys()) assert.ok(existsSync(path.join(ROOT, file)), `${file} is still on disk`);
   const offenders = offendersIn(files);
   assert.deepEqual(offenders, [], `Server-side fetch targets must be this fork's own routes or the real source:\n${offenders.join('\n')}`);
+});
+
+test('the api/ build-output filter skips only generated bundles', () => {
+  const at = (p) => path.join(ROOT, p);
+  assert.ok(isApiBuildOutput(at('api/market/v1/[rpc].js')));
+  assert.ok(isApiBuildOutput(at('api/[[...path]].js')));
+  assert.ok(isApiBuildOutput(at('api/_inventory-facts.generated.js')));
+  assert.ok(isApiBuildOutput(at('api/travel-risk-assessment.js')), 'a .js next to its .ts source is a personal edge bundle');
+  assert.ok(!isApiBuildOutput(at('api/bootstrap.js')));
+  assert.ok(!isApiBuildOutput(at('api/_cii-coverage-baseline.generated.js')), 'tracked generated modules stay scanned');
 });
 
 test('the host pattern catches the upstream API and relay defaults and ignores attribution strings', () => {

@@ -25,18 +25,14 @@ const apiFetch = (url, init) => wmApiFetch()(url, init);
 const WM_KEY = process.env.WORLDMONITOR_API_KEY
   || (process.env.WORLDMONITOR_VALID_KEYS ?? '').split(',').map((k) => k.trim()).filter(Boolean)[0]
   || '';
-// Ranking ?refresh=1 is intentionally stronger than a normal premium read:
-// only this seed-only secret can force the expensive recompute path.
+// Optional seed-only secret for ranking ?refresh=1. The personal server allows
+// the refresh for every caller behind its Basic auth, so the header is sent
+// only when the key is set and a missing key does not stop the seeder.
 const WM_REFRESH_KEY = process.env.WORLDMONITOR_SEED_REFRESH_KEY?.trim() || '';
 const SEED_UA = 'Mozilla/5.0 (compatible; WorldMonitor-Seed/1.0)';
 const NEG_SENTINEL = '__WM_NEG__';
 const RANKING_REFRESH_TIMEOUT_MS = 60_000;
 const RANKING_REFRESH_SLOW_MS = 45_000;
-
-function requireSeedRefreshKey() {
-  if (WM_REFRESH_KEY) return;
-  throw new Error('WORLDMONITOR_SEED_REFRESH_KEY is required for resilience ranking refresh');
-}
 
 // Bumped v13 → v14 in lockstep with server/worldmonitor/resilience/v1/
 // _shared.ts for plan 2026-04-25-004 Phase 2 (Ship 2) — adds the new
@@ -800,18 +796,6 @@ async function writeScoreSectionHeartbeat(result) {
 
 async function main() {
   const startedAt = Date.now();
-  try {
-    requireSeedRefreshKey();
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    logSeedResult('resilience:scores', 0, Date.now() - startedAt, {
-      skipped: true,
-      reason: 'missing_seed_refresh_key',
-      error: message,
-    });
-    throw err;
-  }
-
   const result = await seedResilienceScores();
   await writeScoreSectionHeartbeat(result);
   const { extra, intervalFailure, exitCode } = buildSeedResultLogExtra(result);

@@ -909,7 +909,12 @@ async function fetchRssText(
     };
     if (validators?.etag) headers['If-None-Match'] = validators.etag;
     if (validators?.lastModified) headers['If-Modified-Since'] = validators.lastModified;
-    const resp = await fetch(own?.url ?? url, { headers, signal: controller.signal });
+    // The local API token must never follow a 3xx to another origin.
+    const resp = await fetch(own?.url ?? url, {
+      headers,
+      signal: controller.signal,
+      ...(own ? { redirect: 'error' as const } : {}),
+    });
     if (resp.status === 304 && validators) return { text: null, failure: null, notModified: true };
     if (!resp.ok) return { text: null, failure: 'direct-error' };
     // Same 5 MiB ceiling the relay leg enforces; an oversized body throws

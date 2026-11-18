@@ -959,16 +959,16 @@ describe('ensures ranking aggregate is present every cron, with truthful meta', 
     );
   });
 
-  it('fails fast when the dedicated seed refresh key is missing', () => {
-    assert.match(
+  it('runs without the seed refresh key: the personal server no longer checks it', () => {
+    // Personal fork: get-resilience-ranking allows ?refresh=1 for every caller
+    // behind the personal server's Basic auth, so a missing key must not stop
+    // the seeder; the header is sent only when the key is set.
+    assert.doesNotMatch(src, /requireSeedRefreshKey/, 'seeder must not fail fast on a missing refresh key');
+    assert.doesNotMatch(src, /missing_seed_refresh_key/, 'seeder must not report a missing refresh key as a skip');
+    assert.doesNotMatch(
       src,
-      /function requireSeedRefreshKey\(\)[\s\S]*?if \(WM_REFRESH_KEY\) return;[\s\S]*?throw new Error\('WORLDMONITOR_SEED_REFRESH_KEY is required for resilience ranking refresh'\);/,
-      'seeder main must hard-fail when the seed-only refresh secret is missing',
-    );
-    assert.match(
-      src,
-      /requireSeedRefreshKey\(\);[\s\S]*?logSeedResult\('resilience:scores', 0,[\s\S]*?reason: 'missing_seed_refresh_key'/,
-      'missing refresh-key failures must emit a seed_complete record before exiting non-zero',
+      /throw new Error\('WORLDMONITOR_SEED_REFRESH_KEY is required/,
+      'seeder must not require WORLDMONITOR_SEED_REFRESH_KEY',
     );
   });
 

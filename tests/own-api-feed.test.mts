@@ -75,3 +75,37 @@ test('the MIIT catalog feed is served by the fork\'s own /api/miit-news', () => 
     assert.equal(miit.url, '/api/miit-news', file);
   }
 });
+
+test('the local API transport token never follows a redirect', async (t) => {
+  // A 3xx from the local API must not carry the token to another origin:
+  // the own-API fetch refuses redirects, while third-party feeds keep following them.
+  withEnv(t, ENV);
+  const redirects: Array<{ url: string; redirect: RequestRedirect | undefined }> = [];
+  t.mock.method(globalThis, 'fetch', async (input: string, init: RequestInit = {}) => {
+    redirects.push({ url: String(input), redirect: init.redirect });
+    return new Response(RSS, { status: 200, headers: { 'content-type': 'application/rss+xml' } });
+  });
+  await fetchRssText('/api/miit-news', new AbortController().signal);
+  await fetchRssText('https://feeds.example.test/rss', new AbortController().signal);
+  assert.deepEqual(redirects, [
+    { url: 'http://127.0.0.1:45678/api/miit-news', redirect: 'error' },
+    { url: 'https://feeds.example.test/rss', redirect: undefined },
+  ]);
+});
+
+test('the transport token is only sent to a loopback http local API origin', () => {
+  for (const origin of ['http://127.0.0.1:45678', 'http://localhost:45678', 'http://[::1]:45678', 'http://127.0.0.1:45678/']) {
+    assert.ok(ownApiFeedRequest('/api/miit-news', { LOCAL_API_ORIGIN: origin, LOCAL_API_TOKEN: 't' }), origin);
+  }
+  for (const origin of [
+    'https://127.0.0.1:45678',
+    'http://10.0.0.5:3000',
+    'http://example.test',
+    'http://127.0.0.1.evil.example:45678',
+    'http://user@127.0.0.1:45678',
+    'http://127.0.0.1:45678/prefix',
+    'not a url',
+  ]) {
+    assert.equal(ownApiFeedRequest('/api/miit-news', { LOCAL_API_ORIGIN: origin, LOCAL_API_TOKEN: 't' }), null, origin);
+  }
+});
