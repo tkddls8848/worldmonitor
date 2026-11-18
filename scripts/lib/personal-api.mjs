@@ -10,6 +10,16 @@ export function wmApiBase(env = process.env) {
   return (configured || personalOrigin(env)).replace(/\/+$/, '');
 }
 
+// The note a seeder appends to a failed WM-API status. For the personal server
+// the credential is WM_PERSONAL_PASSWORD, not the hosted relay key; null means
+// the target is another server and the caller's own note applies.
+export function wmApiAuthHint(url, status, env = process.env) {
+  let target;
+  try { target = new URL(url).origin; } catch { return null; }
+  if (target !== personalOrigin(env)) return null;
+  return status === 401 ? ' (the personal server refused the login: check WM_PERSONAL_PASSWORD in .env.local)' : '';
+}
+
 // A fetch that adds the owner's credential to requests for the personal server
 // only. Without WM_PERSONAL_PASSWORD it adds nothing, and the server's 401
 // names the problem.
@@ -24,7 +34,8 @@ export function wmApiFetch(env = process.env, fetchImpl = (...args) => globalThi
   const withoutOrigin = (input, init = {}) => {
     const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url);
     if (url.origin !== origin || !init.headers) return fetchImpl(input, init);
-    const headers = Object.fromEntries(Object.entries(init.headers).filter(([name]) => name.toLowerCase() !== 'origin'));
+    const headers = new Headers(init.headers);
+    headers.delete('origin');
     return fetchImpl(input, { ...init, headers });
   };
   return createPersonalFetch({

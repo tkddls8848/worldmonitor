@@ -20,7 +20,7 @@ test('the digest is built before the collectors that read it', () => {
 test('every English edition cell is requested through the personal server with the owner credential', async () => {
   const seen = [];
   const fetchImpl = async (input, init = {}) => {
-    seen.push({ url: String(input), headers: init.headers ?? {} });
+    seen.push({ url: String(input), headers: Object.fromEntries(new Headers(init.headers)) });
     return new Response(JSON.stringify({ coverage: { state: 'complete', feedTotal: 3, feedCompleted: 3, servedStale: false } }), { status: 200 });
   };
   const env = { WM_PERSONAL_PASSWORD: PASSWORD, WM_PERSONAL_PORT: '3999' };
@@ -34,7 +34,7 @@ test('every English edition cell is requested through the personal server with t
   );
   for (const call of seen) {
     assert.equal(call.headers.authorization, `Basic ${Buffer.from(`owner:${PASSWORD}`).toString('base64')}`);
-    assert.match(call.headers['User-Agent'] ?? '', /WorldMonitor/);
+    assert.match(call.headers['user-agent'] ?? '', /WorldMonitor/);
   }
   assert.equal(summary.ok, true);
   assert.equal(summary.fresh, PERSONAL_DIGEST_CELLS.length);

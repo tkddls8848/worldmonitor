@@ -17,7 +17,11 @@ export function createPersonalFetch({ origin, username = 'owner', password, fetc
   return (input, init = {}) => {
     const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url);
     if (url.origin !== origin) return fetchImpl(input, init);
-    return fetchImpl(input, { ...init, headers: { ...(init.headers || {}), authorization } });
+    // Headers accepts a plain object, a Headers instance or [name, value]
+    // tuples; spreading only kept the first. A Request keeps its own headers.
+    const headers = new Headers(init.headers ?? (input instanceof Request ? input.headers : undefined));
+    headers.set('authorization', authorization);
+    return fetchImpl(input, { ...init, headers });
   };
 }
 

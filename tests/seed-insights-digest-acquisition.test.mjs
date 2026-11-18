@@ -128,7 +128,7 @@ test('with API_BASE_URL unset the digest warm call goes to the personal server w
   const calls = [];
   t.mock.method(globalThis, 'fetch', async (input, init = {}) => {
     const url = String(input);
-    calls.push({ origin: new URL(url).origin, authorization: init.headers?.authorization });
+    calls.push({ origin: new URL(url).origin, authorization: new Headers(init.headers).get('authorization') ?? undefined });
     if (url.startsWith('https://redis.example.test/get/')) return redisResponse(null);
     if (url.startsWith('http://127.0.0.1:3999/api/news/v1/list-feed-digest')) return new Response(JSON.stringify(ACCEPTED_DIGEST));
     throw new Error(`Unexpected fetch: ${url}`);
@@ -138,7 +138,7 @@ test('with API_BASE_URL unset the digest warm call goes to the personal server w
 
   assert.deepEqual(digest, ACCEPTED_DIGEST);
   assert.deepEqual(calls, [
-    { origin: 'https://redis.example.test', authorization: undefined },
+    { origin: 'https://redis.example.test', authorization: 'Bearer test-token' },
     { origin: 'http://127.0.0.1:3999', authorization: `Basic ${Buffer.from(`owner:${'p'.repeat(16)}`).toString('base64')}` },
   ]);
 });

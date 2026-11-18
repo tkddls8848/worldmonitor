@@ -9,7 +9,7 @@
  */
 
 import { loadEnvFile, CHROME_UA, getRedisCredentials, logSeedResult, extendExistingTtl } from './_seed-utils.mjs';
-import { wmApiBase, wmApiFetch } from './lib/personal-api.mjs';
+import { wmApiAuthHint, wmApiBase, wmApiFetch } from './lib/personal-api.mjs';
 
 loadEnvFile(import.meta.url);
 
@@ -49,7 +49,7 @@ async function warmPing() {
     });
 
     if (!resp.ok) {
-      const keyNote = RELAY_API_KEY ? '' : ' (WORLDMONITOR_RELAY_KEY not set — Origin-only auth)';
+      const keyNote = wmApiAuthHint(RPC_URL, resp.status) ?? (RELAY_API_KEY ? '' : ' (WORLDMONITOR_RELAY_KEY not set — Origin-only auth)');
       throw new Error(`RPC failed: HTTP ${resp.status}${keyNote}`);
     }
     data = await resp.json();

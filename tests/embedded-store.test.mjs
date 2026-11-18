@@ -149,7 +149,7 @@ test('the store refuses weak tokens and non-loopback binds', async () => {
 
 test('the terminal dashboard sends the owner password to the personal server only', async () => {
   const seen = [];
-  const fetchImpl = async (input, init = {}) => { seen.push([String(input), init.headers?.authorization]); return new Response('{}'); };
+  const fetchImpl = async (input, init = {}) => { seen.push([String(input), new Headers(init.headers).get('authorization') ?? undefined, Object.fromEntries(new Headers(init.headers))]); return new Response('{}'); };
   const personalFetch = createPersonalFetch({ origin: 'http://127.0.0.1:3000', password: 'test-password-123456', fetchImpl });
   await personalFetch('http://127.0.0.1:3000/api/bootstrap?tier=fast', { headers: { accept: 'application/json' } });
   await personalFetch('https://gibs.earthdata.nasa.gov/wms');
@@ -158,6 +158,11 @@ test('the terminal dashboard sends the owner password to the personal server onl
   assert.equal(seen[1][1], undefined);
   assert.equal(seen[2][1], undefined);
   assert.throws(() => createPersonalFetch({ origin: 'http://127.0.0.1:3000', password: '' }), /WM_PERSONAL_PASSWORD/);
+  // A Headers object or header tuples keep their entries next to the credential.
+  await personalFetch('http://127.0.0.1:3000/api/a', { headers: new Headers({ accept: 'application/json' }) });
+  await personalFetch('http://127.0.0.1:3000/api/b', { headers: [['accept', 'text/plain'], ['x-trace', '1']] });
+  assert.deepEqual(seen[3][2], { accept: 'application/json', authorization: seen[0][1] });
+  assert.deepEqual(seen[4][2], { accept: 'text/plain', authorization: seen[0][1], 'x-trace': '1' });
 });
 
 test('every default collector exists and names cannot escape scripts/', () => {

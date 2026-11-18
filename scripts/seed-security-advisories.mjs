@@ -225,6 +225,31 @@ export async function readBoundedFeedText(response, maxBytes = MAX_ADVISORY_FEED
   return new TextDecoder().decode(Buffer.concat(chunks.map((chunk) => Buffer.from(chunk))));
 }
 
+const MAX_DIRECT_REDIRECTS = 3;
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+
+// Without a relay the seeder fetches publishers itself, so it applies the
+// relay's per-hop rule (scripts/ais-relay.cjs fetchWithRedirects): at most three
+// redirects, each to an allowed domain over http(s) on the default port. A
+// redirect anywhere else, such as the local store on 127.0.0.1:8079, fails the
+// feed instead of being followed.
+async function fetchDirectWithCheckedRedirects(url, init, doFetch) {
+  let current = url;
+  for (let hops = 0; ; hops += 1) {
+    const resp = await doFetch(current, { ...init, redirect: 'manual' });
+    if (!REDIRECT_STATUSES.has(resp.status)) return resp;
+    const location = resp.headers?.get?.('location');
+    if (!location) return resp;
+    if (hops >= MAX_DIRECT_REDIRECTS) throw new Error('Too many redirects');
+    let target;
+    try { target = new URL(location, current); } catch { throw new Error('Malformed redirect'); }
+    if (!ALLOWED_DOMAINS.has(target.hostname) || !['http:', 'https:'].includes(target.protocol) || target.port !== '') {
+      throw new Error(`Redirect to disallowed domain: ${target.hostname || target.protocol}`);
+    }
+    current = target.href;
+  }
+}
+
 // `doFetch` is injectable so a test can drive this whole path — including the
 // no-truncation guarantee below — without network access.
 export async function fetchFeed(feed, doFetch = fetch) {
@@ -232,10 +257,11 @@ export async function fetchFeed(feed, doFetch = fetch) {
   if (!proxyUrl) return [];
 
   try {
-    const resp = await doFetch(proxyUrl, {
+    const init = {
       headers: { 'User-Agent': CHROME_UA, Accept: 'application/rss+xml, application/xml, text/xml, */*' },
       signal: AbortSignal.timeout(15_000),
-    });
+    };
+    const resp = RELAY_URL ? await doFetch(proxyUrl, init) : await fetchDirectWithCheckedRedirects(proxyUrl, init, doFetch);
     if (!resp.ok) {
       console.warn(`  ${feed.name}: HTTP ${resp.status}`);
       return [];

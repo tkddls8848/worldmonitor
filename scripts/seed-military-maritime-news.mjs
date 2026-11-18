@@ -26,7 +26,7 @@
  */
 
 import { loadEnvFile, CHROME_UA } from './_seed-utils.mjs';
-import { wmApiBase, wmApiFetch } from './lib/personal-api.mjs';
+import { wmApiAuthHint, wmApiBase, wmApiFetch } from './lib/personal-api.mjs';
 
 loadEnvFile(import.meta.url);
 
@@ -58,7 +58,7 @@ async function warmPing(name, path, body = {}) {
       signal: AbortSignal.timeout(TIMEOUT),
     });
     if (!resp.ok) {
-      const keyNote = RELAY_API_KEY ? '' : ' (WORLDMONITOR_RELAY_KEY not set — Origin-only auth)';
+      const keyNote = wmApiAuthHint(`${API_BASE}${path}`, resp.status) ?? (RELAY_API_KEY ? '' : ' (WORLDMONITOR_RELAY_KEY not set — Origin-only auth)');
       console.warn(`  ${name}: HTTP ${resp.status}${keyNote}`);
       return false;
     }
@@ -91,7 +91,7 @@ async function main() {
     // Distinct, grep-able marker so persistent auth/gateway breakage stays
     // visible in Railway logs even though we exit 0. Set up a Railway log
     // alert on this string instead of relying on container exit codes.
-    console.log('WARN: all warm-pings failed — cache is cold (check WORLDMONITOR_RELAY_KEY and gateway auth)');
+    console.log('WARN: all warm-pings failed — cache is cold (check WM_PERSONAL_PASSWORD for the personal server, or WORLDMONITOR_RELAY_KEY and gateway auth)');
   }
   // Best-effort cache warmer: a missed warm-ping is not a failure worth paging on.
   // Upstream timeouts and transient 5xx happen routinely; exiting non-zero turned
