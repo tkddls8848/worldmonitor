@@ -1,6 +1,7 @@
 import { isDesktopRuntime, toApiUrl, toRuntimeUrl } from '../services/runtime';
 import { getPersistentCache, setPersistentCache } from '../services/persistent-cache';
 import { createRequestTimeoutSignal } from '../services/timeout-signal';
+import { PERSONAL_MODE } from '@/config/personal-mode';
 
 const isDev = import.meta.env.DEV;
 const RESPONSE_CACHE_PREFIX = 'api-response:';
@@ -9,7 +10,8 @@ const PERSISTED_RESPONSE_MAX_AGE_CAP_MS = 15 * 60 * 1000;
 
 // RSS proxy: route directly to Railway relay via Cloudflare CDN when enabled.
 // Feature flag controls rollout; default off for safe staged deployment.
-const RSS_DIRECT_TO_RELAY = import.meta.env.VITE_RSS_DIRECT_TO_RELAY === 'true';
+// A personal build has no hosted relay, so it never takes this path.
+const RSS_DIRECT_TO_RELAY = !PERSONAL_MODE && import.meta.env.VITE_RSS_DIRECT_TO_RELAY === 'true';
 const RSS_PROXY_BASE = isDev
   ? '' // Dev uses Vite's rssProxyPlugin
   : RSS_DIRECT_TO_RELAY
@@ -21,16 +23,19 @@ const RSS_PROXY_BASE = isDev
 //   desktop   → relay directly (sidecar buffers arrayBuffer() which destroys SSE streaming)
 //   prod web  → /api/widget-agent (Vercel edge) → validates Clerk JWT or tester keys
 //               then proxies SSE to relay with real server-side keys
+//   personal  → same-origin /api/widget-agent, even on an https://localhost
+//               page that isDesktopRuntime() mistakes for the desktop shell
 const WIDGET_RELAY_BASE = 'https://proxy.worldmonitor.app';
+const widgetViaRelay = () => !PERSONAL_MODE && isDesktopRuntime();
 export function widgetAgentUrl(): string {
   if (isDev) return '/widget-agent';
-  if (isDesktopRuntime()) return `${WIDGET_RELAY_BASE}/widget-agent`;
+  if (widgetViaRelay()) return `${WIDGET_RELAY_BASE}/widget-agent`;
   return '/api/widget-agent';
 }
 
 export function widgetAgentHealthUrl(): string {
   if (isDev) return '/widget-agent/health';
-  if (isDesktopRuntime()) return `${WIDGET_RELAY_BASE}/widget-agent/health`;
+  if (widgetViaRelay()) return `${WIDGET_RELAY_BASE}/widget-agent/health`;
   return '/api/widget-agent'; // Vercel handler: GET → relay /widget-agent/health
 }
 

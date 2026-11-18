@@ -6,6 +6,7 @@ import { escapeHtml } from '@/utils/sanitize';
 import { getDismissed, setDismissed } from '@/utils/cross-domain-storage';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 import { decideUpdateOutcome } from '@/utils/desktop-version';
+import { PERSONAL_MODE } from '@/config/personal-mode';
 
 
 interface DesktopRuntimeInfo {
@@ -41,7 +42,9 @@ export class DesktopUpdater implements AppModule {
   }
 
   private setupUpdateChecks(): void {
-    if (!this.ctx.isDesktopApp || this.ctx.isDestroyed) return;
+    // A personal build ships no desktop releases; an https://localhost page
+    // still reads as desktop, so without this it polled the upstream version API.
+    if (PERSONAL_MODE || !this.ctx.isDesktopApp || this.ctx.isDestroyed) return;
 
     setTimeout(() => {
       if (this.ctx.isDestroyed) return;
