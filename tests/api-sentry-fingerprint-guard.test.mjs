@@ -130,18 +130,10 @@ test('every API capture has an explicit stable fingerprint', async () => {
     .map(({ path, call }) => ({ path, violation: fingerprintViolation(call) }))
     .filter(({ violation }) => violation);
   assert.deepEqual(invalid, [], `invalid fingerprints:\n${invalid.map(({ path, violation }) => `${path}: ${violation}`).join('\n')}`);
-  const userPrefs = await readFile(join(apiRoot, 'user-prefs.ts'), 'utf8');
-  assert.match(userPrefs, /fingerprint:\s*\['api\/user-prefs', opts\.method, errorShape\]/);
-  const notificationChannels = await readFile(join(apiRoot, 'notification-channels.ts'), 'utf8');
-  const notificationCaptures = captures(notificationChannels);
-  for (const method of ['GET', 'POST']) {
-    const stable = new RegExp(`fingerprint:\\s*\\['api/notification-channels', '${method}', err instanceof Error \\? err\\.name : 'Error'\\]`);
-    assert.equal(
-      notificationCaptures.filter((call) => stable.test(call)).length,
-      1,
-      `notification ${method} catch must capture with its explicit stable fingerprint`,
-    );
-  }
+  // Personal fork: api/user-prefs.ts, api/notification-channels.ts and the MCP
+  // auth/dispatch handlers were deleted with the account and MCP surfaces, so
+  // their pinned fingerprints are gone; the guard above still covers every
+  // capture in the remaining api/ sources.
   const sentryEdge = await readFile(join(apiRoot, '_sentry-edge.js'), 'utf8');
   assert.match(sentryEdge, /captureSilentError\(err, \{ extra: context, ctx: vctx, fingerprint \}\)/);
   assert.match(
@@ -149,10 +141,6 @@ test('every API capture has an explicit stable fingerprint', async () => {
     /fingerprint\s*:\s*rssProxyErrorFingerprint\(/,
     'existing RSS fingerprint helper must remain in use',
   );
-  for (const path of ['api/mcp/auth.ts', 'api/mcp/dispatch.ts']) {
-    const source = await readFile(join(root, path), 'utf8');
-    assert.match(source, /fingerprint\s*:\s*mcpErrorFingerprint\(/, `${path} must retain its MCP fingerprint helper`);
-  }
 });
 
 test('fingerprint guard rejects malformed and high-cardinality policies', () => {
