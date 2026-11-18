@@ -133,6 +133,14 @@ export function startScenarioWorker({ env = process.env, spawnImpl = spawn, rest
   };
 }
 
+// News-catalog feeds whose URL is a path (/api/miit-news) are this fork's own
+// API routes. The digest builder runs in this process and reaches them through
+// the local API, which listens on a random loopback port
+// (server/_shared/own-api-feed.ts).
+export function publishLocalApiOrigin(apiPort, env = process.env) {
+  env.LOCAL_API_ORIGIN = `http://127.0.0.1:${apiPort}`;
+}
+
 export async function startPersonalServer() {
   loadEnvFile(import.meta.url);
   validatePersonalStore(process.env.UPSTASH_REDIS_REST_URL);
@@ -154,6 +162,7 @@ export async function startPersonalServer() {
     const { createLocalApiServer } = await import('./local/local-api-server.mjs');
     api = await createLocalApiServer({ port: 0, mode: 'docker', resourceDir: ROOT, cloudFallback: false, selfHostRelay: 'off' });
     const { port: apiPort } = await api.start();
+    publishLocalApiOrigin(apiPort);
     const server = await createPersonalIngress({ password: process.env.WM_PERSONAL_PASSWORD, username: process.env.WM_PERSONAL_USERNAME || 'owner', distDir: path.join(ROOT, 'dist'), apiPort, token: process.env.LOCAL_API_TOKEN });
     const port = Number(process.env.WM_PERSONAL_PORT || 3000);
     const host = process.env.WM_PERSONAL_HOST || '127.0.0.1';

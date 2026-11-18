@@ -1573,7 +1573,7 @@
     {
       "host": "api.worldmonitor.app",
       "provider": "World Monitor hosted API",
-      "kind": "feed+structured",
+      "kind": "structured",
       "observed": true,
       "license": "Excluded: World Monitor own service/control plane",
       "attribution": "Excluded from the external-provider count: first-party API endpoint.",
@@ -1626,9 +1626,6 @@
         },
         {
           "path": "scripts/verify-import-hhi-coverage.mjs"
-        },
-        {
-          "path": "shared/news-catalog.json"
         },
         {
           "path": "src/app/desktop-updater.ts"

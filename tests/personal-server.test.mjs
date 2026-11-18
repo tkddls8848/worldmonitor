@@ -108,3 +108,10 @@ test('the scenario worker runs with the server, against its store, and stops wit
   await new Promise((resolve) => setTimeout(resolve, 50));
   assert.equal(spawned.length, 2);
 });
+
+test('the local API origin is published in-process so own-API catalog feeds reach it', async () => {
+  const { publishLocalApiOrigin } = await import('../scripts/personal-server.mjs');
+  const env = {};
+  publishLocalApiOrigin(45678, env);
+  assert.equal(env.LOCAL_API_ORIGIN, 'http://127.0.0.1:45678');
+});

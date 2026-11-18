@@ -75,7 +75,11 @@ export function extractServerFeeds(catalog = loadCatalog()) {
   for (const feed of catalog.feeds) {
     if (!placedFor(feed, 'serverOrder') || typeof feed.url !== 'string' || seen.has(feed.url)) continue;
     seen.add(feed.url);
-    feeds.push({ name: feed.name, url: feed.url, catalog: 'server' });
+    // A path is this fork's own API route (e.g. /api/miit-news), which the
+    // digest reaches through the local API; there is nothing public to probe.
+    feeds.push(feed.url.startsWith('/')
+      ? { name: feed.name, url: feed.url, catalog: 'server', isLocal: true }
+      : { name: feed.name, url: feed.url, catalog: 'server' });
   }
   return feeds;
 }

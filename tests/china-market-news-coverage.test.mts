@@ -111,7 +111,8 @@ describe('China A/H-share market coverage (#5272)', () => {
 describe('China client/server news digest parity (#5272)', () => {
   it('MIIT reads the official listing adapter without depending on Google indexing', () => {
     const feed = VARIANT_FEEDS.full!.asia!.find((entry) => entry.name === 'MIIT (China)');
-    assert.equal(feed?.url, 'https://api.worldmonitor.app/api/miit-news');
+    // The fork's own adapter route (api/miit-news.js), fetched from the local API.
+    assert.equal(feed?.url, '/api/miit-news');
   });
   it('the digest parser retains official MIIT article identity and publication day', () => {
     const link = 'https://www.miit.gov.cn/zwgk/zcwj/wjfb/tz/art/2026/art_7d2e760b4be94217b8f55caec840b30d.html';

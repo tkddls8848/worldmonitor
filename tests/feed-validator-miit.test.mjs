@@ -4,19 +4,25 @@ import { extractFeeds, extractServerFeeds, fetchFeed } from '../scripts/validate
 
 const adapter = 'https://api.worldmonitor.app/api/miit-news';
 
-it('validates the configured server MIIT adapter and preserves the local browser feed', async (t) => {
+it("treats the MIIT feed as the fork's own API route on both catalog views", () => {
+  // The personal fork serves /api/miit-news itself (api/miit-news.js); the
+  // server digest reaches it through the local API, never the upstream host.
   const client = extractFeeds().find((feed) => feed.name === 'MIIT (China)');
   const server = extractServerFeeds().find((feed) => feed.name === 'MIIT (China)');
   assert.equal(client.url, '/api/miit-news');
   assert.equal(client.isLocal, true);
-  assert.equal(server.url, adapter);
+  assert.equal(server.url, '/api/miit-news');
+  assert.equal(server.isLocal, true);
+});
+
+it('still validates the hosted MIIT adapter URL when asked to', async (t) => {
   const calls = [];
   t.mock.method(globalThis, 'fetch', async (url, options) => {
     calls.push(url);
     assert.equal(options.redirect, 'manual');
     return new Response('<rss/>');
   });
-  assert.equal(await fetchFeed(server.url, { ci: true }), '<rss/>');
+  assert.equal(await fetchFeed(adapter, { ci: true }), '<rss/>');
   assert.deepEqual(calls, [adapter]);
 });
 

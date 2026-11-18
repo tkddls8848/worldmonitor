@@ -129,6 +129,7 @@ import {
   DIGEST_ACCUMULATOR_TTL,
 } from '../../../_shared/cache-keys';
 import { getRelayBaseUrl, getRelayHeaders } from '../../../_shared/relay';
+import { isOwnApiFeed, ownApiFeedRequest } from '../../../_shared/own-api-feed';
 import diplomacyKeywordsData from '../../../../shared/diplomacy-keywords.json';
 import { normalizeFeedDateZone } from '../../../../shared/feed-date-zone.js';
 import { NEWS_LANGUAGES } from '../../../../src/shared/public-rpc-cache';
@@ -893,6 +894,10 @@ async function fetchRssText(
   signal: AbortSignal,
   validators?: FeedValidators,
 ): Promise<RssTextResult> {
+  // A path feed is this fork's own API route (server/_shared/own-api-feed.ts):
+  // fetched from the local API, or not at all.
+  const own = isOwnApiFeed(url) ? ownApiFeedRequest(url) : null;
+  if (isOwnApiFeed(url) && !own) return { text: null, failure: 'direct-error' };
   const { controller, cleanup, timedOut } = createTimeoutLinkedController(signal);
 
   try {
@@ -900,10 +905,11 @@ async function fetchRssText(
       'User-Agent': CHROME_UA,
       'Accept': 'application/rss+xml, application/xml, text/xml, */*',
       'Accept-Language': 'en-US,en;q=0.9',
+      ...own?.headers,
     };
     if (validators?.etag) headers['If-None-Match'] = validators.etag;
     if (validators?.lastModified) headers['If-Modified-Since'] = validators.lastModified;
-    const resp = await fetch(url, { headers, signal: controller.signal });
+    const resp = await fetch(own?.url ?? url, { headers, signal: controller.signal });
     if (resp.status === 304 && validators) return { text: null, failure: null, notModified: true };
     if (!resp.ok) return { text: null, failure: 'direct-error' };
     // Same 5 MiB ceiling the relay leg enforces; an oversized body throws
@@ -938,7 +944,8 @@ interface RelayTextResult {
 /** The Railway relay leg: a different IP for feeds that block Vercel. */
 async function fetchViaRelay(url: string, signal: AbortSignal): Promise<RelayTextResult> {
   const relayBase = getRelayBaseUrl();
-  if (!relayBase) return { text: null, attempted: false, status: null, failure: null, bodyShape: 'no-relay' };
+  // The relay cannot reach this fork's own API routes.
+  if (!relayBase || isOwnApiFeed(url)) return { text: null, attempted: false, status: null, failure: null, bodyShape: 'no-relay' };
   const relayUrl = `${relayBase}/rss?url=${encodeURIComponent(url)}`;
   const { controller, cleanup, timedOut } = createTimeoutLinkedController(signal);
   let status: number | null = null;
@@ -3938,6 +3945,8 @@ async function publishAcceptedLabelCounts(response: ListFeedDigestResponse, dead
 
 /** Internal exports for unit tests only — do not import in production code. */
 export const __testing__ = {
+  fetchRssText,
+  fetchViaRelay,
   storyCorroborationByHash,
   // #7084 serving path. Exported so the wiring can be EXECUTED in tests rather
   // than asserted against this file's own source text — a grep for

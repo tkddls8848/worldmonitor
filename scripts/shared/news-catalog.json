@@ -3913,7 +3913,7 @@
     },
     {
       "name": "MIIT (China)",
-      "url": "https://api.worldmonitor.app/api/miit-news",
+      "url": "/api/miit-news",
       "lang": "zh",
       "strategicDefault": true,
       "deadlinePriority": 100,
