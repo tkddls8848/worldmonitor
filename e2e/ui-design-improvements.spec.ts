@@ -69,8 +69,6 @@ for (const theme of ['light', 'dark']) {
       }
       await openSettingsPage(page, 'notifications');
       await expect(page.locator('#usNotifUpgradeBtn')).toHaveText('Sign In');
-      await openSettingsPage(page, 'api-keys');
-      await expect(page.locator('#us-page-api-keys .settings-access-gate h3')).toHaveText('API and desktop keys');
       await openSettingsPage(page, 'ai');
       await page.locator('#fwImportBtn').click();
       const field = page.getByLabel('agentskills.io URL or ID', { exact: true });

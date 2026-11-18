@@ -266,10 +266,9 @@ export const GUARD_EXEMPT_FILES = new Set(['src/utils/safe-storage.ts']);
  * registry; do not duplicate those shrinking counts in this comment.
  */
 export const LEGACY_RAW_LOCAL_STORAGE = [
-  'src/App.ts :: localStorage.<member> x74',
+  'src/App.ts :: localStorage.<member> x62',
   'src/app/event-handlers.ts :: localStorage.<member> x5',
-  'src/app/panel-layout.ts :: localStorage.<member> x9',
-  'src/app/pro-activation-controller.ts :: <global>.localStorage x7',
+  'src/app/panel-layout.ts :: localStorage.<member> x7',
   'src/bootstrap/sw-update.ts :: localStorage.<member> x1',
   'src/components/AviationCommandBar.ts :: localStorage.<member> x1',
   'src/components/ChatAnalystPanel.ts :: <global>.localStorage x2',
@@ -277,9 +276,6 @@ export const LEGACY_RAW_LOCAL_STORAGE = [
   'src/components/GlobeMap.ts :: localStorage.<member> x2',
   'src/components/InsightsPanel.ts :: localStorage.<member> x1',
   'src/components/NewsPanel.ts :: localStorage.<member> x6',
-  'src/components/ProActivationChip.ts :: localStorage.<member> x4',
-  'src/components/ProBanner.ts :: localStorage.<member> x5',
-  'src/components/ProPreviewSection.ts :: localStorage.<member> x2',
   'src/components/SearchModal.ts :: localStorage.<member> x2',
   'src/components/StrategicPosturePanel.ts :: localStorage.<member> x2',
   'src/components/WorldClockPanel.ts :: localStorage.<member> x1',
@@ -304,7 +300,6 @@ export const LEGACY_RAW_LOCAL_STORAGE = [
   'src/services/market-watchlist.ts :: localStorage.<member> x6',
   'src/services/mission-presets.ts :: localStorage.<member> x7',
   'src/services/persistent-cache.ts :: localStorage.<member> x3',
-  'src/services/referral-capture.ts :: localStorage.<member> x7',
   'src/services/runtime-config.ts :: localStorage.<member> x2',
   'src/services/sentiment-gate.ts :: localStorage.<member> x1',
   'src/services/tab-store.ts :: localStorage.<member> x2',

@@ -7,7 +7,7 @@
   "totalTolerancePct": 0.25,
   "totalToleranceBytes": 16384,
   "total": {
-    "raw": 478296
+    "raw": 441366
   },
   "chunks": {
     "i18n": {
@@ -15,25 +15,21 @@
       "files": 1
     },
     "main": {
-      "raw": 425736,
+      "raw": 388806,
       "files": 1
     }
   },
   "deferred": {
     "total": {
-      "raw": 1555449
+      "raw": 1427248
     },
     "chunks": {
       "App": {
-        "raw": 1291203,
-        "files": 1
-      },
-      "checkout": {
-        "raw": 13826,
+        "raw": 1179680,
         "files": 1
       },
       "desktop-cloud-auth": {
-        "raw": 1409,
+        "raw": 991,
         "files": 1
       },
       "index": {
@@ -45,7 +41,7 @@
         "files": 1
       },
       "panel-display-name": {
-        "raw": 192357,
+        "raw": 192384,
         "files": 1
       },
       "persistent-cache": {
@@ -61,7 +57,7 @@
         "files": 1
       },
       "widget-store": {
-        "raw": 29683,
+        "raw": 27222,
         "files": 1
       }
     }

@@ -124,7 +124,7 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 1024, height: 768
       expect(box.width, 'the sheet is 960px wide or the viewport less its gutters').toBe(Math.min(960, viewport.width - 32));
       await sheet.screenshot({ path: testInfo.outputPath(`settings-sidebar-${viewport.width}.png`) });
 
-      for (const id of ['panels', 'sources', 'api-keys', 'about']) {
+      for (const id of ['panels', 'sources', 'ai', 'about']) {
         await page.locator(`[data-settings-nav="${id}"]`).click();
         await expect(page.locator(`#us-page-${id}`)).toBeVisible();
         await expect(currentRow(page)).toHaveAttribute('data-settings-nav', id);

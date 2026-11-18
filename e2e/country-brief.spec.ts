@@ -7,7 +7,7 @@ import type { CountrySignalOutcome } from '../shared/country-signal-observations
 
 const recording = process.env.CI ? 'on-first-retry' : 'retain-on-failure';
 
-for (const [language, width, label] of [['fr', 1280, 'Débloquez 90 jours avec Pro'], ['ar', 390, 'افتح سجل 90 يومًا مع Pro']] as const) {
+for (const [language, width] of [['fr', 1280], ['ar', 390]] as const) {
   test(`daily country history localizes ${language} at ${width}`, async ({ page, countryBrief }, testInfo) => {
     void countryBrief;
     await page.setViewportSize({ width, height: 900 });
@@ -25,7 +25,9 @@ for (const [language, width, label] of [['fr', 1280, 'Débloquez 90 jours avec P
     await panel.locator('[data-topic="security"]').click();
     const history = page.locator('#cdp-section-history');
     await history.scrollIntoViewIfNeeded();
-    await expect(history.locator('.panel-locked-cta')).toHaveText(label);
+    await expect(history).toBeVisible();
+    // The personal build has no 90-day upsell: the history renders with no lock.
+    await expect(history.locator('.panel-locked-cta')).toHaveCount(0);
     expect(await history.evaluate(el => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
     await expect(page.locator('html')).toHaveCSS('direction', language === 'ar' ? 'rtl' : 'ltr');
     const path = testInfo.outputPath(`history-${language}-${width}.png`);
@@ -76,7 +78,7 @@ for (const width of [1280, 390]) {
     await history.getByRole('button', { name: 'Retry', exact: true }).click();
     await expect(history.locator('a[href="https://example.com/ukraine-19"]')).toBeVisible();
     await expect(history).toContainText('Formula or observation gap');
-    await expect(history.locator('.panel-locked-cta')).toHaveText('Unlock 90 days with Pro');
+    await expect(history.locator('.panel-locked-cta')).toHaveCount(0);
     await history.locator('svg circle.country-history-resilience').first().click();
     await expect(history.locator('.country-history-detail')).toContainText('2026-10-17');
     await expect(history.locator('a[href="https://example.com/ukraine-17"]')).toBeVisible();
