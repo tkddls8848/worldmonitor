@@ -19,7 +19,8 @@ import { build } from 'esbuild';
 import { readdir, stat } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { existsSync } from 'node:fs';
+import { existsSync, rmSync } from 'node:fs';
+import { findStaleHandlerBundles } from './lib/stale-handler-bundles.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -75,6 +76,13 @@ if (undeclaredFamilies.length > 0) {
 }
 for (const key of skippedFamilies) {
   console.log(`build:sidecar-handlers  api/${key} declared cloud-only, not bundled (#5907)`);
+}
+
+// A deleted domain leaves its gitignored [rpc].js bundle behind, and the local
+// API server routes every .js under api/: remove bundles whose source is gone.
+for (const file of findStaleHandlerBundles(apiDir)) {
+  rmSync(file);
+  console.log(`build:sidecar-handlers  removed stale bundle ${path.relative(ROOT, file)} (no [rpc].ts)`);
 }
 
 // Personal fork: the standalone edge routes the dashboard calls on the personal
