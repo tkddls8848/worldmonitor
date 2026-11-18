@@ -1790,16 +1790,12 @@ describe('panel guardrails — cw- prefix handling', () => {
     ) ?? [];
     assert.equal(
       createFailureHandlers.length,
-      2,
-      'Both widget create entry points must surface a rejected save to the user',
+      1,
+      'The widget create entry point must surface a rejected save to the user',
     );
   });
 
   it('panel-layout loads widgets when feature is enabled', () => {
-    assert.ok(
-      layout.includes('hasPremiumAccess') || layout.includes('isProUser'),
-      'panel-layout must check hasPremiumAccess (or isProUser) before loading widgets',
-    );
     assert.ok(
       layout.includes('loadWidgets'),
       'panel-layout must call loadWidgets() to restore persisted widgets',
@@ -1811,13 +1807,6 @@ describe('panel guardrails — cw- prefix handling', () => {
       layout.includes('addCustomWidget'),
       'panel-layout must implement addCustomWidget() method',
     );
-  });
-
-  it('panel-layout AI button is gated by hasPremiumAccess', () => {
-    const hasCheck = layout.includes('hasPremiumAccess') || layout.includes('isProUser');
-    const buttonIdx = layout.indexOf('ai-widget-block');
-    assert.ok(hasCheck, 'hasPremiumAccess (or isProUser) not found in panel-layout');
-    assert.ok(buttonIdx !== -1, 'AI widget button not found in panel-layout');
   });
 
   it('panel-layout DEV warning excludes cw- panels', () => {
@@ -2182,12 +2171,6 @@ describe('CustomWidgetPanel — header buttons and events', () => {
     );
   });
 
-  it('PRO badge rendered in header when tier is pro', () => {
-    assert.ok(
-      panel.includes('widget-pro-badge'),
-      'CustomWidgetPanel must render .widget-pro-badge for PRO widgets',
-    );
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -3051,27 +3034,6 @@ describe('PRO widget — modal and layout integration', () => {
     );
   });
 
-  it('layout has PRO create button when hasPremiumAccess', () => {
-    assert.ok(
-      layout.includes('hasPremiumAccess') || layout.includes('isProUser'),
-      'panel-layout must import/call hasPremiumAccess (or isProUser)',
-    );
-    assert.ok(
-      layout.includes('ai-widget-block-pro'),
-      'panel-layout must render PRO create button (.ai-widget-block-pro)',
-    );
-  });
-
-  it('layout PRO button opens modal with tier: pro', () => {
-    const proButtonIdx = layout.indexOf('ai-widget-block-pro');
-    assert.ok(proButtonIdx !== -1);
-    // Use 1200 chars to cover the full button element including the click handler
-    const proButtonRegion = layout.slice(proButtonIdx, proButtonIdx + 1200);
-    assert.ok(
-      proButtonRegion.includes("tier: 'pro'") || proButtonRegion.includes("tier:'pro'") || proButtonRegion.includes('"pro"'),
-      "PRO button must open modal with tier: 'pro'",
-    );
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -3333,42 +3295,6 @@ describe('widget-agent relay — error classifier', () => {
 describe('panel-layout — Pro add-block gating reacts to entitlement updates', () => {
   const layout = src('src/app/panel-layout.ts');
 
-  it('imports onEntitlementChange', () => {
-    assert.ok(
-      /import\s*\{[^}]*\bonEntitlementChange\b[^}]*\}\s*from\s*['"][^'"]*entitlements['"]/.test(layout),
-      'panel-layout must import onEntitlementChange to re-evaluate Pro CTA gating on Convex snapshots',
-    );
-  });
-
-  it('proBlock + mcpBlock gating subscribes to BOTH auth and entitlement changes', () => {
-    // Anchor on the gating function to scope the search to its surroundings.
-    const gateFnIdx = layout.indexOf('applyProBlockGating');
-    assert.ok(gateFnIdx !== -1, 'applyProBlockGating not found in panel-layout');
-    const region = layout.slice(gateFnIdx, gateFnIdx + 1500);
-    assert.ok(
-      region.includes('subscribeAuthState'),
-      'Pro CTA gating must subscribe to subscribeAuthState (legacy auth-driven path)',
-    );
-    assert.ok(
-      region.includes('onEntitlementChange'),
-      'Pro CTA gating MUST subscribe to onEntitlementChange so paying Dodo users flip from hidden->visible when the Convex entitlement snapshot lands',
-    );
-  });
-
-  it('teardown clears the entitlement subscription so a destroyed layout does not leak callbacks', () => {
-    assert.ok(
-      layout.includes('proBlockEntitlementUnsubscribe'),
-      'panel-layout must hold a proBlockEntitlementUnsubscribe handle and clear it in destroy()',
-    );
-    // Look for the destroy() block
-    const destroyIdx = layout.indexOf('destroy(): void {');
-    assert.ok(destroyIdx !== -1, 'destroy() not found');
-    const destroyRegion = layout.slice(destroyIdx, destroyIdx + 2000);
-    assert.ok(
-      destroyRegion.includes('proBlockEntitlementUnsubscribe'),
-      'destroy() must invoke proBlockEntitlementUnsubscribe to avoid leaking callbacks across layout init/destroy cycles',
-    );
-  });
 });
 
 describe('WidgetChatModal — preflight 403 message branches on auth mode', () => {
@@ -3379,26 +3305,6 @@ describe('WidgetChatModal — preflight 403 message branches on auth mode', () =
     assert.ok(
       modal.includes('usedTesterKey'),
       'buildWidgetAuthHeaders must report whether a tester key was used so the 403 message can branch',
-    );
-  });
-
-  it('resolvePreflightMessage takes usedTesterKey and branches Clerk path on isPro', () => {
-    const fnIdx = modal.indexOf('function resolvePreflightMessage');
-    assert.ok(fnIdx !== -1, 'resolvePreflightMessage not found');
-    const fnEnd = modal.indexOf('\nfunction setReadinessState', fnIdx);
-    assert.ok(fnEnd !== -1, 'resolvePreflightMessage boundary not found');
-    const region = modal.slice(fnIdx, fnEnd);
-    assert.ok(
-      region.includes('usedTesterKey'),
-      'resolvePreflightMessage must take usedTesterKey to branch on auth mode',
-    );
-    assert.ok(
-      region.includes('preflightProSubscriptionRequired'),
-      'Clerk-auth 403 (isPro=true) must surface preflightProSubscriptionRequired',
-    );
-    assert.ok(
-      region.includes('preflightProRequired'),
-      'Clerk-auth 403 (isPro=false, free user) must surface preflightProRequired (clean upgrade ask, no "just upgraded" language)',
     );
   });
 

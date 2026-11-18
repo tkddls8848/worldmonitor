@@ -110,7 +110,4 @@ describe('threat-classifier wiring (source-grep — module not loadable under no
     );
   });
 
-  it('gate probe is wired to hasPremiumAccess (dual-signal entitlement)', () => {
-    assert.match(src, /configureClassifyGate\(\s*\(\)\s*=>\s*hasPremiumAccess\(\)/);
-  });
 });

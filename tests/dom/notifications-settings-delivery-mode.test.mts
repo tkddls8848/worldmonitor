@@ -52,9 +52,6 @@ vi.mock('@/services/clerk', () => ({
   getCurrentClerkUser: () => ({ id: 'user_mode', email: 'mode@worldmonitor.test' }),
 }));
 
-vi.mock('@/services/entitlements', () => ({
-  hasTier: () => gate.tier,
-}));
 
 vi.mock('@/services/market-watchlist', () => ({
   getMarketWatchlistEntries: () => [{ symbol: 'AAPL' }, { symbol: 'MSFT' }],
@@ -223,16 +220,4 @@ describe('notification settings delivery mode and sensitivity', () => {
     expect(q<HTMLInputElement>(container, '#usWatchlistAlerts').checked).toBe(true);
   });
 
-  it('gates the panel on the entitlement snapshot, not on being signed in', async () => {
-    gate.tier = false;
-    const container = document.createElement('div');
-    const rendered = renderNotificationsSettings({ isSignedIn: true });
-    container.innerHTML = rendered.html;
-    document.body.appendChild(container);
-    cleanups.push(rendered.attach(container));
-    expect(container.querySelector('#usNotifSensitivity')).toBeNull();
-    expect(container.querySelector('#usNotifContent')).toBeNull();
-    expect(container.querySelector('#usNotifUpgradeBtn')).not.toBeNull();
-    expect(channelMocks.getChannelsData).not.toHaveBeenCalled();
-  });
 });

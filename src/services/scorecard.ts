@@ -1,6 +1,5 @@
 import type { GetFiveFactorScorecardResponse } from '@/generated/client/worldmonitor/scorecard/v1/service_client';
 import { ScorecardServiceClient } from '@/services/generated-rpc-clients';
-import { premiumFetch } from '@/services/premium-fetch';
 import { getRpcBaseUrl } from '@/services/rpc-client';
 import { combineAbortSignals, createTimeoutSignal } from '@/services/timeout-signal';
 
@@ -24,7 +23,7 @@ export const SCORECARD_REQUEST_TIMEOUT_MS = 12_000;
 let client: InstanceType<typeof ScorecardServiceClient> | null = null;
 
 function getClient(): InstanceType<typeof ScorecardServiceClient> {
-  client ||= new ScorecardServiceClient(getRpcBaseUrl(), { fetch: premiumFetch });
+  client ||= new ScorecardServiceClient(getRpcBaseUrl(), { fetch: (...args: Parameters<typeof fetch>) => globalThis.fetch(...args) });
   return client;
 }
 

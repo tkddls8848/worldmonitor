@@ -141,7 +141,6 @@ import { addExposureCoverage, enrichEventsWithExposure, ucdpExposureEvents } fro
 import { debounce, getCircuitBreakerCooldownInfo } from '@/utils';
 import { addLocalDays, localYmd } from '@/utils/local-date';
 import { isFeatureAvailable, isFeatureEnabled } from '@/services/runtime-config';
-import { hasPremiumAccess } from '@/services/panel-gating';
 import { isDesktopRuntime, toApiUrl } from '@/services/runtime';
 import { filterFeedsByLanguage } from '@/services/feed-language';
 import { getAiFlowSettings } from '@/services/ai-flow-settings';
@@ -600,16 +599,14 @@ export class DataLoaderManager implements AppModule {
   init(): void {
     this.boundMarketWatchlistHandler = () => {
       void this.loadMarkets().then(async () => {
-        if (hasPremiumAccess()) {
-          // All three loaders own a different panel and swallow their own
-          // failures, so serializing them only added latency to a watchlist
-          // edit. The boot path already fans them out the same way (#6770).
-          await Promise.all([
-            this.loadStockAnalysis(),
-            this.loadStockBacktest(),
-            this.loadDailyMarketBrief(true),
-          ]);
-        }
+        // All three loaders own a different panel and swallow their own
+        // failures, so serializing them only added latency to a watchlist
+        // edit. The boot path already fans them out the same way (#6770).
+        await Promise.all([
+          this.loadStockAnalysis(),
+          this.loadStockBacktest(),
+          this.loadDailyMarketBrief(true),
+        ]);
       });
     };
     window.addEventListener('wm-market-watchlist-changed', this.boundMarketWatchlistHandler as EventListener);
@@ -1228,7 +1225,7 @@ export class DataLoaderManager implements AppModule {
     // has loaded; refreshing loaded panels is the refresh scheduler's job.
     // Every layout read happens here, before any loader writes DOM (#4487).
     const viewportOnly = trigger === 'viewport' && !forceAll;
-    this.viewportHydration.beginPass(hasPremiumAccess());
+    this.viewportHydration.beginPass(true);
     const panelIds = Object.keys(this.ctx.panels);
     let unserved: Set<string> | null = null;
     if (viewportOnly) {
@@ -1257,10 +1254,10 @@ export class DataLoaderManager implements AppModule {
       if (shouldLoadAny(['markets', 'heatmap', 'commodities', 'crypto', 'energy-complex', 'crypto-heatmap', 'defi-tokens', 'ai-tokens', 'other-tokens'])) {
         tasks.push({ name: 'markets', task: () => runGuarded('markets', () => this.loadMarkets()) });
       }
-      if (hasPremiumAccess() && shouldLoad('stock-analysis')) {
+      if (shouldLoad('stock-analysis')) {
         tasks.push({ name: 'stockAnalysis', task: () => runGuarded('stockAnalysis', () => this.loadStockAnalysis()) });
       }
-      if (hasPremiumAccess() && shouldLoad('stock-backtest')) {
+      if (shouldLoad('stock-backtest')) {
         tasks.push({ name: 'stockBacktest', task: () => runGuarded('stockBacktest', () => this.loadStockBacktest()) });
       }
       // The daily market brief is loaded by the post-hydration pass below
@@ -1284,7 +1281,7 @@ export class DataLoaderManager implements AppModule {
         tasks.push({ name: 'bis', task: () => runGuarded('bis', () => this.loadBisData()) });
         tasks.push({ name: 'bls', task: () => runGuarded('bls', () => this.loadBlsData()) });
       }
-      if (hasPremiumAccess() && shouldLoad('global-procurement')) {
+      if (shouldLoad('global-procurement')) {
         tasks.push({ name: 'global-tenders', task: () => runGuarded('global-tenders', () => this.loadGlobalTenders()) });
       }
       if (shouldLoad('energy-complex')) {
@@ -1396,7 +1393,7 @@ export class DataLoaderManager implements AppModule {
     if (this.ctx.mapLayers.natural) tasks.push({ name: 'natural', task: () => runGuarded('natural', () => this.loadNatural()) });
     if (this.ctx.mapLayers.diseaseOutbreaks || shouldLoad('disease-outbreaks')) tasks.push({ name: 'diseaseOutbreaks', task: () => runGuarded('diseaseOutbreaks', () => this.loadDiseaseOutbreaks()) });
     if (shouldLoad('social-velocity')) tasks.push({ name: 'socialVelocity', task: () => runGuarded('socialVelocity', () => this.loadSocialVelocity()) });
-    if (hasPremiumAccess() && shouldLoad('wsb-ticker-scanner')) tasks.push({ name: 'wsbTickers', task: () => runGuarded('wsbTickers', () => this.loadWsbTickers()) });
+    if (shouldLoad('wsb-ticker-scanner')) tasks.push({ name: 'wsbTickers', task: () => runGuarded('wsbTickers', () => this.loadWsbTickers()) });
     if (shouldLoad('economic')) tasks.push({ name: 'economicStress', task: () => runGuarded('economicStress', () => this.loadEconomicStress()) });
     if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.weather) tasks.push({ name: 'weather', task: () => runGuarded('weather', () => this.loadWeatherAlerts()) });
     if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.canadaRoads) tasks.push({ name: 'canadaRoads', task: () => runGuarded('canadaRoads', () => this.loadCanadaRoads()) });
@@ -1423,12 +1420,7 @@ export class DataLoaderManager implements AppModule {
       tasks.push({ name: 'reservoirLevels', task: () => runGuarded('reservoirLevels', () => this.loadReservoirLevels()) });
     }
     if (this.ctx.mapLayers.resilienceScore) {
-      if (hasPremiumAccess()) {
-        tasks.push({ name: 'resilienceRanking', task: () => runGuarded('resilienceRanking', () => this.loadResilienceRanking()) });
-      } else {
-        this.ctx.map?.setResilienceRanking([]);
-        this.ctx.map?.setLayerReady('resilienceScore', false);
-      }
+      tasks.push({ name: 'resilienceRanking', task: () => runGuarded('resilienceRanking', () => this.loadResilienceRanking()) });
     }
     if (SITE_VARIANT !== 'happy' && (shouldLoad('radiation-watch') || this.ctx.mapLayers.radiationWatch)) {
       // Lock under the map-layer key ('radiationWatch') so a hydration load and
@@ -1456,7 +1448,7 @@ export class DataLoaderManager implements AppModule {
 
     this.updateSearchIndex();
 
-    if (hasPremiumAccess() && runOncePerViewport('premium-briefs', ['daily-market-brief', 'market-implications'])) {
+    if (runOncePerViewport('premium-briefs', ['daily-market-brief', 'market-implications'])) {
       // The news task may have released the tiers at first paint. The brief is
       // built from the headlines and cached for the day, so wait for the late
       // digest instead of building it from the fallback.
@@ -2987,12 +2979,7 @@ export class DataLoaderManager implements AppModule {
         if (!energyLoaded) energyPanel?.updateTape([]);
       }
 
-      // Physical premiums + divergence index are Pro (#6436/#6448). Skipping
-      // the fetch leaves _physicalPremiums empty, which is exactly what
-      // _buildTabBar reads to decide whether the Physical tab exists — so a
-      // free viewer sees the commodity tape unchanged rather than a tab that
-      // opens onto a 401.
-      if (commoditiesPanel && hasPremiumAccess()) {
+      if (commoditiesPanel) {
         try {
           const physicalGeneration = this.physicalComparisonLoadGuard.begin();
           await loadPhysicalPremiumComparisonIfNeeded(
@@ -3000,7 +2987,6 @@ export class DataLoaderManager implements AppModule {
             () => (
               isCurrent()
               && this.physicalComparisonLoadGuard.isCurrent(physicalGeneration)
-              && hasPremiumAccess()
             ),
             fetchPhysicalPremiums,
             fetchPhysicalDivergence,
@@ -3073,7 +3059,6 @@ export class DataLoaderManager implements AppModule {
     // This is the tab-activation entry point, so without it clicking Physical
     // would re-fire the two gated RPCs for a free user on every open.
     // Free→Pro / Pro→free transitions are handled in App.firePremiumLoaders().
-    if (!hasPremiumAccess()) return;
     const panel = this.ctx.panels['commodities'] as CommoditiesPanel | undefined;
     if (!panel) return;
     const generation = this.physicalComparisonLoadGuard.begin();
@@ -3084,7 +3069,6 @@ export class DataLoaderManager implements AppModule {
       () => (
         !signal?.aborted
         && this.physicalComparisonLoadGuard.isCurrent(generation)
-        && hasPremiumAccess()
       ),
       () => fetchPhysicalPremiums(signal),
       () => fetchPhysicalDivergence(signal),
@@ -3099,7 +3083,6 @@ export class DataLoaderManager implements AppModule {
   }
 
   async loadDailyMarketBrief(force = false): Promise<void> {
-    if (!hasPremiumAccess()) return;
     if (this.ctx.isDestroyed || this.ctx.inFlight.has('dailyMarketBrief')) return;
 
     this.dailyBriefGeneration++;
@@ -3337,7 +3320,6 @@ export class DataLoaderManager implements AppModule {
   }
 
   async loadMarketImplications(): Promise<void> {
-    if (!hasPremiumAccess()) return;
     if (this.ctx.isDestroyed || this.ctx.inFlight.has('marketImplications')) return;
     this.ctx.inFlight.add('marketImplications');
     try {
@@ -3705,7 +3687,6 @@ export class DataLoaderManager implements AppModule {
   }
 
   async loadIntelligenceSignals(): Promise<void> {
-    const _desktopLocked = isDesktopRuntime() && !hasPremiumAccess();
     const tasks: Promise<void>[] = [];
     let protestsUpdated = false;
 
@@ -3954,19 +3935,9 @@ export class DataLoaderManager implements AppModule {
     // Security advisories
     tasks.push(this.loadSecurityAdvisories());
 
-    // Telegram Intel (premium-locked on desktop without API key)
-    if (!_desktopLocked) {
-      tasks.push(this.loadTelegramIntel());
-    }
-
-    if (!_desktopLocked) {
-      tasks.push(this.loadXIntel());
-    }
-
-    // OREF sirens (premium-locked on desktop without API key)
-    if (!_desktopLocked) {
-      tasks.push(this.loadOrefAlerts());
-    }
+    tasks.push(this.loadTelegramIntel());
+    tasks.push(this.loadXIntel());
+    tasks.push(this.loadOrefAlerts());
 
     // GPS/GNSS jamming (cloud-only — seeded by Wingbits API via fetch-gpsjam.mjs)
     if (!isDesktopRuntime()) {
@@ -4629,12 +4600,6 @@ export class DataLoaderManager implements AppModule {
       procurementPanel.setRequestHandler((nextFilters, shouldAppend, requestSignal) => {
         return this.loadGlobalTenders(nextFilters, shouldAppend, requestSignal);
       });
-      procurementPanel.setPrincipalResetHandler(() => this.resetGlobalTendersForPrincipal());
-      if (!hasPremiumAccess()) {
-        if (isCanceledOrStale()) return;
-        procurementPanel.clear();
-        return;
-      }
       if (isCanceledOrStale()) return;
       procurementPanel.setLoading(true, append);
       try {
@@ -4642,11 +4607,6 @@ export class DataLoaderManager implements AppModule {
         if (isCanceledOrStale()) return;
         const data = await fetchGlobalTenders(requestFilters, signal);
         if (isCanceledOrStale()) return;
-        if (!hasPremiumAccess()) {
-          if (isCanceledOrStale()) return;
-          procurementPanel.clear();
-          return;
-        }
         if (isCanceledOrStale()) return;
         procurementPanel.update(data, append);
         if (isCanceledOrStale()) return;
@@ -4654,7 +4614,7 @@ export class DataLoaderManager implements AppModule {
           status: !data.dataAvailable ? 'error' : ['partial', 'stale'].includes(data.availability) ? 'warning' : 'ok',
         });
       } catch (error) {
-        if (isCanceledOrStale() || !hasPremiumAccess()) return;
+        if (isCanceledOrStale()) return;
         console.warn('[App] Global tenders failed:', error);
         if (isCanceledOrStale()) return;
         procurementPanel.showUnavailable();
@@ -4664,23 +4624,6 @@ export class DataLoaderManager implements AppModule {
     } finally {
       releaseScopedRequest();
     }
-  }
-
-  /**
-   * The procurement panel was reset for a principal change (sign-out,
-   * downgrade, or a switch to another Pro account). Drop the previous
-   * account's filters and cached results, then reload for the current account
-   * (loadGlobalTenders applies the access gate itself). App fires its
-   * account-transition loaders before panel gating runs, so the load already
-   * in flight carries the old filters; clearGlobalTenders() supersedes it and
-   * the reload replaces it.
-   */
-  private resetGlobalTendersForPrincipal(): void {
-    void this.clearGlobalTenders();
-    void Promise.resolve().then(() => {
-      if (this.ctx.isDestroyed) return;
-      void this.loadGlobalTenders();
-    });
   }
 
   async clearGlobalTenders(): Promise<void> {
@@ -4753,7 +4696,6 @@ export class DataLoaderManager implements AppModule {
     // Trade-policy is PRO-gated. Short-circuit for anonymous/free users so
     // we don't fire 6 RPCs that all 401 on every page load — fixes the
     // console-noise + Sentry-noise bug from the 2026-04-22 trace.
-    if (!hasPremiumAccess()) return;
     const tradePanel = this.ctx.panels['trade-policy'] as TradePolicyPanel | undefined;
     if (!tradePanel) return;
     const generation = tradePanel.beginDataLoad();
@@ -4865,13 +4807,12 @@ export class DataLoaderManager implements AppModule {
   }
 
   async loadMineralProduction(): Promise<void> {
-    if (!hasPremiumAccess()) return;
     const panel = this.ctx.panels['supply-chain'] as SupplyChainPanel | undefined;
     if (!panel) return;
     const generation = this.mineralProductionLoadGuard.begin();
     const { fetchMineralProduction } = await import('@/services/supply-chain');
     const data = await fetchMineralProduction();
-    if (!hasPremiumAccess() || !this.mineralProductionLoadGuard.isCurrent(generation)) return;
+    if (!this.mineralProductionLoadGuard.isCurrent(generation)) return;
     panel.updateMineralProduction(data);
   }
 
@@ -5374,7 +5315,7 @@ export class DataLoaderManager implements AppModule {
   }
 
   async loadResilienceRanking(): Promise<void> {
-    if (!hasPremiumAccess() || !this.ctx.map?.isDeckGLActive?.()) {
+    if (!this.ctx.map?.isDeckGLActive?.()) {
       this.ctx.map?.setResilienceRanking([]);
       this.ctx.map?.setLayerReady('resilienceScore', false);
       return;
@@ -5413,11 +5354,9 @@ export class DataLoaderManager implements AppModule {
   }
 
   async loadTelegramIntel(): Promise<void> {
-    if (isDesktopRuntime() && !hasPremiumAccess()) return;
     const generation = getTelegramIntelGeneration();
     const isCurrent = () => !this.ctx.isDestroyed
-      && generation === getTelegramIntelGeneration()
-      && (!isDesktopRuntime() || hasPremiumAccess());
+      && generation === getTelegramIntelGeneration();
     try {
       const result = await fetchTelegramFeed();
       if (!isCurrent()) return;
@@ -5432,7 +5371,6 @@ export class DataLoaderManager implements AppModule {
   }
 
   async loadXIntel(): Promise<void> {
-    if (isDesktopRuntime() && !hasPremiumAccess()) return;
     // `xFeed` is intentionally NOT a bootstrap tier key (R4, #6654): its items
     // carry post bodies, and every tier is served unauthenticated at
     // `?tier=<t>&public=1` with ACAO:*. So this read is inert today and always

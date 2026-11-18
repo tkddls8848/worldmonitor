@@ -1,8 +1,4 @@
 import { getClerkToken, getCurrentClerkUser } from '@/services/clerk';
-import {
-  billingVerificationRetryDelayMs,
-  readBillingVerificationCode,
-} from '@/services/billing-retry';
 import { SITE_VARIANT } from '@/config/variant';
 
 export type ChannelType = 'telegram' | 'slack' | 'email' | 'discord' | 'teams' | 'webhook' | 'web_push';
@@ -58,17 +54,6 @@ export interface ChannelsData {
   channels: NotificationChannel[];
   alertRules: AlertRule[];
 }
-
-// ---------------------------------------------------------------------------
-// Retryable billing-verification denials (#5622)
-// ---------------------------------------------------------------------------
-//
-// The decision itself now lives in src/services/billing-retry.ts so the premium
-// RPC surface shares it verbatim (#6483) — the gateway emits this same 503 on
-// every tier-gated path, not just this endpoint. Re-exported because
-// tests/notification-channels-billing-retry.test.mts pins the contract here.
-
-export { billingVerificationRetryDelayMs } from '@/services/billing-retry';
 
 function sleep(ms: number, signal?: AbortSignal | null): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -146,71 +131,14 @@ async function sendOnce(
   });
 }
 
-/**
- * Authenticated fetch with ONE bounded retry on a retryable
- * billing-verification 503 (#5622).
- *
- * Before this, every caller below threw `Error(\`... ${res.status}\`)` on any
- * non-2xx, so the 503 + Retry-After + X-Billing-Verification the server emits
- * for an unverifiable entitlement was inert on this surface — the day-0 Pro
- * activation wizard failed the step exactly as if the user had no subscription.
- * The retry is what makes the server-side contract observable behavior.
- *
- * Bounded on purpose: one extra attempt, only for the codes the server marks
- * retryable, only after waiting the delay it asked for. The retry re-derives the
- * Clerk token and re-asserts the expected account, so it cannot write under a
- * session that changed while we waited.
- *
- * Note this does NOT help the day-0 poisoned-marker cohort — that state is a
- * 403 by design (see api/notification-channels.ts), and no amount of retrying
- * should turn a clean upsell into a retry loop.
- *
- * `init.body` must be a re-sendable value (every caller here passes a string).
- * A stream body would be consumed by the first attempt.
- *
- * `waitSignal` cancels only the Retry-After WAIT, never a dispatched request.
- * That distinction is the whole point: a caller whose lifetime signal lands in
- * `init.signal` cancels the POST itself, and for the fire-and-forget setters
- * below that silently discards a write the user already made. Read paths pass
- * their signal in `init` (cancelling a stale read is desirable); write paths
- * pass it here instead, so closing the settings panel abandons the retry rather
- * than the mutation.
- */
+/** Authenticated fetch pinned to the account that was current when the call started. */
 async function authFetch(
   path: string,
   init?: RequestInit,
   expectedUserId?: string,
-  waitSignal?: AbortSignal | null,
+  _waitSignal?: AbortSignal | null,
 ): Promise<Response> {
-  // Pin the identity for the whole call, including the retry. `expectedUserId`
-  // is opt-in and most callers in this file omit it (every setter reached from
-  // src/services/notifications-settings.ts), which made assertExpectedAccount a
-  // no-op for them. That was tolerable while a call was one round-trip; adding a
-  // multi-second wait is not — an account switch during the wait would let the
-  // retry write under the new session. Falling back to the session that was
-  // current when the call started gives those callers the same protection the
-  // activation wizard asks for explicitly.
   const pinnedUserId = expectedUserId ?? clientDeps.getCurrentClerkUser()?.id;
-  const first = await sendOnce(path, init, pinnedUserId);
-  if (first.status !== 503) return first;
-
-  // No identity could be pinned — `getCurrentClerkUser()` is a synchronous
-  // `clerkInstance?.user` read that never triggers a load, while
-  // `getClerkToken()` above can itself initialise Clerk and succeed. So a call
-  // landing in that window reaches here with `pinnedUserId === undefined`, and
-  // `assertExpectedAccount(undefined)` is a no-op. Rather than retry with the
-  // account check silently disabled — the exact protection the comment above
-  // claims — decline the retry and let the caller surface the 503.
-  if (pinnedUserId === undefined) return first;
-
-  const delayMs = billingVerificationRetryDelayMs({
-    status: first.status,
-    code: await readBillingVerificationCode(first),
-    retryAfterHeader: first.headers.get('Retry-After'),
-  });
-  if (delayMs === null) return first;
-
-  await clientDeps.sleep(delayMs, waitSignal ?? init?.signal ?? null);
   return sendOnce(path, init, pinnedUserId);
 }
 

@@ -6,10 +6,9 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi, type Mock }
 import i18next from 'i18next';
 
 import { FocusBar, type FocusBarCallbacks } from '@/components/FocusBar';
-import { focusCountryName, focusGateCopy, focusWindowText } from '@/components/focus-format';
+import { focusCountryName, focusWindowText } from '@/components/focus-format';
 import { openFocusEditor, validateFocusDraft, type FocusEditorHandle } from '@/components/FocusEditor';
 import { PanelTabBar } from '@/components/PanelTabBar';
-import { PanelGateReason } from '@/services/panel-gating';
 import type { ResolvedScope } from '@/services/tab-focus';
 import type { TabsState } from '@/services/tab-store';
 import { RELOAD_POLICY_ATTR } from '@/utils/open-modal';
@@ -194,7 +193,7 @@ describe('FocusBar', () => {
     function barWith(onDraft: () => void): FocusBar {
       bar.destroy();
       document.body.replaceChildren();
-      bar = new FocusBar({ onEdit: vi.fn(), onClear: vi.fn(), canDraftAssessment: () => true, onDraftAssessment: onDraft }, () => now);
+      bar = new FocusBar({ onEdit: vi.fn(), onClear: vi.fn(), onDraftAssessment: onDraft }, () => now);
       document.body.appendChild(bar.getElement());
       return bar;
     }
@@ -220,10 +219,10 @@ describe('FocusBar', () => {
   describe('draft assessment action (#10451 hand-off)', () => {
     const draft = () => q<HTMLButtonElement>('.focus-bar-draft');
 
-    function barWith(canDraft: (() => boolean) | undefined, onDraft: () => void): FocusBar {
+    function barWith(onDraft: () => void): FocusBar {
       bar.destroy();
       document.body.replaceChildren();
-      bar = new FocusBar({ onEdit: vi.fn(), onClear: vi.fn(), canDraftAssessment: canDraft, onDraftAssessment: onDraft }, () => now);
+      bar = new FocusBar({ onEdit: vi.fn(), onClear: vi.fn(), onDraftAssessment: onDraft }, () => now);
       document.body.appendChild(bar.getElement());
       return bar;
     }
@@ -233,14 +232,9 @@ describe('FocusBar', () => {
       expect(draft()).toBeNull();
     });
 
-    it('is absent for an account that may not draft', () => {
-      barWith(() => false, vi.fn()).render(resolved(SEA));
-      expect(draft()).toBeNull();
-    });
-
-    it('is a labelled button for an account that may, and calls back once per click', () => {
+    it('is a labelled button that calls back once per click', () => {
       const onDraft = vi.fn();
-      barWith(() => true, onDraft).render(resolved(SEA));
+      barWith(onDraft).render(resolved(SEA));
       expect(draft()!.textContent).toBe('Trip assessment');
       expect(draft()!.getAttribute('aria-label')).toBe('Open the trip assessment, prefilled with this focus');
       draft()!.click();
@@ -248,47 +242,14 @@ describe('FocusBar', () => {
     });
 
     it('sits before Edit so the report action leads the focus actions', () => {
-      barWith(() => true, vi.fn()).render(resolved(SEA));
+      barWith(vi.fn()).render(resolved(SEA));
       const labels = [...root().querySelectorAll('.focus-bar-actions button')].map((b) => b.className);
       expect(labels[0]).toContain('focus-bar-draft');
       expect(labels[1]).toContain('focus-bar-edit');
     });
 
-    it('follows the plan at the next render, so a lapsed grant removes it', () => {
-      let allowed = true;
-      barWith(() => allowed, vi.fn()).render(resolved(SEA));
-      expect(draft()).not.toBeNull();
-      allowed = false;
-      bar.render(resolved(SEA));
-      expect(draft()).toBeNull();
-    });
   });
 
-  it('shows the upgrade gate inline for an account without focus', () => {
-    bar.render(resolved(SEA));
-    const onAction = vi.fn();
-    bar.showGate(focusGateCopy(PanelGateReason.FREE_TIER), onAction);
-    const gate = q('.focus-bar-gate')!;
-    expect(gate.textContent).toContain('Pro Business');
-    const cta = gate.querySelector<HTMLButtonElement>('.focus-bar-gate-cta')!;
-    expect(document.activeElement).toBe(cta);
-    cta.click();
-    expect(onAction).toHaveBeenCalledTimes(1);
-    expect(q('.focus-bar-gate')).toBeNull();
-  });
-});
-
-describe('focusGateCopy', () => {
-  it('asks a signed-out visitor to sign in and a signed-in one to upgrade', () => {
-    expect(focusGateCopy(PanelGateReason.ANONYMOUS).cta).toBe('Sign In to Unlock');
-    const upgrade = focusGateCopy(PanelGateReason.FREE_TIER);
-    expect(upgrade.desc).toContain('Pro Business');
-    expect(upgrade.cta).not.toBe('');
-  });
-
-  it('never upsells a customer whose payment is on hold', () => {
-    expect(focusGateCopy(PanelGateReason.PAYMENT_ON_HOLD).desc).not.toContain('Pro Business');
-  });
 });
 
 describe('validateFocusDraft', () => {
@@ -468,22 +429,6 @@ describe('PanelTabBar Focus button', () => {
     tabBar.refresh();
     expect(btn()?.classList.contains('active')).toBe(true);
     expect(btn()?.getAttribute('aria-label')).toBe("Edit this tab's focus");
-  });
-
-  it('shows the upgrade notice for an account without focus, and a second click closes it', () => {
-    const onAction = vi.fn();
-    tabBar.showFocusGateNotice(focusGateCopy(PanelGateReason.FREE_TIER), onAction);
-    const notice = document.querySelector('.tab-cap-notice');
-    expect(notice?.textContent).toContain('Pro Business');
-    expect(document.activeElement).toBe(notice?.querySelector('.tab-cap-notice-cta'));
-
-    btn()!.click();
-    expect(document.querySelector('.tab-cap-notice')).toBeNull();
-    expect(onClick).not.toHaveBeenCalled();
-
-    tabBar.showFocusGateNotice(focusGateCopy(PanelGateReason.FREE_TIER), onAction);
-    document.querySelector<HTMLButtonElement>('.tab-cap-notice-cta')!.click();
-    expect(onAction).toHaveBeenCalledTimes(1);
   });
 
   it('has no Focus button without focus callbacks', () => {

@@ -364,14 +364,10 @@ describe('main.js eager diet — export panel is interaction-loaded', () => {
     );
   });
 
-  it('keeps ExportPanel behind a dynamic import and resets failed loads', () => {
+  it('keeps ExportPanel behind a dynamic import', () => {
     assert.ok(
       dynamicImportSpecifiers(eventHandlersSource).includes(EXPORT_PANEL_DEFERRED_IMPORT),
       'event-handlers should lazy-load ExportPanel with import("@/utils/export")',
-    );
-    assert.ok(
-      eventHandlersWithoutComments.includes('exportPanelLoad = null;'),
-      'event-handlers should reset exportPanelLoad on chunk-load failure so later Pro gates can retry',
     );
   });
 

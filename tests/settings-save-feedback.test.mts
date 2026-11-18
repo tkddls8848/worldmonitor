@@ -458,10 +458,6 @@ describe('settings save feedback', () => {
     assert.doesNotMatch(extractMethodBody(settings, 'private savePanelChanges()'), /showToast\(/);
     assert.doesNotMatch(settings, /function showToast\(/);
     assert.doesNotMatch(eventHandlers, /\n\s{2}showToast\(msg: string\): void/);
-    assert.equal(
-      eventHandlers.match(/showToast\(t\('modals\.settingsWindow\.freeSourceLimit',[\s\S]*?\), 3000\);/g)?.length,
-      2,
-    );
     assert.match(
       extractMethodBody(countryIntel, 'showToast(msg: string): void'),
       /^\s*showGlobalToast\(msg, 3000\);\s*$/,

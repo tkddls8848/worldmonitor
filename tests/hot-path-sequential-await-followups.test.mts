@@ -136,16 +136,8 @@ function assertApiLoadStartsBeforeClientAwait(rel: string, marker: string) {
 }
 
 describe('signed-in boot: the Convex API chunk loads alongside the client', () => {
-  it('entitlements subscription starts the API load before awaiting the client', () => {
-    assertApiLoadStartsBeforeClientAwait('src/services/entitlements.ts', 'No VITE_CONVEX_URL — skipping Convex subscription');
-  });
-
-  it('billing subscription watch starts the API load before awaiting the client', () => {
-    assertApiLoadStartsBeforeClientAwait('src/services/billing.ts', 'No VITE_CONVEX_URL -- skipping subscription watch');
-  });
-
-  it('no billing or followed-countries call awaits the client and then the API', () => {
-    for (const rel of ['src/services/billing.ts', 'src/services/followed-countries.ts', 'src/services/entitlements.ts']) {
+  it('no followed-countries call awaits the client and then the API', () => {
+    for (const rel of ['src/services/followed-countries.ts']) {
       assert.doesNotMatch(
         read(rel),
         /await (?:getConvexClient|_convexClientGetter)\(\);\s*\n\s*const api = await (?:getConvexApi|_convexApiGetter)\(\)/,

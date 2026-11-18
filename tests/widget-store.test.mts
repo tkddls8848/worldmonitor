@@ -378,58 +378,6 @@ describe('widget-store tester-key hints follow the server verdict', () => {
     restoreGlobal('window', windowSnapshot);
   });
 
-  it('a legacy pro key grants Pro only after the server accepts it', async () => {
-    let answer!: (r: ExchangeResult) => void;
-    const store = await loadWithKeys({
-      legacy: { 'wm-pro-key': 'good-pro' },
-      exchange: () => new Promise(resolve => { answer = resolve; }),
-    });
-    let changes = 0;
-    store.subscribeWidgetAccess(() => { changes++; });
-    assert.equal(store.isProUser(), false, 'no Pro while the exchange is pending');
-    await settle();
-    assert.equal(store.isProUser(), false, 'still no Pro while the exchange is pending');
-    answer({ ok: true, pro: 'accepted' });
-    await settle();
-    assert.equal(store.isProUser(), true);
-    assert.equal(store.isProWidgetEnabled(), true);
-    assert.ok(changes >= 1, 'listeners hear about the accepted key');
-  });
-
-  it('a legacy pro key the server rejects never grants Pro', async () => {
-    let changes = 0;
-    const store = await loadWithKeys({
-      legacy: { 'wm-pro-key': 'wrong-pro' },
-      exchange: async keys => verdictFor(keys, () => 'rejected'),
-    });
-    store.subscribeWidgetAccess(() => { changes++; });
-    assert.equal(store.isProUser(), false);
-    await settle();
-    assert.equal(store.isProUser(), false);
-    assert.equal(changes, 0, 'a rejected key changes nothing listeners can see');
-  });
-
-  it('a transport failure leaves Pro off', async () => {
-    const store = await loadWithKeys({
-      legacy: { 'wm-pro-key': 'maybe-pro' },
-      exchange: async keys => verdictFor(keys, () => 'failed'),
-    });
-    assert.equal(store.isProUser(), false);
-    await settle();
-    assert.equal(store.isProUser(), false);
-  });
-
-  it('widget and pro keys are judged independently', async () => {
-    const store = await loadWithKeys({
-      legacy: { 'wm-widget-key': 'stale-widget', 'wm-pro-key': 'good-pro' },
-      exchange: async keys => verdictFor(keys, key => key === 'good-pro' ? 'accepted' : 'rejected'),
-    });
-    store.isProUser();
-    await settle();
-    assert.equal(store.isWidgetFeatureEnabled(), false);
-    assert.equal(store.isProWidgetEnabled(), true);
-  });
-
   it('setProKey with a rejected key does not grant Pro', async () => {
     const store = await loadWithKeys({ exchange: async keys => verdictFor(keys, () => 'rejected') });
     let changes = 0;
@@ -448,49 +396,4 @@ describe('widget-store tester-key hints follow the server verdict', () => {
     assert.equal(store.isProWidgetEnabled(), true, 'the server kept the previous cookie, so Pro stays');
   });
 
-  it('after a reload the server status restores Pro without a legacy key', async () => {
-    let answer!: (s: { widget: boolean; pro: boolean } | null) => void;
-    const exchanged: unknown[] = [];
-    const store = await loadWithKeys({
-      exchange: async keys => { exchanged.push(keys); return verdictFor(keys, () => 'accepted'); },
-      status: () => new Promise(resolve => { answer = resolve; }),
-    });
-    let changes = 0;
-    store.subscribeWidgetAccess(() => { changes++; });
-    assert.equal(store.isProUser(), false, 'boot never waits for the status read');
-    answer({ widget: false, pro: true });
-    await settle();
-    assert.equal(store.isProUser(), true);
-    assert.equal(store.isWidgetFeatureEnabled(), false);
-    assert.equal(changes, 1);
-    assert.deepEqual(exchanged, [], 'no exchange without a legacy key');
-  });
-
-  it('an unknown status leaves the hints off', async () => {
-    const store = await loadWithKeys({ status: async () => null });
-    assert.equal(store.isProUser(), false);
-    await settle();
-    assert.equal(store.isProUser(), false);
-  });
-
-  it('a stale status answer does not override a key the user changed meanwhile', async () => {
-    let answer!: (s: { widget: boolean; pro: boolean } | null) => void;
-    const store = await loadWithKeys({ status: () => new Promise(resolve => { answer = resolve; }) });
-    assert.equal(store.isProUser(), false);
-    assert.equal(await store.setProKey(''), true);
-    answer({ widget: false, pro: true });
-    await settle();
-    assert.equal(store.isProWidgetEnabled(), false, 'the user cleared the key after the status request left');
-  });
-
-  it('the status read reports the session an exchange at boot just established', async () => {
-    const store = await loadWithKeys({
-      legacy: { 'wm-pro-key': 'good-pro' },
-      exchange: async keys => verdictFor(keys, () => 'accepted'),
-      status: async () => ({ widget: false, pro: false }),
-    });
-    store.isProUser();
-    await settle();
-    assert.equal(store.isProWidgetEnabled(), false, 'the server says the cookie is not usable, so Pro stays off');
-  });
 });

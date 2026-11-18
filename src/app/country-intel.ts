@@ -11,7 +11,6 @@ import type { AppContext, AppModule, CountryBriefSignals } from '@/app/app-conte
 import type { CountrySignalCounts } from '@/types';
 import { getSignalAggregator } from '@/app/lazy-services';
 import type { CountrySignalCluster } from '@/services/signal-aggregator';
-import { premiumFetch } from '@/services/premium-fetch';
 import { CountryTimeline } from '@/components/CountryTimeline';
 import type {
   CountryDeepDiveEconomicIndicator,
@@ -53,9 +52,6 @@ import { collectStoryData } from '@/services/story-data';
 // remaining StoryModal eager edge. The modal opens on user interaction
 // (post-paint), so the import() latency is hidden.
 
-import { hasPremiumAccess } from '@/services/panel-gating';
-import { getAuthState, subscribeAuthState } from '@/services/auth-state';
-import { onEntitlementChange } from '@/services/entitlements';
 import { showMapContextMenu } from '@/components/MapContextMenu';
 import { BETA_MODE } from '@/config/beta';
 import { mlWorker } from '@/services/ml-worker';
@@ -162,17 +158,8 @@ export class CountryIntelManager implements AppModule {
   private briefStateListener: ((state: { visible: boolean; maximized: boolean }) => void) | null = null;
   private frameworkUnsubscribe: (() => void) | null = null;
   private _fwDebounce: ReturnType<typeof setTimeout> | null = null;
-  // Re-fire PRO-gated country sections on false→true entitlement transition.
-  // Without this, a user who opens a country brief before Clerk resolves
-  // keeps seeing empty national-debt / sanctions / comtrade / tariff cards
-  // until they reselect the country or reload. Tracks the last-seen
-  // entitlement so unrelated auth events (session refresh, prefs sync)
-  // don't re-hammer fetchProSections.
-  private authUnsubscribe: (() => void) | null = null;
   private orbitalRouteUnsubscribe: (() => void) | null = null;
   private orbitalMapFocusUnsubscribe: (() => void) | null = null;
-  private entitlementUnsubscribe: (() => void) | null = null;
-  private lastHadPremium = false;
   private currentCountryPresentation: CountryPresentation | null = null;
   private countryController: CountryBriefController | null = null;
   private qualifiedSource = createWebsiteCountryBriefSource();
@@ -215,10 +202,6 @@ export class CountryIntelManager implements AppModule {
       restore: ({ lat, lon, zoom }) => void this.ctx.map?.setCenter(lat, lon, zoom, { instant: true }),
     });
     if (ORBITAL_WATCH_ENABLED) this.orbitalRouteUnsubscribe = watchOrbitalRoute(() => this.ctx.map);
-    this.lastHadPremium = hasPremiumAccess(getAuthState());
-    const syncPremiumAccess = () => this.handlePremiumAccessTransition(hasPremiumAccess(getAuthState()));
-    this.authUnsubscribe = subscribeAuthState(syncPremiumAccess);
-    this.entitlementUnsubscribe = onEntitlementChange(syncPremiumAccess);
   }
 
   destroy(): void {
@@ -242,34 +225,6 @@ export class CountryIntelManager implements AppModule {
     this.countryBriefPageLoading = null;
     this.frameworkUnsubscribe?.();
     this.frameworkUnsubscribe = null;
-    this.authUnsubscribe?.();
-    this.authUnsubscribe = null;
-    this.entitlementUnsubscribe?.();
-    this.entitlementUnsubscribe = null;
-  }
-
-  private handlePremiumAccessTransition(nowPremium: boolean): void {
-    if (nowPremium === this.lastHadPremium) return;
-    this.lastHadPremium = nowPremium;
-    this.qualifiedSignals = null;
-    this.qualifiedMilitary = null;
-    this.qualifiedMilitarySummary = null;
-    this.qualifiedSource.clearLoadedData();
-
-    const page = this.ctx.countryBriefPage;
-    const openCode = page?.getCode();
-    if (!page?.isVisible() || !openCode || openCode === '__loading__' || openCode === '__error__') return;
-
-    page.syncCountryPremiumSectionsAccess?.(nowPremium);
-    page.clearQualifiedCountrySignals?.();
-    if (!nowPremium) {
-      const summary = this.buildMilitarySummary(openCode, page.getName() ?? openCode);
-      page.updateMilitaryActivity?.(summary);
-      const latest = page.getSignalCounts?.();
-      if (latest) page.updateSignals?.({ ...latest, ...this.getQualifiedMilitaryCounts(openCode) }, summary.coverageNotes);
-    }
-    this.getCountryController(page).refreshPremium();
-    this.refreshOpenBrief();
   }
 
   private handleCountryBriefOpenError(err: unknown): void {
@@ -927,7 +882,7 @@ export class CountryIntelManager implements AppModule {
       params.set('framework', effectiveFramework);
     }
 
-    const resp = await premiumFetch(toApiUrl(`/api/intelligence/v1/get-country-intel-brief?${params.toString()}`), {
+    const resp = await fetch(toApiUrl(`/api/intelligence/v1/get-country-intel-brief?${params.toString()}`), {
       method: 'GET',
       headers: { Accept: 'application/json' },
       signal: this.ctx.countryBriefPage?.signal,

@@ -10,7 +10,6 @@ import { t } from '@/services/i18n';
 import { createFocusTrap, type FocusTrap } from '@/utils/focus-trap';
 import { escapeHtml } from '@/utils/sanitize';
 import { proxyUrl } from '@/utils/proxy';
-import { premiumFetch } from '@/services/premium-fetch';
 import { track } from '@/services/analytics';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 import { declareOverlay } from '@/utils/open-modal';
@@ -437,11 +436,7 @@ export function openMcpConnectModal(options: McpConnectOptions): void {
     connectBtn.disabled = true;
     try {
       const headers = getEffectiveHeaders();
-      // premiumFetch attaches the Clerk Pro Bearer for normal web Pro
-      // users. /api/mcp-proxy is in PREMIUM_RPC_PATHS so the path gate
-      // fires; the server-side isCallerPremium check accepts Bearer,
-      // wm_ user keys, and enterprise keys (PR #3768).
-      const resp = await premiumFetch(proxyUrl('/api/mcp-proxy'), {
+      const resp = await fetch(proxyUrl('/api/mcp-proxy'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'tools/list', serverUrl, customHeaders: headers }),

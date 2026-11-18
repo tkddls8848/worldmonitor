@@ -194,7 +194,6 @@ function createHarness(matches: SearchMatch[], enabledPanels: Record<string, boo
       unifiedSettings: { open: openSettings },
     } as never,
     getVariant: () => 'full',
-    hasPremiumAccess: () => false,
     openCountryBriefByCode,
     enablePanel,
     trackSearchResultSelected: vi.fn(),
@@ -212,7 +211,6 @@ function createHarness(matches: SearchMatch[], enabledPanels: Record<string, boo
     isDestroyed: () => false,
     refreshIndex: vi.fn(),
     getModal: () => modal as never,
-    hasPremiumAccess: () => false,
     fetchLiveFlight: vi.fn(async () => {}),
     getAuthContext: () => 'anonymous:settled:free',
     getVariant: () => 'full',
@@ -224,10 +222,8 @@ function createHarness(matches: SearchMatch[], enabledPanels: Record<string, boo
       signal,
     ),
     subscribeAuth: () => () => {},
-    subscribeEntitlement: () => () => {},
     subscribeRuntimeConfig: () => () => {},
     subscribeWidgetAccess: () => () => {},
-    onPremiumAccessChanged: vi.fn(),
     cancelPendingSelection: () => dispatcher.cancelPendingProgrammaticSelection(),
   });
   return {

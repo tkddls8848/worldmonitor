@@ -1,18 +1,11 @@
 import { t } from '@/services/i18n';
 import type { ResolvedScope } from '@/services/tab-focus';
-import type { GateCopy } from '@/components/ExportGateControl';
-import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 import { focusCountryName, focusWindowText, formatCountryList } from './focus-format';
 
 export interface FocusBarCallbacks {
   onEdit(): void;
   onClear(): void;
-  /**
-   * Hand the focus to the travel risk assessment (#10451). The action shows
-   * only when both are given and `canDraftAssessment` says the plan holds the
-   * grant, read at every render so a lapsed grant removes it.
-   */
-  canDraftAssessment?(): boolean;
+  /** Hand the focus to the travel risk assessment (#10451). */
   onDraftAssessment?(): void;
 }
 
@@ -36,11 +29,10 @@ export class FocusBar {
   private readonly detailsId = `focus-bar-details-${++nextId}`;
   private expanded = false;
   private lastKey: string | null = null;
-  private gate: HTMLElement | null = null;
   private current: ResolvedScope | null = null;
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly onVisible = (): void => {
-    if (document.visibilityState === 'visible' && this.current && !this.element.hidden && !this.gate) this.render(this.current);
+    if (document.visibilityState === 'visible' && this.current && !this.element.hidden) this.render(this.current);
   };
 
   constructor(
@@ -78,13 +70,12 @@ export class FocusBar {
     const delay = Math.min(Math.max(nextMidnight - now.getTime() + 1000, 1000), 2 ** 31 - 1);
     this.refreshTimer = setTimeout(() => {
       this.refreshTimer = null;
-      if (this.current === resolved && !this.element.hidden && !this.gate) this.render(resolved);
+      if (this.current === resolved && !this.element.hidden) this.render(resolved);
     }, delay);
   }
 
   /** Show the active focus, or hide the bar when there is none. */
   render(resolved: ResolvedScope | null): void {
-    this.gate = null;
     this.current = resolved;
     this.clearRefresh();
     if (!resolved) {
@@ -160,8 +151,8 @@ export class FocusBar {
 
     const actions = document.createElement('div');
     actions.className = 'focus-bar-actions';
-    const { canDraftAssessment, onDraftAssessment } = this.callbacks;
-    if (canDraftAssessment && onDraftAssessment && canDraftAssessment()) {
+    const { onDraftAssessment } = this.callbacks;
+    if (onDraftAssessment) {
       const draft = document.createElement('button');
       draft.type = 'button';
       draft.className = 'focus-bar-btn focus-bar-draft';
@@ -183,44 +174,6 @@ export class FocusBar {
     this.element.replaceChildren(row, details);
     if (focusedAction) this.element.querySelector<HTMLElement>(`.${focusedAction}`)?.focus();
     this.scheduleRefresh(resolved);
-  }
-
-  /**
-   * The upsell for an account that may not set a focus (it can still clear
-   * one, e.g. a shared dashboard). Inline rather than a popover: the bar is
-   * full width and may wrap at phone widths.
-   */
-  showGate(copy: GateCopy, onAction: () => void): void {
-    this.gate?.remove();
-    const gate = document.createElement('div');
-    gate.className = 'focus-bar-gate';
-    gate.setAttribute('role', 'status');
-
-    const icon = document.createElement('span');
-    icon.className = 'focus-bar-gate-icon tab-cap-notice-icon';
-    icon.setAttribute('aria-hidden', 'true');
-    setTrustedHtml(icon, trustedHtml(copy.icon, 'static inline icon markup'));
-
-    const desc = document.createElement('span');
-    desc.className = 'focus-bar-gate-desc';
-    desc.id = `${this.detailsId}-gate`;
-    desc.textContent = copy.desc;
-
-    const cta = document.createElement('button');
-    cta.type = 'button';
-    cta.className = 'focus-bar-gate-cta tab-cap-notice-cta';
-    cta.textContent = copy.cta;
-    cta.setAttribute('aria-describedby', desc.id);
-    cta.addEventListener('click', () => {
-      gate.remove();
-      this.gate = null;
-      onAction();
-    });
-
-    gate.append(icon, desc, cta);
-    this.element.append(gate);
-    this.gate = gate;
-    cta.focus();
   }
 
   private buildDetails(chosen: readonly string[], neighbours: readonly string[]): HTMLElement {

@@ -2,10 +2,9 @@ import { normalizeStockSymbol } from '../../shared/stock-symbol';
 import { getRpcBaseUrl } from '@/services/rpc-client';
 import type { BacktestStockResponse } from '@/generated/client/worldmonitor/market/v1/service_client';
 import { runThrottledTargetRequests } from '@/services/throttled-target-requests';
-import { premiumFetch } from '@/services/premium-fetch';
 import { MarketServiceClient } from '@/services/generated-rpc-clients';
 
-const client = new MarketServiceClient(getRpcBaseUrl(), { fetch: premiumFetch });
+const client = new MarketServiceClient(getRpcBaseUrl(), { fetch: (...args: Parameters<typeof fetch>) => globalThis.fetch(...args) });
 
 export type StockBacktestResult = BacktestStockResponse;
 

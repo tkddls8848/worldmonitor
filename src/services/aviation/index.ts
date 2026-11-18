@@ -3,7 +3,6 @@ import type { AirportDelayAlert as ProtoAlert, AirportOpsSummary as ProtoOpsSumm
 import { createCircuitBreaker } from '@/utils/circuit-breaker';
 import { ensureHydrated, getHydratedData } from '@/services/bootstrap';
 import { AviationServiceClient } from '@/services/generated-rpc-clients';
-import { premiumFetch } from '@/services/premium-fetch';
 
 // ---- Consumer-friendly display types ----
 
@@ -321,11 +320,7 @@ function toDisplayDatePrice(p: ProtoDatePriceEntry): DatePrice {
 
 // ---- Client + circuit breakers ----
 
-// premiumFetch, not raw fetch: the three AviationStack-metered routes are in
-// PREMIUM_RPC_PATHS, and only premiumFetch attaches the Clerk Bearer for them.
-// Injection is path-gated inside premiumFetch, so the free aviation methods on
-// this same client (delays, ops summary, news, tracking) are unaffected.
-const client = new AviationServiceClient(getRpcBaseUrl(), { fetch: premiumFetch });
+const client = new AviationServiceClient(getRpcBaseUrl(), { fetch: (...args: Parameters<typeof fetch>) => globalThis.fetch(...args) });
 
 function reviveDate(value: unknown): Date {
   if (value instanceof Date) {

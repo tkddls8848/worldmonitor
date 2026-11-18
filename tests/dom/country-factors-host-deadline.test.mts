@@ -2,8 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createHostCountryBriefSource, createWebsiteCountryBriefSource } from '@/services/country-brief-source';
 import norwayFactors from '../../e2e/fixtures/country-factors-no.json';
 
-const website = vi.hoisted(() => ({ fetch: vi.fn() }));
-vi.mock('@/services/premium-fetch', () => ({ premiumFetch: website.fetch }));
+const website = vi.hoisted(() => {
+  const w = { fetch: vi.fn() };
+  globalThis.fetch = ((...args: unknown[]) => w.fetch(...args)) as typeof fetch;
+  return w;
+});
 
 const value = norwayFactors;
 type CallArgs = { section: string; arguments: object };

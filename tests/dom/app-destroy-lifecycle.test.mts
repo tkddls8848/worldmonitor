@@ -73,10 +73,6 @@ vi.mock('@/components/IntelligenceGapBadge', () => ({
 }));
 
 import { App } from '@/App';
-import {
-  beginEntitlementVerification, getEntitlementVerificationStatus,
-  onEntitlementVerificationChange, resetEntitlementState, resetEntitlementVerification,
-} from '@/services/entitlements';
 import { dataFreshness } from '@/services/data-freshness';
 import {
   VesselRuntimeStoppedError,
@@ -92,7 +88,6 @@ type AppInternals = {
   lifecycleController: AbortController;
   webMcpController: AbortController | null;
   appDestroyed: Promise<void>;
-  freeTierGate: { cancelFallback: () => void };
   visiblePanelPrimeRaf: number | null;
   viewportHydrationReady: boolean;
   viewportHydrationReadyAt: number;
@@ -149,25 +144,6 @@ afterEach(() => {
 });
 
 describe('App.destroy', () => {
-  it('settles pending entitlement verification during final panel teardown for current and late subscribers', () => {
-    const { app } = makeApp();
-    resetEntitlementState();
-    beginEntitlementVerification();
-    const observer = vi.fn();
-    const off = onEntitlementVerificationChange(observer);
-    try {
-      app.destroy();
-      expect(getEntitlementVerificationStatus()).toBe('unavailable');
-      expect(observer).toHaveBeenLastCalledWith('unavailable');
-      const lateObserver = vi.fn();
-      onEntitlementVerificationChange(lateObserver)();
-      expect(lateObserver).toHaveBeenLastCalledWith('unavailable');
-    } finally {
-      off();
-      resetEntitlementVerification();
-    }
-  });
-
   it('tears down the map, AIS, flight cleanup, workers and WebMCP even when a module destructor throws', async () => {
     const { app, internals } = makeApp();
     enableVesselRuntime();
@@ -185,7 +161,6 @@ describe('App.destroy', () => {
     const lifecycle = internals.lifecycleController;
     lifecycle.signal.addEventListener('abort', () => order.push('lifecycle'));
     webMcp.signal.addEventListener('abort', () => order.push('webmcp'));
-    const cancelFallback = vi.spyOn(internals.freeTierGate, 'cancelFallback');
     let readinessWaitFinished = false;
     void internals.appDestroyed.then(() => { readinessWaitFinished = true; });
 
@@ -195,7 +170,6 @@ describe('App.destroy', () => {
     // modules destroy in reverse order and the map still follows a throwing module
     expect(order).toEqual(['lifecycle', 'webmcp', 'last', 'throws', 'first', 'map']);
     expect(readinessWaitFinished).toBe(true);
-    expect(cancelFallback).toHaveBeenCalledTimes(1);
     expect(internals.state.isDestroyed).toBe(true);
     expect(lifecycle.signal.aborted).toBe(true);
     expect(webMcp.signal.aborted).toBe(true);

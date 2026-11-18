@@ -117,7 +117,7 @@ describe('Settings home list', () => {
     expect(home().hidden).toBe(false);
     expect(back().hidden).toBe(true);
     const groups = [...document.querySelectorAll('.us-group-label')].map((h) => h.textContent);
-    expect(groups).toEqual(['Dashboard', 'Preferences', 'Developer', 'App']);
+    expect(groups).toEqual(['Dashboard', 'Preferences', 'App']);
     expect(row('panels')).not.toBeNull();
     expect(row('about')).not.toBeNull();
     expect(document.querySelectorAll('[data-settings-page]')).toHaveLength(0);

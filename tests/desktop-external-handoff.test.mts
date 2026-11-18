@@ -196,9 +196,6 @@ installWindow('web');
 const { isOpenableExternalUrl, openExternalUrl, prereserveExternalTab } = await import(
   '../src/services/external-navigation.ts'
 );
-const { openBillingPortal, prereserveBillingPortalTab } = await import(
-  '../src/services/billing.ts'
-);
 const { __setClerkInstanceForTests } = await import('../src/services/clerk.ts');
 const { __setConvexClientForTests } = await import('../src/services/convex-client.ts');
 
@@ -324,15 +321,6 @@ describe('openExternalUrl — desktop', () => {
 
   // #10342: the opener is the one exit every desktop upgrade CTA and link
   // shares, so it is where /pro learns which account the app is signed in to.
-  it('marks an exit to /pro as a desktop checkout handoff', async () => {
-    installWindow('desktop');
-
-    assert.equal(await openExternalUrl('https://worldmonitor.app/pro#pricing'), 'native');
-
-    assert.deepEqual(probe.invocations, [
-      { command: 'open_url', payload: { url: 'https://worldmonitor.app/pro?wm_checkout_handoff=desktop#pricing' } },
-    ]);
-  });
 });
 
 describe('openExternalUrl — web', () => {
@@ -548,112 +536,4 @@ describe('prereserveExternalTab', () => {
     assert.deepEqual(probe.opened, [['', '_blank', undefined]]);
   });
 
-  it('is what prereserveBillingPortalTab delegates to, so billing inherits both', () => {
-    installWindow('desktop');
-    assert.equal(prereserveBillingPortalTab(), null);
-
-    installWindow('web');
-    assert.notEqual(prereserveBillingPortalTab(), null);
-  });
-});
-
-describe('openBillingPortal — desktop', () => {
-  it('opens the personalized portal session in the OS browser', async () => {
-    installWindow('desktop');
-    installSignedInPortalUser();
-
-    assert.deepEqual(await openBillingPortal(prereserveBillingPortalTab()), {
-      outcome: 'opened',
-      url: PORTAL_URL,
-    });
-
-    assert.deepEqual(probe.invocations, [
-      { command: 'open_url', payload: { url: PORTAL_URL } },
-    ]);
-    // Regression guard for the reported bug: the WebView itself became the
-    // Dodo portal, with no way back to the app.
-    assert.deepEqual(probe.assigned, []);
-    assert.deepEqual(probe.opened, []);
-  });
-
-  it('routes the signed-out fallback portal the same way', async () => {
-    installWindow('desktop');
-
-    const result = await openBillingPortal(prereserveBillingPortalTab());
-
-    assert.deepEqual(result, { outcome: 'opened', url: 'https://customer.dodopayments.com' });
-    assert.deepEqual(probe.invocations, [
-      { command: 'open_url', payload: { url: 'https://customer.dodopayments.com' } },
-    ]);
-    assert.deepEqual(probe.assigned, []);
-  });
-});
-
-describe('openBillingPortal — desktop failure', () => {
-  it('reports open-failed rather than claiming it opened a session it did not', async () => {
-    // A portal session was just minted server-side. Reporting 'opened' for a
-    // handoff that never happened leaves the user staring at a dead button on
-    // the billing surface with a live session behind it.
-    installWindow('desktop');
-    installSignedInPortalUser();
-    probe.invokeRejects = true;
-    probe.popupBlocked = true;
-
-    assert.deepEqual(await openBillingPortal(prereserveBillingPortalTab()), {
-      outcome: 'open-failed',
-      url: PORTAL_URL,
-    });
-  });
-
-  it('still reports opened when the native handoff succeeds', async () => {
-    installWindow('desktop');
-    installSignedInPortalUser();
-
-    assert.deepEqual(await openBillingPortal(prereserveBillingPortalTab()), {
-      outcome: 'opened',
-      url: PORTAL_URL,
-    });
-  });
-});
-
-describe('openBillingPortal — web', () => {
-  it('keeps navigating the pre-reserved tab, with no native bridge call', async () => {
-    installWindow('web');
-    installSignedInPortalUser();
-    const reserved = prereserveBillingPortalTab();
-
-    assert.deepEqual(await openBillingPortal(reserved), {
-      outcome: 'opened',
-      url: PORTAL_URL,
-    });
-
-    assert.equal(reserved?.location.href, PORTAL_URL);
-    assert.deepEqual(probe.invocations, []);
-  });
-
-  it('does not label a reserved-tab SecurityError as a portal-URL fetch failure', async () => {
-    installWindow('web');
-    installSignedInPortalUser();
-    const reserved = makeTab({ hrefAssignThrows: true });
-    const errors: string[] = [];
-    const originalError = console.error;
-    console.error = (...args: unknown[]) => {
-      errors.push(args.map(String).join(' '));
-    };
-
-    let result: Awaited<ReturnType<typeof openBillingPortal>>;
-    try {
-      result = await openBillingPortal(reserved);
-    } finally {
-      console.error = originalError;
-    }
-
-    assert.equal(result.outcome, 'opened');
-    if (result.outcome === 'opened') assert.equal(result.url, PORTAL_URL);
-    assert.equal(
-      errors.some((line) => line.includes('Failed to get customer portal URL')),
-      false,
-      'navigation SecurityError after a successful portal URL fetch must not be logged as a Convex/URL failure',
-    );
-  });
 });

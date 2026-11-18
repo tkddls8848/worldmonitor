@@ -27,7 +27,6 @@ const facts = (overrides: Partial<SettingsFacts> = {}): SettingsFacts => ({
   signedIn: true,
   canSignIn: true,
   isDesktopApp: false,
-  embedAccess: true,
   account: { plan: 'Pro', email: 'a@example.com' },
   panels: { on: 18, total: 64 },
   sourcesOn: 412,
@@ -35,7 +34,7 @@ const facts = (overrides: Partial<SettingsFacts> = {}): SettingsFacts => ({
   ...overrides,
 });
 
-const signedOut = facts({ signedIn: false, account: null, embedAccess: false });
+const signedOut = facts({ signedIn: false, account: null });
 
 function at(page: SettingsSectionId | null, f = facts(), layout: NavLayout = 'sheet'): NavState {
   return reduceNav(null, { type: 'open', target: page ?? undefined, layout, recent: null }, f);
@@ -59,7 +58,6 @@ describe('settings sections registry', () => {
     assert.deepEqual([...SETTINGS_SECTION_IDS], [
       'account', 'panels', 'sources', 'notifications',
       'display', 'map', 'ai', 'video',
-      'api-keys', 'embeds', 'mcp-clients',
       'sync', 'about',
     ]);
   });
@@ -75,10 +73,6 @@ describe('settings sections registry', () => {
       ['signed out', signedOut, 'account', false],
       ['web', facts(), 'notifications', true],
       ['desktop', facts({ isDesktopApp: true }), 'notifications', false],
-      ['embed access', facts(), 'embeds', true],
-      ['no embed access', facts({ embedAccess: false }), 'embeds', false],
-      ['signed out', signedOut, 'mcp-clients', true],
-      ['signed out', signedOut, 'api-keys', true],
       ['signed out', signedOut, 'sync', true],
       ['desktop', facts({ isDesktopApp: true }), 'about', true],
     ];
@@ -101,9 +95,8 @@ describe('settings sections registry', () => {
   });
 
   it('hides unavailable sections from the home list and keeps registry order', () => {
-    const desktopNoEmbeds = rowIds(facts({ isDesktopApp: true, embedAccess: false }));
-    assert.ok(!desktopNoEmbeds.includes('notifications'));
-    assert.ok(!desktopNoEmbeds.includes('embeds'));
+    const desktop = rowIds(facts({ isDesktopApp: true }));
+    assert.ok(!desktop.includes('notifications'));
     assert.deepEqual(rowIds(facts()), [...SETTINGS_SECTION_IDS]);
   });
 
@@ -113,7 +106,6 @@ describe('settings sections registry', () => {
       ['account', null],
       ['dashboard', 'settings.groups.dashboard'],
       ['preferences', 'settings.groups.preferences'],
-      ['developer', 'settings.groups.developer'],
       ['app', 'settings.groups.app'],
     ]);
     assert.equal(SETTINGS_GROUPS.length, groups.length);
@@ -127,8 +119,6 @@ describe('settings sections registry', () => {
     assert.deepEqual(rows.get('display')?.summary, { kind: 'text', key: 'preferences.themeDark' });
     assert.deepEqual(rows.get('account')?.summary, { kind: 'account', plan: 'Pro', email: 'a@example.com' });
     assert.equal(rows.get('map')?.summary, null);
-    assert.equal(rows.get('api-keys')?.badge, 'pro');
-    assert.equal(rows.get('mcp-clients')?.badge, null);
   });
 
   it('follows the theme in the display summary', () => {
@@ -153,16 +143,16 @@ describe('settings navigation reducer', () => {
   });
 
   it('opens an unavailable target on the home list', () => {
-    assert.equal(at('embeds', facts({ embedAccess: false })).page, null);
     assert.equal(at('account', signedOut).page, null);
     assert.equal(at('notifications', facts({ isDesktopApp: true })).page, null);
   });
 
   it('selects an available section and ignores an unavailable one', () => {
-    const home = at(null, facts({ embedAccess: false }));
-    const panels = reduceNav(home, { type: 'select', id: 'panels' }, facts({ embedAccess: false }));
+    const desktop = facts({ isDesktopApp: true });
+    const home = at(null, desktop);
+    const panels = reduceNav(home, { type: 'select', id: 'panels' }, desktop);
     assert.equal(panels.page, 'panels');
-    assert.equal(reduceNav(panels, { type: 'select', id: 'embeds' }, facts({ embedAccess: false })), panels);
+    assert.equal(reduceNav(panels, { type: 'select', id: 'notifications' }, desktop), panels);
   });
 
   it('goes back to the home list', () => {
@@ -178,8 +168,8 @@ describe('settings navigation reducer', () => {
   });
 
   it('evicts a page that became unavailable', () => {
-    const embeds = at('embeds');
-    assert.equal(reduceNav(embeds, { type: 'facts-changed' }, facts({ embedAccess: false })).page, null);
+    const notifications = at('notifications');
+    assert.equal(reduceNav(notifications, { type: 'facts-changed' }, facts({ isDesktopApp: true })).page, null);
     const account = at('account');
     assert.equal(reduceNav(account, { type: 'facts-changed' }, signedOut).page, null);
   });
@@ -205,13 +195,13 @@ describe('settings navigation effects', () => {
   });
 
   it('leaves without entering on back', () => {
-    const mcp = at('mcp-clients');
-    assert.deepEqual(diffNav(mcp, reduceNav(mcp, { type: 'back' }, facts())), { leave: 'mcp-clients', enter: null });
+    const ai = at('ai');
+    assert.deepEqual(diffNav(ai, reduceNav(ai, { type: 'back' }, facts())), { leave: 'ai', enter: null });
   });
 
   it('has no effects for a no-op transition', () => {
-    const mcp = at('mcp-clients');
-    assert.deepEqual(diffNav(mcp, reduceNav(mcp, { type: 'select', id: 'mcp-clients' }, facts())), { leave: null, enter: null });
+    const ai = at('ai');
+    assert.deepEqual(diffNav(ai, reduceNav(ai, { type: 'select', id: 'ai' }, facts())), { leave: null, enter: null });
     const home = at(null);
     assert.deepEqual(diffNav(home, reduceNav(home, { type: 'back' }, facts())), { leave: null, enter: null });
   });
@@ -264,18 +254,18 @@ describe('settings navigation in the two-pane modal', () => {
   });
 
   it('falls back to the recent page, then Display, for an unavailable target', () => {
-    const noEmbeds = facts({ embedAccess: false });
-    assert.equal(openIn('modal', 'embeds', 'map', noEmbeds).page, 'map');
-    assert.equal(openIn('modal', 'embeds', null, noEmbeds).page, 'display');
+    const desktop = facts({ isDesktopApp: true });
+    assert.equal(openIn('modal', 'notifications', 'map', desktop).page, 'map');
+    assert.equal(openIn('modal', 'notifications', null, desktop).page, 'display');
     assert.equal(openIn('modal', 'account', 'account', signedOut).page, 'display');
   });
 
   it('selects an available section and ignores an unavailable one', () => {
-    const noEmbeds = facts({ embedAccess: false });
-    const display = openIn('modal', undefined, null, noEmbeds);
-    const about = reduceNav(display, { type: 'select', id: 'about' }, noEmbeds);
+    const desktop = facts({ isDesktopApp: true });
+    const display = openIn('modal', undefined, null, desktop);
+    const about = reduceNav(display, { type: 'select', id: 'about' }, desktop);
     assert.equal(about.page, 'about');
-    assert.equal(reduceNav(about, { type: 'select', id: 'embeds' }, noEmbeds), about);
+    assert.equal(reduceNav(about, { type: 'select', id: 'notifications' }, desktop), about);
   });
 
   it('never shows the home list: back keeps the page', () => {
@@ -348,10 +338,8 @@ describe('settings sidebar search', () => {
     const search = (q: string) => ids(searchNav(buildNav(facts()), q, text).groups);
     assert.deepEqual(search('ollama'), ['account', 'ai']);
     assert.deepEqual(search('text size'), ['account', 'panels', 'display']);
-    assert.deepEqual(search('desktop key'), ['account', 'api-keys']);
     assert.deepEqual(search('telegram'), ['account', 'notifications']);
     assert.deepEqual(search('backup'), ['account', 'sync']);
-    assert.deepEqual(search('claude'), ['account', 'mcp-clients']);
     assert.deepEqual(search('globe tiles'), ['account', 'map']);
     assert.deepEqual(search('stream autoplay'), ['account', 'video']);
   });

@@ -25,14 +25,6 @@ vi.mock('@/services/generated-rpc-clients', async (importOriginal) => ({
 
 // Lane-color tests force premium; every other test keeps the real gate.
 const premium = vi.hoisted(() => ({ forced: undefined as boolean | undefined }));
-vi.mock('@/services/panel-gating', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/services/panel-gating')>();
-  return {
-    ...actual,
-    hasPremiumAccess: (...args: Parameters<typeof actual.hasPremiumAccess>) =>
-      premium.forced ?? actual.hasPremiumAccess(...args),
-  };
-});
 
 type Handler = (event?: unknown) => void;
 type FlyToCall = { options: { center?: [number, number]; zoom?: number; duration?: number }; eventData?: Record<string, unknown> };

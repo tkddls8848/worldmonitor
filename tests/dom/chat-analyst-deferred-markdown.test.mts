@@ -21,9 +21,7 @@ vi.mock('@/utils/after-paint', async (importOriginal) => ({
   ...await importOriginal<typeof import('@/utils/after-paint')>(),
   yieldToMain: () => new Promise<void>((resolve) => { yieldControl.releases.push(resolve); }),
 }));
-vi.mock('@/services/premium-fetch', () => ({ premiumFetch: vi.fn() }));
 
-import { premiumFetch } from '@/services/premium-fetch';
 import { ChatAnalystPanel } from '@/components/ChatAnalystPanel';
 
 const RENDERED_HEIGHT = 500;
@@ -87,7 +85,7 @@ beforeEach(() => {
   frames = [];
   yieldControl.releases.length = 0;
   vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => frames.push(cb));
-  vi.mocked(premiumFetch).mockImplementation(async () => streamOf(
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async () => streamOf(
     '{"delta":"**Bold** answer"}',
     '{"done":true}',
   ));

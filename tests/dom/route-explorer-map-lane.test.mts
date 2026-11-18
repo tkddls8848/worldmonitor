@@ -26,7 +26,6 @@ const {
 vi.mock('@/services/supply-chain', () => ({ fetchRouteExplorerLane, fetchRouteImpact }));
 vi.mock('@/services/resilience', () => ({ getResilienceScore }));
 vi.mock('@/services/auth-state', () => ({ getAuthState: () => ({ user: null, isPending: false }) }));
-vi.mock('@/services/panel-gating', () => ({ hasPremiumAccess }));
 vi.mock('@/services/analytics', () => ({ track: vi.fn(), trackGateHit: vi.fn() }));
 
 import { RouteExplorer } from '@/components/RouteExplorer/RouteExplorer';
@@ -94,18 +93,4 @@ describe('RouteExplorer map lane', () => {
     expect(map.highlightRoute).not.toHaveBeenCalled();
   });
 
-  it('draws the same lane for free visitors without a lane response', async () => {
-    hasPremiumAccess.mockReturnValue(false);
-
-    explorer.open();
-    await vi.runAllTimersAsync();
-
-    expect(fetchRouteExplorerLane).not.toHaveBeenCalled();
-    expect(map.highlightLane).toHaveBeenCalledOnce();
-    const lane = map.highlightLane.mock.calls[0]![0];
-    expect(lane.routeId).toBe('gulf-asia-oil');
-    expect(lane.chokepointIds).toEqual(['hormuz_strait']);
-    expect(inIndia(lane.path[lane.path.length - 1]!)).toBe(true);
-    expect(map.highlightRoute).not.toHaveBeenCalled();
-  });
 });

@@ -118,16 +118,6 @@ describe('clearGlobalTenders cannot reject into the void call site (WORLDMONITOR
   // Pins the premise the guard rests on. If a future refactor gives the call
   // site its own rejection handler, this test's rationale changes and should be
   // re-derived rather than silently kept.
-  it('is still invoked fire-and-forget, with no rejection handler', () => {
-    const app = readFileSync(resolve(root, 'src/App.ts'), 'utf8');
-    assert.match(
-      app,
-      /void this\.dataLoader\.clearGlobalTenders\(\);/,
-      'expected the fire-and-forget call site that makes the guard necessary',
-    );
-    assert.doesNotMatch(app, /clearGlobalTenders\(\)\s*\.\s*catch/);
-  });
-
   // The user-visible half of the downgrade guarantee must stay ahead of the
   // import, so a swallowed import failure can never leave Pro data on screen.
   it('clears the panel before the guarded import, not after', () => {

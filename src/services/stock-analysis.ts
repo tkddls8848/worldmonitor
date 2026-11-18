@@ -7,15 +7,13 @@ import {
   resolveEffectiveMarketWatchlist,
 } from '@/services/market-watchlist';
 import { runThrottledTargetRequests } from '@/services/throttled-target-requests';
-import { premiumFetch } from '@/services/premium-fetch';
-import { isProUser } from '@/services/widget-store';
 import {
   selectStockAnalysisTargets,
   type StockAnalysisTarget,
 } from '@/services/stock-analysis-targets';
 import { MarketServiceClient } from '@/services/generated-rpc-clients';
 
-const client = new MarketServiceClient(getRpcBaseUrl(), { fetch: premiumFetch });
+const client = new MarketServiceClient(getRpcBaseUrl(), { fetch: (...args: Parameters<typeof fetch>) => globalThis.fetch(...args) });
 
 export type StockAnalysisResult = AnalyzeStockResponse;
 
@@ -48,7 +46,7 @@ export function getStockAnalysisTargets(limitOverride?: number): StockAnalysisTa
     ? [...resolved.customEntries, ...resolved.baseSymbols]
     : resolved.customEntries;
   return selectStockAnalysisTargets(userPicks, resolved.symbols, {
-    isPro: isProUser(),
+    isPro: true,
     limitOverride,
   });
 }

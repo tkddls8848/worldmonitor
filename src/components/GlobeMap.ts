@@ -41,7 +41,6 @@ import {
 } from '@/config/map-layer-definitions';
 import { layerExplanationLookup, renderLayerExplanationCard } from '@/utils/layer-explanation-card';
 import { guardOrbitControlsPointerTracking } from '@/utils/orbit-controls-pointer-guard';
-import { getAuthState } from '@/services/auth-state';
 import { resolveTradeRouteSegments, type TradeRouteSegment } from '@/config/trade-routes';
 import { GAMMA_IRRADIATORS } from '@/config/irradiators';
 import { AI_DATA_CENTERS } from '@/config/ai-datacenters';
@@ -87,11 +86,6 @@ import type { RadiationObservation } from '@/services/radiation';
 import type { ScenarioVisualState } from '@/config/scenario-templates';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 import { renderPopupSourceLinks } from './map-popup-source-links';
-import {
-  applyPremiumLayerPresentation,
-  getPremiumLayerPresentation,
-  PremiumLayerGate,
-} from './premium-layer-gate';
 import { globeAltitudeToMapZoom, mapZoomToGlobeAltitude } from '@/utils/globe-zoom';
 import { globeCenterForOffset, isOnVisibleHemisphere, type ScreenOffset } from '@/utils/map-point-offset';
 import { headingToCompass } from '@/utils/heading-to-compass';
@@ -544,8 +538,6 @@ export class GlobeMap {
   private unsubscribeGlobeQuality: (() => void) | null = null;
   private unsubscribeGlobeTexture: (() => void) | null = null;
   private unsubscribeVisualPreset: (() => void) | null = null;
-  private premiumLayerGate: PremiumLayerGate | null = null;
-  private pendingPremiumLayerChanges = new Set<keyof MapLayers>();
   private savedDefaultMaterial: any = null;
   private controls: GlobeControlsLike | null = null;
   private pendingMarkerGestureCleanup: (() => void) | null = null;
@@ -2173,13 +2165,10 @@ export class GlobeMap {
 
   private createLayerToggles(): void {
     const layerDefs = getLayersForVariant((SITE_VARIANT || 'full') as MapVariant, 'globe');
-    const authState = getAuthState();
     const layers = layerDefs.map(def => ({
       key: def.key,
       label: resolveLayerLabel(def, t),
       icon: def.icon,
-      premium: def.premium,
-      presentation: getPremiumLayerPresentation(def.premium, authState),
     }));
 
     const el = document.createElement('div');
@@ -2193,7 +2182,7 @@ export class GlobeMap {
       </div>
       <input type="text" class="layer-search" placeholder="${t('components.deckgl.layerSearch')}" autocomplete="off" spellcheck="false" />
       <div class="toggle-list" style="max-height:32vh;overflow-y:auto;scrollbar-width:thin;">
-        ${layers.map(({ key, label, icon, presentation }) => {
+        ${layers.map(({ key, label, icon }) => {
             const explainLabel = escapeHtml(`Explain ${label} layer`);
             const hasExplanation = hasCuratedLayerExplanation(key);
             return `
@@ -2201,7 +2190,7 @@ export class GlobeMap {
             <label class="layer-toggle" data-layer="${key}">
               <input type="checkbox" ${this.layers[key] ? 'checked' : ''}>
               <span class="toggle-icon">${icon}</span>
-              <span class="toggle-label">${label}${presentation.enhanced ? ' <span class="layer-pro-badge">PRO</span>' : ''}</span>
+              <span class="toggle-label">${label}</span>
             </label>
             <button type="button" class="layer-explain-btn${hasExplanation ? ' has-layer-explanation' : ''}" data-layer="${key}" aria-label="${explainLabel}" title="${explainLabel}">i</button>
           </div>`;
@@ -2209,12 +2198,6 @@ export class GlobeMap {
       </div>`, "legacy direct innerHTML migration"));
     this.container.appendChild(el);
     this.layerTogglesEl = el;
-
-    for (const layer of layers) {
-      if (!layer.premium) continue;
-      const toggle = el.querySelector(`.layer-toggle[data-layer="${layer.key}"]`) as HTMLElement | null;
-      if (toggle) applyPremiumLayerPresentation(toggle, layer.presentation);
-    }
 
     el.querySelectorAll('.layer-toggle input').forEach(input => {
       input.addEventListener('change', () => {
@@ -2242,17 +2225,6 @@ export class GlobeMap {
         if (layer) void this.showLayerExplanation(layer);
       });
     });
-
-    const lockedPremiumLayerKeys = new Set(
-      layers.filter(layer => layer.premium === 'locked').map(layer => layer.key),
-    );
-    this.premiumLayerGate?.destroy();
-    this.premiumLayerGate = lockedPremiumLayerKeys.size > 0
-      ? new PremiumLayerGate(el, lockedPremiumLayerKeys, {
-          isLayerEnabled: layer => Boolean(this.layers[layer as keyof MapLayers]),
-          onAccessLost: layer => this.handlePremiumLayerAccessLoss(layer as keyof MapLayers),
-        })
-      : null;
 
     // ── Webcam marker-mode sub-toggle ────────────────────────────────────────
     const webcamToggleEl = el.querySelector('.layer-toggle[data-layer="webcams"]') as HTMLElement | null;
@@ -2298,21 +2270,6 @@ export class GlobeMap {
 
     // The panel usually mounts after the first flush, so replay what that flush withheld.
     this.updateLayerTruncationLabels();
-  }
-
-  private handlePremiumLayerAccessLoss(layer: keyof MapLayers): void {
-    const wasEnabled = Boolean(this.layers[layer]);
-    this.layers[layer] = false;
-    this.flushLayerChannels(layer);
-    if (!wasEnabled) return;
-
-    if (this.onLayerChangeCb) {
-      this.onLayerChangeCb(layer, false, 'programmatic');
-    } else {
-      // GlobeMap builds its controls before MapContainer rehydrates the
-      // callback. Preserve an initial entitlement clamp for that short window.
-      this.pendingPremiumLayerChanges.add(layer);
-    }
   }
 
   private async showLayerExplanation(layer: keyof MapLayers): Promise<void> {
@@ -3642,10 +3599,6 @@ export class GlobeMap {
   public highlightAssets(_assets: any): void {}
   public setOnLayerChange(cb: (layer: keyof MapLayers, enabled: boolean, source: 'user' | 'programmatic') => void): void {
     this.onLayerChangeCb = cb;
-    if (this.pendingPremiumLayerChanges.size === 0) return;
-    const pending = [...this.pendingPremiumLayerChanges];
-    this.pendingPremiumLayerChanges.clear();
-    for (const layer of pending) cb(layer, false, 'programmatic');
   }
   public setOnTimeRangeChange(_cb: any): void {}
   public hideLayerToggle(layer: keyof MapLayers): void {
@@ -4515,9 +4468,6 @@ export class GlobeMap {
     this.unsubscribeGlobeTexture = null;
     this.unsubscribeVisualPreset?.();
     this.unsubscribeVisualPreset = null;
-    this.premiumLayerGate?.destroy();
-    this.premiumLayerGate = null;
-    this.pendingPremiumLayerChanges.clear();
     // Stop attributing INP events to a globe that is no longer mounted (#5368).
     setGlobeMarkerLoad(null);
     if (this.visibilityHandler) {

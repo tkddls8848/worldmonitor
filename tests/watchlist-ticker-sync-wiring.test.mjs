@@ -53,16 +53,11 @@ describe('watchlist tickers — client save + re-sync plumbing (#4922 U3)', () =
     );
   });
 
-  it('watchlist-modal save path re-syncs tickers, gated on PRO tier (no anon/free 4xx flood)', () => {
+  it('watchlist-modal save path re-syncs tickers', () => {
     assert.match(
       watchlistModalSrc,
       /syncWatchlistTickersToAlertRule/,
       'watchlist-modal save must trigger the ticker re-sync',
-    );
-    assert.match(
-      watchlistModalSrc,
-      /hasTier\(1\)/,
-      're-sync must be gated on PRO tier client-side before hitting the API',
     );
     assert.match(watchlistModalSrc, /setMarketWatchlistPreferences/, 'catalog and custom layers must save atomically');
     assert.match(watchlistModalSrc, /setAttribute\('role', 'checkbox'\)/, 'catalog items must be keyboard-operable controls');

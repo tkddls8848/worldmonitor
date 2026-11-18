@@ -19,31 +19,37 @@ import {
   waitForConvexAuth,
   waitForConvexAuthForUser,
 } from '../src/services/convex-client.ts';
-import { createEmbedKey } from '../src/services/embed-keys.ts';
-import { createApiKey, listApiKeys } from '../src/services/api-keys.ts';
-import {
-  acknowledgePlanLimitNotice,
-  listCurrentPlanLimitNotices,
-} from '../src/services/api-plan-limit-notices.ts';
-import { listMcpClients } from '../src/services/mcp-clients.ts';
-import { settleAccountOperation } from '../src/services/account-operation.ts';
+import { assertAccountStillCurrent, settleAccountOperation } from '../src/services/account-operation.ts';
 import {
   __setClerkInstanceForTests,
   getClerkToken,
+  getCurrentClerkUser,
 } from '../src/services/clerk.ts';
 import { startAccountAuthHandoff } from '../src/app/account-auth-handoff.ts';
-import {
-  destroyEntitlementSubscription,
-  initEntitlementSubscription,
-} from '../src/services/entitlements.ts';
-import {
-  destroySubscriptionWatch,
-  getSubscription,
-  initSubscriptionWatch,
-  listBusinessSeats,
-  openBillingPortal,
-  openProActivationDay0Presentation,
-} from '../src/services/billing.ts';
+import { getConvexApi } from '../src/services/convex-client.ts';
+
+/**
+ * A signed-in Convex mutation with the same account guards every account
+ * write uses: the probe the same-user recovery cases drive. (The billing
+ * call they used to drive is retired.)
+ */
+async function accountMutationProbe(): Promise<unknown> {
+  const userId = getCurrentClerkUser()?.id;
+  if (!userId) throw new Error('Sign in to run the probe.');
+  const [client, api] = await Promise.all([getConvexClient(), getConvexApi()]);
+  if (!client || !api) throw new Error('Convex unavailable');
+  if (!await waitForConvexAuthForUser(userId)) {
+    assertAccountStillCurrent(userId, 'running the probe');
+    throw new Error('Authentication unavailable while running the probe. Try again.');
+  }
+  assertAccountStillCurrent(userId, 'running the probe');
+  const result = await settleAccountOperation(userId, 'running the probe', () => client.mutation(
+    (api as never as { probe: unknown }).probe as never,
+    {},
+  )) as { status: unknown };
+  assertAccountStillCurrent(userId, 'running the probe');
+  return result.status;
+}
 
 type TokenFetcher = (args?: { forceRefreshToken?: boolean }) => Promise<string | null>;
 type AuthCallback = (isAuthenticated: boolean) => void;
@@ -179,8 +185,6 @@ function installFakeClient(): FakeConvexClient {
 const originalFetch = globalThis.fetch;
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  destroyEntitlementSubscription();
-  destroySubscriptionWatch();
   __setConvexClientFactoryForTests(null);
   __setConvexClientForTests(null);
   __setClerkInstanceForTests(null);
@@ -417,23 +421,6 @@ describe('generation-scoped Convex auth handoff', () => {
     assert.equal(await handoff, true);
   });
 
-  it('cancels async watch initialization when the selected identity changes', async () => {
-    __setClerkInstanceForTests({
-      session: { getToken: async () => 'token-b' },
-      user: { id: 'B' },
-    } as never);
-    const fake = installFakeClient();
-    fake.authConfigs[0].onChange(true);
-    let current = true;
-
-    const entitlementInit = initEntitlementSubscription('B', () => current);
-    const billingInit = initSubscriptionWatch('B', () => current);
-    current = false;
-
-    await Promise.all([entitlementInit, billingInit]);
-    assert.equal(fake.watchAttachments.length, 0);
-  });
-
   it('invalidates cached, in-flight, and Convex credentials on sign-out', async () => {
     const fake = installFakeClient();
     fake.authConfigs[0].onChange(true);
@@ -465,78 +452,6 @@ describe('generation-scoped Convex auth handoff', () => {
     fake.authConfigs[1].onChange(false);
     assert.equal(await waitForConvexAuth(10), false);
   });
-
-  it('does not dispatch an API-key create if A changes while auth is pending', async () => {
-    const token = deferred<string | null>();
-    let tokenRequested = false;
-    __setClerkInstanceForTests({
-      session: { getToken: async () => { tokenRequested = true; return token.promise; } },
-      user: { id: 'A' },
-    } as never);
-    const calls: unknown[] = [];
-    globalThis.fetch = async (...args) => { calls.push(args); return Response.json({}); };
-    const rejected = assert.rejects(createApiKey('A key'), /Account changed while creating the API key/);
-    await waitForCondition(() => tokenRequested, 'session token must be pending');
-    __setClerkInstanceForTests({
-      session: { getToken: async () => 'token-b' }, user: { id: 'B' },
-    } as never);
-    token.resolve('token-a');
-    await rejected;
-    assert.equal(calls.length, 0, 'no API-key fetch may cross the switch');
-  });
-
-  it('does not dispatch an embed-key create if A changes while auth is pending', async () => {
-    const token = deferred<string | null>();
-    let tokenRequested = false;
-    __setClerkInstanceForTests({
-      session: { getToken: async () => { tokenRequested = true; return token.promise; } },
-      user: { id: 'A' },
-    } as never);
-    const calls: unknown[] = [];
-    globalThis.fetch = async (...args) => { calls.push(args); return Response.json({}); };
-    const rejected = assert.rejects(createEmbedKey('A key'), /Account changed while creating the embed key/);
-    await waitForCondition(() => tokenRequested, 'session token must be pending');
-    __setClerkInstanceForTests({
-      session: { getToken: async () => 'token-b' }, user: { id: 'B' },
-    } as never);
-    token.resolve('token-a');
-    await rejected;
-    assert.equal(calls.length, 0, 'no embed-key fetch may cross the switch');
-  });
-
-  it('creates an embed key through the standard session route and sends only its hash', async () => {
-    const tokenOptions: unknown[] = [];
-    __setClerkInstanceForTests({
-      session: { getToken: async (options: unknown) => { tokenOptions.push(options); return 'session-a'; } },
-      user: { id: 'A' },
-    } as never);
-    let sent: Record<string, string> | undefined;
-    globalThis.fetch = async (url, init) => {
-      assert.equal(url, '/api/user-embed-keys');
-      assert.equal(init?.method, 'POST');
-      assert.equal(new Headers(init?.headers).get('Authorization'), 'Bearer session-a');
-      sent = JSON.parse(String(init?.body));
-      return Response.json({ id: 'embed_a', name: sent!.name, keyPrefix: sent!.keyPrefix });
-    };
-    const result = await createEmbedKey('  Partner  ');
-    assert.deepEqual(tokenOptions, [{ skipCache: true }], 'must not request the convex template');
-    assert.equal(result.id, 'embed_a');
-    assert.equal(result.name, 'Partner');
-    assert.match(result.key, /^wme_[a-f0-9]{40}$/);
-    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(result.key));
-    const hash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
-    assert.deepEqual(sent, { name: 'Partner', keyPrefix: result.key.slice(0, 9), keyHash: hash });
-  });
-
-  for (const code of ['KEY_LIMIT_REACHED', 'EMBED_ACCESS_REQUIRED']) {
-    it(`preserves embed creation error ${code} for Settings`, async () => {
-      __setClerkInstanceForTests({
-        session: { getToken: async () => 'session-a' }, user: { id: 'A' },
-      } as never);
-      globalThis.fetch = async () => Response.json({ error: code }, { status: 403 });
-      await assert.rejects(createEmbedKey('Partner'), { message: code });
-    });
-  }
 
   it('checks the initiating account immediately before dispatch', async () => {
     __setClerkInstanceForTests({
@@ -590,189 +505,6 @@ describe('generation-scoped Convex auth handoff', () => {
     await rejected;
   });
 
-  it('surfaces current-account auth outages instead of rendering empty account lists', async () => {
-    __setClerkInstanceForTests({
-      session: { getToken: async () => 'token-a' },
-      user: { id: 'A' },
-    } as never);
-    installManualAuthTimers();
-    const fake = installFakeClient();
-    // The token stays unavailable: the failure's one reinstall fails too, and
-    // its cooldown keeps every load below from reinstalling again.
-    fake.authConfigs[0].onChange(false);
-    await waitForCondition(() => fake.authConfigs.length === 2, 'the failure reinstalls auth once');
-    fake.authConfigs[1].onChange(false);
-    await flushMicrotasks();
-
-    const cases: Array<[string, () => Promise<unknown>]> = [
-      ['API keys', listApiKeys],
-      ['MCP clients', listMcpClients],
-      ['API plan-limit notices', listCurrentPlanLimitNotices],
-      ['Business Pro seats', listBusinessSeats],
-    ];
-    for (const [label, operation] of cases) {
-      await assert.rejects(
-        operation(),
-        new RegExp(`Authentication unavailable while loading ${label}`),
-      );
-    }
-  });
-
-  it('rejects an A API key that resolves after Clerk selects B', async () => {
-    __setClerkInstanceForTests({
-      session: { getToken: async () => 'token-a' }, user: { id: 'A' },
-    } as never);
-    const response = deferred<Response>();
-    const calls: unknown[] = [];
-    globalThis.fetch = async (url, init) => {
-      assert.equal(url, '/api/user-api-keys');
-      assert.equal(new Headers(init?.headers).get('Authorization'), 'Bearer token-a');
-      calls.push(url);
-      return response.promise;
-    };
-    const rejected = assert.rejects(createApiKey('A key'), /Account changed while creating the API key/);
-    await waitForCondition(() => calls.length === 1, 'A fetch must be pending');
-    __setClerkInstanceForTests({
-      session: { getToken: async () => 'token-b' }, user: { id: 'B' },
-    } as never);
-    response.resolve(Response.json({ id: 'key_a', name: 'A key', keyPrefix: 'wm_a' }));
-    await rejected;
-    assert.equal(calls.length, 1, 'the A request completed, but its plaintext stayed discarded');
-  });
-
-  it('rejects an A embed key that resolves after Clerk selects B', async () => {
-    __setClerkInstanceForTests({
-      session: { getToken: async () => 'token-a' }, user: { id: 'A' },
-    } as never);
-    const response = deferred<Response>();
-    const calls: unknown[] = [];
-    globalThis.fetch = async (url, init) => {
-      assert.equal(url, '/api/user-embed-keys');
-      assert.equal(new Headers(init?.headers).get('Authorization'), 'Bearer token-a');
-      calls.push(url);
-      return response.promise;
-    };
-    const rejected = assert.rejects(createEmbedKey('A key'), /Account changed while creating the embed key/);
-    await waitForCondition(() => calls.length === 1, 'A fetch must be pending');
-    __setClerkInstanceForTests({
-      session: { getToken: async () => 'token-b' }, user: { id: 'B' },
-    } as never);
-    response.resolve(Response.json({ id: 'key_a', name: 'A key', keyPrefix: 'wme_a' }));
-    await rejected;
-    assert.equal(calls.length, 1, 'the A request completed, but its plaintext stayed discarded');
-  });
-
-  it('rejects a notice acknowledgement when the identity-bound auth gate fails', async () => {
-    __setClerkInstanceForTests({
-      session: { getToken: async () => 'token-a' },
-      user: { id: 'A' },
-    } as never);
-    installManualAuthTimers();
-    const fake = installFakeClient();
-    fake.authConfigs[0].onChange(false);
-    await waitForCondition(() => fake.authConfigs.length === 2, 'the failure reinstalls auth once');
-    fake.authConfigs[1].onChange(false);
-    await flushMicrotasks();
-
-    // The same user is still signed in, so this is an auth outage, not an
-    // account change (Sentry WORLDMONITOR-1CP).
-    await assert.rejects(
-      acknowledgePlanLimitNotice('notice-a'),
-      /Authentication unavailable while acknowledging the API plan-limit notice/,
-    );
-    assert.equal(fake.mutations.length, 0);
-    assert.equal(fake.authConfigs.length, 2, 'the cooldown blocks another reinstall');
-  });
-
-  it('discards account-scoped list results that settle after A changes to B', async () => {
-    const cases = [
-      ['API keys', listApiKeys],
-      ['MCP clients', listMcpClients],
-      ['plan-limit notices', listCurrentPlanLimitNotices],
-      ['Business seats', listBusinessSeats],
-    ] as const;
-
-    for (const [label, load] of cases) {
-      __setClerkInstanceForTests({
-        session: { getToken: async () => 'token-a' },
-        user: { id: 'A' },
-      } as never);
-      const fake = installFakeClient();
-      fake.authConfigs[0].onChange(true);
-      const query = deferred<unknown>();
-      fake.queryResult = query.promise;
-
-      const rejected = assert.rejects(
-        load(),
-        /Account changed while/,
-        `${label} must not cross the account handoff`,
-      );
-      await waitForCalls(fake.queries, 1);
-
-      __setClerkInstanceForTests({
-        session: { getToken: async () => 'token-b' },
-        user: { id: 'B' },
-      } as never);
-      query.resolve([]);
-
-      await rejected;
-      __setConvexClientForTests(null);
-    }
-  });
-
-  it('closes the reserved tab instead of navigating B to A billing portal', async () => {
-    __setClerkInstanceForTests({
-      session: { getToken: async () => 'token-a' },
-      user: { id: 'A' },
-    } as never);
-    const fake = installFakeClient();
-    fake.authConfigs[0].onChange(true);
-    const action = deferred<{ portal_url: string }>();
-    fake.actionResult = action.promise;
-    const reserved = {
-      closed: false,
-      location: { href: '' },
-      close() {
-        this.closed = true;
-      },
-    };
-
-    const opening = openBillingPortal(reserved as never);
-    await waitForCalls(fake.actions, 1);
-
-    action.resolve({ portal_url: 'https://portal.example/account-a-secret' });
-    queueMicrotask(() => {
-      __setClerkInstanceForTests({
-        session: { getToken: async () => 'token-b' },
-        user: { id: 'B' },
-      } as never);
-    });
-
-    assert.deepEqual(await opening, { outcome: 'account-changed' });
-    assert.equal(reserved.closed, true);
-    assert.equal(reserved.location.href, '', 'A portal URL must never be assigned');
-  });
-
-  it('drops a late billing-watch snapshot after its account handoff is stale', async () => {
-    __setClerkInstanceForTests({
-      session: { getToken: async () => 'token-a' },
-      user: { id: 'A' },
-    } as never);
-    const fake = installFakeClient();
-    await initSubscriptionWatch('A');
-    assert.equal(fake.watchAttachments.length, 1);
-
-    __setClerkInstanceForTests({
-      session: { getToken: async () => 'token-b' },
-      user: { id: 'B' },
-    } as never);
-    const onResult = fake.watchAttachments[0]?.[2] as (
-      result: { planKey: string } | null,
-    ) => void;
-    onResult({ planKey: 'pro' });
-
-    assert.equal(getSubscription(), null);
-  });
 });
 
 describe('cold Convex singleton initialization', () => {
@@ -870,31 +602,18 @@ describe('cold Convex singleton initialization', () => {
 });
 
 describe('App account-switch controller', () => {
-  it('resets state, starts rebind before cloud prefs, and nests watch attachment', async () => {
+  it('starts rebind before cloud prefs and resolves with the rebind result', async () => {
     const events: string[] = [];
     const completion = deferred<boolean>();
-    let attachWatches: (() => void) | null = null;
 
     const handoff = startAccountAuthHandoff({
       userId: 'B',
       isCurrent: () => true,
       effects: {
-        destroyEntitlementSubscription: () => events.push('destroy-entitlement'),
-        beginEntitlementVerification: () => events.push('begin-entitlement-verification'),
-        resetEntitlementState: () => events.push('reset-entitlement'),
-        markEntitlementVerificationUnavailable: () => events.push('unavailable-entitlement-verification'),
-        destroySubscriptionWatch: () => events.push('destroy-billing'),
-        rebindConvexAuthForWatchHandoff: (isCurrent, attach) => {
+        rebindConvexAuthForWatchHandoff: (isCurrent) => {
           events.push('rebind');
           assert.equal(isCurrent(), true);
-          attachWatches = attach;
           return completion.promise;
-        },
-        initEntitlementSubscription: (userId) => {
-          events.push(`attach-entitlement:${userId}`);
-        },
-        initSubscriptionWatch: (userId) => {
-          events.push(`attach-billing:${userId}`);
         },
         cloudPrefsSignIn: (userId) => {
           events.push(`cloud-prefs:${userId}`);
@@ -902,70 +621,9 @@ describe('App account-switch controller', () => {
       },
     });
 
-    assert.deepEqual(events, [
-      'destroy-entitlement',
-      'begin-entitlement-verification',
-      'reset-entitlement',
-      'destroy-billing',
-      'rebind',
-      'cloud-prefs:B',
-    ]);
-
-    assert.ok(attachWatches);
-    attachWatches();
-    assert.deepEqual(events.slice(-2), [
-      'attach-entitlement:B',
-      'attach-billing:B',
-    ]);
-
-    completion.resolve(true);
-    assert.equal(await handoff, true);
-    assert.equal(events.includes('unavailable-entitlement-verification'), false);
-  });
-
-  it('publishes unavailable only when the current account handoff exhausts retries', async () => {
-    const events: string[] = [];
-    let current = true;
-
-    const handoff = startAccountAuthHandoff({
-      userId: 'B',
-      isCurrent: () => current,
-      effects: {
-        destroyEntitlementSubscription: () => {},
-        beginEntitlementVerification: () => events.push('pending'),
-        resetEntitlementState: () => {},
-        markEntitlementVerificationUnavailable: () => events.push('unavailable'),
-        destroySubscriptionWatch: () => {},
-        rebindConvexAuthForWatchHandoff: async () => false,
-        initEntitlementSubscription: () => {},
-        initSubscriptionWatch: () => {},
-        cloudPrefsSignIn: () => {},
-      },
-    });
-
+    assert.deepEqual(events, ['rebind', 'cloud-prefs:B']);
+    completion.resolve(false);
     assert.equal(await handoff, false);
-    assert.deepEqual(events, ['pending', 'unavailable']);
-
-    current = false;
-    events.length = 0;
-    const staleHandoff = startAccountAuthHandoff({
-      userId: 'B',
-      isCurrent: () => current,
-      effects: {
-        destroyEntitlementSubscription: () => {},
-        beginEntitlementVerification: () => events.push('pending'),
-        resetEntitlementState: () => {},
-        markEntitlementVerificationUnavailable: () => events.push('unavailable'),
-        destroySubscriptionWatch: () => {},
-        rebindConvexAuthForWatchHandoff: async () => false,
-        initEntitlementSubscription: () => {},
-        initSubscriptionWatch: () => {},
-        cloudPrefsSignIn: () => {},
-      },
-    });
-
-    assert.equal(await staleHandoff, false);
-    assert.deepEqual(events, ['pending']);
   });
 
   it('wires App through the tested account-handoff controller', async () => {
@@ -977,7 +635,6 @@ describe('App account-switch controller', () => {
     assert.match(branch, /startAccountAuthHandoff\(\{/);
     assert.match(branch, /!this\.state\.isDestroyed[\s\S]*?handoffGeneration === _convexWatchHandoffGeneration/);
     assert.match(branch, /getAuthState\(\)\.user\?\.id === userId/);
-    assert.match(branch, /resetEntitlementState,/);
     assert.match(branch, /rebindConvexAuthForWatchHandoff,/);
     assert.match(branch, /cloudPrefsSignIn: \(nextUserId\)/);
     assert.match(
@@ -998,7 +655,7 @@ describe('same-user Convex auth recovery after a terminal failure', () => {
     session: { getToken: async () => `token-${id}` },
     user: { id },
   } as never);
-  const openActivation = () => openProActivationDay0Presentation('key-1', 'nonce-1', 1);
+  const openActivation = () => accountMutationProbe();
 
   it('reinstalls auth for the same user and lets a billing call through', async () => {
     signIn('A');
@@ -1132,9 +789,9 @@ describe('same-user Convex auth recovery after a terminal failure', () => {
     const first = openActivation();
     await waitForCondition(() => fake.authConfigs.length === 6, 'a user action reinstalls once');
     fake.authConfigs[5].onChange(false);
-    await assert.rejects(first, /^Error: Authentication unavailable while opening Pro activation\. Try again\.$/);
+    await assert.rejects(first, /^Error: Authentication unavailable while running the probe\. Try again\.$/);
 
-    await assert.rejects(openActivation(), /Authentication unavailable while opening Pro activation/);
+    await assert.rejects(openActivation(), /Authentication unavailable while running the probe/);
     assert.equal(fake.authConfigs.length, 6, 'a second action inside the cooldown does not reinstall');
     assert.equal(fake.mutations.length, 0);
   });
@@ -1170,7 +827,7 @@ describe('same-user Convex auth recovery after a terminal failure', () => {
     fake.authConfigs[0].onChange(false);
     await waitForCondition(() => fake.authConfigs.length === 2, 'A recovery reinstall');
 
-    const opening = assert.rejects(openActivation(), /Account changed while opening Pro activation/);
+    const opening = assert.rejects(openActivation(), /Account changed while running the probe/);
     await flushMicrotasks();
 
     signIn('B');

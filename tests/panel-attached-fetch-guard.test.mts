@@ -53,7 +53,7 @@ describe('self-starting panel fetches wait for attachment', () => {
     assertGuardBefore(
       read('src/components/McpDataPanel.ts'),
       'fetchData',
-      /premiumFetch\(/,
+      /fetch\(proxyUrl\(/,
     );
   });
 

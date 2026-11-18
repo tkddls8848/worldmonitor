@@ -149,27 +149,10 @@ function makeCommandHarness({
 }
 
 describe('CMD+K premium layer gate (#6045)', () => {
-  it('free users cannot activate the locked resilience layer', () => {
-    assert.equal(LAYER_REGISTRY.resilienceScore.premium, 'locked');
-    assert.equal(isLayerCommandAllowed('resilienceScore', false, 'deck', false), false);
-  });
-
-  it('free users can clear a stale checked locked layer', () => {
-    assert.equal(isLayerCommandAllowed('resilienceScore', true, 'deck', false), true);
-    const stale = { resilienceScore: true } as unknown as MapLayers;
-    assert.equal(sanitizeLockedLayers(stale, false).resilienceScore, false);
-  });
-
   it('premium users and enhanced layers retain activation access', () => {
     assert.equal(isLayerCommandAllowed('resilienceScore', false, 'deck', true), true);
     // ciiChoropleth is enhanced (free-toggleable) and renders on deck.
     assert.equal(isLayerCommandAllowed('ciiChoropleth', false, 'deck', false), true);
-  });
-
-  it('does not treat an unresolved tier as settled-free', () => {
-    assert.equal(shouldSanitizeLockedLayers(false, false, false), false);
-    assert.equal(isLayerCommandAllowed('resilienceScore', false, 'deck', false), false,
-      'activation stays fail-closed while entitlement is unavailable');
   });
 
   it('still blocks commands that cannot render in the active map context', () => {
@@ -181,48 +164,4 @@ describe('CMD+K premium layer gate (#6045)', () => {
     assert.equal(isLayerCommandAllowed('ciiChoropleth', false, 'svg', false), false);
   });
 
-  it('wires the production command handler for direct layer and resilience commands', () => {
-    const free = makeCommandHarness();
-    free.command('layer:resilienceScore');
-    assert.equal(free.ctx.mapLayers.resilienceScore, false,
-      'free users must not activate resilience through layer:<key>');
-    assert.deepEqual(free.calls.enabled, []);
-
-    free.ctx.mapLayers.resilienceScore = true;
-    free.command('layer:resilienceScore');
-    assert.equal(free.ctx.mapLayers.resilienceScore, false,
-      'a stale locked layer must remain recoverable through layer:<key>');
-    assert.equal(free.calls.setLayers, 1);
-
-    const premium = makeCommandHarness({ premium: true });
-    premium.command('view:resilience');
-    assert.equal(premium.ctx.mapLayers.resilienceScore, true,
-      'premium users must be able to activate the resilience shortcut');
-    assert.deepEqual(premium.calls.enabled, ['resilienceScore']);
-  });
-
-  it('wires the production palette filter with stale-off and free-activation gates', () => {
-    const ctx = {
-      mapLayers: { resilienceScore: false },
-      map: {
-        isGlobeMode: () => false,
-        isDeckGLActive: () => true,
-      },
-    };
-    commandTier.premium = false;
-    assert.equal(layerExecutableCallbackFactory.call({ ctx })('resilienceScore'), false);
-    ctx.mapLayers.resilienceScore = true;
-    assert.equal(layerExecutableCallbackFactory.call({ ctx })('resilienceScore'), true);
-    commandTier.premium = true;
-    ctx.mapLayers.resilienceScore = false;
-    assert.equal(layerExecutableCallbackFactory.call({ ctx })('resilienceScore'), true);
-  });
-
-  it('keeps locked layers out of the production all-layers preset for free users', () => {
-    const free = makeCommandHarness();
-    free.command('layers:all');
-    assert.equal(free.ctx.mapLayers.resilienceScore, false);
-    assert.equal(free.ctx.mapLayers.conflicts, true);
-    assert.equal(free.calls.setLayers, 1);
-  });
 });

@@ -1,9 +1,6 @@
 import { createCircuitBreaker } from '@/utils/circuit-breaker';
 import { getRpcBaseUrl } from '@/services/rpc-client';
-import { premiumFetch } from '@/services/premium-fetch';
 import { getHydratedData } from '@/services/bootstrap';
-import { hasPremiumAccess } from '@/services/panel-gating';
-import { toApiUrl } from '@/services/runtime';
 import type { SanctionsEntry as ProtoSanctionsEntry, SanctionsEntityType as ProtoSanctionsEntityType, CountrySanctionsPressure as ProtoCountryPressure, ProgramSanctionsPressure as ProtoProgramPressure, ListSanctionsPressureResponse, UnattributedSanctionsPressure, FlagRegistrySanctionsPressure } from '@/generated/client/worldmonitor/sanctions/v1/service_client';
 import { SanctionsServiceClient } from '@/services/generated-rpc-clients';
 import { normalizeFlagRegistries, splitSanctionsAttribution } from '../../shared/sanctions-attribution';
@@ -59,10 +56,7 @@ export interface SanctionsPressureResult {
   entries: SanctionsEntry[];
 }
 
-// premiumFetch no-ops safely without credentials, so keeping it is harmless
-// now that listSanctionsPressure is free. See src/services/supply-chain/index.ts
-// for the pattern.
-const client = new SanctionsServiceClient(getRpcBaseUrl(), { fetch: premiumFetch });
+const client = new SanctionsServiceClient(getRpcBaseUrl(), { fetch: (...args: Parameters<typeof fetch>) => globalThis.fetch(...args) });
 const breaker = createCircuitBreaker<SanctionsPressureResult>({
   name: 'Sanctions Pressure',
   cacheTtlMs: 30 * 60 * 1000,
@@ -205,40 +199,6 @@ export async function fetchSanctionsPressure(): Promise<SanctionsPressureResult>
     // (complete, non-degraded data); the local mirror above already covers
     // getLatestSanctionsPressure() consumers.
     if (isCacheableSanctionsPressureResult(result)) breaker.recordSuccess(result);
-    return result;
-  }
-
-  // Anonymous (non-premium) users read the shared bootstrap copy. The RPC
-  // is free and serves the same seed, but the per-key bootstrap URL is the
-  // cheaper read for ordinary visitors. Surface whatever it serves (or
-  // emptyResult on any failure).
-  if (!hasPremiumAccess()) {
-    const cached = breaker.getCached();
-    if (cached) {
-      latestSanctionsPressureResult = cached;
-      return cached;
-    }
-
-    const result = await breaker.execute(async () => {
-      const resp = await fetch(toApiUrl('/api/bootstrap?keys=sanctionsPressure'), {
-        signal: AbortSignal.timeout(5_000),
-      });
-      if (!resp.ok) {
-        throw new Error(`Sanctions bootstrap failed: HTTP ${resp.status}`);
-      }
-      const { data } = (await resp.json()) as { data?: { sanctionsPressure?: ListSanctionsPressureResponse } };
-      const payload = data?.sanctionsPressure;
-      if (payload?.entries?.length || payload?.countries?.length || payload?.programs?.length) {
-        const liveResult = toResult(payload);
-        latestSanctionsPressureResult = liveResult;
-        return liveResult;
-      }
-      latestSanctionsPressureResult = emptyResult;
-      return emptyResult;
-    }, emptyResult, {
-      shouldCache: isCacheableSanctionsPressureResult,
-    });
-    latestSanctionsPressureResult = result;
     return result;
   }
 

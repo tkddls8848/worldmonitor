@@ -8,13 +8,15 @@ import { t } from '@/services/i18n';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 import { showToast } from '@/utils/toast';
 import { buildDataReportDocument, printReportDocument, sanitizeExportData } from '@/utils/export-report';
-import { SUPPORTED_EXPORT_FORMATS, type DataExportFormat } from '@/services/gates/export-resolver';
 
 // Iran-events domain sunset (war ended 2026-07). Default OFF: omit the IRAN
 // EVENTS CSV block. Set VITE_ENABLE_IRAN_ATTACKS=true to restore. Guarded so
 // node:test never dereferences import.meta.env.
 const IRAN_ATTACKS_ENABLED = typeof window !== 'undefined' && import.meta.env.VITE_ENABLE_IRAN_ATTACKS === 'true';
 
+/** The data-export formats `ExportPanel` and the report menus can offer. */
+export const SUPPORTED_EXPORT_FORMATS = ['csv', 'json', 'pdf'] as const;
+export type DataExportFormat = (typeof SUPPORTED_EXPORT_FORMATS)[number];
 type ExportFormat = DataExportFormat;
 
 export interface ExportMeta {

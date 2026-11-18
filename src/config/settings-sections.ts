@@ -14,8 +14,6 @@ export interface SettingsFacts {
   /** isClerkAuthEnabled(). A build without a Clerk key offers no sign-in row. */
   readonly canSignIn: boolean;
   readonly isDesktopApp: boolean;
-  /** hasEmbedAccessForAccount(role). */
-  readonly embedAccess: boolean;
   /** Signed-in account card text. Null when signed out. */
   readonly account: { readonly plan: string; readonly email: string } | null;
   /** Panels that read as on in the Panels page draft. */
@@ -107,23 +105,6 @@ export const SETTINGS_GROUPS = [
       {
         id: 'video', labelKey: 'settings.sections.video', descKey: 'settings.descriptions.video', owner: 'preferences',
         keywordsKey: 'settings.keywords.video',
-      },
-    ],
-  },
-  {
-    id: 'developer', labelKey: 'settings.groups.developer', sections: [
-      {
-        id: 'api-keys', labelKey: 'settings.sections.apiKeys', descKey: 'settings.descriptions.apiKeys', owner: 'shell', badge: 'pro',
-        keywordsKey: 'settings.keywords.apiKeys',
-      },
-      {
-        id: 'embeds', labelKey: 'settings.sections.embeds', descKey: 'settings.descriptions.embeds', owner: 'shell', badge: 'pro',
-        available: (f) => f.embedAccess,
-        keywordsKey: 'settings.keywords.embeds',
-      },
-      {
-        id: 'mcp-clients', labelKey: 'settings.sections.aiAgents', descKey: 'settings.descriptions.aiAgents', owner: 'shell',
-        keywordsKey: 'settings.keywords.aiAgents',
       },
     ],
   },

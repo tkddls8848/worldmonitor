@@ -91,22 +91,21 @@ test('the RPC handler preserves canonical seed mapping', async t => {
   assert.equal(data.cards[0]?.riskCaveat, 'test risk');
 });
 
-test('browser ignores old bootstrap cards and uses the premium RPC, then reuses its cache', async () => {
+test('browser ignores old bootstrap cards and uses the RPC, then reuses its cache', async () => {
   const { build } = await import('esbuild');
   const result = await build({
     entryPoints: ['src/services/market-implications.ts'], bundle: true, write: false, format: 'cjs', platform: 'node',
     plugins: [{ name: 'client-boundaries', setup(builder) {
-      builder.onResolve({ filter: /^@\/services\/(runtime|premium-fetch|bootstrap)$/ }, args => ({ path: args.path, namespace: 'fixture' }));
+      builder.onResolve({ filter: /^@\/services\/(runtime|bootstrap)$/ }, args => ({ path: args.path, namespace: 'fixture' }));
       builder.onLoad({ filter: /.*/, namespace: 'fixture' }, args => ({ contents: args.path.endsWith('/runtime')
         ? 'export const toApiUrl = path => path;'
-        : args.path.endsWith('/bootstrap')
-          ? 'export const getHydratedData = () => ({ cards: [{ title: "old public card" }] });'
-          : 'export const premiumFetch = async url => { requests.push(url); return Response.json(fixture); };' }));
+        : 'export const getHydratedData = () => ({ cards: [{ title: "old public card" }] });' }));
     } }],
   });
   const requests: string[] = [];
   const module = { exports: {} as { fetchMarketImplications: (framework?: string) => Promise<{ cards: Array<{ title: string; riskCaveat: string }> }> } };
-  new Function('module', 'fixture', 'requests', 'Response', 'window', result.outputFiles[0]!.text)(module, fixture, requests, Response, { location: { origin: 'https://app.test' } });
+  const fetch = async (url: string) => { requests.push(url); return Response.json(fixture); };
+  new Function('module', 'fixture', 'requests', 'Response', 'window', 'fetch', result.outputFiles[0]!.text)(module, fixture, requests, Response, { location: { origin: 'https://app.test' } }, fetch);
   const first = await module.exports.fetchMarketImplications();
   assert.equal(first.cards[0]?.title, 'premium-fixture-only');
   assert.equal(first.cards[0]?.riskCaveat, 'test risk');

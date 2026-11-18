@@ -2,10 +2,6 @@ import type { PanelConfig, MapLayers, DataSourceId } from '@/types';
 import { SITE_VARIANT } from './variant';
 // boundary-ignore: isDesktopRuntime is a pure env probe with no service dependencies
 import { isDesktopRuntime } from '@/services/runtime';
-// boundary-ignore: getSecretState is a pure env/keychain probe with no service dependencies
-import { getSecretState } from '@/services/runtime-config';
-// boundary-ignore: isEntitled is a pure state check with no side effects
-import { isEntitled } from '@/services/entitlements';
 
 const _desktop = isDesktopRuntime();
 
@@ -29,11 +25,11 @@ const FULL_PANELS: Record<string, PanelConfig> = {
   insights: { name: 'AI Insights', enabled: true, priority: 1 },
   'threat-timeline': { name: 'Threat Timeline', enabled: true, priority: 1 },
   'strategic-posture': { name: 'AI Strategic Posture', enabled: true, priority: 1 },
-  forecast: { name: 'AI Forecasts', enabled: true, priority: 1, ...(_desktop && { premium: 'locked' as const }) }, // trial: unlocked on web, locked on desktop
-  cii: { name: 'Country Instability', enabled: true, priority: 1, ...(_desktop && { premium: 'enhanced' as const }) },
-  'strategic-risk': { name: 'Strategic Risk Overview', enabled: true, priority: 1, ...(_desktop && { premium: 'enhanced' as const }) },
+  forecast: { name: 'AI Forecasts', enabled: true, priority: 1 }, // trial: unlocked on web, locked on desktop
+  cii: { name: 'Country Instability', enabled: true, priority: 1 },
+  'strategic-risk': { name: 'Strategic Risk Overview', enabled: true, priority: 1 },
   intel: { name: 'Intel Feed', enabled: true, priority: 1 },
-  'gdelt-intel': { name: 'Live Intelligence', enabled: true, priority: 1, ...(_desktop && { premium: 'enhanced' as const }) },
+  'gdelt-intel': { name: 'Live Intelligence', enabled: true, priority: 1 },
   cascade: { name: 'Infrastructure Cascade', enabled: true, priority: 1 },
   'military-correlation': { name: 'Force Posture', enabled: true, priority: 2 },
   'escalation-correlation': { name: 'Escalation Monitor', enabled: true, priority: 2 },
@@ -54,14 +50,14 @@ const FULL_PANELS: Record<string, PanelConfig> = {
   'energy-complex': { name: 'Energy Complex', enabled: true, priority: 1 },
   'oil-inventories': { name: 'Oil Inventories', enabled: true, priority: 60 },
   markets: { name: 'Markets', enabled: true, priority: 1 },
-  'stock-analysis': { name: 'Stock Analysis', enabled: true, priority: 1, premium: 'locked' as const },
-  'stock-backtest': { name: 'Backtesting', enabled: true, priority: 1, premium: 'locked' as const },
-  'daily-market-brief': { name: 'Daily Market Brief', enabled: true, priority: 1, premium: 'locked' as const },
-  'chat-analyst': { name: 'WM Analyst', enabled: true, priority: 1, premium: 'locked' as const },
+  'stock-analysis': { name: 'Stock Analysis', enabled: true, priority: 1 },
+  'stock-backtest': { name: 'Backtesting', enabled: true, priority: 1 },
+  'daily-market-brief': { name: 'Daily Market Brief', enabled: true, priority: 1 },
+  'chat-analyst': { name: 'WM Analyst', enabled: true, priority: 1 },
   economic: { name: 'Macro Stress', enabled: true, priority: 1 },
-  'global-procurement': { name: 'Global Procurement', enabled: true, priority: 1, premium: 'locked' as const },
-  'trade-policy': { name: 'Trade Policy', enabled: true, priority: 1, premium: 'locked' as const },
-  'supply-chain': { name: 'Supply Chain', enabled: true, priority: 1, ...(_desktop && { premium: 'enhanced' as const }) },
+  'global-procurement': { name: 'Global Procurement', enabled: true, priority: 1 },
+  'trade-policy': { name: 'Trade Policy', enabled: true, priority: 1 },
+  'supply-chain': { name: 'Supply Chain', enabled: true, priority: 1 },
   'china-corridors': { name: 'China Logistics Corridors', enabled: true, priority: 1 },
   'china-activity-nowcast': { name: 'China Activity Nowcast', enabled: true, priority: 1 },
   finance: { name: 'Financial', enabled: true, priority: 1 },
@@ -73,7 +69,7 @@ const FULL_PANELS: Record<string, PanelConfig> = {
   // Opt-in news panel (2026-10-17 audit); its feeds also widen /verify claim search.
   science: { name: 'Science', enabled: false, priority: 2 },
   monitors: { name: 'My Monitors', enabled: true, priority: 2 },
-  'latest-brief': { name: 'Latest Brief', enabled: true, priority: 1, premium: 'locked' as const },
+  'latest-brief': { name: 'Latest Brief', enabled: true, priority: 1 },
   'satellite-fires': { name: 'Fires', enabled: true, priority: 2 },
   'macro-signals': { name: 'Market Regime', enabled: true, priority: 2 },
   'fear-greed': { name: 'Fear & Greed', enabled: true, priority: 2 },
@@ -113,7 +109,7 @@ const FULL_PANELS: Record<string, PanelConfig> = {
   'ucdp-events': { name: 'UCDP Conflict Events', enabled: true, priority: 2 },
   'disease-outbreaks': { name: 'Disease Outbreaks', enabled: true, priority: 2 },
   'social-velocity': { name: 'Social Velocity', enabled: true, priority: 2 },
-  'wsb-ticker-scanner': { name: 'WSB Ticker Scanner', enabled: true, priority: 75, premium: 'locked' as const },
+  'wsb-ticker-scanner': { name: 'WSB Ticker Scanner', enabled: true, priority: 75 },
   giving: { name: 'Global Giving', enabled: false, priority: 2 },
   displacement: { name: 'UNHCR Displacement', enabled: true, priority: 2 },
   'ukmto-incidents': { name: 'UKMTO Incidents', enabled: false, priority: 2 },
@@ -127,17 +123,17 @@ const FULL_PANELS: Record<string, PanelConfig> = {
   'toronto-safety': { name: 'Toronto Safety', enabled: false, priority: 2 },
   'radiation-watch': { name: 'Radiation Watch', enabled: true, priority: 2 },
   'thermal-escalation': { name: 'Thermal Escalation', enabled: true, priority: 2 },
-  'oref-sirens': { name: 'Israel Sirens', enabled: true, priority: 2, ...(_desktop && { premium: 'locked' as const }) },
-  'telegram-intel': { name: 'Telegram Intel', enabled: true, priority: 2, ...(_desktop && { premium: 'locked' as const }) },
-  'x-intel': { name: 'X News Accounts', enabled: true, priority: 2, ...(_desktop && { premium: 'locked' as const }) },
+  'oref-sirens': { name: 'Israel Sirens', enabled: true, priority: 2 },
+  'telegram-intel': { name: 'Telegram Intel', enabled: true, priority: 2 },
+  'x-intel': { name: 'X News Accounts', enabled: true, priority: 2 },
   'airline-intel': { name: 'Airline Intelligence', enabled: true, priority: 2 },
   'tech-readiness': { name: 'Tech Readiness Index', enabled: true, priority: 2 },
   'world-clock': { name: 'World Clock', enabled: true, priority: 2 },
   'national-debt': { name: 'Global Debt Clock', enabled: true, priority: 2 },
   'cross-source-signals': { name: 'Cross-Source Signals', enabled: true, priority: 2 },
-  'market-implications': { name: 'AI Market Implications', enabled: true, priority: 1, premium: 'locked' as const },
-  'regional-intelligence': { name: 'Regional Intelligence', enabled: false, priority: 1, premium: 'locked' as const },
-  'deduction': { name: 'Deduct Situation', enabled: false, priority: 1, premium: 'locked' as const },
+  'market-implications': { name: 'AI Market Implications', enabled: true, priority: 1 },
+  'regional-intelligence': { name: 'Regional Intelligence', enabled: false, priority: 1 },
+  'deduction': { name: 'Deduct Situation', enabled: false, priority: 1 },
   'geo-hubs': { name: 'Geopolitical Hubs', enabled: false, priority: 2 },
   'tech-hubs': { name: 'Hot Tech Hubs', enabled: false, priority: 2 },
 };
@@ -316,7 +312,7 @@ const TECH_PANELS: Record<string, PanelConfig> = {
   'internet-disruptions': { name: 'Internet Disruptions', enabled: true, priority: 2 },
   'service-status': { name: 'Service Status', enabled: true, priority: 2 },
   economic: { name: 'Macro Stress', enabled: true, priority: 2 },
-  'global-procurement': { name: 'Global Procurement', enabled: true, priority: 1, premium: 'locked' as const },
+  'global-procurement': { name: 'Global Procurement', enabled: true, priority: 1 },
   'tech-readiness': { name: 'Tech Readiness Index', enabled: true, priority: 1 },
   'macro-signals': { name: 'Market Regime', enabled: true, priority: 2 },
   'etf-flows': { name: 'BTC ETF Tracker', enabled: true, priority: 2 },
@@ -324,7 +320,7 @@ const TECH_PANELS: Record<string, PanelConfig> = {
   'airline-intel': { name: 'Airline Intelligence', enabled: true, priority: 2 },
   'world-clock': { name: 'World Clock', enabled: true, priority: 2 },
   monitors: { name: 'My Monitors', enabled: true, priority: 2 },
-  'latest-brief': { name: 'Latest Brief', enabled: true, priority: 1, premium: 'locked' as const },
+  'latest-brief': { name: 'Latest Brief', enabled: true, priority: 1 },
   'tech-hubs': { name: 'Hot Tech Hubs', enabled: false, priority: 2 },
   'ai-regulation': { name: 'AI Regulation Dashboard', enabled: false, priority: 2 },
 };
@@ -467,9 +463,9 @@ const FINANCE_PANELS: Record<string, PanelConfig> = {
   'windy-webcams': { name: 'Windy Live Webcam', enabled: false, priority: 2 },
   insights: { name: 'AI Market Insights', enabled: true, priority: 1 },
   markets: { name: 'Live Markets', enabled: true, priority: 1 },
-  'stock-analysis': { name: 'Premium Stock Analysis', enabled: true, priority: 1, premium: 'locked' },
-  'stock-backtest': { name: 'Premium Backtesting', enabled: true, priority: 1, premium: 'locked' },
-  'daily-market-brief': { name: 'Daily Market Brief', enabled: true, priority: 1, premium: 'locked' },
+  'stock-analysis': { name: 'Stock Analysis', enabled: true, priority: 1 },
+  'stock-backtest': { name: 'Backtesting', enabled: true, priority: 1 },
+  'daily-market-brief': { name: 'Daily Market Brief', enabled: true, priority: 1 },
   'markets-news': { name: 'Markets News', enabled: true, priority: 2 },
   forex: { name: 'Forex & Currencies', enabled: true, priority: 1 },
   fx: { name: 'FX Rates', enabled: false, priority: 2 },
@@ -494,8 +490,8 @@ const FINANCE_PANELS: Record<string, PanelConfig> = {
   'other-tokens': { name: 'Alt Tokens', enabled: true, priority: 2 },
   centralbanks: { name: 'Central Bank Watch', enabled: true, priority: 1 },
   economic: { name: 'Macro Stress', enabled: true, priority: 1 },
-  'global-procurement': { name: 'Global Procurement', enabled: true, priority: 1, premium: 'locked' as const },
-  'trade-policy': { name: 'Trade Policy', enabled: true, priority: 1, premium: 'locked' as const },
+  'global-procurement': { name: 'Global Procurement', enabled: true, priority: 1 },
+  'trade-policy': { name: 'Trade Policy', enabled: true, priority: 1 },
   'sanctions-pressure': { name: 'Sanctions Pressure', enabled: true, priority: 1 },
   'supply-chain': { name: 'Supply Chain', enabled: true, priority: 1 },
   'china-corridors': { name: 'China Logistics Corridors', enabled: false, priority: 2 },
@@ -530,11 +526,11 @@ const FINANCE_PANELS: Record<string, PanelConfig> = {
   'gulf-economies': { name: 'Gulf Economies', enabled: true, priority: 1 },
   'consumer-prices': { name: 'Consumer Prices', enabled: true, priority: 1 },
   polymarket: { name: 'Predictions', enabled: true, priority: 2 },
-  'wsb-ticker-scanner': { name: 'WSB Ticker Scanner', enabled: true, priority: 75, premium: 'locked' },
+  'wsb-ticker-scanner': { name: 'WSB Ticker Scanner', enabled: true, priority: 75 },
   'airline-intel': { name: 'Airline Intelligence', enabled: true, priority: 2 },
   'world-clock': { name: 'World Clock', enabled: true, priority: 2 },
   monitors: { name: 'My Monitors', enabled: true, priority: 2 },
-  'latest-brief': { name: 'Latest Brief', enabled: true, priority: 1, premium: 'locked' as const },
+  'latest-brief': { name: 'Latest Brief', enabled: true, priority: 1 },
   'nq-pulse': { name: 'NQ Pulse', enabled: false, priority: 1 },
   'nq-catalysts': { name: 'NQ Catalysts', enabled: false, priority: 1 },
   'nq-news': { name: 'NQ News', enabled: false, priority: 2 },
@@ -845,7 +841,7 @@ const COMMODITY_PANELS: Record<string, PanelConfig> = {
   'gold-intelligence': { name: 'Gold Intelligence', enabled: true, priority: 60 },
   heatmap: { name: 'Sector Heatmap', enabled: true, priority: 1 },
   'macro-signals': { name: 'Market Regime', enabled: true, priority: 1 },
-  'trade-policy': { name: 'Trade Policy', enabled: true, priority: 1, premium: 'locked' as const },
+  'trade-policy': { name: 'Trade Policy', enabled: true, priority: 1 },
   'sanctions-pressure': { name: 'Sanctions Pressure', enabled: true, priority: 1 },
   economic: { name: 'Macro Stress', enabled: true, priority: 1 },
   'gulf-economies': { name: 'Gulf & OPEC Economies', enabled: true, priority: 1 },
@@ -855,7 +851,7 @@ const COMMODITY_PANELS: Record<string, PanelConfig> = {
   polymarket: { name: 'Commodity Predictions', enabled: true, priority: 2 },
   'world-clock': { name: 'World Clock', enabled: true, priority: 2 },
   monitors: { name: 'My Monitors', enabled: true, priority: 2 },
-  'latest-brief': { name: 'Latest Brief', enabled: true, priority: 1, premium: 'locked' as const },
+  'latest-brief': { name: 'Latest Brief', enabled: true, priority: 1 },
 };
 
 const COMMODITY_MAP_LAYERS: MapLayers = {
@@ -1028,7 +1024,7 @@ const ENERGY_PANELS: Record<string, PanelConfig> = {
   // Tracking
   monitors: { name: 'My Monitors', enabled: true, priority: 3 },
   'world-clock': { name: 'World Clock', enabled: true, priority: 3 },
-  'latest-brief': { name: 'Latest Brief', enabled: true, priority: 1, premium: 'locked' as const },
+  'latest-brief': { name: 'Latest Brief', enabled: true, priority: 1 },
 };
 
 const ENERGY_MAP_LAYERS: MapLayers = {
@@ -1237,7 +1233,7 @@ export const VARIANT_PANEL_OVERRIDES: Partial<Record<string, Partial<Record<stri
 
 /**
  * Returns the effective panel config for a given key and variant,
- * applying variant-specific display overrides (name, premium, etc.).
+ * applying variant-specific display overrides (name, etc.).
  */
 export function getEffectivePanelConfig(key: string, variant: string): PanelConfig {
   const base = getVariantPanelConfigs(variant)?.[key] ?? ALL_PANELS[key];
@@ -1279,120 +1275,12 @@ export function isPanelInVariantDefaults(key: string): boolean {
   return SITE_VARIANT_DEFAULTS.has(key);
 }
 
-export const FREE_MAX_PANELS = 40;
-export const FREE_MAX_SOURCES = 80;
-
-export function isFreePanelCapCounted(key: string): boolean {
-  return key !== 'map' && !key.startsWith('cw-');
-}
-
-export function countFreePanelCapUsage(panelSettings: Record<string, PanelConfig>): number {
-  return Object.entries(panelSettings).filter(([key, panel]) =>
-    panel.enabled && isFreePanelCapCounted(key)
-  ).length;
-}
-
-export function restoreFreeMapPanelAccess(
-  panelSettings: Record<string, PanelConfig>,
-): Record<string, PanelConfig> {
-  const next: Record<string, PanelConfig> = {};
-  for (const [key, config] of Object.entries(panelSettings)) {
-    next[key] = { ...config };
-  }
-
-  if (next.map?.enabled === false && countFreePanelCapUsage(next) > FREE_MAX_PANELS) {
-    next.map = { ...next.map, enabled: true };
-  }
-
-  return next;
-}
-
-/**
- * Returns true if the current user is entitled to enable/view this panel.
- * Mirrors the entitlement checks in panel-layout.ts (single source of truth).
- */
-export function isPanelEntitled(key: string, config: PanelConfig, isPro = false): boolean {
-  if (!config.premium) return true;
-  // Dodo entitlements unlock all premium panels
-  if (isEntitled()) return true;
-  const apiKeyPanels = ['stock-analysis', 'stock-backtest', 'daily-market-brief', 'market-implications', 'regional-intelligence', 'deduction', 'chat-analyst', 'wsb-ticker-scanner', 'trade-policy', 'global-procurement'];
-  if (apiKeyPanels.includes(key)) {
-    return getSecretState('WORLDMONITOR_API_KEY').present || isPro;
-  }
-  if (config.premium === 'locked') {
-    return isDesktopRuntime();
-  }
-  return true;
-}
-
-/**
- * Clamp a panel-settings map to the free-tier panel cap. Single source of
- * truth for the count limit so App boot, the settings/search add paths, and
- * the dashboard-tab add/switch/load paths all enforce the SAME ceiling.
- *
- * Returns a NEW map; the input is never mutated. For free users: cw-*
- * custom-widget panels are a pro
- * feature and are always disabled. The map is free baseline infrastructure
- * and never consumes a capped panel slot. Among the remaining enabled panels
- * the lowest-priority ones past FREE_MAX_PANELS are disabled (priority asc,
- * key tiebreak — identical ordering to App.enforceFreeTierLimits).
- *
- * Pro users get the same panel eligibility, plus the inverse of the cw-* gate:
- * widgets this helper previously hid are restored (see restoreProGatedPanels).
- *
- * `isPro` is passed in (rather than read here) to keep this a pure config
- * helper with no service-state dependency, matching isPanelEntitled above.
- */
-export function enforceFreePanelLimit(
-  panelSettings: Record<string, PanelConfig>,
-  isPro: boolean,
-): Record<string, PanelConfig> {
-  if (isPro) return restoreProGatedPanels(panelSettings);
-
-  const next: Record<string, PanelConfig> = {};
-  for (const [key, config] of Object.entries(panelSettings)) {
-    next[key] = { ...config };
-  }
-
-  // cw-* custom widgets are pro-only — never enabled on the free tier.
-  // Stamp `proGated` so restoreProGatedPanels can tell this apart from a
-  // widget the user hid themselves and put it back when they go Pro.
-  for (const key of Object.keys(next)) {
-    if (key.startsWith('cw-') && next[key]?.enabled) {
-      next[key] = { ...next[key]!, enabled: false, proGated: true };
-    }
-  }
-
-  const enabledKeys = Object.entries(next)
-    .filter(([k, v]) => v.enabled && isFreePanelCapCounted(k))
-    .sort(([ka, a], [kb, b]) => (a.priority ?? 99) - (b.priority ?? 99) || ka.localeCompare(kb))
-    .map(([k]) => k);
-
-  // Stamp `proGated` for the same reason the cw-* gate above does: this is the
-  // GATE disabling the panel, not the user. Without the marker the count cap
-  // was a one-way door — App.enforceFreeTierLimits persists this map into
-  // STORAGE_KEYS.panels, and restoreProGatedPanels only re-enables what is
-  // marked, so a panel clamped during any window where the tier read as free
-  // stayed `enabled: false` forever. Going Pro never brought it back: the panel
-  // kept appearing in Cmd+K and as a checked box in settings while being absent
-  // from the dashboard.
-  for (const key of enabledKeys.slice(FREE_MAX_PANELS)) {
-    next[key] = { ...next[key]!, enabled: false, proGated: true };
-  }
-
-  return next;
-}
-
 /**
  * Apply a USER-initiated enable/disable to a panel config.
  *
- * Every user toggle path must go through this. `proGated` means "the GATE owns
- * this disable"; the moment the user takes a position on the panel themselves,
- * the gate no longer owns it and the marker must go — otherwise a panel the
- * gate once clamped keeps the marker through a user re-enable, and a LATER
- * deliberate hide is indistinguishable from gate damage, so the next Pro
- * reconcile resurrects a panel the user chose to hide (and cloud-syncs that to
- * every device).
+ * Every user toggle path must go through this. Once the user takes a position
+ * on a panel, a leftover `proGated` marker must go, or the next
+ * `restoreProGatedPanels` would resurrect a panel the user chose to hide.
  *
  * Mutates in place: every call site already owns a live entry in the
  * panelSettings map it is about to persist.
@@ -1403,18 +1291,9 @@ export function userSetPanelEnabled(config: PanelConfig, enabled: boolean): void
 }
 
 /**
- * Inverse of `enforceFreePanelLimit`: re-enable panels the free-tier gate hid
- * (custom widgets or count-cap overflow), and clear the marker.
- *
- * Without this the gate is a one-way door. `enforceFreePanelLimit` writes
- * straight into STORAGE_KEYS.panels, so once a widget is disabled nothing
- * ever turns it back on — a user who upgrades to Pro (or whose Pro session
- * simply resolved late, see App.enforceFreeTierLimits) would find their
- * widgets permanently missing from the dashboard even though the specs are
- * still in wm-custom-widgets.
- *
- * Only panels carrying `proGated` are touched, so a panel the user hid
- * deliberately via settings stays hidden.
+ * Re-enable panels an earlier free-tier clamp hid (custom widgets or the old
+ * panel-count cap) and clear the marker. Only panels carrying `proGated` are
+ * touched, so a panel the user hid deliberately via settings stays hidden.
  */
 export function restoreProGatedPanels(
   panelSettings: Record<string, PanelConfig>,
@@ -1429,34 +1308,6 @@ export function restoreProGatedPanels(
     }
   }
   return next;
-}
-
-/**
- * True while the session's tier is still unknowable, so the persisted
- * free-tier clamp must not run yet. Two windows qualify:
- *
- * - Clerk hasn't settled (`authPending`) — a signed-in Pro user is
- *   indistinguishable from an anonymous one.
- * - Clerk settled on a signed-in user but the Convex entitlement snapshot
- *   hasn't arrived (`hasUser && !entitlementLoaded`) — isEntitled() is
- *   deterministically false until the snapshot lands, so a Convex-only Pro
- *   subscriber would be clamped as free.
- *
- * `deadlineExceeded` is the AUTH_SETTLE_GRACE_MS backstop: once the grace
- * timer fires, enforcement proceeds with whatever tier signals exist, so a
- * snapshot that never arrives cannot defer the caps forever.
- *
- * Pure on plain booleans (no service imports) to keep this a config helper,
- * matching isPanelEntitled above.
- */
-export function shouldDeferFreeTierEnforcement(
-  authPending: boolean,
-  hasUser: boolean,
-  entitlementLoaded: boolean,
-  deadlineExceeded: boolean,
-): boolean {
-  if (deadlineExceeded) return false;
-  return authPending || (hasUser && !entitlementLoaded);
 }
 
 // ============================================
@@ -1660,17 +1511,4 @@ export function getVariantPanelCategories(
     .filter(([, def]) => !def.variants || def.variants.includes(variant))
     .filter(([, def]) => def.panelKeys.some((pk) => panelSettings[pk]?.enabled))
     .map(([key, def]) => ({ key, labelKey: def.labelKey, panelKeys: def.panelKeys }));
-}
-
-// Enabled panels that carry a premium gate on the current surface — drives
-// the mobile nav's PRO chip. getEffectivePanelConfig folds in per-variant
-// premium overrides; unknown keys (custom widgets, MCP panels) resolve to a
-// premium-less stub and drop out.
-export function getProPanelKeys(
-  panelSettings: Record<string, PanelConfig>,
-  variant: string,
-): string[] {
-  return Object.keys(panelSettings).filter((key) =>
-    panelSettings[key]?.enabled && Boolean(getEffectivePanelConfig(key, variant).premium),
-  );
 }

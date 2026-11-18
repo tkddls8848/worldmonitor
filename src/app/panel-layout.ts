@@ -1,5 +1,3 @@
-import { clearTelegramIntelCache } from '@/services/telegram-intel';
-import { subscribeRuntimeConfig } from '@/services/runtime-config';
 import type { AppContext, AppModule } from '@/app/app-context';
 import type { LoadAllDataTrigger } from '@/app/viewport-hydration-ledger';
 import { CORRELATION_DOMAINS } from '@/types/correlation';
@@ -49,48 +47,23 @@ import {
   VARIANT_DEFAULTS,
   isPanelInVariantDefaults,
   getEffectivePanelConfig,
-  isPanelEntitled,
-  enforceFreePanelLimit,
+  restoreProGatedPanels,
 } from '@/config';
 import { BETA_MODE } from '@/config/beta';
 import { NQ_PULSE_DISCLOSURE } from '@/config/nq-context';
 import { t } from '@/services/i18n';
 import { getPanelDisplayName } from '@/services/panel-display-name';
 import { getCurrentTheme } from '@/utils';
-import { trackCriticalBannerAction, trackCheckoutSuccess, trackCheckoutFailed, trackGateHit, trackMapViewChange, trackLayoutCustomized, replayPendingCheckoutSuccess, replayPendingProFunnelEvents, replayPendingConversionEvents, replayPendingMissionReturn } from '@/services/analytics';
-import { ProPreviewSection } from '@/components/ProPreviewSection';
-import { syncPanelPreview } from '@/services/mission-preview-registry';
-import { loadStoredMissionPreset } from '@/services/mission-presets';
-import { peekPendingMissionAttribution } from '@/services/analytics';
+import { trackCriticalBannerAction, trackMapViewChange, trackLayoutCustomized } from '@/services/analytics';
 import { getStoredMapModePreference } from '@/services/map-mode-preference';
-import { loadWidgets, saveWidget, isProUser, isProTierResolved, subscribeWidgetAccess } from '@/services/widget-store';
-import { LAYER_REGISTRY, getAllowedLayerKeys, sanitizeLockedLayers, shouldSanitizeLockedLayers, type MapVariant } from '@/config/map-layer-definitions';
+import { loadWidgets, saveWidget } from '@/services/widget-store';
+import { getAllowedLayerKeys, type MapVariant } from '@/config/map-layer-definitions';
 import type { CustomWidgetSpec } from '@/services/widget-store';
-import {
-  panelGateStateChanged,
-  sweepLegacyDisabledCustomWidgets,
-} from '@/app/free-tier-gate';
-import { initEntitlementSubscription, destroyEntitlementSubscription, markEntitlementVerificationUnavailable, isEntitlementActive, hasTier, getEntitlementState, onEntitlementChange, hasTravelRiskAssessmentForAccount } from '@/services/entitlements';
-import { createEntitlementReloadController } from '@/services/entitlement-reload-controller';
-import { initSubscriptionWatch, destroySubscriptionWatch, onSubscriptionChange } from '@/services/billing';
-import { initPaymentFailureBanner } from '@/components/payment-failure-banner';
-import {
-  handleCheckoutReturn,
-  resolveCheckoutReturnRouting,
-} from '@/services/checkout-return';
-import { showCheckoutSuccess, consumePostCheckoutFlag, clearCheckoutAttempt, loadCheckoutAttempt } from '@/services/checkout';
-import {
-  markProActivationPending,
-  ProActivationController,
-} from '@/app/pro-activation-controller';
 import { PasskeyOfferBoot } from '@/app/passkey-offer-boot';
-import { bootGitHubStarPrompt } from '@/app/github-star-prompt-boot';
-import { showCheckoutFailureBanner } from '@/components/checkout-failure-banner';
-import { PanelTabBar, tabCapGateCopy } from '@/components/PanelTabBar';
+import { PanelTabBar } from '@/components/PanelTabBar';
 import type { FocusBar } from '@/components/FocusBar';
 import { FocusMapSync } from '@/app/focus-map-sync';
 import {
-  canSetFocus,
   getActiveScope,
   getResolvedScope,
   restoreActiveScope,
@@ -109,19 +82,6 @@ import {
   hasNewTabPanels,
   saveNewTabPanels,
 } from '@/services/tab-store';
-import { TeamDashboardsStore, publishOrShareAsNew } from '@/services/team-dashboards-store';
-import {
-  canPublishTeamDashboardScope,
-  captureTeamDashboardLayout,
-  loadTeamDashboards,
-  publishTeamDashboard,
-  removeTeamDashboard,
-  teamDashboardErrorKind,
-  teamDashboardFailureKey,
-  toTeamDashboardTab,
-  type PanelSize,
-  type TeamDashboardMap,
-} from '@/services/team-dashboards';
 import type { PanelTab, TabsPersistReceipt, TabsState } from '@/services/tab-store';
 import {
   DASHBOARD_TAB_UNAVAILABLE_RESULT,
@@ -155,24 +115,14 @@ import {
 import { showToast } from '@/utils';
 import { loadMcpPanels, saveMcpPanel } from '@/services/mcp-store';
 import type { McpPanelSpec } from '@/services/mcp-store';
-import { getAuthState, subscribeAuthState } from '@/services/auth-state';
-import type { AuthSession } from '@/services/auth-state';
-import { PanelGateReason, getPanelGateReason, hasPremiumAccess, resolveBillingAwareGateReason, resolveGateAction } from '@/services/panel-gating';
-import { evaluateTabCap, exportLockToGateReason } from '@/services/gates/export';
-import { primeExportGateActivation } from '@/services/gates/export-resolver';
-import type { TabCapVerdict } from '@/services/gates/export-resolver';
 import { markLcpDebug } from '@/utils/lcp-debug';
 import type { Panel } from '@/components/Panel';
 import type { SupplyChainPanel } from '@/components/SupplyChainPanel';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 import {
-  clearPanelColSpanEntry,
-  clearPanelSpanEntry,
   loadPanelCollapsed,
   loadPanelColSpans,
   loadPanelSpans,
-  savePanelColSpan,
-  savePanelSpan,
 } from '@/utils/panel-storage';
 import { observePanelGridColumns } from '@/utils/panel-grid';
 import { registerSettingsExportFlush } from '@/utils/settings-persistence';
@@ -183,13 +133,6 @@ import {
   hydrateTechHubPanelFromClusters,
 } from '@/app/hub-activity-hydration';
 import { movePanelToKeyboardZone } from '@/app/panel-keyboard-reorder';
-import { isCatalogPanelLive, waitUntilPanelLive } from '@/app/panel-enablement';
-import {
-  armCheckoutReturnState,
-  loadCheckoutReturnState,
-  settleCheckoutReturnFocus,
-} from '@/services/checkout-return-state';
-import { resolveCheckoutContext, type CheckoutContext } from '../../shared/checkout-attribution';
 
 function readSessionStorageValue(key: string): string | null {
   try {
@@ -206,54 +149,6 @@ function writeSessionStorageValue(key: string, value: string): void {
     // Banner dismissal remains functional for this render even without persistence.
   }
 }
-
-/**
- * Panels that require premium access on web. Auth-based gating applies to
- * these — `updatePanelGating()` calls `Panel.showGatedCta()` to render
- * "Sign In to Unlock" / "Upgrade to Pro" for non-premium users.
- *
- * INVARIANT: every panel listed in `apiKeyPanels` (src/config/panels.ts
- * `isPanelEntitled`) MUST appear here. If it's API-key-entitled but missing
- * from this set, anonymous/free-Clerk users see the panel mount and run
- * its loader (which writes empty/loading/error UI directly into the body)
- * instead of the lock CTA. The PRO badge in the title still renders, so
- * the symptom is "PRO badge + panel-internal loading or empty copy"
- * which looks broken (e.g. Regional Intelligence rendering its empty-state
- * "is being refreshed" message to anonymous users — see todo #257 item 8).
- *
- * The static test in tests/panel-config-guardrails.test.mjs enforces
- * `apiKeyPanels ⊆ WEB_PREMIUM_PANELS` so this drift can't recur silently.
- */
-const WEB_PREMIUM_PANELS = new Set([
-  'stock-analysis',
-  'stock-backtest',
-  'daily-market-brief',
-  'market-implications',
-  'deduction',
-  'chat-analyst',
-  'wsb-ticker-scanner',
-  'latest-brief',
-  'regional-intelligence',
-  'trade-policy',
-  'global-procurement',
-]);
-
-/**
- * Panels that require a Clerk-authenticated PRO account specifically.
- * Desktop API key / browser tester keys do NOT satisfy the gate because
- * these panels are bound to a Clerk userId server-side (e.g. the Brief
- * is stored at brief:{clerkUserId}:{date} in Redis — no Clerk user, no
- * brief to fetch).
- *
- * Without this extra gate, API-key + free-Clerk users would see the
- * panel "unlocked" by hasPremiumAccess() and then hit a 403 when the
- * server re-checks entitlement from the JWT. This set promotes the
- * inconsistency to the layout gating layer so the user sees the
- * correct "Upgrade to Pro" CTA instead of a doomed fetch.
- */
-const WEB_CLERK_PRO_ONLY_PANELS = new Set([
-  'latest-brief',
-]);
 
 /**
  * Panel keys a dedicated panel owns but registers for AFTER the CANONICAL_FEEDS
@@ -276,7 +171,6 @@ const WEB_CLERK_PRO_ONLY_PANELS = new Set([
  * ever moves below the pass without being listed here.
  */
 const LATE_REGISTERED_PANEL_KEYS = new Set(['live-news']);
-const CW_PRO_GATE_TAB_RECOVERY_KEY = 'worldmonitor-cw-pro-gate-tab-recovery-v1';
 const STORAGE_ATLAS_PANEL_KEY = 'storage-facility-map';
 
 
@@ -471,7 +365,6 @@ export interface PanelLayoutManagerCallbacks {
   loadSecurityAdvisories?: () => Promise<void>;
   loadTelegramIntel?: () => Promise<void>;
   applyMapLayerChange?: (layer: keyof MapLayers, enabled: boolean, source: 'programmatic') => void;
-  isFreeTierFallbackActive?: () => boolean;
 }
 
 interface DeferredPanelMount {
@@ -556,7 +449,6 @@ export class PanelLayoutManager implements AppModule {
   // subscription, and the editor while it is open.
   private focusBar: FocusBar | null = null;
   private unsubscribeScope: (() => void) | null = null;
-  private unsubscribeFocusEntitlement: (() => void) | null = null;
   private focusEditor: { close(): void } | null = null;
   // Panels the active tab has a filter choice for; see planPanelFilterApply.
   private appliedPanelFilters = new Set<string>();
@@ -567,33 +459,11 @@ export class PanelLayoutManager implements AppModule {
   private unregisterExportFlush: (() => void) | null = null;
   private aviationCommandBar: AviationCommandBar | null = null;
   private readonly applyTimeRangeFilterDebounced: (() => void) & { cancel(): void };
-  private unsubscribeRuntimeConfig: (() => void) | null = null;
-  private unsubscribeAuth: (() => void) | null = null;
-  private unsubscribeWidgetAccess: (() => void) | null = null;
-  private proBlockUnsubscribe: (() => void) | null = null;
-  private proBlockEntitlementUnsubscribe: (() => void) | null = null;
   private boundWidgetCreatorHandler: ((e: Event) => void) | null = null;
-  private unsubscribeEntitlementChange: (() => void) | null = null;
-  private gatingPrincipal: string | null | undefined = undefined;
-  // Team dashboards for the signed-in user: null until loaded, and for anyone
-  // without an API Business or Enterprise team.
-  private readonly team = new TeamDashboardsStore({
-    load: loadTeamDashboards,
-    onChange: () => {
-      if (!this.ctx.isDestroyed) this.panelTabBar?.refresh();
-    },
-  });
-  private teamBusy = false;
-  private premiumPanelsUnlocked = new Set<string>();
-  private unsubscribeSubscriptionChange: (() => void) | null = null;
-  private unsubscribePaymentFailureBanner: (() => void) | null = null;
   private scheduledLoadAllRaf: number | null = null;
   private scheduledLoadAllIdle: number | null = null;
   private responsiveZoneListener: ResponsiveZoneListener | null = null;
-  private readonly proActivationController: ProActivationController;
   private readonly passkeyOfferController: PasskeyOfferBoot;
-  private destroyGitHubStarPrompt: (() => void) | null = null;
-  private readonly checkoutReturnFocusController = new AbortController();
   private pendingStorageFacilityId: string | null = null;
 
   constructor(ctx: AppContext, callbacks: PanelLayoutManagerCallbacks) {
@@ -603,243 +473,14 @@ export class PanelLayoutManager implements AppModule {
       this.applyTimeRangeFilterToNewsPanels();
     }, 120);
 
-    // Dodo Payments: entitlement subscription + billing watch for ALL users.
-    // Free users need the subscription active so they receive real-time
-    // entitlement updates after purchasing (P1: newly upgraded users must
-    // see their premium access without a manual page reload).
-    //
-    // Two account-bound return paths need to seed the transition detector as
-    // post-checkout:
-    //   1. Full-page Dodo redirect — handleCheckoutReturn() reads
-    //      subscription_id/status URL params and cleans them.
-    //   2. A legacy overlay-success flag left by an older tab.
-    const returnResult = handleCheckoutReturn();
-    const returnedFromOverlayFlag = consumePostCheckoutFlag();
-    const routing = resolveCheckoutReturnRouting(returnResult, returnedFromOverlayFlag);
-    const returnedFromDesktopBrowser = routing.kind === 'desktop';
-    const returnedFromCheckout = routing.kind !== 'none';
-    const returnedFromAccountCheckout = routing.kind === 'overlay' || routing.kind === 'account';
-    this.proActivationController = new ProActivationController(ctx, {
-      reloadPending: returnedFromAccountCheckout,
-      openAiAnalyst: () => this.revealAnalystPanel(),
-      openSearch: callbacks.openSearch,
-    });
     // Boot shim only — the controller, prompt, and passkey services load on
     // demand, keeping ~12 KB out of the first-paint chunk (see #7353 follow-up).
     this.passkeyOfferController = new PasskeyOfferBoot(ctx);
-    if (returnedFromCheckout) {
-      const attempt = loadCheckoutAttempt();
-      const pendingAttribution = peekPendingMissionAttribution();
-      const checkoutContext: CheckoutContext | null = attempt?.context ?? (
-        pendingAttribution
-          ? resolveCheckoutContext({
-            surface: pendingAttribution.surface,
-            attribution: pendingAttribution.panelKey
-              ? { missionId: pendingAttribution.missionId, panelKey: pendingAttribution.panelKey }
-              : undefined,
-            ambientMissionId: pendingAttribution.missionId,
-          })
-          : null
-      );
-      if (checkoutContext) {
-        armCheckoutReturnState(
-          checkoutContext,
-          returnedFromDesktopBrowser
-            ? 'desktop-return'
-            : returnResult.kind === 'success'
-              ? 'url-return'
-              : 'overlay-flag',
-        );
-      }
-      // Funnel (#4931): the purchase-complete signal on the client side.
-      // Queued by the analytics facade until Umami loads after first paint.
-      trackCheckoutSuccess(returnResult.kind === 'success' ? 'url-return' : 'overlay-flag');
-      // Mission return leg (plan U4/R1): a checkout that started from a
-      // mission preview lands the buyer back on the originating mission and
-      // panel. The stored preset re-applies itself on boot; here we finish
-      // the leg — scroll+focus the originating panel and emit the
-      // completion-side attribution event.
-      // The durable carrier is the CheckoutAttempt (still present here — the
-      // clearCheckoutAttempt('success') below runs after this branch). The
-      // pending-conversion peek is only a fallback: the collector usually
-      // confirms and clears that entry BEFORE the Dodo redirect.
-      if (returnedFromAccountCheckout) {
-        // Pro Activation Onboarding: capture the plan identity from the attempt
-        // record and write the durable pending-onboarding marker BEFORE the
-        // clear below wipes the attempt. Success branch only (the `failed`
-        // branch structurally cannot reach here). An overlay-only return may
-        // carry no attempt record → the marker omits productId and the boot
-        // hook falls back to the live entitlement snapshot for plan identity
-        // (never a write-time frozen fallback — see decideActivationMount).
-        const activationProductId = loadCheckoutAttempt()?.productId ?? null;
-        markProActivationPending(activationProductId);
-        // Full-page return cleared its URL params; belt-and-braces clear
-        // of the attempt record here catches the success path where the
-        // overlay handler never ran (direct Dodo redirect).
-        clearCheckoutAttempt('success');
-      }
-      // waitForEntitlement: true keeps the banner mounted across the
-      // entitlement-watcher reload (post-PR-4 the watcher is the single
-      // reload source). If the user is already entitled on mount the
-      // banner goes straight to the "active" state; otherwise it waits
-      // up to 30s for the transition before surfacing a manual-refresh
-      // CTA. `email` is read from auth-state (authoritative on the main
-      // app) and masked in the banner before rendering to keep the raw
-      // address out of screenshots / screen-shares of the banner.
-      showCheckoutSuccess({
-        // The desktop marker acknowledges payment in an arbitrary browser;
-        // it cannot prove that browser is signed into the purchasing Clerk
-        // account. Keep that path informational instead of waiting on (or
-        // displaying) another browser identity's entitlement.
-        waitForEntitlement: !returnedFromDesktopBrowser,
-        accountAgnostic: returnedFromDesktopBrowser,
-        email: returnedFromDesktopBrowser ? null : getAuthState().user?.email ?? null,
-      });
-    } else if (returnResult.kind === 'failed') {
-      trackCheckoutFailed(returnResult.rawStatus);
-      showCheckoutFailureBanner(returnResult.rawStatus);
-    }
-    if (!returnedFromCheckout) {
-      // #4934 round-2 F2: the entitlement watcher reloads the page the
-      // moment Pro lands — often before the deferred Umami queue flushes,
-      // which would silently drop the terminal checkout-success event.
-      // This boot-time replay re-queues it from the durable marker the
-      // pre-reload track left behind (no-op on ordinary loads).
-      replayPendingCheckoutSuccess();
-    }
-    // #4934 round-5: /pro checkout-start events that died with the Dodo
-    // redirect are mirrored in sessionStorage; the buyer lands back here
-    // in the same tab — on BOTH the checkout-return and ordinary branches —
-    // so this replay is unconditional (no-op when nothing is pending).
-    replayPendingProFunnelEvents();
-
-    // Dashboard checkout-start / checkout-failed have the same exposure: both
-    // are followed by a navigation (the Dodo redirect) that outlives any
-    // in-page retry, so their durable markers replay here too.
-    replayPendingConversionEvents();
-    replayPendingMissionReturn();
-
-    // Always register the payment-failure-banner listener — onSubscriptionChange
-    // is an in-memory listener registry, doesn't open any network connection,
-    // and survives the destroy/reinit cycle on auth transitions (see
-    // billing.ts:124-126). Registering once here means the banner reacts when
-    // a user signs in mid-session and the App.ts auth-state subscription
-    // (App.ts:995-1006) starts the Convex subscription watch.
-    this.unsubscribePaymentFailureBanner = initPaymentFailureBanner();
-
-    // Defer Convex subscriptions until a real Clerk identity exists.
-    //
-    // `getUserId()` (user-identity.ts) always returns truthy for browser
-    // users — it falls back to an auto-generated `wm-anon-id` UUID — so the
-    // previous `if (userId)` gate never short-circuited. That meant every
-    // anonymous visitor opened a Convex WebSocket via getConvexClient()
-    // with `setAuth(getClerkToken)` returning null, which the Convex SDK
-    // could not authenticate, producing a constant
-    //   `WebSocket connection to wss://…/api/1.34.0/sync failed`
-    // reconnect loop in DevTools (todo #257 item 4). The subscriptions
-    // themselves never delivered useful state for anon users either:
-    //   - getEntitlementsForUser returns FREE_TIER_DEFAULTS without auth
-    //   - getSubscriptionForUser returns null without auth
-    // — so the loop was pure noise.
-    //
-    // For users who sign in mid-session, App.ts:1003-1006 destroys and
-    // re-initializes both subscriptions against the real Clerk userId, so
-    // skipping here is a no-op for the signed-in path.
-    //
-    // Note: PanelLayoutManager is constructed before initAuthState() awaits
-    // Clerk, so getAuthState().user is null even for users who will silently
-    // restore a Clerk session on this page load. Those users are picked up
-    // by subscribeAuthState a few hundred ms later via the same App.ts
-    // rebind path. Constructor-time anon is the common case.
-    if (getAuthState().user) {
-      const userId = getAuthState().user!.id;
-      initEntitlementSubscription(userId).catch(() => {});
-      initSubscriptionWatch(userId).catch(() => {});
-    }
-
-    // Reload at most once per account and browser tab on a free→pro
-    // transition. Legacy-pro users whose first snapshot is already pro must
-    // not reload, while a newly upgraded user gets one clean boot with every
-    // premium panel initialized against the paid entitlement.
-    //
-    // When we just returned from a Dodo full-page redirect checkout, seed
-    // lastEntitled = false instead of null. The webhook may have already
-    // landed by the time the user's browser comes back, so the first
-    // entitlement snapshot can arrive as pro. Without this seed the
-    // transition detector would swallow that snapshot as "legacy-pro" and
-    // the user would see locked panels until a manual refresh — exactly the
-    // symptom that caused the 2026-04-17/18 duplicate-subscription incident.
-    //
-    // The guard is persisted and verified BEFORE navigation. If storage is
-    // blocked, we fail closed to updatePanelGating() without reloading. This
-    // prevents the customer-visible failure where each new page boot receives
-    // another transient free→pro sequence and reloads again every ~500ms.
-    //
-    // REQUIRES_SKIP_INITIAL_SNAPSHOT_BEHAVIOR — this remains the sole
-    // automatic reload source for post-checkout success. Regression guards:
-    // tests/entitlement-transition.test.mts locks the raw transition semantics;
-    // tests/entitlement-reload-controller.test.mts locks the cross-boot
-    // one-navigation invariant from the daypesta customer recording.
-    const entitlementReloadController = createEntitlementReloadController({
-      returnedFromCheckout: returnedFromAccountCheckout,
-      onSnapshot: () => this.updatePanelGating(getAuthState()),
-      reload: () => {
-        console.log('[entitlements] Subscription activated — reloading once to unlock panels');
-        window.location.reload();
-      },
-    });
-    this.unsubscribeEntitlementChange = onEntitlementChange((state) => {
-      // Desktop checkout is handed to the OS browser, so the app itself never
-      // receives the Dodo return URL. Once its Clerk-bound entitlement becomes
-      // active, retire the app-local retry/referral state here instead. This
-      // is scoped to the desktop app; an anonymous or mismatched browser must
-      // never clear its own unrelated local checkout state.
-      // Preserve null for unavailable auth-handoff snapshots: isEntitlementActive
-      // collapses null→false, which would invent a free→pro edge and re-trigger
-      // the daypesta reload loop (see createEntitlementReloadController).
-      const entitlementActive =
-        state === null ? null : isEntitlementActive(state, Date.now());
-      if (
-        this.ctx.isDesktopApp &&
-        entitlementActive === true &&
-        loadCheckoutAttempt()
-      ) {
-        clearCheckoutAttempt('success');
-      }
-      entitlementReloadController.handleSnapshot(
-        entitlementActive,
-        getAuthState().user?.id ?? null,
-      );
-    });
-
-    // #4771: billing-state transitions can arrive on the SUBSCRIPTION row
-    // alone (webhook flips to on_hold, renewal verification records a
-    // verdict) with no entitlement snapshot change. Re-run gating so the
-    // billing-aware CTA copy tracks the current state, not just the banner.
-    this.unsubscribeSubscriptionChange = onSubscriptionChange(() => {
-      this.updatePanelGating(getAuthState());
-    });
   }
 
   async init(): Promise<void> {
     await this.renderLayout();
     if (this.ctx.isDestroyed) return;
-    void this.reconcileCheckoutReturnFocus();
-
-    // Subscribe to auth state for reactive panel gating on web
-    this.unsubscribeAuth = subscribeAuthState((state) => {
-      this.updatePanelGating(state);
-    });
-
-    this.unsubscribeRuntimeConfig = subscribeRuntimeConfig(() => {
-      this.updatePanelGating(getAuthState());
-    });
-
-    // Tester keys and the self-host desktop-key verdict change isProUser()
-    // without an auth or entitlement event.
-    this.unsubscribeWidgetAccess = subscribeWidgetAccess(() => {
-      this.updatePanelGating(getAuthState());
-    });
 
     // Handle analyst action chip "Create chart widget →" click
     this.boundWidgetCreatorHandler = ((e: CustomEvent<{ initialMessage?: string }>) => {
@@ -857,77 +498,8 @@ export class PanelLayoutManager implements AppModule {
     }) as EventListener;
     this.ctx.container.addEventListener('wm:open-widget-creator', this.boundWidgetCreatorHandler);
 
-    // Pro Activation Onboarding: after the dashboard settles, evaluate whether
-    // a pending-onboarding marker should open the interstitial (or surface the
-    // finish-setup chip). Deferred off the boot critical path like the panel
-    // hydration scheduler above.
-    this.proActivationController.init();
     // Passkey offer: subscribes to auth and evaluates on a genuine sign-in.
-    // Registered after the Pro controller so the activation interstitial —
-    // which is a focus trap — wins the crowded post-sign-in moment; the offer
-    // hides behind it and restores when it closes.
     this.passkeyOfferController.init();
-    // Ask-once GitHub star toast: counts visit days, loads its chunk only when eligible.
-    this.destroyGitHubStarPrompt = bootGitHubStarPrompt().destroy;
-  }
-
-  /**
-   * Open + scroll the WM Analyst (chat-analyst) panel into view. The panel is a
-   * lazy/deferred premium panel, so it may not be in `ctx.panels` yet at click
-   * time; scrolling to its reserved grid slot trips the mount observer, and we
-   * retry briefly until the element appears (mirrors search-manager's
-   * scrollToPanelWhenReady contract).
-   */
-  private revealAnalystPanel(attemptsLeft = 12): void {
-    if (this.ctx.isDestroyed || typeof document === 'undefined') return;
-    const key = 'chat-analyst';
-    this.ctx.panels[key]?.show();
-    const el = document.querySelector(`[data-panel="${key}"]`);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
-    if (attemptsLeft <= 0) return;
-    window.setTimeout(() => this.revealAnalystPanel(attemptsLeft - 1), 80);
-  }
-
-  private async reconcileCheckoutReturnFocus(): Promise<void> {
-    const state = loadCheckoutReturnState();
-    if (!state || state.delivery.panelFocus !== 'pending') return;
-    if (state.context.origin.kind !== 'mission-preview') return;
-
-    const panelKey = state.context.origin.panelKey;
-    const escaped = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
-      ? CSS.escape(panelKey)
-      : panelKey.replace(/["\\]/g, '\\$&');
-    document.querySelector<HTMLElement>(`[data-panel="${escaped}"]`)?.scrollIntoView({
-      block: 'start',
-      behavior: 'smooth',
-    });
-
-    try {
-      const outcome = await waitUntilPanelLive({
-        isLive: () => isCatalogPanelLive(panelKey, this.ctx.panels),
-        signal: this.checkoutReturnFocusController.signal,
-      });
-      if (outcome !== 'live' || this.ctx.isDestroyed) return;
-      const panel = this.ctx.panels[panelKey] as { getElement?: () => HTMLElement | null } | undefined;
-      const instanceElement = panel?.getElement?.();
-      const element = instanceElement?.isConnected
-        ? instanceElement
-        : document.querySelector<HTMLElement>(
-          `[data-panel="${escaped}"]:not([data-deferred-panel])`,
-        );
-      if (!element?.isConnected || element.hasAttribute('data-deferred-panel')) return;
-      element.scrollIntoView({ block: 'start', behavior: 'smooth' });
-      element.tabIndex = -1;
-      element.focus({ preventScroll: true });
-      settleCheckoutReturnFocus();
-    } catch (error) {
-      if ((error as { name?: string }).name !== 'AbortError') {
-        console.warn('[checkout] Failed to restore preview panel focus', error);
-      }
-    }
   }
 
   /**
@@ -972,19 +544,8 @@ export class PanelLayoutManager implements AppModule {
     this.variantPlacementCleanup?.();
     this.variantPlacementCleanup = null;
     this.pendingStorageFacilityId = null;
-    this.checkoutReturnFocusController.abort();
     clearAllPendingCalls();
     this.applyTimeRangeFilterDebounced.cancel();
-    this.unsubscribeRuntimeConfig?.();
-    this.unsubscribeRuntimeConfig = null;
-    this.unsubscribeAuth?.();
-    this.unsubscribeAuth = null;
-    this.unsubscribeWidgetAccess?.();
-    this.unsubscribeWidgetAccess = null;
-    this.proBlockUnsubscribe?.();
-    this.proBlockUnsubscribe = null;
-    this.proBlockEntitlementUnsubscribe?.();
-    this.proBlockEntitlementUnsubscribe = null;
 
     const destroyedTargets = new Set<{ destroy?: () => void }>();
     const destroyOnce = (target: { destroy?: () => void } | null | undefined): void => {
@@ -1031,8 +592,6 @@ export class PanelLayoutManager implements AppModule {
     this.panelTabBar = null;
     this.unsubscribeScope?.();
     this.unsubscribeScope = null;
-    this.unsubscribeFocusEntitlement?.();
-    this.unsubscribeFocusEntitlement = null;
     this.focusEditor?.close();
     this.focusEditor = null;
     this.focusBar?.destroy();
@@ -1065,10 +624,6 @@ export class PanelLayoutManager implements AppModule {
 
     // Destroy every registered panel exactly once, including lazy-created
     // and self-fetching panels that own subscriptions, intervals, or aborts.
-    for (const preview of this.missionPreviews.values()) {
-      preview.destroy();
-    }
-    this.missionPreviews.clear();
     for (const panel of Object.values(this.ctx.panels)) {
       destroyOnce(panel);
     }
@@ -1085,112 +640,10 @@ export class PanelLayoutManager implements AppModule {
     // recording keys it believes are already mapped.
     this.ctx.newsCategoryPanelKeys.clear();
 
-    // Clean up billing subscription watch + entitlement subscription
-    destroySubscriptionWatch();
-    destroyEntitlementSubscription();
-    // Final teardown owns the terminal verdict; account rebinds keep verification pending.
-    markEntitlementVerificationUnavailable();
-
-    // Clean up entitlement change listener
-    this.unsubscribeEntitlementChange?.();
-    this.unsubscribeEntitlementChange = null;
-
-    // Clean up subscription-change gating listener (#4771)
-    this.unsubscribeSubscriptionChange?.();
-    this.unsubscribeSubscriptionChange = null;
-
-    // Clean up payment failure banner subscription
-    this.unsubscribePaymentFailureBanner?.();
-    this.unsubscribePaymentFailureBanner = null;
-
-    this.proActivationController.destroy();
     this.passkeyOfferController.destroy();
-    this.destroyGitHubStarPrompt?.();
-    this.destroyGitHubStarPrompt = null;
 
     removeResponsiveZoneListener(this.responsiveZoneListener);
     this.responsiveZoneListener = null;
-  }
-
-  /** Reactively update premium panel gating based on auth state. */
-  private updatePanelGating(state: AuthSession): void {
-    // Also invalidate requests and queued calls when Telegram has not mounted yet.
-    if (this.ctx.isDesktopApp && !hasPremiumAccess(state)) clearTelegramIntelCache();
-    // #4771: resolve the billing-aware refinement of FREE_TIER once per pass
-    // — the inputs (subscription/entitlement snapshots, now) are invariant
-    // across the panel loop, and a single Date.now() keeps every panel on
-    // the same verdict at a period-end boundary.
-    const billingAwareFreeTier = resolveBillingAwareGateReason(PanelGateReason.FREE_TIER);
-    for (const [key, panel] of Object.entries(this.ctx.panels)) {
-      const isPremium = WEB_PREMIUM_PANELS.has(key)
-        || (this.ctx.isDesktopApp && key === 'telegram-intel');
-      let reason = getPanelGateReason(state, isPremium);
-
-      // Clerk-pro-only panels: even when hasPremiumAccess() returns
-      // true via API/tester key, these panels need a Clerk userId
-      // bound to a PRO entitlement. We DO NOT trust client-side
-      // entitlement state as an authoritative gate — the server-side
-      // /api/latest-brief check is authoritative. We only downgrade
-      // the gate reason here as AFFIRMATIVE DENIAL: when we KNOW
-      // (snapshot loaded AND tier < 1) the user is free. In every
-      // other case — snapshot not yet loaded, Convex subscription
-      // skipped, transient failure — we leave the panel unlocked
-      // and let the server 403 path drive the upgrade CTA inside
-      // the panel's refresh() catch block.
-      //
-      // Prior iterations of this code tried the opposite — gating
-      // positively on hasTier(1) — and locked legitimate Pro users
-      // out whenever the Convex snapshot was late, skipped, or
-      // failed. Affirmative-denial-only is the right shape: never
-      // over-gate, accept the one-doomed-fetch-per-session cost
-      // for API-key-only + free-Clerk users as the lesser harm.
-      if (
-        reason === PanelGateReason.NONE &&
-        WEB_CLERK_PRO_ONLY_PANELS.has(key) &&
-        getEntitlementState() !== null &&
-        !hasTier(1)
-      ) {
-        reason = state.user ? PanelGateReason.FREE_TIER : PanelGateReason.ANONYMOUS;
-      }
-
-      // #4771: a FREE_TIER verdict for a customer with stale paid evidence
-      // becomes a billing-state reason (verifying renewal / update payment /
-      // resubscribe) so we never push a paying user toward duplicate checkout.
-      if (reason === PanelGateReason.FREE_TIER) reason = billingAwareFreeTier;
-
-      const gatedPanel = panel as Panel;
-      const principal = state.user?.id ?? null;
-      const principalChanged = this.gatingPrincipal !== undefined && this.gatingPrincipal !== principal;
-      const hadUnlockedPayload = isPremium && this.premiumPanelsUnlocked.has(key);
-      if (hadUnlockedPayload && (principalChanged || reason !== PanelGateReason.NONE)) {
-        gatedPanel.clearSensitiveContent();
-      }
-
-      if (reason === PanelGateReason.NONE) {
-        // Bind before unlock so a snapshot taken under another user is refused.
-        gatedPanel.bindContentPrincipal(principal);
-        gatedPanel.unlockPanel();
-        if (isPremium) this.premiumPanelsUnlocked.add(key);
-      } else {
-        // Snapshot while the previous principal is still bound, then record
-        // the user who is now locked out.
-        const onAction = resolveGateAction(reason, {
-          openAuthModal: () => this.ctx.authModal?.open(),
-        });
-        gatedPanel.showGatedCta(reason, onAction);
-        gatedPanel.bindContentPrincipal(principal);
-        this.premiumPanelsUnlocked.delete(key);
-      }
-    }
-    this.gatingPrincipal = state.user?.id ?? null;
-    // Also retries a failed team load for the same user.
-    this.team.setPrincipal(state.user?.id ?? null);
-
-    // KTD8: the tab cap rides the SAME pass, so it re-evaluates on both
-    // subscribeAuthState and onEntitlementChange (plus onSubscriptionChange).
-    // An auth-only subscription would miss the post-checkout snapshot — the
-    // bug documented at the proBlock wiring below.
-    this.updateTabCapLock();
   }
 
   /** #5159/#5205/#5201: storage access can throw (blocked cookies, sandboxed
@@ -1611,21 +1064,12 @@ export class PanelLayoutManager implements AppModule {
       hasNewTabPanels,
       onSaveNewTabPanels: () => this.saveActiveTabAsNewTabPanels(),
       onClearNewTabPanels: () => this.useDefaultNewTabPanels(),
-      team: {
-        view: () => this.teamDashboardsView(),
-        onOpenMenu: () => { void this.team.reload(); },
-        onOpen: (id) => this.openTeamDashboard(id),
-        onShareTab: () => { void this.shareActiveTabWithTeam(); },
-        onUpdateTab: () => this.updateActiveTabFromTeam(),
-        onStopSharing: (id) => { void this.stopSharingTeamDashboard(id); },
-      },
       focus: {
         isFocused: () => !!this.activeTab()?.scope,
         onClick: () => this.openFocusEditor('tabs'),
       },
     });
     mount.appendChild(this.panelTabBar.getElement());
-    this.updateTabCapLock();
     this.initFocus();
   }
 
@@ -1638,10 +1082,6 @@ export class PanelLayoutManager implements AppModule {
     this.focusBar?.destroy();
     this.focusBar = null;
     this.unsubscribeScope = subscribeScope((resolved) => this.onScopeChanged(resolved));
-    // The bar's report action follows the plan, which can hydrate or lapse
-    // after the bar is drawn.
-    this.unsubscribeFocusEntitlement?.();
-    this.unsubscribeFocusEntitlement = onEntitlementChange(() => this.focusBar?.render(getResolvedScope()));
     // Reload: the stored tab's focus becomes the active one. Not gated; see
     // restoreActiveScope.
     restoreActiveScope(this.activeTab()?.scope ?? null);
@@ -1681,7 +1121,6 @@ export class PanelLayoutManager implements AppModule {
       this.focusBar = new ui.FocusBar({
         onEdit: () => this.openFocusEditor('bar'),
         onClear: () => this.setActiveTabFocus(null),
-        canDraftAssessment: () => hasTravelRiskAssessmentForAccount(),
         onDraftAssessment: () => {
           const scope = getActiveScope();
           if (scope) void ui.openTripAssessmentForScope(scope);
@@ -1697,56 +1136,13 @@ export class PanelLayoutManager implements AppModule {
     }
   }
 
-  /**
-   * Whether this account may set or edit a focus. The plan's own grant, or
-   * the server's word that this teammate may publish focused dashboards: an
-   * API Business seat holds a Pro snapshot locally, but its team plan
-   * includes focus. Client-side only: a personal focus narrows data the plan
-   * already receives, so this protects nothing (see src/services/tab-focus.ts).
-   */
-  private focusAllowed(): boolean {
-    return canSetFocus() || this.team.dashboards?.team.focus === true;
-  }
-
-  /** Whether this account may set a focus; the mission presets that ask for countries read it. */
-  public canFocus(): boolean {
-    return this.focusAllowed();
-  }
-
   /** Open the focus editor on the active tab (a mission preset asks for its countries). */
   public promptForFocus(): void {
     this.openFocusEditor('tabs');
   }
 
-  /** Say a focus needs a plan this account lacks (a gated mission preset). */
-  public showFocusGateNotice(): void {
-    this.showFocusGate('tabs');
-  }
-
-  private showFocusGate(from: 'tabs' | 'bar'): void {
-    trackGateHit('tab-focus');
-    const auth = getAuthState();
-    const reason = auth.user
-      ? resolveBillingAwareGateReason(PanelGateReason.FREE_TIER)
-      : PanelGateReason.ANONYMOUS;
-    const onAction = resolveGateAction(reason, { openAuthModal: () => this.ctx.authModal?.open() });
-    loadFocusUi().then(
-      (ui) => {
-        if (this.ctx.isDestroyed) return;
-        const copy = ui.focusGateCopy(reason);
-        if (from === 'bar' && this.focusBar) this.focusBar.showGate(copy, onAction);
-        else this.panelTabBar?.showFocusGateNotice(copy, onAction);
-      },
-      (err: unknown) => console.error('[focus] focus UI failed to load', err),
-    );
-  }
-
-  private openFocusEditor(from: 'tabs' | 'bar'): void {
+  private openFocusEditor(_from: 'tabs' | 'bar'): void {
     if (!this.tabsState || this.focusEditor) return;
-    if (!this.focusAllowed()) {
-      this.showFocusGate(from);
-      return;
-    }
     const tabId = this.tabsState.activeTabId;
     void import('@/components/FocusEditor').then(({ openFocusEditor }) => {
       // The tab can change while the chunk loads; edit only the tab it was opened for.
@@ -1819,10 +1215,7 @@ export class PanelLayoutManager implements AppModule {
   private setActiveTabFocus(scope: TabScope | null): void {
     const tab = this.activeTab();
     if (!tab || !this.tabsState) return;
-    if (!setActiveScope(scope, scope === null || this.focusAllowed())) {
-      if (scope) this.showFocusGate('bar');
-      return;
-    }
+    if (!setActiveScope(scope)) return;
     const active = getActiveScope();
     if (active) tab.scope = active;
     else delete tab.scope;
@@ -1852,246 +1245,9 @@ export class PanelLayoutManager implements AppModule {
     showToast(t('dashboardTabs.newTabStartsDefault'));
   }
 
-  // ============================================
-  // Team dashboards — tabs shared within an API Business or Enterprise team
-  // ============================================
-
   private activeTab(): PanelTab | null {
     const state = this.tabsState;
     return state?.tabs.find((tab) => tab.id === state.activeTabId) ?? null;
-  }
-
-  private teamDashboardsView() {
-    const team = this.team.dashboards;
-    if (!team) return null;
-    const link = this.activeTab()?.team;
-    const linked = link ? team.dashboards.find((d) => d.id === link.id) : undefined;
-    return {
-      dashboards: team.dashboards.map((d) => ({ id: d.id, name: d.name })),
-      active: linked && link ? { id: linked.id, behind: linked.version > link.version } : null,
-      busy: this.teamBusy,
-    };
-  }
-
-  private openTeamDashboard(id: string): void {
-    const dashboard = this.team.dashboards?.dashboards.find((d) => d.id === id);
-    if (!dashboard || !this.tabsState) return;
-
-    // Already open here: go to that tab rather than stacking copies.
-    const existing = this.tabsState.tabs.find((tab) => tab.team?.id === id);
-    if (existing) {
-      this.switchToTab(existing.id);
-      return;
-    }
-
-    const verdict = this.updateTabCapLock();
-    if (!verdict.allowed) {
-      trackGateHit('dashboard-tab');
-      this.panelTabBar?.showAddLockNotice();
-      return;
-    }
-
-    const built = toTeamDashboardTab(dashboard.layout, this.ctx.panelSettings);
-    if (built.scopeInvalid) {
-      // Opened without its focus it would pass for the whole world.
-      showToast(t('teamDashboards.focusUnreadable', { name: dashboard.name }));
-      return;
-    }
-    // A stored map view wins over the focus fit; the outline still draws.
-    const open = () => {
-      this.createAndActivateTab(dashboard.name, {
-        panelSettings: built.panelSettings,
-        panelOrder: built.panelOrder,
-        bottomSet: built.bottomSet,
-        team: { id: dashboard.id, version: dashboard.version },
-        ...(built.scope ? { scope: built.scope } : {}),
-        ...(built.panelFilters ? { panelFilters: built.panelFilters } : {}),
-      });
-      this.applyTeamPanelSizes(built.sizes);
-      this.applyTeamMap(built.map);
-    };
-    if (built.map) this.focusMap().keepMapView(open);
-    else open();
-    showToast(t('teamDashboards.opened', { name: dashboard.name }));
-  }
-
-  private updateActiveTabFromTeam(): void {
-    const tab = this.activeTab();
-    const dashboard = tab?.team && this.team.dashboards?.dashboards.find((d) => d.id === tab.team!.id);
-    if (!tab || !dashboard || !this.tabsState) return;
-
-    const built = toTeamDashboardTab(dashboard.layout, this.ctx.panelSettings);
-    if (built.scopeInvalid) {
-      showToast(t('teamDashboards.focusUnreadable', { name: dashboard.name }));
-      return;
-    }
-    // The shared focus (and its neighbours switch) is part of the version.
-    if (built.scope) tab.scope = built.scope;
-    else delete tab.scope;
-    if (built.panelFilters) tab.panelFilters = built.panelFilters;
-    else delete tab.panelFilters;
-    this.applyTabPanelFilters(tab.panelFilters);
-    // A stored map view wins over the focus fit; the outline still draws.
-    if (built.map) this.focusMap().keepMapView(() => restoreActiveScope(built.scope));
-    else restoreActiveScope(built.scope);
-    this.applyTabPanelState(built.panelSettings, built.panelOrder, built.bottomSet);
-    this.applyTeamPanelSizes(built.sizes);
-    this.applyTeamMap(built.map);
-    this.snapshotActiveTab();
-    tab.team = { id: dashboard.id, version: dashboard.version };
-    saveTabsState(this.tabsState);
-    this.panelTabBar?.refresh();
-    showToast(t('teamDashboards.updated'));
-  }
-
-  private async shareActiveTabWithTeam(): Promise<void> {
-    const userId = this.team.userId;
-    const tab = this.activeTab();
-    const team = this.team.dashboards;
-    if (!userId || !tab || !team || this.teamBusy) return;
-    // Refused before the round trip; `publish` enforces the same rule.
-    if (!canPublishTeamDashboardScope(team.team, tab.scope, tab.panelFilters)) {
-      showToast(t('teamDashboards.focusNotEntitled'));
-      return;
-    }
-
-    const mapState = this.ctx.map?.getState();
-    const layout = captureTeamDashboardLayout({
-      ...this.captureCurrentTabState().snapshot,
-      scope: tab.scope ?? null,
-      panelFilters: tab.panelFilters,
-      rowSpans: loadPanelSpans(),
-      colSpans: loadPanelColSpans(),
-      map: this.ctx.map && mapState
-        ? {
-          view: mapState.view,
-          zoom: mapState.zoom,
-          center: this.ctx.map.getCenter(),
-          timeRange: mapState.timeRange,
-          layers: mapState.layers as unknown as Record<string, boolean | undefined>,
-        }
-        : null,
-    });
-    // Update the linked dashboard from the version this browser last saw. The
-    // list can lag a publish this tab just made, so fall back to the tab's own
-    // version. A link to a removed dashboard shares as a new one
-    // (publishOrShareAsNew); a newer teammate version is refused until seen.
-    const linkedId = tab.team?.id;
-    const baseVersion = linkedId
-      ? team.dashboards.find((d) => d.id === linkedId)?.version ?? tab.team!.version
-      : undefined;
-
-    this.teamBusy = true;
-    this.panelTabBar?.refresh();
-    try {
-      const link = await publishOrShareAsNew(
-        (args) => publishTeamDashboard(userId, args),
-        { name: tab.name, layout, dashboardId: linkedId, baseVersion },
-      );
-      if (this.team.userId !== userId || this.ctx.isDestroyed) return;
-      tab.team = link;
-      if (this.tabsState) saveTabsState(this.tabsState);
-      showToast(t('teamDashboards.shared', { name: tab.name }));
-      await this.team.reload({ fresh: true });
-    } catch (err) {
-      const kind = teamDashboardErrorKind(err);
-      if (kind === 'VERSION_CONFLICT') {
-        // Show the newer version; sharing again from the menu replaces it.
-        showToast(t('teamDashboards.behind'));
-        if (this.team.userId === userId) void this.team.reload({ fresh: true });
-        return;
-      }
-      showToast(t(teamDashboardFailureKey(kind), {
-        limit: String((err as { data?: { limit?: number } }).data?.limit ?? 25),
-      }));
-    } finally {
-      this.teamBusy = false;
-      this.panelTabBar?.refresh();
-    }
-  }
-
-  private async stopSharingTeamDashboard(id: string): Promise<void> {
-    const userId = this.team.userId;
-    const dashboard = this.team.dashboards?.dashboards.find((d) => d.id === id);
-    if (!userId || !dashboard || this.teamBusy) return;
-    if (!window.confirm(t('teamDashboards.confirmStop', { name: dashboard.name }))) return;
-
-    this.teamBusy = true;
-    this.panelTabBar?.refresh();
-    try {
-      await removeTeamDashboard(userId, id);
-      if (this.team.userId !== userId || this.ctx.isDestroyed) return;
-      // Tabs opened from it keep their panels; they are just no longer linked.
-      let unlinked = false;
-      for (const tab of this.tabsState?.tabs ?? []) {
-        if (tab.team?.id !== id) continue;
-        delete tab.team;
-        unlinked = true;
-      }
-      if (unlinked && this.tabsState) saveTabsState(this.tabsState);
-      showToast(t('teamDashboards.stopped', { name: dashboard.name }));
-      await this.team.reload({ fresh: true });
-    } catch {
-      showToast(t('teamDashboards.failed'));
-    } finally {
-      this.teamBusy = false;
-      this.panelTabBar?.refresh();
-    }
-  }
-
-  /**
-   * Panel sizes are kept per panel, not per tab, so a shared layout's sizes
-   * become this browser's sizes for those panels. Mounted panels resize now;
-   * the rest read the saved size when they mount.
-   */
-  private applyTeamPanelSizes(sizes: readonly PanelSize[]): void {
-    for (const { key, rows, cols } of sizes) {
-      const panel = this.ctx.panels[key] as Panel | undefined;
-      if (panel && typeof panel.applySharedSize === 'function') {
-        panel.applySharedSize(rows, cols);
-        continue;
-      }
-      if (rows === undefined) clearPanelSpanEntry(key);
-      else savePanelSpan(key, rows);
-      if (cols === undefined) clearPanelColSpanEntry(key);
-      else savePanelColSpan(key, cols);
-    }
-  }
-
-  /** Same order and safeguards as a shared link's map state (applyInitialUrlState). */
-  private applyTeamMap(map: TeamDashboardMap | null): void {
-    if (!map || !this.ctx.map) return;
-    this.ctx.map.setView(map.view as import('@/components/MapContainer').MapView, map.zoom);
-    this.ctx.map.setTimeRange(map.timeRange);
-
-    const requested = new Set(map.layers);
-    const next = { ...this.ctx.mapLayers };
-    for (const layer of Object.keys(LAYER_REGISTRY) as Array<keyof MapLayers>) {
-      next[layer] = requested.has(layer);
-    }
-    let normalized = normalizeExclusiveChoropleths(next, this.ctx.mapLayers);
-    if (normalized.resilienceScore && !this.ctx.map.isDeckGLActive?.()) {
-      normalized = { ...normalized, resilienceScore: false };
-    }
-    if (shouldSanitizeLockedLayers(
-      hasPremiumAccess(getAuthState()),
-      isProTierResolved(),
-      this.callbacks.isFreeTierFallbackActive?.() === true,
-    )) {
-      normalized = sanitizeLockedLayers(normalized, false);
-    }
-    const previous = { ...this.ctx.mapLayers };
-    this.ctx.mapLayers = normalized;
-    this.ctx.map.setLayers(normalized);
-    // Opening a team dashboard is the user's choice, so its layers persist
-    // and load their data like a toggle would.
-    saveToStorage(STORAGE_KEYS.mapLayers, normalized);
-    for (const layer of Object.keys(normalized) as Array<keyof MapLayers>) {
-      if (!!previous[layer] !== !!normalized[layer]) {
-        this.callbacks.applyMapLayerChange?.(layer, !!normalized[layer], 'programmatic');
-      }
-    }
-    this.ctx.map.setCenter(map.lat, map.lon, map.zoom);
   }
 
   /**
@@ -2103,10 +1259,9 @@ export class PanelLayoutManager implements AppModule {
       return { ...DASHBOARD_TAB_UNAVAILABLE_RESULT, actionType: action.type };
     }
 
-    const cap = this.updateTabCapLock();
     switch (action.type) {
       case 'list':
-        return describeDashboardTabs(this.tabsState, cap);
+        return describeDashboardTabs(this.tabsState);
       case 'select': {
         const resolved = resolveSelectDashboardTab(this.tabsState, action.tabId);
         if (!resolved.ok) {
@@ -2124,13 +1279,11 @@ export class PanelLayoutManager implements AppModule {
         );
       }
       case 'create': {
-        const resolved = resolveCreateDashboardTab(this.tabsState, cap, action.name);
+        const resolved = resolveCreateDashboardTab(this.tabsState, action.name);
         if (!resolved.ok) {
-          if (resolved.reason === 'tab_cap') trackGateHit('dashboard-tab');
           return mutationDenied('create', resolved.reason, resolved.message, {
-            ...(resolved.lockReason ? { lockReason: resolved.lockReason } : {}),
-            cap: cap.cap,
-            canCreate: cap.allowed,
+            cap: null,
+            canCreate: true,
             tabCount: this.tabsState.tabs.length,
           });
         }
@@ -2180,13 +1333,12 @@ export class PanelLayoutManager implements AppModule {
         if (!resolved.ok) {
           return mutationDenied('delete', resolved.reason, resolved.message, {
             tabCount: this.tabsState.tabs.length,
-            canCreate: cap.allowed,
-            cap: cap.cap,
+            canCreate: true,
+            cap: null,
           });
         }
         const removedName = resolved.tab.name;
         const persist = this.deleteTab(resolved.tab.id);
-        const nextCap = this.updateTabCapLock();
         return applyPersistReceipt(persist, mutationApplied('delete', {
           message: `Deleted dashboard tab "${removedName}".`,
           tabId: resolved.tab.id,
@@ -2194,8 +1346,8 @@ export class PanelLayoutManager implements AppModule {
           activeTabId: this.tabsState.activeTabId,
           unchanged: false,
           tabCount: this.tabsState.tabs.length,
-          canCreate: nextCap.allowed,
-          cap: nextCap.cap,
+          canCreate: true,
+          cap: null,
         }));
       }
     }
@@ -2521,7 +1673,6 @@ export class PanelLayoutManager implements AppModule {
     unchanged: boolean,
     extra: { alreadyExisted?: boolean; persisted?: boolean } = {},
   ): DashboardTabActionResult {
-    const cap = this.updateTabCapLock();
     const persist = { persisted: extra.persisted !== false };
     return applyPersistReceipt(persist, mutationApplied(actionType, {
       message,
@@ -2531,8 +1682,8 @@ export class PanelLayoutManager implements AppModule {
       unchanged,
       ...(extra.alreadyExisted ? { alreadyExisted: true } : {}),
       tabCount: this.tabsState?.tabs.length ?? 0,
-      canCreate: cap.allowed,
-      cap: cap.cap,
+      canCreate: true,
+      cap: null,
     }));
   }
 
@@ -2548,13 +1699,7 @@ export class PanelLayoutManager implements AppModule {
     const tab: PanelTab = {
       id: generateTabId(),
       name,
-      // Same unresolved-tier caveat as applyTabPanelState: clamping a new tab
-      // before the entitlement is known bakes a free-tier layout into a Pro
-      // user's workspace before its ownership marker can be safely reconciled.
-      // The variant default set can also exceed FREE_MAX_PANELS.
-      panelSettings: this.isProTierResolvedOrFallback()
-        ? enforceFreePanelLimit(defaults.panelSettings, isProUser())
-        : defaults.panelSettings,
+      panelSettings: restoreProGatedPanels(defaults.panelSettings),
       panelOrder: defaults.panelOrder,
       bottomSet: preset?.bottomSet ?? [],
       ...(preset?.team ? { team: preset.team } : {}),
@@ -2568,72 +1713,25 @@ export class PanelLayoutManager implements AppModule {
     this.applyTabPanelFilters(tab.panelFilters);
     this.applyTabPanelState(tab.panelSettings, tab.panelOrder, tab.bottomSet);
     this.panelTabBar?.refresh();
-    this.updateTabCapLock();
     return { tab, persisted: persist.persisted };
   }
 
   /**
-   * Reconcile every stored tab snapshot against the current entitlement.
-   *
-   * Persisting a free-tier clamp while the tier is still unknown is the same
-   * bug App.enforceFreeTierLimits defers around: a Pro user's custom widgets
-   * would be written out of their saved workspaces on every load. Bail out
-   * until the answer is real or the bounded free fallback fires; App calls
-   * this again from the auth and entitlement callbacks, and
-   * applyTabPanelState re-clamps on switch.
+   * Re-enable panels the retired free-tier clamp hid in stored tab snapshots
+   * (marked `proGated`). A panel the user hid stays hidden.
    */
   public healStoredTabSnapshots(): void {
     const state = this.tabsState;
-    if (!state || !this.isProTierResolvedOrFallback()) return;
-
-    const pro = isProUser();
-    let healedSnapshots = pro ? this.restoreLegacyCustomWidgetTabs(state) : false;
+    if (!state) return;
+    let healedSnapshots = false;
     for (const tab of state.tabs) {
-      const clamped = enforceFreePanelLimit(tab.panelSettings, pro);
-      if (this.panelSettingsEnabledStateChanged(tab.panelSettings, clamped)) {
+      const restored = restoreProGatedPanels(tab.panelSettings);
+      if (Object.keys(restored).some((key) => restored[key]?.enabled !== tab.panelSettings[key]?.enabled)) {
         healedSnapshots = true;
       }
-      tab.panelSettings = clamped;
+      tab.panelSettings = restored;
     }
     if (healedSnapshots) saveTabsState(state);
-  }
-
-  private isProTierResolvedOrFallback(): boolean {
-    return isProTierResolved() || this.callbacks.isFreeTierFallbackActive?.() === true;
-  }
-
-  /**
-   * Repair pre-`proGated` widget damage in saved tabs once per browser.
-   *
-   * App's global recovery can run before panel tabs initialize, so tabs own a
-   * separate marker. The same ambiguity applies here: markerless disabled
-   * widgets may be deliberate hides, which is why this sweep is bounded to one
-   * migration pass rather than being re-run on every entitlement refresh.
-   */
-  private restoreLegacyCustomWidgetTabs(state: TabsState): boolean {
-    try {
-      if (localStorage.getItem(CW_PRO_GATE_TAB_RECOVERY_KEY)) return false;
-
-      const ownedWidgetIds = new Set(loadWidgets().map((widget) => widget.id));
-      let changed = false;
-      for (const tab of state.tabs) {
-        const restored = sweepLegacyDisabledCustomWidgets(tab.panelSettings, ownedWidgetIds);
-        if (panelGateStateChanged(tab.panelSettings, restored)) changed = true;
-        tab.panelSettings = restored;
-      }
-      localStorage.setItem(CW_PRO_GATE_TAB_RECOVERY_KEY, 'done');
-      return changed;
-    } catch {
-      // Persistence-only migration; blocked storage leaves the tab usable.
-      return false;
-    }
-  }
-
-  private panelSettingsEnabledStateChanged(
-    before: Record<string, PanelConfig>,
-    after: Record<string, PanelConfig>,
-  ): boolean {
-    return panelGateStateChanged(before, after);
   }
 
   /** Capture the live panel state (settings + order) for a tab snapshot. */
@@ -2679,49 +1777,8 @@ export class PanelLayoutManager implements AppModule {
     return persist;
   }
 
-  /**
-   * Tab-cap state for the CURRENT tab count (plan 2026-07-25-001, KTD8).
-   * Pushes the locked/unlocked state into the tab bar and returns the verdict
-   * so `addTab` can enforce it without resolving twice.
-   *
-   * CREATION-ONLY: nothing here removes a tab. A user sitting above their cap
-   * (downgrade, lowered allowance, tabs created during a null-snapshot window)
-   * keeps every tab they have — only the "+" locks.
-   */
-  private updateTabCapLock(): TabCapVerdict {
-    const verdict = evaluateTabCap(getAuthState(), this.tabsState?.tabs.length ?? 0);
-    if (verdict.allowed) {
-      // Only a would-be-capped user pays for the catalog probe; the cap stays
-      // inactive until Pro Business is provably purchasable, so the limit and
-      // the tier flip together (R10). Single-flight and shared with U5.
-      if (verdict.pendingActivation) {
-        void primeExportGateActivation().then((active) => {
-          if (active && !this.ctx.isDestroyed) this.updateTabCapLock();
-        });
-      }
-      this.panelTabBar?.setAddLock(null);
-      return verdict;
-    }
-    const reason = exportLockToGateReason(verdict.reason);
-    this.panelTabBar?.setAddLock({
-      copy: tabCapGateCopy(reason, verdict.cap),
-      onAction: resolveGateAction(reason, { openAuthModal: () => this.ctx.authModal?.open() }),
-    });
-    return verdict;
-  }
-
   private addTab(): void {
     if (!this.tabsState) return;
-
-    const verdict = this.updateTabCapLock();
-    if (!verdict.allowed) {
-      // The metric fires on a blocked CLICK, never on render — a control
-      // nobody reached for is not a gate hit.
-      trackGateHit('dashboard-tab');
-      this.panelTabBar?.showAddLockNotice();
-      return;
-    }
-
     this.createAndActivateTab(t('dashboardTabs.newTabName'));
     showToast(t('dashboardTabs.newTabCreated'));
   }
@@ -2755,8 +1812,6 @@ export class PanelLayoutManager implements AppModule {
       persist = saveTabsState(this.tabsState);
     }
     this.panelTabBar?.refresh();
-    // Deleting frees a slot: a capped user drops back under the limit.
-    this.updateTabCapLock();
     showToast(t('dashboardTabs.tabDeleted', { name: removed!.name }));
     return persist;
   }
@@ -2793,20 +1848,7 @@ export class PanelLayoutManager implements AppModule {
       }
     }
 
-    // Final free-tier guarantee: this is the only path that writes a tab's
-    // panel selection into STORAGE_KEYS.panels, so clamping here means no tab
-    // operation (add / switch / delete-fallback) can ever persist an over-cap
-    // workspace, regardless of how the snapshot was produced.
-    //
-    // Unless the tier isn't known yet and the bounded fallback has not fired —
-    // a tab click can land inside the same unresolved-session window the boot
-    // clamp defers around. Skipping the clamp leaves an over-cap workspace
-    // live for at most that window; App re-runs enforcement (and
-    // healStoredTabSnapshots) when the entitlement resolves or the fallback
-    // settles the account as free.
-    const capped = this.isProTierResolvedOrFallback()
-      ? enforceFreePanelLimit(next, isProUser())
-      : next;
+    const capped = restoreProGatedPanels(next);
 
     this.ctx.panelSettings = capped;
     saveToStorage(STORAGE_KEYS.panels, capped);
@@ -2982,7 +2024,6 @@ export class PanelLayoutManager implements AppModule {
       }
     });
     this.mobilePanelNav?.refresh();
-    this.syncAllMissionPreviews();
   }
 
   /**
@@ -3137,36 +2178,6 @@ export class PanelLayoutManager implements AppModule {
     }
   }
 
-  private missionPreviews = new Map<string, ProPreviewSection>();
-
-  /**
-   * Keep each mounted panel's Pro preview in sync with the ACTIVE mission
-   * (plan U5). The registry is the only authority: a preview exists exactly
-   * when the active mission's entry targets this panel, so a mission switch,
-   * a reset, or a registry rollback all converge through this one seam.
-   * Attached as a sibling AFTER the panel's content, so the panel's own
-   * content re-renders never touch it.
-   */
-  private syncMissionPreview(key: string, panel: Panel, activeMissionId?: string | null): void {
-    const missionId = activeMissionId !== undefined ? activeMissionId : (loadStoredMissionPreset()?.id ?? null);
-    syncPanelPreview(
-      this.missionPreviews,
-      key,
-      panel.getElement(),
-      missionId,
-      (spec) => new ProPreviewSection(spec),
-    );
-  }
-
-  private syncAllMissionPreviews(): void {
-    // One preset read for the whole board — this runs on every
-    // applyPanelSettings call, mission or not (hot-path rule).
-    const missionId = loadStoredMissionPreset()?.id ?? null;
-    for (const [key, panel] of Object.entries(this.ctx.panels)) {
-      if (panel) this.syncMissionPreview(key, panel, missionId);
-    }
-  }
-
   private mountPanelElement(grid: HTMLElement, key: string, panel: Panel, placeholder?: HTMLElement | null): boolean {
     const el = panel.getElement();
     if (el.parentElement) return false;
@@ -3180,7 +2191,6 @@ export class PanelLayoutManager implements AppModule {
     }
     this.mobilePanelNav?.applyToNewPanel(el);
     panel.notifyConnected();
-    this.syncMissionPreview(key, panel);
     return true;
   }
 
@@ -3709,13 +2719,9 @@ export class PanelLayoutManager implements AppModule {
       return p;
     });
 
-    const _lockPanels = this.ctx.isDesktopApp && !hasPremiumAccess();
-
     this.lazyDefaultPanel('daily-market-brief', () => import('@/components/DailyMarketBriefPanel'), 'DailyMarketBriefPanel');
 
     this.lazyDefaultPanel('market-implications', () => import('@/components/MarketImplicationsPanel'), 'MarketImplicationsPanel');
-    // Gating for daily-market-brief, market-implications, and chat-analyst is handled
-    // reactively by updatePanelGating() via auth state subscription (all in WEB_PREMIUM_PANELS).
 
     this.lazyImportedPanel('chat-analyst', () => import('@/components/ChatAnalystPanel'), 'ChatAnalystPanel', (ChatAnalystPanel) => {
       // agent-bus-applier (and its zod-backed shared/agent-bus-actions schemas, ~69KB)
@@ -3727,8 +2733,6 @@ export class PanelLayoutManager implements AppModule {
         .then(({ applyAgentBusAction }) => {
           panel.setDashboardActionHandler((action) => applyAgentBusAction(this.ctx, action, {
             getPanelConfig: (panelId) => getEffectivePanelConfig(panelId, SITE_VARIANT),
-            isPanelAllowed: (panelId, config) => isPanelEntitled(panelId, config, hasPremiumAccess(getAuthState())),
-            hasPremiumAccess: () => hasPremiumAccess(getAuthState()),
             applyViewChange: (viewAction) => {
               if (viewAction.view) trackMapViewChange(viewAction.view);
             },
@@ -3745,31 +2749,24 @@ export class PanelLayoutManager implements AppModule {
       'forecast',
       () => import('@/components/ForecastPanel'),
       'ForecastPanel',
-      undefined,
-      _lockPanels ? ['AI-powered geopolitical forecasts', 'Cross-domain cascade predictions', 'Prediction market calibration'] : undefined,
     );
 
     this.lazyDefaultPanel(
       'oref-sirens',
       () => import('@/components/OrefSirensPanel'),
       'OrefSirensPanel',
-      undefined,
-      _lockPanels ? [t('premium.features.orefSirens1'), t('premium.features.orefSirens2')] : undefined,
     );
 
     this.lazyDefaultPanel(
       'telegram-intel',
       () => import('@/components/TelegramIntelPanel'),
       'TelegramIntelPanel',
-      (panel) => panel.setAccessGrantedHandler(() => { void this.callbacks.loadTelegramIntel?.(); }),
     );
 
     this.lazyDefaultPanel(
       'x-intel',
       () => import('@/components/XIntelPanel'),
       'XIntelPanel',
-      undefined,
-      _lockPanels ? [t('premium.features.xIntel1'), t('premium.features.xIntel2')] : undefined,
     );
 
     this.lazyPanel('gcc-investments', async () => {
@@ -4105,87 +3102,6 @@ export class PanelLayoutManager implements AppModule {
     });
     panelsGrid.appendChild(addPanelBlock);
 
-    // Always create Pro and MCP add-panel blocks — show/hide reactively via auth state.
-    const proBlock = document.createElement('button');
-    proBlock.className = 'add-panel-block ai-widget-block ai-widget-block-pro';
-    proBlock.dataset.clsMover = 'pro-widget-cta';
-    proBlock.setAttribute('aria-label', t('widgets.createInteractive'));
-    const proIcon = document.createElement('span');
-    proIcon.className = 'add-panel-block-icon';
-    proIcon.textContent = '\u26a1';
-    const proLabel = document.createElement('span');
-    proLabel.className = 'add-panel-block-label';
-    proLabel.textContent = t('widgets.createInteractive');
-    const proBadge = document.createElement('span');
-    proBadge.className = 'widget-pro-badge';
-    proBadge.textContent = t('widgets.proBadge');
-    proBlock.appendChild(proIcon);
-    proBlock.appendChild(proLabel);
-    proBlock.appendChild(proBadge);
-    proBlock.addEventListener('click', () => {
-      void import('@/components/WidgetChatModal').then((m) => m.openWidgetChatModal({
-        mode: 'create',
-        tier: 'pro',
-        onComplete: (spec) => {
-          void this.addCustomWidget(spec).catch((error) => {
-            console.error('[widget-builder] failed to add widget', error);
-            showToast(t('widgets.saveFailed'));
-          });
-        },
-      })).catch((err) => console.error('[widget-chat] failed to lazy-load WidgetChatModal', err));
-    });
-    panelsGrid.appendChild(proBlock);
-
-    const mcpBlock = document.createElement('button');
-    mcpBlock.className = 'add-panel-block mcp-panel-block';
-    mcpBlock.dataset.clsMover = 'mcp-cta';
-    mcpBlock.setAttribute('aria-label', t('mcp.connectPanel'));
-    const mcpIcon = document.createElement('span');
-    mcpIcon.className = 'add-panel-block-icon';
-    mcpIcon.textContent = '\u26a1';
-    const mcpLabel = document.createElement('span');
-    mcpLabel.className = 'add-panel-block-label';
-    mcpLabel.textContent = t('mcp.connectPanel');
-    const mcpBadge = document.createElement('span');
-    mcpBadge.className = 'widget-pro-badge';
-    mcpBadge.textContent = t('widgets.proBadge');
-    mcpBlock.appendChild(mcpIcon);
-    mcpBlock.appendChild(mcpLabel);
-    mcpBlock.appendChild(mcpBadge);
-    mcpBlock.addEventListener('click', () => {
-      void import('@/components/McpConnectModal').then((m) => m.openMcpConnectModal({
-        onComplete: (spec) => this.addMcpPanel(spec),
-      })).catch((err) => console.error('[mcp-connect] failed to lazy-load McpConnectModal', err));
-    });
-    panelsGrid.appendChild(mcpBlock);
-
-    // Reactively show/hide Pro-only UI blocks ("Create Interactive Widget" +
-    // "Connect MCP" CTAs) based on premium access.
-    //
-    // hasPremiumAccess() folds in isEntitled() (Convex Dodo entitlement) per
-    // panel-gating.ts:11-27 — so a paying subscriber whose Clerk publicMetadata
-    // is never written by the webhook still resolves to true once the Convex
-    // snapshot lands. BUT: the snapshot lands AFTER auth state stabilises, and
-    // Convex updates do NOT necessarily fire a fresh subscribeAuthState event.
-    // Subscribing only to subscribeAuthState meant these CTAs stayed
-    // display:none for the whole page lifetime for paying users — exactly the
-    // shape PR #3505 chased on the server side, repeated here on the client.
-    //
-    // Subscribe to BOTH auth state and entitlement changes; whichever fires
-    // last (typically entitlements) is the one that flips the CTAs visible.
-    // Mirrors the same dual-subscription wiring used by updatePanelGating
-    // for existing panels (see lines ~259 and ~282).
-    const proBlocks = [proBlock, mcpBlock];
-    const applyProBlockGating = (isPro: boolean) => {
-      for (const block of proBlocks) {
-        block.style.display = isPro ? '' : 'none';
-      }
-    };
-    const reapply = () => applyProBlockGating(hasPremiumAccess(getAuthState()));
-    reapply();
-    this.proBlockUnsubscribe = subscribeAuthState(reapply);
-    this.proBlockEntitlementUnsubscribe = onEntitlementChange(reapply);
-
     const bottomGrid = document.getElementById('mapBottomGrid');
     if (bottomGrid) {
       bottomOrder.forEach(key => {
@@ -4215,9 +3131,7 @@ export class PanelLayoutManager implements AppModule {
       view: this.ctx.isMobile ? this.ctx.resolvedLocation : 'global',
       layers: this.ctx.mapLayers,
       timeRange: '7d',
-    }, preferGlobe, {
-      isFreeTierFallbackActive: this.callbacks.isFreeTierFallbackActive,
-    });
+    }, preferGlobe);
 
     const eagerSupplyChainPanel = this.ctx.panels['supply-chain'] as SupplyChainPanel | undefined;
     if (eagerSupplyChainPanel) {
@@ -4369,17 +3283,8 @@ export class PanelLayoutManager implements AppModule {
       if (normalized.resilienceScore && !this.ctx.map.isDeckGLActive?.()) {
         normalized = { ...normalized, resilienceScore: false };
       }
-      // MapContainer also sanitizes at the renderer boundary, but update the
-      // URL-derived context with the effective display state first. A shared
-      // link is not a user preference, so it must never overwrite the saved
-      // (and cloud-synced) map-layer selection.
-      if (shouldSanitizeLockedLayers(
-        hasPremiumAccess(getAuthState()),
-        isProTierResolved(),
-        this.callbacks.isFreeTierFallbackActive?.() === true,
-      )) {
-        normalized = sanitizeLockedLayers(normalized, false);
-      }
+      // A shared link is not a user preference, so it must never overwrite the
+      // saved (and cloud-synced) map-layer selection.
       this.ctx.initialUrlState.layers = normalized;
       this.ctx.mapLayers = normalized;
       this.ctx.map.setLayers(normalized);
@@ -4760,13 +3665,11 @@ export class PanelLayoutManager implements AppModule {
     exportName: K,
     createPanel: (PanelClass: PanelExport<M, K>, module: M) => ImportedPanel<M, K> | null,
     setup?: (panel: ImportedPanel<M, K>) => void,
-    lockedFeatures?: string[],
   ): boolean {
     return this.lazyPanel(
       key,
       () => this.importPanel(key, importer, exportName, createPanel),
       setup,
-      lockedFeatures,
     );
   }
 
@@ -4775,9 +3678,8 @@ export class PanelLayoutManager implements AppModule {
     importer: () => Promise<M>,
     exportName: K,
     setup?: (panel: ImportedPanel<M, K>) => void,
-    lockedFeatures?: string[],
   ): boolean {
-    return this.lazyImportedPanel(key, importer, exportName, (PanelClass) => new PanelClass() as ImportedPanel<M, K>, setup, lockedFeatures);
+    return this.lazyImportedPanel(key, importer, exportName, (PanelClass) => new PanelClass() as ImportedPanel<M, K>, setup);
   }
 
   /**
@@ -4793,7 +3695,6 @@ export class PanelLayoutManager implements AppModule {
     key: string,
     loader: () => Promise<T | null>,
     setup?: (panel: T) => void,
-    lockedFeatures?: string[],
   ): boolean {
     if (!this.shouldCreatePanel(key)) return false;
     if (this.ctx.panels[key] || this.lazyPanelRegistrations.has(key)) return false;
@@ -4809,18 +3710,12 @@ export class PanelLayoutManager implements AppModule {
           return null;
         }
         this.ctx.panels[key] = basePanel;
-        if (lockedFeatures) {
-          basePanel.showLocked(lockedFeatures);
-        } else {
-          // Re-apply auth gating for panels that load after the initial auth state fire.
-          this.updatePanelGating(getAuthState());
-          await replayPendingCalls(key, panel);
-          if (this.ctx.isDestroyed) {
-            basePanel.destroy?.();
-            return null;
-          }
-          if (setup) setup(panel);
+        await replayPendingCalls(key, panel);
+        if (this.ctx.isDestroyed) {
+          basePanel.destroy?.();
+          return null;
         }
+        if (setup) setup(panel);
         return basePanel;
       },
     });

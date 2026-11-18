@@ -43,21 +43,6 @@ test('funnel events exist in the typed catalog', () => {
   }
 });
 
-test('API outcome telemetry is bounded to successful key lifecycle actions', () => {
-  const analytics = read('src/services/analytics.ts');
-  const settings = read('src/components/UnifiedSettings.ts');
-  assert.ok(analytics.includes("['key-created', 'key-revoked'] as const"),
-    'API action vocabulary must stay closed to key lifecycle outcomes');
-  assert.ok(analytics.includes("track('api-action', { action })"),
-    'API action helper must emit only the normalized action bucket');
-  assert.ok(settings.includes("trackApiAction('key-created')"),
-    'successful API key creation no longer contributes to API outcomes');
-  assert.ok(settings.includes("trackApiAction('key-revoked')"),
-    'successful API key revocation no longer contributes to API outcomes');
-  assert.ok(!settings.includes('trackApiAction(keyId)'),
-    'API telemetry must not include a key identifier');
-});
-
 test('API outcome telemetry emits only the closed key lifecycle buckets at runtime', () => {
   const calls = [];
   const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
@@ -90,34 +75,6 @@ test('API outcome telemetry emits only the closed key lifecycle buckets at runti
   }
 });
 
-test('dashboard checkout entry fires checkout-start', () => {
-  const src = read('src/services/checkout.ts');
-  assert.match(
-    src,
-    /const checkoutContext = trackCheckoutStart\(\s*productId,\s*Boolean\(user\),/,
-    'startCheckout no longer fires trackCheckoutStart or preserves its checkout context',
-  );
-});
-
-test('checkout-return reconciliation fires success/failed events', () => {
-  const src = read('src/app/panel-layout.ts');
-  assert.ok(src.includes('trackCheckoutSuccess('),
-    'checkout-return success path no longer fires trackCheckoutSuccess');
-  assert.ok(src.includes('trackCheckoutFailed('),
-    'checkout-return failed path no longer fires trackCheckoutFailed');
-});
-
-test('checkout-success is durable across the entitlement reload', () => {
-  const analytics = read('src/services/analytics.ts');
-  assert.ok(analytics.includes('sessionStorage.setItem(CHECKOUT_SUCCESS_PENDING_KEY'),
-    'trackCheckoutSuccess no longer writes the durable marker');
-  assert.ok(analytics.includes('clearPendingCheckoutSuccessMarker()'),
-    'delivery-time marker clear missing from sendUmamiCall');
-  const layout = read('src/app/panel-layout.ts');
-  assert.ok(layout.includes('replayPendingCheckoutSuccess()'),
-    'panel-layout boot no longer replays a pending checkout-success');
-});
-
 test('checkout-failed status is bucketed to a closed vocabulary', () => {
   const analytics = read('src/services/analytics.ts');
   assert.ok(analytics.includes('CHECKOUT_FAILED_STATUSES.has(rawStatus)'),
@@ -130,15 +87,6 @@ test('checkout-start product ids are bucketed on the dashboard (round-4 F2)', ()
     'dashboard trackCheckoutStart no longer buckets the (resume-path URL-derived) productId');
   assert.ok(analytics.includes("from '@/config/product-ids.generated'") && analytics.includes('DODO_PRODUCT_IDS'),
     'dashboard product allowlist must keep deriving from the generated catalog');
-});
-
-test('/pro checkout-start survives the Dodo redirect via sessionStorage handoff (round-5)', () => {
-  const analytics = read('src/services/analytics.ts');
-  assert.ok(analytics.includes("'wm-pro-funnel-pending'"),
-    'dashboard replay no longer reads the /pro handoff key (keys must match across builds)');
-  const layout = read('src/app/panel-layout.ts');
-  assert.ok(layout.includes('replayPendingProFunnelEvents()'),
-    'panel-layout boot no longer replays /pro funnel events');
 });
 
 test('/pro replay marker clears on DELIVERY, not on read (round-6)', () => {

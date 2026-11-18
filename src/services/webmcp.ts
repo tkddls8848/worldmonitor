@@ -1574,9 +1574,6 @@ function boundDashboardTabList(
   const activeTabId = boundedText(snapshot.activeTabId, 64);
   const canCreate = snapshot.canCreate === true;
   const cap = snapshot.cap === null || typeof snapshot.cap === 'number' ? snapshot.cap : null;
-  const createBlockReason = snapshot.createBlockReason
-    ? boundedText(snapshot.createBlockReason, 32) as DashboardTabListSnapshot['createBlockReason']
-    : undefined;
 
   let startIndex = 0;
   if (cursor !== undefined) {
@@ -1607,7 +1604,6 @@ function boundDashboardTabList(
     tabsTruncated: nextCursor !== undefined || snapshot.tabsTruncated === true,
     canCreate,
     cap,
-    ...(createBlockReason ? { createBlockReason } : {}),
     ...(nextCursor ? { nextCursor: boundedText(nextCursor, 64) } : {}),
   });
 
@@ -1650,7 +1646,6 @@ function boundDashboardTabMutation(result: DashboardTabMutationResult): Dashboar
     ...(typeof result.tabCount === 'number' ? { tabCount: Math.max(0, Math.floor(result.tabCount)) } : {}),
     ...(typeof result.canCreate === 'boolean' ? { canCreate: result.canCreate } : {}),
     ...(result.cap === null || typeof result.cap === 'number' ? { cap: result.cap } : {}),
-    ...(result.lockReason ? { lockReason: boundedText(result.lockReason, 32) as DashboardTabMutationResult['lockReason'] } : {}),
   };
   if (JSON.stringify(bounded).length > MAX_OUTPUT_CHARS) {
     throw new SafeWebMcpError('Dashboard tab result exceeded the safe output limit.');

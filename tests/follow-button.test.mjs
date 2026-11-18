@@ -109,7 +109,7 @@ const {
 } = svc;
 
 const fb = await import('../src/utils/follow-button.ts');
-const { renderFollowButton, _setUpgradeTriggerForTests } = fb;
+const { renderFollowButton } = fb;
 
 // ---------------------------------------------------------------------------
 // Mock host element
@@ -278,21 +278,6 @@ function setupSignedIn(userId, { tier = 1, fakeClient }) {
   });
 }
 
-/**
- * Signed-in BUT entitlement state is null — the "loading" window
- * between Clerk session ready and Convex first snapshot.
- */
-function setupSignedInLoading(userId) {
-  _setDepsForTests({
-    getCurrentClerkUser: () => ({ id: userId }),
-    getEntitlementState: () => null,
-    hasTier: () => false,
-    featureFlagEnabled: true,
-    convexClient: null,
-    convexApi: null,
-  });
-}
-
 async function flushMicrotasks() {
   await new Promise((r) => setTimeout(r, 0));
   await new Promise((r) => setTimeout(r, 0));
@@ -305,7 +290,6 @@ async function flushMicrotasks() {
 beforeEach(() => {
   _localStorage.clear();
   _resetStateForTests();
-  _setUpgradeTriggerForTests(null); // production-shape (window.open) — overridden per-test as needed
 });
 
 describe('renderFollowButton — basic visual states', () => {
@@ -331,14 +315,6 @@ describe('renderFollowButton — basic visual states', () => {
     // Filled: SVG has fill="currentColor"
     assert.match(handle.html, /fill="currentColor"/);
     assert.match(handle.html, /Unfollow US/);
-  });
-
-  it('signed-in entitlement loading → emits spinner html with disabled and data-state="loading"', () => {
-    setupSignedInLoading('user-1');
-    const handle = renderFollowButton({ countryCode: 'FR' });
-    assert.match(handle.html, /data-state="loading"/);
-    assert.match(handle.html, /disabled/);
-    assert.match(handle.html, /wm-follow-btn-spinner/);
   });
 
   it('feature flag off → empty html, attach is a no-op', () => {
@@ -431,57 +407,9 @@ describe('renderFollowButton — click behavior (anonymous mode)', () => {
     teardown();
   });
 
-  it('free user at cap → click triggers upgrade-modal, addCountry not committed', async () => {
-    setupAnonymousFree();
-    _localStorage.setItem(
-      FOLLOWED_COUNTRIES_STORAGE_KEY,
-      JSON.stringify({ countries: ['US', 'FR', 'DE'] }),
-    );
-    const upgradeCalls = [];
-    _setUpgradeTriggerForTests((source) => upgradeCalls.push(source));
-
-    const handle = renderFollowButton({ countryCode: 'GB' });
-    const host = makeHost();
-    const teardown = handle.attach(host);
-    // Tooltip should already reflect at-cap state.
-    assert.match(host.innerHTML, /Upgrade to follow more/);
-
-    host.clickButton();
-    await flushMicrotasks();
-
-    assert.equal(upgradeCalls.length, 1);
-    assert.equal(upgradeCalls[0], 'follow-cap');
-    // GB was NOT added.
-    const stored = JSON.parse(_localStorage.getItem(FOLLOWED_COUNTRIES_STORAGE_KEY)).countries;
-    assert.deepEqual(stored, ['US', 'FR', 'DE']);
-    // Visual state still unfollowed.
-    assert.match(host.innerHTML, /data-state="unfollowed"/);
-
-    teardown();
-  });
 });
 
 describe('renderFollowButton — entitlement-loading window', () => {
-  it('signed-in loading → click is no-op; nothing committed; state stays loading', async () => {
-    setupSignedInLoading('user-1');
-    const handle = renderFollowButton({ countryCode: 'FR' });
-    const host = makeHost();
-    const teardown = handle.attach(host);
-    assert.match(host.innerHTML, /data-state="loading"/);
-
-    // Click should be a no-op because the rendered button has data-state="loading"
-    // (the click handler short-circuits on that attribute).
-    host.clickButton();
-    await flushMicrotasks();
-
-    assert.match(host.innerHTML, /data-state="loading"/);
-    // localStorage should remain empty — the service short-circuits anyway,
-    // but verify we never even reach that path.
-    assert.equal(_localStorage.getItem(FOLLOWED_COUNTRIES_STORAGE_KEY), null);
-
-    teardown();
-  });
-
   it('anonymous user with null entitlement state → renders interactive (NOT loading)', () => {
     // Anonymous: clerk user is null AND entitlement state is null.
     // The service's `serviceEntitlementState()` returns 'free' (not 'loading')
@@ -492,110 +420,6 @@ describe('renderFollowButton — entitlement-loading window', () => {
     assert.doesNotMatch(handle.html, /data-state="loading"/);
   });
 
-  it('entitlement resolves to PRO during loading → re-renders to interactive; click commits', async () => {
-    // Start in loading state. We wire a real fakeConvex client so that
-    // once entitlement resolves, the click can flow through the signed-in
-    // mutation path without hitting the production import.meta.env crash.
-    const fakeClient = makeFakeConvex({ tier: 1, initialRows: [] });
-    let _entState = null;
-    let _tier = 0;
-    _setDepsForTests({
-      getCurrentClerkUser: () => ({ id: 'user-1' }),
-      getEntitlementState: () => _entState,
-      hasTier: (n) => n <= _tier,
-      featureFlagEnabled: true,
-      convexClient: fakeClient,
-      convexApi: FAKE_API,
-    });
-    // Drive the auth-state listener so the service flips to handoff-complete.
-    await _emitAuthStateForTests({ id: 'user-1' });
-    await flushMicrotasks();
-
-    const handle = renderFollowButton({ countryCode: 'US' });
-    const host = makeHost();
-    const teardown = handle.attach(host);
-    assert.match(host.innerHTML, /data-state="loading"/);
-
-    // Resolve to PRO and drive a re-render. The button's onEntitlementChange
-    // hook only fires when entitlements.ts's listeners are notified; in
-    // tests we instead nudge a re-render via the watchlist event (the
-    // button rerenders on either signal — both call computeViewState()).
-    _entState = { features: { tier: 1 } };
-    _tier = 1;
-    _window.dispatchEvent(new CustomEvent(WM_FOLLOWED_COUNTRIES_CHANGED));
-    await flushMicrotasks();
-
-    assert.match(host.innerHTML, /data-state="unfollowed"/);
-
-    host.clickButton();
-    await flushMicrotasks();
-    await flushMicrotasks();
-
-    assert.match(host.innerHTML, /data-state="followed"/);
-    // Verify the signed-in mutation path was actually exercised.
-    assert.equal(fakeClient._calls.follow.length, 1);
-    assert.equal(fakeClient._calls.follow[0].country, 'US');
-
-    teardown();
-  });
-
-  it('entitlement resolves to FREE during loading with cap-full state → click on NEW country triggers FREE_CAP', async () => {
-    // Cloud-merged grandfather: snapshot already at cap (3 rows). After
-    // entitlement resolves to FREE, clicking a NEW country should hit
-    // FREE_CAP via the server-mutation rejection path.
-    const fakeClient = makeFakeConvex({
-      tier: 0,
-      capLimit: 3,
-      initialRows: ['US', 'FR', 'DE'],
-    });
-
-    let _entState = null;
-    let _tier = 0;
-    _setDepsForTests({
-      getCurrentClerkUser: () => ({ id: 'user-1' }),
-      getEntitlementState: () => _entState,
-      hasTier: (n) => n <= _tier,
-      featureFlagEnabled: true,
-      convexClient: fakeClient,
-      convexApi: FAKE_API,
-    });
-    await _emitAuthStateForTests({ id: 'user-1' });
-    await flushMicrotasks();
-
-    const upgradeCalls = [];
-    _setUpgradeTriggerForTests((source) => upgradeCalls.push(source));
-
-    const handle = renderFollowButton({ countryCode: 'GB' });
-    const host = makeHost();
-    const teardown = handle.attach(host);
-    // Initial render: loading (entitlement null).
-    assert.match(host.innerHTML, /data-state="loading"/);
-
-    // Click in loading → no-op.
-    host.clickButton();
-    await flushMicrotasks();
-    assert.equal(upgradeCalls.length, 0);
-
-    // Resolve to FREE.
-    _entState = { features: { tier: 0 } };
-    _tier = 0;
-    _window.dispatchEvent(new CustomEvent(WM_FOLLOWED_COUNTRIES_CHANGED));
-    await flushMicrotasks();
-
-    // Now interactive. GB is NOT followed; click should hit FREE_CAP because
-    // the Convex snapshot already has 3 entries.
-    assert.match(host.innerHTML, /data-state="unfollowed"/);
-    assert.match(host.innerHTML, /Upgrade to follow more/);
-
-    host.clickButton();
-    await flushMicrotasks();
-    await flushMicrotasks();
-
-    assert.equal(upgradeCalls.length, 1, 'upgrade trigger fired exactly once');
-    assert.equal(upgradeCalls[0], 'follow-cap');
-
-    teardown();
-  });
 });
 
 describe('renderFollowButton — P2 #16 INVALID_INPUT and assertNever exhaustiveness', () => {

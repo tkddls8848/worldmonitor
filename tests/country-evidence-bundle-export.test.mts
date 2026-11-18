@@ -739,45 +739,18 @@ describe('country evidence bundle export', () => {
 
     assert.match(legacySource, /exportCountryEvidenceMarkdown/);
     assert.match(legacySource, /data-format="evidence-md"/);
-    // U5 (plan 2026-07-25-001): json/csv route through the data-export gate;
-    // evidence-md keeps its own Pro gate, and image/pdf/print stay free.
-    assert.match(legacySource, /format === 'json' \|\| format === 'csv'/);
-    assert.match(legacySource, /if \(this\.canExportStructuredData\(format\)\) this\.exportBrief\(format\);/);
-    assert.match(legacySource, /evaluateAvailableExportFormats\(authState\)/);
+    // Every export format is open: json/csv and evidence-md go straight to exportBrief.
+    assert.match(legacySource, /format === 'json' \|\| format === 'csv'\) \{\n\s+this\.exportBrief\(format\);/);
     assert.match(legacySource, /else if \(format === 'evidence-md'\) \{\n\s+this\.exportBrief\(format\);/);
-    assert.match(legacySource, /if \(format === 'evidence-md' && !this\.canExportEvidenceBundle\(\)\) return;/);
     assert.match(legacySource, /if \(format === 'evidence-md'\) exportCountryEvidenceMarkdown\(data\)/);
     assert.match(legacySource, /data-format="json"/);
     assert.match(legacySource, /data-format="csv"/);
-    assert.match(legacySource, /trackGateHit\('evidence-export'\)/);
+    assert.doesNotMatch(legacySource, /trackGateHit\('evidence-export'\)/);
 
     assert.match(dossierSource, /countryEvidenceMarkdownArtifact/);
     assert.match(dossierSource, /cdp-evidence-export-btn/);
-    assert.match(dossierSource, /if \(!this\.canRequestPremium\(\)\)/);
-    assert.match(dossierSource, /trackGateHit\('evidence-export'\)/);
     assert.match(dossierSource, /this\.exportEvidenceBundle\(signal\)/);
     assert.match(dossierSource, /this\.downloadText\(countryEvidenceMarkdownArtifact\(data\), signal\)/);
-  });
-
-  it('blocks country brief evidence export for free users', async () => {
-    const harness = await createCountryBriefPageHarness({ premiumAccess: false });
-    try {
-      const page = harness.createPage();
-      page.show('France', 'FR', null, zeroCountryBriefSignals());
-
-      const overlay = harness.getOverlay();
-      assert.ok(overlay, 'expected country brief overlay');
-      const button = overlay.querySelector('[data-format="evidence-md"]') as HTMLElement | null;
-      assert.ok(button, 'expected evidence export option');
-
-      dispatchDelegatedClick(overlay, button);
-
-      assert.equal(harness.getEvidenceExports().length, 0);
-      assert.deepEqual(harness.getGateHits(), ['evidence-export']);
-      assert.deepEqual(harness.getToasts(), ['Evidence export is available on Pro.']);
-    } finally {
-      harness.cleanup();
-    }
   });
 
   it('uses one Evidence snapshot, disables duplicate clicks and suppresses status after country close', async () => {
@@ -829,30 +802,6 @@ describe('country evidence bundle export', () => {
     }
   });
 
-  it('blocks country brief JSON/CSV export when the data-export gate is locked (R9)', async () => {
-    const harness = await createCountryBriefPageHarness({ premiumAccess: false, exportGateLocked: true });
-    try {
-      const page = harness.createPage();
-      page.show('France', 'FR', null, zeroCountryBriefSignals());
-
-      const overlay = harness.getOverlay();
-      assert.ok(overlay, 'expected country brief overlay');
-      for (const format of ['json', 'csv']) {
-        const button = overlay.querySelector(`[data-format="${format}"]`) as HTMLElement | null;
-        assert.ok(button, `expected ${format} export option`);
-        dispatchDelegatedClick(overlay, button);
-      }
-
-      assert.equal(harness.getJsonExports().length, 0);
-      assert.equal(harness.getCsvExports().length, 0);
-      assert.deepEqual(harness.getGateHits(), ['export', 'export']);
-      // The toast carries the billing-aware reason, not a hardcoded upsell.
-      assert.deepEqual(harness.getToasts(), ['export-gate-locked:free_tier', 'export-gate-locked:free_tier']);
-    } finally {
-      harness.cleanup();
-    }
-  });
-
   it('allows country brief JSON/CSV export when the data-export gate is open', async () => {
     const harness = await createCountryBriefPageHarness({ premiumAccess: false, exportGateLocked: false });
     try {
@@ -865,49 +814,6 @@ describe('country evidence bundle export', () => {
       assert.ok(jsonButton, 'expected json export option');
       dispatchDelegatedClick(overlay, jsonButton);
 
-      assert.equal(harness.getJsonExports().length, 1);
-      assert.deepEqual(harness.getGateHits(), []);
-      assert.deepEqual(harness.getToasts(), []);
-    } finally {
-      harness.cleanup();
-    }
-  });
-
-  it('enforces declared Country Brief formats at menu-open and click time', async () => {
-    const harness = await createCountryBriefPageHarness({
-      premiumAccess: false,
-      exportGateLocked: false,
-      availableExportFormats: ['json'],
-    });
-    try {
-      const page = harness.createPage();
-      page.show('France', 'FR', null, zeroCountryBriefSignals());
-
-      const overlay = harness.getOverlay();
-      assert.ok(overlay, 'expected country brief overlay');
-      const trigger = overlay.querySelector('.cb-export-btn') as HTMLElement | null;
-      const jsonButton = overlay.querySelector('[data-format="json"]') as HTMLButtonElement | null;
-      const csvButton = overlay.querySelector('[data-format="csv"]') as HTMLButtonElement | null;
-      const pdfButton = overlay.querySelector('[data-format="pdf"]') as HTMLButtonElement | null;
-      assert.ok(trigger, 'expected country brief export trigger');
-      assert.ok(jsonButton, 'expected json export option');
-      assert.ok(csvButton, 'expected csv export option');
-      assert.ok(pdfButton, 'expected pdf export option');
-
-      dispatchDelegatedClick(overlay, trigger);
-
-      assert.equal(jsonButton.hidden, false);
-      assert.equal(csvButton.hidden, true);
-      // The Country Brief print-based PDF remains free and outside the
-      // structured-data format allowlist.
-      assert.notEqual(pdfButton.hidden, true);
-
-      // A synthetic click proves the action itself re-checks the allowlist;
-      // hiding alone must not be the security boundary.
-      dispatchDelegatedClick(overlay, csvButton);
-      dispatchDelegatedClick(overlay, jsonButton);
-
-      assert.equal(harness.getCsvExports().length, 0);
       assert.equal(harness.getJsonExports().length, 1);
       assert.deepEqual(harness.getGateHits(), []);
       assert.deepEqual(harness.getToasts(), []);
@@ -1000,54 +906,6 @@ describe('country evidence bundle export', () => {
     }
   });
 
-  it('blocks active dossier evidence export for free users', async () => {
-    const harness = await createCountryDeepDivePanelHarness({ premiumAccess: false });
-    try {
-      const panel = harness.createPanel();
-      panel.show('France', 'FR', null, {
-        criticalNews: 0,
-        protests: 0,
-        militaryFlights: 0,
-        militaryVessels: 0,
-        militaryFlightsInCountry: 0,
-        militaryVesselsInCountry: 0,
-        outages: 0,
-        aisDisruptions: 0,
-        satelliteFires: 0,
-        radiationAnomalies: 0,
-        temporalAnomalies: 0,
-        cyberThreats: 0,
-        earthquakes: 0,
-        displacementOutflow: 0,
-        climateStress: 0,
-        conflictEvents: 0,
-        activeStrikes: 0,
-        orefSirens: 0,
-        orefHistory24h: 0,
-        aviationDisruptions: 0,
-        travelAdvisories: 0,
-        travelAdvisoryMaxLevel: null,
-        gpsJammingHexes: 0,
-        isTier1: true,
-        thermalEscalations: 0,
-        sanctionsDesignations: 0,
-        sanctionsNewDesignations: 0,
-      });
-      for (let attempt = 0; attempt < 25 && harness.getWidgets().length === 0; attempt += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 0));
-      }
-
-      const button = harness.getPanelRoot()?.querySelector('.cdp-evidence-export-btn') as HTMLButtonElement | null;
-      assert.ok(button, 'expected evidence export button');
-      button.dispatchEvent(new Event('click'));
-
-      assert.equal(harness.getEvidenceExports().length, 0);
-      assert.deepEqual(harness.getGateHits(), ['evidence-export']);
-      assert.deepEqual(harness.getToasts(), ['Evidence export is available on Pro.']);
-    } finally {
-      harness.cleanup();
-    }
-  });
 });
 
 

@@ -45,7 +45,6 @@ export interface WebMcpSearchControllerBindings {
   isDestroyed(): boolean;
   refreshIndex(): void;
   getModal(): SearchModal | null | undefined;
-  hasPremiumAccess(): boolean;
   fetchLiveFlight(callsign: string, signal?: AbortSignal): Promise<void>;
   getAuthContext(): string;
   getVariant(): string;
@@ -53,10 +52,8 @@ export interface WebMcpSearchControllerBindings {
   isPanelCurrentlyEnabled(panelId: string): boolean;
   selectMatch(match: SearchMatch, signal?: AbortSignal): Promise<boolean>;
   subscribeAuth(listener: () => void): () => void;
-  subscribeEntitlement(listener: () => void): () => void;
   subscribeRuntimeConfig(listener: () => void): () => void;
   subscribeWidgetAccess(listener: () => void): () => void;
-  onPremiumAccessChanged(premium: boolean, premiumRestored: boolean): void;
   cancelPendingSelection(): void;
 }
 
@@ -70,7 +67,6 @@ export class WebMcpSearchController {
   private securityEpoch = 0;
   private openOperationEpoch = 0;
   private activeOpenOperation: ActiveOpenOperation | null = null;
-  private lastPremiumAccess = false;
   private unsubscribers: Array<() => void> = [];
   private readonly resultCache = new OpaqueResultCache<IssuedSearchResult>({
     maxEntries: SEARCH_RESULT_CACHE_MAX_ENTRIES,
@@ -81,19 +77,13 @@ export class WebMcpSearchController {
 
   public observeSecurityContext(): void {
     if (this.unsubscribers.length > 0) return;
-    this.lastPremiumAccess = this.bindings.hasPremiumAccess();
     const invalidate = (): void => {
       this.securityEpoch += 1;
       this.resultCache.clear();
       this.cancelPendingOpen();
-      const premium = this.bindings.hasPremiumAccess();
-      const premiumRestored = !this.lastPremiumAccess && premium;
-      this.lastPremiumAccess = premium;
-      this.bindings.onPremiumAccessChanged(premium, premiumRestored);
     };
     this.unsubscribers = [
       this.subscribeAfterInitial(this.bindings.subscribeAuth, invalidate),
-      this.subscribeAfterInitial(this.bindings.subscribeEntitlement, invalidate),
       this.bindings.subscribeRuntimeConfig(invalidate),
       this.bindings.subscribeWidgetAccess(invalidate),
     ];
@@ -132,7 +122,6 @@ export class WebMcpSearchController {
     if (
       searchResult.flightCallsign
       && searchResult.orderedMatches.length === 0
-      && this.bindings.hasPremiumAccess()
     ) {
       try {
         await raceWebMcpAbort(

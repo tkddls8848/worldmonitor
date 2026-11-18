@@ -1,8 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { dashboardInteractionTarget, observeDashboardFirstInteraction } from '@/components/dashboard-interaction-analytics';
 import * as analytics from '@/services/analytics';
-import { Panel } from '@/components/Panel';
-import { PanelGateReason } from '@/services/panel-gating';
 
 afterEach(() => { document.body.innerHTML = ''; vi.restoreAllMocks(); });
 
@@ -22,19 +20,6 @@ describe('dashboard first interaction', () => {
   ])('classifies nested controls: %s', (html, expected) => {
     document.body.innerHTML = html;
     expect(dashboardInteractionTarget(document.body.querySelector('span, canvas, button')!)).toBe(expected);
-  });
-
-  it.each([
-    [PanelGateReason.ANONYMOUS, 'signin'],
-    [PanelGateReason.FREE_TIER, 'upgrade'],
-    [PanelGateReason.PAYMENT_ON_HOLD, 'panel'],
-    [PanelGateReason.RENEWAL_PENDING, 'panel'],
-    [PanelGateReason.RENEWAL_FAILED, 'panel'],
-  ])('classifies the real gated CTA action for %s', (reason, expected) => {
-    const panel = new Panel({ id: 'news', title: 'News' });
-    panel.showGatedCta(reason, () => {});
-    expect(dashboardInteractionTarget(panel.getElement().querySelector('.panel-locked-cta')!)).toBe(expected);
-    panel.destroy();
   });
 
   it('does not emit on installation, hover, or synthetic boot clicks', () => {

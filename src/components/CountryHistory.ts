@@ -1,29 +1,20 @@
 import { t } from '@/services/i18n';
 import { fetchCountryHistory, type GetCountryHistoryResponse, type CountryHistoryPoint } from '@/services/country-history';
-import { onEntitlementChange } from '@/services/entitlements';
 
 export class CountryHistory {
   private days = 7;
   private request = new AbortController();
-  private unsubscribe: () => void;
   private data: GetCountryHistoryResponse | null = null;
   private disposed = false;
 
   constructor(private mount: HTMLElement, private country: string, private signal: AbortSignal) {
-    let started = false;
-    this.unsubscribe = onEntitlementChange(() => {
-      started = true;
-      this.days = 7;
-      void this.load();
-    });
     signal.addEventListener('abort', () => this.destroy(), { once: true });
-    if (!started) void this.load();
+    void this.load();
   }
 
   destroy(): void {
     this.disposed = true;
     this.request.abort();
-    this.unsubscribe();
   }
 
   private element<K extends keyof HTMLElementTagNameMap>(tag: K, text = '', className = ''): HTMLElementTagNameMap[K] {
@@ -92,11 +83,6 @@ export class CountryHistory {
       }
       this.mount.append(dates, detail);
       (dates.lastElementChild as HTMLButtonElement).click();
-    }
-    if (this.days >= data.allowedDays && data.allowedDays < 365) {
-      const upsell = this.element('a', t(data.allowedDays <= 7 ? 'countryHistory.unlock90' : 'countryHistory.unlock365'), 'panel-locked-cta');
-      upsell.href = '/pro#pricing';
-      this.mount.append(upsell);
     }
   }
 

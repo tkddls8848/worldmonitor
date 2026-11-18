@@ -134,16 +134,6 @@ export class GdeltIntelPanel extends Panel {
     // (DIRECT_WRITE_PATTERNS doc). Its allowlist entry stays for the same reason.
     this.content.insertAdjacentElement('beforebegin', this.summaryEl);
 
-    // Staying off the helper costs the lock bail, so honour the lock by hand.
-    // `showLocked` hides header→content siblings ONCE, at lock time, so a summary
-    // inserted after that sweep would paint above the "Upgrade to Pro" CTA — the
-    // exact leak the migrated writes now refuse. `unlockPanel` re-shows every
-    // sibling in that same range, so this hide clears itself on unlock rather
-    // than stranding the summary hidden. Uses the base-class lock accessor
-    // (#6714) instead of the former class-name proxy.
-    if (this.isLocked) {
-      this.summaryEl.style.display = 'none';
-    }
   }
 
   private renderArticles(articles: GdeltArticle[]): void {

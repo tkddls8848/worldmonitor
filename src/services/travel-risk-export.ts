@@ -8,7 +8,6 @@
  * stored: the draft lives in the open dialog and nowhere else.
  */
 
-import { premiumFetch } from './premium-fetch';
 import type { ReportHandoff } from '../../shared/report-handoff';
 import { REPORT_MAX_COUNTRIES } from '../../shared/report-handoff';
 
@@ -139,7 +138,7 @@ async function violationsOf(response: Response): Promise<TripViolation[]> {
   }
 }
 
-export type TripFetch = (input: string, init: RequestInit & { forcePremium?: boolean }) => Promise<Response>;
+export type TripFetch = (input: string, init: RequestInit) => Promise<Response>;
 
 /**
  * Asks the server for the draft. The server decides the plan: a 403 means the
@@ -150,7 +149,7 @@ export async function requestTripAssessment(
   format: TripFormat,
   options: { fetcher?: TripFetch; signal?: AbortSignal; now?: () => number } = {},
 ): Promise<TripExportResult> {
-  const fetcher = options.fetcher ?? premiumFetch;
+  const fetcher = options.fetcher ?? ((input: string, init: RequestInit) => globalThis.fetch(input, init));
   let response: Response;
   try {
     response = await fetcher(TRIP_ENDPOINT, {
@@ -158,9 +157,6 @@ export async function requestTripAssessment(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(buildTripRequest(draft, format)),
       signal: options.signal,
-      // The path is not in the shared premium list; the session token is
-      // attached because the caller says so.
-      forcePremium: true,
     });
   } catch {
     return { ok: false, reason: 'error', violations: [] };

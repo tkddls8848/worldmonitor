@@ -5,12 +5,9 @@
  *
  * Owns:
  *  - Visual states: outlined star (not followed), filled star (followed),
- *    spinner (entitlement loading), hidden (feature flag off).
+ *    hidden (feature flag off).
  *  - Click handler that calls into `addCountry` / `removeCountry`.
- *  - Subscription to watchlist + entitlement changes (re-render on update).
- *  - Branch on `FollowMutationResult.reason` — opens the upgrade modal
- *    on `FREE_CAP` via the same path `notifications-settings.ts` uses
- *    (lazy `@/services/clerk` + `@/services/checkout`).
+ *  - Subscription to watchlist changes (re-render on update).
  *
  * Pattern:
  *  - `{ html, attach } → teardown` matches `src/services/notifications-settings.ts`.
@@ -21,10 +18,6 @@
  *    project's `tests/*.test.mjs` runner has no jsdom).
  *
  * Memory:
- *  - `paywalled-feature-needs-three-layer-entitlement-gate` — the button
- *    consults `serviceEntitlementState()` (not raw `getEntitlementState()`)
- *    so anonymous users render interactive immediately while signed-in
- *    users awaiting their first entitlement snapshot show the spinner.
  *  - `discriminated-union-over-sentinel-boolean` — branches on
  *    `FollowMutationResult.reason`, never on a boolean.
  *
@@ -39,16 +32,10 @@ import {
   addCountry,
   removeCountry,
   isFollowed,
-  getFollowed,
   subscribe,
-  serviceEntitlementState,
   isFollowFeatureEnabled,
-  FREE_TIER_FOLLOW_LIMIT,
   type FollowMutationResult,
 } from '@/services/followed-countries';
-import { WEB_APP_ORIGIN } from '@/config/web-origin';
-import { onEntitlementChange } from '@/services/entitlements';
-import { openExternalUrl } from '@/services/external-navigation';
 import { escapeHtml } from '@/utils/sanitize';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 
@@ -85,78 +72,6 @@ export interface FollowButtonHandle {
 }
 
 // ---------------------------------------------------------------------------
-// Test-injection seam: upgrade-modal trigger
-// ---------------------------------------------------------------------------
-//
-// In production, the `FREE_CAP` branch dynamically imports clerk and
-// opens sign-in or the /pro plan picker (`openUpgradePlans`). Tests inject a synchronous fake here so
-// they can assert the trigger was called without spinning up the real
-// import graph.
-
-type UpgradeTrigger = (source: string) => void;
-
-/**
- * Fallback upgrade destination: the /pro plan picker. Absolute, and routed
- * through `openExternalUrl`: the bare relative `/pro#pricing` this replaced
- * resolved against `tauri://localhost` in the desktop WebView, where no such
- * route exists (#5911). Never throws.
- */
-function openProPricingPage(): void {
-  void openExternalUrl(`${WEB_APP_ORIGIN}/pro#pricing`).catch(() => {
-    /* swallow — non-browser env, or the OS opener refused */
-  });
-}
-
-let _upgradeTrigger: UpgradeTrigger = (source) => {
-  // Match the notifications-settings.ts pattern: sign-in first if there is
-  // no user, otherwise the `/pro` plan picker (consistent w/ ProBanner CTA).
-  try {
-    void import('@/services/clerk').then((clerk) => {
-      const user = clerk.getCurrentClerkUser?.();
-      if (!user) {
-        const opener = clerk.openSignIn;
-        if (typeof opener === 'function') {
-          opener();
-          return;
-        }
-      }
-      // Signed-in OR no openSignIn helper: the plan picker on /pro, through
-      // the shared helper so a desktop purchase keeps its handoff marker.
-      void import('@/services/upgrade-flow')
-        .then((flow) => flow.openUpgradePlans())
-        .catch(() => openProPricingPage());
-    }).catch(() => {
-      openProPricingPage();
-    });
-  } catch {
-    try {
-      openProPricingPage();
-    } catch {
-      /* swallow — non-browser env */
-    }
-  }
-  // `source` is informational; analytics integration is App-level.
-  // We deliberately don't pull in `@/services/analytics` here to avoid
-  // a heavy import chain on the button factory.
-  void source;
-};
-
-/**
- * Test-only override for the upgrade-modal trigger. Pass `null` to
- * restore the production lazy-import path.
- */
-export function _setUpgradeTriggerForTests(fn: UpgradeTrigger | null): void {
-  _upgradeTrigger = fn ?? ((source) => {
-    void source;
-    try {
-      openProPricingPage();
-    } catch {
-      /* swallow */
-    }
-  });
-}
-
-// ---------------------------------------------------------------------------
 // Factory
 // ---------------------------------------------------------------------------
 
@@ -164,49 +79,13 @@ interface ButtonViewState {
   visible: boolean;
   followed: boolean;
   loading: boolean;
-  atCap: boolean;
 }
 
 function computeViewState(countryCode: string): ButtonViewState {
   if (!isFollowFeatureEnabled()) {
-    return { visible: false, followed: false, loading: false, atCap: false };
+    return { visible: false, followed: false, loading: false };
   }
-  const entState = serviceEntitlementState();
-  if (entState === 'loading') {
-    return { visible: true, followed: false, loading: true, atCap: false };
-  }
-  const followed = isFollowed(countryCode);
-  // We don't query getFollowed().length here for `atCap` — the *click*
-  // path is the source of truth (the service rejects on FREE_CAP and
-  // returns the discriminated reason). The tooltip is the only thing
-  // that benefits from knowing "would clicking this fail?" upfront, and
-  // for that we do a cheap-and-correct check: if free + already at cap
-  // + not currently followed, the next click would hit FREE_CAP.
-  let atCap = false;
-  if (entState === 'free' && !followed) {
-    // Local import to avoid a circular dependency through addCountry's
-    // re-entry. We import getFollowed lazily via the top-level service.
-    // Doing this dynamically keeps the synchronous render path simple.
-    // (We DO statically import the rest of the service above.)
-    try {
-      // The countModule branch is intentionally a defensive try; if
-      // anything throws we fall back to atCap=false and let the click
-      // handler reveal the cap.
-      const list = _getFollowedListSafe();
-      atCap = list.length >= FREE_TIER_FOLLOW_LIMIT;
-    } catch {
-      atCap = false;
-    }
-  }
-  return { visible: true, followed, loading: false, atCap };
-}
-
-function _getFollowedListSafe(): string[] {
-  try {
-    return getFollowed();
-  } catch {
-    return [];
-  }
+  return { visible: true, followed: isFollowed(countryCode), loading: false };
 }
 
 function renderHtml(state: ButtonViewState, props: FollowButtonProps): string {
@@ -245,11 +124,9 @@ function renderHtml(state: ButtonViewState, props: FollowButtonProps): string {
   }
 
   // Not followed.
-  const tooltip = state.atCap ? 'Upgrade to follow more' : `Follow ${displayName}`;
+  const tooltip = `Follow ${displayName}`;
   return (
-    `<button type="button" class="wm-follow-btn ${sizeCls} wm-follow-btn--unfollowed${
-      state.atCap ? ' wm-follow-btn--at-cap' : ''
-    }"` +
+    `<button type="button" class="wm-follow-btn ${sizeCls} wm-follow-btn--unfollowed"` +
     ` data-country="${safeCode}" data-state="unfollowed"` +
     ` aria-pressed="false"` +
     ` aria-label="${escapeHtml(tooltip)}"` +
@@ -344,10 +221,8 @@ export function renderFollowButton(
 
       host.addEventListener('click', clickHandler);
 
-      // Subscribe to watchlist + entitlement changes; re-render on
-      // either signal.
+      // Re-render on watchlist changes.
       const unsubWatchlist = subscribe(rerender);
-      const unsubEntitlement = onEntitlementChange(rerender);
 
       return () => {
         if (tornDown) return;
@@ -359,11 +234,6 @@ export function renderFollowButton(
         }
         try {
           unsubWatchlist();
-        } catch {
-          /* swallow */
-        }
-        try {
-          unsubEntitlement();
         } catch {
           /* swallow */
         }
@@ -413,20 +283,6 @@ async function onClick(
 
   switch (result.reason) {
     case 'FREE_CAP':
-      // Country Watcher's honest conversion trigger (plan U6/R12): the cap
-      // hit is the upgrade moment, so it joins the funnel as a gate-hit.
-      void import('@/services/analytics')
-        .then((analytics) => analytics.trackGateHit('limits.followed_countries'))
-        .catch(() => {});
-      try {
-        _upgradeTrigger('follow-cap');
-      } catch (err) {
-        console.warn('[follow-button] upgrade trigger failed:', err);
-      }
-      // Re-render so the tooltip / aria-label settles back to the
-      // "Upgrade to follow more" state if it wasn't already there.
-      rerenderForFailure();
-      return;
     case 'HANDOFF_PENDING':
     case 'ENTITLEMENT_LOADING':
     case 'DISABLED':

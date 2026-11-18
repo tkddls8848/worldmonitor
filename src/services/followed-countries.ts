@@ -25,7 +25,6 @@
  * Patterns mirrored from:
  *  - src/services/market-watchlist.ts (event dispatch, JSON.parse safety)
  *  - src/services/aviation/watchlist.ts (storage-key versioning)
- *  - src/services/entitlements.ts (hasTier / getEntitlementState; ConvexClient.onUpdate)
  *  - src/utils/cloud-prefs-sync.ts (`_authGeneration` guard pattern)
  *
  * Memory: `discriminated-union-over-sentinel-boolean` —
@@ -37,10 +36,6 @@
 
 import type { FunctionReference } from 'convex/server';
 import { toIso2 } from '../utils/country-codes';
-import {
-  getEntitlementState as _getEntitlementState,
-  hasTier as _hasTier,
-} from './entitlements';
 import { getCurrentClerkUser as _getCurrentClerkUser } from './clerk';
 import { subscribeAuthState as _subscribeAuthState } from './auth-state';
 import {
@@ -152,8 +147,6 @@ export interface ConvexClientLike {
 // hooks. Production callers never touch these.
 
 type ClerkUserGetter = () => { id: string } | null;
-type EntitlementStateGetter = () => { features?: { tier?: number } } | null;
-type HasTierFn = (minTier: number) => boolean;
 
 /**
  * Strongly-typed Convex API surface this module needs. Mirrors the
@@ -171,9 +164,6 @@ interface ConvexApiLike {
 
 let _clerkUserGetter: ClerkUserGetter = () =>
   _getCurrentClerkUser() as { id: string } | null;
-let _entitlementStateGetter: EntitlementStateGetter = () =>
-  _getEntitlementState();
-let _hasTierFn: HasTierFn = (n) => _hasTier(n);
 let _featureFlagOverride: boolean | null = null;
 let _convexClientGetter: () => Promise<ConvexClientLike | null> = async () =>
   (await _getConvexClient()) as ConvexClientLike | null;
@@ -210,8 +200,6 @@ let _waitForConvexAuthFn: (
  */
 export function _setDepsForTests(deps: {
   getCurrentClerkUser?: ClerkUserGetter | null;
-  getEntitlementState?: EntitlementStateGetter | null;
-  hasTier?: HasTierFn | null;
   featureFlagEnabled?: boolean | null;
   convexClient?: ConvexClientLike | null | 'force-null';
   convexApi?: ConvexApiLike | null | 'force-null';
@@ -221,13 +209,6 @@ export function _setDepsForTests(deps: {
     _clerkUserGetter =
       deps.getCurrentClerkUser ??
       (() => _getCurrentClerkUser() as { id: string } | null);
-  }
-  if (deps.getEntitlementState !== undefined) {
-    _entitlementStateGetter =
-      deps.getEntitlementState ?? (() => _getEntitlementState());
-  }
-  if (deps.hasTier !== undefined) {
-    _hasTierFn = deps.hasTier ?? ((n) => _hasTier(n));
   }
   if (deps.featureFlagEnabled !== undefined) {
     _featureFlagOverride = deps.featureFlagEnabled;
@@ -547,25 +528,9 @@ function dispatchCapDrop(kept: number, dropped: number): void {
 // Entitlement + auth state resolution
 // ---------------------------------------------------------------------------
 
-/**
- * Returns the effective service-level entitlement state.
- *
- *  - Anonymous (no Clerk user) → `'free'` (NEVER `'loading'`; otherwise
- *    anon users would be permanently blocked because
- *    `getEntitlementState()` returns null without a Clerk session).
- *  - Signed-in, entitlement snapshot not yet arrived → `'loading'`.
- *  - Signed-in, snapshot arrived, tier ≥ 1 → `'pro'`.
- *  - Otherwise → `'free'`.
- *
- * Codex round-2 finding #1: anonymous users must never block on
- * entitlement loading.
- */
+/** Every follow is allowed: there is no plan that limits it. */
 export function serviceEntitlementState(): ServiceEntitlementState {
-  const user = _clerkUserGetter();
-  if (!user) return 'free';
-  const ent = _entitlementStateGetter();
-  if (ent === null) return 'loading';
-  return _hasTierFn(1) ? 'pro' : 'free';
+  return 'pro';
 }
 
 // ---------------------------------------------------------------------------
@@ -1079,11 +1044,6 @@ export async function addCountry(input: string): Promise<FollowMutationResult> {
     return { ok: false, reason: 'HANDOFF_PENDING' };
   }
 
-  const ent = serviceEntitlementState();
-  if (ent === 'loading') {
-    return { ok: false, reason: 'ENTITLEMENT_LOADING' };
-  }
-
   const user = _clerkUserGetter();
 
   // Signed-in & handoff complete → Convex authoritative path.
@@ -1186,14 +1146,6 @@ export async function addCountry(input: string): Promise<FollowMutationResult> {
   const existing = getFollowed();
   if (existing.includes(code)) {
     return { ok: true };
-  }
-  if (ent === 'free' && existing.length >= FREE_TIER_FOLLOW_LIMIT) {
-    return {
-      ok: false,
-      reason: 'FREE_CAP',
-      currentCount: existing.length,
-      limit: FREE_TIER_FOLLOW_LIMIT,
-    };
   }
   return _writeLocalStorageAdd(code);
 }

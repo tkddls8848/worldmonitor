@@ -239,7 +239,6 @@ describe('overlay reload-contract gate', () => {
       'src/app/event-handlers.ts :: dialog',
       'src/app/event-handlers.ts :: popover',
       // Every answer saves on tap; the optional free text saves on blur.
-      'src/components/AboutYouCard.ts :: root',
       'src/components/IntelligenceGapBadge.ts :: overlay',
       'src/components/MobileWarningModal.ts :: this.element',
       // Read-only archive imagery and the yearly time-lapse for a looked-up point; a reload only closes them.

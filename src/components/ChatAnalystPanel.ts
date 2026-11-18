@@ -5,16 +5,6 @@ import DOMPurify from 'dompurify';
 import { balanceStreamingMarkdown, postProcessAnalystHtml } from '@/utils/analyst-markdown';
 import { yieldToMain } from '@/utils/after-paint';
 import { LatestRequestGuard } from '@/utils/latest-request-guard';
-import { premiumFetch } from '@/services/premium-fetch';
-import { getAuthState } from '@/services/auth-state';
-import { readClientEntitlementBelief } from '@/services/panel-gating';
-import {
-  analystDenialMessage,
-  isBillingVerificationDenial,
-  PRO_VERIFICATION_RETRY_MESSAGE,
-} from '@/services/analyst-denial';
-import { classifyDenialResponse, type ClientEntitlementBelief } from '@/services/premium-denial';
-import { reportEntitlementDesync } from '@/services/entitlement-desync-telemetry';
 import { trackAnalystControlAction } from '@/services/analytics';
 import { h, replaceChildren, setTrustedHtml, trustedHtml, type TrustedHtml } from '@/utils/dom-utils';
 import {
@@ -61,40 +51,6 @@ interface MetaEvent {
 }
 
 type DashboardControlStatus = 'applied' | 'denied' | 'invalid' | 'skipped';
-
-/**
- * Turn a failed /api/chat-analyst response into user-facing copy.
- *
- * A 403 has several causes and only one of them is "you need to buy Pro":
- * the route 403s on a missing plan (api/chat-analyst.ts:126), and the shared
- * gateway also 403s an unidentified caller and a failed entitlement lookup.
- * Telling a customer who paid minutes ago to buy a subscription — which is
- * what the old blanket `status === 403` branch did during the #5600 poison
- * window — is worse than saying nothing (#5608).
- *
- * Consumes the response body, so it is only called on the !ok path where the
- * stream is never read.
- */
-async function describeDenial(
-  res: Response,
-  requestBelief: ClientEntitlementBelief,
-  requestUserId: string | null,
-): Promise<string> {
-  const requestIdentityChanged = () => (getAuthState().user?.id ?? null) !== requestUserId;
-  if (requestIdentityChanged()) throw new DOMException('account changed during analyst request', 'AbortError');
-  // #5622: the route now answers an entitlement it could not VERIFY with a
-  // retryable 503 + `X-Billing-Verification` instead of flattening it into the
-  // 403 upsell. Both this check and the verdict-to-copy mapping live in
-  // src/services/analyst-denial.ts so they are reachable from a test — this
-  // module imports DOMPurify at scope and cannot be loaded by `tsx --test`.
-  if (isBillingVerificationDenial(res.status, res.headers.get('X-Billing-Verification'))) {
-    return PRO_VERIFICATION_RETRY_MESSAGE;
-  }
-  const verdict = await classifyDenialResponse(res, requestBelief);
-  if (requestIdentityChanged()) throw new DOMException('account changed while reading analyst denial', 'AbortError');
-  if (verdict === 'entitlement_desync') reportEntitlementDesync('chat-analyst');
-  return analystDenialMessage(res.status, verdict);
-}
 
 interface DashboardControlResult {
   ok: boolean;
@@ -163,7 +119,6 @@ export class ChatAnalystPanel extends Panel {
     super({
       id: 'chat-analyst',
       title: 'WM Analyst',
-      premium: 'locked',
       defaultRowSpan: 2,
       infoTooltip: t('components.chatAnalyst.infoTooltip'),
     });
@@ -538,12 +493,9 @@ export class ChatAnalystPanel extends Panel {
     const controller = new AbortController();
     const generation = this.streamGuard.begin();
     this.streamAbort = controller;
-    const requestAuthState = getAuthState();
-    const requestUserId = requestAuthState.user?.id ?? null;
-    const requestBelief = readClientEntitlementBelief(requestAuthState);
 
     try {
-      const res = await premiumFetch(API_URL, {
+      const res = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -558,11 +510,10 @@ export class ChatAnalystPanel extends Panel {
 
       if (!this.streamGuard.isCurrent(generation)) return;
       if (!res.ok) {
-        const denial = await describeDenial(res, requestBelief, requestUserId);
-        if (!this.streamGuard.isCurrent(generation)) return;
+        void res.body?.cancel().catch(() => {});
         this.finalizeStreamingBubble(
           streamingBody,
-          `⚠ ${denial}`,
+          `⚠ Error ${res.status}`,
           false,
         );
         return;
@@ -744,31 +695,6 @@ export class ChatAnalystPanel extends Panel {
     a.download = `wm-analyst-session-${Date.now()}.md`;
     a.click();
     URL.revokeObjectURL(url);
-  }
-
-  // Panel.unlockPanel() does `replaceChildren(this.content)` (empties it)
-  // when a previously-locked panel transitions to unlocked. The chat surface
-  // (chips, messages, quick actions, input row) lives entirely in buildUI()
-  // and is only constructed once in the ctor — without a rebuild here, the
-  // body would stay empty after the FREE→PRO unlock fired by
-  // panel-layout.ts:updatePanelGating(). Re-detect via querySelector so we
-  // only pay the cost when the wipe actually happened.
-  override unlockPanel(): void {
-    super.unlockPanel();
-    if (!this.content.querySelector('.chat-analyst-wrapper')) {
-      this.buildUI();
-    }
-  }
-
-  public override clearSensitiveContent(): void {
-    this.streamGuard.begin();
-    this.history = [];
-    this.streamAbort?.abort();
-    this.streamAbort = null;
-    this.isStreaming = false;
-    // An unsent draft belongs to the previous account too.
-    if (this.inputEl) this.inputEl.value = '';
-    super.clearSensitiveContent();
   }
 
   override destroy(): void {

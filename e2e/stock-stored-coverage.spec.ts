@@ -11,8 +11,6 @@ for (const count of [12, 50]) {
         import('/src/app/data-loader.ts'), import('/src/components/StockBacktestPanel.ts'),
         import('/src/components/StockAnalysisPanel.ts'), import('/src/services/widget-store.ts'),
       ]);
-      const { _setTestProviders } = await import('/src/services/premium-fetch.ts');
-      _setTestProviders({ getTesterKey: () => 'fixture', getClerkToken: async () => null });
       const { initI18n } = await import('/src/services/i18n.ts');
       await initI18n();
       const symbols = Array.from({ length: count }, (_, i) => `SYM${i}`);

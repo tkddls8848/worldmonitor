@@ -19,13 +19,6 @@ for (const theme of ['light', 'dark']) {
       localStorage.setItem('worldmonitor-mission-preset-dismissed-v1', '1');
     }, theme);
     await page.route('**/api/**', route => route.fulfill({ json: {} }));
-    await page.route('**/src/services/entitlements.ts', async route => {
-      const response = await route.fetch();
-      const source = await response.text();
-      const body = source.replace(/export function hasTier\(minTier\) \{[\s\S]*?\n\}/, 'export function hasTier(minTier) { return true; }');
-      expect(body).not.toBe(source);
-      await route.fulfill({ response, body });
-    });
     await page.goto('/dashboard');
     await page.waitForFunction(() => document.documentElement.dataset.wmEventHandlersReady === 'true');
     await page.locator('#unifiedSettingsBtn').click();

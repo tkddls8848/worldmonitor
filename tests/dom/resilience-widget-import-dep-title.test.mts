@@ -22,14 +22,6 @@ vi.mock('@/services/auth-state', () => ({
   subscribeAuthState: () => () => {},
 }));
 
-vi.mock('@/services/panel-gating', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/services/panel-gating')>();
-  return {
-    ...actual,
-    hasPremiumAccess: () => true,
-    getPanelGateReason: () => actual.PanelGateReason.NONE,
-  };
-});
 
 import { ResilienceWidget } from '@/components/ResilienceWidget';
 

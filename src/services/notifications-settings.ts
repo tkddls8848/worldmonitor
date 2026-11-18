@@ -26,7 +26,6 @@ import {
   type DigestMode,
 } from '@/services/notification-channels';
 import { getCurrentClerkUser } from '@/services/clerk';
-import { hasTier } from '@/services/entitlements';
 import { t } from '@/services/i18n';
 import { getMarketWatchlistEntries } from '@/services/market-watchlist';
 import { SITE_VARIANT } from '@/config/variant';
@@ -219,16 +218,16 @@ function getTelegramBotUsername(): string {
 }
 
 /**
- * Settings → Notifications: channel and alert-rule controls for signed-in Pro
- * users, otherwise an "Upgrade to Pro" prompt that opens the /pro plan picker.
+ * Settings → Notifications: channel and alert-rule controls for signed-in
+ * users, otherwise a sign-in prompt.
  * `attach` wires the rendered markup and returns its cleanup function.
  */
 export function renderNotificationsSettings(host: NotificationsSettingsHost): NotificationsSettingsResult {
-  const isPro = !!host.isSignedIn && hasTier(1);
+  const canConfigure = !!host.isSignedIn;
   const preselectCountry = normalizePreselectCountry(host.preselectCountry);
 
   let html = '';
-  if (isPro) {
+  if (canConfigure) {
     html += `<div class="wm-pref-group-content wm-notif-tab-content">`;
     html += `<div class="us-notif-loading" id="usNotifLoading">Loading...</div>`;
     html += `<div class="us-notif-content" id="usNotifContent" style="display:none"></div>`;
@@ -237,8 +236,8 @@ export function renderNotificationsSettings(host: NotificationsSettingsHost): No
     html += `<div class="wm-pref-group-content wm-notif-tab-content panel-locked-state settings-access-gate">`;
     html += `<h3>Intelligence alerts</h3>`;
     html += `<p class="panel-locked-desc">Get alerts in Telegram, Slack, Discord or email. Choose your sensitivity, quiet hours and digest schedule.</p>`;
-    html += `<p class="panel-locked-desc">${host.isSignedIn ? 'Notifications require Pro.' : 'Sign in to configure notifications. Notifications require Pro.'}</p>`;
-    html += `<button type="button" class="panel-locked-cta" id="usNotifUpgradeBtn">${host.isSignedIn ? 'Upgrade to Pro' : 'Sign In'}</button>`;
+    html += `<p class="panel-locked-desc">Sign in to configure notifications.</p>`;
+    html += `<button type="button" class="panel-locked-cta" id="usNotifUpgradeBtn">Sign In</button>`;
     html += `</div>`;
   }
 
@@ -248,17 +247,11 @@ export function renderNotificationsSettings(host: NotificationsSettingsHost): No
       const ac = new AbortController();
       const { signal } = ac;
 
-      if (!isPro) {
+      if (!canConfigure) {
         const upgradeBtn = container.querySelector<HTMLButtonElement>('#usNotifUpgradeBtn');
         if (upgradeBtn) {
           upgradeBtn.addEventListener('click', () => {
-            if (!host.isSignedIn) {
-              import('@/services/clerk').then(m => m.openSignIn()).catch(() => {
-                void openExternalUrl(`${WEB_APP_ORIGIN}/pro`);
-              });
-              return;
-            }
-            import('@/services/upgrade-flow').then(m => m.openUpgradePlans()).catch(() => {
+            import('@/services/clerk').then(m => m.openSignIn()).catch(() => {
               void openExternalUrl(`${WEB_APP_ORIGIN}/pro`);
             });
           }, { signal });

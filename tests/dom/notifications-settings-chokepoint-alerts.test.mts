@@ -47,9 +47,6 @@ vi.mock('@/services/clerk', () => ({
   getCurrentClerkUser: () => ({ id: 'user_push', email: 'push@worldmonitor.test' }),
 }));
 
-vi.mock('@/services/entitlements', () => ({
-  hasTier: () => true,
-}));
 
 vi.mock('@/services/market-watchlist', () => ({
   getMarketWatchlistEntries: () => [],

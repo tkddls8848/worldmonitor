@@ -4,7 +4,6 @@ import { CountryHistory } from '@/components/CountryHistory';
 import { fetchCountryHistory } from '@/services/country-history';
 
 vi.mock('@/services/country-history', () => ({ fetchCountryHistory: vi.fn() }));
-vi.mock('@/services/entitlements', () => ({ onEntitlementChange: () => () => {} }));
 
 const fixture = (allowedDays = 7) => ({
   country: 'US', requestedDays: 7, allowedDays, effectiveDays: 7, returnedDays: 2, stale: false, upstreamUnavailable: false, fetchedAt: Date.now(),
@@ -17,13 +16,14 @@ const fixture = (allowedDays = 7) => ({
 describe('daily country history', () => {
   beforeEach(async () => { await initTestI18n(); vi.mocked(fetchCountryHistory).mockReset(); document.body.replaceChildren(); });
 
-  it('shows event click-through, observed zero, formula breaks and the free boundary CTA', async () => {
+  it('shows event click-through, observed zero and formula breaks, with no upgrade CTA', async () => {
     vi.mocked(fetchCountryHistory).mockResolvedValue(fixture());
     const mount = document.createElement('div'); document.body.append(mount);
     const widget = new CountryHistory(mount, 'US', new AbortController().signal);
     await vi.waitFor(() => expect(mount.querySelector('a[href="https://example.com/talks"]')).not.toBeNull());
     expect(mount.textContent).toContain('Formula or observation gap');
-    expect(mount.textContent).toContain('Unlock 90 days');
+    expect(mount.textContent).not.toContain('Unlock 90 days');
+    expect(mount.querySelector('.panel-locked-cta')).toBeNull();
     (mount.querySelector('[data-history-date="2026-10-17"]') as HTMLButtonElement).click();
     expect(mount.querySelector('.country-history-detail')?.textContent).toContain('CII 0');
     expect(mount.querySelector('svg path')).toBeNull();
@@ -32,7 +32,7 @@ describe('daily country history', () => {
     widget.destroy();
   });
 
-  it('shows a Pro upsell only when the selected window reaches the 90-day boundary', async () => {
+  it('offers every window the server allows and never an upsell', async () => {
     vi.mocked(fetchCountryHistory).mockResolvedValue(fixture(90));
     const mount = document.createElement('div');
     const widget = new CountryHistory(mount, 'US', new AbortController().signal);
@@ -41,7 +41,8 @@ describe('daily country history', () => {
     const select = mount.querySelector('select')!;
     select.value = '90'; select.dispatchEvent(new Event('change'));
     await vi.waitFor(() => expect(fetchCountryHistory).toHaveBeenLastCalledWith('US', 90, expect.any(AbortSignal)));
-    await vi.waitFor(() => expect(mount.textContent).toContain('365 days'));
+    await vi.waitFor(() => expect(fetchCountryHistory).toHaveBeenCalledTimes(2));
+    expect(mount.querySelector('.panel-locked-cta')).toBeNull();
     widget.destroy();
   });
 

@@ -141,18 +141,10 @@ import {
   bindLayerSearch,
   getLayerExplanation,
   hasCuratedLayerExplanation,
-  isLayerEntitled,
-  isLayerToggleAllowed,
-  sanitizeLockedLayers,
   LAYER_REGISTRY,
   type MapVariant,
 } from '@/config/map-layer-definitions';
-import { isProTierResolved } from '@/services/widget-store';
 import { layerExplanationLookup, renderLayerExplanationCard } from '@/utils/layer-explanation-card';
-import { getAuthState, subscribeAuthState } from '@/services/auth-state';
-import { onEntitlementChange } from '@/services/entitlements';
-import { hasPremiumAccess } from '@/services/panel-gating';
-import { trackGateHit } from '@/services/analytics';
 import { MapPopup, type PopupType } from './MapPopup';
 import { renderMilitaryVesselTooltipHtml } from './deckgl-tooltip-renderers';
 import type { GetChokepointStatusResponse } from '@/services/supply-chain';
@@ -719,8 +711,6 @@ export class DeckGLMap {
   private cyberThreats: CyberThreat[] = [];
   private aptGroups: import('@/types').APTGroup[] = [];
   private aptGroupsLoaded = false;
-  private _unsubscribeAuthState: (() => void) | null = null;
-  private _unsubscribeEntitlement: (() => void) | null = null;
   private aptGroupsLayerFailed = false;
   private satelliteImageryLayerFailed = false;
   private iranEvents: IranEvent[] = [];
@@ -5969,10 +5959,6 @@ export class DeckGLMap {
 
     if (layerId === 'trade-routes-layer') {
       const segment = info.object as TradeRouteSegment;
-      if (!hasPremiumAccess(getAuthState())) {
-        trackGateHit('trade-arc-intel');
-        return;
-      }
       const waypoints = ROUTE_WAYPOINTS_MAP.get(segment.routeId) ?? [];
       this.popup.showRouteBreakdown(segment, waypoints, info.x, info.y);
       this.onTradeArcClick?.(segment, waypoints, info.x, info.y);
@@ -6271,12 +6257,10 @@ export class DeckGLMap {
     toggles.className = 'layer-toggles deckgl-layer-toggles';
 
     const layerDefs = getLayersForVariant((SITE_VARIANT || 'full') as MapVariant, 'deck');
-    const premiumUnlocked = hasPremiumAccess(getAuthState());
     const layerConfig = layerDefs.map(def => ({
       key: def.key,
       label: resolveLayerLabel(def, t),
       icon: def.icon,
-      premium: def.premium,
       explainLabel: escapeHtml(`Explain ${resolveLayerLabel(def, t)} layer`),
       hasExplanation: hasCuratedLayerExplanation(def.key),
     }));
@@ -6289,15 +6273,13 @@ export class DeckGLMap {
       </div>
       <input type="text" class="layer-search" placeholder="${t('components.deckgl.layerSearch')}" autocomplete="off" spellcheck="false" />
       <div class="toggle-list" style="max-height: 32vh; overflow-y: auto; scrollbar-width: thin;">
-        ${layerConfig.map(({ key, label, icon, premium, explainLabel, hasExplanation }) => {
-          const isLocked = premium === 'locked' && !premiumUnlocked;
-          const isEnhanced = premium === 'enhanced' && !premiumUnlocked;
+        ${layerConfig.map(({ key, label, icon, explainLabel, hasExplanation }) => {
           return `
           <div class="layer-toggle-row" data-layer="${key}">
-            <label class="layer-toggle${isLocked ? ' layer-toggle-locked' : ''}" data-layer="${key}">
-              <input type="checkbox" ${this.state.layers[key as keyof MapLayers] ? 'checked' : ''}${isLocked ? ' disabled' : ''}>
+            <label class="layer-toggle" data-layer="${key}">
+              <input type="checkbox" ${this.state.layers[key as keyof MapLayers] ? 'checked' : ''}>
               <span class="toggle-icon">${icon}</span>
-              <span class="toggle-label">${label}${isLocked ? ' \uD83D\uDD12' : ''}${isEnhanced ? ' <span class="layer-pro-badge">PRO</span>' : ''}</span>
+              <span class="toggle-label">${label}</span>
             </label>
             <button type="button" class="layer-explain-btn${hasExplanation ? ' has-layer-explanation' : ''}" data-layer="${key}" aria-label="${explainLabel}">i</button>
           </div>`;
@@ -6307,74 +6289,12 @@ export class DeckGLMap {
 
     this.container.appendChild(toggles);
 
-    const lockedLayerControls = layerConfig
-      .filter(({ premium }) => premium === 'locked')
-      .map(({ key, label }) => {
-        const control = toggles.querySelector(`.layer-toggle[data-layer="${key}"]`);
-        return {
-          key,
-          label,
-          control,
-          input: control?.querySelector('input') as HTMLInputElement | null,
-          labelSpan: control?.querySelector('.toggle-label') as HTMLElement | null,
-        };
-      });
-    let lastPremiumUnlocked: boolean | null = null;
-    let lastSettledFree: boolean | null = null;
-
-    // Reconcile premium controls whenever either entitlement signal changes.
-    // Pro can come from Clerk role or the Convex entitlement snapshot, and
-    // both subscriptions must remain live: a user can later downgrade or sign
-    // out after unlocking a layer. The initial pending state stays visually
-    // locked, but it must not be persisted as free until the tier settles (or
-    // App's bounded fallback explicitly heals it).
-    const syncPremiumLayerControls = (): void => {
-      const premiumUnlocked = hasPremiumAccess(getAuthState());
-      const settledFree = isProTierResolved() && !premiumUnlocked;
-      if (premiumUnlocked === lastPremiumUnlocked && settledFree === lastSettledFree) return;
-      lastPremiumUnlocked = premiumUnlocked;
-      lastSettledFree = settledFree;
-      let stateChanged = false;
-
-      for (const { key, label: layerLabel, control, input, labelSpan } of lockedLayerControls) {
-        if (!control) continue;
-        const locked = !premiumUnlocked;
-        control.classList.toggle('layer-toggle-locked', locked);
-        if (input) {
-          input.disabled = locked;
-          if (settledFree && this.state.layers[key]) {
-            this.state.layers[key] = false;
-            input.checked = false;
-            this.setLayerReady(key, false);
-            this.onLayerChange?.(key, false, 'programmatic');
-            stateChanged = true;
-          }
-        }
-
-        if (labelSpan) {
-          labelSpan.textContent = locked ? `${layerLabel} 🔒` : layerLabel;
-        }
-      }
-
-      if (stateChanged) {
-        this.render();
-        this.updateLegend();
-        this.enforceLayerLimit();
-      }
-    };
-    this._unsubscribeAuthState = subscribeAuthState(syncPremiumLayerControls);
-    this._unsubscribeEntitlement = onEntitlementChange(syncPremiumLayerControls);
-
     // Bind toggle events
     toggles.querySelectorAll('.layer-toggle input').forEach(input => {
       input.addEventListener('change', () => {
         const layer = (input as HTMLInputElement).closest('.layer-toggle')?.getAttribute('data-layer') as keyof MapLayers;
         if (layer) {
           const enabled = (input as HTMLInputElement).checked;
-          if (!isLayerToggleAllowed(layer, this.state.layers[layer], hasPremiumAccess(getAuthState()))) {
-            (input as HTMLInputElement).checked = Boolean(this.state.layers[layer]);
-            return;
-          }
           const prevRadar = this.state.layers.weather;
           const prevCyber = this.state.layers.cyberThreats;
           if (enabled && (layer === 'resilienceScore' || layer === 'ciiChoropleth')) {
@@ -7045,13 +6965,7 @@ export class DeckGLMap {
   }
 
   public setLayers(layers: MapLayers): void {
-    // #6045 — strip locked premium layers for settled free users before
-    // checkbox force-sync (prevents checked+disabled stuck state from any
-    // bulk path: mission presets, layers:all, URL, cloud prefs).
-    let next = layers;
-    if (isProTierResolved() && !hasPremiumAccess(getAuthState())) {
-      next = sanitizeLockedLayers(layers, false);
-    }
+    const next = layers;
     const prevRadar = this.state.layers.weather;
     const prevCyber = this.state.layers.cyberThreats;
     const prevBases = this.state.layers.bases;
@@ -7274,13 +7188,9 @@ export class DeckGLMap {
         const waypoints = ROUTE_WAYPOINTS_MAP.get(d.routeId);
         if (waypoints && waypoints.some(wp => scenarioDisrupted.has(wp))) {
           base = scenario;
-        } else if (!hasPremiumAccess(getAuthState())) {
-          base = active;
         } else {
           base = colorFor(d.status);
         }
-      } else if (!hasPremiumAccess(getAuthState())) {
-        base = active;
       } else {
         base = colorFor(d.status);
       }
@@ -7312,8 +7222,6 @@ export class DeckGLMap {
     const highRiskColor: [number, number, number, number] = [255, 180, 50, 160];
     const scenarioColor: [number, number, number, number] = [255, 140, 50, 170];
 
-    const isPremium = hasPremiumAccess(getAuthState());
-
     const scenarioDisrupted = this.scenarioState
       ? new Set(this.scenarioState.disruptedChokepointIds)
       : null;
@@ -7327,13 +7235,9 @@ export class DeckGLMap {
         const waypoints = ROUTE_WAYPOINTS_MAP.get(routeId);
         if (waypoints && waypoints.some(wp => scenarioDisrupted.has(wp))) {
           base = scenarioColor;
-        } else if (!isPremium) {
-          base = activeColor;
         } else {
           base = status === 'disrupted' ? disruptedColor : status === 'high_risk' ? highRiskColor : activeColor;
         }
-      } else if (!isPremium) {
-        base = activeColor;
       } else {
         base = status === 'disrupted' ? disruptedColor : status === 'high_risk' ? highRiskColor : activeColor;
       }
@@ -7525,9 +7429,7 @@ export class DeckGLMap {
     const scenarioHit = (this.scenarioState?.disruptedChokepointIds ?? []).some((id) => lane.chokepointIds.includes(id));
     const color = scenarioHit
       ? scenario
-      : !hasPremiumAccess(getAuthState())
-        ? active
-        : maxScore >= 70 ? disrupted : maxScore > 30 ? highRisk : active;
+      : maxScore >= 70 ? disrupted : maxScore > 30 ? highRisk : active;
     const legs: BypassArcDatum[] = [];
     for (let i = 1; i < lane.path.length; i++) legs.push({ source: lane.path[i - 1]!, target: lane.path[i]! });
     return new ArcLayer<BypassArcDatum>({
@@ -8701,10 +8603,6 @@ export class DeckGLMap {
 
   // Enable layer programmatically
   public enableLayer(layer: keyof MapLayers): void {
-    // Defense in depth for CMD+K / agent / deep-link paths: locked premium
-    // layers stay off for free users (#6045). search-manager also gates
-    // before calling here; this catches any remaining enableLayer callers.
-    if (!isLayerEntitled(layer, hasPremiumAccess(getAuthState()))) return;
     if (!this.state.layers[layer]) {
       if (layer === 'resilienceScore' && this.state.layers.ciiChoropleth) {
         this.state.layers.ciiChoropleth = false;
@@ -8738,7 +8636,6 @@ export class DeckGLMap {
     const prevRadar = this.state.layers.weather;
     const prevCyber = this.state.layers.cyberThreats;
     const nextEnabled = !this.state.layers[layer];
-    if (!isLayerToggleAllowed(layer, this.state.layers[layer], hasPremiumAccess(getAuthState()))) return;
     if (nextEnabled && layer === 'resilienceScore' && this.state.layers.ciiChoropleth) {
       this.state.layers.ciiChoropleth = false;
       const ciiToggle = this.container.querySelector(`.layer-toggle[data-layer="ciiChoropleth"] input`) as HTMLInputElement | null;
@@ -9434,10 +9331,6 @@ export class DeckGLMap {
     this.stopTradeAnimation();
     this.activeFlightTrails.clear();
     this.clearTrailsBtn = null;
-    this._unsubscribeAuthState?.();
-    this._unsubscribeAuthState = null;
-    this._unsubscribeEntitlement?.();
-    this._unsubscribeEntitlement = null;
     window.removeEventListener('theme-changed', this.handleThemeChange);
     window.removeEventListener('map-theme-changed', this.handleMapThemeChange);
     this.tradeReducedMotionMedia?.removeEventListener('change', this.handleTradeMotionPreferenceChange);

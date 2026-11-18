@@ -7,7 +7,6 @@ const {
   fetchRouteImpact,
   getResilienceScore,
   getAuthState,
-  hasPremiumAccess,
   track,
   trackGateHit,
 } = vi.hoisted(() => ({
@@ -15,7 +14,6 @@ const {
   fetchRouteImpact: vi.fn(),
   getResilienceScore: vi.fn(),
   getAuthState: vi.fn(() => ({ user: null, isPending: false })),
-  hasPremiumAccess: vi.fn(() => true),
   track: vi.fn(),
   trackGateHit: vi.fn(),
 }));
@@ -27,7 +25,6 @@ vi.mock('@/services/supply-chain', () => ({
 
 vi.mock('@/services/resilience', () => ({ getResilienceScore }));
 vi.mock('@/services/auth-state', () => ({ getAuthState }));
-vi.mock('@/services/panel-gating', () => ({ hasPremiumAccess }));
 vi.mock('@/services/analytics', () => ({ track, trackGateHit }));
 
 import { RouteExplorer } from '@/components/RouteExplorer/RouteExplorer';

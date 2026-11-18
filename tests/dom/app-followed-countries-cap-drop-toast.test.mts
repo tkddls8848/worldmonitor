@@ -89,12 +89,12 @@ describe('App followed-countries cap-drop toast', () => {
     dispatchCapDrop(1, 2);
     expect(currentToast(), 'no listener before init').toBeNull();
 
-    // enforceFreeTierLimits() is the first call after the registration; make it
+    // restoreGateOwnedPreferences() is the first call after the registration; make it
     // throw so init stops there instead of building the whole dashboard.
     const stop = new Error('stop after cap-drop registration');
     const enforce = vi.spyOn(
-      App.prototype as unknown as { enforceFreeTierLimits: () => boolean },
-      'enforceFreeTierLimits',
+      App.prototype as unknown as { restoreGateOwnedPreferences: () => boolean },
+      'restoreGateOwnedPreferences',
     ).mockImplementation(() => { throw stop; });
     try {
       await expect(app.init(null)).rejects.toBe(stop);

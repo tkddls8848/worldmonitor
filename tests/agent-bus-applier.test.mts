@@ -165,46 +165,25 @@ describe('agent bus applier', () => {
     assert.equal(panel.scrollCalls, 0);
   });
 
-  it('keeps dynamic custom-widget and MCP panels Pro-only without canonical metadata', () => {
+  it('opens dynamic custom-widget and MCP panels without canonical metadata', () => {
     for (const panelId of ['cw-risk-chart', 'mcp-risk-feed']) {
-      const deniedPanel = makePanel();
-      const freeCtx = makeCtx({
-        panels: { [panelId]: deniedPanel.panel as never },
+      const dynamicPanel = makePanel();
+      const ctx = makeCtx({
+        panels: { [panelId]: dynamicPanel.panel as never },
         panelSettings: { [panelId]: { name: 'Dynamic panel', enabled: true } },
       });
-      const deniedResult = applyAgentBusAction(
-        freeCtx,
+      const result = applyAgentBusAction(
+        ctx,
         { type: 'open_panel', panelId },
         {
           ...entitled,
           getPanelConfig: (id) => ({ name: id, enabled: false }),
-          isPanelAllowed: () => true,
-          hasPremiumAccess: () => false,
         },
       );
 
-      assert.equal(deniedResult.ok, false, panelId);
-      assert.equal(deniedResult.reason, 'panel_not_entitled', panelId);
-      assert.equal(deniedPanel.showCalls, 0, panelId);
+      assert.equal(result.ok, true, panelId);
+      assert.equal(dynamicPanel.showCalls, 1, panelId);
     }
-
-    const allowedPanel = makePanel();
-    const proCtx = makeCtx({
-      panels: { 'cw-risk-chart': allowedPanel.panel as never },
-      panelSettings: { 'cw-risk-chart': { name: 'Risk chart', enabled: true } },
-    });
-    const allowedResult = applyAgentBusAction(
-      proCtx,
-      { type: 'open_panel', panelId: 'cw-risk-chart' },
-      {
-        ...entitled,
-        getPanelConfig: (panelId) => ({ name: panelId, enabled: false }),
-        hasPremiumAccess: () => true,
-      },
-    );
-
-    assert.equal(allowedResult.ok, true);
-    assert.equal(allowedPanel.showCalls, 1);
   });
 
   it('moves the map only after action validation', () => {
@@ -230,7 +209,7 @@ describe('agent bus applier', () => {
     assert.equal(result.reason, 'map_unavailable');
   });
 
-  it('filters layers by live state, entitlement, variant, and renderer executability', () => {
+  it('filters layers by live state, variant, and renderer executability', () => {
     const ctx = makeCtx();
     const result = applyAgentBusAction(ctx, {
       type: 'set_layers',
@@ -252,7 +231,7 @@ describe('agent bus applier', () => {
       result.targets.map((target) => [target.target, target.status, target.reason ?? '']),
       [
         ['conflicts', 'applied', ''],
-        ['resilienceScore', 'denied', 'layer_not_entitled'],
+        ['resilienceScore', 'denied', 'layer_not_executable'],
         ['storageFacilities', 'denied', 'layer_not_executable'],
         ['notARealLayer', 'denied', 'unknown_layer'],
       ],

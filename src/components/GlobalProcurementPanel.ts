@@ -7,7 +7,6 @@ import {
 } from '@/config/webmcp';
 import type { GlobalTender, ListGlobalTendersResponse } from '@/generated/client/worldmonitor/economic/v1/service_client';
 import type { GlobalTenderFilters } from '@/services/global-tenders';
-import { PanelGateReason } from '@/services/panel-gating';
 import { isMobileDevice } from '@/utils';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 import { escapeHtml, sanitizeUrl } from '@/utils/sanitize';
@@ -142,7 +141,6 @@ export class GlobalProcurementPanel extends Panel {
   private data: ListGlobalTendersResponse | null = null;
   private filters: GlobalTenderFilters = { ...DEFAULT_FILTERS };
   private requestHandler: RequestHandler | null = null;
-  private principalResetHandler: (() => void) | null = null;
   private loading = false;
   private pendingAgentInvocation: PendingAgentInvocation | null = null;
   private settlingAgentForm: HTMLFormElement | null = null;
@@ -151,7 +149,6 @@ export class GlobalProcurementPanel extends Panel {
   private requestStarting = false;
   private activeRequestController: AbortController | null = null;
   private activeRequestPreviousFilters: GlobalTenderFilters | null = null;
-  private lifecycleEpoch = 0;
   private contentRevision = 0;
   private disposed = false;
 
@@ -161,7 +158,6 @@ export class GlobalProcurementPanel extends Panel {
       title: 'Global Procurement',
       defaultRowSpan: 2,
       showCount: true,
-      premium: 'locked',
       infoTooltip: 'Search active official procurement opportunities. Results are seed-backed and source health is reported explicitly.',
     });
     this.showLoading('Loading procurement opportunities…');
@@ -294,14 +290,6 @@ export class GlobalProcurementPanel extends Panel {
       return;
     }
     this.syncDeclarativeToolState();
-  }
-
-  /**
-   * The owner of the loader-side filter state (DataLoader) registers here so a
-   * principal change resets that state too, not just this panel's copy.
-   */
-  public setPrincipalResetHandler(handler: () => void): void {
-    this.principalResetHandler = handler;
   }
 
   public setLoading(loading: boolean, append = false): void {
@@ -477,80 +465,35 @@ export class GlobalProcurementPanel extends Panel {
           || this.disposed
           || this.data !== null
         ) return;
-        super.clearSensitiveContent();
+        this.setContentNodes();
       });
       return;
     }
-    super.clearSensitiveContent();
-  }
-
-  /**
-   * Panel gating calls this on sign-out, downgrade, and a switch to another
-   * account. Filters and results belong to the previous principal, so reset
-   * them here and in the DataLoader, which replays its own filter copy on the
-   * next unscoped refresh.
-   */
-  public override clearSensitiveContent(): void {
-    this.clear();
-    this.principalResetHandler?.();
-  }
-
-  public override showGatedCta(reason: PanelGateReason, onAction: () => void): void {
-    const lifecycleEpoch = ++this.lifecycleEpoch;
-    const hadPendingInvocation = this.pendingAgentInvocation !== null || this.settlingAgentForm !== null;
-    this.cancelForUnavailablePanel();
-    if (hadPendingInvocation) {
-      this.deferAfterAgentSettlement(() => {
-        if (!this.disposed && this.lifecycleEpoch === lifecycleEpoch) super.showGatedCta(reason, onAction);
-      });
-      return;
-    }
-    super.showGatedCta(reason, onAction);
-  }
-
-  public override showLocked(features: string[] = []): void {
-    const lifecycleEpoch = ++this.lifecycleEpoch;
-    const hadPendingInvocation = this.pendingAgentInvocation !== null || this.settlingAgentForm !== null;
-    this.cancelForUnavailablePanel();
-    if (hadPendingInvocation) {
-      this.deferAfterAgentSettlement(() => {
-        if (!this.disposed && this.lifecycleEpoch === lifecycleEpoch) super.showLocked(features);
-      });
-      return;
-    }
-    super.showLocked(features);
-  }
-
-  public override unlockPanel(): void {
-    this.lifecycleEpoch += 1;
-    const wasLocked = this.isLocked;
-    super.unlockPanel();
-    if (wasLocked) this.syncDeclarativeToolState();
+    this.setContentNodes();
   }
 
   public override hide(): void {
     const hadPendingInvocation = this.pendingAgentInvocation !== null || this.settlingAgentForm !== null;
     super.hide();
     this.cancelForUnavailablePanel();
-    if (!hadPendingInvocation && this.data && !this.isLocked) this.render();
+    if (!hadPendingInvocation && this.data) this.render();
   }
 
   public override show(): void {
     super.show();
     this.syncDeclarativeToolState();
-    if (this.data && !this.isLocked) this.render();
+    if (this.data) this.render();
   }
 
   public override notifyConnected(): void {
     super.notifyConnected();
     this.syncDeclarativeToolState();
-    if (this.data && !this.isLocked) this.render();
+    if (this.data) this.render();
   }
 
   public override destroy(): void {
     if (this.disposed) return;
     const hadPendingInvocation = this.pendingAgentInvocation !== null || this.settlingAgentForm !== null;
-    this.lifecycleEpoch += 1;
     this.disposed = true;
     this.cancelForUnavailablePanel();
     if (hadPendingInvocation) {
@@ -571,7 +514,6 @@ export class GlobalProcurementPanel extends Panel {
       !this.requestHandler
       || this.loading
       || this.disposed
-      || this.isLocked
       || !this.isPanelToolVisible()
     ) return false;
     this.abortActiveRequest();
@@ -739,7 +681,6 @@ export class GlobalProcurementPanel extends Panel {
 
   private canDeclareTool(): boolean {
     return !this.disposed
-      && !this.isLocked
       && this.element.isConnected
       && this.isPanelToolVisible()
       && this.requestHandler !== null
@@ -830,7 +771,6 @@ export class GlobalProcurementPanel extends Panel {
         this.pendingAgentInvocation === null
         && this.settlingAgentForm === null
         && this.data
-        && !this.isLocked
         && !this.disposed
         && this.contentRevision === contentRevision
       ) this.render();
@@ -1094,7 +1034,6 @@ export class GlobalProcurementPanel extends Panel {
         this.pendingAgentInvocation === null
         && this.settlingAgentForm === null
         && this.data
-        && !this.isLocked
         && !this.disposed
         && this.contentRevision === contentRevision
       ) this.render();

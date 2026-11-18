@@ -18,16 +18,13 @@ import type { SummarizeArticleResponse } from '@/generated/client/worldmonitor/n
 import { createCircuitBreaker } from '@/utils';
 import { buildSummaryCacheKey } from '@/utils/summary-cache-key';
 import { NewsServiceClient } from '@/services/generated-rpc-clients';
-import { premiumFetch } from '@/services/premium-fetch';
 import {
   canAttemptServerSummarization,
-  configureSummarizeGate,
   isServerSummarizationSuppressed,
   parseSummarizeRetryAfterMs,
   suppressServerSummarization,
   suppressServerSummarizationFor,
 } from '@/services/summarize-gate';
-import { hasPremiumAccess } from '@/services/panel-gating';
 import {
   createSummarizationAttemptState,
   logChainOutcome,
@@ -66,7 +63,7 @@ export interface SummarizeOptions {
 const newsClient = new NewsServiceClient(getRpcBaseUrl(), { fetch: (...args) => globalThis.fetch(...args) });
 const premiumNewsClient = new NewsServiceClient(getRpcBaseUrl(), {
   fetch: async (input, init) => {
-    const response = await premiumFetch(input, { ...init, forcePremium: true });
+    const response = await fetch(input, init);
     if (response.status === 429) {
       const retryAfterMs = parseSummarizeRetryAfterMs(response.headers.get('Retry-After'));
       if (retryAfterMs === null) {
@@ -81,15 +78,6 @@ const premiumNewsClient = new NewsServiceClient(getRpcBaseUrl(), {
   },
 });
 
-// #4913: summarize-article LLM spend is premium-gated server-side (#4687).
-// Gate every API-provider dispatch on the client-side entitlement signal so
-// anon/free principals fall straight to the browser-T5 provider with ZERO
-// network attempts — before this gate, every summarize attempt fanned out up
-// to 2 doomed RPCs (ollama→openrouter through the same gated endpoint).
-// panel-gating's hasPremiumAccess is the dual-signal source of truth.
-// translateText is deliberately NOT gated: it uses mode='translate' via the
-// plain newsClient, which the server allows for non-premium callers.
-configureSummarizeGate(() => hasPremiumAccess());
 const summaryBreaker = createCircuitBreaker<SummarizeArticleResponse>({ name: 'News Summarization', cacheTtlMs: 0 });
 
 const summaryResultBreaker = createCircuitBreaker<SummarizationResult | null>({

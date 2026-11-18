@@ -1,7 +1,4 @@
 import { getCurrentLanguageTag, getLocale, t } from '@/services/i18n';
-import { PanelGateReason } from '@/services/panel-gating';
-import { lockSvg, upgradeSvg } from '@/components/gate-icons';
-import { billingAwareGateCopy, type GateCopy } from '@/components/ExportGateControl';
 import { iso2ToCountryName } from '@/utils/country-codes';
 import { scopeStatus, type TabScope } from '../../shared/tab-scope';
 
@@ -85,19 +82,4 @@ export function focusWindowText(scope: TabScope, now: Date): { text: string; end
   if (scope.start && scope.end) return { text: formatRange(scope.start, scope.end, format), ended: false };
   if (scope.end) return { text: t('focus.windowUntil', { date: day(scope.end) }), ended: false };
   return { text: t('focus.windowFrom', { date: day(scope.start!) }), ended: false };
-}
-
-/**
- * Copy for an account that may not set a focus, shaped like `tabCapGateCopy`
- * so every locked surface reads the same: billing-aware reasons first (a
- * customer with paid evidence never sees a fresh upsell), then sign-in for a
- * visitor, then the upgrade.
- */
-export function focusGateCopy(reason: PanelGateReason): GateCopy {
-  const billing = billingAwareGateCopy(reason);
-  if (billing) return billing;
-  if (reason === PanelGateReason.ANONYMOUS) {
-    return { icon: lockSvg, desc: t('focus.gateSignedOutDesc'), cta: t('premium.signIn') };
-  }
-  return { icon: upgradeSvg, desc: t('focus.gateUpgradeDesc'), cta: t('focus.gateUpgradeCta') };
 }

@@ -4,7 +4,6 @@ import { initTestI18n } from './helpers/i18n.mts';
 vi.mock('@/services/clerk', () => ({ getClerkToken: vi.fn() }));
 vi.mock('@/services/auth-state', () => ({ getAuthState: vi.fn() }));
 vi.mock('@/services/analytics', () => ({ track: vi.fn() }));
-vi.mock('@/services/entitlement-desync-telemetry', () => ({ reportEntitlementDesync: vi.fn() }));
 
 import { getClerkToken } from '@/services/clerk';
 import { getAuthState } from '@/services/auth-state';

@@ -314,7 +314,7 @@ describe('deploy/cache configuration guardrails', () => {
     const dist = dirname(swPath);
     const assets = readdirSync(resolve(dist, 'assets'));
     for (const prefix of [
-      'protomaps-', 'h3-js-', 'UnifiedSettings-', 'settings-window-', 'checkout-',
+      'protomaps-', 'h3-js-', 'UnifiedSettings-', 'settings-window-',
       'panel-support-', 'panels-news-', 'panels-intel-',
     ]) {
       const asset = assets.find((name) => name.startsWith(prefix) && name.endsWith('.js'));

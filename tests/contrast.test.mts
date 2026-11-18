@@ -160,24 +160,6 @@ describe('billing tone contrast', () => {
     assert.fail(`${name} not found in any :root block`);
   };
 
-  it('paints the plan name from data-billing-tone, not an inlined hex', () => {
-    assert.match(
-      settingsSource,
-      /data-billing-tone="\$\{tone\}"/,
-      'the entitled plan card must stamp data-billing-tone so light overrides apply',
-    );
-    assert.match(
-      settingsSource,
-      /class="upgrade-pro-plan-name"/,
-      'the 13px plan name must use the theme-aware class, not an inline color',
-    );
-    assert.doesNotMatch(
-      settingsSource,
-      /BILLING_TONE_COLORS/,
-      'inlined hex map would bypass [data-theme="light"] billing-tone overrides',
-    );
-  });
-
   it('dark: every billing tone clears 4.5:1 on --bg and --surface', () => {
     const bg = token(mainCss, ':root {', '--bg');
     const surface = token(mainCss, ':root {', '--surface');

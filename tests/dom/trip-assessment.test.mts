@@ -99,14 +99,14 @@ describe('draft shaping', () => {
 });
 
 describe('requestTripAssessment', () => {
-  it('posts the request with the session token forced on, and returns a named file', async () => {
+  it('posts the request and returns a named file', async () => {
     const fetcher = vi.fn().mockResolvedValue(okResponse('BODY'));
     const result = await requestTripAssessment(draft(), 'markdown', { fetcher, now: () => Date.parse('2026-11-10T12:00:00Z') });
     expect(result).toEqual({ ok: true, content: 'BODY', filename: 'travel-risk-assessment-2026-11-10.md', mimeType: 'text/markdown;charset=utf-8' });
     const [url, init] = fetcher.mock.calls[0]!;
     expect(url).toBe('/api/travel-risk-assessment');
     expect(init.method).toBe('POST');
-    expect(init.forcePremium).toBe(true);
+    expect(init.forcePremium).toBeUndefined();
     expect(JSON.parse(init.body)).toMatchObject({ format: 'markdown', countries: [{ country_code: 'TH' }, { country_code: 'VN' }] });
   });
 

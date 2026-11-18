@@ -11,12 +11,6 @@ vi.mock('@/services/runtime', async () => ({
   )),
   isDesktopRuntime: () => state.desktop,
 }));
-vi.mock('@/services/panel-gating', async () => ({
-  ...(await vi.importActual<typeof import('@/services/panel-gating')>(
-    '@/services/panel-gating',
-  )),
-  hasPremiumAccess: () => state.premium,
-}));
 vi.mock('@/services/telegram-intel', async () => ({
   ...(await vi.importActual<typeof import('@/services/telegram-intel')>(
     '@/services/telegram-intel',
@@ -26,7 +20,6 @@ vi.mock('@/services/telegram-intel', async () => ({
 import { DataLoaderManager } from '@/app/data-loader';
 import {
   clearTelegramIntelCache,
-  getTelegramIntelGeneration,
 } from '@/services/telegram-intel';
 const feed = { source: 'telegram', enabled: true, items: [] };
 afterEach(() => {
@@ -50,19 +43,6 @@ function create() {
   };
 }
 describe('Telegram loader access', () => {
-  it('skips free desktop requests and allows intentional free web feed', async () => {
-    state.desktop = true;
-    state.fetch.mockResolvedValue(feed);
-    const { loader, panel } = create();
-    await loader.loadTelegramIntel();
-    expect(state.fetch).not.toHaveBeenCalled();
-    state.desktop = false;
-    await loader.loadTelegramIntel();
-    expect(panel.setData).toHaveBeenCalledWith(
-      feed,
-      getTelegramIntelGeneration(),
-    );
-  });
   it.each(['success', 'error'] as const)(
     'drops late %s across revoke and recovery',
     async (outcome) => {

@@ -12,9 +12,6 @@ import {
   DEFAULT_MAP_LAYERS,
   VARIANT_DEFAULTS,
   getEffectivePanelConfig,
-  FREE_MAX_PANELS,
-  countFreePanelCapUsage,
-  restoreProGatedPanels,
 } from '../src/config/panels.ts';
 import {
   LAYER_REGISTRY,
@@ -1488,95 +1485,28 @@ describe('mission preset shell integration', () => {
   });
 
   for (const action of ['applyMissionPreset', 'applyMissionPresetForWebMcp', 'resetMissionPreset'] as const) {
-    for (const access of [
-      { label: 'settled free', premium: false, tierResolved: true, fallback: false, capped: true },
-      { label: 'pending', premium: false, tierResolved: false, fallback: false, capped: false },
-      { label: 'fallback free', premium: false, tierResolved: false, fallback: true, capped: true },
-      { label: 'Pro', premium: true, tierResolved: true, fallback: false, capped: false },
-      { label: 'Pro during fallback', premium: true, tierResolved: false, fallback: true, capped: false },
-    ]) {
-      it(`${action} commits the correct panel limit for ${access.label}`, () => {
-        setMissionAccess(access);
-        let rendered: Record<string, PanelConfig> | undefined;
-        const { ctx, manager } = createMissionHarness({
-          freeTierFallback: access.fallback,
-          onApplyPanels: (settings) => {
-            rendered = structuredClone(settings);
-            assert.deepEqual(readJsonStorage('worldmonitor-panels'), settings,
-              'the same selection must be persisted before rendering');
-          },
-        });
-        // Retained MCP panels count toward the cap and can overflow a small mission.
-        for (let i = 0; i < FREE_MAX_PANELS; i++) {
-          ctx.panelSettings[`mcp-feed-${i}`] = { name: `Feed ${i}`, enabled: true, priority: 99 };
-        }
-        const candidate = action === 'resetMissionPreset'
-          ? resetMissionPresetState(ctx.panelSettings).panelSettings
-          : applyMissionPresetToState('crisis-desk', ctx.panelSettings).panelSettings;
-        assert.ok(countFreePanelCapUsage(candidate) > FREE_MAX_PANELS);
-        manager[action]('crisis-desk');
-        assert.deepEqual(rendered, ctx.panelSettings);
-        assert.equal(ctx.panelSettings.map?.enabled, true);
-        if (access.capped) {
-          assert.equal(countFreePanelCapUsage(ctx.panelSettings), FREE_MAX_PANELS);
-          assert.equal(ctx.panelSettings['cw-market-note']?.enabled, false);
-          assert.equal(ctx.panelSettings['cw-market-note']?.proGated, true);
-          assert.deepEqual(enabledPanelKeys(restoreProGatedPanels(ctx.panelSettings)), enabledPanelKeys(candidate),
-            'an upgrade can restore the panels disabled by this gate');
-        } else {
-          assert.deepEqual(ctx.panelSettings, candidate, 'Pro and pending layouts keep the exact mission selection');
-        }
+    it(`${action} commits the exact mission selection, with no panel cap`, () => {
+      let rendered: Record<string, PanelConfig> | undefined;
+      const { ctx, manager } = createMissionHarness({
+        onApplyPanels: (settings) => {
+          rendered = structuredClone(settings);
+          assert.deepEqual(readJsonStorage('worldmonitor-panels'), settings,
+            'the same selection must be persisted before rendering');
+        },
       });
-    }
-  }
-
-  it('caps the live reset even when storage writes fail', () => {
-    setMissionAccess({ premium: false, tierResolved: true });
-    const storage = new MemoryStorage();
-    storage.throwOnSet = true;
-    let renderedCount = -1;
-    const { ctx, manager } = createMissionHarness({
-      storage,
-      onApplyPanels: (settings) => { renderedCount = countFreePanelCapUsage(settings); },
+      // Retained MCP panels used to count toward the retired free cap.
+      for (let i = 0; i < 40; i++) {
+        ctx.panelSettings[`mcp-feed-${i}`] = { name: `Feed ${i}`, enabled: true, priority: 99 };
+      }
+      const candidate = action === 'resetMissionPreset'
+        ? resetMissionPresetState(ctx.panelSettings).panelSettings
+        : applyMissionPresetToState('crisis-desk', ctx.panelSettings).panelSettings;
+      manager[action]('crisis-desk');
+      assert.deepEqual(rendered, ctx.panelSettings);
+      assert.equal(ctx.panelSettings.map?.enabled, true);
+      assert.deepEqual(ctx.panelSettings, candidate);
     });
-    manager.resetMissionPreset();
-    assert.equal(countFreePanelCapUsage(ctx.panelSettings), FREE_MAX_PANELS);
-    assert.equal(renderedCount, FREE_MAX_PANELS);
-  });
-
-  it('sanitizes locked mission layers only for settled free users or the bounded fallback', () => {
-    setMissionAccess({ premium: false, tierResolved: false });
-    const pending = createMissionHarness();
-    pending.manager.applyMissionPreset('supply-chain-risk');
-    assert.equal(pending.ctx.mapLayers.resilienceScore, true,
-      'pending auth must preserve a possible Pro user\'s layer state');
-    assert.equal(readJsonStorage<MapLayers>('worldmonitor-layers').resilienceScore, true);
-    assert.equal(pending.ctx.map.calls.setLayers.at(-1)?.resilienceScore, true);
-
-    setMissionAccess({ premium: false, tierResolved: true });
-    const settled = createMissionHarness();
-    settled.manager.applyMissionPreset('supply-chain-risk');
-    assert.equal(settled.ctx.mapLayers.resilienceScore, false,
-      'settled free users must not persist the locked layer');
-    assert.equal(readJsonStorage<MapLayers>('worldmonitor-layers').resilienceScore, false);
-    assert.equal(settled.ctx.map.calls.setLayers.at(-1)?.resilienceScore, false);
-
-    setMissionAccess({ premium: false, tierResolved: false });
-    const fallback = createMissionHarness({ freeTierFallback: true });
-    fallback.manager.applyMissionPreset('supply-chain-risk');
-    assert.equal(fallback.ctx.mapLayers.resilienceScore, false,
-      'the bounded fallback must heal stale locked state when auth never settles');
-    assert.equal(readJsonStorage<MapLayers>('worldmonitor-layers').resilienceScore, false);
-    assert.equal(fallback.ctx.map.calls.setLayers.at(-1)?.resilienceScore, false);
-
-    setMissionAccess({ premium: true, tierResolved: false });
-    const premium = createMissionHarness({ freeTierFallback: true });
-    premium.manager.applyMissionPreset('supply-chain-risk');
-    assert.equal(premium.ctx.mapLayers.resilienceScore, true,
-      'fallback must not strip a premium user\'s layer');
-    assert.equal(readJsonStorage<MapLayers>('worldmonitor-layers').resilienceScore, true);
-    assert.equal(premium.ctx.map.calls.setLayers.at(-1)?.resilienceScore, true);
-  });
+  }
 
   it('filters AIS before persisting a mission preset when AIS is not configured', async () => {
     (globalThis as { __missionAisConfigured?: boolean }).__missionAisConfigured = false;
@@ -1680,15 +1610,6 @@ describe('mission presets that ask for countries (#10453)', () => {
     assert.equal(callbacks.focusGates, 0);
   });
 
-  it('applies Country Watcher without a prompt or a gate for a plan that cannot set a focus', async () => {
-    const { manager, callbacks } = createMissionHarness({ focusAllowed: false });
-    manager.applyMissionPreset('country-watcher');
-    await waitForMissionTimers();
-    assert.equal(loadStoredMissionPreset()?.id, 'country-watcher');
-    assert.equal(callbacks.focusPrompts, 0);
-    assert.equal(callbacks.focusGates, 0);
-  });
-
   it('applies Protective Travel and asks for the countries for an entitled plan', async () => {
     const { manager, callbacks } = createMissionHarness({ focusAllowed: true });
     manager.applyMissionPreset('protective-travel');
@@ -1698,30 +1619,12 @@ describe('mission presets that ask for countries (#10453)', () => {
     assert.equal(callbacks.focusGates, 0);
   });
 
-  it('does not apply Protective Travel for a plan without the entitlement, and shows the gate', async () => {
-    const { manager, callbacks, ctx } = createMissionHarness({ focusAllowed: false });
-    const before = structuredClone(ctx.panelSettings);
-    manager.applyMissionPreset('protective-travel');
-    await waitForMissionTimers();
-    assert.equal(loadStoredMissionPreset(), null);
-    assert.deepEqual(ctx.panelSettings, before, 'a refused preset must not touch the layout');
-    assert.equal(callbacks.applyPanelSettingsCalls, 0);
-    assert.equal(callbacks.focusPrompts, 0);
-    assert.equal(callbacks.focusGates, 1);
-  });
-
-  it('never opens a dialog when an agent applies a preset, and still refuses an unentitled travel preset', async () => {
+  it('never opens a dialog when an agent applies a preset', async () => {
     const entitled = createMissionHarness({ focusAllowed: true });
     entitled.manager.applyMissionPreset('protective-travel', 'agent');
     await waitForMissionTimers();
     assert.equal(loadStoredMissionPreset()?.id, 'protective-travel');
     assert.equal(entitled.callbacks.focusPrompts, 0);
-
-    const unentitled = createMissionHarness({ focusAllowed: false });
-    unentitled.manager.applyMissionPreset('protective-travel', 'agent');
-    await waitForMissionTimers();
-    assert.equal(loadStoredMissionPreset(), null);
-    assert.equal(unentitled.callbacks.focusGates, 1);
   });
 
   it('leaves presets that do not ask for countries alone', async () => {

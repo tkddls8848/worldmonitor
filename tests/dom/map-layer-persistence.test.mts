@@ -117,7 +117,6 @@ describe('open_search_result persists an executable layer result', () => {
         newsPanels: {},
       } as never,
       getVariant: () => 'full',
-      hasPremiumAccess: () => false,
       openCountryBriefByCode: vi.fn(() => true),
       enablePanel: vi.fn(() => true),
       trackSearchResultSelected: vi.fn(),
@@ -135,7 +134,6 @@ describe('open_search_result persists an executable layer result', () => {
       isDestroyed: () => false,
       refreshIndex: vi.fn(),
       getModal: () => modal as never,
-      hasPremiumAccess: () => false,
       fetchLiveFlight: vi.fn(async () => {}),
       getAuthContext: () => 'anonymous:settled:free',
       getVariant: () => 'full',
@@ -147,10 +145,8 @@ describe('open_search_result persists an executable layer result', () => {
         signal,
       ),
       subscribeAuth: () => () => {},
-      subscribeEntitlement: () => () => {},
       subscribeRuntimeConfig: () => () => {},
       subscribeWidgetAccess: () => () => {},
-      onPremiumAccessChanged: vi.fn(),
       cancelPendingSelection: () => dispatcher.cancelPendingProgrammaticSelection(),
     });
 

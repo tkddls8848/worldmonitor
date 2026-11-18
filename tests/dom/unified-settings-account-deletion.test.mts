@@ -9,19 +9,15 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import i18next from 'i18next';
 
-import { initTestI18n, restoreEnglish, useCatalogue } from './helpers/i18n.mts';
+import { initTestI18n } from './helpers/i18n.mts';
 import en from '@/locales/en.json';
 import enShell from '@/locales/en.shell.json';
-import fr from '@/locales/fr.json';
 import type { UnifiedSettingsConfig } from '@/components/UnifiedSettings';
 import type { AuthSession } from '@/services/auth-state';
-import type { SubscriptionInfo } from '@/services/billing';
 
 let session: AuthSession = signedIn('user_self');
 const authSubscribers: Array<(state: AuthSession) => void> = [];
-let mockSubscription: SubscriptionInfo | null = subscription();
 let entitled = true;
-let subscriptionLoaded = true;
 
 const deletionMocks = vi.hoisted(() => ({
   request: vi.fn(),
@@ -77,23 +73,7 @@ vi.mock('@/utils/toast', () => ({
   showToast: (...args: unknown[]) => toastMock(...args),
 }));
 
-vi.mock('@/services/entitlements', () => ({
-  getEntitlementState: () => (
-    entitled
-      ? { planKey: 'pro_monthly', validUntil: Date.now() + 1e9 }
-      : null
-  ),
-  getEntitlementVerificationStatus: () => 'ready',
-  hasFeature: () => entitled,
-  hasEmbedAccessForAccount: () => entitled,
-  isEntitled: () => entitled,
-  onEntitlementChange: () => () => {},
-  onEntitlementVerificationChange: () => () => {},
-}));
 
-vi.mock('@/services/panel-gating', () => ({
-  hasPremiumAccess: () => entitled,
-}));
 
 vi.mock('@/services/widget-store', () => ({
   isProUser: () => entitled,
@@ -129,44 +109,10 @@ vi.mock('@/config/variant', () => ({
   SITE_VARIANT: 'full',
 }));
 
-vi.mock('@/services/billing', () => ({
-  getSubscription: () => mockSubscription,
-  isSubscriptionLoaded: () => subscriptionLoaded,
-  onSubscriptionChange: () => () => {},
-  openBillingPortal: async () => ({ outcome: 'no-customer' as const }),
-  prereserveBillingPortalTab: () => null,
-  listBusinessSeats: async () => ({
-    businessSubscriptionId: null,
-    ownerDomain: null,
-    ownerIsCorporateDomain: false,
-    seats: [],
-  }),
-  inviteBusinessSeats: async () => ({ invited: [] }),
-  removeBusinessSeat: async () => ({ status: 'removed' as const }),
-}));
 
-vi.mock('@/services/billing-state', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/services/billing-state')>()),
-  deriveBillingUxState: () => (entitled ? 'active' : 'free'),
-  getReactivationHref: () => '/pro#pricing',
-}));
 
-vi.mock('@/services/api-keys', () => ({
-  createApiKey: vi.fn(),
-  listApiKeys: vi.fn(),
-  revokeApiKey: vi.fn(),
-}));
 
-vi.mock('@/services/api-plan-limit-notices', () => ({
-  acknowledgePlanLimitNotice: vi.fn(),
-  listCurrentPlanLimitNotices: vi.fn(),
-}));
 
-vi.mock('@/services/mcp-clients', () => ({
-  listMcpClients: vi.fn(),
-  fetchMcpQuota: vi.fn(),
-  revokeMcpClient: vi.fn(),
-}));
 
 const { UnifiedSettings } = await import('@/components/UnifiedSettings');
 
@@ -181,16 +127,6 @@ function signedIn(id: string): AuthSession {
 
 function anonymous(): AuthSession {
   return { user: null, isPending: false };
-}
-
-function subscription(): SubscriptionInfo {
-  return {
-    planKey: 'pro_monthly',
-    displayName: 'Pro',
-    status: 'active',
-    currentPeriodEnd: Date.now() + 30 * 86_400_000,
-    renewalVerificationState: null,
-  };
 }
 
 function config(): UnifiedSettingsConfig {
@@ -224,9 +160,7 @@ beforeEach(() => {
   vi.stubGlobal('localStorage', storage);
   authSubscribers.length = 0;
   session = signedIn('user_self');
-  mockSubscription = subscription();
   entitled = true;
-  subscriptionLoaded = true;
   deletionMocks.request.mockReset();
   deletionMocks.request.mockResolvedValue({ status: 'complete', userIdHash: 'abc' });
   signOutMock.mockReset();
@@ -238,57 +172,6 @@ afterEach(() => {
   settings?.destroy();
   vi.unstubAllGlobals();
   document.body.replaceChildren();
-});
-
-describe('UnifiedSettings account card', () => {
-  it('leads the home list with the plan and email, and opens the account page', () => {
-    settings.open();
-    const card = document.querySelector<HTMLButtonElement>('[data-settings-nav="account"]')!;
-    expect(card.querySelector('.us-avatar')?.textContent).toBe('UU');
-    expect(card.querySelector('[data-settings-summary]')?.textContent).toBe('Pro · user_self@example.com');
-    expect(document.querySelector('[data-account-deletion]')).toBeNull();
-
-    card.click();
-
-    const page = document.querySelector<HTMLElement>('[data-settings-page="account"]')!;
-    expect(page.hidden).toBe(false);
-    expect(page.querySelector('.billing-settings-intro h3')?.textContent).toBe('Plan & billing');
-    expect(page.querySelector('.billing-settings-intro p')?.textContent)
-      .toBe('See your current plan and manage payment details, invoices, or cancellation.');
-    expect(page.querySelector('[data-account-deletion]')).not.toBeNull();
-  });
-});
-
-describe('UnifiedSettings account page in French', () => {
-  beforeEach(async () => {
-    await useCatalogue('fr', fr);
-  });
-
-  afterEach(async () => {
-    await restoreEnglish();
-  });
-
-  it('renders the plan, billing, sign-out and deletion copy from the French catalogue', () => {
-    settings.open('account');
-    const page = document.querySelector<HTMLElement>('[data-settings-page="account"]')!;
-    const text = (selector: string) => page.querySelector(selector)?.textContent?.trim();
-    const renewsOn = new Date(mockSubscription!.currentPeriodEnd!).toLocaleDateString();
-
-    expect(fr.auth.planBilling).not.toBe('Plan & billing');
-    expect(text('.billing-settings-intro h3')).toBe(fr.auth.planBilling);
-    expect(text('.billing-settings-intro p')).toBe(fr.settings.account.intro);
-    expect(text('.upgrade-pro-status-line')).toBe(fr.settings.account.status.renews.replace('{{date}}', renewsOn));
-    expect(text('.manage-billing-btn')).toBe(fr.components.billingState.manageBilling);
-    expect(text('[data-settings-signout]')).toBe(fr.settings.signOut);
-    expect(text('.account-deletion-title')).toBe(fr.settings.account.deletion.heading);
-    expect(text('.account-deletion-desc')).toBe(fr.settings.account.deletion.desc);
-
-    page.querySelector<HTMLButtonElement>('[data-delete-account]')!.click();
-    const dialog = document.querySelector<HTMLElement>('.account-deletion-dialog')!;
-    expect(dialog.querySelector('.account-deletion-dialog-title')?.textContent).toBe(fr.settings.account.deletion.dialogTitle);
-    expect(dialog.querySelector('label')?.textContent).toBe(fr.settings.account.deletion.phraseLabel.replace('{{phrase}}', 'DELETE'));
-    expect(dialog.querySelector('[data-deletion-cancel]')?.textContent).toBe(fr.common.cancel);
-  });
 });
 
 describe('UnifiedSettings opened before the full English catalogue loads', () => {
@@ -320,27 +203,6 @@ describe('UnifiedSettings opened before the full English catalogue loads', () =>
     expect(page.querySelector('.billing-settings-intro p')?.textContent?.trim()).toBe(en.settings.account.intro);
   });
 
-  it('restores the dated plan status and an open deletion dialog once the catalogue arrives', async () => {
-    const { I18N_RESOURCES_LOADED_EVENT } = await import('@/services/i18n');
-    settings.open('account');
-    const page = document.querySelector<HTMLElement>('[data-settings-page="account"]')!;
-    page.querySelector<HTMLButtonElement>('[data-delete-account]')!.click();
-    const dialog = document.querySelector<HTMLElement>('.account-deletion-dialog')!;
-    const phrase = dialog.querySelector<HTMLInputElement>('[data-deletion-phrase]')!;
-    phrase.value = 'DEL';
-    expect(rawKeysIn(dialog).length).toBeGreaterThan(0);
-
-    i18next.addResourceBundle('en', 'translation', en as Record<string, unknown>, true, true);
-    window.dispatchEvent(new CustomEvent(I18N_RESOURCES_LOADED_EVENT, { detail: { language: 'en' } }));
-
-    const renewsOn = new Date(mockSubscription!.currentPeriodEnd!).toLocaleDateString();
-    expect(page.querySelector('.upgrade-pro-status-line')?.textContent?.trim())
-      .toBe(en.settings.account.status.renews.replace('{{date}}', renewsOn));
-    expect(rawKeysIn(dialog)).toEqual([]);
-    expect(dialog.querySelector('label')?.textContent).toBe(en.settings.account.deletion.phraseLabel.replace('{{phrase}}', 'DELETE'));
-    expect(document.querySelector('.account-deletion-dialog')).toBe(dialog);
-    expect(phrase.value).toBe('DEL');
-  });
 });
 
 describe('UnifiedSettings sign out', () => {
@@ -386,7 +248,6 @@ describe('UnifiedSettings account deletion', () => {
 
     session = anonymous();
     entitled = false;
-    mockSubscription = null;
     settings = new UnifiedSettings(config());
     settings.open();
     expect(document.querySelector('[data-settings-nav="account"]')).toBeNull();
@@ -395,8 +256,6 @@ describe('UnifiedSettings account deletion', () => {
   });
 
   it('shows Delete account for an invitee without Manage Billing', () => {
-    mockSubscription = null;
-    subscriptionLoaded = true;
     entitled = true;
     settings.open('account');
     expect(document.querySelector('.manage-billing-btn')).toBeNull();

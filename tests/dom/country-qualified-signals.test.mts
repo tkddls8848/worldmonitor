@@ -2,7 +2,6 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { qualifiedFixtureOutcomes } from '../../src/e2e/fixtures/qualified-country-signals';
 import { COUNTRY_SIGNAL_FAMILIES, projectQualifiedCountrySignals, projectQualifiedCountrySignalContext, unavailableCountrySignal } from '../../shared/country-signal-observations';
 import { initTestI18n } from './helpers/i18n.mts';
-vi.mock('@/services/premium-fetch', () => ({ premiumFetch: (...args: Parameters<typeof fetch>) => globalThis.fetch(...args) }));
 import { createHostCountryBriefSource, createWebsiteCountryBriefSource } from '@/services/country-brief-source';
 import { loadQualifiedCountrySignals } from '@/services/country-signal-projection';
 import { CountryDeepDivePanel } from '@/components/CountryDeepDivePanel';

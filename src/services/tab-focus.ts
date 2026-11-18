@@ -1,6 +1,5 @@
 import { normalizeScope, scopeEquals, type TabScope } from '../../shared/tab-scope';
 import { resolveScope } from '../../shared/tab-scope-resolve';
-import { hasTabFocusForAccount } from '@/services/entitlements';
 
 /**
  * Dashboard focus (#10453): the ACTIVE tab's scope, held here as the single
@@ -8,13 +7,6 @@ import { hasTabFocusForAccount } from '@/services/entitlements';
  * module; the tab object in `tab-store` is where it is persisted, and
  * `PanelLayoutManager` keeps the two in step on every tab switch, create,
  * delete and reload.
- *
- * Gate: setting a focus on your own tab is a CLIENT-SIDE presentation gate.
- * A personal tab's focus only narrows data the account's plan already
- * receives, so no data is protected by `canSetFocus()`; someone who edits it
- * out gains nothing they could not already see. The gate that does protect
- * something is server-side: `convex/teamDashboards.ts` refuses to publish a
- * focused team dashboard for a caller without the entitlement.
  */
 
 export type { TabScope };
@@ -70,20 +62,11 @@ export function subscribeScope(listener: ScopeListener): () => void {
 }
 
 /**
- * Whether this account may set a focus on its own tabs (Pro Business, API
- * Business, Enterprise). Client-side only; see the module comment.
- */
-export function canSetFocus(): boolean {
-  return hasTabFocusForAccount();
-}
-
-/**
  * A user's own change to the active tab's focus. Clearing (null) is always
- * allowed. Setting one is refused (false) without the entitlement, and for a
- * scope `normalizeScope` rejects. `entitled` defaults to the live gate; the
- * parameter exists so callers that already evaluated it, and tests, pass it.
+ * allowed. Setting one is refused (false) when `entitled` is false, and for a
+ * scope `normalizeScope` rejects.
  */
-export function setActiveScope(scope: TabScope | null, entitled: boolean = scope === null || canSetFocus()): boolean {
+export function setActiveScope(scope: TabScope | null, entitled = true): boolean {
   if (scope === null) {
     apply(null);
     return true;

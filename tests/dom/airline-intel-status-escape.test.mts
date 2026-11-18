@@ -2,13 +2,13 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Replace only the transport under the real aviation service, as
 // airline-intel-prices.test.mts does, so the panel mounts and settles.
-const transport = vi.hoisted(() => ({
-  premiumFetch: vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>(),
-}));
-vi.mock('@/services/premium-fetch', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/services/premium-fetch')>()),
-  premiumFetch: transport.premiumFetch,
-}));
+const transport = vi.hoisted(() => {
+  const t = {
+    premiumFetch: vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>(),
+  };
+  globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => t.premiumFetch(input, init)) as typeof fetch;
+  return t;
+});
 
 import type { FlightInstance } from '@/services/aviation';
 import { AirlineIntelPanel } from '@/components/AirlineIntelPanel';

@@ -1,12 +1,9 @@
 import { Panel } from './Panel';
 import { validateUrl } from '@/utils/sanitize';
 import { t } from '@/services/i18n';
-import { isDesktopRuntime } from '@/services/runtime';
-import { hasPremiumAccess, PanelGateReason } from '@/services/panel-gating';
 import { h, replaceChildren, safeHtml } from '@/utils/dom-utils';
 import {
   TELEGRAM_TOPICS,
-  clearTelegramIntelCache,
   getTelegramIntelGeneration,
   fetchTelegramChannelFeed,
   fetchTelegramChannelPreview,
@@ -101,7 +98,6 @@ export class TelegramIntelPanel extends Panel {
   private relayEnabled = false;
   private relayStarting = false;
   private disposed = false;
-  private onAccessGranted: (() => void) | null = null;
   private previewState: PreviewState = { channel: null, error: null, loading: false, username: '' };
   private previewTimer: ReturnType<typeof setTimeout> | null = null;
   private previewRequestId = 0;
@@ -571,49 +567,7 @@ export class TelegramIntelPanel extends Panel {
   }
 
   private canUseFeed(): boolean {
-    return !this.disposed && !this.isLocked && (!isDesktopRuntime() || hasPremiumAccess());
-  }
-
-  private resetFeed(): void {
-    this.relayEnabled = false;
-    this.watchlistRequestId++;
-    this.baseItems = [];
-    this.watchlistItems = [];
-    this.cancelPreviewResolve();
-    if (this.inputEl) {
-      this.inputEl.value = '';
-      this.inputEl.disabled = true;
-    }
-    if (this.previewEl) replaceChildren(this.previewEl);
-    if (this.watchlistPillsEl) replaceChildren(this.watchlistPillsEl);
-    this.setCount(0);
-    this.clearSensitiveContent();
-    clearTelegramIntelCache();
-  }
-
-  public override showLocked(features: string[] = []): void {
-    if (!this.isLocked) this.resetFeed();
-    super.showLocked(features);
-  }
-
-  public override showGatedCta(reason: PanelGateReason, onAction: () => void): void {
-    if (reason !== PanelGateReason.NONE && !this.isLocked) this.resetFeed();
-    super.showGatedCta(reason, onAction);
-  }
-
-  public setAccessGrantedHandler(handler: () => void): void {
-    this.onAccessGranted = handler;
-  }
-
-  public override unlockPanel(): void {
-    if (this.disposed || (isDesktopRuntime() && !hasPremiumAccess())) return;
-    const wasLocked = this.isLocked;
-    super.unlockPanel();
-    if (wasLocked) {
-      this.renderWatchlistPills();
-      this.showLoading(t('components.telegramIntel.loading'));
-      this.onAccessGranted?.();
-    }
+    return !this.disposed;
   }
 
   public async refresh(): Promise<void> {
@@ -622,7 +576,6 @@ export class TelegramIntelPanel extends Panel {
 
   public destroy(): void {
     this.disposed = true;
-    this.onAccessGranted = null;
     this.previewRequestId++;
     this.watchlistRequestId++;
     if (this.previewTimer) {

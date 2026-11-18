@@ -14,7 +14,6 @@
 
 import { getCanonicalApiOrigin, toApiUrl } from './runtime';
 import { PREMIUM_RPC_PATHS } from '@/shared/premium-paths';
-import { hasPremiumIntent } from './premium-intent';
 import type { WmSessionDeadReason } from './wm-session-copy';
 import { isPublicSharedRpcRequest } from '@/shared/public-rpc-cache';
 import { enqueueSentryCall } from '@/bootstrap/sentry-defer';
@@ -1162,25 +1161,6 @@ export function installWmSessionFetchInterceptor(): void {
       if (isCurrentSessionIdentity()) noteRouteSuccess(path);
       return resp;
     }
-
-    // #5674 — premiumFetch marked this as a premium call it could not
-    // authenticate, so the 401 is the expected auth denial, not a rejected
-    // cookie. Hand it back untouched: reminting and replaying would produce the
-    // identical 401 and then suppress every anonymous API call for 15 minutes.
-    //
-    // This is the SECOND of the two bypasses in this function, and the only one
-    // that can fire here — path-listed premium routes already returned far
-    // above, before any session work. The two are not interchangeable:
-    //
-    //   - PREMIUM_RPC_PATHS steps aside entirely (a dedicated auth-injection
-    //     layer owns those credentials; PR #3557 review).
-    //   - This one suppresses ONLY the recovery. The request must already have
-    //     minted a session and travelled with credentials, because
-    //     `forcePremium` also covers routes anonymous callers legitimately use
-    //     — the market-quote tape via proFreshRpcFetch — which 401 when no
-    //     cookie is sent at all. premiumFetch keeps that tape unmarked for the
-    //     same reason.
-    if (hasPremiumIntent(init)) return resp;
 
     // A slower initial request can report the old cookie after another caller
     // already recovered it. Replay with the newer cookie instead of clearing

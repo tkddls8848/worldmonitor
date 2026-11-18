@@ -49,10 +49,9 @@ test('loader refreshes retain one poll and translation subscriber and reject lat
     await import('/src/styles/main.css');
     const { initI18n } = await import('/src/services/i18n.ts');
     await initI18n();
-    const [{ DataLoaderManager }, { OrefSirensPanel }, { _setTestProviders }] = await Promise.all([
-      import('/src/app/data-loader.ts'), import('/src/components/OrefSirensPanel.ts'), import('/src/services/premium-fetch.ts'),
+    const [{ DataLoaderManager }, { OrefSirensPanel }] = await Promise.all([
+      import('/src/app/data-loader.ts'), import('/src/components/OrefSirensPanel.ts'),
     ]);
-    _setTestProviders({ getTesterKey: () => 'fixture', getClerkToken: async () => null });
     const panel = new OrefSirensPanel();
     const fixture: Window['__orefFixture'] = window.__orefFixture = {
       panelUpdates: 0, cacheUpdates: 0, fetches: 0,

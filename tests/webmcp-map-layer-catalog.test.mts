@@ -190,34 +190,6 @@ describe('listMapLayerCatalog', () => {
     assert.equal(sanctionsEntry?.reason, 'layer_not_executable');
   });
 
-  it('explains premium-gated layers with the same reason set_map_layers uses', () => {
-    const world = collectPages({ monitor: 'world', limit: MAX_MAP_LAYER_PAGE_SIZE });
-    assert.ok(world.ids.includes('resilienceScore'));
-    const cursor = world.ids[world.ids.indexOf('resilienceScore') - 1];
-    const entry = listMapLayerCatalog(snapshot({ hasPremium: false }), {
-      monitor: 'world',
-      cursor,
-      limit: 1,
-    }, BUDGETS);
-    assert.equal(entry.ok, true);
-    if (!entry.ok) return;
-    assert.equal(entry.layers[0]?.id, 'resilienceScore');
-    assert.equal(entry.layers[0]?.entitled, isLayerEntitled('resilienceScore', false));
-    assert.equal(entry.layers[0]?.available, false);
-    assert.equal(entry.layers[0]?.reason, 'layer_not_entitled');
-    assert.equal(entry.layers[0]?.enabled, false);
-
-    const premium = listMapLayerCatalog(snapshot({ hasPremium: true }), {
-      monitor: 'world',
-      cursor,
-      limit: 1,
-    }, BUDGETS);
-    assert.equal(premium.ok, true);
-    if (!premium.ok) return;
-    assert.equal(premium.layers[0]?.available, true);
-    assert.equal(premium.layers[0]?.reason, undefined);
-  });
-
   it('explains resilienceScore as layer_not_executable when deck.gl is inactive', () => {
     const world = collectPages({ monitor: 'world', limit: MAX_MAP_LAYER_PAGE_SIZE });
     assert.ok(world.ids.includes('resilienceScore'));
@@ -256,7 +228,6 @@ describe('listMapLayerCatalog', () => {
 
     const available = collectPages({ state: 'available', limit: MAX_MAP_LAYER_PAGE_SIZE });
     assert.ok(available.ids.includes('conflicts'));
-    assert.equal(available.ids.includes('resilienceScore'), false);
     assert.equal(available.ids.includes('startupHubs'), false);
   });
 
@@ -271,22 +242,6 @@ describe('listMapLayerCatalog', () => {
     assert.equal(conflicts.enabled, true);
     assert.equal(conflicts.available, false);
     assert.equal(conflicts.reason, 'target_cancellation_unsupported');
-
-    const world = collectPages({ monitor: 'world', limit: MAX_MAP_LAYER_PAGE_SIZE });
-    const cursor = world.ids[world.ids.indexOf('resilienceScore') - 1];
-    const gated = listMapLayerCatalog(snapshot({
-      targetCancellationSupported: false,
-      hasPremium: false,
-    }), {
-      monitor: 'world',
-      cursor,
-      limit: 1,
-    }, BUDGETS);
-    assert.equal(gated.ok, true);
-    if (!gated.ok) return;
-    assert.equal(gated.layers[0]?.id, 'resilienceScore');
-    assert.equal(gated.layers[0]?.available, false);
-    assert.equal(gated.layers[0]?.reason, 'layer_not_entitled');
 
     const available = listMapLayerCatalog(snapshot({ targetCancellationSupported: false }), {
       state: 'available',

@@ -2883,15 +2883,10 @@
       "host": "customer.dodopayments.com",
       "provider": "customer.dodopayments.com",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: first-party, control-plane, UI, or rendering transport",
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "src/services/billing.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "d24qbtp4vooyzi.cloudfront.net",
@@ -5032,9 +5027,6 @@
         },
         {
           "path": "src/services/analytics.ts"
-        },
-        {
-          "path": "src/services/github-star-prompt-state.ts"
         },
         {
           "path": "src/services/preferences-content.ts"
@@ -11328,9 +11320,6 @@
           "path": "src/config/web-origin.ts"
         },
         {
-          "path": "src/services/premium-fetch.ts"
-        },
-        {
           "path": "src/services/runtime.ts"
         }
       ]
@@ -15530,9 +15519,6 @@
         },
         {
           "path": "src/components/CountryDeepDivePanel.ts"
-        },
-        {
-          "path": "src/components/RuntimeConfigPanel.ts"
         },
         {
           "path": "src/config/dashboard-reference-links.ts"

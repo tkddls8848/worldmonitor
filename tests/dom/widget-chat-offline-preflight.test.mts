@@ -4,7 +4,6 @@ import { initTestI18n } from './helpers/i18n.mts';
 vi.mock('@/services/clerk', () => ({ getClerkToken: vi.fn() }));
 vi.mock('@/services/auth-state', () => ({ getAuthState: vi.fn() }));
 vi.mock('@/services/analytics', () => ({ track: vi.fn() }));
-vi.mock('@/services/entitlement-desync-telemetry', () => ({ reportEntitlementDesync: vi.fn() }));
 
 import { getClerkToken } from '@/services/clerk';
 import { getAuthState } from '@/services/auth-state';
@@ -223,14 +222,6 @@ describe('Widget chat preflight without a network', () => {
     }
   });
 
-  it('keeps the upgrade copy for a real entitlement 403', async () => {
-    setOnline(true);
-    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ error: 'Pro subscription required' }), { status: 403 })));
-
-    open();
-
-    await vi.waitFor(() => expect(readiness()).toBe(t('widgets.preflightProSubscriptionRequired')));
-  });
 });
 
 it('does not report ready when the health body stalls past the deadline', async () => {

@@ -24,17 +24,7 @@ vi.mock('@/services/auth-state', () => ({
   },
 }));
 
-vi.mock('@/services/entitlements', () => ({
-  onEntitlementChange: (listener: () => void) => {
-    entitlementMocks.entitlementListeners.add(listener);
-    return () => entitlementMocks.entitlementListeners.delete(listener);
-  },
-}));
 
-vi.mock('@/services/panel-gating', async (importOriginal) => ({
-  ...await importOriginal<typeof import('@/services/panel-gating')>(),
-  hasPremiumAccess: () => gateMocks.isPro,
-}));
 
 // The panel's English copy, interpolated, so the label test reads what a viewer reads.
 // `catalogLoaded` false mimics first paint: only the eager en.shell.json subset resolves.
@@ -110,14 +100,6 @@ beforeEach(() => {
   entitlementMocks.authListeners.clear();
   entitlementMocks.entitlementListeners.clear();
 });
-
-function emitAuthChange(): void {
-  for (const listener of [...entitlementMocks.authListeners]) listener();
-}
-
-function emitEntitlementChange(): void {
-  for (const listener of [...entitlementMocks.entitlementListeners]) listener();
-}
 
 describe('HormuzPanel progressive vulnerability loading', () => {
   it('renders the primary tracker before optional dependencies settle', async () => {
@@ -208,100 +190,7 @@ describe('HormuzPanel progressive vulnerability loading', () => {
     expect(renderPanel).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps the tracker but locks the dependency block for a free viewer (#6449)', async () => {
-    gateMocks.isPro = false;
-    serviceMocks.fetchTracker.mockResolvedValue(tracker);
-    serviceMocks.fetchDependencies.mockResolvedValue(dependencyResponse);
-
-    const panel = new HormuzPanel();
-    document.body.append(panel.getElement());
-    await panel.fetchData();
-
-    await vi.waitFor(() => {
-      expect(panel.getElement().textContent).toContain('Crude oil transit');
-    });
-
-    expect(serviceMocks.fetchDependencies).not.toHaveBeenCalled();
-
-    const dependencies = panel.getElement().querySelector('.hz-dependencies');
-    expect(dependencies?.getAttribute('data-state')).toBe('pro-locked');
-    expect(dependencies?.textContent).not.toContain('United Arab Emirates');
-  });
-
-  it('dedupes Clerk and Convex unlock events into one dependency fetch', async () => {
-    gateMocks.isPro = false;
-    serviceMocks.fetchTracker.mockResolvedValue(tracker);
-    serviceMocks.fetchDependencies.mockResolvedValue(dependencyResponse);
-
-    const panel = new HormuzPanel();
-    document.body.append(panel.getElement());
-    await panel.fetchData();
-    expect(serviceMocks.fetchDependencies).not.toHaveBeenCalled();
-
-    gateMocks.isPro = true;
-    emitAuthChange();
-    emitEntitlementChange();
-
-    await vi.waitFor(() => {
-      expect(serviceMocks.fetchDependencies).toHaveBeenCalledTimes(1);
-      expect(panel.getElement().textContent).toContain('United Arab Emirates');
-    });
-  });
-
-  it('clears Pro dependencies immediately on downgrade while retaining the tracker', async () => {
-    let resolveDependencies!: (value: typeof dependencyResponse) => void;
-    const pendingDependencies = new Promise<typeof dependencyResponse>((resolve) => {
-      resolveDependencies = resolve;
-    });
-    serviceMocks.fetchTracker.mockResolvedValue(tracker);
-    serviceMocks.fetchDependencies.mockReturnValue(pendingDependencies);
-
-    const panel = new HormuzPanel();
-    document.body.append(panel.getElement());
-    await panel.fetchData();
-    await vi.waitFor(() => expect(panel.getElement().textContent).toContain('Crude oil transit'));
-    const requestOptions = serviceMocks.fetchDependencies.mock.calls[0]?.[2] as { signal?: AbortSignal };
-
-    gateMocks.isPro = false;
-    emitEntitlementChange();
-
-    expect(requestOptions.signal?.aborted).toBe(true);
-    expect(panel.getElement().textContent).toContain('Crude oil transit');
-    await vi.waitFor(() => {
-      expect(panel.getElement().querySelector('.hz-dependencies')?.getAttribute('data-state')).toBe('pro-locked');
-    });
-    resolveDependencies(dependencyResponse);
-    await Promise.resolve();
-    expect(panel.getElement().textContent).not.toContain('United Arab Emirates');
-  });
-
-  it('ignores a stale dependency completion after a downgrade and re-upgrade', async () => {
-    let resolveStale!: (value: typeof dependencyResponse) => void;
-    const staleDependencies = new Promise<typeof dependencyResponse>((resolve) => {
-      resolveStale = resolve;
-    });
-    serviceMocks.fetchTracker.mockResolvedValue(tracker);
-    serviceMocks.fetchDependencies
-      .mockReturnValueOnce(staleDependencies)
-      .mockResolvedValueOnce(dependencyResponse);
-
-    const panel = new HormuzPanel();
-    document.body.append(panel.getElement());
-    await panel.fetchData();
-
-    gateMocks.isPro = false;
-    emitAuthChange();
-    gateMocks.isPro = true;
-    emitEntitlementChange();
-    await vi.waitFor(() => expect(serviceMocks.fetchDependencies).toHaveBeenCalledTimes(2));
-
-    resolveStale(dependencyResponse);
-    await Promise.resolve();
-    expect(panel.getElement().textContent).not.toContain('United Arab Emirates');
-    await vi.waitFor(() => expect(panel.getElement().textContent).toContain('United Arab Emirates'));
-  });
-
-  it('unsubscribes auth listeners and aborts dependencies on destroy', async () => {
+  it('aborts dependencies on destroy', async () => {
     let resolveDependencies!: (value: typeof dependencyResponse) => void;
     const pendingDependencies = new Promise<typeof dependencyResponse>((resolve) => {
       resolveDependencies = resolve;
@@ -313,13 +202,9 @@ describe('HormuzPanel progressive vulnerability loading', () => {
     document.body.append(panel.getElement());
     await panel.fetchData();
     const requestOptions = serviceMocks.fetchDependencies.mock.calls[0]?.[2] as { signal?: AbortSignal };
-    expect(entitlementMocks.authListeners.size).toBe(1);
-    expect(entitlementMocks.entitlementListeners.size).toBe(1);
 
     panel.destroy();
 
-    expect(entitlementMocks.authListeners.size).toBe(0);
-    expect(entitlementMocks.entitlementListeners.size).toBe(0);
     expect(requestOptions.signal?.aborted).toBe(true);
     resolveDependencies(dependencyResponse);
     await Promise.resolve();
@@ -371,7 +256,7 @@ describe('HormuzPanel dates from a tracker payload stored before the ISO seeder 
   }
 
   it('labels each chart with the latest day as MM-DD and draws bars oldest first', async () => {
-    gateMocks.isPro = false;
+    serviceMocks.fetchDependencies.mockResolvedValue(null);
     serviceMocks.fetchTracker.mockResolvedValue(await serveFromRedis(storedPayload));
 
     const panel = new HormuzPanel();

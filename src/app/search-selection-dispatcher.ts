@@ -32,7 +32,6 @@ import { STOCK_EXCHANGES, FINANCIAL_CENTERS, CENTRAL_BANKS, COMMODITY_HUBS } fro
 export interface SearchSelectionDispatcherBindings {
   ctx: AppContext;
   getVariant(): string;
-  hasPremiumAccess(): boolean;
   openCountryBriefByCode(
     code: string,
     country: string,
@@ -502,7 +501,7 @@ export class SearchSelectionDispatcher {
           : (ctx.map?.isDeckGLActive?.() ? 'deck' : 'svg');
         const executable = (key: keyof MapLayers): boolean => allowed.has(key)
           && isLayerExecutable(key, renderer)
-          && isLayerEntitled(key, this.bindings.hasPremiumAccess());
+          && isLayerEntitled(key, true);
         if (action === 'all') {
           for (const key of Object.keys(ctx.mapLayers)) {
             ctx.mapLayers[key as keyof MapLayers] = executable(key as keyof MapLayers);
@@ -528,7 +527,7 @@ export class SearchSelectionDispatcher {
           : (ctx.map?.isDeckGLActive?.() ? 'deck' : 'svg');
         const deckGL = ctx.map?.isDeckGLActive?.() ?? false;
         const current = ctx.mapLayers[layer];
-        if (!isLayerCommandAllowed(layer, current, renderer, this.bindings.hasPremiumAccess())) {
+        if (!isLayerCommandAllowed(layer, current, renderer, true)) {
           return false;
         }
         let next = !current;
@@ -592,7 +591,7 @@ export class SearchSelectionDispatcher {
             ? 'globe'
             : (ctx.map?.isDeckGLActive?.() ? 'deck' : 'svg');
           const deckGL = ctx.map?.isDeckGLActive?.() ?? false;
-          if (!isLayerCommandAllowed(layer, current, renderer, this.bindings.hasPremiumAccess())) {
+          if (!isLayerCommandAllowed(layer, current, renderer, true)) {
             return false;
           }
           let next = !current;

@@ -12,13 +12,11 @@ export { bucketPanelKeyForAnalytics } from '@/utils/analytics-panel-key';
 import { scheduleAfterFirstPaint } from '@/utils/after-paint';
 import { safeStorageGet, safeStorageRemove, safeStorageSet } from '@/utils/safe-storage';
 import { subscribeAuthState, type AuthSession } from './auth-state';
-import { onSubscriptionChange, type SubscriptionInfo } from './billing';
 import { getClerkUserCreatedAt } from './clerk';
 import { DODO_PRODUCT_IDS } from '@/config/product-ids.generated';
 import type { McpAgentClientId } from '@/config/mcp-agent-clients';
 import { SITE_VARIANT, isSiteVariant } from '@/config/variant';
 import { isAgentPanelViewSuppressed } from './agent-analytics-privacy';
-import type { ActivationEventName, ActivationStepId } from './pro-activation-state';
 import {
   collectorFailureFromError,
   configureCollectorTransport,
@@ -44,10 +42,6 @@ import {
   type CheckoutContext,
   type CheckoutSurface,
 } from '../../shared/checkout-attribution';
-import {
-  loadCheckoutReturnState,
-  settleMissionReturnDelivery,
-} from './checkout-return-state';
 
 export type {
   CheckoutAttribution,
@@ -429,7 +423,6 @@ function handleCollectorOutcome(outcome: CollectorOutcome): void {
 
   if (outcome.eventName === 'checkout-success') clearPendingCheckoutSuccessMarker();
   if (outcome.eventName === 'dashboard-first-interaction') settleDashboardFirstInteraction();
-  if (outcome.eventName === 'mission-returned-after-purchase') settleMissionReturnDelivery();
   if (outcome.eventName === 'checkout-start' && isReplayedCheckoutStart(outcome.requestBody)) {
     noteProFunnelReplayDelivered();
   }
@@ -617,7 +610,6 @@ function scheduleTrackRetry(call: Extract<QueuedUmamiCall, { kind: 'track' }>, e
 function clearUnobservableCriticalMarker(call: Extract<QueuedUmamiCall, { kind: 'track' }>): void {
   if (call.event === 'dashboard-first-interaction') settleDashboardFirstInteraction();
   if (call.event === 'checkout-success') clearPendingCheckoutSuccessMarker();
-  if (call.event === 'mission-returned-after-purchase') settleMissionReturnDelivery();
   if (call.event === 'checkout-start' && call.data?.replayed === true) {
     noteProFunnelReplayDelivered();
   }
@@ -769,7 +761,7 @@ export function initAnalytics(): void {
 export function identifyUser(
   userId: string,
   plan: string,
-  subStatus?: SubscriptionInfo['status'] | null,
+  subStatus?: string | null,
   planKey?: string | null,
 ): void {
   const data = {
@@ -792,18 +784,13 @@ export function clearIdentity(): void {
 }
 
 let _unsubAuth: (() => void) | null = null;
-let _unsubBilling: (() => void) | null = null;
-
-// Cached latest values so either subscription firing can re-identify with full data
 let _lastAuth: AuthSession | null = null;
-let _lastSub: SubscriptionInfo | null = null;
 
 function _syncIdentity(): void {
   const user = _lastAuth?.user;
   if (user) {
-    identifyUser(user.id, user.role, _lastSub?.status ?? null, _lastSub?.planKey ?? null);
+    identifyUser(user.id, user.role);
   } else {
-    _lastSub = null;
     clearIdentity();
   }
 }
@@ -820,7 +807,6 @@ export function initAuthAnalytics(): void {
     const prevUserId = _lastAuth?.user?.id ?? null;
     const nextUserId = state.user?.id ?? null;
     if (prevUserId !== nextUserId) {
-      _lastSub = null;
       // Detect a genuine sign-UP (not a sign-in). Null→non-null id transition
       // plus a createdAt within FRESH_SIGNUP_WINDOW_MS of now means Clerk
       // just created this account. Firing trackSignUp on the button click
@@ -849,20 +835,13 @@ export function initAuthAnalytics(): void {
     _syncIdentity();
   });
 
-  _unsubBilling = onSubscriptionChange((sub) => {
-    _lastSub = sub;
-    _syncIdentity();
-  });
 }
 
-/** Tear down auth + billing listeners. Symmetric with initAuthAnalytics(). */
+/** Tear down auth listeners. Symmetric with initAuthAnalytics(). */
 export function destroyAuthAnalytics(): void {
   _unsubAuth?.();
-  _unsubBilling?.();
   _unsubAuth = null;
-  _unsubBilling = null;
   _lastAuth = null;
-  _lastSub = null;
   clearIdentity();
 }
 
@@ -1510,50 +1489,6 @@ export function trackAgentConnect(client: McpAgentClientId, method: 'link' | 'co
 }
 
 // ---------------------------------------------------------------------------
-// Pro Activation Onboarding funnel (#4771)
-// ---------------------------------------------------------------------------
-
-/** The activation funnel events — the leaf's ACTIVATION_EVENTS is the naming source. */
-export type ProActivationEvent = ActivationEventName;
-
-/**
- * The ONLY fields allowed on an activation event payload. Deliberately narrow:
- * the plan tier, the step id (step events), and the aggregate exit counts
- * (exit event). NEVER the subscription id or any billing identifier — cohort
- * joins key on the userId Umami already receives via identifyUser(). Mirrors
- * the closed-vocabulary minimization of bucketProductIdForAnalytics above.
- */
-export interface ProActivationEventFields {
-  planKey?: string | null;
-  step?: ActivationStepId;
-  completion?: 'complete' | 'partial' | 'none';
-  verified?: number;
-  pending?: number;
-  failed?: number;
-  total?: number;
-}
-
-/**
- * Track a Pro-activation funnel event with a minimized payload. Every field is
- * whitelisted here, so a caller cannot widen the payload into billing identity:
- * only planKey / step / the aggregate exit counts ever reach Umami.
- */
-export function trackProActivation(
-  event: ProActivationEvent,
-  fields: ProActivationEventFields = {},
-): void {
-  const data: Record<string, unknown> = {};
-  if (fields.planKey != null) data.planKey = fields.planKey;
-  if (fields.step != null) data.step = fields.step;
-  if (fields.completion != null) data.completion = fields.completion;
-  if (fields.verified != null) data.verified = fields.verified;
-  if (fields.pending != null) data.pending = fields.pending;
-  if (fields.failed != null) data.failed = fields.failed;
-  if (fields.total != null) data.total = fields.total;
-  track(event, data);
-}
-
-// ---------------------------------------------------------------------------
 // Generic (kept as no-ops — too noisy / not useful in Umami)
 // ---------------------------------------------------------------------------
 
@@ -1811,18 +1746,6 @@ export function trackMissionReturnedAfterPurchase(
     // one — day-30 completion reads split on this.
     ...(surface ? { surface } : {}),
   });
-}
-
-export function replayPendingMissionReturn(): void {
-  const state = loadCheckoutReturnState();
-  if (!state || state.delivery.missionReturn !== 'pending') return;
-  const { origin } = state.context;
-  if (!origin.missionId) return;
-  trackMissionReturnedAfterPurchase(
-    origin.missionId,
-    origin.kind === 'mission-preview' ? origin.panelKey : 'unknown',
-    state.context.eventSurface,
-  );
 }
 
 export function trackApiKeysSnapshot(): void {}

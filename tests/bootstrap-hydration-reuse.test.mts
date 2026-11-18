@@ -283,7 +283,10 @@ before(async () => {
             constructor() {}
             async listRadiationObservations() { return globalThis.__wmCapturedLiveRadiation; }
           }
-          export class SanctionsServiceClient { constructor() {} }
+          export class SanctionsServiceClient {
+            constructor() {}
+            async listSanctionsPressure() { return globalThis.__wmCapturedLiveSanctions; }
+          }
           export class ThermalServiceClient { constructor() {} }
         `,
         loader: 'js',
@@ -726,7 +729,7 @@ describe('bootstrap hydration reuse (#7048)', () => {
       semaCount: 0, semaError: 'SEMA HTTP 503', newEntryCount: 0, vesselCount: 0,
       aircraftCount: 0, fetchedAt: 1, datasetDate: 1,
     };
-    const requests = bootstrapStub({ sanctionsPressure: partial });
+    const requests = bootstrapStub({ sanctionsPressure: partial }, () => partial);
     await harness.fetchBootstrapData();
 
     const hydrated = await harness.fetchSanctionsPressure();
@@ -737,15 +740,13 @@ describe('bootstrap hydration reuse (#7048)', () => {
     assert.equal(firstRetry.semaError, 'SEMA HTTP 503');
     assert.equal(secondRetry.semaError, 'SEMA HTTP 503');
     assert.equal(
-      requests.filter((url) => url.includes('keys=sanctionsPressure')).length,
+      requests.filter((url) => url.includes('list-sanctions-pressure')).length,
       2,
       'partial SEMA data must not suppress later recovery attempts',
     );
   });
 
-  it('sanctionsPressure: accepted hydration reaches callers and warms the anonymous path', async () => {
-    // hasPremiumAccess() is stubbed false (see the build plugin), so this pins
-    // the anonymous branch used by ordinary visitors.
+  it('sanctionsPressure: accepted hydration reaches callers and warms the recurring path', async () => {
     const requests = bootstrapStub({
       sanctionsPressure: { entries: [{ id: 'sdn-1', name: 'X', entityType: 'ENTITY', countryCodes: [], countryNames: [], programs: [], sourceLists: [], effectiveAt: 0, isNew: false, note: '' }], countries: [], programs: [], totalCount: 1, sdnCount: 1, consolidatedCount: 0, semaCount: 0, newEntryCount: 0, vesselCount: 0, aircraftCount: 0, fetchedAt: 1, datasetDate: 1 },
     });
@@ -760,7 +761,7 @@ describe('bootstrap hydration reuse (#7048)', () => {
     assert.equal(
       requests.filter((url) => url.includes('keys=sanctionsPressure')).length,
       0,
-      'the anonymous per-key bootstrap path must not refetch accepted tier data',
+      'the per-key bootstrap path must not refetch accepted tier data',
     );
   });
 
@@ -1162,6 +1163,7 @@ describe('bootstrap hydration reuse (#7048)', () => {
       __wmBreakerRunBackground: string[];
       __wmBreakerBackgroundPromises: Promise<unknown>[];
       __wmCapturedLiveRadiation: unknown;
+      __wmCapturedLiveSanctions: unknown;
     };
     scopedGlobal.__wmBreakerReplay = {
       'Radiation Watch': staleRadiation,
@@ -1170,9 +1172,7 @@ describe('bootstrap hydration reuse (#7048)', () => {
     scopedGlobal.__wmBreakerRunBackground = ['Radiation Watch', 'Sanctions Pressure'];
     scopedGlobal.__wmBreakerBackgroundPromises = [];
     scopedGlobal.__wmCapturedLiveRadiation = liveRadiation;
-    globalThis.fetch = (async () => new Response(JSON.stringify({
-      data: { sanctionsPressure: liveSanctions },
-    }), { status: 200, headers: { 'content-type': 'application/json' } })) as typeof fetch;
+    scopedGlobal.__wmCapturedLiveSanctions = liveSanctions;
 
     try {
       await mirrorHarness.fetchRadiationWatch();
@@ -1187,7 +1187,7 @@ describe('bootstrap hydration reuse (#7048)', () => {
       delete (scopedGlobal as Partial<typeof scopedGlobal>).__wmBreakerRunBackground;
       delete (scopedGlobal as Partial<typeof scopedGlobal>).__wmBreakerBackgroundPromises;
       delete (scopedGlobal as Partial<typeof scopedGlobal>).__wmCapturedLiveRadiation;
-      globalThis.fetch = originalFetch;
+      delete (scopedGlobal as Partial<typeof scopedGlobal>).__wmCapturedLiveSanctions;
     }
   });
 

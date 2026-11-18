@@ -2,11 +2,6 @@ import assert from 'node:assert/strict';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 
 import type { PanelConfig } from '../src/types/index.ts';
-import {
-  countFreePanelCapUsage,
-  enforceFreePanelLimit,
-  FREE_MAX_PANELS,
-} from '../src/config/panels.ts';
 import { resetMissionPresetState } from '../src/services/mission-presets.ts';
 import {
   buildNewTabPanels,
@@ -113,37 +108,6 @@ describe('saveNewTabPanels then buildNewTabPanels', () => {
     assert.equal('proGated' in built.panelSettings.insights!, false);
     assert.equal(built.panelSettings['cw-pro']!.enabled, false);
     assert.equal(built.panelSettings['live-news']!.enabled, true);
-  });
-
-  it('leaves the free-tier clamp to creation when the saved panels exceed the cap', () => {
-    const live = liveSettings({ 'cw-pro': widget('Pro widget', true) });
-    const saved = clone(defaultTab(live));
-    for (const key of Object.keys(saved.panelSettings)) saved.panelSettings[key]!.enabled = true;
-    saved.panelSettings['cw-pro'] = widget('Pro widget', true);
-    saveNewTabPanels(saved);
-
-    const built = buildNewTabPanels(live);
-    assert.ok(countFreePanelCapUsage(built.panelSettings) > FREE_MAX_PANELS);
-
-    const free = enforceFreePanelLimit(built.panelSettings, false);
-    assert.ok(countFreePanelCapUsage(free) <= FREE_MAX_PANELS);
-    assert.equal(free['cw-pro']!.enabled, false);
-
-    const pro = enforceFreePanelLimit(built.panelSettings, true);
-    assert.equal(pro['cw-pro']!.enabled, true);
-    assert.equal(countFreePanelCapUsage(pro), countFreePanelCapUsage(built.panelSettings));
-  });
-
-  it('never writes a clamp back into the saved list', () => {
-    const live = liveSettings();
-    const saved = clone(defaultTab(live));
-    for (const key of Object.keys(saved.panelSettings)) saved.panelSettings[key]!.enabled = true;
-    saveNewTabPanels(saved);
-    const before = storage.getItem(NEW_TAB_PANELS_KEY);
-
-    enforceFreePanelLimit(buildNewTabPanels(live).panelSettings, false);
-
-    assert.equal(storage.getItem(NEW_TAB_PANELS_KEY), before);
   });
 
   it('follows the live widget set: saved widgets keep their choice, new ones their live config, deleted ones stay gone', () => {

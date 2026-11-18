@@ -6,8 +6,6 @@ import { IS_EMBEDDED_PREVIEW } from '@/utils/embedded-preview';
 import type { createHostCountryFetch } from './country-brief-host-transport';
 import { IntelligenceServiceClient, MarketServiceClient, MilitaryServiceClient, MaritimeServiceClient, EconomicServiceClient, TradeServiceClient, SupplyChainServiceClient, ResilienceServiceClient, ScorecardServiceClient, PredictionServiceClient } from '@/services/generated-rpc-clients';
 import { getRpcBaseUrl } from '@/services/rpc-client';
-import { premiumFetch } from '@/services/premium-fetch';
-import { hasPremiumAccess } from '@/services/panel-gating';
 import { fetchMultiSectorCostShock, fetchMultiSectorExposure, fetchBypassOptions, fetchChokepointStatus, HS2_SHORT_LABELS, SEEDED_HS2_CODES } from '@/services/supply-chain';
 
 function createCountryBriefSource(fetcher: typeof fetch & { clear?: () => void; settleMandatoryReads?: (signal?: AbortSignal) => Promise<void>; selectAdmission?: (token: string) => void }, mode: 'website' | 'host') {
@@ -19,7 +17,7 @@ function createCountryBriefSource(fetcher: typeof fetch & { clear?: () => void; 
   const scorecard = new ScorecardServiceClient(base, options);
   return {
     mode,
-    canRequestPremium: () => mode === 'host' || (!IS_EMBEDDED_PREVIEW && hasPremiumAccess()),
+    canRequestPremium: () => mode === 'host' || !IS_EMBEDDED_PREVIEW,
     fetch: fetcher,
     settleMandatoryReads: fetcher.settleMandatoryReads ?? (async () => {}),
     countrySignals: async (code: string, family: CountrySignalFamily, signal: AbortSignal) => {
@@ -105,10 +103,10 @@ function createCountryBriefSource(fetcher: typeof fetch & { clear?: () => void; 
   };
 }
 export type CountryBriefSource = ReturnType<typeof createCountryBriefSource>;
-export const createWebsiteCountryBriefSource = () => createCountryBriefSource(premiumFetch, 'website');
+export const createWebsiteCountryBriefSource = () => createCountryBriefSource((...args: Parameters<typeof fetch>) => globalThis.fetch(...args), 'website');
 async function fetchWebsiteCountrySignals(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const url = new URL(input instanceof Request ? input.url : String(input), window.location.origin);
-  if (url.pathname !== COUNTRY_SIGNAL_PATH) return premiumFetch(input, init);
+  if (url.pathname !== COUNTRY_SIGNAL_PATH) return fetch(input, init);
   const signal = combineAbortSignals([init?.signal ?? (input instanceof Request ? input.signal : new AbortController().signal), AbortSignal.timeout(15_000)]);
   const withinDeadline = <T>(work: Promise<T>) => new Promise<T>((resolve, reject) => {
     signal.throwIfAborted();
@@ -116,7 +114,7 @@ async function fetchWebsiteCountrySignals(input: RequestInfo | URL, init?: Reque
     signal.addEventListener('abort', abort, { once: true });
     work.then(resolve, reject).finally(() => signal.removeEventListener('abort', abort));
   });
-  const pending = premiumFetch(input, { ...init, signal });
+  const pending = fetch(input, { ...init, signal });
   void pending.then(response => { if (signal.aborted) void response.body?.cancel().catch(() => {}); }, () => {});
   const response = await withinDeadline(pending);
   if (response.status === 401 || response.status === 403) {

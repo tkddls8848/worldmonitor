@@ -7,10 +7,6 @@ const procurementMocks = vi.hoisted(() => ({
   fetchGlobalTenders: vi.fn(),
 }));
 
-vi.mock('@/services/panel-gating', async (importOriginal) => ({
-  ...await importOriginal<typeof import('@/services/panel-gating')>(),
-  hasPremiumAccess: () => true,
-}));
 
 vi.mock('@/services/global-tenders', () => ({
   clearGlobalTenderCache: vi.fn(),

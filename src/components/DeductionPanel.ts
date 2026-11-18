@@ -1,6 +1,5 @@
 import { Panel } from './Panel';
 import { createLazyClient, getRpcBaseUrl } from '@/services/rpc-client';
-import { premiumFetch } from '@/services/premium-fetch';
 import { h, replaceChildren, setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 import { yieldToMain } from '@/utils/after-paint';
 import { marked } from 'marked';
@@ -8,13 +7,12 @@ import DOMPurify from 'dompurify';
 import type { NewsItem, DeductContextDetail } from '@/types';
 import { buildNewsContext } from '@/utils/news-context';
 import { getActiveFrameworkForPanel } from '@/services/analysis-framework-store';
-import { hasPremiumAccess } from '@/services/panel-gating';
 import { FrameworkSelector } from './FrameworkSelector';
 import { extractDeductionProbability } from './deduction-probability';
 import { IntelligenceServiceClient } from '@/services/generated-rpc-clients';
 
 // deduct-situation + list-market-implications are premium-gated.
-const getIntelligenceClient = createLazyClient(() => new IntelligenceServiceClient(getRpcBaseUrl(), { fetch: premiumFetch }));
+const getIntelligenceClient = createLazyClient(() => new IntelligenceServiceClient(getRpcBaseUrl(), { fetch: (...args: Parameters<typeof fetch>) => globalThis.fetch(...args) }));
 
 const COOLDOWN_MS = 5_000;
 
@@ -41,7 +39,6 @@ export class DeductionPanel extends Panel {
     private inputEl: HTMLTextAreaElement;
     private geoInputEl: HTMLTextAreaElement;
     private resultContainer: HTMLElement;
-    private contentRoot: HTMLElement;
     private submitBtn: HTMLButtonElement;
     private isSubmitting = false;
     private getLatestNews?: () => NewsItem[];
@@ -93,7 +90,6 @@ export class DeductionPanel extends Panel {
             this.formEl,
             this.resultContainer
         );
-        this.contentRoot = container;
 
         replaceChildren(this.content, container);
 
@@ -122,35 +118,12 @@ export class DeductionPanel extends Panel {
         }) as EventListener;
         document.addEventListener('wm:deduct-context', this.contextHandler);
 
-        this.fwSelector = new FrameworkSelector({ panelId: 'deduction', isPremium: hasPremiumAccess(), panel: this });
+        this.fwSelector = new FrameworkSelector({ panelId: 'deduction' });
         this.header.appendChild(this.fwSelector.el);
     }
 
     private deductionGeneration = 0;
     private deductionAbort: AbortController | null = null;
-
-    public override clearSensitiveContent(): void {
-        this.deductionGeneration += 1;
-        // The previous account's request must not keep running (and spending
-        // its quota) after the reset; discarding its result is not enough.
-        this.deductionAbort?.abort();
-        this.deductionAbort = null;
-        this.inputEl.value = '';
-        this.geoInputEl.value = '';
-        this.resultContainer.replaceChildren();
-        this.resultContainer.className = 'deduction-result';
-        this.isSubmitting = false;
-        this.submitBtn.disabled = false;
-        super.clearSensitiveContent();
-    }
-
-    public override unlockPanel(): void {
-        super.unlockPanel();
-        if (!this.content.contains(this.contentRoot)) {
-            this.resultContainer.replaceChildren();
-            this.setContentNodes(this.contentRoot);
-        }
-    }
 
     public override destroy(): void {
         document.removeEventListener('wm:deduct-context', this.contextHandler);

@@ -81,19 +81,6 @@ function makeMap(initialLayers: Partial<MapLayers> = {}) {
 }
 
 describe('SVG map premium layer toggle gate (#6045)', () => {
-  it('blocks free activation but preserves stale locked-layer off-ramp', () => {
-    tier.premium = false;
-    const fresh = makeMap();
-    fresh.map.toggleLayer('resilienceScore');
-    assert.equal(fresh.map.state.layers.resilienceScore, false);
-    assert.deepEqual(fresh.changes, []);
-
-    const stale = makeMap({ resilienceScore: true });
-    stale.map.toggleLayer('resilienceScore');
-    assert.equal(stale.map.state.layers.resilienceScore, false);
-    assert.deepEqual(stale.changes, [['resilienceScore', false, 'user']]);
-  });
-
   it('keeps enhanced layers available to free users', () => {
     tier.premium = false;
     const map = makeMap();
@@ -101,17 +88,6 @@ describe('SVG map premium layer toggle gate (#6045)', () => {
     assert.equal(map.map.state.layers.ciiChoropleth, true);
   });
 
-  it('gates programmatic enableLayer with the same policy', () => {
-    tier.premium = false;
-    const free = makeMap();
-    free.map.enableLayer('resilienceScore');
-    assert.equal(free.map.state.layers.resilienceScore, false);
-
-    tier.premium = true;
-    const premium = makeMap();
-    premium.map.enableLayer('resilienceScore');
-    assert.equal(premium.map.state.layers.resilienceScore, true);
-  });
 });
 
 describe('SVG map layer picker capability gate', () => {

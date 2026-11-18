@@ -3,7 +3,6 @@ import { normalizeMcpRefreshIntervalMs, type McpPanelSpec } from '@/services/mcp
 import { t } from '@/services/i18n';
 import { h } from '@/utils/dom-utils';
 import { proxyUrl, widgetAgentUrl } from '@/utils/proxy';
-import { premiumFetch } from '@/services/premium-fetch';
 import { escapeHtml, unsafeRawHtml } from '@/utils/sanitize';
 import { isProWidgetEnabled, getBrowserTesterKey, getWidgetAgentKey, getProWidgetKey } from '@/services/widget-store';
 import { wrapProWidgetHtml } from '@/utils/widget-sanitizer';
@@ -99,11 +98,7 @@ export class McpDataPanel extends Panel {
     }
     this.showLoading();
     try {
-      // premiumFetch attaches the Clerk Pro Bearer for normal web Pro
-      // users. /api/mcp-proxy is in PREMIUM_RPC_PATHS so the path gate
-      // fires; the server-side isCallerPremium check accepts Bearer,
-      // wm_ user keys, and enterprise keys (PR #3768).
-      const resp = await premiumFetch(proxyUrl('/api/mcp-proxy'), {
+      const resp = await fetch(proxyUrl('/api/mcp-proxy'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

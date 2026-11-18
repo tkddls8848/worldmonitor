@@ -15,7 +15,6 @@ import {
 import { isDebugBearRumScriptFrame } from '../src/bootstrap/debugbear-rum.ts';
 import { isIosLikeUserAgent } from '../src/bootstrap/platform-ua.ts';
 import { isolateNonProductionSentryEvent } from '../shared/sentry-build-metadata.ts';
-import { buildCheckoutReportTags } from '../src/services/checkout-sentry-policy.ts';
 import { scrubSentryCredentials } from '../shared/sensitive-url-params.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -64,15 +63,15 @@ const rawBeforeSend = new Function(
 // src/bootstrap/platform-ua.ts). `navigator` is passed as a Function parameter so it
 // shadows Node's global and each test can state the platform explicitly.
 /**
- * The REAL tag block src/services/checkout.ts puts on every checkout report,
- * built by the shipped helper rather than copied. A hand-written fixture here
- * would keep passing after the production tags changed shape, which is the
- * whole failure mode this suite exists to catch.
+ * The tag block the retired dashboard checkout put on its reports. beforeSend
+ * still recognises the kind, so the fixture keeps that shape.
  */
-const CHECKOUT_REPORT_TAGS = buildCheckoutReportTags({
+const CHECKOUT_REPORT_TAGS = {
+  component: 'dodo-checkout',
   action: 'exception',
   code: 'service_unavailable',
-});
+  kind: 'checkout_request_failed',
+};
 
 const MAC_DESKTOP_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36';
 const IOS_GOOGLE_APP_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) GSA/432.9.954074404 Mobile/15E148 Safari/604.1';

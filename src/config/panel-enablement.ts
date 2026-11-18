@@ -1,13 +1,5 @@
 import type { PanelConfig } from '@/types';
-import {
-  ALL_PANELS,
-  FREE_MAX_PANELS,
-  countFreePanelCapUsage,
-  getEffectivePanelConfig,
-  isFreePanelCapCounted,
-  isPanelEntitled,
-  isPanelNativeToVariant,
-} from './panels';
+import { ALL_PANELS, isPanelNativeToVariant } from './panels';
 
 export const SET_PANEL_ENABLED_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9@_-]*$/;
 export const SET_PANEL_ENABLED_ID_MAX_CHARS = 96;
@@ -18,8 +10,6 @@ export type SetPanelEnabledReason =
   | 'malformed_arguments'
   | 'unknown_panel'
   | 'panel_incompatible'
-  | 'panel_not_entitled'
-  | 'panel_cap_exceeded'
   | 'panel_required'
   | 'persist_failed';
 
@@ -39,8 +29,6 @@ export interface EvaluateSetPanelEnabledInput {
   enabled: unknown;
   panelSettings: Record<string, PanelConfig>;
   variant: string;
-  isPro: boolean;
-  isPanelAllowed?: (panelId: string, config: PanelConfig) => boolean;
 }
 
 function result(fields: SetPanelEnabledResult): SetPanelEnabledResult {
@@ -92,10 +80,6 @@ export function evaluateSetPanelEnabled(
 
   const existing = input.panelSettings[panelId];
   const currentlyEnabled = existing?.enabled === true;
-  // Entitlement uses catalog metadata. Stored entries can predate a premium
-  // flag or have `premium` stripped; UnifiedSettings uses the same split.
-  const catalogConfig = getEffectivePanelConfig(panelId, input.variant);
-
   if (currentlyEnabled === input.enabled) {
     return result({
       ok: true,
@@ -118,45 +102,6 @@ export function evaluateSetPanelEnabled(
       changed: false,
       reason: 'panel_incompatible',
       message: 'That panel is not available on this monitor.',
-    });
-  }
-
-  // Settings and the panel X-button still let a person disable a panel that is
-  // already live, including a premium panel from a previous entitled session.
-  // Entitlement only gates turning a panel on.
-  if (input.enabled) {
-    const allowed = input.isPanelAllowed
-      ? input.isPanelAllowed(panelId, catalogConfig)
-      : isPanelEntitled(panelId, catalogConfig, input.isPro);
-    if (!allowed) {
-      return result({
-        ok: false,
-        status: 'denied',
-        panelId,
-        requestedEnabled,
-        effectiveEnabled: currentlyEnabled,
-        changed: false,
-        reason: 'panel_not_entitled',
-        message: 'That panel is not available on the current plan.',
-      });
-    }
-  }
-
-  if (
-    input.enabled
-    && !input.isPro
-    && isFreePanelCapCounted(panelId)
-    && countFreePanelCapUsage(input.panelSettings) >= FREE_MAX_PANELS
-  ) {
-    return result({
-      ok: false,
-      status: 'denied',
-      panelId,
-      requestedEnabled,
-      effectiveEnabled: currentlyEnabled,
-      changed: false,
-      reason: 'panel_cap_exceeded',
-      message: 'The free-tier panel limit has been reached.',
     });
   }
 

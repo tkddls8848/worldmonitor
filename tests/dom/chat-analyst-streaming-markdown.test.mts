@@ -10,10 +10,8 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { initTestI18n } from './helpers/i18n.mts';
 
-vi.mock('@/services/premium-fetch', () => ({ premiumFetch: vi.fn() }));
 
 import DOMPurify from 'dompurify';
-import { premiumFetch } from '@/services/premium-fetch';
 import { ChatAnalystPanel } from '@/components/ChatAnalystPanel';
 import { balanceStreamingMarkdown } from '@/utils/analyst-markdown';
 
@@ -78,7 +76,7 @@ afterEach(() => {
 describe('ChatAnalystPanel streaming markdown', () => {
   it('renders bold markdown mid-stream instead of literal asterisks', async () => {
     const stream = controlledStream();
-    vi.mocked(premiumFetch).mockResolvedValue(stream.response);
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(stream.response);
     const panel = new ChatAnalystPanel();
     document.body.append(panel.getElement());
 
@@ -121,7 +119,7 @@ describe('ChatAnalystPanel streaming markdown', () => {
 
   it('does not let a frame queued before completion overwrite the final render', async () => {
     const stream = controlledStream();
-    vi.mocked(premiumFetch).mockResolvedValue(stream.response);
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(stream.response);
     const panel = new ChatAnalystPanel();
     document.body.append(panel.getElement());
 
@@ -149,7 +147,7 @@ describe('ChatAnalystPanel streaming markdown', () => {
   it('sanitises partial renders with the analyst DOMPurify allowlist', async () => {
     const sanitize = vi.spyOn(DOMPurify, 'sanitize');
     const stream = controlledStream();
-    vi.mocked(premiumFetch).mockResolvedValue(stream.response);
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(stream.response);
     const panel = new ChatAnalystPanel();
     document.body.append(panel.getElement());
 

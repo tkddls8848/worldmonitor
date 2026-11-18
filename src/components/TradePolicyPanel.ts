@@ -40,28 +40,12 @@ export class TradePolicyPanel extends Panel {
     });
   }
 
-  public override clearSensitiveContent(): void {
-    this.loadGuard.begin();
-    this.restrictionsData = null;
-    this.tariffsData = null;
-    this.flowsData = null;
-    this.barriersData = null;
-    this.revenueData = null;
-    this.comtradeData = null;
-    super.clearSensitiveContent();
-  }
-
-  public override unlockPanel(): void {
-    super.unlockPanel();
-    if (!this.content.hasChildNodes()) this.render();
-  }
-
   public beginDataLoad(): number {
     return this.loadGuard.begin();
   }
 
   public acceptsDataLoad(generation: number): boolean {
-    return this.loadGuard.isCurrent(generation) && !this.isLocked && !this.signal.aborted;
+    return this.loadGuard.isCurrent(generation) && !this.signal.aborted;
   }
 
   public updateRestrictions(data: GetTradeRestrictionsResponse): void {

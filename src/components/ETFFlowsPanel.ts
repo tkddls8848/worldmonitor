@@ -89,8 +89,6 @@ export class ETFFlowsPanel extends Panel {
   }
 
   private renderPanel(): void {
-    // Locked panels restore their original nodes, including these listeners.
-    if (this.isLocked) return;
     this.tableNavigationCleanup?.();
     this.tableNavigationCleanup = null;
     if (this.loading) {
@@ -208,10 +206,4 @@ export class ETFFlowsPanel extends Panel {
     super.destroy();
   }
 
-  public override unlockPanel(): void {
-    if (!this.isLocked) return;
-    super.unlockPanel();
-    // Restoring detached nodes can reset scrollLeft without a scroll event.
-    this.bindTableNavigation();
-  }
 }

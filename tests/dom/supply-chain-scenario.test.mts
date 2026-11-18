@@ -3,7 +3,6 @@ import { initTestI18n } from './helpers/i18n.mts';
 
 const mocks = vi.hoisted(() => ({ run: vi.fn(), poll: vi.fn(), premium: true, gate: vi.fn() }));
 vi.mock('@/services/scenario', () => ({ runScenario: mocks.run, getScenarioStatus: mocks.poll }));
-vi.mock('@/services/panel-gating', () => ({ hasPremiumAccess: () => mocks.premium }));
 vi.mock('@/services/analytics', () => ({ trackGateHit: mocks.gate }));
 vi.mock('@/services/supply-chain', () => ({
   fetchBypassOptions: async () => ({ options: [] }), fetchChokepointHistory: async () => ({ history: [] }),
@@ -89,17 +88,13 @@ describe('SupplyChainPanel scenario controls', () => {
     expect(panel.getElement().querySelectorAll('.sc-scenario-banner li')).toHaveLength(0);
   });
 
-  it('keeps default severity, PRO gating and retry behavior', async () => {
+  it('keeps default severity and retry behavior', async () => {
     expect(severity().value).toBe('100');
     mocks.run.mockRejectedValueOnce(new Error('queue unavailable'));
     button().click(); await settle();
     expect(button().disabled).toBe(false);
     expect(button().textContent).toContain('retry');
-    mocks.premium = false;
-    panel.updateShippingRates({ rates: [] } as never); await settle();
-    button().click(); await settle();
     expect(mocks.run).toHaveBeenCalledTimes(1);
-    expect(mocks.gate).toHaveBeenCalledWith('scenario-engine');
   });
 
   it('ignores a stale poll after controls change and displays unknown legacy coverage', async () => {

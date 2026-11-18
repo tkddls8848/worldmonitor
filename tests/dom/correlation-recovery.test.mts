@@ -10,10 +10,6 @@ vi.mock('@/bootstrap/sentry-defer', () => ({ enqueueSentryCall: mocks.sentry }))
 vi.mock('@/services/generated-rpc-clients', () => ({
   IntelligenceServiceClient: class { deductSituation = mocks.deduct; },
 }));
-vi.mock('@/services/panel-gating', async importOriginal => ({
-  ...await importOriginal<typeof import('@/services/panel-gating')>(),
-  hasPremiumAccess: mocks.premium,
-}));
 vi.mock('@/services/bootstrap', () => ({
   ensureHydrated: mocks.fetch,
   getHydratedData: mocks.hydrate,
@@ -562,15 +558,11 @@ describe('CorrelationPanel presentation', () => {
     expect(mocks.deduct).toHaveBeenCalledTimes(1);
   });
 
-  it('shares an in-flight assessment only across identical evidence and respects premium access', async () => {
+  it('shares an in-flight assessment only across identical evidence', async () => {
     const { CorrelationEngine } = await import('@/services/correlation-engine/engine');
     const engine = new CorrelationEngine();
     const first = { ...card(), score: 75, countries: ['US', 'CA'] };
     const next = structuredClone(first);
-    mocks.premium.mockReturnValue(false);
-    engine.assessCards('economic', [first]);
-    expect(mocks.deduct).not.toHaveBeenCalled();
-    mocks.premium.mockReturnValue(true);
     const response = deferred<{ analysis: string }>();
     mocks.deduct.mockReturnValueOnce(response.promise);
     engine.assessCards('economic', [first]);

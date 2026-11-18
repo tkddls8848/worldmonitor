@@ -928,7 +928,7 @@ function computeStats({ sourceAttribution: suppliedAttribution } = {}) {
   // VITE_ENABLE_IRAN_ATTACKS=true; App.ts hides cyberThreats unless
   // VITE_ENABLE_CYBER_LAYER=true) and VARIANT_LAYER_ORDER means no single site
   // shows the whole registry. Plan copy therefore names the Pro-only layer
-  // instead of quoting a free total — see validatePlanLayerEntitlementCopy.
+  // instead of quoting a free total.
   const lockedLayerDefinitions = lockedLayerKeys.length;
 
   const variantBlock = mld.slice(mld.indexOf('VARIANT_LAYER_ORDER'), mld.indexOf('export function getLayersForVariant'));
@@ -1684,57 +1684,6 @@ function validateBootstrapCacheDocs(stats, docs = null, keyTiers = parseBootstra
 }
 
 /**
- * Plan copy names the Pro-only map layer rather than quoting a free-layer count
- * (#5387). That phrasing is only true while `resilienceScore` is the ONLY
- * web-locked entry in LAYER_REGISTRY: lock a second layer and every surface
- * below silently starts over-promising again, exactly the way "all 56 map
- * layers" did. A count pin cannot catch that — the total does not move when a
- * layer flips to `premium: 'locked'` — so assert the identity of the locked set
- * and re-point the author at the copy that names it.
- */
-export const PLAN_LAYER_COPY_SURFACES = [
-  'public/pricing.md',
-  'docs/pricing.mdx',
-  'docs/accounts.mdx',
-  'docs/zh/pricing.mdx',
-  'docs/zh/accounts.mdx',
-  // The category explainer names the free-tier layer boundary too ("Every
-  // layer except the Resilience layer is available on the free plan"), so it
-  // has to be re-pointed alongside the pricing surfaces when the lock set moves.
-  'blog-site/src/content/blog/what-is-worldmonitor-real-time-global-intelligence.md',
-];
-
-/** The single web-locked layer the copy above is written around. */
-export const PLAN_LAYER_PRO_ONLY_KEY = 'resilienceScore';
-const PLAN_LAYER_PRO_ONLY_LABEL = 'Resilience';
-
-export function validatePlanLayerEntitlementCopy(stats, readFile = read) {
-  const failures = [];
-  const locked = stats.lockedLayerKeys ?? [];
-
-  if (locked.join(',') !== PLAN_LAYER_PRO_ONLY_KEY) {
-    failures.push(
-      `src/config/map-layer-definitions.ts: plan copy names ${PLAN_LAYER_PRO_ONLY_LABEL} as the only Pro-only map layer, but LAYER_REGISTRY web-locks [${locked.join(', ')}] — update the free-tier copy in ${PLAN_LAYER_COPY_SURFACES.join(', ')} before changing the lock set`,
-    );
-    return failures;
-  }
-
-  for (const file of PLAN_LAYER_COPY_SURFACES) {
-    let text;
-    try {
-      text = readFile(file);
-    } catch {
-      failures.push(`${file}: file not found`);
-      continue;
-    }
-    if (!text.includes(PLAN_LAYER_PRO_ONLY_LABEL)) {
-      failures.push(`${file}: free-tier copy must name the Pro-only "${PLAN_LAYER_PRO_ONLY_LABEL}" map layer (#5387)`);
-    }
-  }
-  return failures;
-}
-
-/**
  * The category explainer's answer-first shape (#6217).
  *
  * The explainer is the site's primary "what is this product" page and is
@@ -1846,7 +1795,6 @@ const DOC_VALIDATORS = [
   validateSupportedLanguagesRegistry,
   validateBootstrapCacheDocs,
   validateHealthSummaryDocs,
-  validatePlanLayerEntitlementCopy,
   validateCategoryExplainerCopy,
   validateVolatileInventoryClaims,
 ];

@@ -20,9 +20,6 @@ vi.mock('@/services/ml-worker', () => ({
   },
 }));
 
-vi.mock('@/services/premium-fetch', () => ({
-  premiumFetch: (...args: unknown[]) => coverageMocks.premiumFetch(...args),
-}));
 
 vi.mock('@/components/CountryDeepDivePanel', () => ({
   CountryDeepDivePanel: function CountryDeepDivePanel() {
@@ -70,10 +67,6 @@ vi.mock('@/services/supply-chain', async (importOriginal) => ({
   fetchCountryVulnerabilities: async () => null,
 }));
 
-vi.mock('@/services/panel-gating', async (importOriginal) => ({
-  ...await importOriginal<typeof import('@/services/panel-gating')>(),
-  hasPremiumAccess: () => false,
-}));
 
 vi.mock('@/services/analysis-framework-store', async (importOriginal) => ({
   ...await importOriginal<typeof import('@/services/analysis-framework-store')>(),
@@ -224,7 +217,7 @@ describe('CountryIntelManager lazy coverage headlines', () => {
     coverageMocks.activeFramework.mockReset().mockReturnValue(null);
     coverageMocks.localSummaryAvailable = false;
     coverageMocks.summarize.mockReset();
-    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'));
+    vi.spyOn(globalThis, 'fetch').mockImplementation(((...args: unknown[]) => coverageMocks.premiumFetch(...args)) as typeof fetch);
   });
 
   it('uses the shared default assessment without browser grounding and preserves its accepted timestamp', async () => {

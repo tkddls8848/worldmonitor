@@ -11,17 +11,12 @@ import type { CIIPanel } from '@/components/CIIPanel';
 import {
   SITE_VARIANT,
   ALL_PANELS,
-  FREE_MAX_PANELS,
-  countFreePanelCapUsage,
   getEffectivePanelConfig,
-  isFreePanelCapCounted,
-  isPanelEntitled,
 } from '@/config';
 import {
   getAllowedLayerKeys,
   isLayerCommandAllowed,
   isLayerExecutable,
-  isLayerEntitled,
 } from '@/config/map-layer-definitions';
 import type { MapVariant, RendererKind } from '@/config/map-layer-definitions';
 import { LAYER_PRESETS, LAYER_KEY_MAP } from '@/config/commands';
@@ -48,8 +43,6 @@ import type { PositionSample } from '@/services/aviation';
 import { fetchAircraftPositions } from '@/services/aviation';
 import { subscribeWidgetAccess } from '@/services/widget-store';
 import { getAuthState, subscribeAuthState } from '@/services/auth-state';
-import { hasPremiumAccess } from '@/services/panel-gating';
-import { onEntitlementChange } from '@/services/entitlements';
 import { subscribeRuntimeConfig } from '@/services/runtime-config';
 import {
   runWithAgentAnalyticsSuppressed,
@@ -195,7 +188,6 @@ export class SearchManager implements AppModule {
   private flightSearchItems: FlightSearchItem[] = [];
   private latestAdsb: PositionSample[] = [];
   private latestMilitary: MilitaryFlight[] = [];
-  private latestAdsbUpdatedAt = 0;
   private liveFlightOverlay: Array<{ position: PositionSample; expiresAt: number }> = [];
   private liveFlightLookupGeneration = 0;
   private acceptLateBaseHydration = true;
@@ -207,7 +199,6 @@ export class SearchManager implements AppModule {
     this.searchSelection = new SearchSelectionDispatcher({
       ctx,
       getVariant: () => SITE_VARIANT,
-      hasPremiumAccess: () => hasPremiumAccess(getAuthState()),
       openCountryBriefByCode: (...args) => this.callbacks.openCountryBriefByCode(...args),
       enablePanel: (...args) => this.callbacks.enablePanel(...args),
       trackSearchResultSelected,
@@ -231,7 +222,6 @@ export class SearchManager implements AppModule {
       isDestroyed: () => this.destroyed,
       refreshIndex: () => this.updateSearchIndex({ updateVisibleMetrics: false }),
       getModal: () => this.ctx.searchModal,
-      hasPremiumAccess: () => hasPremiumAccess(getAuthState()),
       fetchLiveFlight: async (callsign, signal) => {
         const generation = this.liveFlightLookupGeneration;
         const completed = await SearchManager.waitWithTimeout(
@@ -245,7 +235,7 @@ export class SearchManager implements AppModule {
       cancelPendingSelection: () => this.searchSelection.cancelPendingProgrammaticSelection(),
       getAuthContext: () => {
         const auth = getAuthState();
-        return `${auth.user ? 'signed-in' : 'anonymous'}:${auth.isPending ? 'pending' : 'settled'}:${hasPremiumAccess(auth) ? 'premium' : 'free'}`;
+        return `${auth.user ? 'signed-in' : 'anonymous'}:${auth.isPending ? 'pending' : 'settled'}`;
       },
       getVariant: () => SITE_VARIANT,
       isMatchExecutable: (match) => this.isSearchMatchExecutable(match),
@@ -256,24 +246,8 @@ export class SearchManager implements AppModule {
         signal,
       ),
       subscribeAuth: subscribeAuthState,
-      subscribeEntitlement: onEntitlementChange,
       subscribeRuntimeConfig,
       subscribeWidgetAccess,
-      onPremiumAccessChanged: (premium, premiumRestored) => {
-        if (!premium) {
-          this.flightSearchItems = [];
-          this.flightSourceExpiresAt = 0;
-          this.liveFlightOverlay = [];
-          this.ctx.searchModal?.registerSource('flight', []);
-        } else if (premiumRestored) {
-          this.updateFlightSource(
-            this.latestAdsb,
-            this.latestMilitary,
-            this.latestAdsbUpdatedAt,
-          );
-          this.ctx.searchModal?.refreshSearch();
-        }
-      },
     });
   }
 
@@ -304,7 +278,6 @@ export class SearchManager implements AppModule {
     this.liveFlightOverlay = [];
     this.latestAdsb = [];
     this.latestMilitary = [];
-    this.latestAdsbUpdatedAt = 0;
   }
 
   private setupSearchModal(): void {
@@ -463,13 +436,10 @@ export class SearchManager implements AppModule {
     this.syncPanelSearchIndex();
     // Filter CMD+K layer commands by (a) variant-allowed, (b) renderer-kind
     // compatibility (a deck-only layer can't run on the SVG fallback or the
-    // globe), (c) premium entitlement for locked layers. Without (a)–(b), layer
+    // globe). Without them, layer
     // commands surface where they'd silently fail the variant/renderer guard
     // (e.g. `layer:storageFacilities` on tech/finance/commodity/happy, or globe
-    // / SVG-mobile). Without (c), free users could enable locked layers like
-    // resilienceScore, leaving a checked+disabled checkbox (#6045).
-    // Currently-on locked layers stay visible so free users can turn them off
-    // if stuck state survived from an older session.
+    // / SVG-mobile).
     this.ctx.searchModal.setLayerExecutableFn((layerKey) => {
       const key = (LAYER_KEY_MAP[layerKey] || layerKey) as keyof MapLayers;
       if (!(key in this.ctx.mapLayers)) return false;
@@ -482,7 +452,7 @@ export class SearchManager implements AppModule {
         key,
         this.ctx.mapLayers[key],
         kind,
-        hasPremiumAccess(getAuthState()),
+        true,
       );
     });
     this.ctx.searchModal.setCommandVisibleFn((command) => this.isModalCommandVisible(command));
@@ -490,8 +460,6 @@ export class SearchManager implements AppModule {
     this.ctx.searchModal.setOnHumanInteraction(() => this.cancelPendingProgrammaticSelection());
     this.ctx.searchModal.setOnSelect((result) => this.searchSelection.handleSearchResult(result));
     this.ctx.searchModal.setOnCommand((cmd) => this.searchSelection.handleCommand(cmd));
-    // Always wire flight search; check pro status reactively inside the callback
-    // so mid-session sign-ins get the feature without a page reload.
     this.ctx.searchModal.setOnFlightSearch((callsign) => {
       this.handleLiveFlightSearch(callsign);
     });
@@ -499,7 +467,6 @@ export class SearchManager implements AppModule {
   }
 
   private handleLiveFlightSearch(callsign: string): void {
-    if (!hasPremiumAccess(getAuthState())) return;
     void this.fetchAndPublishLiveFlight(callsign)
       .then(() => {
         if (!this.destroyed) this.ctx.searchModal?.refreshSearch();
@@ -662,11 +629,7 @@ export class SearchManager implements AppModule {
       const effective = ALL_PANELS[panelId]
         ? getEffectivePanelConfig(panelId, SITE_VARIANT)
         : undefined;
-      return !!effective && isPanelEntitled(
-        panelId,
-        effective,
-        hasPremiumAccess(getAuthState()),
-      );
+      return !!effective;
     }
     if (category === 'layer') return this.isLayerCommandExecutable(action);
     if (category === 'layers') return this.hasVisibleLayerPreset(action);
@@ -691,14 +654,11 @@ export class SearchManager implements AppModule {
         const effective = ALL_PANELS[panelId]
           ? getEffectivePanelConfig(panelId, SITE_VARIANT)
           : undefined;
-        const premium = hasPremiumAccess(getAuthState());
-        if (!effective || !isPanelEntitled(panelId, effective, premium)) return false;
+        if (!effective) return false;
         if (config.enabled) {
           return allowPendingPanelTarget || this.hasLivePanelTarget(panelId);
         }
-        if (premium) return true;
-        return !isFreePanelCapCounted(panelId)
-          || countFreePanelCapUsage(this.ctx.panelSettings) < FREE_MAX_PANELS;
+        return true;
       }
       case 'layer':
         return this.isLayerCommandExecutable(action);
@@ -759,7 +719,7 @@ export class SearchManager implements AppModule {
       key,
       this.ctx.mapLayers[key],
       renderer,
-      hasPremiumAccess(getAuthState()),
+      true,
     );
   }
 
@@ -813,14 +773,13 @@ export class SearchManager implements AppModule {
         return this.ctx.panelSettings.polymarket?.enabled === true
           && this.hasLivePanelTarget('polymarket');
       case 'flight':
-        return hasPremiumAccess(getAuthState());
+        return true;
       default:
         return true;
     }
   }
 
   private isSearchResultVisible(result: SearchResult): boolean {
-    if (result.type === 'flight' && !hasPremiumAccess(getAuthState())) return false;
     const requiredLayer = this.resultRequiredLayer(result);
     if (!requiredLayer) return true;
     return getAllowedLayerKeys((SITE_VARIANT || 'full') as MapVariant).has(requiredLayer);
@@ -835,7 +794,7 @@ export class SearchManager implements AppModule {
     return isLayerExecutable(
       layer,
       renderer,
-    ) && isLayerEntitled(layer, hasPremiumAccess(getAuthState()));
+    );
   }
 
   private resultRequiredLayer(result: SearchResult): keyof MapLayers | null {
@@ -875,15 +834,7 @@ export class SearchManager implements AppModule {
     if (this.destroyed) return;
     this.latestAdsb = [...adsb];
     this.latestMilitary = [...military];
-    this.latestAdsbUpdatedAt = adsbUpdatedAt;
     if (!this.ctx.searchModal) return;
-    if (!hasPremiumAccess(getAuthState())) {
-      this.flightSearchItems = [];
-      this.flightSourceExpiresAt = 0;
-      this.liveFlightOverlay = [];
-      this.ctx.searchModal.registerSource('flight', []);
-      return;
-    }
     const now = Date.now();
     const mergedAdsb = this.mergeLiveAdsb(adsb, this.pruneLiveFlightOverlay(now));
     this.flightSearchItems = SearchManager.buildFlightSearchItems(
@@ -964,7 +915,6 @@ export class SearchManager implements AppModule {
    */
   private syncPanelSearchIndex(options?: { updateVisibleMetrics?: boolean }): void {
     if (!this.ctx.searchModal) return;
-    const hasPremium = hasPremiumAccess(getAuthState());
     this.ctx.searchModal.setActivePanels(
       Object.entries(this.ctx.panelSettings).filter(([, v]) => v.enabled).map(([k]) => k),
       options,
@@ -974,7 +924,7 @@ export class SearchManager implements AppModule {
         // Keep unregistered/dynamic keys out of search; the resolver would
         // otherwise return a disabled synthetic fallback for unknown keys.
         const cfg = ALL_PANELS[k] ? getEffectivePanelConfig(k, SITE_VARIANT) : undefined;
-        return cfg ? isPanelEntitled(k, cfg, hasPremium) : false;
+        return cfg !== undefined;
       }),
       options,
     );

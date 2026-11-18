@@ -8,13 +8,8 @@ import {
   ALL_PANELS,
   getEffectivePanelConfig,
   getVariantPanelCategories,
-  isPanelEntitled,
-  FREE_MAX_PANELS,
-  countFreePanelCapUsage,
-  isFreePanelCapCounted,
   isPanelInVariantDefaults,
 } from '@/config/panels';
-import { isProUser } from '@/services/widget-store';
 import { SITE_VARIANT } from '@/config/variant';
 import { I18N_RESOURCES_LOADED_EVENT, t } from '@/services/i18n';
 import { replaceRawI18nKeyPlaceholders } from '@/utils/i18n-raw-key-healer';
@@ -57,47 +52,9 @@ import { renderNotificationsSettings } from '@/services/notifications-settings';
 import { getAuthState, subscribeAuthState } from '@/services/auth-state';
 import { isClerkAuthEnabled, signOut } from '@/services/clerk';
 import { requestOwnAccountDeletion } from '@/services/account-deletion';
-import { track, trackAgentConnect, trackApiAction } from '@/services/analytics';
-import {
-  getEntitlementState,
-  getEntitlementVerificationStatus,
-  hasEmbedAccessForAccount,
-  hasFeature,
-  isEntitled,
-  onEntitlementChange,
-  onEntitlementVerificationChange,
-} from '@/services/entitlements';
-import { hasPremiumAccess } from '@/services/panel-gating';
-import { getSubscription, isSubscriptionLoaded, onSubscriptionChange, openBillingPortal, prereserveBillingPortalTab, type SubscriptionInfo } from '@/services/billing';
-import { BusinessSeatsSection } from '@/components/BusinessSeatsSection';
-import { EnterpriseSeatsSection } from '@/components/EnterpriseSeatsSection';
-import {
-  deriveBillingUxState,
-  getReactivationHref,
-  getSubscriptionStatusTone,
-  type BillingStatusTone,
-} from '@/services/billing-state';
-import { createApiKey, listApiKeys, revokeApiKey, type ApiKeyInfo } from '@/services/api-keys';
-import {
-  getSelfHostKeySnapshot,
-  removeSelfHostKey,
-  saveSelfHostKey,
-  subscribeSelfHostKey,
-  type SelfHostKeySnapshot,
-  type SelfHostKeyStatus,
-  type SelfHostKeyWriteResult,
-} from '@/services/self-host-key';
-import { hasDesktopKeyAccess } from '../../shared/desktop-key-access.js';
-import { createEmbedKey, listEmbedKeys, revokeEmbedKey, type EmbedKeyInfo } from '@/services/embed-keys';
-import { listMcpClients, revokeMcpClient, fetchMcpQuota, type McpClientInfo, type McpQuota } from '@/services/mcp-clients';
-import { MCP_AGENT_CLIENTS, MCP_SERVER_URL, type McpAgentClient } from '@/config/mcp-agent-clients';
-import {
-  acknowledgePlanLimitNotice,
-  listCurrentPlanLimitNotices,
-  type ApiPlanLimitNotice,
-} from '@/services/api-plan-limit-notices';
+import { track } from '@/services/analytics';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
-import { checkoutConsentHtml, legalLinksHtml, LEGAL_LINK_ATTR } from '@/utils/legal-links';
+import { legalLinksHtml, LEGAL_LINK_ATTR } from '@/utils/legal-links';
 import { dashboardSiteLinksHtml } from '@/utils/dashboard-site-links';
 import { resolveDashboardSiteOrigin } from '@/config/dashboard-reference-links';
 import { createFocusTrap, type FocusTrap } from '@/utils/focus-trap';
@@ -146,55 +103,8 @@ export interface UnifiedSettingsConfig {
   onSourcesChanged?: () => void;
 }
 
-/** What the self-host Desktop key section shows (plan 2026-11-04-001, U6). */
 /** What the user types to confirm account deletion. Not translated: it is a token, not prose. */
 const DELETION_PHRASE = 'DELETE';
-
-const SELF_HOST_KEY_TONE: Record<SelfHostKeyStatus, 'ok' | 'warn' | 'bad' | 'neutral'> = {
-  none: 'neutral',
-  active: 'ok',
-  invalid: 'bad',
-  not_desktop_key: 'bad',
-  over_cap: 'bad',
-  lapsed: 'bad',
-  unavailable: 'warn',
-  disabled: 'neutral',
-};
-
-/**
- * Map the verdict service's snapshot to one displayed state. An active verdict
- * the client no longer trusts (past the 24-hour bound) reads as "could not
- * verify", because that is why Pro is off.
- */
-function selfHostKeyDisplay(snapshot: SelfHostKeySnapshot): { state: SelfHostKeyStatus; staleNote: boolean } | null {
-  const verdict = snapshot.verdict;
-  if (snapshot.selfHosted !== true || !verdict) return null;
-  if (!verdict.enabled || verdict.status === 'disabled') return { state: 'disabled', staleNote: false };
-  if (verdict.status === 'active') {
-    return snapshot.unlock === 'unlocked'
-      ? { state: 'active', staleNote: verdict.stale || snapshot.checkFailed }
-      : { state: 'unavailable', staleNote: false };
-  }
-  return { state: verdict.status, staleNote: false };
-}
-type AccountRequest = { userId: string; generation: number };
-
-/**
- * Plan-card palette per billing status tone (#7315).
- *
- * The tone comes from the shared coverage predicate in billing-state.ts, never
- * from a status string compared here — a cancelled plan still inside its paid
- * window is a paying customer and must not be painted like a dead account.
- *
- * `unknown` (a provider status this client does not model) is deliberately the
- * neutral grey, not red: we are inside the isEntitled() branch, so claiming a
- * problem we have not established would repeat the bug in a new colour.
- *
- * Colours live on `--billing-tone-*` in main.css so [data-theme="light"] can
- * raise every tone to WCAG AA for the 13px-bold plan name. The card only
- * stamps `data-billing-tone`; it must not inline hex, or those overrides
- * never apply. The status sentence stays on theme-aware var(--text-dim).
- */
 
 export class UnifiedSettings {
   private overlay: HTMLElement;
@@ -210,8 +120,6 @@ export class UnifiedSettings {
   private recentPage: SettingsSectionId | null = null;
   /** The sidebar search text. The sheet has no search, so it is empty there. */
   private navQuery = '';
-  /** Embed access the home rows were last built for. Search can hide the row, so the DOM cannot answer this. */
-  private renderedEmbedAccess = false;
   private installCleanup: (() => void) | null = null;
   private legalLinkHandoffAttached = false;
   private activeSourceRegion = 'all';
@@ -237,41 +145,8 @@ export class UnifiedSettings {
    * net no-op the dashboard must not be asked to reload for.
    */
   private sourceSelectionBaseline: string | null = null;
-  private apiKeys: ApiKeyInfo[] = [];
-  private apiKeysLoading = false;
-  private apiKeysError = '';
-  private newlyCreatedKey: string | null = null;
-  // ---- Embeds tab (partner-embed `wme_` keys) ----
-  private embedKeys: EmbedKeyInfo[] = [];
-  private embedKeysLoading = false;
-  private embedKeyCreating = false;
-  private embedKeysError = '';
-  private newlyCreatedEmbedKey: string | null = null;
-  private planLimitNotices: ApiPlanLimitNotice[] = [];
-  private planLimitNoticesLoading = false;
-  private planLimitNoticesError = '';
-  // ---- Business Pro seats (plan 2026-07-24-001 U7) ----
-  private readonly businessSeatsSection: BusinessSeatsSection;
-  private readonly enterpriseSeatsSection: EnterpriseSeatsSection;
-  // ---- Connected MCP clients tab (plan 2026-05-10-001 U9) ----
-  private mcpClients: McpClientInfo[] = [];
-  private mcpClientsLoading = false;
-  private mcpClientsError = '';
-  private mcpQuota: McpQuota | 'unavailable' | null = null;
-  /** setInterval handle for quota auto-refresh; cleared on close()/destroy()/tab-switch. */
-  private mcpQuotaTimer: ReturnType<typeof setInterval> | null = null;
   private accountUserId: string | null = getAuthState().user?.id ?? null;
-  private accountDataGeneration = 0;
-  private accountEntitlementRefreshPending = false;
   private unsubscribeAuth: (() => void) | null = null;
-  private unsubscribeSelfHostKey: (() => void) | null = null;
-  private selfHostKeyBusy: 'save' | 'remove' | null = null;
-  private selfHostKeyRenderedHtml: string | null = null;
-  private selfHostKeyMessage = '';
-  private selfHostKeyRejected = false;
-  private unsubscribeEntitlement: (() => void) | null = null;
-  private unsubscribeEntitlementVerification: (() => void) | null = null;
-  private unsubscribeSubscription: (() => void) | null = null;
   private deletionDialog: HTMLElement | null = null;
   private deletionFocusTrap: FocusTrap | null = null;
   private deletionBusy = false;
@@ -289,8 +164,6 @@ export class UnifiedSettings {
     declareOverlay(this.overlay, { reload: 'blocking' });
     this.overlay.setAttribute('aria-label', t('header.settings'));
     this.focusTrap = createFocusTrap(this.overlay);
-    this.businessSeatsSection = new BusinessSeatsSection(this.overlay);
-    this.enterpriseSeatsSection = new EnterpriseSeatsSection(this.overlay);
 
     this.resetPanelDraft();
 
@@ -320,77 +193,8 @@ export class UnifiedSettings {
         return;
       }
 
-      if (target.closest('.upgrade-pro-cta')) {
-        this.handleUpgradeClick();
-        return;
-      }
-
-      if (target.closest('.retry-plan-status-btn')) {
-        window.location.reload();
-        return;
-      }
-
-      if (target.closest('.upgrade-to-business-btn')) {
-        // Self-serve Starter→Business upgrade (#4634): open the Dodo customer
-        // portal, which surfaces the prorated plan change via the product
-        // collection ("Allow Subscription Updates" enabled). Same hosted open
-        // path as Manage Billing — Dodo owns payment + 3DS + proration; a failed
-        // charge (prevent_change) leaves the customer on Starter.
-        const reservedWin = prereserveBillingPortalTab();
-        void openBillingPortal(reservedWin).then((result) => {
-          // The portal session exists but no window opened (native handoff
-          // refused and the browser fallback was blocked). Saying nothing here
-          // reads as a dead click on a paid feature.
-          if (result.outcome === 'open-failed') {
-            showToast(t('settings.account.portal.openFailed'));
-            return;
-          }
-          if (result.outcome === 'no-customer') {
-            showToast(t('settings.account.portal.unavailable'));
-          }
-        });
-        return;
-      }
-
       if (target.closest('[data-delete-account]')) {
         this.openDeletionDialog();
-        return;
-      }
-
-      if (target.closest('.manage-billing-btn')) {
-        // Pre-reserve the portal tab synchronously inside the click
-        // handler so the popup blocker doesn't suppress the eventual
-        // window.open inside openBillingPortal (which runs after an
-        // await of the Convex action).
-        const reservedWin = prereserveBillingPortalTab();
-        void openBillingPortal(reservedWin).then((result) => {
-          // NO_CUSTOMER: user is entitled but has no Dodo customer row
-          // (comp grant, restore race, or post-purge cancellation). Send
-          // them somewhere actionable instead of leaving them in a
-          // generic Dodo portal that won't recognise them.
-          // The portal session exists but no window opened (native handoff
-          // refused and the browser fallback was blocked). Saying nothing here
-          // reads as a dead click on a paid feature.
-          if (result.outcome === 'open-failed') {
-            showToast(t('settings.account.portal.openFailed'));
-            return;
-          }
-          if (result.outcome === 'no-customer') {
-            showToast(t('settings.account.portal.unavailable'));
-          }
-        });
-        return;
-      }
-
-      const planNoticeAck = target.closest<HTMLElement>('[data-plan-limit-ack]');
-      if (planNoticeAck?.dataset.planLimitAck) {
-        void this.handleAcknowledgePlanLimitNotice(planNoticeAck.dataset.planLimitAck);
-        return;
-      }
-
-      const planNoticeCta = target.closest<HTMLElement>('[data-plan-limit-cta]');
-      if (planNoticeCta?.dataset.planLimitCta) {
-        this.handlePlanLimitNoticeCta(planNoticeCta.dataset.planLimitCta);
         return;
       }
 
@@ -446,12 +250,6 @@ export class UnifiedSettings {
 
       const panelItem = target.closest<HTMLElement>('.panel-toggle-item');
       if (panelItem?.dataset.panel) {
-        if (panelItem.dataset.proLocked) {
-          // Absolute + routed: a relative /pro resolves against tauri://localhost
-          // in the desktop WebView, where no such route is served (#5911).
-          void openExternalUrl(`${WEB_APP_ORIGIN}/pro`);
-          return;
-        }
         const panelKey = panelItem.dataset.panel;
         const shouldRestoreFocus = document.activeElement === panelItem;
         this.toggleDraftPanel(panelKey);
@@ -518,104 +316,6 @@ export class UnifiedSettings {
         return;
       }
 
-      if (target.closest('.api-keys-create-btn')) {
-        void this.handleCreateApiKey();
-        return;
-      }
-
-      const revokeBtn = target.closest<HTMLElement>('.api-keys-revoke-btn');
-      if (revokeBtn?.dataset.keyId) {
-        void this.handleRevokeApiKey(revokeBtn.dataset.keyId);
-        return;
-      }
-
-      if (target.closest('.api-keys-copy-btn')) {
-        const key = this.newlyCreatedKey;
-        if (key) {
-          void navigator.clipboard.writeText(key).then(() => {
-            const btn = this.overlay.querySelector<HTMLElement>('.api-keys-copy-btn');
-            if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy'; }, 1500); }
-          });
-        }
-        return;
-      }
-
-      if (target.closest('.embed-keys-create-btn')) {
-        void this.handleCreateEmbedKey();
-        return;
-      }
-
-      const embedRevokeBtn = target.closest<HTMLElement>('.embed-keys-revoke-btn');
-      if (embedRevokeBtn?.dataset.keyId) {
-        void this.handleRevokeEmbedKey(embedRevokeBtn.dataset.keyId);
-        return;
-      }
-
-      if (target.closest('.embed-keys-copy-btn')) {
-        const key = this.newlyCreatedEmbedKey;
-        if (key) {
-          void navigator.clipboard.writeText(key).then(() => {
-            const btn = this.overlay.querySelector<HTMLElement>('.embed-keys-copy-btn');
-            if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy'; }, 1500); }
-          });
-        }
-        return;
-      }
-
-      const mcpRevokeBtn = target.closest<HTMLElement>('.mcp-clients-revoke-btn');
-      if (mcpRevokeBtn?.dataset.tokenId) {
-        void this.handleRevokeMcpClient(mcpRevokeBtn.dataset.tokenId);
-        return;
-      }
-
-      const businessInviteBtn = target.closest<HTMLElement>('.business-seats-invite-btn');
-      if (businessInviteBtn) {
-        void this.businessSeatsSection.handleInvite();
-        return;
-      }
-
-      const businessRemoveBtn = target.closest<HTMLElement>('.business-seat-remove-btn');
-      if (businessRemoveBtn?.dataset.grantId) {
-        void this.businessSeatsSection.handleRemove(businessRemoveBtn.dataset.grantId);
-        return;
-      }
-
-      const enterpriseInviteBtn = target.closest<HTMLElement>('.enterprise-seats-invite-btn');
-      if (enterpriseInviteBtn) {
-        void this.enterpriseSeatsSection.handleInvite();
-        return;
-      }
-
-      const enterpriseRemoveBtn = target.closest<HTMLElement>('.enterprise-seat-remove-btn');
-      if (enterpriseRemoveBtn?.dataset.memberId) {
-        void this.enterpriseSeatsSection.handleRemove(enterpriseRemoveBtn.dataset.memberId);
-        return;
-      }
-
-      const agentControl = target.closest<HTMLElement>('[data-agent-connect]');
-      // Resolve against the catalog so only closed ids reach analytics.
-      const agentClient = MCP_AGENT_CLIENTS.find((c) => c.id === agentControl?.dataset.agentConnect);
-      if (agentControl && agentClient) {
-        trackAgentConnect(agentClient.id, agentControl.tagName === 'A' ? 'link' : 'copy');
-      }
-
-      const mcpCopyBtn = target.closest<HTMLElement>('.mcp-copy-btn');
-      if (mcpCopyBtn?.dataset.copyValue) {
-        const value = mcpCopyBtn.dataset.copyValue;
-        const label = mcpCopyBtn.dataset.copyLabel ?? 'Copy';
-        const flash = (text: string) => {
-          mcpCopyBtn.textContent = text;
-          setTimeout(() => { mcpCopyBtn.textContent = label; }, 1500);
-        };
-        // navigator.clipboard is async + can reject (insecure context, perms);
-        // fall back gracefully so the button never silently no-ops.
-        if (navigator.clipboard?.writeText) {
-          void navigator.clipboard.writeText(value).then(() => flash('Copied!')).catch(() => flash('Copy failed'));
-        } else {
-          flash('Copy unavailable');
-        }
-        return;
-      }
     });
 
     this.overlay.addEventListener('change', (e) => {
@@ -686,9 +386,6 @@ export class UnifiedSettings {
     this.unsubscribeAuth = subscribeAuthState((state) => {
       this.handleAccountIdentityChange(state.user?.id ?? null);
     });
-    // The verdict can land after Settings is built (the first read is never
-    // awaited), and it changes on refresh or a premium denial.
-    this.unsubscribeSelfHostKey = subscribeSelfHostKey(() => this.refreshSelfHostKeySection());
   }
 
   private handleAccountIdentityChange(nextUserId: string | null): void {
@@ -696,45 +393,11 @@ export class UnifiedSettings {
 
     this.closeDeletionDialog();
     this.accountUserId = nextUserId;
-    this.accountDataGeneration += 1;
-    this.accountEntitlementRefreshPending = true;
-    this.apiKeys = [];
-    this.apiKeysLoading = false;
-    this.apiKeysError = '';
-    this.newlyCreatedKey = null;
-    this.embedKeys = [];
-    this.embedKeysLoading = false;
-    this.embedKeyCreating = false;
-    this.embedKeysError = '';
-    this.newlyCreatedEmbedKey = null;
-    this.planLimitNotices = [];
-    this.planLimitNoticesLoading = false;
-    this.planLimitNoticesError = '';
-    this.mcpClients = [];
-    this.mcpClientsLoading = false;
-    this.mcpClientsError = '';
-    this.mcpQuota = null;
-    this.stopMcpQuotaPolling();
-    this.businessSeatsSection.resetForAccountChange();
-    this.enterpriseSeatsSection.resetForAccountChange();
 
-    // Replace any rendered A-owned plaintext/list data synchronously. Account
-    // loaders stay suppressed until the new entitlement snapshot rerenders.
+    // Rebuild account-scoped pages for the new identity.
     if (this.overlay.classList.contains('active')) {
       this.rebuild(false);
     }
-  }
-
-  private captureAccountRequest(): AccountRequest | null {
-    const userId = getAuthState().user?.id ?? null;
-    if (!userId || userId !== this.accountUserId) return null;
-    return { userId, generation: this.accountDataGeneration };
-  }
-
-  private isAccountRequestCurrent(request: AccountRequest): boolean {
-    return request.generation === this.accountDataGeneration
-      && request.userId === this.accountUserId
-      && request.userId === getAuthState().user?.id;
   }
 
   public open(section?: SettingsSectionId, replaceOverlayId?: OverlayId): void {
@@ -771,103 +434,6 @@ export class UnifiedSettings {
     window.addEventListener(I18N_RESOURCES_LOADED_EVENT, this.onTranslationsLoaded);
     track('settings-open', { tab: section ?? 'default' });
 
-    // Rebuild account-scoped pages when entitlements arrive (cold-load race:
-    // hasFeature('apiAccess') returns false until the Convex subscription
-    // delivers data, so a paid API Starter user sees the upgrade CTA briefly).
-    this.unsubscribeEntitlement?.();
-    this.unsubscribeEntitlement = onEntitlementChange((state) => {
-      if (this.accountEntitlementRefreshPending) {
-        // Entitlements are account-scoped. Rebuild every account surface so a
-        // direct A→B handoff removes/adds MCP and API pages using B's snapshot.
-        // Keep the marker through the reset(null) emission; the first real B
-        // snapshot must rebuild once more before ordinary targeted refreshes.
-        if (state !== null) this.accountEntitlementRefreshPending = false;
-        this.rebuild(true);
-        return;
-      }
-
-      const mcpPageStale = this.pages.has('mcp-clients')
-        && (this.overlay.querySelector('[data-mcp-manage]') !== null) !== this.canManageMcpClients();
-      const embedsRowStale = this.renderedEmbedAccess !== hasEmbedAccessForAccount(getAuthState().user?.role);
-      if (mcpPageStale || embedsRowStale) {
-        // Entitlements can legitimately progress from a free/default snapshot
-        // to Pro after the account handoff's first non-null emission. Rebuild
-        // whenever MCP client management or embed capability changes in
-        // either direction.
-        this.rebuild(true);
-        return;
-      }
-
-      const keysHost = this.overlay.querySelector<HTMLElement>('[data-api-keys-host]');
-      if (keysHost) {
-        setTrustedHtml(keysHost, trustedHtml(this.renderApiKeysContent(), "legacy direct innerHTML migration"));
-        this.attachApiKeysHandlers();
-        if (this.nav?.page === 'api-keys' && this.canManageKeys()) {
-          void this.loadApiKeys();
-        }
-      }
-      const embedsBody = this.pageBody('embeds');
-      if (embedsBody) {
-        setTrustedHtml(embedsBody, trustedHtml(this.renderEmbedKeysContent(), "legacy direct innerHTML migration"));
-        this.attachEmbedKeysHandlers();
-        if (this.nav?.page === 'embeds' && getAuthState().user && hasEmbedAccessForAccount(getAuthState().user?.role)) {
-          void this.loadEmbedKeys();
-        }
-      }
-      this.replaceUpgradeSection();
-      if (this.pages.has('account')) this.loadEnterpriseSeats();
-      this.refreshSummaries();
-    });
-    this.unsubscribeEntitlementVerification?.();
-    this.unsubscribeEntitlementVerification = onEntitlementVerificationChange(() => {
-      this.replaceUpgradeSection();
-    });
-    this.unsubscribeSubscription?.();
-    this.unsubscribeSubscription = onSubscriptionChange(() => {
-      this.replaceUpgradeSection();
-      this.refreshSummaries();
-      // Ask for seats whenever the account has ANY subscription row, and let
-      // the server decide who owns seats. Filtering here on the display row's
-      // plan/status would miss an owner whose Business row is outranked by
-      // another subscription (see BusinessSeatsSection.businessSubscriptionId);
-      // free accounts have no row at all, so they still never query.
-      if (this.pages.has('account') && getSubscription() !== null) {
-        void this.businessSeatsSection.load();
-      }
-    });
-  }
-
-  /** Account page entry: seats load only once someone opens the page. */
-  private loadAccountSeats(): void {
-    if (getSubscription() !== null) {
-      void this.businessSeatsSection.load();
-    }
-    this.loadEnterpriseSeats();
-  }
-
-  /**
-   * Ask the server for the signed-in user's Enterprise seat view; it returns
-   * null for anyone who is not a member. Not gated on the current plan: after
-   * a contract ends its members lose the Enterprise plan but keep their seats,
-   * and the admin still needs the roster to remove people.
-   */
-  private loadEnterpriseSeats(): void {
-    if (getAuthState().user) {
-      void this.enterpriseSeatsSection.load();
-    }
-  }
-
-  /**
-   * Swap the .upgrade-pro-section wrapper in place. Click handlers are
-   * delegated at overlay level, so replacing the node needs no rebind.
-   */
-  private replaceUpgradeSection(): void {
-    const upgradeSection = this.overlay.querySelector('.upgrade-pro-section');
-    if (!upgradeSection) return;
-    const fresh = document.createElement('template');
-    setTrustedHtml(fresh, trustedHtml(this.renderUpgradeSection().trim(), "legacy direct innerHTML migration"));
-    const next = fresh.content.firstElementChild;
-    if (next) upgradeSection.replaceWith(next);
   }
 
   public close(origin: OverlayCloseOrigin = 'control'): void {
@@ -922,13 +488,6 @@ export class UnifiedSettings {
     this.overlay.classList.remove('active');
     this.focusTrap.deactivate();
     this.endSession();
-    this.unsubscribeEntitlement?.();
-    this.unsubscribeEntitlement = null;
-    this.unsubscribeEntitlementVerification?.();
-    this.unsubscribeEntitlementVerification = null;
-    this.unsubscribeSubscription?.();
-    this.unsubscribeSubscription = null;
-    this.stopMcpQuotaPolling();
     this.closeDeletionDialog();
     this.resetPanelDraft();
     safeStorageRemove('wm-settings-open');
@@ -988,17 +547,8 @@ export class UnifiedSettings {
     this.historyRegistered = false;
     if (this.savedTimeout) clearTimeout(this.savedTimeout);
     this.endSession();
-    this.unsubscribeEntitlement?.();
-    this.unsubscribeEntitlement = null;
-    this.unsubscribeEntitlementVerification?.();
-    this.unsubscribeEntitlementVerification = null;
-    this.unsubscribeSubscription?.();
-    this.unsubscribeSubscription = null;
     this.unsubscribeAuth?.();
     this.unsubscribeAuth = null;
-    this.unsubscribeSelfHostKey?.();
-    this.unsubscribeSelfHostKey = null;
-    this.stopMcpQuotaPolling();
     this.closeDeletionDialog();
     document.removeEventListener('keydown', this.escapeHandler);
     window.removeEventListener('resize', this.onResize);
@@ -1060,8 +610,7 @@ export class UnifiedSettings {
       signedIn: user !== null,
       canSignIn: isClerkAuthEnabled(),
       isDesktopApp: this.config.isDesktopApp,
-      embedAccess: hasEmbedAccessForAccount(user?.role),
-      account: user ? { plan: this.accountPlanLabel(), email: user.email } : null,
+      account: user ? { plan: '', email: user.email } : null,
       panels: this.panelCounts(),
       sourcesOn: (() => {
         const disabled = this.config.getDisabledSources();
@@ -1073,20 +622,9 @@ export class UnifiedSettings {
 
   /** The panels that read as on in the Panels page, out of every panel it lists. */
   private panelCounts(): { on: number; total: number } {
-    const pro = isProUser();
     const entries = this.listedPanelEntries();
-    const on = entries.filter(([key, panel]) => {
-      const resolvedPanel = ALL_PANELS[key] ? getEffectivePanelConfig(key, SITE_VARIANT) : panel;
-      return panel.enabled && isPanelEntitled(key, resolvedPanel, pro);
-    }).length;
+    const on = entries.filter(([, panel]) => panel.enabled).length;
     return { on, total: entries.length };
-  }
-
-  /** Short plan name for the account card. Empty while the plan is still resolving. */
-  private accountPlanLabel(): string {
-    if (!isEntitled() && hasPremiumAccess()) return t('settings.account.planPremium');
-    if (isEntitled()) return getSubscription()?.displayName ?? 'Pro';
-    return getEntitlementState() === null ? '' : t('settings.account.planFree');
   }
 
   private formatSummary(summary: RowSummary): string {
@@ -1107,7 +645,6 @@ export class UnifiedSettings {
     const rows = this.overlay.querySelector<HTMLElement>('[data-settings-rows]');
     if (!rows) return;
     const facts = this.readFacts();
-    this.renderedEmbedAccess = facts.embedAccess;
     const { groups, hits } = searchNav(buildNav(facts), this.navQuery, searchTerms(t));
     setTrustedHtml(rows, trustedHtml(
       groups.map((group) => this.renderNavGroup(group)).join(''),
@@ -1253,8 +790,6 @@ export class UnifiedSettings {
   private readonly onTranslationsLoaded = (): void => {
     this.renderHome();
     replaceRawI18nKeyPlaceholders(this.overlay, t);
-    const statusLine = this.overlay.querySelector('.upgrade-pro-status-line');
-    if (statusLine) statusLine.textContent = this.planStatusLine(getSubscription());
     // The deletion dialog sits on document.body, outside the overlay.
     if (this.deletionDialog) {
       replaceRawI18nKeyPlaceholders(this.deletionDialog, t);
@@ -1396,10 +931,6 @@ export class UnifiedSettings {
     this.pages.clear();
   }
 
-  private pageBody(id: SettingsSectionId): HTMLElement | null {
-    return this.pages.get(id)?.el.querySelector<HTMLElement>('[data-settings-body]') ?? null;
-  }
-
   private mountFor(id: SettingsSectionId): SectionMount {
     return isPreferenceSection(id) ? this.mountPreference(id) : this.shellMounts[id];
   }
@@ -1429,14 +960,12 @@ export class UnifiedSettings {
           <h3>${escapeHtml(t('auth.planBilling'))}</h3>
           <p>${escapeHtml(t('settings.account.intro'))}</p>
         </div>
-        ${this.renderUpgradeSection()}
-        <div id="usEnterpriseSeats">${this.enterpriseSeatsSection.renderContent()}</div>
         <ul class="us-list us-signout" role="list">
           <li><button type="button" class="us-row" data-settings-signout><span class="us-row-text"><span class="us-row-title">${escapeHtml(t('settings.signOut'))}</span></span></button></li>
         </ul>
         ${this.renderAccountDeletionSection()}
-      `, 'account page; billing and seat sections escape their values'));
-      return { enter: () => this.loadAccountSeats(), dispose: () => {} };
+      `, 'account page; every value escaped'));
+      return { dispose: () => {} };
     },
     panels: (body) => {
       setTrustedHtml(body, trustedHtml(`
@@ -1497,53 +1026,6 @@ export class UnifiedSettings {
       setTrustedHtml(body, trustedHtml(notifs.html, 'notifications settings; the renderer escapes every value'));
       return { dispose: notifs.attach(body) };
     },
-    'api-keys': (body) => {
-      // The self-host key block sits here because its copy sends users to API keys.
-      const selfHostKeyHtml = this.renderSelfHostKeySection();
-      this.selfHostKeyRenderedHtml = selfHostKeyHtml;
-      setTrustedHtml(body, trustedHtml(
-        `<div data-selfhost-key-host>${selfHostKeyHtml}</div><div data-api-keys-host>${this.renderApiKeysContent()}</div>`,
-        'api keys page; key sections escape their values',
-      ));
-      this.attachSelfHostKeyHandlers();
-      this.attachApiKeysHandlers();
-      return {
-        enter: () => {
-          if (getAuthState().user && hasFeature('apiAccess')) void this.loadPlanLimitNotices();
-          if (this.canManageKeys()) void this.loadApiKeys();
-        },
-        dispose: () => {},
-      };
-    },
-    // Gated on `embedAccess`, NOT `apiAccess`: both Pro tiers are
-    // `apiAccess: false`, so an apiAccess gate would hide embed keys from most
-    // of the customers who bought embedding. A page of its own rather than a
-    // section of API keys so the two credential classes never look
-    // interchangeable.
-    embeds: (body) => {
-      setTrustedHtml(body, trustedHtml(this.renderEmbedKeysContent(), 'embeds page; key values escaped'));
-      this.attachEmbedKeysHandlers();
-      return {
-        enter: () => {
-          if (getAuthState().user && hasEmbedAccessForAccount(getAuthState().user?.role)) void this.loadEmbedKeys();
-        },
-        dispose: () => {},
-      };
-    },
-    'mcp-clients': (body) => {
-      setTrustedHtml(body, trustedHtml(this.renderMcpClientsContent(), 'AI agents page; client values escaped'));
-      return {
-        enter: () => {
-          if (!this.canManageMcpClients()) return;
-          void this.loadPlanLimitNotices();
-          void this.loadMcpClients();
-          this.startMcpQuotaPolling();
-        },
-        // No need to keep the quota timer running for a hidden page.
-        leave: () => this.stopMcpQuotaPolling(),
-        dispose: () => this.stopMcpQuotaPolling(),
-      };
-    },
     about: (body) => {
       setTrustedHtml(body, trustedHtml(`
         <div class="us-about">
@@ -1580,118 +1062,6 @@ export class UnifiedSettings {
     });
   }
 
-  // Pending state shown while the plan is still resolving — used both before
-  // the entitlement snapshot arrives and, for an entitled owner, while the
-  // subscription watch is still settling (#6772).
-  private renderPlanCheckingState(): string {
-    return `
-        <div class="upgrade-pro-section upgrade-pro-loading" role="status" aria-live="polite">
-          <div class="upgrade-pro-title">${escapeHtml(t('settings.account.checking.heading'))}</div>
-          <div class="upgrade-pro-desc">${escapeHtml(t('settings.account.checking.desc'))}</div>
-        </div>
-      `;
-  }
-
-  private renderUpgradeSection(): string {
-    // Non-Dodo premium (API key / tester key / Clerk pro role without a
-    // Convex subscription): neither "Upgrade" nor "Manage Billing" is
-    // actionable. Still explain the account state here; a hidden billing
-    // section would recreate the discoverability problem this tab fixes.
-    if (!isEntitled() && hasPremiumAccess()) {
-      return `
-        <div class="upgrade-pro-section upgrade-pro-external" data-billing-state="external">
-          <div class="upgrade-pro-title">${escapeHtml(t('settings.account.external.heading'))}</div>
-          <div class="upgrade-pro-desc">${escapeHtml(t('settings.account.external.desc'))}</div>
-        </div>
-      `;
-    }
-    const sub = getSubscription();
-    const billingState = deriveBillingUxState(sub, getEntitlementState(), Date.now());
-    if (billingState === 'lapsed') {
-      const planName = sub?.displayName ?? 'Pro';
-      return `
-        <div class="upgrade-pro-section upgrade-pro-lapsed" data-billing-state="lapsed">
-          <div class="upgrade-pro-title">${escapeHtml(t('components.billingState.resubscribe'))}: ${escapeHtml(planName)}</div>
-          <div class="upgrade-pro-desc">${escapeHtml(t('components.billingState.lapsedDesc'))}</div>
-          <a class="upgrade-pro-cta-link" href="${WEB_APP_ORIGIN}${getReactivationHref(sub?.planKey)}" target="_blank" rel="noopener">${escapeHtml(t('components.billingState.resubscribe'))} →</a>
-        </div>
-      `;
-    }
-    // Signed-in user whose Convex entitlement snapshot has not arrived yet.
-    // Rendering "Upgrade to Pro" in this window is how paying users click through to
-    // /api/create-checkout and hit 409 duplicate_subscription — same race
-    // as the 2026-04-17/18 panel-overlay incident fixed in panel-gating.ts,
-    // different surface. The verification service stays pending across the
-    // complete Clerk/Convex retry schedule and publishes unavailable only
-    // after a terminal handoff or subscription failure.
-    const verificationStatus = getEntitlementVerificationStatus();
-    if (
-      getAuthState().user
-      && getEntitlementState() === null
-      && (verificationStatus === 'idle' || verificationStatus === 'pending')
-    ) {
-      return this.renderPlanCheckingState();
-    }
-    if (isEntitled()) {
-      const sub = getSubscription();
-      // A Pro owner's entitlement snapshot can arrive before their own
-      // subscription watch settles. In that window getSubscription() is null
-      // but the user is NOT a Business invitee — falling through would render
-      // "Billing is managed by your plan owner" and hide Manage Billing from a
-      // paying owner. Treat an unresolved watch like the pending state above;
-      // the invitee copy below is reserved for a *settled* null (#6772).
-      if (sub === null && !isSubscriptionLoaded()) {
-        return this.renderPlanCheckingState();
-      }
-      const planName = sub?.displayName ?? 'Pro';
-      const now = Date.now();
-      // A Business Pro grant invitee has no own subscription row (sub === null)
-      // but IS entitled (we're inside the isEntitled() branch) — they hold a
-      // grant that is working, so paint them like an active plan.
-      const tone: BillingStatusTone = sub === null
-        ? 'active'
-        : getSubscriptionStatusTone(sub, now);
-
-      const hasOwnSubscription = sub !== null;
-      const statusLine = this.planStatusLine(sub);
-
-      return `
-        <div class="upgrade-pro-section upgrade-pro-active" data-billing-tone="${tone}">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:${statusLine ? '8' : '0'}px;">
-            <span class="upgrade-pro-tone-dot"></span>
-            <span class="upgrade-pro-plan-name">${escapeHtml(planName)}</span>
-          </div>
-          ${statusLine ? `<div class="upgrade-pro-status-line">${escapeHtml(statusLine)}</div>` : ''}
-          ${sub?.planKey === 'api_starter' ? `<button class="upgrade-to-business-btn" style="margin-right:8px;">${escapeHtml(t('settings.account.upgradeToBusiness'))}</button>` : ''}
-          ${hasOwnSubscription ? `<button class="manage-billing-btn">${escapeHtml(t('components.billingState.manageBilling'))}</button>` : ''}
-        </div>
-        ${hasOwnSubscription ? `<div id="usBusinessSeats">${this.businessSeatsSection.renderContent()}</div>` : ''}
-      `;
-    }
-
-    // A terminal auth/subscription failure still does not prove the user is
-    // free. Keep checkout unavailable, offer a fresh verification attempt,
-    // and retain the safe /pro link in a separate tab.
-    if (getAuthState().user && getEntitlementState() === null) {
-      return `
-        <div class="upgrade-pro-section upgrade-pro-fallback">
-          <div class="upgrade-pro-title">${escapeHtml(t('settings.account.unavailable.heading'))}</div>
-          <div class="upgrade-pro-desc">${escapeHtml(t('settings.account.unavailable.desc'))}</div>
-          <button class="manage-billing-btn retry-plan-status-btn" style="margin-bottom:8px;">${escapeHtml(t('components.checkoutFailureBanner.retry'))}</button>
-          <a class="upgrade-pro-cta-link" href="${WEB_APP_ORIGIN}/pro" target="_blank" rel="noopener">${escapeHtml(t('modals.settingsWindow.worldMonitor.register.submitBtn'))} →</a>
-        </div>
-      `;
-    }
-
-    return `
-      <div class="upgrade-pro-section" data-billing-state="free">
-        <div class="upgrade-pro-title">${escapeHtml(t('settings.account.free.heading'))}</div>
-        <div class="upgrade-pro-desc">${escapeHtml(t('settings.account.free.desc'))}</div>
-        <button class="upgrade-pro-cta">${escapeHtml(t('premium.upgradeToPro'))}</button>
-      </div>
-    `;
-  }
-
   private renderAccountDeletionSection(): string {
     return `
       <section class="account-deletion-zone" data-account-deletion>
@@ -1712,31 +1082,6 @@ export class UnifiedSettings {
     input.disabled = this.deletionBusy;
     const error = overlay.querySelector('[data-deletion-error]');
     if (error) error.textContent = this.deletionError;
-  }
-
-  /**
-   * The plan status sentence under the plan name. The catalogue-load handler
-   * redraws it too, because the raw-key healer cannot restore its date.
-   */
-  private planStatusLine(sub: SubscriptionInfo | null): string {
-    // An invitee holding a Business Pro grant has Pro features but no own
-    // subscription row: they hold a grant, so the billing surface stays
-    // owner-only and the Manage Billing CTA (a Dodo 404) is not shown.
-    if (sub === null) return t('settings.account.status.ownerManaged');
-    if (!sub.currentPeriodEnd) return '';
-    const dateStr = new Date(sub.currentPeriodEnd).toLocaleDateString();
-    if (sub.status === 'active') {
-      return sub.cancelAtPeriodEnd
-        ? t('settings.account.status.cancelScheduled', { date: dateStr })
-        : t('settings.account.status.renews', { date: dateStr });
-    }
-    if (sub.status === 'on_hold') return t('settings.account.status.onHold');
-    if (sub.status === 'cancelled') return t('settings.account.status.cancelled', { date: dateStr });
-    if (sub.status === 'expired') return t('settings.account.status.expired');
-    // A status this client does not model yet. Callers are inside the
-    // isEntitled() branch, so access is working: say only that, and point at
-    // the billing portal instead of leaving the `unknown` tone as a bare dot.
-    return t('settings.account.status.unknown');
   }
 
   private openDeletionDialog(): void {
@@ -1864,36 +1209,6 @@ export class UnifiedSettings {
     }
   }
 
-  // Business Pro seats (#4634/#4635) state/render/handlers live in
-  // BusinessSeatsSection — see this.businessSeatsSection.
-
-  private handleUpgradeClick(): void {
-    // Defense in depth: re-check at click time so a late-arriving "you're a
-    // paying user" snapshot routes to the billing portal instead of creating
-    // a second checkout against an active subscription.
-    if (isEntitled()) {
-      this.close();
-      const reservedWin = prereserveBillingPortalTab();
-      void openBillingPortal(reservedWin).then((result) => {
-        // The portal session exists but no window opened (native handoff
-        // refused and the browser fallback was blocked). Saying nothing here
-        // reads as a dead click on a paid feature.
-        if (result.outcome === 'open-failed') {
-          showToast(t('settings.account.portal.openFailed'));
-          return;
-        }
-        if (result.outcome === 'no-customer') {
-          showToast(t('settings.account.portal.unavailable'));
-        }
-      });
-      return;
-    }
-    this.close();
-    import('@/services/upgrade-flow').then(m => m.openUpgradePlans()).catch(() => {
-      void openExternalUrl(`${WEB_APP_ORIGIN}/pro`);
-    });
-  }
-
   private categoryMatchesVariant(catDef: { variants?: string[] }): boolean {
     return !catDef.variants || catDef.variants.includes(SITE_VARIANT);
   }
@@ -1953,7 +1268,6 @@ export class UnifiedSettings {
     if (!container) return;
 
     const savedSettings = this.config.getPanelSettings();
-    const pro = isProUser();
     const entries = this.getVisiblePanelEntries();
     const panelFontScaleLabel = t('preferences.panelFontScale', { defaultValue: 'Text size' });
     const followGlobalFontScaleLabel = t('preferences.followGlobalFontScale', { defaultValue: 'Use global' });
@@ -1961,24 +1275,21 @@ export class UnifiedSettings {
       // Preserve saved config for dynamic cw-* panels; unknown keys should not
       // collapse to getEffectivePanelConfig's disabled synthetic fallback.
       const resolvedPanel = ALL_PANELS[key] ? getEffectivePanelConfig(key, SITE_VARIANT) : panel;
-      const entitled = isPanelEntitled(key, resolvedPanel, pro);
-      const locked = !entitled;
-      const changed = !locked && this.isPanelDraftChanged(key, panel, savedSettings);
+      const changed = this.isPanelDraftChanged(key, panel, savedSettings);
       const displayName = this.config.getLocalizedPanelName(key, resolvedPanel.name ?? panel.name);
-      const a11yState = getPanelToggleA11yState(locked, panel.enabled, displayName);
+      const a11yState = getPanelToggleA11yState(false, panel.enabled, displayName);
       // Sandboxed MCP iframes cannot inherit the host panel's CSS scale.
       const supportsPanelFontScale = key !== 'map' && !key.startsWith('mcp-');
-      const on = panel.enabled && !locked;
+      const on = panel.enabled;
       return `
         <div class="panel-settings-item${supportsPanelFontScale ? ' has-font-scale' : ''}">
-          <button type="button" class="panel-toggle-item ${on ? 'active' : ''}${changed ? ' changed' : ''}${locked ? ' pro-locked' : ''}" data-panel="${escapeHtml(key)}" ${a11yState.ariaPressed === null ? '' : `aria-pressed="${a11yState.ariaPressed}"`} ${a11yState.ariaLabel === null ? '' : `aria-label="${escapeHtml(a11yState.ariaLabel)}"`} ${locked ? 'data-pro-locked="1"' : ''}>
+          <button type="button" class="panel-toggle-item ${on ? 'active' : ''}${changed ? ' changed' : ''}" data-panel="${escapeHtml(key)}" ${a11yState.ariaPressed === null ? '' : `aria-pressed="${a11yState.ariaPressed}"`} ${a11yState.ariaLabel === null ? '' : `aria-label="${escapeHtml(a11yState.ariaLabel)}"`}>
             <span class="panel-toggle-label">${escapeHtml(displayName)}</span>
-            ${(locked || resolvedPanel.premium) ? '<span class="panel-toggle-pro-badge" aria-hidden="true">PRO</span>' : ''}
             <span class="panel-toggle-switch" aria-hidden="true"></span>
           </button>
           ${supportsPanelFontScale ? `<label class="panel-font-scale-control">
             <span class="panel-font-scale-value" data-panel-scale-summary aria-hidden="true">${escapeHtml(panelFontScaleSummary(panel.fontScale))}</span>
-            <select data-panel-font-scale="${escapeHtml(key)}" aria-label="${escapeHtml(`${displayName}: ${panelFontScaleLabel}`)}"${locked ? ' disabled' : ''}>
+            <select data-panel-font-scale="${escapeHtml(key)}" aria-label="${escapeHtml(`${displayName}: ${panelFontScaleLabel}`)}">
               <option value="global"${panel.fontScale === undefined ? ' selected' : ''}>${escapeHtml(followGlobalFontScaleLabel)}</option>
               ${FONT_SCALE_STEPS.map(scale => `<option value="${scale}"${panel.fontScale === scale ? ' selected' : ''}>${fontScaleLabel(scale)}</option>`).join('')}
             </select>
@@ -2039,17 +1350,6 @@ export class UnifiedSettings {
   private toggleDraftPanel(key: string): void {
     const panel = this.draftPanelSettings[key];
     if (!panel) return;
-    // Preserve saved config for dynamic cw-* panels; unknown keys should not
-    // collapse to getEffectivePanelConfig's disabled synthetic fallback.
-    const resolvedPanel = ALL_PANELS[key] ? getEffectivePanelConfig(key, SITE_VARIANT) : panel;
-    if (!panel.enabled && !isPanelEntitled(key, resolvedPanel, isProUser())) return;
-    if (!panel.enabled && !isProUser() && isFreePanelCapCounted(key)) {
-      const enabledCount = countFreePanelCapUsage(this.draftPanelSettings);
-      if (enabledCount >= FREE_MAX_PANELS) {
-        showToast(t('modals.settingsWindow.freePanelLimit', { max: String(FREE_MAX_PANELS) }));
-        return;
-      }
-    }
     panel.enabled = !panel.enabled;
     this.panelsJustSaved = false;
     this.renderPanelsTab();
@@ -2243,1212 +1543,5 @@ export class UnifiedSettings {
       this.updateSourcesCounter();
       showToast(t('theaterPresets.applied', { preset: label, count: String(toEnable.length) }));
     }
-  }
-
-  private async loadPlanLimitNotices(): Promise<void> {
-    const request = this.captureAccountRequest();
-    if (!request || this.planLimitNoticesLoading) return;
-    this.planLimitNoticesLoading = true;
-    this.planLimitNoticesError = '';
-    try {
-      const notices = await listCurrentPlanLimitNotices();
-      if (!this.isAccountRequestCurrent(request)) return;
-      this.planLimitNotices = notices;
-    } catch (err) {
-      if (!this.isAccountRequestCurrent(request)) return;
-      console.warn('[settings] Failed to load API plan-limit notices:', err);
-      this.planLimitNoticesError = err instanceof Error
-        ? err.message
-        : 'Failed to load API plan-limit notices';
-    } finally {
-      if (this.isAccountRequestCurrent(request)) {
-        this.planLimitNoticesLoading = false;
-        this.renderPlanLimitNoticeBlocks();
-      }
-    }
-  }
-
-  private renderPlanLimitNoticeBlocks(): void {
-    const html = this.renderPlanLimitNotices();
-    this.overlay.querySelectorAll<HTMLElement>('[data-plan-limit-notices]').forEach((el) => {
-      setTrustedHtml(el, trustedHtml(html, "legacy direct innerHTML migration"));
-    });
-  }
-
-  private planLimitDimensionLabel(dimension: ApiPlanLimitNotice['dimension']): string {
-    switch (dimension) {
-      case 'api_daily_requests': return 'Daily API requests';
-      case 'api_minute_burst': return 'API burst traffic';
-      case 'mcp_daily_calls': return 'Daily MCP usage';
-      case 'mcp_minute_burst': return 'MCP burst traffic';
-    }
-  }
-
-  private planLimitStateLabel(state: ApiPlanLimitNotice['state']): string {
-    if (state === 'warning') return 'Nearing plan limit';
-    if (state === 'sustained_burst') return 'Burst limit exceeded';
-    return 'Plan limit exceeded';
-  }
-
-  private renderPlanLimitNotices(): string {
-    if (!this.planLimitNoticesError && this.planLimitNotices.length === 0) return '';
-    const error = this.planLimitNoticesError
-      ? `<div class="api-keys-error api-plan-limit-notices-error" role="alert">${escapeHtml(this.planLimitNoticesError)}</div>`
-      : '';
-    const nf = new Intl.NumberFormat();
-    return `
-      <div class="api-plan-limit-notices" aria-live="polite">
-        ${error}
-        ${this.planLimitNotices.map((notice) => {
-          const limit = notice.limit == null ? 'unlimited' : nf.format(notice.limit);
-          const usage = nf.format(notice.usage);
-          const ratio = notice.usageRatio == null ? '' : ` (${Math.round(notice.usageRatio * 100)}%)`;
-          const cta = notice.ctaKind === 'contact_support'
-            ? 'Contact support'
-            : notice.ctaKind === 'billing_portal'
-            ? 'Manage billing'
-            : notice.ctaKind === 'checkout'
-            ? 'Upgrade'
-            : '';
-          return `
-            <div class="api-plan-limit-notice ${escapeHtml(notice.state)}">
-              <div class="api-plan-limit-notice-main">
-                <div class="api-plan-limit-notice-title">${escapeHtml(this.planLimitStateLabel(notice.state))}</div>
-                <div class="api-plan-limit-notice-body">
-                  ${escapeHtml(this.planLimitDimensionLabel(notice.dimension))}: ${escapeHtml(usage)} used / ${escapeHtml(limit)} included${escapeHtml(ratio)} in ${escapeHtml(notice.windowKey)}.
-                  You can upgrade for more room or reduce traffic to stay on this plan.
-                </div>
-              </div>
-              <div class="api-plan-limit-notice-actions">
-                ${notice.ctaKind === 'checkout' ? checkoutConsentHtml(WEB_APP_ORIGIN) : ''}
-                ${cta ? `<button class="btn btn-primary api-plan-limit-notice-cta" data-plan-limit-cta="${escapeHtml(notice._id)}">${escapeHtml(cta)}</button>` : ''}
-                <button class="btn btn-ghost api-plan-limit-notice-ack" data-plan-limit-ack="${escapeHtml(notice._id)}">Dismiss</button>
-              </div>
-            </div>
-          `;
-        }).join('')}
-      </div>
-    `;
-  }
-
-  private async handleAcknowledgePlanLimitNotice(noticeId: string): Promise<void> {
-    const request = this.captureAccountRequest();
-    if (!request) return;
-    try {
-      await acknowledgePlanLimitNotice(noticeId);
-      if (!this.isAccountRequestCurrent(request)) return;
-      this.planLimitNotices = this.planLimitNotices.filter((notice) => notice._id !== noticeId);
-      this.renderPlanLimitNoticeBlocks();
-    } catch (err) {
-      if (!this.isAccountRequestCurrent(request)) return;
-      console.warn('[settings] Failed to acknowledge API plan-limit notice:', err);
-      showToast('Could not dismiss this notice. Try again.');
-    }
-  }
-
-  private handlePlanLimitNoticeCta(noticeId: string): void {
-    const notice = this.planLimitNotices.find((item) => item._id === noticeId);
-    if (!notice) return;
-    if (notice.ctaKind === 'billing_portal') {
-      const reservedWin = prereserveBillingPortalTab();
-      void openBillingPortal(reservedWin).then((result) => {
-        // The portal session exists but no window opened (native handoff
-        // refused and the browser fallback was blocked). Saying nothing here
-        // reads as a dead click on a paid feature.
-        if (result.outcome === 'open-failed') {
-          showToast('Could not open the billing portal. Please allow pop-ups and try again.');
-          return;
-        }
-        if (result.outcome === 'no-customer') {
-          showToast('Billing portal unavailable. Email support@worldmonitor.app for help.');
-        }
-      });
-      return;
-    }
-    if (notice.ctaKind === 'checkout') {
-      // Never send an active subscriber to a fresh checkout. The upgrade target
-      // (api_starter) sits in a DIFFERENT tierGroup than an existing Pro sub, and
-      // getCheckoutBlockingSubscription only blocks a same-tierGroup duplicate
-      // (#4797) — so startCheckout would STACK a second live subscription and
-      // double-charge. Route entitled users to the billing portal instead (same
-      // precedent as handleUpgradeClick); its no-customer outcome surfaces the
-      // support path for a subscription managed outside Dodo.
-      if (isEntitled()) {
-        const reservedWin = prereserveBillingPortalTab();
-        void openBillingPortal(reservedWin).then((result) => {
-          // The portal session exists but no window opened (native handoff
-          // refused and the browser fallback was blocked). Saying nothing here
-          // reads as a dead click on a paid feature.
-          if (result.outcome === 'open-failed') {
-            showToast('Could not open the billing portal. Please allow pop-ups and try again.');
-            return;
-          }
-          if (result.outcome === 'no-customer') {
-            showToast('Billing portal unavailable. Email support@worldmonitor.app for help.');
-          }
-        });
-        return;
-      }
-      this.close();
-      import('@/services/checkout').then(m => import('@/config/products').then((p) => {
-        const product = notice.upgradeTargetPlanKey === 'api_starter'
-          ? p.DODO_PRODUCTS.API_STARTER_MONTHLY
-          : p.DODO_PRODUCTS.PRO_MONTHLY;
-        return m.startCheckout(product);
-      })).catch(() => {
-        void openExternalUrl(`${WEB_APP_ORIGIN}/pro`);
-      });
-      return;
-    }
-    if (notice.ctaKind === 'contact_support') {
-      window.location.href = `mailto:support@worldmonitor.app?subject=${encodeURIComponent('WorldMonitor API plan limit upgrade')}`;
-    }
-  }
-
-  // ---------------------------------------------------------------------------
-  // API Keys tab
-  // ---------------------------------------------------------------------------
-
-  private attachApiKeysHandlers(): void {
-    // Enter to submit (only exists when entitled user sees full UI)
-    const apiKeyInput = this.overlay.querySelector<HTMLInputElement>('[data-api-keys-host] .api-keys-name-input');
-    if (apiKeyInput) {
-      apiKeyInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') void this.handleCreateApiKey();
-      });
-    }
-
-    // Gate CTA click (sign-in for anonymous, API Starter checkout otherwise).
-    // The free prompt's "Upgrade to Pro" uses the delegated .upgrade-pro-cta.
-    this.overlay.querySelectorAll<HTMLElement>('.api-keys-gate-btn').forEach((gateBtn) => {
-      gateBtn.addEventListener('click', () => {
-        if (!getAuthState().user) {
-          this.close();
-          import('@/services/clerk').then(m => m.openSignIn()).catch(() => {});
-        } else {
-          this.close();
-          import('@/services/checkout').then(m => import('@/config/products').then(p => m.startCheckout(p.DODO_PRODUCTS.API_STARTER_MONTHLY))).catch(() => {
-            void openExternalUrl(`${WEB_APP_ORIGIN}/pro`);
-          });
-        }
-      });
-    });
-  }
-
-  /**
-   * Which key section the API Keys tab shows (plan 2026-10-25-001, U5).
-   * `apiAccess` wins, so API-plan owners keep the existing section. Pro and
-   * Pro Business get desktop keys; that branch also catches a downgraded API
-   * customer, whose generic keys now work at desktop scope.
-   */
-  private keysMode(): 'signed-out' | 'api' | 'desktop' | 'upgrade' {
-    if (!getAuthState().user) return 'signed-out';
-    if (hasFeature('apiAccess')) return 'api';
-    if (hasDesktopKeyAccess(getEntitlementState(), Date.now())) return 'desktop';
-    return 'upgrade';
-  }
-
-  private canManageKeys(): boolean {
-    const mode = this.keysMode();
-    return mode === 'api' || mode === 'desktop';
-  }
-
-  /** Connected-client list, quota and revoke: signed-in accounts with mcpAccess. */
-  private canManageMcpClients(): boolean {
-    return getAuthState().user !== null && hasFeature('mcpAccess');
-  }
-
-  private desktopKeyLimit(): number {
-    return getEntitlementState()?.features.maxDesktopKeys ?? 0;
-  }
-
-  /**
-   * In desktop mode every active key counts toward `maxDesktopKeys`: desktop
-   * keys, plus a downgraded owner's generic keys (convex/apiKeys.ts
-   * createDesktopKey counts the same set).
-   */
-  private activeDesktopKeyCount(): number {
-    return this.apiKeys.filter(k => !k.revokedAt).length;
-  }
-
-  private desktopKeyErrorMessage(err: unknown): string {
-    const data = (err as { data?: unknown } | null)?.data;
-    const raw = typeof data === 'string' ? data : err instanceof Error ? err.message : '';
-    const limit = this.desktopKeyLimit();
-    if (raw.includes('DESKTOP_KEY_LIMIT_REACHED')) {
-      return `Your plan allows ${limit} desktop keys. Revoke one to create another.`;
-    }
-    if (raw.includes('DESKTOP_KEYS_DISABLED')) {
-      return "Desktop keys aren't available yet. Try again later.";
-    }
-    if (raw.includes('DESKTOP_KEY_ACCESS_REQUIRED')) {
-      return 'Desktop keys need an active Pro or Pro Business plan.';
-    }
-    if (raw.includes('INVALID_API_KEY_SCOPES')) {
-      return 'Desktop keys cannot have API scopes.';
-    }
-    return raw || 'Failed to create desktop key';
-  }
-
-  // ── Self-hosted install: this browser's desktop key (plan 2026-11-04-001, U6)
-
-  /** Empty unless this page is served by a self-hosted install. */
-  private renderSelfHostKeySection(): string {
-    const display = selfHostKeyDisplay(getSelfHostKeySnapshot());
-    if (!display) return '';
-    const { state, staleNote } = display;
-    const label = escapeHtml(t(`preferences.selfHostKey.state.${state}`));
-    const detail = state === 'disabled'
-      ? t('preferences.selfHostKey.disabled')
-      : t(`preferences.selfHostKey.detail.${state}`);
-    const status = `
-      <div class="selfhost-key-status" data-selfhost-key-status data-state="${state}" role="status" aria-live="polite">
-        <span class="api-keys-item-kind-badge selfhost-key-badge" data-tone="${SELF_HOST_KEY_TONE[state]}">${label}</span>
-        <span class="selfhost-key-detail">${escapeHtml(detail)}${staleNote ? ` ${escapeHtml(t('preferences.selfHostKey.staleNote'))}` : ''}</span>
-      </div>`;
-    const intro = `
-      <p class="api-keys-desc selfhost-key-desc">${escapeHtml(t('preferences.selfHostKey.description'))}</p>
-      <p class="api-keys-desc selfhost-key-desc">${escapeHtml(t('preferences.selfHostKey.relay'))} ${escapeHtml(t('preferences.selfHostKey.trust'))}</p>`;
-    if (state === 'disabled') {
-      return `
-      <details class="wm-pref-group selfhost-key-section" open data-selfhost-key-section>
-        <summary>${escapeHtml(t('preferences.selfHostKey.heading'))}</summary>
-        <div class="wm-pref-group-content">${status}</div>
-      </details>`;
-    }
-    const busy = this.selfHostKeyBusy;
-    const insecure = typeof window !== 'undefined' && window.isSecureContext === false;
-    const message = this.selfHostKeyMessage;
-    return `
-      <details class="wm-pref-group selfhost-key-section" open data-selfhost-key-section>
-        <summary>${escapeHtml(t('preferences.selfHostKey.heading'))}</summary>
-        <div class="wm-pref-group-content">
-          ${intro}
-          ${status}
-          ${insecure ? `<p class="ai-flow-toggle-warn selfhost-key-warn" data-selfhost-key-insecure>${escapeHtml(t('preferences.selfHostKey.insecure'))}</p>` : ''}
-          <div class="api-keys-create-form selfhost-key-form">
-            <input type="password" class="api-keys-name-input selfhost-key-input" data-selfhost-key-input
-              aria-label="${escapeHtml(t('preferences.selfHostKey.inputLabel'))}"
-              placeholder="${escapeHtml(t('preferences.selfHostKey.placeholder'))}"
-              autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="200"
-              ${this.selfHostKeyRejected ? 'aria-invalid="true"' : ''}
-              ${busy ? 'disabled' : ''} />
-            <button type="button" class="btn btn-primary" data-selfhost-key-save ${busy ? 'disabled' : ''}>${escapeHtml(t(busy === 'save' ? 'preferences.selfHostKey.saving' : 'preferences.selfHostKey.save'))}</button>
-            ${state !== 'none' ? `<button type="button" class="btn btn-secondary" data-selfhost-key-remove ${busy ? 'disabled' : ''}>${escapeHtml(t(busy === 'remove' ? 'preferences.selfHostKey.removing' : 'preferences.selfHostKey.remove'))}</button>` : ''}
-          </div>
-          <div class="api-keys-error selfhost-key-message" data-selfhost-key-message role="alert"${message ? '' : ' hidden'}>${escapeHtml(message)}</div>
-        </div>
-      </details>`;
-  }
-
-  /**
-   * Re-render the section in place, keeping a half-typed key, its focus and
-   * whether the section was collapsed. A poll that changes nothing is a no-op.
-   */
-  private refreshSelfHostKeySection(): void {
-    const host = this.overlay.querySelector<HTMLElement>('[data-selfhost-key-host]');
-    if (!host) return;
-    const html = this.renderSelfHostKeySection();
-    if (html === this.selfHostKeyRenderedHtml && host.firstElementChild) return;
-    const previous = host.querySelector<HTMLInputElement>('[data-selfhost-key-input]');
-    const value = previous?.value ?? '';
-    const focused = previous !== null && document.activeElement === previous;
-    const wasOpen = host.querySelector<HTMLDetailsElement>('[data-selfhost-key-section]')?.open;
-    setTrustedHtml(host, trustedHtml(html, 'self-host key section; every interpolated value escaped'));
-    this.selfHostKeyRenderedHtml = html;
-    const section = host.querySelector<HTMLDetailsElement>('[data-selfhost-key-section]');
-    if (section && wasOpen !== undefined) section.open = wasOpen;
-    const next = host.querySelector<HTMLInputElement>('[data-selfhost-key-input]');
-    if (next) {
-      next.value = value;
-      if (focused && !next.disabled) next.focus();
-    }
-  }
-
-  private attachSelfHostKeyHandlers(): void {
-    const host = this.overlay.querySelector<HTMLElement>('[data-selfhost-key-host]');
-    if (!host) return;
-    host.addEventListener('click', (e) => {
-      const target = e.target as HTMLElement;
-      if (target.closest('[data-selfhost-key-save]')) void this.saveSelfHostKeyFromForm();
-      else if (target.closest('[data-selfhost-key-remove]')) void this.removeSelfHostKeyFromForm();
-    });
-    host.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && (e.target as HTMLElement).matches('[data-selfhost-key-input]')) {
-        e.preventDefault();
-        void this.saveSelfHostKeyFromForm();
-      }
-    });
-  }
-
-  private selfHostKeyInput(): HTMLInputElement | null {
-    return this.overlay.querySelector<HTMLInputElement>('[data-selfhost-key-host] [data-selfhost-key-input]');
-  }
-
-  private selfHostKeyWriteMessage(result: SelfHostKeyWriteResult, failedKey: string): string {
-    if (result.kind === 'rate_limited') {
-      return result.retryAfterSeconds
-        ? t('preferences.selfHostKey.rateLimited', { seconds: result.retryAfterSeconds })
-        : t('preferences.selfHostKey.rateLimitedSoon');
-    }
-    return result.kind === 'failed' ? t(failedKey) : '';
-  }
-
-  private async saveSelfHostKeyFromForm(): Promise<void> {
-    if (this.selfHostKeyBusy) return;
-    const key = this.selfHostKeyInput()?.value.trim() ?? '';
-    if (!key) {
-      this.selfHostKeyMessage = t('preferences.selfHostKey.empty');
-      this.refreshSelfHostKeySection();
-      this.selfHostKeyInput()?.focus();
-      return;
-    }
-    // The cookie is only as private as the connection carrying it (KTD2).
-    if (window.isSecureContext === false) {
-      const send = await confirmDialog({
-        message: t('preferences.selfHostKey.insecureConfirm'),
-        confirmLabel: t('preferences.selfHostKey.insecureConfirmButton'),
-      });
-      if (!send) {
-        this.selfHostKeyInput()?.focus();
-        return;
-      }
-    }
-    this.selfHostKeyBusy = 'save';
-    this.selfHostKeyMessage = '';
-    this.selfHostKeyRejected = false;
-    this.refreshSelfHostKeySection();
-    let result: SelfHostKeyWriteResult;
-    try {
-      result = await saveSelfHostKey(key);
-    } finally {
-      this.selfHostKeyBusy = null;
-    }
-    const accepted = result.kind === 'verdict' && result.verdict.status === 'active';
-    this.selfHostKeyRejected = result.kind === 'verdict' && !accepted && result.verdict.status !== 'unavailable';
-    this.selfHostKeyMessage = this.selfHostKeyWriteMessage(result, 'preferences.selfHostKey.saveFailed');
-    this.refreshSelfHostKeySection();
-    const input = this.selfHostKeyInput();
-    if (!input) return;
-    if (accepted) {
-      input.value = '';
-    } else {
-      // Keep the key so it can be corrected.
-      input.focus();
-    }
-  }
-
-  private async removeSelfHostKeyFromForm(): Promise<void> {
-    if (this.selfHostKeyBusy) return;
-    this.selfHostKeyBusy = 'remove';
-    this.selfHostKeyMessage = '';
-    this.selfHostKeyRejected = false;
-    this.refreshSelfHostKeySection();
-    let result: SelfHostKeyWriteResult;
-    try {
-      result = await removeSelfHostKey();
-    } finally {
-      this.selfHostKeyBusy = null;
-    }
-    this.selfHostKeyMessage = this.selfHostKeyWriteMessage(result, 'preferences.selfHostKey.removeFailed');
-    this.refreshSelfHostKeySection();
-  }
-
-  private renderDesktopKeysContent(): string {
-    return `
-      <div class="api-keys-section desktop-keys-section">
-        <div class="api-keys-header">
-          <p class="api-keys-desc"><strong>Desktop keys</strong> unlock Pro in your desktop app and on self-hosted dashboards. On a shared install, each person enters their own key. An API plan is for calling the API directly. Keys are shown once on creation.</p>
-        </div>
-        <div class="desktop-keys-count" data-desktop-keys-count aria-live="polite"></div>
-        <div class="api-keys-create-form">
-          <input type="text" class="api-keys-name-input" placeholder="Key name (e.g. my-laptop)" aria-label="Desktop key name" maxlength="64" />
-          <button class="btn btn-primary api-keys-create-btn">Create desktop key</button>
-        </div>
-        <div class="api-keys-created-banner" id="usApiKeysBanner" style="display:none;"></div>
-        <div class="api-keys-error" id="usApiKeysError" style="display:none;"></div>
-        <div class="api-keys-list" id="usApiKeysList">
-          <div class="api-keys-loading">Loading...</div>
-        </div>
-        <div class="api-starter-offer" data-api-starter-offer>
-          <p class="api-keys-desc">Need the REST API, SDKs or webhooks for your organization's internal tools? API Starter adds them to your dashboard. Customer-facing products need API Business.</p>
-          ${checkoutConsentHtml(WEB_APP_ORIGIN)}
-          <button class="btn btn-secondary api-keys-gate-btn">Upgrade to API Starter</button>
-        </div>
-      </div>`;
-  }
-
-  /**
-   * Shows the used/limit count and holds create closed at the cap. Called after
-   * every list render and after a create settles, so a finished create cannot
-   * re-enable the button past the limit.
-   */
-  private syncDesktopKeyLimit(): void {
-    if (this.keysMode() !== 'desktop') return;
-    const countEl = this.overlay.querySelector<HTMLElement>('[data-desktop-keys-count]');
-    const input = this.overlay.querySelector<HTMLInputElement>('[data-api-keys-host] .api-keys-name-input');
-    const btn = this.overlay.querySelector<HTMLButtonElement>('.api-keys-create-btn');
-    if (!countEl) return;
-    if (this.apiKeysLoading && this.apiKeys.length === 0) {
-      countEl.textContent = '';
-      return;
-    }
-    const used = this.activeDesktopKeyCount();
-    const limit = this.desktopKeyLimit();
-    const atLimit = used >= limit;
-    const over = used - limit;
-    const note = over > 0
-      ? ` Your plan allows ${limit} desktop keys, and keys over the limit don't work. Revoke ${over} key${over === 1 ? '' : 's'} to get back within it.`
-      : atLimit
-      ? ` Your plan allows ${limit} desktop keys. Revoke one to create another.`
-      : '';
-    countEl.textContent = `${used} of ${limit} desktop keys in use.${note}`;
-    countEl.classList.toggle('at-limit', atLimit);
-    if (input) input.disabled = atLimit;
-    if (btn && btn.textContent !== 'Creating...') btn.disabled = atLimit;
-  }
-
-  private renderApiKeysContent(): string {
-    const authState = getAuthState();
-
-    if (!authState.user) {
-      const lockIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>`;
-      return `
-        <div class="panel-locked-state settings-access-gate">
-          <div class="panel-locked-icon" aria-hidden="true">${lockIcon}</div>
-          <h3>API and desktop keys</h3>
-          <p class="panel-locked-desc">Connect your own tools to World Monitor data, or activate Pro in the desktop app.</p>
-          <p class="panel-locked-desc">Sign in to see the keys available with your plan.</p>
-          <button class="panel-locked-cta api-keys-gate-btn" data-dashboard-interaction="signin">Sign In</button>
-        </div>`;
-    }
-
-    const mode = this.keysMode();
-    if (mode === 'desktop') return this.renderDesktopKeysContent();
-
-    if (mode === 'upgrade') {
-      const upgradeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>`;
-      return `
-        <div class="panel-locked-state settings-access-gate">
-          <div class="panel-locked-icon" aria-hidden="true">${upgradeIcon}</div>
-          <h3>Choose the access you need</h3>
-          <div class="panel-locked-desc">Desktop keys come with Pro. Use one to get your Pro data in your own desktop app.</div>
-          <button class="panel-locked-cta upgrade-pro-cta" data-dashboard-interaction="upgrade">Upgrade to Pro</button>
-          <div class="panel-locked-desc">Need the REST API, SDKs or webhooks for your organization's internal tools? API Starter adds them to the full Pro dashboard. Customer-facing products need API Business.</div>
-          ${checkoutConsentHtml(WEB_APP_ORIGIN)}
-          <button class="panel-locked-cta api-keys-gate-btn" data-dashboard-interaction="upgrade">Upgrade to API Starter</button>
-        </div>`;
-    }
-
-    return `
-      <div class="api-keys-section">
-        <div data-plan-limit-notices>${this.renderPlanLimitNotices()}</div>
-        <div class="api-keys-header">
-          <p class="api-keys-desc">Create API keys to access WorldMonitor data programmatically. Keys are shown once on creation — store them securely.</p>
-        </div>
-        <div class="api-keys-create-form">
-          <input type="text" class="api-keys-name-input" placeholder="Key name (e.g. my-app)" aria-label="API key name" maxlength="64" />
-          <button class="btn btn-primary api-keys-create-btn">Create Key</button>
-        </div>
-        <div class="api-keys-created-banner" id="usApiKeysBanner" style="display:none;"></div>
-        <div class="api-keys-error" id="usApiKeysError" style="display:none;"></div>
-        <div class="api-keys-list" id="usApiKeysList">
-          <div class="api-keys-loading">Loading...</div>
-        </div>
-      </div>`;
-  }
-
-  private async loadApiKeys(): Promise<void> {
-    const request = this.captureAccountRequest();
-    if (!request || this.apiKeysLoading) return;
-    this.apiKeysLoading = true;
-    this.apiKeysError = '';
-    this.renderApiKeysList();
-
-    try {
-      const keys = await listApiKeys();
-      if (!this.isAccountRequestCurrent(request)) return;
-      this.apiKeys = keys;
-    } catch (err) {
-      if (!this.isAccountRequestCurrent(request)) return;
-      this.apiKeysError = err instanceof Error ? err.message : 'Failed to load keys';
-    } finally {
-      if (this.isAccountRequestCurrent(request)) {
-        this.apiKeysLoading = false;
-        this.renderApiKeysList();
-      }
-    }
-  }
-
-  private async handleCreateApiKey(): Promise<void> {
-    const input = this.overlay.querySelector<HTMLInputElement>('[data-api-keys-host] .api-keys-name-input');
-    const btn = this.overlay.querySelector<HTMLButtonElement>('.api-keys-create-btn');
-    const name = input?.value.trim();
-    if (!name || !input || !btn) return;
-    const request = this.captureAccountRequest();
-    if (!request) return;
-
-    const desktop = this.keysMode() === 'desktop';
-    const idleLabel = desktop ? 'Create desktop key' : 'Create Key';
-    btn.disabled = true;
-    btn.textContent = 'Creating...';
-    this.apiKeysError = '';
-    this.newlyCreatedKey = null;
-    this.hideBanner();
-
-    try {
-      const result = desktop ? await createApiKey(name, 'desktop') : await createApiKey(name);
-      if (!this.isAccountRequestCurrent(request)) return;
-      trackApiAction('key-created');
-      this.newlyCreatedKey = result.key;
-      input.value = '';
-      this.showCreatedBanner(result.key, desktop);
-      await this.loadApiKeys();
-    } catch (err) {
-      if (!this.isAccountRequestCurrent(request)) return;
-      const msg = err instanceof Error ? err.message : 'Failed to create key';
-      // Desktop codes first: DESKTOP_KEY_LIMIT_REACHED contains KEY_LIMIT_REACHED.
-      this.apiKeysError = desktop
-        ? this.desktopKeyErrorMessage(err)
-        : msg.includes('KEY_LIMIT_REACHED')
-        ? 'Maximum of 5 active keys reached. Revoke an existing key first.'
-        : msg.includes('API_ACCESS_REQUIRED')
-        ? 'API keys require an API access subscription (API Starter or higher).'
-        : msg;
-      this.renderApiKeysError();
-    } finally {
-      if (this.isAccountRequestCurrent(request)) {
-        btn.disabled = false;
-        btn.textContent = idleLabel;
-        this.syncDesktopKeyLimit();
-      }
-    }
-  }
-
-  private async handleRevokeApiKey(keyId: string): Promise<void> {
-    const request = this.captureAccountRequest();
-    if (!request) return;
-    const keyInfo = this.apiKeys.find(k => k.id === keyId);
-    const keyName = keyInfo?.name ?? 'this key';
-    const consequence = this.keysMode() === 'desktop'
-      ? 'Any desktop app using this key will stop getting Pro data.'
-      : 'Any applications using this key will stop working.';
-    if (!confirm(`Revoke "${keyName}"? This cannot be undone. ${consequence}`)) return;
-
-    try {
-      await revokeApiKey(keyId);
-      if (!this.isAccountRequestCurrent(request)) return;
-      trackApiAction('key-revoked');
-      await this.loadApiKeys();
-    } catch (err) {
-      if (!this.isAccountRequestCurrent(request)) return;
-      this.apiKeysError = err instanceof Error ? err.message : 'Failed to revoke key';
-      this.renderApiKeysError();
-    }
-  }
-
-  private showCreatedBanner(key: string, desktop = false): void {
-    const banner = this.overlay.querySelector<HTMLElement>('#usApiKeysBanner');
-    if (!banner) return;
-
-    banner.style.display = 'block';
-    setTrustedHtml(banner, trustedHtml(`
-      <div class="api-keys-banner-title">${desktop ? 'Desktop key' : 'Key'} created — copy it now, it won't be shown again</div>
-      ${desktop ? '<div class="api-keys-desc">Paste it into the desktop app under Settings → Desktop key.</div>' : ''}
-      <div class="api-keys-banner-key">
-        <code class="api-keys-key-value">${escapeHtml(key)}</code>
-        <button class="btn btn-secondary api-keys-copy-btn">Copy</button>
-      </div>
-    `, "legacy direct innerHTML migration"));
-  }
-
-  private hideBanner(): void {
-    const banner = this.overlay.querySelector<HTMLElement>('#usApiKeysBanner');
-    if (banner) {
-      banner.style.display = 'none';
-      setTrustedHtml(banner, trustedHtml('', "legacy direct innerHTML migration"));
-    }
-  }
-
-  private renderApiKeysError(): void {
-    const el = this.overlay.querySelector<HTMLElement>('#usApiKeysError');
-    if (!el) return;
-    if (this.apiKeysError) {
-      el.style.display = 'block';
-      el.textContent = this.apiKeysError;
-    } else {
-      el.style.display = 'none';
-      el.textContent = '';
-    }
-  }
-
-  private renderApiKeysList(): void {
-    const container = this.overlay.querySelector('#usApiKeysList');
-    if (!container) return;
-
-    const desktopMode = this.keysMode() === 'desktop';
-
-    if (this.apiKeysLoading && this.apiKeys.length === 0) {
-      setTrustedHtml(container, trustedHtml('<div class="api-keys-loading">Loading...</div>', "legacy direct innerHTML migration"));
-      this.syncDesktopKeyLimit();
-      return;
-    }
-
-    this.renderApiKeysError();
-    this.syncDesktopKeyLimit();
-
-    const active = this.apiKeys.filter(k => !k.revokedAt);
-    const revoked = this.apiKeys.filter(k => k.revokedAt);
-
-    if (active.length === 0 && revoked.length === 0) {
-      const empty = desktopMode
-        ? 'No desktop keys yet. Create one above to use in your desktop app.'
-        : 'No API keys yet. Create one above to get started.';
-      setTrustedHtml(container, trustedHtml(`<div class="api-keys-empty">${empty}</div>`, "legacy direct innerHTML migration"));
-      return;
-    }
-
-    // Desktop mode: a generic key here belongs to a downgraded API customer and
-    // now works at desktop scope only. API mode: a desktop key here belongs to
-    // an owner who upgraded from Pro and keeps desktop scope (R8).
-    const kindBadge = (k: ApiKeyInfo): string => {
-      if (desktopMode && k.keyKind !== 'desktop') {
-        return '<span class="api-keys-item-kind-badge" title="Created as an API key. On your current plan it works as a desktop key.">Desktop access</span>';
-      }
-      if (!desktopMode && k.keyKind === 'desktop') {
-        return '<span class="api-keys-item-kind-badge" title="Works in your desktop app only, not for API access.">Desktop key</span>';
-      }
-      return '';
-    };
-
-    const formatDate = (ts: number) => new Date(ts).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-
-    const renderKey = (k: ApiKeyInfo) => {
-      const isRevoked = !!k.revokedAt;
-      return `
-        <div class="api-keys-item${isRevoked ? ' revoked' : ''}">
-          <div class="api-keys-item-main">
-            <span class="api-keys-item-name">${escapeHtml(k.name)}</span>
-            <code class="api-keys-item-prefix">${escapeHtml(k.keyPrefix)}${'*'.repeat(8)}</code>
-            ${isRevoked ? '' : kindBadge(k)}
-          </div>
-          <div class="api-keys-item-meta">
-            <span>Created ${formatDate(k.createdAt)}</span>
-            ${k.lastUsedAt ? `<span>Last used ${formatDate(k.lastUsedAt)}</span>` : ''}
-            ${isRevoked ? `<span class="api-keys-item-revoked-badge">Revoked ${formatDate(k.revokedAt!)}</span>` : ''}
-          </div>
-          ${!isRevoked ? `<button class="btn btn-ghost api-keys-revoke-btn" data-key-id="${escapeHtml(k.id)}">Revoke</button>` : ''}
-        </div>
-      `;
-    };
-
-    setTrustedHtml(container, trustedHtml(active.map(renderKey).join('')
-      + (revoked.length > 0 ? `<div class="api-keys-revoked-section"><div class="api-keys-revoked-label">Revoked</div>${revoked.map(renderKey).join('')}</div>` : ''), "legacy direct innerHTML migration"));
-  }
-
-  // ---------------------------------------------------------------------------
-  // Embeds tab — partner-embed keys (`wme_…`)
-  //
-  // Gated on `embedAccess`, never `apiAccess`: both Pro tiers sell embedding
-  // without REST access, and the API Keys tab above would hide embed keys from
-  // exactly the customers this feature exists for. Same split, same reason as
-  // the MCP Clients tab below.
-  //
-  // A separate tab rather than a second list inside API Keys, because the two
-  // credentials have opposite handling rules and must never read as
-  // interchangeable: an embed key is MEANT to be published in the partner's
-  // page HTML; a `wm_` key there hands over the account's whole REST allowance.
-  // ---------------------------------------------------------------------------
-
-  private attachEmbedKeysHandlers(): void {
-    const input = this.overlay.querySelector<HTMLInputElement>('.embed-keys-name-input');
-    if (!input) return;
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') void this.handleCreateEmbedKey();
-    });
-  }
-
-  private renderEmbedKeysContent(): string {
-    const authState = getAuthState();
-
-    if (!authState.user) {
-      const lockIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>`;
-      return `
-        <div class="panel-locked-state">
-          <div class="panel-locked-icon">${lockIcon}</div>
-          <div class="panel-locked-desc">Sign in to manage embed keys</div>
-        </div>`;
-    }
-
-    if (!hasEmbedAccessForAccount(authState.user?.role)) {
-      // Defensive — the tab is hidden entirely without embedAccess, so this
-      // only shows if the subscription lapsed while the modal was open.
-      const upgradeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>`;
-      return `
-        <div class="panel-locked-state">
-          <div class="panel-locked-icon">${upgradeIcon}</div>
-          <div class="panel-locked-desc">Put World Monitor panels on your own site with a scoped embed key.</div>
-        </div>`;
-    }
-
-    return `
-      <div class="embed-keys-section">
-        <div class="embed-keys-header">
-          <p class="embed-keys-desc">Embed keys authorise World Monitor panels on your site and nothing else, and each one is shown once at creation. Paste it into the <code>data-key</code> attribute of the <a class="embed-keys-docs-link" ${LEGAL_LINK_ATTR} href="${escapeHtml(`${WEB_APP_ORIGIN}/docs/embed-live-map`)}" target="_blank" rel="noopener noreferrer">embed loader</a>.</p>
-        </div>
-        <div class="embed-keys-note">
-          <strong>These are meant to be public.</strong> An embed key sits in your page's HTML where anyone can read it — that is the point, and it is why it exists as its own credential. Never put an API key (<code>wm_…</code>) there instead: that one carries your whole REST allowance. New reads with a revoked key are denied within about a minute. Already rendered paid-only panels remain visible until reload. A live map already showing its paid tier holds a session grant for up to 30 more minutes, then drops to the free tier.
-        </div>
-        <div class="embed-keys-create-form">
-          <input type="text" class="embed-keys-name-input" placeholder="Key name (e.g. marketing-site)" aria-label="Embed key name" maxlength="64" />
-          <button class="btn btn-primary embed-keys-create-btn" ${this.embedKeyCreating ? 'disabled' : ''}>${this.embedKeyCreating ? 'Creating...' : 'Create Embed Key'}</button>
-        </div>
-        <div class="embed-keys-created-banner" id="usEmbedKeysBanner" style="display:none;"></div>
-        <div class="embed-keys-error" id="usEmbedKeysError" style="display:none;"></div>
-        <div class="embed-keys-list" id="usEmbedKeysList">
-          <div class="embed-keys-loading">Loading...</div>
-        </div>
-      </div>`;
-  }
-
-  private async loadEmbedKeys(): Promise<void> {
-    const request = this.captureAccountRequest();
-    if (!request || this.embedKeysLoading) return;
-    this.embedKeysLoading = true;
-    this.embedKeysError = '';
-    this.renderEmbedKeysList();
-
-    try {
-      const keys = await listEmbedKeys();
-      if (!this.isAccountRequestCurrent(request)) return;
-      this.embedKeys = keys;
-    } catch (err) {
-      if (!this.isAccountRequestCurrent(request)) return;
-      this.embedKeysError = err instanceof Error ? err.message : 'Failed to load embed keys';
-    } finally {
-      if (this.isAccountRequestCurrent(request)) {
-        this.embedKeysLoading = false;
-        this.renderEmbedKeysList();
-      }
-    }
-  }
-
-  private async handleCreateEmbedKey(): Promise<void> {
-    if (this.embedKeyCreating) return;
-    const input = this.overlay.querySelector<HTMLInputElement>('.embed-keys-name-input');
-    const btn = this.overlay.querySelector<HTMLButtonElement>('.embed-keys-create-btn');
-    const name = input?.value.trim();
-    if (!name || !input || !btn) return;
-    const request = this.captureAccountRequest();
-    if (!request) return;
-
-    this.embedKeyCreating = true;
-    btn.disabled = true;
-    btn.textContent = 'Creating...';
-    this.embedKeysError = '';
-    this.newlyCreatedEmbedKey = null;
-    this.hideEmbedKeysBanner();
-
-    try {
-      const result = await createEmbedKey(name);
-      if (!this.isAccountRequestCurrent(request)) return;
-      this.newlyCreatedEmbedKey = result.key;
-      const currentInput = this.overlay.querySelector<HTMLInputElement>('.embed-keys-name-input');
-      if (currentInput) currentInput.value = '';
-      this.showEmbedKeysCreatedBanner(result.key);
-      await this.loadEmbedKeys();
-    } catch (err) {
-      if (!this.isAccountRequestCurrent(request)) return;
-      const msg = err instanceof Error ? err.message : 'Failed to create embed key';
-      this.embedKeysError = msg.includes('KEY_LIMIT_REACHED')
-        ? 'Maximum of 5 active embed keys reached. Revoke an existing key first.'
-        : msg.includes('EMBED_ACCESS_REQUIRED')
-        ? 'Embed keys require an active paid plan.'
-        : msg;
-      this.renderEmbedKeysError();
-    } finally {
-      if (this.isAccountRequestCurrent(request)) {
-        this.embedKeyCreating = false;
-        const currentBtn = this.overlay.querySelector<HTMLButtonElement>('.embed-keys-create-btn');
-        if (currentBtn) {
-          currentBtn.disabled = false;
-          currentBtn.textContent = 'Create Embed Key';
-        }
-      }
-    }
-  }
-
-  private async handleRevokeEmbedKey(keyId: string): Promise<void> {
-    const request = this.captureAccountRequest();
-    if (!request) return;
-    const keyInfo = this.embedKeys.find(k => k.id === keyId);
-    const keyName = keyInfo?.name ?? 'this key';
-    if (!confirm(`Revoke "${keyName}"? This cannot be undone. New reads with this key will be denied within about a minute. Already rendered paid-only panels remain visible until reload. A live map can retain its paid tier for up to 30 more minutes.`)) return;
-
-    try {
-      await revokeEmbedKey(keyId);
-      if (!this.isAccountRequestCurrent(request)) return;
-      await this.loadEmbedKeys();
-    } catch (err) {
-      if (!this.isAccountRequestCurrent(request)) return;
-      this.embedKeysError = err instanceof Error ? err.message : 'Failed to revoke embed key';
-      this.renderEmbedKeysError();
-    }
-  }
-
-  private showEmbedKeysCreatedBanner(key: string): void {
-    const banner = this.overlay.querySelector<HTMLElement>('#usEmbedKeysBanner');
-    if (!banner) return;
-
-    banner.style.display = 'block';
-    setTrustedHtml(banner, trustedHtml(`
-      <div class="embed-keys-banner-title">Embed key created — copy it now, it won't be shown again</div>
-      <div class="embed-keys-banner-key">
-        <code class="embed-keys-key-value">${escapeHtml(key)}</code>
-        <button class="btn btn-secondary embed-keys-copy-btn">Copy</button>
-      </div>
-    `, "legacy direct innerHTML migration"));
-  }
-
-  private hideEmbedKeysBanner(): void {
-    const banner = this.overlay.querySelector<HTMLElement>('#usEmbedKeysBanner');
-    if (banner) {
-      banner.style.display = 'none';
-      setTrustedHtml(banner, trustedHtml('', "legacy direct innerHTML migration"));
-    }
-  }
-
-  private renderEmbedKeysError(): void {
-    const el = this.overlay.querySelector<HTMLElement>('#usEmbedKeysError');
-    if (!el) return;
-    if (this.embedKeysError) {
-      el.style.display = 'block';
-      el.textContent = this.embedKeysError;
-    } else {
-      el.style.display = 'none';
-      el.textContent = '';
-    }
-  }
-
-  private renderEmbedKeysList(): void {
-    const container = this.overlay.querySelector('#usEmbedKeysList');
-    if (!container) return;
-
-    if (this.embedKeysLoading && this.embedKeys.length === 0) {
-      setTrustedHtml(container, trustedHtml('<div class="embed-keys-loading">Loading...</div>', "legacy direct innerHTML migration"));
-      return;
-    }
-
-    this.renderEmbedKeysError();
-
-    const active = this.embedKeys.filter(k => !k.revokedAt);
-    const revoked = this.embedKeys.filter(k => k.revokedAt);
-
-    if (active.length === 0 && revoked.length === 0) {
-      setTrustedHtml(container, trustedHtml('<div class="embed-keys-empty">No embed keys yet. Create one above, then paste it into the loader snippet from the Embed button on the map.</div>', "legacy direct innerHTML migration"));
-      return;
-    }
-
-    const formatDate = (ts: number) => new Date(ts).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-
-    const renderKey = (k: EmbedKeyInfo) => {
-      const isRevoked = !!k.revokedAt;
-      return `
-        <div class="embed-keys-item${isRevoked ? ' revoked' : ''}">
-          <div class="embed-keys-item-main">
-            <span class="embed-keys-item-name">${escapeHtml(k.name)}</span>
-            <code class="embed-keys-item-prefix">${escapeHtml(k.keyPrefix)}${'*'.repeat(8)}</code>
-          </div>
-          <div class="embed-keys-item-meta">
-            <span>Created ${formatDate(k.createdAt)}</span>
-            ${k.lastUsedAt ? `<span>Last used ${formatDate(k.lastUsedAt)}</span>` : ''}
-            ${isRevoked ? `<span class="embed-keys-item-revoked-badge">Revoked ${formatDate(k.revokedAt!)}</span>` : ''}
-          </div>
-          ${!isRevoked ? `<button class="btn btn-ghost embed-keys-revoke-btn" data-key-id="${escapeHtml(k.id)}">Revoke</button>` : ''}
-        </div>
-      `;
-    };
-
-    setTrustedHtml(container, trustedHtml(active.map(renderKey).join('')
-      + (revoked.length > 0 ? `<div class="embed-keys-revoked-section"><div class="embed-keys-revoked-label">Revoked</div>${revoked.map(renderKey).join('')}</div>` : ''), "legacy direct innerHTML migration"));
-  }
-
-  // ---------------------------------------------------------------------------
-  // Connected MCP clients tab (plan 2026-05-10-001 U9)
-  //
-  // Distinct from the API Keys tab above (gated on `apiAccess`). This tab is
-  // gated on `mcpAccess` so Pro users (where `apiAccess === false`) see ONLY
-  // this tab. API Starter+ users (`apiAccess && mcpAccess`) see BOTH tabs;
-  // they manage independent surfaces (manual API keys vs auto-issued OAuth
-  // tokens for Claude Desktop / Cursor / etc).
-  // ---------------------------------------------------------------------------
-
-  private renderMcpClientsContent(): string {
-    const signedIn = getAuthState().user !== null;
-    const manage = this.canManageMcpClients()
-      ? `
-        <div class="mcp-clients-manage" data-mcp-manage>
-          <h3 class="mcp-agents-subtitle">Connected agents</h3>
-          <div data-plan-limit-notices>${this.renderPlanLimitNotices()}</div>
-          <div class="mcp-clients-quota" id="usMcpQuota" aria-live="polite">${this.renderMcpQuotaText()}</div>
-          <div class="mcp-clients-error" id="usMcpClientsError" style="display:none;"></div>
-          <div class="mcp-clients-list" id="usMcpClientsList">
-            <div class="mcp-clients-loading">Loading...</div>
-          </div>
-        </div>`
-      : `
-        <p class="mcp-agents-plan-note">
-          ${signedIn
-            ? 'Your free account includes source listings and a few cached datasets: up to 5 calls a day, in up to 3 sessions.'
-            : 'Your agent asks you to sign in with your World Monitor account. A free account includes a few cached datasets: up to 5 calls a day, in up to 3 sessions.'}
-          Pro unlocks every tool.
-          <a ${LEGAL_LINK_ATTR} href="${escapeHtml(`${WEB_APP_ORIGIN}/pro`)}" target="_blank" rel="noopener noreferrer">Compare plans</a>
-        </p>`;
-
-    return `
-      <div class="mcp-clients-section">
-        <div class="mcp-clients-header">
-          <h3 class="mcp-agents-title">Connect World Monitor to your AI agent</h3>
-          <p class="mcp-clients-desc">Pick your assistant and sign in with your World Monitor account. No API key to copy. Each agent gets its own credential you can revoke any time.</p>
-        </div>
-        <div class="mcp-agents-url">
-          <span class="mcp-agents-url-label">Server URL</span>
-          <code>${escapeHtml(MCP_SERVER_URL)}</code>
-          <button type="button" class="btn btn-secondary mcp-copy-btn" data-copy-value="${escapeHtml(MCP_SERVER_URL)}" data-copy-label="Copy">Copy</button>
-        </div>
-        <ul class="mcp-agents-list" role="list">
-          ${MCP_AGENT_CLIENTS.map((client) => this.renderMcpAgentClient(client)).join('')}
-        </ul>
-        <p class="mcp-agents-docs">
-          Step-by-step guides with screenshots:
-          <a ${LEGAL_LINK_ATTR} href="${escapeHtml(`${WEB_APP_ORIGIN}/docs/mcp-quickstart`)}" target="_blank" rel="noopener noreferrer">MCP quickstart</a>
-        </p>
-        ${manage}
-      </div>`;
-  }
-
-  private renderMcpAgentClient(client: McpAgentClient): string {
-    const id = escapeHtml(client.id);
-    const { action } = client;
-    let control = '';
-    let command = '';
-    if (action.kind === 'link') {
-      // LEGAL_LINK_ATTR routes the click to the OS browser on desktop, where a
-      // target=_blank anchor would open a chrome-less WebView window.
-      control = `<a class="btn btn-primary mcp-agent-action" ${LEGAL_LINK_ATTR} data-agent-connect="${id}" href="${escapeHtml(action.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(action.label)}</a>`;
-    } else if (action.kind === 'command') {
-      command = `
-        <div class="mcp-agent-command">
-          <code>${escapeHtml(action.command)}</code>
-          <button type="button" class="btn btn-secondary mcp-copy-btn" data-agent-connect="${id}" data-copy-value="${escapeHtml(action.command)}" data-copy-label="Copy">Copy</button>
-        </div>`;
-    } else {
-      control = `
-        ${action.openHref ? `<a class="btn btn-ghost mcp-agent-action" ${LEGAL_LINK_ATTR} data-agent-connect="${id}" href="${escapeHtml(action.openHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(action.openLabel ?? 'Open')}</a>` : ''}
-        <button type="button" class="btn btn-secondary mcp-copy-btn" data-agent-connect="${id}" data-copy-value="${escapeHtml(MCP_SERVER_URL)}" data-copy-label="Copy URL">Copy URL</button>`;
-    }
-    return `
-      <li class="mcp-agent" data-agent-id="${id}">
-        <div class="mcp-agent-row">
-          <div class="mcp-agent-text">
-            <span class="mcp-agent-name">${escapeHtml(client.name)}</span>
-            <span class="mcp-agent-hint">${escapeHtml(client.hint)}</span>
-          </div>
-          ${control ? `<div class="mcp-agent-controls">${control}</div>` : ''}
-        </div>
-        ${command}
-      </li>`;
-  }
-
-  private renderMcpQuotaText(): string {
-    const q = this.mcpQuota;
-    if (q === 'unavailable') {
-      return `<span class="mcp-clients-quota-loading">Quota unavailable</span>`;
-    }
-    if (!q) {
-      return `<span class="mcp-clients-quota-loading">Loading quota...</span>`;
-    }
-    const reset = this.formatQuotaReset(q.resetsAt);
-    // `limit: null` = unlimited plan (Enterprise) — there is no denominator to
-    // show, so the counter reads "120 / unlimited".
-    const limitLabel = q.limit === null ? 'unlimited' : String(q.limit);
-    return `<span class="mcp-clients-quota-label">MCP daily quota:</span>
-      <strong>${q.used} / ${limitLabel}</strong>
-      <span class="mcp-clients-quota-reset">used today, resets ${escapeHtml(reset)}</span>`;
-  }
-
-  private formatQuotaReset(iso: string): string {
-    const ts = Date.parse(iso);
-    if (!Number.isFinite(ts)) return 'at next UTC midnight';
-    const ms = ts - Date.now();
-    if (ms <= 0) return 'momentarily';
-    const totalSec = Math.floor(ms / 1000);
-    const hrs = Math.floor(totalSec / 3600);
-    const mins = Math.floor((totalSec % 3600) / 60);
-    if (hrs > 0) return `in ${hrs}h ${mins}m`;
-    if (mins > 0) return `in ${mins}m`;
-    return 'in under a minute';
-  }
-
-  private async loadMcpClients(): Promise<void> {
-    const request = this.captureAccountRequest();
-    if (!request || this.mcpClientsLoading) return;
-    this.mcpClientsLoading = true;
-    this.mcpClientsError = '';
-    this.renderMcpClientsList();
-
-    try {
-      const clients = await listMcpClients();
-      if (!this.isAccountRequestCurrent(request)) return;
-      this.mcpClients = clients;
-    } catch (err) {
-      if (!this.isAccountRequestCurrent(request)) return;
-      this.mcpClientsError = err instanceof Error ? err.message : 'Failed to load MCP clients';
-    } finally {
-      if (this.isAccountRequestCurrent(request)) {
-        this.mcpClientsLoading = false;
-        this.renderMcpClientsList();
-      }
-    }
-
-    // Kick a fresh quota fetch alongside the list so the user sees current
-    // numbers immediately on tab open (the polling timer takes 30s otherwise).
-    if (this.isAccountRequestCurrent(request)) void this.refreshMcpQuota();
-  }
-
-  private async refreshMcpQuota(): Promise<void> {
-    const request = this.captureAccountRequest();
-    if (!request) return;
-    try {
-      const quota = await fetchMcpQuota();
-      if (!this.isAccountRequestCurrent(request)) return;
-      this.mcpQuota = quota;
-    } catch {
-      if (!this.isAccountRequestCurrent(request)) return;
-      this.mcpQuota = 'unavailable';
-    }
-    if (this.isAccountRequestCurrent(request)) this.renderMcpQuotaInPlace();
-  }
-
-  private renderMcpQuotaInPlace(): void {
-    const el = this.overlay.querySelector<HTMLElement>('#usMcpQuota');
-    if (el) setTrustedHtml(el, trustedHtml(this.renderMcpQuotaText(), "legacy direct innerHTML migration"));
-  }
-
-  /**
-   * Auto-refresh the quota counter every 30s while the tab is visible.
-   * Cleared on tab-switch, close(), and destroy() — see stopMcpQuotaPolling.
-   */
-  private startMcpQuotaPolling(): void {
-    if (this.mcpQuotaTimer) return; // idempotent
-    this.mcpQuotaTimer = setInterval(() => {
-      // Skip silently if the page is no longer visible — can happen if the
-      // overlay was hidden via display:none rather than full destroy().
-      if (this.nav?.page !== 'mcp-clients') return;
-      // AI Agents stays open after a downgrade, with the quota section gone.
-      if (!this.canManageMcpClients()) {
-        this.stopMcpQuotaPolling();
-        return;
-      }
-      void this.refreshMcpQuota();
-    }, 30_000);
-  }
-
-  private stopMcpQuotaPolling(): void {
-    if (this.mcpQuotaTimer) {
-      clearInterval(this.mcpQuotaTimer);
-      this.mcpQuotaTimer = null;
-    }
-  }
-
-  private async handleRevokeMcpClient(tokenId: string): Promise<void> {
-    const request = this.captureAccountRequest();
-    if (!request) return;
-    const client = this.mcpClients.find(c => c.id === tokenId);
-    const label = client?.name?.trim() ? `"${client.name}"` : 'this client';
-    if (!confirm(`Revoke ${label}? The connected AI client will need to re-authorize before its next request.`)) return;
-
-    try {
-      await revokeMcpClient(tokenId);
-      if (!this.isAccountRequestCurrent(request)) return;
-      // Refresh both list (Convex query result cached locally) and quota
-      // (revoke does not change the daily counter, but the user might have
-      // crossed the boundary while the modal was open).
-      await this.loadMcpClients();
-    } catch (err) {
-      if (!this.isAccountRequestCurrent(request)) return;
-      this.mcpClientsError = err instanceof Error ? err.message : 'Failed to revoke MCP client';
-      this.renderMcpClientsError();
-    }
-  }
-
-  private renderMcpClientsError(): void {
-    const el = this.overlay.querySelector<HTMLElement>('#usMcpClientsError');
-    if (!el) return;
-    if (this.mcpClientsError) {
-      el.style.display = 'block';
-      el.textContent = this.mcpClientsError;
-    } else {
-      el.style.display = 'none';
-      el.textContent = '';
-    }
-  }
-
-  private renderMcpClientsList(): void {
-    const container = this.overlay.querySelector('#usMcpClientsList');
-    if (!container) return;
-
-    if (this.mcpClientsLoading && this.mcpClients.length === 0) {
-      setTrustedHtml(container, trustedHtml('<div class="mcp-clients-loading">Loading...</div>', "legacy direct innerHTML migration"));
-      return;
-    }
-
-    this.renderMcpClientsError();
-
-    const active = this.mcpClients.filter(c => !c.revokedAt);
-    const revoked = this.mcpClients.filter(c => c.revokedAt);
-
-    if (active.length === 0 && revoked.length === 0) {
-      setTrustedHtml(container, trustedHtml(`
-        <div class="mcp-clients-empty">
-          <div class="mcp-clients-empty-title">No connected agents yet</div>
-          <div class="mcp-clients-empty-desc">Pick an assistant above. It appears here after you sign in from it.</div>
-        </div>`, "legacy direct innerHTML migration"));
-      return;
-    }
-
-    const formatDate = (ts: number) => new Date(ts).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-    const formatRelative = (ts: number): string => {
-      const ms = Date.now() - ts;
-      const sec = Math.floor(ms / 1000);
-      if (sec < 60) return 'just now';
-      const min = Math.floor(sec / 60);
-      if (min < 60) return `${min}m ago`;
-      const hrs = Math.floor(min / 60);
-      if (hrs < 24) return `${hrs}h ago`;
-      return formatDate(ts);
-    };
-
-    const renderClient = (c: McpClientInfo) => {
-      const isRevoked = !!c.revokedAt;
-      const name = c.name?.trim() || 'Connected MCP client';
-      const lastUsed = c.lastUsedAt ? formatRelative(c.lastUsedAt) : 'never';
-      return `
-        <div class="mcp-clients-item${isRevoked ? ' revoked' : ''}">
-          <div class="mcp-clients-item-main">
-            <span class="mcp-clients-item-name">${escapeHtml(name)}</span>
-          </div>
-          <div class="mcp-clients-item-meta">
-            <span>Connected ${formatDate(c.createdAt)}</span>
-            <span>Last used ${escapeHtml(lastUsed)}</span>
-            ${isRevoked ? `<span class="mcp-clients-item-revoked-badge">Revoked ${formatDate(c.revokedAt!)}</span>` : ''}
-          </div>
-          ${!isRevoked ? `<button class="btn btn-ghost mcp-clients-revoke-btn" data-token-id="${escapeHtml(c.id)}">Revoke</button>` : ''}
-        </div>
-      `;
-    };
-
-    setTrustedHtml(container, trustedHtml(active.map(renderClient).join('')
-      + (revoked.length > 0 ? `<div class="mcp-clients-revoked-section"><div class="mcp-clients-revoked-label">Revoked</div>${revoked.map(renderClient).join('')}</div>` : ''), "legacy direct innerHTML migration"));
   }
 }

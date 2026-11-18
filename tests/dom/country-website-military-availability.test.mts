@@ -369,14 +369,4 @@ describe('website qualified military presentation owner',()=>{
   if(outcome==='success')old.resolve(qualifiedResult());else old.reject(new CountrySectionError('unavailable','Older failure'));await first;expect(read).toHaveBeenCalledTimes(2);
   expect(h.panel.getSignalCounts()).toMatchObject({militaryVessels:2,militaryVesselsInCountry:0});expect(h.page.updateMilitaryActivity).toHaveBeenLastCalledWith(expect.objectContaining({nearbyVessels:0}));h.cleanup();
  });
- it('clears the owner on access loss, suppresses pending pre-loss data, and recovers on access return',async()=>{
-  const h=ownerFixture(),pending=deferred<QualifiedMilitaryResult>();const read=vi.spyOn(qualifiedMilitaryLoader,'loadHostCountryMilitaryActivity').mockResolvedValueOnce(qualifiedResult()).mockReturnValueOnce(pending.promise);
-  await h.load();vi.spyOn(h.intel,'getCountrySignals').mockResolvedValue(h.base());await h.refresh();
-  Reflect.set(h.intel,'lastHadPremium',true);Reflect.set(h.intel,'getCountryController',()=>({refreshPremium(){}}));
-  read.mockRejectedValue(new CountrySectionError('locked','Access lost'));
-  Reflect.get(h.intel,'handlePremiumAccessTransition').call(h.intel,false);expect(h.panel.getSignalCounts()).toMatchObject({militaryFlights:null,militaryVessels:null});await tick();
-  pending.resolve(qualifiedResult());await tick();expect(h.panel.getSignalCounts()).toMatchObject({militaryFlights:null,militaryVessels:null});
-  read.mockResolvedValue(qualifiedResult());Reflect.get(h.intel,'handlePremiumAccessTransition').call(h.intel,true);await tick();
-  expect(h.panel.getSignalCounts()).toMatchObject(qualifiedCounts);h.cleanup();
- });
 });

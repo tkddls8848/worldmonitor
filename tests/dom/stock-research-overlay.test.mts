@@ -17,10 +17,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const hasPremiumAccess = vi.fn<() => boolean>(() => true);
 const analyzeStock = vi.fn();
 
-vi.mock('@/services/panel-gating', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/services/panel-gating')>()),
-  hasPremiumAccess: () => hasPremiumAccess(),
-}));
 
 vi.mock('@/services/generated-rpc-clients', () => ({
   MarketServiceClient: class {
@@ -30,7 +26,6 @@ vi.mock('@/services/generated-rpc-clients', () => ({
   },
 }));
 
-vi.mock('@/services/premium-fetch', () => ({ premiumFetch: vi.fn() }));
 vi.mock('@/services/rpc-client', () => ({ getRpcBaseUrl: () => 'https://rpc.test' }));
 
 const {
@@ -69,17 +64,6 @@ afterEach(() => {
 });
 
 describe('stock research overlay premium gate', () => {
-  it('renders the locked state and never calls the premium RPC', async () => {
-    hasPremiumAccess.mockReturnValue(false);
-    await openStockResearchOverlay('AAPL');
-
-    expect(analyzeSection()?.dataset.analyzeState).toBe('locked');
-    expect(analyzeStock).not.toHaveBeenCalled();
-    // No analysis value may reach the DOM in the locked state, including via
-    // attributes rather than visible text.
-    expect(document.body.innerHTML).not.toContain('Rating summary');
-  });
-
   it('drives loading -> ready and renders the analysis for an entitled user', async () => {
     await openStockResearchOverlay('AAPL');
     expect(analyzeStock).toHaveBeenCalledTimes(1);
@@ -307,17 +291,6 @@ describe('stock research overlay discloses AI-vs-template provenance (#5498)', (
     expect(analyzeSection()?.textContent).toContain('No analysis is available for AAPL right now.');
   });
 
-  it('renders no provenance line in the locked or error states', async () => {
-    hasPremiumAccess.mockReturnValue(false);
-    await openStockResearchOverlay('AAPL');
-    expect(document.querySelector('[data-analysis-provenance]')).toBeNull();
-    closeStockResearchOverlay();
-
-    hasPremiumAccess.mockReturnValue(true);
-    analyzeStock.mockRejectedValue(new Error('boom'));
-    await openStockResearchOverlay('AAPL');
-    expect(document.querySelector('[data-analysis-provenance]')).toBeNull();
-  });
 });
 
 describe('stock research overlay chart width', () => {

@@ -31,8 +31,6 @@ import { toFlagEmoji } from '@/utils/country-flag';
 import { PORTS } from '@/config/ports';
 import { getChokepointRoutes } from '@/config/trade-routes';
 import { STRATEGIC_WATERWAYS } from '@/config/geo';
-import { hasPremiumAccess, readClientEntitlementBelief, readPremiumAccessGrant } from '@/services/panel-gating';
-import { getAuthState } from '@/services/auth-state';
 import { trackGateHit } from '@/services/analytics';
 import { fetchBypassOptions, fetchChokepointStatus } from '@/services/supply-chain';
 import { haversineDistanceKm } from '@/services/related-assets';
@@ -295,7 +293,7 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
   }
 
   private canRequestPremium(): boolean {
-    return this.source?.canRequestPremium() ?? hasPremiumAccess(getAuthState());
+    return this.source?.canRequestPremium() ?? true;
   }
 
   public selectTopic(topic: BriefTopic): void {
@@ -723,36 +721,6 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
       });
     });
     signal.throwIfAborted();
-  }
-
-  public syncCountryPremiumSectionsAccess(hasAccess: boolean): void {
-    this.outputClose?.();
-    this.costShockCalcAbort?.abort();
-    if (this.costShockCalcDebounceTimer) clearTimeout(this.costShockCalcDebounceTimer);
-    this.foodStocksRequestId++;
-    this.demographicsCapabilityRequestId++;
-    if (!hasAccess) { this.cachedTradeExposureData = null; this.cachedSectors = []; }
-    for (const id of ['trade', 'food', 'demographics', 'debt', 'sanctions', 'flows', 'tariffs', 'products', 'scenario', 'commodities'] as const) {
-      const section = this.sections.find(section => section.id === id);
-      if (section) section.body.replaceChildren(hasAccess
-        ? this.makeLoading(`Loading ${section.title.toLowerCase()}…`)
-        : this.makeProLocked(`Upgrade to PRO for ${section.title.toLowerCase()}`));
-    }
-    if (hasAccess && this.currentCode) {
-      if (this.foodStocksBody) void this.renderFoodStocks(this.currentCode, this.foodStocksBody);
-      if (this.demographicsBody) void this.renderDemographicsCapability(this.currentCode, this.demographicsBody);
-      if (this.cachedTradeExposureData?.primaryChokepointId) {
-        void this.loadCostShock(this.cachedTradeExposureData.primaryChokepointId);
-      } else if (this.tradeExposureBody?.querySelector('.cdp-empty')) {
-        this.updateMultiSectorCostShock(null);
-      }
-    }
-    this.currentDefenseIndustrial = null;
-    this.renderDefenseIndustrialBase(hasAccess ? 'loading' : 'locked');
-    if (!this.commodityVulnerabilityBody) return;
-    this.commodityVulnerabilityBody.replaceChildren(hasAccess
-      ? this.makeLoading(t('components.supplyVulnerability.loading'))
-      : this.makeProLocked(t('components.supplyVulnerability.proLocked')));
   }
 
   private renderMilitaryActivity(): void {
@@ -4009,33 +3977,13 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
       // failure. The `kind` tag claims it for beforeSend: a scorecard deadline
       // or a network failure arrives with zero frames (`signal timed out`,
       // `Failed to fetch`) and would otherwise be dropped as extension noise.
-      //
-      // A 401/403 is the one failure this panel cannot diagnose from the event
-      // alone. Every premium widget here fetches only once `hasPremiumAccess()`
-      // is true, so a denial means the client's premium belief and the
-      // credential the premium injector actually attached disagreed — and the
-      // event said nothing about which of the four arms had granted access
-      // (WORLDMONITOR-147). Record the arm and the client's own entitlement
-      // belief; together they separate "a browser-local key unlocked the panel"
-      // from "the Clerk session lapsed mid-flight".
-      //
-      // Denials ONLY. A deadline or a network failure says nothing about the
-      // account, and widening this to every failure would both attach account
-      // state to unrelated events and break the exact tag-shape assertion in
-      // tests/five-factor-scorecard-ui-registration.test.mjs, which is the
-      // preservation control for the deadline capture.
-      const status = (error as { statusCode?: unknown } | null)?.statusCode;
-      const denial = status === 401 || status === 403;
       Sentry.captureException?.(error instanceof Error ? error : new Error(String(error)), {
         tags: {
           kind: 'country_deep_dive_load_failed',
           surface: 'country-deep-dive',
           widget: details.widget,
-          ...(denial ? { status: String(status), premium_grant: readPremiumAccessGrant(getAuthState()) } : {}),
         },
-        extra: denial
-          ? { countryCode, entitlementBelief: readClientEntitlementBelief(getAuthState()) }
-          : { countryCode },
+        extra: { countryCode },
       });
     });
   }

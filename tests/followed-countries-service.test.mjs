@@ -433,30 +433,9 @@ describe('followed-countries service — PRO no cap', () => {
 });
 
 describe('followed-countries service — entitlement loading', () => {
-  it('signed-in user, entitlement state null → ENTITLEMENT_LOADING', async () => {
-    setSignedInLoading();
-    const res = await addCountry('US');
-    assert.deepEqual(res, { ok: false, reason: 'ENTITLEMENT_LOADING' });
-    assert.deepEqual(getFollowed(), []);
-  });
-
-  it('serviceEntitlementState() reports loading when signed-in + null entitlement', () => {
-    setSignedInLoading();
-    assert.equal(serviceEntitlementState(), 'loading');
-  });
 });
 
 describe('followed-countries service — anonymous never blocks on entitlement loading', () => {
-  it("Codex round-2 finding #1: anon user with entitlement null treated as 'free' immediately, can add 3, 4th hits FREE_CAP", async () => {
-    // Default `setAnonymous()` already gives null entitlement.
-    assert.equal(serviceEntitlementState(), 'free');
-    assert.deepEqual(await addCountry('US'), { ok: true });
-    assert.deepEqual(await addCountry('FR'), { ok: true });
-    assert.deepEqual(await addCountry('DE'), { ok: true });
-    const res = await addCountry('JP');
-    assert.equal(res.ok, false);
-    assert.equal(res.reason, 'FREE_CAP');
-  });
 });
 
 describe('followed-countries service — feature flag', () => {

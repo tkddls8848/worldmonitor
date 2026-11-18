@@ -1,7 +1,6 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
-import { PanelTabBar, tabCapGateCopy, type TabAddLock } from '@/components/PanelTabBar';
-import { PanelGateReason } from '@/services/panel-gating';
+import { PanelTabBar } from '@/components/PanelTabBar';
 import type { PanelTab, TabsState } from '@/services/tab-store';
 
 import { initTestI18n } from './helpers/i18n.mts';
@@ -12,10 +11,6 @@ beforeAll(async () => {
 
 function tab(id: string, name: string): PanelTab {
   return { id, name, panelSettings: {}, panelOrder: [], bottomSet: [] };
-}
-
-function lockFor(reason: PanelGateReason): TabAddLock {
-  return { copy: tabCapGateCopy(reason, 3), onAction: vi.fn<() => void>() };
 }
 
 let state: TabsState;
@@ -169,39 +164,5 @@ describe('PanelTabBar new tab options popover', () => {
     bar.destroy();
 
     expect(popover()).toBeNull();
-  });
-});
-
-describe('PanelTabBar new tab options with the tab cap', () => {
-  it('still opens while "+" is cap-locked', () => {
-    bar.setAddLock(lockFor(PanelGateReason.FREE_TIER));
-
-    optionsBtn().click();
-
-    expect(popover()).not.toBeNull();
-  });
-
-  it('gives way to the lock notice when the locked "+" is clicked', () => {
-    bar.setAddLock(lockFor(PanelGateReason.FREE_TIER));
-    callbacks.onAdd.mockImplementation(() => bar.showAddLockNotice());
-    optionsBtn().click();
-
-    addBtn().click();
-
-    expect(popover()).toBeNull();
-    expect(document.querySelectorAll('.tab-cap-notice')).toHaveLength(1);
-    expect(optionsBtn().getAttribute('aria-expanded')).toBe('false');
-  });
-
-  it('a lock change closes the cap notice but not the options popover', () => {
-    bar.setAddLock(lockFor(PanelGateReason.ANONYMOUS));
-    optionsBtn().click();
-
-    bar.setAddLock(lockFor(PanelGateReason.FREE_TIER));
-    expect(popover()).not.toBeNull();
-
-    bar.setAddLock(null);
-    expect(popover()).not.toBeNull();
-    expect(optionsBtn().getAttribute('aria-expanded')).toBe('true');
   });
 });

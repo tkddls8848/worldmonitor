@@ -74,7 +74,8 @@ vi.mock('@/services/analytics', () => ({
 vi.mock('@/services/i18n', () => ({ t: (k: string) => k }));
 
 import { PasskeyOfferController } from '@/app/passkey-offer-controller';
-import { ABOUT_YOU_CARD_ID } from '@/components/AboutYouCard';
+// The id onboarding-prompt probes for; the card itself is retired.
+const ABOUT_YOU_CARD_ID = 'wm-about-you-card';
 
 import type { AppContext } from '@/app/app-context';
 

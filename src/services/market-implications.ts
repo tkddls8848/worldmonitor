@@ -1,5 +1,4 @@
 import { toApiUrl } from '@/services/runtime';
-import { premiumFetch } from '@/services/premium-fetch';
 
 export interface TransmissionNode {
   node: string;
@@ -76,7 +75,7 @@ export async function fetchMarketImplications(frameworkId = ''): Promise<MarketI
     // up the Clerk bearer from the global patch but skipped reportServerError,
     // so its 503s were invisible in Sentry. The 15s budget comfortably covers a
     // first attempt plus the server's 5s Retry-After and the replay.
-    const resp = await premiumFetch(url.toString(), {
+    const resp = await fetch(url.toString(), {
       signal: AbortSignal.timeout(15_000),
     });
     if (!resp.ok) return cached?.data ?? null;

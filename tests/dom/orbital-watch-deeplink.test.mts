@@ -122,7 +122,7 @@ describe('place search in the satellite pass lookup', () => {
     expect(command.label).toBe('Satellite passes: find a place');
     const dispatcher = new SearchSelectionDispatcher({
       ctx: { mapLayers: {}, map: null, panelSettings: {}, newsPanels: {} } as never,
-      getVariant: () => 'full', hasPremiumAccess: () => false, openCountryBriefByCode: vi.fn(() => true), enablePanel: vi.fn(() => false),
+      getVariant: () => 'full', openCountryBriefByCode: vi.fn(() => true), enablePanel: vi.fn(() => false),
       trackSearchResultSelected: vi.fn(), trackCountrySelected: vi.fn(), runWithAgentAnalyticsSuppressed: (callback) => callback(),
       suppressNextAgentPanelView: vi.fn(), resolveExecutableNewsPanel: vi.fn(() => null), saveToStorage, setTheme: vi.fn(),
       setTimeout: (callback, delay) => setTimeout(callback, delay), clearTimeout: (timer) => clearTimeout(timer),

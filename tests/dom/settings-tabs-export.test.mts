@@ -3,11 +3,9 @@ import { PanelLayoutManager } from '@/app/panel-layout';
 import type { AppContext } from '@/app/app-context';
 import type { PanelTab, TabsState } from '@/services/tab-store';
 import { exportSettings, importSettings } from '@/utils/settings-persistence';
-import { countFreePanelCapUsage, FREE_MAX_PANELS } from '@/config/panels';
 import { resetMissionPresetState } from '@/services/mission-presets';
 import type { PanelConfig } from '@/types';
 import { initTestI18n } from './helpers/i18n.mts';
-import { TeamDashboardsStore } from '@/services/team-dashboards-store';
 
 const tabsKey = 'worldmonitor-tabs-v1:full';
 const tab = (id: string, name: string): PanelTab => ({
@@ -22,11 +20,9 @@ interface LayoutHarness {
   resolvedPanelOrder: string[];
   bottomSetMemory: Set<string>;
   healStoredTabSnapshots: () => void;
-  updateTabCapLock: () => void;
   initPanelTabs: () => void;
   unregisterExportFlush: (() => void) | null;
   panelTabBar: { destroy: () => void } | null;
-  team: TeamDashboardsStore;
 }
 
 let manager: LayoutHarness;
@@ -40,9 +36,6 @@ beforeEach(() => {
   manager.resolvedPanelOrder = ['news'];
   manager.bottomSetMemory = new Set(['markets']);
   manager.healStoredTabSnapshots = vi.fn();
-  manager.updateTabCapLock = vi.fn();
-  // Object.create skips field initializers.
-  manager.team = new TeamDashboardsStore({ load: async () => null, onChange: () => {} });
   manager.initPanelTabs();
   vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:settings');
   vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
@@ -134,7 +127,6 @@ describe('live dashboard tab backups', () => {
 
 describe('new tabs from saved panels', () => {
   const newTabPanelsKey = 'worldmonitor-new-tab-panels-v1:full';
-  let tierResolved: boolean;
   const button = (selector: string) => document.querySelector<HTMLButtonElement>(selector)!;
   const optionAction = (label: string) =>
     Array.from(document.querySelectorAll<HTMLButtonElement>('#dashboard-tab-options button')).find((b) => b.textContent === label)!;
@@ -154,11 +146,8 @@ describe('new tabs from saved panels', () => {
   };
 
   beforeEach(() => {
-    tierResolved = false;
     const harness = manager as unknown as Record<string, unknown>;
-    harness.updateTabCapLock = vi.fn(() => ({ allowed: true }));
     harness.applyTabPanelState = vi.fn();
-    harness.isProTierResolvedOrFallback = () => tierResolved;
     manager.ctx.panelSettings = live({ 'live-news': { enabled: false }, 'positive-feed': { enabled: true } });
   });
 
@@ -192,29 +181,16 @@ describe('new tabs from saved panels', () => {
     expect(created.panelOrder.slice(0, 3)).toEqual(['positive-feed', 'insights', 'live-news']);
   });
 
-  it('clamps a free user\'s new tab without touching the saved panels', () => {
+  it('never clamps a new tab: every saved panel stays on', () => {
     manager.ctx.panelSettings = live({});
     for (const config of Object.values(manager.ctx.panelSettings)) config.enabled = true;
     useThisTab();
-    const savedBefore = localStorage.getItem(newTabPanelsKey);
-    tierResolved = true;
 
     addTab();
 
     const created = newestStoredTab();
-    expect(countFreePanelCapUsage(created.panelSettings)).toBe(FREE_MAX_PANELS);
-    expect(Object.values(created.panelSettings).some((config) => config.proGated)).toBe(true);
-    expect(localStorage.getItem(newTabPanelsKey)).toBe(savedBefore);
-  });
-
-  it('does not clamp while the tier is unresolved', () => {
-    manager.ctx.panelSettings = live({});
-    for (const config of Object.values(manager.ctx.panelSettings)) config.enabled = true;
-    useThisTab();
-
-    addTab();
-
-    expect(countFreePanelCapUsage(newestStoredTab().panelSettings)).toBeGreaterThan(FREE_MAX_PANELS);
+    expect(Object.values(created.panelSettings).every((config) => config.enabled)).toBe(true);
+    expect(Object.values(created.panelSettings).some((config) => config.proGated)).toBe(false);
   });
 
   it('goes back to the default panels after "Use the default panels"', () => {

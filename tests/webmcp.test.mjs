@@ -1337,7 +1337,6 @@ describe('webmcp.ts: current API contract', () => {
             message: 'Dashboard tab cap reached.',
             canCreate: false,
             cap: 3,
-            lockReason: 'free_tier',
             tabCount: 3,
           };
         }
@@ -1361,7 +1360,6 @@ describe('webmcp.ts: current API contract', () => {
     assert.equal(capped.reason, 'tab_cap');
     assert.equal(capped.canCreate, false);
     assert.equal(capped.cap, 3);
-    assert.equal(capped.lockReason, 'free_tier');
 
     const last = await tools.find((tool) => tool.name === 'delete_dashboard_tab')
       .execute({ tabId: 'tab-main01-abc123', confirm: true });
@@ -2840,7 +2838,7 @@ describe('webmcp App.ts binding invariants', () => {
     );
   });
 
-  it('wires entitlement-aware actions and post-settlement URL synchronization', () => {
+  it('wires dashboard actions and post-settlement URL synchronization', () => {
     const applyDashboardAction = objectPropertyInitializer(bindings, appFile, 'applyDashboardAction');
     const bindingCall = callByExpression(
       applyDashboardAction,
@@ -2864,16 +2862,6 @@ describe('webmcp App.ts binding invariants', () => {
     );
 
     const applierOptions = objectPropertyInitializer(options, appFile, 'applierOptions');
-    const isPanelAllowed = objectPropertyInitializer(applierOptions, appFile, 'isPanelAllowed');
-    const entitlementCall = callByExpression(isPanelAllowed, appFile, 'isPanelEntitled');
-    assert.equal(entitlementCall.arguments[0]?.getText(appFile), 'panelId');
-    assert.equal(entitlementCall.arguments[1]?.getText(appFile), 'config');
-    const premiumAccessCall = entitlementCall.arguments[2];
-    assert.ok(ts.isCallExpression(premiumAccessCall));
-    assert.equal(premiumAccessCall.expression.getText(appFile), 'hasPremiumAccess');
-    const authStateCall = premiumAccessCall.arguments[0];
-    assert.ok(ts.isCallExpression(authStateCall));
-    assert.equal(authStateCall.expression.getText(appFile), 'getAuthState');
 
     const listMapLayerCatalog = objectPropertyInitializer(bindings, appFile, 'listMapLayerCatalog');
     assertCallArguments(
@@ -3066,10 +3054,6 @@ describe('webmcp App.ts binding invariants', () => {
       assert.equal(text.includes('waitForDashboardReady'), false, `${name} must not wait for the map`);
     }
     callByExpression(getAccessContext, appFile, 'getWebMcpAccessContext');
-    assert.match(
-      getAccessContext.getText(appFile),
-      /freeTierFallbackActive:\s*this\.freeTierGate\.authSettleDeadlineExceeded/,
-    );
     assertCallArguments(
       callByExpression(openSignIn, appFile, 'openWebMcpSignIn'),
       appFile,

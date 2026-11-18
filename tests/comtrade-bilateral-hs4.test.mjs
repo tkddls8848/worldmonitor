@@ -506,29 +506,6 @@ describe('CountryDeepDivePanel product imports section', () => {
     );
   });
 
-  it('PRO gate check (hasPremiumAccess) guards product imports card', () => {
-    // Match the binding inside the import list, not the list's exact spelling:
-    // the panel legitimately imports siblings from panel-gating (the
-    // WORLDMONITOR-147 denial diagnostic added two), and pinning the literal
-    // `import { hasPremiumAccess }` made an unrelated import widening fail a
-    // test whose invariant — this panel gates on hasPremiumAccess — still held.
-    assert.match(
-      src,
-      /import \{[^}]*\bhasPremiumAccess\b[^}]*\} from '@\/services\/panel-gating'/,
-      'CountryDeepDivePanel: must import hasPremiumAccess for PRO gating',
-    );
-    const productImportsIdx = src.indexOf('productImportsCardBody');
-    assert.ok(
-      productImportsIdx !== -1,
-      'CountryDeepDivePanel: must have productImportsCardBody',
-    );
-    const nearbyIsPro = src.slice(Math.max(0, productImportsIdx - 200), productImportsIdx + 300);
-    assert.ok(
-      nearbyIsPro.includes('isPro'),
-      'CountryDeepDivePanel: productImportsCardBody must be gated by isPro check',
-    );
-  });
-
   it('uses textContent for product rendering (XSS-safe, no innerHTML)', () => {
     const renderStart = src.indexOf('private renderProductDetail');
     assert.ok(renderStart !== -1, 'CountryDeepDivePanel: must have private renderProductDetail method');

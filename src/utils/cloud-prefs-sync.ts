@@ -34,7 +34,6 @@ import {
   getStrategicDefaultSources,
   INTEL_SOURCES,
 } from '@/config/feeds';
-import { FREE_MAX_SOURCES } from '@/config/panels';
 import { getCurrentLanguage } from '@/services/i18n';
 import { computeCapDisabledSources } from '@/services/source-cap';
 import {
@@ -146,10 +145,14 @@ const CLOUD_PREFS_REQUEST_TIMEOUT_MS = 15_000;
 // Schema 9 (#7748): keep the new curated regional desks opt-in for returners.
 // Schema 10 (#10102/#10103): German RSS defaults only for German UI language.
 let _migrations: ReturnType<typeof buildMigrations> | null = null;
+// The retired free-tier source cap. Earlier builds disabled sources past this
+// count, and the cloud-prefs migrations below must reproduce that legacy state.
+const LEGACY_FREE_MAX_SOURCES = 80;
+
 let _regionalRolloutTargets: ReturnType<typeof buildRegionalFeedRolloutMigrationTargets> | null = null;
 
 function getRegionalRolloutTargets(): ReturnType<typeof buildRegionalFeedRolloutMigrationTargets> {
-  _regionalRolloutTargets ??= buildRegionalFeedRolloutMigrationTargets(FREE_MAX_SOURCES);
+  _regionalRolloutTargets ??= buildRegionalFeedRolloutMigrationTargets(LEGACY_FREE_MAX_SOURCES);
   return _regionalRolloutTargets;
 }
 
@@ -163,7 +166,7 @@ function getMigrations(): ReturnType<typeof buildMigrations> {
     FEEDS,
     INTEL_SOURCES,
     legacyPreStrategicDefaultDisabled,
-    FREE_MAX_SOURCES,
+    LEGACY_FREE_MAX_SOURCES,
   );
   _migrations = buildMigrations(FEEDS, {
     frontline: {
@@ -173,7 +176,7 @@ function getMigrations(): ReturnType<typeof buildMigrations> {
     },
     strategic: {
       names: getStrategicDefaultSources(),
-      legacyDisabledStates: buildPreStrategicDefaultDisabledStates(FREE_MAX_SOURCES),
+      legacyDisabledStates: buildPreStrategicDefaultDisabledStates(LEGACY_FREE_MAX_SOURCES),
     },
     regionalRollout: {
       targets: getRegionalRolloutTargets(),

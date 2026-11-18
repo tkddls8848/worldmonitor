@@ -1,10 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { MapContainer } from '@/components/MapContainer';
 
-vi.mock('@/services/panel-gating', async (importOriginal) => ({
-  ...await importOriginal<typeof import('@/services/panel-gating')>(),
-  hasPremiumAccess: () => true,
-}));
 
 const SAVED = { conflicts: true, hotspots: true, fires: false } as Record<string, boolean>;
 

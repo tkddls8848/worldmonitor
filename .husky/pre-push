@@ -593,11 +593,6 @@ else
   echo "Health-probe cutover check skipped (no health registry or cutover-policy changes)."
 fi
 
-if changed '^(src/|api/|scripts/enforce-premium-fetch\.mjs$)'; then
-  echo "Running premium-fetch parity check..."
-  npm run lint:premium-fetch || exit 1
-fi
-
 if changed '^(src/|api/|server/|scripts/|convex/)'; then
   echo "Running outbound-deadline check (fetch without a signal)..."
   npm run lint:outbound-deadlines || exit 1

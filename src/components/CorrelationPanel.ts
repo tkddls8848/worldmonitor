@@ -9,7 +9,6 @@ import {
   type CorrelationSnapshotState,
 } from '@/services/correlation-snapshots';
 import { describeFreshness } from '@/services/persistent-cache';
-import { hasPremiumAccess } from '@/services/panel-gating';
 import type { ResolvedScope } from '@/services/tab-focus';
 import { PanelScopeFilter, focusedEmptyNode, scopeTagNode, type ScopeRow } from './panel-scope-filter';
 
@@ -166,7 +165,7 @@ export class CorrelationPanel extends Panel {
 
     const emptyText = t(`components.correlation.${status === 'updating' ? 'emptySaved' : 'empty'}`);
     const previousNotice = this.content.querySelector('.correlation-status');
-    if (!force && !this.isLocked && previousNotice
+    if (!force && previousNotice
       && this.renderedCards === snapshot?.cards && this.renderedOrigin === snapshot?.origin) {
       // Updating age/connectivity must not replace focused controls or reset scrolling.
       previousNotice.replaceChildren(...notice.childNodes);
@@ -276,11 +275,11 @@ export class CorrelationPanel extends Panel {
       h('div', { style: 'padding:6px 0;' }, ...signalList),
     ];
 
-    if (card.assessment && hasPremiumAccess()) {
+    if (card.assessment) {
       children.push(h('div', {
         style: 'padding:6px 8px;margin:4px 0;border-radius:4px;background:rgba(100,150,255,0.08);border-left:2px solid rgba(100,150,255,0.3);font-size:calc(10px * var(--wm-panel-effective-scale, 1));line-height:1.4;',
       }, card.assessment));
-    } else if (card.score >= 60 && this.assessmentHandler && hasPremiumAccess()) {
+    } else if (card.score >= 60 && this.assessmentHandler) {
       children.push(h('div', {
         style: 'padding:4px;font-size:calc(9px * var(--wm-panel-effective-scale, 1));opacity:0.4;font-style:italic;',
       }, t('components.correlation.analyzing')));

@@ -322,7 +322,7 @@ function builtSecondaryLazyChunksMissing() {
   const assetsDir = resolve(repoRoot, 'dist/assets');
   if (!existsSync(assetsDir)) return null;
   const files = readdirSync(assetsDir);
-  return ['UnifiedSettings', 'settings-window', 'checkout'].filter(
+  return ['UnifiedSettings', 'settings-window'].filter(
     (name) => !files.some((file) => new RegExp(`^${name}-[A-Za-z0-9_-]+\\.js$`).test(file)),
   );
 }
@@ -343,22 +343,6 @@ function startupSecondaryFlowImportOffenders() {
       if (specifier && blockedSpecifiers.has(specifier)) {
         offenders.push(`${relativePath}:${lineForPosition(ast, statement.getStart(ast))} imports ${specifier}`);
       }
-    }
-  }
-  return offenders;
-}
-
-function checkoutSdkValueImportOffenders() {
-  const filePath = resolve(repoRoot, 'src/services/checkout.ts');
-  const ast = astForPath(filePath);
-  const offenders = [];
-  for (const statement of ast.statements) {
-    if (!ts.isImportDeclaration(statement)) continue;
-    const importClause = statement.importClause;
-    if (!importClause || importClause.isTypeOnly) continue;
-    const specifier = stringValue(statement.moduleSpecifier);
-    if (specifier === 'dodopayments-checkout') {
-      offenders.push(`src/services/checkout.ts:${lineForPosition(ast, statement.getStart(ast))} imports ${specifier}`);
     }
   }
   return offenders;
@@ -474,8 +458,8 @@ describe('panel cluster chunk guardrails', () => {
     );
   });
 
-  it('keeps secondary settings and checkout chunks off the eager startup path', () => {
-    for (const chunkName of ['UnifiedSettings', 'settings-window', 'checkout']) {
+  it('keeps secondary settings chunks off the eager startup path', () => {
+    for (const chunkName of ['UnifiedSettings', 'settings-window']) {
       assert.equal(
         hasStringElement('LAZY_HTML_PRELOAD_CHUNKS', chunkName),
         true,
@@ -486,11 +470,6 @@ describe('panel cluster chunk guardrails', () => {
       startupSecondaryFlowImportOffenders(),
       [],
       'Startup modules must use dynamic imports for the UnifiedSettings modal.',
-    );
-    assert.deepEqual(
-      checkoutSdkValueImportOffenders(),
-      [],
-      'Checkout must dynamically import dodopayments-checkout so the SDK stays out of main.',
     );
     const missingLazyChunks = builtSecondaryLazyChunksMissing();
     if (missingLazyChunks) {

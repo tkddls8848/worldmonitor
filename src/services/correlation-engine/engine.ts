@@ -10,8 +10,6 @@ import type {
 } from './types';
 import { haversineKm } from '@/utils/distance';
 
-import { premiumFetch } from '@/services/premium-fetch';
-import { hasPremiumAccess } from '@/services/panel-gating';
 import { IntelligenceServiceClient } from '@/services/generated-rpc-clients';
 import type { CorrelationRuntimeMode } from '@/services/correlation-runtime-mode';
 
@@ -44,10 +42,7 @@ export class CorrelationEngine {
 
   constructor() {
     // Use '' base URL — requests go to current origin, same as other panels.
-    // premiumFetch — deductSituation is in PREMIUM_RPC_PATHS. globalThis.fetch
-    // (the generated default) would 401 signed-in browser pros so the LLM
-    // assessment never lands. See #3242 review HIGH(new) #1 for the bug class.
-    this.intelligenceClient = new IntelligenceServiceClient('', { fetch: premiumFetch });
+    this.intelligenceClient = new IntelligenceServiceClient('', { fetch: (...args: Parameters<typeof fetch>) => globalThis.fetch(...args) });
   }
 
   registerAdapter(adapter: DomainAdapter): void {
@@ -454,7 +449,6 @@ export class CorrelationEngine {
   }
 
   private drainAssessments(): void {
-    if (!hasPremiumAccess()) return;
     const changed = new Set<CorrelationDomain>();
     for (const card of [...this.assessmentCards.values()].flat()) {
       if (card.score < LLM_SCORE_THRESHOLD) continue;
@@ -527,7 +521,7 @@ export class CorrelationEngine {
 
       const resp = await this.intelligenceClient.deductSituation({ query, geoContext, framework: '' });
 
-      if (resp.analysis && generation === this.assessmentGeneration && hasPremiumAccess()) {
+      if (resp.analysis && generation === this.assessmentGeneration) {
         this.llmCache.set(cacheKey, { assessment: resp.analysis, timestamp: Date.now() });
         return resp.analysis;
       }

@@ -15,16 +15,11 @@ import type { FocusFitBounds } from '@/utils/focus-map';
 import { type FrameBounds, type OrbitalTarget, type PassTrack, type TrackPoint } from '@/services/orbital/track-geometry';
 import { mercatorCenterForOffset, visibleMapArea, type ScreenOffset } from '@/utils/map-point-offset';
 import {
-  isLayerToggleAllowed,
-  isLayerEntitled,
-  sanitizeLockedLayers,
   sanitizeResilienceScoreForRenderer,
-  shouldSanitizeLockedLayers,
   type RendererKind,
 } from '@/config/map-layer-definitions';
-import { isProTierResolved } from '@/services/widget-store';
 import { t } from '@/services/i18n';
-import type { MapComponent, MapComponentOptions } from './Map';
+import type { MapComponent } from './Map';
 import type { DeckGLMap, DeckMapView, CountryClickPayload } from './DeckGLMap';
 import type { GlobeMap } from './GlobeMap';
 import type {
@@ -79,9 +74,6 @@ import { NotamAirspaceLayer } from './NotamAirspaceLayer';
 import type { NotamAirspaceRestriction } from '@/services/notam-airspace';
 import type { No2ActivitySnapshot } from '@/services/economic/no2-activity';
 import type { ScenarioVisualState, ScenarioResult } from '@/config/scenario-templates';
-import { getAuthState } from '@/services/auth-state';
-import { hasPremiumAccess } from '@/services/panel-gating';
-import { trackGateHit } from '@/services/analytics';
 
 export type { ScenarioVisualState, ScenarioResult };
 
@@ -156,7 +148,6 @@ export interface MapContainerOptions {
   chrome?: boolean;
   mapLibreWorkerUrl?: string;
   preferDesktopRenderer?: boolean;
-  isFreeTierFallbackActive?: () => boolean;
 }
 
 export type ViewportTransitionFailureReason =
@@ -228,8 +219,6 @@ export class MapContainer {
   private useGlobe: boolean;
   private readonly chrome: boolean;
   private readonly mapLibreWorkerUrl: string | undefined;
-  private readonly svgLayerToggleGuard: NonNullable<MapComponentOptions['canToggleLayer']>;
-  private readonly isFreeTierFallbackActive: (() => boolean) | null;
   private isResizingInternal = false;
   private resizeObserver: ResizeObserver | null = null;
   private rendererDemandCleanup: (() => void) | null = null;
@@ -350,12 +339,6 @@ export class MapContainer {
     this.initialState = initialState;
     this.chrome = options.chrome ?? true;
     this.mapLibreWorkerUrl = options.mapLibreWorkerUrl;
-    this.svgLayerToggleGuard = (layer, currentlyEnabled) => isLayerToggleAllowed(
-      layer,
-      currentlyEnabled === true,
-      hasPremiumAccess(getAuthState()),
-    );
-    this.isFreeTierFallbackActive = options.isFreeTierFallbackActive ?? null;
     this.isMobile = isMobileDevice();
     this.preferDesktopRenderer = options.preferDesktopRenderer ?? false;
     this.useGlobe = preferGlobe && this.hasGlobeSupport();
@@ -695,7 +678,6 @@ export class MapContainer {
     this.svgMap = new MapComponent(this.container, this.initialState, {
       chrome: this.chrome,
       isMobile: this.isMobile,
-      canToggleLayer: this.svgLayerToggleGuard,
     });
     this.rehydrateActiveMap();
     this.markRendererReady(token);
@@ -1193,17 +1175,9 @@ export class MapContainer {
     return this.svgMap?.getTimeRange() ?? this.initialState.timeRange;
   }
 
-  public setLayers(layers: MapLayers, options: { bypassEntitlementSanitization?: boolean } = {}): void {
-    // Strip resilience on non-DeckGL, then locked premium layers for settled free users (#6045).
-    // Wait for isProTierResolved so Pro users don't lose resilienceScore during Clerk/Convex boot.
-    let sanitized = sanitizeResilienceScoreForRenderer(layers, this.useDeckGL);
-    if (!options.bypassEntitlementSanitization && shouldSanitizeLockedLayers(
-      hasPremiumAccess(getAuthState()),
-      isProTierResolved(),
-      this.isFreeTierFallbackActive?.() === true,
-    )) {
-      sanitized = sanitizeLockedLayers(sanitized, false);
-    }
+  public setLayers(layers: MapLayers, _options: { bypassEntitlementSanitization?: boolean } = {}): void {
+    // Strip resilience on non-DeckGL.
+    const sanitized = sanitizeResilienceScoreForRenderer(layers, this.useDeckGL);
     this.initialState = { ...this.initialState, layers: sanitized };
     if (this.suppressedLayers) {
       this.suppressedLayers = sanitized;
@@ -1846,8 +1820,6 @@ export class MapContainer {
   // Layer enable/disable and trigger methods
   public enableLayer(layer: keyof MapLayers): void {
     if (layer === 'resilienceScore' && !this.useDeckGL) return;
-    // #6045 — don't stamp initialState or enable locked premium layers for free users.
-    if (!isLayerEntitled(layer, hasPremiumAccess(getAuthState()))) return;
     this.initialState = {
       ...this.initialState,
       layers: { ...this.initialState.layers, [layer]: true },
@@ -2190,7 +2162,6 @@ export class MapContainer {
 
   /**
    * Activate a scenario across all active renderers.
-   * PRO-gated — free users trigger `trackGateHit('scenario-engine')` only.
    *
    * @param scenarioId  Template ID from scenario-templates.ts
    * @param result      Computed result from the scenario worker
@@ -2202,10 +2173,6 @@ export class MapContainer {
   }
 
   public activateScenario(scenarioId: string, result: ScenarioResult): void {
-    if (!hasPremiumAccess(getAuthState())) {
-      trackGateHit('scenario-engine');
-      return;
-    }
     const state: ScenarioVisualState = {
       scenarioId,
       disruptedChokepointIds: result.template?.disruptionPct === 0 ? [] : result.affectedChokepointIds,

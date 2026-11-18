@@ -2,13 +2,13 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Replace only the transport under the real aviation service: the panel, the
 // service wrappers, their circuit breakers and the generated client all run.
-const transport = vi.hoisted(() => ({
-  premiumFetch: vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>(),
-}));
-vi.mock('@/services/premium-fetch', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/services/premium-fetch')>()),
-  premiumFetch: transport.premiumFetch,
-}));
+const transport = vi.hoisted(() => {
+  const t = {
+    premiumFetch: vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>(),
+  };
+  globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => t.premiumFetch(input, init)) as typeof fetch;
+  return t;
+});
 
 import { fetchGoogleDates, fetchGoogleFlights } from '@/services/aviation';
 import { AirlineIntelPanel } from '@/components/AirlineIntelPanel';

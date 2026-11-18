@@ -3,7 +3,6 @@ import type { ThreatLevel, EventCategory, ThreatClassification } from '@/types';
 
 import { getCSSColor } from '@/utils';
 import { getRpcBaseUrl, getRpcErrorStatusCode } from '@/services/rpc-client';
-import { premiumFetch } from '@/services/premium-fetch';
 
 /** @deprecated Use getThreatColor() instead for runtime CSS variable reads */
 export const THREAT_COLORS: Record<ThreatLevel, string> = {
@@ -76,20 +75,11 @@ import { createCircuitBreaker } from '@/utils';
 import { IntelligenceServiceClient } from '@/services/generated-rpc-clients';
 import {
   canAttemptAiClassification,
-  configureClassifyGate,
   suppressAiClassification,
 } from '@/services/classify-gate';
-import { hasPremiumAccess } from '@/services/panel-gating';
 
-const classifyClient = new IntelligenceServiceClient(getRpcBaseUrl(), { fetch: premiumFetch });
+const classifyClient = new IntelligenceServiceClient(getRpcBaseUrl(), { fetch: (...args: Parameters<typeof fetch>) => globalThis.fetch(...args) });
 
-// #4865: classify-event is premium-gated server-side (#4779). Gate every
-// enqueue on the client-side entitlement signal so anon/free principals fall
-// back to keyword classification with ZERO network attempts — before this
-// gate, every incoming headline fired an RPC that 401/403'd (~570k wasted
-// requests/day). panel-gating's hasPremiumAccess is the dual-signal source
-// of truth (API key, tester keys, Clerk role, Convex entitlement).
-configureClassifyGate(() => hasPremiumAccess());
 
 const classifyBreaker = createCircuitBreaker<ThreatClassification | null>({
   name: 'AIClassify',

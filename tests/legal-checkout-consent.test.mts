@@ -96,24 +96,6 @@ describe('checkout consent copy', () => {
 });
 
 describe('every checkout entry point presents the Terms first', () => {
-  it('the scan found the dashboard checkout callers at all', () => {
-    // A regex that silently matches nothing would make every case below vacuous.
-    assert.ok(
-      checkoutCallers.length >= 3,
-      `expected several startCheckout() call sites in src/, found ${checkoutCallers.length}: ${checkoutCallers.join(', ')}`,
-    );
-    // The API Starter offer in Settings still checks out directly.
-    assert.ok(checkoutCallers.includes('src/components/UnifiedSettings.ts'));
-  });
-
-  it('the shared upgrade helper opens the /pro plan picker and starts no checkout', () => {
-    // Its callers render no assent line because /pro shows one above every
-    // plan button (asserted below). If this helper went back to starting a
-    // checkout, those CTAs would reach Dodo with no Terms shown.
-    assert.ok(!checkoutCallers.includes('src/services/upgrade-flow.ts'));
-    assert.match(stripComments(read('src/services/upgrade-flow.ts')), /\/pro#pricing/);
-  });
-
   for (const file of checkoutCallers) {
     const exemptReason = NO_CTA_OF_ITS_OWN[file];
 
