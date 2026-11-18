@@ -119,7 +119,7 @@ describe('requestTripAssessment', () => {
     const reason = async (status: number, body?: unknown) =>
       (await requestTripAssessment(draft(), 'markdown', { fetcher: async () => fail(status, body) }) as { reason: string }).reason;
     expect(await reason(401)).toBe('auth');
-    expect(await reason(403, { error: 'UPGRADE_REQUIRED' })).toBe('upgrade');
+    expect(await reason(403, { error: 'UPGRADE_REQUIRED' })).toBe('unavailable');
     expect(await reason(400, { error: 'INVALID_ARGUMENTS', violations: [] })).toBe('invalid');
     expect(await reason(413)).toBe('invalid');
     expect(await reason(429)).toBe('busy');
@@ -267,12 +267,12 @@ describe('TripAssessmentDialog', () => {
     expect(error().textContent).toBe('The trip must end on or after the day it starts.');
   });
 
-  it('tells an account without the plan to upgrade, in words, with no file', async () => {
+  it('reports a refused request as unavailable, in words, with no file', async () => {
     const deliver = vi.fn();
     open({ fetcher: async () => fail(403, { error: 'UPGRADE_REQUIRED' }), deliver });
     click('.trip-assessment-markdown');
     await tick(); await tick();
-    expect(error().textContent).toBe('The trip assessment is included in the Pro Business, API Business and Enterprise plans.');
+    expect(error().textContent).not.toMatch(/Pro|Business|Enterprise|upgrade/i);
     expect(deliver).not.toHaveBeenCalled();
     expect(q<HTMLButtonElement>('.trip-assessment-markdown').disabled).toBe(false);
   });

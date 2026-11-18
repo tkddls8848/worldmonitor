@@ -246,12 +246,6 @@ async function loadCountryDeepDivePanel(options = {}) {
     ['intelligence-client-stub', `
       export class IntelligenceServiceClient {}
     `],
-    ['panel-gating-stub', `
-      export function hasPremiumAccess() { return globalThis.__wmCountryDeepDiveTestState.premiumAccess; }
-      export function getPanelGateReason() { return 'none'; }
-      export function readPremiumAccessGrant() { return globalThis.__wmCountryDeepDiveTestState.premiumGrant; }
-      export function readClientEntitlementBelief() { return globalThis.__wmCountryDeepDiveTestState.entitlementBelief; }
-    `],
     ['auth-state-stub', `
       const state = globalThis.__wmCountryDeepDiveTestState;
       export function getAuthState() { return { user: null }; }
@@ -259,15 +253,6 @@ async function loadCountryDeepDivePanel(options = {}) {
         state.authListeners.add(callback);
         callback(getAuthState());
         return () => state.authListeners.delete(callback);
-      }
-    `],
-    ['entitlements-stub', `
-      const state = globalThis.__wmCountryDeepDiveTestState;
-      export function isEntitled() { return state.premiumAccess; }
-      export function getEntitlementState() { return null; }
-      export function onEntitlementChange(callback) {
-        state.entitlementListeners.add(callback);
-        return () => state.entitlementListeners.delete(callback);
       }
     `],
     ['resilience-service-stub', `
@@ -397,9 +382,7 @@ async function loadCountryDeepDivePanel(options = {}) {
     ['@/components/ResilienceWidget', 'resilience-widget-stub'],
     ['@/services/runtime', 'runtime-stub'],
     ['@/generated/client/worldmonitor/intelligence/v1/service_client', 'intelligence-client-stub'],
-    ['@/services/panel-gating', 'panel-gating-stub'],
     ['@/services/auth-state', 'auth-state-stub'],
-    ['@/services/entitlements', 'entitlements-stub'],
     ['@/services/resilience', 'resilience-service-stub'],
     ['@/services/scorecard', 'scorecard-service-stub'],
     ['@/bootstrap/sentry-defer', 'sentry-defer-stub'],

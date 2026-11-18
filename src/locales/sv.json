@@ -5157,7 +5157,6 @@
     "errOutsideWindow": "{{name}}: datum måste ligga inom resefönstret.",
     "errInvalid": "Utkastet kunde inte byggas från denna resa:",
     "errAuth": "Logga in igen för att bygga utkastet.",
-    "errUpgrade": "Resebedömningen ingår i Pro Business-, API Business- och Enterprise-planerna.",
     "errBusy": "För många förfrågningar. Försök igen om en minut.",
     "errUnavailable": "Data bakom utkastet är för närvarande otillgänglig. Försök igen om en minut.",
     "errGeneric": "Utkastet kunde inte byggas. Försök igen.",

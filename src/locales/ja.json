@@ -5129,7 +5129,6 @@
     "errOutsideWindow": "{{name}}：日付は旅行期間内である必要があります。",
     "errInvalid": "この旅行から初版を作成できませんでした：",
     "errAuth": "初版を作成するには再度サインインしてください。",
-    "errUpgrade": "旅行リスク評価は Pro Business、API Business、Enterprise プランに含まれています。",
     "errBusy": "リクエストが多すぎます。1 分後に再度お試しください。",
     "errUnavailable": "初版のデータは現在利用できません。1 分後に再度お試しください。",
     "errGeneric": "初版を作成できませんでした。再度お試しください。",

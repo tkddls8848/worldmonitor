@@ -1,8 +1,6 @@
 import { Panel } from './Panel';
 import type { CustomWidgetSpec } from '@/services/widget-store';
-import { t } from '@/services/i18n';
 import { wrapWidgetHtml, wrapProWidgetHtml } from '@/utils/widget-sanitizer';
-import { h } from '@/utils/dom-utils';
 import { unsafeRawHtml } from '@/utils/sanitize';
 
 export class CustomWidgetPanel extends Panel {
@@ -17,31 +15,7 @@ export class CustomWidgetPanel extends Panel {
       defaultRowSpan: 2,
     });
     this.spec = spec;
-    this.addHeaderButtons();
     this.renderWidget();
-  }
-
-  private addHeaderButtons(): void {
-    const closeBtn = this.header.querySelector('.panel-close-btn');
-
-    const chatBtn = h('button', {
-      className: 'icon-btn panel-widget-chat-btn widget-header-btn',
-      title: t('widgets.modifyWithAi'),
-      'aria-label': t('widgets.modifyWithAi'),
-    }, '\u2726');
-    chatBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.element.dispatchEvent(new CustomEvent('wm:widget-modify', {
-        bubbles: true,
-        detail: { widgetId: this.spec.id },
-      }));
-    });
-
-    if (closeBtn) {
-      this.header.insertBefore(chatBtn, closeBtn);
-    } else {
-      this.header.appendChild(chatBtn);
-    }
   }
 
   renderWidget(): void {

@@ -119,8 +119,7 @@ async function fetchWebsiteCountrySignals(input: RequestInfo | URL, init?: Reque
   const response = await withinDeadline(pending);
   if (response.status === 401 || response.status === 403) {
     void response.body?.cancel().catch(() => {});
-    const billing = response.headers.get('X-Billing-Verification');
-    throw new CountrySectionError('locked', billing ? `Country Signals authorization denied (${billing}).` : 'This connection is not authorized for Country Signals.');
+    throw new CountrySectionError('unavailable', `Country Signals are unavailable (HTTP ${response.status}).`);
   }
   const reader = response.body?.getReader();
   if (!reader) throw new Error('Country signal body unavailable');

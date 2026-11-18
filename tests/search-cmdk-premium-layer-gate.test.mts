@@ -14,8 +14,6 @@ import {
   isLayerCommandAllowed,
   isLayerEntitled,
   isLayerExecutable,
-  shouldSanitizeLockedLayers,
-  sanitizeLockedLayers,
 } from '../src/config/map-layer-definitions.ts';
 import type { MapLayers } from '../src/types/index.ts';
 

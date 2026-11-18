@@ -5129,7 +5129,6 @@
     "errOutsideWindow": "{{name}}：日期必须在行程窗口内。",
     "errInvalid": "无法从此行程生成初稿：",
     "errAuth": "重新登录以生成初稿。",
-    "errUpgrade": "行程评估包含在 Pro Business、API Business 和 Enterprise 计划中。",
     "errBusy": "请求过于频繁。请在一分钟后重试。",
     "errUnavailable": "初稿背后的数据暂时不可用。请在一分钟后重试。",
     "errGeneric": "初稿生成失败。请重试。",

@@ -695,7 +695,7 @@ export class UnifiedSettings {
         <li>
           <button type="button" class="us-row" data-settings-nav="${row.id}" id="us-nav-${row.id}">
             <span class="us-row-text">
-              <span class="us-row-title">${title}${row.badge ? ' <span class="panel-pro-badge">PRO</span>' : ''}</span>
+              <span class="us-row-title">${title}</span>
               ${row.descKey ? `<span class="us-row-desc">${escapeHtml(t(row.descKey))}</span>` : ''}
             </span>
             ${row.summary ? `<span class="us-row-value" data-settings-summary>${summary}</span>` : ''}
@@ -1277,7 +1277,7 @@ export class UnifiedSettings {
       const resolvedPanel = ALL_PANELS[key] ? getEffectivePanelConfig(key, SITE_VARIANT) : panel;
       const changed = this.isPanelDraftChanged(key, panel, savedSettings);
       const displayName = this.config.getLocalizedPanelName(key, resolvedPanel.name ?? panel.name);
-      const a11yState = getPanelToggleA11yState(false, panel.enabled, displayName);
+      const a11yState = getPanelToggleA11yState(panel.enabled);
       // Sandboxed MCP iframes cannot inherit the host panel's CSS scale.
       const supportsPanelFontScale = key !== 'map' && !key.startsWith('mcp-');
       const on = panel.enabled;

@@ -5195,7 +5195,6 @@
     "errOutsideWindow": "{{name}}: datumi moraju biti unutar vremenskog okvira putovanja.",
     "errInvalid": "Nacrt se ne može izraditi iz ovog putovanja:",
     "errAuth": "Prijavite se ponovno da izradite nacrt.",
-    "errUpgrade": "Procjena putovanja je uključena u planove Pro Business, API Business i Enterprise.",
     "errBusy": "Previše zahtjeva. Pokušajte ponovno za minutu.",
     "errUnavailable": "Podaci iza nacrta trenutno nisu dostupni. Pokušajte ponovno za minutu.",
     "errGeneric": "Nacrt se ne može izraditi. Pokušajte ponovno.",

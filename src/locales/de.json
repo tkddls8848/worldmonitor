@@ -5157,7 +5157,6 @@
     "errOutsideWindow": "{{name}}: Daten müssen im Reisezeitraum liegen.",
     "errInvalid": "Der Entwurf konnte nicht aus dieser Reise erstellt werden:",
     "errAuth": "Melden Sie sich erneut an, um den Entwurf zu erstellen.",
-    "errUpgrade": "Die Reisebewertung ist in den Plänen Pro Business, API Business und Enterprise enthalten.",
     "errBusy": "Zu viele Anfragen. Versuchen Sie es in einer Minute erneut.",
     "errUnavailable": "Die Daten hinter dem Entwurf sind gerade nicht verfügbar. Versuchen Sie es in einer Minute erneut.",
     "errGeneric": "Der Entwurf konnte nicht erstellt werden. Versuchen Sie es erneut.",

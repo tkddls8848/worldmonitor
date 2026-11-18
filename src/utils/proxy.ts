@@ -18,27 +18,6 @@ const RSS_PROXY_BASE = isDev
     ? 'https://proxy.worldmonitor.app'
     : '';
 
-// Widget agent proxy:
-//   dev       → Vite proxy /widget-agent → relay
-//   desktop   → relay directly (sidecar buffers arrayBuffer() which destroys SSE streaming)
-//   prod web  → /api/widget-agent (Vercel edge) → validates Clerk JWT or tester keys
-//               then proxies SSE to relay with real server-side keys
-//   personal  → same-origin /api/widget-agent, even on an https://localhost
-//               page that isDesktopRuntime() mistakes for the desktop shell
-const WIDGET_RELAY_BASE = 'https://proxy.worldmonitor.app';
-const widgetViaRelay = () => !PERSONAL_MODE && isDesktopRuntime();
-export function widgetAgentUrl(): string {
-  if (isDev) return '/widget-agent';
-  if (widgetViaRelay()) return `${WIDGET_RELAY_BASE}/widget-agent`;
-  return '/api/widget-agent';
-}
-
-export function widgetAgentHealthUrl(): string {
-  if (isDev) return '/widget-agent/health';
-  if (widgetViaRelay()) return `${WIDGET_RELAY_BASE}/widget-agent/health`;
-  return '/api/widget-agent'; // Vercel handler: GET → relay /widget-agent/health
-}
-
 export function rssProxyUrl(feedUrl: string): string {
   // Desktop fetches through the sidecar's rss-proxy. The WebView cannot read
   // publisher feeds directly (CORS), and the relay's CORS excludes tauri://.

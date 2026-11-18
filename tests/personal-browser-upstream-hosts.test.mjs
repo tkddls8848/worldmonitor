@@ -38,19 +38,6 @@ async function load(entry, env, stubs) {
 
 const PERSONAL = { VITE_PERSONAL_MODE: 'true' };
 
-test('widget agent URLs stay same-origin in personal mode, even where the page looks like desktop', async () => {
-  // https://localhost (an HTTPS proxy in front of the personal server) makes
-  // isDesktopRuntime() true, which used to send the widget agent straight to
-  // the upstream relay.
-  const mod = await load('src/utils/proxy.ts', PERSONAL, {
-    '../services/runtime': 'export const isDesktopRuntime = () => true; export const toApiUrl = (p) => p; export const toRuntimeUrl = (p) => p;',
-    '../services/persistent-cache': 'export const getPersistentCache = async () => null; export const setPersistentCache = async () => {};',
-    '../services/timeout-signal': 'export const createRequestTimeoutSignal = () => undefined;',
-  });
-  assert.equal(mod.widgetAgentUrl(), '/api/widget-agent');
-  assert.equal(mod.widgetAgentHealthUrl(), '/api/widget-agent');
-});
-
 test('the RSS proxy ignores the upstream direct-relay flag in personal mode', async () => {
   const mod = await load('src/utils/proxy.ts', { ...PERSONAL, VITE_RSS_DIRECT_TO_RELAY: 'true' }, {
     '../services/runtime': 'export const isDesktopRuntime = () => false; export const toApiUrl = (p) => p; export const toRuntimeUrl = (p) => p;',

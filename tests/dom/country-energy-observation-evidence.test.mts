@@ -196,7 +196,7 @@ it('retains observations on failed refresh, replaces lock state, and recovers wi
   expect(body.textContent).toContain('Previously loaded observations remain visible.');
   expect(body.querySelectorAll('.cdp-refresh-failure')).toHaveLength(1);
   panel.setSectionFailure('energy', 'locked', 'Energy requires access.');
-  expect(briefSectionState(section)).toBe('locked');
+  expect(briefSectionState(section)).toBe('unavailable');
   expect(body.textContent).not.toContain('2026-06');
   expect(body.textContent).not.toContain('not supplied in this profile');
   panel.updateEnergyProfile(energyProfile());

@@ -341,75 +341,9 @@ export function isLayerCommandAllowed(
     && isLayerToggleAllowed(layerKey, currentlyEnabled, hasPremium);
 }
 
-/**
- * Whether locked-layer state may be persisted as a free-tier decision.
- *
- * A pending auth session is intentionally not enough: a paying user is
- * indistinguishable from an anonymous user during boot. The explicit fallback
- * signal is the bounded exception used when that session never settles.
- */
-export function shouldSanitizeLockedLayers(
-  hasPremium: boolean,
-  tierResolved: boolean,
-  fallbackActive = false,
-): boolean {
-  return !hasPremium && (tierResolved || fallbackActive);
-}
-
-/**
- * Force locked premium layers off when the user is not entitled.
- * Heals stuck localStorage/state left by pre-#6045 CMD+K activation.
- * Does not mutate the input object.
- */
-export function sanitizeLockedLayers(
-  layers: MapLayers,
-  hasPremium: boolean,
-): MapLayers {
-  if (hasPremium) return layers;
-  let changed = false;
-  const sanitized = { ...layers };
-  for (const key of Object.keys(sanitized) as Array<keyof MapLayers>) {
-    if (sanitized[key] && LAYER_REGISTRY[key]?.premium === 'locked') {
-      sanitized[key] = false;
-      changed = true;
-    }
-  }
-  return changed ? sanitized : layers;
-}
-
-export interface LockedLayerOwnershipResult {
-  layers: MapLayers;
-  gateOwned: Set<string>;
-}
-
 export function mapLayerStatesEqual(a: MapLayers, b: MapLayers): boolean {
   const keys = Object.keys(a) as Array<keyof MapLayers>;
   return keys.length === Object.keys(b).length && keys.every((key) => a[key] === b[key]);
-}
-
-/**
- * Sanitize locked layers while remembering which enabled preferences the
- * free-tier gate forced off. Existing ownership is retained across idempotent
- * reconciliation passes where the persisted layer is already false.
- */
-export function sanitizeLockedLayersWithOwnership(
-  layers: MapLayers,
-  existingGateOwned: ReadonlySet<string>,
-): LockedLayerOwnershipResult {
-  const gateOwned = new Set(
-    [...existingGateOwned].filter((key) => (
-      LAYER_REGISTRY[key as keyof MapLayers]?.premium === 'locked'
-    )),
-  );
-  for (const key of Object.keys(layers) as Array<keyof MapLayers>) {
-    if (layers[key] && LAYER_REGISTRY[key]?.premium === 'locked') {
-      gateOwned.add(key);
-    }
-  }
-  return {
-    layers: sanitizeLockedLayers(layers, false),
-    gateOwned,
-  };
 }
 
 /**

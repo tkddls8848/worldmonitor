@@ -27,11 +27,8 @@ import {
   isLayerEntitled,
   isLayerToggleAllowed,
   sanitizeLayersForVariant,
-  sanitizeLockedLayers,
-  sanitizeLockedLayersWithOwnership,
   restoreGateOwnedLockedLayers,
   mapLayerStatesEqual,
-  shouldSanitizeLockedLayers,
 } from '../src/config/map-layer-definitions';
 
 describe('LAYER_REGISTRY — renderer axis', () => {
@@ -161,18 +158,6 @@ describe('isLayerEntitled — premium locked gate', () => {
   });
 });
 
-describe('sanitizeLockedLayers — free-user stuck-state heal', () => {
-  test('is a no-op when entitled', () => {
-    const input = {
-      resilienceScore: true,
-      conflicts: true,
-    } as unknown as import('../src/types').MapLayers;
-    const out = sanitizeLockedLayers(input, true);
-    assert.equal(out.resilienceScore, true);
-    assert.equal(out.conflicts, true);
-  });
-});
-
 describe('locked map-layer ownership', () => {
   // Regression: App.sanitizeMapLayersForTier's premium branch guarded its
   // storage write with `restored === layers`, where `restored` came out of
@@ -252,24 +237,6 @@ describe('isLayerToggleAllowed — stale locked-state recovery', () => {
   test('unknown layers never pass the toggle gate', () => {
     // @ts-expect-error — intentionally passing a key outside the union
     assert.equal(isLayerToggleAllowed('nonexistentLayer', true, false), false);
-  });
-});
-
-describe('shouldSanitizeLockedLayers — settled-free policy', () => {
-  test('does not clamp a pending session before the fallback deadline', () => {
-    assert.equal(shouldSanitizeLockedLayers(false, false, false), false);
-  });
-
-  test('clamps a settled anonymous session', () => {
-    assert.equal(shouldSanitizeLockedLayers(false, true, false), true);
-  });
-
-  test('clamps when the bounded fallback is active even if auth stays pending', () => {
-    assert.equal(shouldSanitizeLockedLayers(false, false, true), true);
-  });
-
-  test('never clamps a premium user', () => {
-    assert.equal(shouldSanitizeLockedLayers(true, true, true), false);
   });
 });
 

@@ -131,7 +131,7 @@ export class CountryBriefController {
     this.premiumRequest.abort();
     this.premiumRequest = new AbortController();
     if (!this.source.canRequestPremium()) {
-      this.panel.setSectionFailure?.('trade', 'locked', 'Upgrade to PRO for trade exposure');
+      this.panel.setSectionFailure?.('trade', 'unavailable', 'Trade exposure is unavailable in this embedded preview.');
       return;
     }
     const code = this.snapshot.countryCode.toUpperCase();

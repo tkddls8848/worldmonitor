@@ -56,9 +56,8 @@ import { getPanelDisplayName } from '@/services/panel-display-name';
 import { getCurrentTheme } from '@/utils';
 import { trackCriticalBannerAction, trackMapViewChange, trackLayoutCustomized } from '@/services/analytics';
 import { getStoredMapModePreference } from '@/services/map-mode-preference';
-import { loadWidgets, saveWidget } from '@/services/widget-store';
+import { loadWidgets } from '@/services/widget-store';
 import { getAllowedLayerKeys, type MapVariant } from '@/config/map-layer-definitions';
-import type { CustomWidgetSpec } from '@/services/widget-store';
 import { PasskeyOfferBoot } from '@/app/passkey-offer-boot';
 import { PanelTabBar } from '@/components/PanelTabBar';
 import type { FocusBar } from '@/components/FocusBar';
@@ -113,8 +112,6 @@ import {
   type PanelLayoutSnapshot,
 } from '@/services/panel-layout-actions';
 import { showToast } from '@/utils';
-import { loadMcpPanels, saveMcpPanel } from '@/services/mcp-store';
-import type { McpPanelSpec } from '@/services/mcp-store';
 import { markLcpDebug } from '@/utils/lcp-debug';
 import type { Panel } from '@/components/Panel';
 import type { SupplyChainPanel } from '@/components/SupplyChainPanel';
@@ -240,7 +237,6 @@ export const DEFERRED_PANEL_NATURAL_FOOTPRINTS: Readonly<Record<string, Deferred
 
 const DEFERRED_DYNAMIC_PANEL_FOOTPRINTS: Readonly<Record<string, DeferredPanelShellFootprint>> = {
   'cw-': { rowSpan: 2 },
-  'mcp-': { rowSpan: 2 },
 };
 
 const DEFERRED_PANEL_RETRY_DELAY_MS = 1_000;
@@ -459,7 +455,6 @@ export class PanelLayoutManager implements AppModule {
   private unregisterExportFlush: (() => void) | null = null;
   private aviationCommandBar: AviationCommandBar | null = null;
   private readonly applyTimeRangeFilterDebounced: (() => void) & { cancel(): void };
-  private boundWidgetCreatorHandler: ((e: Event) => void) | null = null;
   private scheduledLoadAllRaf: number | null = null;
   private scheduledLoadAllIdle: number | null = null;
   private responsiveZoneListener: ResponsiveZoneListener | null = null;
@@ -481,22 +476,6 @@ export class PanelLayoutManager implements AppModule {
   async init(): Promise<void> {
     await this.renderLayout();
     if (this.ctx.isDestroyed) return;
-
-    // Handle analyst action chip "Create chart widget →" click
-    this.boundWidgetCreatorHandler = ((e: CustomEvent<{ initialMessage?: string }>) => {
-      void import('@/components/WidgetChatModal').then((m) => m.openWidgetChatModal({
-        mode: 'create',
-        tier: 'pro',
-        initialMessage: e.detail.initialMessage,
-        onComplete: (spec) => {
-          void this.addCustomWidget(spec).catch((error) => {
-            console.error('[widget-builder] failed to add widget', error);
-            showToast(t('widgets.saveFailed'));
-          });
-        },
-      })).catch((err) => console.error('[widget-chat] failed to lazy-load WidgetChatModal', err));
-    }) as EventListener;
-    this.ctx.container.addEventListener('wm:open-widget-creator', this.boundWidgetCreatorHandler);
 
     // Passkey offer: subscribes to auth and evaluates on a genuine sign-in.
     this.passkeyOfferController.init();
@@ -561,10 +540,6 @@ export class PanelLayoutManager implements AppModule {
         console.error('[panel] destroy() threw during teardown', err);
       }
     };
-    if (this.boundWidgetCreatorHandler) {
-      this.ctx.container.removeEventListener('wm:open-widget-creator', this.boundWidgetCreatorHandler);
-      this.boundWidgetCreatorHandler = null;
-    }
     this.panelDragCleanupHandlers.forEach((cleanup) => cleanup());
     this.panelDragCleanupHandlers = [];
     for (const deferred of this.deferredPanelMounts.values()) {
@@ -695,7 +670,6 @@ export class PanelLayoutManager implements AppModule {
       hostname: window.location.hostname,
     });
     const referenceLinksHtml = dashboardReferenceAnchorsHtml(referenceOrigin);
-    const pricingHref = `${referenceOrigin}/pro#pricing`;
     const externalSiteLinksHtml = DASHBOARD_EXTERNAL_SITE_LINKS.map(({ label, href }) => (
       `<a href="${href}" target="_blank" rel="noopener">${label}</a>`
     )).join('');
@@ -704,7 +678,6 @@ export class PanelLayoutManager implements AppModule {
     document.documentElement.classList.add('wm-layout-hydrated');
     setTrustedHtml(this.ctx.container, trustedHtml(`
       <a href="#main" class="skip-link">Skip to main content</a>
-      <div id="proBannerSlot" class="pro-banner-slot" aria-live="polite"></div>
       <div class="header" role="banner">
         <div class="header-left">
           <div class="variant-switcher">${(() => {
@@ -869,7 +842,6 @@ export class PanelLayoutManager implements AppModule {
         <div class="mobile-menu-divider"></div>
         <div class="mobile-menu-footer-links">
           ${referenceLinksHtml}
-          <a href="${pricingHref}" target="_blank" rel="noopener">Pricing</a>
           ${externalSiteLinksHtml}
         </div>
         <div class="mobile-menu-version">v${__APP_VERSION__}</div>
@@ -2453,8 +2425,7 @@ export class PanelLayoutManager implements AppModule {
     });
 
     // Latest Brief — reads /api/latest-brief and opens the hosted
-    // magazine on click. Self-fetching (no data-loader integration);
-    // PRO gating handled by the base Panel class via premium: 'locked'.
+    // magazine on click. Self-fetching (no data-loader integration).
     this.lazyDefaultPanel('latest-brief', () => import('@/components/LatestBriefPanel'), 'LatestBriefPanel');
 
     this.lazyDefaultPanel('commodities', () => import('@/components/MarketPanel'), 'CommoditiesPanel');
@@ -2995,21 +2966,6 @@ export class PanelLayoutManager implements AppModule {
       );
     }
 
-    for (const spec of loadMcpPanels()) {
-      if (!this.ctx.panelSettings[spec.id]) {
-        this.ctx.panelSettings[spec.id] = { name: spec.title, enabled: true, priority: 3 };
-      }
-      const capturedSpec = spec;
-      this.lazyPanel(spec.id, () =>
-        this.importPanel(
-          spec.id,
-          () => import('@/components/McpDataPanel'),
-          'McpDataPanel',
-          (McpDataPanel) => new McpDataPanel(capturedSpec),
-        ),
-      );
-    }
-
     const variantOrder = (VARIANT_DEFAULTS[SITE_VARIANT] ?? VARIANT_DEFAULTS['full'] ?? []).filter(k => k !== 'map');
     const activePanelSet = new Set(Object.keys(this.ctx.panelSettings));
     const crossVariantKeys = Object.keys(this.ctx.panelSettings).filter(k => !variantOrder.includes(k) && k !== 'map');
@@ -3303,54 +3259,6 @@ export class PanelLayoutManager implements AppModule {
     if (regionSelect && currentView) {
       regionSelect.value = currentView;
     }
-  }
-
-  private addDynamicPanel(key: string, panel: Panel): void {
-    this.ctx.panels[key] = panel;
-    const el = panel.getElement();
-    this.makeDraggable(el, key);
-    const grid = document.getElementById('panelsGrid');
-    if (grid) {
-      const addBlock = grid.querySelector('.add-panel-block');
-      if (addBlock) {
-        grid.insertBefore(el, addBlock);
-      } else {
-        grid.appendChild(el);
-      }
-      this.mobilePanelNav?.applyToNewPanel(el);
-      panel.notifyConnected();
-      this.afterPanelMounted(key, panel);
-    }
-    this.savePanelOrder();
-    this.applyPanelSettings();
-  }
-
-  async addCustomWidget(spec: CustomWidgetSpec): Promise<void> {
-    await saveWidget(spec);
-    this.ctx.panelSettings[spec.id] = { name: spec.title, enabled: true, priority: 3 };
-    saveToStorage(STORAGE_KEYS.panels, this.ctx.panelSettings);
-    void this.importPanel(
-      spec.id,
-      () => import('@/components/CustomWidgetPanel'),
-      'CustomWidgetPanel',
-      (CustomWidgetPanel) => new CustomWidgetPanel(spec),
-    ).then((panel) => {
-      if (panel) this.addDynamicPanel(spec.id, panel);
-    });
-  }
-
-  addMcpPanel(spec: McpPanelSpec): void {
-    saveMcpPanel(spec);
-    this.ctx.panelSettings[spec.id] = { name: spec.title, enabled: true, priority: 3 };
-    saveToStorage(STORAGE_KEYS.panels, this.ctx.panelSettings);
-    void this.importPanel(
-      spec.id,
-      () => import('@/components/McpDataPanel'),
-      'McpDataPanel',
-      (McpDataPanel) => new McpDataPanel(spec),
-    ).then((panel) => {
-      if (panel) this.addDynamicPanel(spec.id, panel);
-    });
   }
 
   private getSavedPanelOrder(): string[] {

@@ -118,8 +118,9 @@ export const SAFE_DECLARATION_RE = /\bdeclareOverlay\(\s*([^,{]+?)\s*,\s*\{\s*re
 /** Hits this close together are one element's attributes, not two sites. */
 export const SITE_CLUSTER_RADIUS_LINES = 3;
 
-/** 21 sites in 19 files when this gate landed; 22 with the sign-up resume overlay. A scan that finds fewer has drifted. */
-export const MIN_SITE_COUNT = 22;
+/** 21 sites in 19 files when this gate landed; 22 with the sign-up resume overlay; 21 again once the
+ * personal build retired the MCP connect and AI widget chat modals. A scan that finds fewer has drifted. */
+export const MIN_SITE_COUNT = 21;
 
 /** The module that defines the vocabulary; its selector strings are not sites. */
 export const EXCLUDED_FILES = new Set(['src/utils/open-modal.ts']);

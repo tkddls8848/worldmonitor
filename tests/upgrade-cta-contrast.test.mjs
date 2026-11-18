@@ -32,8 +32,6 @@ const mainCss = sheets['main.css'];
 const UPGRADE_CTAS = [
   ['main.css', '.upgrade-pro-cta'],
   ['main.css', '.panel-locked-cta'],
-  ['main.css', '.pro-banner-cta'],
-  ['main.css', '.pro-banner-cta:hover', { color: '#0a0a0a' }],
   ['route-explorer.css', '.re-content__upgrade'],
 ];
 

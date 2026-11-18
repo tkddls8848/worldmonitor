@@ -5157,7 +5157,6 @@
     "errOutsideWindow": "{{name}}: a dátumok az utazási ablak időtartamán belül kell, hogy legyenek.",
     "errInvalid": "Az első változat nem állítható össze ebből az utazásból:",
     "errAuth": "Jelentkezzen be újra az első változat összeállításához.",
-    "errUpgrade": "Az utazási értékelés a Pro Business, API Business és Enterprise csomagokban érhető el.",
     "errBusy": "Túl sok kérés. Próbálja újra egy perc múlva.",
     "errUnavailable": "Az első változat mögötti adatok jelenleg nem érhetők el. Próbálja újra egy perc múlva.",
     "errGeneric": "Az első változat nem állítható össze. Próbálja újra.",

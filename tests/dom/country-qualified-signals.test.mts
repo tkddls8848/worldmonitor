@@ -10,14 +10,15 @@ import type { loadHostCountryMilitaryActivity } from '@/services/country-militar
 
 beforeAll(async () => { await initTestI18n(); });
 const military = () => Promise.resolve({ qualified: qualifiedFixtureOutcomes().find(row => row.family === 'military')! } as Awaited<ReturnType<typeof loadHostCountryMilitaryActivity>>);
-it.each([401, 403])('clears prior family observations after actual website HTTP %i', async status => {
+it.each([401, 403])('treats an actual website HTTP %i as unavailable, keeping prior observations, never locked', async status => {
   const previous = projectQualifiedCountrySignals('IR', qualifiedFixtureOutcomes());
   vi.stubGlobal('fetch', vi.fn(async () => new Response('Denied', { status })));
   try {
     const next = await loadQualifiedCountrySignals(createWebsiteCountryBriefSource(), 'IR', new AbortController().signal, military(), previous);
-    expect(next.families.find(row => row.family === 'radiation')).toMatchObject({ state: 'locked', observations: [] });
-    expect(next.details?.critical).toBe(0);
-    expect(next.families.filter(row => row.family !== 'military').every(row => row.state === 'locked')).toBe(true);
+    // The personal build has no paid tier: a refused read is a temporary outage,
+    // so the last good observations stay (as for any other unavailable read).
+    expect(next.families.find(row => row.family === 'radiation')).toMatchObject({ state: 'observed' });
+    expect(next.families.some(row => row.state === 'locked')).toBe(false);
   } finally { vi.unstubAllGlobals(); }
 });
 describe('qualified country source to rendered view and context', () => {

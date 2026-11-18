@@ -77,7 +77,6 @@ export function printHtmlDocument(html: string): void {
 
 const FAILURE_KEYS: Record<Exclude<Extract<TripExportResult, { ok: false }>['reason'], 'invalid'>, string> = {
   auth: 'tripAssessment.errAuth',
-  upgrade: 'tripAssessment.errUpgrade',
   busy: 'tripAssessment.errBusy',
   unavailable: 'tripAssessment.errUnavailable',
   error: 'tripAssessment.errGeneric',

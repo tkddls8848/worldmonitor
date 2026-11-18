@@ -428,14 +428,10 @@ async function loadSanctionsService(state) {
       }
     `],
     ['rpc-client-stub', `export function getRpcBaseUrl() { return 'https://worldmonitor.test'; }`],
-    ['premium-fetch-stub', `export async function premiumFetch() { throw new Error('unused test stub'); }`],
     ['bootstrap-stub', `
       export function getHydratedData() {
         return structuredClone(globalThis.${FRONTEND_STATE_KEY}.hydrated);
       }
-    `],
-    ['panel-gating-stub', `
-      export function hasPremiumAccess() { return globalThis.${FRONTEND_STATE_KEY}.premium; }
     `],
     ['runtime-stub', `export function toApiUrl(path) { return 'https://worldmonitor.test' + path; }`],
     ['generated-clients-stub', `
@@ -449,9 +445,7 @@ async function loadSanctionsService(state) {
   const aliases = new Map([
     ['@/utils/circuit-breaker', 'utils-stub'],
     ['@/services/rpc-client', 'rpc-client-stub'],
-    ['@/services/premium-fetch', 'premium-fetch-stub'],
     ['@/services/bootstrap', 'bootstrap-stub'],
-    ['@/services/panel-gating', 'panel-gating-stub'],
     ['@/services/runtime', 'runtime-stub'],
     ['@/services/generated-rpc-clients', 'generated-clients-stub'],
   ]);

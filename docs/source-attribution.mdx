@@ -12,7 +12,7 @@ The inventory is **generated, not hand-written**: `scripts/source-attribution.mj
 ## Observed Source Inventory
 
 {/* BEGIN GENERATED SOURCE ATTRIBUTION */}
-This generated inventory covers **881 active source hosts** representing **858 active providers** (**395 structured/API**, **470 feed**, and **30 operational-status** hosts). It is derived from source declarations in `scripts/`, `server/`, `api/`, and `src/`. Each row shows the configured provider identity and where the source is referenced. Syndication transports such as FeedBurner and Google News remain listed as hosts and are not counted as publishers.
+This generated inventory covers **880 active source hosts** representing **857 active providers** (**394 structured/API**, **470 feed**, and **30 operational-status** hosts). It is derived from source declarations in `scripts/`, `server/`, `api/`, and `src/`. Each row shows the configured provider identity and where the source is referenced. Syndication transports such as FeedBurner and Google News remain listed as hosts and are not counted as publishers.
 
 | Provider | Observed surface |
 | --- | --- |
@@ -170,8 +170,8 @@ This generated inventory covers **881 active source hosts** representing **858 a
 | Claude link (claude.ai) | structured — src/config/mcp-agent-clients.ts |
 | Clerk identity service (api.clerk.com) | structured — server/auth-session.ts |
 | climate.copernicus.eu (climate.copernicus.eu) | structured — scripts/seed-climate-news.mjs |
-| Cloudflare Browser MCP (browser.mcp.cloudflare.com) | structured — src/services/mcp-store.ts |
-| Cloudflare Radar MCP (radar.mcp.cloudflare.com) | structured — src/services/mcp-store.ts |
+| Cloudflare Browser MCP (browser.mcp.cloudflare.com) | Excluded / candidate — No current fetch observed |
+| Cloudflare Radar MCP (radar.mcp.cloudflare.com) | Excluded / candidate — No current fetch observed |
 | cloudflare-dns.com (cloudflare-dns.com) | structured — server/_shared/email-validation.ts, server/worldmonitor/shipping/v2/webhook-shared.ts |
 | cnas.org (cnas.org) | feed — shared/news-catalog.json |
 | cnbc.com (cnbc.com) | feed — shared/news-catalog.json |
@@ -288,7 +288,7 @@ This generated inventory covers **881 active source hosts** representing **858 a
 | eurasianet.org (eurasianet.org) | feed — shared/news-catalog.json |
 | euromaidanpress.com (euromaidanpress.com) | feed — shared/news-catalog.json |
 | evn.com.vn (evn.com.vn) | structured — scripts/shared/regional-energy-feeds.json |
-| Example domain placeholder (example.com) | structured — scripts/mcp-live-smoke.mjs, scripts/openapi-inject-examples.mjs, src/services/mcp-store.ts, src/utils/sanitize.ts |
+| Example domain placeholder (example.com) | structured — scripts/mcp-live-smoke.mjs, scripts/openapi-inject-examples.mjs, src/utils/sanitize.ts |
 | export.arxiv.org (export.arxiv.org) | feed+structured — scripts/seed-research.mjs, shared/news-catalog.json |
 | ezamowienia.gov.pl (ezamowienia.gov.pl) | structured — scripts/_global-tender-feeds.mjs |
 | factchecktools.googleapis.com (factchecktools.googleapis.com) | structured — server/_shared/fact-checks.ts |
@@ -436,7 +436,7 @@ This generated inventory covers **881 active source hosts** representing **858 a
 | liberal.gr (liberal.gr) | feed — shared/news-catalog.json |
 | Libya Herald (libyaherald.com) | feed — shared/news-catalog.json |
 | lindas.cz-aws.net (lindas.cz-aws.net) | structured — scripts/lib/food-prices-adapters/foag.mjs |
-| Linear MCP (mcp.linear.app) | structured — src/services/mcp-store.ts |
+| Linear MCP (mcp.linear.app) | Excluded / candidate — No current fetch observed |
 | linear901-oo-hls0-prd-gtm.delivery.skycdp.com (linear901-oo-hls0-prd-gtm.delivery.skycdp.com) | feed — src/config/live-video-sources.ts |
 | linearstatus.com (linearstatus.com) | operational-status — server/worldmonitor/infrastructure/v1/list-service-statuses.ts |
 | live-cdn-stream-euw1.bfmtv.bct.nextradiotv.com (live-cdn-stream-euw1.bfmtv.bct.nextradiotv.com) | feed — src/config/live-video-sources.ts |
@@ -540,7 +540,7 @@ This generated inventory covers **881 active source hosts** representing **858 a
 | onemileatatime.com (onemileatatime.com) | structured — scripts/seed-aviation.mjs, server/worldmonitor/aviation/v1/list-aviation-news.ts |
 | Onet (wiadomosci.onet.pl) | feed — shared/news-catalog.json |
 | Ontario 511 (511on.ca) | structured — scripts/lib/provincial-511.mjs |
-| open-meteo.caseyjhand.com (open-meteo.caseyjhand.com) | structured — src/services/mcp-store.ts |
+| open-meteo.caseyjhand.com (open-meteo.caseyjhand.com) | Excluded / candidate — No current fetch observed |
 | open.alberta.ca (open.alberta.ca) | Excluded / candidate — No current fetch observed |
 | open.iub.gov.lv (open.iub.gov.lv) | structured — scripts/_global-tender-feeds.mjs |
 | OpenAQ (api.openaq.org) | structured — scripts/seed-health-air-quality.mjs |
@@ -558,7 +558,7 @@ This generated inventory covers **881 active source hosts** representing **858 a
 | overpass-api.de (overpass-api.de) | structured — scripts/fetch-osm-bases.mjs |
 | Pajhwok Afghan News (pajhwok.com) | feed — shared/news-catalog.json |
 | PAP (pap.pl) | feed — shared/news-catalog.json |
-| Parallel Search MCP (search.parallel.ai) | structured — src/services/mcp-store.ts |
+| Parallel Search MCP (search.parallel.ai) | Excluded / candidate — No current fetch observed |
 | patents.google.com (patents.google.com) | structured — scripts/_defense-patents-source.mjs |
 | pe-fa-lp02a.9c9media.com (pe-fa-lp02a.9c9media.com) | Excluded / candidate — No current fetch observed |
 | petrobangla.org.bd (petrobangla.org.bd) | structured — scripts/shared/regional-energy-feeds.json |
@@ -610,7 +610,7 @@ This generated inventory covers **881 active source hosts** representing **858 a
 | review.firstround.com (review.firstround.com) | feed — shared/news-catalog.json |
 | rferl.org (rferl.org) | feed — shared/news-catalog.json |
 | rieti.go.jp (rieti.go.jp) | feed — shared/news-catalog.json |
-| Robtex MCP (mcp.robtex.com) | structured — src/services/mcp-store.ts |
+| Robtex MCP (mcp.robtex.com) | Excluded / candidate — No current fetch observed |
 | rss.art19.com (rss.art19.com) | feed — shared/news-catalog.json |
 | rss.dw.com (rss.dw.com) | feed — shared/news-catalog.json |
 | rss.libsyn.com (rss.libsyn.com) | feed — shared/news-catalog.json |

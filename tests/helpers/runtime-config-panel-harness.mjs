@@ -93,14 +93,6 @@ async function loadRuntimeConfigPanel() {
       }
     `],
     ['runtime-stub', `export function isDesktopRuntime() { return true; }`],
-    ['entitlements-stub', `
-      const state = globalThis.__wmRuntimeConfigPanelTestState;
-      export function isEntitled() { return state.entitled; }
-      export function onEntitlementChange(listener) {
-        state.entitlementListeners.add(listener);
-        return () => state.entitlementListeners.delete(listener);
-      }
-    `],
     ['tauri-bridge-stub', `export async function invokeTauri() {}\nexport function hasTauriInvokeBridge() { return false; }`],
     ['i18n-stub', `export function t(key) { return key; }`],
     ['dom-utils-stub', `
@@ -176,18 +168,6 @@ async function loadRuntimeConfigPanel() {
       export const PLAINTEXT_KEYS = new Set();
       export const MASKED_SENTINEL = '***';
     `],
-    ['panel-gating-stub', `
-      export const PanelGateReason = { NONE: 'none', ANONYMOUS: 'anonymous', UNVERIFIED: 'unverified', FREE_TIER: 'free_tier' };
-      export function getPanelGateReason() { return PanelGateReason.NONE; }
-    `],
-    ['dodo-checkout-stub', `
-      export const DodoPayments = {
-        Initialize() {},
-        Checkout: {
-          open() {},
-        },
-      };
-    `],
     ['dodo-empty-stub', 'export {};'],
   ]);
 
@@ -195,7 +175,6 @@ async function loadRuntimeConfigPanel() {
     ['@/services/runtime-config', 'runtime-config-stub'],
     ['../services/runtime', 'runtime-stub'],
     ['@/services/runtime', 'runtime-stub'],
-    ['@/services/entitlements', 'entitlements-stub'],
     ['../services/tauri-bridge', 'tauri-bridge-stub'],
     ['@/services/tauri-bridge', 'tauri-bridge-stub'],
     ['../services/i18n', 'i18n-stub'],
@@ -206,8 +185,6 @@ async function loadRuntimeConfigPanel() {
     ['@/utils/sanitize', 'sanitize-stub'],
     ['@/services/ollama-models', 'ollama-models-stub'],
     ['@/services/settings-constants', 'settings-constants-stub'],
-    ['@/services/panel-gating', 'panel-gating-stub'],
-    ['dodopayments-checkout', 'dodo-checkout-stub'],
     ['dodopayments', 'dodo-empty-stub'],
     ['@dodopayments/core', 'dodo-empty-stub'],
     ['@dodopayments/convex', 'dodo-empty-stub'],

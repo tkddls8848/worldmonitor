@@ -47,7 +47,7 @@ describe('desktop header chrome', () => {
   it('renders the same elements above the header as the web shell', async () => {
     const web = await chromeAboveHeader(false);
     const desktop = await chromeAboveHeader(true);
-    expect(web).toEqual(['a#.skip-link', 'div#proBannerSlot.pro-banner-slot']);
+    expect(web).toEqual(['a#.skip-link']);
     expect(desktop).toEqual(web);
   });
 });

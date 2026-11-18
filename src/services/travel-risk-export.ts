@@ -118,7 +118,7 @@ export interface TripViolation {
 
 export type TripExportResult =
   | { ok: true; content: string; filename: string; mimeType: 'text/markdown;charset=utf-8' | 'text/html;charset=utf-8' }
-  | { ok: false; reason: 'auth' | 'upgrade' | 'invalid' | 'busy' | 'unavailable' | 'error'; violations: TripViolation[] };
+  | { ok: false; reason: 'auth' | 'invalid' | 'busy' | 'unavailable' | 'error'; violations: TripViolation[] };
 
 const FILES: Record<TripFormat, { extension: string; mimeType: 'text/markdown;charset=utf-8' | 'text/html;charset=utf-8' }> = {
   markdown: { extension: 'md', mimeType: 'text/markdown;charset=utf-8' },
@@ -176,7 +176,7 @@ export async function requestTripAssessment(
   }
   switch (response.status) {
     case 401: return { ok: false, reason: 'auth', violations: [] };
-    case 403: return { ok: false, reason: 'upgrade', violations: [] };
+    case 403: return { ok: false, reason: 'unavailable', violations: [] };
     case 400:
     case 413: return { ok: false, reason: 'invalid', violations: await violationsOf(response) };
     case 429: return { ok: false, reason: 'busy', violations: [] };

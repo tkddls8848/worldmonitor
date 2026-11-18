@@ -8,14 +8,11 @@ import type { SettingsSectionId } from '@/config/settings-sections';
 import { applyVisibleMapDimension } from '@/app/map-dimension-control';
 import type { UnifiedSettingsConfig } from '@/components/UnifiedSettings';
 import type { AirlineIntelPanel } from '@/components/AirlineIntelPanel';
-import type { CustomWidgetPanel } from '@/components/CustomWidgetPanel';
-import { deleteWidget, getWidget, saveWidget } from '@/services/widget-store';
+import { deleteWidget } from '@/services/widget-store';
 import { isOrbitalLookupOpen } from '@/services/orbital/lookup-host';
 import { userSetPanelEnabled } from '@/config/panels';
 import { applySetPanelEnabled } from '@/app/panel-enablement';
 import type { SetPanelEnabledResult } from '@/config/panel-enablement';
-import type { McpDataPanel } from '@/components/McpDataPanel';
-import { deleteMcpPanel, getMcpPanel, saveMcpPanel } from '@/services/mcp-store';
 import type { PanelConfig, MapLayers, MilitaryFlight } from '@/types';
 import type { MapView } from '@/components/MapContainer';
 import type { PositionSample } from '@/services/aviation';
@@ -319,7 +316,6 @@ export class EventHandlerManager implements AppModule {
   private boundSearchKeyHandler: ((e: KeyboardEvent) => void) | null = null;
   private readonly mobilePrimaryNav: MobilePrimaryNav;
   private boundPanelCloseHandler: ((e: Event) => void) | null = null;
-  private boundWidgetModifyHandler: ((e: Event) => void) | null = null;
   private boundUndoHandler: ((e: KeyboardEvent) => void) | null = null;
   private boundNotifyForCountryHandler: ((e: Event) => void) | null = null;
   private boundMissionOutsideHandler: ((e: MouseEvent) => void) | null = null;
@@ -599,10 +595,6 @@ export class EventHandlerManager implements AppModule {
       this.ctx.container.removeEventListener('wm:panel-close', this.boundPanelCloseHandler);
       this.boundPanelCloseHandler = null;
     }
-    if (this.boundWidgetModifyHandler) {
-      this.ctx.container.removeEventListener('wm:widget-modify', this.boundWidgetModifyHandler);
-      this.boundWidgetModifyHandler = null;
-    }
     if (this.boundUndoHandler) {
       document.removeEventListener('keydown', this.boundUndoHandler);
       this.boundUndoHandler = null;
@@ -739,18 +731,6 @@ export class EventHandlerManager implements AppModule {
         return;
       }
 
-      if (panelId.startsWith('mcp-')) {
-        if (!window.confirm(t('mcp.confirmDelete'))) return;
-        deleteMcpPanel(panelId);
-        const panel = this.ctx.panels[panelId];
-        panel?.destroy();
-        delete this.ctx.panels[panelId];
-        delete this.ctx.panelSettings[panelId];
-        saveToStorage(STORAGE_KEYS.panels, this.ctx.panelSettings);
-        panel?.getElement()?.remove();
-        return;
-      }
-
       const config = this.ctx.panelSettings[panelId];
       if (!config) return;
       userSetPanelEnabled(config, false);
@@ -766,36 +746,6 @@ export class EventHandlerManager implements AppModule {
       if (this.closedPanelStack.length > 20) this.closedPanelStack.shift();
     }) as EventListener;
     this.ctx.container.addEventListener('wm:panel-close', this.boundPanelCloseHandler);
-
-    this.boundWidgetModifyHandler = ((e: CustomEvent<{ widgetId: string }>) => {
-      const spec = getWidget(e.detail.widgetId);
-      if (!spec) return;
-      void import('@/components/WidgetChatModal').then((m) => m.openWidgetChatModal({
-        mode: 'modify',
-        existingSpec: spec,
-        onComplete: (updated) => {
-          void saveWidget(updated).then(() => {
-            (this.ctx.panels[updated.id] as CustomWidgetPanel | undefined)?.updateSpec(updated);
-          }).catch((error) => {
-            console.error('[widget-chat] failed to save widget', error);
-            showToast(t('widgets.saveFailed'));
-          });
-        },
-      })).catch((err) => console.error('[widget-chat] failed to lazy-load WidgetChatModal', err));
-    }) as EventListener;
-    this.ctx.container.addEventListener('wm:widget-modify', this.boundWidgetModifyHandler);
-
-    this.ctx.container.addEventListener('wm:mcp-configure', ((e: CustomEvent<{ panelId: string }>) => {
-      const spec = getMcpPanel(e.detail.panelId);
-      if (!spec) return;
-      void import('@/components/McpConnectModal').then((m) => m.openMcpConnectModal({
-        existingSpec: spec,
-        onComplete: (updated) => {
-          saveMcpPanel(updated);
-          (this.ctx.panels[updated.id] as McpDataPanel | undefined)?.updateSpec(updated);
-        },
-      })).catch((err) => console.error('[mcp-connect] failed to lazy-load McpConnectModal', err));
-    }) as EventListener);
 
     // undo via Ctrl/Cmd+Z
     this.boundUndoHandler = (e: KeyboardEvent) => {

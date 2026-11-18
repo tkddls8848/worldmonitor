@@ -81,7 +81,7 @@ type PanelManualChunkName = PanelChunkName | PanelSupportChunkName;
 //   - maplibre, deck-stack, protomaps: heavy WebGL deps, only reachable via MapContainer
 //   - MapContainer: the dynamic-import target itself
 //   - panels-*: panel domain chunks; keep them out of the entry HTML preload
-//   - UnifiedSettings, settings-window, checkout: secondary interaction flows;
+//   - UnifiedSettings, settings-window: secondary interaction flows;
 //     first paint only needs their header buttons and cheap event wiring
 const LAZY_HTML_PRELOAD_CHUNKS = [
   'maplibre',
@@ -91,7 +91,6 @@ const LAZY_HTML_PRELOAD_CHUNKS = [
   'MapContainer',
   'UnifiedSettings',
   'settings-window',
-  'checkout',
   ...PANEL_CHUNK_NAMES,
   ...PANEL_SUPPORT_CHUNK_NAMES,
 ] as const;
@@ -161,7 +160,7 @@ const PANEL_CLUSTER: Record<string, PanelChunkName> = {
   MilitaryCorrelation: 'panels-intel',
   Forecast: 'panels-intel',
   HeroSpotlight: 'panels-intel', Insights: 'panels-intel',
-  LiveWebcams: 'panels-intel', McpData: 'panels-intel',
+  LiveWebcams: 'panels-intel',
   Monitor: 'panels-intel', PinnedWebcams: 'panels-intel',
   Prediction: 'panels-intel', ProgressCharts: 'panels-intel',
   RegionalIntelligenceBoard: 'panels-intel',
@@ -1346,11 +1345,6 @@ export default defineConfig(({ mode }) => {
           // DeckGLMap boundary.
           onlyExplicitManualChunks: true,
           manualChunks(id) {
-            // Keep the existing secondary-flow chunk stable when standalone
-            // entries stop sharing panel dependencies with the dashboard.
-            if (id.endsWith('/src/services/checkout.ts')) {
-              return 'checkout';
-            }
             // Give the layered dashboard stylesheet a CSS-only chunk. Vite folds a
             // CSS-only chunk into each importing entry's own CSS, so dashboard.html
             // links it. Left inside a shared JavaScript chunk it inherited that
@@ -1458,13 +1452,6 @@ export default defineConfig(({ mode }) => {
             // Post-paint service tail split (#4487). These files are dynamic-imported
             // from data-loader/country-intel/SignalModal; stable names let the
             // dist guard prove they stay out of main rather than merely grepping src.
-            // Keep the product catalog independent from its shared cache and
-            // entitlement dependencies. Before this split, Rollup named the shared
-            // cache group `products`, making the post-hydration product task parse
-            // unrelated IndexedDB code alongside the tiny checkout catalog. (#5165)
-            if (id.endsWith('/src/config/products.ts') || id.endsWith('/src/config/products.generated.ts')) {
-              return 'products';
-            }
             if (id.endsWith('/src/services/persistent-cache.ts')) {
               return 'persistent-cache';
             }

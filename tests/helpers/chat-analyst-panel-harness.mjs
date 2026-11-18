@@ -71,26 +71,8 @@ async function loadChatAnalystPanel() {
     ['runtime-config-stub', `
       export function getSecretState() { return { present: true }; }
     `],
-    ['panel-gating-stub', `
-      export const PanelGateReason = Object.freeze({
-        NONE: 'none',
-        ANONYMOUS: 'anonymous',
-        FREE_TIER: 'free_tier',
-      });
-      // No entitlement snapshot and no role claim — the panel's denial
-      // classifier then treats a 403 as an honest upsell. Tests that care
-      // about the desync branch drive classifyPremiumDenial directly
-      // (tests/premium-denial.test.mts); @/services/premium-denial is a pure
-      // leaf and is bundled for real here rather than stubbed.
-      export function readClientEntitlementBelief() {
-        return { entitlementTier: null, authRole: null };
-      }
-    `],
     ['auth-state-stub', `
       export function getAuthState() { return { user: null }; }
-    `],
-    ['premium-fetch-stub', `
-      export function premiumFetch() { return Promise.reject(new Error('not wired in test')); }
     `],
     ['analyst-markdown-stub', `
       export function postProcessAnalystHtml(html) { return html; }
@@ -101,12 +83,6 @@ async function loadChatAnalystPanel() {
     `],
     ['dompurify-stub', `
       export default { sanitize: (s) => s };
-    `],
-    ['checkout-stub', `
-      export function startCheckout() {}
-    `],
-    ['products-stub', `
-      export const DEFAULT_UPGRADE_PRODUCT = 'pro';
     `],
   ]);
 
@@ -120,12 +96,8 @@ async function loadChatAnalystPanel() {
     ['@/services/analytics', 'analytics-stub'],
     ['@/services/ai-flow-settings', 'ai-flow-settings-stub'],
     ['@/services/runtime-config', 'runtime-config-stub'],
-    ['@/services/panel-gating', 'panel-gating-stub'],
     ['@/services/auth-state', 'auth-state-stub'],
-    ['@/services/premium-fetch', 'premium-fetch-stub'],
     ['@/utils/analyst-markdown', 'analyst-markdown-stub'],
-    ['@/services/checkout', 'checkout-stub'],
-    ['@/config/products', 'products-stub'],
     ['marked', 'marked-stub'],
     ['dompurify', 'dompurify-stub'],
   ]);

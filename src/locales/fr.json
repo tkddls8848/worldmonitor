@@ -5185,7 +5185,6 @@
     "errOutsideWindow": "{{name}} : les dates doivent se situer dans la fenêtre du voyage.",
     "errInvalid": "Le brouillon n'a pas pu être généré à partir de ce voyage :",
     "errAuth": "Connectez-vous à nouveau pour générer le brouillon.",
-    "errUpgrade": "L'évaluation de voyage est incluse dans les plans Pro Business, API Business et Enterprise.",
     "errBusy": "Trop de requêtes. Réessayez dans une minute.",
     "errUnavailable": "Les données du brouillon ne sont pas disponibles pour le moment. Réessayez dans une minute.",
     "errGeneric": "Le brouillon n'a pas pu être généré. Réessayez.",

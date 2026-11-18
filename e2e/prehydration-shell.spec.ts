@@ -233,7 +233,6 @@ test.describe('pre-hydration dashboard shell', () => {
         '/chokepoints/',
         '/crises/',
         '/tools/',
-        '/pro#pricing',
         'https://www.worldmonitor.app/blog/',
         'https://www.worldmonitor.app/docs/documentation',
         'https://github.com/koala73/worldmonitor',

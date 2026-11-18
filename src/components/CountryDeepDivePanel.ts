@@ -316,8 +316,9 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     }
     const { card } = section;
     const body = id === 'energy' && this.hostedAtlasBody ? this.energyBody! : section.body;
-    const notice = state === 'locked' ? this.makeProLocked(reason) : this.makeEmpty(reason);
-    notice.dataset.briefState = state;
+    // A denied section reads as unavailable: the personal build has no plan to sell.
+    const notice = this.makeEmpty(reason);
+    notice.dataset.briefState = 'unavailable';
     if (id === 'signals' && state === 'unavailable' && this.signalBreakdownBody && this.signalRecentBody) {
       this.currentSignalDetails = 'unavailable';
       this.signalBreakdownBody.replaceChildren(notice);
@@ -777,8 +778,8 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     }
     const failure = this.defenseIndustrialFailure;
     if (failure?.state === 'locked') {
-      const notice = this.makeProLocked(failure.reason);
-      notice.dataset.briefState = 'locked';
+      const notice = this.makeEmpty(failure.reason);
+      notice.dataset.briefState = 'unavailable';
       body.append(notice);
       return;
     }

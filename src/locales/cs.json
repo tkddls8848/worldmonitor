@@ -5213,7 +5213,6 @@
     "errOutsideWindow": "{{name}}: data musí být v rozmezí okna cesty.",
     "errInvalid": "Návrh nemohl být z této cesty vytvořen:",
     "errAuth": "Přihlaste se znovu, abyste vytvořili návrh.",
-    "errUpgrade": "Posouzení cesty je součástí plánů Pro Business, API Business a Enterprise.",
     "errBusy": "Příliš mnoho požadavků. Zkuste to za minutu.",
     "errUnavailable": "Data pro návrh jsou nyní nedostupná. Zkuste to za minutu.",
     "errGeneric": "Návrh nemohl být vytvořen. Zkuste to znovu.",

@@ -33,31 +33,15 @@ describe('panel toggles are real buttons', () => {
     assert.match(settings, /<button\b[^>]*type="button"[^>]*class="source-toggle-item/);
   });
 
-  it('unlocked panel toggles expose their current pressed state', () => {
+  it('panel toggles expose their current pressed state', () => {
     assert.deepEqual(
-      getPanelToggleA11yState(false, true, 'Markets'),
+      getPanelToggleA11yState(true),
       { ariaPressed: 'true', ariaLabel: null },
     );
     assert.deepEqual(
-      getPanelToggleA11yState(false, false, 'Markets'),
+      getPanelToggleA11yState(false),
       { ariaPressed: 'false', ariaLabel: null },
     );
-  });
-
-  it('locked Pro panels are upgrade actions rather than false toggles', () => {
-    assert.deepEqual(
-      getPanelToggleA11yState(true, false, 'Force posture'),
-      {
-        ariaPressed: null,
-        ariaLabel: 'Upgrade to Pro to use Force posture',
-      },
-    );
-    assert.match(
-      settings,
-      /a11yState\.ariaPressed === null \? '' : `aria-pressed=/,
-      'locked controls must omit aria-pressed',
-    );
-    assert.match(settings, /a11yState\.ariaLabel === null \? '' : `aria-label=/);
   });
 
   it('source-toggle-item has aria-pressed', () => {

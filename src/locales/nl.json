@@ -5157,7 +5157,6 @@
     "errOutsideWindow": "{{name}}: data moeten binnen het reisroutevenster vallen.",
     "errInvalid": "De versie kon niet uit deze reisroute worden samengesteld:",
     "errAuth": "Meld u opnieuw aan om de versie op te stellen.",
-    "errUpgrade": "De reisbeoordeling is inbegrepen in de plannen Pro Business, API Business en Enterprise.",
     "errBusy": "Te veel verzoeken. Probeer het over een minuut opnieuw.",
     "errUnavailable": "De data achter de versie zijn momenteel niet beschikbaar. Probeer het over een minuut opnieuw.",
     "errGeneric": "De versie kon niet worden samengesteld. Probeer het opnieuw.",

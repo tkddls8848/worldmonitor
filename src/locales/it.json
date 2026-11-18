@@ -5185,7 +5185,6 @@
     "errOutsideWindow": "{{name}}: le date devono rientrare nella finestra del viaggio.",
     "errInvalid": "La bozza non può essere creata da questo viaggio:",
     "errAuth": "Accedi di nuovo per creare la bozza.",
-    "errUpgrade": "La valutazione del viaggio è inclusa nei piani Pro Business, API Business e Enterprise.",
     "errBusy": "Troppe richieste. Riprova tra un minuto.",
     "errUnavailable": "I dati alla base della bozza non sono disponibili al momento. Riprova tra un minuto.",
     "errGeneric": "La bozza non può essere creata. Riprova.",

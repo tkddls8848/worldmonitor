@@ -5129,7 +5129,6 @@
     "errOutsideWindow": "{{name}}: ngày tháng phải nằm trong cửa sổ chuyến đi.",
     "errInvalid": "Không thể xây dựng dự thảo từ chuyến đi này:",
     "errAuth": "Đăng nhập lại để xây dựng dự thảo.",
-    "errUpgrade": "Đánh giá chuyến đi được bao gồm trong các kế hoạch Pro Business, API Business và Enterprise.",
     "errBusy": "Quá nhiều yêu cầu. Thử lại trong một phút.",
     "errUnavailable": "Dữ liệu đằng sau dự thảo hiện không khả dụng. Thử lại trong một phút.",
     "errGeneric": "Không thể xây dựng dự thảo. Thử lại.",

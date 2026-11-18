@@ -35,7 +35,6 @@ interface SectionDef {
   readonly descKey?: string;
   /** 'preferences' pages are rendered by preferences-content.ts. */
   readonly owner: 'shell' | 'preferences';
-  readonly badge?: 'pro';
   readonly available?: (f: SettingsFacts) => boolean;
   /** What the home list shows while the section is unavailable. Default 'hide'. */
   readonly whenUnavailable?: 'hide' | 'sign-in-row';
@@ -157,7 +156,6 @@ export type NavRow =
     readonly id: SettingsSectionId;
     readonly labelKey: string;
     readonly descKey: string | null;
-    readonly badge: 'pro' | null;
     readonly summary: RowSummary | null;
     readonly keywordsKey: string;
   }
@@ -182,7 +180,6 @@ export function buildNav(f: SettingsFacts): readonly NavGroup[] {
           id,
           labelKey: def.labelKey,
           descKey: def.descKey ?? null,
-          badge: def.badge ?? null,
           summary: def.summary?.(f) ?? null,
           keywordsKey: def.keywordsKey,
         });

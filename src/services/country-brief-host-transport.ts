@@ -61,7 +61,7 @@ export function createHostCountryFetch(call: (name: string, args: object, signal
           const result = section === 'signalsRaw' ? rawSignalsResultSchema.parse(raw) : countryReadResultSchema.parse(raw);
           if (result.section !== section as CountryReader) throw new Error('Country section identity mismatch');
           requestSignal.throwIfAborted();
-          if (section !== 'signalsRaw' && result.state !== 'ready') throw new CountrySectionError(result.state, result.reason ?? 'The section is unavailable.');
+          if (section !== 'signalsRaw' && result.state !== 'ready') throw new CountrySectionError('unavailable', result.reason ?? 'The section is unavailable.');
           if (!('value' in result)) throw new Error('Missing country value');
           const requestedCountry = 'country_code' in args ? args.country_code : 'countryCode' in args ? args.countryCode : 'iso2' in args ? args.iso2 : undefined;
           const returnedCountry = result.value.countryCode ?? ('iso2' in result.value ? result.value.iso2 : undefined);

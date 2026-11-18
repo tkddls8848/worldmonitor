@@ -30,7 +30,7 @@ describe('dashboard site links (#10461)', () => {
     for (const { path } of DASHBOARD_REFERENCE_LINKS) {
       assert.ok(html.includes(`href="${DASHBOARD_SITE_ORIGIN}${path}"`), `missing ${path}`);
     }
-    assert.ok(html.includes(`href="${DASHBOARD_SITE_ORIGIN}/pro#pricing"`));
+    assert.ok(!html.includes('/pro#pricing'), 'the personal build lists no Pricing link');
     for (const { href } of DASHBOARD_EXTERNAL_SITE_LINKS) {
       assert.ok(html.includes(`href="${href}"`), `missing ${href}`);
     }
@@ -54,7 +54,7 @@ describe('dashboard site links (#10461)', () => {
       assert.ok(html.includes(`href="${path}"`), `self-host missing relative ${path}`);
       assert.ok(!html.includes(`href="${DASHBOARD_SITE_ORIGIN}${path}"`), `self-host must not force www for ${path}`);
     }
-    assert.ok(html.includes('href="/pro#pricing"'));
+    assert.ok(!html.includes('/pro#pricing'));
   });
 
   it('Settings lists the site links above the legal links on the About page', () => {

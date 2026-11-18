@@ -17,14 +17,12 @@ export function dashboardSiteLinksHtml(origin: string): string {
     `<a class="dashboard-site-links-item" href="${escapeHtml(`${base}${path}`)}"`
     + ` target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`
   )).join('');
-  const pricing = `<a class="dashboard-site-links-item" href="${escapeHtml(`${base}/pro#pricing`)}"`
-    + ` target="_blank" rel="noopener noreferrer">Pricing</a>`;
   const external = DASHBOARD_EXTERNAL_SITE_LINKS.map(({ label, href }) => (
     `<a class="dashboard-site-links-item" href="${escapeHtml(href)}"`
     + ` target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`
   )).join('');
   return `<nav aria-label="World Monitor site" class="dashboard-site-links-row">`
-    + `${reference}${pricing}${external}</nav>`;
+    + `${reference}${external}</nav>`;
 }
 
 /** Shared anchor HTML for the mobile More menu and any other shell host. */

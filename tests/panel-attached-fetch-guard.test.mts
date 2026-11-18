@@ -49,14 +49,6 @@ describe('self-starting panel fetches wait for attachment', () => {
     );
   });
 
-  it('McpDataPanel fetchData waits for connection before proxy fetch', () => {
-    assertGuardBefore(
-      read('src/components/McpDataPanel.ts'),
-      'fetchData',
-      /fetch\(proxyUrl\(/,
-    );
-  });
-
   it('RegionalIntelligenceBoard loadCurrent waits for connection before premium RPCs', () => {
     assertGuardBefore(
       read('src/components/RegionalIntelligenceBoard.ts'),

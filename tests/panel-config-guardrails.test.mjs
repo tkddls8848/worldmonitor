@@ -746,45 +746,10 @@ describe('panel-config guardrails', () => {
     );
   });
 
-  it('reserves deferred shells for dynamic custom and MCP panel footprints', () => {
+  it('reserves deferred shells for dynamic custom panel footprints', () => {
     const dynamicEntries = deferredDynamicPanelFootprintRegistryEntries();
     assert.match(dynamicEntries.get('cw-') ?? '', /rowSpan:\s*2/, 'cw- dynamic shell row span missing');
-    assert.match(dynamicEntries.get('mcp-') ?? '', /rowSpan:\s*2/, 'mcp- dynamic shell row span missing');
     assert.equal(dynamicConstructorRowSpan('CustomWidgetPanel.ts', 'custom-widget-panel'), 2);
-    assert.equal(dynamicConstructorRowSpan('McpDataPanel.ts', 'mcp-data-panel'), 2);
-  });
-
-  it('runs dynamic custom and MCP panels through the mounted-panel hydration path', () => {
-    const helperStart = panelLayoutSrc.indexOf('private addDynamicPanel(');
-    assert.notEqual(helperStart, -1, 'expected addDynamicPanel helper in panel-layout.ts');
-    const helperEnd = panelLayoutSrc.indexOf('addCustomWidget(spec:', helperStart);
-    assert.ok(helperEnd > helperStart, 'expected addDynamicPanel helper boundary in panel-layout.ts');
-    const addDynamicPanel = panelLayoutSrc.slice(helperStart, helperEnd);
-    assert.match(
-      addDynamicPanel,
-      /this\.afterPanelMounted\(key, panel\);/,
-      'custom and MCP panels added after startup must run afterPanelMounted so initial hydration can be scheduled',
-    );
-
-    for (const methodName of ['addCustomWidget', 'addMcpPanel']) {
-      const methodStart = panelLayoutSrc.indexOf(`${methodName}(spec:`);
-      assert.notEqual(methodStart, -1, `expected ${methodName} method in panel-layout.ts`);
-      const methodEnd = methodName === 'addCustomWidget'
-        ? panelLayoutSrc.indexOf('addMcpPanel(spec:', methodStart)
-        : panelLayoutSrc.indexOf('private getSavedPanelOrder', methodStart);
-      assert.ok(methodEnd > methodStart, `expected ${methodName} method boundary in panel-layout.ts`);
-      const method = panelLayoutSrc.slice(methodStart, methodEnd);
-      assert.match(
-        method,
-        /this\.importPanel\(/,
-        `${methodName} must use the shared guarded import path`,
-      );
-      assert.match(
-        method,
-        /this\.addDynamicPanel\(spec\.id, panel\);/,
-        `${methodName} must insert through addDynamicPanel() so notifyConnected/afterPanelMounted run`,
-      );
-    }
   });
 
   it('panel keys are consistent across variant configs (no typos)', () => {

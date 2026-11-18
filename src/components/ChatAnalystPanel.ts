@@ -394,20 +394,8 @@ export class ChatAnalystPanel extends Panel {
       void this.renderDashboardControlAction(bubble, parsedAction);
       return;
     }
-    if (parsedAction.type !== 'suggest-widget') return;
-
-    const chip = document.createElement('button');
-    chip.className = 'chat-action-chip';
-    chip.textContent = `${parsedAction.label} →`;
-    chip.addEventListener('click', () => {
-      this.element.dispatchEvent(new CustomEvent('wm:open-widget-creator', {
-        bubbles: true,
-        detail: { initialMessage: parsedAction.prefill },
-      }));
-    });
-    const body = bubble.querySelector('.chat-msg-body');
-    if (body) bubble.insertBefore(chip, body);
-    else bubble.appendChild(chip);
+    // A 'suggest-widget' action used to open the AI widget creator, whose
+    // backend (/api/widget-agent) the personal build does not serve.
   }
 
   private async renderDashboardControlAction(bubble: HTMLElement, action: DashboardControlAction): Promise<void> {

@@ -5157,7 +5157,6 @@
     "errOutsideWindow": "{{name}}: tarihler seyahat penceresinin içinde olmalıdır.",
     "errInvalid": "Taslak bu seyahatten oluşturulamadı:",
     "errAuth": "Taslağı oluşturmak için yeniden oturum açın.",
-    "errUpgrade": "Seyahat değerlendirmesi Pro Business, API Business ve Enterprise planlarında bulunur.",
     "errBusy": "Çok fazla istek. Bir dakika sonra yeniden deneyin.",
     "errUnavailable": "Taslağın arkasındaki veriler şu anda kullanılamıyor. Bir dakika sonra yeniden deneyin.",
     "errGeneric": "Taslak oluşturulamadı. Yeniden deneyin.",

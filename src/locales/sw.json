@@ -5157,7 +5157,6 @@
     "errOutsideWindow": "{{name}}: tarehe lazima ziwe ndani ya dirisha la safari.",
     "errInvalid": "Rasimu haikuweza kujenguliwa kutoka safari hii:",
     "errAuth": "Ingia tena kujenga rasimu.",
-    "errUpgrade": "Tathmini ya safari inajumuishwa katika mipango ya Pro Business, API Business na Enterprise.",
     "errBusy": "Maombi mengi sana. Jaribu tena baada ya dakika moja.",
     "errUnavailable": "Data nyuma ya rasimu haipatikani sasa. Jaribu tena baada ya dakika moja.",
     "errGeneric": "Rasimu haikuweza kujenguliwa. Jaribu tena.",

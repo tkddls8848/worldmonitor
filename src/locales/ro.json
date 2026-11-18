@@ -5185,7 +5185,6 @@
     "errOutsideWindow": "{{name}}: datele trebuie să se încadreze în perioada călătoriei.",
     "errInvalid": "Varianta nu a putut fi construită din această călătorie:",
     "errAuth": "Conectați-vă din nou pentru a construi varianta.",
-    "errUpgrade": "Evaluarea călătoriei este inclusă în planurile Pro Business, API Business și Enterprise.",
     "errBusy": "Prea multe cereri. Încercați din nou peste un minut.",
     "errUnavailable": "Datele din spatele variantei nu sunt disponibile acum. Încercați din nou peste un minut.",
     "errGeneric": "Varianta nu a putut fi construită. Încercați din nou.",

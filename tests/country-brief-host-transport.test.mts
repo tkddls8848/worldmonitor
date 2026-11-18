@@ -100,7 +100,7 @@ it('rejects arbitrary routes, origins, parameters and methods before asking the 
 it('preserves denial and rejects a section identity mismatch', async () => {
   const url = 'https://www.worldmonitor.app/api/intelligence/v1/get-country-facts?country_code=US';
   const denied = createHostCountryFetch(async () => ({ state: 'locked', section: 'facts', reason: 'Access denied' }));
-  await assert.rejects(denied(url), (error: unknown) => error instanceof CountrySectionError && error.state === 'locked');
+  await assert.rejects(denied(url), (error: unknown) => error instanceof CountrySectionError && error.state === 'unavailable');
   const mixed = createHostCountryFetch(async () => ({ state: 'ready', section: 'energy', value: {}, retrievedAt: '2026-10-01T00:00:00.000Z' }));
   await assert.rejects(mixed(url), /identity mismatch/);
   const wrongCountry = createHostCountryFetch(async () => ({ state: 'ready', section: 'facts', value: { countryCode: 'JP' }, retrievedAt: '2026-10-01T00:00:00.000Z' }));

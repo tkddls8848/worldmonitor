@@ -5185,7 +5185,6 @@
     "errOutsideWindow": "{{name}}: las fechas deben estar dentro de la ventana del viaje.",
     "errInvalid": "No se pudo generar el borrador a partir de este viaje:",
     "errAuth": "Inicia sesión nuevamente para generar el borrador.",
-    "errUpgrade": "La evaluación de viaje se incluye en los planes Pro Business, API Business y Enterprise.",
     "errBusy": "Demasiadas solicitudes. Intenta de nuevo en un minuto.",
     "errUnavailable": "Los datos detrás del borrador no están disponibles en este momento. Intenta de nuevo en un minuto.",
     "errGeneric": "No se pudo generar el borrador. Intenta de nuevo.",

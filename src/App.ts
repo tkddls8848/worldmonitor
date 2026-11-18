@@ -1174,6 +1174,17 @@ export class App {
       }
     }
 
+    // MCP panels are retired (their /api/mcp-proxy backend is gone). A stored
+    // `mcp-*` entry would only list a dead toggle, so drop it; the saved MCP
+    // specs themselves are simply never read again.
+    let droppedRetiredMcpPanel = false;
+    for (const key of Object.keys(panelSettings)) {
+      if (!key.startsWith('mcp-')) continue;
+      delete panelSettings[key];
+      droppedRetiredMcpPanel = true;
+    }
+    if (droppedRetiredMcpPanel && storageAvailable) saveToStorage(STORAGE_KEYS.panels, panelSettings);
+
     if (storageAvailable) {
       // One-time migration: prune removed panel keys from stored settings and order
       const PANEL_PRUNE_KEY = 'worldmonitor-panel-prune-v1';

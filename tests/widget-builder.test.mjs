@@ -1447,16 +1447,6 @@ describe('widget-store — constants and logic', () => {
     assert.equal(Number(match[1]), 10, 'MAX_HISTORY must be 10');
   });
 
-  it('widget IDs use cw- prefix (in modal or store)', () => {
-    const modal = src('src/components/WidgetChatModal.ts');
-    assert.ok(
-      store.includes("'cw-'") || store.includes('"cw-"') ||
-      modal.includes("'cw-'") || modal.includes('"cw-"') ||
-      modal.includes('`cw-'),
-      "Widget IDs must use 'cw-' prefix (check widget-store.ts and WidgetChatModal.ts)",
-    );
-  });
-
   it('deleteWidget cleans worldmonitor-panel-spans (aggregate map)', () => {
     assert.ok(
       store.includes('clearPanelSpanEntry(id)'),
@@ -1772,40 +1762,10 @@ describe('panel guardrails — cw- prefix handling', () => {
     );
   });
 
-  it('event-handlers registers wm:widget-modify listener', () => {
-    assert.ok(
-      events.includes('wm:widget-modify'),
-      'Must listen for wm:widget-modify custom event',
-    );
-  });
-
-  it('shows an accessible save failure message when widget persistence rejects', () => {
-    assert.match(
-      events,
-      /failed to save widget[\s\S]{0,220}showToast\(t\('widgets\.saveFailed'\)\)/,
-      'Modifying a widget must surface a rejected save to the user',
-    );
-    const createFailureHandlers = layout.match(
-      /failed to add widget[\s\S]{0,220}showToast\(t\('widgets\.saveFailed'\)\)/g,
-    ) ?? [];
-    assert.equal(
-      createFailureHandlers.length,
-      1,
-      'The widget create entry point must surface a rejected save to the user',
-    );
-  });
-
   it('panel-layout loads widgets when feature is enabled', () => {
     assert.ok(
       layout.includes('loadWidgets'),
       'panel-layout must call loadWidgets() to restore persisted widgets',
-    );
-  });
-
-  it('panel-layout has addCustomWidget method', () => {
-    assert.ok(
-      layout.includes('addCustomWidget'),
-      'panel-layout must implement addCustomWidget() method',
     );
   });
 
@@ -1866,170 +1826,9 @@ describe('widget-agent relay — SSE event protocol', () => {
 // ---------------------------------------------------------------------------
 // 7. WidgetChatModal — client-side SSE handling
 // ---------------------------------------------------------------------------
-describe('WidgetChatModal — SSE client protocol', () => {
-  const modal = src('src/components/WidgetChatModal.ts');
-
-  it('uses fetch (not EventSource) for POST SSE', () => {
-    assert.ok(modal.includes('fetch(widgetAgentUrl'), 'Must use fetch() not EventSource');
-    assert.ok(!modal.includes('new EventSource'), 'Must NOT use EventSource (POST not supported)');
-  });
-
-  it('sends X-Widget-Key header', () => {
-    assert.ok(
-      modal.includes('X-Widget-Key'),
-      'Must send X-Widget-Key header with request',
-    );
-  });
-
-  it('runs preflight against widget-agent health route on open', () => {
-    assert.ok(modal.includes('widgetAgentHealthUrl'), 'Modal must import widgetAgentHealthUrl()');
-    assert.ok(modal.includes('runPreflight'), 'Modal must define runPreflight()');
-    assert.ok(modal.includes("fetch(widgetAgentHealthUrl()"), 'Modal must fetch widgetAgentHealthUrl() during preflight');
-  });
-
-  it('AbortController used for cancellation', () => {
-    assert.ok(modal.includes('AbortController'), 'Must use AbortController for stream cancellation');
-  });
-
-  it('currentHtml sent as separate field (not embedded in conversationHistory)', () => {
-    const bodyIdx = modal.indexOf('JSON.stringify');
-    assert.ok(bodyIdx !== -1);
-    const bodyRegion = modal.slice(bodyIdx, bodyIdx + 400);
-    assert.ok(bodyRegion.includes('currentHtml'), 'Must send currentHtml as separate request field');
-    assert.ok(bodyRegion.includes('conversationHistory'), 'Must send conversationHistory');
-  });
-
-  it('prompt is sliced to 2000 chars before sending', () => {
-    assert.ok(
-      modal.includes('.slice(0, 2000)'),
-      'Prompt must be sliced to 2000 chars before sending',
-    );
-  });
-
-  it('history content is sliced to 500 chars per entry', () => {
-    assert.ok(
-      modal.includes('.slice(0, 500)'),
-      'Each history entry content must be sliced to 500 chars',
-    );
-  });
-
-  it('modal handles AbortError without showing error to user', () => {
-    assert.ok(
-      modal.includes('AbortError'),
-      'Must handle AbortError (e.g. from timeout or close) gracefully',
-    );
-  });
-
-  it('Escape key closes modal', () => {
-    assert.ok(
-      modal.includes('Escape') || modal.includes("'Escape'"),
-      'Escape key must close the modal',
-    );
-  });
-
-  it('action button says "Add to Dashboard" (create) or "Apply Changes" (modify)', () => {
-    assert.ok(modal.includes("t('widgets.addToDashboard')"), 'Create mode button must use widgets.addToDashboard');
-    assert.ok(modal.includes("t('widgets.applyChanges')"), 'Modify mode button must use widgets.applyChanges');
-  });
-
-  it('uses split layout and sticky footer action bar structure', () => {
-    assert.ok(modal.includes('widget-chat-layout'), 'Modal must render widget-chat-layout');
-    assert.ok(modal.includes('widget-chat-sidebar'), 'Modal must render widget-chat-sidebar');
-    assert.ok(modal.includes('widget-chat-main'), 'Modal must render widget-chat-main');
-    assert.ok(modal.includes('widget-chat-footer'), 'Modal must render widget-chat-footer');
-  });
-
-  it('renders prompt example chips', () => {
-    assert.ok(modal.includes('EXAMPLE_PROMPT_KEYS'), 'Modal must define prompt example keys');
-    assert.ok(modal.includes('widget-chat-example-chip'), 'Modal must render prompt example chips');
-  });
-
-  it('conversationHistory entries use literal role types (user | assistant)', () => {
-    // After our fix, these should use `as const`
-    assert.ok(
-      modal.includes("'user' as const") || modal.includes('"user" as const'),
-      "role must be typed as literal 'user' with `as const`",
-    );
-    assert.ok(
-      modal.includes("'assistant' as const") || modal.includes('"assistant" as const'),
-      "role must be typed as literal 'assistant' with `as const`",
-    );
-  });
-
-  it('multi-turn requests reuse mutable sessionHistory instead of original spec history', () => {
-    assert.ok(
-      modal.includes('const sessionHistory = [...(options.existingSpec?.conversationHistory ?? [])]'),
-      'Modal must keep a mutable sessionHistory array for iterative requests',
-    );
-    assert.ok(
-      modal.includes('conversationHistory: sessionHistory'),
-      'Outgoing request body must use the mutable sessionHistory array',
-    );
-    assert.ok(
-      modal.includes('sessionHistory.push('),
-      'Modal must append new user/assistant turns back into sessionHistory after success',
-    );
-    assert.ok(
-      modal.includes('conversationHistory: [...sessionHistory]'),
-      'Saved widget spec must persist the updated sessionHistory',
-    );
-  });
-});
-
 // ---------------------------------------------------------------------------
 // 8. Vite proxy + URL helper
 // ---------------------------------------------------------------------------
-describe('proxy routing — widgetAgentUrl', () => {
-  const proxy = src('src/utils/proxy.ts');
-  const vite = src('vite.config.ts');
-
-  it('widgetAgentUrl() exists in proxy.ts', () => {
-    assert.ok(
-      proxy.includes('widgetAgentUrl'),
-      'widgetAgentUrl() must be defined in src/utils/proxy.ts',
-    );
-  });
-
-  it('widgetAgentUrl returns /widget-agent in dev (for Vite proxy)', () => {
-    assert.ok(
-      proxy.includes("'/widget-agent'") || proxy.includes('"/widget-agent"'),
-      'widgetAgentUrl must return /widget-agent in dev mode',
-    );
-  });
-
-  it('widgetAgentUrl targets proxy.worldmonitor.app (not toRuntimeUrl)', () => {
-    // The URL may be in a constant above the function; search the whole file
-    assert.ok(
-      proxy.includes('proxy.worldmonitor.app'),
-      'Must target proxy.worldmonitor.app directly (sidecar destroys SSE via arrayBuffer)',
-    );
-    // Verify the function itself does not use toRuntimeUrl
-    const fnIdx = proxy.indexOf('function widgetAgentUrl');
-    assert.ok(fnIdx !== -1, 'widgetAgentUrl function not found');
-    const fnBody = proxy.slice(fnIdx, fnIdx + 400);
-    assert.ok(
-      !fnBody.includes('toRuntimeUrl'),
-      'widgetAgentUrl must NOT use toRuntimeUrl — sidecar buffers via arrayBuffer, destroying SSE',
-    );
-  });
-
-  it('vite.config.ts proxies /widget-agent to proxy.worldmonitor.app', () => {
-    assert.ok(
-      vite.includes('/widget-agent'),
-      'vite.config.ts must have proxy entry for /widget-agent',
-    );
-    assert.ok(
-      vite.includes('proxy.worldmonitor.app'),
-      'Vite proxy target must be proxy.worldmonitor.app',
-    );
-  });
-
-  it('widgetAgentHealthUrl() exists and targets /widget-agent/health', () => {
-    assert.ok(proxy.includes('widgetAgentHealthUrl'), 'widgetAgentHealthUrl() must be defined');
-    assert.ok(proxy.includes('/widget-agent/health'), 'widgetAgentHealthUrl() must target /widget-agent/health');
-  });
-});
-
 // ---------------------------------------------------------------------------
 // 9. i18n completeness
 // ---------------------------------------------------------------------------
@@ -2100,13 +1899,7 @@ describe('i18n — widgets section completeness', () => {
   });
 
   it('widget UI sources labels from i18n keys instead of hardcoded English copy', () => {
-    const modal = src('src/components/WidgetChatModal.ts');
-    const panel = src('src/components/CustomWidgetPanel.ts');
     const events = src('src/app/event-handlers.ts');
-    assert.ok(modal.includes("t('widgets.chatTitle')"), 'WidgetChatModal must use widgets.chatTitle');
-    assert.ok(modal.includes("t('widgets.modifyTitle')"), 'WidgetChatModal must use widgets.modifyTitle');
-    assert.ok(modal.includes("t('widgets.inputPlaceholder')"), 'WidgetChatModal must use widgets.inputPlaceholder');
-    assert.ok(panel.includes("t('widgets.modifyWithAi')"), 'CustomWidgetPanel must use widgets.modifyWithAi');
     assert.ok(events.includes("t('widgets.confirmDelete')"), 'Delete confirmation must use widgets.confirmDelete');
   });
 
@@ -2127,13 +1920,6 @@ describe('i18n — widgets section completeness', () => {
 describe('CustomWidgetPanel — header buttons and events', () => {
   const panel = src('src/components/CustomWidgetPanel.ts');
   const sanitizer = src('src/utils/widget-sanitizer.ts');
-
-  it('dispatches wm:widget-modify event from chat button', () => {
-    assert.ok(
-      panel.includes('wm:widget-modify'),
-      'CustomWidgetPanel must dispatch wm:widget-modify CustomEvent',
-    );
-  });
 
   it('applies --widget-accent CSS variable', () => {
     assert.ok(
@@ -2984,58 +2770,6 @@ window.dispatchEvent(new Event('click'));
 // ---------------------------------------------------------------------------
 // 13. PRO widget — modal and layout
 // ---------------------------------------------------------------------------
-describe('PRO widget — modal and layout integration', () => {
-  const modal = src('src/components/WidgetChatModal.ts');
-  const layout = src('src/app/panel-layout.ts');
-
-  it('modal sends tier in request body', () => {
-    const bodyIdx = modal.indexOf('JSON.stringify');
-    assert.ok(bodyIdx !== -1);
-    const bodyRegion = modal.slice(bodyIdx, bodyIdx + 400);
-    assert.ok(bodyRegion.includes('tier'), "Request body must include 'tier' field");
-  });
-
-  it('modal sends X-Pro-Key header for PRO requests', () => {
-    assert.ok(
-      modal.includes('X-Pro-Key'),
-      'Modal must send X-Pro-Key header for PRO tier requests',
-    );
-  });
-
-  it('modal timeout outlasts the relay timeout: 200 s PRO, 170 s basic', () => {
-    assert.ok(modal.includes('const timeoutMs = isPro ? 200_000 : 170_000;'));
-  });
-
-  it('modal shows preflightProUnavailable when proKeyConfigured is false', () => {
-    assert.ok(
-      modal.includes('proKeyConfigured') || modal.includes('preflightProUnavailable'),
-      'Modal must handle proKeyConfigured=false from health endpoint',
-    );
-  });
-
-  it('pendingSaveSpec includes tier field', () => {
-    assert.ok(
-      modal.includes('pendingSaveSpec'),
-      'Modal must use pendingSaveSpec before saving',
-    );
-    // tier should be part of the spec being saved
-    const specIdx = modal.indexOf('pendingSaveSpec');
-    const specRegion = modal.slice(specIdx, specIdx + 200);
-    assert.ok(
-      specRegion.includes('tier') || modal.includes("tier: currentTier"),
-      'pendingSaveSpec must include tier field',
-    );
-  });
-
-  it('PRO example chips defined (separate from basic examples)', () => {
-    assert.ok(
-      modal.includes('PRO_EXAMPLE_PROMPT_KEYS'),
-      'Modal must define PRO_EXAMPLE_PROMPT_KEYS for PRO example chips',
-    );
-  });
-
-});
-
 // ---------------------------------------------------------------------------
 // 14. PRO widget — i18n and CSS
 // ---------------------------------------------------------------------------
@@ -3295,46 +3029,6 @@ describe('widget-agent relay — error classifier', () => {
 describe('panel-layout — Pro add-block gating reacts to entitlement updates', () => {
   const layout = src('src/app/panel-layout.ts');
 
-});
-
-describe('WidgetChatModal — preflight 403 message branches on auth mode', () => {
-  const modal = src('src/components/WidgetChatModal.ts');
-  const en = JSON.parse(src('src/locales/en.json'));
-
-  it('buildWidgetAuthHeaders returns usedTesterKey flag', () => {
-    assert.ok(
-      modal.includes('usedTesterKey'),
-      'buildWidgetAuthHeaders must report whether a tester key was used so the 403 message can branch',
-    );
-  });
-
-  it('en.json defines widgets.preflightProSubscriptionRequired (just-upgraded / outage)', () => {
-    assert.ok(
-      typeof en.widgets?.preflightProSubscriptionRequired === 'string'
-        && en.widgets.preflightProSubscriptionRequired.length > 0,
-      'en.json must define widgets.preflightProSubscriptionRequired',
-    );
-    assert.ok(
-      !/wm-pro-key/i.test(en.widgets.preflightProSubscriptionRequired),
-      'preflightProSubscriptionRequired must not mention wm-pro-key — Clerk users have no tester key',
-    );
-  });
-
-  it('en.json defines widgets.preflightProRequired (free-user upgrade ask, no "just upgraded" language)', () => {
-    assert.ok(
-      typeof en.widgets?.preflightProRequired === 'string'
-        && en.widgets.preflightProRequired.length > 0,
-      'en.json must define widgets.preflightProRequired',
-    );
-    assert.ok(
-      !/wm-pro-key/i.test(en.widgets.preflightProRequired),
-      'preflightProRequired must not mention wm-pro-key',
-    );
-    assert.ok(
-      !/just upgraded|refresh the page|contact support/i.test(en.widgets.preflightProRequired),
-      'preflightProRequired is for genuinely-free users — must not include "just upgraded / refresh / contact support" language',
-    );
-  });
 });
 
 // ---------------------------------------------------------------------------

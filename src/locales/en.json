@@ -5225,7 +5225,6 @@
     "errOutsideWindow": "{{name}}: dates must fall inside the trip window.",
     "errInvalid": "The draft could not be built from this trip:",
     "errAuth": "Sign in again to build the draft.",
-    "errUpgrade": "The trip assessment is included in the Pro Business, API Business and Enterprise plans.",
     "errBusy": "Too many requests. Try again in a minute.",
     "errUnavailable": "The data behind the draft is unavailable right now. Try again in a minute.",
     "errGeneric": "The draft could not be built. Try again.",

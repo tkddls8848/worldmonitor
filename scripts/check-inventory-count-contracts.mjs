@@ -69,9 +69,6 @@ export const INVENTORY_CONTRACTS = Object.freeze([
   contract('market-tape-locales', 'the authoritative locale file registry and market-tape translations', ['parity'], 'replace', 'Exact per-locale translation coverage replaces a locale-count floor.', [
     surface('tests/market-tape-claim.test.mts', ['localeFiles']),
   ]),
-  contract('mcp-presets', 'the MCP preset registry', ['named-member', 'parity'], 'replace', 'Exact preset coverage and named required presets replace the preset floor.', [
-    surface('tests/mcp-presets.test.mjs', ['presets']),
-  ]),
   contract('route-explorer-countries', 'the authoritative country registry used by route explorer pickers', ['parity'], 'replace', 'Exact authoritative country coverage replaces the country floor.', [
     surface('tests/route-explorer-pickers.test.mts', ['getAllCountries']),
   ]),

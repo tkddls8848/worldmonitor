@@ -117,17 +117,16 @@ export class CountryBriefPresentation {
   }
 
   private refreshStatus(): void {
-    const counts = { ready: 0, loading: 0, unavailable: 0, locked: 0 };
+    const counts = { ready: 0, loading: 0, unavailable: 0 };
     for (const section of this.sections) {
       const state = briefSectionState(section);
-      counts[state]++;
+      counts[state === 'locked' ? 'unavailable' : state]++;
       section.card.dataset.loadState = state;
       section.card.setAttribute('aria-busy', String(state === 'loading'));
     }
     const text = [`${counts.ready} sections ready`,
       counts.loading ? `${counts.loading} loading` : '',
-      counts.unavailable ? `${counts.unavailable} unavailable` : '',
-      counts.locked ? `${counts.locked} Pro` : ''].filter(Boolean).join(' · ');
+      counts.unavailable ? `${counts.unavailable} unavailable` : ''].filter(Boolean).join(' · ');
     if (this.status.textContent !== text) this.status.textContent = text;
   }
 

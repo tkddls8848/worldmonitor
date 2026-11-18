@@ -261,15 +261,6 @@ async function loadThreatTimelinePanelHarness() {
         return document.createDocumentFragment();
       }
     `],
-    ['panel-gating-stub', `
-      export const PanelGateReason = Object.freeze({
-        NONE: 'none',
-        ANONYMOUS: 'anonymous',
-        FREE_TIER: 'free_tier',
-      });
-    `],
-    ['checkout-stub', `export function startCheckout() {}`],
-    ['products-stub', `export const DEFAULT_UPGRADE_PRODUCT = 'pro';`],
     ['virtual-entry', virtualEntrySource],
   ]);
   const aliasMap = new Map<string, string>([
@@ -285,9 +276,6 @@ async function loadThreatTimelinePanelHarness() {
     ['@/services/bootstrap', 'bootstrap-stub'],
     ['../utils/dom-utils', 'dom-utils-stub'],
     ['@/utils/dom-utils', 'dom-utils-stub'],
-    ['@/services/panel-gating', 'panel-gating-stub'],
-    ['@/services/checkout', 'checkout-stub'],
-    ['@/config/products', 'products-stub'],
     ['virtual:threat-timeline-entry', 'virtual-entry'],
   ]);
 

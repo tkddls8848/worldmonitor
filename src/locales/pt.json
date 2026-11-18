@@ -5185,7 +5185,6 @@
     "errOutsideWindow": "{{name}}: as datas devem estar dentro da janela de viagem.",
     "errInvalid": "O rascunho não pôde ser construído a partir desta viagem:",
     "errAuth": "Conecte-se novamente para construir o rascunho.",
-    "errUpgrade": "A avaliação de viagem está incluída nos planos Pro Business, API Business e Enterprise.",
     "errBusy": "Muitas solicitações. Tente novamente em um minuto.",
     "errUnavailable": "Os dados por trás do rascunho não estão disponíveis agora. Tente novamente em um minuto.",
     "errGeneric": "O rascunho não pôde ser construído. Tente novamente.",

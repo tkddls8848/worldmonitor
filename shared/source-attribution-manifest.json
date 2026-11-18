@@ -2128,15 +2128,10 @@
       "host": "browser.mcp.cloudflare.com",
       "provider": "Cloudflare Browser MCP",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: optional rendering/automation connector",
       "attribution": "Excluded from the provider count: user-configured MCP connector.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "src/services/mcp-store.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "budgetlab.yale.edu",
@@ -4202,9 +4197,6 @@
         },
         {
           "path": "scripts/openapi-inject-examples.mjs"
-        },
-        {
-          "path": "src/services/mcp-store.ts"
         },
         {
           "path": "src/utils/sanitize.ts"
@@ -6614,29 +6606,19 @@
       "host": "mcp.linear.app",
       "provider": "Linear MCP",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: optional user-configured MCP connector",
       "attribution": "Excluded from the provider count: user-configured MCP connector.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "src/services/mcp-store.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "mcp.robtex.com",
       "provider": "Robtex MCP",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: optional user-configured MCP connector",
       "attribution": "Excluded from the provider count: user-configured MCP connector.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "src/services/mcp-store.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "me.liveuamap.com",
@@ -7566,15 +7548,10 @@
       "host": "open-meteo.caseyjhand.com",
       "provider": "open-meteo.caseyjhand.com",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Community-hosted MCP service. Open-Meteo weather data is CC BY 4.0; free API access is non-commercial only. Commercial access requires a paid Open-Meteo plan and compatible hosting.",
       "attribution": "Weather data by Open-Meteo.com. MCP server hosted by cyanheads at open-meteo.caseyjhand.com. Preserve the attribution returned with weather results.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "src/services/mcp-store.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "open.alberta.ca",
@@ -8386,15 +8363,10 @@
       "host": "radar.mcp.cloudflare.com",
       "provider": "Cloudflare Radar MCP",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: optional user-configured MCP connector",
       "attribution": "Excluded from the provider count: user-configured MCP connector.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "src/services/mcp-store.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "radnet.epa.gov",
@@ -8997,15 +8969,10 @@
       "host": "search.parallel.ai",
       "provider": "Parallel Search MCP",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: optional user-configured MCP connector",
       "attribution": "Excluded from the provider count: user-configured MCP connector.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "src/services/mcp-store.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "search.seznam.cz",

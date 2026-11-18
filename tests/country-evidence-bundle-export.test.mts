@@ -230,9 +230,6 @@ async function loadCountryBriefPage(options: CountryBriefHarnessOptions = {}) {
       }
     `],
     ['auth-state-stub', `export function getAuthState() { return { user: null }; }`],
-    ['panel-gating-stub', `
-      export function hasPremiumAccess() { return ${premiumAccess ? 'true' : 'false'}; }
-    `],
     ['gates-export-stub', `
       export function evaluateExportGate() {
         return ${exportGateLocked
@@ -279,7 +276,6 @@ async function loadCountryBriefPage(options: CountryBriefHarnessOptions = {}) {
     ['@/utils/country-flag', 'country-flag-stub'],
     ['@/utils/dom-utils', 'dom-utils-stub'],
     ['@/services/auth-state', 'auth-state-stub'],
-    ['@/services/panel-gating', 'panel-gating-stub'],
     ['@/services/gates/export', 'gates-export-stub'],
     ['@/services/gates/export-resolver', 'export-gate-stub'],
     ['@/components/ExportGateControl', 'export-gate-control-stub'],

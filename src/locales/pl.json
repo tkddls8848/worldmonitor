@@ -5213,7 +5213,6 @@
     "errOutsideWindow": "{{name}}: daty muszą przypadać w oknie podróży.",
     "errInvalid": "Nie można było zbudować szkicu z tej podróży:",
     "errAuth": "Zaloguj się ponownie, aby zbudować szkic.",
-    "errUpgrade": "Ocena podróży jest dostępna w planach Pro Business, API Business i Enterprise.",
     "errBusy": "Zbyt wiele żądań. Spróbuj ponownie za minutę.",
     "errUnavailable": "Dane na potrzeby szkicu są niedostępne. Spróbuj ponownie za minutę.",
     "errGeneric": "Nie można było zbudować szkicu. Spróbuj ponownie.",

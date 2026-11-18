@@ -25,7 +25,7 @@ const FULL_PANELS: Record<string, PanelConfig> = {
   insights: { name: 'AI Insights', enabled: true, priority: 1 },
   'threat-timeline': { name: 'Threat Timeline', enabled: true, priority: 1 },
   'strategic-posture': { name: 'AI Strategic Posture', enabled: true, priority: 1 },
-  forecast: { name: 'AI Forecasts', enabled: true, priority: 1 }, // trial: unlocked on web, locked on desktop
+  forecast: { name: 'AI Forecasts', enabled: true, priority: 1 },
   cii: { name: 'Country Instability', enabled: true, priority: 1 },
   'strategic-risk': { name: 'Strategic Risk Overview', enabled: true, priority: 1 },
   intel: { name: 'Intel Feed', enabled: true, priority: 1 },

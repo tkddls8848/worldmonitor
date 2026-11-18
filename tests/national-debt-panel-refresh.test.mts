@@ -104,15 +104,6 @@ async function loadNationalDebtPanel() {
     ['analytics-stub', `export function trackLayoutCustomized() {}`],
     ['ai-flow-settings-stub', `export function getAiFlowSettings() { return { badgeAnimation: false }; }`],
     ['runtime-config-stub', `export function getSecretState() { return { present: true }; }`],
-    ['panel-gating-stub', `
-      export const PanelGateReason = Object.freeze({
-        NONE: 'none',
-        ANONYMOUS: 'anonymous',
-        FREE_TIER: 'free_tier',
-      });
-    `],
-    ['checkout-stub', `export function startCheckout() {}`],
-    ['products-stub', `export const DEFAULT_UPGRADE_PRODUCT = 'pro';`],
     ['theme-colors-stub', `export function getCSSColor() { return '#000'; }`],
     ['dom-utils-stub', `
       function append(parent, child) {
@@ -172,9 +163,6 @@ async function loadNationalDebtPanel() {
     ['@/services/analytics', 'analytics-stub'],
     ['@/services/ai-flow-settings', 'ai-flow-settings-stub'],
     ['@/services/runtime-config', 'runtime-config-stub'],
-    ['@/services/panel-gating', 'panel-gating-stub'],
-    ['@/services/checkout', 'checkout-stub'],
-    ['@/config/products', 'products-stub'],
     ['@/utils/theme-colors', 'theme-colors-stub'],
     ['@/utils/dom-utils', 'dom-utils-stub'],
     ['../utils/dom-utils', 'dom-utils-stub'],
