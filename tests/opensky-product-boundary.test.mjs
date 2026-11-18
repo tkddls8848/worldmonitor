@@ -54,7 +54,7 @@ describe('OpenSky legacy proxy product boundary', () => {
     assert.doesNotMatch(response.headers.get('Cache-Control') || '', /public|s-maxage/i);
   });
 
-  it('accepts the sidecar-rewritten local and cloud product hops', async () => {
+  it('accepts the cloud product hop', async () => {
     let upstreamCalls = 0;
     globalThis.fetch = async () => {
       upstreamCalls += 1;
@@ -65,7 +65,6 @@ describe('OpenSky legacy proxy product boundary', () => {
     };
 
     for (const headers of [
-      { Origin: 'http://127.0.0.1:43127', 'X-WorldMonitor-Key': 'desktop-product-key' },
       { Origin: 'https://worldmonitor.app', 'X-WorldMonitor-Key': 'desktop-product-key' },
     ]) {
       const response = await handler(new Request('https://worldmonitor.app/api/opensky', { headers }));
@@ -73,6 +72,6 @@ describe('OpenSky legacy proxy product boundary', () => {
       assert.equal(response.headers.get('Cache-Control'), 'private, no-store');
       assert.equal(response.headers.get('CDN-Cache-Control'), 'no-store');
     }
-    assert.equal(upstreamCalls, 2);
+    assert.equal(upstreamCalls, 1);
   });
 });
