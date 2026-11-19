@@ -1,16 +1,19 @@
 // This fork runs its collectors and its API on its own personal server. A
-// seeder or server-side config that targets the upstream operator's hosted API
-// or relay sends our traffic to a third party, warms their cache and leaves our
-// store empty. This guard:
+// seeder or server-side module that targets the upstream operator's hosts
+// (any *.worldmonitor.app) sends our traffic to a third party, warms their
+// cache, loads their analytics, and leaves our store empty. This guard:
 //   - follows every seed-*.mjs (bundles included) through the relative
 //     .js/.mjs/.cjs/.json modules it imports in scripts/, shared/, server/ and
 //     api/ (TypeScript resolution is out of scope), and
-//   - scans the server-side config of fetch targets: every JSON file under
-//     shared/ and scripts/shared/ (the news catalog and its mirror), the
-//     server/ TypeScript sources, and the api/ handlers (tracked .ts/.js
+//   - scans the server-side config of fetch targets and the server runtime:
+//     every JSON file under shared/ and scripts/shared/ (the news catalog and
+//     its mirror), the server/ TypeScript and JavaScript sources, the
+//     scripts/local/ personal-server modules, and the api/ handlers (tracked
 //     sources; tests and gitignored build outputs are skipped),
-// and fails on any upstream API/relay host in code. It matches hosts, not file
+// and fails on any worldmonitor.app host in code. It matches hosts, not file
 // names, so a new seeder or catalog entry with the same target fails too.
+// The few lines that name the host without sending it a request are listed in
+// ALLOWED, one exact line each, by reason.
 import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
@@ -21,24 +24,75 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCRIPTS = path.join(ROOT, 'scripts');
 const CLOSURE_ROOTS = ['scripts', 'shared', 'server', 'api'].map((dir) => path.join(ROOT, dir) + path.sep);
 
-// The upstream operator's API and relay hosts, plus any worldmonitor.app URL
-// that addresses an API or RSS-relay path.
-const UPSTREAM_TARGET = /\b(?:api|proxy)\.worldmonitor\.app\b|https?:\/\/(?:[a-z0-9-]+\.)*worldmonitor\.app\/(?:api|rss)(?=[/?#'"`]|$)/i;
+// Any host under the upstream operator's domain: the API, the relay, the
+// analytics collector (abacus.), the map tiles (maps.), www. and the apex.
+const UPSTREAM_TARGET = /\b(?:[a-z0-9-]+\.)*worldmonitor\.app\b/i;
 
-// Single lines this guard does not judge, each with its reason. A line entry
-// covers that line only, so the rest of the file is still scanned.
-const ALLOWED_LINES = new Map([
-  // ais-relay's classify loop default (the relay is not run in personal mode).
-  // The one seeder that reaches this module, seed-news-digest via
-  // lib/news-digest-warm.cjs, always passes env.API_BASE_URL = personalOrigin();
-  // tests/personal-collect-news-digest.test.mjs proves its requests go to the
-  // personal server.
-  ['scripts/lib/classify-digest-request.cjs', "const DEFAULT_CLASSIFY_API_HOST = 'api.worldmonitor.app';"],
-]);
+// Header values that name the host without sending it a request. The host is
+// stripped from a code line only inside a match, so the same line that also
+// fetches an upstream URL still fails. Each pattern must still match at least
+// one scanned line (see the unused-exception check).
+const HEADER_VALUES = [
+  // User-Agent strings: a WorldMonitor product token with a parenthesized
+  // contact comment, sent to a real data source. Nothing is sent to the host.
+  ['user-agent', /(['"`])world-?monitor[^'"`()\n]*\([^'"`()\n]*\)\1/gi],
+  // HTTP-Referer: OpenRouter's app-attribution header on calls to OpenRouter.
+  ['http-referer', /(['"])HTTP-Referer\1\s*:\s*(['"])https:\/\/worldmonitor\.app\2/g],
+  // Origin request header: what the warm-ping seeders and the opt-in cloud
+  // pass-through send (personal-api.mjs drops it for the personal server).
+  ['origin', /\bOrigin['"]?\s*[:,]\s*(['"])https:\/\/worldmonitor\.app\1/g],
+];
 
-// Server-side JSON that names hosts without fetching them.
+// Single lines this guard does not judge, each with its reason. An entry
+// covers that one line in that one file, so the rest of the file is still
+// scanned. Every entry must still be needed (see the unused-exception check).
+const ALLOWED = [
+  // Origin response values: CORS fallbacks the API answers with. They name
+  // the origin a browser may read the response from; nothing is requested.
+  ['origin', 'api/_cors.js', "const allowOrigin = isAllowedOrigin(origin) ? origin : 'https://worldmonitor.app';"],
+  ['origin', 'api/_cors.js', "'Access-Control-Allow-Origin': origin || 'https://worldmonitor.app',"],
+  ['origin', 'api/youtube/embed.js', "return sanitizeAllowedOrigin(raw, 'https://worldmonitor.app', ALLOWED_ORIGINS);"],
+  ['origin', 'server/cors.ts', "const allowOrigin = isAllowedOrigin(origin) ? origin : 'https://worldmonitor.app';"],
+  ['origin', 'server/cors.ts', "'Access-Control-Allow-Origin': origin || 'https://worldmonitor.app',"],
+  // HDX HAPI's app_identifier: the client name and contact address the
+  // conflict seeders send to HAPI, like a User-Agent. Nothing is sent to it.
+  ['user-agent', 'shared/hapi-app-identifier.json', '"email": "monitor@worldmonitor.app"'],
+  ['user-agent', 'scripts/shared/hapi-app-identifier.json', '"email": "monitor@worldmonitor.app"'],
+  // Documentation-only: text and links a person may read or click. The
+  // server never requests them and the page never loads them.
+  ['documentation', 'api/brief/[userId]/[issueDate].ts', `+ '<p><a href="https://worldmonitor.app">Return to WorldMonitor</a></p>'`],
+  ['documentation', 'api/brief/public/[hash].ts', `+ '<p><a href="https://worldmonitor.app/pro">Start your own WorldMonitor Brief</a></p>'`],
+  ['documentation', 'api/not-found.ts', "hint: 'Check the endpoint path against the OpenAPI spec at https://www.worldmonitor.app/openapi.yaml or the API reference at https://www.worldmonitor.app/docs/api-reference.',"],
+  ['documentation', 'api/not-found.ts', "documentation: 'https://www.worldmonitor.app/docs/api-reference',"],
+  ['documentation', 'server/_shared/deprecation-policy.ts', "export const DEPRECATION_POLICY_URL = 'https://www.worldmonitor.app/api-versioning.md';"],
+  // Base of the reference links the country brief's evidence items carry
+  // (forecast scorecard, chokepoint pages). The server never requests them.
+  ['documentation', 'server/worldmonitor/intelligence/v1/_country-brief-evidence.ts', "const SITE_ORIGIN = 'https://www.worldmonitor.app';"],
+  ['documentation', 'shared/agent-request-policy.json', '"hint": "Use a descriptive User-Agent and an X-WorldMonitor-Key API key. See https://www.worldmonitor.app/auth.md."'],
+  ['documentation', 'scripts/shared/agent-request-policy.json', '"hint": "Use a descriptive User-Agent and an X-WorldMonitor-Key API key. See https://www.worldmonitor.app/auth.md."'],
+  ['documentation', 'server/_shared/brief-render.js', "? `https://worldmonitor.app/pro${refCode ? `?ref=${encodeURIComponent(refCode)}` : ''}`"],
+  ['documentation', 'server/_shared/brief-render.js', ": 'https://worldmonitor.app';"],
+  ['documentation', 'server/_shared/brief-render.js', `: '<span class="mono">worldmonitor.app</span>';`],
+  ['documentation', 'server/_shared/brief-render.js', `? '<span class="mono">worldmonitor.app</span>'`],
+  ['documentation', 'server/_shared/brief-render.js', "const publicStripHref = `https://worldmonitor.app/pro${refCode ? `?ref=${encodeURIComponent(refCode)}` : ''}`;"],
+];
+const ALLOWED_KINDS = new Set(['user-agent', 'http-referer', 'origin', 'documentation']);
+const ALLOWED_LINES = new Map();
+for (const [, file, line] of ALLOWED) {
+  if (!ALLOWED_LINES.has(file)) ALLOWED_LINES.set(file, new Set());
+  ALLOWED_LINES.get(file).add(line);
+}
+
+// Server-side JSON that names hosts without fetching them, skipped whole.
+// Documentation-only: each must still exist (checked below).
 const ATTRIBUTION_LEDGERS = new Map([
   ['shared/source-attribution-manifest.json', 'source-attribution ledger: lists every host the tree references, by design'],
+  // Generated product facts (scripts/generate-derived.mjs): the upstream
+  // site's page and pricing links as marketing copy. No code fetches them.
+  ['shared/product-catalog.generated.json', 'product facts: page links, never fetched'],
+  ['scripts/shared/product-catalog.generated.json', 'product facts mirror: page links, never fetched'],
+  ['shared/product-facts.generated.json', 'product facts: page links, never fetched'],
+  ['scripts/shared/product-facts.generated.json', 'product facts mirror: page links, never fetched'],
 ]);
 
 const IMPORT_PATTERNS = [
@@ -119,13 +173,38 @@ function apiHandlers() {
     .filter((file) => !isApiBuildOutput(file));
 }
 
+const isSource = (name) => /\.(?:ts|js|mjs|cjs)$/.test(name) && !/\.(?:test|spec)\.[cm]?[jt]s$/.test(name) && !name.endsWith('.d.ts');
+
+// The personal server's own modules (the API host, the embedded store and its
+// REST proxy, the handler builder): top level of scripts/local/ only.
+function personalServerModules() {
+  const dir = path.join(ROOT, 'scripts', 'local');
+  return readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.mjs') && isSource(entry.name))
+    .map((entry) => path.join(dir, entry.name));
+}
+
 function serverSideConfig() {
   return [
     ...walk(path.join(ROOT, 'shared'), (name) => name.endsWith('.json')),
     ...walk(path.join(ROOT, 'scripts', 'shared'), (name) => name.endsWith('.json')),
-    ...walk(path.join(ROOT, 'server'), (name) => /\.ts$/.test(name) && !/\.(?:test|spec)\.ts$/.test(name) && !name.endsWith('.d.ts')),
+    ...walk(path.join(ROOT, 'server'), (name) => /\.(?:ts|js)$/.test(name) && isSource(name)),
+    ...personalServerModules(),
     ...apiHandlers(),
   ];
+}
+
+// Removes the allowed header values from a code line; returns the rest and
+// the kinds that matched.
+function stripHeaderValues(code) {
+  const used = [];
+  let rest = code;
+  for (const [kind, pattern] of HEADER_VALUES) {
+    const next = rest.replace(pattern, (match) => (UPSTREAM_TARGET.test(match) ? '' : match));
+    if (next !== rest) used.push(kind);
+    rest = next;
+  }
+  return { rest, used };
 }
 
 function offendersIn(files) {
@@ -134,11 +213,17 @@ function offendersIn(files) {
     const allowed = ALLOWED_LINES.get(rel(file));
     for (const [lineNo, code] of codeLines(readFileSync(file, 'utf8'))) {
       if (!UPSTREAM_TARGET.test(code)) continue;
-      if (allowed && code.trim() === allowed) continue;
+      if (allowed?.has(code.trim())) continue;
+      if (!UPSTREAM_TARGET.test(stripHeaderValues(code).rest)) continue;
       offenders.push(`${rel(file)}:${lineNo}: ${code.trim().slice(0, 160)}`);
     }
   }
   return offenders;
+}
+
+function scannedFiles() {
+  return [...new Set([...seederClosure().files, ...serverSideConfig()])]
+    .filter((file) => !ATTRIBUTION_LEDGERS.has(rel(file)));
 }
 
 test('the guard reaches every seeder and the modules they import, across the repo', () => {
@@ -151,24 +236,60 @@ test('the guard reaches every seeder and the modules they import, across the rep
   const outsideScripts = files.map(rel).filter((name) => !name.startsWith('scripts/'));
   assert.ok(outsideScripts.length > 0, 'the closure follows imports out of scripts/');
   assert.ok(!files.some((file) => /\.(?:ts|mts|tsx)$/.test(file)), 'TypeScript resolution stays out of scope');
-  // Every exception must still be needed: on disk, reached, and matching.
-  for (const [file, line] of ALLOWED_LINES) {
-    assert.ok(names.has(file), `${file} is no longer in the seeder closure (prune it from ALLOWED_LINES)`);
-    assert.ok(readFileSync(path.join(ROOT, file), 'utf8').split('\n').some((l) => l.trim() === line), `${file} no longer has the allowed line`);
+});
+
+test('every allowed line is still needed: a known reason, a scanned file, a present line that matches', () => {
+  const scanned = new Set(scannedFiles().map(rel));
+  for (const [kind, file, line] of ALLOWED) {
+    assert.ok(ALLOWED_KINDS.has(kind), `${file}: unknown allowance reason ${kind}`);
+    assert.ok(scanned.has(file), `${file} is no longer scanned (prune it from ALLOWED)`);
+    assert.ok(UPSTREAM_TARGET.test(line), `${file}: the allowed line no longer names the host (prune it)`);
+    const present = codeLines(readFileSync(path.join(ROOT, file), 'utf8')).some(([, code]) => code.trim() === line);
+    assert.ok(present, `${file} no longer has the allowed line (prune it from ALLOWED): ${line}`);
+  }
+  const usedKinds = new Set();
+  for (const file of scanned) {
+    for (const [, code] of codeLines(readFileSync(path.join(ROOT, file), 'utf8'))) {
+      if (UPSTREAM_TARGET.test(code)) for (const kind of stripHeaderValues(code).used) usedKinds.add(kind);
+    }
+  }
+  for (const [kind] of HEADER_VALUES) {
+    assert.ok(usedKinds.has(kind), `the ${kind} header pattern no longer matches any scanned line (prune it)`);
   }
 });
 
-test('no seeder, or module a seeder imports, targets the upstream API or relay hosts', () => {
+test('a header value hides the host only inside the header, not elsewhere on the line', () => {
+  const ua = "headers: { 'User-Agent': 'WorldMonitor/1.0 (+https://worldmonitor.app)' }";
+  assert.ok(!UPSTREAM_TARGET.test(stripHeaderValues(ua).rest));
+  assert.ok(!UPSTREAM_TARGET.test(stripHeaderValues("'HTTP-Referer': 'https://worldmonitor.app',").rest));
+  assert.ok(!UPSTREAM_TARGET.test(stripHeaderValues("headers.set('Origin', 'https://worldmonitor.app');").rest));
+  assert.ok(!UPSTREAM_TARGET.test(stripHeaderValues("Origin: 'https://worldmonitor.app',").rest));
+  const mixed = "fetch('https://api.worldmonitor.app/x', { headers: { Origin: 'https://worldmonitor.app' } })";
+  assert.ok(UPSTREAM_TARGET.test(stripHeaderValues(mixed).rest), 'the fetch target still fails');
+  assert.ok(UPSTREAM_TARGET.test(stripHeaderValues("Origin: 'https://api.worldmonitor.app',").rest), 'only the apex origin is a header value');
+});
+
+test('no seeder, or module a seeder imports, targets the upstream operator hosts', () => {
   const offenders = offendersIn(seederClosure().files);
   assert.deepEqual(offenders, [], `Seeders must call the personal server (personalOrigin) or a direct source, not the upstream cloud:\n${offenders.join('\n')}`);
 });
 
-test('no server-side config of fetch targets names the upstream API or relay hosts', () => {
+test('no server-side module or fetch-target config names the upstream operator hosts', () => {
   const files = serverSideConfig().filter((file) => !ATTRIBUTION_LEDGERS.has(rel(file)));
   const names = files.map(rel);
   assert.ok(names.includes('shared/news-catalog.json') && names.includes('scripts/shared/news-catalog.json'), 'the news catalog and its mirror are scanned');
   // The digest's feed fetcher (own-API path feeds, relay fallback) is scanned.
   assert.ok(names.includes('server/worldmonitor/news/v1/list-feed-digest.ts'), 'list-feed-digest.ts is scanned');
+  // server/ JavaScript (the brief magazine renderer) and the personal server's
+  // own modules are scanned.
+  for (const expected of [
+    'server/_shared/brief-render.js',
+    'scripts/local/local-api-server.mjs',
+    'scripts/local/embedded-store.mjs',
+    'scripts/local/redis-rest-proxy.mjs',
+  ]) {
+    assert.ok(names.includes(expected), `${expected} is scanned`);
+  }
   // The api/ handlers are scanned, including the Trip Assessment route and the
   // MCP travel-risk modules it still runs; tests and build outputs are not.
   for (const expected of [
@@ -177,14 +298,15 @@ test('no server-side config of fetch targets names the upstream API or relay hos
     'api/mcp/registry/analysis-tools.ts',
     'api/bootstrap.js',
     'api/miit-news.js',
+    'api/youtube/live.js',
   ]) {
     assert.ok(names.includes(expected), `${expected} is scanned`);
   }
-  assert.ok(!names.some((name) => name.startsWith('api/') && /\.test\./.test(name)), 'api/ tests are not scanned');
+  assert.ok(!names.some((name) => /\.test\./.test(name)), 'tests are not scanned');
   assert.ok(!names.some((name) => /\[rpc\]\.js$/.test(name)), 'api/ build outputs are not scanned');
   for (const file of ATTRIBUTION_LEDGERS.keys()) assert.ok(existsSync(path.join(ROOT, file)), `${file} is still on disk`);
   const offenders = offendersIn(files);
-  assert.deepEqual(offenders, [], `Server-side fetch targets must be this fork's own routes or the real source:\n${offenders.join('\n')}`);
+  assert.deepEqual(offenders, [], `Server-side code must call this fork's own routes or the real source, never *.worldmonitor.app:\n${offenders.join('\n')}`);
 });
 
 test('the api/ build-output filter skips only generated bundles', () => {
@@ -197,12 +319,22 @@ test('the api/ build-output filter skips only generated bundles', () => {
   assert.ok(!isApiBuildOutput(at('api/_cii-coverage-baseline.generated.js')), 'tracked generated modules stay scanned');
 });
 
-test('the host pattern catches the upstream API and relay defaults and ignores attribution strings', () => {
-  assert.ok(UPSTREAM_TARGET.test("const API_BASE = process.env.API_BASE_URL || 'https://api.worldmonitor.app';"));
-  assert.ok(UPSTREAM_TARGET.test("const RELAY_URL = process.env.RELAY_URL || 'https://proxy.worldmonitor.app';"));
-  assert.ok(UPSTREAM_TARGET.test("fetch('https://www.worldmonitor.app/api/bootstrap')"));
-  assert.ok(UPSTREAM_TARGET.test('"url": "https://api.worldmonitor.app/api/miit-news",'));
-  assert.ok(!UPSTREAM_TARGET.test("const UA = 'WorldMonitor/1.0 (+https://www.worldmonitor.app)';"));
-  assert.ok(!UPSTREAM_TARGET.test("headers: { Origin: 'https://worldmonitor.app' }"));
-  assert.ok(!UPSTREAM_TARGET.test("const DEPRECATION_POLICY_URL = 'https://www.worldmonitor.app/api-versioning.md';"));
+test('the host pattern catches every upstream host, not only the API and relay', () => {
+  for (const line of [
+    "const API_BASE = process.env.API_BASE_URL || 'https://api.worldmonitor.app';",
+    "const RELAY_URL = process.env.RELAY_URL || 'https://proxy.worldmonitor.app';",
+    "fetch('https://www.worldmonitor.app/api/bootstrap')",
+    '"url": "https://api.worldmonitor.app/api/miit-news",',
+    '<script async src="https://abacus.worldmonitor.app/script.js"></script>',
+    "const TILES = 'https://maps.worldmonitor.app/{z}/{x}/{y}.pbf';",
+    "await fetch('https://worldmonitor.app/api/youtube/live');",
+    "const WEBHOOK_BASE = 'https://api.worldmonitor.app/api/v2/shipping';",
+  ]) {
+    assert.ok(UPSTREAM_TARGET.test(line), line);
+  }
+  // The pattern itself has no exceptions: attribution strings match too and
+  // are allowed only line by line in ALLOWED.
+  assert.ok(UPSTREAM_TARGET.test("const UA = 'WorldMonitor/1.0 (+https://www.worldmonitor.app)';"));
+  assert.ok(!UPSTREAM_TARGET.test("const UA = 'WorldMonitor/1.0';"));
+  assert.ok(!UPSTREAM_TARGET.test("const HOST = 'worldmonitor.application.example';"));
 });

@@ -20,7 +20,6 @@ import { fileURLToPath } from 'node:url';
 const require = createRequire(import.meta.url);
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const {
-  DEFAULT_CLASSIFY_API_HOST,
   DEFAULT_CLASSIFY_API_BASE,
   resolveClassifyApiBase,
   buildClassifyDigestUrl,
@@ -44,15 +43,20 @@ function classifyFnSrc() {
 }
 
 describe('classify digest request builder (#7437)', () => {
-  it('defaults to the production API host when API_BASE_URL is unset', () => {
-    assert.equal(DEFAULT_CLASSIFY_API_HOST, 'api.worldmonitor.app');
-    assert.equal(DEFAULT_CLASSIFY_API_BASE, `https://${DEFAULT_CLASSIFY_API_HOST}`);
+  it('defaults to the personal server, never the upstream API, when API_BASE_URL is unset', () => {
+    assert.equal(DEFAULT_CLASSIFY_API_BASE, 'http://127.0.0.1:3000');
     assert.equal(resolveClassifyApiBase({}), DEFAULT_CLASSIFY_API_BASE);
     assert.equal(resolveClassifyApiBase({ API_BASE_URL: '   ' }), DEFAULT_CLASSIFY_API_BASE);
+    assert.equal(
+      resolveClassifyApiBase({ WM_PERSONAL_HOST: '10.0.0.5', WM_PERSONAL_PORT: '4000' }),
+      'http://10.0.0.5:4000',
+      'follows the personal server host and port, like personalOrigin()',
+    );
     assert.equal(
       buildClassifyDigestUrl('full', {}),
       `${DEFAULT_CLASSIFY_API_BASE}/api/news/v1/list-feed-digest?variant=full&lang=en`,
     );
+    assert.ok(!/worldmonitor\.app/i.test(buildClassifyDigestUrl('full', {})));
   });
 
   it('honors API_BASE_URL, including an in-network http base with a trailing slash', () => {

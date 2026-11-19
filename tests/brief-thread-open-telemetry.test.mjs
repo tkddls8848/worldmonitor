@@ -1,27 +1,14 @@
 /**
- * Tests for the U11 brief_thread_open telemetry plumbing.
+ * Tests for the brief magazine's source-link stamping.
  *
- * Two surfaces emit `brief-thread-open`:
- *
- *   1. Magazine — `server/_shared/brief-render.js` stamps every story
- *      source-link with `data-thread-open / data-country / data-severity
- *      / data-followed`, and an inline script invokes
- *      `window.umami?.track('brief-thread-open', { … })` on click.
- *
- *   2. Dashboard — `src/components/LatestBriefPanel.ts` fires the same
- *      event from the cover-card click via `trackBriefThreadOpen` in
- *      `src/services/analytics.ts`.
- *
- * The magazine surface is fully testable from Node without jsdom (the
- * renderer is a pure HTML producer; the inline script is a string we
- * eval against a hand-rolled DOM stub). The dashboard surface is
- * exercised through `trackBriefThreadOpen` directly: it short-circuits
- * on missing `window.umami` and forwards the props otherwise. The
- * panel's click-handler-doesn't-throw contract is asserted by the
- * fact that `trackBriefThreadOpen` itself is the only side-effect.
+ * `server/_shared/brief-render.js` stamps every story source-link with
+ * `data-thread-open / data-country / data-severity / data-followed`.
+ * The personal fork removed the Umami loader and the inline
+ * `brief-thread-open` tracker that read those attributes; the last test
+ * pins that the page loads no external script or analytics tracker.
  */
 
-import { describe, it, before, beforeEach, after } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { renderBriefMagazine } from '../server/_shared/brief-render.js';
 import { BRIEF_ENVELOPE_VERSION } from '../shared/brief-envelope.js';
@@ -213,186 +200,14 @@ describe('brief-render — U11 source-link stamping', () => {
     assert.equal(links[0]['followed'], '0');
   });
 
-  it('emits the inline brief-thread-open tracker script in the magazine HTML', () => {
-    const env = envelope();
-    const html = renderBriefMagazine(env, { followedCountries: [] });
-    assert.ok(
-      html.includes("window.umami.track('brief-thread-open'"),
-      'tracker invokes window.umami.track with the brief-thread-open event name',
-    );
-    assert.ok(
-      html.includes("source: 'magazine'"),
-      'tracker pins source: magazine',
-    );
-    assert.ok(
-      html.includes('https://abacus.worldmonitor.app/script.js'),
-      'umami loader script tag is emitted in the head',
-    );
-  });
-
-  it('tells the umami loader to drop the query string', () => {
-    const html = renderBriefMagazine(envelope(), { followedCountries: [] });
-    const loader = html.match(/<script[^>]*abacus\.worldmonitor\.app\/script\.js[^>]*>/)?.[0];
-    assert.ok(loader, 'umami loader tag present');
-    assert.match(
-      loader,
-      /\sdata-exclude-search="true"(\s|>)/,
-      'the magazine URL carries its credential in ?t=, so the tracker must not report the query',
-    );
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Magazine: inline tracker script behaviour
-// ---------------------------------------------------------------------------
-
-/**
- * Extract the BRIEF_THREAD_OPEN_SCRIPT body from rendered HTML and run
- * it against a hand-rolled DOM stub. Validates the on-click handler:
- *  - reads data-* from the clicked anchor (or its closest ancestor);
- *  - calls window.umami.track('brief-thread-open', { … }) with the
- *    properties baked into the data-attributes;
- *  - never throws when umami is missing or its track method throws.
- */
-function makeDomStub() {
-  const listeners = [];
-  const win = {};
-  const doc = {
-    addEventListener(type, handler) {
-      if (type === 'click') listeners.push(handler);
-    },
-  };
-  return { win, doc, fireClick(target) {
-    const ev = { target };
-    for (const fn of listeners) fn(ev);
-  } };
-}
-
-/** Build a minimal element with data-attrs that the script's parent-walk understands. */
-function makeElement(dataset = {}, parent = null) {
-  return {
-    nodeType: 1,
-    parentNode: parent,
-    dataset,
-  };
-}
-
-/** Pull the inline tracker script body out of the rendered HTML. */
-function extractTrackerScript(html) {
-  // The tracker script is the one that contains `brief-thread-open`.
-  const scriptRe = /<script>([\s\S]*?brief-thread-open[\s\S]*?)<\/script>/;
-  const match = scriptRe.exec(html);
-  assert.ok(match, 'tracker script must be present in rendered HTML');
-  return match[1];
-}
-
-/** Run the tracker script against a DOM/window stub. Returns the stub. */
-function runTracker(html, trackImpl) {
-  const stub = makeDomStub();
-  if (trackImpl) stub.win.umami = { track: trackImpl };
-  const script = extractTrackerScript(html);
-  // The script is an IIFE referencing `window` and `document` — we
-  // rebind both via a local scope.
-  const fn = new Function('window', 'document', script);
-  fn(stub.win, stub.doc);
-  return stub;
-}
-
-describe('brief-render — U11 inline tracker', () => {
-  it('emits brief-thread-open with country/severity/followed=true on a followed-country click', () => {
-    const env = envelope();
-    const html = renderBriefMagazine(env, { followedCountries: ['US'] });
-    const calls = [];
-    const stub = runTracker(html, (name, props) => calls.push({ name, props }));
-    const link = makeElement({ threadOpen: '1', country: 'US', severity: 'critical', followed: '1' });
-    stub.fireClick(link);
-    assert.equal(calls.length, 1);
-    assert.equal(calls[0].name, 'brief-thread-open');
-    assert.deepEqual(calls[0].props, {
-      country: 'US',
-      severity: 'critical',
-      followed: true,
-      source: 'magazine',
-    });
-  });
-
-  it('emits followed=false when data-followed="0"', () => {
-    const env = envelope();
-    const html = renderBriefMagazine(env, { followedCountries: [] });
-    const calls = [];
-    const stub = runTracker(html, (name, props) => calls.push({ name, props }));
-    const link = makeElement({ threadOpen: '1', country: 'IR', severity: 'high', followed: '0' });
-    stub.fireClick(link);
-    assert.equal(calls.length, 1);
-    assert.equal(calls[0].props.followed, false);
-    assert.equal(calls[0].props.country, 'IR');
-    assert.equal(calls[0].props.severity, 'high');
-  });
-
-  it('country=null when data-country is absent (free-form story.country)', () => {
-    const env = envelope();
-    const html = renderBriefMagazine(env, { followedCountries: [] });
-    const calls = [];
-    const stub = runTracker(html, (name, props) => calls.push({ name, props }));
-    const link = makeElement({ threadOpen: '1', severity: 'medium', followed: '0' });
-    stub.fireClick(link);
-    assert.equal(calls.length, 1);
-    assert.equal(calls[0].props.country, null);
-    assert.equal(calls[0].props.followed, false);
-  });
-
-  it('clicks bubble through ancestors: source-link parent walk finds data-thread-open', () => {
-    const env = envelope();
-    const html = renderBriefMagazine(env, { followedCountries: ['US'] });
-    const calls = [];
-    const stub = runTracker(html, (name, props) => calls.push({ name, props }));
-    const anchor = makeElement({ threadOpen: '1', country: 'US', severity: 'critical', followed: '1' });
-    const inner = makeElement({}, anchor);
-    stub.fireClick(inner);
-    assert.equal(calls.length, 1);
-    assert.equal(calls[0].props.country, 'US');
-  });
-
-  it('clicks outside any source-link are ignored (no track call)', () => {
-    const env = envelope();
-    const html = renderBriefMagazine(env, { followedCountries: ['US'] });
-    const calls = [];
-    const stub = runTracker(html, (name, props) => calls.push({ name, props }));
-    const elsewhere = makeElement({});
-    stub.fireClick(elsewhere);
-    assert.equal(calls.length, 0);
-  });
-
-  it('umami missing → handler is a silent no-op (never throws)', () => {
-    const env = envelope();
-    const html = renderBriefMagazine(env, { followedCountries: ['US'] });
-    // No `trackImpl` argument → window.umami is undefined.
-    const stub = runTracker(html, null);
-    const link = makeElement({ threadOpen: '1', country: 'US', severity: 'critical', followed: '1' });
-    assert.doesNotThrow(() => stub.fireClick(link));
-  });
-
-  it('umami.track throws → handler swallows and never propagates to the click', () => {
-    const env = envelope();
-    const html = renderBriefMagazine(env, { followedCountries: ['US'] });
-    let invocations = 0;
-    const stub = runTracker(html, () => {
-      invocations += 1;
-      throw new Error('umami down');
-    });
-    const link = makeElement({ threadOpen: '1', country: 'US', severity: 'critical', followed: '1' });
-    assert.doesNotThrow(() => stub.fireClick(link));
-    assert.equal(invocations, 1, 'track was called and the throw was swallowed');
-  });
-
-  it('same source-link clicked twice fires twice (no client-side dedup)', () => {
-    const env = envelope();
-    const html = renderBriefMagazine(env, { followedCountries: [] });
-    const calls = [];
-    const stub = runTracker(html, (name, props) => calls.push({ name, props }));
-    const link = makeElement({ threadOpen: '1', country: 'IR', severity: 'high', followed: '0' });
-    stub.fireClick(link);
-    stub.fireClick(link);
-    assert.equal(calls.length, 2);
+  it('loads no external script and no analytics tracker', () => {
+    // The personal brief page must not contact the upstream operator's hosts
+    // or an analytics vendor: no <script src>, no Umami loader, no tracker.
+    for (const publicMode of [false, true]) {
+      const html = renderBriefMagazine(envelope(), { followedCountries: [], publicMode });
+      assert.deepEqual(html.match(/<script\b[^>]*\bsrc=/gi) ?? [], [], 'no external script tag');
+      assert.ok(!/umami/i.test(html), 'no Umami tracker');
+      assert.ok(!html.includes('abacus.worldmonitor.app'), 'no upstream analytics host');
+    }
   });
 });

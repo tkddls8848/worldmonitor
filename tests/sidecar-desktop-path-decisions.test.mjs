@@ -127,6 +127,6 @@ describe('desktop path decision per server/worldmonitor route family (#5907)', (
 
 describe('docker mode', () => {
   it('keeps cloudFallback forced off in docker mode', () => {
-    assert.match(sidecar, /const cloudFallback = mode === 'docker' \? false : requestedFallback;/);
+    assert.match(sidecar, /const cloudFallback = mode === 'docker' \|\| !remoteBase \? false : requestedFallback;/);
   });
 });

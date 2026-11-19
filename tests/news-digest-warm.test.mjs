@@ -77,7 +77,7 @@ describe('buildDigestWarmUrl', () => {
     );
     assert.equal(
       buildDigestWarmUrl({ edition: 'energy', lang: 'en' }, {}),
-      'https://api.worldmonitor.app/api/news/v1/list-feed-digest?variant=energy&lang=en',
+      'http://127.0.0.1:3000/api/news/v1/list-feed-digest?variant=energy&lang=en',
     );
   });
 });
@@ -115,7 +115,7 @@ describe('fetchDigestWarmCell', () => {
       },
     });
     assert.equal(result.outcome, 'fresh');
-    assert.equal(seen.url, 'https://api.worldmonitor.app/api/news/v1/list-feed-digest?variant=full&lang=de');
+    assert.equal(seen.url, 'http://127.0.0.1:3000/api/news/v1/list-feed-digest?variant=full&lang=de');
     assert.equal(seen.headers['X-WorldMonitor-Key'], 'relay-secret');
     assert.equal(seen.headers['User-Agent'], 'test-agent');
     assert.equal(seen.redirect, 'error', 'a redirect must not carry the relay key to another origin');

@@ -8,7 +8,6 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { UMAMI_SCRIPT_TAG } from '../scripts/build-research-reports.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (path) => readFileSync(join(ROOT, path), 'utf8');
@@ -43,13 +42,13 @@ describe('/agent page content', () => {
     }
   });
 
-  it('uses no robot emoji and no utm tags, and tracks clicks with Umami attributes only', () => {
+  it('uses no robot emoji and no utm tags, and loads no analytics tracker', () => {
     assert.doesNotMatch(PAGE, /\u{1F916}/u);
     assert.doesNotMatch(PAGE, /utm_/);
     assert.doesNotMatch(PAGE, /href="[^"]*[?&]ref=/, 'same-site links carry no query tag');
-    assert.ok(PAGE.includes(UMAMI_SCRIPT_TAG), 'the shared first-party Umami tag');
+    assert.doesNotMatch(PAGE, /<script\b[^>]*\bsrc="https?:/i, 'no external script: the personal server serves no upstream analytics loader');
     const scripts = [...PAGE.matchAll(/<script\b[^>]*>/gi)].map((match) => match[0]);
-    assert.equal(scripts.length, 2, 'only the page script and Umami');
+    assert.equal(scripts.length, 1, 'only the page script');
     for (const tag of scripts) assert.match(tag, /nonce="wm-static-bootstrap"/);
     assert.ok((PAGE.match(/data-umami-event="agent-copy-command"/g) ?? []).length >= 8);
   });

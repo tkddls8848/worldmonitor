@@ -1202,7 +1202,7 @@ function remoteBaseLooksPrivate(remoteBase) {
 
 function resolveConfig(options = {}) {
   const port = Number(options.port ?? process.env.LOCAL_API_PORT ?? 46123);
-  const remoteBase = String(options.remoteBase ?? process.env.LOCAL_API_REMOTE_BASE ?? 'https://api.worldmonitor.app').replace(/\/$/, '');
+  const remoteBase = String(options.remoteBase ?? process.env.LOCAL_API_REMOTE_BASE ?? '').replace(/\/$/, '');
   const resourceDir = String(options.resourceDir ?? process.env.LOCAL_API_RESOURCE_DIR ?? process.cwd());
   const apiDir = options.apiDir
     ? String(options.apiDir)
@@ -1213,7 +1213,8 @@ function resolveConfig(options = {}) {
   const dataDir = String(options.dataDir ?? process.env.LOCAL_API_DATA_DIR ?? resourceDir);
   const mode = String(options.mode ?? process.env.LOCAL_API_MODE ?? 'desktop-sidecar');
   const requestedFallback = String(options.cloudFallback ?? process.env.LOCAL_API_CLOUD_FALLBACK ?? '') === 'true';
-  const cloudFallback = mode === 'docker' ? false : requestedFallback;
+  // No remote is configured by default: without one there is nothing to fall back to.
+  const cloudFallback = mode === 'docker' || !remoteBase ? false : requestedFallback;
   // Programmatic dev/test escape hatch only; CLI/env startup keeps private remoteBase blocked.
   const allowPrivateRemoteBase = options.allowPrivateRemoteBase === true;
   // Programmatic-only test escape hatch for adding extra origins to the
@@ -1929,15 +1930,6 @@ async function dispatch(requestUrl, req, routes, context) {
     }
     return json({ verboseMode });
   }
-  // YouTube video naming for channel management (oEmbed). The cloud edge handler owns the
-  // rate limit and the retired channel-detection answer, so always proxy to cloud,
-  // bypassing the cloudFallback flag.
-  if (requestUrl.pathname === '/api/youtube/live') {
-    const cloudResponse = await tryCloudFallback(requestUrl, req, context, 'youtube video names come from the cloud');
-    if (cloudResponse) return cloudResponse;
-    return json({ error: 'YouTube video lookup unavailable' }, 503);
-  }
-
   // RSS proxy — fetch public feeds with SSRF protection
   if (requestUrl.pathname === '/api/rss-proxy') {
     const feedUrl = requestUrl.searchParams.get('url');

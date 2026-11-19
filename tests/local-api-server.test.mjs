@@ -1305,9 +1305,23 @@ test('preserves caller Authorization while hiding the sidecar transport token', 
   }
 });
 
-test('does not forward the sidecar transport token through Docker cloud proxy routes', async () => {
+test('serves /api/youtube/live from the local handler and never contacts the cloud', async () => {
+  // The personal server must not reach the upstream operator's hosts. The
+  // route used to bypass the cloudFallback flag and always proxy to
+  // remoteBase; it now runs the local api/youtube/live.js bundle like any
+  // other route, even when a remoteBase is configured.
   const remote = await setupRemoteServer();
-  const localApi = await setupApiDir({});
+  const localApi = await setupApiDir({
+    'youtube/live.js': `
+      export default async function handler(req) {
+        const videoId = new URL(req.url).searchParams.get('videoId');
+        return new Response(JSON.stringify({ source: 'local', videoId }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+    `,
+  });
   const app = await createLocalApiServer({
     port: 0,
     apiDir: localApi.apiDir,
@@ -1320,18 +1334,36 @@ test('does not forward the sidecar transport token through Docker cloud proxy ro
 
   try {
     const headers = { 'X-WorldMonitor-Local-Token': TEST_LOCAL_API_TOKEN };
-    const youtubeResponse = await fetch(`http://127.0.0.1:${port}/api/youtube/live`, { headers });
+    const youtubeResponse = await fetch(`http://127.0.0.1:${port}/api/youtube/live?videoId=dQw4w9WgXcQ`, { headers });
     assert.equal(youtubeResponse.status, 200);
-
-    assert.deepEqual(remote.hits, ['/api/youtube/live']);
-    assert.equal(remote.headers.length, 1);
-    for (const upstreamHeaders of remote.headers) {
-      assert.equal(upstreamHeaders['x-worldmonitor-local-token'], undefined);
-    }
+    assert.deepEqual(await youtubeResponse.json(), { source: 'local', videoId: 'dQw4w9WgXcQ' });
+    assert.deepEqual(remote.hits, []);
   } finally {
     await app.close();
     await localApi.cleanup();
     await remote.close();
+  }
+});
+
+test('has no cloud remoteBase unless one is configured', async () => {
+  const saved = process.env.LOCAL_API_REMOTE_BASE;
+  delete process.env.LOCAL_API_REMOTE_BASE;
+  const localApi = await setupApiDir({});
+  const app = await createLocalApiServer({
+    port: 0,
+    apiDir: localApi.apiDir,
+    logger: { log() { }, warn() { }, error() { } },
+  });
+  const { port } = await app.start();
+  try {
+    const response = await fetch(`http://127.0.0.1:${port}/api/service-status`);
+    const body = await response.json();
+    assert.equal(body.local.remoteBase, '');
+    assert.ok(!JSON.stringify(body).includes('worldmonitor.app'), 'no upstream host in the local status');
+  } finally {
+    if (saved === undefined) delete process.env.LOCAL_API_REMOTE_BASE; else process.env.LOCAL_API_REMOTE_BASE = saved;
+    await app.close();
+    await localApi.cleanup();
   }
 });
 

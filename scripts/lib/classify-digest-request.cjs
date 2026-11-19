@@ -8,12 +8,17 @@
 // and header contract can execute in tests without importing the boot-on-require
 // relay — same reason as digest-stale-gate.cjs.
 
-const DEFAULT_CLASSIFY_API_HOST = 'api.worldmonitor.app';
-const DEFAULT_CLASSIFY_API_BASE = `https://${DEFAULT_CLASSIFY_API_HOST}`;
+// This fork has no hosted API: unless API_BASE_URL names another server, the
+// digest comes from the personal server (the same origin as personalOrigin()
+// in scripts/personal-tui.mjs, which the seeders use).
+function personalOrigin(env = process.env) {
+  return `http://${env.WM_PERSONAL_HOST || '127.0.0.1'}:${Number(env.WM_PERSONAL_PORT || 3000)}`;
+}
+const DEFAULT_CLASSIFY_API_BASE = personalOrigin({});
 
 function resolveClassifyApiBase(env = process.env) {
   const raw = typeof env.API_BASE_URL === 'string' ? env.API_BASE_URL.trim() : '';
-  return (raw || DEFAULT_CLASSIFY_API_BASE).replace(/\/+$/, '');
+  return (raw || personalOrigin(env)).replace(/\/+$/, '');
 }
 
 function buildClassifyDigestUrl(variant, env = process.env) {
@@ -81,7 +86,6 @@ function classifyDigestRetryDecision({ attempt = 0, error, status } = {}) {
 }
 
 module.exports = {
-  DEFAULT_CLASSIFY_API_HOST,
   DEFAULT_CLASSIFY_API_BASE,
   CLASSIFY_DIGEST_RETRY_DELAYS_MS,
   resolveClassifyApiBase,

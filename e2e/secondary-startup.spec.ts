@@ -52,7 +52,9 @@ test.describe('secondary startup work', () => {
     await page.evaluate(() => {
       (window as unknown as { __wmRunDeferredIdle?: () => void }).__wmRunDeferredIdle?.();
     });
-    await expect.poll(() => secondaryRequests.some((url) => url.includes('abacus.worldmonitor.app/script.js'))).toBe(true);
+    // The personal build ships no analytics, sign-in or error-reporting
+    // vendor: none of them may load even after idle startup runs.
+    expect(secondaryRequests.some((url) => /abacus\.worldmonitor\.app|clerk\.worldmonitor\.app|sentry\.io|cloudflareinsights|\/_vercel\//.test(url))).toBe(false);
     expect(secondaryRequests.some((url) => url.includes('www.youtube.com/iframe_api'))).toBe(false);
   });
 });
