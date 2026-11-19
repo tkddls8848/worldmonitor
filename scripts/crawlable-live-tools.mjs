@@ -1147,115 +1147,21 @@ async function fetchWithTimeout(
   }
 }
 
-const ANONYMOUS_SESSION_STORAGE_KEY = 'wm-session-exp';
-const ANONYMOUS_SESSION_REFRESH_MARGIN_MS = 5 * 60 * 1000;
-
-let anonymousSessionPromise = null;
-let anonymousSessionGeneration = 0;
-let anonymousSessionFallbackExpiry = null;
-let anonymousSessionFallbackStorage = null;
-
-function currentAnonymousSessionStorage() {
-  try {
-    return typeof globalThis.sessionStorage === 'undefined' ? null : globalThis.sessionStorage;
-  } catch {
-    return null;
-  }
-}
-
-function loadAnonymousSessionExpiry() {
-  const storage = currentAnonymousSessionStorage();
-  if (!storage) {
-    return anonymousSessionFallbackStorage === null ? anonymousSessionFallbackExpiry : null;
-  }
-  try {
-    const parsed = JSON.parse(storage.getItem(ANONYMOUS_SESSION_STORAGE_KEY) || 'null');
-    return typeof parsed?.exp === 'number' ? parsed.exp : null;
-  } catch {
-    return anonymousSessionFallbackStorage === storage ? anonymousSessionFallbackExpiry : null;
-  }
-}
-
-function saveAnonymousSessionExpiry(exp) {
-  const storage = currentAnonymousSessionStorage();
-  anonymousSessionFallbackExpiry = exp;
-  anonymousSessionFallbackStorage = storage;
-  if (!storage) return;
-  try {
-    storage.setItem(ANONYMOUS_SESSION_STORAGE_KEY, JSON.stringify({ exp }));
-  } catch {
-    // Storage can be unavailable in privacy-restricted browsers.
-  }
-}
-
-function clearAnonymousSession() {
-  const storage = currentAnonymousSessionStorage();
-  anonymousSessionFallbackExpiry = null;
-  anonymousSessionFallbackStorage = storage;
-  if (!storage) return;
-  try {
-    storage.removeItem(ANONYMOUS_SESSION_STORAGE_KEY);
-  } catch {
-    // Storage can be unavailable in privacy-restricted browsers.
-  }
-}
-
-function hasFreshAnonymousSession() {
-  const expiry = loadAnonymousSessionExpiry();
-  return expiry !== null && expiry - ANONYMOUS_SESSION_REFRESH_MARGIN_MS > Date.now();
-}
-
-async function ensureAnonymousSession(fetchImpl, timeoutMs) {
-  if (anonymousSessionPromise) return anonymousSessionPromise;
-  if (hasFreshAnonymousSession()) return;
-  anonymousSessionPromise = fetchWithTimeout('/api/wm-session', {
-    method: 'POST',
-  }, fetchImpl, timeoutMs, true).then(({ response, payload }) => {
-    if (!response.ok) throw new Error(`Anonymous session request failed (${response.status})`);
-    if (typeof payload?.exp !== 'number') {
-      throw new Error('Anonymous session response did not include an expiry');
-    }
-    saveAnonymousSessionExpiry(payload.exp);
-    anonymousSessionGeneration += 1;
-  }).finally(() => {
-    anonymousSessionPromise = null;
-  });
-  return anonymousSessionPromise;
-}
-
 export async function requestLiveJson(
   url,
   {
     fetchImpl = fetch,
     signal,
     timeoutMs = REQUEST_TIMEOUT_MS,
-    preflightSession = false,
   } = {},
 ) {
-  if (preflightSession) {
-    await ensureAnonymousSession(fetchImpl, timeoutMs);
-  }
-  const requestSessionGeneration = anonymousSessionGeneration;
-  let { response, payload } = await fetchWithTimeout(
+  const { response, payload } = await fetchWithTimeout(
     url,
     { signal },
     fetchImpl,
     timeoutMs,
     true,
   );
-  if (response.status === 401) {
-    if (requestSessionGeneration === anonymousSessionGeneration) {
-      clearAnonymousSession();
-      await ensureAnonymousSession(fetchImpl, timeoutMs);
-    }
-    ({ response, payload } = await fetchWithTimeout(
-      url,
-      { signal },
-      fetchImpl,
-      timeoutMs,
-      true,
-    ));
-  }
   if (!response.ok) throw new Error(`Live data request failed (${response.status})`);
   return payload;
 }
@@ -1525,7 +1431,7 @@ export async function loadCountryRisk(tool) {
       async (signal) => {
         const payload = await requestLiveJson(
           `/api/intelligence/v1/get-country-risk?country_code=${encodeURIComponent(countryCode)}`,
-          { signal, preflightSession: true },
+          { signal },
         );
         return liveRiskViewModel(payload);
       },
@@ -1600,7 +1506,6 @@ export async function loadCiiRanking(tool) {
       async (signal) => {
         const payload = await requestLiveJson('/api/intelligence/v1/get-risk-scores', {
           signal,
-          preflightSession: true,
         });
         return ciiRankingViewModel(payload);
       },
@@ -1618,7 +1523,6 @@ export async function loadChokepoint(tool) {
   try {
     const payload = await requestLiveJson('/api/supply-chain/v1/get-chokepoint-status', {
       signal: state.controller.signal,
-      preflightSession: true,
     });
     const view = chokepointStatusViewModel(payload, id);
     if (!isCurrentRequest(tool, state)) return;
@@ -1766,7 +1670,6 @@ export async function loadPizzInt(tool) {
       tool,
       async (signal) => pizzIntViewModel(await requestLiveJson('/api/intelligence/v1/get-pizzint-status', {
         signal,
-        preflightSession: true,
       })),
       (view) => {
         renderPizzIntView(tool, view, Date.now());
@@ -1799,7 +1702,7 @@ export async function loadCrisis(tool) {
       code: country.code,
       payload: await requestLiveJson(
         `/api/conflict/v1/get-humanitarian-summary?country_code=${encodeURIComponent(country.code)}`,
-        { signal: state.controller.signal, preflightSession: true },
+        { signal: state.controller.signal },
       ),
     })));
     const results = settled.map((result, index) => (
@@ -1873,7 +1776,6 @@ export async function loadHazards(tool) {
       async (signal) => {
         const payload = await requestLiveJson('/api/natural/v1/list-natural-events', {
           signal,
-          preflightSession: true,
         });
         return hazardPulseViewModel(payload, { bounds });
       },
@@ -1944,8 +1846,8 @@ async function loadAirspace(tool) {
   await runLatestToolRequest(
     tool,
     async (signal) => Promise.allSettled([
-      requestLiveJson(airportUrl, { signal, preflightSession: true }),
-      requestLiveJson(militaryUrl, { signal, preflightSession: true }),
+      requestLiveJson(airportUrl, { signal }),
+      requestLiveJson(militaryUrl, { signal }),
     ]),
     ([airportResult, militaryResult]) => {
       let readySections = 0;

@@ -13,7 +13,6 @@ function translated(lookup: string): string | null {
  * the generic `panels.<key>` string, so all three surfaces agree.
  */
 export function getPanelDisplayName(panelKey: string, fallback: string = panelKey, variant: string = SITE_VARIANT): string {
-  if (panelKey === 'runtime-config') return t('modals.runtimeConfig.title');
   const camelKey = panelKey.replace(/-([a-z])/g, (_match, group: string) => group.toUpperCase());
   const overrideName = VARIANT_PANEL_OVERRIDES[variant]?.[panelKey]?.name;
   if (overrideName) return translated(`panelVariants.${variant}.${camelKey}`) ?? overrideName;

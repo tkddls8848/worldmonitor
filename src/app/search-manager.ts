@@ -431,12 +431,7 @@ export class SearchManager implements AppModule {
       const kind = this.ctx.map?.isGlobeMode?.()
         ? 'globe'
         : (this.ctx.map?.isDeckGLActive?.() ? 'deck' : 'svg');
-      return isLayerCommandAllowed(
-        key,
-        this.ctx.mapLayers[key],
-        kind,
-        true,
-      );
+      return isLayerCommandAllowed(key, kind);
     });
     this.ctx.searchModal.setCommandVisibleFn((command) => this.isModalCommandVisible(command));
     this.ctx.searchModal.setResultVisibleFn((result) => this.isSearchResultVisible(result));
@@ -698,12 +693,7 @@ export class SearchManager implements AppModule {
     const renderer: RendererKind = this.ctx.map?.isGlobeMode?.()
       ? 'globe'
       : (this.ctx.map?.isDeckGLActive?.() ? 'deck' : 'svg');
-    return isLayerCommandAllowed(
-      key,
-      this.ctx.mapLayers[key],
-      renderer,
-      true,
-    );
+    return isLayerCommandAllowed(key, renderer);
   }
 
   private hasExecutableLayerPreset(action: string): boolean {

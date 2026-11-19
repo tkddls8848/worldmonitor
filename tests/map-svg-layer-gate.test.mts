@@ -3,11 +3,10 @@ import { describe, it } from 'node:test';
 import { readFileSync } from 'node:fs';
 import ts from 'typescript';
 
-import { isLayerExecutable, isLayerToggleAllowed } from '../src/config/map-layer-definitions';
+import { isLayerExecutable } from '../src/config/map-layer-definitions';
 import type { MapLayers } from '../src/types';
 
 const mapSrc = readFileSync(new URL('../src/components/Map.ts', import.meta.url), 'utf8');
-const tier = { premium: false };
 
 function extractMethods(): new () => {
   state: { layers: MapLayers; zoom: number };
@@ -73,16 +72,15 @@ function makeMap(initialLayers: Partial<MapLayers> = {}) {
   };
   map.container = { querySelector: () => null };
   map.layerZoomOverrides = {};
-  map.canToggleLayer = (layer, currentlyEnabled) => isLayerToggleAllowed(layer, currentlyEnabled === true, tier.premium);
+  map.canToggleLayer = () => true;
   map.onLayerChange = (layer, enabled, source) => changes.push([layer, enabled, source]);
   map.scheduleRender = () => {};
   map.render = () => {};
   return { map, changes };
 }
 
-describe('SVG map premium layer toggle gate (#6045)', () => {
-  it('keeps enhanced layers available to free users', () => {
-    tier.premium = false;
+describe('SVG map layer toggle', () => {
+  it('toggles the CII choropleth on', () => {
     const map = makeMap();
     map.map.toggleLayer('ciiChoropleth');
     assert.equal(map.map.state.layers.ciiChoropleth, true);

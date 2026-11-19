@@ -24,8 +24,6 @@ const { isAllowedDomain: isAllowedRssDomain } = await import(
 
 const brotliCompressAsync = promisify(brotliCompress);
 const LOCAL_API_TRANSPORT_HEADER = 'x-worldmonitor-local-token';
-const MAX_REGISTRATION_BODY_BYTES = 16 * 1024;
-const MAX_REGISTRATION_EMAIL_LENGTH = 254;
 
 // Monkey-patch globalThis.fetch to force IPv4 for HTTPS requests.
 // Node.js built-in fetch (undici) tries IPv6 first via Happy Eyeballs.
@@ -799,11 +797,9 @@ function toHeaders(nodeHeaders, options = {}) {
   return headers;
 }
 
-// The renderer forwards a signed-in Pro user's Clerk bearer under its own
-// header: `Authorization` on the renderer → sidecar hop carries the sidecar
-// token, so the user credential cannot share it (#9396).
+// Desktop builds once forwarded a signed-in user's bearer under this header.
+// Sign-in is gone; the header is stripped on every hop and never forwarded.
 const CLOUD_USER_AUTHORIZATION_HEADER = 'x-worldmonitor-user-authorization';
-const CLOUD_BEARER_SHAPE = /^Bearer [A-Za-z0-9._~+/-]+=*$/;
 
 // The cloud edge 403s missing, short, and library user agents. The renderer's
 // hop arrives through Rust with none, and a WebView UA would misreport the caller.
@@ -828,9 +824,7 @@ async function proxyToCloud(requestUrl, req, context) {
   headers.delete('Authorization');
   // Never forward an operator's proxy cookies to the cloud.
   headers.delete('Cookie');
-  const userAuthorization = headers.get(CLOUD_USER_AUTHORIZATION_HEADER) ?? '';
   headers.delete(CLOUD_USER_AUTHORIZATION_HEADER);
-  const userBearer = CLOUD_BEARER_SHAPE.test(userAuthorization) ? userAuthorization : '';
   headers.set('User-Agent', cloudUserAgent());
   // Strip conditional headers so cloud always returns fresh 200, not 304.
   // The browser may have stale ETags from previous sessions with empty data.
@@ -848,8 +842,6 @@ async function proxyToCloud(requestUrl, req, context) {
     const wmKey = process.env.WORLDMONITOR_API_KEY;
     if (wmKey) headers.set('X-WorldMonitor-Key', wmKey);
   }
-  // Only a signed-in Pro desktop forwards a bearer.
-  if (userBearer) headers.set('Authorization', userBearer);
   const clientAbort = new AbortController();
   const onClientClose = () => clientAbort.abort();
   req.socket.once('close', onClientClose);
@@ -864,45 +856,6 @@ async function proxyToCloud(requestUrl, req, context) {
   } finally {
     req.socket.off('close', onClientClose);
   }
-}
-
-async function proxyRegisterInterestToCloud(requestUrl, req, context) {
-  const target = `${context.remoteBase}${requestUrl.pathname}${requestUrl.search}`;
-  const bodyBuffer = await readBody(req);
-  let payload = {};
-  if (bodyBuffer?.length) {
-    try {
-      payload = JSON.parse(bodyBuffer.toString('utf8'));
-    } catch {
-      payload = {};
-    }
-  }
-
-  const normalizedPayload = {
-    ...payload,
-    source: 'desktop-settings',
-  };
-  const body = JSON.stringify(normalizedPayload);
-  const headers = toHeaders(req.headers, { stripOrigin: true });
-  headers.delete(LOCAL_API_TRANSPORT_HEADER);
-  headers.delete(CLOUD_USER_AUTHORIZATION_HEADER);
-  headers.delete('Authorization');
-  headers.delete('If-None-Match');
-  headers.delete('If-Modified-Since');
-  headers.delete('Transfer-Encoding');
-  headers.delete('Content-Encoding');
-  headers.delete('Connection');
-  headers.delete('Expect');
-  headers.set('Origin', 'https://worldmonitor.app');
-  headers.set('User-Agent', CHROME_UA);
-  headers.set('Content-Type', 'application/json');
-  headers.set('Content-Length', String(Buffer.byteLength(body)));
-
-  return fetchWithTimeout(target, {
-    method: 'POST',
-    headers: Object.fromEntries(headers.entries()),
-    body,
-  }, 15000);
 }
 
 const CLIENT_LIMIT_MAX_KEYS = 10_000;
@@ -1980,105 +1933,6 @@ async function dispatch(requestUrl, req, routes, context) {
     }
     return json({ verboseMode });
   }
-  // Registration — use the authenticated Convex HTTP bridge when CONVEX_URL is
-  // available (self-hosted), otherwise proxy to cloud (desktop sidecar never
-  // has CONVEX_URL).
-  // Keeps the legacy /api/register-interest local path so older desktop builds
-  // continue to work; cloud fallback rewrites to the new sebuf RPC path.
-  if (requestUrl.pathname === '/api/register-interest' && req.method === 'POST') {
-    const convexUrl = process.env.CONVEX_URL;
-    if (!convexUrl) {
-      const cloudUrl = new URL(requestUrl);
-      cloudUrl.pathname = '/api/leads/v1/register-interest';
-      const { prefix, timing } = startCloudRequestLog();
-      try {
-        const cloudResponse = await proxyRegisterInterestToCloud(cloudUrl, req, context);
-        if (!cloudResponse.ok) {
-          context.logger.warn(`${prefix} cloud returned ${cloudResponse.status} for ${cloudUrl.pathname} ${timing()}`);
-        }
-        return cloudResponse;
-      } catch (error) {
-        context.logger.error(`${prefix} register-interest cloud fallback failed ${timing()}`, error);
-      }
-      return json({ error: 'Registration service unavailable' }, 503);
-    }
-    try {
-      const body = await new Promise((resolve, reject) => {
-        if (Number(req.headers['content-length']) > MAX_REGISTRATION_BODY_BYTES) {
-          req.resume();
-          resolve(null);
-          return;
-        }
-        const chunks = [];
-        let bytes = 0;
-        const onData = (chunk) => {
-          bytes += chunk.length;
-          if (bytes > MAX_REGISTRATION_BODY_BYTES) {
-            chunks.length = 0;
-            req.off('data', onData);
-            req.resume();
-            resolve(null);
-            return;
-          }
-          chunks.push(chunk);
-        };
-        req.on('data', onData);
-        req.on('end', () => resolve(Buffer.concat(chunks).toString()));
-        req.on('error', reject);
-      });
-      if (body === null) {
-        return json({ error: 'Request body too large' }, 413, { Connection: 'close' });
-      }
-      const parsed = JSON.parse(body);
-      const email = parsed?.email;
-      if (typeof email !== 'string' || email.length > MAX_REGISTRATION_EMAIL_LENGTH
-        || !/^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/.test(email)) {
-        return json({ error: 'Invalid email address' }, 400);
-      }
-      const sharedSecret = process.env.CONVEX_SERVER_SHARED_SECRET;
-      if (!sharedSecret) {
-        context.logger.warn('[local-api] self-hosted register-interest bridge is not configured');
-        return json({ error: 'Registration service unavailable' }, 503);
-      }
-      const convexSiteUrl = (
-        process.env.CONVEX_SITE_URL || convexUrl.replace(/\.convex\.cloud\/?$/, '.convex.site')
-      ).replace(/\/$/, '');
-      const args = {
-        email,
-        source: typeof parsed.source === 'string' ? parsed.source : 'desktop',
-        appVersion: typeof parsed.appVersion === 'string' ? parsed.appVersion : 'unknown',
-      };
-      if (typeof parsed.referredBy === 'string') args.referredBy = parsed.referredBy;
-      const response = await fetchWithTimeout(`${convexSiteUrl}/api/internal-register-interest`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'worldmonitor-sidecar/1.0',
-          'x-convex-shared-secret': sharedSecret,
-        },
-        body: JSON.stringify(args),
-      }, 15000);
-      if (!response.ok) {
-        context.logger.warn(`[local-api] self-hosted register-interest bridge returned ${response.status}`);
-        return json({ error: 'Registration failed' }, 502);
-      }
-      const responseBody = await response.text();
-      let result;
-      try {
-        result = JSON.parse(responseBody);
-      } catch {
-        return json({ error: 'Registration failed' }, 502);
-      }
-      if (!result || (result.status !== 'registered' && result.status !== 'already_registered')) {
-        return json({ error: 'Registration failed' }, 502);
-      }
-      return json({ status: 'registered', referralCode: '', referralCount: 0, position: 0, emailSuppressed: false });
-    } catch (e) {
-      context.logger.error(`[register-interest] error: ${e.message}`);
-      return json({ error: 'Registration service unreachable' }, 502);
-    }
-  }
-
   // YouTube video naming for channel management (oEmbed). The cloud edge handler owns the
   // rate limit and the retired channel-detection answer, so always proxy to cloud,
   // bypassing the cloudFallback flag.

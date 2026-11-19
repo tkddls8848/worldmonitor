@@ -12,7 +12,7 @@ import {
   parseOrbitalShareFragment,
   withoutOrbitalShareFragment,
 } from '../src/utils/urlState.ts';
-import { redactSensitiveUrl, scrubSentryCredentials } from '../shared/sensitive-url-params.ts';
+import { redactSensitiveUrl } from '../shared/sensitive-url-params.ts';
 import { LAYER_REGISTRY } from '../src/config/map-layer-definitions.ts';
 
 const EMPTY_LAYERS = {
@@ -327,11 +327,9 @@ describe('satellite pass share link', () => {
     });
   }
 
-  it('is redacted from analytics URLs and error reports', () => {
+  it('is redacted from analytics URLs', () => {
     const shared = `https://www.worldmonitor.app/dashboard?view=global#${buildOrbitalShareFragment(eiffel)}`;
     assert.equal(redactSensitiveUrl(shared), 'https://www.worldmonitor.app/dashboard?view=global');
-    const event = scrubSentryCredentials({ request: { url: shared }, breadcrumbs: [{ data: { from: shared } }] });
-    assert.doesNotMatch(JSON.stringify(event), /48\.86/);
   });
 });
 

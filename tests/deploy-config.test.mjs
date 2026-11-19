@@ -1159,49 +1159,6 @@ describe('agent readiness: crawl-budget disallows (#7660)', () => {
   });
 });
 
-describe('vercel deployment excludes api test files', () => {
-  // Vercel deploys every non-underscore file under api/ as a live serverless
-  // function. A deployed *.test.mjs is a public endpoint that executes its
-  // whole node:test suite (with production env + Sentry) on every request —
-  // WORLDMONITOR-VD flooded Sentry with "Upstash Redis is not configured"
-  // because wm-session.test.mjs deletes the Upstash env vars to exercise the
-  // fail-closed path, and something polls /api/wm-session.test every ~2 min.
-  const vercelignore = readFileSync(resolve(__dirname, '../.vercelignore'), 'utf-8');
-  const ignoreRules = vercelignore
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line && !line.startsWith('#'));
-
-  const collectApiTestFiles = (dir) => {
-    const found = [];
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const full = resolve(dir, entry.name);
-      if (entry.isDirectory()) found.push(...collectApiTestFiles(full));
-      else if (/\.test\.[cm]?[jt]sx?$/.test(entry.name)) found.push(full);
-    }
-    return found;
-  };
-  const apiTestFiles = collectApiTestFiles(resolve(__dirname, '../api'));
-
-  it('.vercelignore excludes api/**/*.test.mjs', () => {
-    assert.ok(
-      ignoreRules.includes('api/**/*.test.mjs'),
-      '.vercelignore must contain "api/**/*.test.mjs" — without it every api test file deploys as a live production function'
-    );
-  });
-
-  it('every api test file uses the .test.mjs extension the ignore rule covers', () => {
-    assert.ok(apiTestFiles.length > 0, 'expected api test files to exist (walker broke?)');
-    for (const file of apiTestFiles) {
-      assert.match(
-        file,
-        /\.test\.mjs$/,
-        `${file}: api test files must end in .test.mjs so the .vercelignore rule excludes them from deployment — extend both if introducing a new extension`
-      );
-    }
-  });
-});
-
 // Registry branding + ARD catalog (ora.ai Discovery checks). The MCP
 // server-card must carry the full branding trio (name, icon, description —
 // `registry-branding`), and /.well-known/ai-catalog.json publishes the ARD
@@ -1288,11 +1245,11 @@ describe('variant subdomain dashboard SEO (#4996)', () => {
     .filter(Boolean)
     .sort();
 
-  it('vite build emits the variant dashboard files the rewrites point at (web full build only)', () => {
+  it('vite build emits the variant dashboard files the rewrites point at (full build only)', () => {
     assert.match(
       viteConfigSource,
-      /!isDesktopBuild && activeVariant === 'full' && variantDashboardHtmlPlugin\(\)/,
-      'variantDashboardHtmlPlugin must be registered for web full builds'
+      /activeVariant === 'full' && variantDashboardHtmlPlugin\(\)/,
+      'variantDashboardHtmlPlugin must be registered for full builds'
     );
   });
 });

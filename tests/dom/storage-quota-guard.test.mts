@@ -11,8 +11,6 @@
 
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@/services/runtime', () => ({ isDesktopRuntime: () => false }));
-vi.mock('@/services/tauri-bridge', () => ({ invokeTauri: vi.fn() }));
 
 import { isStorageQuotaExceeded } from '@/utils/storage-quota';
 import { saveToStorage } from '@/utils';

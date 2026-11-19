@@ -158,7 +158,7 @@ export async function startPersonalServer() {
   let worker = null;
   try {
     const { createLocalApiServer } = await import('./local/local-api-server.mjs');
-    api = await createLocalApiServer({ port: 0, mode: 'docker', resourceDir: ROOT, cloudFallback: false, selfHostRelay: 'off' });
+    api = await createLocalApiServer({ port: 0, mode: 'docker', resourceDir: ROOT, cloudFallback: false });
     const { port: apiPort } = await api.start();
     publishLocalApiOrigin(apiPort);
     const server = await createPersonalIngress({ password: process.env.WM_PERSONAL_PASSWORD, username: process.env.WM_PERSONAL_USERNAME || 'owner', distDir: path.join(ROOT, 'dist'), apiPort, token: process.env.LOCAL_API_TOKEN });

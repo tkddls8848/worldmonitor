@@ -543,7 +543,8 @@ describe('CountryDeepDivePanel product imports section', () => {
       assert.ok(card, 'Product Imports must be mounted in the brief grid');
       assert.ok(card.classList.contains('cdp-card'));
       assert.match(card.querySelector('.cdp-card-title').textContent, /Product Imports/);
-      assert.ok(card.querySelector('.cdp-card-body').querySelector('.cdp-pro-locked'));
+      assert.ok(card.querySelector('.cdp-card-body'));
+      assert.equal(card.querySelector('.cdp-pro-locked'), null, 'the personal build has no Pro lock');
     } finally {
       panel.hide();
       harness.cleanup();

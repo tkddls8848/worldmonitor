@@ -51,28 +51,11 @@ async function loadChatAnalystPanel() {
     ['runtime-stub', `
       export function isDesktopRuntime() { return false; }
     `],
-    ['tauri-bridge-stub', `
-      export function invokeTauri() { return Promise.reject(new Error('not wired in test')); }
-      export function hasTauriInvokeBridge() { return false; }
-    `],
-    ['analytics-stub', `
-      export function trackLayoutCustomized() {}
-      export function trackAnalystControlAction(actionType, status, reason) {
-        globalThis.__wmAnalystControlTelemetry?.push({
-          actionType,
-          status,
-          ...(reason ? { reason } : {}),
-        });
-      }
-    `],
     ['ai-flow-settings-stub', `
       export function getAiFlowSettings() { return { badgeAnimation: false }; }
     `],
     ['runtime-config-stub', `
       export function getSecretState() { return { present: true }; }
-    `],
-    ['auth-state-stub', `
-      export function getAuthState() { return { user: null }; }
     `],
     ['analyst-markdown-stub', `
       export function postProcessAnalystHtml(html) { return html; }
@@ -91,12 +74,8 @@ async function loadChatAnalystPanel() {
     ['../services/i18n', 'i18n-stub'],
     ['@/services/runtime', 'runtime-stub'],
     ['../services/runtime', 'runtime-stub'],
-    ['@/services/tauri-bridge', 'tauri-bridge-stub'],
-    ['../services/tauri-bridge', 'tauri-bridge-stub'],
-    ['@/services/analytics', 'analytics-stub'],
     ['@/services/ai-flow-settings', 'ai-flow-settings-stub'],
     ['@/services/runtime-config', 'runtime-config-stub'],
-    ['@/services/auth-state', 'auth-state-stub'],
     ['@/utils/analyst-markdown', 'analyst-markdown-stub'],
     ['marked', 'marked-stub'],
     ['dompurify', 'dompurify-stub'],

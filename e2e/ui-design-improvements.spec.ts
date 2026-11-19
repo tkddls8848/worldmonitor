@@ -67,8 +67,6 @@ for (const theme of ['light', 'dark']) {
       if (mobile) {
         expect((await row.locator('.panel-toggle-item').boundingBox())!.height).toBeGreaterThanOrEqual(44);
       }
-      await openSettingsPage(page, 'notifications');
-      await expect(page.locator('#usNotifUpgradeBtn')).toHaveText('Sign In');
       await openSettingsPage(page, 'ai');
       await page.locator('#fwImportBtn').click();
       const field = page.getByLabel('agentskills.io URL or ID', { exact: true });

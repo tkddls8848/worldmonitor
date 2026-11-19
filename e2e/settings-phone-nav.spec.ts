@@ -62,8 +62,8 @@ test('device Back returns from a page to the list with focus on its row, then cl
 });
 
 test('a deep link to a page leaves the home list beneath it', async ({ page }) => {
-  await boot(page, '?settings=notifications');
-  await expect(page.locator('#us-page-notifications')).toBeVisible({ timeout: 60_000 });
+  await boot(page, '?settings=about');
+  await expect(page.locator('#us-page-about')).toBeVisible({ timeout: 60_000 });
 
   await page.goBack();
   await expect(page.locator('[data-settings-home]')).toBeVisible();

@@ -151,7 +151,7 @@ subprocessor row again.
 | Vercel, Railway and Cloudflare hosting | Edge APIs, workers, CDN and Turnstile | Tasks 4, 6 and 8; the personal server replaces them |
 | Mintlify | Hosted documentation | Not used locally; `docs/` remains as source files |
 | Upstash (cloud) | Rate limits and cache | Replaced by the embedded local store |
-| The `wm-acq` acquisition cookie | Checkout channel attribution | Task 9 removed checkout, so nothing sets it; `shared/acquisition-source.ts` remains with no runtime caller |
+| The `wm-acq` acquisition cookie | Checkout channel attribution | Tasks 9 and 11 (checkout, then the orphaned `shared/acquisition-source.ts`) |
 
 Some comments and generated files still name these vendors, such as Sentry
 issue numbers in code comments. They do not send data. The Axiom telemetry

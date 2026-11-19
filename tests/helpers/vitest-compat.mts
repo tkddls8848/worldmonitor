@@ -49,6 +49,14 @@ function equals(actual: unknown, expected: unknown): boolean {
     for (const value of expected) if (!actual.has(value)) return false;
     return true;
   }
+  if (!Array.isArray(actual) && (!isPlainObject(actual) || !isPlainObject(expected))) {
+    // Only Date, RegExp, Map and Set have class-aware comparison here. Any other
+    // class instance would be compared by its own enumerable keys and could pass
+    // spuriously, so refuse instead of guessing.
+    throw new TypeError(
+      `vitest-compat equals() cannot compare class instances (${Object.prototype.toString.call(actual)} vs ${Object.prototype.toString.call(expected)})`,
+    );
+  }
   const a = actual as Record<string, unknown>;
   const e = expected as Record<string, unknown>;
   const keys = new Set([...Object.keys(a), ...Object.keys(e)]);
@@ -132,7 +140,15 @@ function makeMatchers(actual: unknown, negate: boolean): Matchers {
   return {
     toBe: (expected) => check(Object.is(actual, expected), () => `expected ${describeValue(actual)} to be ${describeValue(expected)}`),
     toEqual: (expected) => check(equals(actual, expected), () => `expected ${describeValue(actual)} to equal ${describeValue(expected)}`),
-    toStrictEqual: (expected) => check(equals(actual, expected), () => `expected ${describeValue(actual)} to strictly equal ${describeValue(expected)}`),
+    toStrictEqual: (expected) => {
+      let pass = true;
+      try {
+        assert.deepStrictEqual(actual, expected);
+      } catch {
+        pass = false;
+      }
+      check(pass, () => `expected ${describeValue(actual)} to strictly equal ${describeValue(expected)}`);
+    },
     toMatchObject: (expected) => check(matchesObject(actual, expected), () => `expected ${describeValue(actual)} to match ${describeValue(expected)}`),
     toHaveLength: (length) => check((actual as { length?: number })?.length === length, () => `expected length ${(actual as { length?: number })?.length} to be ${length}`),
     toBeNull: () => check(actual === null, () => `expected ${describeValue(actual)} to be null`),

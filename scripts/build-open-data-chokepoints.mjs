@@ -511,20 +511,7 @@ export async function fetchChokepointStatus({
 } = {}) {
   const base = apiBase.replace(/\/+$/, '');
   const headers = { 'User-Agent': userAgent, Accept: 'application/json', Origin: base, Referer: `${base}/` };
-  if (apiKey) {
-    headers['X-WorldMonitor-Key'] = apiKey;
-  } else {
-    const session = await withRetry(() =>
-      requestJson(fetchImpl, `${base}/api/wm-session`, {
-        method: 'POST',
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: '{}',
-      }),
-    );
-    const token = String(session?.token ?? '').trim();
-    if (!token) throw new Error('wm-session response did not include a token');
-    headers.Cookie = `wm-session=${token}`;
-  }
+  if (apiKey) headers['X-WorldMonitor-Key'] = apiKey;
   return withRetry(() => requestJson(fetchImpl, `${base}${RPC_PATH}`, { method: 'GET', headers }));
 }
 

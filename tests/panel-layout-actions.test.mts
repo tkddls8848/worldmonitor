@@ -338,10 +338,10 @@ describe('resolveMovePanel', () => {
 
     assert.equal(resolveMovePanel({
       panels: [
-        entry('runtime-config', 'sidebar', 0, { fixed: true }),
+        entry('fixed-panel', 'sidebar', 0, { fixed: true }),
         entry('markets', 'sidebar', 1),
       ],
-      panelId: 'runtime-config',
+      panelId: 'fixed-panel',
       region: 'sidebar',
       index: 1,
       bottomAvailable: true,

@@ -450,7 +450,7 @@ const missionPresetListeners = new Set<(preset: MissionPreset | null) => void>()
 let storageDeniedMissionState: MissionPresetId | null | undefined;
 
 export const isDynamicPanel = (key: string): boolean =>
-  key === 'runtime-config' || DYNAMIC_PANEL_PREFIXES.some((prefix) => key.startsWith(prefix));
+  DYNAMIC_PANEL_PREFIXES.some((prefix) => key.startsWith(prefix));
 
 const getVariantDefaultPanels = (variant: string): string[] =>
   VARIANT_DEFAULTS[variant] ?? VARIANT_DEFAULTS.full ?? [];

@@ -24,7 +24,6 @@ export interface LayerDefinition {
    * `['deck', 'globe']`; a layer on every surface is `['svg', 'deck', 'globe']`.
    */
   renderers: RendererKind[];
-  premium?: 'locked' | 'enhanced';
 }
 
 export type LayerExplanationCoverage = 'curated' | 'fallback';
@@ -47,10 +46,8 @@ const def = (
   i18nSuffix: string,
   fallbackLabel: string,
   renderers: RendererKind[] = ['svg', 'deck', 'globe'],
-  premium?: 'locked' | 'enhanced',
 ): LayerDefinition => ({
   key, icon, i18nSuffix, fallbackLabel, renderers,
-  ...(premium && { premium }),
 });
 
 export const LAYER_REGISTRY: Record<keyof MapLayers, LayerDefinition> = {
@@ -288,57 +285,15 @@ export function isLayerExecutable(
 }
 
 /**
- * Whether the user may enable a layer given their premium status.
- *
- * Matches DeckGLMap's layer-picker contract:
- *   - `premium: 'locked'` → disabled checkbox for free users (must not enable)
- *   - `premium: 'enhanced'` → PRO badge only; free users can still toggle
- *   - no premium flag → free for everyone
- *
- * Used by CMD+K (`search-manager`) and programmatic enable paths so free
- * users cannot force a locked layer on (which left a stuck checked+disabled
- * checkbox and could mutual-exclude a free layer — #6045).
- */
-export function isLayerEntitled(
-  layerKey: keyof MapLayers,
-  hasPremium: boolean,
-): boolean {
-  const def = LAYER_REGISTRY[layerKey];
-  if (!def) return false;
-  if (def.premium === 'locked' && !hasPremium) return false;
-  return true;
-}
-
-/**
- * Whether a layer toggle may be applied from the current state.
- *
- * A free user may turn a locked layer off when stale state survives from an
- * older build, but must not be able to turn it on. Keeping that distinction
- * makes every toggle entry point able to heal old state without reopening the
- * activation path (#6045).
- */
-export function isLayerToggleAllowed(
-  layerKey: keyof MapLayers,
-  currentlyEnabled: boolean | undefined,
-  hasPremium: boolean,
-): boolean {
-  if (!LAYER_REGISTRY[layerKey]) return false;
-  return currentlyEnabled === true || isLayerEntitled(layerKey, hasPremium);
-}
-
-/**
  * Whether a CMD+K layer command may toggle the layer in the current map
- * context. This keeps renderer compatibility and entitlement in one policy
- * used by the palette filter and its dispatch paths.
+ * context. The personal build has no layer entitlements, so this is the
+ * renderer-compatibility check alone.
  */
 export function isLayerCommandAllowed(
   layerKey: keyof MapLayers,
-  currentlyEnabled: boolean | undefined,
   kind: RendererKind,
-  hasPremium: boolean,
 ): boolean {
-  return isLayerExecutable(layerKey, kind)
-    && isLayerToggleAllowed(layerKey, currentlyEnabled, hasPremium);
+  return isLayerExecutable(layerKey, kind);
 }
 
 export function mapLayerStatesEqual(a: MapLayers, b: MapLayers): boolean {

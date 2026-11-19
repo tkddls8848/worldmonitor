@@ -159,6 +159,9 @@ async function loadCountryDeepDivePanel(options = {}) {
         }
         return key;
       }
+      export function getCurrentLanguageTag() {
+        return 'en';
+      }
     `],
     ['related-assets-stub', `
       export function getNearbyInfrastructure() {
@@ -244,15 +247,6 @@ async function loadCountryDeepDivePanel(options = {}) {
     `],
     ['intelligence-client-stub', `
       export class IntelligenceServiceClient {}
-    `],
-    ['auth-state-stub', `
-      const state = globalThis.__wmCountryDeepDiveTestState;
-      export function getAuthState() { return { user: null }; }
-      export function subscribeAuthState(callback) {
-        state.authListeners.add(callback);
-        callback(getAuthState());
-        return () => state.authListeners.delete(callback);
-      }
     `],
     ['resilience-service-stub', `
       const state = globalThis.__wmCountryDeepDiveTestState;
@@ -361,7 +355,6 @@ async function loadCountryDeepDivePanel(options = {}) {
     ['@/components/ResilienceWidget', 'resilience-widget-stub'],
     ['@/services/runtime', 'runtime-stub'],
     ['@/generated/client/worldmonitor/intelligence/v1/service_client', 'intelligence-client-stub'],
-    ['@/services/auth-state', 'auth-state-stub'],
     ['@/services/resilience', 'resilience-service-stub'],
     ['@/services/scorecard', 'scorecard-service-stub'],
     ['@/utils/overlay-history', 'overlay-history-stub'],

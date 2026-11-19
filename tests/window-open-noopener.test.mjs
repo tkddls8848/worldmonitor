@@ -87,13 +87,7 @@ function collectUnsafeWindowOpenCalls(file) {
  * the `opener = null` line is ever dropped this guard goes red rather than
  * silently permitting a real reverse-tabnabbing vector.
  */
-const OPENER_SEVERED_MANUALLY = [
-  {
-    file: 'src/services/external-navigation.ts',
-    mitigation: /\bwin\.opener\s*=\s*null\b/,
-    reason: 'openWindowWithHandle() needs the handle; it nulls opener instead',
-  },
-];
+const OPENER_SEVERED_MANUALLY = [];
 
 describe('window.open reverse-tabnabbing guard', () => {
   it('requires noopener,noreferrer for _blank browser windows', () => {

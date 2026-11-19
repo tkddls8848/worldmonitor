@@ -1,6 +1,5 @@
 import { CANONICAL_FEEDS, INTEL_SOURCES, SOURCE_REGION_MAP } from '@/config/feeds';
 import { WEB_APP_ORIGIN } from '@/config/web-origin';
-import { openExternalUrl } from '@/services/external-navigation';
 import { THEATER_PRESETS, getTheaterPreset, getTheaterPresetEnableList, resolveTheaterPresetSources, type TheaterPreset } from '@/config/theater-presets';
 import {
   PANEL_CATEGORY_MAP,
@@ -47,7 +46,7 @@ import { safeStorageRemove, safeStorageSet } from '@/utils/safe-storage';
 import type { PanelConfig } from '@/types';
 import { renderPreferenceSection } from '@/services/preferences-content';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
-import { legalLinksHtml, LEGAL_LINK_ATTR } from '@/utils/legal-links';
+import { legalLinksHtml } from '@/utils/legal-links';
 import { dashboardSiteLinksHtml } from '@/utils/dashboard-site-links';
 import { resolveDashboardSiteOrigin } from '@/config/dashboard-reference-links';
 import { createFocusTrap, type FocusTrap } from '@/utils/focus-trap';
@@ -109,7 +108,6 @@ export class UnifiedSettings {
   private recentPage: SettingsSectionId | null = null;
   /** The sidebar search text. The sheet has no search, so it is empty there. */
   private navQuery = '';
-  private legalLinkHandoffAttached = false;
   private activeSourceRegion = 'all';
   private sourceFilter = '';
   private activePanelCategory = 'all';
@@ -503,7 +501,6 @@ export class UnifiedSettings {
     this.endSession();
     this.scrollOffsets.clear();
     this.clearSearch();
-    this.attachLegalLinkHandoff();
   }
 
   /** Disposes every mounted page and returns to no navigation state. */
@@ -850,28 +847,6 @@ export class UnifiedSettings {
     },
   };
 
-  /**
-   * Desktop hands legal links to the OS browser (#5911 precedent). A plain
-   * `target="_blank"` anchor inside the Tauri WebView opens another WebView
-   * window with no chrome, which is how a user ends up stranded on the Terms
-   * with no way back. Delegated on the overlay so it covers the legal row AND
-   * every checkout-consent line rendered inside a tab panel, including the ones
-   * re-rendered after this handler is attached.
-   */
-  private attachLegalLinkHandoff(): void {
-    if (!this.legalLinkHandoffAttached) return;
-    // The overlay element outlives every re-render, so an unguarded attach
-    // would stack one listener per render and open N windows on one click.
-    this.legalLinkHandoffAttached = true;
-    this.overlay.addEventListener('click', (e) => {
-      const link = (e.target as HTMLElement | null)?.closest?.(`a[${LEGAL_LINK_ATTR}]`);
-      const href = link instanceof HTMLAnchorElement ? link.href : '';
-      if (!href) return;
-      e.preventDefault();
-      void openExternalUrl(href);
-    });
-  }
-
   private categoryMatchesVariant(catDef: { variants?: string[] }): boolean {
     return !catDef.variants || catDef.variants.includes(SITE_VARIANT);
   }
@@ -887,7 +862,7 @@ export class UnifiedSettings {
   /** Every panel the Panels page can list, before the category and filter narrow it. */
   private listedPanelEntries(): Array<[string, PanelConfig]> {
     return Object.entries(this.draftPanelSettings)
-      .filter(([key]) => (key !== 'runtime-config') && !key.startsWith('cw-'));
+      .filter(([key]) => !key.startsWith('cw-'));
   }
 
   private getVisiblePanelEntries(): Array<[string, PanelConfig]> {

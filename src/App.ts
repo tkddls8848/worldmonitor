@@ -781,8 +781,8 @@ export class App {
     let mapLayers: MapLayers;
     let panelSettings: Record<string, PanelConfig>;
 
-    // Panels that must survive variant switches: desktop config, user-created widgets, MCP panels.
-    const isDynamicPanel = (k: string) => !ALL_PANELS[k] && (k === 'runtime-config' || k.startsWith('cw-') || k.startsWith('mcp-'));
+    // Panels that must survive variant switches: user-created widgets, MCP panels.
+    const isDynamicPanel = (k: string) => !ALL_PANELS[k] && (k.startsWith('cw-') || k.startsWith('mcp-'));
 
     const currentVariant = SITE_VARIANT;
     let appliedPanelLayoutVariant: string | null = null;
@@ -1038,7 +1038,7 @@ export class App {
         const validKeys = new Set(Object.keys(ALL_PANELS));
         let pruned = false;
         for (const key of Object.keys(panelSettings)) {
-          if (!validKeys.has(key) && key !== 'runtime-config') {
+          if (!validKeys.has(key)) {
             delete panelSettings[key];
             pruned = true;
           }

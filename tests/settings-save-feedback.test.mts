@@ -102,7 +102,6 @@ async function loadRealChangeLanguage(): Promise<ChangeLanguage> {
       export default i18next;
     `],
     ['i18next-browser-languagedetector', 'export default class LanguageDetector { addDetector(){} }'],
-    ['@/bootstrap/sentry-defer', 'export function enqueueSentryCall(){}'],
     ['@/shared/language-tags', 'export function resolveLanguageTag(value){ return value; }'],
     ['@/utils/i18n-url', 'export function readQueryLanguage(){} export function stripQueryLanguage(value){ return value; }'],
   ]);
@@ -134,9 +133,7 @@ async function loadPreferencesModule(): Promise<PreferencesModule> {
     ['@/services/font-settings', 'export function getFontFamily(){ return "mono"; } export function setFontFamily(){}'],
     ['@/services/font-scale-settings', 'export const FONT_SCALE_CHANGED_EVENT = "font-scale-changed"; export const FONT_SCALE_STEPS = []; export function fontScaleLabel(value){ return String(value); } export function getFontScale(){ return 1; } export function parseFontScale(value){ const parsed = Number(value); return Number.isFinite(parsed) ? parsed : undefined; } export function setFontScale(){}'],
     ['@/utils/sanitize', 'export function escapeHtml(value){ return String(value); }'],
-    ['@/services/analytics', 'export function trackLanguageChange(){} export function track(){}'],
     ['@/utils/settings-persistence', 'export function exportSettings(){} export async function importSettings(){ return { keysImported: 0 }; }'],
-    ['@/utils/cloud-prefs-sync', 'export function getSyncState(){ return "synced"; } export function getLastSyncAt(){ return null; } export async function syncNow(){} export function isCloudSyncEnabled(){ return false; }'],
     ['@/services/analysis-framework-store', 'export function loadFrameworkLibrary(){ return []; } export function saveImportedFramework(){} export function deleteImportedFramework(){} export function renameImportedFramework(){} export function getActiveFrameworkForPanel(){ return null; }'],
     ['@/utils/dom-utils', 'export function setTrustedHtml(){} export function trustedHtml(value){ return value; }'],
   ]);

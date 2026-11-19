@@ -229,7 +229,6 @@ async function loadCountryBriefPage(options: CountryBriefHarnessOptions = {}) {
         materializeCountryBriefExportControls(el, html);
       }
     `],
-    ['auth-state-stub', `export function getAuthState() { return { user: null }; }`],
     ['gates-export-stub', `
       export function evaluateExportGate() {
         return ${exportGateLocked
@@ -245,11 +244,6 @@ async function loadCountryBriefPage(options: CountryBriefHarnessOptions = {}) {
     ['export-gate-control-stub', `
       export function exportGateCopy(reason) {
         return { icon: '', desc: 'export-gate-locked:' + reason, cta: '' };
-      }
-    `],
-    ['analytics-stub', `
-      export function trackGateHit(feature) {
-        globalThis.__wmCountryBriefPageTestState.gateHits.push(feature);
       }
     `],
   ]);
@@ -275,11 +269,9 @@ async function loadCountryBriefPage(options: CountryBriefHarnessOptions = {}) {
     ['@/services/country-geometry', 'country-geometry-stub'],
     ['@/utils/country-flag', 'country-flag-stub'],
     ['@/utils/dom-utils', 'dom-utils-stub'],
-    ['@/services/auth-state', 'auth-state-stub'],
     ['@/services/gates/export', 'gates-export-stub'],
     ['@/services/gates/export-resolver', 'export-gate-stub'],
     ['@/components/ExportGateControl', 'export-gate-control-stub'],
-    ['@/services/analytics', 'analytics-stub'],
   ]);
 
   const plugin = {

@@ -5,7 +5,6 @@ import {
   LAYER_REGISTRY,
   getCompleteLayerCatalogKeys,
   getOrderedLayerKeys,
-  isLayerEntitled,
   isLayerExecutable,
   isSunsetLayer,
   resolveLayerLabel,

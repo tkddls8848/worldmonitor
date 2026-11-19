@@ -1,7 +1,6 @@
 import { strict as assert } from 'node:assert';
-import test, { mock } from 'node:test';
+import test from 'node:test';
 import handler from './bootstrap.js';
-import { DESKTOP_KEY_LIMIT_ERROR } from '../shared/desktop-key-access.js';
 import {
   assertPublicBootstrapCorsHeaders,
   assertPublicBootstrapSharedCacheHeaders,
@@ -30,8 +29,6 @@ async function withMockedBootstrapAuth({
   bootstrapPipelineBody,
 }, fn) {
   const restoreEnv = snapshotEnv([
-    'CONVEX_SITE_URL',
-    'CONVEX_SERVER_SHARED_SECRET',
     'UPSTASH_REDIS_REST_URL',
     'UPSTASH_REDIS_REST_TOKEN',
     'WORLDMONITOR_VALID_KEYS',
@@ -39,8 +36,6 @@ async function withMockedBootstrapAuth({
   const originalFetch = globalThis.fetch;
   const calls = [];
 
-  process.env.CONVEX_SITE_URL = 'https://convex.test';
-  process.env.CONVEX_SERVER_SHARED_SECRET = 'shared-secret';
   process.env.UPSTASH_REDIS_REST_URL = 'https://upstash.test';
   process.env.UPSTASH_REDIS_REST_TOKEN = 'redis-token';
   process.env.WORLDMONITOR_VALID_KEYS = ENTERPRISE_KEY;
@@ -267,10 +262,10 @@ test('allowed-Origin valid wm_ user key returns bootstrap data without shared ca
   });
 });
 
-test('session-authenticated bootstrap returns data without shared cache headers', async () => {
+test('cookie-carrying bootstrap returns data without shared cache headers', async () => {
   await withMockedBootstrapAuth({ entitlement: activeApiEntitlement() }, async () => {
-    const token = 'wms_test-browser-session';
-    const resp = await handler(makeBootstrapRequestWithAllowedOrigin({ Cookie: `wm-session=${token}` }));
+    const token = 'test-browser-cookie';
+    const resp = await handler(makeBootstrapRequestWithAllowedOrigin({ Cookie: `session=${token}` }));
 
     assert.equal(resp.status, 200);
     assert.deepEqual(Object.keys(await resp.json()).sort(), ['data', 'missing']);
@@ -278,10 +273,10 @@ test('session-authenticated bootstrap returns data without shared cache headers'
   });
 });
 
-test('session-authenticated weather-only bootstrap is not shared-cacheable', async () => {
+test('cookie-carrying weather-only bootstrap is not shared-cacheable', async () => {
   await withMockedBootstrapAuth({ entitlement: activeApiEntitlement() }, async () => {
-    const token = 'wms_test-browser-session';
-    const resp = await handler(makeWeatherBootstrapRequest({ Cookie: `wm-session=${token}` }));
+    const token = 'test-browser-cookie';
+    const resp = await handler(makeWeatherBootstrapRequest({ Cookie: `session=${token}` }));
 
     assert.equal(resp.status, 200);
     assert.deepEqual(Object.keys(await resp.json()).sort(), ['data', 'missing']);
@@ -418,14 +413,14 @@ test('explicit public weather bootstrap answers a VALID entitled key identically
   });
 });
 
-test('explicit public weather bootstrap answers a session cookie identically', async () => {
+test('explicit public weather bootstrap answers a cookie identically', async () => {
   // The shape the dashboard produces if `credentials: 'omit'` is ever dropped
   // from src/services/weather.ts. It must still be the shared public response —
-  // otherwise a signed-in browser could mint a session-flavoured entry at the
-  // shared cache key.
+  // otherwise a cookie-carrying browser could mint a credential-flavoured
+  // entry at the shared cache key.
   await withMockedBootstrapAuth({ entitlement: activeApiEntitlement() }, async () => {
-    const token = 'wms_test-browser-session';
-    const resp = await handler(makePublicWeatherBootstrapRequest({ Cookie: `wm-session=${token}` }));
+    const token = 'test-browser-cookie';
+    const resp = await handler(makePublicWeatherBootstrapRequest({ Cookie: `session=${token}` }));
 
     assert.equal(resp.status, 200);
     assertPublicCorsHeaders(resp);
@@ -466,7 +461,7 @@ test('HEAD on the public weather URL is not the public path', async () => {
 });
 
 test('explicit public fast-tier bootstrap is CDN-cacheable — restores the #5249 shield', async () => {
-  // The regression: dashboard boots carry an anonymous wm-session cookie, so
+  // The regression: dashboard boots carried an anonymous session cookie, so
   // successful tier reads returned no-store and every boot re-read the full
   // registry from Upstash. A credential-less tier read serves the shared public
   // seed payload and MUST carry the CDN shared-cache shield.
@@ -558,12 +553,12 @@ for (const [label, bootstrapPipelineBody] of [
   });
 }
 
-test('session-cookie legacy tier bootstrap stays no-store', async () => {
+test('cookie-carrying legacy tier bootstrap stays no-store', async () => {
   // The legacy tier URL remains credentialed and cannot share the explicit
   // public=1 cache entry.
   await withMockedBootstrapAuth({ entitlement: activeApiEntitlement() }, async () => {
-    const token = 'wms_test-browser-session';
-    const resp = await handler(makeTierBootstrapRequest('fast', { Cookie: `wm-session=${token}` }));
+    const token = 'test-browser-cookie';
+    const resp = await handler(makeTierBootstrapRequest('fast', { Cookie: `session=${token}` }));
 
     assert.equal(resp.status, 200);
     assertNonSharedCacheHeaders(resp);
@@ -664,7 +659,7 @@ test('public on-demand URL keeps ONE contract even when credentials are attached
     entitlement: activeApiEntitlement(),
     bootstrapPipelineBody: presentOnDemandPipelineBody(),
   }, async () => {
-    const resp = await handler(makePublicOnDemandRequest('cyberThreats', { Cookie: 'wm-session=whatever' }));
+    const resp = await handler(makePublicOnDemandRequest('cyberThreats', { Cookie: 'session=whatever' }));
 
     assert.equal(resp.status, 200);
     assertSharedCacheHeaders(resp);
@@ -818,161 +813,3 @@ for (const [key, field] of Object.entries({ imfMacro: 'inflationPct', imfGrowth:
     });
   });
 }
-
-// ── Desktop keys (plan 2026-10-25-001 U4) ───────────────────────────────────
-// A desktop key, or a downgraded owner's api key within `maxDesktopKeys`, is
-// served what a signed-in Pro session gets, under one per-owner daily ceiling
-// plus a per-minute burst bucket (KTD4–KTD6). The Redis fake below is
-// stateful so the counter can be observed across requests and keys.
-
-const DESKTOP_KEY = 'wm_fedcba9876543210fedcba9876543210fedcba98';
-const DESKTOP_KEY_2 = 'wm_0123456789abcdef0123456789abcdef01234568';
-const DOWNGRADED_KEYS = [
-  'wm_1111111111111111111111111111111111111111',
-  'wm_2222222222222222222222222222222222222222',
-  'wm_3333333333333333333333333333333333333333',
-];
-
-async function sha256HexForTest(value) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
-  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, '0')).join('');
-}
-
-// Every desktop scenario runs on a frozen clock (midday UTC, mid-minute) so the
-// day and minute counter names the test computes and the ones the meter
-// computes cannot straddle a UTC-midnight or minute boundary mid-run. Inputs
-// that mean "now" are derived from the same instant, never from the real clock.
-const FROZEN_NOW = Date.UTC(2026, 9, 25, 12, 0, 30);
-
-function utcDateForTest(now = new Date(FROZEN_NOW)) {
-  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`;
-}
-const desktopDayKey = (userId) => `rl:desktopkey:day:${userId}:${utcDateForTest()}`;
-const desktopMinuteKey = (userId) => `rl:desktopkey:min:${userId}:${Math.floor(FROZEN_NOW / 60_000)}`;
-
-const proDesktopEntitlement = (overrides = {}) => ({
-  planKey: 'pro_monthly',
-  validUntil: FROZEN_NOW + 86_400_000,
-  features: {
-    tier: 1,
-    apiAccess: false,
-    apiRateLimit: 60,
-    maxDashboards: 10,
-    prioritySupport: false,
-    exportFormats: [],
-    mcpAccess: true,
-    desktopKeyAccess: true,
-    maxDesktopKeys: 2,
-    planLimits: { desktopKeyRequestsPerDay: 7_500, desktopKeyBurstPerMinute: 120 },
-  },
-  ...overrides,
-});
-
-const apiStarterEntitlement = () => ({
-  ...activeApiEntitlement(),
-  validUntil: FROZEN_NOW + 86_400_000,
-  features: {
-    ...activeApiEntitlement().features,
-    desktopKeyAccess: false,
-    maxDesktopKeys: 0,
-    planLimits: { desktopKeyRequestsPerDay: 0, desktopKeyBurstPerMinute: 0 },
-  },
-});
-
-async function withDesktopBootstrapAuth({ keys, entitlements, seed = {}, failDesktopCounter = false }, fn) {
-  mock.timers.enable({ apis: ['Date'], now: FROZEN_NOW });
-  const restoreEnv = snapshotEnv([
-    'CONVEX_SITE_URL',
-    'CONVEX_SERVER_SHARED_SECRET',
-    'UPSTASH_REDIS_REST_URL',
-    'UPSTASH_REDIS_REST_TOKEN',
-    'WORLDMONITOR_VALID_KEYS',
-    'VERCEL_ENV',
-  ]);
-  const originalFetch = globalThis.fetch;
-  process.env.CONVEX_SITE_URL = 'https://convex.test';
-  process.env.CONVEX_SERVER_SHARED_SECRET = 'shared-secret';
-  process.env.UPSTASH_REDIS_REST_URL = 'https://upstash.test';
-  process.env.UPSTASH_REDIS_REST_TOKEN = 'redis-token';
-  process.env.WORLDMONITOR_VALID_KEYS = ENTERPRISE_KEY;
-  delete process.env.VERCEL_ENV;
-
-  const rowsByHash = new Map();
-  for (const [key, row] of Object.entries(keys)) rowsByHash.set(await sha256HexForTest(key), row);
-  const redis = new Map([
-    [MARKET_QUOTES_REDIS_KEY, JSON.stringify(SEEDED_MARKET_QUOTES)],
-    ...Object.entries(seed).map(([k, v]) => [k, String(v)]),
-  ]);
-
-  const run = (command) => {
-    const [verb, key, ...args] = command;
-    switch (String(verb).toUpperCase()) {
-      case 'GET': return { result: redis.get(key) ?? null };
-      case 'SET': redis.set(key, String(args[0])); return { result: 'OK' };
-      case 'DEL': return { result: redis.delete(key) ? 1 : 0 };
-      case 'INCR': { const next = Number(redis.get(key) ?? 0) + 1; redis.set(key, String(next)); return { result: next }; }
-      case 'DECR': { const next = Number(redis.get(key) ?? 0) - 1; redis.set(key, String(next)); return { result: next }; }
-      case 'EXPIRE': return { result: redis.has(key) ? 1 : 0 };
-      case 'TTL': return { result: 60 };
-      default: return { result: null };
-    }
-  };
-
-  globalThis.fetch = async (input, init) => {
-    const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
-    if (new URL(url).hostname === 'upstash.test') {
-      const commands = JSON.parse(String(init?.body || '[]'));
-      if (failDesktopCounter && commands.some((c) => String(c[1] ?? '').startsWith('rl:desktopkey:'))) {
-        return new Response(JSON.stringify({ error: 'redis unavailable' }), { status: 503 });
-      }
-      return new Response(JSON.stringify(commands.map(run)), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    }
-    if (url.endsWith('/api/internal-validate-api-key')) {
-      const { keyHash } = JSON.parse(String(init?.body || '{}'));
-      return new Response(JSON.stringify(rowsByHash.get(keyHash) ?? null), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    }
-    if (url.endsWith('/api/internal-entitlements')) {
-      const { userId } = JSON.parse(String(init?.body || '{}'));
-      const value = entitlements[userId];
-      if (value && value.__status) return new Response('{}', { status: value.__status });
-      return new Response(JSON.stringify(value ?? null), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    }
-    return originalFetch(input, init);
-  };
-
-  try {
-    return await fn({ redis, rowsByHash, entitlements });
-  } finally {
-    globalThis.fetch = originalFetch;
-    restoreEnv();
-    mock.timers.reset();
-  }
-}
-
-// Convex validateKeyByHash always reports `activeKeyRank` (desktop rows cannot
-// predate it); rank 0 is the owner's oldest key unless a scenario says otherwise.
-const desktopRow = (userId, overrides = {}) => ({ id: `key_${userId}`, userId, name: 'laptop', keyKind: 'desktop', activeKeyRank: 0, ...overrides });
-
-// The seeded bootstrap payload every desktop scenario is served. `marketQuotes`
-// is the key makeBootstrapRequest asks for; its Redis name comes from the
-// shared registry (shared/bootstrap-tier-keys.js).
-const MARKET_QUOTES_REDIS_KEY = 'market:stocks-bootstrap:v1';
-const SEEDED_MARKET_QUOTES = { quotes: [{ symbol: 'SPY', price: 512.34, changePct: 0.42 }], updatedAt: '2026-10-25T12:00:00.000Z' };
-
-
-
-
-
-
-
-
-
-
-test('R5 (bootstrap): an API-plan owner\'s desktop keys are served regardless of rank (0 slots to rank against)', async () => {
-  await withDesktopBootstrapAuth({
-    keys: { [DESKTOP_KEY]: desktopRow('upgraded', { activeKeyRank: 7 }) },
-    entitlements: { upgraded: apiStarterEntitlement() },
-  }, async () => {
-    assert.equal((await handler(makeBootstrapRequest({ 'X-WorldMonitor-Key': DESKTOP_KEY }))).status, 200);
-  });
-});

@@ -452,12 +452,9 @@ async function loadEventHandlerManager(): Promise<EventHandlerManagerCtor> {
       };
     `],
     ['@/services/i18n', 'export function t(key) { return key; }'],
-    ['@/services/widget-store', 'export function deleteWidget(){} export function getWidget(){ return null; } export function saveWidget(){} export function isProUser(){ return globalThis.__missionIsProUser === true; } export function isProTierResolved(){ return globalThis.__missionIsProTierResolved === true; }'],
-    ['@/services/runtime', 'export function isDesktopRuntime(){ return false; }'],
-    ['@/services/tauri-bridge', 'export async function invokeTauri(){ return null; } export function hasTauriInvokeBridge(){ return false; }'],
+    ['@/services/widget-store', 'export function deleteWidget(){} export function getWidget(){ return null; } export function saveWidget(){}'],
     ['@/services/gps-interference', 'export function getCachedGpsInterference(){ return null; }'],
     ['@/services/ml-worker', 'export const mlWorker = {};'],
-    ['@/services/auth-state', 'export function getAuthState(){ return { user: { role: "pro" } }; } export function subscribeAuthState(){ return () => {}; }'],
     ['@/services/tv-mode', 'export class TvModeController { constructor(){} toggle(){} updatePanelKeys(){} get active(){ return false; } }'],
     ['@/components', `
       export class PlaybackControl { onSnapshot(){} getElement(){ return document.createElement('div'); } }
@@ -469,12 +466,9 @@ async function loadEventHandlerManager(): Promise<EventHandlerManagerCtor> {
     ['@/components/PlaybackControl', 'export class PlaybackControl { onSnapshot(){} getElement(){ return document.createElement("div"); } }'],
     ['@/components/StatusPanel', 'export class StatusPanel {}'],
     ['@/components/PizzIntIndicator', 'export class PizzIntIndicator { getElement(){ return document.createElement("div"); } update(){} }'],
-    ['@/components/LlmStatusIndicator', 'export class LlmStatusIndicator { getElement(){ return document.createElement("div"); } update(){} }'],
     ['@/components/CustomWidgetPanel', 'export class CustomWidgetPanel { constructor(spec){ this.spec = spec; } getElement(){ return document.createElement("div"); } }'],
     ['@/components/DownloadBanner', 'export function detectPlatform(){ return "web"; } export const allButtons = []; export function buttonsForPlatform(){ return []; }'],
     ['@/components/UnifiedSettings', 'export class UnifiedSettings { refreshPanelToggles(){} open(){} }'],
-    ['@/components/AuthLauncher', 'export class AuthLauncher { open(){} close(){} destroy(){} }'],
-    ['@/components/AuthHeaderWidget', 'export class AuthHeaderWidget { constructor(){} getElement(){ return document.createElement("div"); } }'],
   ]);
   const plugin = {
     name: 'mission-event-handler-stubs',
@@ -521,7 +515,6 @@ function makePanelSettings(variant: string): Record<string, PanelConfig> {
       enabled: false,
     };
   }
-  settings['runtime-config'] = { name: 'Desktop Configuration', enabled: true, priority: 2 };
   settings['cw-market-note'] = { name: 'Market Note', enabled: true, priority: 3 };
   settings['mcp-risk-feed'] = { name: 'Risk Feed', enabled: false, priority: 3 };
   return settings;
@@ -536,7 +529,7 @@ function enabledPanelKeys(settings: Record<string, PanelConfig>): string[] {
 
 function enabledWorkspacePanelKeys(settings: Record<string, PanelConfig>): string[] {
   return enabledPanelKeys(settings).filter(
-    (key) => key !== 'map' && key !== 'runtime-config' && !key.startsWith('cw-') && !key.startsWith('mcp-'),
+    (key) => key !== 'map' && !key.startsWith('cw-') && !key.startsWith('mcp-'),
   );
 }
 
@@ -761,7 +754,7 @@ describe('applyMissionPresetToState', () => {
           variant,
         );
         for (const panelId of enabledPanelKeys(applied.panelSettings)) {
-          if (panelId === 'map' || panelId === 'runtime-config' || panelId.startsWith('cw-') || panelId.startsWith('mcp-')) {
+          if (panelId === 'map' || panelId.startsWith('cw-') || panelId.startsWith('mcp-')) {
             continue;
           }
           assert.ok(

@@ -1778,7 +1778,7 @@ export class PanelLayoutManager implements AppModule {
     bottomSet: string[],
   ): void {
     const isDynamicPanel = (k: string) =>
-      !ALL_PANELS[k] && (k === 'runtime-config' || k.startsWith('cw-') || k.startsWith('mcp-'));
+      !ALL_PANELS[k] && (k.startsWith('cw-') || k.startsWith('mcp-'));
 
     const next: Record<string, PanelConfig> = {};
     for (const [key, config] of Object.entries(panelSettings)) {
@@ -3087,7 +3087,7 @@ export class PanelLayoutManager implements AppModule {
     if (import.meta.env.DEV) {
       const configured = new Set(Object.keys(ALL_PANELS).filter(k => k !== 'map'));
       const created = new Set(Object.keys(this.ctx.panels));
-      const extra = [...created].filter(k => !configured.has(k) && k !== 'runtime-config' && !k.startsWith('cw-') && !k.startsWith('mcp-'));
+      const extra = [...created].filter(k => !configured.has(k) && !k.startsWith('cw-') && !k.startsWith('mcp-'));
       if (extra.length) console.warn('[PanelLayoutManager] Panels created but not in ALL_PANELS:', extra);
     }
   }

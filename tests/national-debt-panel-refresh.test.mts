@@ -100,8 +100,6 @@ async function loadNationalDebtPanel() {
       }
     `],
     ['runtime-stub', `export function isDesktopRuntime() { return false; }`],
-    ['tauri-bridge-stub', `export function invokeTauri() { return Promise.reject(new Error('not wired in test')); }\nexport function hasTauriInvokeBridge() { return false; }`],
-    ['analytics-stub', `export function trackLayoutCustomized() {}`],
     ['ai-flow-settings-stub', `export function getAiFlowSettings() { return { badgeAnimation: false }; }`],
     ['runtime-config-stub', `export function getSecretState() { return { present: true }; }`],
     ['theme-colors-stub', `export function getCSSColor() { return '#000'; }`],
@@ -158,9 +156,6 @@ async function loadNationalDebtPanel() {
     ['../services/i18n', 'i18n-stub'],
     ['@/services/runtime', 'runtime-stub'],
     ['../services/runtime', 'runtime-stub'],
-    ['@/services/tauri-bridge', 'tauri-bridge-stub'],
-    ['../services/tauri-bridge', 'tauri-bridge-stub'],
-    ['@/services/analytics', 'analytics-stub'],
     ['@/services/ai-flow-settings', 'ai-flow-settings-stub'],
     ['@/services/runtime-config', 'runtime-config-stub'],
     ['@/utils/theme-colors', 'theme-colors-stub'],

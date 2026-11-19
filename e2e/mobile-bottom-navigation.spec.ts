@@ -47,7 +47,6 @@ test.describe('mobile primary navigation (#5201 P0)', () => {
 
     await page.locator('[data-mobile-tab="more"]').click();
     await expect(page.locator('#mobileMenu')).toHaveClass(/open/);
-    await expect(page.locator('#mobileAuthFallback, #mobileAuthWidgetMount .auth-signin-btn').first()).toBeVisible();
     await page.evaluate(() => history.back());
     await expect(page.locator('#mobileMenu')).not.toHaveClass(/open/);
     await expect(page.locator('[data-mobile-tab="today"]')).toHaveAttribute('aria-current', 'page');
@@ -61,32 +60,6 @@ test.describe('mobile primary navigation (#5201 P0)', () => {
     await page.reload({ waitUntil: 'domcontentloaded' });
     await expect(page.locator('html')).toHaveAttribute('data-wm-event-handlers-ready', 'true', { timeout: 45_000 });
     await expect(page.locator('#mapSection')).toHaveClass(/collapsed/);
-  });
-
-  test('keeps the account entry visible in the header before More opens', async ({ page }) => {
-    const headerAuth = page.locator('#authWidgetMount');
-    const signIn = headerAuth.locator('.auth-signin-btn');
-
-    await expect(page.locator('#mobileMenu')).not.toHaveClass(/open/);
-    await expect(headerAuth).toBeVisible();
-    await expect(signIn).toBeVisible();
-    await expect(signIn).toHaveAccessibleName('Sign In');
-    await expect(headerAuth.locator('.auth-signup-link')).toHaveCount(0);
-
-    const box = await signIn.boundingBox();
-    const headerBox = await page.locator('.header').boundingBox();
-    expect(box).not.toBeNull();
-    expect(headerBox).not.toBeNull();
-    expect(box?.width).toBeGreaterThanOrEqual(44);
-    expect(box?.height).toBeGreaterThanOrEqual(44);
-    expect(box?.y).toBeGreaterThanOrEqual(headerBox?.y ?? Number.POSITIVE_INFINITY);
-    expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(
-      (headerBox?.y ?? 0) + (headerBox?.height ?? 0),
-    );
-
-    const logoBox = await page.locator('.logo-mobile').boundingBox();
-    expect(logoBox).not.toBeNull();
-    expect(logoBox?.height).toBeLessThanOrEqual(24);
   });
 
   test('uses one Back press for the More to Region sheet transition', async ({ page }) => {

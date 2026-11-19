@@ -108,8 +108,7 @@ describe('web makes no direct feed requests', () => {
     expect(statusPanel.updateFeed).toHaveBeenCalledWith('Politics', { status: 'error', errorMessage: 'Digest unavailable' });
   });
 
-  it('even with the switch on, for preset, cross-edition and intel panels', async () => {
-    mocks.toggles.newsOutageFallback = true;
+  it('never fetches feeds directly for preset, cross-edition and intel panels', async () => {
     const { loader } = await makeLoader();
 
     await loader.loadNewsCategory('politics', feeds(['A']), null, false, OPTIONS);

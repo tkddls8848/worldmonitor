@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, test } from 'node:test';
 import handler, { parseMiitNews, renderMiitRss } from './miit-news.js';
 
@@ -213,11 +212,20 @@ test('fresh official listing refreshes both the short cache and the last-good co
   assert.deepEqual(writes.sort(), [['miit:news-listing:last-good:v1', '1209600'], ['miit:news-listing:v1', '300']]);
 });
 
-test('listing TimeoutError / AbortError capture is downgraded to warning', () => {
-  // captureSilentError is a no-op under NODE_TEST_CONTEXT, so pin the gate in
-  // source the same way oauth/token contract tests pin capture shape. Real
-  // envelope delivery stays covered by api/_sentry-common.test.mjs.
-  const src = readFileSync(new URL('./miit-news.js', import.meta.url), 'utf8');
-  assert.match(src, /errName === 'AbortError' \|\| errName === 'TimeoutError'/);
-  assert.match(src, /isTransientTimeout \? \{ level: 'warning' \} : \{\}/);
+test('a failed listing is logged once before the last-good fallback', async () => {
+  const { redis } = redisWithLastGood(null);
+  globalThis.fetch = async (url, options) => redis(url, options)
+    ?? (() => { throw new DOMException('The operation was aborted due to timeout', 'TimeoutError'); })();
+  const warnings = [];
+  const originalWarn = console.warn;
+  console.warn = (...args) => { warnings.push(args); };
+  try {
+    const response = await handler(new Request('https://api.worldmonitor.app/api/miit-news'));
+    assert.equal(response.status, 502);
+  } finally {
+    console.warn = originalWarn;
+  }
+  assert.equal(warnings.length, 1);
+  assert.equal(warnings[0][0], '[miit-news] listing failed');
+  assert.equal(warnings[0][1].name, 'TimeoutError');
 });

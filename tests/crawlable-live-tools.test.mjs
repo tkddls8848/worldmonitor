@@ -36,7 +36,7 @@ import { pizzaIndexReading, renderPizzaIndexSection } from '../scripts/live-page
 
 const NOW = Date.UTC(2026, 6, 24, 12);
 
-function anonymousSessionResponse() {
+function unrelatedOkResponse() {
   return {
     ok: true,
     status: 200,
@@ -327,7 +327,7 @@ describe('crawlable live intelligence view models', () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async (url) => (String(url).includes('get-chokepoint-status')
       ? { ok: true, status: 200, json: async () => ({ ...HORMUZ_PORTWATCH_PAYLOAD, fetchedAt: new Date(Date.now() - 60_000).toISOString() }) }
-      : anonymousSessionResponse());
+      : unrelatedOkResponse());
     try {
       await loadChokepoint(tool);
     } finally {
@@ -362,7 +362,7 @@ describe('crawlable live intelligence view models', () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async (url) => (String(url).includes('get-chokepoint-status')
       ? { ok: true, status: 200, json: async () => ({ ...HORMUZ_PORTWATCH_PAYLOAD, fetchedAt: new Date(readingAt - 60_000).toISOString() }) }
-      : anonymousSessionResponse());
+      : unrelatedOkResponse());
     try {
       await loadChokepoint(tool);
     } finally {
@@ -639,7 +639,7 @@ describe('crawlable live intelligence view models', () => {
           }),
         };
       }
-      return anonymousSessionResponse();
+      return unrelatedOkResponse();
     };
     try {
       await loadChokepoint(tool);
@@ -780,7 +780,7 @@ describe('crawlable live intelligence view models', () => {
           }),
         };
       }
-      return anonymousSessionResponse();
+      return unrelatedOkResponse();
     };
     try {
       await loadChokepoint(tool);
@@ -858,7 +858,7 @@ describe('crawlable live intelligence view models', () => {
           }),
         };
       }
-      return anonymousSessionResponse();
+      return unrelatedOkResponse();
     };
     try {
       await loadChokepoint(tool);
@@ -930,7 +930,7 @@ describe('crawlable live intelligence view models', () => {
           }),
         };
       }
-      return anonymousSessionResponse();
+      return unrelatedOkResponse();
     };
     try {
       await loadChokepoint(tool);
@@ -1035,7 +1035,7 @@ describe('crawlable live intelligence view models', () => {
             officialLatestDate: available ? '2026-10-18' : '', officialLatestTotal: available ? 2 : 0, officialAvg7d: available ? 3.7 : 0,
           } }],
       }) }
-      : anonymousSessionResponse();
+      : unrelatedOkResponse();
     try {
       await loadChokepoint(tool);
       const withheld = tool.querySelector('[data-chokepoint-open-status]').textContent;
@@ -1625,218 +1625,6 @@ describe('crawlable live intelligence view models', () => {
     assert.equal(view.flights[0].aircraftType, 'Reconnaissance');
   });
 
-  it('mints an anonymous session before a session-gated live request', async () => {
-    const calls = [];
-    const responses = [
-      anonymousSessionResponse(),
-      { ok: true, status: 200, json: async () => ({ value: 42 }) },
-    ];
-    const fetchImpl = async (url, options) => {
-      calls.push({ url, method: options.method || 'GET', credentials: options.credentials });
-      return responses.shift();
-    };
-
-    const payload = await requestLiveJson('/api/example', {
-      fetchImpl,
-      preflightSession: true,
-    });
-    assert.deepEqual(payload, { value: 42 });
-    assert.deepEqual(calls, [
-      { url: '/api/wm-session', method: 'POST', credentials: 'include' },
-      { url: '/api/example', method: 'GET', credentials: 'include' },
-    ]);
-  });
-
-  it('reuses a fresh anonymous session for serial protected requests', async () => {
-    const calls = [];
-    const fetchImpl = async (url, options) => {
-      calls.push({ url, method: options.method || 'GET' });
-      if (url === '/api/wm-session') return anonymousSessionResponse();
-      return { ok: true, status: 200, json: async () => ({ url }) };
-    };
-
-    await requestLiveJson('/api/one', { fetchImpl, preflightSession: true });
-    await requestLiveJson('/api/two', { fetchImpl, preflightSession: true });
-    assert.deepEqual(calls.map(({ url }) => url), [
-      '/api/wm-session',
-      '/api/one',
-      '/api/two',
-    ]);
-  });
-
-  it('reuses a fresh anonymous session when browser storage is unavailable', async () => {
-    globalThis.sessionStorage = {
-      getItem: () => {
-        throw new Error('storage disabled');
-      },
-      setItem: () => {
-        throw new Error('storage disabled');
-      },
-      removeItem: () => {
-        throw new Error('storage disabled');
-      },
-    };
-    const calls = [];
-    const fetchImpl = async (url, options) => {
-      calls.push({ url, method: options.method || 'GET' });
-      if (url === '/api/wm-session') return anonymousSessionResponse();
-      return { ok: true, status: 200, json: async () => ({ url }) };
-    };
-
-    await requestLiveJson('/api/one', { fetchImpl, preflightSession: true });
-    await requestLiveJson('/api/two', { fetchImpl, preflightSession: true });
-    assert.deepEqual(calls.map(({ url }) => url), [
-      '/api/wm-session',
-      '/api/one',
-      '/api/two',
-    ]);
-  });
-
-  it('refreshes a stored session after a protected request returns 401', async () => {
-    globalThis.sessionStorage.setItem(
-      'wm-session-exp',
-      JSON.stringify({ exp: Date.now() + 60 * 60 * 1000 }),
-    );
-    const calls = [];
-    const responses = [
-      { ok: false, status: 401 },
-      anonymousSessionResponse(),
-      { ok: true, status: 200, json: async () => ({ value: 42 }) },
-    ];
-    const fetchImpl = async (url, options) => {
-      calls.push({ url, method: options.method || 'GET' });
-      return responses.shift();
-    };
-
-    assert.deepEqual(
-      await requestLiveJson('/api/example', { fetchImpl, preflightSession: true }),
-      { value: 42 },
-    );
-    assert.deepEqual(calls, [
-      { url: '/api/example', method: 'GET' },
-      { url: '/api/wm-session', method: 'POST' },
-      { url: '/api/example', method: 'GET' },
-    ]);
-  });
-
-  it('does not send a session-gated live request when session minting fails', async () => {
-    const calls = [];
-    const fetchImpl = async (url, options) => {
-      calls.push({ url, method: options.method || 'GET', credentials: options.credentials });
-      return { ok: false, status: 503 };
-    };
-
-    await assert.rejects(
-      requestLiveJson('/api/example', { fetchImpl, preflightSession: true }),
-      /Anonymous session request failed \(503\)/,
-    );
-    assert.deepEqual(calls, [
-      { url: '/api/wm-session', method: 'POST', credentials: 'include' },
-    ]);
-  });
-
-  it('coalesces concurrent session preflights before protected request fan-out', async () => {
-    const calls = [];
-    let releaseSession;
-    const sessionResponse = new Promise((resolve) => {
-      releaseSession = resolve;
-    });
-    const fetchImpl = async (url, options) => {
-      calls.push({ url, method: options.method || 'GET', credentials: options.credentials });
-      if (url === '/api/wm-session') return sessionResponse;
-      return { ok: true, status: 200, json: async () => ({ url }) };
-    };
-
-    const requests = [
-      requestLiveJson('/api/one', { fetchImpl, preflightSession: true }),
-      requestLiveJson('/api/two', { fetchImpl, preflightSession: true }),
-    ];
-    await Promise.resolve();
-    assert.equal(
-      calls.filter(({ url }) => url === '/api/wm-session').length,
-      1,
-      'concurrent protected calls should share one session mint',
-    );
-
-    releaseSession(anonymousSessionResponse());
-    assert.deepEqual(await Promise.all(requests), [
-      { url: '/api/one' },
-      { url: '/api/two' },
-    ]);
-    assert.deepEqual(calls.map(({ url }) => url), [
-      '/api/wm-session',
-      '/api/one',
-      '/api/two',
-    ]);
-  });
-
-  it('does not remint for a late 401 after another request refreshed the session', async () => {
-    let resolveFirst;
-    let resolveSecond;
-    const firstResponse = new Promise((resolve) => {
-      resolveFirst = resolve;
-    });
-    const secondResponse = new Promise((resolve) => {
-      resolveSecond = resolve;
-    });
-    let resolveFirstRetryStarted;
-    const firstRetryStarted = new Promise((resolve) => {
-      resolveFirstRetryStarted = resolve;
-    });
-    const calls = [];
-    const requestCounts = new Map();
-    const fetchImpl = async (url, options) => {
-      calls.push({ url, method: options.method || 'GET' });
-      if (url === '/api/wm-session') return anonymousSessionResponse();
-      const count = (requestCounts.get(url) || 0) + 1;
-      requestCounts.set(url, count);
-      if (count > 1) {
-        if (url === '/api/one') resolveFirstRetryStarted();
-        return { ok: true, status: 200, json: async () => ({ url }) };
-      }
-      return url === '/api/one' ? firstResponse : secondResponse;
-    };
-
-    const requests = [
-      requestLiveJson('/api/one', { fetchImpl, preflightSession: true }),
-      requestLiveJson('/api/two', { fetchImpl, preflightSession: true }),
-    ];
-    await Promise.resolve();
-    resolveFirst({ ok: false, status: 401 });
-    await firstRetryStarted;
-    resolveSecond({ ok: false, status: 401 });
-    assert.deepEqual(await Promise.all(requests), [
-      { url: '/api/one' },
-      { url: '/api/two' },
-    ]);
-    assert.equal(
-      calls.filter(({ url }) => url === '/api/wm-session').length,
-      2,
-      'the late 401 should reuse the newer session generation',
-    );
-  });
-
-  it('mints an anonymous session after a 401 and retries the original request once', async () => {
-    const calls = [];
-    const responses = [
-      { ok: false, status: 401 },
-      anonymousSessionResponse(),
-      { ok: true, status: 200, json: async () => ({ value: 42 }) },
-    ];
-    const fetchImpl = async (url, options) => {
-      calls.push({ url, method: options.method || 'GET', credentials: options.credentials });
-      return responses.shift();
-    };
-
-    const payload = await requestLiveJson('/api/example', { fetchImpl });
-    assert.deepEqual(payload, { value: 42 });
-    assert.deepEqual(calls, [
-      { url: '/api/example', method: 'GET', credentials: 'include' },
-      { url: '/api/wm-session', method: 'POST', credentials: 'include' },
-      { url: '/api/example', method: 'GET', credentials: 'include' },
-    ]);
-  });
-
   it('aborts a live request at the configured request bound', async () => {
     const fetchImpl = async (_url, options) => new Promise((_resolve, reject) => {
       options.signal.addEventListener('abort', () => reject(new Error('request aborted')), {
@@ -1958,7 +1746,7 @@ describe('crawlable live intelligence view models', () => {
           }),
         };
       }
-      return anonymousSessionResponse();
+      return unrelatedOkResponse();
     };
     try {
       await loadCountryRisk(tool);
@@ -2111,7 +1899,7 @@ describe('crawlable live intelligence view models', () => {
     const originalFetch = globalThis.fetch;
     let phase = 'hydrate';
     globalThis.fetch = async (url) => {
-      if (String(url).includes('/api/wm-session')) return anonymousSessionResponse();
+      if (String(url).includes('/api/wm-session')) return unrelatedOkResponse();
       if (phase === 'hydrate') {
         return {
           ok: true,
@@ -2188,7 +1976,7 @@ describe('crawlable live intelligence view models', () => {
     const tool = document.querySelector('[data-live-cii-ranking]');
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async (url) => {
-      if (String(url).includes('/api/wm-session')) return anonymousSessionResponse();
+      if (String(url).includes('/api/wm-session')) return unrelatedOkResponse();
       return {
         ok: true,
         status: 200,
@@ -2246,7 +2034,7 @@ describe('crawlable live intelligence view models', () => {
     const tool = document.querySelector('[data-live-cii-ranking]');
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async (url) => {
-      if (String(url).includes('/api/wm-session')) return anonymousSessionResponse();
+      if (String(url).includes('/api/wm-session')) return unrelatedOkResponse();
       return {
         ok: true,
         status: 200,
@@ -2310,7 +2098,7 @@ describe('crawlable live intelligence view models', () => {
     const originalFetch = globalThis.fetch;
     let phase = 'partial';
     globalThis.fetch = async (url) => {
-      if (String(url).includes('/api/wm-session')) return anonymousSessionResponse();
+      if (String(url).includes('/api/wm-session')) return unrelatedOkResponse();
       if (phase === 'partial') {
         return {
           ok: true,
@@ -2372,7 +2160,7 @@ describe('crawlable live intelligence view models', () => {
     const originalFetch = globalThis.fetch;
     let phase = 'ready';
     globalThis.fetch = async (url) => {
-      if (String(url).includes('/api/wm-session')) return anonymousSessionResponse();
+      if (String(url).includes('/api/wm-session')) return unrelatedOkResponse();
       if (phase === 'ready') {
         return {
           ok: true,
@@ -2429,7 +2217,7 @@ describe('crawlable live intelligence view models', () => {
     const tool = document.querySelector('[data-live-country-risk]');
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async (url) => {
-      if (String(url).includes('/api/wm-session')) return anonymousSessionResponse();
+      if (String(url).includes('/api/wm-session')) return unrelatedOkResponse();
       return {
         ok: true,
         status: 200,
@@ -2653,7 +2441,7 @@ describe('Pentagon Pizza Index live reading', () => {
     }
   }
 
-  it('hydrates the level, venues, and UTC stamp through the session-gated route', async () => {
+  it('hydrates the level, venues, and UTC stamp from the live route', async () => {
     const tool = pizzaTool();
     const fresh = payload({ updatedAt: Date.now() - 5 * 60_000 });
     const requested = [];
@@ -2662,10 +2450,10 @@ describe('Pentagon Pizza Index live reading', () => {
       if (String(url).includes('get-pizzint-status')) {
         return { ok: true, status: 200, json: async () => fresh };
       }
-      return anonymousSessionResponse();
+      return unrelatedOkResponse();
     }, () => loadPizzInt(tool));
 
-    assert.deepEqual(requested, ['/api/wm-session', '/api/intelligence/v1/get-pizzint-status']);
+    assert.deepEqual(requested, ['/api/intelligence/v1/get-pizzint-status']);
     assert.equal(tool.dataset.state, 'ready');
     assert.equal(tool.querySelector('[data-live-status]').textContent, 'Live reading');
     assert.equal(tool.querySelector('[data-pizzint-level]').textContent, '4');
@@ -2683,7 +2471,7 @@ describe('Pentagon Pizza Index live reading', () => {
     const tool = pizzaTool();
     await withFetch(async (url) => (String(url).includes('get-pizzint-status')
       ? { ok: true, status: 200, json: async () => ({ tensionPairs: [] }) }
-      : anonymousSessionResponse()), () => loadPizzInt(tool));
+      : unrelatedOkResponse()), () => loadPizzInt(tool));
 
     assert.equal(tool.dataset.state, 'empty');
     assert.equal(tool.querySelector('[data-live-status]').textContent, 'Live feed checked');
@@ -2705,7 +2493,7 @@ describe('Pentagon Pizza Index live reading', () => {
         statusRequests += 1;
         return { ok: true, status: 200, json: async () => payload({ updatedAt: Date.now() - 5 * 60_000 }) };
       }
-      return anonymousSessionResponse();
+      return unrelatedOkResponse();
     };
     await withFetch(handler, async () => {
       await loadPizzInt(tool);
@@ -2758,7 +2546,7 @@ describe('Pentagon Pizza Index live reading', () => {
     const gate = new Promise((resolve) => { release = resolve; });
     const later = payload({ defconLevel: 2, updatedAt: Date.now() - 60_000 });
     await withFetch(async (url) => {
-      if (!String(url).includes('get-pizzint-status')) return anonymousSessionResponse();
+      if (!String(url).includes('get-pizzint-status')) return unrelatedOkResponse();
       await gate;
       return { ok: true, status: 200, json: async () => later };
     }, async () => {
@@ -2784,7 +2572,7 @@ describe('Pentagon Pizza Index live reading', () => {
     const tool = renderedPizzaTool(renderPizzaIndexSection(pizzaIndexReading(payload(), NOW)));
     await withFetch(async (url) => (String(url).includes('get-pizzint-status')
       ? { ok: true, status: 200, json: async () => ({ tensionPairs: [] }) }
-      : anonymousSessionResponse()), () => loadPizzInt(tool));
+      : unrelatedOkResponse()), () => loadPizzInt(tool));
     assert.equal(tool.dataset.state, 'empty');
     assert.equal(tool.querySelector('[data-live-answer]').hidden, true);
 

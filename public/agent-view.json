@@ -1,5 +1,5 @@
 {
-  "$comment": "Machine-readable homepage view served at /?mode=agent (vercel.json rewrite). Structured summary for AI agents instead of marketing HTML. Parity with the MCP server card and agent card is guarded in tests/agent-mode-view.test.mjs.",
+  "$comment": "Machine-readable homepage view served at /?mode=agent. Structured summary for AI agents instead of marketing HTML. Parity with the MCP server card and agent card is guarded in tests/agent-mode-view.test.mjs.",
   "kind": "agent-view",
   "product": "World Monitor",
   "url": "https://www.worldmonitor.app",

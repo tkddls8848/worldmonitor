@@ -151,14 +151,9 @@ export default async function handler(req) {
     }
     return rssResponse(items, CACHE_TTL_SECONDS);
   } catch (error) {
-    // AbortSignal.timeout(10000) on the official listing fetch surfaces as
-    // TimeoutError / AbortError when www.miit.gov.cn is slow or unreachable
-    // from the edge. The handler falls back to last-good; downgrade the Sentry
-    // capture to warning so one-shot upstream timeouts stay queryable without
-    // drowning real listing bugs (empty parse, HTTP non-ok, size limit).
-    // Same gate as api/brief/carousel and api/_relay (WORLDMONITOR-17C).
-    const errName = error instanceof Error ? error.name : '';
-    const isTransientTimeout = errName === 'AbortError' || errName === 'TimeoutError';
+    // A slow or unreachable www.miit.gov.cn surfaces as TimeoutError /
+    // AbortError; the handler falls back to last-good either way.
+    console.warn('[miit-news] listing failed', error);
     // Short CDN lifetime so the edge retries the live listing soon.
     const lastGood = await readLastGood();
     if (lastGood.length > 0) return rssResponse(lastGood, 60);

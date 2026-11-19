@@ -47,7 +47,6 @@ const API_BASE = (process.env.API_BASE || '').replace(/\/$/, '');
 const API_ORIGIN = API_BASE ? new URL(API_BASE).origin : '';
 const RANKING_BASE_URL = API_BASE ? `${API_BASE}/api/resilience/v1/get-resilience-ranking` : '';
 const SCORE_URL = API_BASE ? `${API_BASE}/api/resilience/v1/get-resilience-score` : '';
-const SESSION_URL = API_BASE ? `${API_BASE}/api/wm-session` : '';
 const USER_AGENT = process.env.USER_AGENT
   || 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
 const FORCE_RANKING_REFRESH = (process.env.RESILIENCE_RANKING_REFRESH ?? '1').toLowerCase() !== 'false';
@@ -374,41 +373,10 @@ function baseHeaders() {
   };
 }
 
-function readSetCookies(headers) {
-  if (typeof headers.getSetCookie === 'function') return headers.getSetCookie();
-  const cookie = headers.get('set-cookie');
-  return cookie ? [cookie] : [];
-}
-
-async function mintSessionCookie() {
-  const response = await fetch(SESSION_URL, {
-    method: 'POST',
-    headers: {
-      ...baseHeaders(),
-      'content-type': 'application/json',
-    },
-    body: '{}',
-    signal: AbortSignal.timeout(HTTP_TIMEOUT_MS),
-  });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status} from ${SESSION_URL}: ${await response.text().catch(() => '')}`);
-  }
-
-  const sessionCookie = readSetCookies(response.headers)
-    .map((cookie) => cookie.match(/(?:^|,\s*)(wm-session=[^;]+)/)?.[1])
-    .find(Boolean);
-  if (!sessionCookie) throw new Error(`No wm-session cookie returned by ${SESSION_URL}`);
-  return sessionCookie;
-}
-
 async function buildAuthHeaders() {
   const headers = baseHeaders();
   const apiKey = worldMonitorApiKey();
-  if (apiKey) {
-    headers['X-WorldMonitor-Key'] = apiKey;
-  } else {
-    headers.cookie = await mintSessionCookie();
-  }
+  if (apiKey) headers['X-WorldMonitor-Key'] = apiKey;
   return headers;
 }
 

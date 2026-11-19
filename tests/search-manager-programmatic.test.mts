@@ -16,7 +16,6 @@ import {
   LAYER_REGISTRY,
   getAllowedLayerKeys,
   isLayerCommandAllowed,
-  isLayerEntitled,
   isLayerExecutable,
 } from '../src/config/map-layer-definitions.ts';
 import {
@@ -189,7 +188,6 @@ function createHarness(variant: Variant, runtime: Runtime): new (ctx: any, callb
     'getAllowedLayerKeys',
     'isLayerCommandAllowed',
     'isLayerExecutable',
-    'isLayerEntitled',
     'LAYER_PRESETS',
     'LAYER_KEY_MAP',
     'trackSearchResultSelected',
@@ -282,7 +280,6 @@ function createHarness(variant: Variant, runtime: Runtime): new (ctx: any, callb
     getAllowedLayerKeys,
     isLayerCommandAllowed,
     isLayerExecutable,
-    isLayerEntitled,
     {
       military: ['bases', 'nuclear', 'flights', 'military', 'waterways'],
       finance: ['stockExchanges', 'financialCenters', 'centralBanks', 'commodityHubs', 'economic', 'tradeRoutes'],

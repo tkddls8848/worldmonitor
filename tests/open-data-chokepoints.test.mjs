@@ -571,23 +571,11 @@ function stubFetch(responses) {
 }
 
 describe('open data chokepoint fetch', () => {
-  it('mints an anonymous wm-session and sends it as a cookie', async () => {
-    const { calls, fetchImpl } = stubFetch([{ body: { token: 'tok123' } }, { body: fixtureBody }]);
+  it('requests the chokepoint status without a session', async () => {
+    const { calls, fetchImpl } = stubFetch([{ body: fixtureBody }]);
     const result = await fetchChokepointStatus({ apiBase: 'https://example.test', userAgent: 'wm-open-data-test/1.0', fetchImpl });
     assert.equal(result, fixtureBody);
     assert.deepEqual(calls, [
-      {
-        url: 'https://example.test/api/wm-session',
-        method: 'POST',
-        headers: {
-          'User-Agent': 'wm-open-data-test/1.0',
-          Accept: 'application/json',
-          Origin: 'https://example.test',
-          Referer: 'https://example.test/',
-          'Content-Type': 'application/json',
-        },
-        body: '{}',
-      },
       {
         url: 'https://example.test/api/supply-chain/v1/get-chokepoint-status',
         method: 'GET',
@@ -596,14 +584,13 @@ describe('open data chokepoint fetch', () => {
           Accept: 'application/json',
           Origin: 'https://example.test',
           Referer: 'https://example.test/',
-          Cookie: 'wm-session=tok123',
         },
         body: undefined,
       },
     ]);
   });
 
-  it('sends the service key instead of minting a session', async () => {
+  it('sends the service key when one is configured', async () => {
     const { calls, fetchImpl } = stubFetch([{ body: fixtureBody }]);
     await fetchChokepointStatus({ apiBase: 'https://example.test/', apiKey: 'wm_abc', fetchImpl });
     assert.equal(calls.length, 1);
@@ -636,24 +623,6 @@ describe('open data chokepoint fetch', () => {
       );
       assert.equal(forbidden.calls.length, 1);
 
-      const flakySession = stubFetch([
-        { status: 503, body: {} },
-        { status: 200, body: { token: 'tok_retry' } },
-        { status: 200, body: fixtureBody },
-      ]);
-      assert.equal(await fetchChokepointStatus({ apiBase: 'https://example.test', fetchImpl: flakySession.fetchImpl }), fixtureBody);
-      assert.deepEqual(
-        flakySession.calls.map((call) => call.url),
-        ['https://example.test/api/wm-session', 'https://example.test/api/wm-session', 'https://example.test/api/supply-chain/v1/get-chokepoint-status'],
-      );
-      assert.equal(flakySession.calls[2].headers.Cookie, 'wm-session=tok_retry');
-
-      const deniedSession = stubFetch([{ status: 403, body: {} }]);
-      await assert.rejects(
-        fetchChokepointStatus({ apiBase: 'https://example.test', fetchImpl: deniedSession.fetchImpl }),
-        /HTTP 403 for https:\/\/example\.test\/api\/wm-session/,
-      );
-      assert.equal(deniedSession.calls.length, 1);
     } finally {
       if (prior === undefined) delete process.env.WM_SEED_RETRY_DELAY_MS;
       else process.env.WM_SEED_RETRY_DELAY_MS = prior;

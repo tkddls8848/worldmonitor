@@ -279,6 +279,7 @@ export async function readAcceptedSnapshot<T extends DigestLike>(variant: string
       readable: true,
     };
   } catch (err) {
+    console.warn('[news-lastgood] accepted snapshot read failed', err);
     return { snapshot: null, readable: false };
   }
 }

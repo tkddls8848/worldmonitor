@@ -7,7 +7,6 @@ import {
   getAllowedLayerKeys,
   getCompleteLayerCatalogKeys,
   getOrderedLayerKeys,
-  isLayerEntitled,
   isLayerExecutable,
   resolveLayerLabel,
   type MapVariant,
@@ -158,7 +157,6 @@ function enableUnavailableReason(
   );
   if (runtimeReason) return runtimeReason;
   if (!pageAllowed.has(layerKey)) return 'variant_disallowed';
-  if (!isLayerEntitled(layerKey, snapshot.hasPremium)) return 'layer_not_entitled';
   if (layerKey === 'resilienceScore' && !snapshot.deckGlActive) return 'layer_not_executable';
   if (!isLayerExecutable(layerKey, snapshot.rendererKind)) return 'layer_not_executable';
   if (snapshot.targetCancellationSupported !== true) return 'target_cancellation_unsupported';
@@ -181,7 +179,8 @@ function describeLayer(
     enabled: enabledSet.has(layerKey),
     monitorAvailable: listedAllowed.has(layerKey),
     rendererCompatible: isLayerExecutable(layerKey, snapshot.rendererKind),
-    entitled: isLayerEntitled(layerKey, snapshot.hasPremium),
+    // No layer entitlements in the personal build: every registered layer is entitled.
+    entitled: true,
     available: reason === undefined,
   };
   if (reason) entry.reason = reason;

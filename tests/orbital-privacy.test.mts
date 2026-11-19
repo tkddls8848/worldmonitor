@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { redactSensitiveUrl, scrubSentryCredentials } from '../shared/sensitive-url-params.ts';
+import { redactSensitiveUrl } from '../shared/sensitive-url-params.ts';
 import { findArchiveEvidence } from '../src/services/orbital/match.ts';
 import { parseStacItem, readPointCondition } from '../src/services/orbital/archive-stac.ts';
 import { loadArchiveImage } from '../src/services/orbital/archive-image.ts';
@@ -39,20 +39,6 @@ describe('a free lookup keeps the exact point to the archives', () => {
     assert.ok(requests.some(({ url, body }) => coordinatesIn(url + (body ?? '')).length > 0), 'the archives do receive the point');
   });
 
-  it('removes the point from every archive request before Sentry sees it', async () => {
-    const { requests, evidence } = await lookupRequests();
-    const imageUrls = [...evidence.acquisitions.map((a) => a.imageUrl), ...evidence.mosaics.flatMap((m) => m.days.map((d) => d.imageUrl)), ...evidence.frames.flatMap((f) => [f.latest?.imageUrl, ...(f.latest?.fallbacks ?? []).map((frame) => frame.imageUrl)])]
-      .filter((url): url is string => Boolean(url));
-    const urls = [...requests.map((r) => r.url), ...imageUrls];
-    const event = scrubSentryCredentials({
-      breadcrumbs: urls.map((url) => ({ category: 'fetch', type: 'http', data: { method: 'GET', url, status_code: 200 } })),
-      spans: urls.map((url) => ({ op: 'http.client', description: `GET ${url}`, data: { url } })),
-      exception: { values: [{ type: 'TypeError', value: `Failed to fetch ${urls[0]}` }] },
-    });
-    assert.deepEqual(coordinatesIn(JSON.stringify(event)), []);
-    assert.deepEqual(coordinatesIn(JSON.stringify(evidence.failures)), []);
-  });
-
   it('removes the point from archive URLs before analytics sees them', async () => {
     const { requests, evidence } = await lookupRequests();
     for (const url of [...requests.map((r) => r.url), evidence.bestView!.imageUrl!]) {
@@ -60,25 +46,22 @@ describe('a free lookup keeps the exact point to the archives', () => {
     }
   });
 
-  it('removes the bounding box from a Planetary Computer crop breadcrumb', async () => {
+  it('removes the bounding box from a Planetary Computer crop URL', async () => {
     const { evidence } = await lookupRequests();
     const crop = evidence.bestView!.imageUrl!;
     assert.match(crop, /\/item\/bbox\/55\.\d+,25\.\d+/);
-    const crumb = scrubSentryCredentials({ category: 'fetch', data: { method: 'GET', url: crop } });
-    const scrubbed = new URL(crumb.data.url);
+    const scrubbed = new URL(redactSensitiveUrl(crop));
     assert.match(scrubbed.pathname, /\/item\/bbox\/redacted\/512x512\.png$/);
     assert.equal(scrubbed.searchParams.get('collection'), 'sentinel-2-l2a', 'keeps what the archive item was');
   });
 
-  it('removes the bounding-box parameter from a GIBS breadcrumb', async () => {
+  it('removes the bounding-box parameter from a GIBS URL', async () => {
     const { evidence } = await lookupRequests();
     const gibs = evidence.mosaics[0]!.days[0]!.imageUrl!;
     assert.ok(new URL(gibs).searchParams.get('BBOX'));
-    const crumb = scrubSentryCredentials({ category: 'xhr', data: { method: 'GET', url: gibs } });
-    const scrubbed = new URL(crumb.data.url);
+    const scrubbed = new URL(redactSensitiveUrl(gibs));
     assert.equal(scrubbed.searchParams.get('BBOX'), null);
     assert.equal(scrubbed.searchParams.get('LAYERS'), new URL(gibs).searchParams.get('LAYERS'));
-    assert.deepEqual(scrubSentryCredentials({ request: { query_string: [['BBOX', '25.1,55.2,25.3,55.3'], ['TIME', '2026-11-12']] } }).request.query_string, [['TIME', '2026-11-12']]);
   });
 
   it('keeps the point out of what a RUM collector reports, the largest paint included', async () => {
@@ -155,15 +138,15 @@ describe('a free lookup keeps the exact point to the archives', () => {
     for (const body of bodies) assert.doesNotMatch(body, /\d[eE][-+]?\d/, `${body} has no exponent`);
     for (const url of urls) {
       assert.doesNotMatch(decodeURIComponent(url), /\d[eE][-+]?\d/, `${url} has no exponent`);
-      const crumb = scrubSentryCredentials({ data: { url } });
-      assert.doesNotMatch(crumb.data.url, /55\.27/, `${crumb.data.url} is scrubbed`);
+      const scrubbed = redactSensitiveUrl(url);
+      assert.doesNotMatch(scrubbed, /55\.27/, `${scrubbed} is scrubbed`);
     }
     for (const raw of [
       'https://planetarycomputer.microsoft.com/api/data/v1/item/point/55.2708,1e-7?collection=sentinel-2-l2a',
       'https://planetarycomputer.microsoft.com/api/data/v1/item/bbox/55.27,-1E-7,55.28,2.5e-1/512x512.png?collection=sentinel-2-l2a',
       'https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi?BBOX=1e-7,55.27,2e-7,55.28&TIME=2026-11-12',
     ]) {
-      const scrubbed = scrubSentryCredentials({ data: { url: raw } }).data.url;
+      const scrubbed = redactSensitiveUrl(raw);
       assert.doesNotMatch(scrubbed, /55\.27|1e-7|1E-7/, scrubbed);
     }
   });

@@ -225,7 +225,7 @@ function stripPrivateSourceMapsPlugin(): Plugin {
   };
 }
 
-function htmlVariantPlugin(activeMeta: VariantMeta, activeVariant: string, isDesktopBuild: boolean): Plugin {
+function htmlVariantPlugin(activeMeta: VariantMeta, activeVariant: string): Plugin {
   return {
     name: 'html-variant',
     transformIndexHtml(html) {
@@ -259,7 +259,7 @@ function htmlVariantPlugin(activeMeta: VariantMeta, activeVariant: string, isDes
         );
       }
 
-      // Desktop builds: inject build-time variant into the inline script so data-variant is set
+      // Dedicated variant builds: inject build-time variant into the inline script so data-variant is set
       // before CSS loads. Web builds always use 'full' — runtime hostname detection handles variants.
       if (activeVariant !== 'full') {
         result = result.replace(
@@ -268,21 +268,7 @@ function htmlVariantPlugin(activeMeta: VariantMeta, activeVariant: string, isDes
         );
       }
 
-      // Desktop CSP: inject localhost wildcard for dynamic sidecar port.
-      // Web builds intentionally exclude localhost to avoid exposing attack surface.
-      if (isDesktopBuild) {
-        result = result
-          .replace(
-            /connect-src 'self' https: http:\/\/localhost:5173/,
-            "connect-src 'self' https: http://localhost:5173 http://127.0.0.1:*"
-          )
-          .replace(
-            /frame-src 'self'/,
-            "frame-src 'self' http://127.0.0.1:*"
-          );
-      }
-
-      // Desktop builds: replace favicon paths with variant-specific subdirectory.
+      // Dedicated variant builds: replace favicon paths with variant-specific subdirectory.
       // Web builds use 'full' favicons in HTML; runtime JS swaps them per hostname.
       if (activeVariant !== 'full') {
         result = result
@@ -962,7 +948,6 @@ export default defineConfig(({ mode }) => {
       : 3000;
 
   const isE2E = process.env.VITE_E2E === '1';
-  const isDesktopBuild = process.env.VITE_DESKTOP_RUNTIME === '1';
   const activeVariant = process.env.VITE_VARIANT || 'full';
   const activeMeta = VARIANT_META[activeVariant] || VARIANT_META.full;
   // Production deploys never publish maps; see shared/source-map-policy.ts.
@@ -997,13 +982,13 @@ export default defineConfig(({ mode }) => {
           });
         },
       },
-      htmlVariantPlugin(activeMeta, activeVariant, isDesktopBuild),
+      htmlVariantPlugin(activeMeta, activeVariant),
       chunkSizeWarningPolicyPlugin(),
-      !isDesktopBuild && dashboardHtmlOutputPlugin(),
-      // Variant subdomain SEO pages only make sense on the web deployment,
-      // which is always the 'full' build (variant selection is runtime by
-      // hostname). Desktop and dedicated VITE_VARIANT builds skip it.
-      !isDesktopBuild && activeVariant === 'full' && variantDashboardHtmlPlugin(),
+      dashboardHtmlOutputPlugin(),
+      // Variant subdomain SEO pages only make sense on the 'full' build
+      // (variant selection is runtime by hostname). Dedicated VITE_VARIANT
+      // builds skip it.
+      activeVariant === 'full' && variantDashboardHtmlPlugin(),
       webMcpDevSecurityHeadersPlugin(),
       polymarketPlugin(),
       rssProxyPlugin(),

@@ -70,8 +70,6 @@ before(async () => {
           `,
           '@/utils/lcp-debug': 'export const markLcpDebug = () => {};',
           '@/config/map-layer-definitions': `
-            export const isLayerToggleAllowed = () => true;
-            export const isLayerEntitled = () => true;
             export const getLayersForVariant = () => [];
             export const sanitizeResilienceScoreForRenderer = (layers, isDeckGLActive) =>
               layers.resilienceScore && !isDeckGLActive
@@ -83,11 +81,6 @@ before(async () => {
             export const hasCuratedLayerExplanation = () => false;
           `,
           '@/services/widget-store': 'export const isProTierResolved = () => true;',
-          '@/services/auth-state': `
-            export const getAuthState = () => ({});
-            export const subscribeAuthState = () => () => {};
-          `,
-          '@/services/analytics': 'export const trackGateHit = () => {};',
           '@/services/i18n': `
             export const t = (key) => key;
             export const getCurrentLanguage = () => 'en';

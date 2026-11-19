@@ -17,7 +17,7 @@ rm -rf "$RUNTIME"
 mkdir -p "$RUNTIME"
 tar -C /src --exclude=./.git --exclude='*/node_modules' --exclude=./node_modules \
     --exclude=./tests --exclude=./e2e --exclude=./docs --exclude=./dist \
-    --exclude=./blog-site --exclude=./demos --exclude=./src-tauri/target -cf - . \
+    --exclude=./blog-site --exclude=./demos -cf - . \
   | tar -C "$RUNTIME" -xf -
 ln -s /src/node_modules "$RUNTIME/node_modules"
 node "$RUNTIME/scripts/local/build-handlers.mjs"

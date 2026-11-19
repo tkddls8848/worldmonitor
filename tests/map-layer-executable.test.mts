@@ -24,8 +24,6 @@ import {
   LAYER_SYNONYMS,
   isLayerCommandAllowed,
   isLayerExecutable,
-  isLayerEntitled,
-  isLayerToggleAllowed,
   sanitizeLayersForVariant,
   restoreGateOwnedLockedLayers,
   mapLayerStatesEqual,
@@ -131,33 +129,6 @@ describe('isLayerExecutable — renderer gate', () => {
   });
 });
 
-// #6045 — premium entitlement gate for CMD+K / programmatic layer enable.
-// DeckGLMap disables the checkbox for premium === 'locked' only; enhanced
-// layers stay toggleable with a PRO badge. isLayerEntitled must match that
-// contract so CMD+K cannot enable locked layers for free users (and cannot
-// leave a stuck checked+disabled control).
-describe('isLayerEntitled — premium locked gate', () => {
-  test('enhanced layers remain entitled without premium', () => {
-    // ciiChoropleth is premium:'enhanced' on desktop — free users can still
-    // toggle it (PRO badge only). Gating it would regress free-tier CII.
-    // On web where premium is undefined the same assertion holds.
-    assert.equal(isLayerEntitled('ciiChoropleth', false), true,
-      'enhanced/free layers stay entitled for free users');
-    assert.equal(isLayerEntitled('ciiChoropleth', true), true);
-  });
-
-  test('non-premium layers are always entitled', () => {
-    assert.equal(LAYER_REGISTRY.conflicts.premium, undefined);
-    assert.equal(isLayerEntitled('conflicts', false), true);
-    assert.equal(isLayerEntitled('pipelines', false), true);
-  });
-
-  test('unknown layer key returns false', () => {
-    // @ts-expect-error — intentionally passing a key outside the union
-    assert.equal(isLayerEntitled('nonexistentLayer', true), false);
-  });
-});
-
 describe('locked map-layer ownership', () => {
   // Regression: App.sanitizeMapLayersForTier's premium branch guarded its
   // storage write with `restored === layers`, where `restored` came out of
@@ -223,37 +194,24 @@ describe('locked map-layer ownership', () => {
 
 });
 
-describe('isLayerToggleAllowed — stale locked-state recovery', () => {
-  test('premium users may toggle locked layers in either direction', () => {
-    assert.equal(isLayerToggleAllowed('resilienceScore', true, true), true);
-    assert.equal(isLayerToggleAllowed('resilienceScore', false, true), true);
-  });
-
-  test('enhanced and free layers remain toggleable for free users', () => {
-    assert.equal(isLayerToggleAllowed('ciiChoropleth', false, false), true);
-    assert.equal(isLayerToggleAllowed('conflicts', false, false), true);
-  });
-
-  test('unknown layers never pass the toggle gate', () => {
-    // @ts-expect-error — intentionally passing a key outside the union
-    assert.equal(isLayerToggleAllowed('nonexistentLayer', true, false), false);
-  });
-});
-
 describe('isLayerCommandAllowed — CMD+K toggle policy', () => {
-  test('premium and enhanced/free layers keep their expected toggle paths', () => {
-    assert.equal(isLayerCommandAllowed('resilienceScore', false, 'deck', true), true);
-    // ciiChoropleth is enhanced (free-toggleable) and renders on deck.
-    assert.equal(isLayerCommandAllowed('ciiChoropleth', false, 'deck', false), true);
+  test('layers that render on the active map stay toggleable', () => {
+    assert.equal(isLayerCommandAllowed('resilienceScore', 'deck'), true);
+    assert.equal(isLayerCommandAllowed('ciiChoropleth', 'deck'), true);
   });
 
-  test('renderer compatibility still blocks commands independently of entitlement', () => {
-    // resilience renders only on deck: globe is blocked even for premium.
-    assert.equal(isLayerCommandAllowed('resilienceScore', false, 'globe', true), false);
+  test('renderer compatibility blocks commands', () => {
+    // resilience renders only on deck: globe is blocked.
+    assert.equal(isLayerCommandAllowed('resilienceScore', 'globe'), false);
     // storageFacilities is deck-only: the SVG fallback cannot run it.
-    assert.equal(isLayerCommandAllowed('storageFacilities', false, 'svg', true), false);
+    assert.equal(isLayerCommandAllowed('storageFacilities', 'svg'), false);
     // ciiChoropleth renders on deck/globe but not the SVG fallback.
-    assert.equal(isLayerCommandAllowed('ciiChoropleth', false, 'svg', false), false);
+    assert.equal(isLayerCommandAllowed('ciiChoropleth', 'svg'), false);
+  });
+
+  test('unknown layers never pass', () => {
+    // @ts-expect-error — intentionally passing a key outside the union
+    assert.equal(isLayerCommandAllowed('nonexistentLayer', 'deck'), false);
   });
 });
 
