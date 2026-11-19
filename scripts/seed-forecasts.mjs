@@ -15795,27 +15795,6 @@ function createForecastLlmHttpError(resp, usableBudgetMs = Infinity) {
   return err;
 }
 
-// Seeder-side llm_call telemetry (#4895, post-#4901 review P1). Mirrors
-// server/_shared/usage.ts LlmCallEvent field-for-field and shares its gating
-// (USAGE_TELEMETRY=1 + AXIOM_API_TOKEN) so seeder events unify with the
-// Vercel-side stream in one APL query. Best-effort: one bounded POST per
-// logical call, never throws, never delays the seed meaningfully.
-const AXIOM_WM_API_USAGE_INGEST_URL = 'https://api.axiom.co/v1/datasets/wm_api_usage/ingest';
-
-async function emitForecastLlmEvents(events) {
-  if (process.env.USAGE_TELEMETRY !== '1' || events.length === 0) return;
-  const token = process.env.AXIOM_API_TOKEN;
-  if (!token) return;
-  try {
-    await fetch(AXIOM_WM_API_USAGE_INGEST_URL, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(events),
-      signal: AbortSignal.timeout(1_500),
-    });
-  } catch { /* telemetry must never affect the seed */ }
-}
-
 async function callForecastLLM(systemPrompt, userPrompt, options = {}) {
   if (forecastLlmCallOverrideForTests) {
     return await forecastLlmCallOverrideForTests(systemPrompt, userPrompt, options);
@@ -15835,13 +15814,6 @@ async function callForecastLLM(systemPrompt, userPrompt, options = {}) {
     : providers.map(provider => provider.name).join(',');
   console.log(`  [LLM:${stage}] providerOrder=${requestedOrder} modelOverrides=${JSON.stringify(options.modelOverrides || {})}`);
 
-  // One event per ATTEMPT: every withRetry retry and every provider fallback
-  // re-sends the full prompt, so each gets its own fallback_index. Budget
-  // pre-emptions (thrown before the fetch) are not attempts and emit nothing.
-  const llmPromptChars = (systemPrompt?.length ?? 0) + (userPrompt?.length ?? 0);
-  const llmMaxTokens = options.maxTokens || 1500;
-  const llmEvents = [];
-  let llmAttemptIndex = 0;
   // Failure-reason classification invariant (#4978): callForecastLLM returns
   // FORECAST_LLM_FAILURE_BUDGET_EXHAUSTED (a benign starve — the market_implications
   // caller preserves last-good and writes NO SEED_ERROR) ONLY when the sole cause
@@ -15854,154 +15826,115 @@ async function callForecastLLM(systemPrompt, userPrompt, options = {}) {
   // to set this flag would silently misreport a real outage as a benign starve.
   let sawProviderFailure = false;
   let sawBudgetCappedTimeout = false;
-  const recordLlmAttempt = (providerName, model, ok, startedAtMs, extra = {}) => {
-    llmEvents.push({
-      _time: new Date().toISOString(),
-      event_type: 'llm_call',
-      provider: providerName,
-      model,
-      stage,
-      ok,
-      duration_ms: Date.now() - startedAtMs,
-      tokens_total: extra.tokensTotal ?? 0,
-      tokens_prompt: extra.tokensPrompt ?? 0,
-      tokens_completion: extra.tokensCompletion ?? 0,
-      prompt_chars: llmPromptChars,
-      max_tokens: llmMaxTokens,
-      fallback_index: llmAttemptIndex++,
-      reason: extra.reason || '',
-    });
-  };
-
-  try {
-    for (const provider of providers) {
-      const apiKey = process.env[provider.envKey];
-      if (!apiKey) continue;
-      let attemptT0 = Date.now();
-      try {
-        const forecastFetch = forecastLlmFetchForTests || ((...args) => globalThis.fetch(...args));
-        const retryDelayMs = Number.isFinite(options.retryDelayMs)
-          ? Math.max(0, Math.floor(options.retryDelayMs))
-          : FORECAST_LLM_RETRY_BASE_MS;
-        const resp = await withRetry(async () => {
-          const usableBudgetMs = getUsableForecastLlmBudgetMs(budgetStartedAtMs, stageBudgetMs);
-          if (usableBudgetMs <= 0) throw createForecastLlmBudgetError(stage, budgetStartedAtMs, stageBudgetMs);
-          const attemptTimeoutMs = Math.max(1, Math.min(provider.timeout, usableBudgetMs));
-          attemptT0 = Date.now();
-          try {
-            const response = await forecastFetch(provider.apiUrl, {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${apiKey}`,
-                'Content-Type': 'application/json',
-                'User-Agent': CHROME_UA,
-                ...(provider.name.startsWith('openrouter') ? { 'HTTP-Referer': 'https://worldmonitor.app', 'X-Title': 'World Monitor' } : {}),
-              },
-              body: JSON.stringify({
-                model: provider.model,
-                messages: [
-                  { role: 'system', content: systemPrompt },
-                  { role: 'user', content: userPrompt },
-                ],
-                max_tokens: options.maxTokens || 1500,
-                temperature: options.temperature ?? 0.3,
-                ...(provider.extraBody || {}),
-              }),
-              signal: AbortSignal.timeout(attemptTimeoutMs),
-            });
-            if (!response.ok) {
-              sawProviderFailure = true;
-              recordLlmAttempt(provider.name, provider.model, false, attemptT0, { reason: `http_${response.status}` });
-              const httpErr = createForecastLlmHttpError(
-                response,
-                getUsableForecastLlmBudgetMs(budgetStartedAtMs, stageBudgetMs),
-              );
-              httpErr.__llmAttemptRecorded = true;
-              throw httpErr;
-            }
-            return response;
-          } catch (err) {
-            if (!err?.__llmAttemptRecorded && !isForecastLlmBudgetError(err)) {
-              err.__llmAttemptRecorded = true;
-              const name = err?.name;
-              const timedOut = name === 'TimeoutError' || name === 'AbortError';
-              // A Flash timeout represents the observed provider stall mode,
-              // not a transient response worth replaying four times. Move on
-              // to the fallback provider after the first full 15s window.
-              if (timedOut && provider.failFastOnTimeout && attemptTimeoutMs >= provider.timeout) {
-                err.nonRetryable = true;
-              }
-              // Attribute a timeout to the run budget (not the provider) ONLY when
-              // this attempt's timeout was itself CAPPED below the provider's own
-              // timeout (attemptTimeoutMs < provider.timeout) AND the run budget is
-              // now exhausted — i.e. we never gave the provider its full window, so
-              // we cannot call this a provider failure. When the call gets the full
-              // provider.timeout (market_implications' admission guard reserves the
-              // whole resolved chain — every runnable provider's timeout + the stage
-              // guard, with maxRetries:0 — so each admitted attempt gets its full
-              // window), a timeout is unambiguously a provider failure -> sawProviderFailure.
-              const budgetCappedTimeout = timedOut
-                && attemptTimeoutMs < provider.timeout
-                && getUsableForecastLlmBudgetMs(budgetStartedAtMs, stageBudgetMs) <= 0;
-              if (budgetCappedTimeout) sawBudgetCappedTimeout = true;
-              else sawProviderFailure = true;
-              recordLlmAttempt(provider.name, provider.model, false, attemptT0, {
-                reason: timedOut ? 'timeout' : 'fetch_error',
-              });
-            }
-            throw err;
-          }
-        }, provider.maxRetries ?? providerMaxRetries, retryDelayMs);
-
-        let json;
+  for (const provider of providers) {
+    const apiKey = process.env[provider.envKey];
+    if (!apiKey) continue;
+    try {
+      const forecastFetch = forecastLlmFetchForTests || ((...args) => globalThis.fetch(...args));
+      const retryDelayMs = Number.isFinite(options.retryDelayMs)
+        ? Math.max(0, Math.floor(options.retryDelayMs))
+        : FORECAST_LLM_RETRY_BASE_MS;
+      const resp = await withRetry(async () => {
+        const usableBudgetMs = getUsableForecastLlmBudgetMs(budgetStartedAtMs, stageBudgetMs);
+        if (usableBudgetMs <= 0) throw createForecastLlmBudgetError(stage, budgetStartedAtMs, stageBudgetMs);
+        const attemptTimeoutMs = Math.max(1, Math.min(provider.timeout, usableBudgetMs));
         try {
-          json = await resp.json();
+          const response = await forecastFetch(provider.apiUrl, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              'Content-Type': 'application/json',
+              'User-Agent': CHROME_UA,
+              ...(provider.name.startsWith('openrouter') ? { 'HTTP-Referer': 'https://worldmonitor.app', 'X-Title': 'World Monitor' } : {}),
+            },
+            body: JSON.stringify({
+              model: provider.model,
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt },
+              ],
+              max_tokens: options.maxTokens || 1500,
+              temperature: options.temperature ?? 0.3,
+              ...(provider.extraBody || {}),
+            }),
+            signal: AbortSignal.timeout(attemptTimeoutMs),
+          });
+          if (!response.ok) {
+            sawProviderFailure = true;
+            const httpErr = createForecastLlmHttpError(
+              response,
+              getUsableForecastLlmBudgetMs(budgetStartedAtMs, stageBudgetMs),
+            );
+            httpErr.__llmAttemptRecorded = true;
+            throw httpErr;
+          }
+          return response;
         } catch (err) {
-          console.warn(`  [LLM:${stage}] ${provider.name} invalid response: ${err.message}`);
-          sawProviderFailure = true;
-          recordLlmAttempt(provider.name, provider.model, false, attemptT0, { reason: 'invalid_json' });
-          continue;
+          if (!err?.__llmAttemptRecorded && !isForecastLlmBudgetError(err)) {
+            err.__llmAttemptRecorded = true;
+            const name = err?.name;
+            const timedOut = name === 'TimeoutError' || name === 'AbortError';
+            // A Flash timeout represents the observed provider stall mode,
+            // not a transient response worth replaying four times. Move on
+            // to the fallback provider after the first full 15s window.
+            if (timedOut && provider.failFastOnTimeout && attemptTimeoutMs >= provider.timeout) {
+              err.nonRetryable = true;
+            }
+            // Attribute a timeout to the run budget (not the provider) ONLY when
+            // this attempt's timeout was itself CAPPED below the provider's own
+            // timeout (attemptTimeoutMs < provider.timeout) AND the run budget is
+            // now exhausted — i.e. we never gave the provider its full window, so
+            // we cannot call this a provider failure. When the call gets the full
+            // provider.timeout (market_implications' admission guard reserves the
+            // whole resolved chain — every runnable provider's timeout + the stage
+            // guard, with maxRetries:0 — so each admitted attempt gets its full
+            // window), a timeout is unambiguously a provider failure -> sawProviderFailure.
+            const budgetCappedTimeout = timedOut
+              && attemptTimeoutMs < provider.timeout
+              && getUsableForecastLlmBudgetMs(budgetStartedAtMs, stageBudgetMs) <= 0;
+            if (budgetCappedTimeout) sawBudgetCappedTimeout = true;
+            else sawProviderFailure = true;
+          }
+          throw err;
         }
-        const tokensExtra = {
-          tokensTotal: json.usage?.total_tokens ?? 0,
-          tokensPrompt: json.usage?.prompt_tokens ?? 0,
-          tokensCompletion: json.usage?.completion_tokens ?? 0,
-        };
-        const text = json.choices?.[0]?.message?.content?.trim();
-        if (!text || text.length < 20) {
-          sawProviderFailure = true;
-          recordLlmAttempt(provider.name, provider.model, false, attemptT0, { ...tokensExtra, reason: 'empty' });
-          continue;
-        }
-        const model = json.model || provider.model;
-        console.log(`  [LLM:${stage}] ${provider.name} success model=${model}`);
-        recordLlmAttempt(provider.name, model, true, attemptT0, tokensExtra);
-        return { text, model, provider: provider.name,
-          ...(stage === 'market_implications' ? { completionTokens: json.usage?.completion_tokens } : {}),
-        };
+      }, provider.maxRetries ?? providerMaxRetries, retryDelayMs);
+
+      let json;
+      try {
+        json = await resp.json();
       } catch (err) {
-        // All real attempts were recorded inside the retry callback; budget
-        // pre-emptions never sent the prompt, so nothing to record here.
-        console.warn(`  [LLM:${stage}] ${provider.name} ${err.message}`);
-        if (isForecastLlmBudgetError(err)) {
-          return createForecastLlmFailureResult(
-            options,
-            sawProviderFailure ? FORECAST_LLM_FAILURE_PROVIDER_FAILED : FORECAST_LLM_FAILURE_BUDGET_EXHAUSTED,
-          );
-        }
+        console.warn(`  [LLM:${stage}] ${provider.name} invalid response: ${err.message}`);
+        sawProviderFailure = true;
+        continue;
+      }
+      const text = json.choices?.[0]?.message?.content?.trim();
+      if (!text || text.length < 20) {
+        sawProviderFailure = true;
+        continue;
+      }
+      const model = json.model || provider.model;
+      console.log(`  [LLM:${stage}] ${provider.name} success model=${model}`);
+      return { text, model, provider: provider.name,
+        ...(stage === 'market_implications' ? { completionTokens: json.usage?.completion_tokens } : {}),
+      };
+    } catch (err) {
+      console.warn(`  [LLM:${stage}] ${provider.name} ${err.message}`);
+      if (isForecastLlmBudgetError(err)) {
+        return createForecastLlmFailureResult(
+          options,
+          sawProviderFailure ? FORECAST_LLM_FAILURE_PROVIDER_FAILED : FORECAST_LLM_FAILURE_BUDGET_EXHAUSTED,
+        );
       }
     }
-    return createForecastLlmFailureResult(
-      options,
-      sawProviderFailure
-        ? FORECAST_LLM_FAILURE_PROVIDER_FAILED
-        : sawBudgetCappedTimeout
-          ? FORECAST_LLM_FAILURE_BUDGET_EXHAUSTED
-          : FORECAST_LLM_FAILURE_PROVIDER_FAILED,
-    );
-  } finally {
-    await emitForecastLlmEvents(llmEvents);
   }
+  return createForecastLlmFailureResult(
+    options,
+    sawProviderFailure
+      ? FORECAST_LLM_FAILURE_PROVIDER_FAILED
+      : sawBudgetCappedTimeout
+        ? FORECAST_LLM_FAILURE_BUDGET_EXHAUSTED
+        : FORECAST_LLM_FAILURE_PROVIDER_FAILED,
+  );
 }
 
 async function redisSet(url, token, key, data, ttlSeconds) {

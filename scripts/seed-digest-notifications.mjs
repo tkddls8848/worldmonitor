@@ -26,7 +26,6 @@ const DIGEST_DIPLOMACY_DATA = require('../shared/diplomacy-keywords.json');
 const WATCHLIST_STOCKS_DATA = require('../shared/stocks.json');
 const { callLLM } = require('./lib/llm-chain.cjs');
 const { withAiRoutingPolicy } = require('./lib/ai-routing-policy.cjs');
-const { flushPendingLlmEvents } = require('./lib/llm-telemetry.cjs');
 import { readRawJsonFromUpstash, redisPipeline } from '../api/_upstash-json.js';
 import { classifyFeelGood } from '../server/_shared/feelgood-classifier.js';
 import { classifyEphemeralLiveCoverage } from '../shared/ephemeral-live-classifier.js';
@@ -1487,7 +1486,6 @@ async function main() {
     });
     // process.exit does not drain in-flight promises — flush fire-and-forget
     // llm_call telemetry first (bounded by the 1.5s fetch timeout).
-    await flushPendingLlmEvents();
     process.exit(1);
   }
 
@@ -1522,7 +1520,6 @@ if (isMainModule(import.meta.url, process.argv[1])) {
       status: 'error',
       errorReason: `fatal:${err?.message ?? err}`,
     });
-    await flushPendingLlmEvents();
     process.exit(1);
   });
 }

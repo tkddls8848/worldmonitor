@@ -403,7 +403,13 @@ const EXCLUDED_RPC_ROUTES = {
 
 const BOOTSTRAP_KEYS = new Set(BOOTSTRAP.map(entry => entry.key));
 const RPC_PATHS = new Set(RPCS.map(entry => entry.path));
-const API_ORIGIN = 'https://api.worldmonitor.app';
+// This fork's own API: API_BASE_URL when set, else the personal server (the
+// same origin as personalOrigin() in scripts/personal-tui.mjs). Never the
+// upstream operator's hosted API.
+const API_ORIGIN = new URL(
+  (typeof process.env.API_BASE_URL === 'string' && process.env.API_BASE_URL.trim())
+  || `http://${process.env.WM_PERSONAL_HOST || '127.0.0.1'}:${Number(process.env.WM_PERSONAL_PORT || 3000)}`,
+).origin;
 
 const byGroup = (entries, line) => GROUPS
   .map(group => [group, entries.filter(entry => entry.group === group)])

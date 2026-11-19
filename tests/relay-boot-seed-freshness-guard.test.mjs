@@ -183,15 +183,6 @@ const SEEDERS = [
   ['Satellites', "'seed-meta:intelligence:satellites'", 'SAT_SEED_INTERVAL_MS', 'seedSatelliteTLEs'],
   ['Market', "'seed-meta:market:stocks'", 'MARKET_SEED_INTERVAL_MS', 'seedAllMarketData'],
   ['Classify', "'seed-meta:classify'", 'CLASSIFY_SEED_INTERVAL_MS', 'seedClassify'],
-  // Internal warm-pings — gated on the seed-meta key their own RPC handler writes,
-  // so frequent relay recycling no longer re-pings these endpoints on every boot.
-  // (Previously excluded; the endpoints self-limit, so gating is risk-free here —
-  // a missing key fails open to an immediate ping — and also dedupes the boot ping
-  // against organic traffic that already kept the cache warm.)
-  ['ServiceStatuses', "'seed-meta:infra:service-statuses'", 'SERVICE_STATUSES_SEED_INTERVAL_MS', 'seedServiceStatuses'],
-  ['CII', "'seed-meta:intelligence:risk-scores'", 'CII_WARM_PING_INTERVAL_MS', 'seedCiiWarmPing'],
-  ['Chokepoints', "'seed-meta:supply_chain:chokepoints'", 'CHOKEPOINT_WARM_PING_INTERVAL_MS', 'seedChokepointWarmPing'],
-  ['CableHealth', "'seed-meta:cable-health'", 'CABLE_HEALTH_WARM_PING_INTERVAL_MS', 'seedCableHealthWarmPing'],
   ['TheaterPosture', "'seed-meta:theater-posture'", 'THEATER_POSTURE_SEED_INTERVAL_MS', 'seedTheaterPosture'],
   ['Weather', "'seed-meta:weather:alerts'", 'WEATHER_SEED_INTERVAL_MS', 'seedWeatherAlerts'],
   ['Spending', "'seed-meta:economic:spending'", 'SPENDING_SEED_INTERVAL_MS', 'seedUsaSpending'],
@@ -207,7 +198,6 @@ const SEEDERS = [
   ['ChokepointFlows', "'relay:heartbeat:chokepoint-flows'", 'CHOKEPOINT_FLOWS_SEED_INTERVAL_MS', 'seedChokepointFlows'],
   ['AuYieldFallback', "'seed-meta:economic:yield-curve-au'", 'AU_YIELD_CHECK_INTERVAL_MS', 'seedAuYieldCurve'],
   ['PizzINT', "'seed-meta:intelligence:pizzint'", 'PIZZINT_SEED_INTERVAL_MS', 'seedPizzint'],
-  ['DodoPrices', "'seed-meta:product-catalog'", 'DODO_PRICE_SEED_INTERVAL_MS', 'seedDodoPrices'],
   ['Transit', "'seed-meta:supply_chain:chokepoint_transits'", 'CHOKEPOINT_TRANSIT_INTERVAL_MS', 'seedChokepointTransits'],
   ['AisGaps', "'seed-meta:maritime:ais-gaps'", 'AIS_GAPS_SEED_INTERVAL_MS', 'seedAisGaps'],
   ['TransitSummary', "'seed-meta:supply_chain:transit-summaries'", 'TRANSIT_SUMMARY_INTERVAL_MS', 'seedTransitSummaries'],

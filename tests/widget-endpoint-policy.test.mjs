@@ -39,7 +39,7 @@ describe('widget data request boundary', () => {
   ]) it(`admits ${endpoint} ${JSON.stringify(params ?? {})}`, () => {
     const url = buildWidgetDataUrl(endpoint, params);
     assert.ok(url);
-    assert.equal(url.origin, 'https://api.worldmonitor.app');
+    assert.equal(url.origin, 'http://127.0.0.1:3000', 'the personal server, never the upstream API');
     for (const [key, value] of Object.entries(params || {})) assert.equal(url.searchParams.get(key), value);
   });
 

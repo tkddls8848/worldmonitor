@@ -6,7 +6,6 @@ import { execFileSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
-import { flushPendingLlmEvents } from './lib/llm-telemetry.cjs';
 
 import { buildEnvelope, unwrapEnvelope } from './_seed-envelope-source.mjs';
 import { MAX_DECODED_PAYLOAD_BYTES, encodeGzipPayload, parseStoredSeedJson } from './_seed-payload-codec.mjs';
@@ -19,13 +18,11 @@ import { isTestRuntime, loadEnvFile } from './_env-file.mjs';
 
 export { isTestRuntime, loadEnvFile };
 
-// process.exit does not drain in-flight promises — drain any fire-and-forget
-// llm_call telemetry first (bounded by its 1.5s fetch timeout; a no-op when
-// nothing is pending). Used by every runSeed exit reachable after fetchFn,
-// where seeder LLM calls may have emitted events (#4954 review).
+// Stops the lock heartbeat and exits. Used by every runSeed exit reachable
+// after fetchFn. (It used to drain the llm_call usage telemetry, which this
+// fork removed.)
 async function exitAfterTelemetryFlush(code) {
   activeLockHeartbeat?.stop();
-  try { await flushPendingLlmEvents(); } catch { /* never block exit */ }
   process.exit(code);
 }
 
@@ -2949,10 +2946,6 @@ export async function runSeed(domain, resource, canonicalKey, fetchFn, opts = {}
     } catch (err) {
       console.error(`  [${domain}:${resource}] SIGTERM cleanup error: ${err?.message || err}`);
     } finally {
-      // process.exit does not drain in-flight promises — flush any
-      // fire-and-forget llm_call telemetry (bounded by its 1.5s fetch
-      // timeout; the runner's 5s SIGKILL grace leaves room).
-      try { await flushPendingLlmEvents(); } catch { /* never block exit */ }
       process.exit(143);
     }
   };

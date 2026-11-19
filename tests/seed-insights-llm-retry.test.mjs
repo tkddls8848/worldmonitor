@@ -465,9 +465,9 @@ describe('seed-insights callLLM output acceptance (#6001)', () => {
     assert.equal(feedbackCalls, 0, 'the feedback hook is for editorial rejections only');
   });
 
-  it('telemetry records the size of the corrected prompt, not the base one', async () => {
-    // #7248 review: promptChars was computed once from the base prompts, so
-    // every corrected resample recorded an undersized event.
+  it('sends no llm_call telemetry, even with the removed telemetry switches set', async () => {
+    // The personal fork removed the Axiom usage telemetry. Provider calls go
+    // through the transport hook, so any global fetch here would be telemetry.
     process.env.OPENROUTER_API_KEY = 'openrouter-test-key';
     process.env.USAGE_TELEMETRY = '1';
     process.env.AXIOM_API_TOKEN = 'axiom-test-token';
@@ -475,15 +475,17 @@ describe('seed-insights callLLM output acceptance (#6001)', () => {
     const originalFetch = globalThis.fetch;
 
     try {
-      const telemetryBatches = [];
-      // Provider calls go through the transport hook; the Axiom POST uses the
-      // global fetch, so the two streams are separable.
-      globalThis.fetch = async (_url, init) => {
-        telemetryBatches.push(JSON.parse(init.body));
+      const globalRequests = [];
+      globalThis.fetch = async (url) => {
+        globalRequests.push(String(url));
         return { ok: true, status: 200, json: async () => ({}) };
       };
+      const sent = [];
       __setInsightsLlmTransportForTests({
-        fetch: async (_url, init) => okResponse(modelOf(init) !== BACKUP_MODEL ? `${LONG_BRIEF} REJECT_ME` : LONG_BRIEF),
+        fetch: async (_url, init) => {
+          sent.push(JSON.parse(init.body).messages[1].content);
+          return okResponse(modelOf(init) !== BACKUP_MODEL ? `${LONG_BRIEF} REJECT_ME` : LONG_BRIEF);
+        },
       });
 
       const FEEDBACK = 'Correction: drop the ungrounded phrase.';
@@ -493,20 +495,13 @@ describe('seed-insights callLLM output acceptance (#6001)', () => {
         accept: (text) => (text.includes('REJECT_ME') ? null : { composed: true }),
         rejectionFeedback: () => FEEDBACK,
       });
-      // emitLlmEvents is fire-and-forget; give the microtask queue a beat.
       await new Promise((resolve) => setImmediate(resolve));
 
-      const events = telemetryBatches.flat();
-      assert.ok(events.length >= 2, 'the walk must emit one event per attempt');
-      const base = 'sys'.length + 'user'.length;
-      const corrected = 'sys'.length + `user\n\n${FEEDBACK}`.length;
-      assert.equal(events[0].prompt_chars, base, 'the first attempt sends the base prompt');
-      for (const event of events.slice(1)) {
-        assert.equal(
-          event.prompt_chars,
-          corrected,
-          'every attempt after the rejection records the corrected prompt it actually sent',
-        );
+      assert.deepEqual(globalRequests, [], 'no telemetry request');
+      assert.ok(sent.length >= 2, 'the walk made more than one attempt');
+      assert.equal(sent[0], 'user', 'the first attempt sends the base prompt');
+      for (const prompt of sent.slice(1)) {
+        assert.equal(prompt, `user\n\n${FEEDBACK}`, 'later attempts send the corrected prompt');
       }
     } finally {
       globalThis.fetch = originalFetch;

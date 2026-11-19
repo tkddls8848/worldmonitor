@@ -12,7 +12,7 @@ const ISO_COUNTRY_RE = /^[A-Z]{2}$/;
  * GetIpGeo returns geographic information based on the request headers (Cloudflare/Vercel).
  *
  * `cf-ipcountry` is caller-controlled unless the request provably transited
- * Cloudflare (same gate as deriveCountry in server/_shared/usage.ts), so it is
+ * Cloudflare (the same transit-proof gate as getClientIp in server/_shared/client-ip.ts), so it is
  * only honored with transit proof. Vercel's `x-vercel-ip-*` connection headers
  * are platform-set on Vercel and are the fallback. Values are validated to the
  * ISO 3166-1 alpha-2 shape (`T1` and anything else non-conforming map to `XX`)

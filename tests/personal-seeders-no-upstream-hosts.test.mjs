@@ -36,6 +36,8 @@ const HEADER_VALUES = [
   // User-Agent strings: a WorldMonitor product token with a parenthesized
   // contact comment, sent to a real data source. Nothing is sent to the host.
   ['user-agent', /(['"`])world-?monitor[^'"`()\n]*\([^'"`()\n]*\)\1/gi],
+  // Any value written directly as a User-Agent header (browser-style tokens).
+  ['user-agent', /(['"])User-Agent\1\s*:\s*(['"`])[^'"`\n]*\2/g],
   // HTTP-Referer: OpenRouter's app-attribution header on calls to OpenRouter.
   ['http-referer', /(['"])HTTP-Referer\1\s*:\s*(['"])https:\/\/worldmonitor\.app\2/g],
   // Origin request header: what the warm-ping seeders and the opt-in cloud
@@ -54,6 +56,11 @@ const ALLOWED = [
   ['origin', 'api/youtube/embed.js', "return sanitizeAllowedOrigin(raw, 'https://worldmonitor.app', ALLOWED_ORIGINS);"],
   ['origin', 'server/cors.ts', "const allowOrigin = isAllowedOrigin(origin) ? origin : 'https://worldmonitor.app';"],
   ['origin', 'server/cors.ts', "'Access-Control-Allow-Origin': origin || 'https://worldmonitor.app',"],
+  // The relay's CORS allowlist: browser origins it answers, not targets.
+  ['origin', 'scripts/ais-relay.cjs', "'https://worldmonitor.app',"],
+  ['origin', 'scripts/ais-relay.cjs', "'https://tech.worldmonitor.app',"],
+  ['origin', 'scripts/ais-relay.cjs', "'https://finance.worldmonitor.app',"],
+  ['origin', 'scripts/ais-relay.cjs', "if (url.hostname.endsWith('.worldmonitor.app') && url.protocol === 'https:') return origin;"],
   // HDX HAPI's app_identifier: the client name and contact address the
   // conflict seeders send to HAPI, like a User-Agent. Nothing is sent to it.
   ['user-agent', 'shared/hapi-app-identifier.json', '"email": "monitor@worldmonitor.app"'],
@@ -126,6 +133,15 @@ function codeLines(source) {
 
 function seederClosure() {
   const roots = readdirSync(SCRIPTS).filter((name) => /^seed-.*\.mjs$/.test(name)).map((name) => path.join(SCRIPTS, name));
+  return importClosure(roots);
+}
+
+// The AIS relay (a long-running collector) and every module it requires.
+function relayClosure() {
+  return importClosure([path.join(SCRIPTS, 'ais-relay.cjs')]);
+}
+
+function importClosure(roots) {
   const seen = new Set();
   const queue = [...roots];
   while (queue.length) {
@@ -195,15 +211,15 @@ function serverSideConfig() {
 }
 
 // Removes the allowed header values from a code line; returns the rest and
-// the kinds that matched.
+// the indexes of the HEADER_VALUES patterns that hid a host.
 function stripHeaderValues(code) {
   const used = [];
   let rest = code;
-  for (const [kind, pattern] of HEADER_VALUES) {
+  HEADER_VALUES.forEach(([, pattern], index) => {
     const next = rest.replace(pattern, (match) => (UPSTREAM_TARGET.test(match) ? '' : match));
-    if (next !== rest) used.push(kind);
+    if (next !== rest) used.push(index);
     rest = next;
-  }
+  });
   return { rest, used };
 }
 
@@ -222,7 +238,7 @@ function offendersIn(files) {
 }
 
 function scannedFiles() {
-  return [...new Set([...seederClosure().files, ...serverSideConfig()])]
+  return [...new Set([...seederClosure().files, ...relayClosure().files, ...serverSideConfig()])]
     .filter((file) => !ATTRIBUTION_LEDGERS.has(rel(file)));
 }
 
@@ -247,15 +263,16 @@ test('every allowed line is still needed: a known reason, a scanned file, a pres
     const present = codeLines(readFileSync(path.join(ROOT, file), 'utf8')).some(([, code]) => code.trim() === line);
     assert.ok(present, `${file} no longer has the allowed line (prune it from ALLOWED): ${line}`);
   }
-  const usedKinds = new Set();
+  const usedPatterns = new Set();
   for (const file of scanned) {
     for (const [, code] of codeLines(readFileSync(path.join(ROOT, file), 'utf8'))) {
-      if (UPSTREAM_TARGET.test(code)) for (const kind of stripHeaderValues(code).used) usedKinds.add(kind);
+      if (UPSTREAM_TARGET.test(code)) for (const index of stripHeaderValues(code).used) usedPatterns.add(index);
     }
   }
-  for (const [kind] of HEADER_VALUES) {
-    assert.ok(usedKinds.has(kind), `the ${kind} header pattern no longer matches any scanned line (prune it)`);
-  }
+  HEADER_VALUES.forEach(([kind, pattern], index) => {
+    assert.ok(ALLOWED_KINDS.has(kind), `unknown header allowance reason ${kind}`);
+    assert.ok(usedPatterns.has(index), `the ${kind} header pattern ${pattern} no longer matches any scanned line (prune it)`);
+  });
 });
 
 test('a header value hides the host only inside the header, not elsewhere on the line', () => {
@@ -272,6 +289,16 @@ test('a header value hides the host only inside the header, not elsewhere on the
 test('no seeder, or module a seeder imports, targets the upstream operator hosts', () => {
   const offenders = offendersIn(seederClosure().files);
   assert.deepEqual(offenders, [], `Seeders must call the personal server (personalOrigin) or a direct source, not the upstream cloud:\n${offenders.join('\n')}`);
+});
+
+test('the AIS relay, and every module it requires, targets no upstream operator host', () => {
+  const { files } = relayClosure();
+  const names = new Set(files.map(rel));
+  for (const expected of ['scripts/ais-relay.cjs', 'scripts/_widget-data-policy.cjs', 'scripts/lib/classify-digest-request.cjs']) {
+    assert.ok(names.has(expected), `${expected} is part of the relay closure`);
+  }
+  const offenders = offendersIn(files.filter((file) => !ATTRIBUTION_LEDGERS.has(rel(file))));
+  assert.deepEqual(offenders, [], `The relay must call the personal server or a direct source, never *.worldmonitor.app:\n${offenders.join('\n')}`);
 });
 
 test('no server-side module or fetch-target config names the upstream operator hosts', () => {

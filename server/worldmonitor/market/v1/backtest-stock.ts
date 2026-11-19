@@ -293,14 +293,7 @@ export const backtestStock: MarketServiceHandler['backtestStock'] = async (
       CACHE_TTL_SECONDS,
       computeBacktest,
       120,
-      {
-        usage: {
-          provider: 'yahoo-finance',
-          operation: 'backtest-history',
-          host: 'query1.finance.yahoo.com',
-        },
-        cacheFetcherErrors: false,
-      },
+      { cacheFetcherErrors: false },
     );
     // Shared records use the symbol; caller display names belong only in this response.
     if (result.data) return { ...result.data, name: req.name || symbol };

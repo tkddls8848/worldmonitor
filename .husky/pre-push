@@ -406,7 +406,6 @@ PROTO_INPUTS=(
   server/_shared/response-headers.ts
   server/_shared/response-projection.ts
   server/_shared/seed-envelope.ts
-  server/_shared/usage.ts
   server/cors.ts
   server/error-mapper.ts
   server/gateway.ts

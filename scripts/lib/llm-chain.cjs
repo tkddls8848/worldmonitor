@@ -1,6 +1,5 @@
 'use strict';
 
-const { buildLlmCallEvent, emitLlmEvents } = require('./llm-telemetry.cjs');
 const {
   OPENROUTER_FREE_BACKUP_MODEL,
   OPENROUTER_FREE_PRIMARY_MODEL,
@@ -132,7 +131,7 @@ const LLM_PROVIDERS = [
  *   tried in the order given. Opt-in providers (anthropic) run only when named here.
  * @param {string[]} [opts.skipProviders] - Optional provider denylist
  * @param {Record<string, string>} [opts.modelOverrides] - Per-provider model override, keyed by provider name
- * @param {string} [opts.stage] - llm_call telemetry surface tag (#4944 U5)
+ * @param {string} [opts.stage] - Caller surface tag (unused since the usage telemetry was removed)
  * @returns {Promise<string|null>} Generated text, or null if all providers fail
  */
 async function callLLM(systemPrompt, userPrompt, opts = {}) {
@@ -154,10 +153,6 @@ async function callLLM(systemPrompt, userPrompt, opts = {}) {
     ? [...new Set(allowedProviders)].map((name) => LLM_PROVIDERS.find((p) => p.name === name)).filter(Boolean)
     : LLM_PROVIDERS.filter((p) => !p.optIn);
 
-  const promptChars = (systemPrompt?.length ?? 0) + (userPrompt?.length ?? 0);
-  const events = [];
-  let attemptIndex = 0;
-
   for (const provider of chain) {
     if (allowedSet && !allowedSet.has(provider.name)) continue;
     if (skipSet?.has(provider.name)) continue;
@@ -169,18 +164,6 @@ async function callLLM(systemPrompt, userPrompt, opts = {}) {
       ?? (typeof provider.model === 'function' ? provider.model() : provider.model);
     const timeout = timeoutMs ?? provider.timeout;
 
-    // Skipped/unconfigured providers never sent the prompt — only real
-    // attempts get an event and advance the fallback index.
-    const t0 = Date.now();
-    const record = (ok, extra = {}) => {
-      events.push(buildLlmCallEvent({
-        provider: provider.name, model, stage, ok,
-        durationMs: Date.now() - t0, promptChars, maxTokens,
-        fallbackIndex: attemptIndex++,
-        ...extra,
-      }));
-    };
-
     try {
       if (provider.invoke) {
         const result = await provider.invoke({
@@ -188,18 +171,14 @@ async function callLLM(systemPrompt, userPrompt, opts = {}) {
         });
         if (result.finishReason === 'max_tokens') {
           console.warn(`[llm-chain] ${provider.name}: length-limited response, trying next provider`);
-          record(false, { ...result.usage, reason: 'length' });
           continue;
         }
         if (!result.text) {
           console.warn(`[llm-chain] ${provider.name}: empty response`);
-          record(false, { ...result.usage, reason: result.finishReason === 'refusal' ? 'refusal' : 'empty' });
           continue;
         }
         const text = stripReasoningPreamble(result.text);
         console.log(`[llm-chain] ${provider.name} OK (${text.length} chars)`);
-        record(true, result.usage);
-        void emitLlmEvents(events); // fire-and-forget: telemetry never delays the return path
         return text;
       }
 
@@ -221,44 +200,30 @@ async function callLLM(systemPrompt, userPrompt, opts = {}) {
 
       if (!resp.ok) {
         console.warn(`[llm-chain] ${provider.name} API error: ${resp.status}`);
-        record(false, { reason: `http_${resp.status}` });
         continue;
       }
 
       const json = await resp.json();
-      const usage = {
-        tokensTotal: json.usage?.total_tokens ?? 0,
-        tokensPrompt: json.usage?.prompt_tokens ?? 0,
-        tokensCompletion: json.usage?.completion_tokens ?? 0,
-      };
       if (json.choices?.[0]?.finish_reason === 'length') {
         console.warn(`[llm-chain] ${provider.name}: length-limited response, trying next provider`);
-        record(false, { ...usage, reason: 'length' });
         continue;
       }
 
       const rawText = json.choices?.[0]?.message?.content?.trim();
       if (!rawText) {
         console.warn(`[llm-chain] ${provider.name}: empty response`);
-        record(false, { ...usage, reason: 'empty' });
         continue;
       }
 
       const text = stripReasoningPreamble(rawText);
       console.log(`[llm-chain] ${provider.name} OK (${text.length} chars)`);
-      record(true, usage);
-      void emitLlmEvents(events); // fire-and-forget: telemetry never delays the return path
       return text;
     } catch (err) {
       console.warn(`[llm-chain] ${provider.name} failed: ${err.message}`);
-      const status = typeof err?.status === 'number' ? err.status : null;
-      const timedOut = err?.name === 'TimeoutError' || err?.name === 'AbortError' || err?.name === 'APIConnectionTimeoutError';
-      record(false, { reason: status ? `http_${status}` : timedOut ? 'timeout' : 'fetch_error' });
     }
   }
 
   console.warn('[llm-chain] all providers failed');
-  void emitLlmEvents(events); // fire-and-forget: telemetry never delays the return path
   return null;
 }
 

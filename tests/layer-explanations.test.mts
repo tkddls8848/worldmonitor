@@ -96,6 +96,11 @@ function refreshIntervalMinutes(name: string): number {
   return evalNumberExpression(match[1]) / 60_000;
 }
 
+// The relay's upstream warm-pings set these cadences. The personal fork removed
+// them (they called the upstream operator's API); the layer copy still states
+// the old cadence until Phase 2 revisits layer freshness text.
+const REMOVED_WARM_PING_MINUTES = { cii: 8, chokepoints: 6 } as const;
+
 function relayConstMinutes(name: string): number {
   const match = relaySource.match(new RegExp(`const\\s+${name}\\s*=\\s*([^;\\n]+);`));
   assert.ok(match, `scripts/ais-relay.cjs must define ${name}`);
@@ -268,7 +273,7 @@ describe('layer explanation metadata', () => {
     assertDuration(renderedFreshnessText('cyberThreats'), /([0-9]+)-\s*(day)\s+rolling window/i, cyberRollingWindowMinutes(), 'cyber IOC rolling window');
     assert.equal(healthMaxStale('cyberThreats'), relayConstMinutes('CYBER_SEED_INTERVAL_MS') * 2, 'cyber health budget should stay 2x relay cadence');
 
-    assertDuration(renderedFreshnessText('ciiChoropleth'), /every\s+([0-9]+)\s+(minute)s?/i, relayConstMinutes('CII_WARM_PING_INTERVAL_MS'), 'CII warm-ping cadence');
+    assertDuration(renderedFreshnessText('ciiChoropleth'), /every\s+([0-9]+)\s+(minute)s?/i, REMOVED_WARM_PING_MINUTES.cii, 'CII warm-ping cadence');
     assertDuration(renderedFreshnessText('ciiChoropleth'), /([0-9]+)-\s*(minute)\s+freshness budget/i, healthMaxStale('riskScores'), 'CII health freshness budget');
 
     assertDuration(renderedFreshnessText('ais'), /every\s+([0-9]+)\s+(second)s?/i, relayEnvDefaultMinutes('SNAPSHOT_INTERVAL_MS'), 'AIS relay snapshot cadence');
@@ -281,7 +286,7 @@ describe('layer explanation metadata', () => {
 
     for (const layer of ['waterways', 'tradeRoutes'] as const) {
       const text = renderedFreshnessText(layer);
-      assertDuration(text, /every\s+([0-9]+)\s+(minute)s?/i, relayConstMinutes('CHOKEPOINT_WARM_PING_INTERVAL_MS'), `${layer} chokepoint warm-ping cadence`);
+      assertDuration(text, /every\s+([0-9]+)\s+(minute)s?/i, REMOVED_WARM_PING_MINUTES.chokepoints, `${layer} chokepoint warm-ping cadence`);
       assertDuration(text, /refresh\s+every\s+([0-9]+)\s+(minute)s?/i, relayConstMinutes('TRANSIT_SUMMARY_INTERVAL_MS'), `${layer} transit-summary cadence`);
     }
 

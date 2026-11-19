@@ -50,7 +50,6 @@ const {
 } = require('./lib/llm-model-policy.cjs');
 const xNewsAccounts = require('./lib/x-news-accounts.cjs');
 const { SAUDI_CIVIL_DEFENSE, MAX_POST_CHARS, publishSaudiCivilDefenseAlerts } = require('./lib/saudi-civil-defense-alerts.cjs');
-const { publishChokepointDisruptionAlerts } = require('./lib/chokepoint-disruption-alerts.cjs');
 // Loaded defensively: the gazetteer validates its data files at require time,
 // and a bad regenerated data file must disable only this feed, not the relay.
 let middleEastStrikes = null;
@@ -5949,41 +5948,6 @@ function startMiddleEastStrikesLoop() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Service Statuses Seed — warm-pings Vercel RPC every 15 min
-// so service statuses are always cached (TTL is 30 min).
-// ─────────────────────────────────────────────────────────────
-const SERVICE_STATUSES_SEED_INTERVAL_MS = 15 * 60 * 1000; // 15 min (TTL/2)
-const SERVICE_STATUSES_RPC_URL = 'https://api.worldmonitor.app/api/infrastructure/v1/list-service-statuses';
-
-async function seedServiceStatuses() {
-  try {
-    const resp = await fetch(SERVICE_STATUSES_RPC_URL, {
-      method: 'POST',
-      headers: warmPingHeaders({ 'Content-Type': 'application/json' }),
-      body: '{}',
-      signal: AbortSignal.timeout(60_000),
-    });
-    if (!resp.ok) {
-      console.warn(`[ServiceStatuses] Seed ping failed: HTTP ${resp.status}${RELAY_API_KEY ? '' : ' (WORLDMONITOR_RELAY_KEY not set — 401 expected; set it on the relay AND the Vercel api project)'}`);
-      return;
-    }
-    const data = await resp.json();
-    const count = data?.statuses?.length || 0;
-    console.log(`[ServiceStatuses] Seed ping OK — ${count} statuses`);
-    // seed-meta is written by listServiceStatuses handler only when fresh data
-    // is scraped; writing it here would mark fallback responses as fresh.
-  } catch (e) {
-    console.warn('[ServiceStatuses] Seed ping error:', e?.message || e);
-  }
-}
-
-function startServiceStatusesSeedLoop() {
-  console.log(`[ServiceStatuses] Seed loop starting (interval ${SERVICE_STATUSES_SEED_INTERVAL_MS / 1000 / 60}min)`);
-  startBootSeedLoop('ServiceStatuses', 'seed-meta:infra:service-statuses', SERVICE_STATUSES_SEED_INTERVAL_MS, seedServiceStatuses, (e) => console.warn('[ServiceStatuses] Initial seed error:', e?.message || e), (e) => console.warn('[ServiceStatuses] Seed error:', e?.message || e));
-}
-
-
-// ─────────────────────────────────────────────────────────────
 // Theater Posture Seed — fetches OpenSky directly via localhost
 // proxy, computes military postures, writes to Redis.
 // Eliminates circular dependency on Vercel RPC.
@@ -6658,171 +6622,12 @@ function startTheaterPostureSeedLoop() {
   }, 30_000);
 }
 
-// ─────────────────────────────────────────────────────────────
-// Warm-ping shared auth — relay → api.worldmonitor.app
-//
-// All warm-pings call api.worldmonitor.app/api/* edge functions. These are
-// non-premium but NOT anonymous: in normal traffic they require a browser
-// session token or an API key. Origin-trust used to satisfy them, but the
-// gateway dropped all Origin/Referer trust in the #3541 hardening — Origin
-// headers are client-forgeable, so they are no longer an auth signal. There is
-// NO Origin-only fallback anymore: without a recognized key, every warm-ping
-// 401s (observed in prod 2026-06-06 — all three warm-pings dark).
-//
-// The relay authenticates as a trusted internal caller via X-WorldMonitor-Key =
-// WORLDMONITOR_RELAY_KEY. The gateway validates this (timing-safe) against its
-// OWN WORLDMONITOR_RELAY_KEY for the warm-ping path allowlist only
-// (server/gateway.ts isRelayWarmPingRequest / RELAY_WARM_PING_PATHS). It is a
-// DEDICATED relay↔gateway secret — it does NOT need to be a
-// WORLDMONITOR_VALID_KEYS enterprise key, and shouldn't be (least privilege: it
-// unlocks only a cache-warm on these free endpoints, nothing else).
-//
-// Required env var, SAME value on BOTH sides:
-//   Railway ais-relay service  : WORLDMONITOR_RELAY_KEY=<dedicated secret>
-//   Vercel api project (gateway): WORLDMONITOR_RELAY_KEY=<same dedicated secret>
-// ─────────────────────────────────────────────────────────────
+// The relay authenticates its Classify and digest-warm requests with
+// X-WorldMonitor-Key = WORLDMONITOR_RELAY_KEY when it is set. Those requests
+// go to API_BASE_URL or the personal server (scripts/lib/classify-digest-request.cjs).
+// The upstream warm-pings that also used it are gone: this fork never calls
+// the upstream operator's API.
 const RELAY_API_KEY = process.env.WORLDMONITOR_RELAY_KEY || '';
-// Surface the auth-mode at boot so misconfig (env var on wrong service,
-// typo'd name, missing on a fresh Railway deploy) is visible in the first
-// log lines instead of waiting for the first 401. PR #3565 review P2.
-if (!RELAY_API_KEY) {
-  console.warn('[Relay] WORLDMONITOR_RELAY_KEY not set — warm-pings will 401 (no Origin-trust fallback since #3541). Set the same value on the Railway relay and the Vercel api project.');
-} else {
-  console.log('[Relay] WORLDMONITOR_RELAY_KEY configured — warm-pings will send X-WorldMonitor-Key');
-}
-
-function warmPingHeaders(extra = {}) {
-  const h = {
-    'User-Agent': CHROME_UA,
-    Origin: 'https://worldmonitor.app',
-    ...extra,
-  };
-  if (RELAY_API_KEY) h['X-WorldMonitor-Key'] = RELAY_API_KEY;
-  return h;
-}
-
-// ─────────────────────────────────────────────────────────────
-// CII Risk Scores warm-ping — keeps RPC cache fresh so
-// bootstrap stale key never expires.
-// The RPC handler owns seed-meta:intelligence:risk-scores so recordCount uses
-// signal coverage, not the structural Tier-1 CII row count. The cache-buster
-// keeps CDN caching from hiding the handler from the warm-ping loop.
-// ─────────────────────────────────────────────────────────────
-const CII_WARM_PING_INTERVAL_MS = 8 * 60 * 1000; // 8 min (live cache TTL is 10 min)
-const CII_RPC_URL = 'https://api.worldmonitor.app/api/intelligence/v1/get-risk-scores';
-
-function ciiWarmPingUrl() {
-  return `${CII_RPC_URL}?_wm_warm_ping=${Date.now()}`;
-}
-
-async function seedCiiWarmPing() {
-  try {
-    const resp = await fetch(ciiWarmPingUrl(), {
-      headers: warmPingHeaders(),
-      signal: AbortSignal.timeout(60_000),
-    });
-    if (!resp.ok) {
-      console.warn(`[CII] Warm-ping failed: HTTP ${resp.status}${RELAY_API_KEY ? '' : ' (WORLDMONITOR_RELAY_KEY not set — 401 expected; set it on the relay AND the Vercel api project)'}`);
-      return;
-    }
-    const data = await resp.json();
-    const count = data?.ciiScores?.length || 0;
-    console.log(`[CII] Warm-ping OK: ${count} scores`);
-  } catch (e) {
-    console.warn('[CII] Warm-ping error:', e?.message || e);
-  }
-}
-
-function startCiiWarmPingLoop() {
-  console.log(`[CII] Warm-ping loop starting (interval ${CII_WARM_PING_INTERVAL_MS / 1000 / 60}min)`);
-  startBootSeedLoop('CII', 'seed-meta:intelligence:risk-scores', CII_WARM_PING_INTERVAL_MS, seedCiiWarmPing, (e) => console.warn('[CII] Initial warm-ping error:', e?.message || e), (e) => console.warn('[CII] Warm-ping error:', e?.message || e));
-}
-
-// ─────────────────────────────────────────────────────────────
-// Chokepoint Status Warm-Ping — keeps supply_chain:chokepoints:v4
-// fresh so health.js does not report STALE_SEED. The RPC handler
-// (get-chokepoint-status.ts) writes seed-meta on every live fetch.
-// The handler reads only Redis, so a tick costs one function call. Each tick
-// also runs the disruption-alert check, which has its own 12 h cooldown.
-// ─────────────────────────────────────────────────────────────
-// One minute past the 300 s status-key TTL: the boot tick writes the key a few
-// seconds after the interval starts, so a 5-minute tick could land just before
-// expiry and re-read the cached reading on every other tick.
-const CHOKEPOINT_WARM_PING_INTERVAL_MS = 6 * 60 * 1000;
-const CHOKEPOINT_RPC_URL = 'https://api.worldmonitor.app/api/supply-chain/v1/get-chokepoint-status';
-
-async function seedChokepointWarmPing() {
-  try {
-    const resp = await fetch(CHOKEPOINT_RPC_URL, {
-      method: 'POST',
-      headers: warmPingHeaders({ 'Content-Type': 'application/json' }),
-      body: '{}',
-      signal: AbortSignal.timeout(60_000),
-    });
-    if (!resp.ok) {
-      console.warn(`[Chokepoints] Warm-ping failed: HTTP ${resp.status}${RELAY_API_KEY ? '' : ' (WORLDMONITOR_RELAY_KEY not set — 401 expected; set it on the relay AND the Vercel api project)'}`);
-      return;
-    }
-    const data = await resp.json();
-    const count = data?.chokepoints?.length || 0;
-    console.log(`[Chokepoints] Warm-ping OK: ${count} chokepoints`);
-    // seed-meta is written by the RPC handler when it fetches fresh data;
-    // no direct write needed here.
-    // The status key has a 5-min TTL, shorter than the tick, so the alert
-    // check reads the response, not Redis.
-    const alerts = await publishChokepointDisruptionAlerts(data, {
-      now: Date.now,
-      readState: upstashGet,
-      writeState: upstashSet,
-      publish: publishNotificationEvent,
-      log: (message) => console.warn(message),
-    });
-    if (alerts === null) console.warn('[Chokepoints] Disruption alert state unreadable; skipped this tick');
-    else if (alerts.published || alerts.failed || !alerts.stateWritten) console.log(`[Chokepoints] Disruption alerts: published=${alerts.published} failed=${alerts.failed}${alerts.stateWritten ? '' : ' stateWritten=false'}`);
-  } catch (e) {
-    console.warn('[Chokepoints] Warm-ping error:', e?.message || e);
-  }
-}
-
-function startChokepointWarmPingLoop() {
-  console.log(`[Chokepoints] Warm-ping loop starting (interval ${CHOKEPOINT_WARM_PING_INTERVAL_MS / 1000 / 60}min)`);
-  startBootSeedLoop('Chokepoints', 'seed-meta:supply_chain:chokepoints', CHOKEPOINT_WARM_PING_INTERVAL_MS, seedChokepointWarmPing, (e) => console.warn('[Chokepoints] Initial warm-ping error:', e?.message || e), (e) => console.warn('[Chokepoints] Warm-ping error:', e?.message || e));
-}
-
-// ─────────────────────────────────────────────────────────────
-// Cable Health Warm-Ping — keeps cable-health-v1 fresh so
-// health.js does not report STALE_SEED. The RPC handler writes
-// seed-meta on every live fetch; we just need to call it regularly.
-// ─────────────────────────────────────────────────────────────
-const CABLE_HEALTH_WARM_PING_INTERVAL_MS = 30 * 60 * 1000; // 30 min
-const CABLE_HEALTH_RPC_URL = 'https://api.worldmonitor.app/api/infrastructure/v1/get-cable-health';
-
-async function seedCableHealthWarmPing() {
-  try {
-    const resp = await fetch(CABLE_HEALTH_RPC_URL, {
-      method: 'POST',
-      headers: warmPingHeaders({ 'Content-Type': 'application/json' }),
-      body: '{}',
-      signal: AbortSignal.timeout(60_000),
-    });
-    if (!resp.ok) {
-      console.warn(`[CableHealth] Warm-ping failed: HTTP ${resp.status}${RELAY_API_KEY ? '' : ' (WORLDMONITOR_RELAY_KEY not set — 401 expected; set it on the relay AND the Vercel api project)'}`);
-      return;
-    }
-    const data = await resp.json();
-    const count = data?.cables ? Object.keys(data.cables).length : 0;
-    console.log(`[CableHealth] Warm-ping OK: ${count} cables`);
-    // seed-meta is written by getCableHealth handler only when source === 'fresh';
-    // writing it here would mark stale/cached responses as fresh.
-  } catch (e) {
-    console.warn('[CableHealth] Warm-ping error:', e?.message || e);
-  }
-}
-
-function startCableHealthWarmPingLoop() {
-  console.log(`[CableHealth] Warm-ping loop starting (interval ${CABLE_HEALTH_WARM_PING_INTERVAL_MS / 1000 / 60}min)`);
-  startBootSeedLoop('CableHealth', 'seed-meta:cable-health', CABLE_HEALTH_WARM_PING_INTERVAL_MS, seedCableHealthWarmPing, (e) => console.warn('[CableHealth] Initial warm-ping error:', e?.message || e), (e) => console.warn('[CableHealth] Warm-ping error:', e?.message || e));
-}
 
 // ─────────────────────────────────────────────────────────────
 // Weather Alerts Seed — NWS + ECCC + WMO SWIC → weather:alerts:v1 every 15 min
@@ -9074,146 +8879,6 @@ function startPizzintSeedLoop() {
   startBootSeedLoop('PizzINT', 'seed-meta:intelligence:pizzint', PIZZINT_SEED_INTERVAL_MS, seedPizzint, (e) => console.warn('[PizzINT] Initial seed error:', e?.message || e), (e) => console.warn('[PizzINT] Seed error:', e?.message || e));
 }
 
-
-// ─────────────────────────────────────────────────────────────
-// Dodo Product Prices Seed — fetches live prices from Dodo API,
-// builds tier view model, writes to Redis for /api/product-catalog.
-// Direct fetch first, PROXY_URL fallback if Dodo blocks datacenter IPs.
-// ─────────────────────────────────────────────────────────────
-const DODO_PRICE_SEED_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
-const DODO_PRICE_SEED_TTL = 43200; // 12h (2× interval)
-const DODO_PRICE_REDIS_KEY = 'product-catalog:v3';
-const DODO_LIVE_URL = 'https://live.dodopayments.com';
-const DODO_TEST_URL = 'https://test.dodopayments.com';
-const DODO_PRICE_API_KEY = process.env.DODO_API_KEY || '';
-const DODO_PRICE_ENV = process.env.DODO_PAYMENTS_ENVIRONMENT || 'test_mode';
-
-// Generated from convex/config/productCatalog.ts. The Railway Redis writer and
-// the Edge fallback consume the same artifact so cache hits cannot silently
-// revert plan copy, lifecycle metadata, or fallback prices.
-const GENERATED_PRODUCT_CATALOG = requireShared('product-catalog.generated.json');
-const DODO_PRODUCT_META = GENERATED_PRODUCT_CATALOG.products;
-const DODO_PRODUCT_IDS = Object.keys(GENERATED_PRODUCT_CATALOG.fallbackPrices);
-const DODO_TIER_CONFIG = GENERATED_PRODUCT_CATALOG.tierConfig;
-const DODO_PUBLIC_TIER_GROUPS = GENERATED_PRODUCT_CATALOG.publicTierGroups;
-const DODO_FALLBACK_PRICES = GENERATED_PRODUCT_CATALOG.fallbackPrices;
-const DODO_PUBLIC_PRODUCT_FACTS = GENERATED_PRODUCT_CATALOG.facts;
-const DODO_PUBLIC_INVENTORY_FACTS = requireShared('inventory-facts.generated.json');
-
-let dodoPriceSeedInFlight = false;
-
-async function fetchDodoProductPrice(productId, baseUrl) {
-  const resp = await fetch(`${baseUrl}/products/${productId}`, {
-    headers: { Authorization: `Bearer ${DODO_PRICE_API_KEY}`, 'User-Agent': CHROME_UA },
-    signal: AbortSignal.timeout(10_000),
-  });
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-  const product = await resp.json();
-  return product.price?.price ?? product.price?.fixed_price ?? null;
-}
-
-async function seedDodoPrices() {
-  if (dodoPriceSeedInFlight) return;
-  dodoPriceSeedInFlight = true;
-  const t0 = Date.now();
-  try {
-    if (!DODO_PRICE_API_KEY) {
-      console.warn('[DodoPrices] No DODO_API_KEY — skipping');
-      return;
-    }
-
-    const baseUrl = DODO_PRICE_ENV === 'live_mode' ? DODO_LIVE_URL : DODO_TEST_URL;
-    const prices = {};
-    let fetchedCount = 0;
-    let fallbackCount = 0;
-
-    for (const productId of DODO_PRODUCT_IDS) {
-      // Try direct first
-      try {
-        const priceCents = await fetchDodoProductPrice(productId, baseUrl);
-        if (priceCents != null) { prices[productId] = priceCents; fetchedCount++; continue; }
-      } catch (e) {
-        console.warn(`[DodoPrices] Direct fetch ${productId} failed: ${e?.message}`);
-      }
-
-      if (PROXY_URL) {
-        try {
-          const { proxyFetch } = require('./_proxy-utils.cjs');
-          const proxy = parseProxyUrl(PROXY_URL);
-          const fetchUrl = `${baseUrl}/products/${productId}`;
-          const result = await proxyFetch(fetchUrl, proxy, {
-            headers: { 'User-Agent': CHROME_UA, Authorization: `Bearer ${DODO_PRICE_API_KEY}` },
-            accept: 'application/json',
-            timeoutMs: 10_000,
-          });
-          if (result?.ok) {
-            const product = JSON.parse(result.buffer.toString('utf8'));
-            const priceCents = product.price?.price ?? product.price?.fixed_price;
-            if (priceCents != null) { prices[productId] = priceCents; fetchedCount++; continue; }
-          }
-        } catch (e) {
-          console.warn(`[DodoPrices] Proxy fetch ${productId} failed: ${e?.message}`);
-        }
-      }
-
-      // Use fallback
-      if (DODO_FALLBACK_PRICES[productId] != null) {
-        prices[productId] = DODO_FALLBACK_PRICES[productId];
-        fallbackCount++;
-      }
-    }
-
-    // Build tier view model
-    const tiers = [];
-    for (const group of DODO_PUBLIC_TIER_GROUPS) {
-      const config = DODO_TIER_CONFIG[group];
-      if (!config) continue;
-      if (group === 'free') { tiers.push({ ...config, price: 0, period: 'forever' }); continue; }
-      if (group === 'enterprise') { tiers.push({ ...config, price: null }); continue; }
-
-      const tier = { ...config };
-      const monthlyId = Object.entries(DODO_PRODUCT_META).find(([, v]) => v.tierGroup === group && v.billingPeriod === 'monthly')?.[0];
-      const annualId = Object.entries(DODO_PRODUCT_META).find(([, v]) => v.tierGroup === group && v.billingPeriod === 'annual')?.[0];
-      if (monthlyId && prices[monthlyId]) { tier.monthlyPrice = prices[monthlyId] / 100; tier.monthlyProductId = monthlyId; }
-      if (annualId && prices[annualId]) { tier.annualPrice = prices[annualId] / 100; tier.annualProductId = annualId; }
-      tiers.push(tier);
-    }
-
-    const priceSource = fallbackCount === 0 ? 'dodo' : fetchedCount > 0 ? 'partial' : 'fallback';
-    const now = Date.now();
-    const payload = {
-      ...DODO_PUBLIC_PRODUCT_FACTS,
-      capabilities: DODO_PUBLIC_INVENTORY_FACTS.capabilities,
-      tiers,
-      fetchedAt: now,
-      cachedUntil: now + DODO_PRICE_SEED_TTL * 1000,
-      priceSource,
-    };
-
-    // Only write to Redis when ALL prices came from Dodo (no fallback contamination).
-    // Partial/fallback results are not persisted — edge endpoint serves them directly with short cache.
-    if (priceSource === 'dodo') {
-      const ok1 = await envelopeWrite(DODO_PRICE_REDIS_KEY, payload, DODO_PRICE_SEED_TTL, { recordCount: fetchedCount, sourceVersion: 'dodo-prices' });
-      const ok2 = await upstashSet('seed-meta:product-catalog', { fetchedAt: now, recordCount: fetchedCount, priceSource }, 604800);
-      console.log(`[DodoPrices] Seeded ${fetchedCount}/${DODO_PRODUCT_IDS.length} from Dodo (redis=${ok1 && ok2 ? 'OK' : 'PARTIAL'}) in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
-    } else {
-      // Don't overwrite good cached data with degraded prices. Just extend TTL if it exists.
-      try { await upstashExpire(DODO_PRICE_REDIS_KEY, DODO_PRICE_SEED_TTL); } catch {}
-      console.warn(`[DodoPrices] NOT writing to Redis — source=${priceSource} (${fetchedCount} live, ${fallbackCount} fallback) in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
-    }
-  } catch (e) {
-    console.warn('[DodoPrices] Seed error:', e?.message || e);
-  } finally {
-    dodoPriceSeedInFlight = false;
-  }
-}
-
-function startDodoPriceSeedLoop() {
-  if (!UPSTASH_ENABLED) { console.log('[DodoPrices] Disabled (no Upstash Redis)'); return; }
-  if (!DODO_PRICE_API_KEY) { console.log('[DodoPrices] Disabled (no DODO_API_KEY)'); return; }
-  console.log(`[DodoPrices] Seed loop starting (interval ${DODO_PRICE_SEED_INTERVAL_MS / 1000 / 60}min)`);
-  startBootSeedLoop('DodoPrices', 'seed-meta:product-catalog', DODO_PRICE_SEED_INTERVAL_MS, seedDodoPrices, (e) => console.warn('[DodoPrices] Initial seed error:', e?.message || e), (e) => console.warn('[DodoPrices] Seed error:', e?.message || e));
-}
 
 
 function gzipSyncBuffer(body) {
@@ -14485,42 +14150,9 @@ const WIDGET_EXA_KEY = (process.env.EXA_API_KEYS || '').split(/[\n,]+/).map(k =>
 const WIDGET_BRAVE_KEY = (process.env.BRAVE_API_KEYS || '').split(/[\n,]+/).map(k => k.trim()).filter(Boolean)[0] || '';
 const WIDGET_FIRECRAWL_KEY = (process.env.FIRECRAWL_API_KEY || '').trim();
 
-// Widget data reads need a credential since #3541 removed Origin trust. The
-// agent's endpoints are model-chosen, so it gets exactly a browser visitor's
-// authority: an anonymous wms_ session, which forceKey routes reject. Never
-// WORLDMONITOR_RELAY_KEY — in production that is an enterprise key.
-let widgetDataSession = null;
-let widgetDataSessionPending = null;
-
-async function getWidgetDataSessionToken() {
-  if (widgetDataSession && widgetDataSession.exp - Date.now() > 5 * 60_000) return widgetDataSession.token;
-  widgetDataSessionPending ??= (async () => {
-    try {
-      const res = await fetch('https://api.worldmonitor.app/api/wm-session', {
-        method: 'POST',
-        headers: { 'User-Agent': 'WorldMonitor-WidgetAgent/1.0' },
-        signal: AbortSignal.timeout(10_000),
-      });
-      const body = res.ok ? await res.json() : null;
-      if (typeof body?.token !== 'string' || !body.token.startsWith('wms_') || !Number.isFinite(body.exp)) {
-        console.warn(`[widget-agent] Data session mint failed: HTTP ${res.status}`);
-        return '';
-      }
-      widgetDataSession = { token: body.token, exp: body.exp };
-      return body.token;
-    } catch (err) {
-      console.warn(`[widget-agent] Data session mint failed: ${err?.name || 'Error'}`);
-      return '';
-    } finally {
-      widgetDataSessionPending = null;
-    }
-  })();
-  return widgetDataSessionPending;
-}
-
-function invalidateWidgetDataSession(token) {
-  if (widgetDataSession?.token === token) widgetDataSession = null;
-}
+// Widget data reads go to this fork's own API (scripts/_widget-data-policy.cjs
+// API_ORIGIN) with no credential: the upstream wm-session mint is gone, and the
+// agent never sends WORLDMONITOR_RELAY_KEY to its model-chosen endpoints.
 
 async function performWidgetWebSearch(query) {
   if (WIDGET_EXA_KEY) {
@@ -15135,21 +14767,14 @@ async function handleWidgetAgentRequest(req, res) {
 
           try {
             toolExecutionCount++;
-            const sessionToken = await getWidgetDataSessionToken();
             const dataHeaders = { 'User-Agent': 'WorldMonitor-WidgetAgent/1.0' };
-            if (sessionToken) dataHeaders['X-WorldMonitor-Key'] = sessionToken;
-            // A redirect (e.g. /api/download → GitHub) would carry the session header off-origin.
+            // Never follow a redirect off the API origin (e.g. /api/download → GitHub).
             const dataRes = await fetch(url.toString(), {
               headers: dataHeaders,
               redirect: 'error',
               signal: AbortSignal.timeout(15_000),
             });
             const data = await dataRes.text();
-            // Pro-only routes also 401 ("Pro authentication required"); re-minting
-            // for those would spend the fail-closed per-IP issuance budget.
-            if (dataRes.status === 401 && sessionToken && data.includes('Invalid session token')) {
-              invalidateWidgetDataSession(sessionToken);
-            }
             const trimmed = data.trimStart();
             if (trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html')) {
               rejectTool('Error: endpoint returned HTML instead of JSON. No data available.');
@@ -15776,13 +15401,9 @@ server.listen(PORT, RELAY_BIND_HOST, () => {
   // Assembles per-country canonical energy keys from 6 domain sources daily.
   // Cyber seed disabled — standalone cron seed-cyber-threats.mjs handles this
   // (avoids burning 12 extra AbuseIPDB calls/day from duplicate relay loop)
-  startCiiWarmPingLoop();
-  startChokepointWarmPingLoop();
-  startCableHealthWarmPingLoop();
   startClassifySeedLoop();
   startDigestWarmLoop();
   startMiddleEastStrikesLoop();
-  startServiceStatusesSeedLoop();
   startTheaterPostureSeedLoop();
 
   startWeatherSeedLoop();
@@ -15800,7 +15421,6 @@ server.listen(PORT, RELAY_BIND_HOST, () => {
   startChokepointFlowsSeedLoop();
   startAuYieldCurveSeedLoop();
   startPizzintSeedLoop();
-  startDodoPriceSeedLoop();
 });
 
 wss.on('connection', (ws, req) => {

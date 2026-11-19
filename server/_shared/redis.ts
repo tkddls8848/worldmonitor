@@ -1,7 +1,6 @@
 import { COMPARE_AND_DELETE_SCRIPT } from '../../shared/compare-and-delete-script.cjs';
 import { unwrapEnvelope } from './seed-envelope.js';
 import { getRpcNoStoreReasonFromPayload } from './cache-contract.js';
-import { buildUpstreamEvent, sendToAxiom } from './usage.js';
 
 // Default Upstash REST timeouts are tuned for production (Vercel ↔ Upstash
 // same-datacenter latency is sub-50ms, 1.5s leaves >20× headroom). They
@@ -940,25 +939,6 @@ export async function cachedFetchJson<T extends object>(
 }
 
 /**
- * Per-call usage-telemetry hook for upstream event emission (issue #3381).
- *
- * The only required field is `provider` — its presence is what tells the
- * helper "emit an upstream event for this call." Emission also needs `ctx`;
- * without it the event is skipped silently. The other fields default to
- * empty values.
- */
-export interface UsageHook {
-  provider: string;
-  operation?: string;
-  host?: string;
-  ctx?: { waitUntil: (p: Promise<unknown>) => void };
-  requestId?: string;
-  customerId?: string | null;
-  route?: string;
-  tier?: number;
-}
-
-/**
  * Like cachedFetchJson but reports the data source.
  * Use when callers need to distinguish cache hits from fresh fetches
  * (e.g. to set provider/cached metadata on responses).
@@ -968,10 +948,6 @@ export interface UsageHook {
  *   'fresh'  — fetcher ran (leader) or joined an in-flight fetch (follower)
  *   'skipped' — caller-local gate prevented a fetch after cache/in-flight miss
  * and leader is true only for the caller that actually ran the fetcher.
- *
- * If `opts.usage` is supplied, an upstream event is emitted on the fresh
- * path (issue #3381). Pass-through for callers that don't care about
- * telemetry — backwards-compatible.
  *
  * If `opts.shouldFetch` resolves false after all cache and in-flight checks,
  * the fetcher is skipped without writing a negative sentinel. Use this for
@@ -987,7 +963,6 @@ export interface UsageHook {
  * inheriting any preceding leader's failure.
  */
 type CachedFetchWithMetaOpts<T extends object = object> = CachedFetchOpts & {
-  usage?: UsageHook;
   shouldFetch?: () => boolean | Promise<boolean>;
   cacheFailures?: boolean;
   cachePositiveResult?: boolean;
@@ -1008,8 +983,8 @@ export async function cachedFetchJsonWithMeta<T extends object>(
 
 // Shared implementation behind cachedFetchJson / cachedFetchJsonWithMeta.
 // cachedFetchJson is the WithMeta behavior with every WithMeta-only opt left
-// at its default (no inflightKey override, no shouldFetch gate, no
-// per-fetch usage telemetry, cacheFailures/isCallerLocalError unset) and
+// at its default (no inflightKey override, no shouldFetch gate,
+// cacheFailures/isCallerLocalError unset) and
 // { data, source, leader } narrowed down to plain `data`. `callerName`
 // keeps the timeout/backoff/log messages attributed to whichever public
 // entry point the caller actually used, matching withFetcherTimeout's
@@ -1070,19 +1045,9 @@ async function cachedFetchJsonCore<T extends object>(
     break;
   }
 
-  const fetchT0 = Date.now();
-  let upstreamStatus = 0;
-  let cacheStatus: 'miss' | 'neg-sentinel' = 'miss';
-
   const timeoutMs = opts?.timeoutMs ?? fetcherTimeoutDefaultMs;
   const promise = withFetcherTimeout(fetcher(), key, timeoutMs, callerName)
     .then(async (result) => {
-      // Only count an upstream call as a 200 when it actually returned data.
-      // A null result triggers the neg-sentinel branch below — these are
-      // empty/failed upstream calls and must NOT show up as `status=200` in
-      // dashboards (would poison the cache-hit-ratio recipe and per-provider
-      // error rates). Use status=0 for the empty branch; cache_status carries
-      // the structural detail.
       if (result != null) {
         const noStoreReason = getRpcNoStoreReasonFromPayload(result, { includeAvailableFalse: false });
         const cachePartialUpstreamResult = noStoreReason === 'upstream-unavailable'
@@ -1092,14 +1057,11 @@ async function cachedFetchJsonCore<T extends object>(
             { includeAvailableFalse: false },
           ) === null;
         if (noStoreReason && !cachePartialUpstreamResult) {
-          upstreamStatus = 0;
           if (opts?.cacheFailures !== false) {
-            cacheStatus = 'neg-sentinel';
             armLocalNegativeCooldown(key, negativeTtlSeconds);
             await setCachedJson(key, NEG_SENTINEL, negativeTtlSeconds);
           }
         } else {
-          upstreamStatus = 200;
           const wrote = opts?.cachePositiveResult === false
             ? true
             : await setCachedJson(key, result, ttlSeconds);
@@ -1112,9 +1074,7 @@ async function cachedFetchJsonCore<T extends object>(
           if (opts?.cachePositiveResult === false) await opts.onPositiveResult?.(result);
         }
       } else {
-        upstreamStatus = 0;
         if (opts?.cacheFailures !== false) {
-          cacheStatus = 'neg-sentinel';
           armLocalNegativeCooldown(key, negativeTtlSeconds);
           await setCachedJson(key, NEG_SENTINEL, negativeTtlSeconds);
         }
@@ -1122,14 +1082,12 @@ async function cachedFetchJsonCore<T extends object>(
       return result;
     })
     .catch(async (err: unknown) => {
-      upstreamStatus = 0;
       if (opts?.isCallerLocalError?.(err)) {
         // Caller-local admission failures must not mutate provider-independent
         // cache or backoff state shared by other principals.
       } else if (opts?.cacheFailures === false) {
         // Provider-local failures must not mutate a provider-independent key.
       } else if (opts?.cacheFetcherErrors !== false) {
-        cacheStatus = 'neg-sentinel';
         const errorTtlSeconds = effectiveFetchErrorNegativeTtlSeconds(negativeTtlSeconds);
         armLocalNegativeCooldown(key, errorTtlSeconds);
         await setCachedJson(key, NEG_SENTINEL, errorTtlSeconds);
@@ -1144,42 +1102,8 @@ async function cachedFetchJsonCore<T extends object>(
     });
 
   inflight.set(inflightKey, promise);
-  let data: T | null;
-  try {
-    data = await promise;
-  } finally {
-    emitUpstreamFromHook(opts?.usage, upstreamStatus, Date.now() - fetchT0, cacheStatus);
-  }
+  const data: T | null = await promise;
   return { data, source: 'fresh', leader: true };
-}
-
-function emitUpstreamFromHook(usage: UsageHook | undefined, status: number, durationMs: number, cacheStatus: 'miss' | 'fresh' | 'stale-while-revalidate' | 'neg-sentinel'): void {
-  // Emit only when caller labels the provider — avoids "unknown" pollution.
-  if (!usage?.provider) return;
-  // Single waitUntil() registered synchronously here — no nested
-  // ctx.waitUntil() inside Axiom delivery. Static import keeps the call
-  // synchronous so the runtime registers it during the request phase.
-  const ctx = usage.ctx;
-  if (!ctx) return;
-  const event = buildUpstreamEvent({
-    requestId: usage.requestId ?? '',
-    customerId: usage.customerId ?? null,
-    route: usage.route ?? '',
-    tier: usage.tier ?? 0,
-    provider: usage.provider,
-    operation: usage.operation ?? 'fetch',
-    host: usage.host ?? '',
-    status,
-    durationMs,
-    requestBytes: 0,
-    responseBytes: 0,
-    cacheStatus,
-  });
-  try {
-    ctx.waitUntil(sendToAxiom([event]));
-  } catch {
-    /* telemetry must never throw */
-  }
 }
 
 export async function geoSearchByBox(...args: Parameters<typeof geoSearchByBoxStrict>): Promise<string[]> {

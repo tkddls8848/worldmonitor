@@ -22,14 +22,6 @@ function extractObjectEntry(source, entryName) {
   return { key: match[1], minutes: Number(match[2].replaceAll('_', '')) };
 }
 
-function extractSourceRange(source, startNeedle, endNeedle) {
-  const start = source.indexOf(startNeedle);
-  assert.notEqual(start, -1, `missing ${startNeedle}`);
-  const end = source.indexOf(endNeedle, start);
-  assert.notEqual(end, -1, `missing ${endNeedle}`);
-  return source.slice(start, end);
-}
-
 test('seed-health CII risk score freshness mirrors api/health riskScores', () => {
   const seedHealth = readRepoFile('api/seed-health.js');
   const health = readRepoFile('api/health.js');
@@ -73,35 +65,11 @@ test('seed-health CII risk score freshness mirrors api/health riskScores', () =>
   );
 });
 
-test('relay CII warm-ping delegates risk-score health count to the RPC handler', () => {
+test('the get-risk-scores handler owns the risk-score health count (signal coverage)', () => {
+  // The relay's upstream CII warm-ping is gone; the handler alone writes this seed-meta.
   const relay = readRepoFile('scripts/ais-relay.cjs');
   const handler = readRepoFile('server/worldmonitor/intelligence/v1/get-risk-scores.ts');
-  const warmPing = extractSourceRange(
-    relay,
-    'async function seedCiiWarmPing()',
-    'function startCiiWarmPingLoop()',
-  );
-
-  assert.doesNotMatch(
-    warmPing,
-    /upstashSet\(\s*['"]seed-meta:intelligence:risk-scores/,
-    'relay warm-ping must not overwrite the handler signal-coverage count with the structural CII row count',
-  );
-  assert.doesNotMatch(
-    warmPing,
-    /recordCount:\s*(?:count|data\?\.ciiScores\?\.length)/,
-    'relay warm-ping must not derive seed-meta recordCount from ciiScores.length',
-  );
-  assert.match(
-    warmPing,
-    /fetch\(ciiWarmPingUrl\(\)/,
-    'relay warm-ping must bypass CDN cache so the handler can refresh its own seed-meta on fresh fetches',
-  );
-  assert.match(
-    relay,
-    /_wm_warm_ping=/,
-    'CII warm-ping URL must carry a private cache-busting query parameter',
-  );
+  assert.doesNotMatch(relay, /seed-meta:intelligence:risk-scores/, 'the relay no longer touches the risk-score seed-meta');
   assert.match(
     handler,
     /countCiiRealtimeSignalDensityCoverage\(acled,\s*aux,\s*nowMs\)/,

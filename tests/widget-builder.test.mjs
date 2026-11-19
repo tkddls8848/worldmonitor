@@ -80,14 +80,14 @@ const widgetSonnetConstants = () => {
 
 // Execute the production handler without the relay's unconditional server startup.
 // Only the SDK import is substituted; requests, tool results and SSE use real code.
-async function runWidgetAgent(responses, { tier = 'basic', failFetch = false, failSearch = false, sdkTransport = false, expireDuringFetch = false, sessionToken = 'wms_fixture', fetchStatus = 200, fetchBody = '{"value":42}', searchResults = [{ title: 'Fixture' }], pageText = 'page fixture', verdicts = [], hangOn = null, clock = null, request = {} } = {}) {
+async function runWidgetAgent(responses, { tier = 'basic', failFetch = false, failSearch = false, sdkTransport = false, expireDuringFetch = false, fetchStatus = 200, fetchBody = '{"value":42}', searchResults = [{ title: 'Fixture' }], pageText = 'page fixture', verdicts = [], hangOn = null, clock = null, request = {} } = {}) {
   const relay = src('scripts/ais-relay.cjs');
   const extract = name => {
     const match = relay.match(new RegExp(`(?:async )?function ${name}\\([^]*?\\n\\}`));
     assert.ok(match, `Missing relay function ${name}`);
     return match[0];
   };
-  const requests = [], effects = [], logs = [], frames = [], fetchInits = [], invalidated = [], verifyCalls = [], modelSignals = [], modelOptions = [];
+  const requests = [], effects = [], logs = [], frames = [], fetchInits = [], verifyCalls = [], modelSignals = [], modelOptions = [];
   let ended = 0;
   let expire, disconnect;
   // A hung call settles only through its abort signal; the guard fails a missing abort.
@@ -137,8 +137,6 @@ async function runWidgetAgent(responses, { tier = 'basic', failFetch = false, fa
       if (failFetch) throw new Error('Fetch fixture failure');
       return { status: fetchStatus, text: async () => (typeof fetchBody === 'function' ? fetchBody(url) : fetchBody) };
     },
-    getWidgetDataSessionToken: async () => sessionToken,
-    invalidateWidgetDataSession: token => invalidated.push(token),
     importAnthropic: async () => ({ default: sdkTransport ? class extends Anthropic {
       constructor(options) {
         super({ ...options, maxRetries: 0, fetch: async (_url, init) => {
@@ -187,7 +185,7 @@ async function runWidgetAgent(responses, { tier = 'basic', failFetch = false, fa
   res.on = (event, cb) => { if (event === 'close') disconnect = () => { if (!res.writableEnded) cb(); }; };
   await run({ headers: {}, on() {}, socket: {} }, res);
   const events = frames.map(frame => JSON.parse(frame.match(/data: (.*)/)[1]));
-  return { requests, effects, fetchInits, invalidated, verifyCalls, modelSignals, modelOptions, logs, events, ended };
+  return { requests, effects, fetchInits, verifyCalls, modelSignals, modelOptions, logs, events, ended };
 }
 
 const usageLine = result => JSON.parse(result.logs.find(args => args[0] === '[widget-agent] usage')[1]);
@@ -590,7 +588,6 @@ describe('widget data-tool contracts', () => {
       URL, AbortSignal, fetch, buildWidgetDataUrl, response: { stop_reason: 'tool_use', content: [block] }, messages: [], res: {},
       cancelled: false, finalizing: false, toolCallCount: 0, toolExecutionCount: 0,
       WIDGET_MAX_TOOL_CALLS: 3, toolLimit: 3, searchedUrls: new Set(), sources: [], usedWeb: false,
-      getWidgetDataSessionToken: async () => 'wms_contract', invalidateWidgetDataSession() {},
       sendWidgetSSE() {}, WIDGET_EXA_KEY: 'fixture', WIDGET_BRAVE_KEY: 'fixture', console,
     });
     const searchStart = relay.indexOf('async function performWidgetWebSearch(');
@@ -604,9 +601,9 @@ describe('widget data-tool contracts', () => {
   it('returns bootstrap response text and sends params as GET query strings', async () => {
     const body = JSON.stringify({ data: { marketQuotes: [{ symbol: 'SPY', price: 600 }] }, missing: ['cryptoQuotes'] });
     const result = await toolResult(fetchBlock('/api/bootstrap', { keys: 'marketQuotes,cryptoQuotes' }), async (url, init) => {
-      assert.equal(url, 'https://api.worldmonitor.app/api/bootstrap?keys=marketQuotes%2CcryptoQuotes');
+      assert.equal(url, 'http://127.0.0.1:3000/api/bootstrap?keys=marketQuotes%2CcryptoQuotes');
       assert.equal(init.method ?? 'GET', 'GET');
-      assert.equal(init.headers['X-WorldMonitor-Key'], 'wms_contract');
+      assert.equal('X-WorldMonitor-Key' in init.headers, false);
       return { text: async () => body };
     });
     assert.equal(result, body);
@@ -665,30 +662,17 @@ describe('widget data-tool contracts', () => {
 describe('widget-agent relay — data fetch credentials', () => {
   const oneFetch = () => [widgetResponse('tool_use', [widgetTool('1')]), widgetResponse('end_turn')];
 
-  it('authenticates data fetches with an anonymous WorldMonitor session', async () => {
+  it('fetches data without a credential and never follows a redirect', async () => {
     const result = await runWidgetAgent(oneFetch());
-    assert.equal(result.fetchInits[0].headers['X-WorldMonitor-Key'], 'wms_fixture');
-    assert.equal(result.fetchInits[0].redirect, 'error');
-    assert.deepEqual(result.invalidated, []);
-    assertWidgetSuccess(result);
-  });
-
-  it('fetches without a credential when no session could be minted', async () => {
-    const result = await runWidgetAgent(oneFetch(), { sessionToken: '' });
     assert.equal('X-WorldMonitor-Key' in result.fetchInits[0].headers, false);
+    assert.equal(result.fetchInits[0].redirect, 'error');
     assertWidgetSuccess(result);
   });
 
-  it('drops the session when the API rejects it so the next fetch mints a fresh one', async () => {
-    const result = await runWidgetAgent(oneFetch(), { fetchStatus: 401, fetchBody: '{"error":"Invalid session token"}' });
-    assert.deepEqual(result.invalidated, ['wms_fixture']);
-    assertWidgetSuccess(result);
-  });
-
-  it('keeps the session when a route needs more than anonymous authority', async () => {
-    const result = await runWidgetAgent(oneFetch(), { fetchStatus: 401, fetchBody: '{"error":"Pro authentication required"}' });
-    assert.deepEqual(result.invalidated, []);
-    assertWidgetSuccess(result);
+  it('mints no upstream session token', () => {
+    const relay = src('scripts/ais-relay.cjs');
+    assert.ok(!relay.includes('/api/wm-session'), 'the upstream wm-session mint is gone');
+    assert.ok(!relay.includes('getWidgetDataSessionToken'));
   });
 });
 
@@ -1147,69 +1131,6 @@ describe('widget source verifier', () => {
     assert.equal(await verify({ messages: { create: async () => { throw new Error('overloaded'); } } }, input), null);
     assert.equal(await verify(clientReturning('{"right_dataset": tr'), input), null);
     assert.equal(await verify(clientReturning('{"unsupported": []}'), input), null);
-  });
-});
-
-describe('widget-agent relay — anonymous data session', () => {
-  const relay = src('scripts/ais-relay.cjs');
-  const start = relay.indexOf('let widgetDataSession = null;');
-  const end = relay.indexOf('\n}\n', relay.indexOf('function invalidateWidgetDataSession(')) + 3;
-
-  function load(mint) {
-    const calls = [];
-    let now = 1_000_000;
-    const context = vm.createContext({
-      console: { warn() {} },
-      Date: { now: () => now },
-      AbortSignal,
-      fetch: async (url, init) => { calls.push({ url, init }); return mint(calls.length); },
-    });
-    assert.ok(start > 0 && end > start, 'Missing widget data session helpers');
-    vm.runInContext(relay.slice(start, end), context);
-    return { context, calls, advance: ms => { now += ms; } };
-  }
-  const minted = (token, exp) => ({ ok: true, status: 200, json: async () => ({ ok: true, token, exp }) });
-
-  it('mints once with a POST to /api/wm-session and reuses the token until near expiry', async () => {
-    const { context, calls, advance } = load(n => minted(`wms_${n}`, 1_000_000 + 12 * 3600_000));
-    assert.equal(await context.getWidgetDataSessionToken(), 'wms_1');
-    assert.equal(await context.getWidgetDataSessionToken(), 'wms_1');
-    assert.equal(calls.length, 1);
-    assert.equal(calls[0].url, 'https://api.worldmonitor.app/api/wm-session');
-    assert.equal(calls[0].init.method, 'POST');
-    advance(12 * 3600_000 - 60_000);
-    assert.equal(await context.getWidgetDataSessionToken(), 'wms_2');
-  });
-
-  it('shares one in-flight mint between concurrent callers', async () => {
-    const { context, calls } = load(n => minted(`wms_${n}`, 1_000_000 + 3600_000));
-    const tokens = await Promise.all([context.getWidgetDataSessionToken(), context.getWidgetDataSessionToken()]);
-    assert.deepEqual(tokens, ['wms_1', 'wms_1']);
-    assert.equal(calls.length, 1);
-  });
-
-  it('re-mints after the current token is invalidated, but ignores a stale invalidation', async () => {
-    const { context, calls } = load(n => minted(`wms_${n}`, 1_000_000 + 3600_000));
-    await context.getWidgetDataSessionToken();
-    context.invalidateWidgetDataSession('wms_other');
-    assert.equal(await context.getWidgetDataSessionToken(), 'wms_1');
-    context.invalidateWidgetDataSession('wms_1');
-    assert.equal(await context.getWidgetDataSessionToken(), 'wms_2');
-    assert.equal(calls.length, 2);
-  });
-
-  it('returns an empty token when minting fails, then retries on the next call', async () => {
-    const { context, calls } = load(n => n === 1
-      ? { ok: false, status: 429, json: async () => ({}) }
-      : minted('wms_ok', 1_000_000 + 3600_000));
-    assert.equal(await context.getWidgetDataSessionToken(), '');
-    assert.equal(await context.getWidgetDataSessionToken(), 'wms_ok');
-    assert.equal(calls.length, 2);
-  });
-
-  it('rejects a mint response that is not a wms_ session token', async () => {
-    const { context } = load(() => minted('sk-not-a-session', 1_000_000 + 3600_000));
-    assert.equal(await context.getWidgetDataSessionToken(), '');
   });
 });
 

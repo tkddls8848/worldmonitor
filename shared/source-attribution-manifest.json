@@ -587,24 +587,10 @@
       "host": "api.axiom.co",
       "provider": "Axiom telemetry",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: World Monitor operational telemetry, not an external data provider",
       "attribution": "Excluded from the provider count: internal usage telemetry.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "scripts/deploy-error-canary.mjs"
-        },
-        {
-          "path": "scripts/lib/llm-telemetry.cjs"
-        },
-        {
-          "path": "scripts/seed-forecasts.mjs"
-        },
-        {
-          "path": "server/_shared/usage.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "api.axios.com",
@@ -1532,19 +1518,10 @@
       "status": "excluded",
       "references": [
         {
-          "path": "scripts/_widget-data-policy.cjs"
-        },
-        {
-          "path": "scripts/ais-relay.cjs"
-        },
-        {
           "path": "scripts/audit-resilience-cohorts.mjs"
         },
         {
           "path": "scripts/freeze-resilience-ranking.mjs"
-        },
-        {
-          "path": "scripts/local/local-api-server.mjs"
         },
         {
           "path": "scripts/openapi-inject-servers.mjs"
@@ -6247,15 +6224,10 @@
       "host": "live.dodopayments.com",
       "provider": "live.dodopayments.com",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: first-party, control-plane, UI, or rendering transport",
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "scripts/ais-relay.cjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "live.livetvstream.co.uk",
@@ -10053,15 +10025,10 @@
       "host": "test.dodopayments.com",
       "provider": "test.dodopayments.com",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: first-party, control-plane, UI, or rendering transport",
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "scripts/ais-relay.cjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "th.usembassy.gov",
@@ -15364,9 +15331,6 @@
         },
         {
           "path": "scripts/comparison-shortlist.mjs"
-        },
-        {
-          "path": "scripts/deploy-error-canary.mjs"
         },
         {
           "path": "scripts/discover-content-corpus-pages.mjs"

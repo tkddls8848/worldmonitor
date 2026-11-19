@@ -53,7 +53,6 @@ export {
   composeInsightsSynthesis,
   resolveInsightsSynthesis,
 };
-import { buildLlmCallEvent, emitLlmEvents, flushPendingLlmEvents } from './lib/llm-telemetry.cjs';
 import { wmApiAuthHint, wmApiBase, wmApiFetch } from './lib/personal-api.mjs';
 import {
   OPENROUTER_FREE_BACKUP_MODEL,
@@ -517,11 +516,6 @@ async function callLLM(headline, options = {}) {
   const budgetStartedAtMs = Date.now();
   const usableBudgetMs = () => Math.max(0, budgetStartedAtMs + callBudgetMs - Date.now() - INSIGHTS_LLM_CALL_BUDGET_GUARD_MS);
 
-  // llm_call telemetry (#4944 U5): one event per provider OUTCOME (the
-  // withRetry duration covers in-provider retries), unified with the
-  // Vercel-side stream via scripts/lib/llm-telemetry.cjs.
-  const events = [];
-  let attemptIndex = 0;
   // 0.1 keeps the first sample stable and cheap to reason about. But after a
   // gate rejection, determinism is the enemy: the same prompt at the same
   // temperature returns the same draft, so #6995's resample-once was a second
@@ -579,23 +573,8 @@ async function callLLM(headline, options = {}) {
     const apiUrl = provider.apiUrlFn ? provider.apiUrlFn(envVal) : provider.apiUrl;
     const model = typeof provider.model === 'function' ? provider.model() : provider.model;
     // Captured per attempt, BEFORE the request: a correction collected during
-    // this attempt's rejection belongs to the NEXT request. The request body
-    // and the telemetry both derive from this one variable, so the recorded
-    // promptChars is the size of what was actually sent — a corrected resample
-    // is larger than the base prompt, and the events must say so (#7248
-    // review: every event recorded the base-only size).
+    // this attempt's rejection belongs to the NEXT request.
     const effectiveUserPrompt = gateFeedbackNote ? `${userPrompt}\n\n${gateFeedbackNote}` : userPrompt;
-    const attemptPromptChars = (systemPrompt?.length ?? 0) + effectiveUserPrompt.length;
-    const t0 = Date.now();
-    const record = (ok, extra = {}) => {
-      events.push(buildLlmCallEvent({
-        provider: provider.name, model, stage: 'seed-insights', ok,
-        durationMs: Date.now() - t0, promptChars: attemptPromptChars, maxTokens,
-        fallbackIndex: attemptIndex++,
-        ...extra,
-      }));
-    };
-
     try {
       const resp = await withRetry(async () => {
         const usable = usableBudgetMs();
@@ -630,15 +609,9 @@ async function callLLM(headline, options = {}) {
       }, provider.maxRetries ?? INSIGHTS_LLM_MAX_RETRIES, retryDelayMs);
 
       const json = await resp.json();
-      const usage = {
-        tokensTotal: json.usage?.total_tokens ?? 0,
-        tokensPrompt: json.usage?.prompt_tokens ?? 0,
-        tokensCompletion: json.usage?.completion_tokens ?? 0,
-      };
       const rawText = json.choices?.[0]?.message?.content?.trim();
       if (!rawText) {
         console.warn(`  ${provider.name}: empty response`);
-        record(false, { ...usage, reason: 'empty' });
         continue;
       }
 
@@ -650,7 +623,6 @@ async function callLLM(headline, options = {}) {
 
       if (text.length < 20) {
         console.warn(`  ${provider.name}: output too short (${text.length} chars)`);
-        record(false, { ...usage, reason: 'too_short' });
         continue;
       }
 
@@ -668,9 +640,6 @@ async function callLLM(headline, options = {}) {
         }
         if (!accepted) {
           if (!faulted) console.warn(`  ${provider.name}: output rejected by caller gates`);
-          // `validate_reject` is the shared vocabulary from server/_shared/usage.ts,
-          // so these unify with the Vercel-side llm_call stream in one query.
-          record(false, { ...usage, model: json.model || model, reason: 'validate_reject' });
           if (faulted) { if (!firstFaulted) firstFaulted = candidate; }
           else if (!firstRejected) firstRejected = candidate;
           if (!faulted) {
@@ -696,27 +665,16 @@ async function callLLM(headline, options = {}) {
         }
       }
 
-      record(true, { ...usage, model: json.model || model });
-      void emitLlmEvents(events); // fire-and-forget: telemetry never delays the return path
       return candidate;
     } catch (err) {
       console.warn(`  ${provider.name} failed: ${err.message}`);
-      const httpMatch = /HTTP (\d{3})/.exec(err.message || '');
-      record(false, {
-        reason: isLlmBudgetError(err) ? 'budget_exhausted'
-          : err?.name === 'TimeoutError' || err?.name === 'AbortError' ? 'timeout'
-          : httpMatch ? `http_${httpMatch[1]}`
-          : 'fetch_error',
-      });
       // Budget spent — give up rather than burning the next provider's timeout.
       if (isLlmBudgetError(err)) {
-        void emitLlmEvents(events); // fire-and-forget: telemetry never delays the return path
         return rejectedResult();
       }
     }
   }
 
-  void emitLlmEvents(events); // fire-and-forget: telemetry never delays the return path
   return rejectedResult();
 }
 
@@ -1386,7 +1344,6 @@ if (_isDirectRun) {
     // Exit gracefully for cron — health endpoint flags stale data via
     // seed-meta. process.exit does not drain in-flight promises — flush
     // llm_call telemetry first (bounded by the 1.5s fetch timeout).
-    await flushPendingLlmEvents();
     process.exit(0);
   });
 }

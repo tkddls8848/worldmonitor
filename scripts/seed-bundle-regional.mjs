@@ -30,7 +30,6 @@ import { loadEnvFile, getRedisCredentials } from './_seed-utils.mjs';
 import { unwrapEnvelope } from './_seed-envelope-source.mjs';
 import { main as runSnapshots } from './seed-regional-snapshots.mjs';
 import { main as runBriefs } from './seed-regional-briefs.mjs';
-import { flushPendingLlmEvents } from './lib/llm-telemetry.cjs';
 
 loadEnvFile(import.meta.url);
 
@@ -177,7 +176,6 @@ async function main() {
     console.error(`[bundle] Done in ${elapsed}s with ERRORS`);
     // process.exit does not drain in-flight promises — flush fire-and-forget
     // llm_call telemetry first (bounded by the 1.5s fetch timeout).
-    await flushPendingLlmEvents();
     process.exit(1);
   }
   console.log(`[bundle] Done in ${elapsed}s`);
@@ -195,7 +193,6 @@ if (isMain) {
     .then(() => console.log(`\n=== Done (${Date.now() - __runStartedAt}ms) ===`))
     .catch(async (err) => {
       console.error('[bundle] Fatal:', err);
-      await flushPendingLlmEvents();
       process.exit(1);
     });
 }
