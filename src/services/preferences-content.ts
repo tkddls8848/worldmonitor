@@ -334,24 +334,7 @@ const aiSection: PreferenceSectionSpec = {
           <span class="fw-import-modal-title">${t('components.insights.analysisFrameworksImportTitle')}</span>
           <button type="button" class="fw-import-modal-close" id="fwImportModalClose" aria-label="Close">&times;</button>
         </div>
-        <div class="fw-import-tabs">
-          <button type="button" class="fw-import-tab active" data-fw-tab="agentskills" id="fwTabAgentskills">${t('components.insights.analysisFrameworksFromAgentskills')}</button>
-          <button type="button" class="fw-import-tab" data-fw-tab="json" id="fwTabJson">${t('components.insights.analysisFrameworksPasteJson')}</button>
-        </div>
-        <div class="fw-import-tab-panel active" id="fwTabPanelAgentskills">
-          <div class="fw-import-field">
-            <label class="fw-import-label" for="fwAgentskillsUrl">agentskills.io URL or ID</label>
-            <input type="text" class="fw-import-input" id="fwAgentskillsUrl" placeholder="https://agentskills.io/skills/..." />
-          </div>
-          <button type="button" class="btn btn-secondary" id="fwFetchBtn">Fetch</button>
-          <div class="fw-import-preview" id="fwAgentskillsPreview" style="display:none">
-            <div class="fw-import-preview-name" id="fwPreviewName"></div>
-            <div class="fw-import-preview-desc" id="fwPreviewDesc"></div>
-            <button type="button" class="btn btn-primary fw-save-btn" id="fwAgentskillsSaveBtn">${t('components.insights.analysisFrameworksSaveToLibrary')}</button>
-          </div>
-          <div class="fw-import-error" id="fwAgentskillsError" style="display:none"></div>
-        </div>
-        <div class="fw-import-tab-panel" id="fwTabPanelJson">
+        <div class="fw-import-tab-panel active" id="fwTabPanelJson">
           <div class="fw-import-field">
             <label class="fw-import-label" for="fwJsonInput">${t('components.insights.analysisFrameworksPasteJson')}</label>
             <textarea class="fw-import-textarea" id="fwJsonInput" rows="6" placeholder='{ "name": "...", "instructions": "..." }'></textarea>
@@ -573,87 +556,6 @@ function attachFrameworkHandlers(container: HTMLElement, signal: AbortSignal): v
 
     if (target.closest('#fwImportModalClose') || target.id === 'fwImportModalBackdrop') {
       closeFrameworkImport();
-      return;
-    }
-
-    const tab = target.closest<HTMLElement>('[data-fw-tab]');
-    if (tab?.dataset.fwTab) {
-      const tabId = tab.dataset.fwTab;
-      container.querySelectorAll('.fw-import-tab').forEach(el => el.classList.toggle('active', (el as HTMLElement).dataset.fwTab === tabId));
-      container.querySelectorAll('.fw-import-tab-panel').forEach(el => {
-        const panelEl = el as HTMLElement;
-        panelEl.classList.toggle('active', panelEl.id === `fwTabPanel${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`);
-      });
-      return;
-    }
-
-    if (target.closest('#fwFetchBtn')) {
-      const urlInput = container.querySelector<HTMLInputElement>('#fwAgentskillsUrl');
-      const errEl = container.querySelector<HTMLElement>('#fwAgentskillsError');
-      const preview = container.querySelector<HTMLElement>('#fwAgentskillsPreview');
-      if (!urlInput) return;
-      hideImportError(errEl);
-      if (preview) preview.style.display = 'none';
-      const urlVal = urlInput.value.trim();
-      let skillHostname = '';
-      try { skillHostname = new URL(urlVal).hostname; } catch { /* rejected below */ }
-      if (!['agentskills.io', 'www.agentskills.io', 'api.agentskills.io'].includes(skillHostname)) {
-        showImportError(errEl, 'Only agentskills.io URLs are supported.');
-        return;
-      }
-      const fetchBtn = container.querySelector<HTMLButtonElement>('#fwFetchBtn');
-      if (fetchBtn) fetchBtn.disabled = true;
-      fetch('/api/skills/fetch-agentskills', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: urlVal }),
-        signal,
-      }).then(async (res) => {
-        if (res.status === 429) throw new Error('rate-limit');
-        if (!res.ok) throw new Error('network');
-        return res.json() as Promise<{ name?: string; description?: string; instructions?: string }>;
-      }).then((data) => {
-        if (!data.instructions) {
-          showImportError(errEl, 'This skill has no instructions — it may use tools only (not supported).');
-          return;
-        }
-        const nameEl = container.querySelector<HTMLElement>('#fwPreviewName');
-        const descEl = container.querySelector<HTMLElement>('#fwPreviewDesc');
-        if (nameEl) nameEl.textContent = data.name ?? 'Unnamed skill';
-        if (descEl) descEl.textContent = data.instructions.slice(0, 200) + (data.instructions.length > 200 ? '…' : '');
-        if (preview) {
-          preview.style.display = 'block';
-          (preview as HTMLElement & { _fwData?: { name: string; description: string; instructions: string } })._fwData = {
-            name: data.name ?? 'Unnamed skill',
-            description: data.description ?? '',
-            instructions: data.instructions,
-          };
-        }
-      }).catch((err: Error) => {
-        if (err.name === 'AbortError') return;
-        if (err.message === 'rate-limit') {
-          showImportError(errEl, 'Too many import requests. Try again in a minute.');
-        } else {
-          showImportError(errEl, 'Could not reach agentskills.io. Check your connection.');
-        }
-      }).finally(() => {
-        if (fetchBtn) fetchBtn.disabled = false;
-      });
-      return;
-    }
-
-    if (target.closest('#fwAgentskillsSaveBtn')) {
-      const preview = container.querySelector<HTMLElement>('#fwAgentskillsPreview');
-      const errEl = container.querySelector<HTMLElement>('#fwAgentskillsError');
-      const fwData = (preview as HTMLElement & { _fwData?: { name: string; description: string; instructions: string } } | null)?._fwData;
-      if (!fwData) return;
-      try {
-        saveImportedFramework({ id: crypto.randomUUID(), name: fwData.name, description: fwData.description, systemPromptAppend: fwData.instructions });
-        refreshFrameworkLibrary(container);
-        closeFrameworkImport();
-      } catch (err) {
-        showImportError(errEl, (err as Error).message);
-      }
       return;
     }
 

@@ -69,15 +69,14 @@ for (const theme of ['light', 'dark']) {
       }
       await openSettingsPage(page, 'ai');
       await page.locator('#fwImportBtn').click();
-      const field = page.getByLabel('agentskills.io URL or ID', { exact: true });
+      // Paste-JSON is the only import (the agentskills.io fetch was removed).
+      const field = page.locator('#fwJsonInput');
       await expect(field).toBeVisible();
       const colors = await field.evaluate(el => {
         const style = getComputedStyle(el);
         return { border: style.borderTopColor, background: style.backgroundColor };
       });
       expect(colors.border).not.toBe(colors.background);
-      await page.locator('#fwTabJson').click();
-      await expect(page.locator('#fwJsonInput')).toBeVisible();
       await page.keyboard.press('Escape');
       await expect(page.locator('.fw-import-modal')).not.toBeVisible();
       await expect(page.locator('#unifiedSettingsModal')).toBeVisible();
