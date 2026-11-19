@@ -18,13 +18,12 @@ import {
   EULA_PATH,
   LEGAL_FOOTER_LINKS,
   TERMS_PATH,
-  PRIVACY_PATH,
   LICENSE_PATH,
   TRADEMARK_PATH,
 } from '../shared/legal.ts';
 import { legalLinksHtml } from '../src/utils/legal-links.ts';
 
-const REQUIRED = [EULA_PATH, TERMS_PATH, PRIVACY_PATH, LICENSE_PATH, TRADEMARK_PATH];
+const REQUIRED = [EULA_PATH, TERMS_PATH, LICENSE_PATH, TRADEMARK_PATH];
 
 describe('legal links are reachable in one click', () => {
   it('the shared cluster is every document a buyer is bound by', () => {

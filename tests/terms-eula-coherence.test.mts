@@ -43,10 +43,8 @@ describe('every document names the same legal entity', () => {
   for (const [label, path] of [
     ['Terms', 'docs/terms.mdx'],
     ['EULA', 'docs/eula.mdx'],
-    ['Privacy Policy', 'docs/privacy.mdx'],
     ['Terms (zh)', 'docs/zh/terms.mdx'],
     ['EULA (zh)', 'docs/zh/eula.mdx'],
-    ['Privacy Policy (zh)', 'docs/zh/privacy.mdx'],
   ]) {
     it(`${label} names the entity`, () => {
       assert.match(visible(read(path)), LEGAL_NAME, `${path} must name the contracting party, not describe it`);
@@ -54,7 +52,7 @@ describe('every document names the same legal entity', () => {
   }
 
   it('no document still describes the party without naming it', () => {
-    for (const path of ['docs/terms.mdx', 'docs/eula.mdx', 'docs/privacy.mdx']) {
+    for (const path of ['docs/terms.mdx', 'docs/eula.mdx']) {
       assert.doesNotMatch(
         visible(read(path)),
         /World Monitor, based in the United Arab Emirates/,

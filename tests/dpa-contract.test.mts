@@ -9,6 +9,10 @@
  *
  * So the DPA does not carry its own subprocessor table. It points at the
  * Privacy Policy, and this pins that arrangement in place.
+ *
+ * The privacy policy itself was removed for the personal setup (Ruling 15);
+ * the DPA is a public document reviewed in Phase 2, and what a public launch
+ * would have to disclose is in docs/internal/public-launch-disclosures.md.
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -22,7 +26,6 @@ const visible = (mdx: string) =>
   mdx.replace(/^---\n[\s\S]*?\n---\n/, '').replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
 
 const dpa = visible(read('docs/dpa.mdx'));
-const privacy = visible(read('docs/privacy.mdx'));
 
 describe('the DPA keeps one subprocessor list, in the Privacy Policy', () => {
   it('points at the Privacy Policy instead of copying the table', () => {
@@ -38,13 +41,6 @@ describe('the DPA keeps one subprocessor list, in the Privacy Policy', () => {
       /\|\s*Provider\s*\|/i,
       'the DPA must not duplicate the subprocessor table — one list, in the Privacy Policy',
     );
-  });
-
-  it('the list it points at is actually there', () => {
-    assert.match(privacy, /\| Provider \| Purpose \|/);
-    for (const provider of [/Clerk/, /Convex/, /Dodo Payments/, /Anthropic/, /Upstash/, /Railway/, /Mintlify/]) {
-      assert.match(privacy, provider, `the Privacy Policy table must still name ${provider}`);
-    }
   });
 });
 
@@ -83,7 +79,6 @@ describe('the AI commitment is worded as what we can actually do', () => {
   it('does not over-claim control over downstream model providers', () => {
     // OpenRouter routes to providers whose own terms vary. Promising every
     // downstream provider's behaviour would be a commitment we cannot keep.
-    assert.match(privacy, /OpenRouter/, 'the routing provider is still in use');
     assert.match(
       dpa,
       /we do not represent that every downstream provider offers identical terms/i,
@@ -111,14 +106,12 @@ describe('the DPA is obtainable', () => {
     for (const [label, path] of [
       ['Terms', 'docs/terms.mdx'],
       ['EULA', 'docs/eula.mdx'],
-      ['Privacy Policy', 'docs/privacy.mdx'],
     ]) {
       assert.match(visible(read(path)), /\(\/dpa\)/, `${label} must link the DPA`);
     }
     for (const [label, path] of [
       ['Terms (zh)', 'docs/zh/terms.mdx'],
       ['EULA (zh)', 'docs/zh/eula.mdx'],
-      ['Privacy Policy (zh)', 'docs/zh/privacy.mdx'],
     ]) {
       assert.match(visible(read(path)), /\(\/zh\/dpa\)/, `${label} must link the DPA`);
     }

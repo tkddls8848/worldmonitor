@@ -39,7 +39,7 @@ import {
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DEFAULT_REPORT = join(ROOT, 'node_modules/.cache/internal-links/report.json');
 
-const TARGET_ONLY_DOCS = new Set(['changelog', 'eula', 'privacy', 'terms', 'dpa', 'license']);
+const TARGET_ONLY_DOCS = new Set(['changelog', 'eula', 'terms', 'dpa', 'license']);
 
 // Map.groupBy needs Node 21; scripts/package.json still admits Node 20.
 function groupBy(items, keyFn) {

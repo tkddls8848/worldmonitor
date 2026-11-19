@@ -28205,22 +28205,6 @@ body.map-width-resizing {
   text-decoration: underline;
 }
 
-.checkout-consent {
-  margin: 0 0 8px;
-  font-size: calc(11px * var(--wm-panel-effective-scale, 1));
-  line-height: 1.45;
-  color: var(--text-dim);
-}
-
-.checkout-consent-link {
-  color: var(--text-dim);
-  text-decoration: underline;
-}
-
-.checkout-consent-link:hover {
-  color: var(--text);
-}
-
 .upgrade-pro-status-line {
   font-size: calc(12px * var(--wm-panel-effective-scale, 1));
   color: var(--text-dim);
@@ -28600,15 +28584,6 @@ body.map-width-resizing {
   justify-content: flex-end;
   gap: 6px;
   flex: 0 0 auto;
-}
-
-/* The checkout-consent line (#6976) is a full-width row inside the action
-   column so the assent reads above the CTA it belongs to, rather than becoming
-   a third column in the notice's space-between row. */
-.api-plan-limit-notice-actions .checkout-consent {
-  flex: 1 0 100%;
-  margin: 0 0 2px;
-  text-align: right;
 }
 
 .api-plan-limit-notice-actions .btn {
