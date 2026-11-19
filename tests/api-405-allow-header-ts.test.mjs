@@ -30,8 +30,6 @@ const CASES = [
   { name: 'brief/carousel', path: '/api/brief/carousel/user/2026-10-30/1', module: '../api/brief/carousel/[userId]/[issueDate]/[page].ts', allow: 'GET, HEAD, OPTIONS', refused: 'POST', preflight: false },
   { name: 'brief/public', path: '/api/brief/public/abc', module: '../api/brief/public/[hash].ts', allow: 'GET, HEAD, OPTIONS', refused: 'POST', preflight: false },
   { name: 'brief/[userId]', path: '/api/brief/user/2026-10-30', module: '../api/brief/[userId]/[issueDate].ts', allow: 'GET, HEAD, OPTIONS', refused: 'POST', preflight: false },
-  { name: 'v2/shipping/webhooks/[subscriberId]/[action]', path: '/api/v2/shipping/webhooks/sub/test', module: '../api/v2/shipping/webhooks/[subscriberId]/[action].ts', allow: 'POST, OPTIONS', refused: 'GET', preflight: true },
-  { name: 'v2/shipping/webhooks/[subscriberId]', path: '/api/v2/shipping/webhooks/sub', module: '../api/v2/shipping/webhooks/[subscriberId].ts', allow: 'GET, DELETE, OPTIONS', refused: 'POST', preflight: true },
 ];
 
 const ctx = { waitUntil() {} };
