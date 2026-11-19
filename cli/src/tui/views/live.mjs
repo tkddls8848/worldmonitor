@@ -112,8 +112,10 @@ export class LiveView extends PaneView {
     const note = (text, kind) => this.app.toast(text, 3500, kind);
     if (mode === 'browser' || !player.mpv) {
       if (!player.mpv && mode !== 'browser') note('mpv not found: opening in the browser instead (brew install mpv yt-dlp)', 'warn');
-      const url = cand.kind === 'hls' ? `https://www.worldmonitor.app/live-channels.html` : cand.url;
-      openExternal(url);
+      // HLS has no browser page here (the hosted live-channels page is not
+      // part of this deployment); it plays in mpv only.
+      if (cand.kind === 'hls') return note('HLS streams play in mpv only (brew install mpv yt-dlp)', 'warn');
+      (this.app.openUrl || openExternal)(cand.url);
       this.remember(cur, cand, 'browser');
       return;
     }

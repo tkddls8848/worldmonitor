@@ -38,7 +38,7 @@ export async function startPersonalTui({ argv = process.argv.slice(2), env = pro
   }
   const { launchTui } = await import('../cli/src/tui/index.mjs');
   // The personal server has no session endpoint; its Basic login is the credential.
-  const options = { baseUrl: origin, anonymousSession: false };
+  const options = { baseUrl: origin, webOrigin: origin, anonymousSession: false };
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--theme') options.theme = argv[++i];
     else if (argv[i] === '--fps') options.fps = argv[++i];

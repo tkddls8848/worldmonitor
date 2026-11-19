@@ -304,6 +304,36 @@ describe('selectors', () => {
   });
 });
 
+describe('live view browser fallback', () => {
+  const makeLive = (cand) => {
+    const opened = [];
+    const toasts = [];
+    const app = {
+      player: { mpv: null, ytdlp: null, vo: 'tct' },
+      toast: (msg) => toasts.push(msg),
+      now: () => 0,
+      openUrl: (url) => { opened.push(url); return { ok: true }; },
+    };
+    const view = new LiveView(app);
+    view.current = () => ({ id: 'x', name: 'Chan' });
+    view.candidate = () => cand;
+    view.candidates = () => [cand];
+    view.remember = () => {};
+    return { view, opened, toasts };
+  };
+  it('opens no upstream page for an HLS stream (there is no local live-channels page)', async () => {
+    const { view, opened, toasts } = makeLive({ kind: 'hls', url: 'https://example.test/live.m3u8', label: 'hls' });
+    await view.play('browser');
+    assert.deepEqual(opened, []);
+    assert.ok(toasts.some((t) => /mpv/.test(t)), toasts.join('|'));
+  });
+  it('opens a YouTube stream at its own URL', async () => {
+    const { view, opened } = makeLive({ kind: 'youtube', url: 'https://www.youtube.com/watch?v=QB5BNdBFujE', label: 'yt' });
+    await view.play('browser');
+    assert.deepEqual(opened, ['https://www.youtube.com/watch?v=QB5BNdBFujE']);
+  });
+});
+
 describe('prefs', () => {
   it('round-trips through XDG_CONFIG_HOME and never stores a key', () => {
     const dir = mkdtempSync(join(tmpdir(), 'wm-tui-'));

@@ -35,8 +35,12 @@ function hotkeyFor(i) {
 }
 
 export class App {
-  constructor({ store, catalog, prefs, savePrefs, env = {}, out, cols, rows, depth = 24, now = () => Date.now(), createViews, player, apiKeyPresent = false, fetchImpl = null }) {
+  constructor({ store, catalog, prefs, savePrefs, env = {}, out, cols, rows, depth = 24, now = () => Date.now(), createViews, player, apiKeyPresent = false, fetchImpl = null, webOrigin = '', openUrl = openExternal }) {
     this.store = store;
+    // Where W opens the web dashboard (the personal server passes its own
+    // origin), and how links open (injectable for tests).
+    this.webOrigin = webOrigin;
+    this.openUrl = openUrl;
     this.fetchImpl = fetchImpl;
     this.detail = null;
     this.catalog = catalog;
@@ -249,7 +253,7 @@ export class App {
       case 'r':
         return this.refreshView();
       case 'W':
-        openExternal('https://www.worldmonitor.app/dashboard');
+        this.openUrl(this.webOrigin ? `${this.webOrigin.replace(/\/+$/, '')}/dashboard` : 'https://www.worldmonitor.app/dashboard');
         return this.toast('opening the web dashboard');
       case 'o':
         return this.openSelected();

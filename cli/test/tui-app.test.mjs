@@ -15,7 +15,7 @@ const bootstrap = JSON.parse(readFileSync(new URL('./fixtures/bootstrap.json', i
 const digest = JSON.parse(readFileSync(new URL('./fixtures/digest.json', import.meta.url), 'utf8'));
 const catalog = loadCatalog();
 
-function makeApp({ cols = 160, rows = 45, anim = true } = {}) {
+function makeApp({ cols = 160, rows = 45, anim = true, extra = {} } = {}) {
   const clock = { t: 1_700_000_000_000 };
   const store = new Store(createClient({ fetch: async () => ({ ok: true, status: 200, text: async () => '{}', headers: new Map() }) }), { now: () => clock.t });
   Object.assign(store.data, bootstrap.data);
@@ -35,6 +35,7 @@ function makeApp({ cols = 160, rows = 45, anim = true } = {}) {
     createViews,
     now: () => clock.t,
     player: { mpv: null, ytdlp: null, vo: 'tct' },
+    ...extra,
   });
   // Skip the boot sequence for most tests.
   app.boot.done = true;
@@ -306,5 +307,14 @@ describe('Narrow layouts', () => {
     app.resize(100, 30);
     app.render();
     assert.notEqual(app.view.focusedPane, 'anomalies');
+  });
+});
+
+describe('web dashboard key', () => {
+  it('W opens the dashboard on the configured web origin, never the upstream site', () => {
+    const opened = [];
+    const { app } = makeApp({ extra: { webOrigin: 'http://127.0.0.1:3000', openUrl: (url) => { opened.push(url); return { ok: true }; } } });
+    app.handleEvent({ type: 'key', name: 'W', ch: 'W', shift: true });
+    assert.deepEqual(opened, ['http://127.0.0.1:3000/dashboard']);
   });
 });
