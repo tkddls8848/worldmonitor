@@ -831,6 +831,9 @@
     },
     "decisionBrief": {
       "title": "Decision brief"
+    },
+    "operationalWorksheet": {
+      "title": "Operational what-if"
     }
   },
   "modals": {
