@@ -72,20 +72,10 @@ function collectUnsafeWindowOpenCalls(file) {
 }
 
 /**
- * The single sanctioned exception, and why it cannot be a blanket one.
- *
- * `noopener` (and `noreferrer`, which implies it) makes `window.open` return
- * `null` PER SPEC while still opening the tab. `external-navigation.ts` reads
- * that handle to answer "did it actually open?" — the answer drives the
- * checkout handoff message, the billing-portal outcome, and whether a blocked
- * popup falls back to a same-tab navigation. Passing the features there made
- * every success look like a blocked popup, so one click opened a tab AND
- * navigated the app away (#6137).
- *
- * The exemption is therefore conditional: it holds ONLY while that file still
- * severs the opener itself. `mitigation` is asserted separately below, so if
- * the `opener = null` line is ever dropped this guard goes red rather than
- * silently permitting a real reverse-tabnabbing vector.
+ * Files exempt from the noopener rule because they sever `opener` themselves
+ * (each entry's `mitigation` is asserted below). The only one,
+ * src/services/external-navigation.ts, was deleted with checkout in Phase 1,
+ * so the list is empty: every `_blank` window must pass noopener,noreferrer.
  */
 const OPENER_SEVERED_MANUALLY = [];
 

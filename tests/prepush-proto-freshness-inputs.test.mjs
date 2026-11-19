@@ -114,7 +114,7 @@ function makeProtoInputRepo() {
   write('proto/service.proto', 'syntax = "proto3";\n');
   write('Makefile', 'generate:\n\t@true\n');
   write('scripts/generate-request-validation.mjs', 'export {}\n');
-  write('scripts/openapi-inject-security.mjs', 'export const injector = 1;\n');
+  write('scripts/openapi-inject-examples.mjs', 'export const injector = 1;\n');
   write('src/generated/client.ts', 'export {}\n');
   write('docs/api/worldmonitor.openapi.yaml', 'openapi: 3.1.0\n');
   write('shared/openapi-filter-param-contracts.json', '{}\n');
@@ -197,7 +197,7 @@ describe('proto-freshness inputs cover every make generate script and generation
     fixtures.push(fx.root);
     assert.equal(fx.attest('gate-write'), 0);
     assert.equal(fx.attest('gate-read'), 0, 'identical inputs must hit');
-    fx.write('scripts/openapi-inject-security.mjs', 'export const injector = 2;\n');
+    fx.write('scripts/openapi-inject-examples.mjs', 'export const injector = 2;\n');
     assert.equal(fx.attest('gate-read'), 3, 'an injector amend must miss so make generate runs again');
   });
 

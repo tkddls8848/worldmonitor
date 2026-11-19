@@ -192,7 +192,6 @@
   "tests/chat-analyst-panel-control.test.mts": 38,
   "tests/chat-analyst.test.mts": 655,
   "tests/check-doc-anchors.test.mjs": 528,
-  "tests/checkout-attribution.test.mts": 188,
   "tests/china-activity-nowcast-handler.test.mts": 119,
   "tests/china-activity-nowcast-service.test.mts": 42,
   "tests/china-activity-nowcast-ui.test.mts": 42,
