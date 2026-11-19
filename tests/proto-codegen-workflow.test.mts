@@ -11,8 +11,6 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const workflowPath = resolve(root, '.github/workflows/proto-check.yml');
 const workflowSource = readFileSync(workflowPath, 'utf8');
 const deployGateScript = readFileSync(resolve(root, '.github/scripts/deploy-gate.sh'), 'utf8');
-const contributing = readFileSync(resolve(root, 'CONTRIBUTING.md'), 'utf8');
-const agentInstructions = readFileSync(resolve(root, 'AGENTS.md'), 'utf8');
 const scorecardMirrorSource = readFileSync(
   resolve(root, 'scripts/generate-scorecard-edge-mirrors.mjs'),
   'utf8',
@@ -502,7 +500,7 @@ describe('proto codegen workflow trust boundaries (#3340)', () => {
     for (const path of [
       'proto/worldmonitor/example/v1/service.proto',
       'proto/café.proto',
-      'scripts/openapi-inject-security.mjs',
+      'scripts/openapi-inject-examples.mjs',
       'shared/openapi-filter-param-contracts.json',
       'server/gateway.ts',
       'Makefile',
@@ -529,10 +527,10 @@ describe('proto codegen workflow trust boundaries (#3340)', () => {
     ]);
     assert.equal(railwayOnly.status, 0, railwayOnly.stderr);
     assert.match(railwayOnly.output, /^codegen=false$/m);
-    const removedInput = runChangeClassifier([{ filename: 'scripts/openapi-inject-security.mjs', status: 'removed' }]);
+    const removedInput = runChangeClassifier([{ filename: 'scripts/openapi-inject-examples.mjs', status: 'removed' }]);
     assert.match(removedInput.output, /^codegen=true$/m);
     const renamedInput = runChangeClassifier([{
-      filename: 'archive/injector.mjs', previous_filename: 'scripts/openapi-inject-security.mjs', status: 'renamed',
+      filename: 'archive/injector.mjs', previous_filename: 'scripts/openapi-inject-examples.mjs', status: 'renamed',
     }]);
     assert.match(renamedInput.output, /^codegen=true$/m);
 
@@ -776,7 +774,7 @@ describe('proto codegen workflow trust boundaries (#3340)', () => {
     assertNoLaterValidatorSteps(generation.steps, exactHeadStepName);
     assert.equal(
       generation.steps?.find((step) => step.uses?.startsWith('actions/upload-artifact@'))?.uses,
-      'actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f',
+      'actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9',
     );
     assert.equal(
       internal.steps?.find((step) => step.uses?.startsWith('actions/download-artifact@'))?.uses,
@@ -1067,30 +1065,5 @@ describe('proto codegen workflow trust boundaries (#3340)', () => {
     assert.equal(leaseFailure.output, '');
     assert.notEqual(leaseFailure.remoteSha, leaseFailure.expectedSha);
     assert.equal(leaseFailure.ghLog, '');
-  });
-
-  it('documents the internal and owner-reviewed fork contributor contracts', () => {
-    assert.match(contributing, /### Generated Artifacts in Pull Requests/);
-    assert.match(contributing, /approval-required state/);
-    assert.match(contributing, /`proto-generated-followup` remains pending/);
-    assert.match(contributing, /original fork branch/);
-    assert.match(contributing, /maintainer edits are enabled/);
-    assert.match(contributing, /repository owner reviews the exact current head/);
-    assert.match(contributing, /clean isolated worktree/);
-    assert.match(contributing, /no linked environment files or credentials/);
-    assert.match(contributing, /only the reviewed source changes and required generated artifacts/);
-    assert.match(contributing, /CI validates the exact head and merge result but does not write to the fork/);
-    assert.match(contributing, /later contributor push revokes that trust/);
-    assert.match(contributing, /owner-pushed empty commit/);
-    assert.match(contributing, /maintainer edits are disabled.*trusted internal branch/s);
-    assert.match(contributing, /For Dependabot pull requests from this repository/);
-    assert.match(contributing, /CI does not publish generated patches or write to the Dependabot branch/);
-    assert.match(contributing, /later Dependabot push revokes trust/);
-
-    assert.match(agentInstructions, /Never run repository scripts from an unreviewed third-party PR checkout/);
-    assert.match(agentInstructions, /reviewed the exact fork head/);
-    assert.match(agentInstructions, /clean isolated worktree with no linked environment files or credentials/);
-    assert.match(agentInstructions, /owner push is the CI trust event for that exact head/);
-    assert.match(agentInstructions, /later contributor push revokes that trust/);
   });
 });

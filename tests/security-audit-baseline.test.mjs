@@ -650,15 +650,6 @@ describe('Dependabot image-size and fast-uri remediation', () => {
     const paths = Object.keys(readRepoJson('package-lock.json').packages);
     assert.equal(paths.some((path) => path.endsWith('/texture-compressor')), false);
   });
-
-  it('excludes vulnerable fast-uri copies from the Umami runtime lockfile', () => {
-    const lock = readFileSync(new URL('../docker/umami/runtime/pnpm-lock.yaml', import.meta.url), 'utf8');
-    const versions = [...lock.matchAll(/^  fast-uri@([^:]+):/gm)].map((match) => match[1]);
-    assert.ok(versions.length > 0, 'the Ajv consumer must remain covered');
-    for (const version of versions) {
-      assert.ok(atLeast(version, '3.1.7'), `Umami fast-uri@${version} is vulnerable`);
-    }
-  });
 });
 
 

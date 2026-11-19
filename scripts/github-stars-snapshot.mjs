@@ -37,7 +37,7 @@ export const MAX_GITHUB_STARS_SNAPSHOT_AGE_DAYS = 45;
 
 function readSnapshotError(name, reason) {
   return new Error(
-    `star snapshot ${name} ${reason}; refresh with npm run freeze:github-stars`,
+    `star snapshot ${name} ${reason}; refresh with node scripts/freeze-github-stars.mjs`,
   );
 }
 
@@ -56,7 +56,7 @@ export function latestValidGithubStarsSnapshot(
     files = readdirSync(snapshotsDir).filter((name) => SNAPSHOT_PATTERN.test(name)).sort();
   } catch (error) {
     throw new Error(
-      `star snapshots unreadable at ${snapshotsDir} (${error.message}); refresh with npm run freeze:github-stars`,
+      `star snapshots unreadable at ${snapshotsDir} (${error.message}); refresh with node scripts/freeze-github-stars.mjs`,
     );
   }
   let lastError = null;
@@ -88,13 +88,13 @@ export function latestValidGithubStarsSnapshot(
   }
   if (!newestValid) {
     throw lastError ?? new Error(
-      `no docs/snapshots/github-stars-*.json snapshot; run npm run freeze:github-stars`,
+      `no docs/snapshots/github-stars-*.json snapshot; run node scripts/freeze-github-stars.mjs`,
     );
   }
   const ageDays = (Date.parse(`${currentUtcDate}T00:00:00Z`) - Date.parse(`${newestValid.capturedAt}T00:00:00Z`)) / 86_400_000;
   if (ageDays > MAX_GITHUB_STARS_SNAPSHOT_AGE_DAYS) {
     throw new Error(
-      `star snapshot ${newestValid.snapshotFile} is ${Math.round(ageDays)} days old (max ${MAX_GITHUB_STARS_SNAPSHOT_AGE_DAYS}); run npm run freeze:github-stars`,
+      `star snapshot ${newestValid.snapshotFile} is ${Math.round(ageDays)} days old (max ${MAX_GITHUB_STARS_SNAPSHOT_AGE_DAYS}); run node scripts/freeze-github-stars.mjs`,
     );
   }
   return newestValid;

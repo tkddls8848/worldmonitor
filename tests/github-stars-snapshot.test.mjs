@@ -57,8 +57,8 @@ describe('github stars snapshot lookup', () => {
     const empty = fixtureDir({});
     const bad = fixtureDir({ 'github-stars-2026-09-03.json': JSON.stringify({ stargazers_count: 'many' }) });
     try {
-      assert.throws(() => latestValidGithubStarsSnapshot(empty), /freeze:github-stars/);
-      assert.throws(() => latestValidGithubStarsSnapshot(bad), /freeze:github-stars/);
+      assert.throws(() => latestValidGithubStarsSnapshot(empty), /freeze-github-stars/);
+      assert.throws(() => latestValidGithubStarsSnapshot(bad), /freeze-github-stars/);
     } finally {
       rmSync(empty, { recursive: true, force: true });
       rmSync(bad, { recursive: true, force: true });
@@ -124,7 +124,7 @@ describe('github stars snapshot lookup', () => {
       // build must red instead of publishing a rotting figure (#7641).
       assert.throws(
         () => latestValidGithubStarsSnapshot(dir, '2026-09-04'),
-        /days old \(max \d+\); run npm run freeze:github-stars/,
+        /days old \(max \d+\); run node scripts\/freeze-github-stars\.mjs/,
       );
     } finally {
       rmSync(dir, { recursive: true, force: true });

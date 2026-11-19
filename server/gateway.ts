@@ -400,13 +400,12 @@ export const PUBLIC_NO_AUTH_RPC_PATHS = new Set<string>([
   '/api/intelligence/v1/get-china-decision-signals',
   '/api/resilience/v1/get-runtime-manifest',
   // #9093 "Report an error": readers report without an account by design. The
-  // gates are the handler's honeypot and validation, a fail-closed per-IP
-  // endpoint limit (server/_shared/rate-limit.ts), and a bounded review queue
-  // that refuses rather than evicts. Reports are never applied automatically.
+  // gates are the handler's honeypot and validation and a bounded review queue
+  // that refuses rather than evicts (the personal build has no per-IP limits). Reports are never applied automatically.
   '/api/news/v1/submit-error-report',
   // #9093 /trust page: public label history and today's counts. Read-only,
   // public coverage metadata; a visitor who lands on /trust directly has no
-  // session cookie. Bounded by a per-IP endpoint limit and the 'fast' CDN tier.
+  // session cookie. Bounded by the 'fast' cache tier.
   '/api/news/v1/list-label-changes',
   // #9093 operator review. The gate is TRUST_REVIEW_SECRET, checked in the
   // handler (X-Trust-Review-Key, constant-time): unset → every call is 401.

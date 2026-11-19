@@ -15,14 +15,6 @@ import {
   getClientIp as getApiClientIp,
   resetEdgeProofMismatchWarnedForTest as resetApi,
 } from '../api/_client-ip.js';
-import {
-  EDGE_PROOF_TRANSFORM_EXPRESSION,
-  EDGE_PROOF_PATH_PREFIXES,
-  EDGE_PROOF_PATH_ALTERNATIVES,
-  EDGE_PROOF_PATH_MATCHER,
-  EDGE_PROOF_PATH_MATCHER_SOURCE,
-  pathCoveredByExpression,
-} from '../scripts/cloudflare-edge-proof-rule.mjs';
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
@@ -79,16 +71,4 @@ describe('unproven Cloudflare client IP (#8402)', () => {
     assert.equal(serverUnproven(req), false);
     assert.equal(getServerClientIp(req), '203.0.113.7');
   });
-});
-
-describe('Cloudflare edge-proof Transform Rule coverage (#8402)', () => {
-  it('documents path prefixes that must receive x-wm-edge-proof', () => {
-    assert.equal(
-      EDGE_PROOF_TRANSFORM_EXPRESSION,
-      `(http.request.uri.path matches "${EDGE_PROOF_PATH_MATCHER_SOURCE}")`,
-    );
-    assert.deepEqual([...EDGE_PROOF_PATH_ALTERNATIVES], ['api', 'mcp', 'ask', 'oauth', 'a2a', 'docs/mcp']);
-    assert.deepEqual(EDGE_PROOF_PATH_PREFIXES, ['/api/', '/mcp', '/ask', '/oauth/', '/a2a', '/docs/mcp']);
-  });
-
 });

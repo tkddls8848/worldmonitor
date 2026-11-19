@@ -35,8 +35,8 @@
  *     the application itself: the entry loads it through a dynamic
  *     `import('./App')` on every visit, so that import's JS graph is gated in a
  *     separate `deferred` section with the same tolerances.
- *   pro — every dist/pro/assets/*.js chunk emitted by `npm run build:pro`
- *     (pro-test/) and copied into dist/ by the root vite build.
+ *   pro — every dist/pro/assets/*.js chunk (the /pro subapp; its pro-test/ build was
+ *     removed in Phase 1, so this surface measures nothing until Phase 2 drops it).
  *   embed — the dist-root embed.js partner loader (public/embed.js).
  *
  * Hashed rollup chunks aggregate under their stable name; an un-hashed .js
@@ -110,9 +110,9 @@ const SURFACE_TOLERANCES = {
   },
 };
 const BUILD_COMMANDS = {
-  dashboard: 'npm run build:pro && VITE_VARIANT=full ./node_modules/.bin/vite build',
-  pro: 'npm run build:pro && VITE_VARIANT=full ./node_modules/.bin/vite build',
-  embed: 'npm run build:pro && VITE_VARIANT=full ./node_modules/.bin/vite build',
+  dashboard: 'VITE_VARIANT=full ./node_modules/.bin/vite build',
+  pro: 'VITE_VARIANT=full ./node_modules/.bin/vite build',
+  embed: 'VITE_VARIANT=full ./node_modules/.bin/vite build',
 };
 const DEFAULT_DIST_DIRS = {
   dashboard: 'dist',

@@ -147,7 +147,7 @@ export async function startPersonalServer() {
   if (process.env.WM_PERSONAL_STORE !== 'embedded' && (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN)) {
     console.warn('로컬 데이터 저장소가 설정되지 않았습니다. Redis 기반 수집 데이터와 시나리오 작업은 사용할 수 없습니다.');
   }
-  if (!process.env.WM_PERSONAL_PASSWORD || process.env.WM_PERSONAL_PASSWORD.length < 16) throw new Error('Set WM_PERSONAL_PASSWORD (at least 16 characters) in .env.local');
+  if (!process.env.WM_PERSONAL_PASSWORD || process.env.WM_PERSONAL_PASSWORD.length < 16) throw new Error('Set WM_PERSONAL_PASSWORD (at least 16 characters) in the local env file; see SELF_HOSTING.md');
   process.env.LOCAL_API_MODE = 'docker';
   process.env.LOCAL_API_CLOUD_FALLBACK = 'false';
   process.env.LOCAL_API_TOKEN = randomBytes(32).toString('hex');

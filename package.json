@@ -18,7 +18,7 @@
   },
   "type": "module",
   "scripts": {
-    "build:personal": "node scripts/build-sidecar-sebuf.mjs && node scripts/build-sidecar-handlers.mjs && cross-env VITE_PERSONAL_MODE=true VITE_VARIANT=full vite build",
+    "build:personal": "npm run security:vite-env-secrets -- --strict-local && node scripts/build-sidecar-sebuf.mjs && node scripts/build-sidecar-handlers.mjs && cross-env VITE_PERSONAL_MODE=true VITE_VARIANT=full vite build",
     "start:personal": "node scripts/personal-server.mjs",
     "start:local-store": "node scripts/local/redis-rest-proxy.mjs",
     "collect:personal": "node scripts/personal-collect.mjs",

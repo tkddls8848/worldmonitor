@@ -1090,11 +1090,10 @@ describe('durable last-good wiring (#7084)', () => {
     assert.notEqual(out.coverage.state, 'unavailable');
   });
 
-  it('the guarded write is the SHARED pinned script, and the Docker proxy pins the same bytes', async () => {
-    // The Docker redis-rest proxy blocklists EVAL as a class and allows
-    // exactly one pinned script -- the publish gate. Its image bundles only
-    // its own file, so it holds a copy; this parity check is what keeps the
-    // copy honest. (Text comparison is the point here: the pinned TEXT is
+  it('the guarded write is the SHARED pinned script, and the local redis-rest proxy pins the same bytes', async () => {
+    // The local redis-rest proxy (scripts/local/, moved from docker/) blocklists
+    // EVAL as a class and allows exactly one pinned script -- the publish gate.
+    // It holds its own copy; this parity check is what keeps the copy honest. (Text comparison is the point here: the pinned TEXT is
     // the contract the proxy enforces.)
     const { DIGEST_LASTGOOD_PUBLISH_SCRIPT } = await import('../shared/digest-lastgood-publish-script.mjs');
     reset();
@@ -1114,7 +1113,7 @@ describe('durable last-good wiring (#7084)', () => {
     );
 
     const proxySrc = await import('node:fs').then((fs) =>
-      fs.readFileSync(resolve(here, '..', 'docker', 'redis-rest-proxy.mjs'), 'utf8'));
+      fs.readFileSync(resolve(here, '..', 'scripts', 'local', 'redis-rest-proxy.mjs'), 'utf8'));
     const block = proxySrc.match(/const DIGEST_LASTGOOD_PUBLISH_SCRIPT = (\[[\s\S]*?\])\.join\('\\n'\);/);
     assert.ok(block, 'the proxy must carry its pinned copy of the publish script');
     const proxyScript = (new Function(`return ${block![1]};`)() as string[]).join('\n');

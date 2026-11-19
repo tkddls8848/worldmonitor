@@ -10,7 +10,7 @@
  * output to the snapshot value.
  *
  * Usage:
- *   npm run freeze:github-stars
+ *   node scripts/freeze-github-stars.mjs
  */
 
 import { writeFileSync } from 'node:fs';

@@ -113,13 +113,8 @@ const DIGEST_LOOKBACK_MS = 24 * 60 * 60 * 1000; // 24h default lookback on first
 // ── Brief composer (consolidation of the retired seed-brief-composer) ──────
 
 const BRIEF_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
-// Brief story window: derived per-rule from the rule's lastSentAt via
-// digestWindowStartMs, identical to the send-loop window. The previous
-// fixed-24h constant decoupled the canonical brief lead from the
-// stories the email/Slack body actually shipped, reintroducing the
-// cross-surface divergence the canonical-brain refactor is designed to
-// eliminate (especially severe for weekly users — 7d email body vs 24h
-// lead).
+// Brief story window: derived from the owner's default rule via
+// digestWindowStartMs, the same window the digest pass reads.
 const INSIGHTS_KEY = 'news:insights:v1';
 
 // Operator kill switch — used to intentionally silence brief compose.
@@ -953,17 +948,13 @@ async function buildDigest(rule, windowStartMs) {
 // ── Brief composition ────────────────────────────────────────────────────────
 
 /**
- * Write brief:{userId}:{issueSlot} for every eligible user and
- * brief:latest:{userId} as the latest-pointer for share/readback, then
- * return { briefByUser, counters } for the digest loop + main's
- * end-of-run exit gate. One brief per user regardless of how many
- * variants they have enabled.
+ * Write brief:{userId}:{issueSlot} for the owner and brief:latest:{userId}
+ * as the latest-pointer for readback, then return { briefByUser, counters }
+ * for main's end-of-run exit gate. One brief per run regardless of how many
+ * variants are enabled.
  *
- * Returns empty counters when brief composition is disabled,
- * insights are unavailable, or the signing secret is missing. Never
- * throws — the digest send path must remain independent of the
- * brief path, so main() handles exit-codes at the very end AFTER
- * the digest has been dispatched.
+ * Returns empty counters when brief composition is disabled or insights are
+ * unavailable. Never throws; main() handles exit codes at the end of the run.
  *
  * @param {unknown[]} rules
  * @param {number} nowMs
@@ -1054,13 +1045,12 @@ async function composeBriefsForRun(rules, nowMs, { deadlineMs } = {}) {
  * Per-user: pick a winning candidate (DUE rules first, then any
  * eligible rule), pull its digest pool, run canonical synthesis
  * over the FULL pre-cap pool, then compose the envelope with the
- * synthesis spliced in. SETEX the envelope, sign the magazine URL.
+ * synthesis spliced in and SETEX it.
  *
  * Returns the entry the caller should stash in briefByUser, or null
  * when no candidate had stories. The entry's `synthesisLevel` field
- * tells the send loop which fallback path produced the lead (1 =
- * canonical, 2 = degraded, 3 = stub) — drives the email subject-line
- * ternary and the parity log.
+ * records which fallback path produced the lead (1 = canonical,
+ * 2 = degraded, 3 = stub) for the parity log.
  *
  * @param {string} userId
  * @param {Array<{ rule: object; lastSentAt: number | null; due: boolean }>} annotated

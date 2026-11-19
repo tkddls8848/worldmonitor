@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { AGENT_NOT_FOUND_PASSTHROUGH_PREFIXES } from '../src/config/agent-not-found.ts';
 import {
   INDEXABLE_LANDING_LOCALES,
   defaultLandingLocale,
@@ -53,12 +52,4 @@ describe('indexable landing locale registry', () => {
     );
   });
 
-  it('keeps 404 passthroughs on the registry', () => {
-    for (const locale of nonDefaultLandingLocales()) {
-      assert.ok(
-        (AGENT_NOT_FOUND_PASSTHROUGH_PREFIXES as readonly string[]).includes(`/${locale.pathSegment}`),
-        `/${locale.pathSegment} must not 404 the prerendered landing`,
-      );
-    }
-  });
 });

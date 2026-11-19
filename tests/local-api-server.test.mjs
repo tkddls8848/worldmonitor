@@ -17,16 +17,12 @@ import { runInNewContext } from 'node:vm';
 delete process.env.WS_RELAY_URL;
 const { createLocalApiServer, __testing__ } = await import('../scripts/local/local-api-server.mjs');
 
-// Served locally, these answer 5xx or an empty 200 (notification-suppressions);
-// the cloud holds their state. Before #9906 a failed Upstash import hid that.
+// Served locally, these answer 5xx; the cloud holds their state. Before #9906
+// a failed Upstash import hid that.
 // reverse-geocode answers 503 locally: its Nominatim limiter fails closed
 // without Upstash, and its geocode cache is the cloud's Redis.
 test('prefers the cloud for routes whose state lives only in the cloud (#9906)', () => {
   for (const pathname of [
-    '/api/analytics-health',
-    '/api/notification-suppressions',
-    '/api/oauth/authorize',
-    '/api/oauth/register',
     '/api/reverse-geocode',
     '/api/security/report',
   ]) {

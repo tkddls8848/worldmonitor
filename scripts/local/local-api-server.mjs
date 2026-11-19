@@ -1088,8 +1088,8 @@ const cloudPreferredSeedOnlyPrefixes = [
   '/api/wildfire/v1/',
 ];
 const cloudPreferredAlwaysPrefixes = ['/api/scorecard/v1/'];
-// Routes whose answer lives in cloud-only state: OAuth client records, operator Redis sets, cross-user aggregates and
-// the security-report sink. The sidecar holds none of it, so served locally
+// Routes whose answer lives in cloud-only state: cross-user aggregates and the
+// security-report sink. The sidecar holds none of it, so served locally
 // they answer 5xx or empty. Until #9906 they reached the cloud only by accident:
 // a static Upstash import kept them from loading on desktop at all.
 // reverse-geocode belongs here too: its shared Nominatim limiter fails closed
@@ -1097,10 +1097,6 @@ const cloudPreferredAlwaysPrefixes = ['/api/scorecard/v1/'];
 // Cyber network enrichment also needs cloud authorization and shared budgets.
 const cloudPreferredServerStateRoutes = new Set([
   '/api/cyber/v1/get-network-info',
-  '/api/analytics-health',
-  '/api/notification-suppressions',
-  '/api/oauth/authorize',
-  '/api/oauth/register',
   '/api/reverse-geocode',
   '/api/security/report',
 ]);

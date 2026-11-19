@@ -156,7 +156,10 @@ describe('mobile P0 navigation shell (#5201)', () => {
   // The tab bar is markup and CSS with no runtime seam to call; the dashboard
   // itself is exercised on mobile viewports by the Playwright suite.
   it('renders the five primary destinations in a real navigation landmark', () => {
-    assert.match(layout, /<nav class="mobile-tab-bar"[^>]*aria-label="Primary"/);
+    // The landmark label is localized; English still reads "Primary".
+    assert.match(layout, /<nav class="mobile-tab-bar"[^>]*aria-label="\$\{escapeHtml\(t\('mobileNavigation\.primary'\)\)\}"/);
+    const en = JSON.parse(readFileSync(new URL('../src/locales/en.json', import.meta.url), 'utf8'));
+    assert.equal(en.mobileNavigation.primary, 'Primary');
     for (const tab of ['today', 'map', 'search', 'alerts', 'more']) {
       assert.match(layout, new RegExp(`data-mobile-tab="${tab}"`));
     }
