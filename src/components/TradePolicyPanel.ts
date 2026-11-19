@@ -78,7 +78,7 @@ export class TradePolicyPanel extends Panel {
   }
 
   private render(): void {
-    const wtoAvailable = !isFeatureAvailable('wtoTrade');
+    const wtoAvailable = isFeatureAvailable('wtoTrade');
     const hasTariffs = wtoAvailable && this.tariffsData && this.tariffsData.datapoints?.length > 0;
     const hasFlows = wtoAvailable && this.flowsData && this.flowsData.flows?.length > 0;
     const hasBarriers = wtoAvailable && this.barriersData && this.barriersData.barriers?.length > 0;
