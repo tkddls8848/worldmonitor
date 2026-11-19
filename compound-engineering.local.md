@@ -10,7 +10,7 @@ review_agents:
 # WorldMonitor Review Context
 
 TypeScript monorepo: Vanilla TS panels (no React), sebuf proto RPCs, Redis-cached seed data,
-Vercel edge functions, Railway cron seeds.
+a local API server and collectors writing to an embedded store (personal fork).
 
 Key patterns:
 

@@ -191,7 +191,6 @@ function parseLayerRegistry(source) {
   cursor += 1;
   const declaredKeys = [];
   const mismatchedKeys = [];
-  const lockedKeys = [];
   while (cursor < registryBlock.length) {
     while (/\s|,/.test(registryBlock[cursor] ?? '')) cursor += 1;
     if (registryBlock[cursor] === '}') break;
@@ -245,7 +244,6 @@ function parseLayerRegistry(source) {
       throw new Error(`docs-stats: LAYER_REGISTRY property ${key} needs a static def() key`);
     }
     if (key !== definitionKey) mismatchedKeys.push(`${key} -> ${definitionKey}`);
-    if (/^(['"])locked\1$/.test(args[5] ?? '')) lockedKeys.push(key);
   }
   if (declaredKeys.length === 0) {
     throw new Error('docs-stats: LAYER_REGISTRY extraction was empty');
@@ -260,7 +258,6 @@ function parseLayerRegistry(source) {
   }
   return {
     keys: sorted(declaredKeys),
-    lockedKeys: sorted(lockedKeys),
   };
 }
 
@@ -915,21 +912,8 @@ function computeStats({ sourceAttribution: suppliedAttribution } = {}) {
 
   // ---- Map layers (src/config/map-layer-definitions.ts) ----
   const mld = read('src/config/map-layer-definitions.ts');
-  const { keys: layerKeys, lockedKeys: lockedLayerKeys } = parseLayerRegistry(mld);
+  const { keys: layerKeys } = parseLayerRegistry(mld);
   const layerDefinitions = layerKeys.length;
-
-  // Web-locked premium layers: literal 'locked' in the def() call. Desktop-only
-  // locks use the `_desktop ? 'locked' : undefined` ternary and stay free on web,
-  // so they are excluded — plan copy describes the web product.
-  //
-  // Deliberately NOT derived here: a "free layer count". `layerDefinitions -
-  // lockedLayerKeys.length` overstates it, because a registry entry can also be
-  // unreachable for everyone (`isSunsetLayer` drops iranAttacks unless
-  // VITE_ENABLE_IRAN_ATTACKS=true; App.ts hides cyberThreats unless
-  // VITE_ENABLE_CYBER_LAYER=true) and VARIANT_LAYER_ORDER means no single site
-  // shows the whole registry. Plan copy therefore names the Pro-only layer
-  // instead of quoting a free total.
-  const lockedLayerDefinitions = lockedLayerKeys.length;
 
   const variantBlock = mld.slice(mld.indexOf('VARIANT_LAYER_ORDER'), mld.indexOf('export function getLayersForVariant'));
   const variantLayers = {};
@@ -1065,8 +1049,6 @@ function computeStats({ sourceAttribution: suppliedAttribution } = {}) {
   return {
     _generated: 'scripts/generate-inventory-facts.mjs — build artifact; do not commit',
     layerDefinitions,
-    lockedLayerDefinitions,
-    lockedLayerKeys,
     tier1Countries,
     rankableUniverseCountries,
     variantLayers,

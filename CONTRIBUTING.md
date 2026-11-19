@@ -1,47 +1,42 @@
-# Contributing to World Monitor
+# Contributing to this fork
 
-Thank you for your interest in contributing to World Monitor! This project thrives on community contributions — whether it's code, data sources, documentation, or bug reports.
+This is a single-owner personal fork of World Monitor. It runs as a personal dashboard, a local API, an embedded data store and the data collectors on the owner's machine. There are no outside contributors, pull requests or hosted deployments; this guide records how changes are made and verified here.
 
 ## Table of Contents
 
 - [Architecture Overview](#architecture-overview)
-- [Getting Started](#getting-started)
 - [Development Setup](#development-setup)
+- [Preflight](#preflight)
 - [Complete one change](#complete-one-change)
-- [How to Contribute](#how-to-contribute)
 - [Delivery](#delivery)
-- [AI-Assisted Development](#ai-assisted-development)
 - [Coding Standards](#coding-standards)
 - [Working with Sebuf (RPC Framework)](#working-with-sebuf-rpc-framework)
 - [Adding Data Sources](#adding-data-sources)
 - [Adding RSS Feeds](#adding-rss-feeds)
-- [Reporting Bugs](#reporting-bugs)
-- [Feature Requests](#feature-requests)
 - [Code of Conduct](#code-of-conduct)
 
 ## Architecture Overview
 
-World Monitor is a real-time OSINT dashboard built with **Vanilla TypeScript** (no UI framework), **MapLibre GL + deck.gl** for map rendering, and a custom Proto-first RPC framework called **Sebuf** for all API communication.
+World Monitor is a real-time OSINT dashboard built with **Vanilla TypeScript** (no UI framework), **MapLibre GL + deck.gl** for map rendering, and a Proto-first RPC framework called **Sebuf** for API communication. See [ARCHITECTURE.md](ARCHITECTURE.md) for the personal runtime.
 
 ### Key Technologies
 
 | Technology | Purpose |
 |---|---|
-| **TypeScript** | All code — frontend, edge functions, and handlers |
+| **TypeScript** | All code: frontend, API handlers and server modules |
 | **Vite** | Build tool and dev server |
 | **Sebuf** | Proto-first HTTP RPC framework for typed API contracts |
 | **Protobuf / Buf** | Service and message definitions across domains |
 | **MapLibre GL** | Base map rendering (tiles, globe mode, camera) |
 | **deck.gl** | WebGL overlay layers (scatterplot, geojson, arcs, heatmaps) |
 | **d3** | Charts, sparklines, and data visualization |
-| **Vercel Edge Functions** | Serverless API gateway |
-| **Tauri v2** | Desktop app (Windows, macOS, Linux) |
-| **Convex** | Billing, entitlements, user state, forms, and intelligence history |
+| **Node.js 24** | Personal server, local API, embedded store and collectors |
+| **node:sqlite** | Intelligence history |
 | **Playwright** | End-to-end and visual regression testing |
 
 ### Variant System
 
-The codebase produces app variants from the same source, each targeting a different audience or use case:
+The codebase produces app variants from the same source. The personal build uses `full`.
 
 | Variant | Command | Focus |
 |---|---|---|
@@ -59,209 +54,70 @@ Variants share all code but differ in default panels, map layers, and RSS feeds.
 | Directory | Purpose |
 |---|---|
 | `src/components/` | UI components |
-| `src/services/` | Data fetching modules — sebuf client wrappers, AI, signal analysis |
+| `src/services/` | Data fetching modules: sebuf client wrappers, AI, signal analysis |
 | `src/config/` | Static data and variant configs (feeds, geo, military, pipelines, ports) |
 | `src/generated/` | Auto-generated sebuf client + server stubs (**do not edit by hand**) |
 | `src/types/` | TypeScript type definitions |
 | `src/locales/` | i18n JSON files |
 | `src/workers/` | Web Workers for analysis |
 | `server/` | Sebuf handler implementations |
-| `api/` | Vercel Edge Functions (sebuf gateway + legacy endpoints) |
+| `api/` | API entries the local server runs (sebuf gateways + legacy endpoints) |
 | `proto/` | Protobuf service and message definitions |
 | `data/` | Static JSON datasets |
 | `docs/` | Documentation + generated OpenAPI specs |
-| `src-tauri/` | Tauri v2 Rust app + Node.js sidecar for desktop builds |
 | `e2e/` | Playwright end-to-end tests |
-| `scripts/` | Build and packaging scripts |
-
-## Getting Started
-
-1. **Fork** the repository on GitHub
-2. **Clone** your fork locally:
-   ```bash
-   git clone https://github.com/<your-username>/worldmonitor.git
-   cd worldmonitor
-   ```
-3. **Configure the remotes** in this new clone:
-   ```bash
-   git remote rename origin fork
-   git remote add origin https://github.com/koala73/worldmonitor.git
-   git config remote.pushDefault fork
-   git fetch origin main
-   ```
-   Preflight and PR snapshots use `origin` to identify the repository hosting the
-   PR and its canonical `main`. Keep your contribution remote named `fork` and
-   make it the default push target.
-4. **Create a branch** for your work from current canonical `main`:
-   ```bash
-   git switch -c feature/your-feature-name origin/main
-   ```
+| `scripts/` | Collectors, the personal server, build and check scripts |
 
 ## Development Setup
 
-Use Node.js 24 from `.nvmrc`, matching the main CI workflows. For a trusted checkout,
-start with the existing test preparation command. It installs dependencies without
-package lifecycle scripts or credential links and generates local inventory facts.
+Use Node.js 24 from `.nvmrc`, matching the CI workflows.
 
 ```bash
-npm run --silent agent:preflight -- --mode tests
-npx playwright install chromium
-npm run test:e2e:country-brief
-```
+npm ci
 
-The Country Brief check opens `/dashboard?country=UA` in Chromium and verifies
-prediction records, fallback, empty results, and reload recovery. It needs no API
-keys. Playwright starts and stops Vite on port 4173. See the
-[Country Brief recipe](.agents/skills/verify-worldmonitor/features/country-brief.md)
-for evidence files, backend checks, and the limits of this proof.
+# Personal runtime (see SELF_HOSTING.md for .env.local)
+npm run build:personal
+npm run start:personal
+npm run collect:personal
+npm run tui:personal
 
-For interactive development, run the commands below. Install the full toolchain
-with `make install` when you need code generation or the broader build tools.
-
-```bash
-# Start the development server (full variant, default)
+# Development server (full variant, default)
 npm run dev
 
-# Start other variants
-npm run dev:tech
-npm run dev:finance
-npm run dev:commodity
-npm run dev:happy
-npm run dev:energy
-
-# Run type checking
+# Type checking and boundaries
 npm run typecheck
+npm run typecheck:api
+npm run lint:boundaries
 
-# Run tests
-npm run test:related       # Data tests the branch's changes can reach
-npm run test:data          # All data integrity tests (CI runs these on every push)
+# Tests
+npm run test:related       # data tests the change can reach (POSIX shells)
+npm run test:data          # all node:test suites in tests/ (CI runs these on every push)
+npm run test:dom           # DOM suites in tests/dom/
+npm run test:api           # api/ handler and relay suites
 npm run test:e2e:full      # Playwright end-to-end tests (full variant)
-
-# Production build (per variant)
-npm run build              # full
-npm run build:tech
-npm run build:finance
-npm run build:commodity
-npm run build:happy
-npm run build:energy
 ```
 
-The dev server runs at `http://localhost:3000` (override the port with `DEV_PORT` in `.env.local`). Run `make help` to see all available make targets.
+The dev server runs at `http://localhost:3000` (override the port with `DEV_PORT` in `.env.local`). On Windows, `test:related` cannot spawn its test runs; run the changed files directly with `node --import tsx --test <file>`, as CI does.
 
-### Build Prerequisites
+### Environment Variables
 
-`npm run check:prereqs` reports everything missing in one pass and, when the
-local package archive confirms the names, prints a single install command for
-your distribution. It runs automatically before `npm run desktop:dev` and
-`npm run desktop:tauri:build`.
+Copy `.env.example` to `.env.local` and fill in the keys you need. The personal server requires `WM_PERSONAL_PASSWORD` and the embedded store settings; AI features need `OPENROUTER_API_KEY`. Without a data source's key its collector fails and its panel shows no data.
 
-```bash
-npm run check:prereqs              # everything
-npm run check:prereqs -- --scope web       # web app only
-npm run check:prereqs:desktop              # desktop development
-npm run check:prereqs:desktop:bundle       # desktop bundle, including AppImage tools
-npm run check:prereqs -- --json            # machine-readable, for CI
-npm run check:prereqs -- --warn-only       # report but do not fail
-```
-
-**Web app:** Use Node.js 24. The prerequisite checker accepts an older runtime floor,
-but preflight and the main CI workflows require 24.
-
-**Desktop app (Tauri v2):** Rust via [rustup](https://rustup.rs), plus native
-libraries on Linux. macOS and Windows need only the Rust toolchain. On Linux
-the check covers WebKitGTK 4.1, JavaScriptCoreGTK 4.1, GTK 3, libsoup 3,
-GLib/GObject, Cairo, Pango, ATK and D-Bus — and, for AppImage bundling,
-librsvg2 (dev), patchelf and the FUSE 2 runtime.
-
-Two of these have bitten people and are worth knowing:
-
-- **librsvg2-dev, not just the runtime.** `linuxdeploy-plugin-gtk` locates the
-  SVG pixbuf loader via `pkg-config --variable=libdir librsvg-2.0`, so it needs
-  the `.pc` file from the `-dev` package. Without it, `tauri build` fails at the
-  very end with only `failed to run linuxdeploy` and no cause.
-- **Tauri v2 requires the 4.1 / libsoup3 line.** WebKitGTK 4.0 is the Tauri v1
-  pairing and will not satisfy this build.
-
-The check probes capabilities (pkg-config modules, sonames, commands) rather
-than package names, and resolves names against your archive, so distro renames
-such as Ubuntu's `libfuse2` → `libfuse2t64` t64 transition are handled
-automatically. Debian/Ubuntu, Fedora/RHEL, Arch and openSUSE families get an
-install command; other distributions get the capability list to map themselves.
-
-openSUSE package names are currently unverified — derived from naming
-convention rather than checked against a live archive — and the check says so
-when it prints them. Corrections welcome.
-
-### Environment Variables (Optional)
-
-For full functionality, copy `.env.example` to `.env.local` and fill in the API keys you need. The app runs without any API keys — external data sources will simply be unavailable.
-
-See the [API dependencies docs](https://www.worldmonitor.app/docs/getting-started#api-dependencies) for the full list.
-
-### Worktrees and preflight
-
-Run commands from the worktree under test. Inspect `git status --short --branch`
-first. For new work, use a branch from current `origin/main`. For existing PR work,
-use its current head and existing safe worktree.
-
-Check `git remote -v` before preflight. `origin` must identify `koala73/worldmonitor`
-for an upstream PR. Fork contributors should use the [remote layout above](#getting-started).
-In an existing clone, preserve its remotes and push URLs while adapting that layout.
-Do not add a second `fork` remote or overwrite an existing destination. Keep the
-existing PR's head branch and fork repository as the push target. A full upstream
-PR URL cannot override a fork-valued `origin` in these tools.
+## Preflight
 
 ```bash
-npm run --silent agent:preflight -- --mode review --pr 456
+npm run --silent agent:preflight -- --mode review
 npm run --silent agent:preflight -- --mode tests
 npm run --silent agent:preflight -- --mode repair --issue 123
 ```
 
-Supply the actual PR or issue number. Add `--require-env <NAME>` for each required
-credential. Explicit modes return `worldmonitor-agent-preflight/v2`.
-
 | Mode | Readiness field | What it permits |
 |---|---|---|
 | `review` | `readiness.sourceReview.ready` | Inspect the committed `checks.source.headOid` through Git objects, including in a dirty checkout. No dependency installation or inventory generation. |
-| `tests` | `readiness.tests.ready` | Run tests against the working tree, including intentional edits. Prepares dependencies and inventory in the current trusted checkout. |
-| `repair` | `readiness.repair.ready` | Edit on a safely aligned branch with current base ancestry, GitHub access, dependencies, and no worktree collision. |
+| `tests` | `readiness.tests.ready` | Run tests against the working tree, including intentional edits. Prepares dependencies and inventory in the current checkout. |
+| `repair` | `readiness.repair.ready` | Edit with current base ancestry, GitHub access and dependencies. |
 
-`status`, `ok`, and the exit code follow the selected mode.
-`expensiveTestsAllowed` follows test readiness only. A blocked repair does not block
-ready source inspection or local tests. GitHub access, base drift, and detached
-HEAD do not independently block tests. A known PR-head mismatch blocks PR review.
-If `checks.source.scope` is `local_commit`, report that live PR state and feedback
-remain unverified. Without `--mode`, legacy v1 callers still require both
-`status: "ready"` and `expensiveTestsAllowed: true`.
-
-Resolve each blocker's `reason` and `nextAction` before the affected action:
-
-- Use `--allow-dirty`, `--allow-detached`, or `--allow-stale-main` only for an intentional state appropriate to the action. These flags record exceptions. They do not repair the checkout. Unmerged paths always block tests and repair.
-- A collision identifies another registered worktree, not a proven active writer. Inspect that path and task state. Resume an idle, safe owner worktree or coordinate with its active owner. Unknown writer activity keeps branch writes blocked. Never create a competing writer or discard another worktree.
-- Repair permits local commits ahead of the confirmed PR head. A closed PR blocks delivery to that branch. Refresh base and head again before pushing.
-- If `gh` resolves to an unsuitable wrapper, set `WM_GH_BIN` and `WM_GH_AUTH_BIN` to the installed authenticated CLI. Do not fabricate credentials.
-- A sandbox `listen EPERM` when Vite or `tsx` starts is an execution restriction. Obtain the required execution access and rerun the same check. An occupied port belongs to its current owner. Do not kill another run's server.
-
-Preflight is the primary bootstrap path. It does not link env files or run package
-lifecycle scripts. It runs the inventory generator directly with a minimal
-environment only in the current trusted checkout. If full bootstrap is needed,
-use `npm run worktree:bootstrap` in a trusted agent-owned worktree. For docs or test
-tooling, use `npm run worktree:bootstrap:test-only`.
-
-Full bootstrap can link env files. Link only `.env.local` and `.env`, never
-`.env.vercel-backup` or `.env.vercel-export`. If Git cannot infer the source checkout,
-use `WM_ENV_SOURCE=/path/to/worldmonitor npm run worktree:env`. Check
-`git status --short` after setup and remove only incidental changes you created. A credential
-available in another checkout does not prove this process can use it. Run checks
-that need no credentials and report the remaining gate.
-
-For an unreviewed third-party checkout, run `agent:preflight`
-from a clean trusted worktree with `--root /path/to/untrusted-checkout` and
-`--skip-bootstrap`. Never execute the target's scripts. Explicit modes disable
-alternate-target bootstrap and inventory generation and block tests and repair.
-Changing directories does not establish trust. Follow the
-[owner-reviewed code generation procedure](#generated-artifacts-in-pull-requests)
-before executing reviewed fork code.
+Read each blocker's `reason` and `nextAction`. Readiness is neither authority nor a test result. Its branch and pull-request blockers do not apply to this fork: work happens on `main`. Preflight does not link env files or run package lifecycle scripts. A credential available elsewhere does not prove this process can use it; run the checks that need no credentials and report the remaining gate.
 
 ## Complete one change
 
@@ -279,21 +135,6 @@ required gates. Run focused checks first and heavy checks sequentially. Keep use
 regression coverage. Remove a check only with evidence that its protection is
 obsolete, redundant, or ineffective.
 
-For PWA changes, build with `VITE_VARIANT=full npx vite build`, then run
-`node --import tsx --test tests/pwa-precache.test.mjs tests/pwa-recovery.test.mjs tests/deploy-config.test.mjs`.
-The generated worker precaches the dashboard entry's static JavaScript/CSS
-dependencies and the fixed offline/install assets, with a 32-file, 2 MiB budget
-checked against `dist/sw.js`. Other app chunks are cached when requested.
-Navigation still falls back to the self-contained offline page. Verify the built
-worker in a browser; the development server does not register it.
-
-For Railway registry changes, use `npm run test:railway-registry` during the edit
-loop. It exercises the real CLI, runner, workflow and registry contracts without
-the unrelated health-status publisher fixtures. Run the expanded source-health
-proof once before delivery when that boundary changes. See
-[CI test selection and shards](docs/solutions/performance-issues/ci-test-selection-and-shards.md)
-for the commands, full-suite route and timing evidence.
-
 For browser work, use the [verification skill](.agents/skills/verify-worldmonitor/SKILL.md)
 and the relevant feature recipe. Country Brief is a worked example with an existing
 local command and CI coverage. Extend that proof for a changed outcome instead of
@@ -306,71 +147,13 @@ or middleware configuration and may return source text or an error.
 
 - A deterministic browser test can stub HTTP responses while exercising real application assets, request construction, hydration, rendering, URL state, and reload behavior. State which responses are controlled.
 - A local unmocked RPC request exercises the Node dev router and registered handler. It needs the handler's credentials and dependencies to prove useful data. An empty response alone does not prove a provider or cache works.
-- Vite does not prove deployed Edge middleware, authentication, entitlements, or deployment assets. Use an authorized preview or production observation when the acceptance criterion requires those paths.
+- Vite does not prove the personal server's ingress (Basic auth, no-store headers) or the built handler bundles. Use `npm run build:personal` and `npm run start:personal` when the acceptance criterion requires those paths.
 - Worker and freshness changes require producer-to-reader checks and, when needed, source-specific natural-run evidence. A parent bundle success is insufficient. Do not run production seeders or deploy without authorization.
 
 Before handoff, run `git diff --check` and `git status --short`. Report the exercised
 path, commands and results, evidence location, and unverified parts. A timeout,
 interruption, skipped job, or unmet prerequisite is not a pass. Keep local proof,
-PR readiness, merge, deployment, production observation, and acceptance separate.
-
-### CodeQL scan schedule and setup handover
-
-`.github/workflows/codeql.yml` does not run on pull requests or pushes. CodeQL
-does not gate merges, and a full scan costs about 30 runner-minutes, so it runs
-once a day at 03:23 UTC across all six languages. Findings for a change appear
-in **Security > Code scanning** when the first scan after it reaches `main`
-completes, which can be more than 24 hours later; dispatch **CodeQL** on `main`
-to scan sooner. Scheduled and manual runs use separate
-concurrency groups, and neither cancels a running scan.
-
-After each default-branch scan, the `prune-overlay-bases` job deletes every CodeQL
-overlay-base cache except the newest per workflow/job/language group, because
-CodeQL saves a new base under a unique key on every run and never removes old ones.
-
-The repository owner must coordinate activation with the approved merge:
-
-1. Keep default setup enabled while reviewing this workflow. Advanced analysis
-   uploads can be rejected while default setup is enabled; this is not a passing
-   CodeQL validation result.
-2. At the approved handover, disable default setup in **Settings > Code security >
-   CodeQL analysis**, then merge the workflow and dispatch **CodeQL** on `main`. GitHub documents the [switch to advanced setup](https://docs.github.com/en/code-security/how-tos/find-and-fix-code-vulnerabilities/configure-code-scanning/configuring-advanced-setup-for-code-scanning).
-3. Confirm all six `Analyze (<language>)` jobs succeed and publish fresh results
-   for the merged commit in **Security > Code scanning**. Check any required
-   code-scanning rules still accept the new workflow; do not treat skipped jobs
-   as proof of analysis. Confirm the next daily run, and compare
-   runner-minutes after seven days before claiming savings.
-4. If analysis or uploads fail, restore default setup and disable the advanced
-   workflow until repaired. Avoid leaving both disabled or allowing both to run
-   as the steady state.
-   If the merge or manual dispatch cannot proceed after default setup is
-   disabled, restore default setup immediately. An interrupted handover is not
-   complete; do not leave main without an active scan configuration.
-
-Run `node --test tests/codeql-workflow.test.mjs` for local workflow contract
-checks. These tests do not execute CodeQL or prove SARIF upload access.
-
-## How to Contribute
-
-### Types of Contributions We Welcome
-
-- **Bug fixes** — found something broken? Fix it!
-- **New data layers** — add new geospatial data sources to the map
-- **RSS feeds** — expand our curated feed collection with quality sources
-- **UI/UX improvements** — make the dashboard more intuitive
-- **Performance optimizations** — faster loading, better caching
-- **Documentation** — improve docs, add examples, fix typos
-- **Accessibility** — make the dashboard usable by everyone
-- **Internationalization** — help make World Monitor available in more languages
-- **Tests** — add unit or integration tests
-
-### What We're Especially Looking For
-
-- New data layers (see [Adding Data Sources](#adding-data-sources))
-- Feed quality improvements and new RSS sources
-- Mobile responsiveness improvements
-- Performance optimizations for the map rendering pipeline
-- Better anomaly detection algorithms
+pushed, CI, live observation and acceptance separate.
 
 ## Delivery
 
@@ -381,12 +164,6 @@ This fork has one owner. Changes go straight to `main`; there is no pull request
 3. Fetch `origin/main` and reconcile it before pushing. Push to `origin` (`tkddls8848/worldmonitor`). Never push to `upstream`, and never bypass the pre-push gate with `--no-verify`.
 4. After pushing, watch CI on the pushed commit and repair relevant failures with a follow-up commit. Green checks do not prove deployment or production acceptance.
 5. Do not create a feature branch or pull request unless the owner asks for one. Deployment still requires the owner's explicit authorization.
-
-## AI-Assisted Development
-
-We fully embrace AI-assisted development. Many of our own PRs are labeled with the LLM that helped produce them (e.g., `claude`, `codex`, `cursor`), and contributors are welcome to use any AI tools they find helpful.
-
-That said, **all code is held to the same quality bar regardless of how it was written**. AI-generated code will be reviewed with the same scrutiny as human-written code. Contributors are responsible for understanding and being able to explain every line they submit. Blindly pasting LLM output without review is discouraged — treat AI as a collaborator, not a replacement for your own judgement.
 
 ## Coding Standards
 
@@ -409,7 +186,7 @@ That said, **all code is held to the same quality bar regardless of how it was w
 
 - Static layer/geo data and variant configs go in `src/config/`
 - Sebuf handler implementations go in `server/worldmonitor/{domain}/v1/`
-- Edge function gateway and legacy endpoints go in `api/`
+- API gateways and legacy endpoints go in `api/`
 - UI components (panels, map, modals) go in `src/components/`
 - Service modules (data fetching, client wrappers) go in `src/services/`
 - Proto definitions go in `proto/worldmonitor/{domain}/v1/`
@@ -458,25 +235,9 @@ The pinned sebuf version is set by `SEBUF_VERSION` in the `Makefile` (currently 
 
 Product facts, `llms.txt`, the AI search briefing, source attribution, catalogs, locales and legal digests are committed outputs of generators in `scripts/`. Run `npm run generate` after changing anything they read; it runs each generator's `--check` and rewrites only what is stale, in dependency order. `npm run generate:check` reports without writing. The pre-push hook regenerates stale files and stops the push so you can commit them, and the always-on `docs-stats` CI job runs the check. Proto output is separate (`make generate`, below). App translations, internal links, the sitemap and docs page dates are not covered; see the header of `scripts/generate-derived.mjs`.
 
-### Generated Artifacts in Pull Requests
+### Generated Artifacts
 
-`make generate` writes generated files under `src/generated/` and `docs/api/`, plus the seven scorecard Edge mirrors named by `scripts/generate-scorecard-edge-mirrors.mjs`. These files remain committed to the repository, but they must never be edited by hand.
-
-For pull requests created from branches in this repository, a read-only job runs the pinned generator against the exact PR head. A fresh writer job applies only the validated generated-artifact patch; it does not execute repository-controlled code with a write token. When generated files drift, CI appends a `chore(proto): update generated artifacts` commit to the same branch. GitHub creates fresh PR runs for the automated update in an approval-required state; a maintainer must approve them in the merge box. `proto-generated-followup` remains pending until that new head produces no further drift. CI also regenerates against the synthetic merge result so concurrent proto changes on `main` cannot leave an internally consistent branch stale after merge. The required Deploy Gate includes all proto jobs and the aggregate `proto-freshness` result.
-
-For a fork pull request with codegen changes, keep the original fork branch when maintainer edits are enabled. The proto check stays red until the repository owner creates a trusted head:
-
-1. The repository owner reviews the exact current head and its generator inputs.
-2. In a clean isolated worktree with no linked environment files or credentials, check out that head and run the pinned `make generate` command.
-3. Review the result. Push only the reviewed source changes and required generated artifacts to the original fork branch.
-
-The repository owner's push must create a `pull_request` `synchronize` event. CI validates the exact head and merge result but does not write to the fork. Trust applies only to that head. A later contributor push revokes that trust, and an owner rerun or reopen does not restore it.
-
-If `make generate` produces no diff, create an owner-pushed empty commit on the original fork branch. The empty commit creates the required `synchronize` event.
-
-If maintainer edits are disabled, move the commit to a trusted internal branch.
-
-For Dependabot pull requests from this repository, use the same owner-review and generation procedure on the existing branch. An owner push creates the required `synchronize` event and permits read-only validation of the exact head and merge result. CI does not publish generated patches or write to the Dependabot branch. A later Dependabot push revokes trust; an owner rerun or reopen does not restore it. Commit any required generated artifacts locally before the owner push.
+`make generate` writes generated files under `src/generated/` and `docs/api/`, plus the seven scorecard Edge mirrors named by `scripts/generate-scorecard-edge-mirrors.mjs`. These files remain committed to the repository and must never be edited by hand. CI regenerates them in `proto-check.yml` and fails on drift. The owner's machine has no `buf` or `make`, so proto changes wait for an environment that has them.
 
 ### OpenAPI Output
 
@@ -497,13 +258,13 @@ To add a new data layer to the map:
 2. **Add the proto service** (if the data needs a backend proxy) — define messages and RPC methods in `proto/worldmonitor/{domain}/v1/`
 3. **Generate stubs** — run `make generate`
 4. **Implement the handler** in `server/worldmonitor/{domain}/v1/`
-5. **Register the handler** in `api/[domain]/v1/[rpc].ts` and `vite.config.ts` (for local dev)
+5. **Register the handler** in `api/[domain]/v1/[rpc].ts` and `vite.config.ts` (for local dev), then rebuild with `npm run build:personal`
 6. **Create the service module** in `src/services/{domain}/` wrapping the generated client
 7. **Add the layer config** and implement the map renderer following existing layer patterns
 8. **Add to layer toggles** — make it toggleable in the UI
-9. **Document the source** — add it to the [data sources docs](https://www.worldmonitor.app/docs/data-sources)
+9. **Add the collector** to `DEFAULT_COLLECTORS` in `scripts/personal-collect.mjs` if it should run every pass
 
-For endpoints that deal with non-JSON payloads (XML feeds, binary data, HTML embeds), you can add a standalone Edge Function in `api/` instead of Sebuf. For anything returning JSON, prefer Sebuf — the typed contracts are always worth it.
+For endpoints that deal with non-JSON payloads (XML feeds, binary data, HTML embeds), you can add a standalone endpoint in `api/` instead of Sebuf. For anything returning JSON, prefer Sebuf — the typed contracts are always worth it.
 
 ### Data Source Requirements
 
@@ -514,7 +275,7 @@ For endpoints that deal with non-JSON payloads (XML feeds, binary data, HTML emb
 
 ### Source attribution ledger
 
-Any new outbound host that appears in a URL literal under `scripts/`, `server/`, `api/`, or `src/` is discovered by `scripts/source-attribution.mjs` and needs a curated row in `shared/source-attribution-manifest.json`. This catches contributions that only add data — a feed URL, an MCP preset in `src/services/mcp-store.ts` — with no obvious link to the ledger:
+Any new outbound host that appears in a URL literal under `scripts/`, `server/`, `api/`, or `src/` is discovered by `scripts/source-attribution.mjs` and needs a curated row in `shared/source-attribution-manifest.json`. This catches contributions that only add data — a feed URL — with no obvious link to the ledger:
 
 ```bash
 npm run sources:check     # fails with "missing manifest entry for <host>"
@@ -544,35 +305,6 @@ To add new RSS feeds:
 4. Categorize the feed (geopolitics, defense, energy, tech, etc.)
 5. Test that the feed parses correctly through the RSS proxy
 
-## Reporting Bugs
-
-When filing a bug report, please include:
-
-- **Description** — clear description of the issue
-- **Steps to reproduce** — how to trigger the bug
-- **Expected behavior** — what should happen
-- **Actual behavior** — what actually happens
-- **Screenshots** — if applicable
-- **Browser/OS** — your environment details
-- **Console errors** — any relevant browser console output
-
-Use the [Bug Report issue template](https://github.com/koala73/worldmonitor/issues/new/choose) when available.
-
-## Feature Requests
-
-We welcome feature ideas! When suggesting a feature:
-
-- **Describe the problem** it solves
-- **Propose a solution** with as much detail as possible
-- **Consider alternatives** you've thought about
-- **Provide context** — who would benefit from this feature?
-
-Use the [Feature Request issue template](https://github.com/koala73/worldmonitor/issues/new/choose) when available.
-
 ## Code of Conduct
 
-This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior through GitHub issues or by contacting the repository owner.
-
----
-
-Thank you for helping make World Monitor better! 🌍
+The upstream project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md).

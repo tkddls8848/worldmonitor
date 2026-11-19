@@ -602,9 +602,6 @@
           "path": "scripts/seed-forecasts.mjs"
         },
         {
-          "path": "scripts/triage-agent-feedback.mjs"
-        },
-        {
           "path": "server/_shared/usage.ts"
         }
       ]
@@ -919,9 +916,6 @@
       "references": [
         {
           "path": "api/_github-release.js"
-        },
-        {
-          "path": "scripts/dispatch-stale-railway-reconcile.mjs"
         },
         {
           "path": "scripts/freeze-github-stars.mjs"

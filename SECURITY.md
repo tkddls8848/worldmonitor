@@ -46,19 +46,17 @@ World Monitor is a client-side intelligence dashboard that aggregates publicly a
 
 ### API Keys & Secrets
 
-- **Web deployment**: API keys are stored server-side in Vercel Edge Functions
-- **Desktop runtime**: API keys are stored in the OS keychain (macOS Keychain / Windows Credential Manager) via a consolidated vault entry, never on disk in plaintext
+- **Personal server**: provider API keys stay in the server environment (`.env.local`, gitignored) and never reach the browser. `npm run build:personal` runs the strict VITE secret guard, which refuses a secret-looking `VITE_*` variable
+- **Access**: one owner; every dashboard and API request carries HTTP Basic auth (`WM_PERSONAL_PASSWORD`, 16+ characters) and is answered `private, no-store`
 - No API keys should ever be committed to the repository
-- Environment variables (`.env.local`) are gitignored
-- The RSS proxy uses domain allowlisting to prevent SSRF. Both the Vercel Edge proxy and the Railway relay re-check the RSS allowlist on every redirect hop.
-- The Pro-gated MCP proxy accepts only HTTPS targets, resolves and rejects private/reserved A and AAAA answers immediately before each outbound request, and strips cloud-metadata headers. Vercel Edge `fetch` cannot pin its socket to the vetted address, so a narrow resolve-versus-connect DNS-rebinding window remains an accepted residual; closing it requires a Node-runtime/socket-pinning design (tracked in draft advisory [GHSA-887j-p88r-qmm9](https://github.com/koala73/worldmonitor/security/advisories/GHSA-887j-p88r-qmm9), access restricted until publication).
+- The RSS proxy uses domain allowlisting to prevent SSRF. Both the local API's RSS proxy and the relay re-check the RSS allowlist on every redirect hop.
 
-### Edge Functions & Sebuf Handlers
+### API entries & Sebuf Handlers
 
-- Domain APIs are served through Sebuf (a Proto-first RPC framework) via Vercel Edge Functions
-- Edge functions and handlers should validate/sanitize all input
+- Domain APIs are served through Sebuf (a Proto-first RPC framework) by the local API server
+- API entries and handlers should validate/sanitize all input
 - CORS headers are configured per-function
-- Rate limiting and circuit breakers protect against abuse
+- Circuit breakers protect upstream providers
 
 ### Client-Side Security
 
@@ -66,14 +64,6 @@ World Monitor is a client-side intelligence dashboard that aggregates publicly a
 - External content (RSS feeds, news) is sanitized before rendering
 - Map data layers use trusted, vetted data sources
 - Content Security Policy restricts script-src to `'self'` (no unsafe-inline/eval)
-
-### Desktop Runtime Security (Tauri)
-
-- **IPC origin validation**: Sensitive Tauri commands (secrets, cache, token) are gated to trusted windows only; external-origin windows (e.g., YouTube login) are blocked
-- **DevTools**: Disabled in production builds; gated behind an opt-in Cargo feature for development
-- **Sidecar authentication**: A per-session CSPRNG token (`LOCAL_API_TOKEN`) authenticates all renderer-to-sidecar requests, preventing other local processes from accessing the API
-- **Capability isolation**: The YouTube login window runs under a restricted capability with no access to secret or cache IPC commands
-- **Fetch patch trust boundary**: The global fetch interceptor injects the sidecar token with a 5-minute TTL; the renderer is the intended client — if renderer integrity is compromised, Tauri IPC provides strictly more access than the fetch patch
 
 ### Data Sources
 
@@ -87,11 +77,10 @@ World Monitor is a client-side intelligence dashboard that aggregates publicly a
 The following are **in scope** for security reports:
 
 - Vulnerabilities in the World Monitor codebase
-- Edge function security issues (SSRF, injection, auth bypass)
+- API entry and personal server security issues (SSRF, injection, auth bypass)
 - XSS or content injection through RSS feeds or external data
 - API key exposure or secret leakage
-- Tauri IPC command privilege escalation or capability bypass
-- Sidecar authentication bypass or token leakage
+- Local API transport token leakage
 - Dependency vulnerabilities with a viable attack vector
 
 The following are **out of scope**:

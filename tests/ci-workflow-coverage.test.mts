@@ -122,7 +122,7 @@ const workflowText = readdirSync(workflowsDir)
 
 const REQUIRED_PR_SCRIPTS = [
   'test:data',
-  'test:convex',
+  'test:api',
   'test:resilience-validation-smoke',
 ] as const;
 
@@ -166,8 +166,7 @@ const REQUIRED_CI_SMOKE_SPECS = [
 
 const REQUIRED_TEST_JOBS = [
   'unit',
-  'sidecar',
-  'convex-tests',
+  'api-tests',
   'variant-smoke-full',
   'resilience-validation-smoke',
   'desktop-config',
@@ -177,8 +176,7 @@ const REQUIRED_TEST_JOBS = [
 
 const TIMEOUT_CAPPED_TEST_JOBS = [
   'consumer-prices',
-  'sidecar',
-  'convex-tests',
+  'api-tests',
   'variant-smoke-shards',
   'variant-smoke-pro-webmcp',
   'variant-smoke-full',

@@ -2,26 +2,24 @@
 
 ## Personal fork runtime
 
-`npm run build:personal` builds the Korean-first dashboard with `VITE_PERSONAL_MODE=true`.
-`npm run start:personal` serves static assets and the existing loopback API from one Node.js process.
-The ingress requires a personal password, uses private/no-store responses, and disables hosted API fallback and desktop-key relay.
-The browser does not initialize Clerk, Convex, checkout, analytics, Sentry, or PWA service-worker caching in this build.
-External access uses an HTTPS reverse proxy in front of the loopback listener.
+This fork is a single-owner personal setup on one machine. It has four parts:
 
-Seeded datasets still use the existing transactional store contracts; personal startup accepts only a loopback Redis REST endpoint.
-No storage configuration means those datasets are unavailable, not empty observations.
+| Part | Command | Role |
+|------|---------|------|
+| Personal server | `npm run start:personal` (`scripts/personal-server.mjs`) | Serves the built dashboard (`dist/`) and the local API behind HTTP Basic auth (user `owner`, `WM_PERSONAL_PASSWORD`), `private, no-store` |
+| Local API | `scripts/local/local-api-server.mjs`, started by the personal server | Runs the `api/` handlers (built with `npm run build:personal`) on a loopback port, with cloud fallback off |
+| Embedded store | `scripts/local/embedded-store.mjs`, started when `WM_PERSONAL_STORE=embedded` | Redis REST compatible store on `127.0.0.1:8079`, snapshot in `.personal/store.ndjson`; implements only the commands and pinned scripts the collectors and handlers use |
+| Collectors | `npm run collect:personal` (`scripts/personal-collect.mjs`) | Run the `seed-*` collectors against the store, once or with `--watch N` |
 
-`WM_PERSONAL_STORE=embedded` starts that endpoint inside the personal server (`scripts/local/embedded-store.mjs`), so no Redis is installed or run.
-It keeps data in memory, snapshots it to `.personal/store.ndjson`, and implements only the commands and pinned scripts the collectors and handlers use; any other `EVAL` script is refused.
-`npm run collect:personal` runs the existing collectors against it in place of the Railway cron services, and `npm run tui:personal` opens the terminal dashboard (`cli/src/tui`) against the personal server with the owner's password.
-`npm run scenario:local` evaluates a supplied exposure snapshot without a queue, Railway, or Redis.
-This CLI is separate from the browser's existing asynchronous scenario route.
-The deployment workflows removed from this fork are no longer part of its runtime or release procedure.
-The sections below document remaining shared and legacy code while migration continues.
+`npm run tui:personal` opens the terminal dashboard (`cli/src/tui`) against the personal server. `npm run scenario:local` evaluates a supplied exposure snapshot without a queue or store. The intelligence history is a `node:sqlite` file (`.personal/intel-history.sqlite`). The personal server also starts the scenario worker when a store is configured.
+
+`npm run build:personal` runs the strict VITE secret guard, builds the API handler bundles and builds the Korean-first dashboard with `VITE_PERSONAL_MODE=true`. The browser has no sign-in, checkout, analytics, error reporting or service worker. LLM calls go to OpenRouter, with Anthropic tried first when `ANTHROPIC_API_KEY` is set. External access uses an HTTPS reverse proxy in front of the loopback listener.
+
+Seeded datasets keep the existing store contracts; personal startup accepts only a loopback store endpoint. A dataset with no collected data is unavailable, not an empty observation.
 
 > **Inventory ownership**: map layers, services, protos, locales, CI workflows, and freshness sources are defined by their registries. `npm run docs:check` verifies registry and fixed-contract documentation; generated snapshots are refreshed with `npm run docs:stats`.
 >
-> **Ownership rule**: When deployment topology, API surface, desktop runtime, or bootstrap keys change, this document must be updated in the same PR.
+> **Ownership rule**: When the runtime topology, API surface, or bootstrap keys change, this document must be updated in the same commit.
 
 > **Design philosophy**: For the "why" behind architectural decisions, intelligence tradecraft, and algorithmic choices, see [Design Philosophy](docs/architecture.mdx).
 
@@ -32,43 +30,38 @@ World Monitor is a real-time global intelligence dashboard built as a TypeScript
 ## 1. System Overview
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│                        Browser / Desktop                        │
+┌──────────────────────────────────────────────────────────────┐
+│                           Browser                             │
 │  ┌──────────┐  ┌──────────┐  ┌───────────┐  ┌─────────────┐  │
-│  │ DeckGLMap│  │ GlobeMap │  │  Panels    │  │  Workers     │  │
-│  │(deck.gl) │  │(globe.gl)│  │(Panel base)│  │(ML, analysis)│  │
-│  └────┐─────┘  └────┐─────┘  └─────┐─────┘  └─────────────┘  │
-│       └──────────────┴─────────────┘                           │
-│                         │ fetch /api/*                          │
-└─────────────────────────┴───────────────────────────────────┘
-                          │
-           ┌──────────────┼──────────────┐
-           │              │              │
-    ┌──────▼──────┐ ┌─────▼─────┐ ┌─────▼──────┐
-    │   Vercel    │ │  Railway  │ │   Tauri    │
-    │ Edge Funcs  │ │ AIS Relay │ │  Sidecar   │
-    │ + Middleware│ │ + Seeds   │ │ (Node.js)  │
-    └──────┬──────┘ └─────┬─────┘ └─────┬──────┘
-           │              │              │
-           └──────────────┼──────────────┘
-                          │
-                   ┌──────▼──────┐
-                   │   Upstash   │
-                   │    Redis    │
-                   └──────┬──────┘
-                          │
-              ┌───────────┼───────────┐
-              │           │           │
-        ┌─────▼───┐ ┌─────▼───┐ ┌────▼────┐
-        │ Finnhub │ │  Yahoo  │ │ ACLED   │
-        │ OpenSky │ │  GDELT  │ │ UCDP    │
-        │ CoinGeck│ │  FRED   │ │ FIRMS   │
-        │   ...   │ │   ...   │ │   ...   │
-        └─────────┘ └─────────┘ └─────────┘
-           885 observed source hosts
+│  │ DeckGLMap│  │ GlobeMap │  │  Panels   │  │  Workers    │  │
+│  └────┬─────┘  └────┬─────┘  └─────┬─────┘  └─────────────┘  │
+│       └─────────────┴──────────────┘                          │
+│                     │ fetch /api/* (Basic auth)               │
+└─────────────────────┼────────────────────────────────────────┘
+                      │
+           ┌──────────▼──────────┐       ┌────────────────────┐
+           │  Personal server    │       │  Collectors        │
+           │  (static + ingress) │       │  collect:personal  │
+           │          │          │       └─────────┬──────────┘
+           │   Local API server  │                 │
+           │   (api/ handlers)   │                 │
+           └──────────┬──────────┘                 │
+                      │                            │
+               ┌──────▼────────────────────────────▼──┐
+               │ Embedded store (127.0.0.1:8079)      │
+               │ + node:sqlite intelligence history   │
+               └──────────────────┬───────────────────┘
+                                  │
+              ┌───────────────────┼──────────────────┐
+        ┌─────▼───┐         ┌─────▼───┐         ┌────▼────┐
+        │ Finnhub │         │  Yahoo  │         │ ACLED   │
+        │ OpenSky │         │  GDELT  │         │ UCDP    │
+        │   ...   │         │   ...   │         │   ...   │
+        └─────────┘         └─────────┘         └─────────┘
+        upstream hosts: shared/source-attribution-manifest.json
 ```
 
-**Source files**: `package.json`, `vercel.json`
+**Source files**: `package.json`, `scripts/personal-server.mjs`, `scripts/local/`
 
 ---
 
@@ -76,36 +69,32 @@ World Monitor is a real-time global intelligence dashboard built as a TypeScript
 
 | Process | Role |
 |---------|------|
-| Node.js personal server | Password-protected static dashboard and loopback API |
-| Local data collectors | Fetch enabled providers using the operator's credentials |
-| Local persistent data store | Preserve source datasets, timestamps and analysis history |
+| Node.js personal server | Password-protected static dashboard, local API and embedded store |
+| Collectors | Fetch enabled providers using the owner's credentials |
+| Scenario worker | Runs queued scenario jobs from the store |
 | Optional HTTPS proxy | Private external access to the same personal server |
 
-Container images, Compose, nginx packaging and supervisor configuration are removed.
-The remaining legacy data readers still require the local Redis compatibility adapter;
-it is source-data storage, not permission to reconnect a shared hosted cache.
-Source-only collector metadata lives in `scripts/railway-services.json` while its local scheduler replacement is developed.
+Container images, Compose, nginx, supervisor configuration and the hosted deployment (Vercel, Railway, Convex, Clerk) are removed. `docs/internal/public-launch-disclosures.md` lists what a future public launch would have to disclose.
 
 ## 3. Frontend Architecture
 
 ### Entry and Initialization
 
-`src/main.ts` initializes Sentry error tracking, Vercel analytics, dynamic meta tags, runtime fetch patches (desktop sidecar redirection), theme application, and creates the `App` instance.
+`src/main.ts` installs the startup fallbacks, the variant theme, the `/api/*` redirect patch (`installWebApiRedirect`), WebMCP tool registration and dynamic meta tags, then creates the `App` instance.
 
-`App.init()` runs in 8 phases:
+`App.init()` runs in 7 phases:
 
 1. **Storage + i18n**: IndexedDB, language detection, locale loading
 2. **ML Worker**: ONNX model prep (embeddings, sentiment, summarization)
-3. **Sidecar**: Wait for desktop sidecar readiness (desktop only)
-4. **Bootstrap**: Two-tier concurrent hydration from `/api/bootstrap` (fast 3s + slow 5s timeouts)
-5. **Layout**: PanelLayoutManager renders map and panels
-6. **UI**: SignalModal, IntelligenceGapBadge, BreakingNewsBanner, correlation engine
-7. **Data**: Parallel `loadAllData()` + viewport-conditional `primeVisiblePanelData()`
-8. **Refresh**: Variant-specific polling intervals via `startSmartPollLoop()`
+3. **Bootstrap**: Two-tier concurrent hydration from `/api/bootstrap` (fast 3s + slow 5s timeouts)
+4. **Layout**: PanelLayoutManager renders map and panels
+5. **UI**: SignalModal, IntelligenceGapBadge, BreakingNewsBanner, correlation engine
+6. **Data**: Parallel `loadAllData()` + viewport-conditional `primeVisiblePanelData()`
+7. **Refresh**: Variant-specific polling intervals via `startSmartPollLoop()`
 
 ### Component Model
 
-All panels extend the `Panel` base class (109 classes across `src/components`). Panels render via `setContent(html)` (debounced 150ms) and use event delegation on a stable `this.content` element. Panels support resizable row/col spans persisted to localStorage.
+All panels extend the `Panel` base class (`src/components/Panel.ts`). Panels render via `setContent(html)` (debounced 150ms) and use event delegation on a stable `this.content` element. Panels support resizable row/col spans persisted to localStorage.
 
 ### Dual Map System
 
@@ -113,7 +102,7 @@ All panels extend the `Panel` base class (109 classes across `src/components`). 
 - **Loaded news selection**: `MapContainer.onNewsClicked()` caches and forwards the callback to each renderer's `setOnNewsClick()`. The callback receives `Pick<NewsLocationMarker, 'article' | 'title'>`: optional original loaded article `{link, title, source}` and the displayed marker title. Existing markers without article metadata remain valid. The plugin uses this loaded identity to publish its latest interaction with current view context; it does not track popup visibility or fetch more data on selection.
 - **GlobeMap**: 3D interactive globe via globe.gl. Single merged `htmlElementsData` array with `_kind` discriminator. Earth texture, atmosphere shader, auto-rotate after idle.
 
-Layer definitions live in `src/config/map-layer-definitions.ts`, each specifying renderer support (flat/globe), premium status, variant filtering, and i18n keys.
+Layer definitions live in `src/config/map-layer-definitions.ts`, each specifying renderer support (flat/globe), variant filtering, and i18n keys. The personal build has no layer entitlements.
 
 ### State Management
 
@@ -127,7 +116,7 @@ No external state library. `AppContext` is a central mutable object holding: map
 
 ### Variant System
 
-Detected by hostname (`tech.worldmonitor.app` → tech, `finance.worldmonitor.app` → finance, etc.) or localStorage on desktop. Controls: default panels, map layers, refresh intervals, theme, UI text. Variant change resets all settings to defaults.
+Detected by hostname (`tech.worldmonitor.app` → tech, `finance.worldmonitor.app` → finance, etc.) or the `VITE_VARIANT` build variable; the personal build uses `full`. Controls: default panels, map layers, refresh intervals, theme, UI text. Variant change resets all settings to defaults.
 
 **Source files**: `src/main.ts`, `src/App.ts`, `src/app/`, `src/components/Panel.ts`, `src/components/DeckGLMap.ts`, `src/components/GlobeMap.ts`, `src/config/variant.ts`, `src/workers/`
 
@@ -135,40 +124,40 @@ Detected by hostname (`tech.worldmonitor.app` → tech, `finance.worldmonitor.ap
 
 ## 4. API Layer
 
-### Edge Functions
+### API entries
 
-The `api/` directory holds two kinds of endpoints, both deployed as Vercel Edge Functions:
+The `api/` directory holds two kinds of endpoints. `npm run build:personal` bundles them and the local API server runs them in-process:
 
-- **Domain intelligence gateways** — generated from proto contracts and backed by handlers under `server/worldmonitor/**`. The per-domain thin entry points (`api/<domain>/v<N>/[rpc].ts`) are produced via `createDomainGateway` (`server/gateway.ts`) and esbuild-bundled, so the *deployed* artifact is self-contained even though the source composes server-side modules.
-- **Operational endpoints** — hand-written for concerns that don't fit the contract model: auth/session, checkout and customer portal, MCP, bootstrap/health, notifications, cache invalidation, and user workflows (e.g. `api/create-checkout.ts`, `api/customer-portal.ts`, `api/mcp.ts`, `api/user-prefs.ts`).
+- **Domain intelligence gateways** — generated from proto contracts and backed by handlers under `server/worldmonitor/**`. The per-domain thin entry points (`api/<domain>/v<N>/[rpc].ts`) are produced via `createDomainGateway` (`server/gateway.ts`) and esbuild-bundled into `api/<domain>/v<N>/[rpc].js` (gitignored build output).
+- **Operational endpoints** — hand-written for concerns that don't fit the contract model: bootstrap/health, the brief reader, RSS and feed proxies, Trip Assessment (`api/travel-risk-assessment.ts`) and a few data passthroughs.
 
-Compact health separates actionable `problems` from bounded `pending` diagnostics. Both retain the source diagnosis. Pending deadlines also bound the Redis verdict cache lifetime.
+Compact health separates actionable `problems` from bounded `pending` diagnostics. Both retain the source diagnosis. Pending deadlines also bound the verdict cache lifetime.
 
-Edge functions are bundled per file: each deployed function may not pull in unrelated modules at runtime, a constraint enforced by `tests/edge-functions.test.mjs` and the pre-push esbuild bundle check. Hand-written endpoints that genuinely cannot be proto-defined are listed in `api/api-route-exceptions.json` and enforced by `npm run lint:api-contract`.
+Entries are bundled per file, a constraint enforced by `tests/edge-functions.test.mjs` and the pre-push esbuild bundle check. Hand-written endpoints that genuinely cannot be proto-defined are listed in `api/api-route-exceptions.json` and enforced by `npm run lint:api-contract`.
 
 ### Shared Helpers
 
 | File | Purpose |
 |------|---------|
-| `_cors.js` | Origin allowlist (worldmonitor.app, Vercel previews, tauri://localhost, localhost) |
-| `_rate-limit.js` | Upstash sliding window rate limiting, IP extraction |
-| `_api-key.js` | Origin-aware API key validation (desktop requires key, trusted browser exempt) |
-| `_relay.js` | Factory for proxying requests to Railway relay service |
+| `_cors.js` | Origin allowlist |
+| `_relay.js` | Factory for proxying requests to the relay service |
+| `_upstash-json.js` | Store reads for legacy entries |
+| `_json-response.js` | JSON response helper |
 
 ### Gateway Factory
 
-`server/gateway.ts` provides `createDomainGateway(routes)` for per-domain Edge Function bundles. Pipeline:
+`server/gateway.ts` provides `createDomainGateway(routes)` for per-domain bundles. Pipeline:
 
 1. Origin check (403 if disallowed)
 2. CORS headers
 3. OPTIONS preflight
-4. API key validation
-5. Rate limiting (endpoint-specific, then global fallback)
-6. Route matching (static Map lookup, then dynamic `{param}` scan)
-7. POST-to-GET compatibility (for stale clients). Unmatched POSTs with a trusted `Content-Length` under 1 MB may be retried as GET when a GET handler exists for the path. The body is all-or-nothing: JSON objects of scalars and scalar arrays become query parameters; object values, nested/non-scalar array members, non-object JSON, malformed JSON, and unread bodies return 400 without applying a partial translation. Empty or whitespace-only bodies still fall through to GET with no extra query parameters. Unknown paths still 404/405. Array expansion remains capped at 200 values per key.
-8. Handler execution with error boundary
-9. ETag generation (FNV-1a hash) + 304 Not Modified
-10. Cache header application
+4. Route matching (static Map lookup, then dynamic `{param}` scan)
+5. POST-to-GET compatibility (for stale clients). Unmatched POSTs with a trusted `Content-Length` under 1 MB may be retried as GET when a GET handler exists for the path. The body is all-or-nothing: JSON objects of scalars and scalar arrays become query parameters; object values, nested/non-scalar array members, non-object JSON, malformed JSON, and unread bodies return 400 without applying a partial translation. Empty or whitespace-only bodies still fall through to GET with no extra query parameters. Unknown paths still 404/405. Array expansion remains capped at 200 values per key.
+6. Handler execution with error boundary
+7. ETag generation (FNV-1a hash) + 304 Not Modified
+8. Cache header application
+
+The personal ingress authenticates the owner before any request reaches the gateway, so the gateway applies no API keys, entitlements or rate limits.
 
 ### Cache Tiers
 
@@ -185,15 +174,15 @@ Edge functions are bundled per file: each deployed function may not pull in unre
 
 `server/worldmonitor/<domain>/v1/handler.ts` exports handler objects with per-RPC functions. Each RPC function uses `cachedFetchJson()` from `server/_shared/redis.ts` for cache-miss coalescing: concurrent requests for the same key share a single upstream fetch and Redis write.
 
-The `scorecard/v1` domain is an exception to request-time upstream fetching. Its generated `ScorecardService` country, list, and bloc RPCs read one frozen cohort from `scorecard:five-factor:v1:read-model`, then use `scorecard:five-factor:v1` only as a bounded last-good fallback. The canonical pure adapters and country scorer live under `scripts/scorecard/v1/` for the scripts-root Railway publisher; a checked generator emits Edge-safe copies under the server domain, which owns Redis reads, bloc scoring, and public response conversion. See [Five-factor scorecard v1 architecture](docs/architecture/five-factor-scorecard-v1.md).
+The `scorecard/v1` domain is an exception to request-time upstream fetching. Its generated `ScorecardService` country, list, and bloc RPCs read one frozen cohort from `scorecard:five-factor:v1:read-model`, then use `scorecard:five-factor:v1` only as a bounded last-good fallback. The canonical pure adapters and country scorer live under `scripts/scorecard/v1/` for the scripts-root publisher; a checked generator emits Edge-safe copies under the server domain, which owns Redis reads, bloc scoring, and public response conversion. See [Five-factor scorecard v1 architecture](docs/architecture/five-factor-scorecard-v1.md).
 
-The `supply-chain/v1` country-vulnerability, ranking, and chokepoint-dependency RPCs also read a Railway-published cohort instead of fetching upstream data at request time. `seed-supply-vulnerability.mjs` scores each country and builds the chokepoint inverse index in one pass, writes country and chokepoint shards into the inactive Redis slot, and switches the shared cohort pointer only after every shard is valid. The manifest and every shard carry an explicit redistribution-policy version; readers reject an older unmarked cohort until the matching publisher activates a current one. Every direct RPC or MCP response fails closed on provider inputs whose programmatic redistribution is restricted, including requests with freely mintable browser-session tokens. The canonical cohort retains the full attribution-bound evidence for internal audit, but the restricted values do not leave through these routes. The three routes are also `no-store`.
+The `supply-chain/v1` country-vulnerability, ranking, and chokepoint-dependency RPCs also read a collector-published cohort instead of fetching upstream data at request time. `seed-supply-vulnerability.mjs` scores each country and builds the chokepoint inverse index in one pass, writes country and chokepoint shards into the inactive Redis slot, and switches the shared cohort pointer only after every shard is valid. The manifest and every shard carry an explicit redistribution-policy version; readers reject an older unmarked cohort until the matching publisher activates a current one. Every direct RPC or MCP response fails closed on provider inputs whose programmatic redistribution is restricted, The canonical cohort retains the full attribution-bound evidence for internal audit, but the restricted values do not leave through these routes. The three routes are also `no-store`.
 
 `IntelligenceService.GetCountryCoverage` is the inverse case: it serves an agent surface that must agree, event for event, with what the browser country panel renders. Rather than reimplement the panel's rules server-side, the rules were moved to `shared/` and both sides import them — `country-headline-match.ts` (which country a headline is primarily about), `threat-keyword-classifier.ts` (lane and severity), and `country-timeline-events.ts` (36-hour incident clustering and structured-record precedence). A second copy of any of these is the defect this arrangement exists to prevent, and the ordering between them is load-bearing: cluster first, then filter by country, because a cluster is represented by its earliest member.
 
 Its coverage half fetches Google News at request time through `news/v1`'s shared fetcher rather than standing up a second RSS transport; its structured half composes five existing first-party RPCs. Because several of those upstream handlers catch their own failures and return an empty array, this route cannot learn about an outage from a thrown error — it reads the backing seed key's own hit/miss/error status instead, and reports `failed` rather than `empty` when the cache is unreadable. Producers that genuinely cannot prove they were reached report `unknown`. `degraded` covers only `stale` and `failed`, the states that mean something changed; the per-producer `sources` block, always populated, is where the guarantee lives that an empty event list is never silently healthy.
 
-`MarketService.GetPhysicalDivergenceIndex` is also a read-model RPC. The daily macro seed bundle normalizes SGE SHAU/SHAG benchmarks against the independently timestamped COMEX and FX snapshots, appends bounded per-metal history, and atomically publishes `market:physical-divergence:v1`, its health metadata, activation marker, and transition cooldowns. The Edge handler revalidates the stored contract and re-ages every input clock before it serves the response; the route is `no-store` so independently aging cohorts are never joined through a stale shared cache. MCP reads the same normalized snapshot, and the commodities panel renders the same explicit `ok`, `insufficient_history`, `stale_input`, or `missing_input` states. See [Physical divergence index methodology](docs/methodology/physical-divergence-index.mdx).
+`MarketService.GetPhysicalDivergenceIndex` is also a read-model RPC. The daily macro seed bundle normalizes SGE SHAU/SHAG benchmarks against the independently timestamped COMEX and FX snapshots, appends bounded per-metal history, and atomically publishes `market:physical-divergence:v1`, its health metadata, activation marker, and transition cooldowns. The handler revalidates the stored contract and re-ages every input clock before it serves the response; the route is `no-store` so independently aging cohorts are never joined through a stale shared cache. MCP reads the same normalized snapshot, and the commodities panel renders the same explicit `ok`, `insufficient_history`, `stale_input`, or `missing_input` states. See [Physical divergence index methodology](docs/methodology/physical-divergence-index.mdx).
 
 **Source files**: `api/`, `server/gateway.ts`, `server/router.ts`, `server/_shared/redis.ts`, `server/worldmonitor/`
 
@@ -213,7 +202,7 @@ docs/api/               (OpenAPI v3 specs)
 
 Service definitions use `(sebuf.http.config)` annotations to map RPCs to HTTP verbs and paths. GET fields require `(sebuf.http.query)` annotation. `repeated string` fields need `parseStringArray()` in the handler. `int64` maps to `string` in TypeScript.
 
-CI enforces generated code freshness via `.github/workflows/proto-check.yml`: runs `make generate` and fails if output differs from committed files.
+CI enforces generated code freshness via `.github/workflows/proto-check.yml`: runs `make generate` and fails if output differs from committed files. Phase 1 froze `proto/` and `src/generated/`; the leads, feedback and company-monitoring definitions whose gateways were deleted are pruned in Phase 2 (`RETIRED_GENERATED_SERVICES` in `scripts/enforce-sebuf-api-contract.mjs`).
 
 **Source files**: `proto/`, `Makefile`, `src/generated/`, `.github/workflows/proto-check.yml`
 
@@ -229,13 +218,15 @@ CI enforces generated code freshness via `.github/workflows/proto-check.yml`: ru
 
 `scripts/seed-*.mjs` fetch upstream data, transform it, and write to Redis via `atomicPublish()` from `scripts/_seed-utils.mjs`. Atomic publish acquires a Redis lock (SET NX), validates data, writes the cache key, writes `seed-meta:<key>` with `{ fetchedAt, recordCount }`, and releases the lock.
 
-`seed-five-factor-scorecard.mjs` runs inside Railway's measured `seed-bundle-resilience` placement. It reads only landed source snapshots, builds the closed scorecard evidence ledger, stages a narrow hash read model, and atomically switches the canonical cohort and read model with one idempotent Lua publication. `seed-meta:scorecard:five-factor` and health coverage remain separate from deployment and production-acceptance evidence.
+`seed-five-factor-scorecard.mjs` runs inside the `seed-bundle-resilience` bundle. It reads only landed source snapshots, builds the closed scorecard evidence ledger, stages a narrow hash read model, and atomically switches the canonical cohort and read model with one idempotent Lua publication. `seed-meta:scorecard:five-factor` and health coverage remain separate from deployment and production-acceptance evidence.
 
-`seed-supply-vulnerability.mjs` runs once per durable turn in the static-reference Railway bundle after its mirrored inputs. It publishes `supply-chain:vulnerability:cohort:v1` plus two-slot country and chokepoint shards, then writes separate activation and seed-health metadata. The cohort pointer is the read authority; compatibility manifests are not independent publication clocks.
+`seed-supply-vulnerability.mjs` runs once per durable turn in the static-reference bundle after its mirrored inputs. It publishes `supply-chain:vulnerability:cohort:v1` plus two-slot country and chokepoint shards, then writes separate activation and seed-health metadata. The cohort pointer is the read authority; compatibility manifests are not independent publication clocks.
 
-### AIS Relay Seed Loops
+### Collectors
 
-The Railway relay service (`scripts/ais-relay.cjs`) runs continuous seed loops:
+`npm run collect:personal` (`scripts/personal-collect.mjs`) runs the collectors one at a time against the embedded store, once or every N minutes with `-- --watch N`. `DEFAULT_COLLECTORS` lists the standalone collectors and bundles it runs; a collector whose API key is missing fails on its own and the pass continues.
+
+The relay service (`scripts/ais-relay.cjs`) carries continuous seed loops:
 
 - Market data (stocks, commodities, crypto, stablecoins, sectors, ETF flows, gulf quotes)
 - Aviation (international delays)
@@ -244,7 +235,7 @@ The Railway relay service (`scripts/ais-relay.cjs`) runs continuous seed loops:
 - Risk scores (CII)
 - UCDP events
 
-These are the primary seeders. Standalone `seed-*.mjs` scripts on Railway cron are secondary/backup.
+The `bundle-relay-backup` and `bundle-market-backup` collectors cover these datasets when the relay is not running.
 
 The market backup bundle also persists 14 days of timestamped hourly Yahoo closes for the news-to-market correlation panel. This series is an on-demand bootstrap key, so it does not increase the default hydration payload.
 
@@ -260,27 +251,11 @@ The market backup bundle also persists 14 days of timestamped hourly Yahoo close
 
 ---
 
-## 7. Desktop Architecture
+## 7. Local API server
 
-### Tauri Shell
+`scripts/local/local-api-server.mjs` runs the bundled `api/` handlers on a dynamic loopback port. The personal server starts it with `mode: 'docker'` and cloud fallback off, so a missing handler answers 404 instead of reaching the upstream API. It strips its own transport token before a handler sees the request and monkey-patches `globalThis.fetch` to force IPv4 (many government APIs have broken IPv6).
 
-Tauri 2.x (Rust) manages the app lifecycle, system tray, and IPC commands:
-
-- **Secret management**: Read/write platform keyring (macOS Keychain, Windows Credential Manager, Linux keyring)
-- **Sidecar control**: Spawn Node.js process, probe port, inject environment variables
-- **Window management**: Three trusted windows (main, settings, live-channels) with Edit menu for macOS clipboard shortcuts
-
-### Node.js Sidecar
-
-`src-tauri/sidecar/local-api-server.mjs` runs on a dynamic port. It dynamically loads Edge Function handler modules from `api/`, injects secrets from the keyring via environment variables, and monkey-patches `globalThis.fetch` to force IPv4 (Node.js tries IPv6 first, but many government APIs have broken IPv6).
-
-### Fetch Patching
-
-`installRuntimeFetchPatch()` in `src/services/runtime.ts` replaces `window.fetch` on the desktop renderer. All `/api/*` requests route to the sidecar with `Authorization: Bearer <token>` (5-min TTL from Tauri IPC). If the sidecar fails, requests fall back to the cloud API.
-
-Seed-owned scorecard RPC paths are always cloud-preferred on desktop. The sidecar does not carry the Railway-published scorecard cohort, so routing these paths locally would create a false unavailable state instead of using the authenticated cloud API.
-
-**Source files**: `src-tauri/src/main.rs`, `src-tauri/sidecar/local-api-server.mjs`, `src/services/runtime.ts`, `src/services/tauri-bridge.ts`
+**Source files**: `scripts/personal-server.mjs`, `scripts/local/local-api-server.mjs`, `scripts/build-sidecar-handlers.mjs`
 
 ---
 
@@ -289,35 +264,19 @@ Seed-owned scorecard RPC paths are always cloud-preferred on desktop. The sideca
 ### Trust Boundaries
 
 ```
-Browser ↔ Vercel Edge ↔ Upstream APIs
-Desktop ↔ Sidecar ↔ Cloud API / Upstream APIs
+Browser ↔ Personal ingress (Basic auth) ↔ Local API ↔ Upstream APIs
+Collectors ↔ Upstream APIs, Embedded store
 ```
 
 ### Content Security Policy
 
-Three CSP sources that must stay in sync:
-
-1. `index.html` `<meta>` tag (development, Tauri fallback)
-2. `vercel.json` HTTP header (production, overrides meta)
-3. `src-tauri/tauri.conf.json` (desktop)
+`index.html` carries the CSP `<meta>` tag; `vite.config.ts` injects per-build nonces. The personal ingress serves the built HTML unchanged.
 
 ### Authentication
 
-API keys are required for non-browser origins. Trusted browser origins (production domains, Vercel preview deployments, localhost) are exempt. Premium RPC paths always require a key.
+One owner, HTTP Basic auth on every request (`WM_PERSONAL_PASSWORD`, 16+ characters). The browser runtime sends `same-origin` credentials for API calls in personal mode. Provider API keys stay in the server environment; `npm run security:vite-env-secrets -- --strict-local` keeps them out of `VITE_*` variables.
 
-### Bot Protection
-
-`middleware.ts` filters automated traffic: blocks known crawler user-agents on API and asset paths, allows social preview bots (Twitter, Facebook, LinkedIn, Telegram, Discord) on story and OG endpoints.
-
-### Rate Limiting
-
-Per-IP sliding window via Upstash with per-endpoint overrides for high-traffic paths.
-
-### Desktop Secret Storage
-
-Secrets are stored in the platform keyring (never plaintext), injected into the sidecar via Tauri IPC, and scoped to an allowlist of environment variable keys.
-
-**Source files**: `middleware.ts`, `vercel.json`, `index.html`, `src-tauri/tauri.conf.json`, `api/_api-key.js`, `server/_shared/rate-limit.ts`
+**Source files**: `scripts/personal-server.mjs`, `index.html`, `src/services/runtime.ts`, `scripts/check-vite-env-secrets.mjs`
 
 ---
 
@@ -326,11 +285,11 @@ Secrets are stored in the platform keyring (never plaintext), injected into the 
 ### Four-Layer Hierarchy
 
 ```
-Bootstrap seed (Railway writes to Redis on schedule)
+Bootstrap seed (collectors write to the store)
     ↓ miss
-In-memory cache (per Vercel instance, short TTL)
+In-memory cache (per server process, short TTL)
     ↓ miss
-Redis (Upstash, cross-instance, cachedFetchJson coalesces concurrent misses)
+Embedded store (Redis REST compatible, cachedFetchJson coalesces concurrent misses)
     ↓ miss
 Upstream API fetch (result cached back to Redis + seed-meta written)
 ```
@@ -343,11 +302,9 @@ Every RPC handler with shared cache MUST include request-varying parameters in t
 
 `server/gateway.ts` computes an FNV-1a hash of each response body and returns it as an `ETag`. Clients send `If-None-Match` and receive `304 Not Modified` when content is unchanged.
 
-### CDN Integration
+### Cache headers
 
-`CDN-Cache-Control` headers give Cloudflare edge (when enabled) longer TTLs than `Cache-Control`, since CF can revalidate via ETag without full payload transfer.
-
-The header only sets the TTL; it does not make a response cacheable. Cloudflare decides eligibility from its cache rules first, and HTML documents on `www` are bypassed by default (see the cache-rule note in §2). Adding `CDN-Cache-Control` to a new document route therefore has to be paired with a zone rule that re-admits it — by extending the surface model in `scripts/cloudflare-cache-rule.mjs` (`CONTENT_CORPUS_PREFIXES` for a new corpus family, `ENTRY_DOCUMENTS` for an exact-path entry document, `EDGE_CACHED_FAMILIES` / `AGENT_TEXT_FILES` otherwise) and re-running `scripts/cloudflare-cache-rule.mjs --apply`; `tests/cloudflare-cache-rule.test.mjs` fails when the two halves disagree.
+The personal ingress answers every request `private, no-store`, so `Cache-Control` and `CDN-Cache-Control` tiers set by handlers only matter to the browser and to code shared with the upstream deployment.
 
 ### Seed Metadata
 
@@ -363,11 +320,15 @@ The five-factor scorecard adds an atomic two-key read pattern: `scorecard:five-f
 
 ### Unit and Integration
 
-`node:test` runner. Test files in `tests/*.test.{mjs,mts}` cover: server handlers, cache keying, circuit breakers, edge function constraints, data validation, market quote dedup, health checks, panel config guardrails, and variant layer filtering.
+`node:test` runner. Test files in `tests/*.test.{mjs,mts}` cover: server handlers, cache keying, circuit breakers, edge function constraints, data validation, market quote dedup, health checks, panel config guardrails, and variant layer filtering. Run them with `node --import tsx --test`, as CI does.
 
-### Sidecar and API Tests
+### DOM tests
 
-`api/*.test.mjs` and `src-tauri/sidecar/*.test.mjs` test CORS handling, YouTube embed proxying, and local API server behavior.
+`tests/dom/*.test.mts` run under vitest with happy-dom (`npm run test:dom`).
+
+### API and relay tests
+
+`api/*.test.mjs` and the relay suites in `scripts/*.test.cjs` (`npm run test:api`) test CORS handling, bootstrap, health, feed proxies and the relay ingestion paths.
 
 ### End-to-End
 
@@ -399,11 +360,11 @@ Runs before every `git push`:
 | Workflow | Trigger | Checks |
 |----------|---------|--------|
 | `typecheck.yml` | PR, push to main | `tsc --noEmit` (TypeScript 7) for src, API, contract-test and e2e tsconfigs |
-| `lint-code.yml` | PR, push to main | Biome lint + sebuf API-contract enforcement; `lint:outbound-deadlines` fails any `fetch()` call with no signal (`scripts/audit-outbound-calls.mjs --check`); markdownlint-cli2 in a `markdown` job that runs on every push to main and, on PRs, only when markdown, its config, or package.json changes; `doc-anchors` installs a pinned `mint` (up to three attempts, since a registry 404 once failed the install) and exports the authored docs with `mint export --disable-openapi` (preloading `scripts/mint-export-preload.mjs`, which stubs Mint's crash-prone online probe and names pages that fail to render) and checks every anchor against the rendered pages |
-| `test.yml` | PR, push to main | Unit/integration suite, always-on docs-stats guardrails (including docs-only changes; docs-stats runs `npm run generate:check`, which fails when any committed derived file in `scripts/generate-derived.mjs` is stale), plus conditional resilience-validation and consumer-prices gates. `test:data` runs on five unit shards balanced by measured per-file durations: the `changes` job looks up the newest `data-test-durations-v1-*` cache entry once, every shard restores that exact entry (falling back together to the committed `scripts/shared/data-test-durations.json` when there is none), and one shard per run, rotating from the shard that saved the restored entry, blends its own timings into a new entry whether the run passed or failed, plus `unit-built-output` for the suites that read built output. Both check out full history blobless (`filter: blob:none`): suites and the health-probe cutover gate read commit history, and the few old blobs they need are fetched on demand. Unit shards also need `scripts/` deps, which suites that load seeder package imports resolve from, and `blog-site/` deps. They restore both installed trees from one `actions/cache` entry keyed on the two manifests, lockfiles and `.npmrc` files plus the vendored `file:` dependency, and install and save them only on a miss; `WM_EXPECT_SCRIPTS_DEPS` fails a shard whose `scripts/` tree is missing, and setup-node's npm cache stays off in that job. `unit-built-output` restores its `blog-site/` installed tree the same way (`built-output-deps-v1-*`, keyed on its install inputs and `vendor/**`), installs and saves it only on a miss; its setup-node npm cache is off as well. The `consumer-prices` job installs Redis with the cached local action and requires its publisher expiry/concurrency regression to run in CI. |
-| `proto-check.yml` | PR (proto changes) | Generated code matches committed output at the exact PR head (`internal-generate`; on internal branches `internal-auto-generate` commits any drift) and, in parallel, at the PR merge result (`internal-merge-freshness`). When a generated commit is pushed, the aggregate `proto-freshness` ignores the superseded head's merge verdict and the new commit gets its own run |
+| `lint-code.yml` | PR, push to main | `biome` job: unicode safety, Biome lint, import boundaries, sebuf API-contract enforcement, bootstrap/live-video/TUI catalog sync checks, `lint:outbound-deadlines` (fails any `fetch()` call with no signal), safe-local-storage and overlay-reload policies, and the VITE secret guard. `markdown` job: markdownlint-cli2 on every push to main and, on PRs, only when markdown, its config, or package.json changes |
+| `test.yml` | PR, push to main | Always-on `docs-stats` guardrails (including docs-only changes; it runs `npm run generate:check`, which fails when any committed derived file in `scripts/generate-derived.mjs` is stale). `test:data` runs on five `unit-shards` balanced by measured per-file durations: the `changes` job looks up the newest `data-test-durations-v1-*` cache entry once, every shard restores that exact entry (falling back together to the committed `scripts/shared/data-test-durations.json`), and one shard per run blends its own timings into a new entry. `unit-built-output` runs the suites that read built output. Shards check out full history blobless and restore the `scripts/` and `blog-site/` installed trees from one cache entry. `dom-tests` typechecks and runs `tests/dom/`. `api-tests` runs `npm run test:api` (the `api/` handler and relay suites). `variant-smoke` shards and `variant-smoke-full` run the Playwright ci-smoke specs; `consumer-prices` and `resilience-validation-smoke` are conditional gates |
+| `proto-check.yml` | PR (proto changes), push to main | Generated code matches committed output at the exact head (`internal-generate`; on internal branches `internal-auto-generate` commits any drift) and at the merge result (`internal-merge-freshness`). The aggregate `proto-freshness` ignores a superseded head's merge verdict. `CODEGEN_INPUT_PATHS` must stay aligned with `PROTO_INPUTS` in `.husky/pre-push` |
 
-Personal builds do not build or publish container images. The Test workflow no longer runs the digest-image or Umami image/PostgreSQL jobs; data-worker source checks remain.
+The personal fork builds no container images and deploys nothing from CI.
 
 **Source files**: `.github/workflows/`, `.husky/pre-push`. The workflow list is CI-checked against `.github/workflows/*.yml` by `npm run docs:check` — a new workflow file must be added to this table.
 
@@ -413,45 +374,39 @@ Personal builds do not build or publish container images. The Test workflow no l
 
 ```
 .
-├── api/                    Vercel Edge Functions (self-contained JS)
-│   ├── _*.js               Shared helpers (CORS, rate-limit, API key, relay, Sentry, session)
+├── api/                    API entries run by the local API server
+│   ├── _*.js               Shared helpers (CORS, relay, store reads)
 │   └── <domain>/           Domain endpoints (aviation/, climate/, conflict/, ...)
-├── blog-site/              Static blog (built into public/blog/)
-├── cli/                    Official `worldmonitor` npm CLI (zero-dep ESM, MCP-first; published via cli-v* tag)
+├── blog-site/              Static blog source (upstream; not built in personal mode)
+├── cli/                    `worldmonitor` CLI and the terminal dashboard (cli/src/tui)
 ├── consumer-prices-core/   Consumer-price collection service (Playwright scrapers, per-country baskets; local process)
-├── convex/                 Convex backend (billing/entitlements, user state, broadcast, forms, intel history)
 ├── data/                   Static data (telegram channels, X accounts, OREF threat translations, forecast cohorts)
-├── docs/                   Mintlify documentation site
+├── docs/                   Documentation sources; docs/internal/ holds internal notes
 ├── e2e/                    Playwright E2E specs
-├── pro-test/               Standalone Pro QA app (separate package)
 ├── proto/                  Protobuf service definitions (sebuf framework)
-├── public/                 Static assets served as-is (favicons, textures, .well-known agent-skills/MCP, llms.txt)
-├── scripts/                Seed scripts, build helpers, relay service
-├── server/                 Server-side code (bundled into Edge Functions)
-│   ├── _shared/            Redis, rate-limit, LLM, caching utilities
+├── public/                 Static assets served as-is
+├── scripts/                Collectors, personal server, build and check scripts
+│   └── local/              Local API server, embedded store, baseline tooling
+├── server/                 Server-side code (bundled into the API entries)
+│   ├── _shared/            Store, LLM, caching utilities
 │   ├── gateway.ts          Domain gateway factory
 │   ├── router.ts           Route matching
 │   └── worldmonitor/       Domain handlers (mirrors proto structure)
-├── shared/                 Cross-platform JSON configs (markets, RSS domains)
+├── shared/                 Cross-runtime data and helpers (markets, RSS domains, owner id)
 ├── src/                    Browser SPA (TypeScript)
 │   ├── app/                App orchestration managers
-│   ├── bootstrap/          Startup/recovery (chunk reload, deferred Sentry, SW update)
+│   ├── bootstrap/          Startup/recovery (chunk reload, boot failure, theme)
 │   ├── components/         Panel subclasses + map components
 │   ├── config/             Variant, panel, layer, market configurations
 │   ├── data/               Static JSON datasets (conservation, renewable, happiness)
 │   ├── e2e/                Map test harnesses (consumed by Playwright specs)
-│   ├── embed/              Embeddable widget loader
 │   ├── generated/          Proto-generated client/server stubs (DO NOT EDIT)
 │   ├── locales/            i18n translation files
 │   ├── services/           Business logic organized by domain
-│   ├── shared/             Cross-cutting helpers (premium paths, registries, staleness)
-│   ├── shims/              Runtime shims (child-process for sidecar)
+│   ├── shared/             Cross-cutting helpers (registries, staleness)
 │   ├── styles/             Global CSS (layers, themes, panel styles)
 │   ├── types/              TypeScript type definitions
 │   ├── utils/              Shared utilities (circuit-breaker, theme, URL state)
 │   └── workers/            Web Workers (analysis, ML, vector DB)
-├── src-tauri/              Tauri desktop shell (Rust)
-│   └── sidecar/            Node.js sidecar API server
-├── tests/                  Unit/integration tests (node:test)
-└── workers/                Cloudflare Workers (edge CORS preflight for api.worldmonitor.app)
+└── tests/                  Unit/integration tests (node:test) and tests/dom (vitest)
 ```

@@ -22,10 +22,9 @@ describe('docs stats layer-registry extraction', () => {
   desktopPremium: def('desktopPremium', 'D', 'desktopPremium', 'Desktop', ['flat'], desktop ? 'locked' : undefined),
 `));
     assert.deepEqual(parsed.keys, ['alpha', 'beta', 'desktopPremium', 'premium']);
-    assert.deepEqual(parsed.lockedKeys, ['premium']);
   });
 
-  it('ignores commented-out definitions and locked markers', () => {
+  it('ignores commented-out definitions', () => {
     const parsed = parseLayerRegistry(source(`
   alpha: def('alpha', 'A'),
   // retiredLine: def('retiredLine', 'R', 'retired', 'Retired', ['flat'], 'locked'),
@@ -34,7 +33,6 @@ describe('docs stats layer-registry extraction', () => {
   */
 `));
     assert.deepEqual(parsed.keys, ['alpha']);
-    assert.deepEqual(parsed.lockedKeys, []);
   });
 
   it('ignores definition-shaped text inside template literals', () => {
