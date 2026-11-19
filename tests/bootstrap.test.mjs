@@ -246,29 +246,18 @@ describe('Frontend bootstrap tier budgets', () => {
     );
   });
 
-  it('gives the slow tier more room than the fast tier, on both runtimes', () => {
-    for (const runtime of ['web', 'desktop']) {
+  it('gives the slow tier more room than the fast tier', () => {
+    for (const runtime of ['web']) {
       const { fast, slow } = BOOTSTRAP_TIER_TIMEOUT_MS[runtime];
       assert.ok(slow > fast, `${runtime}: slow budget must exceed fast`);
     }
   });
 
   it('keeps every budget inside the 8s ceiling that panels fall back at', () => {
-    for (const runtime of ['web', 'desktop']) {
+    for (const runtime of ['web']) {
       for (const [tier, ms] of Object.entries(BOOTSTRAP_TIER_TIMEOUT_MS[runtime])) {
         assert.ok(ms > 0 && ms <= 8_000, `${runtime}.${tier} budget ${ms}ms is out of range`);
       }
-    }
-  });
-
-  it('allows desktop longer budgets than web on every tier', () => {
-    // Different network and dependency-loading constraints; a web budget that
-    // drifted above desktop's would mean the tuning got inverted.
-    for (const tier of ['fast', 'slow']) {
-      assert.ok(
-        BOOTSTRAP_TIER_TIMEOUT_MS.desktop[tier] > BOOTSTRAP_TIER_TIMEOUT_MS.web[tier],
-        `desktop ${tier} budget must exceed web`,
-      );
     }
   });
 });

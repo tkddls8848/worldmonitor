@@ -3028,21 +3028,7 @@ describe('webmcp App.ts binding invariants', () => {
     );
   });
 
-  it('reads access context and opens sign-in without waiting for map or UI ready', () => {
-    const accessImport = findNode(
-      appFile,
-      (node) => (
-        ts.isImportDeclaration(node)
-        && ts.isStringLiteral(node.moduleSpecifier)
-        && node.moduleSpecifier.text === '@/app/webmcp-access'
-      ),
-      'static @/app/webmcp-access import',
-    );
-    const importedNames = accessImport.importClause?.namedBindings?.elements
-      .map(({ name }) => name.text) ?? [];
-    assert.ok(importedNames.includes('getWebMcpAccessContext'));
-    assert.ok(importedNames.includes('openWebMcpSignIn'));
-
+  it('reads access context and answers sign-in without waiting for map or UI ready', () => {
     const getAccessContext = objectPropertyInitializer(bindings, appFile, 'getAccessContext');
     const openSignIn = objectPropertyInitializer(bindings, appFile, 'openSignIn');
     for (const [name, initializer] of [
@@ -3053,12 +3039,9 @@ describe('webmcp App.ts binding invariants', () => {
       assert.equal(text.includes('waitForUiReady'), false, `${name} must not wait for UI ready`);
       assert.equal(text.includes('waitForDashboardReady'), false, `${name} must not wait for the map`);
     }
-    callByExpression(getAccessContext, appFile, 'getWebMcpAccessContext');
-    assertCallArguments(
-      callByExpression(openSignIn, appFile, 'openWebMcpSignIn'),
-      appFile,
-      ['execution?.signal'],
-    );
+    callByExpression(getAccessContext, appFile, 'buildWebMcpAccessContext');
+    // The personal build has no account, so sign-in is always denied.
+    assert.match(openSignIn.getText(appFile), /status: 'denied'/);
   });
 
   it('enables catalog panels through settings after UI readiness and waits until live', () => {

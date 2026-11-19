@@ -296,7 +296,7 @@ export const LEGACY_RAW_LOCAL_STORAGE = [
   'src/services/market-watchlist.ts :: localStorage.<member> x6',
   'src/services/mission-presets.ts :: localStorage.<member> x7',
   'src/services/persistent-cache.ts :: localStorage.<member> x3',
-  'src/services/runtime-config.ts :: localStorage.<member> x2',
+  'src/services/runtime-config.ts :: localStorage.<member> x1',
   'src/services/sentiment-gate.ts :: localStorage.<member> x1',
   'src/services/tab-store.ts :: localStorage.<member> x2',
   'src/services/telegram-watchlist.ts :: localStorage.<member> x2',
