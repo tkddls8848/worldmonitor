@@ -1,14 +1,10 @@
 // POST /api/travel-risk-assessment (#10451, phase 2): the in-app export of the
-// travel risk assessment. The route is the gate, not the button: every verdict
-// is decided from the caller's entitlement before any source is read, and the
-// plan fixtures come from the real catalog so a plan that gains or loses the
-// `travelRiskAssessment` flag changes these results.
+// travel risk assessment.
 
 import { describe, it, afterEach } from 'node:test';
 import { readFileSync } from 'node:fs';
 import { strict as assert } from 'node:assert';
 
-import { getEntitlementFeatures } from '../convex/config/productCatalog';
 import { McpSourceUnavailableError } from '../api/mcp/source-unavailable';
 import { createTravelRiskTool } from '../api/mcp/registry/travel-risk-tool';
 import type { TravelRiskResult } from '../api/mcp/registry/_travel-risk-document';
@@ -24,7 +20,7 @@ const TRIP = { countries: [{ country_code: 'TH', cities: ['Bangkok'], arrive: '2
 const MARKDOWN = '# Travel risk assessment draft\n\nTask: Site visit\n\n## 1. Summary\n\n**Overall rating.** Unrated.\n';
 
 function entitlement(planKey: string) {
-  return { planKey, features: { ...getEntitlementFeatures(planKey) }, validUntil: NOW + 86_400_000 };
+  return { planKey, features: {}, validUntil: NOW + 86_400_000 };
 }
 
 interface Harness {

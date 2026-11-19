@@ -72,9 +72,6 @@ export const INVENTORY_CONTRACTS = Object.freeze([
   contract('route-explorer-countries', 'the authoritative country registry used by route explorer pickers', ['parity'], 'replace', 'Exact authoritative country coverage replaces the country floor.', [
     surface('tests/route-explorer-pickers.test.mts', ['getAllCountries']),
   ]),
-  contract('iso2-country-registry', 'the closed ISO alpha-2 registry and its client mirror', ['exact', 'parity'], 'keep', 'ISO alpha-2 is a closed external standard and the client/server sets must remain identical.', [
-    surface('convex/__tests__/followed-countries-mutations.test.ts', ['_ISO2_REGISTRY_FOR_TESTS']),
-  ]),
   contract('public-fixed-algorithm-claims', 'versioned CII country membership and the closed CRI public rankable universe', ['exact', 'named-member'], 'keep', 'Fixed algorithm universes remain exact while platform inventories on the same surfaces use semantic or named-set wording.', [
     surface('tests/cii-docs-drift.test.mts', ['llmsBrief', 'llmsFull', 'pressKit', 'communityGuide', 'publicHome', 'agentView.capabilities']),
   ]),

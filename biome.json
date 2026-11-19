@@ -98,8 +98,7 @@
 		"globals": [
 			"globalThis",
 			"__APP_VERSION__",
-			"__BUILD_HASH__",
-			"__CLERK_JS_VERSION__"
+			"__BUILD_HASH__"
 		]
 	},
 	"assist": {

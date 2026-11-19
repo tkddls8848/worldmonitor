@@ -6,7 +6,6 @@ import { pipeline } from 'node:stream/promises';
 import { it } from 'node:test';
 
 const require = createRequire(import.meta.url);
-const jayson = require('jayson');
 const StreamValues = require('stream-json/streamers/StreamValues');
 const katex = require('katex');
 const { load } = require('js-yaml');
@@ -19,32 +18,6 @@ const inputs = [
   '{"__proto__":["admin"],"name":"bob"}',
   '{"__proto__":"value","name":"bob"}',
 ];
-
-for (const input of inputs) {
-  it(`jayson preserves JSON.parse semantics for ${input}`, async () => {
-    const value = await new Promise((resolve, reject) => {
-      jayson.Utils.parseStream(Readable.from([...input]), {}, (error, value) => {
-        if (error) reject(error);
-        else resolve(value);
-      });
-    });
-    assert.deepEqual(value, JSON.parse(input));
-    const object = value.user ?? value;
-    assert.equal(Object.getPrototypeOf(object), Object.prototype);
-    assert.equal(Object.hasOwn(object, '__proto__'), true);
-    assert.equal(object.isAdmin, undefined);
-  });
-
-  it(`stream-json preserves own keys with a reviver for ${input}`, async () => {
-    const values = [];
-    await pipeline(
-      Readable.from([input]),
-      StreamValues.withParser({ reviver: (_key, value) => value }),
-      async (source) => { for await (const item of source) values.push(item.value); },
-    );
-    assert.deepEqual(values, [JSON.parse(input)]);
-  });
-}
 
 it('stream-json respects reviver deletion and parses consecutive values', async () => {
   const values = [];
@@ -82,7 +55,6 @@ const patchedLocks = [
   ['fast-xml-parser', '5.12.0', npmLockVersions, '../blog-site/package-lock.json'],
   ['sharp', '0.35.5', npmLockVersions, '../package-lock.json'],
   ['sharp', '0.35.5', npmLockVersions, '../blog-site/package-lock.json'],
-  ['shell-quote', '1.11.0', npmLockVersions, '../package-lock.json'],
   ['markdown-it', '14.3.3', npmLockVersions, '../package-lock.json'],
   ['@vitest/mocker', '4.1.12', npmLockVersions, '../package-lock.json'],
   ['@vitest/mocker', '4.1.12', npmLockVersions, '../consumer-prices-core/package-lock.json'],
@@ -96,9 +68,3 @@ for (const [name, patched, versionsOf, path] of patchedLocks) {
     for (const version of versions) assert.ok(semver.gte(version, patched), `${name}@${version}`);
   });
 }
-
-it('shell-quote rejects a line terminator after a comment token', () => {
-  const { quote } = require('shell-quote');
-  assert.throws(() => quote(['echo', 'ok', { comment: 'x' }, 'a\nid;#']), TypeError);
-  assert.equal(quote(['echo', 'a b']), "echo 'a b'");
-});

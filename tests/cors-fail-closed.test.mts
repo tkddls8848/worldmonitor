@@ -3,7 +3,18 @@ import { readFile } from 'node:fs/promises';
 import { performance } from 'node:perf_hooks';
 import { describe, it } from 'node:test';
 
-import { TRUSTED_RETURN_URL_ORIGINS } from '../convex/payments/returnUrlOrigin.ts';
+// App-serving origins (the former post-payment return-URL allowlist).
+const TRUSTED_RETURN_URL_ORIGINS = [
+  'https://worldmonitor.app',
+  'https://www.worldmonitor.app',
+  'https://app.worldmonitor.app',
+  'https://api.worldmonitor.app',
+  'https://tech.worldmonitor.app',
+  'https://finance.worldmonitor.app',
+  'https://commodity.worldmonitor.app',
+  'https://happy.worldmonitor.app',
+  'https://energy.worldmonitor.app',
+];
 import { getCorsHeaders, isAllowedOrigin } from '../server/cors.ts';
 import {
   getCorsHeaders as getCorsHeadersJs,

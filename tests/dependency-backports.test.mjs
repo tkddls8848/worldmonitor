@@ -43,20 +43,6 @@ describe('installed dependency backports', () => {
     }
   });
 
-  it('installs the patched assembler for jayson without install scripts', () => {
-    const consumer = createRequire(require.resolve('jayson'));
-    assert.deepEqual(readFileSync(consumer.resolve('stream-json/Assembler')), readFileSync(new URL('../vendor/stream-json/Assembler.js', import.meta.url)));
-    assert.equal(consumer('stream-json/package.json').private, true);
-    assert.equal(consumer('stream-json/package.json').scripts, undefined);
-  });
-
-  it('installs the patched merge implementation for the Rollup resolver', () => {
-    const consumer = createRequire(require.resolve('@rollup/plugin-node-resolve'));
-    assert.deepEqual(readFileSync(consumer.resolve('deepmerge')), readFileSync(new URL('../scripts/vendor/deepmerge/index.js', import.meta.url)));
-    assert.equal(consumer('deepmerge/package.json').private, true);
-    assert.equal(consumer('deepmerge/package.json').scripts, undefined);
-  });
-
   it('installs the patched source for Astro', { skip: !existsSync(new URL('../blog-site/node_modules/astro/package.json', import.meta.url)) }, () => {
     const consumer = createRequire(require.resolve('../blog-site/node_modules/astro/package.json'));
     assert.deepEqual(readFileSync(consumer.resolve('http-cache-semantics')), readFileSync(new URL('../vendor/http-cache-semantics/index.js', import.meta.url)));

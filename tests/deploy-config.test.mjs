@@ -223,13 +223,6 @@ describe('deploy/cache configuration guardrails', () => {
     assert.match(viteConfigSource, /emitPublicSourceMaps \? \[\] : \[stripPrivateSourceMapsPlugin\(\)\]/);
   });
 
-  it('assigns a stable chunk name to the Clerk SDK', () => {
-    assert.match(
-      viteConfigSource,
-      /if\s*\(\s*id\.includes\('\/@clerk\/clerk-js\/'\)\s*\)\s*\{[^{}]*\breturn 'clerk';\s*\}/
-    );
-  });
-
   it('contains variant-specific metadata fields used by html replacement and manifest', () => {
     const variantMetaSource = readFileSync(resolve(__dirname, '../src/config/variant-meta.ts'), 'utf-8');
     assert.match(variantMetaSource, /shortName:\s*'/);

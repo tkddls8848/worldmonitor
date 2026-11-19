@@ -14,7 +14,6 @@ const NOT_DERIVED = new Map([
   ['scripts/docs-stats.mjs', 'validator'],
   ['scripts/generate-inventory-facts.mjs', 'gitignored build input; the runner refreshes it before the checks'],
   ['scripts/check-live-video-sources.mjs', 'network probe'],
-  ['scripts/sync-sentry-convex-probe-filters.mjs', 'Sentry and Convex leave the personal build'],
   ['scripts/generate-docs-page-dates.mjs', "follows main's commit dates; regenerated before tests and builds"],
 ]);
 

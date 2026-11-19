@@ -23,7 +23,6 @@ import {
   sanitizeClientName,
 } from '../shared/agent-client-source.js';
 import { isInternalSourceTag } from '../shared/referral-namespaces.ts';
-import { signupSourceFields } from '../convex/users.ts';
 
 /** A document.cookie stand-in that keeps name=value pairs and honours max-age=0. */
 function fakeCookieJar() {
@@ -223,10 +222,6 @@ describe('stored fields', () => {
   it('derives the users fields from a ref, dropping invalid refs', () => {
     assert.deepEqual(agentRefColumns(' Agent-Cursor '), { ref: 'agent-cursor', source: 'cursor' });
     assert.equal(agentRefColumns('AFF123'), null);
-    assert.deepEqual(signupSourceFields('agent-claude'), { signupRef: 'agent-claude', signupSource: 'claude' });
-    assert.deepEqual(signupSourceFields('agent'), { signupRef: 'agent', signupSource: 'other' });
-    assert.deepEqual(signupSourceFields('AFF123'), {});
-    assert.deepEqual(signupSourceFields(undefined), {});
   });
 
   it('classifies the OAuth grant name an MCP token is issued with', () => {

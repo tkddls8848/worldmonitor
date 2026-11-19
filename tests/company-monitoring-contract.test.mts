@@ -25,7 +25,6 @@ import {
   validateCursorClaims,
   verifyOpaqueCursor,
 } from '../shared/company-monitoring-contract.ts';
-import { COMPANY_MONITORING_ROLLOUT_FLAGS } from '../convex/config/productCatalog.ts';
 import {
   GENERATED_MESSAGE_RULES,
   GENERATED_REQUEST_TYPES,
@@ -348,16 +347,6 @@ describe('Company Monitoring limits and rollout controls', () => {
     assert.equal(compared, 4, 'expected all four filter vocabularies to be cross-checked');
   });
 
-  it('keeps every provider and product surface independently dark', () => {
-    assert.deepEqual(COMPANY_MONITORING_ROLLOUT_FLAGS, {
-      exaProvider: false,
-      xProvider: false,
-      publication: false,
-      restWrites: false,
-      ui: false,
-      alerts: false,
-    });
-  });
 
   it('rejects oversized request bodies before parsing downstream content', () => {
     assert.doesNotThrow(() => assertCompanyMonitoringPayloadSize(262_144));

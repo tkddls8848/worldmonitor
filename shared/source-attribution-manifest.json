@@ -10762,18 +10762,10 @@
       "host": "us.sentry.io",
       "provider": "Sentry error tracking",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: World Monitor operational telemetry, not an external data provider",
       "attribution": "Excluded from the provider count: internal error-tracking request.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "scripts/audit-sentry-resolve-pins.mjs"
-        },
-        {
-          "path": "scripts/sync-sentry-convex-probe-filters.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "user",

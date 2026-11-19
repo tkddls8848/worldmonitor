@@ -33,7 +33,6 @@ const EXPECTED_INVENTORY_SURFACES = [
   ['food-stocks-locales', 'tests/food-stocks-registration.test.mjs', ['locales']],
   ['market-tape-locales', 'tests/market-tape-claim.test.mts', ['localeFiles']],
   ['route-explorer-countries', 'tests/route-explorer-pickers.test.mts', ['getAllCountries']],
-  ['iso2-country-registry', 'convex/__tests__/followed-countries-mutations.test.ts', ['_ISO2_REGISTRY_FOR_TESTS']],
   ['public-fixed-algorithm-claims', 'tests/cii-docs-drift.test.mts', ['llmsBrief', 'llmsFull', 'pressKit', 'communityGuide', 'publicHome', 'agentView.capabilities']],
 ];
 

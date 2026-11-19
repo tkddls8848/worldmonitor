@@ -474,7 +474,6 @@ describe('security audit baseline', () => {
     const cpcLock = readRepoJson('consumer-prices-core/package-lock.json');
 
     for (const [label, entry] of [
-      ['root @istanbuljs', rootLock.packages['node_modules/@istanbuljs/load-nyc-config/node_modules/js-yaml']],
       ['blog-site gray-matter', blogLock.packages['node_modules/gray-matter/node_modules/js-yaml']],
     ]) {
       assert.ok(entry, `${label} js-yaml must be present`);
@@ -521,7 +520,6 @@ describe('security audit baseline', () => {
     const viteEsbuild = lockfile.packages['node_modules/vite/node_modules/esbuild'];
 
     assert.equal(packageJson.overrides?.esbuild, undefined);
-    assert.equal(packageJson.overrides?.convex?.esbuild, '0.28.1');
     assert.equal(rootEsbuild?.version, '0.28.1');
     assert.equal(vite?.dependencies?.esbuild, '^0.25.0');
     assert.ok(viteEsbuild, 'Vite must keep its own esbuild when root uses the audit-patched version');
@@ -664,22 +662,3 @@ describe('Dependabot image-size and fast-uri remediation', () => {
 });
 
 
-it('Metro reads ordinary and zip-mounted image asset files', async (t) => {
-  const require = createRequire(new URL('../package.json', import.meta.url));
-  const { getAssetData, getAssetSize } = require('metro/private/Assets');
-  const directory = mkdtempSync(join(tmpdir(), 'metro-assets-'));
-  t.after(() => rmSync(directory, { recursive: true, force: true }));
-  const png = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c489', 'hex');
-  assert.deepEqual(getAssetSize('png', png, 'pixel.png'), { width: 1, height: 1 });
-
-  for (const folder of ['ordinary', 'assets.zip']) {
-    const assetDirectory = join(directory, folder);
-    mkdirSync(assetDirectory);
-    const file = join(assetDirectory, 'pixel.png');
-    writeFileSync(file, png);
-    const asset = await getAssetData(file, 'pixel.png', [], null, '/assets');
-    assert.equal(asset.width, 1);
-    assert.equal(asset.height, 1);
-    assert.deepEqual(asset.files, [file]);
-  }
-});

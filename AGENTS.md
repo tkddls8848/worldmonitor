@@ -56,7 +56,6 @@ Test path, command, and owning CI job. Read this instead of `.github/workflows/t
 |---|---|---|
 | `tests/*.test.mjs`, `tests/*.test.mts`, `cli/test/`, `api/security/report.test.mjs` | `npm run test:related` locally; `npm run test:data` is the full suite | `unit-shards` |
 | `tests/dom/` | `npm run test:dom` | `dom-tests` |
-| `convex/__tests__/`, `server/__tests__/`, `src/services/correlation-engine/` | `npm run test:convex` | `convex-tests` |
 | `api/` node suites except `api/security/report.test.mjs`, and `src-tauri/` | `npm run test:sidecar` | `sidecar` |
 
 Find a suite by subject with `ls tests/ | grep <subject>` before searching the tree.

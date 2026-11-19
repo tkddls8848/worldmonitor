@@ -22,31 +22,6 @@ for (const file of ['package-lock.json', 'scripts/package-lock.json']) {
   });
 }
 
-for (const parent of ['@sentry/bundler-plugins/vite', 'workbox-build']) {
-  it(`${parent} retains glob APIs and stops filesystem traversal on abort`, async (t) => {
-    const consumer = createRequire(require.resolve(parent));
-    const { glob, globSync } = consumer('glob');
-    const cwd = mkdtempSync(join(tmpdir(), 'wm-glob-regression-'));
-    t.after(() => rmSync(cwd, { recursive: true, force: true }));
-    for (let i = 0; i < 4; i++) {
-      mkdirSync(join(cwd, `${i}`, 'nested'), { recursive: true });
-      writeFileSync(join(cwd, `${i}`, 'nested', 'file.js'), 'fixture');
-    }
-    assert.equal((await glob('**/*.js', { cwd })).length, 4);
-    assert.equal(globSync('**/*.js', { cwd }).length, 4);
-    const controller = new AbortController();
-    let reads = 0;
-    await assert.rejects(glob('**/*', { cwd, signal: controller.signal, fs: {
-      readdir(...args) {
-        if (++reads === 1) controller.abort(new Error('probe-abort'));
-        readdir(...args);
-      },
-    } }), /probe-abort/);
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    assert.equal(reads, 1, 'aborted walk must not start child directory reads');
-  });
-}
-
 for (const name of ['Pick', 'Ignore', 'Filter', 'Replace']) {
   const Filter = require(`stream-json/filters/${name}`);
   for (const filter of ['data', /^data$/]) {
@@ -104,7 +79,7 @@ it('deepmerge preserves nested objects, arrays, symbols, and custom merge behavi
 });
 
 it('uuid consumers retain v4 generation and reject undersized v3/v5 output buffers', () => {
-  for (const name of ['jayson', 'exceljs']) {
+  for (const name of ['exceljs']) {
     const consumer = createRequire(require.resolve(name));
     const uuid = consumer('uuid');
     assert.ok(uuid.validate(uuid.v4()));
@@ -112,5 +87,4 @@ it('uuid consumers retain v4 generation and reject undersized v3/v5 output buffe
       assert.throws(() => uuid[version]('test', uuid[version].DNS, new Uint8Array(8), 4), RangeError);
     }
   }
-  assert.match(require('jayson').Utils.generateId(), /^[0-9a-f-]{36}$/);
 });

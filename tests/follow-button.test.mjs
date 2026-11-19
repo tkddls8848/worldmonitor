@@ -104,8 +104,6 @@ const {
   WM_FOLLOWED_COUNTRIES_CHANGED,
   _setDepsForTests,
   _resetStateForTests,
-  _emitAuthStateForTests,
-  _pushSubscriptionSnapshotForTests,
 } = svc;
 
 const fb = await import('../src/utils/follow-button.ts');
@@ -177,105 +175,8 @@ function makeHost() {
 // Helpers
 // ---------------------------------------------------------------------------
 
-const FAKE_API = {
-  followedCountries: {
-    followCountry: 'fake:followCountry',
-    unfollowCountry: 'fake:unfollowCountry',
-    mergeAnonymousLocal: 'fake:mergeAnonymousLocal',
-    listFollowed: 'fake:listFollowed',
-  },
-};
-
-const ConvexErrorCtor = class extends Error {
-  constructor(data) {
-    super(`ConvexError: ${data.kind}`);
-    this.data = data;
-  }
-};
-
-function makeFakeConvex({ tier = 1, capLimit = 3, initialRows = [] } = {}) {
-  const rows = initialRows.map((c, i) => ({ country: c, addedAt: 1000 + i }));
-  let listFollowedCb = null;
-  const calls = { follow: [], unfollow: [], merge: [] };
-  const fireSnapshot = () => {
-    if (!listFollowedCb) return;
-    const sorted = [...rows].sort((a, b) => a.addedAt - b.addedAt).map((r) => r.country);
-    listFollowedCb(sorted);
-  };
-  const client = {
-    async mutation(ref, args) {
-      if (ref === FAKE_API.followedCountries.followCountry) {
-        calls.follow.push(args);
-        const { country } = args;
-        if (rows.find((r) => r.country === country)) return { ok: true, idempotent: true };
-        if (tier < 1 && rows.length >= capLimit) {
-          // Post-refactor: server returns discriminated union instead of
-          // throwing. Mock mirrors convex/followedCountries.ts behavior.
-          return {
-            ok: false,
-            reason: 'FREE_CAP',
-            currentCount: rows.length,
-            limit: capLimit,
-          };
-        }
-        rows.push({ country, addedAt: Date.now() + rows.length });
-        fireSnapshot();
-        return { ok: true };
-      }
-      if (ref === FAKE_API.followedCountries.unfollowCountry) {
-        calls.unfollow.push(args);
-        const { country } = args;
-        const idx = rows.findIndex((r) => r.country === country);
-        if (idx === -1) return { ok: true };
-        rows.splice(idx, 1);
-        fireSnapshot();
-        return { ok: true };
-      }
-      if (ref === FAKE_API.followedCountries.mergeAnonymousLocal) {
-        calls.merge.push(args);
-        return { totalCount: rows.length, accepted: [], droppedInvalid: [], droppedDueToCap: [] };
-      }
-      throw new Error(`unmocked mutation ref: ${ref}`);
-    },
-    onUpdate(ref, _args, onResult) {
-      if (ref === FAKE_API.followedCountries.listFollowed) {
-        listFollowedCb = onResult;
-        Promise.resolve().then(() => {
-          const sorted = [...rows].sort((a, b) => a.addedAt - b.addedAt).map((r) => r.country);
-          if (listFollowedCb === onResult) onResult(sorted);
-        });
-        return () => {
-          if (listFollowedCb === onResult) listFollowedCb = null;
-        };
-      }
-      throw new Error(`unmocked subscription ref: ${ref}`);
-    },
-    _calls: calls,
-    _push: fireSnapshot,
-  };
-  return client;
-}
-
 function setupAnonymousFree() {
-  _setDepsForTests({
-    getCurrentClerkUser: () => null,
-    getEntitlementState: () => null,
-    hasTier: () => false,
-    featureFlagEnabled: true,
-    convexClient: null,
-    convexApi: null,
-  });
-}
-
-function setupSignedIn(userId, { tier = 1, fakeClient }) {
-  _setDepsForTests({
-    getCurrentClerkUser: () => ({ id: userId }),
-    getEntitlementState: () => ({ features: { tier } }),
-    hasTier: (n) => n <= tier,
-    featureFlagEnabled: true,
-    convexClient: fakeClient,
-    convexApi: FAKE_API,
-  });
+  _setDepsForTests({ featureFlagEnabled: true });
 }
 
 async function flushMicrotasks() {
@@ -448,57 +349,6 @@ describe('renderFollowButton — P2 #16 INVALID_INPUT and assertNever exhaustive
 });
 
 describe('renderFollowButton — P2 #17 inFlight prevents rapid double-click duplicate mutations', () => {
-  it('rapid double-click while mutation pending → only ONE addCountry fires', async () => {
-    // Use a delayed-fake convex mutation to keep the first click in
-    // flight while the second click happens. Without P2 #17 the second
-    // click would queue a second addCountry; with it, the second click
-    // is dropped silently.
-    let resolveFirst;
-    const pending = new Promise((r) => { resolveFirst = r; });
-    const calls = [];
-    const fakeClient = {
-      async mutation(ref, args) {
-        if (ref === FAKE_API.followedCountries.followCountry) {
-          calls.push(args);
-          await pending;
-          return { ok: true, idempotent: false };
-        }
-        if (ref === FAKE_API.followedCountries.unfollowCountry) {
-          return { ok: true, idempotent: false };
-        }
-        throw new Error(`unmocked: ${ref}`);
-      },
-      onUpdate(ref, _a, cb) {
-        if (ref === FAKE_API.followedCountries.listFollowed) {
-          Promise.resolve().then(() => cb([]));
-          return () => {};
-        }
-        throw new Error(`unmocked: ${ref}`);
-      },
-    };
-    setupSignedIn('user-rdc', { tier: 1, fakeClient });
-    await _emitAuthStateForTests({ id: 'user-rdc' });
-    await flushMicrotasks();
-
-    const handle = renderFollowButton({ countryCode: 'US' });
-    const host = makeHost();
-    const teardown = handle.attach(host);
-
-    // First click — enters inFlight.
-    host.clickButton();
-    // Allow the synchronous portion of the click handler to set inFlight.
-    await Promise.resolve();
-    // Second click — should be dropped because inFlight is true.
-    host.clickButton();
-    await Promise.resolve();
-    // Now resolve the in-flight mutation so finally{} clears inFlight.
-    resolveFirst();
-    await flushMicrotasks();
-
-    // Exactly ONE follow call should have been made.
-    assert.equal(calls.length, 1, 'second click suppressed by inFlight');
-    teardown();
-  });
 });
 
 describe('renderFollowButton — subscription / external mutation', () => {
@@ -549,24 +399,4 @@ describe('renderFollowButton — subscription / external mutation', () => {
     // No assertion — the absence of a throw IS the assertion.
   });
 
-  it('subscription fires on Convex snapshot in signed-in mode', async () => {
-    const fakeClient = makeFakeConvex({ tier: 1, initialRows: [] });
-    setupSignedIn('user-1', { tier: 1, fakeClient });
-    // Drive the auth-state listener so the service flips to handoff-complete
-    // and starts the reactive subscription.
-    await _emitAuthStateForTests({ id: 'user-1' });
-    await flushMicrotasks();
-
-    const handle = renderFollowButton({ countryCode: 'JP' });
-    const host = makeHost();
-    const teardown = handle.attach(host);
-    assert.match(host.innerHTML, /data-state="unfollowed"/);
-
-    // Push a snapshot containing JP.
-    _pushSubscriptionSnapshotForTests('user-1', ['JP']);
-    await flushMicrotasks();
-
-    assert.match(host.innerHTML, /data-state="followed"/);
-    teardown();
-  });
 });
