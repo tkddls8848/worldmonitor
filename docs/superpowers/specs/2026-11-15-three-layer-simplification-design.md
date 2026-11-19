@@ -1,6 +1,6 @@
 # WorldMonitor 3계층 단순화 설계
 
-작성일: 2026-11-15 · 상태: 소유자 승인 (2026-11-15)
+작성일: 2026-11-15 · 상태: 1단계 완료 (2026-11-19). 결과는 9절에 있다.
 
 ## 1. 의도
 
@@ -257,3 +257,45 @@ connectors/   외부 API 연결 계층: 수집기, 외부 소스별 연결 코�
 6. 24시간 전 점수와 비교한 추세, 하루 단위 이력 저장
 
 이 구조는 1단계에서 바꾸지 않는다.
+
+## 9. 1단계 결과 (2026-11-19)
+
+1단계는 작업 0~11로 끝났다(기준 커밋 `0e6bf1e90`부터 51개 커밋). 이 절은 5.4의 완료 조건을 기록한다.
+
+### 9.1 5.2 범주별 결과
+
+| 범주 | 결과 |
+|---|---|
+| (1) 독립 디렉터리와 루트 파일 | 모두 지웠다. `src-tauri/`의 로컬 API 서버는 지우기 전에 `scripts/local/local-api-server.mjs`로 옮겼다. 마지막으로 남은 추적 밖 파일(`src-tauri/notices/`)과 `.gitignore` 규칙도 작업 11에서 지웠다. |
+| (2) 공개 HTML 진입점 | 모두 지웠다. 8.5 정정대로 `country.html`, `market.html`, `settings.html`, `live-channels.html`도 지웠다. |
+| (3) API 진입점 | 계정·결제·OAuth·MCP·알림·공개 부가 기능을 지웠다. 남긴 것: Trip Assessment가 쓰는 `api/mcp/` 11개 파일(결정 16), `api/chat-analyst`, `api/travel-risk-assessment`, `api/brief/*`, `api/latest-brief`. `api/brief`의 Convex 관심 국가 조회는 작업 11에서 지웠다. |
+| (4) 서버 다중 사용자 장치 | 등급·키·세션·속도 제한 모듈과 게이트웨이 단계를 지웠다. `server/_shared/internal-auth.ts`는 남긴다. `RELAY_SHARED_SECRET`(브리프 why-matters 내부 엔드포인트)와 `TRUST_REVIEW_SECRET`(오류 보고 검토)를 지키고 있다(결정 16). 지도 레이어 등급(`LayerDefinition.premium`, `isLayerEntitled` 등)은 작업 11에서 "허용"으로 접었다. |
+| (5) 브라우저 코드 | 로그인·결제·잠금·PWA·Sentry·분석·데스크톱 분기를 지웠다. 남긴 것: 임베드 미리보기용 `makeProLocked` 경로(`IS_EMBEDDED_PREVIEW`일 때만 잠기며, 12곳 이상에 걸쳐 있어 2단계로 넘긴다), WebMCP의 `open_sign_in` 도구(WebMCP 공개 표면과 함께 2단계에서 정한다). |
+| (6) 공개 노출용 생성물 | 공개 페이지 빌더 대부분을 지웠다. 남긴 것: `scripts/crawlable-live-tools.mjs`와 `live-pages/`, `situation-page/` 등 공개 페이지 빌더(빌드에 쓰이지 않지만 서버 코드와 대응 테스트가 묶여 있어 2단계에서 공개 페이지와 함께 정한다. `/api/wm-session` 호출은 작업 11에서 지웠다), `public/llms*`·sitemap 같은 공개 파일, `scripts/source-attribution.mjs`와 그 목록(5.2 결정대로 남긴다). |
+| (7) 알림·메일 발송 | 지웠다. `seed-digest-notifications.mjs`는 소유자 브리프 조립만 한다(8.3). `scripts/telegram/session-auth.mjs`는 텔레그램 OSINT 수집 보조라 남긴다(결정 9). 릴레이(`ais-relay.cjs`)의 위젯 에이전트는 `WIDGET_AGENT_KEY`가 있을 때만 동작하는 기능이라 남겼고, 그 안의 원본 `wm-session` 발급 호출도 함께 남아 있다(2단계). |
+| (8) CI와 운영 장치 | 워크플로는 `typecheck.yml`, `test.yml`, `lint-code.yml`, `proto-check.yml` 넷만 남았다. 작업 11에서 `test.yml`에 `api-tests` 작업(`npm run test:api`)을 다시 넣었고, Railway·Umami·Convex 운영 스크립트와 `.vercelignore`를 지웠다. |
+| (9) 테스트 | 지운 대상의 테스트는 함께 지우고, 남은 코드의 테스트는 고쳤다. |
+
+`proto/`와 `src/generated/`의 leads·feedback·company-monitoring 정의는 이 PC에 `buf`·`make`가 없어 2단계로 넘긴다(`scripts/enforce-sebuf-api-contract.mjs`의 `RETIRED_GENERATED_SERVICES`). 공개 문서(`docs/`)와 번역 README, `public/*.md`, `cli/README.md`도 2단계에서 정한다. 예외로 개인정보 처리방침 페이지는 결정 15에 따라 작업 11에서 지웠고, 공개 출시 때 필요한 공개 항목은 `docs/internal/public-launch-disclosures.md`에 적었다.
+
+### 9.2 기준선 비교
+
+- 시나리오 결과: 기준선(`base`)과 `base-unlocked` 모두 차이 0.
+- 위험도 점수: `cii-table-diff --base 0e6bf1e90`에서 고정본 4개 × 31개국 124행 모두 Δ 0, Spearman ρ 1.0000.
+- `typecheck`·`lint:boundaries` 오류: 0 → 0.
+- 터미널 대시보드: 첫 화면에 뉴스 목록이 그려진다.
+
+### 9.3 줄 수 (`loc.json`)
+
+| 시점 | 파일 | 줄 |
+|---|---:|---:|
+| 기준선 `base` (`0e6bf1e90`, 2026-11-15) | 3,809 | 1,115,067 |
+| 최종 `final` (`65c6f7a9a`, 2026-11-19) | 2,917 | 780,185 |
+| 차이 | −892 | −334,882 |
+
+### 9.4 빠진 bootstrap·health 키
+
+`compare base final`에서 새로 생긴 bootstrap 키는 없다. 빠진 키는 다음과 같다.
+
+- 지운 기능의 키: health `companyMonitoringWorker`(작업 8, 회사 모니터링 작업자).
+- 저장소 신선도에 따른 변동(결정 3, 기능은 그대로): bootstrap `aiTokens`, `chinaCorporateDisclosures`, `climateDisasters`, `climateNews`, `co2Monitoring`, `crossSourceSignals`, `cryptoQuotes`, `defiTokens`, `diseaseOutbreaks`, `earthquakes`, `etfFlows`, `euGasStorage`, `fuelShortages`, `giving`, `gulfQuotes`, `hyperliquidFlow`, `naturalEvents`, `oceanIce`, `otherTokens`, `predictions`, `spending`, `stablecoinMarkets`, `theaterPosture`, `weatherAlerts`. 모두 `api/health.js`와 bootstrap 등록부에 남아 있고, 해당 수집기가 다시 돌면 돌아온다. 같은 이유로 health의 `problems:*` 항목이 늘었다.
