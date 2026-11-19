@@ -15,7 +15,6 @@ import {
   type LoadImage,
   type SceneHistory,
 } from '@/services/orbital/timelapse';
-import { afterDebugBearRequestWindow } from '@/bootstrap/debugbear-rum';
 import { t } from '@/services/i18n';
 import { declareOverlay } from '@/utils/open-modal';
 import { isAllowedPreviewUrl } from '@/utils/imagery-preview';
@@ -280,7 +279,6 @@ export class OrbitalImageViewer {
     this.render();
     let result: SceneHistory;
     try {
-      await afterDebugBearRequestWindow(signal);
       result = await this.deps.searchHistory(this.subject.point, profileId, this.subject.nowMs, { signal });
     } catch {
       return;

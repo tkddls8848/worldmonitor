@@ -176,10 +176,6 @@ describe('DeckGLMap wiring', () => {
     assert.match(onError.slice(0, onError.indexOf('\n    };')), /this\.deckLoopRecovery\(error\)/);
   });
 
-  it('claims its Sentry report so vendor-stack filters keep it', () => {
-    assert.match(src, /kind: 'deck_loop_stopped'/);
-  });
-
   it('falls back through the fatal-error path when restarts run out', () => {
     assert.match(src, /giveUp: \(error\) => [^\n]*this\.onFatalError/);
   });

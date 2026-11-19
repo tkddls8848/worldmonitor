@@ -47,13 +47,6 @@ describe('auto-open gate stays conservative (KTD4)', () => {
       assert.ok(gate.includes(condition), `auto-open gate lost condition: ${condition}`);
     }
   });
-
-  it('tags the deferred auto-open as trigger "auto"', () => {
-    assert.ok(
-      eventHandlers.includes("this.openMissionPresetPopover(document.getElementById('missionPresetBtn'), false, 'auto')"),
-      'auto-open no longer passes the auto trigger — funnel cannot separate auto from manual opens',
-    );
-  });
 });
 
 describe('manual reach', () => {
@@ -71,39 +64,9 @@ describe('manual reach', () => {
   });
 });
 
-describe('funnel emission sites', () => {
-  it('openMissionPresetPopover is the single mission-picker-shown emitter', () => {
-    const open = section(eventHandlers, 'private openMissionPresetPopover(', 900);
-    assert.ok(open.includes('trackMissionPickerShown(trigger'), 'picker-shown emission lost from the open path');
-    assert.equal(
-      eventHandlers.split('trackMissionPickerShown(').length - 1,
-      1,
-      'picker-shown must have exactly one emission site (the open path) so triggers stay consistent',
-    );
-  });
-
-  it('the WebMCP picker entry is tagged agent', () => {
-    const webmcp = section(eventHandlers, 'openMissionPresetPickerForWebMcp', 500);
-    assert.ok(webmcp.includes("'agent'"), 'WebMCP picker open must be tagged agent');
-  });
-
-  it('applyMissionPreset emits mission-selected once, after the preset is saved', () => {
-    const apply = section(eventHandlers, 'private applyMissionPreset(', 1600);
-    assert.ok(apply.includes('trackMissionSelected(applied.preset.id, source)'),
-      'mission-selected emission lost from the apply pipeline');
-    const saveIdx = apply.indexOf('saveMissionPreset(');
-    const trackIdx = apply.indexOf('trackMissionSelected(');
-    assert.ok(saveIdx >= 0 && trackIdx > saveIdx, 'mission-selected must fire after the preset persists');
-  });
-
+describe('WebMCP mission entry', () => {
   it('the WebMCP apply passes source "agent"', () => {
     assert.ok(eventHandlers.includes("this.applyMissionPreset(presetId, 'agent')"),
-      'WebMCP-applied presets must be tagged agent so the human funnel reads clean');
-  });
-
-  it('late-mounted panels join the panel-view observer', () => {
-    const tracking = section(eventHandlers, 'setupPanelViewTracking(): void', 1400);
-    assert.ok(tracking.includes('MutationObserver'),
-      'panel-view tracking lost its late-mount observer — mission-applied panels would leave the denominator');
+      'WebMCP-applied presets must be tagged agent so they skip the country prompt');
   });
 });

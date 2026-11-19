@@ -26,7 +26,6 @@ import {
   type FontScaleChangedDetail,
 } from '@/services/font-scale-settings';
 import { escapeHtml } from '@/utils/sanitize';
-import { trackLanguageChange } from '@/services/analytics';
 import { exportSettings, importSettings, type ImportResult } from '@/utils/settings-persistence';
 import { declareOverlay } from '@/utils/open-modal';
 import { createFocusTrap } from '@/utils/focus-trap';
@@ -223,7 +222,6 @@ const displaySection: PreferenceSectionSpec = {
       return true;
     },
     'us-language': (target) => {
-      trackLanguageChange(target.value);
       return changeLanguage(target.value);
     },
     'us-badge-anim': (target) => {

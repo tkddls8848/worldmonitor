@@ -19,8 +19,6 @@ import { bindCountryHistoryAccess } from './_shared/country-history-access';
 import { createRouter, toHeadResponse, type RouteDescriptor } from './router';
 import { getCorsHeaders, getOriginDeniedCorsHeaders, isDisallowedOrigin, isAllowedOrigin } from './cors';
 import { PRO_FRESH_CACHE_RPC_PATHS } from '../src/shared/pro-fresh-rpc';
-// @ts-expect-error — JS module, no declaration file
-import { captureSilentError } from '../api/_sentry-edge.js';
 import { mapErrorToResponse } from './error-mapper';
 import {
   drainResponseHeaders,
@@ -674,9 +672,7 @@ export function createDomainGateway(
         ? getOriginDeniedCorsHeaders(request)
         : getCorsHeaders(request);
     } catch (err) {
-      ctx?.waitUntil(captureSilentError(err, {
-        tags: { route: 'gateway', step: 'cors_headers' },
-      }));
+      console.error('[gateway] CORS header generation failed', err);
       return new Response(JSON.stringify({ error: 'Internal server error' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },

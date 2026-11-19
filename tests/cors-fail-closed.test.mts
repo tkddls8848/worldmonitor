@@ -457,23 +457,16 @@ describe('gateway CORS error path (issue #3705)', () => {
     );
   });
 
-  it('routes CORS exceptions through captureSilentError + 500 (no wildcard)', async () => {
+  it('logs CORS exceptions and returns 500 (no wildcard)', async () => {
     const source = await readFile(
       new URL('../server/gateway.ts', import.meta.url),
       'utf8',
     );
-    // The fail-closed branch must log the original error to Sentry AND
-    // return a 5xx instead of a permissive CORS response. The gap is
-    // bounded so we can tolerate minor refactoring inside the catch
-    // (additional tags, intermediate variable names) without losing
-    // the structural assertion.
+    // The fail-closed branch must log the original error and return a 5xx
+    // instead of a permissive CORS response.
     assert.ok(
-      /catch \(err\)[\s\S]{0,500}captureSilentError\(err/.test(source),
-      'gateway.ts cors catch must pass the original error to captureSilentError',
-    );
-    assert.ok(
-      /step:\s*['"]cors_headers['"]/.test(source),
-      'gateway.ts cors catch must tag Sentry events with step="cors_headers"',
+      /catch \(err\)[\s\S]{0,500}console\.error\([^)]*CORS[^)]*, err\)/.test(source),
+      'gateway.ts cors catch must log the original error',
     );
   });
 

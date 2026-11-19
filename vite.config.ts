@@ -1,16 +1,11 @@
 import { defineConfig, loadEnv, type Plugin } from 'vite';
-import { sentryVitePlugin } from '@sentry/vite-plugin';
-import { VitePWA } from 'vite-plugin-pwa';
-import { appChunkRuntimeCache, createDashboardPrecache } from './shared/pwa-precache';
 import type { OutputBundle } from 'rollup';
 import { resolve, dirname, extname, posix } from 'path';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { brotliCompress } from 'zlib';
 import { promisify } from 'util';
 import pkg from './package.json';
-import { getSentryBuildMetadata } from './shared/sentry-build-metadata';
 import { removeSourceMaps, shouldEmitPublicSourceMaps, viteSourcemapSetting } from './shared/source-map-policy';
-import { appendChunkOwnership, chunkHasFirstPartyModule } from './shared/chunk-ownership';
 import { VARIANT_META, type VariantMeta } from './src/config/variant-meta';
 import {
   WEB_DASHBOARD_VARIANTS,
@@ -348,36 +343,6 @@ function dashboardHtmlOutputPlugin(): Plugin {
         dashboardHtml.source = deferDashboardStylesheetLinks(dashboardHtml.source, bundle);
       }
       bundle['dashboard.html'] = dashboardHtml;
-    },
-  };
-}
-
-// Stamp each emitted chunk with its own ownership so `beforeSend` can stop
-// guessing from the filename. See shared/chunk-ownership.ts for why a name
-// cannot answer the question. Runs at `enforce: 'post'` so the chunk bodies are
-// final, and appends (never prepends) so sourcemap columns stay valid.
-//
-// Web workers (`*.worker-<hash>.js`, `maplibre-gl-worker-<hash>.js`) go through
-// a separate Vite build and never reach this hook. That is correct, not a gap:
-// a worker has its own `globalThis`, so a registration there could never reach
-// the manifest the main thread's `beforeSend` reads. Worker frames stay
-// unregistered and fall back to the legacy name regex.
-function firstPartyChunkManifestPlugin(): Plugin {
-  return {
-    name: 'wm-first-party-chunk-manifest',
-    apply: 'build',
-    enforce: 'post',
-    generateBundle(_options, bundle) {
-      for (const output of Object.values(bundle)) {
-        if (output.type !== 'chunk') continue;
-        const basename = output.fileName.split('/').pop();
-        if (!basename) continue;
-        output.code = appendChunkOwnership(
-          output.code,
-          basename,
-          chunkHasFirstPartyModule(output.moduleIds ?? []),
-        );
-      }
     },
   };
 }
@@ -1003,7 +968,6 @@ function webMcpDevSecurityHeadersPlugin(): Plugin {
 }
 
 export default defineConfig(({ mode }) => {
-  const dashboardPrecache = createDashboardPrecache();
   const env = loadEnv(mode, process.cwd(), '');
   // Inject environment variables from .env files into process.env.
   // This ensures that API keys and other secrets in .env.local are
@@ -1025,12 +989,6 @@ export default defineConfig(({ mode }) => {
   const activeMeta = VARIANT_META[activeVariant] || VARIANT_META.full;
   // Production deploys never publish maps; see shared/source-map-policy.ts.
   const emitPublicSourceMaps = shouldEmitPublicSourceMaps(process.env);
-  // Sentry source-map upload. Gated on the token so a build without it (local,
-  // fork, CI) behaves exactly as before rather than failing. Matching is by
-  // debug ID — the plugin stamps the same id into the bundle and its map.
-  const uploadSourceMapsToSentry = Boolean(process.env.SENTRY_AUTH_TOKEN);
-  const sentryBuild = getSentryBuildMetadata(pkg.version, process.env.VERCEL_GIT_COMMIT_SHA ?? 'dev');
-  const publishSentryRelease = process.env.VERCEL_ENV === 'production' && Boolean(sentryBuild.dist);
 
   return {
     html: {
@@ -1048,34 +1006,6 @@ export default defineConfig(({ mode }) => {
       __BUILD_HASH__: JSON.stringify(process.env.VERCEL_GIT_COMMIT_SHA ?? 'dev'),
     },
     plugins: [
-      // Ship readable dashboard stack traces to Sentry. Without this every
-      // browser frame arrives minified (`Rs.loadNews`, `BO`, `v`), which is why
-      // triage has had to infer call sites from Vite chunk names.
-      ...(uploadSourceMapsToSentry
-        ? [sentryVitePlugin({
-            org: 'elie-habib',
-            project: 'worldmonitor',
-            authToken: process.env.SENTRY_AUTH_TOKEN,
-            telemetry: false,
-            release: {
-              name: sentryBuild.release,
-              inject: false,
-              dist: sentryBuild.dist,
-              // Preview/local uploads must not resolve shared production issues.
-              create: publishSentryRelease,
-              finalize: publishSentryRelease,
-              // Preserve the plugin's Vercel-aware commit detection in production.
-              setCommits: publishSentryRelease ? undefined : false,
-              deploy: publishSentryRelease ? undefined : false,
-            },
-            sourcemaps: {
-              // Previews deliberately serve public maps (emitPublicSourceMaps);
-              // leave those in place and only sweep them when production built
-              // them solely to upload.
-              filesToDeleteAfterUpload: emitPublicSourceMaps ? [] : ['dist/**/*.map'],
-            },
-          })]
-        : []),
       // Emit dist/build-hash.txt with the deployed SHA so the running bundle
       // can fetch /build-hash.txt at tab-focus time and force-reload itself
       // if it's running an older bundle (see src/bootstrap/stale-bundle-check.ts).
@@ -1093,8 +1023,6 @@ export default defineConfig(({ mode }) => {
         },
       },
       htmlVariantPlugin(activeMeta, activeVariant, isDesktopBuild),
-      firstPartyChunkManifestPlugin(),
-      dashboardPrecache.plugin,
       chunkSizeWarningPolicyPlugin(),
       !isDesktopBuild && dashboardHtmlOutputPlugin(),
       // Variant subdomain SEO pages only make sense on the web deployment,
@@ -1109,162 +1037,6 @@ export default defineConfig(({ mode }) => {
       sebufApiPlugin(),
       brotliPrecompressPlugin(),
       ...(emitPublicSourceMaps ? [] : [stripPrivateSourceMapsPlugin()]),
-      VitePWA({
-        registerType: 'autoUpdate',
-        injectRegister: false,
-
-        includeAssets: [
-          'offline.html',
-          'favico/favicon.ico',
-          'favico/apple-touch-icon.png',
-          'favico/favicon-32x32.png',
-        ],
-        // Manifest install icons stay advertised in manifest.webmanifest, but
-        // they are fetched on demand instead of forced into first-visit SW
-        // precache with the rest of the dashboard shell.
-        includeManifestIcons: false,
-
-        manifest: {
-          name: `${activeMeta.siteName} - ${activeMeta.subject}`,
-          short_name: activeMeta.shortName,
-          description: activeMeta.description,
-          start_url: '/dashboard',
-          scope: '/',
-          display: 'standalone',
-          orientation: 'any',
-          theme_color: '#0a0f0a',
-          background_color: '#0a0f0a',
-          categories: activeMeta.categories,
-          screenshots: [
-            {
-              src: '/pwa/dashboard-wide.jpg',
-              sizes: '1440x900',
-              type: 'image/jpeg',
-              form_factor: 'wide',
-              label: 'World Monitor desktop dashboard with conflict zones, intelligence hotspots, and live news',
-            },
-            {
-              src: '/pwa/dashboard-narrow.jpg',
-              sizes: '390x844',
-              type: 'image/jpeg',
-              form_factor: 'narrow',
-              label: 'World Monitor mobile map with conflict zones and intelligence hotspots',
-            },
-          ],
-          shortcuts: [
-            {
-              name: 'Dashboard',
-              description: 'Open the live global intelligence dashboard',
-              url: '/dashboard',
-              icons: [{ src: '/favico/android-chrome-96x96.png', sizes: '96x96', type: 'image/png' }],
-            },
-            {
-              name: 'Stocks',
-              description: 'Open stock research and market data',
-              url: '/stocks',
-              icons: [{ src: '/favico/android-chrome-96x96.png', sizes: '96x96', type: 'image/png' }],
-            },
-          ],
-          icons: [
-            { src: '/favico/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
-            { src: '/favico/android-chrome-384x384.png', sizes: '384x384', type: 'image/png' },
-            { src: '/favico/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' },
-            { src: '/favico/worldmonitor-icon-1024.png', sizes: '1024x1024', type: 'image/png' },
-            { src: '/favico/worldmonitor-maskable-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
-            { src: '/favico/worldmonitor-maskable-384.png', sizes: '384x384', type: 'image/png', purpose: 'maskable' },
-            { src: '/favico/worldmonitor-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-            { src: '/favico/worldmonitor-maskable-1024.png', sizes: '1024x1024', type: 'image/png', purpose: 'maskable' },
-          ],
-        },
-
-        workbox: {
-          // The service worker is generated after the Sentry upload has run,
-          // so its map is never uploaded; outside previews it is just a
-          // public file. Production served /sw.js.map until this was set.
-          sourcemap: emitPublicSourceMaps,
-          globPatterns: ['assets/**/*.{js,css}'],
-          manifestTransforms: [dashboardPrecache.manifestTransform],
-          navigateFallback: null,
-          skipWaiting: true,
-          clientsClaim: true,
-          cleanupOutdatedCaches: true,
-          // Web Push handler (Phase 6). importScripts runs in the SW
-          // context; /push-handler.js is a static file copied from
-          // public/ and attaches 'push' + 'notificationclick' listeners.
-          // /link-suppression-check.js must load BEFORE the push handler
-          // so notificationclick can consult the operator block set (#8401).
-          importScripts: ['/link-suppression-check.js', '/push-handler.js', '/sw-navigation.js'],
-
-          // Navigations are handled by public/sw-navigation.js (network-first
-          // with an offline.html fallback), NOT by a runtime cache: a cached
-          // index.html survives cleanupOutdatedCaches while its hashed chunks
-          // are purged with the old precache, so an offline reload after any
-          // deploy used to 404 the bundle and blank the dashboard.
-          runtimeCaching: [
-            {
-              urlPattern: ({ url, sameOrigin }: { url: URL; sameOrigin: boolean }) =>
-                sameOrigin && /^\/api\//.test(url.pathname),
-              handler: 'NetworkOnly',
-              method: 'GET',
-            },
-            {
-              urlPattern: ({ url, sameOrigin }: { url: URL; sameOrigin: boolean }) =>
-                sameOrigin && /^\/api\//.test(url.pathname),
-              handler: 'NetworkOnly',
-              method: 'POST',
-            },
-            {
-              urlPattern: ({ url, sameOrigin }: { url: URL; sameOrigin: boolean }) =>
-                sameOrigin && /^\/rss\//.test(url.pathname),
-              handler: 'NetworkOnly',
-              method: 'GET',
-            },
-            {
-              urlPattern: ({ url }: { url: URL }) =>
-                url.pathname.endsWith('.pmtiles') ||
-                url.hostname.endsWith('.r2.dev') ||
-                url.hostname === 'build.protomaps.com',
-              handler: 'NetworkFirst',
-              options: {
-                cacheName: 'pmtiles-ranges',
-                expiration: { maxEntries: 500, maxAgeSeconds: 30 * 24 * 60 * 60 },
-                cacheableResponse: { statuses: [0, 200] },
-              },
-            },
-            {
-              urlPattern: /^https:\/\/protomaps\.github\.io\//,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'protomaps-assets',
-                expiration: { maxEntries: 100, maxAgeSeconds: 365 * 24 * 60 * 60 },
-                cacheableResponse: { statuses: [0, 200] },
-              },
-            },
-            {
-              urlPattern: /\/assets\/locale-.*\.js$/i,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'locale-files',
-                expiration: { maxEntries: 20, maxAgeSeconds: 30 * 24 * 60 * 60 },
-                cacheableResponse: { statuses: [0, 200] },
-              },
-            },
-            appChunkRuntimeCache,
-            {
-              urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
-              handler: 'StaleWhileRevalidate',
-              options: {
-                cacheName: 'images',
-                expiration: { maxEntries: 100, maxAgeSeconds: 7 * 24 * 60 * 60 },
-              },
-            },
-          ],
-        },
-
-        devOptions: {
-          enabled: false,
-        },
-      }),
     ],
     resolve: {
       alias: {
@@ -1281,10 +1053,8 @@ export default defineConfig(({ mode }) => {
       format: 'es',
     },
     build: {
-      // Uploading requires the maps to exist. When they are not also being
-      // published deliberately they are 'hidden' (no sourceMappingURL), the
-      // Sentry plugin deletes them after upload, and
-      // stripPrivateSourceMapsPlugin removes anything left.
+      // When maps are not published deliberately they are 'hidden' (no
+      // sourceMappingURL) and stripPrivateSourceMapsPlugin removes them.
       sourcemap: viteSourcemapSetting(process.env),
       // Vite's global threshold accommodates the known lazy GlobeMap bundle.
       // wm-chunk-size-warning-policy keeps the 1200 kB default for every other
@@ -1394,9 +1164,6 @@ export default defineConfig(({ mode }) => {
               }
               if (id.includes('/i18next')) {
                 return 'i18n';
-              }
-              if (id.includes('/@sentry/') || id.includes('/@sentry-internal/')) {
-                return 'sentry';
               }
               if (id.includes('/@clerk/clerk-js/')) {
                 // Clerk remains a runtime dynamic import; the stable chunk name

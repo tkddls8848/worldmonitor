@@ -2,7 +2,6 @@ import { escapeHtml } from '@/utils/sanitize';
 import { debounce } from '@/utils';
 import { t } from '@/services/i18n';
 import { getPanelDisplayName } from '@/services/panel-display-name';
-import { trackSearchUsed } from '@/services/analytics';
 import { getAllCommands, type Command } from '@/config/commands';
 import { isMobileDevice } from '@/utils';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
@@ -701,7 +700,6 @@ export class SearchModal {
     this.commandResults = matches.commandMatches;
     this.results = matches.entityMatches.map((match) => match.result);
 
-    trackSearchUsed(query.length, this.results.length + this.commandResults.length);
     this.selectedIndex = 0;
     this.quickLaunchExamples = [];
     this.renderResults();

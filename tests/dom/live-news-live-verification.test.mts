@@ -23,16 +23,10 @@ const catalog = vi.hoisted(() => ({
 }));
 
 const resolvedFeed = vi.hoisted(() => ({ ensureHydrated: vi.fn<(key: string) => Promise<unknown>>() }));
-const analytics = vi.hoisted(() => ({ track: vi.fn() }));
 
 vi.mock('@/services/bootstrap', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/services/bootstrap')>()),
   ensureHydrated: resolvedFeed.ensureHydrated,
-}));
-
-vi.mock('@/services/analytics', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/services/analytics')>()),
-  track: analytics.track,
 }));
 
 vi.mock('@/services/live-video/youtube-iframe-api', () => ({
@@ -247,7 +241,6 @@ beforeEach(() => {
   __resetResolvedLiveVideosForTests();
   resolvedFeed.ensureHydrated.mockReset();
   resolvedFeed.ensureHydrated.mockResolvedValue(undefined);
-  analytics.track.mockClear();
   catalog.news.bloomberg = [BLOOMBERG_HLS, 'https://www.youtube.com/watch?v=QB5BNdBFujE'];
   catalog.news.cnn = ['https://www.youtube.com/watch?v=GotlA1KKWoo'];
 });
@@ -799,8 +792,6 @@ describe('Live News live verification', () => {
       expect(content().querySelector('.live-offline')).toBeNull();
       expect(mediaVideo()).toBeTruthy();
       expect(channelButton('custom-hls-1').classList.contains('offline')).toBe(false);
-      expect(analytics.track).toHaveBeenCalledWith('live-video-tap-to-play', { slot: 'live-news/custom-hls-1', kind: 'hls' });
-      expect(analytics.track).not.toHaveBeenCalledWith('live-video-attempt-failed', expect.anything());
     });
 
     it('keeps Tap to play through a bare play event and drops it only once playback has advanced', async () => {
@@ -996,9 +987,6 @@ describe('Live News resolved channel live videos (#8545)', () => {
     return api().players.filter((player) => player.iframe.title === 'CNN live feed').map((player) => player.embeddedVideoId);
   }
 
-  function resolvedEvents(): unknown[][] {
-    return analytics.track.mock.calls.filter(([event]) => event === 'live-video-resolved-applied');
-  }
 
   it('plays the resolved video ahead of a channel-only slot, then the channel embed', async () => {
     catalog.news.cnn = [channelUrl];
@@ -1008,7 +996,6 @@ describe('Live News resolved channel live videos (#8545)', () => {
 
     expect(resolvedFeed.ensureHydrated).toHaveBeenCalledWith('liveVideoResolved');
     expect(cnnPlayers()).toEqual([B]);
-    expect(resolvedEvents()).toEqual([['live-video-resolved-applied', { slot: 'live-news/cnn', count: 1 }]]);
 
     api().playerFor('CNN live feed').error(100);
     await flush(POLL);
@@ -1084,7 +1071,6 @@ describe('Live News resolved channel live videos (#8545)', () => {
     await flush(POLL);
 
     expect(cnnPlayers()).toEqual([A, 'live_stream']);
-    expect(resolvedEvents()).toEqual([]);
   });
 
   it('does not add a resolved id the slot already lists', async () => {
@@ -1096,7 +1082,6 @@ describe('Live News resolved channel live videos (#8545)', () => {
     await flush(POLL);
 
     expect(cnnPlayers()).toEqual([A, 'live_stream']);
-    expect(resolvedEvents()).toEqual([]);
   });
 
   it('opens no player for a channel the viewer left while the map was loading', async () => {

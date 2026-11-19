@@ -139,9 +139,6 @@
       "references": [
         {
           "path": "scripts/check-analytics-collector.mjs"
-        },
-        {
-          "path": "src/services/analytics.ts"
         }
       ]
     },
@@ -2276,15 +2273,10 @@
       "host": "cdn.debugbear.com",
       "provider": "cdn.debugbear.com",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: first-party, control-plane, UI, or rendering transport",
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "src/bootstrap/debugbear-rum.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "cdn.jsdelivr.net",
@@ -5011,9 +5003,6 @@
         },
         {
           "path": "src/app/desktop-updater.ts"
-        },
-        {
-          "path": "src/services/analytics.ts"
         },
         {
           "path": "src/services/preferences-content.ts"
@@ -10522,15 +10511,10 @@
       "host": "tts.baidu.com",
       "provider": "tts.baidu.com",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: first-party, control-plane, UI, or rendering transport",
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "src/main.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "tuoitrenews.vn",
@@ -11267,7 +11251,7 @@
           "path": "server/worldmonitor/infrastructure/v1/reverse-geocode.ts"
         },
         {
-          "path": "src/bootstrap/web-vitals-utils.ts"
+          "path": "src/bootstrap/lcp-attribution.ts"
         },
         {
           "path": "src/config/mcp-agent-clients.ts"
@@ -12719,7 +12703,7 @@
     {
       "host": "www.euronews.com",
       "provider": "www.euronews.com",
-      "kind": "feed+structured",
+      "kind": "feed",
       "observed": true,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit www.euronews.com and link to the original feed publisher.",
@@ -12727,9 +12711,6 @@
       "references": [
         {
           "path": "shared/news-catalog.json"
-        },
-        {
-          "path": "src/main.ts"
         }
       ]
     },

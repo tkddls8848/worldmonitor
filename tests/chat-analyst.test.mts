@@ -806,15 +806,15 @@ describe('api/chat-analyst handler — edge wiring + pre-auth gates', () => {
   it('has a top-level error boundary that fails to a CORS-correct 503 (not an opaque platform 500)', () => {
     // Source-shape guard. The boundary converts an uncaught pre-stream throw
     // into a controlled, CORS-bearing 503 the panel can render and a server-
-    // side Sentry capture — the gap that left WORLDMONITOR-SV diagnosable only
+    // side log line — the gap that left WORLDMONITOR-SV diagnosable only
     // as the browser's `API 500` message. Locks the boundary in against a
     // refactor that re-introduces an unguarded handler body.
     const src = readFileSync(
       new URL('../api/chat-analyst.ts', import.meta.url),
       'utf-8',
     );
-    assert.match(src, /captureSilentError\(err,\s*\{\s*tags:\s*\{\s*route:\s*'api\/chat-analyst'/,
-      'catch must capture server-side with a route tag');
+    assert.match(src, /console\.error\('\[chat-analyst\] pre-stream failure', err\)/,
+      'catch must log the failure server-side');
     assert.match(src, /json\(\{\s*error:\s*'service_unavailable'\s*\},\s*503,\s*corsHeaders\)/,
       'catch must return a CORS-correct 503 service_unavailable');
   });
@@ -2144,6 +2144,6 @@ describe('api/chat-analyst handler — the served stream is price-grounded', () 
     const src = readFileSync(new URL('../api/chat-analyst.ts', import.meta.url), 'utf-8');
     assert.match(src, /const stream = withPriceGrounding\(\s*prependSseEvents\(/,
       'the price check wraps the quota/meta wrapper, which keeps reading llmStream directly');
-    assert.match(src, /step:\s*'price-grounding'/, 'an ungrounded price is reported server-side');
+    assert.match(src, /answer stated prices absent from the live context/, 'an ungrounded price is reported server-side');
   });
 });

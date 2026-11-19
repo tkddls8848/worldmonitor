@@ -24,8 +24,6 @@ import { CHROME_UA } from '../../../_shared/constants';
 import { resolveTechEventsPaging, type TechEventsPagingPresence } from './_tech-events-paging';
 import { cachedFetchJson } from '../../../_shared/redis';
 import { getRelayBaseUrl, getRelayHeaders } from '../../../_shared/relay';
-// @ts-expect-error — JS module, no declaration file
-import { captureSilentError } from '../../../../api/_sentry-edge.js';
 
 const REDIS_CACHE_KEY = 'research:tech-events:v1';
 const REDIS_CACHE_TTL = 21600; // 6 hr — weekly event data
@@ -481,7 +479,6 @@ export async function listTechEvents(
     // backoff error embeds cache-key names). Stays non-empty so the gateway's
     // no-store contract (getRpcNoStoreReasonFromJson) still applies.
     console.error('[tech-events] listTechEvents failed:', error instanceof Error ? error.message : String(error));
-    captureSilentError(error, { tags: { route: 'research/list-tech-events', step: 'handler-catch' } });
     return {
       success: false,
       count: 0,

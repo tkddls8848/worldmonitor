@@ -1,10 +1,9 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { readFileSync as originalReadFileSync, existsSync, readdirSync, mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { runInNewContext } from 'node:vm';
+import { readFileSync as originalReadFileSync, existsSync, readdirSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve, sep } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 function readFileSync(path, options) {
   const content = originalReadFileSync(path, options);
   if (typeof content === 'string') {
@@ -218,15 +217,6 @@ describe('crawlable content corpus deployment contracts', () => {
 
 describe('deploy/cache configuration guardrails', () => {
 
-  it('keeps PWA precache glob free of HTML files', () => {
-    assert.match(viteConfigSource, /includeManifestIcons:\s*false/);
-    assert.match(
-      viteConfigSource,
-      /globPatterns:\s*\['assets\/\*\*\/\*\.\{js,css\}'\]/
-    );
-    assert.match(viteConfigSource, /manifestTransforms:\s*\[dashboardPrecache\.manifestTransform\]/);
-  });
-
   it('routes sourcemap output through the policy that keeps production maps Sentry-only (#7382)', () => {
     assert.match(viteConfigSource, /const emitPublicSourceMaps = shouldEmitPublicSourceMaps\(process\.env\)/);
     assert.match(viteConfigSource, /sourcemap:\s*viteSourcemapSetting\(process\.env\)/);
@@ -238,111 +228,6 @@ describe('deploy/cache configuration guardrails', () => {
       viteConfigSource,
       /if\s*\(\s*id\.includes\('\/@clerk\/clerk-js\/'\)\s*\)\s*\{[^{}]*\breturn 'clerk';\s*\}/
     );
-  });
-
-  const swPath = resolve(__dirname, '../dist/sw.js');
-  guardBuiltOutput(swPath);
-  function readPwaWorker() {
-    let manifest;
-    let appChunkCache;
-    function workboxStub() {} // Used as both a constructor and an ordinary helper.
-    const workbox = new Proxy({
-      precacheAndRoute(entries) { manifest = entries; },
-      ExpirationPlugin: class {
-        constructor(options) { Object.assign(this, options); }
-      },
-      StaleWhileRevalidate: class {
-        constructor(options) {
-          if (options.cacheName === 'app-chunks') appChunkCache = options;
-        }
-      },
-    }, { get: (target, name) => target[name] ?? workboxStub });
-    const define = (_dependencies, factory) => factory(workbox);
-    runInNewContext(readFileSync(swPath, 'utf8'), {
-      define,
-      self: { define, skipWaiting() {}, addEventListener() {} },
-      importScripts() {},
-    }, { timeout: 5_000 });
-    assert.ok(Array.isArray(manifest) && manifest.length > 0, 'generated SW must register a precache');
-    return { manifest, appChunkCache };
-  }
-
-  function assertPwaPrecache(manifest) {
-    const urls = Array.from(manifest, ({ url }) => url);
-    assert.ok(urls.length <= 32, `PWA precache has ${urls.length} entries; budget is 32`);
-    let totalBytes = 0;
-    const dist = dirname(swPath);
-    for (const url of urls) {
-      const path = resolve(dist, url);
-      assert.ok(path.startsWith(`${dist}${sep}`), `precache URL escapes dist: ${url}`);
-      totalBytes += statSync(path).size;
-      assert.doesNotMatch(url, /^(?:pro|blog|textures|trust|research-assets)\//);
-      if (!url.startsWith('favico/')) assert.doesNotMatch(url, /\.(?:woff2?|png|svg)$/i);
-      assert.doesNotMatch(url, /(?:^|\/)(?:App-|MapContainer-|GlobeMap-|maplibre-|protomaps-|deck-stack-|h3-js-|UnifiedSettings-|settings-window-|checkout-|rpc-client-|panel-support-|panels-(?:economy|markets|risk|energy|defense|news|intel)-)/, `Optional chunk must stay out of precache: ${url}`);
-      if (/\.html$/.test(url)) assert.equal(url, 'offline.html');
-    }
-    assert.ok(totalBytes <= 2 * 1024 * 1024, `PWA precache is ${totalBytes} bytes; budget is 2 MiB`);
-    for (const url of ['offline.html', 'manifest.webmanifest', 'favico/favicon.ico', 'favico/apple-touch-icon.png', 'favico/favicon-32x32.png']) {
-      assert.ok(urls.includes(url), `missing required precache file: ${url}`);
-    }
-    assert.ok(urls.some((url) => /^assets\/main-.*\.js$/.test(url)), 'dashboard entry is missing');
-  }
-
-  it('bounds the generated PWA precache and excludes optional/off-page assets (#5373)', {
-    skip: shouldSkipBuiltOutput(swPath),
-  }, () => {
-    assertPwaPrecache(readPwaWorker().manifest);
-  });
-
-  it('keeps enough runtime-cache capacity for the emitted JS/CSS build (#5373)', {
-    skip: shouldSkipBuiltOutput(swPath),
-  }, () => {
-    const { appChunkCache } = readPwaWorker();
-    assert.ok(appChunkCache, 'generated SW must register the app chunk runtime cache');
-    const expiration = appChunkCache.plugins.find((plugin) => Number.isFinite(plugin.maxEntries));
-    assert.ok(expiration, 'app chunk runtime cache must have bounded capacity');
-    // Counting every chunk is conservative: shell and locale routes own some of them.
-    const assets = readdirSync(resolve(dirname(swPath), 'assets')).filter((name) => /\.(?:js|css)$/i.test(name));
-    assert.ok(expiration.maxEntries >= assets.length,
-      `Runtime cache holds ${expiration.maxEntries} entries but the build emits ${assets.length} JS/CSS files; normal use can evict the app entry`);
-  });
-
-  it('rejects forbidden map and panel chunks even when they fit the precache budgets (#5373)', {
-    skip: shouldSkipBuiltOutput(swPath),
-  }, () => {
-    const { manifest } = readPwaWorker();
-    const dist = dirname(swPath);
-    const assets = readdirSync(resolve(dist, 'assets'));
-    for (const prefix of [
-      'protomaps-', 'h3-js-', 'UnifiedSettings-', 'settings-window-',
-      'panel-support-', 'panels-news-', 'panels-intel-',
-    ]) {
-      const asset = assets.find((name) => name.startsWith(prefix) && name.endsWith('.js'));
-      assert.ok(asset, `missing built chunk for negative test: ${prefix}`);
-      const polluted = [...manifest, { url: `assets/${asset}`, revision: null }];
-      assert.ok(polluted.length <= 32, 'negative test must stay within the entry budget');
-      const bytes = polluted.reduce((sum, { url }) => sum + statSync(resolve(dist, url)).size, 0);
-      assert.ok(bytes <= 2 * 1024 * 1024, 'negative test must stay within the byte budget');
-      assert.throws(() => assertPwaPrecache(polluted), /Optional chunk must stay out of precache/);
-    }
-  });
-
-  it('explicitly disables navigateFallback when HTML is not precached', () => {
-    assert.match(viteConfigSource, /navigateFallback:\s*null/);
-    assert.doesNotMatch(viteConfigSource, /navigateFallbackDenylist:\s*\[/);
-  });
-
-  it('delegates navigation requests to the SW script with an offline fallback', () => {
-    // Navigations are handled by public/sw-navigation.js: network-first with
-    // NO cache write (a cached index.html outlives its hashed chunks across
-    // deploys -> blank offline reloads), falling back to the precached
-    // offline.html when the network is unreachable.
-    assert.match(viteConfigSource, /importScripts:\s*\[[^\]]*'\/sw-navigation\.js'/);
-    assert.doesNotMatch(viteConfigSource, /html-navigation/);
-    const navScript = readFileSync(resolve(__dirname, '../public/sw-navigation.js'), 'utf-8');
-    assert.match(navScript, /request\.mode !== 'navigate'/);
-    assert.match(navScript, /OFFLINE_URL = '\/offline\.html'/);
-    assert.match(navScript, /caches\.match\(OFFLINE_URL/);
   });
 
   it('contains variant-specific metadata fields used by html replacement and manifest', () => {
@@ -406,10 +291,6 @@ describe('welcome landing page routing', () => {
       !existsSync(join(distDir, 'index.html')),
       'web build must not leave a root dist/index.html — Vercel would serve it at / ahead of the dashboard rewrite',
     );
-  });
-
-  it('starts installed PWAs on /dashboard, not the public welcome page', () => {
-    assert.match(viteConfigSource, /start_url:\s*'\/dashboard'/);
   });
 
 });

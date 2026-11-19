@@ -1,7 +1,6 @@
 import type { AppContext } from '@/app/app-context';
 import type { MapView } from '@/components/MapContainer';
 import { SITE_VARIANT } from '@/config';
-import { track, trackMapViewChange, trackThemeChanged } from '@/services/analytics';
 import { getCurrentTheme, setTheme, showToast } from '@/utils';
 import { createFocusTrap, type FocusTrap } from '@/utils/focus-trap';
 import {
@@ -113,7 +112,6 @@ export class MobilePrimaryNav {
         }
         case 'search': {
           this.exitMap();
-          track('search-open', { source: 'mobile-tab' });
           this.callbacks.openSearch({
             replaceOverlayId,
             historyPending: true,
@@ -177,7 +175,6 @@ export class MobilePrimaryNav {
       this.closeMenu();
       const next = getCurrentTheme() === 'dark' ? 'light' : 'dark';
       setTheme(next);
-      trackThemeChanged(next);
     }, options);
     document.getElementById('mobileMenuMission')?.addEventListener('click', (event) => {
       this.closeMenu();
@@ -198,7 +195,6 @@ export class MobilePrimaryNav {
     const region = option.dataset.region;
     if (!region) return;
     this.ctx.map?.setView(region as MapView);
-    trackMapViewChange(region);
     const select = document.getElementById('regionSelect') as HTMLSelectElement | null;
     if (select) select.value = region;
     sheet.querySelectorAll('.region-sheet-option').forEach((item) => {

@@ -210,7 +210,6 @@ async function loadCountryDeepDivePanel(options = {}) {
     ['ports-stub', `export const PORTS = [];`],
     ['trade-routes-stub', `export function getChokepointRoutes() { return []; } export const TRADE_ROUTES = [];`],
     ['geo-stub', `export const STRATEGIC_WATERWAYS = [];`],
-    ['analytics-stub', `export function trackGateHit(feature) { globalThis.__wmCountryDeepDiveTestState.gateHits.push(feature); }`],
     ['chokepoint-registry-stub', `export const CHOKEPOINT_REGISTRY = [];`],
     ['supplier-route-risk-stub', `
       export function computeAlternativeSuppliers(exporters) {
@@ -319,25 +318,6 @@ async function loadCountryDeepDivePanel(options = {}) {
       }
     `],
     ['resilience-widget-stub', resilienceWidgetStub],
-    ['sentry-defer-stub', `
-      const state = globalThis.__wmCountryDeepDiveTestState;
-      export function enqueueSentryCall(fn) {
-        fn({
-          addBreadcrumb(breadcrumb) {
-            state.sentryBreadcrumbs.push(breadcrumb);
-          },
-          captureException(error, context) {
-            state.sentryExceptions.push({ error, context });
-          },
-          captureMessage(message, context) {
-            state.sentryMessages.push({ message, context });
-          },
-          setUser(user) {
-            state.sentryUser = user;
-          },
-        });
-      }
-    `],
     ['overlay-history-stub', `
       const state = globalThis.__wmCountryDeepDiveTestState;
       export const overlayHistory = {
@@ -374,7 +354,6 @@ async function loadCountryDeepDivePanel(options = {}) {
     ['@/config/ports', 'ports-stub'],
     ['@/config/trade-routes', 'trade-routes-stub'],
     ['@/config/geo', 'geo-stub'],
-    ['@/services/analytics', 'analytics-stub'],
     ['@/config/chokepoint-registry', 'chokepoint-registry-stub'],
     ['@/utils/supplier-route-risk', 'supplier-route-risk-stub'],
     ['@/services/supply-chain', 'supply-chain-stub'],
@@ -385,7 +364,6 @@ async function loadCountryDeepDivePanel(options = {}) {
     ['@/services/auth-state', 'auth-state-stub'],
     ['@/services/resilience', 'resilience-service-stub'],
     ['@/services/scorecard', 'scorecard-service-stub'],
-    ['@/bootstrap/sentry-defer', 'sentry-defer-stub'],
     ['@/utils/overlay-history', 'overlay-history-stub'],
   ]);
 
@@ -443,9 +421,7 @@ export async function createCountryDeepDivePanelHarness(options = {}) {
   const browserEnvironment = createBrowserEnvironment();
   const state = {
     widgets: [],
-    sentryBreadcrumbs: [],
-    sentryExceptions: [],
-    sentryMessages: [],
+    loadFailures: [],
     demographicsCalls: [],
     demographicsPending: [],
     scorecardCalls: [],
@@ -461,7 +437,6 @@ export async function createCountryDeepDivePanelHarness(options = {}) {
     entitlementBelief: options.entitlementBelief ?? { entitlementTier: null, authRole: null },
     authListeners: new Set(),
     entitlementListeners: new Set(),
-    sentryUser: undefined,
     evidenceExports: [],
     gateHits: [],
     toasts: [],
@@ -500,6 +475,18 @@ export async function createCountryDeepDivePanelHarness(options = {}) {
     throw error;
   }
 
+  // The panel's only failure signal is a console.warn line; record the ones
+  // for a real load failure so tests can tell a failure from a cancellation.
+  const originalWarn = console.warn;
+  console.warn = (...args) => {
+    const first = typeof args[0] === 'string' ? args[0] : '';
+    if (first.startsWith('[CountryDeepDivePanel]') && /load failed|Failed to load/.test(first)) {
+      state.loadFailures.push({ message: first, error: args[1] });
+      return;
+    }
+    originalWarn(...args);
+  };
+
   function createPanel(download = async () => ({ state: 'attempted' })) {
     return new CountryDeepDivePanel(null, undefined, download);
   }
@@ -509,6 +496,7 @@ export async function createCountryDeepDivePanelHarness(options = {}) {
   }
 
   function cleanup() {
+    console.warn = originalWarn;
     cleanupBundle();
     delete globalThis.__wmCountryDeepDiveTestState;
     restoreGlobal('document', originalGlobals.document);
@@ -530,11 +518,9 @@ export async function createCountryDeepDivePanelHarness(options = {}) {
     getWidgets() {
       return state.widgets;
     },
-    getSentryBreadcrumbs() {
-      return state.sentryBreadcrumbs;
-    },
-    getSentryExceptions() {
-      return state.sentryExceptions;
+    /** console.warn lines the panel writes for a real (non-cancelled) load failure. */
+    getLoadFailures() {
+      return state.loadFailures;
     },
     getDemographicsCalls() {
       return state.demographicsCalls;

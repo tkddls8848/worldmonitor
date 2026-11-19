@@ -1,7 +1,6 @@
 import type { AppContext, AppModule } from '@/app/app-context';
 import { invokeTauri } from '@/services/tauri-bridge';
 import { openExternalUrl } from '@/services/external-navigation';
-import { trackUpdateShown, trackUpdateClicked, trackUpdateDismissed } from '@/services/analytics';
 import { escapeHtml } from '@/utils/sanitize';
 import { getDismissed, setDismissed } from '@/utils/cross-domain-storage';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
@@ -105,7 +104,6 @@ export class DesktopUpdater implements AppModule {
         ? data.url
         : 'https://github.com/koala73/worldmonitor/releases/latest';
       this.logUpdaterOutcome('update_available', { current, remote, dismissed: false });
-      trackUpdateShown(current, remote);
       await this.showUpdateToast(remote, releaseUrl);
     } catch (error) {
       this.logUpdaterOutcome('fetch_failed', {
@@ -199,7 +197,6 @@ export class DesktopUpdater implements AppModule {
       const target = e.target as HTMLElement;
       const action = target.closest<HTMLElement>('[data-action]')?.dataset.action;
       if (action === 'download') {
-        trackUpdateClicked(version);
         if (this.ctx.isDesktopApp) {
           void openExternalUrl(url)
             .then((outcome) => {
@@ -213,7 +210,6 @@ export class DesktopUpdater implements AppModule {
         }
         dismissToast();
       } else if (action === 'dismiss') {
-        trackUpdateDismissed(version);
         dismissToast();
       }
     });

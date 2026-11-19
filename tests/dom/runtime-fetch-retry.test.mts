@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const proxy = vi.hoisted(() => vi.fn());
 vi.mock('@/services/tauri-bridge', () => ({ proxyLocalApiRequest: proxy }));
-vi.mock('@/services/clerk', () => ({ getClerkToken: async () => null }));
 
 const API = 'https://api.worldmonitor.app';
 const ORIGIN = 'https://worldmonitor.app';

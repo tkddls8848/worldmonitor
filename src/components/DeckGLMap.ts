@@ -193,7 +193,6 @@ import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 import { summarizeRenderTiming, formatRenderTiming } from '@/components/map/render-timing';
 import { DeferredHeavyCommit } from '@/components/map/deferred-layer-commit';
 import { createDeckLoopRecovery } from '@/components/map/deck-loop-recovery';
-import { enqueueSentryCall } from '@/bootstrap/sentry-defer';
 import { ZoomHintGuard } from '@/components/map/zoom-hint-guard';
 import { NOTAM_AIRSPACE_COLORS, notamAirspaceTooltip } from '@/components/map/notam-airspace-style';
 import { NO2_ACTIVITY_LEGEND, no2ActivityFill, no2ActivityTooltip, NO2_ACTIVITY_COLORS } from '@/components/map/no2-activity-style';
@@ -674,9 +673,6 @@ function installDeckInterleavedRaceFilter(): void {
 /** Every stop is a real map freeze, and the console warning alone never reached us (#9653). */
 function reportDeckLoopStop(error: Error, recovery: 'restart' | 'svg-fallback'): void {
   console.warn(`[DeckGLMap] deck.gl render loop stopped (${recovery}):`, error.message);
-  enqueueSentryCall((Sentry) => {
-    Sentry.captureException?.(error, { tags: { kind: 'deck_loop_stopped', surface: 'map', component: 'deckgl-loop', recovery } });
-  });
 }
 
 export class DeckGLMap {

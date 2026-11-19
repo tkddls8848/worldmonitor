@@ -94,7 +94,7 @@ describe('api/brief followed-countries telemetry fetch', () => {
   });
 
   it('starts followed-countries lookup before the required Redis envelope read', () => {
-    const followedIdx = src.indexOf('const followedCountriesPromise = fetchFollowedCountriesEdge(userId, ctx);');
+    const followedIdx = src.indexOf('const followedCountriesPromise = fetchFollowedCountriesEdge(userId);');
     const envelopeIdx = src.indexOf("envelope = await readRawJsonFromUpstash(`brief:${userId}:${issueDate}`, 3_000, true);");
     assert.ok(followedIdx !== -1, 'followedCountriesPromise start not found');
     assert.ok(envelopeIdx !== -1, 'envelope read not found');
@@ -120,7 +120,7 @@ describe('api/brief followed-countries telemetry fetch', () => {
   it('drains the in-flight telemetry lookup when envelope read returns 503', () => {
     assert.match(
       src,
-      /catch \(err\) \{[\s\S]*?step: 'envelope-read'[\s\S]*?ctx\?\.waitUntil\(followedCountriesPromise\)[\s\S]*?return htmlResponse\(req, 503, UNAVAILABLE_PAGE\)/,
+      /catch \(err\) \{[\s\S]*?Upstash read failed[\s\S]*?ctx\?\.waitUntil\(followedCountriesPromise\)[\s\S]*?return htmlResponse\(req, 503, UNAVAILABLE_PAGE\)/,
       '503 envelope-read path should hand the telemetry promise to waitUntil before returning',
     );
   });

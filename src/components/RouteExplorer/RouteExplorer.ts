@@ -26,7 +26,6 @@ import {
 } from './url-state';
 import type { GetRouteExplorerLaneResponse, GetRouteImpactResponse, BypassCorridorOption } from '@/generated/server/worldmonitor/supply_chain/v1/service_server';
 import { fetchRouteExplorerLane, fetchRouteImpact } from '@/services/supply-chain';
-import { track, type UmamiEvent } from '@/services/analytics';
 
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 
@@ -88,8 +87,6 @@ export class RouteExplorer {
   private laneData: GetRouteExplorerLaneResponse | null = null;
   public isLoading = false;
   private displayMode: 'idle' | 'loading' | 'data' | 'error' = 'idle';
-  private openedAt = 0;
-  private queryCount = 0;
 
   constructor() {
     this.state = { ...DEFAULT_EXPLORER_STATE };
@@ -100,7 +97,7 @@ export class RouteExplorer {
     this.mapRef = map;
   }
 
-  public open(source: 'cmdk' | 'url' | 'icon' = 'cmdk'): void {
+  public open(): void {
     if (this.isOpen) {
       this.fromPicker?.focusInput();
       return;
@@ -117,9 +114,6 @@ export class RouteExplorer {
       document.body.append(this.root);
     }
     this.isOpen = true;
-    this.openedAt = Date.now();
-    this.queryCount = 0;
-    this.trackEvent('route-explorer:opened', { source });
     document.addEventListener('keydown', this.handleGlobalKeydown, { capture: true });
     this.focusInitial();
     if (this.isQueryComplete()) this.scheduleFetch();
@@ -133,10 +127,6 @@ export class RouteExplorer {
     document.removeEventListener('keydown', this.handleGlobalKeydown, { capture: true });
     this.helpOverlay?.element.remove();
     this.helpOverlay = null;
-    this.trackEvent('route-explorer:closed', {
-      durationSec: Math.round((Date.now() - this.openedAt) / 1000),
-      queryCount: this.queryCount,
-    });
     this.clearMapState();
     this.root.remove();
     this.root = null;
@@ -177,13 +167,6 @@ export class RouteExplorer {
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
     this.debounceTimer = setTimeout(() => {
       this.debounceTimer = null;
-      this.queryCount++;
-      this.trackEvent('route-explorer:query', {
-        from: this.state.fromIso2 ?? '',
-        to: this.state.toIso2 ?? '',
-        hs2: this.state.hs2 ?? '',
-        cargo: this.getEffectiveCargo(),
-      });
       void this.fetchLane();
     }, FETCH_DEBOUNCE_MS);
   }
@@ -257,9 +240,6 @@ export class RouteExplorer {
       this.impactData = data;
       this.impactTab.update(data);
       this.leftRail.updateDependencyFlags(data.dependencyFlags);
-      if (data.comtradeSource === 'bilateral-hs4') {
-        this.trackEvent('route-explorer:impact-viewed', { toIso2, hs2 });
-      }
       if (this.state.tab === 4) this.showActiveTab();
     } catch {
       if (gen !== this.generationId) return;
@@ -303,7 +283,6 @@ export class RouteExplorer {
 
   private handleBypassSelect(option: BypassCorridorOption): void {
     if (!this.mapRef || !option.fromPort || !option.toPort) return;
-    this.trackEvent('route-explorer:alternative-selected', { corridorId: option.id });
     const corridors = [{ fromPort: [option.fromPort.lon, option.fromPort.lat] as [number, number], toPort: [option.toPort.lon, option.toPort.lat] as [number, number] }];
     this.mapRef.setBypassRoutes(corridors);
     if (typeof window !== 'undefined' && window.__routeExplorerTestHook) {
@@ -509,7 +488,6 @@ export class RouteExplorer {
     if (n === this.state.tab) return;
     this.state = { ...this.state, tab: n };
     this.writeStateToUrl();
-    this.trackEvent('route-explorer:tab-switch', { tab: n });
     if (this.tabStrip) {
       const buttons = this.tabStrip.querySelectorAll<HTMLButtonElement>('.re-tabstrip__tab');
       buttons.forEach((b) => {
@@ -655,14 +633,7 @@ export class RouteExplorer {
     if (serialized) url.searchParams.set('explorer', serialized);
     if (navigator.clipboard?.writeText) {
       void navigator.clipboard.writeText(url.toString());
-      this.trackEvent('route-explorer:share-copied');
     }
-  }
-
-  // ─── Analytics ─────────────────────────────────────────────────────────
-
-  private trackEvent(event: UmamiEvent, props?: Record<string, unknown>): void {
-    track(event, { ...props });
   }
 
   // ─── Test hook ────────────────────────────────────────────────────────

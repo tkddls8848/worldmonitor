@@ -266,9 +266,6 @@ describe('durable last-good wiring (#7084)', () => {
     // read — the two were conflated and blanked the endpoint on preview
     // deploys and local dev runs.
     redisConfigured: true,
-    // Every captureSilentError call. Without a DSN the real reporter is a no-op, so
-    // "did this reach Sentry" is only observable through a stub.
-    captures: [] as Array<{ message: string; opts: any }>,
   };
   let mod: any;
 
@@ -332,15 +329,6 @@ describe('durable last-good wiring (#7084)', () => {
               : undefined;
           });
           b.onLoad({ filter: /.*/, namespace: 'redisstub' }, () => ({ contents: shim, loader: 'js' }));
-          b.onResolve({ filter: /_sentry-edge(\.js)?$/ }, () => ({ path: 'sentry-stub', namespace: 'sentrystub' }));
-          b.onLoad({ filter: /.*/, namespace: 'sentrystub' }, () => ({
-            contents: [
-              'const s = globalThis.__digestRedisStub;',
-              'export function captureSilentError(err, opts) { s.captures.push({ message: String(err?.message ?? err), opts }); return Promise.resolve(); }',
-              'export function captureEdgeException() { return Promise.resolve(); }',
-            ].join('\n'),
-            loader: 'js',
-          }));
           b.onResolve({ filter: /response-headers$/ }, () => ({ path: 'headers-stub', namespace: 'headerstub' }));
           b.onLoad({ filter: /.*/, namespace: 'headerstub' }, () => ({
             contents: [
@@ -371,12 +359,10 @@ describe('durable last-good wiring (#7084)', () => {
     stub.fetchKeys.length = 0;
     stub.redisConfigured = true;
     stub.noCache.length = 0;
-    stub.captures.length = 0;
     mod.__testing__.fallbackDigestCache.clear();
     mod.__testing__.lastGoodStoreTesting.activeAttempts.clear();
     mod.__testing__.lastGoodStoreTesting.recentFailedAttempts.clear();
     mod.__testing__.lastGoodStoreTesting.failureCooldowns.clear();
-    mod.__testing__.lastGoodStoreTesting.gateRejectionReports.clear();
   };
 
   /** Minimal ServerContext — listFeedDigest only touches ctx.request headers. */
@@ -510,45 +496,6 @@ describe('durable last-good wiring (#7084)', () => {
     // Must not throw and must not fall back to plain writes.
     await mod.__testing__.publishAcceptedSnapshot('full', 'en', body(['https://a/1'], COVERAGE));
     assert.equal(stub.writes.filter((w) => w.key === lastGoodKey('full', 'en')).length, 0);
-  });
-
-  it('reports a sustained gate rejection once per scope per cooldown, not once per rebuild', async () => {
-    // The 120s rejection sentinel is the only backoff, so a frozen variant
-    // rebuilds ~30x/hour per region. The condition is sustained; one event says it.
-    reset();
-    stub.pipeline = async () => [{ result: 0 }];
-    const data = body(['https://a/1'], COVERAGE, new Date().toISOString());
-    await mod.__testing__.publishAcceptedSnapshot('full', 'en', data, 'news:digest:v1:full:en');
-    await mod.__testing__.publishAcceptedSnapshot('full', 'en', data, 'news:digest:v1:full:en');
-    assert.equal(stub.captures.length, 1, 'a second rejection inside the cooldown is not re-reported');
-    await mod.__testing__.publishAcceptedSnapshot('tech', 'en', data, 'news:digest:v1:tech:en');
-    assert.equal(stub.captures.length, 2, 'another variant has its own cooldown');
-  });
-
-  it('a gate rejection reaches Sentry as a warning; a fully-revoked candidate does not', async () => {
-    // The 2026-09-19 freeze ran ~6h with nothing alerting: the rejection was a
-    // console.log, and the relay relabelled the stale replay as `build-error`.
-    // With the depth floor a rejection now means a genuinely degraded build.
-    reset();
-    stub.pipeline = async () => [{ result: 0 }];
-    await mod.__testing__.publishAcceptedSnapshot('full', 'en', body(['https://a/1'], COVERAGE));
-    assert.equal(stub.captures.length, 1);
-    assert.match(stub.captures[0]!.message, /rejected by the last-good acceptance gate/);
-    assert.equal(stub.captures[0]!.opts.level, 'warning');
-    assert.deepEqual(stub.captures[0]!.opts.fingerprint, ['digest-lastgood', 'publish-gate-rejected', 'full']);
-    assert.deepEqual(stub.captures[0]!.opts.tags, {
-      surface: 'news', component: 'digest-lastgood', stage: 'publish-gate', variant: 'full', lang: 'en',
-    });
-
-    reset();
-    stub.pipeline = async () => [{ result: -1 }];
-    await mod.__testing__.publishAcceptedSnapshot('full', 'en', body(['https://a/1'], COVERAGE));
-    assert.equal(stub.captures.length, 0, 'an operator revocation is intended, not a degraded build');
-
-    reset();
-    stub.pipeline = async () => [{ result: 1 }];
-    await mod.__testing__.publishAcceptedSnapshot('full', 'en', body(['https://a/1'], COVERAGE));
-    assert.equal(stub.captures.length, 0);
   });
 
   it('reports distinct guarded-publication outcomes', async () => {

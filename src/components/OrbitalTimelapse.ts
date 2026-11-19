@@ -11,7 +11,6 @@ import {
   type YearlyLook,
   type YearlyLooks,
 } from '@/services/orbital/timelapse';
-import { afterDebugBearRequestWindow } from '@/bootstrap/debugbear-rum';
 import { t } from '@/services/i18n';
 import { declareOverlay } from '@/utils/open-modal';
 import { isAllowedPreviewUrl } from '@/utils/imagery-preview';
@@ -117,7 +116,6 @@ export class OrbitalTimelapsePage {
     this.render();
     let result: YearlyLooks;
     try {
-      await afterDebugBearRequestWindow(signal);
       result = await this.deps.searchLooks(this.subject.point, this.subject.nowMs, { signal });
     } catch {
       return;

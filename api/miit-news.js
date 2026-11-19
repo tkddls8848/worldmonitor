@@ -1,7 +1,6 @@
 import { getCorsHeaders, getPublicCorsHeaders, isDisallowedOrigin } from './_cors.js';
 import { jsonResponse } from './_json-response.js';
 import { readRawJsonFromUpstash, setCachedData } from './_upstash-json.js';
-import { captureSilentError } from './_sentry-edge.js';
 
 export const config = { runtime: 'edge' };
 
@@ -123,7 +122,7 @@ ${items.map((item) => `<item><title>${cdata(item.title)}</title><link>${item.lin
 </channel></rss>`;
 }
 
-export default async function handler(req, ctx) {
+export default async function handler(req) {
   const cors = getCorsHeaders(req);
   if (isDisallowedOrigin(req)) return jsonResponse({ error: 'Origin not allowed' }, 403, cors);
   try {
@@ -160,12 +159,6 @@ export default async function handler(req, ctx) {
     // Same gate as api/brief/carousel and api/_relay (WORLDMONITOR-17C).
     const errName = error instanceof Error ? error.name : '';
     const isTransientTimeout = errName === 'AbortError' || errName === 'TimeoutError';
-    captureSilentError(error, {
-      tags: { route: 'api/miit-news', step: 'listing' },
-      fingerprint: ['api/miit-news', 'listing', error instanceof Error ? error.name : 'Error'],
-      ctx,
-      ...(isTransientTimeout ? { level: 'warning' } : {}),
-    });
     // Short CDN lifetime so the edge retries the live listing soon.
     const lastGood = await readLastGood();
     if (lastGood.length > 0) return rssResponse(lastGood, 60);

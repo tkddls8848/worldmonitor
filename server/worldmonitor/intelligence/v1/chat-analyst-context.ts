@@ -17,8 +17,6 @@ import { filterRevokedUrls, readRevokedUrlSet, type RevocationRead } from '../..
 // worldBrief and countryBrief bodies render under structural headers), so a
 // plain sanitizeForPrompt call site would be the bug, not an exception.
 import { sanitizeForPromptLine } from '../../../_shared/llm-sanitize.js';
-// @ts-expect-error — JS module, no declaration file
-import { captureSilentError } from '../../../../api/_sentry-edge.js';
 // Pure, import-safe helper module (no Redis, no network, no top-level exec) —
 // shared with the seeder side so the GDELT seendate parser has one home
 // (#5856 review). esbuild inlines it for the edge bundle.
@@ -948,9 +946,6 @@ async function buildLiveHeadlines(domainFocus: string, keywords: string[]): Prom
       console.error(`[REDIS-TIMEOUT] readCachedJson key=${GDELT_INTEL_KEY}`);
     }
     console.warn(`[chat-analyst] ${GDELT_INTEL_KEY} read failed, dropping live headlines: ${msg}`);
-    void captureSilentError(read.error, {
-      tags: { route: 'intelligence/chat-analyst-context', step: 'gdelt-intel-seed-read' },
-    });
     return '';
   }
   if (read.status === 'miss') return '';
@@ -962,9 +957,6 @@ async function buildLiveHeadlines(domainFocus: string, keywords: string[]): Prom
       `[chat-analyst] ${GDELT_INTEL_KEY} payload unusable, dropping live headlines: `,
       err instanceof Error ? err.message : err,
     );
-    void captureSilentError(err, {
-      tags: { route: 'intelligence/chat-analyst-context', step: 'gdelt-intel-format' },
-    });
     return '';
   }
 }

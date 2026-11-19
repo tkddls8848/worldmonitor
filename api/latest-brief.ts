@@ -27,8 +27,6 @@ import { getCorsHeaders, isDisallowedOrigin } from './_cors.js';
 // @ts-expect-error — JS module, no declaration file
 import { jsonResponse } from './_json-response.js';
 import { readRawJsonFromUpstash } from './_upstash-json.js';
-// @ts-expect-error — JS module, no declaration file
-import { captureSilentError } from './_sentry-edge.js';
 import { PERSONAL_OWNER_ID } from '../shared/personal-owner.js';
 import { assertBriefEnvelope } from '../server/_shared/brief-render.js';
 
@@ -69,7 +67,6 @@ export const RETRY_ATTEMPT_MS = 3_000;
 export async function readWithOneRetry<T>(
   attempt: (timeoutMs: number) => Promise<T>,
   label: string,
-  ctx?: { waitUntil: (p: Promise<unknown>) => void },
 ): Promise<T> {
   try {
     return await attempt(FIRST_ATTEMPT_MS);
@@ -77,11 +74,6 @@ export async function readWithOneRetry<T>(
     const name = (err as { name?: string } | null)?.name;
     if (name === 'TimeoutError' || name === 'AbortError') {
       console.warn(`[api/latest-brief] ${label} aborted on timeout — retrying once (${RETRY_ATTEMPT_MS}ms)`);
-      captureSilentError(err, {
-        tags: { route: 'api/latest-brief', step: 'upstash-retry-attempt', label },
-        fingerprint: ['api/latest-brief', 'upstash-retry-attempt', err instanceof Error ? err.name : 'Error'],
-        ctx,
-      });
       return await attempt(RETRY_ATTEMPT_MS);
     }
     throw err;
@@ -103,7 +95,6 @@ async function readBriefPreview(
   userId: string,
   issueSlot: string,
   timeoutMs: number,
-  ctx?: { waitUntil: (p: Promise<unknown>) => void },
 ): Promise<BriefPreview | null> {
   // Seeder-owned keys (#7674): the Railway digest composer writes
   // brief:{userId}:{slot} and brief:latest:{userId} bare — read them raw in
@@ -121,11 +112,6 @@ async function readBriefPreview(
     console.error(
       `[api/latest-brief] composer-bug: brief:${userId}:${issueSlot} failed envelope assertion: ${(err as Error).message}`,
     );
-    captureSilentError(err, {
-      tags: { route: 'api/latest-brief', step: 'envelope-assertion', issueSlot },
-      fingerprint: ['api/latest-brief', 'envelope-assertion', err instanceof Error ? err.name : 'Error'],
-      ctx,
-    });
     return null;
   }
   const { data } = raw;
@@ -164,10 +150,7 @@ function publicBaseUrl(req: Request): string {
   return new URL(req.url).origin;
 }
 
-export default async function handler(
-  req: Request,
-  ctx?: { waitUntil: (p: Promise<unknown>) => void },
-): Promise<Response> {
+export default async function handler(req: Request): Promise<Response> {
   if (isDisallowedOrigin(req)) {
     return jsonResponse({ error: 'Origin not allowed' }, 403);
   }
@@ -202,13 +185,11 @@ export default async function handler(
       (await readWithOneRetry(
         (timeoutMs) => readLatestPointer(userId, timeoutMs),
         'readLatestPointer',
-        ctx,
       ));
     if (targetSlot) {
       const hit = await readWithOneRetry(
-        (timeoutMs) => readBriefPreview(userId, targetSlot, timeoutMs, ctx),
+        (timeoutMs) => readBriefPreview(userId, targetSlot, timeoutMs),
         'readBriefPreview',
-        ctx,
       );
       if (hit) {
         issueSlot = targetSlot;
@@ -220,7 +201,6 @@ export default async function handler(
     // this into "composing", which would falsely signal empty state
     // to the dashboard panel. 503 lets the client show a retry path.
     console.error('[api/latest-brief] Upstash read failed:', (err as Error).message);
-    captureSilentError(err, { tags: { route: 'api/latest-brief', step: 'upstash-read' }, fingerprint: ['api/latest-brief', 'upstash-read', err instanceof Error ? err.name : 'Error'], ctx });
     return jsonResponse({ error: 'service_unavailable' }, 503, cors);
   }
 

@@ -68,7 +68,7 @@ describe('demographics capability country UI registration (#6437)', () => {
   it('does not report a failure from a read that an access re-sync superseded', async () => {
     // syncCountryPremiumSectionsAccess starts a new read without aborting the
     // old one. The new read owns the section; the old one failing afterwards
-    // is not a load failure to log or send to Sentry.
+    // is not a load failure to log.
     const harness = await createCountryDeepDivePanelHarness({ premiumAccess: true, demographicsMode: 'deferred' });
     try {
       const panel = harness.createPanel();
@@ -79,10 +79,10 @@ describe('demographics capability country UI registration (#6437)', () => {
 
       harness.rejectDemographics(0);
       await new Promise((resolve) => setTimeout(resolve, 10));
-      assert.equal(harness.getSentryExceptions().length, 0);
+      assert.equal(harness.getLoadFailures().length, 0);
 
       harness.rejectDemographics(1);
-      await waitFor(() => harness.getSentryExceptions().length === 1);
+      await waitFor(() => harness.getLoadFailures().length === 1);
       panel.close();
     } finally {
       harness.cleanup();

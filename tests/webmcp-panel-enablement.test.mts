@@ -207,7 +207,7 @@ describe('evaluateSetPanelEnabled', () => {
 });
 
 describe('applySetPanelEnabled', () => {
-  it('runs beforeApply only after a changed enable persists', () => {
+  it('applies only after a changed enable persists', () => {
     const events: string[] = [];
     const panelSettings = settingsWithFreeSlots('full');
     const result = applySetPanelEnabled(
@@ -217,13 +217,11 @@ describe('applySetPanelEnabled', () => {
       {
         variant: 'full',
         persist: () => { events.push('persist'); },
-        trackToggle: () => { events.push('track'); },
-        beforeApply: () => { events.push('beforeApply'); },
         applyPanelSettings: () => { events.push('apply'); },
       },
     );
     assert.equal(result.changed, true);
-    assert.deepEqual(events, ['persist', 'track', 'beforeApply', 'apply']);
+    assert.deepEqual(events, ['persist', 'apply']);
 
     events.length = 0;
     applySetPanelEnabled(
@@ -233,16 +231,14 @@ describe('applySetPanelEnabled', () => {
       {
         variant: 'full',
         persist: () => { events.push('persist'); },
-        trackToggle: () => { events.push('track'); },
-        beforeApply: () => { events.push('beforeApply'); },
         applyPanelSettings: () => { events.push('apply'); },
       },
     );
-    assert.deepEqual(events, [], 'an unchanged enable must not arm suppression');
+    assert.deepEqual(events, [], 'an unchanged enable must not persist or apply');
   });
 
-  it('does not run beforeApply when persistence fails', () => {
-    let beforeApplyCount = 0;
+  it('does not apply when persistence fails', () => {
+    let applyCount = 0;
     const result = applySetPanelEnabled(
       { panelSettings: settingsWithFreeSlots('full') },
       'windy-webcams',
@@ -250,20 +246,17 @@ describe('applySetPanelEnabled', () => {
       {
         variant: 'full',
         persist: () => false,
-        trackToggle: () => {},
-        beforeApply: () => { beforeApplyCount += 1; },
-        applyPanelSettings: () => {},
+        applyPanelSettings: () => { applyCount += 1; },
       },
     );
     assert.equal(result.reason, 'persist_failed');
-    assert.equal(beforeApplyCount, 0);
+    assert.equal(applyCount, 0);
   });
 
   it('persists an enable through the same user-set path and skips persist on no-op', () => {
     const panelSettings = settingsWithFreeSlots('full');
     const persistCalls: Record<string, PanelConfig>[] = [];
     let applyCount = 0;
-    let toggleCount = 0;
     let fetchCount = 0;
     let toastCount = 0;
     let refreshCount = 0;
@@ -274,9 +267,6 @@ describe('applySetPanelEnabled', () => {
       },
       applyPanelSettings: () => {
         applyCount += 1;
-      },
-      trackToggle: () => {
-        toggleCount += 1;
       },
       showCapToast: () => {
         toastCount += 1;
@@ -303,7 +293,6 @@ describe('applySetPanelEnabled', () => {
     assert.equal(persistCalls.length, 1);
     assert.equal(persistCalls[0]?.['windy-webcams']?.enabled, true);
     assert.equal(applyCount, 1);
-    assert.equal(toggleCount, 1);
     assert.equal(fetchCount, 1);
     assert.equal(refreshCount, 1);
     assert.equal(toastCount, 0);
@@ -317,7 +306,6 @@ describe('applySetPanelEnabled', () => {
     assert.equal(repeat.changed, false);
     assert.equal(persistCalls.length, 1);
     assert.equal(applyCount, 1);
-    assert.equal(toggleCount, 1);
     assert.equal(fetchCount, 1);
     assert.equal(refreshCount, 1);
   });
@@ -331,7 +319,6 @@ describe('applySetPanelEnabled', () => {
         persistCount += 1;
       },
       applyPanelSettings: () => {},
-      trackToggle: () => {},
     };
     const thrown = applySetPanelEnabled(
       {
@@ -383,7 +370,6 @@ describe('applySetPanelEnabled', () => {
         variant: 'full',
         persist: (settings) => persistCalls.push(structuredClone(settings)),
         applyPanelSettings: () => {},
-        trackToggle: () => {},
       },
     );
     assert.equal(result.changed, true);
@@ -395,7 +381,6 @@ describe('applySetPanelEnabled', () => {
   it('fails closed before changing live state when persistence fails', () => {
     const panelSettings = settingsWithFreeSlots('full');
     let applyCount = 0;
-    let toggleCount = 0;
     const result = applySetPanelEnabled(
       { panelSettings },
       'windy-webcams',
@@ -404,7 +389,6 @@ describe('applySetPanelEnabled', () => {
         variant: 'full',
         persist: () => false,
         applyPanelSettings: () => { applyCount += 1; },
-        trackToggle: () => { toggleCount += 1; },
       },
     );
 
@@ -420,7 +404,6 @@ describe('applySetPanelEnabled', () => {
     });
     assert.equal(panelSettings['windy-webcams']?.enabled, false);
     assert.equal(applyCount, 0);
-    assert.equal(toggleCount, 0);
   });
 
 });

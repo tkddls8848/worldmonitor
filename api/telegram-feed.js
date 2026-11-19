@@ -2,14 +2,11 @@
 import { getRelayBaseUrl, getRelayHeaders, fetchWithTimeout, buildRelayResponse } from './_relay.js';
 import { getCorsHeaders, isDisallowedOrigin } from './_cors.js';
 import { jsonResponse } from './_json-response.js';
-import { captureSilentError } from './_sentry-edge.js';
 import { sha256Hex } from './_crypto.js';
 // Shared classifier (WORLDMONITOR-R1). Re-exported as a test seam; the
 // classification is otherwise observable only through a Sentry capture.
-import { relayFailureLevel } from './_relay-failure-level.js';
 
 export const config = { runtime: 'edge' };
-export { relayFailureLevel };
 
 const EPOCH_ISO = new Date(0).toISOString();
 
@@ -319,7 +316,6 @@ export default async function handler(req) {
       });
     } catch (normalizeError) {
       console.warn('[telegram-feed] normalization failed:', normalizeError?.message || String(normalizeError));
-      void captureSilentError(normalizeError, { tags: { route: 'api/telegram-feed', step: 'normalize' }, fingerprint: ['api/telegram-feed', 'normalize', normalizeError instanceof Error ? normalizeError.name : 'Error'] });
       if (mode === 'resolve') {
         return jsonResponse({ error: 'Invalid Telegram channel response' }, 502, {
           'Cache-Control': 'no-store',
@@ -342,23 +338,8 @@ export default async function handler(req) {
     const isTimeout = error?.name === 'AbortError' || error?.name === 'TimeoutError';
     // No `details`: the underlying message can carry relay transport detail
     // (undici cause chains, MTProto text) and the browser has no use for it.
-    // Failures are captured server-side instead.
+    // Failures are logged server-side instead.
     console.warn('[telegram-feed] relay request failed:', error?.message || String(error));
-    // Routine transport churn captures at `warning`, not `error` — see
-    // relayFailureLevel. Skipping those outright (the previous posture,
-    // inherited from api/rss-proxy.js) left relay degradation with no signal at
-    // all — nothing in scripts/ or .github/workflows/ watches it. `warning`
-    // keeps it queryable without counting toward error totals.
-    // `mode` is mandatory on every path: the budgets differ by 7s, so without
-    // it a feed stall and a channel stall are the same Sentry issue.
-    // `timeout_ms` stays exclusive to the abort arm; it describes a deadline
-    // the other failures never reached.
-    void captureSilentError(error, {
-      tags: { route: 'api/telegram-feed', step: 'relay-fetch', mode },
-      fingerprint: ['api/telegram-feed', 'relay-fetch', error instanceof Error ? error.name : 'Error'],
-      level: relayFailureLevel(error),
-      ...(isTimeout ? { extra: { timeout_ms: TELEGRAM_RELAY_TIMEOUT_MS[mode] } } : {}),
-    });
     return jsonResponse({
       error: isTimeout ? 'Relay timeout' : 'Relay request failed',
     }, isTimeout ? 504 : 502, { 'Cache-Control': 'no-store', ...corsHeaders });

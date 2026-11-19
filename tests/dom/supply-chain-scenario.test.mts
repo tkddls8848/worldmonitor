@@ -1,9 +1,8 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { initTestI18n } from './helpers/i18n.mts';
 
-const mocks = vi.hoisted(() => ({ run: vi.fn(), poll: vi.fn(), premium: true, gate: vi.fn() }));
+const mocks = vi.hoisted(() => ({ run: vi.fn(), poll: vi.fn(), premium: true }));
 vi.mock('@/services/scenario', () => ({ runScenario: mocks.run, getScenarioStatus: mocks.poll }));
-vi.mock('@/services/analytics', () => ({ trackGateHit: mocks.gate }));
 vi.mock('@/services/supply-chain', () => ({
   fetchBypassOptions: async () => ({ options: [] }), fetchChokepointHistory: async () => ({ history: [] }),
 }));
@@ -28,7 +27,7 @@ function change(input: HTMLInputElement | HTMLSelectElement, value: string) {
 }
 beforeAll(initTestI18n);
 beforeEach(async () => {
-  vi.useFakeTimers(); mocks.premium = true; mocks.run.mockReset(); mocks.poll.mockReset(); mocks.gate.mockReset();
+  vi.useFakeTimers(); mocks.premium = true; mocks.run.mockReset(); mocks.poll.mockReset();
   mocks.run.mockResolvedValue({ jobId: 'scenario:1712345678901:abcdefgh', status: 'pending' });
   mocks.poll.mockResolvedValue({ status: 'done', result: result() });
   panel = new SupplyChainPanel(); document.body.append(panel.getElement());

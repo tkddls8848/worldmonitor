@@ -1,6 +1,5 @@
 import { getCorsHeaders, isDisallowedOrigin } from './_cors.js';
 import { jsonResponse } from './_json-response.js';
-import { captureSilentError } from './_sentry-edge.js';
 // @ts-expect-error — JS module, no declaration file
 import { redisPipeline } from './_upstash-json.js';
 
@@ -39,10 +38,6 @@ async function readModeFromRedis() {
     // failure is invisible to route-level error-rate monitoring.
     if (entry && typeof entry === 'object' && Object.prototype.hasOwnProperty.call(entry, 'error')) {
       console.warn('[correlation-runtime-mode] Upstash error entry; using legacy:', entry.error);
-      captureSilentError(new Error(String(entry.error)), {
-        tags: { route: 'api/correlation-runtime-mode', step: 'redis-error-entry' },
-        fingerprint: ['api/correlation-runtime-mode', 'redis-error-entry', 'Error'],
-      });
       return 'legacy';
     }
     if (
@@ -58,10 +53,6 @@ async function readModeFromRedis() {
     return resolveMode(raw);
   } catch (error) {
     console.warn('[correlation-runtime-mode] Redis read failed; using legacy:', error);
-    captureSilentError(error, {
-      tags: { route: 'api/correlation-runtime-mode', step: 'redis-read' },
-      fingerprint: ['api/correlation-runtime-mode', 'redis-read', error instanceof Error ? error.name : 'Error'],
-    });
     return 'legacy';
   }
 }

@@ -3,8 +3,6 @@ import type {
     SearchFlightPricesRequest,
     SearchFlightPricesResponse,
 } from '../../../../src/generated/server/worldmonitor/aviation/v1/service_server';
-// @ts-expect-error — JS module, no declaration file
-import { captureSilentError } from '../../../../api/_sentry-edge.js';
 import { generateDemoPrices } from './_providers/demo_prices';
 import { searchPricesTravelpayouts } from './_providers/travelpayouts_data';
 import { ValidationError } from '../../../../src/generated/server/worldmonitor/aviation/v1/service_server';
@@ -98,7 +96,6 @@ export async function searchFlightPrices(
         } catch (err) {
             if (err instanceof ValidationError) throw err;
             console.warn(`[Aviation] Travelpayouts upstream error: ${err instanceof Error ? err.message : err}`);
-            void captureSilentError(err, { tags: { route: 'aviation/search-flight-prices', step: 'travelpayouts-fetch' } });
             if (demoOptIn) {
                 const quotes = generateDemoPrices(origin, destination, depDate, cabin, nonstopOnly, maxResults, currency);
                 return {

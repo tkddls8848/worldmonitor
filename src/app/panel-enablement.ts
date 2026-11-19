@@ -18,8 +18,6 @@ export interface SetPanelEnabledDeps {
   variant: string;
   persist: (settings: Record<string, PanelConfig>) => boolean | void;
   applyPanelSettings: () => void;
-  trackToggle: (panelId: string, enabled: boolean) => void;
-  beforeApply?: (panelId: string, enabled: boolean) => void;
 }
 
 /**
@@ -64,8 +62,6 @@ export function applySetPanelEnabled(
     };
   }
   ctx.panelSettings[panelId] = nextConfig;
-  deps.trackToggle(panelId, enabled);
-  deps.beforeApply?.(panelId, enabled);
   deps.applyPanelSettings();
   ctx.unifiedSettings?.refreshPanelToggles?.();
   if (enabled) {

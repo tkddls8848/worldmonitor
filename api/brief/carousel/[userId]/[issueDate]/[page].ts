@@ -34,8 +34,6 @@ export const config = { runtime: 'edge' };
 // @ts-expect-error — JS module, no declaration file
 import { getCorsHeaders, isDisallowedOrigin } from '../../../../_cors.js';
 import { readRawJsonFromUpstash } from '../../../../_upstash-json.js';
-// @ts-expect-error — JS module, no declaration file
-import { captureSilentError } from '../../../../_sentry-edge.js';
 import { PERSONAL_OWNER_ID } from '../../../../../shared/personal-owner.js';
 import { renderCarouselImageResponse, pageFromIndex } from '../../../../../server/_shared/brief-carousel-render';
 
@@ -72,10 +70,7 @@ function withCacheControl(response: Response, body: BodyInit | null): Response {
   return new Response(body, { status: response.status, headers });
 }
 
-export default async function handler(
-  req: Request,
-  ctx?: { waitUntil: (p: Promise<unknown>) => void },
-): Promise<Response> {
+export default async function handler(req: Request): Promise<Response> {
   if (isDisallowedOrigin(req)) {
     return new Response('Origin not allowed', {
       status: 403,
@@ -114,7 +109,6 @@ export default async function handler(
     envelope = await readRawJsonFromUpstash(`brief:${userId}:${issueDate}`, 3_000, true);
   } catch (err) {
     console.error('[api/brief/carousel] Upstash read failed:', (err as Error).message);
-    captureSilentError(err, { tags: { route: 'api/brief/carousel', step: 'envelope-read' }, fingerprint: ['api/brief/carousel', 'envelope-read', err instanceof Error ? err.name : 'Error'], ctx });
     return jsonError('service_unavailable', 503, cors);
   }
   if (!envelope) return jsonError('not_found', 404, cors);
@@ -154,12 +148,6 @@ export default async function handler(
       `[api/brief/carousel] render failed for ${userId}/${issueDate}/${page}:`,
       (err as Error).message,
     );
-    captureSilentError(err, {
-      tags: { route: 'api/brief/carousel', step: 'render', page: String(page) },
-      fingerprint: ['api/brief/carousel', 'render', err instanceof Error ? err.name : 'Error'],
-      ctx,
-      ...(isTransientTimeout ? { level: 'warning' as const } : {}),
-    });
     return jsonError('render_failed', 503, cors);
   }
 }

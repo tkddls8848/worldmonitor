@@ -1,6 +1,4 @@
 import type { AppContext, AppModule } from '@/app/app-context';
-import { enqueueSentryCall } from '@/bootstrap/sentry-defer';
-import { isAnalyticsHost, track } from '@/services/analytics';
 import { isPageUnloading } from '@/bootstrap/page-unload-signal';
 import { fetchUkmtoIncidents } from '@/services/ukmto-incidents';
 import { getRpcBaseUrl } from '@/services/rpc-client';
@@ -500,10 +498,6 @@ export class DataLoaderManager implements AppModule {
   /** The running news hydration load, including the part after first paint. */
   private activeNewsLoad: Promise<void> | null = null;
   private readonly digestBreakerCooldownMs = 5 * 60 * 1000;
-  /** Failure kinds already sent to Sentry this page load (one event per kind). */
-  private readonly reportedDigestFailures = new Set<DigestFetchFailureKind>();
-  /** Same bound for the analytics count, kept apart so a degraded outcome cannot use up the Sentry slot of a later empty one. */
-  private readonly countedDigestDegradations = new Set<DigestFetchFailureKind>();
   private readonly persistedDigestMaxAgeMs = 6 * 60 * 60 * 1000;
   private readonly outageFallbackCategoryFeedLimit = 3;
   private readonly outageFallbackIntelFeedLimit = 6;
@@ -878,9 +872,6 @@ export class DataLoaderManager implements AppModule {
         return fallback ? { digest: fallback, servedStale: true } : null;
       }
       this.lastGoodDigest = retainRicherScopedDigest(this.lastGoodDigest, requestKey, data);
-      // A retry that answered with no stories left the panels as empty as the
-      // failure did, so it is not a recovery.
-      if (firstFailure) this.reportDigestFetchFailure(firstFailure.error, 'none', firstFailure.deadlineExpired, digestHasItems(data) ? 'recovered' : 'failed');
       this.reportDigestCoverage(data);
       return { digest: data, servedStale: data.coverage?.servedStale === true };
     } catch (e) {
@@ -913,77 +904,9 @@ export class DataLoaderManager implements AppModule {
         console.info('[News] Retrying the digest once: no saved copy to show');
         return this.tryFetchDigest({ error: e, deadlineExpired });
       }
-      const reported = firstFailure ?? { error: e, deadlineExpired };
-      // A copy with no items puts nothing on screen, so it is not a fallback.
-      const shownFallback = digestHasItems(fallback) ? (retained ? 'retained' : 'saved') : 'none';
-      this.reportDigestFetchFailure(
-        reported.error,
-        shownFallback,
-        reported.deadlineExpired,
-        firstFailure ? 'failed' : 'none',
-        firstFailure ? classifyDigestFetchFailure(e, deadlineExpired) : undefined,
-      );
       this.reportDigestCoverage(fallback, fallback ? 'stale' : 'unavailable');
       return fallback ? { digest: fallback, servedStale: true } : null;
     }
-  }
-
-  /**
-   * The footer tells the user when this browser fell back to an old copy, but
-   * nothing told us. One warning per failure kind per page load: enough to
-   * measure how often users see stale news and why, without a burst per
-   * refresh. Offline browsers and page teardown are not service failures.
-   */
-  private reportDigestFetchFailure(
-    error: unknown,
-    fallback: 'retained' | 'saved' | 'none',
-    deadlineExpired: boolean,
-    retry: 'none' | 'recovered' | 'failed',
-    retryFailure?: DigestFetchFailureKind,
-  ): void {
-    if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
-    if (isPageUnloading()) return;
-    const kind = classifyDigestFetchFailure(error, deadlineExpired);
-    // Sentry WORLDMONITOR-1D4: only a failure that left the panels empty is an
-    // incident. Every other outcome had news on screen, so it is a rate to
-    // watch, not an issue to triage: counted in analytics instead. Hosts the
-    // analytics tracker is disabled on (tech, commodity, energy, self-host)
-    // keep reporting to Sentry, because the count would be dropped there.
-    const outcome = digestFailureOutcome(fallback, retry);
-    if (outcome !== 'empty' && isAnalyticsHost()) {
-      if (this.countedDigestDegradations.has(kind)) return;
-      this.countedDigestDegradations.add(kind);
-      track('news-digest-degraded', { outcome, failure: kind, variant: SITE_VARIANT });
-      return;
-    }
-    if (this.reportedDigestFailures.has(kind)) return;
-    this.reportedDigestFailures.add(kind);
-    enqueueSentryCall((s) => s.captureMessage('News digest fetch failed', {
-      level: 'warning',
-      tags: {
-        surface: 'news',
-        'digest.failure': kind,
-        'digest.fallback': fallback,
-        'digest.variant': SITE_VARIANT,
-        // The error's name only: messages can carry URLs. Without it an
-        // "other" failure says nothing about what went wrong.
-        'digest.error': digestErrorName(error),
-        // Whether the one retry ran: 'recovered' rendered fresh news after a
-        // delay, 'failed' left the panels empty, 'none' was not attempted.
-        'digest.retry': retry,
-        // How the retry itself failed, which can differ from the first failure.
-        ...(retryFailure ? { 'digest.retry.failure': retryFailure } : {}),
-        // The exact status, and whether Vercel answered at all: a 4xx with no
-        // gateway telemetry came from in front of it (Sentry WORLDMONITOR-1DE).
-        ...(error instanceof DigestHttpError
-          ? { 'digest.status': String(error.status), 'digest.responder': error.responder }
-          : {}),
-      },
-      extra: { timeoutMs: this.digestRequestTimeoutMs },
-      // Tags do not split issues; one group per kind keeps timeouts, 5xx and
-      // ad-blocked requests readable as separate rates.
-      fingerprint: ['news-digest-fetch', kind],
-    }));
   }
 
   /**
@@ -5492,19 +5415,6 @@ export function digestHasItems(digest: ListFeedDigestResponse | null): boolean {
 }
 
 /**
- * What the user was left with after a failed digest request. `empty` is the
- * only outcome with no news on screen: no retained or saved copy, and no retry
- * that recovered.
- */
-export function digestFailureOutcome(
-  fallback: 'retained' | 'saved' | 'none',
-  retry: 'none' | 'recovered' | 'failed',
-): 'retained' | 'saved' | 'recovered' | 'empty' {
-  if (fallback !== 'none') return fallback;
-  return retry === 'recovered' ? 'recovered' : 'empty';
-}
-
-/**
  * Failures a second request can clear: a stalled or dropped connection, or a
  * 5xx from the CDN or origin. A 4xx, a malformed body or an empty digest would
  * come back the same.
@@ -5540,8 +5450,3 @@ class DigestHttpError extends Error {
   }
 }
 
-/** A short, PII-free label for a digest failure: the error's name, or its type. */
-function digestErrorName(error: unknown): string {
-  const name = error instanceof Error || error instanceof DOMException ? error.name : typeof error;
-  return (name || 'unknown').slice(0, 64);
-}

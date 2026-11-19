@@ -149,7 +149,6 @@ describe('bundler configs that ship to production', () => {
     const read = (p: string) => readFile(join(root, p), 'utf8');
     const main = await read('vite.config.ts');
     assert.match(main, /sourcemap:\s*viteSourcemapSetting\(process\.env\)/);
-    assert.match(main, /sourcemap:\s*emitPublicSourceMaps,\n\s*globPatterns/);
     assert.match(main, /emitPublicSourceMaps \? \[\] : \[stripPrivateSourceMapsPlugin\(\)\]/);
     assert.doesNotMatch(await read('blog-site/astro.config.mjs'), /sourcemap/i);
   });

@@ -34,7 +34,6 @@ import { AI_RESEARCH_LABS } from '@/config/ai-research-labs';
 import { STARTUP_ECOSYSTEMS } from '@/config/startup-ecosystems';
 import { TECH_HQS, ACCELERATORS } from '@/config/tech-geo';
 import { STOCK_EXCHANGES, FINANCIAL_CENTERS, CENTRAL_BANKS, COMMODITY_HUBS } from '@/config/finance-geo';
-import { trackSearchResultSelected, trackCountrySelected } from '@/services/analytics';
 import { t } from '@/services/i18n';
 import { saveToStorage, setTheme } from '@/utils';
 import { withTimeout } from '@/utils/with-timeout';
@@ -42,10 +41,6 @@ import { CountryIntelManager } from '@/app/country-intel';
 import type { PositionSample } from '@/services/aviation';
 import { fetchAircraftPositions } from '@/services/aviation';
 import { subscribeRuntimeConfig } from '@/services/runtime-config';
-import {
-  runWithAgentAnalyticsSuppressed,
-  suppressNextAgentPanelView,
-} from '@/services/agent-analytics-privacy';
 import { SearchSelectionDispatcher } from '@/app/search-selection-dispatcher';
 import { WebMcpSearchController } from '@/app/webmcp-search-controller';
 import type {
@@ -199,10 +194,6 @@ export class SearchManager implements AppModule {
       getVariant: () => SITE_VARIANT,
       openCountryBriefByCode: (...args) => this.callbacks.openCountryBriefByCode(...args),
       enablePanel: (...args) => this.callbacks.enablePanel(...args),
-      trackSearchResultSelected,
-      trackCountrySelected,
-      runWithAgentAnalyticsSuppressed,
-      suppressNextAgentPanelView,
       resolveExecutableNewsPanel: (link) => this.resolveExecutableNewsPanel(link),
       saveToStorage,
       setTheme,

@@ -38,10 +38,6 @@ export interface SearchSelectionDispatcherBindings {
     options?: { trackDetailedAnalytics?: boolean; signal?: AbortSignal },
   ): boolean | Promise<boolean>;
   enablePanel(panelId: string, options?: { trackDetailedAnalytics?: boolean }): boolean;
-  trackSearchResultSelected(type: string, options?: { includeAttribution?: boolean }): void;
-  trackCountrySelected(code: string, name: string, source: string): void;
-  runWithAgentAnalyticsSuppressed<T>(callback: () => T): T;
-  suppressNextAgentPanelView(panelId: string): void;
   resolveExecutableNewsPanel(
     link: string,
   ): [string, AppContext['newsPanels'][string]] | null;
@@ -127,16 +123,14 @@ export class SearchSelectionDispatcher {
     };
     signal?.addEventListener('abort', handleAbort, { once: true });
     try {
-      const selection = this.bindings.runWithAgentAnalyticsSuppressed(() => {
-        const options = {
-          trackDetailedAnalytics: false,
-          programmaticEpoch: epoch,
-          signal: selectionAbort.signal,
-        };
-        return match.kind === 'command'
-          ? this.applyCommand(match.command, options)
-          : this.applySearchResult(match.result, options);
-      });
+      const options = {
+        trackDetailedAnalytics: false,
+        programmaticEpoch: epoch,
+        signal: selectionAbort.signal,
+      };
+      const selection = match.kind === 'command'
+        ? this.applyCommand(match.command, options)
+        : this.applySearchResult(match.result, options);
       const selectionWasAsync = typeof (selection as PromiseLike<boolean>)?.then === 'function';
       const selected = selectionWasAsync ? await selection : selection as boolean;
       throwIfWebMcpAborted(signal);
@@ -174,16 +168,13 @@ export class SearchSelectionDispatcher {
     const trackDetailedAnalytics = options.trackDetailedAnalytics !== false;
     const epoch = options.programmaticEpoch;
     const ctx = this.bindings.ctx;
-    this.bindings.trackSearchResultSelected(result.type, {
-      includeAttribution: trackDetailedAnalytics,
-    });
     switch (result.type) {
       case 'news': {
         const item = result.data as NewsItem;
         const target = this.bindings.resolveExecutableNewsPanel(item.link);
         if (!target) return false;
         const [targetPanelId] = target;
-        if (!this.scrollToPanel(targetPanelId, trackDetailedAnalytics)) return false;
+        if (!this.scrollToPanel(targetPanelId)) return false;
         return this.schedule((commitMatch) => {
           const commitItem = this.resolveScheduledResultData<NewsItem>(result, commitMatch);
           if (!commitItem) return false;
@@ -217,19 +208,17 @@ export class SearchSelectionDispatcher {
       }
       case 'market':
         return epoch === undefined
-          ? this.scrollToPanel('markets', trackDetailedAnalytics)
+          ? this.scrollToPanel('markets')
           : this.scrollToPanelWhenReady(
             'markets',
-            trackDetailedAnalytics,
             epoch,
             options.signal,
           );
       case 'prediction':
         return epoch === undefined
-          ? this.scrollToPanel('polymarket', trackDetailedAnalytics)
+          ? this.scrollToPanel('polymarket')
           : this.scrollToPanelWhenReady(
             'polymarket',
-            trackDetailedAnalytics,
             epoch,
             options.signal,
           );
@@ -437,7 +426,6 @@ export class SearchSelectionDispatcher {
       }
       case 'country': {
         const { code, name } = result.data as { code: string; name: string };
-        if (trackDetailedAnalytics) this.bindings.trackCountrySelected(code, name, 'search');
         return this.bindings.openCountryBriefByCode(code, name, {
           trackDetailedAnalytics,
           ...(options.signal ? { signal: options.signal } : {}),
@@ -546,7 +534,6 @@ export class SearchSelectionDispatcher {
           if (!this.bindings.enablePanel(panelId, { trackDetailedAnalytics })) return false;
           const scrolled = this.scrollToPanelWhenReady(
             panelId,
-            trackDetailedAnalytics,
             epoch,
             options.signal,
             options.cancelPanelWaitOnNextHumanSelection,
@@ -555,10 +542,9 @@ export class SearchSelectionDispatcher {
           return this.dispatchPanelTabAfterPresentation(scrolled, panelId, subTab, epoch);
         }
         const scrolled = epoch === undefined
-          ? this.scrollToPanel(panelId, trackDetailedAnalytics)
+          ? this.scrollToPanel(panelId)
           : this.scrollToPanelWhenReady(
             panelId,
-            trackDetailedAnalytics,
             epoch,
             options.signal,
           );
@@ -620,7 +606,6 @@ export class SearchSelectionDispatcher {
           || CURATED_COUNTRIES[action]?.name
           || new Intl.DisplayNames(['en'], { type: 'region' }).of(action)
           || action;
-        if (trackDetailedAnalytics) this.bindings.trackCountrySelected(action, name, 'command');
         return this.bindings.openCountryBriefByCode(action, name, {
           trackDetailedAnalytics,
           ...(options.signal ? { signal: options.signal } : {}),
@@ -642,14 +627,12 @@ export class SearchSelectionDispatcher {
 
   private async scrollToPanelWhenReady(
     panelId: string,
-    trackDetailedAnalytics = true,
     epoch?: number,
     signal?: AbortSignal,
     cancelOnNextHumanSelection = false,
   ): Promise<boolean> {
     let panel = this.findConnectedPanel(panelId);
     if (panel?.isConnected) {
-      if (!trackDetailedAnalytics) this.bindings.suppressNextAgentPanelView(panelId);
       panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
       this.applyHighlight(panel);
       return true;
@@ -678,7 +661,6 @@ export class SearchSelectionDispatcher {
     // The initial privacy mark may expire while a slow lazy import exhausts a
     // retry. Re-arm it at the actual presentation boundary so the eventual
     // scroll/view event is still attributed to the agent-safe path.
-    if (!trackDetailedAnalytics) this.bindings.suppressNextAgentPanelView(panelId);
     panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
     this.applyHighlight(panel);
     return true;
@@ -776,8 +758,7 @@ export class SearchSelectionDispatcher {
     });
   }
 
-  private scrollToPanel(panelId: string, trackDetailedAnalytics = true): boolean {
-    if (!trackDetailedAnalytics) this.bindings.suppressNextAgentPanelView(panelId);
+  private scrollToPanel(panelId: string): boolean {
     const panel = document.querySelector(`[data-panel="${panelId}"]`);
     if (!panel) return false;
     panel.scrollIntoView({ behavior: 'smooth', block: 'center' });

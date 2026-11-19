@@ -46,8 +46,6 @@ import { escapeHtml } from '@/utils/sanitize';
 import { safeStorageRemove, safeStorageSet } from '@/utils/safe-storage';
 import type { PanelConfig } from '@/types';
 import { renderPreferenceSection } from '@/services/preferences-content';
-import { mountInstallEntry } from '@/services/pwa-install';
-import { track } from '@/services/analytics';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 import { legalLinksHtml, LEGAL_LINK_ATTR } from '@/utils/legal-links';
 import { dashboardSiteLinksHtml } from '@/utils/dashboard-site-links';
@@ -112,7 +110,6 @@ export class UnifiedSettings {
   private recentPage: SettingsSectionId | null = null;
   /** The sidebar search text. The sheet has no search, so it is empty there. */
   private navQuery = '';
-  private installCleanup: (() => void) | null = null;
   private legalLinkHandoffAttached = false;
   private activeSourceRegion = 'all';
   private sourceFilter = '';
@@ -372,7 +369,6 @@ export class UnifiedSettings {
     document.addEventListener('keydown', this.escapeHandler);
     window.addEventListener('resize', this.onResize);
     window.addEventListener(I18N_RESOURCES_LOADED_EVENT, this.onTranslationsLoaded);
-    track('settings-open', { tab: section ?? 'default' });
 
   }
 
@@ -496,7 +492,6 @@ export class UnifiedSettings {
             <input type="search" class="us-search-input" data-settings-search autocomplete="off" spellcheck="false"
               placeholder="${escapeHtml(t('modals.settingsWindow.shellSearchPlaceholder'))}" aria-label="${escapeHtml(t('modals.settingsWindow.shellSearchPlaceholder'))}" aria-controls="us-home-rows">
           </div>
-          ${this.config.isDesktopApp ? '' : '<div class="us-install-slot" data-pwa-install-entry></div>'}
           <div class="us-home-rows" id="us-home-rows" data-settings-rows></div>
           <p class="us-search-empty" data-settings-empty aria-live="polite"></p>
         </nav>
@@ -510,16 +505,12 @@ export class UnifiedSettings {
     this.scrollOffsets.clear();
     this.clearSearch();
     this.attachLegalLinkHandoff();
-    const installHost = this.overlay.querySelector<HTMLElement>('[data-pwa-install-entry]');
-    if (installHost) this.installCleanup = mountInstallEntry(installHost);
   }
 
   /** Disposes every mounted page and returns to no navigation state. */
   private endSession(): void {
     this.disposePages();
     this.nav = null;
-    this.installCleanup?.();
-    this.installCleanup = null;
     this.reflectNav();
   }
 

@@ -1,10 +1,8 @@
 import { getCorsHeaders, isDisallowedOrigin } from './_cors.js';
 import { getRelayBaseUrl, getRelayHeaders } from './_relay.js';
-import { relayFailureLevel } from './_relay-failure-level.js';
 import { isAllowedDomain, hostMatchForms } from './_rss-allowed-domain-match.js';
 import { RSS_BROWSER_UA, rssFetchHeadersForHost } from './_rss-fetch-headers.js';
 import { jsonResponse } from './_json-response.js';
-import { captureSilentError } from './_sentry-edge.js';
 
 export const config = { runtime: 'edge' };
 
@@ -256,7 +254,7 @@ function assertAllowedRedirect(url) {
   }
 }
 
-export default async function handler(req, ctx) {
+export default async function handler(req) {
   const corsHeaders = getCorsHeaders(req, 'GET, OPTIONS');
 
   if (isDisallowedOrigin(req)) {
@@ -374,27 +372,6 @@ export default async function handler(req, ctx) {
           relayResponse = await fetchViaRailway(feedUrl, timeout);
         } catch (relayError) {
           console.error('RSS proxy relay retry error:', feedUrl, relayError instanceof Error ? relayError.message : String(relayError));
-          // Skip Sentry on timeout, exactly as the outer catch does for the
-          // direct leg. fetchViaRailway aborts on the same feed timeout budget,
-          // and this retry is a best-effort SECOND attempt whose failure the
-          // caller never sees — the original non-ok direct response is returned
-          // either way. Capturing it reported routine upstream latency at error
-          // level (WORLDMONITOR-11G); #7438 made the same call for
-          // api/telegram-feed.js. Real relay failures still report.
-          //
-          // Established-then-dropped connections (Network connection lost,
-          // ECONNRESET, …) still capture, but at `warning` via
-          // relayFailureLevel — same boundary as api/telegram-feed.js
-          // (WORLDMONITOR-R1 / WORLDMONITOR-17M). Default `error` would page
-          // on-call for Vercel edge transport churn the product cannot fix.
-          if (relayError?.name !== 'AbortError') {
-            captureSilentError(relayError, {
-              tags: { route: 'api/rss-proxy', step: 'relay-retry', feed: feedUrl },
-              fingerprint: rssProxyErrorFingerprint('relay-retry', relayError),
-              level: relayFailureLevel(relayError),
-              ctx,
-            });
-          }
         }
         if (relayResponse?.ok) {
           response = relayResponse;
@@ -431,17 +408,6 @@ export default async function handler(req, ctx) {
 
     const isTimeout = error.name === 'AbortError';
     console.error('RSS proxy error:', feedUrl, error.message);
-    // Skip Sentry capture on timeout — Sentry would drown in transient
-    // upstream-feed timeouts which are routine. Only surface "real" errors.
-    // Dropped connections use warning (relayFailureLevel); refuse/DNS stay error.
-    if (!isTimeout) {
-      captureSilentError(error, {
-        tags: { route: 'api/rss-proxy', step: 'fetch', feed: feedUrl },
-        fingerprint: rssProxyErrorFingerprint('fetch', error),
-        level: relayFailureLevel(error),
-        ctx,
-      });
-    }
     return jsonResponse({
       error: isTimeout ? 'Feed timeout' : 'Failed to fetch feed',
       url: feedUrl

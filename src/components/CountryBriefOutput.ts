@@ -1,5 +1,4 @@
 import { t } from '@/services/i18n';
-import { enqueueSentryCall } from '@/bootstrap/sentry-defer';
 import { h } from '@/utils/dom-utils';
 import { WEB_APP_ORIGIN } from '@/config/web-origin';
 import { BRIEF_TOPICS, type BriefTopic, type BriefSectionState } from './country-brief-presentation';
@@ -284,12 +283,6 @@ export function createDecisionBriefOutput(
       // premiumFetch only reports resolved 5xx responses, so a rejected fetch or a
       // logic bug in the capture/build path would otherwise be invisible.
       console.warn('[CountryBriefOutput] decision brief capture failed', error);
-      enqueueSentryCall((Sentry) => {
-        Sentry.captureException?.(error instanceof Error ? error : new Error(String(error)), {
-          tags: { surface: 'country-deep-dive', widget: 'decision-brief' },
-          extra: { countryCode: country.code },
-        });
-      });
       status.textContent = t('components.decisionBrief.failed');
     } finally {
       // A superseded generation must not re-enable a button the newer request owns.

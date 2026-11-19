@@ -23,8 +23,6 @@ export const config = { runtime: 'edge' };
 // @ts-expect-error — JS module, no declaration file
 import { getCorsHeaders, isDisallowedOrigin } from '../../_cors.js';
 import { readRawJsonFromUpstash } from '../../_upstash-json.js';
-// @ts-expect-error — JS module, no declaration file
-import { captureSilentError } from '../../_sentry-edge.js';
 import { renderBriefMagazine } from '../../../server/_shared/brief-render.js';
 import { briefFontPlatform } from '../../../server/_shared/brief-font-platform.js';
 import {
@@ -101,10 +99,7 @@ const UNAVAILABLE_PAGE = renderErrorPage(
   'The brief service is having trouble right now. Please try again shortly.',
 );
 
-export default async function handler(
-  req: Request,
-  ctx?: { waitUntil: (p: Promise<unknown>) => void },
-): Promise<Response> {
+export default async function handler(req: Request): Promise<Response> {
   if (isDisallowedOrigin(req)) {
     return new Response('Origin not allowed', { status: 403 });
   }
@@ -156,7 +151,6 @@ export default async function handler(
     pointerRaw = await readRawJsonFromUpstash(pointerKey);
   } catch (err) {
     console.error('[api/brief/public] pointer read failed:', (err as Error).message);
-    captureSilentError(err, { tags: { route: 'api/brief/public', step: 'pointer-read' }, fingerprint: ['api/brief/public', 'pointer-read', err instanceof Error ? err.name : 'Error'], ctx });
     return htmlResponse(req, 503, UNAVAILABLE_PAGE);
   }
   // The pointer is JSON-encoded at write time (both
@@ -192,7 +186,6 @@ export default async function handler(
     envelope = await readRawJsonFromUpstash(`brief:${pointer.userId}:${pointer.issueDate}`, 3_000, true);
   } catch (err) {
     console.error('[api/brief/public] envelope read failed:', (err as Error).message);
-    captureSilentError(err, { tags: { route: 'api/brief/public', step: 'envelope-read' }, fingerprint: ['api/brief/public', 'envelope-read', err instanceof Error ? err.name : 'Error'], ctx });
     return htmlResponse(req, 503, UNAVAILABLE_PAGE);
   }
   if (!envelope) {
@@ -210,7 +203,6 @@ export default async function handler(
     );
   } catch (err) {
     console.error('[api/brief/public] malformed envelope:', (err as Error).message);
-    captureSilentError(err, { tags: { route: 'api/brief/public', step: 'render' }, fingerprint: ['api/brief/public', 'render', err instanceof Error ? err.name : 'Error'], ctx });
     return htmlResponse(req, 404, NOT_FOUND_PAGE);
   }
 

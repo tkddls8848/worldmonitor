@@ -3,7 +3,6 @@
 // they never see YT.Player, hls.js, player error codes or sidecar bridge messages.
 
 import { getStreamQuality } from '@/services/ai-flow-settings';
-import { track } from '@/services/analytics';
 import { isAllowedWebcamEmbedMessageOrigin } from '@/services/live-video/embed-message-origin';
 import { getLocalApiPort, isDesktopRuntime } from '@/services/runtime';
 
@@ -26,7 +25,6 @@ import {
   type OfflineReason,
   type ParsedSource,
   type PlayerObservation,
-  type SettledVerdict,
   type UnverifiableReason,
   type YouTubeVideoSnapshot,
 } from './model';
@@ -137,7 +135,6 @@ const HAVE_FUTURE_DATA = 3;
 
 // Page-wide, so a feed that just failed in one tile is tried last in the next.
 const recentFailures = new Map<string, number>();
-let signalMissingReported = false;
 
 function recentFailureKeys(slot: string, nowMs: number): Set<string> {
   const keys = new Set<string>();
@@ -614,24 +611,6 @@ function viewState(state: ChainState, parsed: ParsedSource): LiveVideoState {
   }
 }
 
-function attemptOutcome(verdict: SettledVerdict, transport: Transport): Record<string, string | number> {
-  if (verdict.verdict === 'failed') {
-    const { outcome } = verdict;
-    if (outcome.kind === 'player-error') return { outcome: 'player-error', code: outcome.code };
-    if (outcome.kind === 'hls-fatal') return { outcome: 'hls-fatal', detail: outcome.detail };
-    const stall = outcome.kind === 'not-started' ? transport.stallDetail?.() : undefined;
-    return stall ? { outcome: outcome.kind, detail: stall } : { outcome: outcome.kind };
-  }
-  return { outcome: verdict.verdict === 'unverifiable' ? verdict.reason : verdict.verdict };
-}
-
-/** Once per page: YouTube stopped exposing isLive, so no tile can be verified live. */
-function reportSignalMissing(slot: string, verdict: SettledVerdict): void {
-  if (signalMissingReported || verdict.verdict !== 'unverifiable' || verdict.reason !== 'live-signal-missing') return;
-  signalMissingReported = true;
-  track('live-video-signal-missing', { slot });
-}
-
 /**
  * Must only be called after play intent (click-to-play gate): the first mount loads the YouTube
  * IFrame API. Callbacks never fire after destroy().
@@ -696,14 +675,9 @@ export function openLiveVideo(container: HTMLElement, options: LiveVideoOptions)
       }
       return;
     }
-    reportSignalMissing(slot, verdict);
     const step = advanceChain(state, { type: 'verdict', verdict }, parsed, Date.now());
     if (verdict.verdict !== 'live' && step.state.phase !== 'recording' && step.state.phase !== 'unverified') {
       recentFailures.set(failureKey(slot, candidate), Date.now());
-      track('live-video-attempt-failed', { slot, kind: candidate.kind, ...attemptOutcome(verdict, transport) });
-    }
-    if (verdict.verdict === 'unverifiable' && verdict.reason === 'not-started') {
-      track('live-video-tap-to-play', { slot, kind: candidate.kind });
     }
     apply(step);
   };

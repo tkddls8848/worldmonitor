@@ -12,7 +12,6 @@ import { getRpcBaseUrl, getRpcErrorStatusCode } from '@/services/rpc-client';
 import { SITE_VARIANT } from '@/config';
 import { BETA_MODE } from '@/config/beta';
 import { isFeatureAvailable, type RuntimeFeatureId } from './runtime-config';
-import { trackLLMUsage, trackLLMFailure } from './analytics';
 import { getCurrentLanguage } from './i18n';
 import type { SummarizeArticleResponse } from '@/generated/client/worldmonitor/news/v1/service_client';
 import { createCircuitBreaker } from '@/utils';
@@ -286,15 +285,7 @@ export async function generateSummary(
   return summaryResultBreaker.execute(
     async () => {
       const attemptState = createSummarizationAttemptState();
-      const result = await generateSummaryInternal(attemptState, headlines, onProgress, geoContext, lang, options);
-
-      if (result) {
-        trackLLMUsage(result.provider, result.model, result.cached);
-      } else {
-        trackLLMFailure(attemptState.lastAttemptedProvider);
-      }
-
-      return result;
+      return generateSummaryInternal(attemptState, headlines, onProgress, geoContext, lang, options);
     },
     null,
     { cacheKey, shouldCache: (result) => result !== null },

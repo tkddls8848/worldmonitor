@@ -13,7 +13,6 @@ const catalog = vi.hoisted(() => ({
   sources: {} as Record<string, readonly string[]>,
   original: {} as Record<string, readonly string[]>,
 }));
-const analytics = vi.hoisted(() => ({ track: vi.fn() }));
 const resolvedFeed = vi.hoisted(() => ({ ensureHydrated: vi.fn<(key: string) => Promise<unknown>>() }));
 
 vi.mock('@/services/bootstrap', async (importOriginal) => ({
@@ -23,11 +22,6 @@ vi.mock('@/services/bootstrap', async (importOriginal) => ({
 
 vi.mock('@/services/live-video/youtube-iframe-api', () => ({
   loadYouTubeIframeApi: () => Promise.resolve(loader.blocked ? null : loader.api?.namespace ?? null),
-}));
-
-vi.mock('@/services/analytics', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/services/analytics')>()),
-  track: analytics.track,
 }));
 
 vi.mock('@/config/live-video-sources', async (importOriginal) => {
@@ -169,7 +163,6 @@ beforeEach(() => {
   vi.stubGlobal('IntersectionObserver', FakeIntersectionObserver);
   loader.api = createFakeYouTubeIframeApi();
   loader.blocked = false;
-  analytics.track.mockClear();
   __resetResolvedLiveVideosForTests();
   resolvedFeed.ensureHydrated.mockReset();
   resolvedFeed.ensureHydrated.mockResolvedValue(undefined);
@@ -327,7 +320,6 @@ describe('Live Webcams live verification', () => {
     await flush(LIVE_VIDEO_TIMING.pollMs);
     expect(playingFeeds()).toEqual(['Middle East live webcam', 'Taipei live webcam', 'Ukraine live webcam', 'Washington DC live webcam']);
     expect(offlineNote()).toBe('Jerusalem is offline right now');
-    expect(analytics.track).toHaveBeenCalledWith('live-video-attempt-failed', { slot: 'webcams/jerusalem', kind: 'video', outcome: 'not-started' });
   });
 
   it('keeps every tile unverified when YouTube stops reporting isLive, and reports the missing signal once', async () => {
@@ -345,8 +337,6 @@ describe('Live Webcams live verification', () => {
     expect(offlineNote()).toBeNull();
     expect(content().querySelectorAll('.webcam-live-dot')).toHaveLength(0);
     for (const title of WALL) expect(cellFor(title).textContent).toContain('Can’t confirm this stream is live');
-    const reports = analytics.track.mock.calls.filter(([event]) => event === 'live-video-signal-missing');
-    expect(reports).toEqual([['live-video-signal-missing', { slot: 'webcams/jerusalem' }]]);
   });
 
   it('shows an offline card with Retry when no replacement feed is left', async () => {
@@ -457,7 +447,6 @@ describe('Live Webcams resolved channel live videos (#8545)', () => {
     settle(resolvedMap({ [X]: B }));
     await flush();
     expect(jerusalemPlayers().map((player) => player.embeddedVideoId)).toEqual([B]);
-    expect(analytics.track).toHaveBeenCalledWith('live-video-resolved-applied', { slot: 'webcams/jerusalem', count: 1 });
   });
 
   it('opens one player, in the connected cell, when the wall re-renders while the map loads', async () => {

@@ -932,17 +932,3 @@ describe('generated OpenAPI', () => {
 
 // captureSilentError is a no-op under NODE_TEST_CONTEXT, so pin the Sentry
 // tagging in source the same way api/miit-news.test.mjs does.
-describe('Sentry capture gates', () => {
-  it('tags store read failures for Sentry', () => {
-    const src = readFileSync(resolve(root, 'server/_shared/intel-history-client.ts'), 'utf8');
-    assert.match(src, /captureSilentError\(err/);
-    assert.match(src, /stage: 'store-read'/);
-  });
-
-  it('downgrades AbortSignal.timeout captures on the embeddings path', () => {
-    const src = readFileSync(resolve(root, 'server/_shared/intel-history-embed.ts'), 'utf8');
-    assert.match(src, /errName === 'AbortError' \|\| errName === 'TimeoutError'/);
-    assert.match(src, /isTransientTimeout \? \{ level: 'warning' \} : \{\}/);
-    assert.match(src, /stage: 'embed'/);
-  });
-});

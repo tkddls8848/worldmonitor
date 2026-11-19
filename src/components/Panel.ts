@@ -3,7 +3,6 @@ import { invokeTauri } from '../services/tauri-bridge';
 import { t } from '../services/i18n';
 import { type DomChild, h, replaceChildren, safeHtml as sanitizeHtmlFragment, setTrustedHtml, trustedHtml, type TrustedHtml } from '../utils/dom-utils';
 import { safeHtmlToString, type SafeHtml } from '@/utils/sanitize';
-import { trackLayoutCustomized } from '@/services/analytics';
 import { getAiFlowSettings } from '@/services/ai-flow-settings';
 import { dataFreshness, type PanelFreshnessSummary } from '@/services/data-freshness';
 import { formatPanelFreshnessDisplay } from '@/services/panel-freshness-display';
@@ -460,7 +459,6 @@ export class Panel {
       if (next === current) return;
       setSpanClass(this.element, next);
       savePanelSpan(this.panelId, next);
-      trackLayoutCustomized('panel-resize');
       this.syncKeyboardRowResizeAria();
     });
   }
@@ -487,7 +485,6 @@ export class Panel {
       if (next === current) return;
       setColSpanClass(this.element, next);
       persistPanelColSpan(this.panelId, this.element);
-      trackLayoutCustomized('panel-resize');
       this.syncKeyboardColResizeAria();
     });
   }
@@ -546,7 +543,6 @@ export class Panel {
 
       if (this.rowSpanClassesChangedSinceDragStart()) {
         savePanelSpan(this.panelId, getRowSpan(this.element));
-        trackLayoutCustomized('panel-resize');
       }
       this.syncKeyboardRowResizeAria();
     };
@@ -623,7 +619,6 @@ export class Panel {
       this.removeRowTouchDocumentListeners();
       if (this.rowSpanClassesChangedSinceDragStart()) {
         savePanelSpan(this.panelId, getRowSpan(this.element));
-        trackLayoutCustomized('panel-resize');
       }
       this.syncKeyboardRowResizeAria();
     };
@@ -669,7 +664,6 @@ export class Panel {
     const finalSpan = clampColSpan(getColSpan(this.element), getMaxColSpan(this.element));
     if (finalSpan !== this.startColSpan) {
       persistPanelColSpan(this.panelId, this.element);
-      trackLayoutCustomized('panel-resize');
     } else if (this.startColSpanClass === undefined) {
       // The drag rewrote the class with the span the grid shows; put back the
       // span the panel asked for, so it widens again when the grid has room.

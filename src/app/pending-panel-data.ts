@@ -1,4 +1,3 @@
-import { enqueueSentryCall } from '@/bootstrap/sentry-defer';
 
 const pendingCalls = new Map<string, Map<string, unknown[]>>();
 
@@ -11,13 +10,8 @@ export type PanelCallFailureReporter = (key: string, method: string, error: unkn
  * Swallowing the rejection silently would trade an unhandled rejection for an
  * invisible failure, so the panel that failed and the error are reported.
  */
-export function reportPanelCallFailure(key: string, method: string, error: unknown, dispatch: PanelCallDispatch): void {
+export function reportPanelCallFailure(key: string, method: string, error: unknown, _dispatch: PanelCallDispatch): void {
   console.error(`[panel-call] ${key}.${method}() rejected:`, error);
-  enqueueSentryCall((s) => {
-    s.captureException(error instanceof Error ? error : new Error(String(error)), {
-      tags: { kind: 'panel_call_rejected', panel: key, method, dispatch },
-    });
-  });
 }
 
 /**

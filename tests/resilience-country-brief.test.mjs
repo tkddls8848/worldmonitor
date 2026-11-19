@@ -122,12 +122,12 @@ async function waitForResilienceFallback(harness) {
   assert.fail('expected lazy resilience widget fallback to render');
 }
 
-async function waitForSentryFailure(harness) {
+async function waitForLoadFailure(harness) {
   for (let attempt = 0; attempt < 25; attempt += 1) {
-    if (harness.getSentryBreadcrumbs().length > 0 && harness.getSentryExceptions().length > 0) return;
+    if (harness.getLoadFailures().length > 0) return;
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
-  assert.fail('expected resilience widget lazy-load failure telemetry');
+  assert.fail('expected resilience widget lazy-load failure to be logged');
 }
 
 test('country deep-dive panel mounts the resilience widget beside the score card', async () => {
@@ -161,9 +161,8 @@ test('country deep-dive panel renders fallback when the resilience widget chunk 
     assert.equal(fallback.textContent, 'countryBrief.resilienceScoreUnavailable');
     assert.equal(slot.querySelector('.cdp-loading-inline'), null, 'fallback must replace loading state');
     assert.equal(harness.getWidgets().length, 0, 'chunk failure must not create a widget');
-    await waitForSentryFailure(harness);
-    assert.equal(harness.getSentryBreadcrumbs().length, 1);
-    assert.equal(harness.getSentryExceptions().length, 1);
+    await waitForLoadFailure(harness);
+    assert.equal(harness.getLoadFailures().length, 1);
   } finally {
     harness.cleanup();
   }
@@ -179,9 +178,8 @@ test('country deep-dive panel renders fallback when the resilience widget succes
     assert.equal(fallback.textContent, 'countryBrief.resilienceScoreUnavailable');
     assert.equal(slot.querySelector('.cdp-loading-inline'), null, 'fallback must replace loading state');
     assert.equal(harness.getWidgets().length, 0, 'constructor failure must not retain a widget');
-    await waitForSentryFailure(harness);
-    assert.equal(harness.getSentryBreadcrumbs().length, 1);
-    assert.equal(harness.getSentryExceptions().length, 1);
+    await waitForLoadFailure(harness);
+    assert.equal(harness.getLoadFailures().length, 1);
   } finally {
     harness.cleanup();
   }
@@ -199,9 +197,8 @@ test('country deep-dive panel destroys a constructed resilience widget when setu
     assert.equal(slot.querySelector('.cdp-loading-inline'), null, 'fallback must replace loading state');
     assert.ok(widget, 'post-construction failure should create a widget before setup throws');
     assert.equal(widget.destroyCount, 1, 'failed setup must not leave widget subscriptions live');
-    await waitForSentryFailure(harness);
-    assert.equal(harness.getSentryBreadcrumbs().length, 1);
-    assert.equal(harness.getSentryExceptions().length, 1);
+    await waitForLoadFailure(harness);
+    assert.equal(harness.getLoadFailures().length, 1);
   } finally {
     harness.cleanup();
   }

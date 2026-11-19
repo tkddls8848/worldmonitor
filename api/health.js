@@ -37,7 +37,6 @@ import {
 } from './_content-freshness.js';
 import { assessContentAge } from './_content-age.js';
 import { readHumanitarianRetention } from './_humanitarian-retention.js';
-import { captureSilentError } from './_sentry-edge.js';
 
 export const config = { runtime: 'edge' };
 
@@ -5521,11 +5520,17 @@ function boundedIncidentValue(value) {
     : `${text.slice(0, SOURCE_INCIDENT_FIELD_MAX_CHARS)}…[truncated]`;
 }
 
+/** Default incident sink: the server log. Resolves true once the line is written. */
+async function logSourceIncident(error, details) {
+  console.warn('[health] %s', error.message, JSON.stringify(details.extra));
+  return true;
+}
+
 /**
- * Report one `<source>:<status>` incident to Sentry with the check fields that
- * say how stale it is and why it fired. Resolves true when Sentry accepted it.
+ * Report one `<source>:<status>` incident with the check fields that say how
+ * stale it is and why it fired. Resolves true when the sink accepted it.
  */
-async function reportSourceIncident(key, checks, ctx, capture = captureSilentError) {
+async function reportSourceIncident(key, checks, ctx, capture = logSourceIncident) {
   const separator = key.lastIndexOf(':');
   const name = key.slice(0, separator);
   const status = key.slice(separator + 1);

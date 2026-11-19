@@ -31,10 +31,8 @@ import { toFlagEmoji } from '@/utils/country-flag';
 import { PORTS } from '@/config/ports';
 import { getChokepointRoutes } from '@/config/trade-routes';
 import { STRATEGIC_WATERWAYS } from '@/config/geo';
-import { trackGateHit } from '@/services/analytics';
 import { fetchBypassOptions, fetchChokepointStatus } from '@/services/supply-chain';
 import { haversineDistanceKm } from '@/services/related-assets';
-import { enqueueSentryCall } from '@/bootstrap/sentry-defer';
 import type {
   CountryBriefPanel,
   CountryTariffTrendsData,
@@ -2793,7 +2791,6 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     const isPro = this.canRequestPremium();
     if (!isPro) {
       const gateEl = this.makeProLocked('Bypass corridors available with PRO');
-      gateEl.addEventListener('click', () => trackGateHit('sector-bypass-corridors'), { once: true });
       bypassContent.append(gateEl);
     } else {
       bypassContent.append(this.makeLoading('Loading bypass options\u2026'));
@@ -3533,7 +3530,6 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     evidenceButton.addEventListener('click', async () => {
       if (evidenceButton.disabled) return;
       if (!this.canRequestPremium()) {
-        trackGateHit('evidence-export');
         showToast('Evidence export is available on Pro.');
         return;
       }
@@ -3551,7 +3547,6 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     decisionButton.type = 'button';
     decisionButton.addEventListener('click', () => {
       if (!this.canRequestPremium()) {
-        trackGateHit('decision-brief');
         showToast(t('components.decisionBrief.locked'));
         return;
       }
@@ -3560,7 +3555,7 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     const commodityButton = this.el('button', 'cdp-action-btn', t('components.decisionBrief.commodityTitle')) as HTMLButtonElement;
     commodityButton.type = 'button';
     commodityButton.addEventListener('click', () => {
-      if (!this.canRequestPremium()) { trackGateHit('decision-brief'); showToast(t('components.decisionBrief.locked')); return; }
+      if (!this.canRequestPremium()) { showToast(t('components.decisionBrief.locked')); return; }
       void this.openDecisionBrief(commodityButton, true);
     });
     const moreActions = this.el('details', 'cdp-more-actions');
@@ -3842,14 +3837,6 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
       if (stillCurrent()) body.replaceChildren(table);
     } catch (error) {
       console.warn('[CountryDeepDivePanel] food stocks load failed', error);
-      // An aborted request is an expected panel-close/country-switch, not a fault.
-      const aborted = (error as { name?: string })?.name === 'AbortError' || this.signal.aborted;
-      if (!aborted) {
-        this.captureCountryDeepDiveLoadFailure(error, code, {
-          message: 'Food stocks load failed',
-          widget: 'food-stocks',
-        });
-      }
       if (stillCurrent()) {
         if (error instanceof CountrySectionError && error.state === 'locked') this.setSectionFailure('food', 'locked', error.message);
         else this.setSectionFailure('food', 'unavailable', t('countryBrief.foodStocksUnavailable'));
@@ -3883,10 +3870,6 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
       const aborted = (error as { name?: string })?.name === 'AbortError' || signal.aborted || !stillCurrent();
       if (!aborted) {
         console.warn('[CountryDeepDivePanel] demographics capability load failed', error);
-        this.captureCountryDeepDiveLoadFailure(error, code, {
-          message: 'Demographics capability load failed',
-          widget: 'demographics-capability',
-        });
       }
       if (stillCurrent()) this.setSectionFailure('demographics', error instanceof CountrySectionError ? error.state : 'unavailable', t('countryBrief.demographicsCapability.unavailable'));
     }
@@ -3930,10 +3913,6 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
       const cancelled = signal.aborted || accessSignal.aborted || !stillCurrent();
       if (!cancelled) {
         console.warn('[CountryDeepDivePanel] five-factor scorecard load failed', error);
-        this.captureCountryDeepDiveLoadFailure(error, code, {
-          message: 'Five-factor scorecard load failed',
-          widget: 'five-factor-scorecard',
-        });
       }
       if (stillCurrent()) {
         this.setSectionFailure('factors', error instanceof CountrySectionError ? error.state : 'unavailable', t('countryBrief.fiveFactorScorecard.unavailable'));
@@ -3943,33 +3922,6 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
         this.fiveFactorScorecardAbortController = null;
       }
     }
-  }
-
-  private captureCountryDeepDiveLoadFailure(
-    error: unknown,
-    countryCode: string,
-    details: { message: string; widget: string },
-  ): void {
-    enqueueSentryCall((Sentry) => {
-      Sentry.addBreadcrumb?.({
-        category: 'country-deep-dive',
-        level: 'warning',
-        message: details.message,
-        data: { countryCode },
-      });
-      // Callers skip cancellations, so anything reaching here is a real load
-      // failure. The `kind` tag claims it for beforeSend: a scorecard deadline
-      // or a network failure arrives with zero frames (`signal timed out`,
-      // `Failed to fetch`) and would otherwise be dropped as extension noise.
-      Sentry.captureException?.(error instanceof Error ? error : new Error(String(error)), {
-        tags: {
-          kind: 'country_deep_dive_load_failed',
-          surface: 'country-deep-dive',
-          widget: details.widget,
-        },
-        extra: { countryCode },
-      });
-    });
   }
 
   private formatStocksToUse(
@@ -4012,10 +3964,6 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
       this.resilienceWidget?.destroy();
       this.resilienceWidget = null;
       console.warn('[CountryDeepDivePanel] Failed to load resilience widget', error);
-      this.captureCountryDeepDiveLoadFailure(error, code, {
-        message: 'Resilience widget lazy load failed',
-        widget: 'resilience',
-      });
       slot.replaceChildren(this.makeEmpty(t('countryBrief.resilienceScoreUnavailable')));
     };
 

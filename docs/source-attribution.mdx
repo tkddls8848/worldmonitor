@@ -12,7 +12,7 @@ The inventory is **generated, not hand-written**: `scripts/source-attribution.mj
 ## Observed Source Inventory
 
 {/* BEGIN GENERATED SOURCE ATTRIBUTION */}
-This generated inventory covers **880 active source hosts** representing **857 active providers** (**394 structured/API**, **470 feed**, and **30 operational-status** hosts). It is derived from source declarations in `scripts/`, `server/`, `api/`, and `src/`. Each row shows the configured provider identity and where the source is referenced. Syndication transports such as FeedBurner and Google News remain listed as hosts and are not counted as publishers.
+This generated inventory covers **880 active source hosts** representing **857 active providers** (**393 structured/API**, **470 feed**, and **30 operational-status** hosts). It is derived from source declarations in `scripts/`, `server/`, `api/`, and `src/`. Each row shows the configured provider identity and where the source is referenced. Syndication transports such as FeedBurner and Google News remain listed as hosts and are not counted as publishers.
 
 | Provider | Observed surface |
 | --- | --- |
@@ -23,7 +23,7 @@ This generated inventory covers **880 active source hosts** representing **857 a
 | 36kr.com (36kr.com) | feed — shared/news-catalog.json |
 | 444.hu (444.hu) | feed — shared/news-catalog.json |
 | a16z.com (a16z.com) | feed — shared/news-catalog.json |
-| abacus.worldmonitor.app (abacus.worldmonitor.app) | structured — scripts/check-analytics-collector.mjs, src/services/analytics.ts |
+| abacus.worldmonitor.app (abacus.worldmonitor.app) | structured — scripts/check-analytics-collector.mjs |
 | abc-iview-mediapackagestreams-2.akamaized.net (abc-iview-mediapackagestreams-2.akamaized.net) | feed — src/config/live-video-sources.ts |
 | abplivetv.pc.cdn.bitgravity.com (abplivetv.pc.cdn.bitgravity.com) | Excluded / candidate — No current fetch observed |
 | acleddata.com (acleddata.com) | structured — scripts/local/local-api-server.mjs, scripts/seed-conflict-intel.mjs, scripts/seed-unrest-events.mjs, scripts/shared/acled-oauth.mjs, +2 more |
@@ -152,7 +152,7 @@ This generated inventory covers **880 active source hosts** representing **857 a
 | cdc.gov (cdc.gov) | feed — shared/news-catalog.json |
 | cdn-ca2-na.lncnetworks.host (cdn-ca2-na.lncnetworks.host) | Excluded / candidate — No current fetch observed |
 | cdn-uw2-prod.tsv2.amagi.tv (cdn-uw2-prod.tsv2.amagi.tv) | feed — src/config/live-video-sources.ts |
-| cdn.debugbear.com (cdn.debugbear.com) | structured — src/bootstrap/debugbear-rum.ts |
+| cdn.debugbear.com (cdn.debugbear.com) | Excluded / candidate — No current fetch observed |
 | cdnlive.presstv.ir (cdnlive.presstv.ir) | Excluded / candidate — No current fetch observed |
 | CelesTrak (celestrak.org) | structured — scripts/_orbital-catalog.mjs, scripts/ais-relay.cjs |
 | CFTC Commitments of Traders (publicreporting.cftc.gov) | structured — scripts/seed-cot.mjs |
@@ -344,7 +344,7 @@ This generated inventory covers **880 active source hosts** representing **857 a
 | geospatial-usace.opendata.arcgis.com (geospatial-usace.opendata.arcgis.com) | structured — scripts/fetch-mirta-bases.mjs |
 | ghoapi.azureedge.net (ghoapi.azureedge.net) | structured — scripts/seed-resilience-static.mjs |
 | github.blog (github.blog) | feed — shared/news-catalog.json |
-| github.com (github.com) | structured — api/health.js, scripts/build-accuracy-page.mjs, scripts/build-plane-alert-watchlist.mjs, scripts/generate-airline-codes.mjs, +5 more |
+| github.com (github.com) | structured — api/health.js, scripts/build-accuracy-page.mjs, scripts/build-plane-alert-watchlist.mjs, scripts/generate-airline-codes.mjs, +4 more |
 | Global Affairs Canada (SEMA consolidated sanctions) (www.international.gc.ca) | structured — scripts/_sema-sanctions.mjs |
 | Global Energy Monitor (globalenergymonitor.org) | structured — scripts/import-gem-pipelines.mjs, src/components/PipelineStatusPanel.ts, src/components/StorageFacilityMapPanel.ts |
 | globalinitiative.net (globalinitiative.net) | feed — shared/news-catalog.json |
@@ -761,7 +761,7 @@ This generated inventory covers **880 active source hosts** representing **857 a
 | Travelpayouts flight-price data (api.travelpayouts.com) | structured — server/worldmonitor/aviation/v1/_providers/travelpayouts_data.ts |
 | treasury.gov (treasury.gov) | feed — shared/news-catalog.json |
 | trumpstruth.org (trumpstruth.org) | feed — shared/news-catalog.json |
-| tts.baidu.com (tts.baidu.com) | structured — src/main.ts |
+| tts.baidu.com (tts.baidu.com) | Excluded / candidate — No current fetch observed |
 | tuoitrenews.vn (tuoitrenews.vn) | Excluded / candidate — No current fetch observed |
 | turnerlive.warnermediacdn.com (turnerlive.warnermediacdn.com) | Excluded / candidate — No current fetch observed |
 | tv-trthaber.medya.trt.com.tr (tv-trthaber.medya.trt.com.tr) | feed — src/config/live-video-sources.ts |
@@ -910,7 +910,7 @@ This generated inventory covers **880 active source hosts** representing **857 a
 | www.eskom.co.za (www.eskom.co.za) | structured — scripts/shared/regional-energy-feeds.json |
 | www.ethiopia-insight.com (www.ethiopia-insight.com) | feed — shared/news-catalog.json |
 | www.eu-startups.com (www.eu-startups.com) | feed — shared/news-catalog.json |
-| www.euronews.com (www.euronews.com) | feed+structured — shared/news-catalog.json, src/main.ts |
+| www.euronews.com (www.euronews.com) | feed — shared/news-catalog.json |
 | www.facebook.com (www.facebook.com) | structured — src/services/story-share.ts |
 | www.factal.com (www.factal.com) | structured — scripts/comparison-shortlist.mjs |
 | www.fao.org (www.fao.org) | feed+structured — scripts/lib/food-prices-fetch.mjs, scripts/lib/food-prices.mjs, scripts/seed-fao-food-price-index.mjs, shared/news-catalog.json |

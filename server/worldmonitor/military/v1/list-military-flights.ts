@@ -18,8 +18,6 @@ import {
   hasRedistributableProviderAttribution,
   requiresRedistributableProviders,
 } from '../../../_shared/provider-redistribution';
-// @ts-expect-error JavaScript module has no declaration file.
-import { captureSilentError } from '../../../../api/_sentry-edge.js';
 
 const REDIS_CACHE_KEY = MILITARY_FLIGHTS_SEED_KEY;
 const REDIS_CACHE_TTL = 600; // 10 min — reduce upstream API pressure
@@ -353,12 +351,7 @@ async function fetchStableLiveSeedSnapshot(): Promise<LiveSeedRead> {
       REDIS_CACHE_TTL,
       false,
       (error) => {
-        void captureSilentError(error, {
-          tags: {
-            route: 'military/list-military-flights',
-            step: 'stable-live-snapshot-publish',
-          },
-        });
+        console.warn('[military-flights] stable snapshot write failed', error);
       },
     );
     const persisted = await readCachedJson(STABLE_LIVE_SNAPSHOT_CACHE_KEY);

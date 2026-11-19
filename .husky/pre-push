@@ -579,11 +579,6 @@ if changed '^(src/|scripts/(enforce-overlay-reload-policy|lib/source-scan)\.mjs$
   npm run lint:overlay-reload-policy || exit 1
 fi
 
-if changed '^(src/|api/|server/|scripts/check-sentry-coverage\.mjs$)'; then
-  echo "Running Sentry-coverage check..."
-  node scripts/check-sentry-coverage.mjs || exit 1
-fi
-
 if changed '^(api/health\.js|scripts/check-health-probe-cutovers\.mts)$'; then
   echo "Running health-probe cutover check..."
   node --import tsx scripts/check-health-probe-cutovers.mts origin/main || exit 1

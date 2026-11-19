@@ -4,9 +4,8 @@ import type { CorrelationSnapshotState } from '@/services/correlation-snapshots'
 
 const mocks = vi.hoisted(() => ({
   fetch: vi.fn(), hydrate: vi.fn(), slowTier: vi.fn(), read: vi.fn(), write: vi.fn(),
-  deduct: vi.fn(), premium: vi.fn(), sentry: vi.fn(),
+  deduct: vi.fn(), premium: vi.fn(),
 }));
-vi.mock('@/bootstrap/sentry-defer', () => ({ enqueueSentryCall: mocks.sentry }));
 vi.mock('@/services/generated-rpc-clients', () => ({
   IntelligenceServiceClient: class { deductSituation = mocks.deduct; },
 }));
@@ -281,7 +280,6 @@ describe('correlation snapshot recovery', () => {
     expect(mocks.fetch).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(3 * MINUTE);
     expect(mocks.fetch).toHaveBeenCalledTimes(1);
-    expect(mocks.sentry).not.toHaveBeenCalled();
     mocks.fetch.mockResolvedValue(payload());
     online.mockReturnValue(true);
     window.dispatchEvent(new Event('online'));
@@ -336,29 +334,6 @@ describe('correlation snapshot recovery', () => {
     await settle();
     expect(mocks.fetch).toHaveBeenCalledTimes(2);
     expect(result.latest().snapshot).toBeNull();
-  });
-
-  it('reports a sustained online failure once per episode and survives telemetry failure', async () => {
-    mocks.fetch.mockResolvedValue(payload(null));
-    mocks.sentry.mockImplementation(() => { throw new Error('telemetry unavailable'); });
-    const result = watch();
-    await vi.advanceTimersByTimeAsync(40_525);
-    expect(mocks.sentry).toHaveBeenCalledTimes(1);
-    const captureMessage = vi.fn();
-    mocks.sentry.mock.calls[0]![0]({ captureMessage });
-    expect(captureMessage).toHaveBeenCalledWith('Correlation snapshot recovery stalled', {
-      level: 'warning', tags: { component: 'correlation-snapshots' }, extra: { domains: ['economic'] },
-    });
-    await vi.advanceTimersByTimeAsync(5 * MINUTE);
-    expect(mocks.sentry).toHaveBeenCalledTimes(1);
-    mocks.fetch.mockResolvedValue(payload([], Date.now()));
-    window.dispatchEvent(new Event('online'));
-    await settle();
-    expect(result.latest().status).toBe('current');
-    mocks.fetch.mockResolvedValue(undefined);
-    window.dispatchEvent(new Event('online'));
-    await vi.advanceTimersByTimeAsync(40_525);
-    expect(mocks.sentry).toHaveBeenCalledTimes(2);
   });
 
   it.each([0, 1])('bounds retry jitter with random value %s', async random => {

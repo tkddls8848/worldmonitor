@@ -25,8 +25,6 @@ const {
 
 vi.mock('@/services/supply-chain', () => ({ fetchRouteExplorerLane, fetchRouteImpact }));
 vi.mock('@/services/resilience', () => ({ getResilienceScore }));
-vi.mock('@/services/auth-state', () => ({ getAuthState: () => ({ user: null, isPending: false }) }));
-vi.mock('@/services/analytics', () => ({ track: vi.fn(), trackGateHit: vi.fn() }));
 
 import { RouteExplorer } from '@/components/RouteExplorer/RouteExplorer';
 

@@ -6,8 +6,6 @@ import type {
 
 import { logCacheReadError, readCachedJson } from '../../../_shared/redis';
 import { markNoStoreFallbackResponse } from '../../../_shared/response-headers';
-// @ts-expect-error -- JS module, no declaration file
-import { captureSilentError } from '../../../../api/_sentry-edge.js';
 
 const CRUDE_KEY = 'economic:crude-inventories:v1';
 const SPR_KEY = 'economic:spr:v1';
@@ -189,7 +187,6 @@ export async function getOilInventories(
     return response;
   } catch (err) {
     console.error('[getOilInventories] Redis read failed:', err);
-    captureSilentError(err, { tags: { handler: 'getOilInventories' } });
     return markNoStoreFallbackResponse(ctx.request, { crudeWeeks: [], natGasWeeks: [], updatedAt: '' });
   }
 }

@@ -1,4 +1,3 @@
-import { observeDashboardFirstInteraction } from '@/components/dashboard-interaction-analytics';
 import type {
   AppContext,
   AppModule,
@@ -68,20 +67,6 @@ import {
   disconnectAisStream,
   isAisConfigured,
 } from '@/services';
-import {
-  track,
-  trackMissionPickerShown,
-  type MissionPickerTrigger,
-  trackMissionSelected,
-  trackPanelView,
-  trackVariantSwitch,
-  replayPendingDashboardFirstInteraction,
-  trackMapViewChange,
-  trackMapLayerToggle,
-  trackPanelToggled,
-  trackDownloadClicked,
-  trackLayoutCustomized,
-} from '@/services/analytics';
 import { detectPlatform, allButtons, buttonsForPlatform } from '@/components/DownloadBanner';
 import type { Platform } from '@/components/DownloadBanner';
 import { isOpenableExternalUrl, openExternalUrl } from '@/services/external-navigation';
@@ -94,11 +79,6 @@ import { TvModeController } from '@/services/tv-mode';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 import { scheduleAfterFirstPaint } from '@/utils/after-paint';
 import { declareOverlay, isModalOpen } from '@/utils/open-modal';
-import {
-  isAgentAnalyticsSuppressed,
-  isAgentPanelViewSuppressed,
-  suppressNextAgentPanelView,
-} from '@/services/agent-analytics-privacy';
 import { escapeHtml } from '@/utils/sanitize';
 import {
   buildEmbedIframeSnippet,
@@ -280,7 +260,6 @@ export interface EventHandlerCallbacks {
 }
 
 export class EventHandlerManager implements AppModule {
-  private stopInteractionAnalytics: (() => void) | null = null;
   private ctx: AppContext;
   private callbacks: EventHandlerCallbacks;
 
@@ -356,9 +335,6 @@ export class EventHandlerManager implements AppModule {
   }
 
   init(): void {
-    replayPendingDashboardFirstInteraction();
-    this.stopInteractionAnalytics?.();
-    this.stopInteractionAnalytics = observeDashboardFirstInteraction(this.ctx.container);
     this.setupSearchControls();
     this.setupEventListeners();
     this.mobilePrimaryNav.init();
@@ -380,12 +356,11 @@ export class EventHandlerManager implements AppModule {
    * WebMCP catalog toggles use `applySetPanelEnabled`, which also enforces
    * monitor compatibility and entitlements on enable.
    */
-  enablePanelById(panelId: string, options?: { trackAnalytics?: boolean }): boolean {
+  enablePanelById(panelId: string): boolean {
     const config = this.ctx.panelSettings[panelId];
     if (!config) return false;
     if (config.enabled) return true;
     userSetPanelEnabled(config, true);
-    if (options?.trackAnalytics !== false) trackPanelToggled(panelId, true);
     saveToStorage(STORAGE_KEYS.panels, this.ctx.panelSettings);
     this.applyPanelSettings();
     this.ctx.unifiedSettings?.refreshPanelToggles();
@@ -416,10 +391,6 @@ export class EventHandlerManager implements AppModule {
         variant: SITE_VARIANT,
         persist: (settings) => saveToStorage(STORAGE_KEYS.panels, settings),
         applyPanelSettings: () => this.applyPanelSettings(),
-        trackToggle: trackPanelToggled,
-        beforeApply: (committedPanelId, committedEnabled) => {
-          if (committedEnabled) suppressNextAgentPanelView(committedPanelId);
-        },
       },
     );
   }
@@ -468,8 +439,6 @@ export class EventHandlerManager implements AppModule {
 
   destroy(): void {
     this.closeEmbedDialog();
-    this.stopInteractionAnalytics?.();
-    this.stopInteractionAnalytics = null;
     this.debouncedUrlSync.cancel();
     this.debouncedWebcamReload.cancel();
     if (this.boundFullscreenHandler) {
@@ -611,18 +580,17 @@ export class EventHandlerManager implements AppModule {
     // times); tracking registered IDs in a Set means a button absent at an
     // early call still gets wired when it appears, instead of being permanently
     // skipped by a single latched boolean. (#4403 review)
-    const wireSearchButton = (id: string, source: string) => {
+    const wireSearchButton = (id: string) => {
       if (this.registeredSearchButtons.has(id)) return;
       const el = document.getElementById(id);
       if (!el) return;
       el.addEventListener('click', () => {
-        track('search-open', { source });
         this.callbacks.openSearch();
       });
       this.registeredSearchButtons.add(id);
     };
-    wireSearchButton('searchBtn', 'desktop');
-    wireSearchButton('mobileSearchBtn', 'mobile');
+    wireSearchButton('searchBtn');
+    wireSearchButton('mobileSearchBtn');
     if (!this.boundSearchKeyHandler) {
       this.boundSearchKeyHandler = (e: KeyboardEvent) => {
         // !e.shiftKey so Cmd/Ctrl+Shift+K (e.g. Firefox web console) doesn't
@@ -716,7 +684,6 @@ export class EventHandlerManager implements AppModule {
       // Live-media teardown is handled centrally by applyPanelSettings() below, which
       // calls stopLiveMediaForClose() on every now-disabled panel. Calling it here too
       // double-fired the lifecycle hook for live-news / live-webcams.
-      trackPanelToggled(panelId, false);
       saveToStorage(STORAGE_KEYS.panels, this.ctx.panelSettings);
       this.applyPanelSettings();
       this.ctx.unifiedSettings?.refreshPanelToggles();
@@ -764,7 +731,6 @@ export class EventHandlerManager implements AppModule {
     const regionSelect = document.getElementById('regionSelect') as HTMLSelectElement;
     regionSelect?.addEventListener('change', () => {
       this.ctx.map?.setView(regionSelect.value as MapView);
-      trackMapViewChange(regionSelect.value);
     });
 
     this.boundResizeHandler = debounce(() => {
@@ -859,7 +825,7 @@ export class EventHandlerManager implements AppModule {
         if (this.ctx.isDestroyed) return;
         if (this.missionPresetPopover || loadStoredMissionPreset() || isMissionPresetPromptDismissed()) return;
         if (isModalOpen(document)) return;
-        this.openMissionPresetPopover(document.getElementById('missionPresetBtn'), false, 'auto');
+        this.openMissionPresetPopover(document.getElementById('missionPresetBtn'), false);
       });
     }
   }
@@ -912,13 +878,11 @@ export class EventHandlerManager implements AppModule {
   private openMissionPresetPopover(
     anchor: HTMLElement | null,
     mobile: boolean,
-    trigger: MissionPickerTrigger = 'manual',
   ): void {
     this.closeMissionPresetPopover();
     // One emission site covers every path onto the picker: the desktop button,
     // the mobile menu item, the deferred auto-open, and the WebMCP entry
     // (tagged 'agent' so the human funnel reads clean).
-    trackMissionPickerShown(trigger, mobile ? 'mobile' : 'desktop');
     // The desktop trigger (#missionPresetBtn) is display:none on mobile, where the
     // popover opens from the menu item instead, so remember the real opener.
     this.missionPresetReturnFocus = anchor ?? document.getElementById('missionPresetBtn');
@@ -1150,7 +1114,6 @@ export class EventHandlerManager implements AppModule {
     for (const layer of layerKeys) {
       const enabled = !!nextLayers[layer];
       if (!!previousLayers[layer] === enabled) continue;
-      trackMapLayerToggle(layer, enabled, 'programmatic');
       this.runMapLayerSideEffects(layer, enabled);
     }
   }
@@ -1178,17 +1141,6 @@ export class EventHandlerManager implements AppModule {
     saveToStorage(STORAGE_KEYS.mapLayers, mapLayers);
     this.persistMissionPanelOrder(applied.panelOrder);
     saveMissionPreset(applied.preset.id);
-    trackMissionSelected(applied.preset.id, source);
-    if (source === 'agent') {
-      // An agent-applied preset mounts panels the user never asked to see.
-      // Suppress the panel-view records those mounts trigger (same rule the
-      // WebMCP search flows apply via search-selection-dispatcher) so the
-      // funnel's denominator stays human.
-      for (const [key, cfg] of Object.entries(panelSettings)) {
-        if (cfg?.enabled) suppressNextAgentPanelView(key);
-      }
-    }
-
     this.applyPanelSettings();
     this.callbacks.applySavedPanelOrder?.(applied.panelOrder);
     this.ctx.unifiedSettings?.refreshPanelToggles();
@@ -1219,7 +1171,7 @@ export class EventHandlerManager implements AppModule {
     if (this.ctx.isDestroyed) return false;
     const mobile = this.ctx.isMobile;
     const anchor = document.getElementById(mobile ? 'mobileMenuMission' : 'missionPresetBtn');
-    this.openMissionPresetPopover(anchor, mobile, 'agent');
+    this.openMissionPresetPopover(anchor, mobile);
     return this.missionPresetPopover !== null;
   }
 
@@ -1426,7 +1378,6 @@ export class EventHandlerManager implements AppModule {
 
   applyMapLayerChange(layer: keyof MapLayers, enabled: boolean, source: 'user' | 'programmatic'): void {
     console.log(`[App.onLayerChange] ${layer}: ${enabled} (${source})`);
-    if (!isAgentAnalyticsSuppressed()) trackMapLayerToggle(layer, enabled, source);
     this.ctx.mapLayers[layer] = enabled;
     saveToStorage(STORAGE_KEYS.mapLayers, this.ctx.mapLayers);
     this.syncUrlState();
@@ -1689,8 +1640,6 @@ export class EventHandlerManager implements AppModule {
       dropdown.querySelectorAll<HTMLAnchorElement>('.dl-dd-btn').forEach(a => {
         a.addEventListener('click', (e) => {
           e.preventDefault();
-          const plat = new URLSearchParams(a.search).get('platform') || 'unknown';
-          trackDownloadClicked(plat);
           window.open(a.href, '_blank', 'noopener,noreferrer');
           dropdown.classList.remove('open');
         });
@@ -1754,8 +1703,6 @@ export class EventHandlerManager implements AppModule {
     a.rel = 'noopener';
     a.addEventListener('click', (e) => {
       e.preventDefault();
-      const plat = new URLSearchParams(a.search).get('platform') || 'unknown';
-      trackDownloadClicked(plat);
       window.open(btn.href, '_blank', 'noopener,noreferrer');
     });
     mount.replaceWith(a);
@@ -1808,7 +1755,6 @@ export class EventHandlerManager implements AppModule {
     variant: string,
     options: { href?: string; isLocalDev: boolean },
   ): Promise<'reload' | 'assign' | 'blocked'> {
-    trackVariantSwitch(SITE_VARIANT, variant);
     await this.exitFullscreenForNavigation();
 
     if (this.ctx.isDesktopApp || options.isLocalDev) {
@@ -1964,13 +1910,9 @@ export class EventHandlerManager implements AppModule {
           const current = this.ctx.panelSettings[key];
           if (!current) {
             this.ctx.panelSettings[key] = { ...nextConfig };
-            trackPanelToggled(key, nextConfig.enabled);
             return;
           }
           const enabledChanged = current.enabled !== nextConfig.enabled;
-          if (enabledChanged) {
-            trackPanelToggled(key, nextConfig.enabled);
-          }
           Object.assign(current, nextConfig);
           if (nextConfig.fontScale === undefined) delete current.fontScale;
           // Object.assign cannot DELETE a key, so a stale gate marker would
@@ -2136,39 +2078,6 @@ export class EventHandlerManager implements AppModule {
       const military = this.ctx.intelligenceCache.military?.flights ?? [];
       this.callbacks.updateFlightSource?.(positions, military);
     });
-  }
-
-  setupPanelViewTracking(): void {
-    const viewedPanels = new Set<string>();
-    const observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.3) {
-          const id = (entry.target as HTMLElement).dataset.panel;
-          if (id && !viewedPanels.has(id)) {
-            if (isAgentPanelViewSuppressed(id)) continue;
-            viewedPanels.add(id);
-            trackPanelView(id);
-          }
-        }
-      }
-    }, { threshold: 0.3 });
-
-    const grid = document.getElementById('panelsGrid');
-    if (grid) {
-      const observeGridPanels = () => {
-        for (const child of Array.from(grid.children)) {
-          if ((child as HTMLElement).dataset.panel) {
-            observer.observe(child);
-          }
-        }
-      };
-      observeGridPanels();
-      // Panels mounted after boot (mission apply, add-panel, tab switch) must
-      // join the funnel denominator too; observe() is idempotent, so a bulk
-      // re-scan per childList change is cheap and cannot double-count.
-      const lateMounts = new MutationObserver(() => observeGridPanels());
-      lateMounts.observe(grid, { childList: true });
-    }
   }
 
   shouldShowIntelligenceNotifications(): boolean {
@@ -2470,7 +2379,6 @@ export class EventHandlerManager implements AppModule {
       const current = mainContent.style.getPropertyValue('--map-col-width');
       if (current && dragMoved) {
         writeStorageValue('map-col-width', current);
-        if (Number.parseFloat(current).toFixed(1) !== dragStartPct) trackLayoutCustomized('map-divider');
       }
       dragMoved = false;
       syncMapColNarrowState();
@@ -2527,7 +2435,6 @@ export class EventHandlerManager implements AppModule {
       mainContent.style.setProperty('--map-col-width', value);
       this.ctx.map?.resize();
       writeStorageValue('map-col-width', value);
-      if (newPct.toFixed(1) !== currentPct.toFixed(1)) trackLayoutCustomized('map-divider');
       syncMapColNarrowState();
       syncWidthSeparatorAria();
     });

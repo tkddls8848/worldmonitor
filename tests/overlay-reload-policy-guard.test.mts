@@ -251,7 +251,6 @@ describe('overlay reload-contract gate', () => {
       'src/components/SignalModal.ts :: this.element',
       'src/components/StoryModal.ts :: modalEl',
       'src/components/market-chart-modal.ts :: modalEl',
-      'src/services/pwa-install.ts :: sheet',
     ]);
     assert.deepEqual(safeDeclarationsIn("declareOverlay(el, { reload: 'blocking' })"), []);
     assert.deepEqual(safeDeclarationsIn("declareOverlay(root.querySelector('.x')!, { reload: 'safe' })"), ["root.querySelector('.x')!"]);
@@ -340,9 +339,9 @@ describe('overlay reload-contract gate', () => {
     assert.deepEqual(unguardedReloadsIn(fixture), []);
   });
 
-  it('both reload consumers are in the scanned population and guarded', () => {
+  it('the stale-bundle reload consumer is in the scanned population and guarded', () => {
     // Without this the lockstep rule could pass by scanning nothing.
-    for (const consumer of ['src/bootstrap/stale-bundle-check.ts', 'src/bootstrap/sw-update.ts']) {
+    for (const consumer of ['src/bootstrap/stale-bundle-check.ts']) {
       assert.ok(scan.reloadConsumers.includes(consumer), `${consumer} must be seen as a reload consumer`);
     }
     assert.deepEqual(

@@ -14,8 +14,6 @@ export const config = { runtime: 'edge', regions: ['iad1', 'lhr1', 'fra1', 'sfo1
 
 // @ts-expect-error — JS module, no declaration file
 import { getCorsHeaders } from './_cors.js';
-// @ts-expect-error — JS module, no declaration file
-import { captureSilentError } from './_sentry-edge.js';
 import { createTravelRiskExportHandler } from '../server/_shared/travel-risk-export';
 import { createTravelRiskTool } from './mcp/registry/travel-risk-tool';
 import type { TravelRiskResult } from './mcp/registry/_travel-risk-document';
@@ -30,9 +28,6 @@ export default createTravelRiskExportHandler({
   },
   now: () => Date.now(),
   captureError: (error, context) => {
-    captureSilentError(error, {
-      tags: { route: 'api/travel-risk-assessment', step: context.step },
-      fingerprint: ['api/travel-risk-assessment', context.step, error instanceof Error ? error.name : 'Error'],
-    });
+    console.error(`[travel-risk-assessment] ${context.step} failed`, error);
   },
 });

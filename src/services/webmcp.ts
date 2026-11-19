@@ -51,7 +51,6 @@
 // Register synchronously from the dashboard entry before loading App. Tool
 // callbacks await App bindings, so discovery does not wait for the UI bundle.
 
-import { trackPrivacyRestricted, type UmamiEvent } from './analytics';
 import { markLcpDebug } from '../utils/lcp-debug';
 import {
   WEBMCP_SPA_TOOL,
@@ -442,7 +441,10 @@ export class DashboardBindingError extends Error {
   }
 }
 
-type WebMcpAnalytics = (event: UmamiEvent, data?: Record<string, unknown>) => void;
+type WebMcpAnalytics = (event: string, data?: Record<string, unknown>) => void;
+
+/** The default sink: invocation events are not recorded anywhere. Tests inject their own. */
+const discardWebMcpEvent: WebMcpAnalytics = () => {};
 type WebMcpInvocationOutcome = 'success' | 'denied' | 'failure';
 type WebMcpInvocationReason =
   | 'completed'
@@ -676,7 +678,7 @@ class SafeWebMcpError extends Error {
 
 function reportWebMcpEvent(
   trackEvent: WebMcpAnalytics,
-  event: UmamiEvent,
+  event: string,
   data: Record<string, unknown>,
 ): void {
   try {
@@ -1835,7 +1837,7 @@ export function createWebMcpBindingsGate(
 
 export function buildWebMcpTools(
   bindings: WebMcpAppBindings | Promise<WebMcpAppBindings>,
-  trackEvent: WebMcpAnalytics = trackPrivacyRestricted,
+  trackEvent: WebMcpAnalytics = discardWebMcpEvent,
 ): DashboardWebMcpTool[] {
   const bindingsGate = createWebMcpBindingsGate(bindings);
   let app: WebMcpAppBindings;
@@ -3214,7 +3216,7 @@ export function registerWebMcpTools(
 
   const runtimeWindow = runtime.window
     ?? (typeof window === 'undefined' ? null : window);
-  const trackEvent = runtime.track ?? trackPrivacyRestricted;
+  const trackEvent = runtime.track ?? discardWebMcpEvent;
   const controller = new AbortController();
   const tools = buildWebMcpTools(raceWebMcpAbort(app, controller.signal), trackEvent);
   let registrationStarted = false;

@@ -54,7 +54,6 @@ import { NQ_PULSE_DISCLOSURE } from '@/config/nq-context';
 import { t } from '@/services/i18n';
 import { getPanelDisplayName } from '@/services/panel-display-name';
 import { getCurrentTheme } from '@/utils';
-import { trackCriticalBannerAction, trackMapViewChange, trackLayoutCustomized } from '@/services/analytics';
 import { getStoredMapModePreference } from '@/services/map-mode-preference';
 import { loadWidgets } from '@/services/widget-store';
 import { getAllowedLayerKeys, type MapVariant } from '@/config/map-layer-definitions';
@@ -1916,7 +1915,6 @@ export class PanelLayoutManager implements AppModule {
 
     this.criticalBannerEl.querySelector('.banner-view')?.addEventListener('click', () => {
       console.log('[Banner] View Region clicked:', top.theaterId, 'lat:', top.centerLat, 'lon:', top.centerLon);
-      trackCriticalBannerAction('view', top.theaterId);
       if (typeof top.centerLat === 'number' && typeof top.centerLon === 'number') {
         if (this.ctx.isMobile) this.revealMobileMap();
         this.ctx.map?.setCenter(top.centerLat, top.centerLon, 4);
@@ -1926,7 +1924,6 @@ export class PanelLayoutManager implements AppModule {
     });
 
     this.criticalBannerEl.querySelector('.banner-dismiss')?.addEventListener('click', () => {
-      trackCriticalBannerAction('dismiss', top.theaterId);
       this.criticalBannerEl?.classList.add('dismissed');
       document.body.classList.remove('has-critical-banner');
       writeSessionStorageValue('banner-dismissed', Date.now().toString());
@@ -2685,9 +2682,6 @@ export class PanelLayoutManager implements AppModule {
         .then(({ applyAgentBusAction }) => {
           panel.setDashboardActionHandler((action) => applyAgentBusAction(this.ctx, action, {
             getPanelConfig: (panelId) => getEffectivePanelConfig(panelId, SITE_VARIANT),
-            applyViewChange: (viewAction) => {
-              if (viewAction.view) trackMapViewChange(viewAction.view);
-            },
             applyLayerChange: this.callbacks.applyMapLayerChange,
           }));
         })
@@ -3985,7 +3979,6 @@ export class PanelLayoutManager implements AppModule {
             this.bottomSetMemory.delete(key);
           }
           this.savePanelOrder();
-          trackLayoutCustomized('panel-reorder');
         }
       }
       dragStarted = false;
@@ -4045,7 +4038,6 @@ export class PanelLayoutManager implements AppModule {
           });
           if (moved) {
             this.savePanelOrder();
-            trackLayoutCustomized('panel-reorder');
           }
           moveBtn.focus();
           return;
@@ -4063,7 +4055,6 @@ export class PanelLayoutManager implements AppModule {
         if (back) parent.insertBefore(el, sibling);
         else parent.insertBefore(el, sibling.nextElementSibling);
         this.savePanelOrder();
-        trackLayoutCustomized('panel-reorder');
         // The button travels with the panel; keep focus on it so repeated
         // presses keep moving the same panel.
         moveBtn.focus();

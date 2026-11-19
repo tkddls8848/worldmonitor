@@ -104,7 +104,6 @@ import type { PositioningPanel } from '@/components/PositioningPanel';
 import type { GoldIntelligencePanel } from '@/components/GoldIntelligencePanel';
 import { isDesktopRuntime, waitForSidecarReady } from '@/services/runtime';
 import { BETA_MODE } from '@/config/beta';
-import { track, trackEvent, trackDeeplinkOpened, trackMapViewChange } from '@/services/analytics';
 import { preloadCountryGeometry, isCountryGeometryLoaded, getCountryNameByCode } from '@/services/country-geometry';
 import { initI18n, t, I18N_RESOURCES_LOADED_EVENT, type I18nResourcesLoadedDetail } from '@/services/i18n';
 import { initDeferredDashboardFonts } from '@/bootstrap/secondary-startup';
@@ -1404,7 +1403,6 @@ export class App {
         });
       },
       openSearch: () => {
-        track('search-open', { source: 'pro-onboarding' });
         void this.openSearch();
       },
       loadAllData: (forceAll, trigger) => this.dataLoader.loadAllData(forceAll, trigger),
@@ -1492,9 +1490,7 @@ export class App {
               signal: options?.signal,
             })
           ),
-          enablePanel: (panelId, options) => this.eventHandlers.enablePanelById(panelId, {
-            trackAnalytics: options?.trackDetailedAnalytics !== false,
-          }),
+          enablePanel: (panelId) => this.eventHandlers.enablePanelById(panelId),
         });
         manager.init();
         if (this.state.isDestroyed) {
@@ -1884,9 +1880,6 @@ export class App {
           signal: execution?.signal,
           applierOptions: {
             getPanelConfig: (panelId) => getEffectivePanelConfig(panelId, SITE_VARIANT),
-            applyViewChange: (viewAction) => {
-              if (viewAction.view) trackMapViewChange(viewAction.view);
-            },
             getMapLayerRuntimeAvailability: this.getMapLayerRuntimeAvailability,
             applyLayerChange: (layer, enabled, source) => (
               this.eventHandlers.applyMapLayerChange(layer, enabled, source)
@@ -2157,7 +2150,6 @@ export class App {
   }
 
   public async init(webMcpController: AbortController | null): Promise<void> {
-    const initStart = performance.now();
     markLcpDebug('wm:boot:app-init-start');
 
     // src/main.ts registers WebMCP before loading App. Own its controller before
@@ -2525,11 +2517,6 @@ export class App {
     this.desktopUpdater.init();
 
     // Analytics
-    trackEvent('wm_app_loaded', {
-      load_time_ms: Math.round(performance.now() - initStart),
-      panel_count: Object.keys(this.state.panels).length,
-    });
-    this.eventHandlers.setupPanelViewTracking();
   }
 
   /**
@@ -2895,7 +2882,6 @@ export class App {
       // /stocks/0700.HK parses to null — returning there would open nothing
       // AND cancel the ?c= / ?country= / ?chokepoint= deep links below.
       if (stockSymbol) {
-        trackDeeplinkOpened('stock', stockSymbol);
         this.stockDeepLinkTimer = window.setTimeout(() => {
           this.stockDeepLinkTimer = null;
           if (this.state.isDestroyed) return;
@@ -2908,7 +2894,6 @@ export class App {
     if (url.pathname === '/story' || storyCode) {
       const countryCode = storyCode;
       if (countryCode) {
-        trackDeeplinkOpened('country', countryCode);
         const countryName = getCountryNameByCode(countryCode.toUpperCase()) || countryCode;
         setTimeout(() => {
           void this.countryIntel.openCountryBriefByCode(countryCode.toUpperCase(), countryName, {
@@ -2929,7 +2914,6 @@ export class App {
     this.pendingDeepLinkCountry = null;
     this.pendingDeepLinkExpanded = false;
     if (deepLinkCountry) {
-      trackDeeplinkOpened('country', deepLinkCountry);
       const cName = CountryIntelManager.resolveCountryName(deepLinkCountry);
       // Set in the same task as setupUrlStateSync(), before its first debounced
       // write, and only here: search and story links return above and open no
@@ -2958,7 +2942,6 @@ export class App {
     const deepLinkChokepoint = this.pendingDeepLinkChokepoint;
     this.pendingDeepLinkChokepoint = null;
     if (deepLinkChokepoint) {
-      trackDeeplinkOpened('chokepoint', deepLinkChokepoint);
       this.state.activeChokepoint = deepLinkChokepoint;
       this.chokepointDeepLinkTimer = window.setTimeout(() => {
         this.chokepointDeepLinkTimer = null;

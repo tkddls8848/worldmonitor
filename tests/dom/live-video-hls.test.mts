@@ -43,14 +43,8 @@ const hlsjs = vi.hoisted(() => {
 
   return { FakeHls, instances };
 });
-const analytics = vi.hoisted(() => ({ track: vi.fn() }));
 
 vi.mock('hls.js', () => ({ default: hlsjs.FakeHls }));
-
-vi.mock('@/services/analytics', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/services/analytics')>()),
-  track: analytics.track,
-}));
 
 const STREAM = 'https://live-hls-apps-aje-fa.getaj.net/AJE/index.m3u8';
 const LIVE: LiveVideoState = { phase: 'live', via: 'hls', title: null, author: null, watchUrl: null };
@@ -113,7 +107,6 @@ function everShownLive(tile: HlsTile): boolean {
 beforeEach(() => {
   vi.useFakeTimers();
   hlsjs.instances.length = 0;
-  analytics.track.mockClear();
 });
 
 afterEach(() => {
@@ -220,7 +213,6 @@ describe('live video HLS transport', () => {
     expect(everShownLive(tile)).toBe(false);
     expect(lastState(tile)).toEqual({ phase: 'offline', reason: 'not-live', watchUrl: null });
     expect(tile.container.querySelector('video')).toBeNull();
-    expect(analytics.track).toHaveBeenCalledWith('live-video-attempt-failed', { slot: 'webcams/hls-test', kind: 'hls', outcome: 'not-started', detail: 'buffering' });
   });
 
   it('reports why a live playlist never started: the browser refused play(), or it played with frames but a frozen clock', async () => {
@@ -230,7 +222,6 @@ describe('live video HLS transport', () => {
       const refused = await openLivePlaylistTile();
       expect(refused.video.paused).toBe(true);
       await vi.advanceTimersByTimeAsync(LIVE_VIDEO_TIMING.verdictDeadlineMs);
-      expect(analytics.track).toHaveBeenLastCalledWith('live-video-attempt-failed', { slot: 'webcams/hls-test', kind: 'hls', outcome: 'not-started', detail: 'refused-NotAllowedError' });
     } finally {
       playSpy.mockRestore();
     }
@@ -244,7 +235,6 @@ describe('live video HLS transport', () => {
       restarted.video.dispatchEvent(new Event('play'));
       expect(restarted.video.paused).toBe(true);
       await vi.advanceTimersByTimeAsync(LIVE_VIDEO_TIMING.verdictDeadlineMs);
-      expect(analytics.track).toHaveBeenLastCalledWith('live-video-attempt-failed', { slot: 'webcams/hls-test', kind: 'hls', outcome: 'not-started', detail: 'paused' });
     } finally {
       abortSpy.mockRestore();
     }
@@ -253,14 +243,12 @@ describe('live video HLS transport', () => {
     const frozen = await openLivePlaylistTile();
     Object.defineProperty(frozen.video, 'readyState', { configurable: true, value: 4 /* HAVE_ENOUGH_DATA */ });
     await vi.advanceTimersByTimeAsync(LIVE_VIDEO_TIMING.verdictDeadlineMs);
-    expect(analytics.track).toHaveBeenLastCalledWith('live-video-attempt-failed', { slot: 'webcams/hls-test', kind: 'hls', outcome: 'not-started', detail: 'frozen' });
   });
 
   it('reports the hls.js error detail with a fatal failure', async () => {
     await openLivePlaylistTile();
     hlsjs.instances[hlsjs.instances.length - 1]!.raiseFatal('manifestLoadError');
     await poll();
-    expect(analytics.track).toHaveBeenCalledWith('live-video-attempt-failed', { slot: 'webcams/hls-test', kind: 'hls', outcome: 'hls-fatal', detail: 'manifestLoadError' });
   });
 
   it('reports the media error code when the video element fails', async () => {
@@ -268,7 +256,6 @@ describe('live video HLS transport', () => {
     Object.defineProperty(tile.video, 'error', { configurable: true, value: { code: 3 } });
     tile.video.dispatchEvent(new Event('error'));
     await poll();
-    expect(analytics.track).toHaveBeenCalledWith('live-video-attempt-failed', { slot: 'webcams/hls-test', kind: 'hls', outcome: 'hls-fatal', detail: 'media-error-3' });
   });
 
   it('goes live only once the media clock has advanced a full second while playing', async () => {

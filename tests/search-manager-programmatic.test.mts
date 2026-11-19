@@ -927,116 +927,6 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
     }
   });
 
-  it('re-arms agent view suppression when a slow deferred-panel retry finally mounts', async () => {
-    const scenario = makeScenario([
-      commandMatch('panel:test-panel', 'panels', 'Test panel'),
-    ]);
-    scenario.runtime.deferTimers = true;
-    delete scenario.manager.searchSelection.scrollToPanelWhenReady;
-    delete scenario.manager.searchSelection.scrollToPanel;
-    delete scenario.manager.searchSelection.dispatchPanelTabAfterPresentation;
-    let mounted = false;
-    let notifyMutation = (): void => {};
-    let simulatedElapsedMs = 0;
-    let observerObserved = false;
-    const suppressionTimes: number[] = [];
-    scenario.manager.searchSelection.bindings.suppressNextAgentPanelView = () => {
-      suppressionTimes.push(simulatedElapsedMs);
-    };
-    const target = {
-      classList: { add: () => {}, remove: () => {} },
-      isConnected: true,
-      offsetWidth: 1,
-      scrollIntoView: () => scenario.calls.scrolledPanels.push('test-panel'),
-    };
-    const shell = {
-      isConnected: true,
-      scrollIntoView: () => scenario.calls.scrolledPanels.push('deferred-shell'),
-    };
-    const runtimeGlobal = globalThis as unknown as {
-      document?: {
-        body: object;
-        querySelector: (selector: string) => typeof target | typeof shell | null;
-      };
-      MutationObserver?: typeof MutationObserver;
-    };
-    const previousDocument = runtimeGlobal.document;
-    const previousMutationObserver = Object.getOwnPropertyDescriptor(globalThis, 'MutationObserver');
-    runtimeGlobal.document = {
-      body: {},
-      querySelector: (selector) => {
-        if (selector.includes(':not([data-deferred-panel])')) return mounted ? target : null;
-        return selector.includes('[data-deferred-panel]') ? shell : null;
-      },
-    };
-    class MutationObserverDouble {
-      constructor(callback: () => void) {
-        notifyMutation = callback;
-      }
-
-      observe(): void { observerObserved = true; }
-      disconnect(): void {}
-      takeRecords(): MutationRecord[] { return []; }
-    }
-    Object.defineProperty(globalThis, 'MutationObserver', {
-      configurable: true,
-      writable: true,
-      value: MutationObserverDouble as unknown as typeof MutationObserver,
-    });
-
-    try {
-      const response = await scenario.manager.searchDashboard('needle', 'all', 10);
-      const key = response.results[0]?.key;
-      assert.ok(key);
-      const pendingOpen = scenario.manager.openSearchResult(key);
-      await Promise.resolve();
-      assert.deepEqual(scenario.calls.scrolledPanels, ['deferred-shell']);
-      assert.equal(observerObserved, true, 'the deferred wait must observe panel mounts');
-      assert.equal(
-        scenario.runtime.pendingTimers.size,
-        1,
-        'waiting uses one deadline rather than polling PanelLayout retry timing',
-      );
-      assert.deepEqual(
-        suppressionTimes,
-        [],
-        'a shell-only wait must not leave privacy suppression behind if the agent is cancelled',
-      );
-
-      let settled = false;
-      void pendingOpen.then(() => { settled = true; });
-      simulatedElapsedMs = 5_500;
-      notifyMutation();
-      await Promise.resolve();
-      assert.equal(settled, false, 'the failed initial load must keep waiting for PanelLayout retry');
-
-      simulatedElapsedMs += 1_000;
-      mounted = true;
-      notifyMutation();
-
-      assert.deepEqual(await pendingOpen, {
-        ok: true,
-        status: 'opened',
-        type: 'command',
-      });
-      assert.equal(simulatedElapsedMs, 6_500, 'the real panel mounted after the privacy TTL and retry gap');
-      assert.deepEqual(
-        suppressionTimes,
-        [6_500],
-        'privacy suppression must be armed at the real-panel scroll boundary',
-      );
-      assert.deepEqual(scenario.calls.scrolledPanels, ['deferred-shell', 'test-panel']);
-    } finally {
-      if (previousDocument === undefined) delete runtimeGlobal.document;
-      else runtimeGlobal.document = previousDocument;
-      if (previousMutationObserver) {
-        Object.defineProperty(globalThis, 'MutationObserver', previousMutationObserver);
-      } else {
-        delete runtimeGlobal.MutationObserver;
-      }
-    }
-  });
-
   it('disconnects a human deferred-panel wait when the dispatcher is destroyed', async () => {
     const scenario = makeScenario([]);
     scenario.runtime.deferTimers = true;
@@ -1086,7 +976,6 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
     try {
       const pendingScroll = scenario.manager.searchSelection.scrollToPanelWhenReady(
         'test-panel',
-        true,
       );
       await Promise.resolve();
       assert.deepEqual(scenario.calls.scrolledPanels, ['deferred-shell']);
@@ -1614,11 +1503,6 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
 
     assert.equal(scenario.manager.searchSelection.handleSearchResult(humanMatch.result), true);
     assert.equal(agentSignal?.aborted, true, 'human selection must abort the older agent presentation');
-    assert.deepEqual(scenario.runtime.detailedCountryAnalytics, [[
-      'CA',
-      'Canada',
-      'search',
-    ]]);
     assert.deepEqual(summarizeCountryBriefs(scenario.calls.countryBriefs), [
       ['US', 'United States', { trackDetailedAnalytics: false, hasSignal: true }],
       ['CA', 'Canada', { trackDetailedAnalytics: true }],

@@ -26,8 +26,6 @@ import {
 import { stripSourceSuffix } from '../../scripts/lib/brief-dedup-jaccard.mjs';
 import { getCachedJson, setCachedJson } from './redis';
 import { allowsProvider, type AiRoutingDecision } from './ai-routing-policy';
-// @ts-expect-error — JS module, no declaration file
-import { captureSilentError } from '../../api/_sentry-edge.js';
 
 /**
  * One embeddings call on a user-facing read path. Shorter than the seed
@@ -181,21 +179,9 @@ export async function embedQueryText(text: string): Promise<number[] | null> {
     return vector as number[];
   } catch (err) {
     // Degrades to upstreamUnavailable rather than a 5xx, so the caller sees a
-    // 200 with no records — report it, or a provider outage is indistinguishable
-    // from an empty history in every dashboard we have.
-    // AbortSignal.timeout(EMBED_TIMEOUT_MS) surfaces as TimeoutError /
-    // AbortError when the embeddings provider is slow. Downgrade those to
-    // warning; keep unexpected throws at error. Same gate as the Convex
-    // read path (Sentry WORLDMONITOR-187).
+    // 200 with no records; the log line keeps a provider outage visible.
     const msg = err instanceof Error ? err.message : String(err);
     console.warn(`[intel-history] embeddings call failed: ${msg}`);
-    const errName = err instanceof Error ? err.name : '';
-    const isTransientTimeout = errName === 'AbortError' || errName === 'TimeoutError';
-    captureSilentError(err, {
-      tags: { surface: 'server', component: 'intel-history', stage: 'embed' },
-      fingerprint: ['intel-history', 'embed-error'],
-      ...(isTransientTimeout ? { level: 'warning' } : {}),
-    });
     return null;
   }
 }

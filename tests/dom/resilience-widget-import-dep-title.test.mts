@@ -14,13 +14,6 @@ const { getResilienceScore } = vi.hoisted(() => ({
 
 vi.mock('@/services/resilience', () => ({ getResilienceScore }));
 
-vi.mock('@/services/auth-state', () => ({
-  getAuthState: () => ({
-    isPending: false,
-    user: { id: 'pro-user', name: 'Pro', email: 'pro@example.com', role: 'pro' as const },
-  }),
-  subscribeAuthState: () => () => {},
-}));
 
 
 import { ResilienceWidget } from '@/components/ResilienceWidget';

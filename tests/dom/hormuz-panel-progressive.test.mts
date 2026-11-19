@@ -12,17 +12,6 @@ const entitlementMocks = vi.hoisted(() => ({
   entitlementListeners: new Set<() => void>(),
 }));
 
-vi.mock('@/services/auth-state', () => ({
-  getAuthState: () => ({
-    user: gateMocks.isPro ? { id: 'user-1', name: 'Pro User', email: 'pro@example.com', role: 'pro' } : null,
-    isPending: false,
-  }),
-  subscribeAuthState: (listener: () => void) => {
-    entitlementMocks.authListeners.add(listener);
-    listener();
-    return () => entitlementMocks.authListeners.delete(listener);
-  },
-}));
 
 
 

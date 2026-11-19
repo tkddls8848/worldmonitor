@@ -1,7 +1,6 @@
 // Edge function copy — canonical version at server/_shared/relay.ts
 import { getCorsHeaders, getPublicCorsHeaders, isDisallowedOrigin } from './_cors.js';
 import { jsonResponse } from './_json-response.js';
-import { captureSilentError } from './_sentry-edge.js';
 
 export function getRelayBaseUrl() {
   const relayUrl = process.env.WS_RELAY_URL;
@@ -116,11 +115,6 @@ export function createRelayHandler(cfg) {
       console.warn(`[relay] ${route} request failed:`, error?.message || String(error));
       // Timeouts capture at `warning`: fetchWithTimeout aborts on cfg.timeout,
       // so those 504s are relay latency rather than product defects.
-      void captureSilentError(error, {
-        tags: { route, step: 'relay-fetch' },
-        fingerprint: ['api/_relay', 'relay-fetch', error instanceof Error ? error.name : 'Error'],
-        ...(isTimeout ? { level: 'warning', extra: { timeout_ms: cfg.timeout || 15000 } } : {}),
-      });
       return jsonResponse({
         error: isTimeout ? 'Relay timeout' : 'Relay request failed',
       }, isTimeout ? 504 : 502, corsHeaders);

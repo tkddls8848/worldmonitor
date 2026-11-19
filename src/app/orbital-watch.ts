@@ -14,7 +14,6 @@ import { createReplayHud } from '@/components/OrbitalReplayHud';
 import { formatAcquiredLine, formatTargetCoordinates } from '@/components/orbital-target-label';
 import { loadPointContext } from '@/services/orbital/point-context';
 import { OrbitalPlaceTools } from '@/components/OrbitalPlaceTools';
-import { afterDebugBearRequestWindow } from '@/bootstrap/debugbear-rum';
 import { formatOrbitalRoute, parseOrbitalRoute } from '@/app/orbital-route';
 import { DASHBOARD_SITE_ORIGIN } from '@/config/dashboard-reference-links';
 import { isDesktopRuntime } from '@/config/desktop-runtime';
@@ -206,7 +205,6 @@ function onViewChange(view: OrbitalView): void {
 
 async function checkArchives(found: PointPassLookup, signal: AbortSignal): Promise<void> {
   show({ kind: 'passes', lookup: found, archives: { kind: 'checking', total: ARCHIVE_SEARCHES.length, progress: null } });
-  await afterDebugBearRequestWindow(signal);
   const result = await findArchiveEvidence(found, {
     signal,
     onProgress: (progress) => {

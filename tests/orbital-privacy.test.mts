@@ -167,11 +167,4 @@ describe('a free lookup keeps the exact point to the archives', () => {
       assert.doesNotMatch(scrubbed, /55\.27|1e-7|1E-7/, scrubbed);
     }
   });
-
-  it('runs the scrubber on every Sentry breadcrumb and span', () => {
-    const init = readFileSync(new URL('../src/bootstrap/sentry-init.ts', import.meta.url), 'utf8');
-    for (const hook of ['beforeBreadcrumb', 'beforeSendSpan', 'beforeSend']) assert.match(init, new RegExp(`${hook}[:(]`));
-    assert.match(init, /beforeBreadcrumb: scrubSentryCredentials/);
-    assert.match(init, /beforeSendSpan: scrubSentryCredentials/);
-  });
 });

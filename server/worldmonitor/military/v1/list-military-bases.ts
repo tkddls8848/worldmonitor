@@ -9,8 +9,6 @@ import type {
 import filterParamContracts from '../../../../shared/openapi-filter-param-contracts.json';
 import { cachedFetchJson, getCachedJson, geoSearchByBox, getHashFieldsBatch } from '../../../_shared/redis';
 import { markNoCacheResponse, setResponseHeader } from '../../../_shared/response-headers';
-// @ts-expect-error — JS module, no declaration file
-import { captureSilentError } from '../../../../api/_sentry-edge.js';
 
 const VALID_TYPES = new Set(filterParamContracts.militaryBaseTypes);
 const VALID_KINDS = new Set(filterParamContracts.militaryBaseKinds);
@@ -240,7 +238,6 @@ export async function listMilitaryBases(
     // Fixed marker only: exception text can carry internals (cache-key names
     // from the shared-cache backoff error). The detail goes to the server log.
     console.error('[military-bases] listMilitaryBases failed:', err instanceof Error ? err.message : String(err));
-    captureSilentError(err, { tags: { route: 'military/list-military-bases', step: 'handler-catch' } });
     setResponseHeader(ctx.request, 'X-Bases-Debug', 'error');
     return { bases: [], clusters: [], totalInView: 0, truncated: false };
   }

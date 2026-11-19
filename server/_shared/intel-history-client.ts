@@ -17,8 +17,6 @@
  * cursor, which is the caller's error and throws a ValidationError.
  */
 
-// @ts-expect-error — JS module, no declaration file
-import { captureSilentError } from '../../api/_sentry-edge.js';
 import { ValidationError } from '../../src/generated/server/worldmonitor/intelligence/v1/service_server';
 import type { IntelHistoryStore } from '../../shared/intel-history-store.mjs';
 
@@ -198,10 +196,6 @@ async function readIntelHistory(
     // reach Sentry to be distinguishable from "no history".
     const msg = err instanceof Error ? err.message : String(err);
     console.warn(`[intel-history] ${operation} failed: ${msg}`);
-    captureSilentError(err, {
-      tags: { surface: 'server', component: 'intel-history', stage: 'store-read' },
-      fingerprint: ['intel-history', 'store-read-error', operation],
-    });
     return null;
   }
 }

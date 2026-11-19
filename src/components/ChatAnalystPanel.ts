@@ -5,7 +5,6 @@ import DOMPurify from 'dompurify';
 import { balanceStreamingMarkdown, postProcessAnalystHtml } from '@/utils/analyst-markdown';
 import { yieldToMain } from '@/utils/after-paint';
 import { LatestRequestGuard } from '@/utils/latest-request-guard';
-import { trackAnalystControlAction } from '@/services/analytics';
 import { h, replaceChildren, setTrustedHtml, trustedHtml, type TrustedHtml } from '@/utils/dom-utils';
 import {
   isDashboardControlAction,
@@ -410,9 +409,6 @@ export class ChatAnalystPanel extends Panel {
       result = await this.dashboardActionHandler(action);
     }
 
-    if (result.actionType) {
-      trackAnalystControlAction(result.actionType, result.status, result.reason);
-    }
     this.renderDashboardControlStatus(bubble, result, action);
   }
 

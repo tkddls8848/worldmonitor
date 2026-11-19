@@ -27,7 +27,6 @@
 // session (WORLDMONITOR-15X/15Z: first the onboarding popover, then the
 // SignalModal, neither of which is the sign-up case this guard is for).
 
-import { enqueueSentryCall } from '@/bootstrap/sentry-defer';
 import { findReloadBlockingModal, type ModalDocumentLike, type ReloadBlocker } from '@/utils/open-modal';
 
 // Captured before main() replaces window.fetch. check() catches the promise
@@ -173,27 +172,11 @@ export function installStaleBundleCheck(options: StaleBundleCheckOptions = {}): 
   const setIntervalImpl = options.setInterval ?? ((cb: () => void, ms: number) => globalThis.setInterval(cb, ms));
   const reload = options.reload ?? (() => window.location.reload());
   const now = options.now ?? Date.now;
-  // Only a suspected wedge reaches Sentry. A modal open when a deploy lands is
-  // the state this guard exists for, so reporting every episode start kept
-  // WORLDMONITOR-15X open with no failure behind it; the console line remains.
+  // Only a suspected wedge is worth a warning. A modal open when a deploy lands
+  // is the state this guard exists for.
   const reportDeferral = options.reportDeferral ?? ((report: DeferralReport) => {
     if (report.phase !== 'suspected-wedge') return;
-    enqueueSentryCall((Sentry) => {
-      Sentry.captureMessage(
-        '[stale-bundle] reload still deferred, modal never closed',
-        {
-          level: 'warning',
-          tags: {
-            surface: 'stale-bundle',
-            current_hash: report.currentHash,
-            deployed_hash: report.deployedHash,
-            blocked_by: report.blockedBy,
-            reload_policy: report.reloadPolicy,
-            deferrals: String(report.deferrals),
-          },
-        },
-      );
-    });
+    console.warn('[stale-bundle] reload still deferred, modal never closed', report);
   });
   const wedgeAfterDeferrals = options.wedgeAfterDeferrals ?? DEFAULT_WEDGE_AFTER_DEFERRALS;
   const minIntervalMs = options.minIntervalMs ?? DEFAULT_MIN_INTERVAL_MS;

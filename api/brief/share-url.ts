@@ -34,8 +34,6 @@ import { getCorsHeaders, isDisallowedOrigin } from '../_cors.js';
 // @ts-expect-error — JS module, no declaration file
 import { jsonResponse } from '../_json-response.js';
 import { readRawJsonFromUpstash, redisPipeline } from '../_upstash-json.js';
-// @ts-expect-error — JS module, no declaration file
-import { captureSilentError } from '../_sentry-edge.js';
 import { PERSONAL_OWNER_ID } from '../../shared/personal-owner.js';
 import {
   BriefShareUrlError,
@@ -60,10 +58,7 @@ const BRIEF_TTL_SECONDS = 7 * 24 * 60 * 60;
 // pins the round-trip contract through this module.
 export { publicBaseUrl };
 
-export default async function handler(
-  req: Request,
-  ctx?: { waitUntil: (p: Promise<unknown>) => void },
-): Promise<Response> {
+export default async function handler(req: Request): Promise<Response> {
   if (isDisallowedOrigin(req)) {
     return jsonResponse({ error: 'Origin not allowed' }, 403);
   }
@@ -132,7 +127,6 @@ export default async function handler(
       }
     } catch (err) {
       console.error('[api/brief/share-url] latest pointer read failed:', (err as Error).message);
-      captureSilentError(err, { tags: { route: 'api/brief/share-url', step: 'latest-pointer-read' }, fingerprint: ['api/brief/share-url', 'latest-pointer-read', err instanceof Error ? err.name : 'Error'], ctx });
       return jsonResponse({ error: 'service_unavailable' }, 503, cors);
     }
   }
@@ -152,7 +146,6 @@ export default async function handler(
     existing = await readRawJsonFromUpstash(`brief:${userId}:${issueSlot}`, 3_000, true);
   } catch (err) {
     console.error('[api/brief/share-url] Upstash read failed:', (err as Error).message);
-    captureSilentError(err, { tags: { route: 'api/brief/share-url', step: 'envelope-read' }, fingerprint: ['api/brief/share-url', 'envelope-read', err instanceof Error ? err.name : 'Error'], ctx });
     return jsonResponse({ error: 'service_unavailable' }, 503, cors);
   }
   if (existing == null) {

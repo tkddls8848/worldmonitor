@@ -6,16 +6,10 @@ const {
   fetchRouteExplorerLane,
   fetchRouteImpact,
   getResilienceScore,
-  getAuthState,
-  track,
-  trackGateHit,
 } = vi.hoisted(() => ({
   fetchRouteExplorerLane: vi.fn(),
   fetchRouteImpact: vi.fn(),
   getResilienceScore: vi.fn(),
-  getAuthState: vi.fn(() => ({ user: null, isPending: false })),
-  track: vi.fn(),
-  trackGateHit: vi.fn(),
 }));
 
 vi.mock('@/services/supply-chain', () => ({
@@ -24,8 +18,6 @@ vi.mock('@/services/supply-chain', () => ({
 }));
 
 vi.mock('@/services/resilience', () => ({ getResilienceScore }));
-vi.mock('@/services/auth-state', () => ({ getAuthState }));
-vi.mock('@/services/analytics', () => ({ track, trackGateHit }));
 
 import { RouteExplorer } from '@/components/RouteExplorer/RouteExplorer';
 
@@ -71,8 +63,6 @@ describe('RouteExplorer loading lifecycle', () => {
     fetchRouteExplorerLane.mockReset();
     fetchRouteImpact.mockReset();
     getResilienceScore.mockReset();
-    track.mockReset();
-    trackGateHit.mockReset();
     explorer = new RouteExplorer();
   });
 

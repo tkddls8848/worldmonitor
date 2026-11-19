@@ -10,8 +10,6 @@ import { ValidationError } from '../../../../src/generated/server/worldmonitor/a
 import { MONITORED_AIRPORTS, AVIATIONSTACK_AIRPORTS } from '../../../../src/config/airports';
 import { readCachedJson } from '../../../_shared/redis';
 import { markNoStoreFallbackResponse } from '../../../_shared/response-headers';
-// @ts-expect-error — JS module, no declaration file
-import { captureSilentError } from '../../../../api/_sentry-edge.js';
 import {
     determineSeverity,
     severityFromCancelRate,
@@ -89,7 +87,6 @@ export async function getAirportOpsSummary(
             // the cause — otherwise a broken cache read is indistinguishable
             // from an empty seed.
             console.warn(`[Aviation] Ops summary seed read failed: ${err instanceof Error ? err.message : 'unknown'}`);
-            void captureSilentError(err, { tags: { route: 'aviation/get-airport-ops-summary', step: 'seed-read' } });
             healthy = false;
             alerts = [];
             intlCoveredIatas = new Set();
@@ -113,7 +110,6 @@ export async function getAirportOpsSummary(
             }
         } catch (err) {
             console.warn(`[Aviation] Ops summary NOTAM load failed: ${err instanceof Error ? err.message : 'unknown'}`);
-            void captureSilentError(err, { tags: { route: 'aviation/get-airport-ops-summary', step: 'notam-load' } });
         }
 
         for (const airport of airports) {
@@ -210,7 +206,6 @@ export async function getAirportOpsSummary(
             : markNoStoreFallbackResponse(ctx.request, response);
     } catch (err) {
         console.warn(`[Aviation] GetAirportOpsSummary failed: ${err instanceof Error ? err.message : err}`);
-        void captureSilentError(err, { tags: { route: 'aviation/get-airport-ops-summary', step: 'response' } });
         return markNoStoreFallbackResponse(ctx.request, { summaries: [], cacheHit: false });
     }
 }

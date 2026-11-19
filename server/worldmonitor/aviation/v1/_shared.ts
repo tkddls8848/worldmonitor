@@ -13,8 +13,6 @@ import {
 } from '../../../../src/config/airports';
 import { readCachedJson } from '../../../_shared/redis';
 export { getRelayBaseUrl, getRelayHeaders } from '../../../_shared/relay';
-// @ts-expect-error — JS module, no declaration file
-import { captureSilentError } from '../../../../api/_sentry-edge.js';
 export { parseStringArray } from '../../../_shared/parse-string-array';
 
 export type IntlCoverage = { iata: string; status: 'normal' | 'disruption' | 'omitted' | 'failed'; flightCount: number };
@@ -309,7 +307,6 @@ export async function loadNotamClosures(): Promise<LoadedNotamRead> {
     }, unavailable: false };
   } catch (err) {
     console.warn(`[Aviation] NOTAM seed read failed: ${err instanceof Error ? err.message : 'unknown'}`);
-    void captureSilentError(err, { tags: { route: 'aviation/notam', step: 'seed-read' } });
   }
   return { data: null, unavailable: true };
 }

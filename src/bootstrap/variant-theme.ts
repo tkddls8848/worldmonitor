@@ -1,4 +1,3 @@
-import { enqueueSentryCall } from './sentry-defer';
 
 /**
  * Variant stylesheets load through a fire-and-forget dynamic import so they stay
@@ -12,20 +11,12 @@ import { enqueueSentryCall } from './sentry-defer';
  * (WORLDMONITOR-XT: happy-theme.css, 2026-07-28; the asset itself served 200, so
  * the failure was client-local, not deploy skew).
  *
- * Consume the rejection here and re-report it as deliberate warning-level
- * telemetry instead: a stylesheet genuinely missing from a deploy still
- * escalates by volume, while a lone client-side network blip stops reading as an
- * unhandled error. Every other dynamic import under `bootstrap/` already
- * terminates in a `.catch`; this is the same contract, made testable.
+ * Consume the rejection here and log it as a warning instead. Every other
+ * dynamic import under `bootstrap/` already terminates in a `.catch`; this is
+ * the same contract, made testable.
  */
 export function reportVariantThemeLoadFailure(variant: string, error: unknown): void {
-  enqueueSentryCall((s) => {
-    s.captureMessage(`Variant theme stylesheet failed to load: ${variant}`, {
-      level: 'warning',
-      tags: { kind: 'variant_theme_load_failed', variant },
-      extra: { reason: error instanceof Error ? error.message : String(error) },
-    });
-  });
+  console.warn(`[variant-theme] ${variant} stylesheet failed to load`, error);
 }
 
 export function loadVariantThemeStylesheet(
@@ -43,7 +34,7 @@ export function loadVariantThemeStylesheet(
         try {
           report(variant, error);
         } catch {
-          // Telemetry must never resurrect the rejection it exists to report.
+          // The reporter must never resurrect the rejection it exists to report.
         }
       },
     );

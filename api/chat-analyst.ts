@@ -17,8 +17,6 @@ export const config = { runtime: 'edge', regions: ['iad1', 'lhr1', 'fra1', 'sfo1
 
 // @ts-expect-error — JS module, no declaration file
 import { getCorsHeaders } from './_cors.js';
-// @ts-expect-error — JS module, no declaration file
-import { captureSilentError } from './_sentry-edge.js';
 import { PERSONAL_OWNER_ID } from '../shared/personal-owner.js';
 import { assembleAnalystContext } from '../server/worldmonitor/intelligence/v1/chat-analyst-context';
 import { buildAnalystMessages } from '../server/worldmonitor/intelligence/v1/chat-analyst-prompt';
@@ -197,10 +195,6 @@ export default async function handler(req: Request): Promise<Response> {
       groundText,
       (prices) => {
         console.warn(`[chat-analyst] answer stated prices absent from the live context: ${prices.join(', ')}`);
-        void captureSilentError(new Error(`chat-analyst answer stated unsupported price(s): ${prices.join(', ')}`), {
-          tags: { route: 'api/chat-analyst', step: 'price-grounding' },
-          fingerprint: ['api/chat-analyst', 'price-grounding'],
-        });
       },
     );
 
@@ -214,7 +208,7 @@ export default async function handler(req: Request): Promise<Response> {
       },
     });
   } catch (err) {
-    captureSilentError(err, { tags: { route: 'api/chat-analyst', step: 'pre-stream' }, fingerprint: ['api/chat-analyst', 'pre-stream', err instanceof Error ? err.name : 'Error'] });
+    console.error('[chat-analyst] pre-stream failure', err);
     return json({ error: 'service_unavailable' }, 503, corsHeaders);
   }
 }

@@ -40,7 +40,6 @@ vi.mock('@/services/ml-worker', () => ({
   mlWorker: { isAvailable: false, classifySentiment: vi.fn(async () => null) },
 }));
 
-vi.mock('@/services/analytics', () => ({ trackSearchUsed: vi.fn() }));
 
 import { VARIANT_PANEL_OVERRIDES } from '@/config/panels';
 import { InsightsPanel } from '@/components/InsightsPanel';

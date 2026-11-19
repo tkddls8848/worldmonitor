@@ -1,5 +1,17 @@
 import { markLcpDebug, type LcpMarkSnapshot } from '@/utils/lcp-debug';
-import { sanitizeWebVitalUrl } from '@/bootstrap/web-vitals-utils';
+
+/** Origin and path only: a query string can carry user data. */
+function sanitizeWebVitalUrl(raw: string | undefined): string {
+  if (!raw) return '';
+  try {
+    const url = new URL(raw, typeof window !== 'undefined' ? window.location.href : 'https://worldmonitor.app/');
+    const query = url.search ? '?[redacted]' : '';
+    return `${url.origin}${url.pathname}${query}`;
+  } catch {
+    const [withoutQuery = raw] = raw.split('?');
+    return withoutQuery.slice(0, 200);
+  }
+}
 
 type LcpElementSnapshot = {
   className: string;

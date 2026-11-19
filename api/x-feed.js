@@ -2,7 +2,6 @@
 import { getRelayBaseUrl, getRelayHeaders, fetchWithTimeout, buildRelayResponse } from './_relay.js';
 import { getCorsHeaders, isDisallowedOrigin } from './_cors.js';
 import { jsonResponse } from './_json-response.js';
-import { captureSilentError } from './_sentry-edge.js';
 
 export const config = { runtime: 'edge' };
 
@@ -236,7 +235,6 @@ export default async function handler(req, _ctx) {
       });
     } catch (normalizeError) {
       console.warn('[x-feed] normalization failed:', normalizeError?.message || String(normalizeError));
-      void captureSilentError(normalizeError, { tags: { route: 'api/x-feed', step: 'normalize' }, fingerprint: ['api/x-feed', 'normalize', normalizeError instanceof Error ? normalizeError.name : 'Error'] });
     }
 
     return buildRelayResponse(response, body, {

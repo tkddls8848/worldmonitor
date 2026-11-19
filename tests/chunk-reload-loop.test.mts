@@ -5,7 +5,6 @@
 import assert from 'node:assert/strict';
 import { afterEach, describe, it } from 'node:test';
 
-import { claimSentryPreloadErrors } from '../src/bootstrap/sentry-defer';
 
 type GuardModule = typeof import('../src/bootstrap/chunk-reload');
 
@@ -108,86 +107,5 @@ describe('chunk reload guard across page loads', () => {
     target.dispatchEvent(new Event('vite:preloadError', { cancelable: true }));
     await settle();
     assert.equal(reloads, 0);
-  });
-});
-
-describe('deferred Sentry loader claims its own chunk failures', () => {
-  /** What Vite's __vitePreload does when the wrapped import() rejects. */
-  function vitePreloadFailure(target: EventTarget, error: Error): Promise<undefined> {
-    const event = Object.assign(new Event('vite:preloadError', { cancelable: true }), { payload: error });
-    target.dispatchEvent(event);
-    if (!event.defaultPrevented) return Promise.reject(error);
-    return Promise.resolve(undefined);
-  }
-
-  async function sentryLoadAttempt(target: EventTarget, error: Error): Promise<unknown> {
-    try {
-      await claimSentryPreloadErrors(async () => {
-        const mod = await vitePreloadFailure(target, error);
-        // The destructure in defaultSentryLoader hits `undefined` here.
-        return (mod as unknown as { loadAndInitSentry: () => unknown }).loadAndInitSentry();
-      }, target);
-    } catch (thrown) {
-      return thrown;
-    }
-    return null;
-  }
-
-  it('a blocked Sentry chunk never reloads the page, on any load', async () => {
-    setWindow({ sessionStorage: fakeStorage(), localStorage: fakeStorage() });
-    const blocked = new TypeError(
-      'Failed to fetch dynamically imported module: https://www.worldmonitor.app/assets/sentry-init-AbC12345.js',
-    );
-    let reloads = 0;
-    for (let i = 0; i < 3; i += 1) {
-      const { installChunkReloadGuard } = await freshGuardModule();
-      const target = new EventTarget();
-      installChunkReloadGuard('build-A', { eventTarget: target, reload: () => { reloads += 1; } });
-      const thrown = await sentryLoadAttempt(target, blocked);
-      assert.equal(thrown, blocked, 'the loader rethrows the original import error');
-      await settle();
-    }
-    assert.equal(reloads, 0);
-  });
-
-  it('leaves a URL-less failure (Safari) to the guard, which reloads once', async () => {
-    setWindow({ sessionStorage: fakeStorage(), localStorage: fakeStorage() });
-    const safari = new TypeError('Importing a module script failed.');
-    let reloads = 0;
-    for (let i = 0; i < 3; i += 1) {
-      const { installChunkReloadGuard } = await freshGuardModule();
-      const target = new EventTarget();
-      installChunkReloadGuard('build-A', { eventTarget: target, reload: () => { reloads += 1; } });
-      // Unclaimed, so Vite rejects with the original error.
-      assert.equal(await sentryLoadAttempt(target, safari), safari);
-      await settle();
-    }
-    assert.equal(reloads, 1, 'it may be an unrelated chunk such as App, so it keeps its one reload');
-  });
-
-  it('leaves another chunk failure during the Sentry load to the guard', async () => {
-    setWindow({ sessionStorage: fakeStorage(), localStorage: fakeStorage() });
-    const { installChunkReloadGuard } = await freshGuardModule();
-    const target = new EventTarget();
-    let reloads = 0;
-    installChunkReloadGuard('build-A', { eventTarget: target, reload: () => { reloads += 1; } });
-    const stale = new TypeError(
-      'Failed to fetch dynamically imported module: https://www.worldmonitor.app/assets/MarketPanel-Xy98765.js',
-    );
-    assert.equal(await sentryLoadAttempt(target, stale), stale);
-    await settle();
-    assert.equal(reloads, 1);
-  });
-
-  it('stops claiming once the Sentry load settles', async () => {
-    setWindow({ sessionStorage: fakeStorage(), localStorage: fakeStorage() });
-    const { installChunkReloadGuard } = await freshGuardModule();
-    const target = new EventTarget();
-    let reloads = 0;
-    installChunkReloadGuard('build-A', { eventTarget: target, reload: () => { reloads += 1; } });
-    await claimSentryPreloadErrors(async () => 'loaded', target);
-    target.dispatchEvent(new Event('vite:preloadError', { cancelable: true }));
-    await settle();
-    assert.equal(reloads, 1);
   });
 });

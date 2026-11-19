@@ -20,8 +20,6 @@ import {
   runRedisTransaction,
   REDIS_PIPELINE_TIMEOUT_MS,
 } from '../../../_shared/redis';
-// @ts-expect-error — JS module, no declaration file
-import { captureSilentError } from '../../../../api/_sentry-edge.js';
 import { readBoundedResponseBody } from '../../../../api/mcp/bounded-body';
 import {
   classifyStaleSnapshot,
@@ -339,10 +337,6 @@ async function serveLastGood(
       console.warn(
         `[digest-serving] tier=durable result=revocations-unreadable variant=${variant} lang=${lang}`,
       );
-      captureSilentError(new Error('revocation set unreadable on durable serving path'), {
-        tags: { surface: 'news', component: 'digest-lastgood', stage: 'revocation-read', variant, lang },
-        fingerprint: ['digest-lastgood', 'revocations-unreadable-durable'],
-      });
       return null;
     }
 
@@ -372,10 +366,6 @@ async function serveLastGood(
     });
   } catch (err) {
     console.warn(`[digest-serving] tier=durable result=snapshot-malformed variant=${variant} lang=${lang}`);
-    captureSilentError(err, {
-      tags: { surface: 'news', component: 'digest-lastgood', stage: 'serve-classify', variant, lang },
-      fingerprint: ['digest-lastgood', 'serve-classify-threw'],
-    });
     return null;
   }
 }
@@ -2453,10 +2443,6 @@ export async function listFeedDigest(
       console.warn(
         `[digest-serving] outcome=unavailable reason=revocations-unreadable variant=${variant} lang=${lang} tier=isolate`,
       );
-      captureSilentError(new Error('revocation set unreadable on isolate serving path'), {
-        tags: { surface: 'news', component: 'digest-lastgood', stage: 'revocation-read', variant, lang },
-        fingerprint: ['digest-lastgood', 'revocations-unreadable-isolate'],
-      });
       return empty(at, reason);
     }
     // The body below was cached in-process, but it originated from a build or
@@ -2486,10 +2472,6 @@ export async function listFeedDigest(
     } catch (err) {
       fallbackDigestCache.delete(fallbackKey);
       console.warn(`[digest-serving] outcome=unavailable reason=isolate-malformed variant=${variant} lang=${lang}`);
-      captureSilentError(err, {
-        tags: { surface: 'news', component: 'digest-lastgood', stage: 'isolate-serve', variant, lang },
-        fingerprint: ['digest-lastgood', 'isolate-serve-threw'],
-      });
       return empty(at, reason);
     }
   };
@@ -2667,10 +2649,6 @@ export async function listFeedDigest(
       console.warn(
         `[digest-serving] outcome=unavailable reason=revocations-unreadable variant=${variant} lang=${lang} tier=fresh`,
       );
-      captureSilentError(new Error('revocation set unreadable on fresh serving path'), {
-        tags: { surface: 'news', component: 'digest-lastgood', stage: 'revocation-read', variant, lang },
-        fingerprint: ['digest-lastgood', 'revocations-unreadable-fresh'],
-      });
       markNoCacheResponse(ctx.request);
       return empty(fresh.coverage?.attemptedAt || attemptedAt, '');
     }

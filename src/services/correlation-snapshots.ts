@@ -2,7 +2,6 @@ import { ensureHydrated, getHydratedData, waitForBootstrapSlowTier } from './boo
 import { getPersistentCache, setPersistentCache } from './persistent-cache';
 import type { ConvergenceCard, CorrelationDomain } from './correlation-engine';
 import { CORRELATION_DOMAINS } from '@/types/correlation';
-import { enqueueSentryCall } from '@/bootstrap/sentry-defer';
 
 export interface CorrelationSnapshot {
   cards: ConvergenceCard[];
@@ -37,7 +36,6 @@ let nextFetchAt = 0;
 let saveQueued = false;
 let offlineProbeAt = 0;
 let reachedServer = false;
-let reportedFailure = false;
 
 function record(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -188,16 +186,6 @@ async function refresh(): Promise<void> {
       pending = false;
       attempted = true;
       failureCount = failedDomains.size ? failureCount + 1 : 0;
-      if (!failureCount) reportedFailure = false;
-      if (failureCount >= 3 && !reportedFailure && (navigator.onLine !== false || reachedServer)) {
-        reportedFailure = true;
-        const domains = [...failedDomains];
-        try {
-          enqueueSentryCall(s => s.captureMessage('Correlation snapshot recovery stalled', {
-            level: 'warning', tags: { component: 'correlation-snapshots' }, extra: { domains },
-          }));
-        } catch { /* Telemetry must not interrupt recovery. */ }
-      }
       const retryMs = Math.min(15_000 * 2 ** Math.min(failureCount - 1, 4), 180_000)
         * (0.8 + 0.2 * Math.random());
       offlineProbeAt = Date.now() + REFRESH_MS;

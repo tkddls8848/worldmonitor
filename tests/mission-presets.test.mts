@@ -428,35 +428,6 @@ async function loadEventHandlerManager(): Promise<EventHandlerManagerCtor> {
       export function setTrustedHtml(el, html) { el.innerHTML = String(html); }
     `],
     ['@/utils/sanitize', 'export function escapeHtml(value) { return String(value); } export function safeHtmlToString(value) { return String(value); }'],
-    ['@/services/agent-analytics-privacy', `
-      const push = (name, args) => {
-        globalThis.__missionAnalytics = globalThis.__missionAnalytics || [];
-        globalThis.__missionAnalytics.push({ name, args });
-      };
-      export function suppressNextAgentPanelView(...args) { push('suppressNextAgentPanelView', args); }
-      export function isAgentPanelViewSuppressed() { return false; }
-      export function isAgentAnalyticsSuppressed() { return false; }
-    `],
-    ['@/services/analytics', `
-      const push = (name, args) => {
-        globalThis.__missionAnalytics = globalThis.__missionAnalytics || [];
-        globalThis.__missionAnalytics.push({ name, args });
-      };
-      export function track(...args) { push('track', args); }
-      export function trackPanelView(...args) { push('trackPanelView', args); }
-      export function trackMissionPickerShown(...args) { push('trackMissionPickerShown', args); }
-      export function trackMissionSelected(...args) { push('trackMissionSelected', args); }
-      export function trackVariantSwitch(...args) { push('trackVariantSwitch', args); }
-      export function trackDashboardFirstInteraction(...args) { push('trackDashboardFirstInteraction', args); }
-      export function replayPendingDashboardFirstInteraction() {}
-      export function trackThemeChanged(...args) { push('trackThemeChanged', args); }
-      export function trackMapViewChange(...args) { push('trackMapViewChange', args); }
-      export function trackMapLayerToggle(...args) { push('trackMapLayerToggle', args); }
-      export function trackPanelToggled(...args) { push('trackPanelToggled', args); }
-      export function trackDownloadClicked(...args) { push('trackDownloadClicked', args); }
-      export function trackGateHit(...args) { push('trackGateHit', args); }
-      export function trackLayoutCustomized(...args) { push('trackLayoutCustomized', args); }
-    `],
     ['@/services', `
       export async function saveSnapshot() {}
       export function isAisConfigured() {
@@ -583,7 +554,6 @@ after(() => {
 });
 
 function resetMissionGlobals(): void {
-  delete (globalThis as { __missionAnalytics?: unknown }).__missionAnalytics;
   delete (globalThis as { __missionAis?: unknown }).__missionAis;
   delete (globalThis as { __missionAisConfigured?: unknown }).__missionAisConfigured;
   delete (globalThis as { __missionFreshness?: unknown }).__missionFreshness;
@@ -1385,41 +1355,13 @@ describe('mission preset shell integration', () => {
     assert.equal(preset!.variants, undefined, 'country-watcher must be offered on every variant');
   });
 
-  it('tags agent-applied presets and suppresses the panel views they trigger', async () => {
-    const { manager } = createMissionHarness();
-    (globalThis as { __missionAnalytics?: unknown[] }).__missionAnalytics = [];
-
-    (manager as unknown as { applyMissionPreset(id: string, source?: 'user' | 'agent'): void })
-      .applyMissionPreset('crisis-desk', 'agent');
-    await waitForMissionTimers();
-
-    const emitted = ((globalThis as { __missionAnalytics?: Array<{ name: string; args: unknown[] }> }).__missionAnalytics ?? []);
-    const selected = emitted.filter((call) => call.name === 'trackMissionSelected');
-    assert.deepEqual(selected.map((call) => call.args), [['crisis-desk', 'agent']]);
-    const suppressed = emitted
-      .filter((call) => call.name === 'suppressNextAgentPanelView')
-      .map((call) => call.args[0]);
-    assert.ok(suppressed.length > 0, 'agent apply must suppress the panel views it triggers');
-    assert.ok(suppressed.includes('cii'),
-      "crisis-desk enables 'cii' — its agent-triggered mount must not count as a human panel view");
-  });
-
   it('applies a preset through the real manager path and resets state, storage, layers, map view, and URL to defaults', async () => {
     const { ctx, callbacks, manager } = createMissionHarness();
     const baselineWorkspace = defaultWorkspacePanelKeys('full');
     const baselineLayers = activeLayers(DEFAULT_MAP_LAYERS);
 
-    (globalThis as { __missionAnalytics?: unknown[] }).__missionAnalytics = [];
     manager.applyMissionPreset('supply-chain-risk');
     await waitForMissionTimers();
-
-    // The funnel emission is part of the apply contract: mission-selected
-    // fires through the real pipeline with the user source, and a user apply
-    // must NOT suppress panel views (that guard is agent-only).
-    const emitted = ((globalThis as { __missionAnalytics?: Array<{ name: string; args: unknown[] }> }).__missionAnalytics ?? []);
-    const selected = emitted.filter((call) => call.name === 'trackMissionSelected');
-    assert.deepEqual(selected.map((call) => call.args), [['supply-chain-risk', 'user']]);
-    assert.equal(emitted.some((call) => call.name === 'suppressNextAgentPanelView'), false);
 
     assert.equal(ctx.panelSettings['supply-chain']?.enabled, true);
     assert.equal(ctx.panelSettings.markets?.enabled, true);
@@ -1437,11 +1379,6 @@ describe('mission preset shell integration', () => {
       'a preset that flips panels must push them onto the live dashboard, not just persist them (#6379)',
     );
     assert.ok(callbacks.loadDataForLayer.includes('tradeRoutes'), 'newly enabled non-AIS layers should load data');
-    assert.ok(
-      ((globalThis as { __missionAnalytics?: Array<{ name: string; args: unknown[] }> }).__missionAnalytics ?? [])
-        .some((entry) => entry.name === 'trackMapLayerToggle' && entry.args[0] === 'tradeRoutes' && entry.args[1] === true),
-      'programmatic layer analytics should be emitted for apply transitions',
-    );
     assert.equal(latestUrl().searchParams.get('layers')?.includes('tradeRoutes'), true);
 
     manager.resetMissionPreset();

@@ -29,7 +29,6 @@
  * manually instead. See its comment before changing a feature string.
  */
 
-import { enqueueSentryCall } from '@/bootstrap/sentry-defer';
 import { isDesktopRuntime } from './desktop-runtime';
 import { invokeTauri } from './tauri-bridge';
 
@@ -59,24 +58,6 @@ export function isOpenableExternalUrl(raw: string): boolean {
   } catch {
     return false;
   }
-}
-
-/** Origin only — a billing-portal session URL is credential-bearing. */
-function originForTelemetry(raw: string): string {
-  try {
-    return new URL(raw).origin;
-  } catch {
-    return 'unparseable';
-  }
-}
-
-function reportOpenFailure(url: string, reason: string): void {
-  enqueueSentryCall((s) => s.captureMessage('[external-navigation] open_url failed', {
-    level: 'warning',
-    tags: { component: 'external-navigation', action: 'open_url', reason },
-    // The URL itself is withheld: portal session URLs are bearer-like.
-    extra: { origin: originForTelemetry(url), reason },
-  }));
 }
 
 /** Distinguishes "the native side said no" from "it never answered". */
@@ -217,7 +198,6 @@ export async function openExternalUrl(
 ): Promise<ExternalNavOutcome> {
   const targetUrl = typeof url === 'string' ? url : url.toString();
   if (!isOpenableExternalUrl(targetUrl)) {
-    reportOpenFailure(targetUrl, 'rejected-scheme');
     closeWindowQuietly(preopened);
     return 'failed';
   }
@@ -237,14 +217,12 @@ export async function openExternalUrl(
         // after we gave up — falling back would open the URL twice, once in
         // a WebView and once in the OS browser. For a payment page that is
         // worse than a clean failure, and the caller can retry.
-        reportOpenFailure(targetUrl, 'native-open-timeout');
         return 'failed';
       }
       // Bridge globals are not always present at first paint, so this path is
       // reachable in production — report it, because falling back to
       // `window.open` inside Tauri reproduces the very bug this module exists
       // to fix, and a silent reproduction is unfindable.
-      reportOpenFailure(targetUrl, 'native-open-failed');
       if (options?.desktopPopupFallback === false) return 'failed';
       return openWindowWithHandle(targetUrl) ? 'popup' : 'failed';
     }
@@ -274,14 +252,12 @@ export async function openExternalUrl(
   // silently doing nothing for an upgrade CTA — but not for a caller holding
   // unsaved input, which opts out and gets the failure instead.
   if (options?.sameTabFallback === false) {
-    reportOpenFailure(targetUrl, 'popup-blocked');
     return 'failed';
   }
   try {
     window.location.assign(targetUrl);
     return 'same-tab';
   } catch {
-    reportOpenFailure(targetUrl, 'same-tab-assign-failed');
     return 'failed';
   }
 }

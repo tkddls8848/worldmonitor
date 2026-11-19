@@ -120,8 +120,9 @@ export const SITE_CLUSTER_RADIUS_LINES = 3;
 
 /** 21 sites in 19 files when this gate landed; 22 with the sign-up resume overlay; 21 again once the
  * personal build retired the MCP connect and AI widget chat modals; 19 once it retired sign-in (the
- * sign-up resume overlay and the account deletion dialog). A scan that finds fewer has drifted. */
-export const MIN_SITE_COUNT = 19;
+ * sign-up resume overlay and the account deletion dialog); 18 once it retired the PWA install sheet.
+ * A scan that finds fewer has drifted. */
+export const MIN_SITE_COUNT = 18;
 
 /** The module that defines the vocabulary; its selector strings are not sites. */
 export const EXCLUDED_FILES = new Set(['src/utils/open-modal.ts']);

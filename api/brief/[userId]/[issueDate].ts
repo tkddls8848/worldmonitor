@@ -20,8 +20,6 @@ export const config = { runtime: 'edge' };
 
 // @ts-expect-error — JS module, no declaration file
 import { getCorsHeaders, isDisallowedOrigin } from '../../_cors.js';
-// @ts-expect-error — JS module, no declaration file
-import { captureSilentError } from '../../_sentry-edge.js';
 import { renderBriefMagazine } from '../../../server/_shared/brief-render.js';
 import { briefFontPlatform } from '../../../server/_shared/brief-font-platform.js';
 import { readRawJsonFromUpstash, redisPipeline } from '../../_upstash-json.js';
@@ -101,10 +99,7 @@ const FOLLOWED_COUNTRIES_TIMEOUT_MS = 500;
  * degrades `data-followed` to "unknown encoded as false" and never
  * affects visible magazine content.
  */
-async function fetchFollowedCountriesEdge(
-  userId: string,
-  ctx?: { waitUntil: (p: Promise<unknown>) => void },
-): Promise<string[]> {
+async function fetchFollowedCountriesEdge(userId: string): Promise<string[]> {
   const convexSiteUrl =
     process.env.CONVEX_SITE_URL
     ?? (process.env.CONVEX_URL ?? '').replace('.convex.cloud', '.convex.site');
@@ -123,13 +118,7 @@ async function fetchFollowedCountriesEdge(
       signal: AbortSignal.timeout(FOLLOWED_COUNTRIES_TIMEOUT_MS),
     });
     if (res.status === 401) {
-      const err = new Error('followed-countries relay returned 401');
       console.warn('[api/brief] followed-countries relay auth failed');
-      captureSilentError(err, {
-        tags: { route: 'api/brief', step: 'followed-countries-relay', status: '401' },
-        fingerprint: ['api/brief', 'followed-countries-relay', err instanceof Error ? err.name : 'Error'],
-        ctx,
-      });
       return [];
     }
     if (!res.ok) return [];
@@ -188,7 +177,7 @@ export default async function handler(
   // U11: start the telemetry-only watchlist lookup before the Redis
   // envelope read so relay latency overlaps the required brief fetch.
   // The promise never rejects and is bounded by FOLLOWED_COUNTRIES_TIMEOUT_MS.
-  const followedCountriesPromise = fetchFollowedCountriesEdge(userId, ctx);
+  const followedCountriesPromise = fetchFollowedCountriesEdge(userId);
 
   // The helper throws on infrastructure failure (Upstash down, config
   // missing, parse failure). Only a genuine miss returns null. We must
@@ -202,7 +191,6 @@ export default async function handler(
     envelope = await readRawJsonFromUpstash(`brief:${userId}:${issueDate}`, 3_000, true);
   } catch (err) {
     console.error('[api/brief] Upstash read failed:', (err as Error).message);
-    captureSilentError(err, { tags: { route: 'api/brief', step: 'envelope-read' }, fingerprint: ['api/brief', 'envelope-read', err instanceof Error ? err.name : 'Error'], ctx });
     ctx?.waitUntil(followedCountriesPromise);
     return htmlResponse(req, 503, UNAVAILABLE_PAGE);
   }
@@ -246,7 +234,6 @@ export default async function handler(
       }
     } catch (err) {
       console.warn('[api/brief] share URL derive failed:', (err as Error).message);
-      captureSilentError(err, { level: 'warning', tags: { route: 'api/brief', step: 'share-url-derive', severity: 'warn' }, fingerprint: ['api/brief', 'share-url-derive', err instanceof Error ? err.name : 'Error'], ctx });
     }
   }
 
@@ -272,7 +259,6 @@ export default async function handler(
     // and log the details server-side. The renderer's assertion
     // message is safe to log (no secrets, no user content).
     console.error('[api/brief] malformed envelope for brief:*:*:', (err as Error).message);
-    captureSilentError(err, { tags: { route: 'api/brief', step: 'malformed-envelope' }, fingerprint: ['api/brief', 'malformed-envelope', err instanceof Error ? err.name : 'Error'], ctx });
     // Distinct log tag so ops can grep composer-bug vs Redis-miss. User
     // still sees the neutral "expired" page.
     return htmlResponse(req, 404, EXPIRED_PAGE);
