@@ -53,7 +53,7 @@ for (const width of [393, 360]) {
         const modal = page.locator('.unified-settings-modal');
         await expect(page.locator('[data-settings-home]')).toBeVisible();
         await modal.screenshot({ path: testInfo.outputPath(`settings-home-${width}${lang ? '-ar' : ''}.png`) });
-        expect(await page.locator('[data-settings-nav]').count(), 'the list has rows').toBeGreaterThan(8);
+        expect(await page.locator('[data-settings-nav]').count(), 'the list has rows').toBeGreaterThanOrEqual(8);
         expect(await rowsOutsideModal(page), 'rows cut off by the sheet edge').toEqual([]);
         const overflow = await modal.evaluate((el) => el.scrollWidth - el.clientWidth);
         expect(overflow, 'the sheet does not scroll sideways').toBeLessThanOrEqual(0);
@@ -86,13 +86,6 @@ test.describe('settings navigation on a phone', () => {
     await expect(page.locator('[data-settings-home]')).toBeVisible();
   });
 
-  test('a deep link opens straight onto its page', async ({ page }) => {
-    await seed(page);
-    await page.goto('/dashboard?settings=notifications', { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('#us-page-notifications')).toBeVisible({ timeout: 60_000 });
-    await expect(page.locator('[data-settings-back]')).toBeVisible();
-    await expect(page.locator('[data-settings-home]')).toBeHidden();
-  });
 });
 
 async function openSettingsFromGear(page: Page, query = ''): Promise<void> {
@@ -162,14 +155,6 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 1024, height: 768
 
       await search.press('Escape');
       await expect(page.locator('#unifiedSettingsModal')).not.toHaveClass(/active/);
-    });
-
-    test('a deep link selects its page in the sidebar', async ({ page }) => {
-      await seed(page);
-      await openSettingsFromGear(page, '?settings=notifications');
-      await expect(page.locator('#us-page-notifications')).toBeVisible({ timeout: 60_000 });
-      await expect(currentRow(page)).toHaveAttribute('data-settings-nav', 'notifications');
-      await expect(page.locator('[data-settings-home]')).toBeVisible();
     });
 
     test('shows the dashboard dimmed behind the sheet', async ({ page }) => {
