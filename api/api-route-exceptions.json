@@ -297,20 +297,6 @@
       "removal_issue": "#3282"
     },
     {
-      "path": "api/v2/shipping/webhooks/[subscriberId].ts",
-      "category": "migration-pending",
-      "reason": "Partner-facing path-parameter endpoint (GET status by subscriber id). Cannot migrate to sebuf yet — no path-param support in the annotation layer. Paired with the typed ShippingV2Service on the same base URL; tracked for eventual migration once sebuf path params are available.",
-      "owner": "@SebastienMelki",
-      "removal_issue": "#3207"
-    },
-    {
-      "path": "api/v2/shipping/webhooks/[subscriberId]/[action].ts",
-      "category": "migration-pending",
-      "reason": "Partner-facing path-parameter endpoints (POST rotate-secret, POST reactivate). Cannot migrate to sebuf yet — no path-param support. Paired with the typed ShippingV2Service; tracked for eventual migration once sebuf path params are available.",
-      "owner": "@SebastienMelki",
-      "removal_issue": "#3207"
-    },
-    {
       "path": "api/chat-analyst.ts",
       "category": "migration-pending",
       "reason": "SSE streaming endpoint. Migrating to analyst/v1.ChatAnalyst (streaming RPC) in commit 9 of #3207. Blocked on sebuf#150 (TS-server SSE codegen).",

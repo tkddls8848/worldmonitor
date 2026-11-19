@@ -1,13 +1,13 @@
 'use strict';
 
 /**
- * Stable event ids and the API fan-out list contract for occurrence events
- * (shared/event-triggers.json, kind "occurrence").
+ * Stable event ids and the API fan-out list contract for occurrence events.
  *
- * CommonJS so scripts/ais-relay.cjs can require it at the publish site; the
- * ESM delivery worker (scripts/shipping-webhook-worker.mjs) imports it too, so
- * producer and consumer derive one id from one function. Dockerfile.relay
- * COPYs this file (tests/dockerfile-relay-imports.test.mjs).
+ * CommonJS so scripts/ais-relay.cjs can require it at the publish site.
+ * Dockerfile.relay COPYs this file (tests/dockerfile-relay-imports.test.mjs).
+ * The personal fork removed the Shipping v2 webhook worker that drained the
+ * fan-out list; the list stays capped (API_FANOUT_LIST_CAP) and expires on
+ * its own (API_FANOUT_LIST_TTL_SECONDS). Phase 2 decides whether to drop the tee.
  *
  * Why not the queue's title hash: the relay dedups wm:events:queue on
  * hash(title) per site variant for 30 minutes, so one story reaches the queue

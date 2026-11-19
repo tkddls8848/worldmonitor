@@ -1105,8 +1105,8 @@ const cloudPreferredServerStateRoutes = new Set([
 // bundles — scripts/build-sidecar-handlers.mjs refuses to build an undeclared
 // one, and its CLOUD_ONLY_ROUTE_FAMILIES must list exactly these (#5907).
 // Routed to the cloud on purpose, WS_RELAY_URL or not: route-intelligence reads
-// seed-owned Redis (empty 200 locally, so `!ok` fallback never fires) and the
-// webhook family is Pro-gated + server-persisted, so the gate lives upstream.
+// seed-owned Redis (empty 200 locally, so `!ok` fallback never fires). The
+// webhook RPCs are retired (410). With no remote configured nothing is proxied.
 // Before this list the family reached the cloud only via the 404 "handler
 // missing" fallback — undeclared, and invisible when cloudFallback is off.
 const cloudOnlyRouteFamilyPrefixes = ['/api/v2/shipping/'];

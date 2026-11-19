@@ -1,17 +1,11 @@
 /**
  * Functional tests for ShippingV2Service handlers. Tests the typed handlers
- * directly (not the HTTP gateway). Covers the security invariants the legacy
- * edge functions enforced:
- *   - routeIntelligence: PRO gate, iso2 regex, hs2 non-digit stripping,
- *     cargoType coercion to legal enum, wire-shape byte-for-byte with partner
- *     contract (camelCase field names, ISO-8601 fetchedAt).
- *   - registerWebhook: PRO gate, SSRF guards (https-only, private IP, cloud
- *     metadata), chokepointIds whitelist, alertThreshold 0-100 range,
- *     subscriberId / secret format (wh_ + 24 hex / 64 hex), 30-day TTL
- *     atomic capped registration script.
- *   - listWebhooks: PRO gate, owner-filter isolation, `secret` never in response.
- *   - deliverWebhook: delivery-time DNS re-resolution blocks private/reserved
- *     addresses before fetch to prevent DNS rebinding SSRF.
+ * directly (not the HTTP gateway):
+ *   - routeIntelligence: iso2 regex, hs2 non-digit stripping, cargoType
+ *     coercion to legal enum, wire-shape byte-for-byte with partner contract
+ *     (camelCase field names, ISO-8601 fetchedAt).
+ *   - registerWebhook / listWebhooks: retired in the personal fork (the
+ *     webhook subsystem was removed); both answer 410 Gone.
  */
 
 import { strict as assert } from 'node:assert';
@@ -19,7 +13,6 @@ import { describe, it, beforeEach, afterEach } from 'node:test';
 
 const originalFetch = globalThis.fetch;
 const originalEnv = { ...process.env };
-const TEST_RESOLVER_KEY = Symbol.for('worldmonitor.shippingV2.resolveWebhookHostnameForTest');
 
 function makeCtx(headers = {}) {
   const req = new Request('https://worldmonitor.app/api/v2/shipping/route-intelligence', {
@@ -34,11 +27,7 @@ function proCtx() {
 }
 
 let routeIntelligence;
-let registerWebhook;
-let listWebhooks;
-let webhookShared;
-let deliverShippingV2Webhook;
-let WebhookDeliverySsrfError;
+let shippingV2Handler;
 let ValidationError;
 let ApiError;
 
@@ -53,18 +42,10 @@ describe('ShippingV2Service handlers', () => {
     process.env.WORLDMONITOR_VALID_KEYS = 'pro-test-key';
     process.env.UPSTASH_REDIS_REST_URL = 'https://fake-upstash.example';
     process.env.UPSTASH_REDIS_REST_TOKEN = 'fake-token';
-    Reflect.set(globalThis, TEST_RESOLVER_KEY, async () => ['93.184.216.34']);
 
     const riMod = await import('../server/worldmonitor/shipping/v2/route-intelligence.ts');
-    const rwMod = await import('../server/worldmonitor/shipping/v2/register-webhook.ts');
-    const lwMod = await import('../server/worldmonitor/shipping/v2/list-webhooks.ts');
-    const dwMod = await import('../server/worldmonitor/shipping/v2/deliver-webhook.ts');
-    webhookShared = await import('../server/worldmonitor/shipping/v2/webhook-shared.ts');
     routeIntelligence = riMod.routeIntelligence;
-    registerWebhook = rwMod.registerWebhook;
-    listWebhooks = lwMod.listWebhooks;
-    deliverShippingV2Webhook = dwMod.deliverShippingV2Webhook;
-    WebhookDeliverySsrfError = dwMod.WebhookDeliverySsrfError;
+    ({ shippingV2Handler } = await import('../server/worldmonitor/shipping/v2/handler.ts'));
     const gen = await import('../src/generated/server/worldmonitor/shipping/v2/service_server.ts');
     ValidationError = gen.ValidationError;
     ApiError = gen.ApiError;
@@ -72,7 +53,6 @@ describe('ShippingV2Service handlers', () => {
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
-    Reflect.deleteProperty(globalThis, TEST_RESOLVER_KEY);
     Object.keys(process.env).forEach((k) => {
       if (!(k in originalEnv)) delete process.env[k];
     });
@@ -178,514 +158,14 @@ describe('ShippingV2Service handlers', () => {
     });
   });
 
-  describe('registerWebhook', () => {
-    // Capture pipeline commands dispatched to Upstash for the happy-path Redis stub.
-    function stubRedisOk() {
-      const calls = [];
-      globalThis.fetch = async (_url, init) => {
-        const body = JSON.parse(String(init?.body));
-        if (body[0]?.[0] === 'SSCAN') return Response.json([{ result: ['0', []] }]);
-        if (body[0]?.[1]?.endsWith(':sweep')) return Response.json([{ result: body[0][0] === 'GET' ? null : 'OK' }]);
-        calls.push(body);
-        // Upstash pipeline returns one result per command.
-        return new Response(
-          JSON.stringify(body.map(command => ({ result: command[0] === 'SET' ? 'OK' : 1 }))),
-          { status: 200 },
-        );
-      };
-      return calls;
-    }
-
-    it('rejects missing callbackUrl with ValidationError', async () => {
-      await assert.rejects(
-        () => registerWebhook(proCtx(), { callbackUrl: '', chokepointIds: [], alertThreshold: 50 }),
-        (err) => err instanceof ValidationError && err.violations[0].field === 'callbackUrl',
-      );
-    });
-
-    it('SSRF guards reject http:// (must be https)', async () => {
-      await assert.rejects(
-        () => registerWebhook(proCtx(), {
-          callbackUrl: 'http://hooks.example.com/wm',
-          chokepointIds: [],
-          alertThreshold: 50,
-        }),
-        (err) => err instanceof ValidationError && /https/.test(err.violations[0].description),
-      );
-    });
-
-    it('SSRF guards reject localhost, RFC1918, and cloud metadata hostnames', async () => {
-      const blockedHosts = [
-        'https://localhost/hook',
-        'https://127.0.0.1/hook',
-        'https://10.0.0.1/hook',
-        'https://192.168.1.1/hook',
-        'https://169.254.169.254/latest/meta-data/',
-        'https://metadata.google.internal/',
-      ];
-      for (const callbackUrl of blockedHosts) {
+  describe('webhooks (retired)', () => {
+    for (const method of ['registerWebhook', 'listWebhooks']) {
+      it(`${method} answers 410 Gone`, async () => {
         await assert.rejects(
-          () => registerWebhook(proCtx(), { callbackUrl, chokepointIds: [], alertThreshold: 50 }),
-          (err) => err instanceof ValidationError,
-          `expected SSRF block for ${callbackUrl}`,
+          () => shippingV2Handler[method](proCtx(), {}),
+          (err) => err instanceof ApiError && err.statusCode === 410,
         );
-      }
-    });
-
-    it('rejects unknown chokepointIds', async () => {
-      await assert.rejects(
-        () => registerWebhook(proCtx(), {
-          callbackUrl: 'https://93.184.216.34/wm',
-          chokepointIds: ['not_a_real_chokepoint'],
-          alertThreshold: 50,
-        }),
-        (err) => err instanceof ValidationError && /Unknown chokepoint/.test(err.violations[0].description),
-      );
-    });
-
-    // alert_threshold 0..100 range is enforced primarily by buf.validate at
-    // the wire layer. The handler re-enforces it so direct invocations
-    // (internal jobs, test harnesses, future transports) can't store out-of-
-    // range values — cheap invariant-at-the-boundary (#3287 review nit 1).
-    it('rejects alertThreshold > 100 with ValidationError', async () => {
-      await assert.rejects(
-        () => registerWebhook(proCtx(), {
-          callbackUrl: 'https://93.184.216.34/wm',
-          chokepointIds: [],
-          alertThreshold: 9999,
-        }),
-        (err) => err instanceof ValidationError && err.violations[0].field === 'alertThreshold',
-      );
-    });
-
-    it('rejects alertThreshold < 0 with ValidationError', async () => {
-      await assert.rejects(
-        () => registerWebhook(proCtx(), {
-          callbackUrl: 'https://93.184.216.34/wm',
-          chokepointIds: [],
-          alertThreshold: -1,
-        }),
-        (err) => err instanceof ValidationError && err.violations[0].field === 'alertThreshold',
-      );
-    });
-
-    it('happy path returns wh_-prefixed subscriberId and 64-char hex secret; issues atomic capped registration with 30-day TTL', async () => {
-      const calls = stubRedisOk();
-      const res = await registerWebhook(proCtx(), {
-        callbackUrl: 'https://93.184.216.34/wm',
-        chokepointIds: [],
-        alertThreshold: 60,
       });
-
-      // Partner-visible shape: subscriberId + secret only (no extras).
-      assert.deepEqual(Object.keys(res).sort(), ['secret', 'subscriberId']);
-      assert.match(res.subscriberId, /^wh_[0-9a-f]{24}$/);
-      assert.match(res.secret, /^[0-9a-f]{64}$/);
-
-      assert.equal(calls.length, 1);
-      const pipeline = calls[0];
-      assert.equal(pipeline.length, 1);
-      const [verb, script, count, recordKey, ownerKey, allKey, quotaKey, raw, subscriberId, ttl, cap] = pipeline[0];
-      assert.equal(verb, 'EVAL');
-      assert.match(script, /SCARD/);
-      assert.equal(count, '4');
-      assert.equal(recordKey, `webhook:sub:${res.subscriberId}:v1`);
-      assert.ok(ownerKey.startsWith('webhook:owner:'));
-      assert.equal(quotaKey, ownerKey);
-      assert.equal(allKey, 'webhook:all:v1');
-      assert.equal(JSON.parse(raw).subscriberId, subscriberId);
-      assert.equal(ttl, String(86400 * 30));
-      assert.equal(cap, '10');
-    });
-
-    it('stores every registration under the single owner', async () => {
-      const calls = stubRedisOk();
-      await registerWebhook(makeCtx({
-        'X-WorldMonitor-Key': 'wms_automatic-anonymous-session',
-        Cookie: '__Host-wm-pro-key=pro-test-key',
-      }), {
-        callbackUrl: 'https://93.184.216.34/wm',
-        chokepointIds: [],
-        alertThreshold: 60,
-      });
-
-      const record = JSON.parse(calls[0][0][7]);
-      assert.equal(record.ownerTag, 'owner');
-    });
-
-    it('alertThreshold omitted (undefined) applies the legacy default of 50', async () => {
-      const calls = stubRedisOk();
-      await registerWebhook(proCtx(), {
-        callbackUrl: 'https://93.184.216.34/wm',
-        chokepointIds: [],
-        // alertThreshold omitted — proto3 `optional int32` arrives as undefined
-      });
-      const record = JSON.parse(calls[0][0][7]);
-      assert.equal(record.alertThreshold, 50);
-    });
-
-    it('alertThreshold explicit 0 is preserved (deliver every alert)', async () => {
-      // #3242 followup #4 — proto3 `optional` lets the handler distinguish
-      // "partner explicitly sent 0" from "partner omitted the field". The
-      // pre-fix handler coerced both to 50, silently dropping the partner's
-      // intent to receive every disruption.
-      const calls = stubRedisOk();
-      await registerWebhook(proCtx(), {
-        callbackUrl: 'https://93.184.216.34/wm',
-        chokepointIds: [],
-        alertThreshold: 0,
-      });
-      const record = JSON.parse(calls[0][0][7]);
-      assert.equal(record.alertThreshold, 0);
-    });
-
-    it('empty chokepointIds subscribes to the full CHOKEPOINT_REGISTRY', async () => {
-      const calls = stubRedisOk();
-      await registerWebhook(proCtx(), {
-        callbackUrl: 'https://93.184.216.34/wm',
-        chokepointIds: [],
-        alertThreshold: 50,
-      });
-      const record = JSON.parse(calls[0][0][7]);
-      assert.ok(record.chokepointIds.length > 0, 'empty list expands to registry');
-      assert.equal(record.chokepointIds.length, webhookShared.VALID_CHOKEPOINT_IDS.size);
-    });
-
-    it('eventType omitted stores the default chokepoint.disruption and no scope fields', async () => {
-      const calls = stubRedisOk();
-      await registerWebhook(proCtx(), { callbackUrl: 'https://93.184.216.34/wm', chokepointIds: [], countries: [] });
-      const record = JSON.parse(calls[0][0][7]);
-      assert.equal(record.eventType, 'chokepoint.disruption');
-      assert.equal('countries' in record, false);
-      assert.equal('minLiveSignal' in record, false);
-    });
-
-    it('rejects an eventType outside shared/event-triggers.json', async () => {
-      stubRedisOk();
-      await assert.rejects(
-        () => registerWebhook(proCtx(), { callbackUrl: 'https://93.184.216.34/wm', chokepointIds: [], countries: [], eventType: 'country.coup' }),
-        (err) => err instanceof ValidationError && err.violations[0].field === 'eventType',
-      );
-    });
-
-    it('country.risk_surge keeps an upper-cased, de-duplicated country scope and rejects unmonitored codes', async () => {
-      const calls = stubRedisOk();
-      await registerWebhook(proCtx(), {
-        callbackUrl: 'https://93.184.216.34/wm',
-        chokepointIds: [],
-        eventType: 'country.risk_surge',
-        countries: ['ir', 'IR', ' ua '],
-      });
-      const record = JSON.parse(calls[0][0][7]);
-      assert.equal(record.eventType, 'country.risk_surge');
-      assert.deepEqual(record.countries, ['IR', 'UA']);
-      await assert.rejects(
-        () => registerWebhook(proCtx(), { callbackUrl: 'https://93.184.216.34/wm', chokepointIds: [], eventType: 'country.risk_surge', countries: ['ZZ'] }),
-        (err) => err instanceof ValidationError && err.violations[0].field === 'countries',
-      );
-      await assert.rejects(
-        () => registerWebhook(proCtx(), { callbackUrl: 'https://93.184.216.34/wm', chokepointIds: [], countries: ['IR'] }),
-        (err) => err instanceof ValidationError && err.violations[0].field === 'countries',
-        'countries on a chokepoint subscription is a caller mistake, not silently ignored',
-      );
-    });
-
-    it('news.breaking stores a normalized scope with the registry defaults and echoes nothing for threshold events', async () => {
-      const calls = stubRedisOk();
-      await registerWebhook(proCtx(), {
-        callbackUrl: 'https://93.184.216.34/wm',
-        chokepointIds: [],
-        countries: [],
-        eventType: 'news.breaking',
-        scope: { keywords: [' Hormuz ', 'tanker'], countries: ['ir'], categories: [], severityFloor: 'critical' },
-      });
-      const record = JSON.parse(calls[0][0][7]);
-      assert.equal(record.eventType, 'news.breaking');
-      assert.deepEqual(record.scope, {
-        keywords: ['hormuz', 'tanker'],
-        categories: [],
-        countries: ['IR'],
-        importanceFloor: 69,
-        severityFloor: 'critical',
-      });
-      assert.equal('minLiveSignal' in record, false);
-      assert.equal('countries' in record, false, 'top-level countries stays a risk-surge field');
-
-      const threshold = stubRedisOk();
-      await registerWebhook(proCtx(), { callbackUrl: 'https://93.184.216.34/wm', chokepointIds: [], countries: [], eventType: 'country.risk_surge', scope: { keywords: [] } });
-      assert.equal('scope' in JSON.parse(threshold[0][0][7]), false, 'a threshold record carries no scope');
-    });
-
-    it('natural.hazard stores its scope with the registry defaults (magnitude 5.5, alert level Orange)', async () => {
-      const calls = stubRedisOk();
-      await registerWebhook(proCtx(), {
-        callbackUrl: 'https://93.184.216.34/wm',
-        chokepointIds: [],
-        countries: [],
-        eventType: 'natural.hazard',
-        scope: { hazardTypes: ['earthquakes', 'severeStorms'], countries: ['jp'], minAlertLevel: '', keywords: [] },
-      });
-      const record = JSON.parse(calls[0][0][7]);
-      assert.equal(record.eventType, 'natural.hazard');
-      assert.deepEqual(record.scope, { hazardTypes: ['earthquakes', 'severeStorms'], countries: ['JP'], minMagnitude: 5.5, minAlertLevel: 'Orange' });
-    });
-
-    it('rejects a scope key the event does not define, and any set scope on a threshold event', async () => {
-      stubRedisOk();
-      await assert.rejects(
-        () => registerWebhook(proCtx(), { callbackUrl: 'https://93.184.216.34/wm', chokepointIds: [], countries: [], eventType: 'news.breaking', scope: { symbols: ['VIX'] } }),
-        (err) => err instanceof ValidationError && err.violations[0].field === 'scope.symbols',
-      );
-      await assert.rejects(
-        () => registerWebhook(proCtx(), { callbackUrl: 'https://93.184.216.34/wm', chokepointIds: [], countries: [], eventType: 'market.move', scope: { minAbsPct: 3 } }),
-        (err) => err instanceof ValidationError && err.violations[0].field === 'scope.minAbsPct',
-      );
-      await assert.rejects(
-        () => registerWebhook(proCtx(), { callbackUrl: 'https://93.184.216.34/wm', chokepointIds: [], countries: [], scope: { keywords: ['iran'] } }),
-        (err) => err instanceof ValidationError && err.violations[0].field === 'scope',
-        'scope on a chokepoint subscription is a caller mistake, not silently ignored',
-      );
-    });
-
-    it('minLiveSignal is stored for chokepoint.disruption, bounded, and refused for other events', async () => {
-      const calls = stubRedisOk();
-      await registerWebhook(proCtx(), { callbackUrl: 'https://93.184.216.34/wm', chokepointIds: ['hormuz_strait'], countries: [], minLiveSignal: 15 });
-      assert.equal(JSON.parse(calls[0][0][7]).minLiveSignal, 15);
-      await assert.rejects(
-        () => registerWebhook(proCtx(), { callbackUrl: 'https://93.184.216.34/wm', chokepointIds: [], countries: [], minLiveSignal: 41 }),
-        (err) => err instanceof ValidationError && err.violations[0].field === 'minLiveSignal',
-      );
-      await assert.rejects(
-        () => registerWebhook(proCtx(), { callbackUrl: 'https://93.184.216.34/wm', chokepointIds: [], eventType: 'country.risk_surge', countries: [], minLiveSignal: 15 }),
-        (err) => err instanceof ValidationError && err.violations[0].field === 'minLiveSignal',
-      );
-    });
-  });
-
-  describe('listWebhooks', () => {
-
-    it('returns empty webhooks array when SMEMBERS is empty', async () => {
-      globalThis.fetch = async (_url, init) => {
-        const [command] = JSON.parse(String(init?.body));
-        if (command[0] === 'SSCAN') return Response.json([{ result: ['0', []] }]);
-        if (command[1].endsWith(':sweep')) return Response.json([{ result: command[0] === 'GET' ? null : 'OK' }]);
-        return Response.json([{ result: [] }]);
-      };
-      const res = await listWebhooks(proCtx(), {});
-      assert.deepEqual(res, { webhooks: [] });
-    });
-
-    it('filters out records whose ownerTag does not match the caller fingerprint (cross-tenant isolation)', async () => {
-      const otherOwnerRecord = {
-        subscriberId: 'wh_deadbeef000000000000beef',
-        ownerTag: 'someone-elses-hash',
-        callbackUrl: 'https://other.example/hook',
-        chokepointIds: ['hormuz_strait'],
-        alertThreshold: 50,
-        createdAt: '2026-04-01T00:00:00.000Z',
-        active: true,
-        secret: 'other-caller-secret-never-returned',
-      };
-      globalThis.fetch = async (_url, init) => {
-        const body = JSON.parse(String(init?.body));
-        if (body[0]?.[0] === 'SSCAN') return Response.json([{ result: ['0', []] }]);
-        if (body[0]?.[1]?.endsWith(':sweep')) return Response.json([{ result: body[0][0] === 'GET' ? null : 'OK' }]);
-        if (body.length === 1 && body[0][0] === 'SMEMBERS') {
-          return new Response(
-            JSON.stringify([{ result: ['wh_deadbeef000000000000beef'] }]),
-            { status: 200 },
-          );
-        }
-        return new Response(
-          JSON.stringify(body.map(() => ({ result: JSON.stringify(otherOwnerRecord) }))),
-          { status: 200 },
-        );
-      };
-      const res = await listWebhooks(proCtx(), {});
-      assert.deepEqual(res.webhooks, [], 'mismatched ownerTag must not leak across callers');
-    });
-
-    it('omits `secret` from matched records — partner contract invariant', async () => {
-      // Build a record whose ownerTag matches the caller's SHA-256 fingerprint.
-      const ownerTag = 'owner'; // PERSONAL_OWNER_ID
-
-      const record = {
-        subscriberId: 'wh_abc123456789012345678901',
-        ownerTag,
-        callbackUrl: 'https://hooks.example.com/wm',
-        chokepointIds: ['hormuz_strait'],
-        alertThreshold: 60,
-        createdAt: '2026-04-01T00:00:00.000Z',
-        active: true,
-        secret: 'must-not-be-in-response',
-      };
-      globalThis.fetch = async (_url, init) => {
-        const body = JSON.parse(String(init?.body));
-        if (body[0]?.[0] === 'SSCAN') return Response.json([{ result: ['0', []] }]);
-        if (body[0]?.[1]?.endsWith(':sweep')) return Response.json([{ result: body[0][0] === 'GET' ? null : 'OK' }]);
-        if (body.length === 1 && body[0][0] === 'SMEMBERS') {
-          return new Response(
-            JSON.stringify([{ result: [record.subscriberId] }]),
-            { status: 200 },
-          );
-        }
-        return new Response(
-          JSON.stringify(body.map(() => ({ result: JSON.stringify(record) }))),
-          { status: 200 },
-        );
-      };
-      const res = await listWebhooks(proCtx(), {});
-      assert.equal(res.webhooks.length, 1);
-      const [summary] = res.webhooks;
-      assert.equal(summary.subscriberId, record.subscriberId);
-      assert.equal(summary.callbackUrl, record.callbackUrl);
-      assert.ok(!('secret' in summary), '`secret` must never appear in ListWebhooks response');
-      // Records written before event types existed report the default event
-      // and empty scope fields, so partner clients see one shape.
-      assert.equal(summary.eventType, 'chokepoint.disruption');
-      assert.deepEqual(summary.countries, []);
-      assert.equal(summary.minLiveSignal, 0);
-      assert.equal('scope' in summary, false, 'threshold records carry no scope');
-    });
-
-    it('echoes the stored scope of an occurrence-event record as registered', async () => {
-      const ownerTag = 'owner'; // PERSONAL_OWNER_ID
-      const scope = { keywords: ['hormuz'], categories: [], countries: ['IR'], importanceFloor: 69, severityFloor: 'high' };
-      const record = {
-        subscriberId: 'wh_abc123456789012345678901',
-        ownerTag,
-        callbackUrl: 'https://hooks.example.com/wm',
-        chokepointIds: ['hormuz_strait'],
-        alertThreshold: 50,
-        createdAt: '2026-10-18T00:00:00.000Z',
-        active: true,
-        secret: 'must-not-be-in-response',
-        eventType: 'news.breaking',
-        scope,
-      };
-      globalThis.fetch = async (_url, init) => {
-        const body = JSON.parse(String(init?.body));
-        if (body[0]?.[0] === 'SSCAN') return Response.json([{ result: ['0', []] }]);
-        if (body[0]?.[1]?.endsWith(':sweep')) return Response.json([{ result: body[0][0] === 'GET' ? null : 'OK' }]);
-        if (body.length === 1 && body[0][0] === 'SMEMBERS') return Response.json([{ result: [record.subscriberId] }]);
-        return Response.json(body.map(() => ({ result: JSON.stringify(record) })));
-      };
-      const res = await listWebhooks(proCtx(), {});
-      assert.equal(res.webhooks[0].eventType, 'news.breaking');
-      assert.deepEqual(res.webhooks[0].scope, scope);
-      assert.ok(!('secret' in res.webhooks[0]));
-    });
-  });
-
-  describe('deliverWebhook', () => {
-    function makeRecord(callbackUrl = 'https://hooks.example.com/wm') {
-      return {
-        subscriberId: 'wh_abc123456789012345678901',
-        ownerTag: 'owner',
-        callbackUrl,
-        chokepointIds: ['hormuz_strait'],
-        alertThreshold: 60,
-        createdAt: '2026-04-01T00:00:00.000Z',
-        active: true,
-        secret: 'a'.repeat(64),
-      };
     }
-
-    const payload = {
-      subscriberId: 'wh_abc123456789012345678901',
-      chokepointId: 'hormuz_strait',
-      score: 74,
-      alertThreshold: 60,
-      triggeredAt: '2026-04-19T12:03:00Z',
-      reason: 'ais_congestion_spike',
-      details: { source: 'test' },
-    };
-
-    it('re-resolves callbackUrl immediately before send and blocks private rebinding without fetching', async () => {
-      let fetched = false;
-      await assert.rejects(
-        () => deliverShippingV2Webhook(makeRecord(), payload, {
-          resolveHostname: async (hostname) => {
-            assert.equal(hostname, 'hooks.example.com');
-            return ['10.0.0.9'];
-          },
-          fetchImpl: async () => {
-            fetched = true;
-            return new Response('should not send', { status: 200 });
-          },
-        }),
-        (err) => err instanceof WebhookDeliverySsrfError && /private\/reserved/.test(err.message),
-      );
-      assert.equal(fetched, false, 'delivery fetch must not run after private DNS answer');
-    });
-
-    it('blocks reserved/documentation ranges returned by delivery-time DNS', async () => {
-      let fetched = false;
-      await assert.rejects(
-        () => deliverShippingV2Webhook(makeRecord(), payload, {
-          resolveHostname: async () => ['203.0.113.10'],
-          fetchImpl: async () => {
-            fetched = true;
-            return new Response('should not send', { status: 200 });
-          },
-        }),
-        (err) => err instanceof WebhookDeliverySsrfError && /203\.0\.113\.10/.test(err.message),
-      );
-      assert.equal(fetched, false, 'delivery fetch must not run after reserved DNS answer');
-    });
-
-    it('blocks mixed DNS answers if any address is private or reserved', async () => {
-      await assert.rejects(
-        () => deliverShippingV2Webhook(makeRecord(), payload, {
-          resolveHostname: async () => ['93.184.216.34', '169.254.169.254'],
-          fetchImpl: async () => new Response('should not send', { status: 200 }),
-        }),
-        (err) => err instanceof WebhookDeliverySsrfError && /169\.254\.169\.254/.test(err.message),
-      );
-    });
-
-    it('sends only after a public delivery-time DNS answer and includes delivery headers', async () => {
-      const seen = {};
-      const result = await deliverShippingV2Webhook(makeRecord(), payload, {
-        deliveryId: 'whd_test_delivery',
-        resolveHostname: async () => ['93.184.216.34'],
-        fetchImpl: async (url, init) => {
-          seen.url = String(url);
-          seen.method = init.method;
-          seen.headers = init.headers;
-          seen.body = init.body;
-          return new Response('ok', { status: 202 });
-        },
-      });
-
-      assert.deepEqual(result, { status: 202, ok: true, resolvedAddresses: ['93.184.216.34'] });
-      assert.equal(seen.url, 'https://hooks.example.com/wm');
-      assert.equal(seen.method, 'POST');
-      assert.equal(seen.headers['content-type'], 'application/json');
-      assert.equal(seen.headers['user-agent'], 'WorldMonitor-ShippingV2-Webhooks/1.0');
-      assert.equal(seen.headers['x-wm-delivery-id'], 'whd_test_delivery');
-      assert.equal(seen.headers['x-wm-event'], 'chokepoint.disruption');
-      assert.match(seen.headers['x-wm-signature'], /^sha256=[0-9a-f]{64}$/);
-      assert.equal(seen.body, JSON.stringify(payload));
-    });
-  });
-
-  describe('registerWebhook DNS validation', () => {
-    it('rejects private DNS answers before registration persists a callback URL', async () => {
-      await assert.rejects(
-        () => webhookShared.assertCallbackUrlRegistrationSafe(
-          'https://hooks.example.com/wm',
-          async () => ['93.184.216.34', '169.254.169.254'],
-        ),
-        /private\/reserved/,
-      );
-    });
-
-    it('accepts a public IP literal without performing a DNS lookup', async () => {
-      await assert.doesNotReject(() => webhookShared.assertCallbackUrlRegistrationSafe(
-        'https://93.184.216.34/wm',
-        async () => { throw new Error('public IP literals must not require DNS'); },
-      ));
-    });
   });
 });

@@ -445,9 +445,6 @@ const STANDALONE_KEYS = {
   // monitored here. Gated by IRAN_EVENTS_ENABLED like the feed itself.
   strikePressure:     'conflict:strike-pressure:v1',
   chinaCoverage:      CHINA_COVERAGE_SUMMARY_KEY,
-  // Per-tick status of the chokepoint webhook delivery worker (#9217). No
-  // dashboard reads it; recordCount is the number of active subscribers.
-  shippingWebhookWorker: 'shipping:webhook-worker:v1',
   // Seeded and health-monitored; no dashboard consumer yet (#6155 is the
   // data layer only), so it is standalone rather than bootstrap-tiered.
   chinaStockConnect:  'market:china:stock-connect:v1',
@@ -880,18 +877,6 @@ const SEED_META = {
   // a full hour below the 6h data-expiry floor.
   humanitarianSummary: { key: 'seed-meta:conflict:humanitarian',  maxStaleMin: 300, minRecordCount: 41 },
   chinaCoverage:   { key: 'seed-meta:health:china-coverage',   maxStaleMin: 180 },
-  // Ticks every 5 minutes; 15 tolerates 2 missed ticks across a deploy.
-  shippingWebhookWorker: {
-    key: 'seed-meta:shipping:webhook-worker',
-    maxStaleMin: 15,
-    activationKey: 'seed-activated:shipping:webhook-worker',
-    cutover: {
-      mode: 'activation-marker',
-      fromKey: null,
-      issue: 9217,
-      activationKey: 'seed-activated:shipping:webhook-worker',
-    },
-  },
   earthquakes: {
     key: 'seed-meta:seismology:earthquakes', maxStaleMin: 30,
     sourceFailure: {
@@ -2853,10 +2838,6 @@ const ON_DEMAND_KEYS = new Set([
   // seed-fire-detections' next 10-minute tick writes the key. The seeder SETs
   // the durable marker on every successful publish; strict from then on.
   'wildfiresSummary',
-  // Deployment-order bridge (#9217): this reader ships before the
-  // shipping-webhook-worker Railway service is provisioned. The worker SETs the
-  // durable marker on its first tick that reads the score feed; strict from then on.
-  'shippingWebhookWorker',
   'sanctionsChanges',
   // Same deployment-order bridge as chinaCoverage: Vercel can ship this reader
   // before seed-bundle-macro's next 08:00 UTC tick publishes the first CBR
@@ -3078,7 +3059,6 @@ const ACTIVATION_MARKERS = {
   ciiStructuralPrior: SEED_META.ciiStructuralPrior.activationKey,
   ciiEconomicStress: SEED_META.ciiEconomicStress.activationKey,
   countryHistory: SEED_META.countryHistory.activationKey,
-  shippingWebhookWorker: SEED_META.shippingWebhookWorker.activationKey,
   sanctionsChanges: SEED_META.sanctionsChanges.activationKey,
   // Written by scripts/seed-cbr-rates.mjs (CBR_ACTIVATION_KEY) in runSeed's
   // afterPublish hook, so it exists only once a real table has been published.
@@ -3571,9 +3551,6 @@ const ZERO_RECORD_DATA_OK_KEYS = new Set([
   // A current List query can validly return no Posts. The relay still writes
   // the canonical snapshot, so a missing xFeed key remains a hard failure.
   'xFeed',
-  // Zero active webhook subscribers is a valid state; the status key is still
-  // written every tick, so a missing key stays a hard failure.
-  'shippingWebhookWorker',
   // Both Toronto CAD sources publish an explicit {records:[]} envelope on a
   // quiet tick. Keep zero valid without softening a missing payload after each
   // activation marker exists.

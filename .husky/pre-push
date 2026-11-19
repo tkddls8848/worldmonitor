@@ -383,7 +383,6 @@ PROTO_INPUTS=(
   scripts/openapi-inject-jmespath.mjs
   scripts/openapi-inject-required.mjs
   scripts/openapi-inject-servers.mjs
-  scripts/openapi-inject-webhooks.mjs
   scripts/openapi-restrict-provider-redistribution.mjs
   scripts/scorecard/v1/_input-registry.mts
   scripts/scorecard/v1/_methodology.mts
@@ -425,7 +424,6 @@ PROTO_INPUTS=(
   shared/decision-signal-provenance-families.ts
   shared/decision-signal-provenance.ts
   shared/embed-panels.ts
-  shared/event-triggers.json
   shared/iso2-to-iso3.json
   shared/openapi-filter-param-contracts.json
   shared/source-provenance-declarations.ts

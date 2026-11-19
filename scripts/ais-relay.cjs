@@ -61,8 +61,9 @@ try {
 const { createPollGenerationGuard } = require('./lib/poll-generation-guard.cjs');
 const { createXPollCycle, xPollSlot } = require('./lib/x-poll-cycle.cjs');
 const { createGuardedLookup, SSRF_BLOCKED_ERROR_CODE } = require('./lib/notification-webhook-ssrf.cjs');
-// API fan-out of rss_alert / market_alert queue messages to the Shipping v2
-// webhook worker (news.breaking, market.move in shared/event-triggers.json).
+// API fan-out of rss_alert / market_alert queue messages (news.breaking,
+// market.move). The webhook worker that drained it was removed; the list is
+// capped and expires on its own.
 const {
   API_FANOUT_EVENT_TYPES,
   API_FANOUT_LIST_CAP,

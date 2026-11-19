@@ -35,8 +35,7 @@ const SKIP_DIRS = new Set(['[domain]', '[[...path]]']);
  *
  * - v2/shipping — route-intelligence reads seed-owned Redis the desktop has no
  *   credentials for (an empty 200 locally, so the `!ok` fallback would never
- *   fire), and the webhook family persists registrations server-side, in the
- *   cloud.
+ *   fire). The webhook RPCs are retired (410).
  */
 export const CLOUD_ONLY_ROUTE_FAMILIES = new Set(['v2/shipping']);
 

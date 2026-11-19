@@ -92,7 +92,6 @@
     "gen:openapi:servers": "node scripts/openapi-inject-servers.mjs",
     "gen:openapi:deprecated": "node scripts/openapi-inject-deprecated.mjs",
     "gen:openapi:jmespath": "node scripts/openapi-inject-jmespath.mjs",
-    "gen:openapi:webhooks": "node scripts/openapi-inject-webhooks.mjs",
     "gen:openapi:async-jobs": "node scripts/openapi-inject-async-jobs.mjs",
     "gen:openapi:china-decision-signals": "node scripts/openapi-inject-china-decision-signals.mjs",
     "prebuild": "npm run docs:dates -- --fetch-history && npm run build:openapi",

@@ -376,7 +376,8 @@ const RPC_CACHE_TIER: Record<string, CacheTier> = {
 
   // Partner-facing shipping/v2.
   '/api/v2/shipping/route-intelligence': 'slow-browser',
-  // GET /webhooks lists the owner's webhooks.
+  // GET /webhooks is retired (410) with the webhook subsystem; the generated
+  // route still exists until Phase 2 prunes proto/ and src/generated/.
   '/api/v2/shipping/webhooks': 'slow-browser',
 
   // Company Monitoring is account-private and remains unrouted until #6003.

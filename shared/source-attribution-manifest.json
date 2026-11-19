@@ -1533,9 +1533,6 @@
           "path": "scripts/post-pr3487-force-refresh.mjs"
         },
         {
-          "path": "scripts/shipping-webhook-worker.mjs"
-        },
-        {
           "path": "scripts/validate-rss-feeds.mjs"
         },
         {
@@ -2427,9 +2424,6 @@
       "references": [
         {
           "path": "server/_shared/email-validation.ts"
-        },
-        {
-          "path": "server/worldmonitor/shipping/v2/webhook-shared.ts"
         }
       ]
     },
@@ -11175,9 +11169,6 @@
         },
         {
           "path": "scripts/shared/notify-fields.cjs"
-        },
-        {
-          "path": "scripts/shipping-webhook-worker.mjs"
         },
         {
           "path": "scripts/validate-seed-migration.mjs"

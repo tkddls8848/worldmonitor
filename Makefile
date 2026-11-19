@@ -131,7 +131,6 @@ generate: clean ## Generate code from proto definitions
 	@node scripts/openapi-inject-examples.mjs
 	@node scripts/openapi-inject-servers.mjs
 	@node scripts/openapi-inject-deprecated.mjs
-	@node scripts/openapi-inject-webhooks.mjs
 	@node scripts/openapi-inject-async-jobs.mjs
 	@node scripts/openapi-inject-china-corridors.mjs
 	@node scripts/openapi-inject-china-decision-signals.mjs
