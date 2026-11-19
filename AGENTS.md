@@ -80,7 +80,7 @@ The browser import direction is `types -> config -> services -> components -> ap
 - For a new or changed news feed, load [add-rss-feed](.agents/skills/add-rss-feed/SKILL.md). For a JSON API endpoint, load [add-rpc-endpoint](.agents/skills/add-rpc-endpoint/SKILL.md). For a new dataset, seeder, or map layer, load [add-data-source](.agents/skills/add-data-source/SKILL.md).
 - For a code review or a self-review before committing, load [review-worldmonitor-change](.agents/skills/review-worldmonitor-change/SKILL.md). A standalone review stays read-only.
 - Folder rules live in `src/components/AGENTS.md`, `scripts/AGENTS.md`, and `server/AGENTS.md`. Read the one for the folder you edit.
-- `.agents/skills/` contains repository engineering skills. `skills/` contains the upstream product recipes for API and MCP consumers; this fork does not serve those APIs.
+- `.agents/skills/` contains the repository engineering skills. The upstream product recipes for API and MCP consumers (`skills/`) were deleted with the hosted API.
 - Read [documented solutions](docs/solutions/) when the affected area has a prior fix — organized by category directory (`security-issues/`, `logic-errors/`, `conventions/`, …) with YAML frontmatter (`module`, `component`, `problem_type`, `tags`) to grep. Use [CONCEPTS.md](CONCEPTS.md) for shared terms and [design philosophy](docs/architecture.mdx) for design decisions.
 
 Run the smallest meaningful proof first. Preserve useful regression coverage. Run heavy checks sequentially. Report failures honestly. Keep locally verified, pushed, CI green, observed on the running personal server, and acceptance complete as separate claims.

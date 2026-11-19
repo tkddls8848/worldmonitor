@@ -235,6 +235,7 @@ connectors/   외부 API 연결 계층: 수집기, 외부 소스별 연결 코�
 - `market.html`, `country.html`, `settings.html`, `live-channels.html`은 대시보드 기능이라 남긴다. `index.html`이 공개 랜딩 페이지라면 지운다.
   - 정정(작업 6, 2026-11-17): 확인해 보니 `country.html`, `market.html`은 플러그인용 페이지(`plugin-country-main.ts`, `plugin-market-main.ts`)였고, `settings.html`, `live-channels.html`은 데스크톱(Tauri) 창(`settings-main.ts`, `live-channels-main.ts`, `tauri-bridge` 사용)이었다. 그래서 작업 6에서 네 페이지와 진입 파일을 지웠다. 웹 대시보드의 같은 기능은 `src/main.ts`의 쿼리 경로 `?settings=1`(`settings-window.ts`)과 `?live-channels=1`(`live-channels-window.ts`)로 남는다. `index.html`은 대시보드 자체이므로 남는다.
 - `api/ask.ts`, `api/chat-analyst.ts`, `api/travel-risk-assessment.ts`는 고유 논리로 보고 남긴다.
+  - 정정(작업 8, 2026-11-18): `api/ask.ts`는 NLWeb 카탈로그 응답이라 고유 논리가 아니었다. 결정 16에 따라 작업 8에서 지웠다. `api/chat-analyst.ts`와 `api/travel-risk-assessment.ts`는 남았다.
 - `leads`, `feedback`, `giving` 도메인은 빌더가 데이터 소스인지 확인해서, 데이터 소스면 남기고 영업·문의용이면 지운다.
 
 **8.6 원본 저장소와 결별한다** (소유자 결정, 2026-11-15)
@@ -268,11 +269,11 @@ connectors/   외부 API 연결 계층: 수집기, 외부 소스별 연결 코�
 |---|---|
 | (1) 독립 디렉터리와 루트 파일 | 모두 지웠다. `src-tauri/`의 로컬 API 서버는 지우기 전에 `scripts/local/local-api-server.mjs`로 옮겼다. 마지막으로 남은 추적 밖 파일(`src-tauri/notices/`)과 `.gitignore` 규칙도 작업 11에서 지웠다. |
 | (2) 공개 HTML 진입점 | 모두 지웠다. 8.5 정정대로 `country.html`, `market.html`, `settings.html`, `live-channels.html`도 지웠다. |
-| (3) API 진입점 | 계정·결제·OAuth·MCP·알림·공개 부가 기능을 지웠다. 남긴 것: Trip Assessment가 쓰는 `api/mcp/` 11개 파일(결정 16), `api/chat-analyst`, `api/travel-risk-assessment`, `api/brief/*`, `api/latest-brief`. `api/brief`의 Convex 관심 국가 조회는 작업 11에서 지웠다. |
+| (3) API 진입점 | 계정·결제·OAuth·MCP·알림·공개 부가 기능을 지웠다. 남긴 것: Trip Assessment가 쓰는 `api/mcp/` 11개 파일(결정 16), `api/chat-analyst`, `api/travel-risk-assessment`, `api/brief/*`, `api/latest-brief`. `api/brief`의 Convex 관심 국가 조회는 작업 11에서 지웠다. 8.5는 `api/ask.ts`를 남긴다고 했지만, NLWeb 카탈로그라 고유 논리가 아니어서 작업 8에서 지웠다(결정 16, 8.5 정정). |
 | (4) 서버 다중 사용자 장치 | 등급·키·세션·속도 제한 모듈과 게이트웨이 단계를 지웠다. `server/_shared/internal-auth.ts`는 남긴다. `RELAY_SHARED_SECRET`(브리프 why-matters 내부 엔드포인트)와 `TRUST_REVIEW_SECRET`(오류 보고 검토)를 지키고 있다(결정 16). 지도 레이어 등급(`LayerDefinition.premium`, `isLayerEntitled` 등)은 작업 11에서 "허용"으로 접었다. |
 | (5) 브라우저 코드 | 로그인·결제·잠금·PWA·Sentry·분석·데스크톱 분기를 지웠다. 남긴 것: 임베드 미리보기용 `makeProLocked` 경로(`IS_EMBEDDED_PREVIEW`일 때만 잠기며, 12곳 이상에 걸쳐 있어 2단계로 넘긴다), WebMCP의 `open_sign_in` 도구(WebMCP 공개 표면과 함께 2단계에서 정한다). |
 | (6) 공개 노출용 생성물 | 공개 페이지 빌더 대부분을 지웠다. 남긴 것: `scripts/crawlable-live-tools.mjs`와 `live-pages/`, `situation-page/` 등 공개 페이지 빌더(빌드에 쓰이지 않지만 서버 코드와 대응 테스트가 묶여 있어 2단계에서 공개 페이지와 함께 정한다. `/api/wm-session` 호출은 작업 11에서 지웠다), `public/llms*`·sitemap 같은 공개 파일, `scripts/source-attribution.mjs`와 그 목록(5.2 결정대로 남긴다). |
-| (7) 알림·메일 발송 | 지웠다. `seed-digest-notifications.mjs`는 소유자 브리프 조립만 한다(8.3). `scripts/telegram/session-auth.mjs`는 텔레그램 OSINT 수집 보조라 남긴다(결정 9). 릴레이(`ais-relay.cjs`)의 위젯 에이전트는 `WIDGET_AGENT_KEY`가 있을 때만 동작하는 기능이라 남겼고, 그 안의 원본 `wm-session` 발급 호출도 함께 남아 있다(2단계). |
+| (7) 알림·메일 발송 | 지웠다. `seed-digest-notifications.mjs`는 소유자 브리프 조립만 한다(8.3). `scripts/telegram/session-auth.mjs`는 텔레그램 OSINT 수집 보조라 남긴다(결정 9). 릴레이(`ais-relay.cjs`)의 위젯 에이전트는 `WIDGET_AGENT_KEY`가 있을 때만 동작하는 기능이라 남겼다. 그 안의 원본 `wm-session` 발급 호출은 최종 검토 뒤 후속 정리(9.5)에서 지웠다. |
 | (8) CI와 운영 장치 | 워크플로는 `typecheck.yml`, `test.yml`, `lint-code.yml`, `proto-check.yml` 넷만 남았다. 작업 11에서 `test.yml`에 `api-tests` 작업(`npm run test:api`)을 다시 넣었고, Railway·Umami·Convex 운영 스크립트와 `.vercelignore`를 지웠다. |
 | (9) 테스트 | 지운 대상의 테스트는 함께 지우고, 남은 코드의 테스트는 고쳤다. |
 
@@ -299,3 +300,30 @@ connectors/   외부 API 연결 계층: 수집기, 외부 소스별 연결 코�
 
 - 지운 기능의 키: health `companyMonitoringWorker`(작업 8, 회사 모니터링 작업자).
 - 저장소 신선도에 따른 변동(결정 3, 기능은 그대로): bootstrap `aiTokens`, `chinaCorporateDisclosures`, `climateDisasters`, `climateNews`, `co2Monitoring`, `crossSourceSignals`, `cryptoQuotes`, `defiTokens`, `diseaseOutbreaks`, `earthquakes`, `etfFlows`, `euGasStorage`, `fuelShortages`, `giving`, `gulfQuotes`, `hyperliquidFlow`, `naturalEvents`, `oceanIce`, `otherTokens`, `predictions`, `spending`, `stablecoinMarkets`, `theaterPosture`, `weatherAlerts`. 모두 `api/health.js`와 bootstrap 등록부에 남아 있고, 해당 수집기가 다시 돌면 돌아온다. 같은 이유로 health의 `problems:*` 항목이 늘었다.
+
+### 9.5 최종 검토 뒤 후속 정리 (2026-11-19)
+
+최종 검토가 "후속 조치와 함께 승인"으로 끝난 뒤, 다음을 `main`에 커밋했다. 원칙은 그대로다. 개인 배포는 원본 운영자의 호스트(`*.worldmonitor.app`)나 지운 업체에 연결하지 않는다. 외부 데이터 소스, 받아오는 내용, 변환·점수 논리는 바꾸지 않았다.
+
+- **원본 호스트 연결 제거**: `scripts/local/local-api-server.mjs`의 `/api/youtube/live`가 `cloudFallback` 설정을 무시하고 늘 `api.worldmonitor.app`으로 보내던 분기를 지웠다. 이제 로컬 `api/youtube/live.js`가 답한다. `remoteBase` 기본값은 빈 값이고, 원격이 없으면 cloud fallback도 꺼진다. 브리프 페이지(`server/_shared/brief-render.js`)와 `public/agent/index.html`의 Umami 로더(`abacus.worldmonitor.app`)와 `umami.track` 스크립트를 지웠다. 릴레이 Classify·digest warm의 기본 대상은 개인 서버다.
+- **수집기 연결 제거**: `ais-relay.cjs`의 원본 warm-ping 4개(서비스 상태, CII, 초크포인트와 그 장애 알림, 해저 케이블), 위젯 에이전트의 `wm-session` 발급, 지운 `/api/product-catalog`용 Dodo 가격 수집을 지웠다. 위젯 데이터 조회 대상(`scripts/_widget-data-policy.cjs`)은 개인 서버다. Axiom 사용량 원격 측정(`server/_shared/usage.ts`, `scripts/lib/llm-telemetry.cjs`, `seed-forecasts`의 자체 전송, `scripts/deploy-error-canary.mjs`)을 지웠다. 모델 상태 기록과 대체 순서 논리는 그대로다.
+- **Shipping v2 웹훅 하위 시스템 삭제**: 등록·목록·전달·소유자 색인·범위 모듈, `api/v2/shipping/webhooks/*`, `scripts/shipping-webhook-worker.mjs`(`api.worldmonitor.app`을 하드코딩), `scripts/openapi-inject-webhooks.mjs`, `shared/event-triggers.json`과 미러, 그 테스트를 지웠다. `proto/`·`src/generated/`는 그대로라 생성된 서비스가 여전히 `registerWebhook`·`listWebhooks`를 선언하므로, `retired-webhooks.ts`가 410 Gone으로 답한다. `route-intelligence`는 v1이나 개인 경로가 쓰지 않지만(`v2/shipping`은 개인 서버가 묶지 않는 클라우드 전용 계열) 2단계에서 정하도록 남겼다.
+- **설정 화면**: 지운 `/api/skills/fetch-agentskills`를 부르던 agentskills.io 가져오기 탭을 지웠다. JSON 붙여넣기만 남는다.
+- **정리**: 다른 모듈이 import하지 않는 죽은 모듈 22개, 남은 운영 스크립트 9개(`vendor-vercel-og`는 `vendor/README.md`가 재현 도구로 쓰므로 남김), 읽는 코드가 없는 `.env.example` 키를 지웠다. 터미널 대시보드의 `W` 키는 개인 서버의 `/dashboard`를 연다. 라이브 화면의 HLS는 브라우저 대신 mpv로만 재생한다(로컬에 live-channels 페이지가 없다).
+- **검사 강화**: `tests/personal-seeders-no-upstream-hosts.test.mjs`가 모든 `*.worldmonitor.app` 호스트를 잡는다. `server/**/*.js`, `scripts/local/*.mjs`, `scripts/ais-relay.cjs`와 그것이 require하는 모듈도 검사한다. User-Agent·HTTP-Referer·Origin 헤더 값과 문서용 줄만 이유를 적어 허용하고, 쓰이지 않는 예외는 실패로 처리한다.
+- **빠진 health 키**: `productCatalog`(Dodo 수집이 쓰던 `product-catalog:v3`), `shippingWebhookWorker`. bootstrap 키 변동은 없다.
+
+### 9.6 2단계 출발점
+
+최종 검토와 후속 정리에서 2단계로 넘긴 얽힘이다.
+
+- `scripts/shared/`가 `shared/`의 상당 부분을 미러한다(수집기는 `scripts/` 밖을 import하지 못한다). 한 곳으로 합칠 방법을 정한다.
+- `src/`와 `server/`가 서로 import한다(예: `server/`가 `src/config`·`src/generated`를 읽는다).
+- `server/`와 `scripts/`가 서로 import한다. CII 점수가 `scripts/shared`를 import하고, `server/_shared/llm.ts`가 `scripts/_llm-model-timeouts.mjs`를 읽는다.
+- API 스택이 둘이다. sebuf 게이트웨이(`api/*/v1/[rpc].ts`)와 레거시 `api/*.js`가 공존하고, 그 위에 약 2,400줄짜리 `scripts/local/local-api-server.mjs`가 있다.
+- Trip Assessment가 `api/mcp/` 안에 있다(결정 16). 고유 논리 계층으로 옮긴다.
+- Shipping v2: `route-intelligence`와 그 게이트웨이, 410으로 답하는 웹훅 RPC, `docs/api`의 OpenAPI 산출물에 남은 웹훅 작업을 `proto/`·`src/generated/` 정리와 함께 정한다. 릴레이의 API fan-out 목록(`wm:events:api:v1`, 상한 2,000개·TTL 1일)은 소비자가 없어졌다. tee를 지울지 정한다.
+- 국가 브리프의 host 모드: `createHostCountryBriefSource`는 실서비스 import가 없어 도달하지 않는다. 하지만 `CountryDeepDivePanel`·`CountryBriefController`·`country-brief-source`에 `www.worldmonitor.app`을 쓰는 `mode === 'host'` 분기 약 10곳과 이를 쓰는 DOM 테스트 4개가 남아 있다.
+- 공개 페이지 빌더: `scripts/build-research-reports.mjs`의 Umami 태그, `blog-site/`의 Umami 로더(개인 빌드에는 들어가지 않는다).
+- 얽힘 때문에 남긴 죽은 모듈: `brief-url-sign.mjs`(테스트가 살아 있는 `brief-url.ts`와 묶임), `embed-map-frame.ts`, `company-monitoring-offline-predictions.ts`, `mission-preview-registry.ts`, `country-signal-details.ts`, `travel-risk-access.ts`, `seo-robots`·`docs-locale-seo`, `panel-request-scripts.mjs`(내장 저장소 EVAL 허용 목록의 원본), `yield-curves/chinabond.mjs`, 형식 검사 전용 `generated-rpc-clients.*`.
+- 기타: 레이어 설명 문구가 지운 warm-ping의 갱신 주기(CII 8분, 초크포인트 6분)를 아직 말한다. `components.insights.analysisFrameworksFromAgentskills` 번역 키가 쓰이지 않는다. 릴레이 위젯 에이전트는 `PRO_WIDGET_KEY`·`WIDGET_AGENT_KEY`·`WORLDMONITOR_RELAY_KEY`를 여전히 읽지만 `.env.example`에서는 빠졌다. `cli/`의 기본 대상(`api.worldmonitor.app`)은 공개 CLI 그대로다.

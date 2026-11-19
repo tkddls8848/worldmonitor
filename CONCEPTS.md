@@ -262,6 +262,8 @@ The typed value a provider-rate-limited operation returns *instead of throwing*,
 
 ## Error Telemetry & Suppression
 
+> **This fork:** Sentry and the other error-reporting vendors were removed in Phase 1. Nothing here runs in the personal deployment; the entries describe the upstream design and stay as reference.
+
 ### Trampoline Frame
 
 A stack frame contributed by a monkeypatched global — most often a third-party script's `window.fetch` wrapper — that appears in a trace as though it were a caller but merely passes the call through. Trampoline frames make third-party failures look first-party, which is why suppression gates must classify them; the trap is that their *names* are minifier output, renamed at will across builds and eventually omitted entirely, so any gate that recognizes a trampoline by name shape is on a treadmill. Identity comes instead from build-stable structural facts: which first-party chunk the frame is attributed to, and whether the wrapping script's own frame is present in the same trace. A gate that admits trampoline frames from a chunk is safe only under an *enforced* invariant that the chunk's backing modules perform no network work of their own — enforced meaning a test fails when it stops being true, not a comment asserting it. See also: Vacuous Guard.
@@ -465,6 +467,8 @@ The distinction that lets one URL serve both crawlers and MCP clients. A `GET` c
 
 ### Credential Class
 
+> **This fork:** there are no MCP OAuth tokens, user API keys or plans. The personal server's owner credential (Basic auth at the ingress) is the only door; this entry describes the upstream design.
+
 One of the independent doors through which a caller reaches MCP tooling: a pro OAuth token, minted for any entitlement that clears the mint gate (a paid tier with MCP access), or a user API key, available only to plans that include API access. The classes are resolved by different code paths and carry different hardcoded assumptions, but they are not plan boundaries — an API-tier subscriber legitimately holds both.
 
 The load-bearing rule: credential class never determines plan family, so any rule stated per-plan ("API tiers keep the default cap") must discriminate on the plan key, not on which door the request came through — otherwise the other door grants what the rule withheld. Daily metering is per-user, not per-class: every class increments one shared counter because the principal is the key's owner, which means all classes a user can hold must resolve the same limit against that counter. See also: Plan Family, Entitlement.
@@ -518,6 +522,8 @@ The identity is the contract, which makes agreement between emitters a correctne
 One of the product-variant subdomains (`tech`, `finance`, `commodity`, `happy`, `energy`) that serves a themed dashboard entry and metadata. The middleware and Vercel config recognize these hosts explicitly; canonical discovery URLs for shared surfaces (such as `/mcp`) redirect retrieval-method requests from variant hosts to the apex host so discovery signals do not fragment. This is the web half of variant resolution only — see Desktop Variant Selection for the desktop half, which does not use hosts.
 
 ## Activation & Onboarding
+
+> **This fork:** checkout, subscriptions and the post-checkout Activation Interstitial were removed in Phase 1. Brief Loop and Brief URL still describe the personal brief; the two Activation entries describe the upstream design.
 
 ### Brief Loop
 
@@ -707,6 +713,8 @@ The accepted-problem list the ingestion acceptance gate consults: each entry ack
 Matching is exact by design. A source that recovers surfaces its entry as a prune prompt; a source that worsens to a different status escalates and blocks, because a suppression written for a lesser state must not cover a worse one. The list as a whole carries an expiry that forces re-review, and an acknowledgement is never added for a status whose remediation is still in flight — the gate exists to verify the remediation, not to trust it. See also: Baselined Advisory.
 
 ## Desktop Distribution
+
+> **This fork:** the desktop app (`src-tauri/`) and its release train were removed in Phase 1. These entries describe the upstream design.
 
 ### Desktop Variant Selection
 
