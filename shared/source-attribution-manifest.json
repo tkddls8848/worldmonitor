@@ -24,9 +24,6 @@
         },
         {
           "path": "scripts/profile-news-hybrid-clustering-7782-dashboard.mjs"
-        },
-        {
-          "path": "src/services/runtime.ts"
         }
       ]
     },
@@ -1575,9 +1572,6 @@
         },
         {
           "path": "scripts/verify-import-hhi-coverage.mjs"
-        },
-        {
-          "path": "src/app/desktop-updater.ts"
         },
         {
           "path": "src/services/runtime.ts"
@@ -5002,9 +4996,6 @@
           "path": "scripts/seed-research.mjs"
         },
         {
-          "path": "src/app/desktop-updater.ts"
-        },
-        {
           "path": "src/services/preferences-content.ts"
         }
       ]
@@ -6392,9 +6383,6 @@
         },
         {
           "path": "server/worldmonitor/research/v1/list-tech-events.ts"
-        },
-        {
-          "path": "src/config/desktop-runtime.ts"
         }
       ]
     },
@@ -11258,9 +11246,6 @@
         },
         {
           "path": "src/config/web-origin.ts"
-        },
-        {
-          "path": "src/services/runtime.ts"
         }
       ]
     },

@@ -14,7 +14,6 @@ function createSettings(saved: Record<string, PanelConfig>, saves: Array<Record<
     getAllSourceNames: () => [],
     getLocalizedPanelName: (_key: string, fallback: string) => fallback,
     resetLayout: () => {},
-    isDesktopApp: false,
   });
 }
 

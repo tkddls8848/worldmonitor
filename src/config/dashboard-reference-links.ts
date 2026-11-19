@@ -18,14 +18,13 @@ export const DASHBOARD_REFERENCE_LINKS = [
 export const DASHBOARD_SITE_ORIGIN = 'https://www.worldmonitor.app';
 
 /**
- * Absolute www origin for desktop/public hosts; empty for local and self-hosted
+ * Absolute www origin for public hosts; empty for local and self-hosted
  * installs so Countries/Chokepoints/… resolve against the served corpus.
  */
 export function resolveDashboardSiteOrigin(options: {
-  isDesktopApp: boolean;
   hostname: string;
 }): string {
-  return options.isDesktopApp || options.hostname.endsWith('.worldmonitor.app')
+  return options.hostname.endsWith('.worldmonitor.app')
     ? DASHBOARD_SITE_ORIGIN
     : '';
 }

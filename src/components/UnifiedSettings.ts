@@ -76,7 +76,6 @@ export interface UnifiedSettingsConfig {
   getAllSourceNames: () => string[];
   getLocalizedPanelName: (key: string, fallback: string) => string;
   resetLayout: () => void;
-  isDesktopApp: boolean;
   onMapProviderChange?: (provider: MapProvider) => void;
   /**
    * The user finished editing Settings → SOURCES and the enabled set is not
@@ -516,7 +515,6 @@ export class UnifiedSettings {
 
   private readFacts(): SettingsFacts {
     return {
-      isDesktopApp: this.config.isDesktopApp,
       panels: this.panelCounts(),
       sourcesOn: (() => {
         const disabled = this.config.getDisabledSources();
@@ -773,7 +771,6 @@ export class UnifiedSettings {
   private mountPreference(id: PreferenceSectionId): SectionMount {
     return (body) => {
       const section = renderPreferenceSection(id, {
-        isDesktopApp: this.config.isDesktopApp,
         onMapProviderChange: this.config.onMapProviderChange,
         onSettingSaved: () => {
           showToast(t('modals.settingsWindow.saved'));
@@ -844,7 +841,6 @@ export class UnifiedSettings {
       setTrustedHtml(body, trustedHtml(`
         <div class="us-about">
           ${dashboardSiteLinksHtml(resolveDashboardSiteOrigin({
-            isDesktopApp: this.config.isDesktopApp,
             hostname: window.location.hostname,
           }))}
           ${legalLinksHtml(WEB_APP_ORIGIN)}
@@ -863,7 +859,7 @@ export class UnifiedSettings {
    * re-rendered after this handler is attached.
    */
   private attachLegalLinkHandoff(): void {
-    if (!this.config.isDesktopApp || this.legalLinkHandoffAttached) return;
+    if (!this.legalLinkHandoffAttached) return;
     // The overlay element outlives every re-render, so an unguarded attach
     // would stack one listener per render and open N windows on one click.
     this.legalLinkHandoffAttached = true;
@@ -891,7 +887,7 @@ export class UnifiedSettings {
   /** Every panel the Panels page can list, before the category and filter narrow it. */
   private listedPanelEntries(): Array<[string, PanelConfig]> {
     return Object.entries(this.draftPanelSettings)
-      .filter(([key]) => (key !== 'runtime-config' || this.config.isDesktopApp) && !key.startsWith('cw-'));
+      .filter(([key]) => (key !== 'runtime-config') && !key.startsWith('cw-'));
   }
 
   private getVisiblePanelEntries(): Array<[string, PanelConfig]> {

@@ -35,7 +35,6 @@ function createSettings(): Settings {
     getAllSourceNames: () => sourceNames,
     getLocalizedPanelName: (_key: string, fallback: string) => fallback,
     resetLayout: () => {},
-    isDesktopApp: false,
   });
 }
 

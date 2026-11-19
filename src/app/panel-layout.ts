@@ -653,7 +653,6 @@ export class PanelLayoutManager implements AppModule {
     })();
     const bootShellFootprint = import.meta.env.DEV ? captureBootShellFootprint(this.ctx.container) : null;
     const referenceOrigin = resolveDashboardSiteOrigin({
-      isDesktopApp: this.ctx.isDesktopApp,
       hostname: window.location.hostname,
     });
     const referenceLinksHtml = dashboardReferenceAnchorsHtml(referenceOrigin);
@@ -668,7 +667,7 @@ export class PanelLayoutManager implements AppModule {
       <div class="header" role="banner">
         <div class="header-left">
           <div class="variant-switcher">${(() => {
-        const local = this.ctx.isDesktopApp || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        const local = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
         const inIframe = window.self !== window.top;
         const vHref = (v: keyof typeof VARIANT_SWITCHER_DASHBOARD_URLS) =>
           variantSwitcherHref(v, SITE_VARIANT, local);
@@ -762,9 +761,9 @@ export class PanelLayoutManager implements AppModule {
         </div>
         <div class="header-right">
           <button class="search-btn" id="searchBtn"><kbd>⌘K</kbd> ${t('header.search')}</button>
-          ${this.ctx.isDesktopApp ? '' : `<button class="copy-link-btn" id="copyLinkBtn">${t('header.copyLink')}</button>`}
-          ${this.ctx.isDesktopApp ? '' : `<button class="copy-link-btn embed-link-btn" id="embedLinkBtn">${t('header.embed')}</button>`}
-          ${this.ctx.isDesktopApp ? '' : `<button class="fullscreen-btn" id="fullscreenBtn" title="${t('header.fullscreen')}" aria-label="${t('header.fullscreen')}">⛶</button>`}
+          <button class="copy-link-btn" id="copyLinkBtn">${t('header.copyLink')}</button>
+          <button class="copy-link-btn embed-link-btn" id="embedLinkBtn">${t('header.embed')}</button>
+          <button class="fullscreen-btn" id="fullscreenBtn" title="${t('header.fullscreen')}" aria-label="${t('header.fullscreen')}">⛶</button>
           ${SITE_VARIANT === 'happy' ? `<button class="tv-mode-btn" id="tvModeBtn" title="TV Mode (Shift+T)" aria-label="TV Mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></button>` : ''}
           <span id="unifiedSettingsMount"></span>
         </div>
@@ -904,7 +903,7 @@ export class PanelLayoutManager implements AppModule {
         <span class="site-footer-meta">
           <span class="site-footer-version">v${__APP_VERSION__}</span>
           <span class="site-footer-copy">&copy; ${new Date().getFullYear()} World Monitor</span>
-          ${this.ctx.isDesktopApp ? '' : `<span id="footerDownloadMount"></span>`}
+          <span id="footerDownloadMount"></span>
         </span>
       </footer>
     `, "legacy direct innerHTML migration"));
@@ -2592,7 +2591,7 @@ export class PanelLayoutManager implements AppModule {
     });
 
     this.lazyImportedPanel('strategic-posture', () => import('@/components/StrategicPosturePanel'), 'StrategicPosturePanel', (StrategicPosturePanel) => {
-      const strategicPosturePanel = new StrategicPosturePanel(() => this.ctx.allNews);
+      const strategicPosturePanel = new StrategicPosturePanel();
       strategicPosturePanel.setLocationClickHandler((lat, lon) => {
         this.ctx.map?.setCenter(lat, lon, 4);
       });
@@ -2775,7 +2774,7 @@ export class PanelLayoutManager implements AppModule {
         () => import('@/components/TechEventsPanel'),
         'TechEventsPanel',
         (TechEventsPanel) => {
-          const panel = new TechEventsPanel('events', () => this.ctx.allNews);
+          const panel = new TechEventsPanel('events');
           panel.setMapNavigateHandler((lat, lng) => { this.ctx.map?.setCenter(lat, lng, 10); });
           return panel;
         },
@@ -2853,9 +2852,6 @@ export class PanelLayoutManager implements AppModule {
     this.lazyDefaultPanel('etf-flows', () => import('@/components/ETFFlowsPanel'), 'ETFFlowsPanel');
     this.lazyDefaultPanel('stablecoins', () => import('@/components/StablecoinPanel'), 'StablecoinPanel');
 
-    if (this.ctx.isDesktopApp) {
-      this.lazyImportedPanel('runtime-config', () => import('@/components/RuntimeConfigPanel'), 'RuntimeConfigPanel', (RuntimeConfigPanel) => new RuntimeConfigPanel({ mode: 'alert' }));
-    }
 
     this.lazyDefaultPanel('insights', () => import('@/components/InsightsPanel'), 'InsightsPanel');
     if (isPanelInVariantDefaults('threat-timeline')) {
@@ -2991,15 +2987,6 @@ export class PanelLayoutManager implements AppModule {
         }
       }
 
-      if (this.ctx.isDesktopApp) {
-        const runtimeIdx = allOrder.indexOf('runtime-config');
-        if (runtimeIdx > 1) {
-          allOrder.splice(runtimeIdx, 1);
-          allOrder.splice(1, 0, 'runtime-config');
-        } else if (runtimeIdx === -1) {
-          allOrder.splice(1, 0, 'runtime-config');
-        }
-      }
     }
 
     this.resolvedPanelOrder = allOrder;

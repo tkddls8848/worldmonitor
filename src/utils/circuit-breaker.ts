@@ -1,4 +1,3 @@
-import { isDesktopRuntime } from '@/services/desktop-runtime';
 
 interface CircuitState {
   failures: number;
@@ -59,13 +58,6 @@ const PERSISTENT_STALE_CEILING_MS = 24 * 60 * 60 * 1000; // 24h — discard pers
 const DEFAULT_CACHE_KEY = '__default__';
 const DEFAULT_MAX_CACHE_ENTRIES = 256;
 const DEFAULT_RECOVERY_PROBE_TIMEOUT_MS = 30_000;
-
-function isDesktopOfflineMode(): boolean {
-  // The shared detector, not a raw window.__TAURI__ read: the raw read said
-  // "web" in every desktop configuration that has no bridge global at that
-  // moment, so the offline stale-cache path never engaged there (#5912).
-  return isDesktopRuntime() && typeof navigator !== 'undefined' && navigator.onLine === false;
-}
 
 export class CircuitBreaker<T> {
   private state: CircuitState = { failures: 0, cooldownUntil: 0 };
@@ -467,7 +459,6 @@ export class CircuitBreaker<T> {
       maxServeAgeMs?: number;
     } = {},
   ): Promise<R> {
-    const offline = isDesktopOfflineMode();
     const cacheKey = this.resolveCacheKey(options.cacheKey);
     const shouldCache = options.shouldCache ?? (() => true);
     const evictOnRefreshFailure = options.evictOnRefreshFailure ?? false;
@@ -503,17 +494,17 @@ export class CircuitBreaker<T> {
     if (this.isStateOnCooldown()) {
       console.log(`[${this.name}] Currently unavailable, ${this.getCooldownRemaining()}s remaining`);
       if (cachedEntry !== null) {
-        this.lastDataState = { mode: 'cached', timestamp: cachedEntry.timestamp, offline };
+        this.lastDataState = { mode: 'cached', timestamp: cachedEntry.timestamp, offline: false };
         this.touchCacheKey(cacheKey);
         return cachedEntry.data as R;
       }
-      this.lastDataState = { mode: 'unavailable', timestamp: null, offline };
+      this.lastDataState = { mode: 'unavailable', timestamp: null, offline: false };
       return defaultValue;
     }
 
     if (this.recoveryProbeInFlight) {
       if (cachedEntry !== null) {
-        this.lastDataState = { mode: 'cached', timestamp: cachedEntry.timestamp, offline };
+        this.lastDataState = { mode: 'cached', timestamp: cachedEntry.timestamp, offline: false };
         this.touchCacheKey(cacheKey);
         return cachedEntry.data as R;
       }
@@ -524,7 +515,7 @@ export class CircuitBreaker<T> {
         if (outcome.kind === 'success') {
           if (probeCacheKey === cacheKey) return outcome.data as R;
         } else {
-          this.lastDataState = { mode: 'unavailable', timestamp: null, offline };
+          this.lastDataState = { mode: 'unavailable', timestamp: null, offline: false };
           return defaultValue;
         }
       }
@@ -535,7 +526,7 @@ export class CircuitBreaker<T> {
       && cachedEntry !== null
       && this.isCacheEntryFresh(cachedEntry)
     ) {
-      this.lastDataState = { mode: 'cached', timestamp: cachedEntry.timestamp, offline };
+      this.lastDataState = { mode: 'cached', timestamp: cachedEntry.timestamp, offline: false };
       this.touchCacheKey(cacheKey);
       return cachedEntry.data as R;
     }
@@ -546,7 +537,7 @@ export class CircuitBreaker<T> {
     // a fresh entry, preserving it as fallback while awaiting the refresh.
     // Skip SWR when cacheTtlMs === 0.
     if (cachedEntry !== null && this.cacheTtlMs > 0) {
-      this.lastDataState = { mode: 'cached', timestamp: cachedEntry.timestamp, offline };
+      this.lastDataState = { mode: 'cached', timestamp: cachedEntry.timestamp, offline: false };
       this.touchCacheKey(cacheKey);
       // Fire-and-forget background refresh — guard against concurrent SWR fetches
       // so that multiple callers with the same stale cache key don't each
@@ -619,12 +610,12 @@ export class CircuitBreaker<T> {
 
         const fallbackEntry = this.getCacheEntry(cacheKey);
         if (fallbackEntry !== null && isServable(fallbackEntry)) {
-          this.lastDataState = { mode: 'cached', timestamp: fallbackEntry.timestamp, offline };
+          this.lastDataState = { mode: 'cached', timestamp: fallbackEntry.timestamp, offline: false };
           this.touchCacheKey(cacheKey);
           return fallbackEntry.data as R;
         }
 
-        this.lastDataState = { mode: 'unavailable', timestamp: null, offline };
+        this.lastDataState = { mode: 'unavailable', timestamp: null, offline: false };
         return defaultValue;
       }
       return cachedEntry.data as R;
@@ -657,7 +648,7 @@ export class CircuitBreaker<T> {
         const msg = String(e);
         console.error(`[${this.name}] Failed:`, msg);
         this.recordFailure(msg);
-        this.lastDataState = { mode: 'unavailable', timestamp: null, offline };
+        this.lastDataState = { mode: 'unavailable', timestamp: null, offline: false };
         return { kind: 'failed' };
       } finally {
         if (recoveryProbe) this.finishRecoveryProbe(probeGeneration);

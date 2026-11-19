@@ -1,7 +1,6 @@
 import { Panel } from './Panel';
 import { STORAGE_KEYS } from '@/config';
 import { WEBCAM_GRID_PRIORITY, WEBCAM_SOURCES, type WebcamSlotId } from '@/config/live-video-sources';
-import { isDesktopRuntime } from '@/services/runtime';
 import { escapeHtml } from '@/utils/sanitize';
 import { t } from '../services/i18n';
 import { subscribeStreamQualityChange } from '@/services/ai-flow-settings';
@@ -143,7 +142,7 @@ export class LiveWebcamsPanel extends Panel {
   // UI
   private fullscreenBtn: HTMLButtonElement | null = null;
   private isFullscreen = false;
-  private readonly forceSingleView = !isDesktopRuntime() && isMobileDevice();
+  private readonly forceSingleView = isMobileDevice();
 
   constructor() {
     super({ id: 'live-webcams', title: t('panels.liveWebcams'), className: 'panel-wide', closable: true, collapsible: true, infoTooltip: t('components.liveWebcams.infoTooltip') });

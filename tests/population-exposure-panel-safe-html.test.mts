@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { createBrowserEnvironment } from './helpers/runtime-config-panel-harness.mjs';
+import { createBrowserEnvironment } from './helpers/mini-dom.mts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const tempDir = mkdtempSync(join(tmpdir(), 'wm-population-exposure-panel-'));

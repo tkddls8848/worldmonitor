@@ -163,8 +163,7 @@ describe('ForecastPanel track-record strip', () => {
   });
 
   it('links to the hosted record from the desktop app, where /accuracy/ is not bundled', () => {
-    expect(recordHref(false)).toBe('/accuracy/');
-    expect(recordHref(true)).toBe('https://www.worldmonitor.app/accuracy/');
+    expect(recordHref()).toBe('/accuracy/');
   });
 
   it('leads with skill against the actual rate, then the Brier, actual-rate Brier and void rate', async () => {

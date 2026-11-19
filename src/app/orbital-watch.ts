@@ -15,8 +15,6 @@ import { formatAcquiredLine, formatTargetCoordinates } from '@/components/orbita
 import { loadPointContext } from '@/services/orbital/point-context';
 import { OrbitalPlaceTools } from '@/components/OrbitalPlaceTools';
 import { formatOrbitalRoute, parseOrbitalRoute } from '@/app/orbital-route';
-import { DASHBOARD_SITE_ORIGIN } from '@/config/dashboard-reference-links';
-import { isDesktopRuntime } from '@/config/desktop-runtime';
 import { buildOrbitalShareFragment, type OrbitalShareLink, type OrbitalSharePass } from '@/utils/urlState';
 import { claimMapUrlCentre, getOrbitalMapView, releaseMapUrlCentreOnUserMove, type MapCamera } from '@/app/orbital-map-focus';
 import { visibleMapArea, type ScreenArea } from '@/utils/map-point-offset';
@@ -333,8 +331,7 @@ const samePoint = (a: GeoPoint | null, b: GeoPoint) => !!a && Math.abs(a.lat - b
 
 function shareLink(): string | null {
   if (!point) return null;
-  // The desktop WebView origin is local, so its links point at the public dashboard.
-  const base = isDesktopRuntime() ? `${DASHBOARD_SITE_ORIGIN}/dashboard` : `${location.origin}${location.pathname}`;
+  const base = `${location.origin}${location.pathname}`;
   return `${base}#${buildOrbitalShareFragment(point, selectedPass, page?.currentView ?? 'sheet')}`;
 }
 

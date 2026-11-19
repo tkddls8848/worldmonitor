@@ -31,7 +31,6 @@ function createManager(mapLayers: Record<string, boolean>) {
   document.body.append(container);
   return new EventHandlerManager({
     container,
-    isDesktopApp: false,
     panels: {},
     panelSettings: {},
     mapLayers,
@@ -119,10 +118,6 @@ describe('open_search_result persists an executable layer result', () => {
       getVariant: () => 'full',
       openCountryBriefByCode: vi.fn(() => true),
       enablePanel: vi.fn(() => true),
-      trackSearchResultSelected: vi.fn(),
-      trackCountrySelected: vi.fn(),
-      runWithAgentAnalyticsSuppressed: (callback) => callback(),
-      suppressNextAgentPanelView: vi.fn(),
       resolveExecutableNewsPanel: vi.fn(() => null),
       saveToStorage,
       setTheme: vi.fn(),

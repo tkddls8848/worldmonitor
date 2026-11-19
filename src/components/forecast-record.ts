@@ -1,7 +1,5 @@
 import type { GetForecastScorecardResponse } from '@/services/forecast';
 import { getLocale, t } from '@/services/i18n';
-import { isDesktopRuntime } from '@/services/runtime';
-import { CANONICAL_ORIGIN } from '@/config/schema-graph-ids';
 import { escapeHtml } from '@/utils/sanitize';
 import { STANDING_ACCURACY_AUDIT, forecastAccuracyAudit, headlineFamilyGate, type ForecastAccuracyAudit } from '../../shared/forecast-accuracy-audit';
 
@@ -137,7 +135,7 @@ export function renderReliabilityBadge(
 ): string {
   if (audit) {
     const text = t('components.forecast.audit.label');
-    return `<a class="fc-reliability" data-fc-reliability-state="under-audit" href="${escapeHtml(recordHref(isDesktopRuntime()))}" aria-label="${escapeHtml(`${text}. ${auditHint(audit)}`)}">${escapeHtml(text)}</a>`;
+    return `<a class="fc-reliability" data-fc-reliability-state="under-audit" href="${escapeHtml(recordHref())}" aria-label="${escapeHtml(`${text}. ${auditHint(audit)}`)}">${escapeHtml(text)}</a>`;
   }
   // A domain the scorecard has no published row for has graded nothing yet, so it reads as unmeasured with n=0.
   if (!table) return '';
@@ -154,7 +152,7 @@ export function renderReliabilityBadge(
       ];
   // Stale and n lead: the badge is one line with an ellipsis, so a narrow card cuts the tail.
   const text = table.stale ? `${t('components.forecast.record.stale')} · ${main}` : main;
-  return `<a class="fc-reliability" data-fc-reliability-state="${r.kind}" href="${escapeHtml(reliabilityHref(isDesktopRuntime()))}" aria-label="${escapeHtml(`${text}. ${hint}`)}">${escapeHtml(text)}</a>`;
+  return `<a class="fc-reliability" data-fc-reliability-state="${r.kind}" href="${escapeHtml(reliabilityHref())}" aria-label="${escapeHtml(`${text}. ${hint}`)}">${escapeHtml(text)}</a>`;
 }
 
 const OUTCOMES = ['YES', 'NO', 'VOID'] as const;
@@ -274,17 +272,16 @@ function staleBadge(record: GradedRecord): string {
 }
 
 /** The badge lands on the /accuracy/ table built from the same publishedByDomain rows. */
-export function reliabilityHref(desktop: boolean): string {
-  return `${recordHref(desktop)}#by-domain`;
+export function reliabilityHref(): string {
+  return `${recordHref()}#by-domain`;
 }
 
-/** The desktop bundle has no /accuracy/ page, so desktop links to the hosted one. */
-export function recordHref(desktop: boolean): string {
-  return desktop ? `${CANONICAL_ORIGIN}accuracy/` : '/accuracy/';
+export function recordHref(): string {
+  return '/accuracy/';
 }
 
 function link(): string {
-  return `<a class="fc-record-link" href="${escapeHtml(recordHref(isDesktopRuntime()))}">${escapeHtml(t('components.forecast.record.fullRecord'))}</a>`;
+  return `<a class="fc-record-link" href="${escapeHtml(recordHref())}">${escapeHtml(t('components.forecast.record.fullRecord'))}</a>`;
 }
 
 function wrap(kind: ForecastRecord['kind'], inner: string): string {

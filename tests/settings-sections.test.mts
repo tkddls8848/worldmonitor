@@ -24,7 +24,6 @@ import {
 const EN: unknown = JSON.parse(readFileSync(new URL('../src/locales/en.json', import.meta.url), 'utf8'));
 
 const facts = (overrides: Partial<SettingsFacts> = {}): SettingsFacts => ({
-  isDesktopApp: false,
   panels: { on: 18, total: 64 },
   sourcesOn: 412,
   theme: 'auto',
@@ -65,7 +64,6 @@ describe('settings sections registry', () => {
   it('makes every section available', () => {
     for (const id of SETTINGS_SECTION_IDS) {
       assert.equal(isAvailable(id, facts()), true, id);
-      assert.equal(isAvailable(id, facts({ isDesktopApp: true })), true, `${id} on desktop`);
     }
   });
 

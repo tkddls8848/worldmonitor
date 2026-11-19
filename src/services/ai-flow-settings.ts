@@ -6,7 +6,6 @@
  *       settings hub once the UI is extended with additional sections.
  */
 
-import { isDesktopRuntime } from './runtime';
 
 const STORAGE_KEY_BROWSER_MODEL = 'wm-ai-flow-browser-model';
 const STORAGE_KEY_CLOUD_LLM = 'wm-ai-flow-cloud-llm';
@@ -87,7 +86,6 @@ export function getAiFlowSettings(): AiFlowSettings {
 export function isHeadlineMemoryEnabled(): boolean {
   const headline = readBool(STORAGE_KEY_HEADLINE_MEMORY, DEFAULTS.headlineMemory);
   if (!headline) return false;
-  if (isDesktopRuntime()) return true;
   const browser = readBool(STORAGE_KEY_BROWSER_MODEL, DEFAULTS.browserModel);
   return browser;
 }

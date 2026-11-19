@@ -12,7 +12,7 @@ import { preferenceSectionControlIds, renderPreferenceSection } from '@/services
 import { setAiFlowSetting } from '@/services/ai-flow-settings';
 
 const PREFERENCE_IDS = SETTINGS_SECTION_IDS.filter(isPreferenceSection);
-const host = { isDesktopApp: false, isSignedIn: true };
+const host = {};
 
 function mount(id: (typeof PREFERENCE_IDS)[number]): { root: HTMLElement; detach: () => void } {
   const root = document.createElement('section');

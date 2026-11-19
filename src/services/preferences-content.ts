@@ -45,7 +45,6 @@ import type { PreferenceSectionId } from '@/config/settings-sections';
 const DESKTOP_RELEASES_URL = 'https://github.com/koala73/worldmonitor/releases';
 
 export interface PreferencesHost {
-  isDesktopApp: boolean;
   onMapProviderChange?: (provider: MapProvider) => void;
   onSettingSaved?: () => void;
 }
@@ -280,27 +279,26 @@ const ANALYSIS_PANELS: ReadonlyArray<{ id: AnalysisPanelId; label: string }> = [
 ];
 
 const aiSection: PreferenceSectionSpec = {
-  html(host) {
+  html() {
     const settings = getAiFlowSettings();
     let html = '';
-    if (!host.isDesktopApp) {
-      html += toggleRowHtml('us-cloud', t('components.insights.aiFlowCloudLabel'), t('components.insights.aiFlowCloudDesc'), settings.cloudLlm);
-      html += toggleRowHtml('us-browser', t('components.insights.aiFlowBrowserLabel'), t('components.insights.aiFlowBrowserDesc'), settings.browserModel);
-      html += `<div class="ai-flow-toggle-warn" style="display:${settings.browserModel ? 'block' : 'none'}">${t('components.insights.aiFlowBrowserWarn')}</div>`;
-      html += `
-        <div class="ai-flow-cta">
-          <div class="ai-flow-cta-title">${t('components.insights.aiFlowOllamaCta')}</div>
-          <div class="ai-flow-cta-desc">${t('components.insights.aiFlowOllamaCtaDesc')}</div>
-          <a href="${DESKTOP_RELEASES_URL}" target="_blank" rel="noopener noreferrer" class="ai-flow-cta-link">${t('components.insights.aiFlowDownloadDesktop')}</a>
-        </div>
-      `;
-    }
+    html += toggleRowHtml('us-cloud', t('components.insights.aiFlowCloudLabel'), t('components.insights.aiFlowCloudDesc'), settings.cloudLlm);
+    html += toggleRowHtml('us-browser', t('components.insights.aiFlowBrowserLabel'), t('components.insights.aiFlowBrowserDesc'), settings.browserModel);
+    html += `<div class="ai-flow-toggle-warn" style="display:${settings.browserModel ? 'block' : 'none'}">${t('components.insights.aiFlowBrowserWarn')}</div>`;
+    html += `
+      <div class="ai-flow-cta">
+        <div class="ai-flow-cta-title">${t('components.insights.aiFlowOllamaCta')}</div>
+        <div class="ai-flow-cta-desc">${t('components.insights.aiFlowOllamaCtaDesc')}</div>
+        <a href="${DESKTOP_RELEASES_URL}" target="_blank" rel="noopener noreferrer" class="ai-flow-cta-link">${t('components.insights.aiFlowDownloadDesktop')}</a>
+      </div>
+    `;
+
 
     // Headline Memory requires Browser Local Model (it loads an embeddings
     // model in the ML worker). Disable the toggle when the parent is off so
     // the user sees the dependency rather than wondering why their Headline
     // Memory toggle "did nothing."
-    const headlineDisabled = !host.isDesktopApp && !settings.browserModel;
+    const headlineDisabled = !settings.browserModel;
     html += toggleRowHtml(
       'us-headline-memory',
       t('components.insights.headlineMemoryLabel'),
@@ -364,9 +362,8 @@ const aiSection: PreferenceSectionSpec = {
       </div>
     </div>`;
 
-    if (!host.isDesktopApp) {
-      html += `<div class="ai-flow-popup-footer"><span class="ai-flow-status-dot" id="usStatusDot"></span><span class="ai-flow-status-text" id="usStatusText"></span></div>`;
-    }
+    html += `<div class="ai-flow-popup-footer"><span class="ai-flow-status-dot" id="usStatusDot"></span><span class="ai-flow-status-text" id="usStatusText"></span></div>`;
+
     return html;
   },
   onChange: {
@@ -375,7 +372,7 @@ const aiSection: PreferenceSectionSpec = {
       updateAiStatus(root);
       return true;
     },
-    'us-browser': (target, root, host) => {
+    'us-browser': (target, root) => {
       setAiFlowSetting('browserModel', target.checked);
       const warn = root.querySelector<HTMLElement>('.ai-flow-toggle-warn');
       if (warn) warn.style.display = target.checked ? 'block' : 'none';
@@ -386,7 +383,7 @@ const aiSection: PreferenceSectionSpec = {
       const hmInput = root.querySelector<HTMLInputElement>('#us-headline-memory');
       const hmRow = hmInput?.closest('.ai-flow-toggle-row');
       const hmSwitch = hmInput?.closest('.ai-flow-switch');
-      if (hmInput && !host.isDesktopApp) {
+      if (hmInput) {
         hmInput.disabled = !target.checked;
         hmRow?.classList.toggle('is-disabled', !target.checked);
         hmSwitch?.classList.toggle('is-disabled', !target.checked);
@@ -399,9 +396,9 @@ const aiSection: PreferenceSectionSpec = {
       return true;
     },
   },
-  attach(root, host, signal) {
+  attach(root, _host, signal) {
     attachFrameworkHandlers(root, signal);
-    if (!host.isDesktopApp) updateAiStatus(root);
+    updateAiStatus(root);
   },
 };
 

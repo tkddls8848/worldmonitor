@@ -102,7 +102,6 @@ import type { LiquidityShiftsPanel } from '@/components/LiquidityShiftsPanel';
 import type { NewsMarketCorrelationPanel } from '@/components/NewsMarketCorrelationPanel';
 import type { PositioningPanel } from '@/components/PositioningPanel';
 import type { GoldIntelligencePanel } from '@/components/GoldIntelligencePanel';
-import { isDesktopRuntime, waitForSidecarReady } from '@/services/runtime';
 import { BETA_MODE } from '@/config/beta';
 import { preloadCountryGeometry, isCountryGeometryLoaded, getCountryNameByCode } from '@/services/country-geometry';
 import { initI18n, t, I18N_RESOURCES_LOADED_EVENT, type I18nResourcesLoadedDetail } from '@/services/i18n';
@@ -150,7 +149,6 @@ import {
   type BootstrapHydrationState,
 } from '@/services/bootstrap';
 import { describeFreshness } from '@/services/persistent-cache';
-import { DesktopUpdater } from '@/app/desktop-updater';
 import { CountryIntelManager } from '@/app/country-intel';
 import {
   DashboardBindingError,
@@ -256,7 +254,6 @@ export class App {
   private latestSearchAdsbUpdatedAt = 0;
   private countryIntel: CountryIntelManager;
   private refreshScheduler: RefreshScheduler;
-  private desktopUpdater: DesktopUpdater;
 
   private modules: { destroy(): void }[] = [];
   private unsubAiFlow: (() => void) | null = null;
@@ -776,7 +773,6 @@ export class App {
     const LAYOUT_RESET_MIGRATION_KEY = 'worldmonitor-layout-reset-v2.5';
 
     const isMobile = isMobileDevice();
-    const isDesktopApp = isDesktopRuntime();
     const monitors = loadFromStorage<Monitor[]>(STORAGE_KEYS.monitors, []);
 
     // Use mobile-specific defaults on first load (no saved layers)
@@ -1076,19 +1072,6 @@ export class App {
       }
     }
 
-    // Desktop key management panel must always remain accessible in Tauri.
-    if (isDesktopApp) {
-      if (!panelSettings['runtime-config'] || !panelSettings['runtime-config'].enabled) {
-        panelSettings['runtime-config'] = {
-          ...panelSettings['runtime-config'],
-          name: panelSettings['runtime-config']?.name ?? 'Desktop Configuration',
-          enabled: true,
-          priority: panelSettings['runtime-config']?.priority ?? 2,
-        };
-        saveToStorage(STORAGE_KEYS.panels, panelSettings);
-      }
-    }
-
     const initialUrlState: ParsedMapUrlState | null = parseMapUrlState(window.location.search, mapLayers);
     if (initialUrlState.layers) {
       mapLayers = normalizeExclusiveChoropleths(
@@ -1319,7 +1302,6 @@ export class App {
     this.state = {
       map: null,
       isMobile,
-      isDesktopApp,
       container: el,
       panels: {},
       newsPanels: {},
@@ -1350,7 +1332,6 @@ export class App {
       unifiedSettings: null,
       pizzintIndicator: null,
       correlationEngine: null,
-      llmStatusIndicator: null,
       countryBriefPage: null,
       countryTimeline: null,
       positivePanel: null,
@@ -1379,7 +1360,6 @@ export class App {
     // Instantiate modules (callbacks wired after all modules exist)
     this.refreshScheduler = new RefreshScheduler(this.state);
     this.countryIntel = new CountryIntelManager(this.state);
-    this.desktopUpdater = new DesktopUpdater(this.state);
 
     this.dataLoader = new DataLoaderManager(this.state, {
       renderCriticalBanner: (postures) => this.panelLayout.renderCriticalBanner(postures),
@@ -1440,7 +1420,6 @@ export class App {
 
     // Track destroy order (reverse of init)
     this.modules = [
-      this.desktopUpdater,
       this.panelLayout,
       this.countryIntel,
       this.dataLoader,
@@ -1689,7 +1668,7 @@ export class App {
   private async waitForSlowBootstrapCheckpoint(): Promise<boolean> {
     markLcpDebug('wm:data:slow-tier-wait-start');
     try {
-      const settled = await waitForBootstrapSlowTier(isDesktopRuntime() ? 8_500 : 3_500);
+      const settled = await waitForBootstrapSlowTier(3_500);
       markLcpDebug('wm:data:slow-tier-wait-end', { settled });
       if (this.state.isDestroyed) return settled;
       this.bootstrapHydrationState = getBootstrapHydrationState();
@@ -2219,13 +2198,13 @@ export class App {
     // Same authority as before: browserModel on web, unconditional on desktop.
     // Headline Memory needs no extra disjunct — on web its effective gate
     // already requires browserModel, on desktop the runtime check covers it.
-    if (aiFlow.browserModel || isDesktopRuntime()) {
+    if (aiFlow.browserModel) {
       void (async () => {
         try {
           const ready = await mlWorker.init();
           if (this.localAiInitEpoch !== localAiEpoch || this.state.isDestroyed) return;
           if (!ready) return;
-          if (!getAiFlowSettings().browserModel && !isDesktopRuntime()) return;
+          if (!getAiFlowSettings().browserModel) return;
           if (BETA_MODE) mlWorker.loadModel('summarization-beta').catch(() => { });
         } catch {
           // Worker failure must not break boot; explicit AI operations fail
@@ -2270,7 +2249,7 @@ export class App {
               mlWorker.loadModel('embeddings').catch(() => { });
             }
           }).catch(() => { });
-        } else if (!isDesktopRuntime()) {
+        } else {
           // Browser Local Model is the parent toggle for ALL local-model use,
           // including Headline Memory. Terminate unconditionally on web —
           // any persisted Headline Memory value is now non-effective.
@@ -2293,7 +2272,7 @@ export class App {
         } else {
           mlWorker.unloadModel('embeddings').catch(() => { });
           const s = getAiFlowSettings();
-          if (!s.browserModel && !isDesktopRuntime()) {
+          if (!s.browserModel) {
             mlWorker.terminate();
           }
         }
@@ -2310,13 +2289,6 @@ export class App {
     // Wait for sidecar readiness on desktop so bootstrap hits a live server.
     // Consume the result: a sidecar that never answered its own health probe
     // should leave a signal rather than being silently treated as ready (#6779).
-    if (isDesktopRuntime()) {
-      const sidecarReady = await waitForSidecarReady(3000);
-      markLcpDebug(sidecarReady ? 'wm:boot:sidecar-ready' : 'wm:boot:sidecar-not-ready');
-      if (!sidecarReady) {
-        console.warn('[boot] Local sidecar did not report ready within 3s; bootstrap may fall back to cloud.');
-      }
-    }
 
     // Hydrate in-memory cache from bootstrap endpoint. Awaits only the fast tier; the slow
     // tier loads in the background (off the first-paint critical path, #4488) and calls back
@@ -2408,7 +2380,6 @@ export class App {
     this.eventHandlers.setupPlaybackControl();
     this.eventHandlers.setupStatusPanel();
     this.eventHandlers.setupPizzIntIndicator();
-    this.eventHandlers.setupLlmStatusIndicator();
     this.eventHandlers.setupExportPanel();
     this.eventHandlers.setupSearchControls();
 
@@ -2514,7 +2485,6 @@ export class App {
     cleanOldSnapshots().catch((e) => console.warn('[Storage] Snapshot cleanup failed:', e));
 
     // Phase 8: Update checks
-    this.desktopUpdater.init();
 
     // Analytics
   }

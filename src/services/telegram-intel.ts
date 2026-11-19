@@ -1,4 +1,4 @@
-import { isDesktopRuntime, toApiUrl, toRuntimeUrl } from '@/services/runtime';
+import { toApiUrl } from '@/services/runtime';
 import { createTimeoutSignal } from '@/services/timeout-signal';
 import { normalizeTelegramUsername } from '@/services/telegram-watchlist';
 
@@ -112,17 +112,17 @@ function setLookupCache<T>(
 
 function telegramFeedUrl(limit: number): string {
   const path = `/api/telegram-feed?limit=${limit}`;
-  return isDesktopRuntime() ? toRuntimeUrl(path) : toApiUrl(path);
+  return toApiUrl(path);
 }
 
 function telegramResolveUrl(username: string): string {
   const path = `/api/telegram-feed?mode=resolve&username=${encodeURIComponent(username)}`;
-  return isDesktopRuntime() ? toRuntimeUrl(path) : toApiUrl(path);
+  return toApiUrl(path);
 }
 
 function telegramChannelUrl(username: string, limit: number): string {
   const path = `/api/telegram-feed?mode=channel&username=${encodeURIComponent(username)}&limit=${limit}`;
-  return isDesktopRuntime() ? toRuntimeUrl(path) : toApiUrl(path);
+  return toApiUrl(path);
 }
 
 /** Carries the HTTP status so callers can distinguish "try again shortly" from "bad input". */

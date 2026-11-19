@@ -103,7 +103,7 @@ describe('ForecastPanel under the accuracy audit (#8990)', () => {
     expect(strip.dataset.fcRecord).toBe('under-audit');
     expect(strip.textContent).toContain('Accuracy under audit');
     expect(strip.textContent).not.toMatch(/Brier|Base rate|Void|\d\.\d{3}/);
-    expect(strip.querySelector<HTMLAnchorElement>('a.fc-record-link')!.getAttribute('href')).toBe(recordHref(false));
+    expect(strip.querySelector<HTMLAnchorElement>('a.fc-record-link')!.getAttribute('href')).toBe(recordHref());
     expect(strip.querySelector('.fc-sr-only')!.textContent).toContain('Under audit since Oct 7, 2026.');
   });
 

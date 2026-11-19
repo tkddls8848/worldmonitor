@@ -138,9 +138,8 @@ import { getNo2ActivityData } from '@/services/no2-activity';
 import { addExposureCoverage, enrichEventsWithExposure, ucdpExposureEvents } from '@/services/population-exposure';
 import { debounce, getCircuitBreakerCooldownInfo } from '@/utils';
 import { addLocalDays, localYmd } from '@/utils/local-date';
-import { isFeatureAvailable, isFeatureEnabled } from '@/services/runtime-config';
-import { isDesktopRuntime, toApiUrl } from '@/services/runtime';
-import { filterFeedsByLanguage } from '@/services/feed-language';
+import { isFeatureAvailable } from '@/services/runtime-config';
+import { toApiUrl } from '@/services/runtime';
 import { getAiFlowSettings } from '@/services/ai-flow-settings';
 import { t, getCurrentLanguage } from '@/services/i18n';
 import { ensureHydrated, getHydratedData } from '@/services/bootstrap';
@@ -286,12 +285,10 @@ export interface DataLoaderCallbacks {
 
 type HydrationTier = 1 | 2 | 3 | 4;
 type DailyMarketBriefModule = typeof import('@/services/daily-market-brief');
-type RssModule = Pick<typeof import('@/services/rss'), 'fetchCategoryFeeds' | 'getFeedFailures'>;
 type TrendingHeadlineInput = import('@/services/trending-keywords').TrendingHeadlineInput;
 type DrainTrendingSignals = typeof import('@/services/trending-keywords').drainTrendingSignals;
 
 let dailyMarketBriefModulePromise: Promise<DailyMarketBriefModule> | null = null;
-let rssModulePromise: Promise<RssModule> | null = null;
 let ingestHeadlinesPromise: Promise<(headlines: TrendingHeadlineInput[]) => void> | null = null;
 let drainTrendingSignalsPromise: Promise<DrainTrendingSignals> | null = null;
 
@@ -301,14 +298,6 @@ function getDailyMarketBriefModule(): Promise<DailyMarketBriefModule> {
     throw err;
   });
   return dailyMarketBriefModulePromise;
-}
-
-function getRssModule(): Promise<RssModule> {
-  rssModulePromise ??= import('@/services/rss').catch((err) => {
-    rssModulePromise = null;
-    throw err;
-  });
-  return rssModulePromise;
 }
 
 async function ingestTrendingHeadlines(headlines: TrendingHeadlineInput[]): Promise<void> {
@@ -499,9 +488,6 @@ export class DataLoaderManager implements AppModule {
   private activeNewsLoad: Promise<void> | null = null;
   private readonly digestBreakerCooldownMs = 5 * 60 * 1000;
   private readonly persistedDigestMaxAgeMs = 6 * 60 * 60 * 1000;
-  private readonly outageFallbackCategoryFeedLimit = 3;
-  private readonly outageFallbackIntelFeedLimit = 6;
-  private readonly outageFallbackBatchSize = 2;
   /**
    * Ceiling on a cross-edition panel's merged item set. A category placed in
    * several editions gets up to 20 items (`MAX_ITEMS_PER_CATEGORY`) from each
@@ -1039,26 +1025,10 @@ export class DataLoaderManager implements AppModule {
     return data;
   }
 
-  /**
-   * The outage fallback (KTD9): when no digest carries a category and the panel
-   * has no items, fetch a few catalog feeds directly. Desktop only, where the
-   * sidecar fetches publishers itself; `newsOutageFallback` turns it off. Web
-   * never fetches feeds directly: every browser on one digest outage would land
-   * on the shared proxy at once.
-   */
-  private isNewsOutageFallbackEnabled(): boolean {
-    return isDesktopRuntime() && isFeatureEnabled('newsOutageFallback');
-  }
-
   private getStaleNewsItems(category: string): NewsItem[] {
     const staleItems = this.ctx.newsByCategory[category];
     if (!Array.isArray(staleItems) || staleItems.length === 0) return [];
     return [...staleItems].sort((a, b) => effectivePubDateMs(b) - effectivePubDateMs(a));
-  }
-
-  private selectLimitedFeeds<T>(feeds: T[], maxFeeds: number): T[] {
-    if (feeds.length <= maxFeeds) return feeds;
-    return feeds.slice(0, maxFeeds);
   }
 
   private shouldShowIntelligenceNotifications(): boolean {
@@ -1323,7 +1293,7 @@ export class DataLoaderManager implements AppModule {
     if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.pipelines) tasks.push({ name: 'pipelineRegistries', task: () => runGuarded('pipelineRegistries', () => this.loadPipelineRegistries()) });
     if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.storageFacilities) tasks.push({ name: 'storageFacilities', task: () => runGuarded('storageFacilities', () => this.loadStorageFacilities()) });
     if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.canadaAlerts) tasks.push({ name: 'canadaAlerts', task: () => runGuarded('canadaAlerts', () => this.loadCanadaAlerts()) });
-    if (SITE_VARIANT !== 'happy' && !isDesktopRuntime() && this.ctx.mapLayers.ais) tasks.push({ name: 'ais', task: () => runGuarded('ais', () => this.loadAisSignals()) });
+    if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.ais) tasks.push({ name: 'ais', task: () => runGuarded('ais', () => this.loadAisSignals()) });
     if ((SITE_VARIANT === 'full' && this.ctx.mapLayers.ais) || (this.ctx.panelSettings['ukmto-incidents']?.enabled && shouldLoad('ukmto-incidents'))) {
       tasks.push({ name: 'ukmtoIncidents', task: () => runGuarded('ukmtoIncidents', () => this.loadUkmtoIncidents()) });
     }
@@ -1331,7 +1301,7 @@ export class DataLoaderManager implements AppModule {
     if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.cables) tasks.push({ name: 'cableHealth', task: () => runGuarded('cableHealth', () => this.loadCableHealth()) });
     if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.flights) tasks.push({ name: 'flights', task: () => runGuarded('flights', () => this.loadFlightDelays()) });
     if (SITE_VARIANT !== 'happy' && CYBER_LAYER_ENABLED && this.ctx.mapLayers.cyberThreats) tasks.push({ name: 'cyberThreats', task: () => runGuarded('cyberThreats', () => this.loadCyberThreats()) });
-    if (IRAN_ATTACKS_ENABLED && SITE_VARIANT !== 'happy' && !isDesktopRuntime() && (this.ctx.mapLayers.iranAttacks || shouldLoadAny(['cii', 'strategic-risk', 'strategic-posture']))) tasks.push({ name: 'iranAttacks', task: () => runGuarded('iranAttacks', () => this.loadIranEvents()) });
+    if (IRAN_ATTACKS_ENABLED && SITE_VARIANT !== 'happy' && (this.ctx.mapLayers.iranAttacks || shouldLoadAny(['cii', 'strategic-risk', 'strategic-posture']))) tasks.push({ name: 'iranAttacks', task: () => runGuarded('iranAttacks', () => this.loadIranEvents()) });
     if (SITE_VARIANT !== 'happy' && (this.ctx.mapLayers.techEvents || SITE_VARIANT === 'tech')) tasks.push({ name: 'techEvents', task: () => runGuarded('techEvents', () => this.loadTechEvents()) });
     if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.satellites && this.ctx.map?.isGlobeMode?.()) tasks.push({ name: 'satellites', task: () => runGuarded('satellites', () => this.loadSatellites()) });
     if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.webcams) tasks.push({ name: 'webcams', task: () => runGuarded('webcams', () => this.loadWebcams()) });
@@ -1692,7 +1662,7 @@ export class DataLoaderManager implements AppModule {
   // `isCustom` marks a category from a user-added panel that isn't in the
   // active variant's preset. The active edition's digest does not carry it, so
   // it reads the digests of the editions that do. Every panel reads only
-  // digests; the one direct fetch left is the desktop outage fallback (KTD9).
+  // digests.
   private async loadNewsCategory(
     category: string,
     feeds: typeof FEEDS.politics,
@@ -1849,110 +1819,13 @@ export class DataLoaderManager implements AppModule {
       if (options.digestPending && !isCustom) return [];
 
       recordSelectedFreshness(false);
-      if (!this.isNewsOutageFallbackEnabled()) {
-        console.warn(`[News] Digest missing for "${category}", outage fallback off`);
-        this.renderNewsForCategory(category, []);
-        this.ctx.statusPanel?.updateFeed(category.charAt(0).toUpperCase() + category.slice(1), {
-          status: 'error',
-          errorMessage: 'Digest unavailable',
-        });
-        return [];
-      }
-
-      // Desktop outage fallback (KTD9): a capped, fixed prefix of the catalog
-      // feeds this UI language can read, so an outage's repeated attempts
-      // fetch the same few feeds.
-      const reachableFeeds = filterFeedsByLanguage(enabledFeeds, getCurrentLanguage());
-      const fallbackFeeds = this.selectLimitedFeeds(reachableFeeds, this.outageFallbackCategoryFeedLimit);
-      console.warn(`[News] Digest missing for "${category}", outage fallback fetching ${fallbackFeeds.length}/${reachableFeeds.length} feeds`);
-
-      const renderIntervalMs = 100;
-      let lastRenderTime = 0;
-      let renderTimeout: ReturnType<typeof setTimeout> | null = null;
-      let pendingItems: NewsItem[] | null = null;
-
-      const flushPendingRender = () => {
-        if (!pendingItems) return;
-        this.renderNewsForCategory(category, pendingItems);
-        pendingItems = null;
-        lastRenderTime = Date.now();
-      };
-
-      const scheduleRender = (partialItems: NewsItem[]) => {
-        if (!panel) return;
-        pendingItems = partialItems;
-        const elapsed = Date.now() - lastRenderTime;
-        if (elapsed >= renderIntervalMs) {
-          if (renderTimeout) {
-            clearTimeout(renderTimeout);
-            renderTimeout = null;
-          }
-          flushPendingRender();
-          return;
-        }
-
-        if (!renderTimeout) {
-          renderTimeout = setTimeout(() => {
-            renderTimeout = null;
-            flushPendingRender();
-          }, renderIntervalMs - elapsed);
-        }
-      };
-
-      const { fetchCategoryFeeds, getFeedFailures } = await getRssModule();
-      const items = await fetchCategoryFeeds(fallbackFeeds, {
-        batchSize: this.outageFallbackBatchSize,
-        onBatch: (partialItems) => {
-          scheduleRender(partialItems);
-          this.flashMapForNews(partialItems);
-          if (this.isCurrentNewsLoad(generation)) checkBatchForBreakingAlerts(partialItems);
-        },
+      console.warn(`[News] Digest missing for "${category}"`);
+      this.renderNewsForCategory(category, []);
+      this.ctx.statusPanel?.updateFeed(category.charAt(0).toUpperCase() + category.slice(1), {
+        status: 'error',
+        errorMessage: 'Digest unavailable',
       });
-
-      const failures = getFeedFailures();
-      const failedFeeds = fallbackFeeds.filter(f => failures.has(f.name));
-      const allFailed = fallbackFeeds.length > 0 && failedFeeds.length === fallbackFeeds.length;
-      this.setNewsRefreshDegraded(category, allFailed);
-      this.renderNewsForCategory(category, items);
-      if (panel) {
-        if (renderTimeout) {
-          clearTimeout(renderTimeout);
-          renderTimeout = null;
-          pendingItems = null;
-        }
-
-        if (items.length === 0 && failedFeeds.length > 0) {
-          const names = failedFeeds.map(f => f.name).join(', ');
-          panel.showError(`${t('common.noNewsAvailable')} (${names} failed)`);
-        }
-
-        if (options.recordBaselineSample && !allFailed) {
-          try {
-            const baseline = await updateBaseline(`news:${category}`, items.length);
-            const deviation = calculateDeviation(items.length, baseline);
-            panel.setDeviation(deviation.zScore, deviation.percentChange, deviation.level);
-          } catch (e) { console.warn(`[Baseline] news:${category} write failed:`, e); }
-        }
-      }
-
-      const feedLabel = category.charAt(0).toUpperCase() + category.slice(1);
-      if (allFailed) {
-        const names = failedFeeds.map(f => f.name).join(', ');
-        this.ctx.statusPanel?.updateFeed(feedLabel, {
-          status: 'error',
-          itemCount: items.length,
-          errorMessage: `${names} failed`,
-        });
-        this.ctx.statusPanel?.updateApi('RSS2JSON', { status: 'error' });
-      } else {
-        this.ctx.statusPanel?.updateFeed(feedLabel, {
-          status: 'ok',
-          itemCount: items.length,
-        });
-        this.ctx.statusPanel?.updateApi('RSS2JSON', { status: 'ok' });
-      }
-
-      return items;
+      return [];
     } catch (error) {
       this.ctx.statusPanel?.updateFeed(category.charAt(0).toUpperCase() + category.slice(1), {
         status: 'error',
@@ -2060,41 +1933,11 @@ export class DataLoaderManager implements AppModule {
 
     if (options.digestPending) return [];
 
-    if (!this.isNewsOutageFallbackEnabled()) {
-      recordSelectedFreshness(false);
-      console.warn('[News] Intel digest missing, outage fallback off');
-      this.renderNewsForCategory('intel', []);
-      this.ctx.statusPanel?.updateFeed('Intel', { status: 'error', errorMessage: 'Digest unavailable' });
-      return [];
-    }
-
     recordSelectedFreshness(false);
-    const fallbackIntelFeeds = this.selectLimitedFeeds(enabledIntelSources, this.outageFallbackIntelFeedLimit);
-    console.warn(`[News] Intel digest missing, outage fallback fetching ${fallbackIntelFeeds.length}/${enabledIntelSources.length} feeds`);
-
-    let intel: NewsItem[];
-    try {
-      const { fetchCategoryFeeds } = await getRssModule();
-      intel = await fetchCategoryFeeds(fallbackIntelFeeds, { batchSize: this.outageFallbackBatchSize });
-    } catch (e) {
-      recordSelectedFreshness(false);
-      delete this.ctx.newsByCategory['intel'];
-      console.error('[App] Intel feed failed:', e);
-      return [];
-    }
-
-    if (this.isCurrentNewsLoad(generation)) checkBatchForBreakingAlerts(intel);
-    this.renderNewsForCategory('intel', intel);
-    if (intelPanel && options.recordBaselineSample) {
-      try {
-        const baseline = await updateBaseline('news:intel', intel.length);
-        const deviation = calculateDeviation(intel.length, baseline);
-        intelPanel.setDeviation(deviation.zScore, deviation.percentChange, deviation.level);
-      } catch (e) { console.warn('[Baseline] news:intel write failed:', e); }
-    }
-    this.ctx.statusPanel?.updateFeed('Intel', { status: 'ok', itemCount: intel.length });
-    this.flashMapForNews(intel);
-    return intel;
+    console.warn('[News] Intel digest missing');
+    this.renderNewsForCategory('intel', []);
+    this.ctx.statusPanel?.updateFeed('Intel', { status: 'error', errorMessage: 'Digest unavailable' });
+    return [];
   }
 
   /**
@@ -3863,31 +3706,30 @@ export class DataLoaderManager implements AppModule {
     tasks.push(this.loadOrefAlerts());
 
     // GPS/GNSS jamming (cloud-only — seeded by Wingbits API via fetch-gpsjam.mjs)
-    if (!isDesktopRuntime()) {
-      tasks.push((async () => {
-        try {
-          const data = await fetchGpsInterference();
-          if (!data) {
-            this.ctx.intelligenceCache.gpsJamming = [];
-            ingestGpsJammingForCountryData([]);
-            this.ctx.map?.setLayerReady('gpsJamming', false);
-            return;
-          }
-          this.ctx.intelligenceCache.gpsJamming = data.hexes;
-          ingestGpsJammingForCountryData(data.hexes);
-          if (this.ctx.mapLayers.gpsJamming) {
-            await this.ctx.map?.setGpsJamming(data.hexes);
-            this.ctx.map?.setLayerReady('gpsJamming', data.hexes.length > 0);
-          }
-          this.ctx.statusPanel?.updateFeed('GPS Jam', { status: 'ok', itemCount: data.hexes.length });
-          dataFreshness.recordUpdate('gpsjam', data.hexes.length);
-        } catch (error) {
+    tasks.push((async () => {
+      try {
+        const data = await fetchGpsInterference();
+        if (!data) {
+          this.ctx.intelligenceCache.gpsJamming = [];
+          ingestGpsJammingForCountryData([]);
           this.ctx.map?.setLayerReady('gpsJamming', false);
-          this.ctx.statusPanel?.updateFeed('GPS Jam', { status: 'error' });
-          dataFreshness.recordError('gpsjam', String(error));
+          return;
         }
-      })());
-    }
+        this.ctx.intelligenceCache.gpsJamming = data.hexes;
+        ingestGpsJammingForCountryData(data.hexes);
+        if (this.ctx.mapLayers.gpsJamming) {
+          await this.ctx.map?.setGpsJamming(data.hexes);
+          this.ctx.map?.setLayerReady('gpsJamming', data.hexes.length > 0);
+        }
+        this.ctx.statusPanel?.updateFeed('GPS Jam', { status: 'ok', itemCount: data.hexes.length });
+        dataFreshness.recordUpdate('gpsjam', data.hexes.length);
+      } catch (error) {
+        this.ctx.map?.setLayerReady('gpsJamming', false);
+        this.ctx.statusPanel?.updateFeed('GPS Jam', { status: 'error' });
+        dataFreshness.recordError('gpsjam', String(error));
+      }
+    })());
+
 
     await Promise.allSettled(tasks);
 

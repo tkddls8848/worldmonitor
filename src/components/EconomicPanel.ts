@@ -3,8 +3,6 @@ import type { FredSeries, BisData } from '@/services/economic';
 import { BLS_METRO_IDS } from '@/services/economic';
 import { t } from '@/services/i18n';
 import { escapeHtml, unsafeRawHtml } from '@/utils/sanitize';
-import { isDesktopRuntime } from '@/services/runtime';
-import { isFeatureAvailable } from '@/services/runtime-config';
 import type { SpendingSummary } from '@/services/usa-spending';
 import { formatAwardAmount, getAwardTypeIcon } from '@/services/usa-spending';
 import { getCSSColor } from '@/utils';
@@ -288,9 +286,6 @@ export class EconomicPanel extends Panel {
 
   private renderIndicators(): string {
     if (this.fredData.length === 0) {
-      if (isDesktopRuntime() && !isFeatureAvailable('economicFred')) {
-        return `<div class="economic-empty">${t('components.economic.fredKeyMissing')}</div>`;
-      }
       if (this.fredState === 'error' || this.fredState === 'retrying') {
         const isRetrying = this.fredState === 'retrying';
         const raw = isRetrying ? t('common.upstreamUnavailable') : this.fredErrorMsg;

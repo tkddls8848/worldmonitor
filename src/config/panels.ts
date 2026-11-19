@@ -1,9 +1,5 @@
 import type { PanelConfig, MapLayers, DataSourceId } from '@/types';
 import { SITE_VARIANT } from './variant';
-// boundary-ignore: isDesktopRuntime is a pure env probe with no service dependencies
-import { isDesktopRuntime } from '@/services/runtime';
-
-const _desktop = isDesktopRuntime();
 
 // Iran-events domain sunset (war ended 2026-07). Default OFF: iranAttacks is
 // disabled in every variant default so DEFAULT_MAP_LAYERS agrees with the gated
@@ -140,13 +136,13 @@ const FULL_PANELS: Record<string, PanelConfig> = {
 
 const FULL_MAP_LAYERS: MapLayers = {
   aircraftEmergencies: false,
-  iranAttacks: IRAN_ATTACKS_ENABLED && !_desktop,
+  iranAttacks: IRAN_ATTACKS_ENABLED,
   gpsJamming: false,
   satellites: false,
 
 
   conflicts: true,
-  bases: !_desktop,
+  bases: true,
   cables: false,
   pipelines: false,
   storageFacilities: false,

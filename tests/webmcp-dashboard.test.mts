@@ -1025,7 +1025,7 @@ describe('WebMCP live dashboard bindings', () => {
 
   it('opens settings without mutating overlay contents, and reports alerts unavailable', async () => {
     const calls: string[] = [];
-    const ctx = makeContext({ unifiedSettings: makeSettings(calls), isDesktopApp: false });
+    const ctx = makeContext({ unifiedSettings: makeSettings(calls) });
 
     const settings = await applyWebMcpOpenSettings(ctx, 'full');
     assert.equal(settings.ok, true);
@@ -1060,7 +1060,7 @@ describe('WebMCP live dashboard bindings', () => {
   it('keeps alerts unavailable without opening settings', async () => {
     const calls: string[] = [];
     const result = await applyWebMcpOpenAlerts(
-      makeContext({ unifiedSettings: makeSettings(calls), isDesktopApp: true }),
+      makeContext({ unifiedSettings: makeSettings(calls) }),
       'full',
     );
     assert.equal(result.ok, false);

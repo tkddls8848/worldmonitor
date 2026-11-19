@@ -5,11 +5,6 @@ import { initTestI18n } from './helpers/i18n.mts';
 const lookupMock = vi.hoisted(() => vi.fn());
 const evidenceMock = vi.hoisted(() => vi.fn());
 
-const desktop = vi.hoisted(() => ({ value: false }));
-vi.mock('@/config/desktop-runtime', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/config/desktop-runtime')>()),
-  isDesktopRuntime: () => desktop.value,
-}));
 vi.mock('@/config/orbital-watch-flag', () => ({ ORBITAL_WATCH_ENABLED: true }));
 // The timeline's event context reads the dashboard's point-free global feeds; these tests count search requests only.
 vi.mock('@/services/orbital/point-context', async (importOriginal) => ({
@@ -123,8 +118,7 @@ describe('place search in the satellite pass lookup', () => {
     const dispatcher = new SearchSelectionDispatcher({
       ctx: { mapLayers: {}, map: null, panelSettings: {}, newsPanels: {} } as never,
       getVariant: () => 'full', openCountryBriefByCode: vi.fn(() => true), enablePanel: vi.fn(() => false),
-      trackSearchResultSelected: vi.fn(), trackCountrySelected: vi.fn(), runWithAgentAnalyticsSuppressed: (callback) => callback(),
-      suppressNextAgentPanelView: vi.fn(), resolveExecutableNewsPanel: vi.fn(() => null), saveToStorage, setTheme: vi.fn(),
+      resolveExecutableNewsPanel: vi.fn(() => null), saveToStorage, setTheme: vi.fn(),
       setTimeout: (callback, delay) => setTimeout(callback, delay), clearTimeout: (timer) => clearTimeout(timer),
     });
     dispatcher.handleCommand(command);
@@ -292,19 +286,6 @@ describe('satellite pass share link', () => {
     expect(sheet()!.querySelector<HTMLElement>('.ow-search-slot')!.hidden).toBe(false);
   });
 
-  it('points a desktop share link at the public dashboard, not the local WebView origin', async () => {
-    desktop.value = true;
-    try {
-      openOrbitalWatch(EXACT, null);
-      await vi.waitFor(() => expect(sheet()!.querySelector('.ow-headline')).not.toBeNull());
-      button('.ow-share').click();
-      await vi.waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
-      expect(writeText.mock.calls[0]![0]).toBe('https://www.worldmonitor.app/dashboard#orbital=48.86,2.29');
-    } finally {
-      desktop.value = false;
-    }
-  });
-
   it('opens the full view from a view=full link', async () => {
     history.replaceState(null, '', '/dashboard#orbital=48.86,2.29&view=full');
     scheduleOrbitalShareLink(takeOrbitalShareLink()!, 0, () => false);
@@ -400,7 +381,7 @@ describe('satellite pass share link', () => {
       getState: () => ({ view: 'global', zoom: 6, timeRange: '24h', layers: {} }),
       getCenter: () => ({ lat: 48.9, lon: 2.3 }),
     };
-    const manager = new EventHandlerManager({ container, isDesktopApp: false, panels: {}, panelSettings: {}, mapLayers: {}, map } as never, {} as never);
+    const manager = new EventHandlerManager({ container, panels: {}, panelSettings: {}, mapLayers: {}, map } as never, {} as never);
     expect(new URL(manager.getShareUrl()!).searchParams.get('lat')).toBe('48.9000');
     openOrbitalWatchSearch(null);
     submitSearch('48.8584, 2.2945');

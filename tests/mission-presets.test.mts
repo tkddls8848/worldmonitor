@@ -1172,7 +1172,6 @@ function createMissionHarness(options: {
   const ctx = {
     map: options.map ?? makeMapSpy(),
     isMobile: options.mobile ?? false,
-    isDesktopApp: false,
     container: document.body,
     panels: {},
     newsPanels: {},

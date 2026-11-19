@@ -155,8 +155,7 @@ describe('ForecastPanel reliability badge', () => {
   });
 
   it('links to the published domain table, hosted on desktop', () => {
-    expect(reliabilityHref(false)).toBe('/accuracy/#by-domain');
-    expect(reliabilityHref(true)).toBe('https://www.worldmonitor.app/accuracy/#by-domain');
+    expect(reliabilityHref()).toBe('/accuracy/#by-domain');
   });
 
   it('carries its hint once, in the accessible name, with no duplicate title', async () => {

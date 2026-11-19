@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { after, describe, it } from 'node:test';
 
-import { createBrowserEnvironment } from './helpers/runtime-config-panel-harness.mjs';
+import { createBrowserEnvironment } from './helpers/mini-dom.mts';
 import { LeftRail } from '../src/components/RouteExplorer/components/LeftRail.ts';
 import { CountryImpactTab } from '../src/components/RouteExplorer/tabs/CountryImpactTab.ts';
 import type {

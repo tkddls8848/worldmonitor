@@ -3,7 +3,7 @@ import { writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { createBrowserEnvironment } from './runtime-config-panel-harness.mjs';
+import { createBrowserEnvironment } from './mini-dom.mts';
 import { MiniNode } from './mini-dom.mts';
 import { createTempDir, removeTempDir } from './temp-dir.mjs';
 

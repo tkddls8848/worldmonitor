@@ -66,7 +66,6 @@ export interface IntelligenceCache {
 export interface AppContext {
   map: import('@/components').MapContainer | null;
   readonly isMobile: boolean;
-  readonly isDesktopApp: boolean;
   readonly container: HTMLElement;
 
   panels: Record<string, import('@/components').Panel>;
@@ -110,7 +109,6 @@ export interface AppContext {
   unifiedSettings: UnifiedSettingsController | null;
   pizzintIndicator: import('@/components').PizzIntIndicator | null;
   correlationEngine: import('@/services/correlation-engine').CorrelationEngine | null;
-  llmStatusIndicator: import('@/components').LlmStatusIndicator | null;
   countryBriefPage: import('@/components/CountryBriefPanel').CountryBriefPanel | null;
   countryTimeline: import('@/components/CountryTimeline').CountryTimeline | null;
 

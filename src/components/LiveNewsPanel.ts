@@ -1,5 +1,4 @@
 import { Panel } from './Panel';
-import { isDesktopRuntime } from '@/services/runtime';
 import { t } from '../services/i18n';
 import { getPanelDisplayName } from '@/services/panel-display-name';
 import { createFocusTrap } from '@/utils/focus-trap';
@@ -928,16 +927,8 @@ export class LiveNewsPanel extends Panel {
 
   private async openYouTubeSignIn(): Promise<void> {
     const youtubeLoginUrl = 'https://accounts.google.com/ServiceLogin?service=youtube&continue=https://www.youtube.com/';
-    if (isDesktopRuntime()) {
-      try {
-        const { tryInvokeTauri } = await import('@/services/tauri-bridge');
-        await tryInvokeTauri('open_youtube_login');
-      } catch {
-        window.open(youtubeLoginUrl, '_blank', 'noopener,noreferrer');
-      }
-    } else {
-      window.open(youtubeLoginUrl, '_blank', 'noopener,noreferrer');
-    }
+    window.open(youtubeLoginUrl, '_blank', 'noopener,noreferrer');
+
   }
 
   public refresh(): void {

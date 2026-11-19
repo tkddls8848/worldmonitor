@@ -18,7 +18,6 @@ describe('map fullscreen resize synchronization', () => {
     document.body.append(container);
     manager = new EventHandlerManager({
       container,
-      isDesktopApp: false,
       panels: {},
       panelSettings: {},
       mapLayers: {},

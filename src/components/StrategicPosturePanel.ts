@@ -3,10 +3,7 @@ import { escapeHtml, unsafeRawHtml } from '@/utils/sanitize';
 import { fetchCachedTheaterPosture, type CachedTheaterPosture } from '@/services/cached-theater-posture';
 import { getMilitaryVesselsModule, isVesselRuntimeStoppedError } from '@/services/military-vessels-lazy';
 import { recalcPostureWithVessels, type TheaterPostureSummary } from '@/services/military-surge';
-import { isDesktopRuntime } from '@/services/runtime';
 import { t } from '../services/i18n';
-import type { NewsItem, DeductContextDetail } from '@/types';
-import { buildNewsContext } from '@/utils/news-context';
 import { bindActivationKeys } from '@/utils/activation';
 import { LatestRequestGuard } from '@/utils/latest-request-guard';
 
@@ -22,7 +19,7 @@ export class StrategicPosturePanel extends Panel {
   private staleRetryTimer: ReturnType<typeof setTimeout> | null = null;
   private refreshGuard = new LatestRequestGuard();
 
-  constructor(private getLatestNews?: () => NewsItem[]) {
+  constructor() {
     super({
       id: 'strategic-posture',
       title: t('panels.strategicPosture'),
@@ -488,7 +485,6 @@ export class StrategicPosturePanel extends Panel {
           ${p.strikeCapable ? `<span class="posture-strike">⚡ ${t('components.strategicPosture.strike')}</span>` : ''}
           ${this.getTrendIcon(p.trend, p.changePercent)}
           ${p.targetNation ? `<span class="posture-focus">→ ${escapeHtml(p.targetNation)}</span>` : ''}
-          ${isDesktopRuntime() ? `<button class="posture-deduce-btn" title="Deduce Situation with AI" style="background: none; border: none; cursor: pointer; opacity: 0.7; font-size: 1.1em; transition: opacity 0.2s; margin-left: auto;" data-theater='${escapeHtml(JSON.stringify(p))}'>\u{1F9E0}</button>` : ''}
         </div>
       </div>
     `;
@@ -552,30 +548,6 @@ export class StrategicPosturePanel extends Panel {
 
     if (target.closest('.posture-refresh-btn')) {
       this.refresh();
-      return;
-    }
-
-    const deduceBtn = target.closest<HTMLElement>('.posture-deduce-btn');
-    if (deduceBtn) {
-      e.stopPropagation();
-      try {
-        const theaterDataStr = deduceBtn.dataset.theater;
-        if (!theaterDataStr) return;
-
-        const p = JSON.parse(theaterDataStr);
-        const query = `What is the expected strategic impact of the current military posture in the ${p.shortName} theater?`;
-        let geoContext = `Theater: ${p.shortName} (${p.theaterName}). Military Assets: ${p.totalAircraft} aircraft, ${p.totalVessels} naval vessels. Readiness Level: ${p.postureLevel}. Assets breakdown: ${p.fighters} fighters, ${p.bombers} bombers, ${p.carriers} carriers, ${p.submarines} submarines. Focus/Target: ${p.targetNation || 'Unknown'}.`;
-
-        if (this.getLatestNews) {
-          const newsCtx = buildNewsContext(this.getLatestNews);
-          if (newsCtx) geoContext += `\n\n${newsCtx}`;
-        }
-
-        const detail: DeductContextDetail = { query, geoContext, autoSubmit: true };
-        document.dispatchEvent(new CustomEvent('wm:deduct-context', { detail }));
-      } catch (err) {
-        console.error('[StrategicPosturePanel] Failed to dispatch deduction event', err);
-      }
       return;
     }
 

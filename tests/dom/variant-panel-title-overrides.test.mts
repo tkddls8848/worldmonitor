@@ -80,7 +80,7 @@ async function mapHeaderOf(): Promise<string> {
   vi.stubGlobal('__APP_VERSION__', '0.0.0-test');
   const container = document.body.appendChild(document.createElement('div'));
   const layout = Object.create(PanelLayoutManager.prototype) as PanelLayoutManager;
-  Reflect.set(layout, 'ctx', { container, isDesktopApp: false, isMobile: false, panels: {}, panelSettings: {} });
+  Reflect.set(layout, 'ctx', { container, isMobile: false, panels: {}, panelSettings: {} });
   // The shell markup is written first; panel creation after it needs a full App and throws here.
   await layout.renderLayout().catch(() => {});
   return container.querySelector('#mapSection .panel-title')?.textContent?.trim() ?? '';

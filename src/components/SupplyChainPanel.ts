@@ -14,8 +14,6 @@ import { SCENARIO_TEMPLATES } from '@/config/scenario-templates';
 import { TransitChart } from '@/utils/transit-chart';
 import { t } from '@/services/i18n';
 import { escapeHtml, unsafeRawHtml } from '@/utils/sanitize';
-import { isFeatureAvailable } from '@/services/runtime-config';
-import { isDesktopRuntime } from '@/services/runtime';
 import { runScenario, getScenarioStatus } from '@/services/scenario';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 import { bindActivationKeys } from '@/utils/activation';
@@ -696,7 +694,6 @@ export class SupplyChainPanel extends Panel {
   }
 
   private renderFredIndices(): string {
-    if (isDesktopRuntime() && !isFeatureAvailable('supplyChain')) return '';
     if (!this.shippingData?.indices?.length) return '';
     const container = new Set(['SCFI', 'CCFI']);
     const bulk = new Set(['BDI', 'BCI', 'BPI', 'BSI', 'BHSI']);
@@ -735,7 +732,6 @@ export class SupplyChainPanel extends Panel {
   }
 
   private renderIndicators(): string {
-    if (isDesktopRuntime() && !isFeatureAvailable('supplyChain')) return '';
     if (!this.shippingData?.indices?.length) {
       return `<div class="economic-empty">${t('components.supplyChain.noShipping')}</div>`;
     }

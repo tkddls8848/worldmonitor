@@ -12,7 +12,6 @@ import type {
 import { t } from '@/services/i18n';
 import { escapeHtml, unsafeRawHtml } from '@/utils/sanitize';
 import { isFeatureAvailable } from '@/services/runtime-config';
-import { isDesktopRuntime } from '@/services/runtime';
 import { LatestRequestGuard } from '@/utils/latest-request-guard';
 
 type TabId = 'restrictions' | 'tariffs' | 'flows' | 'barriers' | 'revenue' | 'comtrade';
@@ -75,14 +74,11 @@ export class TradePolicyPanel extends Panel {
 
   public updateRevenue(data: GetCustomsRevenueResponse): void {
     this.revenueData = data;
-    if (isDesktopRuntime() && !isFeatureAvailable('wtoTrade') && this.activeTab !== 'revenue') {
-      this.activeTab = 'revenue';
-    }
     this.render();
   }
 
   private render(): void {
-    const wtoAvailable = !isDesktopRuntime() || isFeatureAvailable('wtoTrade');
+    const wtoAvailable = !isFeatureAvailable('wtoTrade');
     const hasTariffs = wtoAvailable && this.tariffsData && this.tariffsData.datapoints?.length > 0;
     const hasFlows = wtoAvailable && this.flowsData && this.flowsData.flows?.length > 0;
     const hasBarriers = wtoAvailable && this.barriersData && this.barriersData.barriers?.length > 0;

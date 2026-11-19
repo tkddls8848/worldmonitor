@@ -111,7 +111,7 @@ describe('language picker — which entry is marked selected', () => {
    * and it is what this renderer actually decides, so assert that directly.
    */
   function markedOptions(): Array<{ value: string; label: string }> {
-    document.body.innerHTML = renderPreferenceSection('display', { isDesktopApp: false }).html;
+    document.body.innerHTML = renderPreferenceSection('display', {}).html;
     const select = document.querySelector<HTMLSelectElement>('#us-language');
     if (!select) throw new Error('language select missing from preferences markup');
 

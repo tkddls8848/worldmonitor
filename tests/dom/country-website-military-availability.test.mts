@@ -85,9 +85,6 @@ describe('actual result-local USNI and flight observation state',()=>{
  it('null and thrown roster results are unavailable',async()=>{
   rpc.usni.mockResolvedValueOnce({}).mockRejectedValueOnce(Error('fixture failure'));const {fetchUSNIFleetObservation}=await import('@/services/usni-fleet');for(let i=0;i<2;i++){const r=await fetchUSNIFleetObservation();expect(r.report).toBeNull();expect(r.dataState.mode).toBe('unavailable');}
  });
- it('cached roster in desktop offline mode keeps cached/offline metadata',async()=>{
-  const stored={articleDate:'2026-10-05',vessels:[]};rpc.persistent.set('breaker:USNI Fleet Tracker',{data:stored,updatedAt:Date.now()-1000});vi.stubGlobal('window',Object.assign(window,{__TAURI__:{}}));vi.spyOn(navigator,'onLine','get').mockReturnValue(false);try{const {fetchUSNIFleetObservation}=await import('@/services/usni-fleet');expect((await fetchUSNIFleetObservation()).dataState).toMatchObject({mode:'cached',offline:true});}finally{Reflect.deleteProperty(window,'__TAURI__');}
- });
  for(const order of ['failure-first','success-first'])it(`flights reverse ${order} keeps unavailable and live results associated`,async()=>{
   vi.spyOn(runtimeConfig,'isFeatureAvailable').mockReturnValue(true);const a=deferred<any>(),b=deferred<any>();rpc.flight.mockReturnValueOnce(a.promise).mockReturnValueOnce(b.promise);const {fetchMilitaryFlights}=await import('@/services/military-flights');const good=fetchMilitaryFlights();await tick();const bad=fetchMilitaryFlights();await tick();let success:any,failed:any;
   if(order==='failure-first'){b.reject(Error('fixture failure'));failed=await bad;a.resolve({flights:[protoFlight('A1')],pagination:{nextCursor:'',totalCount:1}});success=await good;}else{a.resolve({flights:[protoFlight('A1')],pagination:{nextCursor:'',totalCount:1}});success=await good;b.reject(Error('fixture failure'));failed=await bad;}

@@ -39,14 +39,10 @@ describe('dashboard site links (#10461)', () => {
   });
 
   it('keeps reference destinations local for self-hosted and localhost dashboards', () => {
-    assert.equal(resolveDashboardSiteOrigin({ isDesktopApp: false, hostname: 'localhost' }), '');
-    assert.equal(resolveDashboardSiteOrigin({ isDesktopApp: false, hostname: 'dash.example.com' }), '');
+    assert.equal(resolveDashboardSiteOrigin({ hostname: 'localhost' }), '');
+    assert.equal(resolveDashboardSiteOrigin({ hostname: 'dash.example.com' }), '');
     assert.equal(
-      resolveDashboardSiteOrigin({ isDesktopApp: false, hostname: 'www.worldmonitor.app' }),
-      DASHBOARD_SITE_ORIGIN,
-    );
-    assert.equal(
-      resolveDashboardSiteOrigin({ isDesktopApp: true, hostname: 'localhost' }),
+      resolveDashboardSiteOrigin({ hostname: 'www.worldmonitor.app' }),
       DASHBOARD_SITE_ORIGIN,
     );
     const html = dashboardSiteLinksHtml('');

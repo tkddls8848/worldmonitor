@@ -3,8 +3,6 @@
 // they never see YT.Player, hls.js, player error codes or sidecar bridge messages.
 
 import { getStreamQuality } from '@/services/ai-flow-settings';
-import { isAllowedWebcamEmbedMessageOrigin } from '@/services/live-video/embed-message-origin';
-import { getLocalApiPort, isDesktopRuntime } from '@/services/runtime';
 
 import {
   advanceChain,
@@ -167,10 +165,9 @@ function createFrame(presentation: LiveVideoPresentation, src: string): HTMLIFra
   iframe.title = presentation.title;
   iframe.allow = 'autoplay; encrypted-media; picture-in-picture; storage-access';
   iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-  if (!isDesktopRuntime()) {
-    iframe.allowFullscreen = true;
-    iframe.setAttribute('loading', 'lazy');
-  }
+  iframe.allowFullscreen = true;
+  iframe.setAttribute('loading', 'lazy');
+
   iframe.src = src;
   return iframe;
 }
@@ -319,119 +316,6 @@ function mountYouTubeWeb(container: HTMLElement, candidate: YouTubeCandidate, co
       } catch { /* the frame is removed below either way */ }
       player = null;
       // Removing the frame discards its document, which stops playback.
-      iframe.remove();
-    },
-  };
-}
-
-interface SidecarMessage {
-  type?: unknown;
-  state?: unknown;
-  code?: unknown;
-  muted?: unknown;
-  videoId?: unknown;
-  isLive?: unknown;
-  title?: unknown;
-  author?: unknown;
-  duration?: unknown;
-}
-
-/**
- * Desktop: YouTube rejects the tauri:// parent origin (error 153), so the sidecar serves the player
- * from localhost and relays its signals. `probe` asks it for the current video data.
- */
-function mountYouTubeSidecar(container: HTMLElement, candidate: YouTubeCandidate, context: TransportContext): Transport {
-  const params = new URLSearchParams(candidate.kind === 'video' ? { videoId: candidate.videoId } : { channel: candidate.channelId });
-  params.set('autoplay', context.autoplay ? '1' : '0');
-  params.set('mute', context.muted ? '1' : '0');
-  params.set('controls', context.presentation.controls ? '1' : '0');
-  const quality = streamQuality();
-  if (quality) params.set('vq', quality);
-  params.set('parentOrigin', window.location.origin);
-  const iframe = createFrame(context.presentation, `http://localhost:${getLocalApiPort()}/api/youtube-embed?${params.toString()}`);
-  const sidecarOrigin = new URL(iframe.src).origin;
-  let destroyed = false;
-  let frameLoaded = false;
-  let readyAtMs: number | null = null;
-  let errorCode: number | null = null;
-  let video: YouTubeVideoSnapshot | null = null;
-  const durations: DurationSample[] = [];
-  let reportedMuted = context.muted;
-
-  const post = (type: string) => {
-    try {
-      iframe.contentWindow?.postMessage({ type }, sidecarOrigin);
-    } catch { /* the frame is navigating away */ }
-  };
-
-  const onMessage = (event: MessageEvent) => {
-    if (destroyed || event.source !== iframe.contentWindow || !isAllowedWebcamEmbedMessageOrigin(event.origin, iframe.src)) return;
-    const message = event.data as SidecarMessage | null;
-    if (!message || typeof message !== 'object') return;
-    switch (message.type) {
-      case 'yt-ready':
-        if (readyAtMs === null) readyAtMs = context.elapsedMs();
-        break;
-      case 'yt-state':
-        if (message.state === PLAYING) context.onPlayingChange(true);
-        else if (message.state === PAUSED) context.onPlayingChange(false);
-        else if (message.state === ENDED) context.onLiveLost();
-        break;
-      case 'yt-error':
-        errorCode = typeof message.code === 'number' ? message.code : 5;
-        context.onLiveLost();
-        break;
-      case 'yt-mute-state':
-        // The sidecar's own mute sync echoes what setMuted posted: only a real change is news.
-        if (typeof message.muted === 'boolean' && message.muted !== reportedMuted) {
-          reportedMuted = message.muted;
-          context.onMutedChange(message.muted);
-        }
-        break;
-      case 'yt-video-data':
-        video = {
-          videoId: typeof message.videoId === 'string' ? message.videoId : '',
-          isLive: typeof message.isLive === 'boolean' ? message.isLive : undefined,
-          title: typeof message.title === 'string' ? message.title : '',
-          author: typeof message.author === 'string' ? message.author : '',
-        };
-        if (message.state === PLAYING && typeof message.duration === 'number') {
-          pushDuration(durations, { atMs: context.elapsedMs(), seconds: message.duration });
-        }
-        break;
-    }
-  };
-
-  window.addEventListener('message', onMessage);
-  iframe.addEventListener('load', () => { frameLoaded = true; });
-  container.appendChild(iframe);
-
-  return {
-    observe() {
-      if (readyAtMs !== null) post('probe');
-      return {
-        transport: 'youtube',
-        api: 'loaded',
-        candidate: candidate.kind,
-        elapsedMs: context.elapsedMs(),
-        frameLoaded,
-        readyAtMs,
-        errorCode,
-        video,
-        durations: [...durations],
-      };
-    },
-    setMuted(muted) {
-      // Already known to the caller: never report it back.
-      reportedMuted = muted;
-      post(muted ? 'mute' : 'unmute');
-    },
-    setPaused(paused) {
-      post(paused ? 'pause' : 'play');
-    },
-    destroy() {
-      destroyed = true;
-      window.removeEventListener('message', onMessage);
       iframe.remove();
     },
   };
@@ -707,7 +591,6 @@ export function openLiveVideo(container: HTMLElement, options: LiveVideoOptions)
       } : undefined,
     };
     if (candidate.kind === 'hls') mounted = mountHls(container, candidate, context);
-    else if (isDesktopRuntime()) mounted = mountYouTubeSidecar(container, candidate, context);
     else mounted = mountYouTubeWeb(container, candidate, context);
     transport = mounted;
     pollTimer = setInterval(() => poll(index, candidate), LIVE_VIDEO_TIMING.pollMs);

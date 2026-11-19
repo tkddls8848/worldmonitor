@@ -1,4 +1,4 @@
-import { isDesktopRuntime, toApiUrl } from '@/services/runtime';
+import { toApiUrl } from '@/services/runtime';
 
 /**
  * Starts the fast bootstrap tier from the dashboard entry script, before the
@@ -26,7 +26,6 @@ export function primeBootstrapFastTier(): void {
   if (primed || typeof fetch !== 'function') return;
   // Desktop waits for its local sidecar before bootstrap; offline boots read
   // the cached tier instead of the network.
-  if (isDesktopRuntime()) return;
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
 
   const controller = new AbortController();

@@ -10,7 +10,6 @@
 
 /** A plain snapshot the shell reads before every navigation event. */
 export interface SettingsFacts {
-  readonly isDesktopApp: boolean;
   /** Panels that read as on in the Panels page draft. */
   readonly panels: { readonly on: number; readonly total: number };
   readonly sourcesOn: number;

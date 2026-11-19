@@ -149,7 +149,6 @@ beforeEach(() => {
     getAllSourceNames: () => ALL_SOURCES,
     getLocalizedPanelName: (_key, fallback) => fallback,
     resetLayout: () => {},
-    isDesktopApp: false,
   };
 
   settings = new UnifiedSettings(config);

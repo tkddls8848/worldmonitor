@@ -49,8 +49,8 @@ describe('optional local-AI init stays off the dashboard critical path (#7779)',
     );
     assert.match(
       src,
-      /if \(!getAiFlowSettings\(\)\.browserModel && !isDesktopRuntime\(\)\) return;/,
-      'a late boot continuation must recheck the browser-model/desktop authority',
+      /if \(!getAiFlowSettings\(\)\.browserModel\) return;/,
+      'a late boot continuation must recheck the browser-model setting',
     );
   });
 

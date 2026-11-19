@@ -16,7 +16,6 @@ import { loadFromStorage, saveToStorage } from '@/utils';
 import { t } from '@/services/i18n';
 import { getPanelDisplayName } from '@/services/panel-display-name';
 import { escapeHtml } from '@/utils/sanitize';
-import { isDesktopRuntime } from '@/services/runtime';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 
 export function initSettingsWindow(): void {
@@ -42,11 +41,9 @@ export function initSettingsWindow(): void {
     }
   }
 
-  const isDesktopApp = isDesktopRuntime();
-
   function render(): void {
     const panelEntries = Object.entries(panelSettings).filter(
-      ([key]) => key !== 'runtime-config' || isDesktopApp
+      ([key]) => key !== 'runtime-config'
     );
     const panelHtml = panelEntries
       .map(

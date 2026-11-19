@@ -91,7 +91,6 @@ beforeEach(() => {
     getAllSourceNames: () => [],
     getLocalizedPanelName: (_key: string, fallback: string) => fallback,
     resetLayout: () => {},
-    isDesktopApp: false,
   });
 });
 

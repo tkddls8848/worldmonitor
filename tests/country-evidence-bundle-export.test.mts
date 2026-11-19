@@ -8,7 +8,7 @@ import { build } from 'esbuild';
 import ts from 'typescript';
 import { runInNewContext } from 'node:vm';
 import { createCountryDeepDivePanelHarness } from './helpers/country-deep-dive-panel-harness.mjs';
-import { createBrowserEnvironment } from './helpers/runtime-config-panel-harness.mjs';
+import { createBrowserEnvironment } from './helpers/mini-dom.mts';
 import { countrySignalsFromMilitary } from '../src/services/country-signals';
 
 type ExportUtils = typeof import('../src/utils/export.ts');

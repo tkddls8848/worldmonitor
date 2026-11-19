@@ -72,14 +72,10 @@ async function loadMilitaryService(
   );
   patched = replaceRequired(
     patched,
-    /import \{\n {2}identifyByCallsign,[\s\S]*?\} from '@\/config\/military';\nimport type \{ QueryRegion \} from '@\/config\/military';/,
-    `const identifyByCallsign = () => undefined;
-    const identifyByAircraftType = () => undefined;
-    const isKnownMilitaryHex = () => undefined;
-    const getNearbyHotspot = () => undefined;
+    "import { identifyByAircraftType, MILITARY_HOTSPOTS, MILITARY_QUERY_REGIONS } from '@/config/military';",
+    `const identifyByAircraftType = () => undefined;
     const MILITARY_HOTSPOTS: any[] = (globalThis as any).__wmTestMilitaryHotspots ?? [];
-    const MILITARY_QUERY_REGIONS = ${JSON.stringify(queryRegions)};
-    type QueryRegion = any;`,
+    const MILITARY_QUERY_REGIONS = ${JSON.stringify(queryRegions)};`,
     'military config',
   );
   patched = replaceRequired(
@@ -110,12 +106,6 @@ async function loadMilitaryService(
   );
   patched = replaceRequired(
     patched,
-    "import { isDesktopRuntime, toApiUrl } from './runtime';",
-    "const isDesktopRuntime = () => false; const toApiUrl = (path: string) => path;",
-    'runtime',
-  );
-  patched = replaceRequired(
-    patched,
     "import { MilitaryServiceClient } from '@/services/generated-rpc-clients';",
     `class MilitaryServiceClient {
       constructor(..._args: unknown[]) {}
@@ -124,12 +114,6 @@ async function loadMilitaryService(
       }
     }`,
     'military RPC client',
-  );
-  patched = replaceRequired(
-    patched,
-    "const wsRelayUrl = import.meta.env.VITE_WS_RELAY_URL || '';",
-    "const wsRelayUrl = '';",
-    'Vite environment',
   );
 
   const transformed = transformSync(patched, {

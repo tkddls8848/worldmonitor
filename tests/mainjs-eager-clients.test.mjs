@@ -25,7 +25,6 @@ const EAGER_SERVICE_FILES = [
 ];
 
 const DATA_LOADER_DEFERRED_SERVICE_IMPORTS = [
-  '@/services/rss',
   '@/services/trending-keywords',
   '@/services/daily-market-brief',
 ];
@@ -62,7 +61,6 @@ const DATA_LOADER_DEFERRED_BARREL_EXPORTS = [
 
 const DATA_LOADER_LAZY_PROMISE_SLOTS = [
   'dailyMarketBriefModulePromise',
-  'rssModulePromise',
   'ingestHeadlinesPromise',
   'drainTrendingSignalsPromise',
 ];

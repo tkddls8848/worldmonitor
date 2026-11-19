@@ -1,5 +1,5 @@
 import { getPersistentCache, setPersistentCache } from '@/services/persistent-cache';
-import { isDesktopRuntime, toApiUrl } from '@/services/runtime';
+import { toApiUrl } from '@/services/runtime';
 import { adoptPrimedBootstrapTier, primedBootstrapTierBudgetUsedMs, resetPrimedBootstrapTierForTests } from '@/services/bootstrap-prefetch';
 import { bootstrapTierKeyNames } from '../../shared/bootstrap-tier-keys.js';
 
@@ -41,7 +41,6 @@ const EMPTY_TIER_STATE: BootstrapTierHydrationState = { source: 'none', updatedA
  */
 export const BOOTSTRAP_TIER_TIMEOUT_MS = {
   web: { fast: 1_200, slow: 3_000 },
-  desktop: { fast: 5_000, slow: 8_000 },
 } as const;
 
 let lastHydrationState: BootstrapHydrationState = {
@@ -349,7 +348,6 @@ function shouldAbortSlowTierOnTimeout(): boolean {
 }
 
 function scheduleSlowTierFetch(generation: number, onSlowSettled?: () => void): Promise<void> {
-  const desktop = isDesktopRuntime();
   const isCurrentGeneration = (): boolean => generation === bootstrapGeneration;
 
   return new Promise<void>((resolve) => {
@@ -365,7 +363,7 @@ function scheduleSlowTierFetch(generation: number, onSlowSettled?: () => void): 
       const slowTimeout = abortSlowTier
         ? setTimeout(
           () => slowCtrl.abort(),
-          desktop ? BOOTSTRAP_TIER_TIMEOUT_MS.desktop.slow : BOOTSTRAP_TIER_TIMEOUT_MS.web.slow,
+          BOOTSTRAP_TIER_TIMEOUT_MS.web.slow,
         )
         : null;
 
@@ -485,7 +483,6 @@ export async function fetchBootstrapData(onSlowSettled?: () => void): Promise<vo
   };
 
   const fastCtrl = new AbortController();
-  const desktop = isDesktopRuntime();
   // Tier abort budgets:
   // - Fast tier (~10 keys, small payload) keeps an aggressive 1.2 s browser cap; it already meets that budget.
   // - Slow tier carries ~70 bootstrap keys (~500 KB). The previous 1.8 s browser cap was below realistic p95
@@ -494,9 +491,8 @@ export async function fetchBootstrapData(onSlowSettled?: () => void): Promise<vo
   //   the same conditions, leaving panels stuck in empty-state.
   // - 3.0 s is a conservative bump to avoid that cascade. Further tuning should be driven by RUM / Sentry
   //   data once available; do not move this without evidence.
-  // - Desktop budgets (5 s / 8 s) are unchanged — different network and dependency-loading constraints.
   // A request primed by the entry script has already spent part of the budget.
-  const fastBudgetMs = desktop ? BOOTSTRAP_TIER_TIMEOUT_MS.desktop.fast : BOOTSTRAP_TIER_TIMEOUT_MS.web.fast;
+  const fastBudgetMs = BOOTSTRAP_TIER_TIMEOUT_MS.web.fast;
   const fastTimeout = setTimeout(
     () => fastCtrl.abort(),
     Math.max(0, fastBudgetMs - primedBootstrapTierBudgetUsedMs()),

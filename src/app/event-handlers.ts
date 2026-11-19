@@ -19,7 +19,6 @@ import type { ClusteredEvent } from '@/types';
 import type { DashboardSnapshot } from '@/services/storage';
 import { PlaybackControl } from '@/components/PlaybackControl';
 import { PizzIntIndicator } from '@/components/PizzIntIndicator';
-import { LlmStatusIndicator } from '@/components/LlmStatusIndicator';
 import type { PredictionPanel } from '@/components/PredictionPanel';
 import {
   buildMapUrl,
@@ -47,7 +46,6 @@ import {
 } from '@/config';
 import { resolveNewsCategories, enabledNewsCategoryKeys } from '@/config/feed-resolution';
 import { VARIANT_META } from '@/config/variant-meta';
-import { isDesktopRuntime } from '@/services/runtime';
 import {
   getMissionPresetsForVariant,
   applyMissionPresetToState,
@@ -69,7 +67,6 @@ import {
 } from '@/services';
 import { detectPlatform, allButtons, buttonsForPlatform } from '@/components/DownloadBanner';
 import type { Platform } from '@/components/DownloadBanner';
-import { isOpenableExternalUrl, openExternalUrl } from '@/services/external-navigation';
 import { getCachedGpsInterference } from '@/services/gps-interference';
 import { dataFreshness } from '@/services/data-freshness';
 import { mlWorker } from '@/services/ml-worker';
@@ -266,7 +263,6 @@ export class EventHandlerManager implements AppModule {
   private boundFullscreenHandler: (() => void) | null = null;
   private boundResizeHandler: (() => void) | null = null;
   private boundVisibilityHandler: (() => void) | null = null;
-  private boundDesktopExternalLinkHandler: ((e: MouseEvent) => void) | null = null;
   private boundIdleResetHandler: (() => void) | null = null;
   private boundStorageHandler: ((e: StorageEvent) => void) | null = null;
   private boundOpenStorageAtlas: ((ev: Event) => void) | null = null;
@@ -452,10 +448,6 @@ export class EventHandlerManager implements AppModule {
     if (this.boundVisibilityHandler) {
       document.removeEventListener('visibilitychange', this.boundVisibilityHandler);
       this.boundVisibilityHandler = null;
-    }
-    if (this.boundDesktopExternalLinkHandler) {
-      document.removeEventListener('click', this.boundDesktopExternalLinkHandler, true);
-      this.boundDesktopExternalLinkHandler = null;
     }
     if (this.idleTimeoutId) {
       clearTimeout(this.idleTimeoutId);
@@ -718,7 +710,7 @@ export class EventHandlerManager implements AppModule {
     });
 
     const fullscreenBtn = document.getElementById('fullscreenBtn');
-    if (!this.ctx.isDesktopApp && fullscreenBtn) {
+    if (fullscreenBtn) {
       fullscreenBtn.addEventListener('click', () => this.toggleFullscreen());
       this.boundFullscreenHandler = () => {
         fullscreenBtn.textContent = document.fullscreenElement ? '\u26F6' : '\u26F6';
@@ -746,9 +738,6 @@ export class EventHandlerManager implements AppModule {
 
     this.boundVisibilityHandler = () => {
       document.body?.classList.toggle('animations-paused', document.hidden);
-      if (this.ctx.isDesktopApp) {
-        this.ctx.map?.setRenderPaused(document.hidden);
-      }
       if (document.hidden) {
         this.callbacks.setHiddenSince(Date.now());
         mlWorker.unloadOptionalModels();
@@ -767,38 +756,6 @@ export class EventHandlerManager implements AppModule {
 
     this.setupMissionPresets();
 
-    if (this.ctx.isDesktopApp) {
-      if (this.boundDesktopExternalLinkHandler) {
-        document.removeEventListener('click', this.boundDesktopExternalLinkHandler, true);
-      }
-      this.boundDesktopExternalLinkHandler = (e: MouseEvent) => {
-        if (!(e.target instanceof Element)) return;
-        const anchor = e.target.closest('a[href]') as HTMLAnchorElement | null;
-        if (!anchor) return;
-        const href = anchor.href;
-        if (!href || href.startsWith('javascript:') || href === '#' || href.startsWith('#')) return;
-        // Only handle valid http(s) URLs
-        let url: URL;
-        try {
-          url = new URL(href, window.location.href);
-        } catch {
-          // Malformed URL, let browser handle
-          return;
-        }
-        if (url.origin === window.location.origin) return;
-        // Gate on the SAME predicate the router uses, not a looser one. The
-        // native opener takes https anywhere but http only for localhost, so
-        // a plain-http link matched by `/^https?:$/` was cancelled here and
-        // then refused there — a guaranteed dead click plus a misleading
-        // `rejected-scheme` report. Anything the router will not take is left
-        // to the WebView's own `target="_blank"` handling instead.
-        if (!isOpenableExternalUrl(url.href)) return;
-        e.preventDefault();
-        e.stopPropagation();
-        void openExternalUrl(url);
-      };
-      document.addEventListener('click', this.boundDesktopExternalLinkHandler, true);
-    }
   }
 
   private setupMissionPresets(): void {
@@ -1757,7 +1714,7 @@ export class EventHandlerManager implements AppModule {
   ): Promise<'reload' | 'assign' | 'blocked'> {
     await this.exitFullscreenForNavigation();
 
-    if (this.ctx.isDesktopApp || options.isLocalDev) {
+    if (options.isLocalDev) {
       if (stageVariantSelection(SITE_VARIANT, variant, writeStorageValue)) {
         window.history.replaceState(
           window.history.state,
@@ -1847,14 +1804,6 @@ export class EventHandlerManager implements AppModule {
     }
   }
 
-  setupLlmStatusIndicator(): void {
-    if (!isDesktopRuntime()) return;
-    this.ctx.llmStatusIndicator = new LlmStatusIndicator();
-    const headerRight = this.ctx.container.querySelector('.header-right');
-    if (headerRight) {
-      headerRight.appendChild(this.ctx.llmStatusIndicator.getElement());
-    }
-  }
 
   setupExportPanel(): void {
     const getExportData = () => {
@@ -1975,7 +1924,6 @@ export class EventHandlerManager implements AppModule {
         removeStorageValue('map-side');
         window.location.reload();
       },
-      isDesktopApp: this.ctx.isDesktopApp,
       onMapProviderChange: () => {
         this.ctx.map?.reloadBasemap();
       },
@@ -2105,8 +2053,7 @@ export class EventHandlerManager implements AppModule {
       // Before the keys were mode-scoped both modes overwrote 'map-height';
       // fall back to it so existing split-mode users keep their height. The
       // restore below completes the migration by writing the split key.
-      const canUseLegacySplitHeight = this.ctx.isDesktopApp
-        || window.innerWidth >= LEGACY_WEB_SPLIT_LAYOUT_MIN_WIDTH;
+      const canUseLegacySplitHeight = window.innerWidth >= LEGACY_WEB_SPLIT_LAYOUT_MIN_WIDTH;
       if (value === null && isSplit() && canUseLegacySplitHeight
         && readStorageValue('map-height-mode') !== 'stacked') {
         return { value: readStorageValue('map-height'), sourceKey: 'map-height' };

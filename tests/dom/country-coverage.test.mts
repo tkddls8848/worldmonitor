@@ -5,17 +5,10 @@ import type { NewsItem } from '@/types';
 const rssMocks = vi.hoisted(() => ({
   fetchFeed: vi.fn(),
 }));
-const runtimeMocks = vi.hoisted(() => ({
-  isDesktopRuntime: vi.fn(() => false),
-}));
 
 vi.mock('@/services/rss', async (importOriginal) => ({
   ...await importOriginal<typeof import('@/services/rss')>(),
   fetchFeed: rssMocks.fetchFeed,
-}));
-vi.mock('@/services/runtime', async (importOriginal) => ({
-  ...await importOriginal<typeof import('@/services/runtime')>(),
-  isDesktopRuntime: runtimeMocks.isDesktopRuntime,
 }));
 
 import { fetchCountryCoverage } from '@/services/country-coverage';
@@ -50,7 +43,6 @@ function newsItem(
 describe('country coverage', () => {
   beforeEach(() => {
     rssMocks.fetchFeed.mockReset();
-    runtimeMocks.isDesktopRuntime.mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -240,21 +232,6 @@ describe('country coverage', () => {
       structured,
       unrelated,
     ]);
-  });
-
-  it('routes desktop country feeds through the local RSS proxy', async () => {
-    runtimeMocks.isDesktopRuntime.mockReturnValue(true);
-    rssMocks.fetchFeed.mockResolvedValue([]);
-
-    await fetchCountryCoverage('France');
-
-    expect(rssMocks.fetchFeed).toHaveBeenCalledTimes(2);
-    for (const [feed, options] of rssMocks.fetchFeed.mock.calls) {
-      expect(options.policy).toBe(BRIEF_ONLY_RSS_FETCH_POLICY);
-      const proxyUrl = new URL(feed.url, 'https://desktop.local');
-      expect(proxyUrl.pathname).toBe('/api/rss-proxy');
-      expect(new URL(proxyUrl.searchParams.get('url') ?? '').hostname).toBe('news.google.com');
-    }
   });
 
   it('forwards an abort signal and rejects a superseded country request', async () => {

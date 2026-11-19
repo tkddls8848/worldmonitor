@@ -6,7 +6,6 @@ import {
   formatCounterValue,
   type CounterMetric,
 } from '@/services/humanity-counters';
-import { isDesktopRuntime } from '@/services/runtime';
 
 /**
  * CountersPanel -- Worldometer-style ticking counters showing positive global metrics.
@@ -21,25 +20,10 @@ import { isDesktopRuntime } from '@/services/runtime';
 export class CountersPanel extends Panel {
   private animFrameId: number | null = null;
   private valueElements: Map<string, HTMLElement> = new Map();
-  private readonly desktopMode = isDesktopRuntime();
-  private visibilityHandler: (() => void) | null = null;
-  private lastDesktopUpdateAt = 0;
-  private readonly desktopUpdateIntervalMs = 250;
 
   constructor() {
     super({ id: 'counters', title: 'Live Counters', trackActivity: false, infoTooltip: t('components.counters.infoTooltip') });
     this.createCounterGrid();
-    if (this.desktopMode) {
-      this.visibilityHandler = () => {
-        if (document.hidden) {
-          this.stopTicking();
-          return;
-        }
-        this.lastDesktopUpdateAt = 0;
-        this.startTicking();
-      };
-      document.addEventListener('visibilitychange', this.visibilityHandler);
-    }
     this.startTicking();
   }
 
@@ -105,7 +89,6 @@ export class CountersPanel extends Panel {
    */
   public startTicking(): void {
     if (this.animFrameId !== null) return; // Already ticking
-    if (this.desktopMode && document.hidden) return;
     this.animFrameId = requestAnimationFrame(this.tick);
   }
 
@@ -119,18 +102,8 @@ export class CountersPanel extends Panel {
   /**
    * Animation tick -- arrow function for correct `this` binding.
    * Updates all 6 counter values using textContent (not innerHTML).
-   * Desktop runtime is throttled to reduce background CPU usage.
    */
   private tick = (): void => {
-    if (this.desktopMode) {
-      const now = performance.now();
-      if ((now - this.lastDesktopUpdateAt) < this.desktopUpdateIntervalMs) {
-        this.animFrameId = requestAnimationFrame(this.tick);
-        return;
-      }
-      this.lastDesktopUpdateAt = now;
-    }
-
     for (const metric of COUNTER_METRICS) {
       const el = this.valueElements.get(metric.id);
       if (el) {
@@ -146,10 +119,6 @@ export class CountersPanel extends Panel {
    */
   public destroy(): void {
     this.stopTicking();
-    if (this.visibilityHandler) {
-      document.removeEventListener('visibilitychange', this.visibilityHandler);
-      this.visibilityHandler = null;
-    }
     this.valueElements.clear();
     super.destroy();
   }

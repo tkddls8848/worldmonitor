@@ -17,7 +17,6 @@ import { bindMapControlDisclosure } from './map-control-disclosure';
 
 import Globe from 'globe.gl';
 import { ukmtoIncidentLabel, type UkmtoMapIncident } from '../../shared/ukmto-incidents';
-import { isDesktopRuntime } from '@/services/runtime';
 import type { NewsLocationMarker as NewsLocationInput } from '@/types';
 import type { GlobeInstance, ConfigOptions } from 'globe.gl';
 import { INTEL_HOTSPOTS, CONFLICT_ZONES, STRATEGIC_WATERWAYS } from '@/config/geo';
@@ -730,18 +729,13 @@ export class GlobeMap {
   private async initGlobe(): Promise<void> {
     if (this.destroyed) return;
 
-    const desktop = isDesktopRuntime();
     const initialScale = getGlobeRenderScale();
-    const initialPixelRatio = desktop
-      ? Math.min(resolveGlobePixelRatio(initialScale), 1.25)
-      : resolveGlobePixelRatio(initialScale);
+    const initialPixelRatio = resolveGlobePixelRatio(initialScale);
     const config: ConfigOptions = {
       animateIn: false,
       rendererConfig: {
-        // Desktop (Tauri/WebView2) can fall back to software rendering on some machines.
-        // Keep defaults conservative to avoid 1fps reports (see #930).
-        powerPreference: desktop ? 'high-performance' : 'default',
-        logarithmicDepthBuffer: !desktop,
+        powerPreference: 'default',
+        logarithmicDepthBuffer: true,
         antialias: initialPixelRatio > 1,
       },
     };
@@ -785,14 +779,14 @@ export class GlobeMap {
     // surviving/second pointer's position in mixed mouse|pen + touch gestures —
     // crashes reading undefined.x on touchscreen laptops (WORLDMONITOR-QD).
     guardOrbitControlsPointerTracking(controls);
-    controls.autoRotate = !desktop && !this.autoRotateHeld;
+    controls.autoRotate = !this.autoRotateHeld;
     controls.autoRotateSpeed = 0.3;
     controls.enablePan = false;
     controls.enableZoom = true;
     controls.zoomSpeed = 1.4;
     controls.minDistance = 101;
     controls.maxDistance = 600;
-    controls.enableDamping = !desktop;
+    controls.enableDamping = true;
 
     this.controlsStartHandler = () => {
       this.reservoirRevealSeq++;
@@ -873,9 +867,9 @@ export class GlobeMap {
       this.autoRotateTimer = setTimeout(() => {
         if (this.renderPaused || this.orbitalTarget || this.autoRotateHeld) return;
         if (this.viewportAutoRotateBeforeMove !== null) {
-          this.viewportAutoRotateBeforeMove = !desktop;
+          this.viewportAutoRotateBeforeMove = true;
         } else {
-          controls.autoRotate = !desktop;
+          controls.autoRotate = true;
         }
       }, 60_000);
     };
@@ -3546,7 +3540,7 @@ export class GlobeMap {
     if (this.autoRotateHeld === held) return;
     this.autoRotateHeld = held;
     if (!this.controls || this.renderPaused || this.viewportAutoRotateBeforeMove !== null) return;
-    this.controls.autoRotate = !held && !isDesktopRuntime();
+    this.controls.autoRotate = !held;
   }
 
   public setRenderPaused(paused: boolean): void {
@@ -4356,10 +4350,7 @@ export class GlobeMap {
   private applyRenderQuality(scale?: GlobeRenderScale, width?: number, height?: number): void {
     if (!this.globe) return;
     try {
-      const desktop = isDesktopRuntime();
-      const pr = desktop
-        ? Math.min(resolveGlobePixelRatio(scale ?? getGlobeRenderScale()), 1.25)
-        : resolveGlobePixelRatio(scale ?? getGlobeRenderScale());
+      const pr = resolveGlobePixelRatio(scale ?? getGlobeRenderScale());
       const renderer = this.globe.renderer();
       renderer.setPixelRatio(pr);
       const w = (width ?? this.container.clientWidth) || window.innerWidth;

@@ -6,32 +6,16 @@ const news = [
   { title: '停火谈判继续 — محادثات السلام', source: '共同通信' },
 ];
 
-for (const consumer of ['deduction', 'tech', 'posture'] as const) {
+for (const consumer of ['deduction'] as const) {
   test(`${consumer} preserves news records through the rendered deduction form`, async ({ page }, testInfo) => {
-    // Real components, DOM events and RPC request serialization. Network data,
-    // premium access and desktop detection are controlled fixture inputs.
-    await page.addInitScript(() => {
-      Object.assign(window, { __TAURI__: {} });
-    });
+    // Real components, DOM events and RPC request serialization. Network data
+    // and premium access are controlled fixture inputs.
     let requestBody: { geoContext: string } | undefined;
     await page.route('**/api/**', async route => {
       const path = new URL(route.request().url()).pathname;
       if (path.endsWith('/deduct-situation')) {
         requestBody = route.request().postDataJSON();
         return route.fulfill({ json: { analysis: 'Fixture response: two supplied news records.', model: 'fixture', provider: 'fixture' } });
-      }
-      if (path.endsWith('/list-tech-events')) {
-        return route.fulfill({ json: { success: true, conferenceCount: 1, events: [{
-          id: 'fixture-event', title: 'Fixture Technology Forum', type: 'conference',
-          startDate: new Date(Date.now() + 86400000).toISOString(), endDate: '',
-          location: 'Tokyo', url: 'https://example.com', description: '',
-        }] } });
-      }
-      if (path.endsWith('/get-theater-posture')) {
-        return route.fulfill({ json: { theaters: [{
-          theater: 'taiwan-theater', postureLevel: 'critical', activeFlights: 50,
-          trackedVessels: 0, activeOperations: [],
-        }] } });
       }
       return route.fulfill({ json: {} });
     });
@@ -56,13 +40,6 @@ for (const consumer of ['deduction', 'tech', 'posture'] as const) {
         app.append(element);
         panel.notifyConnected();
       };
-      if (consumer === 'tech') {
-        const { TechEventsPanel } = await load('/src/components/TechEventsPanel.ts');
-        mount(new TechEventsPanel('tech-events', getNews));
-      } else if (consumer === 'posture') {
-        const { StrategicPosturePanel } = await load('/src/components/StrategicPosturePanel.ts');
-        mount(new StrategicPosturePanel(getNews));
-      }
       mount(new DeductionPanel(getNews));
     }, { consumer, news });
 
@@ -75,15 +52,9 @@ for (const consumer of ['deduction', 'tech', 'posture'] as const) {
     const context = page.locator('.deduction-geo-input');
     await expect(context).toBeVisible();
     await expect(context).toHaveJSProperty('tagName', 'TEXTAREA');
-    if (consumer === 'deduction') {
-      await page.locator('.deduction-input').fill('Assess the outlook');
-      await context.fill('Region: Pacific\nLocal context');
-      await page.locator('.deduction-submit-btn').click();
-    } else {
-      // The panel's resize handle overlaps the right edge of these buttons.
-      await page.locator(consumer === 'tech' ? '.event-deduce-link' : '.posture-deduce-btn').click({ position: { x: 3, y: 8 } });
-      await expect(context).toHaveValue(/\n\nRecent News: \(JSON records\)\n- /);
-    }
+    await page.locator('.deduction-input').fill('Assess the outlook');
+    await context.fill('Region: Pacific\nLocal context');
+    await page.locator('.deduction-submit-btn').click();
     await expect.poll(() => requestBody).toBeTruthy();
     const records = splitDeductionContext(requestBody!.geoContext).recentNews.map(row => JSON.parse(row));
     expect(records).toEqual(news);

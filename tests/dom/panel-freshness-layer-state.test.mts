@@ -84,7 +84,6 @@ function makeEventHandlers(mapLayers: Partial<MapLayers>) {
   document.body.append(container);
   return new EventHandlerManager({
     container,
-    isDesktopApp: false,
     panels: {},
     panelSettings: {},
     mapLayers,

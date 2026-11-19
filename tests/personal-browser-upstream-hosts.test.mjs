@@ -40,31 +40,11 @@ const PERSONAL = { VITE_PERSONAL_MODE: 'true' };
 
 test('the RSS proxy ignores the upstream direct-relay flag in personal mode', async () => {
   const mod = await load('src/utils/proxy.ts', { ...PERSONAL, VITE_RSS_DIRECT_TO_RELAY: 'true' }, {
-    '../services/runtime': 'export const isDesktopRuntime = () => false; export const toApiUrl = (p) => p; export const toRuntimeUrl = (p) => p;',
+    '../services/runtime': 'export const toApiUrl = (p) => p;',
     '../services/persistent-cache': 'export const getPersistentCache = async () => null; export const setPersistentCache = async () => {};',
     '../services/timeout-signal': 'export const createRequestTimeoutSignal = () => undefined;',
   });
   assert.equal(mod.rssProxyUrl('https://feeds.example.test/rss.xml'), '/api/rss-proxy?url=https%3A%2F%2Ffeeds.example.test%2Frss.xml');
-});
-
-test('the desktop updater never checks the upstream version endpoint in personal mode', async (t) => {
-  const mod = await load('src/app/desktop-updater.ts', PERSONAL, {
-    '@/services/tauri-bridge': 'export const invokeTauri = async () => ({});',
-    '@/services/external-navigation': 'export const openExternalUrl = () => {};',
-    '@/services/analytics': 'export const trackUpdateShown = () => {}; export const trackUpdateClicked = () => {}; export const trackUpdateDismissed = () => {};',
-    '@/utils/sanitize': 'export const escapeHtml = (s) => s;',
-    '@/utils/cross-domain-storage': 'export const getDismissed = () => false; export const setDismissed = () => {};',
-    '@/utils/dom-utils': 'export const setTrustedHtml = () => {}; export const trustedHtml = (s) => s;',
-    '@/utils/desktop-version': 'export const decideUpdateOutcome = () => "no_update";',
-  });
-  const scheduled = [];
-  t.mock.method(globalThis, 'setTimeout', (_fn, ms) => { scheduled.push(ms); return 0; });
-  t.mock.method(globalThis, 'setInterval', (_fn, ms) => { scheduled.push(ms); return 0; });
-  const fetches = [];
-  t.mock.method(globalThis, 'fetch', async (url) => { fetches.push(String(url)); return new Response('{}'); });
-  const updater = new mod.DesktopUpdater({ isDesktopApp: true, isDestroyed: false });
-  updater.init();
-  assert.deepEqual({ scheduled, fetches }, { scheduled: [], fetches: [] });
 });
 
 test('country boundary overrides load from the personal server, not the upstream CDN', async (t) => {

@@ -7,7 +7,7 @@ describe('AgentSkills import URL validation', () => {
   it('rejects lookalike URLs before sending an import request', async () => {
     const fetch = vi.fn(async () => new Response('{}', { status: 400 }));
     vi.stubGlobal('fetch', fetch);
-    const preferences = renderPreferenceSection('ai', { isDesktopApp: false });
+    const preferences = renderPreferenceSection('ai', {});
     const container = document.createElement('div');
     container.innerHTML = '<input id="fwAgentskillsUrl"><button id="fwFetchBtn">Fetch</button><div id="fwAgentskillsError"></div>';
     const detach = preferences.attach(container);

@@ -18,7 +18,6 @@ import { SITE_VARIANT } from '@/config';
 import { deletePersistentCache, getPersistentCache, setPersistentCache } from '@/services/persistent-cache';
 import { t } from '@/services/i18n';
 import { getPanelDisplayName } from '@/services/panel-display-name';
-import { isDesktopRuntime } from '@/services/runtime';
 import { getAiFlowSettings, isAnyAiProviderEnabled, subscribeAiFlowChange } from '@/services/ai-flow-settings';
 import { getActiveFrameworkForPanel, subscribeFrameworkChange } from '@/services/analysis-framework-store';
 import { FrameworkSelector } from './FrameworkSelector';
@@ -79,7 +78,7 @@ export class InsightsPanel extends Panel {
 
     // Web-only: subscribe to AI flow changes so toggling providers re-runs analysis
     // Skip on mobile — only server-side insights are used there (no client-side AI)
-    if (!isDesktopRuntime() && !isMobileDevice()) {
+    if (!isMobileDevice()) {
       this.aiFlowUnsubscribe = subscribeAiFlowChange((changedKey) => {
         if (changedKey === 'mapNewsFlash') return;
         void this.onAiFlowChanged();
@@ -437,14 +436,13 @@ export class InsightsPanel extends Panel {
     this.lastMissedStories = [];
 
     // Web-only: if no AI providers enabled, show disabled state
-    if (!isDesktopRuntime() && !isAnyAiProviderEnabled()) {
+    if (!isAnyAiProviderEnabled()) {
       this.setDataBadge('unavailable');
       this.renderDisabledState();
       return;
     }
 
-    // Build summarize options from AI flow settings (web) or defaults (desktop)
-    const aiFlow = isDesktopRuntime() ? { cloudLlm: true, browserModel: true } : getAiFlowSettings();
+    const aiFlow = getAiFlowSettings();
     const summarizeOpts: SummarizeOptions = {
       skipCloudProviders: !aiFlow.cloudLlm,
       skipBrowserFallback: !aiFlow.browserModel,

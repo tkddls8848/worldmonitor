@@ -1,5 +1,4 @@
-import { proxyUrl } from '@/utils';
-import { isDesktopRuntime, toApiUrl } from '@/services/runtime';
+import { toApiUrl } from '@/services/runtime';
 
 export interface XItem {
   id: string;
@@ -62,7 +61,7 @@ const MISSING_TIMESTAMP_ISO = new Date(0).toISOString();
 
 function xFeedUrl(limit: number): string {
   const path = `/api/x-feed?limit=${limit}`;
-  return isDesktopRuntime() ? proxyUrl(path) : toApiUrl(path);
+  return toApiUrl(path);
 }
 
 export async function fetchXFeed(limit = 50, signal?: AbortSignal): Promise<XFeedResponse> {

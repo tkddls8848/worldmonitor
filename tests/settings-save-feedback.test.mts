@@ -36,7 +36,6 @@ type PreferenceSectionId = 'display' | 'map' | 'ai' | 'video' | 'sync';
 
 interface PreferencesModule {
   renderPreferenceSection: (id: PreferenceSectionId, host: {
-    isDesktopApp: boolean;
     onSettingSaved?: () => void;
   }) => {
     html: string;
@@ -175,7 +174,7 @@ describe('settings save feedback', () => {
           querySelector: () => null,
         } as unknown as HTMLElement;
         const before = saved;
-        const detach = renderPreferenceSection(section, { isDesktopApp: false, onSettingSaved: () => { saved += 1; } })
+        const detach = renderPreferenceSection(section, { onSettingSaved: () => { saved += 1; } })
           .attach(container);
         assert.ok(listener, `${section} attaches a change listener`);
         listener({ target } as unknown as Event);
@@ -219,7 +218,7 @@ describe('settings save feedback', () => {
 
     try {
       const { renderPreferenceSection } = await loadPreferencesModule();
-      const { html } = renderPreferenceSection('video', { isDesktopApp: false });
+      const { html } = renderPreferenceSection('video', {});
 
       const autoplayAt = html.indexOf('us-live-streams-always-on');
       const newsAutoplayAt = html.indexOf('us-live-news-autoplay');
@@ -282,7 +281,6 @@ describe('settings save feedback', () => {
 
       const { renderPreferenceSection } = await loadPreferencesModule();
       const detach = renderPreferenceSection('display', {
-        isDesktopApp: false,
         onSettingSaved: () => { savedCalls += 1; },
       }).attach(container);
 

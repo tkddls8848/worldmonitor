@@ -145,7 +145,6 @@ export const LEGACY_DIRECT_CONTENT_WRITES = [
   'src/components/RegulationPanel.ts :: setTrustedHtml(this.content, …) x1',
   'src/components/RenewableEnergyPanel.ts :: replaceChildren(this.content, …) x1',
   'src/components/RenewableEnergyPanel.ts :: this.content.appendChild(…) x3',
-  'src/components/RuntimeConfigPanel.ts :: setTrustedHtml(this.content, …) x2',
   'src/components/ServiceStatusPanel.ts :: replaceChildren(this.content, …) x1',
   'src/components/SpeciesComebackPanel.ts :: replaceChildren(this.content, …) x1',
   'src/components/SpeciesComebackPanel.ts :: this.content.appendChild(…) x2',
