@@ -240,9 +240,9 @@ export function clampShare(rawShare) {
 }
 
 async function fetchReexportShare() {
-  const apiKey = (process.env.COMTRADE_API_KEYS || '').split(',').filter(Boolean)[0];
+  const apiKey = (process.env.COMTRADE_PRIMARY_API_KEYS || '').split(',').filter(Boolean)[0];
   if (!apiKey) {
-    throw new Error('[reexport-share] COMTRADE_API_KEYS not set — cannot fetch');
+    throw new Error('[reexport-share] COMTRADE_PRIMARY_API_KEYS not set — cannot fetch');
   }
 
   const years = buildPeriodYears();

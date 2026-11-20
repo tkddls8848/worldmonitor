@@ -86,10 +86,10 @@ describe('Comtrade bilateral HS4 seeder (scripts/seed-comtrade-bilateral-hs4.mjs
     );
   });
 
-  it('reads COMTRADE_API_KEYS from environment', () => {
+  it('reads COMTRADE_PRIMARY_API_KEYS from environment', () => {
     assert.ok(
-      src.includes('process.env.COMTRADE_API_KEYS'),
-      'seeder: must read COMTRADE_API_KEYS from environment for API authentication',
+      src.includes('process.env.COMTRADE_PRIMARY_API_KEYS'),
+      'seeder: must read COMTRADE_PRIMARY_API_KEYS from environment for API authentication',
     );
   });
 

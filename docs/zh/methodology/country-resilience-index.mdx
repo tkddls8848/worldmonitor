@@ -744,7 +744,7 @@ v17.1 在评分时将修复扩展到 `liquidReserveAdequacy`（无种子器变�
 **开放构造间隙和操作注意事项（诚实记录，非静默推迟）：**
 
 - **经济复杂性/工业基础指标。** 指数衡量冲击吸收机制（本文档顶部的构造测试）；它不衡量结构多元化。拥有单一文化出口 + 强中央政府资产负债表的国家可以胜过财政空间较弱的更多元化同行。添加经济复杂性图谱（Hidalgo–Hausmann ECI）或制造业增加值份额将是故意的构造*扩展*，非*修正* — 标记为 v18 计划候选。
-- **`importConcentration` 种子器覆盖率间隙。** UN Comtrade HS2 双边可落入 `curated_list_absent` 插补（50 / 0.3 / unmonitored），适用于数据可用但未进入进口 HHI 缓存的国家。已知报告者代码偏移在共享 Comtrade 报告者覆盖映射中处理，俄罗斯使用仅种子陈旧期回退，因为标准四年窗口当前不返回年度进口行。如果 AE/RU/NO/CH 等有效代码报告者在强制刷新后仍缺失，请将 HTTP 429 和配额耗尽 HTTP 403 首先视为操作 Comtrade 密钥预算问题：加宽 `IMPORT_HHI_PER_KEY_DELAY_MS`、添加 `COMTRADE_API_KEYS` 或按 `docs/railway-seed-consolidation-runbook.md` 降低 `IMPORT_HHI_MAX_CONCURRENCY`。这是种子器覆盖率和新鲜度问题，非评分构造问题。
+- **`importConcentration` 种子器覆盖率间隙。** UN Comtrade HS2 双边可落入 `curated_list_absent` 插补（50 / 0.3 / unmonitored），适用于数据可用但未进入进口 HHI 缓存的国家。已知报告者代码偏移在共享 Comtrade 报告者覆盖映射中处理，俄罗斯使用仅种子陈旧期回退，因为标准四年窗口当前不返回年度进口行。如果 AE/RU/NO/CH 等有效代码报告者在强制刷新后仍缺失，请将 HTTP 429 和配额耗尽 HTTP 403 首先视为操作 Comtrade 密钥预算问题：加宽 `IMPORT_HHI_PER_KEY_DELAY_MS`、添加 `COMTRADE_PRIMARY_API_KEYS` 或按 `docs/railway-seed-consolidation-runbook.md` 降低 `IMPORT_HHI_MAX_CONCURRENCY`。这是种子器覆盖率和新鲜度问题，非评分构造问题。
 - **`cyberDigital` 衡量发现率，非活跃存量。** 发现日平滑（v17.8 / #4009，上方机制）限制同日爆发并让持续*新发现*压力达到上限，但因为衰减以 `firstSeenAt` 为键，来自持续基础设施但停止呈现新指标的稳态攻击即使仍活跃也会衰减 — 维度是*新观测*威胁*流*的代理，非活跃威胁*存量*的代理。混合最后活跃近期信号需要 `cyber:threats:v2` 携带稳定的、非获取时间的 `lastSeenAt`，它当前没有。在此之前，此残余限制被接受，非静默推迟。平滑在评分器侧，非单独的韧性所有 EWMA 键。
 
 ### v1.0（2026 年 4 月）

@@ -1324,14 +1324,14 @@ Recovery is accepted only when:
 | **Replaces** | 6 services |
 | **Net savings** | 5 slots |
 | **Members** | GIE Gas Storage (daily), Gas Storage Countries (daily), JODI Gas (monthly), JODI Oil (monthly), Oil-Trade-Series (weekly), OWID Energy Mix (monthly), IEA Oil Stocks (monthly) |
-| **Required env** | `COMTRADE_API_KEYS` for the weekly Oil-Trade-Series Comtrade mirror lane. Without it, the other oil sources can publish while all mirrors report `unavailable`. |
+| **Required env** | `COMTRADE_PRIMARY_API_KEYS` for the weekly Oil-Trade-Series Comtrade mirror lane. Without it, the other oil sources can publish while all mirrors report `unavailable`. |
 
 #### Activate the oil-trade mirror lane
 
 The October 21, 2026 MCP audit found all 24 exporter mirrors unavailable in the
 October 19 publication. Deployment `8715f5d0-26f4-4dc5-9ecd-c226cd9ac559`, from
 commit `0ec794835060fc2e7b24146683c183963886c385`, logged
-`Comtrade mirror unavailable: COMTRADE_API_KEYS not set` for every exporter at
+`Comtrade mirror unavailable: COMTRADE_PRIMARY_API_KEYS not set` for every exporter at
 07:33 UTC on October 19. The production service still lacked that variable on
 October 21. This failure occurs before a Comtrade request, so these logs do not
 establish provider refusal or missing monthly filings.
@@ -1342,7 +1342,7 @@ operator authorization. After that authorization, use this procedure.
 1. Select project `29419572-0b0d-437f-8e71-4fa68daf514f`, production environment
    `91a05726-0b83-4d44-a33e-6aec94e58780`, and service
    `c989eee4-3336-46b7-b7cd-39700cd56a0f` in Railway.
-2. Configure `COMTRADE_API_KEYS` with one or more approved Comtrade API-key values
+2. Configure `COMTRADE_PRIMARY_API_KEYS` with one or more approved Comtrade API-key values
    for this service. Separate multiple keys with commas. Use the secure variable
    editor. Do not put keys in logs, commands, evidence files, or pull requests.
    Coordinate the provider quota with the other Comtrade workers before activation.
@@ -1691,7 +1691,7 @@ unset, so the seeder uses `PROXY_URL`. The service is enrolled in
 `scripts/railway-native-autodeploy-fleet.json` with `source.checkSuites`
 `false`, like the rest of the fleet.
 
-The bilateral HS4 cron uses `COMTRADE_API_KEYS` and a 480-request hard budget
+The bilateral HS4 cron uses `COMTRADE_PRIMARY_API_KEYS` and a 480-request hard budget
 under the provider's 500-call monthly quota. The authenticated route requests
 one four-year window (`Y-2` through `Y-5`) in each of two HS4 batches and keeps
 the newest row per product/partner. The public-preview fallback cannot accept
@@ -1772,12 +1772,12 @@ Set these on the Railway service that runs `node scripts/seed-bundle-resilience-
 
 | Variable | Default | Use when |
 |---|---:|---|
-| `COMTRADE_API_KEYS` | required | Add keys first when multiple reporters are missing with 429s or quota-exhausted 403s. |
+| `COMTRADE_PRIMARY_API_KEYS` | required | Add keys first when multiple reporters are missing with 429s or quota-exhausted 403s. |
 | `IMPORT_HHI_PER_KEY_DELAY_MS` | `1500` | Increase to `10000`-`15000` if logs still show import-HHI 429s. `PER_KEY_DELAY_MS` is accepted as a legacy alias. |
 | `IMPORT_HHI_MAX_CONCURRENCY` | key count | Set to `1` if quota failures look IP-level or global, not per-key. |
 | `IMPORT_HHI_VERBOSE` | unset | Set to `1` only for a diagnostic force-refresh; logs per-reporter status. |
 
-Reporter cohort splitting is the last resort. Prefer more `COMTRADE_API_KEYS`, then wider per-key delay, then lower concurrency. The import-HHI seeder fetches the watched #3979 reporters first when they are missing, so a replenished force-refresh should recover AE/RU/NO/CH before unrelated registry backfill can consume the hourly provider budget. Aggressive incident pacing such as `IMPORT_HHI_PER_KEY_DELAY_MS=15000` with `IMPORT_HHI_MAX_CONCURRENCY=1` can exceed the 30-minute bundle window; that mode intentionally relies on checkpoint/resume across ticks, not one-pass completion. Cohort splitting should only be used if a single full pass still exhausts the provider budget after the first three controls.
+Reporter cohort splitting is the last resort. Prefer more `COMTRADE_PRIMARY_API_KEYS`, then wider per-key delay, then lower concurrency. The import-HHI seeder fetches the watched #3979 reporters first when they are missing, so a replenished force-refresh should recover AE/RU/NO/CH before unrelated registry backfill can consume the hourly provider budget. Aggressive incident pacing such as `IMPORT_HHI_PER_KEY_DELAY_MS=15000` with `IMPORT_HHI_MAX_CONCURRENCY=1` can exceed the 30-minute bundle window; that mode intentionally relies on checkpoint/resume across ticks, not one-pass completion. Cohort splitting should only be used if a single full pass still exhausts the provider budget after the first three controls.
 
 The import-HHI publish gate requires AE/RU/NO/CH as well as the normal country-count floor. If one of those watched reporters is still absent, the seed run fails validation with `emptyDataIsFailure: true`, does not refresh seed-meta, and leaves the bundle eligible to retry instead of stranding a fresh-but-incomplete canonical payload for the full monthly interval.
 

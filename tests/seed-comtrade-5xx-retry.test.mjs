@@ -88,7 +88,7 @@ test('fetchBilateral: requests an explicit safely-final annual period', async ()
   // Assert the FRESHEST requested year, not the whole parameter: the seeder
   // sends a multi-year window on the authenticated route and a single year on
   // the public preview route (which 400s on a list), so the exact string
-  // depends on whether COMTRADE_API_KEYS is present. Pinning the full value
+  // depends on whether COMTRADE_PRIMARY_API_KEYS is present. Pinning the full value
   // would pass locally and mean something different on CI.
   const period = new URL(fetchCalls[0]).searchParams.get('period');
   assert.ok(period, 'period must always be sent — omitting it is the count=0 outage');

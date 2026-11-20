@@ -175,7 +175,7 @@ anonymous China summary.
 The authenticated Comtrade route sends one four-year period window, `Y-2`
 through `Y-5`, for each of the two HS4 batches. The normalizer keeps the newest
 year per product-and-partner pair, so a response cannot silently mix annual
-values. When `COMTRADE_API_KEYS` is absent, the public preview route cannot
+values. When `COMTRADE_PRIMARY_API_KEYS` is absent, the public preview route cannot
 accept a period list and instead tries `Y-2` followed by `Y-3`.
 
 The scheduled production contract is deliberately quota-bound:

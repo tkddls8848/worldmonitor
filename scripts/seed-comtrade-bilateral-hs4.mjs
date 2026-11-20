@@ -125,7 +125,7 @@ export const MAX_PRESERVE_RUNS = 2;
 export const MAX_PIPELINE_COMMANDS = 50;
 export const MAX_PIPELINE_BYTES = 1_048_576; // 1 MB of accumulated payload
 
-const COMTRADE_KEYS = (process.env.COMTRADE_API_KEYS || '').split(',').map(k => k.trim()).filter(Boolean);
+const COMTRADE_KEYS = (process.env.COMTRADE_PRIMARY_API_KEYS || '').split(',').map(k => k.trim()).filter(Boolean);
 let keyIndex = 0;
 function getNextKey() {
   if (COMTRADE_KEYS.length === 0) return '';
@@ -543,7 +543,7 @@ export async function main({ requestBudget = REQUEST_BUDGET } = {}) {
   resetRateLimitStreak();
 
   try {
-    const apiMode = usePublicApi ? 'public preview (no COMTRADE_API_KEYS)' : `authenticated (${COMTRADE_KEYS.length} key(s), ${INTER_REQUEST_DELAY_MS}ms delay)`;
+    const apiMode = usePublicApi ? 'public preview (no COMTRADE_PRIMARY_API_KEYS)' : `authenticated (${COMTRADE_KEYS.length} key(s), ${INTER_REQUEST_DELAY_MS}ms delay)`;
     console.log(`[bilateral-hs4] Fetching bilateral HS4 data for ${countries.length} countries × ${HS4_CODES.length} products [${apiMode}]...`);
 
     const commands = [];

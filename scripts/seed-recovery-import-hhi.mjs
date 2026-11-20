@@ -30,13 +30,13 @@ const CHECKPOINT_EVERY = 25;
 // the same so two overlapping cron invocations cannot both grab the lock.
 const LOCK_TTL_MS = 30 * 60 * 1000;
 
-// COMTRADE_API_KEYS is comma-separated; each active worker owns one key. The
+// COMTRADE_PRIMARY_API_KEYS is comma-separated; each active worker owns one key. The
 // optional IMPORT_HHI_MAX_CONCURRENCY cap lets operators slow global request
 // pressure while IMPORT_HHI_PER_KEY_DELAY_MS controls each key's pacing.
-const COMTRADE_KEYS = (process.env.COMTRADE_API_KEYS || '').split(',').map(k => k.trim()).filter(Boolean);
+const COMTRADE_KEYS = (process.env.COMTRADE_PRIMARY_API_KEYS || '').split(',').map(k => k.trim()).filter(Boolean);
 
 if (COMTRADE_KEYS.length === 0) {
-  console.error('[seed] import-hhi: COMTRADE_API_KEYS is required. Set the env var (comma-separated keys) and retry.');
+  console.error('[seed] import-hhi: COMTRADE_PRIMARY_API_KEYS is required. Set the env var (comma-separated keys) and retry.');
 }
 const COMTRADE_URL = 'https://comtradeapi.un.org/data/v1/get/C/A/HS';
 const COMTRADE_MAX_RECORDS = 250_000;
@@ -502,7 +502,7 @@ async function fetchImportHhi() {
     console.warn(
       `[seed] import-hhi: ${progressRef.rateLimited} reporters ended in Comtrade quota/auth status ` +
       `(samples=${progressRef.rateLimitedReporters.join(',') || 'n/a'}). ` +
-      `Increase COMTRADE_API_KEYS, wait for quota replenishment, or widen IMPORT_HHI_PER_KEY_DELAY_MS before changing scoring logic.`,
+      `Increase COMTRADE_PRIMARY_API_KEYS, wait for quota replenishment, or widen IMPORT_HHI_PER_KEY_DELAY_MS before changing scoring logic.`,
     );
   }
   const missingWatchReporters = WATCH_REPORTERS.filter(iso2 => !countries[iso2]);

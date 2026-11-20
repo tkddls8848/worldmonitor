@@ -425,8 +425,8 @@ async function fetchComtradeJsonNow(url, key) {
 }
 
 async function fetchMirrorRows(spec, nowMs, keyIndex) {
-  const keys = (process.env.COMTRADE_API_KEYS || '').split(',').map((k) => k.trim()).filter(Boolean);
-  if (keys.length === 0) throw new Error('COMTRADE_API_KEYS not set');
+  const keys = (process.env.COMTRADE_PRIMARY_API_KEYS || '').split(',').map((k) => k.trim()).filter(Boolean);
+  if (keys.length === 0) throw new Error('COMTRADE_PRIMARY_API_KEYS not set');
   const key = keys[keyIndex % keys.length];
   const end = lastCompleteMonth(nowMs);
   const months = monthRange(shiftMonth(end, -(SERIES_MONTHS - 1)), end).map((m) => m.replace('-', ''));
@@ -602,9 +602,9 @@ async function fetchCrudeImportOrigin(nowMs, previous) {
   const periods = crudeImportOriginPeriods(nowMs);
   const months = periods.flat();
   const fetchedAt = new Date(nowMs).toISOString();
-  const keys = (process.env.COMTRADE_API_KEYS || '').split(',').map((k) => k.trim()).filter(Boolean);
+  const keys = (process.env.COMTRADE_PRIMARY_API_KEYS || '').split(',').map((k) => k.trim()).filter(Boolean);
   try {
-    if (keys.length === 0) throw new Error('COMTRADE_API_KEYS not set');
+    if (keys.length === 0) throw new Error('COMTRADE_PRIMARY_API_KEYS not set');
     const { rows, windowRowCounts } = await fetchCrudeImportOriginRows(periods, keys);
     if (windowRowCounts.some((count) => count === 0)) console.warn(`  Crude import origin: a requested window returned no rows (${windowRowCounts.join(', ')}); keeping the previous section`);
     const section = crudeImportOriginSection({ months, rows, fetchedAt, previous, windowRowCounts });

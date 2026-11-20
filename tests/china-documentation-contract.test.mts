@@ -250,7 +250,7 @@ describe('China documentation contract', () => {
         content,
         [
           '0 6 1 * *',
-          'COMTRADE_API_KEYS',
+          'COMTRADE_PRIMARY_API_KEYS',
           String(REQUEST_BUDGET),
           String(MIN_COUNTRY_COVERAGE),
           'get-country-products',

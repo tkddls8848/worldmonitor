@@ -27,7 +27,7 @@
 // `seed-resilience-scores` cron tick so AE's importConcentration dim
 // surfaces with the real HHI value on the first ranking refresh.
 //
-// Usage: COMTRADE_API_KEYS=<keys> node scripts/post-pr3487-force-refresh.mjs
+// Usage: COMTRADE_PRIMARY_API_KEYS=<keys> node scripts/post-pr3487-force-refresh.mjs
 
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -43,8 +43,8 @@ console.log('[post-pr3487] Resume logic only fetches reporters NOT already in th
 console.log('[post-pr3487] so this run is incremental — AE plus any other rate-limit casualties.');
 console.log('');
 
-if (!process.env.COMTRADE_API_KEYS) {
-  console.error('[post-pr3487] COMTRADE_API_KEYS not set. Export the comma-separated keys and retry.');
+if (!process.env.COMTRADE_PRIMARY_API_KEYS) {
+  console.error('[post-pr3487] COMTRADE_PRIMARY_API_KEYS not set. Export the comma-separated keys and retry.');
   process.exit(1);
 }
 
