@@ -1121,7 +1121,7 @@
       "evidenceUsual": "（通常 {{value}}）",
       "pizzaUnavailable": "ピザ店の活動データを取得できません",
       "source": "ソース:",
-      "statusClosed": "閉鎖",
+      "statusClosed": "営業時間外",
       "statusSpike": "急上昇",
       "statusHigh": "高",
       "statusElevated": "上昇",

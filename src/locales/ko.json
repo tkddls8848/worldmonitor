@@ -1121,7 +1121,7 @@
       "evidenceUsual": "(평소 {{value}})",
       "pizzaUnavailable": "피자 가게 활동 데이터를 사용할 수 없습니다",
       "source": "출처:",
-      "statusClosed": "폐점",
+      "statusClosed": "영업 종료",
       "statusSpike": "급증",
       "statusHigh": "높음",
       "statusElevated": "경계",

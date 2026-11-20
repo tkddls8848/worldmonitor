@@ -123,7 +123,20 @@ export class PizzIntIndicator {
     );
 
     const timeAgo = this.formatTimeAgo(this.status.lastUpdate);
-    updatedEl.textContent = t('components.pizzint.updated', { timeAgo });
+    // The venues keep Washington hours, so a reader in another timezone needs
+    // the local clock to tell "closed for the night" from a quiet afternoon.
+    const venueClock = this.formatVenueClock();
+    updatedEl.textContent = [t('components.pizzint.updated', { timeAgo }), venueClock].filter(Boolean).join(' · ');
+  }
+
+  private formatVenueClock(): string {
+    try {
+      return new Intl.DateTimeFormat(getCurrentLanguageTag(), {
+        timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit', timeZoneName: 'longGeneric',
+      }).format(new Date());
+    } catch {
+      return '';
+    }
   }
 
   private renderTensions(): void {
