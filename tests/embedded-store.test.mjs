@@ -166,7 +166,8 @@ test('the terminal dashboard sends the owner password to the personal server onl
 });
 
 test('every default collector exists and names cannot escape scripts/', () => {
-  for (const name of DEFAULT_COLLECTORS) assert.match(collectorScript(name), /seed-[a-z0-9-]+\.mjs$/);
+  // gpsjam is the one collector whose script keeps its fetch-* name.
+  for (const name of DEFAULT_COLLECTORS) assert.match(collectorScript(name), /(seed-[a-z0-9-]+|fetch-gpsjam)\.mjs$/);
   assert.throws(() => collectorScript('../personal-server'), /Invalid collector name/);
   assert.throws(() => collectorScript('does-not-exist'), /Unknown collector/);
 });
