@@ -15,8 +15,12 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { extendExistingTtl } from './_seed-utils.mjs';
+import { extendExistingTtl, loadEnvFile } from './_seed-utils.mjs';
 import { processHexes } from './_gpsjam-parse.mjs';
+
+// collect:personal spawns this with the bare process environment; the store
+// URL and token live in .env.local.
+loadEnvFile(import.meta.url);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.resolve(__dirname, 'data');

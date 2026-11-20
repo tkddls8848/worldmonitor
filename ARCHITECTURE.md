@@ -224,7 +224,7 @@ CI enforces generated code freshness via `.github/workflows/proto-check.yml`: ru
 
 ### Collectors
 
-`npm run collect:personal` (`scripts/personal-collect.mjs`) runs the collectors one at a time against the embedded store, once or every N minutes with `-- --watch N`. `DEFAULT_COLLECTORS` lists the standalone collectors and bundles it runs; a collector whose API key is missing fails on its own and the pass continues.
+`npm run collect:personal` (`scripts/personal-collect.mjs`) runs the collectors one at a time against the embedded store, once or every N minutes with `-- --watch N`. `DEFAULT_COLLECTORS` lists every bundle and the standalone collectors it runs; a collector whose API key is missing fails on its own and the pass continues. Bundles skip members that are still fresh. Standalone collectors in `STANDALONE_INTERVAL_MIN` skip a pass while their last success (kept in `.personal/collect-state.json`) is younger than their interval. `seed-pizzint.mjs` runs the relay's PizzINT producer block against the store, since the relay itself does not run in personal mode.
 
 The relay service (`scripts/ais-relay.cjs`) carries continuous seed loops:
 

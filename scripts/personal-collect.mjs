@@ -4,31 +4,86 @@
 // only those (`-- earthquakes bundle-climate`). A collector that needs an API
 // key you have not set fails on its own and the pass continues.
 import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const SCRIPTS = path.dirname(fileURLToPath(import.meta.url));
+const STATE_FILE = path.resolve(SCRIPTS, '..', '.personal', 'collect-state.json');
 const MIN = 60_000;
 
+// Standalone collectors that no bundle runs, with the minutes a successful run
+// stays good for. A pass skips one whose last success is younger than that, so
+// `--watch 15` does not refetch daily and weekly sources every 15 minutes.
+// Roughly a third of each dataset's maxStaleMin in api/health.js.
+export const STANDALONE_INTERVAL_MIN = {
+  'market-quotes': 15, 'commodity-quotes': 15, 'crypto-sectors': 30, 'fear-greed': 240,
+  'market-breadth': 1440, 'aaii-sentiment': 1440, 'cot': 1440, 'earnings-calendar': 360,
+  'economic-calendar': 360, 'economy': 45, 'fred-rates': 60, 'fx-rates': 1440, 'fx-yoy': 480,
+  'fuel-prices': 1440, 'electricity-prices': 360, 'ember-electricity': 1440, 'energy-spine': 1440,
+  'energy-intelligence': 240, 'chokepoint-flows': 240, 'hormuz': 720, 'supply-chain-trade': 360,
+  'trade-flows': 960, 'comtrade-bilateral-hs4': 1440, 'hs2-chokepoint-exposure': 1440,
+  'bigmac': 1440, 'grocery-basket': 1440, 'sanctions-pressure': 240, 'regulatory-actions': 120,
+  'gdelt-intel': 15, 'gdelt-bulk-materializer': 60, 'security-advisories': 30, 'ukmto-incidents': 20,
+  'thermal-escalation': 120, 'military-cii': 15, 'military-maritime-news': 60, 'infra': 15,
+  'aviation': 30, 'notam-nms': 30, 'fire-detections': 60, 'radiation-watch': 15,
+  'imd-cyclone-marine': 60, 'no2-activity': 1440, 'cve-reference': 720, 'research': 45,
+  'country-history': 1440, 'webcams': 480, 'forecast-resolutions': 720, 'forecast-bets': 720,
+  'gpsjam': 360,
+  // The index counts a spike only over consecutive ~15-minute readings.
+  'pizzint': 15,
+};
+
+// Collectors whose script is not named seed-<name>.mjs.
+const SCRIPT_ALIASES = { gpsjam: 'fetch-gpsjam.mjs' };
+
 // Bundles skip their own members while those are still fresh, so repeating a
-// pass is cheap. Standalone collectors run every pass. digest-notifications
-// composes the owner's daily brief and decides on its own whether to
-// regenerate the prose this pass. news-digest builds the news:digest:v1 cells
-// that insights, forecasts and digest-notifications read, so it runs first.
+// pass is cheap. Standalone collectors without an interval run every pass.
+// news-digest builds the news:digest:v1 cells that insights, forecasts and
+// digest-notifications read, so it runs first; those readers run last, after
+// everything they summarise. digest-notifications composes the owner's daily
+// brief and decides on its own whether to regenerate the prose this pass.
 export const DEFAULT_COLLECTORS = [
   'news-digest', 'earthquakes', 'natural-events', 'weather-alerts', 'internet-outages', 'cyber-threats',
   'unrest-events', 'military-flights', 'conflict-intel', 'prediction-markets', 'service-statuses',
   'bundle-market-backup', 'bundle-relay-backup', 'bundle-climate', 'bundle-health',
-  'bundle-energy-sources', 'bundle-derived-signals', 'insights', 'forecasts', 'correlation',
-  'digest-notifications',
+  'bundle-energy-sources', 'bundle-derived-signals',
+  'bundle-macro', 'bundle-yield-curves', 'bundle-ecb-eu', 'bundle-imf-extended', 'bundle-canada',
+  'bundle-portwatch', 'bundle-portwatch-port-activity', 'bundle-regional-energy', 'bundle-regional',
+  'bundle-static-ref', 'bundle-static-ref-heavy', 'bundle-resilience', 'bundle-resilience-recovery',
+  'bundle-resilience-energy-v2', 'bundle-resilience-validation',
+  ...Object.keys(STANDALONE_INTERVAL_MIN),
+  'insights', 'forecasts', 'correlation', 'digest-notifications',
 ];
 
 export function collectorScript(name) {
   if (!/^[a-z0-9-]+$/.test(name)) throw new Error(`Invalid collector name: ${name}`);
-  const file = path.join(SCRIPTS, `seed-${name}.mjs`);
+  const file = path.join(SCRIPTS, SCRIPT_ALIASES[name] ?? `seed-${name}.mjs`);
   if (!existsSync(file)) throw new Error(`Unknown collector: ${name} (no scripts/seed-${name}.mjs)`);
   return file;
+}
+
+// The collectors of `names` that are due at `now`, given the last successful
+// run times in `state` ({ name: epochMs }).
+export function dueCollectors(names, state, now = Date.now()) {
+  return names.filter((name) => {
+    const every = STANDALONE_INTERVAL_MIN[name];
+    const last = state[name];
+    return !every || !Number.isFinite(last) || now - last >= every * MIN;
+  });
+}
+
+function readState() {
+  try { return JSON.parse(readFileSync(STATE_FILE, 'utf8')); } catch { return {}; }
+}
+
+function writeState(state) {
+  try {
+    mkdirSync(path.dirname(STATE_FILE), { recursive: true });
+    writeFileSync(STATE_FILE, JSON.stringify(state, null, 1));
+  } catch (error) {
+    console.warn(`수집 기록을 저장하지 못했습니다: ${error.message}`);
+  }
 }
 
 function runOne(name, timeoutMs) {
@@ -47,13 +102,19 @@ function runOne(name, timeoutMs) {
   });
 }
 
-export async function collectOnce(names, { log = console.log } = {}) {
+export async function collectOnce(names, { log = console.log, force = false } = {}) {
+  const state = readState();
+  const due = force ? names : dueCollectors(names, state);
+  if (due.length < names.length) log(`아직 신선한 수집기 ${names.length - due.length}개는 건너뜁니다.`);
   const results = [];
-  for (const name of names) {
+  for (const name of due) {
     const result = await runOne(name, (name.startsWith('bundle-') ? 30 : 6) * MIN);
     results.push(result);
     log(`${result.ok ? ' OK ' : 'FAIL'} ${name} (${result.seconds}s)`);
-    if (!result.ok) {
+    if (result.ok) {
+      state[name] = Date.now();
+      writeState(state);
+    } else {
       const reason = result.tail.trim().split('\n').filter(Boolean).slice(-2).join(' | ');
       log(`      ${reason.slice(0, 300) || `exit ${result.code}`}`);
     }
@@ -73,7 +134,8 @@ async function main(argv) {
   const selected = names.length ? names : DEFAULT_COLLECTORS;
   selected.forEach(collectorScript); // reject a typo before the first run
   for (;;) {
-    await collectOnce(selected);
+    // Naming collectors explicitly runs them even when they are still fresh.
+    await collectOnce(selected, { force: names.length > 0 });
     if (!watchMinutes) return;
     console.log(`${watchMinutes}분 뒤 다시 수집합니다. 중지하려면 Ctrl+C.`);
     await new Promise((resolve) => setTimeout(resolve, watchMinutes * MIN));
