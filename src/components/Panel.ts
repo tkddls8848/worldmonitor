@@ -125,6 +125,38 @@ function setSpanClass(element: HTMLElement, span: number): void {
   element.classList.add('resized');
 }
 
+/**
+ * Candidates for an overlay that sits above an expanded (⛶) panel and should
+ * receive Escape first. Search, confirm, story and similar dialogs are created
+ * on open and removed on close, so their presence means open.
+ */
+const HIGHER_OVERLAY_CANDIDATES = '[role="dialog"], [aria-modal="true"], dialog[open], .country-deep-dive';
+
+/**
+ * Persistent overlays stay in the DOM after they close and mark the open state
+ * with `.active` (`main.css` / `country-deep-dive.css` hide them otherwise):
+ * UnifiedSettings and the FocusEditor/watchlist dialogs (`.modal-overlay`),
+ * SignalModal, MobileWarningModal and the country deep dive.
+ */
+const ACTIVE_MARKED_OVERLAYS = '.modal-overlay, .signal-modal-overlay, .mobile-warning-overlay, .country-deep-dive';
+
+function isOpenOverlay(el: HTMLElement): boolean {
+  if (el.matches(ACTIVE_MARKED_OVERLAYS) && !el.classList.contains('active')) return false;
+  if (el.hidden || el.getAttribute('aria-hidden') === 'true') return false;
+  if (el.tagName === 'DIALOG' && !el.hasAttribute('open')) return false;
+  // Leaves out anything hidden by layout (display:none, detached).
+  if (typeof el.checkVisibility === 'function' && !el.checkVisibility()) return false;
+  return true;
+}
+
+function hasOpenHigherOverlay(panelEl: HTMLElement): boolean {
+  for (const el of document.querySelectorAll<HTMLElement>(HIGHER_OVERLAY_CANDIDATES)) {
+    if (el === panelEl || panelEl.contains(el)) continue;
+    if (isOpenOverlay(el)) return true;
+  }
+  return false;
+}
+
 export class Panel {
   protected element: HTMLElement;
   protected content: HTMLElement;
@@ -949,7 +981,7 @@ export class Panel {
       document.body.classList.add('panel-modal-open');
       this.onModalExpandKeydown = (ev: KeyboardEvent) => {
         if (ev.key !== 'Escape' || ev.defaultPrevented) return;
-        // Let higher-layer overlays/modals (Settings, Search, Command Palette, open dialogs)
+        // Let open higher-layer overlays (Settings, Search, signal/deep-dive overlays, dialogs)
         // and editable in-panel inputs handle Escape first.
         const target = ev.target as HTMLElement | null;
         if (target && this.element.contains(target) && (
@@ -960,12 +992,7 @@ export class Panel {
         )) {
           return;
         }
-        const higherModal = document.querySelector(
-          '.unified-settings-overlay.open, .search-overlay.open, .modal-overlay.open, .command-palette.open, .country-deep-dive.open, dialog[open], [role="dialog"]:not(.panel-modal-expanded):not([hidden]):not([aria-hidden="true"])',
-        );
-        if (higherModal && higherModal !== this.element && !this.element.contains(higherModal)) {
-          return;
-        }
+        if (hasOpenHigherOverlay(this.element)) return;
         ev.stopImmediatePropagation();
         ev.stopPropagation();
         this.setModalExpanded(false);

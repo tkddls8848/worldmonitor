@@ -1063,6 +1063,8 @@ export class PanelLayoutManager implements AppModule {
       `worldmonitor-tabs-v1:${SITE_VARIANT}`,
       STORAGE_KEYS.panels,
       this.ctx.PANEL_ORDER_KEY,
+      // No longer written, but an old backup that carries it is still a layout
+      // import, so it keeps suspending this flush until reload.
       this.ctx.PANEL_ORDER_KEY + '-bottom-set',
     ]);
     // Clamp stored snapshots to the current free-tier cap so a workspace saved
@@ -1260,9 +1262,11 @@ export class PanelLayoutManager implements AppModule {
       if (this.deferredPanelMounts.has(pendingReveal)) {
         this.mountDeferredPanel(pendingReveal);
       }
-      return;
     }
 
+    // Always filter and hydrate the resulting tab: revealPanelInTab is a no-op
+    // when the panel already belongs to the restored tab, and the boot-time
+    // visible set may cover only the revealed panel.
     const visibleKeys = this.inspectorShell.applyGridFilter();
     this.hydrateVisibleInspectorPanels(visibleKeys);
   }
@@ -1396,22 +1400,7 @@ export class PanelLayoutManager implements AppModule {
           }
         }
       } else if (panelId === 'live-news' && this.shouldCreatePanel('live-news')) {
-        if (!this.liveNewsLoadInFlight) {
-          this.liveNewsLoadInFlight = this.importPanel(
-            'live-news',
-            () => import('@/components/LiveNewsPanel'),
-            'LiveNewsPanel',
-            (LiveNewsPanel, module) => {
-              if (this.ctx.panels['live-news']) return null;
-              const liveNewsModule = module as typeof import('@/components/LiveNewsPanel');
-              if (liveNewsModule.getDefaultLiveChannels().length === 0 && liveNewsModule.loadChannelsFromStorage().length === 0) return null;
-              return new LiveNewsPanel();
-            },
-          ).finally(() => {
-            this.liveNewsLoadInFlight = null;
-          });
-        }
-        panel = await this.liveNewsLoadInFlight;
+        panel = await this.loadLiveNewsPanel();
         if (panel && !this.ctx.isDestroyed && !this.ctx.panels['live-news']) {
           this.ctx.panels['live-news'] = panel;
           const grid = document.getElementById('panelsGrid');
@@ -2087,7 +2076,7 @@ export class PanelLayoutManager implements AppModule {
     const persist = saveTabsState(this.tabsState);
     restoreActiveScope(tab.scope ?? null);
     this.applyTabPanelFilters(tab.panelFilters);
-    this.applyTabPanelState(tab.panelSettings, tab.panelOrder, tab.bottomSet);
+    this.applyTabPanelState(tab.panelSettings, tab.panelOrder);
     this.panelTabBar?.refresh();
     this.syncHeaderFocusButton();
     return { tab, persisted: persist.persisted };
@@ -2149,7 +2138,7 @@ export class PanelLayoutManager implements AppModule {
 
     restoreActiveScope(target.scope ?? null);
     this.applyTabPanelFilters(target.panelFilters);
-    this.applyTabPanelState(target.panelSettings, target.panelOrder, target.bottomSet);
+    this.applyTabPanelState(target.panelSettings, target.panelOrder);
     this.panelTabBar?.refresh();
     this.syncHeaderFocusButton();
     return persist;
@@ -2186,7 +2175,7 @@ export class PanelLayoutManager implements AppModule {
       persist = saveTabsState(this.tabsState);
       restoreActiveScope(fallback.scope ?? null);
       this.applyTabPanelFilters(fallback.panelFilters);
-      this.applyTabPanelState(fallback.panelSettings, fallback.panelOrder, fallback.bottomSet);
+      this.applyTabPanelState(fallback.panelSettings, fallback.panelOrder);
     } else {
       persist = saveTabsState(this.tabsState);
     }
@@ -2204,7 +2193,6 @@ export class PanelLayoutManager implements AppModule {
   private applyTabPanelState(
     panelSettings: Record<string, PanelConfig>,
     panelOrder: string[],
-    bottomSet: string[],
   ): void {
     const isDynamicPanel = (k: string) =>
       !ALL_PANELS[k] && (k.startsWith('cw-') || k.startsWith('mcp-'));
@@ -2233,7 +2221,8 @@ export class PanelLayoutManager implements AppModule {
     this.ctx.panelSettings = capped;
     saveToStorage(STORAGE_KEYS.panels, capped);
     saveToStorage(this.ctx.PANEL_ORDER_KEY, panelOrder);
-    saveToStorage(this.ctx.PANEL_ORDER_KEY + '-bottom-set', bottomSet);
+    // A tab's legacy bottomSet is not written back: the bottom zone is retired
+    // and those ids load from panelOrder into #panelsGrid.
 
     this.applyPanelSettings();
     this.applySavedPanelOrder();
@@ -2418,17 +2407,7 @@ export class PanelLayoutManager implements AppModule {
       this.mountLazyPanel('live-news', grid);
       return;
     }
-    void this.importPanel(
-      'live-news',
-      () => import('@/components/LiveNewsPanel'),
-      'LiveNewsPanel',
-      (LiveNewsPanel, module) => {
-        if (this.ctx.panels['live-news']) return null;
-        const liveNewsModule = module as typeof import('@/components/LiveNewsPanel');
-        if (liveNewsModule.getDefaultLiveChannels().length === 0 && liveNewsModule.loadChannelsFromStorage().length === 0) return null;
-        return new LiveNewsPanel();
-      },
-    ).then((panel) => {
+    void this.loadLiveNewsPanel().then((panel) => {
       if (this.ctx.isDestroyed) return;
       if (this.ctx.panels['live-news'] || !panel) return;
       this.ctx.panels['live-news'] = panel;
@@ -2444,6 +2423,31 @@ export class PanelLayoutManager implements AppModule {
     }).catch((err) => {
       console.error('[panel] failed to lazy-load "live-news"', err);
     });
+  }
+
+  /**
+   * The one LiveNewsPanel import shared by the tray and the mid-session
+   * channel path, so concurrent callers get the same instance instead of each
+   * constructing one. Callers mount it only if `ctx.panels['live-news']` is
+   * still unset when their continuation runs.
+   */
+  private loadLiveNewsPanel(): Promise<Panel | null> {
+    if (!this.liveNewsLoadInFlight) {
+      this.liveNewsLoadInFlight = this.importPanel(
+        'live-news',
+        () => import('@/components/LiveNewsPanel'),
+        'LiveNewsPanel',
+        (LiveNewsPanel, module) => {
+          if (this.ctx.panels['live-news']) return null;
+          const liveNewsModule = module as typeof import('@/components/LiveNewsPanel');
+          if (liveNewsModule.getDefaultLiveChannels().length === 0 && liveNewsModule.loadChannelsFromStorage().length === 0) return null;
+          return new LiveNewsPanel();
+        },
+      ).finally(() => {
+        this.liveNewsLoadInFlight = null;
+      });
+    }
+    return this.liveNewsLoadInFlight;
   }
 
   private shouldCreatePanel(key: string): boolean {
@@ -3724,9 +3728,11 @@ export class PanelLayoutManager implements AppModule {
 
     const allOrder = this.buildUnifiedOrder(sidebarIds, bottomIds);
     this.resolvedPanelOrder = allOrder;
+    // The under-map bottom zone is retired, so only the unified order is
+    // written. A legacy `-bottom-set` key is left as is: its ids are also in the
+    // saved order and load into #panelsGrid through applySavedPanelOrder().
     const orderPersisted = saveToStorage(this.ctx.PANEL_ORDER_KEY, allOrder);
-    const bottomPersisted = saveToStorage(this.ctx.PANEL_ORDER_KEY + '-bottom-set', Array.from(this.bottomSetMemory));
-    return { persisted: orderPersisted && bottomPersisted };
+    return { persisted: orderPersisted };
   }
 
   private buildUnifiedOrder(sidebarIds: string[], bottomIds: string[]): string[] {

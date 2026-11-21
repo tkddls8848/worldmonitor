@@ -486,7 +486,7 @@ describe('WebMCP live dashboard bindings', () => {
       panels: {
         markets: {
           show: () => { showCalls += 1; },
-          getElement: () => ({ scrollIntoView() {} }),
+          getElement: () => ({ classList: { contains: () => false }, scrollIntoView() {} }),
         } as unknown as AppContext['panels'][string],
       },
       panelSettings: {
@@ -519,7 +519,7 @@ describe('WebMCP live dashboard bindings', () => {
       panels: {
         regionalStartups: {
           show: () => { showCalls += 1; },
-          getElement: () => ({ scrollIntoView() {} }),
+          getElement: () => ({ classList: { contains: () => false }, scrollIntoView() {} }),
         } as unknown as AppContext['panels'][string],
       },
       panelSettings: {

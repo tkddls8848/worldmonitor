@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SearchSelectionDispatcher } from '@/app/search-selection-dispatcher';
-import { applyAgentBusAction } from '@/app/agent-bus-applier';
+import { applyAgentBusAction, type AgentBusApplyResult } from '@/app/agent-bus-applier';
 import { InspectorShell } from '@/components/InspectorShell';
 import { BottomMediaTray } from '@/components/BottomMediaTray';
 import {
@@ -11,9 +11,11 @@ import {
 import { EventHandlerManager } from '@/app/event-handlers';
 import { PanelLayoutManager } from '@/app/panel-layout';
 import type { AppContext } from '@/app/app-context';
+import { Panel as RealPanel } from '@/components/Panel';
 import type { Panel } from '@/components/Panel';
 import type { MapLayers, PanelConfig } from '@/types';
 import { DEFAULT_MAP_LAYERS } from '@/config/panels';
+import { SPLIT_LAYOUT_MIN_WIDTH } from '@/app/split-layout';
 
 function makeFakePanel(id: string): Panel {
   const el = document.createElement('div');
@@ -40,6 +42,12 @@ function makeFakePanel(id: string): Panel {
     notifyConnected: vi.fn(),
     destroy: vi.fn(),
   } as unknown as Panel;
+}
+
+/** Denials and already-live panels resolve synchronously, before any mount wait. */
+function syncResult(result: AgentBusApplyResult | Promise<AgentBusApplyResult>): AgentBusApplyResult {
+  expect(result).not.toBeInstanceOf(Promise);
+  return result as AgentBusApplyResult;
 }
 
 function makeLayoutManager(settings: Record<string, PanelConfig>, panels: Record<string, Panel> = {}) {
@@ -101,7 +109,7 @@ describe('Option B integration: real PanelLayoutManager reveal, tray race, botto
 
     const gdeltPanel = makeFakePanel('gdelt-intel');
     const polyPanel = makeFakePanel('polymarket');
-    const { ctx, manager } = makeLayoutManager(settings, { 'gdelt-intel': gdeltPanel });
+    const { manager } = makeLayoutManager(settings, { 'gdelt-intel': gdeltPanel });
 
     grid.appendChild(gdeltPanel.getElement());
 
@@ -142,6 +150,7 @@ describe('Option B integration: real PanelLayoutManager reveal, tray race, botto
         id: 'panel:gdelt-intel',
         label: 'Live Intelligence',
         category: 'panels',
+        icon: '',
         keywords: ['gdelt', 'intel', 'security'],
       });
       expect(okMounted).toBe(true);
@@ -156,6 +165,7 @@ describe('Option B integration: real PanelLayoutManager reveal, tray race, botto
         id: 'panel:polymarket',
         label: 'Predictions',
         category: 'panels',
+        icon: '',
         keywords: ['predictions', 'polymarket', 'markets'],
       });
       expect(okDeferred).toBe(true);
@@ -172,6 +182,7 @@ describe('Option B integration: real PanelLayoutManager reveal, tray race, botto
         id: 'panel:gdelt-intel',
         label: 'Live Intelligence',
         category: 'panels',
+        icon: '',
         keywords: ['gdelt', 'intel', 'security'],
       });
       expect(hiddenResult).toBe(false);
@@ -216,6 +227,81 @@ describe('Option B integration: real PanelLayoutManager reveal, tray race, botto
     expect(gdelt.getElement().classList.contains('inspector-tab-hidden')).toBe(false);
 
     manager.destroy();
+  });
+
+  it('pre-shell reveal of a panel in the restored tab still filters and hydrates the rest of that tab (rereview2 B-M1)', () => {
+    localStorage.setItem('wm-inspector-tab-v1', 'security');
+    document.body.innerHTML = `
+      <div id="inspectorHeaderMount"></div>
+      <div id="panelsGrid" class="panels-grid"></div>
+    `;
+    const grid = document.getElementById('panelsGrid')!;
+    const settings: Record<string, PanelConfig> = {
+      insights: { name: 'AI Insights', enabled: true, priority: 1 },
+      'gdelt-intel': { name: 'Live Intelligence', enabled: true, priority: 2 },
+      'strategic-posture': { name: 'Strategic Posture', enabled: true, priority: 2 },
+      intel: { name: 'Intel Feed', enabled: true, priority: 2 },
+    };
+    const gdelt = makeFakePanel('gdelt-intel');
+    const posture = makeFakePanel('strategic-posture');
+    const intel = makeFakePanel('intel');
+    const { manager } = makeLayoutManager(settings, { 'gdelt-intel': gdelt, 'strategic-posture': posture });
+    const mgrAny = manager as unknown as {
+      initialVisiblePanelSet: Set<string> | null;
+      computeInitialVisiblePanelSet: () => Set<string> | null;
+      installRevealPanelListener: () => void;
+      deferPanelMount: (key: string, panel: Panel | null, grid: HTMLElement, withShell: boolean) => void;
+      mountInspectorShell: (ctor: typeof InspectorShell) => void;
+      inspectorShell: InspectorShell | null;
+    };
+    // Saved non-Overview tab: boot holds every panel hidden until the shell mounts.
+    mgrAny.initialVisiblePanelSet = mgrAny.computeInitialVisiblePanelSet();
+    expect(mgrAny.initialVisiblePanelSet?.size).toBe(0);
+    for (const p of [gdelt, posture]) {
+      p.getElement().classList.add('inspector-tab-hidden');
+      grid.appendChild(p.getElement());
+    }
+    mgrAny.deferPanelMount('intel', intel, grid, true);
+    const intelShell = grid.querySelector<HTMLElement>('[data-panel="intel"][data-deferred-panel]')!;
+    expect(intelShell.classList.contains('inspector-tab-hidden')).toBe(true);
+    mgrAny.installRevealPanelListener();
+
+    // A Security panel is revealed before the InspectorShell chunk resolves.
+    window.dispatchEvent(new CustomEvent('wm:reveal-panel', { detail: { panelId: 'gdelt-intel' } }));
+    mgrAny.mountInspectorShell(InspectorShell);
+
+    try {
+      expect(mgrAny.inspectorShell!.getActiveTab()).toBe('security');
+      expect(gdelt.getElement().classList.contains('inspector-tab-hidden')).toBe(false);
+      // The rest of the restored Security tab is filtered in and hydrated, not left hidden.
+      expect(posture.getElement().classList.contains('inspector-tab-hidden')).toBe(false);
+      expect(grid.contains(intel.getElement())).toBe(true);
+      expect(intel.getElement().classList.contains('inspector-tab-hidden')).toBe(false);
+      expect(grid.querySelector('[data-panel="intel"][data-deferred-panel]')).toBeNull();
+    } finally {
+      manager.destroy();
+    }
+  });
+
+  it('renderLayout() boot markup starts the navigation row hosted, so no 36px strip paints before the shell (B-I2 boot)', async () => {
+    vi.stubGlobal('__APP_VERSION__', '0.0.0-test');
+    const container = document.body.appendChild(document.createElement('div'));
+    const { ctx, manager: layout } = makeLayoutManager({});
+    Reflect.set(ctx, 'container', container);
+    try {
+      // The shell markup is written synchronously, before renderLayout's first await.
+      const pending = layout.renderLayout();
+      const row = container.querySelector<HTMLElement>('.dashboard-navigation-row');
+      expect(row).toBeTruthy();
+      expect(row!.classList.contains('dashboard-navigation-row--hosted')).toBe(true);
+      expect(row!.querySelector('#panelTabsMount')).toBeTruthy();
+      // Panel creation after the shell needs a full App and throws here.
+      await pending.catch(() => {});
+    } finally {
+      ctx.isDestroyed = true;
+      layout.destroy();
+      vi.unstubAllGlobals();
+    }
   });
 
   it('mountInspectorShell does not cancel pending BottomMediaTray load (B-I1) and fallbackWithoutInspector respects destroy (B-M9, B-I2)', async () => {
@@ -321,41 +407,97 @@ describe('Option B integration: real PanelLayoutManager reveal, tray race, botto
     expect(mgrAny.inspectorShell!.getActiveTab()).toBe('overview');
 
     // Denied actions must NOT switch the active inspector tab
-    const deniedMissing = applyAgentBusAction(ctx, { type: 'open_panel', panelId: 'markets' });
+    const deniedMissing = syncResult(applyAgentBusAction(ctx, { type: 'open_panel', panelId: 'markets' }));
     expect(deniedMissing.ok).toBe(false);
     expect(deniedMissing.reason).toBe('panel_not_live');
     expect(mgrAny.inspectorShell!.getActiveTab()).toBe('overview');
 
-    const deniedDisabled = applyAgentBusAction(ctx, { type: 'open_panel', panelId: 'crypto' });
+    const deniedDisabled = syncResult(applyAgentBusAction(ctx, { type: 'open_panel', panelId: 'crypto' }));
     expect(deniedDisabled.ok).toBe(false);
     expect(deniedDisabled.reason).toBe('panel_disabled');
     expect(mgrAny.inspectorShell!.getActiveTab()).toBe('overview');
 
-    const deniedEntitled = applyAgentBusAction(
+    const deniedEntitled = syncResult(applyAgentBusAction(
       ctx,
       { type: 'open_panel', panelId: 'supply-chain' },
       { isPanelAllowed: () => false },
-    );
+    ));
     expect(deniedEntitled.ok).toBe(false);
     expect(deniedEntitled.reason).toBe('panel_not_entitled');
     expect(mgrAny.inspectorShell!.getActiveTab()).toBe('overview');
 
     // Entitled live panel switches tab through real PanelLayoutManager listener and succeeds
-    const ok = applyAgentBusAction(ctx, { type: 'open_panel', panelId: 'gdelt-intel' });
+    const ok = syncResult(applyAgentBusAction(ctx, { type: 'open_panel', panelId: 'gdelt-intel' }));
     expect(ok.ok).toBe(true);
     expect(mgrAny.inspectorShell!.getActiveTab()).toBe('security');
     expect(gdelt.getElement().classList.contains('inspector-tab-hidden')).toBe(false);
 
     // If still hidden by mobile filter, agent denies honestly
     gdelt.getElement().classList.add('mobile-cat-hidden');
-    const deniedHidden = applyAgentBusAction(ctx, { type: 'open_panel', panelId: 'gdelt-intel' });
+    const deniedHidden = syncResult(applyAgentBusAction(ctx, { type: 'open_panel', panelId: 'gdelt-intel' }));
     expect(deniedHidden.ok).toBe(false);
     expect(deniedHidden.reason).toBe('panel_hidden');
 
     manager.destroy();
   });
 
-  it('mounts all 7 Overview panels at boot, handles non-Overview saved tabs without flashing all panels (B-I3, B-M4), and blocks all bottom-zone write paths (B-I4)', () => {
+  it('agent-bus open_panel on a lazy deferred panel waits for the chunk mount and reports success (rereview2 B-I2)', async () => {
+    document.body.innerHTML = `
+      <div id="inspectorHeaderMount"></div>
+      <div id="panelsGrid" class="panels-grid"></div>
+    `;
+    const grid = document.getElementById('panelsGrid')!;
+    const settings: Record<string, PanelConfig> = {
+      insights: { name: 'AI Insights', enabled: true, priority: 1 },
+      polymarket: { name: 'Predictions', enabled: true, priority: 2 },
+    };
+    const { ctx, manager } = makeLayoutManager(settings);
+    const mgrAny = manager as unknown as {
+      lazyPanel: (key: string, loader: () => Promise<Panel | null>) => boolean;
+      deferPanelMount: (key: string, panel: Panel | null, grid: HTMLElement, withShell: boolean) => void;
+      installRevealPanelListener: () => void;
+      mountInspectorShell: (ctor: typeof InspectorShell) => void;
+      inspectorShell: InspectorShell | null;
+    };
+
+    // Real lazy registration: the chunk resolves a real Panel after the reveal.
+    let resolveChunk!: () => void;
+    const chunk = new Promise<void>((resolve) => { resolveChunk = resolve; });
+    const loader = vi.fn(async () => {
+      await chunk;
+      return new RealPanel({ id: 'polymarket', title: 'Predictions' });
+    });
+    expect(mgrAny.lazyPanel('polymarket', loader)).toBe(true);
+    mgrAny.deferPanelMount('polymarket', null, grid, true);
+    mgrAny.installRevealPanelListener();
+    mgrAny.mountInspectorShell(InspectorShell);
+
+    expect(mgrAny.inspectorShell!.getActiveTab()).toBe('overview');
+    expect(ctx.panels.polymarket).toBeUndefined();
+    expect(grid.querySelector('[data-panel="polymarket"][data-deferred-panel]')).toBeTruthy();
+
+    try {
+      const pending = applyAgentBusAction(ctx, { type: 'open_panel', panelId: 'polymarket' });
+      // The reveal switched the tab and started the import.
+      expect(mgrAny.inspectorShell!.getActiveTab()).toBe('markets');
+      expect(loader).toHaveBeenCalledTimes(1);
+
+      resolveChunk();
+      const result = await pending;
+      expect(result.ok).toBe(true);
+      expect(result.status).toBe('applied');
+      expect(result.reason).toBeUndefined();
+      const el = ctx.panels.polymarket!.getElement();
+      expect(el.isConnected).toBe(true);
+      expect(grid.contains(el)).toBe(true);
+      expect(el.classList.contains('inspector-tab-hidden')).toBe(false);
+      expect(grid.querySelector('[data-panel="polymarket"][data-deferred-panel]')).toBeNull();
+    } finally {
+      manager.destroy();
+    }
+  });
+
+  it('mounts all 7 Overview panels at boot, handles non-Overview saved tabs without flashing all panels (B-I3, B-M4), and migrates stray bottom-grid panels', () => {
     document.body.innerHTML = `
       <div id="mapSection"></div>
       <div id="mapBottomGrid" class="map-bottom-grid"><div class="panel" data-panel="markets"></div></div>
@@ -409,26 +551,79 @@ describe('Option B integration: real PanelLayoutManager reveal, tray race, botto
     const marketsEl = grid.querySelector<HTMLElement>('[data-panel="markets"]')!;
     expect(marketsEl).toBeTruthy();
 
-    // 4. B-I4: agent layout tool reports bottomAvailable=false and denies moving to bottom
-    const layout = mgrAny.collectPanelLayoutEntries();
-    expect(layout?.bottomAvailable).toBe(false);
-    const moveBottom = manager.applyWebMcpMovePanel('markets', 'bottom', 0);
-    expect(moveBottom.ok).toBe(false);
-    expect(moveBottom.reason).toBe('region_unavailable');
-    expect(bottomGrid.querySelectorAll('.panel').length).toBe(0);
-
-    // 5. B-I4: keyboard PageDown does not move panel into #mapBottomGrid
-    const header = document.createElement('div');
-    header.className = 'panel-header';
-    marketsEl.appendChild(header);
-    mgrAny.makeDraggable(marketsEl, 'markets');
-    const moveBtn = marketsEl.querySelector<HTMLButtonElement>('.panel-move-btn')!;
-    expect(moveBtn.getAttribute('aria-keyshortcuts')).not.toContain('PageDown');
-    moveBtn.dispatchEvent(new KeyboardEvent('keydown', { key: 'PageDown', bubbles: true }));
-    expect(marketsEl.parentElement).toBe(grid);
-    expect(bottomGrid.querySelectorAll('.panel').length).toBe(0);
-
     manager.destroy();
+  });
+
+  it('blocks every bottom-zone write path at a split-layout viewport >= 1200px: agent, keyboard and drag (B-I4)', () => {
+    const happyDOM = (window as unknown as { happyDOM: { setViewport: (v: { width: number; height: number }) => void } }).happyDOM;
+    const previousViewport = { width: window.innerWidth, height: window.innerHeight };
+    // The pre-fix code allowed every bottom write only in the split layout, so a
+    // narrower default viewport would let these assertions pass on it too.
+    happyDOM.setViewport({ width: 1440, height: 900 });
+    expect(window.matchMedia(`(min-width: ${SPLIT_LAYOUT_MIN_WIDTH}px)`).matches).toBe(true);
+
+    document.body.innerHTML = `
+      <div id="mapSection"></div>
+      <div id="mapBottomGrid" class="map-bottom-grid"></div>
+      <div id="panelsGrid" class="panels-grid"></div>
+    `;
+    const grid = document.getElementById('panelsGrid')!;
+    const bottomGrid = document.getElementById('mapBottomGrid')!;
+    const settings: Record<string, PanelConfig> = {
+      insights: { name: 'AI Insights', enabled: true, priority: 1 },
+      markets: { name: 'Markets', enabled: true, priority: 1 },
+      cii: { name: 'Country Instability', enabled: true, priority: 1 },
+    };
+    const panels = Object.fromEntries(Object.keys(settings).map((key) => [key, makeFakePanel(key)]));
+    for (const p of Object.values(panels)) grid.appendChild(p.getElement());
+    const { manager } = makeLayoutManager(settings, panels);
+    const mgrAny = manager as unknown as {
+      makeDraggable: (el: HTMLElement, key: string) => void;
+      collectPanelLayoutEntries: () => { panels: unknown[]; bottomAvailable: boolean } | null;
+    };
+    const marketsEl = panels.markets!.getElement();
+    const ciiEl = panels.cii!.getElement();
+    mgrAny.makeDraggable(marketsEl, 'markets');
+    const origElementFromPoint = document.elementFromPoint;
+
+    try {
+      // 1. Agent layout tool: bottom region unavailable, move denied
+      expect(mgrAny.collectPanelLayoutEntries()?.bottomAvailable).toBe(false);
+      const moveBottom = manager.applyWebMcpMovePanel('markets', 'bottom', 0);
+      expect(moveBottom.ok).toBe(false);
+      expect(moveBottom.reason).toBe('region_unavailable');
+      expect(bottomGrid.children.length).toBe(0);
+
+      // 2. Keyboard: PageDown on the move button does not move the panel under the map
+      const moveBtn = marketsEl.querySelector<HTMLButtonElement>('.panel-move-btn')!;
+      expect(moveBtn.getAttribute('aria-keyshortcuts')).not.toContain('PageDown');
+      moveBtn.dispatchEvent(new KeyboardEvent('keydown', { key: 'PageDown', bubbles: true, cancelable: true }));
+      expect(marketsEl.parentElement).toBe(grid);
+      expect(bottomGrid.children.length).toBe(0);
+
+      // 3. Drag: a drop over the empty #mapBottomGrid is not a drop target (findDropPosition)
+      const drag = (dropTarget: Element) => {
+        document.elementFromPoint = (() => dropTarget) as typeof document.elementFromPoint;
+        const header = marketsEl.querySelector('.panel-header')!;
+        header.dispatchEvent(new MouseEvent('mousedown', { button: 0, clientX: 10, clientY: 10, bubbles: true }));
+        document.dispatchEvent(new MouseEvent('mousemove', { clientX: 60, clientY: 500, bubbles: true }));
+        document.dispatchEvent(new MouseEvent('mouseup', { clientX: 60, clientY: 500, bubbles: true }));
+      };
+      drag(bottomGrid);
+      expect(marketsEl.parentElement).toBe(grid);
+      expect(bottomGrid.children.length).toBe(0);
+      expect(localStorage.getItem('panel-order-bottom-set')).toBeNull();
+
+      // Control: the same drag over a panel in #panelsGrid still reorders.
+      expect(Array.from(grid.children).indexOf(marketsEl)).toBeLessThan(Array.from(grid.children).indexOf(ciiEl));
+      drag(ciiEl);
+      expect(marketsEl.parentElement).toBe(grid);
+      expect(Array.from(grid.children).indexOf(marketsEl)).toBeGreaterThan(Array.from(grid.children).indexOf(ciiEl));
+    } finally {
+      document.elementFromPoint = origElementFromPoint;
+      happyDOM.setViewport(previousViewport);
+      manager.destroy();
+    }
   });
 
   it('re-hides a disabled panel when released from BottomMediaTray (B-M5)', async () => {

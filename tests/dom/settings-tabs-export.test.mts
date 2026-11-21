@@ -118,10 +118,22 @@ describe('live dashboard tab backups', () => {
     expect((JSON.parse((await backup())[tabsKey]!) as TabsState).tabs[0]!.panelSettings.news!.enabled).toBe(false);
   });
 
-  it.each([tabsKey, 'panel-order', 'panel-order-bottom-set'])('fails export without downloading when %s cannot be saved', key => {
+  it.each([tabsKey, 'panel-order'])('fails export without downloading when %s cannot be saved', key => {
     failStorageWrite(key);
     expect(() => exportSettings()).toThrow('Settings export could not save the current dashboard layout');
     expect(URL.createObjectURL).not.toHaveBeenCalled();
+  });
+
+  it('does not write the retired panel-order-bottom-set key, and keeps a legacy value intact', async () => {
+    const data = await backup();
+    expect(data['panel-order-bottom-set']).toBeUndefined();
+    expect(localStorage.getItem('panel-order-bottom-set')).toBeNull();
+
+    localStorage.setItem('panel-order-bottom-set', '["legacy"]');
+    failStorageWrite('panel-order-bottom-set');
+    expect(() => exportSettings()).not.toThrow();
+    vi.unstubAllGlobals();
+    expect(localStorage.getItem('panel-order-bottom-set')).toBe('["legacy"]');
   });
 });
 

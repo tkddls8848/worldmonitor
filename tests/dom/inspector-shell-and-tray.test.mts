@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { InspectorShell } from '@/components/InspectorShell';
 import { BottomMediaTray } from '@/components/BottomMediaTray';
 import { Panel } from '@/components/Panel';
+import { SignalModal } from '@/components/SignalModal';
+import { UnifiedSettings } from '@/components/UnifiedSettings';
 import { applyFont, getFontFamily, setFontFamily } from '@/services/font-settings';
 import type { PanelConfig } from '@/types';
 
@@ -18,6 +20,19 @@ function makePanelSettings(): Record<string, PanelConfig> {
     politics: { name: 'World News', enabled: true, priority: 2 },
     crypto: { name: 'Crypto', enabled: false, priority: 3 },
   };
+}
+
+function createSettings(): UnifiedSettings {
+  return new UnifiedSettings({
+    getPanelSettings: () => ({}),
+    savePanelSettings: () => {},
+    getDisabledSources: () => new Set<string>(),
+    toggleSource: () => {},
+    setSourcesEnabled: () => {},
+    getAllSourceNames: () => [],
+    getLocalizedPanelName: (_key: string, fallback: string) => fallback,
+    resetLayout: () => {},
+  });
 }
 
 describe('InspectorShell', () => {
@@ -208,6 +223,29 @@ describe('Panel fullscreen modal and font-settings default', () => {
     delete document.documentElement.dataset.font;
   });
 
+  it('Escape still closes the expanded panel while closed persistent overlays (Settings, SignalModal) stay in the DOM', () => {
+    const settings = createSettings();
+    settings.open();
+    settings.close();
+    new SignalModal();
+    const settingsEl = document.getElementById('unifiedSettingsModal');
+    const signalEl = document.querySelector('.signal-modal-overlay');
+    // Both are role=dialog overlays that remain mounted after closing.
+    expect(settingsEl?.getAttribute('role')).toBe('dialog');
+    expect(settingsEl?.classList.contains('active')).toBe(false);
+    expect(signalEl?.getAttribute('role')).toBe('dialog');
+    expect(signalEl?.classList.contains('active')).toBe(false);
+
+    const panel = new Panel({ id: 'markets', title: 'Markets' });
+    document.body.appendChild(panel.getElement());
+    panel.getElement().querySelector<HTMLButtonElement>('.panel-expand-modal-btn')!.click();
+    expect(panel.getElement().classList.contains('panel-modal-expanded')).toBe(true);
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(panel.getElement().classList.contains('panel-modal-expanded')).toBe(false);
+    panel.destroy();
+  });
+
   it('expands via ⛶, yields Escape to higher modals and in-panel inputs, restores on Escape when topmost, and cleans up on destroy', () => {
     const panel = new Panel({ id: 'markets', title: 'Markets' });
     document.body.appendChild(panel.getElement());
@@ -222,14 +260,15 @@ describe('Panel fullscreen modal and font-settings default', () => {
       expect(panel.getElement().classList.contains('panel-modal-expanded')).toBe(true);
       expect(document.body.classList.contains('panel-modal-open')).toBe(true);
 
-      // Higher modal (e.g. Settings) receives Escape first without collapsing the expanded panel
-      const settingsOverlay = document.createElement('div');
-      settingsOverlay.className = 'unified-settings-overlay open';
-      document.body.appendChild(settingsOverlay);
+      // Open Settings (the real overlay) receives Escape first without collapsing the expanded panel
+      const settings = createSettings();
+      settings.open();
+      expect(document.getElementById('unifiedSettingsModal')?.classList.contains('active')).toBe(true);
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
       expect(panel.getElement().classList.contains('panel-modal-expanded')).toBe(true);
       expect(underlyingEsc).toHaveBeenCalledTimes(1);
-      settingsOverlay.remove();
+      settings.close();
+      expect(document.getElementById('unifiedSettingsModal')?.classList.contains('active')).toBe(false);
 
       // Editable input inside the expanded panel handles its own Escape without collapsing the panel
       const input = document.createElement('input');

@@ -13,6 +13,7 @@ import {
   type MapLayerRuntimeAvailability,
 } from '@/services/map-layer-runtime-availability';
 import type { AppContext } from './app-context';
+import type { Panel } from '@/components/Panel';
 import type { MapLayers, PanelConfig } from '@/types';
 import {
   isDashboardControlAction,
@@ -156,7 +157,81 @@ function isMapLayerKey(key: string): key is keyof MapLayers {
   return Object.prototype.hasOwnProperty.call(LAYER_REGISTRY, key);
 }
 
-function applyOpenPanel(ctx: AppContext, action: Extract<AgentBusAction, { type: 'open_panel' }>, options: AgentBusApplierOptions): AgentBusApplyResult {
+type OpenPanelAction = Extract<AgentBusAction, { type: 'open_panel' }>;
+
+/**
+ * How long `open_panel` waits for a lazy panel's chunk after the reveal started
+ * its mount. Matches the order of the search palette's deferred-panel wait.
+ */
+const LAZY_PANEL_MOUNT_TIMEOUT_MS = 15_000;
+
+function connectedLivePanel(ctx: AppContext, panelId: string): Panel | null {
+  const panel = ctx.panels[panelId];
+  return panel && panel.getElement().isConnected ? panel : null;
+}
+
+/**
+ * Resolve once the deferred shell has been replaced by the live panel, or null
+ * on timeout / teardown. `ctx.panels[id]` is set before the element replaces
+ * the shell, so a DOM mutation is the signal that both are ready.
+ */
+function waitForLivePanel(ctx: AppContext, panelId: string): Promise<Panel | null> {
+  const ready = connectedLivePanel(ctx, panelId);
+  if (ready) return Promise.resolve(ready);
+  const root = typeof document !== 'undefined' ? (document.body ?? document.documentElement) : null;
+  if (!root || typeof MutationObserver === 'undefined') return Promise.resolve(null);
+  return new Promise<Panel | null>((resolve) => {
+    let settled = false;
+    const finish = (panel: Panel | null): void => {
+      if (settled) return;
+      settled = true;
+      observer.disconnect();
+      clearTimeout(timer);
+      resolve(panel);
+    };
+    const observer = new MutationObserver(() => {
+      if (ctx.isDestroyed) {
+        finish(null);
+        return;
+      }
+      const panel = connectedLivePanel(ctx, panelId);
+      if (panel) finish(panel);
+    });
+    observer.observe(root, { childList: true, subtree: true });
+    const timer = setTimeout(() => finish(connectedLivePanel(ctx, panelId)), LAZY_PANEL_MOUNT_TIMEOUT_MS);
+    // Close the check/observe race.
+    const mounted = connectedLivePanel(ctx, panelId);
+    if (mounted) finish(mounted);
+  });
+}
+
+function presentOpenedPanel(action: OpenPanelAction, config: PanelConfig, panel: Panel): AgentBusApplyResult {
+  panel.show();
+  const element = panel.getElement();
+  const hiddenByClass = element.classList.contains('hidden')
+    || element.classList.contains('inspector-tab-hidden')
+    || element.classList.contains('mobile-cat-hidden');
+  const hiddenByStyle = typeof getComputedStyle === 'function'
+    && element.isConnected
+    && getComputedStyle(element).display === 'none';
+  if (hiddenByClass || hiddenByStyle) {
+    return denied(`Panel is hidden in the current view: ${config.name || action.panelId}.`, 'panel_hidden', [
+      { target: action.panelId, status: 'denied', reason: 'panel_hidden' },
+    ], action);
+  }
+  if (typeof element.scrollIntoView === 'function') {
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  return applied(action, `Opened ${config.name || action.panelId}.`, [
+    { target: action.panelId, status: 'applied' },
+  ]);
+}
+
+function applyOpenPanel(
+  ctx: AppContext,
+  action: OpenPanelAction,
+  options: AgentBusApplierOptions,
+): AgentBusApplyResult | Promise<AgentBusApplyResult> {
   const hasSavedConfig = Object.prototype.hasOwnProperty.call(ctx.panelSettings, action.panelId);
   const savedConfig = hasSavedConfig ? ctx.panelSettings[action.panelId] : undefined;
   if (savedConfig && savedConfig.enabled !== true) {
@@ -189,29 +264,15 @@ function applyOpenPanel(ctx: AppContext, action: Extract<AgentBusAction, { type:
   }
 
   const panel = ctx.panels[action.panelId];
-  if (!panel) {
-    return denied(`Panel is not available: ${action.panelId}.`, 'panel_not_live', [], action);
-  }
+  if (panel) return presentOpenedPanel(action, config, panel);
 
-  panel.show();
-  const element = panel.getElement();
-  const hiddenByClass = element.classList.contains('hidden')
-    || element.classList.contains('inspector-tab-hidden')
-    || element.classList.contains('mobile-cat-hidden');
-  const hiddenByStyle = typeof getComputedStyle === 'function'
-    && element.isConnected
-    && getComputedStyle(element).display === 'none';
-  if (hiddenByClass || hiddenByStyle) {
-    return denied(`Panel is hidden in the current view: ${config.name || action.panelId}.`, 'panel_hidden', [
-      { target: action.panelId, status: 'denied', reason: 'panel_hidden' },
-    ], action);
-  }
-  if (typeof element.scrollIntoView === 'function') {
-    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-  return applied(action, `Opened ${config.name || action.panelId}.`, [
-    { target: action.panelId, status: 'applied' },
-  ]);
+  // A lazy panel with only a deferred shell: the reveal above started its chunk
+  // import. Wait for the mount instead of reporting a view change as a denial.
+  return waitForLivePanel(ctx, action.panelId).then((mounted) => (
+    mounted
+      ? presentOpenedPanel(action, config, mounted)
+      : denied(`Panel is not available: ${action.panelId}.`, 'panel_not_live', [], action)
+  ));
 }
 
 function applySetView(

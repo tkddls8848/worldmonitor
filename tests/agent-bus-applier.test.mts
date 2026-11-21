@@ -10,6 +10,7 @@ function makePanel() {
   let showCalls = 0;
   let scrollCalls = 0;
   const element = {
+    classList: { contains: () => false },
     scrollIntoView: () => { scrollCalls += 1; },
   } as unknown as HTMLElement;
   return {

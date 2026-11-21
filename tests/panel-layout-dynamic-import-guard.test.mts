@@ -226,7 +226,7 @@ function assertLiveNewsDirectMountCatchesCallbackErrors(source: string) {
   const block = source.slice(start, end);
   assert.match(
     block,
-    /void this\.importPanel\([\s\S]*?\)\.then\(\(panel\) => \{[\s\S]*?this\.afterPanelMounted\('live-news', panel\);[\s\S]*?\}\)\.catch\(\(err\) => \{[\s\S]*?failed to lazy-load "live-news"/,
+    /void this\.loadLiveNewsPanel\(\)\.then\(\(panel\) => \{[\s\S]*?this\.afterPanelMounted\('live-news', panel\);[\s\S]*?\}\)\.catch\(\(err\) => \{[\s\S]*?failed to lazy-load "live-news"/,
     'direct live-news mount path must catch callback errors as well as import failures',
   );
 }
@@ -335,15 +335,15 @@ describe('panel-layout lazy dynamic-import guard (WORLDMONITOR-R4)', () => {
       /const orderPersisted = saveToStorage\(this\.ctx\.PANEL_ORDER_KEY,\s*allOrder\);/,
       'savePanelOrder must keep the unified-order write receipt',
     );
-    assert.match(
+    assert.doesNotMatch(
       source,
-      /const bottomPersisted = saveToStorage\(this\.ctx\.PANEL_ORDER_KEY \+ '-bottom-set',\s*Array\.from\(this\.bottomSetMemory\)\);/,
-      'savePanelOrder must keep the bottom-set write receipt',
+      /saveToStorage\(this\.ctx\.PANEL_ORDER_KEY \+ '-bottom-set'/,
+      'the retired bottom zone must not write the always-empty -bottom-set key',
     );
     assert.match(
       source,
-      /return \{ persisted: orderPersisted && bottomPersisted \};/,
-      'savePanelOrder must fail closed when either layout key write fails',
+      /return \{ persisted: orderPersisted \};/,
+      'savePanelOrder must fail closed when the layout order write fails',
     );
     assert.match(
       source,
