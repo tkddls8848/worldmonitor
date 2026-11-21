@@ -31593,11 +31593,335 @@ body.map-width-resizing {
 
 /* Keep the existing 48px touch targets; mouse users can use a compact row. */
 @media (pointer: fine) {
-  :has(> .layer-toggles.map-control-compact) > .deckgl-time-slider {
+  .deckgl-time-slider {
     padding: 4px 6px;
   }
-  :has(> .layer-toggles.map-control-compact) > .deckgl-time-slider .time-btn {
-    min-width: 40px;
-    min-height: 28px;
+  .deckgl-time-slider .time-btn {
+    min-width: 34px;
+    min-height: 26px;
+    padding: 3px 8px;
+    border-radius: 5px;
   }
+}
+
+/* ==========================================================================
+   Map-First Dark Glass HUD (Option B)
+   DeckGL overlays sit over the dark map canvas; keep them cohesive dark glass
+   in both light and dark UI themes so stark white boxes never occlude the map.
+   ========================================================================== */
+.deckgl-mode {
+  --hud-bg: rgba(13, 17, 23, 0.84);
+  --hud-bg-hover: rgba(24, 32, 42, 0.94);
+  --hud-border: rgba(255, 255, 255, 0.14);
+  --hud-text: #e6edf3;
+  --hud-text-dim: #9aa7b4;
+  --hud-accent: #44ff88;
+}
+
+.deckgl-controls .map-btn,
+.deckgl-time-slider,
+.deckgl-layer-toggles,
+.deckgl-legend,
+.deckgl-mode .map-distance-control button,
+.deckgl-mode .map-distance-control select,
+.deckgl-mode .map-distance-panel,
+.deckgl-mode .map-control-disclosure,
+.deckgl-mode .layer-explanation-popup,
+.deckgl-mode .layer-help-popup {
+  background: var(--hud-bg);
+  border-color: var(--hud-border);
+  color: var(--hud-text);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.deckgl-controls .map-btn {
+  border-radius: 6px;
+}
+
+.deckgl-controls .map-btn:hover {
+  background: var(--hud-bg-hover);
+  border-color: var(--hud-accent);
+  color: #ffffff;
+}
+
+.deckgl-time-slider {
+  top: auto;
+  bottom: 12px;
+  left: 12px;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.deckgl-time-slider .time-btn {
+  color: var(--hud-text-dim);
+  border-color: transparent;
+  background: transparent;
+}
+
+.deckgl-time-slider .time-btn:hover {
+  color: var(--hud-text);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--hud-border);
+}
+
+.deckgl-time-slider .time-btn.active {
+  background: var(--hud-accent);
+  border-color: var(--hud-accent);
+  color: #09110c;
+}
+
+.deckgl-layer-toggles {
+  top: 12px;
+  bottom: auto;
+  left: 12px;
+  width: 288px;
+  max-width: min(300px, calc(100% - 24px));
+  max-height: calc(100% - 80px);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.42);
+}
+
+.deckgl-layer-toggles.map-control-collapsed {
+  width: auto;
+  border-radius: 8px;
+}
+
+.deckgl-layer-toggles .toggle-header {
+  padding: 6px 8px;
+  border-bottom-color: var(--hud-border);
+  color: var(--hud-text);
+  text-transform: none;
+  letter-spacing: 0.2px;
+  gap: 6px;
+}
+
+.deckgl-mode .map-control-disclosure {
+  border-radius: 7px;
+  font-size: calc(11px * var(--wm-panel-effective-scale, 1));
+  font-weight: 600;
+  color: var(--hud-text);
+  padding: 6px 10px;
+}
+
+.deckgl-mode .map-control-disclosure:hover {
+  background: var(--hud-bg-hover);
+  border-color: rgba(68, 255, 136, 0.55);
+}
+
+.deckgl-layer-toggles .layer-help-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--hud-border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--hud-text-dim);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deckgl-layer-toggles .layer-help-btn:hover {
+  color: var(--hud-text);
+  border-color: var(--hud-accent);
+}
+
+.deckgl-layer-toggles .layer-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px 8px 2px;
+  flex-shrink: 0;
+}
+
+.deckgl-layer-toggles .layer-preset-btn {
+  padding: 3px 7px;
+  border: 1px solid var(--hud-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--hud-text-dim);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.deckgl-layer-toggles .layer-preset-btn:hover,
+.deckgl-layer-toggles .layer-preset-btn.active {
+  background: rgba(68, 255, 136, 0.16);
+  border-color: rgba(68, 255, 136, 0.55);
+  color: var(--hud-accent);
+}
+
+.deckgl-layer-toggles .layer-search {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--hud-border);
+  color: var(--hud-text);
+  border-radius: 6px;
+}
+
+.deckgl-layer-toggles .layer-search::placeholder {
+  color: var(--hud-text-dim);
+}
+
+.deckgl-layer-toggles .toggle-list {
+  max-height: min(52vh, 420px) !important;
+  padding: 4px 6px 8px;
+  gap: 4px;
+}
+
+.deckgl-layer-toggles .layer-group {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+}
+
+.deckgl-layer-toggles .layer-group-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--hud-text);
+  user-select: none;
+}
+
+.deckgl-layer-toggles .layer-group-summary::-webkit-details-marker {
+  display: none;
+}
+
+.deckgl-layer-toggles .layer-group-summary::before {
+  content: '▸';
+  font-size: 10px;
+  color: var(--hud-text-dim);
+  margin-right: 4px;
+  transition: transform 0.15s ease;
+}
+
+.deckgl-layer-toggles .layer-group[open] > .layer-group-summary::before {
+  content: '▾';
+  color: var(--hud-accent);
+}
+
+.deckgl-layer-toggles .layer-group-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deckgl-layer-toggles .layer-group-count {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  color: var(--hud-text-dim);
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.deckgl-layer-toggles .layer-group-count.has-active {
+  color: var(--hud-accent);
+  background: rgba(68, 255, 136, 0.14);
+}
+
+.deckgl-layer-toggles .layer-group-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px 4px 6px;
+}
+
+.deckgl-layer-toggles .layer-toggle {
+  background: transparent;
+  color: var(--hud-text);
+  text-transform: none;
+  font-size: 11px;
+  padding: 4px 6px;
+  border-radius: 5px;
+}
+
+.deckgl-layer-toggles .layer-toggle:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.deckgl-layer-toggles .toggle-label {
+  color: var(--hud-text);
+  font-size: 11px;
+  letter-spacing: 0.1px;
+}
+
+.deckgl-layer-toggles .layer-toggle input[type="checkbox"] {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.deckgl-layer-toggles .layer-toggle input[type="checkbox"]:checked::after {
+  color: #09110c;
+}
+
+.deckgl-layer-toggles .layer-explain-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--hud-border);
+  color: var(--hud-text-dim);
+}
+
+.deckgl-legend {
+  top: 12px;
+  bottom: auto;
+  left: auto;
+  right: 54px;
+  transform: none;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.38);
+}
+
+.deckgl-legend .legend-label {
+  color: var(--hud-text);
+}
+
+.deckgl-mode .map-distance-control {
+  top: auto;
+  bottom: 12px;
+  right: 12px;
+  align-items: flex-end;
+}
+
+.deckgl-mode .map-distance-control .maplibregl-ctrl-scale {
+  background: var(--hud-bg);
+  color: var(--hud-text);
+  border-color: var(--hud-text-dim);
+  border-radius: 3px;
+}
+
+.deckgl-mode .map-distance-control button,
+.deckgl-mode .map-distance-control select {
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+.deckgl-mode .layer-explanation-popup {
+  top: 12px;
+  bottom: auto;
+  left: 310px;
+}
+
+.deckgl-mode .layer-explanation-header {
+  background: rgba(20, 26, 34, 0.96);
+  border-bottom-color: var(--hud-border);
+}
+
+.deckgl-mode .layer-explanation-header strong,
+.deckgl-mode .layer-explanation-purpose {
+  color: var(--hud-text);
 }

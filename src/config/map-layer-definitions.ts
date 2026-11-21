@@ -452,6 +452,99 @@ export function getLayerExplanation(layerKey: keyof MapLayers): LayerExplanation
   };
 }
 
+export interface MapLayerGroupDef {
+  readonly id: string;
+  readonly labelKo: string;
+  readonly labelEn: string;
+  readonly keys: readonly (keyof MapLayers)[];
+}
+
+export interface MapLayerPresetDef {
+  readonly id: string;
+  readonly labelKo: string;
+  readonly labelEn: string;
+  readonly layers: readonly (keyof MapLayers)[];
+}
+
+/** 6 logical groups organizing all map layers for scannable accordion browsing. */
+export const MAP_LAYER_GROUPS: readonly MapLayerGroupDef[] = [
+  {
+    id: 'conflict',
+    labelKo: '분쟁 · 안보',
+    labelEn: 'Conflict & Security',
+    keys: ['hotspots', 'conflicts', 'iranAttacks', 'ucdpEvents', 'protests', 'sanctions', 'displacement'],
+  },
+  {
+    id: 'military',
+    labelKo: '군사 · 항공 · 해상',
+    labelEn: 'Military & Transport',
+    keys: ['bases', 'military', 'flights', 'aircraftEmergencies', 'ais', 'liveTankers', 'gpsJamming', 'spaceports', 'satellites'],
+  },
+  {
+    id: 'infra',
+    labelKo: '에너지 · 인프라 · 사이버',
+    labelEn: 'Energy & Infra',
+    keys: ['pipelines', 'storageFacilities', 'fuelShortages', 'cables', 'outages', 'datacenters', 'cyberThreats', 'nuclear', 'irradiators', 'radiationWatch'],
+  },
+  {
+    id: 'economic',
+    labelKo: '경제 · 무역 · 자원',
+    labelEn: 'Economy & Trade',
+    keys: [
+      'waterways', 'economic', 'tradeRoutes', 'minerals', 'no2Activity',
+      'stockExchanges', 'financialCenters', 'centralBanks', 'commodityHubs', 'gulfInvestments',
+      'miningSites', 'processingPlants', 'commodityPorts',
+      'startupHubs', 'techHQs', 'accelerators', 'cloudRegions', 'techEvents',
+    ],
+  },
+  {
+    id: 'hazards',
+    labelKo: '자연 · 기상 · 보건',
+    labelEn: 'Nature & Hazards',
+    keys: ['natural', 'weather', 'fires', 'climate', 'reservoirLevels', 'diseaseOutbreaks', 'canadaRoads', 'canadaAlerts'],
+  },
+  {
+    id: 'overlays',
+    labelKo: '국가 지표 · 오버레이',
+    labelEn: 'Indicators & Overlays',
+    keys: ['ciiChoropleth', 'resilienceScore', 'dayNight', 'webcams', 'positiveEvents', 'kindness', 'happiness', 'speciesRecovery', 'renewableInstallations'],
+  },
+] as const;
+
+/** One-click layer presets for the map HUD drawer. */
+export const MAP_LAYER_PRESETS: readonly MapLayerPresetDef[] = [
+  {
+    id: 'core',
+    labelKo: '기본 6',
+    labelEn: 'Core 6',
+    layers: ['conflicts', 'hotspots', 'natural', 'weather', 'waterways', 'economic'],
+  },
+  {
+    id: 'security',
+    labelKo: '분쟁·군사',
+    labelEn: 'Security',
+    layers: ['conflicts', 'hotspots', 'military', 'bases', 'ucdpEvents', 'sanctions', 'ciiChoropleth'],
+  },
+  {
+    id: 'energy',
+    labelKo: '에너지·해운',
+    labelEn: 'Energy',
+    layers: ['pipelines', 'storageFacilities', 'waterways', 'tradeRoutes', 'ais', 'fuelShortages'],
+  },
+  {
+    id: 'hazards',
+    labelKo: '재난·기상',
+    labelEn: 'Hazards',
+    layers: ['natural', 'weather', 'fires', 'climate', 'outages', 'diseaseOutbreaks'],
+  },
+  {
+    id: 'clear',
+    labelKo: '모두 끄기',
+    labelEn: 'Clear',
+    layers: [],
+  },
+] as const;
+
 export function bindLayerSearch(container: HTMLElement): void {
   const searchInput = container.querySelector('.layer-search') as HTMLInputElement | null;
   if (!searchInput) return;
@@ -473,6 +566,17 @@ export function bindLayerSearch(container: HTMLElement): void {
       const text = label.textContent?.toLowerCase() || '';
       const match = text.includes(q) || key.toLowerCase().includes(q) || synonymHits.has(key);
       displayTarget.style.display = match ? '' : 'none';
+    });
+    container.querySelectorAll<HTMLDetailsElement>('.layer-group').forEach(group => {
+      const rows = Array.from(group.querySelectorAll<HTMLElement>('.layer-toggle-row'));
+      if (!q) {
+        group.style.display = '';
+        if (group.dataset.defaultOpen === 'true') group.open = true;
+        return;
+      }
+      const hasVisible = rows.some(r => r.style.display !== 'none' && !r.querySelector('[data-layer-hidden]'));
+      group.style.display = hasVisible ? '' : 'none';
+      if (hasVisible) group.open = true;
     });
   });
 }

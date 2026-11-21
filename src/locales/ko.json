@@ -1311,7 +1311,18 @@
         "notamAirspace": "NOTAM 공역 제한",
         "no2Activity": "산업 활동",
         "reservoirLevels": "수위",
-        "aircraftEmergencies": "항공기 비상상황"
+        "aircraftEmergencies": "항공기 비상상황",
+        "radiationWatch": "방사선 감시",
+        "resilienceScore": "국가 회복력",
+        "sanctions": "국제 제재",
+        "miningSites": "광산 시설",
+        "processingPlants": "정제·가공 시설",
+        "commodityPorts": "원자재 항만",
+        "webcams": "실시간 웹캠",
+        "diseaseOutbreaks": "감염병 발생",
+        "storageFacilities": "전략 저장 시설",
+        "fuelShortages": "연료 부족 경보",
+        "liveTankers": "실시간 유조선"
       },
       "tooltip": {
         "earthquake": "지진",

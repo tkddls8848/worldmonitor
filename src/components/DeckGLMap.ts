@@ -143,6 +143,8 @@ import {
   getLayerExplanation,
   hasCuratedLayerExplanation,
   LAYER_REGISTRY,
+  MAP_LAYER_GROUPS,
+  MAP_LAYER_PRESETS,
   type MapVariant,
 } from '@/config/map-layer-definitions';
 import { layerExplanationLookup, renderLayerExplanationCard } from '@/utils/layer-explanation-card';
@@ -6256,13 +6258,66 @@ export class DeckGLMap {
     toggles.className = 'layer-toggles deckgl-layer-toggles';
 
     const layerDefs = getLayersForVariant((SITE_VARIANT || 'full') as MapVariant, 'deck');
-    const layerConfig = layerDefs.map(def => ({
-      key: def.key,
-      label: resolveLayerLabel(def, t),
-      icon: def.icon,
-      explainLabel: escapeHtml(`Explain ${resolveLayerLabel(def, t)} layer`),
-      hasExplanation: hasCuratedLayerExplanation(def.key),
-    }));
+    const isKo = (typeof document !== 'undefined' && document.documentElement.lang?.startsWith('ko'))
+      || t('components.deckgl.layersTitle') === '레이어';
+    const layerByKey = new Map(layerDefs.map(def => [def.key, def]));
+    const assigned = new Set<keyof MapLayers>();
+    const grouped: Array<{ id: string; title: string; items: typeof layerDefs }> = [];
+    for (const group of MAP_LAYER_GROUPS) {
+      const items = group.keys
+        .map(k => layerByKey.get(k))
+        .filter((d): d is (typeof layerDefs)[number] => Boolean(d));
+      if (items.length === 0) continue;
+      items.forEach(d => assigned.add(d.key));
+      grouped.push({
+        id: group.id,
+        title: isKo ? group.labelKo : group.labelEn,
+        items,
+      });
+    }
+    const remaining = layerDefs.filter(d => !assigned.has(d.key));
+    if (remaining.length > 0) {
+      grouped.push({
+        id: 'other',
+        title: isKo ? '기타 레이어' : 'Other Layers',
+        items: remaining,
+      });
+    }
+
+    const renderRow = (def: (typeof layerDefs)[number]): string => {
+      const label = escapeHtml(resolveLayerLabel(def, t));
+      const explainLabel = escapeHtml(`Explain ${resolveLayerLabel(def, t)} layer`);
+      const hasExplanation = hasCuratedLayerExplanation(def.key);
+      return `
+          <div class="layer-toggle-row" data-layer="${def.key}">
+            <label class="layer-toggle" data-layer="${def.key}">
+              <input type="checkbox" ${this.state.layers[def.key as keyof MapLayers] ? 'checked' : ''}>
+              <span class="toggle-icon">${def.icon}</span>
+              <span class="toggle-label">${label}</span>
+            </label>
+            <button type="button" class="layer-explain-btn${hasExplanation ? ' has-layer-explanation' : ''}" data-layer="${def.key}" aria-label="${explainLabel}">i</button>
+          </div>`;
+    };
+
+    const presetButtonsHtml = MAP_LAYER_PRESETS.map((preset) => {
+      const label = escapeHtml(isKo ? preset.labelKo : preset.labelEn);
+      return `<button type="button" class="layer-preset-btn" data-layer-preset="${preset.id}">${label}</button>`;
+    }).join('');
+
+    const groupsHtml = grouped.map((group, idx) => {
+      const activeCount = group.items.filter(d => this.state.layers[d.key]).length;
+      const openByDefault = idx === 0 || activeCount > 0;
+      return `
+        <details class="layer-group" data-layer-group="${group.id}" data-default-open="${openByDefault ? 'true' : 'false'}"${openByDefault ? ' open' : ''}>
+          <summary class="layer-group-summary">
+            <span class="layer-group-title">${escapeHtml(group.title)}</span>
+            <span class="layer-group-count${activeCount > 0 ? ' has-active' : ''}">${activeCount}/${group.items.length}</span>
+          </summary>
+          <div class="layer-group-rows">
+            ${group.items.map(renderRow).join('')}
+          </div>
+        </details>`;
+    }).join('');
 
     setTrustedHtml(toggles, trustedHtml(`
       <div class="toggle-header">
@@ -6270,23 +6325,46 @@ export class DeckGLMap {
         <button class="layer-help-btn" aria-label="${t('components.deckgl.layerGuide')}">?</button>
         <button class="toggle-collapse">&#9660;</button>
       </div>
+      <div class="layer-presets" role="group" aria-label="${escapeHtml(isKo ? '레이어 프리셋' : 'Layer presets')}">
+        ${presetButtonsHtml}
+      </div>
       <input type="text" class="layer-search" placeholder="${t('components.deckgl.layerSearch')}" autocomplete="off" spellcheck="false" />
       <div class="toggle-list" style="max-height: 32vh; overflow-y: auto; scrollbar-width: thin;">
-        ${layerConfig.map(({ key, label, icon, explainLabel, hasExplanation }) => {
-          return `
-          <div class="layer-toggle-row" data-layer="${key}">
-            <label class="layer-toggle" data-layer="${key}">
-              <input type="checkbox" ${this.state.layers[key as keyof MapLayers] ? 'checked' : ''}>
-              <span class="toggle-icon">${icon}</span>
-              <span class="toggle-label">${label}</span>
-            </label>
-            <button type="button" class="layer-explain-btn${hasExplanation ? ' has-layer-explanation' : ''}" data-layer="${key}" aria-label="${explainLabel}">i</button>
-          </div>`;
-        }).join('')}
+        ${groupsHtml}
       </div>
     `, "legacy direct innerHTML migration"));
 
     this.container.appendChild(toggles);
+
+    // Bind preset chips
+    toggles.querySelectorAll<HTMLButtonElement>('.layer-preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const presetId = btn.dataset.layerPreset;
+        const preset = MAP_LAYER_PRESETS.find(p => p.id === presetId);
+        if (!preset) return;
+        const allowed = new Set(layerDefs.map(d => d.key));
+        const targetOn = new Set(preset.layers.filter(k => allowed.has(k)));
+        for (const def of layerDefs) {
+          const nextVal = targetOn.has(def.key);
+          if (Boolean(this.state.layers[def.key]) !== nextVal) {
+            this.state.layers[def.key] = nextVal;
+            const input = toggles.querySelector<HTMLInputElement>(`.layer-toggle[data-layer="${def.key}"] input`);
+            if (input) input.checked = nextVal;
+            this.onLayerChange?.(def.key, nextVal, 'user');
+          }
+        }
+        if (!this.state.layers.military) this.clearFlightTrails();
+        this.manageAircraftTimer(this.state.layers.flights);
+        if (this.state.layers.bases) this.debouncedFetchBases();
+        if (this.state.layers.weather) this.startWeatherRadar();
+        else this.stopWeatherRadar();
+        if (this.state.layers.cyberThreats && !this.aptGroupsLoaded) this.loadAptGroups();
+        this.render();
+        this.updateLegend();
+        this.enforceLayerLimit({ notify: false });
+        this.updateLayerGroupCounts();
+      });
+    });
 
     // Bind toggle events
     toggles.querySelectorAll('.layer-toggle input').forEach(input => {
@@ -6317,6 +6395,7 @@ export class DeckGLMap {
           this.updateLegend();
           this.onLayerChange?.(layer, enabled, 'user');
           this.enforceLayerLimit();
+          this.updateLayerGroupCounts();
         }
       });
     });
@@ -6349,6 +6428,29 @@ export class DeckGLMap {
     }
     bindLayerSearch(toggles);
     this.controlDisclosureCleanups.push(bindMapControlDisclosure(this.container, toggles, 'layers', t('components.deckgl.layersTitle')));
+    this.updateLayerGroupCounts();
+  }
+
+  private updateLayerGroupCounts(): void {
+    const toggles = this.container.querySelector('.deckgl-layer-toggles');
+    if (!toggles) return;
+    let totalOn = 0;
+    let totalAll = 0;
+    toggles.querySelectorAll<HTMLElement>('.layer-group').forEach(group => {
+      const inputs = Array.from(group.querySelectorAll<HTMLInputElement>('.layer-toggle:not([data-layer-hidden]) input'));
+      const on = inputs.filter(i => i.checked).length;
+      totalOn += on;
+      totalAll += inputs.length;
+      const badge = group.querySelector('.layer-group-count');
+      if (badge) {
+        badge.textContent = `${on}/${inputs.length}`;
+        badge.classList.toggle('has-active', on > 0);
+      }
+    });
+    const disclosureBtn = toggles.querySelector<HTMLButtonElement>('.map-control-disclosure');
+    if (disclosureBtn && totalAll > 0) {
+      disclosureBtn.textContent = `${t('components.deckgl.layersTitle')} ${totalOn}/${totalAll}`;
+    }
   }
 
   private async showLayerExplanation(layer: keyof MapLayers): Promise<void> {
@@ -6984,6 +7086,7 @@ export class DeckGLMap {
       if (toggle) toggle.checked = value;
     });
     this.enforceLayerLimit({ notify: false });
+    this.updateLayerGroupCounts();
   }
 
   public getState(): DeckMapState {

@@ -25,14 +25,20 @@ function mount(kind: 'layers' | 'legend' = 'layers') {
 afterEach(() => { localStorage.clear(); document.body.innerHTML = ''; width = 562; height = 600; vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 describe('map control disclosure', () => {
-  it('uses the map width and follows resize until the visitor chooses', () => {
+  it('starts collapsed by default across map sizes until the visitor opens it', () => {
     const { panel, button, cleanup } = mount();
     expect(panel.classList.contains('map-control-collapsed')).toBe(true);
     expect(button.getAttribute('aria-expanded')).toBe('false');
-    width = 700; resize();
+    width = 900; resize();
+    expect(panel.classList.contains('map-control-compact')).toBe(false);
+    expect(panel.classList.contains('map-control-collapsed')).toBe(true);
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    button.click();
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+    expect(panel.classList.contains('map-control-collapsed')).toBe(false);
+    width = 1200; resize();
     expect(button.getAttribute('aria-expanded')).toBe('true');
     button.click();
-    width = 900; resize();
     expect(button.getAttribute('aria-expanded')).toBe('false');
     cleanup();
     expect(disconnect).toHaveBeenCalled();
@@ -44,26 +50,29 @@ describe('map control disclosure', () => {
     expect(mount().button.getAttribute('aria-expanded')).toBe('true');
     expect(mount('legend').button.getAttribute('aria-expanded')).toBe('false');
   });
-  it('collapses short stacked maps until the visitor chooses', () => {
+  it('marks short stacked maps compact and preserves explicit user open choice', () => {
     width = 938;
     height = 307;
     const { panel, button } = mount();
     expect(panel.classList.contains('map-control-compact')).toBe(true);
     expect(button.getAttribute('aria-expanded')).toBe('false');
     height = 400; resize();
-    expect(button.getAttribute('aria-expanded')).toBe('true');
+    expect(panel.classList.contains('map-control-compact')).toBe(false);
+    expect(button.getAttribute('aria-expanded')).toBe('false');
     height = 307; resize();
     button.click();
     height = 300; resize();
     expect(button.getAttribute('aria-expanded')).toBe('true');
   });
-  it('waits for a hidden map to acquire a width', () => {
+  it('updates compact state cleanly when a hidden map acquires a width', () => {
     width = 0;
-    const { button } = mount();
+    const { panel, button } = mount();
+    expect(panel.classList.contains('map-control-compact')).toBe(true);
     width = 900; resize();
-    expect(button.getAttribute('aria-expanded')).toBe('true');
-    width = 562; resize();
+    expect(panel.classList.contains('map-control-compact')).toBe(false);
     expect(button.getAttribute('aria-expanded')).toBe('false');
+    width = 562; resize();
+    expect(panel.classList.contains('map-control-compact')).toBe(true);
   });
   it('remains usable when storage is unavailable', () => {
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('blocked'); });

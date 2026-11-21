@@ -27,7 +27,9 @@ export function bindMapControlDisclosure(
   const render = (): void => {
     // Stacked laptop layouts can be wide but too short for the open controls.
     const compact = container.clientWidth < 700 || container.clientHeight < 400;
-    expanded = choice ?? !compact;
+    // Map-first HUD: layers and legend stay collapsed by default until the user
+    // explicitly opens them, so the map canvas stays unobstructed on first paint.
+    expanded = choice ?? false;
     panel.classList.toggle('map-control-compact', compact);
     panel.classList.toggle('map-control-collapsed', !expanded);
     button.setAttribute('aria-expanded', String(expanded));
