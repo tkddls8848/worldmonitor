@@ -496,6 +496,7 @@ function sebufApiPlugin(): Plugin {
       thermalServerMod, thermalHandlerMod,
       webcamServerMod, webcamHandlerMod,
       orbitalServerMod, orbitalHandlerMod,
+      worldOverviewServerMod, worldOverviewHandlerMod,
     ] = await Promise.all([
         import('./server/router'),
         import('./server/cors'),
@@ -574,6 +575,8 @@ function sebufApiPlugin(): Plugin {
         import('./server/worldmonitor/webcam/v1/handler'),
         import('./src/generated/server/worldmonitor/orbital/v1/service_server'),
         import('./server/worldmonitor/orbital/v1/handler'),
+        import('./src/generated/server/worldmonitor/world_overview/v1/service_server'),
+        import('./server/worldmonitor/world-overview/v1/handler'),
       ]);
 
     const serverOptions = {
@@ -618,6 +621,7 @@ function sebufApiPlugin(): Plugin {
       ...thermalServerMod.createThermalServiceRoutes(thermalHandlerMod.thermalHandler, serverOptions),
       ...webcamServerMod.createWebcamServiceRoutes(webcamHandlerMod.webcamHandler, serverOptions),
       ...orbitalServerMod.createOrbitalServiceRoutes(orbitalHandlerMod.orbitalHandler, serverOptions),
+      ...worldOverviewServerMod.createWorldOverviewServiceRoutes(worldOverviewHandlerMod.worldOverviewHandler, serverOptions),
     ];
     cachedCorsMod = corsMod;
     return routerMod.createRouter(allRoutes);
