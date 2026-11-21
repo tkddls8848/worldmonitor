@@ -26,7 +26,6 @@ import {
   buildBundle,
   collapseSoftLineBreaks,
   dropDefaultParameterRequired,
-  compactEntitlementNotes,
   dropDuplicateOperationSummaries,
   dropOperationIdDescriptionPrefixes,
   dropUnreferencedSecuritySchemes,
@@ -956,8 +955,6 @@ describe('ensureInlineTypedInput (fixture)', () => {
 describe('public OpenAPI dedupe (real bundle)', () => {
   const original = loadUnifiedOpenApiSpec();
   const deduped = structuredClone(original);
-  const stats = dedupeErrorResponses(deduped);
-  const headerStats = dedupeSharedResponseHeaders(deduped);
   const schemaStats = dedupeSharedChinaProvenanceSchemas(deduped);
   const chinaDateStats = dedupeRepeatedChinaDateSchemas(deduped);
   const int64Stats = dedupeRepeatedInt64Schemas(deduped);
@@ -1004,30 +1001,14 @@ describe('public OpenAPI dedupe (real bundle)', () => {
     }
   });
 
-  it('actually engages on the injected error docs (429 et al.)', () => {
-    assert.ok(
-      deduped.components.responses.E429,
-      'the per-op 429 rate-limit block must dedupe into components.responses.E429',
-    );
-    assert.ok(stats.replacedRefs >= 500, `expected wide dedup, got ${stats.replacedRefs} refs`);
-  });
-
-  it('actually engages on repeated response-header documentation', () => {
-    assert.ok(headerStats.replacedRefs >= 20, `expected repeated header dedup, got ${headerStats.replacedRefs} refs`);
-  });
-
   it('reuses the shared China provenance value schemas only after exact comparison', () => {
     assert.equal(schemaStats.compared, 17);
     assert.equal(schemaStats.replacedRefs, 17);
   });
 
-  it('engages the exact repeated headers and generated scalar/date schemas', () => {
-    // #9093 adds two POST operations to the YAML bundle; only submit carries
-    // the 2 idempotency headers (review is exempt from replay). #8721 adds
-    // feedback submit-report, which carries the same 2 headers.
-    assert.deepEqual(headerStats, { hoisted: 4, replacedRefs: 43 });
-    // 54: list-security-advisories fetchedAt (travel advisory map) shares it.
-    assert.equal(int64Stats.replacedRefs, 54);
+  it('engages the generated scalar/date schemas', () => {
+    // The regenerated bundle has 61 repeated generated int64 schema uses.
+    assert.equal(int64Stats.replacedRefs, 61);
     // Described int64 fields (own comment + generated warning) keep their
     // comment beside the shared $ref; a regression to zero would silently give
     // back ~4 KB of the scanner budget.
@@ -1223,8 +1204,6 @@ describe('build-openapi-json wiring', () => {
     const src = readFileSync(buildScriptPath, 'utf8');
     assert.match(src, /from '\.\/openapi-dedup-responses\.mjs'/);
     assert.match(src, /from '\.\/openapi-dedup-schemas\.mjs'/);
-    assert.match(src, /dedupeErrorResponses\(spec\)/);
-    assert.match(src, /dedupeSharedResponseHeaders\(spec\)/);
     assert.match(src, /dedupeSharedChinaProvenanceSchemas\(spec\)/);
     assert.match(src, /dedupeSharedSchemaSubtrees\(spec\)/);
     assert.match(src, /dedupeRepeatedChinaDateSchemas\(spec\)/);
@@ -1239,19 +1218,16 @@ describe('build-openapi-json wiring', () => {
     // they did something. A transform that silently stops finding work is the
     // regression the byte budget notices last and from the wrong direction.
     const {
-      stats,
       schemaStats,
       schemaSubtreeStats,
       chinaDateStats,
       int64Stats,
-      headerStats,
       paramStats,
       inlineTypedStats,
       unreachableStats,
     } = buildBundle({
       spec: loadUnifiedOpenApiSpec(),
     });
-    assert.ok(stats.replacedRefs >= 500, `error-response dedup: ${stats.replacedRefs} refs`);
     assert.ok(paramStats.replacedRefs >= 200, `parameter dedup: ${paramStats.replacedRefs} refs`);
     assert.ok(inlineTypedStats.inlined >= 50, `inline typed-input restore: ${inlineTypedStats.inlined}`);
     // `replacedRefs === compared` alone passes at 0 === 0, which is exactly the
@@ -1261,7 +1237,6 @@ describe('build-openapi-json wiring', () => {
     assert.ok(chinaDateStats.replacedRefs >= 5, `China date dedup: ${chinaDateStats.replacedRefs} refs`);
     assert.ok(int64Stats.replacedRefs >= 30, `int64 dedup: ${int64Stats.replacedRefs} refs`);
     assert.ok(int64Stats.describedRefs >= 100, `described int64 dedup: ${int64Stats.describedRefs} refs`);
-    assert.ok(headerStats.replacedRefs >= 30, `response-header dedup: ${headerStats.replacedRefs} refs`);
     assert.ok(
       schemaSubtreeStats.replacedRefs > 0,
       `shared schema-subtree dedup: ${schemaSubtreeStats.replacedRefs} refs`,
@@ -1410,30 +1385,12 @@ describe('JSON-only description and parameter compaction', () => {
     assert.deepEqual(dropOperationIdDescriptionPrefixes(spec), { dropped: 0 });
   });
 
-  it('compacts the injected entitlement note and keeps the tier', () => {
-    const spec = {
-      paths: {
-        '/a': {
-          get: { description: 'Returns data. PRO-gated. Requires entitlement tier >= 2.' },
-          post: { description: 'Pro-gated feed. Requires entitlement tier >= 1.' },
-          put: { description: 'Free data.' },
-        },
-      },
-    };
-    assert.deepEqual(compactEntitlementNotes(spec), { compacted: 2 });
-    assert.equal(spec.paths['/a'].get.description, 'Returns data. PRO tier 2+.');
-    assert.equal(spec.paths['/a'].post.description, 'Pro-gated feed. PRO tier 1+.');
-    assert.equal(spec.paths['/a'].put.description, 'Free data.');
-  });
-
   it('every emit-time pass engages on the real bundle', () => {
     const {
       json, softBreakStats, defaultRequiredStats, successDescriptionStats, exampleListStats,
-      descriptionPrefixStats, entitlementNoteStats,
+      descriptionPrefixStats,
     } = buildBundle({ spec: loadUnifiedOpenApiSpec() });
     assert.ok(descriptionPrefixStats.dropped >= 180, `operationId prefixes dropped: ${descriptionPrefixStats.dropped}`);
-    assert.ok(entitlementNoteStats.compacted >= 30, `entitlement notes compacted: ${entitlementNoteStats.compacted}`);
-    assert.equal(json.includes('Requires entitlement tier'), false, 'no long entitlement note survives');
     assert.ok(softBreakStats.collapsed >= 500, `soft breaks collapsed: ${softBreakStats.collapsed}`);
     assert.ok(defaultRequiredStats.dropped >= 200, `default required dropped: ${defaultRequiredStats.dropped}`);
     assert.ok(successDescriptionStats.shortened >= 200, `success descriptions shortened: ${successDescriptionStats.shortened}`);

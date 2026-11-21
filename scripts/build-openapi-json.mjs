@@ -51,7 +51,6 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 import {
-  dedupeErrorResponses,
   dedupeSharedParameters,
   ensureInlineTypedInput,
 } from './openapi-dedup-responses.mjs';
@@ -59,7 +58,6 @@ import {
   dedupeRepeatedChinaDateSchemas,
   dedupeRepeatedInt64Schemas,
   dedupeSharedChinaProvenanceSchemas,
-  dedupeSharedResponseHeaders,
   dedupeSharedSchemaSubtrees,
   dedupeSharedSubtreeComponents,
 } from './openapi-dedup-schemas.mjs';
@@ -223,30 +221,6 @@ export function dropOperationIdDescriptionPrefixes(spec) {
       if (!/^\S/.test(rest)) continue;
       operation.description = rest[0].toUpperCase() + rest.slice(1);
       stats.dropped += 1;
-    }
-  }
-  return stats;
-}
-
-/**
- * openapi-inject-security.mjs appends "PRO-gated. Requires entitlement tier >= N."
- * to every entitlement-gated operation, and the per-spec contract tests pin that
- * wording in the YAML. The JSON states the same gate as "PRO tier N+."; the 403
- * response still describes the refusal in full. JSON only.
- *
- * Mutates `spec` in place; returns { compacted }.
- */
-const ENTITLEMENT_NOTE = /(?:PRO-gated\. )?Requires entitlement tier >= (\d+)\./g;
-
-export function compactEntitlementNotes(spec) {
-  const stats = { compacted: 0 };
-  for (const pathItem of Object.values(spec.paths ?? {})) {
-    for (const [method, operation] of Object.entries(pathItem ?? {})) {
-      if (!HTTP_METHODS.has(method) || typeof operation?.description !== 'string') continue;
-      operation.description = operation.description.replace(ENTITLEMENT_NOTE, (_, tier) => {
-        stats.compacted += 1;
-        return `PRO tier ${tier}+.`;
-      });
     }
   }
   return stats;
@@ -423,8 +397,6 @@ export function buildBundle({ spec: provided } = {}) {
 
   const excludedStats = excludeScannerBundleOperations(spec);
   dropUnreferencedSecuritySchemes(spec);
-  const stats = dedupeErrorResponses(spec);
-  const headerStats = dedupeSharedResponseHeaders(spec);
   const schemaStats = dedupeSharedChinaProvenanceSchemas(spec);
   // The named passes run before the generic byte-identical sweep. Reversing them
   // lets the generic pass absorb the int64/China-date shapes into anonymous
@@ -462,7 +434,6 @@ export function buildBundle({ spec: provided } = {}) {
     const rest = schema.description.slice(prefix.length);
     if (/^\S/.test(rest)) schema.description = rest[0].toUpperCase() + rest.slice(1);
   }
-  const entitlementNoteStats = compactEntitlementNotes(spec);
   const exampleListStats = trimResponseExampleLists(spec);
 
   // Minified: this artifact is machine-consumed (scanners/agents), and the
@@ -473,8 +444,6 @@ export function buildBundle({ spec: provided } = {}) {
     spec,
     json,
     bytes: Buffer.byteLength(json, 'utf8'),
-    stats,
-    headerStats,
     schemaStats,
     schemaSubtreeStats,
     sharedSubtreeStats,
@@ -488,7 +457,6 @@ export function buildBundle({ spec: provided } = {}) {
     successDescriptionStats,
     duplicateSummaryStats,
     descriptionPrefixStats,
-    entitlementNoteStats,
     exampleListStats,
     excludedStats,
   };
@@ -500,13 +468,11 @@ function main() {
     spec,
     json,
     bytes,
-    stats,
     schemaStats,
     schemaSubtreeStats,
     sharedSubtreeStats,
     chinaDateStats,
     int64Stats,
-    headerStats,
     paramStats,
     inlineTypedStats,
     unreachableStats,
@@ -516,8 +482,7 @@ function main() {
   const pathCount = spec.paths ? Object.keys(spec.paths).length : 0;
   console.log(
     `build-openapi-json: wrote ${jsonPath} (OpenAPI ${spec.openapi}, ${pathCount} paths, ` +
-      `${bytes} bytes; hoisted ${stats.hoisted} shared error responses into ${stats.replacedRefs} $refs; ` +
-      `hoisted ${headerStats.hoisted} shared response headers into ${headerStats.replacedRefs} $refs; ` +
+      `${bytes} bytes; ` +
       `hoisted ${paramStats.hoisted} fleet-wide parameters into ${paramStats.replacedRefs} $refs; ` +
       `reused ${int64Stats.replacedRefs} generated int64 schemas (+${int64Stats.describedRefs} described int64 fields); ` +
       `restored ${inlineTypedStats.inlined} inline typed parameters for JSON-only scanners; ` +

@@ -388,7 +388,6 @@ export function unreferencedComponentSchemas(spec) {
 function transformEngagement(bundle) {
   const engaged = (n) => Number.isFinite(n) && n > 0;
   return {
-    errorResponses: { ...bundle.stats, engaged: engaged(bundle.stats?.replacedRefs) },
     chinaProvenanceSchemas: {
       ...bundle.schemaStats,
       engaged: engaged(bundle.schemaStats?.replacedRefs),
@@ -405,10 +404,6 @@ function transformEngagement(bundle) {
       ...bundle.int64Stats,
       engaged: engaged(bundle.int64Stats?.replacedRefs),
     },
-    responseHeaders: {
-      ...bundle.headerStats,
-      engaged: engaged(bundle.headerStats?.replacedRefs),
-    },
     sharedParameters: { ...bundle.paramStats, engaged: engaged(bundle.paramStats?.replacedRefs) },
     unreachableSchemas: {
       ...bundle.unreachableStats,
@@ -420,9 +415,9 @@ function transformEngagement(bundle) {
 /**
  * Turn a built bundle into the capacity report.
  *
- * @param {{ spec: object, bytes: number, stats: object, schemaStats: object,
+ * @param {{ spec: object, bytes: number, schemaStats: object,
  *   schemaSubtreeStats: object,
- *   chinaDateStats: object, int64Stats: object, headerStats: object,
+ *   chinaDateStats: object, int64Stats: object,
  *   paramStats: object, unreachableStats: object }} bundle
  */
 export function buildCapacityReport(bundle, {
