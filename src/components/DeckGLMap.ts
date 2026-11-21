@@ -223,7 +223,6 @@ type GlyphAccessor<T> = (d: unknown, info: unknown) => T;
 
 export type TimeRange = '1h' | '6h' | '24h' | '48h' | '7d' | 'all';
 export type DeckMapView = 'global' | 'america' | 'mena' | 'eu' | 'asia' | 'latam' | 'africa' | 'oceania';
-type MapInteractionMode = 'flat' | '3d';
 
 export interface CountryClickPayload {
   lat: number;
@@ -317,9 +316,6 @@ const DECK_FRAME_WAKE_EVENTS = ['render', 'movestart', 'mousemove', 'mousedown',
 type ViewportMovementEventData = {
   worldMonitorViewportGeneration?: unknown;
 };
-
-const MAP_INTERACTION_MODE: MapInteractionMode =
-  import.meta.env.VITE_MAP_INTERACTION_MODE === 'flat' ? 'flat' : '3d';
 
 const HAPPY_DARK_STYLE = '/map-styles/happy-dark.json';
 const HAPPY_LIGHT_STYLE = '/map-styles/happy-light.json';
@@ -1274,14 +1270,11 @@ export class DeckGLMap {
       attributionControl: false,
       interactive: true,
       canvasContextAttributes: { powerPreference: 'high-performance' },
-      ...(MAP_INTERACTION_MODE === 'flat'
-        ? {
-          maxPitch: 0,
-          pitchWithRotate: false,
-          dragRotate: false,
-          touchPitch: false,
-        }
-        : {}),
+      // Flat map only: no tilt, no rotation.
+      maxPitch: 0,
+      pitchWithRotate: false,
+      dragRotate: false,
+      touchPitch: false,
     });
 
     const reportFatalBasemapFailure = (error: unknown, center = this.getCenter()): void => {
@@ -1345,14 +1338,11 @@ export class DeckGLMap {
           attributionControl: false,
           interactive: true,
           canvasContextAttributes: { powerPreference: 'high-performance' },
-          ...(MAP_INTERACTION_MODE === 'flat'
-            ? {
-              maxPitch: 0,
-              pitchWithRotate: false,
-              dragRotate: false,
-              touchPitch: false,
-            }
-            : {}),
+          // Flat map only: no tilt, no rotation.
+          maxPitch: 0,
+          pitchWithRotate: false,
+          dragRotate: false,
+          touchPitch: false,
         });
       } catch (error) {
         // MapLibre throws GPUInitializationError synchronously when WebGL2 is

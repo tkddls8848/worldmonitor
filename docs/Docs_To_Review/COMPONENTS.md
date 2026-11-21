@@ -209,7 +209,6 @@ const map = new DeckGLMap(container, initialState);
 | `TimeRange` | `{ start: number; end: number }` epoch-ms window. |
 | `DeckMapView` | 8 named camera presets. |
 | `CountryClickPayload` | `{ iso: string; name: string; lngLat: [number, number] }` |
-| `MapInteractionMode` | `'flat' \| '3d'` — controlled by `MAP_INTERACTION_MODE` env. |
 
 #### Rendering Stack
 
@@ -271,8 +270,6 @@ The map embeds or lazily loads over 20 static datasets:
 - **`SITE_VARIANT`** determines which static infrastructure layers are
   loaded (e.g. `tech` loads `AI_DATA_CENTERS`, `STARTUP_HUBS`,
   `CLOUD_REGIONS`; `finance` loads `STOCK_EXCHANGES`, `FINANCIAL_CENTERS`).
-- **`MAP_INTERACTION_MODE`** env var toggles flat (2-D pitch-locked) vs 3-D
-  (free pitch/bearing).
 - **Theme**: basemap switches between CARTO Dark Matter and CARTO Positron
   via `getOverlayColors()` which provides a colour palette per theme.
 

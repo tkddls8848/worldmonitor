@@ -53,6 +53,23 @@ function rendererStub(kind: 'deck' | 'svg') {
   };
 }
 
+const mapOptions = vi.hoisted(() => [] as Array<Record<string, unknown>>);
+const mapLibreFatal = vi.hoisted(() => ({ error: new Error('stop after the options are captured') }));
+
+vi.mock('maplibre-gl', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('maplibre-gl')>();
+  return {
+    ...actual,
+    setWorkerUrl: () => {},
+    Map: class {
+      constructor(options: Record<string, unknown>) {
+        mapOptions.push(options);
+        throw mapLibreFatal.error;
+      }
+    },
+  };
+});
+
 vi.mock('@/components/DeckGLMap', () => ({ DeckGLMap: rendererStub('deck') }));
 vi.mock('@/components/Map', () => ({ MapComponent: rendererStub('svg') }));
 
@@ -247,5 +264,34 @@ describe('map without the 3D globe', () => {
     expect('loadSatellites' in DataLoaderManager.prototype).toBe(false);
     expect(dataLoaderSource).not.toMatch(/startPropagationLoop|propagatePositions|fetchSatelliteTLEs/);
     loader.stopLayerActivity('satellites');
+  });
+});
+
+describe('flat map interaction', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it.each(['3d', 'flat', ''])('locks pitch and rotation whatever VITE_MAP_INTERACTION_MODE is (%j)', async (mode) => {
+    vi.stubEnv('VITE_MAP_INTERACTION_MODE', mode);
+    const { DeckGLMap } = await vi.importActual<typeof import('@/components/DeckGLMap')>('@/components/DeckGLMap');
+    const basemap = document.createElement('div');
+    basemap.id = 'deckgl-basemap';
+    document.body.append(basemap);
+    const fatal = mapLibreFatal.error;
+    mapOptions.length = 0;
+    const self = {
+      destroyed: false,
+      mapLibreWorkerUrl: '',
+      state: { view: 'global', zoom: 2 },
+      container: document.createElement('div'),
+      resolveInitialBasemapStyle: async () => ({ mapTheme: 'dark', style: 'https://example.test/style.json' }),
+    };
+    await expect(
+      (DeckGLMap.prototype as unknown as { initMapLibre(this: unknown): Promise<void> }).initMapLibre.call(self),
+    ).rejects.toBe(fatal);
+    basemap.remove();
+    expect(mapOptions).toHaveLength(1);
+    expect(mapOptions[0]).toMatchObject({ maxPitch: 0, dragRotate: false, pitchWithRotate: false });
   });
 });

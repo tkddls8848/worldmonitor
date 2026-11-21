@@ -41,7 +41,6 @@ async function createHarness({ failReplacement = true, scheduleMicrotask = queue
     VIEW_PRESETS: { global: { latitude: 0, longitude: 0, zoom: 2 } },
     isHappyVariant: false,
     document: { getElementById: () => ({}) },
-    MAP_INTERACTION_MODE: 'flat',
     isLightMapTheme: () => false,
     FALLBACK_DARK_STYLE: 'fallback',
     FALLBACK_LIGHT_STYLE: 'fallback',
