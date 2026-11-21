@@ -321,8 +321,6 @@ const BOOTSTRAP_KEYS = {
   ucdpEventsBootstrap: 'conflict:ucdp-events-bootstrap:v1',
   weatherAlerts:     'weather:alerts:v1',
   canadaRoads:       'infra:ontario-511:v1',
-  albertaRoads:      'infra:alberta-511:v1',
-  manitobaRoads:     'infra:manitoba-511:v1',
   canadaAlerts:      'alerts:canada:v1',
   spending:          'economic:spending:v1',
   techEvents:        'research:tech-events-bootstrap:v1',
@@ -844,10 +842,10 @@ const STANDALONE_KEYS = {
   // Seeded and health-monitored; no transit panel yet (#6623).
   ttcAlerts: 'transit:ttc:alerts:v1',
   // Official Toronto Fire Services live CAD (#6682). Own key; not folded into
-  // canadaAlerts / canadaRoads / torontoRoads. No map panel yet.
+  // canadaAlerts / canadaRoads. No map panel yet.
   torontoTfs: 'safety:toronto-tfs:v1',
   // Official TPS public-safety calls for service (#6682). Own key; not folded
-  // into canadaAlerts / canadaRoads / torontoRoads. No map panel yet.
+  // into canadaAlerts / canadaRoads. No map panel yet.
   torontoTps: 'safety:toronto-tps:v1',
 };
 
@@ -1342,26 +1340,6 @@ const SEED_META = {
       mode: 'expiring-ack',
       fromKey: null,
       issue: 6608,
-      status: 'EMPTY',
-    },
-  },
-  albertaRoads:     {
-    key: 'seed-meta:infra:alberta-511',
-    maxStaleMin: 45, // same seed-provincial-511 cron */15; 45 = 3× interval
-    cutover: {
-      mode: 'expiring-ack',
-      fromKey: null,
-      issue: 6612,
-      status: 'EMPTY',
-    },
-  },
-  manitobaRoads:    {
-    key: 'seed-meta:infra:manitoba-511',
-    maxStaleMin: 45, // same seed-provincial-511 cron */15; 45 = 3× interval
-    cutover: {
-      mode: 'expiring-ack',
-      fromKey: null,
-      issue: 6622,
       status: 'EMPTY',
     },
   },
@@ -3469,7 +3447,7 @@ function applyStaleContentGrace(checks, graceEvidenceByName, deadlines, now) {
 }
 
 const EMPTY_DATA_OK_KEYS = new Set([
-  'notamClosures', 'faaDelays', 'intlDelays', 'gpsjam', 'positiveGeoEvents', 'weatherAlerts', 'imdCycloneMarine', 'canadaRoads', 'albertaRoads', 'manitobaRoads', 'canadaAlerts', 'canadaAlertsAbSource', 'canadaAlertsBcSource', 'canadaAlertsSkSource',
+  'notamClosures', 'faaDelays', 'intlDelays', 'gpsjam', 'positiveGeoEvents', 'weatherAlerts', 'imdCycloneMarine', 'canadaRoads', 'canadaAlerts', 'canadaAlertsAbSource', 'canadaAlertsBcSource', 'canadaAlertsSkSource',
   'earningsCalendar', 'econCalendar', 'cotPositioning',
   'usniFleet', // usniFleetStale covers the fallback; relay outages → WARN not CRIT
   'newsThreatSummary', // a quiet classify cycle writes `byCountry: {}` (0 records); MISSING_DATA_IS_FAILURE_KEYS makes a payload missing beside fresh seed-meta critical (expiry after the 2h TTL reads STALE_SEED, since seed-meta is stale by then)
@@ -3522,11 +3500,7 @@ const MISSING_DATA_IS_FAILURE_KEYS = new Set([
   // so they never refresh metadata alone. Without this, an expired or evicted
   // canonical key alongside a still-refreshing seed-meta classified OK: the map
   // layer goes blank and nothing pages. Same reasoning as `outages`.
-  // albertaRoads and manitobaRoads are written by the same seeder on the same
-  // publish path.
   'canadaRoads',
-  'albertaRoads',
-  'manitobaRoads',
   // Same contract, and the highest-stakes member of it: the provincial union
   // writes {alerts: []} when all configured sources are quiet. Reading
   // OK while an EMERGENCY ALERT payload has vanished is the worst failure in this set.
