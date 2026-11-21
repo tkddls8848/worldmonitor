@@ -1,8 +1,8 @@
 const DEFAULT_CHUNK_SIZE_WARNING_LIMIT_KB = 1200;
 
-const CHUNK_SIZE_WARNING_EXCEPTIONS_KB = new Map([
-  ['GlobeMap', 2000],
-]);
+// Per-chunk exceptions to the default limit. Empty since the 3D globe chunk
+// (GlobeMap, ~1.8 MB) was removed; add an entry only with a measured reason.
+const CHUNK_SIZE_WARNING_EXCEPTIONS_KB = new Map<string, number>();
 
 const EXPECTED_EMPTY_RPC_CLIENT_CHUNK = 'rpc-client-cyber-v1';
 

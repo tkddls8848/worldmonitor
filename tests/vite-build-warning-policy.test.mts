@@ -20,20 +20,15 @@ describe('Vite build warning policy', () => {
     );
   });
 
-  it('allows only GlobeMap to use the 2000 kB exception', () => {
-    assert.equal(chunkSizeWarningLimitKb('GlobeMap'), 2000);
-    assert.equal(getChunkSizeWarning({
-      name: 'GlobeMap',
-      fileName: 'assets/GlobeMap-hash.js',
-      sizeBytes: 1_900_000,
-    }), null);
+  it('grants no chunk a size exception now that the GlobeMap chunk is gone', () => {
+    assert.equal(chunkSizeWarningLimitKb('GlobeMap'), 1200);
     assert.match(
       getChunkSizeWarning({
         name: 'GlobeMap',
         fileName: 'assets/GlobeMap-hash.js',
-        sizeBytes: 2_100_000,
+        sizeBytes: 1_900_000,
       }) ?? '',
-      /budget is 2000 kB/,
+      /budget is 1200 kB/,
     );
   });
 

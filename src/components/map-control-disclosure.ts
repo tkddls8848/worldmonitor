@@ -1,6 +1,6 @@
 import { safeStorageGet, safeStorageSet } from '@/utils/safe-storage';
 
-/** Shared by the SVG, WebGL and globe pickers. Explicit choices win over resize defaults. */
+/** Shared by the SVG and WebGL pickers. Explicit choices win over resize defaults. */
 export function bindMapControlDisclosure(
   container: HTMLElement,
   panel: HTMLElement,

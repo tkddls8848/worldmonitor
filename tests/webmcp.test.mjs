@@ -883,7 +883,7 @@ describe('webmcp.ts: current API contract', () => {
       'energy',
       'happy',
     ]);
-    assert.deepEqual(list.inputSchema.properties.renderer.enum, ['2d', '3d']);
+    assert.deepEqual(list.inputSchema.properties.renderer.enum, ['2d']);
     assert.deepEqual(list.inputSchema.properties.state.enum, ['enabled', 'available']);
     assert.equal(list.inputSchema.properties.cursor.pattern, DASHBOARD_LAYER_ACTION_TARGET_ID_PATTERN);
     assert.equal(list.inputSchema.properties.limit.minimum, 1);
@@ -929,8 +929,9 @@ describe('webmcp.ts: current API contract', () => {
       ok: false,
       status: 'invalid',
       reason: 'invalid_renderer',
-      message: 'renderer must be 2d or 3d.',
+      message: 'renderer must be 2d.',
     });
+    assert.equal((await list.execute({ renderer: '3d' })).reason, 'invalid_renderer');
     assert.deepEqual(await list.execute({ cursor: 'not-in-this-page' }), {
       ok: false,
       status: 'invalid',

@@ -12,7 +12,6 @@ vi.mock('@/services/i18n', async (importOriginal) => ({
 
 import { MapComponent } from '@/components/Map';
 import { DeckGLMap } from '@/components/DeckGLMap';
-import { GlobeMap } from '@/components/GlobeMap';
 
 type ExplanationMap = {
   container: HTMLElement;
@@ -43,7 +42,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-for (const [name, Component] of Object.entries({ SVG: MapComponent, DeckGL: DeckGLMap, Globe: GlobeMap })) {
+for (const [name, Component] of Object.entries({ SVG: MapComponent, DeckGL: DeckGLMap })) {
   describe(`${name} explanation translation loading`, () => {
     function createMap(): ExplanationMap {
       const map = Object.create(Component.prototype) as ExplanationMap;

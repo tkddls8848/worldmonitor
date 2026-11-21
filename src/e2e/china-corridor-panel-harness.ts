@@ -17,7 +17,7 @@ declare global {
     __chinaCorridorPanelHarness?: {
       selectedCorridorId: string | null;
       rendererSupportsOverlay: boolean | null;
-      switchRenderer: (renderer: 'deck' | 'globe' | 'svg') => void;
+      switchRenderer: (renderer: 'deck' | 'svg') => void;
       ready: boolean;
     };
   }
@@ -91,8 +91,6 @@ Object.assign(mapInternals, {
 function configureRenderer(kind: string): void {
   Object.assign(mapInternals, {
     useDeckGL: kind === 'deck' || kind === 'pending-deck',
-    useGlobe: kind === 'globe',
-    globeMap: kind === 'globe' ? {} : null,
     deckGLMap: kind === 'deck' ? { setChinaCorridorSelection: () => {} } : null,
     svgMap: kind === 'svg' ? {} : null,
   });
@@ -103,7 +101,7 @@ const harness = {
   rendererSupportsOverlay: renderer === 'pending-deck'
     ? null
     : renderer === 'deck',
-  switchRenderer: (kind: 'deck' | 'globe' | 'svg') => {
+  switchRenderer: (kind: 'deck' | 'svg') => {
     configureRenderer(kind);
     (mapInternals.rehydrateActiveMap as () => void).call(map);
   },

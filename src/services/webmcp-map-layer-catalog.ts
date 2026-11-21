@@ -29,7 +29,8 @@ export const WEBMCP_MAP_LAYER_MONITORS = [
 ] as const;
 export type WebMcpMapLayerMonitor = (typeof WEBMCP_MAP_LAYER_MONITORS)[number];
 
-export const WEBMCP_MAP_LAYER_RENDERERS = ['2d', '3d'] as const;
+// The dashboard map is 2D only: the 3D globe renderer was removed.
+export const WEBMCP_MAP_LAYER_RENDERERS = ['2d'] as const;
 export type WebMcpMapLayerRenderer = (typeof WEBMCP_MAP_LAYER_RENDERERS)[number];
 
 export const WEBMCP_MAP_LAYER_STATES = ['enabled', 'available'] as const;
@@ -112,8 +113,8 @@ export function monitorToVariant(monitor: WebMcpMapLayerMonitor): MapVariant {
   return monitor === 'world' ? 'full' : monitor;
 }
 
-export function rendererFamily(kind: RendererKind): WebMcpMapLayerRenderer {
-  return kind === 'globe' ? '3d' : '2d';
+export function rendererFamily(_kind: RendererKind): WebMcpMapLayerRenderer {
+  return '2d';
 }
 
 export function normalizeCatalogVariant(variant: string): MapVariant {
@@ -137,11 +138,9 @@ function hasOnlyOwnKeys(
 
 function matchesRendererFilter(
   renderers: RendererKind[],
-  filter: WebMcpMapLayerRenderer,
+  _filter: WebMcpMapLayerRenderer,
 ): boolean {
-  return filter === '3d'
-    ? renderers.includes('globe')
-    : renderers.includes('svg') || renderers.includes('deck');
+  return renderers.includes('svg') || renderers.includes('deck');
 }
 
 function enableUnavailableReason(
@@ -211,7 +210,7 @@ export function parseMapLayerCatalogArgs(
   let renderer: WebMcpMapLayerRenderer | undefined;
   if (args.renderer !== undefined) {
     if (typeof args.renderer !== 'string' || !RENDERER_SET.has(args.renderer)) {
-      return invalid('invalid_renderer', 'renderer must be 2d or 3d.');
+      return invalid('invalid_renderer', 'renderer must be 2d.');
     }
     renderer = args.renderer as WebMcpMapLayerRenderer;
   }

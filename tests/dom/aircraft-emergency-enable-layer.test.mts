@@ -10,7 +10,7 @@ describe('programmatic aircraft emergency enable', () => {
     };
     const emergencyLayer = { setEnabled: vi.fn() };
     const map = Object.assign(Object.create(MapContainer.prototype), {
-      useDeckGL: false, useGlobe: false, svgMap: svg, emergencyLayer, initialState: { layers: {} },
+      useDeckGL: false, svgMap: svg, emergencyLayer, initialState: { layers: {} },
     });
     map.enableLayer('aircraftEmergencies');
     expect(svg.enableLayer).toHaveBeenCalledExactlyOnceWith('aircraftEmergencies');

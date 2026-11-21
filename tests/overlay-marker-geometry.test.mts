@@ -18,7 +18,7 @@ import {
   overlayMarkerPosition,
   projectionPointAtScreenCentre,
 } from '../src/utils/overlay-marker-geometry.ts';
-import { proximityRank } from '../src/utils/globe-marker-budget.ts';
+import { proximityRank } from '../src/utils/map-marker-budget.ts';
 
 /**
  * The wrapper transform MapComponent.applyTransform() actually writes:

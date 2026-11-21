@@ -515,7 +515,7 @@ type GpsJamHexWithPolygon = GpsJamHex & { polygon: [number, number][] };
 
 /**
  * Webcam markers carry an explicit leaf/group discriminant tagged at setWebcams
- * ingestion, mirroring GlobeMap's `_kind: 'webcam' | 'webcam-cluster'` union.
+ * ingestion as a `_kind: 'webcam' | 'webcam-cluster'` union.
  * Existing consumers still narrow on `'count' in d`; `_kind` makes the
  * distinction available at the type level for new code without re-deriving it.
  */

@@ -1471,13 +1471,6 @@
       "infoTooltip": "<strong>Phân tích Hỗ trợ AI</strong><br>• <strong>Bản tin Thế giới</strong>: Tóm tắt AI (OpenRouter)<br>• <strong>Cảm xúc</strong>: Phân tích sắc thái tin tức<br>• <strong>Tốc độ</strong>: Tin đang lan nhanh<br>• <strong>Điểm Hội tụ</strong>: Tương quan thực thể tin tức với tín hiệu bản đồ (quân sự, biểu tình, gián đoạn)<br><em>Chỉ Desktop • Được hỗ trợ bởi Llama 3.3 + Phát hiện Điểm Hội tụ</em>",
       "streamQualityLabel": "Chất lượng Video",
       "streamQualityDesc": "Đặt chất lượng cho tất cả luồng phát trực tiếp (thấp hơn tiết kiệm băng thông)",
-      "globeRenderScaleOptions": {
-        "1": "Tiết kiệm (1x)",
-        "2": "4K (2x)",
-        "3": "Cực cao (3x)",
-        "auto": "Tự động (theo thiết bị)",
-        "1_5": "Sắc nét (1.5x)"
-      },
       "mapFlashLabel": "Xung Sự kiện Trực tiếp",
       "mapFlashDesc": "Nhấp nháy vị trí trên bản đồ khi có tin tức nóng",
       "aiFlowCloudLabel": "AI Đám mây (OpenRouter)",
@@ -4388,8 +4381,6 @@
     "mapProviderDesc": "Chọn nơi tải tile bản đồ.",
     "mapTheme": "Giao diện bản đồ",
     "mapThemeDesc": "Kiểu hiển thị của tile bản đồ.",
-    "globePreset": "Cài đặt trước hình ảnh",
-    "globePresetDesc": "Chuyển đổi giữa chế độ cổ điển và nâng cao của quả địa cầu.",
     "fontFamily": "Họ phông chữ",
     "fontFamilyDesc": "Monospace cho giao diện kỹ thuật, phông chữ hệ thống mặc định để dễ đọc hơn.",
     "fontMono": "Monospace",

@@ -1,13 +1,13 @@
 import type { MapLayers } from '@/types';
 
 /**
- * The three concrete map renderers a layer can be painted by. This is the
- * single renderer axis: `'svg'` (D3/SVG mobile fallback in Map.ts), `'deck'`
- * (WebGL DeckGLMap), and `'globe'` (globe.gl GlobeMap). It mirrors
- * MapContainer's `RendererKind` (computed by `getPendingRendererKind()`), which
- * imports this type so the picker, dispatcher, and shell stay in lockstep.
+ * The two concrete map renderers a layer can be painted by. This is the
+ * single renderer axis: `'svg'` (D3/SVG mobile fallback in Map.ts) and
+ * `'deck'` (WebGL DeckGLMap). It mirrors MapContainer's `RendererKind`
+ * (computed by `getPendingRendererKind()`), which imports this type so the
+ * picker, dispatcher, and shell stay in lockstep.
  */
-export type RendererKind = 'svg' | 'deck' | 'globe';
+export type RendererKind = 'svg' | 'deck';
 export type MapVariant = 'full' | 'tech' | 'finance' | 'happy' | 'commodity' | 'energy';
 
 
@@ -20,8 +20,7 @@ export interface LayerDefinition {
    * Every renderer that has a real paint path for this layer. A layer executes
    * (picker toggle / CMD+K dispatch) under a renderer only if that renderer is
    * listed here — this is the whole gate. A DeckGL-only layer is `['deck']`; a
-   * layer painted by both DeckGL and the globe (e.g. the CII choropleth) is
-   * `['deck', 'globe']`; a layer on every surface is `['svg', 'deck', 'globe']`.
+   * layer on both surfaces is `['svg', 'deck']`.
    */
   renderers: RendererKind[];
 }
@@ -45,13 +44,13 @@ const def = (
   icon: string,
   i18nSuffix: string,
   fallbackLabel: string,
-  renderers: RendererKind[] = ['svg', 'deck', 'globe'],
+  renderers: RendererKind[] = ['svg', 'deck'],
 ): LayerDefinition => ({
   key, icon, i18nSuffix, fallbackLabel, renderers,
 });
 
 export const LAYER_REGISTRY: Record<keyof MapLayers, LayerDefinition> = {
-  iranAttacks:              def('iranAttacks',              '&#127919;', 'iranAttacks',              'Middle East Strikes', ['svg', 'deck', 'globe']),
+  iranAttacks:              def('iranAttacks',              '&#127919;', 'iranAttacks',              'Middle East Strikes', ['svg', 'deck']),
   hotspots:                 def('hotspots',                 '&#127919;', 'intelHotspots',            'Intel Hotspots'),
   conflicts:                def('conflicts',                '&#9876;',   'conflictZones',            'Conflict Zones'),
 
@@ -60,7 +59,7 @@ export const LAYER_REGISTRY: Record<keyof MapLayers, LayerDefinition> = {
   irradiators:              def('irradiators',              '&#9888;',   'gammaIrradiators',         'Gamma Irradiators'),
   radiationWatch:           def('radiationWatch',           '&#9762;',   'radiationWatch',           'Radiation Watch'),
   spaceports:               def('spaceports',               '&#128640;', 'spaceports',               'Spaceports'),
-  satellites:               def('satellites',               '&#128752;', 'satellites',               'Orbital Surveillance', ['svg', 'deck', 'globe']),
+  satellites:               def('satellites',               '&#128752;', 'satellites',               'Orbital Surveillance', ['svg', 'deck']),
 
   cables:                   def('cables',                   '&#128268;', 'underseaCables',           'Undersea Cables'),
   pipelines:                def('pipelines',                '&#128738;', 'pipelines',                'Pipelines'),
@@ -84,12 +83,10 @@ export const LAYER_REGISTRY: Record<keyof MapLayers, LayerDefinition> = {
   waterways:                def('waterways',                '&#9875;',   'strategicWaterways',       'Chokepoints'),
   economic:                 def('economic',                 '&#128176;', 'economicCenters',          'Economic Centers'),
   minerals:                 def('minerals',                 '&#128142;', 'criticalMinerals',         'Critical Minerals'),
-  gpsJamming:               def('gpsJamming',               '&#128225;', 'gpsJamming',               'GPS Jamming', ['svg', 'deck', 'globe']),
-  // Painted by DeckGLMap AND GlobeMap (both build CII choropleth polygons);
-  // the SVG/mobile fallback has no CII paint path, so this is deck + globe,
-  // NOT svg. Previously mislabeled `['flat']`, which wrongly kept it out of
-  // the globe layer picker even though GlobeMap renders it (#6773 / R8).
-  ciiChoropleth:            def('ciiChoropleth',            '&#127758;', 'ciiChoropleth',            'Country Instability', ['deck', 'globe']),
+  gpsJamming:               def('gpsJamming',               '&#128225;', 'gpsJamming',               'GPS Jamming', ['svg', 'deck']),
+  // Only DeckGLMap builds the CII choropleth polygons; the SVG/mobile
+  // fallback has no CII paint path.
+  ciiChoropleth:            def('ciiChoropleth',            '&#127758;', 'ciiChoropleth',            'Country Instability', ['deck']),
   // DeckGLMap owns the resilience choropleth; only DeckGL has a paint path.
   resilienceScore:          def('resilienceScore',          '&#128200;', 'resilienceScore',          'Country Resilience', ['deck']),
   dayNight:                 def('dayNight',                 '&#127763;', 'dayNight',                 'Day/Night', ['svg', 'deck']),
@@ -117,11 +114,9 @@ export const LAYER_REGISTRY: Record<keyof MapLayers, LayerDefinition> = {
   webcams:                  def('webcams',                  '&#128247;', 'webcams',                  'Live Webcams'),
   // weatherRadar removed — radar tiles now auto-start when Weather Alerts layer is toggled on
   diseaseOutbreaks:         def('diseaseOutbreaks',         '&#129440;', 'diseaseOutbreaks',         'Disease Outbreaks', ['deck']),
-  // DeckGL-only layers: `renderers: ['deck']` hides them from the globe
-  // picker (GlobeMap has no branch in ensureStaticDataForLayer / no entry
-  // in the layer-channel map) AND from the SVG/mobile fallback's CMD+K
-  // dispatch (Map.ts has no SVG render path for either marker/pin type).
-  // Add 'svg'/'globe' here once those renderers gain real support.
+  // DeckGL-only layers: `renderers: ['deck']` hides them from the SVG/mobile
+  // fallback's CMD+K dispatch (Map.ts has no SVG render path for either
+  // marker/pin type). Add 'svg' here once that renderer gains real support.
   storageFacilities:        def('storageFacilities',        '&#127959;', 'storageFacilities',        'Storage Facilities', ['deck']),
   fuelShortages:            def('fuelShortages',            '&#9881;',   'fuelShortages',            'Fuel Shortages', ['deck']),
   liveTankers:              def('liveTankers',              '&#128674;', 'liveTankers',              'Live Tanker Positions', ['deck']),
@@ -272,7 +267,7 @@ export function sanitizeResilienceScoreForRenderer(
  *
  * The layer's declared `renderers` must include `kind`. Because the axis now
  * distinguishes `'svg'` from `'deck'`, a DeckGL-only layer (`['deck']`) is
- * naturally rejected on the SVG fallback and on the globe — no separate flag.
+ * naturally rejected on the SVG fallback — no separate flag.
  */
 export function isLayerExecutable(
   layerKey: keyof MapLayers,

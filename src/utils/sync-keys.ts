@@ -17,7 +17,6 @@ export const CLOUD_SYNC_KEYS = [
   'panel-order-bottom-set',
   'worldmonitor-theme',
   'worldmonitor-variant',
-  'worldmonitor-map-mode',
   'wm-breaking-alerts-v1',
   'wm-market-watchlist-v1',
   'wm-market-catalog-selection-v1',
@@ -26,7 +25,6 @@ export const CLOUD_SYNC_KEYS = [
   'wm-map-provider',
   'wm-font-family',
   'wm-font-scale',
-  'wm-globe-visual-preset',
   'wm-stream-quality',
   'wm-ai-flow-cloud-llm',
   // Sister AI-flow toggles. Without these, the user's "Browser Local Model"

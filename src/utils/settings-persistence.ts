@@ -29,7 +29,6 @@ const SETTINGS_KEYS: readonly string[] = [
   'worldmonitor-live-channels',
   'worldmonitor-active-channel',
   'worldmonitor-runtime-feature-toggles',
-  'wm-globe-render-scale',
   'wm-live-streams-always-on',
   'worldmonitor-webcam-prefs',
   'worldmonitor-disabled-feeds-schema',

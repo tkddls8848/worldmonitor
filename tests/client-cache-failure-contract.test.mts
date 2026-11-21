@@ -35,7 +35,7 @@ function serviceStubs() {
         export class ClimateServiceClient { listClimateAnomalies() { return take('climate'); } }
         export class ConsumerPricesServiceClient { getConsumerPriceOverview() { return take('consumerOverview'); } getConsumerPriceBasketSeries() { return take('consumerSeries'); } listConsumerPriceCategories() { return take('consumerCategories'); } listConsumerPriceMovers() { return take('consumerMovers'); } listRetailerPriceSpreads() { return take('consumerSpreads'); } getConsumerPriceFreshness() { return take('consumerFreshness'); } }
         export class InfrastructureServiceClient { listInternetOutages() { return take('outages'); } listServiceStatuses() { return take('statuses'); } }
-        export class IntelligenceServiceClient { listSecurityAdvisories() { return take('advisories'); } listSatellites() { return take('satellites'); } }
+        export class IntelligenceServiceClient { listSecurityAdvisories() { return take('advisories'); } }
       ` };
       if (args.path === 'stub:bootstrap') return { loader: 'js', contents: `
         export function getHydratedData(key) { return globalThis.__clientHydrated?.[key]; }
@@ -155,18 +155,17 @@ describe('browser service cache failure contracts (#8348)', () => {
     assert.ok(Object.values(runtime.__clientRpcQueues!).every(queue => queue.length === 0), 'unavailable hydration falls through to RPC');
   });
 
-  it('advisories and satellites keep last-good data when refresh rejects', async () => {
+  it('advisories keep last-good data when refresh rejects', async () => {
     let now = 1_000_000; Date.now = () => now;
-    // Records must pass shared/intelligence-snapshots.js validation: a real TLE
-    // pair and an advisory index at the 100-country coverage floor.
+    // Records must pass shared/intelligence-snapshots.js validation: an
+    // advisory index at the 100-country coverage floor.
     const byCountry = Object.fromEntries(Array.from({ length: 100 }, (_, i) => [`C${i}`, 'normal']));
-    const tle = { line1: '1 25544U 98067A   19156.50900463  .00003075  00000-0  59442-4 0  9992', line2: '2 25544  51.6433  59.2583 0008217  16.4489 347.6017 15.51174618173442' };
-    setup({ advisories: [{ advisories: [{ title: 'A', link: 'x', pubDate: '2026-01-01', source: 'gov', sourceCountry: 'AE', level: '', country: 'AE' }], byCountry }, new Error('503')], satellites: [{ satellites: [{ id: '25544', name: 'S', ...tle, type: 'x', country: 'AE' }] }, new Error('503')] });
-    const h = await loadHarness<{ loadAdvisoriesFromServer(): Promise<{ ok: boolean; advisories: Array<{ title: string }> }>; fetchSatelliteTLEs(): Promise<Array<{ name: string }> | null>; getSatelliteStatus(): string }>(["export { loadAdvisoriesFromServer } from './src/services/security-advisories.ts';", "export { fetchSatelliteTLEs, getSatelliteStatus } from './src/services/satellites.ts';"]);
-    assert.equal((await h.loadAdvisoriesFromServer()).advisories[0]?.title, 'A'); assert.equal((await h.fetchSatelliteTLEs())?.[0]?.name, 'S');
+    setup({ advisories: [{ advisories: [{ title: 'A', link: 'x', pubDate: '2026-01-01', source: 'gov', sourceCountry: 'AE', level: '', country: 'AE' }], byCountry }, new Error('503')] });
+    const h = await loadHarness<{ loadAdvisoriesFromServer(): Promise<{ ok: boolean; advisories: Array<{ title: string }> }> }>(["export { loadAdvisoriesFromServer } from './src/services/security-advisories.ts';"]);
+    assert.equal((await h.loadAdvisoriesFromServer()).advisories[0]?.title, 'A');
     now += 16 * 60 * 1000;
-    const advisoryFailure = await h.loadAdvisoriesFromServer(); const satelliteFailure = await h.fetchSatelliteTLEs();
-    assert.equal(advisoryFailure.ok, false); assert.equal(advisoryFailure.advisories[0]?.title, 'A'); assert.equal(satelliteFailure?.[0]?.name, 'S'); assert.equal(h.getSatelliteStatus(), 'degraded'); assert.equal(runtime.__clientFreshnessErrors?.length, 1);
+    const advisoryFailure = await h.loadAdvisoriesFromServer();
+    assert.equal(advisoryFailure.ok, false); assert.equal(advisoryFailure.advisories[0]?.title, 'A');
   });
 
   it('IMF exposes healthy themes on a cold partial load and retries the missing theme', async () => {

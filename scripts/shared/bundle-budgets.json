@@ -1,5 +1,5 @@
 {
-  "comment": "Initial /dashboard bundle-size budgets (#7111). Gated on raw bytes: per chunk ±max(2048 B, 2%), total ±max(16384 B, 0.25%). The \"deferred\" section gates the application graph the entry imports on every visit with the same tolerances. Tolerance fields here are informational — the gate enforces its own constants and rejects a snapshot that disagrees. Regenerate after \"npm run build:pro && VITE_VARIANT=full ./node_modules/.bin/vite build\" with: npm run bundle:budgets",
+  "comment": "Initial /dashboard bundle-size budgets (#7111). Gated on raw bytes: per chunk ±max(2048 B, 2%), total ±max(16384 B, 0.25%). The \"deferred\" section gates the application graph the entry imports on every visit with the same tolerances. Tolerance fields here are informational — the gate enforces its own constants and rejects a snapshot that disagrees. Regenerate after \"VITE_VARIANT=full ./node_modules/.bin/vite build\" with: npm run bundle:budgets",
   "surface": "dashboard",
   "variant": "full",
   "tolerancePct": 2,
@@ -7,7 +7,7 @@
   "totalTolerancePct": 0.25,
   "totalToleranceBytes": 16384,
   "total": {
-    "raw": 339003
+    "raw": 338746
   },
   "chunks": {
     "i18n": {
@@ -15,25 +15,25 @@
       "files": 1
     },
     "main": {
-      "raw": 286543,
+      "raw": 286286,
       "files": 1
     }
   },
   "deferred": {
     "total": {
-      "raw": 1322015
+      "raw": 1314476
     },
     "chunks": {
       "App": {
-        "raw": 1101634,
+        "raw": 1094209,
         "files": 1
       },
       "dom-utils": {
-        "raw": 17462,
+        "raw": 17412,
         "files": 1
       },
       "panel-display-name": {
-        "raw": 191964,
+        "raw": 191900,
         "files": 1
       },
       "persistent-cache": {

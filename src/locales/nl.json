@@ -1345,13 +1345,6 @@
       "headlineMemoryDesc": "Gezien koppen onthouden om nieuwe te markeren",
       "streamAlwaysOnLabel": "Live webcams automatisch afspelen",
       "streamAlwaysOnDesc": "Start de live webcamvideo's automatisch zodra deze op het scherm verschijnen. Laat dit uit om ze alleen te laden wanneer je deze zelf start.",
-      "globeRenderScaleOptions": {
-        "1": "Eco (1x)",
-        "2": "4K (2x)",
-        "3": "Extreem (3x)",
-        "auto": "Auto (apparaat)",
-        "1_5": "Scherp (1.5x)"
-      },
       "analysisFrameworksLabel": "Analyseframeworks",
       "analysisFrameworksActivePerPanel": "Actief per paneel",
       "analysisFrameworksSkillLibrary": "Vaardighedenbibliotheek",
@@ -4410,8 +4403,6 @@
     "mapProviderDesc": "Kies waar kaarttegels vandaan worden geladen.",
     "mapTheme": "Kaartthema",
     "mapThemeDesc": "Visuele stijl van de kaarttegels.",
-    "globePreset": "Visuele voorinstelling",
-    "globePresetDesc": "Schakel tussen klassieke en verbeterde globevisuals.",
     "fontFamily": "Lettertype",
     "fontFamilyDesc": "Monospace voor een technische uitstraling, systeemstandaard voor gemakkelijker lezen.",
     "fontMono": "Monospace",

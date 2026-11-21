@@ -18,9 +18,6 @@ interface MapContainerHarness {
       getViewportAuthorityToken: () => number;
       whenRendererReady: () => Promise<void>;
       whenViewportSettled: (viewportActionToken?: number) => Promise<void>;
-      switchToGlobe: () => Promise<{ renderer: 'globe' | 'deck' | 'svg'; mode: 'globe' | 'flat'; fallback: boolean }>;
-      switchToFlat: () => Promise<{ renderer: 'globe' | 'deck' | 'svg'; mode: 'globe' | 'flat'; fallback: boolean }>;
-      isGlobeMode: () => boolean;
       isDeckGLActive: () => boolean;
       destroy: () => void;
     };
@@ -118,16 +115,13 @@ before(async () => {
             pendingChokepointOpen: null,
             pendingReservoirOpen: null,
             initialState: { view: 'global', zoom: 2, pan: { x: 0, y: 0 }, layers: {}, timeRange: '24h' },
-            useGlobe: false,
             useDeckGL: true,
-            globeMap: null,
             svgMap: null,
             deckGLMap: null,
             emergencyLayer: { setEnabled() {}, destroy() {} },
             notamAirspaceLayer: { setEnabled() {}, destroy() {} },
             rendererDemandCleanup: null,
             resizeObserver: null,
-            globeInitToken: 0,
             clearCache() {},
           };
           Object.assign(map, internals);
@@ -146,9 +140,6 @@ before(async () => {
     platform: 'node',
     plugins: [lifecycleOnlyStubs],
     target: 'node20',
-    external: [
-      './GlobeMap',
-    ],
     write: false,
   });
   const source = result.outputFiles[0]?.text;
@@ -491,7 +482,7 @@ describe('map viewport runtime lifecycle', () => {
     (internals.handleDeckGLRuntimeFailure as (token: number, error: unknown) => void)
       .call(map, 7, new Error('GPU unavailable'));
     internals.rendererInitToken = 9;
-    internals.globeMap = {};
+    internals.deckGLMap = {};
     (internals.markRendererReady as (token: number) => void).call(map, 9);
     rejectFallback(new Error('stale SVG failure'));
     await new Promise<void>(resolve => setImmediate(resolve));
@@ -664,51 +655,11 @@ describe('map viewport runtime lifecycle', () => {
     );
   });
 
-  it('disables the Deck-only resilience layer when switching to the globe renderer', async () => {
+  it('denies set_map_mode 3d with globe_unavailable and keeps the live flat renderer', async () => {
     const { map, internals } = harness.createMapContainerHarness();
-    const snapshot = {
-      view: 'global',
-      zoom: 2,
-      pan: { x: 0, y: 0 },
-      layers: { resilienceScore: true },
-      timeRange: '24h',
-    };
-    internals.deckGLMap = {
-      getState: () => snapshot,
-      getCenter: () => null,
-    };
-    internals.destroyFlatMap = () => {
-      internals.deckGLMap = null;
-    };
-    internals.init = async () => {};
-    internals.waitForRendererSwitch = async () => ({
-      renderer: 'globe',
-      mode: 'globe',
-      fallback: false,
-    });
-
-    await map.switchToGlobe();
-
-    assert.equal(
-      (internals.initialState as { layers: MapLayers }).layers.resilienceScore,
-      false,
-    );
-  });
-
-  it('denies set_map_mode 3d after handleGlobeInitFailure falls back to SVG', async () => {
-    const { map, internals } = harness.createMapContainerHarness();
-    internals.destroyFlatMap = () => {
-      internals.deckGLMap = null;
-      internals.svgMap = null;
-    };
-    internals.showRendererShell = () => {};
-    internals.init = async () => {
-      internals.rendererReady = false;
-    };
-    internals.initSvgMap = async (_log: string, token: number) => {
-      internals.svgMap = { destroy() {} };
-      (internals.markRendererReady as (token: number) => void).call(map, token);
-    };
+    const deck = { getState: () => internals.initialState, getCenter: () => null, destroy() {} };
+    internals.deckGLMap = deck;
+    (internals.markRendererReady as (token: number) => void).call(map, 7);
 
     const ctx = {
       isDestroyed: false,
@@ -718,7 +669,7 @@ describe('map viewport runtime lifecycle', () => {
       map,
     } as unknown as AppContext;
 
-    const pending = runDashboardActionBinding(
+    const result = await runDashboardActionBinding(
       ctx,
       { type: 'set_map_mode', mode: '3d' },
       {
@@ -734,24 +685,13 @@ describe('map viewport runtime lifecycle', () => {
       },
     );
 
-    for (let attempt = 0; internals.useGlobe !== true && attempt < 20; attempt += 1) {
-      await new Promise<void>((resolve) => setImmediate(resolve));
-    }
-    assert.equal(internals.useGlobe, true, 'switchToGlobe must start before the failure path');
-    (internals.handleGlobeInitFailure as (token: number, error: unknown) => void).call(
-      map,
-      internals.globeInitToken as number,
-      new Error('globe failed'),
-    );
-
-    const result = await pending;
     assert.equal(result.ok, false);
     assert.equal(result.status, 'denied');
     assert.equal(result.reason, 'globe_unavailable');
     assert.deepEqual(result.requested, { mode: '3d' });
-    assert.deepEqual(result.effective, { mode: '2d', renderer: 'svg' });
-    assert.equal(internals.useGlobe, false);
-    assert.equal(map.isGlobeMode(), false);
+    assert.deepEqual(result.effective, { mode: '2d', renderer: 'deck' });
+    assert.equal(map.isDeckGLActive(), true);
+    assert.equal(internals.deckGLMap, deck);
   });
 
 });
@@ -762,18 +702,12 @@ for (const scenario of [
   { name: 'desktop without WebGL2', mobile: true, preferDesktop: true, webgl: false, renderer: 'svg' },
   { name: 'ordinary wide desktop', mobile: false, preferDesktop: false, webgl: true, renderer: 'deck' },
 ]) {
-  it(`returns to the correct flat renderer for ${scenario.name}`, async () => {
+  it(`picks the correct flat renderer for ${scenario.name}`, () => {
     const { map, internals } = harness.createMapContainerHarness();
-    internals.useGlobe = true;
     internals.isMobile = scenario.mobile;
     internals.preferDesktopRenderer = scenario.preferDesktop;
     internals.hasWebGLSupport = () => scenario.webgl;
-    internals.globeMap = { destroy() {}, getCenter: () => null, getState: () => internals.initialState };
-    internals.init = async () => {
-      internals.rendererReady = true;
-      if (internals.useDeckGL) internals.deckGLMap = {};
-      else internals.svgMap = {};
-    };
-    assert.deepEqual(await map.switchToFlat(), { renderer: scenario.renderer, mode: 'flat', fallback: false });
+    const useDeck = (internals.shouldUseDeckGL as () => boolean).call(map);
+    assert.equal(useDeck ? 'deck' : 'svg', scenario.renderer);
   });
 }

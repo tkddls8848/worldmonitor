@@ -33,7 +33,7 @@ World Monitor is a real-time global intelligence dashboard built as a TypeScript
 ┌──────────────────────────────────────────────────────────────┐
 │                           Browser                             │
 │  ┌──────────┐  ┌──────────┐  ┌───────────┐  ┌─────────────┐  │
-│  │ DeckGLMap│  │ GlobeMap │  │  Panels   │  │  Workers    │  │
+│  │ DeckGLMap│  │ SVG Map  │  │  Panels   │  │  Workers    │  │
 │  └────┬─────┘  └────┬─────┘  └─────┬─────┘  └─────────────┘  │
 │       └─────────────┴──────────────┘                          │
 │                     │ fetch /api/* (Basic auth)               │
@@ -96,13 +96,13 @@ Container images, Compose, nginx, supervisor configuration and the hosted deploy
 
 All panels extend the `Panel` base class (`src/components/Panel.ts`). Panels render via `setContent(html)` (debounced 150ms) and use event delegation on a stable `this.content` element. Panels support resizable row/col spans persisted to localStorage.
 
-### Dual Map System
+### Map System
 
 - **DeckGLMap**: WebGL rendering via deck.gl + maplibre-gl. Supports ScatterplotLayer, GeoJsonLayer, PathLayer, IconLayer, PolygonLayer, ArcLayer, HeatmapLayer, H3HexagonLayer. PMTiles protocol for self-hosted basemap tiles. Supercluster for marker clustering.
 - **Loaded news selection**: `MapContainer.onNewsClicked()` caches and forwards the callback to each renderer's `setOnNewsClick()`. The callback receives `Pick<NewsLocationMarker, 'article' | 'title'>`: optional original loaded article `{link, title, source}` and the displayed marker title. Existing markers without article metadata remain valid. The plugin uses this loaded identity to publish its latest interaction with current view context; it does not track popup visibility or fetch more data on selection.
-- **GlobeMap**: 3D interactive globe via globe.gl. Single merged `htmlElementsData` array with `_kind` discriminator. Earth texture, atmosphere shader, auto-rotate after idle.
+- **MapComponent (SVG)**: D3/SVG renderer in `src/components/Map.ts` for phones and for desktops without hardware WebGL2. `MapContainer` picks DeckGL or SVG per device. There is no 3D globe; it was removed, and an agent `set_map_mode` request for `3d` is denied with `globe_unavailable`.
 
-Layer definitions live in `src/config/map-layer-definitions.ts`, each specifying renderer support (flat/globe), variant filtering, and i18n keys. The personal build has no layer entitlements.
+Layer definitions live in `src/config/map-layer-definitions.ts`, each specifying renderer support (`svg`/`deck`), variant filtering, and i18n keys. The personal build has no layer entitlements.
 
 ### State Management
 
@@ -118,7 +118,7 @@ No external state library. `AppContext` is a central mutable object holding: map
 
 Detected by hostname (`tech.worldmonitor.app` → tech, `finance.worldmonitor.app` → finance, etc.) or the `VITE_VARIANT` build variable; the personal build uses `full`. Controls: default panels, map layers, refresh intervals, theme, UI text. Variant change resets all settings to defaults.
 
-**Source files**: `src/main.ts`, `src/App.ts`, `src/app/`, `src/components/Panel.ts`, `src/components/DeckGLMap.ts`, `src/components/GlobeMap.ts`, `src/config/variant.ts`, `src/workers/`
+**Source files**: `src/main.ts`, `src/App.ts`, `src/app/`, `src/components/Panel.ts`, `src/components/DeckGLMap.ts`, `src/components/Map.ts`, `src/config/variant.ts`, `src/workers/`
 
 ---
 

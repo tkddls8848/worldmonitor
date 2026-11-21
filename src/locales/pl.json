@@ -1793,13 +1793,6 @@
       "headlineMemoryDesc": "Zapamiętuj widziane nagłówki, aby wyróżnić nowe",
       "streamAlwaysOnLabel": "Automatyczne odtwarzanie transmisji na żywo z kamer",
       "streamAlwaysOnDesc": "Rozpoczyna transmisje z kamer internetowych zaraz po ich pojawienia się na ekranie. Pozostaw tę opcję wyłączoną, aby załadować je tylko po ręcznym uruchomieniu.",
-      "globeRenderScaleOptions": {
-        "1": "Eko (1x)",
-        "2": "4K (2x)",
-        "3": "Ekstremalny (3x)",
-        "auto": "Auto (urządzenie)",
-        "1_5": "Ostry (1.5x)"
-      },
       "analysisFrameworksLabel": "Frameworki analizy",
       "analysisFrameworksActivePerPanel": "Aktywne na panelu",
       "analysisFrameworksSkillLibrary": "Biblioteka umiejętności",
@@ -4454,8 +4447,6 @@
     "mapProviderDesc": "Wybierz źródło kafelków mapy.",
     "mapTheme": "Motyw mapy",
     "mapThemeDesc": "Styl wizualny kafelków mapy.",
-    "globePreset": "Ustawienie wizualne",
-    "globePresetDesc": "Przełączaj między klasycznymi a ulepszonymi wizualizacjami globu.",
     "fontFamily": "Rodzina czcionki",
     "fontFamilyDesc": "Monospace dla wyglądu technicznego, domyślna czcionka systemowa dla łatwiejszego czytania.",
     "fontMono": "Monospace",

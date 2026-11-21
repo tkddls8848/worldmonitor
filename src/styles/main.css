@@ -1604,37 +1604,6 @@ canvas,
   z-index: 100;
 }
 
-.map-dimension-toggle {
-  display: flex;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  overflow: hidden;
-  margin-right: 2px;
-}
-
-.map-dim-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-dim);
-  font-size: calc(11px * var(--wm-panel-effective-scale, 1));
-  font-weight: 600;
-  padding: 3px 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-  letter-spacing: 0.5px;
-}
-
-.map-dim-btn:hover {
-  color: var(--text);
-  background: var(--surface-hover);
-}
-
-.map-dim-btn.active {
-  background: var(--green);
-  color: #0a0a0a;
-}
-
 .map-header-actions {
   display: flex;
   align-items: center;
@@ -6458,8 +6427,8 @@ body.playback-mode .status-dot {
   }
 }
 
-/* Dashboard focus outline on the SVG map (#10453). The DeckGL and globe maps
-   draw the same two styles with their own layers. CSS beats the paths'
+/* Dashboard focus outline on the SVG map (#10453). The DeckGL map
+   draws the same two styles with their own layers. CSS beats the paths'
    presentation attributes; the fill is left alone so sanctions shading stays.
    The map wrapper is CSS-scaled by the zoom, so the width is divided by it
    (--marker-scale is 1 / zoom) to stay 2px and 1px on screen. */
@@ -14801,7 +14770,7 @@ button.popup-link {
 }
 
 /*
- * "shown/total" for layers the globe's marker budget is trimming (#5368).
+ * "shown/total" for layers the map's marker budget is trimming (#5368, #7112).
  * Muted and right-aligned: it reports a limit, it is not a call to action.
  */
 /* #7112: the marker-budget disclosure for maps with no layer-toggle rail —
@@ -19381,33 +19350,6 @@ button.popup-link {
 #deckgl-overlay canvas {
   pointer-events: auto;
   background: transparent !important;
-}
-
-/* Globe Beta Badge */
-.globe-beta-badge {
-  display: inline-block;
-  padding: 3px 10px;
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: calc(11px * var(--wm-panel-effective-scale, 1));
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: #00e5ff;
-  background: rgba(0, 229, 255, 0.08);
-  border: 1px solid rgba(0, 229, 255, 0.4);
-  border-radius: 4px;
-  box-shadow:
-    0 0 6px rgba(0, 229, 255, 0.3),
-    0 0 20px rgba(0, 229, 255, 0.15),
-    inset 0 0 8px rgba(0, 229, 255, 0.05);
-  animation: globe-beta-pulse 2.5s ease-in-out infinite;
-  pointer-events: none;
-  align-self: flex-end;
-}
-
-@keyframes globe-beta-pulse {
-  0%, 100% { box-shadow: 0 0 6px rgba(0, 229, 255, 0.3), 0 0 20px rgba(0, 229, 255, 0.15), inset 0 0 8px rgba(0, 229, 255, 0.05); }
-  50% { box-shadow: 0 0 10px rgba(0, 229, 255, 0.5), 0 0 30px rgba(0, 229, 255, 0.25), inset 0 0 12px rgba(0, 229, 255, 0.1); }
 }
 
 /* deck.gl Controls */
@@ -25314,24 +25256,6 @@ body.map-width-resizing {
 .x-intel-follow-btn:hover {
   background: var(--accent);
   color: var(--bg);
-}
-
-/* ─── Globe Map Styles ──────────────────────────────────────────────────────── */
-
-.globe-mode {
-  background: #000 !important;
-  overflow: hidden;
-}
-
-/* The canvas is positioned above the default polygon tooltip in globe.gl. */
-.globe-mode .float-tooltip-kap {
-  z-index: 10;
-}
-
-@keyframes globe-pulse {
-  0%   { transform: scale(1); opacity: 0.6; }
-  70%  { transform: scale(2.5); opacity: 0; }
-  100% { transform: scale(2.5); opacity: 0; }
 }
 
 /* ─── Custom AI Widgets ─────────────────────────────────────────────────────── */

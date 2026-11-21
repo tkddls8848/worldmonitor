@@ -2,8 +2,6 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
-  globeCenterForOffset,
-  isOnVisibleHemisphere,
   mercatorCenterForOffset,
   visibleMapArea,
 } from '../src/utils/map-point-offset.ts';
@@ -39,30 +37,6 @@ describe('mercatorCenterForOffset', () => {
   it('wraps longitude across the antimeridian', () => {
     const c = mercatorCenterForOffset(0, 179.99, 6, { x: -400, y: 0 });
     assert.ok(c.lon < -170);
-  });
-});
-
-describe('globeCenterForOffset', () => {
-  it('moves the centre east of a point that should sit left of centre', () => {
-    const c = globeCenterForOffset(PALM.lat, PALM.lon, 0.01, 50, 900, { x: -226, y: 0 });
-    assert.ok(c.lon > PALM.lon);
-    assert.ok(Math.abs(c.lat - PALM.lat) < 1e-9);
-  });
-
-  it('moves the centre south of a point that should sit above centre', () => {
-    const c = globeCenterForOffset(PALM.lat, PALM.lon, 0.01, 50, 320, { x: 0, y: -60 });
-    assert.ok(c.lat < PALM.lat);
-  });
-
-  it('leaves the point alone without a viewport', () => {
-    assert.deepEqual(globeCenterForOffset(PALM.lat, PALM.lon, 0.01, 50, 0, { x: -226, y: 0 }), PALM);
-  });
-});
-
-describe('isOnVisibleHemisphere', () => {
-  it('sees the point under the camera and hides the far side', () => {
-    assert.equal(isOnVisibleHemisphere(PALM.lat, PALM.lon, PALM.lat, PALM.lon, 0.01), true);
-    assert.equal(isOnVisibleHemisphere(PALM.lat, PALM.lon, 20, -90, 1.5), false);
   });
 });
 

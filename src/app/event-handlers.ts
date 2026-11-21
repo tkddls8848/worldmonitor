@@ -4,7 +4,6 @@ import type {
   UnifiedSettingsController,
 } from '@/app/app-context';
 import type { SettingsSectionId } from '@/config/settings-sections';
-import { applyVisibleMapDimension } from '@/app/map-dimension-control';
 import type { UnifiedSettingsConfig } from '@/components/UnifiedSettings';
 import type { AirlineIntelPanel } from '@/components/AirlineIntelPanel';
 import { deleteWidget } from '@/services/widget-store';
@@ -977,9 +976,7 @@ export class EventHandlerManager implements AppModule {
 
   private filterMissionLayersForCurrentRenderer(layers: MapLayers): MapLayers {
     const isDeckGLActive = this.ctx.map?.isDeckGLActive?.() ?? !this.ctx.isMobile;
-    const kind = this.ctx.map?.isGlobeMode?.()
-      ? 'globe'
-      : (isDeckGLActive ? 'deck' : 'svg');
+    const kind = isDeckGLActive ? 'deck' : 'svg';
     return this.filterMissionLayersForAvailableServices(
       filterMissionLayersForRenderer(layers, kind, this.getMissionDefaultLayers()),
     );
@@ -2480,22 +2477,6 @@ export class EventHandlerManager implements AppModule {
     });
 
     this.setupMapFullscreen(mapSection);
-    this.setupMapDimensionToggle();
-  }
-
-  private setupMapDimensionToggle(): void {
-    const toggle = document.getElementById('mapDimensionToggle');
-    if (!toggle) return;
-    toggle.querySelectorAll<HTMLButtonElement>('.map-dim-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const mode = btn.dataset.mode;
-        if (!mode) return;
-        const isGlobe = mode === 'globe';
-        const alreadyGlobe = this.ctx.map?.isGlobeMode() ?? false;
-        if (isGlobe === alreadyGlobe) return;
-        void applyVisibleMapDimension(this.ctx, isGlobe ? '3d' : '2d');
-      });
-    });
   }
 
   private setupMapFullscreen(mapSection: HTMLElement): void {

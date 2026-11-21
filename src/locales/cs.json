@@ -1490,13 +1490,6 @@
       "headlineMemoryDesc": "Zapamatovat si zobrazené titulky pro zvýraznění nových",
       "streamAlwaysOnLabel": "Automatické přehrávání živých kamer",
       "streamAlwaysOnDesc": "Spustí živá videa z webkamer, jakmile se zobrazí na obrazovce. Ponechte vypnuté, chcete-li je načíst pouze sami.",
-      "globeRenderScaleOptions": {
-        "1": "Eko (1x)",
-        "2": "4K (2x)",
-        "3": "Extrémní (3x)",
-        "auto": "Auto (zařízení)",
-        "1_5": "Ostrý (1.5x)"
-      },
       "analysisFrameworksLabel": "Analytické rámce",
       "analysisFrameworksActivePerPanel": "Aktivní na panel",
       "analysisFrameworksSkillLibrary": "Knihovna dovedností",
@@ -4454,8 +4447,6 @@
     "mapProviderDesc": "Zvolte zdroj dlaždic mapy.",
     "mapTheme": "Motiv mapy",
     "mapThemeDesc": "Vizuální styl dlaždic mapy.",
-    "globePreset": "Vizuální předvolba",
-    "globePresetDesc": "Přepínejte mezi klasickým a vylepšeným zobrazením globálu.",
     "fontFamily": "Typ písma",
     "fontFamilyDesc": "Monospace pro technický vzhled, systémové výchozí pro snazší čtení.",
     "fontMono": "Monospace",

@@ -418,19 +418,16 @@ export class SearchManager implements AppModule {
 
     this.syncPanelSearchIndex();
     // Filter CMD+K layer commands by (a) variant-allowed, (b) renderer-kind
-    // compatibility (a deck-only layer can't run on the SVG fallback or the
-    // globe). Without them, layer
-    // commands surface where they'd silently fail the variant/renderer guard
-    // (e.g. `layer:storageFacilities` on tech/finance/commodity/happy, or globe
-    // / SVG-mobile).
+    // compatibility (a deck-only layer can't run on the SVG fallback). Without
+    // them, layer commands surface where they'd silently fail the
+    // variant/renderer guard (e.g. `layer:storageFacilities` on
+    // tech/finance/commodity/happy, or SVG-mobile).
     this.ctx.searchModal.setLayerExecutableFn((layerKey) => {
       const key = (LAYER_KEY_MAP[layerKey] || layerKey) as keyof MapLayers;
       if (!(key in this.ctx.mapLayers)) return false;
       const variantAllowed = getAllowedLayerKeys((SITE_VARIANT || 'full') as MapVariant);
       if (!variantAllowed.has(key)) return false;
-      const kind = this.ctx.map?.isGlobeMode?.()
-        ? 'globe'
-        : (this.ctx.map?.isDeckGLActive?.() ? 'deck' : 'svg');
+      const kind = this.ctx.map?.isDeckGLActive?.() ? 'deck' : 'svg';
       return isLayerCommandAllowed(key, kind);
     });
     this.ctx.searchModal.setCommandVisibleFn((command) => this.isModalCommandVisible(command));
@@ -644,9 +641,8 @@ export class SearchManager implements AppModule {
         return this.hasExecutableLayerPreset(action);
       case 'nav':
       case 'country':
-        return true;
       case 'time':
-        return !(this.ctx.map?.isGlobeMode?.() ?? false);
+        return true;
       case 'country-map':
         return getCountryBbox(action) !== null;
       case 'view':
@@ -690,9 +686,7 @@ export class SearchManager implements AppModule {
     if (!(key in this.ctx.mapLayers)) return false;
     const allowed = getAllowedLayerKeys((SITE_VARIANT || 'full') as MapVariant);
     if (!allowed.has(key)) return false;
-    const renderer: RendererKind = this.ctx.map?.isGlobeMode?.()
-      ? 'globe'
-      : (this.ctx.map?.isDeckGLActive?.() ? 'deck' : 'svg');
+    const renderer: RendererKind = this.ctx.map?.isDeckGLActive?.() ? 'deck' : 'svg';
     return isLayerCommandAllowed(key, renderer);
   }
 
@@ -724,18 +718,6 @@ export class SearchManager implements AppModule {
     if (!this.isSearchResultVisible(result)) return false;
     const requiredLayer = this.resultRequiredLayer(result);
     if (requiredLayer && !this.isEntityLayerExecutable(requiredLayer)) return false;
-    if (
-      this.ctx.map?.isGlobeMode?.()
-      && (
-        requiredLayer === 'flights'
-        || [
-          'hotspot', 'conflict', 'base', 'pipeline', 'cable', 'datacenter', 'nuclear', 'irradiator',
-          'techcompany', 'ailab', 'startup', 'techevent', 'techhq', 'accelerator',
-          'exchange', 'financialcenter', 'centralbank', 'commodityhub',
-        ]
-          .includes(result.type)
-      )
-    ) return false;
     switch (result.type) {
       case 'news':
         return this.resolveExecutableNewsPanel((result.data as NewsItem).link) !== null;
@@ -761,9 +743,7 @@ export class SearchManager implements AppModule {
   private isEntityLayerExecutable(layer: keyof MapLayers): boolean {
     const allowed = getAllowedLayerKeys((SITE_VARIANT || 'full') as MapVariant);
     if (!allowed.has(layer)) return false;
-    const renderer: RendererKind = this.ctx.map?.isGlobeMode?.()
-      ? 'globe'
-      : (this.ctx.map?.isDeckGLActive?.() ? 'deck' : 'svg');
+    const renderer: RendererKind = this.ctx.map?.isDeckGLActive?.() ? 'deck' : 'svg';
     return isLayerExecutable(
       layer,
       renderer,

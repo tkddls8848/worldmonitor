@@ -118,8 +118,6 @@ import type { TheaterPostureSummary } from '@/services/military-surge';
 import { fetchCachedTheaterPosture } from '@/services/cached-theater-posture';
 import { ingestConflictsForCountryData, ingestDisplacementForCountryData, ingestClimateForCountryData, ingestGpsJammingForCountryData, isInLearningMode, type CountryScore } from '@/services/country-instability';
 import { fetchGpsInterference } from '@/services/gps-interference';
-import { fetchSatelliteTLEs, initSatRecs, propagatePositions, startPropagationLoop } from '@/services/satellites';
-import type { SatRecEntry } from '@/services/satellites';
 import { dataFreshness, type DataSourceId } from '@/services/data-freshness';
 import type { CorrelationSignal } from '@/services/correlation';
 import { fetchConflictEvents, fetchUcdpEvents, fetchIranEvents, type UcdpExposureInput } from '@/services/conflict';
@@ -355,7 +353,6 @@ const HYDRATION_TIER_TWO = new Set([
   'cyberThreats',
   'iranAttacks',
   'techEvents',
-  'satellites',
   'webcams',
   'cables',
   'cableHealth',
@@ -437,7 +434,6 @@ export class DataLoaderManager implements AppModule {
   }
 
   private boundMarketWatchlistHandler: (() => void) | null = null;
-  private satellitePropagationCleanup: (() => void) | null = null;
   private dailyBriefGeneration = 0;
   private _stockAnalysisGeneration = 0;
   private readonly marketLoadGuard = new LatestRequestGuard();
@@ -454,7 +450,6 @@ export class DataLoaderManager implements AppModule {
   private marketImplicationsFrameworkUnsubscribe: (() => void) | null = null;
   private orefUnsubscribe: (() => void) | null = null;
   private orefDisposed = false;
-  private cachedSatRecs: SatRecEntry[] | null = null;
   // The scheduled refresh replaces intelligenceCache before fetching new data.
   private ucdpExposure?: UcdpExposureInput;
   private loadAllDataPromise: Promise<void> | null = null;
@@ -607,7 +602,6 @@ export class DataLoaderManager implements AppModule {
     }
     this.globalTenderGeneration += 1;
     this.activeGlobalTenderScopedGeneration = null;
-    this.stopSatellitePropagation();
     if (this.imageryRetryTimer) { clearTimeout(this.imageryRetryTimer); this.imageryRetryTimer = null; }
     this.applyTimeRangeFilterToNewsPanelsDebounced.cancel();
     this.xIntelAbortController?.abort();
@@ -1303,7 +1297,6 @@ export class DataLoaderManager implements AppModule {
     if (SITE_VARIANT !== 'happy' && CYBER_LAYER_ENABLED && this.ctx.mapLayers.cyberThreats) tasks.push({ name: 'cyberThreats', task: () => runGuarded('cyberThreats', () => this.loadCyberThreats()) });
     if (IRAN_ATTACKS_ENABLED && SITE_VARIANT !== 'happy' && (this.ctx.mapLayers.iranAttacks || shouldLoadAny(['cii', 'strategic-risk', 'strategic-posture']))) tasks.push({ name: 'iranAttacks', task: () => runGuarded('iranAttacks', () => this.loadIranEvents()) });
     if (SITE_VARIANT !== 'happy' && (this.ctx.mapLayers.techEvents || SITE_VARIANT === 'tech')) tasks.push({ name: 'techEvents', task: () => runGuarded('techEvents', () => this.loadTechEvents()) });
-    if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.satellites && this.ctx.map?.isGlobeMode?.()) tasks.push({ name: 'satellites', task: () => runGuarded('satellites', () => this.loadSatellites()) });
     if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.webcams) tasks.push({ name: 'webcams', task: () => runGuarded('webcams', () => this.loadWebcams()) });
     if (SITE_VARIANT !== 'happy' && (shouldLoad('sanctions-pressure') || this.ctx.mapLayers.sanctions)) {
       tasks.push({ name: 'sanctions', task: () => runGuarded('sanctions', () => this.loadSanctionsPressure()) });
@@ -1430,11 +1423,11 @@ export class DataLoaderManager implements AppModule {
         case 'iranAttacks':
           await this.loadIranEvents();
           break;
-        case 'satellites': {
-          await this.loadSatellites();
+        case 'satellites':
+          // The flat map draws imagery footprints for this layer. Live
+          // satellite positions were drawn only by the removed 3D globe.
           this.loadImageryFootprints();
           break;
-        }
         case 'webcams':
           await this.loadWebcams();
           break;
@@ -1469,41 +1462,10 @@ export class DataLoaderManager implements AppModule {
     }
   }
 
-  async loadSatellites(): Promise<void> {
-    this.stopSatellitePropagation();
-    const data = await fetchSatelliteTLEs();
-    if (!data || data.length === 0) {
-      // Confirmed empty, expired, or unavailable without last-good data:
-      // clear the layer instead of leaving the previous orbits on the map.
-      this.cachedSatRecs = [];
-      this.ctx.map?.setSatellites([]);
-      return;
-    }
-    try {
-      this.cachedSatRecs = await initSatRecs(data);
-    } catch (err) {
-      console.error('[satellites] failed to initialize satellite propagation', err);
-      this.cachedSatRecs = [];
-      this.ctx.map?.setSatellites([]);
-      return;
-    }
-    const positions = propagatePositions(this.cachedSatRecs);
-    this.ctx.map?.setSatellites(positions);
-    this.satellitePropagationCleanup = startPropagationLoop(this.cachedSatRecs, (pos) => {
-      this.ctx.map?.setSatellites(pos);
-    }, 3000);
-  }
-
-  private stopSatellitePropagation(): void {
-    this.satellitePropagationCleanup?.();
-    this.satellitePropagationCleanup = null;
-  }
-
   private imageryRetryTimer: ReturnType<typeof setTimeout> | null = null;
 
   private loadImageryFootprints(retries = 2): void {
     if (!this.ctx.mapLayers.satellites) return;
-    if (this.ctx.map?.isGlobeMode()) return;
     const bbox = this.ctx.map?.getBbox();
     if (!bbox) {
       if (retries > 0) {
@@ -1515,7 +1477,6 @@ export class DataLoaderManager implements AppModule {
       try {
         const scenes = await fetchImageryScenes({ bbox, limit: 20 });
         if (!this.ctx.mapLayers.satellites) return;
-        if (this.ctx.map?.isGlobeMode()) return;
         this.ctx.map?.setImageryScenes(scenes);
       } catch { /* imagery is best-effort */ }
     });
@@ -1523,7 +1484,6 @@ export class DataLoaderManager implements AppModule {
 
   stopLayerActivity(layer: keyof MapLayers): void {
     if (layer === 'satellites') {
-      this.stopSatellitePropagation();
       if (this.imageryRetryTimer) { clearTimeout(this.imageryRetryTimer); this.imageryRetryTimer = null; }
     }
   }

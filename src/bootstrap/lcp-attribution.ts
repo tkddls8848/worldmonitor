@@ -225,7 +225,6 @@ function classifyCriticalResource(name: string, initiatorType: string): string {
   if (
     lower.includes('mapcontainer')
     || lower.includes('deckglmap')
-    || lower.includes('globemap')
     || lower.includes('maplibre')
     || lower.includes('deck-stack')
     || lower.includes('protomaps')

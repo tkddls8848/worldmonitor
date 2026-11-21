@@ -1624,13 +1624,6 @@
       "infoTooltip": "<strong>Uchambuzi Unaoendeshwa na AI</strong><br>• <strong>Muhtasari wa Ulimwengu</strong>: Muhtasari wa AI (OpenRouter)<br>• <strong>Maoni</strong>: Uchanganuzi wa sauti ya habari<br>• <strong>Kasi</strong>: Hadithi zinazosonga haraka<br>• <strong>Viini muhimu</strong>: Wanajeshi na maandamano ya ramani kukatika)<br><em>Desktop pekee • Inaendeshwa na Llama 3.3 + Focal Point Detection</em>",
       "streamQualityLabel": "Ubora wa Video",
       "streamQualityDesc": "Weka ubora wa mitiririko yote ya moja kwa moja (hifadhi data ya chini)",
-      "globeRenderScaleOptions": {
-        "1": "Eco (1x)",
-        "2": "4K (2x)",
-        "3": "Mwendawazimu (3x)",
-        "auto": "Otomatiki (kifaa)",
-        "1_5": "Mkali (1.5x)"
-      },
       "mapFlashLabel": "Mapigo ya Tukio la Moja kwa Moja",
       "mapFlashDesc": "Mwangaza maeneo kwenye ramani wakati habari muhimu zinapofika",
       "aiFlowCloudLabel": "AI ya wingu (OpenRouter)",
@@ -4484,8 +4477,6 @@
     "mapProviderDesc": "Chagua mahali ambapo vigae vya ramani vinapakiwa kutoka. Kiotomatiki hutumia PMTiles inayojipangisha yenyewe na njia mbadala ya OpenFreeMap.",
     "mapTheme": "Mandhari ya Ramani",
     "mapThemeDesc": "Mtindo unaoonekana wa vigae vya ramani. Chaguo hutofautiana kulingana na mtoaji.",
-    "globePreset": "Mtindo wa mwonekano",
-    "globePresetDesc": "Badili kati ya taswira za kawaida na zilizoboreshwa za ulimwengu ili kulinganisha.",
     "fontFamily": "Familia ya Fonti",
     "fontFamilyDesc": "Nafasi moja kwa mwonekano wa kiufundi, chaguomsingi ya mfumo kwa usomaji rahisi.",
     "fontMono": "Nafasi moja",

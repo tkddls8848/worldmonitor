@@ -43,7 +43,7 @@ for (const renderer of ['svg', 'deck'] as const) {
     const selected = { setDisplacementFlows: vi.fn(), setInternalDisplacement: vi.fn(), setDisplacementEvents: vi.fn() };
     const other = { setDisplacementFlows: vi.fn(), setInternalDisplacement: vi.fn(), setDisplacementEvents: vi.fn() };
     const map = Object.create(MapContainer.prototype);
-    Object.assign(map, { useGlobe: false, useDeckGL: renderer === 'deck',
+    Object.assign(map, { useDeckGL: renderer === 'deck',
       svgMap: renderer === 'svg' ? selected : other, deckGLMap: renderer === 'deck' ? selected : other });
     const flow = [{ originCode: 'A', originName: 'Origin', asylumCode: 'B', asylumName: 'Asylum', refugees: 100 }];
     const internal = { operations: [], regions: [], routes: [] };

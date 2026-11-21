@@ -1,30 +1,23 @@
 /**
- * Bounds how many HTML markers the 3D globe renders at once (#5368).
+ * Bounds how many HTML overlay markers the SVG/D3 map renders at once.
  *
- * globe.gl renders `htmlElementsData` through three's CSS2DRenderer, which walks
- * EVERY marker on EVERY animation frame and rewrites `display`, `transform` and
- * `zIndex` on each one — unconditionally, even with a still camera — then runs a
- * whole-scene `traverseVisible` plus an O(n log n) depth sort
- * (three/examples/jsm/renderers/CSS2DRenderer.js:214-310, driven from
- * globe.gl's `_animationCycle`). Frame cost is therefore linear in marker count
- * and lands squarely in the interaction frame budget, which is what INP measures.
+ * The selection was introduced for the removed 3D globe (#5368), where every
+ * marker was a DOM node rewritten on each animation frame, and is now used by
+ * the SVG/D3 renderer (`MapComponent.renderOverlays`), which has the same
+ * shape of problem for a different reason (#7112) — see
+ * `MAP_OVERLAY_MARKER_BUDGET_DESKTOP` below.
  *
- * Measured on production 2026-07-18: the desktop default view carries 2,319
+ * Measured on production 2026-07-18: the desktop default view carried 2,319
  * markers, 1,526 of them live AIS vessels arriving over a websocket with no
  * ceiling of their own; opting into Armed Conflict Events adds a further 2,000.
  * Nothing upstream bounds these, so the ceiling belongs here.
  *
- * This module is deliberately free of DOM and three.js imports so the real
- * selection function can be unit-tested directly against real payload shapes.
- *
- * It is shared with the SVG/D3 renderer (`MapComponent.renderOverlays`), which
- * has the same shape of problem for a different reason (#7112) — see
- * `MAP_OVERLAY_MARKER_BUDGET_DESKTOP` below. The names keep the `Globe` prefix
- * they were introduced with; the selection itself is renderer-agnostic.
+ * This module is deliberately free of DOM imports so the real selection
+ * function can be unit-tested directly against real payload shapes.
  */
 
-/** A single layer's contribution to the globe, before budgeting. */
-export interface GlobeMarkerGroup<T> {
+/** A single layer's contribution to the map overlay, before budgeting. */
+export interface MapMarkerGroup<T> {
   /**
    * Layer toggle key this group belongs to. Several groups may share one key —
    * `military` alone contributes flights, vessels and clusters — in which case
@@ -58,7 +51,7 @@ export interface GlobeMarkerGroup<T> {
   exempt?: boolean;
 }
 
-export interface GlobeMarkerBudget {
+export interface MapMarkerBudget {
   /**
    * Ceiling per GROUP, not per layer key. A layer that supplies several feeds
    * (`military` = flights + vessels + clusters) is budgeted once per feed, so
@@ -70,25 +63,16 @@ export interface GlobeMarkerBudget {
   total: number;
 }
 
-export interface GlobeLayerTruncation {
+export interface MapLayerTruncation {
   shown: number;
   total: number;
 }
 
-export interface GlobeMarkerSelection<T> {
+export interface MapMarkerSelection<T> {
   markers: T[];
   /** Only layers that actually lost markers appear here. */
-  truncated: Record<string, GlobeLayerTruncation>;
+  truncated: Record<string, MapLayerTruncation>;
 }
-
-/**
- * Mobile keeps the default view (~120 markers on production today) untouched and
- * only bites when a user stacks heavy layers onto a phone.
- */
-export const GLOBE_MARKER_BUDGET_MOBILE: GlobeMarkerBudget = { perLayer: 150, total: 400 };
-
-/** Desktop's default view is 2,319 markers today, so this cuts it ~2.9x. */
-export const GLOBE_MARKER_BUDGET_DESKTOP: GlobeMarkerBudget = { perLayer: 300, total: 800 };
 
 /**
  * The same selection, applied to the SVG/D3 renderer's HTML overlay (#7112).
@@ -108,21 +92,23 @@ export const GLOBE_MARKER_BUDGET_DESKTOP: GlobeMarkerBudget = { perLayer: 300, t
  * same page carries 7.6k nodes / 736 listeners because its vessels are a single
  * WebGL draw call.
  *
- * Deliberately the same numbers as the globe: both renderers pay per DOM marker,
- * and two different ceilings for the same layer set would be a surprise when a
- * client falls back between them.
+ * Desktop's default view was 2,319 markers when the census ran, so this cuts it
+ * ~2.9x.
  */
-export const MAP_OVERLAY_MARKER_BUDGET_DESKTOP: GlobeMarkerBudget = { perLayer: 300, total: 800 };
+export const MAP_OVERLAY_MARKER_BUDGET_DESKTOP: MapMarkerBudget = { perLayer: 300, total: 800 };
 
-/** Mobile always uses the SVG renderer, so it keeps the tighter mobile ceiling. */
-export const MAP_OVERLAY_MARKER_BUDGET_MOBILE: GlobeMarkerBudget = { perLayer: 150, total: 400 };
+/**
+ * Mobile always uses the SVG renderer. Its default view (~120 markers) stays
+ * untouched; the ceiling only bites when a user stacks heavy layers onto a phone.
+ */
+export const MAP_OVERLAY_MARKER_BUDGET_MOBILE: MapMarkerBudget = { perLayer: 150, total: 400 };
 
 /**
  * Half the mobile ceiling for low-end devices (`src/utils/device-tier.ts`),
  * where p75 INP is 656-1,704 ms and is set by paint, so it scales with the
  * marker DOM. The truncation badge still tells the user markers were cut.
  */
-export const MAP_OVERLAY_MARKER_BUDGET_LOW_END: GlobeMarkerBudget = { perLayer: 75, total: 200 };
+export const MAP_OVERLAY_MARKER_BUDGET_LOW_END: MapMarkerBudget = { perLayer: 75, total: 200 };
 
 /**
  * Largest per-group cap `c <= max` for which `sum(min(len_i, c)) <= total`.
@@ -207,10 +193,10 @@ function takeTop<T>(
  * Applies the per-layer cap, then the global ceiling, returning the markers to
  * render plus a report of what was withheld so the UI can disclose it.
  */
-export function selectGlobeMarkers<T>(
-  groups: readonly GlobeMarkerGroup<T>[],
-  budget: GlobeMarkerBudget,
-): GlobeMarkerSelection<T> {
+export function selectMapMarkers<T>(
+  groups: readonly MapMarkerGroup<T>[],
+  budget: MapMarkerBudget,
+): MapMarkerSelection<T> {
   const exempt = groups.filter(group => group.exempt);
   const budgeted = groups.filter(group => !group.exempt && group.markers.length > 0);
 
@@ -223,7 +209,7 @@ export function selectGlobeMarkers<T>(
   const markers: T[] = [];
   // Totalled across every group sharing a layer key, so a layer whose vessel
   // feed is trimmed still reports its untrimmed flights in the same figure.
-  const perLayer = new Map<string, GlobeLayerTruncation>();
+  const perLayer = new Map<string, MapLayerTruncation>();
 
   for (const group of budgeted) {
     const kept = takeTop(group.markers, cap, group.rank, group.tieBreak);
@@ -237,7 +223,7 @@ export function selectGlobeMarkers<T>(
     markers.push(...group.markers);
   }
 
-  const truncated: Record<string, GlobeLayerTruncation> = {};
+  const truncated: Record<string, MapLayerTruncation> = {};
   for (const [layer, counts] of perLayer) {
     if (counts.shown < counts.total) truncated[layer] = counts;
   }

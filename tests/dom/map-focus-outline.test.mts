@@ -1,14 +1,13 @@
 /**
  * Dashboard focus on the map (#10453): the chosen countries outlined solid,
  * neighbours lighter, the view fitted to the chosen countries only, and
- * markers never filtered. Covers the three renderers (DeckGL desktop, SVG
- * mobile/fallback, globe) and the MapContainer facade that orders the fit
+ * markers never filtered. Covers both renderers (DeckGL desktop, SVG
+ * mobile/fallback) and the MapContainer facade that orders the fit
  * against other viewport commands.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { DeckGLMap } from '@/components/DeckGLMap';
-import { GlobeMap } from '@/components/GlobeMap';
 import { MapComponent } from '@/components/Map';
 import { MapContainer } from '@/components/MapContainer';
 import { focusFitBounds, focusSingleWorldFitBounds } from '@/utils/focus-map';
@@ -270,73 +269,6 @@ describe('SVG focus outline', () => {
   });
 });
 
-describe('Globe focus outline', () => {
-  function feature(code: string) {
-    return {
-      type: 'Feature',
-      properties: { 'ISO3166-1-Alpha-2': code, name: code },
-      geometry: { type: 'Polygon', coordinates: [[[0, 0], [1, 0], [1, 1], [0, 0]]] },
-    };
-  }
-
-  it('adds chosen and neighbour polygons, neighbours first, and removes them on clear', () => {
-    const polygonsData = vi.fn();
-    const map = Object.assign(Object.create(GlobeMap.prototype), {
-      globe: { polygonsData },
-      initialized: true,
-      destroyed: false,
-      webglLost: false,
-      layers: {},
-      scenarioPolygons: [], orbitalFootprintPolygons: [], orbitalSweptPolygons: [],
-      focusOutline: null,
-      reversedRingCache: new Map(),
-      countriesGeoData: { type: 'FeatureCollection', features: ['TH', 'LA', 'FR', 'VN'].map(feature) },
-      wakeGlobe: vi.fn(),
-    });
-    map.setFocusOutline({ chosen: ['TH', 'VN'], neighbours: ['LA'] });
-    const polys = polygonsData.mock.lastCall![0] as Array<{ name: string; _kind: string }>;
-    expect(polys.map((p) => [p.name, p._kind])).toEqual([
-      ['LA', 'focusNeighbour'],
-      ['TH', 'focusChosen'],
-      ['VN', 'focusChosen'],
-    ]);
-    map.setFocusOutline(null);
-    expect(polygonsData.mock.lastCall![0]).toEqual([]);
-  });
-
-  it('uses the same globe ring winding for CII fills and focus outlines without mutating the boundary', () => {
-    const boundary = feature('TH');
-    const original = structuredClone(boundary.geometry.coordinates);
-    const polygonsData = vi.fn();
-    const map = Object.assign(Object.create(GlobeMap.prototype), {
-      globe: { polygonsData }, initialized: true, destroyed: false, webglLost: false,
-      layers: { ciiChoropleth: true }, scenarioPolygons: [], orbitalFootprintPolygons: [], orbitalSweptPolygons: [], focusOutline: null,
-      reversedRingCache: new Map(), ciiScoresMap: new Map(), wakeGlobe: vi.fn(),
-      countriesGeoData: { type: 'FeatureCollection', features: [boundary] },
-    });
-    map.setCIIScores([{ code: 'TH', score: 73, level: 'high' }]);
-    map.setFocusOutline({ chosen: ['TH'], neighbours: [] });
-    const polys = polygonsData.mock.lastCall![0];
-    expect(polys.find((p: { _kind: string }) => p._kind === 'cii').coords)
-      .toEqual(polys.find((p: { _kind: string }) => p._kind === 'focusChosen').coords);
-    expect(boundary.geometry.coordinates).toEqual(original);
-  });
-
-  it('builds the outline once countries load after the focus was set', () => {
-    const polygonsData = vi.fn();
-    const map = Object.assign(Object.create(GlobeMap.prototype), {
-      globe: { polygonsData },
-      initialized: true, destroyed: false, webglLost: false, layers: {}, scenarioPolygons: [], orbitalFootprintPolygons: [], orbitalSweptPolygons: [],
-      focusOutline: null, reversedRingCache: new Map(), countriesGeoData: null, wakeGlobe: vi.fn(),
-    });
-    map.setFocusOutline({ chosen: ['TH'], neighbours: [] });
-    expect(polygonsData.mock.lastCall![0]).toEqual([]);
-    map.countriesGeoData = { type: 'FeatureCollection', features: [feature('TH')] };
-    map.flushPolygons();
-    expect((polygonsData.mock.lastCall![0] as Array<{ _kind: string }>).map((p) => p._kind)).toEqual(['focusChosen']);
-  });
-});
-
 describe('MapContainer focus scope', () => {
   function renderer() {
     return {
@@ -350,17 +282,14 @@ describe('MapContainer focus scope', () => {
     };
   }
 
-  function container(options: { ready?: boolean; renderer?: 'deck' | 'svg' | 'globe' } = {}) {
+  function container(options: { ready?: boolean; renderer?: 'deck' | 'svg' } = {}) {
     const deck = renderer();
     const svg = renderer();
-    const globe = renderer();
     const kind = options.renderer ?? 'deck';
     const map = Object.assign(Object.create(MapContainer.prototype), {
       useDeckGL: kind === 'deck',
-      useGlobe: kind === 'globe',
       deckGLMap: kind === 'deck' ? deck : null,
       svgMap: kind === 'svg' ? svg : null,
-      globeMap: kind === 'globe' ? globe : null,
       rendererReady: options.ready ?? true,
       destroyed: false,
       rendererInitToken: 1,
@@ -378,7 +307,7 @@ describe('MapContainer focus scope', () => {
       focusOutline: null,
       focusFitSeq: 0,
     });
-    return { map, deck, svg, globe };
+    return { map, deck, svg };
   }
 
   it('outlines on the active renderer and fits the chosen countries only', async () => {
@@ -392,16 +321,12 @@ describe('MapContainer focus scope', () => {
     expect(maxZoom).toBe(6);
   });
 
-  it('uses the SVG fit on the mobile renderer and the globe fit with an altitude on the globe', async () => {
+  it('uses the SVG fit on the mobile renderer', async () => {
     const svg = container({ renderer: 'svg' });
     svg.map.setFocusScope(OUTLINE, { fit: true });
-    const globe = container({ renderer: 'globe' });
-    globe.map.setFocusScope(OUTLINE, { fit: true });
     await vi.dynamicImportSettled();
     expect(svg.svg.setFocusOutline).toHaveBeenCalledWith(OUTLINE);
     expect(svg.svg.fitFocusBounds).toHaveBeenCalledWith(focusFitBounds(['TH', 'VN', 'ID']));
-    expect(globe.globe.setFocusOutline).toHaveBeenCalledWith(OUTLINE);
-    expect(globe.globe.fitFocusBounds).toHaveBeenCalledWith(focusFitBounds(['TH', 'VN', 'ID']), expect.any(Number));
   });
 
   it('outlines without moving when fit is off, and clears without moving', async () => {
@@ -441,7 +366,7 @@ describe('MapContainer focus scope', () => {
     expect(deck.fitFocusBounds).toHaveBeenCalledOnce();
   });
 
-  it.each(['deck', 'svg', 'globe'] as const)('direct navigation supersedes a loading focus fit on %s', async (kind) => {
+  it.each(['deck', 'svg'] as const)('direct navigation supersedes a loading focus fit on %s', async (kind) => {
     for (const destination of ['reservoir', 'chokepoint']) {
       const host = container({ renderer: kind });
       const active = host[kind];
@@ -572,14 +497,12 @@ describe('MapContainer focus scope', () => {
     expect(deck.fitFocusBounds).not.toHaveBeenCalled();
   });
 
-  it('gives the one-world flat renderers a fit inside [-180, 180] and the globe the short arc', async () => {
+  it('gives the one-world flat renderers a fit inside [-180, 180], not the antimeridian-crossing arc', async () => {
     const pacific = { chosen: ['FJ', 'US'], neighbours: [] };
     const deck = container({ renderer: 'deck' });
     deck.map.setFocusScope(pacific, { fit: true });
     const svg = container({ renderer: 'svg' });
     svg.map.setFocusScope(pacific, { fit: true });
-    const globe = container({ renderer: 'globe' });
-    globe.map.setFocusScope(pacific, { fit: true });
     await vi.dynamicImportSettled();
     const flat = focusSingleWorldFitBounds(['FJ', 'US'])!;
     expect(flat.east).toBeLessThanOrEqual(180);
@@ -587,20 +510,19 @@ describe('MapContainer focus scope', () => {
     expect(svg.svg.fitFocusBounds).toHaveBeenCalledWith(flat);
     const arc = focusFitBounds(['FJ', 'US'])!;
     expect(arc.east).toBeGreaterThan(180);
-    expect(globe.globe.fitFocusBounds).toHaveBeenCalledWith(arc, expect.any(Number));
   });
 
   it('re-applies the outline to a renderer created after a switch', () => {
-    const { map, globe } = container({ renderer: 'deck' });
+    const { map, svg } = container({ renderer: 'deck' });
     map.setFocusScope(OUTLINE, { fit: false });
     Object.assign(map, {
-      useDeckGL: false, useGlobe: true, deckGLMap: null, globeMap: globe,
+      useDeckGL: false, deckGLMap: null, svgMap: svg,
       emergencyLayer: { setEnabled: vi.fn() }, notamAirspaceLayer: { setEnabled: vi.fn() },
       cachedNotamAirspace: [], layerLoadingState: new Map(), layerReadyState: new Map(), hiddenLayerToggles: new Set(),
     });
-    Object.assign(globe, { getState: () => ({ layers: {} }) });
+    Object.assign(svg, { getState: () => ({ layers: {} }) });
     map.rehydrateActiveMap();
-    expect(globe.setFocusOutline).toHaveBeenCalledWith(OUTLINE);
-    expect(globe.fitFocusBounds).not.toHaveBeenCalled();
+    expect(svg.setFocusOutline).toHaveBeenCalledWith(OUTLINE);
+    expect(svg.fitFocusBounds).not.toHaveBeenCalled();
   });
 });

@@ -1,8 +1,8 @@
 /**
  * Guardrail: every layer enabled by default in a variant's MapLayers
- * MUST be in VARIANT_LAYER_ORDER (DeckGL/Globe toggle) or SVG_ONLY_LAYERS
+ * MUST be in VARIANT_LAYER_ORDER (DeckGL toggle) or SVG_ONLY_LAYERS
  * (SVG fallback toggle). Layers in VARIANT_LAYER_ORDER must have at least
- * one DeckGL/Globe renderer so getLayersForVariant() returns them.
+ * one renderer so getLayersForVariant() returns them.
  *
  * Without this, layers render but have no UI toggle → users can't turn them off.
  */
@@ -46,7 +46,7 @@ function extractLayerRenderers(source) {
       result[key] = renderers;
     } else {
       // Layers with no explicit `renderers:` inherit the def() factory default.
-      result[key] = ['svg', 'deck', 'globe'];
+      result[key] = ['svg', 'deck'];
     }
   }
   return result;
@@ -121,7 +121,7 @@ describe('variant layer guardrail', () => {
     }
   });
 
-  it('every layer in VARIANT_LAYER_ORDER has at least one DeckGL/Globe renderer', () => {
+  it('every layer in VARIANT_LAYER_ORDER has at least one renderer', () => {
     const noRenderer = [];
     for (const [variant, keys] of Object.entries(variantOrder)) {
       for (const key of keys) {

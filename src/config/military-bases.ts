@@ -3,7 +3,7 @@
 // eager boot graph (#4478 / #4410). geo.ts stays eager for INTEL_HOTSPOTS /
 // CONFLICT_ZONES, but no longer imports bases-expanded. Eager consumers
 // (country-intel, related-assets, data-loader→military-surge) lazy-load this
-// module via dynamic import(); lazy consumers (Map / DeckGLMap / GlobeMap /
+// module via dynamic import(); lazy consumers (Map / DeckGLMap /
 // search-manager) import it statically and pull it only when their own chunk
 // loads. Co-chunked with bases-expanded as 'military-bases-data' in vite.config.ts.
 //

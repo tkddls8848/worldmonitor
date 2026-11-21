@@ -91,11 +91,11 @@ test('Water Levels markers follow the layer toggle and open a popup in each rend
     const { toDisplayReservoirLevel } = await import(/* @vite-ignore */ '/src/services/climate/reservoir-levels.ts');
     const reservoirs = fixture.reservoirs.map(toDisplayReservoirLevel);
     const mead = reservoirs.find((r: { id: string }) => r.id === 'mead');
-    const modulePaths = ['/src/components/DeckGLMap.ts', '/src/components/Map.ts', '/src/components/GlobeMap.ts'];
+    const modulePaths = ['/src/components/DeckGLMap.ts', '/src/components/Map.ts'];
     const result = [];
     for (const path of modulePaths) {
       const exports = await import(/* @vite-ignore */ path);
-      const Constructor = exports.DeckGLMap ?? exports.MapComponent ?? exports.GlobeMap;
+      const Constructor = exports.DeckGLMap ?? exports.MapComponent;
       const container = document.createElement('div');
       container.style.cssText = 'position:fixed;inset:0;width:1000px;height:700px;z-index:9999';
       document.body.append(container);
@@ -104,8 +104,7 @@ test('Water Levels markers follow the layer toggle and open a popup in each rend
       map.setReservoirLevels(reservoirs);
       const count = () => exports.DeckGLMap
         ? map.buildLayers().find((layer: { id: string }) => layer.id === 'reservoir-levels-layer')?.props.data.length ?? 0
-        : exports.GlobeMap ? map.globe.htmlElementsData().filter((item: { _kind: string }) => item._kind === 'reservoirLevel').length
-          : container.querySelectorAll('.wl-marker').length;
+        : container.querySelectorAll('.wl-marker').length;
       const waitFor = async (check: () => boolean, ms = 5000) => {
         const deadline = performance.now() + ms;
         while (!check() && performance.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 50));
@@ -120,8 +119,6 @@ test('Water Levels markers follow the layer toggle and open a popup in each rend
       const reenabled = count();
       map.openReservoir(mead);
       // MapPopup mounts on document.body to escape the map's overflow clipping.
-      // The globe opens the popup from a timer after its camera rotation settles. Under
-      // software WebGL in CI that timer has been measured firing 15 s late, so wait longer.
       await waitFor(() => Boolean(document.querySelector('.map-popup .wl-popup .popup-title')), 40000);
       const popupTitle = document.querySelector('.map-popup .wl-popup .popup-title')?.textContent ?? '';
       document.querySelectorAll('.map-popup').forEach((el) => el.remove());

@@ -12,7 +12,6 @@ import {
   setLiveNewsAutoplay,
   setLiveStreamsAlwaysOn,
 } from '@/services/live-stream-settings';
-import { getGlobeVisualPreset, setGlobeVisualPreset, GLOBE_VISUAL_PRESET_OPTIONS, type GlobeVisualPreset } from '@/services/globe-render-settings';
 import type { StreamQuality } from '@/services/ai-flow-settings';
 import { getThemePreference, setThemePreference, type ThemePreference } from '@/utils/theme-manager';
 import { getFontFamily, setFontFamily, type FontFamily } from '@/services/font-settings';
@@ -243,7 +242,6 @@ const mapSection: PreferenceSectionSpec = {
     let html = selectHtml('us-map-provider', t('preferences.mapProvider'), t('preferences.mapProviderDesc'), MAP_PROVIDER_OPTIONS, currentProvider);
     html += selectHtml('us-map-theme', t('preferences.mapTheme'), t('preferences.mapThemeDesc'), MAP_THEME_OPTIONS[currentProvider], getMapTheme(currentProvider));
     html += toggleRowHtml('us-map-flash', t('components.insights.mapFlashLabel'), t('components.insights.mapFlashDesc'), getAiFlowSettings().mapNewsFlash);
-    html += selectHtml('us-globe-visual-preset', t('preferences.globePreset'), t('preferences.globePresetDesc'), GLOBE_VISUAL_PRESET_OPTIONS, getGlobeVisualPreset());
     return html;
   },
   onChange: {
@@ -262,10 +260,6 @@ const mapSection: PreferenceSectionSpec = {
     },
     'us-map-flash': (target) => {
       setAiFlowSetting('mapNewsFlash', target.checked);
-      return true;
-    },
-    'us-globe-visual-preset': (target) => {
-      setGlobeVisualPreset(target.value as GlobeVisualPreset);
       return true;
     },
   },

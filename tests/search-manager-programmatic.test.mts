@@ -152,7 +152,6 @@ interface Scenario {
     scrolledPanels: string[];
   };
   state: {
-    globe: boolean;
     deckGL: boolean;
     updateCount: number;
     onUpdate?: (count: number) => void;
@@ -407,7 +406,6 @@ function makeScenario(
     scrolledPanels: [],
   };
   const state: Scenario['state'] = {
-    globe: false,
     deckGL: true,
     updateCount: 0,
   };
@@ -460,7 +458,6 @@ function makeScenario(
     searchModal: modal,
     mapLayers,
     map: {
-      isGlobeMode: () => state.globe,
       isDeckGLActive: () => state.deckGL,
       setView: (view: string) => calls.views.push(view),
       enableLayer: (layer: string) => calls.layers.push(layer),
@@ -1655,7 +1652,7 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
     scenario.manager.destroy();
   });
 
-  it('revalidates executability after a renderer flip', async () => {
+  it('keeps a both-surface result executable after a DeckGL-to-SVG renderer flip', async () => {
     const scenario = makeScenario([
       resultMatch('pipeline', 'pipe-1', 'Needle pipeline', { id: 'pipe-1' }),
     ]);
@@ -1664,42 +1661,13 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
     const key = response.results[0]?.key;
     assert.ok(key);
 
-    scenario.state.globe = true;
-    let readinessCalls = 0;
-    assert.deepEqual(await scenario.manager.openSearchResult(key, async () => {
-      readinessCalls += 1;
-    }), {
-      ok: false,
-      status: 'denied',
-      reason: 'result_no_longer_executable',
+    scenario.state.deckGL = false;
+    assert.deepEqual(await scenario.manager.openSearchResult(key, async () => {}), {
+      ok: true,
+      status: 'opened',
+      type: 'pipeline',
     });
-    assert.equal(readinessCalls, 0, 'a denied key must not wake the deferred renderer');
-    assert.deepEqual(scenario.calls.layers, []);
-    assert.deepEqual(scenario.calls.pipelineIds, []);
-  });
-
-  it('revalidates renderer compatibility at the delayed mutation boundary', async () => {
-    const scenario = makeScenario([
-      resultMatch('pipeline', 'pipe-delayed', 'Delayed pipeline', { id: 'pipe-delayed' }),
-    ]);
-    scenario.runtime.deferTimers = true;
-    const response = await scenario.manager.searchDashboard('needle', 'all', 10);
-    const key = response.results[0]?.key;
-    assert.ok(key);
-    const pendingOpen = scenario.manager.openSearchResult(key);
-    await Promise.resolve();
-    assert.equal(scenario.runtime.pendingTimers.size, 1);
-
-    scenario.state.globe = true;
-    flushTimers(scenario.runtime);
-    assert.deepEqual(await pendingOpen, {
-      ok: false,
-      status: 'denied',
-      reason: 'result_no_longer_executable',
-    });
-    assert.deepEqual(scenario.calls.layers, []);
-    assert.deepEqual(scenario.calls.pipelineIds, []);
-    assert.deepEqual(scenario.calls.views, []);
+    assert.deepEqual(scenario.calls.pipelineIds, ['pipe-1']);
   });
 
   it('denies a delayed selection removed from the live search index before commit', async () => {
@@ -1758,90 +1726,6 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
     });
     assert.deepEqual(scenario.calls.centers, [[33, 44, 9]]);
     assert.deepEqual(scenario.calls.layers, ['flights']);
-  });
-
-  it('denies cached civilian aircraft after a globe switch while retaining military aircraft', async () => {
-    const civilian = resultMatch(
-      'flight',
-      'civilian-1',
-      'NEEDLE1',
-      { kind: 'adsb', lat: 1, lon: 2, layer: 'flights' },
-    );
-    const military = resultMatch(
-      'flight',
-      'military-1',
-      'NEEDLE2',
-      { kind: 'military', lat: 3, lon: 4, layer: 'military' },
-    );
-    const scenario = makeScenario([civilian, military]);
-    const response = await scenario.manager.searchDashboard('needle', 'all', 10);
-    assert.deepEqual(response.results.map((result: { executable: boolean }) => result.executable), [
-      true,
-      true,
-    ]);
-
-    scenario.state.globe = true;
-    let readinessCalls = 0;
-    assert.deepEqual(await scenario.manager.openSearchResult(
-      response.results[0].key,
-      async () => { readinessCalls += 1; },
-    ), {
-      ok: false,
-      status: 'denied',
-      reason: 'result_no_longer_executable',
-    });
-    assert.equal(readinessCalls, 0, 'an invisible civilian target must not wake the renderer');
-
-    assert.deepEqual(await scenario.manager.openSearchResult(
-      response.results[1].key,
-      async () => { readinessCalls += 1; },
-    ), {
-      ok: true,
-      status: 'opened',
-      type: 'flight',
-    });
-    assert.equal(readinessCalls, 1);
-    assert.deepEqual(scenario.calls.layers, ['military']);
-    assert.deepEqual(scenario.calls.centers, [[3, 4, 9]]);
-  });
-
-  it('denies tech-event centering after a globe switch', async () => {
-    const scenario = makeScenario([
-      resultMatch(
-        'techevent',
-        'event-1',
-        'Needle tech event',
-        { id: 'event-1', lat: 37.8, lng: -122.4 },
-      ),
-    ], 'tech');
-    const response = await scenario.manager.searchDashboard('needle', 'all', 10);
-    assert.equal(response.results[0]?.executable, true);
-
-    scenario.state.globe = true;
-    assert.deepEqual(await scenario.manager.openSearchResult(response.results[0].key), {
-      ok: false,
-      status: 'denied',
-      reason: 'result_no_longer_executable',
-    });
-    assert.deepEqual(scenario.calls.layers, []);
-    assert.deepEqual(scenario.calls.centers, []);
-  });
-
-  it('denies globe time commands that only mutate hidden renderer state', async () => {
-    const scenario = makeScenario([
-      commandMatch('time:24h', 'actions', 'Last 24 hours'),
-    ]);
-    scenario.state.globe = true;
-    const response = await scenario.manager.searchDashboard('needle', 'all', 10);
-    assert.equal(response.results[0]?.executable, false);
-    const key = response.results[0]?.key;
-    assert.ok(key);
-    assert.deepEqual(await scenario.manager.openSearchResult(key, async () => {}), {
-      ok: false,
-      status: 'denied',
-      reason: 'result_no_longer_executable',
-    });
-    assert.deepEqual(scenario.calls.timeRanges, []);
   });
 
   it('denies news retained only by a disabled hidden panel', () => {

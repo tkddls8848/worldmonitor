@@ -106,7 +106,6 @@ function trackMark(): void {
 /** Flies the map to the point once the sheet's layout, and a raised map's size, have settled. */
 function focusMap(): void {
   centredFor = null;
-  getOrbitalMapView()?.hold(true);
   requestAnimationFrame(() => requestAnimationFrame(centreMap));
   if (markFrame === null) markFrame = requestAnimationFrame(trackMark);
 }
@@ -359,7 +358,6 @@ function ensurePage(): OrbitalWatchPage {
   if (!page) {
     page = new OrbitalWatchPage({
       onClose: () => {
-        getOrbitalMapView()?.hold(false);
         getOrbitalMapView()?.suppressLayers(false);
         if (homeCamera) getOrbitalMapView()?.restore(homeCamera);
         homeCamera = null;

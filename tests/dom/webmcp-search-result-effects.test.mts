@@ -183,7 +183,6 @@ function createHarness(matches: SearchMatch[], enabledPanels: Record<string, boo
     ctx: {
       mapLayers,
       map: {
-        isGlobeMode: () => false,
         isDeckGLActive: () => false,
         enableLayer,
         setView: vi.fn(),

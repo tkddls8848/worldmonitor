@@ -1,19 +1,19 @@
 /**
- * #5368 — the globe's HTML marker ceiling.
+ * #5368 / #7112 — the HTML overlay marker ceiling.
  *
- * These call the REAL `selectGlobeMarkers` (the function GlobeMap.flushMarkersImmediate
- * uses), and the headline cases feed it the marker counts a production census
+ * These call the REAL `selectMapMarkers` (the function the SVG map's
+ * renderOverlays uses), and the headline cases feed it the marker counts a production census
  * actually measured on 2026-07-18 rather than counts invented here.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  GLOBE_MARKER_BUDGET_DESKTOP,
-  GLOBE_MARKER_BUDGET_MOBILE,
+  MAP_OVERLAY_MARKER_BUDGET_DESKTOP,
+  MAP_OVERLAY_MARKER_BUDGET_MOBILE,
   proximityRank,
-  selectGlobeMarkers,
-  type GlobeMarkerGroup,
-} from '../src/utils/globe-marker-budget.ts';
+  selectMapMarkers,
+  type MapMarkerGroup,
+} from '../src/utils/map-marker-budget.ts';
 
 /**
  * Marker counts measured on www.worldmonitor.app/dashboard in globe mode,
@@ -62,7 +62,7 @@ const PROD_MOBILE_CENSUS: Record<string, number> = {
 
 interface Dot { id: string; severity: number; }
 
-function group(layer: string, count: number, opts: Partial<GlobeMarkerGroup<Dot>> = {}): GlobeMarkerGroup<Dot> {
+function group(layer: string, count: number, opts: Partial<MapMarkerGroup<Dot>> = {}): MapMarkerGroup<Dot> {
   return {
     layer: layer.split(':')[0],
     markers: Array.from({ length: count }, (_, i) => ({ id: `${layer}-${i}`, severity: i })),
@@ -70,34 +70,34 @@ function group(layer: string, count: number, opts: Partial<GlobeMarkerGroup<Dot>
   };
 }
 
-const censusGroups = (census: Record<string, number>): GlobeMarkerGroup<Dot>[] =>
+const censusGroups = (census: Record<string, number>): MapMarkerGroup<Dot>[] =>
   Object.entries(census).map(([layer, count]) => group(layer, count));
 
 const total = (census: Record<string, number>): number =>
   Object.values(census).reduce((a, b) => a + b, 0);
 
-describe('selectGlobeMarkers — production census (#5368)', () => {
+describe('selectMapMarkers — production census (#5368)', () => {
   it('cuts the real 2,319-marker desktop default view under the desktop budget', () => {
     const measured = total(PROD_DESKTOP_CENSUS);
     assert.ok(measured >= 2300 && measured <= 2350, `census drifted out of the measured band: ${measured}`);
 
-    const { markers, truncated } = selectGlobeMarkers(
+    const { markers, truncated } = selectMapMarkers(
       censusGroups(PROD_DESKTOP_CENSUS),
-      GLOBE_MARKER_BUDGET_DESKTOP,
+      MAP_OVERLAY_MARKER_BUDGET_DESKTOP,
     );
 
     assert.ok(
-      markers.length <= GLOBE_MARKER_BUDGET_DESKTOP.total,
-      `rendered ${markers.length} markers, budget is ${GLOBE_MARKER_BUDGET_DESKTOP.total}`,
+      markers.length <= MAP_OVERLAY_MARKER_BUDGET_DESKTOP.total,
+      `rendered ${markers.length} markers, budget is ${MAP_OVERLAY_MARKER_BUDGET_DESKTOP.total}`,
     );
     assert.ok(markers.length < 2319, 'the budget must actually bite on the production payload');
     assert.ok(truncated.military, 'the 1,526-marker vessel feed must be reported as truncated');
   });
 
   it('trims the biggest feed rather than starving small layers', () => {
-    const { markers } = selectGlobeMarkers(
+    const { markers } = selectMapMarkers(
       censusGroups(PROD_DESKTOP_CENSUS),
-      GLOBE_MARKER_BUDGET_DESKTOP,
+      MAP_OVERLAY_MARKER_BUDGET_DESKTOP,
     );
     const kept = (prefix: string): number => markers.filter(m => m.id.startsWith(prefix)).length;
 
@@ -115,9 +115,9 @@ describe('selectGlobeMarkers — production census (#5368)', () => {
     const measured = groups.reduce((n, g) => n + g.markers.length, 0);
     assert.ok(measured >= 4300 && measured <= 4350, `census drifted out of the measured band: ${measured}`);
 
-    const { markers, truncated } = selectGlobeMarkers(groups, GLOBE_MARKER_BUDGET_DESKTOP);
+    const { markers, truncated } = selectMapMarkers(groups, MAP_OVERLAY_MARKER_BUDGET_DESKTOP);
 
-    assert.ok(markers.length <= GLOBE_MARKER_BUDGET_DESKTOP.total);
+    assert.ok(markers.length <= MAP_OVERLAY_MARKER_BUDGET_DESKTOP.total);
     assert.equal(truncated.ucdpEvents.total, 2000);
     assert.ok(truncated.ucdpEvents.shown < 2000);
   });
@@ -125,9 +125,9 @@ describe('selectGlobeMarkers — production census (#5368)', () => {
   it('leaves the real mobile default view untouched — it is already small', () => {
     assert.equal(total(PROD_MOBILE_CENSUS), PROD_MOBILE_TOTAL, 'census drifted from the measured mobile total');
 
-    const { markers, truncated } = selectGlobeMarkers(
+    const { markers, truncated } = selectMapMarkers(
       censusGroups(PROD_MOBILE_CENSUS),
-      GLOBE_MARKER_BUDGET_MOBILE,
+      MAP_OVERLAY_MARKER_BUDGET_MOBILE,
     );
 
     assert.equal(markers.length, PROD_MOBILE_TOTAL, 'the mobile default view must not lose markers');
@@ -136,14 +136,14 @@ describe('selectGlobeMarkers — production census (#5368)', () => {
 
   it('bites on mobile only once a heavy layer is stacked on', () => {
     const groups = [...censusGroups(PROD_MOBILE_CENSUS), group('military:vessels', 1526)];
-    const { markers, truncated } = selectGlobeMarkers(groups, GLOBE_MARKER_BUDGET_MOBILE);
+    const { markers, truncated } = selectMapMarkers(groups, MAP_OVERLAY_MARKER_BUDGET_MOBILE);
 
-    assert.ok(markers.length <= GLOBE_MARKER_BUDGET_MOBILE.total);
+    assert.ok(markers.length <= MAP_OVERLAY_MARKER_BUDGET_MOBILE.total);
     assert.ok(truncated.military.total === 1526);
   });
 });
 
-describe('selectGlobeMarkers — invariants', () => {
+describe('selectMapMarkers — invariants', () => {
   const budget = { perLayer: 50, total: 120 };
 
   it('never exceeds either ceiling, for any group shape', () => {
@@ -152,7 +152,7 @@ describe('selectGlobeMarkers — invariants', () => {
     ];
     for (const shape of shapes) {
       const groups = shape.map((n, i) => group(`L${i}`, n));
-      const { markers } = selectGlobeMarkers(groups, budget);
+      const { markers } = selectMapMarkers(groups, budget);
       assert.ok(markers.length <= budget.total, `total exceeded for shape ${JSON.stringify(shape)}`);
       for (let i = 0; i < shape.length; i++) {
         const kept = markers.filter(m => m.id.startsWith(`L${i}-`)).length;
@@ -163,7 +163,7 @@ describe('selectGlobeMarkers — invariants', () => {
 
   it('invents no markers and preserves each layer order', () => {
     const groups = [group('a', 200), group('b', 10)];
-    const { markers } = selectGlobeMarkers(groups, budget);
+    const { markers } = selectMapMarkers(groups, budget);
     const ids = markers.map(m => m.id);
     assert.equal(new Set(ids).size, ids.length, 'no duplicates');
 
@@ -173,7 +173,7 @@ describe('selectGlobeMarkers — invariants', () => {
 
   it('keeps the highest-ranked markers when a rank is supplied', () => {
     const markers = Array.from({ length: 300 }, (_, i) => ({ id: `q-${i}`, severity: i }));
-    const { markers: kept } = selectGlobeMarkers(
+    const { markers: kept } = selectMapMarkers(
       [{ layer: 'quakes', markers, rank: m => m.severity }],
       { perLayer: 10, total: 10 },
     );
@@ -185,7 +185,7 @@ describe('selectGlobeMarkers — invariants', () => {
   });
 
   it('exempts ephemeral markers from the budget', () => {
-    const { markers } = selectGlobeMarkers(
+    const { markers } = selectMapMarkers(
       [group('bulk', 1000), { ...group('flash', 3), exempt: true }],
       budget,
     );
@@ -195,7 +195,7 @@ describe('selectGlobeMarkers — invariants', () => {
   it('reports a layer total across all of its feeds', () => {
     // `military` is three separate feeds behind one toggle.
     const groups = [group('military:flights', 32), group('military:vessels', 1526), group('military:clusters', 11)];
-    const { truncated } = selectGlobeMarkers(groups, budget);
+    const { truncated } = selectMapMarkers(groups, budget);
     assert.equal(truncated.military.total, 32 + 1526 + 11);
   });
 });
@@ -224,7 +224,7 @@ describe('proximityRank (#5368)', () => {
   });
 
   it('keeps the sites near the view when a layer is capped', () => {
-    const { markers } = selectGlobeMarkers(
+    const { markers } = selectMapMarkers(
       [{ layer: 'nuclear', markers: sites, rank }],
       { perLayer: 2, total: 2 },
     );
@@ -239,7 +239,7 @@ describe('proximityRank (#5368)', () => {
     const fromSantiago = proximityRank<typeof sites[number]>(
       { lat: -33.45, lng: -70.67 }, s => ({ lat: s.lat, lng: s.lng }),
     );
-    const { markers } = selectGlobeMarkers(
+    const { markers } = selectMapMarkers(
       [{ layer: 'nuclear', markers: sites, rank: fromSantiago }],
       { perLayer: 1, total: 1 },
     );
@@ -253,7 +253,7 @@ describe('proximityRank (#5368)', () => {
       { id: 'sydney', lat: -33.87, lng: 151.21 },
     ];
     const r = proximityRank<typeof withBad[number]>(KYIV, s => ({ lat: s.lat, lng: s.lng }));
-    const { markers } = selectGlobeMarkers(
+    const { markers } = selectMapMarkers(
       [{ layer: 'nuclear', markers: withBad, rank: r }],
       { perLayer: 2, total: 2 },
     );
@@ -261,7 +261,7 @@ describe('proximityRank (#5368)', () => {
   });
 });
 
-describe('selectGlobeMarkers — multi-feed layers and bad ranks', () => {
+describe('selectMapMarkers — multi-feed layers and bad ranks', () => {
   it('budgets each feed of a shared layer key independently', () => {
     // `military` is flights + vessels + clusters behind one toggle.
     const groups = [
@@ -269,7 +269,7 @@ describe('selectGlobeMarkers — multi-feed layers and bad ranks', () => {
       { layer: 'military', markers: Array.from({ length: 1526 }, (_, i) => ({ id: `v-${i}` })) },
       { layer: 'military', markers: Array.from({ length: 11 }, (_, i) => ({ id: `c-${i}` })) },
     ];
-    const { markers, truncated } = selectGlobeMarkers(groups, { perLayer: 50, total: 200 });
+    const { markers, truncated } = selectMapMarkers(groups, { perLayer: 50, total: 200 });
 
     assert.ok(markers.length <= 200, 'the global ceiling still holds');
     assert.equal(markers.filter(m => m.id.startsWith('f-')).length, 32, 'small feeds survive whole');
@@ -280,7 +280,7 @@ describe('selectGlobeMarkers — multi-feed layers and bad ranks', () => {
 
   it('does not drop markers when a rank returns NaN for every one of them', () => {
     const markers = Array.from({ length: 10 }, (_, i) => ({ id: `n-${i}` }));
-    const { markers: kept } = selectGlobeMarkers(
+    const { markers: kept } = selectMapMarkers(
       [{ layer: 'x', markers, rank: () => Number.NaN }],
       { perLayer: 4, total: 4 },
     );
@@ -289,11 +289,11 @@ describe('selectGlobeMarkers — multi-feed layers and bad ranks', () => {
   });
 
   it('handles a zero budget and an all-exempt input', () => {
-    const zero = selectGlobeMarkers([{ layer: 'a', markers: [{ id: 'x' }] }], { perLayer: 0, total: 0 });
+    const zero = selectMapMarkers([{ layer: 'a', markers: [{ id: 'x' }] }], { perLayer: 0, total: 0 });
     assert.deepEqual(zero.markers, []);
     assert.equal(zero.truncated.a.shown, 0);
 
-    const allExempt = selectGlobeMarkers(
+    const allExempt = selectMapMarkers(
       [{ layer: 'flash', markers: [{ id: 'f1' }, { id: 'f2' }], exempt: true }],
       { perLayer: 0, total: 0 },
     );
@@ -302,7 +302,7 @@ describe('selectGlobeMarkers — multi-feed layers and bad ranks', () => {
   });
 });
 
-describe('selectGlobeMarkers — tie-break (#5368)', () => {
+describe('selectMapMarkers — tie-break (#5368)', () => {
   // A carrier-or-not rank leaves ~1,500 vessels on one score. Without a
   // tie-break the cut among them falls to feed order — the same arbitrary
   // selection proximity ranking exists to prevent.
@@ -314,7 +314,7 @@ describe('selectGlobeMarkers — tie-break (#5368)', () => {
   ];
 
   it('lets severity decide first and nearness decide the rest', () => {
-    const { markers } = selectGlobeMarkers(
+    const { markers } = selectMapMarkers(
       [{ layer: 'military', markers: vessels, rank: v => v.carrier, tieBreak: v => v.near }],
       { perLayer: 2, total: 2 },
     );
@@ -326,7 +326,7 @@ describe('selectGlobeMarkers — tie-break (#5368)', () => {
   });
 
   it('does not let the tie-break override a real rank difference', () => {
-    const { markers } = selectGlobeMarkers(
+    const { markers } = selectMapMarkers(
       [{ layer: 'q', markers: [{ id: 'm5.2-far', mag: 5.2, near: -1 }, { id: 'm5.1-near', mag: 5.1, near: 1 }],
          rank: q => q.mag, tieBreak: q => q.near }],
       { perLayer: 1, total: 1 },
@@ -335,7 +335,7 @@ describe('selectGlobeMarkers — tie-break (#5368)', () => {
   });
 
   it('falls back to source order when no tie-break is supplied', () => {
-    const { markers } = selectGlobeMarkers(
+    const { markers } = selectMapMarkers(
       [{ layer: 'military', markers: vessels, rank: v => v.carrier }],
       { perLayer: 2, total: 2 },
     );

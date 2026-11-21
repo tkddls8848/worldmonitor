@@ -1631,13 +1631,6 @@
       "infoTooltip": "<strong>AI-pogonjena analiza</strong><br>• <strong>World Brief</strong>: AI sažetak (OpenRouter)<br>• <strong>Sentiment</strong>: Analiza tona vijesti<br>• <strong>Velocity</strong>: Brzo pokretne vijesti<br>• <strong>Focal Points</strong>: Povezuje vijesti sa signalima na karti (vojska, prosvjedi, ispadi)<br><em>Samo desktop • Pokreće Llama 3.3 + Detekcija Žarišne Točke</em>",
       "streamQualityLabel": "Kvaliteta videa",
       "streamQualityDesc": "Postavi kvalitetu za sve live streamove (niža kvaliteta štedi bandwidth)",
-      "globeRenderScaleOptions": {
-        "1": "Eko (1x)",
-        "2": "4K (2x)",
-        "3": "Ludo (3x)",
-        "auto": "Auto (uređaj)",
-        "1_5": "Oštro (1,5x)"
-      },
       "mapFlashLabel": "Puls događaja uživo",
       "mapFlashDesc": "Osvjetli lokacije na karti kada stignu važne vijesti",
       "aiFlowCloudLabel": "AI u oblaku (OpenRouter)",
@@ -4516,8 +4509,6 @@
     "mapProviderDesc": "Odaberite odakle se učitavaju pločice karte. Automatski koristi samoposlužujući PMTiles s OpenFreeMap rezervom.",
     "mapTheme": "Tema Karte",
     "mapThemeDesc": "Vizualni stil pločica karte. Opcije se razlikuju ovisno o pružatelju.",
-    "globePreset": "Vizualni Predpreset",
-    "globePresetDesc": "Prebacujte se između klasičnog i poboljšanog prikaza globusa za usporedbu.",
     "fontFamily": "Obitelj Fonta",
     "fontFamilyDesc": "Monospace za tehnički izgled, zadanu vrijednost sustava za lakše čitanje.",
     "fontMono": "Monospace",

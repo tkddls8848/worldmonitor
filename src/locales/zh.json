@@ -1471,13 +1471,6 @@
       "infoTooltip": "<strong>AI驱动分析</strong><br>• <strong>世界简报</strong>：AI摘要（OpenRouter）<br>• <strong>情绪分析</strong>：新闻情感分析<br>• <strong>传播速度</strong>：快速传播的报道<br>• <strong>焦点</strong>：将新闻实体与地图信号（军事、抗议、中断）关联<br><em>仅限桌面端 • 由Llama 3.3 + 焦点检测驱动</em>",
       "streamQualityLabel": "视频画质",
       "streamQualityDesc": "设置所有直播流的画质（低画质可节省带宽）",
-      "globeRenderScaleOptions": {
-        "1": "节能 (1x)",
-        "2": "4K (2x)",
-        "3": "极致 (3x)",
-        "auto": "自动（跟随设备）",
-        "1_5": "清晰 (1.5x)"
-      },
       "mapFlashLabel": "实时事件脉冲",
       "mapFlashDesc": "突发新闻到达时在地图上闪烁标记位置",
       "aiFlowCloudLabel": "云端AI（OpenRouter）",
@@ -4388,8 +4381,6 @@
     "mapProviderDesc": "选择地图图块的加载来源。",
     "mapTheme": "地图主题",
     "mapThemeDesc": "地图图块的视觉风格。",
-    "globePreset": "视觉预设",
-    "globePresetDesc": "在经典和增强的地球视觉之间切换。",
     "fontFamily": "字体",
     "fontFamilyDesc": "等宽字体用于技术外观，系统默认字体便于阅读。",
     "fontMono": "等宽字体",

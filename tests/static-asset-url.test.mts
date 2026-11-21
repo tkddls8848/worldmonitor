@@ -13,7 +13,7 @@ describe('resolveStaticAssetUrl', () => {
   });
 
   it('loads from the bundle origin in an opaque sandbox', () => {
-    assert.equal(resolveStaticAssetUrl('/textures/earth-topo-bathy.jpg', BUNDLE, 'null'), 'https://www.worldmonitor.app/textures/earth-topo-bathy.jpg');
+    assert.equal(resolveStaticAssetUrl('/data/countries.geojson', BUNDLE, 'null'), 'https://www.worldmonitor.app/data/countries.geojson');
   });
 
   it('keeps the path when page and bundle share an origin', () => {

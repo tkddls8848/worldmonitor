@@ -23,7 +23,6 @@ import {
 } from '../../shared/agent-bus-actions';
 import { isCountryGeometryLoaded } from '@/services/country-geometry';
 import { getCountryMapFocus, type CountryMapFocus } from './country-map-focus';
-import { applyVisibleMapDimension } from './map-dimension-control';
 
 export type AgentBusApplyStatus = 'applied' | 'denied' | 'invalid' | 'skipped';
 
@@ -80,7 +79,6 @@ export interface AgentBusApplierOptions {
   getMapLayerRuntimeAvailability?: () => MapLayerRuntimeAvailability;
   getCountryMapFocus?: (iso2: string) => CountryMapFocus | null;
   isCountryGeometryLoaded?: () => boolean;
-  requireMapModePersistence?: boolean;
 }
 
 const DEFAULT_LAYER_RESULT: AgentBusApplyTargetResult[] = [];
@@ -146,7 +144,6 @@ function isPanelAllowed(panelId: string, config: PanelConfig, options: AgentBusA
 
 function currentRendererKind(ctx: AppContext, options: AgentBusApplierOptions): RendererKind {
   if (options.getRenderer) return options.getRenderer(ctx);
-  if (ctx.map?.isGlobeMode?.()) return 'globe';
   return ctx.map?.isDeckGLActive?.() ? 'deck' : 'svg';
 }
 
@@ -381,57 +378,38 @@ function applyFocusCountry(
   });
 }
 
-async function applySetMapMode(
+/**
+ * The dashboard map is 2D only: the 3D globe renderer was removed. A request
+ * for '3d' is denied with the same globe_unavailable reason the globe startup
+ * fallback used, so a caller can tell the map did not switch; '2d' confirms
+ * the current flat renderer without touching storage or layers.
+ */
+function applySetMapMode(
   ctx: AppContext,
   action: Extract<AgentBusAction, { type: 'set_map_mode' }>,
-  options: AgentBusApplierOptions,
-): Promise<AgentBusApplyResult> {
+): AgentBusApplyResult {
   if (!ctx.map) {
     return denied('Map is not available.', 'map_unavailable', [], action);
   }
 
-  const result = await applyVisibleMapDimension(ctx, action.mode, {
-    requirePersistence: options.requireMapModePersistence,
-  });
-  const compatibility = {
-    adjusted: result.adjustedLayers.length > 0 || result.fellBack,
-    ...(result.adjustedLayers.length > 0 ? { layers: result.adjustedLayers } : {}),
+  const renderer = ctx.map.isDeckGLActive?.() ? 'deck' : 'svg';
+  const extras = {
+    requested: { mode: action.mode },
+    effective: { mode: '2d', renderer },
+    compatibility: { adjusted: false },
   };
-  if (options.requireMapModePersistence && !result.persisted) {
+  if (action.mode === '3d') {
     return denied(
-      'Map mode change could not be saved.',
-      'persist_failed',
-      [{ target: result.effective, status: 'denied', reason: 'persist_failed' }],
-      action,
-      {
-        requested: { mode: result.requested },
-        effective: { mode: result.effective, renderer: result.renderer },
-        compatibility,
-      },
-    );
-  }
-  if (result.fellBack) {
-    return denied(
-      'Globe startup fell back to the 2D map.',
+      'The 3D globe is not available; the map stays 2D.',
       'globe_unavailable',
-      [{ target: result.effective, status: 'denied', reason: 'globe_unavailable' }],
+      [{ target: action.mode, status: 'denied', reason: 'globe_unavailable' }],
       action,
-      {
-        requested: { mode: result.requested },
-        effective: { mode: result.effective, renderer: result.renderer },
-        compatibility,
-      },
+      extras,
     );
   }
-  return applied(action, result.alreadyActive
-    ? `Map mode is already ${result.effective}.`
-    : `Set the map mode to ${result.effective}.`, [
-    { target: result.effective, status: 'applied' },
-  ], {
-    requested: { mode: result.requested },
-    effective: { mode: result.effective, renderer: result.renderer },
-    compatibility,
-  });
+  return applied(action, 'Map mode is already 2d.', [
+    { target: '2d', status: 'applied' },
+  ], extras);
 }
 
 export function applyAgentBusAction(
@@ -465,6 +443,6 @@ export function applyAgentBusAction(
     case 'focus_country':
       return applyFocusCountry(ctx, parsed.action, options);
     case 'set_map_mode':
-      return applySetMapMode(ctx, parsed.action, options);
+      return applySetMapMode(ctx, parsed.action);
   }
 }

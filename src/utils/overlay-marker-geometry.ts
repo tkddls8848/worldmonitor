@@ -1,13 +1,13 @@
 /**
  * Pure geometry the SVG map's overlay marker budget depends on (#7112).
  *
- * Split out of `MapComponent` for the same reason `globe-marker-budget.ts` is:
+ * Split out of `MapComponent` for the same reason `map-marker-budget.ts` is:
  * both functions are total, DOM-free and easy to get subtly wrong, so they are
  * unit-tested directly against real payload shapes and the renderer's own
  * transform algebra rather than through a browser harness that can only observe
  * that "something changed".
  */
-import type { LatLng } from './globe-marker-budget';
+import type { LatLng } from './map-marker-budget';
 
 /**
  * Reads a marker's coordinates across every feed shape `renderOverlays` iterates

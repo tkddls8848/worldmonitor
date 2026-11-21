@@ -1477,13 +1477,6 @@
       "infoTooltip": "<strong>Analiză alimentată de AI</strong><br>• <strong>World Brief</strong>: rezumat AI (OpenRouter)<br>• <strong>Sentiment</strong>: analiza tonului știrilor<br>• <strong>Velocitate</strong>: povestiri în mișcare rapidă<br>• <strong>Puncte focale, hărți de corelare</strong> entități, hărți noi proteste, întreruperi)<br><em>Numai desktop • Powered by Llama 3.3 + Focal Point Detection</em>",
       "streamQualityLabel": "Calitate video",
       "streamQualityDesc": "Setați calitatea pentru toate fluxurile live (lățime de bandă mai mică pentru economii)",
-      "globeRenderScaleOptions": {
-        "1": "Eco (1x)",
-        "2": "4K (2x)",
-        "3": "Extrem (3x)",
-        "auto": "Auto (dispozitiv)",
-        "1_5": "Clar (1.5x)"
-      },
       "mapFlashLabel": "Impuls eveniment live",
       "mapFlashDesc": "Flash locații pe hartă când sosesc știri de ultimă oră",
       "aiFlowCloudLabel": "AI în cloud (OpenRouter)",
@@ -4432,8 +4425,6 @@
     "mapProviderDesc": "Alegeți sursa dalelor hărții.",
     "mapTheme": "Tema hărții",
     "mapThemeDesc": "Stilul vizual al dalelor hărții.",
-    "globePreset": "Presetare vizuală",
-    "globePresetDesc": "Comută între vizualizări clasice și îmbunătățite ale globului.",
     "fontFamily": "Familie de fonturi",
     "fontFamilyDesc": "Monospace pentru aspect tehnic, font implicit pentru citire mai ușoară.",
     "fontMono": "Monospace",

@@ -15,10 +15,6 @@ import {
 } from '../src/app/webmcp-dashboard.ts';
 import { runDashboardActionBinding } from '../src/app/dashboard-action-binding.ts';
 import { DashboardBindingError } from '../src/services/webmcp.ts';
-import {
-  globeAltitudeToMapZoom,
-  mapZoomToGlobeAltitude,
-} from '../src/utils/globe-zoom.ts';
 import type { AppContext, UnifiedSettingsController } from '../src/app/app-context.ts';
 import { SITE_VARIANTS } from '../src/config/variant.ts';
 import {
@@ -90,12 +86,9 @@ function makeContext(
       setLayers: () => {},
       setTimeRange: () => {},
       getTimeRange: () => '24h',
-      switchToGlobe: () => {},
-      switchToFlat: () => {},
       whenRendererReady: () => Promise.resolve(),
       whenViewportSettled: () => Promise.resolve(),
       isDeckGLActive: () => false,
-      isGlobeMode: () => false,
     },
     ...overrides,
   } as unknown as AppContext;
@@ -193,10 +186,10 @@ describe('WebMCP live dashboard bindings', () => {
       getWebMcpDashboardContext(makeContext({
         map: {
           ...makeContext().map,
-          isGlobeMode: () => true,
+          isDeckGLActive: () => true,
         },
       }), 'full').map.mode,
-      '3d',
+      '2d',
     );
     assert.deepEqual(
       Object.entries(ctx.mapLayers)
@@ -303,18 +296,17 @@ describe('WebMCP live dashboard bindings', () => {
     assert.equal(catalogSnapshot.deckGlActive, false);
     assert.equal(catalogSnapshot.tFn, undefined);
 
-    const globe = makeContext({
+    const deck = makeContext({
       map: {
         ...makeContext().map,
-        isGlobeMode: () => true,
         isDeckGLActive: () => true,
       },
     });
-    const globeSnapshot = getWebMcpMapLayerCatalogSnapshot(globe, 'tech', true);
-    assert.equal(globeSnapshot.rendererKind, 'globe');
-    assert.equal(globeSnapshot.deckGlActive, true);
-    assert.equal(globeSnapshot.hasPremium, true);
-    assert.equal(globeSnapshot.variant, 'tech');
+    const deckSnapshot = getWebMcpMapLayerCatalogSnapshot(deck, 'tech', true);
+    assert.equal(deckSnapshot.rendererKind, 'deck');
+    assert.equal(deckSnapshot.deckGlActive, true);
+    assert.equal(deckSnapshot.hasPremium, true);
+    assert.equal(deckSnapshot.variant, 'tech');
 
     assert.throws(
       () => getWebMcpMapLayerCatalogSnapshot(makeContext({ map: null }), 'full', false),
@@ -349,32 +341,6 @@ describe('WebMCP live dashboard bindings', () => {
     assert.ok(catalogSnapshot.liveLayerKeys.includes('ais'));
     assert.ok(catalogSnapshot.liveLayerKeys.includes('outages'));
     assert.deepEqual(catalogSnapshot.runtimeAvailability, gated);
-  });
-
-  it('converts the live globe camera altitude to the dashboard zoom scale', () => {
-    assert.equal(globeAltitudeToMapZoom(1.8), 1);
-    assert.equal(globeAltitudeToMapZoom(1.2), 2.5);
-    assert.equal(globeAltitudeToMapZoom(0.5), 4);
-    assert.equal(globeAltitudeToMapZoom(0.01), 10);
-    assert.equal(globeAltitudeToMapZoom(Number.NaN), 1);
-  });
-
-  it('round-trips the full logical globe zoom range and named-view URL anchors', () => {
-    for (const zoom of [1, 1.25, 2, 2.5, 3.75, 5, 6.5, 8, 9.25, 10]) {
-      const roundTrip = globeAltitudeToMapZoom(mapZoomToGlobeAltitude(zoom));
-      assert.ok(Math.abs(roundTrip - zoom) < 1e-10, `${zoom} round-tripped as ${roundTrip}`);
-    }
-
-    for (const presetAltitude of [1.8, 1.5, 1.2]) {
-      const serializedZoom = Number(globeAltitudeToMapZoom(presetAltitude).toFixed(2));
-      assert.ok(
-        Math.abs(mapZoomToGlobeAltitude(serializedZoom) - presetAltitude) < 1e-10,
-        `${presetAltitude} changed after URL serialization`,
-      );
-    }
-
-    assert.ok(mapZoomToGlobeAltitude(8) > mapZoomToGlobeAltitude(9));
-    assert.ok(mapZoomToGlobeAltitude(9) > mapZoomToGlobeAltitude(10));
   });
 
   it('wakes a pre-ready invocation as soon as the app is destroyed', async () => {
@@ -1187,13 +1153,10 @@ describe('WebMCP live dashboard bindings', () => {
   it('does not sync URL after set_map_mode', async () => {
     let syncCalls = 0;
     const ctx = makeContext();
-    Object.assign(ctx.map!, {
-      switchToGlobe: () => { (ctx.map as { isGlobeMode: () => boolean }).isGlobeMode = () => true; },
-    });
 
     const result = await runDashboardActionBinding(
       ctx,
-      { type: 'set_map_mode', mode: '3d' },
+      { type: 'set_map_mode', mode: '2d' },
       {
         waitForUiReady: () => Promise.resolve(),
         waitForMapReady: () => Promise.resolve(),
@@ -1204,8 +1167,8 @@ describe('WebMCP live dashboard bindings', () => {
 
     assert.equal(result.ok, true);
     assert.equal(syncCalls, 0);
-    assert.deepEqual(result.requested, { mode: '3d' });
-    assert.equal(result.effective?.mode, '3d');
+    assert.deepEqual(result.requested, { mode: '2d' });
+    assert.equal(result.effective?.mode, '2d');
   });
 
   it('does not apply a stale focus_country after newer map interaction during readiness', async () => {

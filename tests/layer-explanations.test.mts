@@ -411,7 +411,6 @@ describe('map layer explanation control wiring', () => {
   const componentSources = new Map([
     ['SVG map', readFileSync(resolve(root, 'src/components/Map.ts'), 'utf8')],
     ['DeckGL map', readFileSync(resolve(root, 'src/components/DeckGLMap.ts'), 'utf8')],
-    ['Globe map', readFileSync(resolve(root, 'src/components/GlobeMap.ts'), 'utf8')],
   ]);
   test('layer pickers render an explanation button for each layer row', () => {
     for (const [name, source] of componentSources) {

@@ -3,8 +3,8 @@
  *
  * `positionDesktopPopup` used to append the popup off-screen, read
  * `offsetHeight`, and remove it again — on every popup open, inside the click
- * handler, for all 76 marker call sites across Map.ts, DeckGLMap.ts and
- * GlobeMap.ts. `offsetHeight` forces a synchronous layout of the whole
+ * handler, for all 76 marker call sites across Map.ts, DeckGLMap.ts and the
+ * since-removed GlobeMap.ts. `offsetHeight` forces a synchronous layout of the whole
  * document, so that read landed squarely on the task INP measures.
  *
  * Three defects found in review of the first revision, each pinned below:

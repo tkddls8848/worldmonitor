@@ -17,7 +17,7 @@ import { waitForDomQuiescence, type DomQuiescenceResult } from './helpers/dom-qu
  * 49.7k / 21.5k mid-rebuild, against 7.6k / 736 on the DeckGL path.
  *
  * The ceiling is `MAP_OVERLAY_MARKER_BUDGET_DESKTOP` = { perLayer: 300,
- * total: 800 } (see src/utils/globe-marker-budget.ts). This spec seeds feeds an
+ * total: 800 } (see src/utils/map-marker-budget.ts). This spec seeds feeds an
  * order of magnitude past anything production has produced and asserts the
  * ceiling holds, that the budget cut the biggest feed rather than starving the
  * small ones, and that the cut is disclosed on the layer row.

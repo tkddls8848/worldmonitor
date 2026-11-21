@@ -21,7 +21,7 @@ export function connectOrbitalLookupMap(access: () => LookupMapHandle | null): v
   anchor = 'set';
 }
 
-/** Globe spin and a sideways pan turn only the longitude, so the map still carries the looked-up latitude. */
+/** A sideways pan turns only the longitude, so the map still carries the looked-up latitude. */
 const sameLatitude = (a: { lat: number }, b: { lat: number }) => Math.abs(a.lat - b.lat) < 1e-6;
 
 function anchorOnCentre(): void {

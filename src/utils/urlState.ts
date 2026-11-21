@@ -33,7 +33,7 @@ export interface ParsedMapUrlState {
  *
  * `view` alone never qualifies. Every renderer writes state.view
  * synchronously at the top of setView(), so the debounced read is correct,
- * and the initial Globe/SVG view is applied before the sync listener exists,
+ * and the initial SVG view is applied before the sync listener exists,
  * so those renderers need the immediate write to publish the URL at all.
  */
 export function urlHasAsyncFlyTo(

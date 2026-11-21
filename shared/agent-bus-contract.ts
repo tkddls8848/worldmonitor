@@ -18,8 +18,9 @@ export const DASHBOARD_TIME_RANGES = [
   'all',
 ] as const;
 
-// Public WebMCP/agent-bus grammar. The visible dashboard buttons are labeled
-// 2D/3D; storage still uses the internal flat/globe preference.
+// Public WebMCP/agent-bus grammar. The dashboard map is 2D only; '3d' stays in
+// the grammar so an agent asking for the removed globe gets a structured
+// globe_unavailable denial instead of an invalid-argument error.
 export const DASHBOARD_MAP_MODES = ['2d', '3d'] as const;
 
 export type DashboardTimeRange = (typeof DASHBOARD_TIME_RANGES)[number];
@@ -28,8 +29,7 @@ export type DashboardMapMode = (typeof DASHBOARD_MAP_MODES)[number];
 export const DASHBOARD_COUNTRY_CODE_PATTERN = '^[A-Z]{2}$';
 
 // Keep coordinate actions portable across every dashboard renderer. The flat
-// map uses Web Mercator, whose finite latitude extent ends at this value; the
-// globe can render the same range without renderer-specific normalization.
+// map uses Web Mercator, whose finite latitude extent ends at this value.
 export const DASHBOARD_MAP_MAX_LATITUDE = 85.051129;
 
 // WebMCP action results must remain below Chrome's 1.5K-character guidance

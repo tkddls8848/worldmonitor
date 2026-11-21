@@ -12,8 +12,6 @@ export {
   REFRESH_INTERVALS,
   MONITOR_COLORS,
   STORAGE_KEYS,
-  DEFAULT_MAP_MODE,
-  type MapModePreference,
 } from './variants/base';
 
 // Market data (shared)
@@ -23,7 +21,7 @@ export { SECTORS, COMMODITIES, MARKET_SYMBOLS, CRYPTO_MAP, STOCK_CATALOG, AUXILI
 // chunk (#4404) — import them directly from '@/config/geo-map', not via this barrel.
 
 // AI Datacenters: NOT re-exported on the eager @/config barrel — the ~86KB table
-// is dragged onto the critical path via this re-export. Consumers (map/globe/
+// is dragged onto the critical path via this re-export. Consumers (map/
 // search) import directly from '@/config/ai-datacenters'; related-assets lazy-
 // loads it. (#4404)
 
@@ -124,7 +122,7 @@ export {
 } from './ai-regulations';
 // Value re-exports of the tech-geo tables are intentionally NOT on the eager
 // @/config barrel — they pull the ~62KB tech-geo chunk onto the dashboard
-// critical path. Every consumer (search/map/globe/tech-hub services) imports
+// critical path. Every consumer (search/map/tech-hub services) imports
 // directly from '@/config/tech-geo'. Type re-exports are erased, no edge. (#4404)
 export type {
   StartupHub,

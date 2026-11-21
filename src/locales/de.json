@@ -1879,13 +1879,6 @@
       "headlineMemoryDesc": "Gesehene Schlagzeilen merken, um neue hervorzuheben",
       "streamAlwaysOnLabel": "Automatische Wiedergabe von Live-Webcams",
       "streamAlwaysOnDesc": "Startet die Live-Webcam-Videos automatisch, sobald sie auf dem Bildschirm angezeigt werden. Lassen Sie dies deaktiviert, um sie nur zu laden, wenn Sie sie selbst starten.",
-      "globeRenderScaleOptions": {
-        "1": "Öko (1x)",
-        "2": "4K (2x)",
-        "3": "Extrem (3x)",
-        "auto": "Auto (Gerät)",
-        "1_5": "Scharf (1.5x)"
-      },
       "analysisFrameworksLabel": "Analyse-Frameworks",
       "analysisFrameworksActivePerPanel": "Aktiv pro Panel",
       "analysisFrameworksSkillLibrary": "Skill-Bibliothek",
@@ -4410,8 +4403,6 @@
     "mapProviderDesc": "Wählen Sie aus, woher die Kartenkacheln geladen werden.",
     "mapTheme": "Karten-Design",
     "mapThemeDesc": "Visueller Stil der Kartenkacheln.",
-    "globePreset": "Visuelle Voreinstellung",
-    "globePresetDesc": "Zwischen klassischer und verbesserter Globus-Darstellung wechseln.",
     "fontFamily": "Schriftfamilie",
     "fontFamilyDesc": "Monospace für technisches Aussehen, Systemstandard für leichtere Lesbarkeit.",
     "fontMono": "Monospace",

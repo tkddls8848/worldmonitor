@@ -9,10 +9,10 @@
  * which is how two renderers drift into disclosing different things about the
  * same cut. One implementation, one wording, one place to fix.
  *
- * Kept out of `globe-marker-budget.ts` on purpose: that module is deliberately
+ * Kept out of `map-marker-budget.ts` on purpose: that module is deliberately
  * free of DOM imports so the selection algorithm can be unit-tested directly.
  */
-import type { GlobeLayerTruncation } from './globe-marker-budget';
+import type { MapLayerTruncation } from './map-marker-budget';
 
 /** How the renderer's viewport moves, for the badge's "… to bring others in". */
 export type TruncationMoveVerb = 'pan' | 'rotate';
@@ -37,7 +37,7 @@ export interface TruncationBadgeResult {
  */
 export function renderLayerTruncationBadges(
   root: HTMLElement,
-  truncation: Readonly<Record<string, GlobeLayerTruncation>>,
+  truncation: Readonly<Record<string, MapLayerTruncation>>,
   moveVerb: TruncationMoveVerb,
 ): TruncationBadgeResult {
   const disclosed: string[] = [];

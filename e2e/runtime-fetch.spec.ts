@@ -64,7 +64,7 @@ test.describe('runtime loading guardrails', () => {
       await initI18n();
 
       const isHeavyMapResource = (name: string): boolean =>
-        /DeckGLMap|GlobeMap|maplibre|deck-stack|globe\.gl|pmtiles|\.pmtiles|@deck\.gl|@luma\.gl|@loaders\.gl/i.test(name);
+        /DeckGLMap|maplibre|deck-stack|pmtiles|\.pmtiles|@deck\.gl|@luma\.gl|@loaders\.gl/i.test(name);
       const heavyResourceNames = (): string[] =>
         performance.getEntriesByType('resource')
           .map((entry) => entry.name)
@@ -75,7 +75,6 @@ test.describe('runtime loading guardrails', () => {
         while (!(
           host.classList.contains('svg-mode')
           || host.classList.contains('deckgl-mode')
-          || host.classList.contains('globe-mode')
         )) {
           if (performance.now() > deadline) throw new Error('Map renderer did not settle');
           await nextFrame();
@@ -141,7 +140,6 @@ test.describe('runtime loading guardrails', () => {
           settled: {
             svgMode: mapHost.classList.contains('svg-mode'),
             deckMode: mapHost.classList.contains('deckgl-mode'),
-            globeMode: mapHost.classList.contains('globe-mode'),
             width: settledRect.width,
             height: settledRect.height,
           },
@@ -165,7 +163,6 @@ test.describe('runtime loading guardrails', () => {
     expect(result.webglProbeCallsAtShell).toBe(0);
     expect(result.settled.svgMode).toBe(true);
     expect(result.settled.deckMode).toBe(false);
-    expect(result.settled.globeMode).toBe(false);
     expect(Math.abs(result.settled.width - result.shellState.width)).toBeLessThanOrEqual(1);
     expect(Math.abs(result.settled.height - result.shellState.height)).toBeLessThanOrEqual(1);
   });
@@ -180,7 +177,7 @@ test.describe('runtime loading guardrails', () => {
       await initI18n();
 
       const isHeavyMapResource = (name: string): boolean =>
-        /DeckGLMap|GlobeMap|maplibre|deck-stack|globe\.gl|pmtiles|\.pmtiles|@deck\.gl|@luma\.gl|@loaders\.gl/i.test(name);
+        /DeckGLMap|maplibre|deck-stack|pmtiles|\.pmtiles|@deck\.gl|@luma\.gl|@loaders\.gl/i.test(name);
       const heavyResourceNames = (): string[] =>
         performance.getEntriesByType('resource')
           .map((entry) => entry.name)
@@ -275,7 +272,7 @@ test.describe('runtime loading guardrails', () => {
       await initI18n();
 
       const isHeavyMapResource = (name: string): boolean =>
-        /DeckGLMap|GlobeMap|maplibre|deck-stack|globe\.gl|pmtiles|\.pmtiles|@deck\.gl|@luma\.gl|@loaders\.gl/i.test(name);
+        /DeckGLMap|maplibre|deck-stack|pmtiles|\.pmtiles|@deck\.gl|@luma\.gl|@loaders\.gl/i.test(name);
       const heavyResourceNames = (): string[] =>
         performance.getEntriesByType('resource')
           .map((entry) => entry.name)
@@ -978,7 +975,6 @@ test.describe('runtime loading guardrails', () => {
         while (!(
           mapHost.classList.contains('svg-mode')
           || mapHost.classList.contains('deckgl-mode')
-          || mapHost.classList.contains('globe-mode')
         )) {
           if (performance.now() > deadline) throw new Error('Map renderer did not settle');
           await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));

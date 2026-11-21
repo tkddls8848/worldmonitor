@@ -379,7 +379,6 @@ const WEBMCP_MAINTAINER_SOURCES = [
   'shared/agent-bus-contract.ts',
   'src/app/agent-bus-applier.ts',
   'src/app/country-map-focus.ts',
-  'src/app/map-dimension-control.ts',
   'src/config/panel-enablement.ts',
   'src/app/panel-enablement.ts',
   'src/services/webmcp-access-snapshot.ts',

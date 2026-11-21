@@ -13,8 +13,8 @@ import { countryBox, type CountryBox } from '../../shared/country-bbox';
 /**
  * Highest MapLibre zoom a focus fit may reach. A focus is a monitoring
  * frame, so a single small country (Lebanon, Luxembourg) stops at a regional
- * zoom instead of filling the map at city level. The SVG and globe renderers
- * apply their own equivalent limits.
+ * zoom instead of filling the map at city level. The SVG renderer applies its
+ * own equivalent limit.
  */
 export const FOCUS_FIT_MAX_ZOOM = 6;
 
@@ -133,8 +133,8 @@ function fitOf(south: number, north: number, west: number, east: number): FocusF
  * when one covers every longitude (Antarctica): there is no frame to fit,
  * and the outline still draws.
  *
- * This is the globe's fit. The flat renderers show one world and use
- * focusSingleWorldFitBounds.
+ * The flat renderers show one world and fit with focusSingleWorldFitBounds,
+ * which starts from this arc.
  */
 export function focusFitBounds(
   codes: readonly string[],
@@ -182,9 +182,6 @@ export function focusFitBounds(
  * bundled boxes) is counted by its larger side: no view of one world shows
  * both sides short of the whole map, and Chukotka's strip east of -180 is
  * not worth zooming Russia out to the world.
- *
- * The globe keeps focusFitBounds' short arc: it has no seam, and its camera
- * centred on the arc's midpoint is the closest view of every chosen country.
  */
 export function focusSingleWorldFitBounds(
   codes: readonly string[],
@@ -204,43 +201,4 @@ export function focusSingleWorldFitBounds(
     east = Math.max(east, to);
   }
   return fitOf(arc.south, arc.north, west, east);
-}
-
-/**
- * The highest altitude the globe camera reaches: GlobeMap sets
- * `controls.maxDistance = 600` for a globe of radius 100, so the camera is at
- * most 5 radii above the surface and sees about 80 degrees around its nadir.
- */
-export const GLOBE_MAX_ALTITUDE = 5;
-
-/** Great-circle angle in degrees between two points. */
-function angleBetween(a: { lat: number; lon: number }, b: { lat: number; lon: number }): number {
-  const rad = Math.PI / 180;
-  const cos = Math.sin(a.lat * rad) * Math.sin(b.lat * rad)
-    + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.cos((a.lon - b.lon) * rad);
-  return Math.acos(Math.min(1, Math.max(-1, cos))) / rad;
-}
-
-/**
- * Globe camera altitude (in globe radii) that frames a fit. Same steps as
- * GlobeMap.fitCountry, with a wider step for unions that span most of a
- * hemisphere. A camera at altitude `a` sees `acos(1 / (1 + a))` degrees
- * around its nadir, so a union wider than the steps assume (GB with NZ, 167
- * degrees apart) is raised until that reaches its farthest corner, up to the
- * camera's limit. Past the limit no view shows every country; the fit then
- * frames as much as the camera can.
- */
-export function focusGlobeAltitude(fit: FocusFitBounds): number {
-  const span = Math.max(fit.latSpan, fit.lonSpan);
-  const stepped = span > 120 ? 1.8
-    : span > 60 ? 1.0
-      : span > 20 ? 0.7
-        : span > 8 ? 0.45
-          : span > 3 ? 0.25
-            : 0.18;
-  const radius = Math.max(
-    ...[fit.south, fit.north].flatMap((lat) => [fit.west, fit.east].map((lon) => angleBetween(fit.center, { lat, lon }))),
-  );
-  const needed = radius >= 89 ? GLOBE_MAX_ALTITUDE : 1 / Math.cos(radius * Math.PI / 180) - 1;
-  return Math.min(GLOBE_MAX_ALTITUDE, Math.max(stepped, needed));
 }

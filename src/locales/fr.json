@@ -1456,13 +1456,6 @@
       "analysisFrameworksSaveToLibrary": "Enregistrer dans la bibliothèque",
       "streamAlwaysOnLabel": "Lecture automatique des webcams en direct",
       "streamAlwaysOnDesc": "Lance les vidéos des webcams en direct dès qu'elles apparaissent à l'écran. Laissez cette option désactivée pour les charger uniquement quand vous les lancez vous-même.",
-      "globeRenderScaleOptions": {
-        "1": "Éco (1x)",
-        "2": "4K (2x)",
-        "3": "Extrême (3x)",
-        "auto": "Auto (appareil)",
-        "1_5": "Net (1.5x)"
-      },
       "frameworkNote": "S'applique uniquement à l'analyse générée par le client",
       "loadingServerInsights": "Chargement des informations du serveur...",
       "usingCachedBrief": "Utilisation du résumé en cache...",
@@ -4432,8 +4425,6 @@
     "mapProviderDesc": "Choisissez la source des tuiles de carte.",
     "mapTheme": "Thème de carte",
     "mapThemeDesc": "Style visuel des tuiles de carte.",
-    "globePreset": "Préréglage visuel",
-    "globePresetDesc": "Basculer entre les visuels classiques et améliorés du globe.",
     "fontFamily": "Famille de polices",
     "fontFamilyDesc": "Monospace pour un look technique, police système par défaut pour une lecture plus facile.",
     "fontMono": "Monospace",

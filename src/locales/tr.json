@@ -1474,13 +1474,6 @@
       "infoTooltip": "<strong>Yapay Zeka Destekli Analiz</strong><br>• <strong>Dunya Brifingi</strong>: Yapay zeka ozeti (OpenRouter)<br>• <strong>Duygu Analizi</strong>: Haber ton analizi<br>• <strong>Hiz</strong>: Hizla gelisen haberler<br>• <strong>Odak Noktalari</strong>: Haber varliklarini harita sinyalleriyle iliskilendirir (askeri, protestolar, kesintiler)<br><em>Yalnizca masaustu - Llama 3.3 + Odak Noktasi Tespiti tarafindan desteklenmektedir</em>",
       "streamQualityLabel": "Video Kalitesi",
       "streamQualityDesc": "Tüm canlı yayınlar için kaliteyi ayarlayın (düşük kalite bant genişliği tasarrufu sağlar)",
-      "globeRenderScaleOptions": {
-        "1": "Eko (1x)",
-        "2": "4K (2x)",
-        "3": "Maksimum (3x)",
-        "auto": "Otomatik (cihaz)",
-        "1_5": "Net (1.5x)"
-      },
       "mapFlashLabel": "Canlı Olay Nabzı",
       "mapFlashDesc": "Son dakika haberi geldiğinde haritadaki konumları vurgula",
       "aiFlowCloudLabel": "Bulut AI (OpenRouter)",
@@ -4410,8 +4403,6 @@
     "mapProviderDesc": "Harita döşemelerinin yükleneceği kaynağı seçin.",
     "mapTheme": "Harita teması",
     "mapThemeDesc": "Harita döşemelerinin görsel stili.",
-    "globePreset": "Görsel ön ayar",
-    "globePresetDesc": "Klasik ve geliştirilmiş küre görselleri arasında geçiş yapın.",
     "fontFamily": "Yazı Tipi Ailesi",
     "fontFamilyDesc": "Teknik görünüş için Monospace, daha kolay okuma için sistem varsayılanı.",
     "fontMono": "Monospace",

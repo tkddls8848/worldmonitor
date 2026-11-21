@@ -1472,13 +1472,6 @@
       "infoTooltip": "<strong>AI 기반 분석</strong><br>• <strong>세계 브리핑</strong>: AI 요약 (OpenRouter)<br>• <strong>감성</strong>: 뉴스 논조 분석<br>• <strong>속도</strong>: 빠르게 전개되는 기사<br>• <strong>핵심 지점</strong>: 뉴스 개체와 지도 신호 상관 분석 (군사, 시위, 장애)<br><em>데스크톱 전용 • Llama 3.3 + 핵심 지점 감지 기반</em>",
       "streamQualityLabel": "영상 품질",
       "streamQualityDesc": "모든 라이브 스트림의 품질 설정 (낮추면 대역폭 절약)",
-      "globeRenderScaleOptions": {
-        "1": "에코 (1x)",
-        "2": "4K (2x)",
-        "3": "초고해상 (3x)",
-        "auto": "자동 (기기 기준)",
-        "1_5": "선명 (1.5x)"
-      },
       "mapFlashLabel": "실시간 이벤트 펄스",
       "mapFlashDesc": "속보 수신 시 지도에서 해당 위치를 깜박임",
       "aiFlowCloudLabel": "클라우드 AI (OpenRouter)",
@@ -4471,8 +4464,6 @@
     "mapProviderDesc": "지도 타일을 로드할 위치를 선택하세요.",
     "mapTheme": "지도 테마",
     "mapThemeDesc": "지도 타일의 시각적 스타일.",
-    "globePreset": "시각적 프리셋",
-    "globePresetDesc": "클래식과 향상된 글로브 시각화 간 전환.",
     "fontFamily": "글꼴 패밀리",
     "fontFamilyDesc": "기술적 모양을 위해 모노스페이스, 더 쉬운 읽기를 위해 시스템 기본값.",
     "fontMono": "모노스페이스",

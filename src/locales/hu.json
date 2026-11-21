@@ -1624,13 +1624,6 @@
       "infoTooltip": "<strong>AI-alapú elemzés</strong><br>• <strong>Világösszefoglaló</strong>: AI-összefoglalás (OpenRouter)<br>• <strong>Hangulat</strong>: Hírek tónusának elemzése<br>• <strong>Sebesség</strong>: Gyorsan mozgó történetek<br>• <strong>Fókuszpontok</strong>: Hírjellegzetességek korrelációja térképi jelekkel (katonai, tüntetések, kimaradások)<br><em>Csak asztal • Llama 3.3 + Fókuszpont-detektálás működteti</em>",
       "streamQualityLabel": "Videó minősége",
       "streamQualityDesc": "Az összes élő stream minőségének beállítása (alacsonyabb érték sávszélességet takarít meg)",
-      "globeRenderScaleOptions": {
-        "1": "Öko (1x)",
-        "2": "4K (2x)",
-        "3": "Őrület (3x)",
-        "auto": "Automatikus (eszköz)",
-        "1_5": "Éles (1,5x)"
-      },
       "mapFlashLabel": "Élő esemény impulzus",
       "mapFlashDesc": "Helyeket villan fel a térképen, amikor Breaking News érkezik",
       "aiFlowCloudLabel": "Felhő AI (OpenRouter)",
@@ -4484,8 +4477,6 @@
     "mapProviderDesc": "Válassza ki, honnan töltődjenek be a térképcsempék. Az Automatikus beállítás az önálló PMTiles-t használja OpenFreeMap tartalékkal.",
     "mapTheme": "Térkép témája",
     "mapThemeDesc": "A térképcsempék vizuális stílusa. Az opciók a szolgáltatótól függően változnak.",
-    "globePreset": "Vizuális előbeállítás",
-    "globePresetDesc": "Váltson a klasszikus és továbbfejlesztett földgömb vizuális effektusok között az összehasonlításhoz.",
     "fontFamily": "Betűtípus család",
     "fontFamilyDesc": "Monospace a technikai megjelenéshez, rendszer alapértelmezés az olvashatóság kedvéért.",
     "fontMono": "Monospace",

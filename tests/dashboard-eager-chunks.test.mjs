@@ -32,10 +32,10 @@ const DEFERRED_TABLE_CHUNKS = ['tech-geo-data', 'airports-data', 'ai-datacenters
 // the subtree (and zod) into main — collapsing this chunk and failing the guard.
 const DEFERRED_AGENT_BUS_CHUNKS = ['agent-bus-actions'];
 // npm libs only needed by opt-in/non-boot features, lazy-loaded off the eager entry:
-//   satellite.es  — satellite.js, loaded by the satellite layer (ensureSatelliteLib)
 //   confetti.module — canvas-confetti, loaded on the first milestone celebration
-// Re-adding a static `import` of either would re-eagerise it into main and fail this.
-const DEFERRED_NPM_LIB_CHUNKS = ['satellite.es', 'confetti.module'];
+// (satellite.es went away with the 3D globe's live satellite layer.)
+// Re-adding a static `import` would re-eagerise it into main and fail this.
+const DEFERRED_NPM_LIB_CHUNKS = ['confetti.module'];
 // Widget HTML sanitization is needed only after a custom-widget action. Keep it
 // out of the dashboard's static graph; otherwise its shared dependencies rejoin
 // the post-hydration long-task wave. (The checkout catalog chunk is retired.)
@@ -104,7 +104,6 @@ const MILITARY_BASE_DIRECT_IMPORT_FORBIDDEN = [
   'src/app/country-intel.ts',
   'src/app/search-manager.ts',
   'src/components/DeckGLMap.ts',
-  'src/components/GlobeMap.ts',
   'src/components/Map.ts',
   'src/services/related-assets.ts',
 ];

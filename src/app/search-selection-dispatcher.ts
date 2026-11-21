@@ -483,9 +483,7 @@ export class SearchSelectionDispatcher {
       }
       case 'layers': {
         const allowed = getAllowedLayerKeys(this.variant());
-        const renderer: RendererKind = ctx.map?.isGlobeMode?.()
-          ? 'globe'
-          : (ctx.map?.isDeckGLActive?.() ? 'deck' : 'svg');
+        const renderer: RendererKind = ctx.map?.isDeckGLActive?.() ? 'deck' : 'svg';
         const executable = (key: keyof MapLayers): boolean => allowed.has(key)
           && isLayerExecutable(key, renderer);
         if (action === 'all') {
@@ -508,9 +506,7 @@ export class SearchSelectionDispatcher {
       case 'layer': {
         const layer = (LAYER_KEY_MAP[action] || action) as keyof MapLayers;
         if (!(layer in ctx.mapLayers) || !getAllowedLayerKeys(this.variant()).has(layer)) return false;
-        const renderer: RendererKind = ctx.map?.isGlobeMode?.()
-          ? 'globe'
-          : (ctx.map?.isDeckGLActive?.() ? 'deck' : 'svg');
+        const renderer: RendererKind = ctx.map?.isDeckGLActive?.() ? 'deck' : 'svg';
         const deckGL = ctx.map?.isDeckGLActive?.() ?? false;
         const current = ctx.mapLayers[layer];
         if (!isLayerCommandAllowed(layer, renderer)) {
@@ -571,9 +567,7 @@ export class SearchSelectionDispatcher {
           const layer = 'resilienceScore' as keyof MapLayers;
           if (!getAllowedLayerKeys(this.variant()).has(layer)) return false;
           const current = ctx.mapLayers[layer];
-          const renderer: RendererKind = ctx.map?.isGlobeMode?.()
-            ? 'globe'
-            : (ctx.map?.isDeckGLActive?.() ? 'deck' : 'svg');
+          const renderer: RendererKind = ctx.map?.isDeckGLActive?.() ? 'deck' : 'svg';
           const deckGL = ctx.map?.isDeckGLActive?.() ?? false;
           if (!isLayerCommandAllowed(layer, renderer)) {
             return false;

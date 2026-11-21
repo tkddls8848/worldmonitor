@@ -15,8 +15,6 @@ export interface OrbitalMapView {
   center(point: GeoPoint, offset: ScreenOffset): boolean;
   /** Where the point is drawn in client coordinates, or null when the renderer cannot say. */
   project(point: GeoPoint): { x: number; y: number } | null;
-  /** Stops or resumes the globe's idle spin, which would carry the point out of view. */
-  hold(held: boolean): void;
   /** Hides or redraws the dashboard's data layers without changing the saved layer toggles. */
   suppressLayers(suppressed: boolean): void;
   /** The map's centre and zoom, or null before it has a camera. */

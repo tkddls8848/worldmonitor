@@ -1016,9 +1016,9 @@ export default defineConfig(({ mode }) => {
       // When maps are not published deliberately they are 'hidden' (no
       // sourceMappingURL) and stripPrivateSourceMapsPlugin removes them.
       sourcemap: viteSourcemapSetting(process.env),
-      // Vite's global threshold accommodates the known lazy GlobeMap bundle.
-      // wm-chunk-size-warning-policy keeps the 1200 kB default for every other
-      // chunk so unrelated regressions between 1200 and 2000 kB remain visible.
+      // Vite's own threshold stays above the per-chunk policy so it never
+      // duplicates it; wm-chunk-size-warning-policy enforces the 1200 kB
+      // default for every chunk.
       chunkSizeWarningLimit: 2000,
       // The gzip column in Vite's build report cost 15s per build on CI (about
       // 400 files) and nothing reads it: the bundle budgets gate raw bytes and
@@ -1127,7 +1127,7 @@ export default defineConfig(({ mode }) => {
               }
             }
             // Large static config DATA TABLE (~62KB) with only lazy consumers
-            // (search/map/globe/tech-hub services). Isolating it keeps it off the
+            // (search/map/tech-hub services). Isolating it keeps it off the
             // eager entry now that the @/config barrel no longer re-exports its
             // values and data-loader lazy-loads the tech-activity chain. Pure
             // data (type-only imports) → no unmatched-static-dep circular risk. (#4404)
@@ -1139,7 +1139,7 @@ export default defineConfig(({ mode }) => {
             if (id.endsWith('/src/config/airports.ts')) {
               return 'airports-data';
             }
-            // ai-datacenters table (~86KB) — consumers (map/globe/search) import
+            // ai-datacenters table (~86KB) — consumers (map/search) import
             // directly and are lazy; related-assets lazy-imports it. Kept off the
             // eager @/config barrel above. (#4404)
             if (id.endsWith('/src/config/ai-datacenters.ts')) {
@@ -1147,7 +1147,7 @@ export default defineConfig(({ mode }) => {
             }
             // geo-map table bulk (~150KB: UNDERSEA_CABLES + NUCLEAR_FACILITIES +
             // ECONOMIC_CENTERS/SPACEPORTS/CRITICAL_MINERALS/SANCTIONED_*/MAP_URLS).
-            // Map/globe/search consumers import directly (lazy); the eager
+            // Map/search consumers import directly (lazy); the eager
             // related-assets/infrastructure-cascade/cable-activity chains
             // lazy-cache it. Kept off the eager @/config barrel above. (#4404)
             if (id.endsWith('/src/config/geo-map.ts') || id.endsWith('/shared/nuclear-facilities-data.ts')) {

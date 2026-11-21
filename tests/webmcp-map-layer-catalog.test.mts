@@ -112,6 +112,8 @@ describe('parseMapLayerCatalogArgs', () => {
     assert.equal(parseMapLayerCatalogArgs({ extra: true }).reason, 'malformed_arguments');
     assert.equal(parseMapLayerCatalogArgs({ monitor: 'full' }).reason, 'invalid_monitor');
     assert.equal(parseMapLayerCatalogArgs({ renderer: 'deck' }).reason, 'invalid_renderer');
+    // The 3D globe renderer was removed, so '3d' is no longer a filter value.
+    assert.equal(parseMapLayerCatalogArgs({ renderer: '3d' }).reason, 'invalid_renderer');
     assert.equal(parseMapLayerCatalogArgs({ state: 'disabled' }).reason, 'invalid_state');
     assert.equal(parseMapLayerCatalogArgs({ limit: 0 }).reason, 'invalid_limit');
     assert.equal(parseMapLayerCatalogArgs({ limit: MAX_MAP_LAYER_PAGE_SIZE + 1 }).reason, 'invalid_limit');
@@ -150,43 +152,32 @@ describe('listMapLayerCatalog', () => {
     assert.equal(datacenters.available, true);
   });
 
-  it('filters 2D and 3D renderer compatibility without dropping disabled layers', () => {
-    const threeD = listMapLayerCatalog(snapshot({ rendererKind: 'globe' }), {
-      renderer: '3d',
-      limit: MAX_MAP_LAYER_PAGE_SIZE,
-    }, BUDGETS);
-    assert.equal(threeD.ok, true);
-    if (!threeD.ok) return;
-    assert.ok(threeD.layers.every((layer) => (
-      LAYER_REGISTRY[layer.id as keyof MapLayers].renderers.includes('globe')
-    )));
-    const dayNight = threeD.layers.find((layer) => layer.id === 'dayNight');
-    assert.equal(dayNight, undefined);
-
+  it('filters 2D renderer compatibility without dropping disabled layers', () => {
     const twoD = collectPages({ renderer: '2d', limit: MAX_MAP_LAYER_PAGE_SIZE });
     assert.ok(twoD.ids.includes('dayNight'));
     assert.ok(twoD.ids.includes('canadaRoads'));
     assert.equal(twoD.ids.includes('conflicts'), true);
-    const globeOnlyMissing = twoD.ids.every((id) => {
+    const flatRenderable = twoD.ids.every((id) => {
       const renderers = LAYER_REGISTRY[id as keyof MapLayers].renderers;
       return renderers.includes('svg') || renderers.includes('deck');
     });
-    assert.equal(globeOnlyMissing, true);
+    assert.equal(flatRenderable, true);
+    assert.equal(twoD.total, getCompleteLayerCatalogKeys('full').length);
 
-    const globeIds = getCompleteLayerCatalogKeys('full');
-    const sanctionsCursor = globeIds[globeIds.indexOf('sanctions') - 1];
-    const globePage = listMapLayerCatalog(snapshot({ rendererKind: 'globe' }), {
-      cursor: sanctionsCursor,
+    const ids = getCompleteLayerCatalogKeys('full');
+    const canadaCursor = ids[ids.indexOf('canadaRoads') - 1];
+    const svgPage = listMapLayerCatalog(snapshot({ rendererKind: 'svg', deckGlActive: false }), {
+      cursor: canadaCursor,
       limit: 1,
     }, BUDGETS);
-    assert.equal(globePage.ok, true);
-    if (!globePage.ok) return;
-    const sanctionsEntry = globePage.layers[0];
-    assert.equal(sanctionsEntry?.id, 'sanctions');
-    assert.equal(sanctionsEntry?.enabled, false);
-    assert.equal(sanctionsEntry?.rendererCompatible, isLayerExecutable('sanctions', 'globe'));
-    assert.equal(sanctionsEntry?.available, false);
-    assert.equal(sanctionsEntry?.reason, 'layer_not_executable');
+    assert.equal(svgPage.ok, true);
+    if (!svgPage.ok) return;
+    const canadaEntry = svgPage.layers[0];
+    assert.equal(canadaEntry?.id, 'canadaRoads');
+    assert.equal(canadaEntry?.enabled, false);
+    assert.equal(canadaEntry?.rendererCompatible, isLayerExecutable('canadaRoads', 'svg'));
+    assert.equal(canadaEntry?.available, false);
+    assert.equal(canadaEntry?.reason, 'layer_not_executable');
   });
 
   it('explains resilienceScore as layer_not_executable when deck.gl is inactive', () => {

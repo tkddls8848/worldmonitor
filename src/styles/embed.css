@@ -61,7 +61,6 @@ body {
 }
 
 .wm-embed-map.deckgl-mode,
-.wm-embed-map.globe-mode,
 .wm-embed-map .deckgl-map-wrapper,
 .wm-embed-map #deckgl-basemap,
 .wm-embed-map .maplibregl-map,

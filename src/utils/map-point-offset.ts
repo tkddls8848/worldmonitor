@@ -19,34 +19,6 @@ export function mercatorCenterForOffset(lat: number, lon: number, zoom: number, 
   return { lat: centreLat, lon: wrapLon((x / world) * 360 - 180) };
 }
 
-/**
- * The globe point of view that draws (lat, lon) `offset` pixels from the canvas centre, for a
- * camera `altitude` globe radii above the surface with a vertical field of view of `fovDeg`.
- * Close to the surface the visible patch is nearly flat, which is when an offset matters.
- */
-export function globeCenterForOffset(
-  lat: number,
-  lon: number,
-  altitude: number,
-  fovDeg: number,
-  viewportHeight: number,
-  offset: ScreenOffset,
-): { lat: number; lon: number } {
-  if (viewportHeight <= 0) return { lat, lon };
-  const degPerPx = ((2 * altitude * Math.tan((fovDeg * Math.PI) / 360)) / viewportHeight) * (180 / Math.PI);
-  const centreLat = Math.max(-89, Math.min(89, lat + offset.y * degPerPx));
-  const cos = Math.max(0.05, Math.cos((lat * Math.PI) / 180));
-  return { lat: centreLat, lon: wrapLon(lon - (offset.x * degPerPx) / cos) };
-}
-
-/** Whether (lat, lon) faces a camera above (povLat, povLon) at `altitude` globe radii. */
-export function isOnVisibleHemisphere(lat: number, lon: number, povLat: number, povLon: number, altitude: number): boolean {
-  const rad = Math.PI / 180;
-  const cosAngle = Math.sin(lat * rad) * Math.sin(povLat * rad)
-    + Math.cos(lat * rad) * Math.cos(povLat * rad) * Math.cos((lon - povLon) * rad);
-  return cosAngle > 1 / (1 + Math.max(0, altitude));
-}
-
 export interface ScreenArea {
   left: number;
   top: number;

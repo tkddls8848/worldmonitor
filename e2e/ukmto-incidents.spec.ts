@@ -68,11 +68,11 @@ test('UKMTO markers follow the Ships toggle in each renderer', async ({ page }) 
   await page.route('**/api/**', route => route.fulfill({ json: {} }));
   await page.goto('/tests/map-harness.html');
   const results = await page.evaluate(async () => {
-    const modulePaths = ['/src/components/DeckGLMap.ts', '/src/components/Map.ts', '/src/components/GlobeMap.ts'];
+    const modulePaths = ['/src/components/DeckGLMap.ts', '/src/components/Map.ts'];
     const result = [];
     for (const path of modulePaths) {
       const exports = await import(/* @vite-ignore */ path);
-      const Constructor = exports.DeckGLMap ?? exports.MapComponent ?? exports.GlobeMap;
+      const Constructor = exports.DeckGLMap ?? exports.MapComponent;
       const container = document.createElement('div');
       container.style.cssText = 'position:fixed;inset:0;width:1000px;height:700px;z-index:9999';
       document.body.append(container);
@@ -86,8 +86,7 @@ test('UKMTO markers follow the Ships toggle in each renderer', async ({ page }) 
       map.setUkmtoIncidents([incident]);
       const count = () => exports.DeckGLMap
         ? map.buildLayers().find((layer: { id: string }) => layer.id === 'ukmto-incidents-layer')?.props.data.length ?? 0
-        : exports.GlobeMap ? map.globe.htmlElementsData().filter((item: { _kind: string }) => item._kind === 'ukmtoIncident').length
-          : container.querySelectorAll('.ukmto-marker').length;
+        : container.querySelectorAll('.ukmto-marker').length;
       const waitForCount = async (expected: number) => {
         const deadline = performance.now() + 5000;
         while (count() !== expected && performance.now() < deadline) await new Promise(resolve => setTimeout(resolve, 50));

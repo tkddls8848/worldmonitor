@@ -72,7 +72,7 @@ describe('map control disclosure', () => {
     button.click();
     expect(button.getAttribute('aria-expanded')).toBe('true');
   });
-  it('reuses the WebGL/globe button and leaves dynamic legend visibility intact', () => {
+  it('reuses the WebGL button and leaves dynamic legend visibility intact', () => {
     vi.stubGlobal('ResizeObserver', Observer);
     const container = document.createElement('div');
     Object.defineProperty(container, 'clientWidth', { value: 562 });

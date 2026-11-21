@@ -523,12 +523,6 @@ async function executeDashboardToolProbe(
   }, { toolName: name, input });
 }
 
-async function storedMapMode(page: Page): Promise<string | null> {
-  const raw = await page.evaluate(() => localStorage.getItem('worldmonitor-map-mode'));
-  if (raw == null) return null;
-  return JSON.parse(raw) as string;
-}
-
 async function executeDashboardToolWithCallerSignal(
   page: Page,
   name: string,
@@ -1995,7 +1989,7 @@ test.describe('top-level WebMCP dashboard contract', () => {
     });
   });
 
-  test('applies time range and country focus, and gates 2D/3D without target cancellation', async ({ page }, testInfo) => {
+  test('applies time range and country focus, and denies 3D (no globe) or gates it without target cancellation', async ({ page }, testInfo) => {
     test.skip(productionSmoke, 'Local view-state mutations stay off the production origin.');
     testInfo.setTimeout(180_000);
     await installReadinessRecorder(page);
@@ -2057,12 +2051,12 @@ test.describe('top-level WebMCP dashboard contract', () => {
     expect(Number(afterFocusReload.get('lon'))).toBeCloseTo(lon, 3);
     await expect(page.locator('#country-deep-dive-panel')).toHaveAttribute('aria-hidden', 'true');
 
-    await expect(page.locator('#mapDimensionToggle .map-dim-btn[data-mode="flat"]')).toHaveClass(/active/);
-    await expect(page.locator('#mapDimensionToggle .map-dim-btn[data-mode="globe"]')).toBeVisible();
+    // The 2D/3D control was removed with the 3D globe.
+    await expect(page.locator('#mapDimensionToggle')).toHaveCount(0);
 
     // Branch on the tool-start mark, not the denial reason. Chrome 149–151
     // invokes the callback without a target AbortSignal; Chrome 153+ delivers
-    // one. Do not click the 2D/3D control as a substitute.
+    // one.
     const to3d = await executeDashboardToolProbe(page, 'set_map_mode', { mode: '3d' });
     const mapCancellationSupported = await readTargetCancellationSupported(page, 'set_map_mode');
     if (!mapCancellationSupported) {
@@ -2074,22 +2068,19 @@ test.describe('top-level WebMCP dashboard contract', () => {
           reason: 'target_cancellation_unsupported',
         },
       });
-      await expect(page.locator('#mapDimensionToggle .map-dim-btn[data-mode="flat"]')).toHaveClass(/active/);
-      await expect(page.locator('#mapDimensionToggle .map-dim-btn[data-mode="globe"]')).not.toHaveClass(/active/);
       expect(new URL(page.url()).searchParams.get('mapMode')).toBeNull();
-      expect(await storedMapMode(page)).not.toBe('globe');
     } else {
       expect(to3d).toMatchObject({
         ok: true,
         output: {
-          ok: true,
-          status: 'applied',
+          ok: false,
+          status: 'denied',
+          reason: 'globe_unavailable',
           actionType: 'set_map_mode',
+          requested: { mode: '3d' },
+          effective: { mode: '2d' },
         },
       });
-      await expect(page.locator('#mapDimensionToggle .map-dim-btn[data-mode="globe"]')).toHaveClass(/active/);
-      await expect(page.locator('#mapDimensionToggle .map-dim-btn[data-mode="flat"]')).not.toHaveClass(/active/);
-      expect(await storedMapMode(page)).toBe('globe');
     }
     expect(new URL(page.url()).searchParams.get('timeRange')).toBe('6h');
 

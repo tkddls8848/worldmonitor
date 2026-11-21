@@ -23,7 +23,7 @@ function svgMap(start: Record<string, boolean> = SAVED) {
 
 function container(svg: ReturnType<typeof svgMap> | null) {
   const map = Object.assign(Object.create(MapContainer.prototype), {
-    useDeckGL: false, useGlobe: false, svgMap: svg, initialState: { layers: { ...SAVED } }, suppressedLayers: null,
+    useDeckGL: false, svgMap: svg, initialState: { layers: { ...SAVED } }, suppressedLayers: null,
     emergencyLayer: { setEnabled: vi.fn() }, notamAirspaceLayer: { setEnabled: vi.fn() },
     layerLoadingState: new Map(), layerReadyState: new Map(), hiddenLayerToggles: new Set(), cachedNotamAirspace: [],
     cachedOnLayerChange: null,
@@ -128,8 +128,7 @@ describe('MapContainer.suppressDataLayers', () => {
 
 describe('MapContainer.setCenter', () => {
   it.each([
-    ['deck.gl', { useDeckGL: true, useGlobe: false }, 'deckGLMap'],
-    ['the globe', { useDeckGL: false, useGlobe: true }, 'globeMap'],
+    ['deck.gl', { useDeckGL: true }, 'deckGLMap'],
   ] as const)('jumps with no animation on %s when asked for an instant move', (_name, flags, renderer) => {
     const setCenter = vi.fn();
     const map = Object.assign(Object.create(MapContainer.prototype), {

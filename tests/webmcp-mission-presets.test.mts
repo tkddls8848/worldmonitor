@@ -49,12 +49,9 @@ function makeApplyContext(overrides: Partial<AppContext> = {}): AppContext {
       setLayers: () => {},
       setTimeRange: () => {},
       getTimeRange: () => '7d',
-      switchToGlobe: () => {},
-      switchToFlat: () => {},
       whenRendererReady: () => Promise.resolve(),
       whenViewportSettled: () => Promise.resolve(),
       isDeckGLActive: () => false,
-      isGlobeMode: () => false,
     },
     ...overrides,
   } as AppContext;

@@ -1863,7 +1863,6 @@ export class App {
             applyLayerChange: (layer, enabled, source) => (
               this.eventHandlers.applyMapLayerChange(layer, enabled, source)
             ),
-            requireMapModePersistence: true,
           },
           syncUrlStateNow: () => this.eventHandlers.syncUrlStateNow(),
         });

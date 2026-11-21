@@ -1,5 +1,5 @@
 /**
- * Resolve a root-relative static file (`/data/...`, `/textures/...`) against the
+ * Resolve a root-relative static file (`/data/...`) against the
  * origin that served this bundle.
  *
  * The MCP Apps views run inside a host sandbox on another origin. Claude's

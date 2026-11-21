@@ -1081,7 +1081,7 @@ async function waitForMissionTimers(): Promise<void> {
   await wait(320);
 }
 
-function makeMapSpy(options: { isGlobe?: boolean; isDeckGLActive?: boolean } = {}) {
+function makeMapSpy(options: { isDeckGLActive?: boolean } = {}) {
   const state = {
     view: 'global',
     zoom: 2.3,
@@ -1114,9 +1114,6 @@ function makeMapSpy(options: { isGlobe?: boolean; isDeckGLActive?: boolean } = {
     },
     getCenter() {
       return { lat: 0, lon: 0 };
-    },
-    isGlobeMode() {
-      return options.isGlobe ?? false;
     },
     isDeckGLActive() {
       return options.isDeckGLActive ?? true;

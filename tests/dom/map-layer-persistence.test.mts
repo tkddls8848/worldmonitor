@@ -108,7 +108,6 @@ describe('open_search_result persists an executable layer result', () => {
       ctx: {
         mapLayers,
         map: {
-          isGlobeMode: () => false,
           isDeckGLActive: () => false,
           enableLayer,
         },

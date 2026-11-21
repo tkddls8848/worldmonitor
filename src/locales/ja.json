@@ -1471,13 +1471,6 @@
       "infoTooltip": "<strong>AI分析</strong><br>• <strong>世界ブリーフ</strong>: AI要約（OpenRouter）<br>• <strong>センチメント</strong>: ニュースのトーン分析<br>• <strong>速度</strong>: 急速に広がるストーリー<br>• <strong>焦点</strong>: ニュースエンティティとマップシグナル（軍事、抗議、障害）を相関<br><em>デスクトップ版のみ・Llama 3.3 + 焦点検出搭載</em>",
       "streamQualityLabel": "動画画質",
       "streamQualityDesc": "すべてのライブストリームの画質を設定（低画質は帯域幅を節約）",
-      "globeRenderScaleOptions": {
-        "1": "エコ (1x)",
-        "2": "4K (2x)",
-        "3": "超高精細 (3x)",
-        "auto": "自動（デバイス依存）",
-        "1_5": "シャープ (1.5x)"
-      },
       "mapFlashLabel": "ライブイベントパルス",
       "mapFlashDesc": "速報が入ったときに地図上の場所を点滅させる",
       "aiFlowCloudLabel": "クラウドAI（OpenRouter）",
@@ -4388,8 +4381,6 @@
     "mapProviderDesc": "マップタイルの読み込み先を選択します。",
     "mapTheme": "マップテーマ",
     "mapThemeDesc": "マップタイルのビジュアルスタイル。",
-    "globePreset": "ビジュアルプリセット",
-    "globePresetDesc": "クラシックと拡張地球表示を切り替えます。",
     "fontFamily": "フォントファミリー",
     "fontFamilyDesc": "テクニカルな見た目にはモノスペース、より読みやすくするにはシステムデフォルトを選択できます。",
     "fontMono": "モノスペース",

@@ -34,7 +34,6 @@ import { WEBMCP_MISSION_PICKER_REASON } from '@/config/webmcp';
 import type { PanelConfig } from '@/types';
 import type { AgentBusApplierOptions } from './agent-bus-applier';
 import type { RendererKind } from '@/config/map-layer-definitions';
-import { currentDashboardMapMode } from './map-dimension-control';
 
 const APP_DESTROYED_RESULT: DashboardActionResult = {
   ok: false,
@@ -94,7 +93,8 @@ export function getWebMcpDashboardContext(
       view: mapState.view,
       center,
       zoom: mapState.zoom,
-      mode: currentDashboardMapMode(ctx),
+      // The 3D globe was removed; the dashboard map is always 2D.
+      mode: '2d',
       timeRange: mapState.timeRange,
       enabledLayers: Object.entries(mapState.layers)
         .filter(([, enabled]) => enabled === true)
@@ -125,9 +125,7 @@ export function getWebMcpMapLayerCatalogSnapshot(
   }
 
   const mapState = ctx.map.getState();
-  const rendererKind: RendererKind = ctx.map.isGlobeMode?.()
-    ? 'globe'
-    : ctx.map.isDeckGLActive?.() ? 'deck' : 'svg';
+  const rendererKind: RendererKind = ctx.map.isDeckGLActive?.() ? 'deck' : 'svg';
   return {
     variant: normalizeCatalogVariant(variant),
     rendererKind,

@@ -32,7 +32,7 @@ Treat each WebMCP change as a public UI contract change. Tool names, description
 | `src/main.ts` | Dashboard registration before the deferred App import, the pending App bindings, the controller handed to `App.init`, and unregistration when App fails to load or construct. |
 | `src/App.ts`, `src/app/webmcp-dashboard.ts`, and `src/app/dashboard-action-binding.ts` | App initialization ordering, UI readiness, teardown, dashboard context, catalog snapshots, and binding to the human action path. |
 | `shared/agent-bus-actions.ts`, `shared/agent-bus-contract.ts`, and `src/app/agent-bus-applier.ts` | Typed dashboard action protocol and application through existing UI state. |
-| `src/app/country-map-focus.ts` and `src/app/map-dimension-control.ts` | Country bounding-box focus and the shared 2D or 3D control path. |
+| `src/app/country-map-focus.ts` | Country bounding-box focus. `set_map_mode` is handled in `src/app/agent-bus-applier.ts`: the map is 2D only, so `3d` is denied with `globe_unavailable`. |
 | `src/config/panel-enablement.ts` and `src/app/panel-enablement.ts` | Panel enablement policy and the settings persist and apply path used by `set_panel_enabled`. |
 | `src/services/webmcp-access-snapshot.ts` | The PII-free access snapshot. This build has no account, so `open_sign_in` always reports `clerk_unavailable`. |
 | `src/app/webmcp-search-controller.ts`, `src/app/webmcp-search-effects.ts`, and `src/app/search-selection-dispatcher.ts` | Opaque search capabilities, bound effect classes, invalidation, live-state revalidation, and visible result selection. |

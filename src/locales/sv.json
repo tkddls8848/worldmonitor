@@ -1345,13 +1345,6 @@
       "headlineMemoryDesc": "Kom ihåg sedda rubriker för att markera nya",
       "streamAlwaysOnLabel": "Spela live-webbkameror automatiskt",
       "streamAlwaysOnDesc": "Startar direktwebkameravideoerna så snart de visas på skärmen. Lämna detta avstängt för att endast ladda dem när du startar dem själv.",
-      "globeRenderScaleOptions": {
-        "1": "Eko (1x)",
-        "2": "4K (2x)",
-        "3": "Extrem (3x)",
-        "auto": "Auto (enhet)",
-        "1_5": "Skarp (1.5x)"
-      },
       "analysisFrameworksLabel": "Analysramverk",
       "analysisFrameworksActivePerPanel": "Aktiv per panel",
       "analysisFrameworksSkillLibrary": "Kompetensbibliotek",
@@ -4410,8 +4403,6 @@
     "mapProviderDesc": "Välj varifrån kartpaneler laddas.",
     "mapTheme": "Karttema",
     "mapThemeDesc": "Visuell stil för kartpaneler.",
-    "globePreset": "Visuell förinställning",
-    "globePresetDesc": "Växla mellan klassiska och förbättrade globvisualer.",
     "fontFamily": "Teckensnitt",
     "fontFamilyDesc": "Monospace för teknisk stil, systemstandard för lättare läsning.",
     "fontMono": "Monospace",

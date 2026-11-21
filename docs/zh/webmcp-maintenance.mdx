@@ -32,7 +32,7 @@ description: "更改、验证并发布 WorldMonitor WebMCP 契约，同时避免
 | `src/main.ts` | 在延迟导入 App 之前注册仪表板工具、待定的 App 绑定、传给 `App.init` 的控制器，以及 App 加载或构造失败时注销工具。 |
 | `src/App.ts`、`src/app/webmcp-dashboard.ts` 和 `src/app/dashboard-action-binding.ts` | App 初始化顺序、UI 就绪、销毁、仪表板上下文、目录快照和人工操作路径绑定。 |
 | `shared/agent-bus-actions.ts`、`shared/agent-bus-contract.ts` 和 `src/app/agent-bus-applier.ts` | 类型化仪表板动作协议，以及通过现有 UI 状态应用动作。 |
-| `src/app/country-map-focus.ts` 和 `src/app/map-dimension-control.ts` | 国家边界框聚焦，以及共享 2D 或 3D 控件路径。 |
+| `src/app/country-map-focus.ts` | 国家边界框聚焦。`set_map_mode` 由 `src/app/agent-bus-applier.ts` 处理：地图仅支持 2D，因此 `3d` 会以 `globe_unavailable` 被拒绝。 |
 | `src/config/panel-enablement.ts` 和 `src/app/panel-enablement.ts` | 面板启用策略，以及 `set_panel_enabled` 使用的设置持久化与应用路径。 |
 | `src/services/webmcp-access-snapshot.ts` | 无个人身份信息的访问快照。此版本没有账户，因此 `open_sign_in` 始终返回 `clerk_unavailable`。 |
 | `src/app/webmcp-search-controller.ts`、`src/app/webmcp-search-effects.ts` 和 `src/app/search-selection-dispatcher.ts` | 不透明搜索能力、绑定效果类别、失效、实时状态复核和可见结果选择。 |

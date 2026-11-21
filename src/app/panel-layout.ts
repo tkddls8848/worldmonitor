@@ -54,7 +54,6 @@ import { NQ_PULSE_DISCLOSURE } from '@/config/nq-context';
 import { t } from '@/services/i18n';
 import { getPanelDisplayName } from '@/services/panel-display-name';
 import { getCurrentTheme } from '@/utils';
-import { getStoredMapModePreference } from '@/services/map-mode-preference';
 import { loadWidgets } from '@/services/widget-store';
 import { getAllowedLayerKeys, type MapVariant } from '@/config/map-layer-definitions';
 import { PanelTabBar } from '@/components/PanelTabBar';
@@ -619,7 +618,6 @@ export class PanelLayoutManager implements AppModule {
   }
 
   async renderLayout(): Promise<void> {
-    const isGlobeMode = getStoredMapModePreference() === 'globe';
     // #5159: the collapsed-map cohort's #mapSection must be CREATED with
     // .collapsed — main.css sets the expanded mobile height with !important
     // inside a cascade layer, and layered !important beats any unlayered
@@ -857,10 +855,6 @@ export class PanelLayoutManager implements AppModule {
             </div>
             <span class="header-clock" id="headerClock" translate="no"></span>
             <div class="map-header-actions">
-              <div class="map-dimension-toggle" id="mapDimensionToggle">
-                <button class="map-dim-btn${isGlobeMode ? '' : ' active'}" data-mode="flat" title="2D Map">2D</button>
-                <button class="map-dim-btn${isGlobeMode ? ' active' : ''}" data-mode="globe" title="3D Globe">3D</button>
-              </div>
               <button class="map-pin-btn map-side-btn" id="mapSideBtn" title="Move map to the right side">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/></svg>
               </button>
@@ -2364,7 +2358,6 @@ export class PanelLayoutManager implements AppModule {
     this.initiallyMountedEnabledPanelCount = 0;
 
     const mapContainer = document.getElementById('mapContainer') as HTMLElement;
-    const preferGlobe = getStoredMapModePreference() === 'globe';
     // Dynamic import: keeps maplibre-gl + @deck.gl/* + @loaders.gl + @luma.gl out of
     // the entry chunk.
     //
@@ -3049,7 +3042,7 @@ export class PanelLayoutManager implements AppModule {
       view: this.ctx.isMobile ? this.ctx.resolvedLocation : 'global',
       layers: this.ctx.mapLayers,
       timeRange: '7d',
-    }, preferGlobe);
+    });
 
     const eagerSupplyChainPanel = this.ctx.panels['supply-chain'] as SupplyChainPanel | undefined;
     if (eagerSupplyChainPanel) {

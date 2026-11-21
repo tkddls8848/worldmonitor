@@ -125,13 +125,9 @@ export const STORAGE_KEYS = {
   //       full-category disabling would be silently undone forever).
   disabledFeedsSchema: 'worldmonitor-disabled-feeds-schema',
   liveChannels: 'worldmonitor-live-channels',
-  mapMode: 'worldmonitor-map-mode',          // 'flat' | 'globe'
   activeChannel: 'worldmonitor-active-channel',
   webcamPrefs: 'worldmonitor-webcam-prefs',
 } as const;
-
-export type MapModePreference = 'flat' | 'globe';
-export const DEFAULT_MAP_MODE: MapModePreference = 'flat';
 
 // Type definitions for variant configs
 export interface VariantConfig {

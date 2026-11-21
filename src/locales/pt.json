@@ -1347,13 +1347,6 @@
       "headlineMemoryDesc": "Lembrar manchetes vistas para destacar novas",
       "streamAlwaysOnLabel": "Reprodução automática de webcams ao vivo",
       "streamAlwaysOnDesc": "Inicia os vídeos da webcam ao vivo assim que aparecem na tela. Deixe desativado para carregá-los apenas quando você iniciá-los.",
-      "globeRenderScaleOptions": {
-        "1": "Econômico (1x)",
-        "2": "4K (2x)",
-        "3": "Extremo (3x)",
-        "auto": "Auto (dispositivo)",
-        "1_5": "Nítido (1.5x)"
-      },
       "analysisFrameworksLabel": "Estruturas de Análise",
       "analysisFrameworksActivePerPanel": "Ativa por painel",
       "analysisFrameworksSkillLibrary": "Biblioteca de competências",
@@ -4432,8 +4425,6 @@
     "mapProviderDesc": "Escolha de onde os tiles do mapa são carregados.",
     "mapTheme": "Tema do mapa",
     "mapThemeDesc": "Estilo visual dos tiles do mapa.",
-    "globePreset": "Predefinição visual",
-    "globePresetDesc": "Alternar entre visuais clássicos e aprimorados do globo.",
     "fontFamily": "Família de Fontes",
     "fontFamilyDesc": "Monospace para uma aparência técnica, fonte padrão do sistema para leitura mais fácil.",
     "fontMono": "Monospace",

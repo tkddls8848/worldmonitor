@@ -1,6 +1,6 @@
 // These seven checks pin the static import graph and emitted build chunks.
 // Runtime tests cannot prove which code ships or preloads; behavior is covered
-// by map-viewport-runtime and the DeckGL/Globe DOM runtime suites (#8690).
+// by map-viewport-runtime and the DeckGL DOM runtime suites (#8690).
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -164,11 +164,9 @@ describe('map renderer deferral boundary', () => {
     const forbidden = [
       './Map',
       './DeckGLMap',
-      './GlobeMap',
       'maplibre-gl/dist/maplibre-gl.css',
       'maplibre-gl',
       'pmtiles',
-      'globe.gl',
     ];
 
     for (const specifier of forbidden) {
@@ -185,7 +183,6 @@ describe('map renderer deferral boundary', () => {
 
     assert.ok(imports.has('./Map'), 'SVG fallback renderer should be loaded on demand');
     assert.ok(imports.has('./DeckGLMap'), 'DeckGL renderer should be loaded on demand');
-    assert.ok(imports.has('./GlobeMap'), 'Globe renderer should be loaded on demand');
     assert.ok(imports.has('maplibre-gl/dist/maplibre-gl.css'), 'MapLibre CSS should load with the DeckGL renderer');
   });
 

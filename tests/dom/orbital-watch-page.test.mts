@@ -404,7 +404,7 @@ describe('satellite pass lookup sheet', () => {
     expect(media.querySelector('.ow-detail-glyph .ow-label')!.textContent).toBe('capability overhead');
   });
 
-  it('asks the globe to replay a pass that has one', () => {
+  it('asks the map to replay a pass that has one', () => {
     const { all, confirmedNew } = tiered();
     mounted(answered(all, { acquisitions: [acquisition(confirmedNew)] }));
     const replay = vi.fn();

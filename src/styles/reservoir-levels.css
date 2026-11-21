@@ -272,17 +272,3 @@
   border: 2px solid var(--wl-tone);
   background: transparent;
 }
-
-/* Globe marker (inside the globe's 20px hit target) */
-.wl-globe-dot {
-  width: 9px;
-  height: 9px;
-  border: 1.5px solid var(--bg);
-  border-radius: 50%;
-  background: var(--wl-tone);
-}
-
-.wl-globe-dot.wl-tone-muted {
-  border: 2px solid var(--wl-tone);
-  background: transparent;
-}

@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
 
-// The five service modules below are statically imported by the eager boot
+// The four service modules below are statically imported by the eager boot
 // graph (via @/app/data-loader). Their IntelligenceServiceClient MUST be
 // constructed lazily (createLazyClient) so its constructor + getRpcBaseUrl()
 // do NOT run at module eval on every dashboard boot (#4477 / #4410). A
@@ -21,7 +21,6 @@ const EAGER_SERVICE_FILES = [
   'src/services/security-advisories.ts',
   'src/services/social-velocity.ts',
   'src/services/pizzint.ts',
-  'src/services/satellites.ts',
 ];
 
 const DATA_LOADER_DEFERRED_SERVICE_IMPORTS = [

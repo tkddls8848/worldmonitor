@@ -82,11 +82,11 @@ import {
   MAP_OVERLAY_MARKER_BUDGET_LOW_END,
   MAP_OVERLAY_MARKER_BUDGET_MOBILE,
   proximityRank,
-  selectGlobeMarkers,
-  type GlobeLayerTruncation,
-  type GlobeMarkerGroup,
+  selectMapMarkers,
+  type MapLayerTruncation,
+  type MapMarkerGroup,
   type LatLng,
-} from '@/utils/globe-marker-budget';
+} from '@/utils/map-marker-budget';
 import {
   getLayerExplanation,
   hasCuratedLayerExplanation,
@@ -323,7 +323,7 @@ export class MapComponent {
   // can be evicted when MAX_CONCURRENT_MAP_FLASHES is reached. Also lets destroy()
   // clear timers that would otherwise fire against a torn-down instance.
   private readonly activeFlashes = new Map<HTMLElement, ReturnType<typeof setTimeout>>();
-  private overlayMarkerTruncation: Record<string, GlobeLayerTruncation> = {};
+  private overlayMarkerTruncation: Record<string, MapLayerTruncation> = {};
   // Truncated layer keys with no toggle row to disclose them on; see
   // updateLayerTruncationLabels().
   private overlayUndisclosedTruncation: string[] = [];
@@ -683,8 +683,7 @@ export class MapComponent {
       // storageFacilities + fuelShortages are also DeckGL-only — this file has no
       // SVG render path for them (see grep for existing 'pipelines' render at :1100).
       // Adding them here would surface a toggle that produces zero output. They're
-      // already restricted to renderers: ['deck'] in LAYER_REGISTRY, which keeps
-      // them out of the globe picker too.
+      // already restricted to renderers: ['deck'] in LAYER_REGISTRY.
       'ais', 'flights', 'aircraftEmergencies', 'gpsJamming',
       'natural', 'weather', 'reservoirLevels',            // natural
       'economic',                                         // economic
@@ -1917,9 +1916,9 @@ export class MapComponent {
    * generation waited for GC. Desktop reaches this path whenever the client has
    * no hardware WebGL2 context, which is the normal state of a lab runner.
    *
-   * The selection is the globe's (#5368) — same module, same ceilings, so a
-   * client that falls back from Deck to SVG does not silently change how much of
-   * a layer it can see. The plan is stored as the set of markers to WITHHOLD, so
+   * The selection (#5368) applies one ceiling per device class, so a client
+   * that falls back from Deck to SVG gets a predictable cap on how much of a
+   * layer it can see. The plan is stored as the set of markers to WITHHOLD, so
    * a feed absent from the plan renders in full rather than disappearing.
    */
   /**
@@ -2041,13 +2040,13 @@ export class MapComponent {
     projection: d3.GeoProjection,
     slices: ReturnType<MapComponent['overlayFeedSlices']>,
   ): void {
-    const groups: GlobeMarkerGroup<unknown>[] = [];
+    const groups: MapMarkerGroup<unknown>[] = [];
     const add = (
       layer: string,
       markers: readonly unknown[],
-      // Only the tuning knobs, mirroring GlobeMap.flushMarkers: spreading a full
-      // Partial would let a caller overwrite the layer/markers just set.
-      extra: Pick<Partial<GlobeMarkerGroup<unknown>>, 'rank' | 'exempt'> = {},
+      // Only the tuning knobs: spreading a full Partial would let a caller
+      // overwrite the layer/markers just set.
+      extra: Pick<Partial<MapMarkerGroup<unknown>>, 'rank' | 'exempt'> = {},
     ): void => { if (markers.length) groups.push({ layer, markers, ...extra }); };
 
     const layers = this.state.layers;
@@ -2126,7 +2125,7 @@ export class MapComponent {
     }
     if (layers.webcams && this.state.zoom >= 2) add('webcams', this.webcamData);
     // Variant hub overlays have no layer-toggle row, so a truncation here would
-    // have nowhere to be disclosed — exempt like the globe's `news` group. Both
+    // have nowhere to be disclosed, so they are exempt. Both
     // are bounded by the hub registry, not by an upstream feed.
     if (SITE_VARIANT === 'tech') add('techHubs', this.techActivities, { exempt: true });
     if (SITE_VARIANT === 'full') add('geoHubs', this.geoActivities, { exempt: true });
@@ -2152,7 +2151,7 @@ export class MapComponent {
       : this.isMobile
         ? MAP_OVERLAY_MARKER_BUDGET_MOBILE
         : MAP_OVERLAY_MARKER_BUDGET_DESKTOP;
-    const { markers, truncated } = selectGlobeMarkers(groups, budget);
+    const { markers, truncated } = selectMapMarkers(groups, budget);
 
     const kept = new Set(markers);
     const cut = new Set<unknown>();
@@ -2208,9 +2207,8 @@ export class MapComponent {
   }
 
   /**
-   * Discloses a capped layer as `shown/total` on its toggle row, the way the
-   * globe does — a ceiling the user cannot see is indistinguishable from missing
-   * data. Skipped when nothing changed: this runs on every render pass, and the
+   * Discloses a capped layer as `shown/total` on its toggle row — a ceiling the
+   * user cannot see is indistinguishable from missing data. Skipped when nothing changed: this runs on every render pass, and the
    * writes would restyle the toggle rows each time (#5080).
    *
    * A layer the budget trimmed that has no toggle row in this variant's picker
@@ -2307,7 +2305,7 @@ export class MapComponent {
   public getOverlayMarkerBudgetState(): {
     rendered: number;
     renders: number;
-    truncated: Record<string, GlobeLayerTruncation>;
+    truncated: Record<string, MapLayerTruncation>;
     undisclosed: string[];
   } {
     return {
@@ -4939,8 +4937,8 @@ export class MapComponent {
    * marker in the infinite-pulse state (and its compositing layer, #4669) for
    * the whole gesture.
    *
-   * So coalesce to the settle instead, which is what GlobeMap does by re-selecting
-   * on the controls 'end' event rather than during the drag. The markers on
+   * So coalesce to the settle instead, re-selecting once the gesture ends
+   * rather than during the drag. The markers on
    * screen stay correct for the pre-gesture POV while the finger is down and
    * are re-ranked once, when the user stops.
    */
@@ -4968,7 +4966,6 @@ export class MapComponent {
    * The truncation test is the load-bearing half: with nothing withheld the
    * selection is view-independent, so a rebuild cannot change a single marker and
    * would be pure churn on the very path this feature exists to make cheaper.
-   * Same guard, and same reason, as GlobeMap.reselectMarkersForViewport.
    */
   private overlayBudgetPlanIsStale(width: number, height: number): boolean {
     return (

@@ -5,9 +5,7 @@
  */
 import i18next from 'i18next';
 import type { AIDataCenter } from '@/types';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-vi.mock('globe.gl', () => ({ default: vi.fn() }));
-import { GlobeMap } from '@/components/GlobeMap';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { MapPopup } from '@/components/MapPopup';
 import {
   aptSectorLabel, aptTacticLabel, countryLabel, isSameLocation, localizeRelativePlace,
@@ -237,17 +235,4 @@ describe('datacenter details', () => {
       );
     }
   });
-});
-
-it('opens the shared datacenter popup from a globe marker', async () => {
-  await useLanguage('en');
-  const anchor = document.createElement('button');
-  container.append(anchor);
-  const host = Object.assign(Object.create(GlobeMap.prototype), {
-    container, popup, hideTooltip: vi.fn(), showMarkerTooltip: vi.fn(),
-  });
-  host.handleMarkerClick({ _kind: 'datacenter', id: 'dc-55' }, anchor);
-  expect(document.querySelector('.datacenter-details')?.textContent).toContain('23.4 MW');
-  expect(host.hideTooltip).toHaveBeenCalledOnce();
-  expect(host.showMarkerTooltip).not.toHaveBeenCalled();
 });

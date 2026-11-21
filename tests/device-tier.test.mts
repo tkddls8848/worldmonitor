@@ -11,7 +11,7 @@ import {
 import {
   MAP_OVERLAY_MARKER_BUDGET_LOW_END,
   MAP_OVERLAY_MARKER_BUDGET_MOBILE,
-} from '../src/utils/globe-marker-budget.ts';
+} from '../src/utils/map-marker-budget.ts';
 
 function withNavigator<T>(value: unknown, run: () => T): T {
   const saved = Object.getOwnPropertyDescriptor(globalThis, 'navigator');

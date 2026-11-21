@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DeckGLMap } from '@/components/DeckGLMap';
-import { GlobeMap } from '@/components/GlobeMap';
 import { MapComponent } from '@/components/Map';
 import type { WebcamLeafLike } from '@/components/map/webcam-click';
 import type { WebcamEntry } from '@/generated/client/worldmonitor/webcam/v1/service_client';
@@ -55,14 +54,6 @@ type DeckPopup = {
   showWebcamClickPopup: (webcam: WebcamLeafLike, x: number, y: number) => Promise<void>;
 };
 
-type GlobePopup = {
-  container: HTMLElement;
-  tooltipEl: HTMLElement | null;
-  tooltipHideTimer: ReturnType<typeof setTimeout> | null;
-  popup: { hide: () => void } | null;
-  showMarkerTooltip: (marker: unknown, anchor: HTMLElement) => void;
-};
-
 const roots: HTMLElement[] = [];
 
 function container(): HTMLElement {
@@ -100,26 +91,6 @@ async function openDeckMap(): Promise<HTMLElement> {
   return map.container;
 }
 
-function openGlobe(): HTMLElement {
-  const map = Object.create(GlobeMap.prototype) as GlobePopup;
-  map.container = container();
-  map.tooltipEl = null;
-  map.tooltipHideTimer = null;
-  map.popup = null;
-  const anchor = document.createElement('div');
-  map.container.appendChild(anchor);
-  map.showMarkerTooltip({
-    _kind: 'webcam',
-    _lat: -54.9,
-    _lng: -67.6,
-    webcamId: 'horn',
-    title: 'Cape Horn',
-    category: 'city',
-    country: 'CL',
-  }, anchor);
-  return map.container;
-}
-
 async function pinButton(root: ParentNode): Promise<HTMLButtonElement> {
   await vi.waitFor(() => {
     expect(root.querySelector('.webcam-pin-btn')).toBeTruthy();
@@ -143,7 +114,6 @@ describe('map pin button for a hidden webcam', () => {
   it.each([
     ['flat map', openFlatMap],
     ['deck map', openDeckMap],
-    ['globe', openGlobe],
   ] as const)('%s offers Turn back on and activates the saved camera', async (_name, open) => {
     seed(false);
     const button = await pinButton(await open());

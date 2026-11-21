@@ -73,33 +73,29 @@ test.describe('China corridor control towers', () => {
     ]);
   });
 
-  for (const renderer of ['globe', 'svg']) {
-    test(`tells ${renderer} users to switch to the 2D map when the corridor overlay is unavailable`, async ({ page }) => {
-      await page.goto(`/tests/china-corridor-panel-harness.html?renderer=${renderer}`);
-      await expect.poll(() => page.evaluate(() =>
-        (window as unknown as {
-          __chinaCorridorPanelHarness?: { ready: boolean };
-        }).__chinaCorridorPanelHarness?.ready ?? false)).toBe(true);
+  test('tells svg users to switch to the 2D map when the corridor overlay is unavailable', async ({ page }) => {
+    await page.goto('/tests/china-corridor-panel-harness.html?renderer=svg');
+    await expect.poll(() => page.evaluate(() =>
+      (window as unknown as {
+        __chinaCorridorPanelHarness?: { ready: boolean };
+      }).__chinaCorridorPanelHarness?.ready ?? false)).toBe(true);
 
-      await page.locator('[data-panel="china-corridors"]').getByRole('tab').nth(1).click();
-      await expect(page.getByRole('status')).toContainText(
-        'The active map renderer centers this corridor but cannot draw its boundary or nodes.',
-      );
-      if (renderer === 'globe') {
-        await page.evaluate(() => (window as unknown as {
-          __chinaCorridorPanelHarness?: {
-            switchRenderer: (renderer: 'deck' | 'globe' | 'svg') => void;
-          };
-        }).__chinaCorridorPanelHarness?.switchRenderer('deck'));
-        await expect(page.locator('.china-corridor-renderer-hint')).toHaveCount(0);
-        await expect.poll(() => page.evaluate(() =>
-          (window as unknown as {
-            __chinaCorridorPanelHarness?: { rendererSupportsOverlay: boolean };
-          }).__chinaCorridorPanelHarness?.rendererSupportsOverlay ?? false))
-          .toBe(true);
-      }
-    });
-  }
+    await page.locator('[data-panel="china-corridors"]').getByRole('tab').nth(1).click();
+    await expect(page.getByRole('status')).toContainText(
+      'The active map renderer centers this corridor but cannot draw its boundary or nodes.',
+    );
+    await page.evaluate(() => (window as unknown as {
+      __chinaCorridorPanelHarness?: {
+        switchRenderer: (renderer: 'deck' | 'svg') => void;
+      };
+    }).__chinaCorridorPanelHarness?.switchRenderer('deck'));
+    await expect(page.locator('.china-corridor-renderer-hint')).toHaveCount(0);
+    await expect.poll(() => page.evaluate(() =>
+      (window as unknown as {
+        __chinaCorridorPanelHarness?: { rendererSupportsOverlay: boolean };
+      }).__chinaCorridorPanelHarness?.rendererSupportsOverlay ?? false))
+      .toBe(true);
+  });
 
   test('keeps renderer capability pending until a deferred DeckGL map is ready', async ({ page }) => {
     await page.goto('/tests/china-corridor-panel-harness.html?renderer=pending-deck');
@@ -121,7 +117,7 @@ test.describe('China corridor control towers', () => {
 
     await page.evaluate(() => (window as unknown as {
       __chinaCorridorPanelHarness?: {
-        switchRenderer: (renderer: 'deck' | 'globe' | 'svg') => void;
+        switchRenderer: (renderer: 'deck' | 'svg') => void;
       };
     }).__chinaCorridorPanelHarness?.switchRenderer('deck'));
     await expect.poll(() => page.evaluate(() =>

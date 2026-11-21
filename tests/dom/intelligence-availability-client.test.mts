@@ -1,12 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { rpc, hydration } = vi.hoisted(() => ({
-  rpc: { listSatellites: vi.fn(), listSecurityAdvisories: vi.fn(), searchGdeltDocuments: vi.fn() },
+  rpc: { listSecurityAdvisories: vi.fn(), searchGdeltDocuments: vi.fn() },
   hydration: new Map<string, unknown>(),
 }));
 vi.mock('@/services/generated-rpc-clients', () => ({
   IntelligenceServiceClient: class {
-    listSatellites = rpc.listSatellites;
     listSecurityAdvisories = rpc.listSecurityAdvisories;
     searchGdeltDocuments = rpc.searchGdeltDocuments;
   },
@@ -27,7 +26,6 @@ vi.mock('@/services/persistent-cache', () => ({
 vi.mock('@/utils', async () => await import('@/utils/circuit-breaker'));
 
 const INTEL_TOPIC_IDS = ['military', 'cyber', 'nuclear', 'sanctions', 'intelligence', 'maritime'];
-const satellite = { id: '25544', name: 'ISS', country: 'US', type: 'station', alt: 0, velocity: 0, inclination: 0, line1: '1 25544U 98067A   19156.50900463  .00003075  00000-0  59442-4 0  9992', line2: '2 25544  51.6433  59.2583 0008217  16.4489 347.6017 15.51174618173442' };
 const advisory = { title: 'Travel update', link: 'https://example.com/advice', pubDate: '2026-09-15T00:00:00Z', source: 'FCDO', sourceCountry: 'UK', level: 'caution', country: 'UA' };
 const coveredByCountry = Object.fromEntries(Array.from({ length: 100 }, (_, i) => [`C${String(i).padStart(3, '0')}`, 'normal']));
 const article = (title: string) => ({ title, url: `https://example.com/${title || 'untitled'}`, source: 'example.com', date: '20260915T000000Z', image: '', language: 'English', tone: 0 });
@@ -47,42 +45,6 @@ beforeEach(() => {
   vi.spyOn(console, 'log').mockImplementation(() => {});
 });
 afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
-
-describe('satellite TLE availability', () => {
-  it('retains last-good through failures for at most an hour, then recovers to a cached confirmed empty', async () => {
-    const { fetchSatelliteTLEs, getSatelliteStatus } = await import('@/services/satellites');
-    rpc.listSatellites.mockResolvedValue({ satellites: [satellite] });
-    expect(await fetchSatelliteTLEs()).toHaveLength(1);
-
-    vi.setSystemTime(Date.now() + 11 * MINUTE);
-    rpc.listSatellites.mockRejectedValue(new Error('503'));
-    expect(await fetchSatelliteTLEs()).toHaveLength(1);
-    expect(getSatelliteStatus()).toBe('degraded');
-    // A malformed body is a failure too, not a confirmed-empty sky.
-    rpc.listSatellites.mockResolvedValue({ satellites: [null] });
-    await fetchSatelliteTLEs();
-    await fetchSatelliteTLEs();
-    expect(getSatelliteStatus()).toBe('cooldown');
-
-    vi.setSystemTime(Date.now() + 60 * MINUTE);
-    expect(await fetchSatelliteTLEs()).toBeNull();
-
-    vi.setSystemTime(Date.now() + 11 * MINUTE);
-    rpc.listSatellites.mockResolvedValue({ satellites: [] });
-    expect(await fetchSatelliteTLEs()).toEqual([]);
-    expect(getSatelliteStatus()).toBe('ok');
-    const calls = rpc.listSatellites.mock.calls.length;
-    expect(await fetchSatelliteTLEs()).toEqual([]);
-    expect(rpc.listSatellites).toHaveBeenCalledTimes(calls);
-  });
-
-  it('drops an invalid TLE record and keeps the valid ones', async () => {
-    const { fetchSatelliteTLEs } = await import('@/services/satellites');
-    rpc.listSatellites.mockResolvedValue({ satellites: [satellite, { ...satellite, line1: 'broken' }] });
-    const tles = await fetchSatelliteTLEs();
-    expect(tles?.map(tle => tle.noradId)).toEqual(['25544']);
-  });
-});
 
 describe('security advisory availability', () => {
   it('reports unavailable as ok:false, retains last-good for an hour, and recovers to confirmed empty', async () => {

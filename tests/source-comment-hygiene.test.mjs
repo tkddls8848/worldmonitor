@@ -12,10 +12,6 @@ const source = (path) => readFileSync(join(ROOT, path), 'utf8');
 
 test('obsolete ESLint suppressions do not return', () => {
   assert.doesNotMatch(
-    source('src/types/globe-gl.d.ts'),
-    /eslint-disable-next-line @typescript-eslint\/no-explicit-any\s+export interface GlobeInstance/,
-  );
-  assert.doesNotMatch(
     source('src/components/CountryDeepDivePanel.ts'),
     /eslint-disable-next-line @typescript-eslint\/no-require-imports\s+import\('@\/shared\/pipeline-registry-store'\)/,
   );

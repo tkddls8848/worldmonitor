@@ -26,7 +26,7 @@
 //  16. set_map_layers()           — changes allowed visible map layers.
 //  17. set_time_range()           — sets the visible map time range.
 //  18. focus_country()            — focuses a country bbox without a briefing.
-//  19. set_map_mode()             — switches the visible 2D/3D map renderer.
+//  19. set_map_mode()             — confirms the 2D map; 3d is denied (no globe).
 //  20. search_dashboard()         — searches the live dashboard index.
 //  21. open_search_result()       — selects an opaque, revalidated result.
 //  22. list_dashboard_tabs()      — enumerates persistent workspace tabs.
@@ -1915,7 +1915,7 @@ export function buildWebMcpTools(
       name: WEBMCP_SPA_TOOL.getDashboardContext,
       title: 'Get Dashboard Context',
       description:
-        'Read a bounded snapshot of the visible dashboard: active variant, map view, center, zoom, map mode (2d or 3d), time range, enabled layers, and mounted or enabled panel IDs.',
+        'Read a bounded snapshot of the visible dashboard: active variant, map view, center, zoom, map mode (always 2d), time range, enabled layers, and mounted or enabled panel IDs.',
       inputSchema: {
         type: 'object',
         properties: {},
@@ -1941,7 +1941,7 @@ export function buildWebMcpTools(
           },
           renderer: {
             type: 'string',
-            description: 'Optional 2d or 3d renderer compatibility filter.',
+            description: 'Optional renderer compatibility filter. The map is 2d only.',
             enum: [...WEBMCP_MAP_LAYER_RENDERERS],
           },
           state: {
@@ -2570,13 +2570,13 @@ export function buildWebMcpTools(
       name: WEBMCP_SPA_TOOL.setMapMode,
       title: 'Set Map Mode',
       description:
-        'Switch the visible map between 2d (flat) and 3d (globe) through the same dashboard control, including renderer layer compatibility.',
+        'Request a map mode. The dashboard map is 2d (flat) only: 2d confirms the current map, and 3d is denied with globe_unavailable because the 3D globe was removed.',
       inputSchema: {
         type: 'object',
         properties: {
           mode: {
             type: 'string',
-            description: 'Visible map mode: 2d or 3d.',
+            description: 'Map mode: 2d, or 3d (always denied with globe_unavailable).',
             enum: [...DASHBOARD_MAP_MODES],
           },
         },
