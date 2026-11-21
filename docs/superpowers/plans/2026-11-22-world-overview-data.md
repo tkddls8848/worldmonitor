@@ -108,11 +108,13 @@
 ### Task 1: Sanctions pair counters (5.2)
 
 **Files:**
+
 - Create: `scripts/_world-sanctions.mjs`
 - Create: `shared/world-sanctions-issuers.json`
 - Test: `tests/world-sanctions.test.mjs`
 
 **Interfaces:**
+
 - Consumes: `resolveIso2({ name })` from `scripts/_country-resolver.mjs`; `papaparse` (`Papa.parse(Papa.NODE_STREAM_INPUT, { header: true, skipEmptyLines: true })`); `sax`.
 - Produces:
   ```ts
@@ -266,6 +268,7 @@
 ### Task 2: Fixed relations collector (5.2)
 
 **Files:**
+
 - Create: `shared/world-overview.js`, `shared/world-overview.d.ts`
 - Create: `shared/world-alliances.json`
 - Create: `scripts/_world-economic-pairs.mjs`, `scripts/_world-overview-io.mjs`, `scripts/seed-world-relations.mjs`
@@ -276,6 +279,7 @@
 - Test: `tests/world-relations.test.mjs`, `tests/world-overview-shared.test.mjs`, `tests/world-overview-health-registration.test.mjs`, `tests/personal-collect-schedule.test.mjs`
 
 **Interfaces:**
+
 - Consumes: Task 1 exports; `runSeed`, `readCanonicalValue`, `loadEnvFile` from `scripts/_seed-utils.mjs`; `getOptionalUpstashCreds`, `upstashCommand` from `scripts/_upstash-rest.mjs`; Comtrade keys `comtrade:bilateral-hs4:<ISO2>:v1` for the ISO2 keys of `scripts/shared/country-port-clusters.json`; BIS key `economic:bis-lbs:v1` (`data.countries[cp].parents[parent]` in USD millions).
 - Produces (`shared/world-overview.js` + matching `.d.ts`):
   ```ts
@@ -432,6 +436,7 @@
 ### Task 3: Tension trends for major and AI pairs (5.3)
 
 **Files:**
+
 - Create: `shared/world-overview-config.json`
 - Create: `scripts/_gdelt-world-pairs.mjs`
 - Modify: `scripts/seed-gdelt-bulk-materializer.mjs` (`fetchGdeltBulkFiles`, `fetchMaterializedGdelt`, `afterPublish`)
@@ -439,6 +444,7 @@
 - Test: `tests/gdelt-world-pairs.test.mjs`, `tests/seed-gdelt-bulk-materializer.test.mjs`, `tests/world-overview-health-registration.test.mjs`
 
 **Interfaces:**
+
 - Consumes: `pairKey`, `kstDate`, `addDays`, `WORLD_OVERVIEW_KEYS` (Task 2); `shared/iso3-to-iso2.json` (CAMEO actor codes are ISO3); `shared/gdelt-tension-pairs.json` and `gdelt:bulk:dyad-tension:v1` hourly buckets (`days[date].hours[HH] = { cohorts, pairs: { pairId: [conflict, intensity] } }`); AI key `world-overview:ai:v1` field `trackedPairs: Record<pairKey, 'YYYY-MM-DD'>` (written by Task 4; absent until then).
 - Produces:
   ```ts
@@ -580,12 +586,14 @@
 ### Task 4: Daily AI relations and issues (5.4)
 
 **Files:**
+
 - Modify: `shared/world-overview.js`, `shared/world-overview.d.ts` (fields, kinds)
 - Create: `scripts/_world-relations-ai.mjs`, `scripts/seed-world-relations-ai.mjs`
 - Modify: `scripts/personal-collect.mjs` (`DEFAULT_COLLECTORS`), `api/health.js` (`worldRelationsAi`), `docs/data-sources.mdx`
 - Test: `tests/world-relations-ai.test.mjs`, `tests/world-overview-shared.test.mjs`, `tests/world-overview-health-registration.test.mjs`, `tests/personal-collect-schedule.test.mjs`
 
 **Interfaces:**
+
 - Consumes: Task 2 shared helpers; `callLLM(headline, { systemPrompt, userPrompt, maxTokens, callBudgetMs, accept })` and `__setInsightsLlmTransportForTests` from `scripts/seed-insights.mjs` (returns `{ text, model, provider } | null`; walks Ollama → paid OpenRouter → free OpenRouter models, resampling a provider once after an `accept` rejection); `extractFirstJsonObject` from `scripts/_llm-json.mjs`; `extractStoryCountries` from `scripts/shared/geo-extract.mjs`; story pool `news:insights:v1:pool` (`{ generatedAt, stories: [{ primaryTitle, primarySource, primaryLink, pubDate, countryCodes, memberTitles }] }`), `news:insights:v1` (`worldBrief`).
 - Produces (shared, added to `.js` and `.d.ts`):
   ```ts
@@ -767,10 +775,12 @@
 ### Task 5: Snapshot contract, line budget and 틀림 marks (shared)
 
 **Files:**
+
 - Modify: `shared/world-overview.js`, `shared/world-overview.d.ts`
 - Test: `tests/world-overview-shared.test.mjs`
 
 **Interfaces:**
+
 - Consumes: Task 2 and Task 4 exports of the same module.
 - Produces (`shared/world-overview.d.ts`, the type the UI plan consumes; `.js` implements the functions):
   ```ts
@@ -952,12 +962,14 @@
 ### Task 6: First-screen snapshot builder
 
 **Files:**
+
 - Modify: `shared/world-overview-config.json` (add `citations`, `anchors`)
 - Create: `scripts/_world-overview-build.mjs`, `scripts/seed-world-overview.mjs`
 - Modify: `shared/bootstrap-tier-keys.js` (+ regenerated `api/_bootstrap-tier-keys.js`), `api/health.js` (`worldOverview`), `scripts/personal-collect.mjs`, `tests/bootstrap.test.mjs` (`PENDING_CONSUMERS`), `docs/data-sources.mdx`
 - Test: `tests/world-overview-build.test.mjs`, `tests/world-overview-health-registration.test.mjs`, `tests/personal-collect-schedule.test.mjs`
 
 **Interfaces:**
+
 - Consumes: Task 2 `WorldRelationsPayload`, Task 3 `WorldPairStore`, Task 4 `AiRelationsPayload`, Task 5 types and `annotateWrongMarks`; `activeWarsReading`, `palestineLocator` from `scripts/active-wars.mjs`; `CII_RISK_SCORE_CACHE_KEYS` from `scripts/_cii-risk-cache-keys.mjs`; `wmApiBase`, `wmApiFetch` from `scripts/lib/personal-api.mjs` (GET `/api/intelligence/v1/get-risk-scores` → `{ ciiScores: [{ region, combinedScore, components: { ciiContribution } , computedAt }] }`); `redisPipeline` from `api/_upstash-json.js` and `unwrapEnvelope` from `scripts/_seed-envelope-source.mjs` for the HAPI batch; HAPI `conflict:humanitarian:v1:<CC>` (`previousCompleteSummary ?? summary`: `conflictFatalities`, `conflictDemonstrations`, `referencePeriod`); story pool.
 - Produces:
   ```ts
@@ -1084,6 +1096,7 @@
 ### Task 7: Past-date and 틀림 route
 
 > **Owner decision (2026-11-22) overrides the route design below.** Build this as a proper sebuf RPC, not a personal edge route. The owner installed the generator toolchain; generation runs only in the controller's WSL LF clone (`wsl-gen-lf.sh`), never on Windows.
+>
 > - **7a (worker):** add the proto definitions per `.agents/skills/add-rpc-endpoint/SKILL.md`: a new `WorldOverviewService` (`proto/worldmonitor/world_overview/v1/`) with `GetWorldOverviewSnapshot` (GET, request `date` YYYY-MM-DD optional, response = the `WorldOverviewSnapshot` shape from Task 5 as proto messages, plus `archived_dates`) and `SetWorldOverviewMark` (POST, request `item_kind` relation|issue, `item_key`, `action` mark|unmark; response `ok`, `mark`). Commit the proto only, then stop and report `NEEDS_GENERATION`.
 > - **Controller:** runs generation in WSL, commits the generated client/server/openapi output (this also refreshes stale `docs/api` files from the earlier hosted-API removal), and hands back.
 > - **7b (worker):** implement the handlers in `server/worldmonitor/world-overview/v1/` with the same behaviour as the route design below (date validation, archive read, mark/unmark rewriting today's key, mark rules from Task 5), register the service where the other sebuf services are registered, and add the RPC cache tier entry per the skill. Tests as in the steps below, against the handlers instead of the route. Ignore the `api/world-overview.ts`, `PERSONAL_EDGE_ENTRIES`, `.gitignore` and `api-route-exceptions.json` steps.
