@@ -651,12 +651,12 @@ function honeypotRequestViolations(spec, label) {
 describe('OpenAPI examples contract', () => {
   // Bump these exact surface counts when adding or removing proto services/RPCs.
   it('audits the known service operation surface', () => {
-    assert.equal(serviceSpecs.length, 40, `expected 40 service specs, found ${serviceSpecs.length}`);
+    assert.equal(serviceSpecs.length, 41, `expected 41 service specs, found ${serviceSpecs.length}`);
     const total = serviceSpecs.reduce((sum, file) => {
       const spec = JSON.parse(readFileSync(resolve(apiDir, file), 'utf8'));
       return sum + operationEntries(spec).length;
     }, 0);
-    assert.equal(total, 263, `expected 263 OpenAPI operations, found ${total}`);
+    assert.equal(total, 265, `expected 265 OpenAPI operations, found ${total}`);
   });
 
   it('adds schema-valid request and response examples to every service JSON spec', () => {
@@ -668,9 +668,9 @@ describe('OpenAPI examples contract', () => {
       totals.requestExpected += result.requestExpected;
       totals.responseExpected += result.responseExpected;
     }
-    assert.equal(totals.operations, 263);
+    assert.equal(totals.operations, 265);
     assert.ok(totals.requestExpected >= 137, `expected at least 137 request example targets, found ${totals.requestExpected}`);
-    assert.equal(totals.responseExpected, 263);
+    assert.equal(totals.responseExpected, 265);
   });
 
   // record-baseline-snapshot's nested updates[].type is a bare string (no schema

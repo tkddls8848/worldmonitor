@@ -43,7 +43,7 @@ service AviationService {
     };
   }
 
-  // ListAirportFlights returns recent arrivals and departures with direction and limit filters, status and carrier.
+  // ListAirportFlights returns recent arrivals and departures with direction and limit filters, status and carrier. Apply these filters to focus the airport traffic.
   rpc ListAirportFlights(ListAirportFlightsRequest) returns (ListAirportFlightsResponse) {
     option (sebuf.http.config) = {
       path: "/list-airport-flights"
@@ -51,7 +51,7 @@ service AviationService {
     };
   }
 
-  // GetCarrierOps returns delay and cancellation metrics grouped by carrier.
+  // GetCarrierOps returns delay and cancellation metrics grouped by carrier. The response uses the fields defined by this RPC's protobuf response message.
   rpc GetCarrierOps(GetCarrierOpsRequest) returns (GetCarrierOpsResponse) {
     option (sebuf.http.config) = {
       path: "/get-carrier-ops"
@@ -59,7 +59,7 @@ service AviationService {
     };
   }
 
-  // GetFlightStatus looks up the current status of a specific flight.
+  // GetFlightStatus looks up the current status of a specific flight. The response uses the fields defined by this RPC's protobuf response message.
   rpc GetFlightStatus(GetFlightStatusRequest) returns (GetFlightStatusResponse) {
     option (sebuf.http.config) = {
       path: "/get-flight-status"
