@@ -305,6 +305,22 @@ const INTERACTION_DEFS = {
   },
   layer: {
     // `cables` is static data with no zoom gate, so it draws at the default view.
+    // The layers drawer and its group accordion start collapsed in Option B, so
+    // expand them outside the measured interval before clicking the toggle.
+    async prepare(page) {
+      await page.evaluate((layer) => {
+        const drawer = document.querySelector('#mapContainer .layer-toggles');
+        if (drawer?.classList.contains('map-control-collapsed')) {
+          const btn = drawer.querySelector('.map-control-toggle, .layer-toggle-header, button[aria-expanded="false"]');
+          if (btn instanceof HTMLElement) btn.click();
+        }
+        const toggle = document.querySelector(`.layer-toggle[data-layer="${layer}"]`);
+        const group = toggle?.closest('details.layer-group');
+        if (group && !group.open) group.open = true;
+      }, LAYER);
+      await page.waitForSelector(`.layer-toggle[data-layer="${LAYER}"] input`, { state: 'visible', timeout: RESULT_TIMEOUT_MS });
+      await page.waitForTimeout(SETTLE_MS);
+    },
     // Done: layerDrawn. The `layers` URL state is not used: the app writes it on
     // a 250 ms debounce (src/app/event-handlers.ts debouncedUrlSync), long after
     // the map has drawn the layer.
@@ -321,9 +337,14 @@ const INTERACTION_DEFS = {
     done: layerDrawn,
   },
   panel: {
-    // Panels render their tabs lazily, so the tabbed panel is scrolled into
-    // view first. That wait is setup and is not part of the measured interval.
+    // Panels render their tabs lazily, and gdelt-intel lives in the Security
+    // inspector tab. Switch to Security and scroll it into view outside the
+    // measured interval so only the panel-tab click is timed.
     async prepare(page) {
+      const secTab = page.locator('[data-inspector-tab="security"]');
+      if (await secTab.isVisible().catch(() => false)) {
+        await secTab.click();
+      }
       await page.evaluate((id) => document.querySelector(`#panelsGrid .panel[data-panel="${id}"]`)?.scrollIntoView(), TABBED_PANEL);
       await page.waitForSelector(`#panelsGrid .panel[data-panel="${TABBED_PANEL}"] .panel-tab:not(.active)`, { timeout: RESULT_TIMEOUT_MS });
       await page.waitForTimeout(SETTLE_MS);
