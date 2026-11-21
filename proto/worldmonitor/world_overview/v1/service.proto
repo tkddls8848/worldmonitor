@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package worldmonitor.world_overview.v1;
+
+import "sebuf/http/annotations.proto";
+import "worldmonitor/world_overview/v1/get_world_overview_snapshot.proto";
+import "worldmonitor/world_overview/v1/set_world_overview_mark.proto";
+
+// WorldOverviewService reads dated overview snapshots and records owner mark actions.
+service WorldOverviewService {
+  option (sebuf.http.service_config) = {base_path: "/api/world-overview/v1"};
+
+  // GetWorldOverviewSnapshot returns today's snapshot or an archived date and the available archive dates.
+  rpc GetWorldOverviewSnapshot(GetWorldOverviewSnapshotRequest) returns (GetWorldOverviewSnapshotResponse) {
+    option (sebuf.http.config) = {path: "/get-world-overview-snapshot", method: HTTP_METHOD_GET};
+  }
+
+  // SetWorldOverviewMark creates, undoes, or replaces a wrong-data mark.
+  rpc SetWorldOverviewMark(SetWorldOverviewMarkRequest) returns (SetWorldOverviewMarkResponse) {
+    option (sebuf.http.config) = {path: "/set-world-overview-mark", method: HTTP_METHOD_POST};
+  }
+}

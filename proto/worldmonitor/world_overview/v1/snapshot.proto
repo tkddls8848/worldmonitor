@@ -1,0 +1,118 @@
+syntax = "proto3";
+
+package worldmonitor.world_overview.v1;
+
+import "sebuf/http/annotations.proto";
+
+// WorldOverviewSnapshot is the dated first-screen world overview state.
+message WorldOverviewSnapshot {
+  int32 schema_version = 1;
+  string date = 2;
+  int64 generated_at = 3 [(sebuf.http.int64_encoding) = INT64_ENCODING_NUMBER];
+  map<string, CountryState> countries = 4;
+  repeated RelationLine relations = 5;
+  repeated Bloc blocs = 6;
+  map<string, Coordinate> anchors = 7;
+  AiStatus ai = 8;
+  map<string, InputStatus> inputs = 9;
+  repeated string available_dates = 10;
+}
+
+message Coordinate {
+  double longitude = 1;
+  double latitude = 2;
+}
+
+message CountryState {
+  string level = 1;
+  Deaths deaths = 2;
+  CiiState cii = 3;
+  int32 demonstrations = 4;
+  bool has_demonstrations = 5;
+  bool unrest = 6;
+  repeated string blocs = 7;
+  bool in_news = 8;
+  CountryIssue issue = 9;
+}
+
+message Deaths {
+  int32 count = 1;
+  string source = 2;
+  string month = 3;
+}
+
+message CiiState {
+  double score = 1;
+  double unrest = 2;
+}
+
+message CountryIssue {
+  string summary_ko = 1;
+  repeated string fields = 2;
+  repeated SourceLink sources = 3;
+  MarkAnnotation mark = 4;
+}
+
+message RelationLine {
+  string id = 1;
+  string origin = 2;
+  string kind = 3;
+  string basis = 4;
+  string field = 5;
+  string from = 6;
+  string to = 7;
+  bool directed = 8;
+  double score = 9;
+  double value = 10;
+  string label = 11;
+  double confidence = 12;
+  bool has_confidence = 13;
+  repeated SourceLink sources = 14;
+  PairTrend trend = 15;
+  MarkAnnotation mark = 16;
+}
+
+message PairTrend {
+  string state = 1;
+  double recent_events_per_day = 2;
+  double baseline_events_per_day = 3;
+  bool has_baseline_events_per_day = 4;
+  double recent_intensity_per_day = 5;
+  double baseline_intensity_per_day = 6;
+  bool has_baseline_intensity_per_day = 7;
+  double ratio = 8;
+  bool has_ratio = 9;
+  int64 tracked_since = 10 [(sebuf.http.int64_encoding) = INT64_ENCODING_NUMBER];
+}
+
+message MarkAnnotation {
+  string state = 1;
+  string mark_id = 2;
+  int64 marked_at = 3 [(sebuf.http.int64_encoding) = INT64_ENCODING_NUMBER];
+}
+
+message SourceLink {
+  string url = 1;
+  string title = 2;
+  string publisher = 3;
+  optional int64 published_at = 4 [(sebuf.http.int64_encoding) = INT64_ENCODING_NUMBER];
+}
+
+message Bloc {
+  string id = 1;
+  string name_ko = 2;
+  string name_en = 3;
+  repeated string members = 4;
+  SourceLink source = 5;
+}
+
+message AiStatus {
+  string status = 1;
+  string date = 2;
+  string model = 3;
+}
+
+message InputStatus {
+  string status = 1;
+  optional int64 as_of = 2 [(sebuf.http.int64_encoding) = INT64_ENCODING_NUMBER];
+}

@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package worldmonitor.world_overview.v1;
+
+import "worldmonitor/world_overview/v1/snapshot.proto";
+
+message GetWorldOverviewSnapshotRequest {
+  // Optional calendar date in Asia/Seoul, formatted YYYY-MM-DD. Omit for today.
+  string date = 1;
+}
+
+message GetWorldOverviewSnapshotResponse {
+  WorldOverviewSnapshot snapshot = 1;
+  repeated string archived_dates = 2;
+}

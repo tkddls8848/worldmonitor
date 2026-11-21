@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package worldmonitor.world_overview.v1;
+
+import "sebuf/http/annotations.proto";
+
+message SetWorldOverviewMarkRequest {
+  // relation | issue
+  string item_kind = 1;
+  // Relation id or ISO2 country code, depending on item_kind.
+  string item_key = 2;
+  // mark | unmark
+  string action = 3;
+  // Required for unmark; the persisted mark id.
+  string mark_id = 4;
+}
+
+message SetWorldOverviewMarkResponse {
+  bool ok = 1;
+  WrongMark mark = 2;
+}
+
+message WrongMark {
+  string id = 1;
+  string type = 2;
+  string date = 3;
+  string match_key = 4;
+  string iso2 = 5;
+  repeated string source_urls = 6;
+  string summary_ko = 7;
+  int64 marked_at = 8 [(sebuf.http.int64_encoding) = INT64_ENCODING_NUMBER];
+  optional int64 undone_at = 9 [(sebuf.http.int64_encoding) = INT64_ENCODING_NUMBER];
+}
