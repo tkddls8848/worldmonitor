@@ -126,20 +126,34 @@ async function discoverCandidateVersion(token, fetchPage = candidateFetcher(toke
 // overwriting last-good data. Deliberately does NOT write a fresh seed-meta:
 // health must reflect the age of the data actually being served, not the time
 // of a failed attempt.
-async function extendExistingTtl(redisUrl, redisToken) {
+export async function extendExistingTtl(redisUrl, redisToken) {
   try {
-    const expire = (key, ttl) => fetch(redisUrl, {
+    const expire = async (key, ttl) => {
+      const resp = await fetch(redisUrl, {
       method: 'POST',
       headers: { Authorization: `Bearer ${redisToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(['EXPIRE', key, ttl]),
       signal: AbortSignal.timeout(5_000),
-    });
-    const r1 = await expire(REDIS_KEY, 86400);
-    if (!r1.ok) console.warn(`  EXPIRE ${REDIS_KEY} failed: HTTP ${r1.status}`);
-    const r2 = await expire('seed-meta:conflict:ucdp-events', 604800);
-    if (!r2.ok) console.warn(`  EXPIRE seed-meta failed: HTTP ${r2.status}`);
-    if (r1.ok && r2.ok) console.log(`  Extended TTL on ${REDIS_KEY} and seed-meta`);
-  } catch (e) { console.warn(`  TTL extension failed: ${e.message}`); }
+      });
+      if (!resp.ok) {
+        console.warn(`  EXPIRE ${key} failed: HTTP ${resp.status}`);
+        return false;
+      }
+      const { result } = await resp.json();
+      if (result !== 1) {
+        console.warn(`  EXPIRE ${key} was a no-op; key is missing and needs a successful seed`);
+        return false;
+      }
+      return true;
+    };
+    const dataExtended = await expire(REDIS_KEY, 86400);
+    const metaExtended = await expire('seed-meta:conflict:ucdp-events', 604800);
+    if (dataExtended && metaExtended) console.log(`  Extended TTL on ${REDIS_KEY} and seed-meta`);
+    return dataExtended && metaExtended;
+  } catch (e) {
+    console.warn(`  TTL extension failed: ${e.message}`);
+    return false;
+  }
 }
 
 // The cached payload, unwrapped (the relay writes it in a seed envelope); null
