@@ -25141,7 +25141,7 @@ body.map-width-resizing {
 .inspector-sub-chip.active {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--bg);
 }
 
 .inspector-overview-hint {
