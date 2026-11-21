@@ -338,7 +338,7 @@ function publicationData() {
       }]),
     ),
     _conflict: { events: [{ id: 'c1' }] },
-    _worldPairs: { trends: Object.fromEntries(Array.from({ length: 435 }, (_, i) => [`pair-${i}`, {}])) },
+    _worldPairs: { trends: Object.fromEntries(Array.from({ length: 435 }, (_, i) => [`pair-${i}`, {}])), hours: {} },
     _unrest: { events: [{ id: 'u1' }] },
     _positive: { events: [{ name: 'p1' }] },
     _reference: { articles: [{ title: 'r1' }] },
@@ -367,6 +367,25 @@ describe('seed-gdelt-bulk-materializer fetch integration', () => {
     assert.equal(first._dyads.days['2026-07-30'].pairs.usa_russia.intensity, 10);
     assert.deepEqual(first._worldPairs.hours['2026073012'].pairs['RU:US'], [1, 10]);
     assert.deepEqual(replay._worldPairs.hours, first._worldPairs.hours);
+  });
+  it('retains the previous AI pair set and its hourly history when the AI read fails', async () => {
+    const pairStore = {
+      cursor: '20260729114500',
+      hours: { '2026072911': { cohorts: 4, pairs: { 'BR:RU': [2, 10] } } },
+      trackedSince: { 'BR:RU': Date.parse('2026-07-20T00:00:00Z') },
+      aiTrackedPairs: { 'BR:RU': '2026-07-28' },
+      trends: {}, updatedAt: Date.parse('2026-07-29T12:00:00Z'), scope: { majorPairs: 435, aiPairs: 1 },
+    };
+    const result = await fetchMaterializedGdelt({
+      _repairDyadHistory: noDyadRepair, _repairCountryEventsHistory: noDyadRepair,
+      _now: () => Date.parse('2026-07-30T12:05:00Z'),
+      _readSnapshot: async key => key === 'gdelt:bulk:world-pair-trends:v1' ? pairStore : null,
+      _readOptionalSnapshot: async () => { throw new Error('AI cache temporarily unavailable'); },
+      _fetchFiles: async () => materializationFiles(),
+    });
+    assert.equal(result._worldPairs.aiTrackedPairs['BR:RU'], '2026-07-28');
+    assert.equal(result._worldPairs.trackedSince['BR:RU'], pairStore.trackedSince['BR:RU']);
+    assert.deepEqual(result._worldPairs.hours['2026072911'].pairs['BR:RU'], [2, 10]);
   });
   it('accepts a cohort GDELT published before its nominal timestamp', async () => {
     // GDELT lists 193000 at ~19:18:45; a run starting then crashed every
@@ -863,7 +882,7 @@ describe('seed-gdelt-bulk-materializer publication cohort', () => {
     assert.equal(dyadWrite.args[4], 'seed-meta:gdelt:bulk:dyad-tension');
     const worldPairWrite = writes.find(({ key }) => key === 'gdelt:bulk:world-pair-trends:v1');
     assert.equal(worldPairWrite.args[2], 864000);
-    assert.equal(worldPairWrite.args[3], 435);
+    assert.equal(worldPairWrite.args[3], 0, 'empty hourly data has zero records even while collecting trends exist');
     assert.equal(worldPairWrite.args[4], 'seed-meta:gdelt:bulk:world-pair-trends');
     assert.equal(worldPairMarked, 1);
     const countryIndexWrite = writes.find(({ key }) => key === GDELT_BULK_COUNTRY_ARTICLES_KEY);
@@ -884,6 +903,22 @@ describe('seed-gdelt-bulk-materializer publication cohort', () => {
       writes.find(({ key }) => key === 'gdelt:intel:vol:military').value.fetchedAt,
       data._timelines.military.volFetchedAt,
     );
+  });
+
+  it('counts only unique world pairs with hourly data in seed metadata', async () => {
+    const data = publicationData();
+    data._worldPairs.hours = {
+      '2026073011': { cohorts: 1, pairs: { 'RU:US': [1, 4], 'UA:RU': [0, 0] } },
+      '2026073012': { cohorts: 1, pairs: { 'RU:US': [2, 8] } },
+    };
+    let recordCount;
+    await afterPublish(data, undefined, {
+      _writeExtraKey: async () => true,
+      _writeExtraKeyWithMeta: async (key, _value, _ttl, count) => { if (key === 'gdelt:bulk:world-pair-trends:v1') recordCount = count; return true; },
+      _writeWorldPairActivationMarker: async () => {},
+      _writeActivationMarker: async () => {}, _writeDyadActivationMarker: async () => {}, _writeCountryEventsActivationMarker: async () => {},
+    });
+    assert.equal(recordCount, 2);
   });
 
   it('activates the country-index probe only after its own publish lands (#7748)', async () => {

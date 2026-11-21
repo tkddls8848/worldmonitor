@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash } from 'node:crypto';
-import { kstDate } from '../shared/world-overview.js';
+import { addDays, kstDate, WORLD_OVERVIEW_KEYS } from '../shared/world-overview.js';
 import worldOverviewConfig from '../shared/world-overview-config.json' with { type: 'json' };
 import {
   buildTrackedPairs, mergeWorldPairHours, parseWorldPairExport,
@@ -587,11 +587,15 @@ export async function fetchMaterializedGdelt(deps = {}) {
     _readSnapshot(GDELT_BULK_COUNTRY_ARTICLES_KEY),
     _readSnapshot(GDELT_BULK_DYAD_KEY),
     _readSnapshot(GDELT_BULK_COUNTRY_EVENTS_KEY),
-    _readSnapshot('gdelt:bulk:world-pair-trends:v1'),
+    _readSnapshot(WORLD_OVERVIEW_KEYS.pairTrends),
   ]);
-  const aiTracked = await _readOptionalSnapshot('world-overview:ai:v1').catch(() => null);
+  let aiReadFailed = false;
+  const aiTracked = await _readOptionalSnapshot(WORLD_OVERVIEW_KEYS.ai).catch(() => { aiReadFailed = true; return null; });
   const today = kstDate(nowMs);
-  const tracked = buildTrackedPairs(worldOverviewConfig.majorCountries, aiTracked?.trackedPairs, today, worldOverviewConfig.aiPairRetentionDays);
+  const priorAiPairs = aiTracked?.trackedPairs ?? ((aiReadFailed || !aiTracked) ? (previousWorldPairs?.aiTrackedPairs ?? {}) : {});
+  const aiCutoff = addDays(today, -(worldOverviewConfig.aiPairRetentionDays - 1));
+  const aiTrackedPairs = Object.fromEntries(Object.entries(priorAiPairs).filter(([, date]) => typeof date === 'string' && date >= aiCutoff && date <= today));
+  const tracked = buildTrackedPairs(worldOverviewConfig.majorCountries, aiTrackedPairs, today, worldOverviewConfig.aiPairRetentionDays);
   const downloaded = await _fetchFiles({
     afterTimestamp: previousState?.cursor || {},
     nowMs,
@@ -650,6 +654,7 @@ export async function fetchMaterializedGdelt(deps = {}) {
   const mergedWorldPairs = mergeWorldPairHours(worldPairBase, exportBatches, tracked, nowMs);
   const worldPairData = {
     ...mergedWorldPairs,
+    aiTrackedPairs,
     trends: scoreWorldPairTrends(mergedWorldPairs, nowMs),
     updatedAt: nowMs,
     scope: { majorPairs: majorPairCount, aiPairs: Math.max(0, tracked.size - majorPairCount) },
@@ -877,10 +882,10 @@ export async function afterPublish(data, _meta, deps = {}) {
       ),
     },
     {
-      label: 'gdelt:bulk:world-pair-trends:v1',
+      label: WORLD_OVERVIEW_KEYS.pairTrends,
       run: () => _writeExtraKeyWithMeta(
-        'gdelt:bulk:world-pair-trends:v1', data._worldPairs, 864000,
-        Object.keys(data._worldPairs?.trends ?? {}).length,
+        WORLD_OVERVIEW_KEYS.pairTrends, data._worldPairs, 864000,
+        new Set(Object.values(data._worldPairs?.hours ?? {}).flatMap((hour) => Object.keys(hour?.pairs ?? {}))).size,
         'seed-meta:gdelt:bulk:world-pair-trends',
       ),
     },
@@ -948,7 +953,7 @@ export async function afterPublish(data, _meta, deps = {}) {
   if (dyadResult?.status === 'fulfilled' && dyadResult.value !== false) {
     await _writeDyadActivationMarker();
   }
-  const worldPairResult = settled[outputOperations.findIndex(({ label }) => label === 'gdelt:bulk:world-pair-trends:v1')];
+  const worldPairResult = settled[outputOperations.findIndex(({ label }) => label === WORLD_OVERVIEW_KEYS.pairTrends)];
   if (worldPairResult?.status === 'fulfilled' && worldPairResult.value !== false) {
     await _writeWorldPairActivationMarker();
   }
