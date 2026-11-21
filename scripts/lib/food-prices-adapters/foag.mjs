@@ -52,7 +52,7 @@ export const foagAdapter = cube => ({ collect: async ctx => {
   const rows = payload.results?.bindings;
   if (!Array.isArray(rows) || rows.length > 5000) throw new Error('FOAG result shape changed');
   const uris = [...new Set(rows.flatMap(row => [1, 2, 4, 5, 6, 7, 8, 10, 12, 13, 14].map(i => row[`v${i}`]?.value)))];
-  if (uris.some(uri => typeof uri !== 'string' || !new RegExp(`^https://agriculture\\.ld\\.admin\\.ch/foag/[a-z-]+/[A-Za-z0-9-]+$`).test(uri))) throw new Error('FOAG vocabulary identifiers changed');
+  if (uris.some(uri => typeof uri !== 'string' || !/^https:\/\/agriculture\.ld\.admin\.ch\/foag\/[a-z-]+\/[A-Za-z0-9-]+$/.test(uri))) throw new Error('FOAG vocabulary identifiers changed');
   const labels = new Map();
   for (let at = 0; at < uris.length; at += 100) {
     const response = await query(ctx, `SELECT ?uri ?label WHERE { VALUES ?uri { ${uris.slice(at, at + 100).map(uri => `<${uri}>`).join(' ')} }

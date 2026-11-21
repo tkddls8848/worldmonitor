@@ -1174,7 +1174,7 @@ test('handleHealth holds a late government release back from Sentry, then report
       },
     });
     const response = await handleHealth(new Request('https://api.worldmonitor.app/api/health?compact=1'), undefined, {
-      captureIncident: async (error, opts) => { captures.push(opts.tags); return true; },
+      captureIncident: async (_error, opts) => { captures.push(opts.tags); return true; },
     });
     const body = await response.json();
     return { body, mit: captures.filter((tags) => tags.health_source === 'foodPricesMit'), total: captures.length };

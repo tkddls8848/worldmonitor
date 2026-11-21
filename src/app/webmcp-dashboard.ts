@@ -368,7 +368,7 @@ export async function applyWebMcpOpenAlerts(
 export function listWebMcpMissionPresets(
   ctx: AppContext,
   variant: string,
-  query: MissionPresetCatalogQuery = {},
+  query: MissionPresetCatalogQuery,
   options: {
     hasPremium: boolean;
     hasFocus?: boolean;
@@ -376,6 +376,7 @@ export function listWebMcpMissionPresets(
     isPanelEntitled?: (panelId: string) => boolean;
   },
 ): MissionPresetCatalogResult {
+  if (query === undefined) query = {};
   if (ctx.isDestroyed) {
     throw new DashboardBindingError('app_destroyed', 'Dashboard is no longer available.');
   }

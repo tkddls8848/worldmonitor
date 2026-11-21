@@ -63,7 +63,7 @@ test('Amman collect posts back for the latest trading day and the same weekday a
     now: new Date('2026-11-01T05:00:00Z'),
     dated: (now, offset) => new Date(now.getTime() + offset * 86400000).toISOString().slice(0, 10),
     warn: () => {},
-    get: async (url, options = {}) => {
+    get: async (_url, options = {}) => {
       calls.push(options.body ? new URLSearchParams(options.body).get('ctl00$ContentPlaceHolder1$txtfromdate') : 'GET');
       if (!options.body) return empty('01-11-2026');
       const date = new URLSearchParams(options.body).get('ctl00$ContentPlaceHolder1$txtfromdate');

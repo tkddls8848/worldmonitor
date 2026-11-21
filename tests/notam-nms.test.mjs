@@ -51,7 +51,8 @@ const HOUR = 3600_000;
 
 const clone = (v) => structuredClone(v);
 const notamOf = (f) => f.properties.coreNOTAMData.notam;
-function feature(name, patch = {}, geometry) {
+function feature(name, patch, geometry) {
+  if (patch === undefined) patch = {};
   const f = clone(FIXTURE[name]);
   Object.assign(notamOf(f), patch);
   if (geometry !== undefined) f.geometry = geometry;

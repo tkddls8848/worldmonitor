@@ -13925,7 +13925,10 @@ function compactWidgetToolJson(text, symbols = []) {
       const hit = x => wanted.includes(String(x?.symbol).toUpperCase());
       if (wanted.length && path.endsWith('.quotes') && v.some(hit)) {
         filtered.push(path);
-        return v.filter(hit).map((x, i) => (found.add(String(x.symbol).toUpperCase()), shrink(x, `${path}.${i}`)));
+        return v.filter(hit).map((x, i) => {
+          found.add(String(x.symbol).toUpperCase());
+          return shrink(x, `${path}.${i}`);
+        });
       }
       return v.map((x, i) => shrink(x, `${path}.${i}`));
     }

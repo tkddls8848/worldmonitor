@@ -230,7 +230,7 @@ describe('orbital country rollups', () => {
   });
 });
 
-const preload = String.raw`
+const preload = `
 import { readFileSync, writeFileSync } from 'node:fs';
 const values = new Map(Object.entries(JSON.parse(process.env.TEST_INITIAL || '{}')));
 const initial = Object.fromEntries(values);
@@ -279,7 +279,7 @@ globalThis.fetch = async (input, options = {}) => {
 process.on('exit', () => {
   writeFileSync(process.env.TEST_STATE_FILE, JSON.stringify({ writes, archiveCalls, initial, values: Object.fromEntries(values) }));
 });
-`;
+`.replaceAll('\n', '\r\n');
 
 function runSeeder({ mode = 'ok', initial = {}, budgetMs = 4_000, enabled = 'true' } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'orbital-sites-seed-'));

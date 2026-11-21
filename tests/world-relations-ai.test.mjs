@@ -60,7 +60,7 @@ test('builds numbered story prompts without URLs and strips markers from the wor
   const rel = buildRelationsPrompt(stories, '2026-11-23', 'brief [3] retained [12]');
   const issue = buildIssuesPrompt(stories, ['UA'], '2026-11-23');
   assert.match(rel.userPrompt, /1\. \[RU,UA\] Headline/);
-  assert.match(rel.userPrompt, /brief  retained/);
+  assert.match(rel.userPrompt, /brief {2}retained/);
   assert.doesNotMatch(`${rel.systemPrompt}\n${rel.userPrompt}\n${issue.systemPrompt}\n${issue.userPrompt}`, /https?:\/\//);
   assert.match(issue.userPrompt, /1\. \[RU,UA\] Headline/);
 });

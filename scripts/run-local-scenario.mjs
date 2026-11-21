@@ -7,7 +7,8 @@ import { computeScenario } from './scenario-worker.mjs';
 
 // Snapshot values are decoded JSON records, indexed by their original seed key.
 // Missing keys deliberately remain missing; no remote fallback or invented data.
-export async function runLocalScenario(snapshot, scenarioId, iso2 = null, disruptionPct) {
+export async function runLocalScenario(snapshot, scenarioId, iso2, disruptionPct) {
+  if (iso2 === undefined) iso2 = null;
   if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) {
     throw new Error('Snapshot must be an object mapping seed keys to decoded JSON values');
   }

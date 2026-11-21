@@ -125,7 +125,8 @@ const HOLD_RULES = {
   flow_price_divergence: () => true,
 };
 
-function extendRuns(runs = [], nowMs, type) {
+function extendRuns(runs, nowMs, type) {
+  if (runs === undefined) runs = [];
   const last = runs.at(-1);
   if (last && withinGap(last.until, nowMs)) return [...runs.slice(0, -1), { since: last.since, until: nowMs, types: unionTypes(last.types, [type]) }];
   return [...runs, { since: nowMs, until: nowMs, types: [type] }].slice(-MARKET_ALERT_ACTIVITY_MAX_RUNS);

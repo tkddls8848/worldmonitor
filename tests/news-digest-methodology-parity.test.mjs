@@ -334,7 +334,7 @@ function openApiDescription(schemaName, propertyName, nestedPropertyName) {
 
 function extractYamlSchemaBlock(yamlText, schemaName) {
   const lines = yamlText.split(/\r?\n/);
-  const start = lines.findIndex((line) => line === `        ${schemaName}:`);
+  const start = lines.indexOf(`        ${schemaName}:`);
   assert.notEqual(start, -1, `failed to locate YAML schema ${schemaName}`);
 
   const end = lines.findIndex((line, index) =>

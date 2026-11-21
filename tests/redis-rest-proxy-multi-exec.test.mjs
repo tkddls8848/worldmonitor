@@ -33,7 +33,7 @@ import { STORY_ALIAS_PUBLISH_SCRIPT } from '../shared/story-alias-publish-script
 const source = readFileSync(new URL('../scripts/local/redis-rest-proxy.mjs', import.meta.url), 'utf8')
   .replace(/^#!.*\n/, '')
   .replace(/^import .*;\n/gm, '');
-const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
 const run = new AsyncFunction('process', 'http', 'crypto', 'createClient', 'console', source);
 
 const TOKEN = 'a'.repeat(64);

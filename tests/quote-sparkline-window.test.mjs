@@ -223,7 +223,7 @@ describe('commodity seeders publish the 24-hour sparkline', () => {
     const end = source.indexOf('function fetchYahooChartDirect(');
     assert.ok(start > 0 && end > start, 'relay sparkline helper found');
     const calls = [];
-    const fetchOnce = async (symbol, query) => { calls.push(query); return { chart: structuredClone(history) }; };
+    const fetchOnce = async (_symbol, query) => { calls.push(query); return { chart: structuredClone(history) }; };
     const commoditySparkline = Function(
       '_fetchYahooChartOnce', 'sleep', 'SPARKLINE_HISTORY_QUERY', 'SPARKLINE_HISTORY_RETRY_SECONDS', 'buildQuoteSparkline', 'logThrottled',
       `${source.slice(start, end)}\nreturn _commoditySparkline;`,

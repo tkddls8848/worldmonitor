@@ -211,7 +211,7 @@ export function combineSanctionSources({ openSanctions, un, uk, previous, nowMs 
     const hasRecent = Number.isFinite(previous?.openSanctionsAsOf) && nowMs - previous.openSanctionsAsOf <= WEEK_MS;
     openSanctionsPairs = hasRecent ? previous.openSanctionsPairs || [] : [];
     openSanctionsAsOf = hasRecent ? previous.openSanctionsAsOf : null;
-    let old = Object.fromEntries(openSanctionsPairs.map(({ issuer, target, count }) => [`${issuer}>${target}`, count]));
+    const old = Object.fromEntries(openSanctionsPairs.map(({ issuer, target, count }) => [`${issuer}>${target}`, count]));
     const backups = {};
     for (const [issuer, backup] of [['UN', un], ['GB', uk]]) {
       const fresh = backup ? issuerPairs(backup.pairs, [issuer]) : issuerPairs(old, [issuer]);

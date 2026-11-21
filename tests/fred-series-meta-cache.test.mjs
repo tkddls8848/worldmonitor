@@ -179,7 +179,7 @@ describe('FRED series-metadata cache', () => {
     const realToken = process.env.UPSTASH_REDIS_REST_TOKEN;
     process.env.UPSTASH_REDIS_REST_URL = 'https://upstash.test';
     process.env.UPSTASH_REDIS_REST_TOKEN = 'token';
-    globalThis.fetch = async (url, init) => {
+    globalThis.fetch = async (_url, init) => {
       seen.push(init?.headers || {});
       return { ok: true, json: async () => ({ result: null }) };
     };

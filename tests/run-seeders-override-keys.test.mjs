@@ -97,7 +97,7 @@ test('quoted values keep a " #" and shell metacharacters verbatim', () => {
     environment:
       ACLED_PASSWORD: "abc #def"      # a password containing space-hash
       ACLED_EMAIL: 'ops@example.org' # single-quoted
-      FRED_API_KEY: "it's \$HOME"     # apostrophe and a dollar sign
+      FRED_API_KEY: "it's $HOME"     # apostrophe and a dollar sign
       EIA_API_KEY: plain-value       # unquoted, trailing comment
 `, 'ACLED_PASSWORD=from-dotenv\n');
   assert.equal(env.ACLED_PASSWORD, 'abc #def');

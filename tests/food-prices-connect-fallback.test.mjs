@@ -14,7 +14,7 @@ const LIVE = '127.0.0.1';
 
 /** Fake DNS that records each query and puts the dead address first. */
 function rotatingDns(queries) {
-  return (hostname, options, callback) => {
+  return (_hostname, options, callback) => {
     queries.push({ family: options.family, all: options.all === true });
     if (options.all) callback(null, [{ address: DEAD, family: 4 }, { address: LIVE, family: 4 }]);
     else callback(null, DEAD, 4);

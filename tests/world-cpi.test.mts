@@ -537,7 +537,7 @@ describe('latest window and content age', () => {
 
   it('writes the ABS activation marker monitored by health', () => {
     const health = readFileSync(new URL('../api/health.js', import.meta.url), 'utf8');
-    const block = health.match(/worldCpiAbs: \{([\s\S]*?)\n  \},/);
+    const block = health.match(/worldCpiAbs: \{([\s\S]*?)\n {2}\},/);
     assert.ok(block);
     const activationKey = block[1].match(/activationKey: '([^']+)'/);
     assert.equal(ABS_CPI_ACTIVATION_KEY, activationKey?.[1]);

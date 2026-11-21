@@ -15,7 +15,7 @@ async function detect(href, explicit) {
   const window = { location: { href } };
   const localStorage = { getItem: () => explicit };
   const readQueryLanguage = (value) => new URL(value).searchParams.get('lang') || undefined;
-  for (const match of source.matchAll(/detector\.addDetector\((\{[\s\S]*?\n  \})\);/g)) {
+  for (const match of source.matchAll(/detector\.addDetector\((\{[\s\S]*?\n {2}\})\);/g)) {
     detector.addDetector(Function('window', 'localStorage', 'readQueryLanguage', 'EXPLICIT_LOCALE_KEY', `return (${match[1]});`)(window, localStorage, readQueryLanguage, 'wm-locale-explicit'));
   }
   const order = source.match(/order: (\[[^\]]+\])/)[1];

@@ -233,7 +233,7 @@ describe('archive completeness and cutover (#8990)', () => {
       redisUrl: 'https://redis.example',
       redisToken: 'token',
       env: {},
-      fetchFn: async (url, init) => {
+      fetchFn: async (_url, init) => {
         calls.push(JSON.parse(init.body));
         return new Response(JSON.stringify(calls.length === 1 ? { result: null } : { result: [] }), { status: 200 });
       },

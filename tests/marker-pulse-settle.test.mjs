@@ -154,7 +154,7 @@ describe('marker pulse settle (#4669)', () => {
   });
 
   it('low-end devices settle markers from the first render and stop page live pulses', () => {
-    const arm = mapSrc.match(/private armMarkerSettle\(\): void \{([\s\S]*?)\n  \}/);
+    const arm = mapSrc.match(/private armMarkerSettle\(\): void \{([\s\S]*?)\n {2}\}/);
     assert.ok(arm, 'expected armMarkerSettle in Map.ts');
     const body = arm[1];
     const lowEnd = body.indexOf('if (this.lowEndDevice)');

@@ -485,7 +485,7 @@ for (const localFailure of ['missing', 'error-response', 'throw']) {
   test(`does not retry a timed-out cloud-preferred POST when the local handler is ${localFailure}`, async () => {
     const endpoint = '/api/v2/shipping/webhooks';
     let cloudCalls = 0;
-    const remote = createServer((req, res) => {
+    const remote = createServer((_req, _res) => {
       cloudCalls++;
     });
     const remotePort = await listen(remote);
@@ -529,7 +529,7 @@ test('cloud proxy cancels its upstream request when the desktop client disconnec
   let cloudClosed;
   const received = new Promise(resolve => { cloudRequest = resolve; });
   const closed = new Promise(resolve => { cloudClosed = resolve; });
-  const remote = createServer((req, res) => {
+  const remote = createServer((_req, res) => {
     res.once('close', cloudClosed);
     cloudRequest();
   });

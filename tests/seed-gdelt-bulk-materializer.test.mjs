@@ -934,7 +934,7 @@ describe('seed-gdelt-bulk-materializer publication cohort', () => {
     marked = 0;
     const outcome = await afterPublish(data, undefined, {
       _writeExtraKey: async () => undefined,
-      _writeExtraKeyWithMeta: async (key) => (key === GDELT_BULK_COUNTRY_ARTICLES_KEY ? false : true),
+      _writeExtraKeyWithMeta: async (key) => (key !==GDELT_BULK_COUNTRY_ARTICLES_KEY),
       _writeActivationMarker: async () => { marked += 1; },
     });
     assert.equal(marked, 0, 'a rejected index metadata write must not activate the probe');
@@ -1271,7 +1271,7 @@ describe('dyad history repair', async () => {
     const full = repairSource(['2026-09-26']);
     const requests = [];
     let first = true;
-    const fetchImpl = async (url, init) => {
+    const fetchImpl = async (url, _init) => {
       requests.push(String(url));
       if (first) {
         first = false;
