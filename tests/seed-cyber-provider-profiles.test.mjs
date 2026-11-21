@@ -203,7 +203,7 @@ test('read public provider profiles pass the same producer boundary', async test
 });
 
 test('validation examines rows after the selected cap and preserves healthy evidence', async testContext => {
-  const validRows = Array.from({ length: 1000 }, (unusedRow, rowIndex) => ({ ...foreign,
+  const validRows = Array.from({ length: 1000 }, (_unusedRow, rowIndex) => ({ ...foreign,
     ip_address: `198.18.${Math.floor(rowIndex / 250)}.${rowIndex % 250 + 1}` }));
   const { seed } = await producerHarness(testContext, { keys, rows: [...validRows, null], csv,
     geo: { country: 'FR', loc: '46.2,2.2' } });
@@ -344,7 +344,7 @@ test('all invalid source bodies reject before a new snapshot can be published', 
 
 test('incomplete OTX pages reject the aggregate instead of publishing unqualified rows', async testContext => {
   const row = { indicator: '192.0.2.61', created: new Date(NOW - DAY).toISOString() };
-  const many = Array.from({ length: 1001 }, (unusedRow, rowIndex) => ({ indicator: `198.18.${Math.floor(rowIndex / 250)}.${rowIndex % 250 + 1}` }));
+  const many = Array.from({ length: 1001 }, (_unusedRow, rowIndex) => ({ indicator: `198.18.${Math.floor(rowIndex / 250)}.${rowIndex % 250 + 1}` }));
   for (const body of [
     { results: [], count: 100, next: 'https://otx.fixture/page2', previous: null },
     { results: [row], count: 100, next: 'https://otx.fixture/page2', previous: null },
@@ -463,7 +463,7 @@ test('known OTX incompleteness survives invalid rows, wrappers and decoded bound
 
 test('complete bounded OTX pages and generic invalid payload policy remain unchanged', async testContext => {
   const row = { indicator: '192.0.2.61' };
-  const full = Array.from({ length: 1000 }, (unusedRow, rowIndex) => ({ indicator: `198.18.${Math.floor(rowIndex / 250)}.${rowIndex % 250 + 1}` }));
+  const full = Array.from({ length: 1000 }, (_unusedRow, rowIndex) => ({ indicator: `198.18.${Math.floor(rowIndex / 250)}.${rowIndex % 250 + 1}` }));
   for (const body of [{ results: [row], count: 1, next: null, previous: null },
     { results: full, count: 1000, next: null, previous: null }, full,
     { results: [], count: 0, next: null, previous: null }]) {
@@ -537,7 +537,7 @@ test('paginated OTX exports that never cover the advertised count stay unavailab
   for (const [name, pages, maxCalls] of [
     ['short final page', otxPages([1000, 1000, 300], { count: 2365 }), 3],
     ['count changes between pages', otxPages([1000, 1000, 365], { counts: [2365, 2400, 2365] }), 2],
-    ['page cap', Object.fromEntries(Array.from({ length: 40 }, (unusedPage, pageIndex) => [String(pageIndex + 1),
+    ['page cap', Object.fromEntries(Array.from({ length: 40 }, (_unusedPage, pageIndex) => [String(pageIndex + 1),
       { results: [{ indicator: `198.19.0.${pageIndex + 1}` }], count: 40,
         next: `${OTX_EXPORT}&page=${pageIndex + 2}`, previous: pageIndex ? OTX_EXPORT : null }])), 10],
   ]) {

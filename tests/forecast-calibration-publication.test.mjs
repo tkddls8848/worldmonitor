@@ -119,7 +119,7 @@ describe('seeder calibration publication (#7070)', () => {
     assert.notEqual(resolveAt, -1, 'fetchForecasts must resolve the calibration decision and the aligned prior');
     assert.notEqual(scoreAt, -1, 'fetchForecasts must score detector output through scoreDetectedPredictions');
     assert.ok(resolveAt < scoreAt, 'the decision must exist before scoring');
-    assert.match(body, /\n    calibrationPublication: calibrationPublication\.record,\n/, 'the run must hand its record to afterPublish');
+    assert.match(body, /\n {4}calibrationPublication: calibrationPublication\.record,\n/, 'the run must hand its record to afterPublish');
   });
 
   it('publishes calibrated on an eligible gate and logs the flip with the gate numbers', async () => {

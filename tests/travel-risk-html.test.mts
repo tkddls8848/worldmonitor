@@ -177,7 +177,7 @@ describe('renderTravelRiskHtml: input that is built to be slow', () => {
       const started = performance.now();
       const html = renderTravelRiskHtml(`# T\n\n${body}\n`);
       assert.ok(performance.now() - started < 1500, `${name} took ${Math.round(performance.now() - started)} ms`);
-      assert.doesNotMatch(html, /<(?!\/?(?:!doctype|html|head|body|meta|title|style|h[1-3]|p|ul|ol|li|a|strong|table|thead|tbody|tr|th|td)[\s>\/])/i, 'no tag other than the ones the converter writes');
+      assert.doesNotMatch(html, /<(?!\/?(?:!doctype|html|head|body|meta|title|style|h[1-3]|p|ul|ol|li|a|strong|table|thead|tbody|tr|th|td)[\s>/])/i, 'no tag other than the ones the converter writes');
     });
   }
 });

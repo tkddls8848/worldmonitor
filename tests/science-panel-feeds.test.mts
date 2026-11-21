@@ -82,7 +82,7 @@ describe('science panel feeds', () => {
   });
 
   it('registers an opt-in panel with a label in every locale', () => {
-    assert.match(read('src/config/panels.ts'), /\n  science: \{ name: 'Science', enabled: false, priority: 2 \},\n/);
+    assert.match(read('src/config/panels.ts'), /\n {2}science: \{ name: 'Science', enabled: false, priority: 2 \},\n/);
     assert.match(read('src/app/panel-layout.ts'), /this\.createNewsPanel\('science', 'panels\.science'\);/);
     assert.match(read('src/config/commands.ts'), /id: 'panel:science'/);
     for (const locale of ['ar', 'bg', 'cs', 'de', 'el', 'en', 'es', 'fa', 'fr', 'hi', 'hr', 'hu', 'it', 'ja', 'ko', 'nl',

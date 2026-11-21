@@ -1115,7 +1115,7 @@ const SAFE_PORT_ID = /^[A-Za-z0-9_-]{1,32}$/;
 // failure the coverage gate exists to prevent.
 export const MAX_SOURCE_ABSENT_COUNTRIES = 35;
 
-export async function probeCountrySourceAbsence(iso3, refMap, { signal, fetchFn } = {}) {
+export async function probeCountrySourceAbsence(_iso3, refMap, { signal, fetchFn } = {}) {
   const portIds = refMap instanceof Map ? [...refMap.keys()] : [];
   if (portIds.length === 0 || !portIds.every((id) => SAFE_PORT_ID.test(id))) return 'unknown';
   const params = new URLSearchParams({

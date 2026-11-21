@@ -489,7 +489,7 @@ test('a slow but healthy GDACS feed completes inside its own per-attempt limit',
     type: 'Feature', geometry: { type: 'Point', coordinates: [12, 8] },
     properties: { eventtype: 'DR', eventid: 7, alertlevel: 'Orange', name: 'Drought', fromdate: new Date(NOW).toISOString() },
   };
-  const server = createServer((req, res) => {
+  const server = createServer((_req, res) => {
     drRequests++;
     setTimeout(() => {
       res.writeHead(200, { 'Content-Type': 'application/json' });

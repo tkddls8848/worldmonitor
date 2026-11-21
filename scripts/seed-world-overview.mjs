@@ -24,7 +24,7 @@ async function fetchCii() {
   return response.json();
 }
 
-export async function readBuildInputs({ readValue = readCanonicalValue, readHapi = defaultReadHapi, fetchCii: fetch = () => fetchCii(), nowMs = Date.now() } = {}) {
+export async function readBuildInputs({ readValue = readCanonicalValue, readHapi = defaultReadHapi, fetchCii: fetchCiiFn = () => fetchCii(), nowMs = Date.now() } = {}) {
   const [relations, trends, ai, ucdpRaw, pool, ciiRaw] = await Promise.all([
     readValue(WORLD_OVERVIEW_KEYS.relations).catch(() => null), readValue(WORLD_OVERVIEW_KEYS.pairTrends).catch(() => null),
     readValue(WORLD_OVERVIEW_KEYS.ai).catch(() => null), readValue('conflict:ucdp-events:v1').catch(() => null),
@@ -33,7 +33,7 @@ export async function readBuildInputs({ readValue = readCanonicalValue, readHapi
   const hapi = await readHapi();
   let cii = ciiRaw?.scores || ciiRaw?.ciiScores ? ciiRaw : null;
   if (!cii) {
-    try { const response = await fetch(); cii = Array.isArray(response?.ciiScores) ? { scores: response.ciiScores, asOf: nowMs } : null; } catch { cii = null; }
+    try { const response = await fetchCiiFn(); cii = Array.isArray(response?.ciiScores) ? { scores: response.ciiScores, asOf: nowMs } : null; } catch { cii = null; }
   }
   return { relations, trends, ai, ucdpEvents: Array.isArray(ucdpRaw) ? ucdpRaw : Array.isArray(ucdpRaw?.events) ? ucdpRaw.events : null, hapi, cii, pool };
 }

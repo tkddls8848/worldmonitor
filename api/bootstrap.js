@@ -309,7 +309,7 @@ function successCacheHeaders(requestedTier, authKind, cors, onDemandKey = null) 
   };
 }
 
-export default async function handler(req, ctx) {
+export default async function handler(req, _ctx) {
   // no-store because this rejection is decided by the Origin header, which no
   // cache layer here keys on (CF ignores Vary — see TIER_CACHE above). Without
   // it, a 403 minted by one disallowed origin is an ordinary cacheable response

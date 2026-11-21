@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { assembleRawSignals, failedRawSignal, validateRawSignal, projectRawSignals, rawSignalsResultSchema, type RawSignalsValue } from '../shared/country-raw-signals';
 
 const retrievedAt = '2026-10-05T12:00:00.000Z';
-const quake = { id: 'eq', place: 'United States \"測\" \\ quake', magnitude: 4.5, location: { latitude: 38, longitude: -77 }, occurredAt: 1791000000000, source: 'USGS', category: 'earthquake', sourceUrl: 'https://example.com/eq' };
+const quake = { id: 'eq', place: 'United States "測" \\ quake', magnitude: 4.5, location: { latitude: 38, longitude: -77 }, occurredAt: 1791000000000, source: 'USGS', category: 'earthquake', sourceUrl: 'https://example.com/eq' };
 const outage = { id: 'out', title: 'Curated outage', country: 'United States', location: { latitude: 0, longitude: 0 }, detectedAt: 1791000000000, endedAt: 1791000300000, link: 'https://example.com/out' };
 const advisory = { title: 'Publisher observation', link: 'https://example.com/advisory', source: 'US State Dept', sourceCountry: 'US', pubDate: '2026-10-01T12:00:00Z', level: 'caution', country: 'US' };
 const thermal = { id: 'hot', countryCode: 'US', status: 'THERMAL_STATUS_SPIKE', firstDetectedAt: '2026-10-01T12:00:00Z', lastDetectedAt: '2026-10-01T15:00:00Z' };

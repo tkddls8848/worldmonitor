@@ -1866,7 +1866,7 @@ describe('computeMonthlyGulfShares', () => {
   });
 
   it('pre-crisis needs at least 9 of the 12 months filed', () => {
-    const world = months.map((m, i) => (i < 8 ? 100 : null));
+    const world = months.map((_m, i) => (i < 8 ? 100 : null));
     const gulf = world.map((w) => (w == null ? null : 50));
     assert.equal(computeMonthlyGulfShares(origin(world, gulf), 'XX').preCrisis, null);
   });

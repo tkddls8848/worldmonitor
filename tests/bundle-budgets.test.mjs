@@ -46,7 +46,7 @@ function writeDashboardIndex(root, files) {
   writeFileSync(join(root, 'dashboard.html'), tags.join('\n'));
 }
 
-function makeAssetsFixture(files, { distName = 'dashboard.html', writeIndex = true } = {}) {
+function makeAssetsFixture(files, { writeIndex = true } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'wm-bundle-budgets-'));
   fixtures.push(root);
   const assets = join(root, 'assets');

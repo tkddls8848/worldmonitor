@@ -5012,7 +5012,9 @@ function composeChokepointTransitsCoverage(entry, rawMeta) {
   return { ...entry, status: 'COVERAGE_PARTIAL', missingMeasurable };
 }
 
-function composeCiiEconomicStressHealth(entry, raw, readError = false, now = Date.now(), containmentEvidenceByName) {
+function composeCiiEconomicStressHealth(entry, raw, readError, now, containmentEvidenceByName) {
+  if (readError === undefined) readError = false;
+  if (now === undefined) now = Date.now();
   if (!entry) return entry;
   if (readError) {
     containmentEvidenceByName?.delete('ciiEconomicStress');
@@ -5040,7 +5042,8 @@ function composeCiiEconomicStressHealth(entry, raw, readError = false, now = Dat
     measuredCount: measuredCountries.length, unmeasuredCountries, missingExpectedCountries, validCoverage: Boolean(valid) };
 }
 
-function composeCiiStructuralPriorHealth(entry, raw, readError = false, containmentEvidenceByName) {
+function composeCiiStructuralPriorHealth(entry, raw, readError, containmentEvidenceByName) {
+  if (readError === undefined) readError = false;
   if (!entry) return entry;
   if (readError) {
     containmentEvidenceByName?.delete('ciiStructuralPrior');

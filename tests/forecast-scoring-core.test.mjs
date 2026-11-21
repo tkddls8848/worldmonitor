@@ -190,7 +190,7 @@ describe('scored probability (#8990 item 5)', () => {
       snap(T0, [chokepoint(T0, 0.2, { calibration: anchor })]),
       snap(T0 + 3 * DAY_MS, [chokepoint(T0 + 3 * DAY_MS, 0.9, { calibration: null })]),
     ];
-    let ledger = (await processResolutionCycleWithJudges({}, history, chokepointFeed(40), [], T0 + 3 * DAY_MS + HOUR_MS, noJudges)).ledger;
+    const ledger = (await processResolutionCycleWithJudges({}, history, chokepointFeed(40), [], T0 + 3 * DAY_MS + HOUR_MS, noJudges)).ledger;
     const result = await processResolutionCycleWithJudges(ledger, history, chokepointFeed(30), [], T0 + 7 * DAY_MS + HOUR_MS, noJudges);
     const [row] = windowsOf(result.ledger, 'fc-supply_chain-hormuz');
     assert.equal(row.outcome, 'NO');

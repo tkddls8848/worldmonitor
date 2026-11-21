@@ -105,7 +105,7 @@ describe('fetchSegments', () => {
 
   it('streams rows and treats a per-granule server failure as partial success', async () => {
     const calls = [];
-    const fetchImpl = async (url, init) => {
+    const fetchImpl = async (_url, init) => {
       const body = JSON.parse(init.body);
       calls.push(body.resource);
       return streamResponse(body.resource === G2
@@ -170,7 +170,7 @@ describe('listGranules', () => {
       { title: 'not-a-granule' },
     ];
     const seen = [];
-    const fetchImpl = async (url, init) => {
+    const fetchImpl = async (_url, init) => {
       seen.push(init.headers['CMR-Search-After'] ?? null);
       const body = seen.length === 1 ? page1 : page2;
       return { ok: true, status: 200, headers: new Headers(seen.length === 1 ? { 'cmr-search-after': '[1,2]' } : {}), json: async () => ({ feed: { entry: body } }) };

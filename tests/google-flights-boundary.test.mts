@@ -146,7 +146,7 @@ test('upstream failure remains degraded and is not cached as a successful search
     return attempts === 1 ? new Response('failure', { status: 502 }) : Response.json({ flights: [] });
   }) as typeof fetch;
   const realNow = Date.now;
-  let now = realNow();
+  const now = realNow();
   Date.now = () => now;
   try {
     const failed = await read();

@@ -82,13 +82,13 @@ test('a reverted run at the end of the window cannot set the latest value', () =
 });
 test('a feed that resumes after a hole is not published as a fresh median', () => {
   // Three weeks of missing closes, then one new quote at a new level.
-  const pts = flatDaily().filter((p, i) => i < 111 || i === 132).map((p, i, all) => (i === all.length - 1 ? { ...p, close: 0.9 } : p));
+  const pts = flatDaily().filter((_p, i) => i < 111 || i === 132).map((p, i, all) => (i === all.length - 1 ? { ...p, close: 0.9 } : p));
   assert.equal(cleanDailyQuotes(pts), null);
   const raw = inputs();
   raw.currency.rates = [{ countryCode: 'AE', asOf: '2026-11-12' }];
   assert.equal(economicCountry(raw, 'AE', NOW).absent.currency.reason, 'insufficient-history');
   // A hole at the anchor end is refused the same way.
-  assert.equal(cleanDailyQuotes(flatDaily().filter((p, i) => i < 25 || i > 41 || i === 33)), null);
+  assert.equal(cleanDailyQuotes(flatDaily().filter((_p, i) => i < 25 || i > 41 || i === 33)), null);
 });
 test('the optional daily request yields to the required rows when time is short', async () => {
   const base = { nowMs: 0, slowestRequestMs: 3000 };

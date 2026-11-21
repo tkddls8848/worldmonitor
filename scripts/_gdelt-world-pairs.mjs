@@ -100,7 +100,7 @@ export function mergeWorldPairHours(previous, batches, tracked, nowMs) {
   return result;
 }
 
-export function scoreWorldPairTrends(store, nowMs) {
+export function scoreWorldPairTrends(store, _nowMs) {
   const cursor = store?.cursor ?? '';
   if (!/^\d{14}$/.test(cursor)) return {};
   const cursorMs = gdeltTimestampToMs(cursor);

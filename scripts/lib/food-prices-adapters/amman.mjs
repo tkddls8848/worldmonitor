@@ -71,11 +71,15 @@ export function parseAmman(html, expectedDate, skipped = []) {
     const unit = UNITS[field(LABELS.pack)?.[1]];
     const [high, mode, low] = prices.map(match => number(match[1]));
     const item = AMMAN_ITEMS[name];
-    if (!item) return skipped.push(`${name}: no English name`), [];
-    if (!unit) return skipped.push(`${name}: unknown package`), [];
-    if (!mode) return skipped.push(`${name}: no modal price`), [];
-    if (high !== null && low !== null && !(high >= mode && mode >= low)) return disordered.push(name), skipped.push(`${name}: high/mode/low out of order`), [];
-    if (seen.has(item)) return skipped.push(`${name}: duplicate item`), [];
+    if (!item) { skipped.push(`${name}: no English name`); return []; }
+    if (!unit) { skipped.push(`${name}: unknown package`); return []; }
+    if (!mode) { skipped.push(`${name}: no modal price`); return []; }
+    if (high !== null && low !== null && !(high >= mode && mode >= low)) {
+      disordered.push(name);
+      skipped.push(`${name}: high/mode/low out of order`);
+      return [];
+    }
+    if (seen.has(item)) { skipped.push(`${name}: duplicate item`); return []; }
     seen.add(item);
     return [{ item, market: MARKET, marketType: 'wholesale', unit, currency: 'JOD', date, price: Math.round(mode * 10) / 1000, origin: '' }];
   });

@@ -1,4 +1,4 @@
-'use strict';
+
 
 const isMergeableObject = function isMergeableObject(value) {
 	return isNonNullObject(value)
@@ -36,9 +36,7 @@ function cloneUnlessOtherwiseSpecified(value, options) {
 }
 
 function defaultArrayMerge(target, source, options) {
-	return target.concat(source).map(function(element) {
-		return cloneUnlessOtherwiseSpecified(element, options)
-	})
+	return target.concat(source).map((element) => cloneUnlessOtherwiseSpecified(element, options))
 }
 
 function getMergeFunction(key, options) {
@@ -51,9 +49,7 @@ function getMergeFunction(key, options) {
 
 function getEnumerableOwnPropertySymbols(target) {
 	return Object.getOwnPropertySymbols
-		? Object.getOwnPropertySymbols(target).filter(function(symbol) {
-			return Object.propertyIsEnumerable.call(target, symbol)
-		})
+		? Object.getOwnPropertySymbols(target).filter((symbol) => Object.propertyIsEnumerable.call(target, symbol))
 		: []
 }
 
@@ -84,11 +80,11 @@ function setProperty(destination, key, value) {
 function mergeObject(target, source, options) {
 	const destination = {};
 	if (options.isMergeableObject(target)) {
-		getKeys(target).forEach(function(key) {
+		getKeys(target).forEach((key) => {
 			setProperty(destination, key, cloneUnlessOtherwiseSpecified(target[key], options));
 		});
 	}
-	getKeys(source).forEach(function(key) {
+	getKeys(source).forEach((key) => {
 		if (propertyIsUnsafe(target, key)) {
 			return
 		}
@@ -128,9 +124,7 @@ deepmerge.all = function deepmergeAll(array, options) {
 		throw new Error('first argument should be an array')
 	}
 
-	return array.reduce(function(prev, next) {
-		return deepmerge(prev, next, options)
-	}, {})
+	return array.reduce((prev, next) => deepmerge(prev, next, options), {})
 };
 
 const deepmerge_1 = deepmerge;

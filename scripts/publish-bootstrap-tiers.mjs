@@ -138,7 +138,7 @@ export async function assembleBootstrapTierPayload(registry, options = {}) {
   const data = {};
   const missing = [];
   for (let index = 0; index < names.length; index += 1) {
-    let value = keys[index] === BOOTSTRAP_CACHE_KEYS.canadaAlerts
+    const value = keys[index] === BOOTSTRAP_CACHE_KEYS.canadaAlerts
       && !valuesByKey.has(BOOTSTRAP_CACHE_KEYS.canadaAlerts)
       ? canadaAlertsCutoverFallbackValue(valuesByKey)
       : valuesByKey.get(keys[index]);

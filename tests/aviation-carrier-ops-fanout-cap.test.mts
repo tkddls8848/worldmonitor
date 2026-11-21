@@ -167,7 +167,7 @@ describe('get-carrier-ops minFlights default', () => {
     // cannot re-stub globalThis.fetch twice, so install the single-flight
     // relay variant up front instead of reusing installFetchMock().
     const relayUrls: string[] = [];
-    mock.method(globalThis, 'fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+    mock.method(globalThis, 'fetch', async (input: RequestInfo | URL, _init?: RequestInit) => {
       const url = String(input);
       if (url.startsWith('https://redis.test/get/')) {
         return new Response(JSON.stringify({ result: null }), { status: 200 });

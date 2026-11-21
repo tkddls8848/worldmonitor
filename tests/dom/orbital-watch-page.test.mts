@@ -292,7 +292,7 @@ describe('satellite pass lookup sheet', () => {
     const css = readFileSync(resolve(process.cwd(), 'src/styles/orbital-watch.css'), 'utf8');
     const phone = css.slice(css.indexOf('@media (max-width: 768px)'));
     expect(phone).toMatch(/\.ow-caption-ago \{ display: none; \}/);
-    expect(phone, 'the phone full view drops the summary heading as the sheet does').toMatch(/\n  \.ow-summary > \.ow-section-head \{ display: none; \}/);
+    expect(phone, 'the phone full view drops the summary heading as the sheet does').toMatch(/\n {2}\.ow-summary > \.ow-section-head \{ display: none; \}/);
   });
 
   it('shows every image as a labelled skeleton, then the image or a failure tile with retry', () => {
