@@ -5,6 +5,7 @@
 **Goal:** 대시보드 로드와 상호작용 지연을 재는 장치를 만든다. 기준선을 잰 뒤 3D 지구본과 평면 지도의 기울이기·회전을 없애고 다시 잰다. 그 결과로 주인과 성공 기준을 확정한다.
 
 **Architecture:** 측정 장치는 둘로 나뉜다.
+
 - 순수 통계·판정 모듈: `scripts/perf/perf-stats.mjs`. 단위 테스트한다.
 - Playwright 실행기: `scripts/perf-personal.mjs`. 실행 중인 개인 서버(127.0.0.1:3000)를 잰다.
 
@@ -57,10 +58,12 @@
 ### Task 1: 측정 통계·판정 모듈
 
 **Files:**
+
 - Create: `scripts/perf/perf-stats.mjs`
 - Test: `tests/perf-stats.test.mjs`
 
 **Interfaces:**
+
 - Produces:
   - `summarize(samples: Array<number|null>) -> { median: number|null, min: number|null, max: number|null, runs: number, failed: number }`
     - `null`은 실패한 측정이다. `failed`로 센다.
@@ -92,11 +95,13 @@
 ### Task 2: 측정 실행기 `perf:personal`
 
 **Files:**
+
 - Create: `scripts/perf-personal.mjs`
 - Modify: `package.json` scripts. `"perf:personal": "node scripts/perf-personal.mjs"`를 추가한다.
 - Test: `tests/perf-personal-args.test.mjs`
 
 **Interfaces:**
+
 - Consumes: Task 1의 `summarize`, `compareReports`
 - Produces:
   - CLI
@@ -107,6 +112,7 @@
     - label은 `^[a-z0-9-]+$`만 허용한다. 그 밖의 값이면 Error를 던진다.
 
 지표 이름은 이 목록으로 고정한다. 모두 밀리초이고, 바이트·메가바이트 지표만 단위가 다르다.
+
 - 로드, 캐시 없는 새 컨텍스트: `cold.fcp`, `cold.lcp`, `cold.mapReady`, `cold.panelsReady`, `cold.tbt`, `cold.jsBytes`, `cold.cssBytes`, `cold.heapMB`
 - 로드, 같은 컨텍스트에서 다시 들어간 경우: `warm.fcp`, `warm.lcp`, `warm.mapReady`, `warm.panelsReady`, `warm.tbt`
 - 상호작용: `<name>.inputToPaint`와 `<name>.resultVisible`
@@ -115,6 +121,7 @@
   - `resultVisible`: 입력을 보낸 시점부터 결과 요소가 보이고 다음 프레임이 그려질 때까지
 
 측정 방법:
+
 - 인증과 브라우저
   - 인증: `.env.local`의 `WM_PERSONAL_USERNAME`(기본값 `owner`)과 `WM_PERSONAL_PASSWORD`를 `httpCredentials`로 넘긴다. 값은 출력하지 않는다. `.env.local`은 `scripts/_env-file.mjs`의 `loadEnvFile`로 읽는다.
   - 브라우저: chromium, headless, 뷰포트 1600x1000(데스크톱 DeckGL 경로).
@@ -174,6 +181,7 @@
 ### Task 4: 3D 지구본 제거
 
 **Files:**
+
 - Delete:
   - `src/components/GlobeMap.ts`
   - `src/services/globe-render-settings.ts`
@@ -195,6 +203,7 @@
 - Test: `tests/dom/map-no-globe.test.mts`(신규)
 
 **Interfaces:**
+
 - Produces:
   - `MapContainer` 생성자에서 `preferGlobe` 인자가 사라진다.
   - `RendererKind = 'svg' | 'deck'`
@@ -229,6 +238,7 @@
 ### Task 5: 평면 지도를 평면 전용으로
 
 **Files:**
+
 - Modify:
   - `src/components/DeckGLMap.ts:226,321-322,1277-1282,1348-1353`. `MapInteractionMode`와 `MAP_INTERACTION_MODE`를 없애고 `maxPitch: 0`, `pitchWithRotate: false`, `dragRotate: false`를 항상 적용한다.
   - `.env.example`: `VITE_MAP_INTERACTION_MODE` 줄을 뺀다.
@@ -251,6 +261,7 @@
 ### Task 6: 3D 제거 후 측정과 주인 보고
 
 **Files:**
+
 - Modify: `docs/superpowers/specs/2026-11-21-frontend-performance-design.md`. 끝에 `## 8. 가 단계 결과`를 추가한다.
 
 - [ ] **Step 1:** `npm run build:personal` 후 서버를 다시 띄운다. 수집기는 돌리지 않는다.
