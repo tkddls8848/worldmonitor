@@ -93,7 +93,8 @@ describe('embed URL contract', () => {
     assert.equal(parsed.layers.military, false);
     assert.equal(parsed.layers.liveTankers, false);
     assert.equal(parsed.layers.webcams, false);
-    assert.equal(parsed.layers.satellites, false);
+    // `satellites` is no longer a map layer; the parser drops the unknown key.
+    assert.equal(Object.hasOwn(parsed.layers, 'satellites'), false);
     assert.equal(parsed.layers.sanctions, false);
     assert.equal(parsed.layers.resilienceScore, false);
     assert.equal(parsed.layers.ciiChoropleth, false);

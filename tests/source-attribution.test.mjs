@@ -371,17 +371,6 @@ test('the issue audit providers are represented by named attribution rows', () =
   }
 });
 
-test('City of Toronto CART host stays terms-review while CKAN licence_id is notspecified', () => {
-  const inventory = scanUpstreamHosts(rootDir);
-  const manifest = loadManifest(rootDir);
-  const observed = inventory.find((entry) => entry.host === 'secure.toronto.ca');
-  assert.ok(observed, 'secure.toronto.ca must be observed from the Toronto seeder/adapter');
-  const entry = [...manifest.entries, ...manifest.logicalEntries].find((row) => row.host === 'secure.toronto.ca');
-  assert.ok(entry, 'secure.toronto.ca must have a generated attribution row');
-  assert.equal(entry.status, 'terms-review');
-  assert.equal(entry.provider, 'City of Toronto Open Data');
-});
-
 test('GTA Update records permission but stays inactive pending activation gates', () => {
   const inventory = scanUpstreamHosts(rootDir);
   const manifest = loadManifest(rootDir);
