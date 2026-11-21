@@ -107,8 +107,9 @@ export function annotateWrongMarks(snapshot, doc) {
   const marks = (doc?.marks ?? []).filter((mark) => !mark.undoneAt);
   const relations = snapshot.relations.map(({ mark: _mark, ...line }) => {
     if (line.origin !== 'ai') return line;
-    const match = marks.find((item) => item.type === 'relation' && item.matchKey === relationMatchKey(line)
-      && item.date <= snapshot.date && snapshot.date <= addDays(item.date, MARK_HIDE_DAYS - 1));
+    const match = marks.filter((item) => item.type === 'relation' && item.matchKey === relationMatchKey(line)
+      && item.date <= snapshot.date && snapshot.date <= addDays(item.date, MARK_HIDE_DAYS - 1))
+      .sort((a, b) => b.markedAt - a.markedAt)[0];
     if (!match) return line;
     const known = new Set(match.sourceUrls ?? []);
     const fresh = line.sources.filter((source) => !known.has(source.url)).length;
