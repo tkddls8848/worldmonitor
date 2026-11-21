@@ -1,9 +1,9 @@
 /**
- * The `shown/total` badge every renderer uses to disclose a marker budget cut.
+ * The `shown/total` badge the SVG map uses to disclose a marker budget cut.
  *
  * Quietly dropping 2,000 conflict events off a monitoring product would
  * misrepresent the data, so the withholding is stated in the panel that controls
- * it (#5368 for the globe, #7112 for the SVG overlay). Both renderers reached
+ * it (#5368 for the former globe, #7112 for the SVG overlay). Both renderers reached
  * that conclusion independently and grew a near-identical 20-line copy of the
  * DOM write, down to a duplicated 40-word title string with one word changed —
  * which is how two renderers drift into disclosing different things about the
@@ -13,9 +13,6 @@
  * free of DOM imports so the selection algorithm can be unit-tested directly.
  */
 import type { MapLayerTruncation } from './map-marker-budget';
-
-/** How the renderer's viewport moves, for the badge's "… to bring others in". */
-export type TruncationMoveVerb = 'pan' | 'rotate';
 
 export interface TruncationBadgeResult {
   /** Layer keys that had a toggle row and now carry a badge. */
@@ -38,7 +35,6 @@ export interface TruncationBadgeResult {
 export function renderLayerTruncationBadges(
   root: HTMLElement,
   truncation: Readonly<Record<string, MapLayerTruncation>>,
-  moveVerb: TruncationMoveVerb,
 ): TruncationBadgeResult {
   const disclosed: string[] = [];
   const rowLayers = new Set<string>();
@@ -62,7 +58,7 @@ export function renderLayerTruncationBadges(
     // and the badge itself is numeric. Real key tracked as follow-up.
     // Says "nearest this view" rather than "highest priority" because that is
     // what the ranking actually does for layers with no severity of their own.
-    badge.title = `Showing ${counts.shown} of ${counts.total} markers — the most significant, and those nearest the current view. The map caps markers per layer to keep interaction responsive; ${moveVerb} or zoom to bring others in.`;
+    badge.title = `Showing ${counts.shown} of ${counts.total} markers — the most significant, and those nearest the current view. The map caps markers per layer to keep interaction responsive; pan or zoom to bring others in.`;
     if (layer) disclosed.push(layer);
   }
 

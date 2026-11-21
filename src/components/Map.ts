@@ -2208,8 +2208,9 @@ export class MapComponent {
 
   /**
    * Discloses a capped layer as `shown/total` on its toggle row — a ceiling the
-   * user cannot see is indistinguishable from missing data. Skipped when nothing changed: this runs on every render pass, and the
-   * writes would restyle the toggle rows each time (#5080).
+   * user cannot see is indistinguishable from missing data. Skipped when
+   * nothing changed: this runs on every render pass, and the writes would
+   * restyle the toggle rows each time (#5080).
    *
    * A layer the budget trimmed that has no toggle row in this variant's picker
    * (`fires` outside the energy/commodity variants, `webcams`, `radiationWatch`,
@@ -2250,7 +2251,7 @@ export class MapComponent {
     // a render that ran before the rail existed be redone once it appears.
     if (key === this.lastTruncationLabelKey) return;
     this.lastTruncationLabelKey = key;
-    const { undisclosed } = renderLayerTruncationBadges(root, this.overlayMarkerTruncation, 'pan');
+    const { undisclosed } = renderLayerTruncationBadges(root, this.overlayMarkerTruncation);
     this.overlayUndisclosedTruncation = undisclosed;
     this.renderCompactTruncationSummary(this.overlayMarkerTruncation.news ? [this.overlayMarkerTruncation.news] : []);
   }

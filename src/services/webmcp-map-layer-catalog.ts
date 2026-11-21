@@ -113,7 +113,7 @@ export function monitorToVariant(monitor: WebMcpMapLayerMonitor): MapVariant {
   return monitor === 'world' ? 'full' : monitor;
 }
 
-export function rendererFamily(_kind: RendererKind): WebMcpMapLayerRenderer {
+export function rendererFamily(): WebMcpMapLayerRenderer {
   return '2d';
 }
 
@@ -136,10 +136,7 @@ function hasOnlyOwnKeys(
   return Object.keys(value).every((key) => allowed.has(key));
 }
 
-function matchesRendererFilter(
-  renderers: RendererKind[],
-  _filter: WebMcpMapLayerRenderer,
-): boolean {
+function matchesRendererFilter(renderers: RendererKind[]): boolean {
   return renderers.includes('svg') || renderers.includes('deck');
 }
 
@@ -273,7 +270,7 @@ export function listMapLayerCatalog(
   const enabledSet = new Set(snapshot.enabledLayers);
 
   const filtered = catalogKeys.filter((layerKey) => {
-    if (query.renderer && !matchesRendererFilter(LAYER_REGISTRY[layerKey].renderers, query.renderer)) {
+    if (query.renderer && !matchesRendererFilter(LAYER_REGISTRY[layerKey].renderers)) {
       return false;
     }
     const entry = describeLayer(
@@ -306,7 +303,7 @@ export function listMapLayerCatalog(
   const result: MapLayerCatalogSuccess = {
     ok: true,
     variant: pageVariant,
-    renderer: rendererFamily(snapshot.rendererKind),
+    renderer: rendererFamily(),
     layers: selected,
     count: selected.length,
     total: filtered.length,

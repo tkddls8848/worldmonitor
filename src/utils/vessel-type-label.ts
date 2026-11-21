@@ -8,10 +8,10 @@ import type { MilitaryVessel } from '@/types';
  * unless a known-vessel record names it. Showing a bare "unknown" would throw
  * away the one supported fact, so the AIS ship type name wins for that case.
  *
- * `labels` stays per-surface: the map popup translates, and callers that want the raw enum pass nothing. The lookup is
- * own-property only — `vesselType` is a closed union in TypeScript but arrives
- * from the RPC layer as a bare string, so a value like `constructor` must not
- * reach through the prototype chain.
+ * `labels` stays per-surface: the map popup translates, and callers that want
+ * the raw enum pass nothing. The lookup is own-property only — `vesselType` is
+ * a closed union in TypeScript but arrives from the RPC layer as a bare string,
+ * so a value like `constructor` must not reach through the prototype chain.
  */
 export function vesselTypeLabel(
   vessel: Pick<MilitaryVessel, 'vesselType' | 'aisShipType'>,

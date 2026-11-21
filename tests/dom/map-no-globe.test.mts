@@ -244,8 +244,7 @@ describe('map without the 3D globe', () => {
 
   it('the WebMCP layer catalog offers no 3d renderer filter', () => {
     expect([...WEBMCP_MAP_LAYER_RENDERERS]).toEqual(['2d']);
-    expect(rendererFamily('deck')).toBe('2d');
-    expect(rendererFamily('svg')).toBe('2d');
+    expect(rendererFamily()).toBe('2d');
     expect(parseMapLayerCatalogArgs({ renderer: '3d' })).toMatchObject({
       ok: false,
       reason: 'invalid_renderer',

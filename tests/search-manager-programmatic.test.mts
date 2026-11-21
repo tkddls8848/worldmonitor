@@ -1670,6 +1670,42 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
     assert.deepEqual(scenario.calls.pipelineIds, ['pipe-1']);
   });
 
+  it('revalidates renderer compatibility at the delayed mutation boundary', async () => {
+    // Every entity layer draws on both flat renderers since the globe went, so
+    // pipelines is narrowed to DeckGL-only here to keep the commit-time
+    // renderer check covered: a DeckGL-to-SVG flip while the open waits for
+    // its timer must deny the result instead of committing it.
+    const pipelines = LAYER_REGISTRY.pipelines;
+    const renderers = pipelines.renderers;
+    pipelines.renderers = ['deck'];
+    try {
+      const scenario = makeScenario([
+        resultMatch('pipeline', 'pipe-delayed', 'Delayed pipeline', { id: 'pipe-delayed' }),
+      ]);
+      scenario.runtime.deferTimers = true;
+      const response = await scenario.manager.searchDashboard('needle', 'all', 10);
+      assert.equal(response.results[0]?.executable, true);
+      const key = response.results[0]?.key;
+      assert.ok(key);
+      const pendingOpen = scenario.manager.openSearchResult(key);
+      await Promise.resolve();
+      assert.equal(scenario.runtime.pendingTimers.size, 1);
+
+      scenario.state.deckGL = false;
+      flushTimers(scenario.runtime);
+      assert.deepEqual(await pendingOpen, {
+        ok: false,
+        status: 'denied',
+        reason: 'result_no_longer_executable',
+      });
+      assert.deepEqual(scenario.calls.layers, []);
+      assert.deepEqual(scenario.calls.pipelineIds, []);
+      assert.deepEqual(scenario.calls.views, []);
+    } finally {
+      pipelines.renderers = renderers;
+    }
+  });
+
   it('denies a delayed selection removed from the live search index before commit', async () => {
     const scenario = makeScenario([
       resultMatch('hotspot', 'removed-hotspot', 'Removed hotspot', { id: 'removed-hotspot' }),
