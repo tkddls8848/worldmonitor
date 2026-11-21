@@ -70,7 +70,7 @@ World Monitor 使用原生 TypeScript 编写 — 不使用任何前端框架（R
 
 ### 可辨识联合标记系统
 
-所有地图标记 — 在 globe.gl 和 deck.gl 两种引擎中 — 都携带一个 `_kind` 判别字段，用于在运行时识别其类型。每个标记是一个带有字面量 `_kind` 字符串的普通 TypeScript 对象，而非使用类继承（后者需要 `instanceof` 检查且阻止标记数据成为普通可序列化对象）：
+deck.gl 地图上的所有地图标记都携带一个 `_kind` 判别字段，用于在运行时识别其类型。每个标记是一个带有字面量 `_kind` 字符串的普通 TypeScript 对象，而非使用类继承（后者需要 `instanceof` 检查且阻止标记数据成为普通可序列化对象）：
 
 ```typescript
 type MapMarker =

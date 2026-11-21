@@ -52,13 +52,13 @@ A `deviceMemory` API guard excludes the ML pipeline entirely on low-memory devic
 
 The map supports typed geopolitical boundary polygons with associated metadata. Each boundary carries a `boundaryType` discriminant (`demilitarized`, `ceasefire`, `disputed`, `armistice`) that controls rendering style and popup content.
 
-**Korean DMZ** — the first boundary implemented is the Korean Demilitarized Zone, defined as a 43-point closed-ring polygon derived from OpenStreetMap Way 369265305 and the Korean Armistice Agreement Article I demarcation line. On the flat map, it renders as a `GeoJsonLayer` with a translucent blue fill and labeled tooltip. On the 3D globe, it renders as `polygonsData` under the conflicts layer. The boundary has a dedicated help entry and layer toggle, and is enabled by default on the `full` variant only.
+**Korean DMZ** — the first boundary implemented is the Korean Demilitarized Zone, defined as a 43-point closed-ring polygon derived from OpenStreetMap Way 369265305 and the Korean Armistice Agreement Article I demarcation line. On the DeckGL flat map, it renders as a `GeoJsonLayer` with a translucent blue fill and labeled tooltip. The boundary has a dedicated help entry and layer toggle, and is enabled by default on the `full` variant only.
 
-The boundary system is designed to be extensible — additional geopolitical boundaries (Line of Control in Kashmir, Golan Heights, Northern Cyprus Green Line) can be added to the `GEOPOLITICAL_BOUNDARIES` constant with appropriate typing and will render automatically on both map engines.
+The boundary system is designed to be extensible — additional geopolitical boundaries (Line of Control in Kashmir, Golan Heights, Northern Cyprus Green Line) can be added to the `GEOPOLITICAL_BOUNDARIES` constant with appropriate typing and will render automatically on the DeckGL map.
 
 ### CII Choropleth Heatmap
 
-The Country Instability Index can be projected as a full-coverage choropleth layer on both map engines, painting every country's polygon in a five-stop color gradient based on its live CII score (0–100):
+The Country Instability Index can be projected as a full-coverage choropleth layer on the DeckGL flat map, painting every country's polygon in a five-stop color gradient based on its live CII score (0–100):
 
 | Score Range | Level     | Color     |
 | ----------- | --------- | --------- |
@@ -68,17 +68,15 @@ The Country Instability Index can be projected as a full-coverage choropleth lay
 | 66–80       | High      | Red       |
 | 81–100      | Critical  | Dark Red  |
 
-On the **flat map** (deck.gl), a `GeoJsonLayer` maps ISO 3166-1 alpha-2 country codes to fixed RGBA values via the `getLevel()` threshold function. Updates are triggered by a monotonic version counter (`ciiScoresVersion`) — the layer compares the counter on each render pass and only recomputes fill colors when it increments, avoiding O(n) data spreads.
-
-On the **3D globe** (globe.gl), CII country polygons merge into the same `polygonsData` array as geopolitical boundaries. A `_kind` discriminant (`'boundary' | 'cii'`) in each polygon object lets a single `.polygonCapColor()` callback dispatch rendering logic for both types. CII polygons render at `polygonAltitude: 0.002` (below the `0.006` altitude used by conflict-zone outlines), preventing visual Z-fighting.
+On the **flat map** (deck.gl, the only map renderer that draws it), a `GeoJsonLayer` maps ISO 3166-1 alpha-2 country codes to fixed RGBA values via the `getLevel()` threshold function. Updates are triggered by a monotonic version counter (`ciiScoresVersion`) — the layer compares the counter on each render pass and only recomputes fill colors when it increments, avoiding O(n) data spreads.
 
 Countries GeoJSON is lazy-loaded from a shared `getCountriesGeoJson()` function, cached after first fetch, and shared between the CII layer and the country-detection ray-casting service.
 
 ### Unified Layer Toggle Catalog
 
-All map layer toggle definitions — icon, localization key, fallback display label, and supported renderer types — are consolidated in a single shared registry (`src/config/map-layer-definitions.ts`). Each entry declares which map renderers support it via a `renderers: MapRenderer[]` field (e.g., `dayNight` is flat-only, `ciiChoropleth` is both flat and globe), preventing the two map components from showing inconsistent layer options.
+All map layer toggle definitions — icon, localization key, fallback display label, and supported renderer types — are consolidated in a single shared registry (`src/config/map-layer-definitions.ts`). Each entry declares which map renderers support it via a `renderers: RendererKind[]` field (`'deck'` for the DeckGL flat map, `'svg'` for the SVG map used on phones and without WebGL; e.g., `dayNight` is on both, `ciiChoropleth` is DeckGL-only), preventing the two map components from showing inconsistent layer options.
 
-A `def()` factory function reduces per-entry boilerplate. Variant-specific layer ordering (`VARIANT_LAYER_ORDER`) defines the display sequence for each published dashboard variant without duplicating the definitions themselves. Adding a new map layer requires a single registry entry — both the flat map and 3D globe derive their toggle panels from this catalog automatically.
+A `def()` factory function reduces per-entry boilerplate. Variant-specific layer ordering (`VARIANT_LAYER_ORDER`) defines the display sequence for each published dashboard variant without duplicating the definitions themselves. Adding a new map layer requires a single registry entry — both the DeckGL map and the SVG map derive their toggle panels from this catalog automatically.
 
 The same registry also carries the v1 layer-explanation catalog for high-adoption layers. Each curated explanation records purpose, provider/source, freshness expectations, confidence notes, limitations, related panels/actions, and grounding paths; unsupported layers intentionally fall back to a generic card so the UI never implies a fabricated freshness or confidence value.
 

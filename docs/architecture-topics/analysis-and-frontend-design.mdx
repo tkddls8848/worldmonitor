@@ -69,7 +69,7 @@ World Monitor is written in vanilla TypeScript — no frontend framework (React,
 
 ### Discriminated Union Marker System
 
-All map markers — across both the globe.gl and deck.gl engines — carry a `_kind` discriminant field that identifies their type at runtime. Rather than using class inheritance (which requires `instanceof` checks and prevents marker data from being plain serializable objects), each marker is a plain TypeScript object with a literal `_kind` string:
+All map markers on the deck.gl map carry a `_kind` discriminant field that identifies their type at runtime. Rather than using class inheritance (which requires `instanceof` checks and prevents marker data from being plain serializable objects), each marker is a plain TypeScript object with a literal `_kind` string:
 
 ```typescript
 type MapMarker =
