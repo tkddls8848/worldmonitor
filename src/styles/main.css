@@ -24932,6 +24932,14 @@ body.map-width-resizing {
     overflow-y: auto;
   }
 
+  /* Prevent .panel-wide / .col-span-2 panels from creating an implicit narrow
+     2nd column in the default 1-column inspector mode. Multi-column spans
+     re-enable when the user switches to Multi-Col Grid or hides the map. */
+  .main-content:not(.inspector-wide-grid):not(.map-hidden) .inspector-column .panels-grid > .panel,
+  .main-content:not(.inspector-wide-grid):not(.map-hidden) .inspector-column .panels-grid > .add-panel-block {
+    grid-column: 1 / -1 !important;
+  }
+
   .main-content.map-hidden .inspector-column .panels-grid {
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   }
@@ -24940,6 +24948,12 @@ body.map-width-resizing {
 /* ==========================================================================
    Option B — Right Tabbed Inspector, Panel Modal, and Bottom Media Tray
    ========================================================================== */
+
+/* Keep the hidden variant registry DOM-present for navigateToVisibleVariant()
+   while never rendering a duplicate 6-button bar in the streamlined header. */
+.header .variant-switcher.variant-switcher-registry {
+  display: none !important;
+}
 
 .dashboard-navigation-row:empty,
 .dashboard-navigation-row:not(:has(.dashboard-tabs-bar)) {
@@ -24992,15 +25006,15 @@ body.map-width-resizing {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
   height: 28px;
-  padding: 0 9px;
+  padding: 0 7px;
   border: 1px solid transparent;
   border-radius: 6px;
   background: transparent;
   color: var(--text-dim);
   font-family: inherit;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
@@ -25479,10 +25493,40 @@ body.map-width-resizing {
 
 .bottom-tray-drawer-body > .tray-hosted-panel {
   flex: 1 1 0 !important;
+  min-height: 0 !important;
   height: 100% !important;
   max-height: none !important;
   border: none !important;
   border-radius: 0 !important;
+  box-shadow: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.bottom-tray-drawer-body > .tray-hosted-panel > .panel-content {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow-y: auto !important;
+}
+
+.bottom-tray-drawer-body > .tray-hosted-panel[data-panel="chat-analyst"] > .panel-header {
+  display: none !important;
+}
+
+.bottom-tray-drawer-body > .tray-hosted-panel[data-panel="chat-analyst"] .chat-container,
+.bottom-tray-drawer-body > .tray-hosted-panel[data-panel="chat-analyst"] .analyst-chat {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+}
+
+.bottom-tray-drawer-body > .tray-hosted-panel .panel-resize-handle,
+.bottom-tray-drawer-body > .tray-hosted-panel .panel-col-resize-handle {
+  display: none !important;
 }
 
 @media (min-width: 769px) {

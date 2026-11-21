@@ -17,7 +17,7 @@ export const INSPECTOR_TABS: readonly InspectorTabDef[] = [
   { id: 'security', labelKo: '안보', labelEn: 'Security', icon: '🛡' },
   { id: 'markets', labelKo: '시장·에너지', labelEn: 'Markets', icon: '📈' },
   { id: 'news', labelKo: '뉴스·추적', labelEn: 'News', icon: '📰' },
-  { id: 'all', labelKo: '전체/내 탭', labelEn: 'All & Tabs', icon: '⊞' },
+  { id: 'all', labelKo: '전체', labelEn: 'All', icon: '⊞' },
 ] as const;
 
 export const MARKETS_SUB_FILTERS: ReadonlyArray<{ readonly id: MarketsSubFilter; readonly labelKo: string; readonly labelEn: string }> = [
