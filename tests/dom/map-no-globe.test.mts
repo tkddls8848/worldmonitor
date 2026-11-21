@@ -72,30 +72,29 @@ vi.mock('maplibre-gl', async (importOriginal) => {
   return {
     ...actual,
     setWorkerUrl: () => {},
-    Map: class {
-      constructor(options: Record<string, unknown>) {
-        mapOptions.push(options);
-        if (mapLibreFatal.error) throw mapLibreFatal.error;
-        const handlers: MapStub['handlers'] = {};
-        const stub = {
-          handlers,
-          touchZoomRotate: { disable: vi.fn(), disableRotation: vi.fn() },
-          keyboard: { disable: vi.fn(), disableRotation: vi.fn() },
-          on: (event: string, handler: (event: unknown) => void) => {
-            (handlers[event] ??= []).push(handler);
-          },
-          getCanvas: () => document.createElement('canvas'),
-        };
-        mapStubs.push(stub);
-        // Every other map method is a no-op.
-        return new Proxy(stub, {
-          get(target, prop, receiver) {
-            if (prop in target) return Reflect.get(target, prop, receiver);
-            if (prop === 'then') return undefined;
-            return () => undefined;
-          },
-        });
-      }
+    // A constructor function, not a class: `new` hands back the stub proxy.
+    Map: function MapLibreStub(options: Record<string, unknown>) {
+      mapOptions.push(options);
+      if (mapLibreFatal.error) throw mapLibreFatal.error;
+      const handlers: MapStub['handlers'] = {};
+      const stub = {
+        handlers,
+        touchZoomRotate: { disable: vi.fn(), disableRotation: vi.fn() },
+        keyboard: { disable: vi.fn(), disableRotation: vi.fn() },
+        on: (event: string, handler: (event: unknown) => void) => {
+          (handlers[event] ??= []).push(handler);
+        },
+        getCanvas: () => document.createElement('canvas'),
+      };
+      mapStubs.push(stub);
+      // Every other map method is a no-op.
+      return new Proxy(stub, {
+        get(target, prop, receiver) {
+          if (prop in target) return Reflect.get(target, prop, receiver);
+          if (prop === 'then') return undefined;
+          return () => undefined;
+        },
+      });
     },
   };
 });
