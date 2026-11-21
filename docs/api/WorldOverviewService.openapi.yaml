@@ -1,0 +1,500 @@
+openapi: 3.1.0
+info:
+    title: WorldOverviewService API
+    version: 1.0.0
+servers:
+    - url: https://api.worldmonitor.app
+paths:
+    /api/world-overview/v1/get-world-overview-snapshot:
+        get:
+            tags:
+                - WorldOverviewService
+            summary: GetWorldOverviewSnapshot
+            description: GetWorldOverviewSnapshot returns today's snapshot or an archived date and the available archive dates.
+            operationId: GetWorldOverviewSnapshot
+            parameters:
+                - name: date
+                  in: query
+                  description: Optional calendar date in Asia/Seoul, formatted YYYY-MM-DD. Omit for today.
+                  required: false
+                  example: "2026-01-15"
+                  schema:
+                    type: string
+                - name: jmespath
+                  in: query
+                  description: |-
+                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
+                  required: false
+                  example: "keys(@)"
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: Successful response
+                    content:
+                        application/json:
+                            example:
+                                "archivedDates":
+                                    - "2026-01-15"
+                                "snapshot":
+                                    "ai":
+                                        "date": "2026-01-15"
+                                        "model": "example"
+                                        "status": "example"
+                                    "anchors":
+                                        "exampleKey":
+                                            "latitude": 40.7128
+                                            "longitude": -74.006
+                                    "availableDates":
+                                        - "2026-01-15"
+                                    "blocs":
+                                        - "id": "example-id"
+                                          "members":
+                                              - "US"
+                                          "nameEn": "WorldMonitor Analyst"
+                                          "nameKo": "WorldMonitor Analyst"
+                                          "source":
+                                              "publishedAt": 1717200000000
+                                              "publisher": "example"
+                                              "title": "example"
+                                              "url": "https://example.com/worldmonitor"
+                                    "countries":
+                                        "exampleKey":
+                                            "blocs":
+                                                - "example"
+                                            "cii":
+                                                "score": 42.5
+                                                "unrest": 1.5
+                                            "deaths":
+                                                "count": 1
+                                                "month": "example"
+                                                "source": "example"
+                                            "demonstrations": 42
+                                            "hasDemonstrations": true
+                            schema:
+                                $ref: '#/components/schemas/GetWorldOverviewSnapshotResponse'
+                "400":
+                    description: Validation error
+                    content:
+                        application/json:
+                            schema:
+                                oneOf:
+                                    - $ref: '#/components/schemas/ValidationError'
+                                    - $ref: '#/components/schemas/JmespathProjectionError'
+                default:
+                    description: Error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+    /api/world-overview/v1/set-world-overview-mark:
+        post:
+            tags:
+                - WorldOverviewService
+            summary: SetWorldOverviewMark
+            description: SetWorldOverviewMark creates, undoes, or replaces a wrong-data mark.
+            operationId: SetWorldOverviewMark
+            requestBody:
+                content:
+                    application/json:
+                        example:
+                            "action": "example"
+                            "itemKey": "example"
+                            "itemKind": "example"
+                            "markId": "example-id"
+                        schema:
+                            $ref: '#/components/schemas/SetWorldOverviewMarkRequest'
+                required: true
+            responses:
+                "200":
+                    description: Successful response
+                    content:
+                        application/json:
+                            example:
+                                "mark":
+                                    "date": "2026-01-15"
+                                    "id": "example-id"
+                                    "iso2": "US"
+                                    "markedAt": 1717200000000
+                                    "matchKey": "example"
+                                "ok": true
+                            schema:
+                                $ref: '#/components/schemas/SetWorldOverviewMarkResponse'
+                "400":
+                    description: Validation error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ValidationError'
+                default:
+                    description: Error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+components:
+    schemas:
+        JmespathProjectionError:
+            description: Returned when a REST jmespath projection is invalid or exceeds the expression/output byte limits.
+            properties:
+                _jmespath_error:
+                    description: Projection error discriminator and details.
+                    type: string
+                original_keys:
+                    description: Top-level keys or shape of the unprojected response.
+                    items:
+                        type: string
+                    type: array
+            required:
+                - _jmespath_error
+                - original_keys
+            type: object
+        Error:
+            type: object
+            properties:
+                message:
+                    type: string
+                    description: Error message (e.g., 'user not found', 'database connection failed')
+            description: Error is returned when a handler encounters an error. It contains a simple error message that the developer can customize.
+        FieldViolation:
+            type: object
+            properties:
+                field:
+                    type: string
+                    description: The field path that failed validation (e.g., 'user.email' for nested fields). For header validation, this will be the header name (e.g., 'X-API-Key')
+                description:
+                    type: string
+                    description: Human-readable description of the validation violation (e.g., 'must be a valid email address', 'required field missing')
+            required:
+                - field
+                - description
+            description: FieldViolation describes a single validation error for a specific field.
+        ValidationError:
+            type: object
+            properties:
+                violations:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/FieldViolation'
+                    description: List of validation violations
+            required:
+                - violations
+            description: ValidationError is returned when request validation fails. It contains a list of field violations describing what went wrong.
+        GetWorldOverviewSnapshotRequest:
+            type: object
+            properties:
+                date:
+                    type: string
+                    description: Optional calendar date in Asia/Seoul, formatted YYYY-MM-DD. Omit for today.
+        GetWorldOverviewSnapshotResponse:
+            type: object
+            properties:
+                snapshot:
+                    $ref: '#/components/schemas/WorldOverviewSnapshot'
+                archivedDates:
+                    type: array
+                    items:
+                        type: string
+        WorldOverviewSnapshot:
+            type: object
+            properties:
+                schemaVersion:
+                    type: integer
+                    format: int32
+                date:
+                    type: string
+                generatedAt:
+                    type: integer
+                    format: int64
+                    description: 'Warning: Values > 2^53 may lose precision in JavaScript'
+                countries:
+                    type: object
+                    additionalProperties:
+                        $ref: '#/components/schemas/CountryState'
+                relations:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/RelationLine'
+                blocs:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Bloc'
+                anchors:
+                    type: object
+                    additionalProperties:
+                        $ref: '#/components/schemas/Coordinate'
+                ai:
+                    $ref: '#/components/schemas/AiStatus'
+                inputs:
+                    type: object
+                    additionalProperties:
+                        $ref: '#/components/schemas/InputStatus'
+                availableDates:
+                    type: array
+                    items:
+                        type: string
+            description: WorldOverviewSnapshot is the dated first-screen world overview state.
+        CountriesEntry:
+            type: object
+            properties:
+                key:
+                    type: string
+                value:
+                    $ref: '#/components/schemas/CountryState'
+        AnchorsEntry:
+            type: object
+            properties:
+                key:
+                    type: string
+                value:
+                    $ref: '#/components/schemas/Coordinate'
+        InputsEntry:
+            type: object
+            properties:
+                key:
+                    type: string
+                value:
+                    $ref: '#/components/schemas/InputStatus'
+        CountryState:
+            type: object
+            properties:
+                level:
+                    type: string
+                deaths:
+                    $ref: '#/components/schemas/Deaths'
+                cii:
+                    $ref: '#/components/schemas/CiiState'
+                demonstrations:
+                    type: integer
+                    format: int32
+                hasDemonstrations:
+                    type: boolean
+                unrest:
+                    type: boolean
+                blocs:
+                    type: array
+                    items:
+                        type: string
+                inNews:
+                    type: boolean
+                issue:
+                    $ref: '#/components/schemas/CountryIssue'
+        Deaths:
+            type: object
+            properties:
+                count:
+                    type: integer
+                    format: int32
+                source:
+                    type: string
+                month:
+                    type: string
+        CiiState:
+            type: object
+            properties:
+                score:
+                    type: number
+                    format: double
+                unrest:
+                    type: number
+                    format: double
+        CountryIssue:
+            type: object
+            properties:
+                summaryKo:
+                    type: string
+                fields:
+                    type: array
+                    items:
+                        type: string
+                sources:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/SourceLink'
+                mark:
+                    $ref: '#/components/schemas/MarkAnnotation'
+        SourceLink:
+            type: object
+            properties:
+                url:
+                    type: string
+                title:
+                    type: string
+                publisher:
+                    type: string
+                publishedAt:
+                    type: integer
+                    format: int64
+                    description: 'Warning: Values > 2^53 may lose precision in JavaScript'
+        MarkAnnotation:
+            type: object
+            properties:
+                state:
+                    type: string
+                markId:
+                    type: string
+                markedAt:
+                    type: integer
+                    format: int64
+                    description: 'Warning: Values > 2^53 may lose precision in JavaScript'
+        RelationLine:
+            type: object
+            properties:
+                id:
+                    type: string
+                origin:
+                    type: string
+                kind:
+                    type: string
+                basis:
+                    type: string
+                field:
+                    type: string
+                from:
+                    type: string
+                to:
+                    type: string
+                directed:
+                    type: boolean
+                score:
+                    type: number
+                    format: double
+                value:
+                    type: number
+                    format: double
+                label:
+                    type: string
+                confidence:
+                    type: number
+                    format: double
+                hasConfidence:
+                    type: boolean
+                sources:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/SourceLink'
+                trend:
+                    $ref: '#/components/schemas/PairTrend'
+                mark:
+                    $ref: '#/components/schemas/MarkAnnotation'
+        PairTrend:
+            type: object
+            properties:
+                state:
+                    type: string
+                recentEventsPerDay:
+                    type: number
+                    format: double
+                baselineEventsPerDay:
+                    type: number
+                    format: double
+                hasBaselineEventsPerDay:
+                    type: boolean
+                recentIntensityPerDay:
+                    type: number
+                    format: double
+                baselineIntensityPerDay:
+                    type: number
+                    format: double
+                hasBaselineIntensityPerDay:
+                    type: boolean
+                ratio:
+                    type: number
+                    format: double
+                hasRatio:
+                    type: boolean
+                trackedSince:
+                    type: integer
+                    format: int64
+                    description: 'Warning: Values > 2^53 may lose precision in JavaScript'
+        Bloc:
+            type: object
+            properties:
+                id:
+                    type: string
+                nameKo:
+                    type: string
+                nameEn:
+                    type: string
+                members:
+                    type: array
+                    items:
+                        type: string
+                source:
+                    $ref: '#/components/schemas/SourceLink'
+        Coordinate:
+            type: object
+            properties:
+                longitude:
+                    type: number
+                    format: double
+                latitude:
+                    type: number
+                    format: double
+        AiStatus:
+            type: object
+            properties:
+                status:
+                    type: string
+                date:
+                    type: string
+                model:
+                    type: string
+        InputStatus:
+            type: object
+            properties:
+                status:
+                    type: string
+                asOf:
+                    type: integer
+                    format: int64
+                    description: 'Warning: Values > 2^53 may lose precision in JavaScript'
+        SetWorldOverviewMarkRequest:
+            type: object
+            properties:
+                itemKind:
+                    type: string
+                    description: relation | issue
+                itemKey:
+                    type: string
+                    description: Relation id or ISO2 country code, depending on item_kind.
+                action:
+                    type: string
+                    description: mark | unmark
+                markId:
+                    type: string
+                    description: Required for unmark; the persisted mark id.
+        SetWorldOverviewMarkResponse:
+            type: object
+            properties:
+                ok:
+                    type: boolean
+                mark:
+                    $ref: '#/components/schemas/WrongMark'
+        WrongMark:
+            type: object
+            properties:
+                id:
+                    type: string
+                type:
+                    type: string
+                date:
+                    type: string
+                matchKey:
+                    type: string
+                iso2:
+                    type: string
+                sourceUrls:
+                    type: array
+                    items:
+                        type: string
+                summaryKo:
+                    type: string
+                markedAt:
+                    type: integer
+                    format: int64
+                    description: 'Warning: Values > 2^53 may lose precision in JavaScript'
+                undoneAt:
+                    type: integer
+                    format: int64
+                    description: 'Warning: Values > 2^53 may lose precision in JavaScript'

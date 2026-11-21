@@ -2,9 +2,6 @@ openapi: 3.1.0
 info:
     title: ScorecardService API
     version: 1.0.0
-security:
-    - WorldMonitorKey: []
-    - ApiKeyHeader: []
 servers:
     - url: https://api.worldmonitor.app
 paths:
@@ -15,7 +12,6 @@ paths:
             summary: GetFiveFactorScorecard
             description: GetFiveFactorScorecard returns one country's 1-5 scores for food, energy, demographics, technology and defense, with per-pillar input evidence and coverage.
             operationId: GetFiveFactorScorecard
-            security: []
             parameters:
                 - name: countryCode
                   in: query
@@ -93,39 +89,12 @@ paths:
                                 oneOf:
                                     - $ref: '#/components/schemas/ValidationError'
                                     - $ref: '#/components/schemas/JmespathProjectionError'
-                "429":
-                    description: Rate limit exceeded.
-                    headers:
-                        X-RateLimit-Limit:
-                            description: Maximum requests allowed in the active rate-limit window.
-                            schema:
-                                type: string
-                        X-RateLimit-Remaining:
-                            description: Requests remaining in the active rate-limit window.
-                            schema:
-                                type: string
-                        X-RateLimit-Reset:
-                            description: Unix epoch milliseconds when the active rate-limit window resets.
-                            schema:
-                                type: string
-                        Retry-After:
-                            description: Seconds to wait before retrying the request.
-                            schema:
-                                type: string
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/Error'
-                                    - $ref: '#/components/schemas/RateLimitError'
                 default:
-                    description: Gateway or handler error response.
+                    description: Error response
                     content:
                         application/json:
                             schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/Error'
-                                    - $ref: '#/components/schemas/GatewayError'
+                                $ref: '#/components/schemas/Error'
     /api/scorecard/v1/list-five-factor-scorecards:
         get:
             tags:
@@ -133,7 +102,6 @@ paths:
             summary: ListFiveFactorScorecards
             description: ListFiveFactorScorecards returns pillar scores, bands and input coverage for every country in the seeded five-factor snapshot, plus methodology version.
             operationId: ListFiveFactorScorecards
-            security: []
             parameters:
                 - name: jmespath
                   in: query
@@ -174,39 +142,12 @@ paths:
                                 oneOf:
                                     - $ref: '#/components/schemas/ValidationError'
                                     - $ref: '#/components/schemas/JmespathProjectionError'
-                "429":
-                    description: Rate limit exceeded.
-                    headers:
-                        X-RateLimit-Limit:
-                            description: Maximum requests allowed in the active rate-limit window.
-                            schema:
-                                type: string
-                        X-RateLimit-Remaining:
-                            description: Requests remaining in the active rate-limit window.
-                            schema:
-                                type: string
-                        X-RateLimit-Reset:
-                            description: Unix epoch milliseconds when the active rate-limit window resets.
-                            schema:
-                                type: string
-                        Retry-After:
-                            description: Seconds to wait before retrying the request.
-                            schema:
-                                type: string
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/Error'
-                                    - $ref: '#/components/schemas/RateLimitError'
                 default:
-                    description: Gateway or handler error response.
+                    description: Error response
                     content:
                         application/json:
                             schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/Error'
-                                    - $ref: '#/components/schemas/GatewayError'
+                                $ref: '#/components/schemas/Error'
     /api/scorecard/v1/get-bloc-scorecard:
         get:
             tags:
@@ -214,7 +155,6 @@ paths:
             summary: GetBlocScorecard
             description: GetBlocScorecard aggregates five-factor pillar scores for a preset bloc such as EU27, NATO or BRICS, or 2-30 custom countries, listing excluded members.
             operationId: GetBlocScorecard
-            security: []
             parameters:
                 - name: preset
                   in: query
@@ -319,51 +259,13 @@ paths:
                                 oneOf:
                                     - $ref: '#/components/schemas/ValidationError'
                                     - $ref: '#/components/schemas/JmespathProjectionError'
-                "429":
-                    description: Rate limit exceeded.
-                    headers:
-                        X-RateLimit-Limit:
-                            description: Maximum requests allowed in the active rate-limit window.
-                            schema:
-                                type: string
-                        X-RateLimit-Remaining:
-                            description: Requests remaining in the active rate-limit window.
-                            schema:
-                                type: string
-                        X-RateLimit-Reset:
-                            description: Unix epoch milliseconds when the active rate-limit window resets.
-                            schema:
-                                type: string
-                        Retry-After:
-                            description: Seconds to wait before retrying the request.
-                            schema:
-                                type: string
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/Error'
-                                    - $ref: '#/components/schemas/RateLimitError'
                 default:
-                    description: Gateway or handler error response.
+                    description: Error response
                     content:
                         application/json:
                             schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/Error'
-                                    - $ref: '#/components/schemas/GatewayError'
+                                $ref: '#/components/schemas/Error'
 components:
-    securitySchemes:
-        WorldMonitorKey:
-            type: apiKey
-            in: header
-            name: X-WorldMonitor-Key
-            description: User-issued WorldMonitor API key.
-        ApiKeyHeader:
-            type: apiKey
-            in: header
-            name: X-Api-Key
-            description: Alias header for the WorldMonitor API key (X-WorldMonitor-Key).
     schemas:
         JmespathProjectionError:
             description: Returned when a REST jmespath projection is invalid or exceeds the expression/output byte limits.
@@ -387,36 +289,6 @@ components:
                     type: string
                     description: Error message (e.g., 'user not found', 'database connection failed')
             description: Error is returned when a handler encounters an error. It contains a simple error message that the developer can customize.
-        InvalidRequestBodyError:
-            type: object
-            description: Returned when a JSON POST request body is empty or malformed.
-            properties:
-                message:
-                    type: string
-                    description: Invalid request body
-            required:
-                - message
-        GatewayError:
-            type: object
-            description: Returned by gateway infrastructure errors before an RPC handler runs, such as origin, routing, method, authentication, or quota checks.
-            properties:
-                error:
-                    oneOf:
-                        - type: string
-                        - type: object
-                          additionalProperties: true
-                    description: Gateway error reason or structured gateway failure details.
-            required:
-                - error
-        RateLimitError:
-            type: object
-            description: Returned when a gateway or handler rate limit rejects the request.
-            properties:
-                error:
-                    type: string
-                    description: Human-readable rate-limit failure reason.
-            required:
-                - error
         FieldViolation:
             type: object
             properties:

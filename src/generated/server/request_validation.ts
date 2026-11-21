@@ -2,7 +2,7 @@
 // Source: proto/worldmonitor/**/*.proto buf.validate annotations.
 
 export const GENERATED_PROTO_VALIDATION_RULE_COUNT = 735;
-export const GENERATED_REQUEST_METHOD_COUNT = 195;
+export const GENERATED_REQUEST_METHOD_COUNT = 197;
 
 export const GENERATED_REQUEST_TYPES = {
   "analyzeStock": "worldmonitor.market.v1.AnalyzeStockRequest",
@@ -109,6 +109,7 @@ export const GENERATED_REQUEST_TYPES = {
   "getWebcamImage": "worldmonitor.webcam.v1.GetWebcamImageRequest",
   "getWingbitsLiveFlight": "worldmonitor.military.v1.GetWingbitsLiveFlightRequest",
   "getWorldCpiMonthly": "worldmonitor.economic.v1.GetWorldCpiMonthlyRequest",
+  "getWorldOverviewSnapshot": "worldmonitor.world_overview.v1.GetWorldOverviewSnapshotRequest",
   "getYoutubeLiveStreamInfo": "worldmonitor.aviation.v1.GetYoutubeLiveStreamInfoRequest",
   "importMonitoredCompanyBatch": "worldmonitor.company_monitoring.v1.ImportMonitoredCompanyBatchRequest",
   "listAcledEvents": "worldmonitor.conflict.v1.ListAcledEventsRequest",
@@ -193,6 +194,7 @@ export const GENERATED_REQUEST_TYPES = {
   "searchPlace": "worldmonitor.infrastructure.v1.SearchPlaceRequest",
   "searchSecFilings": "worldmonitor.intelligence.v1.SearchSecFilingsRequest",
   "setMonitoredCompanyState": "worldmonitor.company_monitoring.v1.SetMonitoredCompanyStateRequest",
+  "setWorldOverviewMark": "worldmonitor.world_overview.v1.SetWorldOverviewMarkRequest",
   "submitContact": "worldmonitor.leads.v1.SubmitContactRequest",
   "submitErrorReport": "worldmonitor.news.v1.SubmitErrorReportRequest",
   "submitReport": "worldmonitor.feedback.v1.SubmitReportRequest",
@@ -3328,6 +3330,34 @@ export const GENERATED_MESSAGE_RULES = {
   "worldmonitor.wildfire.v1.ListFireDetectionsRequest": {
     "fields": {
       "cursor": {
+        "kind": "string",
+        "stringMaxBytes": 65536
+      }
+    }
+  },
+  "worldmonitor.world_overview.v1.GetWorldOverviewSnapshotRequest": {
+    "fields": {
+      "date": {
+        "kind": "string",
+        "stringMaxBytes": 65536
+      }
+    }
+  },
+  "worldmonitor.world_overview.v1.SetWorldOverviewMarkRequest": {
+    "fields": {
+      "itemKind": {
+        "kind": "string",
+        "stringMaxBytes": 65536
+      },
+      "itemKey": {
+        "kind": "string",
+        "stringMaxBytes": 65536
+      },
+      "action": {
+        "kind": "string",
+        "stringMaxBytes": 65536
+      },
+      "markId": {
         "kind": "string",
         "stringMaxBytes": 65536
       }
