@@ -1,6 +1,12 @@
 #!/usr/bin/env node
 
 import { createHash } from 'node:crypto';
+import { kstDate } from '../shared/world-overview.js';
+import worldOverviewConfig from '../shared/world-overview-config.json' with { type: 'json' };
+import {
+  buildTrackedPairs, mergeWorldPairHours, parseWorldPairExport,
+  scoreWorldPairTrends, seedFromDyadStore,
+} from './_gdelt-world-pairs.mjs';
 import {
   dyadDayExportTimestamps,
   mergeDyadBuckets,
@@ -309,6 +315,7 @@ export async function fetchGdeltBulkFiles({
             descriptor,
             events: mapGdeltExportToConflictEvents(csv),
             dyads: parseDyadExport(csv),
+            worldPairs: parseWorldPairExport(csv),
             countries: parseCountryEventsExport(csv),
           };
     },
@@ -563,6 +570,7 @@ export async function fetchMaterializedGdelt(deps = {}) {
   const {
     _now = () => Date.now(),
     _readSnapshot = (key) => readSeedSnapshot(key, { strict: true, timeoutMs: SNAPSHOT_READ_TIMEOUT_MS }),
+    _readOptionalSnapshot = (key) => readSeedSnapshot(key),
     _fetchFiles = fetchGdeltBulkFiles,
     _repairDyadHistory = repairDyadHistory,
     _repairCountryEventsHistory = repairCountryEventsHistory,
@@ -573,13 +581,17 @@ export async function fetchMaterializedGdelt(deps = {}) {
   // the state key: the state already holds the compacted geo batches and the
   // conflict window, and ~250 countries of rows would push it toward the 5MB
   // write ceiling (#7748).
-  const [previousIntel, previousState, previousCountryIndex, previousDyads, previousCountryEvents] = await Promise.all([
+  const [previousIntel, previousState, previousCountryIndex, previousDyads, previousCountryEvents, previousWorldPairs] = await Promise.all([
     _readSnapshot(GDELT_INTEL_KEY),
     _readSnapshot(GDELT_BULK_STATE_KEY),
     _readSnapshot(GDELT_BULK_COUNTRY_ARTICLES_KEY),
     _readSnapshot(GDELT_BULK_DYAD_KEY),
     _readSnapshot(GDELT_BULK_COUNTRY_EVENTS_KEY),
+    _readSnapshot('gdelt:bulk:world-pair-trends:v1'),
   ]);
+  const aiTracked = await _readOptionalSnapshot('world-overview:ai:v1').catch(() => null);
+  const today = kstDate(nowMs);
+  const tracked = buildTrackedPairs(worldOverviewConfig.majorCountries, aiTracked?.trackedPairs, today, worldOverviewConfig.aiPairRetentionDays);
   const downloaded = await _fetchFiles({
     afterTimestamp: previousState?.cursor || {},
     nowMs,
@@ -628,10 +640,20 @@ export async function fetchMaterializedGdelt(deps = {}) {
 
   const exportBatches = downloaded
     .filter(({ descriptor }) => descriptor.kind === 'export')
-    .map(({ descriptor, events, csv }) => ({
+    .map(({ descriptor, events, worldPairs, csv }) => ({
       timestamp: descriptor.timestamp,
       events: events ?? mapGdeltExportToConflictEvents(csv),
+      worldPairs: worldPairs ?? parseWorldPairExport(csv),
     }));
+  const majorPairCount = worldOverviewConfig.majorCountries.length * (worldOverviewConfig.majorCountries.length - 1) / 2;
+  const worldPairBase = previousWorldPairs ?? seedFromDyadStore(previousDyads, nowMs);
+  const mergedWorldPairs = mergeWorldPairHours(worldPairBase, exportBatches, tracked, nowMs);
+  const worldPairData = {
+    ...mergedWorldPairs,
+    trends: scoreWorldPairTrends(mergedWorldPairs, nowMs),
+    updatedAt: nowMs,
+    scope: { majorPairs: majorPairCount, aiPairs: Math.max(0, tracked.size - majorPairCount) },
+  };
   const latestExport = exportBatches.map(({ timestamp }) => timestamp).sort().at(-1);
   const oldestExport = exportBatches.map(({ timestamp }) => timestamp).sort().at(0);
   const coverage = {
@@ -753,6 +775,7 @@ export async function fetchMaterializedGdelt(deps = {}) {
   return {
     ...materialized.intel,
     _dyads: { ...dyads, ...scoreDyads(dyads, nowMs), updatedAt: nowMs },
+    _worldPairs: worldPairData,
     _countryEvents: { ...countryEvents, ...summarizeCountryEvents(countryEvents, nowMs), updatedAt: nowMs },
     _timelines: materialized.timelines,
     _unrest: materialized.unrest,
@@ -822,6 +845,7 @@ export async function afterPublish(data, _meta, deps = {}) {
     _writeActivationMarker = () => writeActivation(COUNTRY_ARTICLES_ACTIVATION_KEY),
     _writeDyadActivationMarker = () => writeActivation('seed-activated:gdelt:bulk:dyad-tension'),
     _writeCountryEventsActivationMarker = () => writeActivation(COUNTRY_EVENTS_ACTIVATION_KEY),
+    _writeWorldPairActivationMarker = () => writeActivation('seed-activated:gdelt:bulk:world-pair-trends'),
   } = deps;
   const outputOperations = Object.entries(data._timelines ?? {}).flatMap(
     ([topic, series]) => [
@@ -850,6 +874,14 @@ export async function afterPublish(data, _meta, deps = {}) {
         GDELT_BULK_DYAD_KEY, data._dyads, DYAD_TTL,
         Object.keys(data._dyads?.days ?? {}).length,
         'seed-meta:gdelt:bulk:dyad-tension',
+      ),
+    },
+    {
+      label: 'gdelt:bulk:world-pair-trends:v1',
+      run: () => _writeExtraKeyWithMeta(
+        'gdelt:bulk:world-pair-trends:v1', data._worldPairs, 864000,
+        Object.keys(data._worldPairs?.trends ?? {}).length,
+        'seed-meta:gdelt:bulk:world-pair-trends',
       ),
     },
     {
@@ -915,6 +947,10 @@ export async function afterPublish(data, _meta, deps = {}) {
   const dyadResult = settled[outputOperations.findIndex(({ label }) => label === GDELT_BULK_DYAD_KEY)];
   if (dyadResult?.status === 'fulfilled' && dyadResult.value !== false) {
     await _writeDyadActivationMarker();
+  }
+  const worldPairResult = settled[outputOperations.findIndex(({ label }) => label === 'gdelt:bulk:world-pair-trends:v1')];
+  if (worldPairResult?.status === 'fulfilled' && worldPairResult.value !== false) {
+    await _writeWorldPairActivationMarker();
   }
   const countryEventsResult = settled[outputOperations.findIndex(({ label }) => label === COUNTRY_EVENTS_META_KEY)];
   if (countryEventsResult?.status === 'fulfilled' && countryEventsResult.value !== false) {
