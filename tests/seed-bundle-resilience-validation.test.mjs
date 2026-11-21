@@ -15,14 +15,16 @@ const scriptsDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'scripts'
 const EXPECTED_MEMBERS = [
   { label: 'External-Benchmark', script: 'benchmark-resilience-external.mjs', timeoutMs: 300_000 },
   { label: 'Outcome-Backtest', script: 'backtest-resilience-outcomes.mjs', timeoutMs: 300_000 },
-  { label: 'Sensitivity-Suite', script: 'validate-resilience-sensitivity.mjs', timeoutMs: 600_000 },
+  { label: 'Sensitivity-Suite', script: 'validate-resilience-sensitivity.mjs', useTsxLoader: true, timeoutMs: 600_000 },
 ];
 
 describe('resilience validation bundle contract', () => {
   it('runs the three required validation members in the declared order', () => {
     assert.equal(RESILIENCE_VALIDATION_BUNDLE_NAME, 'resilience-validation');
     assert.deepEqual(
-      RESILIENCE_VALIDATION_BUNDLE_MEMBERS.map(({ label, script, timeoutMs }) => ({ label, script, timeoutMs })),
+      RESILIENCE_VALIDATION_BUNDLE_MEMBERS.map(({ label, script, timeoutMs, useTsxLoader }) => ({
+        label, script, ...(useTsxLoader ? { useTsxLoader } : {}), timeoutMs,
+      })),
       EXPECTED_MEMBERS,
     );
   });

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { loadEnvFile, CHROME_UA, runSeed, httpsProxyFetchRaw, resolveProxyForConnect, describeErr, readSeedSnapshot, writeExtraKeyWithMeta, sleep } from './_seed-utils.mjs';
+import { isMainModule } from './_entrypoint.mjs';
 import { getAcledToken, hasAcledCredentials } from './shared/acled-oauth.mjs';
 import { GDELT_BULK_UNREST_KEY } from './_gdelt-bulk-contract.mjs';
 
@@ -526,7 +527,7 @@ export function unrestSourceVersion(env = process.env) {
 // without triggering a real seed run. process.argv[1] is set when this file
 // is invoked as a script (`node scripts/seed-unrest-events.mjs`); under
 // `node --test`, argv[1] is the test runner, not this file.
-const isMain = import.meta.url === `file://${process.argv[1]}`;
+const isMain = isMainModule(import.meta.url);
 if (isMain) {
   runSeed('unrest', 'events', CANONICAL_KEY, fetchUnrestEvents, {
     validateFn: validate,

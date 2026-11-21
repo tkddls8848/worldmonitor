@@ -1060,6 +1060,21 @@ test('bundled CA selection applies only to the configured child and preserves NO
   }
 });
 
+test('tsx loader is enabled only for members that import TypeScript modules', async () => {
+  const cleanupDependency = writeFixture('_bundle-fixture-tsx-dependency.ts', `export const answer = 42;\n`);
+  const cleanupScript = writeFixture('_bundle-fixture-tsx.mjs', `import { answer } from './_bundle-fixture-tsx-dependency'; console.log('tsx-answer=' + answer);\n`);
+  try {
+    const result = await runBundleWith([
+      { label: 'TSX', script: '_bundle-fixture-tsx.mjs', useTsxLoader: true, intervalMs: 1, timeoutMs: 5000 },
+    ]);
+    assert.equal(result.code, 0, result.stderr);
+    assert.match(result.stdout, /\[TSX\] tsx-answer=42/);
+  } finally {
+    cleanupScript();
+    cleanupDependency();
+  }
+});
+
 test('streams child stdout live and reports Done on success', async () => {
   const cleanup = writeFixture(
     '_bundle-fixture-fast.mjs',

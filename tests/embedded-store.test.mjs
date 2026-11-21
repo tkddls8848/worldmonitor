@@ -12,6 +12,9 @@ import {
   createEngine,
   startEmbeddedStore,
 } from '../scripts/local/embedded-store.mjs';
+import SCORECARD_ATOMIC_PUBLISH_SCRIPT from '../scripts/shared/scorecard-atomic-publish-script.cjs';
+import COUNTRY_HISTORY_WRITE_SCRIPT from '../scripts/shared/country-history-write-script.cjs';
+import { publishCountrySnapshots } from '../scripts/seed-country-history.mjs';
 import * as seedUtils from '../scripts/_seed-utils.mjs';
 import { createPersonalFetch } from '../scripts/personal-tui.mjs';
 import { DEFAULT_COLLECTORS, collectorScript } from '../scripts/personal-collect.mjs';
@@ -79,6 +82,89 @@ test('a fenced write lands only while the caller still owns the lock', () => {
   assert.equal(engine.exec(['GET', 'data']), 'payload');
   assert.throws(() => engine.exec(['EVAL', 'return 1', '0']), /not supported/);
   assert.throws(() => engine.exec(['EVALSHA', 'ffff', '0']), /^Error: NOSCRIPT/);
+});
+
+test('the scorecard publish script atomically switches the staged cohort and retries by fingerprint', () => {
+  const engine = createEngine();
+  const args = [
+    SCORECARD_ATOMIC_PUBLISH_SCRIPT,
+    '5',
+    'scorecard:five-factor:v1',
+    'scorecard:five-factor:v1:read-model:staging:run-1',
+    'scorecard:five-factor:v1:read-model',
+    'scorecard:five-factor:v1:activated',
+    'scorecard:five-factor:v1:fingerprint',
+    '{"cohort":1}',
+    '3600',
+    'sha256:cohort-1',
+  ];
+  engine.exec(['HSET', args[3], 'metadata', '{"runId":"run-1"}', 'country:US', '{"score":80}']);
+  engine.exec(['EXPIRE', args[3], '3600']);
+
+  assert.equal(engine.exec(['EVAL', ...args]), 1);
+  assert.equal(engine.exec(['GET', args[2]]), '{"cohort":1}');
+  assert.deepEqual(engine.exec(['HGETALL', args[4]]), ['metadata', '{"runId":"run-1"}', 'country:US', '{"score":80}']);
+  assert.equal(engine.exec(['EXISTS', args[3]]), 0);
+  assert.equal(engine.exec(['GET', args[5]]), '1');
+  assert.equal(engine.exec(['GET', args[6]]), 'sha256:cohort-1');
+
+  // Redis may commit a script but lose its response; the fingerprint makes a retry safe.
+  assert.equal(engine.exec(['EVAL', ...args]), 1);
+  assert.equal(engine.exec(['GET', args[2]]), '{"cohort":1}');
+  assert.throws(() => engine.exec(['EVAL', ...args.slice(0, -1), 'sha256:wrong']), /scorecard staging cohort missing/);
+});
+
+test('the country-history script writes each daily series atomically and rejects stale cohorts', () => {
+  const engine = createEngine();
+  const keys = [
+    'history:country:US', 'history:country:FR', 'history:country:index',
+    'seed-meta:history:country', 'seed-activated:history:country',
+  ];
+  const day = '20600';
+  const captured = '1000';
+  const args = [
+    COUNTRY_HISTORY_WRITE_SCRIPT, String(keys.length), ...keys,
+    day, captured, JSON.stringify({ date: '2026-06-22', countries: ['US', 'FR'] }),
+    JSON.stringify({ fetchedAt: 1000, recordCount: 2 }),
+    JSON.stringify({ countryCode: 'US', cii: { score: 70 } }),
+    JSON.stringify({ countryCode: 'FR', cii: { score: 60 } }),
+  ];
+
+  assert.equal(engine.exec(['EVAL', ...args]), 2);
+  assert.equal(engine.exec(['ZCARD', keys[0]]), 1);
+  assert.equal(engine.exec(['GET', keys[3]]), JSON.stringify({ fetchedAt: 1000, recordCount: 2 }));
+  assert.ok(engine.exec(['TTL', keys[0]]) > 34558);
+  assert.equal(engine.exec(['GET', keys[4]]), '1000');
+
+  const staleArgs = [...args];
+  staleArgs[8] = '999';
+  staleArgs[10] = JSON.stringify({ fetchedAt: 1000, recordCount: 2 });
+  staleArgs[11] = JSON.stringify({ countryCode: 'US', cii: { score: 1 } });
+  staleArgs[12] = JSON.stringify({ countryCode: 'FR', cii: { score: 1 } });
+  assert.equal(engine.exec(['EVAL', ...staleArgs]), 0);
+  assert.deepEqual(JSON.parse(engine.exec(['ZRANGE', keys[0], '0', '-1']).at(-1)), { countryCode: 'US', cii: { score: 70 } });
+
+  const wrongType = createEngine();
+  wrongType.exec(['SET', keys[1], 'wrong-type']);
+  assert.throws(() => wrongType.exec(['EVAL', ...args]), /country_history_wrong_type/);
+  assert.equal(wrongType.exec(['ZCARD', keys[0]]), 0);
+});
+
+test('country-history publisher writes through the embedded REST EVAL implementation', async (t) => {
+  const store = await startEmbeddedStore({ token: TOKEN, port: 0 });
+  t.after(() => store.close());
+  const url = `http://127.0.0.1:${store.port}`;
+  const now = Date.now();
+  const rows = [
+    { countryCode: 'US', date: new Date(now).toISOString().slice(0, 10), capturedAt: now, cii: { score: 72 } },
+    { countryCode: 'FR', date: new Date(now).toISOString().slice(0, 10), capturedAt: now, cii: { score: 58 } },
+  ];
+
+  await publishCountrySnapshots(url, TOKEN, rows, now, seedUtils.redisCommand);
+  const series = await seedUtils.redisCommand(url, TOKEN, ['ZRANGE', 'history:country:US', '0', '-1']);
+  const meta = await seedUtils.redisCommand(url, TOKEN, ['GET', 'seed-meta:history:country']);
+  assert.deepEqual(JSON.parse(series.result[0]), rows[0]);
+  assert.equal(JSON.parse(meta.result).recordCount, 2);
 });
 
 test('a failed transaction leaves nothing behind', () => {

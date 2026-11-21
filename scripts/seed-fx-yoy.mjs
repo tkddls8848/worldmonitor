@@ -40,6 +40,7 @@
  */
 
 import { loadEnvFile, runSeed } from './_seed-utils.mjs';
+import { isMainModule } from './_entrypoint.mjs';
 import { fetchFallbackWindows, fallbackDailyQuotes } from './_currency-api.mjs';
 import { fetchYahooJson } from './_yahoo-fetch.mjs';
 import { tokensToContentMeta, DAY_MIN } from './_content-age-helpers.mjs';
@@ -389,7 +390,7 @@ async function fetchFxYoy({ fetchDeadlineAtMs = Infinity } = {}) {
   return { rates, dailyOnly, fetchedAt: new Date().toISOString() };
 }
 
-const isMain = process.argv[1] && import.meta.url === `file://${process.argv[1]}`;
+const isMain = isMainModule(import.meta.url);
 export function declareRecords(data) {
   return Array.isArray(data?.rates) ? data.rates.length : 0;
 }

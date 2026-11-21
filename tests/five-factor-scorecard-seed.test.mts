@@ -35,6 +35,7 @@ import {
   stageScorecardReadModel,
 } from '../scripts/seed-five-factor-scorecard.mjs';
 import { withSeedLockFence } from './helpers/seed-lock-fence.mjs';
+import scorecardAtomicPublishScript from '../scripts/shared/scorecard-atomic-publish-script.cjs';
 
 
 const sources = {
@@ -281,6 +282,7 @@ describe('five-factor atomic snapshot', () => {
     assert.ok(commands.some((command) => command[0] === 'EXPIRE' && command[1] === stagingKey));
     const atomicCommand = commands.at(-1)!;
     assert.equal(atomicCommand[0], 'EVAL');
+    assert.equal(atomicCommand[1], scorecardAtomicPublishScript);
     assert.match(String(atomicCommand[1]), /SET.*RENAME.*EXPIRE.*SET.*KEYS\[4\]/);
     assert.match(String(atomicCommand[1]), /redis\.call\('SET', KEYS\[4\], '1'\)/);
     assert.doesNotMatch(String(atomicCommand[1]), /KEYS\[4\].*'EX'/);
