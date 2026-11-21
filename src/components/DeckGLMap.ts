@@ -100,6 +100,7 @@ import { isInputPending, scheduleYield } from '@/utils/after-paint';
 import { showLayerWarning } from '@/utils/layer-warning';
 import { ukmtoIncidentLabel, type UkmtoMapIncident } from '../../shared/ukmto-incidents';
 import { localizeMapLabels } from '@/utils/map-locale';
+import { recordDeckLayersDebug } from '@/utils/lcp-debug';
 import { improveBasemapLabels } from '@/config/basemap-labels';
 import {
   createCountryHoverQueryController,
@@ -6748,6 +6749,7 @@ export class DeckGLMap {
       this.deckFrameProvider.wake();
       this.committedLayers = built;
       this.deckOverlay?.setProps({ layers: built });
+      recordDeckLayersDebug(built);
     } catch { /* map may be mid-teardown (null.getProjection) */ }
     if (import.meta.env.DEV) {
       // Attribute a slow frame to our JS build vs deck.gl's commit (#4558).
@@ -8125,6 +8127,7 @@ export class DeckGLMap {
     this.committedLayers = layers;
     this.deckFrameProvider.wake();
     this.deckOverlay?.setProps({ layers });
+    recordDeckLayersDebug(layers);
     this.maplibreMap.triggerRepaint();
   }
 

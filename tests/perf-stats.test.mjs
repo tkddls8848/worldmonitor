@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { summarize, isImprovement, compareReports } from '../scripts/perf/perf-stats.mjs';
+import { summarize, isImprovement, compareReports, unmatchedMetrics } from '../scripts/perf/perf-stats.mjs';
 
 describe('summarize', () => {
   it('takes the median of the successful samples and counts failures', () => {
@@ -65,5 +65,15 @@ describe('compareReports', () => {
     const out = compareReports({ metrics: { m: ok } }, { metrics: { m: s } });
     assert.equal(out[0].changePct, null);
     assert.equal(out[0].improved, false);
+  });
+});
+
+describe('unmatchedMetrics', () => {
+  it('names the metrics only one report has, so a comparison can say what it skipped', () => {
+    const ok = { median: 1, min: 1, max: 1, runs: 1, failed: 0 };
+    const before = { metrics: { 'cold.mapReady': ok, 'layer.resultVisible': ok } };
+    const after = { metrics: { 'cold.mapReady': ok, 'cold.mapDemand': ok, 'layer.resultVisible': ok } };
+    assert.deepEqual(unmatchedMetrics(before, after), { onlyA: [], onlyB: ['cold.mapDemand'] });
+    assert.deepEqual(unmatchedMetrics(after, before), { onlyA: ['cold.mapDemand'], onlyB: [] });
   });
 });

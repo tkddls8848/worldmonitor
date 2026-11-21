@@ -32,3 +32,12 @@ export function compareReports(a, b) {
   }
   return rows;
 }
+
+// Metrics only one report has (a metric added or dropped between tool
+// versions). compareReports skips them; the comparison output names them.
+export function unmatchedMetrics(a, b) {
+  return {
+    onlyA: Object.keys(a.metrics).filter((m) => !(m in b.metrics)),
+    onlyB: Object.keys(b.metrics).filter((m) => !(m in a.metrics)),
+  };
+}

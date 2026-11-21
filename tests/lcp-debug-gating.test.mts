@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { afterEach, describe, it } from 'node:test';
 
-import { markLcpDebug } from '../src/utils/lcp-debug';
+import { markLcpDebug, recordDeckLayersDebug } from '../src/utils/lcp-debug';
 
 type MarkRecord = { name: string };
 
@@ -71,5 +71,33 @@ describe('markLcpDebug production gating (#4512)', () => {
       assert.doesNotThrow(() => markLcpDebug('wm:boot:app-init-start'));
     });
     assert.deepEqual(perf.marks, [], 'no marks without a window');
+  });
+});
+
+describe('recordDeckLayersDebug (perf runner layer signal)', () => {
+  it('records the committed deck layer ids and the commit time when enabled', () => {
+    const perf = makePerformance();
+    const recorder: { enabled: boolean; marks: MarkRecord[]; deckLayers?: unknown } = { enabled: true, marks: [] };
+    withStubbedEnv({ __wmLcpDebug: recorder }, perf, () => {
+      recordDeckLayersDebug([{ id: 'cables-layer' }, null, false, { id: 'pipelines-layer' }, { id: 7 }]);
+    });
+    assert.deepEqual(recorder.deckLayers, { at: 123, ids: ['cables-layer', 'pipelines-layer'] });
+    assert.deepEqual(recorder.marks, [], 'a layer commit is not a mark: it must not crowd the boot marks out');
+    assert.deepEqual(perf.marks, []);
+  });
+
+  it('leaves the recorder untouched when debug is disabled or absent', () => {
+    const perf = makePerformance();
+    const recorder: { enabled: boolean; marks: MarkRecord[]; deckLayers?: unknown } = { enabled: false, marks: [] };
+    withStubbedEnv({ __wmLcpDebug: recorder }, perf, () => {
+      recordDeckLayersDebug([{ id: 'cables-layer' }]);
+    });
+    assert.equal(recorder.deckLayers, undefined);
+    withStubbedEnv({}, perf, () => {
+      assert.doesNotThrow(() => recordDeckLayersDebug([{ id: 'cables-layer' }]));
+    });
+    withStubbedEnv(undefined, perf, () => {
+      assert.doesNotThrow(() => recordDeckLayersDebug([{ id: 'cables-layer' }]));
+    });
   });
 });
