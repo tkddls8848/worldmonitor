@@ -526,6 +526,7 @@ export class SearchSelectionDispatcher {
         const config = ctx.panelSettings[panelId];
         if (config && !config.enabled) {
           if (!this.bindings.enablePanel(panelId, { trackDetailedAnalytics })) return false;
+          this.revealPanel(panelId);
           const scrolled = this.scrollToPanelWhenReady(
             panelId,
             epoch,
@@ -535,12 +536,15 @@ export class SearchSelectionDispatcher {
           if (!subTab) return scrolled;
           return this.dispatchPanelTabAfterPresentation(scrolled, panelId, subTab, epoch);
         }
-        const scrolled = epoch === undefined
+        this.revealPanel(panelId);
+        const alreadyMounted = this.findConnectedPanel(panelId) !== null;
+        const scrolled = epoch === undefined && alreadyMounted
           ? this.scrollToPanel(panelId)
           : this.scrollToPanelWhenReady(
             panelId,
             epoch,
             options.signal,
+            options.cancelPanelWaitOnNextHumanSelection,
           );
         if (!subTab) return scrolled;
         return this.dispatchPanelTabAfterPresentation(scrolled, panelId, subTab, epoch);
@@ -617,14 +621,37 @@ export class SearchSelectionDispatcher {
     return true;
   }
 
+  private revealPanel(panelId: string): void {
+    if (typeof window === 'undefined' || typeof CustomEvent === 'undefined') return;
+    window.dispatchEvent(new CustomEvent('wm:reveal-panel', { detail: { panelId } }));
+  }
+
+  private isPanelElementVisible(element: Element): boolean {
+    if (!element.isConnected) return false;
+    if (
+      element.classList.contains('hidden')
+      || element.classList.contains('inspector-tab-hidden')
+      || element.classList.contains('mobile-cat-hidden')
+    ) {
+      return false;
+    }
+    if (typeof getComputedStyle === 'function') {
+      const display = getComputedStyle(element).display;
+      if (display === 'none') return false;
+    }
+    return true;
+  }
+
   private async scrollToPanelWhenReady(
     panelId: string,
     epoch?: number,
     signal?: AbortSignal,
     cancelOnNextHumanSelection = false,
   ): Promise<boolean> {
+    this.revealPanel(panelId);
     let panel = this.findConnectedPanel(panelId);
     if (panel?.isConnected) {
+      if (!this.isPanelElementVisible(panel)) return false;
       panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
       this.applyHighlight(panel);
       return true;
@@ -650,6 +677,7 @@ export class SearchSelectionDispatcher {
       }
     }
     if (!panel || !this.isProgrammaticSelectionCurrent(epoch)) return false;
+    if (!this.isPanelElementVisible(panel)) return false;
     // The initial privacy mark may expire while a slow lazy import exhausts a
     // retry. Re-arm it at the actual presentation boundary so the eventual
     // scroll/view event is still attributed to the agent-safe path.
@@ -751,8 +779,9 @@ export class SearchSelectionDispatcher {
   }
 
   private scrollToPanel(panelId: string): boolean {
+    this.revealPanel(panelId);
     const panel = document.querySelector(`[data-panel="${panelId}"]`);
-    if (!panel) return false;
+    if (!panel || !this.isPanelElementVisible(panel)) return false;
     panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
     this.applyHighlight(panel);
     return true;

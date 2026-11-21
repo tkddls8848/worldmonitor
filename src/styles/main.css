@@ -58,15 +58,15 @@
 
   /* Font stack */
   --font-mono: 'SF Mono', 'Monaco', 'Cascadia Code', 'Fira Code', 'DejaVu Sans Mono', 'Liberation Mono', monospace;
-  /* Base body font: crisp sans-serif UI chrome by default (mono still selectable via Settings) */
-  --font-body-base: 'Pretendard', 'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* Base body font: crisp system sans-serif UI chrome (avoids missing-font lookups before system-ui) */
+  --font-body-base: system-ui, -apple-system, 'Segoe UI', Roboto, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Helvetica Neue', Arial, sans-serif;
   /* Effective body font used throughout the app */
   --font-body: var(--font-body-base);
 }
 
 /* Explicit font selection via data-font attribute (avoids inline style specificity issues with RTL) */
 [data-font="system"] {
-  --font-body-base: 'Pretendard', 'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-body-base: system-ui, -apple-system, 'Segoe UI', Roboto, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Helvetica Neue', Arial, sans-serif;
 }
 
 [data-font="mono"] {
@@ -74,7 +74,7 @@
 }
 
 :lang(ko):not([data-font="mono"]) {
-  --font-body: 'Pretendard', 'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 [dir="rtl"] {
@@ -1700,9 +1700,6 @@ canvas,
 }
 .site-footer a:hover {
   color: var(--accent);
-}
-.site-footer-download-link {
-  white-space: nowrap;
 }
 
 /* #7085 + #10461: digest coverage mounts into the compact footer as an
@@ -24810,7 +24807,17 @@ body.map-width-resizing {
   }
 
   .main-content.inspector-collapsed:not(.map-hidden) {
-    grid-template-columns: 1fr 0 0;
+    grid-template-columns: 1fr;
+  }
+
+  .main-content.inspector-collapsed:not(.map-hidden) .map-section {
+    grid-column: 1;
+    border-right: none;
+  }
+
+  .main-content.map-right.inspector-collapsed .inspector-reopen-btn {
+    left: 8px;
+    right: auto;
   }
 
   .main-content.inspector-collapsed .inspector-column,
@@ -24820,6 +24827,10 @@ body.map-width-resizing {
 
   .main-content.inspector-wide-grid:not(.map-hidden):not(.inspector-collapsed) {
     grid-template-columns: min(max(44%, 220px), calc(100% - 306px)) 6px 1fr;
+  }
+
+  .main-content.map-right.inspector-wide-grid:not(.map-hidden):not(.inspector-collapsed) {
+    grid-template-columns: 1fr 6px min(max(44%, 220px), calc(100% - 306px));
   }
 
   .main-content.inspector-wide-grid .panels-grid {
@@ -24956,7 +24967,7 @@ body.map-width-resizing {
 }
 
 .dashboard-navigation-row:empty,
-.dashboard-navigation-row:not(:has(.dashboard-tabs-bar)) {
+.dashboard-navigation-row.dashboard-navigation-row--hosted {
   display: none;
 }
 

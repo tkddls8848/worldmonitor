@@ -9,6 +9,7 @@ test('wide live video panels do not overlap adjacent dashboard panels (#8276)', 
     localStorage.setItem('worldmonitor-variant', 'full');
     localStorage.setItem('worldmonitor-mission-preset-dismissed-v1', '1');
     localStorage.setItem('wm-layer-warning-dismissed', 'true');
+    localStorage.setItem('wm-inspector-tab-v1', 'news');
     localStorage.setItem(
       'wm-pro-banner-launched-dismissed',
       String(Date.now()),
@@ -67,6 +68,7 @@ test('wide live video panels do not overlap adjacent dashboard panels (#8276)', 
           panel => getComputedStyle(panel).display !== 'none',
         );
 
+        const rowGap = parseFloat(getComputedStyle(grid).rowGap) || 4;
         const ids = ['live-news', 'live-webcams'];
 
         return ids.every(id => {
@@ -77,7 +79,7 @@ test('wide live video panels do not overlap adjacent dashboard panels (#8276)', 
           if (!panel) return false;
 
           const wantSpan = id === 'live-news' ? 2 : span;
-          const wantHeight = id === 'live-news' ? 404 : panelHeight;
+          const wantHeight = wantSpan * 200 + (wantSpan - 1) * rowGap;
 
           const rect = panel.getBoundingClientRect();
           const style = getComputedStyle(panel);
@@ -132,7 +134,7 @@ test('wide live video panels do not overlap adjacent dashboard panels (#8276)', 
           return (
             style.gridRowStart === `span ${wantSpan}` &&
             Math.abs(rect.height - wantHeight) <= 2 &&
-            Math.abs(gap - 4) <= 2 &&
+            Math.abs(gap - rowGap) <= 2 &&
             webcamCellsVisible &&
             !panel.classList.contains('resized')
           );
@@ -185,12 +187,15 @@ test('wide live video panels do not overlap adjacent dashboard panels (#8276)', 
     return Math.round(rect('live-news').bottom - rect('live-webcams').top);
   });
   expect(collapsedOverlap).toBeLessThanOrEqual(0);
+  const expectedRowGap = await page.evaluate(() => parseFloat(getComputedStyle(document.querySelector('#panelsGrid')!).rowGap) || 4);
   for (const panel of [news, webcams]) {
     await panel.locator('.panel-collapse-btn').click();
     await expect(panel).not.toHaveClass(/panel-collapsed/);
-    await expect.poll(() => footprint(panel)).toEqual(
-      panel === news ? { span: 'span 2', height: 404 } : { span: 'span 3', height: 608 },
-    );
+    const expectedSpan = panel === news ? 2 : 3;
+    await expect.poll(() => footprint(panel)).toEqual({
+      span: `span ${expectedSpan}`,
+      height: expectedSpan * 200 + (expectedSpan - 1) * expectedRowGap,
+    });
   }
   const newsHandle = news.locator(':scope > .panel-resize-handle');
   await newsHandle.focus();
@@ -209,6 +214,7 @@ test('collapsing a user-resized video panel releases its grid rows (#10185)', as
     localStorage.setItem('worldmonitor-variant', 'full');
     localStorage.setItem('worldmonitor-mission-preset-dismissed-v1', '1');
     localStorage.setItem('wm-layer-warning-dismissed', 'true');
+    localStorage.setItem('wm-inspector-tab-v1', 'news');
     localStorage.setItem(
       'wm-pro-banner-launched-dismissed',
       String(Date.now()),

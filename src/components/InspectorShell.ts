@@ -131,9 +131,10 @@ export class InspectorShell {
     this.catalogSearch.className = 'inspector-catalog-search';
     this.catalogSearch.autocomplete = 'off';
     this.catalogSearch.spellcheck = false;
+    const panelTotal = Object.keys(ALL_PANELS).filter((k) => k !== 'map').length;
     this.catalogSearch.placeholder = isKoreanUi()
-      ? '전체 168개 패널 검색 (이름 · 영문 키)...'
-      : 'Search all 168 panels...';
+      ? `전체 ${panelTotal}개 패널 검색 (이름 · 영문 키)...`
+      : `Search all ${panelTotal} panels...`;
     this.catalogSearch.setAttribute('aria-label', this.catalogSearch.placeholder);
     this.catalogSearch.addEventListener('input', () => {
       this.catalogQuery = this.catalogSearch.value.trim().toLowerCase();

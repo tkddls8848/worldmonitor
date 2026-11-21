@@ -238,6 +238,8 @@ describe('overlay reload-contract gate', () => {
     assert.deepEqual(scan.safeDeclarations, [
       'src/app/event-handlers.ts :: dialog',
       'src/app/event-handlers.ts :: popover',
+      // Read-only header tools menu (playback/export/PizzINT/fullscreen/link); no user-entered state, a reload only closes it.
+      'src/app/event-handlers.ts :: toolsPopover',
       // Every answer saves on tap; the optional free text saves on blur.
       'src/components/IntelligenceGapBadge.ts :: overlay',
       'src/components/MobileWarningModal.ts :: this.element',

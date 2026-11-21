@@ -949,14 +949,15 @@ export class Panel {
       document.body.classList.add('panel-modal-open');
       this.onModalExpandKeydown = (ev: KeyboardEvent) => {
         if (ev.key === 'Escape') {
+          ev.stopImmediatePropagation();
           ev.stopPropagation();
           this.setModalExpanded(false);
         }
       };
-      document.addEventListener('keydown', this.onModalExpandKeydown);
+      document.addEventListener('keydown', this.onModalExpandKeydown, true);
     } else {
       if (this.onModalExpandKeydown) {
-        document.removeEventListener('keydown', this.onModalExpandKeydown);
+        document.removeEventListener('keydown', this.onModalExpandKeydown, true);
         this.onModalExpandKeydown = null;
       }
       if (!document.querySelector('.panel.panel-modal-expanded')) {

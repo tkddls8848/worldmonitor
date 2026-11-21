@@ -28,6 +28,7 @@ test('pinned dashboard panels do not overlap their grid neighbours', async ({ pa
     localStorage.setItem('worldmonitor-variant', 'full');
     localStorage.setItem('worldmonitor-mission-preset-dismissed-v1', '1');
     localStorage.setItem('wm-layer-warning-dismissed', 'true');
+    localStorage.setItem('wm-inspector-tab-v1', 'all');
     localStorage.setItem('wm-pro-banner-launched-dismissed', String(Date.now()));
     const settings = JSON.parse(localStorage.getItem('worldmonitor-panels') || '{}');
     for (const id of panels) settings[id] = { name: id, enabled: true, priority: 1 };

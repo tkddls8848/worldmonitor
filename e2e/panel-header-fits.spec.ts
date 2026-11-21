@@ -256,7 +256,12 @@ test('panel headers keep the title readable with nothing overlapping', async ({ 
     const context = await browser.newContext({ viewport, isMobile: mobile, hasTouch: mobile, colorScheme: 'dark' });
     const page = await context.newPage();
     const settings = { politics: { name: 'World News', enabled: true, priority: 0 } };
-    await seedAnonymousDashboard(page, 'full', { localStorage: { 'worldmonitor-panels': JSON.stringify(settings) } });
+    await seedAnonymousDashboard(page, 'full', {
+      localStorage: {
+        'worldmonitor-panels': JSON.stringify(settings),
+        'wm-inspector-tab-v1': 'news',
+      },
+    });
     await page.route(/^https?:\/\/(?!(127\.0\.0\.1:4173|localhost:4173)(?:\/|$)).*/i, (route) => route.abort());
     await page.route('**/api/**', (route) => route.fulfill({ json: {} }));
     await page.route('**/api/bootstrap*', (route) => route.fulfill({ json: { missing: [], data: {} } }));
@@ -408,6 +413,13 @@ test('a header with a watchlist button keeps a long title readable beside a cach
     await page.route('**/api/bootstrap*', (route) => route.fulfill({ json: { missing: [], data: {} } }));
 
     await page.goto('/dashboard');
+    if (!mobile) {
+      // Option B defaults to a 1-column 30% inspector (~550px at 1920px); enable
+      // Multi-Col Grid on desktop so the test still exercises the narrow <=420px column.
+      const wideBtn = page.locator('#bottomTrayWideGridBtn');
+      await expect(wideBtn).toBeVisible({ timeout: 30_000 });
+      await wideBtn.click();
+    }
     const panel = page.locator('#panelsGrid .panel[data-panel="markets"]');
     const watchlist = panel.getByRole('button', { name: 'Edit Watchlist' });
     await expect

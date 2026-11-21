@@ -125,7 +125,7 @@ export class BottomMediaTray {
     tabsIcon.setAttribute('aria-hidden', 'true');
     tabsIcon.textContent = '📑';
     const tabsLabel = document.createElement('span');
-    tabsLabel.textContent = ko ? '내 탭 · 전체 168' : 'Tabs · All 168';
+    tabsLabel.textContent = ko ? '내 탭 · 전체 패널' : 'Tabs · All Panels';
     tabsBtn.append(tabsIcon, tabsLabel);
     tabsBtn.addEventListener('click', () => this.callbacks.onOpenTabsManager());
     leftGroup.appendChild(tabsBtn);
@@ -186,7 +186,11 @@ export class BottomMediaTray {
     this.syncTriggerStates();
 
     const el = await this.callbacks.onRequestPanelElement(panelId);
-    if (this.activePanelId !== panelId || !el) return;
+    if (this.activePanelId !== panelId) return;
+    if (!el) {
+      this.close();
+      return;
+    }
     this.hostedEl = el;
     el.classList.remove('inspector-tab-hidden', 'hidden');
     el.classList.add('tray-hosted-panel');

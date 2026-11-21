@@ -101,6 +101,7 @@ test('prediction labels and SEC filer names are never clipped', async ({ browser
     const page = await context.newPage();
     await seedAnonymousDashboard(page, 'full', {
       localStorage: {
+        'wm-inspector-tab-v1': 'markets',
         'worldmonitor-panels': JSON.stringify({
           polymarket: { name: 'Predictions', enabled: true, priority: 0 },
           'material-events': { name: 'SEC Material Events', enabled: true, priority: 0 },

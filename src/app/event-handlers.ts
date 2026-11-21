@@ -270,6 +270,8 @@ export class EventHandlerManager implements AppModule {
   private boundThemeChangedHandler: (() => void) | null = null;
   private boundDropdownClickHandler: ((e: MouseEvent) => void) | null = null;
   private boundDropdownKeydownHandler: ((e: KeyboardEvent) => void) | null = null;
+  private boundToolsMenuClickHandler: ((e: MouseEvent) => void) | null = null;
+  private boundToolsMenuKeydownHandler: ((e: KeyboardEvent) => void) | null = null;
   private boundMapResizeMoveHandler: ((e: MouseEvent) => void) | null = null;
   private boundMapEndResizeHandler: (() => void) | null = null;
   private boundMapResizeVisChangeHandler: (() => void) | null = null;
@@ -490,6 +492,14 @@ export class EventHandlerManager implements AppModule {
       document.removeEventListener('keydown', this.boundDropdownKeydownHandler);
       this.boundDropdownKeydownHandler = null;
     }
+    if (this.boundToolsMenuClickHandler) {
+      document.removeEventListener('click', this.boundToolsMenuClickHandler);
+      this.boundToolsMenuClickHandler = null;
+    }
+    if (this.boundToolsMenuKeydownHandler) {
+      document.removeEventListener('keydown', this.boundToolsMenuKeydownHandler);
+      this.boundToolsMenuKeydownHandler = null;
+    }
     if (this.boundMapResizeMoveHandler) {
       document.removeEventListener('mousemove', this.boundMapResizeMoveHandler);
       this.boundMapResizeMoveHandler = null;
@@ -619,7 +629,6 @@ export class EventHandlerManager implements AppModule {
     });
 
     this.initDownloadDropdown();
-    this.initFooterDownload();
 
     this.boundStorageHandler = (e: StorageEvent) => {
       if (e.key === STORAGE_KEYS.panels && e.newValue) {
@@ -759,34 +768,42 @@ export class EventHandlerManager implements AppModule {
 
   private setupHeaderToolsMenu(): void {
     const btn = document.getElementById('headerToolsBtn');
-    const popover = document.getElementById('headerToolsPopover');
-    if (!btn || !popover) return;
-    declareOverlay(popover, { reload: 'safe' });
+    const toolsPopover = document.getElementById('headerToolsPopover');
+    if (!btn || !toolsPopover) return;
+    declareOverlay(toolsPopover, { reload: 'safe' });
 
     const setOpen = (open: boolean) => {
-      popover.hidden = !open;
+      toolsPopover.hidden = !open;
       btn.setAttribute('aria-expanded', String(open));
       btn.classList.toggle('active', open);
     };
 
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      setOpen(Boolean(popover.hidden));
+      setOpen(Boolean(toolsPopover.hidden));
     });
 
-    document.addEventListener('click', (e) => {
-      if (popover.hidden) return;
+    if (this.boundToolsMenuClickHandler) {
+      document.removeEventListener('click', this.boundToolsMenuClickHandler);
+    }
+    this.boundToolsMenuClickHandler = (e: MouseEvent) => {
+      if (toolsPopover.hidden) return;
       const target = e.target as Node | null;
-      if (target && (popover.contains(target) || btn.contains(target))) return;
+      if (target && (toolsPopover.contains(target) || btn.contains(target))) return;
       setOpen(false);
-    });
+    };
+    document.addEventListener('click', this.boundToolsMenuClickHandler);
 
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !popover.hidden) {
+    if (this.boundToolsMenuKeydownHandler) {
+      document.removeEventListener('keydown', this.boundToolsMenuKeydownHandler);
+    }
+    this.boundToolsMenuKeydownHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !toolsPopover.hidden) {
         setOpen(false);
         btn.focus();
       }
-    });
+    };
+    document.addEventListener('keydown', this.boundToolsMenuKeydownHandler);
 
     document.getElementById('headerAnalystBtn')?.addEventListener('click', () => {
       setOpen(false);
@@ -1691,26 +1708,6 @@ export class EventHandlerManager implements AppModule {
     document.addEventListener('keydown', this.boundDropdownKeydownHandler);
   }
 
-  private initFooterDownload(): void {
-    const mount = document.getElementById('footerDownloadMount');
-    if (!mount) return;
-    const platform = detectPlatform();
-    const primary = buttonsForPlatform(platform);
-    const btn = primary[0];
-    if (!btn) return;
-    const a = document.createElement('a');
-    a.href = btn.href;
-    a.textContent = t('header.downloadApp');
-    a.className = 'site-footer-download-link';
-    a.target = '_blank';
-    a.rel = 'noopener';
-    a.addEventListener('click', (e) => {
-      e.preventDefault();
-      window.open(btn.href, '_blank', 'noopener,noreferrer');
-    });
-    mount.replaceWith(a);
-  }
-
   private setCopyLinkFeedback(button: HTMLElement | null, message: string): void {
     if (!button) return;
     const originalText = button.textContent ?? '';
@@ -2506,6 +2503,7 @@ export class EventHandlerManager implements AppModule {
       sideBtn.title = label;
       sideBtn.setAttribute('aria-label', label);
       sideBtn.classList.toggle('active', visualSide === 'right');
+      document.documentElement.dataset.mapSide = visualSide;
     };
 
     const storedSide = readStorageValue('map-side');

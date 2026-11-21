@@ -35,16 +35,16 @@ export const NEWS_SUB_FILTERS: ReadonlyArray<{ readonly id: NewsSubFilter; reado
   { id: 'tracking', labelKo: '재난·추적', labelEn: 'Tracking' },
 ];
 
-/** Curated first-screen Overview panels per variant (max ~7 scannable cards, no heavy video spinners). */
+/** Curated first-screen Overview panels per variant (max ~7 scannable cards, fast visual indicators first, no heavy video spinners). */
 export const OVERVIEW_DEFAULT_PANELS: Readonly<Record<string, readonly string[]>> = {
   full: [
-    'insights',
     'strategic-risk',
     'cii',
-    'threat-timeline',
     'markets',
     'energy-complex',
+    'threat-timeline',
     'latest-brief',
+    'insights',
   ],
   tech: [
     'insights',

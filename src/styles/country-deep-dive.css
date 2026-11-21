@@ -14,7 +14,7 @@
   contain: layout paint;
 }
 
-/* Option B: dock country detail cleanly over the right inspector column on desktop
+/* Option B: dock country detail cleanly over the inspector column on desktop
    so the 70% map stays open and interactive alongside the country brief. */
 @media (min-width: 1200px) {
   .country-deep-dive:not(.maximized) {
@@ -23,6 +23,31 @@
     height: auto;
     width: max(320px, calc(100vw - var(--wm-map-col-actual, 70%) - 6px));
     box-shadow: -4px 0 20px rgba(0, 0, 0, 0.22);
+  }
+
+  /* When the map is on the right side, dock the country brief on the LEFT
+     inspector side so it never covers the right-hand map. */
+  html[data-map-side="right"] .country-deep-dive:not(.maximized) {
+    left: 0;
+    right: auto;
+    border-left: none;
+    border-right: 1px solid var(--border);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.22);
+    transform: translateX(calc(-100% - 30px));
+  }
+
+  html[data-map-side="right"] .country-deep-dive.active:not(.maximized) {
+    transform: none;
+  }
+
+  /* When the inspector is collapsed or in wide multi-column grid mode, keep a
+     readable drawer width instead of collapsing to 0px or covering half the screen. */
+  html[data-inspector-collapsed="true"] .country-deep-dive:not(.maximized) {
+    width: min(520px, 42vw);
+  }
+
+  html[data-inspector-wide-grid="true"] .country-deep-dive:not(.maximized) {
+    width: min(560px, 50vw);
   }
 
   .country-deep-dive:not(.maximized) .panel-close {

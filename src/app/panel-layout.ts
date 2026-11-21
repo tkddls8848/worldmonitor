@@ -171,6 +171,16 @@ function writeSessionStorageValue(key: string, value: string): void {
 const LATE_REGISTERED_PANEL_KEYS = new Set(['live-news']);
 const STORAGE_ATLAS_PANEL_KEY = 'storage-facility-map';
 
+/** Mirror of OVERVIEW_DEFAULT_PANELS so first-screen boot knows Overview panels synchronously without blocking on dynamic imports. */
+const INITIAL_OVERVIEW_PANELS: Readonly<Record<string, readonly string[]>> = {
+  full: ['strategic-risk', 'cii', 'markets', 'energy-complex', 'threat-timeline', 'latest-brief', 'insights'],
+  tech: ['insights', 'ai', 'tech', 'startups', 'markets', 'internet-disruptions', 'latest-brief'],
+  finance: ['insights', 'markets', 'heatmap', 'macro-signals', 'fear-greed', 'daily-market-brief', 'latest-brief'],
+  commodity: ['insights', 'commodities', 'energy-complex', 'gold-intelligence', 'supply-chain', 'markets', 'latest-brief'],
+  energy: ['energy-risk-overview', 'chokepoint-strip', 'insights', 'energy-complex', 'oil-inventories', 'hormuz-tracker', 'latest-brief'],
+  happy: ['positive-feed', 'progress', 'counters', 'spotlight', 'breakthroughs', 'digest'],
+};
+
 
 export const VARIANT_SWITCHER_DASHBOARD_URLS = {
   full: 'https://www.worldmonitor.app/dashboard',
@@ -443,7 +453,16 @@ export class PanelLayoutManager implements AppModule {
   private panelTabBar: PanelTabBar | null = null;
   private inspectorShell: InspectorShell | null = null;
   private bottomMediaTray: BottomMediaTray | null = null;
-  private overviewDefaultPanels: readonly string[] = [];
+  private bottomTrayRaf: number | null = null;
+  private bottomTrayTimer: ReturnType<typeof setTimeout> | null = null;
+  private initialVisiblePanelSet: Set<string> | null = null;
+  private isInitialOrderedMountPass = false;
+  private cachedShellFootprintStorage: {
+    spans: Record<string, number>;
+    colSpans: Record<string, number>;
+    collapsed: Record<string, boolean>;
+  } | null = null;
+  private boundRevealPanelHandler: ((e: Event) => void) | null = null;
   private inspectorCollapsed = false;
   private inspectorWideGrid = false;
   private tabsState: TabsState | null = null;
@@ -562,12 +581,28 @@ export class PanelLayoutManager implements AppModule {
     this.mobileMapCollapseBtn = null;
     this.panelTabBar?.destroy();
     this.panelTabBar = null;
+    if (this.boundRevealPanelHandler) {
+      window.removeEventListener('wm:reveal-panel', this.boundRevealPanelHandler);
+      this.boundRevealPanelHandler = null;
+    }
+    if (this.bottomTrayRaf !== null && typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(this.bottomTrayRaf);
+      this.bottomTrayRaf = null;
+    }
+    if (this.bottomTrayTimer !== null) {
+      clearTimeout(this.bottomTrayTimer);
+      this.bottomTrayTimer = null;
+    }
     this.inspectorShell?.destroy();
     this.inspectorShell = null;
     this.bottomMediaTray?.destroy();
     this.bottomMediaTray = null;
+    this.initialVisiblePanelSet = null;
+    this.cachedShellFootprintStorage = null;
     this.inspectorCollapsed = false;
     this.inspectorWideGrid = false;
+    delete document.documentElement.dataset.inspectorCollapsed;
+    delete document.documentElement.dataset.inspectorWideGrid;
     this.unsubscribeScope?.();
     this.unsubscribeScope = null;
     this.focusEditor?.close();
@@ -656,6 +691,7 @@ export class PanelLayoutManager implements AppModule {
         return false;
       }
     })();
+    document.documentElement.dataset.mapSide = mapRightClassActive ? 'right' : 'left';
     // Render the saved map width the same way: EventHandlerManager.init() runs
     // after the first paint, and applying it there moved the map, the sidebar
     // and every panel span. It re-clamps against the measured width later.
@@ -954,9 +990,11 @@ export class PanelLayoutManager implements AppModule {
       }
     });
 
-    // Mount Option B inspector shell & bottom media tray before creating panels
-    // so panel visibility & eager mount budgets align with the active inspector tab.
-    await this.initInspectorAndTray();
+    // Compute initial visible Overview panels synchronously so createPanels()
+    // never blocks on dynamic imports, while InspectorShell loads in parallel.
+    this.initialVisiblePanelSet = this.computeInitialVisiblePanelSet();
+    this.installRevealPanelListener();
+    this.loadInspectorShellAsync();
 
     // Mount the chip nav before createPanels() yields: a nav added after that await paints one
     // frame with #panelsGrid 49px too high, then shifts it down.
@@ -965,8 +1003,10 @@ export class PanelLayoutManager implements AppModule {
     await this.createPanels();
 
     this.initPanelTabs();
-    this.inspectorShell?.refresh();
-    this.hydrateVisibleInspectorPanels();
+    if (this.inspectorShell) {
+      this.hydrateVisibleInspectorPanels(this.inspectorShell.applyGridFilter());
+    }
+    this.loadBottomTrayAsync();
     if (import.meta.env.DEV && bootShellFootprint) warnOnBootShellFootprintDrift(bootShellFootprint);
 
     if (this.ctx.isMobile) {
@@ -1041,139 +1081,271 @@ export class PanelLayoutManager implements AppModule {
     mount.appendChild(this.panelTabBar.getElement());
     if (this.inspectorShell) {
       this.inspectorShell.getCustomTabsSlot().appendChild(mount);
+      document.querySelector('.dashboard-navigation-row')?.classList.add('dashboard-navigation-row--hosted');
     }
     this.initFocus();
   }
 
-  private async initInspectorAndTray(): Promise<void> {
-    this.inspectorShell?.destroy();
-    this.bottomMediaTray?.destroy();
-
-    const [{ InspectorShell }, { BottomMediaTray }, { OVERVIEW_DEFAULT_PANELS }] = await Promise.all([
-      import('@/components/InspectorShell'),
-      import('@/components/BottomMediaTray'),
-      import('@/config/inspector-domains'),
-    ]);
-    if (this.ctx.isDestroyed) return;
-    this.overviewDefaultPanels = OVERVIEW_DEFAULT_PANELS[SITE_VARIANT] ?? OVERVIEW_DEFAULT_PANELS.full ?? [];
-
-    const headerMount = document.getElementById('inspectorHeaderMount');
-    if (headerMount) {
-      this.inspectorShell = new InspectorShell({
-        getPanelSettings: () => this.ctx.panelSettings,
-        onTogglePanelEnabled: (panelId, enabled) => {
-          const existing = this.ctx.panelSettings[panelId];
-          if (existing) {
-            existing.enabled = enabled;
-          } else {
-            const meta = ALL_PANELS[panelId];
-            this.ctx.panelSettings[panelId] = {
-              name: meta?.name ?? panelId,
-              enabled,
-              priority: meta?.priority ?? 3,
-            };
-          }
-          saveToStorage(STORAGE_KEYS.panels, this.ctx.panelSettings);
-          this.applyPanelSettings();
-          if (enabled) {
-            this.mountDeferredPanel(panelId);
-            this.callbacks.primeVisiblePanelData();
-            this.scheduleLoadAllData('visible');
-          }
-        },
-        onRevealPanel: (panelId) => {
-          if (this.inspectorCollapsed) {
-            this.toggleInspectorCollapsed(false);
-          }
-          this.inspectorShell?.revealPanelInTab(panelId);
-          this.mountDeferredPanel(panelId);
-          const el = this.ctx.panels[panelId]?.getElement()
-            ?? document.querySelector<HTMLElement>(`#panelsGrid > [data-panel="${CSS.escape(panelId)}"]`);
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            el.classList.add('inspector-panel-highlight');
-            setTimeout(() => el.classList.remove('inspector-panel-highlight'), 1400);
-          }
-        },
-        onTabChanged: (_tab, visibleKeys) => {
-          this.hydrateVisibleInspectorPanels(visibleKeys);
-          this.callbacks.primeVisiblePanelData();
-          this.scheduleLoadAllData('visible');
-        },
-        onOpenSettings: () => {
-          this.ctx.unifiedSettings?.open('panels');
-        },
-        onToggleCollapse: () => {
-          this.toggleInspectorCollapsed();
-        },
-      });
-      headerMount.replaceChildren(this.inspectorShell.getElement());
+  private computeInitialVisiblePanelSet(): Set<string> | null {
+    const savedTab = safeStorageGet('wm-inspector-tab-v1');
+    if (savedTab && savedTab !== 'overview') {
+      return null;
     }
+    const settings = this.ctx.panelSettings;
+    const rawPins = safeStorageGet('wm-inspector-overview-pins-v1');
+    if (rawPins) {
+      try {
+        const parsed: unknown = JSON.parse(rawPins);
+        if (Array.isArray(parsed)) {
+          const valid = parsed.filter(
+            (id): id is string => typeof id === 'string' && id !== 'map' && settings[id]?.enabled === true,
+          );
+          if (valid.length > 0) return new Set(valid);
+        }
+      } catch {
+        // ignore corrupt pins
+      }
+    }
+    const defaults = (INITIAL_OVERVIEW_PANELS[SITE_VARIANT] ?? INITIAL_OVERVIEW_PANELS.full ?? [])
+      .filter((id) => settings[id]?.enabled === true);
+    if (defaults.length > 0) return new Set(defaults);
+    const fallback = Object.entries(settings)
+      .filter(([id, cfg]) => id !== 'map' && cfg.enabled)
+      .slice(0, 7)
+      .map(([id]) => id);
+    return fallback.length > 0 ? new Set(fallback) : null;
+  }
 
+  private isPanelVisibleForInitialFilter(key: string): boolean {
+    if (this.inspectorShell) return this.inspectorShell.isPanelVisible(key);
+    if (this.initialVisiblePanelSet) return this.initialVisiblePanelSet.has(key);
+    return true;
+  }
+
+  private applyInspectorVisibilityToElement(el: HTMLElement, key: string): void {
+    if (this.inspectorShell) {
+      this.inspectorShell.applyToElement(el);
+      return;
+    }
+    if (this.initialVisiblePanelSet) {
+      el.classList.toggle('inspector-tab-hidden', !this.initialVisiblePanelSet.has(key));
+    }
+  }
+
+  private installRevealPanelListener(): void {
+    if (this.boundRevealPanelHandler) {
+      window.removeEventListener('wm:reveal-panel', this.boundRevealPanelHandler);
+    }
+    this.boundRevealPanelHandler = (e: Event) => {
+      const panelId = (e as CustomEvent<{ panelId?: string }>).detail?.panelId;
+      if (!panelId || panelId === 'map') return;
+      if (this.inspectorCollapsed) {
+        this.toggleInspectorCollapsed(false);
+      }
+      if (this.inspectorShell) {
+        this.inspectorShell.revealPanelInTab(panelId);
+      } else {
+        this.initialVisiblePanelSet?.add(panelId);
+        const existingEl = document.querySelector<HTMLElement>(`#panelsGrid > [data-panel="${CSS.escape(panelId)}"]`);
+        existingEl?.classList.remove('inspector-tab-hidden');
+      }
+      if (this.deferredPanelMounts.has(panelId)) {
+        this.mountDeferredPanel(panelId);
+      }
+    };
+    window.addEventListener('wm:reveal-panel', this.boundRevealPanelHandler);
+  }
+
+  private loadInspectorShellAsync(): void {
     const reopenBtn = document.getElementById('inspectorReopenBtn');
     reopenBtn?.addEventListener('click', () => this.toggleInspectorCollapsed(false));
 
-    const trayMount = document.getElementById('bottomTrayMount');
-    if (trayMount) {
-      this.bottomMediaTray = new BottomMediaTray({
-        onRequestPanelElement: (panelId) => this.ensurePanelElementForTray(panelId),
-        onReleasePanelElement: (panelId, el) => {
-          const livePanel = this.ctx.panels[panelId] as { stopLiveMediaForClose?: () => void } | undefined;
-          livePanel?.stopLiveMediaForClose?.();
-          const grid = document.getElementById('panelsGrid');
-          if (grid) {
-            this.insertByOrder(grid, el, panelId);
-            this.inspectorShell?.applyToElement(el);
-          }
-        },
-        onToggleWideGrid: () => {
-          this.inspectorWideGrid = !this.inspectorWideGrid;
-          if (this.inspectorWideGrid && this.inspectorCollapsed) {
-            this.toggleInspectorCollapsed(false);
-          }
-          document.getElementById('main')?.classList.toggle('inspector-wide-grid', this.inspectorWideGrid);
-          this.ctx.map?.resize();
-          return this.inspectorWideGrid;
-        },
-        onOpenTabsManager: () => {
-          if (this.inspectorCollapsed) {
-            this.toggleInspectorCollapsed(false);
-          }
-          this.inspectorShell?.selectTab('all', true);
-        },
-      });
-      trayMount.replaceChildren(this.bottomMediaTray.getElement());
+    void import('@/components/InspectorShell').then(
+      ({ InspectorShell }) => {
+        if (this.ctx.isDestroyed || typeof InspectorShell !== 'function') return;
+        this.mountInspectorShell(InspectorShell);
+      },
+      (err) => {
+        console.warn('[PanelLayoutManager] Failed to load InspectorShell; showing all panels', err);
+        this.fallbackWithoutInspector();
+      },
+    );
+  }
+
+  private mountInspectorShell(InspectorShellCtor: typeof import('@/components/InspectorShell').InspectorShell): void {
+    if (this.bottomTrayRaf !== null && typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(this.bottomTrayRaf);
+      this.bottomTrayRaf = null;
     }
+    if (this.bottomTrayTimer !== null) {
+      clearTimeout(this.bottomTrayTimer);
+      this.bottomTrayTimer = null;
+    }
+    this.inspectorShell?.destroy();
+    const headerMount = document.getElementById('inspectorHeaderMount');
+    if (!headerMount) return;
+
+    this.inspectorShell = new InspectorShellCtor({
+      getPanelSettings: () => this.ctx.panelSettings,
+      onTogglePanelEnabled: (panelId, enabled) => {
+        const existing = this.ctx.panelSettings[panelId];
+        if (existing) {
+          existing.enabled = enabled;
+        } else {
+          const meta = ALL_PANELS[panelId];
+          this.ctx.panelSettings[panelId] = {
+            name: meta?.name ?? panelId,
+            enabled,
+            priority: meta?.priority ?? 3,
+          };
+        }
+        saveToStorage(STORAGE_KEYS.panels, this.ctx.panelSettings);
+        this.applyPanelSettings();
+        if (enabled) {
+          this.mountDeferredPanel(panelId);
+          this.callbacks.primeVisiblePanelData();
+          this.scheduleLoadAllData('visible');
+        }
+      },
+      onRevealPanel: (panelId) => {
+        if (this.inspectorCollapsed) {
+          this.toggleInspectorCollapsed(false);
+        }
+        this.inspectorShell?.revealPanelInTab(panelId);
+        this.mountDeferredPanel(panelId);
+        const el = this.ctx.panels[panelId]?.getElement()
+          ?? document.querySelector<HTMLElement>(`#panelsGrid > [data-panel="${CSS.escape(panelId)}"]`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          el.classList.add('inspector-panel-highlight');
+          setTimeout(() => el.classList.remove('inspector-panel-highlight'), 1400);
+        }
+      },
+      onTabChanged: (_tab, visibleKeys) => {
+        this.hydrateVisibleInspectorPanels(visibleKeys);
+        this.callbacks.primeVisiblePanelData();
+        this.scheduleLoadAllData('visible');
+      },
+      onOpenSettings: () => {
+        this.ctx.unifiedSettings?.open('panels');
+      },
+      onToggleCollapse: () => {
+        this.toggleInspectorCollapsed();
+      },
+    });
+    headerMount.replaceChildren(this.inspectorShell.getElement());
+
+    const tabsMount = document.getElementById('panelTabsMount');
+    if (tabsMount && this.panelTabBar) {
+      this.inspectorShell.getCustomTabsSlot().appendChild(tabsMount);
+      document.querySelector('.dashboard-navigation-row')?.classList.add('dashboard-navigation-row--hosted');
+    }
+
+    const visibleKeys = this.inspectorShell.applyGridFilter();
+    this.hydrateVisibleInspectorPanels(visibleKeys, 3);
+  }
+
+  private fallbackWithoutInspector(): void {
+    this.initialVisiblePanelSet = null;
+    const grid = document.getElementById('panelsGrid');
+    grid?.querySelectorAll<HTMLElement>(':scope > [data-panel]').forEach((el) => {
+      el.classList.remove('inspector-tab-hidden');
+    });
+    for (const [key, deferred] of this.deferredPanelMounts) {
+      if (deferred.placeholder && !deferred.observer && !deferred.mounted && !deferred.loading) {
+        this.observeDeferredPanelShell(key, deferred);
+      }
+    }
+  }
+
+  private loadBottomTrayAsync(): void {
+    const mount = () => {
+      this.bottomTrayTimer = null;
+      if (this.ctx.isDestroyed) return;
+      void import('@/components/BottomMediaTray').then(
+        ({ BottomMediaTray }) => {
+          if (this.ctx.isDestroyed || typeof BottomMediaTray !== 'function') return;
+          this.mountBottomMediaTray(BottomMediaTray);
+        },
+        (err) => {
+          console.warn('[PanelLayoutManager] Failed to load BottomMediaTray', err);
+        },
+      );
+    };
+    if (typeof requestAnimationFrame === 'function') {
+      this.bottomTrayRaf = requestAnimationFrame(() => {
+        this.bottomTrayRaf = null;
+        if (this.ctx.isDestroyed) return;
+        this.bottomTrayTimer = setTimeout(mount, 0);
+      });
+    } else {
+      this.bottomTrayTimer = setTimeout(mount, 0);
+    }
+  }
+
+  private mountBottomMediaTray(BottomMediaTrayCtor: typeof import('@/components/BottomMediaTray').BottomMediaTray): void {
+    this.bottomMediaTray?.destroy();
+    const trayMount = document.getElementById('bottomTrayMount');
+    if (!trayMount) return;
+
+    this.bottomMediaTray = new BottomMediaTrayCtor({
+      onRequestPanelElement: (panelId) => this.ensurePanelElementForTray(panelId),
+      onReleasePanelElement: (panelId, el) => {
+        const livePanel = this.ctx.panels[panelId] as { stopLiveMediaForClose?: () => void } | undefined;
+        livePanel?.stopLiveMediaForClose?.();
+        const grid = document.getElementById('panelsGrid');
+        if (grid) {
+          this.insertByOrder(grid, el, panelId);
+          this.applyInspectorVisibilityToElement(el, panelId);
+        }
+      },
+      onToggleWideGrid: () => {
+        this.inspectorWideGrid = !this.inspectorWideGrid;
+        if (this.inspectorWideGrid && this.inspectorCollapsed) {
+          this.toggleInspectorCollapsed(false);
+        }
+        document.getElementById('main')?.classList.toggle('inspector-wide-grid', this.inspectorWideGrid);
+        document.documentElement.dataset.inspectorWideGrid = String(this.inspectorWideGrid);
+        this.ctx.map?.resize();
+        return this.inspectorWideGrid;
+      },
+      onOpenTabsManager: () => {
+        if (this.inspectorCollapsed) {
+          this.toggleInspectorCollapsed(false);
+        }
+        this.inspectorShell?.selectTab('all', true);
+      },
+    });
+    trayMount.replaceChildren(this.bottomMediaTray.getElement());
   }
 
   private toggleInspectorCollapsed(force?: boolean): void {
     const next = force ?? !this.inspectorCollapsed;
     this.inspectorCollapsed = next;
     document.getElementById('main')?.classList.toggle('inspector-collapsed', next);
+    document.documentElement.dataset.inspectorCollapsed = String(next);
     const reopenBtn = document.getElementById('inspectorReopenBtn');
     if (reopenBtn) reopenBtn.hidden = !next;
     this.ctx.map?.resize();
   }
 
-  private hydrateVisibleInspectorPanels(visibleKeys?: string[]): void {
+  private hydrateVisibleInspectorPanels(visibleKeys?: string[], immediateLimit = 10): void {
     const keys = visibleKeys ?? this.inspectorShell?.applyGridFilter() ?? [];
     let hydrated = 0;
     for (const key of keys) {
-      if (hydrated >= 10) break;
-      if (this.deferredPanelMounts.has(key)) {
+      const deferred = this.deferredPanelMounts.get(key);
+      if (!deferred || deferred.mounted) continue;
+      if (hydrated < immediateLimit) {
         if (this.mountDeferredPanel(key)) {
           hydrated += 1;
         }
+      } else if (deferred.placeholder && !deferred.observer && !deferred.loading) {
+        this.observeDeferredPanelShell(key, deferred);
       }
     }
   }
 
   private async ensurePanelElementForTray(panelId: BottomTrayPanelId): Promise<HTMLElement | null> {
-    if (this.ctx.panelSettings[panelId] && !this.ctx.panelSettings[panelId].enabled) {
-      this.ctx.panelSettings[panelId].enabled = true;
-      saveToStorage(STORAGE_KEYS.panels, this.ctx.panelSettings);
-    }
-
     let panel = this.ctx.panels[panelId] ?? null;
     if (!panel) {
       const deferred = this.deferredPanelMounts.get(panelId);
@@ -1192,10 +1364,26 @@ export class PanelLayoutManager implements AppModule {
             this.afterPanelMounted(panelId, panel);
           }
         }
-      } else if (panelId === 'live-news') {
-        this.mountLiveNewsIfReady();
-        await new Promise((r) => setTimeout(r, 150));
-        panel = this.ctx.panels[panelId] ?? null;
+      } else if (panelId === 'live-news' && this.shouldCreatePanel('live-news')) {
+        panel = await this.importPanel(
+          'live-news',
+          () => import('@/components/LiveNewsPanel'),
+          'LiveNewsPanel',
+          (LiveNewsPanel, module) => {
+            const liveNewsModule = module as typeof import('@/components/LiveNewsPanel');
+            if (liveNewsModule.getDefaultLiveChannels().length === 0 && liveNewsModule.loadChannelsFromStorage().length === 0) return null;
+            return new LiveNewsPanel();
+          },
+        );
+        if (panel && !this.ctx.isDestroyed && !this.ctx.panels['live-news']) {
+          this.ctx.panels['live-news'] = panel;
+          const grid = document.getElementById('panelsGrid');
+          if (grid) {
+            this.mountPanelElement(grid, 'live-news', panel);
+            this.afterPanelMounted('live-news', panel);
+          }
+        }
+        panel = this.ctx.panels['live-news'] ?? null;
       }
     }
 
@@ -2287,7 +2475,15 @@ export class PanelLayoutManager implements AppModule {
   private shouldMountPanelImmediately(key: string): boolean {
     const config = this.ctx.panelSettings[key];
     if (!config?.enabled) return false;
-    if (this.inspectorShell && !this.inspectorShell.isPanelVisible(key)) {
+    if (!this.isPanelVisibleForInitialFilter(key)) {
+      return false;
+    }
+    // In the 1-column desktop inspector, only the top 3 cards sit above the fold.
+    // Limiting synchronous pre-map mounts to 3 keeps heavy below-fold chunks from
+    // competing with MapContainer construction on throttled CPUs; the remaining
+    // Overview cards hydrate via IntersectionObserver / staggered post-map frames.
+    const immediateCap = !this.ctx.isMobile && this.initialVisiblePanelSet ? 3 : undefined;
+    if (immediateCap !== undefined && this.initiallyMountedEnabledPanelCount >= immediateCap) {
       return false;
     }
     if (shouldDeferInitialPanelMount({
@@ -2334,28 +2530,32 @@ export class PanelLayoutManager implements AppModule {
   private mountPanelElement(grid: HTMLElement, key: string, panel: Panel, placeholder?: HTMLElement | null): boolean {
     const el = panel.getElement();
     if (el.parentElement) return false;
-    applyPanelFontScale(el, this.ctx.panelSettings[key]?.fontScale);
+    const fontScale = this.ctx.panelSettings[key]?.fontScale;
+    if (fontScale) applyPanelFontScale(el, fontScale);
     this.makeDraggable(el, key);
     if (placeholder?.parentNode) {
       if (import.meta.env.DEV) warnOnDeferredFootprintDrift(key, placeholder, el);
       placeholder.parentNode.replaceChild(el, placeholder);
+    } else if (this.isInitialOrderedMountPass) {
+      grid.appendChild(el);
     } else {
       this.insertByOrder(grid, el, key);
     }
     this.mobilePanelNav?.applyToNewPanel(el);
-    this.inspectorShell?.applyToElement(el);
+    this.applyInspectorVisibilityToElement(el, key);
     panel.notifyConnected();
     return true;
   }
 
   private getDeferredPanelShellFootprint(key: string): DeferredPanelShellFootprint {
+    const cached = this.cachedShellFootprintStorage;
     return resolveDeferredPanelShellFootprint({
       panelId: key,
       naturalFootprints: DEFERRED_PANEL_NATURAL_FOOTPRINTS,
       dynamicFootprints: DEFERRED_DYNAMIC_PANEL_FOOTPRINTS,
-      savedRowSpans: loadPanelSpans(),
-      savedColSpans: loadPanelColSpans(),
-      savedCollapsed: loadPanelCollapsed(),
+      savedRowSpans: cached ? cached.spans : loadPanelSpans(),
+      savedColSpans: cached ? cached.colSpans : loadPanelColSpans(),
+      savedCollapsed: cached ? cached.collapsed : loadPanelCollapsed(),
     });
   }
 
@@ -2364,10 +2564,15 @@ export class PanelLayoutManager implements AppModule {
       ? createDeferredPanelShell(key, this.ctx.panelSettings[key]?.name ?? key, this.getDeferredPanelShellFootprint(key))
       : null;
     if (placeholder && grid) {
-      applyPanelFontScale(placeholder, this.ctx.panelSettings[key]?.fontScale);
-      this.insertByOrder(grid, placeholder, key);
+      const fontScale = this.ctx.panelSettings[key]?.fontScale;
+      if (fontScale) applyPanelFontScale(placeholder, fontScale);
+      if (this.isInitialOrderedMountPass) {
+        grid.appendChild(placeholder);
+      } else {
+        this.insertByOrder(grid, placeholder, key);
+      }
       this.mobilePanelNav?.applyToNewPanel(placeholder);
-      this.inspectorShell?.applyToElement(placeholder);
+      this.applyInspectorVisibilityToElement(placeholder, key);
     }
     const existing = this.deferredPanelMounts.get(key);
     existing?.observer?.disconnect();
@@ -2388,7 +2593,9 @@ export class PanelLayoutManager implements AppModule {
       failed: false,
     };
     this.deferredPanelMounts.set(key, deferred);
-    if (placeholder) {
+    // Skip creating IntersectionObservers on boot for panels hidden in inactive
+    // inspector tabs; hydrateVisibleInspectorPanels() attaches them when revealed.
+    if (placeholder && !placeholder.classList.contains('inspector-tab-hidden')) {
       this.observeDeferredPanelShell(key, deferred);
     }
   }
@@ -2418,11 +2625,9 @@ export class PanelLayoutManager implements AppModule {
     deferred.observer.observe(placeholder);
   }
 
-  private getPanelMountGrid(key: string): HTMLElement | null {
-    const bottomGrid = document.getElementById('mapBottomGrid');
-    if (bottomGrid && this.getEffectiveUltraWide() && this.bottomSetMemory.has(key)) {
-      return bottomGrid;
-    }
+  private getPanelMountGrid(_key: string): HTMLElement | null {
+    // Option B desktop split layout keeps all panels in the tabbed inspector
+    // (#panelsGrid) rather than splitting legacy bottom-set panels under the map.
     return document.getElementById('panelsGrid');
   }
 
@@ -2584,6 +2789,8 @@ export class PanelLayoutManager implements AppModule {
     // after the registration block (just before the onTimeRangeChanged wiring).
     // Failed-fetch reload guard: src/main.ts:285-290 (installChunkReloadGuard).
     const mapModulePromise = import('@/components/MapContainer');
+    // Prevent unhandled rejection if synchronous panel registration throws before await mapModulePromise.
+    mapModulePromise.catch(() => {});
 
     this.createNewsPanel('politics', 'panels.politics');
     this.createNewsPanel('tech', 'panels.tech');
@@ -3147,12 +3354,11 @@ export class PanelLayoutManager implements AppModule {
     const crossVariantKeys = Object.keys(this.ctx.panelSettings).filter(k => !variantOrder.includes(k) && k !== 'map');
     const defaultOrder = [...variantOrder.filter(k => activePanelSet.has(k)), ...crossVariantKeys];
     const activePanelKeys = Object.keys(this.ctx.panelSettings).filter(k => k !== 'map');
-    const bottomSet = this.getSavedBottomSet();
     const savedOrder = this.getSavedPanelOrder();
-    this.bottomSetMemory = bottomSet;
-    const effectiveUltraWide = this.getEffectiveUltraWide();
-    this.wasUltraWide = effectiveUltraWide;
-
+    // Option B retires the legacy under-map bottom-set zone in desktop split layout:
+    // saved bottom-set keys migrate cleanly into the tabbed inspector (#panelsGrid)
+    // without shrinking the map or stranding panels outside tab filtering.
+    this.bottomSetMemory = new Set();
     const hasSavedOrder = savedOrder.length > 0;
     let allOrder: string[];
 
@@ -3180,7 +3386,7 @@ export class PanelLayoutManager implements AppModule {
       // Option B: place the curated Overview panels first so the initial
       // 1-column inspector renders high-signal summary cards immediately while
       // heavy video/webcam streams stay deferred in the bottom tray until opened.
-      const overviewPriority = this.overviewDefaultPanels;
+      const overviewPriority = INITIAL_OVERVIEW_PANELS[SITE_VARIANT] ?? INITIAL_OVERVIEW_PANELS.full ?? [];
       for (let i = overviewPriority.length - 1; i >= 0; i -= 1) {
         const key = overviewPriority[i]!;
         const idx = allOrder.indexOf(key);
@@ -3193,16 +3399,22 @@ export class PanelLayoutManager implements AppModule {
 
     this.resolvedPanelOrder = allOrder;
 
-    const sidebarOrder = effectiveUltraWide
-      ? allOrder.filter(k => !this.bottomSetMemory.has(k))
-      : allOrder;
-    const bottomOrder = effectiveUltraWide
-      ? allOrder.filter(k => this.bottomSetMemory.has(k))
-      : [];
-
-    sidebarOrder.forEach((key: string) => {
-      this.insertInitialPanelByKey(panelsGrid, key);
-    });
+    // Read panel footprint storage once for the whole boot pass instead of
+    // parsing localStorage 3x per deferred panel (~250 parses on full variant).
+    this.cachedShellFootprintStorage = {
+      spans: loadPanelSpans(),
+      colSpans: loadPanelColSpans(),
+      collapsed: loadPanelCollapsed(),
+    };
+    this.isInitialOrderedMountPass = true;
+    try {
+      allOrder.forEach((key: string) => {
+        this.insertInitialPanelByKey(panelsGrid, key);
+      });
+    } finally {
+      this.isInitialOrderedMountPass = false;
+      this.cachedShellFootprintStorage = null;
+    }
 
     // "+" Add Panel block at the end of the grid
     const addPanelBlock = document.createElement('button');
@@ -3221,13 +3433,6 @@ export class PanelLayoutManager implements AppModule {
       this.ctx.unifiedSettings?.open('panels');
     });
     panelsGrid.appendChild(addPanelBlock);
-
-    const bottomGrid = document.getElementById('mapBottomGrid');
-    if (bottomGrid) {
-      bottomOrder.forEach(key => {
-        this.insertInitialPanelByKey(bottomGrid, key);
-      });
-    }
 
     removeResponsiveZoneListener(this.responsiveZoneListener);
     this.responsiveZoneListener = addResponsiveZoneListener(
@@ -3457,29 +3662,16 @@ export class PanelLayoutManager implements AppModule {
     this.resolvedPanelOrder.forEach(appendUnique);
     activePanelKeys.forEach(appendUnique);
 
-    this.bottomSetMemory = panelOrder ? new Set<string>() : this.getSavedBottomSet();
+    this.bottomSetMemory = new Set<string>();
     this.resolvedPanelOrder = allOrder;
 
-    const effectiveUltraWide = this.getEffectiveUltraWide();
-    this.wasUltraWide = effectiveUltraWide;
-    const sidebarOrder = effectiveUltraWide
-      ? allOrder.filter(k => !this.bottomSetMemory.has(k))
-      : allOrder;
-    const bottomOrder = effectiveUltraWide
-      ? allOrder.filter(k => this.bottomSetMemory.has(k))
-      : [];
-
     const firstAddBlock = grid.querySelector('.add-panel-block');
-    sidebarOrder.forEach((key) => {
+    allOrder.forEach((key) => {
       const el = this.getPanelElementForOrdering(key);
       if (!el) return;
       if (firstAddBlock) grid.insertBefore(el, firstAddBlock);
       else grid.appendChild(el);
-    });
-
-    bottomOrder.forEach((key) => {
-      const el = this.getPanelElementForOrdering(key);
-      if (el) bottomGrid.appendChild(el);
+      this.applyInspectorVisibilityToElement(el, key);
     });
   }
 
@@ -3575,40 +3767,6 @@ export class PanelLayoutManager implements AppModule {
       : uniqueIds.sort(compareIds);
   }
 
-  private getSavedBottomSet(): Set<string> {
-    try {
-      const saved = localStorage.getItem(this.ctx.PANEL_ORDER_KEY + '-bottom-set');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          return new Set(parsed.filter((v: unknown) => typeof v === 'string'));
-        }
-      }
-    } catch { /* ignore */ }
-    try {
-      const legacy = localStorage.getItem(this.ctx.PANEL_ORDER_KEY + '-bottom');
-      if (legacy) {
-        const parsed = JSON.parse(legacy);
-        if (Array.isArray(parsed)) {
-          const bottomIds = parsed.filter((v: unknown) => typeof v === 'string') as string[];
-          const set = new Set(bottomIds);
-          // Merge old sidebar + bottom into unified PANEL_ORDER_KEY
-          const sidebarOrder = this.getSavedPanelOrder();
-          const seen = new Set(sidebarOrder);
-          const unified = [...sidebarOrder];
-          for (const id of bottomIds) {
-            if (!seen.has(id)) { unified.push(id); seen.add(id); }
-          }
-          localStorage.setItem(this.ctx.PANEL_ORDER_KEY, JSON.stringify(unified));
-          localStorage.setItem(this.ctx.PANEL_ORDER_KEY + '-bottom-set', JSON.stringify([...set]));
-          localStorage.removeItem(this.ctx.PANEL_ORDER_KEY + '-bottom');
-          return set;
-        }
-      }
-    } catch { /* ignore */ }
-    return new Set();
-  }
-
   private getUltraWideMinWidth(): number {
     return SPLIT_LAYOUT_MIN_WIDTH;
   }
@@ -3638,33 +3796,20 @@ export class PanelLayoutManager implements AppModule {
     grid.appendChild(el);
   }
 
-  private wasUltraWide = false;
-
   public ensureCorrectZones(): void {
-    const effectiveUltraWide = this.getEffectiveUltraWide();
-
-    if (effectiveUltraWide === this.wasUltraWide) return;
-    this.wasUltraWide = effectiveUltraWide;
-
     const grid = document.getElementById('panelsGrid');
     const bottomGrid = document.getElementById('mapBottomGrid');
     if (!grid || !bottomGrid) return;
 
-    if (!effectiveUltraWide) {
-      const panelsInBottom = Array.from(bottomGrid.querySelectorAll('.panel')) as HTMLElement[];
-      panelsInBottom.forEach(panelEl => {
-        const id = panelEl.dataset.panel;
-        if (!id) return;
-        this.insertByOrder(grid, panelEl, id);
-      });
-    } else {
-      this.bottomSetMemory.forEach(id => {
-        const el = grid.querySelector(`[data-panel="${CSS.escape(id)}"]`);
-        if (el) {
-          this.insertByOrder(bottomGrid, el as HTMLElement, id);
-        }
-      });
-    }
+    // Option B desktop split layout keeps every panel inside the tabbed inspector
+    // (#panelsGrid); migrate any legacy bottom-grid panel back into #panelsGrid.
+    const panelsInBottom = Array.from(bottomGrid.querySelectorAll('.panel')) as HTMLElement[];
+    panelsInBottom.forEach(panelEl => {
+      const id = panelEl.dataset.panel;
+      if (!id) return;
+      this.insertByOrder(grid, panelEl, id);
+      this.applyInspectorVisibilityToElement(panelEl, id);
+    });
   }
 
   private attachRelatedAssetHandlers(panel: NewsPanel): void {

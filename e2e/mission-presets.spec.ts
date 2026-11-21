@@ -158,6 +158,7 @@ test.describe('mission presets', () => {
       await expect(page.locator('[data-mission-id="nq-day-trader"]')).toHaveCount(0);
     }
     await applyMission(page, 'supply-chain-risk', 'Supply');
+    await page.locator('[data-inspector-tab="markets"]').click();
 
     await expect(page.locator('.panel[data-panel="supply-chain"]:not(.hidden)')).toBeVisible({ timeout: 30_000 });
     await expect
@@ -180,12 +181,7 @@ test.describe('mission presets', () => {
       .toBe(true);
   });
 
-  test('first-run prompt does not open over a modal the user already opened', async ({ page }) => {
-    // The prompt auto-opens on the first idle period after paint. On a slow
-    // machine that idle period can land after the user has opened a modal; the
-    // prompt then took focus and swallowed that modal's Escape, so the modal
-    // could not be closed from the keyboard (the WebMCP settings smoke failed
-    // that way on a CI runner). Hold idle callbacks to force that ordering.
+  test('first-run prompt does not auto-open over a modal or interrupt first paint', async ({ page }) => {
     test.setTimeout(150_000);
     await holdIdleCallbacks(page);
     await setupMissionPage(page, { width: 1440, height: 900 });
@@ -202,9 +198,7 @@ test.describe('mission presets', () => {
     await expect(page.locator('.search-overlay')).toBeHidden();
   });
 
-  test('first-run prompt still auto-opens on a late idle period when no modal is open', async ({ page }) => {
-    // Positive control for the test above: the same held-then-released idle
-    // period must still open the prompt, or that test proves nothing.
+  test('first-run stays unobstructed on idle and opens mission popover on manual click', async ({ page }) => {
     test.setTimeout(150_000);
     await holdIdleCallbacks(page);
     await setupMissionPage(page, { width: 1440, height: 900 });
@@ -212,6 +206,9 @@ test.describe('mission presets', () => {
     await expect(page.locator('.mission-preset-popover')).toHaveCount(0);
 
     await releaseIdleCallbacks(page);
+    await expect(page.locator('.mission-preset-popover')).toHaveCount(0);
+
+    await page.locator('#missionPresetBtn').click();
     await expect(page.locator('.mission-preset-popover')).toBeVisible();
   });
 

@@ -1244,7 +1244,7 @@ function createMissionHarness(options: {
 }
 
 describe('mission preset shell integration', () => {
-  it('rechecks mission prompt eligibility before the idle auto-open fires', async () => {
+  it('does not schedule an automatic first-paint mission popup and still opens manually on click', async () => {
     const { manager } = createMissionHarness();
     const opened: Array<{ anchor: unknown; mobile: unknown }> = [];
 
@@ -1254,12 +1254,14 @@ describe('mission preset shell integration', () => {
     };
 
     const tasks = (globalThis as { __missionAfterPaintTasks?: Array<() => void> }).__missionAfterPaintTasks ?? [];
-    assert.equal(tasks.length, 1, 'desktop startup should schedule one mission prompt idle task');
+    assert.equal(tasks.length, 0, 'desktop startup should not schedule a first-paint auto-open mission popup');
+    assert.deepEqual(opened, [], 'mission popover must stay closed until the user requests it');
 
-    saveMissionPreset('supply-chain-risk');
-    tasks[0]!();
-
-    assert.deepEqual(opened, [], 'stored mission state should cancel the delayed auto-open');
+    const btn = document.getElementById('missionPresetBtn');
+    assert.ok(btn, 'desktop header must render the manual mission preset trigger');
+    btn!.dispatchEvent(new Event('click'));
+    assert.equal(opened.length, 1, 'clicking the manual trigger should open the mission popover');
+    assert.equal(opened[0]?.mobile, false);
   });
 
   it('opens the WebMCP mission picker from the visible trigger', () => {

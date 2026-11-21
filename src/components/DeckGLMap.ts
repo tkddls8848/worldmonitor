@@ -6343,13 +6343,24 @@ export class DeckGLMap {
         const preset = MAP_LAYER_PRESETS.find(p => p.id === presetId);
         if (!preset) return;
         const allowed = new Set(layerDefs.map(d => d.key));
-        const targetOn = new Set(preset.layers.filter(k => allowed.has(k)));
+        const rawTargetOn = new Set(preset.layers.filter(k => allowed.has(k)));
+        // Skip layers hidden for the active renderer/runtime and enforce choropleth exclusivity.
+        const targetOn = new Set<keyof MapLayers>();
+        for (const k of rawTargetOn) {
+          const toggleEl = toggles.querySelector(`.layer-toggle[data-layer="${k}"]`);
+          if (toggleEl?.hasAttribute('data-layer-hidden')) continue;
+          targetOn.add(k);
+        }
+        if (targetOn.has('resilienceScore') && targetOn.has('ciiChoropleth')) {
+          targetOn.delete('ciiChoropleth');
+        }
         for (const def of layerDefs) {
           const nextVal = targetOn.has(def.key);
           if (Boolean(this.state.layers[def.key]) !== nextVal) {
             this.state.layers[def.key] = nextVal;
             const input = toggles.querySelector<HTMLInputElement>(`.layer-toggle[data-layer="${def.key}"] input`);
             if (input) input.checked = nextVal;
+            if (!nextVal) this.setLayerReady(def.key, false);
             this.onLayerChange?.(def.key, nextVal, 'user');
           }
         }

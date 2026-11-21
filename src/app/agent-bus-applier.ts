@@ -165,6 +165,10 @@ function applyOpenPanel(ctx: AppContext, action: Extract<AgentBusAction, { type:
     ], action);
   }
 
+  if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('wm:reveal-panel', { detail: { panelId: action.panelId } }));
+  }
+
   const panel = ctx.panels[action.panelId];
   if (!panel) {
     return denied(`Panel is not available: ${action.panelId}.`, 'panel_not_live', [], action);
@@ -185,6 +189,17 @@ function applyOpenPanel(ctx: AppContext, action: Extract<AgentBusAction, { type:
 
   panel.show();
   const element = panel.getElement();
+  const hiddenByClass = element.classList.contains('hidden')
+    || element.classList.contains('inspector-tab-hidden')
+    || element.classList.contains('mobile-cat-hidden');
+  const hiddenByStyle = typeof getComputedStyle === 'function'
+    && element.isConnected
+    && getComputedStyle(element).display === 'none';
+  if (hiddenByClass || hiddenByStyle) {
+    return denied(`Panel is hidden in the current view: ${config.name || action.panelId}.`, 'panel_hidden', [
+      { target: action.panelId, status: 'denied', reason: 'panel_hidden' },
+    ], action);
+  }
   if (typeof element.scrollIntoView === 'function') {
     element.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
