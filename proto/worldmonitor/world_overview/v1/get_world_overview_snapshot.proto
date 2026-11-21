@@ -2,11 +2,12 @@ syntax = "proto3";
 
 package worldmonitor.world_overview.v1;
 
+import "sebuf/http/annotations.proto";
 import "worldmonitor/world_overview/v1/snapshot.proto";
 
 message GetWorldOverviewSnapshotRequest {
   // Optional calendar date in Asia/Seoul, formatted YYYY-MM-DD. Omit for today.
-  string date = 1;
+  string date = 1 [(sebuf.http.query) = {name: "date"}];
 }
 
 message GetWorldOverviewSnapshotResponse {
