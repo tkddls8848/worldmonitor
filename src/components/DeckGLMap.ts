@@ -585,6 +585,16 @@ function orbitalRgba(token: '--ow-mark' | '--ow-text' | '--ow-dim' | '--ow-panel
 }
 const ORBITAL_RETICLE = { pickable: false } as const;
 
+/**
+ * Flat map only: the constructor options stop drag rotation and tilt, and this
+ * stops the two-finger twist and Shift+arrow rotation. Pinch zoom and
+ * arrow-key panning stay. The map has no compass to undo a stray bearing.
+ */
+function disableMapRotation(map: maplibregl.Map): void {
+  map.touchZoomRotate.disableRotation();
+  map.keyboard.disableRotation();
+}
+
 function deckLayerId(layer: LayersList[number]): string | null {
   return layer && !Array.isArray(layer) && typeof layer === 'object' ? (layer as Layer).id : null;
 }
@@ -1276,6 +1286,7 @@ export class DeckGLMap {
       dragRotate: false,
       touchPitch: false,
     });
+    disableMapRotation(this.maplibreMap);
 
     const reportFatalBasemapFailure = (error: unknown, center = this.getCenter()): void => {
       const message = error instanceof Error ? error.message : String(error);
@@ -1344,6 +1355,7 @@ export class DeckGLMap {
           dragRotate: false,
           touchPitch: false,
         });
+        disableMapRotation(this.maplibreMap);
       } catch (error) {
         // MapLibre throws GPUInitializationError synchronously when WebGL2 is
         // gone (lost context, software renderer revoked, etc.). Catch it so it

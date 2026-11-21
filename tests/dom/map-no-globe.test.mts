@@ -53,8 +53,19 @@ function rendererStub(kind: 'deck' | 'svg') {
   };
 }
 
+interface MapStub {
+  handlers: Record<string, Array<(event: unknown) => void>>;
+  touchZoomRotate: { disable: () => void; disableRotation: () => void };
+  keyboard: { disable: () => void; disableRotation: () => void };
+}
+
 const mapOptions = vi.hoisted(() => [] as Array<Record<string, unknown>>);
-const mapLibreFatal = vi.hoisted(() => ({ error: new Error('stop after the options are captured') }));
+const mapStubs = vi.hoisted(() => [] as MapStub[]);
+// With `error` set the MapLibre stand-in throws right after it captures the
+// options; with null it builds a stub map so construction runs to the end.
+const mapLibreFatal = vi.hoisted(() => ({
+  error: new Error('stop after the options are captured') as Error | null,
+}));
 
 vi.mock('maplibre-gl', async (importOriginal) => {
   const actual = await importOriginal<typeof import('maplibre-gl')>();
@@ -64,7 +75,26 @@ vi.mock('maplibre-gl', async (importOriginal) => {
     Map: class {
       constructor(options: Record<string, unknown>) {
         mapOptions.push(options);
-        throw mapLibreFatal.error;
+        if (mapLibreFatal.error) throw mapLibreFatal.error;
+        const handlers: MapStub['handlers'] = {};
+        const stub = {
+          handlers,
+          touchZoomRotate: { disable: vi.fn(), disableRotation: vi.fn() },
+          keyboard: { disable: vi.fn(), disableRotation: vi.fn() },
+          on: (event: string, handler: (event: unknown) => void) => {
+            (handlers[event] ??= []).push(handler);
+          },
+          getCanvas: () => document.createElement('canvas'),
+        };
+        mapStubs.push(stub);
+        // Every other map method is a no-op.
+        return new Proxy(stub, {
+          get(target, prop, receiver) {
+            if (prop in target) return Reflect.get(target, prop, receiver);
+            if (prop === 'then') return undefined;
+            return () => undefined;
+          },
+        });
       }
     },
   };
@@ -293,5 +323,59 @@ describe('flat map interaction', () => {
     basemap.remove();
     expect(mapOptions).toHaveLength(1);
     expect(mapOptions[0]).toMatchObject({ maxPitch: 0, dragRotate: false, pitchWithRotate: false });
+  });
+
+  it('stops twist and keyboard rotation on the primary and the fallback map, keeping pinch zoom', async () => {
+    const { DeckGLMap } = await vi.importActual<typeof import('@/components/DeckGLMap')>('@/components/DeckGLMap');
+    const basemap = document.createElement('div');
+    basemap.id = 'deckgl-basemap';
+    document.body.append(basemap);
+    const fatal = mapLibreFatal.error;
+    mapLibreFatal.error = null;
+    mapOptions.length = 0;
+    mapStubs.length = 0;
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const self = {
+      destroyed: false,
+      usedFallbackStyle: false,
+      webglLost: false,
+      styleLoadTimeoutId: null as ReturnType<typeof setTimeout> | null,
+      mapLibreWorkerUrl: '',
+      state: { view: 'global', zoom: 2 },
+      container: document.createElement('div'),
+      // A pmtiles style keeps the primary basemap, so a fetch failure can fall back.
+      resolveInitialBasemapStyle: async () => ({ mapTheme: 'dark', style: 'pmtiles://example.test/style.json' }),
+      getCenter: () => null,
+      attachMapLibreInteractionHandlers: () => {},
+      detachMapLibreInteractionHandlers: () => {},
+    };
+    try {
+      await (DeckGLMap.prototype as unknown as { initMapLibre(this: unknown): Promise<void> }).initMapLibre.call(self);
+      expect(mapStubs).toHaveLength(1);
+      // Two network errors before any tile loaded rebuild the map on the fallback style.
+      const onError = mapStubs[0]!.handlers.error?.[0];
+      expect(onError).toBeTypeOf('function');
+      onError!({ error: { message: 'Failed to fetch' } });
+      onError!({ error: { message: 'Failed to fetch' } });
+      expect(mapStubs).toHaveLength(2);
+    } finally {
+      if (self.styleLoadTimeoutId) clearTimeout(self.styleLoadTimeoutId);
+      basemap.remove();
+      mapLibreFatal.error = fatal;
+      vi.restoreAllMocks();
+    }
+    for (const [index, map] of mapStubs.entries()) {
+      const which = index === 0 ? 'primary' : 'fallback';
+      expect(map.touchZoomRotate.disableRotation, which).toHaveBeenCalledTimes(1);
+      expect(map.keyboard.disableRotation, which).toHaveBeenCalledTimes(1);
+      // Pinch zoom and arrow-key panning stay on.
+      expect(map.touchZoomRotate.disable, which).not.toHaveBeenCalled();
+      expect(map.keyboard.disable, which).not.toHaveBeenCalled();
+    }
+    for (const options of mapOptions) {
+      expect(options).toMatchObject({ maxPitch: 0, dragRotate: false, pitchWithRotate: false });
+      expect(options.touchZoomRotate).not.toBe(false);
+      expect(options.keyboard).not.toBe(false);
+    }
   });
 });
