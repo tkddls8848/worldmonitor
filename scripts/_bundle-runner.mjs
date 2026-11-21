@@ -352,7 +352,7 @@ function streamLines(stream, onLine) {
   stream.on('error', (err) => onLine(`<stdio error: ${err.message}>`));
 }
 
-function spawnSeed(scriptPath, { timeoutMs, label, bundleStartedAtMs, completionMetaKey, useBundledCa }) {
+function spawnSeed(scriptPath, { timeoutMs, label, bundleStartedAtMs, completionMetaKey, useBundledCa, useTsxLoader }) {
   return new Promise((resolve) => {
     const t0 = Date.now();
     // Capture the child's structured `seed_complete` event if emitted, so
@@ -367,7 +367,9 @@ function spawnSeed(scriptPath, { timeoutMs, label, bundleStartedAtMs, completion
     // peer's seed-meta predates the current bundle run and fall back to a
     // hard default instead of reading a stale peer key. See plan
     // 2026-04-24-003 §"Phase 2 — SWF seeder" bundle-freshness guard.
-    const nodeArgs = useBundledCa === true ? ['--use-bundled-ca'] : [];
+    const nodeArgs = [];
+    if (useBundledCa === true) nodeArgs.push('--use-bundled-ca');
+    if (useTsxLoader === true) nodeArgs.push('--import', 'tsx/esm');
     const child = spawn(process.execPath, [...nodeArgs, scriptPath], {
       env: {
         ...process.env,
@@ -743,6 +745,7 @@ export async function runBundle(label, sections, opts = {}) {
       bundleStartedAtMs: t0,
       completionMetaKey: section.freshnessMetaKey ? '' : section.completionMetaKey,
       useBundledCa: section.useBundledCa,
+      useTsxLoader: section.useTsxLoader,
     });
     if (result.ok) {
       console.log(`  [${section.label}] Done (${result.elapsed}s)`);

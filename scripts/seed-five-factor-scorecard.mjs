@@ -6,6 +6,7 @@ import { register } from 'tsx/esm/api';
 import { getRedisCredentials, loadEnvFile, loadSharedConfig, runSeed, withRetry } from './_seed-utils.mjs';
 import { unwrapEnvelope } from './_seed-envelope-source.mjs';
 import { listRankableCountries } from './shared/rankable-universe.mjs';
+import SCORECARD_ATOMIC_PUBLISH_SCRIPT from './shared/scorecard-atomic-publish-script.cjs';
 register();
 
 // The Railway closure audit intentionally models a plain Node process for
@@ -83,8 +84,15 @@ export async function redisPipeline(commands, fetchImpl = globalThis.fetch) {
   });
   if (!response.ok) throw new Error(`scorecard source pipeline HTTP ${response.status}`);
   const results = await response.json();
-  if (!Array.isArray(results) || results.length !== commands.length || results.some((entry) => entry?.error)) {
+  if (!Array.isArray(results)) {
     throw new Error('scorecard Redis pipeline returned an invalid command result');
+  }
+  if (results.length !== commands.length) {
+    throw new Error(`scorecard Redis pipeline returned ${results.length} results for ${commands.length} commands`);
+  }
+  const failedIndex = results.findIndex((entry) => entry?.error);
+  if (failedIndex >= 0) {
+    throw new Error(`scorecard Redis ${String(commands[failedIndex]?.[0] ?? 'unknown')} failed: ${String(results[failedIndex].error).slice(0, 240)}`);
   }
   return results;
 }
@@ -154,7 +162,7 @@ export async function publishScorecardCohortAtomically(stagingKey, {
   await pipeline([
     [
       'EVAL',
-      "if redis.call('EXISTS', KEYS[2]) == 1 then redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[2]); redis.call('RENAME', KEYS[2], KEYS[3]); redis.call('EXPIRE', KEYS[3], ARGV[2]); redis.call('SET', KEYS[5], ARGV[3], 'EX', ARGV[2]); redis.call('SET', KEYS[4], '1'); return 1 end; if redis.call('GET', KEYS[5]) == ARGV[3] and redis.call('EXISTS', KEYS[1]) == 1 and redis.call('EXISTS', KEYS[3]) == 1 then redis.call('SET', KEYS[4], '1'); return 1 end; return redis.error_reply('scorecard staging cohort missing')",
+      SCORECARD_ATOMIC_PUBLISH_SCRIPT,
       '5',
       canonicalKey,
       stagingKey,

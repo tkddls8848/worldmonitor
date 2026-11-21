@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Railway: dockerfilePath=Dockerfile.seed-bundle-resilience-validation.
-// The Dockerfile wires NODE_OPTIONS --import to tsx's loader via absolute
-// path so that dynamic imports of ../server/*.ts work in spawned children.
+// Hosted bundle images set NODE_OPTIONS for TypeScript imports; personal mode
+// enables the same loader for this member through useTsxLoader in the bundle map.
 import { runBundle } from './_bundle-runner.mjs';
 import {
   RESILIENCE_VALIDATION_BUNDLE_MEMBERS,

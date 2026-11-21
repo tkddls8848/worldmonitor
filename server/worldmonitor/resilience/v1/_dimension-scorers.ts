@@ -1,6 +1,6 @@
-import countryNames from '../../../../shared/country-names.json';
-import iso2ToIso3Json from '../../../../shared/iso2-to-iso3.json';
-import wgiIndicatorKeys from '../../../../shared/wgi-indicator-keys.json';
+import countryNames from '../../../../shared/country-names.json' with { type: 'json' };
+import iso2ToIso3Json from '../../../../shared/iso2-to-iso3.json' with { type: 'json' };
+import wgiIndicatorKeys from '../../../../shared/wgi-indicator-keys.json' with { type: 'json' };
 import { wgiObservationSource } from '../../../../shared/wgi-source-provenance.js';
 import { normalizeCountryToken } from '../../../_shared/country-token';
 import { getCachedEnvelopeJson, getCachedJson, readCachedEnvelopeJson, readCachedJson } from '../../../_shared/redis';

@@ -15,6 +15,8 @@ import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const { COMPARE_AND_DELETE_SCRIPT } = require('../shared/compare-and-delete-script.cjs');
+const SCORECARD_ATOMIC_PUBLISH_SCRIPT = require('../shared/scorecard-atomic-publish-script.cjs');
+const COUNTRY_HISTORY_WRITE_SCRIPT = require('../shared/country-history-write-script.cjs');
 
 // Exact texts of scripts/_seed-utils.mjs SEED_LOCK_RENEW_SCRIPT and
 // SEED_LOCK_FENCED_SET_SCRIPT. Not imported: that module is a 2k-line seeder
@@ -252,6 +254,15 @@ export function createEngine({ now = () => Date.now() } = {}) {
     DECRBY: ([key, delta]) => incrBy(key, -toInt(delta)),
 
     DEL: (keys) => { let n = 0; for (const key of keys) if (live(key)) { data.delete(key); n += 1; } if (n) touch(); return n; },
+    RENAME: ([source, destination]) => {
+      const entry = live(source);
+      if (!entry) throw new Error('ERR no such key');
+      if (source === destination) return 'OK';
+      data.delete(source);
+      data.set(destination, entry);
+      touch();
+      return 'OK';
+    },
     EXISTS: (keys) => keys.filter((key) => live(key)).length,
     TYPE: ([key]) => live(key)?.type ?? 'none',
     COPY: ([source, destination, ...options]) => {
@@ -454,6 +465,48 @@ export function createEngine({ now = () => Date.now() } = {}) {
       commands.PEXPIRE([lock, ttlMs]);
       commands.SET(ttlSeconds === '' ? [target, value] : [target, value, 'EX', ttlSeconds]);
       return [1, ''];
+    }],
+    [SCORECARD_ATOMIC_PUBLISH_SCRIPT, ([canonicalKey, stagingKey, readModelKey, activationKey, fingerprintKey], [payload, ttlSeconds, fingerprint]) => {
+      if (commands.EXISTS([stagingKey])) {
+        commands.SET([canonicalKey, payload, 'EX', ttlSeconds]);
+        commands.RENAME([stagingKey, readModelKey]);
+        commands.EXPIRE([readModelKey, ttlSeconds]);
+        commands.SET([fingerprintKey, fingerprint, 'EX', ttlSeconds]);
+        commands.SET([activationKey, '1']);
+        return 1;
+      }
+      if (commands.GET([fingerprintKey]) === fingerprint
+        && commands.EXISTS([canonicalKey])
+        && commands.EXISTS([readModelKey])) {
+        commands.SET([activationKey, '1']);
+        return 1;
+      }
+      throw new Error('scorecard staging cohort missing');
+    }],
+    [COUNTRY_HISTORY_WRITE_SCRIPT, (keys, args) => {
+      const count = keys.length - 3;
+      const day = Number(args[0]);
+      const captured = Number(args[1]);
+      if (!Number.isInteger(count) || count < 1 || !Number.isFinite(day) || !Number.isFinite(captured) || args.length !== count + 4) {
+        throw new Error('ERR country history script arguments invalid');
+      }
+      for (let i = 0; i < keys.length; i += 1) {
+        const kind = commands.TYPE([keys[i]]);
+        const expected = i < count ? 'zset' : 'string';
+        if (kind !== 'none' && kind !== expected) throw new Error('country_history_wrong_type');
+      }
+      const previous = commands.GET([keys[count + 1]]);
+      if (previous && Number(JSON.parse(previous).fetchedAt) > captured) return 0;
+      for (let i = 0; i < count; i += 1) {
+        commands.ZREMRANGEBYSCORE([keys[i], String(day), String(day)]);
+        commands.ZADD([keys[i], String(day), args[4 + i]]);
+        commands.ZREMRANGEBYSCORE([keys[i], '-inf', String(day - 365)]);
+        commands.EXPIRE([keys[i], '34560000']);
+      }
+      commands.SET([keys[count], args[2], 'EX', '34560000']);
+      commands.SET([keys[count + 1], args[3], 'EX', '34646400']);
+      commands.SET([keys[count + 2], String(captured)]);
+      return count;
     }],
   ]);
   const sha1 = (text) => crypto.createHash('sha1').update(text).digest('hex');

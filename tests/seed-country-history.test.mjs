@@ -5,7 +5,7 @@ import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { composeCountrySnapshots, publishCountrySnapshots } from '../scripts/seed-country-history.mjs';
+import { composeCountrySnapshots, publishCountrySnapshots, readCountryHistorySources } from '../scripts/seed-country-history.mjs';
 import { CII_RISK_SCORE_CACHE_KEYS } from '../api/_cii-risk-cache-keys.js';
 
 test('daily source namespaces match the current CII, resilience and news publishers', () => {
@@ -50,6 +50,42 @@ test('unavailable, malformed and stale source snapshots cannot become daily hist
     { digest: { ...inputs().digest, coverage: { state: 'unavailable' } } },
     { risk: { ciiScores: [{ ...inputs().risk.ciiScores[0], combinedScore: null }] } },
   ]) assert.throws(() => composeCountrySnapshots({ ...inputs(), ...change }));
+});
+
+test('missing or stale CII cache warms from the personal risk-scores API before history is built', async () => {
+  const data = inputs();
+  const calls = [];
+  const sources = await readCountryHistorySources({
+    url: 'https://redis.test', token: 'fixture', now,
+    command: async (_url, _token, args) => {
+      calls.push(args);
+      return { result: [null, JSON.stringify(data.ranking), JSON.stringify(data.digest)] };
+    },
+    warmRiskScores: async () => data.risk,
+  });
+  assert.equal(calls.length, 1);
+  assert.equal(sources.risk, data.risk);
+  assert.deepEqual(composeCountrySnapshots({ ...data, ...sources }).map(row => row.countryCode), ['US', 'FR']);
+});
+
+test('a fresh ranking made only of scoreable greyed-out countries remains a usable history source', () => {
+  const data = inputs();
+  data.ranking.items = [];
+  data.ranking.greyedOut = [{ countryCode: 'US', overallScore: 65 }];
+  const [snapshot] = composeCountrySnapshots(data);
+  assert.equal(snapshot.resilience.score, 65);
+});
+
+test('missing or stale news digest warms from the local digest RPC', async () => {
+  const data = inputs();
+  data.digest.generatedAt = new Date(now + 1000).toISOString();
+  const sources = await readCountryHistorySources({
+    url: 'https://redis.test', token: 'fixture', now,
+    command: async () => ({ result: [JSON.stringify(data.risk), JSON.stringify(data.ranking), null] }),
+    warmNewsDigest: async () => data.digest,
+  });
+  assert.equal(sources.digest, data.digest);
+  assert.equal(composeCountrySnapshots({ ...data, ...sources, now: now + 2000 }).length, 2);
 });
 
 test('headline selection requires qualified names for ambiguous countries', () => {

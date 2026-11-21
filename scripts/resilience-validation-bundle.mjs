@@ -23,6 +23,7 @@ export const RESILIENCE_VALIDATION_BUNDLE_MEMBERS = Object.freeze([
   Object.freeze({
     label: 'Sensitivity-Suite',
     script: 'validate-resilience-sensitivity.mjs',
+    useTsxLoader: true,
     intervalMs: RESILIENCE_VALIDATION_WEEK_MS,
     timeoutMs: 600_000,
   }),
