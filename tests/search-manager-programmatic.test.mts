@@ -933,7 +933,7 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
       scrollIntoView: () => scenario.calls.scrolledPanels.push('deferred-shell'),
     };
     const target = {
-      classList: { add: () => {}, remove: () => {} },
+      classList: { add: () => {}, remove: () => {}, contains: () => false },
       isConnected: true,
       offsetWidth: 1,
       scrollIntoView: () => scenario.calls.scrolledPanels.push('real-panel'),
@@ -1017,6 +1017,7 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
       classList: {
         add: () => { highlightCount += 1; },
         remove: () => {},
+        contains: () => false,
       },
       isConnected: true,
       offsetWidth: 1,
@@ -1114,7 +1115,7 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
       scrollIntoView: () => scenario.calls.scrolledPanels.push('deferred-shell'),
     };
     const panel = {
-      classList: { add: () => {}, remove: () => {} },
+      classList: { add: () => {}, remove: () => {}, contains: () => false },
       isConnected: true,
       offsetWidth: 1,
       scrollIntoView: () => scenario.calls.scrolledPanels.push('real-panel'),
