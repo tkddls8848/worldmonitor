@@ -97,7 +97,7 @@ describe('Toronto safety qualification wiring (#7012)', () => {
   it('keeps GTA out of seed-bundle-canada and runs the TPS pair as members', () => {
     const bundle = read('scripts/seed-bundle-canada.mjs');
     const sections = extractBundleSections(bundle);
-    assert.equal(sections.length, 12);
+    assert.equal(sections.length, 10);
     assert.equal(sections.some((section) => GTA_HINT.test(section.label) || GTA_HINT.test(section.script)), false);
     assert.equal(GTA_HINT.test(bundle), false);
     for (const script of TPS_BUNDLE_SCRIPTS) {
@@ -169,7 +169,7 @@ describe('Toronto safety qualification wiring (#7012)', () => {
 
   it('does not fold Toronto safety into canadaAlerts, canadaRoads, weather, or news', () => {
     const alerts = read('scripts/lib/canada-alerts-union.mjs');
-    const roads = read('src/services/canada-roads-core.ts');
+    const roads = read('scripts/lib/provincial-511.mjs');
     assert.equal(SAFETY_HINT.test(alerts), false);
     assert.equal(SAFETY_HINT.test(roads), false);
     assert.equal(TORONTO_SAFETY_SOURCES.every((source) => !source.canonicalKey.startsWith('alerts:canada')), true);

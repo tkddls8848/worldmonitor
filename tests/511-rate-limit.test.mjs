@@ -3,7 +3,6 @@ import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 
 import {
-  HOST_511_RATES,
   __testing__,
   acquire511Slot,
   create511RateLimiter,
@@ -13,11 +12,6 @@ import {
 const SEEDER_SOURCE = readFileSync(new URL('../scripts/seed-provincial-511.mjs', import.meta.url), 'utf8');
 const ADAPTER_SOURCE = readFileSync(new URL('../scripts/lib/provincial-511.mjs', import.meta.url), 'utf8');
 const RELAY_SOURCE = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
-// canada-roads-core.ts, not canada-roads.ts: #6763 moved the source descriptors
-// into the import-safe core, so the per-jurisdiction literals this file checks
-// for live there now.
-const CANADA_ROADS_SOURCE = readFileSync(new URL('../src/services/canada-roads-core.ts', import.meta.url), 'utf8');
-
 describe('per-host 511 limiter (#6618 v1)', () => {
   it('does not import the seeder from tests', () => {
     const self = readFileSync(new URL(import.meta.url), 'utf8');
@@ -57,14 +51,14 @@ describe('per-host 511 limiter (#6618 v1)', () => {
     await acquire511Slot('511on.ca');
     await acquire511Slot('511on.ca');
     await acquire511Slot('511on.ca');
-    // BC Open511 is a different host and must not wait on Ontario's 3 tokens.
+    // Alberta is a different host and must not wait on Ontario's 3 tokens.
     // Asserted on bucket state rather than elapsed time: a 50ms bound was
     // measuring runner scheduling, not bucket separation, and flaked under
     // --test-concurrency=16 (#7534). Per-host token counts say it directly --
-    // a shared bucket would put Ontario at 4 and leave BC empty.
-    await acquire511Slot('api.open511.gov.bc.ca');
+    // a shared bucket would put Ontario at 4 and leave Alberta empty.
+    await acquire511Slot('511.alberta.ca');
     assert.equal(__testing__.pendingTokens('511on.ca'), 3, 'Ontario holds only its own 3 tokens');
-    assert.equal(__testing__.pendingTokens('api.open511.gov.bc.ca'), 1, 'BC consumed a token from its own bucket');
+    assert.equal(__testing__.pendingTokens('511.alberta.ca'), 1, 'Alberta consumed a token from its own bucket');
   });
 
   it('adapter acquires the Ontario host slot before each fetch', () => {
@@ -74,37 +68,6 @@ describe('per-host 511 limiter (#6618 v1)', () => {
     assert.doesNotMatch(ADAPTER_SOURCE, /open511\.gov\.bc/);
     assert.doesNotMatch(ADAPTER_SOURCE, /from ['"]\.\.\/\.\.\/shared\//);
     assert.doesNotMatch(ADAPTER_SOURCE, /fetch\.bind/);
-  });
-
-  it('BC Open511 is paced at one request per second; Ontario stays 10/60', async () => {
-    assert.deepEqual(HOST_511_RATES['api.open511.gov.bc.ca'], { capacity: 1, windowMs: 1_000 });
-    let nowMs = 1_000;
-    const sleeps = [];
-    const limiter = create511RateLimiter({
-      hostRates: HOST_511_RATES,
-      now: () => nowMs,
-      sleep: async (ms) => {
-        sleeps.push(ms);
-        nowMs += ms;
-      },
-    });
-
-    await limiter.acquire511Slot('api.open511.gov.bc.ca');
-    assert.equal(limiter.pendingCount('api.open511.gov.bc.ca'), 1);
-    assert.equal(limiter.pendingCount('511on.ca'), 0);
-
-    await limiter.acquire511Slot('api.open511.gov.bc.ca');
-    assert.ok(sleeps.length >= 1, 'second BC call must wait for the one-second window');
-    assert.equal(sleeps[0], 1_000);
-
-    sleeps.length = 0;
-    for (let i = 0; i < 10; i++) {
-      await limiter.acquire511Slot('511on.ca');
-    }
-    assert.equal(sleeps.length, 0, 'Ontario 10/60 must not wait on the first 10 calls');
-    await limiter.acquire511Slot('511on.ca');
-    assert.ok(sleeps.length >= 1, '11th Ontario call must still wait');
-    assert.equal(sleeps[0], 60_000);
   });
 
   it('seeder is a standalone nixpacks job and does not loop ais-relay', () => {
@@ -124,10 +87,6 @@ describe('per-host 511 limiter (#6618 v1)', () => {
     assert.doesNotMatch(RELAY_SOURCE, /alberta-511/);
     assert.doesNotMatch(RELAY_SOURCE, /manitoba-511/);
     assert.doesNotMatch(RELAY_SOURCE, /canadaRoads/);
-    assert.match(CANADA_ROADS_SOURCE, /albertaRoads/);
-    assert.match(CANADA_ROADS_SOURCE, /alberta-511/);
-    assert.match(CANADA_ROADS_SOURCE, /manitobaRoads/);
-    assert.match(CANADA_ROADS_SOURCE, /manitoba-511/);
   });
 
   it('511.alberta.ca is a separate limiter bucket from 511on.ca', async () => {

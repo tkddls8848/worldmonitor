@@ -54,9 +54,7 @@ Layers are organized into logical groups for efficient monitoring:
 |-------|-------------|
 | **Military Bases** | Global military installations from the authoritative base registry |
 | **Nuclear Facilities** | Power plants, weapons labs, enrichment sites |
-| **Gamma Irradiators** | IAEA-tracked Category 1-3 radiation sources |
 | **APT Groups** | State-sponsored cyber threat actors with geographic attribution |
-| **Spaceports** | 12 major launch facilities (NASA, SpaceX, Roscosmos, CNSA, ESA, ISRO, JAXA) |
 | **Critical Minerals** | Strategic mineral deposits (lithium, cobalt, rare earths) with operator info |
 
 **Infrastructure**
@@ -77,12 +75,6 @@ Layers are organized into logical groups for efficient monitoring:
 
 *\*AIS data via [AISStream.io](https://aisstream.io) uses terrestrial receivers with stronger coverage in European/Atlantic waters. Middle East, Asia, and open ocean coverage is limited. Satellite AIS providers (Spire, Kpler) offer global coverage but require commercial licenses.*
 
-**Canada**
-| Layer | Description |
-|-------|-------------|
-| **Canada Roads** | Road closures and incidents from Ontario, Alberta, and Manitoba 511, Toronto road restrictions, and DriveBC (Open511). Provinces whose API key is not configured keep their last good data. Off by default because the payload is large |
-| **Canada Alerts** | Public emergency alerts from Alberta Emergency Alert, B.C. Evacuation Orders, and SaskAlert, refreshed every 15 minutes. Polygons are drawn at their centroid. Ontario is not covered. On by default on desktop in the geopolitical variant |
-
 **Natural Events**
 | Layer | Description |
 |-------|-------------|
@@ -93,7 +85,6 @@ Layers are organized into logical groups for efficient monitoring:
 **Overlays & Labels**
 | Layer | Description |
 |-------|-------------|
-| **Day/Night** | Real-time solar terminator overlay showing day and night zones (updates every 5 minutes) |
 | **Economic** | Tabbed economic panel with FRED indicators, open public procurement opportunities, and USASpending.gov recent awards |
 | **Countries** | Country boundary labels |
 | **Waterways** | Strategic waterways and chokepoints |
@@ -689,7 +680,7 @@ The mobile experience focuses on the most essential intelligence layers:
 
 Layers disabled by default on mobile (but available on desktop):
 
-- Military bases, nuclear facilities, spaceports, minerals
+- Military bases, nuclear facilities, minerals
 - Undersea cables, pipelines, datacenters
 - AIS vessels, military flights
 - Protests, economic centers

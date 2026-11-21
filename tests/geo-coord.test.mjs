@@ -5,9 +5,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { finiteLat, finiteLon, lonLatPair } from '../scripts/lib/geo-coord.mjs';
-import { geometryFromOpen511 } from '../scripts/lib/open511.mjs';
 import { normalize511Record } from '../scripts/lib/provincial-511.mjs';
-import { normalizeTorontoRoadRecord, parseGeoPolyline } from '../scripts/lib/toronto-road-restrictions.mjs';
 import { weatherAlertNotifyLocation } from '../scripts/_weather-alert-select.mjs';
 
 // Every one of these is Number()-coercible to 0, and 0,0 is the Gulf of Guinea.
@@ -49,25 +47,6 @@ test('a pair is rejected when either axis is unusable', () => {
   }
 });
 
-test('Open511 drops unplaceable points rather than mapping them to zero', () => {
-  const empty = { lat: null, lon: null, centroid: null, path: null };
-  for (const value of MISSING) {
-    assert.deepEqual(geometryFromOpen511({ type: 'Point', coordinates: [value, 49] }), empty);
-    assert.deepEqual(geometryFromOpen511({ type: 'Point', coordinates: [-123, value] }), empty);
-  }
-  assert.deepEqual(geometryFromOpen511({ type: 'Point', coordinates: [181, 49] }), empty);
-  assert.deepEqual(geometryFromOpen511({ type: 'Point', coordinates: ['-123.5', '49.5'] }).centroid,
-    [-123.5, 49.5]);
-});
-
-test('a malformed LineString vertex cannot drag the Open511 centroid', () => {
-  const line = geometryFromOpen511({
-    type: 'LineString',
-    coordinates: [[-124, 48], [false, '  '], [-122, 50], [1000, 49]],
-  });
-  assert.deepEqual(line.centroid, [-123, 49]);
-});
-
 test('provincial 511 falls back to the encoded path when direct coordinates are junk', () => {
   for (const value of MISSING) {
     const record = normalize511Record(
@@ -83,26 +62,6 @@ test('provincial 511 falls back to the encoded path when direct coordinates are 
     { kind: 'event', jurisdiction: 'ON' },
   );
   assert.deepEqual(zero.centroid, [0, 0]);
-});
-
-test('Toronto polylines reject junk vertices in array, JSON and encoded forms', () => {
-  for (const value of MISSING) {
-    assert.deepEqual(parseGeoPolyline([[value, 43], [-79, value]]), []);
-  }
-  const outOfRange = [[181, 43], [-79, 91]];
-  assert.deepEqual(parseGeoPolyline(outOfRange), []);
-  assert.deepEqual(parseGeoPolyline(JSON.stringify(outOfRange)), []);
-  assert.deepEqual(parseGeoPolyline([[0, 0], [180, 90], ['-79.5', '43.5']]),
-    [[0, 0], [180, 90], [-79.5, 43.5]]);
-});
-
-test('invalid direct Toronto coordinates do not override a valid road path', () => {
-  const record = normalizeTorontoRoadRecord({
-    latitude: false, longitude: false, geoPolyline: [[-80, 43], [-79, 44]],
-  });
-  assert.deepEqual(record.centroid, [-79.5, 43.5]);
-  assert.equal(record.lat, null);
-  assert.equal(record.lon, null);
 });
 
 test('a webhook ring with a null vertex is withheld from the geometry payload', () => {

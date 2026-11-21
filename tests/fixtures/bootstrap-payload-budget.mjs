@@ -58,7 +58,6 @@ export const FAST_FIRST_PAINT_JUSTIFICATION = Object.freeze({
   spending: 'Economic panel first-wave when the layer/panel is in view.',
   theaterPosture: 'Strategic-posture first-wave.',
   gdeltIntel: 'GDELT intel first-wave.',
-  canadaAlerts: 'Default-on Canada alerts layer on full desktop.',
   shippingRates: 'Supply-chain first-wave rates.',
   shippingStress: 'Supply-chain first-wave stress.',
   socialVelocity: 'Retained once the 20% target is met to avoid another default dashboard request.',

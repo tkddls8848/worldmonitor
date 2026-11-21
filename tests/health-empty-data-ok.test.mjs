@@ -34,14 +34,11 @@ const AUDITED_PRESENT_PAYLOAD_KEYS = [
   // publishes an explicit {records: []} envelope on every successful tick
   // (zeroIsValid -> OK_ZERO -> canonical written). So fresh metadata plus a
   // vanished payload is a real publish failure, not a quiet period — the same
-  // reasoning api/health.js already applies to `outages`. albertaRoads rides the
-  // same seeder and the same publish path. torontoRoads is a different seeder but
-  // the same contract: an explicit envelope on every successful tick.
+  // reasoning api/health.js already applies to `outages`. albertaRoads and
+  // manitobaRoads ride the same seeder and the same publish path.
   'canadaRoads',
   'albertaRoads',
   'manitobaRoads',
-  'torontoRoads',
-  'bcOpen511',
   // canadaAlerts is the same contract again: seed-alberta-emergency-alert runs
   // with zeroIsValid, so a quiet province still writes {alerts: []}. A vanished
   // canonical key beside fresh seed-meta is a failed publish — and on an

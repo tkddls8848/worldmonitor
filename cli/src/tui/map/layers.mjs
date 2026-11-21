@@ -302,7 +302,7 @@ export const LAYERS = [
     }).filter(Boolean),
   },
   {
-    id: 'canadaAlerts', group: 'hazards', label: 'Canada emergency alerts', glyph: '⚠', kind: 'point', on: true, color: 'bad',
+    id: 'canadaAlerts', group: 'hazards', label: 'Canada emergency alerts', glyph: '⚠', kind: 'point', on: true, color: 'bad', sources: ['canadaAlerts'],
     build: ({ data, t, now }) => (data.canadaAlerts?.alerts || []).map((a) => {
       const p = loc(a);
       if (!p) return null;

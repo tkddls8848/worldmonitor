@@ -675,14 +675,12 @@ test('every Canada road key serves anonymously with a shield sized to its publis
   // move edits, so checking it against itself would pass either way.
   //
   // The s-maxage values are the second half of the move. Without a profile
-  // these inherit the slow 7200 s shield, which outlives the 45- and 90-minute
+  // these inherit the slow 7200 s shield, which outlives the 45-minute
   // freshness budgets api/health.js declares for them.
   const expected = {
     canadaRoads: 900,   // seed-provincial-511, 15min member interval
     albertaRoads: 900,  // same seeder, same interval
     manitobaRoads: 900, // same seeder, same interval
-    bcOpen511: 1800,    // seed-open511, 30min member interval
-    torontoRoads: 7200, // 2h publisher; the inherited slow shield already fits
   };
   await withMockedBootstrapAuth({
     entitlement: null,
@@ -699,6 +697,25 @@ test('every Canada road key serves anonymously with a shield sized to its publis
         `keys=${key} must be CDN-shielded for ${sMaxAge}s`,
       );
     }
+  });
+});
+
+// canadaAlerts left the fast tier with its dashboard map layer. Its per-key URL
+// also reads the two cutover fallback keys, so the pipeline answers three GETs.
+test('canadaAlerts serves anonymously with a 15-minute shield', async () => {
+  await withMockedBootstrapAuth({
+    entitlement: null,
+    bootstrapPipelineBody: [
+      { result: JSON.stringify({ alerts: [] }) },
+      { result: null },
+      { result: null },
+    ],
+  }, async () => {
+    const resp = await handler(makePublicOnDemandRequest('canadaAlerts'));
+    assert.equal(resp.status, 200, 'keys=canadaAlerts must serve without credentials');
+    assertSharedCacheHeaders(resp);
+    assertPublicCorsHeaders(resp);
+    assert.match(resp.headers.get('cdn-cache-control') || '', /s-maxage=900\b/);
   });
 });
 

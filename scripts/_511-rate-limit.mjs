@@ -5,9 +5,6 @@
  * AB/MB APIs). A shared Canada bucket would stall Alberta because Ontario
  * consumed the quota. Each hostname gets its own in-process bucket.
  *
- * DriveBC Open511 is paced at one request per second. A 60-token minute bucket
- * would permit a 60-request burst and would not enforce that pacing.
- *
  * Do not reuse inbound api/_rate-limit.js / the `rl:` Redis prefix — this is
  * an egress limiter inside the seeder process, not the public API limiter.
  *
@@ -18,9 +15,7 @@ const DEFAULT_CAPACITY = 10;
 const DEFAULT_WINDOW_MS = 60_000;
 
 /** Per-host overrides for the process-wide default limiter. */
-export const HOST_511_RATES = Object.freeze({
-  'api.open511.gov.bc.ca': Object.freeze({ capacity: 1, windowMs: 1_000 }),
-});
+export const HOST_511_RATES = Object.freeze({});
 
 /**
  * @param {{

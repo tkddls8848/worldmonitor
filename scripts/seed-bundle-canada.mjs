@@ -17,11 +17,9 @@
 // actually justifies rather than inheriting TTC's.
 //
 // CADENCES ARE DELIBERATE, NOT INHERITED. Measured payloads per tick (live,
-// 2026-08-14): Toronto 3.62MB, Ontario+Alberta 1.99MB, BC 0.87MB, VIA 0.30MB,
-// TTC 27KB, Alberta alerts 12KB. Polling Toronto's construction-permit feed
-// every 15 minutes cost 348 MB/day for data that changes on a permit desk's
-// schedule; at 2h it costs ~44 MB/day. BC at 30min halves 84 MB/day. Together
-// with the unchanged members that is ~938 -> ~394 MB/day.
+// 2026-08-14): Ontario+Alberta 1.99MB, VIA 0.30MB, TTC 27KB, Alberta alerts
+// 12KB. The Toronto road-restrictions and DriveBC Open511 members were removed
+// with the dashboard Canada roads layer they fed.
 //
 // FAILURE SEMANTICS: every member runs through `runSeed`, whose fetch-phase
 // catch preserves last-good and exits GRACEFUL_FETCH_FAILURE_EXIT_CODE (75).
@@ -46,14 +44,6 @@ const CANADA_SECTIONS = [
   // covers that with margin — if the limiter sleeps past the timeout the section
   // is SIGTERM'd, which is a HARD failure rather than runSeed's graceful path.
   { label: 'Provincial-511', script: 'seed-provincial-511.mjs', seedMetaKey: 'seed-meta:infra:ontario-511', canonicalKey: 'infra:ontario-511:v1', completionMetaKey: 'seed-completion:infra:ontario-511', intervalMs: 15 * MIN, timeoutMs: 240_000 },
-  // 3.62MB body, not strictly valid JSON, sanitized then parsed. Road
-  // restrictions are construction permits, not live incidents.
-  // A slow run published at 179.5s, then hit the old 180s limit in cleanup.
-  // Fetch has its own 135s deadline; leave time for Redis retries and exit.
-  { label: 'Toronto-Roads', script: 'seed-toronto-road-restrictions.mjs', seedMetaKey: 'seed-meta:infra:toronto-roads', canonicalKey: 'infra:toronto-roads:v1', intervalMs: 2 * HOUR, timeoutMs: 300_000 },
-  // Open511 spec with next_url pagination; DriveBC returned the full active set
-  // in one page, so budget one request per tick, not MAX_PAGES.
-  { label: 'BC-Open511', script: 'seed-open511.mjs', seedMetaKey: 'seed-meta:infra:bc-open511', canonicalKey: 'infra:bc-open511:v1', intervalMs: 30 * MIN, timeoutMs: 120_000 },
   // Emergency alerts stay at 15 minutes: the payload is tiny and the whole point
   // of the layer is timeliness.
   { label: 'Alberta-Emergency-Alert', script: 'seed-alberta-emergency-alert.mjs', seedMetaKey: 'seed-meta:alerts:alberta-aea', canonicalKey: 'alerts:canada:alberta-aea:v1', completionMetaKey: 'seed-completion:alerts:alberta-aea', intervalMs: 15 * MIN, timeoutMs: 60_000 },

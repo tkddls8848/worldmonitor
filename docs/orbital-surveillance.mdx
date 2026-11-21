@@ -1,77 +1,24 @@
 ---
 title: "Orbital Surveillance"
-description: "The Orbital Surveillance map layer: recent Sentinel SAR and optical imagery footprints for the area in view on the flat map, and what was removed with the 3D globe."
+description: "The Orbital Surveillance map layer was removed. What remains: the imagery search endpoint and the satellite TLE mirror."
 ---
 
 ## Overview
 
-The Orbital Surveillance layer (layer key `satellites`) shows where recent Sentinel SAR and optical imagery was captured inside the area you are looking at. It draws the scene footprints on the flat DeckGL map.
-
-Live satellite tracking was removed together with the 3D globe. The dashboard no longer draws satellite positions, orbit trails, or nadir footprints, and it no longer runs SGP4 propagation in the browser. Turning the layer on loads imagery footprints only.
+The dashboard no longer has an Orbital Surveillance map layer (layer key `satellites`). Live satellite tracking was removed together with the 3D globe, and the imagery-footprint layer that replaced it was removed at the owner's request. A saved layer setting or a `?layers=` link that still names `satellites` loads without it.
 
 To see when a satellite passed over a specific place, use [Orbital Watch](/orbital-watch), which draws pass ground tracks on the flat map.
 
-### What It Shows
-
-| Element | Description |
-|---------|-------------|
-| **Imagery footprint** | The outline of a recent Sentinel scene whose bounding box intersects the current map view |
-| **Tooltip** | Satellite, acquisition time, resolution, sensor mode, and a preview image where the archive provides one |
-
-### Renderer support
-
-| Renderer | Behavior |
-|----------|----------|
-| DeckGL (desktop with hardware WebGL2) | Draws the imagery footprints |
-| SVG (phones and software-WebGL desktops) | The layer toggle exists, but no footprints are drawn |
-
 ---
 
-## Architecture
+## Server-side surfaces that remain
 
-### Data Flow
-
-```
-Browser (layer on) ──bbox──▶ /api/imagery/v1/search-imagery ──STAC──▶ Sentinel archive
-                            (cached per canonical request, including the bounding box)
-```
-
-### Lifecycle
-
-| Event | Action |
-|-------|--------|
-| Layer enabled | `loadImageryFootprints()` reads the current map bounding box and requests up to 20 scenes. If the map has no bounding box yet, it retries twice, 1.5 s apart |
-| Map moved (DeckGL) | 500 ms after the map stops moving, the footprints are re-requested for the new view |
-| Layer disabled | `stopLayerActivity('satellites')` cancels a pending retry |
-| Page unload | Cleanup in `destroy()` |
-
----
-
-## Server-side TLE data
-
-The relay still seeds the satellite TLE mirror, and the generated RPC still serves it. No dashboard code reads it after the globe removal.
+| Surface | Endpoint | Notes |
+|---|---|---|
+| SAR / optical scene search | `GET /api/imagery/v1/search-imagery` | STAC-backed Sentinel search by `bbox`, `datetime`, `source`, and `limit`, cached per canonical provider request, including the precise bounding box. No dashboard consumer. |
+| Satellite TLE mirror | `GET /api/intelligence/v1/list-satellites` | Generated IntelligenceService RPC reading `intelligence:satellites:tle:v1`. Read by the terminal dashboard. |
 
 | Key | TTL | Writer | Shape |
 |-----|-----|--------|-------|
 | `intelligence:satellites:tle:v1` | 4h | Relay (2h cycle) | `{ satellites: SatelliteTLE[], fetchedAt: number }` |
 | `seed-meta:intelligence:satellites` | 7d | Relay | `{ fetchedAt: number, recordCount: number }` |
-
-### Backed by endpoints
-
-| Surface | Endpoint | Notes |
-|---|---|---|
-| SAR / optical scene search | `GET /api/imagery/v1/search-imagery` | STAC-backed Sentinel search by `bbox`, `datetime`, `source`, and `limit`, cached per canonical provider request, including the precise bounding box. |
-| Satellite TLE mirror | `GET /api/intelligence/v1/list-satellites` | Generated IntelligenceService RPC reading `intelligence:satellites:tle:v1`. No dashboard consumer. |
-
----
-
-## Files
-
-| File | Purpose |
-|------|---------|
-| `src/app/data-loader.ts` | `loadImageryFootprints()` and its retry and cleanup |
-| `src/services/imagery.ts` | Imagery search client |
-| `src/components/DeckGLMap.ts` | Footprint rendering |
-| `src/components/MapContainer.ts` | Adapter with cache + rehydration |
-| `src/config/map-layer-definitions.ts` | Layer registry entry |
-| `scripts/ais-relay.cjs` | `seedSatelliteTLEs()` + `startSatelliteSeedLoop()` (server-side TLE mirror) |

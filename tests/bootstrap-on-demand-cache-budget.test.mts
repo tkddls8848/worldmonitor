@@ -106,9 +106,9 @@ function completeCacheServingWindowSeconds(header: string, shared: boolean): num
 test('SEED_META budgets are actually readable, or this whole suite is vacuous', () => {
   // Without this, a rename in api/health.js would turn every budget into null
   // and the guard below would pass by having nothing to check.
-  assert.equal(healthMaxStaleMin('bcOpen511'), 90, 'plain digits');
+  assert.equal(healthMaxStaleMin('imdCycloneMarine'), 45, 'plain digits');
   // A nested cutover block sits between the key and its closing brace.
-  assert.equal(healthMaxStaleMin('torontoRoads'), 360, 'budget declared before a nested cutover');
+  assert.equal(healthMaxStaleMin('canadaAlerts'), 45, 'budget declared before a nested cutover');
   // The three shapes that defeat a `\d+` read. Each of these was reported as a
   // violation by the first version of this guard: 2_160 read as 2, and
   // 60 * 24 * 14 read as 60.

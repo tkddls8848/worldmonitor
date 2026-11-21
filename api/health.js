@@ -323,8 +323,6 @@ const BOOTSTRAP_KEYS = {
   canadaRoads:       'infra:ontario-511:v1',
   albertaRoads:      'infra:alberta-511:v1',
   manitobaRoads:     'infra:manitoba-511:v1',
-  torontoRoads:      'infra:toronto-roads:v1',
-  bcOpen511:         'infra:bc-open511:v1',
   canadaAlerts:      'alerts:canada:v1',
   spending:          'economic:spending:v1',
   techEvents:        'research:tech-events-bootstrap:v1',
@@ -1354,26 +1352,6 @@ const SEED_META = {
       status: 'EMPTY',
     },
   },
-  torontoRoads:     {
-    key: 'seed-meta:infra:toronto-roads',
-    maxStaleMin: 360, // seed-bundle-canada member interval 2h; 360 = 3× interval. At the old 45 (sized for a */15 cron) a healthy 2h publisher read STALE_SEED permanently, because normal data age reaches 120min.
-    cutover: {
-      mode: 'expiring-ack',
-      fromKey: null,
-      issue: 6609,
-      status: 'EMPTY',
-    },
-  },
-  bcOpen511:        {
-    key: 'seed-meta:infra:bc-open511',
-    maxStaleMin: 90, // seed-bundle-canada member interval 30min; 90 = 3× interval, and matches this seeder's own 5400s TTL. At the old 45 a single missed tick tripped STALE_SEED.
-    cutover: {
-      mode: 'expiring-ack',
-      fromKey: null,
-      issue: 6611,
-      status: 'EMPTY',
-    },
-  },
   canadaAlerts:     {
     key: 'seed-meta:alerts:canada-union',
     maxStaleMin: 45, // union rebuilds on the */15 Alberta tick; 45 = 3× interval
@@ -1406,7 +1384,7 @@ const SEED_META = {
   // absent forever no matter how healthy the seeder is.
   ttcAlerts:        { key: 'seed-meta:transit:ttc-alerts',         maxStaleMin: 30, cutover: { mode: 'expiring-ack', fromKey: null, issue: 6623, status: 'EMPTY' } }, // 5min bundle member; 30 = 6× interval. Empty until first Railway tick is an expiring acknowledgement, not a crit.
   // #7012/#7036 TPS Open Data, now seed-bundle-canada members at a 6h interval;
-  // 1080 = 3× interval, the same sizing rule torontoRoads documents. The old
+  // 1080 = 3× interval (the 3× member-interval sizing rule). The old
   // 14d was sized for a manual writer and would have hidden a stopped bundle
   // for two weeks — the opposite of what a scheduled publisher needs. Content
   // age stays governed separately by the adapter's maxContentAgeMin, so this
@@ -3460,7 +3438,7 @@ function applyStaleContentGrace(checks, graceEvidenceByName, deadlines, now) {
 }
 
 const EMPTY_DATA_OK_KEYS = new Set([
-  'notamClosures', 'faaDelays', 'intlDelays', 'gpsjam', 'positiveGeoEvents', 'weatherAlerts', 'imdCycloneMarine', 'canadaRoads', 'albertaRoads', 'manitobaRoads', 'torontoRoads', 'bcOpen511', 'canadaAlerts', 'canadaAlertsAbSource', 'canadaAlertsBcSource', 'canadaAlertsSkSource',
+  'notamClosures', 'faaDelays', 'intlDelays', 'gpsjam', 'positiveGeoEvents', 'weatherAlerts', 'imdCycloneMarine', 'canadaRoads', 'albertaRoads', 'manitobaRoads', 'canadaAlerts', 'canadaAlertsAbSource', 'canadaAlertsBcSource', 'canadaAlertsSkSource',
   'earningsCalendar', 'econCalendar', 'cotPositioning',
   'usniFleet', // usniFleetStale covers the fallback; relay outages → WARN not CRIT
   'newsThreatSummary', // a quiet classify cycle writes `byCountry: {}` (0 records); MISSING_DATA_IS_FAILURE_KEYS makes a payload missing beside fresh seed-meta critical (expiry after the 2h TTL reads STALE_SEED, since seed-meta is stale by then)
@@ -3514,12 +3492,10 @@ const MISSING_DATA_IS_FAILURE_KEYS = new Set([
   // canonical key alongside a still-refreshing seed-meta classified OK: the map
   // layer goes blank and nothing pages. Same reasoning as `outages`.
   // albertaRoads and manitobaRoads are written by the same seeder on the same
-  // publish path; torontoRoads is a different seeder under the same publish contract.
+  // publish path.
   'canadaRoads',
   'albertaRoads',
   'manitobaRoads',
-  'torontoRoads',
-  'bcOpen511',
   // Same contract, and the highest-stakes member of it: the provincial union
   // writes {alerts: []} when all configured sources are quiet. Reading
   // OK while an EMERGENCY ALERT payload has vanished is the worst failure in this set.

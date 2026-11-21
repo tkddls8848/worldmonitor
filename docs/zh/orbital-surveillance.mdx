@@ -1,77 +1,24 @@
 ---
 title: "轨道监视"
-description: "WorldMonitor 轨道监视地图图层说明：在 DeckGL 平面地图上显示当前视野内近期 Sentinel SAR 与光学影像的覆盖范围与工具提示，说明各渲染器的支持情况、图层生命周期，以及随 3D 地球仪一同移除的实时卫星追踪功能、服务端 TLE 数据与相关接口。"
+description: "轨道监视地图图层已移除。保留的部分：影像检索接口与卫星 TLE 镜像。"
 ---
 
-## 概览
+## 概述
 
-轨道监视图层（图层键 `satellites`）显示当前视野内近期 Sentinel SAR 与光学影像的拍摄范围，并在 DeckGL 平面地图上绘制影像覆盖轮廓。
+仪表盘不再提供轨道监视地图图层（图层键 `satellites`）。实时卫星追踪已随 3D 地球仪一同移除，之后替代它的影像覆盖范围图层也应所有者要求移除。仍包含 `satellites` 的已保存图层设置或 `?layers=` 链接会忽略该图层并正常加载。
 
-实时卫星追踪已随 3D 地球仪一同移除。仪表板不再绘制卫星位置、轨道轨迹或星下点覆盖，也不再在浏览器中运行 SGP4 轨道传播。开启该图层只会加载影像覆盖范围。
-
-如需查看某颗卫星何时经过特定地点，请使用[轨道观察](/zh/orbital-watch)，它会在平面地图上绘制过境地面轨迹。
-
-### 显示内容
-
-| 元素 | 说明 |
-|---------|-------------|
-| **影像覆盖范围** | 边界框与当前地图视野相交的近期 Sentinel 场景轮廓 |
-| **工具提示** | 卫星、拍摄时间、分辨率、传感器模式，以及档案提供时的预览图 |
-
-### 渲染器支持
-
-| 渲染器 | 行为 |
-|----------|----------|
-| DeckGL（具备硬件 WebGL2 的桌面端） | 绘制影像覆盖范围 |
-| SVG（手机与软件 WebGL 桌面端） | 图层开关存在，但不绘制覆盖范围 |
+如需查看卫星何时经过某个地点，请使用[轨道观察](/zh/orbital-watch)，它会在平面地图上绘制过境地面轨迹。
 
 ---
 
-## 架构
+## 保留的服务端接口
 
-### 数据流
-
-```
-Browser (layer on) ──bbox──▶ /api/imagery/v1/search-imagery ──STAC──▶ Sentinel archive
-                            (cached per canonical request, including the bounding box)
-```
-
-### 生命周期
-
-| 事件 | 动作 |
-|-------|--------|
-| 开启图层 | `loadImageryFootprints()` 读取当前地图边界框并请求最多 20 个场景。若地图尚无边界框，则间隔 1.5 秒重试两次 |
-| 移动地图（DeckGL） | 地图停止移动 500 ms 后，按新视野重新请求覆盖范围 |
-| 关闭图层 | `stopLayerActivity('satellites')` 取消待执行的重试 |
-| 页面卸载 | 在 `destroy()` 中清理 |
-
----
-
-## 服务端 TLE 数据
-
-中继仍会写入卫星 TLE 镜像，生成的 RPC 也仍提供该数据。移除地球仪后，仪表板中已没有读取它的代码。
+| 接口 | 端点 | 说明 |
+|---|---|---|
+| SAR / 光学影像检索 | `GET /api/imagery/v1/search-imagery` | 基于 STAC 的 Sentinel 检索，参数为 `bbox`、`datetime`、`source` 和 `limit`，按规范化请求（含精确边界框）缓存。没有仪表盘使用方。 |
+| 卫星 TLE 镜像 | `GET /api/intelligence/v1/list-satellites` | 生成的 IntelligenceService RPC，读取 `intelligence:satellites:tle:v1`。由终端仪表盘读取。 |
 
 | 键 | TTL | 写入方 | 结构 |
 |-----|-----|--------|-------|
-| `intelligence:satellites:tle:v1` | 4h | 中继（2h 周期） | `{ satellites: SatelliteTLE[], fetchedAt: number }` |
-| `seed-meta:intelligence:satellites` | 7d | 中继 | `{ fetchedAt: number, recordCount: number }` |
-
-### 依赖的接口
-
-| 功能 | 接口 | 说明 |
-|---|---|---|
-| SAR / 光学场景搜索 | `GET /api/imagery/v1/search-imagery` | 基于 STAC 的 Sentinel 搜索，参数为 `bbox`、`datetime`、`source` 和 `limit`，按规范化的提供方请求（含精确边界框）缓存。 |
-| 卫星 TLE 镜像 | `GET /api/intelligence/v1/list-satellites` | 读取 `intelligence:satellites:tle:v1` 的生成 IntelligenceService RPC。仪表板中没有使用方。 |
-
----
-
-## 文件
-
-| 文件 | 用途 |
-|------|---------|
-| `src/app/data-loader.ts` | `loadImageryFootprints()` 及其重试与清理 |
-| `src/services/imagery.ts` | 影像搜索客户端 |
-| `src/components/DeckGLMap.ts` | 覆盖范围渲染 |
-| `src/components/MapContainer.ts` | 带缓存与重新注入的适配器 |
-| `src/config/map-layer-definitions.ts` | 图层注册表条目 |
-| `scripts/ais-relay.cjs` | `seedSatelliteTLEs()` + `startSatelliteSeedLoop()`（服务端 TLE 镜像） |
+| `intelligence:satellites:tle:v1` | 4h | Relay（2h 周期） | `{ satellites: SatelliteTLE[], fetchedAt: number }` |
+| `seed-meta:intelligence:satellites` | 7d | Relay | `{ fetchedAt: number, recordCount: number }` |

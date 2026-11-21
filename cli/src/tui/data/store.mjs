@@ -31,6 +31,7 @@ export const SOURCES = {
   storageFacilities: { label: 'energy storage', path: '/api/bootstrap?keys=storageFacilities&public=1', every: 30 * MIN, bootstrap: true, lazy: true },
   energyDisruptions: { label: 'energy disruptions', path: '/api/bootstrap?keys=energyDisruptions&public=1', every: 15 * MIN, bootstrap: true, lazy: true },
   canadaRoads: { label: 'canada roads', path: '/api/bootstrap?keys=canadaRoads&public=1', every: 15 * MIN, bootstrap: true, lazy: true },
+  canadaAlerts: { label: 'canada alerts', path: '/api/bootstrap?keys=canadaAlerts&public=1', every: 15 * MIN, bootstrap: true, lazy: true },
 };
 
 // Sources loaded during the boot sequence, in order of usefulness.

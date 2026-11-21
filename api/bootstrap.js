@@ -120,14 +120,15 @@ const ON_DEMAND_CACHE_PROFILES = {
     browser: 'max-age=60, stale-while-revalidate=120, stale-if-error=900',
     cdn: 'public, s-maxage=900, stale-while-revalidate=120, stale-if-error=900',
   },
-  // seed-bundle-canada member interval 30min, 90min health budget. The default
-  // 2h shield outlived the budget by half an hour (#6667).
-  bcOpen511: {
-    browser: 'max-age=60, stale-while-revalidate=120, stale-if-error=1800',
-    cdn: 'public, s-maxage=1800, stale-while-revalidate=300, stale-if-error=1800',
+  // The canadaAlerts union rebuilds on a 15min tick against a 45min health
+  // budget. It left the fast tier with its dashboard map layer, so it needs
+  // its own profile instead of the default 2h shield.
+  canadaAlerts: {
+    browser: 'max-age=60, stale-while-revalidate=120, stale-if-error=900',
+    cdn: 'public, s-maxage=900, stale-while-revalidate=120, stale-if-error=900',
   },
-  // seed-bundle-market-backup member interval 15min, 45min health budget. Same
-  // defect as bcOpen511: the default 2h shield was 2.6x the budget.
+  // seed-bundle-market-backup member interval 15min, 45min health budget. The
+  // default 2h shield was 2.6x the budget.
   marketCorrelationSeries: {
     browser: 'max-age=60, stale-while-revalidate=120, stale-if-error=900',
     cdn: 'public, s-maxage=900, stale-while-revalidate=120, stale-if-error=900',

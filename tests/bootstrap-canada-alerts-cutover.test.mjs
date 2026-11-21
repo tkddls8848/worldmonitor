@@ -31,8 +31,8 @@ function installRedis(values) {
   return calls;
 }
 
-function makePublicFastRequest() {
-  return new Request('https://api.worldmonitor.app/api/bootstrap?tier=fast&public=1', {
+function makePublicCanadaAlertsRequest() {
+  return new Request('https://api.worldmonitor.app/api/bootstrap?keys=canadaAlerts&public=1', {
     headers: { origin: 'https://worldmonitor.app' },
   });
 }
@@ -57,7 +57,7 @@ test('public canadaAlerts keeps the aggregate authoritative when both cutover ke
     [LEGACY_KEY, alberta],
   ]));
 
-  const response = await handler(makePublicFastRequest());
+  const response = await handler(makePublicCanadaAlertsRequest());
   const body = await response.json();
 
   assert.equal(response.status, 200);
@@ -76,7 +76,7 @@ test('public canadaAlerts prefers the Alberta sibling when the aggregate is miss
     [LEGACY_KEY, legacy],
   ]));
 
-  const response = await handler(makePublicFastRequest());
+  const response = await handler(makePublicCanadaAlertsRequest());
   const body = await response.json();
 
   assert.equal(response.status, 200);
@@ -89,7 +89,7 @@ test('public canadaAlerts uses the abandoned legacy key when only it remains', a
   const legacy = { alerts: [{ id: 'ab-alert', province: 'AB' }] };
   installRedis(new Map([[LEGACY_KEY, legacy]]));
 
-  const response = await handler(makePublicFastRequest());
+  const response = await handler(makePublicCanadaAlertsRequest());
   const body = await response.json();
 
   assert.equal(response.status, 200);
@@ -106,7 +106,7 @@ test('public canadaAlerts does not resurrect Alberta data when the union is an e
     [LEGACY_KEY, alberta],
   ]));
 
-  const response = await handler(makePublicFastRequest());
+  const response = await handler(makePublicCanadaAlertsRequest());
   const body = await response.json();
 
   assert.equal(response.status, 200);
@@ -121,7 +121,7 @@ test('public canadaAlerts stays missing when a present aggregate unwraps to unde
     [LEGACY_KEY, alberta],
   ]));
 
-  const response = await handler(makePublicFastRequest());
+  const response = await handler(makePublicCanadaAlertsRequest());
   const body = await response.json();
 
   assert.equal(response.status, 200);

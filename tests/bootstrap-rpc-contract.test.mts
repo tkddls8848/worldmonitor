@@ -77,10 +77,10 @@ test('several fast/slow keys are served together; on-demand keys still go one at
   assert.deepEqual(reads.toSorted(), [BOOTSTRAP_CACHE_KEYS.insights, BOOTSTRAP_CACHE_KEYS.wildfires].toSorted());
 
   reads.length = 0;
-  const onDemand = await request('?keys=insights&keys=torontoRoads');
+  const onDemand = await request('?keys=insights&keys=canadaRoads');
   assert.equal(onDemand.status, 400);
   assert.deepEqual(reads, []);
-  assert.equal((await request('?keys=torontoRoads')).status, 200);
+  assert.equal((await request('?keys=canadaRoads')).status, 200);
 });
 
 test('RPC, public bootstrap and publisher apply the same transforms and cutover fallback', async t => {

@@ -65,7 +65,7 @@ describe('widget data request boundary', () => {
     ['/api/bootstrap?keys=marketQuotes&tier=fast'],
     ['/api/bootstrap?keys=marketQuotes%252cnotAdvertised'],
     ['/api/bootstrap?keys=chokepointTransits'], ['/api/bootstrap?keys=marketImplications'],
-    ['/api/bootstrap?keys=iranEvents'], ['/api/bootstrap?keys=torontoRoads'],
+    ['/api/bootstrap?keys=iranEvents'], ['/api/bootstrap?keys=albertaRoads'],
     ['/api/x/../bootstrap?keys=marketQuotes'],
     ['/api/%2e%2e/health'], ['/api/%62ootstrap?keys=marketQuotes'],
     ['/api/bootstrap/?keys=marketQuotes'], ['/api/bootstrap#?keys=marketQuotes'],

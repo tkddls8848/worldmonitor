@@ -33,19 +33,17 @@ function section(label) {
   return found;
 }
 
-test('declares exactly the twelve active Canada members', () => {
+test('declares exactly the ten active Canada members', () => {
   assert.deepEqual(
     sections.map((s) => s.label).sort(),
     [
       'Alberta-Emergency-Alert',
       'BC-Emergency-Info',
-      'BC-Open511',
       'Provincial-511',
       'SaskAlert',
       'TPS-Calls-Attended',
       'TPS-MCI',
       'TTC-Alerts',
-      'Toronto-Roads',
       'Toronto-TFS',
       'Toronto-TPS',
       'VIA-Rail-Live',
@@ -57,11 +55,8 @@ test('declares exactly the twelve active Canada members', () => {
 test('per-member cadence is the declared one, not TTC\'s cron inherited', () => {
   // The service cron is */5 because TTC needs it. Every other member is gated by
   // its own intervalMs — that is the whole reason one service can replace six.
-  // Toronto at */15 cost 348 MB/day for a construction-permit feed; 2h is ~44.
   const expected = [
     ['Provincial-511', 15 * MIN],
-    ['Toronto-Roads', 2 * HOUR],
-    ['BC-Open511', 30 * MIN],
     ['Alberta-Emergency-Alert', 15 * MIN],
     ['BC-Emergency-Info', 15 * MIN],
     ['SaskAlert', 15 * MIN],
@@ -116,8 +111,6 @@ test('seed-meta keys follow runSeed(domain, resource), not the canonical key', (
   // runs every tick or never runs — silently, either way.
   const expected = {
     'Provincial-511': ['seed-meta:infra:ontario-511', 'infra:ontario-511:v1'],
-    'Toronto-Roads': ['seed-meta:infra:toronto-roads', 'infra:toronto-roads:v1'],
-    'BC-Open511': ['seed-meta:infra:bc-open511', 'infra:bc-open511:v1'],
     'Alberta-Emergency-Alert': ['seed-meta:alerts:alberta-aea', 'alerts:canada:alberta-aea:v1'],
     'BC-Emergency-Info': ['seed-meta:alerts:bc-emergency-info', 'alerts:canada:bc-evacuation:v1'],
     'SaskAlert': ['seed-meta:alerts:saskalert', 'alerts:canada:saskalert:v1'],
@@ -325,7 +318,7 @@ test('every member’s TTL and health staleness budget cover its bundle interval
     checked += 1;
   }
 
-  assert.equal(checked, 12, 'all twelve active members must be checked, or this guard is partly vacuous');
+  assert.equal(checked, 10, 'all ten active members must be checked, or this guard is partly vacuous');
 });
 
 describe('per-member kill switch (#6711)', () => {

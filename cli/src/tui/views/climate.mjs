@@ -8,7 +8,7 @@ import { PaneView, selectedItem } from './base.mjs';
 
 export class ClimateView extends PaneView {
   constructor(app) {
-    super(app, { id: 'climate', label: 'Climate', paneIds: ['quakes', 'hazards', 'weather', 'anomalies'], sources: ['fast', 'slow'] });
+    super(app, { id: 'climate', label: 'Climate', paneIds: ['quakes', 'hazards', 'weather', 'anomalies'], sources: ['fast', 'slow', 'canadaAlerts'] });
   }
 
   quakes() {

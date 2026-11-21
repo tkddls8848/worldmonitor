@@ -82,8 +82,6 @@ export const BOOTSTRAP_CACHE_KEYS = Object.freeze({
   canadaRoads: 'infra:ontario-511:v1',
   albertaRoads: 'infra:alberta-511:v1',
   manitobaRoads: 'infra:manitoba-511:v1',
-  torontoRoads: 'infra:toronto-roads:v1',
-  bcOpen511: 'infra:bc-open511:v1',
   canadaAlerts: 'alerts:canada:v1',
   spending: 'economic:spending:v1',
   techEvents: 'research:tech-events-bootstrap:v1',
@@ -182,7 +180,7 @@ const SLOW_KEY_NAMES = new Set([
 const FAST_KEY_NAMES = new Set([
   'earthquakes', 'outages', 'serviceStatuses', 'ddosAttacks', 'trafficAnomalies', 'macroSignals', 'chokepoints',
   'marketQuotes', 'commodityQuotes', 'positiveGeoEvents', 'riskScores', 'insights', 'predictions',
-  'iranEvents', 'temporalAnomalies', 'weatherAlerts', 'spending', 'theaterPosture', 'gdeltIntel', 'canadaAlerts',
+  'iranEvents', 'temporalAnomalies', 'weatherAlerts', 'spending', 'theaterPosture', 'gdeltIntel',
   'shippingRates', 'shippingStress', 'socialVelocity',
 ]);
 
@@ -226,23 +224,15 @@ const ON_DEMAND_KEY_NAMES = new Set([
   // string and gets registered as a duplicate key.
   'fxYoy', 'sharedFxRates',
   'marketCorrelationSeries',
-  // Toronto's live road-restrictions snapshot is about 2 MB. Keep it off the
-  // global FAST payload and fetch it only when the Canada-roads layer renders.
-  'torontoRoads',
-  // DriveBC is also too large for every visitor's startup payload.
-  'bcOpen511',
-  // The other two feeds behind the same map layer, moved off FAST in #6763.
-  // Together they were 507,639 of the fast tier's 1,343,003 bytes — 37.8%, more
-  // than marketQuotes — and a tier is not layer-gated, so every visitor on every
-  // variant downloaded them, mobile included, where this layer ships disabled
-  // and nothing ever rendered a byte of it.
-  //
-  // All five road sources are on-demand now, which is what lets the layer stay
-  // off by default: with none of them tiered, a visitor who never enables
-  // Canada roads pays nothing at all for them.
+  // Province road feeds and province-owned emergency alerts. The dashboard
+  // map layers that read them were removed; the terminal dashboard (cli/)
+  // still reads canadaRoads and canadaAlerts through the per-key URL, and
+  // the widget agent may request canadaAlerts. Alberta and Manitoba come from
+  // the same Provincial-511 seeder as canadaRoads. None of them rides a tier.
   'canadaRoads',
   'albertaRoads',
   'manitobaRoads',
+  'canadaAlerts',
   // IMD cyclone/port/coastal/marine products (#7005). On-demand: the weather
   // and natural layers fetch this key only when those layers are on, so it
   // never rides a payload every visitor downloads.

@@ -55,4 +55,4 @@ Preconditions:
 - `?layers=` is written on a 250 ms debounce; it can be absent from the URL entirely until the first map-state sync fires. Poll for the parameter.
 - `limit-reached` on a chip is the SVG renderer's 9-layer cap (`MAX_SVG_LAYERS`), not a premium gate. Turning one layer off frees a slot.
 - Turning a layer on starts real data work (AIS opens a stream, flights flip the airline panel to live). Leave the layer set as you found it.
-- Pick another layer with `WM_VERIFY_LAYER=<key>`. Valid keys on this checkout: `conflicts, hotspots, sanctions, protests, bases, nuclear, irradiators, military, cables, pipelines, outages, datacenters, ais, flights, gpsJamming, natural, weather, economic, waterways`.
+- Pick another layer with `WM_VERIFY_LAYER=<key>`. Valid keys on this checkout: `conflicts, hotspots, sanctions, protests, bases, nuclear, military, cables, pipelines, outages, datacenters, ais, flights, gpsJamming, natural, weather, economic, waterways`.
