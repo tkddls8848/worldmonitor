@@ -19,9 +19,9 @@ import {
   mapRightClassForVisualSide,
   type MapVisualSide,
 } from '@/app/split-layout';
-import { InspectorShell } from '@/components/InspectorShell';
-import { BottomMediaTray } from '@/components/BottomMediaTray';
-import { OVERVIEW_DEFAULT_PANELS, type BottomTrayPanelId } from '@/config/inspector-domains';
+import type { InspectorShell } from '@/components/InspectorShell';
+import type { BottomMediaTray } from '@/components/BottomMediaTray';
+import type { BottomTrayPanelId } from '@/config/inspector-domains';
 import {
   addResponsiveZoneListener,
   removeResponsiveZoneListener,
@@ -443,6 +443,7 @@ export class PanelLayoutManager implements AppModule {
   private panelTabBar: PanelTabBar | null = null;
   private inspectorShell: InspectorShell | null = null;
   private bottomMediaTray: BottomMediaTray | null = null;
+  private overviewDefaultPanels: readonly string[] = [];
   private inspectorCollapsed = false;
   private inspectorWideGrid = false;
   private tabsState: TabsState | null = null;
@@ -955,7 +956,7 @@ export class PanelLayoutManager implements AppModule {
 
     // Mount Option B inspector shell & bottom media tray before creating panels
     // so panel visibility & eager mount budgets align with the active inspector tab.
-    this.initInspectorAndTray();
+    await this.initInspectorAndTray();
 
     // Mount the chip nav before createPanels() yields: a nav added after that await paints one
     // frame with #panelsGrid 49px too high, then shifts it down.
@@ -1044,9 +1045,17 @@ export class PanelLayoutManager implements AppModule {
     this.initFocus();
   }
 
-  private initInspectorAndTray(): void {
+  private async initInspectorAndTray(): Promise<void> {
     this.inspectorShell?.destroy();
     this.bottomMediaTray?.destroy();
+
+    const [{ InspectorShell }, { BottomMediaTray }, { OVERVIEW_DEFAULT_PANELS }] = await Promise.all([
+      import('@/components/InspectorShell'),
+      import('@/components/BottomMediaTray'),
+      import('@/config/inspector-domains'),
+    ]);
+    if (this.ctx.isDestroyed) return;
+    this.overviewDefaultPanels = OVERVIEW_DEFAULT_PANELS[SITE_VARIANT] ?? OVERVIEW_DEFAULT_PANELS.full ?? [];
 
     const headerMount = document.getElementById('inspectorHeaderMount');
     if (headerMount) {
@@ -3171,7 +3180,7 @@ export class PanelLayoutManager implements AppModule {
       // Option B: place the curated Overview panels first so the initial
       // 1-column inspector renders high-signal summary cards immediately while
       // heavy video/webcam streams stay deferred in the bottom tray until opened.
-      const overviewPriority = OVERVIEW_DEFAULT_PANELS[SITE_VARIANT] ?? OVERVIEW_DEFAULT_PANELS.full ?? [];
+      const overviewPriority = this.overviewDefaultPanels;
       for (let i = overviewPriority.length - 1; i >= 0; i -= 1) {
         const key = overviewPriority[i]!;
         const idx = allOrder.indexOf(key);
