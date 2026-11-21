@@ -3013,6 +3013,20 @@
       ]
     },
     {
+      "host": "data.opensanctions.org",
+      "provider": "OpenSanctions",
+      "kind": "structured",
+      "observed": true,
+      "license": "CC BY-NC 4.0; non-commercial personal use only",
+      "attribution": "Credit OpenSanctions and link to the source dataset; use only for non-commercial personal use.",
+      "status": "terms-review",
+      "references": [
+        {
+          "path": "scripts/_world-sanctions.mjs"
+        }
+      ]
+    },
+    {
       "host": "data.sec.gov",
       "provider": "SEC EDGAR",
       "kind": "structured",
@@ -8766,6 +8780,20 @@
       ]
     },
     {
+      "host": "sanctionslist.fcdo.gov.uk",
+      "provider": "UK Foreign, Commonwealth & Development Office",
+      "kind": "structured",
+      "observed": true,
+      "license": "Open Government Licence v3.0",
+      "attribution": "Credit the UK Foreign, Commonwealth & Development Office and link to the UK Sanctions List.",
+      "status": "reviewed",
+      "references": [
+        {
+          "path": "scripts/_world-sanctions.mjs"
+        }
+      ]
+    },
+    {
       "host": "sanctionslistservice.ofac.treas.gov",
       "provider": "sanctionslistservice.ofac.treas.gov",
       "kind": "structured",
@@ -8842,6 +8870,20 @@
       "references": [
         {
           "path": "shared/news-catalog.json"
+        }
+      ]
+    },
+    {
+      "host": "scsanctions.un.org",
+      "provider": "UN Security Council",
+      "kind": "structured",
+      "observed": true,
+      "license": "Public consolidated list; source terms apply",
+      "attribution": "Credit and link to the UN Security Council Consolidated List.",
+      "status": "reviewed",
+      "references": [
+        {
+          "path": "scripts/_world-sanctions.mjs"
         }
       ]
     },

@@ -62,6 +62,10 @@ The first-screen tension layer tracks all 435 pairs among the 30 major countries
 
 Deep dives: [Country Instability Index](/country-instability-index) · [CII risk-score methodology](/methodology/cii-risk-scores) · [hotspot escalation](/hotspots) · [signal intelligence](/signal-intelligence)
 
+### World Overview Relations
+
+The fixed daily relation set combines treaty alliances and NATO, CSTO and SCO memberships with sanctions and economic links. Sanctions counts stream the [OpenSanctions](https://www.opensanctions.org/) target export (CC BY-NC 4.0; non-commercial personal use only), the [UN Security Council Consolidated List](https://scsanctions.un.org/resources/xml/en/consolidated.xml), and the UK FCDO Sanctions List under the Open Government Licence v3.0. When OpenSanctions is unavailable, its last good pairs remain for up to seven days; fresh UN and UK pairs replace those issuers, and a failed backup keeps its last good issuer pairs. If no source can produce usable pairs, the collector fails and retains the previous relation set. Alliance links use the cited treaty or organisation pages in the stored dataset. Economic links rank strategic-goods imports by exporter and consolidated BIS bank claims by lender; claims are stocks in US dollars, not transaction flows.
+
 ### OREF Rocket Alert Integration
 
 The dashboard monitors Israel's Home Front Command (Pikud HaOref) alert system for incoming rocket, missile, and drone sirens — a real-time signal that is difficult to obtain programmatically due to Akamai WAF protection.

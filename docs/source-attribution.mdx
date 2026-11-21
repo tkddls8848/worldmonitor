@@ -12,7 +12,7 @@ The inventory is **generated, not hand-written**: `scripts/source-attribution.mj
 ## Observed Source Inventory
 
 {/* BEGIN GENERATED SOURCE ATTRIBUTION */}
-This generated inventory covers **878 active source hosts** representing **856 active providers** (**391 structured/API**, **470 feed**, and **30 operational-status** hosts). It is derived from source declarations in `scripts/`, `server/`, `api/`, and `src/`. Each row shows the configured provider identity and where the source is referenced. Syndication transports such as FeedBurner and Google News remain listed as hosts and are not counted as publishers.
+This generated inventory covers **881 active source hosts** representing **859 active providers** (**394 structured/API**, **470 feed**, and **30 operational-status** hosts). It is derived from source declarations in `scripts/`, `server/`, `api/`, and `src/`. Each row shows the configured provider identity and where the source is referenced. Syndication transports such as FeedBurner and Google News remain listed as hosts and are not counted as publishers.
 
 | Provider | Observed surface |
 | --- | --- |
@@ -546,6 +546,7 @@ This generated inventory covers **878 active source hosts** representing **856 a
 | OpenAQ (api.openaq.org) | structured — scripts/seed-health-air-quality.mjs |
 | openrouter.ai (openrouter.ai) | structured — scripts/eval-classify-labels.mjs, scripts/lib/brief-dedup-consts.mjs, scripts/local/local-api-server.mjs, scripts/regional-snapshot/weekly-brief.mjs |
 | OpenSanctions (api.opensanctions.org) | Excluded / candidate — No current fetch observed |
+| OpenSanctions (data.opensanctions.org) | structured — scripts/_world-sanctions.mjs |
 | opensky-network.org (auth.opensky-network.org) | structured — scripts/local/local-api-server.mjs, scripts/seed-military-flights.mjs |
 | opensky-network.org (opensky-network.org) | structured — scripts/ais-relay.cjs, scripts/seed-military-flights.mjs, server/worldmonitor/military/v1/list-military-flights.ts, src/components/MapPopup.ts |
 | openstreetmap.org (openstreetmap.org) | structured — src/config/basemap-styles.ts |
@@ -773,8 +774,10 @@ This generated inventory covers **878 active source hosts** representing **856 a
 | ucdpapi.pcr.uu.se (ucdpapi.pcr.uu.se) | structured — scripts/ais-relay.cjs, scripts/local/local-api-server.mjs, scripts/seed-ucdp-events.mjs |
 | ugandacoffee.go.ug (ugandacoffee.go.ug) | structured — scripts/lib/food-prices-adapters/ucda.mjs |
 | uis.unesco.org (uis.unesco.org) | structured — server/worldmonitor/resilience/v1/_indicator-source-policy.ts |
+| UK Foreign, Commonwealth & Development Office (sanctionslist.fcdo.gov.uk) | structured — scripts/_world-sanctions.mjs |
 | ukrinform.net (ukrinform.net) | feed — shared/news-catalog.json |
 | ukrinform.ua (ukrinform.ua) | feed — shared/news-catalog.json |
+| UN Security Council (scsanctions.un.org) | structured — scripts/_world-sanctions.mjs |
 | unchainedcrypto.com (unchainedcrypto.com) | feed — shared/news-catalog.json |
 | understandingwar.org (understandingwar.org) | feed — shared/news-catalog.json |
 | UNDP Human Development Report (hdr.undp.org) | structured — scripts/benchmark-resilience-external.mjs |

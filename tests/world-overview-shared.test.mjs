@@ -49,3 +49,12 @@ test('date and pair helpers follow the AI collector contract', () => {
   assert.equal(relationMatchKey({ kind: 'support', from: 'US', to: 'UA' }), 'support:US>UA');
   assert.equal(relationMatchKey({ kind: 'tension', from: 'US', to: 'CN' }), 'tension:CN-US');
 });
+test('addDays crosses months and years (Task 2 key contract)', () => {
+  assert.equal(addDays('2026-11-22', 13), '2026-12-05');
+  assert.equal(addDays('2026-12-31', 1), '2027-01-01');
+  assert.equal(addDays('2026-11-22', -89), '2026-08-25');
+});
+test('pairKey is order-independent and keys match the plan', () => {
+  assert.equal(pairKey('UA', 'RU'), 'RU:UA');
+  assert.equal(WORLD_OVERVIEW_KEYS.relations, 'world-overview:relations:v1');
+});
