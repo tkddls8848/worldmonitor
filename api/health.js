@@ -418,6 +418,7 @@ const STANDALONE_KEYS = {
   // api/open-data-chokepoints.js, never by the dashboard.
   openDataChokepoints: 'open-data:chokepoints:v1:index',
   sanctionsChanges: 'sanctions:changes:v1',
+  worldRelationsAi: 'world-overview:ai:v1',
   // NVD CVE reference store for the CISA KEV subset (#6229). Seeded daily by
   // scripts/seed-cve-reference.mjs; no dashboard consumer yet, so it is
   // monitored here rather than bootstrap-tiered.
@@ -1065,6 +1066,12 @@ const SEED_META = {
       failureCodePattern:
         /^INSIGHTS_SYNTHESIS_(PARSE|GATE|MISSING_CLUSTER|PROVIDER|COMPOSER_ERROR|LEAD_(EMPTY|UNCITED|PROPER_NOUN|NUMERIC_FACT|STATUS_QUALIFIER|GROUNDING))$/,
     },
+  },
+  worldRelationsAi: {
+    key: 'seed-meta:world-overview:ai',
+    maxStaleMin: 2160,
+    activationKey: 'seed-activated:world-overview:ai',
+    cutover: { mode: 'activation-marker', fromKey: null, issue: 9, activationKey: 'seed-activated:world-overview:ai' },
   },
   // #4920: daily GH Actions cadence; 2880 = 2x — one fully missed day alarms
   newsFeedHealth:   { key: 'seed-meta:news:feed-health',        maxStaleMin: 2880 },
@@ -2739,6 +2746,7 @@ const GOVERNMENT_RELEASE_INCIDENT_GRACE_MIN = 30 * 24 * 60;
 // chronic outage went undetected until a user noticed the panel was stuck on
 // "Loading...". Removed marketImplications below.
 const ON_DEMAND_KEYS = new Set([
+  'worldRelationsAi',
   'gridDisruptionClock',
   'foodPricesPihps', 'foodPricesPbs', 'foodPricesDa', 'foodPricesCbsl',
   'foodPricesSniim', 'foodPricesGiews', 'foodPricesOnagri',
@@ -2984,6 +2992,7 @@ const ON_DEMAND_KEYS = new Set([
 // publish; when the marker exists the key leaves ON_DEMAND softening and
 // normal EMPTY/STALE_SEED rules apply.
 const ACTIVATION_MARKERS = {
+  worldRelationsAi: SEED_META.worldRelationsAi.activationKey,
   gridDisruptionClock: SEED_META.gridDisruptionClock.activationKey,
   regionalEnergyPgcb: SEED_META.regionalEnergyPgcb.activationKey,
   regionalEnergyPetrobangla: SEED_META.regionalEnergyPetrobangla.activationKey,
