@@ -11172,6 +11172,9 @@
           "path": "scripts/measure-mobile-mainthread.mjs"
         },
         {
+          "path": "scripts/seed-country-history.mjs"
+        },
+        {
           "path": "scripts/seed-five-factor-scorecard.mjs"
         },
         {
