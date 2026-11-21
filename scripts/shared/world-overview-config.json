@@ -1,0 +1,13 @@
+{
+  "majorCountries": ["US", "CN", "RU", "UA", "GB", "FR", "DE", "PL", "JP", "KR", "KP", "TW", "IN", "PK", "AF", "IR", "IL", "PS", "LB", "SY", "IQ", "SA", "AE", "QA", "YE", "TR", "EG", "SD", "VE", "AU"],
+  "aiPairRetentionDays": 14,
+  "anchors": { "EU": [4.35, 50.85] },
+  "citations": {
+    "opensanctions": { "url": "https://www.opensanctions.org/datasets/sanctions/", "publisher": "OpenSanctions", "title": "OpenSanctions consolidated sanctions targets (CC BY-NC 4.0)" },
+    "un": { "url": "https://main.un.org/securitycouncil/en/content/un-sc-consolidated-list", "publisher": "United Nations", "title": "UN Security Council Consolidated List" },
+    "uk": { "url": "https://www.gov.uk/government/publications/the-uk-sanctions-list", "publisher": "UK Government", "title": "The UK Sanctions List" },
+    "comtrade": { "url": "https://comtradeplus.un.org/", "publisher": "UN Comtrade", "title": "UN Comtrade" },
+    "bis": { "url": "https://www.bis.org/statistics/consstats.htm", "publisher": "Bank for International Settlements", "title": "BIS Consolidated Banking Statistics" },
+    "gdelt": { "url": "https://www.gdeltproject.org/", "publisher": "GDELT Project", "title": "GDELT Project" }
+  }
+}

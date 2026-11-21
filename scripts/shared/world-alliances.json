@@ -1,0 +1,19 @@
+{
+  "bilateral": [
+    { "id": "us-jp", "a": "US", "b": "JP", "nameKo": "미국·일본 안보조약", "nameEn": "Treaty of Mutual Cooperation and Security", "since": 1960, "source": { "title": "Treaty of Mutual Cooperation and Security", "url": "https://treaties.un.org/Pages/showDetails.aspx?objid=080000028013964a" }, "verifiedAt": "2026-11-22" },
+    { "id": "us-kr", "a": "US", "b": "KR", "nameKo": "한미상호방위조약", "nameEn": "Mutual Defense Treaty between the United States and the Republic of Korea", "since": 1953, "source": { "title": "Mutual Defense Treaty", "url": "https://avalon.law.yale.edu/20th_century/kor001.asp" }, "verifiedAt": "2026-11-22" },
+    { "id": "us-au", "a": "US", "b": "AU", "nameKo": "ANZUS 조약", "nameEn": "ANZUS Treaty", "since": 1951, "source": { "title": "Security Treaty between Australia, New Zealand and the United States", "url": "https://treaties.un.org/Pages/showDetails.aspx?objid=08000002801531ad" }, "verifiedAt": "2026-11-22" },
+    { "id": "us-ph", "a": "US", "b": "PH", "nameKo": "미국·필리핀 상호방위조약", "nameEn": "Mutual Defense Treaty between the United States and the Republic of the Philippines", "since": 1951, "source": { "title": "Mutual Defense Treaty", "url": "https://avalon.law.yale.edu/20th_century/phil001.asp" }, "verifiedAt": "2026-11-22" },
+    { "id": "us-th", "a": "US", "b": "TH", "nameKo": "마닐라 조약", "nameEn": "Southeast Asia Collective Defense Treaty", "since": 1954, "source": { "title": "Southeast Asia Collective Defense Treaty", "url": "https://treaties.un.org/Pages/showDetails.aspx?objid=080000028014b021" }, "verifiedAt": "2026-11-22" },
+    { "id": "cn-kp", "a": "CN", "b": "KP", "nameKo": "조중 우호협조 및 상호원조조약", "nameEn": "Treaty of Friendship, Co-operation and Mutual Assistance", "since": 1961, "source": { "title": "China Embassy in the DPRK treaty reference", "url": "https://kp.china-embassy.gov.cn/eng/zcgx/zcgxgk/" }, "verifiedAt": "2026-11-22" },
+    { "id": "ru-kp", "a": "RU", "b": "KP", "nameKo": "포괄적 전략적 동반자 관계 조약", "nameEn": "Treaty on Comprehensive Strategic Partnership", "since": 2024, "source": { "title": "Official publication of Russia-DPRK treaty", "url": "https://publication.pravo.gov.ru/document/0001202412050001" }, "verifiedAt": "2026-11-22" },
+    { "id": "ru-by", "a": "RU", "b": "BY", "nameKo": "러시아·벨라루스 연맹국 조약", "nameEn": "Treaty on the Creation of the Union State", "since": 1999, "source": { "title": "Treaty on the establishment of the Union State", "url": "https://treaties.un.org/Pages/showDetails.aspx?objid=0800000280090377" }, "verifiedAt": "2026-11-22" },
+    { "id": "sa-pk", "a": "SA", "b": "PK", "nameKo": "사우디·파키스탄 전략적 상호방위협정", "nameEn": "Strategic Mutual Defence Agreement", "since": 2025, "source": { "title": "Saudi Press Agency: agreement signing", "url": "https://www.spa.gov.sa/N2399714" }, "verifiedAt": "2026-11-22" },
+    { "id": "tr-az", "a": "TR", "b": "AZ", "nameKo": "슈샤 선언", "nameEn": "Shusha Declaration on Allied Relations", "since": 2021, "source": { "title": "Shusha Declaration on Allied Relations", "url": "https://president.az/en/articles/view/52122" }, "verifiedAt": "2026-11-22" }
+  ],
+  "blocs": [
+    { "id": "nato", "nameKo": "북대서양조약기구", "nameEn": "NATO", "members": ["AL", "BE", "BG", "CA", "HR", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IS", "IT", "LV", "LT", "LU", "ME", "NL", "MK", "NO", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "TR", "GB", "US"], "source": { "title": "NATO member countries", "url": "https://www.nato.int/cps/en/natohq/topics_52044.htm" } },
+    { "id": "csto", "nameKo": "집단안보조약기구", "nameEn": "CSTO", "members": ["AM", "BY", "KZ", "KG", "RU", "TJ"], "source": { "title": "Collective Security Treaty Organization", "url": "https://en.odkb-csto.org/" } },
+    { "id": "sco", "nameKo": "상하이협력기구", "nameEn": "SCO", "members": ["BY", "CN", "IN", "IR", "KZ", "KG", "PK", "RU", "TJ", "UZ"], "source": { "title": "Shanghai Cooperation Organisation", "url": "https://eng.sectsco.org/" } }
+  ]
+}
