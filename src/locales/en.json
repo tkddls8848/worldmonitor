@@ -5358,7 +5358,7 @@
         "limitations": {
           "0": "AviationStack-backed simulated demo data can appear when an API key is absent.",
           "1": "Live aircraft positions can be delayed or absent where ADS-B coverage is weak or blocked.",
-          "2": "Airspace NOTAM areas are drawn on the deck.gl map only; the SVG and globe maps show airport markers.",
+          "2": "Airspace NOTAM areas are drawn on the deck.gl map only; the SVG map shows airport markers.",
           "3": "Most US TFRs describe their shape only in text, so they appear as a marker at the NOTAM position, not as the restricted shape.",
           "4": "Schedules inside a NOTAM's effective window (for example daily hours) are shown in the tooltip but not applied to visibility."
         },
@@ -5570,7 +5570,7 @@
       "sources": "Regions and feeds",
       "notifications": "Channels and alert rules",
       "display": "Theme, font and language",
-      "map": "Provider, theme and globe",
+      "map": "Provider and theme",
       "ai": "Models, memory and frameworks",
       "video": "Quality and autoplay",
       "apiKeys": "Keys for the World Monitor API",
@@ -5734,7 +5734,6 @@
         "5": "text size"
       },
       "map": {
-        "0": "globe",
         "1": "provider",
         "2": "tiles",
         "3": "basemap"

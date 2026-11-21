@@ -4791,7 +4791,7 @@
         "limitations": {
           "0": "API anahtarı yoksa AviationStack tabanlı benzetimli tanıtım verisi görünebilir.",
           "1": "ADS-B kapsamı zayıf veya engelli yerlerde canlı hava aracı konumları gecikebilir ya da hiç gelmeyebilir.",
-          "2": "Hava sahası NOTAM alanları yalnızca deck.gl haritasında çizilir. SVG ve küre haritaları havalimanı işaretlerini gösterir.",
+          "2": "Hava sahası NOTAM alanları yalnızca deck.gl haritasında çizilir. SVG haritası havalimanı işaretlerini gösterir.",
           "3": "ABD TFR kayıtlarının çoğu biçimi yalnızca metinde anlatır, bu yüzden kısıtlı biçim olarak değil, NOTAM konumunda bir işaret olarak görünür.",
           "4": "Bir NOTAM'ın geçerlik penceresindeki programlar (örneğin günlük saatler) ipucunda gösterilir, görünürlüğe uygulanmaz."
         },
@@ -5486,7 +5486,7 @@
       "sources": "Bölgeler ve akışlar",
       "notifications": "Kanallar ve uyarı kuralları",
       "display": "Tema, yazı tipi ve dil",
-      "map": "Sağlayıcı, tema ve küre",
+      "map": "Sağlayıcı ve tema",
       "ai": "Modeller, bellek ve çerçeveler",
       "video": "Kalite ve otomatik oynatma",
       "apiKeys": "World Monitor API anahtarları",
@@ -5643,7 +5643,6 @@
         "5": "metin boyutu"
       },
       "map": {
-        "0": "küre",
         "1": "sağlayıcı",
         "2": "kutucuklar",
         "3": "temel harita"

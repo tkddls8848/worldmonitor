@@ -4791,7 +4791,7 @@
         "limitations": {
           "0": "Gesimuleerde demogegevens op basis van AviationStack kunnen verschijnen wanneer een API-sleutel ontbreekt.",
           "1": "Live vliegtuigposities kunnen vertraagd of afwezig zijn waar de ADS-B-dekking zwak of geblokkeerd is.",
-          "2": "NOTAM-gebieden in het luchtruim worden alleen op de deck.gl-kaart getekend. De SVG- en globekaarten tonen luchthavenmarkeringen.",
+          "2": "NOTAM-gebieden in het luchtruim worden alleen op de deck.gl-kaart getekend. De SVG-kaart toont luchthavenmarkeringen.",
           "3": "De meeste Amerikaanse TFR beschrijven hun vorm alleen in de tekst, dus ze verschijnen als een markering op de NOTAM-positie en niet als de beperkte vorm.",
           "4": "Tijdschema's binnen het geldigheidsvenster van een NOTAM (bijvoorbeeld dagelijkse uren) staan in de toelichting, maar worden niet op de zichtbaarheid toegepast."
         },
@@ -5486,7 +5486,7 @@
       "sources": "Regio's en feeds",
       "notifications": "Kanalen en waarschuwingsregels",
       "display": "Thema, lettertype en taal",
-      "map": "Provider, thema en globe",
+      "map": "Provider en thema",
       "ai": "Modellen, geheugen en frameworks",
       "video": "Kwaliteit en automatisch afspelen",
       "apiKeys": "Sleutels voor de World Monitor API",
@@ -5643,7 +5643,6 @@
         "5": "tekstgrootte"
       },
       "map": {
-        "0": "aardbol",
         "1": "provider",
         "2": "tegels",
         "3": "basiskaart"

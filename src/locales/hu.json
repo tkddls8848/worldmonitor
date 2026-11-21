@@ -4791,7 +4791,7 @@
         "limitations": {
           "0": "AviationStackre épülő szimulált demóadatok jelenhetnek meg, ha nincs API-kulcs.",
           "1": "Az élő repülőgép-pozíciók késhetnek vagy hiányozhatnak, ahol az ADS-B lefedettség gyenge vagy blokkolt.",
-          "2": "A légtér-NOTAM területek csak a deck.gl térképen rajzolódnak ki. Az SVG és a glóbusz térképek repülőtéri jelölőket mutatnak.",
+          "2": "A légtér-NOTAM területek csak a deck.gl térképen rajzolódnak ki. Az SVG térkép repülőtéri jelölőket mutat.",
           "3": "A legtöbb amerikai TFR a formáját csak szövegben írja le, ezért jelölőként látszik a NOTAM pozícióján, nem a korlátozott alakként.",
           "4": "A NOTAM érvényességi ablakán belüli menetrendek, például a napi órák, az elemleírásban látszanak, de a láthatóságot nem vezérlik."
         },
@@ -5486,7 +5486,7 @@
       "sources": "Régiók és feedek",
       "notifications": "Csatornák és riasztási szabályok",
       "display": "Téma, betűkészlet és nyelv",
-      "map": "Szolgáltató, téma és földgömb",
+      "map": "Szolgáltató és téma",
       "ai": "Modellek, memória és keretrendszerek",
       "video": "Minőség és automatikus lejátszás",
       "apiKeys": "World Monitor API-kulcsok",
@@ -5643,7 +5643,6 @@
         "5": "szövegméret"
       },
       "map": {
-        "0": "földgömb",
         "1": "szolgáltató",
         "2": "csempék",
         "3": "alaptérkép"

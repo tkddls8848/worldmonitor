@@ -4791,7 +4791,7 @@
         "limitations": {
           "0": "Simulerade demodata som bygger på AviationStack kan synas när en API-nyckel saknas.",
           "1": "Livepositioner för flygplan kan vara fördröjda eller saknas där ADS-B-täckningen är svag eller blockerad.",
-          "2": "Luftrums-NOTAM ritas bara på deck.gl-kartan. SVG-kartan och globkartan visar flygplatsmarkörer.",
+          "2": "Luftrums-NOTAM ritas bara på deck.gl-kartan. SVG-kartan visar flygplatsmarkörer.",
           "3": "De flesta amerikanska TFR beskriver formen bara i text, så de syns som en markör vid NOTAM-positionen, inte som den begränsade formen.",
           "4": "Scheman inom ett NOTAM:s giltighetsfönster, till exempel dagliga tider, visas i tipsrutan men styr inte synligheten."
         },
@@ -5486,7 +5486,7 @@
       "sources": "Regioner och flöden",
       "notifications": "Kanaler och varningsregler",
       "display": "Tema, typsnitt och språk",
-      "map": "Leverantör, tema och globus",
+      "map": "Leverantör och tema",
       "ai": "Modeller, minne och ramverk",
       "video": "Kvalitet och autoplay",
       "apiKeys": "Nycklar för World Monitor API",
@@ -5643,7 +5643,6 @@
         "5": "textstorlek"
       },
       "map": {
-        "0": "glob",
         "1": "leverantör",
         "2": "tiles",
         "3": "baskarta"

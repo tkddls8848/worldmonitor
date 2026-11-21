@@ -4769,7 +4769,7 @@
         "limitations": {
           "0": "Khi thiếu khóa API, có thể xuất hiện dữ liệu minh họa mô phỏng dựa trên AviationStack.",
           "1": "Vị trí máy bay trực tiếp có thể chậm hoặc vắng ở nơi phạm vi ADS-B yếu hoặc bị chặn.",
-          "2": "Vùng NOTAM không phận chỉ được vẽ trên bản đồ deck.gl. Bản đồ SVG và quả địa cầu hiện điểm đánh dấu sân bay.",
+          "2": "Vùng NOTAM không phận chỉ được vẽ trên bản đồ deck.gl. Bản đồ SVG hiện điểm đánh dấu sân bay.",
           "3": "Phần lớn TFR của Hoa Kỳ chỉ mô tả hình trong nội dung, nên chúng hiện là điểm đánh dấu tại vị trí NOTAM, không phải hình vùng hạn chế.",
           "4": "Lịch trong cửa sổ hiệu lực của một NOTAM (ví dụ các giờ hằng ngày) hiện trong chú giải, nhưng không được dùng để quyết định có hiển thị hay không."
         },
@@ -5453,7 +5453,7 @@
       "sources": "Vùng và luồng",
       "notifications": "Kênh và quy tắc cảnh báo",
       "display": "Chủ đề, phông chữ và ngôn ngữ",
-      "map": "Nhà cung cấp, chủ đề và quả cầu",
+      "map": "Nhà cung cấp và chủ đề",
       "ai": "Mô hình, bộ nhớ và khung",
       "video": "Chất lượng và tự động phát",
       "apiKeys": "Khóa cho API World Monitor",
@@ -5610,7 +5610,6 @@
         "5": "kích cỡ văn bản"
       },
       "map": {
-        "0": "quả địa cầu",
         "1": "nhà cung cấp",
         "2": "ô bản đồ",
         "3": "bản đồ nền"

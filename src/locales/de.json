@@ -4791,7 +4791,7 @@
         "limitations": {
           "0": "Simulierte Demodaten auf AviationStack-Basis können erscheinen, wenn ein API-Schlüssel fehlt.",
           "1": "Live-Flugzeugpositionen können verzögert sein oder fehlen, wo die ADS-B-Abdeckung schwach oder blockiert ist.",
-          "2": "Luftraum-NOTAM-Flächen werden nur auf der deck.gl-Karte gezeichnet; die SVG- und Globus-Karten zeigen Flughafenmarker.",
+          "2": "Luftraum-NOTAM-Flächen werden nur auf der deck.gl-Karte gezeichnet; die SVG-Karte zeigt Flughafenmarker.",
           "3": "Die meisten US-TFR beschreiben ihre Form nur im Text und erscheinen daher als Marker an der NOTAM-Position, nicht als Sperrfläche.",
           "4": "Zeitpläne innerhalb des Gültigkeitsfensters eines NOTAM (zum Beispiel tägliche Stunden) stehen im Tooltip, steuern aber nicht die Sichtbarkeit."
         },
@@ -5486,7 +5486,7 @@
       "sources": "Regionen und Feeds",
       "notifications": "Kanäle und Benachrichtigungsregeln",
       "display": "Design, Schriftart und Sprache",
-      "map": "Anbieter, Design und Globus",
+      "map": "Anbieter und Design",
       "ai": "Modelle, Speicher und Frameworks",
       "video": "Qualität und automatische Wiedergabe",
       "apiKeys": "Schlüssel für die World Monitor API",
@@ -5643,7 +5643,6 @@
         "5": "Textgröße"
       },
       "map": {
-        "0": "Globus",
         "1": "Anbieter",
         "2": "Kacheln",
         "3": "Basiskarte"

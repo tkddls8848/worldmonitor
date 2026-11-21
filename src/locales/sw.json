@@ -4791,7 +4791,7 @@
         "limitations": {
           "0": "Data ya maonyesho ya kuiga inayotegemea AviationStack inaweza kuonekana wakati ufunguo wa API haupo.",
           "1": "Nafasi za ndege za moja kwa moja zinaweza kuchelewa au kukosekana ambapo chanjo ya ADS-B ni dhaifu au imezuiwa.",
-          "2": "Maeneo ya NOTAM ya anga huchorwa kwenye ramani ya deck.gl tu. Ramani za SVG na tufe zinaonyesha alama za viwanja vya ndege.",
+          "2": "Maeneo ya NOTAM ya anga huchorwa kwenye ramani ya deck.gl tu. Ramani ya SVG inaonyesha alama za viwanja vya ndege.",
           "3": "TFR nyingi za Marekani zinaeleza umbo katika maandishi tu, kwa hiyo huonekana kama alama kwenye nafasi ya NOTAM, si umbo lililozuiliwa.",
           "4": "Ratiba ndani ya dirisha la uhalali wa NOTAM (kwa mfano saa za kila siku) huonyeshwa kwenye kidokezo lakini hazitumiki kwa kuonekana."
         },
@@ -5486,7 +5486,7 @@
       "sources": "Mikoa na mtiririko",
       "notifications": "Njia na sheria za onyo",
       "display": "Mandhari, fonti na lugha",
-      "map": "Mtoa huduma, mandhari na ulimwengu",
+      "map": "Mtoa huduma na mandhari",
       "ai": "Mifumo, kumbukumbu na muundo",
       "video": "Ubora na kucheza kiotomatiki",
       "apiKeys": "Funguo za API ya World Monitor",
@@ -5643,7 +5643,6 @@
         "5": "ukubwa wa maandishi"
       },
       "map": {
-        "0": "dunia",
         "1": "mtoa huduma",
         "2": "vigae",
         "3": "ramani ya msingi"

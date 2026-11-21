@@ -4813,7 +4813,7 @@
         "limitations": {
           "0": "Possono comparire dati dimostrativi simulati, basati su AviationStack, quando manca una chiave API.",
           "1": "Le posizioni degli aeromobili in diretta possono essere in ritardo o assenti dove la copertura ADS-B è debole o bloccata.",
-          "2": "Le aree NOTAM di spazio aereo sono disegnate solo sulla mappa deck.gl. Le mappe SVG e globo mostrano marcatori di aeroporto.",
+          "2": "Le aree NOTAM di spazio aereo sono disegnate solo sulla mappa deck.gl. La mappa SVG mostra marcatori di aeroporto.",
           "3": "La maggior parte delle TFR degli Stati Uniti descrive la forma solo nel testo, quindi compaiono come un marcatore alla posizione del NOTAM e non come la forma ristretta.",
           "4": "Gli orari dentro la finestra di validità di un NOTAM (per esempio ore giornaliere) sono mostrati nel suggerimento, ma non sono applicati alla visibilità."
         },
@@ -5519,7 +5519,7 @@
       "sources": "Regioni e feed",
       "notifications": "Canali e regole di avviso",
       "display": "Tema, carattere e lingua",
-      "map": "Provider, tema e globo",
+      "map": "Provider e tema",
       "ai": "Modelli, memoria e framework",
       "video": "Qualità e riproduzione automatica",
       "apiKeys": "Chiavi per l'API World Monitor",
@@ -5676,7 +5676,6 @@
         "5": "dimensione testo"
       },
       "map": {
-        "0": "globo",
         "1": "provider",
         "2": "tile",
         "3": "mappa base"

@@ -4813,7 +4813,7 @@
         "limitations": {
           "0": "Date demo simulate, bazate pe AviationStack, pot apărea când lipsește o cheie API.",
           "1": "Pozițiile live ale aeronavelor pot întârzia sau lipsi acolo unde acoperirea ADS-B este slabă sau blocată.",
-          "2": "Zonele NOTAM de spațiu aerian se desenează doar pe harta deck.gl. Hărțile SVG și globul arată marcaje de aeroport.",
+          "2": "Zonele NOTAM de spațiu aerian se desenează doar pe harta deck.gl. Harta SVG arată marcaje de aeroport.",
           "3": "Cele mai multe TFR din SUA își descriu forma doar în text, deci apar ca marcaj la poziția NOTAM, nu ca forma restricționată.",
           "4": "Programele din fereastra de valabilitate a unui NOTAM, de exemplu orele zilnice, apar în balon, dar nu se aplică vizibilității."
         },
@@ -5519,7 +5519,7 @@
       "sources": "Regiuni și feed-uri",
       "notifications": "Canale și reguli de alertă",
       "display": "Temă, font și limbă",
-      "map": "Furnizor, temă și glob",
+      "map": "Furnizor și temă",
       "ai": "Modele, memorie și framework-uri",
       "video": "Calitate și redare automată",
       "apiKeys": "Chei pentru API-ul World Monitor",
@@ -5676,7 +5676,6 @@
         "5": "mărime text"
       },
       "map": {
-        "0": "glob",
         "1": "furnizor",
         "2": "plăci",
         "3": "hartă de bază"

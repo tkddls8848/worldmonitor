@@ -4823,7 +4823,7 @@
         "limitations": {
           "0": "Simulirani pokazni podaci oslonjeni na AviationStack mogu se pojaviti kad nema ključa API.",
           "1": "Živi položaji zrakoplova mogu kasniti ili izostati ondje gdje je pokrivenost ADS-B slaba ili blokirana.",
-          "2": "Područja NOTAM zračnog prostora crtaju se samo na karti deck.gl. Karte SVG i globusa pokazuju oznake zračnih luka.",
+          "2": "Područja NOTAM zračnog prostora crtaju se samo na karti deck.gl. Karta SVG pokazuje oznake zračnih luka.",
           "3": "Većina američkih TFR opisuje oblik samo u tekstu, pa se pojavljuju kao oznaka na položaju NOTAM, a ne kao oblik ograničenog područja.",
           "4": "Rasporedi unutar prozora važenja NOTAM, na primjer dnevni sati, prikazani su u opisu, ali ne utječu na vidljivost."
         },
@@ -5529,7 +5529,7 @@
       "sources": "Regije i izvori",
       "notifications": "Kanali i pravila upozorenja",
       "display": "Tema, font i jezik",
-      "map": "Davatelj, tema i globus",
+      "map": "Davatelj i tema",
       "ai": "Modeli, memorija i okviri",
       "video": "Kvaliteta i automatska reprodukcija",
       "apiKeys": "Ključevi za World Monitor API",
@@ -5686,7 +5686,6 @@
         "5": "veličina teksta"
       },
       "map": {
-        "0": "globus",
         "1": "davatelj usluge",
         "2": "pločice",
         "3": "osnovna mapa"

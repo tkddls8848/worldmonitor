@@ -4835,7 +4835,7 @@
         "limitations": {
           "0": "Simulovaná ukázková data opřená o AviationStack se mohou objevit, když chybí klíč API.",
           "1": "Živé polohy letadel mohou být zpožděné nebo chybět tam, kde je pokrytí ADS-B slabé nebo blokované.",
-          "2": "Oblasti NOTAM vzdušného prostoru se kreslí jen na mapě deck.gl. Mapy SVG a glóbu ukazují značky letišť.",
+          "2": "Oblasti NOTAM vzdušného prostoru se kreslí jen na mapě deck.gl. Mapa SVG ukazuje značky letišť.",
           "3": "Většina amerických TFR popisuje tvar jen v textu, takže se objeví jako značka v poloze NOTAM, ne jako tvar omezeného prostoru.",
           "4": "Rozvrhy uvnitř okna platnosti NOTAM, například denní hodiny, jsou v bublině, ale na viditelnost se neuplatňují."
         },
@@ -5552,7 +5552,7 @@
       "sources": "Regiony a zdroje",
       "notifications": "Kanály a pravidla výstrah",
       "display": "Vzhled, písmo a jazyk",
-      "map": "Poskytovatel, vzhled a glóbus",
+      "map": "Poskytovatel a vzhled",
       "ai": "Modely, paměť a rámce",
       "video": "Kvalita a automatické přehrávání",
       "apiKeys": "Klíče pro World Monitor API",
@@ -5709,7 +5709,6 @@
         "5": "velikost textu"
       },
       "map": {
-        "0": "globus",
         "1": "poskytovatel",
         "2": "dlaždice",
         "3": "podkladová mapa"

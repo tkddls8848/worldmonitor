@@ -274,7 +274,7 @@ describe('settings sidebar search', () => {
     assert.deepEqual(search('ollama'), ['ai']);
     assert.deepEqual(search('text size'), ['panels', 'display']);
     assert.deepEqual(search('backup'), ['sync']);
-    assert.deepEqual(search('globe tiles'), ['map']);
+    assert.deepEqual(search('basemap tiles'), ['map']);
     assert.deepEqual(search('stream autoplay'), ['video']);
   });
 

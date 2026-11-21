@@ -4835,7 +4835,7 @@
         "limitations": {
           "0": "Symulowane dane demonstracyjne oparte na AviationStack mogą się pojawić, gdy brakuje klucza API.",
           "1": "Pozycje statków powietrznych na żywo mogą być opóźnione albo nieobecne tam, gdzie pokrycie ADS-B jest słabe albo zablokowane.",
-          "2": "Obszary NOTAM przestrzeni powietrznej są rysowane tylko na mapie deck.gl. Mapy SVG i globusa pokazują znaczniki lotnisk.",
+          "2": "Obszary NOTAM przestrzeni powietrznej są rysowane tylko na mapie deck.gl. Mapa SVG pokazuje znaczniki lotnisk.",
           "3": "Większość amerykańskich TFR opisuje kształt tylko w tekście, więc widać je jako znacznik w pozycji NOTAM, a nie jako kształt strefy ograniczonej.",
           "4": "Harmonogramy wewnątrz okna obowiązywania NOTAM, na przykład godziny codzienne, są w podpowiedzi, ale nie wpływają na widoczność."
         },
@@ -5552,7 +5552,7 @@
       "sources": "Regiony i źródła",
       "notifications": "Kanały i reguły alertów",
       "display": "Motyw, czcionka i język",
-      "map": "Dostawca, motyw i globus",
+      "map": "Dostawca i motyw",
       "ai": "Modele, pamięć i frameworki",
       "video": "Jakość i automatyczne odtwarzanie",
       "apiKeys": "Klucze API World Monitor",
@@ -5709,7 +5709,6 @@
         "5": "rozmiar tekstu"
       },
       "map": {
-        "0": "globus",
         "1": "dostawca",
         "2": "kafelki",
         "3": "mapa bazowa"
