@@ -383,7 +383,6 @@ export class InspectorShell {
         return a.displayName.localeCompare(b.displayName);
       });
 
-    const shown = matches;
     const nodes: HTMLElement[] = [];
 
     const summary = document.createElement('div');
@@ -395,7 +394,7 @@ export class InspectorShell {
           : `${allKeys.length} total panels (search to filter · ★ pins to Overview)`);
     nodes.push(summary);
 
-    for (const item of shown) {
+    for (const item of matches) {
       const row = document.createElement('div');
       row.className = `inspector-catalog-row${item.enabled ? ' enabled' : ''}`;
 
@@ -431,15 +430,6 @@ export class InspectorShell {
 
       row.append(toggle, nameBtn, pinBtn);
       nodes.push(row);
-    }
-
-    if (!q && matches.length > shown.length) {
-      const more = document.createElement('div');
-      more.className = 'inspector-catalog-more';
-      more.textContent = ko
-        ? `외 ${matches.length - shown.length}개 패널 — 위 검색창에 입력하거나 아래 그리드에서 바로 확인하세요`
-        : `+${matches.length - shown.length} more panels — type above to search or scroll below`;
-      nodes.push(more);
     }
 
     this.catalogList.replaceChildren(...nodes);

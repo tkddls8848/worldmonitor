@@ -31,7 +31,7 @@ export function applyFont(font?: FontFamily): void {
   if (resolved === 'mono') {
     document.documentElement.dataset.font = 'mono';
   } else {
-    document.documentElement.dataset.font = 'system';
+    delete document.documentElement.dataset.font;
   }
 }
 

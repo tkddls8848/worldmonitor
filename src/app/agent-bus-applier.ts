@@ -165,15 +165,6 @@ function applyOpenPanel(ctx: AppContext, action: Extract<AgentBusAction, { type:
     ], action);
   }
 
-  if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('wm:reveal-panel', { detail: { panelId: action.panelId } }));
-  }
-
-  const panel = ctx.panels[action.panelId];
-  if (!panel) {
-    return denied(`Panel is not available: ${action.panelId}.`, 'panel_not_live', [], action);
-  }
-
   const effectiveConfig = getPanelConfig(action.panelId, options, savedConfig);
   const config = savedConfig ?? effectiveConfig;
   if (config.enabled !== true) {
@@ -185,6 +176,21 @@ function applyOpenPanel(ctx: AppContext, action: Extract<AgentBusAction, { type:
     return denied(`Panel is not available on this plan: ${config.name || action.panelId}.`, 'panel_not_entitled', [
       { target: action.panelId, status: 'denied', reason: 'panel_not_entitled' },
     ], action);
+  }
+
+  const hasDeferredShell = typeof document !== 'undefined'
+    && Boolean(document.querySelector(`[data-panel="${CSS.escape(action.panelId)}"][data-deferred-panel]`));
+  if (!ctx.panels[action.panelId] && !hasDeferredShell) {
+    return denied(`Panel is not available: ${action.panelId}.`, 'panel_not_live', [], action);
+  }
+
+  if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('wm:reveal-panel', { detail: { panelId: action.panelId } }));
+  }
+
+  const panel = ctx.panels[action.panelId];
+  if (!panel) {
+    return denied(`Panel is not available: ${action.panelId}.`, 'panel_not_live', [], action);
   }
 
   panel.show();

@@ -2852,63 +2852,20 @@
   z-index: 5;
 }
 
-.map-bottom-grid:empty {
+/* Option B retires the under-map drop zone: keep .map-bottom-grid collapsed
+   even during panel drags so panels always live inside the tabbed inspector. */
+.map-bottom-grid:empty,
+body.panel-drag-active .map-bottom-grid:empty {
   flex: 0 0 0;
   min-height: 0;
   padding: 0;
   border-top: none;
   overflow: hidden;
+  display: none;
 }
 
-body.panel-drag-active .map-bottom-grid:empty {
-  flex: 0 0 120px;
-  min-height: 120px;
-  padding: 12px;
-  border-top: 1px solid var(--border);
-  overflow-y: auto;
-}
-
-/* Base state for placeholder */
 .map-bottom-grid::after {
-  content: 'Drop panels here to move them below the map';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 80%;
-  width: 90%;
-  border: 2px dashed var(--border);
-  border-radius: 8px;
-  color: var(--text-muted);
-  font-size: calc(12px * var(--wm-panel-effective-scale, 1));
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  opacity: 0.4;
-  pointer-events: none;
-  transition: opacity 0.2s;
-}
-
-.map-bottom-grid:empty::after {
-  opacity: 0;
-}
-
-body.panel-drag-active .map-bottom-grid:empty::after {
-  opacity: 0.4;
-}
-
-/* Hide placeholder if there are panels */
-.map-bottom-grid:not(:empty)::after {
-  opacity: 0;
-}
-
-/* Highlight zone during drag (handled by JS if possible, but let's add a hover state too) */
-.map-bottom-grid:hover {
-  background: color-mix(in srgb, var(--surface) 60%, var(--bg));
-  border-top-color: var(--accent);
+  display: none;
 }
 
 /* Hide the drop zone below the split threshold. 1200px mirrors

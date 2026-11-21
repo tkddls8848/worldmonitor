@@ -14,7 +14,6 @@ import {
 import {
   SPLIT_LAYOUT_MIN_WIDTH,
   MAP_COL_DEFAULT_PERCENT,
-  isSplitLayoutViewport,
   clampMapColWidthPercent,
   mapRightClassForVisualSide,
   type MapVisualSide,
@@ -130,7 +129,6 @@ import {
   hydrateGeoHubPanelFromClusters,
   hydrateTechHubPanelFromClusters,
 } from '@/app/hub-activity-hydration';
-import { movePanelToKeyboardZone } from '@/app/panel-keyboard-reorder';
 
 function readSessionStorageValue(key: string): string | null {
   try {
@@ -173,7 +171,7 @@ const STORAGE_ATLAS_PANEL_KEY = 'storage-facility-map';
 
 /** Mirror of OVERVIEW_DEFAULT_PANELS so first-screen boot knows Overview panels synchronously without blocking on dynamic imports. */
 const INITIAL_OVERVIEW_PANELS: Readonly<Record<string, readonly string[]>> = {
-  full: ['strategic-risk', 'cii', 'markets', 'energy-complex', 'threat-timeline', 'latest-brief', 'insights'],
+  full: ['insights', 'strategic-risk', 'cii', 'threat-timeline', 'markets', 'energy-complex', 'latest-brief'],
   tech: ['insights', 'ai', 'tech', 'startups', 'markets', 'internet-disruptions', 'latest-brief'],
   finance: ['insights', 'markets', 'heatmap', 'macro-signals', 'fear-greed', 'daily-market-brief', 'latest-brief'],
   commodity: ['insights', 'commodities', 'energy-complex', 'gold-intelligence', 'supply-chain', 'markets', 'latest-brief'],
@@ -456,6 +454,10 @@ export class PanelLayoutManager implements AppModule {
   private bottomTrayRaf: number | null = null;
   private bottomTrayTimer: ReturnType<typeof setTimeout> | null = null;
   private initialVisiblePanelSet: Set<string> | null = null;
+  private pendingRevealPanelId: string | null = null;
+  private inspectorShellFailed = false;
+  private trayForcedDisabledPanels = new Set<string>();
+  private liveNewsLoadInFlight: Promise<Panel | null> | null = null;
   private isInitialOrderedMountPass = false;
   private cachedShellFootprintStorage: {
     spans: Record<string, number>;
@@ -598,11 +600,16 @@ export class PanelLayoutManager implements AppModule {
     this.bottomMediaTray?.destroy();
     this.bottomMediaTray = null;
     this.initialVisiblePanelSet = null;
+    this.pendingRevealPanelId = null;
+    this.inspectorShellFailed = false;
+    this.trayForcedDisabledPanels.clear();
+    this.liveNewsLoadInFlight = null;
     this.cachedShellFootprintStorage = null;
     this.inspectorCollapsed = false;
     this.inspectorWideGrid = false;
     delete document.documentElement.dataset.inspectorCollapsed;
     delete document.documentElement.dataset.inspectorWideGrid;
+    delete document.documentElement.dataset.mapSide;
     this.unsubscribeScope?.();
     this.unsubscribeScope = null;
     this.focusEditor?.close();
@@ -900,7 +907,7 @@ export class PanelLayoutManager implements AppModule {
         </button>`
       ).join('')}
       </div>
-      <div class="dashboard-navigation-row">
+      <div class="dashboard-navigation-row dashboard-navigation-row--hosted">
         <div class="dashboard-tabs-mount" id="panelTabsMount"></div>
         <div class="tablet-variant-mount"></div>
       </div>
@@ -1082,14 +1089,21 @@ export class PanelLayoutManager implements AppModule {
     if (this.inspectorShell) {
       this.inspectorShell.getCustomTabsSlot().appendChild(mount);
       document.querySelector('.dashboard-navigation-row')?.classList.add('dashboard-navigation-row--hosted');
+    } else if (this.inspectorShellFailed) {
+      document.querySelector('.dashboard-navigation-row')?.classList.remove('dashboard-navigation-row--hosted');
     }
     this.initFocus();
   }
 
   private computeInitialVisiblePanelSet(): Set<string> | null {
     const savedTab = safeStorageGet('wm-inspector-tab-v1');
-    if (savedTab && savedTab !== 'overview') {
+    if (savedTab === 'all') {
       return null;
+    }
+    if (savedTab === 'security' || savedTab === 'markets' || savedTab === 'news') {
+      // Hold non-Overview tabs hidden until InspectorShell mounts so all 86 panels
+      // never flash or consume boot mount budget before the saved tab filters them.
+      return new Set<string>();
     }
     const settings = this.ctx.panelSettings;
     const rawPins = safeStorageGet('wm-inspector-overview-pins-v1');
@@ -1110,7 +1124,7 @@ export class PanelLayoutManager implements AppModule {
       .filter((id) => settings[id]?.enabled === true);
     if (defaults.length > 0) return new Set(defaults);
     const fallback = Object.entries(settings)
-      .filter(([id, cfg]) => id !== 'map' && cfg.enabled)
+      .filter(([id, cfg]) => id !== 'map' && cfg.enabled === true)
       .slice(0, 7)
       .map(([id]) => id);
     return fallback.length > 0 ? new Set(fallback) : null;
@@ -1143,8 +1157,10 @@ export class PanelLayoutManager implements AppModule {
         this.toggleInspectorCollapsed(false);
       }
       if (this.inspectorShell) {
+        this.pendingRevealPanelId = null;
         this.inspectorShell.revealPanelInTab(panelId);
       } else {
+        this.pendingRevealPanelId = panelId;
         this.initialVisiblePanelSet?.add(panelId);
         const existingEl = document.querySelector<HTMLElement>(`#panelsGrid > [data-panel="${CSS.escape(panelId)}"]`);
         existingEl?.classList.remove('inspector-tab-hidden');
@@ -1173,14 +1189,6 @@ export class PanelLayoutManager implements AppModule {
   }
 
   private mountInspectorShell(InspectorShellCtor: typeof import('@/components/InspectorShell').InspectorShell): void {
-    if (this.bottomTrayRaf !== null && typeof cancelAnimationFrame === 'function') {
-      cancelAnimationFrame(this.bottomTrayRaf);
-      this.bottomTrayRaf = null;
-    }
-    if (this.bottomTrayTimer !== null) {
-      clearTimeout(this.bottomTrayTimer);
-      this.bottomTrayTimer = null;
-    }
     this.inspectorShell?.destroy();
     const headerMount = document.getElementById('inspectorHeaderMount');
     if (!headerMount) return;
@@ -1200,6 +1208,10 @@ export class PanelLayoutManager implements AppModule {
           };
         }
         saveToStorage(STORAGE_KEYS.panels, this.ctx.panelSettings);
+        if (this.tabsState) {
+          this.snapshotActiveTab();
+          saveTabsState(this.tabsState);
+        }
         this.applyPanelSettings();
         if (enabled) {
           this.mountDeferredPanel(panelId);
@@ -1241,12 +1253,27 @@ export class PanelLayoutManager implements AppModule {
       document.querySelector('.dashboard-navigation-row')?.classList.add('dashboard-navigation-row--hosted');
     }
 
+    const pendingReveal = this.pendingRevealPanelId;
+    this.pendingRevealPanelId = null;
+    if (pendingReveal) {
+      this.inspectorShell.revealPanelInTab(pendingReveal);
+      if (this.deferredPanelMounts.has(pendingReveal)) {
+        this.mountDeferredPanel(pendingReveal);
+      }
+      return;
+    }
+
     const visibleKeys = this.inspectorShell.applyGridFilter();
-    this.hydrateVisibleInspectorPanels(visibleKeys, 3);
+    this.hydrateVisibleInspectorPanels(visibleKeys);
   }
 
   private fallbackWithoutInspector(): void {
+    if (this.ctx.isDestroyed) return;
+    this.inspectorShellFailed = true;
     this.initialVisiblePanelSet = null;
+    if (this.panelTabBar) {
+      document.querySelector('.dashboard-navigation-row')?.classList.remove('dashboard-navigation-row--hosted');
+    }
     const grid = document.getElementById('panelsGrid');
     grid?.querySelectorAll<HTMLElement>(':scope > [data-panel]').forEach((el) => {
       el.classList.remove('inspector-tab-hidden');
@@ -1293,6 +1320,10 @@ export class PanelLayoutManager implements AppModule {
       onReleasePanelElement: (panelId, el) => {
         const livePanel = this.ctx.panels[panelId] as { stopLiveMediaForClose?: () => void } | undefined;
         livePanel?.stopLiveMediaForClose?.();
+        const wasForcedVisible = this.trayForcedDisabledPanels.delete(panelId);
+        if (wasForcedVisible && this.ctx.panelSettings[panelId]?.enabled !== true) {
+          this.ctx.panels[panelId]?.toggle(false);
+        }
         const grid = document.getElementById('panelsGrid');
         if (grid) {
           this.insertByOrder(grid, el, panelId);
@@ -1365,16 +1396,22 @@ export class PanelLayoutManager implements AppModule {
           }
         }
       } else if (panelId === 'live-news' && this.shouldCreatePanel('live-news')) {
-        panel = await this.importPanel(
-          'live-news',
-          () => import('@/components/LiveNewsPanel'),
-          'LiveNewsPanel',
-          (LiveNewsPanel, module) => {
-            const liveNewsModule = module as typeof import('@/components/LiveNewsPanel');
-            if (liveNewsModule.getDefaultLiveChannels().length === 0 && liveNewsModule.loadChannelsFromStorage().length === 0) return null;
-            return new LiveNewsPanel();
-          },
-        );
+        if (!this.liveNewsLoadInFlight) {
+          this.liveNewsLoadInFlight = this.importPanel(
+            'live-news',
+            () => import('@/components/LiveNewsPanel'),
+            'LiveNewsPanel',
+            (LiveNewsPanel, module) => {
+              if (this.ctx.panels['live-news']) return null;
+              const liveNewsModule = module as typeof import('@/components/LiveNewsPanel');
+              if (liveNewsModule.getDefaultLiveChannels().length === 0 && liveNewsModule.loadChannelsFromStorage().length === 0) return null;
+              return new LiveNewsPanel();
+            },
+          ).finally(() => {
+            this.liveNewsLoadInFlight = null;
+          });
+        }
+        panel = await this.liveNewsLoadInFlight;
         if (panel && !this.ctx.isDestroyed && !this.ctx.panels['live-news']) {
           this.ctx.panels['live-news'] = panel;
           const grid = document.getElementById('panelsGrid');
@@ -1388,6 +1425,9 @@ export class PanelLayoutManager implements AppModule {
     }
 
     if (!panel || this.ctx.isDestroyed) return null;
+    if (this.ctx.panelSettings[panelId]?.enabled !== true) {
+      this.trayForcedDisabledPanels.add(panelId);
+    }
     panel.toggle(true);
     const livePanel = panel as { resumeLiveMediaForShow?: () => void };
     livePanel.resumeLiveMediaForShow?.();
@@ -1924,10 +1964,10 @@ export class PanelLayoutManager implements AppModule {
     bottomAvailable: boolean;
   } | null {
     const sidebarGrid = document.getElementById('panelsGrid');
-    const bottomGrid = document.getElementById('mapBottomGrid');
-    if (!sidebarGrid || !bottomGrid) return null;
+    if (!sidebarGrid) return null;
 
-    const bottomAvailable = this.getEffectiveUltraWide();
+    // Option B retires the under-map bottom zone; all panels live in the tabbed inspector.
+    const bottomAvailable = false;
     const panels: PanelLayoutEntry[] = [];
 
     const collectFromGrid = (grid: HTMLElement, region: PanelLayoutRegion): void => {
@@ -1954,7 +1994,6 @@ export class PanelLayoutManager implements AppModule {
     };
 
     collectFromGrid(sidebarGrid, 'sidebar');
-    if (bottomAvailable) collectFromGrid(bottomGrid, 'bottom');
     return { panels, bottomAvailable };
   }
 
@@ -1963,9 +2002,16 @@ export class PanelLayoutManager implements AppModule {
     region: PanelLayoutRegion,
     index: number,
   ): { ok: true } | { ok: false; reason: NonNullable<PanelLayoutMutationResult['reason']>; message: string } {
+    if (region === 'bottom') {
+      return {
+        ok: false,
+        reason: 'region_unavailable',
+        message: 'The below-map panel zone is retired in the tabbed inspector layout.',
+      };
+    }
+
     const sidebarGrid = document.getElementById('panelsGrid');
-    const bottomGrid = document.getElementById('mapBottomGrid');
-    if (!sidebarGrid || !bottomGrid) {
+    if (!sidebarGrid) {
       return {
         ok: false,
         reason: 'layout_unavailable',
@@ -1982,21 +2028,16 @@ export class PanelLayoutManager implements AppModule {
       };
     }
 
-    const targetGrid = region === 'bottom' ? bottomGrid : sidebarGrid;
-    const peers = Array.from(targetGrid.children).filter(
+    const peers = Array.from(sidebarGrid.children).filter(
       (child): child is HTMLElement =>
         child instanceof HTMLElement
         && child.classList.contains('panel')
         && child.dataset.panel !== panelId,
     );
 
-    const reference = peers[index] ?? (
-      region === 'sidebar' ? sidebarGrid.querySelector('.add-panel-block') : null
-    );
-    targetGrid.insertBefore(panelEl, reference);
-
-    if (region === 'bottom') this.bottomSetMemory.add(panelId);
-    else this.bottomSetMemory.delete(panelId);
+    const reference = peers[index] ?? sidebarGrid.querySelector('.add-panel-block');
+    sidebarGrid.insertBefore(panelEl, reference);
+    this.bottomSetMemory.delete(panelId);
 
     return { ok: true };
   }
@@ -2371,7 +2412,7 @@ export class PanelLayoutManager implements AppModule {
    * channels. Called from the liveChannels storage event handler.
    */
   mountLiveNewsIfReady(): void {
-    if (this.ctx.panels['live-news']) return;
+    if (this.ctx.panels['live-news'] || this.liveNewsLoadInFlight) return;
     const grid = document.getElementById('panelsGrid');
     if (this.lazyPanelRegistrations.has('live-news') && grid) {
       this.mountLazyPanel('live-news', grid);
@@ -2382,6 +2423,7 @@ export class PanelLayoutManager implements AppModule {
       () => import('@/components/LiveNewsPanel'),
       'LiveNewsPanel',
       (LiveNewsPanel, module) => {
+        if (this.ctx.panels['live-news']) return null;
         const liveNewsModule = module as typeof import('@/components/LiveNewsPanel');
         if (liveNewsModule.getDefaultLiveChannels().length === 0 && liveNewsModule.loadChannelsFromStorage().length === 0) return null;
         return new LiveNewsPanel();
@@ -2476,14 +2518,6 @@ export class PanelLayoutManager implements AppModule {
     const config = this.ctx.panelSettings[key];
     if (!config?.enabled) return false;
     if (!this.isPanelVisibleForInitialFilter(key)) {
-      return false;
-    }
-    // In the 1-column desktop inspector, only the top 3 cards sit above the fold.
-    // Limiting synchronous pre-map mounts to 3 keeps heavy below-fold chunks from
-    // competing with MapContainer construction on throttled CPUs; the remaining
-    // Overview cards hydrate via IntersectionObserver / staggered post-map frames.
-    const immediateCap = !this.ctx.isMobile && this.initialVisiblePanelSet ? 3 : undefined;
-    if (immediateCap !== undefined && this.initiallyMountedEnabledPanelCount >= immediateCap) {
       return false;
     }
     if (shouldDeferInitialPanelMount({
@@ -3771,12 +3805,6 @@ export class PanelLayoutManager implements AppModule {
     return SPLIT_LAYOUT_MIN_WIDTH;
   }
 
-  private getEffectiveUltraWide(): boolean {
-    const mapSection = document.getElementById('mapSection');
-    const mapEnabled = !mapSection?.classList.contains('hidden');
-    return isSplitLayoutViewport(window) && mapEnabled;
-  }
-
   private insertByOrder(grid: HTMLElement, el: HTMLElement, key: string): void {
     const idx = this.resolvedPanelOrder.indexOf(key);
     if (idx === -1) { grid.appendChild(el); return; }
@@ -4110,8 +4138,7 @@ export class PanelLayoutManager implements AppModule {
 
     const findDropPosition = (clientX: number, clientY: number): DropPosition | null => {
       const grid = document.getElementById('panelsGrid');
-      const bottomGrid = document.getElementById('mapBottomGrid');
-      if (!grid || !bottomGrid) return null;
+      if (!grid) return null;
 
       // Temporarily hide the ghost to get accurate hit detection
       const prevPointerEvents = ghostEl?.style.pointerEvents;
@@ -4121,13 +4148,14 @@ export class PanelLayoutManager implements AppModule {
 
       if (!target) return null;
 
-      const targetGrid = (target.closest('.panels-grid') || target.closest('.map-bottom-grid')) as HTMLElement | null;
+      // Option B keeps all panels in #panelsGrid; ignore drops over #mapBottomGrid.
+      const targetGrid = target.closest('.panels-grid') as HTMLElement | null;
       const targetPanel = target.closest('.panel') as HTMLElement | null;
 
       if (!targetGrid && !targetPanel) return null;
 
       const currentTargetGrid = targetGrid || (targetPanel ? targetPanel.parentElement as HTMLElement : null);
-      if (!currentTargetGrid || (currentTargetGrid !== grid && currentTargetGrid !== bottomGrid)) return null;
+      if (!currentTargetGrid || currentTargetGrid !== grid) return null;
       const panel = targetPanel && targetPanel !== el ? targetPanel : null;
       let insertBefore = false;
       if (panel) {
@@ -4306,12 +4334,7 @@ export class PanelLayoutManager implements AppModule {
         }
         
         if (moved) {
-          const isInBottom = !!el.closest('.map-bottom-grid');
-          if (isInBottom) {
-            this.bottomSetMemory.add(key);
-          } else {
-            this.bottomSetMemory.delete(key);
-          }
+          this.bottomSetMemory.delete(key);
           this.savePanelOrder();
         }
       }
@@ -4328,12 +4351,8 @@ export class PanelLayoutManager implements AppModule {
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
 
-    // Keyboard path for reordering: the mouse drag above has no keyboard
-    // equivalent, so layout customization was impossible without a pointer.
-    // A visually-hidden-until-focused button in the header moves the panel
-    // one slot per arrow press and persists through the same savePanelOrder()
-    // path as a completed drag. Page Up/Page Down move between the sidebar
-    // and below-map grids when both zones are active on an ultra-wide layout.
+    // Keyboard path for reordering within the tabbed inspector grid:
+    // arrow keys move the panel one slot and persist through savePanelOrder().
     const header = el.querySelector<HTMLElement>('.panel-header');
     if (header && !header.querySelector('.panel-move-btn')) {
       const moveBtn = document.createElement('button');
@@ -4342,41 +4361,14 @@ export class PanelLayoutManager implements AppModule {
       const panelTitle = el.querySelector('.panel-title')?.textContent?.trim() || key;
       moveBtn.setAttribute(
         'aria-label',
-        `Move ${panelTitle} panel; arrow keys reorder, Page Up moves to sidebar, Page Down moves below map`,
+        `Move ${panelTitle} panel; arrow keys reorder`,
       );
       moveBtn.setAttribute(
         'aria-keyshortcuts',
-        'ArrowLeft ArrowRight ArrowUp ArrowDown PageUp PageDown',
+        'ArrowLeft ArrowRight ArrowUp ArrowDown',
       );
       moveBtn.textContent = '⇅';
       moveBtn.addEventListener('keydown', (e: KeyboardEvent) => {
-        const targetZone = e.key === 'PageUp'
-          ? 'sidebar'
-          : e.key === 'PageDown'
-            ? 'bottom'
-            : null;
-        if (targetZone) {
-          if (!this.getEffectiveUltraWide()) return;
-          e.preventDefault();
-          e.stopPropagation();
-          const sidebarGrid = document.getElementById('panelsGrid');
-          const bottomGrid = document.getElementById('mapBottomGrid');
-          if (!sidebarGrid || !bottomGrid) return;
-          const moved = movePanelToKeyboardZone({
-            panel: el,
-            panelKey: key,
-            targetZone,
-            sidebarGrid,
-            bottomGrid,
-            bottomSet: this.bottomSetMemory,
-          });
-          if (moved) {
-            this.savePanelOrder();
-          }
-          moveBtn.focus();
-          return;
-        }
-
         const back = e.key === 'ArrowLeft' || e.key === 'ArrowUp';
         const fwd = e.key === 'ArrowRight' || e.key === 'ArrowDown';
         if (!back && !fwd) return;

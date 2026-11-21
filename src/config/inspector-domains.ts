@@ -35,16 +35,16 @@ export const NEWS_SUB_FILTERS: ReadonlyArray<{ readonly id: NewsSubFilter; reado
   { id: 'tracking', labelKo: '재난·추적', labelEn: 'Tracking' },
 ];
 
-/** Curated first-screen Overview panels per variant (max ~7 scannable cards, fast visual indicators first, no heavy video spinners). */
+/** Curated first-screen Overview panels per variant (max ~7 scannable cards, no heavy video spinners). */
 export const OVERVIEW_DEFAULT_PANELS: Readonly<Record<string, readonly string[]>> = {
   full: [
+    'insights',
     'strategic-risk',
     'cii',
+    'threat-timeline',
     'markets',
     'energy-complex',
-    'threat-timeline',
     'latest-brief',
-    'insights',
   ],
   tech: [
     'insights',
@@ -320,13 +320,14 @@ export function getOverviewPanelKeys(
   pinnedOverrides?: readonly string[] | null,
 ): string[] {
   if (pinnedOverrides && pinnedOverrides.length > 0) {
-    return pinnedOverrides.filter((k) => k !== 'map' && panelSettings[k]?.enabled !== false);
+    const validPins = pinnedOverrides.filter((k) => k !== 'map' && panelSettings[k]?.enabled === true);
+    if (validPins.length > 0) return validPins;
   }
   const defaults = OVERVIEW_DEFAULT_PANELS[variant] ?? OVERVIEW_DEFAULT_PANELS.full ?? [];
-  const enabledDefaults = defaults.filter((k) => panelSettings[k]?.enabled);
+  const enabledDefaults = defaults.filter((k) => panelSettings[k]?.enabled === true);
   if (enabledDefaults.length > 0) return enabledDefaults;
   return Object.entries(panelSettings)
-    .filter(([k, cfg]) => k !== 'map' && cfg.enabled)
+    .filter(([k, cfg]) => k !== 'map' && cfg.enabled === true)
     .slice(0, 7)
     .map(([k]) => k);
 }

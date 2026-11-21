@@ -24754,7 +24754,7 @@ body.map-width-resizing {
   display: none;
 }
 
-/* 1440px mirrors SPLIT_LAYOUT_MIN_WIDTH (src/app/split-layout.ts) — one
+/* 1200px mirrors SPLIT_LAYOUT_MIN_WIDTH (src/app/split-layout.ts) — one
    threshold for web and desktop. Below it, keep panels full-width so the
    default map share cannot squeeze them into one column (#10458). The map track
    pins both pixel floors: 220px = MAP_COL_MIN_PX and 306px = PANELS_COL_MIN_PX

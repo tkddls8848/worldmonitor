@@ -948,11 +948,27 @@ export class Panel {
       if (this._collapsed) this.setCollapsed(false);
       document.body.classList.add('panel-modal-open');
       this.onModalExpandKeydown = (ev: KeyboardEvent) => {
-        if (ev.key === 'Escape') {
-          ev.stopImmediatePropagation();
-          ev.stopPropagation();
-          this.setModalExpanded(false);
+        if (ev.key !== 'Escape' || ev.defaultPrevented) return;
+        // Let higher-layer overlays/modals (Settings, Search, Command Palette, open dialogs)
+        // and editable in-panel inputs handle Escape first.
+        const target = ev.target as HTMLElement | null;
+        if (target && this.element.contains(target) && (
+          target.tagName === 'INPUT'
+          || target.tagName === 'TEXTAREA'
+          || target.tagName === 'SELECT'
+          || target.isContentEditable
+        )) {
+          return;
         }
+        const higherModal = document.querySelector(
+          '.unified-settings-overlay.open, .search-overlay.open, .modal-overlay.open, .command-palette.open, .country-deep-dive.open, dialog[open], [role="dialog"]:not(.panel-modal-expanded):not([hidden]):not([aria-hidden="true"])',
+        );
+        if (higherModal && higherModal !== this.element && !this.element.contains(higherModal)) {
+          return;
+        }
+        ev.stopImmediatePropagation();
+        ev.stopPropagation();
+        this.setModalExpanded(false);
       };
       document.addEventListener('keydown', this.onModalExpandKeydown, true);
     } else {
