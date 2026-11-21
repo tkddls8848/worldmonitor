@@ -85,7 +85,7 @@ service IntelligenceService {
     };
   }
 
-  // GetCountryIntelBrief generates a strategic brief for a specific country.
+  // GetCountryIntelBrief generates a strategic brief for a specific country. The response uses the fields defined by this RPC's protobuf response message.
   rpc GetCountryIntelBrief(GetCountryIntelBriefRequest) returns (GetCountryIntelBriefResponse) {
     option (sebuf.http.config) = {
       path: "/get-country-intel-brief"
@@ -215,12 +215,12 @@ service IntelligenceService {
     option (sebuf.http.config) = {path: "/list-cross-source-signals", method: HTTP_METHOD_GET};
   }
 
-  // ListMarketImplications returns AI-generated trade-implication cards from live world state.
+  // ListMarketImplications returns AI-generated trade-implication cards from live world state. The response uses the fields defined by this RPC's protobuf response message.
   rpc ListMarketImplications(ListMarketImplicationsRequest) returns (ListMarketImplicationsResponse) {
     option (sebuf.http.config) = {path: "/list-market-implications", method: HTTP_METHOD_GET};
   }
 
-  // ListWsbTickers ranks the top 50 tickers mentioned on r/wallstreetbets, r/stocks, and r/investing by velocity.
+  // ListWsbTickers ranks the top 50 tickers mentioned on r/wallstreetbets, r/stocks, and r/investing by velocity. The response uses the fields defined by this RPC's protobuf response message.
   rpc ListWsbTickers(ListWsbTickersRequest) returns (ListWsbTickersResponse) {
     option (sebuf.http.config) = {path: "/list-wsb-tickers", method: HTTP_METHOD_GET};
   }
@@ -254,7 +254,7 @@ service IntelligenceService {
   // Written every 6h by scripts/seed-regional-snapshots.mjs; the handler only
   // reads canonical state. (Detached: kept out of the public spec.)
 
-  // GetRegionalSnapshot returns the latest RegionalSnapshot for a region,
+  // GetRegionalSnapshot returns the latest RegionalSnapshot for a region, The response uses the fields defined by this RPC's protobuf response message.
   // refreshed every 6h. Premium-gated.
   rpc GetRegionalSnapshot(GetRegionalSnapshotRequest) returns (GetRegionalSnapshotResponse) {
     option (sebuf.http.config) = {path: "/get-regional-snapshot", method: HTTP_METHOD_GET};

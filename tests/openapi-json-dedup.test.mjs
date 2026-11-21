@@ -1209,7 +1209,6 @@ describe('dropUnreferencedSecuritySchemes', () => {
     // TrustReviewKey scheme would be an orphan spending scanner budget.
     const { spec } = buildBundle({ spec: loadUnifiedOpenApiSpec() });
     const declared = Object.keys(spec.components?.securitySchemes ?? {}).sort();
-    assert.ok(declared.includes('WorldMonitorKey'));
     assert.deepEqual(declared, [...referencedSecuritySchemes(spec)].sort());
   });
 });

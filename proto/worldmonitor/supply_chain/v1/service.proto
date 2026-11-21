@@ -64,7 +64,7 @@ service SupplyChainService {
     option (sebuf.http.config) = {path: "/get-shipping-stress", method: HTTP_METHOD_GET};
   }
 
-  // GetCountryChokepointIndex returns per-chokepoint exposure scores for a country. PRO-gated.
+  // GetCountryChokepointIndex returns per-chokepoint exposure scores for a country. PRO-gated. The response uses the fields defined by this RPC's protobuf response message.
   rpc GetCountryChokepointIndex(GetCountryChokepointIndexRequest) returns (GetCountryChokepointIndexResponse) {
     option (sebuf.http.config) = {path: "/get-country-chokepoint-index", method: HTTP_METHOD_GET};
   }
@@ -74,12 +74,12 @@ service SupplyChainService {
     option (sebuf.http.config) = {path: "/get-bypass-options", method: HTTP_METHOD_GET};
   }
 
-  // GetCountryCostShock returns cost shock and war risk data for a country+chokepoint. PRO-gated.
+  // GetCountryCostShock returns cost shock and war risk data for a country+chokepoint. PRO-gated. The response uses the fields defined by this RPC's protobuf response message.
   rpc GetCountryCostShock(GetCountryCostShockRequest) returns (GetCountryCostShockResponse) {
     option (sebuf.http.config) = {path: "/get-country-cost-shock", method: HTTP_METHOD_GET};
   }
 
-  // GetCountryProducts returns the seeded bilateral-HS4 import basket for a country. PRO-gated.
+  // GetCountryProducts returns the seeded bilateral-HS4 import basket for a country. PRO-gated. The response uses the fields defined by this RPC's protobuf response message.
   rpc GetCountryProducts(GetCountryProductsRequest) returns (GetCountryProductsResponse) {
     option (sebuf.http.config) = {path: "/get-country-products", method: HTTP_METHOD_GET};
   }
@@ -90,7 +90,7 @@ service SupplyChainService {
     option (sebuf.http.config) = {path: "/get-multi-sector-cost-shock", method: HTTP_METHOD_GET};
   }
 
-  // GetSectorDependency returns dependency flags and risk profile for a country+HS2 sector. PRO-gated.
+  // GetSectorDependency returns dependency flags and risk profile for a country+HS2 sector. PRO-gated. The response uses the fields defined by this RPC's protobuf response message.
   rpc GetSectorDependency(GetSectorDependencyRequest) returns (GetSectorDependencyResponse) {
     option (sebuf.http.config) = {path: "/get-sector-dependency", method: HTTP_METHOD_GET};
   }
@@ -166,17 +166,17 @@ service SupplyChainService {
     option (sebuf.http.config) = {path: "/get-china-corridor-control-towers", method: HTTP_METHOD_GET};
   }
 
-  // GetCountryVulnerabilities returns the full per-commodity score evidence for one country.
+  // GetCountryVulnerabilities returns the full per-commodity score evidence for one country. The response uses the fields defined by this RPC's protobuf response message.
   rpc GetCountryVulnerabilities(GetCountryVulnerabilitiesRequest) returns (GetCountryVulnerabilitiesResponse) {
     option (sebuf.http.config) = {path: "/get-country-vulnerabilities", method: HTTP_METHOD_GET};
   }
 
-  // GetChokepointDependencies returns the inverse country/commodity dependency index.
+  // GetChokepointDependencies returns the inverse country/commodity dependency index. The response uses the fields defined by this RPC's protobuf response message.
   rpc GetChokepointDependencies(GetChokepointDependenciesRequest) returns (GetChokepointDependenciesResponse) {
     option (sebuf.http.config) = {path: "/get-chokepoint-dependencies", method: HTTP_METHOD_GET};
   }
 
-  // ListVulnerabilityRankings returns a bounded global ranking with optional filters.
+  // ListVulnerabilityRankings returns a bounded global ranking with optional filters. The response uses the fields defined by this RPC's protobuf response message.
   rpc ListVulnerabilityRankings(ListVulnerabilityRankingsRequest) returns (ListVulnerabilityRankingsResponse) {
     option (sebuf.http.config) = {path: "/list-vulnerability-rankings", method: HTTP_METHOD_GET};
   }

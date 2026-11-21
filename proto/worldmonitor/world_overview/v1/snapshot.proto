@@ -42,7 +42,9 @@ message Deaths {
 }
 
 message CiiState {
+  // Current combined Country Instability Index score for this snapshot, on the source score's scale.
   double score = 1;
+  // Current unrest contribution carried in the index component state, on the source score's scale.
   double unrest = 2;
 }
 

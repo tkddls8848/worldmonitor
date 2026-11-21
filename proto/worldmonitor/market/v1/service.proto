@@ -93,22 +93,22 @@ service MarketService {
     option (sebuf.http.config) = {path: "/list-gulf-quotes", method: HTTP_METHOD_GET};
   }
 
-  // AnalyzeStock retrieves a premium stock analysis report with technicals, news, and AI synthesis.
+  // AnalyzeStock retrieves a premium stock analysis report with technicals, news, and AI synthesis. The response uses the fields defined by this RPC's protobuf response message.
   rpc AnalyzeStock(AnalyzeStockRequest) returns (AnalyzeStockResponse) {
     option (sebuf.http.config) = {path: "/analyze-stock", method: HTTP_METHOD_GET};
   }
 
-  // GetStockAnalysisHistory retrieves shared premium stock analysis history from the backend store.
+  // GetStockAnalysisHistory retrieves shared premium stock analysis history from the backend store. The response uses the fields defined by this RPC's protobuf response message.
   rpc GetStockAnalysisHistory(GetStockAnalysisHistoryRequest) returns (GetStockAnalysisHistoryResponse) {
     option (sebuf.http.config) = {path: "/get-stock-analysis-history", method: HTTP_METHOD_GET};
   }
 
-  // BacktestStock replays the technical-only stock signal over recent price history.
+  // BacktestStock replays the technical-only stock signal over recent price history. The response uses the fields defined by this RPC's protobuf response message.
   rpc BacktestStock(BacktestStockRequest) returns (BacktestStockResponse) {
     option (sebuf.http.config) = {path: "/backtest-stock", method: HTTP_METHOD_GET};
   }
 
-  // ListStoredStockBacktests retrieves stored premium backtest snapshots from the backend store.
+  // ListStoredStockBacktests retrieves stored premium backtest snapshots from the backend store. The response uses the fields defined by this RPC's protobuf response message.
   rpc ListStoredStockBacktests(ListStoredStockBacktestsRequest) returns (ListStoredStockBacktestsResponse) {
     option (sebuf.http.config) = {path: "/list-stored-stock-backtests", method: HTTP_METHOD_GET};
   }
@@ -148,7 +148,7 @@ service MarketService {
     option (sebuf.http.config) = {path: "/get-cot-positioning", method: HTTP_METHOD_GET};
   }
 
-  // GetInsiderTransactions retrieves SEC insider buy/sell activity from Finnhub.
+  // GetInsiderTransactions retrieves SEC insider buy/sell activity from Finnhub. The response uses the fields defined by this RPC's protobuf response message.
   rpc GetInsiderTransactions(GetInsiderTransactionsRequest) returns (GetInsiderTransactionsResponse) {
     option (sebuf.http.config) = {path: "/get-insider-transactions", method: HTTP_METHOD_GET};
   }

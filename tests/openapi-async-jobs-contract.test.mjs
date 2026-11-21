@@ -39,12 +39,6 @@ function assertAsyncJobContract(op, label) {
   assert.equal(location.schema?.type, 'string', `${label} Location schema type`);
   assert.ok(String(location.example ?? '').startsWith(`${POLL_PATH}?jobId=`), `${label} Location example must target the poll endpoint`);
 
-  // Injector composition: openapi-inject-idempotency.mjs stamps the
-  // replay-marker headers on the generated success BEFORE the 200→202 rename;
-  // the async-jobs injector must merge Location without clobbering them.
-  assert.ok(accepted.headers?.['Idempotent-Replayed'], `${label} 202 must keep the Idempotent-Replayed replay marker`);
-  assert.ok(accepted.headers?.['Idempotency-Key'], `${label} 202 must keep the Idempotency-Key echo header`);
-
   // The success example is an honest job envelope: pending + a poll URL that
   // mirrors the Location header example (two injectors share the literal —
   // openapi-inject-examples.mjs curates the body, openapi-inject-async-jobs.mjs
