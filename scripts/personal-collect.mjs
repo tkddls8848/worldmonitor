@@ -35,6 +35,19 @@ export const STANDALONE_INTERVAL_MIN = {
   'pizzint': 15,
 };
 
+// These fetchers have explicit per-source pacing and multi-minute worst cases.
+// The generic six-minute child cap killed them before their own deadline / quota
+// breaker could publish a partial result, leaving their Redis locks alive much
+// longer than collect-state considered the run fresh.
+export const PERSONAL_COLLECTOR_TIMEOUT_MIN = Object.freeze({
+  'supply-chain-trade': 20, // seed deadline is 17 minutes (15m lock + 2m margin)
+  'comtrade-bilateral-hs4': 15, // allows the five-refusal quota breaker to persist partial coverage
+});
+
+export function collectorTimeoutMs(name) {
+  return (name.startsWith('bundle-') ? 30 : PERSONAL_COLLECTOR_TIMEOUT_MIN[name] ?? 6) * MIN;
+}
+
 // Collectors whose script is not named seed-<name>.mjs.
 const SCRIPT_ALIASES = { gpsjam: 'fetch-gpsjam.mjs' };
 
@@ -109,7 +122,7 @@ export async function collectOnce(names, { log = console.log, force = false } = 
   if (due.length < names.length) log(`아직 신선한 수집기 ${names.length - due.length}개는 건너뜁니다.`);
   const results = [];
   for (const name of due) {
-    const result = await runOne(name, (name.startsWith('bundle-') ? 30 : 6) * MIN);
+    const result = await runOne(name, collectorTimeoutMs(name));
     results.push(result);
     log(`${result.ok ? ' OK ' : 'FAIL'} ${name} (${result.seconds}s)`);
     if (result.ok) {
