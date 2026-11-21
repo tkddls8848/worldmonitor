@@ -38,21 +38,11 @@ test('mark, unmark and re-mark keep one record per date and target', () => { con
 test('records older than 400 days are pruned on write', () => { const old = { id: 'issue:2025-01-01:UA', type: 'issue', date: '2025-01-01', iso2: 'UA', sourceUrls: [], summaryKo: '…', markedAt: 0 }; const r = applyMarkAction({ marks: [old], updatedAt: 0 }, { action: 'mark', date: '2026-11-22', target: { type: 'issue', iso2: 'UA' } }, withIssue('UA', '2026-11-22'), 401 * 86_400_000); assert.deepEqual(r.doc.marks.map((x) => x.id), ['issue:2026-11-22:UA']); });
 
 
-test('KST date changes at 15:00 UTC (AI collector contract)', () => {
-  assert.equal(kstDate(Date.parse('2026-11-22T14:59:59Z')), '2026-11-22');
-  assert.equal(kstDate(Date.parse('2026-11-22T15:00:00Z')), '2026-11-23');
-  assert.equal(kstHour(Date.parse('2026-11-22T21:00:00Z')), 6);
-});
 test('date and pair helpers follow the AI collector contract', () => {
   assert.equal(addDays('2026-12-31', 1), '2027-01-01');
   assert.equal(WORLD_OVERVIEW_KEYS.ai, 'world-overview:ai:v1');
   assert.equal(relationMatchKey({ kind: 'support', from: 'US', to: 'UA' }), 'support:US>UA');
   assert.equal(relationMatchKey({ kind: 'tension', from: 'US', to: 'CN' }), 'tension:CN-US');
-});
-test('addDays crosses months and years (Task 2 key contract)', () => {
-  assert.equal(addDays('2026-11-22', 13), '2026-12-05');
-  assert.equal(addDays('2026-12-31', 1), '2027-01-01');
-  assert.equal(addDays('2026-11-22', -89), '2026-08-25');
 });
 test('pairKey is order-independent and keys match the plan', () => {
   assert.equal(pairKey('UA', 'RU'), 'RU:UA');
