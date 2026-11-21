@@ -20,6 +20,7 @@ test('daily AI relations are an activation-marked on-demand health key', () => {
 });
 
 const ROWS = [
+  ['worldOverview', 'world-overview:snapshot:v1', 'seed-meta:world-overview:snapshot', 360],
   ['worldRelations', 'world-overview:relations:v1', 'seed-meta:world-overview:relations', 4320],
   ['worldPairTrends', 'gdelt:bulk:world-pair-trends:v1', 'seed-meta:gdelt:bulk:world-pair-trends', 240],
   ['worldRelationsAi', 'world-overview:ai:v1', 'seed-meta:world-overview:ai', 2160],
