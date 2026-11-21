@@ -445,7 +445,7 @@ test('content metadata uses authoritative provider clocks', () => {
   assert.equal(torontoTpsContentMeta({}), null);
 });
 
-test('own canonical keys stay off canadaAlerts / canadaRoads / torontoRoads', () => {
+test('own canonical keys stay off unrelated alert and road keys', () => {
   assert.equal(TFS_KEY, 'safety:toronto-tfs:v1');
   assert.equal(TPS_KEY, 'safety:toronto-tps:v1');
   assert.doesNotMatch(TFS_SEEDER, /alerts:canada|infra:toronto-roads|infra:ontario-511/);
@@ -499,7 +499,7 @@ test('host allowlists and isolation from the relay', () => {
   assert.match(LIB_SOURCE, new RegExp(TFS_HOST.replace(/\./g, '\\.')));
   assert.match(LIB_SOURCE, new RegExp(TPS_HOST.replace(/\./g, '\\.')));
   assert.match(LIB_SOURCE, new RegExp(TPS_LAYER_NAME));
-  assert.doesNotMatch(HEALTH, /canadaAlerts:.*toronto-tfs|torontoRoads:.*toronto-tfs/);
+  assert.doesNotMatch(HEALTH, /canadaAlerts:.*toronto-tfs/);
 });
 
 test('this test file does not import the seeder modules', () => {

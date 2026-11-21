@@ -77,8 +77,6 @@ export const BOOTSTRAP_CACHE_KEYS = Object.freeze({
   crossBorderArrivals: 'displacement:cross-border:v1',
   idmcIduDisplacement: 'displacement:idmc-idu:v1',
   canadaRoads: 'infra:ontario-511:v1',
-  albertaRoads: 'infra:alberta-511:v1',
-  manitobaRoads: 'infra:manitoba-511:v1',
   canadaAlerts: 'alerts:canada:v1',
   spending: 'economic:spending:v1',
   techEvents: 'research:tech-events-bootstrap:v1',
@@ -227,8 +225,6 @@ const ON_DEMAND_KEY_NAMES = new Set([
   // the widget agent may request canadaAlerts. Alberta and Manitoba come from
   // the same Provincial-511 seeder as canadaRoads. None of them rides a tier.
   'canadaRoads',
-  'albertaRoads',
-  'manitobaRoads',
   'canadaAlerts',
   // IMD cyclone/port/coastal/marine products (#7005). On-demand: the weather
   // and natural layers fetch this key only when those layers are on, so it

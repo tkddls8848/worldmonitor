@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Toronto Fire Services live CAD (#6682). World Monitor has confirmed direct
 // redistribution and public-display rights for this feed.
-// Own key — do not append to canadaAlerts / canadaRoads / torontoRoads.
+// Own key — do not append to canadaAlerts / canadaRoads.
 
 import { CHROME_UA, loadEnvFile, runSeed } from './_seed-utils.mjs';
 import { getOptionalUpstashCreds, upstashCommand } from './_upstash-rest.mjs';

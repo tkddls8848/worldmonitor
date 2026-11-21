@@ -2,7 +2,7 @@
  * Official Toronto live-CAD / public-safety adapters (#6682).
  *
  * Two independent agencies, two independent last-good keys. Do not fold into
- * canadaAlerts, canadaRoads, or torontoRoads. Do not backfill privacy
+ * canadaAlerts or canadaRoads. Do not backfill privacy
  * exclusions from radio, Citizen, tpscalls.live, GTA Update, or news.
  *
  * TFS machine endpoint was discovered from the official page XHR

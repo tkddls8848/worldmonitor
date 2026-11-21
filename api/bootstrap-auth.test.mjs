@@ -667,7 +667,7 @@ test('public on-demand URL keeps ONE contract even when credentials are attached
 });
 
 test('every Canada road key serves anonymously with a shield sized to its publisher', async () => {
-  // #6763 moved canadaRoads and albertaRoads off the fast tier so they stop
+  // #6763 moved canadaRoads off the fast tier so it stops
   // riding a payload every visitor downloads. A TIERED key is rejected on this
   // URL — the next test proves tiered keys such as wildfires draw a 401 — so the
   // move only works if these same requests now qualify. Asserted through the
@@ -679,8 +679,6 @@ test('every Canada road key serves anonymously with a shield sized to its publis
   // freshness budgets api/health.js declares for them.
   const expected = {
     canadaRoads: 900,   // seed-provincial-511, 15min member interval
-    albertaRoads: 900,  // same seeder, same interval
-    manitobaRoads: 900, // same seeder, same interval
   };
   await withMockedBootstrapAuth({
     entitlement: null,

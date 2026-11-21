@@ -14,14 +14,10 @@
 const DEFAULT_CAPACITY = 10;
 const DEFAULT_WINDOW_MS = 60_000;
 
-/** Per-host overrides for the process-wide default limiter. */
-export const HOST_511_RATES = Object.freeze({});
-
 /**
  * @param {{
  *   capacity?: number,
  *   windowMs?: number,
- *   hostRates?: Record<string, { capacity?: number, windowMs?: number }>,
  *   now?: () => number,
  *   sleep?: (ms: number) => Promise<void>,
  * }} [opts]
@@ -29,20 +25,11 @@ export const HOST_511_RATES = Object.freeze({});
 export function create511RateLimiter(opts = {}) {
   const defaultCapacity = opts.capacity ?? DEFAULT_CAPACITY;
   const defaultWindowMs = opts.windowMs ?? DEFAULT_WINDOW_MS;
-  const hostRates = opts.hostRates ?? {};
   const now = opts.now ?? (() => Date.now());
   const sleep = opts.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
 
   /** @type {Map<string, number[]>} */
   const stampsByHost = new Map();
-
-  function rateFor(host) {
-    const override = hostRates[host];
-    return {
-      capacity: override?.capacity ?? defaultCapacity,
-      windowMs: override?.windowMs ?? defaultWindowMs,
-    };
-  }
 
   /**
    * Wait until this process may call `host` without exceeding that host's rate.
@@ -53,7 +40,8 @@ export function create511RateLimiter(opts = {}) {
       throw new TypeError('acquire511Slot(host) requires a non-empty hostname');
     }
     const key = host.trim().toLowerCase();
-    const { capacity, windowMs } = rateFor(key);
+    const capacity = defaultCapacity;
+    const windowMs = defaultWindowMs;
     for (;;) {
       const nowMs = now();
       const windowStart = nowMs - windowMs;
@@ -77,7 +65,7 @@ export function create511RateLimiter(opts = {}) {
   /** @param {string} host */
   function pendingTokens(host) {
     const key = String(host || '').trim().toLowerCase();
-    const { windowMs } = rateFor(key);
+    const windowMs = defaultWindowMs;
     const nowMs = now();
     const stamps = (stampsByHost.get(key) || []).filter((t) => t > nowMs - windowMs);
     return stamps.length;
@@ -90,11 +78,10 @@ export function create511RateLimiter(opts = {}) {
     pendingCount: pendingTokens,
     capacity: defaultCapacity,
     windowMs: defaultWindowMs,
-    rateFor,
   };
 }
 
-const defaultLimiter = create511RateLimiter({ hostRates: HOST_511_RATES });
+const defaultLimiter = create511RateLimiter();
 
 /** @param {string} host */
 export async function acquire511Slot(host) {
@@ -111,8 +98,5 @@ export const __testing__ = {
   },
   pendingTokens(host) {
     return defaultLimiter.pendingTokens(host);
-  },
-  rateFor(host) {
-    return defaultLimiter.rateFor(String(host || '').trim().toLowerCase());
   },
 };

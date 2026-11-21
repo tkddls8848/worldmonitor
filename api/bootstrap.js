@@ -103,20 +103,7 @@ const ON_DEMAND_CACHE_PROFILES = {
     browser: 'max-age=60, stale-while-revalidate=120, stale-if-error=900',
     cdn: 'public, s-maxage=900, stale-while-revalidate=120, stale-if-error=900',
   },
-  // Both published by seed-provincial-511 on one 15min member interval against
-  // a 45min health budget. They only need a profile because #6763 moved them
-  // off the fast tier, where they inherited the fast shield: without this the
-  // move would have traded 508 KB of universal page weight for a 2h stale
-  // window on live road closures.
   canadaRoads: {
-    browser: 'max-age=60, stale-while-revalidate=120, stale-if-error=900',
-    cdn: 'public, s-maxage=900, stale-while-revalidate=120, stale-if-error=900',
-  },
-  albertaRoads: {
-    browser: 'max-age=60, stale-while-revalidate=120, stale-if-error=900',
-    cdn: 'public, s-maxage=900, stale-while-revalidate=120, stale-if-error=900',
-  },
-  manitobaRoads: {
     browser: 'max-age=60, stale-while-revalidate=120, stale-if-error=900',
     cdn: 'public, s-maxage=900, stale-while-revalidate=120, stale-if-error=900',
   },

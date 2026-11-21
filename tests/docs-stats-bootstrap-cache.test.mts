@@ -76,14 +76,6 @@ const ON_DEMAND_CACHE_PROFILES = {
     browser: 'max-age=60, stale-while-revalidate=120, stale-if-error=900',
     cdn: 'public, s-maxage=900, stale-while-revalidate=120, stale-if-error=900',
   },
-  albertaRoads: {
-    browser: 'max-age=60, stale-while-revalidate=120, stale-if-error=900',
-    cdn: 'public, s-maxage=900, stale-while-revalidate=120, stale-if-error=900',
-  },
-  manitobaRoads: {
-    browser: 'max-age=60, stale-while-revalidate=120, stale-if-error=900',
-    cdn: 'public, s-maxage=900, stale-while-revalidate=120, stale-if-error=900',
-  },
   canadaAlerts: {
     browser: 'max-age=60, stale-while-revalidate=120, stale-if-error=900',
     cdn: 'public, s-maxage=900, stale-while-revalidate=120, stale-if-error=900',

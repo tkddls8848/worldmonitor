@@ -51,9 +51,8 @@ const PENDING_CONSUMERS = new Set([ 'chokepointBaselines',
       // The dashboard Canada roads and alerts map layers were removed. The
       // terminal dashboard (cli/src/tui) still reads canadaRoads and
       // canadaAlerts through the per-key URL, and the widget agent may request
-      // canadaAlerts. albertaRoads and manitobaRoads are published by the same
-      // Provincial-511 seeder as canadaRoads and have no reader today.
-      'canadaRoads', 'albertaRoads', 'manitobaRoads', 'canadaAlerts',
+      // Ontario roads remain available to the terminal consumer.
+      'canadaRoads', 'canadaAlerts',
 ]);
 
 describe('Bootstrap cache key registry', () => {

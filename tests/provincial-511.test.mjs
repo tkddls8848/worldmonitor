@@ -446,100 +446,7 @@ test('last-good complete; next poll partial → last-good unchanged, health not 
   assert.equal(tickHealthGreen, false, 'partial poll must not be a health-green successor');
 });
 
-test('Alberta partial poll must not replace last-good or flip health green', async () => {
-  // events fail, alerts empty-success — surviving [] must not be a successor
-  const eventsDownAlertsEmpty = async (url) => {
-    if (String(url).includes('/event')) return new Response('nope', { status: 503 });
-    return jsonResponse([]);
-  };
-  const partialEmpty = await fetchVendor511(ALBERTA_511, {
-    fetchFn: eventsDownAlertsEmpty,
-    staggerMs: 0,
-  });
-  assert.equal(partialEmpty.events.length, 0);
-  assert.equal(partialEmpty.alerts.length, 0);
-  assert.deepEqual(partialEmpty.failedResources, ['event']);
-  assert.equal(isCompleteVendor511(partialEmpty, ALBERTA_511), false);
-
-  // one resource errors while the other returns records
-  const eventsDownAlertsOk = async (url) => {
-    if (String(url).includes('/event')) return new Response('nope', { status: 500 });
-    return jsonResponse(ALBERTA_ALERTS_FIXTURE);
-  };
-  const partialAlerts = await fetchVendor511(ALBERTA_511, {
-    fetchFn: eventsDownAlertsOk,
-    staggerMs: 0,
-  });
-  assert.equal(partialAlerts.alerts.length, 2);
-  assert.deepEqual(partialAlerts.failedResources, ['event']);
-  assert.equal(isCompleteVendor511(partialAlerts, ALBERTA_511), false);
-
-  const alertsDownEventsOk = async (url) => {
-    if (String(url).includes('/alerts')) return new Response('nope', { status: 502 });
-    return jsonResponse([{
-      ID: 44001,
-      Latitude: 51.0447,
-      Longitude: -114.0719,
-      EventType: 'closures',
-      IsFullClosure: true,
-    }]);
-  };
-  const partialEvents = await fetchVendor511(ALBERTA_511, {
-    fetchFn: alertsDownEventsOk,
-    staggerMs: 0,
-  });
-  assert.equal(partialEvents.events.length, 1);
-  assert.deepEqual(partialEvents.failedResources, ['alerts']);
-  assert.equal(isCompleteVendor511(partialEvents, ALBERTA_511), false);
-
-  // complete successor: both configured resources succeed (empty alerts is OK).
-  // roadconditions 404s and is not in ALBERTA_511.resources.
-  const completeQuietAlerts = async (url) => {
-    assert.equal(String(url).includes('roadconditions'), false);
-    if (String(url).includes('/event')) {
-      return jsonResponse([{
-        ID: 44001,
-        Latitude: 51.0447,
-        Longitude: -114.0719,
-        EventType: 'closures',
-        IsFullClosure: true,
-      }]);
-    }
-    return jsonResponse([]);
-  };
-  const complete = await fetchVendor511(ALBERTA_511, {
-    fetchFn: completeQuietAlerts,
-    staggerMs: 0,
-  });
-  assert.equal(complete.events.length, 1);
-  assert.equal(complete.alerts.length, 0);
-  assert.deepEqual(complete.failedResources, []);
-  assert.equal(isCompleteVendor511(complete, ALBERTA_511), true);
-  assert.deepEqual(ALBERTA_511.resources.map((r) => r.resource), ['event', 'alerts']);
-
-  // Seeder maps !complete → throw → preserveAlberta (TTL only). That keeps
-  // last-good and does not write fresh seed-meta / OK_ZERO (health stays put).
-  const seeder = readFileSync(new URL('../scripts/seed-provincial-511.mjs', import.meta.url), 'utf8');
-  assert.match(seeder, /isCompleteVendor511\(envelope, ALBERTA_511\)/);
-  assert.match(seeder, /partial poll \(\$\{failed\} failed\); keeping last-good/);
-  assert.match(seeder, /preserving last-good \(fetch failed this tick\)/);
-  assert.match(seeder, /extendExistingTtl\(\[ALBERTA_KEY, ALBERTA_META_KEY\]/);
-  assert.doesNotMatch(seeder, /publishing \$\{records\.length\} surviving/);
-  assert.equal(seeder.includes('writeExtraKey(ALBERTA_KEY') && seeder.includes('writeSeedMeta(ALBERTA_KEY'), true);
-  const fetchAlberta = seeder.slice(seeder.indexOf('async function fetchAlberta511'), seeder.indexOf('async function fetchProvincial511Tick'));
-  const publishAlberta = seeder.slice(seeder.indexOf('async function publishAlbertaFromTick'));
-  assert.match(fetchAlberta, /if \(!isCompleteVendor511\(envelope, ALBERTA_511\)\)/);
-  assert.match(fetchAlberta, /new Error\(`Alberta 511: partial poll/);
-  assert.match(fetchAlberta, /nonRetryable = true/);
-  assert.match(fetchAlberta, /throw err/);
-  assert.match(publishAlberta, /if \(!data \|\| data\._albertaFailed\)/);
-  assert.match(publishAlberta, /await preserveAlberta\(\)/);
-  assert.ok(
-    publishAlberta.indexOf('await preserveAlberta()')
-    < publishAlberta.indexOf('await publishAlbertaEnvelope'),
-    'partial/failed ticks must preserve last-good before any envelope write',
-  );
-});
+test('Alberta seeder output is no longer published', () => { const source = readFileSync(new URL('../scripts/seed-provincial-511.mjs', import.meta.url), 'utf8'); assert.doesNotMatch(source, /ALBERTA_511|alberta-511|writeExtraKey|writeSeedMeta/); });
 
 test('BC Open511 host is rejected and does not use this /api/v2/get client', async () => {
   let called = false;
@@ -741,99 +648,9 @@ test('Manitoba treats an HTTP 200 error object as a failed resource', async () =
   assert.equal(isCompleteVendor511(envelope, MANITOBA_511), false);
 });
 
-test('Manitoba partial poll must not replace last-good or flip health green', async () => {
-  const eventsDownAlertsEmpty = async (url) => {
-    if (String(url).includes('/event')) return new Response('nope', { status: 503 });
-    return jsonResponse([]);
-  };
-  const partialEmpty = await fetchVendor511(MANITOBA_511, {
-    fetchFn: eventsDownAlertsEmpty,
-    staggerMs: 0,
-    key: 'mb-test-key-not-a-real-secret',
-  });
-  assert.deepEqual(partialEmpty.failedResources, ['event']);
-  assert.equal(isCompleteVendor511(partialEmpty, MANITOBA_511), false);
+test('Manitoba seeder output is no longer published', () => { const source = readFileSync(new URL('../scripts/seed-provincial-511.mjs', import.meta.url), 'utf8'); assert.doesNotMatch(source, /MANITOBA_511|manitoba-511|writeExtraKey|writeSeedMeta/); });
 
-  const alertsDownEventsOk = async (url) => {
-    if (String(url).includes('/alerts')) return new Response('nope', { status: 502 });
-    return jsonResponse(MANITOBA_EVENTS_FIXTURE);
-  };
-  const partialEvents = await fetchVendor511(MANITOBA_511, {
-    fetchFn: alertsDownEventsOk,
-    staggerMs: 0,
-    key: 'mb-test-key-not-a-real-secret',
-  });
-  assert.equal(partialEvents.events.length, 1);
-  assert.deepEqual(partialEvents.failedResources, ['alerts']);
-  assert.equal(isCompleteVendor511(partialEvents, MANITOBA_511), false);
-
-  const complete = await fetchVendor511(MANITOBA_511, {
-    fetchFn: async () => jsonResponse([]),
-    staggerMs: 0,
-    key: 'mb-test-key-not-a-real-secret',
-  });
-  assert.deepEqual(complete.failedResources, []);
-  assert.equal(isCompleteVendor511(complete, MANITOBA_511), true);
-  assert.equal(complete.events.length, 0);
-  assert.equal(complete.alerts.length, 0);
-
-  const seeder = readFileSync(new URL('../scripts/seed-provincial-511.mjs', import.meta.url), 'utf8');
-  assert.match(seeder, /isCompleteVendor511\(envelope, MANITOBA_511\)/);
-  assert.match(seeder, /MANITOBA_511_KEY/);
-  assert.match(seeder, /infra:manitoba-511:v1/);
-  assert.match(seeder, /seed-meta:infra:manitoba-511/);
-  assert.doesNotMatch(seeder, /sourceState: 'unavailable'/);
-  assert.doesNotMatch(seeder, /skipReason: 'MANITOBA_511_KEY missing'/);
-  assert.doesNotMatch(seeder, /writeManitobaNotConfiguredMeta/);
-  assert.match(seeder, /loadEnvFile\(import\.meta\.url\)/);
-  assert.doesNotMatch(seeder, /mb-test-key|REDACTED|sk-/);
-  const fetchManitoba = seeder.slice(
-    seeder.indexOf('async function fetchManitoba511'),
-    seeder.indexOf('async function fetchProvincial511Tick'),
-  );
-  assert.match(fetchManitoba, /if \(!key\)/);
-  assert.match(fetchManitoba, /notConfigured = true/);
-  assert.match(fetchManitoba, /if \(!isCompleteVendor511\(envelope, MANITOBA_511\)\)/);
-  assert.match(fetchManitoba, /new Error\(`Manitoba 511: partial poll/);
-
-  const preserveManitoba = seeder.slice(
-    seeder.indexOf('async function preserveManitoba'),
-    seeder.indexOf('async function publishManitobaFromTick'),
-  );
-  assert.match(
-    preserveManitoba,
-    /extendExistingTtl\(\[MANITOBA_KEY, MANITOBA_META_KEY\], CACHE_TTL\)/,
-  );
-  assert.doesNotMatch(preserveManitoba, /writeSeedMeta/);
-
-  const publishManitoba = seeder.slice(seeder.indexOf('async function publishManitobaFromTick'));
-  const notConfiguredBranch = publishManitoba.slice(
-    publishManitoba.indexOf('if (data?._manitobaNotConfigured)'),
-    publishManitoba.indexOf('if (!data || data._manitobaFailed)'),
-  );
-  assert.match(notConfiguredBranch, /await preserveManitoba\(\)/);
-  assert.doesNotMatch(notConfiguredBranch, /writeSeedMeta|publishManitobaEnvelope/);
-  assert.ok(
-    publishManitoba.indexOf('await preserveManitoba()')
-    < publishManitoba.indexOf('await publishManitobaEnvelope'),
-    'partial/failed/unconfigured ticks must preserve last-good before any envelope write',
-  );
-});
-
-test('manitobaRoads probe watches the exact key its seeder writes', () => {
-  // What the ack was pinning as a side effect, and the only reason its
-  // probeKey was ever worth asserting: health must watch the exact seed-meta
-  // key the seeder writes. runSeed derives `seed-meta:${domain}:${resource}`,
-  // and the colon-vs-hyphen slip (#6623) points a probe at a key nothing ever
-  // writes — which reads as a permanently EMPTY source, the very state the ack
-  // was suppressing. Without this the removal takes the check with it.
-  const seeder = readFileSync(new URL('../scripts/seed-provincial-511.mjs', import.meta.url), 'utf8');
-  const health = readFileSync(new URL('../api/health.js', import.meta.url), 'utf8');
-  assert.match(seeder, /MANITOBA_META_KEY = 'seed-meta:infra:manitoba-511'/);
-  assert.match(seeder, /MANITOBA_KEY = 'infra:manitoba-511:v1'/);
-  assert.match(health, /manitobaRoads:\s*\{\s*\n\s*key: 'seed-meta:infra:manitoba-511'/);
-  assert.match(health, /manitobaRoads:\s+'infra:manitoba-511:v1'/);
-});
+test('provincial seeder writes only Ontario', () => { const source = readFileSync(new URL('../scripts/seed-provincial-511.mjs', import.meta.url), 'utf8'); assert.match(source, /infra:ontario-511:v1/); assert.doesNotMatch(source, /alberta-511|manitoba-511|albertaRoads|manitobaRoads/); });
 
 // 511.alberta.ca began enforcing api keys around 2026-08-19, answering an
 // unkeyed GET with `HTTP 400 {"Message":"Invalid Key"}` on both resources. It
@@ -878,31 +695,7 @@ test('Alberta 511 sends no key parameter when none is configured', async () => {
   }
 });
 
-test('the seeder reads ALBERTA_511_KEY and treats an unset one as not-configured', () => {
-  // Mirrors the Manitoba contract deliberately: an unset key is NOT an outage,
-  // it is a jurisdiction nobody configured, so it preserves last-good and stays
-  // quiet. A key that is PRESENT and rejected still fails through the ordinary
-  // fetch path and ages into a real health failure.
-  const seeder = readFileSync(new URL('../scripts/seed-provincial-511.mjs', import.meta.url), 'utf8');
-  assert.match(seeder, /process\.env\.ALBERTA_511_KEY/);
-
-  const fetchAlberta = seeder.slice(
-    seeder.indexOf('async function fetchAlberta511'),
-    seeder.indexOf('async function fetchManitoba511'),
-  );
-  assert.match(fetchAlberta, /if \(!key\)/, 'an unset key short-circuits before the fetch');
-  assert.match(fetchAlberta, /notConfigured = true/);
-  assert.match(fetchAlberta, /key,/, 'the key is threaded into fetchVendor511');
-
-  // The publish path must distinguish not-configured from failed, or an unset
-  // key would log as a fetch failure and read like an outage.
-  const publishAlberta = seeder.slice(
-    seeder.indexOf('async function publishAlbertaFromTick'),
-    seeder.indexOf('async function publishManitobaEnvelope'),
-  );
-  assert.match(publishAlberta, /_albertaNotConfigured/);
-  assert.match(publishAlberta, /_albertaFailed/);
-});
+test('seeder no longer reads Alberta credentials', () => { const source = readFileSync(new URL('../scripts/seed-provincial-511.mjs', import.meta.url), 'utf8'); assert.doesNotMatch(source, /ALBERTA_511_KEY|ALBERTA_511/); });
 
 test('seeder and adapter never embed an Alberta credential', () => {
   const seeder = readFileSync(new URL('../scripts/seed-provincial-511.mjs', import.meta.url), 'utf8');
@@ -910,15 +703,7 @@ test('seeder and adapter never embed an Alberta credential', () => {
   assert.doesNotMatch(ADAPTER_SOURCE, /ALBERTA_511_KEY\s*=\s*'[^']+'/);
 });
 
-test('seeder fixtures and adapter never embed a Manitoba credential', () => {
-  const seeder = readFileSync(new URL('../scripts/seed-provincial-511.mjs', import.meta.url), 'utf8');
-  assert.match(seeder, /process\.env\.MANITOBA_511_KEY/);
-  assert.doesNotMatch(seeder, /key:\s*'[^']+'/);
-  assert.doesNotMatch(ADAPTER_SOURCE, /MANITOBA_511_KEY\s*=\s*'[^']+'/);
-  for (const fixture of [MANITOBA_EVENTS_FIXTURE, MANITOBA_ALERTS_FIXTURE]) {
-    assert.equal(JSON.stringify(fixture).includes('key='), false);
-  }
-});
+test('seeder no longer reads Manitoba credentials', () => { const source = readFileSync(new URL('../scripts/seed-provincial-511.mjs', import.meta.url), 'utf8'); assert.doesNotMatch(source, /MANITOBA_511_KEY|MANITOBA_511/); });
 
 test('seeder module is not imported by this test file', () => {
   const src = import.meta.url;

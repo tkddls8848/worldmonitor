@@ -73,7 +73,7 @@ WebGPU (fastest)  →  WebGL (fast)  →  WASM + SIMD (baseline)
 
 ### 统一图层开关目录
 
-所有地图图层开关定义 — 图标、本地化键、回退显示标签和支持的渲染器类型 — 合并到单一共享注册表（`src/config/map-layer-definitions.ts`）。每个条目通过 `renderers: RendererKind[]` 字段声明其支持的地图渲染器（`'deck'` 为 DeckGL 平面地图，`'svg'` 为手机和无 WebGL 时使用的 SVG 地图；例如，`dayNight` 两者均支持，`ciiChoropleth` 仅 DeckGL），防止两个地图组件显示不一致的图层选项。
+所有地图图层开关定义 — 图标、本地化键、回退显示标签和支持的渲染器类型 — 合并到单一共享注册表（`src/config/map-layer-definitions.ts`）。每个条目通过 `renderers: RendererKind[]` 字段声明其支持的地图渲染器（`'deck'` 为 DeckGL 平面地图，`'svg'` 为手机和无 WebGL 时使用的 SVG 地图；例如，`ciiChoropleth` 仅 DeckGL），防止两个地图组件显示不一致的图层选项。
 
 `def()` 工厂函数减少了每条目的样板代码。变体特定的图层排序（`VARIANT_LAYER_ORDER`）为六个仪表盘变体定义显示顺序，而无需重复定义本身。添加新地图图层只需一条注册表条目 — DeckGL 地图和 SVG 地图均自动从此目录派生其开关面板。
 
