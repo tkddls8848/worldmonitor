@@ -1,4 +1,4 @@
-import { Readable } from 'node:stream';
+import { Readable, Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import Papa from 'papaparse';
 import sax from 'sax';
@@ -122,11 +122,12 @@ function resolveUnName(name) {
 export async function countUnSanctionsPairs(input) {
   const count = newCount('un');
   const parser = sax.createStream(true, { trim: true, normalize: true });
+  let parseError = null;
+  parser.on('error', (error) => { parseError = error; });
   let entity = null;
   let capture = null;
   let text = '';
   const stack = [];
-  const targets = new Set();
   parser.on('opentag', (tag) => {
     stack.push(tag.name);
     if (tag.name === 'INDIVIDUAL' || tag.name === 'ENTITY') entity = { kind: tag.name, names: [], listType: '' };
@@ -147,18 +148,20 @@ export async function countUnSanctionsPairs(input) {
     if (entity && (name === 'INDIVIDUAL' || name === 'ENTITY')) {
       let target = entity.names.map(resolveUnName).find(Boolean);
       if (!target) target = UN_LIST_TYPES.get(entity.listType) || null;
-      if (target) targets.add(target);
+      if (target) {
+        record(count, 'UN', target);
+        count.rows++;
+      }
       entity = null;
     }
     stack.pop();
   });
-  await new Promise((resolve, reject) => {
-    parser.on('error', reject);
-    parser.on('end', resolve);
-    Readable.from(input).pipe(parser);
-  });
-  for (const target of targets) record(count, 'UN', target);
-  count.rows = targets.size;
+  // sax's stream is a legacy Stream, so bridge it through a real Writable for pipeline error handling.
+  await pipeline(Readable.from(input), new Writable({
+    write(chunk, _encoding, callback) { parser.write(chunk); callback(); },
+    final(callback) { parser.end(); callback(); },
+  }));
+  if (parseError) throw parseError;
   return count;
 }
 

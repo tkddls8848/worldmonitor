@@ -35,13 +35,19 @@ async function sourceAttempt(fn) {
 export async function fetchWorldRelations({ fetchImpl, readValue, nowMs, deadlineAtMs }) {
   const priorValue = unwrap(await readValue(WORLD_OVERVIEW_KEYS.relations));
   const previous = priorValue?.sanctions || null;
+  // The 280 s seeder deadline reserves 40 s after 150 s OpenSanctions + 90 s UK; UN (60 s) runs alongside them.
+  const ukWeeklyDue = ukCheckDue(previous, nowMs, true);
+  let ukPromise = ukWeeklyDue
+    ? sourceAttempt(async () => countUkSanctionsPairs(await download(fetchImpl, SANCTION_SOURCE_URLS.uk, 90_000)))
+    : null;
   const [osResult, unResult] = await Promise.all([
-    sourceAttempt(async () => countOpenSanctionsPairs(await download(fetchImpl, SANCTION_SOURCE_URLS.opensanctions, 240_000), issuerData.rules)),
+    sourceAttempt(async () => countOpenSanctionsPairs(await download(fetchImpl, SANCTION_SOURCE_URLS.opensanctions, 150_000), issuerData.rules)),
     sourceAttempt(async () => countUnSanctionsPairs(await download(fetchImpl, SANCTION_SOURCE_URLS.un, 60_000))),
   ]);
   const shouldFetchUk = ukCheckDue(previous, nowMs, osResult.diag.ok);
-  const ukResult = shouldFetchUk
-    ? await sourceAttempt(async () => countUkSanctionsPairs(await download(fetchImpl, SANCTION_SOURCE_URLS.uk, 180_000)))
+  if (shouldFetchUk && !ukPromise) ukPromise = sourceAttempt(async () => countUkSanctionsPairs(await download(fetchImpl, SANCTION_SOURCE_URLS.uk, 90_000)));
+  const ukResult = ukPromise
+    ? await ukPromise
     : { result: null, diag: { ok: true, skipped: true, rows: 0, ms: 0 } };
   let sanctions;
   try {
