@@ -20,6 +20,9 @@
           "path": "scripts/measure-trade-animation-rebuild.mjs"
         },
         {
+          "path": "scripts/perf-personal.mjs"
+        },
+        {
           "path": "scripts/personal-server.mjs"
         },
         {
