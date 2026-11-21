@@ -91,3 +91,72 @@ test('retains last good OpenSanctions issuers when a download breaks mid-stream'
   assert.ok(payload.sanctions.pairs.some((pair) => pair.issuer === 'US' && pair.target === 'RU' && pair.count === 812));
   assert.equal(payload.diagnostics.opensanctions.ok, false);
 });
+
+test('a broken UN download is isolated and leaves the OpenSanctions count usable', async () => {
+  const NOW = Date.parse('2026-11-22T00:00:00Z');
+  const csv = [
+    '"id","schema","name","aliases","birth_date","countries","addresses","identifiers","sanctions","phones","emails","program_ids","dataset","first_seen","last_seen","last_change"',
+    ...Array.from({ length: 6 }, (_, i) => `"${i}","Thing","Target ${i}","","","ru","","","","","","","US OFAC list","","",""`),
+  ].join('\n');
+  const fetchImpl = async (url) => {
+    if (url.includes('opensanctions')) return new Response(csv);
+    if (url.includes('scsanctions')) {
+      let sent = false;
+      const body = new ReadableStream({ pull(controller) {
+        if (!sent) { sent = true; controller.enqueue(new TextEncoder().encode('<CONSOLIDATED_LIST>')); }
+        else controller.error(new Error('truncated UN'));
+      } });
+      return new Response(body);
+    }
+    return new Response('', { status: 503 });
+  };
+  const payload = await fetchWorldRelations({ fetchImpl, readValue: async () => null, nowMs: NOW, deadlineAtMs: NOW + 280_000 });
+  assert.deepEqual(payload.sanctions.pairs, [{ issuer: 'US', target: 'RU', count: 6 }]);
+  assert.equal(payload.diagnostics.un.ok, false);
+  assert.match(payload.diagnostics.un.error, /truncated UN/);
+});
+
+test('a broken UK download preserves the last-good relations while UN remains available', async () => {
+  const NOW = Date.parse('2026-11-22T00:00:00Z');
+  const previous = { sanctions: {
+    source: 'opensanctions', asOf: NOW - 2 * 86_400_000, openSanctionsAsOf: NOW - 2 * 86_400_000,
+    openSanctionsPairs: [{ issuer: 'US', target: 'RU', count: 812 }, { issuer: 'GB', target: 'RU', count: 400 }],
+    pairs: [{ issuer: 'US', target: 'RU', count: 812 }, { issuer: 'GB', target: 'RU', count: 400 }], crossCheck: {}, unmappedDatasets: {},
+  } };
+  const brokenCsv = new ReadableStream({
+    pull(controller) {
+      if (controller.byobRequest) return;
+      if (!controller._sent) { controller._sent = true; controller.enqueue(new TextEncoder().encode('Report Date: today\nUnique ID,Name\n')); }
+      else controller.error(new Error('truncated UK download'));
+    },
+  });
+  const fetchImpl = async (url) => {
+    if (url.includes('opensanctions')) return new Response('', { status: 503 });
+    if (url.includes('scsanctions')) return new Response('<CONSOLIDATED_LIST><INDIVIDUAL><NATIONALITY><VALUE>Iraq</VALUE></NATIONALITY></INDIVIDUAL></CONSOLIDATED_LIST>');
+    return new Response(brokenCsv);
+  };
+  const payload = await fetchWorldRelations({ fetchImpl, readValue: async () => previous, nowMs: NOW, deadlineAtMs: NOW + 280_000 });
+  assert.equal(payload.sanctions.source, 'backup+last-good');
+  assert.ok(payload.sanctions.pairs.some((pair) => pair.issuer === 'US' && pair.target === 'RU' && pair.count === 812));
+  assert.equal(payload.diagnostics.uk.ok, false);
+  assert.match(payload.diagnostics.uk.error, /truncated UK download/);
+});
+
+test('starts the due UK cross-check alongside OpenSanctions within the seeder budget', async () => {
+  const NOW = Date.parse('2026-11-22T00:00:00Z');
+  let releaseOpenSanctions;
+  const openSanctionsGate = new Promise((resolve) => { releaseOpenSanctions = resolve; });
+  const started = [];
+  const previous = { sanctions: { crossCheck: { GB: { checkedAt: NOW - 8 * 86_400_000 } } } };
+  const fetchImpl = async (url) => {
+    started.push(url);
+    if (url.includes('opensanctions')) { await openSanctionsGate; return new Response(''); }
+    if (url.includes('scsanctions')) return new Response('<CONSOLIDATED_LIST/>');
+    return new Response('', { status: 503 });
+  };
+  const pending = fetchWorldRelations({ fetchImpl, readValue: async () => previous, nowMs: NOW, deadlineAtMs: NOW + 280_000 });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.ok(started.some((url) => url.includes('sanctionslist.fcdo')));
+  releaseOpenSanctions();
+  await pending;
+});

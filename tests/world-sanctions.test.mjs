@@ -55,9 +55,23 @@ test('skipFirstLine works when the line break spans chunks', async () => {
 });
 
 test('counts UN individuals by nationality and entities by address, with UN name aliases', async () => {
-  const got = await countUnSanctionsPairs(Readable.from(chunked(UN_XML, 11)));
-  assert.deepEqual(got.pairs, { 'UN>KP': 1, 'UN>IQ': 1, 'UN>LY': 1 });
-  assert.equal(got.issuerTotals.UN, 3);
+  const repeated = UN_XML.replace('</CONSOLIDATED_LIST>', `${'<INDIVIDUAL><NATIONALITY><VALUE>Democratic People\'s Republic of Korea</VALUE></NATIONALITY></INDIVIDUAL>'.repeat(5)}</CONSOLIDATED_LIST>`);
+  const got = await countUnSanctionsPairs(Readable.from(chunked(repeated, 11)));
+  assert.deepEqual(got.pairs, { 'UN>KP': 6, 'UN>IQ': 1, 'UN>LY': 1 });
+  assert.equal(got.issuerTotals.UN, 8);
+  assert.equal(got.rows, 8);
+  const fallback = combineSanctionSources({ openSanctions: null, un: got, uk: null, previous: null, nowMs: NOW });
+  assert.ok(fallback.pairs.some((pair) => pair.issuer === 'UN' && pair.target === 'KP' && pair.count === 6));
+});
+
+test('a truncated UN stream rejects cleanly so a good OpenSanctions result survives', async () => {
+  const broken = new ReadableStream({
+    start(controller) {
+      controller.enqueue(new TextEncoder().encode('<CONSOLIDATED_LIST><INDIVIDUAL>'));
+      controller.error(new Error('truncated UN download'));
+    },
+  });
+  await assert.rejects(countUnSanctionsPairs(Readable.fromWeb(broken)), /truncated UN download/);
 });
 
 test('uses OpenSanctions when it arrived, drops pairs under 5 and records the UN cross-check', () => {
