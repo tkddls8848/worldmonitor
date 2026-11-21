@@ -25,6 +25,8 @@ test('the GPS interference feed is collected through its fetch script', () => {
   assert.ok(DEFAULT_COLLECTORS.includes('gpsjam'));
 });
 
+test('the fixed relations collector runs daily', () => assert.equal(STANDALONE_INTERVAL_MIN['world-relations'], 1440));
+
 test('the pizza index collector still finds the relay blocks it runs', () => {
   assert.ok(DEFAULT_COLLECTORS.includes('pizzint'));
   const relay = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');

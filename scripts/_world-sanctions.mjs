@@ -1,13 +1,13 @@
 import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
 import Papa from 'papaparse';
 import sax from 'sax';
 import { resolveIso2 } from './_country-resolver.mjs';
 
-export const SANCTION_SOURCE_URLS = {
-  opensanctions: 'https://data.opensanctions.org/datasets/latest/sanctions/targets.simple.csv',
-  un: 'https://scsanctions.un.org/resources/xml/en/consolidated.xml',
-  uk: 'https://sanctionslist.fcdo.gov.uk/docs/UK-Sanctions-List.csv',
-};
+const OPENSANCTIONS_URL = 'https://data.opensanctions.org/datasets/latest/sanctions/targets.simple.csv';
+const UN_SANCTIONS_URL = 'https://scsanctions.un.org/resources/xml/en/consolidated.xml';
+const UK_SANCTIONS_URL = 'https://sanctionslist.fcdo.gov.uk/docs/UK-Sanctions-List.csv';
+export const SANCTION_SOURCE_URLS = { opensanctions: OPENSANCTIONS_URL, un: UN_SANCTIONS_URL, uk: UK_SANCTIONS_URL };
 export const SANCTION_PAIR_MIN_COUNT = 5;
 export const SANCTION_PAIR_LIMIT = 300;
 const WEEK_MS = 7 * 86_400_000;
@@ -51,15 +51,21 @@ function record(count, issuer, target) {
   const key = `${issuer}>${target}`;
   count.pairs[key] = (count.pairs[key] || 0) + 1;
 }
-function csvStream(input) {
+async function* csvRows(input) {
   const parser = Papa.parse(Papa.NODE_STREAM_INPUT, { header: true, skipEmptyLines: true });
-  Readable.from(input).pipe(parser);
-  return parser;
+  const finished = pipeline(Readable.from(input), parser);
+  try {
+    for await (const row of parser) yield row;
+    await finished;
+  } catch (error) {
+    await finished.catch(() => {});
+    throw error;
+  }
 }
 
 export async function countOpenSanctionsPairs(input, rules) {
   const count = newCount('opensanctions');
-  for await (const row of csvStream(input)) {
+  for await (const row of csvRows(input)) {
     count.rows++;
     const issuers = resolveSanctionIssuers(row.dataset, rules);
     if (!issuers.length) {
@@ -82,7 +88,7 @@ export async function countOpenSanctionsPairs(input, rules) {
 export async function countUkSanctionsPairs(input) {
   const count = newCount('uk');
   const seen = new Set();
-  const rows = csvStream(skipFirstLine(input));
+  const rows = csvRows(skipFirstLine(input));
   for await (const row of rows) {
     const id = String(row['Unique ID'] || '').trim();
     if (!id || seen.has(id)) continue;

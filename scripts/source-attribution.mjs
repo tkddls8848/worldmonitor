@@ -242,6 +242,24 @@ export const PROVIDER_IDENTITY_GROUPS = Object.freeze({
 });
 
 const PROVIDER_OVERRIDES = {
+  'data.opensanctions.org': {
+    provider: 'OpenSanctions',
+    license: 'CC BY-NC 4.0; non-commercial personal use only',
+    attribution: 'Credit OpenSanctions and link to the source dataset; use only for non-commercial personal use.',
+    status: 'terms-review',
+  },
+  'scsanctions.un.org': {
+    provider: 'UN Security Council',
+    license: 'Public consolidated list; source terms apply',
+    attribution: 'Credit and link to the UN Security Council Consolidated List.',
+    status: 'reviewed',
+  },
+  'sanctionslist.fcdo.gov.uk': {
+    provider: 'UK Foreign, Commonwealth & Development Office',
+    license: 'Open Government Licence v3.0',
+    attribution: 'Credit the UK Foreign, Commonwealth & Development Office and link to the UK Sanctions List.',
+    status: 'reviewed',
+  },
   'massoutage.com': {
     license: 'MassOutage API and compilations CC BY 4.0. Upstream terms continue to apply.',
     attribution: 'Credit MassOutage (massoutage.com), link to the source and license, and identify the calculated change in state totals.',
@@ -1187,7 +1205,9 @@ const PROVIDER_OVERRIDES = {
 // a provider-bearing override a separate, explicit lifecycle event instead of
 // something `--write` can silently normalize into the manifest.
 export const PROVIDER_IDENTITY_REVIEW = Object.freeze({
-  sha256: '9691312b5fc50afe166ef61105ee8bb3d2ef5cabe57d5d49f554d834a911f9c7',
+  sha256: 'a44d075b7984bb1e4c55aa7c28f253bd18ec7e6468f5fbab761a7c3decb1ea51',
+  // 2026-11-22: add the OpenSanctions, UN Security Council and UK FCDO
+  // sanctions-list providers used by the fixed world-relations collector.
   // 2026-11-17: exclude redis-rest, the docker-network Redis REST proxy host
   // named in scripts/local/local-api-server.mjs (moved from src-tauri/sidecar
   // into the scanned tree). It is transport, not a data source.
@@ -2140,7 +2160,7 @@ function escapeRegExp(value) {
 
 function inventoryMarkerPattern(leadingNewline) {
   return new RegExp(
-    `${leadingNewline ? '\\n' : ''}## (?:Audited|Observed) (?:Upstream|Source) Inventory\\n+` +
+    `${leadingNewline ? '(?:\\r?\\n)' : ''}## (?:Audited|Observed) (?:Upstream|Source) Inventory(?:\\r?\\n)+` +
       `${escapeRegExp(BEGIN_MARKER)}[\\s\\S]*?${escapeRegExp(END_MARKER)}`,
   );
 }
@@ -2297,6 +2317,6 @@ export function runSourceAttribution({
   return 0;
 }
 
-if (process.argv[1] && process.argv[1].endsWith('scripts/source-attribution.mjs')) {
+if (process.argv[1] && process.argv[1].replaceAll('\\', '/').endsWith('scripts/source-attribution.mjs')) {
   process.exitCode = runSourceAttribution({ args: process.argv.slice(2) });
 }
