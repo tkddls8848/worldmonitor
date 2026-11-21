@@ -38,6 +38,14 @@ export const KIND_LABEL_KO = Object.freeze({ support: '지원', sanction: '제�
 export const LEVEL_LABEL_KO = Object.freeze({ war: '전면전', high: '고강도', medium: '중강도', tension: '긴장·휴전', issue: '이슈 있음' });
 export const TREND_LABEL_KO = Object.freeze({ collecting: '추세 집계 중', steady: '변화 없음', rising: '악화 중', easing: '완화 중', surging: '급등' });
 
+export const AI_RELATION_KINDS = Object.freeze(['support', 'sanction', 'alliance', 'tension']);
+export const DIRECTED_KINDS = new Set(['support', 'sanction', 'economic']);
+export const KIND_DEFAULT_FIELD = Object.freeze({ support: 'military', sanction: 'finance', alliance: 'diplomacy', tension: 'geopolitics' });
+export function relationMatchKey(r) {
+  const pair = DIRECTED_KINDS.has(r.kind) ? `${r.from}>${r.to}` : [r.from, r.to].sort().join('-');
+  return `${r.kind}:${pair}`;
+}
+
 export function isDrawableEndpoint(code, anchors) {
   if (Object.hasOwn(anchors ?? {}, code)) return true;
   if (code === 'UN' || code === 'EU') return false;
@@ -94,7 +102,6 @@ export function countryFill(country) {
   return country.inNews ? 'issue' : null;
 }
 
-function relationMatchKey(line) { return `${line.kind}:${linePair(line)}`; }
 
 export function annotateWrongMarks(snapshot, doc) {
   const marks = (doc?.marks ?? []).filter((mark) => !mark.undoneAt);

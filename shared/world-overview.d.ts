@@ -53,3 +53,10 @@ export function annotateWrongMarks(snapshot: WorldOverviewSnapshot, doc: WrongMa
 export function applyMarkAction(doc: WrongMarksDoc | null, action: MarkAction, snapshot: WorldOverviewSnapshot | null, nowMs: number):
   | { ok: true; doc: WrongMarksDoc; mark: WrongMark }
   | { ok: false; error: 'TARGET_NOT_FOUND' | 'NOT_MARKABLE' | 'MARK_NOT_FOUND' };
+
+export type LineField = Exclude<WorldField, 'politics'>;
+export type AiRelationKind = 'support' | 'sanction' | 'alliance' | 'tension';
+export const AI_RELATION_KINDS: readonly AiRelationKind[];
+export const DIRECTED_KINDS: ReadonlySet<RelationKind>;
+export const KIND_DEFAULT_FIELD: Readonly<Record<AiRelationKind, LineField>>;
+export function relationMatchKey(r: { kind: RelationKind; from: string; to: string }): string;

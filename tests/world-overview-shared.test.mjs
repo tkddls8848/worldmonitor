@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   addDays, annotateWrongMarks, applyMarkAction, countryFill, DEFAULT_FIELDS, isDrawableEndpoint,
-  kstDate, kstHour, pairKey, selectVisibleLines, WORLD_FIELDS,
+  kstDate, kstHour, pairKey, relationMatchKey, selectVisibleLines, WORLD_FIELDS, WORLD_OVERVIEW_KEYS,
 } from '../shared/world-overview.js';
 
 const codes = Object.keys(JSON.parse(readFileSync(new URL('../shared/iso2-to-iso3.json', import.meta.url), 'utf8')));
@@ -36,3 +36,16 @@ test('a relation mark hides the same pair and kind for 14 days and lets it reapp
 test('an issue mark hides that date only; fixed lines are never annotated; annotation is idempotent', () => { const doc = { marks: [{ id: 'issue:2026-11-22:UA', type: 'issue', date: '2026-11-22', iso2: 'UA', sourceUrls: [], summaryKo: '…', markedAt: 1 }] }; assert.equal(annotateWrongMarks(withIssue('UA', '2026-11-22'), doc).countries.UA.issue.mark.state, 'hidden'); assert.equal(annotateWrongMarks(withIssue('UA', '2026-11-23'), doc).countries.UA.issue.mark, undefined); const once = annotateWrongMarks(withIssue('UA', '2026-11-22'), doc); assert.deepEqual(annotateWrongMarks(once, doc), once); assert.deepEqual(annotateWrongMarks(once, { marks: [] }).countries.UA.issue.mark, undefined); });
 test('mark, unmark and re-mark keep one record per date and target', () => { const s = snap([aiTension('US', 'CN', 0.8), fixedTension('CN', 'US', 1)], { date: '2026-11-22' }); const m = applyMarkAction(null, { action: 'mark', date: '2026-11-22', target: { type: 'relation', relationId: 'ai:tension:CN-US' } }, s, 100); assert.equal(m.mark.id, 'rel:2026-11-22:tension:CN-US'); assert.deepEqual(m.mark.sourceUrls, ['https://a']); assert.deepEqual(applyMarkAction(m.doc, { action: 'mark', date: '2026-11-22', target: { type: 'relation', relationId: 'fixed:tension:CN-US' } }, s, 101), { ok: false, error: 'NOT_MARKABLE' }); assert.deepEqual(applyMarkAction(m.doc, { action: 'mark', date: '2026-11-22', target: { type: 'relation', relationId: 'ai:x' } }, s, 101), { ok: false, error: 'TARGET_NOT_FOUND' }); const u = applyMarkAction(m.doc, { action: 'unmark', markId: m.mark.id }, s, 200); assert.equal(u.doc.marks.length, 1); assert.equal(u.doc.marks[0].undoneAt, 200); const again = applyMarkAction(u.doc, { action: 'mark', date: '2026-11-22', target: { type: 'relation', relationId: 'ai:tension:CN-US' } }, s, 300); assert.equal(again.doc.marks.length, 1); assert.equal(again.doc.marks[0].undoneAt, undefined); assert.equal(again.doc.marks[0].markedAt, 300); assert.deepEqual(applyMarkAction(u.doc, { action: 'unmark', markId: 'nope' }, s, 1), { ok: false, error: 'MARK_NOT_FOUND' }); });
 test('records older than 400 days are pruned on write', () => { const old = { id: 'issue:2025-01-01:UA', type: 'issue', date: '2025-01-01', iso2: 'UA', sourceUrls: [], summaryKo: '…', markedAt: 0 }; const r = applyMarkAction({ marks: [old], updatedAt: 0 }, { action: 'mark', date: '2026-11-22', target: { type: 'issue', iso2: 'UA' } }, withIssue('UA', '2026-11-22'), 401 * 86_400_000); assert.deepEqual(r.doc.marks.map((x) => x.id), ['issue:2026-11-22:UA']); });
+
+
+test('KST date changes at 15:00 UTC (AI collector contract)', () => {
+  assert.equal(kstDate(Date.parse('2026-11-22T14:59:59Z')), '2026-11-22');
+  assert.equal(kstDate(Date.parse('2026-11-22T15:00:00Z')), '2026-11-23');
+  assert.equal(kstHour(Date.parse('2026-11-22T21:00:00Z')), 6);
+});
+test('date and pair helpers follow the AI collector contract', () => {
+  assert.equal(addDays('2026-12-31', 1), '2027-01-01');
+  assert.equal(WORLD_OVERVIEW_KEYS.ai, 'world-overview:ai:v1');
+  assert.equal(relationMatchKey({ kind: 'support', from: 'US', to: 'UA' }), 'support:US>UA');
+  assert.equal(relationMatchKey({ kind: 'tension', from: 'US', to: 'CN' }), 'tension:CN-US');
+});

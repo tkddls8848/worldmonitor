@@ -37,6 +37,10 @@ test('the pizza index collector still finds the relay blocks it runs', () => {
   }
 });
 
+test('the AI relations collector runs right after insights', () => {
+  assert.equal(DEFAULT_COLLECTORS.indexOf('world-relations-ai'), DEFAULT_COLLECTORS.indexOf('insights') + 1);
+});
+
 test('a standalone collector waits out its interval; others run every pass', () => {
   const now = 10 * 24 * 60 * 60_000;
   const every = STANDALONE_INTERVAL_MIN['fear-greed'] * 60_000;
