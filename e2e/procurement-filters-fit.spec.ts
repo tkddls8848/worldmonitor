@@ -56,7 +56,11 @@ test('procurement filters fit the panel at every column width', async ({ browser
     const page = await context.newPage();
     const settings = { 'global-procurement': { name: 'Global Procurement', enabled: true, priority: 0 } };
     await seedAnonymousDashboard(page, 'full', {
-      localStorage: { 'worldmonitor-panels': JSON.stringify(settings), 'wm-pro-key': 'wm-test-procurement' },
+      localStorage: {
+        'worldmonitor-panels': JSON.stringify(settings),
+        'wm-pro-key': 'wm-test-procurement',
+        'wm-inspector-tab-v1': 'markets',
+      },
     });
     await page.route(/^https?:\/\/(?!(127\.0\.0\.1:4173|localhost:4173)(?:\/|$)).*/i, (route) => route.abort());
     await page.route('**/api/**', (route) => route.fulfill({ json: {} }));

@@ -208,7 +208,7 @@ describe('Panel fullscreen modal and font-settings default', () => {
     delete document.documentElement.dataset.font;
   });
 
-  it('expands via ⛶, restores on Escape without closing underlying overlays, restores on close click, and cleans up on destroy', () => {
+  it('expands via ⛶, yields Escape to higher modals and in-panel inputs, restores on Escape when topmost, and cleans up on destroy', () => {
     const panel = new Panel({ id: 'markets', title: 'Markets' });
     document.body.appendChild(panel.getElement());
 
@@ -222,7 +222,24 @@ describe('Panel fullscreen modal and font-settings default', () => {
       expect(panel.getElement().classList.contains('panel-modal-expanded')).toBe(true);
       expect(document.body.classList.contains('panel-modal-open')).toBe(true);
 
-      // Escape restores modal and blocks underlying document listeners
+      // Higher modal (e.g. Settings) receives Escape first without collapsing the expanded panel
+      const settingsOverlay = document.createElement('div');
+      settingsOverlay.className = 'unified-settings-overlay open';
+      document.body.appendChild(settingsOverlay);
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      expect(panel.getElement().classList.contains('panel-modal-expanded')).toBe(true);
+      expect(underlyingEsc).toHaveBeenCalledTimes(1);
+      settingsOverlay.remove();
+
+      // Editable input inside the expanded panel handles its own Escape without collapsing the panel
+      const input = document.createElement('input');
+      panel.getElement().appendChild(input);
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      expect(panel.getElement().classList.contains('panel-modal-expanded')).toBe(true);
+      input.remove();
+
+      // When topmost, Escape restores modal and blocks underlying document listeners
+      underlyingEsc.mockClear();
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
       expect(panel.getElement().classList.contains('panel-modal-expanded')).toBe(false);
       expect(document.body.classList.contains('panel-modal-open')).toBe(false);
@@ -246,13 +263,17 @@ describe('Panel fullscreen modal and font-settings default', () => {
     }
   });
 
-  it('defaults font-settings to system and honors stored mono preference', () => {
+  it('defaults font-settings to system without mutating html data-font, and honors mono preference', () => {
     expect(getFontFamily()).toBe('system');
     applyFont();
-    expect(document.documentElement.dataset.font).toBe('system');
+    expect(document.documentElement.dataset.font).toBeUndefined();
 
     setFontFamily('mono');
     expect(getFontFamily()).toBe('mono');
     expect(document.documentElement.dataset.font).toBe('mono');
+
+    setFontFamily('system');
+    expect(getFontFamily()).toBe('system');
+    expect(document.documentElement.dataset.font).toBeUndefined();
   });
 });

@@ -94,20 +94,21 @@ describe('DeckGLMap layer presets, group counts, hidden-toggle protection, and c
     expect(countBadges.length).toBe(6);
     expect(countBadges.every((text) => text?.startsWith('0/'))).toBe(true);
 
-    // Choropleth mutual exclusivity via toggles
+    // Choropleth mutual exclusivity via toggles (unconditional — fail loudly if missing)
     const resInput = host.querySelector<HTMLInputElement>('.layer-toggle[data-layer="resilienceScore"] input');
     const ciiInput = host.querySelector<HTMLInputElement>('.layer-toggle[data-layer="ciiChoropleth"] input');
-    if (resInput && ciiInput) {
-      resInput.checked = true;
-      resInput.dispatchEvent(new Event('change'));
-      expect(map.getState().layers.resilienceScore).toBe(true);
+    expect(resInput).toBeTruthy();
+    expect(ciiInput).toBeTruthy();
 
-      ciiInput.checked = true;
-      ciiInput.dispatchEvent(new Event('change'));
-      expect(map.getState().layers.ciiChoropleth).toBe(true);
-      expect(map.getState().layers.resilienceScore).toBe(false);
-      expect(resInput.checked).toBe(false);
-    }
+    resInput!.checked = true;
+    resInput!.dispatchEvent(new Event('change'));
+    expect(map.getState().layers.resilienceScore).toBe(true);
+
+    ciiInput!.checked = true;
+    ciiInput!.dispatchEvent(new Event('change'));
+    expect(map.getState().layers.ciiChoropleth).toBe(true);
+    expect(map.getState().layers.resilienceScore).toBe(false);
+    expect(resInput!.checked).toBe(false);
 
     map.destroy();
   });

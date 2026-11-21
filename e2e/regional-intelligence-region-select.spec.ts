@@ -23,6 +23,7 @@ for (const { name, viewport, theme, touch } of CASES) {
       localStorage.setItem('wm-layer-warning-dismissed', 'true');
       localStorage.setItem('wm-pro-banner-launched-dismissed', String(Date.now()));
       localStorage.setItem('worldmonitor-mission-preset-dismissed-v1', '1');
+      localStorage.setItem('wm-inspector-tab-v1', 'security');
       localStorage.setItem('worldmonitor-panels', JSON.stringify({
         'regional-intelligence': { name: 'Regional Intelligence', enabled: true, priority: 0 },
       }));

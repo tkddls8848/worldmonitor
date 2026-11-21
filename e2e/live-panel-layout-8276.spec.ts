@@ -41,14 +41,17 @@ test('wide live video panels do not overlap adjacent dashboard panels (#8276)', 
     timeout: 60_000,
   });
 
+  await expect(news).not.toHaveClass(/panel-deferred-shell/, { timeout: 60_000 });
+  await expect(webcams).not.toHaveClass(/panel-deferred-shell/, { timeout: 60_000 });
+
   // The webcam wall takes three rows on a tall viewport. Live News holds one
   // 16:9 player, so it takes two rows at every height (#10458 follow-up): a
   // third row was 111-290px of empty panel under the video.
   const cases = [
-    { height: 590, span: 2, panelHeight: 404 },
-    { height: 671, span: 2, panelHeight: 404 },
-    { height: 672, span: 3, panelHeight: 608 },
-    { height: 866, span: 3, panelHeight: 608 },
+    { height: 590, span: 2 },
+    { height: 671, span: 2 },
+    { height: 672, span: 3 },
+    { height: 866, span: 3 },
   ];
 
   for (const viewport of cases) {
@@ -56,8 +59,11 @@ test('wide live video panels do not overlap adjacent dashboard panels (#8276)', 
       width: 1600,
       height: viewport.height,
     });
+    // Live Webcams pauses off-screen in the scrollable inspector column;
+    // scroll it into view so its 2x2 webcam grid hydrates and stays active.
+    await webcams.scrollIntoViewIfNeeded();
     await expect.poll(
-      async () => page.evaluate(({ span, panelHeight }) => {
+      async () => page.evaluate(({ span }) => {
         const grid = document.querySelector('#panelsGrid');
 
         if (!grid) return false;
@@ -68,7 +74,8 @@ test('wide live video panels do not overlap adjacent dashboard panels (#8276)', 
           panel => getComputedStyle(panel).display !== 'none',
         );
 
-        const rowGap = parseFloat(getComputedStyle(grid).rowGap) || 4;
+        const parsedGap = Number.parseFloat(getComputedStyle(grid).rowGap);
+        const rowGap = Number.isFinite(parsedGap) ? parsedGap : 4;
         const ids = ['live-news', 'live-webcams'];
 
         return ids.every(id => {
@@ -148,6 +155,7 @@ test('wide live video panels do not overlap adjacent dashboard panels (#8276)', 
     ).toBe(true);
   }
   await page.setViewportSize({ width: 1600, height: 866 });
+  await news.scrollIntoViewIfNeeded();
   // The player fills the panel: no empty band between the video and the
   // panel's bottom edge, at the natural size and after a user makes it taller.
   const deadSpaceBelowPlayer = () => news.evaluate((element) => {
@@ -252,10 +260,15 @@ test('collapsing a user-resized video panel releases its grid rows (#10185)', as
     const handle = panel.locator(':scope > .panel-resize-handle');
 
     await expect(handle).toHaveCount(1, { timeout: 60_000 });
+    const gridRowGap = await page.evaluate(() => {
+      const parsed = Number.parseFloat(getComputedStyle(document.querySelector('#panelsGrid')!).rowGap);
+      return Number.isFinite(parsed) ? parsed : 4;
+    });
+    const span4Height = 4 * 200 + 3 * gridRowGap;
     await handle.focus();
     await handle.press('End');
     await expect(panel).toHaveClass(/\bresized\b/);
-    await expect.poll(() => footprint(id)).toMatchObject({ span: 'span 4', height: 812 });
+    await expect.poll(() => footprint(id)).toMatchObject({ span: 'span 4', height: span4Height });
 
     await toggle.click();
     await expect(panel).toHaveClass(/panel-collapsed/);
@@ -266,7 +279,7 @@ test('collapsing a user-resized video panel releases its grid rows (#10185)', as
     expect(collapsed!.height, `${id} collapsed height`).toBeLessThanOrEqual(200);
     expect(collapsed!.gapBelow, `${id} has a panel below`).not.toBeNull();
     expect(collapsed!.gapBelow!, `${id} does not overlap the next panel`).toBeGreaterThanOrEqual(0);
-    expect(collapsed!.height + collapsed!.gapBelow!, `${id} collapsed slot`).toBeLessThanOrEqual(204);
+    expect(collapsed!.height + collapsed!.gapBelow!, `${id} collapsed slot`).toBeLessThanOrEqual(200 + gridRowGap);
     await expect(handle, `${id} row resize is unavailable while collapsed`).toBeHidden();
 
     await page.reload({ waitUntil: 'domcontentloaded' });
@@ -278,14 +291,14 @@ test('collapsing a user-resized video panel releases its grid rows (#10185)', as
     await expect(handle).toBeVisible();
     await expect.poll(() => footprint(id), {
       message: `expanded ${id} restores the saved span`,
-    }).toMatchObject({ span: 'span 4', height: 812 });
+    }).toMatchObject({ span: 'span 4', height: span4Height });
   }
 
   expect(await page.evaluate(() => localStorage.getItem('worldmonitor-panel-spans')))
     .toBe(JSON.stringify({ 'live-news': 4, 'live-webcams': 4 }));
 });
 
-test('collapsed resized video panels release rows in the bottom grid (#10185)', async ({
+test('legacy bottom-set video panels migrate into the inspector grid and release rows on collapse (#10185)', async ({
   page,
 }, testInfo) => {
   test.setTimeout(120_000);
@@ -294,12 +307,13 @@ test('collapsed resized video panels release rows in the bottom grid (#10185)', 
     localStorage.setItem('worldmonitor-variant', 'full');
     localStorage.setItem('worldmonitor-mission-preset-dismissed-v1', '1');
     localStorage.setItem('wm-layer-warning-dismissed', 'true');
+    localStorage.setItem('wm-inspector-tab-v1', 'news');
     localStorage.setItem('wm-pro-banner-launched-dismissed', String(Date.now()));
   });
   await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => document.documentElement.dataset.wmEventHandlersReady === 'true');
-  // Seed the persisted placement through the real layout reader on reload.
-  // Both keys are required; a bottom set alone does not apply a saved order.
+  // Seed legacy persisted bottom-set placement; Option B retires #mapBottomGrid
+  // and migrates those panels cleanly into #panelsGrid under their domain tab.
   await page.evaluate(() => {
     const order = Array.from(document.querySelectorAll<HTMLElement>('.panel[data-panel]'))
       .map(panel => panel.dataset.panel!);
@@ -308,8 +322,10 @@ test('collapsed resized video panels release rows in the bottom grid (#10185)', 
   });
   await page.reload({ waitUntil: 'domcontentloaded' });
 
+  await expect(page.locator('#mapBottomGrid > .panel')).toHaveCount(0);
+
   for (const id of ['live-news', 'live-webcams']) {
-    const panel = page.locator(`#mapBottomGrid > .panel[data-panel="${id}"]`);
+    const panel = page.locator(`#panelsGrid > .panel[data-panel="${id}"]`);
     const handle = panel.locator(':scope > .panel-resize-handle');
     const toggle = panel.locator('.panel-collapse-btn');
     const toolbar = panel.locator(id === 'live-news' ? '.live-news-toolbar' : '.webcam-toolbar');

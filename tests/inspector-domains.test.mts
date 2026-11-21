@@ -52,17 +52,23 @@ describe('inspector-domains mapping and filtering', () => {
       (VARIANT_DEFAULTS.full ?? []).filter((k) => k !== 'map'),
     );
 
-    // Default curated 7
+    // Default curated 7 (insights first, matching approved Option B spec)
     assert.deepEqual(
       getOverviewPanelKeys('full', fullSettings, null),
-      ['strategic-risk', 'cii', 'markets', 'energy-complex', 'threat-timeline', 'latest-brief', 'insights'],
+      ['insights', 'strategic-risk', 'cii', 'threat-timeline', 'markets', 'energy-complex', 'latest-brief'],
     );
 
-    // Custom pins drop disabled & map entries
+    // Custom pins drop disabled, unknown, and map entries
     const customSettings = makeSettings(['politics', 'markets'], ['cii']);
     assert.deepEqual(
-      getOverviewPanelKeys('full', customSettings, ['map', 'cii', 'politics', 'markets']),
+      getOverviewPanelKeys('full', customSettings, ['map', 'cii', 'unknown-panel', 'politics', 'markets']),
       ['politics', 'markets'],
+    );
+
+    // When all custom pins are disabled or unknown, fall back to enabled defaults (matching boot filter)
+    assert.deepEqual(
+      getOverviewPanelKeys('full', customSettings, ['cii', 'unknown-panel']),
+      ['markets'],
     );
 
     // Corrupt/empty pins fall back to enabled defaults

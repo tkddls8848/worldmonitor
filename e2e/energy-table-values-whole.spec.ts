@@ -155,6 +155,7 @@ test('energy table values and names stay whole inside their column', async ({ br
       localStorage: {
         'worldmonitor-panels': JSON.stringify(settings),
         'wm-font-scale': String(fontScale),
+        'wm-inspector-tab-v1': 'markets',
         ...(colSpans ? { 'worldmonitor-panel-col-spans': JSON.stringify(colSpans) } : {}),
       },
     });
@@ -167,6 +168,11 @@ test('energy table values and names stay whole inside their column', async ({ br
     await page.route(/list-energy-disruptions/, (route) => route.fulfill({ json: FIXTURES.disruptions }));
 
     await page.goto('/dashboard');
+    if (!mobile && (colSpans || viewport.width === 1845 || viewport.width === 1440)) {
+      const wideBtn = page.locator('#bottomTrayWideGridBtn');
+      await expect(wideBtn).toBeVisible({ timeout: 30_000 });
+      await wideBtn.click();
+    }
     const variant = `${viewport.width}-${fontScale * 100}${mobile ? '-phone' : ''}${colSpans ? '-wide' : ''}`;
     for (const { key, rows, valueColumns, words, stackEm } of PANELS) {
       const panel = page.locator(`#panelsGrid .panel[data-panel="${key}"]`);

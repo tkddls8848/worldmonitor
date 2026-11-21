@@ -67,7 +67,12 @@ test('news source rows keep every badge inside the panel', async ({ browser }, t
     });
     const page = await context.newPage();
     const settings = { politics: { name: 'World News', enabled: true, priority: 0 } };
-    await seedAnonymousDashboard(page, 'full', { localStorage: { 'worldmonitor-panels': JSON.stringify(settings) } });
+    await seedAnonymousDashboard(page, 'full', {
+      localStorage: {
+        'worldmonitor-panels': JSON.stringify(settings),
+        'wm-inspector-tab-v1': 'news',
+      },
+    });
     await page.route(/^https?:\/\/(?!(127\.0\.0\.1:4173|localhost:4173)(?:\/|$)).*/i, (route) => route.abort());
     await page.route('**/api/**', (route) => route.fulfill({ json: {} }));
     await page.route('**/api/bootstrap*', (route) => route.fulfill({ json: { missing: [], data: {} } }));
