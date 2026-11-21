@@ -4,13 +4,19 @@ import { summarize, isImprovement, compareReports, unmatchedMetrics } from '../s
 
 describe('summarize', () => {
   it('takes the median of the successful samples and counts failures', () => {
-    assert.deepEqual(summarize([30, 10, 20, null, 40]), { median: 25, min: 10, max: 40, runs: 5, failed: 1 });
+    assert.deepEqual(summarize([30, 10, 20, null, 40]), { median: 25, min: 10, max: 40, spread: 20, runs: 5, failed: 1 });
   });
   it('uses the middle value for an odd count', () => {
-    assert.deepEqual(summarize([5, 1, 3]), { median: 3, min: 1, max: 5, runs: 3, failed: 0 });
+    assert.deepEqual(summarize([5, 1, 3]), { median: 3, min: 1, max: 5, spread: 2, runs: 3, failed: 0 });
   });
   it('returns null stats when every sample failed', () => {
-    assert.deepEqual(summarize([null, null]), { median: null, min: null, max: null, runs: 2, failed: 2 });
+    assert.deepEqual(summarize([null, null]), { median: null, min: null, max: null, spread: null, runs: 2, failed: 2 });
+  });
+  it('measures the spread without the single slowest sample (owner rule, spec 8.9 option 1)', () => {
+    assert.equal(summarize([10, 20, 30, 40, 400]).spread, 30);
+  });
+  it('keeps max - min as the spread when fewer than three samples succeeded', () => {
+    assert.equal(summarize([1, 5, null]).spread, 4);
   });
 });
 
@@ -32,6 +38,15 @@ describe('isImprovement', () => {
   it('rejects when a median is null', () => {
     assert.equal(isImprovement(before, { median: null, min: null, max: null, runs: 2, failed: 0 }), false);
     assert.equal(isImprovement({ median: null, min: null, max: null }, { median: 1, min: 1, max: 1, failed: 0 }), false);
+  });
+  it('does not let one slow outlier in either run block a real gain', () => {
+    const spiky = { ...summarize([100, 101, 102, 103, 400]) };
+    const after = { ...summarize([84, 85, 85, 86, 300]) };
+    assert.equal(isImprovement(spiky, after), true);
+  });
+  it('falls back to max - min for a summary saved before spread existed', () => {
+    const old = { median: 100, min: 60, max: 140, runs: 5, failed: 0 };
+    assert.equal(isImprovement(old, { median: 85, min: 84, max: 86, runs: 5, failed: 0 }), false);
   });
   it('honors a custom minRatio', () => {
     const tight = { median: 100, min: 99, max: 101, runs: 5, failed: 0 };
@@ -58,6 +73,13 @@ describe('compareReports', () => {
     assert.equal(out[0].improved, true);
     assert.equal(out[0].before, a.metrics.load);
     assert.equal(out[0].after, b.metrics.load);
+  });
+  it('uses saved samples for the spread of a report whose summaries predate it', () => {
+    const a = { metrics: { m: { median: 102, min: 100, max: 400, runs: 5, failed: 0 } }, samples: { m: [100, 101, 102, 103, 400] } };
+    const b = { metrics: { m: { median: 85, min: 84, max: 86, runs: 5, failed: 0 } }, samples: { m: [84, 85, 85, 86, 86] } };
+    const out = compareReports(a, b);
+    assert.equal(out[0].improved, true);
+    assert.equal(out[0].before, a.metrics.m);
   });
   it('gives null changePct when a median is missing', () => {
     const s = { median: null, min: null, max: null, runs: 1, failed: 1 };

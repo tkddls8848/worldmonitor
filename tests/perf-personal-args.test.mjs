@@ -75,8 +75,8 @@ describe('perf-personal collectRuns and buildReport', () => {
     const { samples, failures } = await collectRuns({ runs: 3, warmup: 1, measureRun: fakeRun([]), log: () => {} });
     const report = buildReport({ label: 'x', createdAt: 't', config: { runs: 3 }, samples, failures });
     assert.deepEqual(report.samples['layer.resultVisible'], [10, null, 30]);
-    assert.deepEqual(report.metrics['layer.resultVisible'], { median: 20, min: 10, max: 30, runs: 3, failed: 1 });
-    assert.deepEqual(report.metrics['cold.mapDemand'], { median: 20, min: 10, max: 30, runs: 3, failed: 0 });
+    assert.deepEqual(report.metrics['layer.resultVisible'], { median: 20, min: 10, max: 30, spread: 20, runs: 3, failed: 1 });
+    assert.deepEqual(report.metrics['cold.mapDemand'], { median: 20, min: 10, max: 30, spread: 10, runs: 3, failed: 0 });
     assert.ok('warm.mapAfterDemand' in report.metrics);
     assert.deepEqual(report.failures, failures);
   });
