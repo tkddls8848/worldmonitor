@@ -7,7 +7,6 @@ import {
   SITE_VARIANT,
   INTEL_HOTSPOTS,
   CONFLICT_ZONES,
-  GAMMA_IRRADIATORS,
   PIPELINES,
   STRATEGIC_WATERWAYS,
   PORTS,
@@ -23,7 +22,7 @@ import {
 // Tech-geo + ai-datacenters + geo-map tables imported directly so they stay off the eager @/config barrel (#4404).
 import { STARTUP_HUBS, ACCELERATORS, TECH_HQS, CLOUD_REGIONS } from '../config/tech-geo';
 import { AI_DATA_CENTERS } from '../config/ai-datacenters';
-import { UNDERSEA_CABLES, NUCLEAR_FACILITIES, ECONOMIC_CENTERS, SPACEPORTS, CRITICAL_MINERALS } from '../config/geo-map';
+import { UNDERSEA_CABLES, NUCLEAR_FACILITIES, ECONOMIC_CENTERS, CRITICAL_MINERALS } from '../config/geo-map';
 import type { PositiveGeoEvent } from '../services/positive-events-geo';
 import type { KindnessPoint } from '../services/kindness-data';
 import type { PassTrack, TrackPoint } from '../services/orbital/track-geometry';
@@ -238,7 +237,6 @@ app.style.margin = '0 auto';
 
 const allLayersEnabled: MapLayers = {
   gpsJamming: true,
-  satellites: false,
 
 
   conflicts: true,
@@ -248,11 +246,8 @@ const allLayersEnabled: MapLayers = {
   hotspots: true,
   ais: true,
   nuclear: true,
-  irradiators: true,
   sanctions: true,
   weather: true,
-  canadaRoads: true,
-  canadaAlerts: true,
   economic: true,
   waterways: true,
   outages: true,
@@ -262,7 +257,6 @@ const allLayersEnabled: MapLayers = {
   flights: true,
   military: true,
   natural: true,
-  spaceports: true,
   minerals: true,
   fires: true,
   ucdpEvents: true,
@@ -287,7 +281,6 @@ const allLayersEnabled: MapLayers = {
   iranAttacks: false,
   ciiChoropleth: false,
   resilienceScore: false,
-  dayNight: true,
   miningSites: false,
   processingPlants: false,
   commodityPorts: false,
@@ -300,7 +293,6 @@ const allLayersEnabled: MapLayers = {
 
 const allLayersDisabled: MapLayers = {
   gpsJamming: false,
-  satellites: false,
 
 
   conflicts: false,
@@ -310,11 +302,8 @@ const allLayersDisabled: MapLayers = {
   hotspots: false,
   ais: false,
   nuclear: false,
-  irradiators: false,
   sanctions: false,
   weather: false,
-  canadaRoads: false,
-  canadaAlerts: false,
   economic: false,
   waterways: false,
   outages: false,
@@ -324,7 +313,6 @@ const allLayersDisabled: MapLayers = {
   flights: false,
   military: false,
   natural: false,
-  spaceports: false,
   minerals: false,
   fires: false,
   ucdpEvents: false,
@@ -349,7 +337,6 @@ const allLayersDisabled: MapLayers = {
   iranAttacks: false,
   ciiChoropleth: false,
   resilienceScore: false,
-  dayNight: false,
   miningSites: false,
   processingPlants: false,
   commodityPorts: false,
@@ -966,11 +953,9 @@ const [cableLon, cableLat] = firstPathPoint(UNDERSEA_CABLES, [38.0, 20.0]);
 const [pipelineLon, pipelineLat] = firstPathPoint(PIPELINES, [45.0, 30.0]);
 const [hotspotLon, hotspotLat] = firstLatLon(INTEL_HOTSPOTS, [0.0, 20.0]);
 const [nuclearLon, nuclearLat] = firstLatLon(NUCLEAR_FACILITIES, [14.0, 50.0]);
-const [irradiatorLon, irradiatorLat] = firstLatLon(GAMMA_IRRADIATORS, [12.0, 50.0]);
 const [waterwayLon, waterwayLat] = firstLatLon(STRATEGIC_WATERWAYS, [32.0, 30.0]);
 const [economicLon, economicLat] = firstLatLon(ECONOMIC_CENTERS, [-74.0, 40.7]);
 const [datacenterLon, datacenterLat] = firstLatLon(AI_DATA_CENTERS, [-121.9, 37.3]);
-const [spaceportLon, spaceportLat] = firstLatLon(SPACEPORTS, [-80.6, 28.6]);
 const [mineralLon, mineralLat] = firstLatLon(CRITICAL_MINERALS, [135.0, -27.0]);
 const [startupLon, startupLat] = firstLatLon(STARTUP_HUBS, [-122.08, 37.38]);
 const [acceleratorLon, acceleratorLat] = firstLatLon(ACCELERATORS, [-122.41, 37.77]);
@@ -1049,14 +1034,6 @@ const VISUAL_SCENARIOS: VisualScenario[] = [
     enabledLayers: ['nuclear'],
     camera: toCamera(nuclearLon, nuclearLat, 5.2),
     expectedDeckLayers: ['nuclear-layer'],
-    expectedSelectors: [],
-  },
-  {
-    id: 'irradiators-z5',
-    variant: 'both',
-    enabledLayers: ['irradiators'],
-    camera: toCamera(irradiatorLon, irradiatorLat, 5.2),
-    expectedDeckLayers: ['irradiators-layer'],
     expectedSelectors: [],
   },
   {
@@ -1150,14 +1127,6 @@ const VISUAL_SCENARIOS: VisualScenario[] = [
     enabledLayers: ['natural'],
     camera: seededCameras.natural,
     expectedDeckLayers: ['earthquakes-layer', 'natural-events-layer'],
-    expectedSelectors: [],
-  },
-  {
-    id: 'spaceports-z5',
-    variant: 'both',
-    enabledLayers: ['spaceports'],
-    camera: toCamera(spaceportLon, spaceportLat, 5.1),
-    expectedDeckLayers: ['spaceports-layer'],
     expectedSelectors: [],
   },
   {

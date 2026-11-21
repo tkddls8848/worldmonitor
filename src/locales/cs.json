@@ -578,9 +578,7 @@
         "displacement": "Přepnout toky vysídlení",
         "climate": "Přepnout klimatické anomálie",
         "outages": "Přepnout výpadky internetu",
-        "tradeRoutes": "Přepnout obchodní trasy",
-        "canadaRoads": "Přepnout vrstvu silnic Kanady",
-        "canadaAlerts": "Přepnout vrstvu provinčních nouzových výstrah Kanady"
+        "tradeRoutes": "Přepnout obchodní trasy"
       },
       "view": {
         "dark": "Přepnout na tmavý režim",
@@ -627,7 +625,6 @@
         "earthquake": "Zemětřesení",
         "outage": "Výpadek",
         "nuclear": "Jaderné zařízení",
-        "irradiator": "Ozařovač",
         "techcompany": "Tech společnost",
         "ailab": "AI laboratoř",
         "startup": "Startup",
@@ -1271,9 +1268,6 @@
         "conflictZones": "Zóny konfliktu",
         "militaryBases": "Vojenské základny",
         "nuclearSites": "Jaderná zařízení",
-        "gammaIrradiators": "Gamma ozařovače",
-        "spaceports": "Kosmodromy",
-        "satellites": "Orbitální sledování",
         "pipelines": "Potrubí",
         "militaryActivity": "Vojenská aktivita",
         "shipTraffic": "Lodní doprava",
@@ -1294,17 +1288,12 @@
         "tradeRoutes": "Obchodní cesty",
         "iranAttacks": "Útoky na Blízkém východě",
         "gpsJamming": "Rušení navigace",
-        "dayNight": "Den/Noc",
         "ciiChoropleth": "Nestabilita zemí",
         "positiveEvents": "Pozitivní události",
         "kindness": "Skutky laskavosti",
         "happiness": "Světové štěstí",
         "speciesRecovery": "Obnova druhů",
         "renewableInstallations": "Čistá energie",
-        "radiationSpike": "Skokový nárůst radiace",
-        "radiationElevated": "Zvýšená radiace",
-        "canadaRoads": "Silnice Kanada",
-        "canadaAlerts": "Výstrahy Kanada",
         "notamAirspace": "Omezení vzdušného prostoru NOTAM",
         "no2Activity": "Průmyslová aktivita",
         "reservoirLevels": "Vodní hladiny"
@@ -1397,7 +1386,6 @@
           "geoProtests": "Občanské nepokoje, demonstrace (filtrované podle času)",
           "militaryBases": "Vojenské základny USA/NATO, Číny a Ruska (150+)",
           "militaryNuclear": "Elektrárny, obohacování, zařízení pro zbraně",
-          "militaryIrradiators": "Průmyslová zařízení pro gama ozařování",
           "militaryActivity": "Živé sledování vojenských letadel a plavidel",
           "infraCablesFull": "Hlavní podmořské optické kabely (20 páteřních tras)",
           "infraPipelinesFull": "Ropovody/plynovody (Nord Stream, TAPI atd.)",
@@ -1410,7 +1398,6 @@
           "waterwaysLabels": "Štítky strategických úzkých hrdel",
           "geoUcdpEvents": "Události ozbrojených konfliktů Uppsala Conflict Data Program",
           "geoDisplacement": "Vzorce toků uprchlíků a vysídlení",
-          "militarySpaceports": "Místa startu raket a vesmírná zařízení",
           "infraCyberThreats": "Kybernetické útoky a bezpečnostní události",
           "mineralsFull": "Naleziště strategických minerálů a těžební místa",
           "techCyberThreats": "Kybernetické útoky a bezpečnostní události",
@@ -1418,11 +1405,8 @@
           "techFires": "Aktivní lesní požáry v blízkosti tech infrastruktury",
           "financeGulfInvestments": "Investice suverénních fondů a přímé zahraniční investice Rady pro spolupráci v Zálivu",
           "tradeRoutes": "Hlavní světové námořní trasy spojující přístavy přes strategická úzká hrdla",
-          "dayNight": "Sluneční terminátor v reálném čase ukazující denní a noční zóny",
           "geoBoundaries": "Demilitarizované zóny, linie příměří a sporné hranice",
           "ciiChoropleth": "Tepelná mapa Country Instability Index — barevně rozlišuje země podle skóre (zelená=stabilní, červená=kritické)",
-          "canadaRoads": "Oficiální dopravní události, varování, podmínky, uzavírky, stavby a nebezpečí z podporovaných kanadských jurisdikcí.",
-          "canadaAlerts": "Provinční výstrahy pro veřejnou bezpečnost z Alberta Emergency Alert, B.C. Evacuation Orders and Alerts a SaskAlert.",
           "notamAirspace": "Dočasná omezení letů a omezený, nebezpečný a zakázaný vzdušný prostor z NOTAMů FAA, která jsou právě v platnosti nebo začínají do 24 hodin",
           "no2Activity": "Směr aktivity NO2 ze Sentinel-5P pro 167 zemí a 32 průmyslových klastrů: poslední 56denní okno oproti stejným datům v předchozích letech, po 10% mrtvém pásmu. Obsahuje upravená data Copernicus Sentinel.",
           "reservoirLevels": "Výška vodní hladiny strategických nádrží a jezer ze satelitního lidaru NASA ICESat-2 ve srovnání s obvyklou hladinou pro daný měsíc. NASA zveřejňuje každý přelet asi dva měsíce po měření."
@@ -3414,10 +3398,6 @@
       },
       "closed": "ZAVŘENO"
     },
-    "irradiator": {
-      "subtitle": "Zařízení pro průmyslové ozařování gama paprsky",
-      "description": "Průmyslové ozařovací zařízení využívající zdroje Kobalt-60 nebo Cesium-137 pro sterilizaci zdravotnických prostředků, konzervaci potravin nebo zpracování materiálů. Zdroj: Databáze IAEA DIIF."
-    },
     "pipeline": {
       "title": "POTRUBÍ",
       "types": {
@@ -3482,7 +3462,6 @@
     "lastSeen": "NAPOSLEDY SPATŘENO",
     "open": "OTEVŘENO",
     "tradingHours": "OBCHODNÍ HODINY",
-    "gamma": "GAMA",
     "city": "MĚSTO",
     "length": "DÉLKA",
     "operator": "PROVOZOVATEL",
@@ -3762,15 +3741,6 @@
       },
       "worldRank": "SVĚTOVÉ POŘADÍ"
     },
-    "spaceport": {
-      "status": {
-        "active": "AKTIVNÍ",
-        "construction": "VE VÝSTAVBĚ",
-        "inactive": "NEAKTIVNÍ"
-      },
-      "launchActivity": "STARTOVACÍ AKTIVITA",
-      "description": "Strategické kosmické startovací zařízení. Kadence startů a možnosti přístupu na oběžnou dráhu jsou klíčovými geopolitickými indikátory."
-    },
     "mineral": {
       "status": {
         "producing": "PRODUKUJÍCÍ",
@@ -4024,17 +3994,6 @@
       "coverageUnavailable": "Pokrytí není k dispozici",
       "targets": "Cíle",
       "listSeparator": ", ",
-      "radiation": {
-        "confirmed": "Potvrzeno",
-        "conflictingSources": "Rozporné zdroje",
-        "cpmDerived": "Složka odvozená z CPM",
-        "reading": "Naměřená hodnota",
-        "baseline": "Výchozí úroveň",
-        "delta": "Rozdíl",
-        "confidence": "Spolehlivost",
-        "sources": "Zdroje",
-        "sourceCount": "Počet zdrojů"
-      },
       "history": {
         "conflictSince": "Konflikt od",
         "peaceAgreements": "Mírové dohody",
@@ -4877,39 +4836,6 @@
         "related": {
           "0": "vrstva Přírodní události",
           "1": "Vyskakovací okna výstrah počasí",
-          "2": "Stav aktuálnosti dat"
-        }
-      },
-      "canadaRoads": {
-        "category": "Doprava",
-        "purpose": "Ukazuje úřední silniční události, výstrahy, stavy, uzavírky, stavby a nebezpečí v podporovaných kanadských jurisdikcích.",
-        "source": "Provinční kanály Ontario 511, Alberta 511 a Manitoba 511, City of Toronto Road Restrictions a DriveBC Open511, naplňované přes WorldMonitor.",
-        "freshness": "Ontario 511, Alberta 511 a Manitoba 511 se naplňují každých 15 minut a hlídají se vůči rozpočtu aktuálnosti 45 minut. Omezení v Torontu se naplňují každé 2 hodiny. DriveBC Open511 se naplňuje každých 30 minut.",
-        "confidence": "Závazné pro podporované provinční a městské vydavatele, s výhradou času publikace u zdroje a mapované geometrie.",
-        "limitations": {
-          "0": "Zdroj roadconditions z Alberta 511 se nepřebírá, protože koncový bod dodavatele vrací 404. Živé kreslení Alberty ukazuje jen události a výstrahy.",
-          "1": "Provinční výstrahy bez souřadnic se neobjeví jako body na mapě.",
-          "2": "Křivky stavu silnic mohou zjednodušit složitou geometrii dálnic."
-        },
-        "related": {
-          "0": "Meteorologická varování",
-          "1": "Stav aktuálnosti dat"
-        }
-      },
-      "canadaAlerts": {
-        "category": "Nouzové výstrahy",
-        "purpose": "Ukazuje aktivní varování veřejné bezpečnosti z Alberty, Britské Kolumbie a Saskatchewan jako body na mapě, vedle počasí NWS pro USA.",
-        "source": "Atom Alberta Emergency Alert, vrstva GeoJSON OGL-BC Evacuation Orders and Alerts a veřejný kanál JSON SaskAlert spolu s podrobnostmi CAP 1.2 ze stejného hostitele se sjednocují do jedné unie canadaAlerts. Polygony CAP/GeoRSS, evakuační polygony Britské Kolumbie a polygony CAP SaskAlert se stávají centroidy. Záznamy bez geometrie použijí centroid zdrojové provincie.",
-        "freshness": "Provinční zdroje se naplňují každých 15 minut a unie se hlídá vůči rozpočtu aktuálnosti 45 minut. Prázdný kanál, tedy žádné aktivní výstrahy, je platný úspěch s nulovým počtem záznamů.",
-        "confidence": "Závazné pro výstrahy, které publikují Alberta Emergency Alert, B.C. Evacuation Orders and Alerts a SaskAlert, s výhradou času publikace u zdroje a mapované geometrie výstrahy.",
-        "limitations": {
-          "0": "Pokrytí je omezené na Albertu, Britskou Kolumbii a Saskatchewan. Ontario nemá způsobilý strojový kanál provozovaný provincií mimo vyloučené NAAD.",
-          "1": "Nenahrazuje výstrahy počasí NWS pro USA ani silniční vrstvy Ontaria a Toronta.",
-          "2": "Položky bez mapovatelné závažnosti se zahazují a nevymýšlejí se. Jde o sémantiku CAP a barvy Alberty, stav evakuace Britské Kolumbie nebo závažnost CAP SaskAlert. Barva nebo stupeň v souhrnu SaskAlert se nebere jako závažnost CAP."
-        },
-        "related": {
-          "0": "Meteorologická varování",
-          "1": "vrstva Přírodní události",
           "2": "Stav aktuálnosti dat"
         }
       },

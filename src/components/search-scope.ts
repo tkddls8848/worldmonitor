@@ -53,7 +53,6 @@ const MAP_RESULT_TYPES = new Set([
   'earthquake',
   'outage',
   'nuclear',
-  'irradiator',
   'techcompany',
   'ailab',
   'startup',

@@ -14,7 +14,6 @@ export type SearchResultType =
   | 'earthquake'
   | 'outage'
   | 'nuclear'
-  | 'irradiator'
   | 'techcompany'
   | 'ailab'
   | 'startup'

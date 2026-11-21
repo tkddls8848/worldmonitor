@@ -643,9 +643,7 @@
         "displacement": "Menekülési folyamatok be/ki",
         "climate": "Klímabeli anomáliák be/ki",
         "outages": "Internetkiesések be/ki",
-        "tradeRoutes": "Kereskedelmi útvonalak be/ki",
-        "canadaRoads": "Kanadai utak rétegének be-/kikapcsolása",
-        "canadaAlerts": "Kanadai tartományi vészhelyzeti riasztások rétegének be-/kikapcsolása"
+        "tradeRoutes": "Kereskedelmi útvonalak be/ki"
       },
       "view": {
         "dark": "Váltás sötét módra",
@@ -694,7 +692,6 @@
         "earthquake": "Földrengés",
         "outage": "Üzemszünet",
         "nuclear": "Atomerőmű",
-        "irradiator": "Sugárzás forrás",
         "techcompany": "Technológiai Cég",
         "ailab": "AI Laboratórium",
         "startup": "Startup",
@@ -1427,11 +1424,6 @@
         "conflictZones": "Konfliktuszónák",
         "militaryBases": "Katonai bázisok",
         "nuclearSites": "Atomenergia-objektumok",
-        "gammaIrradiators": "Gamma besugárzók",
-        "radiationSpike": "Sugárzási csúcs",
-        "radiationElevated": "Megemelkedett sugárzás",
-        "spaceports": "Világűr-kikötők",
-        "satellites": "Pályamenti megfigyelés",
         "pipelines": "Vezetékek",
         "militaryActivity": "Katonai tevékenység",
         "shipTraffic": "Hajóforgalom",
@@ -1453,14 +1445,11 @@
         "iranAttacks": "Közel-keleti csapások",
         "gpsJamming": "Navigációs zavarok",
         "ciiChoropleth": "Ország instabilitása",
-        "dayNight": "Nappali/éjszakai",
         "positiveEvents": "Pozitív események",
         "kindness": "Kedvességi cselekmények",
         "happiness": "Világboldogság",
         "speciesRecovery": "Fajmegmentés",
         "renewableInstallations": "Tiszta energia",
-        "canadaRoads": "Kanadai utak",
-        "canadaAlerts": "Kanadai riasztások",
         "notamAirspace": "NOTAM légtéri korlátozások",
         "no2Activity": "Ipari aktivitás",
         "reservoirLevels": "Vízszintek"
@@ -1553,7 +1542,6 @@
           "geoProtests": "Polgári rendetlenség, tüntetések (időalapú szűrés)",
           "militaryBases": "USA/NATO, Kína, Oroszország katonai létesítmények (150+)",
           "militaryNuclear": "Atomerőművek, dúsítás, fegyver létesítmények",
-          "militaryIrradiators": "Ipari gamma sugárzó létesítmények",
           "militaryActivity": "Élő katonai repülőgép és hajó követés",
           "infraCablesFull": "Nagyobb tengeralatti száloptikai kábelek (20 gerincútvonal)",
           "infraPipelinesFull": "Olaj-/gázvezetékek (Nord Stream, TAPI stb.)",
@@ -1566,7 +1554,6 @@
           "waterwaysLabels": "Stratégiai szűk keresztmetszet feliratok",
           "geoUcdpEvents": "Uppsala Conflict Data Program fegyveres konfliktus események",
           "geoDisplacement": "Menekült és kitelepítési áramlási minták",
-          "militarySpaceports": "Rakéta indító helyek és űrközpontok",
           "infraCyberThreats": "Kibernetikai támadások és biztonsági incidensek",
           "mineralsFull": "Stratégiai ásványlelőhelyek és bányászati helyek",
           "techCyberThreats": "Kibernetikai támadások és biztonsági incidensek",
@@ -1574,11 +1561,8 @@
           "techFires": "Aktív erdőtüzek a technológiai infrastruktúra közelében",
           "financeGulfInvestments": "Golf-öbölbeli Együttműködési Tanács szuverenitási alapok és külföldi közvetlen beruházások",
           "tradeRoutes": "Fő globális szállítási útvonalak portokat stratégiai szűk keresztmetszeteken keresztül összekötve",
-          "dayNight": "Valós idejű napenergia terminátor nap és éj zónákat mutatja",
           "geoBoundaries": "Demilitarizált zónák, tűzszünet vonalak és vitatott határok",
           "ciiChoropleth": "Ország Instabilitási Index hőtérkép — országokat pontszám szerint színez (zöld=stabil, piros=kritikus)",
-          "canadaRoads": "Hivatalos közúti események, figyelmeztetések, útviszonyok, lezárások, építkezések és veszélyek a támogatott kanadai joghatóságokból.",
-          "canadaAlerts": "Tartományi közbiztonsági riasztások az Alberta Emergency Alert, a B.C. Evacuation Orders and Alerts és a SaskAlert forrásaiból.",
           "notamAirspace": "Ideiglenes repüléskorlátozások, valamint korlátozott, veszélyes és tiltott légtér az FAA NOTAM-jaiból, amely jelenleg érvényes vagy 24 órán belül kezdődik",
           "no2Activity": "Sentinel-5P NO2-aktivitás iránya 167 országra és 32 ipari klaszterre: a legutóbbi 56 napos ablak az előző évek azonos dátumaihoz képest, 10%-os holtsáv után. Módosított Copernicus Sentinel adatokat tartalmaz.",
           "reservoirLevels": "Stratégiai víztározók és tavak vízfelszínének szintje a NASA ICESat-2 műholdas lidarja alapján, a hónapra jellemző szinthez viszonyítva. A NASA minden áthaladást nagyjából két hónappal a mérés után tesz közzé."
@@ -3449,10 +3433,6 @@
       },
       "closed": "ZÁRVA"
     },
-    "irradiator": {
-      "subtitle": "Ipari Gamma Sugárzó Létesítmény",
-      "description": "Ipari sugárzási létesítmény Kobalt-60 vagy Cézium-137 forrásokkal orvosi eszközök sterilizálásához, élelmiszer-konzerváláshoz vagy anyagfeldolgozáshoz. Forrás: IAEA DIIF adatbázis."
-    },
     "pipeline": {
       "title": "VEZETÉK",
       "types": {
@@ -3517,7 +3497,6 @@
     "lastSeen": "UTOLJÁRA LÁTOTT",
     "open": "NYITOTT",
     "tradingHours": "KERESKEDÉSI ÓRÁK",
-    "gamma": "GAMMA",
     "city": "VÁROS",
     "length": "HOSSZ",
     "operator": "OPERÁTOR",
@@ -3797,15 +3776,6 @@
       },
       "worldRank": "VILÁGRANGSOR"
     },
-    "spaceport": {
-      "status": {
-        "active": "AKTÍV",
-        "construction": "ÉPÍTÉS ALATT",
-        "inactive": "INAKTÍV"
-      },
-      "launchActivity": "INDÍTÁSI TEVÉKENYSÉG",
-      "description": "Stratégiai űrindítási létesítmény. Az indítási ütem és az orbitális hozzáférés képességei fontos geopolitikai mutatók."
-    },
     "mineral": {
       "status": {
         "producing": "TERMELÉS",
@@ -4051,17 +4021,6 @@
       "coverageUnavailable": "Nincs lefedettség",
       "targets": "Célpontok",
       "listSeparator": ", ",
-      "radiation": {
-        "confirmed": "Megerősítve",
-        "conflictingSources": "Ellentmondó források",
-        "cpmDerived": "CPM-ből számított összetevő",
-        "reading": "Mért érték",
-        "baseline": "Alapérték",
-        "delta": "Eltérés",
-        "confidence": "Megbízhatóság",
-        "sources": "Források",
-        "sourceCount": "Források száma"
-      },
       "history": {
         "conflictSince": "Konfliktus kezdete",
         "peaceAgreements": "Békemegállapodások",
@@ -4833,39 +4792,6 @@
         "related": {
           "0": "réteg Természeti események",
           "1": "Időjárási riasztások felugró ablakai",
-          "2": "Az adatfrissesség állapota"
-        }
-      },
-      "canadaRoads": {
-        "category": "Közlekedés",
-        "purpose": "Hivatalos közúti eseményeket, riasztásokat, állapotokat, lezárásokat, építkezéseket és veszélyeket mutat a támogatott kanadai illetékességi területeken.",
-        "source": "Ontario 511, Alberta 511 és Manitoba 511 tartományi folyamok, a City of Toronto Road Restrictions és a DriveBC Open511, a WorldMonitoron keresztül feltöltve.",
-        "freshness": "Az Ontario 511, az Alberta 511 és a Manitoba 511 15 percenként töltődik fel, és 45 perces frissességi kerethez mérik. A Toronto korlátozásai 2 óránként töltődnek fel. A DriveBC Open511 30 percenként töltődik fel.",
-        "confidence": "Mérvadó a támogatott tartományi és önkormányzati közlőkre, a forrás közlési idejének és a térképezett geometriának a függvényében.",
-        "limitations": {
-          "0": "Az Alberta 511 roadconditions forrása nem kerül be, mert a szállító végpontja 404-et ad. Alberta élő rajza csak eseményeket és riasztásokat mutat.",
-          "1": "A koordináta nélküli tartományi riasztások nem jelennek meg pontként a térképen.",
-          "2": "Az útállapot-vonalak egyszerűsíthetik a bonyolult autópálya-geometriát."
-        },
-        "related": {
-          "0": "Időjárási riasztások",
-          "1": "Az adatfrissesség állapota"
-        }
-      },
-      "canadaAlerts": {
-        "category": "Vészriasztások",
-        "purpose": "Alberta, Brit Columbia és Saskatchewan aktív közbiztonsági figyelmeztetéseit mutatja pontokként a térképen, az USA NWS időjárása mellett.",
-        "source": "Az Alberta Emergency Alert Atom, az OGL-BC Evacuation Orders and Alerts GeoJSON réteg, valamint a SaskAlert nyilvános JSON-folyama és az azonos gazdán lévő CAP 1.2 részletek egy canadaAlerts unióba rendeződnek. A CAP/GeoRSS poligonok, Brit Columbia kitelepítési poligonjai és a SaskAlert CAP-poligonjai súlypontokká válnak. Geometria nélküli rekordok a forrástartomány súlypontját használják.",
-        "freshness": "A tartományi források 15 percenként töltődnek fel, az uniót pedig 45 perces frissességi kerethez mérik. Az üres folyam, vagyis ha nincs aktív riasztás, érvényes siker nulla rekorddal.",
-        "confidence": "Mérvadó az Alberta Emergency Alert, a B.C. Evacuation Orders and Alerts és a SaskAlert által közölt riasztásokra, a forrás közlési idejének és a térképezett riasztásgeometriának a függvényében.",
-        "limitations": {
-          "0": "A lefedettség Albertára, Brit Columbiára és Saskatchewanra korlátozódik. Ontariónak nincs alkalmas, a tartomány által üzemeltetett gépi folyama a kizárt NAAD-on kívül.",
-          "1": "Nem helyettesíti az USA NWS időjárási riasztásait, sem Ontario és Toronto útrétegeit.",
-          "2": "A térképezhető súlyosság nélküli bejegyzések kiesnek, nem pedig kitalálódnak. Ez Alberta CAP- és színszemantikája, Brit Columbia kitelepítési állapota vagy a SaskAlert CAP-súlyossága. A SaskAlert összefoglaló színe vagy szintje nem számít CAP-súlyosságnak."
-        },
-        "related": {
-          "0": "Időjárási riasztások",
-          "1": "réteg Természeti események",
           "2": "Az adatfrissesség állapota"
         }
       },

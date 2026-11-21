@@ -21,18 +21,16 @@ import { ZoomHintGuard } from '../src/components/map/zoom-hint-guard.ts';
 import type { MapLayers } from '../src/types/index.ts';
 
 // Visibility thresholds mirrored from DeckGLMap.LAYER_ZOOM_THRESHOLDS for the
-// acceptance cases: nuclear/base/economic at zoom 3, irradiators at 4,
-// datacenters at 5.
+// acceptance cases: nuclear/base/economic at zoom 3, datacenters at 5.
 const MIN_ZOOM: Partial<Record<string, number>> = {
   bases: 3,
   nuclear: 3,
   economic: 3,
-  irradiators: 4,
   datacenters: 5,
   conflicts: 1,
 };
 
-const HINT_KEYS = ['bases', 'nuclear', 'economic', 'irradiators', 'datacenters', 'conflicts'];
+const HINT_KEYS = ['bases', 'nuclear', 'economic', 'datacenters', 'conflicts'];
 
 function makeLayers(overrides: Partial<Record<string, boolean>> = {}): MapLayers {
   const layers = {} as Record<string, boolean>;
@@ -109,7 +107,6 @@ describe('zoom-hint guard (#7776)', () => {
       { key: 'nuclear', hiddenZoom: 2, visibleZoom: 3 },
       { key: 'bases', hiddenZoom: 2, visibleZoom: 3 },
       { key: 'economic', hiddenZoom: 2, visibleZoom: 3 },
-      { key: 'irradiators', hiddenZoom: 3, visibleZoom: 4 },
       { key: 'datacenters', hiddenZoom: 4, visibleZoom: 5 },
     ];
     for (const { key, hiddenZoom, visibleZoom } of cases) {

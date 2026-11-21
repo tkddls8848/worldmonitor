@@ -2,7 +2,6 @@ import type { AppContext, AppModule } from '@/app/app-context';
 import { isPageUnloading } from '@/bootstrap/page-unload-signal';
 import { fetchUkmtoIncidents } from '@/services/ukmto-incidents';
 import { getRpcBaseUrl } from '@/services/rpc-client';
-import { isReportableCanadaRoad } from '@/services/canada-road-report';
 import { enqueuePanelCall, invokePanelMethod } from '@/app/pending-panel-data';
 import { markLcpDebug } from '@/utils/lcp-debug';
 import { runHydrationTier, type HydrationTask } from '@/app/hydration-scheduler';
@@ -51,10 +50,6 @@ import { fetchPredictionCandidates, reprioritizeMarketsForRegion as reprioritize
 import {
   fetchEarthquakes,
   fetchWeatherAlerts,
-  fetchCanadaRoads,
-  CANADA_ROAD_FRESHNESS_IDS,
-  getCanadaRoadSourceStates,
-  fetchCanadaAlerts,
   fetchInternetOutages,
   fetchTrafficAnomalies,
   fetchDdosAttacks,
@@ -602,7 +597,6 @@ export class DataLoaderManager implements AppModule {
     }
     this.globalTenderGeneration += 1;
     this.activeGlobalTenderScopedGeneration = null;
-    if (this.imageryRetryTimer) { clearTimeout(this.imageryRetryTimer); this.imageryRetryTimer = null; }
     this.applyTimeRangeFilterToNewsPanelsDebounced.cancel();
     this.xIntelAbortController?.abort();
     this.xIntelAbortController = null;
@@ -1283,10 +1277,8 @@ export class DataLoaderManager implements AppModule {
     if (shouldLoad('wsb-ticker-scanner')) tasks.push({ name: 'wsbTickers', task: () => runGuarded('wsbTickers', () => this.loadWsbTickers()) });
     if (shouldLoad('economic')) tasks.push({ name: 'economicStress', task: () => runGuarded('economicStress', () => this.loadEconomicStress()) });
     if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.weather) tasks.push({ name: 'weather', task: () => runGuarded('weather', () => this.loadWeatherAlerts()) });
-    if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.canadaRoads) tasks.push({ name: 'canadaRoads', task: () => runGuarded('canadaRoads', () => this.loadCanadaRoads()) });
     if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.pipelines) tasks.push({ name: 'pipelineRegistries', task: () => runGuarded('pipelineRegistries', () => this.loadPipelineRegistries()) });
     if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.storageFacilities) tasks.push({ name: 'storageFacilities', task: () => runGuarded('storageFacilities', () => this.loadStorageFacilities()) });
-    if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.canadaAlerts) tasks.push({ name: 'canadaAlerts', task: () => runGuarded('canadaAlerts', () => this.loadCanadaAlerts()) });
     if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.ais) tasks.push({ name: 'ais', task: () => runGuarded('ais', () => this.loadAisSignals()) });
     if ((SITE_VARIANT === 'full' && this.ctx.mapLayers.ais) || (this.ctx.panelSettings['ukmto-incidents']?.enabled && shouldLoad('ukmto-incidents'))) {
       tasks.push({ name: 'ukmtoIncidents', task: () => runGuarded('ukmtoIncidents', () => this.loadUkmtoIncidents()) });
@@ -1308,12 +1300,10 @@ export class DataLoaderManager implements AppModule {
     if (this.ctx.mapLayers.resilienceScore) {
       tasks.push({ name: 'resilienceRanking', task: () => runGuarded('resilienceRanking', () => this.loadResilienceRanking()) });
     }
-    if (SITE_VARIANT !== 'happy' && (shouldLoad('radiation-watch') || this.ctx.mapLayers.radiationWatch)) {
-      // Lock under the map-layer key ('radiationWatch') so a hydration load and
-      // a loadDataForLayer('radiationWatch') toggle one-flight each other
-      // (loadRadiationWatch has no internal guard). `name` stays 'radiation' for
-      // hydration tiering (#6770).
-      tasks.push({ name: 'radiation', task: () => runGuarded('radiationWatch', () => this.loadRadiationWatch()) });
+    if (SITE_VARIANT !== 'happy' && shouldLoad('radiation-watch')) {
+      // Only the Radiation Watch panel reads this; the map layer was removed.
+      // `name` stays 'radiation' for hydration tiering (#6770).
+      tasks.push({ name: 'radiation', task: () => runGuarded('radiation', () => this.loadRadiationWatch()) });
     }
 
     // tech-readiness ships in the full and tech defaults. shouldLoad() alone is
@@ -1376,17 +1366,11 @@ export class DataLoaderManager implements AppModule {
         case 'weather':
           await this.loadWeatherAlerts();
           break;
-        case 'canadaRoads':
-          await this.loadCanadaRoads();
-          break;
         case 'pipelines':
           await this.loadPipelineRegistries();
           break;
         case 'storageFacilities':
           await this.loadStorageFacilities();
-          break;
-        case 'canadaAlerts':
-          await this.loadCanadaAlerts();
           break;
         case 'outages':
           await this.loadOutages();
@@ -1423,19 +1407,11 @@ export class DataLoaderManager implements AppModule {
         case 'iranAttacks':
           await this.loadIranEvents();
           break;
-        case 'satellites':
-          // The flat map draws imagery footprints for this layer. Live
-          // satellite positions were drawn only by the removed 3D globe.
-          this.loadImageryFootprints();
-          break;
         case 'webcams':
           await this.loadWebcams();
           break;
         case 'sanctions':
           await this.loadSanctionsPressure();
-          break;
-        case 'radiationWatch':
-          await this.loadRadiationWatch();
           break;
         case 'ucdpEvents':
         case 'displacement':
@@ -1459,32 +1435,6 @@ export class DataLoaderManager implements AppModule {
     } finally {
       this.ctx.inFlight.delete(layer);
       this.ctx.map?.setLayerLoading(layer, false);
-    }
-  }
-
-  private imageryRetryTimer: ReturnType<typeof setTimeout> | null = null;
-
-  private loadImageryFootprints(retries = 2): void {
-    if (!this.ctx.mapLayers.satellites) return;
-    const bbox = this.ctx.map?.getBbox();
-    if (!bbox) {
-      if (retries > 0) {
-        this.imageryRetryTimer = setTimeout(() => this.loadImageryFootprints(retries - 1), 1500);
-      }
-      return;
-    }
-    void import('@/services/imagery').then(async ({ fetchImageryScenes }) => {
-      try {
-        const scenes = await fetchImageryScenes({ bbox, limit: 20 });
-        if (!this.ctx.mapLayers.satellites) return;
-        this.ctx.map?.setImageryScenes(scenes);
-      } catch { /* imagery is best-effort */ }
-    });
-  }
-
-  stopLayerActivity(layer: keyof MapLayers): void {
-    if (layer === 'satellites') {
-      if (this.imageryRetryTimer) { clearTimeout(this.imageryRetryTimer); this.imageryRetryTimer = null; }
     }
   }
 
@@ -3315,45 +3265,6 @@ export class DataLoaderManager implements AppModule {
     }
   }
 
-  async loadCanadaRoads(): Promise<void> {
-    try {
-      const records = await fetchCanadaRoads();
-      const sourceStates = getCanadaRoadSourceStates();
-      const degradedSources = Object.entries(sourceStates)
-        .filter(([, state]) => state === 'unavailable' || state === 'malformed')
-        .map(([key]) => key);
-      this.ctx.map?.setCanadaRoads(records);
-      this.ctx.map?.setLayerReady('canadaRoads', records.some(isReportableCanadaRoad));
-      this.ctx.statusPanel?.updateFeed('Canada Roads', {
-        status: degradedSources.length > 0 ? 'warning' : 'ok',
-        itemCount: records.length,
-        errorMessage: degradedSources.length > 0
-          ? `Partial coverage: ${degradedSources.join(', ')}`
-          : undefined,
-      });
-      // Per source, not one blanket ontario_511. Four feeds union onto this
-      // layer, and attributing all of them to Ontario meant an Alberta, Toronto
-      // or BC outage either read as an Ontario failure or — for the two with no
-      // id at all — never reached the freshness panel. getCanadaRoadSourceStates
-      // already knows which one is degraded; this just stops discarding it.
-      for (const { key, freshnessId } of CANADA_ROAD_FRESHNESS_IDS) {
-        const state = sourceStates[key];
-        if (state === 'unavailable' || state === 'malformed') {
-          dataFreshness.recordError(freshnessId, `${key}: ${state}`);
-        } else {
-          dataFreshness.recordUpdate(freshnessId, records.length);
-        }
-      }
-    } catch (error) {
-      this.ctx.map?.setLayerReady('canadaRoads', false);
-      this.ctx.statusPanel?.updateFeed('Canada Roads', { status: 'error' });
-      // The whole fetch failed, so every source is unknown — not just Ontario.
-      for (const { freshnessId } of CANADA_ROAD_FRESHNESS_IDS) {
-        dataFreshness.recordError(freshnessId, String(error));
-      }
-    }
-  }
-
   async loadWeatherAlerts(): Promise<void> {
     const [alertsResult, imdResult] = await Promise.allSettled([
       fetchWeatherAlerts(),
@@ -3373,18 +3284,6 @@ export class DataLoaderManager implements AppModule {
     this.ctx.map?.setLayerReady('weather', merged.length > 0);
     this.ctx.statusPanel?.updateFeed('Weather', { status: 'ok', itemCount: merged.length });
     dataFreshness.recordUpdate('weather', merged.length);
-  }
-
-  async loadCanadaAlerts(): Promise<void> {
-    try {
-      const alerts = await fetchCanadaAlerts();
-      this.ctx.map?.setCanadaAlerts(alerts);
-      this.ctx.map?.setLayerReady('canadaAlerts', alerts.length > 0);
-      this.ctx.statusPanel?.updateFeed('Canada alerts', { status: 'ok', itemCount: alerts.length });
-    } catch (error) {
-      this.ctx.map?.setLayerReady('canadaAlerts', false);
-      this.ctx.statusPanel?.updateFeed('Canada alerts', { status: 'error' });
-    }
   }
 
   private readonly applyOrefAlerts = (data: OrefAlertsResponse): void => {
@@ -5061,19 +4960,15 @@ export class DataLoaderManager implements AppModule {
   async loadRadiationWatch(): Promise<void> {
     try {
       const result = await fetchRadiationWatch();
-      const anomalies = result.observations.filter((observation) => observation.severity !== 'normal');
       this.callPanel('radiation-watch', 'setData', result);
       this.ctx.intelligenceCache.radiation = result;
       await runSignalAggregator(this.ctx.statusPanel, 'radiation observations', (aggregator) => aggregator.ingestRadiationObservations(result.observations));
-      this.ctx.map?.setRadiationObservations(anomalies);
-      this.ctx.map?.setLayerReady('radiationWatch', anomalies.length > 0);
       if (result.observations.length > 0) {
         dataFreshness.recordUpdate('radiation', result.observations.length);
       }
     } catch (error) {
       console.error('[App] Radiation watch fetch failed:', error);
       this.callPanel('radiation-watch', 'showError');
-      this.ctx.map?.setLayerReady('radiationWatch', false);
       dataFreshness.recordError('radiation', String(error));
     }
   }

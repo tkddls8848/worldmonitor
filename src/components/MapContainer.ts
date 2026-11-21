@@ -47,18 +47,14 @@ import type { CrossBorderData, DisplacementEventsData, DisplacementFlow, Interna
 import type { Earthquake } from '@/services/earthquakes';
 import type { ClimateAnomaly } from '@/services/climate';
 import type { WeatherAlert } from '@/services/weather';
-import type { CanadaRoadRecord } from '@/services/canada-roads';
-import type { CanadaAlert } from '@/services/canada-alerts';
 import type { PositiveGeoEvent } from '@/services/positive-events-geo';
 import type { KindnessPoint } from '@/services/kindness-data';
 import type { HappinessData } from '@/services/happiness-data';
 import type { SpeciesRecovery } from '@/services/conservation-data';
 import type { RenewableInstallation } from '@/services/renewable-installations';
 import type { ResilienceRankingItem } from '@/services/resilience';
-import type { RadiationObservation } from '@/services/radiation';
 import type { GpsJamHex } from '@/services/gps-interference';
 import type { IranEvent } from '@/services/conflict';
-import type { ImageryScene } from '@/generated/server/worldmonitor/imagery/v1/service_server';
 import type { WebcamEntry, WebcamCluster } from '@/generated/client/worldmonitor/webcam/v1/service_client';
 import type { TrafficAnomaly as ProtoTrafficAnomaly, DdosLocationHit } from '@/generated/client/worldmonitor/infrastructure/v1/service_client';
 import type { AcledConflictEvent } from '@/generated/client/worldmonitor/conflict/v1/service_client';
@@ -253,8 +249,6 @@ export class MapContainer {
   private cachedEarthquakes: Earthquake[] | null = null;
   private cachedConflictEvents: AcledConflictEvent[] | null = null;
   private cachedWeatherAlerts: WeatherAlert[] | null = null;
-  private cachedCanadaRoads: CanadaRoadRecord[] | null = null;
-  private cachedCanadaAlerts: CanadaAlert[] | null = null;
   private cachedOutages: InternetOutage[] | null = null;
   private cachedAisDisruptions: AisDisruptionEvent[] | null = null;
   private cachedUkmtoIncidents: UkmtoMapIncident[] | null = null;
@@ -279,7 +273,6 @@ export class MapContainer {
   private cachedCrossBorderArrivals: CrossBorderData | null = null;
   private cachedDisplacementEvents: DisplacementEventsData | null = null;
   private cachedClimateAnomalies: ClimateAnomaly[] | null = null;
-  private cachedRadiationObservations: RadiationObservation[] | null = null;
   private cachedGpsJamming: GpsJamHex[] | null = null;
   private cachedDiseaseOutbreaks: DiseaseOutbreakItem[] | null = null;
   private cachedCyberThreats: CyberThreat[] | null = null;
@@ -298,7 +291,6 @@ export class MapContainer {
   private cachedHotspotActivity: NewsItem[] | null = null;
   private cachedEscalationFlights: MilitaryFlight[] | null = null;
   private cachedEscalationVessels: MilitaryVessel[] | null = null;
-  private cachedImageryScenes: ImageryScene[] | null = null;
   private cachedWebcams: Array<WebcamEntry | WebcamCluster> | null = null;
   private cachedTrafficAnomalies: ProtoTrafficAnomaly[] | null = null;
   private cachedDdosLocations: DdosLocationHit[] | null = null;
@@ -769,8 +761,6 @@ export class MapContainer {
     if (this.cachedEarthquakes) this.setEarthquakes(this.cachedEarthquakes);
     if (this.cachedConflictEvents) this.setConflictEvents(this.cachedConflictEvents);
     if (this.cachedWeatherAlerts) this.setWeatherAlerts(this.cachedWeatherAlerts);
-    if (this.cachedCanadaRoads) this.setCanadaRoads(this.cachedCanadaRoads);
-    if (this.cachedCanadaAlerts) this.setCanadaAlerts(this.cachedCanadaAlerts);
     if (this.cachedOutages) this.setOutages(this.cachedOutages);
     if (this.cachedAisDisruptions != null && this.cachedAisDensity != null) this.setAisData(this.cachedAisDisruptions, this.cachedAisDensity);
     if (this.cachedUkmtoIncidents != null) this.setUkmtoIncidents(this.cachedUkmtoIncidents);
@@ -794,7 +784,6 @@ export class MapContainer {
     if (this.cachedCrossBorderArrivals) this.setCrossBorderArrivals(this.cachedCrossBorderArrivals);
     if (this.cachedDisplacementEvents) this.setDisplacementEvents(this.cachedDisplacementEvents);
     if (this.cachedClimateAnomalies) this.setClimateAnomalies(this.cachedClimateAnomalies);
-    if (this.cachedRadiationObservations) this.setRadiationObservations(this.cachedRadiationObservations);
     if (this.cachedGpsJamming) {
       void this.setGpsJamming(this.cachedGpsJamming).catch(err => {
         console.warn('[MapContainer] GPS jamming re-init failed:', (err as Error)?.message);
@@ -815,7 +804,6 @@ export class MapContainer {
     if (this.cachedRenewableInstallations) this.setRenewableInstallations(this.cachedRenewableInstallations);
     if (this.cachedHotspotActivity) this.updateHotspotActivity(this.cachedHotspotActivity);
     if (this.cachedEscalationFlights && this.cachedEscalationVessels) this.updateMilitaryForEscalation(this.cachedEscalationFlights, this.cachedEscalationVessels);
-    if (this.cachedImageryScenes) this.setImageryScenes(this.cachedImageryScenes);
     if (this.cachedTrafficAnomalies) this.setTrafficAnomalies(this.cachedTrafficAnomalies);
     if (this.cachedDdosLocations) this.setDdosLocations(this.cachedDdosLocations);
     if (this.cachedChokepointData !== undefined) this.setChokepointData(this.cachedChokepointData);
@@ -1069,11 +1057,6 @@ export class MapContainer {
     }
   }
 
-  public setImageryScenes(scenes: ImageryScene[]): void {
-    this.cachedImageryScenes = scenes;
-    if (this.useDeckGL) { this.deckGLMap?.setImageryScenes(scenes); }
-  }
-
   public setWebcams(markers: Array<WebcamEntry | WebcamCluster>): void {
     this.cachedWebcams = markers;
     if (this.useDeckGL) { this.deckGLMap?.setWebcams(markers); }
@@ -1085,14 +1068,6 @@ export class MapContainer {
     if (this.useDeckGL) { this.deckGLMap?.setWeatherAlerts(alerts); } else { this.svgMap?.setWeatherAlerts(alerts); }
   }
 
-  public setCanadaRoads(records: CanadaRoadRecord[]): void {
-    this.cachedCanadaRoads = records;
-    if (this.useDeckGL) { this.deckGLMap?.setCanadaRoads(records); }
-  }
-  public setCanadaAlerts(alerts: CanadaAlert[]): void {
-    this.cachedCanadaAlerts = alerts;
-    if (this.useDeckGL) { this.deckGLMap?.setCanadaAlerts(alerts); }
-  }
 
   public setOutages(outages: InternetOutage[]): void {
     this.cachedOutages = outages;
@@ -1278,15 +1253,6 @@ export class MapContainer {
     this.cachedClimateAnomalies = anomalies;
     if (this.useDeckGL) {
       this.deckGLMap?.setClimateAnomalies(anomalies);
-    }
-  }
-
-  public setRadiationObservations(observations: RadiationObservation[]): void {
-    this.cachedRadiationObservations = observations;
-    if (this.useDeckGL) {
-      this.deckGLMap?.setRadiationObservations(observations);
-    } else {
-      this.svgMap?.setRadiationObservations(observations);
     }
   }
 
@@ -1682,14 +1648,6 @@ export class MapContainer {
     }
   }
 
-  public triggerIrradiatorClick(id: string): void {
-    if (this.useDeckGL) {
-      this.deckGLMap?.triggerIrradiatorClick(id);
-    } else {
-      this.svgMap?.triggerIrradiatorClick(id);
-    }
-  }
-
   // Pan to a chokepoint and open its waterway popup.
   public openChokepoint(id: string): void {
     ++this.viewportActionToken;
@@ -1991,8 +1949,6 @@ export class MapContainer {
     this.cachedEarthquakes = null;
     this.cachedConflictEvents = null;
     this.cachedWeatherAlerts = null;
-    this.cachedCanadaRoads = null;
-    this.cachedCanadaAlerts = null;
     this.cachedOutages = null;
     this.cachedAisDisruptions = null;
     this.cachedUkmtoIncidents = null;
@@ -2015,7 +1971,6 @@ export class MapContainer {
     this.cachedUcdpEvents = null;
     this.cachedDisplacementFlows = null;
     this.cachedClimateAnomalies = null;
-    this.cachedRadiationObservations = null;
     this.cachedGpsJamming = null;
     this.cachedDiseaseOutbreaks = null;
     this.cachedCyberThreats = null;
@@ -2030,7 +1985,6 @@ export class MapContainer {
     this.cachedHotspotActivity = null;
     this.cachedEscalationFlights = null;
     this.cachedEscalationVessels = null;
-    this.cachedImageryScenes = null;
     this.cachedTrafficAnomalies = null;
     this.cachedDdosLocations = null;
     this.cachedChokepointData = undefined;

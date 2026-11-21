@@ -95,17 +95,8 @@ const SOURCE_METADATA: Record<DataSourceId, { name: string; requiredForRisk: boo
   pizzint: { name: 'PizzINT Monitoring', requiredForRisk: false, panelId: 'intel' },
   outages: { name: 'Internet Outages', requiredForRisk: false, panelId: 'outages' },
   cyber_threats: { name: 'Cyber Threat IOCs', requiredForRisk: false, panelId: 'map' },
-  // This branch widened the weather source to cover ECCC as well as NWS; main's
-  // road entries below are untouched by that.
+  // The weather source covers ECCC as well as NWS.
   weather: { name: 'Weather Alerts', requiredForRisk: false, panelId: 'weather' },
-  // One entry per CANADA_ROAD_SOURCES descriptor. Five sources union onto the
-  // canadaRoads layer, and recording them all as ontario_511 made an Alberta,
-  // Toronto or BC outage read as an Ontario one — or vanish entirely.
-  ontario_511: { name: 'Ontario Roads (511)', requiredForRisk: false, panelId: 'map' },
-  alberta_511: { name: 'Alberta Roads (511)', requiredForRisk: false, panelId: 'map' },
-  manitoba_511: { name: 'Manitoba Roads (511)', requiredForRisk: false, panelId: 'map' },
-  toronto_roads: { name: 'Toronto Road Restrictions', requiredForRisk: false, panelId: 'map' },
-  bc_open511: { name: 'BC Roads (Open511)', requiredForRisk: false, panelId: 'map' },
   economic: { name: 'Economic Data (FRED)', requiredForRisk: false, panelId: 'economic' },
   oil: { name: 'Oil Analytics (EIA)', requiredForRisk: false, panelId: 'economic' },
   spending: { name: 'Gov Spending', requiredForRisk: false, panelId: 'economic' },
@@ -591,11 +582,6 @@ const INTELLIGENCE_GAP_MESSAGES: Record<DataSourceId, string> = {
   outages: 'Internet disruptions may be unreported—outage monitoring offline',
   cyber_threats: 'Cyber IOC map points unavailable—malicious infrastructure visibility reduced',
   weather: 'Official weather warnings may be missed—NWS, ECCC, or WMO SWIC alerts unavailable',
-  ontario_511: 'Ontario highway incidents may be missed—511 feed unavailable',
-  alberta_511: 'Alberta highway incidents may be missed—511 feed unavailable',
-  manitoba_511: 'Manitoba highway incidents may be missed—511 feed unavailable',
-  toronto_roads: 'Toronto road restrictions may be missed—City of Toronto feed unavailable',
-  bc_open511: 'BC highway incidents may be missed—Open511 feed unavailable',
   economic: 'Economic indicators stale—Fed/Treasury data not updating',
   oil: 'Oil market analytics unavailable—EIA data not updating',
   spending: 'Government spending data unavailable',

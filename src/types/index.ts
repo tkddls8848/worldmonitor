@@ -13,11 +13,6 @@ export type DataSourceId =
   | 'outages'
   | 'cyber_threats'
   | 'weather'
-  | 'ontario_511'
-  | 'alberta_511'
-  | 'manitoba_511'
-  | 'toronto_roads'
-  | 'bc_open511'
   | 'economic'
   | 'oil'
   | 'spending'
@@ -709,18 +704,12 @@ export interface MapLayers {
   hotspots: boolean;
   ais: boolean;
   nuclear: boolean;
-  irradiators: boolean;
-  radiationWatch?: boolean;
   sanctions: boolean;
   /** Sentinel-5P NO2 activity direction per country and industrial cluster. */
   no2Activity?: boolean;
   /** ICESat-2 water-surface level status of strategic reservoirs and lakes. */
   reservoirLevels?: boolean;
   weather: boolean;
-  /** Official Canada road events and conditions from Ontario, Alberta, Toronto, and British Columbia. */
-  canadaRoads: boolean;
-  /** Alberta, B.C., and Saskatchewan province-owned emergency alerts (#6610, #6659). */
-  canadaAlerts: boolean;
   economic: boolean;
   waterways: boolean;
   outages: boolean;
@@ -731,7 +720,6 @@ export interface MapLayers {
   military: boolean;
   aircraftEmergencies?: boolean;
   natural: boolean;
-  spaceports: boolean;
   minerals: boolean;
   fires: boolean;
   // Data source layers
@@ -763,15 +751,10 @@ export interface MapLayers {
   iranAttacks: boolean;
   // GPS/GNSS interference layer
   gpsJamming: boolean;
-  // Satellite orbital tracking + imagery footprints
-  satellites: boolean;
-
   // CII choropleth layer
   ciiChoropleth: boolean;
   // Resilience choropleth layer
   resilienceScore: boolean;
-  // Overlay layers
-  dayNight: boolean;
   // Commodity variant layers
   miningSites: boolean;
   processingPlants: boolean;

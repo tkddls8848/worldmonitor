@@ -689,9 +689,7 @@
         "displacement": "Toggle displacement flows",
         "climate": "Toggle climate anomalies",
         "outages": "Toggle internet outages",
-        "tradeRoutes": "Toggle trade routes",
-        "canadaRoads": "Toggle Canada roads overlay",
-        "canadaAlerts": "Toggle Canada provincial emergency alerts overlay"
+        "tradeRoutes": "Toggle trade routes"
       },
       "view": {
         "dark": "Switch to dark mode",
@@ -741,7 +739,6 @@
         "earthquake": "Earthquake",
         "outage": "Outage",
         "nuclear": "Nuclear Site",
-        "irradiator": "Irradiator",
         "techcompany": "Tech Company",
         "ailab": "AI Lab",
         "startup": "Startup",
@@ -1538,11 +1535,6 @@
         "conflictZones": "Conflict Zones",
         "militaryBases": "Military Bases",
         "nuclearSites": "Nuclear Sites",
-        "gammaIrradiators": "Gamma Irradiators",
-        "radiationSpike": "Radiation spike",
-        "radiationElevated": "Elevated radiation",
-        "spaceports": "Spaceports",
-        "satellites": "Orbital Surveillance",
         "pipelines": "Pipelines",
         "militaryActivity": "Military Activity",
         "shipTraffic": "Ship Traffic",
@@ -1564,14 +1556,11 @@
         "iranAttacks": "Middle East Strikes",
         "gpsJamming": "Navigation Interference",
         "ciiChoropleth": "Country Instability",
-        "dayNight": "Day/Night",
         "positiveEvents": "Positive Events",
         "kindness": "Acts of Kindness",
         "happiness": "World Happiness",
         "speciesRecovery": "Species Recovery",
         "renewableInstallations": "Clean Energy",
-        "canadaRoads": "Canada Roads",
-        "canadaAlerts": "Canada Alerts",
         "notamAirspace": "NOTAM Airspace Restrictions",
         "no2Activity": "Industrial Activity",
         "reservoirLevels": "Water Levels",
@@ -1665,7 +1654,6 @@
           "geoProtests": "Civil unrest, demonstrations (time-filtered)",
           "militaryBases": "US/NATO, China, Russia military installations (150+)",
           "militaryNuclear": "Power plants, enrichment, weapons facilities",
-          "militaryIrradiators": "Industrial gamma irradiator facilities",
           "militaryActivity": "Live military aircraft and vessel tracking",
           "infraCablesFull": "Major undersea fiber optic cables (20 backbone routes)",
           "infraPipelinesFull": "Oil/gas pipelines (Nord Stream, TAPI, etc.)",
@@ -1678,7 +1666,6 @@
           "waterwaysLabels": "Strategic chokepoint labels",
           "geoUcdpEvents": "Uppsala Conflict Data Program armed conflict events",
           "geoDisplacement": "Refugee and displacement flow patterns",
-          "militarySpaceports": "Rocket launch sites and space facilities",
           "infraCyberThreats": "Cyber attacks and security events",
           "mineralsFull": "Strategic mineral deposits and mining sites",
           "techCyberThreats": "Cyber attacks and security events",
@@ -1686,11 +1673,8 @@
           "techFires": "Active wildfires near tech infrastructure",
           "financeGulfInvestments": "Gulf Cooperation Council sovereign wealth fund investments and foreign direct investment",
           "tradeRoutes": "Major global shipping lanes connecting ports through strategic chokepoints",
-          "dayNight": "Real-time solar terminator showing day and night zones",
           "geoBoundaries": "Demilitarized zones, ceasefire lines, and disputed boundaries",
           "ciiChoropleth": "Country Instability Index heat-map — colors countries by score (green=stable, red=critical)",
-          "canadaRoads": "Official road incidents, alerts, conditions, closures, construction, and hazards across supported Canadian jurisdictions",
-          "canadaAlerts": "Provincial public-safety alerts from Alberta Emergency Alert, B.C. Evacuation Orders and Alerts, and SaskAlert",
           "notamAirspace": "Temporary flight restrictions and restricted, danger and prohibited airspace from FAA NOTAMs, in effect now or starting within 24 hours",
           "no2Activity": "Sentinel-5P NO2 activity direction for 167 countries and 32 industrial clusters: the latest 56-day window against the same dates in prior years, after a 10% dead band. Contains modified Copernicus Sentinel data.",
           "reservoirLevels": "Water-surface level of strategic reservoirs and lakes from NASA ICESat-2 satellite lidar, against the usual level for the month. NASA publishes each pass about two months after it is measured."
@@ -3578,10 +3562,6 @@
       },
       "closed": "CLOSED"
     },
-    "irradiator": {
-      "subtitle": "Industrial Gamma Irradiator Facility",
-      "description": "Industrial irradiation facility using Cobalt-60 or Cesium-137 sources for medical device sterilization, food preservation, or material processing. Source: IAEA DIIF Database."
-    },
     "pipeline": {
       "title": "PIPELINE",
       "types": {
@@ -3646,7 +3626,6 @@
     "lastSeen": "LAST SEEN",
     "open": "OPEN",
     "tradingHours": "TRADING HOURS",
-    "gamma": "GAMMA",
     "city": "CITY",
     "length": "LENGTH",
     "operator": "OPERATOR",
@@ -3931,15 +3910,6 @@
       },
       "worldRank": "WORLD RANK"
     },
-    "spaceport": {
-      "status": {
-        "active": "ACTIVE",
-        "construction": "CONSTRUCTION",
-        "inactive": "INACTIVE"
-      },
-      "launchActivity": "LAUNCH ACTIVITY",
-      "description": "Strategic space launch facility. Launch cadence and orbit access capabilities are key geopolitical indicators."
-    },
     "mineral": {
       "status": {
         "producing": "PRODUCING",
@@ -4180,17 +4150,6 @@
       "coverageUnavailable": "Coverage unavailable",
       "targets": "Targets",
       "listSeparator": ", ",
-      "radiation": {
-        "confirmed": "Confirmed",
-        "conflictingSources": "Conflicting sources",
-        "cpmDerived": "CPM-derived component",
-        "reading": "Reading",
-        "baseline": "Baseline",
-        "delta": "Delta",
-        "confidence": "Confidence",
-        "sources": "Sources",
-        "sourceCount": "Source count"
-      },
       "history": {
         "conflictSince": "Conflict since",
         "peaceAgreements": "Peace agreements",
@@ -5400,39 +5359,6 @@
         "related": {
           "0": "Natural Events layer",
           "1": "Weather alert popups",
-          "2": "Data freshness status"
-        }
-      },
-      "canadaRoads": {
-        "category": "Transport",
-        "purpose": "Shows official road incidents, alerts, conditions, closures, construction, and hazards across supported Canadian jurisdictions.",
-        "source": "Ontario 511, Alberta 511, and Manitoba 511 provincial feeds, City of Toronto Road Restrictions, and DriveBC Open511, seeded through WorldMonitor.",
-        "freshness": "Ontario, Alberta, and Manitoba 511 are seeded every 15 minutes and monitored against a 45-minute freshness budget. Toronto restrictions are seeded every 2 hours; DriveBC Open511 every 30 minutes.",
-        "confidence": "Authoritative for the supported provincial and municipal publishers, subject to upstream publication timing and mapped geometry.",
-        "limitations": {
-          "0": "Alberta 511 roadconditions is not ingested (the vendor endpoint 404s); live Alberta paint is events and alerts only.",
-          "1": "Provincial alerts without coordinates do not appear as map dots.",
-          "2": "Road-condition polylines may simplify complex highway geometry."
-        },
-        "related": {
-          "0": "Weather Alerts",
-          "1": "Data freshness status"
-        }
-      },
-      "canadaAlerts": {
-        "category": "Emergency Alerts",
-        "purpose": "Shows active Alberta, British Columbia, and Saskatchewan public-safety warnings as map dots alongside US NWS weather.",
-        "source": "Alberta Emergency Alert Atom, the OGL-BC Evacuation Orders and Alerts GeoJSON layer, and the SaskAlert public JSON feed plus same-host CAP 1.2 details are normalized into one canadaAlerts union. CAP/GeoRSS polygons, B.C. evacuation polygons, and SaskAlert CAP polygons become centroids; records without geometry use the source province centroid.",
-        "freshness": "Provincial sources are seeded every 15 minutes and the union is monitored against a 45-minute freshness budget. An empty feed (no active alerts) is a valid zero-record success.",
-        "confidence": "Authoritative for alerts published by Alberta Emergency Alert, B.C. Evacuation Orders and Alerts, and SaskAlert, subject to upstream publication timing and mapped alert geometry.",
-        "limitations": {
-          "0": "Coverage is limited to Alberta, British Columbia, and Saskatchewan. Ontario has no eligible province-operated machine feed outside excluded NAAD.",
-          "1": "Does not replace US NWS weather alerts or Ontario/Toronto road layers.",
-          "2": "Entries without a mappable severity (Alberta CAP/colour semantics, B.C. evacuation status, or SaskAlert CAP severity) are dropped rather than invented. SaskAlert summary colour/level is not treated as CAP severity."
-        },
-        "related": {
-          "0": "Weather Alerts",
-          "1": "Natural Events layer",
           "2": "Data freshness status"
         }
       },

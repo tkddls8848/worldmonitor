@@ -572,9 +572,7 @@
         "displacement": "切换流离失所流向",
         "climate": "切换气候异常",
         "outages": "切换互联网中断",
-        "tradeRoutes": "切换贸易路线",
-        "canadaRoads": "切换加拿大道路覆盖层",
-        "canadaAlerts": "切换加拿大省级紧急警报覆盖层"
+        "tradeRoutes": "切换贸易路线"
       },
       "view": {
         "dark": "切换到暗色模式",
@@ -622,7 +620,6 @@
         "earthquake": "地震",
         "outage": "网络中断",
         "nuclear": "核设施",
-        "irradiator": "辐照器",
         "techcompany": "科技公司",
         "ailab": "AI实验室",
         "startup": "创业公司",
@@ -1274,9 +1271,6 @@
         "conflictZones": "冲突区",
         "militaryBases": "军事基地",
         "nuclearSites": "核设施",
-        "gammaIrradiators": "伽马辐照器",
-        "spaceports": "航天发射场",
-        "satellites": "轨道监视",
         "pipelines": "管道",
         "militaryActivity": "军事活动",
         "shipTraffic": "船舶交通",
@@ -1298,16 +1292,11 @@
         "iranAttacks": "中东袭击",
         "gpsJamming": "导航干扰",
         "ciiChoropleth": "国家不稳定性",
-        "dayNight": "昼/夜",
         "positiveEvents": "正面事件",
         "kindness": "善举",
         "happiness": "世界幸福度",
         "speciesRecovery": "物种恢复",
         "renewableInstallations": "清洁能源",
-        "radiationSpike": "辐射峰值",
-        "radiationElevated": "辐射升高",
-        "canadaRoads": "Canada 道路",
-        "canadaAlerts": "加拿大警报",
         "notamAirspace": "NOTAM 空域限制",
         "no2Activity": "工业活动",
         "reservoirLevels": "水位"
@@ -1400,7 +1389,6 @@
           "geoProtests": "社会动荡、示威活动（按时间筛选）",
           "militaryBases": "美国/NATO、中国、俄罗斯军事设施（150+）",
           "militaryNuclear": "核电站、浓缩设施、武器设施",
-          "militaryIrradiators": "工业伽马辐照器设施",
           "militaryActivity": "实时军用飞机和舰艇追踪",
           "infraCablesFull": "主要海底光纤电缆（20条骨干线路）",
           "infraPipelinesFull": "油气管道（北溪、TAPI等）",
@@ -1413,7 +1401,6 @@
           "waterwaysLabels": "战略咽喉要道标签",
           "geoUcdpEvents": "乌普萨拉冲突数据项目武装冲突事件",
           "geoDisplacement": "难民和流离失所人口流动模式",
-          "militarySpaceports": "火箭发射场和航天设施",
           "infraCyberThreats": "网络攻击和安全事件",
           "mineralsFull": "战略矿产资源矿床和采矿点",
           "techCyberThreats": "网络攻击和安全事件",
@@ -1421,11 +1408,8 @@
           "techFires": "科技基础设施附近的活跃野火",
           "financeGulfInvestments": "海湾合作委员会主权财富基金投资和外国直接投资",
           "tradeRoutes": "连接港口并经过战略咽喉要道的全球主要航运通道",
-          "dayNight": "实时太阳终结线显示昼夜区域",
           "geoBoundaries": "非军事区、停火线和争议边界",
           "ciiChoropleth": "国家不稳定指数热力图 — 按评分为各国着色（绿色=稳定，红色=严重）",
-          "canadaRoads": "加拿大（Canada）受支持辖区的官方道路事件、警报、路况、封闭、施工和危险信息",
-          "canadaAlerts": "来自 Alberta Emergency Alert、B.C. 疏散令与警报及 SaskAlert 的省级公共安全警报",
           "notamAirspace": "FAA NOTAM 中的临时飞行限制和受限、危险及禁飞空域，当前生效或将在 24 小时内生效",
           "no2Activity": "Sentinel-5P NO2 活动方向，覆盖 167 个国家和 32 个工业集群：最新 56 天窗口与往年同期日期对比，经 10% 死区处理。包含经修改的 Copernicus Sentinel 数据。",
           "reservoirLevels": "来自 NASA ICESat-2 卫星激光雷达的战略水库和湖泊水面水位，与该月的常年水位对比。NASA 在每次过境测量后约两个月发布数据。"
@@ -3359,10 +3343,6 @@
       },
       "closed": "已休市"
     },
-    "irradiator": {
-      "subtitle": "工业伽马辐照设施",
-      "description": "使用钴-60或铯-137放射源的工业辐照设施，用于医疗器械灭菌、食品保鲜或材料加工。来源：IAEA DIIF数据库。"
-    },
     "pipeline": {
       "title": "管道",
       "types": {
@@ -3427,7 +3407,6 @@
     "lastSeen": "最后发现",
     "open": "开放",
     "tradingHours": "交易时间",
-    "gamma": "伽马",
     "city": "城市",
     "length": "长度",
     "operator": "运营商",
@@ -3707,15 +3686,6 @@
       },
       "worldRank": "世界排名"
     },
-    "spaceport": {
-      "status": {
-        "active": "活跃",
-        "construction": "建设中",
-        "inactive": "停用"
-      },
-      "launchActivity": "发射活动",
-      "description": "战略航天发射设施。发射频率和轨道进入能力是关键的地缘政治指标。"
-    },
     "mineral": {
       "status": {
         "producing": "生产中",
@@ -3961,17 +3931,6 @@
       "coverageUnavailable": "无覆盖数据",
       "targets": "目标",
       "listSeparator": "、",
-      "radiation": {
-        "confirmed": "已确认",
-        "conflictingSources": "来源相互矛盾",
-        "cpmDerived": "由 CPM 换算的分量",
-        "reading": "读数",
-        "baseline": "基线",
-        "delta": "差值",
-        "confidence": "置信度",
-        "sources": "来源",
-        "sourceCount": "来源数量"
-      },
       "history": {
         "conflictSince": "冲突始于",
         "peaceAgreements": "和平协议",
@@ -4811,39 +4770,6 @@
         "related": {
           "0": "自然事件图层",
           "1": "天气预警弹窗",
-          "2": "数据新鲜度状态"
-        }
-      },
-      "canadaRoads": {
-        "category": "交通",
-        "purpose": "显示受支持的加拿大辖区的官方道路事件、警报、路况、封闭、施工和危险。",
-        "source": "安大略511、艾伯塔511和曼尼托巴511的省级信息源、多伦多市道路限制，以及DriveBC Open511。经由WorldMonitor写入种子。",
-        "freshness": "安大略、艾伯塔和曼尼托巴511每15分钟写入一次种子，并对照45分钟的新鲜度时限进行监测。多伦多限制每2小时写入一次种子。DriveBC Open511每30分钟写入一次种子。",
-        "confidence": "对受支持的省级和市级发布方具有权威性，取决于上游发布时间和已映射的几何。",
-        "limitations": {
-          "0": "未接入艾伯塔511的roadconditions（提供方端点返回404）。艾伯塔的实时绘制只有事件和警报。",
-          "1": "没有坐标的省级警报不会显示为地图点。",
-          "2": "路况折线可能简化复杂的公路几何。"
-        },
-        "related": {
-          "0": "天气预警",
-          "1": "数据新鲜度状态"
-        }
-      },
-      "canadaAlerts": {
-        "category": "紧急警报",
-        "purpose": "把艾伯塔、不列颠哥伦比亚和萨斯喀彻温仍然有效的公共安全警报显示为地图点，并与美国NWS天气并列。",
-        "source": "艾伯塔紧急警报的Atom、OGL-BC疏散令和警报GeoJSON图层、SaskAlert公开JSON源，以及同一主机上的CAP 1.2详情，归并为一个 canadaAlerts 并集。CAP/GeoRSS多边形、不列颠哥伦比亚疏散多边形和SaskAlert的CAP多边形变为质心。没有几何的记录使用来源省份的质心。",
-        "freshness": "省级来源每15分钟写入一次种子，并集对照45分钟的新鲜度时限进行监测。空信息流（没有有效警报）是零条记录的有效成功。",
-        "confidence": "对艾伯塔紧急警报、不列颠哥伦比亚疏散令和警报、SaskAlert发布的警报具有权威性，取决于上游发布时间和已映射的警报几何。",
-        "limitations": {
-          "0": "覆盖仅限艾伯塔、不列颠哥伦比亚和萨斯喀彻温。安大略除已排除的NAAD外，没有由省运营且符合条件的机器可读源。",
-          "1": "不能替代美国NWS天气预警，也不能替代安大略和多伦多的道路图层。",
-          "2": "没有可映射严重程度的条目（艾伯塔CAP与颜色语义、不列颠哥伦比亚疏散状态，或SaskAlert的CAP严重程度）会被丢弃，而不会被编造。SaskAlert摘要中的颜色或级别不视为CAP严重程度。"
-        },
-        "related": {
-          "0": "天气预警",
-          "1": "自然事件图层",
           "2": "数据新鲜度状态"
         }
       },

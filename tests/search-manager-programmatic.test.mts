@@ -241,7 +241,7 @@ function createHarness(variant: Variant, runtime: Runtime): new (ctx: any, callb
     {
       military: ['bases', 'flights', 'military'],
       finance: ['stockExchanges', 'financialCenters', 'centralBanks', 'commodityHubs', 'economic'],
-      infra: ['cables', 'pipelines', 'datacenters', 'spaceports', 'minerals'],
+      infra: ['cables', 'pipelines', 'datacenters', 'minerals'],
       intel: ['conflicts', 'hotspots', 'protests', 'ucdpEvents', 'displacement'],
       minimal: ['conflicts', 'hotspots'],
     },
@@ -282,7 +282,7 @@ function createHarness(variant: Variant, runtime: Runtime): new (ctx: any, callb
     {
       military: ['bases', 'nuclear', 'flights', 'military', 'waterways'],
       finance: ['stockExchanges', 'financialCenters', 'centralBanks', 'commodityHubs', 'economic', 'tradeRoutes'],
-      infra: ['cables', 'pipelines', 'datacenters', 'spaceports', 'minerals'],
+      infra: ['cables', 'pipelines', 'datacenters', 'minerals'],
       intel: ['conflicts', 'hotspots', 'protests', 'ucdpEvents', 'displacement'],
       minimal: ['conflicts', 'hotspots'],
     },

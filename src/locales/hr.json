@@ -645,9 +645,7 @@
         "displacement": "Uključi/isključi tokove raseljenih osoba",
         "climate": "Uključi/isključi klimatske anomalije",
         "outages": "Uključi/isključi ispade interneta",
-        "tradeRoutes": "Uključi/isključi trgovačke rute",
-        "canadaRoads": "Uključi/isključi sloj cesta Kanade",
-        "canadaAlerts": "Uključi/isključi sloj pokrajinskih hitnih upozorenja Kanade"
+        "tradeRoutes": "Uključi/isključi trgovačke rute"
       },
       "view": {
         "dark": "Prebedi na tamni način",
@@ -697,7 +695,6 @@
         "earthquake": "Potres",
         "outage": "Prekid",
         "nuclear": "Nuklearna instalacija",
-        "irradiator": "Zračilac",
         "techcompany": "Tehnološka tvrtka",
         "ailab": "AI laboratorij",
         "startup": "Startup",
@@ -1434,11 +1431,6 @@
         "conflictZones": "Zone Konflikta",
         "militaryBases": "Vojne Baze",
         "nuclearSites": "Nuklearna Mjesta",
-        "gammaIrradiators": "Gamma Zračitelji",
-        "radiationSpike": "Skok radijacije",
-        "radiationElevated": "Povećana radijacija",
-        "spaceports": "Svemirske Luke",
-        "satellites": "Orbitalna Nadzorna Oprema",
         "pipelines": "Cjevovodi",
         "militaryActivity": "Vojna Aktivnost",
         "shipTraffic": "Brodski Promet",
@@ -1460,14 +1452,11 @@
         "iranAttacks": "Napadi na Bliskom istoku",
         "gpsJamming": "Smetnje navigaciji",
         "ciiChoropleth": "Nestabilnost države",
-        "dayNight": "Dan/Noć",
         "positiveEvents": "Pozitivni Događaji",
         "kindness": "Čini Ljubaznosti",
         "happiness": "Svjetsko Blagostanje",
         "speciesRecovery": "Oporavak vrsta",
         "renewableInstallations": "Čista energija",
-        "canadaRoads": "Ceste Kanada",
-        "canadaAlerts": "Upozorenja Kanada",
         "notamAirspace": "NOTAM ograničenja zračnog prostora",
         "no2Activity": "Industrijska aktivnost",
         "reservoirLevels": "Vodostaji"
@@ -1560,7 +1549,6 @@
           "geoProtests": "Građanski nemiri, demonstracije (vremenski filtrirano)",
           "militaryBases": "Vojne instalacije SAD-a/NATO-a, Kine, Rusije (150+)",
           "militaryNuclear": "Nuklearne elektrane, obogaćivanje, skladišta oružja",
-          "militaryIrradiators": "Industrijski gamma iradijatori",
           "militaryActivity": "Praćenje vojnih zrakoplova i brodova u stvarnom vremenu",
           "infraCablesFull": "Glavne podvodne svjetlovodne kabeli (20 okosnih ruta)",
           "infraPipelinesFull": "Naftni/plinski plinovodi (Nord Stream, TAPI, itd.)",
@@ -1573,7 +1561,6 @@
           "waterwaysLabels": "Oznake strateških uskih grla",
           "geoUcdpEvents": "Uppsala Conflict Data Program događaji oružanih sukoba",
           "geoDisplacement": "Tokovi izbjeglica i raseljenih osoba",
-          "militarySpaceports": "Centri za lansiranje raketa i svemirskih postrojenja",
           "infraCyberThreats": "Cyber napadi i sigurnosni incidenti",
           "mineralsFull": "Strateški depoziti mineralnih sirovina i rudnici",
           "techCyberThreats": "Cyber napadi i sigurnosni incidenti",
@@ -1581,11 +1568,8 @@
           "techFires": "Aktivne šumske požare blizu tehnološke infrastrukture",
           "financeGulfInvestments": "Ulaganja fondova bogatstva suverenih država Vijeća za saradnju Zaljeva i izravne strane investicije",
           "tradeRoutes": "Glavne globalne brodske rute koje povezuju luke kroz strateške uske grle",
-          "dayNight": "Praćenje solarnog terminatora u stvarnom vremenu - prikaz dnevne i noćne zone",
           "geoBoundaries": "Demilitarizirane zone, linije primirja i sporne granice",
           "ciiChoropleth": "Toplinska mapa indeksa nestabilnosti države — boje zemlje prema bodovima (zelena=stabilna, crvena=kritična)",
-          "canadaRoads": "Službeni prometni incidenti, upozorenja, uvjeti, zatvaranja, radovi i opasnosti iz podržanih kanadskih jurisdikcija.",
-          "canadaAlerts": "Pokrajinska upozorenja za javnu sigurnost iz Alberta Emergency Alert, B.C. Evacuation Orders and Alerts i SaskAlert.",
           "notamAirspace": "Privremena ograničenja letenja i ograničeni, opasni i zabranjeni zračni prostor prema FAA NOTAM-ima, koji su trenutno na snazi ili počinju u roku od 24 sata",
           "no2Activity": "Smjer NO2 aktivnosti iz Sentinel-5P za 167 zemalja i 32 industrijska klastera: najnoviji 56-dnevni prozor u odnosu na iste datume prethodnih godina, nakon mrtve zone od 10 %. Sadrži izmijenjene podatke Copernicus Sentinel.",
           "reservoirLevels": "Razina vodene površine strateških akumulacija i jezera iz satelitskog lidara NASA ICESat-2, u usporedbi s uobičajenom razinom za mjesec. NASA objavljuje svaki prelet otprilike dva mjeseca nakon mjerenja."
@@ -3476,10 +3460,6 @@
       },
       "closed": "ZATVORENO"
     },
-    "irradiator": {
-      "subtitle": "Industrijski postrojenja gamma-zraču",
-      "description": "Industrijska postrojenja za ozračivanje korištenjem izvora Kobalta-60 ili Cezija-137 za sterilizaciju medicinskih uređaja, konzerviranje hrane ili obrada materijala. Izvor: IAEA DIIF baza podataka."
-    },
     "pipeline": {
       "title": "CJEVOVOD",
       "types": {
@@ -3544,7 +3524,6 @@
     "lastSeen": "ZADNJI PUT VIĐENO",
     "open": "OTVORENO",
     "tradingHours": "VRIJEME TRGOVANJA",
-    "gamma": "GAMMA",
     "city": "GRAD",
     "length": "DULJINA",
     "operator": "OPERATER",
@@ -3824,15 +3803,6 @@
       },
       "worldRank": "SVJETSKI RANG"
     },
-    "spaceport": {
-      "status": {
-        "active": "AKTIVNA",
-        "construction": "U GRADNJI",
-        "inactive": "NEAKTIVNA"
-      },
-      "launchActivity": "AKTIVNOST LANSIRANJA",
-      "description": "Strateški objekat za lansiranje svemirskih letjelica. Kadenca lansiranja i mogućnosti pristupa orbiti ključni su geopolitički pokazatelji."
-    },
     "mineral": {
       "status": {
         "producing": "PROIZVODNJA",
@@ -4078,17 +4048,6 @@
       "coverageUnavailable": "Pokrivenost nije dostupna",
       "targets": "Mete",
       "listSeparator": ", ",
-      "radiation": {
-        "confirmed": "Potvrđeno",
-        "conflictingSources": "Proturječni izvori",
-        "cpmDerived": "Komponenta izvedena iz CPM-a",
-        "reading": "Očitanje",
-        "baseline": "Osnovna razina",
-        "delta": "Odstupanje",
-        "confidence": "Pouzdanost",
-        "sources": "Izvori",
-        "sourceCount": "Broj izvora"
-      },
       "history": {
         "conflictSince": "Sukob od",
         "peaceAgreements": "Mirovni sporazumi",
@@ -4865,39 +4824,6 @@
         "related": {
           "0": "sloj Prirodni Događaji",
           "1": "Skočni prozori vremenskih upozorenja",
-          "2": "Status ažurnosti podataka"
-        }
-      },
-      "canadaRoads": {
-        "category": "Promet",
-        "purpose": "Prikazuje službene cestovne događaje, upozorenja, stanja, zatvaranja, radove i opasnosti u podržanim kanadskim nadležnostima.",
-        "source": "Pokrajinski kanali Ontario 511, Alberta 511 i Manitoba 511, City of Toronto Road Restrictions i DriveBC Open511, punjeni preko WorldMonitor.",
-        "freshness": "Ontario 511, Alberta 511 i Manitoba 511 pune se svakih 15 minuta i prate se prema proračunu ažurnosti od 45 minuta. Ograničenja u Torontu pune se svaka 2 sata. DriveBC Open511 puni se svakih 30 minuta.",
-        "confidence": "Mjerodavno za podržane pokrajinske i gradske izdavače, uz ogradu vremena objave na izvoru i mapirane geometrije.",
-        "limitations": {
-          "0": "Izvor roadconditions iz Alberta 511 ne preuzima se jer krajnja točka dobavljača vraća 404. Živo crtanje Alberte obuhvaća samo događaje i upozorenja.",
-          "1": "Pokrajinska upozorenja bez koordinata ne pojavljuju se kao točke na karti.",
-          "2": "Polilinije stanja cesta mogu pojednostavniti složenu geometriju autocesta."
-        },
-        "related": {
-          "0": "Vremenska upozorenja",
-          "1": "Status ažurnosti podataka"
-        }
-      },
-      "canadaAlerts": {
-        "category": "Hitna upozorenja",
-        "purpose": "Prikazuje aktivna upozorenja javne sigurnosti iz Alberte, Britanske Kolumbije i Saskatchewana kao točke na karti, uz vrijeme NWS za SAD.",
-        "source": "Atom Alberta Emergency Alert, sloj GeoJSON OGL-BC Evacuation Orders and Alerts i javni kanal JSON SaskAlert zajedno s pojedinostima CAP 1.2 s istog poslužitelja normaliziraju se u jednu uniju canadaAlerts. Poligoni CAP/GeoRSS, poligoni evakuacije Britanske Kolumbije i poligoni CAP SaskAlert postaju centroidi. Zapisi bez geometrije koriste centroid izvorne pokrajine.",
-        "freshness": "Pokrajinski izvori pune se svakih 15 minuta, a unija se prati prema proračunu ažurnosti od 45 minuta. Prazan kanal, dakle nema aktivnih upozorenja, valjan je uspjeh s nula zapisa.",
-        "confidence": "Mjerodavno za upozorenja koja objavljuju Alberta Emergency Alert, B.C. Evacuation Orders and Alerts i SaskAlert, uz ogradu vremena objave na izvoru i mapirane geometrije upozorenja.",
-        "limitations": {
-          "0": "Pokrivenost je ograničena na Albertu, Britansku Kolumbiju i Saskatchewan. Ontario nema prihvatljiv strojni kanal koji vodi pokrajina izvan isključenog NAAD.",
-          "1": "Ne zamjenjuje vremenska upozorenja NWS za SAD ni cestovne slojeve Ontarija i Toronta.",
-          "2": "Unosi bez ozbiljnosti koja se može mapirati odbacuju se, a ne izmišljaju. Riječ je o semantici CAP i boje Alberte, statusu evakuacije Britanske Kolumbije ili ozbiljnosti CAP SaskAlert. Boja ili razina u sažetku SaskAlert ne tretira se kao ozbiljnost CAP."
-        },
-        "related": {
-          "0": "Vremenska upozorenja",
-          "1": "sloj Prirodni Događaji",
           "2": "Status ažurnosti podataka"
         }
       },

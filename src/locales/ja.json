@@ -572,9 +572,7 @@
         "displacement": "避難フローの切り替え",
         "climate": "気候異常の切り替え",
         "outages": "インターネット障害の切り替え",
-        "tradeRoutes": "貿易ルートの切り替え",
-        "canadaRoads": "カナダ道路オーバーレイを切り替え",
-        "canadaAlerts": "カナダ州緊急警報オーバーレイを切り替え"
+        "tradeRoutes": "貿易ルートの切り替え"
       },
       "view": {
         "dark": "ダークモードに切り替え",
@@ -622,7 +620,6 @@
         "earthquake": "地震",
         "outage": "障害",
         "nuclear": "核施設",
-        "irradiator": "照射施設",
         "techcompany": "テック企業",
         "ailab": "AIラボ",
         "startup": "スタートアップ",
@@ -1274,9 +1271,6 @@
         "conflictZones": "紛争地帯",
         "militaryBases": "軍事基地",
         "nuclearSites": "核施設",
-        "gammaIrradiators": "ガンマ線照射施設",
-        "spaceports": "宇宙港",
-        "satellites": "軌道監視",
         "pipelines": "パイプライン",
         "militaryActivity": "軍事活動",
         "shipTraffic": "船舶交通",
@@ -1298,16 +1292,11 @@
         "iranAttacks": "中東での攻撃",
         "gpsJamming": "航法干渉",
         "ciiChoropleth": "国不安定性指数",
-        "dayNight": "昼/夜",
         "positiveEvents": "ポジティブな出来事",
         "kindness": "善意の行動",
         "happiness": "世界幸福度",
         "speciesRecovery": "種の回復",
         "renewableInstallations": "クリーンエネルギー",
-        "radiationSpike": "放射線スパイク",
-        "radiationElevated": "放射線上昇",
-        "canadaRoads": "カナダ道路情報",
-        "canadaAlerts": "カナダ警報",
         "notamAirspace": "NOTAM飛行制限空域",
         "no2Activity": "産業活動",
         "reservoirLevels": "水位"
@@ -1400,7 +1389,6 @@
           "geoProtests": "市民の騒乱、デモ（時間フィルター付き）",
           "militaryBases": "米国/NATO、中国、ロシアの軍事施設（150+）",
           "militaryNuclear": "発電所、濃縮施設、兵器施設",
-          "militaryIrradiators": "産業用ガンマ線照射施設",
           "militaryActivity": "軍用機・艦艇のリアルタイム追跡",
           "infraCablesFull": "主要海底光ファイバーケーブル（基幹20ルート）",
           "infraPipelinesFull": "石油/ガスパイプライン（Nord Stream、TAPI等）",
@@ -1413,7 +1401,6 @@
           "waterwaysLabels": "戦略的チョークポイントのラベル",
           "geoUcdpEvents": "ウプサラ紛争データプログラムの武力紛争イベント",
           "geoDisplacement": "難民・避難民の移動パターン",
-          "militarySpaceports": "ロケット発射場と宇宙関連施設",
           "infraCyberThreats": "サイバー攻撃およびセキュリティイベント",
           "mineralsFull": "戦略的鉱物資源の鉱床と採掘拠点",
           "techCyberThreats": "サイバー攻撃およびセキュリティイベント",
@@ -1421,11 +1408,8 @@
           "techFires": "テックインフラ付近の活動中の山火事",
           "financeGulfInvestments": "湾岸協力会議ソブリンウェルスファンド投資および直接投資",
           "tradeRoutes": "戦略的なチョークポイントを通じて港を結ぶ主要な世界の航路",
-          "dayNight": "リアルタイムの太陽ターミネーターで昼夜のゾーンを表示",
           "geoBoundaries": "非武装地帯、停戦ライン、係争境界線",
           "ciiChoropleth": "Country Instability Index ヒートマップ — スコア別に国をカラーリング(緑=安定、赤=深刻)",
-          "canadaRoads": "対応するカナダの管轄区域における公式の道路事故、警報、路面状況、通行止め、工事、危険情報",
-          "canadaAlerts": "Alberta Emergency Alert、B.C. Evacuation Orders and Alerts、SaskAlert による州の公共安全警報",
           "notamAirspace": "FAA NOTAMの一時的飛行制限および制限空域、危険空域、禁止空域。現在有効、または24時間以内に開始予定",
           "no2Activity": "Sentinel-5P の NO2 活動の方向（167 か国と 32 の工業クラスター）: 直近 56 日間のウィンドウを過去数年の同じ日付と比較し、10% のデッドバンドを適用。改変された Copernicus Sentinel データを含みます。",
           "reservoirLevels": "NASAの衛星ライダーICESat-2による戦略的な貯水池と湖の水面水位を、その月の平年水位と比較して表示します。NASAは各観測パスを測定の約2か月後に公開します。"
@@ -3359,10 +3343,6 @@
       },
       "closed": "閉場"
     },
-    "irradiator": {
-      "subtitle": "産業用ガンマ線照射施設",
-      "description": "医療機器の滅菌、食品保存、または材料加工のためにコバルト60またはセシウム137線源を使用する産業用照射施設。出典: IAEA DIIFデータベース。"
-    },
     "pipeline": {
       "title": "パイプライン",
       "types": {
@@ -3427,7 +3407,6 @@
     "lastSeen": "最終確認",
     "open": "開場",
     "tradingHours": "取引時間",
-    "gamma": "ガンマ",
     "city": "都市",
     "length": "全長",
     "operator": "運用者",
@@ -3707,15 +3686,6 @@
       },
       "worldRank": "世界ランク"
     },
-    "spaceport": {
-      "status": {
-        "active": "稼働中",
-        "construction": "建設中",
-        "inactive": "休止中"
-      },
-      "launchActivity": "打ち上げ活動",
-      "description": "戦略的宇宙発射施設。打ち上げ頻度と軌道到達能力は重要な地政学的指標。"
-    },
     "mineral": {
       "status": {
         "producing": "生産中",
@@ -3961,17 +3931,6 @@
       "coverageUnavailable": "カバー範囲外",
       "targets": "標的",
       "listSeparator": "、",
-      "radiation": {
-        "confirmed": "確認済み",
-        "conflictingSources": "情報源が矛盾",
-        "cpmDerived": "CPMから換算した成分",
-        "reading": "測定値",
-        "baseline": "基準値",
-        "delta": "差分",
-        "confidence": "信頼度",
-        "sources": "情報源",
-        "sourceCount": "情報源の数"
-      },
       "history": {
         "conflictSince": "紛争開始",
         "peaceAgreements": "和平合意",
@@ -4811,39 +4770,6 @@
         "related": {
           "0": "自然災害レイヤー",
           "1": "気象警報のポップアップ",
-          "2": "データの鮮度ステータス"
-        }
-      },
-      "canadaRoads": {
-        "category": "交通",
-        "purpose": "対応しているカナダの管轄について、公式の道路事象、警報、路面状況、通行止め、工事、危険を示します。",
-        "source": "オンタリオ511、アルバータ511、マニトバ511の州フィード、トロント市の道路規制、DriveBC Open511です。WorldMonitorを通じてシードします。",
-        "freshness": "オンタリオ、アルバータ、マニトバの511は15分ごとにシードし、45分の鮮度許容時間に照らして監視します。トロントの規制は2時間ごとにシードします。DriveBC Open511は30分ごとにシードします。",
-        "confidence": "対応している州と自治体の発行者については正規です。上流がいつ公開したかと、地図に載る形状に左右されます。",
-        "limitations": {
-          "0": "アルバータ511のroadconditionsは取り込んでいません（ベンダーのエンドポイントが404を返します）。アルバータのライブ描画は、事象と警報だけです。",
-          "1": "座標のない州の警報は、地図上の点になりません。",
-          "2": "路面状況のポリラインは、複雑な高速道路の形状を簡略化することがあります。"
-        },
-        "related": {
-          "0": "気象警報",
-          "1": "データの鮮度ステータス"
-        }
-      },
-      "canadaAlerts": {
-        "category": "緊急警報",
-        "purpose": "アルバータ、ブリティッシュコロンビア、サスカチュワンで有効な公共安全の警報を、米国NWSの気象と並べて、地図上の点として示します。",
-        "source": "アルバータ緊急警報のAtom、OGL-BCの避難命令と警報のGeoJSONレイヤー、SaskAlertの公開JSONフィード、および同一ホストのCAP 1.2詳細を、単一のcanadaAlertsユニオンへ正規化します。CAP/GeoRSSのポリゴン、ブリティッシュコロンビアの避難ポリゴン、SaskAlertのCAPポリゴンは重心になります。形状がない記録は、発信した州の重心を使います。",
-        "freshness": "州のソースは15分ごとにシードします。ユニオンは45分の鮮度許容時間に照らして監視します。空のフィード（有効な警報がない場合）は、記録がゼロでも有効な成功です。",
-        "confidence": "アルバータ緊急警報、ブリティッシュコロンビアの避難命令と警報、SaskAlertが公開した警報については正規です。上流がいつ公開したかと、地図に載る警報の形状に左右されます。",
-        "limitations": {
-          "0": "カバーはアルバータ、ブリティッシュコロンビア、サスカチュワンに限られます。オンタリオには、対象外としたNAAD以外に、州が運用する適格な機械可読フィードがありません。",
-          "1": "米国NWSの気象警報や、オンタリオとトロントの道路レイヤーの代わりにはなりません。",
-          "2": "地図に載せられる深刻度がない項目（アルバータのCAPと色の意味、ブリティッシュコロンビアの避難状態、SaskAlertのCAP深刻度）は、値を作らず捨てます。SaskAlertの要約に出る色やレベルは、CAPの深刻度としては扱いません。"
-        },
-        "related": {
-          "0": "気象警報",
-          "1": "自然災害レイヤー",
           "2": "データの鮮度ステータス"
         }
       },

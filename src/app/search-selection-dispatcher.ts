@@ -21,7 +21,6 @@ import type { NewsItem, MapLayers, MilitaryBase } from '@/types';
 import { UNDERSEA_CABLES, NUCLEAR_FACILITIES } from '@/config/geo-map';
 import { PIPELINES } from '@/config/pipelines';
 import { AI_DATA_CENTERS } from '@/config/ai-datacenters';
-import { GAMMA_IRRADIATORS } from '@/config/irradiators';
 import { TECH_COMPANIES } from '@/config/tech-companies';
 import { AI_RESEARCH_LABS } from '@/config/ai-research-labs';
 import { STARTUP_ECOSYSTEMS } from '@/config/startup-ecosystems';
@@ -279,19 +278,6 @@ export class SearchSelectionDispatcher {
           ctx.map?.enableLayer('nuclear');
           ctx.mapLayers.nuclear = true;
           ctx.map?.triggerNuclearClick(facility.id);
-        }, 300, epoch);
-      }
-      case 'irradiator': {
-        return this.schedule((commitMatch) => {
-          const irradiator = this.resolveScheduledResultData<typeof GAMMA_IRRADIATORS[0]>(
-            result,
-            commitMatch,
-          );
-          if (!irradiator) return false;
-          ctx.map?.setView('global');
-          ctx.map?.enableLayer('irradiators');
-          ctx.mapLayers.irradiators = true;
-          ctx.map?.triggerIrradiatorClick(irradiator.id);
         }, 300, epoch);
       }
       case 'earthquake':

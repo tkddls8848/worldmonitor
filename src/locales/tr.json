@@ -574,9 +574,7 @@
         "displacement": "Yerinden edilme akışlarını aç/kapat",
         "climate": "İklim anomalilerini aç/kapat",
         "outages": "İnternet kesintilerini aç/kapat",
-        "tradeRoutes": "Ticaret yollarını aç/kapat",
-        "canadaRoads": "Kanada yolları katmanını aç/kapat",
-        "canadaAlerts": "Kanada eyalet acil durum uyarıları katmanını aç/kapat"
+        "tradeRoutes": "Ticaret yollarını aç/kapat"
       },
       "view": {
         "dark": "Karanlık moda geç",
@@ -625,7 +623,6 @@
         "earthquake": "Deprem",
         "outage": "Kesinti",
         "nuclear": "Nukleer Tesis",
-        "irradiator": "Isinlama Tesisi",
         "techcompany": "Teknoloji Sirketi",
         "ailab": "Yapay Zeka Laboratuvari",
         "startup": "Girisim",
@@ -1277,9 +1274,6 @@
         "conflictZones": "Catisma Bolgeleri",
         "militaryBases": "Askeri Usler",
         "nuclearSites": "Nukleer Tesisler",
-        "gammaIrradiators": "Gama Isinlama Tesisleri",
-        "spaceports": "Uzay Ussu",
-        "satellites": "Yörünge Gözetimi",
         "pipelines": "Boru Hatlari",
         "militaryActivity": "Askeri Faaliyet",
         "shipTraffic": "Gemi Trafigi",
@@ -1301,16 +1295,11 @@
         "iranAttacks": "Orta Doğu Saldırıları",
         "gpsJamming": "Navigasyon müdahalesi",
         "ciiChoropleth": "Ülke istikrarsızlığı",
-        "dayNight": "Gündüz/Gece",
         "positiveEvents": "Olumlu Olaylar",
         "kindness": "İyilik Eylemleri",
         "happiness": "Dünya Mutluluğu",
         "speciesRecovery": "Tür Kurtarma",
         "renewableInstallations": "Temiz Enerji",
-        "radiationSpike": "Radyasyon artışı",
-        "radiationElevated": "Yükseltilmiş radyasyon",
-        "canadaRoads": "Kanada Yolları",
-        "canadaAlerts": "Kanada Uyarıları",
         "notamAirspace": "NOTAM Hava Sahasına İlişkin Kısıtlamalar",
         "no2Activity": "Sanayi faaliyeti",
         "reservoirLevels": "Su Seviyeleri"
@@ -1403,7 +1392,6 @@
           "geoProtests": "Sivil huzursuzluk, gosteriler (zaman filtreli)",
           "militaryBases": "ABD/NATO, Cin, Rusya askeri tesisleri (150+)",
           "militaryNuclear": "Santraller, zenginlestirme, silah tesisleri",
-          "militaryIrradiators": "Endustriyel gama isinlama tesisleri",
           "militaryActivity": "Canli askeri ucak ve gemi takibi",
           "infraCablesFull": "Buyuk denizalti fiber optik kablolar (20 omurga hatti)",
           "infraPipelinesFull": "Petrol/gaz boru hatlari (Kuzey Akimi, TAPI vb.)",
@@ -1416,7 +1404,6 @@
           "waterwaysLabels": "Stratejik darbogaz etiketleri",
           "geoUcdpEvents": "Uppsala Çatışma Veri Programı silahlı çatışma olayları",
           "geoDisplacement": "Mülteci ve yerinden edilme akış kalıpları",
-          "militarySpaceports": "Roket fırlatma alanları ve uzay tesisleri",
           "infraCyberThreats": "Siber saldırılar ve güvenlik olayları",
           "mineralsFull": "Stratejik mineral yatakları ve madencilik alanları",
           "techCyberThreats": "Siber saldırılar ve güvenlik olayları",
@@ -1424,11 +1411,8 @@
           "techFires": "Teknoloji altyapısına yakın aktif orman yangınları",
           "financeGulfInvestments": "Körfez İşbirliği Konseyi egemen varlık fonu yatırımları ve doğrudan yabancı yatırım",
           "tradeRoutes": "Limanları stratejik darboğazlar üzerinden bağlayan başlıca küresel deniz yolları",
-          "dayNight": "Gündüz ve gece bölgelerini gösteren gerçek zamanlı güneş terminatörü",
           "geoBoundaries": "Silahsızlandırılmış bölgeler, ateşkes hatları ve tartışmalı sınırlar",
           "ciiChoropleth": "Ülke İstikrarsızlık Endeksi ısı haritası — ülkeleri puana göre renklendiriyor (yeşil=istikrarlı, kırmızı=kritik)",
-          "canadaRoads": "Desteklenen Kanada yetki bölgelerinde resmi yol olayları, uyarılar, yol durumu, kapanışlar, yapım çalışmaları ve tehlikeler",
-          "canadaAlerts": "Alberta Emergency Alert, B.C. Evacuation Orders and Alerts ve SaskAlert kaynaklı il düzeyinde kamu güvenliği uyarıları",
           "notamAirspace": "FAA NOTAM'larından geçici uçuş kısıtlamaları ve sınırlı, tehlikeli ve yasaklı hava sahaları; şu anda yürürlükte olan veya 24 saat içinde başlayacak olanlar",
           "no2Activity": "167 ülke ve 32 sanayi kümesi için Sentinel-5P NO2 faaliyet yönü: son 56 günlük pencerenin önceki yılların aynı tarihleriyle karşılaştırması, %10 ölü bant sonrası. Değiştirilmiş Copernicus Sentinel verileri içerir.",
           "reservoirLevels": "Stratejik baraj gölleri ve göllerin su yüzeyi seviyesi, NASA ICESat-2 uydu lidarından, ayın olağan seviyesiyle karşılaştırmalı. NASA her geçişi ölçümden yaklaşık iki ay sonra yayımlar."
@@ -3380,10 +3364,6 @@
       },
       "closed": "KAPALI"
     },
-    "irradiator": {
-      "subtitle": "Endustriyel Gama Isinlama Tesisi",
-      "description": "Tibbi cihaz sterilizasyonu, gida koruma veya malzeme isleme icin Kobalt-60 veya Sezyum-137 kaynaklari kullanan endustriyel isinlama tesisi. Kaynak: IAEA DIIF Veritabani."
-    },
     "pipeline": {
       "title": "BORU HATTI",
       "types": {
@@ -3448,7 +3428,6 @@
     "lastSeen": "SON GORULME",
     "open": "ACIK",
     "tradingHours": "ISLEM SAATLERI",
-    "gamma": "GAMA",
     "city": "SEHIR",
     "length": "UZUNLUK",
     "operator": "OPERATÖR",
@@ -3728,15 +3707,6 @@
       },
       "worldRank": "DUNYA SIRALAMA"
     },
-    "spaceport": {
-      "status": {
-        "active": "AKTIF",
-        "construction": "INSAAT",
-        "inactive": "INAKTIF"
-      },
-      "launchActivity": "FIRLATMA FAALIYETI",
-      "description": "Stratejik uzay firlatma tesisi. Firlatma kadansi ve yorunge erisim yetenekleri onemli jeopolitik gostergelerdir."
-    },
     "mineral": {
       "status": {
         "producing": "URETIMDE",
@@ -3982,17 +3952,6 @@
       "coverageUnavailable": "Kapsam mevcut değil",
       "targets": "Hedefler",
       "listSeparator": ", ",
-      "radiation": {
-        "confirmed": "Doğrulandı",
-        "conflictingSources": "Çelişkili kaynaklar",
-        "cpmDerived": "CPM’den türetilmiş bileşen",
-        "reading": "Ölçüm",
-        "baseline": "Temel değer",
-        "delta": "Fark",
-        "confidence": "Güven",
-        "sources": "Kaynaklar",
-        "sourceCount": "Kaynak sayısı"
-      },
       "history": {
         "conflictSince": "Çatışma başlangıcı",
         "peaceAgreements": "Barış anlaşmaları",
@@ -4833,39 +4792,6 @@
         "related": {
           "0": "«Dogal Olaylar» katmanı",
           "1": "Hava uyarısı açılır pencereleri",
-          "2": "Data Freshness durumu"
-        }
-      },
-      "canadaRoads": {
-        "category": "Ulaşım",
-        "purpose": "Desteklenen Kanada yetki alanlarındaki resmî yol olaylarını, uyarıları, koşulları, kapanışları, yapım işlerini ve tehlikeleri gösterir.",
-        "source": "Ontario 511, Alberta 511 ve Manitoba 511 il akışları, City of Toronto Road Restrictions ve DriveBC Open511, WorldMonitor üzerinden yüklenir.",
-        "freshness": "Ontario 511, Alberta 511 ve Manitoba 511 her 15 dakikada bir yüklenir ve 45 dakikalık güncellik bütçesine göre izlenir. Toronto kısıtları her 2 saatte bir yüklenir. DriveBC Open511 her 30 dakikada bir yüklenir.",
-        "confidence": "Desteklenen il ve belediye yayımcıları için yetkilidir. Kaynağın yayımlama zamanı ve haritaya işlenen geometri geçerlidir.",
-        "limitations": {
-          "0": "Alberta 511 roadconditions alınmaz (sağlayıcı adresi 404 döndürür). Alberta'nın canlı çizimi yalnızca olaylar ve uyarılardır.",
-          "1": "Koordinatı olmayan il uyarıları haritada nokta olarak görünmez.",
-          "2": "Yol durumu çoklu çizgileri karmaşık otoyol geometrisini sadeleştirebilir."
-        },
-        "related": {
-          "0": "Hava durumu uyarıları",
-          "1": "Data Freshness durumu"
-        }
-      },
-      "canadaAlerts": {
-        "category": "Acil durum uyarıları",
-        "purpose": "Alberta, Britanya Kolumbiyası ve Saskatchewan kamu güvenliği uyarılarını, ABD NWS havasının yanında harita noktaları olarak gösterir.",
-        "source": "Alberta Emergency Alert Atom akışı, OGL-BC Evacuation Orders and Alerts GeoJSON katmanı ve SaskAlert genel JSON akışı ile aynı sunucudaki CAP 1.2 ayrıntıları tek bir canadaAlerts birleşiminde normalleştirilir. CAP/GeoRSS poligonları, B.C. tahliye poligonları ve SaskAlert CAP poligonları merkez noktaya indirilir. Geometrisi olmayan kayıtlar kaynak ilin merkez noktasını kullanır.",
-        "freshness": "İl kaynakları her 15 dakikada bir yüklenir ve birleşim 45 dakikalık güncellik bütçesine göre izlenir. Boş bir akış (yürürlükte uyarı yok) sıfır kayıtla geçerli bir başarıdır.",
-        "confidence": "Alberta Emergency Alert, B.C. Evacuation Orders and Alerts ve SaskAlert tarafından yayımlanan uyarılar için yetkilidir. Kaynağın yayımlama zamanı ve haritaya işlenen uyarı geometrisi geçerlidir.",
-        "limitations": {
-          "0": "Kapsam Alberta, Britanya Kolumbiyası ve Saskatchewan ile sınırlıdır. Ontario'nun, dışlanan NAAD dışında ilin işlettiği uygun bir makine akışı yoktur.",
-          "1": "ABD NWS hava uyarılarının ya da Ontario ve Toronto yol katmanlarının yerine geçmez.",
-          "2": "Haritaya işlenebilir şiddeti olmayan kayıtlar (Alberta CAP renk anlamı, B.C. tahliye durumu veya SaskAlert CAP şiddeti) uydurulmaz, bırakılır. SaskAlert özetindeki renk ve düzey CAP şiddeti sayılmaz."
-        },
-        "related": {
-          "0": "Hava durumu uyarıları",
-          "1": "«Dogal Olaylar» katmanı",
           "2": "Data Freshness durumu"
         }
       },

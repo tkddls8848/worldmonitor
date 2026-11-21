@@ -1,8 +1,8 @@
 /**
  * A panel's freshness badge describes the data that panel shows. Whether the
- * matching map layer is on is a map concern: the climate, displacement,
- * ucdp-events and radiation-watch panels render current data with their layers
- * off by default, and read "Disabled" when the layer state leaked into the badge.
+ * matching map layer is on is a map concern: the climate, displacement and
+ * ucdp-events panels render current data with their layers off by default,
+ * and read "Disabled" when the layer state leaked into the badge.
  *
  * The layer writes go through the real app paths: DataLoaderManager's boot sync
  * and EventHandlerManager's layer toggle. The badge is the real Panel header badge.
@@ -47,7 +47,6 @@ const LAYER_PANELS = [
   { layer: 'climate', panelId: 'climate', sourceId: 'climate' },
   { layer: 'displacement', panelId: 'displacement', sourceId: 'unhcr' },
   { layer: 'ucdpEvents', panelId: 'ucdp-events', sourceId: 'ucdp_events' },
-  { layer: 'radiationWatch', panelId: 'radiation-watch', sourceId: 'radiation' },
   { layer: 'sanctions', panelId: 'sanctions-pressure', sourceId: 'sanctions_pressure' },
   { layer: 'outages', panelId: 'internet-disruptions', sourceId: 'outages' },
 ] as const;

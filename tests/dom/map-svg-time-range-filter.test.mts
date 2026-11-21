@@ -27,7 +27,6 @@ function feeds() {
     protests: pair((id, at) => ({ id, time: at, sourceType: 'gdelt' })),
     weatherAlerts: pair((id, at) => ({ id, onset: at, centroid: [0, 0] })),
     naturalEvents: pair((id, at) => ({ id, date: at })),
-    radiationObservations: pair((id, at) => ({ id, observedAt: at })),
     outages: pair((id, at) => ({ id, pubDate: at })),
     cableAdvisories: pair((id, at) => ({ id, reported: at })),
     flightDelays: pair((id, at) => ({ id, updatedAt: at })),
@@ -59,12 +58,12 @@ function feeds() {
 
 const ALL_LAYERS = {
   natural: true, conflicts: true, iranAttacks: true, protests: true, weather: true,
-  radiationWatch: true, outages: true, cables: true, flights: true, military: true, fires: true,
+  outages: true, cables: true, flights: true, military: true, fires: true,
 };
 
 const DATED_SLICES = [
   'quakes', 'conflictEvents', 'iranEvents', 'protests', 'weather', 'naturalEvents',
-  'radiationObservations', 'outages', 'cableAdvisories', 'flightDelays', 'militaryFlights',
+  'outages', 'cableAdvisories', 'flightDelays', 'militaryFlights',
   'militaryVessels', 'fires',
 ] as const;
 

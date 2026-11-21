@@ -190,9 +190,7 @@
         "displacement": "Verplaatsingsstromen in-/uitschakelen",
         "climate": "Klimaatanomalieën in-/uitschakelen",
         "outages": "Internetstoringen in-/uitschakelen",
-        "tradeRoutes": "Handelsroutes in-/uitschakelen",
-        "canadaRoads": "Laag met Canadese wegen aan/uit",
-        "canadaAlerts": "Laag met Canadese provinciale noodwaarschuwingen aan/uit"
+        "tradeRoutes": "Handelsroutes in-/uitschakelen"
       },
       "view": {
         "dark": "Naar donkere modus",
@@ -235,7 +233,6 @@
         "earthquake": "Aardbeving",
         "outage": "Storing",
         "nuclear": "Nucleaire site",
-        "irradiator": "Bestraler",
         "techcompany": "Techbedrijf",
         "ailab": "AI-lab",
         "startup": "Opstarten",
@@ -559,9 +556,6 @@
         "conflictZones": "Conflictzones",
         "militaryBases": "Militaire bases",
         "nuclearSites": "Nucleaire locaties",
-        "gammaIrradiators": "Gamma-bestralers",
-        "spaceports": "Ruimtehavens",
-        "satellites": "Orbitale Bewaking",
         "pipelines": "Pijpleidingen",
         "militaryActivity": "Militaire activiteit",
         "shipTraffic": "Scheepsverkeer",
@@ -581,7 +575,6 @@
         "gulfInvestments": "Investeringen Golf Coöperatieraad",
         "tradeRoutes": "Handelsroutes",
         "gpsJamming": "Navigatieinterferentie",
-        "dayNight": "Dag/Nacht",
         "iranAttacks": "Aanvallen in het Midden-Oosten",
         "ciiChoropleth": "Landinestabiliteit",
         "positiveEvents": "Positieve gebeurtenissen",
@@ -589,10 +582,6 @@
         "happiness": "Wereldgeluk",
         "speciesRecovery": "Soortenherstel",
         "renewableInstallations": "Schone energie",
-        "radiationSpike": "Stralingspiek",
-        "radiationElevated": "Verhoogde straling",
-        "canadaRoads": "Canadese wegen",
-        "canadaAlerts": "Canadese waarschuwingen",
         "notamAirspace": "NOTAM-luchtruimbeperkingen",
         "no2Activity": "Industriële activiteit",
         "reservoirLevels": "Waterstanden"
@@ -692,7 +681,6 @@
           "geoProtests": "Burgerlijke onrust, demonstraties (tijdgefilterd)",
           "militaryBases": "Militaire installaties VS/NAVO, China, Rusland (150+)",
           "militaryNuclear": "Energiecentrales, verrijking, wapenfaciliteiten",
-          "militaryIrradiators": "Industriële gammabestralingsinstallaties",
           "militaryActivity": "Live volgen van militaire vliegtuigen en schepen",
           "infraCablesFull": "Grote onderzeese glasvezelkabels (20 backbone-routes)",
           "infraPipelinesFull": "Olie-/gaspijpleidingen (Nord Stream, TAPI, enz.)",
@@ -702,22 +690,18 @@
           "naturalEventsFull": "Aardbevingen (USGS) + stormen, branden, vulkanen, overstromingen (NASA EONET)",
           "waterwaysLabels": "Strategische chokepoint-labels",
           "tradeRoutes": "Belangrijke wereldwijde scheepvaartroutes die havens verbinden via strategische knelpunten",
-          "dayNight": "Realtime zonneterminator met dag- en nachtzones",
           "climateAnomalies": "Temperatuur- en neerslagafwijkingen",
           "financeGulfInvestments": "Investeringen van de soevereine vermogensfondsen van de Golf Coöperatieraad en buitenlandse directe investeringen",
           "firesFull": "Actieve bosbranden en brandperimeters (NASA FIRMS)",
           "geoDisplacement": "Vluchtelingen- en ontheemdingspatronen",
           "geoUcdpEvents": "Gewapende conflictgebeurtenissen van het UCDP-programma van Uppsala",
           "infraCyberThreats": "Cyberaanvallen en beveiligingsincidenten",
-          "militarySpaceports": "Raketlanceerlocaties en ruimtevaartfaciliteiten",
           "mineralsFull": "Strategische minerale afzettingen en mijnbouwlocaties",
           "techCyberThreats": "Cyberaanvallen en beveiligingsincidenten",
           "techEvents": "Grote techconferenties en evenementen",
           "techFires": "Actieve bosbranden nabij technische infrastructuur",
           "geoBoundaries": "Gedemilitariseerde zones, staakt-het-vuren-lijnen en betwiste grenzen",
           "ciiChoropleth": "Country Instability Index heatmap — landen ingekleurd naar score (groen=stabiel, rood=kritiek)",
-          "canadaRoads": "Officiële verkeersincidenten, waarschuwingen, wegcondities, afsluitingen, werkzaamheden en gevaren in ondersteunde Canadese rechtsgebieden",
-          "canadaAlerts": "Provinciale openbare-veiligheidswaarschuwingen van Alberta Emergency Alert, B.C. Evacuation Orders and Alerts en SaskAlert",
           "notamAirspace": "Tijdelijke vliegbeperkingen en beperkt, gevaar- en verboden luchtruim van FAA NOTAMs, nu van kracht of binnen 24 uur van start",
           "no2Activity": "Richting van de NO2-activiteit uit Sentinel-5P voor 167 landen en 32 industriële clusters: het laatste venster van 56 dagen tegenover dezelfde data in voorgaande jaren, na een dode band van 10%. Bevat gewijzigde Copernicus Sentinel-gegevens.",
           "reservoirLevels": "Waterniveau van strategische stuwmeren en meren volgens de satellietlidar ICESat-2 van NASA, vergeleken met het gebruikelijke niveau voor de maand. NASA publiceert elke overkomst ongeveer twee maanden na de meting."
@@ -2987,10 +2971,6 @@
       },
       "closed": "GESLOTEN"
     },
-    "irradiator": {
-      "subtitle": "Industriële gammabestralingsfaciliteit",
-      "description": "Industriële bestralingsfaciliteit met Cobalt-60 of Cesium-137 voor sterilisatie van medische apparatuur, voedselconservering of materiaalverwerking. Bron: IAEA DIIF-database."
-    },
     "pipeline": {
       "title": "PIJPLEIDING",
       "types": {
@@ -3055,7 +3035,6 @@
     "lastSeen": "LAATST GEZIEN",
     "open": "OPEN",
     "tradingHours": "HANDELSUREN",
-    "gamma": "GAMMA",
     "city": "STAD",
     "length": "LENGTE",
     "operator": "EXPLOITANT",
@@ -3336,15 +3315,6 @@
       },
       "worldRank": "WERELDRANK"
     },
-    "spaceport": {
-      "status": {
-        "active": "ACTIEF",
-        "construction": "BOUW",
-        "inactive": "INACTIEF"
-      },
-      "launchActivity": "LANCERINGSACTIVITEIT",
-      "description": "Strategische ruimtelanceringsfaciliteit. Lanceercadans en mogelijkheden voor toegang tot de baan zijn belangrijke geopolitieke indicatoren."
-    },
     "mineral": {
       "status": {
         "producing": "PRODUCEREN",
@@ -3598,17 +3568,6 @@
       "coverageUnavailable": "Geen dekking beschikbaar",
       "targets": "Doelwitten",
       "listSeparator": ", ",
-      "radiation": {
-        "confirmed": "Bevestigd",
-        "conflictingSources": "Tegenstrijdige bronnen",
-        "cpmDerived": "Uit CPM afgeleide component",
-        "reading": "Meting",
-        "baseline": "Basislijn",
-        "delta": "Afwijking",
-        "confidence": "Betrouwbaarheid",
-        "sources": "Bronnen",
-        "sourceCount": "Aantal bronnen"
-      },
       "history": {
         "conflictSince": "Conflict sinds",
         "peaceAgreements": "Vredesakkoorden",
@@ -4833,39 +4792,6 @@
         "related": {
           "0": "Laag Natuurlijke gebeurtenissen",
           "1": "Pop-ups voor weerwaarschuwingen",
-          "2": "Data Freshness"
-        }
-      },
-      "canadaRoads": {
-        "category": "Vervoer",
-        "purpose": "Toont officiële wegincidenten, waarschuwingen, condities, afsluitingen, werkzaamheden en gevaren in de ondersteunde Canadese rechtsgebieden.",
-        "source": "Provinciale stromen Ontario 511, Alberta 511 en Manitoba 511, City of Toronto Road Restrictions en DriveBC Open511, geladen via WorldMonitor.",
-        "freshness": "Ontario 511, Alberta 511 en Manitoba 511 worden elke 15 minuten geladen en bewaakt tegen een actualiteitsbudget van 45 minuten. De beperkingen van Toronto worden elke 2 uur geladen, en DriveBC Open511 elke 30 minuten.",
-        "confidence": "Gezaghebbend voor de ondersteunde provinciale en gemeentelijke uitgevers, afhankelijk van het publicatiemoment bij de bron en van de gekarteerde geometrie.",
-        "limitations": {
-          "0": "Alberta 511 roadconditions wordt niet binnengehaald (het adres van de leverancier antwoordt met 404). De livekaart van Alberta toont alleen gebeurtenissen en waarschuwingen.",
-          "1": "Provinciale waarschuwingen zonder coördinaten verschijnen niet als punten op de kaart.",
-          "2": "Polylijnen van wegconditie kunnen complexe snelweggeometrie vereenvoudigen."
-        },
-        "related": {
-          "0": "Weerwaarschuwingen",
-          "1": "Data Freshness"
-        }
-      },
-      "canadaAlerts": {
-        "category": "Noodwaarschuwingen",
-        "purpose": "Toont actieve waarschuwingen voor de openbare veiligheid van Alberta, British Columbia en Saskatchewan als punten op de kaart, naast het NWS-weer van de Verenigde Staten.",
-        "source": "De Atom van Alberta Emergency Alert, de GeoJSON-laag OGL-BC Evacuation Orders and Alerts en de openbare JSON-stroom van SaskAlert, plus CAP 1.2-details van dezelfde server, worden genormaliseerd tot één canadaAlerts-unie. CAP/GeoRSS-polygonen, evacuatiepolygonen van B.C. en CAP-polygonen van SaskAlert worden centroïden. Registraties zonder geometrie gebruiken de centroïde van de provincie van herkomst.",
-        "freshness": "Provinciale bronnen worden elke 15 minuten geladen en de unie wordt bewaakt tegen een actualiteitsbudget van 45 minuten. Een lege stroom (geen actieve waarschuwingen) is een geldig succes zonder registraties.",
-        "confidence": "Gezaghebbend voor waarschuwingen die Alberta Emergency Alert, B.C. Evacuation Orders and Alerts en SaskAlert publiceren, afhankelijk van het publicatiemoment bij de bron en van de gekarteerde waarschuwingsgeometrie.",
-        "limitations": {
-          "0": "De dekking is beperkt tot Alberta, British Columbia en Saskatchewan. Ontario heeft geen geschikte machinaal leesbare stroom die de provincie zelf beheert, buiten de uitgesloten NAAD.",
-          "1": "Deze laag vervangt geen NWS-weerwaarschuwingen van de Verenigde Staten en geen weglagen van Ontario en Toronto.",
-          "2": "Meldingen zonder een ernst die op de kaart kan worden gezet (CAP- en kleursemantiek van Alberta, evacuatiestatus van B.C. of CAP-ernst van SaskAlert) worden weggelaten in plaats van verzonnen. Kleur of niveau van de SaskAlert-samenvatting telt niet als CAP-ernst."
-        },
-        "related": {
-          "0": "Weerwaarschuwingen",
-          "1": "Laag Natuurlijke gebeurtenissen",
           "2": "Data Freshness"
         }
       },

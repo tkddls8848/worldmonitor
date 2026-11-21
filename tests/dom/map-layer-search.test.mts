@@ -6,13 +6,13 @@ import {
   LAYER_SYNONYMS,
 } from '@/config/map-layer-definitions';
 
-describe('Canada Roads layer discovery', () => {
+describe('layer picker synonym search', () => {
   beforeEach(() => {
     document.body.innerHTML = `
       <div id="layer-picker">
         <input class="layer-search" />
         <div class="layer-toggle-row">
-          <label class="layer-toggle" data-layer="canadaRoads">Canada Roads</label>
+          <label class="layer-toggle" data-layer="reservoirLevels">Water Levels</label>
         </div>
         <div class="layer-toggle-row">
           <label class="layer-toggle" data-layer="conflicts">Conflict Zones</label>
@@ -21,27 +21,27 @@ describe('Canada Roads layer discovery', () => {
     `;
   });
 
-  it('keeps the label short and names Manitoba in the jurisdiction synonyms', () => {
-    expect(LAYER_REGISTRY.canadaRoads.fallbackLabel).toBe('Canada Roads');
-    expect(LAYER_SYNONYMS.manitoba).toContain('canadaRoads');
+  it('keeps the label short and maps hydropower to the water-level layer', () => {
+    expect(LAYER_REGISTRY.reservoirLevels.fallbackLabel).toBe('Water Levels');
+    expect(LAYER_SYNONYMS.hydropower).toContain('reservoirLevels');
   });
 
-  it('finds Canada Roads when the picker is searched for Manitoba', () => {
+  it('finds Water Levels when the picker is searched for hydropower', () => {
     const picker = document.querySelector<HTMLElement>('#layer-picker');
     const search = picker?.querySelector<HTMLInputElement>('.layer-search');
-    const canadaRoads = picker?.querySelector<HTMLElement>('[data-layer="canadaRoads"]')?.closest<HTMLElement>('.layer-toggle-row');
+    const reservoirs = picker?.querySelector<HTMLElement>('[data-layer="reservoirLevels"]')?.closest<HTMLElement>('.layer-toggle-row');
     const conflicts = picker?.querySelector<HTMLElement>('[data-layer="conflicts"]')?.closest<HTMLElement>('.layer-toggle-row');
 
     expect(picker).not.toBeNull();
     expect(search).not.toBeNull();
-    expect(canadaRoads).not.toBeNull();
+    expect(reservoirs).not.toBeNull();
     expect(conflicts).not.toBeNull();
 
     bindLayerSearch(picker!);
-    search!.value = 'manitoba';
+    search!.value = 'hydropower';
     search!.dispatchEvent(new Event('input'));
 
-    expect(canadaRoads!.style.display).toBe('');
+    expect(reservoirs!.style.display).toBe('');
     expect(conflicts!.style.display).toBe('none');
   });
 });

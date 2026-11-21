@@ -574,9 +574,7 @@
         "displacement": "Vertreibungsströme umschalten",
         "climate": "Klimaanomalien umschalten",
         "outages": "Internetausfälle umschalten",
-        "tradeRoutes": "Handelsrouten umschalten",
-        "canadaRoads": "Overlay für kanadische Straßen umschalten",
-        "canadaAlerts": "Overlay für kanadische Provinznotwarnungen umschalten"
+        "tradeRoutes": "Handelsrouten umschalten"
       },
       "view": {
         "dark": "Zum Dunkelmodus wechseln",
@@ -619,7 +617,6 @@
         "earthquake": "Erdbeben",
         "outage": "Ausfall",
         "nuclear": "Nuklearanlage",
-        "irradiator": "Bestrahlungsanlage",
         "techcompany": "Tech-Unternehmen",
         "ailab": "KI-Labor",
         "startup": "Start-up",
@@ -1120,9 +1117,6 @@
         "conflictZones": "Konfliktzonen",
         "militaryBases": "Militärstützpunkte",
         "nuclearSites": "Nukleare Standorte",
-        "gammaIrradiators": "Gamma-Bestrahlungsanlagen",
-        "spaceports": "Raumhäfen",
-        "satellites": "Orbitale Überwachung",
         "pipelines": "Pipelines",
         "militaryActivity": "Militärische Aktivität",
         "shipTraffic": "Schiffsverkehr",
@@ -1143,17 +1137,12 @@
         "tradeRoutes": "Handelsrouten",
         "iranAttacks": "Angriffe im Nahen Osten",
         "gpsJamming": "Navigationsstörung",
-        "dayNight": "Tag/Nacht",
         "ciiChoropleth": "Landinstabilität",
         "positiveEvents": "Positive Ereignisse",
         "kindness": "Gute Taten",
         "happiness": "Weltglücksindex",
         "speciesRecovery": "Artenerholung",
         "renewableInstallations": "Saubere Energie",
-        "radiationSpike": "Strahlungsspitze",
-        "radiationElevated": "Erhöhte Strahlung",
-        "canadaRoads": "Kanada-Straßen",
-        "canadaAlerts": "Kanada-Warnungen",
         "notamAirspace": "NOTAM-Luftraumbeschränkungen",
         "no2Activity": "Industrielle Aktivität",
         "reservoirLevels": "Wasserstände"
@@ -1253,7 +1242,6 @@
           "geoProtests": "Bürgerunruhen, Demonstrationen (zeitgefiltert)",
           "militaryBases": "US/NATO, China, Russland Militäreinrichtungen (150+)",
           "militaryNuclear": "Kraftwerke, Anreicherung, Waffenanlagen",
-          "militaryIrradiators": "Industrielle Gammabestrahlungsanlagen",
           "militaryActivity": "Live-Verfolgung von Militärflugzeugen und Schiffen",
           "infraCablesFull": "Wichtige Unterwasser-Glasfaserkabel (20 Backbone-Strecken)",
           "infraPipelinesFull": "Öl-/Gaspipelines (Nord Stream, TAPI usw.)",
@@ -1263,12 +1251,10 @@
           "naturalEventsFull": "Erdbeben (USGS) + Stürme, Brände, Vulkane, Überschwemmungen (NASA EONET)",
           "waterwaysLabels": "Beschriftungen strategischer Engpässe",
           "tradeRoutes": "Wichtige globale Schifffahrtsrouten, die Häfen über strategische Engpässe verbinden",
-          "dayNight": "Echtzeit-Sonnenterminator zeigt Tag- und Nachtzonen",
           "firesFull": "Aktive Waldbrände und Brandperimeter (NASA FIRMS)",
           "climateAnomalies": "Temperatur- und Niederschlagsanomalien",
           "geoUcdpEvents": "Uppsala Conflict Data Program — Ereignisse bewaffneter Konflikte",
           "geoDisplacement": "Flucht- und Vertreibungsbewegungen",
-          "militarySpaceports": "Raketenstartplätze und Weltraumanlagen",
           "infraCyberThreats": "Cyberangriffe und Sicherheitsereignisse",
           "mineralsFull": "Strategische Mineralvorkommen und Abbaustätten",
           "techCyberThreats": "Cyberangriffe und Sicherheitsereignisse",
@@ -1277,8 +1263,6 @@
           "financeGulfInvestments": "Investitionen von Staatsfonds des Golfkooperationsrats und ausländische Direktinvestitionen",
           "geoBoundaries": "Entmilitarisierte Zonen, Waffenstillstandslinien und umstrittene Grenzen",
           "ciiChoropleth": "Länderinstabilitätsindex-Wärmekarte – färbt Länder nach Punktzahl (grün=stabil, rot=kritisch)",
-          "canadaRoads": "Offizielle Straßenvorkommnisse, Warnungen, Bedingungen, Sperrungen, Bauarbeiten und Gefahren in unterstützten Jurisdiktionen in Kanada",
-          "canadaAlerts": "Provinzielle öffentliche Sicherheitswarnungen von Alberta Emergency Alert, B.C. Evacuation Orders and Alerts und SaskAlert",
           "notamAirspace": "Temporäre Flugbeschränkungen und beschränkter, Gefahren- und verbotener Luftraum aus FAA-NOTAMs, derzeit gültig oder innerhalb von 24 Stunden beginnend",
           "no2Activity": "NO2-Aktivitätsrichtung aus Sentinel-5P für 167 Länder und 32 Industriecluster: das jüngste 56-Tage-Fenster gegenüber denselben Daten der Vorjahre, nach einem Totband von 10 %. Enthält modifizierte Copernicus-Sentinel-Daten.",
           "reservoirLevels": "Wasserspiegel strategischer Stauseen und Seen aus dem NASA-Satellitenlidar ICESat-2, verglichen mit dem üblichen Stand für den Monat. Die NASA veröffentlicht jeden Überflug etwa zwei Monate nach der Messung."
@@ -3371,10 +3355,6 @@
       },
       "closed": "GESCHLOSSEN"
     },
-    "irradiator": {
-      "subtitle": "Industrielle Gamma-Bestrahlungsanlage",
-      "description": "Industrielle Bestrahlungsanlage mit Cobalt-60 oder Cäsium-137 für Sterilisation, Lebensmittelkonservierung oder Materialverarbeitung. Quelle: IAEA DIIF-Datenbank."
-    },
     "pipeline": {
       "title": "PIPELINE",
       "types": {
@@ -3439,7 +3419,6 @@
     "lastSeen": "ZULETZT GESEHEN",
     "open": "GEÖFFNET",
     "tradingHours": "HANDELSZEITEN",
-    "gamma": "GAMMA",
     "city": "STADT",
     "length": "LÄNGE",
     "operator": "BETREIBER",
@@ -3720,15 +3699,6 @@
       },
       "worldRank": "WELTRANG"
     },
-    "spaceport": {
-      "status": {
-        "active": "AKTIV",
-        "construction": "IM BAU",
-        "inactive": "INAKTIV"
-      },
-      "launchActivity": "STARTAKTIVITÄT",
-      "description": "Strategische Weltraumstartanlage. Startfrequenz und Orbit-Zugangsmöglichkeiten sind wichtige geopolitische Indikatoren."
-    },
     "mineral": {
       "status": {
         "producing": "IN PRODUKTION",
@@ -3982,17 +3952,6 @@
       "coverageUnavailable": "Keine Abdeckung verfügbar",
       "targets": "Ziele",
       "listSeparator": ", ",
-      "radiation": {
-        "confirmed": "Bestätigt",
-        "conflictingSources": "Widersprüchliche Quellen",
-        "cpmDerived": "Aus CPM abgeleiteter Anteil",
-        "reading": "Messwert",
-        "baseline": "Basiswert",
-        "delta": "Abweichung",
-        "confidence": "Konfidenz",
-        "sources": "Quellen",
-        "sourceCount": "Anzahl Quellen"
-      },
       "history": {
         "conflictSince": "Konflikt seit",
         "peaceAgreements": "Friedensabkommen",
@@ -4833,39 +4792,6 @@
         "related": {
           "0": "Naturereignisse",
           "1": "Unwetter-Popups",
-          "2": "Status der Datenaktualität"
-        }
-      },
-      "canadaRoads": {
-        "category": "Verkehr",
-        "purpose": "Zeigt amtliche Straßenereignisse, Warnungen, Zustände, Sperrungen, Baustellen und Gefahren in den unterstützten kanadischen Zuständigkeiten.",
-        "source": "Provinz-Feeds von Ontario 511, Alberta 511 und Manitoba 511, Road Restrictions der City of Toronto und DriveBC Open511, geseedet über WorldMonitor.",
-        "freshness": "Ontario 511, Alberta 511 und Manitoba 511 werden alle 15 Minuten geseedet und gegen ein Aktualitätsbudget von 45 Minuten überwacht. Einschränkungen in Toronto werden alle 2 Stunden geseedet, DriveBC Open511 alle 30 Minuten.",
-        "confidence": "Maßgeblich für die unterstützten provinziellen und kommunalen Herausgeber, abhängig vom Veröffentlichungszeitpunkt und von der kartierten Geometrie.",
-        "limitations": {
-          "0": "Alberta 511 roadconditions wird nicht übernommen (der Anbieter-Endpunkt antwortet mit 404); die Live-Darstellung für Alberta zeigt nur Ereignisse und Warnungen.",
-          "1": "Provinzwarnungen ohne Koordinaten erscheinen nicht als Kartenpunkte.",
-          "2": "Polylinien zum Straßenzustand können komplexe Autobahngeometrie vereinfachen."
-        },
-        "related": {
-          "0": "Wetterwarnungen",
-          "1": "Status der Datenaktualität"
-        }
-      },
-      "canadaAlerts": {
-        "category": "Warnmeldungen",
-        "purpose": "Zeigt aktive Warnungen des Bevölkerungsschutzes aus Alberta, British Columbia und Saskatchewan als Kartenpunkte neben dem US-NWS-Wetter.",
-        "source": "Atom von Alberta Emergency Alert, die GeoJSON-Ebene OGL-BC Evacuation Orders and Alerts und der öffentliche JSON-Feed von SaskAlert plus CAP-1.2-Details vom selben Host werden zu einer canadaAlerts-Vereinigung normalisiert. Polygone aus CAP/GeoRSS, Evakuierungspolygone aus British Columbia und CAP-Polygone von SaskAlert werden zu Schwerpunkten; Einträge ohne Geometrie nutzen den Schwerpunkt der Quellprovinz.",
-        "freshness": "Die Provinzquellen werden alle 15 Minuten geseedet und die Vereinigung gegen ein Aktualitätsbudget von 45 Minuten überwacht. Ein leerer Feed (keine aktiven Warnungen) ist ein gültiger Erfolg mit null Einträgen.",
-        "confidence": "Maßgeblich für Warnungen von Alberta Emergency Alert, B.C. Evacuation Orders and Alerts und SaskAlert, abhängig vom Veröffentlichungszeitpunkt und von der kartierten Warngeometrie.",
-        "limitations": {
-          "0": "Die Abdeckung beschränkt sich auf Alberta, British Columbia und Saskatchewan. Ontario hat keinen geeigneten, von der Provinz betriebenen Maschinen-Feed außerhalb des ausgeschlossenen NAAD.",
-          "1": "Ersetzt weder US-NWS-Unwetterwarnungen noch die Straßenebenen von Ontario und Toronto.",
-          "2": "Einträge ohne kartierbare Schwere (CAP-/Farb-Semantik von Alberta, Evakuierungsstatus von British Columbia oder CAP-Schwere von SaskAlert) werden verworfen und nicht erfunden. Farbe oder Stufe in der SaskAlert-Zusammenfassung gelten nicht als CAP-Schwere."
-        },
-        "related": {
-          "0": "Wetterwarnungen",
-          "1": "Naturereignisse",
           "2": "Status der Datenaktualität"
         }
       },

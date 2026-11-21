@@ -604,7 +604,6 @@ const SEARCH_RESULT_TYPE_BUCKETS = new Set([
   'earthquake',
   'outage',
   'nuclear',
-  'irradiator',
   'techcompany',
   'ailab',
   'startup',

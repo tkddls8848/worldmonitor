@@ -154,8 +154,8 @@ describe('listMapLayerCatalog', () => {
 
   it('filters 2D renderer compatibility without dropping disabled layers', () => {
     const twoD = collectPages({ renderer: '2d', limit: MAX_MAP_LAYER_PAGE_SIZE });
-    assert.ok(twoD.ids.includes('dayNight'));
-    assert.ok(twoD.ids.includes('canadaRoads'));
+    assert.ok(twoD.ids.includes('webcams'));
+    assert.ok(twoD.ids.includes('no2Activity'));
     assert.equal(twoD.ids.includes('conflicts'), true);
     const flatRenderable = twoD.ids.every((id) => {
       const renderers = LAYER_REGISTRY[id as keyof MapLayers].renderers;
@@ -165,19 +165,19 @@ describe('listMapLayerCatalog', () => {
     assert.equal(twoD.total, getCompleteLayerCatalogKeys('full').length);
 
     const ids = getCompleteLayerCatalogKeys('full');
-    const canadaCursor = ids[ids.indexOf('canadaRoads') - 1];
+    const deckOnlyCursor = ids[ids.indexOf('no2Activity') - 1];
     const svgPage = listMapLayerCatalog(snapshot({ rendererKind: 'svg', deckGlActive: false }), {
-      cursor: canadaCursor,
+      cursor: deckOnlyCursor,
       limit: 1,
     }, BUDGETS);
     assert.equal(svgPage.ok, true);
     if (!svgPage.ok) return;
-    const canadaEntry = svgPage.layers[0];
-    assert.equal(canadaEntry?.id, 'canadaRoads');
-    assert.equal(canadaEntry?.enabled, false);
-    assert.equal(canadaEntry?.rendererCompatible, isLayerExecutable('canadaRoads', 'svg'));
-    assert.equal(canadaEntry?.available, false);
-    assert.equal(canadaEntry?.reason, 'layer_not_executable');
+    const deckOnlyEntry = svgPage.layers[0];
+    assert.equal(deckOnlyEntry?.id, 'no2Activity');
+    assert.equal(deckOnlyEntry?.enabled, false);
+    assert.equal(deckOnlyEntry?.rendererCompatible, isLayerExecutable('no2Activity', 'svg'));
+    assert.equal(deckOnlyEntry?.available, false);
+    assert.equal(deckOnlyEntry?.reason, 'layer_not_executable');
   });
 
   it('explains resilienceScore as layer_not_executable when deck.gl is inactive', () => {

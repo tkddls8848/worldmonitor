@@ -28,7 +28,6 @@ import { getCachedMilitaryBases, preloadMilitaryBases } from '@/services/militar
 import { UNDERSEA_CABLES, NUCLEAR_FACILITIES } from '@/config/geo-map';
 import { PIPELINES } from '@/config/pipelines';
 import { AI_DATA_CENTERS } from '@/config/ai-datacenters';
-import { GAMMA_IRRADIATORS } from '@/config/irradiators';
 import { TECH_COMPANIES } from '@/config/tech-companies';
 import { AI_RESEARCH_LABS } from '@/config/ai-research-labs';
 import { STARTUP_ECOSYSTEMS } from '@/config/startup-ecosystems';
@@ -66,7 +65,7 @@ interface FlightSearchItem {
 const LAYER_PRESET_PRIMARY_LAYERS: Record<string, (keyof MapLayers)[]> = {
   military: ['bases', 'flights', 'military'],
   finance: ['stockExchanges', 'financialCenters', 'centralBanks', 'commodityHubs', 'economic'],
-  infra: ['cables', 'pipelines', 'datacenters', 'spaceports', 'minerals'],
+  infra: ['cables', 'pipelines', 'datacenters', 'minerals'],
   intel: ['conflicts', 'hotspots', 'protests', 'ucdpEvents', 'displacement'],
   minimal: ['conflicts', 'hotspots'],
 };
@@ -371,13 +370,6 @@ export class SearchManager implements AppModule {
         title: n.name,
         subtitle: `${n.type} ${n.operator || ''}`.trim(),
         data: n,
-      })));
-
-      this.ctx.searchModal.registerSource('irradiator', GAMMA_IRRADIATORS.map(g => ({
-        id: g.id,
-        title: `${g.city}, ${g.country}`,
-        subtitle: g.organization || '',
-        data: g,
       })));
     }
 
@@ -759,7 +751,6 @@ export class SearchManager implements AppModule {
       case 'cable': return 'cables';
       case 'datacenter': return 'datacenters';
       case 'nuclear': return 'nuclear';
-      case 'irradiator': return 'irradiators';
       case 'earthquake': return 'natural';
       case 'outage': return 'outages';
       case 'techcompany':

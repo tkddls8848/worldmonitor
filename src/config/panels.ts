@@ -138,7 +138,6 @@ const FULL_MAP_LAYERS: MapLayers = {
   aircraftEmergencies: false,
   iranAttacks: IRAN_ATTACKS_ENABLED,
   gpsJamming: false,
-  satellites: false,
 
 
   conflicts: true,
@@ -150,12 +149,8 @@ const FULL_MAP_LAYERS: MapLayers = {
   hotspots: true,
   ais: false,
   nuclear: false,
-  irradiators: false,
-  radiationWatch: false,
   sanctions: false,
   weather: true,
-  canadaRoads: false,
-  canadaAlerts: false,
   economic: true,
   waterways: true,
   outages: false,
@@ -165,7 +160,6 @@ const FULL_MAP_LAYERS: MapLayers = {
   flights: false,
   military: false,
   natural: true,
-  spaceports: false,
   minerals: false,
   fires: false,
   // Data source layers
@@ -195,7 +189,6 @@ const FULL_MAP_LAYERS: MapLayers = {
   tradeRoutes: false,
   ciiChoropleth: false,
   resilienceScore: false,
-  dayNight: false,
   // Commodity layers (disabled in full variant)
   miningSites: false,
   processingPlants: false,
@@ -208,7 +201,6 @@ const FULL_MOBILE_MAP_LAYERS: MapLayers = {
   aircraftEmergencies: false,
   iranAttacks: IRAN_ATTACKS_ENABLED,
   gpsJamming: false,
-  satellites: false,
 
 
   conflicts: true,
@@ -220,12 +212,8 @@ const FULL_MOBILE_MAP_LAYERS: MapLayers = {
   hotspots: true,
   ais: false,
   nuclear: false,
-  irradiators: false,
-  radiationWatch: false,
   sanctions: true,
   weather: true,
-  canadaRoads: false,
-  canadaAlerts: false,
   economic: false,
   waterways: false,
   outages: true,
@@ -235,7 +223,6 @@ const FULL_MOBILE_MAP_LAYERS: MapLayers = {
   flights: false,
   military: false,
   natural: true,
-  spaceports: false,
   minerals: false,
   fires: false,
   // Data source layers
@@ -265,7 +252,6 @@ const FULL_MOBILE_MAP_LAYERS: MapLayers = {
   tradeRoutes: false,
   ciiChoropleth: false,
   resilienceScore: false,
-  dayNight: false,
   // Commodity layers (disabled in full variant)
   miningSites: false,
   processingPlants: false,
@@ -323,7 +309,6 @@ const TECH_PANELS: Record<string, PanelConfig> = {
 
 const TECH_MAP_LAYERS: MapLayers = {
   gpsJamming: false,
-  satellites: false,
 
 
   conflicts: false,
@@ -333,11 +318,8 @@ const TECH_MAP_LAYERS: MapLayers = {
   hotspots: false,
   ais: false,
   nuclear: false,
-  irradiators: false,
   sanctions: false,
   weather: false,
-  canadaRoads: false,
-  canadaAlerts: false,
   economic: false,
   waterways: false,
   outages: true,
@@ -347,7 +329,6 @@ const TECH_MAP_LAYERS: MapLayers = {
   flights: false,
   military: false,
   natural: true,
-  spaceports: false,
   minerals: false,
   fires: false,
   // Data source layers
@@ -376,7 +357,6 @@ const TECH_MAP_LAYERS: MapLayers = {
   iranAttacks: false,
   ciiChoropleth: false,
   resilienceScore: false,
-  dayNight: false,
   // Commodity layers (disabled in tech variant)
   miningSites: false,
   processingPlants: false,
@@ -387,7 +367,6 @@ const TECH_MAP_LAYERS: MapLayers = {
 
 const TECH_MOBILE_MAP_LAYERS: MapLayers = {
   gpsJamming: false,
-  satellites: false,
 
 
   conflicts: false,
@@ -397,11 +376,8 @@ const TECH_MOBILE_MAP_LAYERS: MapLayers = {
   hotspots: false,
   ais: false,
   nuclear: false,
-  irradiators: false,
   sanctions: false,
   weather: false,
-  canadaRoads: false,
-  canadaAlerts: false,
   economic: false,
   waterways: false,
   outages: true,
@@ -411,7 +387,6 @@ const TECH_MOBILE_MAP_LAYERS: MapLayers = {
   flights: false,
   military: false,
   natural: true,
-  spaceports: false,
   minerals: false,
   fires: false,
   // Data source layers
@@ -440,7 +415,6 @@ const TECH_MOBILE_MAP_LAYERS: MapLayers = {
   iranAttacks: false,
   ciiChoropleth: false,
   resilienceScore: false,
-  dayNight: false,
   // Commodity layers (disabled in tech variant)
   miningSites: false,
   processingPlants: false,
@@ -534,7 +508,6 @@ const FINANCE_PANELS: Record<string, PanelConfig> = {
 
 const FINANCE_MAP_LAYERS: MapLayers = {
   gpsJamming: false,
-  satellites: false,
 
 
   conflicts: false,
@@ -544,11 +517,8 @@ const FINANCE_MAP_LAYERS: MapLayers = {
   hotspots: false,
   ais: false,
   nuclear: false,
-  irradiators: false,
   sanctions: true,
   weather: true,
-  canadaRoads: false,
-  canadaAlerts: false,
   economic: true,
   waterways: true,
   outages: true,
@@ -558,7 +528,6 @@ const FINANCE_MAP_LAYERS: MapLayers = {
   flights: false,
   military: false,
   natural: true,
-  spaceports: false,
   minerals: false,
   fires: false,
   // Data source layers
@@ -587,7 +556,6 @@ const FINANCE_MAP_LAYERS: MapLayers = {
   iranAttacks: false,
   ciiChoropleth: false,
   resilienceScore: false,
-  dayNight: false,
   // Commodity layers (disabled in finance variant)
   miningSites: false,
   processingPlants: false,
@@ -598,7 +566,6 @@ const FINANCE_MAP_LAYERS: MapLayers = {
 
 const FINANCE_MOBILE_MAP_LAYERS: MapLayers = {
   gpsJamming: false,
-  satellites: false,
 
 
   conflicts: false,
@@ -608,11 +575,8 @@ const FINANCE_MOBILE_MAP_LAYERS: MapLayers = {
   hotspots: false,
   ais: false,
   nuclear: false,
-  irradiators: false,
   sanctions: false,
   weather: false,
-  canadaRoads: false,
-  canadaAlerts: false,
   economic: true,
   waterways: false,
   outages: true,
@@ -622,7 +586,6 @@ const FINANCE_MOBILE_MAP_LAYERS: MapLayers = {
   flights: false,
   military: false,
   natural: true,
-  spaceports: false,
   minerals: false,
   fires: false,
   // Data source layers
@@ -651,7 +614,6 @@ const FINANCE_MOBILE_MAP_LAYERS: MapLayers = {
   iranAttacks: false,
   ciiChoropleth: false,
   resilienceScore: false,
-  dayNight: false,
   // Commodity layers (disabled in finance variant)
   miningSites: false,
   processingPlants: false,
@@ -678,7 +640,6 @@ const HAPPY_PANELS: Record<string, PanelConfig> = {
 
 const HAPPY_MAP_LAYERS: MapLayers = {
   gpsJamming: false,
-  satellites: false,
 
 
   conflicts: false,
@@ -688,11 +649,8 @@ const HAPPY_MAP_LAYERS: MapLayers = {
   hotspots: false,
   ais: false,
   nuclear: false,
-  irradiators: false,
   sanctions: false,
   weather: false,
-  canadaRoads: false,
-  canadaAlerts: false,
   economic: false,
   waterways: false,
   outages: false,
@@ -702,7 +660,6 @@ const HAPPY_MAP_LAYERS: MapLayers = {
   flights: false,
   military: false,
   natural: false,
-  spaceports: false,
   minerals: false,
   fires: false,
   // Data source layers
@@ -731,7 +688,6 @@ const HAPPY_MAP_LAYERS: MapLayers = {
   iranAttacks: false,
   ciiChoropleth: false,
   resilienceScore: false,
-  dayNight: false,
   // Commodity layers (disabled)
   miningSites: false,
   processingPlants: false,
@@ -742,7 +698,6 @@ const HAPPY_MAP_LAYERS: MapLayers = {
 
 const HAPPY_MOBILE_MAP_LAYERS: MapLayers = {
   gpsJamming: false,
-  satellites: false,
 
 
   conflicts: false,
@@ -752,11 +707,8 @@ const HAPPY_MOBILE_MAP_LAYERS: MapLayers = {
   hotspots: false,
   ais: false,
   nuclear: false,
-  irradiators: false,
   sanctions: false,
   weather: false,
-  canadaRoads: false,
-  canadaAlerts: false,
   economic: false,
   waterways: false,
   outages: false,
@@ -766,7 +718,6 @@ const HAPPY_MOBILE_MAP_LAYERS: MapLayers = {
   flights: false,
   military: false,
   natural: false,
-  spaceports: false,
   minerals: false,
   fires: false,
   // Data source layers
@@ -795,7 +746,6 @@ const HAPPY_MOBILE_MAP_LAYERS: MapLayers = {
   iranAttacks: false,
   ciiChoropleth: false,
   resilienceScore: false,
-  dayNight: false,
   // Commodity layers (disabled)
   miningSites: false,
   processingPlants: false,
@@ -852,7 +802,6 @@ const COMMODITY_PANELS: Record<string, PanelConfig> = {
 
 const COMMODITY_MAP_LAYERS: MapLayers = {
   gpsJamming: false,
-  satellites: false,
 
 
   conflicts: false,
@@ -862,11 +811,8 @@ const COMMODITY_MAP_LAYERS: MapLayers = {
   hotspots: false,
   ais: true,
   nuclear: false,
-  irradiators: false,
   sanctions: true,
   weather: true,
-  canadaRoads: false,
-  canadaAlerts: false,
   economic: true,
   waterways: true,
   outages: true,
@@ -876,7 +822,6 @@ const COMMODITY_MAP_LAYERS: MapLayers = {
   flights: false,
   military: false,
   natural: true,
-  spaceports: false,
   minerals: true,
   fires: true,
   // Data source layers
@@ -905,7 +850,6 @@ const COMMODITY_MAP_LAYERS: MapLayers = {
   iranAttacks: false,
   ciiChoropleth: false,
   resilienceScore: false,
-  dayNight: false,
   // Commodity layers (enabled)
   miningSites: true,
   processingPlants: true,
@@ -916,7 +860,6 @@ const COMMODITY_MAP_LAYERS: MapLayers = {
 
 const COMMODITY_MOBILE_MAP_LAYERS: MapLayers = {
   gpsJamming: false,
-  satellites: false,
 
 
   conflicts: false,
@@ -926,11 +869,8 @@ const COMMODITY_MOBILE_MAP_LAYERS: MapLayers = {
   hotspots: false,
   ais: false,
   nuclear: false,
-  irradiators: false,
   sanctions: false,
   weather: false,
-  canadaRoads: false,
-  canadaAlerts: false,
   economic: true,
   waterways: false,
   outages: true,
@@ -940,7 +880,6 @@ const COMMODITY_MOBILE_MAP_LAYERS: MapLayers = {
   flights: false,
   military: false,
   natural: true,
-  spaceports: false,
   minerals: true,
   fires: false,
   // Data source layers
@@ -969,7 +908,6 @@ const COMMODITY_MOBILE_MAP_LAYERS: MapLayers = {
   iranAttacks: false,
   ciiChoropleth: false,
   resilienceScore: false,
-  dayNight: false,
   // Commodity layers (limited on mobile)
   miningSites: true,
   processingPlants: false,
@@ -1025,7 +963,6 @@ const ENERGY_PANELS: Record<string, PanelConfig> = {
 
 const ENERGY_MAP_LAYERS: MapLayers = {
   gpsJamming: false,
-  satellites: false,
   conflicts: false,
   bases: false,
   cables: false,
@@ -1033,11 +970,8 @@ const ENERGY_MAP_LAYERS: MapLayers = {
   hotspots: false,
   ais: true,              // Tanker positions at chokepoints
   nuclear: false,
-  irradiators: false,
   sanctions: true,        // Energy sanctions flows
   weather: true,
-  canadaRoads: false,
-  canadaAlerts: false,
   economic: false,
   waterways: true,        // Strategic chokepoints (Hormuz, Suez, Bab el-Mandeb, etc.)
   outages: true,          // Power / energy system status
@@ -1047,7 +981,6 @@ const ENERGY_MAP_LAYERS: MapLayers = {
   flights: false,
   military: false,
   natural: true,          // Earthquakes near energy infrastructure
-  spaceports: false,
   minerals: true,         // Critical-minerals + energy-transition overlap
   fires: true,            // Fires near energy infrastructure / oilfields
   // Data source layers
@@ -1076,7 +1009,6 @@ const ENERGY_MAP_LAYERS: MapLayers = {
   iranAttacks: false,
   ciiChoropleth: false,
   resilienceScore: false,
-  dayNight: false,
   // Commodity layers — selected (energy-relevant subset)
   miningSites: false,
   processingPlants: false,
@@ -1091,7 +1023,6 @@ const ENERGY_MAP_LAYERS: MapLayers = {
 
 const ENERGY_MOBILE_MAP_LAYERS: MapLayers = {
   gpsJamming: false,
-  satellites: false,
   conflicts: false,
   bases: false,
   cables: false,
@@ -1099,11 +1030,8 @@ const ENERGY_MOBILE_MAP_LAYERS: MapLayers = {
   hotspots: false,
   ais: false,
   nuclear: false,
-  irradiators: false,
   sanctions: false,
   weather: false,
-  canadaRoads: false,
-  canadaAlerts: false,
   economic: false,
   waterways: true,
   outages: false,
@@ -1113,7 +1041,6 @@ const ENERGY_MOBILE_MAP_LAYERS: MapLayers = {
   flights: false,
   military: false,
   natural: true,
-  spaceports: false,
   minerals: false,
   fires: false,
   ucdpEvents: false,
@@ -1138,7 +1065,6 @@ const ENERGY_MOBILE_MAP_LAYERS: MapLayers = {
   iranAttacks: false,
   ciiChoropleth: false,
   resilienceScore: false,
-  dayNight: false,
   miningSites: false,
   processingPlants: false,
   commodityPorts: true,
@@ -1345,7 +1271,6 @@ export const LAYER_TO_SOURCE: Partial<Record<keyof MapLayers, DataSourceId[]>> =
   ais: ['ais'],
   natural: ['usgs'],
   weather: ['weather'],
-  canadaRoads: ['ontario_511', 'alberta_511', 'manitoba_511', 'toronto_roads', 'bc_open511'],
   outages: ['outages'],
   cyberThreats: ['cyber_threats'],
   protests: ['acled', 'gdelt_doc'],
@@ -1353,7 +1278,6 @@ export const LAYER_TO_SOURCE: Partial<Record<keyof MapLayers, DataSourceId[]>> =
   displacement: ['unhcr'],
   climate: ['climate'],
   sanctions: ['sanctions_pressure'],
-  radiationWatch: ['radiation'],
 };
 
 // ============================================

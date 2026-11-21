@@ -56,10 +56,6 @@ export const LAYER_REGISTRY: Record<keyof MapLayers, LayerDefinition> = {
 
   bases:                    def('bases',                    '&#127963;', 'militaryBases',            'Military Bases'),
   nuclear:                  def('nuclear',                  '&#9762;',   'nuclearSites',             'Nuclear Sites'),
-  irradiators:              def('irradiators',              '&#9888;',   'gammaIrradiators',         'Gamma Irradiators'),
-  radiationWatch:           def('radiationWatch',           '&#9762;',   'radiationWatch',           'Radiation Watch'),
-  spaceports:               def('spaceports',               '&#128640;', 'spaceports',               'Spaceports'),
-  satellites:               def('satellites',               '&#128752;', 'satellites',               'Orbital Surveillance', ['svg', 'deck']),
 
   cables:                   def('cables',                   '&#128268;', 'underseaCables',           'Undersea Cables'),
   pipelines:                def('pipelines',                '&#128738;', 'pipelines',                'Pipelines'),
@@ -74,8 +70,6 @@ export const LAYER_REGISTRY: Record<keyof MapLayers, LayerDefinition> = {
   displacement:             def('displacement',             '&#128101;', 'displacementFlows',        'Displacement Flows'),
   climate:                  def('climate',                  '&#127787;', 'climateAnomalies',         'Climate Anomalies'),
   weather:                  def('weather',                  '&#9928;',   'weatherAlerts',            'Weather Alerts'),
-  canadaRoads:              def('canadaRoads',              '&#128679;', 'canadaRoads',              'Canada Roads', ['deck']),
-  canadaAlerts:             def('canadaAlerts',             '&#9888;',   'canadaAlerts',             'Canada Alerts', ['deck']),
   outages:                  def('outages',                  '&#128225;', 'internetOutages',          'Internet Disruptions'),
   cyberThreats:             def('cyberThreats',             '&#128737;', 'cyberThreats',             'Cyber Threats'),
   natural:                  def('natural',                  '&#127755;', 'naturalEvents',            'Natural Events'),
@@ -89,7 +83,6 @@ export const LAYER_REGISTRY: Record<keyof MapLayers, LayerDefinition> = {
   ciiChoropleth:            def('ciiChoropleth',            '&#127758;', 'ciiChoropleth',            'Country Instability', ['deck']),
   // DeckGLMap owns the resilience choropleth; only DeckGL has a paint path.
   resilienceScore:          def('resilienceScore',          '&#128200;', 'resilienceScore',          'Country Resilience', ['deck']),
-  dayNight:                 def('dayNight',                 '&#127763;', 'dayNight',                 'Day/Night', ['svg', 'deck']),
   sanctions:                def('sanctions',                '&#128683;', 'sanctions',                'Sanctions', ['svg', 'deck']),
   no2Activity:              def('no2Activity',              '&#127981;', 'no2Activity',              'Industrial Activity', ['deck']),
   reservoirLevels:          def('reservoirLevels',          '&#128167;', 'reservoirLevels',          'Water Levels'),
@@ -128,7 +121,6 @@ export const V1_LAYER_EXPLANATION_KEYS = [
   'ciiChoropleth',
   'natural',
   'weather',
-  'canadaRoads', 'canadaAlerts',
   'flights',
   'aircraftEmergencies',
   'ais',
@@ -146,8 +138,6 @@ export const LAYER_EXPLANATIONS: Partial<Record<keyof MapLayers, LayerExplanatio
   ciiChoropleth: { key: 'ciiChoropleth', coverage: 'curated', evidence: ['docs/strategic-risk.mdx', 'docs/architecture.mdx', 'src/services/cached-risk-scores.ts'] },
   natural: { key: 'natural', coverage: 'curated', evidence: ['docs/data-sources.mdx', 'docs/architecture.mdx', 'server/worldmonitor/natural/v1/list-natural-events.ts'] },
   weather: { key: 'weather', coverage: 'curated', evidence: ['scripts/ais-relay.cjs', 'scripts/_weather-alert-select.mjs', 'api/health.js', 'src/services/weather.ts'] },
-  canadaRoads: { key: 'canadaRoads', coverage: 'curated', evidence: ['scripts/seed-provincial-511.mjs', 'scripts/seed-toronto-road-restrictions.mjs', 'scripts/seed-open511.mjs', 'api/health.js', 'src/services/canada-roads.ts'] },
-  canadaAlerts: { key: 'canadaAlerts', coverage: 'curated', evidence: ['scripts/seed-alberta-emergency-alert.mjs', 'scripts/seed-bc-emergency-info.mjs', 'scripts/seed-saskalert.mjs', 'api/health.js', 'src/services/canada-alerts.ts'] },
   flights: { key: 'flights', coverage: 'curated', evidence: ['docs/data-sources.mdx', 'docs/architecture.mdx', 'src/services/aviation/index.ts', 'scripts/seed-aviation.mjs', 'scripts/seed-notam-nms.mjs', 'src/services/notam-airspace.ts'] },
   aircraftEmergencies: { key: 'aircraftEmergencies', coverage: 'curated', evidence: ['docs/aircraft-emergencies-evidence.md'] },
   ais: { key: 'ais', coverage: 'curated', evidence: ['docs/features.mdx', 'docs/architecture.mdx', 'src/services/maritime/index.ts', 'scripts/ais-relay.cjs'] },
@@ -162,25 +152,25 @@ export const LAYER_EXPLANATIONS: Partial<Record<keyof MapLayers, LayerExplanatio
 const VARIANT_LAYER_ORDER: Record<MapVariant, Array<keyof MapLayers>> = {
   full: [
     'iranAttacks', 'hotspots', 'conflicts',
-    'bases', 'nuclear', 'irradiators', 'radiationWatch', 'spaceports',
+    'bases', 'nuclear',
     'cables', 'pipelines', 'storageFacilities', 'fuelShortages', 'datacenters', 'military',
     'ais', 'tradeRoutes', 'flights', 'aircraftEmergencies', 'protests',
-    'ucdpEvents', 'displacement', 'climate', 'weather', 'canadaRoads', 'canadaAlerts',
+    'ucdpEvents', 'displacement', 'climate', 'weather',
     'outages', 'cyberThreats', 'natural', 'fires',
     'waterways', 'economic', 'minerals', 'gpsJamming',
-    'satellites', 'ciiChoropleth', 'resilienceScore', 'sanctions', 'no2Activity', 'reservoirLevels', 'dayNight', 'webcams',
+    'ciiChoropleth', 'resilienceScore', 'sanctions', 'no2Activity', 'reservoirLevels', 'webcams',
     'diseaseOutbreaks',
   ],
   tech: [
     'startupHubs', 'techHQs', 'accelerators', 'cloudRegions',
     'datacenters', 'cables', 'outages', 'cyberThreats',
-    'techEvents', 'resilienceScore', 'natural', 'fires', 'dayNight',
+    'techEvents', 'resilienceScore', 'natural', 'fires',
   ],
   finance: [
     'stockExchanges', 'financialCenters', 'centralBanks', 'commodityHubs',
     'gulfInvestments', 'tradeRoutes', 'cables', 'pipelines',
-    'outages', 'weather', 'canadaRoads', 'economic', 'waterways', 'canadaAlerts',
-    'resilienceScore', 'natural', 'cyberThreats', 'sanctions', 'dayNight',
+    'outages', 'weather', 'economic', 'waterways',
+    'resilienceScore', 'natural', 'cyberThreats', 'sanctions',
   ],
   happy: [
     'positiveEvents', 'kindness', 'happiness', 'resilienceScore',
@@ -190,15 +180,15 @@ const VARIANT_LAYER_ORDER: Record<MapVariant, Array<keyof MapLayers>> = {
     'miningSites', 'processingPlants', 'commodityPorts', 'commodityHubs',
     'minerals', 'pipelines', 'waterways', 'tradeRoutes',
     'ais', 'economic', 'fires', 'climate',
-    'resilienceScore', 'natural', 'weather', 'canadaRoads', 'outages', 'sanctions', 'dayNight', 'canadaAlerts',
+    'resilienceScore', 'natural', 'weather', 'outages', 'sanctions',
   ],
   energy: [
     // Core energy infrastructure — mirror of ENERGY_MAP_LAYERS in panels.ts
     'pipelines', 'storageFacilities', 'fuelShortages', 'waterways', 'commodityPorts', 'commodityHubs',
     'ais', 'liveTankers', 'tradeRoutes', 'minerals',
     // Energy-adjacent context
-    'sanctions', 'fires', 'climate', 'reservoirLevels', 'weather', 'canadaRoads', 'outages', 'natural', 'canadaAlerts',
-    'resilienceScore', 'dayNight',
+    'sanctions', 'fires', 'climate', 'reservoirLevels', 'weather', 'outages', 'natural',
+    'resilienceScore',
   ],
 };
 
@@ -242,11 +232,20 @@ export function getAllowedLayerKeys(variant: MapVariant): Set<keyof MapLayers> {
   return new Set(getOrderedLayerKeys(variant));
 }
 
+/**
+ * Clamp a restored layer state to the variant. Keys that are no longer map
+ * layers (saved state, URL deep links, presets or backups written before a
+ * layer was removed) are dropped silently so they never reach a renderer.
+ */
 export function sanitizeLayersForVariant(layers: MapLayers, variant: MapVariant): MapLayers {
   const allowed = getAllowedLayerKeys(variant);
   const sanitized = { ...layers };
   for (const key of Object.keys(sanitized) as Array<keyof MapLayers>) {
-    if (!allowed.has(key)) sanitized[key] = false;
+    if (!Object.prototype.hasOwnProperty.call(LAYER_REGISTRY, key)) {
+      delete sanitized[key];
+    } else if (!allowed.has(key)) {
+      sanitized[key] = false;
+    }
   }
   return sanitized;
 }
@@ -343,12 +342,8 @@ export const LAYER_SYNONYMS: Record<string, Array<keyof MapLayers>> = {
   navy: ['military', 'ais'],
   missile: ['iranAttacks', 'military'],
   nuke: ['nuclear'],
-  radiation: ['radiationWatch', 'nuclear', 'irradiators'],
-  radnet: ['radiationWatch'],
-  safecast: ['radiationWatch'],
-  anomaly: ['radiationWatch', 'climate'],
-  space: ['spaceports', 'satellites'],
-  orbit: ['satellites'],
+  radiation: ['nuclear'],
+  anomaly: ['climate'],
   internet: ['outages', 'cables', 'cyberThreats'],
   cyber: ['cyberThreats', 'outages'],
   hack: ['cyberThreats'],
@@ -360,24 +355,7 @@ export const LAYER_SYNONYMS: Record<string, Array<keyof MapLayers>> = {
   typhoon: ['weather', 'natural'],
   cyclone: ['weather', 'natural'],
   flood: ['weather', 'natural'],
-  aea: ['canadaAlerts'],
   wildfire: ['fires'],
-  road: ['canadaRoads'],
-  roads: ['canadaRoads'],
-  traffic: ['canadaRoads'],
-  ontario: ['canadaRoads'],
-  // Both sides of the merge claimed this alias: Alberta 511 roads (#6612) and
-  // Alberta Emergency Alert (#6610). Searching "alberta" should surface both.
-  alberta: ['canadaRoads', 'canadaAlerts'],
-  manitoba: ['canadaRoads'],
-  toronto: ['canadaRoads'],
-  britishcolumbia: ['canadaRoads', 'canadaAlerts'],
-  bcalert: ['canadaAlerts'],
-  saskatchewan: ['canadaAlerts'],
-  saskalert: ['canadaAlerts'],
-  sask: ['canadaAlerts'],
-  drivebc: ['canadaRoads'],
-  highway: ['canadaRoads'],
   forest: ['fires'],
   refugee: ['displacement'],
   migration: ['displacement'],
@@ -421,9 +399,7 @@ export const LAYER_SYNONYMS: Record<string, Array<keyof MapLayers>> = {
   emissions: ['no2Activity'],
   pollution: ['no2Activity'],
   industrial: ['no2Activity'],
-  satellite: ['no2Activity', 'satellites'],
-  night: ['dayNight'],
-  sun: ['dayNight'],
+  satellite: ['no2Activity'],
   webcam: ['webcams'],
   camera: ['webcams'],
   livecam: ['webcams'],
@@ -478,13 +454,13 @@ export const MAP_LAYER_GROUPS: readonly MapLayerGroupDef[] = [
     id: 'military',
     labelKo: '군사 · 항공 · 해상',
     labelEn: 'Military & Transport',
-    keys: ['bases', 'military', 'flights', 'aircraftEmergencies', 'ais', 'liveTankers', 'gpsJamming', 'spaceports', 'satellites'],
+    keys: ['bases', 'military', 'flights', 'aircraftEmergencies', 'ais', 'liveTankers', 'gpsJamming'],
   },
   {
     id: 'infra',
     labelKo: '에너지 · 인프라 · 사이버',
     labelEn: 'Energy & Infra',
-    keys: ['pipelines', 'storageFacilities', 'fuelShortages', 'cables', 'outages', 'datacenters', 'cyberThreats', 'nuclear', 'irradiators', 'radiationWatch'],
+    keys: ['pipelines', 'storageFacilities', 'fuelShortages', 'cables', 'outages', 'datacenters', 'cyberThreats', 'nuclear'],
   },
   {
     id: 'economic',
@@ -501,13 +477,13 @@ export const MAP_LAYER_GROUPS: readonly MapLayerGroupDef[] = [
     id: 'hazards',
     labelKo: '자연 · 기상 · 보건',
     labelEn: 'Nature & Hazards',
-    keys: ['natural', 'weather', 'fires', 'climate', 'reservoirLevels', 'diseaseOutbreaks', 'canadaRoads', 'canadaAlerts'],
+    keys: ['natural', 'weather', 'fires', 'climate', 'reservoirLevels', 'diseaseOutbreaks'],
   },
   {
     id: 'overlays',
     labelKo: '국가 지표 · 오버레이',
     labelEn: 'Indicators & Overlays',
-    keys: ['ciiChoropleth', 'resilienceScore', 'dayNight', 'webcams', 'positiveEvents', 'kindness', 'happiness', 'speciesRecovery', 'renewableInstallations'],
+    keys: ['ciiChoropleth', 'resilienceScore', 'webcams', 'positiveEvents', 'kindness', 'happiness', 'speciesRecovery', 'renewableInstallations'],
   },
 ] as const;
 

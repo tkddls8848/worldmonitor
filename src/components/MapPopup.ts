@@ -1,4 +1,4 @@
-import type { ConflictZone, Hotspot, NewsItem, NewsLocationMarker, MilitaryBase, StrategicWaterway, APTGroup, NuclearFacility, EconomicCenter, GammaIrradiator, Pipeline, UnderseaCable, CableAdvisory, RepairShip, InternetOutage, AIDataCenter, AisDisruptionEvent, SocialUnrestEvent, MilitaryFlight, MilitaryVessel, MilitaryFlightCluster, MilitaryVesselCluster, NaturalEvent, Port, Spaceport, CriticalMineralProject, CyberThreat } from '@/types';
+import type { ConflictZone, Hotspot, NewsItem, NewsLocationMarker, MilitaryBase, StrategicWaterway, APTGroup, NuclearFacility, EconomicCenter, Pipeline, UnderseaCable, CableAdvisory, RepairShip, InternetOutage, AIDataCenter, AisDisruptionEvent, SocialUnrestEvent, MilitaryFlight, MilitaryVessel, MilitaryFlightCluster, MilitaryVesselCluster, NaturalEvent, Port, CriticalMineralProject, CyberThreat } from '@/types';
 import type { TradeRouteSegment } from '@/config/trade-routes';
 import type { AirportDelayAlert, PositionSample } from '@/services/aviation';
 import type { Earthquake } from '@/services/earthquakes';
@@ -6,7 +6,6 @@ import type { WeatherAlert } from '@/services/weather';
 import type { CrossBorderPoint } from '@/services/displacement';
 import { renderDisplacementDetails, type DisplacementMarker } from './displacement-marker';
 import { renderCrossBorderDetails } from './cross-border-marker';
-import type { RadiationObservation } from '@/services/radiation';
 import { UNDERSEA_CABLES } from '@/config/geo-map';
 import type { StartupHub, Accelerator, TechHQ, CloudRegion } from '@/config/tech-geo';
 import type { TechHubActivity } from '@/services/tech-activity';
@@ -104,7 +103,7 @@ function fmtDelayMin(min: number | undefined): string {
 /** A news marker's popup: its title and, when known, the cluster's corroboration (#9213). */
 type NewsPopupData = Pick<NewsLocationMarker, 'title' | 'corroboration'>;
 
-export type PopupType = 'conflict' | 'hotspot' | 'earthquake' | 'weather' | 'base' | 'waterway' | 'apt' | 'cyberThreat' | 'nuclear' | 'economic' | 'irradiator' | 'pipeline' | 'cable' | 'cable-advisory' | 'repair-ship' | 'outage' | 'datacenter' | 'datacenterCluster' | 'ais' | 'protest' | 'protestCluster' | 'flight' | 'aircraft' | 'militaryFlight' | 'militaryVessel' | 'militaryFlightCluster' | 'militaryVesselCluster' | 'natEvent' | 'port' | 'spaceport' | 'mineral' | 'startupHub' | 'cloudRegion' | 'techHQ' | 'accelerator' | 'techEvent' | 'techHQCluster' | 'techEventCluster' | 'techActivity' | 'geoActivity' | 'stockExchange' | 'financialCenter' | 'centralBank' | 'commodityHub' | 'iranEvent' | 'gpsJamming' | 'radiation' | 'news' | 'crossBorder' | 'displacement' | 'storageFacility' | 'reservoirLevel';
+export type PopupType = 'conflict' | 'hotspot' | 'earthquake' | 'weather' | 'base' | 'waterway' | 'apt' | 'cyberThreat' | 'nuclear' | 'economic' | 'pipeline' | 'cable' | 'cable-advisory' | 'repair-ship' | 'outage' | 'datacenter' | 'datacenterCluster' | 'ais' | 'protest' | 'protestCluster' | 'flight' | 'aircraft' | 'militaryFlight' | 'militaryVessel' | 'militaryFlightCluster' | 'militaryVesselCluster' | 'natEvent' | 'port' | 'mineral' | 'startupHub' | 'cloudRegion' | 'techHQ' | 'accelerator' | 'techEvent' | 'techHQCluster' | 'techEventCluster' | 'techActivity' | 'geoActivity' | 'stockExchange' | 'financialCenter' | 'centralBank' | 'commodityHub' | 'iranEvent' | 'gpsJamming' | 'news' | 'crossBorder' | 'displacement' | 'storageFacility' | 'reservoirLevel';
 
 interface TechEventPopupData {
   id: string;
@@ -243,7 +242,7 @@ interface StorageFacilityPopupData {
 
 interface PopupData {
   type: PopupType;
-  data: ConflictZone | Hotspot | Earthquake | WeatherAlert | MilitaryBase | StrategicWaterway | APTGroup | CyberThreat | NuclearFacility | EconomicCenter | GammaIrradiator | Pipeline | UnderseaCable | CableAdvisory | RepairShip | InternetOutage | AIDataCenter | AisDisruptionEvent | SocialUnrestEvent | AirportDelayAlert | PositionSample | MilitaryFlight | MilitaryVessel | MilitaryFlightCluster | MilitaryVesselCluster | NaturalEvent | Port | Spaceport | CriticalMineralProject | StartupHub | CloudRegion | TechHQ | Accelerator | TechEventPopupData | TechHQClusterData | TechEventClusterData | ProtestClusterData | DatacenterClusterData | TechHubActivity | GeoHubActivity | StockExchangePopupData | FinancialCenterPopupData | CentralBankPopupData | CommodityHubPopupData | IranEventPopupData | GpsJammingPopupData | RadiationObservation | NewsPopupData | DisplacementMarker | CrossBorderPoint | StorageFacilityPopupData | ReservoirLevel;
+  data: ConflictZone | Hotspot | Earthquake | WeatherAlert | MilitaryBase | StrategicWaterway | APTGroup | CyberThreat | NuclearFacility | EconomicCenter | Pipeline | UnderseaCable | CableAdvisory | RepairShip | InternetOutage | AIDataCenter | AisDisruptionEvent | SocialUnrestEvent | AirportDelayAlert | PositionSample | MilitaryFlight | MilitaryVessel | MilitaryFlightCluster | MilitaryVesselCluster | NaturalEvent | Port | CriticalMineralProject | StartupHub | CloudRegion | TechHQ | Accelerator | TechEventPopupData | TechHQClusterData | TechEventClusterData | ProtestClusterData | DatacenterClusterData | TechHubActivity | GeoHubActivity | StockExchangePopupData | FinancialCenterPopupData | CentralBankPopupData | CommodityHubPopupData | IranEventPopupData | GpsJammingPopupData | NewsPopupData | DisplacementMarker | CrossBorderPoint | StorageFacilityPopupData | ReservoirLevel;
   relatedNews?: NewsItem[];
   x: number;
   y: number;
@@ -830,8 +829,6 @@ export class MapPopup {
         return this.renderNuclearPopup(data.data as NuclearFacility);
       case 'economic':
         return this.renderEconomicPopup(data.data as EconomicCenter);
-      case 'irradiator':
-        return this.renderIrradiatorPopup(data.data as GammaIrradiator);
       case 'pipeline':
         return this.renderPipelinePopup(data.data as Pipeline);
       case 'storageFacility':
@@ -870,8 +867,6 @@ export class MapPopup {
         return this.renderNaturalEventPopup(data.data as NaturalEvent);
       case 'port':
         return this.renderPortPopup(data.data as Port);
-      case 'spaceport':
-        return this.renderSpaceportPopup(data.data as Spaceport);
       case 'mineral':
         return this.renderMineralPopup(data.data as CriticalMineralProject);
       case 'startupHub':
@@ -908,8 +903,6 @@ export class MapPopup {
       case 'crossBorder':
         return `<div class="popup-header"><span class="popup-title">${t('components.displacement.crossBorder')}</span><button class="popup-close" aria-label="${t('common.close')}">×</button></div>`
           + `<div class="popup-body">${renderCrossBorderDetails(data.data as CrossBorderPoint)}</div>`;
-      case 'radiation':
-        return this.renderRadiationPopup(data.data as RadiationObservation);
       case 'reservoirLevel':
         return this.renderReservoirLevelPopup(data.data as ReservoirLevel);
       default:
@@ -925,54 +918,6 @@ export class MapPopup {
         <button class="popup-close" aria-label="${t('common.close')}">×</button>
       </div>
       <div class="popup-body"><p>${escapeHtml(news.title)}</p>${coverage ? `<p>${coverage}</p>` : ''}</div>
-    `;
-  }
-
-  private renderRadiationPopup(observation: RadiationObservation): string {
-    const severityClass = observation.severity === 'spike' ? 'high' : 'medium';
-    const delta = `${observation.delta >= 0 ? '+' : ''}${observation.delta.toFixed(1)} ${escapeHtml(observation.unit)}`;
-    const provenance = formatRadiationSources(observation);
-    const confidence = formatRadiationConfidence(observation.confidence);
-    const flags = [
-      observation.corroborated ? t('popups.mapPopup.radiation.confirmed') : '',
-      observation.conflictingSources ? t('popups.mapPopup.radiation.conflictingSources') : '',
-      observation.convertedFromCpm ? t('popups.mapPopup.radiation.cpmDerived') : '',
-    ].filter(Boolean).join(' · ');
-    return `
-      <div class="popup-header outage">
-        <span class="popup-title">☢ ${escapeHtml(observation.location.toUpperCase())}</span>
-        <span class="popup-badge ${severityClass}">${escapeHtml(severityLabel(observation.severity))}</span>
-        <button class="popup-close" aria-label="${t('common.close')}">×</button>
-      </div>
-      <div class="popup-body">
-        <div class="popup-stats">
-          <div class="popup-stat">
-            <span class="stat-label">${t('popups.mapPopup.radiation.reading')}</span>
-            <span class="stat-value">${observation.value.toFixed(1)} ${escapeHtml(observation.unit)}</span>
-          </div>
-          <div class="popup-stat">
-            <span class="stat-label">${t('popups.mapPopup.radiation.baseline')}</span>
-            <span class="stat-value">${observation.baselineValue.toFixed(1)} ${escapeHtml(observation.unit)}</span>
-          </div>
-          <div class="popup-stat">
-            <span class="stat-label">${t('popups.mapPopup.radiation.delta')}</span>
-            <span class="stat-value">${delta}</span>
-          </div>
-          <div class="popup-stat">
-            <span class="stat-label">${t('popups.mapPopup.radiation.confidence')}</span>
-            <span class="stat-value">${escapeHtml(confidence)}</span>
-          </div>
-          <div class="popup-stat">
-            <span class="stat-label">${t('popups.mapPopup.radiation.sources')}</span>
-            <span class="stat-value">${escapeHtml(provenance)}</span>
-          </div>
-          <div class="popup-stat">
-            <span class="stat-label">${t('popups.mapPopup.radiation.sourceCount')}</span>
-            <span class="stat-value">${observation.sourceCount}</span>
-          </div>
-        </div>
-        <p class="popup-description">${escapeHtml(countryLabel(observation.country))} · z-score ${observation.zScore.toFixed(2)} · ${escapeHtml(observation.freshness)}${flags ? ` · ${escapeHtml(flags)}` : ''}</p>
-      </div>
     `;
   }
 
@@ -2193,34 +2138,6 @@ ${isFeatureAvailable('wingbitsEnrichment') ? `<div class="wingbits-live-section"
     `;
   }
 
-
-  private renderIrradiatorPopup(irradiator: GammaIrradiator): string {
-    return `
-      <div class="popup-header irradiator">
-        <span class="popup-title">☢ ${escapeHtml(irradiator.city.toUpperCase())}</span>
-        <span class="popup-badge elevated">${t('popups.gamma')}</span>
-        <button class="popup-close" aria-label="${t('common.close')}">×</button>
-      </div>
-      <div class="popup-body">
-        <div class="popup-subtitle">${t('popups.irradiator.subtitle')}</div>
-        <div class="popup-stats">
-          <div class="popup-stat">
-            <span class="stat-label">${t('popups.country')}</span>
-            <span class="stat-value">${escapeHtml(irradiator.country)}</span>
-          </div>
-          <div class="popup-stat">
-            <span class="stat-label">${t('popups.city')}</span>
-            <span class="stat-value">${escapeHtml(irradiator.city)}</span>
-          </div>
-          <div class="popup-stat">
-            <span class="stat-label">${t('popups.coordinates')}</span>
-            <span class="stat-value">${irradiator.lat.toFixed(2)}°, ${irradiator.lon.toFixed(2)}°</span>
-          </div>
-        </div>
-        <p class="popup-description">${t('popups.irradiator.description')}</p>
-      </div>
-    `;
-  }
 
 
   private renderReservoirLevelPopup(r: ReservoirLevel): string {
@@ -3616,42 +3533,6 @@ ${isFeatureAvailable('wingbitsEnrichment') ? `<div class="wingbits-live-section"
     `;
   }
 
-  private renderSpaceportPopup(port: Spaceport): string {
-    const statusColors: Record<string, string> = {
-      'active': 'elevated',
-      'construction': 'high',
-      'inactive': 'low',
-    };
-    const statusLabels: Record<string, string> = {
-      'active': t('popups.spaceport.status.active'),
-      'construction': t('popups.spaceport.status.construction'),
-      'inactive': t('popups.spaceport.status.inactive'),
-    };
-
-    return `
-      <div class="popup-header spaceport ${port.status}">
-        <span class="popup-icon">🚀</span>
-        <span class="popup-title">${escapeHtml(port.name.toUpperCase())}</span>
-        <span class="popup-badge ${statusColors[port.status] || 'normal'}">${statusLabels[port.status] || escapeHtml(statusLabel(port.status))}</span>
-        <button class="popup-close" aria-label="${t('common.close')}">×</button>
-      </div>
-      <div class="popup-body">
-        <div class="popup-subtitle">${escapeHtml(port.operator)} • ${escapeHtml(port.country)}</div>
-        <div class="popup-stats">
-          <div class="popup-stat">
-            <span class="stat-label">${t('popups.spaceport.launchActivity')}</span>
-            <span class="stat-value">${escapeHtml(port.launches.toUpperCase())}</span>
-          </div>
-          <div class="popup-stat">
-            <span class="stat-label">${t('popups.coordinates')}</span>
-            <span class="stat-value">${port.lat.toFixed(2)}°, ${port.lon.toFixed(2)}°</span>
-          </div>
-        </div>
-        <p class="popup-description">${t('popups.spaceport.description')}</p>
-      </div>
-    `;
-  }
-
   private renderMineralPopup(mine: CriticalMineralProject): string {
     const statusColors: Record<string, string> = {
       'producing': 'elevated',
@@ -3885,21 +3766,5 @@ ${isFeatureAvailable('wingbitsEnrichment') ? `<div class="wingbits-live-section"
         </div>
       </div>
     `;
-  }
-}
-
-function formatRadiationSources(observation: RadiationObservation): string {
-  const uniqueSources = [...new Set(observation.contributingSources)];
-  return uniqueSources.length > 0 ? uniqueSources.join(' + ') : observation.source;
-}
-
-function formatRadiationConfidence(confidence: RadiationObservation['confidence']): string {
-  switch (confidence) {
-    case 'high':
-      return 'High';
-    case 'medium':
-      return 'Medium';
-    default:
-      return 'Low';
   }
 }

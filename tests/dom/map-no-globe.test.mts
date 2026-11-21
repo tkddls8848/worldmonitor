@@ -9,8 +9,8 @@
  *   the map is not silently switched.
  * - RF4: every layer keeps a flat renderer, and no layer names the globe.
  * - The WebMCP layer catalog no longer offers a `3d` renderer filter.
- * - Enabling `satellites` on the flat map loads only imagery footprints; the
- *   live-position propagation that fed the globe is not started.
+ * - The `satellites` layer was removed with its imagery footprints, and the
+ *   live-position propagation that fed the globe does not exist.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -104,7 +104,7 @@ vi.mock('@/components/Map', () => ({ MapComponent: rendererStub('svg') }));
 
 const { MapContainer } = await import('@/components/MapContainer');
 
-const INITIAL_LAYERS = { satellites: false, resilienceScore: false } as unknown as MapLayers;
+const INITIAL_LAYERS = { resilienceScore: false } as unknown as MapLayers;
 
 function stubWebGL(kind: 'webgl2' | 'none'): void {
   const original = HTMLCanvasElement.prototype.getContext;
@@ -251,47 +251,11 @@ describe('map without the 3D globe', () => {
     expect(parseMapLayerCatalogArgs({ renderer: '2d' }).ok).toBe(true);
   });
 
-  it('enabling satellites on the flat map loads imagery footprints, not live satellite positions', async () => {
-    const requested: string[] = [];
-    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
-      requested.push(String(input instanceof Request ? input.url : input));
-      return new Response(JSON.stringify({ scenes: [] }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }));
-
+  it('the satellites layer is gone and no satellite or imagery loader remains', async () => {
     const { DataLoaderManager } = await import('@/app/data-loader');
-    const setSatellites = vi.fn();
-    const setImageryScenes = vi.fn();
-    const ctx = {
-      isDestroyed: false,
-      inFlight: new Set<string>(),
-      mapLayers: { satellites: true } as unknown as MapLayers,
-      map: {
-        setLayerLoading: vi.fn(),
-        getBbox: () => '-10,-10,10,10',
-        setImageryScenes,
-        setSatellites,
-        isDeckGLActive: () => true,
-      },
-      panels: {},
-      intelligenceCache: {},
-    } as unknown as AppContext;
-    const loader = new DataLoaderManager(ctx, {
-      renderCriticalBanner: () => {},
-      refreshOpenCountryBrief: () => {},
-    });
-
-    await loader.loadDataForLayer('satellites');
-    await vi.waitFor(() => expect(setImageryScenes).toHaveBeenCalledWith([]));
-
-    expect(requested.some((url) => url.includes('/api/imagery/v1/search-imagery'))).toBe(true);
-    expect(requested.filter((url) => url.includes('list-satellites'))).toEqual([]);
-    expect(setSatellites).not.toHaveBeenCalled();
+    expect('satellites' in LAYER_REGISTRY).toBe(false);
     expect('loadSatellites' in DataLoaderManager.prototype).toBe(false);
-    expect(dataLoaderSource).not.toMatch(/startPropagationLoop|propagatePositions|fetchSatelliteTLEs/);
-    loader.stopLayerActivity('satellites');
+    expect(dataLoaderSource).not.toMatch(/startPropagationLoop|propagatePositions|fetchSatelliteTLEs|loadImageryFootprints|fetchImageryScenes/);
   });
 });
 

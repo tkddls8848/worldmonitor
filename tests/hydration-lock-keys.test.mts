@@ -32,14 +32,12 @@ describe('hydration lock keys (#6770)', () => {
     );
   });
 
-  it('one-flights firms/radiation hydration with their map-layer toggles', () => {
-    // loadDataForLayer locks by the MapLayers key ('fires' / 'radiationWatch');
-    // the hydration loaders have no internal guard, so they must lock the SAME
-    // key or a hydration/toggle race double-fetches.
+  it('one-flights firms hydration with its map-layer toggle', () => {
+    // loadDataForLayer locks by the MapLayers key ('fires'); the hydration
+    // loader has no internal guard, so it must lock the SAME key or a
+    // hydration/toggle race double-fetches.
     assert.match(dataLoader, /runGuarded\(\s*'fires'/, "firms hydration must lock 'fires' (the layer key)");
-    assert.match(dataLoader, /runGuarded\(\s*'radiationWatch'/, "radiation hydration must lock 'radiationWatch'");
     assert.doesNotMatch(dataLoader, /runGuarded\(\s*'firms'/, "'firms' inFlight key diverges from the 'fires' layer key");
-    assert.doesNotMatch(dataLoader, /runGuarded\(\s*'radiation'\s*,/, "'radiation' inFlight key diverges from 'radiationWatch'");
     // The firms REFRESH is the third guard-less-loadFirmsData call site; it must
     // lock the same 'fires' key or a hydration/refresh overlap double-fetches.
     const firmsRefreshRegistrations = app

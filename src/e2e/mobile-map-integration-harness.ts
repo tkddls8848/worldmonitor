@@ -131,7 +131,6 @@ window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
 
 const layers = {
   gpsJamming: false,
-  satellites: false,
 
   conflicts: false,
   bases: false,
@@ -140,11 +139,8 @@ const layers = {
   hotspots: true,
   ais: false,
   nuclear: false,
-  irradiators: false,
   sanctions: false,
   weather: false,
-  canadaRoads: false,
-  canadaAlerts: false,
   economic: false,
   waterways: false,
   outages: false,
@@ -154,7 +150,6 @@ const layers = {
   flights: false,
   military: false,
   natural: false,
-  spaceports: false,
   minerals: false,
   fires: false,
   ucdpEvents: false,
@@ -180,7 +175,6 @@ const layers = {
 
   ciiChoropleth: false,
   resilienceScore: false,
-  dayNight: false,
   miningSites: false,
   processingPlants: false,
   commodityPorts: false,

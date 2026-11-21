@@ -17,10 +17,10 @@ import { LAYER_REGISTRY } from '../src/config/map-layer-definitions.ts';
 
 const EMPTY_LAYERS = {
   conflicts: false, bases: false, cables: false, pipelines: false,
-  hotspots: false, ais: false, nuclear: false, irradiators: false,
+  hotspots: false, ais: false, nuclear: false,
   sanctions: false, weather: false, economic: false, waterways: false,
   outages: false, cyberThreats: false, datacenters: false, protests: false,
-  flights: false, military: false, natural: false, spaceports: false,
+  flights: false, military: false, natural: false,
   minerals: false, fires: false, ucdpEvents: false, displacement: false,
   climate: false, startupHubs: false, cloudRegions: false,
   accelerators: false, techHQs: false, techEvents: false,

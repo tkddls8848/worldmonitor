@@ -572,9 +572,7 @@
         "displacement": "Bật/tắt dòng di tản",
         "climate": "Bật/tắt bất thường khí hậu",
         "outages": "Bật/tắt gián đoạn internet",
-        "tradeRoutes": "Bật/tắt tuyến thương mại",
-        "canadaRoads": "Bật/tắt lớp đường bộ Canada",
-        "canadaAlerts": "Bật/tắt lớp cảnh báo khẩn cấp cấp tỉnh của Canada"
+        "tradeRoutes": "Bật/tắt tuyến thương mại"
       },
       "view": {
         "dark": "Chuyển sang chế độ tối",
@@ -622,7 +620,6 @@
         "earthquake": "Động đất",
         "outage": "Gián đoạn",
         "nuclear": "Cơ sở Hạt nhân",
-        "irradiator": "Cơ sở Chiếu xạ",
         "techcompany": "Công ty Công nghệ",
         "ailab": "Phòng thí nghiệm AI",
         "startup": "Khởi nghiệp",
@@ -1274,9 +1271,6 @@
         "conflictZones": "Vùng Xung đột",
         "militaryBases": "Căn cứ Quân sự",
         "nuclearSites": "Cơ sở Hạt nhân",
-        "gammaIrradiators": "Cơ sở Chiếu xạ Gamma",
-        "spaceports": "Sân bay Vũ trụ",
-        "satellites": "Giám sát Quỹ đạo",
         "pipelines": "Đường ống",
         "militaryActivity": "Hoạt động Quân sự",
         "shipTraffic": "Giao thông Hàng hải",
@@ -1298,16 +1292,11 @@
         "iranAttacks": "Tấn công ở Trung Đông",
         "gpsJamming": "Gây nhiễu dẫn hướng",
         "ciiChoropleth": "Bất ổn định đất nước",
-        "dayNight": "Ngày/Đêm",
         "positiveEvents": "Sự kiện tích cực",
         "kindness": "Hành động tử tế",
         "happiness": "Hạnh phúc thế giới",
         "speciesRecovery": "Phục hồi loài",
         "renewableInstallations": "Năng lượng sạch",
-        "radiationSpike": "Đột tăng bức xạ",
-        "radiationElevated": "Bức xạ tăng cao",
-        "canadaRoads": "Đường bộ Canada",
-        "canadaAlerts": "Cảnh báo Canada",
         "notamAirspace": "Hạn chế không phận NOTAM",
         "no2Activity": "Hoạt động công nghiệp",
         "reservoirLevels": "Mực nước"
@@ -1400,7 +1389,6 @@
           "geoProtests": "Bất ổn dân sự, biểu tình (lọc theo thời gian)",
           "militaryBases": "Căn cứ quân sự US/NATO, Trung Quốc, Nga (150+)",
           "militaryNuclear": "Nhà máy điện, làm giàu, cơ sở vũ khí",
-          "militaryIrradiators": "Cơ sở chiếu xạ gamma công nghiệp",
           "militaryActivity": "Theo dõi máy bay và tàu quân sự trực tiếp",
           "infraCablesFull": "Cáp quang ngầm chính (20 tuyến xương sống)",
           "infraPipelinesFull": "Đường ống dầu/khí (Nord Stream, TAPI, v.v.)",
@@ -1413,7 +1401,6 @@
           "waterwaysLabels": "Nhãn điểm nghẽn chiến lược",
           "geoUcdpEvents": "Sự kiện xung đột vũ trang từ Chương trình Dữ liệu Xung đột Uppsala",
           "geoDisplacement": "Mô hình dòng chảy tị nạn và di dời",
-          "militarySpaceports": "Bãi phóng tên lửa và cơ sở không gian",
           "infraCyberThreats": "Tấn công mạng và sự kiện an ninh",
           "mineralsFull": "Mỏ khoáng sản chiến lược và địa điểm khai thác",
           "techCyberThreats": "Tấn công mạng và sự kiện an ninh",
@@ -1421,11 +1408,8 @@
           "techFires": "Cháy rừng đang hoạt động gần hạ tầng công nghệ",
           "financeGulfInvestments": "Quỹ tài sản có chủ quyền và đầu tư trực tiếp nước ngoài của Hội đồng Hợp tác Vùng Vịnh",
           "tradeRoutes": "Các tuyến vận tải biển chính toàn cầu kết nối các cảng qua các điểm chiến lược",
-          "dayNight": "Đường phân chia mặt trời thời gian thực hiển thị vùng ngày và đêm",
           "geoBoundaries": "Khu phi quân sự, đường ngừng bắn và ranh giới tranh chấp",
           "ciiChoropleth": "Bản đồ nhiệt Chỉ số Bất ổn định Đất nước — tô màu các quốc gia theo điểm số (xanh=ổn định, đỏ=tới hạn)",
-          "canadaRoads": "Sự cố giao thông chính thức, cảnh báo, tình trạng đường, đóng đường, thi công và mối nguy tại các khu vực tài phán Canada được hỗ trợ",
-          "canadaAlerts": "Cảnh báo an toàn công cộng cấp tỉnh từ Alberta Emergency Alert, B.C. Evacuation Orders and Alerts và SaskAlert",
           "notamAirspace": "Hạn chế bay tạm thời và không phận bị hạn chế, nguy hiểm và bị cấm từ NOTAM của FAA, có hiệu lực ngay bây giờ hoặc bắt đầu trong vòng 24 giờ",
           "no2Activity": "Hướng hoạt động NO2 từ Sentinel-5P cho 167 quốc gia và 32 cụm công nghiệp: cửa sổ 56 ngày gần nhất so với cùng các ngày trong những năm trước, sau dải chết 10%. Chứa dữ liệu Copernicus Sentinel đã sửa đổi.",
           "reservoirLevels": "Mực mặt nước của các hồ chứa và hồ chiến lược từ lidar vệ tinh ICESat-2 của NASA, so với mực nước thường lệ của tháng. NASA công bố mỗi lượt quét khoảng hai tháng sau khi đo."
@@ -3359,10 +3343,6 @@
       },
       "closed": "ĐÓNG CỬA"
     },
-    "irradiator": {
-      "subtitle": "Cơ sở Chiếu xạ Gamma Công nghiệp",
-      "description": "Cơ sở chiếu xạ công nghiệp sử dụng nguồn Cobalt-60 hoặc Cesium-137 để khử trùng thiết bị y tế, bảo quản thực phẩm hoặc xử lý vật liệu. Nguồn: Cơ sở Dữ liệu DIIF của IAEA."
-    },
     "pipeline": {
       "title": "ĐƯỜNG ỐNG",
       "types": {
@@ -3427,7 +3407,6 @@
     "lastSeen": "LẦN CUỐI THẤY",
     "open": "MỞ",
     "tradingHours": "GIỜ GIAO DỊCH",
-    "gamma": "GAMMA",
     "city": "THÀNH PHỐ",
     "length": "CHIỀU DÀI",
     "operator": "ĐƠN VỊ VẬN HÀNH",
@@ -3707,15 +3686,6 @@
       },
       "worldRank": "XẾP HẠNG THẾ GIỚI"
     },
-    "spaceport": {
-      "status": {
-        "active": "HOẠT ĐỘNG",
-        "construction": "XÂY DỰNG",
-        "inactive": "NGỪNG HOẠT ĐỘNG"
-      },
-      "launchActivity": "HOẠT ĐỘNG PHÓNG",
-      "description": "Cơ sở phóng vũ trụ chiến lược. Tần suất phóng và khả năng tiếp cận quỹ đạo là chỉ số địa chính trị quan trọng."
-    },
     "mineral": {
       "status": {
         "producing": "ĐANG SẢN XUẤT",
@@ -3961,17 +3931,6 @@
       "coverageUnavailable": "Không có vùng phủ",
       "targets": "Mục tiêu",
       "listSeparator": ", ",
-      "radiation": {
-        "confirmed": "Đã xác nhận",
-        "conflictingSources": "Nguồn mâu thuẫn",
-        "cpmDerived": "Thành phần quy đổi từ CPM",
-        "reading": "Số đo",
-        "baseline": "Mức nền",
-        "delta": "Chênh lệch",
-        "confidence": "Độ tin cậy",
-        "sources": "Nguồn",
-        "sourceCount": "Số nguồn"
-      },
       "history": {
         "conflictSince": "Xung đột từ",
         "peaceAgreements": "Hiệp định hòa bình",
@@ -4811,39 +4770,6 @@
         "related": {
           "0": "Lớp Thiên tai",
           "1": "Cửa sổ cảnh báo thời tiết",
-          "2": "Trạng thái độ mới của dữ liệu"
-        }
-      },
-      "canadaRoads": {
-        "category": "Giao thông",
-        "purpose": "Hiển thị sự cố đường, cảnh báo, tình trạng mặt đường, phong tỏa, thi công và nguy hiểm chính thức tại các khu vực pháp lý Canada được hỗ trợ.",
-        "source": "Nguồn cấp tỉnh Ontario 511, Alberta 511 và Manitoba 511, Hạn chế đường bộ của Thành phố Toronto, và DriveBC Open511, được nạp qua WorldMonitor.",
-        "freshness": "Ontario, Alberta và Manitoba 511 được nạp mỗi 15 phút và được giám sát theo hạn độ mới 45 phút. Hạn chế của Toronto được nạp mỗi 2 giờ. DriveBC Open511 được nạp mỗi 30 phút.",
-        "confidence": "Có thẩm quyền với cơ quan tỉnh và thành phố được hỗ trợ, tùy thời điểm xuất bản ở thượng nguồn và hình học đã đưa lên bản đồ.",
-        "limitations": {
-          "0": "roadconditions của Alberta 511 không được nạp (điểm cuối của nhà cung cấp trả về 404). Phần vẽ trực tiếp của Alberta chỉ gồm sự kiện và cảnh báo.",
-          "1": "Cảnh báo cấp tỉnh không có tọa độ không hiện thành chấm trên bản đồ.",
-          "2": "Đường gấp khúc tình trạng mặt đường có thể đơn giản hóa hình học đường cao tốc phức tạp."
-        },
-        "related": {
-          "0": "Cảnh báo thời tiết",
-          "1": "Trạng thái độ mới của dữ liệu"
-        }
-      },
-      "canadaAlerts": {
-        "category": "Cảnh báo khẩn cấp",
-        "purpose": "Hiển thị cảnh báo an toàn công cộng còn hiệu lực của Alberta, British Columbia và Saskatchewan thành chấm trên bản đồ, đặt cạnh thời tiết NWS của Hoa Kỳ.",
-        "source": "Atom của Cảnh báo khẩn cấp Alberta, lớp GeoJSON Lệnh và cảnh báo sơ tán OGL-BC, nguồn JSON công khai của SaskAlert cùng chi tiết CAP 1.2 trên cùng máy chủ được chuẩn hóa thành một hợp nhất canadaAlerts. Đa giác CAP/GeoRSS, đa giác sơ tán của British Columbia và đa giác CAP của SaskAlert trở thành trọng tâm. Bản ghi không có hình học dùng trọng tâm của tỉnh nguồn.",
-        "freshness": "Nguồn cấp tỉnh được nạp mỗi 15 phút, và phần hợp nhất được giám sát theo hạn độ mới 45 phút. Một nguồn trống (không có cảnh báo còn hiệu lực) là thành công hợp lệ với không bản ghi.",
-        "confidence": "Có thẩm quyền với cảnh báo do Cảnh báo khẩn cấp Alberta, Lệnh và cảnh báo sơ tán của British Columbia, và SaskAlert công bố, tùy thời điểm xuất bản ở thượng nguồn và hình học cảnh báo đã đưa lên bản đồ.",
-        "limitations": {
-          "0": "Phạm vi chỉ gồm Alberta, British Columbia và Saskatchewan. Ontario không có nguồn máy đọc được do tỉnh vận hành và đủ điều kiện, ngoài NAAD đã bị loại.",
-          "1": "Không thay thế cảnh báo thời tiết NWS của Hoa Kỳ, cũng không thay thế các lớp đường của Ontario và Toronto.",
-          "2": "Mục không có mức nghiêm trọng đưa được lên bản đồ (ngữ nghĩa CAP và màu của Alberta, trạng thái sơ tán của British Columbia, hoặc mức nghiêm trọng CAP của SaskAlert) bị loại, không bị bịa ra. Màu hoặc mức trong phần tóm tắt của SaskAlert không được coi là mức nghiêm trọng CAP."
-        },
-        "related": {
-          "0": "Cảnh báo thời tiết",
-          "1": "Lớp Thiên tai",
           "2": "Trạng thái độ mới của dữ liệu"
         }
       },

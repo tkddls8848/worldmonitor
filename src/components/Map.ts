@@ -20,7 +20,6 @@ import type { TechHubActivity } from '@/services/tech-activity';
 import type { GeoHubActivity } from '@/services/geo-activity';
 import { getNaturalEventIcon } from '@/services/eonet';
 import type { WeatherAlert } from '@/services/weather';
-import type { RadiationObservation } from '@/services/radiation';
 import { getSeverityColor } from '@/services/weather';
 import { getThreatColor } from '@/services/threat-classifier';
 import { startSmartPollLoop, type SmartPollLoopHandle } from '@/services/smart-poll-loop';
@@ -31,7 +30,6 @@ import { getCachedMilitaryBases, preloadMilitaryBases } from '@/services/militar
 import {
   INTEL_HOTSPOTS,
   CONFLICT_ZONES,
-  GAMMA_IRRADIATORS,
   PIPELINES,
   PIPELINE_COLORS,
   STRATEGIC_WATERWAYS,
@@ -47,7 +45,7 @@ import {
 // off the eager @/config barrel and load only with this lazy renderer (#4404).
 import { STARTUP_HUBS, ACCELERATORS, TECH_HQS, CLOUD_REGIONS } from '@/config/tech-geo';
 import { AI_DATA_CENTERS } from '@/config/ai-datacenters';
-import { worldTopologyUrl, UNDERSEA_CABLES, NUCLEAR_FACILITIES, SANCTIONED_COUNTRIES, ECONOMIC_CENTERS, SPACEPORTS, CRITICAL_MINERALS } from '@/config/geo-map';
+import { worldTopologyUrl, UNDERSEA_CABLES, NUCLEAR_FACILITIES, SANCTIONED_COUNTRIES, ECONOMIC_CENTERS, CRITICAL_MINERALS } from '@/config/geo-map';
 import { mountWebcamPinButton } from '@/services/webcams/pinned-store';
 import type { WebcamEntry, WebcamCluster } from '@/generated/client/worldmonitor/webcam/v1/service_client';
 import { tokenizeForMatch, matchKeyword, findMatchingKeywords } from '@/utils/keyword-match';
@@ -238,7 +236,6 @@ export class MapComponent {
   private earthquakes: Earthquake[] = [];
   private newsLocations: NewsLocationMarker[] = [];
   private weatherAlerts: WeatherAlert[] = [];
-  private radiationObservations: RadiationObservation[] = [];
   private outages: InternetOutage[] = [];
   private aisDisruptions: AisDisruptionEvent[] = [];
   private ukmtoIncidents: UkmtoMapIncident[] = [];
@@ -676,7 +673,7 @@ export class MapComponent {
     const fullLayers: (keyof MapLayers)[] = [
       'iranAttacks',                                      // Iran conflict
       'conflicts', 'hotspots', 'sanctions', 'protests',  // geopolitical
-      'bases', 'nuclear', 'irradiators',                 // military/strategic
+      'bases', 'nuclear',                                // military/strategic
       'military',                                         // military tracking (flights + vessels)
       'cables', 'pipelines', 'outages', 'datacenters',   // infrastructure
       // cyberThreats is intentionally hidden on SVG/mobile fallback (DeckGL desktop only).
@@ -706,8 +703,8 @@ export class MapComponent {
       'positiveEvents', 'kindness', 'happiness', 'speciesRecovery', 'renewableInstallations',
     ];
     // Energy variant — SVG/mobile fallback. Only include keys that actually render
-    // in this file (commodityPorts/climate/tradeRoutes/resilienceScore/dayNight do
-    // not, so they're omitted). Mirrors VARIANT_LAYER_ORDER.energy in
+    // in this file (commodityPorts/climate/tradeRoutes/resilienceScore do not,
+    // so they're omitted). Mirrors VARIANT_LAYER_ORDER.energy in
     // src/config/map-layer-definitions.ts but filtered to the SVG-capable subset.
     const energyLayers: (keyof MapLayers)[] = [
       'pipelines',                            // oil + gas pipeline registry (Week 2)
@@ -724,7 +721,7 @@ export class MapComponent {
     ];
     // Commodity variant — SVG/mobile fallback. Only include keys that actually
     // render in this file (miningSites/processingPlants/commodityPorts/climate/
-    // tradeRoutes/resilienceScore/dayNight do not, so they're omitted). Mirrors
+    // tradeRoutes/resilienceScore do not, so they're omitted). Mirrors
     // VARIANT_LAYER_ORDER.commodity in src/config/map-layer-definitions.ts but
     // filtered to the SVG-capable subset. COMMODITY_MAP_LAYERS turns all eleven
     // on; MAX_SVG_LAYERS = 9 then disables the last two active buttons on first
@@ -953,8 +950,6 @@ export class MapComponent {
       helpItem(label('economicCenters'), 'economicCenters'),
       helpItem(label('strategicWaterways'), 'macroWaterways'),
       helpItem(label('weatherAlerts'), 'weatherAlertsMarket'),
-      helpItem(label('canadaRoads'), 'canadaRoads'),
-      helpItem(label('canadaAlerts'), 'canadaAlerts'),
       helpItem(label('naturalEvents'), 'naturalEventsMacro'),
     ])}
       </div>
@@ -978,9 +973,7 @@ export class MapComponent {
         ${helpSection('militaryStrategic', [
       helpItem(label('militaryBases'), 'militaryBases'),
       helpItem(label('nuclearSites'), 'militaryNuclear'),
-      helpItem(label('gammaIrradiators'), 'militaryIrradiators'),
       helpItem(label('militaryActivity'), 'militaryActivity'),
-      helpItem(label('spaceports'), 'militarySpaceports'),
     ])}
         ${helpSection('infrastructure', [
       helpItem(label('underseaCables'), 'infraCablesFull'),
@@ -997,8 +990,6 @@ export class MapComponent {
       helpItem(label('naturalEvents'), 'naturalEventsFull'),
       helpItem(label('fires'), 'firesFull'),
       helpItem(label('weatherAlerts'), 'weatherAlerts'),
-      helpItem(label('canadaRoads'), 'canadaRoads'),
-      helpItem(label('canadaAlerts'), 'canadaAlerts'),
       helpItem(label('climateAnomalies'), 'climateAnomalies'),
       helpItem(label('economicCenters'), 'economicCenters'),
       helpItem(label('criticalMinerals'), 'mineralsFull'),
@@ -1939,7 +1930,6 @@ export class MapComponent {
     weather: readonly WeatherAlert[];
     news: readonly MapComponent['newsLocations'][number][];
     naturalEvents: readonly NaturalEvent[];
-    radiationObservations: readonly RadiationObservation[];
     outages: readonly InternetOutage[];
     cableAdvisories: readonly CableAdvisory[];
     flightDelays: readonly AirportDelayAlert[];
@@ -1997,9 +1987,6 @@ export class MapComponent {
       // Same fields DeckGLMap.buildLayers filters on, so both renderers show the
       // same records for a given TIME RANGE.
       naturalEvents: layers.natural ? this.filterByTime(this.naturalEvents, (event) => event.date) : [],
-      radiationObservations: layers.radiationWatch
-        ? this.filterByTime(this.radiationObservations, (observation) => observation.observedAt)
-        : [],
       outages: layers.outages ? this.filterByTime(this.outages, (outage) => outage.pubDate) : [],
       cableAdvisories: layers.cables ? this.filterByTime(this.cableAdvisories, (advisory) => advisory.reported) : [],
       flightDelays: layers.flights ? this.filterByTime(this.flightDelays, (delay) => delay.updatedAt) : [],
@@ -2062,7 +2049,6 @@ export class MapComponent {
     // is planned but not rendered would spend fair share it never uses, and
     // tighten the cap on the layers that do render.
     if (this.isLayerZoomVisible('nuclear')) add('nuclear', NUCLEAR_FACILITIES);
-    if (layers.irradiators) add('irradiators', GAMMA_IRRADIATORS);
     if (layers.conflicts) {
       add('conflicts', CONFLICT_ZONES);
       add('conflicts', slices.conflictEvents, { rank: (m) => (m as AcledConflictEvent).fatalities ?? 0 });
@@ -2081,14 +2067,12 @@ export class MapComponent {
     if (layers.economic) add('economic', ECONOMIC_CENTERS);
     if (layers.reservoirLevels) add('reservoirLevels', this.reservoirLevels);
     if (layers.weather) add('weather', slices.weather);
-    if (layers.radiationWatch) add('radiationWatch', slices.radiationObservations);
     if (layers.outages) add('outages', slices.outages);
     if (layers.cables) {
       add('cables', slices.cableAdvisories);
       add('cables', this.repairShips);
     }
     if (layers.datacenters) add('datacenters', RENDERABLE_AI_DATA_CENTERS);
-    if (layers.spaceports) add('spaceports', SPACEPORTS);
     if (layers.minerals) add('minerals', CRITICAL_MINERALS);
     if (layers.startupHubs) add('startupHubs', STARTUP_HUBS);
     if (layers.cloudRegions) add('cloudRegions', CLOUD_REGIONS);
@@ -2213,8 +2197,7 @@ export class MapComponent {
    * restyle the toggle rows each time (#5080).
    *
    * A layer the budget trimmed that has no toggle row in this variant's picker
-   * (`fires` outside the energy/commodity variants, `webcams`, `radiationWatch`,
-   * `spaceports`) has nowhere to show a badge. Those stay budgeted — an
+   * (`fires` outside the energy/commodity variants, `webcams`) has nowhere to show a badge. Those stay budgeted — an
    * unbounded feed is what #7112 is about, and `toMapFires` caps nothing — but
    * the cut is recorded on `overlayUndisclosedTruncation` and surfaced through
    * getOverlayMarkerBudgetState() rather than vanishing, so it is assertable and
@@ -2487,34 +2470,6 @@ export class MapComponent {
       });
     }
 
-    // Gamma irradiators (IAEA DIIF) - no labels, click to see details
-    if (this.state.layers.irradiators) {
-      GAMMA_IRRADIATORS.forEach((irradiator) => {
-        if (this.isOverlayMarkerCut(irradiator)) return;
-        const pos = projection([irradiator.lon, irradiator.lat]);
-        if (!pos) return;
-
-        const div = document.createElement('div');
-        div.className = 'irradiator-marker';
-        div.style.left = `${pos[0]}px`;
-        div.style.top = `${pos[1]}px`;
-        div.title = `${irradiator.city}, ${irradiator.country}`;
-
-        div.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const rect = this.container.getBoundingClientRect();
-          this.popup.show({
-            type: 'irradiator',
-            data: irradiator,
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top,
-          });
-        });
-
-        this.appendOverlay(div);
-      });
-    }
-
     // Conflict zone click areas
     if (this.state.layers.conflicts) {
       CONFLICT_ZONES.forEach((zone) => {
@@ -2760,40 +2715,6 @@ export class MapComponent {
       });
     }
 
-    if (this.state.layers.radiationWatch) {
-      slices.radiationObservations.forEach((observation) => {
-        if (this.isOverlayMarkerCut(observation)) return;
-        const pos = projection([observation.lon, observation.lat]);
-        if (!pos) return;
-
-        const div = document.createElement('div');
-        const color = observation.severity === 'spike' ? '#ff3030' : '#ffaa00';
-        div.className = `radiation-watch-marker radiation-watch-marker-${observation.severity}`;
-        div.style.left = `${pos[0]}px`;
-        div.style.top = `${pos[1]}px`;
-        div.style.width = '14px';
-        div.style.height = '14px';
-        div.style.borderRadius = '50%';
-        div.style.background = color;
-        div.style.border = '2px solid rgba(255,255,255,0.75)';
-        div.style.boxShadow = `0 0 10px ${color}88`;
-        div.title = `${observation.location}: ${observation.value.toFixed(1)} ${observation.unit}`;
-
-        div.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const rect = this.container.getBoundingClientRect();
-          this.popup.show({
-            type: 'radiation',
-            data: observation,
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top,
-          });
-        });
-
-        this.appendOverlay(div);
-      });
-    }
-
     // Internet Outages (severity colors)
     if (this.state.layers.outages) {
       slices.outages.forEach((outage) => {
@@ -2927,43 +2848,6 @@ export class MapComponent {
           this.popup.show({
             type: 'datacenter',
             data: dc,
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top,
-          });
-        });
-
-        this.appendOverlay(div);
-      });
-    }
-
-    // Spaceports (🚀 icon)
-    if (this.state.layers.spaceports) {
-      SPACEPORTS.forEach((port) => {
-        if (this.isOverlayMarkerCut(port)) return;
-        const pos = projection([port.lon, port.lat]);
-        if (!pos) return;
-
-        const div = document.createElement('div');
-        div.className = `spaceport-marker ${port.status}`;
-        div.style.left = `${pos[0]}px`;
-        div.style.top = `${pos[1]}px`;
-
-        const icon = document.createElement('div');
-        icon.className = 'spaceport-icon';
-        icon.textContent = '🚀';
-        div.appendChild(icon);
-
-        const label = document.createElement('div');
-        label.className = 'spaceport-label';
-        label.textContent = port.name;
-        div.appendChild(label);
-
-        div.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const rect = this.container.getBoundingClientRect();
-          this.popup.show({
-            type: 'spaceport',
-            data: port,
             x: e.clientX - rect.left,
             y: e.clientY - rect.top,
           });
@@ -4817,23 +4701,6 @@ export class MapComponent {
     });
   }
 
-  public triggerIrradiatorClick(id: string): void {
-    const irradiator = GAMMA_IRRADIATORS.find(i => i.id === id);
-    if (!irradiator) return;
-
-    const { width, height } = this.readContainerSize();
-    const projection = this.getProjection(width, height);
-    const pos = projection([irradiator.lon, irradiator.lat]);
-    if (!pos) return;
-
-    this.popup.show({
-      type: 'irradiator',
-      data: irradiator,
-      x: pos[0],
-      y: pos[1],
-    });
-  }
-
   public enableLayer(layer: keyof MapLayers): void {
     if (!this.canToggleLayer(layer, this.state.layers[layer])) return;
     if (!this.state.layers[layer]) {
@@ -5538,11 +5405,6 @@ export class MapComponent {
 
   public setWeatherAlerts(alerts: WeatherAlert[]): void {
     this.weatherAlerts = alerts;
-    this.render();
-  }
-
-  public setRadiationObservations(observations: RadiationObservation[]): void {
-    this.radiationObservations = observations;
     this.render();
   }
 

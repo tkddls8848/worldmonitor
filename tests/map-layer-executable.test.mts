@@ -22,7 +22,6 @@ import type { MapLayers } from '../src/types';
 import { persistGateOwnershipTransition } from '../src/services/variant-panel-ownership';
 import {
   LAYER_REGISTRY,
-  LAYER_SYNONYMS,
   isLayerCommandAllowed,
   isLayerExecutable,
   sanitizeLayersForVariant,
@@ -39,8 +38,6 @@ describe('LAYER_REGISTRY — renderer axis', () => {
     assert.deepEqual(LAYER_REGISTRY.fuelShortages.renderers, ['deck']);
     assert.deepEqual(LAYER_REGISTRY.diseaseOutbreaks.renderers, ['deck']);
     assert.deepEqual(LAYER_REGISTRY.resilienceScore.renderers, ['deck']);
-    assert.deepEqual(LAYER_REGISTRY.canadaRoads.renderers, ['deck']);
-    assert.deepEqual(LAYER_REGISTRY.canadaAlerts.renderers, ['deck']);
     assert.deepEqual(LAYER_REGISTRY.liveTankers.renderers, ['deck']);
   });
 
@@ -57,20 +54,12 @@ describe('LAYER_REGISTRY — renderer axis', () => {
     assert.equal('deckGLOnly' in LAYER_REGISTRY.ciiChoropleth, false);
   });
 
-  test('Toronto restrictions reuse canadaRoads and do not add a second layer id', () => {
-    assert.equal('torontoRoads' in LAYER_REGISTRY, false);
-    assert.ok(LAYER_REGISTRY.canadaRoads);
-    assert.equal(LAYER_REGISTRY.canadaRoads.key, 'canadaRoads');
-    assert.deepEqual(LAYER_SYNONYMS.toronto, ['canadaRoads']);
-  });
-
   test('all-surface layers list both renderers', () => {
     // Layers with a paint path on SVG and DeckGL list both.
     assert.deepEqual(LAYER_REGISTRY.pipelines.renderers, ['svg', 'deck']);
     assert.deepEqual(LAYER_REGISTRY.conflicts.renderers, ['svg', 'deck']);
     assert.deepEqual(LAYER_REGISTRY.cables.renderers, ['svg', 'deck']);
     assert.deepEqual(LAYER_REGISTRY.sanctions.renderers, ['svg', 'deck']);
-    assert.deepEqual(LAYER_REGISTRY.dayNight.renderers, ['svg', 'deck']);
   });
 });
 

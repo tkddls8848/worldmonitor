@@ -28,7 +28,6 @@ const PERSISTENT_ENTITY_TYPES = new Set([
   'cable',
   'datacenter',
   'nuclear',
-  'irradiator',
   'techcompany',
   'startup',
   'techevent',

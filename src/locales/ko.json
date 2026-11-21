@@ -572,9 +572,7 @@
         "displacement": "이재민 흐름 전환",
         "climate": "기후 이상 전환",
         "outages": "인터넷 장애 전환",
-        "tradeRoutes": "무역 노선 전환",
-        "canadaRoads": "캐나다 도로 오버레이 전환",
-        "canadaAlerts": "캐나다 주 비상 경보 오버레이 전환"
+        "tradeRoutes": "무역 노선 전환"
       },
       "view": {
         "dark": "다크 모드로 전환",
@@ -622,7 +620,6 @@
         "earthquake": "지진",
         "outage": "장애",
         "nuclear": "핵 시설",
-        "irradiator": "방사선 조사 장치",
         "techcompany": "기술 기업",
         "ailab": "AI 연구소",
         "startup": "스타트업",
@@ -1274,9 +1271,6 @@
         "conflictZones": "분쟁 지역",
         "militaryBases": "군사 기지",
         "nuclearSites": "핵 시설",
-        "gammaIrradiators": "감마 조사기",
-        "spaceports": "우주 발사장",
-        "satellites": "궤도 감시",
         "pipelines": "파이프라인",
         "militaryActivity": "군사 활동",
         "shipTraffic": "선박 교통",
@@ -1298,16 +1292,11 @@
         "iranAttacks": "중동 공격",
         "gpsJamming": "항법 간섭",
         "ciiChoropleth": "국가 불안정성",
-        "dayNight": "주/야간",
         "positiveEvents": "긍정적 사건",
         "kindness": "선행",
         "happiness": "세계 행복도",
         "speciesRecovery": "종 복원",
         "renewableInstallations": "클린 에너지",
-        "radiationSpike": "방사능 급증",
-        "radiationElevated": "상승된 방사능",
-        "canadaRoads": "캐나다 도로",
-        "canadaAlerts": "캐나다 경보",
         "notamAirspace": "NOTAM 공역 제한",
         "no2Activity": "산업 활동",
         "reservoirLevels": "수위",
@@ -1412,7 +1401,6 @@
           "geoProtests": "시민 소요, 시위 (시간 필터 적용)",
           "militaryBases": "미국/NATO, 중국, 러시아 군사 시설 (150곳 이상)",
           "militaryNuclear": "원자력 발전소, 농축 시설, 무기 시설",
-          "militaryIrradiators": "산업용 감마 조사기 시설",
           "militaryActivity": "실시간 군용 항공기 및 함정 추적",
           "infraCablesFull": "주요 해저 광케이블 (백본 20개 경로)",
           "infraPipelinesFull": "석유/가스 파이프라인 (노르드 스트림, TAPI 등)",
@@ -1425,7 +1413,6 @@
           "waterwaysLabels": "전략적 병목 지점 라벨",
           "geoUcdpEvents": "웁살라 분쟁 데이터 프로그램 무력 분쟁 사건",
           "geoDisplacement": "난민 및 실향민 이동 패턴",
-          "militarySpaceports": "로켓 발사장 및 우주 시설",
           "infraCyberThreats": "사이버 공격 및 보안 이벤트",
           "mineralsFull": "전략 광물 매장지 및 채굴 현장",
           "techCyberThreats": "사이버 공격 및 보안 이벤트",
@@ -1433,11 +1420,8 @@
           "techFires": "기술 인프라 인근 활성 산불",
           "financeGulfInvestments": "걸프협력회의 국부펀드 투자 및 해외직접투자",
           "tradeRoutes": "전략적 병목 지점을 경유하여 항구를 연결하는 주요 글로벌 해운 항로",
-          "dayNight": "주간 및 야간 영역을 표시하는 실시간 태양 종단선",
           "geoBoundaries": "비무장지대, 휴전선 및 분쟁 경계선",
           "ciiChoropleth": "Country Instability Index 히트맵 — 점수별 국가 표시(녹색=안정, 적색=심각)",
-          "canadaRoads": "지원되는 캐나다 관할 지역의 공식 도로 사고, 경보, 노면 상태, 통행 차단, 공사 및 위험 정보",
-          "canadaAlerts": "Alberta Emergency Alert, B.C. Evacuation Orders and Alerts, SaskAlert의 주(州) 공공안전 경보",
           "notamAirspace": "FAA NOTAM에서 현재 시행 중이거나 24시간 이내에 시작되는 임시 비행 제한, 제한된 공역, 위험 및 금지 공역",
           "no2Activity": "167개국과 32개 산업 클러스터에 대한 Sentinel-5P NO2 활동 방향: 최근 56일 창을 이전 연도의 같은 날짜와 비교하고 10% 데드밴드를 적용합니다. 수정된 Copernicus Sentinel 데이터를 포함합니다.",
           "reservoirLevels": "NASA ICESat-2 위성 라이다로 측정한 전략 저수지와 호수의 수면 수위를 해당 월의 평년 수위와 비교합니다. NASA는 각 관측 패스를 측정 후 약 두 달 뒤에 공개합니다."
@@ -3453,10 +3437,6 @@
       },
       "closed": "폐장"
     },
-    "irradiator": {
-      "subtitle": "산업용 감마선 조사 시설",
-      "description": "의료기기 멸균, 식품 보존 또는 재료 가공을 위해 코발트-60 또는 세슘-137 선원을 사용하는 산업용 조사 시설. 출처: IAEA DIIF 데이터베이스."
-    },
     "pipeline": {
       "title": "파이프라인",
       "types": {
@@ -3521,7 +3501,6 @@
     "lastSeen": "최종 확인",
     "open": "개장",
     "tradingHours": "거래 시간",
-    "gamma": "감마",
     "city": "도시",
     "length": "길이",
     "operator": "운영자",
@@ -3801,15 +3780,6 @@
       },
       "worldRank": "세계 순위"
     },
-    "spaceport": {
-      "status": {
-        "active": "활성",
-        "construction": "건설 중",
-        "inactive": "비활성"
-      },
-      "launchActivity": "발사 활동",
-      "description": "전략적 우주 발사 시설. 발사 빈도와 궤도 도달 능력은 주요 지정학적 지표입니다."
-    },
     "mineral": {
       "status": {
         "producing": "생산 중",
@@ -4055,17 +4025,6 @@
       "coverageUnavailable": "커버리지 없음",
       "targets": "표적",
       "listSeparator": ", ",
-      "radiation": {
-        "confirmed": "확인됨",
-        "conflictingSources": "출처 상충",
-        "cpmDerived": "CPM에서 환산한 성분",
-        "reading": "측정값",
-        "baseline": "기준값",
-        "delta": "차이",
-        "confidence": "신뢰도",
-        "sources": "출처",
-        "sourceCount": "출처 수"
-      },
       "history": {
         "conflictSince": "분쟁 시작",
         "peaceAgreements": "평화 협정",
@@ -4905,39 +4864,6 @@
         "related": {
           "0": "자연재해 레이어",
           "1": "기상 경보 팝업",
-          "2": "데이터 최신성 상태"
-        }
-      },
-      "canadaRoads": {
-        "category": "교통",
-        "purpose": "지원하는 캐나다 관할에 대해 공식 도로 사건, 경보, 노면 상태, 폐쇄, 공사, 위험을 보여 줍니다.",
-        "source": "온타리오 511, 앨버타 511, 매니토바 511 주 피드, 토론토시 도로 제한, DriveBC Open511입니다. WorldMonitor를 통해 시드합니다.",
-        "freshness": "온타리오, 앨버타, 매니토바 511은 15분마다 시드하고 45분 최신성 허용 시간에 맞춰 감시합니다. 토론토 제한은 2시간마다 시드합니다. DriveBC Open511은 30분마다 시드합니다.",
-        "confidence": "지원하는 주와 지방자치단체 발행자에 대해서는 권위가 있습니다. 상위 공개 시점과 지도에 올린 형상에 좌우됩니다.",
-        "limitations": {
-          "0": "앨버타 511 roadconditions는 가져오지 않습니다(공급자 엔드포인트가 404를 반환합니다). 앨버타의 실시간 표시는 사건과 경보만입니다.",
-          "1": "좌표가 없는 주 경보는 지도 점으로 나오지 않습니다.",
-          "2": "노면 상태 폴리라인은 복잡한 고속도로 형상을 단순화할 수 있습니다."
-        },
-        "related": {
-          "0": "기상 경보",
-          "1": "데이터 최신성 상태"
-        }
-      },
-      "canadaAlerts": {
-        "category": "긴급 경보",
-        "purpose": "앨버타, 브리티시컬럼비아, 서스캐처원에서 유효한 공공안전 경보를 미국 NWS 날씨와 나란히 지도 점으로 보여 줍니다.",
-        "source": "앨버타 긴급 경보 Atom, OGL-BC 대피 명령 및 경보 GeoJSON 레이어, SaskAlert 공개 JSON 피드와 동일 호스트의 CAP 1.2 상세를 하나의 canadaAlerts 합집합으로 정규화합니다. CAP/GeoRSS 폴리곤, 브리티시컬럼비아 대피 폴리곤, SaskAlert CAP 폴리곤은 중심점이 됩니다. 형상이 없는 기록은 출처 주의 중심점을 씁니다.",
-        "freshness": "주 출처는 15분마다 시드합니다. 합집합은 45분 최신성 허용 시간에 맞춰 감시합니다. 빈 피드(유효한 경보 없음)는 기록이 없어도 유효한 성공입니다.",
-        "confidence": "앨버타 긴급 경보, 브리티시컬럼비아 대피 명령 및 경보, SaskAlert가 공개한 경보에 대해서는 권위가 있습니다. 상위 공개 시점과 지도에 올린 경보 형상에 좌우됩니다.",
-        "limitations": {
-          "0": "범위는 앨버타, 브리티시컬럼비아, 서스캐처원으로 한정됩니다. 온타리오에는 제외된 NAAD 외에, 주가 운영하는 적합한 기계 판독 피드가 없습니다.",
-          "1": "미국 NWS 기상 경보나 온타리오와 토론토 도로 레이어를 대신하지 않습니다.",
-          "2": "지도에 올릴 수 있는 심각도가 없는 항목(앨버타 CAP과 색의 의미, 브리티시컬럼비아 대피 상태, SaskAlert CAP 심각도)은 값을 만들지 않고 버립니다. SaskAlert 요약의 색이나 수준은 CAP 심각도로 보지 않습니다."
-        },
-        "related": {
-          "0": "기상 경보",
-          "1": "자연재해 레이어",
           "2": "데이터 최신성 상태"
         }
       },

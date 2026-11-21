@@ -17,7 +17,7 @@ export interface Command {
 export const LAYER_PRESETS: Record<string, (keyof MapLayers)[]> = {
   military: ['bases', 'nuclear', 'flights', 'military', 'waterways'],
   finance: ['stockExchanges', 'financialCenters', 'centralBanks', 'commodityHubs', 'economic', 'tradeRoutes'],
-  infra: ['cables', 'pipelines', 'datacenters', 'spaceports', 'minerals'],
+  infra: ['cables', 'pipelines', 'datacenters', 'minerals'],
   intel: ['conflicts', 'hotspots', 'protests', 'ucdpEvents', 'displacement'],
   minimal: ['conflicts', 'hotspots'],
 };
@@ -29,7 +29,6 @@ export const LAYER_KEY_MAP: Record<string, keyof MapLayers> = {
   gps: 'gpsJamming',
   cii: 'ciiChoropleth',
   iran: 'iranAttacks',
-  radiation: 'radiationWatch',
   natural: 'natural',
 };
 
@@ -79,12 +78,8 @@ export const COMMANDS: Command[] = [
   { id: 'layer:outages', keywords: ['outages', 'internet outages', 'internet disruptions', 'disruptions'], label: 'Toggle internet disruptions', icon: '\u{1F4E1}', category: 'layers' },
   { id: 'layer:tradeRoutes', keywords: ['trade routes', 'shipping lanes', 'trade'], label: 'Toggle trade routes', icon: '\u{1F6A2}', category: 'layers' },
   { id: 'layer:gps', keywords: ['gps', 'gps jamming', 'jamming', 'spoofing'], label: 'Toggle GPS jamming', icon: '\u{1F4E1}', category: 'layers' },
-  { id: 'layer:satellites', keywords: ['satellites', 'orbital', 'surveillance', 'space'], label: 'Toggle orbital surveillance', icon: '\u{1F6F0}\uFE0F', category: 'layers' },
   { id: 'layer:ucdp', keywords: ['ucdp', 'armed conflict', 'armed conflict events'], label: 'Toggle armed conflict events', icon: '\u2694\uFE0F', category: 'layers' },
   { id: 'layer:iran', keywords: ['iran', 'iran attacks', 'middle east strikes', 'strikes', 'missiles', 'drones'], label: 'Toggle Middle East strikes', icon: '\u{1F3AF}', category: 'layers' },
-  { id: 'layer:irradiators', keywords: ['irradiators', 'gamma', 'radiation'], label: 'Toggle gamma irradiators', icon: '\u2623\uFE0F', category: 'layers' },
-  { id: 'layer:radiation', keywords: ['radiation', 'radnet', 'safecast', 'anomalies'], label: 'Toggle radiation anomalies', icon: '\u2622\uFE0F', category: 'layers' },
-  { id: 'layer:spaceports', keywords: ['spaceports', 'launch sites', 'rockets'], label: 'Toggle spaceports', icon: '\u{1F680}', category: 'layers' },
   { id: 'layer:datacenters', keywords: ['datacenters', 'data centers', 'ai data'], label: 'Toggle AI data centers', icon: '\u{1F5A5}\uFE0F', category: 'layers' },
   { id: 'layer:military', keywords: ['military activity', 'mil activity'], label: 'Toggle military activity', icon: '\u{1F396}\uFE0F', category: 'layers' },
   { id: 'layer:natural', keywords: ['natural events', 'earthquakes', 'volcanoes', 'tsunamis'], label: 'Toggle natural events', icon: '\u{1F30B}', category: 'layers' },
@@ -92,7 +87,6 @@ export const COMMANDS: Command[] = [
   { id: 'layer:economic', keywords: ['economic centers', 'gdp'], label: 'Toggle economic centers', icon: '\u{1F4B0}', category: 'layers' },
   { id: 'layer:minerals', keywords: ['minerals', 'rare earth', 'critical minerals', 'lithium'], label: 'Toggle critical minerals', icon: '\u{1F48E}', category: 'layers' },
   { id: 'layer:cii', keywords: ['cii', 'instability index', 'country instability'], label: 'Toggle country instability', icon: '\u{1F30E}', category: 'layers' },
-  { id: 'layer:dayNight', keywords: ['day night', 'terminator', 'shadow', 'day/night'], label: 'Toggle day/night overlay', icon: '\u{1F31C}', category: 'layers' },
   { id: 'layer:sanctions', keywords: ['sanctions', 'embargoes'], label: 'Toggle sanctions', icon: '\u{1F6AB}', category: 'layers' },
   { id: 'layer:reservoirLevels', keywords: ['water levels', 'reservoirs', 'dams', 'lakes', 'hydropower', 'icesat'], label: 'Toggle water levels', icon: '\u{1F4A7}', category: 'layers' },
   { id: 'layer:no2Activity', keywords: ['no2', 'nitrogen dioxide', 'industrial activity', 'emissions', 'sentinel', 'pollution'], label: 'Toggle industrial activity (NO2)', icon: '\u{1F3ED}', category: 'layers' },

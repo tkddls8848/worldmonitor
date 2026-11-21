@@ -92,7 +92,6 @@ export {
 } from './geo';
 
 export { APT_GROUPS } from './apt-groups';
-export { GAMMA_IRRADIATORS } from './irradiators';
 export { PIPELINES, PIPELINE_COLORS } from './pipelines';
 export { PORTS } from './ports';
 // MONITORED_AIRPORTS/FAA_AIRPORTS are NOT re-exported on the eager @/config

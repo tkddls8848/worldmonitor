@@ -996,7 +996,6 @@ export class SearchModal {
       earthquake: '\u{1F30D}',
       outage: '\u{1F4E1}',
       nuclear: '\u2622\uFE0F',
-      irradiator: '\u269B\uFE0F',
       techcompany: '\u{1F3E2}',
       ailab: '\u{1F9E0}',
       startup: '\u{1F680}',

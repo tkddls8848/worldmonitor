@@ -576,9 +576,7 @@
         "displacement": "Comutați fluxurile de deplasare",
         "climate": "Comutați anomaliile climatice",
         "outages": "Comutați întreruperile de internet",
-        "tradeRoutes": "Comutați rutele comerciale",
-        "canadaRoads": "Comută stratul de drumuri din Canada",
-        "canadaAlerts": "Comută stratul de alerte de urgență provinciale din Canada"
+        "tradeRoutes": "Comutați rutele comerciale"
       },
       "view": {
         "dark": "Comutați în mod întunecat",
@@ -628,7 +626,6 @@
         "earthquake": "Cutremur",
         "outage": "Întrerupere",
         "nuclear": "Situl nuclear",
-        "irradiator": "Iradiator",
         "techcompany": "Companie de tehnologie",
         "ailab": "Laborator AI",
         "startup": "Start-up",
@@ -1280,9 +1277,6 @@
         "conflictZones": "Zone de conflict",
         "militaryBases": "Bazele militare",
         "nuclearSites": "Situri nucleare",
-        "gammaIrradiators": "Iradiatoare Gamma",
-        "spaceports": "Porturi spațiale",
-        "satellites": "Supraveghere Orbitală",
         "pipelines": "Conducte",
         "militaryActivity": "Activitate militară",
         "shipTraffic": "Trafic naval",
@@ -1304,16 +1298,11 @@
         "iranAttacks": "Atacuri în Orientul Mijlociu",
         "gpsJamming": "Interferență navigație",
         "ciiChoropleth": "Instabilitate țară",
-        "dayNight": "Zi/Noapte",
         "positiveEvents": "Evenimente pozitive",
         "kindness": "Acte de bunătate",
         "happiness": "Fericirea mondială",
         "speciesRecovery": "Recuperarea speciilor",
         "renewableInstallations": "Energie curată",
-        "radiationSpike": "Vârf de radiații",
-        "radiationElevated": "Radiații ridicate",
-        "canadaRoads": "Drumuri Canada",
-        "canadaAlerts": "Alerte Canada",
         "notamAirspace": "Restricții de spațiu aerian NOTAM",
         "no2Activity": "Activitate industrială",
         "reservoirLevels": "Niveluri ale apei"
@@ -1406,7 +1395,6 @@
           "geoProtests": "Tulburări civile, demonstrații (filtrate în timp)",
           "militaryBases": "Instalații militare SUA/NATO, China, Rusia (150+)",
           "militaryNuclear": "Centrale electrice, îmbogățire, instalații de armament",
-          "militaryIrradiators": "Instalații industriale de iradiere gamma",
           "militaryActivity": "Urmărirea aeronavelor militare și a navelor în timp real",
           "infraCablesFull": "Cabluri majore submarine de fibră optică (20 de rute principale)",
           "infraPipelinesFull": "Conducte de petrol/gaze (Nord Stream, TAPI etc.)",
@@ -1419,7 +1407,6 @@
           "waterwaysLabels": "Etichete strategice pentru puncte de sufocare",
           "geoUcdpEvents": "Uppsala Conflict Data Program evenimente de conflict armat",
           "geoDisplacement": "Modele de flux de refugiați și deplasări",
-          "militarySpaceports": "Locuri de lansare a rachetelor și facilități spațiale",
           "infraCyberThreats": "Atacuri cibernetice și evenimente de securitate",
           "mineralsFull": "Zăcăminte minerale strategice și situri miniere",
           "techCyberThreats": "Atacuri cibernetice și evenimente de securitate",
@@ -1427,11 +1414,8 @@
           "techFires": "Incendii active în apropierea infrastructurii tehnologice",
           "financeGulfInvestments": "Investiții ale fondurilor suverane și investiții străine directe ale Consilului de Cooperare al Golfului",
           "tradeRoutes": "Principalele linii maritime globale care conectează porturile prin puncte strategice de blocare",
-          "dayNight": "Terminator solar în timp real care arată zonele de zi și de noapte",
           "geoBoundaries": "Zone demilitarizate, linii de încetare a focului și granițe disputate",
           "ciiChoropleth": "Hartă termică a Indicelui de instabilitate la nivel de țară — colorează țările după scor (verde=stabil, roșu=critic)",
-          "canadaRoads": "Incidente rutiere oficiale, avertismente, condiții, închideri, lucrări și pericole din jurisdicțiile canadiene acceptate.",
-          "canadaAlerts": "Alerte provinciale de siguranță publică de la Alberta Emergency Alert, B.C. Evacuation Orders and Alerts și SaskAlert.",
           "notamAirspace": "Restricții temporare de zbor și spațiu aerian restricționat, de pericol și interzis din NOTAM-urile FAA, în vigoare acum sau începând în următoarele 24 de ore",
           "no2Activity": "Direcția activității NO2 din Sentinel-5P pentru 167 de țări și 32 de clustere industriale: cea mai recentă fereastră de 56 de zile față de aceleași date din anii anteriori, după o bandă moartă de 10%. Conține date Copernicus Sentinel modificate.",
           "reservoirLevels": "Nivelul suprafeței apei în lacuri de acumulare și lacuri strategice, din lidarul satelitar NASA ICESat-2, față de nivelul obișnuit al lunii. NASA publică fiecare trecere la aproximativ două luni după măsurare."
@@ -3401,10 +3385,6 @@
       },
       "closed": "ÎNCHIS"
     },
-    "irradiator": {
-      "subtitle": "Instalație industrială de iradiere Gamma",
-      "description": "Instalație industrială de iradiere care utilizează surse de cobalt-60 sau cesiu-137 pentru sterilizarea dispozitivelor medicale, conservarea alimentelor sau procesarea materialelor. Sursa: Baza de date IAEA DIIF."
-    },
     "pipeline": {
       "title": "CONDUCTĂ",
       "types": {
@@ -3469,7 +3449,6 @@
     "lastSeen": "VĂZUT ULTIMA",
     "open": "DESCHIS",
     "tradingHours": "ORARE DE TRANZACTARE",
-    "gamma": "GAMMA",
     "city": "ORAȘ",
     "length": "LUNGIME",
     "operator": "OPERATOR",
@@ -3749,15 +3728,6 @@
       },
       "worldRank": "RANGUL MONDIAL"
     },
-    "spaceport": {
-      "status": {
-        "active": "ACTIV",
-        "construction": "CONSTRUCȚIE",
-        "inactive": "INACTIV"
-      },
-      "launchActivity": "ACTIVITATEA DE LANSARE",
-      "description": "Facilitate strategică de lansare spațială. cadența lansării și capabilitățile de acces pe orbită sunt indicatori geopolitici cheie."
-    },
     "mineral": {
       "status": {
         "producing": "PRODUCERE",
@@ -4003,17 +3973,6 @@
       "coverageUnavailable": "Acoperire indisponibilă",
       "targets": "Ținte",
       "listSeparator": ", ",
-      "radiation": {
-        "confirmed": "Confirmat",
-        "conflictingSources": "Surse contradictorii",
-        "cpmDerived": "Componentă derivată din CPM",
-        "reading": "Citire",
-        "baseline": "Nivel de referință",
-        "delta": "Abatere",
-        "confidence": "Încredere",
-        "sources": "Surse",
-        "sourceCount": "Număr de surse"
-      },
       "history": {
         "conflictSince": "Conflict din",
         "peaceAgreements": "Acorduri de pace",
@@ -4855,39 +4814,6 @@
         "related": {
           "0": "strat Evenimente naturale",
           "1": "Ferestre pop-up pentru alertele meteo",
-          "2": "Starea de actualitate a datelor"
-        }
-      },
-      "canadaRoads": {
-        "category": "Transport",
-        "purpose": "Arată incidente rutiere oficiale, alerte, stări, închideri, lucrări și pericole în jurisdicțiile canadiene suportate.",
-        "source": "Fluxurile provinciale Ontario 511, Alberta 511 și Manitoba 511, City of Toronto Road Restrictions și DriveBC Open511, alimentate prin WorldMonitor.",
-        "freshness": "Ontario 511, Alberta 511 și Manitoba 511 se alimentează la fiecare 15 minute și sunt urmărite față de un buget de actualitate de 45 de minute. Restricțiile din Toronto se alimentează la fiecare 2 ore. DriveBC Open511 se alimentează la fiecare 30 de minute.",
-        "confidence": "Autoritativ pentru editorii provinciali și municipali suportați, în funcție de momentul publicării la sursă și de geometria cartografiată.",
-        "limitations": {
-          "0": "Sursa roadconditions din Alberta 511 nu este ingerată, pentru că punctul final al furnizorului răspunde cu 404. Desenul live pentru Alberta cuprinde doar evenimente și alerte.",
-          "1": "Alertele provinciale fără coordonate nu apar ca puncte pe hartă.",
-          "2": "Poliliniile de stare a drumului pot simplifica geometria complexă a autostrăzilor."
-        },
-        "related": {
-          "0": "Alerte meteo",
-          "1": "Starea de actualitate a datelor"
-        }
-      },
-      "canadaAlerts": {
-        "category": "Alerte de urgență",
-        "purpose": "Arată avertismentele active de siguranță publică din Alberta, Columbia Britanică și Saskatchewan ca puncte pe hartă, lângă vremea NWS pentru SUA.",
-        "source": "Atom Alberta Emergency Alert, stratul GeoJSON OGL-BC Evacuation Orders and Alerts și fluxul JSON public SaskAlert, plus detaliile CAP 1.2 de pe aceeași gazdă, sunt normalizate într-o uniune canadaAlerts. Poligoanele CAP/GeoRSS, poligoanele de evacuare din Columbia Britanică și poligoanele CAP SaskAlert devin centroizi. Înregistrările fără geometrie folosesc centroidul provinciei sursă.",
-        "freshness": "Sursele provinciale se alimentează la fiecare 15 minute, iar uniunea este urmărită față de un buget de actualitate de 45 de minute. Un flux gol, adică fără alerte active, este un succes valid cu zero înregistrări.",
-        "confidence": "Autoritativ pentru alertele publicate de Alberta Emergency Alert, B.C. Evacuation Orders and Alerts și SaskAlert, în funcție de momentul publicării la sursă și de geometria cartografiată a alertei.",
-        "limitations": {
-          "0": "Acoperirea se limitează la Alberta, Columbia Britanică și Saskatchewan. Ontario nu are un flux automat eligibil, operat de provincie, în afara NAAD exclus.",
-          "1": "Nu înlocuiește alertele meteo NWS pentru SUA și nici straturile rutiere Ontario și Toronto.",
-          "2": "Intrările fără o severitate care poate fi pusă pe hartă sunt eliminate, nu inventate. Este vorba de semantica CAP și de culoare din Alberta, de starea de evacuare din Columbia Britanică sau de severitatea CAP SaskAlert. Culoarea sau nivelul din rezumatul SaskAlert nu sunt tratate ca severitate CAP."
-        },
-        "related": {
-          "0": "Alerte meteo",
-          "1": "strat Evenimente naturale",
           "2": "Starea de actualitate a datelor"
         }
       },

@@ -58,18 +58,12 @@ import { getWindColor } from '@/config/wind-colors';
 import { CII_LEVEL_COLORS, type CiiLevel } from '@/config/cii-colors';
 import type { GpsJamHex } from '@/services/gps-interference';
 import { continuousTrack, pointNear, sweptSwath, type FootprintRing, type FrameBounds, type OrbitalTarget, type PassTrack, type TrackPoint } from '@/services/orbital/track-geometry';
-import { fetchImageryScenes } from '@/services/imagery';
-import type { ImageryScene } from '@/generated/server/worldmonitor/imagery/v1/service_server';
 import type { TrafficAnomaly as ProtoTrafficAnomaly, DdosLocationHit } from '@/generated/client/worldmonitor/infrastructure/v1/service_client';
 import type { CrossBorderData, CrossBorderPoint, DisplacementEventPoint, DisplacementEventsData, DisplacementFlow, InternalDisplacementData, InternalDisplacementRegion, InternalDisplacementRoute } from '@/services/displacement';
 import type { Earthquake } from '@/services/earthquakes';
 import type { ClimateAnomaly } from '@/services/climate';
-import type { RadiationObservation } from '@/services/radiation';
 import { ArcLayer } from '@deck.gl/layers';
 import type { WeatherAlert } from '@/services/weather';
-import type { CanadaRoadRecord } from '@/services/canada-roads';
-import { isReportableCanadaRoad } from '@/services/canada-road-report';
-import type { CanadaAlert } from '@/services/canada-alerts';
 import { escapeHtml } from '@/utils/sanitize';
 import { installLongPressContextMenu } from '@/utils/long-press';
 import { corroborationLabelHtml } from '@/utils/corroboration-flag';
@@ -113,7 +107,6 @@ import { getCachedMilitaryBases, preloadMilitaryBases } from '@/services/militar
 import {
   INTEL_HOTSPOTS,
   CONFLICT_ZONES,
-  GAMMA_IRRADIATORS,
   PIPELINES,
   PIPELINE_COLORS,
   STRATEGIC_WATERWAYS,
@@ -132,7 +125,7 @@ import {
 // off the eager @/config barrel and load only with this lazy renderer (#4404).
 import { STARTUP_HUBS, ACCELERATORS, TECH_HQS, CLOUD_REGIONS } from '@/config/tech-geo';
 import { AI_DATA_CENTERS } from '@/config/ai-datacenters';
-import { UNDERSEA_CABLES, NUCLEAR_FACILITIES, ECONOMIC_CENTERS, SPACEPORTS, CRITICAL_MINERALS, SANCTIONED_COUNTRIES_ALPHA2 } from '@/config/geo-map';
+import { UNDERSEA_CABLES, NUCLEAR_FACILITIES, ECONOMIC_CENTERS, CRITICAL_MINERALS, SANCTIONED_COUNTRIES_ALPHA2 } from '@/config/geo-map';
 import type { GulfInvestment } from '@/types';
 import { resolveTradeRouteSegments, TRADE_ROUTES as TRADE_ROUTES_LIST, type TradeRouteSegment, type TradeRouteStatus } from '@/config/trade-routes';
 import type { ScenarioVisualState } from '@/config/scenario-templates';
@@ -188,7 +181,6 @@ import {
 } from './resilience-choropleth-utils';
 import { formatResilienceServerLevel } from './resilience-widget-utils';
 
-import { isAllowedPreviewUrl } from '@/utils/imagery-preview';
 import { mountWebcamPinButton } from '@/services/webcams/pinned-store';
 import type { WebcamEntry, WebcamCluster } from '@/generated/client/worldmonitor/webcam/v1/service_client';
 import { fetchWebcamImage } from '@/services/webcams';
@@ -333,8 +325,6 @@ const LAYER_ZOOM_THRESHOLDS: Partial<Record<keyof MapLayers, { minZoom: number; 
   economic: { minZoom: 3 },
   natural: { minZoom: 1, showLabels: 2 },
   datacenters: { minZoom: 5 },
-  irradiators: { minZoom: 4 },
-  spaceports: { minZoom: 3 },
   gulfInvestments: { minZoom: 2, showLabels: 5 },
 };
 // Export for external use
@@ -373,9 +363,6 @@ function getOverlayColors() {
     trafficAnomaly: [255, 160, 0, 200] as [number, number, number, number],
     ddosHit: [180, 0, 255, 200] as [number, number, number, number],
     weather: [100, 150, 255, 180] as [number, number, number, number],
-    canadaRoads: [255, 140, 0, 190] as [number, number, number, number],
-    canadaRoadsClosure: [220, 40, 40, 210] as [number, number, number, number],
-    canadaAlerts: [220, 50, 50, 200] as [number, number, number, number],
     startupHub: isLight
       ? [22, 163, 74, 220] as [number, number, number, number]
       : [0, 255, 150, 200] as [number, number, number, number],
@@ -708,8 +695,6 @@ export class DeckGLMap {
   private hotspots: HotspotWithBreaking[];
   private earthquakes: Earthquake[] = [];
   private weatherAlerts: WeatherAlert[] = [];
-  private canadaRoads: CanadaRoadRecord[] = [];
-  private canadaAlerts: CanadaAlert[] = [];
   private outages: InternetOutage[] = [];
   private trafficAnomalies: ProtoTrafficAnomaly[] = [];
   private ddosLocations: DdosLocationHit[] = [];
@@ -717,7 +702,6 @@ export class DeckGLMap {
   private aptGroups: import('@/types').APTGroup[] = [];
   private aptGroupsLoaded = false;
   private aptGroupsLayerFailed = false;
-  private satelliteImageryLayerFailed = false;
   private iranEvents: IranEvent[] = [];
   private aisDisruptions: AisDisruptionEvent[] = [];
   private ukmtoIncidents: UkmtoMapIncident[] = [];
@@ -765,7 +749,6 @@ export class DeckGLMap {
   private gpsJammingHexes: GpsJamHexWithPolygon[] = [];
   private gpsJammingLoadSeq = 0;
   private climateAnomalies: ClimateAnomaly[] = [];
-  private radiationObservations: RadiationObservation[] = [];
   private diseaseOutbreaks: DiseaseOutbreakItem[] = [];
   private tradeRouteSegments: TradeRouteSegment[] = resolveTradeRouteSegments();
   private tradeTrips: TripData[] = [];
@@ -793,9 +776,6 @@ export class DeckGLMap {
   private affectedIso2Set: Set<string> = new Set();
   private positiveEvents: PositiveGeoEvent[] = [];
   private kindnessPoints: KindnessPoint[] = [];
-  private imageryScenes: ImageryScene[] = [];
-  private imagerySearchTimer: ReturnType<typeof setTimeout> | null = null;
-  private imagerySearchVersion = 0;
 
   // Phase 8 overlay data
   private happinessScores: Map<string, number> = new Map();
@@ -986,8 +966,6 @@ export class DeckGLMap {
   private lastSCMask = '';
   private protestSuperclusterSource: SocialUnrestEvent[] = [];
   private newsPulseIntervalId: ReturnType<typeof setInterval> | null = null;
-  private dayNightIntervalId: ReturnType<typeof setInterval> | null = null;
-  private cachedNightPolygon: [number, number][] | null = null;
   private radarRefreshIntervalId: ReturnType<typeof setInterval> | null = null;
   private radarActive = false;
   private radarTileUrl = '';
@@ -1096,10 +1074,6 @@ export class DeckGLMap {
       this.createLegend();
     }
 
-    // Start day/night timer only if layer is initially enabled
-    if (this.state.layers.dayNight) {
-      this.startDayNightTimer();
-    }
     if (this.state.layers.weather) {
       this.startWeatherRadar();
     }
@@ -1107,23 +1081,6 @@ export class DeckGLMap {
     if (this.state.layers.cyberThreats && SITE_VARIANT !== 'tech' && SITE_VARIANT !== 'happy') {
       this.loadAptGroups();
     }
-  }
-
-  private startDayNightTimer(): void {
-    if (this.dayNightIntervalId) return;
-    this.cachedNightPolygon = this.computeNightPolygon();
-    this.dayNightIntervalId = setInterval(() => {
-      this.cachedNightPolygon = this.computeNightPolygon();
-      this.render();
-    }, 5 * 60 * 1000);
-  }
-
-  private stopDayNightTimer(): void {
-    if (this.dayNightIntervalId) {
-      clearInterval(this.dayNightIntervalId);
-      this.dayNightIntervalId = null;
-    }
-    this.cachedNightPolygon = null;
   }
 
   private startWeatherRadar(): void {
@@ -1497,10 +1454,6 @@ export class DeckGLMap {
           this.trySettleViewportMovement(true, viewportMovementGeneration);
         });
       }
-      if (this.state.layers.satellites) {
-        if (this.imagerySearchTimer) clearTimeout(this.imagerySearchTimer);
-        this.imagerySearchTimer = setTimeout(() => this.fetchImageryForViewport(), 500);
-      }
     });
 
     this.maplibreMap.on('move', () => {
@@ -1545,11 +1498,6 @@ export class DeckGLMap {
         console.warn('[DeckGLMap] Render error (non-fatal):', error.message);
         if (error.message.includes('apt-groups-layer')) {
           this.aptGroupsLayerFailed = true;
-        }
-        if (error.message.includes('satellite-imagery-layer')) {
-          this.satelliteImageryLayerFailed = true;
-          console.warn('[DeckGLMap] Satellite imagery layer failed (likely Intel GPU driver incompatibility) — rebuilding layer stack without it');
-          this.updateLayers();
         }
         this.deckLoopRecovery(error);
       },
@@ -2114,16 +2062,12 @@ export class DeckGLMap {
     // freshness at write time. PR #3593: production saw 50 valid records
     // cached but 0 rendered because the newest CDC item was 11d old.
     const filteredDiseaseOutbreaks = mapLayers.diseaseOutbreaks ? this.diseaseOutbreaks : [];
-    const filteredRadiationObservations = mapLayers.radiationWatch ? this.filterByTimeCached(this.radiationObservations, (obs) => obs.observedAt) : [];
     const filteredPositiveEvents = mapLayers.positiveEvents ? this.filterByTimeCached(this.positiveEvents, (e) => e.timestamp) : [];
     const filteredIranEvents = mapLayers.iranAttacks ? this.filterByTimeCached(this.iranEvents, (e) => e.timestamp) : [];
     const filteredFirmsFireData = mapLayers.fires ? this.filterByTimeCached(this.firmsFireData, (d) => d.acq_date) : [];
     const filteredTrafficAnomalies = mapLayers.outages ? this.filterByTimeCached(this.trafficAnomalies, (a) => a.startDate) : [];
     const filteredKindnessPoints = mapLayers.kindness ? this.filterByTimeCached(this.kindnessPoints, (p) => p.timestamp) : [];
-    const filteredImageryScenes = mapLayers.satellites ? this.filterByTimeCached(this.imageryScenes, (s) => s.datetime) : [];
     const filteredWeatherAlerts = mapLayers.weather ? this.filterByTimeCached(this.weatherAlerts, (alert) => alert.onset) : [];
-    const canadaRoadItems = mapLayers.canadaRoads ? this.canadaRoads : [];
-    const canadaAlertItems = mapLayers.canadaAlerts ? this.filterByTimeCached(this.canadaAlerts, (alert) => alert.updatedAt) : [];
     const filteredOutages = mapLayers.outages ? this.filterByTimeCached(this.outages, (outage) => outage.pubDate) : [];
     const filteredCableAdvisories = mapLayers.cables ? this.filterByTimeCached(this.cableAdvisories, (advisory) => advisory.reported) : [];
     const filteredFlightDelays = mapLayers.flights ? this.filterByTimeCached(this.flightDelays, (delay) => delay.updatedAt) : [];
@@ -2135,17 +2079,8 @@ export class DeckGLMap {
     // UCDP is a historical dataset (events aged months); time-range filter always zeroes it out
     const filteredUcdpEvents = mapLayers.ucdpEvents ? this.ucdpEvents : [];
 
-    // Day/night overlay (rendered first as background)
-    if (mapLayers.dayNight) {
-      if (!this.dayNightIntervalId) this.startDayNightTimer();
-      layers.push(this.createDayNightLayer());
-    } else {
-      if (this.dayNightIntervalId) this.stopDayNightTimer();
-      this.layerCache.delete('day-night-layer');
-    }
-
     // FAA NMS airspace restrictions are area overlays (circles up to 250 NM):
-    // they sit above only the day/night background, so cables, pipelines,
+    // they are drawn first, so cables, pipelines,
     // conflict zones and every marker inside a restricted area stay hoverable
     // and clickable.
     if (mapLayers.flights && this.notamAirspace.length > 0) {
@@ -2232,16 +2167,6 @@ export class DeckGLMap {
     }
     layers.push(this.createEmptyGhost('nuclear-layer'));
 
-    // Gamma irradiators layer — hidden at low zoom
-    if (mapLayers.irradiators && this.isLayerVisible('irradiators')) {
-      layers.push(this.createIrradiatorsLayer());
-    }
-
-    // Spaceports layer — hidden at low zoom
-    if (mapLayers.spaceports && this.isLayerVisible('spaceports')) {
-      layers.push(this.createSpaceportsLayer());
-    }
-
     // Hotspots layer (all hotspots including high/breaking, with pulse + ghost)
     if (mapLayers.hotspots) {
       layers.push(...this.createHotspotsLayers());
@@ -2268,11 +2193,6 @@ export class DeckGLMap {
       layers.push(...this.createNaturalEventsLayers(filteredNaturalEvents));
     }
 
-    if (mapLayers.radiationWatch && filteredRadiationObservations.length > 0) {
-      layers.push(this.createRadiationLayer(filteredRadiationObservations));
-    }
-    layers.push(this.createEmptyGhost('radiation-watch-layer'));
-
     // Disease outbreaks layer
     if (mapLayers.diseaseOutbreaks && filteredDiseaseOutbreaks.length > 0) {
       layers.push(this.createDiseaseOutbreaksLayer(filteredDiseaseOutbreaks));
@@ -2293,20 +2213,6 @@ export class DeckGLMap {
     // Weather alerts layer
     if (mapLayers.weather && filteredWeatherAlerts.length > 0) {
       layers.push(this.createWeatherLayer(filteredWeatherAlerts));
-    }
-
-    // Canada roads layer (provincial 511 feeds and municipal restrictions)
-    if (mapLayers.canadaRoads && canadaRoadItems.length > 0) {
-      layers.push(...this.createCanadaRoadsLayers(canadaRoadItems));
-    } else {
-      this.layerCache.delete('canada-roads-layer');
-      this.layerCache.delete('canada-roads-paths-layer');
-    }
-    // canadaAlerts layer (AB + BC + SK provincial alerts; ScatterplotLayer dots)
-    if (mapLayers.canadaAlerts && canadaAlertItems.length > 0) {
-      layers.push(this.createCanadaAlertsLayer(canadaAlertItems));
-    } else {
-      this.layerCache.delete('canada-alerts-layer');
     }
 
     // Internet outages layer
@@ -2594,10 +2500,6 @@ export class DeckGLMap {
     // Phase 8: Renewable energy installations
     if (mapLayers.renewableInstallations && this.renewableInstallations.length > 0) {
       layers.push(this.createRenewableInstallationsLayer());
-    }
-
-    if (mapLayers.satellites && filteredImageryScenes.length > 0 && !this.satelliteImageryLayerFailed) {
-      layers.push(this.createImageryFootprintLayer(filteredImageryScenes));
     }
 
     // Webcam layer (server-side clustered markers)
@@ -3469,32 +3371,6 @@ export class DeckGLMap {
     });
   }
 
-  private createIrradiatorsLayer(): ScatterplotLayer {
-    return new ScatterplotLayer({
-      id: 'irradiators-layer',
-      data: GAMMA_IRRADIATORS,
-      getPosition: (d) => [d.lon, d.lat],
-      getRadius: 6000,
-      getFillColor: [255, 100, 255, 180] as [number, number, number, number], // Magenta
-      radiusMinPixels: 4,
-      radiusMaxPixels: 10,
-      pickable: true,
-    });
-  }
-
-  private createSpaceportsLayer(): ScatterplotLayer {
-    return new ScatterplotLayer({
-      id: 'spaceports-layer',
-      data: SPACEPORTS,
-      getPosition: (d) => [d.lon, d.lat],
-      getRadius: 10000,
-      getFillColor: [200, 100, 255, 200] as [number, number, number, number], // Purple
-      radiusMinPixels: 5,
-      radiusMaxPixels: 12,
-      pickable: true,
-    });
-  }
-
   private createPortsLayer(): ScatterplotLayer {
     return new ScatterplotLayer({
       id: 'ports-layer',
@@ -3880,59 +3756,6 @@ export class DeckGLMap {
     });
   }
 
-  private createCanadaRoadsLayers(items: CanadaRoadRecord[]): Layer[] {
-    const withCentroid = items.filter((d) => Array.isArray(d.centroid) && d.centroid.length === 2);
-    const withPath = items.filter((d) => Array.isArray(d.path) && d.path.length >= 2);
-    const fill = (d: CanadaRoadRecord): [number, number, number, number] => {
-      if (d.isFullClosure || d.severity === 'Extreme') return COLORS.canadaRoadsClosure;
-      if (d.severity === 'Severe') return [255, 100, 0, 200];
-      if (d.severity === 'Moderate') return [255, 170, 0, 170];
-      return COLORS.canadaRoads;
-    };
-    const layers: Layer[] = [];
-    layers.push(new ScatterplotLayer<CanadaRoadRecord>({
-      id: 'canada-roads-layer',
-      data: withCentroid,
-      getPosition: (d) => d.centroid as [number, number],
-      getRadius: (d) => (d.isFullClosure || d.kind === 'event' ? 18000 : 12000),
-      getFillColor: fill,
-      radiusMinPixels: 6,
-      radiusMaxPixels: 18,
-      pickable: true,
-    }));
-    if (withPath.length > 0) {
-      layers.push(new PathLayer<CanadaRoadRecord>({
-        id: 'canada-roads-paths-layer',
-        data: withPath,
-        getPath: (d) => d.path as [number, number][],
-        getColor: fill,
-        getWidth: 2,
-        widthMinPixels: 1,
-        widthMaxPixels: 4,
-        pickable: true,
-      }));
-    }
-    return layers;
-  }
-  private createCanadaAlertsLayer(alerts: CanadaAlert[]): ScatterplotLayer {
-    const alertsWithCoords = alerts.filter(a => a.centroid && a.centroid.length === 2);
-    return new ScatterplotLayer({
-      id: 'canada-alerts-layer',
-      data: alertsWithCoords,
-      getPosition: (d: CanadaAlert) => d.centroid as [number, number],
-      getRadius: 25000,
-      getFillColor: (d: CanadaAlert) => {
-        if (d.severity === 'Extreme') return [255, 0, 0, 200] as [number, number, number, number];
-        if (d.severity === 'Severe') return [255, 100, 0, 180] as [number, number, number, number];
-        if (d.severity === 'Moderate') return [255, 170, 0, 160] as [number, number, number, number];
-        return COLORS.canadaAlerts;
-      },
-      radiusMinPixels: 8,
-      radiusMaxPixels: 20,
-      pickable: true,
-    });
-  }
-
   private createWeatherLayer(alerts: WeatherAlert[]): ScatterplotLayer {
     // Filter weather alerts that have centroid coordinates
     const alertsWithCoords = alerts.filter(a => a.centroid && a.centroid.length === 2);
@@ -4020,33 +3843,6 @@ export class DeckGLMap {
       stroked: true,
       getLineColor: [255, 255, 255, 160] as [number, number, number, number],
       lineWidthMinPixels: 1,
-    });
-  }
-
-  private createRadiationLayer(items: RadiationObservation[]): ScatterplotLayer<RadiationObservation> {
-    return new ScatterplotLayer<RadiationObservation>({
-      id: 'radiation-watch-layer',
-      data: items,
-      getPosition: (d) => [d.lon, d.lat],
-      getRadius: (d) => {
-        const base = d.severity === 'spike' ? 26000 : 18000;
-        if (d.corroborated) return base * 1.15;
-        if (d.confidence === 'low') return base * 0.85;
-        return base;
-      },
-      getFillColor: (d) => (
-        d.severity === 'spike'
-          ? [255, 48, 48, 220]
-          : d.confidence === 'low'
-            ? [255, 174, 0, 150]
-            : [255, 174, 0, 200]
-      ) as [number, number, number, number],
-      getLineColor: [255, 255, 255, 200],
-      stroked: true,
-      lineWidthMinPixels: 2,
-      radiusMinPixels: 6,
-      radiusMaxPixels: 20,
-      pickable: true,
     });
   }
 
@@ -5337,37 +5133,6 @@ export class DeckGLMap {
     });
   }
 
-  private createImageryFootprintLayer(items: ImageryScene[]): PolygonLayer {
-    return new PolygonLayer({
-      id: 'satellite-imagery-layer',
-      data: items.filter(s => s.geometryGeojson),
-      getPolygon: (d: ImageryScene) => {
-        try {
-          const geom = JSON.parse(d.geometryGeojson);
-          if (geom.type === 'Polygon') return geom.coordinates[0];
-          return [];
-        } catch { return []; }
-      },
-      getFillColor: [0, 180, 255, 40] as [number, number, number, number],
-      stroked: false,
-      pickable: true,
-    });
-  }
-
-  private async fetchImageryForViewport(): Promise<void> {
-    const map = this.maplibreMap;
-    if (!map) return;
-    const bounds = map.getBounds();
-    const bbox = `${bounds.getWest().toFixed(4)},${bounds.getSouth().toFixed(4)},${bounds.getEast().toFixed(4)},${bounds.getNorth().toFixed(4)}`;
-    const version = ++this.imagerySearchVersion;
-    try {
-      const scenes = await fetchImageryScenes({ bbox, limit: 20 });
-      if (version !== this.imagerySearchVersion) return;
-      this.imageryScenes = scenes;
-      this.render();
-    } catch { /* viewport fetch failed silently */ }
-  }
-
   private getCategorizedTooltip(info: PickingInfo): { html: string } | null {
     const tooltip = this.getTooltip(info);
     const category = categoryForDeckLayerId(info.layer?.id || '');
@@ -5513,8 +5278,6 @@ export class DeckGLMap {
         return { html: `<div class="deckgl-tooltip"><strong>${text(obj.provider)}</strong><br/>${text(obj.region)}</div>` };
       case 'tech-events-layer':
         return { html: `<div class="deckgl-tooltip"><strong>${text(obj.title)}</strong><br/>${text(obj.location)}</div>` };
-      case 'irradiators-layer':
-        return { html: `<div class="deckgl-tooltip"><strong>${text(obj.name)}</strong><br/>${text(obj.type || t('components.deckgl.layers.gammaIrradiators'))}</div>` };
       case 'disease-outbreaks-layer': {
         const item = (obj as { item: DiseaseOutbreakItem }).item;
         if (!item) return null;
@@ -5525,15 +5288,6 @@ export class DeckGLMap {
         const summaryHtml = item.summary ? `<br/><span style="opacity:.75">${text(item.summary.slice(0, 100))}${item.summary.length > 100 ? '…' : ''}</span>` : '';
         return { html: `<div class="deckgl-tooltip"><strong style="color:${lvlColor}">${text(item.alertLevel.toUpperCase())}</strong> ${text(item.disease)}<br/>${text(item.location)}${summaryHtml}${metaHtml}</div>` };
       }
-      case 'radiation-watch-layer': {
-        const severityLabel = obj.severity === 'spike' ? t('components.deckgl.layers.radiationSpike') : t('components.deckgl.layers.radiationElevated');
-        const delta = Number(obj.delta || 0);
-        const confidence = String(obj.confidence || 'low').toUpperCase();
-        const corroboration = obj.corroborated ? 'CONFIRMED' : obj.conflictingSources ? 'CONFLICTING' : confidence;
-        return { html: `<div class="deckgl-tooltip"><strong>${severityLabel}</strong><br/>${text(obj.location)}<br/>${Number(obj.value).toFixed(1)} ${text(obj.unit)} · ${delta >= 0 ? '+' : ''}${delta.toFixed(1)} vs baseline<br/>${text(corroboration)}</div>` };
-      }
-      case 'spaceports-layer':
-        return { html: `<div class="deckgl-tooltip"><strong>${text(obj.name)}</strong><br/>${text(obj.country || t('components.deckgl.layers.spaceports'))}</div>` };
       case 'ports-layer': {
         const typeIcon = obj.type === 'naval' ? '⚓' : obj.type === 'oil' || obj.type === 'lng' ? '🛢️' : '🏭';
         return { html: `<div class="deckgl-tooltip"><strong>${typeIcon} ${text(obj.name)}</strong><br/>${text(obj.type || t('components.deckgl.tooltip.port'))} - ${text(obj.country)}</div>` };
@@ -5619,25 +5373,6 @@ export class DeckGLMap {
         const sourceLine = obj.sourceUrl ? `<br/><small>${text(String(obj.sourceUrl))}</small>` : '';
         return { html: `<div class="deckgl-tooltip"><strong>${text(obj.event || t('components.deckgl.layers.weatherAlerts'))}</strong><br/>${text(obj.severity)}${issuedBy}${area}${marineLine}${sourceLine}</div>` };
       }
-      case 'canada-roads-layer':
-      case 'canada-roads-paths-layer': {
-        const title = obj.headline || obj.roadwayName || t('components.deckgl.layers.canadaRoads');
-        const origin = obj.jurisdiction
-          || (obj.source === 'manitoba-511' ? 'MB'
-            : obj.source === 'alberta-511' ? 'AB'
-            : obj.source === 'bc-open511' ? 'BC'
-            : obj.source === 'toronto-roads' ? 'Toronto'
-            : 'ON');
-        const detail = obj.lanesAffected || obj.currImpact || obj.district;
-        const extra = detail ? `<br/>${text(detail)}` : '';
-        return { html: `<div class="deckgl-tooltip"><strong>${text(title)}</strong><br/>${text(origin)} · ${text(obj.severity || obj.eventType || '')}${extra}</div>` };
-      }
-      case 'canada-alerts-layer': {
-        const areaDesc = typeof obj.areaDesc === 'string' ? obj.areaDesc : '';
-        const area = areaDesc ? `<br/><small>${text(areaDesc.slice(0, 50))}${areaDesc.length > 50 ? '...' : ''}</small>` : '';
-        const province = obj.province || 'AB';
-        return { html: `<div class="deckgl-tooltip"><strong>${text(obj.headline || obj.event || t('components.deckgl.layers.canadaAlerts'))}</strong><br/>${text(province)} · ${text(obj.severity)}${area}</div>` };
-      }
       case 'outages-layer':
         return { html: `<div class="deckgl-tooltip"><strong>${text(obj.title || t('components.deckgl.tooltip.internetOutage'))}</strong><br/>${text(obj.country)}</div>` };
       case 'traffic-anomalies-layer':
@@ -5720,15 +5455,6 @@ export class DeckGLMap {
             <span style="text-transform:capitalize">${text(inv.status)}</span>
           </div>`,
         };
-      }
-      case 'satellite-imagery-layer': {
-        let imgHtml = `<div class="deckgl-tooltip"><strong>&#128752; ${text(obj.satellite)}</strong><br/>${text(obj.datetime)}<br/>Res: ${numericLabel(obj.resolutionM)}m \u00B7 ${text(obj.mode)}`;
-        if (isAllowedPreviewUrl(obj.previewUrl)) {
-          const safeHref = escapeHtml(new URL(obj.previewUrl).href);
-          imgHtml += `<br><img src="${safeHref}" referrerpolicy="no-referrer" style="max-width:180px;max-height:120px;margin-top:4px;border-radius:4px;" class="imagery-preview" alt="">`;
-        }
-        imgHtml += '</div>';
-        return { html: imgHtml };
       }
       case 'webcam-layer': {
         const label = 'count' in obj
@@ -5972,8 +5698,6 @@ export class DeckGLMap {
 
       'bases-layer': 'base',
       'nuclear-layer': 'nuclear',
-      'irradiators-layer': 'irradiator',
-      'radiation-watch-layer': 'radiation',
       'datacenters-layer': 'datacenter',
       'cables-layer': 'cable',
       'pipelines-layer': 'pipeline',
@@ -5999,7 +5723,6 @@ export class DeckGLMap {
       'financial-centers-layer': 'financialCenter',
       'central-banks-layer': 'centralBank',
       'commodity-hubs-layer': 'commodityHub',
-      'spaceports-layer': 'spaceport',
       'ports-layer': 'port',
       'flight-delays-layer': 'flight',
       'notam-overlay-layer': 'flight',
@@ -6555,7 +6278,6 @@ export class DeckGLMap {
       helpItem(label('naturalEvents'), 'naturalEventsTech'),
       helpItem(label('fires'), 'techFires'),
       helpItem(staticLabel('countries'), 'countriesOverlay'),
-      helpItem(label('dayNight'), 'dayNight'),
     ])}
       </div>
     `;
@@ -6581,10 +6303,7 @@ export class DeckGLMap {
       helpItem(label('economicCenters'), 'economicCenters'),
       helpItem(label('strategicWaterways'), 'macroWaterways'),
       helpItem(label('weatherAlerts'), 'weatherAlertsMarket'),
-      helpItem(label('canadaRoads'), 'canadaRoads'),
-      helpItem(label('canadaAlerts'), 'canadaAlerts'),
       helpItem(label('naturalEvents'), 'naturalEventsMacro'),
-      helpItem(label('dayNight'), 'dayNight'),
     ])}
       </div>
     `;
@@ -6608,9 +6327,7 @@ export class DeckGLMap {
         ${helpSection('militaryStrategic', [
       helpItem(label('militaryBases'), 'militaryBases'),
       helpItem(label('nuclearSites'), 'militaryNuclear'),
-      helpItem(label('gammaIrradiators'), 'militaryIrradiators'),
       helpItem(label('militaryActivity'), 'militaryActivity'),
-      helpItem(label('spaceports'), 'militarySpaceports'),
     ])}
         ${helpSection('infrastructure', [
       helpItem(label('underseaCables'), 'infraCablesFull'),
@@ -6630,15 +6347,12 @@ export class DeckGLMap {
       helpItem(label('naturalEvents'), 'naturalEventsFull'),
       helpItem(label('fires'), 'firesFull'),
       helpItem(label('weatherAlerts'), 'weatherAlerts'),
-      helpItem(label('canadaRoads'), 'canadaRoads'),
-      helpItem(label('canadaAlerts'), 'canadaAlerts'),
       helpItem(label('climateAnomalies'), 'climateAnomalies'),
       helpItem(label('reservoirLevels'), 'reservoirLevels'),
       helpItem(label('economicCenters'), 'economicCenters'),
       helpItem(label('criticalMinerals'), 'mineralsFull'),
     ])}
         ${helpSection('overlays', [
-      helpItem(label('dayNight'), 'dayNight'),
       helpItem(staticLabel('countries'), 'countriesOverlay'),
       helpItem(label('strategicWaterways'), 'waterwaysLabels'),
     ])}
@@ -6833,13 +6547,11 @@ export class DeckGLMap {
         this.renderPending = true;
       }
       this.stopPulseAnimation();
-      this.stopDayNightTimer();
       this.stopTradeAnimation();
       return;
     }
 
     this.syncPulseAnimation();
-    if (this.state.layers.dayNight) this.startDayNightTimer();
     if (this.state.layers.tradeRoutes) this.startTradeAnimation();
     if (!paused && this.renderPending) {
       this.renderPending = false;
@@ -7577,83 +7289,6 @@ export class DeckGLMap {
     });
   }
 
-  private computeNightPolygon(): [number, number][] {
-    const now = new Date();
-    const JD = now.getTime() / 86400000 + 2440587.5;
-    const D = JD - 2451545.0; // Days since J2000.0
-
-    // Solar mean anomaly (radians)
-    const g = ((357.529 + 0.98560028 * D) % 360) * Math.PI / 180;
-
-    // Solar ecliptic longitude (degrees)
-    const q = (280.459 + 0.98564736 * D) % 360;
-    const L = q + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g);
-    const LRad = L * Math.PI / 180;
-
-    // Obliquity of ecliptic (radians)
-    const eRad = (23.439 - 0.00000036 * D) * Math.PI / 180;
-
-    // Solar declination (radians)
-    const decl = Math.asin(Math.sin(eRad) * Math.sin(LRad));
-
-    // Solar right ascension (radians)
-    const RA = Math.atan2(Math.cos(eRad) * Math.sin(LRad), Math.cos(LRad));
-
-    // Greenwich Mean Sidereal Time (degrees)
-    const GMST = ((18.697374558 + 24.06570982441908 * D) % 24) * 15;
-
-    // Sub-solar longitude (degrees, normalized to [-180, 180])
-    let sunLng = RA * 180 / Math.PI - GMST;
-    sunLng = ((sunLng % 360) + 540) % 360 - 180;
-
-    // Trace terminator line (1° steps for smooth curve at high zoom)
-    const tanDecl = Math.tan(decl);
-    const points: [number, number][] = [];
-
-    // Near equinox (|tanDecl| ≈ 0), the terminator is nearly a great circle
-    // through the poles — use a vertical line at the subsolar meridian ±90°
-    if (Math.abs(tanDecl) < 1e-6) {
-      for (let lat = -90; lat <= 90; lat += 1) {
-        points.push([sunLng + 90, lat]);
-      }
-      for (let lat = 90; lat >= -90; lat -= 1) {
-        points.push([sunLng - 90, lat]);
-      }
-      return points;
-    }
-
-    for (let lng = -180; lng <= 180; lng += 1) {
-      const ha = (lng - sunLng) * Math.PI / 180;
-      const lat = Math.atan(-Math.cos(ha) / tanDecl) * 180 / Math.PI;
-      points.push([lng, lat]);
-    }
-
-    // Close polygon around the dark pole
-    const darkPoleLat = decl > 0 ? -90 : 90;
-    points.push([180, darkPoleLat]);
-    points.push([-180, darkPoleLat]);
-
-    return points;
-  }
-
-  private createDayNightLayer(): PolygonLayer {
-    const nightPolygon = this.cachedNightPolygon ?? (this.cachedNightPolygon = this.computeNightPolygon());
-    const isLight = getCurrentTheme() === 'light';
-
-    return new PolygonLayer({
-      id: 'day-night-layer',
-      data: [{ polygon: nightPolygon }],
-      getPolygon: (d: { polygon: [number, number][] }) => d.polygon,
-      getFillColor: isLight ? [0, 0, 40, 35] : [0, 0, 20, 55],
-      filled: true,
-      stroked: true,
-      getLineColor: isLight ? [100, 100, 100, 40] : [200, 200, 255, 25],
-      getLineWidth: 1,
-      lineWidthUnits: 'pixels' as const,
-      pickable: false,
-    });
-  }
-
   private createChinaCorridorSelectionLayers(
     overlay: ChinaCorridorOverlayProjection,
   ): [PolygonLayer, ScatterplotLayer] {
@@ -7694,19 +7329,6 @@ export class DeckGLMap {
 
   public setWeatherAlerts(alerts: WeatherAlert[]): void {
     this.weatherAlerts = alerts;
-    this.render();
-  }
-
-  public setCanadaRoads(records: CanadaRoadRecord[]): void {
-    this.canadaRoads = records.filter(isReportableCanadaRoad);
-  }
-  public setCanadaAlerts(alerts: CanadaAlert[]): void {
-    this.canadaAlerts = alerts;
-    this.render();
-  }
-
-  public setImageryScenes(scenes: ImageryScene[]): void {
-    this.imageryScenes = scenes;
     this.render();
   }
 
@@ -8037,11 +7659,6 @@ export class DeckGLMap {
 
   public setClimateAnomalies(anomalies: ClimateAnomaly[]): void {
     this.climateAnomalies = anomalies;
-    this.render();
-  }
-
-  public setRadiationObservations(observations: RadiationObservation[]): void {
-    this.radiationObservations = observations;
     this.render();
   }
 
@@ -8902,16 +8519,6 @@ export class DeckGLMap {
     }
   }
 
-  public triggerIrradiatorClick(id: string): void {
-    const irradiator = GAMMA_IRRADIATORS.find(i => i.id === id);
-    if (irradiator) {
-      // Don't pan - show popup at projected screen position or center
-      const screenPos = this.projectToScreen(irradiator.lat, irradiator.lon);
-      const { x, y } = screenPos || this.getContainerCenter();
-      this.popup.show({ type: 'irradiator', data: irradiator, x, y });
-    }
-  }
-
   public flashLocation(lat: number, lon: number, durationMs = 2000): void {
     // Don't pan - project coordinates to screen position
     const screenPos = this.projectToScreen(lat, lon);
@@ -9477,7 +9084,6 @@ export class DeckGLMap {
       this.styleLoadTimeoutId = null;
     }
     this.stopPulseAnimation();
-    this.stopDayNightTimer();
     this.stopWeatherRadar();
     if (this.aircraftFetchTimer) {
       clearInterval(this.aircraftFetchTimer);

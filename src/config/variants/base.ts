@@ -19,8 +19,6 @@ export const REFRESH_INTERVALS = {
   pizzint: 10 * 60 * 1000,
   natural: 10 * 60 * 1000, // USGS refreshes every 5 min upstream; an hourly poll hid new quakes for up to 2 h
   weather: 10 * 60 * 1000,
-  canadaRoads: 10 * 60 * 1000,
-  canadaAlerts: 10 * 60 * 1000,
   fred: 6 * 60 * 60 * 1000,
   oil: 6 * 60 * 60 * 1000,
   spending: 6 * 60 * 60 * 1000,

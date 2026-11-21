@@ -23,7 +23,7 @@ const RESULT_TYPE_PRIORITY: readonly SearchResultType[] = [
   'flight',
   'news', 'prediction', 'market', 'earthquake', 'outage',
   'conflict', 'hotspot', 'country',
-  'base', 'pipeline', 'cable', 'datacenter', 'nuclear', 'irradiator',
+  'base', 'pipeline', 'cable', 'datacenter', 'nuclear',
   'techcompany', 'ailab', 'startup', 'techevent', 'techhq', 'accelerator',
   'exchange', 'financialcenter', 'centralbank', 'commodityhub',
 ];
