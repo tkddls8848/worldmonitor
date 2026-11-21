@@ -337,20 +337,24 @@ async function expectCue(page: Page, s: Scroll, id: string, label: string): Prom
   }
 }
 
-// Multi-Col Grid holds narrow columns: about 343px at 1920, 385px at 1440 and
-// 374px at 1400 (see enableWideGrid). `fit` lists the tables that must reflow
-// to the column without scrolling; the rest may keep their columns and scroll
-// with the cue.
-const DESKTOP_VIEWPORTS = [
-  { width: 1920, height: 1080, fit: ['energy-disruptions', 'ucdp-events', 'climate', 'radiation-watch'] },
-  { width: 1440, height: 900, fit: ['climate'] },
-  { width: 1400, height: 800, fit: [] },
+// Each desktop viewport uses the narrowest panel column a user can reach there.
+// At 1920 that is Multi-Col Grid (about 343px columns; the one-column inspector
+// cannot get below about 474px because the map stops at 75%). At 1440 and 1400
+// it is the one-column inspector with the map dragged to its 75% maximum
+// (about 354px and 344px; src/app/split-layout.ts getMapColWidthBounds).
+// `fit` lists the tables that must reflow to the column without scrolling; the
+// rest may keep their columns and scroll with the cue.
+type DesktopLayout = 'wide-grid' | 'max-map';
+const DESKTOP_VIEWPORTS: Array<{ width: number; height: number; layout: DesktopLayout; fit: string[] }> = [
+  { width: 1920, height: 1080, layout: 'wide-grid', fit: ['energy-disruptions', 'ucdp-events', 'climate', 'radiation-watch'] },
+  { width: 1440, height: 900, layout: 'max-map', fit: ['climate'] },
+  { width: 1400, height: 800, layout: 'max-map', fit: [] },
 ];
 const DESKTOP_PANELS = [...PANELS, 'grocery-basket'] as const;
 
 test('panel tables fit a narrow desktop column or scroll with a visible cue', async ({ browser }, testInfo) => {
   test.setTimeout(900_000);
-  for (const { fit, ...viewport } of DESKTOP_VIEWPORTS) {
+  for (const { fit, layout, ...viewport } of DESKTOP_VIEWPORTS) {
     const styles = new Map<string, { th: CellStyle; td: CellStyle }>();
     for (const [tab, ids] of groupByTab(DESKTOP_PANELS)) {
       const context = await browser.newContext({ viewport, colorScheme: 'dark' });
@@ -359,10 +363,12 @@ test('panel tables fit a narrow desktop column or scroll with a visible cue', as
       await seedAnonymousDashboard(page, 'full', { localStorage: {
         'worldmonitor-panels': JSON.stringify(settings),
         'wm-inspector-tab-v1': tab,
+        // Clamped to the 75% maximum at load (clampMapColWidthPercent).
+        ...(layout === 'max-map' ? { 'map-col-width': '75%' } : {}),
       } });
       await routeFixtures(page);
       await page.goto('/dashboard');
-      await enableWideGrid(page);
+      if (layout === 'wide-grid') await enableWideGrid(page);
       for (const id of ids) {
         const panel = page.locator(`#panelsGrid .panel[data-panel="${id}"]`);
         await expect
@@ -403,11 +409,12 @@ test('the table scroll cue follows the reading direction in RTL', async ({ brows
   await seedAnonymousDashboard(page, 'full', { localStorage: {
     'worldmonitor-panels': JSON.stringify(settings),
     'wm-inspector-tab-v1': PANEL_TAB['grocery-basket']!,
+    // The narrowest one-column inspector at 1440 (map at its 75% maximum).
+    'map-col-width': '75%',
   } });
   await routeFixtures(page);
   await page.goto('/dashboard?lang=ar');
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-  await enableWideGrid(page);
   const panel = page.locator('#panelsGrid .panel[data-panel="grocery-basket"]');
   await expect
     .poll(async () => {
