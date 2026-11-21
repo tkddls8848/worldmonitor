@@ -1,11 +1,13 @@
 #!/usr/bin/env node
+import { fileURLToPath } from 'node:url';
 import { loadEnvFile, readCanonicalValue, runSeed } from './_seed-utils.mjs';
-import { callLlmViaInsights, declareRecords, generateAiSnapshot, shouldRunAiToday } from './_world-relations-ai.mjs';
+import { callLlmViaInsights, declareRecords as declareAiRecords, generateAiSnapshot, shouldRunAiToday } from './_world-relations-ai.mjs';
 import { WORLD_OVERVIEW_KEYS, kstDate } from '../shared/world-overview.js';
 import { markActivated } from './_world-overview-io.mjs';
 
-const _isDirectRun = process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/'));
-if (_isDirectRun) {
+export function declareRecords(data) { return declareAiRecords(data); }
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   loadEnvFile(import.meta.url);
   const existing = await readCanonicalValue(WORLD_OVERVIEW_KEYS.ai);
   const gate = shouldRunAiToday({ existing, nowMs: Date.now(), force: process.argv.includes('--force') });
