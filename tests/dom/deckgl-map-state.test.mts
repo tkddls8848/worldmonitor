@@ -39,7 +39,7 @@ const { FakeMap, fakeMaps } = vi.hoisted(() => {
     canvas = document.createElement('canvas');
     dragRotate = { disable(): void {}, enable(): void {} };
     touchZoomRotate = { disableRotation(): void {}, enableRotation(): void {} };
-    keyboard = { disable(): void {}, enable(): void {} };
+    keyboard = { disable(): void {}, enable(): void {}, disableRotation(): void {}, enableRotation(): void {} };
     scrollZoom = { disable(): void {}, enable(): void {}, setWheelZoomRate(): void {} };
     doubleClickZoom = { disable(): void {}, enable(): void {} };
     dragPan = { disable(): void {}, enable(): void {} };

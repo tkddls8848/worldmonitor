@@ -38,6 +38,9 @@ async function createHarness({ failReplacement = true, scheduleMicrotask = queue
       },
     },
     maplibreWorkerUrl: '',
+    // Module-level helper initMapLibre calls after each construction
+    // (covered in tests/dom/map-no-globe.test.mts).
+    disableMapRotation() {},
     VIEW_PRESETS: { global: { latitude: 0, longitude: 0, zoom: 2 } },
     isHappyVariant: false,
     document: { getElementById: () => ({}) },
