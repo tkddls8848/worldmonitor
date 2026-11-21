@@ -1085,6 +1085,7 @@ const cloudPreferredSeedOnlyPrefixes = [
   '/api/seismology/v1/',
   '/api/thermal/v1/',
   '/api/unrest/v1/',
+  '/api/world-overview/v1/',
   '/api/wildfire/v1/',
 ];
 const cloudPreferredAlwaysPrefixes = ['/api/scorecard/v1/'];
