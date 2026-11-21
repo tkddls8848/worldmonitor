@@ -165,7 +165,7 @@ describe('browser service cache failure contracts (#8348)', () => {
     assert.equal((await h.loadAdvisoriesFromServer()).advisories[0]?.title, 'A');
     now += 16 * 60 * 1000;
     const advisoryFailure = await h.loadAdvisoriesFromServer();
-    assert.equal(advisoryFailure.ok, false); assert.equal(advisoryFailure.advisories[0]?.title, 'A');
+    assert.equal(advisoryFailure.ok, false); assert.equal(advisoryFailure.advisories[0]?.title, 'A'); assert.equal(runtime.__clientFreshnessErrors?.length, 1);
   });
 
   it('IMF exposes healthy themes on a cold partial load and retries the missing theme', async () => {
