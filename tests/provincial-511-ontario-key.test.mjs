@@ -39,14 +39,20 @@ async function tick(key, rejected = false) {
     extendExistingTtl: async () => {},
   };
   vm.runInNewContext(source, context);
-  const data = await fetchTick();
-  const canonical = options.publishTransform(data);
+  let data;
+  try {
+    data = await fetchTick();
+  } catch (err) {
+    warnings.push(err.message || String(err));
+    return { requests, warnings, writes, valid: false };
+  }
+  const canonical = options.publishTransform ? options.publishTransform(data) : data;
   const valid = options.validateFn(canonical);
   if (valid) {
     writes.push({ name: 'infra:ontario-511:v1', data: canonical });
-    await options.afterPublish(data);
+    if (typeof options.afterPublish === 'function') await options.afterPublish(data);
   } else {
-    await options.afterValidationSkip(data);
+    if (typeof options.afterValidationSkip === 'function') await options.afterValidationSkip(data);
   }
   return { requests, warnings, writes, valid };
 }
@@ -57,24 +63,25 @@ test('the seeder passes the trimmed Ontario key to all three resources', async (
   assert.equal(ontario.length, 3);
   for (const url of ontario) assert.equal(url.searchParams.get('key'), 'on-fixture');
   assert.equal(result.valid, true, 'a complete empty poll is publishable');
-  assert.equal(result.writes.length, 3);
+  assert.deepEqual(result.writes.map((write) => write.name), ['infra:ontario-511:v1']);
+  assert.ok(!result.writes.some(({ name }) => /alberta|manitoba/i.test(name)));
   assert.ok(!JSON.stringify(result.writes).includes('on-fixture'));
 });
 
 for (const key of [undefined, '', '   ']) {
-  test(`missing Ontario key (${JSON.stringify(key)}) skips requests and keeps other provinces publishable`, async () => {
+  test(`missing Ontario key (${JSON.stringify(key)}) skips requests and writes no province keys`, async () => {
     const result = await tick(key);
     assert.equal(result.requests.filter((url) => url.hostname === '511on.ca').length, 0);
     assert.equal(result.valid, false, 'missing key must not publish a fresh empty Ontario payload');
-    assert.deepEqual(result.writes.map((write) => write.name), ['infra:alberta-511:v1', 'infra:manitoba-511:v1']);
+    assert.deepEqual(result.writes, []);
     assert.match(result.warnings.join('\n'), /ONTARIO_511_KEY missing/);
   });
 }
 
-test('a rejected Ontario key preserves Ontario while other provinces publish', async () => {
+test('a rejected Ontario key preserves Ontario without writing other province keys', async () => {
   const result = await tick('on-fixture', true);
   assert.equal(result.valid, false);
-  assert.deepEqual(result.writes.map((write) => write.name), ['infra:alberta-511:v1', 'infra:manitoba-511:v1']);
+  assert.deepEqual(result.writes, []);
   assert.match(result.warnings.join('\n'), /all endpoints failed/);
   assert.ok(!result.warnings.join('\n').includes('on-fixture'));
 });
