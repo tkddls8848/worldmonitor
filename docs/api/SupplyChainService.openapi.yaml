@@ -381,7 +381,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetCountryChokepointIndex
-            description: GetCountryChokepointIndex returns per-chokepoint exposure scores for a country. PRO-gated.
+            description: GetCountryChokepointIndex returns per-chokepoint exposure scores for a country. PRO-gated. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetCountryChokepointIndex
             parameters:
                 - name: iso2
@@ -514,7 +514,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetCountryCostShock
-            description: GetCountryCostShock returns cost shock and war risk data for a country+chokepoint. PRO-gated.
+            description: GetCountryCostShock returns cost shock and war risk data for a country+chokepoint. PRO-gated. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetCountryCostShock
             parameters:
                 - name: iso2
@@ -579,7 +579,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetCountryProducts
-            description: GetCountryProducts returns the seeded bilateral-HS4 import basket for a country. PRO-gated.
+            description: GetCountryProducts returns the seeded bilateral-HS4 import basket for a country. PRO-gated. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetCountryProducts
             parameters:
                 - name: iso2
@@ -726,7 +726,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetSectorDependency
-            description: GetSectorDependency returns dependency flags and risk profile for a country+HS2 sector. PRO-gated.
+            description: GetSectorDependency returns dependency flags and risk profile for a country+HS2 sector. PRO-gated. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetSectorDependency
             parameters:
                 - name: iso2
@@ -1483,7 +1483,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetCountryVulnerabilities
-            description: GetCountryVulnerabilities returns the full per-commodity score evidence for one country.
+            description: GetCountryVulnerabilities returns the full per-commodity score evidence for one country. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetCountryVulnerabilities
             parameters:
                 - name: iso2
@@ -1534,7 +1534,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetChokepointDependencies
-            description: GetChokepointDependencies returns the inverse country/commodity dependency index.
+            description: GetChokepointDependencies returns the inverse country/commodity dependency index. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetChokepointDependencies
             parameters:
                 - name: chokepointId
@@ -1598,7 +1598,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: ListVulnerabilityRankings
-            description: ListVulnerabilityRankings returns a bounded global ranking with optional filters.
+            description: ListVulnerabilityRankings returns a bounded global ranking with optional filters. The response uses the fields defined by this RPC's protobuf response message.
             operationId: ListVulnerabilityRankings
             parameters:
                 - name: commodityId

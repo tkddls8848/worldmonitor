@@ -428,7 +428,7 @@ paths:
             tags:
                 - IntelligenceService
             summary: GetCountryIntelBrief
-            description: GetCountryIntelBrief generates a strategic brief for a specific country.
+            description: GetCountryIntelBrief generates a strategic brief for a specific country. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetCountryIntelBrief
             parameters:
                 - name: country_code
@@ -1572,7 +1572,7 @@ paths:
             tags:
                 - IntelligenceService
             summary: ListMarketImplications
-            description: ListMarketImplications returns AI-generated trade-implication cards from live world state.
+            description: ListMarketImplications returns AI-generated trade-implication cards from live world state. The response uses the fields defined by this RPC's protobuf response message.
             operationId: ListMarketImplications
             parameters:
                 - name: frameworkId
@@ -1626,7 +1626,7 @@ paths:
             tags:
                 - IntelligenceService
             summary: ListWsbTickers
-            description: ListWsbTickers ranks the top 50 tickers mentioned on r/wallstreetbets, r/stocks, and r/investing by velocity.
+            description: ListWsbTickers ranks the top 50 tickers mentioned on r/wallstreetbets, r/stocks, and r/investing by velocity. The response uses the fields defined by this RPC's protobuf response message.
             operationId: ListWsbTickers
             parameters:
                 - name: jmespath
@@ -1946,7 +1946,7 @@ paths:
                 - IntelligenceService
             summary: GetRegionalSnapshot
             description: |-
-                GetRegionalSnapshot returns the latest RegionalSnapshot for a region,
+                GetRegionalSnapshot returns the latest RegionalSnapshot for a region, The response uses the fields defined by this RPC's protobuf response message.
                  refreshed every 6h. Premium-gated.
             operationId: GetRegionalSnapshot
             parameters:

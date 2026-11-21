@@ -10,7 +10,7 @@ paths:
             tags:
                 - LeadsService
             summary: SubmitContact
-            description: SubmitContact stores an enterprise contact submission in Convex and emails ops.
+            description: SubmitContact stores an enterprise contact submission in Convex and emails ops. The response uses the fields defined by this RPC's protobuf response message.
             operationId: SubmitContact
             requestBody:
                 content:
@@ -53,7 +53,7 @@ paths:
             tags:
                 - LeadsService
             summary: RegisterInterest
-            description: RegisterInterest adds an email to the Pro waitlist and sends a confirmation email.
+            description: RegisterInterest adds an email to the Pro waitlist and sends a confirmation email. The response uses the fields defined by this RPC's protobuf response message.
             operationId: RegisterInterest
             requestBody:
                 content:

@@ -229,7 +229,7 @@ paths:
             tags:
                 - AviationService
             summary: ListAirportFlights
-            description: ListAirportFlights returns recent arrivals and departures with direction and limit filters, status and carrier.
+            description: ListAirportFlights returns recent arrivals and departures with direction and limit filters, status and carrier. Apply these filters to focus the airport traffic.
             operationId: ListAirportFlights
             parameters:
                 - name: airport
@@ -302,7 +302,7 @@ paths:
             tags:
                 - AviationService
             summary: GetCarrierOps
-            description: GetCarrierOps returns delay and cancellation metrics grouped by carrier.
+            description: GetCarrierOps returns delay and cancellation metrics grouped by carrier. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetCarrierOps
             parameters:
                 - name: airports
@@ -375,7 +375,7 @@ paths:
             tags:
                 - AviationService
             summary: GetFlightStatus
-            description: GetFlightStatus looks up the current status of a specific flight.
+            description: GetFlightStatus looks up the current status of a specific flight. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetFlightStatus
             parameters:
                 - name: flight_number

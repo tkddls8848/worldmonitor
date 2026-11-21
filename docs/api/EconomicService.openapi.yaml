@@ -1731,7 +1731,7 @@ paths:
             tags:
                 - EconomicService
             summary: ListGlobalTenders
-            description: ListGlobalTenders returns the Pro-gated, paginated, seed-backed canonical procurement feed.
+            description: ListGlobalTenders returns the Pro-gated, paginated, seed-backed canonical procurement feed. The response uses the fields defined by this RPC's protobuf response message.
             operationId: ListGlobalTenders
             parameters:
                 - name: country

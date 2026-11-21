@@ -233,7 +233,7 @@ paths:
             tags:
                 - AviationService
             summary: ListAirportFlights
-            description: ListAirportFlights returns recent arrivals and departures with direction and limit filters, status and carrier.
+            description: ListAirportFlights returns recent arrivals and departures with direction and limit filters, status and carrier. Apply these filters to focus the airport traffic.
             operationId: ListAirportFlights
             parameters:
                 - name: airport
@@ -306,7 +306,7 @@ paths:
             tags:
                 - AviationService
             summary: GetCarrierOps
-            description: GetCarrierOps returns delay and cancellation metrics grouped by carrier.
+            description: GetCarrierOps returns delay and cancellation metrics grouped by carrier. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetCarrierOps
             parameters:
                 - name: airports
@@ -379,7 +379,7 @@ paths:
             tags:
                 - AviationService
             summary: GetFlightStatus
-            description: GetFlightStatus looks up the current status of a specific flight.
+            description: GetFlightStatus looks up the current status of a specific flight. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetFlightStatus
             parameters:
                 - name: flight_number
@@ -5340,7 +5340,7 @@ paths:
             tags:
                 - EconomicService
             summary: ListGlobalTenders
-            description: ListGlobalTenders returns the Pro-gated, paginated, seed-backed canonical procurement feed.
+            description: ListGlobalTenders returns the Pro-gated, paginated, seed-backed canonical procurement feed. The response uses the fields defined by this RPC's protobuf response message.
             operationId: ListGlobalTenders
             parameters:
                 - name: country
@@ -8060,7 +8060,7 @@ paths:
             tags:
                 - IntelligenceService
             summary: GetCountryIntelBrief
-            description: GetCountryIntelBrief generates a strategic brief for a specific country.
+            description: GetCountryIntelBrief generates a strategic brief for a specific country. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetCountryIntelBrief
             parameters:
                 - name: country_code
@@ -9204,7 +9204,7 @@ paths:
             tags:
                 - IntelligenceService
             summary: ListMarketImplications
-            description: ListMarketImplications returns AI-generated trade-implication cards from live world state.
+            description: ListMarketImplications returns AI-generated trade-implication cards from live world state. The response uses the fields defined by this RPC's protobuf response message.
             operationId: ListMarketImplications
             parameters:
                 - name: frameworkId
@@ -9258,7 +9258,7 @@ paths:
             tags:
                 - IntelligenceService
             summary: ListWsbTickers
-            description: ListWsbTickers ranks the top 50 tickers mentioned on r/wallstreetbets, r/stocks, and r/investing by velocity.
+            description: ListWsbTickers ranks the top 50 tickers mentioned on r/wallstreetbets, r/stocks, and r/investing by velocity. The response uses the fields defined by this RPC's protobuf response message.
             operationId: ListWsbTickers
             parameters:
                 - name: jmespath
@@ -9578,7 +9578,7 @@ paths:
                 - IntelligenceService
             summary: GetRegionalSnapshot
             description: |-
-                GetRegionalSnapshot returns the latest RegionalSnapshot for a region,
+                GetRegionalSnapshot returns the latest RegionalSnapshot for a region, The response uses the fields defined by this RPC's protobuf response message.
                  refreshed every 6h. Premium-gated.
             operationId: GetRegionalSnapshot
             parameters:
@@ -9998,7 +9998,7 @@ paths:
             tags:
                 - LeadsService
             summary: SubmitContact
-            description: SubmitContact stores an enterprise contact submission in Convex and emails ops.
+            description: SubmitContact stores an enterprise contact submission in Convex and emails ops. The response uses the fields defined by this RPC's protobuf response message.
             operationId: SubmitContact
             requestBody:
                 content:
@@ -10041,7 +10041,7 @@ paths:
             tags:
                 - LeadsService
             summary: RegisterInterest
-            description: RegisterInterest adds an email to the Pro waitlist and sends a confirmation email.
+            description: RegisterInterest adds an email to the Pro waitlist and sends a confirmation email. The response uses the fields defined by this RPC's protobuf response message.
             operationId: RegisterInterest
             requestBody:
                 content:
@@ -11087,7 +11087,7 @@ paths:
             tags:
                 - MarketService
             summary: AnalyzeStock
-            description: AnalyzeStock retrieves a premium stock analysis report with technicals, news, and AI synthesis.
+            description: AnalyzeStock retrieves a premium stock analysis report with technicals, news, and AI synthesis. The response uses the fields defined by this RPC's protobuf response message.
             operationId: AnalyzeStock
             parameters:
                 - name: symbol
@@ -11156,7 +11156,7 @@ paths:
             tags:
                 - MarketService
             summary: GetStockAnalysisHistory
-            description: GetStockAnalysisHistory retrieves shared premium stock analysis history from the backend store.
+            description: GetStockAnalysisHistory retrieves shared premium stock analysis history from the backend store. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetStockAnalysisHistory
             parameters:
                 - name: symbols
@@ -11234,7 +11234,7 @@ paths:
             tags:
                 - MarketService
             summary: BacktestStock
-            description: BacktestStock replays the technical-only stock signal over recent price history.
+            description: BacktestStock replays the technical-only stock signal over recent price history. The response uses the fields defined by this RPC's protobuf response message.
             operationId: BacktestStock
             parameters:
                 - name: symbol
@@ -11299,7 +11299,7 @@ paths:
             tags:
                 - MarketService
             summary: ListStoredStockBacktests
-            description: ListStoredStockBacktests retrieves stored premium backtest snapshots from the backend store.
+            description: ListStoredStockBacktests retrieves stored premium backtest snapshots from the backend store. The response uses the fields defined by this RPC's protobuf response message.
             operationId: ListStoredStockBacktests
             parameters:
                 - name: symbols
@@ -11699,7 +11699,7 @@ paths:
             tags:
                 - MarketService
             summary: GetInsiderTransactions
-            description: GetInsiderTransactions retrieves SEC insider buy/sell activity from Finnhub.
+            description: GetInsiderTransactions retrieves SEC insider buy/sell activity from Finnhub. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetInsiderTransactions
             parameters:
                 - name: symbol
@@ -12939,7 +12939,7 @@ paths:
             tags:
                 - NewsService
             summary: ListMediaPerspective
-            description: ListMediaPerspective groups headlines about one country by outlet home country and audience.
+            description: ListMediaPerspective groups headlines about one country by outlet home country and audience. The response uses the fields defined by this RPC's protobuf response message.
             operationId: ListMediaPerspective
             parameters:
                 - name: subject_country
@@ -14195,7 +14195,7 @@ paths:
             tags:
                 - ResilienceService
             summary: GetResilienceScore
-            description: GetResilienceScore returns a country's resilience score with domain and pillar scores, trend and confidence.
+            description: GetResilienceScore returns a country's resilience score with domain and pillar scores, trend and confidence. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetResilienceScore
             parameters:
                 - name: countryCode
@@ -14256,7 +14256,7 @@ paths:
             tags:
                 - ResilienceService
             summary: GetResilienceIndicators
-            description: GetResilienceIndicators explains one country's score at indicator level.
+            description: GetResilienceIndicators explains one country's score at indicator level. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetResilienceIndicators
             parameters:
                 - name: countryCode
@@ -14375,7 +14375,7 @@ paths:
             tags:
                 - ResilienceService
             summary: GetDemographicsCapability
-            description: GetDemographicsCapability returns age, education and industrial-workforce observations for one country.
+            description: GetDemographicsCapability returns age, education and industrial-workforce observations for one country. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetDemographicsCapability
             parameters:
                 - name: countryCode
@@ -15874,7 +15874,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetCountryChokepointIndex
-            description: GetCountryChokepointIndex returns per-chokepoint exposure scores for a country. PRO-gated.
+            description: GetCountryChokepointIndex returns per-chokepoint exposure scores for a country. PRO-gated. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetCountryChokepointIndex
             parameters:
                 - name: iso2
@@ -16007,7 +16007,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetCountryCostShock
-            description: GetCountryCostShock returns cost shock and war risk data for a country+chokepoint. PRO-gated.
+            description: GetCountryCostShock returns cost shock and war risk data for a country+chokepoint. PRO-gated. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetCountryCostShock
             parameters:
                 - name: iso2
@@ -16072,7 +16072,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetCountryProducts
-            description: GetCountryProducts returns the seeded bilateral-HS4 import basket for a country. PRO-gated.
+            description: GetCountryProducts returns the seeded bilateral-HS4 import basket for a country. PRO-gated. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetCountryProducts
             parameters:
                 - name: iso2
@@ -16219,7 +16219,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetSectorDependency
-            description: GetSectorDependency returns dependency flags and risk profile for a country+HS2 sector. PRO-gated.
+            description: GetSectorDependency returns dependency flags and risk profile for a country+HS2 sector. PRO-gated. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetSectorDependency
             parameters:
                 - name: iso2
@@ -16976,7 +16976,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetCountryVulnerabilities
-            description: GetCountryVulnerabilities returns the full per-commodity score evidence for one country.
+            description: GetCountryVulnerabilities returns the full per-commodity score evidence for one country. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetCountryVulnerabilities
             parameters:
                 - name: iso2
@@ -17027,7 +17027,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetChokepointDependencies
-            description: GetChokepointDependencies returns the inverse country/commodity dependency index.
+            description: GetChokepointDependencies returns the inverse country/commodity dependency index. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetChokepointDependencies
             parameters:
                 - name: chokepointId
@@ -17091,7 +17091,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: ListVulnerabilityRankings
-            description: ListVulnerabilityRankings returns a bounded global ranking with optional filters.
+            description: ListVulnerabilityRankings returns a bounded global ranking with optional filters. The response uses the fields defined by this RPC's protobuf response message.
             operationId: ListVulnerabilityRankings
             parameters:
                 - name: commodityId
@@ -18339,7 +18339,7 @@ paths:
             tags:
                 - WorldOverviewService
             summary: GetWorldOverviewSnapshot
-            description: GetWorldOverviewSnapshot returns today's snapshot or an archived date and the available archive dates.
+            description: GetWorldOverviewSnapshot returns today's snapshot or an archived date and the available archive dates. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetWorldOverviewSnapshot
             parameters:
                 - name: date
@@ -18421,7 +18421,7 @@ paths:
             tags:
                 - WorldOverviewService
             summary: SetWorldOverviewMark
-            description: SetWorldOverviewMark creates, undoes, or replaces a wrong-data mark.
+            description: SetWorldOverviewMark creates, undoes, or replaces a wrong-data mark. The response uses the fields defined by this RPC's protobuf response message.
             operationId: SetWorldOverviewMark
             requestBody:
                 content:
@@ -45803,9 +45803,11 @@ components:
                 score:
                     type: number
                     format: double
+                    description: Current combined Country Instability Index score for this snapshot, on the source score's scale.
                 unrest:
                     type: number
                     format: double
+                    description: Current unrest contribution carried in the index component state, on the source score's scale.
         worldmonitor_world_overview_v1_CountryIssue:
             type: object
             properties:

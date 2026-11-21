@@ -10,7 +10,7 @@ paths:
             tags:
                 - WorldOverviewService
             summary: GetWorldOverviewSnapshot
-            description: GetWorldOverviewSnapshot returns today's snapshot or an archived date and the available archive dates.
+            description: GetWorldOverviewSnapshot returns today's snapshot or an archived date and the available archive dates. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetWorldOverviewSnapshot
             parameters:
                 - name: date
@@ -92,7 +92,7 @@ paths:
             tags:
                 - WorldOverviewService
             summary: SetWorldOverviewMark
-            description: SetWorldOverviewMark creates, undoes, or replaces a wrong-data mark.
+            description: SetWorldOverviewMark creates, undoes, or replaces a wrong-data mark. The response uses the fields defined by this RPC's protobuf response message.
             operationId: SetWorldOverviewMark
             requestBody:
                 content:
@@ -295,9 +295,11 @@ components:
                 score:
                     type: number
                     format: double
+                    description: Current combined Country Instability Index score for this snapshot, on the source score's scale.
                 unrest:
                     type: number
                     format: double
+                    description: Current unrest contribution carried in the index component state, on the source score's scale.
         CountryIssue:
             type: object
             properties:

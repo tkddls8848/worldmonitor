@@ -765,7 +765,7 @@ paths:
             tags:
                 - MarketService
             summary: AnalyzeStock
-            description: AnalyzeStock retrieves a premium stock analysis report with technicals, news, and AI synthesis.
+            description: AnalyzeStock retrieves a premium stock analysis report with technicals, news, and AI synthesis. The response uses the fields defined by this RPC's protobuf response message.
             operationId: AnalyzeStock
             parameters:
                 - name: symbol
@@ -834,7 +834,7 @@ paths:
             tags:
                 - MarketService
             summary: GetStockAnalysisHistory
-            description: GetStockAnalysisHistory retrieves shared premium stock analysis history from the backend store.
+            description: GetStockAnalysisHistory retrieves shared premium stock analysis history from the backend store. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetStockAnalysisHistory
             parameters:
                 - name: symbols
@@ -912,7 +912,7 @@ paths:
             tags:
                 - MarketService
             summary: BacktestStock
-            description: BacktestStock replays the technical-only stock signal over recent price history.
+            description: BacktestStock replays the technical-only stock signal over recent price history. The response uses the fields defined by this RPC's protobuf response message.
             operationId: BacktestStock
             parameters:
                 - name: symbol
@@ -977,7 +977,7 @@ paths:
             tags:
                 - MarketService
             summary: ListStoredStockBacktests
-            description: ListStoredStockBacktests retrieves stored premium backtest snapshots from the backend store.
+            description: ListStoredStockBacktests retrieves stored premium backtest snapshots from the backend store. The response uses the fields defined by this RPC's protobuf response message.
             operationId: ListStoredStockBacktests
             parameters:
                 - name: symbols
@@ -1377,7 +1377,7 @@ paths:
             tags:
                 - MarketService
             summary: GetInsiderTransactions
-            description: GetInsiderTransactions retrieves SEC insider buy/sell activity from Finnhub.
+            description: GetInsiderTransactions retrieves SEC insider buy/sell activity from Finnhub. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetInsiderTransactions
             parameters:
                 - name: symbol

@@ -10,7 +10,7 @@ paths:
             tags:
                 - ResilienceService
             summary: GetResilienceScore
-            description: GetResilienceScore returns a country's resilience score with domain and pillar scores, trend and confidence.
+            description: GetResilienceScore returns a country's resilience score with domain and pillar scores, trend and confidence. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetResilienceScore
             parameters:
                 - name: countryCode
@@ -71,7 +71,7 @@ paths:
             tags:
                 - ResilienceService
             summary: GetResilienceIndicators
-            description: GetResilienceIndicators explains one country's score at indicator level.
+            description: GetResilienceIndicators explains one country's score at indicator level. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetResilienceIndicators
             parameters:
                 - name: countryCode
@@ -190,7 +190,7 @@ paths:
             tags:
                 - ResilienceService
             summary: GetDemographicsCapability
-            description: GetDemographicsCapability returns age, education and industrial-workforce observations for one country.
+            description: GetDemographicsCapability returns age, education and industrial-workforce observations for one country. The response uses the fields defined by this RPC's protobuf response message.
             operationId: GetDemographicsCapability
             parameters:
                 - name: countryCode

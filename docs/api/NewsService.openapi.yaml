@@ -243,7 +243,7 @@ paths:
             tags:
                 - NewsService
             summary: ListMediaPerspective
-            description: ListMediaPerspective groups headlines about one country by outlet home country and audience.
+            description: ListMediaPerspective groups headlines about one country by outlet home country and audience. The response uses the fields defined by this RPC's protobuf response message.
             operationId: ListMediaPerspective
             parameters:
                 - name: subject_country
