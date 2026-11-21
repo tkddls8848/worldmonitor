@@ -190,6 +190,9 @@ export class Panel {
   private _fetching = false;
   private _collapsed = false;
   private _collapseBtn: HTMLButtonElement | null = null;
+  private _modalExpanded = false;
+  private _expandModalBtn: HTMLButtonElement | null = null;
+  private onModalExpandKeydown: ((e: KeyboardEvent) => void) | null = null;
   private viewportObserver: IntersectionObserver | null = null;
   private viewportObserverRegistered = false;
   private connectedCallbacks: Array<() => void> = [];
@@ -281,6 +284,10 @@ export class Panel {
       this.countEl.className = 'panel-count';
       this.countEl.textContent = '0';
       this.header.appendChild(this.countEl);
+    }
+
+    if (options.id !== 'live-news' && options.id !== 'live-webcams') {
+      this.appendExpandModalButton();
     }
 
     if (options.collapsible) {
@@ -905,6 +912,60 @@ export class Panel {
     this.header.appendChild(btn);
   }
 
+  protected appendExpandModalButton(): void {
+    const isKo = typeof document !== 'undefined' && document.documentElement.lang?.startsWith('ko');
+    const expandLabel = isKo ? '크게 보기' : 'Expand panel';
+    const btn = h('button', {
+      type: 'button',
+      className: 'icon-btn panel-expand-modal-btn',
+      'aria-label': expandLabel,
+      title: expandLabel,
+      'aria-pressed': 'false',
+    }, '⛶');
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.setModalExpanded(!this._modalExpanded);
+    });
+    this._expandModalBtn = btn as HTMLButtonElement;
+    this.header.appendChild(btn);
+  }
+
+  public setModalExpanded(expanded: boolean): void {
+    if (this._modalExpanded === expanded) return;
+    this._modalExpanded = expanded;
+    this.element.classList.toggle('panel-modal-expanded', expanded);
+    if (this._expandModalBtn) {
+      const isKo = typeof document !== 'undefined' && document.documentElement.lang?.startsWith('ko');
+      const label = expanded
+        ? (isKo ? '원래 크기로' : 'Restore panel size')
+        : (isKo ? '크게 보기' : 'Expand panel');
+      this._expandModalBtn.textContent = expanded ? '⤢' : '⛶';
+      this._expandModalBtn.title = label;
+      this._expandModalBtn.setAttribute('aria-label', label);
+      this._expandModalBtn.setAttribute('aria-pressed', String(expanded));
+    }
+    if (expanded) {
+      if (this._collapsed) this.setCollapsed(false);
+      document.body.classList.add('panel-modal-open');
+      this.onModalExpandKeydown = (ev: KeyboardEvent) => {
+        if (ev.key === 'Escape') {
+          ev.stopPropagation();
+          this.setModalExpanded(false);
+        }
+      };
+      document.addEventListener('keydown', this.onModalExpandKeydown);
+    } else {
+      if (this.onModalExpandKeydown) {
+        document.removeEventListener('keydown', this.onModalExpandKeydown);
+        this.onModalExpandKeydown = null;
+      }
+      if (!document.querySelector('.panel.panel-modal-expanded')) {
+        document.body.classList.remove('panel-modal-open');
+      }
+    }
+    window.dispatchEvent(new Event('resize'));
+  }
+
   protected appendCloseButton(): void {
     const closeBtn = h('button', {
       className: 'icon-btn panel-close-btn',
@@ -913,6 +974,10 @@ export class Panel {
     }, '\u2715');
     closeBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      if (this._modalExpanded) {
+        this.setModalExpanded(false);
+        return;
+      }
       this.element.dispatchEvent(new CustomEvent('wm:panel-close', {
         bubbles: true,
         detail: { panelId: this.panelId },
@@ -927,12 +992,12 @@ export class Panel {
 
   /**
    * True when this panel can host live media right now: attached, enabled (not hidden via the
-   * disable path), and expanded (not collapsed). The play-all cascade gates on this so a
-   * collapsed or disabled panel never creates/queues media work inside a hidden content area.
+   * disable path), visible in the active inspector tab, and expanded (not collapsed).
    */
   public canHostLiveMedia(): boolean {
     return this.element.isConnected
       && !this.element.classList.contains('hidden')
+      && !this.element.classList.contains('inspector-tab-hidden')
       && !this._collapsed;
   }
 
@@ -1643,6 +1708,9 @@ export class Panel {
     this.pendingContentHtml = null;
     this.pendingContentCallback = null;
 
+    if (this._modalExpanded) {
+      this.setModalExpanded(false);
+    }
     if (this.tooltipCloseHandler) {
       document.removeEventListener('click', this.tooltipCloseHandler);
       this.tooltipCloseHandler = null;

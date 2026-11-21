@@ -14,6 +14,32 @@
   contain: layout paint;
 }
 
+/* Option B: dock country detail cleanly over the right inspector column on desktop
+   so the 70% map stays open and interactive alongside the country brief. */
+@media (min-width: 1200px) {
+  .country-deep-dive:not(.maximized) {
+    top: 44px;
+    bottom: 34px;
+    height: auto;
+    width: max(320px, calc(100vw - var(--wm-map-col-actual, 70%) - 6px));
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.22);
+  }
+
+  .country-deep-dive:not(.maximized) .panel-close {
+    width: auto;
+    padding: 0 10px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .country-deep-dive:not(.maximized) .panel-close::before {
+    content: '← ';
+  }
+}
+
 .country-deep-dive[aria-hidden="true"] {
   transition: transform 0.28s ease, visibility 0s linear 0.28s;
   visibility: hidden;

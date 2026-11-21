@@ -2349,7 +2349,11 @@ export class EventHandlerManager implements AppModule {
       const stored = readStorageValue('map-col-width') || mainContent.style.getPropertyValue('--map-col-width');
       if (stored) {
         const clamped = clampMapColWidthPercent(Number.parseFloat(stored), mainContent.offsetWidth);
-        mainContent.style.setProperty('--map-col-width', `${clamped.toFixed(1)}%`);
+        const value = `${clamped.toFixed(1)}%`;
+        mainContent.style.setProperty('--map-col-width', value);
+        document.documentElement.style.setProperty('--wm-map-col-actual', value);
+      } else {
+        document.documentElement.style.setProperty('--wm-map-col-actual', `${MAP_COL_DEFAULT_PERCENT}%`);
       }
       syncMapColNarrowState();
       syncWidthSeparatorAria();
@@ -2407,7 +2411,9 @@ export class EventHandlerManager implements AppModule {
     const applyDrag = (clientX: number) => {
       const delta = (clientX - startX) * dragSign;
       const newPct = clampMapColWidthPercent(((startColPx + delta) / startTotalWidth) * 100, startTotalWidth);
-      mainContent.style.setProperty('--map-col-width', `${newPct.toFixed(1)}%`);
+      const value = `${newPct.toFixed(1)}%`;
+      mainContent.style.setProperty('--map-col-width', value);
+      document.documentElement.style.setProperty('--wm-map-col-actual', value);
       dragMoved = true;
       this.ctx.map?.resize();
       syncMapColNarrowState();
@@ -2436,6 +2442,7 @@ export class EventHandlerManager implements AppModule {
       const newPct = clampMapColWidthPercent(currentPct + step, mainContent.offsetWidth);
       const value = `${newPct.toFixed(1)}%`;
       mainContent.style.setProperty('--map-col-width', value);
+      document.documentElement.style.setProperty('--wm-map-col-actual', value);
       this.ctx.map?.resize();
       writeStorageValue('map-col-width', value);
       syncMapColNarrowState();

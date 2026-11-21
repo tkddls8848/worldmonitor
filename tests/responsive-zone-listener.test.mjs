@@ -128,8 +128,8 @@ describe('responsive zone listener', () => {
 });
 
 describe('panel layout responsive zone wiring', () => {
-  it('keeps small laptops stacked while preserving the 1440px split layout', () => {
-    assert.equal(SPLIT_LAYOUT_MIN_WIDTH, 1440);
+  it('activates the Option B split layout from 1200px desktop widths upward', () => {
+    assert.equal(SPLIT_LAYOUT_MIN_WIDTH, 1200);
   });
   it('keeps embedded plugin overflow rules aligned with the shared layout', () => {
     assert.match(pluginCss, new RegExp(`@media \\(min-width: ${SPLIT_LAYOUT_MIN_WIDTH}px\\)`));

@@ -13,11 +13,15 @@ import {
 } from '@/app/panel-mount-deferral';
 import {
   SPLIT_LAYOUT_MIN_WIDTH,
+  MAP_COL_DEFAULT_PERCENT,
   isSplitLayoutViewport,
   clampMapColWidthPercent,
   mapRightClassForVisualSide,
   type MapVisualSide,
 } from '@/app/split-layout';
+import { InspectorShell } from '@/components/InspectorShell';
+import { BottomMediaTray } from '@/components/BottomMediaTray';
+import { OVERVIEW_DEFAULT_PANELS, type BottomTrayPanelId } from '@/config/inspector-domains';
 import {
   addResponsiveZoneListener,
   removeResponsiveZoneListener,
@@ -437,6 +441,10 @@ export class PanelLayoutManager implements AppModule {
   private mobilePanelNav: MobilePanelNav | null = null;
   private mobileMapCollapseBtn: HTMLButtonElement | null = null;
   private panelTabBar: PanelTabBar | null = null;
+  private inspectorShell: InspectorShell | null = null;
+  private bottomMediaTray: BottomMediaTray | null = null;
+  private inspectorCollapsed = false;
+  private inspectorWideGrid = false;
   private tabsState: TabsState | null = null;
   // Dashboard focus (#10453): the bar above the grid, the active-scope
   // subscription, and the editor while it is open.
@@ -553,6 +561,12 @@ export class PanelLayoutManager implements AppModule {
     this.mobileMapCollapseBtn = null;
     this.panelTabBar?.destroy();
     this.panelTabBar = null;
+    this.inspectorShell?.destroy();
+    this.inspectorShell = null;
+    this.bottomMediaTray?.destroy();
+    this.bottomMediaTray = null;
+    this.inspectorCollapsed = false;
+    this.inspectorWideGrid = false;
     this.unsubscribeScope?.();
     this.unsubscribeScope = null;
     this.focusEditor?.close();
@@ -646,8 +660,13 @@ export class PanelLayoutManager implements AppModule {
     // and every panel span. It re-clamps against the measured width later.
     const mapColWidthStyle = (() => {
       const stored = Number.parseFloat(safeStorageGet('map-col-width') ?? '');
-      if (!Number.isFinite(stored)) return '';
-      return ` style="--map-col-width: ${clampMapColWidthPercent(stored, window.innerWidth).toFixed(1)}%"`;
+      if (!Number.isFinite(stored)) {
+        document.documentElement.style.setProperty('--wm-map-col-actual', `${MAP_COL_DEFAULT_PERCENT}%`);
+        return '';
+      }
+      const clamped = `${clampMapColWidthPercent(stored, window.innerWidth).toFixed(1)}%`;
+      document.documentElement.style.setProperty('--wm-map-col-actual', clamped);
+      return ` style="--map-col-width: ${clamped}"`;
     })();
     const bootShellFootprint = import.meta.env.DEV ? captureBootShellFootprint(this.ctx.container) : null;
     const referenceOrigin = resolveDashboardSiteOrigin({
@@ -875,7 +894,11 @@ export class PanelLayoutManager implements AppModule {
           <div class="map-bottom-grid" id="mapBottomGrid"></div>
         </div>
         <div class="map-width-resize-handle" id="mapWidthResizeHandle"></div>
-        <div class="panels-grid" id="panelsGrid" role="tabpanel" aria-label="Dashboard panels"></div>
+        <section class="inspector-column" id="inspectorColumn" aria-label="${isKoUi ? '인스펙터 패널' : 'Inspector panels'}">
+          <div id="inspectorHeaderMount" class="inspector-header-mount"></div>
+          <div class="panels-grid" id="panelsGrid" role="tabpanel" aria-label="Dashboard panels"></div>
+        </section>
+        <button type="button" class="inspector-reopen-btn" id="inspectorReopenBtn" hidden title="${isKoUi ? '인스펙터 열기' : 'Open inspector'}" aria-label="${isKoUi ? '인스펙터 열기' : 'Open inspector'}">⇤</button>
       </main>
       <nav class="mobile-tab-bar" id="mobileTabBar" aria-label="${escapeHtml(t('mobileNavigation.primary'))}">
         <button class="mobile-tab active" type="button" data-mobile-tab="today" aria-current="page">
@@ -894,11 +917,14 @@ export class PanelLayoutManager implements AppModule {
           <span class="mobile-tab-icon" aria-hidden="true">•••</span><span>${escapeHtml(t('mobileNavigation.more'))}</span>
         </button>
       </nav>
-      <footer class="site-footer" aria-label="World Monitor status">
-        <span class="site-footer-meta">
-          <span class="site-footer-version">v${__APP_VERSION__}</span>
-        </span>
-      </footer>
+      <div class="bottom-dock-shell" id="bottomDockShell">
+        <div id="bottomTrayMount" class="bottom-tray-mount"></div>
+        <footer class="site-footer" aria-label="World Monitor status">
+          <span class="site-footer-meta">
+            <span class="site-footer-version">v${__APP_VERSION__}</span>
+          </span>
+        </footer>
+      </div>
     `, "legacy direct innerHTML migration"));
     this.variantPlacementCleanup?.();
     this.variantPlacementCleanup = null;
@@ -927,6 +953,10 @@ export class PanelLayoutManager implements AppModule {
       }
     });
 
+    // Mount Option B inspector shell & bottom media tray before creating panels
+    // so panel visibility & eager mount budgets align with the active inspector tab.
+    this.initInspectorAndTray();
+
     // Mount the chip nav before createPanels() yields: a nav added after that await paints one
     // frame with #panelsGrid 49px too high, then shifts it down.
     if (this.ctx.isMobile) this.setupMobilePanelNav();
@@ -934,6 +964,8 @@ export class PanelLayoutManager implements AppModule {
     await this.createPanels();
 
     this.initPanelTabs();
+    this.inspectorShell?.refresh();
+    this.hydrateVisibleInspectorPanels();
     if (import.meta.env.DEV && bootShellFootprint) warnOnBootShellFootprintDrift(bootShellFootprint);
 
     if (this.ctx.isMobile) {
@@ -1006,7 +1038,163 @@ export class PanelLayoutManager implements AppModule {
       },
     });
     mount.appendChild(this.panelTabBar.getElement());
+    if (this.inspectorShell) {
+      this.inspectorShell.getCustomTabsSlot().appendChild(mount);
+    }
     this.initFocus();
+  }
+
+  private initInspectorAndTray(): void {
+    this.inspectorShell?.destroy();
+    this.bottomMediaTray?.destroy();
+
+    const headerMount = document.getElementById('inspectorHeaderMount');
+    if (headerMount) {
+      this.inspectorShell = new InspectorShell({
+        getPanelSettings: () => this.ctx.panelSettings,
+        onTogglePanelEnabled: (panelId, enabled) => {
+          const existing = this.ctx.panelSettings[panelId];
+          if (existing) {
+            existing.enabled = enabled;
+          } else {
+            const meta = ALL_PANELS[panelId];
+            this.ctx.panelSettings[panelId] = {
+              name: meta?.name ?? panelId,
+              enabled,
+              priority: meta?.priority ?? 3,
+            };
+          }
+          saveToStorage(STORAGE_KEYS.panels, this.ctx.panelSettings);
+          this.applyPanelSettings();
+          if (enabled) {
+            this.mountDeferredPanel(panelId);
+            this.callbacks.primeVisiblePanelData();
+            this.scheduleLoadAllData('visible');
+          }
+        },
+        onRevealPanel: (panelId) => {
+          if (this.inspectorCollapsed) {
+            this.toggleInspectorCollapsed(false);
+          }
+          this.inspectorShell?.revealPanelInTab(panelId);
+          this.mountDeferredPanel(panelId);
+          const el = this.ctx.panels[panelId]?.getElement()
+            ?? document.querySelector<HTMLElement>(`#panelsGrid > [data-panel="${CSS.escape(panelId)}"]`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            el.classList.add('inspector-panel-highlight');
+            setTimeout(() => el.classList.remove('inspector-panel-highlight'), 1400);
+          }
+        },
+        onTabChanged: (_tab, visibleKeys) => {
+          this.hydrateVisibleInspectorPanels(visibleKeys);
+          this.callbacks.primeVisiblePanelData();
+          this.scheduleLoadAllData('visible');
+        },
+        onOpenSettings: () => {
+          this.ctx.unifiedSettings?.open('panels');
+        },
+        onToggleCollapse: () => {
+          this.toggleInspectorCollapsed();
+        },
+      });
+      headerMount.replaceChildren(this.inspectorShell.getElement());
+    }
+
+    const reopenBtn = document.getElementById('inspectorReopenBtn');
+    reopenBtn?.addEventListener('click', () => this.toggleInspectorCollapsed(false));
+
+    const trayMount = document.getElementById('bottomTrayMount');
+    if (trayMount) {
+      this.bottomMediaTray = new BottomMediaTray({
+        onRequestPanelElement: (panelId) => this.ensurePanelElementForTray(panelId),
+        onReleasePanelElement: (panelId, el) => {
+          const livePanel = this.ctx.panels[panelId] as { stopLiveMediaForClose?: () => void } | undefined;
+          livePanel?.stopLiveMediaForClose?.();
+          const grid = document.getElementById('panelsGrid');
+          if (grid) {
+            this.insertByOrder(grid, el, panelId);
+            this.inspectorShell?.applyToElement(el);
+          }
+        },
+        onToggleWideGrid: () => {
+          this.inspectorWideGrid = !this.inspectorWideGrid;
+          if (this.inspectorWideGrid && this.inspectorCollapsed) {
+            this.toggleInspectorCollapsed(false);
+          }
+          document.getElementById('main')?.classList.toggle('inspector-wide-grid', this.inspectorWideGrid);
+          this.ctx.map?.resize();
+          return this.inspectorWideGrid;
+        },
+        onOpenTabsManager: () => {
+          if (this.inspectorCollapsed) {
+            this.toggleInspectorCollapsed(false);
+          }
+          this.inspectorShell?.selectTab('all', true);
+        },
+      });
+      trayMount.replaceChildren(this.bottomMediaTray.getElement());
+    }
+  }
+
+  private toggleInspectorCollapsed(force?: boolean): void {
+    const next = force ?? !this.inspectorCollapsed;
+    this.inspectorCollapsed = next;
+    document.getElementById('main')?.classList.toggle('inspector-collapsed', next);
+    const reopenBtn = document.getElementById('inspectorReopenBtn');
+    if (reopenBtn) reopenBtn.hidden = !next;
+    this.ctx.map?.resize();
+  }
+
+  private hydrateVisibleInspectorPanels(visibleKeys?: string[]): void {
+    const keys = visibleKeys ?? this.inspectorShell?.applyGridFilter() ?? [];
+    let hydrated = 0;
+    for (const key of keys) {
+      if (hydrated >= 10) break;
+      if (this.deferredPanelMounts.has(key)) {
+        if (this.mountDeferredPanel(key)) {
+          hydrated += 1;
+        }
+      }
+    }
+  }
+
+  private async ensurePanelElementForTray(panelId: BottomTrayPanelId): Promise<HTMLElement | null> {
+    if (this.ctx.panelSettings[panelId] && !this.ctx.panelSettings[panelId].enabled) {
+      this.ctx.panelSettings[panelId].enabled = true;
+      saveToStorage(STORAGE_KEYS.panels, this.ctx.panelSettings);
+    }
+
+    let panel = this.ctx.panels[panelId] ?? null;
+    if (!panel) {
+      const deferred = this.deferredPanelMounts.get(panelId);
+      if (deferred) {
+        if (!deferred.loading) {
+          this.mountDeferredPanel(panelId);
+        }
+        await deferred.loading;
+        panel = this.ctx.panels[panelId] ?? null;
+      } else if (this.lazyPanelRegistrations.has(panelId)) {
+        panel = await this.loadRegisteredPanel(panelId);
+        if (panel && !this.ctx.isDestroyed) {
+          const grid = document.getElementById('panelsGrid');
+          if (grid && !panel.getElement().parentElement) {
+            this.mountPanelElement(grid, panelId, panel);
+            this.afterPanelMounted(panelId, panel);
+          }
+        }
+      } else if (panelId === 'live-news') {
+        this.mountLiveNewsIfReady();
+        await new Promise((r) => setTimeout(r, 150));
+        panel = this.ctx.panels[panelId] ?? null;
+      }
+    }
+
+    if (!panel || this.ctx.isDestroyed) return null;
+    panel.toggle(true);
+    const livePanel = panel as { resumeLiveMediaForShow?: () => void };
+    livePanel.resumeLiveMediaForShow?.();
+    return panel.getElement();
   }
 
   // ============================================
@@ -1976,6 +2164,7 @@ export class PanelLayoutManager implements AppModule {
       }
     });
     this.mobilePanelNav?.refresh();
+    this.inspectorShell?.refresh();
   }
 
   /**
@@ -2089,6 +2278,9 @@ export class PanelLayoutManager implements AppModule {
   private shouldMountPanelImmediately(key: string): boolean {
     const config = this.ctx.panelSettings[key];
     if (!config?.enabled) return false;
+    if (this.inspectorShell && !this.inspectorShell.isPanelVisible(key)) {
+      return false;
+    }
     if (shouldDeferInitialPanelMount({
       enabled: config.enabled,
       mountedEnabledCount: this.initiallyMountedEnabledPanelCount,
@@ -2142,6 +2334,7 @@ export class PanelLayoutManager implements AppModule {
       this.insertByOrder(grid, el, key);
     }
     this.mobilePanelNav?.applyToNewPanel(el);
+    this.inspectorShell?.applyToElement(el);
     panel.notifyConnected();
     return true;
   }
@@ -2165,6 +2358,7 @@ export class PanelLayoutManager implements AppModule {
       applyPanelFontScale(placeholder, this.ctx.panelSettings[key]?.fontScale);
       this.insertByOrder(grid, placeholder, key);
       this.mobilePanelNav?.applyToNewPanel(placeholder);
+      this.inspectorShell?.applyToElement(placeholder);
     }
     const existing = this.deferredPanelMounts.get(key);
     existing?.observer?.disconnect();
@@ -2974,21 +3168,18 @@ export class PanelLayoutManager implements AppModule {
     } else {
       allOrder = [...defaultOrder];
 
-      if (SITE_VARIANT !== 'happy') {
-        const liveNewsIdx = allOrder.indexOf('live-news');
-        if (liveNewsIdx > 0) {
-          allOrder.splice(liveNewsIdx, 1);
-          allOrder.unshift('live-news');
-        }
-
-        const webcamsIdx = allOrder.indexOf('live-webcams');
-        if (webcamsIdx !== -1 && webcamsIdx !== allOrder.indexOf('live-news') + 1) {
-          allOrder.splice(webcamsIdx, 1);
-          const afterNews = allOrder.indexOf('live-news') + 1;
-          allOrder.splice(afterNews, 0, 'live-webcams');
+      // Option B: place the curated Overview panels first so the initial
+      // 1-column inspector renders high-signal summary cards immediately while
+      // heavy video/webcam streams stay deferred in the bottom tray until opened.
+      const overviewPriority = OVERVIEW_DEFAULT_PANELS[SITE_VARIANT] ?? OVERVIEW_DEFAULT_PANELS.full ?? [];
+      for (let i = overviewPriority.length - 1; i >= 0; i -= 1) {
+        const key = overviewPriority[i]!;
+        const idx = allOrder.indexOf(key);
+        if (idx > 0) {
+          allOrder.splice(idx, 1);
+          allOrder.unshift(key);
         }
       }
-
     }
 
     this.resolvedPanelOrder = allOrder;

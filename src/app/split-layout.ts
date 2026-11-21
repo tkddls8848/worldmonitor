@@ -7,10 +7,10 @@
 // aligned with this module. Change the values here first.
 
 /** Viewport width (CSS px) at which the dashboard switches from the stacked
- * layout (map band above the panel grid) to the split layout (map column
- * beside the panels). At 1440px the default 60% map leaves room for two
- * 270px panel tracks plus gaps/padding. Shared by web and desktop (#10458). */
-export const SPLIT_LAYOUT_MIN_WIDTH = 1440;
+ * layout (map band above the panel grid) to the Option B split layout (70% flat
+ * map beside the 1-column tabbed inspector). 1200px covers standard 16:9
+ * desktops (1366x768, 1440x900, 1920x1080) and 1280px laptops. */
+export const SPLIT_LAYOUT_MIN_WIDTH = 1200;
 
 /** Whether the viewport is in the split layout, read the way the stylesheet
  * reads it. `window.innerWidth` is a rounded integer, so at a fractional
@@ -62,8 +62,8 @@ export const PANELS_COL_MIN_PX = 300;
 /** Width of the draggable divider between the map and panel columns. */
 export const MAP_COL_DIVIDER_PX = 6;
 
-/** Map column width applied when no stored preference exists. */
-export const MAP_COL_DEFAULT_PERCENT = 60;
+/** Map column width applied when no stored preference exists (Option B: 70% map / 30% inspector). */
+export const MAP_COL_DEFAULT_PERCENT = 70;
 
 export interface MapColWidthBounds {
   minPct: number;
