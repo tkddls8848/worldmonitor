@@ -219,6 +219,7 @@ const EXCLUDED_BOOTSTRAP_KEYS = {
   notamAirspace: "FAA NMS airspace restriction geometry, ~1.5 MB; map-layer feed, not widget data",
   temporalAnomalies: "Internal anomaly detector output; usually empty",
   aaiiSentiment: "Stale fallback data (fallback=true, last update 2026-04-03)",
+  worldOverview: "Internal first-screen world overview snapshot; not exposed as widget data",
 };
 
 const EXCLUDED_RPC_ROUTES = {
@@ -395,6 +396,7 @@ const EXCLUDED_RPC_ROUTES = {
   "/api/webcam/v1/get-webcam-image": "Needs a webcam_id from the map webcam layer",
   "/api/webcam/v1/list-webcams": "Map viewport feed; needs map bounds",
   "/api/wildfire/v1/list-fire-detections": "Same data as bootstrap key wildfires",
+  "/api/world-overview/v1/get-world-overview-snapshot": "First-screen dashboard snapshot; not offered as widget data",
 };
 
 const BOOTSTRAP_KEYS = new Set(BOOTSTRAP.map(entry => entry.key));
