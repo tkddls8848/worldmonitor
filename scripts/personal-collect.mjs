@@ -54,7 +54,7 @@ export const DEFAULT_COLLECTORS = [
   'bundle-static-ref', 'bundle-static-ref-heavy', 'bundle-resilience', 'bundle-resilience-recovery',
   'bundle-resilience-energy-v2', 'bundle-resilience-validation',
   ...Object.keys(STANDALONE_INTERVAL_MIN),
-  'insights', 'world-relations-ai', 'forecasts', 'correlation', 'digest-notifications',
+  'insights', 'world-relations-ai', 'forecasts', 'correlation', 'digest-notifications', 'world-overview',
 ];
 
 export function collectorScript(name) {

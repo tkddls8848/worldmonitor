@@ -10,6 +10,8 @@ import {
 
 const SCRIPTS = fileURLToPath(new URL('../scripts/', import.meta.url));
 
+test('the snapshot builder runs last, after every input collector', () => assert.equal(DEFAULT_COLLECTORS.at(-1), 'world-overview'));
+
 test('every default collector resolves to a script, once', () => {
   for (const name of DEFAULT_COLLECTORS) assert.doesNotThrow(() => collectorScript(name), name);
   assert.equal(new Set(DEFAULT_COLLECTORS).size, DEFAULT_COLLECTORS.length);
