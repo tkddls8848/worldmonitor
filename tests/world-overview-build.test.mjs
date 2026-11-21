@@ -44,7 +44,13 @@ test('publishes usable HAPI-only snapshot and handler returns the builder fixtur
   assert.equal(snapshot.inputs.relations.status, 'missing');
   assert.equal(snapshot.inputs.hapi.status, 'ok');
   const response = await getWorldOverviewSnapshot({}, { date: OPTS.date }, { now: () => NOW, readJson: async (key) => key === WORLD_OVERVIEW_KEYS.snapshot ? snapshot : key === WORLD_OVERVIEW_KEYS.dates ? [] : null });
-  assert.deepEqual(response.snapshot, snapshot);
+  // The RPC returns the generated proto shape, not the stored shape:
+  // anchors become Coordinate messages and nulls become proto defaults.
+  assert.equal(response.snapshot.date, snapshot.date);
+  assert.equal(response.snapshot.countries.UA.level, 'war');
+  assert.deepEqual(response.snapshot.relations, []);
+  assert.deepEqual(response.snapshot.anchors.EU, { latitude: snapshot.anchors.EU[1], longitude: snapshot.anchors.EU[0] });
+  assert.equal(response.snapshot.ai.status, 'missing');
   assert.deepEqual(response.archivedDates, []);
 });
 
