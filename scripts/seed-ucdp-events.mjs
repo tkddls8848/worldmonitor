@@ -455,12 +455,14 @@ export { buildVersionCandidates, discoverVersion, buildCandidateVersions, discov
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   main().catch(async (err) => {
-    if (err.code === 'UCDP_FETCH_DEADLINE') {
-      await extendExistingTtl(process.env.UPSTASH_REDIS_REST_URL, process.env.UPSTASH_REDIS_REST_TOKEN);
-    }
+    // Keep last-good data alive for every source failure, not just a fetch
+    // deadline. The relay bundle uses the child's exit status to decide whether
+    // this section succeeded; exiting zero here hid 401s and marked the whole
+    // bundle fresh even when the canonical UCDP key had never been written.
+    await extendExistingTtl(process.env.UPSTASH_REDIS_REST_URL, process.env.UPSTASH_REDIS_REST_TOKEN);
     const _cause = err.cause ? ` (cause: ${err.cause.message || err.cause.code || err.cause})` : ''; console.error('FATAL:', (err.message || err) + _cause);
-    // Exit gracefully for cron — crashing restarts the container unnecessarily.
-    // The health endpoint will flag stale data via seed-meta.
-    process.exit(0);
+    // A nonzero child exit marks the relay section failed so the next pass
+    // retries it; this does not restart the collector process or server.
+    process.exitCode = 1;
   });
 }

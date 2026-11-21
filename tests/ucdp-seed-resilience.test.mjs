@@ -452,7 +452,7 @@ describe('a run that cannot complete its window keeps the last good one', () => 
   describe('seed-ucdp-events.mjs writer', () => {
     // Runs the real script with fetch replaced (no network): annual pages
     // answer one row, every candidate release 400s, so discovery returns null.
-    function runStandalone(existing, exhaustBudget = false, nullAnnualRow = false) {
+    function runStandalone(existing, exhaustBudget = false, nullAnnualRow = false, annualStatus = null, expectedStatus = 0) {
       const dir = mkdtempSync(join(tmpdir(), 'ucdp-writer-'));
       const preload = join(dir, 'preload.mjs');
       const outPath = join(dir, 'calls.json');
@@ -468,6 +468,7 @@ globalThis.fetch = async (url, init) => {
   const u = String(url);
   if (u.includes('/api/gedevents/')) {
     if (${exhaustBudget}) { clock += 250_000; throw new Error('upstream timeout'); }
+    if (${annualStatus} !== null) return Response.json({}, { status: ${annualStatus} });
     const version = u.split('/api/gedevents/')[1].split('?')[0];
     if (version.includes('.0.')) return new Response('{}', { status: 400 });
     return Response.json({ TotalPages: 1, Result: ${nullAnnualRow ? '[null, annualRow]' : '[annualRow]'} });
@@ -485,7 +486,7 @@ globalThis.fetch = async (url, init) => {
           timeout: 60_000,
           env: { ...process.env, NODE_ENV: 'test', UPSTASH_REDIS_REST_URL: 'https://redis.invalid', UPSTASH_REDIS_REST_TOKEN: 'test-token' },
         });
-        assert.equal(run.status, 0, run.stderr);
+        assert.equal(run.status, expectedStatus, run.stderr);
         return JSON.parse(readFileSync(outPath, 'utf8'));
       } finally {
         rmSync(dir, { recursive: true, force: true });
@@ -500,12 +501,14 @@ globalThis.fetch = async (url, init) => {
     });
 
     it('still publishes an incomplete run when no complete, later window is cached', () => {
-      const calls = runStandalone(goodWindow(ANNUAL_ROW_MS - DAY_MS));
+      const calls = runStandalone(goodWindow(ANNUAL_ROW_MS - DAY_MS), false, false, null, 1);
       assert.ok(calls.sets.includes(UCDP_REDIS_KEY));
       const payload = calls.payloads[0].data ?? calls.payloads[0];
       assert.deepEqual(payload.partyMonths, [{ country: 'Mexico', sideA: 'Government of Mexico', sideB: 'Rebels', month: isoDay(ANNUAL_ROW_MS).slice(0, 7), deaths: 2, events: 1 }]);
       assert.ok(calls.sets.includes('seed-meta:conflict:ucdp-events'));
-      assert.ok(!calls.expires.includes(UCDP_REDIS_KEY));
+      // A later projection error is surfaced to the bundle after publish, and
+      // the published last-good key still gets its TTL extended.
+      assert.ok(calls.expires.includes(UCDP_REDIS_KEY));
     });
 
     it('a null annual row cannot bypass last-good preservation', () => {
@@ -515,7 +518,14 @@ globalThis.fetch = async (url, init) => {
     });
 
     it('uses the reserved budget to preserve last-good data after discovery exhausts the deadline', () => {
-      const calls = runStandalone(recentGood, true);
+      const calls = runStandalone(recentGood, true, false, null, 1);
+      assert.deepEqual(calls.sets, []);
+      assert.ok(calls.expires.includes(UCDP_REDIS_KEY));
+      assert.ok(calls.expires.includes('seed-meta:conflict:ucdp-events'));
+    });
+
+    it('reports an upstream authorization failure to the relay and extends last-good TTLs', () => {
+      const calls = runStandalone(recentGood, false, false, 401, 1);
       assert.deepEqual(calls.sets, []);
       assert.ok(calls.expires.includes(UCDP_REDIS_KEY));
       assert.ok(calls.expires.includes('seed-meta:conflict:ucdp-events'));
