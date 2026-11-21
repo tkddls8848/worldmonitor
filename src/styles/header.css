@@ -1,28 +1,296 @@
 .header {
   contain: layout;
+  height: 44px;
+  padding: 0 14px;
+  gap: 12px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .header-right {
-  --header-auth-slot-width: 200px;
-  --header-findings-slot-width: 72px;
-
-  /* Grow into leftover header space; min-width:0 lets the auth slot shrink
-     before Sign In clips the viewport on tablet widths (#10464). */
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   justify-content: flex-end;
   min-width: 0;
-  padding-left: calc(var(--header-findings-slot-width) + 12px);
+  padding-left: 0;
+  gap: 8px;
   position: relative;
 }
 
-.header-right > .intel-findings-badge {
-  box-sizing: border-box;
-  justify-content: center;
-  left: 0;
+.header-search-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  min-width: 210px;
+  max-width: 380px;
+  flex: 0 1 320px;
+  padding: 0 10px;
+  margin-right: 0;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--text-dim);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.header-search-bar:hover {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+.header-search-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.header-search-bar kbd {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-dim);
+  background: var(--surface);
+}
+
+.header-region-cluster {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg);
+  overflow: hidden;
+  height: 30px;
+}
+
+.header-region-cluster .region-select {
+  border: none;
+  background-color: transparent;
+  height: 28px;
+  padding: 0 22px 0 9px;
+  font-size: 12px;
+}
+
+.header-focus-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 9px;
+  border: none;
+  border-left: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.header-focus-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.header-focus-btn.active {
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+  color: var(--green-text, var(--green));
+}
+
+.header-alerts-mount {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+.header-alerts-mount > .intel-findings-badge {
+  position: static;
+  translate: none;
+  width: auto;
+  height: 30px;
+  padding: 0 9px;
+  border-radius: 7px;
+}
+
+.header-tools-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.header-tools-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.header-tools-btn:hover,
+.header-tools-btn.active {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+.header-tools-popover {
   position: absolute;
-  top: 50%;
-  translate: 0 -50%;
-  width: var(--header-findings-slot-width);
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 4500;
+  width: 268px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.header-tools-popover[hidden] {
+  display: none;
+}
+
+.header-tool-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.header-tool-row:hover {
+  background: var(--surface-hover);
+  border-color: var(--border);
+}
+
+/* Override legacy media queries that hid copy/embed/fullscreen buttons in the top bar */
+.header-tools-popover .copy-link-btn,
+.header-tools-popover .fullscreen-btn {
+  display: flex !important;
+  font-size: 12px;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+}
+
+.header-tools-popover .pizzint-indicator {
+  display: inline-flex !important;
+}
+
+.header-tool-icon {
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.header-tool-slot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: var(--overlay-subtle);
+}
+
+.header-tool-slot-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.header-tool-slot-mount {
+  display: inline-flex;
+  align-items: center;
+}
+
+.header-tools-divider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 4px 2px;
+}
+
+.mission-variant-section {
+  padding: 8px 0 6px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 6px;
+}
+
+.mission-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 4px 2px 6px;
+}
+
+.mission-variant-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.mission-variant-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mission-variant-pill:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.mission-variant-pill.active {
+  border-color: var(--green);
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+  color: var(--green-text, var(--green));
 }
 
 #missionPresetMount,
@@ -40,84 +308,44 @@
 }
 
 #missionPresetMount {
-  min-width: 86px;
-  min-height: 24px;
+  min-width: 72px;
+  min-height: 30px;
+}
+
+#missionPresetMount .mission-preset-button {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 7px;
+  font-size: 11px;
+  text-transform: none;
+  letter-spacing: 0.2px;
 }
 
 #unifiedSettingsMount {
-  min-width: 28px;
-  min-height: 28px;
+  min-width: 30px;
+  min-height: 30px;
 }
 
-/* Prefer the 200px Sign In + free-reason cluster, but shrink before the
-   rightmost control clips the viewport on tablet widths (#10464). */
-#authWidgetMount {
-  container-type: inline-size;
-  flex: 0 1 var(--header-auth-slot-width);
-  max-width: var(--header-auth-slot-width);
-  min-width: 72px;
-  min-height: 32px;
-}
-
-.auth-header-widget-pending {
-  width: 100%;
-  max-width: var(--header-auth-slot-width);
-  min-width: 0;
-  overflow: hidden;
-}
-
-.auth-header-skeleton {
-  background:
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--text) 7%, transparent),
-      color-mix(in srgb, var(--text) 13%, transparent),
-      color-mix(in srgb, var(--text) 7%, transparent)
-    );
-  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
-  border-radius: 6px;
-  display: block;
-  height: 32px;
-  pointer-events: none;
-}
-
-.auth-header-skeleton-signin {
-  flex: 0 0 72px;
-}
-
-/* Prefer ~120px, but shrink inside a compressed auth slot so the pending
-   placeholders cannot spill past #authWidgetMount during Clerk load. */
-.auth-header-skeleton-reason {
-  flex: 1 1 0;
-  max-width: 120px;
-  min-width: 0;
-}
-
-/* Sign In skeleton is 72px + 8px gap. Below ~160px there is not enough room
-   for a useful reason placeholder — collapse it (and its flex gap). */
-@container (max-width: 160px) {
-  .auth-header-skeleton-reason {
+@media (max-width: 1200px) {
+  .header-search-bar {
+    min-width: 140px;
+    flex-basis: 180px;
+  }
+  .header-tools-label {
     display: none;
   }
 }
 
-/* When left-side chrome returns (variant switcher at >980px) and before the
-   header is wide enough again, the free-reason ellipsis collapses to an empty
-   gap. Hide it and keep the single Sign In action fully on screen. */
-@media (min-width: 981px) and (max-width: 1199px) {
-  #authWidgetMount {
-    flex-basis: 80px;
-    max-width: 90px;
-  }
-
-  #authWidgetMount .auth-free-reason,
-  #authWidgetMount .auth-header-skeleton-reason {
-    display: none;
+@media (max-width: 768px) {
+  .header-search-bar,
+  .header-region-cluster,
+  .header-tools-wrap,
+  .header-alerts-mount {
+    display: none !important;
   }
 }
 
 #missionPresetMount:empty,
-#unifiedSettingsMount:empty,
-#authWidgetMount:empty {
+#unifiedSettingsMount:empty {
   visibility: hidden;
 }

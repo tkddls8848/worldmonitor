@@ -35,17 +35,11 @@ function section(src: string, startMarker: string, length = 1200): string {
   return src.slice(start, start + length);
 }
 
-describe('auto-open gate stays conservative (KTD4)', () => {
-  it('prompts only on desktop, clean URLs, no stored preset, no dismissal', () => {
-    const gate = section(eventHandlers, 'const shouldPrompt =', 300);
-    for (const condition of [
-      '!this.ctx.isMobile',
-      '!window.location.search',
-      '!loadStoredMissionPreset()',
-      '!isMissionPresetPromptDismissed()',
-    ]) {
-      assert.ok(gate.includes(condition), `auto-open gate lost condition: ${condition}`);
-    }
+describe('auto-open does not interrupt first paint', () => {
+  it('keeps setupMissionPresets free of automatic first-paint popups', () => {
+    const setup = section(eventHandlers, 'private setupMissionPresets(): void {', 450);
+    assert.ok(setup.includes('this.renderMissionPresetControl()'), 'setupMissionPresets must render the desktop trigger');
+    assert.ok(!setup.includes('openMissionPresetPopover('), 'first-paint auto-open must stay disabled on the personal workbench');
   });
 });
 

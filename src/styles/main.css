@@ -1131,36 +1131,13 @@ canvas,
    the mobile hamburger menu, or the map's own controls). The full mobile
    hamburger takes over at <=768px. !important mirrors the <=768 block below
    (needed to beat the #missionPresetMount id rule in header.css). */
-@media (max-width: 1875px) {
-  /* redundant with footer/menu: X credit + GitHub icon */
-  .credit-link,
-  .github-link { display: none !important; }
-  .header .region-select { width: 110px; }
-}
-@media (max-width: 1730px) {
-  .version,
-  .fullscreen-btn { display: none !important; }
-}
-@media (max-width: 1630px) {
-  /* Link + Embed share .copy-link-btn */
-  .copy-link-btn { display: none !important; }
-}
-@media (max-width: 1500px) {
-  .pizzint-indicator { display: none !important; }
-}
-@media (max-width: 1075px) {
-  .mission-preset-mount { display: none !important; }
-}
-@media (min-width: 981px) and (max-width: 1375px) {
-  .header { padding-inline: 8px; }
-  .header-left { gap: 6px; }
+/* Compact responsive tightening for the streamlined single-row header.
+   All secondary tools live inside #headerToolsPopover, so the main row fits comfortably down to 1024px. */
+@media (min-width: 769px) and (max-width: 1180px) {
+  .header { padding-inline: 10px; }
+  .header-left { gap: 8px; }
   .header-right { gap: 6px; }
-  .header .search-btn { margin-right: 0; }
-  .header .region-select { width: 80px; }
-  .header .status-indicator,
-  .header .logo { display: none; }
-  .header .variant-option { padding: 2px 4px; letter-spacing: 0.5px; }
-  .header .variant-divider { margin: 0; }
+  .header .region-select { width: 88px; }
 }
 
 .search-btn {

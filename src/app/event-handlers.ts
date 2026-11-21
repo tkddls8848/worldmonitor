@@ -73,8 +73,7 @@ import { t } from '@/services/i18n';
 import { getPanelDisplayName } from '@/services/panel-display-name';
 import { TvModeController } from '@/services/tv-mode';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
-import { scheduleAfterFirstPaint } from '@/utils/after-paint';
-import { declareOverlay, isModalOpen } from '@/utils/open-modal';
+import { declareOverlay } from '@/utils/open-modal';
 import { escapeHtml } from '@/utils/sanitize';
 import {
   buildEmbedIframeSnippet,
@@ -712,12 +711,13 @@ export class EventHandlerManager implements AppModule {
     if (fullscreenBtn) {
       fullscreenBtn.addEventListener('click', () => this.toggleFullscreen());
       this.boundFullscreenHandler = () => {
-        fullscreenBtn.textContent = document.fullscreenElement ? '\u26F6' : '\u26F6';
         fullscreenBtn.classList.toggle('active', !!document.fullscreenElement);
         this.syncMapAfterLayoutChange();
       };
       document.addEventListener('fullscreenchange', this.boundFullscreenHandler);
     }
+
+    this.setupHeaderToolsMenu();
 
     const regionSelect = document.getElementById('regionSelect') as HTMLSelectElement;
     regionSelect?.addEventListener('change', () => {
@@ -757,33 +757,48 @@ export class EventHandlerManager implements AppModule {
 
   }
 
+  private setupHeaderToolsMenu(): void {
+    const btn = document.getElementById('headerToolsBtn');
+    const popover = document.getElementById('headerToolsPopover');
+    if (!btn || !popover) return;
+    declareOverlay(popover, { reload: 'safe' });
+
+    const setOpen = (open: boolean) => {
+      popover.hidden = !open;
+      btn.setAttribute('aria-expanded', String(open));
+      btn.classList.toggle('active', open);
+    };
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setOpen(Boolean(popover.hidden));
+    });
+
+    document.addEventListener('click', (e) => {
+      if (popover.hidden) return;
+      const target = e.target as Node | null;
+      if (target && (popover.contains(target) || btn.contains(target))) return;
+      setOpen(false);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !popover.hidden) {
+        setOpen(false);
+        btn.focus();
+      }
+    });
+
+    document.getElementById('headerAnalystBtn')?.addEventListener('click', () => {
+      setOpen(false);
+      window.dispatchEvent(new CustomEvent('wm:open-tray-panel', { detail: { panelId: 'chat-analyst' } }));
+    });
+  }
+
   private setupMissionPresets(): void {
     this.renderMissionPresetControl();
-
-    const shouldPrompt =
-      !this.ctx.isMobile &&
-      !window.location.search &&
-      !loadStoredMissionPreset() &&
-      !isMissionPresetPromptDismissed();
-    if (shouldPrompt) {
-      // Defer the onboarding auto-open to browser idle after first paint so it
-      // never competes with load or first-interaction work. This replaced a
-      // fixed 700ms timeout that forced layout reads (getBoundingClientRect +
-      // offsetHeight) on the post-load path. Re-check state at fire time since
-      // the idle wait can outlast an early user choice.
-      //
-      // That includes a modal the user opened first. On a slow machine the
-      // idle period lands after it; the prompt then took focus and swallowed
-      // the modal's Escape (its keydown handler stops propagation), leaving the
-      // modal impossible to close from the keyboard. Skipping costs nothing:
-      // an undismissed prompt re-appears on the next load.
-      scheduleAfterFirstPaint(() => {
-        if (this.ctx.isDestroyed) return;
-        if (this.missionPresetPopover || loadStoredMissionPreset() || isMissionPresetPromptDismissed()) return;
-        if (isModalOpen(document)) return;
-        this.openMissionPresetPopover(document.getElementById('missionPresetBtn'), false);
-      });
-    }
+    // Map-first personal workbench: do not interrupt first paint with an automatic
+    // mission-preset popup. Manual opening via #missionPresetBtn, #mobileMenuMission,
+    // and WebMCP remains unconditional.
   }
 
   private renderMissionPresetControl(): void {
@@ -876,23 +891,57 @@ export class EventHandlerManager implements AppModule {
       `;
     }).join('');
 
+    const isKo = (typeof document !== 'undefined' && document.documentElement.lang?.startsWith('ko'))
+      || t('header.search') === '검색';
+    const variantChoices: Array<{ key: string; icon: string; label: string }> = [
+      { key: 'full', icon: '🌍', label: t('header.world') },
+      { key: 'tech', icon: '💻', label: t('header.tech') },
+      { key: 'finance', icon: '📈', label: t('header.finance') },
+      { key: 'commodity', icon: '⛏️', label: t('header.commodity') },
+      { key: 'energy', icon: '⚡', label: t('header.energy') },
+      { key: 'happy', icon: '☀️', label: t('personalChrome.goodNews') },
+    ];
+    const variantPillsHtml = variantChoices.map((v) => `
+      <button type="button" class="mission-variant-pill${v.key === SITE_VARIANT ? ' active' : ''}" data-popover-variant="${v.key}" aria-pressed="${v.key === SITE_VARIANT ? 'true' : 'false'}">
+        <span>${v.icon}</span><span>${escapeHtml(v.label)}</span>
+      </button>
+    `).join('');
+
     setTrustedHtml(popover, trustedHtml(`
       <div class="mission-preset-popover__header">
         <div>
           <span>${escapeHtml(t('personalChrome.mission'))}</span>
-          <strong>${escapeHtml(active?.label ?? 'Choose Workspace')}</strong>
+          <strong>${escapeHtml(active?.label ?? (isKo ? '대시보드 주제 · 프리셋' : 'Choose Workspace'))}</strong>
         </div>
         <div class="mission-preset-popover__actions">
-          <button type="button" class="mission-preset-reset" data-mission-reset>Reset</button>
+          <button type="button" class="mission-preset-reset" data-mission-reset>${escapeHtml(isKo ? '초기화' : 'Reset')}</button>
           <button type="button" class="mission-preset-close" data-mission-close aria-label="Close mission presets">×</button>
         </div>
       </div>
+      <div class="mission-variant-section">
+        <div class="mission-section-label">${escapeHtml(isKo ? '모니터 에디션 (6종)' : 'Monitor Editions')}</div>
+        <div class="mission-variant-grid">${variantPillsHtml}</div>
+      </div>
+      <div class="mission-section-label">${escapeHtml(isKo ? '목적별 프리셋' : 'Mission Presets')}</div>
       <div class="mission-preset-popover__list">${cards}</div>
     `, 'Mission preset popover renders static preset metadata with escaped values'));
 
     document.body.appendChild(popover);
     this.missionPresetPopover = popover;
     document.getElementById('missionPresetBtn')?.setAttribute('aria-expanded', 'true');
+
+    popover.querySelectorAll<HTMLButtonElement>('[data-popover-variant]').forEach((vBtn) => {
+      vBtn.addEventListener('click', () => {
+        const targetVariant = vBtn.dataset.popoverVariant;
+        if (!targetVariant || targetVariant === SITE_VARIANT) {
+          this.closeMissionPresetPopover();
+          return;
+        }
+        const isLocalDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        this.closeMissionPresetPopover();
+        void this.navigateToVariant(targetVariant, { isLocalDev });
+      });
+    });
 
     if (!mobile && anchor) {
       const rect = anchor.getBoundingClientRect();
@@ -1795,9 +1844,9 @@ export class EventHandlerManager implements AppModule {
     if (SITE_VARIANT !== 'full') return;
 
     this.ctx.pizzintIndicator = new PizzIntIndicator();
-    const headerLeft = this.ctx.container.querySelector('.header-left');
-    if (headerLeft) {
-      headerLeft.appendChild(this.ctx.pizzintIndicator.getElement());
+    const mount = document.getElementById('headerPizzIntSlot') ?? this.ctx.container.querySelector('.header-left');
+    if (mount) {
+      mount.appendChild(this.ctx.pizzintIndicator.getElement());
     }
   }
 
@@ -1830,6 +1879,11 @@ export class EventHandlerManager implements AppModule {
     const attachExportPanel = (panel: NonNullable<AppContext['exportPanel']>): void => {
       const el = panel.getElement();
       if (el.parentElement) return;
+      const slot = document.getElementById('headerExportSlot');
+      if (slot) {
+        slot.appendChild(el);
+        return;
+      }
       const headerRight = this.ctx.container.querySelector('.header-right');
       if (headerRight) {
         headerRight.insertBefore(el, headerRight.firstChild);
@@ -1951,9 +2005,14 @@ export class EventHandlerManager implements AppModule {
     });
 
     const el = this.ctx.playbackControl.getElement();
-    const headerRight = this.ctx.container.querySelector('.header-right');
-    if (headerRight) {
-      headerRight.insertBefore(el, headerRight.firstChild);
+    const slot = document.getElementById('headerPlaybackSlot');
+    if (slot) {
+      slot.appendChild(el);
+    } else {
+      const headerRight = this.ctx.container.querySelector('.header-right');
+      if (headerRight) {
+        headerRight.insertBefore(el, headerRight.firstChild);
+      }
     }
 
   }

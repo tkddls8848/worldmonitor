@@ -250,10 +250,14 @@ export class IntelligenceFindingsBadge {
   }
 
   private mount(): void {
-    const headerRight = document.querySelector('.header-right');
-    if (headerRight) {
+    const target = document.getElementById('headerAlertsMount') ?? document.querySelector('.header-right');
+    if (target) {
       this.badge.appendChild(this.dropdown);
-      headerRight.insertBefore(this.badge, headerRight.firstChild);
+      if (target.id === 'headerAlertsMount') {
+        target.appendChild(this.badge);
+      } else {
+        target.insertBefore(this.badge, target.firstChild);
+      }
     }
   }
 

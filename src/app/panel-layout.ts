@@ -658,81 +658,39 @@ export class PanelLayoutManager implements AppModule {
       `<a href="${href}" target="_blank" rel="noopener">${label}</a>`
     )).join('');
 
+    const isKoUi = (typeof document !== 'undefined' && document.documentElement.lang?.startsWith('ko'))
+      || t('header.search') === '검색';
+    const searchPlaceholder = isKoUi
+      ? '검색: 패널 · 국가 · 레이어 · 뉴스...'
+      : 'Search panels, countries, layers, news...';
+    const toolsLabel = isKoUi ? '도구' : 'Tools';
+    const analystLabel = isKoUi ? 'WM AI 애널리스트' : 'WM AI Analyst';
+    const playbackLabel = isKoUi ? '과거 시점 재생' : 'Historical Playback';
+    const exportLabel = isKoUi ? '데이터 내보내기' : 'Export Data';
+    const pizzintLabel = isKoUi ? '펜타곤 피자 지수 (PizzINT)' : 'Pentagon Pizza Index';
+    const fullscreenLabel = isKoUi ? '전체 화면' : t('header.fullscreen');
+
     markLcpDebug('wm:layout:render-start');
     document.documentElement.classList.add('wm-layout-hydrated');
     setTrustedHtml(this.ctx.container, trustedHtml(`
       <a href="#main" class="skip-link">Skip to main content</a>
       <div class="header" role="banner">
         <div class="header-left">
-          <div class="variant-switcher">${(() => {
+          <div class="variant-switcher variant-switcher-registry" hidden>${(() => {
         const local = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
         const inIframe = window.self !== window.top;
         const vHref = (v: keyof typeof VARIANT_SWITCHER_DASHBOARD_URLS) =>
           variantSwitcherHref(v, SITE_VARIANT, local);
         const vTarget = (v: string) => !local && SITE_VARIANT !== v && inIframe ? 'target="_blank" rel="noopener"' : '';
         return `
-            <a href="${vHref('full')}"
-               class="variant-option ${SITE_VARIANT === 'full' ? 'active' : ''}"
-               data-variant="full"
-               ${vTarget('full')}
-               title="${t('header.world')}${SITE_VARIANT === 'full' ? ` ${t('common.currentVariant')}` : ''}">
-              <span class="variant-icon">🌍</span>
-              <span class="variant-label">${t('header.world')}</span>
-            </a>
-            <span class="variant-divider"></span>
-            <a href="${vHref('tech')}"
-               class="variant-option ${SITE_VARIANT === 'tech' ? 'active' : ''}"
-               data-variant="tech"
-               ${vTarget('tech')}
-               title="${t('header.tech')}${SITE_VARIANT === 'tech' ? ` ${t('common.currentVariant')}` : ''}">
-              <span class="variant-icon">💻</span>
-              <span class="variant-label">${t('header.tech')}</span>
-            </a>
-            <span class="variant-divider"></span>
-            <a href="${vHref('finance')}"
-               class="variant-option ${SITE_VARIANT === 'finance' ? 'active' : ''}"
-               data-variant="finance"
-               ${vTarget('finance')}
-               title="${t('header.finance')}${SITE_VARIANT === 'finance' ? ` ${t('common.currentVariant')}` : ''}">
-              <span class="variant-icon">📈</span>
-              <span class="variant-label">${t('header.finance')}</span>
-            </a>
-            <span class="variant-divider"></span>
-            <a href="${vHref('commodity')}"
-               class="variant-option ${SITE_VARIANT === 'commodity' ? 'active' : ''}"
-               data-variant="commodity"
-               ${vTarget('commodity')}
-               title="${t('header.commodity')}${SITE_VARIANT === 'commodity' ? ` ${t('common.currentVariant')}` : ''}">
-              <span class="variant-icon">⛏️</span>
-              <span class="variant-label">${t('header.commodity')}</span>
-            </a>
-            <span class="variant-divider"></span>
-            <a href="${vHref('energy')}"
-               class="variant-option ${SITE_VARIANT === 'energy' ? 'active' : ''}"
-               data-variant="energy"
-               ${vTarget('energy')}
-               title="${t('header.energy')}${SITE_VARIANT === 'energy' ? ` ${t('common.currentVariant')}` : ''}">
-              <span class="variant-icon">⚡</span>
-              <span class="variant-label">${t('header.energy')}</span>
-            </a>
-            <span class="variant-divider"></span>
-            <a href="${vHref('happy')}"
-               class="variant-option ${SITE_VARIANT === 'happy' ? 'active' : ''}"
-               data-variant="happy"
-               ${vTarget('happy')}
-               title="${escapeHtml(t('personalChrome.goodNews'))}${SITE_VARIANT === 'happy' ? ` ${t('common.currentVariant')}` : ''}">
-              <span class="variant-icon">☀️</span>
-              <span class="variant-label">${escapeHtml(t('personalChrome.goodNews'))}</span>
-            </a>`;
+            <a href="${vHref('full')}" class="variant-option ${SITE_VARIANT === 'full' ? 'active' : ''}" data-variant="full" ${vTarget('full')}><span class="variant-icon">🌍</span><span class="variant-label">${t('header.world')}</span></a>
+            <a href="${vHref('tech')}" class="variant-option ${SITE_VARIANT === 'tech' ? 'active' : ''}" data-variant="tech" ${vTarget('tech')}><span class="variant-icon">💻</span><span class="variant-label">${t('header.tech')}</span></a>
+            <a href="${vHref('finance')}" class="variant-option ${SITE_VARIANT === 'finance' ? 'active' : ''}" data-variant="finance" ${vTarget('finance')}><span class="variant-icon">📈</span><span class="variant-label">${t('header.finance')}</span></a>
+            <a href="${vHref('commodity')}" class="variant-option ${SITE_VARIANT === 'commodity' ? 'active' : ''}" data-variant="commodity" ${vTarget('commodity')}><span class="variant-icon">⛏️</span><span class="variant-label">${t('header.commodity')}</span></a>
+            <a href="${vHref('energy')}" class="variant-option ${SITE_VARIANT === 'energy' ? 'active' : ''}" data-variant="energy" ${vTarget('energy')}><span class="variant-icon">⚡</span><span class="variant-label">${t('header.energy')}</span></a>
+            <a href="${vHref('happy')}" class="variant-option ${SITE_VARIANT === 'happy' ? 'active' : ''}" data-variant="happy" ${vTarget('happy')}><span class="variant-icon">☀️</span><span class="variant-label">${escapeHtml(t('personalChrome.goodNews'))}</span></a>`;
       })()}</div>
-          <span class="logo">MONITOR</span><span class="logo-mobile">World Monitor</span><span class="version">v${__APP_VERSION__}</span>${BETA_MODE ? '<span class="beta-badge">BETA</span>' : ''}
-          <a href="https://x.com/eliehabib" target="_blank" rel="noopener" class="credit-link">
-            <svg class="x-logo" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-            <span class="credit-text">@eliehabib</span>
-          </a>
-          <a href="https://github.com/koala73/worldmonitor" target="_blank" rel="noopener" class="github-link" title="${t('header.viewOnGitHub')}" aria-label="${t('header.viewOnGitHub')}">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-          </a>
+          <span class="logo">WORLD MONITOR</span><span class="logo-mobile">World Monitor</span>${BETA_MODE ? '<span class="beta-badge">BETA</span>' : ''}
           <button class="mobile-settings-btn" id="mobileSettingsBtn" title="${t('header.settings')}" aria-label="${t('header.settings')}">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           </button>
@@ -740,28 +698,71 @@ export class PanelLayoutManager implements AppModule {
             <span class="status-dot"></span>
             <span>${t('header.live')}</span>
           </div>
-          <div class="region-selector">
-            <select id="regionSelect" class="region-select" aria-label="${t('header.selectRegion')}">
-              <option value="global">${t('components.deckgl.views.global')}</option>
-              <option value="america">${t('components.deckgl.views.americas')}</option>
-              <option value="mena">${t('components.deckgl.views.mena')}</option>
-              <option value="eu">${t('components.deckgl.views.europe')}</option>
-              <option value="asia">${t('components.deckgl.views.asia')}</option>
-              <option value="latam">${t('components.deckgl.views.latam')}</option>
-              <option value="africa">${t('components.deckgl.views.africa')}</option>
-              <option value="oceania">${t('components.deckgl.views.oceania')}</option>
-            </select>
-          </div>
-          <span id="missionPresetMount" class="mission-preset-mount"></span>
+          <button class="search-btn header-search-bar" id="searchBtn" type="button">
+            <svg class="header-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span class="header-search-text">${escapeHtml(searchPlaceholder)}</span>
+            <kbd>⌘K</kbd>
+          </button>
           <button class="mobile-search-btn" id="mobileSearchBtn" aria-label="${t('header.search')}">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </button>
         </div>
         <div class="header-right">
-          <button class="search-btn" id="searchBtn"><kbd>⌘K</kbd> ${t('header.search')}</button>
-          <button class="copy-link-btn" id="copyLinkBtn">${t('header.copyLink')}</button>
-          <button class="copy-link-btn embed-link-btn" id="embedLinkBtn">${t('header.embed')}</button>
-          <button class="fullscreen-btn" id="fullscreenBtn" title="${t('header.fullscreen')}" aria-label="${t('header.fullscreen')}">⛶</button>
+          <div class="header-region-cluster">
+            <div class="region-selector">
+              <select id="regionSelect" class="region-select" aria-label="${t('header.selectRegion')}">
+                <option value="global">${t('components.deckgl.views.global')}</option>
+                <option value="america">${t('components.deckgl.views.americas')}</option>
+                <option value="mena">${t('components.deckgl.views.mena')}</option>
+                <option value="eu">${t('components.deckgl.views.europe')}</option>
+                <option value="asia">${t('components.deckgl.views.asia')}</option>
+                <option value="latam">${t('components.deckgl.views.latam')}</option>
+                <option value="africa">${t('components.deckgl.views.africa')}</option>
+                <option value="oceania">${t('components.deckgl.views.oceania')}</option>
+              </select>
+            </div>
+            <button type="button" class="header-focus-btn" id="headerFocusBtn" title="${escapeHtml(t('focus.tabButtonTitle'))}">
+              <span aria-hidden="true">◎</span><span>${escapeHtml(t('focus.tabButton'))}</span>
+            </button>
+          </div>
+          <span id="missionPresetMount" class="mission-preset-mount"></span>
+          <span id="headerAlertsMount" class="header-alerts-mount"></span>
+          <div class="header-tools-wrap">
+            <button type="button" class="header-tools-btn" id="headerToolsBtn" aria-haspopup="menu" aria-expanded="false" aria-label="${escapeHtml(toolsLabel)}" title="${escapeHtml(toolsLabel)}">
+              <span aria-hidden="true">⋯</span><span class="header-tools-label">${escapeHtml(toolsLabel)}</span>
+            </button>
+            <div class="header-tools-popover" id="headerToolsPopover" role="menu" hidden>
+              <button type="button" class="header-tool-row" id="headerAnalystBtn" role="menuitem">
+                <span class="header-tool-icon" aria-hidden="true">💬</span>
+                <span class="header-tool-text">${escapeHtml(analystLabel)}</span>
+              </button>
+              <div class="header-tool-slot" role="none">
+                <span class="header-tool-slot-label">${escapeHtml(playbackLabel)}</span>
+                <span id="headerPlaybackSlot" class="header-tool-slot-mount"></span>
+              </div>
+              <div class="header-tool-slot" role="none">
+                <span class="header-tool-slot-label">${escapeHtml(exportLabel)}</span>
+                <span id="headerExportSlot" class="header-tool-slot-mount"></span>
+              </div>
+              ${SITE_VARIANT === 'full' ? `<div class="header-tool-slot" role="none">
+                <span class="header-tool-slot-label">${escapeHtml(pizzintLabel)}</span>
+                <span id="headerPizzIntSlot" class="header-tool-slot-mount"></span>
+              </div>` : ''}
+              <div class="header-tools-divider"></div>
+              <button class="header-tool-row fullscreen-btn" id="fullscreenBtn" type="button" role="menuitem" title="${t('header.fullscreen')}" aria-label="${t('header.fullscreen')}">
+                <span class="header-tool-icon" aria-hidden="true">⛶</span>
+                <span class="header-tool-text">${escapeHtml(fullscreenLabel)}</span>
+              </button>
+              <button class="header-tool-row copy-link-btn" id="copyLinkBtn" type="button" role="menuitem">
+                <span class="header-tool-icon" aria-hidden="true">🔗</span>
+                <span class="header-tool-text">${t('header.copyLink')}</span>
+              </button>
+              <button class="header-tool-row copy-link-btn embed-link-btn" id="embedLinkBtn" type="button" role="menuitem">
+                <span class="header-tool-icon" aria-hidden="true">&lt;/&gt;</span>
+                <span class="header-tool-text">${t('header.embed')}</span>
+              </button>
+            </div>
+          </div>
           ${SITE_VARIANT === 'happy' ? `<button class="tv-mode-btn" id="tvModeBtn" title="TV Mode (Shift+T)" aria-label="TV Mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></button>` : ''}
           <span id="unifiedSettingsMount"></span>
         </div>
@@ -896,25 +897,15 @@ export class PanelLayoutManager implements AppModule {
       <footer class="site-footer" aria-label="World Monitor status">
         <span class="site-footer-meta">
           <span class="site-footer-version">v${__APP_VERSION__}</span>
-          <span class="site-footer-copy">&copy; ${new Date().getFullYear()} World Monitor</span>
-          <span id="footerDownloadMount"></span>
         </span>
       </footer>
     `, "legacy direct innerHTML migration"));
-    // Move the same links so navigation, analytics and focus targets stay shared.
     this.variantPlacementCleanup?.();
-    const switcher = this.ctx.container.querySelector('.variant-switcher');
-    const headerLeft = this.ctx.container.querySelector('.header-left');
-    const tabletMount = this.ctx.container.querySelector('.tablet-variant-mount');
-    const tabletWidth = window.matchMedia('(min-width: 768px) and (max-width: 980px)');
-    const placeSwitcher = () => {
-      if (!switcher || !headerLeft || !tabletMount) return;
-      if (tabletWidth.matches) tabletMount.append(switcher);
-      else headerLeft.prepend(switcher);
-    };
-    placeSwitcher();
-    tabletWidth.addEventListener('change', placeSwitcher);
-    this.variantPlacementCleanup = () => tabletWidth.removeEventListener('change', placeSwitcher);
+    this.variantPlacementCleanup = null;
+    // Wire the slim header Focus button to the same focus editor as the tab bar.
+    document.getElementById('headerFocusBtn')?.addEventListener('click', () => {
+      this.openFocusEditor('tabs');
+    });
     // Mark AFTER the innerHTML swap so the timestamp reflects when the new shell
     // DOM is actually live — placing it before setTrustedHtml recorded a time
     // earlier than any LCP candidate in the new shell, making it useless for
@@ -1048,6 +1039,7 @@ export class PanelLayoutManager implements AppModule {
       if (panel) applyScopeToPanel(key, panel);
     }
     this.panelTabBar?.refresh();
+    this.syncHeaderFocusButton();
     if (focusUi) {
       this.renderFocusChrome(focusUi);
     } else if (resolved) {
@@ -1166,6 +1158,7 @@ export class PanelLayoutManager implements AppModule {
     else delete tab.scope;
     const { persisted } = saveTabsState(this.tabsState);
     this.panelTabBar?.refresh();
+    this.syncHeaderFocusButton();
     if (!persisted) showToast(t('focus.notSaved'));
     else if (!active) showToast(t('focus.cleared'));
     else {
@@ -1181,13 +1174,25 @@ export class PanelLayoutManager implements AppModule {
     // The same capture a tab snapshot uses, so unsaved drags and toggles count.
     const { persisted } = saveNewTabPanels(this.captureCurrentTabState().snapshot);
     this.panelTabBar?.refresh();
+    this.syncHeaderFocusButton();
     showToast(t(persisted ? 'dashboardTabs.newTabStartsSaved' : 'dashboardTabs.newTabPanelsNotSaved'));
   }
 
   private useDefaultNewTabPanels(): void {
     clearNewTabPanels();
     this.panelTabBar?.refresh();
+    this.syncHeaderFocusButton();
     showToast(t('dashboardTabs.newTabStartsDefault'));
+  }
+
+  private syncHeaderFocusButton(): void {
+    const headerFocusBtn = document.getElementById('headerFocusBtn');
+    if (!headerFocusBtn) return;
+    const active = !!this.activeTab()?.scope;
+    headerFocusBtn.classList.toggle('active', active);
+    const label = t(active ? 'focus.tabButtonTitleActive' : 'focus.tabButtonTitle');
+    headerFocusBtn.title = label;
+    headerFocusBtn.setAttribute('aria-label', label);
   }
 
   private activeTab(): PanelTab | null {
@@ -1658,6 +1663,7 @@ export class PanelLayoutManager implements AppModule {
     this.applyTabPanelFilters(tab.panelFilters);
     this.applyTabPanelState(tab.panelSettings, tab.panelOrder, tab.bottomSet);
     this.panelTabBar?.refresh();
+    this.syncHeaderFocusButton();
     return { tab, persisted: persist.persisted };
   }
 
@@ -1719,6 +1725,7 @@ export class PanelLayoutManager implements AppModule {
     this.applyTabPanelFilters(target.panelFilters);
     this.applyTabPanelState(target.panelSettings, target.panelOrder, target.bottomSet);
     this.panelTabBar?.refresh();
+    this.syncHeaderFocusButton();
     return persist;
   }
 
@@ -1735,6 +1742,7 @@ export class PanelLayoutManager implements AppModule {
     tab.name = name;
     const persist = saveTabsState(this.tabsState);
     this.panelTabBar?.refresh();
+    this.syncHeaderFocusButton();
     return persist;
   }
 
@@ -1757,6 +1765,7 @@ export class PanelLayoutManager implements AppModule {
       persist = saveTabsState(this.tabsState);
     }
     this.panelTabBar?.refresh();
+    this.syncHeaderFocusButton();
     showToast(t('dashboardTabs.tabDeleted', { name: removed!.name }));
     return persist;
   }
