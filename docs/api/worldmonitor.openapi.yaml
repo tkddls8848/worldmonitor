@@ -233,7 +233,7 @@ paths:
             tags:
                 - AviationService
             summary: ListAirportFlights
-            description: ListAirportFlights returns recent arrivals and departures with direction and limit filters, status and carrier. Apply these filters to focus the airport traffic.
+            description: ListAirportFlights returns recent arrivals and departures with direction and limit filters, status and carrier. Apply these filters to focus airport traffic.
             operationId: ListAirportFlights
             parameters:
                 - name: airport
@@ -17428,7 +17428,9 @@ paths:
             tags:
                 - TradeService
             summary: GetBilateralTariff
-            description: Applied tariff on one HS6 product between two countries (UNCTAD TRAINS).
+            description: |-
+                Applied tariff on one HS6 product between two countries (UNCTAD TRAINS): reporter,
+                 partner, HS code, year, nomenclature, basis and applied rate detail.
             operationId: GetBilateralTariff
             parameters:
                 - name: reporting_country

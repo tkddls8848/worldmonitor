@@ -229,7 +229,7 @@ paths:
             tags:
                 - AviationService
             summary: ListAirportFlights
-            description: ListAirportFlights returns recent arrivals and departures with direction and limit filters, status and carrier. Apply these filters to focus the airport traffic.
+            description: ListAirportFlights returns recent arrivals and departures with direction and limit filters, status and carrier. Apply these filters to focus airport traffic.
             operationId: ListAirportFlights
             parameters:
                 - name: airport
