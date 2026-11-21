@@ -91,6 +91,38 @@ async function routeFixtures(page: Page): Promise<void> {
   await page.route(/list-grocery-basket-prices/, (route) => route.fulfill({ json: GROCERY_BASKET }));
 }
 
+// Option B shows one inspector tab at a time and keeps the other tabs' panels
+// hidden and unmounted, so each panel is read on the tab that owns it
+// (src/config/inspector-domains.ts). One page per tab keeps the boot path real.
+type InspectorTab = 'markets' | 'security' | 'news';
+const PANEL_TAB: Record<string, InspectorTab> = {
+  'energy-disruptions': 'markets', // Markets > Energy
+  'grocery-basket': 'markets', // Markets > Equities
+  'ucdp-events': 'security',
+  climate: 'news', // News > Tracking
+  'radiation-watch': 'news', // News > Tracking
+};
+
+function groupByTab<T extends string>(ids: readonly T[]): Array<[InspectorTab, T[]]> {
+  const groups = new Map<InspectorTab, T[]>();
+  for (const id of ids) {
+    const tab = PANEL_TAB[id];
+    if (!tab) throw new Error(`no inspector tab mapped for ${id}`);
+    groups.set(tab, [...(groups.get(tab) ?? []), id]);
+  }
+  return [...groups];
+}
+
+// Option B's default desktop inspector is one ~30% column. Multi-Col Grid
+// restores the narrow multi-column panel grid these desktop checks measure
+// (about 343px columns at 1920, 385px at 1440 and 374px at 1400).
+async function enableWideGrid(page: Page): Promise<void> {
+  const wideBtn = page.locator('#bottomTrayWideGridBtn');
+  await expect(wideBtn).toBeVisible({ timeout: 30_000 });
+  await wideBtn.click();
+  await expect(page.locator('#main')).toHaveClass(/inspector-wide-grid/);
+}
+
 interface Overflow { panel: number; table: number; content: [number, number]; cellsPastPanel: string[] }
 
 function measure(page: Page, id: string): Promise<Overflow> {
@@ -112,18 +144,21 @@ function measure(page: Page, id: string): Promise<Overflow> {
 }
 
 test('panel tables fit the panel at phone width', async ({ browser }, testInfo) => {
-  test.setTimeout(240_000);
-  for (const viewport of VIEWPORTS) {
+  test.setTimeout(540_000);
+  for (const viewport of VIEWPORTS) for (const [tab, ids] of groupByTab(PANELS)) {
     const context = await browser.newContext({ viewport, colorScheme: 'dark', isMobile: true, hasTouch: true });
     const page = await context.newPage();
     // Priority 0 keeps these panels inside the free tier's 40-panel cap, which
     // keeps the lowest priorities and breaks ties by key.
     const settings = Object.fromEntries(PANELS.map((id) => [id, { name: id, enabled: true, priority: 0 }]));
-    await seedAnonymousDashboard(page, 'full', { localStorage: { 'worldmonitor-panels': JSON.stringify(settings) } });
+    await seedAnonymousDashboard(page, 'full', { localStorage: {
+      'worldmonitor-panels': JSON.stringify(settings),
+      'wm-inspector-tab-v1': tab,
+    } });
     await routeFixtures(page);
 
     await page.goto('/dashboard');
-    for (const id of PANELS) {
+    for (const id of ids) {
       const panel = page.locator(`#panelsGrid .panel[data-panel="${id}"]`);
       await expect
         .poll(async () => {
@@ -302,10 +337,10 @@ async function expectCue(page: Page, s: Scroll, id: string, label: string): Prom
   }
 }
 
-// The sidebar holds two columns: 375px at 1920, about 279px at 1440, and
-// about 271px at 1400, the narrowest viewport that still fits two. `fit` lists the tables
-// that must reflow to the column without scrolling; the rest may keep their
-// columns and scroll with the cue.
+// Multi-Col Grid holds narrow columns: about 343px at 1920, 385px at 1440 and
+// 374px at 1400 (see enableWideGrid). `fit` lists the tables that must reflow
+// to the column without scrolling; the rest may keep their columns and scroll
+// with the cue.
 const DESKTOP_VIEWPORTS = [
   { width: 1920, height: 1080, fit: ['energy-disruptions', 'ucdp-events', 'climate', 'radiation-watch'] },
   { width: 1440, height: 900, fit: ['climate'] },
@@ -314,43 +349,49 @@ const DESKTOP_VIEWPORTS = [
 const DESKTOP_PANELS = [...PANELS, 'grocery-basket'] as const;
 
 test('panel tables fit a narrow desktop column or scroll with a visible cue', async ({ browser }, testInfo) => {
-  test.setTimeout(300_000);
+  test.setTimeout(900_000);
   for (const { fit, ...viewport } of DESKTOP_VIEWPORTS) {
     const styles = new Map<string, { th: CellStyle; td: CellStyle }>();
-    const context = await browser.newContext({ viewport, colorScheme: 'dark' });
-    const page = await context.newPage();
-    const settings = Object.fromEntries(DESKTOP_PANELS.map((id) => [id, { name: id, enabled: true, priority: 0 }]));
-    await seedAnonymousDashboard(page, 'full', { localStorage: { 'worldmonitor-panels': JSON.stringify(settings) } });
-    await routeFixtures(page);
-    await page.goto('/dashboard');
-    for (const id of DESKTOP_PANELS) {
-      const panel = page.locator(`#panelsGrid .panel[data-panel="${id}"]`);
-      await expect
-        .poll(async () => {
-          await panel.scrollIntoViewIfNeeded().catch(() => {});
-          return panel.locator('tbody tr').count();
-        }, { message: `${id} rows at ${viewport.width}px`, timeout: 90_000 })
-        .toBeGreaterThanOrEqual(3);
-      await panel.screenshot({ path: testInfo.outputPath(`${id}-${viewport.width}.png`) });
-      const s = await readScroll(page, id);
-      const label = `${id} at ${viewport.width}px (panel ${s.panel}px, ${s.scroller || 'no scroller'} hides ${s.overflow}px)`;
-      expect(s.panel, `${label}: the panel sits in a sidebar column`).toBeLessThanOrEqual(400);
-      if (fit.includes(id)) expect.soft(s.overflow, `${label}: sideways scroll`).toBeLessThanOrEqual(0);
-      if (id === 'grocery-basket') expect.soft(s.overflow, `${label}: the country matrix scrolls`).toBeGreaterThan(0);
-      if (s.overflow > 0 || s.cellsPastPanel > 0) await expectCue(page, s, id, label);
-      if (WM_TABLE_PANELS.has(id) && viewport.width === 1920) {
-        const style = await readCellStyle(page, id);
-        expect.soft(style.th, `${id}: header cell uses the shared table style`).toMatchObject(WM_TABLE_STYLE.th);
-        expect.soft(style.td, `${id}: body cell uses the shared table style`).toMatchObject(WM_TABLE_STYLE.td);
-        styles.set(id, style);
-        expect.soft(await readLostColours(page, `#panelsGrid .panel[data-panel="${id}"]`), `${id}: cells keep the colour their class sets`).toEqual([]);
+    for (const [tab, ids] of groupByTab(DESKTOP_PANELS)) {
+      const context = await browser.newContext({ viewport, colorScheme: 'dark' });
+      const page = await context.newPage();
+      const settings = Object.fromEntries(DESKTOP_PANELS.map((id) => [id, { name: id, enabled: true, priority: 0 }]));
+      await seedAnonymousDashboard(page, 'full', { localStorage: {
+        'worldmonitor-panels': JSON.stringify(settings),
+        'wm-inspector-tab-v1': tab,
+      } });
+      await routeFixtures(page);
+      await page.goto('/dashboard');
+      await enableWideGrid(page);
+      for (const id of ids) {
+        const panel = page.locator(`#panelsGrid .panel[data-panel="${id}"]`);
+        await expect
+          .poll(async () => {
+            await panel.scrollIntoViewIfNeeded().catch(() => {});
+            return panel.locator('tbody tr').count();
+          }, { message: `${id} rows at ${viewport.width}px`, timeout: 90_000 })
+          .toBeGreaterThanOrEqual(3);
+        await panel.screenshot({ path: testInfo.outputPath(`${id}-${viewport.width}.png`) });
+        const s = await readScroll(page, id);
+        const label = `${id} at ${viewport.width}px (panel ${s.panel}px, ${s.scroller || 'no scroller'} hides ${s.overflow}px)`;
+        expect(s.panel, `${label}: the panel sits in a sidebar column`).toBeLessThanOrEqual(400);
+        if (fit.includes(id)) expect.soft(s.overflow, `${label}: sideways scroll`).toBeLessThanOrEqual(0);
+        if (id === 'grocery-basket') expect.soft(s.overflow, `${label}: the country matrix scrolls`).toBeGreaterThan(0);
+        if (s.overflow > 0 || s.cellsPastPanel > 0) await expectCue(page, s, id, label);
+        if (WM_TABLE_PANELS.has(id) && viewport.width === 1920) {
+          const style = await readCellStyle(page, id);
+          expect.soft(style.th, `${id}: header cell uses the shared table style`).toMatchObject(WM_TABLE_STYLE.th);
+          expect.soft(style.td, `${id}: body cell uses the shared table style`).toMatchObject(WM_TABLE_STYLE.td);
+          styles.set(id, style);
+          expect.soft(await readLostColours(page, `#panelsGrid .panel[data-panel="${id}"]`), `${id}: cells keep the colour their class sets`).toEqual([]);
+        }
       }
+      await context.close();
     }
     if (viewport.width === 1920) {
       const [first, ...rest] = [...styles.values()];
       for (const style of rest) expect.soft(style, 'shared-style tables render identical header and body cells').toEqual(first);
     }
-    await context.close();
   }
 });
 
@@ -359,10 +400,14 @@ test('the table scroll cue follows the reading direction in RTL', async ({ brows
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
   const page = await context.newPage();
   const settings = { 'grocery-basket': { name: 'grocery-basket', enabled: true, priority: 0 } };
-  await seedAnonymousDashboard(page, 'full', { localStorage: { 'worldmonitor-panels': JSON.stringify(settings) } });
+  await seedAnonymousDashboard(page, 'full', { localStorage: {
+    'worldmonitor-panels': JSON.stringify(settings),
+    'wm-inspector-tab-v1': PANEL_TAB['grocery-basket']!,
+  } });
   await routeFixtures(page);
   await page.goto('/dashboard?lang=ar');
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+  await enableWideGrid(page);
   const panel = page.locator('#panelsGrid .panel[data-panel="grocery-basket"]');
   await expect
     .poll(async () => {
@@ -380,43 +425,48 @@ test('the table scroll cue follows the reading direction in RTL', async ({ brows
 });
 
 test('shared-style table headers line up with their cells in RTL', async ({ browser }) => {
-  test.setTimeout(180_000);
-  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
-  const page = await context.newPage();
-  const ids = [...WM_TABLE_PANELS];
-  const settings = Object.fromEntries(ids.map((id) => [id, { name: id, enabled: true, priority: 0 }]));
-  await seedAnonymousDashboard(page, 'full', { localStorage: { 'worldmonitor-panels': JSON.stringify(settings) } });
-  await routeFixtures(page);
-  await page.goto('/dashboard?lang=ar');
-  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-  for (const id of ids) {
-    const panel = page.locator(`#panelsGrid .panel[data-panel="${id}"]`);
-    await expect
-      .poll(async () => {
-        await panel.scrollIntoViewIfNeeded().catch(() => {});
-        return panel.locator('tbody tr').count();
-      }, { message: `${id} rows`, timeout: 90_000 })
-      .toBeGreaterThanOrEqual(3);
-    const columns = await panel.evaluate((el) => {
-      const table = el.querySelector('table.wm-table')!;
-      // Resolve start/end against the cell's direction, so `left` and `start` compare by where text sits.
-      const side = (cell: Element) => {
-        const { textAlign, direction } = getComputedStyle(cell);
-        if (textAlign === 'start') return direction === 'rtl' ? 'right' : 'left';
-        if (textAlign === 'end') return direction === 'rtl' ? 'left' : 'right';
-        return textAlign;
-      };
-      const headers = [...table.querySelectorAll('thead th')];
-      const cells = [...table.querySelectorAll('tbody tr:first-child > *')];
-      return headers.map((th, i) => `${(th.textContent ?? '').trim()}: header ${side(th)}, cell ${cells[i] ? side(cells[i]) : 'none'}`);
-    });
-    expect(columns.length, `${id} has header cells`).toBeGreaterThan(0);
-    for (const column of columns) {
-      const [, header, cell] = column.match(/header (\w+), cell (\w+)/)!;
-      expect.soft(header, `${id} ${column}`).toBe(cell);
+  test.setTimeout(480_000);
+  const allIds = [...WM_TABLE_PANELS];
+  for (const [tab, ids] of groupByTab(allIds)) {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
+    const page = await context.newPage();
+    const settings = Object.fromEntries(allIds.map((id) => [id, { name: id, enabled: true, priority: 0 }]));
+    await seedAnonymousDashboard(page, 'full', { localStorage: {
+      'worldmonitor-panels': JSON.stringify(settings),
+      'wm-inspector-tab-v1': tab,
+    } });
+    await routeFixtures(page);
+    await page.goto('/dashboard?lang=ar');
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    for (const id of ids) {
+      const panel = page.locator(`#panelsGrid .panel[data-panel="${id}"]`);
+      await expect
+        .poll(async () => {
+          await panel.scrollIntoViewIfNeeded().catch(() => {});
+          return panel.locator('tbody tr').count();
+        }, { message: `${id} rows`, timeout: 90_000 })
+        .toBeGreaterThanOrEqual(3);
+      const columns = await panel.evaluate((el) => {
+        const table = el.querySelector('table.wm-table')!;
+        // Resolve start/end against the cell's direction, so `left` and `start` compare by where text sits.
+        const side = (cell: Element) => {
+          const { textAlign, direction } = getComputedStyle(cell);
+          if (textAlign === 'start') return direction === 'rtl' ? 'right' : 'left';
+          if (textAlign === 'end') return direction === 'rtl' ? 'left' : 'right';
+          return textAlign;
+        };
+        const headers = [...table.querySelectorAll('thead th')];
+        const cells = [...table.querySelectorAll('tbody tr:first-child > *')];
+        return headers.map((th, i) => `${(th.textContent ?? '').trim()}: header ${side(th)}, cell ${cells[i] ? side(cells[i]) : 'none'}`);
+      });
+      expect(columns.length, `${id} has header cells`).toBeGreaterThan(0);
+      for (const column of columns) {
+        const [, header, cell] = column.match(/header (\w+), cell (\w+)/)!;
+        expect.soft(header, `${id} ${column}`).toBe(cell);
+      }
     }
+    await context.close();
   }
-  await context.close();
 });
 
 // FX, ETF flows and the watchlist render outside the fixture dashboard, so
@@ -676,10 +726,14 @@ test('the grocery total row keeps a visible separator and shows coverage in both
       'worldmonitor-panels': JSON.stringify(settings),
       'worldmonitor-theme': theme,
       'worldmonitor-panel-col-spans': JSON.stringify({ 'grocery-basket': 3 }),
+      'wm-inspector-tab-v1': PANEL_TAB['grocery-basket']!,
     } });
     await routeFixtures(page);
     await page.goto('/dashboard');
     await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+    // The saved column span only applies in Multi-Col Grid; the default
+    // one-column inspector forces every panel to the full column.
+    await enableWideGrid(page);
     const panel = page.locator('#panelsGrid .panel[data-panel="grocery-basket"]');
     await expect
       .poll(async () => {
