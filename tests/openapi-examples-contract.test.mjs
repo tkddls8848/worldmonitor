@@ -709,14 +709,14 @@ describe('OpenAPI examples contract', () => {
       const spec = loadYaml(readFileSync(resolve(apiDir, yamlFile), 'utf8'));
       operations += assertOperationExamples(spec, yamlFile).operations;
     }
-    assert.equal(operations, 263);
+    assert.equal(operations, 265);
   });
 
   it('adds request and response examples to the unified OpenAPI bundle', () => {
     const bundle = loadUnifiedOpenApiSpec();
     const result = assertOperationExamples(bundle, 'worldmonitor.openapi.yaml');
-    assert.equal(result.operations, 263);
-    assert.equal(result.responseExpected, 263);
+    assert.equal(result.operations, 265);
+    assert.equal(result.responseExpected, 265);
   });
 
   it('labels aircraft emergency examples synthetic and documents projected response shapes', () => {

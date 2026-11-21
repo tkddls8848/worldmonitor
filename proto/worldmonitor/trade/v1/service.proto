@@ -28,7 +28,8 @@ service TradeService {
     option (sebuf.http.config) = {path: "/get-tariff-trends", method: HTTP_METHOD_GET};
   }
 
-  // Applied tariff on one HS6 product between two countries (UNCTAD TRAINS).
+  // Applied tariff on one HS6 product between two countries (UNCTAD TRAINS): reporter,
+  // partner, HS code, year, nomenclature, basis and applied rate detail.
   rpc GetBilateralTariff(GetBilateralTariffRequest) returns (GetBilateralTariffResponse) {
     option (sebuf.http.config) = {path: "/get-bilateral-tariff", method: HTTP_METHOD_GET};
   }
