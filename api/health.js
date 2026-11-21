@@ -432,6 +432,7 @@ const STANDALONE_KEYS = {
   // evicted or stale index stays invisible until the next weekly freeze.
   gdeltCountryArticles: 'gdelt:bulk:country-articles:v1',
   gdeltDyadTension: 'gdelt:bulk:dyad-tension:v1',
+  worldPairTrends: 'gdelt:bulk:world-pair-trends:v1',
   // Non-news evidence per tension pair, read only by get-pizzint-status for
   // the tension popup, so monitored here.
   tensionEvidence: 'intelligence:tension-evidence:v1',
@@ -1539,6 +1540,11 @@ const SEED_META = {
       mode: 'activation-marker', fromKey: null, issue: 8676,
       activationKey: 'seed-activated:gdelt:bulk:dyad-tension',
     },
+  },
+  worldPairTrends: {
+    key: 'seed-meta:gdelt:bulk:world-pair-trends', maxStaleMin: 240,
+    activationKey: 'seed-activated:gdelt:bulk:world-pair-trends',
+    cutover: { mode: 'activation-marker', fromKey: null, issue: 9, activationKey: 'seed-activated:gdelt:bulk:world-pair-trends' },
   },
   // 15-minute derived-signals section; 45 = 3 missed runs.
   tensionEvidence: {
@@ -2874,6 +2880,7 @@ const ON_DEMAND_KEYS = new Set([
   // pending until that first tick and strict afterward.
   'gdeltCountryArticles',
   'gdeltDyadTension',
+  'worldPairTrends',
   'gdeltCountryEvents',
   // Written by scripts/seed-tension-evidence.mjs after each publish.
   'tensionEvidence',
@@ -3115,6 +3122,7 @@ const ACTIVATION_MARKERS = {
   // article index publishes with its seed-meta (#7748).
   gdeltCountryArticles: SEED_META.gdeltCountryArticles.activationKey,
   gdeltDyadTension: SEED_META.gdeltDyadTension.activationKey,
+  worldPairTrends: SEED_META.worldPairTrends.activationKey,
   tensionEvidence: SEED_META.tensionEvidence.activationKey,
   gdeltCountryEvents: SEED_META.gdeltCountryEvents.activationKey,
   // Written by scripts/ais-relay.cjs after the first healthy strike-pressure publish.

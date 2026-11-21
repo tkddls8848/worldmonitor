@@ -338,6 +338,7 @@ function publicationData() {
       }]),
     ),
     _conflict: { events: [{ id: 'c1' }] },
+    _worldPairs: { trends: Object.fromEntries(Array.from({ length: 435 }, (_, i) => [`pair-${i}`, {}])) },
     _unrest: { events: [{ id: 'u1' }] },
     _positive: { events: [{ name: 'p1' }] },
     _reference: { articles: [{ title: 'r1' }] },
@@ -349,18 +350,23 @@ function publicationData() {
 describe('seed-gdelt-bulk-materializer fetch integration', () => {
   it('replays an export without double-counting an independently published dyad snapshot', async () => {
     let previousDyads = null;
+    let previousWorldPairs = null;
     const deps = {
       _repairDyadHistory: noDyadRepair,
       _repairCountryEventsHistory: noDyadRepair,
       _now: () => Date.parse('2026-07-30T12:05:00Z'),
-      _readSnapshot: async key => key === 'gdelt:bulk:dyad-tension:v1' ? previousDyads : null,
+      _readSnapshot: async key => key === 'gdelt:bulk:dyad-tension:v1' ? previousDyads : key === 'gdelt:bulk:world-pair-trends:v1' ? previousWorldPairs : null,
+      _readOptionalSnapshot: async () => null,
       _fetchFiles: async () => materializationFiles(),
     };
     const first = await fetchMaterializedGdelt(deps);
     previousDyads = first._dyads;
+    previousWorldPairs = first._worldPairs;
     const replay = await fetchMaterializedGdelt(deps);
     assert.deepEqual(replay._dyads, first._dyads);
     assert.equal(first._dyads.days['2026-07-30'].pairs.usa_russia.intensity, 10);
+    assert.deepEqual(first._worldPairs.hours['2026073012'].pairs['RU:US'], [1, 10]);
+    assert.deepEqual(replay._worldPairs.hours, first._worldPairs.hours);
   });
   it('accepts a cohort GDELT published before its nominal timestamp', async () => {
     // GDELT lists 193000 at ~19:18:45; a run starting then crashed every
@@ -432,8 +438,10 @@ describe('seed-gdelt-bulk-materializer fetch integration', () => {
         if (key === GDELT_BULK_COUNTRY_ARTICLES_KEY) return null;
         if (key === 'gdelt:bulk:dyad-tension:v1') return null;
         if (key === 'gdelt:bulk:country-events:v1') return null;
+        if (key === 'gdelt:bulk:world-pair-trends:v1') return null;
         throw new Error(`unexpected key ${key}`);
       },
+      _readOptionalSnapshot: async () => null,
       _fetchFiles: async ({ afterTimestamp }) => {
         assert.deepEqual(afterTimestamp, previousState.cursor);
         return [
@@ -449,7 +457,7 @@ describe('seed-gdelt-bulk-materializer fetch integration', () => {
       },
     });
 
-    assert.deepEqual(reads.sort(), [GDELT_BULK_STATE_KEY, GDELT_INTEL_KEY, GDELT_BULK_COUNTRY_ARTICLES_KEY, 'gdelt:bulk:dyad-tension:v1', 'gdelt:bulk:country-events:v1'].sort());
+    assert.deepEqual(reads.sort(), [GDELT_BULK_STATE_KEY, GDELT_INTEL_KEY, GDELT_BULK_COUNTRY_ARTICLES_KEY, 'gdelt:bulk:dyad-tension:v1', 'gdelt:bulk:country-events:v1', 'gdelt:bulk:world-pair-trends:v1'].sort());
     assert.deepEqual(result._state.cursor, {
       gkg: '20260730120000',
       export: '20260730120000',
@@ -535,10 +543,10 @@ describe('seed-gdelt-bulk-materializer fetch integration', () => {
     // first attempt of every Railway run and crashed 1 in 8 (2026-09-23).
     assert.deepEqual(
       reads.map(({ key }) => key).sort(),
-      [GDELT_BULK_COUNTRY_ARTICLES_KEY, GDELT_BULK_STATE_KEY, GDELT_INTEL_KEY, 'gdelt:bulk:dyad-tension:v1', 'gdelt:bulk:country-events:v1'].sort(),
+      [GDELT_BULK_COUNTRY_ARTICLES_KEY, GDELT_BULK_STATE_KEY, GDELT_INTEL_KEY, 'gdelt:bulk:dyad-tension:v1', 'gdelt:bulk:country-events:v1', 'gdelt:bulk:world-pair-trends:v1', 'world-overview:ai:v1'].sort(),
     );
     for (const { key, timeoutMs } of reads) {
-      assert.ok(timeoutMs >= 30_000, `${key} read with ${timeoutMs}ms`);
+      if (key !== 'world-overview:ai:v1') assert.ok(timeoutMs >= 30_000, `${key} read with ${timeoutMs}ms`);
     }
   });
 
@@ -822,6 +830,7 @@ describe('seed-gdelt-bulk-materializer fetch integration', () => {
 describe('seed-gdelt-bulk-materializer publication cohort', () => {
   it('writes every derived key and advances state last', async () => {
     const writes = [];
+    let worldPairMarked = 0;
     const data = publicationData();
 
     const outcome = await afterPublish(data, undefined, {
@@ -831,6 +840,7 @@ describe('seed-gdelt-bulk-materializer publication cohort', () => {
       _writeExtraKeyWithMeta: async (...args) => {
         writes.push({ type: 'meta', key: args[0], args });
       },
+      _writeWorldPairActivationMarker: async () => { worldPairMarked++; },
     });
 
     assert.deepEqual(outcome, { completionState: 'OK' });
@@ -851,6 +861,11 @@ describe('seed-gdelt-bulk-materializer publication cohort', () => {
     assert.equal(dyadWrite.type, 'meta');
     assert.equal(dyadWrite.args[2], 92 * 86_400);
     assert.equal(dyadWrite.args[4], 'seed-meta:gdelt:bulk:dyad-tension');
+    const worldPairWrite = writes.find(({ key }) => key === 'gdelt:bulk:world-pair-trends:v1');
+    assert.equal(worldPairWrite.args[2], 864000);
+    assert.equal(worldPairWrite.args[3], 435);
+    assert.equal(worldPairWrite.args[4], 'seed-meta:gdelt:bulk:world-pair-trends');
+    assert.equal(worldPairMarked, 1);
     const countryIndexWrite = writes.find(({ key }) => key === GDELT_BULK_COUNTRY_ARTICLES_KEY);
     assert.equal(countryIndexWrite.type, 'meta', 'the per-country index publishes with its own seed-meta record (#7748)');
     assert.deepEqual(countryIndexWrite.args[1], data._countryIndex);
