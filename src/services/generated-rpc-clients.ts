@@ -31,6 +31,7 @@ import type { ThermalServiceClient as ThermalServiceClientInstance } from '@/gen
 import type { TradeServiceClient as TradeServiceClientInstance } from '@/generated/client/worldmonitor/trade/v1/service_client';
 import type { UnrestServiceClient as UnrestServiceClientInstance } from '@/generated/client/worldmonitor/unrest/v1/service_client';
 import type { WebcamServiceClient as WebcamServiceClientInstance } from '@/generated/client/worldmonitor/webcam/v1/service_client';
+import type { WorldOverviewServiceClient as WorldOverviewServiceClientInstance } from '@/generated/client/worldmonitor/world_overview/v1/service_client';
 import type { WildfireServiceClient as WildfireServiceClientInstance } from '@/generated/client/worldmonitor/wildfire/v1/service_client';
 import type { MarketServiceClient as MarketServiceClientCtor } from '@/generated/client/worldmonitor/market/v1/service_client';
 import { createRequestTimeoutSignal } from './timeout-signal';
@@ -258,6 +259,11 @@ export const UnrestServiceClient = createLazyRpcClientConstructor<UnrestServiceC
 export const WebcamServiceClient = createLazyRpcClientConstructor<WebcamServiceClientInstance>(async () => {
   const module = await import('@/generated/client/worldmonitor/webcam/v1/service_client');
   return module.WebcamServiceClient;
+});
+
+export const WorldOverviewServiceClient = createLazyRpcClientConstructor<WorldOverviewServiceClientInstance>(async () => {
+  const module = await import('@/generated/client/worldmonitor/world_overview/v1/service_client');
+  return module.WorldOverviewServiceClient;
 });
 
 export const WildfireServiceClient = createLazyRpcClientConstructor<WildfireServiceClientInstance>(async () => {
