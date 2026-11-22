@@ -71,10 +71,25 @@ export async function fetchEuGasFlows() {
   // ENTSOG fills in a day's operator reports over the following day; yesterday is
   // routinely partial (Norway and LNG read ~35-45% low), so the latest settled day is D-2.
   const latestDate = shiftDate(today, -2);
-  const from = shiftDate(latestDate, -13), to = today;
-  const flows = await getJson(apiUrl('operationaldatas', { indicator: 'Physical Flow', periodType: 'day', from, to, limit: 20000 }));
-  const records = flows.operationaldatas ?? [];
-  if (Number(flows.meta?.total ?? 0) > records.length) throw new Error('ENTSOG flow response exceeded the configured limit');
+  const from = shiftDate(latestDate, -13), to = shiftDate(latestDate, 1);
+  // The API returns fewer operator points per day the longer the requested window
+  // (15 days: ~785-803 rows/day; 2-7 days: 978), so fetch 2-day chunks.
+  const records = [];
+  for (let start = from; start <= latestDate; start = shiftDate(start, 2)) {
+    const end = shiftDate(start, 2) > to ? to : shiftDate(start, 2);
+    const flows = await getJson(apiUrl('operationaldatas', { indicator: 'Physical Flow', periodType: 'day', from: start, to: end, limit: 20000 }));
+    const rows = flows.operationaldatas ?? [];
+    // meta.total also counts rows the API filters out (always above meta.count), so the
+    // truncation signal is a page that fills the limit.
+    if (rows.length >= 20000) throw new Error('ENTSOG flow response reached the row limit');
+    for (const row of rows) {
+      const day = String(row.periodFrom ?? '').slice(0, 10);
+      if (day >= start && day < end) records.push(row);
+    }
+  }
+  // The API does not always report a total: a response cut off by the row limit ends
+  // early and would read as zero flows. Refuse to publish without the latest day.
+  if (!records.some((row) => String(row.periodFrom ?? '').startsWith(latestDate))) throw new Error(`ENTSOG flow response has no rows for ${latestDate}`);
   return { asOf: Date.now(), date: latestDate, origins: aggregateFlows(records, pointConfig.points, latestDate) };
 }
 
