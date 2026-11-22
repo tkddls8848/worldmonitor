@@ -1073,13 +1073,15 @@ describe('panel-config guardrails', () => {
     assert.ok(renderLayout, 'renderLayout method not found');
     assert.match(
       renderLayout[0],
-      /const\s+bootShellFootprint\s*=\s*import\.meta\.env\.DEV\s*\?\s*captureBootShellFootprint\(this\.ctx\.container\)\s*:\s*null;/,
+      /this\.bootShellFootprint\s*=\s*import\.meta\.env\.DEV\s*\?\s*captureBootShellFootprint\(this\.ctx\.container\)\s*:\s*null;/,
       'renderLayout must snapshot the pre-hydration skeleton footprint in dev builds',
     );
+    const buildFullView = panelLayoutSrc.match(/private\s+async\s+buildFullView\(\):\s+Promise<void>\s+\{[\s\S]*?\n {2}\}/);
+    assert.ok(buildFullView, 'buildFullView method not found');
     assert.match(
-      renderLayout[0],
-      /if\s*\(import\.meta\.env\.DEV\s*&&\s*bootShellFootprint\)\s*warnOnBootShellFootprintDrift\(bootShellFootprint\);/,
-      'renderLayout must surface skeleton->app footprint drift after initial panels/tabs mount',
+      buildFullView[0],
+      /if\s*\(import\.meta\.env\.DEV\s*&&\s*this\.bootShellFootprint\)\s*warnOnBootShellFootprintDrift\(this\.bootShellFootprint\);/,
+      'buildFullView must surface skeleton->app footprint drift after initial panels/tabs mount',
     );
     assert.match(
       panelLayoutSrc,
