@@ -126,6 +126,19 @@ function countryName(iso2: string): string {
   try { return new Intl.DisplayNames(['ko'], { type: 'region' }).of(iso2.toUpperCase()) ?? iso2; }
   catch { return iso2; }
 }
+/**
+ * Outages the battle board counts: active or ended in the last 6 h, backed by more
+ * than IODA's darknet telescope alone (merit-nt-only alerts are noisy), and one —
+ * the most recent — per country.
+ */
 function activeOutages(outages: readonly IodaOutage[], nowMs: number): IodaOutage[] {
-  return outages.filter((outage) => outage.end === null || (outage.end <= nowMs && outage.end >= nowMs - OUTAGE_RECENT_MS));
+  const latestByCountry = new Map<string, IodaOutage>();
+  for (const outage of outages) {
+    const recent = outage.end === null || (outage.end <= nowMs && outage.end >= nowMs - OUTAGE_RECENT_MS);
+    const corroborated = outage.signals.some((signal) => signal !== 'merit-nt');
+    if (!recent || !corroborated) continue;
+    const seen = latestByCountry.get(outage.iso2);
+    if (!seen || (outage.end ?? outage.start) > (seen.end ?? seen.start)) latestByCountry.set(outage.iso2, outage);
+  }
+  return [...latestByCountry.values()];
 }

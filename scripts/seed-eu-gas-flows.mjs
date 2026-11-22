@@ -68,7 +68,9 @@ export function aggregateFlows(rows, points, today = new Date().toISOString().sl
 export async function fetchEuGasFlows() {
   const now = new Date();
   const today = now.toISOString().slice(0, 10);
-  const latestDate = shiftDate(today, -1);
+  // ENTSOG fills in a day's operator reports over the following day; yesterday is
+  // routinely partial (Norway and LNG read ~35-45% low), so the latest settled day is D-2.
+  const latestDate = shiftDate(today, -2);
   const from = shiftDate(latestDate, -13), to = today;
   const flows = await getJson(apiUrl('operationaldatas', { indicator: 'Physical Flow', periodType: 'day', from, to, limit: 20000 }));
   const records = flows.operationaldatas ?? [];

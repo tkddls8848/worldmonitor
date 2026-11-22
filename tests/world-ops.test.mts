@@ -56,7 +56,8 @@ test('computes counters from the complete snapshot and applies threat score thre
       ...Array.from({ length: 30 }, (_, i) => relation({ id: `extra-${i}` })),
     ] as WorldOverviewSnapshot['relations'],
   });
-  const outages = [{ id: 'active', iso2: 'KR', start: nowMs - 1000, end: null, severity: 'high', signals: ['BGP'], url: 'https://ioda.example/1' }, { id: 'recent', iso2: 'KR', start: nowMs - 9000, end: nowMs - 1000, severity: 'medium', signals: ['ping'], url: 'https://ioda.example/2' }, { id: 'stale', iso2: 'KR', start: nowMs - 8 * 60 * 60 * 1000, end: nowMs - 7 * 60 * 60 * 1000, severity: 'low', signals: ['ping'], url: 'https://ioda.example/3' }] as never;
+  // Counted per country: KR twice (one corroborated) + JP corroborated = 2; telescope-only and stale entries are ignored.
+  const outages = [{ id: 'active', iso2: 'KR', start: nowMs - 1000, end: null, severity: 'high', signals: ['bgp'], url: 'https://ioda.example/1' }, { id: 'recent', iso2: 'KR', start: nowMs - 9000, end: nowMs - 1000, severity: 'medium', signals: ['ping-slash24'], url: 'https://ioda.example/2' }, { id: 'jp', iso2: 'JP', start: nowMs - 9000, end: nowMs - 2000, severity: 'medium', signals: ['gtr'], url: 'https://ioda.example/4' }, { id: 'telescope', iso2: 'BR', start: nowMs - 500, end: null, severity: 'medium', signals: ['merit-nt'], url: 'https://ioda.example/5' }, { id: 'stale', iso2: 'FR', start: nowMs - 8 * 60 * 60 * 1000, end: nowMs - 7 * 60 * 60 * 1000, severity: 'low', signals: ['bgp'], url: 'https://ioda.example/3' }] as never;
   const metrics = computeOpsMetrics(data, [nowMs, nowMs - 24 * 60 * 60 * 1000, nowMs - 24 * 60 * 60 * 1000 - 1, nowMs + 1], nowMs, outages);
   assert.deepEqual(metrics.counters, {
     wars: 1, highConflicts: 1, worsening: 2, sanctionPairs: 2, aiRelations: 1, breaking24h: 2, outages: 2,
