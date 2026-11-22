@@ -217,6 +217,7 @@ const CYBER_LAYER_ENABLED = import.meta.env.VITE_ENABLE_CYBER_LAYER === 'true';
 // The retired free-tier source cap. Profiles it trimmed before ownership
 // metadata existed are healed by recomputing what the cap auto-disabled.
 const LEGACY_FREE_MAX_SOURCES = 80;
+const WORLD_NEWS_REFRESH_MS = 5 * 60_000;
 type SignalModalInstance = import('@/components/SignalModal').SignalModal;
 
 export type { CountryBriefSignals } from '@/app/app-context';
@@ -231,6 +232,18 @@ export class App {
   private pendingOrbitalShareLink: OrbitalShareLink | null = null;
   private cancelOrbitalShareLink: (() => void) | null = null;
   private chokepointDeepLinkTimer: number | null = null;
+  /** World first screen news refresh; cleared when the full view starts. */
+  private worldNewsTimer: number | null = null;
+  /** World first screen drawer → "이 국가의 전체 86개 패널 열기" (full view is already open). */
+  private readonly handleWorldOpenCountryBrief = (event: Event): void => {
+    const code = (event as CustomEvent<{ code?: string }>).detail?.code;
+    if (!code || this.state.isDestroyed) return;
+    const name = CountryIntelManager.resolveCountryName(code);
+    void this.countryIntel.openCountryBriefByCode(code, name).catch((err) => {
+      console.error('[CountryBrief] Failed to open country brief:', err);
+    });
+  };
+
   private stockDeepLinkTimer: number | null = null;
   // At most one automatic precise mobile recenter per startup (#7778). Set
   // when the late position callback fires; cleared on destroy/re-init so a new
@@ -2364,7 +2377,8 @@ export class App {
     }
 
     initBreakingNewsAlerts();
-    this.state.breakingBanner = new BreakingNewsBanner();
+    // The world first screen has its own breaking-news row; the banner comes with the full view.
+    if (!this.panelLayout.isWorldMode()) this.state.breakingBanner = new BreakingNewsBanner();
 
     // Phase 3: UI setup methods
     this.eventHandlers.startHeaderClock();
@@ -2402,6 +2416,7 @@ export class App {
       document.documentElement.dataset.wmEventHandlersReady = 'true';
     }
 
+    window.addEventListener('wm:world:open-country-brief', this.handleWorldOpenCountryBrief);
     this.countryIntel.onBriefStateChange(({ visible }) => {
       // The loading panel opens with a placeholder code; the deep link stays
       // pending until a real country shows or the panel closes.
@@ -2418,6 +2433,32 @@ export class App {
     this.dataLoader.syncDataFreshnessWithLayers();
     const slowTierReady = this.waitForSlowBootstrapCheckpoint();
     if (this.state.isDestroyed) return;
+    if (this.panelLayout.isWorldMode()) {
+      // World first screen: no panel fan-out. Only news runs, so breaking
+      // alerts reach the first screen's news row; the panel data phase starts
+      // the first time "전체 보기" builds the full view.
+      void this.dataLoader.loadNews().catch((e) => console.warn('[World] news load failed:', e));
+      this.worldNewsTimer = window.setInterval(() => {
+        void this.dataLoader.loadNews().catch(() => { /* next tick retries */ });
+      }, WORLD_NEWS_REFRESH_MS);
+      this.eventHandlers.setupSnapshotSaving();
+      this.panelLayout.setFullViewStarter(() => {
+        if (this.state.isDestroyed) return;
+        if (this.worldNewsTimer !== null) window.clearInterval(this.worldNewsTimer);
+        this.worldNewsTimer = null;
+        this.state.breakingBanner ??= new BreakingNewsBanner();
+        void this.runPanelDataPhase(slowTierReady, { snapshotSavingReady: true });
+      });
+      return;
+    }
+    await this.runPanelDataPhase(slowTierReady);
+  }
+
+  /** Phase 6-7 of init: panel data fan-out and refresh scheduling. */
+  private async runPanelDataPhase(
+    slowTierReady: Promise<boolean>,
+    options: { snapshotSavingReady?: boolean } = {},
+  ): Promise<void> {
     // forceAll=false at bootstrap: data-loader's existing per-panel
     // viewport gate (shouldLoad(id) = forceAll || isPanelNearViewport(id))
     // now actually fires, cutting the ~80-request fan-out down to the
@@ -2472,7 +2513,7 @@ export class App {
 
     // Phase 7: Refresh scheduling
     this.setupRefreshIntervals();
-    this.eventHandlers.setupSnapshotSaving();
+    if (!options.snapshotSavingReady) this.eventHandlers.setupSnapshotSaving();
     cleanOldSnapshots().catch((e) => console.warn('[Storage] Snapshot cleanup failed:', e));
 
     // Phase 8: Update checks
@@ -2729,6 +2770,9 @@ export class App {
       this.state.findingsBadge?.destroy();
       this.state.findingsBadge = null;
       this.state.breakingBanner?.destroy();
+      if (this.worldNewsTimer !== null) window.clearInterval(this.worldNewsTimer);
+      this.worldNewsTimer = null;
+      window.removeEventListener('wm:world:open-country-brief', this.handleWorldOpenCountryBrief);
       destroyBreakingNewsAlerts();
       this.cachedModeBannerEl?.remove();
       this.cachedModeBannerEl = null;

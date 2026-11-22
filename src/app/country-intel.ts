@@ -24,6 +24,7 @@ import { effectivePubDateMs } from '@/services/feed-date';
 import type { CountryCoverageEvent } from '@/services/country-coverage';
 import { reconcileCountryTimelineIncidents } from '../../shared/country-timeline-events';
 import { loadHostCountryMilitaryActivity } from '@/services/country-military-activity';
+import { WORLD_MODE_CLASS } from '@/services/world-first-screen-prefs';
 import type { QualifiedCountrySignals } from '../../shared/country-signal-observations';
 import {
   COUNTRY_ALIASES,
@@ -276,6 +277,11 @@ export class CountryIntelManager implements AppModule {
   private async setupCountryIntel(): Promise<void> {
     if (!this.ctx.map) return;
     this.ctx.map.onCountryClicked((countryClick) => {
+      // World first screen: the country drawer owns clicks while it is shown.
+      if (countryClick.code && document.documentElement.classList.contains(WORLD_MODE_CLASS)) {
+        window.dispatchEvent(new CustomEvent('wm:world:country-click', { detail: { code: countryClick.code } }));
+        return;
+      }
       if (countryClick.code && countryClick.name) {
         void this.openCountryBriefByCode(countryClick.code, countryClick.name)
           .catch((err) => this.handleCountryBriefOpenError(err));

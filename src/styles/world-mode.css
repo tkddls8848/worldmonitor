@@ -1,0 +1,50 @@
+/* World first screen mode switch (plan 2026-11-22-world-first-screen, Task 5).
+   html.wm-world-mode hides the full-view chrome; the map element is moved into
+   the .wfs-slot-stage of #worldFirstScreen and back. */
+html.wm-world-mode .header,
+html.wm-world-mode .dashboard-navigation-row,
+html.wm-world-mode #main,
+html.wm-world-mode .mobile-tab-bar,
+html.wm-world-mode .bottom-dock-shell,
+html.wm-world-mode .breaking-news-banner {
+  display: none !important;
+}
+
+#worldFirstScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+}
+
+#worldFirstScreen[hidden] {
+  display: none !important;
+}
+
+#worldFirstScreen .wfs-slot-stage {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#worldFirstScreen .wfs-slot-stage > .map-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100% !important;
+}
+
+.header-world-btn {
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--border, #444);
+  border-radius: 2px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.header-world-btn:hover {
+  background: var(--surface-hover, rgba(255, 255, 255, 0.08));
+}

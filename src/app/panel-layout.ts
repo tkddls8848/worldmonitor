@@ -129,6 +129,9 @@ import {
   hydrateGeoHubPanelFromClusters,
   hydrateTechHubPanelFromClusters,
 } from '@/app/hub-activity-hydration';
+import { mountWorldFirstScreen, type WorldFirstScreenSlots } from '@/app/world-first-screen';
+import { getFirstScreenMode, setFirstScreenMode, WORLD_MODE_CLASS } from '@/services/world-first-screen-prefs';
+import '@/styles/world-mode.css';
 
 function readSessionStorageValue(key: string): string | null {
   try {
@@ -450,6 +453,14 @@ export class PanelLayoutManager implements AppModule {
   private mobileMapCollapseBtn: HTMLButtonElement | null = null;
   private panelTabBar: PanelTabBar | null = null;
   private inspectorShell: InspectorShell | null = null;
+  /** World first screen (plan 2026-11-22-world-first-screen). */
+  private worldMode = false;
+  private fullViewBuilt = false;
+  private fullViewBuilding: Promise<void> | null = null;
+  private worldScreen: { destroy(): void; onEnter(): void } | null = null;
+  private worldSlots: WorldFirstScreenSlots | null = null;
+  private fullViewStarter: (() => void) | null = null;
+  private bootShellFootprint: BootShellFootprintSnapshot | null = null;
   private bottomMediaTray: BottomMediaTray | null = null;
   private bottomTrayRaf: number | null = null;
   private bottomTrayTimer: ReturnType<typeof setTimeout> | null = null;
@@ -538,6 +549,11 @@ export class PanelLayoutManager implements AppModule {
 
   /** Retire panel resources and watches, then settle pending entitlement verification. */
   destroy(): void {
+    this.worldScreen?.destroy();
+    this.worldScreen = null;
+    this.worldSlots?.root.remove();
+    this.worldSlots = null;
+    document.documentElement.classList.remove(WORLD_MODE_CLASS);
     this.variantPlacementCleanup?.();
     this.variantPlacementCleanup = null;
     this.pendingStorageFacilityId = null;
@@ -712,7 +728,7 @@ export class PanelLayoutManager implements AppModule {
       document.documentElement.style.setProperty('--wm-map-col-actual', clamped);
       return ` style="--map-col-width: ${clamped}"`;
     })();
-    const bootShellFootprint = import.meta.env.DEV ? captureBootShellFootprint(this.ctx.container) : null;
+    this.bootShellFootprint = import.meta.env.DEV ? captureBootShellFootprint(this.ctx.container) : null;
     const referenceOrigin = resolveDashboardSiteOrigin({
       hostname: window.location.hostname,
     });
@@ -827,6 +843,7 @@ export class PanelLayoutManager implements AppModule {
             </div>
           </div>
           ${SITE_VARIANT === 'happy' ? `<button class="tv-mode-btn" id="tvModeBtn" title="TV Mode (Shift+T)" aria-label="TV Mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></button>` : ''}
+          <button type="button" class="header-world-btn" id="worldViewBtn" title="세계 정세 첫 화면">첫 화면</button>
           <span id="unifiedSettingsMount"></span>
         </div>
       </div>
@@ -997,10 +1014,116 @@ export class PanelLayoutManager implements AppModule {
       }
     });
 
+    document.getElementById('worldViewBtn')?.addEventListener('click', () => this.enterWorldView());
+    this.installRevealPanelListener();
+
+    // World first screen: build only the map now; panels, the inspector and
+    // their data wait until "전체 보기" (spec 2026-11-21-world-overview §6).
+    if (getFirstScreenMode() === 'world') {
+      await this.renderWorldFirstScreen();
+      return;
+    }
+    await this.buildFullView();
+  }
+
+  /** True while the world first screen is shown (full view not open). */
+  public isWorldMode(): boolean {
+    return this.worldMode;
+  }
+
+  /** App supplies the full-view data start (fan-out, refresh timers); it runs once. */
+  public setFullViewStarter(starter: () => void): void {
+    this.fullViewStarter = starter;
+    if (this.fullViewBuilt) this.runFullViewStarter();
+  }
+
+  private runFullViewStarter(): void {
+    const starter = this.fullViewStarter;
+    if (!starter) return;
+    this.fullViewStarter = null;
+    starter();
+  }
+
+  private async renderWorldFirstScreen(): Promise<void> {
+    const root = document.createElement('div');
+    root.className = 'wfs-root';
+    root.id = 'worldFirstScreen';
+    const slot = (cls: string): HTMLElement => {
+      const el = document.createElement('div');
+      el.className = cls;
+      root.appendChild(el);
+      return el;
+    };
+    const slots: WorldFirstScreenSlots = {
+      root,
+      masthead: slot('wfs-slot-masthead'),
+      dispatch: slot('wfs-slot-dispatch'),
+      stage: slot('wfs-slot-stage atlas-stage'),
+      shelf: slot('wfs-slot-shelf'),
+    };
+    this.ctx.container.appendChild(root);
+    this.worldSlots = slots;
+    this.worldMode = true;
+    document.documentElement.classList.add(WORLD_MODE_CLASS);
+    const mapContainer = document.getElementById('mapContainer');
+    if (mapContainer) slots.stage.appendChild(mapContainer);
+    await this.ensureMap();
+    if (this.ctx.isDestroyed || !this.ctx.map) return;
+    this.ctx.map.setWorldOverviewMode(true);
+    this.worldScreen = mountWorldFirstScreen(this.ctx, slots, {
+      openFullView: () => { void this.enterFullView(); },
+      openCountryBrief: (iso2: string) => {
+        void this.enterFullView().then(() => {
+          window.dispatchEvent(new CustomEvent('wm:world:open-country-brief', { detail: { code: iso2 } }));
+        });
+      },
+    });
+  }
+
+  /** Switch to the existing map + inspector UI, building it the first time. */
+  public async enterFullView(): Promise<void> {
+    setFirstScreenMode('full');
+    if (!this.worldMode) return;
+    this.worldMode = false;
+    document.documentElement.classList.remove(WORLD_MODE_CLASS);
+    if (this.worldSlots) this.worldSlots.root.hidden = true;
+    const mapContainer = document.getElementById('mapContainer');
+    const mapSection = document.getElementById('mapSection');
+    if (mapContainer && mapSection && mapContainer.parentElement !== mapSection) {
+      mapSection.insertBefore(mapContainer, mapSection.querySelector('.map-resize-handle'));
+    }
+    this.ctx.map?.setWorldOverviewMode(false);
+    this.ctx.map?.resize();
+    if (!this.fullViewBuilt) {
+      this.fullViewBuilding ??= this.buildFullView();
+      await this.fullViewBuilding;
+    }
+  }
+
+  /** Return from the full view to the world first screen. */
+  public enterWorldView(): void {
+    setFirstScreenMode('world');
+    if (this.worldMode) return;
+    if (!this.worldSlots) {
+      // Booted in full view: build the world shell around the existing map.
+      void this.renderWorldFirstScreen().then(() => this.ctx.map?.resize());
+      return;
+    }
+    this.worldMode = true;
+    document.documentElement.classList.add(WORLD_MODE_CLASS);
+    this.worldSlots.root.hidden = false;
+    const mapContainer = document.getElementById('mapContainer');
+    if (mapContainer) this.worldSlots.stage.insertBefore(mapContainer, this.worldSlots.stage.firstChild);
+    this.ctx.map?.setWorldOverviewMode(true);
+    this.ctx.map?.resize();
+    this.worldScreen?.onEnter();
+  }
+
+  private async buildFullView(): Promise<void> {
+    if (this.fullViewBuilt) return;
     // Compute initial visible Overview panels synchronously so createPanels()
     // never blocks on dynamic imports, while InspectorShell loads in parallel.
     this.initialVisiblePanelSet = this.computeInitialVisiblePanelSet();
-    this.installRevealPanelListener();
     this.loadInspectorShellAsync();
 
     // Mount the chip nav before createPanels() yields: a nav added after that await paints one
@@ -1014,12 +1137,15 @@ export class PanelLayoutManager implements AppModule {
       this.hydrateVisibleInspectorPanels(this.inspectorShell.applyGridFilter());
     }
     this.loadBottomTrayAsync();
-    if (import.meta.env.DEV && bootShellFootprint) warnOnBootShellFootprintDrift(bootShellFootprint);
+    if (import.meta.env.DEV && this.bootShellFootprint) warnOnBootShellFootprintDrift(this.bootShellFootprint);
+    this.bootShellFootprint = null;
 
     if (this.ctx.isMobile) {
       this.setupMobileMapToggle();
       this.mobilePanelNav?.refresh();
     }
+    this.fullViewBuilt = true;
+    this.runFullViewStarter();
   }
 
   // ============================================
@@ -2812,7 +2938,6 @@ export class PanelLayoutManager implements AppModule {
     const panelsGrid = document.getElementById('panelsGrid')!;
     this.initiallyMountedEnabledPanelCount = 0;
 
-    const mapContainer = document.getElementById('mapContainer') as HTMLElement;
     // Dynamic import: keeps maplibre-gl + @deck.gl/* + @loaders.gl + @luma.gl out of
     // the entry chunk.
     //
@@ -3485,35 +3610,13 @@ export class PanelLayoutManager implements AppModule {
     // constructed here without breaking registration. The responsive zone listener is
     // wired above (before this await) so a destroy() during the fetch tears it down;
     // the isDestroyed guard below also stops a destroyed manager from building a map.
-    const { MapContainer } = await mapModulePromise;
-    if (this.ctx.isDestroyed) return;
-    markLcpDebug('wm:map:container-construct');
-    this.ctx.map = new MapContainer(mapContainer, {
-      zoom: this.ctx.isMobile ? 2.5 : 1.0,
-      pan: { x: 0, y: 0 },
-      view: this.ctx.isMobile ? this.ctx.resolvedLocation : 'global',
-      layers: this.ctx.mapLayers,
-      timeRange: '7d',
-    });
+    await this.ensureMap(mapModulePromise);
+    if (this.ctx.isDestroyed || !this.ctx.map) return;
 
     const eagerSupplyChainPanel = this.ctx.panels['supply-chain'] as SupplyChainPanel | undefined;
     if (eagerSupplyChainPanel) {
       this.ctx.map.setSupplyChainPanel(eagerSupplyChainPanel);
     }
-
-    if (this.ctx.mapLayers.resilienceScore && !this.ctx.map.isDeckGLActive?.()) {
-      this.ctx.mapLayers = { ...this.ctx.mapLayers, resilienceScore: false };
-      saveToStorage(STORAGE_KEYS.mapLayers, this.ctx.mapLayers);
-    }
-
-    this.ctx.map.initEscalationGetters();
-    this.ctx.currentTimeRange = this.ctx.map.getTimeRange();
-    markLcpDebug('wm:map:container-ready');
-
-    this.ctx.map.onTimeRangeChanged((range) => {
-      this.ctx.currentTimeRange = range;
-      this.applyTimeRangeFilterDebounced();
-    });
 
     this.applyPanelSettings();
     this.applyInitialUrlState();
@@ -3535,6 +3638,38 @@ export class PanelLayoutManager implements AppModule {
       const extra = [...created].filter(k => !configured.has(k) && !k.startsWith('cw-') && !k.startsWith('mcp-'));
       if (extra.length) console.warn('[PanelLayoutManager] Panels created but not in ALL_PANELS:', extra);
     }
+  }
+
+  /** Build the one MapContainer (world first screen and full view share it). */
+  private async ensureMap(
+    modulePromise: Promise<typeof import('@/components/MapContainer')> = import('@/components/MapContainer'),
+  ): Promise<void> {
+    if (this.ctx.map) return;
+    const { MapContainer } = await modulePromise;
+    if (this.ctx.isDestroyed || this.ctx.map) return;
+    const mapContainer = document.getElementById('mapContainer') as HTMLElement;
+    markLcpDebug('wm:map:container-construct');
+    this.ctx.map = new MapContainer(mapContainer, {
+      zoom: this.ctx.isMobile ? 2.5 : 1.0,
+      pan: { x: 0, y: 0 },
+      view: this.ctx.isMobile ? this.ctx.resolvedLocation : 'global',
+      layers: this.ctx.mapLayers,
+      timeRange: '7d',
+    });
+
+    if (this.ctx.mapLayers.resilienceScore && !this.ctx.map.isDeckGLActive?.()) {
+      this.ctx.mapLayers = { ...this.ctx.mapLayers, resilienceScore: false };
+      saveToStorage(STORAGE_KEYS.mapLayers, this.ctx.mapLayers);
+    }
+
+    this.ctx.map.initEscalationGetters();
+    this.ctx.currentTimeRange = this.ctx.map.getTimeRange();
+    markLcpDebug('wm:map:container-ready');
+
+    this.ctx.map.onTimeRangeChanged((range) => {
+      this.ctx.currentTimeRange = range;
+      this.applyTimeRangeFilterDebounced();
+    });
   }
 
   private cancelScheduledLoadAllIdle(): void {

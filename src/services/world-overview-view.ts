@@ -85,7 +85,8 @@ export function buildCountryDrawerData(snapshot: WorldOverviewSnapshot, iso2: st
     level: country?.level ? fillLevelFor(country.level) as CountryDrawerData['level'] : null,
     conflictLevel: country?.level ?? null, ciiScore: country?.cii?.score ?? null, updatedAt: snapshot.generatedAt,
     issue: issue ? { summaryKo: issue.summaryKo, sources: issue.sources, ...(issue.mark ? { mark: issue.mark } : {}) } : null,
-    relations: snapshot.relations.filter((line) => (line.from === iso2 || line.to === iso2) && line.mark?.state !== 'hidden').map((line) => relationForCountry(line, iso2)),
+    // Hidden (wrong-marked) relations stay listed so the drawer can offer the undo.
+    relations: snapshot.relations.filter((line) => line.from === iso2 || line.to === iso2).map((line) => relationForCountry(line, iso2)),
     blocs: (country?.blocs ?? []).map((id) => ({ id, nameKo: snapshot.blocs.find((bloc) => bloc.id === id)?.nameKo ?? id })),
     isToday: snapshot.date === todayDate, aiStatus: snapshot.ai.status,
   };

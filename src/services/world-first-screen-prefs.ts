@@ -27,3 +27,6 @@ export function setWorldFields(fields: readonly WorldField[]): void {
   const allowed = new Set<string>(WORLD_FIELDS);
   saveToStorage(FIELDS_KEY, fields.filter((field) => allowed.has(field)));
 }
+
+/** Class on <html> while the world first screen is shown (CSS and click routing read it). */
+export const WORLD_MODE_CLASS = 'wm-world-mode';
