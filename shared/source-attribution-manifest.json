@@ -3668,6 +3668,20 @@
       ]
     },
     {
+      "host": "ecos.bok.or.kr",
+      "provider": "ecos.bok.or.kr",
+      "kind": "structured",
+      "observed": true,
+      "license": "Provider terms for this upstream API/dataset; verify before redistribution",
+      "attribution": "Credit ecos.bok.or.kr and link to the original upstream API/dataset.",
+      "status": "terms-review",
+      "references": [
+        {
+          "path": "scripts/lib/ecos-macro.mjs"
+        }
+      ]
+    },
+    {
       "host": "ecs-api.wingbits.com",
       "provider": "wingbits.com",
       "kind": "structured",
@@ -15446,6 +15460,9 @@
         },
         {
           "path": "scripts/github-stars-snapshot.mjs"
+        },
+        {
+          "path": "scripts/lib/ecos-macro.mjs"
         },
         {
           "path": "scripts/lib/grid-clock-sources.mjs"

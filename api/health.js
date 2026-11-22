@@ -860,6 +860,7 @@ const SEED_META = {
   worldOverview: { key: 'seed-meta:world-overview:snapshot', maxStaleMin: 360,
     activationKey: 'seed-activated:world-overview:snapshot',
     cutover: { mode: 'activation-marker', fromKey: null, issue: 9, activationKey: 'seed-activated:world-overview:snapshot' } },
+  krEcosMacro: { key: 'seed-meta:kr:ecos-macro', maxStaleMin: 2880 },
   gridDisruptionClock: {
     key: 'seed-meta:infra:grid-disruption-clock',
     maxStaleMin: 30,
