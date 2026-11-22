@@ -20,6 +20,7 @@ import {
 import { t } from '@/services/i18n';
 import type { MapComponent } from './Map';
 import type { DeckGLMap, DeckMapView, CountryClickPayload } from './DeckGLMap';
+import type { WorldMapView } from '@/types/world-overview';
 import type {
   MapLayers,
   Hotspot,
@@ -233,6 +234,9 @@ export class MapContainer {
   private layerReadyState = new Map<keyof MapLayers, boolean>();
   private cachedScenarioState: ScenarioVisualState | null | undefined;
   private escalationGettersRequested = false;
+  private worldOverviewMode = false;
+  private worldOverviewView: WorldMapView | null = null;
+  private worldLineClickCallback: ((lineId: string) => void) | null = null;
 
   // ─── Callback cache (survives map mode switches) ───────────────────────────
   private cachedOnStateChanged: ((state: MapContainerState) => void) | null = null;
@@ -699,6 +703,9 @@ export class MapContainer {
         onFatalError: (error) => this.handleDeckGLRuntimeFailure(token, error),
         mapLibreWorkerUrl: this.mapLibreWorkerUrl,
       });
+      this.deckGLMap.setWorldOverviewMode(this.worldOverviewMode);
+      if (this.worldOverviewView) this.deckGLMap.setWorldOverview(this.worldOverviewView);
+      if (this.worldLineClickCallback) this.deckGLMap.onWorldLineClicked(this.worldLineClickCallback);
       this.rehydrateActiveMap();
       // DeckGLMap defers MapLibre construction behind an async init. Await it so
       // a WebGL/map-construction throw still reaches this catch and degrades to
@@ -1003,6 +1010,36 @@ export class MapContainer {
       return;
     }
     this.drawLayers(sanitized);
+  }
+
+  public setWorldOverviewMode(on: boolean): void {
+    this.worldOverviewMode = on;
+    this.deckGLMap?.setWorldOverviewMode(on);
+  }
+
+  public setWorldOverview(view: WorldMapView | null): void {
+    this.worldOverviewView = view;
+    this.deckGLMap?.setWorldOverview(view);
+  }
+
+  public onWorldLineClicked(cb: (lineId: string) => void): void {
+    this.worldLineClickCallback = cb;
+    this.deckGLMap?.onWorldLineClicked(cb);
+  }
+
+  public zoomBy(delta: number): void {
+    if (!Number.isFinite(delta)) return;
+    if (this.useDeckGL && this.deckGLMap) {
+      this.deckGLMap.zoomBy(delta);
+      return;
+    }
+    const currentZoom = this.rendererState().zoom ?? this.initialState.zoom;
+    this.setZoom(Math.max(0, Math.min(22, currentZoom + delta)));
+  }
+
+  public resetWorldView(): void {
+    if (this.useDeckGL) this.deckGLMap?.resetWorldView();
+    else this.setView('global', 1.6);
   }
 
   private drawLayers(layers: MapLayers): void {
