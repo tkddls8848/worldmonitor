@@ -1,7 +1,7 @@
 import { GeoJsonLayer, PathLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers';
 import type { Layer } from '@deck.gl/core';
 import type { FeatureCollection, Geometry } from 'geojson';
-import type { WorldMapView, WorldLineView, ThemeName } from '@/types/world-overview';
+import type { MapHotspot, WorldMapView, WorldLineView, ThemeName } from '@/types/world-overview';
 import {
   ALLIANCE_EXTRA_WIDTH, WORLD_ARC_CASING, WORLD_BLOC_COLORS, WORLD_DIM_OPACITY,
   WORLD_FILL_COLORS, WORLD_LAND_STROKE, WORLD_LAND_STROKE_WIDTH, WORLD_RELATION_COLORS,
@@ -119,12 +119,33 @@ function targetBracketPaths(center: [number, number]): [number, number][][] {
   ];
 }
 
+/** Hotspot rings; `pulse` (0–1) only changes the layer opacity uniform, so the pulse tick can swap this one layer cheaply. */
+export function buildWorldHotspotLayer(view: WorldMapView, theme: ThemeName, pulse: number): Layer | null {
+  if (!view.hotspots.length) return null;
+  const opacity = 0.25 + 0.45 * (0.5 + 0.5 * Math.sin(pulse * Math.PI * 2));
+  return new ScatterplotLayer({
+    id: 'world-overview-hotspots', data: view.hotspots,
+    getPosition: (hotspot: MapHotspot) => hotspot.coord,
+    getRadius: (hotspot: MapHotspot) => hotspot.level >= 4 ? 22 : hotspot.level === 3 ? 16 : 12,
+    radiusUnits: 'pixels', stroked: true, filled: false,
+    getLineColor: WORLD_HOTSPOT_COLORS[theme],
+    getLineWidth: 2, lineWidthUnits: 'pixels', pickable: true, opacity,
+    onClick: (info) => {
+      const hotspot = info.object as { iso2?: string } | undefined;
+      if (hotspot?.iso2) window.dispatchEvent(new CustomEvent('wm:world:country-click', { detail: { code: hotspot.iso2 } }));
+    },
+    updateTriggers: { getLineColor: [theme] },
+  });
+}
+
 export function buildWorldOverviewLayers(
   view: WorldMapView,
   countries: FeatureCollection,
   theme: ThemeName,
   hoverIso2: string | null,
   pulse = 0,
+  /** Ops-room marks (grid, hotspots, target). Off for the first draw: their shader programs compile slowly, so DeckGLMap adds them once the map is idle. */
+  tactical = true,
 ): Layer[] {
   if (!countries.features.length) return [];
   const features = countries.features as CountryFeature[];
@@ -146,7 +167,7 @@ export function buildWorldOverviewLayers(
     updateTriggers: { getFillColor: [view, theme], getLineColor: [selected, hoverIso2], getLineWidth: [selected, hoverIso2] },
   })];
 
-  if (theme === 'dark') {
+  if (tactical && theme === 'dark') {
     const grid: [number, number][][] = [];
     for (let longitude = -180; longitude <= 180; longitude += 15) grid.push([[longitude, -85], [longitude, 85]]);
     for (let latitude = -75; latitude <= 75; latitude += 15) grid.push([[-180, latitude], [180, latitude]]);
@@ -156,24 +177,9 @@ export function buildWorldOverviewLayers(
     }));
   }
 
-  if (view.hotspots.length) {
-    const alpha = 0.25 + 0.45 * (0.5 + 0.5 * Math.sin(pulse * Math.PI * 2));
-    layers.push(new ScatterplotLayer({
-      id: 'world-overview-hotspots', data: view.hotspots,
-      getPosition: (hotspot) => hotspot.coord,
-      getRadius: (hotspot) => hotspot.level >= 4 ? 22 : hotspot.level === 3 ? 16 : 12,
-      radiusUnits: 'pixels', stroked: true, filled: false,
-      getLineColor: () => {
-        const color = WORLD_HOTSPOT_COLORS[theme];
-        return [color[0], color[1], color[2], Math.round(color[3] * alpha)];
-      },
-      getLineWidth: 2, lineWidthUnits: 'pixels', pickable: true,
-      onClick: (info) => {
-        const hotspot = info.object as { iso2?: string } | undefined;
-        if (hotspot?.iso2) window.dispatchEvent(new CustomEvent('wm:world:country-click', { detail: { code: hotspot.iso2 } }));
-      },
-      updateTriggers: { getLineColor: [theme, pulse] },
-    }));
+  if (tactical && view.hotspots.length) {
+    const hotspotLayer = buildWorldHotspotLayer(view, theme, pulse);
+    if (hotspotLayer) layers.push(hotspotLayer);
     layers.push(new TextLayer({
       id: 'world-overview-hotspot-labels', data: view.hotspots,
       getPosition: (hotspot: (typeof view.hotspots)[number]) => hotspot.coord,
@@ -184,7 +190,7 @@ export function buildWorldOverviewLayers(
     }));
   }
 
-  if (selected) {
+  if (tactical && selected) {
     const selectedFeature = features.find((feature) => iso2(feature) === selected);
     const center = selectedFeature && countryCenter(selectedFeature);
     if (center) {

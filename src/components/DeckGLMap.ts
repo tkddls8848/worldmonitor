@@ -97,7 +97,7 @@ import { localizeMapLabels } from '@/utils/map-locale';
 import { markLcpDebug, recordDeckLayersDebug } from '@/utils/lcp-debug';
 import { improveBasemapLabels } from '@/config/basemap-labels';
 import type { WorldMapView, ThemeName } from '@/types/world-overview';
-import { buildWorldOverviewLayers } from './map/world-overview-layers';
+import { buildWorldHotspotLayer, buildWorldOverviewLayers } from './map/world-overview-layers';
 import {
   createCountryHoverQueryController,
   resolveCountryForPointerInteraction,
@@ -797,6 +797,9 @@ export class DeckGLMap {
   private readonly worldReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   private readonly worldPulseEnvironmentChanged = (): void => this.syncWorldPulse();
   private worldFirstDrawMarked = false;
+  /** Ops-room tactical layers join after the first world draw, when the browser is idle (shader compiles stay off the boot path). */
+  private worldTacticalReady = false;
+  private worldTacticalIdle: number | null = null;
   private worldLineClickCallback: ((lineId: string) => void) | null = null;
   private readonly worldLineClickListener = (event: Event): void => {
     const lineId = (event as CustomEvent<{ lineId?: string }>).detail?.lineId;
@@ -6606,6 +6609,7 @@ export class DeckGLMap {
             getCurrentTheme() as ThemeName,
             this.hoveredCountryIso2,
             this.worldPulse,
+            this.worldTacticalReady,
           )
           : []
         : this.buildLayers(!deferred);
@@ -6617,7 +6621,10 @@ export class DeckGLMap {
       recordDeckLayersDebug(built);
       if (!this.worldFirstDrawMarked && built.some((layer) => deckLayerId(layer) === 'world-overview-fill')) {
         this.worldFirstDrawMarked = true;
-        this.maplibreMap.once('render', () => markLcpDebug('wm:world:first-draw'));
+        this.maplibreMap.once('render', () => {
+          markLcpDebug('wm:world:first-draw');
+          this.scheduleWorldTactical();
+        });
       }
     } catch { /* map may be mid-teardown (null.getProjection) */ }
     if (import.meta.env.DEV) {
@@ -6897,11 +6904,39 @@ export class DeckGLMap {
       if (timestamp - this.worldPulseLastUpdate >= 100) {
         this.worldPulseLastUpdate = timestamp;
         this.worldPulse = (timestamp % 2400) / 2400;
-        this.render();
+        this.swapWorldHotspotLayer();
       }
       this.worldPulseRaf = requestAnimationFrame(tick);
     };
     this.worldPulseRaf = requestAnimationFrame(tick);
+  }
+
+
+  private scheduleWorldTactical(): void {
+    if (this.worldTacticalReady || this.worldTacticalIdle !== null) return;
+    const ready = (): void => {
+      this.worldTacticalIdle = null;
+      if (this.destroyed) return;
+      this.worldTacticalReady = true;
+      this.render();
+    };
+    const idle = window.requestIdleCallback as ((cb: IdleRequestCallback, opts?: IdleRequestOptions) => number) | undefined;
+    this.worldTacticalIdle = idle ? idle(ready, { timeout: 2000 }) : window.setTimeout(ready, 1200);
+  }
+  /** Pulse tick: replace only the hotspot ring layer in the committed stack (no full rebuild). */
+  private swapWorldHotspotLayer(): void {
+    const view = this.worldOverviewView;
+    const layers = this.committedLayers;
+    const at = layers?.findIndex((layer) => deckLayerId(layer) === 'world-overview-hotspots') ?? -1;
+    if (!view || !layers || at < 0 || !this.deckOverlay || this.renderPaused || this.webglLost) return;
+    const next = buildWorldHotspotLayer(view, getCurrentTheme() as ThemeName, this.worldPulse);
+    if (!next) return;
+    const updated = layers.slice();
+    updated[at] = next;
+    this.committedLayers = updated;
+    this.deckFrameProvider.wake();
+    this.deckOverlay.setProps({ layers: updated });
+    this.maplibreMap?.triggerRepaint();
   }
 
   private installWorldPulseListeners(): void {

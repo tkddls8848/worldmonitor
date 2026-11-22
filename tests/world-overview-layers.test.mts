@@ -99,8 +99,9 @@ test('tactical marks render hotspots, selected brackets and dark-only grid', () 
   (hotspot.props.onClick as (info: { object: unknown }) => void)({ object: tacticalView.hotspots[0] });
   Object.defineProperty(globalThis, 'window', { configurable: true, value: previousWindow });
   assert.equal(selectedCountry, 'AA');
-  const getHotspotColor = hotspot.props.getLineColor as () => number[];
-  assert.equal(getHotspotColor()[3], Math.round(WORLD_HOTSPOT_COLORS.dark[3] * 0.7));
+  // The pulse drives the layer opacity uniform (0.25–0.7), not per-ring colours.
+  assert.deepEqual(hotspot.props.getLineColor, WORLD_HOTSPOT_COLORS.dark);
+  assert.ok(Math.abs((hotspot.props.opacity as number) - 0.7) < 1e-9);
   assert.deepEqual(darkLayers.find((layer) => layer.id === 'world-overview-target')!.props.getColor, WORLD_TARGET_COLOR.dark);
   assert.equal((darkLayers.find((layer) => layer.id === 'world-overview-target-label')!.props.getText as (item: { iso2: string }) => string)({ iso2: 'AA' }), 'TARGET // AA');
   assert.deepEqual(darkLayers.find((layer) => layer.id === 'world-overview-grid')!.props.getColor, WORLD_GRID_COLOR.dark);
