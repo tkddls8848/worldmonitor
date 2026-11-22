@@ -42,6 +42,30 @@ function validSourceUrl(value: string): string | null {
   }
 }
 
+/** Korea card: render an ECOS indicator in the units a reader expects. */
+function formatKrIndicator(indicator: { id: string; value: number; unit: string }): string {
+  const n = (value: number, digits: number): string => value.toLocaleString('ko-KR', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  switch (indicator.id) {
+    case 'fx-reserves': return `${n(indicator.value / 100_000, 0)}억 달러`; // ECOS reports thousand USD
+    case 'current-account': return `${n(indicator.value / 100, 1)}억 달러`; // ECOS reports million USD
+    case 'kospi': return n(indicator.value, 2); // unit text is the index base date
+    case 'usdkrw': return `${n(indicator.value, 1)}원`;
+    case 'base-rate': case 'ktb3y': case 'ktb10y': case 'cpi-yoy': case 'unemployment': return `${n(indicator.value, 2)}%`;
+    default: return `${n(indicator.value, 2)}${indicator.unit}`;
+  }
+}
+
+/** YoY percent with one decimal and a sign, or a dash. */
+function formatYoy(value: number | null): string {
+  if (value == null || !Number.isFinite(value)) return 'YoY —';
+  return `YoY ${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
+}
+
+/** HS names can be whole tariff clauses; keep the card readable. */
+function shortItemName(name: string): string {
+  return name.length > 14 ? `${name.slice(0, 14)}…` : name;
+}
+
 export class WorldCountryDrawer {
   readonly element: HTMLElement;
   private readonly options: WorldCountryDrawerOptions;
@@ -275,7 +299,7 @@ export class WorldCountryDrawer {
         const indicator = indicators.get(id);
         const item = make('div', 'wfs-country-drawer__kr-metric');
         item.append(make('span', 'wfs-country-drawer__kr-label', label));
-        const value = make('strong', 'wfs-country-drawer__kr-value', indicator ? `${indicator.value.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}${indicator.unit}` : '자료 없음');
+        const value = make('strong', 'wfs-country-drawer__kr-value', indicator ? formatKrIndicator(indicator) : '자료 없음');
         item.append(value, make('small', 'wfs-country-drawer__kr-period', indicator?.period ?? '기간 없음'));
         grid.append(item);
       }
@@ -285,13 +309,14 @@ export class WorldCountryDrawer {
     if (!trade) section.append(make('p', 'wfs-country-drawer__empty', '관세청 무역 통계를 불러오지 못했습니다.'));
     else {
       const billion = (value: number): string => `${(value / 100_000_000).toLocaleString('ko-KR', { maximumFractionDigits: 1 })}억 달러`;
-      const totals = make('p', 'wfs-country-drawer__kr-trade', `${trade.month}: 수출 ${billion(trade.total.exportUsd)} (${trade.total.exportYoyPct == null ? 'YoY —' : `YoY ${trade.total.exportYoyPct}%`}) · 수입 ${billion(trade.total.importUsd)} (${trade.total.importYoyPct == null ? 'YoY —' : `YoY ${trade.total.importYoyPct}%`}) · 무역수지 ${billion(trade.total.balanceUsd)}`);
+      const month = `${trade.month.slice(0, 4)}년 ${Number(trade.month.slice(4, 6))}월`;
+      const totals = make('p', 'wfs-country-drawer__kr-trade', `${month}: 수출 ${billion(trade.total.exportUsd)} (${formatYoy(trade.total.exportYoyPct)}) · 수입 ${billion(trade.total.importUsd)} (${formatYoy(trade.total.importYoyPct)}) · 무역수지 ${billion(trade.total.balanceUsd)}`);
       section.append(totals);
-      if (trade.provisional) section.append(make('p', 'wfs-country-drawer__kr-trade', `${trade.provisional.period} 잠정 수출 ${billion(trade.provisional.exportUsd)} · YoY ${trade.provisional.exportYoyPct == null ? '—' : `${trade.provisional.exportYoyPct}%`}`));
+      if (trade.provisional) section.append(make('p', 'wfs-country-drawer__kr-trade', `${trade.provisional.period} 잠정 수출 ${billion(trade.provisional.exportUsd)} · ${formatYoy(trade.provisional.exportYoyPct)}`));
       const partners = make('p', 'wfs-country-drawer__kr-trade', `주요 수출국: ${trade.partners.slice(0, 5).map((partner) => partner.nameKo).join(' · ') || '자료 없음'}`);
       section.append(partners);
       const items = [...trade.items].sort((a, b) => Number(b.nameKo.includes('반도체')) - Number(a.nameKo.includes('반도체'))).slice(0, 5);
-      section.append(make('p', 'wfs-country-drawer__kr-trade', `주요 품목: ${items.map((item) => item.nameKo).join(' · ') || '자료 없음'}`));
+      section.append(make('p', 'wfs-country-drawer__kr-trade', `주요 품목: ${items.map((item) => `${shortItemName(item.nameKo)}${item.exportYoyPct == null ? '' : ` ${formatYoy(item.exportYoyPct).replace('YoY ', '')}`}`).join(' · ') || '자료 없음'}`));
     }
     const filings = (korea?.disclosures ?? []).filter((filing) => filing.kind === 'major').sort((a, b) => b.at - a.at).slice(0, 5);
     if (!filings.length) section.append(make('p', 'wfs-country-drawer__empty', '최근 주요 공시가 없습니다.'));
