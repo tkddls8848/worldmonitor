@@ -56,6 +56,8 @@
 
 ### 5.1 첫 화면 (① 단계)
 
+- Conflict-zone fill levels: high → high, medium → medium, low → tension; use the most severe of this, monthly deaths and CII, with deaths-based war taking precedence.
+
 - 진입 경로는 지금의 `/dashboard`다. 새 화면을 기본으로 보여 주고, "전체 보기"를 누르면 지금의 지도 + 인스펙터 화면으로 바뀐다. 마지막 선택을 기억한다(내 판단: 주인이 매일 쓰는 화면이 하나여야 하므로 주소를 나누지 않는다).
 - 지도는 지금의 DeckGL 평면 지도를 그대로 쓴다. 새 화면에서는 점 마커 레이어를 기본으로 모두 끄고, 새 국가 색칠 레이어와 관계선 레이어를 켠다(내 판단: 지도 엔진을 둘 두지 않는다).
 - **국가 색칠(분쟁 강도):** 국가별 단계 4개(전면전, 고강도, 중강도, 긴장·휴전)와 "이슈 있음". 근거는 기존 데이터다: 진행 중인 전쟁(`scripts/active-wars.mjs`, UCDP 월간 사망 기준), 분쟁 지역, 국가 불안정 지수(CII). 단계 기준값은 구현자가 기존 데이터 분포를 보고 정하고 문서에 적는다.
