@@ -50,6 +50,8 @@ The core of the geopolitical variant: who is fighting, protesting, fleeing, and 
 
 The first-screen tension layer tracks all 435 pairs among the 30 major countries in `shared/world-overview-config.json`, plus country pairs named by AI relations in the previous 14 KST dates. The GDELT bulk export contributes Quad 3/4 conflict events and mentions-weighted intensity (`mentions × max(0, −Goldstein)`); pair histories retain 192 hours and replayed cohorts are counted once. Trends compare the latest 24 complete hours with the preceding 144 hours using per-cohort daily rates, so missing export cohorts do not inflate the result. A pair stays **추세 집계 중** until it has seven days of tracking and at least half the cohorts in each window; after that, it is **surging** at a 3× intensity ratio with at least 20 recent events/day, **rising** at 1.3× with at least 5 recent events/day, **easing** at 0.7× or lower with at least 5 baseline events/day, or **steady** otherwise. This is a second store beside the existing eight-pair PizzINT tension data and does not change the tension popup.
 
+The Korea ECOS macro snapshot (`kr:ecos-macro:v1`) uses the Bank of Korea's [public Open API](https://ecos.bok.or.kr/api/#/DevGuide/DevSpecification) `KeyStatisticList` for its latest 100-indicator snapshot and `StatisticSearch` for period changes and the CPI year-over-year calculation. It refreshes every 12 hours; the API key is read only by the personal collector and is not included in the published payload.
+
 **Key providers**
 
 | Provider | Data | Link |

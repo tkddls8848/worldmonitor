@@ -33,6 +33,7 @@ export const STANDALONE_INTERVAL_MIN = {
   'country-history': 1440, 'webcams': 480, 'forecast-resolutions': 720, 'forecast-bets': 720,
   'funding-stress': 240,
   'dart-disclosures': 30,
+  'ecos-macro': 720,
   'gpsjam': 360, 'eu-gas-flows': 360,
   // The index counts a spike only over consecutive ~15-minute readings.
   'pizzint': 15,
