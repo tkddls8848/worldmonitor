@@ -41,7 +41,7 @@ export const STANDALONE_INTERVAL_MIN = {
 // longer than collect-state considered the run fresh.
 export const PERSONAL_COLLECTOR_TIMEOUT_MIN = Object.freeze({
   'supply-chain-trade': 20, // seed deadline is 17 minutes (15m lock + 2m margin)
-  'comtrade-bilateral-hs4': 27, // reaches the 110-country coverage floor while staying inside its 30m lock
+  'comtrade-bilateral-hs4': 27, // longer pass than the 6m generic cap, still below its 30m lock
 });
 
 export function collectorTimeoutMs(name) {
