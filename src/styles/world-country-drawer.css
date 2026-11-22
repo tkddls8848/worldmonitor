@@ -133,6 +133,20 @@
 :root[data-theme="dark"] .wfs-country-drawer {
   box-shadow: 0 12px 36px rgb(0 0 0 / 38%);
 }
+:root[data-theme="dark"] .wfs-country-drawer__header { border-top: 0; }
+:root[data-theme="dark"] .wfs-country-drawer__kicker {
+  margin: 0 0 10px;
+  color: var(--accent-text, #f3c159);
+  font: 700 10px var(--font-mono, monospace);
+  letter-spacing: .06em;
+}
+:root[data-theme="dark"] .wfs-country-drawer__full-panels {
+  color: var(--accent-on, #0c0f0d);
+  background: var(--accent, #d99b26);
+  border-color: var(--accent, #d99b26);
+  font-weight: 700;
+}
+:root[data-theme="dark"] .wfs-country-drawer__notice { background: var(--accent-soft, rgb(217 155 38 / 14%)); }
 
 @media (max-width: 1440px) and (min-width: 769px) {
   .wfs-country-drawer { width: 378px; }

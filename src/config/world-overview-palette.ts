@@ -12,13 +12,15 @@ function hex(h: string, a = 255): Rgba {
 
 export const WORLD_FILL_COLORS: Record<ThemeName, Record<FillLevel | 'none', Rgba>> = {
   light: { 0: hex('#F3F4EF'), 1: hex('#D5DFD8'), 2: hex('#EBD296'), 3: hex('#DF884B'), 4: hex('#B8293D'), none: hex('#E6EBE8') },
-  dark: { 0: hex('#232724'), 1: hex('#343C37'), 2: hex('#7A6030'), 3: hex('#B4592B'), 4: hex('#C93A4C'), none: hex('#1D211E') },
+  dark: { 0: hex('#171E1B'), 1: hex('#23302B'), 2: hex('#6D5729'), 3: hex('#A84E24'), 4: hex('#C82E43'), none: hex('#131916') },
 };
 
-export const WORLD_OCEAN: Record<ThemeName, Rgba> = { light: hex('#DCE5E4'), dark: hex('#141615') };
-export const WORLD_LAND_STROKE: Record<ThemeName, Rgba> = { light: hex('#B4C0BC'), dark: hex('#141615') };
+export const WORLD_OCEAN: Record<ThemeName, Rgba> = { light: hex('#DCE5E4'), dark: hex('#0B0E0D') };
+export const WORLD_LAND_STROKE: Record<ThemeName, Rgba> = { light: hex('#B4C0BC'), dark: hex('#0B0E0D') };
 export const WORLD_LAND_STROKE_WIDTH = { base: 0.7, hover: 1.45, selected: 2.2 } as const;
 export const WORLD_DIM_OPACITY = 0.36;
+export const WORLD_LAND_HOVER_STROKE: Record<ThemeName, Rgba> = { light: hex('#182628'), dark: hex('#E8EFEA') };
+export const WORLD_LAND_SELECTED_STROKE: Record<ThemeName, Rgba> = { light: hex('#1D4ED8'), dark: hex('#F3C159') };
 
 /** economic: violet dash-dot with diamond ends (FINAL-SPEC-OPTION-A appendix 2). */
 export const WORLD_RELATION_COLORS: Record<ThemeName, Record<RelationKind, Rgba>> = {
@@ -28,7 +30,7 @@ export const WORLD_RELATION_COLORS: Record<ThemeName, Record<RelationKind, Rgba>
 
 export const WORLD_ARC_CASING: Record<ThemeName, Rgba> = {
   light: [248, 249, 246, Math.round(0.82 * 255)],
-  dark: [20, 22, 21, Math.round(0.72 * 255)],
+  dark: [11, 14, 13, 204],
 };
 
 /** Dash arrays (on, off, on, off, ...) in px; null = solid. */
@@ -61,13 +63,13 @@ export const WORLD_UNREST_OUTLINE: Record<ThemeName, Rgba> = { light: hex('#B453
 
 /** Tactical map marks; values are intentionally centralized for the ops-room theme pass. */
 export const WORLD_HOTSPOT_COLORS: Record<ThemeName, Rgba> = {
-  light: hex('#B8293D'), dark: hex('#FF5263'),
+  light: hex('#B8293D'), dark: hex('#FB7185'),
 };
 export const WORLD_TARGET_COLOR: Record<ThemeName, Rgba> = {
-  light: hex('#8F2633'), dark: hex('#FF6673'),
+  light: hex('#8F2633'), dark: hex('#F3C159'),
 };
 export const WORLD_GRID_COLOR: Record<ThemeName, Rgba> = {
-  light: hex('#60716C', 36), dark: hex('#9AA69F', 48),
+  light: hex('#60716C', 36), dark: hex('#9AB8A8', 22),
 };
 
 export const WORLD_TAG_MAX_DEFAULT = 6;
