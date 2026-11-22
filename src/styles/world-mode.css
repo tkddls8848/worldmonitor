@@ -144,3 +144,10 @@ html.wm-world-mode .breaking-news-banner {
 #worldFirstScreen .wfs-line-key {
   white-space: nowrap;
 }
+
+/* Keep the shell at window width: a long ticker scrolls inside its strip
+   instead of widening the grid (and pushing the log rail and buttons off-screen). */
+#worldFirstScreen.wfs-root { grid-template-columns: minmax(0, 1fr); }
+#worldFirstScreen > * { min-width: 0; }
+#worldFirstScreen .masthead-bar { overflow: hidden; }
+#worldFirstScreen .wfs-ticker { flex: 1 1 0; min-width: 0; }
