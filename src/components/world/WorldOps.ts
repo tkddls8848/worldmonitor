@@ -1,4 +1,5 @@
 import type { OpsCounters, OpsEvent, OpsMetrics, ThreatLevel } from '@/types/world-overview';
+import { THREAT_LEVEL_LABEL_KO } from '@/services/world-ops';
 import '@/styles/world-ops.css';
 
 function node<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, value?: string): HTMLElementTagNameMap[K] {
@@ -34,14 +35,6 @@ export class WorldThreatBadge {
     this.score.textContent = `점수 ${metrics.threatScore}`;
   }
 }
-
-const THREAT_LEVEL_LABEL_KO: Record<ThreatLevel, string> = {
-  1: '최고 경계',
-  2: '고위험',
-  3: '경계',
-  4: '주의',
-  5: '평시',
-};
 
 const COUNTER_FIELDS: ReadonlyArray<{ key: keyof OpsCounters; label: string }> = [
   { key: 'wars', label: '전쟁' },
