@@ -1594,6 +1594,20 @@
       ]
     },
     {
+      "host": "apis.data.go.kr",
+      "provider": "apis.data.go.kr",
+      "kind": "structured",
+      "observed": true,
+      "license": "Provider terms for this upstream API/dataset; verify before redistribution",
+      "attribution": "Credit apis.data.go.kr and link to the original upstream API/dataset.",
+      "status": "terms-review",
+      "references": [
+        {
+          "path": "scripts/seed-kr-customs-trade.mjs"
+        }
+      ]
+    },
+    {
       "host": "apnews.com",
       "provider": "apnews.com",
       "kind": "feed",

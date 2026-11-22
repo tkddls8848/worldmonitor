@@ -10,6 +10,7 @@
 export const BOOTSTRAP_CACHE_KEYS = Object.freeze({
   euGasFlows: 'energy:eu-gas-flows:v1',
   worldOverview: 'world-overview:snapshot:v1',
+  krCustomsTrade: 'kr:customs-trade:v1',
   fundingStress: 'markets:funding-stress:v1',
   ukmtoIncidents: 'maritime:ukmto-incidents:v1',
   earthquakes: 'seismology:earthquakes:v1',
@@ -188,6 +189,7 @@ const ON_DEMAND_KEY_NAMES = new Set([
   'euGasFlows',
   // World overview first screen snapshot, fetched by that screen alone
   'worldOverview',
+  'krCustomsTrade',
   'fundingStress',
   'gridDisruptionClock',
   'ukmtoIncidents',
