@@ -3040,6 +3040,8 @@ const {
   summarizeUcdpWindow: ucdpSummarizeWindow,
   ucdpLocatedCountry,
   hasPreciseUcdpLocation,
+  downloadCandidateCsvWindow,
+  shouldUseCandidateCsv,
 } = require('./shared/ucdp-candidate.cjs');
 // The capped `events` slice for the map, the RPC and MCP. The CII reads the
 // whole window from `countryDays` instead.
@@ -3060,7 +3062,7 @@ function ucdpFetchPage(version, page, timeoutMs = 30000, query = {}) {
     const req = https.request(pageUrl, { signal: AbortSignal.timeout(timeoutMs), method: 'GET', headers, timeout: timeoutMs }, (resp) => {
       if (resp.statusCode === 401 || resp.statusCode === 403) {
         resp.resume();
-        return reject(new Error(`UCDP ${version} page ${page}: HTTP ${resp.statusCode} — API token required (set UCDP_ACCESS_TOKEN env var)`));
+        return reject(Object.assign(new Error(`UCDP ${version} page ${page}: HTTP ${resp.statusCode} — API token required (set UCDP_ACCESS_TOKEN env var)`), { status: resp.statusCode }));
       }
       if (resp.statusCode < 200 || resp.statusCode >= 300) {
         resp.resume();
@@ -3119,6 +3121,8 @@ async function ucdpDiscoverVersion() {
   }));
   const valid = settled.filter((s) => s.status === 'fulfilled').map((s) => s.value);
   if (valid.length === 0) {
+    const authorizationError = settled.find((s) => s.status === 'rejected' && [401, 403].includes(Number(s.reason?.status)))?.reason;
+    if (authorizationError) throw authorizationError;
     const reasons = settled.map((s) => s.reason?.message).filter(Boolean).join('; ');
     throw new Error(`No valid UCDP GED version found (${reasons})`);
   }
@@ -3138,7 +3142,20 @@ async function ucdpDiscoverVersion() {
 
 async function seedUcdpEvents() {
   try {
-    const { version } = await ucdpDiscoverVersion();
+    let csvFallback = shouldUseCandidateCsv(UCDP_ACCESS_TOKEN);
+    let csvWindow = null;
+    let version;
+    if (csvFallback) csvWindow = await downloadCandidateCsvWindow();
+    else {
+      try { ({ version } = await ucdpDiscoverVersion()); }
+      catch (error) {
+        if (!shouldUseCandidateCsv(UCDP_ACCESS_TOKEN, error?.status)) throw error;
+        console.warn(`[UCDP] API authorization failed (${error.status}); using keyless CSV exports`);
+        csvFallback = true;
+        csvWindow = await downloadCandidateCsvWindow();
+      }
+    }
+    if (csvFallback) version = csvWindow.annualVersion;
     const nowMs = Date.now();
     console.log(`[UCDP] Version ${version}`);
 
@@ -3148,7 +3165,9 @@ async function seedUcdpEvents() {
       console.warn(`[UCDP] page ${pg} of ${v}: ${err.message || err}`);
       throw err;
     });
-    const annual = await ucdpFetchAnnualWindow(fetchLogged, version, { nowMs });
+    const annual = csvFallback
+      ? { events: csvWindow.annualEvents, failedPages: 0, totalPages: 0, truncated: false, startDate: '', endDate: '' }
+      : await ucdpFetchAnnualWindow(fetchLogged, version, { nowMs });
     const annualIds = new Set(annual.events.filter((event) => event?.id != null).map((event) => String(event.id)));
     const allEvents = [...annual.events];
     const failedPages = annual.failedPages;
@@ -3182,6 +3201,23 @@ async function seedUcdpEvents() {
     let unpublishedMonths = [];
     const candidateIds = new Set();
     try {
+      if (csvFallback) {
+        candidateVersion = csvWindow.monthlyEvents.length ? csvWindow.monthlyVersion : null;
+        candidateComplete = csvWindow.monthlyEvents.length > 0;
+        windowReleases = [csvWindow.annualVersion, ...(csvWindow.cumulativeEvents.length ? [csvWindow.cumulativeVersion] : []), ...(candidateVersion ? [candidateVersion] : [])];
+        for (const e of csvWindow.cumulativeEvents) {
+          allEvents.push(e);
+          const ms = e?.date_start ? Date.parse(String(e.date_start)) : NaN;
+          if (Number.isFinite(ms) && (!Number.isFinite(latestMs) || ms > latestMs)) latestMs = ms;
+        }
+        for (const e of csvWindow.monthlyEvents) {
+          allEvents.push(e);
+          if (e?.id != null) candidateIds.add(String(e.id));
+          const ms = e?.date_start ? Date.parse(String(e.date_start)) : NaN;
+          if (Number.isFinite(ms) && (!Number.isFinite(latestMs) || ms > latestMs)) latestMs = ms;
+        }
+        console.log(`[UCDP] CSV monthly events ${csvWindow.monthlyEvents.length}, cumulative ${csvWindow.cumulativeEvents.length}`);
+      } else {
       const candidate = await ucdpDiscoverCandidateVersion(ucdpFetchPage);
       if (candidate) {
         const fromMs = Math.max(ucdpAnnualReleaseEndMs(version) + 1, nowMs - UCDP_ANNUAL_LOOKBACK_MS);
@@ -3212,6 +3248,7 @@ async function seedUcdpEvents() {
           if (e?.id != null) candidateIds.add(String(e.id));
         }
         console.log(`[UCDP] Merged candidates ${merged.releases.map((r) => r.version).join(', ')}: +${merged.releases.reduce((n, r) => n + r.events.length, 0)} events`);
+      }
       }
     } catch (err) {
       console.warn(`[UCDP] Candidate merge skipped: ${err.message || err}`);

@@ -242,6 +242,12 @@ export const PROVIDER_IDENTITY_GROUPS = Object.freeze({
 });
 
 const PROVIDER_OVERRIDES = {
+  'ucdp.uu.se': {
+    provider: 'Uppsala Conflict Data Program (UCDP)',
+    license: 'CC BY 4.0 (UCDP Dataset Download Center)',
+    attribution: 'Credit UCDP and cite the UCDP Candidate Events Dataset; link to https://ucdp.uu.se/downloads/.',
+    status: 'reviewed',
+  },
   'data.opensanctions.org': {
     provider: 'OpenSanctions',
     license: 'CC BY-NC 4.0; non-commercial personal use only',
@@ -1205,7 +1211,8 @@ const PROVIDER_OVERRIDES = {
 // a provider-bearing override a separate, explicit lifecycle event instead of
 // something `--write` can silently normalize into the manifest.
 export const PROVIDER_IDENTITY_REVIEW = Object.freeze({
-  sha256: 'a44d075b7984bb1e4c55aa7c28f253bd18ec7e6468f5fbab761a7c3decb1ea51',
+  sha256: 'd2c410046272d3227f515810795f14ba4dece52ce7d21e75556d52d7298fead4',
+  // 2026-11-22: add UCDP's bulk Candidate CSV downloads under CC BY 4.0.
   // 2026-11-22: add the OpenSanctions, UN Security Council and UK FCDO
   // sanctions-list providers used by the fixed world-relations collector.
   // 2026-11-17: exclude redis-rest, the docker-network Redis REST proxy host
@@ -1237,12 +1244,12 @@ export const PROVIDER_IDENTITY_REVIEW = Object.freeze({
   // stated terms of stat.uz (CC BY 4.0), SIMA Niger and Amman Central Market.
   // 2026-10-24: added Shanghai Financial Portal as a distinct official M2
   // republisher; PBOC source credit is preserved under /BQSM/index.html section 2.
-  reason: 'Group the NVD documentation and API hosts as one NVD (NIST) provider with its attribution sentence (#9385). Preserve all reviewed provider identities, including Shanghai Financial Portal with PBOC source attribution (2026-10-24 review). Add the Uzbekistan Statistics Agency as one identity across stat.uz and api.siat.stat.uz, with its CC BY 4.0 terms, and record the citation and reserved-rights terms that SIMA Niger and Greater Amman Municipality state on their sites (#9892). Add the Algerian Ministry of Agriculture (madr.gov.dz) and the National Statistics Office of Mongolia data host (data.1212.mn) as food-price publishers in terms review (#10050). Add the Philippine Department of Energy as one identity across doe.gov.ph and its CloudFront media host, and SONABHY as one identity across www.sonabhy.bf and the Strapi CMS its tariff page reads (#10051). Move Ember electricity data to files.ember-energy.org, where Ember now publishes its monthly release; storage.googleapis.com now serves only GDELT bulk files and joins api.gdeltproject.org as one GDELT identity (2026-11-03). Add NASA Earthdata CMR, SlideRule Earth (API and site hosts as one identity) and nsidc.org under the existing NSIDC identity for the ICESat-2 ATL13 reservoir levels (2026-11-11). Add Microsoft Planetary Computer, NASA GIBS and EUMETSAT EUMETView as the satellite image archives the point lookup calls from the browser (2026-11-13).',
+  reason: 'Add UCDP Dataset Download Center (ucdp.uu.se) as the bulk CSV host for UCDP Candidate events. The official download page identifies the files as CC BY 4.0; preserve UCDP citation and attribution. Retain the existing reviewed provider identities and rights decisions.',
   // A URL cited here is scanned like any other: this file sits inside
   // SOURCE_ROOTS, so citing a host that is not already a registered source
   // invents a provider row for it. The B.C. catalogue URLs above are safe
   // because that host is itself an observed source; parallel.ai is not.
-  reviewReference: 'PR #9385 NVD identity review; Issue #6449 BGS provenance review; plus Issue #7371 country corpus identity review; plus Issue #7005 IMD cyclone/marine source-rights probe; plus Issues #7012, #7036, and #6682 Toronto safety sources; plus PR #7576 source migration review; plus Issue #7000 publisher-centric source catalog; plus Issue #7001, Issue #6437, Issue #6622, Issue #6659, PR #6447, the 2026-09-01 FAOSTAT transport identity review, the 2026-09-04 FIRMS partial-coverage incident, and the 2026-09-05 Barchart WAF outage that moved S&P 500 breadth to the TradingView screener scan; plus Issue #7838, which added the read-only Sentry resolve-pin audit; plus PR #8394 JODI publication catalog lineage; plus the 2026-10-17 /verify audit that added the Al Jazeera claim-pool depth search; plus Issue #9352 part C, the US Consolidated Screening List export-control lists; plus Issue #10051 fuel-price batch 3, the DOE media host and SONABHY CMS groups; plus the Strategic Water Levels ICESat-2 ATL13 provider identity review.',
+  reviewReference: 'UCDP Dataset Download Center and Candidate Events Dataset Codebook v1.5, reviewed 2026-11-22 (https://ucdp.uu.se/downloads/; https://ucdp.uu.se/downloads/candidateged/ucdp-candidate-codebook1.5.pdf).',
 });
 
 export function providerIdentityDigest(providerOverrides = PROVIDER_OVERRIDES) {
