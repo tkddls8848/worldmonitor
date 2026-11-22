@@ -242,6 +242,18 @@ export const PROVIDER_IDENTITY_GROUPS = Object.freeze({
 });
 
 const PROVIDER_OVERRIDES = {
+  'opendart.fss.or.kr': {
+    provider: 'Financial Supervisory Service OpenDART API',
+    license: 'OpenDART public disclosure data; API key required; verify OpenDART terms for redistribution',
+    attribution: 'Financial Supervisory Service OpenDART (https://opendart.fss.or.kr/).',
+    status: 'terms-review',
+  },
+  'dart.fss.or.kr': {
+    provider: 'Financial Supervisory Service DART Viewer',
+    license: 'OpenDART public disclosure data; verify DART viewer terms for redistribution',
+    attribution: 'Financial Supervisory Service DART (https://dart.fss.or.kr/).',
+    status: 'terms-review',
+  },
   'ucdp.uu.se': {
     provider: 'Uppsala Conflict Data Program (UCDP)',
     license: 'CC BY 4.0 (UCDP Dataset Download Center)',
@@ -1217,7 +1229,9 @@ const PROVIDER_OVERRIDES = {
 // a provider-bearing override a separate, explicit lifecycle event instead of
 // something `--write` can silently normalize into the manifest.
 export const PROVIDER_IDENTITY_REVIEW = Object.freeze({
-  sha256: '7e116e67bc500427d2bf5f77d153d38a095e6a93044d359408d129b8d7051909',
+  sha256: '1dc0b3197e62757a0fb9ced8c99fc8426b68d33f23a353a6123b3be4adfdac5e',
+  // 2026-11-22: identify the OpenDART API and DART viewer as distinct
+  // Financial Supervisory Service disclosure endpoints; reuse terms remain under review.
   // 2026-11-22: add UCDP's bulk Candidate CSV downloads under CC BY 4.0.
   // 2026-11-22: name ENTSOG as the publisher of the public EU gas flow data;
   // the platform terms remain under review.

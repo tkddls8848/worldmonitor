@@ -2883,6 +2883,20 @@
       ]
     },
     {
+      "host": "dart.fss.or.kr",
+      "provider": "Financial Supervisory Service DART Viewer",
+      "kind": "structured",
+      "observed": true,
+      "license": "OpenDART public disclosure data; verify DART viewer terms for redistribution",
+      "attribution": "Financial Supervisory Service DART (https://dart.fss.or.kr/).",
+      "status": "terms-review",
+      "references": [
+        {
+          "path": "scripts/seed-dart-disclosures.mjs"
+        }
+      ]
+    },
+    {
       "host": "dash4.antik.sk",
       "provider": "dash4.antik.sk",
       "kind": "feed",
@@ -7560,6 +7574,20 @@
       "references": [
         {
           "path": "scripts/lib/tps-open-data.mjs"
+        }
+      ]
+    },
+    {
+      "host": "opendart.fss.or.kr",
+      "provider": "Financial Supervisory Service OpenDART API",
+      "kind": "structured",
+      "observed": true,
+      "license": "OpenDART public disclosure data; API key required; verify OpenDART terms for redistribution",
+      "attribution": "Financial Supervisory Service OpenDART (https://opendart.fss.or.kr/).",
+      "status": "terms-review",
+      "references": [
+        {
+          "path": "scripts/seed-dart-disclosures.mjs"
         }
       ]
     },
