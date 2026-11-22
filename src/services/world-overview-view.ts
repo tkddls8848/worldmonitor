@@ -1,6 +1,6 @@
 import { countryFill, selectVisibleLines, isDrawableEndpoint } from '../../shared/world-overview.js';
 import type { WorldOverviewSnapshot, CountryFill, RelationLine, TrendState } from '../../shared/world-overview.js';
-import type { FillLevel, WorldField, WorldMapView, WorldLineView, CountryDrawerData, DrawerRelation } from '@/types/world-overview';
+import type { FillLevel, MapHotspot, WorldField, WorldMapView, WorldLineView, CountryDrawerData, DrawerRelation } from '@/types/world-overview';
 import { getCountryCentroid, getCountryPolygons } from '@/services/country-geometry';
 
 export function fillLevelFor(fill: CountryFill): FillLevel {
@@ -104,7 +104,25 @@ export function buildWorldMapView(snapshot: WorldOverviewSnapshot, fields: reado
     });
   }
   const blocOutlines = diplomacy ? snapshot.blocs.map((bloc, colorIndex) => ({ blocId: bloc.id, members: bloc.members, colorIndex })) : [];
-  return { date: snapshot.date, countries, lines, blocOutlines, selectedIso2, relatedIso2 };
+  const hotspots = military ? pickHotspots(snapshot, countries) : [];
+  return { date: snapshot.date, countries, lines, blocOutlines, selectedIso2, relatedIso2, hotspots };
+}
+
+/** Ops room hotspots: war countries first, then high-intensity, ties by CII score; at most 5 with a map position. */
+export function pickHotspots(snapshot: WorldOverviewSnapshot, countries: WorldMapView['countries']): MapHotspot[] {
+  const ranked = Object.values(countries)
+    .filter((country) => country.level !== null && country.level >= 3)
+    .sort((a, b) => (b.level ?? 0) - (a.level ?? 0)
+      || (snapshot.countries[b.iso2]?.cii?.score ?? 0) - (snapshot.countries[a.iso2]?.cii?.score ?? 0)
+      || a.iso2.localeCompare(b.iso2));
+  const hotspots: MapHotspot[] = [];
+  for (const country of ranked) {
+    const coord = endpointCoord(country.iso2, snapshot.anchors);
+    if (!coord) continue;
+    hotspots.push({ iso2: country.iso2, coord, level: country.level as FillLevel });
+    if (hotspots.length === 5) break;
+  }
+  return hotspots;
 }
 
 function relationForCountry(line: RelationLine, iso2: string): DrawerRelation {

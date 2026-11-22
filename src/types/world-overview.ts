@@ -58,6 +58,8 @@ export interface WorldMapView {
   selectedIso2: string | null;
   /** Countries connected to the selection; everything else is dimmed to 0.36 when a country is selected. */
   relatedIso2: string[];
+  /** Ops room: conflict hotspots to mark on the map (at most 5); empty when the military field is off. */
+  hotspots: MapHotspot[];
 }
 
 export interface TickerItem {
@@ -107,3 +109,50 @@ export type WorldMarkRequest =
   | { action: 'unmark'; markId: string };
 
 export type WorldLoadState = 'loading' | 'ok' | 'empty' | 'error';
+
+// ---- Ops room (battle board) additions, plan 2026-11-22-ops-room ----
+
+/** DEFCON-style global threat level: 1 = most severe, 5 = calm. */
+export type ThreatLevel = 1 | 2 | 3 | 4 | 5;
+
+export interface OpsCounters {
+  /** Countries at fill level 4 (war). */
+  wars: number;
+  /** Countries at fill level 3 (high-intensity conflict). */
+  highConflicts: number;
+  /** Visible + listed relations whose trend is rising or surging. */
+  worsening: number;
+  /** Sanction relation lines (directed issuer → target pairs). */
+  sanctionPairs: number;
+  /** AI-extracted relations in today's snapshot. */
+  aiRelations: number;
+  /** Breaking alerts received in the last 24 h. */
+  breaking24h: number;
+}
+
+export interface OpsMetrics {
+  threatLevel: ThreatLevel;
+  /** 0–100 score behind the level (higher = more severe). */
+  threatScore: number;
+  counters: OpsCounters;
+}
+
+export type OpsEventSeverity = 'low' | 'medium' | 'high' | 'critical';
+
+export interface OpsEvent {
+  id: string;
+  /** epoch ms */
+  at: number;
+  kind: 'breaking' | 'relation' | 'issue';
+  title: string;
+  iso2?: string;
+  severity: OpsEventSeverity;
+  url?: string;
+}
+
+export interface MapHotspot {
+  iso2: string;
+  /** [longitude, latitude] */
+  coord: [number, number];
+  level: FillLevel;
+}
