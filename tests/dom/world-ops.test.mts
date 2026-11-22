@@ -15,6 +15,8 @@ describe('world ops components', () => {
     created.push(badge);
     badge.setMetrics({ threatLevel: 2, threatScore: 61, counters: {} as OpsMetrics['counters'] });
     expect(badge.element.dataset.level).toBe('2');
+    expect(badge.element.dataset.threat).toBe('2');
+    expect(badge.element.querySelectorAll('.wfs-ops-threat-bar')).toHaveLength(5);
     expect(badge.element.querySelector('.wfs-ops-threat-level')?.textContent).toBe('2');
     expect(badge.element.querySelector('.wfs-ops-threat-score')?.textContent).toContain('61');
     expect(badge.element.querySelector('.wfs-ops-threat-label')?.textContent).toBeTruthy();
@@ -23,13 +25,13 @@ describe('world ops components', () => {
     expect(badge.element.textContent).toContain('—');
   });
 
-  it('shows all six counters and uses an em dash for missing data', () => {
+  it('shows the five visible counters and uses an em dash for missing data', () => {
     const counters = new WorldOpsCounters();
     created.push(counters);
-    expect(counters.element.querySelectorAll('.wfs-ops-counter')).toHaveLength(6);
-    expect(counters.element.querySelectorAll('.wfs-ops-counter-value')).toHaveLength(6);
+    expect(counters.element.querySelectorAll('.wfs-ops-counter')).toHaveLength(5);
+    expect(counters.element.querySelectorAll('.wfs-ops-counter-value')).toHaveLength(5);
     counters.setCounters({ wars: 1, highConflicts: 2, worsening: 3, sanctionPairs: 4, aiRelations: 5, breaking24h: 6 });
-    expect([...counters.element.querySelectorAll('.wfs-ops-counter-value')].map((item) => item.textContent)).toEqual(['1', '2', '3', '4', '5', '6']);
+    expect([...counters.element.querySelectorAll('.wfs-ops-counter-value')].map((item) => item.textContent)).toEqual(['1', '2', '3', '4', '5']);
     counters.setCounters(null);
     expect([...counters.element.querySelectorAll('.wfs-ops-counter-value')].every((item) => item.textContent === '—')).toBe(true);
   });

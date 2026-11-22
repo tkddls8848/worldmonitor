@@ -39,6 +39,8 @@ export class WorldMasthead {
     this.element = el('header', 'masthead-bar');
     const brand = el('div', 'wfs-brand');
     brand.append(el('strong', '', 'WorldMonitor'), el('span', '', 'GLOBAL INTELLIGENCE'));
+    const threatMount = el('div', 'wfs-threat-mount');
+    threatMount.dataset.slot = 'threat';
     const theme = el('button', 'wfs-icon-button', '');
     theme.type = 'button';
     theme.setAttribute('aria-label', '테마 전환');
@@ -47,7 +49,7 @@ export class WorldMasthead {
     const full = el('button', 'wfs-full-view', '전체 보기');
     full.type = 'button';
     full.addEventListener('click', callbacks.onOpenFullView);
-    this.element.append(brand, this.ticker, theme, full);
+    this.element.append(brand, threatMount, this.ticker, theme, full);
   }
   setTickerItems(items: TickerItem[]): void {
     this.ticker.replaceChildren();
@@ -88,6 +90,7 @@ export class WorldDispatchBar {
   private locate = el('button', 'wfs-locate', '지도 이동');
   private prev = el('button', 'wfs-page', '‹');
   private next = el('button', 'wfs-page', '›');
+  private logToggle = el('button', 'wfs-log-toggle ops-log-toggle', '로그');
   private listener = (event: Event) => {
     const alert = (event as CustomEvent<BreakingAlert>).detail;
     if (!alert) return;
@@ -95,12 +98,16 @@ export class WorldDispatchBar {
     this.index = this.alerts.length - 1;
     this.render();
   };
-  constructor(private callbacks: { onLocate(alert: BreakingAlert): void }) {
+  constructor(private callbacks: { onLocate(alert: BreakingAlert): void; onToggleLog?(): void }) {
     installStyle();
     this.element = el('section', 'dispatch-bar');
     this.element.setAttribute('aria-label', '속보');
     for (const button of [this.prev, this.next]) button.type = 'button';
     this.locate.type = 'button';
+    this.logToggle.type = 'button';
+    this.logToggle.id = 'logToggleBtn';
+    this.logToggle.setAttribute('aria-expanded', 'false');
+    this.logToggle.addEventListener('click', () => callbacks.onToggleLog?.());
     this.prev.setAttribute('aria-label', '이전 속보');
     this.next.setAttribute('aria-label', '다음 속보');
     this.prev.addEventListener('click', () => {
@@ -115,8 +122,15 @@ export class WorldDispatchBar {
       const alert = this.alerts[this.index];
       if (alert) this.callbacks.onLocate(alert);
     });
-    this.element.append(this.badge, this.headline, this.meta, this.locate, this.prev, this.next);
+    this.element.append(this.badge, this.headline, this.meta, this.locate, this.prev, this.next, this.logToggle);
     document.addEventListener('wm:breaking-news', this.listener);
+  }
+  setLogState(open: boolean, count: number): void {
+    this.logToggle.replaceChildren(document.createTextNode('로그 '));
+    const countBadge = el('span', 'wfs-log-count', String(count));
+    countBadge.setAttribute('aria-label', `이벤트 ${count}개`);
+    this.logToggle.append(countBadge);
+    this.logToggle.setAttribute('aria-expanded', String(open));
   }
   private render(): void {
     const alert = this.alerts[this.index];

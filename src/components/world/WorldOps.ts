@@ -14,46 +14,67 @@ export class WorldThreatBadge {
   private readonly level = node('strong', 'wfs-ops-threat-level');
   private readonly label = node('span', 'wfs-ops-threat-label');
   private readonly score = node('span', 'wfs-ops-threat-score');
+  private readonly bars = node('span', 'wfs-ops-threat-bars');
+  private readonly status = node('span', 'wfs-ops-threat-status');
 
   constructor() {
     this.element.setAttribute('aria-label', '세계 위협 수준');
-    this.element.append(this.level, this.label, this.score);
+    this.element.classList.add('threat-badge');
+    this.element.append(this.level, this.label, this.bars, this.score, this.status);
+    for (let index = 0; index < 5; index++) this.bars.append(node('i', 'wfs-ops-threat-bar'));
     this.setMetrics(null);
   }
 
   setMetrics(metrics: OpsMetrics | null): void {
     if (!metrics) {
       this.element.removeAttribute('data-level');
+      this.element.dataset.threat = '0';
+      this.element.style.setProperty('--ops-lit-width', '0px');
       this.level.textContent = '—';
-      this.label.textContent = '위협 정보 없음';
+      this.label.textContent = '';
       this.score.textContent = '';
+      this.status.textContent = this.status.textContent === '수신 오류' ? '수신 오류' : '산출 대기';
       return;
     }
     this.element.dataset.level = String(metrics.threatLevel);
+    this.element.dataset.threat = String(metrics.threatLevel);
+    this.element.style.removeProperty('--ops-lit-width');
+    this.element.style.removeProperty('--ops-threat-color');
     this.level.textContent = String(metrics.threatLevel);
     this.label.textContent = THREAT_LEVEL_LABEL_KO[metrics.threatLevel];
     this.score.textContent = `점수 ${metrics.threatScore}`;
+    this.status.textContent = '';
+  }
+  setError(): void {
+    this.setMetrics(null);
+    this.element.style.setProperty('--ops-threat-color', 'var(--ops-threat-1)');
+    this.status.textContent = '수신 오류';
   }
 }
 
 const COUNTER_FIELDS: ReadonlyArray<{ key: keyof OpsCounters; label: string }> = [
-  { key: 'wars', label: '전쟁' },
-  { key: 'highConflicts', label: '고강도 충돌' },
+  { key: 'wars', label: '진행 전쟁' },
+  { key: 'highConflicts', label: '고위험국' },
   { key: 'worsening', label: '악화 관계' },
   { key: 'sanctionPairs', label: '제재 쌍' },
-  { key: 'aiRelations', label: 'AI 관계' },
-  { key: 'breaking24h', label: '24시간 속보' },
+  { key: 'aiRelations', label: 'AI 감지' },
 ];
 
 export class WorldOpsCounters {
-  readonly element = node('dl', 'wfs-ops-counters');
+  readonly element = node('dl', 'wfs-ops-counters ops-counters');
   private readonly values = new Map<keyof OpsCounters, HTMLElement>();
 
-  constructor() {
+  constructor(private readonly onSelect?: (key: keyof OpsCounters, button: HTMLButtonElement) => void) {
     for (const counter of COUNTER_FIELDS) {
       const group = node('div', 'wfs-ops-counter');
-      const value = node('dd', 'wfs-ops-counter-value', '—');
-      group.append(node('dt', 'wfs-ops-counter-label', counter.label), value);
+      const button = node('button', 'wfs-ops-counter-btn ops-counter-btn');
+      button.type = 'button';
+      button.dataset.counter = counter.key;
+      const label = node('span', 'wfs-ops-counter-label', counter.label);
+      const value = node('span', 'wfs-ops-counter-value', '—');
+      button.append(label, value);
+      button.addEventListener('click', () => this.onSelect?.(counter.key, button));
+      group.append(button);
       this.values.set(counter.key, value);
       this.element.append(group);
     }
@@ -63,6 +84,12 @@ export class WorldOpsCounters {
     for (const { key } of COUNTER_FIELDS) {
       const value = this.values.get(key);
       if (value) value.textContent = counters ? String(counters[key]) : '—';
+    }
+  }
+  setActive(key: keyof OpsCounters | null): void {
+    for (const button of this.element.querySelectorAll<HTMLButtonElement>('.wfs-ops-counter-btn')) {
+      button.classList.toggle('is-active', button.dataset.counter === key);
+      button.setAttribute('aria-pressed', String(button.dataset.counter === key));
     }
   }
 }
@@ -78,10 +105,18 @@ const CLOCKS: ReadonlyArray<{ label: string; zone: string }> = [
 
 const clockSubscribers = new Set<() => void>();
 let clockInterval: ReturnType<typeof setInterval> | null = null;
+let visibilityListenerInstalled = false;
 function tickClocks(): void {
   for (const update of clockSubscribers) update();
 }
 function syncClockTicker(): void {
+  if (clockSubscribers.size && !visibilityListenerInstalled) {
+    document.addEventListener('visibilitychange', syncClockTicker);
+    visibilityListenerInstalled = true;
+  } else if (!clockSubscribers.size && visibilityListenerInstalled) {
+    document.removeEventListener('visibilitychange', syncClockTicker);
+    visibilityListenerInstalled = false;
+  }
   if (clockSubscribers.size && !document.hidden && clockInterval === null) {
     tickClocks();
     clockInterval = setInterval(tickClocks, 1_000);
@@ -90,10 +125,9 @@ function syncClockTicker(): void {
     clockInterval = null;
   }
 }
-document.addEventListener('visibilitychange', syncClockTicker);
 
 export class WorldClockStrip {
-  readonly element = node('div', 'wfs-ops-clocks');
+  readonly element = node('div', 'wfs-ops-clocks clock-strip');
   private readonly displays = CLOCKS.map(({ label, zone }) => {
     const item = node('div', 'wfs-ops-clock');
     const time = node('time', 'wfs-ops-clock-time', '--:--');
@@ -144,7 +178,7 @@ function eventTime(at: number): string {
 }
 
 export class WorldEventLog {
-  readonly element = node('section', 'wfs-ops-event-log');
+  readonly element = node('section', 'wfs-ops-event-log ops-log-rail');
   private readonly list = node('ol', 'wfs-ops-event-list');
 
   constructor(private readonly callbacks: { onSelectCountry(iso2: string): void }) {
