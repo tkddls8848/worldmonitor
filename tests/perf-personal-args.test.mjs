@@ -5,6 +5,7 @@ import {
   USAGE,
   buildReport,
   collectRuns,
+  countryResultVisible,
   layerDrawn,
   parseArgs,
 } from '../scripts/perf-personal.mjs';
@@ -78,7 +79,29 @@ describe('perf-personal collectRuns and buildReport', () => {
     assert.deepEqual(report.metrics['layer.resultVisible'], { median: 20, min: 10, max: 30, spread: 20, runs: 3, failed: 1 });
     assert.deepEqual(report.metrics['cold.mapDemand'], { median: 20, min: 10, max: 30, spread: 10, runs: 3, failed: 0 });
     assert.ok('warm.mapAfterDemand' in report.metrics);
+    assert.ok('cold.worldReady' in report.metrics);
     assert.deepEqual(report.failures, failures);
+  });
+
+  it('treats absent panels and panel interactions as unavailable, not failed', () => {
+    const report = buildReport({ label: 'world', createdAt: 't', config: {}, failures: [], samples: {
+      'cold.panelsReady': [null, null],
+      'warm.panelsReady': [null, 12],
+      'panel.inputToPaint': [null, null],
+      'country.resultVisible': [20, 30],
+    } });
+    assert.equal(report.metrics['cold.panelsReady'].failed, 0);
+    assert.equal(report.metrics['cold.panelsReady'].median, null);
+    assert.equal(report.metrics['warm.panelsReady'].median, 12);
+    assert.equal(report.metrics['panel.inputToPaint'].failed, 0);
+  });
+});
+
+describe('perf-personal world country result predicate', () => {
+  it('waits for the open world drawer in world mode', () => {
+    const doc = { querySelector: (selector) => selector === '.wfs-country-drawer[data-state="open"]' ? {} : null };
+    assert.equal(countryResultVisible({ worldMode: true }, { document: doc }), true);
+    assert.equal(countryResultVisible({ worldMode: true }, { document: { querySelector: () => null } }), false);
   });
 });
 

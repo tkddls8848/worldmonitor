@@ -5,7 +5,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadEnvFile } from './_env-file.mjs';
-import { compareReports, summarize, unmatchedMetrics } from './perf/perf-stats.mjs';
+import { compareReports, summarize, summarizeOptional, unmatchedMetrics } from './perf/perf-stats.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PERF_DIR = join(ROOT, '.personal', 'perf');
@@ -31,7 +31,7 @@ const SEARCH_DEBOUNCE_MS = 180;
 // mapReady is split at the app's renderer-demand mark (src/components/MapContainer.ts):
 // mapDemand is when the deliberate visible-idle gate released the DeckGL load,
 // mapAfterDemand is mapReady minus mapDemand (chunk load, style, deck, first draw).
-export const LOAD_METRICS = ['fcp', 'lcp', 'mapReady', 'mapDemand', 'mapAfterDemand', 'panelsReady', 'tbt'];
+export const LOAD_METRICS = ['fcp', 'lcp', 'mapReady', 'mapDemand', 'mapAfterDemand', 'worldReady', 'panelsReady', 'tbt'];
 export const COLD_ONLY_METRICS = ['jsBytes', 'cssBytes', 'heapMB'];
 export const INTERACTIONS = ['country', 'layer', 'panel', 'search'];
 export const METRIC_NAMES = [
@@ -177,11 +177,17 @@ function waitMapReady() {
 
 // panelsReady: the first `count` data panels in layout order, wherever the
 // fold is. A panel is settled when it shows no loading indicator; rendered data
-// and an error state both count. Waits until all `count` panels exist.
+// and an error state both count. If the mode doesn't mount panels, this is N/A.
 function waitPanelsReady({ excluded, count }) {
   return new Promise((resolve) => {
     let stable = 0;
     const tick = () => {
+      const grid = document.querySelector('#panelsGrid');
+      if (!grid) {
+        if (document.querySelector('.wfs-root')) { resolve(null); return; }
+        requestAnimationFrame(tick);
+        return;
+      }
       const panels = [...document.querySelectorAll('#panelsGrid .panel')]
         .filter((p) => p.getClientRects().length > 0 && !excluded.includes(p.dataset.panel))
         .slice(0, count);
@@ -202,6 +208,22 @@ function waitPanelsReady({ excluded, count }) {
   });
 }
 
+function waitWorldReady() {
+  return new Promise((resolve) => {
+    const tick = () => {
+      if (!document.querySelector('.wfs-root')) {
+        if (document.querySelector('#panelsGrid')) { resolve(null); return; }
+        requestAnimationFrame(tick);
+        return;
+      }
+      const mark = window.__wmLcpDebug.marks.find((m) => m.name === 'wm:world:first-draw');
+      if (mark) resolve(mark.startTime);
+      else requestAnimationFrame(tick);
+    };
+    tick();
+  });
+}
+
 function withTimeout(promise, ms, message) {
   let timer;
   const timeout = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(message)), ms); });
@@ -211,14 +233,15 @@ function withTimeout(promise, ms, message) {
 async function openDashboard(page, cdp) {
   await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'domcontentloaded', timeout: LOAD_TIMEOUT_MS });
   // Both waits start together so neither one's timestamp depends on the other.
-  const [mapRes, panelsRes] = await Promise.all([
+  const [mapRes, panelsRes, worldReady] = await Promise.all([
     withTimeout(page.evaluate(waitMapReady), LOAD_TIMEOUT_MS, 'map never became ready'),
     withTimeout(page.evaluate(waitPanelsReady, { excluded: Object.keys(EXCLUDED_PANELS), count: PANELS_READY_COUNT }),
       LOAD_TIMEOUT_MS, 'first data panels never finished loading'),
+    withTimeout(page.evaluate(waitWorldReady), LOAD_TIMEOUT_MS, 'world first draw mark never arrived'),
   ]);
   const mapReady = mapRes.t;
   const mapDemand = mapRes.demandAt;
-  const panelsReady = panelsRes.t;
+  const panelsReady = panelsRes?.t ?? null;
   const data = await page.evaluate(() => {
     const p = window.__wmPerf;
     const fcp = p.paint.find((e) => e.name === 'first-contentful-paint')?.startTime ?? null;
@@ -229,17 +252,17 @@ async function openDashboard(page, cdp) {
   });
   const heap = (await cdp.send('Performance.getMetrics')).metrics.find((m) => m.name === 'JSHeapUsedSize')?.value ?? null;
   // Long tasks from first paint until both the map and the first panels are ready.
-  const windowEnd = Math.max(mapReady, panelsReady);
+  const windowEnd = Math.max(mapReady, panelsReady ?? mapReady);
   const tbt = data.fcp == null ? null : data.longtasks
     .filter((t) => t.startTime >= data.fcp && t.startTime <= windowEnd)
     .reduce((s, t) => s + Math.max(0, t.duration - 50), 0);
   return {
-    fcp: data.fcp, lcp: data.lcp, mapReady, mapDemand,
+    fcp: data.fcp, lcp: data.lcp, mapReady, mapDemand, worldReady,
     mapAfterDemand: mapDemand == null ? null : mapReady - mapDemand,
     panelsReady, tbt,
     jsBytes: data.jsBytes, cssBytes: data.cssBytes,
     heapMB: heap == null ? null : heap / (1024 * 1024),
-    panels: panelsRes.panels, erroredPanels: panelsRes.errored,
+    panels: panelsRes?.panels ?? [], erroredPanels: panelsRes?.errored ?? [],
   };
 }
 
@@ -289,6 +312,12 @@ export function layerDrawn(args, w = window) {
     && typeof w.__wmLastDrawAt === 'number' && w.__wmLastDrawAt > committed.at;
 }
 
+export function countryResultVisible(args, w = window) {
+  if (args.worldMode) return w.document.querySelector('.wfs-country-drawer[data-state="open"]') != null;
+  const vis = (el) => !!el && el.getClientRects().length > 0 && w.getComputedStyle(el).visibility !== 'hidden';
+  return vis(w.document.querySelector('.country-brief-overlay')) || vis(w.document.querySelector('#country-deep-dive-panel'));
+}
+
 // Per-interaction: how to trigger it (`act`) and how the page recognises the
 // result (`done`, evaluated in the page once per frame). `armMode` decides
 // which input stamps t0: the first armed input, or the last one.
@@ -297,11 +326,17 @@ const LAYER = 'cables';
 const LAYER_DECK_ID = 'cables-layer';
 const INTERACTION_DEFS = {
   country: {
-    async act(page) { await page.locator('.cii-country').first().click({ timeout: RESULT_TIMEOUT_MS }); },
-    done: () => {
-      const vis = (el) => !!el && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
-      return vis(document.querySelector('.country-brief-overlay')) || vis(document.querySelector('#country-deep-dive-panel'));
+    async act(page, args) {
+      if (args.worldMode) {
+        const canvas = page.locator('#mapContainer canvas.maplibregl-canvas, #mapContainer canvas').first();
+        const box = await canvas.boundingBox();
+        if (!box) throw new Error('world map canvas is not visible');
+        await page.mouse.click(box.x + box.width * 0.57, box.y + box.height * 0.47);
+      } else {
+        await page.locator('.cii-country').first().click({ timeout: RESULT_TIMEOUT_MS });
+      }
     },
+    done: countryResultVisible,
   },
   layer: {
     // `cables` is static data with no zoom gate, so it draws at the default view.
@@ -404,12 +439,16 @@ async function measureInteraction(browser, cpu, env, name) {
     await openDashboard(page, cdp);
     await page.waitForTimeout(SETTLE_MS);
     const def = INTERACTION_DEFS[name];
+    if (name === 'panel' && !(await page.locator('#panelsGrid').count())) {
+      return { inputToPaint: null, resultVisible: null, failure: null };
+    }
     if (def.prepare) await def.prepare(page);
+    const worldMode = await page.locator('.wfs-root').count() > 0;
     await page.evaluate((mode) => {
       window.__wmFirst = null; window.__wmT0 = null; window.__wmArm = true; window.__wmArmMode = mode;
       window.__wmPerf.event.length = 0;
     }, def.armMode ?? 'first');
-    const args = { layer: LAYER, deckLayerId: LAYER_DECK_ID, debounceMs: SEARCH_DEBOUNCE_MS };
+    const args = { layer: LAYER, deckLayerId: LAYER_DECK_ID, debounceMs: SEARCH_DEBOUNCE_MS, worldMode };
     // Start the result poller before the input so the input time and the
     // result time come from one clock.
     const resultP = page.evaluate(({ src, limit, args: a }) => new Promise((resolve) => {
@@ -480,7 +519,8 @@ export async function collectRuns({ runs, warmup, measureRun, log = console.log 
 
 /** The saved report: per-metric summaries plus the raw samples they came from. */
 export function buildReport({ label, createdAt, config, samples, failures }) {
-  const metrics = Object.fromEntries(Object.entries(samples).map(([k, v]) => [k, summarize(v)]));
+  const optional = (name) => /\.(worldReady|panelsReady)$/.test(name) || name.startsWith('panel.');
+  const metrics = Object.fromEntries(Object.entries(samples).map(([k, v]) => [k, optional(k) ? summarizeOptional(v) : summarize(v)]));
   return { label, createdAt, config, metrics, samples, failures };
 }
 

@@ -10,6 +10,14 @@ export function summarize(samples) {
   return { median, min: ok[0], max: ok[ok.length - 1], spread: spreadOfSorted(ok), ...base };
 }
 
+// Optional metrics are null when the active mode has no such UI. Keep the
+// sample count for context, but don't count those samples as failures.
+export function summarizeOptional(samples) {
+  const present = samples.filter((v) => v != null);
+  const result = summarize(present);
+  return { ...result, runs: samples.length, failed: present.length - (present.filter((v) => typeof v === 'number' && Number.isFinite(v)).length) };
+}
+
 // Spread used by the improvement rule: max - min without the single slowest
 // sample, so one spiky run cannot veto a real gain (owner decision, spec 8.9
 // option 1). With fewer than three successful samples there is nothing to
@@ -40,7 +48,10 @@ export function compareReports(a, b) {
     if (!(metric in b.metrics)) continue;
     const before = a.metrics[metric];
     const after = b.metrics[metric];
-    const changePct = before.median == null || after.median == null || before.median === 0
+    // A metric can be unavailable by design (for example, panel tooling in
+    // world mode). Do not present an empty comparison as a regression.
+    if (before.median == null || after.median == null) continue;
+    const changePct = before.median === 0
       ? null
       : Math.round(((after.median - before.median) / before.median) * 1000) / 10;
     // Older reports have no saved spread but do keep raw samples: judge with them.
