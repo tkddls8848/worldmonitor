@@ -1,0 +1,62 @@
+// Map colours for the world-overview first screen, from the approved Antigravity design
+// (.personal/argus-style-mockups/FINAL-SPEC-OPTION-A.md §2.3-2.5). CSS tokens for the
+// chrome live in src/styles/world-first-screen.css.
+import type { FillLevel, RelationKind, ThemeName, WorldField } from '@/types/world-overview';
+
+type Rgba = [number, number, number, number];
+
+function hex(h: string, a = 255): Rgba {
+  const n = Number.parseInt(h.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255, a];
+}
+
+export const WORLD_FILL_COLORS: Record<ThemeName, Record<FillLevel | 'none', Rgba>> = {
+  light: { 0: hex('#F3F4EF'), 1: hex('#D5DFD8'), 2: hex('#EBD296'), 3: hex('#DF884B'), 4: hex('#B8293D'), none: hex('#E6EBE8') },
+  dark: { 0: hex('#232724'), 1: hex('#343C37'), 2: hex('#7A6030'), 3: hex('#B4592B'), 4: hex('#C93A4C'), none: hex('#1D211E') },
+};
+
+export const WORLD_OCEAN: Record<ThemeName, Rgba> = { light: hex('#DCE5E4'), dark: hex('#141615') };
+export const WORLD_LAND_STROKE: Record<ThemeName, Rgba> = { light: hex('#B4C0BC'), dark: hex('#141615') };
+export const WORLD_LAND_STROKE_WIDTH = { base: 0.7, hover: 1.45, selected: 2.2 } as const;
+export const WORLD_DIM_OPACITY = 0.36;
+
+/** economic is not in the design; ruling: neutral slate, thin solid, no end mark. */
+export const WORLD_RELATION_COLORS: Record<ThemeName, Record<RelationKind, Rgba>> = {
+  light: { support: hex('#0F766E'), sanction: hex('#B45309'), alliance: hex('#1D4ED8'), tension: hex('#BE123C'), economic: hex('#475569') },
+  dark: { support: hex('#2DD4BF'), sanction: hex('#F59E0B'), alliance: hex('#60A5FA'), tension: hex('#FB7185'), economic: hex('#94A3B8') },
+};
+
+export const WORLD_ARC_CASING: Record<ThemeName, Rgba> = {
+  light: [248, 249, 246, Math.round(0.82 * 255)],
+  dark: [20, 22, 21, Math.round(0.72 * 255)],
+};
+
+/** Dash arrays in px: [dash, gap]; null = solid. */
+export const WORLD_RELATION_DASH: Record<RelationKind, [number, number] | null> = {
+  support: null, sanction: [6.5, 4.2], alliance: null, tension: [2.2, 4.2], economic: null,
+};
+
+export const WORLD_RELATION_END: Record<RelationKind, 'arrow' | 'bar' | 'dots' | 'double-arrow' | 'none'> = {
+  support: 'arrow', sanction: 'bar', alliance: 'dots', tension: 'double-arrow', economic: 'none',
+};
+
+/** Width/opacity by trend: worsening / steady (incl. collecting, null) / easing. Alliance adds ALLIANCE_EXTRA_WIDTH. */
+export const WORLD_TREND_STROKE = {
+  worsening: { width: 2.25, opacity: 0.96 },
+  steady: { width: 1.65, opacity: 0.82 },
+  easing: { width: 1.45, opacity: 0.72 },
+} as const;
+export const ALLIANCE_EXTRA_WIDTH = 0.8;
+
+export const WORLD_FIELD_ACCENT: Record<WorldField, string> = {
+  military: '#BE123C', diplomacy: '#1D4ED8', geopolitics: '#6D28D9', politics: '#B45309', finance: '#0F766E',
+};
+
+/** Bloc outline colours for the diplomacy field (NATO, CSTO, SCO, ...), cycled by colorIndex. */
+export const WORLD_BLOC_COLORS: Record<ThemeName, Rgba[]> = {
+  light: [hex('#1D4ED8'), hex('#6D28D9'), hex('#0F766E'), hex('#B45309'), hex('#BE185D')],
+  dark: [hex('#60A5FA'), hex('#A78BFA'), hex('#2DD4BF'), hex('#FBBF24'), hex('#F472B6')],
+};
+export const WORLD_UNREST_OUTLINE: Record<ThemeName, Rgba> = { light: hex('#B45309'), dark: hex('#FBBF24') };
+
+export const WORLD_TAG_MAX_DEFAULT = 6;
