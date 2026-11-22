@@ -1,0 +1,59 @@
+import type { TickerItem } from '@/types/world-overview';
+
+type Instrument = { id: string; label: string; digits: number; unit?: string; aliases: string[]; source: 'marketQuotes' | 'commodityQuotes' | 'cryptoQuotes' | 'macroSignals' };
+const instruments: Instrument[] = [
+  { id: '^TNX', label: '미 10년물 금리', digits: 2, unit: '%', aliases: ['^TNX', 'US10Y', 'DGS10', 'treasury10y', 'us10y'], source: 'macroSignals' },
+  { id: '^GSPC', label: 'S&P 500', digits: 0, aliases: ['^GSPC', 'SPX', 'SP500'], source: 'marketQuotes' },
+  { id: '^IXIC', label: '나스닥', digits: 0, aliases: ['^IXIC', 'IXIC', 'NASDAQ'], source: 'marketQuotes' },
+  { id: '^KS11', label: 'KOSPI', digits: 2, aliases: ['^KS11', 'KS11', 'KOSPI'], source: 'marketQuotes' },
+  { id: 'CL=F', label: 'WTI', digits: 2, unit: '$', aliases: ['CL=F', 'WTI'], source: 'commodityQuotes' },
+  { id: 'GC=F', label: '금', digits: 2, unit: '$', aliases: ['GC=F', 'GOLD'], source: 'commodityQuotes' },
+  { id: 'KRW=X', label: '원/달러', digits: 2, aliases: ['KRW=X', 'USD/KRW', 'USDKRW'], source: 'marketQuotes' },
+  { id: 'BTC-USD', label: '비트코인', digits: 0, unit: '$', aliases: ['BTC-USD', 'BTC'], source: 'cryptoQuotes' },
+];
+type SourceKey = Instrument['source'];
+function asRecords(value: unknown): Record<string, unknown>[] {
+  if (Array.isArray(value)) return value.filter((item): item is Record<string, unknown> => !!item && typeof item === 'object');
+  if (!value || typeof value !== 'object') return [];
+  const record = value as Record<string, unknown>;
+  for (const key of ['quotes', 'data', 'signals', 'indicators', 'items']) if (Array.isArray(record[key])) return asRecords(record[key]);
+  return [record];
+}
+function findQuote(src: Record<SourceKey, unknown>, instrument: Instrument): Record<string, unknown> | undefined {
+  const records = asRecords(src[instrument.source]);
+  const aliases = new Set(instrument.aliases.map((x) => x.toUpperCase()));
+  return records.find((row) => [row.symbol, row.id, row.key, row.name, row.indicator].some((v) => typeof v === 'string' && aliases.has(v.toUpperCase())))
+    ?? records.find((row) => instrument.aliases.some((alias) => Object.prototype.hasOwnProperty.call(row, alias)));
+}
+function numberFrom(row: Record<string, unknown> | undefined, keys: string[]): number | null {
+  if (!row) return null;
+  for (const key of keys) {
+    const raw = row[key];
+    if (typeof raw === 'number' && Number.isFinite(raw)) return raw;
+    if (typeof raw === 'string' && raw.trim() && Number.isFinite(Number(raw))) return Number(raw);
+  }
+  for (const value of Object.values(row)) {
+    if (value && typeof value === 'object') {
+      const nested = value as Record<string, unknown>;
+      for (const key of keys) {
+        const raw = nested[key];
+        if (typeof raw === 'number' && Number.isFinite(raw)) return raw;
+        if (typeof raw === 'string' && raw.trim() && Number.isFinite(Number(raw))) return Number(raw);
+      }
+    }
+  }
+  return null;
+}
+export function buildTickerItems(src: { marketQuotes?: unknown; commodityQuotes?: unknown; cryptoQuotes?: unknown; macroSignals?: unknown }): TickerItem[] {
+  const all = src as Record<SourceKey, unknown>;
+  return instruments.map((instrument) => {
+    // A few feeds expose the Treasury yield as a market quote rather than a macro signal.
+    const row = findQuote(all, instrument) ?? (instrument.id === '^TNX' ? findQuote({ ...all, macroSignals: src.marketQuotes }, instrument) : undefined);
+    const sourceSymbol = row && [row.symbol, row.id, row.key].find((value): value is string => typeof value === 'string');
+    return {
+      id: sourceSymbol ?? instrument.id, label: instrument.label, value: numberFrom(row, ['price', 'value', 'yield', 'last', 'close', ...instrument.aliases]),
+      changePct: numberFrom(row, ['changePct', 'changePercent', 'change', 'change_percent']), digits: instrument.digits,
+      ...(instrument.unit ? { unit: instrument.unit } : {}),
+    };
+  });
+}
