@@ -36,13 +36,15 @@ export function computeOpsMetrics(
     aiRelations: snapshot.relations.filter((relation) => relation.origin === 'ai').length,
     breaking24h: breakingAlertTimes.filter((at) => at >= nowMs - DAY_MS && at <= nowMs).length,
   };
-  const threatScore = Math.min(100,
-    18 * counters.wars
-      + 6 * counters.highConflicts
-      + 1.5 * counters.worsening
-      + 0.5 * counters.breaking24h
-      + 0.1 * counters.sanctionPairs,
+  // Calibrated so the late-2026 baseline (4 wars, ~17 high-intensity conflicts) reads 고위험 (2), not saturated.
+  const raw = Math.min(100,
+    8 * counters.wars
+      + 2 * counters.highConflicts
+      + 1 * counters.worsening
+      + 0.2 * counters.breaking24h
+      + 0.02 * counters.sanctionPairs,
   );
+  const threatScore = Math.round(raw * 10) / 10;
   return { threatLevel: levelForScore(threatScore), threatScore, counters };
 }
 

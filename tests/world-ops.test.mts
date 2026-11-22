@@ -60,13 +60,13 @@ test('computes counters from the complete snapshot and applies threat score thre
   assert.deepEqual(metrics.counters, {
     wars: 1, highConflicts: 1, worsening: 2, sanctionPairs: 2, aiRelations: 1, breaking24h: 2,
   });
-  assert.equal(metrics.threatScore, 28.2);
-  assert.equal(metrics.threatLevel, 4);
+  assert.equal(metrics.threatScore, 12.4);
+  assert.equal(metrics.threatLevel, 5);
   assert.deepEqual(Object.keys(THREAT_LEVEL_LABEL_KO).map(Number), [1, 2, 3, 4, 5]);
 });
 
 test('caps threat score and maps all score bands to threat levels', () => {
-  const levels: Array<[number, ThreatLevel]> = [[0, 5], [1, 5], [2, 4], [3, 3], [4, 2], [5, 1]];
+  const levels: Array<[number, ThreatLevel]> = [[0, 5], [2, 5], [3, 4], [5, 3], [8, 2], [10, 1]];
   for (const [wars, level] of levels) {
     const result = computeOpsMetrics(snapshot({
       countries: Object.fromEntries(Array.from({ length: wars }, (_, i) => [`C${i}`, {
@@ -76,7 +76,7 @@ test('caps threat score and maps all score bands to threat levels', () => {
     assert.equal(result.threatLevel, level);
   }
   const capped = computeOpsMetrics(snapshot({
-    countries: Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`W${i}`, {
+    countries: Object.fromEntries(Array.from({ length: 13 }, (_, i) => [`W${i}`, {
       level: 'war', deaths: null, cii: null, demonstrations: null, unrest: false, blocs: [], inNews: false, issue: null,
     }])) as WorldOverviewSnapshot['countries'],
   }), [], nowMs);
