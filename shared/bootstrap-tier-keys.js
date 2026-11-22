@@ -9,6 +9,7 @@
 
 export const BOOTSTRAP_CACHE_KEYS = Object.freeze({
   worldOverview: 'world-overview:snapshot:v1',
+  fundingStress: 'markets:funding-stress:v1',
   ukmtoIncidents: 'maritime:ukmto-incidents:v1',
   earthquakes: 'seismology:earthquakes:v1',
   outages: 'infra:outages:v1',
@@ -183,6 +184,7 @@ const FAST_KEY_NAMES = new Set([
 const ON_DEMAND_KEY_NAMES = new Set([
   // World overview first screen snapshot, fetched by that screen alone
   'worldOverview',
+  'fundingStress',
   'gridDisruptionClock',
   'ukmtoIncidents',
   'cyberThreats',

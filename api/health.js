@@ -289,6 +289,7 @@ function fenceHealthMutations(commands, token) {
 const IRAN_EVENTS_ENABLED = (process.env.IRAN_EVENTS_ENABLED ?? 'false').toLowerCase() === 'true';
 
 const BOOTSTRAP_KEYS = {
+  fundingStress:       BOOTSTRAP_CACHE_KEYS.fundingStress,
   earthquakes:       'seismology:earthquakes:v1',
   outages:           'infra:outages:v1',
   sectors:           'market:sectors:v2',
@@ -852,6 +853,7 @@ const STANDALONE_KEYS = {
 const FIVE_FACTOR_SCORECARD_READ_MODEL_KEY = 'scorecard:five-factor:v1:read-model';
 
 const SEED_META = {
+  fundingStress: { key: 'seed-meta:markets:funding-stress', maxStaleMin: 2880 },
   worldOverview: { key: 'seed-meta:world-overview:snapshot', maxStaleMin: 360,
     activationKey: 'seed-activated:world-overview:snapshot',
     cutover: { mode: 'activation-marker', fromKey: null, issue: 9, activationKey: 'seed-activated:world-overview:snapshot' } },
@@ -2742,6 +2744,7 @@ const GOVERNMENT_RELEASE_INCIDENT_GRACE_MIN = 30 * 24 * 60;
 // "Loading...". Removed marketImplications below.
 const ON_DEMAND_KEYS = new Set([
   'worldOverview',
+  'fundingStress',
   'worldRelationsAi',
   'gridDisruptionClock',
   'foodPricesPihps', 'foodPricesPbs', 'foodPricesDa', 'foodPricesCbsl',

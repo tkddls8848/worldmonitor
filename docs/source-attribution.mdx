@@ -12,7 +12,7 @@ The inventory is **generated, not hand-written**: `scripts/source-attribution.mj
 ## Observed Source Inventory
 
 {/* BEGIN GENERATED SOURCE ATTRIBUTION */}
-This generated inventory covers **881 active source hosts** representing **859 active providers** (**394 structured/API**, **470 feed**, and **30 operational-status** hosts). It is derived from source declarations in `scripts/`, `server/`, `api/`, and `src/`. Each row shows the configured provider identity and where the source is referenced. Syndication transports such as FeedBurner and Google News remain listed as hosts and are not counted as publishers.
+This generated inventory covers **883 active source hosts** representing **861 active providers** (**396 structured/API**, **470 feed**, and **30 operational-status** hosts). It is derived from source declarations in `scripts/`, `server/`, `api/`, and `src/`. Each row shows the configured provider identity and where the source is referenced. Syndication transports such as FeedBurner and Google News remain listed as hosts and are not counted as publishers.
 
 | Provider | Observed surface |
 | --- | --- |
@@ -467,6 +467,7 @@ This generated inventory covers **881 active source hosts** representing **859 a
 | Manitoba 511 (www.manitoba511.ca) | structured — scripts/lib/provincial-511.mjs |
 | maps.worldmonitor.app (maps.worldmonitor.app) | structured — src/services/country-geometry.ts |
 | mapservices.weather.noaa.gov (mapservices.weather.noaa.gov) | structured — scripts/seed-natural-events.mjs |
+| markets.newyorkfed.org (markets.newyorkfed.org) | structured — scripts/_funding-stress.mjs |
 | marketwatch.com (marketwatch.com) | feed — shared/news-catalog.json |
 | massoutage.com (massoutage.com) | structured — scripts/lib/grid-clock-sources.mjs |
 | masterpl.hls.nhkworld.jp (masterpl.hls.nhkworld.jp) | feed — src/config/live-video-sources.ts |
@@ -918,6 +919,7 @@ This generated inventory covers **881 active source hosts** representing **859 a
 | www.factal.com (www.factal.com) | structured — scripts/comparison-shortlist.mjs |
 | www.fao.org (www.fao.org) | feed+structured — scripts/lib/food-prices-fetch.mjs, scripts/lib/food-prices.mjs, scripts/seed-fao-food-price-index.mjs, shared/news-catalog.json |
 | www.federalreserve.gov (www.federalreserve.gov) | feed+structured — scripts/seed-economic-calendar.mjs, scripts/seed-regulatory-actions.mjs, shared/news-catalog.json |
+| www.financialresearch.gov (www.financialresearch.gov) | structured — scripts/_funding-stress.mjs |
 | www.flightglobal.com (www.flightglobal.com) | structured — scripts/seed-aviation.mjs, server/worldmonitor/aviation/v1/list-aviation-news.ts |
 | www.foreignaffairs.com (www.foreignaffairs.com) | feed — shared/news-catalog.json |
 | www.fpri.org (www.fpri.org) | Excluded / candidate — No current fetch observed |
