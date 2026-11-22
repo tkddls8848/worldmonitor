@@ -242,6 +242,12 @@ export const PROVIDER_IDENTITY_GROUPS = Object.freeze({
 });
 
 const PROVIDER_OVERRIDES = {
+  'transparency.entsog.eu': {
+    provider: 'ENTSOG Transparency Platform',
+    license: 'ENTSOG platform terms for public transparency data; verify before redistribution',
+    attribution: 'Credit ENTSOG and link to the Transparency Platform API.',
+    status: 'terms-review',
+  },
   'data.opensanctions.org': {
     provider: 'OpenSanctions',
     license: 'CC BY-NC 4.0; non-commercial personal use only',
@@ -1205,7 +1211,9 @@ const PROVIDER_OVERRIDES = {
 // a provider-bearing override a separate, explicit lifecycle event instead of
 // something `--write` can silently normalize into the manifest.
 export const PROVIDER_IDENTITY_REVIEW = Object.freeze({
-  sha256: 'a44d075b7984bb1e4c55aa7c28f253bd18ec7e6468f5fbab761a7c3decb1ea51',
+  sha256: '6794e965080a86ba75873f6a1231f66badadd1d569a9d7b54040ae562ece093d',
+  // 2026-11-22: name ENTSOG as the publisher of the public EU gas flow data;
+  // the platform terms remain under review.
   // 2026-11-22: add the OpenSanctions, UN Security Council and UK FCDO
   // sanctions-list providers used by the fixed world-relations collector.
   // 2026-11-17: exclude redis-rest, the docker-network Redis REST proxy host
