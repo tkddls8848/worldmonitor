@@ -11,6 +11,7 @@ import {
 type CountryFeature = GeoJSON.Feature<Geometry, Record<string, unknown>>;
 type LinePath = { line: WorldLineView; path: [number, number][] };
 type EndMark = { line: WorldLineView; position: [number, number]; end: string };
+const END_GLYPH: Record<string, string> = { arrow: '›', bar: '⊣', dots: '●', 'double-arrow': '↔', diamond: '◆' };
 const ISO_KEYS = ['ISO3166-1-Alpha-2', 'ISO_A2', 'iso_a2'] as const;
 const iso2 = (feature: CountryFeature): string => {
   for (const key of ISO_KEYS) {
@@ -53,7 +54,6 @@ function segmentedPath(line: WorldLineView): [number, number][][] {
   const steps = dash ? DASHED_CURVE_STEPS : CURVE_STEPS;
   for (let i = 0; i <= steps; i++) points.push(curveAt(line, control, i / steps));
   if (!dash) return [points];
-  const [on, off] = dash;
   // Pixel-pattern dashes are approximated by stable geographic segments along
   // the curve. At world zoom this keeps the distinction without a shader extension.
   let total = 0;
@@ -61,14 +61,22 @@ function segmentedPath(line: WorldLineView): [number, number][][] {
   if (!total) return [points];
   const periods = Math.max(2, Math.min(24, Math.ceil(total * 3)));
   const period = total / periods;
-  const dashLength = period * on / (on + off);
+  const patternLength = dash.reduce((sum, part) => sum + part, 0);
+  // Even pattern entries are "on" (drawn), odd entries are gaps.
+  const isOn = (walked: number): boolean => {
+    let at = ((walked % period) / period) * patternLength;
+    for (let index = 0; index < dash.length; index++) {
+      if (at <= dash[index]!) return index % 2 === 0;
+      at -= dash[index]!;
+    }
+    return false;
+  };
   const paths: [number, number][][] = [];
   let current: [number, number][] = [];
   let walked = 0;
   for (let i = 0; i < points.length; i++) {
     if (i > 0) walked += Math.hypot(points[i]![0] - points[i - 1]![0], points[i]![1] - points[i - 1]![1]);
-    const inDash = (walked % period) <= dashLength;
-    if (inDash) current.push(points[i]!);
+    if (isOn(walked)) current.push(points[i]!);
     else if (current.length) {
       if (current.length > 1) paths.push(current);
       current = [];
@@ -149,17 +157,22 @@ export function buildWorldOverviewLayers(
       },
       updateTriggers: { getColor: [theme], getWidth: [view] },
     }));
-    const endpoints = view.lines.flatMap((line) => {
+    const endpoints = view.lines.flatMap((line): EndMark[] => {
       const end = WORLD_RELATION_END[line.kind];
-      if (end === 'none') return [];
-      return [{ line, position: line.toCoord, end }];
+      // Alliance and economic marks sit on both ends (●—●, ◆—◆); the others mark the target.
+      const both = end === 'dots' || end === 'diamond';
+      return both
+        ? [{ line, position: line.fromCoord, end }, { line, position: line.toCoord, end }]
+        : [{ line, position: line.toCoord, end }];
     });
     if (endpoints.length) layers.push(new TextLayer<EndMark>({
       id: 'world-overview-line-ends', data: endpoints,
       getPosition: (item) => item.position,
-      getText: (item) => item.end === 'arrow' ? '›' : item.end === 'bar' ? '⊣' : item.end === 'dots' ? '••' : '↔',
-      getColor: (item) => WORLD_RELATION_COLORS[theme][item.line.kind], getSize: 15,
+      getText: (item) => END_GLYPH[item.end] ?? '',
+      getColor: (item) => WORLD_RELATION_COLORS[theme][item.line.kind],
+      getSize: (item) => (item.end === 'dots' || item.end === 'diamond' ? 9 : 15),
       sizeUnits: 'pixels', getTextAnchor: 'middle', getAlignmentBaseline: 'center',
+      characterSet: 'auto',
       pickable: false,
     }));
     const eligibleTags = view.lines.filter((line) => line.showTag && (line.worsening || line.easing));
@@ -171,7 +184,7 @@ export function buildWorldOverviewLayers(
       getColor: (line) => WORLD_RELATION_COLORS[theme][line.kind], getSize: 11,
       sizeUnits: 'pixels', getTextAnchor: 'middle', getAlignmentBaseline: 'center',
       background: true, getBackgroundColor: theme === 'light' ? [255, 255, 255, 220] : [20, 22, 21, 220],
-      backgroundPadding: [3, 2], pickable: false,
+      backgroundPadding: [3, 2], characterSet: 'auto', pickable: false,
     }));
   }
   return layers;

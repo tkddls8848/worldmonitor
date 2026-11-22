@@ -44,7 +44,8 @@ export const USAGE = `Usage:
   npm run perf:personal -- --label <name> [--runs 5] [--cpu 1|4] [--warmup 1]
   npm run perf:personal -- --compare <labelA> <labelB>
 
-Measures the running personal server (WM_PERF_URL, default http://127.0.0.1:3000)
+Measures the running personal server (WM_PERF_URL, default http://127.0.0.1:3000;
+WM_PERF_FIRST_SCREEN=full|world pins the dashboard first screen)
 and writes .personal/perf/<label>.json.
 
   --label <name>   report name, ^[a-z0-9-]+$
@@ -182,6 +183,8 @@ function waitPanelsReady({ excluded, count }) {
   return new Promise((resolve) => {
     let stable = 0;
     const tick = () => {
+      // World first screen: the full view (and its hidden, empty grid) is not built.
+      if (document.documentElement.classList.contains('wm-world-mode')) { resolve(null); return; }
       const grid = document.querySelector('#panelsGrid');
       if (!grid) {
         if (document.querySelector('.wfs-root')) { resolve(null); return; }
@@ -272,6 +275,14 @@ async function newSession(browser, cpu, env) {
     httpCredentials: { username: env.WM_PERSONAL_USERNAME || 'owner', password: env.WM_PERSONAL_PASSWORD || '' },
   });
   await context.addInitScript(initScript, EVENT_THRESHOLD_MS);
+  // WM_PERF_FIRST_SCREEN=full|world pins the /dashboard first screen (the
+  // app's saved choice) so the old full view can be measured as a baseline.
+  const firstScreen = env.WM_PERF_FIRST_SCREEN;
+  if (firstScreen === 'full' || firstScreen === 'world') {
+    await context.addInitScript((mode) => {
+      try { localStorage.setItem('worldmonitor-first-screen-mode', JSON.stringify(mode)); } catch { /* private mode */ }
+    }, firstScreen);
+  }
   const page = await context.newPage();
   // Kept for failure diagnosis: why the page navigated and what it logged.
   const diag = { navigations: [], consoleErrors: [] };
@@ -439,7 +450,7 @@ async function measureInteraction(browser, cpu, env, name) {
     await openDashboard(page, cdp);
     await page.waitForTimeout(SETTLE_MS);
     const def = INTERACTION_DEFS[name];
-    if (name === 'panel' && !(await page.locator('#panelsGrid').count())) {
+    if (name === 'panel' && await page.evaluate(() => document.documentElement.classList.contains('wm-world-mode'))) {
       return { inputToPaint: null, resultVisible: null, failure: null };
     }
     if (def.prepare) await def.prepare(page);

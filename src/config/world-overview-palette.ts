@@ -20,10 +20,10 @@ export const WORLD_LAND_STROKE: Record<ThemeName, Rgba> = { light: hex('#B4C0BC'
 export const WORLD_LAND_STROKE_WIDTH = { base: 0.7, hover: 1.45, selected: 2.2 } as const;
 export const WORLD_DIM_OPACITY = 0.36;
 
-/** economic is not in the design; ruling: neutral slate, thin solid, no end mark. */
+/** economic: violet dash-dot with diamond ends (FINAL-SPEC-OPTION-A appendix 2). */
 export const WORLD_RELATION_COLORS: Record<ThemeName, Record<RelationKind, Rgba>> = {
-  light: { support: hex('#0F766E'), sanction: hex('#B45309'), alliance: hex('#1D4ED8'), tension: hex('#BE123C'), economic: hex('#475569') },
-  dark: { support: hex('#2DD4BF'), sanction: hex('#F59E0B'), alliance: hex('#60A5FA'), tension: hex('#FB7185'), economic: hex('#94A3B8') },
+  light: { support: hex('#0F766E'), sanction: hex('#B45309'), alliance: hex('#1D4ED8'), tension: hex('#BE123C'), economic: hex('#6D28D9') },
+  dark: { support: hex('#2DD4BF'), sanction: hex('#F59E0B'), alliance: hex('#60A5FA'), tension: hex('#FB7185'), economic: hex('#A78BFA') },
 };
 
 export const WORLD_ARC_CASING: Record<ThemeName, Rgba> = {
@@ -31,13 +31,13 @@ export const WORLD_ARC_CASING: Record<ThemeName, Rgba> = {
   dark: [20, 22, 21, Math.round(0.72 * 255)],
 };
 
-/** Dash arrays in px: [dash, gap]; null = solid. */
-export const WORLD_RELATION_DASH: Record<RelationKind, [number, number] | null> = {
-  support: null, sanction: [6.5, 4.2], alliance: null, tension: [2.2, 4.2], economic: null,
+/** Dash arrays (on, off, on, off, ...) in px; null = solid. */
+export const WORLD_RELATION_DASH: Record<RelationKind, readonly number[] | null> = {
+  support: null, sanction: [6.5, 4.2], alliance: null, tension: [2.2, 4.2], economic: [9, 3.2, 2, 3.2],
 };
 
-export const WORLD_RELATION_END: Record<RelationKind, 'arrow' | 'bar' | 'dots' | 'double-arrow' | 'none'> = {
-  support: 'arrow', sanction: 'bar', alliance: 'dots', tension: 'double-arrow', economic: 'none',
+export const WORLD_RELATION_END: Record<RelationKind, 'arrow' | 'bar' | 'dots' | 'double-arrow' | 'diamond'> = {
+  support: 'arrow', sanction: 'bar', alliance: 'dots', tension: 'double-arrow', economic: 'diamond',
 };
 
 /** Width/opacity by trend: worsening / steady (incl. collecting, null) / easing. Alliance adds ALLIANCE_EXTRA_WIDTH. */

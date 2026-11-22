@@ -26,7 +26,7 @@
 2. Field behaviour follows spec §5.1 table, not the mockup's "max of active field scores": military → conflict fill; politics → unrest outline (`country.unrest`); diplomacy → bloc outlines + alliance lines; geopolitics → tension lines; finance → sanction + economic lines. When military is off, `level` is `null` and land is drawn with level-0 colour. Default fields = `DEFAULT_FIELDS` (military, geopolitics).
 3. Lines on the map are `selectVisibleLines(snapshot, fields)` (budget 30), minus endpoints that fail `isDrawableEndpoint`. The drawer lists every non-hidden relation of the country, unbudgeted.
 4. Trend: `rising`/`surging` = worsening (▲ 악화), `easing` = easing (▼ 완화), others steady. Default tags: at most 6 lines, greedy by `score` desc among worsening/easing lines, skipping a line if either endpoint already has a tag. With a selected country: tag every worsening/easing line touching it.
-5. `economic` kind (not in the mockup): palette colour from `WORLD_RELATION_COLORS`, solid, steady width, no end mark.
+5. `economic` kind: violet dash-dot (`9 3.2 2 3.2`) with diamond marks on both ends, per the design appendix (FINAL-SPEC-OPTION-A 부록 2).
 6. No dash flow animation (perf); dashes are static.
 7. Mode preference key `worldmonitor-first-screen-mode` (`'world' | 'full'`, default `'world'`); field preference key `worldmonitor-world-fields` (JSON array, validated against `WORLD_FIELDS`, default `DEFAULT_FIELDS`). Date selection is not persisted (always opens on today).
 8. Perf mark `wm:world:first-draw`: emitted once, after the first deck draw that contains the world fill layer with data.

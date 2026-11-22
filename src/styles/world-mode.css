@@ -33,20 +33,81 @@ html.wm-world-mode .breaking-news-banner {
   height: 100% !important;
 }
 
-.header-world-btn {
-  height: 26px;
-  padding: 0 10px;
-  border: 1px solid var(--border, #444);
+/* Full view → first screen ("← 요약 지도"), FINAL-SPEC-OPTION-A appendix 1. */
+.wm-return-overview-btn {
+  --wro-accent: #1d4ed8;
+  --wro-soft: #e8effc;
+  --wro-text: #1e40af;
+  --wro-on: #fff;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 11px;
+  border: 1px solid var(--wro-accent);
   border-radius: 2px;
-  background: transparent;
-  color: inherit;
+  background: var(--wro-soft);
+  color: var(--wro-text);
   font: inherit;
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
   cursor: pointer;
 }
 
-.header-world-btn:hover {
-  background: var(--surface-hover, rgba(255, 255, 255, 0.08));
+:root[data-theme='dark'] .wm-return-overview-btn {
+  --wro-accent: #60a5fa;
+  --wro-soft: rgba(96, 165, 250, 0.14);
+  --wro-text: #93c5fd;
+  --wro-on: #0e1110;
+}
+
+.wm-return-overview-btn:hover {
+  background: var(--wro-accent);
+  color: var(--wro-on);
+}
+
+.wm-return-overview-btn:active {
+  background: var(--wro-accent);
+  color: var(--wro-on);
+  filter: brightness(0.92);
+}
+
+.wm-return-overview-btn:focus-visible {
+  outline: 2px solid var(--wro-accent);
+  outline-offset: 2px;
+}
+
+.wm-return-overview-short {
+  display: none;
+}
+
+.header-left .header-divider {
+  flex: none;
+  width: 1px;
+  height: 20px;
+  margin: 0 10px;
+  background: var(--border, rgba(127, 127, 127, 0.35));
+}
+
+@media (max-width: 768px) {
+  .wm-return-overview-btn {
+    height: 24px;
+    padding: 0 7px;
+  }
+
+  .wm-return-overview-long {
+    display: none;
+  }
+
+  .wm-return-overview-short {
+    display: inline;
+  }
+
+  .header-left .header-divider {
+    margin: 0 6px;
+  }
 }
 
 /* The full view's map controls (layer list, legend, time slider, distance,

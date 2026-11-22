@@ -755,6 +755,11 @@ export class PanelLayoutManager implements AppModule {
       <a href="#main" class="skip-link">Skip to main content</a>
       <div class="header" role="banner">
         <div class="header-left">
+          <button type="button" class="wm-return-overview-btn" id="worldViewBtn" aria-label="오늘 세계 요약 지도로 돌아가기" title="오늘 세계 요약 지도로 돌아가기">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            <span class="wm-return-overview-long">요약 지도</span><span class="wm-return-overview-short">요약</span>
+          </button>
+          <span class="header-divider" aria-hidden="true"></span>
           <div class="variant-switcher variant-switcher-registry" hidden>${(() => {
         const local = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
         const inIframe = window.self !== window.top;
@@ -843,7 +848,6 @@ export class PanelLayoutManager implements AppModule {
             </div>
           </div>
           ${SITE_VARIANT === 'happy' ? `<button class="tv-mode-btn" id="tvModeBtn" title="TV Mode (Shift+T)" aria-label="TV Mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></button>` : ''}
-          <button type="button" class="header-world-btn" id="worldViewBtn" title="세계 정세 첫 화면">첫 화면</button>
           <span id="unifiedSettingsMount"></span>
         </div>
       </div>

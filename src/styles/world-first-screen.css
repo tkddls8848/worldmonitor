@@ -268,6 +268,22 @@
   background: #b8293d;
   color: white;
 }
+/* Dark atlas steps (FINAL-SPEC-OPTION-A §2.3). */
+:root[data-theme="dark"] .wfs-cii-step {
+  background: #232724;
+}
+:root[data-theme="dark"] .wfs-cii-step[data-level="1"] {
+  background: #343c37;
+}
+:root[data-theme="dark"] .wfs-cii-step[data-level="2"] {
+  background: #7a6030;
+}
+:root[data-theme="dark"] .wfs-cii-step[data-level="3"] {
+  background: #b4592b;
+}
+:root[data-theme="dark"] .wfs-cii-step[data-level="4"] {
+  background: #c93a4c;
+}
 .wfs-line-legend {
   display: flex;
   gap: 10px;
@@ -288,6 +304,40 @@
 }
 .wfs-line-key[data-kind="긴장"]:before {
   border-top-style: dotted;
+}
+/* Swatch colours match the map lines (src/config/world-overview-palette.ts). */
+.wfs-line-key[data-kind="지원"]:before {
+  border-top-color: #0f766e;
+}
+.wfs-line-key[data-kind="제재"]:before {
+  border-top-color: #b45309;
+}
+.wfs-line-key[data-kind="동맹"]:before {
+  border-top-color: #1d4ed8;
+  border-top-width: 3px;
+}
+.wfs-line-key[data-kind="긴장"]:before {
+  border-top-color: #be123c;
+}
+.wfs-line-key[data-kind="경제 의존"]:before {
+  height: 2px;
+  border-top: 0;
+  background: repeating-linear-gradient(90deg, #6d28d9 0 5px, transparent 5px 7px, #6d28d9 7px 8px, transparent 8px 10px);
+}
+:root[data-theme="dark"] .wfs-line-key[data-kind="지원"]:before {
+  border-top-color: #2dd4bf;
+}
+:root[data-theme="dark"] .wfs-line-key[data-kind="제재"]:before {
+  border-top-color: #f59e0b;
+}
+:root[data-theme="dark"] .wfs-line-key[data-kind="동맹"]:before {
+  border-top-color: #60a5fa;
+}
+:root[data-theme="dark"] .wfs-line-key[data-kind="긴장"]:before {
+  border-top-color: #fb7185;
+}
+:root[data-theme="dark"] .wfs-line-key[data-kind="경제 의존"]:before {
+  background: repeating-linear-gradient(90deg, #a78bfa 0 5px, transparent 5px 7px, #a78bfa 7px 8px, transparent 8px 10px);
 }
 .zoom-controls {
   position: absolute;
