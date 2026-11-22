@@ -29,6 +29,7 @@ export class WorldThreatBadge {
     if (!metrics) {
       this.element.removeAttribute('data-level');
       this.element.dataset.threat = '0';
+      this.element.style.setProperty('--ops-lit-width', '0px');
       this.level.textContent = '—';
       this.label.textContent = '';
       this.score.textContent = '';
@@ -37,12 +38,18 @@ export class WorldThreatBadge {
     }
     this.element.dataset.level = String(metrics.threatLevel);
     this.element.dataset.threat = String(metrics.threatLevel);
+    this.element.style.removeProperty('--ops-lit-width');
+    this.element.style.removeProperty('--ops-threat-color');
     this.level.textContent = String(metrics.threatLevel);
     this.label.textContent = THREAT_LEVEL_LABEL_KO[metrics.threatLevel];
     this.score.textContent = `점수 ${metrics.threatScore}`;
     this.status.textContent = '';
   }
-  setError(): void { this.setMetrics(null); this.status.textContent = '수신 오류'; }
+  setError(): void {
+    this.setMetrics(null);
+    this.element.style.setProperty('--ops-threat-color', 'var(--ops-threat-1)');
+    this.status.textContent = '수신 오류';
+  }
 }
 
 const COUNTER_FIELDS: ReadonlyArray<{ key: keyof OpsCounters; label: string }> = [

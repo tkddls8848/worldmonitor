@@ -1,6 +1,7 @@
 import type { AppContext } from '@/app/app-context';
 import { WorldMasthead, WorldDispatchBar, WorldKeyPlate, WorldZoomControls, WorldBottomShelf, WorldStatusBanner } from '@/components/world/WorldChrome';
 import { WorldCountryDrawer } from '@/components/world/WorldCountryDrawer';
+import { renderCoordAxes } from '@/components/world/WorldCoordAxes';
 import { preloadCountryGeometry } from '@/services/country-geometry';
 import { loadWorldOverview, setWorldMark } from '@/services/world-overview';
 import { buildCountryDrawerData, buildWorldMapView } from '@/services/world-overview-view';
@@ -116,6 +117,7 @@ export function mountWorldFirstScreen(
     onMark: markItem,
     onOpenFullPanels: (iso2) => hooks.openCountryBrief(iso2),
   });
+  const removeCoordAxes = renderCoordAxes(slots.stage);
 
   slots.masthead.append(masthead.element);
   slots.dispatch.append(dispatch.element);
@@ -250,6 +252,7 @@ export function mountWorldFirstScreen(
       if (tickerTimer !== null) clearInterval(tickerTimer);
       tickerTimer = null;
       clocks.destroy(); eventLog.destroy(); counters.element.remove(); threat.element.remove(); telemetry.remove();
+      removeCoordAxes();
       masthead.destroy(); dispatch.destroy(); shelf.destroy(); drawer.destroy();
       keyPlate.element.remove(); zoom.element.remove(); status.element.remove();
       slots.root.classList.remove('wfs-root');

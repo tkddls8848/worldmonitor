@@ -25,8 +25,10 @@ describe('mountWorldFirstScreen', () => {
     expect(slots.masthead.querySelector('[data-threat="0"]')).not.toBeNull();
     expect(slots.telemetry.querySelector('.wfs-ops-clocks')).not.toBeNull();
     expect(slots.telemetry.querySelectorAll('.wfs-ops-counter-btn')).toHaveLength(5);
+    expect(slots.stage.querySelector('.coord-axis-top')).not.toBeNull();
     expect(slots.stage.querySelector('.wfs-ops-event-log')?.getAttribute('data-collapsed')).toBe(String(window.innerWidth <= 1440));
     expect(slots.masthead.children.length).toBeGreaterThan(0); expect(slots.dispatch.children.length).toBeGreaterThan(0); expect(slots.shelf.children.length).toBeGreaterThan(0); expect(map.setWorldOverviewMode).toHaveBeenCalledWith(true); mounted.destroy();
+    expect(slots.stage.querySelector('.coord-axis-top')).toBeNull();
   });
   it('keeps the existing view on errors and shows an error banner', async () => {
     mocks.load.mockResolvedValueOnce({ snapshot, archivedDates: [] }).mockRejectedValueOnce(new Error('offline')); const { slots, map, ctx } = setup();
