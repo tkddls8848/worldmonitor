@@ -167,8 +167,20 @@ export function buildWorldOverviewLayers(
         const color = WORLD_HOTSPOT_COLORS[theme];
         return [color[0], color[1], color[2], Math.round(color[3] * alpha)];
       },
-      getLineWidth: 2, lineWidthUnits: 'pixels', pickable: false,
+      getLineWidth: 2, lineWidthUnits: 'pixels', pickable: true,
+      onClick: (info) => {
+        const hotspot = info.object as { iso2?: string } | undefined;
+        if (hotspot?.iso2) window.dispatchEvent(new CustomEvent('wm:world:country-click', { detail: { code: hotspot.iso2 } }));
+      },
       updateTriggers: { getLineColor: [theme, pulse] },
+    }));
+    layers.push(new TextLayer({
+      id: 'world-overview-hotspot-labels', data: view.hotspots,
+      getPosition: (hotspot: (typeof view.hotspots)[number]) => hotspot.coord,
+      getText: (hotspot: (typeof view.hotspots)[number]) => hotspot.iso2,
+      getColor: WORLD_TARGET_COLOR[theme], getSize: 8, sizeUnits: 'pixels',
+      getTextAnchor: 'start', getAlignmentBaseline: 'center', characterSet: 'auto',
+      getPixelOffset: [8, 0], pickable: false,
     }));
   }
 
@@ -180,6 +192,13 @@ export function buildWorldOverviewLayers(
         id: 'world-overview-target', data: targetBracketPaths(center),
         getPath: (path) => path, getColor: WORLD_TARGET_COLOR[theme], getWidth: 2,
         widthUnits: 'pixels', capRounded: false, jointRounded: false, pickable: false,
+      }));
+      layers.push(new TextLayer({
+        id: 'world-overview-target-label', data: [{ position: center, iso2: selected }],
+        getPosition: (item: { position: [number, number] }) => [item.position[0], item.position[1] - 2.1],
+        getText: (item: { iso2: string }) => `TARGET // ${item.iso2}`,
+        getColor: WORLD_TARGET_COLOR[theme], getSize: 9, sizeUnits: 'pixels',
+        getTextAnchor: 'middle', getAlignmentBaseline: 'top', characterSet: 'auto', pickable: false,
       }));
     }
   }

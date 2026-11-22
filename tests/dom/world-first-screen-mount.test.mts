@@ -22,6 +22,10 @@ describe('mountWorldFirstScreen', () => {
   it('mounts chrome and reports an empty snapshot', async () => {
     mocks.load.mockResolvedValue({ snapshot: null, archivedDates: [] }); const { slots, map, ctx } = setup();
     const mounted = mountWorldFirstScreen(ctx, slots, { openFullView() {}, openCountryBrief() {} }); await vi.waitFor(() => expect(slots.stage.querySelector('.wfs-status-banner')?.getAttribute('data-state')).toBe('empty'));
+    expect(slots.masthead.querySelector('[data-threat="0"]')).not.toBeNull();
+    expect(slots.telemetry.querySelector('.wfs-ops-clocks')).not.toBeNull();
+    expect(slots.telemetry.querySelectorAll('.wfs-ops-counter-btn')).toHaveLength(5);
+    expect(slots.stage.querySelector('.wfs-ops-event-log')?.getAttribute('data-collapsed')).toBe(String(window.innerWidth <= 1440));
     expect(slots.masthead.children.length).toBeGreaterThan(0); expect(slots.dispatch.children.length).toBeGreaterThan(0); expect(slots.shelf.children.length).toBeGreaterThan(0); expect(map.setWorldOverviewMode).toHaveBeenCalledWith(true); mounted.destroy();
   });
   it('keeps the existing view on errors and shows an error banner', async () => {
@@ -36,5 +40,23 @@ describe('mountWorldFirstScreen', () => {
     window.dispatchEvent(new CustomEvent('wm:world:country-click', { detail: { code: 'JP' } })); expect(slots.stage.querySelector('.wfs-country-drawer')?.getAttribute('data-state')).toBe('open');
     slots.shelf.querySelector<HTMLButtonElement>('[data-date-step="-1"]')!.click(); await vi.waitFor(() => expect(mocks.load).toHaveBeenCalledWith('2026-11-21'));
     mounted.destroy(); window.dispatchEvent(new CustomEvent('wm:world:country-click', { detail: { code: 'KR' } })); expect(slots.stage.querySelector('.wfs-country-drawer')).toBeNull();
+  });
+  it('wires counter filters, log toggle, breaking alerts, and lifecycle timers', async () => {
+    vi.useFakeTimers();
+    mocks.load.mockResolvedValue({ snapshot, archivedDates: [] });
+    const { slots, ctx } = setup();
+    const mounted = mountWorldFirstScreen(ctx, slots, { openFullView() {}, openCountryBrief() {} });
+    await vi.waitFor(() => expect(slots.telemetry.querySelector('.wfs-ops-counters')).not.toBeNull());
+    slots.telemetry.querySelector<HTMLButtonElement>('[data-counter="wars"]')!.click();
+    expect(slots.telemetry.querySelector('[data-counter="wars"]')?.classList.contains('is-active')).toBe(true);
+    expect(mocks.setFields).toHaveBeenCalledWith(['military']);
+    slots.dispatch.querySelector<HTMLButtonElement>('#logToggleBtn')!.click();
+    expect(slots.stage.querySelector('.wfs-ops-event-log')?.getAttribute('data-collapsed')).toBe('false');
+    const alert = { id: 'alert-1', headline: '긴급 속보', source: '테스트', threatLevel: 'critical', timestamp: new Date(), origin: 'rss_alert', countryCode: 'KR', corroboration: {} };
+    document.dispatchEvent(new CustomEvent('wm:breaking-news', { detail: alert }));
+    expect(slots.stage.querySelector('.wfs-ops-event-title')?.textContent).toBe('긴급 속보');
+    mounted.onLeave();
+    mounted.destroy();
+    expect(vi.getTimerCount()).toBe(0);
   });
 });

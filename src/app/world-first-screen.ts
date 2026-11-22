@@ -10,6 +10,10 @@ import { getCurrentTheme, setTheme } from '@/utils/theme-manager';
 import { kstDate } from '../../shared/world-overview.js';
 import type { CountryDrawerData, WorldField, WorldMapView, WorldMarkRequest } from '@/types/world-overview';
 import type { BreakingAlert } from '@/services/breaking-news-alerts';
+import { WorldClockStrip, WorldEventLog, WorldOpsCounters, WorldThreatBadge } from '@/components/world/WorldOps';
+import { buildOpsEvents, computeOpsMetrics } from '@/services/world-ops';
+import type { OpsCounters } from '@/types/world-overview';
+import { WORLD_FIELDS } from '../../shared/world-overview.js';
 
 export interface WorldFirstScreenSlots {
   root: HTMLElement;
@@ -29,7 +33,7 @@ export function mountWorldFirstScreen(
   ctx: AppContext,
   slots: WorldFirstScreenSlots,
   hooks: { openFullView(): void; openCountryBrief(iso2: string): void },
-): { destroy(): void; onEnter(): void } {
+): { destroy(): void; onEnter(): void; onLeave(): void } {
   if (!ctx.map) throw new Error('MapContainer must exist before mounting the world first screen');
   const map = ctx.map!;
   let fields = getWorldFields();
@@ -39,6 +43,7 @@ export function mountWorldFirstScreen(
   let lastLoadedAt = 0;
   let loadGeneration = 0;
   let destroyed = false;
+  const breakingAlerts: BreakingAlert[] = [];
 
   slots.root.classList.add('wfs-root');
   map.setWorldOverviewMode(true);
@@ -51,7 +56,56 @@ export function mountWorldFirstScreen(
       window.dispatchEvent(new CustomEvent('wm:reveal-panel', { detail: { panelId: 'markets' } }));
     },
   });
-  const dispatch = new WorldDispatchBar({ onLocate: locateAlert });
+  let logOpen = window.innerWidth > 1440;
+  const dispatch = new WorldDispatchBar({ onLocate: locateAlert, onToggleLog: () => setLogOpen(!logOpen) });
+  const threat = new WorldThreatBadge();
+  const clocks = new WorldClockStrip();
+  let activeCounter: keyof OpsCounters | null = null;
+  const counterFields: Record<keyof OpsCounters, WorldField[]> = {
+    wars: ['military'], highConflicts: ['military'], worsening: ['geopolitics'],
+    sanctionPairs: ['finance'], aiRelations: [...WORLD_FIELDS], breaking24h: [...WORLD_FIELDS],
+  };
+  const counters = new WorldOpsCounters((key, button) => {
+    activeCounter = activeCounter === key ? null : key;
+    counters.setActive(activeCounter);
+    updateFields(activeCounter ? counterFields[activeCounter] : [...WORLD_FIELDS]);
+    button.blur();
+  });
+  const eventLog = new WorldEventLog({ onSelectCountry: selectCountry });
+  const telemetry = document.createElement('div');
+  telemetry.className = 'ops-telemetry-bar';
+  telemetry.append(clocks.element, counters.element);
+  slots.telemetry.append(telemetry);
+  const threatMount = masthead.element.querySelector<HTMLElement>('[data-slot="threat"]');
+  threatMount?.append(threat.element);
+  slots.stage.append(eventLog.element);
+  function setLogOpen(open: boolean): void {
+    logOpen = open;
+    eventLog.element.dataset.collapsed = String(!open);
+    dispatch.setLogState(open, eventLog.element.querySelectorAll('.wfs-ops-event').length);
+  }
+  setLogOpen(logOpen);
+  clocks.start();
+
+  function refreshOps(): void {
+    const now = Date.now();
+    if (snapshot) {
+      const metrics = computeOpsMetrics(snapshot, breakingAlerts.map((alert) => alert.timestamp.getTime()), now);
+      threat.setMetrics(metrics);
+      counters.setCounters(metrics.counters);
+    }
+    const events = buildOpsEvents(snapshot, breakingAlerts, now);
+    eventLog.setEvents(events);
+    dispatch.setLogState(logOpen, events.length);
+  }
+  const onBreakingAlert = (event: Event): void => {
+    const alert = (event as CustomEvent<BreakingAlert>).detail;
+    if (!alert) return;
+    breakingAlerts.push(alert);
+    if (breakingAlerts.length > 50) breakingAlerts.splice(0, breakingAlerts.length - 50);
+    refreshOps();
+  };
+  document.addEventListener('wm:breaking-news', onBreakingAlert);
   const keyPlate = new WorldKeyPlate();
   const status = new WorldStatusBanner();
   const zoom = new WorldZoomControls({ onZoomIn: () => map.zoomBy(+1), onZoomOut: () => map.zoomBy(-1), onReset: () => map.resetWorldView() });
@@ -112,6 +166,7 @@ export function mountWorldFirstScreen(
       if (destroyed || generation !== loadGeneration) return;
       if (!result.snapshot) { status.setState('empty'); return; }
       snapshot = result.snapshot;
+      refreshOps();
       lastLoadedAt = Date.now();
       shelf.setDates(mergeDates(result.snapshot.availableDates, result.archivedDates), result.snapshot.date);
       status.setState('ok');
@@ -120,6 +175,7 @@ export function mountWorldFirstScreen(
     } catch (error) {
       if (destroyed || generation !== loadGeneration) return;
       status.setState('error', error instanceof Error ? error.message : undefined);
+      threat.setError();
     }
   }
 
@@ -131,6 +187,7 @@ export function mountWorldFirstScreen(
       if (destroyed || generation !== loadGeneration) return;
       if (!result.snapshot) { status.setState('empty'); return; }
       snapshot = result.snapshot;
+      refreshOps();
       lastLoadedAt = Date.now();
       shelf.setDates(mergeDates(result.snapshot.availableDates, result.archivedDates), result.snapshot.date);
       status.setState('ok');
@@ -139,6 +196,7 @@ export function mountWorldFirstScreen(
     } catch (error) {
       if (destroyed || generation !== loadGeneration) return;
       status.setState('error', error instanceof Error ? error.message : undefined);
+      threat.setError();
     }
   }
 
@@ -186,10 +244,12 @@ export function mountWorldFirstScreen(
       destroyed = true;
       loadGeneration++;
       window.removeEventListener('wm:world:country-click', onCountryClick);
+      document.removeEventListener('wm:breaking-news', onBreakingAlert);
       window.removeEventListener('theme-changed', onThemeChanged);
       map.onWorldLineClicked(() => {});
       if (tickerTimer !== null) clearInterval(tickerTimer);
       tickerTimer = null;
+      clocks.destroy(); eventLog.destroy(); counters.element.remove(); threat.element.remove(); telemetry.remove();
       masthead.destroy(); dispatch.destroy(); shelf.destroy(); drawer.destroy();
       keyPlate.element.remove(); zoom.element.remove(); status.element.remove();
       slots.root.classList.remove('wfs-root');
@@ -197,9 +257,11 @@ export function mountWorldFirstScreen(
     onEnter(): void {
       if (destroyed) return;
       map.setWorldOverviewMode(true);
+      clocks.start();
       if (currentView) map.setWorldOverview(currentView);
       if (Date.now() - lastLoadedAt > RELOAD_AFTER_MS) void loadToday();
     },
+    onLeave(): void { clocks.stop(); },
   };
 }
 

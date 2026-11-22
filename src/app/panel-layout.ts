@@ -457,7 +457,7 @@ export class PanelLayoutManager implements AppModule {
   private worldMode = false;
   private fullViewBuilt = false;
   private fullViewBuilding: Promise<void> | null = null;
-  private worldScreen: { destroy(): void; onEnter(): void } | null = null;
+  private worldScreen: { destroy(): void; onEnter(): void; onLeave(): void } | null = null;
   private worldSlots: WorldFirstScreenSlots | null = null;
   private fullViewStarter: (() => void) | null = null;
   private bootShellFootprint: BootShellFootprintSnapshot | null = null;
@@ -1087,6 +1087,7 @@ export class PanelLayoutManager implements AppModule {
 
   /** Switch to the existing map + inspector UI, building it the first time. */
   public async enterFullView(): Promise<void> {
+    this.worldScreen?.onLeave();
     setFirstScreenMode('full');
     if (!this.worldMode) return;
     this.worldMode = false;
