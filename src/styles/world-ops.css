@@ -86,6 +86,7 @@
 .wfs-ops-event-mark[data-severity='medium'] { --ops-severity-color: var(--warn, #a16207); }
 .wfs-ops-event-mark[data-severity='high'] { --ops-severity-color: #ea580c; }
 .wfs-ops-event-mark[data-severity='critical'] { --ops-severity-color: var(--error, #b91c1c); }
+.wfs-ops-event-mark[data-kind='outage'] { width: 4px; background: #38bdf8; }
 .wfs-ops-event-time { color: var(--text-muted, #657477); font: 9px var(--font-mono, monospace); }
 .wfs-ops-event-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
 .wfs-ops-event-country { border: 1px solid var(--border, #c9d2ce); padding: 2px 4px; background: transparent; color: inherit; font: 9px var(--font-mono, monospace); cursor: pointer; }

@@ -2,6 +2,7 @@ import type { WorldOverviewSnapshot } from '../../shared/world-overview.js';
 import { kstDate } from '../../shared/world-overview.js';
 import type { BreakingAlert } from '@/services/breaking-news-alerts';
 import type { OpsCounters, OpsEvent, OpsMetrics, ThreatLevel } from '@/types/world-overview';
+import type { IodaOutage } from '@/services/internet-outages-ioda';
 
 export const THREAT_LEVEL_LABEL_KO: Record<ThreatLevel, string> = {
   1: '최고 위기',
@@ -25,6 +26,7 @@ export function computeOpsMetrics(
   snapshot: WorldOverviewSnapshot,
   breakingAlertTimes: readonly number[],
   nowMs: number,
+  outages: readonly IodaOutage[] = [],
 ): OpsMetrics {
   const countries = Object.values(snapshot.countries);
   const counters: OpsCounters = {
@@ -35,6 +37,7 @@ export function computeOpsMetrics(
     sanctionPairs: snapshot.relations.filter((relation) => relation.kind === 'sanction').length,
     aiRelations: snapshot.relations.filter((relation) => relation.origin === 'ai').length,
     breaking24h: breakingAlertTimes.filter((at) => at >= nowMs - DAY_MS && at <= nowMs).length,
+    outages: activeOutages(outages, nowMs).length,
   };
   // Calibrated so the late-2026 baseline (4 wars, ~17 high-intensity conflicts) reads 고위험 (2), not saturated.
   const raw = Math.min(100,
@@ -42,7 +45,8 @@ export function computeOpsMetrics(
       + 2 * counters.highConflicts
       + 1 * counters.worsening
       + 0.2 * counters.breaking24h
-      + 0.02 * counters.sanctionPairs,
+      + 0.02 * counters.sanctionPairs
+      + 0.5 * counters.outages,
   );
   const threatScore = Math.round(raw * 10) / 10;
   return { threatLevel: levelForScore(threatScore), threatScore, counters };
@@ -52,6 +56,7 @@ export function buildOpsEvents(
   snapshot: WorldOverviewSnapshot | null,
   alerts: readonly BreakingAlert[],
   nowMs: number,
+  extras: { outages?: readonly IodaOutage[] } = {},
 ): OpsEvent[] {
   const events: OpsEvent[] = alerts.map((alert) => ({
     id: `wm:breaking-news:${alert.id}`,
@@ -62,6 +67,18 @@ export function buildOpsEvents(
     severity: alert.threatLevel === 'critical' ? 'critical' : 'high',
     ...(alert.link ? { url: alert.link } : {}),
   }));
+
+  for (const outage of activeOutages(extras.outages ?? [], nowMs)) {
+    events.push({
+      id: `ioda:outage:${outage.id}`,
+      at: outage.end ?? outage.start,
+      kind: 'outage',
+      title: `인터넷 차단 · ${countryName(outage.iso2)} (${outage.signals.join(', ')})`,
+      iso2: outage.iso2,
+      severity: outage.severity,
+      url: outage.url,
+    });
+  }
 
   if (snapshot) {
     if (snapshot.ai.date === kstDate(nowMs)) {
@@ -102,4 +119,13 @@ export function buildOpsEvents(
     })
     .sort((a, b) => b.at - a.at || a.id.localeCompare(b.id))
     .slice(0, 50);
+}
+
+const OUTAGE_RECENT_MS = 6 * 60 * 60 * 1000;
+function countryName(iso2: string): string {
+  try { return new Intl.DisplayNames(['ko'], { type: 'region' }).of(iso2.toUpperCase()) ?? iso2; }
+  catch { return iso2; }
+}
+function activeOutages(outages: readonly IodaOutage[], nowMs: number): IodaOutage[] {
+  return outages.filter((outage) => outage.end === null || (outage.end <= nowMs && outage.end >= nowMs - OUTAGE_RECENT_MS));
 }

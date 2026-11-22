@@ -8,7 +8,7 @@ function drawerData(overrides: Partial<CountryDrawerData> = {}): CountryDrawerDa
     updatedAt: Date.UTC(2026, 10, 22, 3, 0),
     issue: { summaryKo: '긴장이 이어지고 있습니다.', sources: [{ url: 'https://example.com/issue', title: '보도', publisher: '언론사' }] },
     relations: [{ id: 'rel-1', counterpartIso2: 'JP', counterpartName: '일본', kind: 'tension', field: 'geopolitics', origin: 'ai', direction: 'out', label: '외교 긴장', trend: 'rising', sources: [{ url: 'https://example.com/relation', title: '관계 보도', publisher: '통신사' }] }],
-    blocs: [], isToday: true, aiStatus: 'ok', ...overrides,
+    blocs: [], isToday: true, aiStatus: 'ok', outages: [], ...overrides,
   };
 }
 
@@ -41,7 +41,7 @@ describe('WorldCountryDrawer', () => {
     const drawer = new WorldCountryDrawer({ onClose: vi.fn(), onSelectCountry: vi.fn(), onMark: vi.fn().mockResolvedValue(undefined), onOpenFullPanels: vi.fn() });
     drawer.open(data);
     const headings = [...drawer.element.querySelectorAll<HTMLElement>('[data-section]')].map((el) => el.dataset.section);
-    expect(headings).toEqual(['header', 'ai-notice', 'issues', 'relations', 'sources', 'footer']);
+    expect(headings).toEqual(['header', 'ai-notice', 'issues', 'relations', 'infrastructure', 'sources', 'footer']);
     drawer.element.querySelector<HTMLButtonElement>('[data-filter="worsening"]')!.click();
     expect(drawer.element.querySelectorAll('[data-relation-card]')).toHaveLength(1);
     expect(drawer.element.textContent).toContain('일본');
@@ -72,11 +72,22 @@ describe('WorldCountryDrawer', () => {
     drawer.open(drawerData({ issue: null, relations: [], blocs: [] }));
     expect(drawer.element.textContent).toContain('오늘 등록된 핵심 이슈가 없습니다');
     expect(drawer.element.textContent).toContain('표시할 국가 간 관계가 없습니다');
+    expect(drawer.element.textContent).toContain('최근 인터넷 차단 기록이 없습니다');
     drawer.open(drawerData());
     for (const link of drawer.element.querySelectorAll<HTMLAnchorElement>('a[data-source-link]')) {
       expect(link.target).toBe('_blank');
       expect(link.rel).toContain('noopener');
       expect(link.rel).toContain('noreferrer');
     }
+  });
+
+  it('lists internet outages with a safe IODA link', () => {
+    const drawer = new WorldCountryDrawer({ onClose: vi.fn(), onSelectCountry: vi.fn(), onMark: vi.fn().mockResolvedValue(undefined), onOpenFullPanels: vi.fn() });
+    drawer.open(drawerData({ outages: [{ id: 'ioda-1', start: Date.UTC(2026, 10, 22), end: null, severity: 'high', signals: ['BGP'], url: 'https://ioda.example/event' }] }));
+    expect(drawer.element.querySelector('[data-section="infrastructure"]')?.textContent).toContain('BGP');
+    expect(drawer.element.querySelector('[data-section="infrastructure"]')?.textContent).toContain('높음');
+    const link = drawer.element.querySelector<HTMLAnchorElement>('[data-ioda-link]')!;
+    expect(link.href).toBe('https://ioda.example/event');
+    expect(link.rel).toContain('noopener');
   });
 });

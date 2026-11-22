@@ -5,7 +5,13 @@ import { renderCoordAxes } from '@/components/world/WorldCoordAxes';
 import { preloadCountryGeometry } from '@/services/country-geometry';
 import { loadWorldOverview, setWorldMark } from '@/services/world-overview';
 import { buildCountryDrawerData, buildWorldMapView } from '@/services/world-overview-view';
-import { loadTickerItems } from '@/services/world-ticker';
+import { buildSupplementalTickerItems, loadTickerItems } from '@/services/world-ticker';
+import { loadFundingStress } from '@/services/funding-stress';
+import type { FundingStress } from '@/services/funding-stress';
+import { loadIodaOutages } from '@/services/internet-outages-ioda';
+import type { IodaOutage } from '@/services/internet-outages-ioda';
+import { loadEuGasFlows } from '@/services/eu-gas-flows';
+import type { EuGasFlows } from '@/services/eu-gas-flows';
 import { getWorldFields, setWorldFields } from '@/services/world-first-screen-prefs';
 import { getCurrentTheme, setTheme } from '@/utils/theme-manager';
 import { kstDate } from '../../shared/world-overview.js';
@@ -44,6 +50,13 @@ export function mountWorldFirstScreen(
   let lastLoadedAt = 0;
   let loadGeneration = 0;
   let destroyed = false;
+  let fundingStress: FundingStress | null = null;
+  let outages: IodaOutage[] = [];
+  let gasFlows: EuGasFlows | null = null;
+  let extrasLoadedAt = 0;
+  let extrasLoading = false;
+  let extrasTimer: ReturnType<typeof setInterval> | null = null;
+  let worldShown = true;
   const breakingAlerts: BreakingAlert[] = [];
 
   slots.root.classList.add('wfs-root');
@@ -65,6 +78,7 @@ export function mountWorldFirstScreen(
   const counterFields: Record<keyof OpsCounters, WorldField[]> = {
     wars: ['military'], highConflicts: ['military'], worsening: ['geopolitics'],
     sanctionPairs: ['finance'], aiRelations: [...WORLD_FIELDS], breaking24h: [...WORLD_FIELDS],
+    outages: [...WORLD_FIELDS],
   };
   const counters = new WorldOpsCounters((key, button) => {
     activeCounter = activeCounter === key ? null : key;
@@ -91,11 +105,11 @@ export function mountWorldFirstScreen(
   function refreshOps(): void {
     const now = Date.now();
     if (snapshot) {
-      const metrics = computeOpsMetrics(snapshot, breakingAlerts.map((alert) => alert.timestamp.getTime()), now);
+      const metrics = computeOpsMetrics(snapshot, breakingAlerts.map((alert) => alert.timestamp.getTime()), now, outages);
       threat.setMetrics(metrics);
       counters.setCounters(metrics.counters);
     }
-    const events = buildOpsEvents(snapshot, breakingAlerts, now);
+    const events = buildOpsEvents(snapshot, breakingAlerts, now, { outages });
     eventLog.setEvents(events);
     dispatch.setLogState(logOpen, events.length);
   }
@@ -134,7 +148,9 @@ export function mountWorldFirstScreen(
 
   function updateDrawer(): void {
     if (!snapshot || !selectedIso2) return;
-    const data: CountryDrawerData = buildCountryDrawerData(snapshot, selectedIso2, kstDate(Date.now()));
+    const data: CountryDrawerData = { ...buildCountryDrawerData(snapshot, selectedIso2, kstDate(Date.now())), outages: outages
+      .filter((outage) => outage.iso2 === selectedIso2 && (outage.end === null || outage.end >= Date.now() - 6 * 60 * 60 * 1000))
+      .map(({ id, start, end, severity, signals, url }) => ({ id, start, end, severity, signals, url })) };
     if (drawer.isOpen()) drawer.update(data); else drawer.open(data);
   }
 
@@ -173,6 +189,8 @@ export function mountWorldFirstScreen(
       shelf.setDates(mergeDates(result.snapshot.availableDates, result.archivedDates), result.snapshot.date);
       status.setState('ok');
       makeView();
+      void refreshExtras();
+      startExtrasTimer();
       if (selectedIso2) updateDrawer();
     } catch (error) {
       if (destroyed || generation !== loadGeneration) return;
@@ -194,6 +212,8 @@ export function mountWorldFirstScreen(
       shelf.setDates(mergeDates(result.snapshot.availableDates, result.archivedDates), result.snapshot.date);
       status.setState('ok');
       makeView();
+      void refreshExtras();
+      startExtrasTimer();
       if (selectedIso2) updateDrawer();
     } catch (error) {
       if (destroyed || generation !== loadGeneration) return;
@@ -232,8 +252,27 @@ export function mountWorldFirstScreen(
 
   const tickerRefresh = (): void => {
     if (destroyed) return;
-    void loadTickerItems().then((items) => { if (!destroyed) masthead.setTickerItems(items); }).catch(() => { /* keep the last row */ });
+    void loadTickerItems().then((items) => { if (!destroyed) masthead.setTickerItems([...items, ...buildSupplementalTickerItems({ fundingStress, gasFlows })]); }).catch(() => { /* keep the last row */ });
   };
+  async function refreshExtras(): Promise<void> {
+    if (destroyed || !worldShown || extrasLoading) return;
+    extrasLoading = true;
+    const [stressResult, outageResult, gasResult] = await Promise.allSettled([loadFundingStress(), loadIodaOutages(), loadEuGasFlows()]);
+    if (!destroyed) {
+      if (stressResult.status === 'fulfilled') fundingStress = stressResult.value;
+      if (outageResult.status === 'fulfilled') outages = outageResult.value;
+      if (gasResult.status === 'fulfilled') gasFlows = gasResult.value;
+      extrasLoadedAt = Date.now();
+      refreshOps();
+      if (selectedIso2) updateDrawer();
+      tickerRefresh();
+    }
+    extrasLoading = false;
+  }
+  function startExtrasTimer(): void {
+    if (destroyed || !worldShown || extrasTimer !== null) return;
+    extrasTimer = setInterval(() => { void refreshExtras(); }, RELOAD_AFTER_MS);
+  }
   tickerRefresh();
   let tickerTimer: ReturnType<typeof setInterval> | null = setInterval(tickerRefresh, TICKER_REFRESH_MS);
 
@@ -251,6 +290,8 @@ export function mountWorldFirstScreen(
       map.onWorldLineClicked(() => {});
       if (tickerTimer !== null) clearInterval(tickerTimer);
       tickerTimer = null;
+      if (extrasTimer !== null) clearInterval(extrasTimer);
+      extrasTimer = null;
       clocks.destroy(); eventLog.destroy(); counters.element.remove(); threat.element.remove(); telemetry.remove();
       removeCoordAxes();
       masthead.destroy(); dispatch.destroy(); shelf.destroy(); drawer.destroy();
@@ -259,12 +300,20 @@ export function mountWorldFirstScreen(
     },
     onEnter(): void {
       if (destroyed) return;
+      worldShown = true;
       map.setWorldOverviewMode(true);
       clocks.start();
+      startExtrasTimer();
+      if (Date.now() - extrasLoadedAt >= RELOAD_AFTER_MS) void refreshExtras();
       if (currentView) map.setWorldOverview(currentView);
       if (Date.now() - lastLoadedAt > RELOAD_AFTER_MS) void loadToday();
     },
-    onLeave(): void { clocks.stop(); },
+    onLeave(): void {
+      worldShown = false;
+      clocks.stop();
+      if (extrasTimer !== null) clearInterval(extrasTimer);
+      extrasTimer = null;
+    },
   };
 }
 

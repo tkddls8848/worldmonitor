@@ -10,5 +10,16 @@ test('returns the eight market instruments in stable display order and keeps mis
   });
   assert.deepEqual(items.map((item) => item.id), ['^TNX', '^GSPC', '^IXIC', '^KS11', 'CL=F', 'GC=F', 'KRW=X', 'BTC-USD']);
   assert.deepEqual(items.map((item) => item.value), [4.2, 6000, 19000, 2500, 70, 2700, 1400, 90000]);
+  const stress = buildTickerItems({}, {
+    fundingStress: { ofrFsi: { value: 0.42, change1d: 0.13 }, sofr: { rate: 4.3, changeBp: 2 } } as never,
+    gasFlows: { origins: { russia: { gwhPerDay: 100, change7dPct: -2 }, norway: { gwhPerDay: 200, change7dPct: 1 }, lng: { gwhPerDay: 300, change7dPct: 3 } } },
+  });
+  assert.deepEqual(stress.slice(8, 10).map(({ label, value, changePct, changeKind, inverse }) => ({ label, value, changePct, changeKind, inverse })), [
+    { label: 'OFR 스트레스', value: 0.42, changePct: 0.13, changeKind: 'abs', inverse: true },
+    { label: 'SOFR', value: 4.3, changePct: 2, changeKind: 'bp', inverse: undefined },
+  ]);
+  assert.deepEqual(stress.slice(10).map((item) => [item.label, item.value, item.changePct]), [
+    ['EU 가스(러)', 100, -2], ['EU 가스(노)', 200, 1], ['LNG', 300, 3],
+  ]);
   assert.equal(buildTickerItems({})[0].value, null);
 });

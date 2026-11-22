@@ -58,6 +58,7 @@ const COUNTER_FIELDS: ReadonlyArray<{ key: keyof OpsCounters; label: string }> =
   { key: 'worsening', label: '악화 관계' },
   { key: 'sanctionPairs', label: '제재 쌍' },
   { key: 'aiRelations', label: 'AI 감지' },
+  { key: 'outages', label: '인터넷 차단' },
 ];
 
 export class WorldOpsCounters {
@@ -195,8 +196,10 @@ export class WorldEventLog {
     }
     for (const event of events) {
       const row = node('li', 'wfs-ops-event');
+      row.dataset.kind = event.kind;
       const mark = node('span', 'wfs-ops-event-mark');
       mark.dataset.severity = event.severity;
+      mark.dataset.kind = event.kind;
       mark.setAttribute('aria-label', event.severity);
       const time = node('time', 'wfs-ops-event-time', eventTime(event.at));
       time.dateTime = new Date(event.at).toISOString();

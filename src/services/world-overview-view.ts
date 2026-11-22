@@ -146,6 +146,7 @@ export function buildCountryDrawerData(snapshot: WorldOverviewSnapshot, iso2: st
     relations: snapshot.relations.filter((line) => line.from === iso2 || line.to === iso2).map((line) => relationForCountry(line, iso2)),
     blocs: (country?.blocs ?? []).map((id) => ({ id, nameKo: snapshot.blocs.find((bloc) => bloc.id === id)?.nameKo ?? id })),
     isToday: snapshot.date === todayDate, aiStatus: snapshot.ai.status,
+      outages: [],
   };
 }
 

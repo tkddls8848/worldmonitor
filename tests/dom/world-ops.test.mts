@@ -25,13 +25,13 @@ describe('world ops components', () => {
     expect(badge.element.textContent).toContain('—');
   });
 
-  it('shows the five visible counters and uses an em dash for missing data', () => {
+  it('shows the six visible counters and uses an em dash for missing data', () => {
     const counters = new WorldOpsCounters();
     created.push(counters);
-    expect(counters.element.querySelectorAll('.wfs-ops-counter')).toHaveLength(5);
-    expect(counters.element.querySelectorAll('.wfs-ops-counter-value')).toHaveLength(5);
-    counters.setCounters({ wars: 1, highConflicts: 2, worsening: 3, sanctionPairs: 4, aiRelations: 5, breaking24h: 6 });
-    expect([...counters.element.querySelectorAll('.wfs-ops-counter-value')].map((item) => item.textContent)).toEqual(['1', '2', '3', '4', '5']);
+    expect(counters.element.querySelectorAll('.wfs-ops-counter')).toHaveLength(6);
+    expect(counters.element.querySelectorAll('.wfs-ops-counter-value')).toHaveLength(6);
+    counters.setCounters({ wars: 1, highConflicts: 2, worsening: 3, sanctionPairs: 4, aiRelations: 5, breaking24h: 6, outages: 7 });
+    expect([...counters.element.querySelectorAll('.wfs-ops-counter-value')].map((item) => item.textContent)).toEqual(['1', '2', '3', '4', '5', '7']);
     counters.setCounters(null);
     expect([...counters.element.querySelectorAll('.wfs-ops-counter-value')].every((item) => item.textContent === '—')).toBe(true);
   });
@@ -58,7 +58,7 @@ describe('world ops components', () => {
       id: 'e1', at: Date.parse('2026-01-01T00:00:00Z'), kind: 'breaking', title: '<img src=x onerror=alert(1)>',
       iso2: 'KR', severity: 'critical', url: 'https://example.com/story',
     };
-    log.setEvents([event]);
+    log.setEvents([event, { ...event, id: 'outage', kind: 'outage', title: '인터넷 차단' }]);
     const row = log.element.querySelector('.wfs-ops-event');
     expect(row?.querySelector('[data-severity="critical"]')).not.toBeNull();
     expect(row?.querySelector('time')?.textContent).toBe('09:00');
@@ -67,6 +67,7 @@ describe('world ops components', () => {
     const link = row?.querySelector('a');
     expect(link?.target).toBe('_blank');
     expect(link?.rel).toBe('noopener noreferrer');
+    expect(log.element.querySelector('[data-kind="outage"]')).not.toBeNull();
     (row?.querySelector('button') as HTMLButtonElement).click();
     expect(onSelectCountry).toHaveBeenCalledWith('KR');
     log.setEvents([]);
