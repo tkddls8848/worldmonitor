@@ -57,3 +57,36 @@ export function buildTickerItems(src: { marketQuotes?: unknown; commodityQuotes?
     };
   });
 }
+
+const TICKER_STOCKS = [
+  { symbol: '^TNX', name: 'US 10-Year Yield', display: 'US 10Y' },
+  { symbol: '^GSPC', name: 'S&P 500', display: 'SPX' },
+  { symbol: '^IXIC', name: 'NASDAQ Composite', display: 'COMP' },
+  { symbol: '^KS11', name: 'KOSPI', display: 'KOSPI' },
+  { symbol: 'KRW=X', name: 'USD/KRW', display: 'USDKRW' },
+] as const;
+const TICKER_COMMODITIES = [
+  { symbol: 'CL=F', name: 'WTI Crude', display: 'WTI' },
+  { symbol: 'GC=F', name: 'Gold', display: 'GOLD' },
+];
+
+/**
+ * Ticker quotes through the market services (they read the bootstrap payload
+ * first and fall back to the RPCs). The hydrated keys are consume-once, so the
+ * first screen must not read them directly.
+ */
+export async function loadTickerItems(): Promise<TickerItem[]> {
+  const { fetchMultipleStocks, fetchCommodityQuotes, fetchCrypto } = await import('@/services/market');
+  const [stocks, commodities, crypto] = await Promise.allSettled([
+    fetchMultipleStocks(TICKER_STOCKS),
+    fetchCommodityQuotes(TICKER_COMMODITIES),
+    fetchCrypto(),
+  ]);
+  const stockRows = stocks.status === 'fulfilled' ? stocks.value.data : [];
+  return buildTickerItems({
+    marketQuotes: stockRows,
+    macroSignals: stockRows,
+    commodityQuotes: commodities.status === 'fulfilled' ? commodities.value.data : [],
+    cryptoQuotes: crypto.status === 'fulfilled' ? crypto.value : [],
+  });
+}

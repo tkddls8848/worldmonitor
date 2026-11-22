@@ -48,3 +48,22 @@ html.wm-world-mode .breaking-news-banner {
 .header-world-btn:hover {
   background: var(--surface-hover, rgba(255, 255, 255, 0.08));
 }
+
+/* The full view's map controls (layer list, legend, time slider, distance,
+   MapLibre zoom) are replaced by the first screen's key plate and zoom stack. */
+#worldFirstScreen .deckgl-time-slider,
+#worldFirstScreen .deckgl-layer-toggles,
+#worldFirstScreen .deckgl-legend,
+#worldFirstScreen .cii-choropleth-legend,
+#worldFirstScreen .map-distance-control,
+#worldFirstScreen .map-clear-trails-btn,
+#worldFirstScreen .maplibregl-ctrl-top-left,
+#worldFirstScreen .maplibregl-ctrl-top-right,
+#worldFirstScreen .maplibregl-ctrl-bottom-left {
+  display: none !important;
+}
+
+#worldFirstScreen .wfs-slot-stage > .map-container,
+#worldFirstScreen .wfs-slot-stage .maplibregl-map {
+  background: var(--bg-ocean);
+}

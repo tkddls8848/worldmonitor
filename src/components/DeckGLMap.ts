@@ -788,6 +788,8 @@ export class DeckGLMap {
   private webcamData: WebcamMarker[] = [];
   private countriesGeoJsonData: FeatureCollection<Geometry> | null = null;
   private worldOverviewMode = false;
+  private worldBasemapHooked = false;
+  private worldHiddenBasemapLayers: string[] | null = null;
   private worldOverviewView: WorldMapView | null = null;
   private worldFirstDrawMarked = false;
   private worldLineClickCallback: ((lineId: string) => void) | null = null;
@@ -6586,6 +6588,7 @@ export class DeckGLMap {
       const buildStart = performance.now();
       // Immediate pass defers heavy data (deferHeavy=true); the gate's deferred
       // pass (deferred=true) commits the real heavy data (#4558).
+      if (this.worldOverviewMode !== (this.worldHiddenBasemapLayers !== null)) this.syncWorldBasemap();
       const built = this.worldOverviewMode
         ? this.worldOverviewView && this.countriesGeoJsonData
           ? buildWorldOverviewLayers(
@@ -6819,7 +6822,47 @@ export class DeckGLMap {
   public setWorldOverviewMode(on: boolean): void {
     if (this.worldOverviewMode === on) return;
     this.worldOverviewMode = on;
+    this.syncWorldBasemap();
     this.render();
+  }
+
+  /**
+   * The first screen draws its own atlas: hide the basemap style's layers
+   * (water, labels, roads) so the stage's ocean colour shows through, keeping
+   * the country-* layers that carry hover and click hit-testing. Restored when
+   * the full view returns; re-applied after a style reload (theme switch).
+   */
+  private syncWorldBasemap(): void {
+    const map = this.maplibreMap;
+    if (!map) return;
+    if (!this.worldBasemapHooked) {
+      this.worldBasemapHooked = true;
+      map.on('style.load', () => {
+        this.worldHiddenBasemapLayers = null;
+        this.syncWorldBasemap();
+      });
+    }
+    if (!map.isStyleLoaded()) {
+      // Style still loading (first boot): try again once the map settles.
+      map.once('idle', () => this.syncWorldBasemap());
+      return;
+    }
+    if (this.worldOverviewMode) {
+      if (this.worldHiddenBasemapLayers) return;
+      const hidden: string[] = [];
+      for (const layer of map.getStyle()?.layers ?? []) {
+        if (layer.id.startsWith('country-')) continue;
+        if (map.getLayoutProperty(layer.id, 'visibility') === 'none') continue;
+        map.setLayoutProperty(layer.id, 'visibility', 'none');
+        hidden.push(layer.id);
+      }
+      this.worldHiddenBasemapLayers = hidden;
+    } else if (this.worldHiddenBasemapLayers) {
+      for (const id of this.worldHiddenBasemapLayers) {
+        if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'visible');
+      }
+      this.worldHiddenBasemapLayers = null;
+    }
   }
 
   public setWorldOverview(view: WorldMapView | null): void {

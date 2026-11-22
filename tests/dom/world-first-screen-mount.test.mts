@@ -4,7 +4,8 @@ const mocks = vi.hoisted(() => ({ load: vi.fn(), mark: vi.fn(), fields: ['milita
 vi.mock('@/services/world-overview', () => ({ loadWorldOverview: mocks.load, setWorldMark: mocks.mark }));
 vi.mock('@/services/world-overview-view', () => ({ buildWorldMapView: vi.fn((_s, _f, selected) => ({ date: '2026-11-22', countries: {}, lines: [], blocOutlines: [], selectedIso2: selected, relatedIso2: [] })), buildCountryDrawerData: vi.fn((_s, iso2) => ({ iso2, nameKo: iso2, nameEn: iso2, level: null, conflictLevel: null, ciiScore: null, updatedAt: 1, issue: null, relations: [], blocs: [], isToday: true, aiStatus: 'ok' })) }));
 vi.mock('@/services/world-first-screen-prefs', () => ({ getWorldFields: () => [...mocks.fields], setWorldFields: mocks.setFields }));
-vi.mock('@/services/bootstrap', () => ({ getHydratedData: (key: string) => mocks.data[key], waitForBootstrapSlowTier: vi.fn(() => Promise.resolve(true)) }));
+vi.mock('@/services/world-ticker', () => ({ loadTickerItems: vi.fn(() => Promise.resolve([])) }));
+vi.mock('@/services/country-geometry', () => ({ preloadCountryGeometry: vi.fn(() => new Promise(() => { /* geometry never needed here */ })) }));
 import { mountWorldFirstScreen } from '../../src/app/world-first-screen';
 
 const snapshot = { date: '2026-11-22', availableDates: ['2026-11-21', '2026-11-22'], countries: {}, relations: [], anchors: {}, blocs: [], ai: { status: 'ok' }, generatedAt: 1 } as never;

@@ -1,10 +1,10 @@
 import type { AppContext } from '@/app/app-context';
 import { WorldMasthead, WorldDispatchBar, WorldKeyPlate, WorldZoomControls, WorldBottomShelf, WorldStatusBanner } from '@/components/world/WorldChrome';
 import { WorldCountryDrawer } from '@/components/world/WorldCountryDrawer';
-import { getHydratedData, waitForBootstrapSlowTier } from '@/services/bootstrap';
+import { preloadCountryGeometry } from '@/services/country-geometry';
 import { loadWorldOverview, setWorldMark } from '@/services/world-overview';
 import { buildCountryDrawerData, buildWorldMapView } from '@/services/world-overview-view';
-import { buildTickerItems } from '@/services/world-ticker';
+import { loadTickerItems } from '@/services/world-ticker';
 import { getWorldFields, setWorldFields } from '@/services/world-first-screen-prefs';
 import { getCurrentTheme, setTheme } from '@/utils/theme-manager';
 import { kstDate } from '../../shared/world-overview.js';
@@ -21,6 +21,7 @@ export interface WorldFirstScreenSlots {
 
 type WorldSnapshot = NonNullable<Awaited<ReturnType<typeof loadWorldOverview>>['snapshot']>;
 const RELOAD_AFTER_MS = 10 * 60 * 1000;
+const TICKER_REFRESH_MS = 5 * 60 * 1000;
 
 export function mountWorldFirstScreen(
   ctx: AppContext,
@@ -169,13 +170,14 @@ export function mountWorldFirstScreen(
 
   const tickerRefresh = (): void => {
     if (destroyed) return;
-    masthead.setTickerItems(buildTickerItems({ marketQuotes: getHydratedData('marketQuotes'), commodityQuotes: getHydratedData('commodityQuotes'), cryptoQuotes: getHydratedData('cryptoQuotes'), macroSignals: getHydratedData('macroSignals') }));
+    void loadTickerItems().then((items) => { if (!destroyed) masthead.setTickerItems(items); }).catch(() => { /* keep the last row */ });
   };
   tickerRefresh();
-  let tickerTimer: ReturnType<typeof setTimeout> | null = setTimeout(tickerRefresh, 5000);
-  void waitForBootstrapSlowTier(5000).then(() => { if (!destroyed) tickerRefresh(); }).finally(() => { if (tickerTimer !== null) clearTimeout(tickerTimer); tickerTimer = null; });
+  let tickerTimer: ReturnType<typeof setInterval> | null = setInterval(tickerRefresh, TICKER_REFRESH_MS);
 
   void loadToday();
+  // Line endpoints resolve from country geometry; redraw once it is loaded.
+  void preloadCountryGeometry().then(() => { if (!destroyed) makeView(); }).catch(() => { /* lines stay hidden */ });
   return {
     destroy(): void {
       if (destroyed) return;
@@ -184,7 +186,8 @@ export function mountWorldFirstScreen(
       window.removeEventListener('wm:world:country-click', onCountryClick);
       window.removeEventListener('theme-changed', onThemeChanged);
       map.onWorldLineClicked(() => {});
-      if (tickerTimer !== null) clearTimeout(tickerTimer);
+      if (tickerTimer !== null) clearInterval(tickerTimer);
+      tickerTimer = null;
       masthead.destroy(); dispatch.destroy(); shelf.destroy(); drawer.destroy();
       keyPlate.element.remove(); zoom.element.remove(); status.element.remove();
       slots.root.classList.remove('wfs-root');
