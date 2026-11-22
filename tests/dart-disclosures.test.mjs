@@ -4,7 +4,7 @@ import { __testing__ as healthTesting } from '../api/health.js';
 import {
   classifyDartStatus, dateRangeKst, mapDartDisclosure, rankDartDisclosures,
   receiptTimeKst,
-} from './seed-dart-disclosures.mjs';
+} from '../scripts/seed-dart-disclosures.mjs';
 
 const row = (overrides = {}) => ({
   rcept_no: '20261122000123', rcept_dt: '20261122', corp_name: 'Example Co',
