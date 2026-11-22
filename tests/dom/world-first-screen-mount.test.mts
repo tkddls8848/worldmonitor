@@ -10,7 +10,7 @@ import { mountWorldFirstScreen } from '../../src/app/world-first-screen';
 
 const snapshot = { date: '2026-11-22', availableDates: ['2026-11-21', '2026-11-22'], countries: {}, relations: [], anchors: {}, blocs: [], ai: { status: 'ok' }, generatedAt: 1 } as never;
 function setup() {
-  const root = document.createElement('div'); const slots = Object.fromEntries(['masthead', 'dispatch', 'stage', 'shelf'].map((key) => { const node = document.createElement('div'); node.dataset.slot = key; root.append(node); return [key, node]; })) as Record<string, HTMLElement>;
+  const root = document.createElement('div'); const slots = Object.fromEntries(['masthead', 'telemetry', 'dispatch', 'stage', 'shelf'].map((key) => { const node = document.createElement('div'); node.dataset.slot = key; root.append(node); return [key, node]; })) as Record<string, HTMLElement>;
   const map = { setWorldOverviewMode: vi.fn(), setWorldOverview: vi.fn(), onWorldLineClicked: vi.fn(), zoomBy: vi.fn(), resetWorldView: vi.fn(), setCenter: vi.fn() };
   document.body.append(root);
   const ctx = { map } as never;

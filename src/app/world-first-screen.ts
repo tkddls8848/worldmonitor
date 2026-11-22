@@ -14,6 +14,8 @@ import type { BreakingAlert } from '@/services/breaking-news-alerts';
 export interface WorldFirstScreenSlots {
   root: HTMLElement;
   masthead: HTMLElement;
+  /** Ops room row 2 (clocks + counters); 26px in the dark theme, collapsed in the light theme until styled. */
+  telemetry: HTMLElement;
   dispatch: HTMLElement;
   stage: HTMLElement;
   shelf: HTMLElement;

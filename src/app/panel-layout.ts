@@ -1061,6 +1061,7 @@ export class PanelLayoutManager implements AppModule {
     const slots: WorldFirstScreenSlots = {
       root,
       masthead: slot('wfs-slot-masthead'),
+      telemetry: slot('wfs-slot-telemetry'),
       dispatch: slot('wfs-slot-dispatch'),
       stage: slot('wfs-slot-stage atlas-stage'),
       shelf: slot('wfs-slot-shelf'),
