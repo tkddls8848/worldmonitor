@@ -28,6 +28,7 @@
   --text-faint: #7f7f7f; /* was #555 (2.5:1); AA 4.6:1 */
   --text-ghost: #666; /* was #444 (1.9:1); 3.2:1 — decorative/large text only, never body copy */
   --accent: #fff;
+  --accent-on: #000;
 
   /* Overlays & shadows */
   --overlay-subtle: rgba(255, 255, 255, 0.03);
@@ -221,6 +222,7 @@
   --text-faint: #727272; /* was #aaa (2.2:1); AA 4.6:1 */
   --text-ghost: #8e8e8e; /* was #bbb (1.8:1); 3.1:1 — decorative/large text only, never body copy */
   --accent: #111111;
+  --accent-on: #fff;
 
   /* Overlays & shadows */
   --overlay-subtle: rgba(0, 0, 0, 0.02);
