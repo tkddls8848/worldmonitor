@@ -27,6 +27,8 @@ const {
   summarizeUcdpWindow,
   ucdpLocatedCountry,
   hasPreciseUcdpLocation,
+  downloadCandidateCsvWindow,
+  shouldUseCandidateCsv,
 } = ucdpCandidate;
 
 const REDIS_KEY = 'conflict:ucdp-events:v1';
@@ -96,6 +98,7 @@ async function discoverVersion(token, fetchPage = fetchGedPage, candidates = bui
       return { version, page0 };
     } catch (err) {
       if (err.code === 'UCDP_FETCH_DEADLINE') throw err;
+      if ([401, 403].includes(Number(err?.status))) throw err;
       console.warn(`  v${version} failed: ${err.message}`);
     }
   }
@@ -201,14 +204,42 @@ async function main() {
   console.log(`  UCDP Token: ${ucdpToken ? maskToken(ucdpToken) : '(none — unauthenticated)'}`);
   console.log();
 
-  const fetchWindowPage = withUcdpFetchDeadline(candidateFetcher(ucdpToken));
-  const { version } = await discoverVersion(ucdpToken, (v, page) => fetchWindowPage(v, page));
   const nowMs = Date.now();
-  console.log(`  Version: ${version}`);
+  const fetchWindowPage = withUcdpFetchDeadline(candidateFetcher(ucdpToken));
+  let csvFallback = shouldUseCandidateCsv(ucdpToken);
+  let version;
+  if (!csvFallback) {
+    try { ({ version } = await discoverVersion(ucdpToken, (v, page) => fetchWindowPage(v, page))); }
+    catch (error) {
+      if (!shouldUseCandidateCsv(ucdpToken, error?.status)) throw error;
+      console.warn(`  UCDP API authorization failed (${error.status}); using keyless CSV exports`);
+      csvFallback = true;
+    }
+  }
+  let csvMonthly = [];
+  let csvAnnual = [];
+  let csvQuarterly = [];
+  let csvMonthlyVersion = null;
+  let csvCumulativeVersion = null;
+  let csvAnnualVersion = null;
+  if (csvFallback) {
+    const window = await downloadCandidateCsvWindow();
+    csvMonthly = window.monthlyEvents;
+    csvAnnual = window.annualEvents;
+    csvQuarterly = window.cumulativeEvents;
+    csvMonthlyVersion = window.monthlyVersion;
+    csvCumulativeVersion = window.cumulativeVersion;
+    csvAnnualVersion = window.annualVersion;
+    console.log(`  CSV releases: annual ${csvAnnualVersion}, monthly ${csvMonthlyVersion}${csvCumulativeVersion ? `, cumulative ${csvCumulativeVersion}` : ' (no cumulative release found)'}`);
+    version = csvAnnualVersion;
+  }
+  console.log(`  Version: ${version || 'CSV'}`);
 
   // The annual release's part of the trailing window, by date: its pages are
   // not in date order, so "the newest pages" never meant the newest events.
-  const annual = await fetchAnnualWindow(fetchWindowPage, version, { nowMs });
+  const annual = csvFallback
+    ? { events: csvAnnual, failedPages: 0, totalPages: 0, truncated: false, startDate: '', endDate: '' }
+    : await fetchAnnualWindow(fetchWindowPage, version, { nowMs });
   const annualIds = new Set(annual.events.filter((event) => event?.id != null).map((event) => String(event.id)));
   const allEvents = [...annual.events];
   const failedPages = annual.failedPages;
@@ -244,6 +275,23 @@ async function main() {
   let unpublishedMonths = [];
   const candidateIds = new Set();
   try {
+    if (csvFallback) {
+      candidateVersion = csvMonthly.length ? csvMonthlyVersion : null;
+      windowReleases = [csvAnnualVersion, ...(csvQuarterly.length ? [csvCumulativeVersion] : []), ...(csvMonthly.length ? [csvMonthlyVersion] : [])];
+      for (const event of csvQuarterly) {
+        allEvents.push(event);
+        const ms = getMaxDateMs([event]);
+        if (Number.isFinite(ms) && (!Number.isFinite(latestDatasetMs) || ms > latestDatasetMs)) latestDatasetMs = ms;
+      }
+      for (const event of csvMonthly) {
+        allEvents.push(event);
+        if (event?.id != null) candidateIds.add(String(event.id));
+        const ms = getMaxDateMs([event]);
+        if (Number.isFinite(ms) && (!Number.isFinite(latestDatasetMs) || ms > latestDatasetMs)) latestDatasetMs = ms;
+      }
+      candidateComplete = csvMonthly.length > 0;
+      console.log(`  Merged CSV monthly events: ${csvMonthly.length}`);
+    } else {
     const candidate = await discoverCandidateVersion(ucdpToken, fetchWindowPage);
     if (candidate) {
       const fromMs = Math.max(annualReleaseEndMs(version) + 1, nowMs - ANNUAL_LOOKBACK_MS);
@@ -274,6 +322,7 @@ async function main() {
         if (event?.id != null) candidateIds.add(String(event.id));
       }
       console.log(`  Merged candidates ${merged.releases.map((r) => r.version).join(', ')}: +${merged.releases.reduce((n, r) => n + r.events.length, 0)} events`);
+    }
     }
   } catch (err) {
     console.warn(`  Candidate merge skipped: ${err.message}`);

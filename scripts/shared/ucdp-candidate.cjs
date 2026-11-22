@@ -1,5 +1,142 @@
 'use strict';
 const { UNKNOWN_PARTY } = require('./ucdp-state-parties.cjs');
+const { PassThrough } = require('node:stream');
+const { Unzip, UnzipInflate } = require('fflate');
+
+// Parse CSV records incrementally: UCDP's downloadable GED files are large, so
+// never buffer the response body or the complete text representation.
+async function* parseCsv(stream) {
+  let field = '', row = [], quoted = false, pendingQuote = false;
+  const decoder = new TextDecoder();
+  for await (const chunk of stream) {
+    for (const char of decoder.decode(typeof chunk === 'string' ? Buffer.from(chunk) : chunk, { stream: true })) {
+      if (pendingQuote) {
+        pendingQuote = false;
+        if (char === '"') { field += '"'; quoted = true; continue; }
+      }
+      if (quoted) {
+        if (char === '"') { quoted = false; pendingQuote = true; }
+        else field += char;
+      } else if (char === '"' && field === '') { quoted = true; pendingQuote = false; }
+      else if (char === ',') { row.push(field); field = ''; }
+      else if (char === '\n') { row.push(field.replace(/\r$/, '')); yield row; row = []; field = ''; }
+      else field += char;
+    }
+  }
+  for (const char of decoder.decode()) {
+    if (quoted) { field += char; continue; }
+    if (char === ',') { row.push(field); field = ''; }
+    else if (char === '\n') { row.push(field.replace(/\r$/, '')); yield row; row = []; field = ''; }
+    else field += char;
+  }
+  if (field || row.length) { row.push(field.replace(/\r$/, '')); yield row; }
+}
+
+function mapCandidateCsvRow(headers, values) {
+  const r = Object.fromEntries(headers.map((key, i) => [key.replace(/^\uFEFF/, ''), values[i] ?? '']));
+  const number = (v) => v === '' || v == null ? null : Number(v);
+  return {
+    id: r.id || '', relid: r.relid || '', date_start: r.date_start || '', date_end: r.date_end || '',
+    latitude: number(r.latitude), longitude: number(r.longitude), country: r.country || '', country_id: r.country_id || '',
+    where_prec: number(r.where_prec), where_coordinates: r.where_coordinates || '', adm_1: r.adm_1 || '',
+    side_a: r.side_a || '', side_b: r.side_b || '', best: number(r.best) ?? 0, low: number(r.low) ?? 0, high: number(r.high) ?? 0,
+    type_of_violence: r.type_of_violence || '', source_original: r.source_original || '',
+  };
+}
+
+function candidateCsvVersions(html) {
+  const found = [...String(html).matchAll(/GEDEvent_v(\d{2})_(\d{1,2})_(\d{1,2})(?:_(\d{1,2}))?\.csv/gi)]
+    .map((m) => {
+      const monthly = m[2] === '0';
+      const effectiveMonth = Number(monthly ? m[3] : m[4]);
+      return { version: `${m[1]}.${m[2]}.${m[3]}${m[4] ? `.${m[4]}` : ''}`, url: `https://ucdp.uu.se/downloads/candidateged/${m[0]}`, rank: Number(m[1])*100+effectiveMonth, monthly };
+    });
+  return [...new Map(found.map((x) => [x.url, x])).values()].sort((a,b) => b.rank-a.rank || Number(b.monthly)-Number(a.monthly));
+}
+
+function shouldUseCandidateCsv(token, status) {
+  return !String(token || '').trim() || [401, 403].includes(Number(status));
+}
+
+async function streamCandidateCsv(url, onRow, fetchImpl = fetch) {
+  const response = await fetchImpl(url, { headers: { Accept: 'text/csv', 'User-Agent': 'WorldMonitor personal data collector (https://www.worldmonitor.app)' }, signal: AbortSignal.timeout(180_000) });
+  if (!response.ok || !response.body) throw new Error(`UCDP CSV download failed: HTTP ${response.status}`);
+  let headers = null;
+  for await (const row of parseCsv(response.body)) {
+    if (!headers) { headers = row; continue; }
+    if (row.length === 1 && !row[0]) continue;
+    await onRow(mapCandidateCsvRow(headers, row));
+  }
+}
+
+async function discoverCandidateCsv(fetchImpl = fetch) {
+  const response = await fetchImpl('https://ucdp.uu.se/downloads/', { headers: { Accept: 'text/html', 'User-Agent': 'WorldMonitor personal data collector (https://www.worldmonitor.app)' }, signal: AbortSignal.timeout(30_000) });
+  if (!response.ok) throw new Error(`UCDP downloads page failed: HTTP ${response.status}`);
+  const candidates = candidateCsvVersions(await response.text());
+  if (!candidates.length) throw new Error('No UCDP Candidate CSV releases found');
+  return candidates;
+}
+
+async function downloadAnnualGedCsvWindow(fromMs, throughMs, fetchImpl = fetch) {
+  const page = await fetchImpl('https://ucdp.uu.se/downloads/', { headers: { Accept: 'text/html', 'User-Agent': 'WorldMonitor personal data collector (https://www.worldmonitor.app)' }, signal: AbortSignal.timeout(30_000) });
+  if (!page.ok) throw new Error(`UCDP downloads page failed: HTTP ${page.status}`);
+  const html = await page.text();
+  const match = html.match(/href=["']([^"']*\/downloads\/ged\/ged(\d{2})(\d)-csv\.zip)["']/i);
+  if (!match) throw new Error('No annual UCDP GED CSV archive found');
+  const version = `${match[2]}.${match[3]}`;
+  const response = await fetchImpl(new URL(match[1], 'https://ucdp.uu.se/').href, { headers: { Accept: 'application/zip', 'User-Agent': 'WorldMonitor personal data collector (https://www.worldmonitor.app)' }, signal: AbortSignal.timeout(300_000) });
+  if (!response.ok || !response.body) throw new Error(`UCDP annual GED download failed: HTTP ${response.status}`);
+  const events = [];
+  let parserPromise = null;
+  const unzip = new Unzip((file) => {
+    if (!file.name.toLowerCase().endsWith('.csv')) return;
+    const csv = new PassThrough();
+    parserPromise = (async () => {
+      let headers = null;
+      for await (const row of parseCsv(csv)) {
+        if (!headers) { headers = row; continue; }
+        const event = mapCandidateCsvRow(headers, row);
+        const dateMs = Date.parse(event.date_start);
+        if (Number.isFinite(dateMs) && dateMs >= fromMs && dateMs <= throughMs) events.push(event);
+      }
+    })();
+    file.ondata = (error, chunk, final) => {
+      if (error) { csv.destroy(error); return; }
+      if (chunk?.length) csv.write(Buffer.from(chunk));
+      if (final) csv.end();
+    };
+    file.start();
+  });
+  unzip.register(UnzipInflate);
+  for await (const chunk of response.body) unzip.push(chunk);
+  unzip.push(new Uint8Array(), true);
+  if (!parserPromise) throw new Error('Annual UCDP GED archive contained no CSV file');
+  await parserPromise;
+  return { version, events };
+}
+
+async function downloadCandidateCsvWindow(fetchImpl = fetch) {
+  const csvs = await discoverCandidateCsv(fetchImpl);
+  const monthly = csvs.find((x) => x.monthly);
+  const cumulative = csvs.find((x) => /^\d{2}\.01\.\d{2}\.\d{1,2}$/.test(x.version));
+  if (!monthly) throw new Error('No monthly UCDP Candidate CSV release found');
+  const read = async (release) => {
+    const events = [];
+    if (release) await streamCandidateCsv(release.url, (event) => events.push(event), fetchImpl);
+    return events;
+  };
+  const annualEnd = annualReleaseEndMs(`${csvs[0]?.version.match(/^(\d{2})/)?.[1] || new Date().getUTCFullYear() - 2000}.1`);
+  const annualStart = Date.now() - ANNUAL_LOOKBACK_MS;
+  const annual = await downloadAnnualGedCsvWindow(annualStart, Math.min(Date.now(), annualEnd), fetchImpl);
+  return {
+    annualVersion: annual.version,
+    annualEvents: annual.events,
+    monthlyVersion: monthly.version,
+    cumulativeVersion: cumulative?.version || null,
+    monthlyEvents: await read(monthly),
+    cumulativeEvents: await read(cumulative),
+  };
+}
 
 // UCDP GED Candidate releases — shared by BOTH UCDP Redis writers.
 //
@@ -383,6 +520,7 @@ async function keepLastGoodUcdpWindow(readExisting, runWindow) {
   }
   const cached = existing?.window;
   return cached?.complete === true && Number.isFinite(cached.endMs)
+    && cached.endMs <= Date.now()
     && (cached.endMs > runWindow.endMs || (runWindow.complete !== true && cached.endMs === runWindow.endMs));
 }
 
@@ -494,6 +632,13 @@ function hasPreciseUcdpLocation(event) {
 }
 
 module.exports = {
+  parseCsv,
+  mapCandidateCsvRow,
+  candidateCsvVersions,
+  shouldUseCandidateCsv,
+  streamCandidateCsv,
+  discoverCandidateCsv,
+  downloadCandidateCsvWindow,
   withUcdpFetchDeadline,
   CANDIDATE_MAX_PAGES,
   CANDIDATE_DISCOVER_TIMEOUT_MS,

@@ -10587,6 +10587,20 @@
       ]
     },
     {
+      "host": "ucdp.uu.se",
+      "provider": "Uppsala Conflict Data Program (UCDP)",
+      "kind": "structured",
+      "observed": true,
+      "license": "CC BY 4.0 (UCDP Dataset Download Center)",
+      "attribution": "Credit UCDP and cite the UCDP Candidate Events Dataset; link to https://ucdp.uu.se/downloads/.",
+      "status": "reviewed",
+      "references": [
+        {
+          "path": "scripts/shared/ucdp-candidate.cjs"
+        }
+      ]
+    },
+    {
       "host": "ucdpapi.pcr.uu.se",
       "provider": "ucdpapi.pcr.uu.se",
       "kind": "structured",
@@ -15386,6 +15400,9 @@
         },
         {
           "path": "scripts/seed-no2-activity.mjs"
+        },
+        {
+          "path": "scripts/shared/ucdp-candidate.cjs"
         },
         {
           "path": "scripts/syndication-candidates.mjs"
