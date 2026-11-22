@@ -23,3 +23,14 @@ test('returns the eight market instruments in stable display order and keeps mis
   ]);
   assert.equal(buildTickerItems({})[0].value, null);
 });
+
+test('adds Korean 10-year yield and provisional export growth without duplicating USD/KRW', () => {
+  const items = buildTickerItems({ marketQuotes: { quotes: [{ symbol: 'KRW=X', price: 1400 }] } }, { korea: {
+    ktb10y: { value: 3.4, changeBp: 2.1 },
+    trade: { month: '202610', total: { exportYoyPct: 4.2 }, provisional: { period: '11월 1~10일', exportYoyPct: 8.7 } },
+  } });
+  assert.equal(items.filter((item) => item.id === 'KRW=X').length, 1);
+  assert.deepEqual(items.slice(-2).map(({ label, value, changePct, changeKind }) => [label, value, changePct, changeKind]), [
+    ['국고채 10년', 3.4, 2.1, 'bp'], ['한국 수출 11월 1~10일', 8.7, null, undefined],
+  ]);
+});

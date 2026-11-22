@@ -90,6 +90,19 @@ export interface DrawerRelation {
   mark?: MarkAnnotation;
 }
 
+export interface KoreaDrawerData {
+  asOf: number;
+  indicators: Array<{ id: string; nameKo: string; value: number; unit: string; period: string; change: number | null; changeKind: 'abs' | 'pct' | 'bp' | null }>;
+  trade: {
+    asOf: number; month: string;
+    total: { exportUsd: number; importUsd: number; balanceUsd: number; exportYoyPct: number | null; importYoyPct: number | null };
+    partners: Array<{ iso2: string; nameKo: string; exportUsd: number; importUsd: number; exportYoyPct: number | null }>;
+    items: Array<{ hs: string; nameKo: string; exportUsd: number; exportYoyPct: number | null }>;
+    provisional: { period: string; exportUsd: number; importUsd: number; exportYoyPct: number | null } | null;
+  } | null;
+  disclosures: Array<{ id: string; at: number; corpName: string; stockCode: string | null; market: 'KOSPI' | 'KOSDAQ'; kind: 'major' | 'ownership' | 'exchange'; title: string; filer: string; url: string }>;
+}
+
 export interface CountryDrawerData {
   iso2: string;
   nameKo: string;
@@ -105,6 +118,7 @@ export interface CountryDrawerData {
   isToday: boolean;
   aiStatus: 'ok' | 'stale' | 'missing';
   outages: Array<{ id: string; start: number; end: number | null; severity: 'low' | 'medium' | 'high'; signals: string[]; url: string }>;
+  korea?: KoreaDrawerData;
 }
 
 export type WorldMarkRequest =
@@ -149,7 +163,7 @@ export interface OpsEvent {
   id: string;
   /** epoch ms */
   at: number;
-  kind: 'breaking' | 'relation' | 'issue' | 'outage';
+  kind: 'breaking' | 'relation' | 'issue' | 'outage' | 'disclosure';
   title: string;
   iso2?: string;
   severity: OpsEventSeverity;

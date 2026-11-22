@@ -122,3 +122,15 @@ test('does not include AI relations from another KST day and supports a missing 
   assert.deepEqual(buildOpsEvents(data, [], nowMs), []);
   assert.deepEqual(buildOpsEvents(null, [], nowMs), []);
 });
+
+test('adds stable Korean DART events with severity and a 15-filing limit', () => {
+  const filings = Array.from({ length: 18 }, (_, i) => ({ id: `f${i}`, at: nowMs + i, corpName: `회사${i}`, stockCode: null, market: 'KOSPI' as const, kind: i % 2 ? 'ownership' as const : 'major' as const, title: '공시', filer: '', url: `https://dart.example/${i}` }));
+  const events = buildOpsEvents(null, [], nowMs, { disclosures: filings });
+  assert.equal(events.length, 15);
+  assert.equal(events[0]?.id, 'dart:f17');
+  assert.equal(events[0]?.kind, 'disclosure');
+  assert.equal(events[0]?.severity, 'low');
+  assert.equal(events.find((event) => event.id === 'dart:f16')?.severity, 'medium');
+  assert.equal(events[0]?.title, '회사17 · 공시');
+  assert.equal(events[0]?.iso2, 'KR');
+});

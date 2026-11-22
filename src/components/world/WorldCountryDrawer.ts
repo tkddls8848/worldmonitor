@@ -100,7 +100,9 @@ export class WorldCountryDrawer {
     const data = this.data;
     if (!data) return;
     const content = make('div', 'wfs-country-drawer__content');
-    content.append(this.renderHeader(data), this.renderNotice(data), this.renderIssues(data), this.renderRelations(data), this.renderOutages(data), this.renderSources(data), this.renderFooter(data));
+    content.append(this.renderHeader(data), this.renderNotice(data), this.renderIssues(data), this.renderRelations(data), this.renderOutages(data));
+    if (data.iso2 === 'KR') content.append(this.renderKorea(data));
+    content.append(this.renderSources(data), this.renderFooter(data));
     this.element.replaceChildren(content);
   }
 
@@ -258,6 +260,53 @@ export class WorldCountryDrawer {
     }
     if (list.childElementCount) section.append(list);
     else section.append(make('p', 'wfs-country-drawer__empty', '등록된 출처가 없습니다'));
+    return section;
+  }
+
+  private renderKorea(data: CountryDrawerData): HTMLElement {
+    const section = this.section('korea-economy', '한국 경제');
+    const korea = data.korea;
+    if (!korea?.indicators.length) section.append(make('p', 'wfs-country-drawer__empty', 'ECOS 지표를 불러오지 못했습니다.'));
+    else {
+      const grid = make('div', 'wfs-country-drawer__kr-grid');
+      const labelById: Record<string, string> = { 'base-rate': '기준금리', usdkrw: '원/달러', ktb3y: '국고채 3년', ktb10y: '국고채 10년', 'cpi-yoy': '소비자물가', unemployment: '실업률', 'fx-reserves': '외환보유액', kospi: 'KOSPI', 'current-account': '경상수지' };
+      const indicators = new Map(korea.indicators.map((indicator) => [indicator.id, indicator]));
+      for (const [id, label] of Object.entries(labelById)) {
+        const indicator = indicators.get(id);
+        const item = make('div', 'wfs-country-drawer__kr-metric');
+        item.append(make('span', 'wfs-country-drawer__kr-label', label));
+        const value = make('strong', 'wfs-country-drawer__kr-value', indicator ? `${indicator.value.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}${indicator.unit}` : '자료 없음');
+        item.append(value, make('small', 'wfs-country-drawer__kr-period', indicator?.period ?? '기간 없음'));
+        grid.append(item);
+      }
+      section.append(grid);
+    }
+    const trade = korea?.trade;
+    if (!trade) section.append(make('p', 'wfs-country-drawer__empty', '관세청 무역 통계를 불러오지 못했습니다.'));
+    else {
+      const billion = (value: number): string => `${(value / 100_000_000).toLocaleString('ko-KR', { maximumFractionDigits: 1 })}억 달러`;
+      const totals = make('p', 'wfs-country-drawer__kr-trade', `${trade.month}: 수출 ${billion(trade.total.exportUsd)} (${trade.total.exportYoyPct == null ? 'YoY —' : `YoY ${trade.total.exportYoyPct}%`}) · 수입 ${billion(trade.total.importUsd)} (${trade.total.importYoyPct == null ? 'YoY —' : `YoY ${trade.total.importYoyPct}%`}) · 무역수지 ${billion(trade.total.balanceUsd)}`);
+      section.append(totals);
+      if (trade.provisional) section.append(make('p', 'wfs-country-drawer__kr-trade', `${trade.provisional.period} 잠정 수출 ${billion(trade.provisional.exportUsd)} · YoY ${trade.provisional.exportYoyPct == null ? '—' : `${trade.provisional.exportYoyPct}%`}`));
+      const partners = make('p', 'wfs-country-drawer__kr-trade', `주요 수출국: ${trade.partners.slice(0, 5).map((partner) => partner.nameKo).join(' · ') || '자료 없음'}`);
+      section.append(partners);
+      const items = [...trade.items].sort((a, b) => Number(b.nameKo.includes('반도체')) - Number(a.nameKo.includes('반도체'))).slice(0, 5);
+      section.append(make('p', 'wfs-country-drawer__kr-trade', `주요 품목: ${items.map((item) => item.nameKo).join(' · ') || '자료 없음'}`));
+    }
+    const filings = (korea?.disclosures ?? []).filter((filing) => filing.kind === 'major').sort((a, b) => b.at - a.at).slice(0, 5);
+    if (!filings.length) section.append(make('p', 'wfs-country-drawer__empty', '최근 주요 공시가 없습니다.'));
+    else {
+      const list = make('ul', 'wfs-country-drawer__kr-filings');
+      for (const filing of filings) {
+        const item = make('li');
+        const link = make('a', 'wfs-country-drawer__source-link', `${filing.corpName} · ${filing.title}`);
+        const url = validSourceUrl(filing.url);
+        if (url) { link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; }
+        item.append(link);
+        list.append(item);
+      }
+      section.append(list);
+    }
     return section;
   }
 
