@@ -381,6 +381,7 @@ const BOOTSTRAP_KEYS = {
   eurostatGovDebtQ:    'economic:eurostat:gov-debt-q:v1',
   eurostatIndProd:     'economic:eurostat:industrial-production:v1',
   euGasStorage:      'economic:eu-gas-storage:v1',
+  euGasFlows:        BOOTSTRAP_CACHE_KEYS.euGasFlows,
   euFsi:             'economic:fsi-eu:v1',
   shippingStress:    'supply_chain:shipping_stress:v1',
   diseaseOutbreaks:  'health:disease-outbreaks:v1',
@@ -855,6 +856,7 @@ const FIVE_FACTOR_SCORECARD_READ_MODEL_KEY = 'scorecard:five-factor:v1:read-mode
 
 const SEED_META = {
   fundingStress: { key: 'seed-meta:markets:funding-stress', maxStaleMin: 2880 },
+  euGasFlows: { key: 'seed-meta:energy:eu-gas-flows', maxStaleMin: 2880 },
   worldOverview: { key: 'seed-meta:world-overview:snapshot', maxStaleMin: 360,
     activationKey: 'seed-activated:world-overview:snapshot',
     cutover: { mode: 'activation-marker', fromKey: null, issue: 9, activationKey: 'seed-activated:world-overview:snapshot' } },
@@ -2745,6 +2747,7 @@ const GOVERNMENT_RELEASE_INCIDENT_GRACE_MIN = 30 * 24 * 60;
 // chronic outage went undetected until a user noticed the panel was stuck on
 // "Loading...". Removed marketImplications below.
 const ON_DEMAND_KEYS = new Set([
+  'euGasFlows',
   'worldOverview',
   'iodaOutages',
   'fundingStress',

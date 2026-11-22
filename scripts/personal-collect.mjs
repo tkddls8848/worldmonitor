@@ -30,8 +30,8 @@ export const STANDALONE_INTERVAL_MIN = {
   'aviation': 30, 'notam-nms': 30, 'ioda-outages': 30, 'fire-detections': 60, 'radiation-watch': 15,
   'imd-cyclone-marine': 60, 'no2-activity': 1440, 'cve-reference': 720, 'research': 45,
   'country-history': 1440, 'webcams': 480, 'forecast-resolutions': 720, 'forecast-bets': 720,
-  'gpsjam': 360,
   'funding-stress': 240,
+  'gpsjam': 360, 'eu-gas-flows': 360,
   // The index counts a spike only over consecutive ~15-minute readings.
   'pizzint': 15,
 };

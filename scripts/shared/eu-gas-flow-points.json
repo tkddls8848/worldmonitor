@@ -1,0 +1,733 @@
+{
+  "comment": "EU entry point inventory derived from ENTSOG operatorpointdirections metadata: adjacent country maps pipeline origin; LNG Entry point maps terminals. Source: https://transparency.entsog.eu/api/v1/operatorpointdirections (ENTSOG Transparency Platform API/user manual). RU/BY/UA classify Russian pipeline routes; NO Norwegian; DZ/LY/TN North African; LNG type identifies LNG terminals. TN includes the Algeria to Italy pipeline via Tunisia. Metadata inventory refreshed 2026-11-22.",
+  "euCountries": [
+    "AT",
+    "BE",
+    "BG",
+    "HR",
+    "CY",
+    "CZ",
+    "DK",
+    "EE",
+    "FI",
+    "FR",
+    "DE",
+    "GR",
+    "HU",
+    "IE",
+    "IT",
+    "LV",
+    "LT",
+    "LU",
+    "MT",
+    "NL",
+    "PL",
+    "PT",
+    "RO",
+    "SK",
+    "SI",
+    "ES",
+    "SE"
+  ],
+  "origins": {
+    "russia": [
+      "RU",
+      "BY",
+      "UA"
+    ],
+    "norway": [
+      "NO"
+    ],
+    "northAfrica": [
+      "DZ",
+      "LY",
+      "TN"
+    ]
+  },
+  "points": [
+    {
+      "operatorKey": "DE-TSO-0001",
+      "pointKey": "ITP-00501",
+      "label": "Lubmin II",
+      "country": "DE",
+      "adjacentCountry": "RU",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0001",
+      "pointKey": "ITP-00665",
+      "label": "Greifswald PiP",
+      "country": "DE",
+      "adjacentCountry": "RU",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0003",
+      "pointKey": "ITP-00501",
+      "label": "Lubmin II",
+      "country": "DE",
+      "adjacentCountry": "RU",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0005",
+      "pointKey": "ITP-00491",
+      "label": "Greifswald / GUD",
+      "country": "DE",
+      "adjacentCountry": "RU",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0005",
+      "pointKey": "ITP-00501",
+      "label": "Lubmin II",
+      "country": "DE",
+      "adjacentCountry": "RU",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0015",
+      "pointKey": "ITP-00250",
+      "label": "Greifswald / GOAL",
+      "country": "DE",
+      "adjacentCountry": "RU",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0016",
+      "pointKey": "ITP-00251",
+      "label": "Greifswald / OPAL",
+      "country": "DE",
+      "adjacentCountry": "RU",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0017",
+      "pointKey": "ITP-00247",
+      "label": "Greifswald / NEL",
+      "country": "DE",
+      "adjacentCountry": "RU",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0018",
+      "pointKey": "ITP-00297",
+      "label": "Greifswald / Fluxys Deutschland",
+      "country": "DE",
+      "adjacentCountry": "RU",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0018",
+      "pointKey": "ITP-00501",
+      "label": "Lubmin II",
+      "country": "DE",
+      "adjacentCountry": "RU",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0020",
+      "pointKey": "ITP-00454",
+      "label": "Greifswald / LBTG",
+      "country": "DE",
+      "adjacentCountry": "RU",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "EE-TSO-0001",
+      "pointKey": "ITP-00187",
+      "label": "V梨꼛ska",
+      "country": "EE",
+      "adjacentCountry": "RU",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "EE-TSO-0001",
+      "pointKey": "ITP-00243",
+      "label": "Narva",
+      "country": "EE",
+      "adjacentCountry": "RU",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "EE-TSO-0001",
+      "pointKey": "ITP-00493",
+      "label": "Luhamaa",
+      "country": "EE",
+      "adjacentCountry": "RU",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "FI-TSO-0003",
+      "pointKey": "ITP-00024",
+      "label": "Imatra",
+      "country": "FI",
+      "adjacentCountry": "RU",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "LT-TSO-0001",
+      "pointKey": "ITP-00085",
+      "label": "Kotlovka",
+      "country": "LT",
+      "adjacentCountry": "BY",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "HU-TSO-0001",
+      "pointKey": "ITP-00095",
+      "label": "Beregdar泥쁟 1400 (HU) - Beregovo (UA) (UA>HU)",
+      "country": "HU",
+      "adjacentCountry": "UA",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "HU-TSO-0001",
+      "pointKey": "ITP-10006",
+      "label": "VIP Bereg (HU) / VIP Bereg (UA)",
+      "country": "HU",
+      "adjacentCountry": "UA",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "PL-TSO-0002",
+      "pointKey": "ITP-10008",
+      "label": "GCP GAZ-SYSTEM/UA TSO",
+      "country": "PL",
+      "adjacentCountry": "UA",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "RO-TSO-0001",
+      "pointKey": "ITP-00084",
+      "label": "Mediesu Aurit (RO) - Tekovo (UA)",
+      "country": "RO",
+      "adjacentCountry": "UA",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "RO-TSO-0001",
+      "pointKey": "ITP-00087",
+      "label": "Isaccea (RO) - Orlovka (UA) I",
+      "country": "RO",
+      "adjacentCountry": "UA",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "RO-TSO-0001",
+      "pointKey": "ITP-00299",
+      "label": "Isaccea (RO) - Orlovka (UA) II",
+      "country": "RO",
+      "adjacentCountry": "UA",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "RO-TSO-0001",
+      "pointKey": "ITP-00300",
+      "label": "Isaccea (RO) - Orlovka (UA) III",
+      "country": "RO",
+      "adjacentCountry": "UA",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "RO-TSO-0001",
+      "pointKey": "ITP-00438",
+      "label": "VIP Mediesu Aurit - Isaccea (RO-UA)",
+      "country": "RO",
+      "adjacentCountry": "UA",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "SK-TSO-0001",
+      "pointKey": "ITP-00117",
+      "label": "Uzhhorod (UA) - Velk梨?Kapu?꼆ny (SK)",
+      "country": "SK",
+      "adjacentCountry": "UA",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "SK-TSO-0001",
+      "pointKey": "ITP-00421",
+      "label": "Budince",
+      "country": "SK",
+      "adjacentCountry": "UA",
+      "type": "Cross-Border Transmission IP between EU and Non-EU",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "BE-TSO-0001",
+      "pointKey": "ITP-00106",
+      "label": "Zeebrugge ZPT",
+      "country": "BE",
+      "adjacentCountry": "NO",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0002",
+      "pointKey": "ITP-00075",
+      "label": "Emden (NPT) (Thyssengas)",
+      "country": "DE",
+      "adjacentCountry": "NO",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0002",
+      "pointKey": "ITP-00105",
+      "label": "Emden (EPT1) (Thyssengas)",
+      "country": "DE",
+      "adjacentCountry": "NO",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0005",
+      "pointKey": "ITP-00081",
+      "label": "Emden (EPT1) (GUD)",
+      "country": "DE",
+      "adjacentCountry": "NO",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0005",
+      "pointKey": "ITP-00086",
+      "label": "Emden (NPT) (GUD)",
+      "country": "DE",
+      "adjacentCountry": "NO",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0005",
+      "pointKey": "ITP-00188",
+      "label": "Dornum / NETRA (GUD)",
+      "country": "DE",
+      "adjacentCountry": "NO",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0009",
+      "pointKey": "ITP-00080",
+      "label": "Emden (EPT1) (OGE)",
+      "country": "DE",
+      "adjacentCountry": "NO",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0009",
+      "pointKey": "ITP-00126",
+      "label": "Dornum / NETRA (OGE)",
+      "country": "DE",
+      "adjacentCountry": "NO",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0009",
+      "pointKey": "ITP-00525",
+      "label": "Dornum GASPOOL",
+      "country": "DE",
+      "adjacentCountry": "NO",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DK-TSO-0001",
+      "pointKey": "ITP-00630",
+      "label": "North Sea Entry",
+      "country": "DK",
+      "adjacentCountry": "NO",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "FR-TSO-0003",
+      "pointKey": "ITP-00045",
+      "label": "Dunkerque",
+      "country": "FR",
+      "adjacentCountry": "NO",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "NL-TSO-0001",
+      "pointKey": "ITP-00160",
+      "label": "Emden (EPT1) (GTS)",
+      "country": "NL",
+      "adjacentCountry": "NO",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "NL-TSO-0001",
+      "pointKey": "ITP-00161",
+      "label": "Emden (NPT) (GTS)",
+      "country": "NL",
+      "adjacentCountry": "NO",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "IT-TSO-0001",
+      "pointKey": "ITP-00074",
+      "label": "Gela",
+      "country": "IT",
+      "adjacentCountry": "LY",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "IT-TSO-0001",
+      "pointKey": "ITP-00093",
+      "label": "Mazara del Vallo",
+      "country": "IT",
+      "adjacentCountry": "TN",
+      "type": "Cross-Border Transmission IP between EU and Non-EU (import)",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "BE-TSO-0001",
+      "pointKey": "LNG-00017",
+      "label": "Zeebrugge LNG",
+      "country": "BE",
+      "adjacentCountry": "BE",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0001",
+      "pointKey": "LNG-00079",
+      "label": "Baltic Energy Gate ",
+      "country": "DE",
+      "adjacentCountry": "DE",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0005",
+      "pointKey": "LNG-00060",
+      "label": "BRUNSBUETTEL HAFEN (FSRU) (DE)",
+      "country": "DE",
+      "adjacentCountry": "DE",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0005",
+      "pointKey": "LNG-00078",
+      "label": "STADE HAFEN (FSRU) - LNG",
+      "country": "DE",
+      "adjacentCountry": "DE",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0009",
+      "pointKey": "LNG-00083",
+      "label": "Wilhelmshaven, LNG-Zone",
+      "country": "DE",
+      "adjacentCountry": "DE",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0017",
+      "pointKey": "LNG-00075",
+      "label": "Baltic Energy Gate (Port) (DE)",
+      "country": "DE",
+      "adjacentCountry": "DE",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "DE-TSO-0018",
+      "pointKey": "LNG-00079",
+      "label": "Baltic Energy Gate ",
+      "country": "DE",
+      "adjacentCountry": "DE",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "ES-TSO-0006",
+      "pointKey": "LNG-00012",
+      "label": "Barcelona",
+      "country": "ES",
+      "adjacentCountry": "ES",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "ES-TSO-0006",
+      "pointKey": "LNG-00013",
+      "label": "Bilbao",
+      "country": "ES",
+      "adjacentCountry": "ES",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "ES-TSO-0006",
+      "pointKey": "LNG-00016",
+      "label": "Musel",
+      "country": "ES",
+      "adjacentCountry": "ES",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "ES-TSO-0006",
+      "pointKey": "LNG-00018",
+      "label": "Huelva",
+      "country": "ES",
+      "adjacentCountry": "ES",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "ES-TSO-0006",
+      "pointKey": "LNG-00021",
+      "label": "Mugardos",
+      "country": "ES",
+      "adjacentCountry": "ES",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "ES-TSO-0006",
+      "pointKey": "LNG-00022",
+      "label": "Cartagena",
+      "country": "ES",
+      "adjacentCountry": "ES",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "ES-TSO-0006",
+      "pointKey": "LNG-00023",
+      "label": "Sagunto",
+      "country": "ES",
+      "adjacentCountry": "ES",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "ES-TSO-0006",
+      "pointKey": "VTP-00043",
+      "label": "TVB",
+      "country": "ES",
+      "adjacentCountry": "ES",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "FI-TSO-0003",
+      "pointKey": "LNG-00011",
+      "label": "Hamina LNG",
+      "country": "FI",
+      "adjacentCountry": "FI",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "FI-TSO-0003",
+      "pointKey": "LNG-00072",
+      "label": "Inkoo LNG (FI)",
+      "country": "FI",
+      "adjacentCountry": "FI",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "FR-TSO-0003",
+      "pointKey": "LNG-00003",
+      "label": "Dunkerque GNL",
+      "country": "FR",
+      "adjacentCountry": "FR",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "FR-TSO-0003",
+      "pointKey": "LNG-00024",
+      "label": "Montoir de Bretagne",
+      "country": "FR",
+      "adjacentCountry": "FR",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "FR-TSO-0003",
+      "pointKey": "LNG-00029",
+      "label": "Fos (Tonkin/Cavaou)",
+      "country": "FR",
+      "adjacentCountry": "FR",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "FR-TSO-0003",
+      "pointKey": "LNG-00071",
+      "label": "Le Havre (FR)",
+      "country": "FR",
+      "adjacentCountry": "FR",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "GR-TSO-0001",
+      "pointKey": "LNG-00014",
+      "label": "Agia Triada",
+      "country": "GR",
+      "adjacentCountry": "GR",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "GR-TSO-0001",
+      "pointKey": "LNG-00042",
+      "label": "AMFITRITI",
+      "country": "GR",
+      "adjacentCountry": "GR",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "HR-TSO-0001",
+      "pointKey": "LNG-00032",
+      "label": "Croatia LNG",
+      "country": "HR",
+      "adjacentCountry": "HR",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "IT-TSO-0001",
+      "pointKey": "LNG-00004",
+      "label": "OLT LNG / Livorno",
+      "country": "IT",
+      "adjacentCountry": "IT",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "IT-TSO-0001",
+      "pointKey": "LNG-00015",
+      "label": "Cavarzere (Porto Levante / Adriatic LNG)",
+      "country": "IT",
+      "adjacentCountry": "IT",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "IT-TSO-0001",
+      "pointKey": "LNG-00019",
+      "label": "PANIGAGLIA TERMINAL",
+      "country": "IT",
+      "adjacentCountry": "IT",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "IT-TSO-0001",
+      "pointKey": "LNG-00069",
+      "label": "PIOMBINO TERMINAL",
+      "country": "IT",
+      "adjacentCountry": "IT",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "IT-TSO-0001",
+      "pointKey": "LNG-00082",
+      "label": "RAVENNA TERMINAL",
+      "country": "IT",
+      "adjacentCountry": "IT",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "IT-TSO-0004",
+      "pointKey": "LNG-00015",
+      "label": "Cavarzere (Porto Levante / Adriatic LNG)",
+      "country": "IT",
+      "adjacentCountry": "IT",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "LT-TSO-0001",
+      "pointKey": "LNG-00030",
+      "label": "Klaipeda (LNG)",
+      "country": "LT",
+      "adjacentCountry": "LT",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "NL-TSO-0001",
+      "pointKey": "LNG-00027",
+      "label": "Gate Terminal (I)",
+      "country": "NL",
+      "adjacentCountry": "NL",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "NL-TSO-0001",
+      "pointKey": "LNG-00068",
+      "label": "Eems Energy Terminal",
+      "country": "NL",
+      "adjacentCountry": "NL",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "PL-TSO-0002",
+      "pointKey": "LNG-00006",
+      "label": "Swinoujscie",
+      "country": "PL",
+      "adjacentCountry": "PL",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    },
+    {
+      "operatorKey": "PT-TSO-0001",
+      "pointKey": "LNG-00026",
+      "label": "Sines",
+      "country": "PT",
+      "adjacentCountry": "PT",
+      "type": "LNG Entry point",
+      "directionKey": "entry"
+    }
+  ]
+}

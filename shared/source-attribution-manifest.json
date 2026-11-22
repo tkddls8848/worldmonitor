@@ -10462,6 +10462,20 @@
       ]
     },
     {
+      "host": "transparency.entsog.eu",
+      "provider": "ENTSOG Transparency Platform",
+      "kind": "structured",
+      "observed": true,
+      "license": "ENTSOG platform terms for public transparency data; verify before redistribution",
+      "attribution": "Credit ENTSOG and link to the Transparency Platform API.",
+      "status": "terms-review",
+      "references": [
+        {
+          "path": "scripts/seed-eu-gas-flows.mjs"
+        }
+      ]
+    },
+    {
       "host": "travel.state.gov",
       "provider": "travel.state.gov",
       "kind": "structured",

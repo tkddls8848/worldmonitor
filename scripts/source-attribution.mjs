@@ -248,6 +248,12 @@ const PROVIDER_OVERRIDES = {
     attribution: 'Credit UCDP and cite the UCDP Candidate Events Dataset; link to https://ucdp.uu.se/downloads/.',
     status: 'reviewed',
   },
+  'transparency.entsog.eu': {
+    provider: 'ENTSOG Transparency Platform',
+    license: 'ENTSOG platform terms for public transparency data; verify before redistribution',
+    attribution: 'Credit ENTSOG and link to the Transparency Platform API.',
+    status: 'terms-review',
+  },
   'data.opensanctions.org': {
     provider: 'OpenSanctions',
     license: 'CC BY-NC 4.0; non-commercial personal use only',
@@ -1211,8 +1217,10 @@ const PROVIDER_OVERRIDES = {
 // a provider-bearing override a separate, explicit lifecycle event instead of
 // something `--write` can silently normalize into the manifest.
 export const PROVIDER_IDENTITY_REVIEW = Object.freeze({
-  sha256: 'd2c410046272d3227f515810795f14ba4dece52ce7d21e75556d52d7298fead4',
+  sha256: '7e116e67bc500427d2bf5f77d153d38a095e6a93044d359408d129b8d7051909',
   // 2026-11-22: add UCDP's bulk Candidate CSV downloads under CC BY 4.0.
+  // 2026-11-22: name ENTSOG as the publisher of the public EU gas flow data;
+  // the platform terms remain under review.
   // 2026-11-22: add the OpenSanctions, UN Security Council and UK FCDO
   // sanctions-list providers used by the fixed world-relations collector.
   // 2026-11-17: exclude redis-rest, the docker-network Redis REST proxy host
