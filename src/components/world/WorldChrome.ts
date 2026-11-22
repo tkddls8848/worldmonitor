@@ -57,17 +57,19 @@ export class WorldMasthead {
       this.ticker.append(el('span', 'wfs-empty', '표시할 시세 지표가 없습니다'));
       return;
     }
-    for (const item of items.slice(0, 8)) {
+    for (const item of items) {
       const button = el('button', 'wfs-ticker-item');
       button.type = 'button';
       button.setAttribute('aria-label', `${item.label}: ${item.value ?? '자료 없음'}`);
       const label = el('span', 'wfs-ticker-label', item.label),
         value = el('strong', 'num', item.value === null ? '—' : `${item.value.toFixed(item.digits)}${item.unit ?? ''}`);
       if (item.changePct !== null) {
+        const adverse = item.inverse ? -item.changePct : item.changePct;
+        const suffix = item.changeKind === 'bp' ? ' bp' : item.changeKind === 'abs' ? '' : '%';
         const change = el(
           'span',
-          `wfs-ticker-change ${item.changePct > 0 ? 'is-up' : item.changePct < 0 ? 'is-down' : ''}`,
-          `${item.changePct > 0 ? '+' : ''}${item.changePct.toFixed(2)}%`,
+          `wfs-ticker-change ${adverse > 0 ? 'is-down' : adverse < 0 ? 'is-up' : ''}`,
+          `${item.changePct > 0 ? '+' : ''}${item.changePct.toFixed(item.changeKind === 'bp' ? 0 : 2)}${suffix}`,
         );
         button.append(label, value, change);
       } else button.append(label, value);

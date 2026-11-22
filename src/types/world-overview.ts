@@ -67,6 +67,9 @@ export interface TickerItem {
   label: string;
   value: number | null;
   changePct: number | null;
+  changeKind?: 'pct' | 'abs' | 'bp';
+  /** Positive values move in the adverse direction (shown in red/down style). */
+  inverse?: boolean;
   /** Decimal places to render. */
   digits: number;
   unit?: string;
@@ -101,6 +104,7 @@ export interface CountryDrawerData {
   /** Marks may only be set on today's snapshot. */
   isToday: boolean;
   aiStatus: 'ok' | 'stale' | 'missing';
+  outages: Array<{ id: string; start: number; end: number | null; severity: 'low' | 'medium' | 'high'; signals: string[]; url: string }>;
 }
 
 export type WorldMarkRequest =
@@ -128,6 +132,8 @@ export interface OpsCounters {
   aiRelations: number;
   /** Breaking alerts received in the last 24 h. */
   breaking24h: number;
+  /** Active or ended within the last six hours. */
+  outages: number;
 }
 
 export interface OpsMetrics {
@@ -143,7 +149,7 @@ export interface OpsEvent {
   id: string;
   /** epoch ms */
   at: number;
-  kind: 'breaking' | 'relation' | 'issue';
+  kind: 'breaking' | 'relation' | 'issue' | 'outage';
   title: string;
   iso2?: string;
   severity: OpsEventSeverity;

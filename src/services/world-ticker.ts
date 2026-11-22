@@ -12,6 +12,10 @@ const instruments: Instrument[] = [
   { id: 'BTC-USD', label: '비트코인', digits: 0, unit: '$', aliases: ['BTC-USD', 'BTC'], source: 'cryptoQuotes' },
 ];
 type SourceKey = Instrument['source'];
+type TickerExtras = {
+  fundingStress?: { ofrFsi?: { value: number; change1d: number | null } | null; sofr?: { rate: number; changeBp: number | null } | null } | null;
+  gasFlows?: { origins: Partial<Record<'russia' | 'norway' | 'northAfrica' | 'lng', { gwhPerDay: number; change7dPct: number | null } | null>> } | null;
+};
 function asRecords(value: unknown): Record<string, unknown>[] {
   if (Array.isArray(value)) return value.filter((item): item is Record<string, unknown> => !!item && typeof item === 'object');
   if (!value || typeof value !== 'object') return [];
@@ -44,9 +48,9 @@ function numberFrom(row: Record<string, unknown> | undefined, keys: string[]): n
   }
   return null;
 }
-export function buildTickerItems(src: { marketQuotes?: unknown; commodityQuotes?: unknown; cryptoQuotes?: unknown; macroSignals?: unknown }): TickerItem[] {
+export function buildTickerItems(src: { marketQuotes?: unknown; commodityQuotes?: unknown; cryptoQuotes?: unknown; macroSignals?: unknown }, extras: TickerExtras = {}): TickerItem[] {
   const all = src as Record<SourceKey, unknown>;
-  return instruments.map((instrument) => {
+  const items: TickerItem[] = instruments.map((instrument) => {
     // A few feeds expose the Treasury yield as a market quote rather than a macro signal.
     const row = findQuote(all, instrument) ?? (instrument.id === '^TNX' ? findQuote({ ...all, macroSignals: src.marketQuotes }, instrument) : undefined);
     const sourceSymbol = row && [row.symbol, row.id, row.key].find((value): value is string => typeof value === 'string');
@@ -56,6 +60,19 @@ export function buildTickerItems(src: { marketQuotes?: unknown; commodityQuotes?
       ...(instrument.unit ? { unit: instrument.unit } : {}),
     };
   });
+  const stress = extras.fundingStress;
+  if (stress?.ofrFsi) items.push({ id: 'ofr-fsi', label: 'OFR 스트레스', value: stress.ofrFsi.value, changePct: stress.ofrFsi.change1d, changeKind: 'abs', inverse: true, digits: 2 });
+  if (stress?.sofr) items.push({ id: 'sofr', label: 'SOFR', value: stress.sofr.rate, changePct: stress.sofr.changeBp, changeKind: 'bp', digits: 2, unit: '%' });
+  const gasLabels = { russia: 'EU 가스(러)', norway: 'EU 가스(노)', lng: 'LNG' } as const;
+  for (const origin of ['russia', 'norway', 'lng'] as const) {
+    const flow = extras.gasFlows?.origins[origin];
+    if (flow) items.push({ id: `eu-gas-${origin}`, label: gasLabels[origin], value: flow.gwhPerDay, changePct: flow.change7dPct, changeKind: 'pct', digits: 0, unit: ' GWh/d' });
+  }
+  return items;
+}
+
+export function buildSupplementalTickerItems(extras: TickerExtras): TickerItem[] {
+  return buildTickerItems({}, extras).slice(instruments.length);
 }
 
 const TICKER_STOCKS = [

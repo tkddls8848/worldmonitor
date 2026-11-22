@@ -4,6 +4,7 @@ import type { CountryDrawerData, DrawerRelation, SourceLink, WorldMarkRequest } 
 
 type RelationFilter = 'all' | 'worsening' | 'easing';
 type MarkRequest = Extract<WorldMarkRequest, { action: 'mark' }>;
+const OUTAGE_SEVERITY_KO = { low: '낮음', medium: '중간', high: '높음' } as const;
 
 export interface WorldCountryDrawerOptions {
   onClose: () => void;
@@ -99,7 +100,7 @@ export class WorldCountryDrawer {
     const data = this.data;
     if (!data) return;
     const content = make('div', 'wfs-country-drawer__content');
-    content.append(this.renderHeader(data), this.renderNotice(data), this.renderIssues(data), this.renderRelations(data), this.renderSources(data), this.renderFooter(data));
+    content.append(this.renderHeader(data), this.renderNotice(data), this.renderIssues(data), this.renderRelations(data), this.renderOutages(data), this.renderSources(data), this.renderFooter(data));
     this.element.replaceChildren(content);
   }
 
@@ -257,6 +258,30 @@ export class WorldCountryDrawer {
     }
     if (list.childElementCount) section.append(list);
     else section.append(make('p', 'wfs-country-drawer__empty', '등록된 출처가 없습니다'));
+    return section;
+  }
+
+  private renderOutages(data: CountryDrawerData): HTMLElement {
+    const section = this.section('infrastructure', '인프라');
+    if (!data.outages.length) {
+      section.append(make('p', 'wfs-country-drawer__empty', '최근 인터넷 차단 기록이 없습니다'));
+      return section;
+    }
+    const list = make('ul', 'wfs-country-drawer__outage-list');
+    for (const outage of data.outages) {
+      const item = make('li', 'wfs-country-drawer__outage');
+      const time = make('time', 'wfs-country-drawer__source-time', new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(outage.start));
+      const detail = make('span', `wfs-country-drawer__outage-severity is-${outage.severity}`, `${OUTAGE_SEVERITY_KO[outage.severity]} · ${outage.signals.join(', ')}`);
+      const url = validSourceUrl(outage.url);
+      item.append(time, detail);
+      if (url) {
+        const link = make('a', 'wfs-country-drawer__source-link', 'IODA');
+        link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.dataset.iodaLink = '';
+        item.append(link);
+      }
+      list.append(item);
+    }
+    section.append(list);
     return section;
   }
 
