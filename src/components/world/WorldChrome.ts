@@ -2,6 +2,7 @@ import type { BreakingAlert } from '@/services/breaking-news-alerts';
 import type { TickerItem, WorldField, WorldLoadState } from '@/types/world-overview';
 import { FIELD_LABEL_KO, WORLD_FIELDS } from '../../../shared/world-overview.js';
 import css from '@/styles/world-first-screen.css?inline';
+import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 
 let styleInstalled = false;
 function installStyle(): void {
@@ -37,11 +38,11 @@ export class WorldMasthead {
     installStyle();
     this.element = el('header', 'masthead-bar');
     const brand = el('div', 'wfs-brand');
-    brand.innerHTML = '<strong>WorldMonitor</strong><span>GLOBAL INTELLIGENCE</span>';
+    brand.append(el('strong', '', 'WorldMonitor'), el('span', '', 'GLOBAL INTELLIGENCE'));
     const theme = el('button', 'wfs-icon-button', '');
     theme.type = 'button';
     theme.setAttribute('aria-label', '테마 전환');
-    theme.innerHTML = icon('moon');
+    setTrustedHtml(theme, trustedHtml(icon('moon'), 'static inline SVG icon'));
     theme.addEventListener('click', callbacks.onToggleTheme);
     const full = el('button', 'wfs-full-view', '전체 보기');
     full.type = 'button';
@@ -192,7 +193,7 @@ export class WorldZoomControls {
       const b = el('button', 'wfs-zoom-button');
       b.type = 'button';
       b.setAttribute('aria-label', label);
-      b.innerHTML = icon(name);
+      setTrustedHtml(b, trustedHtml(icon(name), 'static inline SVG icon'));
       b.addEventListener('click', cb);
       this.element.append(b);
     }
@@ -344,7 +345,8 @@ export class WorldStatusBanner {
       empty: '데이터 없음 · 세계 현황 자료가 아직 수집되지 않았습니다.',
       error: detail || '데이터를 불러오지 못했습니다. 다시 시도해 주세요.',
     };
-    this.element.innerHTML = state === 'error' ? icon('warning') : '';
+    if (state === 'error') setTrustedHtml(this.element, trustedHtml(icon('warning'), 'static inline SVG icon'));
+    else this.element.replaceChildren();
     this.element.append(document.createTextNode(copy[state]));
     this.element.dataset.state = state;
   }
