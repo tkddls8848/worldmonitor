@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { summarize, isImprovement, compareReports, unmatchedMetrics } from '../scripts/perf/perf-stats.mjs';
+import { summarize, summarizeOptional, isImprovement, compareReports, unmatchedMetrics } from '../scripts/perf/perf-stats.mjs';
 
 describe('summarize', () => {
   it('takes the median of the successful samples and counts failures', () => {
@@ -17,6 +17,13 @@ describe('summarize', () => {
   });
   it('keeps max - min as the spread when fewer than three samples succeeded', () => {
     assert.equal(summarize([1, 5, null]).spread, 4);
+  });
+});
+
+describe('summarizeOptional', () => {
+  it('does not count unavailable mode-specific samples as failures', () => {
+    assert.deepEqual(summarizeOptional([null, 12, null]), { median: 12, min: 12, max: 12, spread: 0, runs: 3, failed: 0 });
+    assert.deepEqual(summarizeOptional([null, null]), { median: null, min: null, max: null, spread: null, runs: 2, failed: 0 });
   });
 });
 
@@ -81,12 +88,11 @@ describe('compareReports', () => {
     assert.equal(out[0].improved, true);
     assert.equal(out[0].before, a.metrics.m);
   });
-  it('gives null changePct when a median is missing', () => {
+  it('skips metrics whose median is unavailable in either report', () => {
     const s = { median: null, min: null, max: null, runs: 1, failed: 1 };
     const ok = { median: 5, min: 5, max: 5, runs: 1, failed: 0 };
     const out = compareReports({ metrics: { m: ok } }, { metrics: { m: s } });
-    assert.equal(out[0].changePct, null);
-    assert.equal(out[0].improved, false);
+    assert.deepEqual(out, []);
   });
 });
 
