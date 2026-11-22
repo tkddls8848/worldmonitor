@@ -37,6 +37,7 @@ export const BOOTSTRAP_CACHE_KEYS = Object.freeze({
   chinaMacro: 'economic:china:macro:v2',
   chinaReleaseCalendar: 'economic:china:release-calendar:v1',
   chinaCorporateDisclosures: 'market:china:corporate-disclosures:v1',
+  krDartDisclosures: 'kr:dart-disclosures:v1',
   chinaPolicyEvents: 'china:policy-events:v1',
   chinaDecisionSignals: 'intelligence:china-decision-signals:v1',
   shippingRates: 'supply_chain:shipping:v2',
@@ -192,6 +193,7 @@ const ON_DEMAND_KEY_NAMES = new Set([
   'ukmtoIncidents',
   'cyberThreats',
   'chinaPolicyEvents', 'chinaDecisionSignals',
+  'krDartDisclosures',
   'bisDsr', 'bisPropertyResidential', 'bisPropertyCommercial',
   // One row of this feeds the Central Banks tab's policy-rate list, which BIS
   // cannot supply for Russia. On-demand rather than tiered: the tab fetches it

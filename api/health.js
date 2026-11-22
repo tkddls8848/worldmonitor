@@ -367,6 +367,7 @@ const BOOTSTRAP_KEYS = {
   chinaMacro:        BOOTSTRAP_CACHE_KEYS.chinaMacro,
   chinaReleaseCalendar: BOOTSTRAP_CACHE_KEYS.chinaReleaseCalendar,
   chinaCorporateDisclosures: 'market:china:corporate-disclosures:v1',
+  krDartDisclosures: 'kr:dart-disclosures:v1',
   chinaPolicyEvents: 'china:policy-events:v1',
   chinaDecisionSignals: BOOTSTRAP_CACHE_KEYS.chinaDecisionSignals,
   cotPositioning:    'market:cot:v1',
@@ -1141,6 +1142,7 @@ const SEED_META = {
   chinaMacro:       { key: 'seed-meta:economic:china-macro-transport', maxStaleMin: 4_320 }, // oldest required-source last success; preserved failures do not refresh it
   chinaReleaseCalendar: { key: 'seed-meta:economic:china-release-calendar', maxStaleMin: 4_320 },
   chinaCorporateDisclosures: { key: 'seed-meta:market:china-corporate-disclosures', maxStaleMin: 180 },
+  krDartDisclosures: { key: 'seed-meta:market:dart-disclosures', maxStaleMin: 180 },
   chinaStockConnect: { key: 'seed-meta:market:china-stock-connect', maxStaleMin: 180 },
   // seed-no2-activity daily cron `20 6 * * *` (#9722); 4320 = 3x cadence.
   no2Activity: {
@@ -2747,6 +2749,7 @@ const GOVERNMENT_RELEASE_INCIDENT_GRACE_MIN = 30 * 24 * 60;
 // chronic outage went undetected until a user noticed the panel was stuck on
 // "Loading...". Removed marketImplications below.
 const ON_DEMAND_KEYS = new Set([
+  'krDartDisclosures',
   'euGasFlows',
   'worldOverview',
   'iodaOutages',
