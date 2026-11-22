@@ -78,7 +78,7 @@ describe('China A/H-share market coverage (#5272)', () => {
     const standalone = readText('scripts/seed-market-quotes.mjs');
     assert.match(relay, /loadMarketSeedUniverse\(_stockCfg\)/);
     assert.match(standalone, /loadMarketSeedUniverse\(stocksConfig\)/);
-    assert.equal(canonical.symbols.length, 93);
+    assert.equal(canonical.symbols.length, 94); // 93 + KRW=X (USD/KRW for the first-screen ticker)
     assert.ok(canonical.symbols.every((entry) => entry.region), 'every catalog symbol needs region metadata');
   });
 

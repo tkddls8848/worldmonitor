@@ -78,7 +78,7 @@ describe('NQ auxiliary quote basket', () => {
       assert.ok(universe.allSymbols.includes(symbol), `${symbol} must be seeded`);
       assert.ok(stocks.yahooOnly.includes(symbol), `${symbol} must stay Yahoo-only`);
     }
-    assert.equal(STOCK_CATALOG.length, 93);
+    assert.equal(STOCK_CATALOG.length, 94); // 93 + KRW=X (USD/KRW for the first-screen ticker)
     assert.equal(universe.coverageExpectedCount, universe.catalogSymbols.length);
     assert.deepEqual(universe.auxiliarySymbols, [...AUX_SYMBOLS]);
   });
