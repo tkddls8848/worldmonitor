@@ -3,6 +3,8 @@ import config from '../shared/world-overview-config.json' with { type: 'json' };
 import iso2ToIso3 from '../shared/iso2-to-iso3.json' with { type: 'json' };
 import { WORLD_OVERVIEW_KEYS, kstDate } from '../shared/world-overview.js';
 import { activeWarsReading, palestineLocator } from './active-wars.mjs';
+import { CONFLICT_ZONES } from '../shared/geo-data.ts';
+import { buildConflictZoneLevels } from './_conflict-zone-levels.mjs';
 import { CII_RISK_SCORE_CACHE_KEYS } from './_cii-risk-cache-keys.mjs';
 import { redisPipeline } from '../api/_upstash-json.js';
 import { unwrapEnvelope } from './_seed-envelope-source.mjs';
@@ -62,8 +64,9 @@ if (direct) {
   const previousDates = await readCanonicalValue(WORLD_OVERVIEW_KEYS.dates).catch(() => null);
   const marks = await readCanonicalValue(WORLD_OVERVIEW_KEYS.marks).catch(() => null);
   const locator = palestineLocator(fileURLToPath(new URL('..', import.meta.url)));
+  const conflictZoneLevels = buildConflictZoneLevels(CONFLICT_ZONES, fileURLToPath(new URL('..', import.meta.url)));
   await runSeed('world-overview', 'snapshot', WORLD_OVERVIEW_KEYS.snapshot,
-    async () => buildWorldOverviewSnapshot(deps, { date, nowMs, marks, previousDates, config, activeWarsReading, inPalestine: (lat, lon) => locator(lat, lon) }),
+    async () => buildWorldOverviewSnapshot(deps, { date, nowMs, marks, previousDates, config, activeWarsReading, inPalestine: (lat, lon) => locator(lat, lon), conflictZoneLevels }),
     { validateFn: isValidSnapshot, declareRecords, ttlSeconds: 172800, sourceVersion: 'world-overview-v1', schemaVersion: 1, maxStaleMin: 360,
       afterPublish: async (data) => {
         await writeExtraKey(`${WORLD_OVERVIEW_KEYS.archivePrefix}${date}`, data, ARCHIVE_TTL_SECONDS);

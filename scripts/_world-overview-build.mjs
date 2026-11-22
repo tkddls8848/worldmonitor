@@ -7,6 +7,11 @@ export const LINE_CAPS = Object.freeze({ sanction: 200, tension: 100, tensionMin
 export const ARCHIVE_DAYS = 90;
 export const ARCHIVE_TTL_SECONDS = 7_862_400;
 export const SNAPSHOT_MAX_BYTES = 262_144;
+const LEVEL_RANK = Object.freeze({ null: 0, tension: 1, medium: 2, high: 3, war: 4 });
+
+function moreSevereLevel(a, b) {
+  return LEVEL_RANK[b ?? 'null'] > LEVEL_RANK[a ?? 'null'] ? b : a;
+}
 
 export function conflictLevel(deaths, ciiScore) {
   if (deaths !== null && deaths !== undefined) {
@@ -92,7 +97,7 @@ export function nextAvailableDates(previous, date) {
 
 export function buildWorldOverviewSnapshot(inputs, opts) {
   const { relations, trends, ai, ucdpEvents, hapi = {}, cii, pool } = inputs;
-  const { date, nowMs, marks, previousDates, config } = opts;
+  const { date, nowMs, marks, previousDates, config, conflictZoneLevels = {} } = opts;
   let ucdp = null;
   if (Array.isArray(ucdpEvents) && ucdpEvents.length) {
     try {
@@ -112,9 +117,11 @@ export function buildWorldOverviewSnapshot(inputs, opts) {
   const issueByCode = new Map((aiStatus !== 'missing' ? ai?.issues ?? [] : []).map((issue) => [issue.iso2, issue]));
   const inNews = storyCodes(pool);
   const countries = {};
+  for (const code of Object.keys(conflictZoneLevels)) codes.add(code);
   for (const code of codes) {
     const ci = ciiByCode[code], h = hapi[code], d = deaths[code], issue = issueByCode.get(code);
-    countries[code] = { level: conflictLevel(d?.count ?? null, ci?.combinedScore ?? null), deaths: d ?? null,
+    const level = moreSevereLevel(conflictLevel(d?.count ?? null, ci?.combinedScore ?? null), conflictZoneLevels[code]);
+    countries[code] = { level, deaths: d ?? null,
       cii: ci ? { score: ci.combinedScore, unrest: ci.components?.ciiContribution ?? 0 } : null,
       demonstrations: Number.isFinite(h?.conflictDemonstrations) ? h.conflictDemonstrations : null,
       unrest: (ci?.components?.ciiContribution ?? 0) >= UNREST_THRESHOLDS.ciiUnrest || (h?.conflictDemonstrations ?? 0) >= UNREST_THRESHOLDS.demonstrations,

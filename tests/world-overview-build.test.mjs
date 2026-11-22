@@ -5,6 +5,9 @@ import { BOOTSTRAP_CACHE_KEYS, BOOTSTRAP_TIERS } from '../shared/bootstrap-tier-
 import { WORLD_OVERVIEW_KEYS } from '../shared/world-overview.js';
 import { buildRelationLines, buildWorldOverviewSnapshot, conflictLevel, formatUsdKo, isValidSnapshot, monthlyDeaths, nextAvailableDates } from '../scripts/_world-overview-build.mjs';
 import { readBuildInputs } from '../scripts/seed-world-overview.mjs';
+import { buildConflictZoneLevels } from '../scripts/_conflict-zone-levels.mjs';
+import { CONFLICT_ZONES } from '../shared/geo-data.ts';
+import { fileURLToPath } from 'node:url';
 import { getWorldOverviewSnapshot } from '../server/worldmonitor/world-overview/v1/get-world-overview-snapshot.ts';
 
 const NOW = Date.parse('2026-11-23T03:00:00Z');
@@ -52,6 +55,26 @@ test('publishes usable HAPI-only snapshot and handler returns the builder fixtur
   assert.deepEqual(response.snapshot.anchors.EU, { latitude: snapshot.anchors.EU[1], longitude: snapshot.anchors.EU[0] });
   assert.equal(response.snapshot.ai.status, 'missing');
   assert.deepEqual(response.archivedDates, []);
+});
+
+test('conflict zone levels combine with deaths and CII, while offshore zones are ignored', () => {
+  const levels = { UA: 'high', IR: 'tension' };
+  const snapshot = buildWorldOverviewSnapshot({ ...EMPTY, hapi: { UA: { conflictFatalities: 1000, referencePeriod: '2026-10-01' } }, cii: { scores: [{ region: 'IR', combinedScore: 50 }] } }, { ...OPTS, conflictZoneLevels: levels });
+  assert.equal(snapshot.countries.UA.level, 'war');
+  assert.equal(snapshot.countries.IR.level, 'tension');
+  const zoneSnapshot = buildWorldOverviewSnapshot(EMPTY, { ...OPTS, conflictZoneLevels: { UA: 'high' } });
+  assert.equal(zoneSnapshot.countries.UA.level, 'high');
+  const missing = buildWorldOverviewSnapshot(EMPTY, OPTS);
+  assert.equal(missing.countries.UA, undefined);
+  assert.deepEqual(buildWorldOverviewSnapshot(EMPTY, { ...OPTS, conflictZoneLevels: {} }), missing);
+  const rootDir = fileURLToPath(new URL('..', import.meta.url));
+  const offshore = buildConflictZoneLevels([{ center: [56.5, 26.2], intensity: 'high' }], rootDir);
+  assert.deepEqual(offshore, {});
+  const low = buildConflictZoneLevels(CONFLICT_ZONES.filter((zone) => zone.intensity === 'low'), rootDir);
+  const [iso2] = Object.entries(low)[0] ?? [];
+  assert.ok(iso2);
+  const ciiWins = buildWorldOverviewSnapshot({ ...EMPTY, cii: { scores: [{ region: iso2, combinedScore: 50 }] } }, { ...OPTS, conflictZoneLevels: low });
+  assert.equal(ciiWins.countries[iso2].level, 'tension');
 });
 
 test('handles AI freshness, marks, unrest, and archive window', () => {
