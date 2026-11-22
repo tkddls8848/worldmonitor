@@ -405,6 +405,7 @@ const BOOTSTRAP_KEYS = {
 // sweep so the canadaAlerts probe grades the data clients actually receive.
 const STANDALONE_KEYS = {
   worldOverview: BOOTSTRAP_CACHE_KEYS.worldOverview,
+  krCustomsTrade: BOOTSTRAP_CACHE_KEYS.krCustomsTrade,
   ukmtoIncidents: 'maritime:ukmto-incidents:v1',
   // ICESat-2 strategic reservoir levels (scripts/seed-reservoir-levels.mjs). Served by
   // /api/climate/v1/list-reservoir-levels with no dashboard consumer yet.
@@ -855,6 +856,7 @@ const STANDALONE_KEYS = {
 const FIVE_FACTOR_SCORECARD_READ_MODEL_KEY = 'scorecard:five-factor:v1:read-model';
 
 const SEED_META = {
+  krCustomsTrade: { key: 'seed-meta:kr-customs-trade:monthly', maxStaleMin: 4320 },
   fundingStress: { key: 'seed-meta:markets:funding-stress', maxStaleMin: 2880 },
   euGasFlows: { key: 'seed-meta:energy:eu-gas-flows', maxStaleMin: 2880 },
   worldOverview: { key: 'seed-meta:world-overview:snapshot', maxStaleMin: 360,
@@ -2747,6 +2749,7 @@ const GOVERNMENT_RELEASE_INCIDENT_GRACE_MIN = 30 * 24 * 60;
 // chronic outage went undetected until a user noticed the panel was stuck on
 // "Loading...". Removed marketImplications below.
 const ON_DEMAND_KEYS = new Set([
+  'krCustomsTrade',
   'euGasFlows',
   'worldOverview',
   'iodaOutages',

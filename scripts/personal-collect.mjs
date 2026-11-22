@@ -17,6 +17,7 @@ const MIN = 60_000;
 // `--watch 15` does not refetch daily and weekly sources every 15 minutes.
 // Roughly a third of each dataset's maxStaleMin in api/health.js.
 export const STANDALONE_INTERVAL_MIN = {
+  'kr-customs-trade': 1440,
   'world-relations': 1440,
   'market-quotes': 15, 'commodity-quotes': 15, 'crypto-sectors': 30, 'fear-greed': 240,
   'market-breadth': 1440, 'aaii-sentiment': 1440, 'cot': 1440, 'earnings-calendar': 360,
