@@ -999,6 +999,20 @@
       "status": "excluded"
     },
     {
+      "host": "api.ioda.inetintel.cc.gatech.edu",
+      "provider": "api.ioda.inetintel.cc.gatech.edu",
+      "kind": "structured",
+      "observed": true,
+      "license": "Provider terms for this upstream API/dataset; verify before redistribution",
+      "attribution": "Credit api.ioda.inetintel.cc.gatech.edu and link to the original upstream API/dataset.",
+      "status": "terms-review",
+      "references": [
+        {
+          "path": "scripts/seed-ioda-outages.mjs"
+        }
+      ]
+    },
+    {
       "host": "api.mercadopublico.cl",
       "provider": "api.mercadopublico.cl",
       "kind": "structured",
@@ -5611,6 +5625,20 @@
       "references": [
         {
           "path": "shared/news-catalog.json"
+        }
+      ]
+    },
+    {
+      "host": "ioda.inetintel.cc.gatech.edu",
+      "provider": "ioda.inetintel.cc.gatech.edu",
+      "kind": "structured",
+      "observed": true,
+      "license": "Provider terms for this upstream API/dataset; verify before redistribution",
+      "attribution": "Credit ioda.inetintel.cc.gatech.edu and link to the original upstream API/dataset.",
+      "status": "terms-review",
+      "references": [
+        {
+          "path": "scripts/seed-ioda-outages.mjs"
         }
       ]
     },

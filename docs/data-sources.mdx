@@ -19,7 +19,7 @@ Compare the dashboard with its underlying event-data services: [World Monitor vs
 | [News & OSINT](#news-%26-osint) | Tiered news feeds, Telegram OSINT, live TV and webcams | Reuters, BBC, AP, Al Jazeera, and reviewed Telegram channels |
 | [Finance & Economics](#finance-%26-economics) | Markets, macro series, central banks, crypto, trade flows | FRED, ECB, BIS, Eurostat, World Bank, CoinGecko |
 | [Energy & Commodities](#energy-%26-commodities) | Gas storage, oil inventories, fuel prices, gold and metals | GIE AGSI+, U.S. EIA, IEA, CFTC |
-| [Infrastructure & Cyber](#infrastructure-%26-cyber) | Undersea cables, pipelines, ports, outages, threat IOCs | Cloudflare Radar, Submarine Cable Map, abuse.ch |
+| [Infrastructure & Cyber](#infrastructure-%26-cyber) | Undersea cables, pipelines, ports, outages, threat IOCs | IODA, Cloudflare Radar, Submarine Cable Map, abuse.ch |
 | [Environment & Disasters](#environment-%26-disasters) | Earthquakes, disasters, wildfires, cyclones, climate anomalies | USGS, GDACS, NASA FIRMS/EONET, Open-Meteo |
 | [Aviation & Airspace](#aviation-%26-airspace) | Airport delays, NOTAM closures, flight tracking, prices | FAA, ICAO, AviationStack, adsb.lol |
 | [China Coverage](#china-coverage) | Official macro, policy, disclosures, cross-strait activity | NBS, SAFE, PBoC, Taiwan MND, SSE/SZSE |
@@ -573,6 +573,7 @@ The physical and digital backbone: cables, pipelines, ports, datacenters, intern
 - AI datacenters from the Epoch AI dataset
 - Strategic ports grouped by container, oil, LNG, naval, mixed, and bulk roles, with throughput rankings
 - Internet outages (Cloudflare Radar)
+- Country-level internet outage events (IODA, Georgia Tech)
 - Critical mineral deposits
 - 19 global trade routes (container, energy, bulk) with multi-segment arcs through strategic chokepoints
 - Cyber threat IOCs (C2 servers, malware hosts, phishing, malicious URLs) geo-located on the globe
@@ -583,6 +584,7 @@ The physical and digital backbone: cables, pipelines, ports, datacenters, intern
 | Provider | Data | Link |
 |----------|------|------|
 | Cloudflare Radar | Internet outages and traffic anomalies | [radar.cloudflare.com](https://radar.cloudflare.com) |
+| IODA | Country-level internet outage events and severity scores | [IODA dashboard](https://ioda.inetintel.cc.gatech.edu/) |
 | Submarine Cable Map | Global submarine cable infrastructure | [submarinecablemap.com](https://www.submarinecablemap.com) |
 | AbuseIPDB | Crowd-sourced malicious IP reports | [abuseipdb.com](https://www.abuseipdb.com) |
 | NVD (NIST) | CVE reference store for the CISA KEV subset: CVSS, CWE, affected products, KEV due dates (public domain) | [nvd.nist.gov](https://nvd.nist.gov/developers/vulnerabilities) |
