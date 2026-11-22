@@ -5489,6 +5489,7 @@ export class DeckGLMap {
 
   private static readonly CHOROPLETH_LAYER_IDS = new Set([
     'cii-choropleth-layer',
+    'world-overview-fill',
     'happiness-choropleth-layer',
     'resilience-choropleth-layer',
     'no2-activity-countries',

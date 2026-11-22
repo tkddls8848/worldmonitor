@@ -20,29 +20,62 @@ const iso2 = (feature: CountryFeature): string => {
   return '';
 };
 
+/** Control point that bows the line sideways by 18% of its length (always to the same side of from→to). */
+function curveControl(line: WorldLineView): [number, number] {
+  const [x0, y0] = line.fromCoord; const [x1, y1] = line.toCoord;
+  const dx = x1 - x0; const dy = y1 - y0;
+  const bow = 0.18;
+  return [(x0 + x1) / 2 - dy * bow, (y0 + y1) / 2 + dx * bow];
+}
+
+/** Point at t on the quadratic curve from → control → to. */
+function curveAt(line: WorldLineView, control: [number, number], t: number): [number, number] {
+  const u = 1 - t;
+  return [
+    u * u * line.fromCoord[0] + 2 * u * t * control[0] + t * t * line.toCoord[0],
+    u * u * line.fromCoord[1] + 2 * u * t * control[1] + t * t * line.toCoord[1],
+  ];
+}
+
+/** Midpoint of the drawn curve (where the trend tag sits). */
+export function curveMidpoint(line: WorldLineView): [number, number] {
+  return curveAt(line, curveControl(line), 0.5);
+}
+
+const CURVE_STEPS = 32;
+/** Dashed lines need finer sampling so each dash spans several vertices. */
+const DASHED_CURVE_STEPS = 192;
+
 function segmentedPath(line: WorldLineView): [number, number][][] {
+  const control = curveControl(line);
+  const points: [number, number][] = [];
   const dash = WORLD_RELATION_DASH[line.kind];
-  if (!dash) return [[line.fromCoord, line.toCoord]];
+  const steps = dash ? DASHED_CURVE_STEPS : CURVE_STEPS;
+  for (let i = 0; i <= steps; i++) points.push(curveAt(line, control, i / steps));
+  if (!dash) return [points];
   const [on, off] = dash;
-  // Pixel-pattern dashes are approximated by stable geographic segments. At
-  // world zoom this keeps the visual distinction without a shader extension.
-  const dx = line.toCoord[0] - line.fromCoord[0];
-  const dy = line.toCoord[1] - line.fromCoord[1];
-  const distance = Math.hypot(dx, dy);
-  if (!distance) return [[line.fromCoord, line.toCoord]];
-  const periods = Math.max(2, Math.min(24, Math.ceil(distance * 3)));
-  const periodLength = distance / periods;
-  const dashLength = periodLength * on / (on + off);
+  // Pixel-pattern dashes are approximated by stable geographic segments along
+  // the curve. At world zoom this keeps the distinction without a shader extension.
+  let total = 0;
+  for (let i = 1; i < points.length; i++) total += Math.hypot(points[i]![0] - points[i - 1]![0], points[i]![1] - points[i - 1]![1]);
+  if (!total) return [points];
+  const periods = Math.max(2, Math.min(24, Math.ceil(total * 3)));
+  const period = total / periods;
+  const dashLength = period * on / (on + off);
   const paths: [number, number][][] = [];
-  for (let index = 0; index < periods; index++) {
-    const start = index * periodLength;
-    const end = Math.min(distance, start + dashLength);
-    paths.push([
-      [line.fromCoord[0] + dx * start / distance, line.fromCoord[1] + dy * start / distance],
-      [line.fromCoord[0] + dx * end / distance, line.fromCoord[1] + dy * end / distance],
-    ]);
+  let current: [number, number][] = [];
+  let walked = 0;
+  for (let i = 0; i < points.length; i++) {
+    if (i > 0) walked += Math.hypot(points[i]![0] - points[i - 1]![0], points[i]![1] - points[i - 1]![1]);
+    const inDash = (walked % period) <= dashLength;
+    if (inDash) current.push(points[i]!);
+    else if (current.length) {
+      if (current.length > 1) paths.push(current);
+      current = [];
+    }
   }
-  return paths;
+  if (current.length > 1) paths.push(current);
+  return paths.length ? paths : [points];
 }
 
 function lineTone(line: WorldLineView) {
@@ -133,7 +166,7 @@ export function buildWorldOverviewLayers(
     const tags = view.selectedIso2 ? eligibleTags : eligibleTags.slice(0, 6);
     if (tags.length) layers.push(new TextLayer<WorldLineView>({
       id: 'world-overview-line-tags', data: tags,
-      getPosition: (line) => [(line.fromCoord[0] + line.toCoord[0]) / 2, (line.fromCoord[1] + line.toCoord[1]) / 2],
+      getPosition: (line) => curveMidpoint(line),
       getText: (line) => line.worsening ? '▲ 악화' : '▼ 완화',
       getColor: (line) => WORLD_RELATION_COLORS[theme][line.kind], getSize: 11,
       sizeUnits: 'pixels', getTextAnchor: 'middle', getAlignmentBaseline: 'center',

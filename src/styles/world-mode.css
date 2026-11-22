@@ -67,3 +67,19 @@ html.wm-world-mode .breaking-news-banner {
 #worldFirstScreen .wfs-slot-stage .maplibregl-map {
   background: var(--bg-ocean);
 }
+
+/* DeckGLMap's own zoom stack (class .zoom-controls, .map-btn) sits under the
+   first screen's; only the first screen's stays. */
+#worldFirstScreen #mapContainer .zoom-controls {
+  display: none !important;
+}
+
+/* Key plate line legend: keep each swatch and label on one line. */
+#worldFirstScreen .wfs-line-legend {
+  flex-wrap: wrap;
+  row-gap: 4px;
+}
+
+#worldFirstScreen .wfs-line-key {
+  white-space: nowrap;
+}
