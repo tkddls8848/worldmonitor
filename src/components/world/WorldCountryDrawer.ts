@@ -106,6 +106,7 @@ export class WorldCountryDrawer {
   private renderHeader(data: CountryDrawerData): HTMLElement {
     const section = make('header', 'wfs-country-drawer__header');
     section.dataset.section = 'header';
+    section.append(make('p', 'wfs-country-drawer__kicker', `OPS BRIEF // ${data.iso2} // CII-${data.ciiScore === null ? '—' : Math.round(data.ciiScore)}`));
     const titleRow = make('div', 'wfs-country-drawer__title-row');
     const identity = make('div', 'wfs-country-drawer__identity');
     const code = make('span', 'wfs-country-drawer__iso num', data.iso2);
