@@ -37,6 +37,7 @@ describe('first screen preferences', () => {
 
 const mountMock = vi.hoisted(() => ({
   onEnter: vi.fn(),
+  onLeave: vi.fn(),
   destroy: vi.fn(),
   mount: vi.fn(),
 }));
@@ -44,7 +45,7 @@ const mountMock = vi.hoisted(() => ({
 vi.mock('@/app/world-first-screen', () => ({
   mountWorldFirstScreen: (...args: unknown[]) => {
     mountMock.mount(...args);
-    return { onEnter: mountMock.onEnter, destroy: mountMock.destroy };
+    return { onEnter: mountMock.onEnter, onLeave: mountMock.onLeave, destroy: mountMock.destroy };
   },
 }));
 
