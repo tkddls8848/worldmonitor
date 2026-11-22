@@ -94,8 +94,10 @@ import { isInputPending, scheduleYield } from '@/utils/after-paint';
 import { showLayerWarning } from '@/utils/layer-warning';
 import { ukmtoIncidentLabel, type UkmtoMapIncident } from '../../shared/ukmto-incidents';
 import { localizeMapLabels } from '@/utils/map-locale';
-import { recordDeckLayersDebug } from '@/utils/lcp-debug';
+import { markLcpDebug, recordDeckLayersDebug } from '@/utils/lcp-debug';
 import { improveBasemapLabels } from '@/config/basemap-labels';
+import type { WorldMapView, ThemeName } from '@/types/world-overview';
+import { buildWorldOverviewLayers } from './map/world-overview-layers';
 import {
   createCountryHoverQueryController,
   resolveCountryForPointerInteraction,
@@ -785,6 +787,14 @@ export class DeckGLMap {
   private renewableInstallations: RenewableInstallation[] = [];
   private webcamData: WebcamMarker[] = [];
   private countriesGeoJsonData: FeatureCollection<Geometry> | null = null;
+  private worldOverviewMode = false;
+  private worldOverviewView: WorldMapView | null = null;
+  private worldFirstDrawMarked = false;
+  private worldLineClickCallback: ((lineId: string) => void) | null = null;
+  private readonly worldLineClickListener = (event: Event): void => {
+    const lineId = (event as CustomEvent<{ lineId?: string }>).detail?.lineId;
+    if (lineId) this.worldLineClickCallback?.(lineId);
+  };
   private conflictZoneGeoJson: GeoJSON.FeatureCollection | null = null;
   // #4561: all zone features + their precomputed bounds, built once (cheap — no
   // tessellation); the viewport cull filters this into conflictZoneGeoJson.
@@ -1490,7 +1500,15 @@ export class DeckGLMap {
       // Forwarded by Deck.setProps to luma.gl's AnimationLoop.setProps.
       animationFrameProvider: this.deckFrameProvider,
       layers: this.buildLayers(true),
-      getTooltip: (info: PickingInfo) => this.getCategorizedTooltip(info),
+      getTooltip: (info: PickingInfo) => {
+        const line = (info.object as { line?: import('@/types/world-overview').WorldLineView } | undefined)?.line;
+        if (line) {
+          const kind: Record<string, string> = { support: '지원', sanction: '제재', alliance: '동맹', tension: '긴장', economic: '경제' };
+          const trend = line.worsening ? '▲ 악화' : line.easing ? '▼ 완화' : '안정';
+          return { text: `${kind[line.kind] ?? line.kind} · ${trend}\n${line.label}` };
+        }
+        return this.getCategorizedTooltip(info);
+      },
       onClick: (info: PickingInfo) => this.handleClick(info),
       pickingRadius: 10,
       useDevicePixels: window.devicePixelRatio > 2 ? 2 : true,
@@ -6568,13 +6586,26 @@ export class DeckGLMap {
       const buildStart = performance.now();
       // Immediate pass defers heavy data (deferHeavy=true); the gate's deferred
       // pass (deferred=true) commits the real heavy data (#4558).
-      const built = this.buildLayers(!deferred);
+      const built = this.worldOverviewMode
+        ? this.worldOverviewView && this.countriesGeoJsonData
+          ? buildWorldOverviewLayers(
+            this.worldOverviewView,
+            this.countriesGeoJsonData as unknown as GeoJSON.FeatureCollection,
+            getCurrentTheme() as ThemeName,
+            this.hoveredCountryIso2,
+          )
+          : []
+        : this.buildLayers(!deferred);
       jsBuild = performance.now() - buildStart;
       layerCount = built.length;
       this.deckFrameProvider.wake();
       this.committedLayers = built;
       this.deckOverlay?.setProps({ layers: built });
       recordDeckLayersDebug(built);
+      if (!this.worldFirstDrawMarked && built.some((layer) => deckLayerId(layer) === 'world-overview-fill')) {
+        this.worldFirstDrawMarked = true;
+        this.maplibreMap.once('render', () => markLcpDebug('wm:world:first-draw'));
+      }
     } catch { /* map may be mid-teardown (null.getProjection) */ }
     if (import.meta.env.DEV) {
       // Attribute a slow frame to our JS build vs deck.gl's commit (#4558).
@@ -6783,6 +6814,32 @@ export class DeckGLMap {
     this.onTimeRangeChange?.(range);
     this.updateTimeSliderButtons();
     this.render(); // Debounced
+  }
+
+  public setWorldOverviewMode(on: boolean): void {
+    if (this.worldOverviewMode === on) return;
+    this.worldOverviewMode = on;
+    this.render();
+  }
+
+  public setWorldOverview(view: WorldMapView | null): void {
+    this.worldOverviewView = view;
+    this.render();
+  }
+
+  public onWorldLineClicked(cb: (lineId: string) => void): void {
+    this.worldLineClickCallback = cb;
+    window.removeEventListener('wm:world-line-click', this.worldLineClickListener);
+    window.addEventListener('wm:world-line-click', this.worldLineClickListener);
+  }
+
+  public zoomBy(delta: number): void {
+    if (!this.maplibreMap || !Number.isFinite(delta)) return;
+    this.maplibreMap.setZoom(Math.max(0, Math.min(22, this.maplibreMap.getZoom() + delta)));
+  }
+
+  public resetWorldView(): void {
+    this.setView('global', VIEW_PRESETS.global.zoom);
   }
 
   public getTimeRange(): TimeRange {
@@ -9044,6 +9101,7 @@ export class DeckGLMap {
   }
 
   public destroy(): void {
+    window.removeEventListener('wm:world-line-click', this.worldLineClickListener);
     this.controlDisclosureCleanups.forEach(cleanup => cleanup());
     this.controlDisclosureCleanups = [];
     this.destroyed = true;
