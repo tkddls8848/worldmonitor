@@ -123,6 +123,7 @@ describe('first-paint map init — one round trip, not two', () => {
       const module = {
         DeckGLMap: class {
           constructor() { events.push('construct'); }
+          setWorldOverviewMode() {}
           async whenReady() {}
         },
       };
