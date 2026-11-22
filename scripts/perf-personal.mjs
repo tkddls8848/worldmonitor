@@ -450,7 +450,8 @@ async function measureInteraction(browser, cpu, env, name) {
     await openDashboard(page, cdp);
     await page.waitForTimeout(SETTLE_MS);
     const def = INTERACTION_DEFS[name];
-    if (name === 'panel' && await page.evaluate(() => document.documentElement.classList.contains('wm-world-mode'))) {
+    // The world first screen has no panel grid or layer list; those interactions belong to the full view.
+    if ((name === 'panel' || name === 'layer') && await page.evaluate(() => document.documentElement.classList.contains('wm-world-mode'))) {
       return { inputToPaint: null, resultVisible: null, failure: null };
     }
     if (def.prepare) await def.prepare(page);
@@ -531,7 +532,12 @@ export async function collectRuns({ runs, warmup, measureRun, log = console.log 
 /** The saved report: per-metric summaries plus the raw samples they came from. */
 export function buildReport({ label, createdAt, config, samples, failures }) {
   const optional = (name) => /\.(worldReady|panelsReady)$/.test(name) || name.startsWith('panel.');
-  const metrics = Object.fromEntries(Object.entries(samples).map(([k, v]) => [k, optional(k) ? summarizeOptional(v) : summarize(v)]));
+  // The world first screen has no layer list: a layer metric with no sample at
+  // all is unavailable, while a partial miss is still a failed measurement.
+  const unavailable = (name, values) => name.startsWith('layer.') && values.every((v) => v === null);
+  const metrics = Object.fromEntries(Object.entries(samples).map(([k, v]) => [
+    k, optional(k) || unavailable(k, v) ? summarizeOptional(v) : summarize(v),
+  ]));
   return { label, createdAt, config, metrics, samples, failures };
 }
 
