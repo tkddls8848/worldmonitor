@@ -1,4 +1,4 @@
-import { GeoJsonLayer, PathLayer, TextLayer } from '@deck.gl/layers';
+import { GeoJsonLayer, PathLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers';
 import type { Layer } from '@deck.gl/core';
 import type { FeatureCollection, Geometry } from 'geojson';
 import type { WorldMapView, WorldLineView, ThemeName } from '@/types/world-overview';
@@ -6,6 +6,7 @@ import {
   ALLIANCE_EXTRA_WIDTH, WORLD_ARC_CASING, WORLD_BLOC_COLORS, WORLD_DIM_OPACITY,
   WORLD_FILL_COLORS, WORLD_LAND_STROKE, WORLD_LAND_STROKE_WIDTH, WORLD_RELATION_COLORS,
   WORLD_RELATION_DASH, WORLD_RELATION_END, WORLD_TREND_STROKE, WORLD_UNREST_OUTLINE,
+  WORLD_GRID_COLOR, WORLD_HOTSPOT_COLORS, WORLD_TARGET_COLOR,
 } from '@/config/world-overview-palette';
 
 type CountryFeature = GeoJSON.Feature<Geometry, Record<string, unknown>>;
@@ -90,11 +91,40 @@ function lineTone(line: WorldLineView) {
   return line.worsening ? WORLD_TREND_STROKE.worsening : line.easing ? WORLD_TREND_STROKE.easing : WORLD_TREND_STROKE.steady;
 }
 
+function countryCenter(feature: CountryFeature): [number, number] | null {
+  const geometry = feature.geometry;
+  if (geometry.type !== 'Polygon' && geometry.type !== 'MultiPolygon') return null;
+  const ring = geometry.type === 'Polygon' ? geometry.coordinates[0] : geometry.coordinates[0]?.[0];
+  if (!ring?.length) return null;
+  let longitude = 0;
+  let latitude = 0;
+  for (const point of ring) {
+    longitude += point[0] ?? 0;
+    latitude += point[1] ?? 0;
+  }
+  return [longitude / ring.length, latitude / ring.length];
+}
+
+function targetBracketPaths(center: [number, number]): [number, number][][] {
+  // Geographic corner strokes keep the mark compact at the world overview zoom.
+  const lon = 1.7 / Math.max(0.25, Math.cos(center[1] * Math.PI / 180));
+  const lat = 1.5;
+  const armX = lon * 0.36;
+  const armY = lat * 0.36;
+  return [
+    [[center[0] - lon, center[1] + lat], [center[0] - lon + armX, center[1] + lat], [center[0] - lon, center[1] + lat - armY]],
+    [[center[0] + lon, center[1] + lat], [center[0] + lon - armX, center[1] + lat], [center[0] + lon, center[1] + lat - armY]],
+    [[center[0] - lon, center[1] - lat], [center[0] - lon + armX, center[1] - lat], [center[0] - lon, center[1] - lat + armY]],
+    [[center[0] + lon, center[1] - lat], [center[0] + lon - armX, center[1] - lat], [center[0] + lon, center[1] - lat + armY]],
+  ];
+}
+
 export function buildWorldOverviewLayers(
   view: WorldMapView,
   countries: FeatureCollection,
   theme: ThemeName,
   hoverIso2: string | null,
+  pulse = 0,
 ): Layer[] {
   if (!countries.features.length) return [];
   const features = countries.features as CountryFeature[];
@@ -115,6 +145,44 @@ export function buildWorldOverviewLayers(
     lineWidthUnits: 'pixels', lineWidthMinPixels: 0.5,
     updateTriggers: { getFillColor: [view, theme], getLineColor: [selected, hoverIso2], getLineWidth: [selected, hoverIso2] },
   })];
+
+  if (theme === 'dark') {
+    const grid: [number, number][][] = [];
+    for (let longitude = -180; longitude <= 180; longitude += 15) grid.push([[longitude, -85], [longitude, 85]]);
+    for (let latitude = -75; latitude <= 75; latitude += 15) grid.push([[-180, latitude], [180, latitude]]);
+    layers.push(new PathLayer({
+      id: 'world-overview-grid', data: grid, getPath: (path) => path,
+      getColor: WORLD_GRID_COLOR.dark, getWidth: 0.7, widthUnits: 'pixels', pickable: false,
+    }));
+  }
+
+  if (view.hotspots.length) {
+    const alpha = 0.25 + 0.45 * (0.5 + 0.5 * Math.sin(pulse * Math.PI * 2));
+    layers.push(new ScatterplotLayer({
+      id: 'world-overview-hotspots', data: view.hotspots,
+      getPosition: (hotspot) => hotspot.coord,
+      getRadius: (hotspot) => hotspot.level >= 4 ? 22 : hotspot.level === 3 ? 16 : 12,
+      radiusUnits: 'pixels', stroked: true, filled: false,
+      getLineColor: () => {
+        const color = WORLD_HOTSPOT_COLORS[theme];
+        return [color[0], color[1], color[2], Math.round(color[3] * alpha)];
+      },
+      getLineWidth: 2, lineWidthUnits: 'pixels', pickable: false,
+      updateTriggers: { getLineColor: [theme, pulse] },
+    }));
+  }
+
+  if (selected) {
+    const selectedFeature = features.find((feature) => iso2(feature) === selected);
+    const center = selectedFeature && countryCenter(selectedFeature);
+    if (center) {
+      layers.push(new PathLayer({
+        id: 'world-overview-target', data: targetBracketPaths(center),
+        getPath: (path) => path, getColor: WORLD_TARGET_COLOR[theme], getWidth: 2,
+        widthUnits: 'pixels', capRounded: false, jointRounded: false, pickable: false,
+      }));
+    }
+  }
 
   const unrest = features.filter((feature) => view.countries[iso2(feature)]?.unrestOutline);
   if (unrest.length) layers.push(new GeoJsonLayer<Record<string, unknown>>({
