@@ -291,6 +291,7 @@ const IRAN_EVENTS_ENABLED = (process.env.IRAN_EVENTS_ENABLED ?? 'false').toLower
 const BOOTSTRAP_KEYS = {
   earthquakes:       'seismology:earthquakes:v1',
   outages:           'infra:outages:v1',
+  iodaOutages:       'infra:ioda-outages:v1',
   sectors:           'market:sectors:v2',
   etfFlows:          'market:etf-flows:v1',
   climateAnomalies:  'climate:anomalies:v2',
@@ -918,6 +919,7 @@ const SEED_META = {
     },
   },
   outages:          { key: 'seed-meta:infra:outages',           maxStaleMin: 30 },
+  iodaOutages:      { key: 'seed-meta:infra:ioda-outages',       maxStaleMin: 120 },
   // seed-live-video-resolved cron `0 */6 * * *` (#8545); 1080 = 3× cadence per
   // project convention. The PR registers the probe before the Railway service
   // exists, so it softens to EMPTY_ON_DEMAND only until the seeder's first
@@ -2742,6 +2744,7 @@ const GOVERNMENT_RELEASE_INCIDENT_GRACE_MIN = 30 * 24 * 60;
 // "Loading...". Removed marketImplications below.
 const ON_DEMAND_KEYS = new Set([
   'worldOverview',
+  'iodaOutages',
   'worldRelationsAi',
   'gridDisruptionClock',
   'foodPricesPihps', 'foodPricesPbs', 'foodPricesDa', 'foodPricesCbsl',

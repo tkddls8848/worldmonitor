@@ -27,7 +27,7 @@ export const STANDALONE_INTERVAL_MIN = {
   'bigmac': 1440, 'grocery-basket': 1440, 'sanctions-pressure': 240, 'regulatory-actions': 120,
   'gdelt-intel': 15, 'gdelt-bulk-materializer': 60, 'security-advisories': 30, 'ukmto-incidents': 20,
   'thermal-escalation': 120, 'military-cii': 15, 'military-maritime-news': 60, 'infra': 15,
-  'aviation': 30, 'notam-nms': 30, 'fire-detections': 60, 'radiation-watch': 15,
+  'aviation': 30, 'notam-nms': 30, 'ioda-outages': 30, 'fire-detections': 60, 'radiation-watch': 15,
   'imd-cyclone-marine': 60, 'no2-activity': 1440, 'cve-reference': 720, 'research': 45,
   'country-history': 1440, 'webcams': 480, 'forecast-resolutions': 720, 'forecast-bets': 720,
   'gpsjam': 360,
