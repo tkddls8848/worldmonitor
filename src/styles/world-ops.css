@@ -120,3 +120,54 @@
 @media (prefers-reduced-motion: reduce) {
   .wfs-ops-event-log { transition-duration: 0.01ms; }
 }
+
+/* Telemetry row (wiring wraps clocks + counters in .ops-telemetry-bar). The row
+   only has height in the dark ops-room theme; the light atlas keeps it closed. */
+.wfs-slot-telemetry { overflow: hidden; }
+.ops-telemetry-bar {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  height: 100%;
+}
+.ops-telemetry-bar > .wfs-ops-clocks { flex: 0 1 auto; }
+.ops-telemetry-bar > .wfs-ops-counters { flex: 0 0 auto; }
+.wfs-ops-counter { padding: 0; }
+.wfs-ops-counter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs, 2px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.wfs-ops-counter-btn:hover { background: var(--surface-subtle, #eff2ee); border-color: var(--border, #c9d2ce); }
+.wfs-ops-counter-btn.is-active { background: var(--accent-soft, #e8effc); border-color: var(--accent, #1d4ed8); }
+.wfs-ops-counter-btn:focus-visible { outline: 2px solid var(--accent, #1d4ed8); outline-offset: 2px; }
+
+/* Event-log toggle in the dispatch bar. */
+.wfs-log-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 23px;
+  padding: 0 8px;
+  border: 1px solid var(--accent, #1d4ed8);
+  border-radius: var(--radius-xs, 2px);
+  background: var(--accent-soft, #e8effc);
+  color: var(--accent-text, #1e40af);
+  font: 600 11px var(--font-sans, sans-serif);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.wfs-log-toggle:hover { background: var(--accent, #1d4ed8); color: var(--accent-on, #fff); }
+.wfs-log-toggle[aria-expanded="true"] { background: var(--accent, #1d4ed8); color: var(--accent-on, #fff); }
+.wfs-log-count { font: 700 10px var(--font-mono, monospace); font-variant-numeric: tabular-nums; }
