@@ -59,4 +59,15 @@ export const WORLD_BLOC_COLORS: Record<ThemeName, Rgba[]> = {
 };
 export const WORLD_UNREST_OUTLINE: Record<ThemeName, Rgba> = { light: hex('#B45309'), dark: hex('#FBBF24') };
 
+/** Tactical map marks; values are intentionally centralized for the ops-room theme pass. */
+export const WORLD_HOTSPOT_COLORS: Record<ThemeName, Rgba> = {
+  light: hex('#B8293D'), dark: hex('#FF5263'),
+};
+export const WORLD_TARGET_COLOR: Record<ThemeName, Rgba> = {
+  light: hex('#8F2633'), dark: hex('#FF6673'),
+};
+export const WORLD_GRID_COLOR: Record<ThemeName, Rgba> = {
+  light: hex('#60716C', 36), dark: hex('#9AA69F', 48),
+};
+
 export const WORLD_TAG_MAX_DEFAULT = 6;

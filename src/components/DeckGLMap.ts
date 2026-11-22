@@ -791,6 +791,11 @@ export class DeckGLMap {
   private worldBasemapHooked = false;
   private worldHiddenBasemapLayers: string[] | null = null;
   private worldOverviewView: WorldMapView | null = null;
+  private worldPulseRaf: number | null = null;
+  private worldPulse = 0;
+  private worldPulseLastUpdate = 0;
+  private readonly worldReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  private readonly worldPulseEnvironmentChanged = (): void => this.syncWorldPulse();
   private worldFirstDrawMarked = false;
   private worldLineClickCallback: ((lineId: string) => void) | null = null;
   private readonly worldLineClickListener = (event: Event): void => {
@@ -1031,6 +1036,7 @@ export class DeckGLMap {
   private aircraftFetchSeq = 0;
 
   constructor(container: HTMLElement, initialState: DeckMapState, options: DeckGLMapOptions = {}) {
+    this.installWorldPulseListeners();
     this.container = container;
     this.chrome = options.chrome ?? true;
     this.mapLibreWorkerUrl = options.mapLibreWorkerUrl;
@@ -6569,10 +6575,12 @@ export class DeckGLMap {
       }
       this.stopPulseAnimation();
       this.stopTradeAnimation();
+      this.syncWorldPulse();
       return;
     }
 
     this.syncPulseAnimation();
+    this.syncWorldPulse();
     if (this.state.layers.tradeRoutes) this.startTradeAnimation();
     if (!paused && this.renderPending) {
       this.renderPending = false;
@@ -6597,6 +6605,7 @@ export class DeckGLMap {
             this.countriesGeoJsonData as unknown as GeoJSON.FeatureCollection,
             getCurrentTheme() as ThemeName,
             this.hoveredCountryIso2,
+            this.worldPulse,
           )
           : []
         : this.buildLayers(!deferred);
@@ -6824,6 +6833,7 @@ export class DeckGLMap {
     if (this.worldOverviewMode === on) return;
     this.worldOverviewMode = on;
     this.syncWorldBasemap();
+    this.syncWorldPulse();
     this.render();
   }
 
@@ -6868,7 +6878,40 @@ export class DeckGLMap {
 
   public setWorldOverview(view: WorldMapView | null): void {
     this.worldOverviewView = view;
+    this.syncWorldPulse();
     this.render();
+  }
+
+  private syncWorldPulse(): void {
+    const shouldRun = this.worldOverviewMode && !!this.worldOverviewView?.hotspots.length &&
+      !document.hidden && !this.renderPaused && !this.worldReducedMotion.matches;
+    if (!shouldRun) {
+      if (this.worldPulseRaf !== null) cancelAnimationFrame(this.worldPulseRaf);
+      this.worldPulseRaf = null;
+      return;
+    }
+    if (this.worldPulseRaf !== null) return;
+    const tick = (timestamp: number): void => {
+      this.worldPulseRaf = null;
+      if (!(this.worldOverviewMode && this.worldOverviewView?.hotspots.length && !document.hidden && !this.renderPaused && !this.worldReducedMotion.matches)) return;
+      if (timestamp - this.worldPulseLastUpdate >= 100) {
+        this.worldPulseLastUpdate = timestamp;
+        this.worldPulse = (timestamp % 2400) / 2400;
+        this.render();
+      }
+      this.worldPulseRaf = requestAnimationFrame(tick);
+    };
+    this.worldPulseRaf = requestAnimationFrame(tick);
+  }
+
+  private installWorldPulseListeners(): void {
+    document.addEventListener('visibilitychange', this.worldPulseEnvironmentChanged);
+    this.worldReducedMotion.addEventListener('change', this.worldPulseEnvironmentChanged);
+  }
+
+  private removeWorldPulseListeners(): void {
+    document.removeEventListener('visibilitychange', this.worldPulseEnvironmentChanged);
+    this.worldReducedMotion.removeEventListener('change', this.worldPulseEnvironmentChanged);
   }
 
   public onWorldLineClicked(cb: (lineId: string) => void): void {
@@ -9146,6 +9189,9 @@ export class DeckGLMap {
 
   public destroy(): void {
     window.removeEventListener('wm:world-line-click', this.worldLineClickListener);
+    this.removeWorldPulseListeners();
+    if (this.worldPulseRaf !== null) cancelAnimationFrame(this.worldPulseRaf);
+    this.worldPulseRaf = null;
     this.controlDisclosureCleanups.forEach(cleanup => cleanup());
     this.controlDisclosureCleanups = [];
     this.destroyed = true;

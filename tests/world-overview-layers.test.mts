@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildWorldOverviewLayers } from '../src/components/map/world-overview-layers';
-import { WORLD_DIM_OPACITY, WORLD_FILL_COLORS } from '../src/config/world-overview-palette';
+import { WORLD_DIM_OPACITY, WORLD_FILL_COLORS, WORLD_GRID_COLOR, WORLD_HOTSPOT_COLORS, WORLD_TARGET_COLOR } from '../src/config/world-overview-palette';
 import type { WorldMapView, WorldLineView } from '../src/types/world-overview';
 
 const countries: GeoJSON.FeatureCollection = {
@@ -29,7 +29,7 @@ const view: WorldMapView = {
   },
   lines: [line('a', 'tension'), line('b', 'sanction'), ...Array.from({ length: 7 }, (_, i) => line(`tag-${i}`, 'support'))],
   blocOutlines: [{ blocId: 'bloc', members: ['BB'], colorIndex: 0 }],
-  selectedIso2: 'AA', relatedIso2: ['BB'],
+  selectedIso2: 'AA', relatedIso2: ['BB'], hotspots: [],
 };
 
 test('buildWorldOverviewLayers includes fills, outlines, casing before lines, ends and capped tags', () => {
@@ -71,4 +71,25 @@ test('empty view yields no world layers', () => {
   const noData = { ...view, countries: {}, lines: [], blocOutlines: [] };
   assert.equal(buildWorldOverviewLayers(noData, countries, 'dark', null)[0]?.id, 'world-overview-fill');
   assert.deepEqual(buildWorldOverviewLayers(noData, { type: 'FeatureCollection', features: [] }, 'dark', null), []);
+});
+
+test('tactical marks render hotspots, selected brackets and dark-only grid', () => {
+  const tacticalView: WorldMapView = {
+    ...view,
+    hotspots: [{ iso2: 'AA', coord: [12, 34], level: 4 }],
+  };
+  const darkLayers = buildWorldOverviewLayers(tacticalView, countries, 'dark', null, 0.25);
+  const ids = darkLayers.map((layer) => layer.id);
+  assert.ok(ids.includes('world-overview-hotspots'));
+  assert.ok(ids.includes('world-overview-target'));
+  assert.ok(ids.includes('world-overview-grid'));
+  const hotspot = darkLayers.find((layer) => layer.id === 'world-overview-hotspots')!;
+  assert.deepEqual((hotspot.props.getPosition as (item: { coord: [number, number] }) => number[])(tacticalView.hotspots[0]!), [12, 34]);
+  assert.equal((hotspot.props.getRadius as (item: { level: number }) => number)(tacticalView.hotspots[0]!), 22);
+  const getHotspotColor = hotspot.props.getLineColor as () => number[];
+  assert.equal(getHotspotColor()[3], Math.round(WORLD_HOTSPOT_COLORS.dark[3] * 0.7));
+  assert.deepEqual(darkLayers.find((layer) => layer.id === 'world-overview-target')!.props.getColor, WORLD_TARGET_COLOR.dark);
+  assert.deepEqual(darkLayers.find((layer) => layer.id === 'world-overview-grid')!.props.getColor, WORLD_GRID_COLOR.dark);
+  assert.ok(!buildWorldOverviewLayers(tacticalView, countries, 'light', null).some((layer) => layer.id === 'world-overview-grid'));
+  assert.ok(!buildWorldOverviewLayers({ ...tacticalView, selectedIso2: null }, countries, 'dark', null).some((layer) => layer.id === 'world-overview-target'));
 });
