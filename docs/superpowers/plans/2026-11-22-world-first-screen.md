@@ -2,7 +2,7 @@
 
 > **For agentic workers:** each task below is one worker. Read the header, Global Constraints, Rulings and Interfaces, then YOUR task only. Steps use checkbox (`- [ ]`) syntax.
 
-**Goal:** `/dashboard` opens on a map-centric "world first screen" (choropleth + relation lines, ticker row, breaking-news row, five field buttons, date/timelapse shelf, country drawer). "전체 보기" switches to the existing map + inspector UI, and the 86 panels are not built until then.
+**Goal:** `/dashboard` opens on a map-centric "world first screen" (choropleth + relation lines, ticker row, breaking-news row, five field buttons, date/timelapse shelf, country drawer). "전체 보기" switches to the existing map + inspector UI, and the full panel set is not built until then.
 
 **Architecture:** the world-overview snapshot (`worldOverview` on-demand bootstrap key, `WorldOverviewService` RPC for past dates and wrong-marks) is turned into a `WorldMapView` by a pure service, drawn by new DeckGL layers inside the existing `DeckGLMap`, and surrounded by new DOM components under `src/components/world/`. `src/app` owns the mode switch and wiring.
 
