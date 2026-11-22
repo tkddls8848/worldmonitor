@@ -3,6 +3,7 @@ import { kstDate } from '../../shared/world-overview.js';
 import type { BreakingAlert } from '@/services/breaking-news-alerts';
 import type { OpsCounters, OpsEvent, OpsMetrics, ThreatLevel } from '@/types/world-overview';
 import type { IodaOutage } from '@/services/internet-outages-ioda';
+import type { KrDartDisclosure } from '@/services/kr-dart';
 
 export const THREAT_LEVEL_LABEL_KO: Record<ThreatLevel, string> = {
   1: '최고 위기',
@@ -56,7 +57,7 @@ export function buildOpsEvents(
   snapshot: WorldOverviewSnapshot | null,
   alerts: readonly BreakingAlert[],
   nowMs: number,
-  extras: { outages?: readonly IodaOutage[] } = {},
+  extras: { outages?: readonly IodaOutage[]; disclosures?: readonly KrDartDisclosure[] } = {},
 ): OpsEvent[] {
   const events: OpsEvent[] = alerts.map((alert) => ({
     id: `wm:breaking-news:${alert.id}`,
@@ -67,6 +68,19 @@ export function buildOpsEvents(
     severity: alert.threatLevel === 'critical' ? 'critical' : 'high',
     ...(alert.link ? { url: alert.link } : {}),
   }));
+
+  const disclosures = [...(extras.disclosures ?? [])]
+    .sort((a, b) => b.at - a.at || a.id.localeCompare(b.id))
+    .slice(0, 15);
+  for (const filing of disclosures) events.push({
+    id: `dart:${filing.id}`,
+    at: filing.at,
+    kind: 'disclosure',
+    title: `${filing.corpName} · ${filing.title}`,
+    iso2: 'KR',
+    severity: filing.kind === 'major' ? 'medium' : 'low',
+    url: filing.url,
+  });
 
   for (const outage of activeOutages(extras.outages ?? [], nowMs)) {
     events.push({

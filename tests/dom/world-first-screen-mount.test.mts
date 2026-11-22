@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({ load: vi.fn(), mark: vi.fn(), stress: vi.fn(), outages: vi.fn(), fields: ['military', 'geopolitics'] as string[], setFields: vi.fn(), data: {} as Record<string, unknown> }));
+const mocks = vi.hoisted(() => ({ load: vi.fn(), mark: vi.fn(), stress: vi.fn(), outages: vi.fn(), ecos: vi.fn(), trade: vi.fn(), dart: vi.fn(), fields: ['military', 'geopolitics'] as string[], setFields: vi.fn(), data: {} as Record<string, unknown> }));
 vi.mock('@/services/world-overview', () => ({ loadWorldOverview: mocks.load, setWorldMark: mocks.mark }));
 vi.mock('@/services/world-overview-view', () => ({ buildWorldMapView: vi.fn((_s, _f, selected) => ({ date: '2026-11-22', countries: {}, lines: [], blocOutlines: [], selectedIso2: selected, relatedIso2: [] })), buildCountryDrawerData: vi.fn((_s, iso2) => ({ iso2, nameKo: iso2, nameEn: iso2, level: null, conflictLevel: null, ciiScore: null, updatedAt: 1, issue: null, relations: [], blocs: [], isToday: true, aiStatus: 'ok' })) }));
 vi.mock('@/services/world-first-screen-prefs', () => ({ getWorldFields: () => [...mocks.fields], setWorldFields: mocks.setFields }));
@@ -8,6 +8,9 @@ vi.mock('@/services/world-ticker', () => ({ loadTickerItems: vi.fn(() => Promise
 vi.mock('@/services/funding-stress', () => ({ loadFundingStress: mocks.stress }));
 vi.mock('@/services/internet-outages-ioda', () => ({ loadIodaOutages: mocks.outages }));
 vi.mock('@/services/eu-gas-flows', () => ({ loadEuGasFlows: vi.fn(() => Promise.resolve(null)) }));
+vi.mock('@/services/kr-ecos', () => ({ loadKrEcosMacro: mocks.ecos }));
+vi.mock('@/services/kr-customs-trade', () => ({ loadKrCustomsTrade: mocks.trade }));
+vi.mock('@/services/kr-dart', () => ({ loadKrDartDisclosures: mocks.dart }));
 vi.mock('@/services/country-geometry', () => ({ preloadCountryGeometry: vi.fn(() => new Promise(() => { /* geometry never needed here */ })) }));
 import { mountWorldFirstScreen } from '../../src/app/world-first-screen';
 
@@ -19,8 +22,8 @@ function setup() {
   const ctx = { map } as never;
   return { root, slots: { root, ...slots }, map, ctx };
 }
-afterEach(() => { document.body.replaceChildren(); vi.clearAllMocks(); mocks.fields = ['military', 'geopolitics']; mocks.data = {}; mocks.stress.mockResolvedValue(null); mocks.outages.mockResolvedValue([]); });
-beforeEach(() => { mocks.stress.mockResolvedValue(null); mocks.outages.mockResolvedValue([]); });
+afterEach(() => { document.body.replaceChildren(); vi.clearAllMocks(); mocks.fields = ['military', 'geopolitics']; mocks.data = {}; mocks.stress.mockResolvedValue(null); mocks.outages.mockResolvedValue([]); mocks.ecos.mockResolvedValue(null); mocks.trade.mockResolvedValue(null); mocks.dart.mockResolvedValue([]); });
+beforeEach(() => { mocks.stress.mockResolvedValue(null); mocks.outages.mockResolvedValue([]); mocks.ecos.mockResolvedValue(null); mocks.trade.mockResolvedValue(null); mocks.dart.mockResolvedValue([]); });
 
 describe('mountWorldFirstScreen', () => {
   it('mounts chrome and reports an empty snapshot', async () => {
@@ -70,16 +73,20 @@ describe('mountWorldFirstScreen', () => {
     mocks.load.mockResolvedValue({ snapshot, archivedDates: [] });
     mocks.stress.mockResolvedValue({ ofrFsi: null, sofr: null });
     mocks.outages.mockResolvedValue([]);
+    mocks.ecos.mockResolvedValue(null); mocks.trade.mockResolvedValue(null); mocks.dart.mockResolvedValue([]);
     const { slots, map, ctx } = setup();
     const mounted = mountWorldFirstScreen(ctx, slots, { openFullView() {}, openCountryBrief() {} });
     await vi.waitFor(() => expect(map.setWorldOverview).toHaveBeenCalled());
     await vi.waitFor(() => expect(mocks.outages).toHaveBeenCalledTimes(1));
+    expect(mocks.ecos).toHaveBeenCalledTimes(1); expect(mocks.trade).toHaveBeenCalledTimes(1); expect(mocks.dart).toHaveBeenCalledTimes(1);
     expect(map.setWorldOverview).toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(10 * 60 * 1000);
     expect(mocks.outages).toHaveBeenCalledTimes(2);
+    expect(mocks.ecos).toHaveBeenCalledTimes(2); expect(mocks.trade).toHaveBeenCalledTimes(2); expect(mocks.dart).toHaveBeenCalledTimes(2);
     mounted.onLeave();
     await vi.advanceTimersByTimeAsync(10 * 60 * 1000);
     expect(mocks.outages).toHaveBeenCalledTimes(2);
+    expect(mocks.ecos).toHaveBeenCalledTimes(2); expect(mocks.trade).toHaveBeenCalledTimes(2); expect(mocks.dart).toHaveBeenCalledTimes(2);
     mounted.destroy();
     expect(vi.getTimerCount()).toBe(0);
   });

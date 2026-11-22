@@ -13,6 +13,7 @@ const instruments: Instrument[] = [
 ];
 type SourceKey = Instrument['source'];
 type TickerExtras = {
+  korea?: { ktb10y: { value: number; changeBp: number | null } | null; trade: { month: string; total: { exportYoyPct: number | null }; provisional: { period: string; exportYoyPct: number | null } | null } | null } | null;
   fundingStress?: { ofrFsi?: { value: number; change1d: number | null } | null; sofr?: { rate: number; changeBp: number | null } | null } | null;
   gasFlows?: { origins: Partial<Record<'russia' | 'norway' | 'northAfrica' | 'lng', { gwhPerDay: number; change7dPct: number | null } | null>> } | null;
 };
@@ -61,6 +62,14 @@ export function buildTickerItems(src: { marketQuotes?: unknown; commodityQuotes?
     };
   });
   const stress = extras.fundingStress;
+  const korea = extras.korea;
+  if (korea?.ktb10y) items.push({ id: 'kr-ktb10y', label: '국고채 10년', value: korea.ktb10y.value, changePct: korea.ktb10y.changeBp, changeKind: 'bp', digits: 2, unit: '%' });
+  if (korea?.trade) {
+    const provisional = korea.trade.provisional;
+    const yoy = provisional?.exportYoyPct ?? korea.trade.total.exportYoyPct;
+    const period = provisional?.exportYoyPct != null ? provisional.period : korea.trade.month;
+    items.push({ id: 'kr-exports', label: `한국 수출 ${period}`, value: yoy, changePct: null, digits: 1, unit: '% YoY' });
+  }
   if (stress?.ofrFsi) items.push({ id: 'ofr-fsi', label: 'OFR 스트레스', value: stress.ofrFsi.value, changePct: stress.ofrFsi.change1d, changeKind: 'abs', inverse: true, digits: 2 });
   if (stress?.sofr) items.push({ id: 'sofr', label: 'SOFR', value: stress.sofr.rate, changePct: stress.sofr.changeBp, changeKind: 'bp', digits: 2, unit: '%' });
   const gasLabels = { russia: 'EU 가스(러)', norway: 'EU 가스(노)', lng: 'LNG' } as const;

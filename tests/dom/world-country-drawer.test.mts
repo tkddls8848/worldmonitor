@@ -41,7 +41,7 @@ describe('WorldCountryDrawer', () => {
     const drawer = new WorldCountryDrawer({ onClose: vi.fn(), onSelectCountry: vi.fn(), onMark: vi.fn().mockResolvedValue(undefined), onOpenFullPanels: vi.fn() });
     drawer.open(data);
     const headings = [...drawer.element.querySelectorAll<HTMLElement>('[data-section]')].map((el) => el.dataset.section);
-    expect(headings).toEqual(['header', 'ai-notice', 'issues', 'relations', 'infrastructure', 'sources', 'footer']);
+    expect(headings).toEqual(['header', 'ai-notice', 'issues', 'relations', 'infrastructure', 'korea-economy', 'sources', 'footer']);
     drawer.element.querySelector<HTMLButtonElement>('[data-filter="worsening"]')!.click();
     expect(drawer.element.querySelectorAll('[data-relation-card]')).toHaveLength(1);
     expect(drawer.element.textContent).toContain('일본');
@@ -89,5 +89,17 @@ describe('WorldCountryDrawer', () => {
     const link = drawer.element.querySelector<HTMLAnchorElement>('[data-ioda-link]')!;
     expect(link.href).toBe('https://ioda.example/event');
     expect(link.rel).toContain('noopener');
+  });
+
+  it('renders Korean economy data before sources and shows source empty states', () => {
+    const drawer = new WorldCountryDrawer({ onClose: vi.fn(), onSelectCountry: vi.fn(), onMark: vi.fn().mockResolvedValue(undefined), onOpenFullPanels: vi.fn() });
+    drawer.open(drawerData({ korea: { asOf: 1, indicators: [{ id: 'ktb10y', nameKo: '국고채 10년', value: 3.4, unit: '%', period: '2026.10', change: 2, changeKind: 'bp' }], trade: null, disclosures: [] } }));
+    const sections = [...drawer.element.querySelectorAll<HTMLElement>('[data-section]')].map((node) => node.dataset.section);
+    expect(sections.indexOf('korea-economy')).toBeLessThan(sections.indexOf('sources'));
+    expect(drawer.element.querySelector('[data-section="korea-economy"]')?.textContent).toContain('국고채 10년');
+    expect(drawer.element.querySelector('[data-section="korea-economy"]')?.textContent).toContain('관세청 무역 통계를 불러오지 못했습니다.');
+    drawer.open(drawerData({ korea: { asOf: 0, indicators: [], trade: null, disclosures: [] } }));
+    expect(drawer.element.querySelector('[data-section="korea-economy"]')?.textContent).toContain('ECOS 지표를 불러오지 못했습니다.');
+    expect(drawer.element.querySelector('[data-section="korea-economy"]')?.textContent).toContain('최근 주요 공시가 없습니다.');
   });
 });
