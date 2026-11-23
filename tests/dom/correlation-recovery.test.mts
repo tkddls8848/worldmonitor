@@ -6,7 +6,8 @@ const mocks = vi.hoisted(() => ({
   fetch: vi.fn(), hydrate: vi.fn(), slowTier: vi.fn(), read: vi.fn(), write: vi.fn(),
   deduct: vi.fn(), premium: vi.fn(),
 }));
-vi.mock('@/services/generated-rpc-clients', () => ({
+vi.mock('@/services/generated-rpc-clients', async importOriginal => ({
+  ...await importOriginal<typeof import('@/services/generated-rpc-clients')>(),
   IntelligenceServiceClient: class { deductSituation = mocks.deduct; },
 }));
 vi.mock('@/services/bootstrap', () => ({
