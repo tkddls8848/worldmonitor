@@ -3,7 +3,7 @@ import test from 'node:test';
 import type { WorldOverviewSnapshot } from '../shared/world-overview.js';
 import type { BreakingAlert } from '../src/services/breaking-news-alerts';
 import { buildOpsEvents, computeOpsMetrics, THREAT_LEVEL_LABEL_KO } from '../src/services/world-ops';
-import type { ThreatLevel } from '../src/types/world-overview';
+import type { FederalRegisterDocument, ThreatLevel } from '../src/types/world-overview';
 
 const nowMs = Date.parse('2026-11-22T03:00:00Z');
 
@@ -115,6 +115,25 @@ test('builds stable, newest-first events with source links and caps the log at 5
   assert.equal(events[1]?.url, 'https://example.com/issue');
   assert.deepEqual(buildOpsEvents(data, alerts, nowMs, { outages }), events);
   assert.equal(buildOpsEvents(null, Array.from({ length: 60 }, (_, i) => alert(String(i), nowMs + i)), nowMs).length, 50);
+});
+
+test('keeps trade and sanctions actions and executive orders in a busy log', () => {
+  const base: FederalRegisterDocument = {
+    id: 'tariff', title: 'Import adjustment', date: '2026-11-21', topic: 'tariff', type: 'Proclamation',
+    countries: ['CN', 'US'], url: 'https://www.federalregister.gov/documents/example',
+  };
+  const federalRegister: FederalRegisterDocument[] = [
+    base,
+    { ...base, id: 'sanctions', topic: 'sanctions', type: 'Notice' },
+    { ...base, id: 'export', topic: 'export-control', type: 'Rule' },
+    { ...base, id: 'order', topic: 'other', type: 'Executive Order', countries: [] },
+    { ...base, id: 'ignored', topic: 'defense', type: 'Determination' },
+  ];
+  const events = buildOpsEvents(null, Array.from({ length: 60 }, (_, i) => alert(String(i), nowMs + i)), nowMs, { federalRegister });
+  assert.equal(events.length, 50);
+  const policy = events.filter((event) => event.kind === 'federal-register');
+  assert.deepEqual(policy.map((event) => event.id), ['export', 'order', 'sanctions', 'tariff'].map((id) => `federal-register:${id}`));
+  assert.deepEqual(policy.map((event) => event.iso2), ['CN', undefined, 'CN', 'CN']);
 });
 
 test('does not include AI relations from another KST day and supports a missing snapshot', () => {

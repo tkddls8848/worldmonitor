@@ -103,6 +103,18 @@ export interface KoreaDrawerData {
   disclosures: Array<{ id: string; at: number; corpName: string; stockCode: string | null; market: 'KOSPI' | 'KOSDAQ'; kind: 'major' | 'ownership' | 'exchange'; title: string; filer: string; url: string }>;
 }
 
+export type FederalRegisterTopic = 'tariff' | 'sanctions' | 'export-control' | 'monetary/financial' | 'defense' | 'other';
+
+export interface FederalRegisterDocument {
+  id: string;
+  title: string;
+  date: string;
+  type: string;
+  topic: FederalRegisterTopic;
+  countries: string[];
+  url: string;
+}
+
 export interface CountryDrawerData {
   iso2: string;
   nameKo: string;
@@ -119,6 +131,7 @@ export interface CountryDrawerData {
   aiStatus: 'ok' | 'stale' | 'missing';
   outages: Array<{ id: string; start: number; end: number | null; severity: 'low' | 'medium' | 'high'; signals: string[]; url: string }>;
   korea?: KoreaDrawerData;
+  federalRegister?: FederalRegisterDocument[];
 }
 
 export type WorldMarkRequest =
@@ -163,7 +176,7 @@ export interface OpsEvent {
   id: string;
   /** epoch ms */
   at: number;
-  kind: 'breaking' | 'relation' | 'issue' | 'outage' | 'disclosure';
+  kind: 'breaking' | 'relation' | 'issue' | 'outage' | 'disclosure' | 'federal-register';
   title: string;
   iso2?: string;
   severity: OpsEventSeverity;

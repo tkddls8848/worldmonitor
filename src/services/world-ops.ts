@@ -1,9 +1,10 @@
 import type { WorldOverviewSnapshot } from '../../shared/world-overview.js';
 import { kstDate } from '../../shared/world-overview.js';
 import type { BreakingAlert } from '@/services/breaking-news-alerts';
-import type { OpsCounters, OpsEvent, OpsMetrics, ThreatLevel } from '@/types/world-overview';
+import type { FederalRegisterDocument, OpsCounters, OpsEvent, OpsMetrics, ThreatLevel } from '@/types/world-overview';
 import type { IodaOutage } from '@/services/internet-outages-ioda';
 import type { KrDartDisclosure } from '@/services/kr-dart';
+import { federalRegisterLabel } from '@/services/federal-register';
 
 export const THREAT_LEVEL_LABEL_KO: Record<ThreatLevel, string> = {
   1: '최고 위기',
@@ -57,7 +58,7 @@ export function buildOpsEvents(
   snapshot: WorldOverviewSnapshot | null,
   alerts: readonly BreakingAlert[],
   nowMs: number,
-  extras: { outages?: readonly IodaOutage[]; disclosures?: readonly KrDartDisclosure[] } = {},
+  extras: { outages?: readonly IodaOutage[]; disclosures?: readonly KrDartDisclosure[]; federalRegister?: readonly FederalRegisterDocument[] } = {},
 ): OpsEvent[] {
   const events: OpsEvent[] = alerts.map((alert) => ({
     id: `wm:breaking-news:${alert.id}`,
@@ -124,15 +125,31 @@ export function buildOpsEvents(
     }
   }
 
+  // Publication dates have day precision. Reserve a few rows so today's
+  // timestamped alerts and snapshot updates cannot push all of them out.
+  const federalEvents: OpsEvent[] = (extras.federalRegister ?? [])
+    .filter((item) => item.type === 'Executive Order' || ['tariff', 'sanctions', 'export-control'].includes(item.topic))
+    .slice(0, 8)
+    .map((item) => ({
+      id: `federal-register:${item.id}`,
+      at: Date.parse(item.date),
+      kind: 'federal-register',
+      title: `미 연방관보 · ${federalRegisterLabel(item)} · ${item.title}`,
+      iso2: item.countries[0],
+      severity: 'medium',
+      url: item.url,
+    }));
+  const newestFirst = (a: OpsEvent, b: OpsEvent) => b.at - a.at || a.id.localeCompare(b.id);
   const seen = new Set<string>();
-  return events
+  const recentEvents = events
     .filter((event) => {
       if (seen.has(event.id)) return false;
       seen.add(event.id);
       return true;
     })
-    .sort((a, b) => b.at - a.at || a.id.localeCompare(b.id))
-    .slice(0, 50);
+    .sort(newestFirst)
+    .slice(0, 50 - federalEvents.length);
+  return [...recentEvents, ...federalEvents].sort(newestFirst);
 }
 
 const OUTAGE_RECENT_MS = 6 * 60 * 60 * 1000;

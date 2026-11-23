@@ -32,6 +32,7 @@ export const STANDALONE_INTERVAL_MIN = {
   'imd-cyclone-marine': 60, 'no2-activity': 1440, 'cve-reference': 720, 'research': 45,
   'country-history': 1440, 'webcams': 480, 'forecast-resolutions': 720, 'forecast-bets': 720,
   'funding-stress': 240,
+  'federal-register': 60,
   'dart-disclosures': 30,
   'ecos-macro': 720,
   'gpsjam': 360, 'eu-gas-flows': 360,

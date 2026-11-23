@@ -20,6 +20,7 @@ export const BOOTSTRAP_CACHE_KEYS = Object.freeze({
   earthquakes: 'seismology:earthquakes:v1',
   outages: 'infra:outages:v1',
   iodaOutages: 'infra:ioda-outages:v1',
+  federalRegister: 'policy:federal-register:v1',
   gridDisruptionClock: 'infra:grid-disruption-clock:v1',
   serviceStatuses: 'infra:service-statuses:v1',
   ddosAttacks: 'cf:radar:ddos:v1',
@@ -251,6 +252,7 @@ const ON_DEMAND_KEY_NAMES = new Set([
   // ~1.5 MB. On-demand: fetched only when the NOTAM airspace layer is on.
   'notamAirspace',
   'iodaOutages',
+  'federalRegister',
   // The video each catalog YouTube channel has live now (#8545), fetched by the
   // live video players at play intent and only for slots that list a channel.
   // The get-bootstrap-data RPC also serves any registered key by name, so the

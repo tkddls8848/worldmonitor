@@ -293,6 +293,7 @@ const BOOTSTRAP_KEYS = {
   earthquakes:       'seismology:earthquakes:v1',
   outages:           'infra:outages:v1',
   iodaOutages:       'infra:ioda-outages:v1',
+  federalRegister:  'policy:federal-register:v1',
   sectors:           'market:sectors:v2',
   etfFlows:          'market:etf-flows:v1',
   climateAnomalies:  'climate:anomalies:v2',
@@ -928,6 +929,7 @@ const SEED_META = {
   },
   outages:          { key: 'seed-meta:infra:outages',           maxStaleMin: 30 },
   iodaOutages:      { key: 'seed-meta:infra:ioda-outages',       maxStaleMin: 120 },
+  federalRegister: { key: 'seed-meta:policy:federal-register', maxStaleMin: 180 },
   // seed-live-video-resolved cron `0 */6 * * *` (#8545); 1080 = 3× cadence per
   // project convention. The PR registers the probe before the Railway service
   // exists, so it softens to EMPTY_ON_DEMAND only until the seeder's first
@@ -2757,6 +2759,7 @@ const ON_DEMAND_KEYS = new Set([
   'euGasFlows',
   'worldOverview',
   'iodaOutages',
+  'federalRegister',
   'fundingStress',
   'worldRelationsAi',
   'gridDisruptionClock',

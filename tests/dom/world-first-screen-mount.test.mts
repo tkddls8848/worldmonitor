@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({ load: vi.fn(), mark: vi.fn(), stress: vi.fn(), outages: vi.fn(), ecos: vi.fn(), trade: vi.fn(), dart: vi.fn(), fields: ['military', 'geopolitics'] as string[], setFields: vi.fn(), data: {} as Record<string, unknown> }));
+const mocks = vi.hoisted(() => ({ load: vi.fn(), mark: vi.fn(), stress: vi.fn(), outages: vi.fn(), ecos: vi.fn(), trade: vi.fn(), dart: vi.fn(), federalRegister: vi.fn(), fields: ['military', 'geopolitics'] as string[], setFields: vi.fn(), data: {} as Record<string, unknown> }));
 vi.mock('@/services/world-overview', () => ({ loadWorldOverview: mocks.load, setWorldMark: mocks.mark }));
 vi.mock('@/services/world-overview-view', () => ({ buildWorldMapView: vi.fn((_s, _f, selected) => ({ date: '2026-11-22', countries: {}, lines: [], blocOutlines: [], selectedIso2: selected, relatedIso2: [] })), buildCountryDrawerData: vi.fn((_s, iso2) => ({ iso2, nameKo: iso2, nameEn: iso2, level: null, conflictLevel: null, ciiScore: null, updatedAt: 1, issue: null, relations: [], blocs: [], isToday: true, aiStatus: 'ok' })) }));
 vi.mock('@/services/world-first-screen-prefs', () => ({ getWorldFields: () => [...mocks.fields], setWorldFields: mocks.setFields }));
@@ -11,6 +11,10 @@ vi.mock('@/services/eu-gas-flows', () => ({ loadEuGasFlows: vi.fn(() => Promise.
 vi.mock('@/services/kr-ecos', () => ({ loadKrEcosMacro: mocks.ecos }));
 vi.mock('@/services/kr-customs-trade', () => ({ loadKrCustomsTrade: mocks.trade }));
 vi.mock('@/services/kr-dart', () => ({ loadKrDartDisclosures: mocks.dart }));
+vi.mock('@/services/federal-register', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/services/federal-register')>(),
+  loadFederalRegister: mocks.federalRegister,
+}));
 vi.mock('@/services/country-geometry', () => ({ preloadCountryGeometry: vi.fn(() => new Promise(() => { /* geometry never needed here */ })) }));
 import { mountWorldFirstScreen, type WorldFirstScreenSlots } from '../../src/app/world-first-screen';
 
@@ -37,7 +41,7 @@ function setup() {
   return { root, slots, map, ctx };
 }
 afterEach(() => { document.body.replaceChildren(); vi.clearAllMocks(); mocks.fields = ['military', 'geopolitics']; mocks.data = {}; mocks.stress.mockResolvedValue(null); mocks.outages.mockResolvedValue([]); mocks.ecos.mockResolvedValue(null); mocks.trade.mockResolvedValue(null); mocks.dart.mockResolvedValue([]); });
-beforeEach(() => { mocks.stress.mockResolvedValue(null); mocks.outages.mockResolvedValue([]); mocks.ecos.mockResolvedValue(null); mocks.trade.mockResolvedValue(null); mocks.dart.mockResolvedValue([]); });
+beforeEach(() => { mocks.stress.mockResolvedValue(null); mocks.outages.mockResolvedValue([]); mocks.ecos.mockResolvedValue(null); mocks.trade.mockResolvedValue(null); mocks.dart.mockResolvedValue([]); mocks.federalRegister.mockResolvedValue([]); });
 
 describe('mountWorldFirstScreen', () => {
   it('mounts chrome and reports an empty snapshot', async () => {
@@ -108,5 +112,38 @@ describe('mountWorldFirstScreen', () => {
     expect(mocks.ecos).toHaveBeenCalledTimes(2); expect(mocks.trade).toHaveBeenCalledTimes(2); expect(mocks.dart).toHaveBeenCalledTimes(2);
     mounted.destroy();
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('opens the Federal Register country card from an event log entry', async () => {
+    const doc = {
+      id: '2026-22385', date: '2026-11-02', title: 'Tariffs on <imports>', type: 'Proclamation',
+      topic: 'tariff', countries: ['JP', 'US'], url: 'https://www.federalregister.gov/documents/2026/11/02/2026-22385/adjusting-imports',
+    };
+    mocks.load.mockResolvedValue({ snapshot, archivedDates: [] });
+    mocks.federalRegister.mockResolvedValue([
+      doc,
+      { ...doc, id: '2026-22384', topic: 'other', title: 'Unrelated determination', countries: ['AU'] },
+    ]);
+    const { slots, ctx } = setup();
+    const mounted = mountWorldFirstScreen(ctx, slots, { openFullView() {}, openCountryBrief() {} });
+    try {
+      const entry = () => slots.stage.querySelector('li[data-kind="federal-register"]');
+      await vi.waitFor(() => expect(entry()?.textContent).toContain(doc.title));
+      expect(slots.stage.querySelectorAll('li[data-kind="federal-register"]')).toHaveLength(1);
+      expect(entry()?.querySelector('time')?.dateTime).toBe(doc.date);
+      expect(entry()?.querySelector('a')?.href).toBe(doc.url);
+      entry()?.querySelector('button')?.click();
+      const card = slots.stage.querySelector('[data-section="federal-register"]');
+      expect(card?.textContent).toContain(doc.title);
+      expect(card?.textContent).not.toContain('Unrelated determination');
+      expect(card?.querySelector('imports')).toBeNull();
+      expect(card?.querySelector('a')?.href).toBe(doc.url);
+      expect(card?.querySelector('a')?.rel).toBe('noopener noreferrer');
+
+      window.dispatchEvent(new CustomEvent('wm:world:country-click', { detail: { code: 'CA' } }));
+      expect(slots.stage.querySelector('[data-section="federal-register"]')).toBeNull();
+    } finally {
+      mounted.destroy();
+    }
   });
 });

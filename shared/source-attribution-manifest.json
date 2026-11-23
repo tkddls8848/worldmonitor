@@ -12870,6 +12870,23 @@
       ]
     },
     {
+      "host": "www.federalregister.gov",
+      "provider": "www.federalregister.gov",
+      "kind": "structured",
+      "observed": true,
+      "license": "U.S. government works are public domain unless otherwise noted.",
+      "attribution": "Credit the U.S. Office of the Federal Register and link to the original FederalRegister.gov document.",
+      "status": "reviewed",
+      "references": [
+        {
+          "path": "scripts/seed-federal-register.mjs"
+        },
+        {
+          "path": "src/services/federal-register.ts"
+        }
+      ]
+    },
+    {
       "host": "www.federalreserve.gov",
       "provider": "www.federalreserve.gov",
       "kind": "feed+structured",

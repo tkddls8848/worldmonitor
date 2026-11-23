@@ -1,6 +1,7 @@
 import '../../styles/world-country-drawer.css';
 import { AI_DISCLAIMER_KO, KIND_LABEL_KO, TREND_LABEL_KO } from '../../../shared/world-overview.js';
-import type { CountryDrawerData, DrawerRelation, SourceLink, WorldMarkRequest } from '../../types/world-overview';
+import { federalRegisterLabel } from '@/services/federal-register';
+import type { CountryDrawerData, DrawerRelation, FederalRegisterDocument, SourceLink, WorldMarkRequest } from '../../types/world-overview';
 
 type RelationFilter = 'all' | 'worsening' | 'easing';
 type MarkRequest = Extract<WorldMarkRequest, { action: 'mark' }>;
@@ -125,6 +126,7 @@ export class WorldCountryDrawer {
     if (!data) return;
     const content = make('div', 'wfs-country-drawer__content');
     content.append(this.renderHeader(data), this.renderNotice(data), this.renderIssues(data), this.renderRelations(data), this.renderOutages(data));
+    if (data.federalRegister?.length) content.append(this.renderFederalRegister(data.federalRegister));
     if (data.iso2 === 'KR') content.append(this.renderKorea(data));
     content.append(this.renderSources(data), this.renderFooter(data));
     this.element.replaceChildren(content);
@@ -332,6 +334,30 @@ export class WorldCountryDrawer {
       }
       section.append(list);
     }
+    return section;
+  }
+
+  private renderFederalRegister(documents: FederalRegisterDocument[]): HTMLElement {
+    const section = this.section('federal-register', '미 연방관보');
+    const list = make('ul', 'wfs-country-drawer__source-list');
+    for (const doc of documents) {
+      const row = make('li');
+      const date = make('time', 'wfs-country-drawer__source-time', doc.date);
+      date.dateTime = doc.date;
+      row.append(date, make('span', 'wfs-country-drawer__source-time', federalRegisterLabel(doc)));
+      const url = validSourceUrl(doc.url);
+      if (url) {
+        const link = make('a', 'wfs-country-drawer__source-link', doc.title);
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        row.append(link);
+      } else {
+        row.append(make('span', 'wfs-country-drawer__source-time', doc.title));
+      }
+      list.append(row);
+    }
+    section.append(list);
     return section;
   }
 

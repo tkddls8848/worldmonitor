@@ -201,8 +201,10 @@ export class WorldEventLog {
       mark.dataset.severity = event.severity;
       mark.dataset.kind = event.kind;
       mark.setAttribute('aria-label', event.severity);
-      const time = node('time', 'wfs-ops-event-time', eventTime(event.at));
-      time.dateTime = new Date(event.at).toISOString();
+      const timestamp = new Date(event.at).toISOString();
+      const publicationDay = event.kind === 'federal-register';
+      const time = node('time', 'wfs-ops-event-time', publicationDay ? timestamp.slice(5, 10) : eventTime(event.at));
+      time.dateTime = publicationDay ? timestamp.slice(0, 10) : timestamp;
       const title = node('span', 'wfs-ops-event-title', event.title);
       row.append(mark, time, title);
       if (event.iso2) {

@@ -9,13 +9,14 @@ import { buildSupplementalTickerItems, loadTickerItems } from '@/services/world-
 import { loadFundingStress } from '@/services/funding-stress';
 import type { FundingStress } from '@/services/funding-stress';
 import { loadIodaOutages } from '@/services/internet-outages-ioda';
+import { loadFederalRegister } from '@/services/federal-register';
 import type { IodaOutage } from '@/services/internet-outages-ioda';
 import { loadEuGasFlows } from '@/services/eu-gas-flows';
 import type { EuGasFlows } from '@/services/eu-gas-flows';
 import { getWorldFields, setWorldFields } from '@/services/world-first-screen-prefs';
 import { getCurrentTheme, setTheme } from '@/utils/theme-manager';
 import { kstDate } from '../../shared/world-overview.js';
-import type { CountryDrawerData, WorldField, WorldMapView, WorldMarkRequest } from '@/types/world-overview';
+import type { CountryDrawerData, FederalRegisterDocument, WorldField, WorldMapView, WorldMarkRequest } from '@/types/world-overview';
 import type { BreakingAlert } from '@/services/breaking-news-alerts';
 import { WorldClockStrip, WorldEventLog, WorldOpsCounters, WorldThreatBadge } from '@/components/world/WorldOps';
 import { buildOpsEvents, computeOpsMetrics } from '@/services/world-ops';
@@ -58,6 +59,7 @@ export function mountWorldFirstScreen(
   let destroyed = false;
   let fundingStress: FundingStress | null = null;
   let outages: IodaOutage[] = [];
+  let federalRegister: FederalRegisterDocument[] = [];
   let gasFlows: EuGasFlows | null = null;
   let krEcos: KrEcosMacro | null = null;
   let krTrade: KrCustomsTrade | null = null;
@@ -118,7 +120,7 @@ export function mountWorldFirstScreen(
       threat.setMetrics(metrics);
       counters.setCounters(metrics.counters);
     }
-    const events = buildOpsEvents(snapshot, breakingAlerts, now, { outages, disclosures: krDisclosures });
+    const events = buildOpsEvents(snapshot, breakingAlerts, now, { outages, disclosures: krDisclosures, federalRegister });
     eventLog.setEvents(events);
     dispatch.setLogState(logOpen, events.length);
   }
@@ -160,6 +162,7 @@ export function mountWorldFirstScreen(
     const data: CountryDrawerData = { ...buildCountryDrawerData(snapshot, selectedIso2, kstDate(Date.now())), outages: outages
       .filter((outage) => outage.iso2 === selectedIso2 && (outage.end === null || outage.end >= Date.now() - 6 * 60 * 60 * 1000))
       .map(({ id, start, end, severity, signals, url }) => ({ id, start, end, severity, signals, url })),
+      federalRegister: federalRegister.filter((item) => selectedIso2 && item.countries.includes(selectedIso2)).slice(0, 5),
       ...(selectedIso2 === 'KR' ? { korea: { asOf: krEcos?.asOf ?? 0, indicators: krEcos?.indicators ?? [], trade: krTrade, disclosures: krDisclosures } } : {}) };
     if (drawer.isOpen()) drawer.update(data); else drawer.open(data);
   }
@@ -267,7 +270,10 @@ export function mountWorldFirstScreen(
   async function refreshExtras(): Promise<void> {
     if (destroyed || !worldShown || extrasLoading) return;
     extrasLoading = true;
-    const [stressResult, outageResult, gasResult, ecosResult, tradeResult, dartResult] = await Promise.allSettled([loadFundingStress(), loadIodaOutages(), loadEuGasFlows(), loadKrEcosMacro(), loadKrCustomsTrade(), loadKrDartDisclosures()]);
+    const [stressResult, outageResult, gasResult, ecosResult, tradeResult, dartResult, registerResult] = await Promise.allSettled([
+      loadFundingStress(), loadIodaOutages(), loadEuGasFlows(), loadKrEcosMacro(),
+      loadKrCustomsTrade(), loadKrDartDisclosures(), loadFederalRegister(),
+    ]);
     if (!destroyed) {
       if (stressResult.status === 'fulfilled') fundingStress = stressResult.value;
       if (outageResult.status === 'fulfilled') outages = outageResult.value;
@@ -275,6 +281,7 @@ export function mountWorldFirstScreen(
       if (ecosResult.status === 'fulfilled') krEcos = ecosResult.value;
       if (tradeResult.status === 'fulfilled') krTrade = tradeResult.value;
       if (dartResult.status === 'fulfilled') krDisclosures = dartResult.value;
+      if (registerResult.status === 'fulfilled') federalRegister = registerResult.value;
       extrasLoadedAt = Date.now();
       refreshOps();
       if (selectedIso2) updateDrawer();
