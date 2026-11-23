@@ -1564,7 +1564,7 @@
           "geoBoundaries": "Maeneo yasiyoruhusiwa kijeshi, njia za kusitisha mapigano, na mipaka yenye mizozo",
           "ciiChoropleth": "Ramani ya joto ya Fahirisi ya Kutokuwa na Uthabiti wa Nchi — rangizo nchi kwa alama (kijani=imara, nyekundu=muhimu)",
           "notamAirspace": "Vikwazo vya kuruka kwa muda na anga yenye vikwazo, hatari na iliyokatazwa kutoka kwa NOTAMs za FAA, inayotumika sasa au kuanza ndani ya saa 24",
-          "no2Activity": "Mwelekeo wa shughuli za NO2 kutoka Sentinel-5P kwa nchi 167 na makundi 32 ya viwanda: dirisha la hivi karibuni la siku 56 ikilinganishwa na tarehe zile zile za miaka iliyopita, baada ya ukanda usiohesabiwa wa 10%. Ina data iliyorekebishwa ya Copernicus Sentinel.",
+          "no2Activity": "Mwelekeo wa shughuli za NO2 kutoka NASA OMI/Aura kwa nchi 167 na makundi 32 ya viwanda: dirisha la hivi karibuni la siku 56 ikilinganishwa na tarehe zile zile za miaka iliyopita, baada ya ukanda usiohesabiwa wa 10%.",
           "reservoirLevels": "Kiwango cha uso wa maji katika mabwawa na maziwa ya kimkakati kutoka lidar ya setilaiti ya NASA ICESat-2, ikilinganishwa na kiwango cha kawaida cha mwezi. NASA huchapisha kila upitaji takriban miezi miwili baada ya kupimwa."
         },
         "notes": {
@@ -4646,8 +4646,8 @@
       },
       "no2Activity": {
         "category": "Uchumi",
-        "purpose": "Hupaka rangi nchi na makundi ya viwanda kulingana na mwelekeo wa NO2 ya troposphere kutoka Sentinel-5P, alama ya mwako, katika dirisha la hivi karibuni la siku 56 ikilinganishwa na tarehe zile zile za miaka iliyopita.",
-        "source": "NO2 ya Copernicus Sentinel-5P TROPOMI kupitia CDSE Sentinel Hub Statistical API, ikijumlishwa kila siku kwa kila eneo na huduma ya seed-no2-activity. Ina data iliyorekebishwa ya Copernicus Sentinel.",
+        "purpose": "Hupaka rangi nchi na makundi ya viwanda kulingana na mwelekeo wa NO2 ya troposphere kutoka NASA OMI/Aura, alama ya mwako, katika dirisha la hivi karibuni la siku 56 ikilinganishwa na tarehe zile zile za miaka iliyopita.",
+        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
         "freshness": "Hupakiwa kila saa 24; dirisha huisha siku 3 kabla ya uendeshaji ili data iliyochelewa ifike, na bajeti ya usasa ya saa 72.",
         "confidence": "Eneo hupata usomaji tu likiwa na angalau siku 14 halali na miaka 2 ya msingi; mawingu ndiyo kelele kuu, hivyo dirisha dhaifu hukataa usomaji badala ya kubahatisha.",
         "limitations": {

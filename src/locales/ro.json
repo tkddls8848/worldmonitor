@@ -1417,7 +1417,7 @@
           "geoBoundaries": "Zone demilitarizate, linii de încetare a focului și granițe disputate",
           "ciiChoropleth": "Hartă termică a Indicelui de instabilitate la nivel de țară — colorează țările după scor (verde=stabil, roșu=critic)",
           "notamAirspace": "Restricții temporare de zbor și spațiu aerian restricționat, de pericol și interzis din NOTAM-urile FAA, în vigoare acum sau începând în următoarele 24 de ore",
-          "no2Activity": "Direcția activității NO2 din Sentinel-5P pentru 167 de țări și 32 de clustere industriale: cea mai recentă fereastră de 56 de zile față de aceleași date din anii anteriori, după o bandă moartă de 10%. Conține date Copernicus Sentinel modificate.",
+          "no2Activity": "Direcția activității NO2 din NASA OMI/Aura pentru 167 de țări și 32 de clustere industriale: cea mai recentă fereastră de 56 de zile față de aceleași date din anii anteriori, după o bandă moartă de 10%.",
           "reservoirLevels": "Nivelul suprafeței apei în lacuri de acumulare și lacuri strategice, din lidarul satelitar NASA ICESat-2, față de nivelul obișnuit al lunii. NASA publică fiecare trecere la aproximativ două luni după măsurare."
         },
         "notes": {
@@ -4668,8 +4668,8 @@
       },
       "no2Activity": {
         "category": "Economie",
-        "purpose": "Colorează țările și clusterele industriale după direcția NO2 troposferic din Sentinel-5P, o urmă de ardere, în cea mai recentă fereastră de 56 de zile față de aceleași date din anii anteriori.",
-        "source": "NO2 Copernicus Sentinel-5P TROPOMI prin CDSE Sentinel Hub Statistical API, agregat zilnic pe regiune de serviciul seed-no2-activity. Conține date Copernicus Sentinel modificate.",
+        "purpose": "Colorează țările și clusterele industriale după direcția NO2 troposferic din NASA OMI/Aura, o urmă de ardere, în cea mai recentă fereastră de 56 de zile față de aceleași date din anii anteriori.",
+        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
         "freshness": "Alimentat la fiecare 24 de ore; fereastra se încheie cu 3 zile înainte de rulare pentru a primi granulele întârziate, cu un buget de prospețime de 72 de ore.",
         "confidence": "O regiune primește o citire doar cu cel puțin 14 zile valide și 2 ani de referință; nebulozitatea este zgomotul dominant, așa că o fereastră săracă refuză citirea în loc să ghicească.",
         "limitations": {

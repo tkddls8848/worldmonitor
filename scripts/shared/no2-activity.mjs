@@ -1,4 +1,4 @@
-// The reviewed Sentinel-5P NO2 activity contract shared by the Railway seeder
+// The reviewed NASA OMI/Aura NO2 activity contract shared by the seeder
 // (scripts/seed-no2-activity.mjs) and every reader, starting with the China
 // activity nowcast (server/worldmonitor/economic/v1/get-china-activity-nowcast.ts).
 // The region registry is generated (scripts/generate-no2-regions.mjs); the
@@ -9,12 +9,18 @@
 import registry from './no2-regions.generated.mjs';
 
 export const NO2_ACTIVITY_KEY = 'economic:no2-activity:v1';
-export const NO2_ACTIVITY_SERIES_KEY_PREFIX = 'economic:no2-activity:series:v1:';
+export const NO2_ACTIVITY_SERIES_KEY_PREFIX = 'economic:no2-activity:series:v2:';
 export const NO2_ACTIVITY_SEED_META_KEY = 'seed-meta:economic:no2-activity';
 export const NO2_ACTIVITY_ACTIVATION_KEY = 'seed-activated:economic:no2-activity';
-export const NO2_ACTIVITY_METHOD_VERSION = 'no2-activity/v1';
-export const NO2_ACTIVITY_SOURCE_VERSION = 'cdse-sentinel-hub-statistics-s5p-no2-v1';
-export const NO2_ATTRIBUTION_PREFIX = 'Contains modified Copernicus Sentinel data';
+export const NO2_ACTIVITY_METHOD_VERSION = 'no2-activity/v2';
+export const NO2_ACTIVITY_SOURCE_VERSION = 'nasa-omi-omno2d-004-v1';
+export const NO2_ATTRIBUTION_PREFIX = 'NASA OMI/Aura OMNO2d (GES DISC)';
+export const NO2_ACTIVITY_SOURCE = Object.freeze({
+  publisherId: 'publisher:nasa-omi',
+  dataset: 'OMNO2d.004',
+  band: 'ColumnAmountNO2TropCloudScreened',
+  unit: 'mol/m2',
+});
 export const NO2_ACTIVITY_MAX_REFRESH_AGE_MS = 7 * 86_400_000;
 
 export const NO2_REGIONS = Object.freeze(registry.regions.map((region) => Object.freeze({
@@ -24,25 +30,6 @@ export const NO2_REGIONS = Object.freeze(registry.regions.map((region) => Object
 
 export const NO2_DIRECTIONS = Object.freeze(['strengthening', 'weakening', 'unchanged']);
 
-/**
- * Measured on 2026-10-26 against the CDSE Statistical API (owner probes):
- * - `minQa` omitted returns the same valid counts as `minQa: 75`, so the
- *   documented NO2 default holds; it is set explicitly anyway.
- * - NRTI granules are not retained for prior years while OFFL is, and OFFL
- *   lags 2 days over China but 7 or more days over the Americas, so every
- *   window uses OFFL, the current window ends `windowEndLagDays` before the
- *   run, and each run re-fetches the trailing `refreshDays` so late granules
- *   heal the stored series.
- * - Cost is 2.54e-6 PU per output pixel per day; a request spanning a year
- *   over Russia times out at 300 s while 61 days answers in 126 s (a 5 degree
- *   wide cluster answers a full year in 70-90 s), so the backfill walks
- *   chunks sized by `backfillChunkDaysByWidth`, at most `backfillChunksPerRun`
- *   per run.
- * - Year-over-year noise between two years with equal annual means: 56-day
- *   windows, daily valid fraction >= 0.2, mean of daily means, Lunar New Year
- *   masked: |change| median 5-9%, sd 7-9% per region. The dead band sits
- *   above the single-region p75.
- */
 export const NO2_ACTIVITY_METHOD = Object.freeze({
   windowDays: 56,
   windowEndLagDays: 3,
@@ -52,26 +39,10 @@ export const NO2_ACTIVITY_METHOD = Object.freeze({
   baselineYears: 3,
   minBaselineYears: 2,
   deadBandPercent: 10,
-  timeliness: 'OFFL',
-  minQa: 75,
-  maxPixelsPerRequest: 10_000,
-  // Statistical API time scales with granules opened, so wide regions take
-  // shorter chunks: [max bbox width in degrees, chunk days].
-  backfillChunkDaysByWidth: Object.freeze([
-    Object.freeze([30, 183]),
-    Object.freeze([90, 92]),
-    Object.freeze([360, 61]),
-  ]),
-  backfillChunksPerRun: 90,
+  gridResolutionDegrees: 0.25,
+  backfillDaysPerRun: 60,
   holidayMask: Object.freeze({ daysBefore: 7, daysAfter: 14 }),
 });
-
-/** Days per backfill request for a region, from its bounding-box width. */
-export function backfillChunkDaysFor(region, method = NO2_ACTIVITY_METHOD) {
-  const width = region.bbox[2] - region.bbox[0];
-  return method.backfillChunkDaysByWidth.find(([maxWidth]) => width <= maxWidth)?.[1]
-    ?? method.backfillChunkDaysByWidth[method.backfillChunkDaysByWidth.length - 1][1];
-}
 
 /** The China nowcast composite over the Chinese clusters. */
 export const CHINA_NO2_COMPOSITE = Object.freeze({
@@ -244,15 +215,11 @@ function sameMethod(value, method) {
 
 function isSource(value) {
   return isRecord(value)
-    && value.publisherId === 'publisher:copernicus-sentinel-5p'
-    && value.dataset === 'sentinel-5p-l2'
-    && value.band === 'NO2'
-    && value.unit === 'mol/m2'
+    && Object.entries(NO2_ACTIVITY_SOURCE).every(([key, expected]) => value[key] === expected)
     && typeof value.attribution === 'string'
     && value.attribution.startsWith(NO2_ATTRIBUTION_PREFIX)
     && isCount(value.requestCount)
-    && isFiniteNumber(value.processingUnitsSpent)
-    && value.processingUnitsSpent >= 0;
+    && isCount(value.bytesDownloaded);
 }
 
 /**

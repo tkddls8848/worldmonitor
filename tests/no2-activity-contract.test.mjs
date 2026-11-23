@@ -8,16 +8,13 @@ import {
   NO2_GEOMETRIES_PATH,
   NO2_REGIONS_PATH,
   buildRegistry,
-  projectBudget,
   renderGeometries,
   renderRegistryModule,
 } from '../scripts/generate-no2-regions.mjs';
 import {
   CHINA_NO2_COMPOSITE,
   LUNAR_NEW_YEAR_DATES,
-  NO2_ACTIVITY_METHOD,
   NO2_REGIONS,
-  backfillChunkDaysFor,
   composeRegions,
   isHolidayMasked,
   signalFor,
@@ -25,13 +22,11 @@ import {
 } from '../scripts/shared/no2-activity.mjs';
 import { no2ActivityDataset } from './helpers/no2-activity-fixture.mjs';
 
-const MONTHLY_QUOTA = 30_000;
-
 describe('NO2 activity region registry (#9722)', () => {
   it('is generated from the country geometry and the cluster table and is up to date', () => {
     const { regions, geometries } = buildRegistry();
     assert.equal(readFileSync(NO2_REGIONS_PATH, 'utf8'), renderRegistryModule(regions));
-    assert.equal(readFileSync(NO2_GEOMETRIES_PATH, 'utf8'), renderGeometries(geometries));
+    assert.equal(readFileSync(NO2_GEOMETRIES_PATH, 'utf8').replaceAll('\r\n', '\n'), renderGeometries(geometries));
     assert.equal(regions.filter((region) => region.kind === 'cluster').length, CLUSTERS.length);
     assert.ok(regions.filter((region) => region.kind === 'country').length >= 160);
     for (const region of regions.filter((item) => item.kind === 'country')) {
@@ -39,7 +34,7 @@ describe('NO2 activity region registry (#9722)', () => {
     }
   });
 
-  it('keeps every region inside the request pixel cap with a sane rectangle', () => {
+  it('keeps every region within the registry pixel cap with a sane rectangle', () => {
     assert.equal(new Set(NO2_REGIONS.map((region) => region.id)).size, NO2_REGIONS.length);
     for (const region of NO2_REGIONS) {
       const [west, south, east, north] = region.bbox;
@@ -52,15 +47,6 @@ describe('NO2 activity region registry (#9722)', () => {
     assert.equal(NO2_REGIONS.find((region) => region.id === 'country-ru')?.resolutionDegrees, 1);
     assert.equal(NO2_REGIONS.find((region) => region.id === 'jing-jin-ji')?.holidayCalendar, 'lunar_new_year');
     assert.equal(NO2_REGIONS.find((region) => region.id === 'country-de')?.holidayCalendar, null);
-  });
-
-  it('projects a daily refresh plus the backfill at well under half the monthly quotas', () => {
-    const budget = projectBudget(NO2_REGIONS, NO2_ACTIVITY_METHOD, backfillChunkDaysFor);
-    assert.ok(budget.refreshRequestsPerMonth + budget.backfillRequests < MONTHLY_QUOTA / 2, JSON.stringify(budget));
-    assert.ok(budget.refreshPuPerMonth + budget.backfillPu < MONTHLY_QUOTA / 2, JSON.stringify(budget));
-    assert.ok(budget.backfillRuns <= 30, JSON.stringify(budget));
-    assert.equal(backfillChunkDaysFor(NO2_REGIONS.find((region) => region.id === 'country-ru')), 61);
-    assert.equal(backfillChunkDaysFor(NO2_REGIONS.find((region) => region.id === 'jing-jin-ji')), 183);
   });
 });
 
@@ -111,11 +97,11 @@ describe('NO2 activity method contract (#9722)', () => {
 
   it('refuses datasets whose method, regions, or signals drift from the contract', () => {
     const cases = {
-      'another method version': (dataset) => { dataset.methodVersion = 'no2-activity/v2'; },
+      'another method version': (dataset) => { dataset.methodVersion = 'no2-activity/v1'; },
       'a moved dead band': (dataset) => { dataset.method.deadBandPercent = 5; },
-      'a different timeliness': (dataset) => { dataset.method.timeliness = 'NRTI'; },
+      'a different grid resolution': (dataset) => { dataset.method.gridResolutionDegrees = 0.5; },
       'an extra method field': (dataset) => { dataset.method.extra = 1; },
-      'a changed chunk table': (dataset) => { dataset.method.backfillChunkDaysByWidth[0][1] = 365; },
+      'a changed day budget': (dataset) => { dataset.method.backfillDaysPerRun = 90; },
       'a missing region': (dataset) => { delete dataset.regions['country-de']; },
       'an unregistered region': (dataset) => { dataset.regions.atlantis = dataset.regions['country-de']; delete dataset.regions['country-de']; },
       'a region rectangle that moved': (dataset) => { dataset.regions['jing-jin-ji'].bbox[0] = 113; },
@@ -137,7 +123,9 @@ describe('NO2 activity method contract (#9722)', () => {
       'a future refresh clock': (dataset) => { dataset.regions['country-de'].series.refreshedAt = '2026-10-27T06:10:00.000Z'; },
       'a stale refresh clock on an eligible region': (dataset) => { dataset.regions['country-de'].series.refreshedAt = '2026-10-18T06:10:00.000Z'; },
       'a missing attribution': (dataset) => { dataset.source.attribution = 'Sentinel-5P'; },
-      'another publisher': (dataset) => { dataset.source.publisherId = 'publisher:nasa'; },
+      'another publisher': (dataset) => { dataset.source.publisherId = 'publisher:copernicus-sentinel-5p'; },
+      'an unreviewed NO2 band': (dataset) => { dataset.source.band = 'ColumnAmountNO2Trop'; },
+      'invalid downloaded bytes': (dataset) => { dataset.source.bytesDownloaded = -1; },
     };
     for (const [label, mutate] of Object.entries(cases)) {
       const dataset = no2ActivityDataset();

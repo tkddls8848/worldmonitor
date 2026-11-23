@@ -453,7 +453,7 @@ const STANDALONE_KEYS = {
   // Seeded and health-monitored; no dashboard consumer yet (#6155 is the
   // data layer only), so it is standalone rather than bootstrap-tiered.
   chinaStockConnect:  'market:china:stock-connect:v1',
-  // Seeded by seed-no2-activity (#9722): the global Sentinel-5P NO2 dataset
+  // Seeded by seed-no2-activity (#9722): the global NASA OMI/Aura OMNO2d dataset
   // keyed by region, read by the China activity nowcast RPC for its
   // atmosphere family, so no bootstrap tier.
   no2Activity:        'economic:no2-activity:v1',
@@ -2866,7 +2866,7 @@ const ON_DEMAND_KEYS = new Set([
   // durable marker after its first successful publish; strict from then on.
   'liveVideoResolved',
   // Same bridge (#9722): the nowcast reader ships before the
-  // seed-no2-activity Railway service is provisioned.
+  // collector publishes its first NASA NO2 dataset.
   'no2Activity',
   // #8480. The macro bundle can ship the reader before the tail sections
   // publish. Each marker is written after the first successful publish.

@@ -14,7 +14,7 @@ test('collapsed legends preserve active NO2 attribution', async ({ page }) => {
     document.body.append(map.container);
     map.controlDisclosureCleanups = [];
     map.state = { layers: { ...Object.fromEntries(Object.keys(DEFAULT_MAP_LAYERS).map(key => [key, false])), no2Activity: true, diseaseOutbreaks: true } };
-    map.no2Activity = { attribution: 'Contains modified Copernicus Sentinel data (2026)' };
+    map.no2Activity = null;
     localStorage.removeItem('worldmonitor-map-legend-expanded');
     map.createLegend();
     Object.assign(window, { legendTestMap: map });
@@ -24,6 +24,7 @@ test('collapsed legends preserve active NO2 attribution', async ({ page }) => {
   const scale = page.locator('#no2ActivityLegend .legend-item').first();
   await expect(button).toHaveAttribute('aria-expanded', 'false');
   await expect(credit).toBeVisible();
+  await expect(credit).toHaveText('NASA OMI/Aura OMNO2d (GES DISC)');
   await expect(scale).toBeHidden();
   await button.click();
   await expect(scale).toBeVisible();
@@ -31,7 +32,7 @@ test('collapsed legends preserve active NO2 attribution', async ({ page }) => {
   await page.evaluate(() => {
     const map = (window as any).legendTestMap;
     map.container.style.width = '1100px';
-    map.no2Activity.attribution = 'Contains modified Copernicus Sentinel data (2027)';
+    map.no2Activity = { attribution: 'NASA OMI/Aura OMNO2d (GES DISC) (2027)' };
     map.updateLegend();
   });
   await button.click();

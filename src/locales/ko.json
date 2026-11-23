@@ -1422,7 +1422,7 @@
           "geoBoundaries": "비무장지대, 휴전선 및 분쟁 경계선",
           "ciiChoropleth": "Country Instability Index 히트맵 — 점수별 국가 표시(녹색=안정, 적색=심각)",
           "notamAirspace": "FAA NOTAM에서 현재 시행 중이거나 24시간 이내에 시작되는 임시 비행 제한, 제한된 공역, 위험 및 금지 공역",
-          "no2Activity": "167개국과 32개 산업 클러스터에 대한 Sentinel-5P NO2 활동 방향: 최근 56일 창을 이전 연도의 같은 날짜와 비교하고 10% 데드밴드를 적용합니다. 수정된 Copernicus Sentinel 데이터를 포함합니다.",
+          "no2Activity": "167개국과 32개 산업 클러스터에 대한 NASA OMI/Aura NO2 활동 방향: 최근 56일 창을 이전 연도의 같은 날짜와 비교하고 10% 데드밴드를 적용합니다.",
           "reservoirLevels": "NASA ICESat-2 위성 라이다로 측정한 전략 저수지와 호수의 수면 수위를 해당 월의 평년 수위와 비교합니다. NASA는 각 관측 패스를 측정 후 약 두 달 뒤에 공개합니다."
         },
         "notes": {
@@ -4717,8 +4717,8 @@
       },
       "no2Activity": {
         "category": "경제",
-        "purpose": "연소 흔적인 Sentinel-5P 대류권 NO2의 방향에 따라 국가와 산업 클러스터를 색칠합니다. 최근 56일 창을 이전 연도의 같은 날짜와 비교합니다.",
-        "source": "CDSE Sentinel Hub Statistical API를 통한 Copernicus Sentinel-5P TROPOMI NO2를 seed-no2-activity 서비스가 지역별로 매일 집계합니다. 수정된 Copernicus Sentinel 데이터를 포함합니다.",
+        "purpose": "연소 흔적인 NASA OMI/Aura 대류권 NO2의 방향에 따라 국가와 산업 클러스터를 색칠합니다. 최근 56일 창을 이전 연도의 같은 날짜와 비교합니다.",
+        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
         "freshness": "24시간마다 갱신되며, 늦게 도착하는 데이터를 위해 창은 실행 3일 전에 끝나고 신선도 예산은 72시간입니다.",
         "confidence": "유효일 14일 이상과 기준 연도 2년이 있어야만 값을 냅니다. 구름이 주요 노이즈이므로 데이터가 부족한 창은 추측하지 않고 값을 거부합니다.",
         "limitations": {

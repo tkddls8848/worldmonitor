@@ -197,6 +197,12 @@ The IMD seeder reads public bulletin pages and needs no credentials. A run with 
 
 The v2 activation marker requires at least one bulletin page that parsed in the current run. A page whose validity window has ended qualifies. Total failures and carried-only snapshots do not.
 
+### NASA OMI/Aura NO₂ activity
+
+`no2Activity` uses a 72-hour freshness budget. To enable collection, register at [NASA Earthdata Login](https://urs.earthdata.nasa.gov), select **Generate Token**, and authorize **NASA GESDISC DATA ARCHIVE** under **Applications > Authorized Apps**. Set `EARTHDATA_TOKEN` in the collector environment or `.env.local`.
+
+Without the token, the collector reports a skip and writes no dataset or freshness metadata. An empty, unactivated key reports `EMPTY_ON_DEMAND`. The first successful publication activates it. If every refresh fails, the collector preserves the last dataset and its original freshness time. A successful run can publish zero eligible regions while backfill is in progress.
+
 ### Producers That Serve Last-Known-Good
 
 NHC current-point identity rejections log a bounded `[NHC identity]` diagnostic with the layer, failed field predicates, source attempt time and seed run start time. The seed run start and surrounding Run ID log correlate the diagnostic with its execution. Field summaries include types and lengths; only allowlisted short public identity/date representations are included. Nested values and unsafe or oversized strings are omitted. These diagnostics do not enter Redis payloads and do not change validation, retries, failure counts or retention. A logged identity rejection still needs its field evidence before a parser defect can be established.

@@ -1253,7 +1253,7 @@
           "geoBoundaries": "Zone demilitarizzate, linee di cessate il fuoco e confini contestati",
           "ciiChoropleth": "Mappa di calore dell'Indice di instabilità del paese — colora i paesi in base al punteggio (verde=stabile, rosso=critico)",
           "notamAirspace": "Restrizioni di volo temporanee e spazio aereo ristretto, pericoloso e proibito dai NOTAM della FAA, in vigore ora o a partire entro 24 ore",
-          "no2Activity": "Direzione dell’attività NO2 da Sentinel-5P per 167 paesi e 32 distretti industriali: l’ultima finestra di 56 giorni rispetto alle stesse date degli anni precedenti, dopo una banda morta del 10%. Contiene dati Copernicus Sentinel modificati.",
+          "no2Activity": "Direzione dell’attività NO2 da NASA OMI/Aura per 167 paesi e 32 distretti industriali: l’ultima finestra di 56 giorni rispetto alle stesse date degli anni precedenti, dopo una banda morta del 10%.",
           "reservoirLevels": "Livello della superficie dell’acqua di bacini e laghi strategici dal lidar satellitare ICESat-2 della NASA, rispetto al livello abituale del mese. La NASA pubblica ogni passaggio circa due mesi dopo la misurazione."
         },
         "notes": {
@@ -4668,8 +4668,8 @@
       },
       "no2Activity": {
         "category": "Economia",
-        "purpose": "Colora paesi e distretti industriali secondo la direzione del loro NO2 troposferico Sentinel-5P, una traccia di combustione, nell’ultima finestra di 56 giorni rispetto alle stesse date degli anni precedenti.",
-        "source": "NO2 Copernicus Sentinel-5P TROPOMI tramite la CDSE Sentinel Hub Statistical API, aggregato ogni giorno per regione dal servizio seed-no2-activity. Contiene dati Copernicus Sentinel modificati.",
+        "purpose": "Colora paesi e distretti industriali secondo la direzione del loro NO2 troposferico NASA OMI/Aura, una traccia di combustione, nell’ultima finestra di 56 giorni rispetto alle stesse date degli anni precedenti.",
+        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
         "freshness": "Alimentato ogni 24 ore; la finestra termina 3 giorni prima dell’esecuzione per far arrivare i granuli in ritardo, con un budget di freschezza di 72 ore.",
         "confidence": "Una regione ottiene una lettura solo con almeno 14 giorni validi e 2 anni di riferimento; la nuvolosità è il rumore dominante, quindi una finestra scarsa rifiuta la lettura invece di indovinare.",
         "limitations": {

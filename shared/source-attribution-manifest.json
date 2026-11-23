@@ -2454,6 +2454,9 @@
       "references": [
         {
           "path": "scripts/_reservoir-levels.mjs"
+        },
+        {
+          "path": "scripts/seed-no2-activity.mjs"
         }
       ]
     },
@@ -5502,15 +5505,10 @@
       "host": "identity.dataspace.copernicus.eu",
       "provider": "identity.dataspace.copernicus.eu",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Copernicus Sentinel data policy: free, full and open access, including commercial use and redistribution, with the Copernicus credit",
       "attribution": "Contains modified Copernicus Sentinel data [year]",
-      "status": "reviewed",
-      "references": [
-        {
-          "path": "scripts/seed-no2-activity.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "iea.org",
@@ -7606,6 +7604,20 @@
       ]
     },
     {
+      "host": "opendap.earthdata.nasa.gov",
+      "provider": "opendap.earthdata.nasa.gov",
+      "kind": "structured",
+      "observed": true,
+      "license": "NASA Earth science data are openly accessible; Earthdata Login is required for this service.",
+      "attribution": "NASA OMI/Aura OMNO2d (GES DISC).",
+      "status": "terms-review",
+      "references": [
+        {
+          "path": "scripts/seed-no2-activity.mjs"
+        }
+      ]
+    },
+    {
       "host": "opendart.fss.or.kr",
       "provider": "Financial Supervisory Service OpenDART API",
       "kind": "structured",
@@ -9288,15 +9300,10 @@
       "host": "sh.dataspace.copernicus.eu",
       "provider": "sh.dataspace.copernicus.eu",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Copernicus Sentinel data policy: free, full and open access, including commercial use and redistribution, with the Copernicus credit",
       "attribution": "Contains modified Copernicus Sentinel data [year]",
-      "status": "reviewed",
-      "references": [
-        {
-          "path": "scripts/seed-no2-activity.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "sifted.eu",

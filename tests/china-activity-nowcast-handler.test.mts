@@ -1446,7 +1446,7 @@ describe('China activity nowcast fail-closed contract (#6060)', () => {
   });
 });
 
-describe('Sentinel-5P NO2 atmosphere contribution (#9722)', () => {
+describe('NASA OMI/Aura NO2 atmosphere contribution (#9722)', () => {
   const RECENT = { generatedAt: '2026-07-24T06:10:00.000Z', windowEnd: '2026-07-21' };
 
   async function atmosphereContribution(payload: unknown) {
@@ -1470,13 +1470,13 @@ describe('Sentinel-5P NO2 atmosphere contribution (#9722)', () => {
 
   it('reads the Chinese clusters of the seeded dataset as a dated, attributed atmosphere observation', async () => {
     const contribution = await atmosphereContribution(no2ActivityDataset({ ...RECENT, changes: STRONG }));
-    assert.equal(contribution?.seriesId, 's5p_no2_industrial_activity_change');
+    assert.equal(contribution?.seriesId, 'omi_no2_industrial_activity_change');
     assert.equal(contribution?.included, true);
     assert.equal(contribution?.direction, 'strengthening');
     assert.equal(contribution?.rawValue, 13.5);
     assert.equal(contribution?.observedAt, '2026-07-22T00:00:00.000Z');
     const provenance = contribution?.provenance as Record<string, unknown>;
-    assert.match(String(provenance.attribution), /^Contains modified Copernicus Sentinel data/);
+    assert.match(String(provenance.attribution), /^NASA OMI\/Aura OMNO2d \(GES DISC\)/);
     assert.deepEqual(provenance.regionIds, [
       'jing-jin-ji',
       'yangtze-river-delta',
@@ -1486,8 +1486,8 @@ describe('Sentinel-5P NO2 atmosphere contribution (#9722)', () => {
     assert.equal(provenance.changeBasis, 'same_calendar_window_prior_years');
     assert.equal(provenance.aggregation, 'median_of_eligible_cluster_changes');
     assert.equal(provenance.windowEnd, '2026-07-21');
-    assert.equal(provenance.timeliness, 'OFFL');
-    assert.equal(provenance.minQa, 75);
+    assert.equal(provenance.gridResolutionDegrees, 0.25);
+    assert.equal(provenance.bytesDownloaded, 41_472_080);
     assert.deepEqual(
       (provenance.regions as Array<Record<string, unknown>>).map((region) => [region.id, region.direction]),
       [['jing-jin-ji', 'strengthening'], ['yangtze-river-delta', 'strengthening'], ['pearl-river-delta', 'unchanged'], ['shandong', 'strengthening']],

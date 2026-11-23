@@ -1564,7 +1564,7 @@
           "geoBoundaries": "Demilitarizált zónák, tűzszünet vonalak és vitatott határok",
           "ciiChoropleth": "Ország Instabilitási Index hőtérkép — országokat pontszám szerint színez (zöld=stabil, piros=kritikus)",
           "notamAirspace": "Ideiglenes repüléskorlátozások, valamint korlátozott, veszélyes és tiltott légtér az FAA NOTAM-jaiból, amely jelenleg érvényes vagy 24 órán belül kezdődik",
-          "no2Activity": "Sentinel-5P NO2-aktivitás iránya 167 országra és 32 ipari klaszterre: a legutóbbi 56 napos ablak az előző évek azonos dátumaihoz képest, 10%-os holtsáv után. Módosított Copernicus Sentinel adatokat tartalmaz.",
+          "no2Activity": "NASA OMI/Aura NO2-aktivitás iránya 167 országra és 32 ipari klaszterre: a legutóbbi 56 napos ablak az előző évek azonos dátumaihoz képest, 10%-os holtsáv után.",
           "reservoirLevels": "Stratégiai víztározók és tavak vízfelszínének szintje a NASA ICESat-2 műholdas lidarja alapján, a hónapra jellemző szinthez viszonyítva. A NASA minden áthaladást nagyjából két hónappal a mérés után tesz közzé."
         },
         "notes": {
@@ -4646,8 +4646,8 @@
       },
       "no2Activity": {
         "category": "Gazdaság",
-        "purpose": "Az országokat és ipari klasztereket a Sentinel-5P troposzferikus NO2-jének, egy égési nyomnak az iránya szerint színezi a legutóbbi 56 napos ablakban az előző évek azonos dátumaihoz képest.",
-        "source": "Copernicus Sentinel-5P TROPOMI NO2 a CDSE Sentinel Hub Statistical API-n keresztül, régiónként naponta összesítve a seed-no2-activity szolgáltatás által. Módosított Copernicus Sentinel adatokat tartalmaz.",
+        "purpose": "Az országokat és ipari klasztereket a NASA OMI/Aura troposzferikus NO2-jének, egy égési nyomnak az iránya szerint színezi a legutóbbi 56 napos ablakban az előző évek azonos dátumaihoz képest.",
+        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
         "freshness": "24 óránként frissül; az ablak 3 nappal a futás előtt zárul, hogy a késői granulumok beérkezzenek, 72 órás frissességi kerettel.",
         "confidence": "Egy régió csak legalább 14 érvényes nappal és 2 bázisévvel kap értéket; a felhőzet a fő zaj, ezért a vékony ablak találgatás helyett elutasítja az értéket.",
         "limitations": {

@@ -1,37 +1,21 @@
 #!/usr/bin/env node
 
-// Publishes the global Sentinel-5P TROPOMI tropospheric NO2 activity dataset
-// (#9722): one record per registered region (167 countries derived from the
-// repository's country geometry plus 32 industrial clusters) with its
-// year-over-year direction, valid-fraction gating, and provenance. The China
-// activity nowcast reads the four Chinese clusters from it as its atmosphere
-// family. The registry, the method, and the dataset validator live in
-// scripts/shared/no2-activity.mjs, which every reader imports too.
+// Builds the regional NO2 activity dataset from NASA OMI/Aura OMNO2d v004.
+// A UTC day's cloud-screened tropospheric grid supplies all 199 regions.
+// Series live in economic:no2-activity:series:v2:<id>; the dataset and its
+// activation marker publish atomically through runSeed.
 //
-// Each region keeps a stored daily series in Redis
-// (economic:no2-activity:series:v1:<id>). Every run re-fetches the trailing
-// refreshDays of every region from the CDSE Sentinel Hub Statistical API
-// (OFFL product, qa_value >= minQa, the region's grid) so late offline
-// granules heal past days, then backfills the prior baselineYears in chunks
-// sized by the region's width, at most backfillChunksPerRun chunks per run,
-// clusters first. A region whose refresh failed keeps its stored series; a
-// region without a refresh in the last seven days publishes request_failed;
-// a run where the token cannot be fetched or every refresh fails publishes
-// nothing so runSeed keeps last-good and exits 75. A successful publish also
-// atomically SETs seed-activated:economic:no2-activity, which ends
-// /api/health's pre-provisioning softening for no2Activity.
+// Authenticated live probe: confirm the Earthdata bearer token is accepted by
+// the CMR-advertised OPeNDAP service, and that .dds exposes the Float32
+// ColumnAmountNO2TropCloudScreened field (HDFEOS/GRIDS/ColumnAmountNO2/Data
+// Fields) and .dods returns only that field in DAP2/XDR. Check the matching
+// v004 granule metadata for 720 latitudes and 1440 longitudes, starting at
+// 89.875 S and 179.875 W and increasing, and confirm the fill value
+// (-1.2676506002282294e30), units (molecules/cm^2), scale 1 and offset 0.
+// Compare cells in both hemispheres to the same granule before live use.
 //
-// Railway service config (set up manually via the Railway dashboard or `railway service`):
-//   - Service name: seed-no2-activity
-//   - Root directory: scripts
-//   - Start command: node seed-no2-activity.mjs
-//   - Cron: 20 6 * * *
-//   - Variables: UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN, CDSE_CLIENT_ID, CDSE_CLIENT_SECRET
-//
-// One-off backfill in a single sitting (about 1,700 chunks for the whole registry):
-//   node seed-no2-activity.mjs --backfill-chunks=1800
-// Dry run (live CDSE requests for a few regions, reads stored series, writes nothing):
-//   node scripts/seed-no2-activity.mjs --dry-run [--regions=jing-jin-ji,country-de] [--backfill-chunks=4]
+// Dry run: node scripts/seed-no2-activity.mjs --dry-run [--regions=jing-jin-ji,country-de] [--backfill-days=4]
+// Daily collection requires EARTHDATA_TOKEN. Dry runs never publish or write series.
 
 import { isMainModule } from './lib/main-module.mjs';
 import {
@@ -54,35 +38,32 @@ import {
   NO2_ACTIVITY_MAX_REFRESH_AGE_MS,
   NO2_ACTIVITY_METHOD_VERSION,
   NO2_ACTIVITY_SERIES_KEY_PREFIX,
+  NO2_ACTIVITY_SOURCE,
   NO2_ACTIVITY_SOURCE_VERSION,
   NO2_ATTRIBUTION_PREFIX,
   NO2_REGIONS,
-  backfillChunkDaysFor,
   dateMs,
   isHolidayMasked,
   signalFor,
   validateNo2ActivityDataset,
 } from './shared/no2-activity.mjs';
 
-export const CDSE_TOKEN_URL = 'https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token';
-export const CDSE_STATISTICS_URL = 'https://sh.dataspace.copernicus.eu/api/v1/statistics';
-const USER_AGENT = 'WorldMonitor seed-no2-activity/1.0 (+https://www.worldmonitor.app)';
-const REQUEST_TIMEOUT_MS = 290_000;
+const CMR_GRANULES_URL = 'https://cmr.earthdata.nasa.gov/search/granules.json';
+const OPENDAP_ORIGIN = 'https://opendap.earthdata.nasa.gov';
+const OPENDAP_PATH = '/collections/C3333493715-GES_DISC/granules/';
+const USER_AGENT = 'WorldMonitor seed-no2-activity/2.0 (+https://www.worldmonitor.app)';
+const REQUEST_TIMEOUT_MS = 25_000;
 const REQUEST_ATTEMPTS = 3;
 const REQUEST_CONCURRENCY = 3;
 const SERIES_TTL_SECONDS = 400 * 24 * 60 * 60;
 const DATASET_TTL_SECONDS = 7 * 24 * 60 * 60;
 const MGET_CHUNK = 50;
 const DAY_MS = 86_400_000;
-const VALID_FRACTION_VERSION = 2;
-
-export const EVALSCRIPT = `//VERSION=3
-function setup() {
-  return { input: [{ bands: ["NO2", "dataMask"] }],
-           output: [{ id: "no2", bands: 1, sampleType: "FLOAT32" }, { id: "dataMask", bands: 1 }] };
-}
-function evaluatePixel(s) { return { no2: [s.NO2], dataMask: [s.dataMask] }; }
-`;
+const GRID_STEP = NO2_ACTIVITY_METHOD.gridResolutionDegrees;
+const GRID_WIDTH = 360 / GRID_STEP;
+const GRID_HEIGHT = 180 / GRID_STEP;
+const GRID_SIZE = GRID_WIDTH * GRID_HEIGHT;
+const MOLECULES_CM2_TO_MOL_M2 = 1e4 / 6.02214076e23;
 
 const isoDate = (ms) => new Date(ms).toISOString().slice(0, 10);
 const addDays = (date, days) => isoDate(dateMs(date) + days * DAY_MS);
@@ -112,73 +93,23 @@ export function refreshRange(current, method = NO2_ACTIVITY_METHOD) {
   return { from: addDays(current.windowEnd, 1 - method.refreshDays), to: addDays(current.windowEnd, 1) };
 }
 
-export function buildStatisticsRequest(region, range, geometry = null, method = NO2_ACTIVITY_METHOD) {
-  const properties = { crs: 'http://www.opengis.net/def/crs/OGC/1.3/CRS84' };
-  return {
-    input: {
-      bounds: geometry ? { geometry, properties } : { bbox: [...region.bbox], properties },
-      data: [{
-        type: 'sentinel-5p-l2',
-        dataFilter: { timeliness: method.timeliness },
-        processing: { minQa: method.minQa },
-      }],
-    },
-    aggregation: {
-      timeRange: { from: `${range.from}T00:00:00Z`, to: `${range.to}T00:00:00Z` },
-      aggregationInterval: { of: 'P1D' },
-      evalscript: EVALSCRIPT,
-      resx: region.resolutionDegrees,
-      resy: region.resolutionDegrees,
-    },
-  };
-}
-
-/** Daily rows keyed by UTC date. A day the API could not compute, or with no samples, reads as invalid (nulls). */
-export function parseStatisticsResponse(body) {
-  if (!Array.isArray(body?.data)) throw new Error('statistics response has no data array');
-  const geometryPixelCount = Number.isFinite(body.geometryPixelCount) && body.geometryPixelCount > 0
-    ? body.geometryPixelCount
-    : null;
-  const rows = new Map();
-  for (const entry of body.data) {
-    const date = String(entry?.interval?.from ?? '').slice(0, 10);
-    if (!Number.isFinite(dateMs(date))) continue;
-    const stats = entry?.outputs?.no2?.bands?.B0?.stats;
-    const sampleCount = stats?.sampleCount;
-    if (!Number.isFinite(sampleCount) || sampleCount <= 0 || !Number.isFinite(stats?.noDataCount)) {
-      rows.set(date, { date, mean: null, validFraction: null });
-      continue;
-    }
-    rows.set(date, {
-      date,
-      mean: Number.isFinite(stats.mean) ? stats.mean : null,
-      validFraction: Math.min(1, (sampleCount - stats.noDataCount) / (geometryPixelCount ?? sampleCount)),
-    });
-  }
-  return rows;
-}
-
 export function emptySeries(region) {
-  return { id: region.id, resolutionDegrees: region.resolutionDegrees, validFractionVersion: VALID_FRACTION_VERSION, refreshedAt: null, backfilledYears: [], days: {} };
+  return { id: region.id, gridResolutionDegrees: GRID_STEP, refreshedAt: null, backfilledYears: [], days: {} };
 }
 
-/** A stored series is reused only when it is well formed and on the region's current grid. */
 export function parseSeries(value, region) {
   const series = typeof value === 'string' ? safeJson(value) : value;
-  if (!series || typeof series !== 'object' || series.id !== region.id
-    || series.resolutionDegrees !== region.resolutionDegrees
-    || (region.kind === 'country' && series.validFractionVersion !== VALID_FRACTION_VERSION)
-    || !Array.isArray(series.backfilledYears) || !series.days || typeof series.days !== 'object') {
+  if (!series || series.id !== region.id || series.gridResolutionDegrees !== GRID_STEP
+    || !series.days || typeof series.days !== 'object' || Array.isArray(series.days)) {
     return emptySeries(region);
   }
   return {
-    id: region.id,
-    resolutionDegrees: region.resolutionDegrees,
-    validFractionVersion: VALID_FRACTION_VERSION,
+    ...emptySeries(region),
     refreshedAt: typeof series.refreshedAt === 'string' && Number.isFinite(Date.parse(series.refreshedAt)) ? series.refreshedAt : null,
-    backfilledYears: series.backfilledYears.filter((year) => Number.isInteger(year)).sort(),
     days: Object.fromEntries(Object.entries(series.days).filter(([date, row]) =>
-      Number.isFinite(dateMs(date)) && Array.isArray(row) && row.length === 2)),
+      Number.isFinite(dateMs(date)) && Array.isArray(row) && row.length === 2
+      && (row[0] === null ? row[1] === 0 || row[1] === null
+        : Number.isFinite(row[0]) && Number.isFinite(row[1]) && row[1] > 0 && row[1] <= 1))),
   };
 }
 
@@ -188,16 +119,6 @@ function safeJson(text) {
   } catch {
     return null;
   }
-}
-
-/** Later rows overwrite earlier ones; days before `keepFrom` are dropped. Returns a new series. */
-export function mergeSeries(series, rows, keepFrom) {
-  const days = { ...series.days };
-  for (const row of rows.values()) days[row.date] = [row.mean, row.validFraction];
-  const kept = Object.fromEntries(Object.entries(days)
-    .filter(([date]) => date >= keepFrom)
-    .sort(([left], [right]) => (left < right ? -1 : 1)));
-  return { ...series, backfilledYears: [...series.backfilledYears], days: kept };
 }
 
 export function seriesCoverage(series) {
@@ -218,49 +139,22 @@ export function windowYears(window) {
   return Array.from({ length: last - first + 1 }, (_, index) => first + index);
 }
 
-/** Every calendar year the current and baseline windows touch, ascending. */
-export function neededYears(current, baselines) {
-  return [...new Set([current, ...baselines].flatMap(windowYears))].sort();
-}
-
-/**
- * The chunks covering [Jan 1, min(Dec 31, windowEnd)] of `year` for a region,
- * minus the days the run's refresh range already fetches. A year that lies
- * entirely inside the refresh range needs no chunk at all.
- */
-export function yearChunks(region, year, windowEnd, refreshFrom, method = NO2_ACTIVITY_METHOD) {
-  const chunkDays = backfillChunkDaysFor(region, method);
-  const last = Math.min(dateMs(`${year}-12-31`), dateMs(windowEnd), dateMs(refreshFrom) - DAY_MS);
-  const chunks = [];
-  for (let from = dateMs(`${year}-01-01`); from <= last; from += chunkDays * DAY_MS) {
-    const to = Math.min(from + chunkDays * DAY_MS, last + DAY_MS);
-    chunks.push({ year, from: isoDate(from), to: isoDate(to) });
-  }
-  return chunks;
-}
-
-/**
- * The backfill chunks this run may spend, clusters first then registry order,
- * whole region-years at a time (a partial year is refetched in full by the
- * next run, so a year is started only when its chunks fit the remaining
- * budget; the first year always starts).
- */
-export function backfillQueue(regions, seriesById, years, windowEnd, refreshFrom, budget, method = NO2_ACTIVITY_METHOD) {
-  const ordered = [...regions].sort((left, right) =>
-    (left.kind === right.kind ? 0 : left.kind === 'cluster' ? -1 : 1));
-  const queue = [];
-  if (budget <= 0) return queue;
-  for (const region of ordered) {
-    const done = new Set(seriesById.get(region.id)?.backfilledYears ?? []);
-    for (const year of years) {
-      if (done.has(year)) continue;
-      const chunks = yearChunks(region, year, windowEnd, refreshFrom, method);
-      if (chunks.length === 0) continue;
-      if (queue.length > 0 && queue.length + chunks.length > budget) return queue;
-      for (const chunk of chunks) queue.push({ region, ...chunk });
+function datesByYear(windows, refreshFrom) {
+  const dates = new Map();
+  for (const window of windows) {
+    for (const year of windowYears(window)) {
+      if (!dates.has(year)) dates.set(year, []);
+    }
+    for (const date of window.dates) {
+      if (date < refreshFrom) dates.get(Number(date.slice(0, 4))).push(date);
     }
   }
-  return queue;
+  return dates;
+}
+
+function markBackfilledYears(series, requiredDates) {
+  series.backfilledYears = [...requiredDates].filter(([, dates]) =>
+    dates.every((date) => Object.hasOwn(series.days, date))).map(([year]) => year).sort();
 }
 
 export function summarizeWindow(series, windowStart, windowEnd, holidayCalendar, method = NO2_ACTIVITY_METHOD) {
@@ -337,34 +231,6 @@ export function regionResult(definition, series, current, baselines, refreshFail
   };
 }
 
-function httpError(label, response, text) {
-  const error = new Error(`${label} HTTP ${response.status}: ${text.slice(0, 200)}`);
-  // 429 and 5xx can clear on a retry; any other status is a request or credential problem that will not.
-  if (response.status !== 429 && response.status < 500) error.nonRetryable = true;
-  const retryAfterMs = parseRetryAfterMs(response.headers.get('retry-after'));
-  if (retryAfterMs !== null) error.retryAfterMs = retryAfterMs;
-  return error;
-}
-
-/** CDSE tokens live 1800 s and a run can outlast one; a token is reused for 25 minutes, then fetched again. */
-const TOKEN_REUSE_MS = 25 * 60_000;
-
-async function fetchToken({ fetchImpl, clientId, clientSecret, retryDelayMs }) {
-  return withRetry(async () => {
-    const response = await fetchImpl(CDSE_TOKEN_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': USER_AGENT },
-      body: new URLSearchParams({ grant_type: 'client_credentials', client_id: clientId, client_secret: clientSecret }).toString(),
-      signal: AbortSignal.timeout(60_000),
-    });
-    const text = await response.text();
-    if (!response.ok) throw httpError('CDSE token', response, text);
-    const token = JSON.parse(text)?.access_token;
-    if (typeof token !== 'string' || token.length === 0) throw new Error('CDSE token response has no access_token');
-    return token;
-  }, REQUEST_ATTEMPTS - 1, retryDelayMs);
-}
-
 export function loadGeometries() {
   return loadSharedConfig('no2-region-geometries.generated.json');
 }
@@ -392,19 +258,197 @@ export function redisSeriesStore() {
   };
 }
 
+function pointInRing(lon, lat, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [x, y] = ring[i];
+    const [otherX, otherY] = ring[j];
+    if ((y > lat) !== (otherY > lat) && lon < x + (otherX - x) * (lat - y) / (otherY - y)) inside = !inside;
+  }
+  return inside;
+}
+
+function ringBounds(ring) {
+  const bbox = [180, 90, -180, -90];
+  for (const [lon, lat] of ring) {
+    bbox[0] = Math.min(bbox[0], lon);
+    bbox[1] = Math.min(bbox[1], lat);
+    bbox[2] = Math.max(bbox[2], lon);
+    bbox[3] = Math.max(bbox[3], lat);
+  }
+  return bbox;
+}
+
+function cellsInBounds(cells, [west, south, east, north], includes = () => true) {
+  const firstCol = Math.max(0, Math.ceil((west + 180) / GRID_STEP - 0.5));
+  const lastCol = Math.min(GRID_WIDTH - 1, Math.floor((east + 180) / GRID_STEP - 0.5));
+  const firstRow = Math.max(0, Math.ceil((south + 90) / GRID_STEP - 0.5));
+  const lastRow = Math.min(GRID_HEIGHT - 1, Math.floor((north + 90) / GRID_STEP - 0.5));
+  for (let row = firstRow; row <= lastRow; row++) {
+    const lat = -90 + (row + 0.5) * GRID_STEP;
+    for (let col = firstCol; col <= lastCol; col++) {
+      const lon = -180 + (col + 0.5) * GRID_STEP;
+      if (includes(lon, lat)) cells.add(row * GRID_WIDTH + col);
+    }
+  }
+}
+
+export function buildRegionMask(region, geometry) {
+  const cells = new Set();
+  const polygons = region.kind !== 'country' ? null
+    : geometry?.type === 'Polygon' ? [geometry.coordinates]
+      : geometry?.type === 'MultiPolygon' ? geometry.coordinates : null;
+  if (polygons?.length) {
+    for (const [outer, ...holes] of polygons) {
+      cellsInBounds(cells, ringBounds(outer), (lon, lat) =>
+        pointInRing(lon, lat, outer) && !holes.some((hole) => pointInRing(lon, lat, hole)));
+    }
+  } else {
+    cellsInBounds(cells, region.bbox);
+  }
+  if (cells.size === 0) {
+    const [west, south, east, north] = region.bbox;
+    const col = Math.min(GRID_WIDTH - 1, Math.floor(((west + east) / 2 + 180) / GRID_STEP));
+    const row = Math.min(GRID_HEIGHT - 1, Math.floor(((south + north) / 2 + 90) / GRID_STEP));
+    cells.add(row * GRID_WIDTH + col);
+  }
+  return Uint32Array.from(cells);
+}
+
+export function summarizeGrid(grid, mask) {
+  let total = 0;
+  let valid = 0;
+  for (const index of mask) {
+    const value = grid[index];
+    // The documented fill is about -1.27e30. Also exclude nonfinite and
+    // similarly huge sentinels, while retaining finite negative retrievals.
+    if (Math.abs(value) < 1e29) {
+      total += value;
+      valid++;
+    }
+  }
+  return [valid ? (total / valid) * MOLECULES_CM2_TO_MOL_M2 : null, valid / mask.length];
+}
+
+function no2DapField(dds) {
+  const fields = [...dds.matchAll(/\bFloat32\s+([\w%]+)\s*(\[[^\]]+\]\s*\[[^\]]+\])\s*;/g)]
+    .filter(([, name]) => name.endsWith(NO2_ACTIVITY_SOURCE.band));
+  if (fields.length !== 1) throw new Error('OMNO2d DDS does not expose a unique Float32 tropospheric NO2 array');
+  const [declaration, name, dimensions] = fields[0];
+  const sizes = [...dimensions.matchAll(/(?:=|\[)\s*(\d+)\s*\]/g)].map(([, size]) => Number(size));
+  const longitudeFirst = sizes[0] === GRID_WIDTH && sizes[1] === GRID_HEIGHT;
+  if (!longitudeFirst && (sizes[0] !== GRID_HEIGHT || sizes[1] !== GRID_WIDTH)) {
+    throw new Error('OMNO2d DDS grid must have 720 latitudes and 1440 longitudes');
+  }
+  const enclosingGrid = /\bGrid\s*{\s*ARRAY\s*:\s*$/.test(dds.slice(0, fields[0].index))
+    ? dds.slice(fields[0].index + declaration.length).match(/^\s*MAPS\s*:[^}]*}\s*([\w%]+)\s*;/)?.[1]
+    : null;
+  return { name, projection: enclosingGrid ? `${enclosingGrid}.${name}` : name, longitudeFirst };
+}
+
+/** DAP2 .dods: a constrained DDS, Data: delimiter, then an XDR Float32 vector.
+ * Numeric DAP2 arrays carry two big-endian counts before their values.
+ * Normalize both dimension orders to a south-to-north, longitude-fast grid.
+ */
+export function decodeNo2Dods(bytes) {
+  const data = Buffer.from(bytes);
+  const delimiter = /\r?\nData:\r?\n/.exec(data.subarray(0, 4096).toString('ascii'));
+  if (!delimiter) throw new Error('OMNO2d DAP2 response has no Data delimiter');
+  const { longitudeFirst } = no2DapField(data.subarray(0, delimiter.index).toString('ascii'));
+  const start = delimiter.index + delimiter[0].length;
+  if (data.length - start !== (GRID_SIZE + 2) * 4
+    || data.readUInt32BE(start) !== GRID_SIZE || data.readUInt32BE(start + 4) !== GRID_SIZE) {
+    throw new Error('OMNO2d DAP2 response has an unexpected XDR array length');
+  }
+  const grid = new Float32Array(GRID_SIZE);
+  for (let index = 0; index < GRID_SIZE; index++) {
+    const target = longitudeFirst ? (index % GRID_HEIGHT) * GRID_WIDTH + Math.floor(index / GRID_HEIGHT) : index;
+    grid[target] = data.readFloatBE(start + 8 + index * 4);
+  }
+  return grid;
+}
+
+function opendapGranule(entry, date) {
+  const stamp = `${date.slice(0, 4)}m${date.slice(5).replace('-', '')}`;
+  const file = new RegExp(`^OMNO2d\\.004(?::|%3A)OMI-Aura_L3-OMNO2d_${stamp}_v004-\\d{4}m\\d{4}t\\d{6}\\.he5$`, 'i');
+  for (const link of Array.isArray(entry.links) ? entry.links : []) {
+    const url = typeof link?.href === 'string' ? URL.parse(link.href) : null;
+    if (url?.origin === OPENDAP_ORIGIN && !url.username && !url.password && !url.search && !url.hash
+      && url.pathname.startsWith(OPENDAP_PATH) && file.test(url.pathname.slice(OPENDAP_PATH.length))) return url.href;
+  }
+  return null;
+}
+
+function nasaSource({ fetchImpl, token, usage, retryDelayMs }) {
+  async function request(url, label, authenticated = false) {
+    const signal = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
+    return withRetry(async () => {
+      try {
+        signal.throwIfAborted();
+        usage.requestCount++;
+        const headers = { 'User-Agent': USER_AGENT };
+        if (authenticated) headers.Authorization = `Bearer ${token}`;
+        const response = await fetchImpl(url, { headers, signal, redirect: 'manual' });
+        if (!response.ok) {
+          await response.body?.cancel();
+          const retryAfterMs = parseRetryAfterMs(response.headers.get('Retry-After'));
+          const error = new Error(`NASA ${label} HTTP ${response.status}`);
+          error.nonRetryable = (response.status < 500 && response.status !== 429) || retryAfterMs >= REQUEST_TIMEOUT_MS;
+          error.retryAfterMs = retryAfterMs;
+          throw error;
+        }
+        const bytes = await response.arrayBuffer();
+        usage.bytesDownloaded += bytes.byteLength;
+        return bytes;
+      } catch (error) {
+        if (signal.aborted) error.nonRetryable = true;
+        throw error;
+      }
+    }, REQUEST_ATTEMPTS - 1, retryDelayMs);
+  }
+
+  return {
+    async catalog({ windowStart, windowEnd }) {
+      const params = new URLSearchParams({
+        short_name: 'OMNO2d', version: '004', collection_concept_id: 'C3333493715-GES_DISC',
+        temporal: `${windowStart}T00:00:00Z,${windowEnd}T23:59:59Z`,
+        page_size: '2000', sort_key: '-revision_date',
+      });
+      const bytes = await request(`${CMR_GRANULES_URL}?${params}`, 'CMR catalog');
+      const entries = JSON.parse(Buffer.from(bytes).toString('utf8'))?.feed?.entry;
+      if (!Array.isArray(entries) || entries.length === 2000) throw new Error('Invalid or incomplete OMNO2d CMR catalog');
+      const granules = new Map();
+      for (const entry of entries) {
+        const date = typeof entry?.time_start === 'string' ? entry.time_start.slice(0, 10) : '';
+        if (!Number.isFinite(dateMs(date))) throw new Error('Invalid OMNO2d CMR granule date');
+        if (date < windowStart || date > windowEnd || granules.get(date)) continue;
+        granules.set(date, opendapGranule(entry, date));
+      }
+      return granules;
+    },
+    async field(url) {
+      const bytes = await request(`${url}.dds`, 'OPeNDAP DDS', true);
+      return no2DapField(Buffer.from(bytes).toString('ascii')).projection;
+    },
+    async grid(url, projection) {
+      const bytes = await request(`${url}.dods?${projection}`, 'OPeNDAP DODS', true);
+      return decodeNo2Dods(bytes);
+    },
+  };
+}
+
 export function makeFetchAll({
   fetchImpl = (...args) => globalThis.fetch(...args),
   store,
-  clientId,
-  clientSecret,
+  token,
   now = Date.now,
   method = NO2_ACTIVITY_METHOD,
   regions = NO2_REGIONS,
   geometries = loadGeometries(),
-  backfillChunks = method.backfillChunksPerRun,
-  backfillDeadlineMs = 40 * 60_000,
+  backfillDays = method.backfillDaysPerRun,
+  backfillDeadlineMs = 9 * 60_000,
   concurrency = REQUEST_CONCURRENCY,
-  retryDelayMs = 2_000,
+  retryDelayMs = 1_000,
   writeSeries = true,
   log = console.log,
 }) {
@@ -413,149 +457,94 @@ export function makeFetchAll({
     const startedAt = Date.now();
     const current = currentWindow(runMs, method);
     const baselines = Array.from({ length: method.baselineYears }, (_, index) => baselineWindow(current, index + 1));
-    const years = neededYears(current, baselines);
-    const keepFrom = `${years[0]}-01-01`;
-    const range = refreshRange(current, method);
+    const windows = [current, ...baselines];
+    const refresh = refreshRange(current, method);
+    const requiredDates = datesByYear(windows, refresh.from);
+    const keys = regions.map((region) => seriesKeyFor(region.id));
+    const stored = await store.readSeries(keys);
+    const series = regions.map((region, index) => parseSeries(stored.get(keys[index]), region));
+    const masks = regions.map((region) => buildRegionMask(region, geometries[region.id]));
+    const usage = { requestCount: 0, bytesDownloaded: 0 };
+    const source = nasaSource({ fetchImpl, token, usage, retryDelayMs });
 
-    const token = { value: null, fetchedAt: 0 };
-    const currentToken = async () => {
-      if (token.value !== null && Date.now() - token.fetchedAt < TOKEN_REUSE_MS) return token.value;
-      token.value = await fetchToken({ fetchImpl, clientId, clientSecret, retryDelayMs });
-      token.fetchedAt = Date.now();
-      return token.value;
-    };
+    let catalog;
+    let projection;
+    let refreshDates;
     try {
-      await currentToken();
+      catalog = await source.catalog(current);
+      refreshDates = [...catalog.keys()].filter((date) => date >= refresh.from && catalog.get(date)).sort().reverse();
+      if (!refreshDates.length) throw new Error('no OMNO2d granules in the refresh range');
+      projection = await source.field(catalog.get(refreshDates[0]));
     } catch (error) {
-      throw markPreservableFetchFailure(new Error(`CDSE token fetch failed: ${error?.message || error}`));
+      throw markPreservableFetchFailure(new Error(`NASA NO2 refresh setup failed: ${error.message}`));
     }
 
-    const stored = await store.readSeries(regions.map((region) => seriesKeyFor(region.id)));
-    const seriesById = new Map(regions.map((region) => [region.id, parseSeries(stored.get(seriesKeyFor(region.id)), region)]));
-    const storedBefore = new Map([...seriesById].map(([id, series]) => [id, JSON.stringify(series)]));
-
-    const usage = { requestCount: 0, processingUnitsSpent: 0 };
-    const requestRows = (region, window) => withRetry(async () => {
-      usage.requestCount++;
-      const requestedAt = Date.now();
-      const response = await fetchImpl(CDSE_STATISTICS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await currentToken()}`, 'User-Agent': USER_AGENT },
-        body: JSON.stringify(buildStatisticsRequest(region, window, geometries[region.id] ?? null, method)),
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    const fetchDates = async (dates, granules, phase) => {
+      const results = await allSettledWithConcurrency(dates, concurrency, async (date) => {
+        if (phase === 'backfill' && Date.now() - startedAt > backfillDeadlineMs) throw new Error('deadline reached');
+        const grid = await source.grid(granules.get(date), projection);
+        series.forEach((item, index) => { item.days[date] = summarizeGrid(grid, masks[index]); });
       });
-      const text = await response.text();
-      const pu = Number(response.headers.get('x-processingunits-spent'));
-      if (Number.isFinite(pu) && pu >= 0) usage.processingUnitsSpent += pu;
-      log(`  ${region.id} ${window.from}..${window.to} HTTP ${response.status} PU=${Number.isFinite(pu) ? pu.toFixed(3) : '?'} ${Date.now() - requestedAt}ms`);
-      if (response.status === 401) {
-        // An expired token: the retry fetches a fresh one.
-        token.value = null;
-        throw new Error('CDSE statistics HTTP 401: token rejected');
-      }
-      if (!response.ok) throw httpError('CDSE statistics', response, text);
-      return parseStatisticsResponse(JSON.parse(text));
-    }, REQUEST_ATTEMPTS - 1, retryDelayMs);
-
-    const refreshes = await allSettledWithConcurrency(regions, concurrency, (region) => requestRows(region, range));
-    const refreshFailed = new Set();
-    regions.forEach((region, index) => {
-      const outcome = refreshes[index];
-      if (outcome.status === 'fulfilled') {
-        const before = seriesById.get(region.id);
-        const previousWindowEnd = before.refreshedAt === null
-          ? Object.keys(before.days).sort().at(-1)
-          : currentWindow(Date.parse(before.refreshedAt), method).windowEnd;
-        const series = mergeSeries(before, outcome.value, keepFrom);
-        if (previousWindowEnd !== undefined && addDays(previousWindowEnd, 1) < range.from) {
-          const gapFromYear = Number(addDays(previousWindowEnd, 1).slice(0, 4));
-          const gapToYear = Number(addDays(range.from, -1).slice(0, 4));
-          series.backfilledYears = series.backfilledYears.filter((year) => year < gapFromYear || year > gapToYear);
-        }
-        series.refreshedAt = new Date(runMs).toISOString();
-        // A year that lies entirely inside the refresh range is complete with it.
-        for (const year of years) {
-          if (yearChunks(region, year, current.windowEnd, range.from, method).length === 0 && !series.backfilledYears.includes(year)) {
-            series.backfilledYears = [...series.backfilledYears, year].sort();
-          }
-        }
-        seriesById.set(region.id, series);
-      } else {
-        refreshFailed.add(region.id);
-        log(`  ${region.id} refresh failed: ${outcome.reason?.message || outcome.reason}`);
-      }
-    });
-    if (refreshFailed.size === regions.length) {
-      throw markPreservableFetchFailure(new Error(`every refresh failed (${usage.requestCount} requests); last-good kept`));
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') log(`  NO2 ${phase} ${dates[index]} failed: ${result.reason.message}`);
+      });
+      return results.some((result) => result.status === 'fulfilled');
+    };
+    if (!await fetchDates(refreshDates, catalog, 'refresh')) {
+      throw markPreservableFetchFailure(new Error(`every NASA NO2 refresh failed (${usage.requestCount} requests); last-good kept`));
     }
 
-    const queue = backfillQueue(regions, seriesById, years, current.windowEnd, range.from, backfillChunks, method);
-    let skippedForDeadline = 0;
-    const chunks = await allSettledWithConcurrency(queue, concurrency, (task) => {
-      // Chunks still start inside the deadline so the fetch-phase timeout can never
-      // outrun the series writes that follow.
-      if (Date.now() - startedAt > backfillDeadlineMs) {
-        skippedForDeadline++;
-        throw new Error('backfill deadline reached');
+    // A successful catalog can confirm that a date has no granule. Store
+    // [null, null] to count it as covered, then keep checking for late arrivals.
+    // A listed date with no usable link, or a failed request, stays pending.
+    const recordCatalogGaps = (window, granules) => {
+      for (const date of window.dates) {
+        if (date >= refresh.from || granules.has(date)) continue;
+        for (const item of series) item.days[date] ??= [null, null];
       }
-      return requestRows(task.region, task);
-    });
-    const chunkOutcomes = new Map();
-    queue.forEach((task, index) => {
-      const key = `${task.region.id}:${task.year}`;
-      const list = chunkOutcomes.get(key) ?? {
-        region: task.region,
-        year: task.year,
-        expected: yearChunks(task.region, task.year, current.windowEnd, range.from, method).length,
-        ok: 0,
-      };
-      const outcome = chunks[index];
-      if (outcome.status === 'fulfilled') {
-        list.ok++;
-        seriesById.set(task.region.id, mergeSeries(seriesById.get(task.region.id), outcome.value, keepFrom));
-      } else {
-        log(`  ${task.region.id} ${task.from}..${task.to} backfill failed: ${outcome.reason?.message || outcome.reason}`);
-      }
-      chunkOutcomes.set(key, list);
-    });
-    for (const { region, year, expected, ok } of chunkOutcomes.values()) {
-      const series = seriesById.get(region.id);
-      if (ok === expected && !series.backfilledYears.includes(year)) {
-        series.backfilledYears = [...series.backfilledYears, year].sort();
-      }
-    }
-    log(`  requests=${usage.requestCount} PU=${usage.processingUnitsSpent.toFixed(3)} refreshFailed=${refreshFailed.size} backfillChunks=${queue.length} skippedForDeadline=${skippedForDeadline}`);
-
-    if (writeSeries) {
-      for (const region of regions) {
-        const series = seriesById.get(region.id);
-        if (Object.keys(series.days).length > 0 && JSON.stringify(series) !== storedBefore.get(region.id)) {
-          await store.writeSeries(seriesKeyFor(region.id), series);
+    };
+    const missing = (date) => series.some((item) => !item.days[date] || item.days[date][1] === null);
+    if (backfillDays > 0) {
+      recordCatalogGaps(current, catalog);
+      const historical = baselines.filter((window) => window.dates.some(missing));
+      const catalogs = await allSettledWithConcurrency(historical, concurrency, (window) => source.catalog(window));
+      catalogs.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          recordCatalogGaps(historical[index], result.value);
+          for (const [date, url] of result.value) catalog.set(date, url);
+        } else {
+          log(`  NO2 catalog ${historical[index].year} failed: ${result.reason.message}`);
         }
-      }
+      });
+      const queue = windows.flatMap((window) => [...window.dates].reverse())
+        .filter((date) => date < refresh.from && catalog.get(date) && missing(date)).slice(0, backfillDays);
+      await fetchDates(queue, catalog, 'backfill');
     }
 
-    const records = regions.map((region) =>
-      regionResult(region, seriesById.get(region.id), current, baselines, refreshFailed.has(region.id), method, runMs));
-    const coveredYears = records.flatMap((record) => [record.series.firstDate, record.series.lastDate, record.current.windowEnd])
-      .filter((date) => date !== null)
-      .map((date) => Number(date.slice(0, 4)));
-    const dataset = {
+    const generatedAt = new Date(runMs).toISOString();
+    const keepFrom = baselines.at(-1)?.windowStart ?? current.windowStart;
+    for (const [index, item] of series.entries()) {
+      item.refreshedAt = generatedAt;
+      for (const date of Object.keys(item.days)) {
+        if (date < keepFrom || date > current.windowEnd) delete item.days[date];
+      }
+      markBackfilledYears(item, requiredDates);
+      if (writeSeries) await store.writeSeries(keys[index], item);
+    }
+    const records = regions.map((region, index) => regionResult(region, series[index], current, baselines, false, method, runMs));
+    const firstDates = records.map((record) => record.series.firstDate).filter(Boolean).sort();
+    log(`  NO2 requests=${usage.requestCount} bytes=${usage.bytesDownloaded}`);
+    return {
       methodVersion: NO2_ACTIVITY_METHOD_VERSION,
-      generatedAt: new Date(runMs).toISOString(),
+      generatedAt,
       method: JSON.parse(JSON.stringify(method)),
       source: {
-        publisherId: 'publisher:copernicus-sentinel-5p',
-        dataset: 'sentinel-5p-l2',
-        band: 'NO2',
-        unit: 'mol/m2',
-        attribution: `${NO2_ATTRIBUTION_PREFIX} ${Math.min(...coveredYears)}-${Math.max(...coveredYears)}`,
-        requestCount: usage.requestCount,
-        processingUnitsSpent: usage.processingUnitsSpent,
+        ...NO2_ACTIVITY_SOURCE,
+        attribution: `${NO2_ATTRIBUTION_PREFIX} ${firstDates[0].slice(0, 4)}-${current.windowEnd.slice(0, 4)}`,
+        ...usage,
       },
       regions: Object.fromEntries(records.map((record) => [record.id, record])),
     };
-    return dataset;
   };
 }
 
@@ -590,29 +579,27 @@ const formatWindow = (window) => `${window.windowStart}..${window.windowEnd} val
 async function main() {
   loadEnvFile(import.meta.url);
   const dryRun = process.argv.includes('--dry-run');
-  const clientId = process.env.CDSE_CLIENT_ID?.trim();
-  const clientSecret = process.env.CDSE_CLIENT_SECRET?.trim();
-  if (!clientId || !clientSecret) {
-    if (process.env.RAILWAY_ENVIRONMENT) {
-      // #5256: no later tick can fix a missing variable, so a daily crash would only train the team to ignore the
-      // crash channel. /api/health reports no2Activity EMPTY, then STALE_SEED, which is where the alarm belongs.
-      console.log('NO SOURCE: CDSE_CLIENT_ID/CDSE_CLIENT_SECRET unset; published nothing, /api/health carries the alarm');
-      process.exit(0);
-    }
-    throw new Error('CDSE_CLIENT_ID and CDSE_CLIENT_SECRET are required');
+  const token = process.env.EARTHDATA_TOKEN?.trim();
+  if (!token) {
+    console.log('NO SOURCE: EARTHDATA_TOKEN unset; skipped NO2 activity collection');
+    return;
   }
-  const backfillArg = Number(argValue('backfill-chunks'));
-  const backfillChunks = Number.isFinite(backfillArg) && backfillArg >= 0 ? backfillArg : undefined;
+  const backfillArg = argValue('backfill-days');
+  const backfillDays = backfillArg === undefined ? undefined : Number(backfillArg);
+  if (backfillArg !== undefined && (!/^\d+$/.test(backfillArg) || !Number.isSafeInteger(backfillDays))) {
+    throw new Error('--backfill-days requires a non-negative integer');
+  }
 
   if (dryRun) {
     const ids = argValue('regions')?.split(',').map((id) => id.trim()).filter(Boolean)
       ?? [...CHINA_NO2_COMPOSITE.regionIds, 'country-de', 'country-ru', 'country-us', 'country-br', 'country-in'];
     const regions = NO2_REGIONS.filter((region) => ids.includes(region.id));
+    if (!regions.length) throw new Error('--regions must include a registered NO2 region');
     const hasRedis = Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
     const store = hasRedis ? redisSeriesStore() : { readSeries: async () => new Map() };
-    console.log(`no2 activity dry run: ${regions.length} of ${NO2_REGIONS.length} regions, backfill chunks ${backfillChunks ?? 0}, stored series ${hasRedis ? 'read' : 'unavailable'}, nothing written`);
+    console.log(`no2 activity dry run: ${regions.length} of ${NO2_REGIONS.length} regions, backfill grid days ${backfillDays ?? 0}, stored series ${hasRedis ? 'read' : 'unavailable'}, nothing written`);
     const nowMs = Date.now();
-    const fetchAll = makeFetchAll({ store, clientId, clientSecret, regions, now: () => nowMs, backfillChunks: backfillChunks ?? 0, writeSeries: false });
+    const fetchAll = makeFetchAll({ store, token, regions, now: () => nowMs, backfillDays: backfillDays ?? 0, writeSeries: false });
     try {
       const partial = await fetchAll();
       for (const record of Object.values(partial.regions)) {
@@ -624,29 +611,28 @@ async function main() {
         ...partial,
         regions: Object.fromEntries(NO2_REGIONS.map((definition) => [definition.id, partial.regions[definition.id] ?? pendingRecord(definition, nowMs)])),
       };
-      console.log(`  requests=${partial.source.requestCount} PU=${partial.source.processingUnitsSpent.toFixed(3)} attribution="${partial.source.attribution}"`);
-      const { projectBudget } = await import('./generate-no2-regions.mjs');
-      console.log(`  projected monthly budget for the full registry: ${JSON.stringify(projectBudget(NO2_REGIONS, NO2_ACTIVITY_METHOD, backfillChunkDaysFor))}`);
+      console.log(`  requests=${partial.source.requestCount} bytes=${partial.source.bytesDownloaded} attribution="${partial.source.attribution}"`);
       console.log(`  valid full dataset: ${validateNo2ActivityDataset(full)}; eligible records: ${declareRecords(full)}`);
     } catch (error) {
-      console.log(`  would exit 75 and keep last-good: ${error.message}`);
+      console.log(`  NO2 dry run failed: ${error.message}`);
+      process.exitCode = 75;
     }
     return;
   }
 
-  const fetchAll = makeFetchAll({ store: redisSeriesStore(), clientId, clientSecret, backfillChunks });
-  console.log(`no2 activity: ${NO2_REGIONS.length} regions, backfill chunks ${backfillChunks ?? NO2_ACTIVITY_METHOD.backfillChunksPerRun}`);
+  const fetchAll = makeFetchAll({ store: redisSeriesStore(), token, backfillDays });
+  console.log(`no2 activity: ${NO2_REGIONS.length} regions, backfill grid days ${backfillDays ?? NO2_ACTIVITY_METHOD.backfillDaysPerRun}`);
   await runSeed('economic', 'no2-activity', NO2_ACTIVITY_KEY, fetchAll, {
     validateFn: validateNo2ActivityDataset,
     publishAtomically: publishNo2Atomically,
     ttlSeconds: DATASET_TTL_SECONDS,
     declareRecords,
     zeroIsValid: true,
-    schemaVersion: 1,
+    schemaVersion: 2,
     sourceVersion: NO2_ACTIVITY_SOURCE_VERSION,
     maxStaleMin: 4320, // 3 x the 20 6 * * * cron
-    fetchPhaseTimeoutMs: 60 * 60_000,
-    lockTtlMs: 75 * 60_000,
+    fetchPhaseTimeoutMs: 12 * 60_000,
+    lockTtlMs: 18 * 60_000,
   });
 }
 

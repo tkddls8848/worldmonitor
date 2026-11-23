@@ -1,31 +1,27 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 
 import {
-  CDSE_STATISTICS_URL,
-  CDSE_TOKEN_URL,
-  backfillQueue,
   baselineWindow,
-  buildStatisticsRequest,
+  buildRegionMask,
+  decodeNo2Dods,
   currentWindow,
   declareRecords,
   emptySeries,
+  loadGeometries,
   makeFetchAll,
-  mergeSeries,
-  neededYears,
   parseSeries,
-  parseStatisticsResponse,
   pendingRecord,
   publishNo2Atomically,
   refreshRange,
   regionResult,
+  summarizeGrid,
   summarizeWindow,
   windowYears,
-  yearChunks,
 } from '../scripts/seed-no2-activity.mjs';
 import {
   NO2_ACTIVITY_METHOD,
+  NO2_ACTIVITY_SOURCE,
   NO2_ACTIVITY_ACTIVATION_KEY,
   NO2_ACTIVITY_MAX_REFRESH_AGE_MS,
   NO2_ACTIVITY_SERIES_KEY_PREFIX,
@@ -33,15 +29,11 @@ import {
   validateNo2ActivityDataset,
 } from '../scripts/shared/no2-activity.mjs';
 
-const FIXTURE = JSON.parse(readFileSync(new URL('./fixtures/no2/statistics-jing-jin-ji-offl-2026-10.json', import.meta.url), 'utf8'));
-const FIXTURE_STATS = FIXTURE.response.data.map((row) => row.outputs.no2.bands.B0.stats);
 const DAY_MS = 86_400_000;
 const NOW = Date.parse('2026-10-26T06:20:00Z');
 const region = (id) => NO2_REGIONS.find((item) => item.id === id);
 const JJJ = region('jing-jin-ji');
 const DE = region('country-de');
-const RU = region('country-ru');
-const GEOMETRIES = { 'country-de': { type: 'Polygon', coordinates: [[[6, 47], [15, 47], [15, 55], [6, 55], [6, 47]]] } };
 
 function seriesWith(regionDef, days, backfilledYears = []) {
   return { ...emptySeries(regionDef), refreshedAt: new Date(NOW).toISOString(), backfilledYears, days };
@@ -55,24 +47,6 @@ function denseDays(from, count, meanValue, fraction = 0.6) {
   }
   return days;
 }
-
-describe('seed-no2-activity request builder', () => {
-  it('sends a country polygon and a cluster bbox on the region grid at QA 75 over OFFL days', () => {
-    const cluster = buildStatisticsRequest(JJJ, { from: '2026-10-14', to: '2026-10-24' });
-    assert.deepEqual(cluster.input.bounds.bbox, [114, 36, 119, 41]);
-    assert.equal(cluster.input.bounds.properties.crs, 'http://www.opengis.net/def/crs/OGC/1.3/CRS84');
-    assert.deepEqual(cluster.input.data[0], { type: 'sentinel-5p-l2', dataFilter: { timeliness: 'OFFL' }, processing: { minQa: 75 } });
-    assert.deepEqual(cluster.aggregation.timeRange, { from: '2026-10-14T00:00:00Z', to: '2026-10-24T00:00:00Z' });
-    assert.deepEqual(cluster.aggregation.aggregationInterval, { of: 'P1D' });
-    assert.equal(cluster.aggregation.resx, 0.05);
-    assert.match(cluster.aggregation.evalscript, /bands: \["NO2", "dataMask"\]/);
-    const country = buildStatisticsRequest(DE, { from: '2026-10-14', to: '2026-10-24' }, GEOMETRIES['country-de']);
-    assert.equal(country.input.bounds.bbox, undefined);
-    assert.equal(country.input.bounds.geometry.type, 'Polygon');
-    assert.equal(country.aggregation.resx, DE.resolutionDegrees);
-    assert.equal(buildStatisticsRequest(RU, { from: '2026-10-14', to: '2026-10-24' }).aggregation.resx, 1);
-  });
-});
 
 describe('seed-no2-activity calendar', () => {
   it('ends the current window windowEndLagDays before the UTC run date and refreshes the trailing days', () => {
@@ -92,96 +66,28 @@ describe('seed-no2-activity calendar', () => {
     assert.equal(leap.dates.length, 55);
   });
 
-  it('cuts a year into chunks sized by the region width and bounded by the window end', () => {
-    assert.deepEqual(yearChunks(JJJ, 2025, '2026-10-23', '2026-10-14').map((chunk) => [chunk.from, chunk.to]), [['2025-01-01', '2025-07-03'], ['2025-07-03', '2026-01-01']]);
-    const russia = yearChunks(RU, 2025, '2026-10-23', '2026-10-14');
-    assert.equal(russia.length, 6);
-    assert.equal(russia[0].to, '2025-03-03');
-    const partial = yearChunks(JJJ, 2026, '2026-10-23', '2026-10-14');
-    assert.equal(partial[partial.length - 1].to, '2026-10-14', 'the refresh range already covers the rest');
-    assert.deepEqual(yearChunks(JJJ, 2026, '2026-01-05', '2025-12-27'), [], 'a year inside the refresh range needs no chunk');
-  });
-
-  it('needs every calendar year the current and baseline windows touch', () => {
-    const october = currentWindow(NOW);
-    assert.deepEqual(neededYears(october, [1, 2, 3].map((years) => baselineWindow(october, years))), [2023, 2024, 2025, 2026]);
+  it('keeps both calendar years in a window crossing New Year', () => {
     const january = currentWindow(Date.parse('2027-01-20T06:00:00Z'));
     assert.deepEqual([january.windowStart, january.windowEnd], ['2026-11-23', '2027-01-17']);
     assert.deepEqual(windowYears(january), [2026, 2027]);
-    assert.deepEqual(neededYears(january, [1, 2, 3].map((years) => baselineWindow(january, years))), [2023, 2024, 2025, 2026, 2027]);
-  });
-
-  it('queues missing years clusters first and spends at most the budget', () => {
-    const seriesById = new Map([[JJJ.id, seriesWith(JJJ, {}, [2023, 2024])]]);
-    const years = [2023, 2024, 2025, 2026];
-    const queue = backfillQueue([DE, JJJ], seriesById, years, '2026-10-23', '2026-10-14', 100);
-    assert.equal(queue[0].region.id, 'jing-jin-ji');
-    assert.deepEqual([...new Set(queue.filter((task) => task.region.id === 'jing-jin-ji').map((task) => task.year))], [2025, 2026]);
-    assert.deepEqual([...new Set(queue.filter((task) => task.region.id === 'country-de').map((task) => task.year))], [2023, 2024, 2025, 2026]);
-    assert.equal(backfillQueue([DE, JJJ], seriesById, years, '2026-10-23', '2026-10-14', 3).length, 2, 'whole years only: 2026 would not fit');
-    assert.equal(backfillQueue([DE, JJJ], seriesById, years, '2026-10-23', '2026-10-14', 1).length, 2, 'the first year always starts');
-    assert.equal(backfillQueue([DE, JJJ], seriesById, years, '2026-10-23', '2026-10-14', 0).length, 0);
   });
 });
 
-describe('seed-no2-activity response parsing and stored series', () => {
-  it('rebuilds country series calculated with bounding-box coverage and preserves unchanged cluster series', () => {
-    const country = seriesWith(DE, { '2026-10-01': [1e-4, 0.03] }, [2024, 2025, 2026]);
-    const cluster = seriesWith(JJJ, { '2026-10-01': [1e-4, 0.3] }, [2024, 2025, 2026]);
-    delete country.validFractionVersion;
-    delete cluster.validFractionVersion;
-    assert.deepEqual(parseSeries(country, DE), emptySeries(DE));
-    assert.deepEqual(parseSeries(cluster, JJJ).days, cluster.days);
-    assert.deepEqual(parseSeries(seriesWith(DE, cluster.days, [2024, 2025, 2026]), DE).days, cluster.days);
-  });
-
-  it('uses the response geometry pixel count for polygon coverage and bounds the fraction', () => {
-    const data = [{
-      interval: { from: '2026-10-01T00:00:00Z' },
-      outputs: { no2: { bands: { B0: { stats: { mean: 1e-4, sampleCount: 1000, noDataCount: 970 } } } } },
-    }];
-    const rows = parseStatisticsResponse({ geometryPixelCount: 100, data });
-    assert.equal(rows.get('2026-10-01').validFraction, 0.3);
-    const series = mergeSeries(emptySeries(DE), rows, '2026-01-01');
-    assert.equal(summarizeWindow(series, '2026-10-01', '2026-10-01', null).validDays, 1);
-    assert.equal(parseStatisticsResponse({ geometryPixelCount: 20, data }).get('2026-10-01').validFraction, 1);
-    for (const geometryPixelCount of [undefined, null, 0, -1, NaN]) {
-      assert.equal(parseStatisticsResponse({ geometryPixelCount, data }).get('2026-10-01').validFraction, 0.03);
-    }
-  });
-
-  it('reads the recorded OFFL response into one row per day', () => {
-    const rows = parseStatisticsResponse(FIXTURE.response);
-    assert.equal(rows.size, 29);
-    const first = rows.get('2026-09-26');
-    assert.equal(first.mean, 5.0234815305675796e-05);
-    assert.ok(Math.abs(first.validFraction - 0.2478) < 1e-9);
-  });
-
-  it('treats a day without outputs or with zero samples as invalid', () => {
-    const rows = parseStatisticsResponse({ data: [
-      { interval: { from: '2026-10-01T00:00:00Z' }, outputs: { no2: { bands: { B0: { stats: { mean: 'NaN', sampleCount: 10, noDataCount: 10 } } } } } },
-      { interval: { from: '2026-10-02T00:00:00Z' }, outputs: { no2: { bands: { B0: { stats: { sampleCount: 0, noDataCount: 0 } } } } } },
-      { interval: { from: 'garbage' } },
-    ] });
-    assert.deepEqual(rows.get('2026-10-01'), { date: '2026-10-01', mean: null, validFraction: 0 });
-    assert.deepEqual(rows.get('2026-10-02'), { date: '2026-10-02', mean: null, validFraction: null });
-    assert.equal(rows.size, 2);
-    assert.throws(() => parseStatisticsResponse({ status: 'OK' }), /no data array/);
-  });
-
-  it('merges later rows over earlier ones, prunes old days, and discards a series on another grid', () => {
-    const series = seriesWith(JJJ, { '2022-01-01': [1e-4, 0.5], '2026-10-01': [1e-4, 0.5] }, [2025]);
-    const merged = mergeSeries(series, parseStatisticsResponse({ data: [
-      { interval: { from: '2026-10-01T00:00:00Z' }, outputs: { no2: { bands: { B0: { stats: { mean: 2e-4, sampleCount: 10, noDataCount: 2 } } } } } },
-    ] }), '2023-01-01');
-    assert.deepEqual(merged.days, { '2026-10-01': [2e-4, 0.8] });
-    assert.deepEqual(merged.backfilledYears, [2025]);
-    assert.deepEqual(series.days['2026-10-01'], [1e-4, 0.5]);
-    assert.deepEqual(parseSeries(JSON.stringify({ ...series, resolutionDegrees: 0.25 }), JJJ), emptySeries(JJJ));
+describe('NO2 stored series', () => {
+  it('validates cached rows and recomputes completed years', () => {
+    const original = seriesWith(JJJ, {
+      '2026-10-01': [1e-4, 0.6],
+      '2026-10-02': [null, 0],
+      '2026-10-03': [1e-4, '0.6'],
+      '2026-10-04': [1e-4, 1.2],
+      '2026-02-30': [1e-4, 1],
+    }, [2025, 2026]);
+    assert.deepEqual(parseSeries(JSON.stringify(original), JJJ), {
+      ...original, backfilledYears: [], days: { '2026-10-01': [1e-4, 0.6], '2026-10-02': [null, 0] },
+    });
+    assert.deepEqual(parseSeries({ ...original, gridResolutionDegrees: 0.5 }, JJJ), emptySeries(JJJ));
     assert.deepEqual(parseSeries('not json', JJJ), emptySeries(JJJ));
     assert.deepEqual(parseSeries(null, JJJ), emptySeries(JJJ));
-    assert.deepEqual(parseSeries(JSON.stringify(series), JJJ).days, series.days);
   });
 });
 
@@ -279,10 +185,10 @@ describe('NO2 atomic publication', () => {
 
 function datasetAround(records) {
   return {
-    methodVersion: 'no2-activity/v1',
+    methodVersion: 'no2-activity/v2',
     generatedAt: new Date(NOW).toISOString(),
     method: JSON.parse(JSON.stringify(NO2_ACTIVITY_METHOD)),
-    source: { publisherId: 'publisher:copernicus-sentinel-5p', dataset: 'sentinel-5p-l2', band: 'NO2', unit: 'mol/m2', attribution: 'Contains modified Copernicus Sentinel data 2023-2026', requestCount: 1, processingUnitsSpent: 0.1 },
+    source: { ...NO2_ACTIVITY_SOURCE, attribution: 'NASA OMI/Aura OMNO2d (GES DISC) 2023-2026', requestCount: 1, bytesDownloaded: 4_147_208 },
     regions: Object.fromEntries(NO2_REGIONS.map((definition) => [
       definition.id,
       records.find((record) => record.id === definition.id) ?? pendingRecord(definition, NOW),
@@ -290,263 +196,244 @@ function datasetAround(records) {
   };
 }
 
-function stubFetch({ fail = () => false, pu = '0.25' } = {}) {
-  const calls = { token: 0, statistics: [] };
+const WIDTH = 1440;
+const HEIGHT = 720;
+const CELLS = WIDTH * HEIGHT;
+const FIELD = 'HDFEOS_GRIDS_ColumnAmountNO2_Data_Fields_ColumnAmountNO2TropCloudScreened';
+const dds = (dimensions = '[YDim = 720][XDim = 1440]') => `Dataset { Float32 ${FIELD}${dimensions}; } omno2d;`;
+const cell = (col, row) => row * WIDTH + col;
+
+// DAP2 encodes Float32 arrays as two XDR element counts followed by values.
+function dodsFixture({ longitudeFirst = false, values = [[0, 2e15]], dimensions, newline = '\n' } = {}) {
+  const header = Buffer.from(`${dds(dimensions ?? (longitudeFirst ? '[XDim = 1440][YDim = 720]' : undefined))}${newline}Data:${newline}`);
+  const payload = Buffer.alloc(8 + CELLS * 4);
+  payload.writeUInt32BE(CELLS, 0);
+  payload.writeUInt32BE(CELLS, 4);
+  for (const [index, value] of values) {
+    const sourceIndex = longitudeFirst ? (index % WIDTH) * HEIGHT + Math.floor(index / WIDTH) : index;
+    payload.writeFloatBE(value, 8 + sourceIndex * 4);
+  }
+  return Buffer.concat([header, payload]);
+}
+
+describe('OMNO2d DAP2 decoder and regional masks', () => {
+  it('decodes bounded XDR Float32 values and normalizes either dimension order', () => {
+    const values = [[cell(100, 20), 2e15], [cell(200, 500), -1e14], [CELLS - 1, -1.2676506002282294e30]];
+    for (const longitudeFirst of [false, true]) {
+      const grid = decodeNo2Dods(dodsFixture({ values, longitudeFirst, newline: '\r\n' }));
+      assert.ok(grid instanceof Float32Array);
+      assert.equal(grid.length, CELLS);
+      for (const [index, value] of values) assert.equal(grid[index], Math.fround(value));
+      assert.equal(grid[1], 0);
+    }
+  });
+
+  it('rejects HTML, wrong dimensions, malformed counts and truncated data', () => {
+    assert.throws(() => decodeNo2Dods(Buffer.from('<html>Earthdata Login</html>')), /Data delimiter/);
+    assert.throws(() => decodeNo2Dods(dodsFixture({ dimensions: '[XDim = 720][YDim = 720]' })), /720 latitudes and 1440 longitudes/);
+    const fixture = dodsFixture();
+    assert.throws(() => decodeNo2Dods(fixture.subarray(0, -4)), /array length/);
+    fixture.writeUInt32BE(2, fixture.indexOf('Data:\n') + 10);
+    assert.throws(() => decodeNo2Dods(fixture), /array length/);
+  });
+
+  it('selects polygon centres, excludes holes, unions disjoint parts and uses cluster bounds', () => {
+    const square = (x, y, side) => [[x, y], [x + side, y], [x + side, y + side], [x, y + side], [x, y]];
+    const geometry = { type: 'MultiPolygon', coordinates: [
+      [square(-180, -90, 0.5), square(-179.75, -89.75, 0.25)],
+      [square(179.75, 89.75, 0.25)],
+    ] };
+    const bbox = [-180, -90, -179.5, -89.5];
+    assert.deepEqual([...buildRegionMask({ ...DE, bbox }, geometry)], [0, 1, WIDTH, CELLS - 1]);
+    assert.deepEqual([...buildRegionMask({ ...JJJ, bbox }, geometry)], [0, 1, WIDTH, WIDTH + 1]);
+    assert.deepEqual([...buildRegionMask({ ...DE, bbox })], [0, 1, WIDTH, WIDTH + 1]);
+  });
+
+  it('falls back to the cell containing a tiny region’s centre and converts valid values to mol/m²', () => {
+    const bbox = [-179.98, -89.98, -179.96, -89.96];
+    const geometry = { type: 'Polygon', coordinates: [[[-179.98, -89.98], [-179.96, -89.98], [-179.96, -89.96], [-179.98, -89.98]]] };
+    assert.deepEqual([...buildRegionMask({ ...DE, bbox }, geometry)], [0]);
+    const grid = Float32Array.of(3e15, -1e15, -1.2676506002282294e30, NaN, Infinity, 1e30);
+    const [mean, coverage] = summarizeGrid(grid, Uint32Array.of(0, 1, 2, 3, 4, 5));
+    assert.ok(Math.abs(mean - 1e15 * 1e4 / 6.02214076e23) < 1e-12);
+    assert.equal(coverage, 1 / 3);
+    assert.deepEqual(summarizeGrid(grid, Uint32Array.of(2, 3, 4, 5)), [null, 0]);
+  });
+});
+
+const GRANULE_ROOT = 'https://opendap.earthdata.nasa.gov/collections/C3333493715-GES_DISC/granules/';
+function granule(date, root = GRANULE_ROOT) {
+  return {
+    time_start: `${date}T00:00:00.000Z`,
+    links: [{ href: `${root}OMNO2d.004%3AOMI-Aura_L3-OMNO2d_${date.slice(0, 4)}m${date.slice(5).replace('-', '')}_v004-2026m1026t062000.he5` }],
+  };
+}
+
+function stubNasa({ fail = () => false, unlisted = [], extraEntries = [], ddsStatus = 200 } = {}) {
+  const calls = { catalogs: [], dds: [], grids: [], bytes: 0 };
+  const validGrid = dodsFixture({ values: [[0, 2e15], [1, 4e15]] });
+  const from = (body, status = 200) => {
+    if (status === 200) calls.bytes += Buffer.byteLength(body);
+    return new Response(body, { status });
+  };
   const fetchImpl = async (url, init) => {
     assert.match(init.headers['User-Agent'], /^WorldMonitor seed-no2-activity/);
-    if (url === CDSE_TOKEN_URL) {
-      calls.token++;
-      const form = new URLSearchParams(init.body);
-      assert.equal(form.get('grant_type'), 'client_credentials');
-      return new Response(JSON.stringify({ access_token: 'tok', expires_in: 1800 }), { status: 200 });
+    assert.equal(init.redirect, 'manual');
+    const { origin, pathname, searchParams } = new URL(url);
+    if (origin === 'https://cmr.earthdata.nasa.gov') {
+      assert.equal(init.headers.Authorization, undefined);
+      assert.equal(searchParams.get('short_name'), 'OMNO2d');
+      assert.equal(searchParams.get('version'), '004');
+      const [start, end] = searchParams.get('temporal').split(',').map((time) => time.slice(0, 10));
+      calls.catalogs.push([start, end]);
+      const entries = Object.keys(denseDays(start, (Date.parse(end) - Date.parse(start)) / DAY_MS + 1, 1))
+        .filter((date) => !unlisted.includes(date)).map((date) => granule(date));
+      return from(JSON.stringify({ feed: { entry: [...extraEntries, ...entries] } }));
     }
-    assert.equal(url, CDSE_STATISTICS_URL);
-    assert.equal(init.headers.Authorization, 'Bearer tok');
-    const body = JSON.parse(init.body);
-    calls.statistics.push(body);
-    if (fail(body)) return new Response('{"error":"boom"}', { status: 503 });
-    const fromMs = Date.parse(body.aggregation.timeRange.from);
-    const toMs = Date.parse(body.aggregation.timeRange.to);
-    const factor = new Date(toMs - DAY_MS).getUTCFullYear() === 2026 ? 1.2 : 1;
-    const data = [];
-    for (let ms = fromMs, index = 0; ms < toMs; ms += DAY_MS, index++) {
-      const stats = FIXTURE_STATS[index % FIXTURE_STATS.length];
-      data.push({
-        interval: { from: new Date(ms).toISOString().replace('.000', ''), to: new Date(ms + DAY_MS).toISOString().replace('.000', '') },
-        outputs: { no2: { bands: { B0: { stats: { ...stats, mean: typeof stats.mean === 'number' ? stats.mean * factor : stats.mean } } } } },
-      });
+    assert.equal(origin, 'https://opendap.earthdata.nasa.gov');
+    assert.equal(init.headers.Authorization, 'Bearer test-token');
+    const [, year, month, day] = /_(\d{4})m(\d{2})(\d{2})_v004-/.exec(pathname);
+    const date = `${year}-${month}-${day}`;
+    if (pathname.endsWith('.dds')) {
+      calls.dds.push(date);
+      return from(dds(), ddsStatus);
     }
-    return new Response(JSON.stringify({ data, status: 'OK' }), { status: 200, headers: { 'x-processingunits-spent': pu } });
+    assert.ok(pathname.endsWith('.dods'));
+    assert.equal([...searchParams.keys()][0], FIELD);
+    calls.grids.push(date);
+    return fail(date) ? from('unavailable', 503) : from(validGrid);
   };
   return { fetchImpl, calls };
 }
 
-function stubStore(initial = {}) {
+function stubStore() {
+  const state = new Map();
   const writes = [];
-  return {
-    writes,
-    store: {
-      async readSeries(keys) {
-        return new Map(keys.map((key) => [key, initial[key] === undefined ? null : JSON.stringify(initial[key])]));
-      },
-      async writeSeries(key, series) {
-        writes.push([key, series]);
-      },
+  const store = {
+    async readSeries(keys) {
+      return new Map(keys.map((key) => [key, state.get(key)]));
+    },
+    async writeSeries(key, value) {
+      writes.push(key);
+      state.set(key, JSON.stringify(value));
     },
   };
+  return { store, state, writes };
 }
 
-const REGIONS = [JJJ, DE];
-
-function fetchAllWith(fetchImpl, store, options = {}) {
+const SMALL_REGIONS = [
+  { ...JJJ, bbox: [-180, -90, -179.75, -89.75] },
+  { ...DE, bbox: [-179.75, -90, -179.5, -89.75] },
+];
+const SHORT_METHOD = { ...NO2_ACTIVITY_METHOD, windowDays: 4, refreshDays: 2, minValidDays: 1 };
+function fixtureFetch(store, fetchImpl, overrides) {
   return makeFetchAll({
-    fetchImpl,
-    store,
-    clientId: 'id',
-    clientSecret: 'secret',
-    now: () => NOW,
-    regions: REGIONS,
-    geometries: GEOMETRIES,
-    retryDelayMs: 0,
-    log: () => {},
-    ...options,
+    store, fetchImpl, token: 'test-token', regions: SMALL_REGIONS, geometries: {},
+    method: SHORT_METHOD, now: () => NOW, retryDelayMs: 0, log: () => {}, ...overrides,
   });
 }
 
-describe('seed-no2-activity fetchAll', () => {
-  for (const { label, previousRun, run, previousYears, gapDates, repairYears } of [
-    {
-      label: 'within one year', previousRun: '2026-10-10T06:20:00Z', run: NOW,
-      previousYears: [2023, 2024, 2025, 2026], gapDates: ['2026-10-08', '2026-10-13'], repairYears: [2026],
-    },
-    {
-      label: 'across New Year', previousRun: '2026-12-20T06:20:00Z', run: Date.parse('2027-01-20T06:20:00Z'),
-      previousYears: [2023, 2024, 2025, 2026], gapDates: ['2026-12-18', '2027-01-07'], repairYears: [2026, 2027],
-    },
-  ]) {
-    it(`persists incomplete years after a refresh gap ${label} and repairs them within the backfill budget`, async () => {
-      const previousEnd = currentWindow(Date.parse(previousRun)).windowEnd;
-      const key = `${NO2_ACTIVITY_SERIES_KEY_PREFIX}${JJJ.id}`;
-      const previous = {
-        ...seriesWith(JJJ, { [previousEnd]: [1e-4, 0.6] }, previousYears),
-        refreshedAt: previousRun,
-      };
-      const { fetchImpl, calls } = stubFetch();
-      const { store, writes } = stubStore({ [key]: previous });
-      const deferred = await fetchAllWith(fetchImpl, store, { regions: [JJJ], now: () => run, backfillChunks: 0 })();
-      assert.equal(calls.statistics.length, 1);
-      const retained = writes[0][1];
-      assert.deepEqual(retained.backfilledYears, previousYears.filter((year) => !repairYears.includes(year)));
-      assert.equal(deferred.regions[JJJ.id].exclusion, 'baseline_backfill_pending');
-      for (const date of gapDates) assert.equal(retained.days[date], undefined);
-
-      const retry = stubFetch();
-      const recovered = stubStore({ [key]: retained });
-      const healed = await fetchAllWith(retry.fetchImpl, recovered.store, { regions: [JJJ], now: () => run, backfillChunks: 100 })();
-      assert.deepEqual([...new Set(retry.calls.statistics.slice(1).map((body) => Number(body.aggregation.timeRange.from.slice(0, 4))))], repairYears);
-      for (const date of gapDates) assert.ok(recovered.writes[0][1].days[date], `repaired ${date}`);
-      for (const year of repairYears) assert.ok(healed.regions[JJJ.id].series.backfilledYears.includes(year));
+describe('NASA NO2 date-based collection', () => {
+  it('downloads one subset per available date for every region and resumes a bounded backfill', async () => {
+    const { store, writes } = stubStore();
+    const { fetchImpl, calls } = stubNasa({
+      unlisted: ['2026-10-23'],
+      extraEntries: [granule('2026-10-23', 'https://untrusted.test/granules/')],
     });
-  }
+    const fetchAll = fixtureFetch(store, fetchImpl, { backfillDays: 3 });
+    const partial = await fetchAll();
+    assert.deepEqual(calls.dds, ['2026-10-22']);
+    assert.deepEqual(calls.grids, ['2026-10-22', '2026-10-21', '2026-10-20', '2025-10-23']);
+    assert.deepEqual(writes, SMALL_REGIONS.map((item) => `${NO2_ACTIVITY_SERIES_KEY_PREFIX}${item.id}`));
+    assert.equal(partial.source.requestCount, calls.catalogs.length + calls.dds.length + calls.grids.length);
+    assert.equal(partial.source.bytesDownloaded, calls.bytes);
+    assert.equal(partial.regions[JJJ.id].current.validDays, 3);
+    assert.equal(partial.regions[DE.id].current.meanNo2MolM2, partial.regions[JJJ.id].current.meanNo2MolM2 * 2);
+    assert.deepEqual(partial.regions[DE.id].series.backfilledYears, [2026]);
+    assert.equal(partial.regions[DE.id].exclusion, 'baseline_backfill_pending');
 
-  it('keeps completed years after a contiguous refresh even when the previous query returned sparse days', async () => {
-    const key = `${NO2_ACTIVITY_SERIES_KEY_PREFIX}${JJJ.id}`;
-    const previous = {
-      ...seriesWith(JJJ, { '2026-10-03': [1e-4, 0.6] }, [2023, 2024, 2025, 2026]),
-      refreshedAt: '2026-10-16T06:20:00Z',
-    };
-    const { fetchImpl, calls } = stubFetch();
-    const { store } = stubStore({ [key]: previous });
-    const dataset = await fetchAllWith(fetchImpl, store, { regions: [JJJ], backfillChunks: 100 })();
-    assert.equal(calls.statistics.length, 1);
-    assert.deepEqual(dataset.regions[JJJ.id].series.backfilledYears, previous.backfilledYears);
+    calls.grids.length = 0;
+    const next = await fetchAll();
+    assert.deepEqual(calls.grids, ['2026-10-22', '2025-10-22', '2025-10-21', '2025-10-20']);
+    assert.deepEqual(next.regions[DE.id].series.backfilledYears, [2025, 2026]);
   });
 
-  it('repairs gaps in a stored series that has no previous refresh clock', async () => {
-    const key = `${NO2_ACTIVITY_SERIES_KEY_PREFIX}${JJJ.id}`;
-    const previous = { ...seriesWith(JJJ, { '2026-10-07': [1e-4, 0.6] }, [2023, 2024, 2025, 2026]), refreshedAt: null };
-    const { fetchImpl, calls } = stubFetch();
-    const { store, writes } = stubStore({ [key]: previous });
-    await fetchAllWith(fetchImpl, store, { regions: [JJJ], backfillChunks: 100 })();
-    assert.ok(calls.statistics.length > 1);
-    assert.ok(writes[0][1].days['2026-10-08']);
-    assert.deepEqual(writes[0][1].backfilledYears, previous.backfilledYears);
+  it('derives coverage for both years of a window and records a zero-validity day as fetched', async () => {
+    const { store, state } = stubStore();
+    const { fetchImpl, calls } = stubNasa();
+    const now = () => Date.parse('2027-01-05T03:00:00Z');
+    const [cluster, country] = SMALL_REGIONS;
+    const keys = SMALL_REGIONS.map((item) => `${NO2_ACTIVITY_SERIES_KEY_PREFIX}${item.id}`);
+    for (const [index, key] of keys.entries()) {
+      const item = SMALL_REGIONS[index];
+      const days = { '2026-01-01': [1e-4, 1], '2026-01-02': [1e-4, 1], '2026-12-30': [null, 0] };
+      if (item === cluster) days['2026-12-31'] = [1e-4, 1];
+      await store.writeSeries(key, seriesWith(item, days, [2025]));
+    }
+    const data = await fixtureFetch(store, fetchImpl, { now, backfillDays: 1 })();
+    assert.deepEqual(calls.grids, ['2027-01-02', '2027-01-01', '2026-12-31']);
+    assert.deepEqual(data.regions[country.id].series.backfilledYears, [2026, 2027]);
+    assert.deepEqual(JSON.parse(state.get(keys[1])).days['2026-12-30'], [null, 0]);
   });
 
-  it('preserves last-good publication when every refresh fails even with stored series', async () => {
-    const stored = {
-      [`${NO2_ACTIVITY_SERIES_KEY_PREFIX}jing-jin-ji`]: seriesWith(JJJ, {
-        ...denseDays('2026-08-29', 36, 1.3e-4),
-        ...denseDays('2025-08-29', 56, 1e-4),
-        ...denseDays('2024-08-29', 56, 1e-4),
-      }, [2024, 2025, 2026]),
-    };
-    const { fetchImpl } = stubFetch({ fail: () => true });
-    const { store, writes } = stubStore(stored);
-    await assert.rejects(fetchAllWith(fetchImpl, store, { backfillChunks: 0 })(), (error) => {
-      assert.equal(error.preservableFetchFailure, true);
-      return true;
-    });
+  it('keeps a cached day through a partial refresh failure and retries that date', async () => {
+    const { store, state } = stubStore();
+    const key = `${NO2_ACTIVITY_SERIES_KEY_PREFIX}${JJJ.id}`;
+    await store.writeSeries(key, seriesWith(JJJ, { '2026-10-23': [1e-4, 1] }));
+    const { fetchImpl, calls } = stubNasa({ fail: (date) => date === '2026-10-23' });
+    const data = await fixtureFetch(store, fetchImpl, { backfillDays: 0 })();
+    assert.equal(calls.grids.filter((date) => date === '2026-10-23').length, 3);
+    assert.deepEqual(calls.catalogs, [['2026-10-20', '2026-10-23']]);
+    assert.deepEqual(JSON.parse(state.get(key)).days['2026-10-23'], [1e-4, 1]);
+    assert.equal(data.regions[JJJ.id].series.refreshedAt, new Date(NOW).toISOString());
+  });
+
+  it('covers catalog-confirmed gaps as invalid days and replaces them when a granule arrives', async () => {
+    const { store, state } = stubStore();
+    const key = `${NO2_ACTIVITY_SERIES_KEY_PREFIX}${JJJ.id}`;
+    const absent = stubNasa({ unlisted: ['2026-10-21', '2025-10-21'] });
+    const first = await fixtureFetch(store, absent.fetchImpl, { backfillDays: 5 })();
+    assert.ok(!absent.calls.grids.includes('2026-10-21'));
+    assert.deepEqual(first.regions[JJJ.id].series.backfilledYears, [2025, 2026]);
+    assert.deepEqual(JSON.parse(state.get(key)).days['2025-10-21'], [null, null]);
+    assert.equal(first.regions[JJJ.id].baseline.years[0].validDays, 3);
+
+    const repaired = stubNasa();
+    const second = await fixtureFetch(store, repaired.fetchImpl, { backfillDays: 2 })();
+    assert.deepEqual(repaired.calls.grids, ['2026-10-23', '2026-10-22', '2026-10-21', '2025-10-21']);
+    assert.deepEqual(second.regions[JJJ.id].series.backfilledYears, [2025, 2026]);
+    assert.equal(second.regions[JJJ.id].baseline.years[0].validDays, 4);
+  });
+
+  it('preserves last-good on failed authentication or a fully failed refresh', async () => {
+    const { store, writes } = stubStore();
+    const redirected = stubNasa({ ddsStatus: 302 });
+    await assert.rejects(fixtureFetch(store, redirected.fetchImpl)(), /OPeNDAP DDS HTTP 302/);
+    assert.equal(redirected.calls.dds.length, 1);
+    const broken = stubNasa({ fail: () => true });
+    await assert.rejects(fixtureFetch(store, broken.fetchImpl)(), /every NASA NO2 refresh failed/);
     assert.equal(writes.length, 0);
   });
 
-  it('preserves each region refresh clock through partial failure', async () => {
-    const refreshedAt = '2026-10-22T06:20:00.000Z';
-    const stored = {
-      [`${NO2_ACTIVITY_SERIES_KEY_PREFIX}jing-jin-ji`]: {
-        ...seriesWith(JJJ, {
-          ...denseDays('2026-08-29', 46, 1.3e-4),
-          ...denseDays('2025-08-29', 56, 1e-4),
-          ...denseDays('2024-08-29', 56, 1e-4),
-        }, [2024, 2025, 2026]),
-        refreshedAt,
-      },
-    };
-    const { fetchImpl } = stubFetch({ fail: (body) => Boolean(body.input.bounds.bbox) });
-    const { store } = stubStore(stored);
-    const dataset = await fetchAllWith(fetchImpl, store, { backfillChunks: 0 })();
-    assert.equal(dataset.regions['jing-jin-ji'].series.refreshedAt, refreshedAt);
-    assert.equal(dataset.regions['country-de'].series.refreshedAt, new Date(NOW).toISOString());
-  });
-
-  it('refreshes every region, backfills within the budget, stores the series, and publishes a valid dataset', async () => {
-    const { fetchImpl, calls } = stubFetch();
+  it('supports a dry run with no series writes', async () => {
     const { store, writes } = stubStore();
-    const partial = await fetchAllWith(fetchImpl, store, { backfillChunks: 4 })();
-    assert.equal(calls.token, 1);
-    assert.equal(calls.statistics.length, 2 + 4);
-    assert.equal(partial.source.requestCount, 6);
-    assert.ok(Math.abs(partial.source.processingUnitsSpent - 6 * 0.25) < 1e-9);
-    const chunks = calls.statistics.slice(2).map((body) => body.aggregation.timeRange.from.slice(0, 10));
-    assert.deepEqual(chunks, ['2023-01-01', '2023-07-03', '2024-01-01', '2024-07-02']);
-    assert.ok(calls.statistics.slice(2).every((body) => body.input.bounds.bbox?.[0] === 114), 'the cluster backfills before the country');
-    assert.equal(calls.statistics[1].input.bounds.geometry.type, 'Polygon');
-    assert.deepEqual(writes.map(([key]) => key), [`${NO2_ACTIVITY_SERIES_KEY_PREFIX}jing-jin-ji`, `${NO2_ACTIVITY_SERIES_KEY_PREFIX}country-de`]);
-    assert.deepEqual(writes[0][1].backfilledYears, [2023, 2024]);
-    assert.equal(partial.regions['jing-jin-ji'].exclusion, 'baseline_backfill_pending');
-    assert.equal(partial.regions['jing-jin-ji'].series.backfilledYears.length, 2);
-    assert.equal(partial.regions['country-de'].series.days, 10);
-    assert.equal(validateNo2ActivityDataset(datasetAround(Object.values(partial.regions))), true);
-    assert.equal(declareRecords(partial), 0);
+    const { fetchImpl } = stubNasa();
+    const data = await fixtureFetch(store, fetchImpl, { backfillDays: 0, writeSeries: false })();
+    assert.equal(data.regions[JJJ.id].current.validDays, 2);
+    assert.equal(writes.length, 0);
+    assert.equal(declareRecords(data), 0);
   });
 
-  it('publishes a direction once the stored series carries the baseline years', async () => {
-    const stored = {
-      [`${NO2_ACTIVITY_SERIES_KEY_PREFIX}jing-jin-ji`]: seriesWith(JJJ, {
-        ...denseDays('2026-08-29', 46, 1.3e-4),
-        ...denseDays('2025-08-29', 56, 1e-4),
-        ...denseDays('2024-08-29', 56, 1e-4),
-        ...denseDays('2023-08-29', 56, 1e-4),
-      }, [2023, 2024, 2025, 2026]),
-    };
-    const { fetchImpl } = stubFetch();
-    const { store, writes } = stubStore(stored);
-    const dataset = await fetchAllWith(fetchImpl, store, { backfillChunks: 0 })();
-    const jjj = dataset.regions['jing-jin-ji'];
-    assert.equal(jjj.exclusion, null);
-    assert.equal(jjj.direction, 'strengthening');
-    assert.ok(jjj.changePercent > 10);
-    assert.equal(jjj.current.validDays >= 46, true);
-    assert.equal(writes.length, 2, 'both series changed and were written');
-    assert.equal(declareRecords(dataset), 1);
-  });
-
-  it('keeps a region with a stored series through a failed refresh and marks an empty one request_failed', async () => {
-    const stored = {
-      [`${NO2_ACTIVITY_SERIES_KEY_PREFIX}jing-jin-ji`]: seriesWith(JJJ, {
-        ...denseDays('2026-08-29', 40, 1.3e-4), ...denseDays('2025-08-29', 56, 1e-4), ...denseDays('2024-08-29', 56, 1e-4),
-      }, [2024, 2025, 2026]),
-    };
-    const { fetchImpl } = stubFetch({ fail: (body) => body.input.bounds.bbox?.[0] !== RU.bbox[0] });
-    const { store, writes } = stubStore(stored);
-    const dataset = await fetchAllWith(fetchImpl, store, { regions: [JJJ, DE, RU], backfillChunks: 0 })();
-    assert.equal(dataset.regions['jing-jin-ji'].exclusion, null);
-    assert.equal(dataset.regions['country-de'].exclusion, 'request_failed');
-    assert.equal(writes.length, 1, 'only the successful refresh is written');
-  });
-
-  it('throws a preservable failure when every refresh fails with nothing stored, or the token is down', async () => {
-    const { fetchImpl } = stubFetch({ fail: () => true });
-    await assert.rejects(fetchAllWith(fetchImpl, stubStore().store)(), (error) => {
-      assert.match(error.message, /every refresh failed/);
-      assert.equal(error.preservableFetchFailure, true);
-      return true;
+  it('assembles a validated publication for all 199 registered masks', async () => {
+    const { store } = stubStore();
+    const { fetchImpl, calls } = stubNasa();
+    const fetchAll = fixtureFetch(store, fetchImpl, {
+      method: NO2_ACTIVITY_METHOD, regions: NO2_REGIONS, geometries: loadGeometries(), backfillDays: 0,
     });
-    const tokenDown = async (url) => (url === CDSE_TOKEN_URL ? new Response('nope', { status: 500 }) : assert.fail('no statistics call'));
-    await assert.rejects(fetchAllWith(tokenDown, stubStore().store)(), (error) => {
-      assert.match(error.message, /token fetch failed/);
-      assert.equal(error.preservableFetchFailure, true);
-      return true;
-    });
-  });
-
-  it('fetches a fresh token when the API rejects the current one', async () => {
-    const { fetchImpl, calls } = stubFetch();
-    let rejected = false;
-    const flaky = async (url, init) => {
-      if (url === CDSE_STATISTICS_URL && !rejected) {
-        rejected = true;
-        return new Response('expired', { status: 401 });
-      }
-      return fetchImpl(url, init);
-    };
-    const dataset = await fetchAllWith(flaky, stubStore().store, { backfillChunks: 0 })();
-    assert.equal(calls.token, 2);
-    assert.equal(dataset.source.requestCount, 3);
-  });
-
-  it('stops starting backfill chunks past the deadline and leaves those years unmarked', async () => {
-    const { fetchImpl, calls } = stubFetch();
-    const { store, writes } = stubStore();
-    await fetchAllWith(fetchImpl, store, { backfillChunks: 4, backfillDeadlineMs: -1 })();
-    assert.equal(calls.statistics.length, 2);
-    assert.deepEqual(writes[0][1].backfilledYears, []);
-  });
-
-  it('marks a year backfilled only when every chunk of it answered', async () => {
-    const { fetchImpl } = stubFetch({ fail: (body) => body.aggregation.timeRange.from.startsWith('2023-07') });
-    const { store, writes } = stubStore();
-    await fetchAllWith(fetchImpl, store, { backfillChunks: 4 })();
-    assert.deepEqual(writes[0][1].backfilledYears, [2024]);
+    const data = await fetchAll();
+    assert.equal(calls.grids.length, 10);
+    assert.equal(Object.keys(data.regions).length, 199);
+    assert.equal(data.regions['country-lu'].current.validDays, 10);
+    assert.equal(validateNo2ActivityDataset(data), true);
   });
 });

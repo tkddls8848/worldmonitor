@@ -1216,7 +1216,7 @@
           "geoBoundaries": "Strefy zdemilitaryzowane, linie zawieszenia broni i sporne granice",
           "ciiChoropleth": "Mapa ciepła Country Instability Index — koduje kraje według wyniku (zielony=stabilny, czerwony=krytyczny)",
           "notamAirspace": "Tymczasowe ograniczenia lotów oraz strefy ograniczone, niebezpieczne i zakazane z NOTAM-ów FAA, obowiązujące obecnie lub rozpoczynające się w ciągu 24 godzin",
-          "no2Activity": "Kierunek aktywności NO2 z Sentinel-5P dla 167 krajów i 32 klastrów przemysłowych: ostatnie 56-dniowe okno względem tych samych dat w poprzednich latach, po 10% strefie martwej. Zawiera zmodyfikowane dane Copernicus Sentinel.",
+          "no2Activity": "Kierunek aktywności NO2 z NASA OMI/Aura dla 167 krajów i 32 klastrów przemysłowych: ostatnie 56-dniowe okno względem tych samych dat w poprzednich latach, po 10% strefie martwej.",
           "reservoirLevels": "Poziom lustra wody w strategicznych zbiornikach i jeziorach z satelitarnego lidaru NASA ICESat-2 w porównaniu ze zwykłym poziomem dla danego miesiąca. NASA publikuje każdy przelot około dwóch miesięcy po pomiarze."
         },
         "notes": {
@@ -4690,8 +4690,8 @@
       },
       "no2Activity": {
         "category": "Gospodarka",
-        "purpose": "Koloruje kraje i klastry przemysłowe według kierunku troposferycznego NO2 z Sentinel-5P, śladu spalania, w ostatnim 56-dniowym oknie względem tych samych dat w poprzednich latach.",
-        "source": "NO2 z Copernicus Sentinel-5P TROPOMI przez CDSE Sentinel Hub Statistical API, agregowane codziennie per region przez usługę seed-no2-activity. Zawiera zmodyfikowane dane Copernicus Sentinel.",
+        "purpose": "Koloruje kraje i klastry przemysłowe według kierunku troposferycznego NO2 z NASA OMI/Aura, śladu spalania, w ostatnim 56-dniowym oknie względem tych samych dat w poprzednich latach.",
+        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
         "freshness": "Zasilane co 24 godziny; okno kończy się 3 dni przed uruchomieniem, aby dotarły spóźnione granule, z 72-godzinnym budżetem świeżości.",
         "confidence": "Region otrzymuje odczyt tylko przy co najmniej 14 ważnych dniach i 2 latach bazowych; zachmurzenie to główny szum, więc ubogie okno odmawia odczytu zamiast zgadywać.",
         "limitations": {

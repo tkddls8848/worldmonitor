@@ -2,11 +2,12 @@
 // covered by `npm run typecheck:api`.
 
 export declare const NO2_ACTIVITY_KEY: 'economic:no2-activity:v1';
-export declare const NO2_ACTIVITY_SERIES_KEY_PREFIX: 'economic:no2-activity:series:v1:';
+export declare const NO2_ACTIVITY_SERIES_KEY_PREFIX: 'economic:no2-activity:series:v2:';
 export declare const NO2_ACTIVITY_SEED_META_KEY: 'seed-meta:economic:no2-activity';
 export declare const NO2_ACTIVITY_ACTIVATION_KEY: 'seed-activated:economic:no2-activity';
-export declare const NO2_ACTIVITY_METHOD_VERSION: 'no2-activity/v1';
+export declare const NO2_ACTIVITY_METHOD_VERSION: 'no2-activity/v2';
 export declare const NO2_ACTIVITY_SOURCE_VERSION: string;
+export declare const NO2_ACTIVITY_SOURCE: Readonly<Pick<No2ActivitySource, 'publisherId' | 'dataset' | 'band' | 'unit'>>;
 export declare const NO2_ATTRIBUTION_PREFIX: string;
 export declare const NO2_ACTIVITY_MAX_REFRESH_AGE_MS: number;
 
@@ -22,11 +23,8 @@ export interface No2ActivityMethod {
   readonly baselineYears: number;
   readonly minBaselineYears: number;
   readonly deadBandPercent: number;
-  readonly timeliness: 'OFFL';
-  readonly minQa: number;
-  readonly maxPixelsPerRequest: number;
-  readonly backfillChunkDaysByWidth: ReadonlyArray<readonly [number, number]>;
-  readonly backfillChunksPerRun: number;
+  readonly gridResolutionDegrees: number;
+  readonly backfillDaysPerRun: number;
   readonly holidayMask: { readonly daysBefore: number; readonly daysAfter: number };
 }
 
@@ -106,13 +104,13 @@ export interface No2RegionResult {
 }
 
 export interface No2ActivitySource {
-  publisherId: 'publisher:copernicus-sentinel-5p';
-  dataset: 'sentinel-5p-l2';
-  band: 'NO2';
+  publisherId: 'publisher:nasa-omi';
+  dataset: 'OMNO2d.004';
+  band: 'ColumnAmountNO2TropCloudScreened';
   unit: 'mol/m2';
   attribution: string;
   requestCount: number;
-  processingUnitsSpent: number;
+  bytesDownloaded: number;
 }
 
 export interface No2ActivityDataset {
@@ -132,7 +130,6 @@ export interface No2Composite {
 }
 
 export declare function dateMs(isoDate: unknown): number;
-export declare function backfillChunkDaysFor(region: No2Region, method?: No2ActivityMethod): number;
 export declare function isHolidayMasked(
   isoDate: string,
   holidayCalendar: No2HolidayCalendar | null,

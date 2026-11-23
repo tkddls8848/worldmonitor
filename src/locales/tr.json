@@ -1414,7 +1414,7 @@
           "geoBoundaries": "Silahsızlandırılmış bölgeler, ateşkes hatları ve tartışmalı sınırlar",
           "ciiChoropleth": "Ülke İstikrarsızlık Endeksi ısı haritası — ülkeleri puana göre renklendiriyor (yeşil=istikrarlı, kırmızı=kritik)",
           "notamAirspace": "FAA NOTAM'larından geçici uçuş kısıtlamaları ve sınırlı, tehlikeli ve yasaklı hava sahaları; şu anda yürürlükte olan veya 24 saat içinde başlayacak olanlar",
-          "no2Activity": "167 ülke ve 32 sanayi kümesi için Sentinel-5P NO2 faaliyet yönü: son 56 günlük pencerenin önceki yılların aynı tarihleriyle karşılaştırması, %10 ölü bant sonrası. Değiştirilmiş Copernicus Sentinel verileri içerir.",
+          "no2Activity": "167 ülke ve 32 sanayi kümesi için NASA OMI/Aura NO2 faaliyet yönü: son 56 günlük pencerenin önceki yılların aynı tarihleriyle karşılaştırması, %10 ölü bant sonrası.",
           "reservoirLevels": "Stratejik baraj gölleri ve göllerin su yüzeyi seviyesi, NASA ICESat-2 uydu lidarından, ayın olağan seviyesiyle karşılaştırmalı. NASA her geçişi ölçümden yaklaşık iki ay sonra yayımlar."
         },
         "notes": {
@@ -4646,8 +4646,8 @@
       },
       "no2Activity": {
         "category": "Ekonomi",
-        "purpose": "Ülkeleri ve sanayi kümelerini, bir yanma izi olan Sentinel-5P troposferik NO2'nin yönüne göre, son 56 günlük pencereyi önceki yılların aynı tarihleriyle karşılaştırarak renklendirir.",
-        "source": "CDSE Sentinel Hub Statistical API üzerinden Copernicus Sentinel-5P TROPOMI NO2, seed-no2-activity hizmeti tarafından bölge başına günlük toplanır. Değiştirilmiş Copernicus Sentinel verileri içerir.",
+        "purpose": "Ülkeleri ve sanayi kümelerini, bir yanma izi olan NASA OMI/Aura troposferik NO2'nin yönüne göre, son 56 günlük pencereyi önceki yılların aynı tarihleriyle karşılaştırarak renklendirir.",
+        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
         "freshness": "Her 24 saatte bir beslenir; geç gelen granüllerin yetişmesi için pencere çalıştırmadan 3 gün önce biter, 72 saatlik tazelik bütçesiyle.",
         "confidence": "Bir bölge yalnızca en az 14 geçerli gün ve 2 temel yıl ile değer alır; bulutluluk baskın gürültüdür, bu yüzden zayıf bir pencere tahmin etmek yerine değer vermeyi reddeder.",
         "limitations": {

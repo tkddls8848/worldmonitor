@@ -1264,7 +1264,7 @@
           "geoBoundaries": "Entmilitarisierte Zonen, Waffenstillstandslinien und umstrittene Grenzen",
           "ciiChoropleth": "Länderinstabilitätsindex-Wärmekarte – färbt Länder nach Punktzahl (grün=stabil, rot=kritisch)",
           "notamAirspace": "Temporäre Flugbeschränkungen und beschränkter, Gefahren- und verbotener Luftraum aus FAA-NOTAMs, derzeit gültig oder innerhalb von 24 Stunden beginnend",
-          "no2Activity": "NO2-Aktivitätsrichtung aus Sentinel-5P für 167 Länder und 32 Industriecluster: das jüngste 56-Tage-Fenster gegenüber denselben Daten der Vorjahre, nach einem Totband von 10 %. Enthält modifizierte Copernicus-Sentinel-Daten.",
+          "no2Activity": "NO2-Aktivitätsrichtung aus NASA OMI/Aura für 167 Länder und 32 Industriecluster: das jüngste 56-Tage-Fenster gegenüber denselben Daten der Vorjahre, nach einem Totband von 10 %.",
           "reservoirLevels": "Wasserspiegel strategischer Stauseen und Seen aus dem NASA-Satellitenlidar ICESat-2, verglichen mit dem üblichen Stand für den Monat. Die NASA veröffentlicht jeden Überflug etwa zwei Monate nach der Messung."
         },
         "notes": {
@@ -4646,8 +4646,8 @@
       },
       "no2Activity": {
         "category": "Wirtschaft",
-        "purpose": "Färbt Länder und Industriecluster nach der Richtung ihres troposphärischen NO2 aus Sentinel-5P, einer Verbrennungsspur, im jüngsten 56-Tage-Fenster gegenüber denselben Daten der Vorjahre.",
-        "source": "Copernicus Sentinel-5P TROPOMI NO2 über die CDSE Sentinel Hub Statistical API, täglich je Region vom Dienst seed-no2-activity aggregiert. Enthält modifizierte Copernicus-Sentinel-Daten.",
+        "purpose": "Färbt Länder und Industriecluster nach der Richtung ihres troposphärischen NO2 aus NASA OMI/Aura, einer Verbrennungsspur, im jüngsten 56-Tage-Fenster gegenüber denselben Daten der Vorjahre.",
+        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
         "freshness": "Alle 24 Stunden eingespeist; das Fenster endet 3 Tage vor dem Lauf, damit späte Granulate eintreffen, mit einem Aktualitätsbudget von 72 Stunden.",
         "confidence": "Eine Region erhält nur mit mindestens 14 gültigen Tagen und 2 Basisjahren einen Wert; Bewölkung ist das dominierende Rauschen, daher verweigert ein dünnes Fenster den Wert statt zu raten.",
         "limitations": {

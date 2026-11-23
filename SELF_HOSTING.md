@@ -31,6 +31,7 @@ OPENROUTER_API_KEY=<AI 요약, 브리프, 시나리오, 여행 위험 평가, �
 선택 설정:
 
 - `ANTHROPIC_API_KEY`: 있으면 LLM 호출이 Anthropic을 먼저 시도하고, 없거나 실패하면 OpenRouter로 넘어갑니다.
+- `EARTHDATA_TOKEN`: 산업 활동(NO₂) 수집에 사용합니다. [NASA Earthdata Login](https://urs.earthdata.nasa.gov)에서 가입하고 **Generate Token**을 선택합니다. **Applications > Authorized Apps**에서 **NASA GESDISC DATA ARCHIVE**를 승인합니다. 토큰이 없으면 NO₂ 수집을 건너뜁니다.
 - 데이터 소스별 키(예: `FRED_API_KEY`, `ACLED_*`, `NASA_FIRMS_API_KEY`): 키가 없는 수집기는 실패로 표시되고 나머지는 계속 진행합니다. 해당 패널은 데이터가 없다고 표시합니다.
 - `WM_PERSONAL_USERNAME`(기본 `owner`), `WM_PERSONAL_HOST`(기본 `127.0.0.1`), `WM_PERSONAL_PORT`(기본 `3000`).
 - `WM_INTEL_HISTORY_DB`: 이력 SQLite 파일 위치. 기본값은 `.personal/intel-history.sqlite`입니다.

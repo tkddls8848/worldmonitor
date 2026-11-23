@@ -44,6 +44,7 @@ export const STANDALONE_INTERVAL_MIN = {
 // breaker could publish a partial result, leaving their Redis locks alive much
 // longer than collect-state considered the run fresh.
 export const PERSONAL_COLLECTOR_TIMEOUT_MIN = Object.freeze({
+  'no2-activity': 15, // seed fetch phase is capped at 12 minutes
   'supply-chain-trade': 20, // seed deadline is 17 minutes (15m lock + 2m margin)
   'comtrade-bilateral-hs4': 27, // longer pass than the 6m generic cap, still below its 30m lock
 });
@@ -128,6 +129,11 @@ export async function collectOnce(names, { log = console.log, force = false } = 
   for (const name of due) {
     const result = await runOne(name, collectorTimeoutMs(name));
     results.push(result);
+    if (name === 'no2-activity' && result.ok && result.tail.includes('NO SOURCE: EARTHDATA_TOKEN unset')) {
+      result.skipped = true;
+      log('SKIP no2-activity (EARTHDATA_TOKEN unset)');
+      continue;
+    }
     log(`${result.ok ? ' OK ' : 'FAIL'} ${name} (${result.seconds}s)`);
     if (result.ok) {
       state[name] = Date.now();
@@ -138,7 +144,8 @@ export async function collectOnce(names, { log = console.log, force = false } = 
     }
   }
   const failed = results.filter((r) => !r.ok).length;
-  log(`완료: 성공 ${results.length - failed}개, 실패 ${failed}개`);
+  const skipped = results.filter((r) => r.skipped).length;
+  log(`완료: 성공 ${results.length - failed - skipped}개, 실패 ${failed}개${skipped ? `, 건너뜀 ${skipped}개` : ''}`);
   return results;
 }
 

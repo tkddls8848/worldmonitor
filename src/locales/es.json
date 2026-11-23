@@ -1253,7 +1253,7 @@
           "geoBoundaries": "Zonas desmilitarizadas, líneas de alto el fuego y fronteras en disputa",
           "ciiChoropleth": "Mapa de calor del Índice de Inestabilidad de País — colorea países por puntuación (verde=estable, rojo=crítico)",
           "notamAirspace": "Restricciones de vuelo temporales y espacio aéreo restringido, de peligro y prohibido de NOTAMs de la FAA, en vigencia ahora o comenzando dentro de 24 horas",
-          "no2Activity": "Dirección de la actividad de NO2 de Sentinel-5P para 167 países y 32 clústeres industriales: la última ventana de 56 días frente a las mismas fechas de años anteriores, tras una banda muerta del 10 %. Contiene datos modificados de Copernicus Sentinel.",
+          "no2Activity": "Dirección de la actividad de NO2 de NASA OMI/Aura para 167 países y 32 clústeres industriales: la última ventana de 56 días frente a las mismas fechas de años anteriores, tras una banda muerta del 10 %.",
           "reservoirLevels": "Nivel de la superficie del agua en embalses y lagos estratégicos según el lidar satelital ICESat-2 de la NASA, frente al nivel habitual del mes. La NASA publica cada pasada unos dos meses después de medirla."
         },
         "notes": {
@@ -4668,8 +4668,8 @@
       },
       "no2Activity": {
         "category": "Economía",
-        "purpose": "Colorea países y clústeres industriales según la dirección de su NO2 troposférico de Sentinel-5P, una traza de combustión, en la última ventana de 56 días frente a las mismas fechas de años anteriores.",
-        "source": "NO2 de Copernicus Sentinel-5P TROPOMI mediante la CDSE Sentinel Hub Statistical API, agregado a diario por región por el servicio seed-no2-activity. Contiene datos modificados de Copernicus Sentinel.",
+        "purpose": "Colorea países y clústeres industriales según la dirección de su NO2 troposférico de NASA OMI/Aura, una traza de combustión, en la última ventana de 56 días frente a las mismas fechas de años anteriores.",
+        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
         "freshness": "Se alimenta cada 24 horas; la ventana termina 3 días antes de la ejecución para que lleguen los gránulos tardíos, con un presupuesto de frescura de 72 horas.",
         "confidence": "Una región solo obtiene lectura con al menos 14 días válidos y 2 años de referencia; la nubosidad es el ruido dominante, así que una ventana escasa rechaza la lectura en lugar de adivinar.",
         "limitations": {

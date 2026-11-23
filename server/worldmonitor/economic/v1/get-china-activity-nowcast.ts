@@ -689,7 +689,7 @@ function marketProxyObservations(
 }
 
 /**
- * The Chinese industrial clusters of the global Sentinel-5P NO2 dataset,
+ * The Chinese industrial clusters of the global NASA OMI/Aura NO2 dataset,
  * composed into one observation. The dataset is consumed only when it carries
  * the reviewed method verbatim (`validateNo2ActivityDataset` is the same
  * check the seeder publishes under). A composite the clusters cannot form
@@ -710,7 +710,7 @@ function no2ProxyObservations(
   const generatedAt = new Date(dataset.generatedAt).toISOString();
   const { method, source } = dataset;
   return [{
-    seriesId: 's5p_no2_industrial_activity_change',
+    seriesId: 'omi_no2_industrial_activity_change',
     observationId: `s5p-no2-change:${windowEnd}`,
     observedAt,
     releasedAt: generatedAt,
@@ -726,8 +726,7 @@ function no2ProxyObservations(
       dataset: source.dataset,
       band: source.band,
       unit: source.unit,
-      timeliness: method.timeliness,
-      minQa: method.minQa,
+      gridResolutionDegrees: method.gridResolutionDegrees,
       changeBasis: 'same_calendar_window_prior_years',
       windowDays: method.windowDays,
       windowEnd,
@@ -738,7 +737,6 @@ function no2ProxyObservations(
       regionIds: composite.regionIds,
       regions: regions.map((region) => ({
         id: region.id,
-        resolutionDegrees: region.resolutionDegrees,
         changePercent: region.changePercent,
         direction: region.direction,
         validDays: region.current.validDays,
@@ -747,7 +745,7 @@ function no2ProxyObservations(
       })),
       generatedAt,
       requestCount: source.requestCount,
-      processingUnitsSpent: source.processingUnitsSpent,
+      bytesDownloaded: source.bytesDownloaded,
       ...(composite.exclusion === null ? {} : { exclusion: composite.exclusion }),
     },
   }];

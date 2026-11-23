@@ -6507,7 +6507,7 @@ export class DeckGLMap {
     `, "legacy direct innerHTML migration"));
     legend.appendChild(ciiLegend);
 
-    // NO2 activity legend with the credit Copernicus requires wherever the
+    // NO2 activity legend with the NASA credit wherever the
     // data is shown; visible only while the layer is on.
     const no2Legend = document.createElement('div');
     no2Legend.className = 'no2-activity-legend';
@@ -6517,7 +6517,7 @@ export class DeckGLMap {
     setTrustedHtml(no2Legend, trustedHtml(`
       <span class="legend-label-title" style="font-size:calc(9px * var(--wm-panel-effective-scale, 1));letter-spacing:0.5px;">${t('components.deckgl.layers.no2Activity').toUpperCase()}</span>
       ${NO2_ACTIVITY_LEGEND.map(({ state, label }) => `<span class="legend-item">${no2Swatch(state)}<span class="legend-label">${label}</span></span>`).join('')}
-      <div class="no2-activity-credit" style="font-size:calc(8px * var(--wm-panel-effective-scale, 1));opacity:0.7;margin-top:2px;">${escapeHtml(this.no2Activity?.attribution ?? 'Contains modified Copernicus Sentinel data')}</div>
+      <div class="no2-activity-credit" style="font-size:calc(8px * var(--wm-panel-effective-scale, 1));opacity:0.7;margin-top:2px;">${escapeHtml(this.no2Activity?.attribution ?? 'NASA OMI/Aura OMNO2d (GES DISC)')}</div>
     `, "legacy direct innerHTML migration"));
     legend.appendChild(no2Legend);
 

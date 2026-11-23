@@ -1411,7 +1411,7 @@
           "geoBoundaries": "非武装地帯、停戦ライン、係争境界線",
           "ciiChoropleth": "Country Instability Index ヒートマップ — スコア別に国をカラーリング(緑=安定、赤=深刻)",
           "notamAirspace": "FAA NOTAMの一時的飛行制限および制限空域、危険空域、禁止空域。現在有効、または24時間以内に開始予定",
-          "no2Activity": "Sentinel-5P の NO2 活動の方向（167 か国と 32 の工業クラスター）: 直近 56 日間のウィンドウを過去数年の同じ日付と比較し、10% のデッドバンドを適用。改変された Copernicus Sentinel データを含みます。",
+          "no2Activity": "NASA OMI/Aura の NO2 活動の方向（167 か国と 32 の工業クラスター）: 直近 56 日間のウィンドウを過去数年の同じ日付と比較し、10% のデッドバンドを適用。",
           "reservoirLevels": "NASAの衛星ライダーICESat-2による戦略的な貯水池と湖の水面水位を、その月の平年水位と比較して表示します。NASAは各観測パスを測定の約2か月後に公開します。"
         },
         "notes": {
@@ -4624,8 +4624,8 @@
       },
       "no2Activity": {
         "category": "経済",
-        "purpose": "燃焼の痕跡である Sentinel-5P の対流圏 NO2 の方向に基づき、直近 56 日間のウィンドウを過去数年の同じ日付と比較して、国と工業クラスターを色分けします。",
-        "source": "CDSE Sentinel Hub Statistical API 経由の Copernicus Sentinel-5P TROPOMI NO2 を、seed-no2-activity サービスが地域ごとに日次で集計。改変された Copernicus Sentinel データを含みます。",
+        "purpose": "燃焼の痕跡である NASA OMI/Aura の対流圏 NO2 の方向に基づき、直近 56 日間のウィンドウを過去数年の同じ日付と比較して、国と工業クラスターを色分けします。",
+        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
         "freshness": "24 時間ごとに更新。遅れて届くグラニュールのためにウィンドウは実行の 3 日前で終了し、鮮度予算は 72 時間です。",
         "confidence": "有効日が 14 日以上かつ基準年が 2 年以上ある場合のみ値を出します。雲が主なノイズのため、データの薄いウィンドウは推測せず値を出しません。",
         "limitations": {

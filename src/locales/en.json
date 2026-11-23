@@ -1676,7 +1676,7 @@
           "geoBoundaries": "Demilitarized zones, ceasefire lines, and disputed boundaries",
           "ciiChoropleth": "Country Instability Index heat-map — colors countries by score (green=stable, red=critical)",
           "notamAirspace": "Temporary flight restrictions and restricted, danger and prohibited airspace from FAA NOTAMs, in effect now or starting within 24 hours",
-          "no2Activity": "Sentinel-5P NO2 activity direction for 167 countries and 32 industrial clusters: the latest 56-day window against the same dates in prior years, after a 10% dead band. Contains modified Copernicus Sentinel data.",
+          "no2Activity": "NASA OMI/Aura NO2 activity direction for 167 countries and 32 industrial clusters: the latest 56-day window against the same dates in prior years, after a 10% dead band.",
           "reservoirLevels": "Water-surface level of strategic reservoirs and lakes from NASA ICESat-2 satellite lidar, against the usual level for the month. NASA publishes each pass about two months after it is measured."
         },
         "notes": {
@@ -5213,8 +5213,8 @@
       },
       "no2Activity": {
         "category": "Economy",
-        "purpose": "Colors countries and industrial clusters by the direction of their Sentinel-5P tropospheric NO2, a combustion trace, over the latest 56-day window against the same dates in prior years.",
-        "source": "Copernicus Sentinel-5P TROPOMI NO2 via the CDSE Sentinel Hub Statistical API, aggregated daily per region by the seed-no2-activity service. Contains modified Copernicus Sentinel data.",
+        "purpose": "Colors countries and industrial clusters by the direction of their NASA OMI/Aura tropospheric NO2, a combustion trace, over the latest 56-day window against the same dates in prior years.",
+        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
         "freshness": "Seeded every 24 hours; the window ends 3 days before the run so late granules can land, with a 72-hour freshness budget.",
         "confidence": "A region reads only with at least 14 valid days and 2 baseline years; cloud cover is the dominant noise, so a thin window refuses a reading rather than guessing.",
         "limitations": {

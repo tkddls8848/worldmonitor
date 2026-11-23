@@ -1,7 +1,7 @@
 /**
- * RPC: getNo2Activity -- serves the global Sentinel-5P NO2 activity dataset
- * that scripts/seed-no2-activity.mjs publishes on Railway, filtered by
- * country, region id and kind. Nothing is fetched from Copernicus here.
+ * RPC: getNo2Activity -- serves the global NASA OMI/Aura NO2 activity dataset
+ * that scripts/seed-no2-activity.mjs publishes, filtered by country, region id
+ * and kind. The handler reads the cached dataset.
  *
  * The dataset crosses the Redis boundary through the shared contract
  * validator, so a reader can only ever serve a record the producer could have

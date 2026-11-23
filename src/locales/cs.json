@@ -1408,7 +1408,7 @@
           "geoBoundaries": "Demilitarizované zóny, linie příměří a sporné hranice",
           "ciiChoropleth": "Tepelná mapa Country Instability Index — barevně rozlišuje země podle skóre (zelená=stabilní, červená=kritické)",
           "notamAirspace": "Dočasná omezení letů a omezený, nebezpečný a zakázaný vzdušný prostor z NOTAMů FAA, která jsou právě v platnosti nebo začínají do 24 hodin",
-          "no2Activity": "Směr aktivity NO2 ze Sentinel-5P pro 167 zemí a 32 průmyslových klastrů: poslední 56denní okno oproti stejným datům v předchozích letech, po 10% mrtvém pásmu. Obsahuje upravená data Copernicus Sentinel.",
+          "no2Activity": "Směr aktivity NO2 ze NASA OMI/Aura pro 167 zemí a 32 průmyslových klastrů: poslední 56denní okno oproti stejným datům v předchozích letech, po 10% mrtvém pásmu.",
           "reservoirLevels": "Výška vodní hladiny strategických nádrží a jezer ze satelitního lidaru NASA ICESat-2 ve srovnání s obvyklou hladinou pro daný měsíc. NASA zveřejňuje každý přelet asi dva měsíce po měření."
         },
         "notes": {
@@ -4690,8 +4690,8 @@
       },
       "no2Activity": {
         "category": "Ekonomika",
-        "purpose": "Obarvuje země a průmyslové klastry podle směru troposférického NO2 ze Sentinel-5P, stopy spalování, v posledním 56denním okně oproti stejným datům v předchozích letech.",
-        "source": "NO2 z Copernicus Sentinel-5P TROPOMI přes CDSE Sentinel Hub Statistical API, denně agregované podle regionu službou seed-no2-activity. Obsahuje upravená data Copernicus Sentinel.",
+        "purpose": "Obarvuje země a průmyslové klastry podle směru troposférického NO2 ze NASA OMI/Aura, stopy spalování, v posledním 56denním okně oproti stejným datům v předchozích letech.",
+        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
         "freshness": "Načítá se každých 24 hodin; okno končí 3 dny před během, aby stihly dorazit opožděné granule, s 72hodinovým rozpočtem aktuálnosti.",
         "confidence": "Region dostane hodnotu jen s nejméně 14 platnými dny a 2 základními roky; oblačnost je hlavní šum, takže tenké okno hodnotu odmítne místo hádání.",
         "limitations": {

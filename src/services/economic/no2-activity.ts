@@ -44,7 +44,7 @@ export interface No2CountryReading {
 export interface No2ActivitySnapshot {
   generatedAt: string;
   stale: boolean;
-  /** The Copernicus credit the route requires every consumer to show. */
+  /** The NASA dataset credit displayed alongside readings. */
   attribution: string;
   regions: No2ActivityRegionView[];
 }

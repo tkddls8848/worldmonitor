@@ -18,8 +18,8 @@ function region(overrides: Partial<No2ActivityRegion> = {}): No2ActivityRegion {
 
 function wire(regions: No2ActivityRegion[], overrides: Partial<GetNo2ActivityResponse> = {}): GetNo2ActivityResponse {
   return {
-    regions, generatedAt: '2026-10-26T06:10:00.000Z', stale: false, methodVersion: 'no2-activity/v1',
-    attribution: 'Contains modified Copernicus Sentinel data 2023-2026',
+    regions, generatedAt: '2026-10-26T06:10:00.000Z', stale: false, methodVersion: 'no2-activity/v2',
+    attribution: 'NASA OMI/Aura OMNO2d (GES DISC) 2023-2026',
     unavailableReason: 'NO2_ACTIVITY_UNAVAILABLE_REASON_UNSPECIFIED', upstreamUnavailable: false, ...overrides,
   };
 }
@@ -64,7 +64,7 @@ describe('country brief NO2 activity line', () => {
     expect(line?.dataset.no2State).toBe('strengthening');
     expect(line?.textContent).toBe('Strengthening +12.4% vs the same window in 2025, 2024, 2023');
     expect(state.body.querySelector('.cdp-measure-note')?.textContent).toBe('2026-08-29 to 2026-10-23, 31 valid days');
-    expect(state.body.querySelector('.cdp-economic-source')?.textContent).toBe('Contains modified Copernicus Sentinel data 2023-2026');
+    expect(state.body.querySelector('.cdp-economic-source')?.textContent).toBe('NASA OMI/Aura OMNO2d (GES DISC) 2023-2026');
     expect(state.body.querySelector('.cdp-no2-stale')).toBeNull();
     expect(state.failures).toEqual([]);
   });
@@ -73,7 +73,7 @@ describe('country brief NO2 activity line', () => {
     const state = fixture(wire([region()], { stale: true }));
     await hydrate(state);
     expect(state.body.querySelector('.cdp-no2-stale')?.textContent).toBe('Stale: the dataset is older than its 72-hour refresh budget, so this reading may be out of date.');
-    expect(state.body.querySelector('.cdp-economic-source')?.textContent).toBe('Contains modified Copernicus Sentinel data 2023-2026');
+    expect(state.body.querySelector('.cdp-economic-source')?.textContent).toBe('NASA OMI/Aura OMNO2d (GES DISC) 2023-2026');
   });
 
   it('renders the pending baseline as its own state, with no change figure', async () => {

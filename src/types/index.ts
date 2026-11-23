@@ -705,7 +705,7 @@ export interface MapLayers {
   ais: boolean;
   nuclear: boolean;
   sanctions: boolean;
-  /** Sentinel-5P NO2 activity direction per country and industrial cluster. */
+  /** NASA OMI/Aura NO2 activity direction per country and industrial cluster. */
   no2Activity?: boolean;
   /** ICESat-2 water-surface level status of strategic reservoirs and lakes. */
   reservoirLevels?: boolean;

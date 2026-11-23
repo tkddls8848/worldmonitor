@@ -267,8 +267,8 @@ export const CHINA_ACTIVITY_PROXY_REGISTRY: readonly Readonly<ChinaActivityProxy
       },
     }),
     proxyDefinition({
-      id: 's5p_no2_industrial_activity_change',
-      label: 'Sentinel-5P tropospheric NO2 change',
+      id: 'omi_no2_industrial_activity_change',
+      label: 'NASA OMI/Aura tropospheric NO2 change',
       family: 'atmosphere',
       decisionRationale: 'Tropospheric NO2 over four industrial clusters is a satellite-observed combustion proxy that no domestic publisher controls, while the output keeps the cloud, holiday, and processor-version limits of a column retrieval visible.',
       unit: '% change',
@@ -290,10 +290,10 @@ export const CHINA_ACTIVITY_PROXY_REGISTRY: readonly Readonly<ChinaActivityProxy
       },
       freshnessBudgetMinutes: 7 * 24 * 60,
       source: {
-        publisherId: 'publisher:copernicus-sentinel-5p',
-        publisherName: 'Copernicus Sentinel-5P TROPOMI (Copernicus Data Space Ecosystem)',
-        url: 'https://dataspace.copernicus.eu/',
-        provenance: 'Consumed from the Railway-owned Sentinel Hub Statistical API aggregate (OFFL timeliness, qa_value >= 75, 0.05 degree grid) only when the payload carries the reviewed method verbatim. Contains modified Copernicus Sentinel data.',
+        publisherId: 'publisher:nasa-omi',
+        publisherName: 'NASA OMI/Aura OMNO2d (GES DISC)',
+        url: 'https://search.earthdata.nasa.gov/search/granules?p=C3333493715-GES_DISC',
+        provenance: 'Reads the reviewed regional aggregate from the daily 0.25 degree NASA OMNO2d v004 cloud-screened tropospheric NO2 grid.',
       },
     }),
   ]);

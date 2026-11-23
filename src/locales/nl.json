@@ -703,7 +703,7 @@
           "geoBoundaries": "Gedemilitariseerde zones, staakt-het-vuren-lijnen en betwiste grenzen",
           "ciiChoropleth": "Country Instability Index heatmap — landen ingekleurd naar score (groen=stabiel, rood=kritiek)",
           "notamAirspace": "Tijdelijke vliegbeperkingen en beperkt, gevaar- en verboden luchtruim van FAA NOTAMs, nu van kracht of binnen 24 uur van start",
-          "no2Activity": "Richting van de NO2-activiteit uit Sentinel-5P voor 167 landen en 32 industriële clusters: het laatste venster van 56 dagen tegenover dezelfde data in voorgaande jaren, na een dode band van 10%. Bevat gewijzigde Copernicus Sentinel-gegevens.",
+          "no2Activity": "Richting van de NO2-activiteit uit NASA OMI/Aura voor 167 landen en 32 industriële clusters: het laatste venster van 56 dagen tegenover dezelfde data in voorgaande jaren, na een dode band van 10%.",
           "reservoirLevels": "Waterniveau van strategische stuwmeren en meren volgens de satellietlidar ICESat-2 van NASA, vergeleken met het gebruikelijke niveau voor de maand. NASA publiceert elke overkomst ongeveer twee maanden na de meting."
         },
         "notes": {
@@ -4646,8 +4646,8 @@
       },
       "no2Activity": {
         "category": "Economie",
-        "purpose": "Kleurt landen en industriële clusters naar de richting van hun troposferische NO2 uit Sentinel-5P, een verbrandingsspoor, in het laatste venster van 56 dagen tegenover dezelfde data in voorgaande jaren.",
-        "source": "Copernicus Sentinel-5P TROPOMI NO2 via de CDSE Sentinel Hub Statistical API, dagelijks per regio samengevoegd door de dienst seed-no2-activity. Bevat gewijzigde Copernicus Sentinel-gegevens.",
+        "purpose": "Kleurt landen en industriële clusters naar de richting van hun troposferische NO2 uit NASA OMI/Aura, een verbrandingsspoor, in het laatste venster van 56 dagen tegenover dezelfde data in voorgaande jaren.",
+        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
         "freshness": "Elke 24 uur gevoed; het venster eindigt 3 dagen voor de run zodat late granules kunnen binnenkomen, met een versheidsbudget van 72 uur.",
         "confidence": "Een regio krijgt alleen een uitlezing met minstens 14 geldige dagen en 2 basisjaren; bewolking is de dominante ruis, dus een mager venster weigert een uitlezing in plaats van te gokken.",
         "limitations": {

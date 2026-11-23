@@ -25,7 +25,7 @@ import {
   no2ActivityTooltip,
 } from '../src/components/map/no2-activity-style.ts';
 
-const ATTRIBUTION = 'Contains modified Copernicus Sentinel data 2023-2026';
+const ATTRIBUTION = 'NASA OMI/Aura OMNO2d (GES DISC) 2023-2026';
 
 function region(overrides: Partial<No2ActivityRegion> = {}): No2ActivityRegion {
   return {
@@ -55,7 +55,7 @@ function wire(overrides: Partial<GetNo2ActivityResponse> = {}): GetNo2ActivityRe
     ],
     generatedAt: '2026-10-26T06:10:00.000Z',
     stale: false,
-    methodVersion: 'no2-activity/v1',
+    methodVersion: 'no2-activity/v2',
     attribution: ATTRIBUTION,
     unavailableReason: 'NO2_ACTIVITY_UNAVAILABLE_REASON_UNSPECIFIED',
     upstreamUnavailable: false,
@@ -159,7 +159,7 @@ describe('no2-activity-style', () => {
     assert.match(germany, /2026-08-29/);
     assert.match(germany, /2026-10-23/);
     assert.match(germany, /31 valid days/);
-    assert.match(germany, /Contains modified Copernicus Sentinel data 2023-2026/);
+    assert.match(germany, /NASA OMI\/Aura OMNO2d \(GES DISC\) 2023-2026/);
     const pending = no2ActivityTooltip(snapshot.regions[2]!, ATTRIBUTION, text);
     assert.match(pending, /Baseline backfill pending/);
     assert.doesNotMatch(pending, /%/);

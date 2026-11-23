@@ -78,13 +78,13 @@ export function no2ActivityDataset({
     generatedAt,
     method: JSON.parse(JSON.stringify(method)),
     source: {
-      publisherId: 'publisher:copernicus-sentinel-5p',
-      dataset: 'sentinel-5p-l2',
-      band: 'NO2',
+      publisherId: 'publisher:nasa-omi',
+      dataset: 'OMNO2d.004',
+      band: 'ColumnAmountNO2TropCloudScreened',
       unit: 'mol/m2',
-      attribution: 'Contains modified Copernicus Sentinel data 2023-2026',
+      attribution: 'NASA OMI/Aura OMNO2d (GES DISC) 2023-2026',
       requestCount: 289,
-      processingUnitsSpent: 148.2,
+      bytesDownloaded: 41_472_080,
     },
     regions,
   };

@@ -1,4 +1,4 @@
-// GET /api/economic/v1/get-no2-activity reads the global Sentinel-5P NO2
+// GET /api/economic/v1/get-no2-activity reads the global NASA OMI/Aura NO2
 // dataset at the Redis boundary through the shared contract validator and
 // serves it filtered by country, region id and kind. The handler is driven
 // through a fake Upstash REST endpoint so the envelope unwrap, the validator
@@ -73,8 +73,8 @@ describe('getNo2Activity', () => {
     assert.equal(response.upstreamUnavailable, false);
     assert.equal(response.stale, false);
     assert.equal(response.generatedAt, dataset.generatedAt);
-    assert.equal(response.attribution, 'Contains modified Copernicus Sentinel data 2023-2026');
-    assert.equal(response.methodVersion, 'no2-activity/v1');
+    assert.equal(response.attribution, 'NASA OMI/Aura OMNO2d (GES DISC) 2023-2026');
+    assert.equal(response.methodVersion, 'no2-activity/v2');
     assert.equal(response.regions.length, NO2_REGIONS.length);
     assert.deepEqual(response.regions.map((region) => region.id), NO2_REGIONS.map((region) => region.id));
 
@@ -144,7 +144,7 @@ describe('getNo2Activity', () => {
     assert.equal(expected.length, 5);
     assert.deepEqual(response.regions.map((region) => region.id), expected);
     assert.equal(response.unavailableReason, NO2_ACTIVITY_REASON.served);
-    assert.equal(response.attribution, 'Contains modified Copernicus Sentinel data 2023-2026');
+    assert.equal(response.attribution, 'NASA OMI/Aura OMNO2d (GES DISC) 2023-2026');
   });
 
   it('combines country and kind filters with AND', async () => {

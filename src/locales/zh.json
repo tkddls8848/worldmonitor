@@ -1411,7 +1411,7 @@
           "geoBoundaries": "非军事区、停火线和争议边界",
           "ciiChoropleth": "国家不稳定指数热力图 — 按评分为各国着色（绿色=稳定，红色=严重）",
           "notamAirspace": "FAA NOTAM 中的临时飞行限制和受限、危险及禁飞空域，当前生效或将在 24 小时内生效",
-          "no2Activity": "Sentinel-5P NO2 活动方向，覆盖 167 个国家和 32 个工业集群：最新 56 天窗口与往年同期日期对比，经 10% 死区处理。包含经修改的 Copernicus Sentinel 数据。",
+          "no2Activity": "NASA OMI/Aura NO2 活动方向，覆盖 167 个国家和 32 个工业集群：最新 56 天窗口与往年同期日期对比，经 10% 死区处理。",
           "reservoirLevels": "来自 NASA ICESat-2 卫星激光雷达的战略水库和湖泊水面水位，与该月的常年水位对比。NASA 在每次过境测量后约两个月发布数据。"
         },
         "notes": {
@@ -4624,8 +4624,8 @@
       },
       "no2Activity": {
         "category": "经济",
-        "purpose": "按 Sentinel-5P 对流层 NO2（一种燃烧痕迹）的方向为国家和工业集群着色：最新 56 天窗口与往年同期日期对比。",
-        "source": "通过 CDSE Sentinel Hub Statistical API 获取的 Copernicus Sentinel-5P TROPOMI NO2，由 seed-no2-activity 服务按区域每日聚合。包含经修改的 Copernicus Sentinel 数据。",
+        "purpose": "按 NASA OMI/Aura 对流层 NO2（一种燃烧痕迹）的方向为国家和工业集群着色：最新 56 天窗口与往年同期日期对比。",
+        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
         "freshness": "每 24 小时播种一次；窗口在运行前 3 天结束，以便迟到的颗粒数据到达，新鲜度预算为 72 小时。",
         "confidence": "仅当至少有 14 个有效日和 2 个基线年时区域才会给出读数；云量是主要噪声，因此数据稀薄的窗口会拒绝读数而非猜测。",
         "limitations": {
