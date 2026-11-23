@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 import { pathToFileURL } from 'node:url';
 import { XMLParser } from 'fast-xml-parser';
-import { BOOTSTRAP_CACHE_KEYS } from '../shared/bootstrap-tier-keys.js';
 import { compareAuctionDemand } from '../shared/treasury-auction-demand.mjs';
 import { getRedisCredentials, loadEnvFile, redisCommand, runSeed } from './_seed-utils.mjs';
 
 const FISCAL_API = 'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/';
 const ANNOUNCED = 'https://www.treasurydirect.gov/TA_WS/securities/upcoming?format=json';
 const TENTATIVE = 'https://home.treasury.gov/system/files/221/Tentative-Auction-Schedule.xml';
+const CACHE_KEY = 'markets:treasury-auctions:v1';
 const ACTIVATION_KEY = 'seed-activated:markets:treasury-auctions';
 const DAY_MS = 86_400_000;
 const ET = 'America/New_York';
@@ -228,7 +228,7 @@ export async function fetchTreasuryAuctions({ fetchImpl = fetch, nowMs = Date.no
 
 if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
   loadEnvFile(import.meta.url);
-  await runSeed('markets', 'treasury-auctions', BOOTSTRAP_CACHE_KEYS.treasuryAuctions, fetchTreasuryAuctions, {
+  await runSeed('markets', 'treasury-auctions', CACHE_KEY, fetchTreasuryAuctions, {
     ttlSeconds: 86_400,
     maxStaleMin: 180,
     sourceVersion: 'treasury-auctions-v1',
