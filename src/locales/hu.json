@@ -4730,7 +4730,7 @@
       "no2Activity": {
         "category": "Gazdaság",
         "purpose": "Az országokat és ipari klasztereket a NASA OMI/Aura troposzferikus NO2-jének, egy égési nyomnak az iránya szerint színezi a legutóbbi 56 napos ablakban az előző évek azonos dátumaihoz képest.",
-        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
+        "source": "Napi troposzférikus NO2-rács a NASA OMI/Aura OMNO2d (GES DISC) adataiból.",
         "freshness": "24 óránként frissül; az ablak 3 nappal a futás előtt zárul, hogy a késői granulumok beérkezzenek, 72 órás frissességi kerettel.",
         "confidence": "Egy régió csak legalább 14 érvényes nappal és 2 bázisévvel kap értéket; a felhőzet a fő zaj, ezért a vékony ablak találgatás helyett elutasítja az értéket.",
         "limitations": {

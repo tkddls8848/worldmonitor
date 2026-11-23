@@ -4752,7 +4752,7 @@
       "no2Activity": {
         "category": "Economia",
         "purpose": "Colore países e polos industriais pela direção do seu NO2 troposférico do NASA OMI/Aura, um traço de combustão, na janela mais recente de 56 dias comparada com as mesmas datas de anos anteriores.",
-        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
+        "source": "Grade diária de NO2 troposférico da NASA OMI/Aura OMNO2d (GES DISC).",
         "freshness": "Alimentado a cada 24 horas; a janela termina 3 dias antes da execução para que grânulos tardios cheguem, com um orçamento de atualidade de 72 horas.",
         "confidence": "Uma região só obtém leitura com pelo menos 14 dias válidos e 2 anos de referência; a nebulosidade é o ruído dominante, então uma janela escassa recusa a leitura em vez de adivinhar.",
         "limitations": {

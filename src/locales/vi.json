@@ -4708,7 +4708,7 @@
       "no2Activity": {
         "category": "Kinh tế",
         "purpose": "Tô màu các quốc gia và cụm công nghiệp theo hướng NO2 tầng đối lưu từ NASA OMI/Aura, một dấu vết của đốt cháy, trong cửa sổ 56 ngày gần nhất so với cùng các ngày trong những năm trước.",
-        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
+        "source": "Lưới NO2 tầng đối lưu hằng ngày từ NASA OMI/Aura OMNO2d (GES DISC).",
         "freshness": "Nạp mỗi 24 giờ; cửa sổ kết thúc 3 ngày trước lần chạy để dữ liệu đến muộn kịp cập nhật, với ngân sách độ mới 72 giờ.",
         "confidence": "Một vùng chỉ có kết quả khi có ít nhất 14 ngày hợp lệ và 2 năm cơ sở; mây là nhiễu chủ đạo, nên cửa sổ thiếu dữ liệu sẽ từ chối kết quả thay vì đoán.",
         "limitations": {

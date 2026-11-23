@@ -4730,7 +4730,7 @@
       "no2Activity": {
         "category": "Ekonomi",
         "purpose": "Ülkeleri ve sanayi kümelerini, bir yanma izi olan NASA OMI/Aura troposferik NO2'nin yönüne göre, son 56 günlük pencereyi önceki yılların aynı tarihleriyle karşılaştırarak renklendirir.",
-        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
+        "source": "NASA OMI/Aura OMNO2d (GES DISC) kaynaklı günlük troposferik NO2 ızgarası.",
         "freshness": "Her 24 saatte bir beslenir; geç gelen granüllerin yetişmesi için pencere çalıştırmadan 3 gün önce biter, 72 saatlik tazelik bütçesiyle.",
         "confidence": "Bir bölge yalnızca en az 14 geçerli gün ve 2 temel yıl ile değer alır; bulutluluk baskın gürültüdür, bu yüzden zayıf bir pencere tahmin etmek yerine değer vermeyi reddeder.",
         "limitations": {

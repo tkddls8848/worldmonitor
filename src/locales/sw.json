@@ -4730,7 +4730,7 @@
       "no2Activity": {
         "category": "Uchumi",
         "purpose": "Hupaka rangi nchi na makundi ya viwanda kulingana na mwelekeo wa NO2 ya troposphere kutoka NASA OMI/Aura, alama ya mwako, katika dirisha la hivi karibuni la siku 56 ikilinganishwa na tarehe zile zile za miaka iliyopita.",
-        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
+        "source": "Gridi ya kila siku ya NO2 katika troposfia kutoka NASA OMI/Aura OMNO2d (GES DISC).",
         "freshness": "Hupakiwa kila saa 24; dirisha huisha siku 3 kabla ya uendeshaji ili data iliyochelewa ifike, na bajeti ya usasa ya saa 72.",
         "confidence": "Eneo hupata usomaji tu likiwa na angalau siku 14 halali na miaka 2 ya msingi; mawingu ndiyo kelele kuu, hivyo dirisha dhaifu hukataa usomaji badala ya kubahatisha.",
         "limitations": {

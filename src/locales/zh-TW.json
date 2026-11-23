@@ -4708,7 +4708,7 @@
       "no2Activity": {
         "category": "經濟",
         "purpose": "按 NASA OMI/Aura 對流層 NO2（一種燃燒痕跡）的方向為國家和工業叢集著色：最新 56 天視窗與往年同期日期對比。",
-        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
+        "source": "NASA OMI/Aura OMNO2d (GES DISC) 提供的每日對流層 NO2 網格資料。",
         "freshness": "每 24 小時播種一次；視窗在執行前 3 天結束，以便遲到的顆粒資料到達，新鮮度預算為 72 小時。",
         "confidence": "僅當至少有 14 個有效日和 2 個基線年時區域才會給出讀數；雲量是主要噪聲，因此資料稀薄的視窗會拒絕讀數而非猜測。",
         "limitations": {

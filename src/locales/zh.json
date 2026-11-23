@@ -4708,7 +4708,7 @@
       "no2Activity": {
         "category": "经济",
         "purpose": "按 NASA OMI/Aura 对流层 NO2（一种燃烧痕迹）的方向为国家和工业集群着色：最新 56 天窗口与往年同期日期对比。",
-        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
+        "source": "NASA OMI/Aura OMNO2d (GES DISC) 提供的每日对流层 NO2 网格数据。",
         "freshness": "每 24 小时播种一次；窗口在运行前 3 天结束，以便迟到的颗粒数据到达，新鲜度预算为 72 小时。",
         "confidence": "仅当至少有 14 个有效日和 2 个基线年时区域才会给出读数；云量是主要噪声，因此数据稀薄的窗口会拒绝读数而非猜测。",
         "limitations": {

@@ -4752,7 +4752,7 @@
       "no2Activity": {
         "category": "Economie",
         "purpose": "Colorează țările și clusterele industriale după direcția NO2 troposferic din NASA OMI/Aura, o urmă de ardere, în cea mai recentă fereastră de 56 de zile față de aceleași date din anii anteriori.",
-        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
+        "source": "Grilă zilnică de NO2 troposferic de la NASA OMI/Aura OMNO2d (GES DISC).",
         "freshness": "Alimentat la fiecare 24 de ore; fereastra se încheie cu 3 zile înainte de rulare pentru a primi granulele întârziate, cu un buget de prospețime de 72 de ore.",
         "confidence": "O regiune primește o citire doar cu cel puțin 14 zile valide și 2 ani de referință; nebulozitatea este zgomotul dominant, așa că o fereastră săracă refuză citirea în loc să ghicească.",
         "limitations": {

@@ -2601,7 +2601,7 @@
   "layerExplanation.layers.no2Activity.purpose": "Colors countries and industrial clusters by the direction of their NASA OMI/Aura tropospheric NO2, a combustion trace, over the latest 56-day window against the same dates in prior years.",
   "layerExplanation.layers.no2Activity.related.0": "China activity nowcast",
   "layerExplanation.layers.no2Activity.related.1": "Country brief",
-  "layerExplanation.layers.no2Activity.source": "NASA OMI/Aura OMNO2d (GES DISC)",
+  "layerExplanation.layers.no2Activity.source": "Daily tropospheric NO2 grid from NASA OMI/Aura OMNO2d (GES DISC).",
   "layerExplanation.layers.reservoirLevels.category": "Climate",
   "layerExplanation.layers.reservoirLevels.confidence": "A pass counts only when at least 5 water segments agree within 0.25 m. A seasonal reading needs passes from at least 3 earlier years at the same time of year.",
   "layerExplanation.layers.reservoirLevels.freshness": "Seeded daily. NASA publishes each pass 50 to 70 days after it is measured, and a reservoir is revisited every few days to about a month.",

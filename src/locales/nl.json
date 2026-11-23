@@ -4730,7 +4730,7 @@
       "no2Activity": {
         "category": "Economie",
         "purpose": "Kleurt landen en industriële clusters naar de richting van hun troposferische NO2 uit NASA OMI/Aura, een verbrandingsspoor, in het laatste venster van 56 dagen tegenover dezelfde data in voorgaande jaren.",
-        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
+        "source": "Dagelijks raster van troposferisch NO2 uit NASA OMI/Aura OMNO2d (GES DISC).",
         "freshness": "Elke 24 uur gevoed; het venster eindigt 3 dagen voor de run zodat late granules kunnen binnenkomen, met een versheidsbudget van 72 uur.",
         "confidence": "Een regio krijgt alleen een uitlezing met minstens 14 geldige dagen en 2 basisjaren; bewolking is de dominante ruis, dus een mager venster weigert een uitlezing in plaats van te gokken.",
         "limitations": {

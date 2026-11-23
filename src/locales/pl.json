@@ -4774,7 +4774,7 @@
       "no2Activity": {
         "category": "Gospodarka",
         "purpose": "Koloruje kraje i klastry przemysłowe według kierunku troposferycznego NO2 z NASA OMI/Aura, śladu spalania, w ostatnim 56-dniowym oknie względem tych samych dat w poprzednich latach.",
-        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
+        "source": "Dobowa siatka troposferycznego NO2 z NASA OMI/Aura OMNO2d (GES DISC).",
         "freshness": "Zasilane co 24 godziny; okno kończy się 3 dni przed uruchomieniem, aby dotarły spóźnione granule, z 72-godzinnym budżetem świeżości.",
         "confidence": "Region otrzymuje odczyt tylko przy co najmniej 14 ważnych dniach i 2 latach bazowych; zachmurzenie to główny szum, więc ubogie okno odmawia odczytu zamiast zgadywać.",
         "limitations": {

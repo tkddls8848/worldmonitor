@@ -4730,7 +4730,7 @@
       "no2Activity": {
         "category": "Wirtschaft",
         "purpose": "Färbt Länder und Industriecluster nach der Richtung ihres troposphärischen NO2 aus NASA OMI/Aura, einer Verbrennungsspur, im jüngsten 56-Tage-Fenster gegenüber denselben Daten der Vorjahre.",
-        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
+        "source": "Tägliches Raster für troposphärisches NO2 aus NASA OMI/Aura OMNO2d (GES DISC).",
         "freshness": "Alle 24 Stunden eingespeist; das Fenster endet 3 Tage vor dem Lauf, damit späte Granulate eintreffen, mit einem Aktualitätsbudget von 72 Stunden.",
         "confidence": "Eine Region erhält nur mit mindestens 14 gültigen Tagen und 2 Basisjahren einen Wert; Bewölkung ist das dominierende Rauschen, daher verweigert ein dünnes Fenster den Wert statt zu raten.",
         "limitations": {

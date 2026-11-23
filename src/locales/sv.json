@@ -4730,7 +4730,7 @@
       "no2Activity": {
         "category": "Ekonomi",
         "purpose": "Färgar länder och industrikluster efter riktningen på deras troposfäriska NO2 från NASA OMI/Aura, ett förbränningsspår, i det senaste 56-dagarsfönstret mot samma datum tidigare år.",
-        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
+        "source": "Dagligt rutnät för troposfäriskt NO2 från NASA OMI/Aura OMNO2d (GES DISC).",
         "freshness": "Matas var 24:e timme; fönstret slutar 3 dagar före körningen så att sena granuler hinner fram, med en färskhetsbudget på 72 timmar.",
         "confidence": "En region får ett värde bara med minst 14 giltiga dagar och 2 basår; molnighet är det dominerande bruset, så ett tunt fönster avstår från värde i stället för att gissa.",
         "limitations": {

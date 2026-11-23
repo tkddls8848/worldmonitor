@@ -4774,7 +4774,7 @@
       "no2Activity": {
         "category": "Ekonomika",
         "purpose": "Obarvuje země a průmyslové klastry podle směru troposférického NO2 ze NASA OMI/Aura, stopy spalování, v posledním 56denním okně oproti stejným datům v předchozích letech.",
-        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
+        "source": "Denní mřížka troposférického NO2 z NASA OMI/Aura OMNO2d (GES DISC).",
         "freshness": "Načítá se každých 24 hodin; okno končí 3 dny před během, aby stihly dorazit opožděné granule, s 72hodinovým rozpočtem aktuálnosti.",
         "confidence": "Region dostane hodnotu jen s nejméně 14 platnými dny a 2 základními roky; oblačnost je hlavní šum, takže tenké okno hodnotu odmítne místo hádání.",
         "limitations": {

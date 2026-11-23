@@ -4762,7 +4762,7 @@
       "no2Activity": {
         "category": "Gospodarstvo",
         "purpose": "Boji zemlje i industrijske klastere prema smjeru troposferskog NO2 iz NASA OMI/Aura, traga izgaranja, u najnovijem 56-dnevnom prozoru u odnosu na iste datume prethodnih godina.",
-        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
+        "source": "Dnevna mreža troposferskog NO2 iz proizvoda NASA OMI/Aura OMNO2d (GES DISC).",
         "freshness": "Puni se svaka 24 sata; prozor završava 3 dana prije izvođenja kako bi stigle zakašnjele granule, uz proračun svježine od 72 sata.",
         "confidence": "Regija dobiva očitanje samo s najmanje 14 valjanih dana i 2 bazne godine; naoblaka je dominantan šum, pa tanak prozor odbija očitanje umjesto nagađanja.",
         "limitations": {

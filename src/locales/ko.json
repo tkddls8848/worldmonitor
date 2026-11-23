@@ -4718,7 +4718,7 @@
       "no2Activity": {
         "category": "경제",
         "purpose": "연소 흔적인 NASA OMI/Aura 대류권 NO2의 방향에 따라 국가와 산업 클러스터를 색칠합니다. 최근 56일 창을 이전 연도의 같은 날짜와 비교합니다.",
-        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
+        "source": "NASA OMI/Aura OMNO2d (GES DISC)의 일별 대류권 NO2 격자 데이터.",
         "freshness": "24시간마다 갱신되며, 늦게 도착하는 데이터를 위해 창은 실행 3일 전에 끝나고 신선도 예산은 72시간입니다.",
         "confidence": "유효일 14일 이상과 기준 연도 2년이 있어야만 값을 냅니다. 구름이 주요 노이즈이므로 데이터가 부족한 창은 추측하지 않고 값을 거부합니다.",
         "limitations": {

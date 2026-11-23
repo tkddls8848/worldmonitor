@@ -4752,7 +4752,7 @@
       "no2Activity": {
         "category": "Economía",
         "purpose": "Colorea países y clústeres industriales según la dirección de su NO2 troposférico de NASA OMI/Aura, una traza de combustión, en la última ventana de 56 días frente a las mismas fechas de años anteriores.",
-        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
+        "source": "Cuadrícula diaria de NO2 troposférico de NASA OMI/Aura OMNO2d (GES DISC).",
         "freshness": "Se alimenta cada 24 horas; la ventana termina 3 días antes de la ejecución para que lleguen los gránulos tardíos, con un presupuesto de frescura de 72 horas.",
         "confidence": "Una región solo obtiene lectura con al menos 14 días válidos y 2 años de referencia; la nubosidad es el ruido dominante, así que una ventana escasa rechaza la lectura en lugar de adivinar.",
         "limitations": {

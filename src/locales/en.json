@@ -5214,7 +5214,7 @@
       "no2Activity": {
         "category": "Economy",
         "purpose": "Colors countries and industrial clusters by the direction of their NASA OMI/Aura tropospheric NO2, a combustion trace, over the latest 56-day window against the same dates in prior years.",
-        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
+        "source": "Daily tropospheric NO2 grid from NASA OMI/Aura OMNO2d (GES DISC).",
         "freshness": "Seeded every 24 hours; the window ends 3 days before the run so late granules can land, with a 72-hour freshness budget.",
         "confidence": "A region reads only with at least 14 valid days and 2 baseline years; cloud cover is the dominant noise, so a thin window refuses a reading rather than guessing.",
         "limitations": {

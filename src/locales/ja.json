@@ -4708,7 +4708,7 @@
       "no2Activity": {
         "category": "経済",
         "purpose": "燃焼の痕跡である NASA OMI/Aura の対流圏 NO2 の方向に基づき、直近 56 日間のウィンドウを過去数年の同じ日付と比較して、国と工業クラスターを色分けします。",
-        "source": "NASA OMI/Aura OMNO2d (GES DISC)",
+        "source": "NASA OMI/Aura OMNO2d (GES DISC) による対流圏 NO2 の日次格子データ。",
         "freshness": "24 時間ごとに更新。遅れて届くグラニュールのためにウィンドウは実行の 3 日前で終了し、鮮度予算は 72 時間です。",
         "confidence": "有効日が 14 日以上かつ基準年が 2 年以上ある場合のみ値を出します。雲が主なノイズのため、データの薄いウィンドウは推測せず値を出しません。",
         "limitations": {
