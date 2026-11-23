@@ -12,15 +12,29 @@ vi.mock('@/services/kr-ecos', () => ({ loadKrEcosMacro: mocks.ecos }));
 vi.mock('@/services/kr-customs-trade', () => ({ loadKrCustomsTrade: mocks.trade }));
 vi.mock('@/services/kr-dart', () => ({ loadKrDartDisclosures: mocks.dart }));
 vi.mock('@/services/country-geometry', () => ({ preloadCountryGeometry: vi.fn(() => new Promise(() => { /* geometry never needed here */ })) }));
-import { mountWorldFirstScreen } from '../../src/app/world-first-screen';
+import { mountWorldFirstScreen, type WorldFirstScreenSlots } from '../../src/app/world-first-screen';
 
 const snapshot = { date: '2026-11-22', availableDates: ['2026-11-21', '2026-11-22'], countries: {}, relations: [], anchors: {}, blocs: [], ai: { status: 'ok' }, generatedAt: 1 } as never;
 function setup() {
-  const root = document.createElement('div'); const slots = Object.fromEntries(['masthead', 'telemetry', 'dispatch', 'stage', 'shelf'].map((key) => { const node = document.createElement('div'); node.dataset.slot = key; root.append(node); return [key, node]; })) as Record<string, HTMLElement>;
+  const root = document.createElement('div');
+  const createSlot = (key: keyof Omit<WorldFirstScreenSlots, 'root'>) => {
+    const node = document.createElement('div');
+    node.dataset.slot = key;
+    root.append(node);
+    return node;
+  };
+  const slots: WorldFirstScreenSlots = {
+    root,
+    masthead: createSlot('masthead'),
+    telemetry: createSlot('telemetry'),
+    dispatch: createSlot('dispatch'),
+    stage: createSlot('stage'),
+    shelf: createSlot('shelf'),
+  };
   const map = { setWorldOverviewMode: vi.fn(), setWorldOverview: vi.fn(), onWorldLineClicked: vi.fn(), zoomBy: vi.fn(), resetWorldView: vi.fn(), setCenter: vi.fn() };
   document.body.append(root);
   const ctx = { map } as never;
-  return { root, slots: { root, ...slots }, map, ctx };
+  return { root, slots, map, ctx };
 }
 afterEach(() => { document.body.replaceChildren(); vi.clearAllMocks(); mocks.fields = ['military', 'geopolitics']; mocks.data = {}; mocks.stress.mockResolvedValue(null); mocks.outages.mockResolvedValue([]); mocks.ecos.mockResolvedValue(null); mocks.trade.mockResolvedValue(null); mocks.dart.mockResolvedValue([]); });
 beforeEach(() => { mocks.stress.mockResolvedValue(null); mocks.outages.mockResolvedValue([]); mocks.ecos.mockResolvedValue(null); mocks.trade.mockResolvedValue(null); mocks.dart.mockResolvedValue([]); });
@@ -39,9 +53,14 @@ describe('mountWorldFirstScreen', () => {
   });
   it('keeps the existing view on errors and shows an error banner', async () => {
     mocks.load.mockResolvedValueOnce({ snapshot, archivedDates: [] }).mockRejectedValueOnce(new Error('offline')); const { slots, map, ctx } = setup();
-    const mounted = mountWorldFirstScreen(ctx, slots, { openFullView() {}, openCountryBrief() {} }); await vi.waitFor(() => expect(map.setWorldOverview).toHaveBeenCalled()); const previous = map.setWorldOverview.mock.calls.at(-1)?.[0];
+    const mounted = mountWorldFirstScreen(ctx, slots, { openFullView() {}, openCountryBrief() {} });
+    await vi.waitFor(() => expect(map.setWorldOverview).toHaveBeenCalled());
+    const calls = map.setWorldOverview.mock.calls;
+    const previous = calls[calls.length - 1]?.[0];
     slots.shelf.querySelector<HTMLButtonElement>('[data-date-step="-1"]')!.click();
-    await vi.waitFor(() => expect(slots.stage.querySelector('.wfs-status-banner')?.getAttribute('data-state')).toBe('error')); expect(map.setWorldOverview.mock.calls.at(-1)?.[0]).toBe(previous); mounted.destroy();
+    await vi.waitFor(() => expect(slots.stage.querySelector('.wfs-status-banner')?.getAttribute('data-state')).toBe('error'));
+    expect(calls[calls.length - 1]?.[0]).toBe(previous);
+    mounted.destroy();
   });
   it('persists field changes, opens country drawer, loads dates, and removes listeners', async () => {
     mocks.load.mockResolvedValue({ snapshot, archivedDates: [] }); const { slots, map, ctx } = setup(); const mounted = mountWorldFirstScreen(ctx, slots, { openFullView() {}, openCountryBrief() {} });

@@ -1,13 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { WorldCountryDrawer } from '../../src/components/world/WorldCountryDrawer';
-import type { CountryDrawerData } from '../../src/types/world-overview';
+import type { CountryDrawerData, DrawerRelation } from '../../src/types/world-overview';
+
+const relationData: DrawerRelation = { id: 'rel-1', counterpartIso2: 'JP', counterpartName: '일본', kind: 'tension', field: 'geopolitics', origin: 'ai', direction: 'out', label: '외교 긴장', trend: 'rising', sources: [{ url: 'https://example.com/relation', title: '관계 보도', publisher: '통신사' }] };
 
 function drawerData(overrides: Partial<CountryDrawerData> = {}): CountryDrawerData {
   return {
     iso2: 'KR', nameKo: '대한민국', nameEn: 'South Korea', level: 1, conflictLevel: 'tension', ciiScore: 42,
     updatedAt: Date.UTC(2026, 10, 22, 3, 0),
     issue: { summaryKo: '긴장이 이어지고 있습니다.', sources: [{ url: 'https://example.com/issue', title: '보도', publisher: '언론사' }] },
-    relations: [{ id: 'rel-1', counterpartIso2: 'JP', counterpartName: '일본', kind: 'tension', field: 'geopolitics', origin: 'ai', direction: 'out', label: '외교 긴장', trend: 'rising', sources: [{ url: 'https://example.com/relation', title: '관계 보도', publisher: '통신사' }] }],
+    relations: [relationData],
     blocs: [], isToday: true, aiStatus: 'ok', outages: [], ...overrides,
   };
 }
@@ -34,9 +36,9 @@ describe('WorldCountryDrawer', () => {
 
   it('renders sections in order and filters relation cards', () => {
     const data = drawerData({ relations: [
-      drawerData().relations[0],
-      { ...drawerData().relations[0], id: 'rel-2', counterpartIso2: 'CN', counterpartName: '중국', trend: 'easing' },
-      { ...drawerData().relations[0], id: 'rel-3', counterpartIso2: 'US', counterpartName: '미국', trend: 'steady' },
+      relationData,
+      { ...relationData, id: 'rel-2', counterpartIso2: 'CN', counterpartName: '중국', trend: 'easing' },
+      { ...relationData, id: 'rel-3', counterpartIso2: 'US', counterpartName: '미국', trend: 'steady' },
     ] });
     const drawer = new WorldCountryDrawer({ onClose: vi.fn(), onSelectCountry: vi.fn(), onMark: vi.fn().mockResolvedValue(undefined), onOpenFullPanels: vi.fn() });
     drawer.open(data);
@@ -59,11 +61,11 @@ describe('WorldCountryDrawer', () => {
     expect(onMark).toHaveBeenCalledWith({ itemKind: 'relation', itemKey: 'rel-1', action: 'mark' });
     drawer.open(drawerData({ isToday: false }));
     expect(drawer.element.querySelector('[data-mark-item]')).toBeNull();
-    drawer.open(drawerData({ relations: [{ ...drawerData().relations[0], mark: { state: 'hidden', markId: 'm1', markedAt: 1 } }] }));
+    drawer.open(drawerData({ relations: [{ ...relationData, mark: { state: 'hidden', markId: 'm1', markedAt: 1 } }] }));
     expect(drawer.element.textContent).toContain('틀림으로 표시함 · 취소');
     drawer.element.querySelector<HTMLButtonElement>('[data-unmark="m1"]')!.click();
     expect(onMark).toHaveBeenLastCalledWith({ action: 'unmark', markId: 'm1' });
-    drawer.open(drawerData({ relations: [{ ...drawerData().relations[0], mark: { state: 'reappeared', markId: 'm2', markedAt: 1 } }] }));
+    drawer.open(drawerData({ relations: [{ ...relationData, mark: { state: 'reappeared', markId: 'm2', markedAt: 1 } }] }));
     expect(drawer.element.textContent).toContain('다시 나타남, 이전에 틀림으로 표시함');
   });
 
