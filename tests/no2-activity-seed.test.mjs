@@ -199,7 +199,7 @@ function datasetAround(records) {
 const WIDTH = 1440;
 const HEIGHT = 720;
 const CELLS = WIDTH * HEIGHT;
-const FIELD = 'HDFEOS_GRIDS_ColumnAmountNO2_Data_Fields_ColumnAmountNO2TropCloudScreened';
+const FIELD = '/HDFEOS/GRIDS/ColumnAmountNO2/Data_Fields/ColumnAmountNO2TropCloudScreened';
 const dds = (dimensions = '[YDim = 720][XDim = 1440]') => `Dataset { Float32 ${FIELD}${dimensions}; } omno2d;`;
 const cell = (col, row) => row * WIDTH + col;
 

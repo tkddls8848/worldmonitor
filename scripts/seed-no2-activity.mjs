@@ -5,14 +5,11 @@
 // Series live in economic:no2-activity:series:v2:<id>; the dataset and its
 // activation marker publish atomically through runSeed.
 //
-// Authenticated live probe: confirm the Earthdata bearer token is accepted by
-// the CMR-advertised OPeNDAP service, and that .dds exposes the Float32
-// ColumnAmountNO2TropCloudScreened field (HDFEOS/GRIDS/ColumnAmountNO2/Data
-// Fields) and .dods returns only that field in DAP2/XDR. Check the matching
-// v004 granule metadata for 720 latitudes and 1440 longitudes, starting at
-// 89.875 S and 179.875 W and increasing, and confirm the fill value
-// (-1.2676506002282294e30), units (molecules/cm^2), scale 1 and offset 0.
-// Compare cells in both hemispheres to the same granule before live use.
+// The authenticated OPeNDAP DDS exposes the v004 Float32 field
+// /HDFEOS/GRIDS/ColumnAmountNO2/Data_Fields/ColumnAmountNO2TropCloudScreened.
+// Its DODS projection contains a 720 x 1440 DAP2/XDR array. The grid starts
+// at 89.875 S and 179.875 W, with both axes increasing. DAS reports a fill
+// value of -1.2676506e30, units of molecules/cm^2, scale 1 and offset 0.
 //
 // Dry run: node scripts/seed-no2-activity.mjs --dry-run [--regions=jing-jin-ji,country-de] [--backfill-days=4]
 // Daily collection requires EARTHDATA_TOKEN. Dry runs never publish or write series.
@@ -331,7 +328,7 @@ export function summarizeGrid(grid, mask) {
 }
 
 function no2DapField(dds) {
-  const fields = [...dds.matchAll(/\bFloat32\s+([\w%]+)\s*(\[[^\]]+\]\s*\[[^\]]+\])\s*;/g)]
+  const fields = [...dds.matchAll(/\bFloat32\s+([\w%/]+)\s*(\[[^\]]+\]\s*\[[^\]]+\])\s*;/g)]
     .filter(([, name]) => name.endsWith(NO2_ACTIVITY_SOURCE.band));
   if (fields.length !== 1) throw new Error('OMNO2d DDS does not expose a unique Float32 tropospheric NO2 array');
   const [declaration, name, dimensions] = fields[0];
