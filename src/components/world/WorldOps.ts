@@ -1,5 +1,6 @@
 import type { OpsCounters, OpsEvent, OpsMetrics, ThreatLevel } from '@/types/world-overview';
 import { THREAT_LEVEL_LABEL_KO } from '@/services/world-ops';
+import { getCurrentLanguage } from '@/services/i18n';
 import '@/styles/world-ops.css';
 
 function node<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, value?: string): HTMLElementTagNameMap[K] {
@@ -178,6 +179,10 @@ function eventTime(at: number): string {
   }).format(at);
 }
 
+export function federalRegisterPrePublicationLabel(): string {
+  return getCurrentLanguage() === 'ko' ? '사전 공개' : 'Pre-publication';
+}
+
 export class WorldEventLog {
   readonly element = node('section', 'wfs-ops-event-log ops-log-rail');
   private readonly list = node('ol', 'wfs-ops-event-list');
@@ -202,11 +207,21 @@ export class WorldEventLog {
       mark.dataset.kind = event.kind;
       mark.setAttribute('aria-label', event.severity);
       const timestamp = new Date(event.at).toISOString();
-      const publicationDay = event.kind === 'federal-register';
-      const time = node('time', 'wfs-ops-event-time', publicationDay ? timestamp.slice(5, 10) : eventTime(event.at));
-      time.dateTime = publicationDay ? timestamp.slice(0, 10) : timestamp;
+      const publicationDay = event.kind === 'federal-register'
+        ? event.scheduledPublicationDate ?? timestamp.slice(0, 10)
+        : undefined;
+      const time = node('time', 'wfs-ops-event-time', publicationDay ? publicationDay.slice(5) : eventTime(event.at));
+      time.dateTime = publicationDay ?? timestamp;
       const title = node('span', 'wfs-ops-event-title', event.title);
-      row.append(mark, time, title);
+      row.append(mark, time);
+      if (event.scheduledPublicationDate) {
+        const summary = node('span', 'wfs-ops-event-summary');
+        summary.append(node('span', 'wfs-ops-event-publication', federalRegisterPrePublicationLabel()), title);
+        summary.title = event.title;
+        row.append(summary);
+      } else {
+        row.append(title);
+      }
       if (event.iso2) {
         const country = node('button', 'wfs-ops-event-country', event.iso2);
         country.type = 'button';

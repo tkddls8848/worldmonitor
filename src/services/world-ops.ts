@@ -128,16 +128,17 @@ export function buildOpsEvents(
   // Publication dates have day precision. Reserve a few rows so today's
   // timestamped alerts and snapshot updates cannot push all of them out.
   const federalEvents: OpsEvent[] = (extras.federalRegister ?? [])
-    .filter((item) => item.type === 'Executive Order' || ['tariff', 'sanctions', 'export-control'].includes(item.topic))
+    .filter((item) => item.filedAt !== undefined || item.type === 'Executive Order' || ['tariff', 'sanctions', 'export-control'].includes(item.topic))
     .slice(0, 8)
     .map((item) => ({
       id: `federal-register:${item.id}`,
-      at: Date.parse(item.date),
+      at: item.filedAt ?? Date.parse(item.date),
       kind: 'federal-register',
       title: `미 연방관보 · ${federalRegisterLabel(item)} · ${item.title}`,
       iso2: item.countries[0],
       severity: 'medium',
       url: item.url,
+      ...(item.filedAt !== undefined ? { scheduledPublicationDate: item.date } : {}),
     }));
   const newestFirst = (a: OpsEvent, b: OpsEvent) => b.at - a.at || a.id.localeCompare(b.id);
   const seen = new Set<string>();

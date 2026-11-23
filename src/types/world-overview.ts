@@ -108,7 +108,10 @@ export type FederalRegisterTopic = 'tariff' | 'sanctions' | 'export-control' | '
 export interface FederalRegisterDocument {
   id: string;
   title: string;
+  /** Publication date, scheduled while the document is on public inspection. */
   date: string;
+  /** Public-inspection filing time in epoch milliseconds. Omitted after publication. */
+  filedAt?: number;
   type: string;
   topic: FederalRegisterTopic;
   countries: string[];
@@ -181,6 +184,7 @@ export interface OpsEvent {
   iso2?: string;
   severity: OpsEventSeverity;
   url?: string;
+  scheduledPublicationDate?: string;
 }
 
 export interface MapHotspot {

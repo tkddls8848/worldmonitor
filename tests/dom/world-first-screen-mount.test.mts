@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import i18next from 'i18next';
+import { initTestI18n } from './helpers/i18n.mts';
 
 const mocks = vi.hoisted(() => ({ load: vi.fn(), mark: vi.fn(), stress: vi.fn(), outages: vi.fn(), ecos: vi.fn(), trade: vi.fn(), dart: vi.fn(), federalRegister: vi.fn(), fields: ['military', 'geopolitics'] as string[], setFields: vi.fn(), data: {} as Record<string, unknown> }));
 vi.mock('@/services/world-overview', () => ({ loadWorldOverview: mocks.load, setWorldMark: mocks.mark }));
@@ -131,6 +133,7 @@ describe('mountWorldFirstScreen', () => {
       await vi.waitFor(() => expect(entry()?.textContent).toContain(doc.title));
       expect(slots.stage.querySelectorAll('li[data-kind="federal-register"]')).toHaveLength(1);
       expect(entry()?.querySelector('time')?.dateTime).toBe(doc.date);
+      expect(entry()?.querySelector('.wfs-ops-event-publication')).toBeNull();
       expect(entry()?.querySelector('a')?.href).toBe(doc.url);
       entry()?.querySelector('button')?.click();
       const card = slots.stage.querySelector('[data-section="federal-register"]');
@@ -144,6 +147,34 @@ describe('mountWorldFirstScreen', () => {
       expect(slots.stage.querySelector('[data-section="federal-register"]')).toBeNull();
     } finally {
       mounted.destroy();
+    }
+  });
+
+  it.each([['ko', '사전 공개'], ['en', 'Pre-publication']])('shows the %s inspection marker and scheduled date in both surfaces', async (language, label) => {
+    await initTestI18n();
+    await i18next.changeLanguage(language);
+    const doc = {
+      id: '2026-23939', date: '2026-11-24', filedAt: Date.parse('2026-11-23T13:45:00Z'),
+      title: 'Antidumping Duty Proceedings on Tires From China', type: 'Notice',
+      topic: 'tariff', countries: ['CN'], url: 'https://www.federalregister.gov/public-inspection/2026-23939/tires',
+    };
+    mocks.load.mockResolvedValue({ snapshot, archivedDates: [] });
+    mocks.federalRegister.mockResolvedValue([doc]);
+    const { slots, ctx } = setup();
+    const mounted = mountWorldFirstScreen(ctx, slots, { openFullView() {}, openCountryBrief() {} });
+    try {
+      const entry = () => slots.stage.querySelector<HTMLLIElement>('li[data-kind="federal-register"]');
+      await vi.waitFor(() => expect(entry()?.querySelector('.wfs-ops-event-publication')?.textContent).toBe(label));
+      expect(entry()?.querySelector('time')?.dateTime).toBe(doc.date);
+      expect(entry()?.querySelector('a')?.href).toBe(doc.url);
+      entry()?.querySelector('button')?.click();
+      const card = slots.stage.querySelector('[data-section="federal-register"]');
+      expect(card?.querySelector('strong')?.textContent).toBe(label);
+      expect(card?.querySelector('time')?.dateTime).toBe(doc.date);
+      expect(card?.querySelector('a')?.href).toBe(doc.url);
+    } finally {
+      mounted.destroy();
+      await i18next.changeLanguage('en');
     }
   });
 });

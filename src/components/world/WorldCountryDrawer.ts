@@ -1,6 +1,7 @@
 import '../../styles/world-country-drawer.css';
 import { AI_DISCLAIMER_KO, KIND_LABEL_KO, TREND_LABEL_KO } from '../../../shared/world-overview.js';
 import { federalRegisterLabel } from '@/services/federal-register';
+import { federalRegisterPrePublicationLabel } from './WorldOps';
 import type { CountryDrawerData, DrawerRelation, FederalRegisterDocument, SourceLink, WorldMarkRequest } from '../../types/world-overview';
 
 type RelationFilter = 'all' | 'worsening' | 'easing';
@@ -344,7 +345,9 @@ export class WorldCountryDrawer {
       const row = make('li');
       const date = make('time', 'wfs-country-drawer__source-time', doc.date);
       date.dateTime = doc.date;
-      row.append(date, make('span', 'wfs-country-drawer__source-time', federalRegisterLabel(doc)));
+      row.append(date);
+      if (doc.filedAt !== undefined) row.append(make('strong', 'wfs-country-drawer__source-time', federalRegisterPrePublicationLabel()));
+      row.append(make('span', 'wfs-country-drawer__source-time', federalRegisterLabel(doc)));
       const url = validSourceUrl(doc.url);
       if (url) {
         const link = make('a', 'wfs-country-drawer__source-link', doc.title);

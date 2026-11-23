@@ -1,0 +1,93 @@
+{
+  "current": {
+    "count": 4,
+    "results": [
+      {
+        "document_number": "2026-23999",
+        "title": "Additions to the Entity List  ",
+        "type": "Rule",
+        "publication_date": "2026-11-25",
+        "filing_type": "special",
+        "filed_at": "2026-11-23T16:15:00.000-05:00",
+        "html_url": "https://www.federalregister.gov/public-inspection/2026-23999/additions-to-the-entity-list",
+        "agencies": [
+          {
+            "slug": "industry-and-security-bureau"
+          }
+        ]
+      },
+      {
+        "document_number": "2026-23939",
+        "title": "Antidumping or Countervailing Duty Investigations, Orders, or Reviews: Certain Passenger Vehicle and Light Truck Tires from the People's Republic of China ",
+        "type": "Notice",
+        "publication_date": "2026-11-24",
+        "filing_type": "regular",
+        "filed_at": "2026-11-23T08:45:00.000-05:00",
+        "html_url": "https://www.federalregister.gov/public-inspection/2026-23939/antidumping-or-countervailing-duty-investigations-orders-or-reviews-certain-passenger-vehicle-and",
+        "agencies": [
+          {
+            "slug": "international-trade-administration"
+          }
+        ]
+      },
+      {
+        "document_number": "2026-23908",
+        "title": "Sanctions Action  ",
+        "type": "Notice",
+        "publication_date": "2026-11-24",
+        "filing_type": "regular",
+        "filed_at": "2026-11-23T08:45:00.000-05:00",
+        "html_url": "https://www.federalregister.gov/public-inspection/2026-23908/sanctions-action",
+        "agencies": [
+          {
+            "slug": "foreign-assets-control-office"
+          }
+        ]
+      },
+      {
+        "document_number": "2026-23858",
+        "title": "Meetings; Sunshine Act  ",
+        "type": "Notice",
+        "publication_date": "2026-11-24",
+        "filing_type": "special",
+        "filed_at": "2026-11-20T11:15:00.000-05:00",
+        "html_url": "https://www.federalregister.gov/public-inspection/2026-23858/meetings-sunshine-act",
+        "agencies": [
+          {
+            "slug": "securities-and-exchange-commission"
+          }
+        ]
+      }
+    ]
+  },
+  "presidential": [
+    {
+      "document_number": "2026-22051",
+      "title": "Housing Costs; Efforts To Decrease (EO 14438)  ",
+      "type": "Presidential Document",
+      "publication_date": "2026-10-28",
+      "filing_type": "special",
+      "filed_at": "2026-10-27T11:15:00.000-04:00",
+      "html_url": "https://www.federalregister.gov/public-inspection/2026-22051/housing-costs-efforts-to-decrease-eo-14438",
+      "agencies": [
+        {
+          "slug": "executive-office-of-the-president"
+        }
+      ]
+    },
+    {
+      "document_number": "2026-22385",
+      "title": "Robotics, Industrial Machinery, and Their Parts and Components, Imports Into U.S.; Adjustment (Proc. 11077)  ",
+      "type": "Presidential Document",
+      "publication_date": "2026-11-02",
+      "filing_type": "special",
+      "filed_at": "2026-10-30T11:15:00.000-04:00",
+      "html_url": "https://www.federalregister.gov/public-inspection/2026-22385/robotics-industrial-machinery-and-their-parts-and-components-imports-into-us-adjustment-proc-11077",
+      "agencies": [
+        {
+          "slug": "executive-office-of-the-president"
+        }
+      ]
+    }
+  ]
+}

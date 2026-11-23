@@ -3,6 +3,7 @@ import { countryMentionTerms, mentionsCountry } from '../shared/country-mention.
 import { getRedisCredentials, loadEnvFile, loadSharedConfig, redisCommand, runSeed } from './_seed-utils.mjs';
 
 const API = 'https://www.federalregister.gov/api/v1/documents.json';
+const INSPECTION_API = 'https://www.federalregister.gov/api/v1/public-inspection-documents/current.json';
 const KEY = 'policy:federal-register:v1';
 const ACTIVATION_KEY = 'seed-activated:policy:federal-register';
 const TTL_SECONDS = 6 * 60 * 60;
@@ -25,16 +26,16 @@ const PUBLICATION_DAY = new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Ne
 const DAY_MS = 86_400_000;
 
 const ROUTINE_NOTICE = /^(?:agency information collection(?: activities)?|information collection(?: activities)?|submission for omb review|sunshine act meetings?|privacy act of 1974|self-regulatory organizations?|combined notice of filings|notice of extension of (?:the )?deadline)\b/i;
-const TARIFF = /\b(?:tariffs?|adjusting imports|(?:anti[- ]?dumping|countervailing|import|additional) dut(?:y|ies)|section (?:201|232|301)|harmonized tariff schedule|tariff-rate quotas?)\b/i;
+const TARIFF = /\b(?:tariffs?|adjusting imports|imports into (?:the united states|u\.s\.)[;,]\s+adjustment|(?:anti[- ]?dumping|countervailing|import|additional) dut(?:y|ies)|section (?:201|232|301)|harmonized tariff schedule|tariff-rate quotas?)\b/i;
 const SANCTIONS = /\b(?:sanction(?:s|ing|ed)?|ofac|blocked persons|blocking (?:the )?property|specially designated nationals|foreign terrorist organization|iran nonproliferation)\b/i;
 const EXPORT_CONTROL = /\b(?:export controls?|export administration regulations|entity list|unverified list|military end users?|commerce control list|reexports?|export (?:license|licensing|restrictions?)|temporary denial order)\b/i;
 const FINANCIAL = /\b(?:monetary policy|interest on reserve balances|capital (?:requirements|adequacy)|stress tests?|financial stability|securities markets?|clearing (?:agencies|organizations)|swap dealers?|digital assets?|market structure|margin requirements|federal open market committee|discount rate|reserve requirements|bank supervision)\b/i;
 const DEFENSE = /\b(?:national defense|defense production act|arms export control|arms sales?|security assistance|foreign military sales?|international traffic in arms|defense cooperation)\b/i;
 const TRADE = /\b(?:trade agreements?|trade negotiations?|trade investigations?|import restrictions?|import quotas?|trade remedies|trade policy)\b/i;
 
-function classifyDocument(title, type, subtype, agencies) {
+function classifyDocument(title, type, subtype, agencies, prePublication) {
   const presidential = type === 'Presidential Document';
-  if (presidential ? !PRESIDENTIAL_SUBTYPES.has(subtype) : !AGENCY_DOCUMENT_TYPES.has(type) || ROUTINE_NOTICE.test(title)) return null;
+  if (presidential ? !prePublication && !PRESIDENTIAL_SUBTYPES.has(subtype) : !AGENCY_DOCUMENT_TYPES.has(type) || ROUTINE_NOTICE.test(title)) return null;
 
   const from = (group) => group.some((agency) => agencies.includes(agency));
   if ((presidential || from(SANCTIONS_AGENCIES)) && SANCTIONS.test(title)) return 'sanctions';
@@ -54,34 +55,61 @@ function matchCountries(title, abstract) {
   return [...new Set([...headline, ...summary])].sort((a, b) => Number(a === 'US') - Number(b === 'US'));
 }
 
-export function mapFederalRegisterDocuments(rows, from, through) {
+function inspectionSubtype(title) {
+  // Inspection headings carry order and proclamation numbers in lieu of subtype.
+  if (/\(EO \d+\)$/i.test(title)) return 'Executive Order';
+  if (/\(Proc\. \d+\)$/i.test(title)) return 'Proclamation';
+  if (/\bPresidential Determination\b/i.test(title)) return 'Determination';
+  if (/\bPresidential Memorandum\b/i.test(title)) return 'Memorandum';
+  return null;
+}
+
+export function mapFederalRegisterDocuments(rows, from, through, inspectionRows = [], nowMs = Date.now()) {
   const items = new Map();
-  for (const row of rows) {
+  // A published document can have a different title or topic. Look up its
+  // number before classification and before truncating the display window.
+  const published = new Set(rows.map((row) => row?.document_number));
+  for (const row of [...rows, ...inspectionRows]) {
     const id = row?.document_number;
     const title = typeof row?.title === 'string' ? row.title.trim() : '';
     const date = row?.publication_date;
     if (typeof id !== 'string' || !/^(?:[A-Z0-9]+-)*\d+$/.test(id) || !title || items.has(id)) continue;
-    if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date) || date < from || date > through) continue;
+    if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(Date.parse(date))) continue;
+    const prePublication = row.filing_type === 'regular' || row.filing_type === 'special';
+    const filedAt = prePublication ? Date.parse(row.filed_at) : null;
+    if (prePublication ? published.has(id) || date < through || !Number.isFinite(filedAt) || filedAt > nowMs : date < from || date > through) continue;
+    const prefix = prePublication ? `/public-inspection/${id}/` : `/documents/${date.replaceAll('-', '/')}/${id}/`;
     const url = typeof row.html_url === 'string' ? URL.parse(row.html_url) : null;
     if (url?.origin !== 'https://www.federalregister.gov' || url.username || url.password
-      || !url.pathname.startsWith(`/documents/${date.replaceAll('-', '/')}/${id}/`)) continue;
+      || !url.pathname.startsWith(prefix)) continue;
 
     const agencies = Array.isArray(row.agencies) ? row.agencies.map((agency) => agency?.slug) : [];
-    const topic = classifyDocument(title, row.type, row.subtype, agencies);
+    const subtype = row.subtype || (prePublication && row.type === 'Presidential Document' ? inspectionSubtype(title) : null);
+    const topic = classifyDocument(title, row.type, subtype, agencies, prePublication);
     if (!topic) continue;
     items.set(id, {
       id,
       title,
       date,
-      type: row.subtype || row.type,
+      type: subtype || row.type,
       topic,
       countries: matchCountries(title, typeof row.abstract === 'string' ? row.abstract : ''),
       url: url.href,
+      ...(filedAt !== null ? { filedAt } : {}),
     });
   }
   return [...items.values()]
-    .sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id))
+    .sort((a, b) => (b.filedAt ?? Date.parse(b.date)) - (a.filedAt ?? Date.parse(a.date)) || b.id.localeCompare(a.id))
     .slice(0, MAX_ITEMS);
+}
+
+async function fetchRegisterJson(fetchImpl, url) {
+  const response = await fetchImpl(url, {
+    headers: { Accept: 'application/json', 'User-Agent': 'WorldMonitor/1.0 (Federal Register collector)' },
+    signal: AbortSignal.timeout(30_000),
+  });
+  if (!response.ok) throw new Error(`Federal Register ${url.pathname} HTTP ${response.status}`);
+  return response.json();
 }
 
 async function fetchDocuments(fetchImpl, params) {
@@ -90,18 +118,19 @@ async function fetchDocuments(fetchImpl, params) {
     const url = new URL(API);
     url.search = params.toString();
     url.searchParams.set('page', String(page));
-    const response = await fetchImpl(url, {
-      headers: { Accept: 'application/json', 'User-Agent': 'WorldMonitor/1.0 (Federal Register collector)' },
-      signal: AbortSignal.timeout(30_000),
-    });
-    if (!response.ok) throw new Error(`Federal Register documents HTTP ${response.status}`);
-    const body = await response.json();
+    const body = await fetchRegisterJson(fetchImpl, url);
     if (page === 1 && body?.count === 0 && body.results === undefined) return rows;
     if (!Array.isArray(body?.results)) throw new Error('Federal Register response did not contain document results');
     rows.push(...body.results);
     if (!body.next_page_url) return rows;
   }
   throw new Error(`Federal Register document search exceeded ${MAX_PAGES} pages`);
+}
+
+async function fetchPublicInspection(fetchImpl) {
+  const body = await fetchRegisterJson(fetchImpl, new URL(INSPECTION_API));
+  if (!Array.isArray(body?.results)) throw new Error('Federal Register response did not contain public inspection results');
+  return body.results;
 }
 
 export async function fetchFederalRegister({ fetchImpl = fetch, nowMs = Date.now() } = {}) {
@@ -114,8 +143,12 @@ export async function fetchFederalRegister({ fetchImpl = fetch, nowMs = Date.now
   const regulatory = new URLSearchParams(common);
   for (const type of AGENCY_TYPES) regulatory.append('conditions[type][]', type);
   for (const agency of AGENCIES) regulatory.append('conditions[agencies][]', agency);
-  const groups = await Promise.all([fetchDocuments(fetchImpl, presidential), fetchDocuments(fetchImpl, regulatory)]);
-  return { asOf: nowMs, items: mapFederalRegisterDocuments(groups.flat(), from, through) };
+  const [orders, rules, inspection] = await Promise.all([
+    fetchDocuments(fetchImpl, presidential),
+    fetchDocuments(fetchImpl, regulatory),
+    fetchPublicInspection(fetchImpl),
+  ]);
+  return { asOf: nowMs, items: mapFederalRegisterDocuments([...orders, ...rules], from, through, inspection, nowMs) };
 }
 
 if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
@@ -124,7 +157,7 @@ if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) 
     ttlSeconds: TTL_SECONDS,
     validateFn: (value) => Number.isFinite(value?.asOf) && Array.isArray(value.items),
     recordCount: (value) => value.items.length,
-    sourceVersion: 'federal-register-v1-30d',
+    sourceVersion: 'federal-register-v1-30d-with-public-inspection',
     maxStaleMin: MAX_STALE_MIN,
     afterPublish: async () => {
       const { url, token } = getRedisCredentials();

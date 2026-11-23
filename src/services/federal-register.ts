@@ -21,7 +21,12 @@ function isDocument(value: unknown): value is FederalRegisterDocument {
     && typeof doc.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(doc.date) && Number.isFinite(Date.parse(doc.date))
     && typeof doc.type === 'string' && typeof doc.topic === 'string' && Object.prototype.hasOwnProperty.call(TOPIC_LABELS, doc.topic)
     && Array.isArray(doc.countries) && doc.countries.every((code) => typeof code === 'string' && /^[A-Z]{2}$/.test(code))
-    && typeof doc.url === 'string' && doc.url.startsWith('https://www.federalregister.gov/documents/');
+    && typeof doc.url === 'string'
+    && (doc.filedAt === undefined
+      ? doc.url.startsWith('https://www.federalregister.gov/documents/')
+      : Number.isFinite(doc.filedAt) && doc.filedAt >= 0 && doc.filedAt <= 8.64e15
+        && /^(?:[A-Z0-9]+-)*\d+$/.test(doc.id)
+        && doc.url.startsWith(`https://www.federalregister.gov/public-inspection/${doc.id}/`));
 }
 
 export async function loadFederalRegister(): Promise<FederalRegisterDocument[]> {
