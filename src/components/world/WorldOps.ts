@@ -179,6 +179,10 @@ function eventTime(at: number): string {
   }).format(at);
 }
 
+const AUCTION_DAY = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
+});
+
 export function federalRegisterPrePublicationLabel(): string {
   return getCurrentLanguage() === 'ko' ? '사전 공개' : 'Pre-publication';
 }
@@ -210,7 +214,8 @@ export class WorldEventLog {
       const publicationDay = event.kind === 'federal-register'
         ? event.scheduledPublicationDate ?? timestamp.slice(0, 10)
         : undefined;
-      const time = node('time', 'wfs-ops-event-time', publicationDay ? publicationDay.slice(5) : eventTime(event.at));
+      const displayDay = event.kind === 'treasury-auction' ? AUCTION_DAY.format(event.at) : publicationDay;
+      const time = node('time', 'wfs-ops-event-time', displayDay ? displayDay.slice(5) : eventTime(event.at));
       time.dateTime = publicationDay ?? timestamp;
       const title = node('span', 'wfs-ops-event-title', event.title);
       row.append(mark, time);

@@ -76,6 +76,10 @@ const TIER_CDN_CACHE = {
 // budget guarantees the shield outlives a complete seed cycle.
 // tests/bootstrap-on-demand-cache-budget.test.mts enforces the ceiling.
 const ON_DEMAND_CACHE_PROFILES = {
+  treasuryAuctions: {
+    browser: 'max-age=60, stale-while-revalidate=60, stale-if-error=300',
+    cdn: 'public, s-maxage=600, stale-while-revalidate=60, stale-if-error=300',
+  },
   gridDisruptionClock: {
     browser: 'max-age=60, stale-while-revalidate=60, stale-if-error=60',
     cdn: 'public, s-maxage=300, stale-while-revalidate=60, stale-if-error=120',

@@ -8,6 +8,8 @@ import { buildCountryDrawerData, buildWorldMapView } from '@/services/world-over
 import { buildSupplementalTickerItems, loadTickerItems } from '@/services/world-ticker';
 import { loadFundingStress } from '@/services/funding-stress';
 import type { FundingStress } from '@/services/funding-stress';
+import { loadTreasuryAuctions, type TreasuryAuctions } from '@/services/treasury-auctions';
+import { getCurrentLanguage } from '@/services/i18n';
 import { loadIodaOutages } from '@/services/internet-outages-ioda';
 import { loadFederalRegister } from '@/services/federal-register';
 import type { IodaOutage } from '@/services/internet-outages-ioda';
@@ -58,6 +60,7 @@ export function mountWorldFirstScreen(
   let loadGeneration = 0;
   let destroyed = false;
   let fundingStress: FundingStress | null = null;
+  let treasuryAuctions: TreasuryAuctions | null = null;
   let outages: IodaOutage[] = [];
   let federalRegister: FederalRegisterDocument[] = [];
   let gasFlows: EuGasFlows | null = null;
@@ -120,7 +123,9 @@ export function mountWorldFirstScreen(
       threat.setMetrics(metrics);
       counters.setCounters(metrics.counters);
     }
-    const events = buildOpsEvents(snapshot, breakingAlerts, now, { outages, disclosures: krDisclosures, federalRegister });
+    const events = buildOpsEvents(snapshot, breakingAlerts, now, {
+      outages, disclosures: krDisclosures, federalRegister, treasuryCoupons: treasuryAuctions?.coupons, language: getCurrentLanguage(),
+    });
     eventLog.setEvents(events);
     dispatch.setLogState(logOpen, events.length);
   }
@@ -265,14 +270,21 @@ export function mountWorldFirstScreen(
 
   const tickerRefresh = (): void => {
     if (destroyed) return;
-    void loadTickerItems().then((items) => { if (!destroyed) masthead.setTickerItems([...items, ...buildSupplementalTickerItems({ fundingStress, gasFlows, korea: { ktb10y: (() => { const indicator = krEcos?.indicators.find((entry) => entry.id === 'ktb10y'); return indicator ? { value: indicator.value, changeBp: indicator.changeKind === 'bp' ? indicator.change : null } : null; })(), trade: krTrade } })]); }).catch(() => { /* keep the last row */ });
+    void loadTickerItems().then((items) => {
+      if (destroyed) return;
+      const indicator = krEcos?.indicators.find((entry) => entry.id === 'ktb10y');
+      const ktb10y = indicator ? { value: indicator.value, changeBp: indicator.changeKind === 'bp' ? indicator.change : null } : null;
+      masthead.setTickerItems([...items, ...buildSupplementalTickerItems({
+        fundingStress, treasuryAuctions, gasFlows, korea: { ktb10y, trade: krTrade },
+      }, getCurrentLanguage())]);
+    }).catch(() => { /* keep the last row */ });
   };
   async function refreshExtras(): Promise<void> {
     if (destroyed || !worldShown || extrasLoading) return;
     extrasLoading = true;
-    const [stressResult, outageResult, gasResult, ecosResult, tradeResult, dartResult, registerResult] = await Promise.allSettled([
+    const [stressResult, outageResult, gasResult, ecosResult, tradeResult, dartResult, registerResult, auctionsResult] = await Promise.allSettled([
       loadFundingStress(), loadIodaOutages(), loadEuGasFlows(), loadKrEcosMacro(),
-      loadKrCustomsTrade(), loadKrDartDisclosures(), loadFederalRegister(),
+      loadKrCustomsTrade(), loadKrDartDisclosures(), loadFederalRegister(), loadTreasuryAuctions(),
     ]);
     if (!destroyed) {
       if (stressResult.status === 'fulfilled') fundingStress = stressResult.value;
@@ -282,6 +294,7 @@ export function mountWorldFirstScreen(
       if (tradeResult.status === 'fulfilled') krTrade = tradeResult.value;
       if (dartResult.status === 'fulfilled') krDisclosures = dartResult.value;
       if (registerResult.status === 'fulfilled') federalRegister = registerResult.value;
+      if (auctionsResult.status === 'fulfilled') treasuryAuctions = auctionsResult.value;
       extrasLoadedAt = Date.now();
       refreshOps();
       if (selectedIso2) updateDrawer();

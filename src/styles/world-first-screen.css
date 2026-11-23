@@ -234,6 +234,10 @@
 .wfs-ticker-item:hover {
   background: var(--surface-hover);
 }
+a.wfs-ticker-item {
+  color: inherit;
+  text-decoration: none;
+}
 .wfs-ticker-label {
   color: var(--text-secondary);
 }

@@ -16,6 +16,7 @@ export const BOOTSTRAP_CACHE_KEYS = Object.freeze({
   krCustomsTrade: 'kr:customs-trade:v1',
   krEcosMacro: 'kr:ecos-macro:v1',
   fundingStress: 'markets:funding-stress:v1',
+  treasuryAuctions: 'markets:treasury-auctions:v1',
   ukmtoIncidents: 'maritime:ukmto-incidents:v1',
   earthquakes: 'seismology:earthquakes:v1',
   outages: 'infra:outages:v1',
@@ -253,6 +254,7 @@ const ON_DEMAND_KEY_NAMES = new Set([
   'notamAirspace',
   'iodaOutages',
   'federalRegister',
+  'treasuryAuctions',
   // The video each catalog YouTube channel has live now (#8545), fetched by the
   // live video players at play intent and only for slots that list a channel.
   // The get-bootstrap-data RPC also serves any registered key by name, so the

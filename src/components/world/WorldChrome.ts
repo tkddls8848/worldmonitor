@@ -58,11 +58,20 @@ export class WorldMasthead {
       return;
     }
     for (const item of items) {
-      const button = el('button', 'wfs-ticker-item');
-      button.type = 'button';
-      button.setAttribute('aria-label', `${item.label}: ${item.value ?? '자료 없음'}`);
+      const control = item.url ? el('a', 'wfs-ticker-item') : el('button', 'wfs-ticker-item');
+      const display = item.displayValue ?? (item.value === null ? '—' : `${item.value.toFixed(item.digits)}${item.unit ?? ''}`);
+      control.dataset.ticker = item.id;
+      if (control instanceof HTMLAnchorElement && item.url) {
+        control.href = item.url;
+        control.target = '_blank';
+        control.rel = 'noopener noreferrer';
+      } else if (control instanceof HTMLButtonElement) {
+        control.type = 'button';
+        control.addEventListener('click', () => this.callbacks.onTickerClick(item.id));
+      }
+      control.setAttribute('aria-label', `${item.label}: ${display}`);
       const label = el('span', 'wfs-ticker-label', item.label),
-        value = el('strong', 'num', item.value === null ? '—' : `${item.value.toFixed(item.digits)}${item.unit ?? ''}`);
+        value = el('strong', 'num', display);
       if (item.changePct !== null) {
         const adverse = item.inverse ? -item.changePct : item.changePct;
         const suffix = item.changeKind === 'bp' ? ' bp' : item.changeKind === 'abs' ? '' : '%';
@@ -71,10 +80,9 @@ export class WorldMasthead {
           `wfs-ticker-change ${adverse > 0 ? 'is-down' : adverse < 0 ? 'is-up' : ''}`,
           `${item.changePct > 0 ? '+' : ''}${item.changePct.toFixed(item.changeKind === 'bp' ? 0 : 2)}${suffix}`,
         );
-        button.append(label, value, change);
-      } else button.append(label, value);
-      button.addEventListener('click', () => this.callbacks.onTickerClick(item.id));
-      this.ticker.append(button);
+        control.append(label, value, change);
+      } else control.append(label, value);
+      this.ticker.append(control);
     }
   }
   destroy(): void {

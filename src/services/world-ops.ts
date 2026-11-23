@@ -5,6 +5,7 @@ import type { FederalRegisterDocument, OpsCounters, OpsEvent, OpsMetrics, Threat
 import type { IodaOutage } from '@/services/internet-outages-ioda';
 import type { KrDartDisclosure } from '@/services/kr-dart';
 import { federalRegisterLabel } from '@/services/federal-register';
+import { treasuryAuctionTitle, treasuryDemandLabel, treasuryResultsUrl, type TreasuryCoupon } from '@/services/treasury-auctions';
 
 export const THREAT_LEVEL_LABEL_KO: Record<ThreatLevel, string> = {
   1: '최고 위기',
@@ -58,7 +59,13 @@ export function buildOpsEvents(
   snapshot: WorldOverviewSnapshot | null,
   alerts: readonly BreakingAlert[],
   nowMs: number,
-  extras: { outages?: readonly IodaOutage[]; disclosures?: readonly KrDartDisclosure[]; federalRegister?: readonly FederalRegisterDocument[] } = {},
+  extras: {
+    outages?: readonly IodaOutage[];
+    disclosures?: readonly KrDartDisclosure[];
+    federalRegister?: readonly FederalRegisterDocument[];
+    treasuryCoupons?: readonly TreasuryCoupon[];
+    language?: string;
+  } = {},
 ): OpsEvent[] {
   const events: OpsEvent[] = alerts.map((alert) => ({
     id: `wm:breaking-news:${alert.id}`,
@@ -144,6 +151,19 @@ export function buildOpsEvents(
       ...(item.filedAt !== undefined ? { scheduledPublicationDate: item.date } : {}),
     }));
   const newestFirst = (a: OpsEvent, b: OpsEvent) => b.at - a.at || a.id.localeCompare(b.id);
+  const language = extras.language ?? 'en';
+  const auctionEvents: OpsEvent[] = (extras.treasuryCoupons ?? [])
+    .filter((item) => item.at <= nowMs && item.at >= nowMs - 30 * DAY_MS && (item.verdict === 'weak' || item.verdict === 'strong'))
+    .slice(0, 4)
+    .map((item) => ({
+      id: `treasury-auction:${item.cusip}:${item.date}`,
+      at: item.at,
+      kind: 'treasury-auction',
+      title: `${treasuryAuctionTitle(item, language)} · ${treasuryDemandLabel(item.verdict, language)} · ${item.bidToCover.toFixed(2)}×`,
+      iso2: 'US',
+      severity: item.verdict === 'weak' ? 'medium' : 'low',
+      url: treasuryResultsUrl(item.resultsFile),
+    }));
   const seen = new Set<string>();
   const recentEvents = events
     .filter((event) => {
@@ -152,8 +172,8 @@ export function buildOpsEvents(
       return true;
     })
     .sort(newestFirst)
-    .slice(0, 50 - federalEvents.length);
-  return [...recentEvents, ...federalEvents].sort(newestFirst);
+    .slice(0, 50 - federalEvents.length - auctionEvents.length);
+  return [...recentEvents, ...federalEvents, ...auctionEvents].sort(newestFirst);
 }
 
 const OUTAGE_RECENT_MS = 6 * 60 * 60 * 1000;

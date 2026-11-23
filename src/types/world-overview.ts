@@ -73,6 +73,8 @@ export interface TickerItem {
   /** Decimal places to render. */
   digits: number;
   unit?: string;
+  displayValue?: string;
+  url?: string;
 }
 
 export interface DrawerRelation {
@@ -179,7 +181,7 @@ export interface OpsEvent {
   id: string;
   /** epoch ms */
   at: number;
-  kind: 'breaking' | 'relation' | 'issue' | 'outage' | 'disclosure' | 'federal-register';
+  kind: 'breaking' | 'relation' | 'issue' | 'outage' | 'disclosure' | 'federal-register' | 'treasury-auction';
   title: string;
   iso2?: string;
   severity: OpsEventSeverity;

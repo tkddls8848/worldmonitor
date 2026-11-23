@@ -407,6 +407,7 @@ const BOOTSTRAP_KEYS = {
 const STANDALONE_KEYS = {
   worldOverview: BOOTSTRAP_CACHE_KEYS.worldOverview,
   federalRegister: BOOTSTRAP_CACHE_KEYS.federalRegister,
+  treasuryAuctions: BOOTSTRAP_CACHE_KEYS.treasuryAuctions,
   krCustomsTrade: BOOTSTRAP_CACHE_KEYS.krCustomsTrade,
   ukmtoIncidents: 'maritime:ukmto-incidents:v1',
   // ICESat-2 strategic reservoir levels (scripts/seed-reservoir-levels.mjs). Served by
@@ -860,6 +861,11 @@ const FIVE_FACTOR_SCORECARD_READ_MODEL_KEY = 'scorecard:five-factor:v1:read-mode
 const SEED_META = {
   krCustomsTrade: { key: 'seed-meta:kr-customs-trade:monthly', maxStaleMin: 4320 },
   fundingStress: { key: 'seed-meta:markets:funding-stress', maxStaleMin: 2880 },
+  treasuryAuctions: {
+    key: 'seed-meta:markets:treasury-auctions', maxStaleMin: 180,
+    activationKey: 'seed-activated:markets:treasury-auctions',
+    cutover: { mode: 'activation-marker', fromKey: null, issue: 9, activationKey: 'seed-activated:markets:treasury-auctions' },
+  },
   euGasFlows: { key: 'seed-meta:energy:eu-gas-flows', maxStaleMin: 2880 },
   worldOverview: { key: 'seed-meta:world-overview:snapshot', maxStaleMin: 360,
     activationKey: 'seed-activated:world-overview:snapshot',
@@ -2766,6 +2772,7 @@ const ON_DEMAND_KEYS = new Set([
   'iodaOutages',
   'federalRegister',
   'fundingStress',
+  'treasuryAuctions',
   'worldRelationsAi',
   'gridDisruptionClock',
   'foodPricesPihps', 'foodPricesPbs', 'foodPricesDa', 'foodPricesCbsl',
@@ -3015,6 +3022,7 @@ const ON_DEMAND_KEYS = new Set([
 const ACTIVATION_MARKERS = {
   worldOverview: SEED_META.worldOverview.activationKey,
   federalRegister: SEED_META.federalRegister.activationKey,
+  treasuryAuctions: SEED_META.treasuryAuctions.activationKey,
   worldRelationsAi: SEED_META.worldRelationsAi.activationKey,
   gridDisruptionClock: SEED_META.gridDisruptionClock.activationKey,
   regionalEnergyPgcb: SEED_META.regionalEnergyPgcb.activationKey,

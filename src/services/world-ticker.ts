@@ -1,4 +1,5 @@
 import type { TickerItem } from '@/types/world-overview';
+import { isTreasuryBenchmark, treasuryAuctionTitle, treasuryCalendarUrl, treasuryDemandLabel, treasuryResultsUrl, type TreasuryAuctions } from '@/services/treasury-auctions';
 
 type Instrument = { id: string; label: string; digits: number; unit?: string; aliases: string[]; source: 'marketQuotes' | 'commodityQuotes' | 'cryptoQuotes' | 'macroSignals' };
 const instruments: Instrument[] = [
@@ -15,6 +16,7 @@ type SourceKey = Instrument['source'];
 type TickerExtras = {
   korea?: { ktb10y: { value: number; changeBp: number | null } | null; trade: { month: string; total: { exportYoyPct: number | null }; provisional: { period: string; exportYoyPct: number | null } | null } | null } | null;
   fundingStress?: { ofrFsi?: { value: number; change1d: number | null } | null; sofr?: { rate: number; changeBp: number | null } | null } | null;
+  treasuryAuctions?: TreasuryAuctions | null;
   gasFlows?: { origins: Partial<Record<'russia' | 'norway' | 'northAfrica' | 'lng', { gwhPerDay: number; change7dPct: number | null } | null>> } | null;
 };
 function asRecords(value: unknown): Record<string, unknown>[] {
@@ -49,7 +51,7 @@ function numberFrom(row: Record<string, unknown> | undefined, keys: string[]): n
   }
   return null;
 }
-export function buildTickerItems(src: { marketQuotes?: unknown; commodityQuotes?: unknown; cryptoQuotes?: unknown; macroSignals?: unknown }, extras: TickerExtras = {}): TickerItem[] {
+export function buildTickerItems(src: { marketQuotes?: unknown; commodityQuotes?: unknown; cryptoQuotes?: unknown; macroSignals?: unknown }, extras: TickerExtras = {}, language = 'en'): TickerItem[] {
   const all = src as Record<SourceKey, unknown>;
   const items: TickerItem[] = instruments.map((instrument) => {
     // A few feeds expose the Treasury yield as a market quote rather than a macro signal.
@@ -72,6 +74,20 @@ export function buildTickerItems(src: { marketQuotes?: unknown; commodityQuotes?
   }
   if (stress?.ofrFsi) items.push({ id: 'ofr-fsi', label: 'OFR 스트레스', value: stress.ofrFsi.value, changePct: stress.ofrFsi.change1d, changeKind: 'abs', inverse: true, digits: 2 });
   if (stress?.sofr) items.push({ id: 'sofr', label: 'SOFR', value: stress.sofr.rate, changePct: stress.sofr.changeBp, changeKind: 'bp', digits: 2, unit: '%' });
+  const latest = extras.treasuryAuctions?.coupons.find(isTreasuryBenchmark);
+  if (latest) items.push({
+    id: 'treasury-auction-latest', label: `${treasuryAuctionTitle(latest, language)} · ${treasuryDemandLabel(latest.verdict, language)}`,
+    value: latest.bidToCover, changePct: null, digits: 2, unit: '×', url: treasuryResultsUrl(latest.resultsFile),
+  });
+  const next = extras.treasuryAuctions?.nextBenchmarks[0];
+  if (next) {
+    const ko = language === 'ko';
+    const timing = next.status === 'tentative' ? (ko ? '잠정' : 'Tentative') : (ko ? '다음' : 'Next');
+    items.push({
+      id: 'treasury-auction-next', label: `${timing} · ${treasuryAuctionTitle(next, language)}`,
+      value: null, displayValue: `${next.date.slice(5)} ET`, changePct: null, digits: 0, url: treasuryCalendarUrl(next.status),
+    });
+  }
   const gasLabels = { russia: 'EU 가스(러)', norway: 'EU 가스(노)', lng: 'LNG' } as const;
   for (const origin of ['russia', 'norway', 'lng'] as const) {
     const flow = extras.gasFlows?.origins[origin];
@@ -80,8 +96,8 @@ export function buildTickerItems(src: { marketQuotes?: unknown; commodityQuotes?
   return items;
 }
 
-export function buildSupplementalTickerItems(extras: TickerExtras): TickerItem[] {
-  return buildTickerItems({}, extras).slice(instruments.length);
+export function buildSupplementalTickerItems(extras: TickerExtras, language = 'en'): TickerItem[] {
+  return buildTickerItems({}, extras, language).slice(instruments.length);
 }
 
 const TICKER_STOCKS = [

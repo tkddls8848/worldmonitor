@@ -2,12 +2,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import i18next from 'i18next';
 import { initTestI18n } from './helpers/i18n.mts';
 
-const mocks = vi.hoisted(() => ({ load: vi.fn(), mark: vi.fn(), stress: vi.fn(), outages: vi.fn(), ecos: vi.fn(), trade: vi.fn(), dart: vi.fn(), federalRegister: vi.fn(), fields: ['military', 'geopolitics'] as string[], setFields: vi.fn(), data: {} as Record<string, unknown> }));
+const mocks = vi.hoisted(() => ({ load: vi.fn(), mark: vi.fn(), stress: vi.fn(), auctions: vi.fn(), outages: vi.fn(), ecos: vi.fn(), trade: vi.fn(), dart: vi.fn(), federalRegister: vi.fn(), fields: ['military', 'geopolitics'] as string[], setFields: vi.fn(), data: {} as Record<string, unknown> }));
 vi.mock('@/services/world-overview', () => ({ loadWorldOverview: mocks.load, setWorldMark: mocks.mark }));
 vi.mock('@/services/world-overview-view', () => ({ buildWorldMapView: vi.fn((_s, _f, selected) => ({ date: '2026-11-22', countries: {}, lines: [], blocOutlines: [], selectedIso2: selected, relatedIso2: [] })), buildCountryDrawerData: vi.fn((_s, iso2) => ({ iso2, nameKo: iso2, nameEn: iso2, level: null, conflictLevel: null, ciiScore: null, updatedAt: 1, issue: null, relations: [], blocs: [], isToday: true, aiStatus: 'ok' })) }));
 vi.mock('@/services/world-first-screen-prefs', () => ({ getWorldFields: () => [...mocks.fields], setWorldFields: mocks.setFields }));
-vi.mock('@/services/world-ticker', () => ({ loadTickerItems: vi.fn(() => Promise.resolve([])), buildSupplementalTickerItems: vi.fn(() => []) }));
+vi.mock('@/services/world-ticker', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/services/world-ticker')>(),
+  loadTickerItems: vi.fn(() => Promise.resolve([])),
+}));
 vi.mock('@/services/funding-stress', () => ({ loadFundingStress: mocks.stress }));
+vi.mock('@/services/treasury-auctions', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/services/treasury-auctions')>(), loadTreasuryAuctions: mocks.auctions,
+}));
 vi.mock('@/services/internet-outages-ioda', () => ({ loadIodaOutages: mocks.outages }));
 vi.mock('@/services/eu-gas-flows', () => ({ loadEuGasFlows: vi.fn(() => Promise.resolve(null)) }));
 vi.mock('@/services/kr-ecos', () => ({ loadKrEcosMacro: mocks.ecos }));
@@ -43,7 +49,7 @@ function setup() {
   return { root, slots, map, ctx };
 }
 afterEach(() => { document.body.replaceChildren(); vi.clearAllMocks(); mocks.fields = ['military', 'geopolitics']; mocks.data = {}; mocks.stress.mockResolvedValue(null); mocks.outages.mockResolvedValue([]); mocks.ecos.mockResolvedValue(null); mocks.trade.mockResolvedValue(null); mocks.dart.mockResolvedValue([]); });
-beforeEach(() => { mocks.stress.mockResolvedValue(null); mocks.outages.mockResolvedValue([]); mocks.ecos.mockResolvedValue(null); mocks.trade.mockResolvedValue(null); mocks.dart.mockResolvedValue([]); mocks.federalRegister.mockResolvedValue([]); });
+beforeEach(() => { mocks.stress.mockResolvedValue(null); mocks.auctions.mockResolvedValue(null); mocks.outages.mockResolvedValue([]); mocks.ecos.mockResolvedValue(null); mocks.trade.mockResolvedValue(null); mocks.dart.mockResolvedValue([]); mocks.federalRegister.mockResolvedValue([]); });
 
 describe('mountWorldFirstScreen', () => {
   it('mounts chrome and reports an empty snapshot', async () => {
@@ -174,6 +180,42 @@ describe('mountWorldFirstScreen', () => {
       expect(card?.querySelector('a')?.href).toBe(doc.url);
     } finally {
       mounted.destroy();
+      await i18next.changeLanguage('en');
+    }
+  });
+
+  it('shows weak and strong coupons in the log and a benchmark pair next to funding stress', async () => {
+    await initTestI18n();
+    await i18next.changeLanguage('ko');
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-11-23T23:00:00Z'));
+    mocks.load.mockResolvedValue({ snapshot, archivedDates: [] });
+    mocks.stress.mockResolvedValue({ sofr: { rate: 4.25, changeBp: 1 } });
+    const coupon = { cusip: '91282CRX1', kind: 'note', term: '10-Year', date: '2026-11-10',
+      at: Date.parse('2026-11-10T18:00:00Z'), verdict: 'weak', bidToCover: 2.46, resultsFile: 'R_20261110_1.pdf' };
+    mocks.auctions.mockResolvedValue({
+      coupons: [coupon, { ...coupon, cusip: '91282CRE3', kind: 'tips', verdict: 'strong' },
+        { ...coupon, cusip: '912810UY2', kind: 'bond', term: '30-Year', verdict: 'neutral' }],
+      nextBenchmarks: [{ kind: 'note', term: '10-Year', date: '2026-12-08', status: 'tentative' }],
+    });
+    const { slots, ctx } = setup();
+    const mounted = mountWorldFirstScreen(ctx, slots, { openFullView() {}, openCountryBrief() {} });
+    try {
+      slots.dispatch.querySelector<HTMLButtonElement>('#logToggleBtn')!.click();
+      const entries = () => slots.stage.querySelectorAll('li[data-kind="treasury-auction"]');
+      await vi.waitFor(() => expect(entries()).toHaveLength(2));
+      expect(slots.stage.querySelector('.wfs-ops-event-log')?.getAttribute('data-collapsed')).toBe('false');
+      const weak = Array.from(entries()).find((row) => row.textContent?.includes('수요 약세'));
+      expect(weak?.textContent).toContain('미 국채 10년 입찰 · 수요 약세 · 2.46×');
+      expect(weak?.querySelector('time')?.textContent).toBe('11-10');
+      expect(weak?.querySelector('a')?.href).toContain('R_20261110_1.pdf');
+      expect(Array.from(entries()).some((row) => row.textContent?.includes('수요 강세'))).toBe(true);
+      const ticker = slots.masthead.querySelector('[data-ticker="treasury-auction-latest"]');
+      expect(ticker?.previousElementSibling?.getAttribute('data-ticker')).toBe('sofr');
+      expect(ticker?.nextElementSibling?.textContent).toContain('잠정 · 미 국채 10년 입찰12-08 ET');
+    } finally {
+      mounted.destroy();
+      vi.useRealTimers();
       await i18next.changeLanguage('en');
     }
   });

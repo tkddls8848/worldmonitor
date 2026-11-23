@@ -869,6 +869,9 @@
         },
         {
           "path": "scripts/seed-supply-chain-trade.mjs"
+        },
+        {
+          "path": "scripts/seed-treasury-auctions.mjs"
         }
       ]
     },
@@ -5350,6 +5353,9 @@
       "attribution": "Credit home.treasury.gov and link to the original upstream API/dataset.",
       "status": "terms-review",
       "references": [
+        {
+          "path": "scripts/seed-treasury-auctions.mjs"
+        },
         {
           "path": "scripts/seed-us-treasury-par-yield.mjs"
         }
@@ -15183,6 +15189,20 @@
       "references": [
         {
           "path": "scripts/lib/tps-open-data.mjs"
+        }
+      ]
+    },
+    {
+      "host": "www.treasurydirect.gov",
+      "provider": "www.treasurydirect.gov",
+      "kind": "structured",
+      "observed": true,
+      "license": "Provider terms for this upstream API/dataset; verify before redistribution",
+      "attribution": "Credit www.treasurydirect.gov and link to the original upstream API/dataset.",
+      "status": "terms-review",
+      "references": [
+        {
+          "path": "scripts/seed-treasury-auctions.mjs"
         }
       ]
     },
