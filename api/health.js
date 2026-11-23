@@ -293,7 +293,6 @@ const BOOTSTRAP_KEYS = {
   earthquakes:       'seismology:earthquakes:v1',
   outages:           'infra:outages:v1',
   iodaOutages:       'infra:ioda-outages:v1',
-  federalRegister:  'policy:federal-register:v1',
   sectors:           'market:sectors:v2',
   etfFlows:          'market:etf-flows:v1',
   climateAnomalies:  'climate:anomalies:v2',
@@ -407,6 +406,7 @@ const BOOTSTRAP_KEYS = {
 // sweep so the canadaAlerts probe grades the data clients actually receive.
 const STANDALONE_KEYS = {
   worldOverview: BOOTSTRAP_CACHE_KEYS.worldOverview,
+  federalRegister: BOOTSTRAP_CACHE_KEYS.federalRegister,
   krCustomsTrade: BOOTSTRAP_CACHE_KEYS.krCustomsTrade,
   ukmtoIncidents: 'maritime:ukmto-incidents:v1',
   // ICESat-2 strategic reservoir levels (scripts/seed-reservoir-levels.mjs). Served by
@@ -929,7 +929,12 @@ const SEED_META = {
   },
   outages:          { key: 'seed-meta:infra:outages',           maxStaleMin: 30 },
   iodaOutages:      { key: 'seed-meta:infra:ioda-outages',       maxStaleMin: 120 },
-  federalRegister: { key: 'seed-meta:policy:federal-register', maxStaleMin: 180 },
+  federalRegister: {
+    key: 'seed-meta:policy:federal-register',
+    maxStaleMin: 180,
+    activationKey: 'seed-activated:policy:federal-register',
+    cutover: { mode: 'activation-marker', fromKey: null, issue: 9, activationKey: 'seed-activated:policy:federal-register' },
+  },
   // seed-live-video-resolved cron `0 */6 * * *` (#8545); 1080 = 3× cadence per
   // project convention. The PR registers the probe before the Railway service
   // exists, so it softens to EMPTY_ON_DEMAND only until the seeder's first
@@ -3009,6 +3014,7 @@ const ON_DEMAND_KEYS = new Set([
 // normal EMPTY/STALE_SEED rules apply.
 const ACTIVATION_MARKERS = {
   worldOverview: SEED_META.worldOverview.activationKey,
+  federalRegister: SEED_META.federalRegister.activationKey,
   worldRelationsAi: SEED_META.worldRelationsAi.activationKey,
   gridDisruptionClock: SEED_META.gridDisruptionClock.activationKey,
   regionalEnergyPgcb: SEED_META.regionalEnergyPgcb.activationKey,

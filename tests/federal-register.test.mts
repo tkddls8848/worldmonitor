@@ -63,9 +63,10 @@ test('registers the personal cadence, cache and health metadata and reads the on
   assert.equal(STANDALONE_INTERVAL_MIN['federal-register'], 60);
   assert.equal(BOOTSTRAP_CACHE_KEYS.federalRegister, 'policy:federal-register:v1');
   assert.ok(bootstrapTierKeyNames('on-demand').includes('federalRegister'));
-  assert.equal(health.BOOTSTRAP_KEYS.federalRegister, BOOTSTRAP_CACHE_KEYS.federalRegister);
+  assert.equal(health.STANDALONE_KEYS.federalRegister, BOOTSTRAP_CACHE_KEYS.federalRegister);
   assert.equal(health.SEED_META.federalRegister.key, 'seed-meta:policy:federal-register');
   assert.equal(health.SEED_META.federalRegister.maxStaleMin, 180);
+  assert.equal(health.ACTIVATION_MARKERS.federalRegister, 'seed-activated:policy:federal-register');
   assert.ok(health.ON_DEMAND_KEYS.has('federalRegister'));
 
   const items = mapFederalRegisterDocuments(fixture.results, from, through);

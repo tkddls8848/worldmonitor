@@ -1,9 +1,10 @@
 import { pathToFileURL } from 'node:url';
 import { countryMentionTerms, mentionsCountry } from '../shared/country-mention.js';
-import { loadEnvFile, loadSharedConfig, runSeed } from './_seed-utils.mjs';
+import { getRedisCredentials, loadEnvFile, loadSharedConfig, redisCommand, runSeed } from './_seed-utils.mjs';
 
 const API = 'https://www.federalregister.gov/api/v1/documents.json';
 const KEY = 'policy:federal-register:v1';
+const ACTIVATION_KEY = 'seed-activated:policy:federal-register';
 const TTL_SECONDS = 6 * 60 * 60;
 const MAX_STALE_MIN = 180;
 const PAGE_SIZE = 1000;
@@ -125,5 +126,9 @@ if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) 
     recordCount: (value) => value.items.length,
     sourceVersion: 'federal-register-v1-30d',
     maxStaleMin: MAX_STALE_MIN,
+    afterPublish: async () => {
+      const { url, token } = getRedisCredentials();
+      await redisCommand(url, token, ['SET', ACTIVATION_KEY, '1', 'NX']);
+    },
   });
 }

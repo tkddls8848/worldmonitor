@@ -220,6 +220,7 @@ const EXCLUDED_BOOTSTRAP_KEYS = {
   temporalAnomalies: "Internal anomaly detector output; usually empty",
   aaiiSentiment: "Stale fallback data (fallback=true, last update 2026-04-03)",
   worldOverview: "Internal first-screen world overview snapshot; not exposed as widget data",
+  federalRegister: "Federal Register actions with source links in the battle board and country drawer",
 };
 
 const EXCLUDED_RPC_ROUTES = {
