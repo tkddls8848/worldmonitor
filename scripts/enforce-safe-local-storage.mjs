@@ -356,15 +356,16 @@ export function rawStorageUsesIn(source) {
 
 /** Scan the tree and return everything the assertions and the CLI both need. */
 export function scanRepo(root = REPO_ROOT) {
+  const relativePath = (abs) => path.relative(root, abs).split(path.sep).join('/');
   const allFiles = collectTsFiles(path.join(root, 'src'), { readdirSync, lstatSync, join: path.join });
   const scanned = allFiles.filter(
-    (abs) => !GUARD_EXEMPT_FILES.has(path.relative(root, abs)),
+    (abs) => !GUARD_EXEMPT_FILES.has(relativePath(abs)),
   );
 
   const observed = scanned
     .flatMap((abs) =>
       rawStorageUsesIn(readFileSync(abs, 'utf8')).map(
-        (label) => `${path.relative(root, abs)} :: ${label}`,
+        (label) => `${relativePath(abs)} :: ${label}`,
       ),
     )
     .sort();

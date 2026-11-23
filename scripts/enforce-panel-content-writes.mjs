@@ -232,6 +232,7 @@ export function adviceFor(label) {
 
 /** Scan the tree and return everything the assertions and the CLI both need. */
 export function scanRepo(root = REPO_ROOT) {
+  const relativePath = (abs) => path.relative(root, abs).split(path.sep).join('/');
   const componentsDir = path.join(root, 'src/components');
   const allFiles = collectTsFiles(componentsDir, { readdirSync, lstatSync, join: path.join });
   // Track files the lexer could not read confidently. A mis-lex does not throw
@@ -242,7 +243,7 @@ export function scanRepo(root = REPO_ROOT) {
   const codeByFile = new Map(
     allFiles.map((abs) => {
       const { code, ok, terminalMode } = lexSource(readFileSync(abs, 'utf8'));
-      if (!ok) unlexable.push(`${path.relative(root, abs)} (ended in ${terminalMode})`);
+      if (!ok) unlexable.push(`${relativePath(abs)} (ended in ${terminalMode})`);
       return [abs, code];
     }),
   );
@@ -254,7 +255,7 @@ export function scanRepo(root = REPO_ROOT) {
 
   const subclassFiles = allFiles.filter(
     (abs) =>
-      !GUARD_EXEMPT_FILES.has(path.relative(root, abs)) &&
+      !GUARD_EXEMPT_FILES.has(relativePath(abs)) &&
       [...collectClassBases(codeByFile.get(abs) ?? '').keys()].some((name) =>
         derivesFromPanel(name, baseOf),
       ),
@@ -263,7 +264,7 @@ export function scanRepo(root = REPO_ROOT) {
   const observed = subclassFiles
     .flatMap((abs) =>
       directWritesIn(codeByFile.get(abs) ?? '').map(
-        (label) => `${path.relative(root, abs)} :: ${label}`,
+        (label) => `${relativePath(abs)} :: ${label}`,
       ),
     )
     .sort();
