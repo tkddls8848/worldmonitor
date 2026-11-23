@@ -136,6 +136,26 @@ test('keeps trade and sanctions actions and executive orders in a busy log', () 
   assert.deepEqual(policy.map((event) => event.iso2), ['CN', undefined, 'CN', 'CN']);
 });
 
+test('orders public-inspection alerts by filing time and keeps published entries in a busy queue', () => {
+  const published: FederalRegisterDocument[] = Array.from({ length: 6 }, (_, i) => ({
+    id: `published-${i}`, date: '2026-11-22', title: 'Tariff decision', type: 'Rule',
+    topic: 'tariff', countries: ['CN'], url: 'https://www.federalregister.gov/documents/example',
+  }));
+  const previews: FederalRegisterDocument[] = Array.from({ length: 10 }, (_, i) => ({
+    id: `preview-${i}`, date: '2026-11-23', filedAt: nowMs - i - 1,
+    title: 'Financial notice', type: 'Notice', topic: 'monetary/financial', countries: [],
+    url: 'https://www.federalregister.gov/public-inspection/example',
+  }));
+  const events = buildOpsEvents(null, [alert('latest', nowMs)], nowMs, { federalRegister: [...previews, ...published] });
+  assert.equal(events[0]?.id, 'wm:breaking-news:latest');
+  assert.equal(events[1]?.at, previews[0]?.filedAt);
+  assert.equal(events[1]?.scheduledPublicationDate, '2026-11-23');
+  assert.equal(events.filter((event) => event.scheduledPublicationDate).length, 4);
+  assert.equal(events.filter((event) => event.kind === 'federal-register' && !event.scheduledPublicationDate).length, 4);
+  assert.equal(buildOpsEvents(null, [], nowMs, { federalRegister: previews }).length, 8);
+  assert.equal(buildOpsEvents(null, [], nowMs, { federalRegister: published }).length, 6);
+});
+
 test('does not include AI relations from another KST day and supports a missing snapshot', () => {
   const data = snapshot({ ai: { status: 'ok', date: '2026-11-21', model: 'test' } });
   assert.deepEqual(buildOpsEvents(data, [], nowMs), []);

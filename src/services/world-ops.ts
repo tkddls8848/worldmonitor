@@ -127,9 +127,12 @@ export function buildOpsEvents(
 
   // Publication dates have day precision. Reserve a few rows so today's
   // timestamped alerts and snapshot updates cannot push all of them out.
-  const federalEvents: OpsEvent[] = (extras.federalRegister ?? [])
-    .filter((item) => item.filedAt !== undefined || item.type === 'Executive Order' || ['tariff', 'sanctions', 'export-control'].includes(item.topic))
-    .slice(0, 8)
+  const federalRegister = extras.federalRegister ?? [];
+  const published = federalRegister.filter((item) => item.filedAt === undefined
+    && (item.type === 'Executive Order' || ['tariff', 'sanctions', 'export-control'].includes(item.topic)));
+  const upcoming = federalRegister.filter((item) => item.filedAt !== undefined)
+    .slice(0, 8 - Math.min(4, published.length));
+  const federalEvents: OpsEvent[] = [...upcoming, ...published.slice(0, 8 - upcoming.length)]
     .map((item) => ({
       id: `federal-register:${item.id}`,
       at: item.filedAt ?? Date.parse(item.date),
