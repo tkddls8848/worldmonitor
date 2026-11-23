@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -18,6 +19,8 @@ import { publishCountrySnapshots } from '../scripts/seed-country-history.mjs';
 import * as seedUtils from '../scripts/_seed-utils.mjs';
 import { createPersonalFetch } from '../scripts/personal-tui.mjs';
 import { DEFAULT_COLLECTORS, collectorScript } from '../scripts/personal-collect.mjs';
+import { APPEND_HISTORY_LUA, PUBLISH_PHYSICAL_PREMIUM_LUA } from '../scripts/seed-physical-premiums.mjs';
+import pizzintHistory from '../scripts/shared/pizzint-history.cjs';
 
 const TOKEN = 'embedded-store-test-token';
 
@@ -80,8 +83,47 @@ test('a fenced write lands only while the caller still owns the lock', () => {
   assert.equal(engine.exec(['GET', 'data']), 'payload');
   assert.deepEqual(engine.exec(['EVAL', SEED_LOCK_FENCED_SET_SCRIPT, '2', 'lock', 'data', 'someone-else', '5000', 'stolen', '']), [0, 'me']);
   assert.equal(engine.exec(['GET', 'data']), 'payload');
-  assert.throws(() => engine.exec(['EVAL', 'return 1', '0']), /not supported/);
+  assert.equal(engine.exec(['EVAL', 'return 1', '0']), 1, 'a script without a native port runs as Lua');
   assert.throws(() => engine.exec(['EVALSHA', 'ffff', '0']), /^Error: NOSCRIPT/);
+});
+
+test('collector scripts without a native port run as Lua against the store', () => {
+  const now = 1_795_000_000_000;
+  const engine = createEngine({ now: () => now });
+  // Physical premiums: atomic publish with TTL and marker, then same-day history replace.
+  assert.equal(engine.exec(['EVAL', PUBLISH_PHYSICAL_PREMIUM_LUA, '2', 'pp', 'pp:active', '{"a":1}', '60', '1']), 1);
+  assert.equal(engine.exec(['GET', 'pp']), '{"a":1}');
+  assert.equal(engine.exec(['TTL', 'pp']), 60);
+  assert.equal(engine.exec(['GET', 'pp:active']), '1');
+  engine.exec(['LPUSH', 'pp:h', '{"date":"2026-11-20","v":1}', '{"date":"2026-11-21","v":2}']);
+  assert.deepEqual(engine.exec(['EVAL', APPEND_HISTORY_LUA, '1', 'pp:h', '2026-11-21', '{"date":"2026-11-21","v":3}', '10', '5']),
+    ['{"date":"2026-11-21","v":3}', '{"date":"2026-11-20","v":1}']);
+
+  // PizzINT history: hash write, cjson meta, integer counters in the reply.
+  const expireAt = String(Math.floor(now / 1000) + 3600);
+  const pizzint = ['EVAL', pizzintHistory.WRITE_LUA, '4', 'pz', 'pz:meta', 'pz:beat', 'pz:active', 'f1', String(now), `{"c":${now}}`, expireAt, expireAt, '100'];
+  assert.deepEqual(engine.exec(pizzint), [1, 0, 0, 1]);
+  assert.deepEqual(engine.exec(pizzint), [0, 0, 1, 1], 'an equal capture time is skipped');
+  assert.deepEqual(JSON.parse(engine.exec(['GET', 'pz:meta'])), { fetchedAt: now, recordCount: 1 });
+  assert.equal(engine.exec(['GET', 'pz:active']), '1');
+
+  // Redis 5.1 number formatting, cjson.null and status replies.
+  assert.deepEqual(engine.exec(['EVAL', "local t = cjson.decode(ARGV[1]) return {tostring(t.n + 1), tostring(t.x == cjson.null), cjson.encode({}), redis.call('TYPE', KEYS[1]).ok}",
+    '1', 'pz', '{"n":1,"x":null}']), ['2', 'true', '{}', 'hash']);
+  assert.equal(engine.exec(['EVAL', "redis.call('SET', KEYS[1], ARGV[1]) return redis.call('INCRBY', KEYS[1], 2)", '1', 'n', 5]), 7);
+});
+
+test('Lua errors reach the caller the way Redis reports them', () => {
+  const engine = createEngine();
+  engine.exec(['SET', 'str', 'x']);
+  assert.throws(() => engine.exec(['EVAL', "return {err = 'history_bucket_cap'}", '0']), /^Error: history_bucket_cap$/);
+  assert.throws(() => engine.exec(['EVAL', "return redis.call('LPUSH', KEYS[1], 'y')", '1', 'str']), /WRONGTYPE/);
+  assert.equal(engine.exec(['EVAL', "local r = redis.pcall('LPUSH', KEYS[1], 'y') return r.err and 1 or 0", '1', 'str']), 1);
+  assert.throws(() => engine.exec(['EVAL', 'return (', '0']), /Error compiling script/);
+  // A Lua script is remembered by digest, so EVALSHA finds it afterwards.
+  const script = 'return ARGV[1]';
+  engine.exec(['EVAL', script, '0', 'a']);
+  assert.equal(engine.exec(['EVALSHA', createHash('sha1').update(script).digest('hex'), '0', 'b']), 'b');
 });
 
 test('the scorecard publish script atomically switches the staged cohort and retries by fingerprint', () => {

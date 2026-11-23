@@ -4249,6 +4249,55 @@ test('nested self-origin fetches do not hold upstream semaphore slots (#5449)', 
   }
 });
 
+test('Redis REST cache reads do not queue behind busy upstream slots', async () => {
+  // Personal mode reads every cache key from the embedded store over loopback.
+  // While six slow upstream fetches held the semaphore, each cache read waited
+  // for a slot past its 1.5 s Redis timeout and the handler saw the key as
+  // missing (resilience scores fell to zero coverage this way).
+  const originalRedisUrl = process.env.UPSTASH_REDIS_REST_URL;
+  let slowConnections = 0;
+  const slow = createServer((_req, res) => {
+    slowConnections += 1;
+    setTimeout(() => { res.writeHead(200); res.end('slow'); }, 1500);
+  });
+  const cache = createServer((_req, res) => {
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ result: 'cached' }));
+  });
+  const slowPort = await listen(slow);
+  const cachePort = await listen(cache);
+  process.env.UPSTASH_REDIS_REST_URL = `http://127.0.0.1:${cachePort}`;
+  const localApi = await setupApiDir({});
+  const app = await createLocalApiServer({
+    port: 0,
+    apiDir: localApi.apiDir,
+    mode: 'docker',
+    logger: { log() { }, warn() { }, error() { } },
+    allowPrivateFetchOrigins: [`http://127.0.0.1:${slowPort}`],
+  });
+  await app.start();
+
+  try {
+    const busy = Array.from({ length: 6 }, () => globalThis.fetch(`http://127.0.0.1:${slowPort}/`).then((r) => r.text()));
+    const deadline = Date.now() + 2000;
+    while (slowConnections < 6 && Date.now() < deadline) await sleep(10);
+    assert.equal(slowConnections, 6, 'all six upstream slots should be held');
+
+    const started = Date.now();
+    const read = await globalThis.fetch(`http://127.0.0.1:${cachePort}/get/key`, { signal: AbortSignal.timeout(1000) });
+    assert.deepEqual(await read.json(), { result: 'cached' });
+    assert.ok(Date.now() - started < 1000, 'the cache read must not wait for an upstream slot');
+    await Promise.all(busy);
+  } finally {
+    await app.close();
+    await localApi.cleanup();
+    if (originalRedisUrl === undefined) delete process.env.UPSTASH_REDIS_REST_URL;
+    else process.env.UPSTASH_REDIS_REST_URL = originalRedisUrl;
+    await new Promise((resolve) => slow.close(resolve));
+    await new Promise((resolve) => cache.close(resolve));
+  }
+});
+
 test('releases the upstream fetch semaphore when a connection goes silent forever (#5441 follow-up)', async () => {
   // Accepts the connection and never writes anything, never closes -- no
   // FIN/RST, no data. None of res 'error'/'aborted'/'end' or req 'error'/

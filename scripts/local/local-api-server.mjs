@@ -39,6 +39,11 @@ const sidecarAllowedPrivateFetchOrigins = new Set();
 // nested handler's own upstream fetches draw from the same pool, and six
 // concurrent self-calls would otherwise wedge until their timeouts fire.
 const sidecarSelfFetchOrigins = new Set();
+// The Redis REST origin (UPSTASH_REDIS_REST_URL) is the cache every handler
+// reads, not an upstream. Holding one of the six upstream slots per cache read
+// queued those reads behind slow upstream fetches until their 1.5 s Redis
+// timeout fired, so a resilience score or a panel read its inputs as missing.
+const sidecarCacheOrigins = new Set();
 
 function normalizeRequestBody(body) {
   if (body == null) return null;
@@ -198,7 +203,7 @@ function makePinnedLookup(address, family = 4) {
   };
 }
 
-function registerSidecarAllowedPrivateFetchOrigins(port, extraOrigins = []) {
+function registerSidecarAllowedPrivateFetchOrigins(port, extraOrigins = [], cacheOrigins = []) {
   // Normalize through URL so a default port (80) compares equal to
   // `url.origin`, which omits it: `http://127.0.0.1:80` never matches
   // `new URL('http://127.0.0.1:80/x').origin === 'http://127.0.0.1'`.
@@ -209,9 +214,11 @@ function registerSidecarAllowedPrivateFetchOrigins(port, extraOrigins = []) {
   const origins = [...selfOrigins, ...extraOrigins];
   for (const origin of origins) sidecarAllowedPrivateFetchOrigins.add(origin);
   for (const origin of selfOrigins) sidecarSelfFetchOrigins.add(origin);
+  for (const origin of cacheOrigins) sidecarCacheOrigins.add(origin);
   return () => {
     for (const origin of origins) sidecarAllowedPrivateFetchOrigins.delete(origin);
     for (const origin of selfOrigins) sidecarSelfFetchOrigins.delete(origin);
+    for (const origin of cacheOrigins) sidecarCacheOrigins.delete(origin);
   };
 }
 
@@ -254,7 +261,7 @@ globalThis.fetch = async function ipv4Fetch(input, init) {
     ? { safe: true, resolvedAddresses: [url.hostname] }
     : await assertSafeSidecarFetchUrl(url);
   if (isYahooFinanceHost(url.hostname)) await sidecarYahooGate();
-  const holdsUpstreamSlot = !sidecarSelfFetchOrigins.has(url.origin);
+  const holdsUpstreamSlot = !sidecarSelfFetchOrigins.has(url.origin) && !sidecarCacheOrigins.has(url.origin);
   if (holdsUpstreamSlot) await acquireUpstreamSlot();
   try {
     const mod = url.protocol === 'https:' ? https : http;
@@ -2368,7 +2375,9 @@ export async function createLocalApiServer(options = {}) {
       for (const origin of context.allowPrivateFetchOrigins) {
         try { extraAllowedPrivateOrigins.push(new URL(origin).origin); } catch {}
       }
-      unregisterSelfFetchOrigins = registerSidecarAllowedPrivateFetchOrigins(boundPort, extraAllowedPrivateOrigins);
+      const cacheOrigins = [];
+      try { if (process.env.UPSTASH_REDIS_REST_URL) cacheOrigins.push(new URL(process.env.UPSTASH_REDIS_REST_URL).origin); } catch {}
+      unregisterSelfFetchOrigins = registerSidecarAllowedPrivateFetchOrigins(boundPort, extraAllowedPrivateOrigins, cacheOrigins);
 
       const portFile = process.env.LOCAL_API_PORT_FILE;
       if (portFile) {

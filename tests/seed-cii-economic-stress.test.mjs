@@ -317,6 +317,17 @@ test('unreadable keys and failed publication cannot activate or overwrite last-g
   await seedEconomicStress({ read, dryRun: true, publish: async () => { writes++; }, activateKey: async () => { activations++; }, nowMs: NOW });
   assert.equal(writes, 0);
 });
+test('a missing e-Stat mirror (no ESTAT_APPID) still publishes; a missing required input does not', async () => {
+  const raw = inputs();
+  const readWithout = (absentId) => async key => {
+    const id = Object.keys(INPUT_KEYS).find(k => INPUT_KEYS[k] === key);
+    return id === absentId ? null : raw[id];
+  };
+  const { payload } = await seedEconomicStress({ read: readWithout('japan'), dryRun: true, nowMs: NOW });
+  assert.ok(payload.countries.JP, 'Japan stays a published row');
+  assert.ok(payload.measuredCount > 0);
+  await assert.rejects(seedEconomicStress({ read: readWithout('eurostat'), dryRun: true, nowMs: NOW }), /Unreadable economic input: economic:world-cpi:eurostat:v1/);
+});
 test('calendar freshness boundaries retain dates and never carry a stale numeric member', () => {
   const raw = inputs();
   raw.currency.rates = [];

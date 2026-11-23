@@ -19,6 +19,10 @@ export const INPUT_KEYS = Object.freeze({
   usCpi: 'economic:us-cpi:v1',
   yield: 'economic:yield-curve:oecd-lt:v1',
 });
+// Mirrors a deployment may not run: e-Stat needs ESTAT_APPID. Without it the
+// mirror is empty and Japan's inflation member comes from the IMF series, as
+// for any country the mirror does not carry; the other inputs stay required.
+export const OPTIONAL_INPUTS = Object.freeze(new Set(['japan']));
 const DAY = 86400000;
 const INPUT_COUNTRY_CODES = new Set(Object.values(ISO3_TO_ISO2));
 
@@ -134,7 +138,7 @@ export function buildEconomicStress(inputs, nowMs = Date.now()) {
 async function readInput(key) {
   const { url, token } = getRedisCredentials();
   const { result } = await upstashCommand({ restUrl: url, token }, ['GET', key]);
-  if (result == null) throw new Error(`Unreadable economic input: ${key}`);
+  if (result == null) return null; // validateInputs names the missing required key
   const raw = JSON.parse(result);
   return raw?._seed ? raw.data : raw;
 }
@@ -143,7 +147,10 @@ async function activate() {
   await upstashCommand({ restUrl: url, token }, ['SET', ECONOMIC_ACTIVATION_KEY, '1']);
 }
 export async function seedEconomicStress({ read = readInput, publish = writeExtraKeyWithMetaAtomically, activateKey = activate, dryRun = false, nowMs = Date.now() } = {}) {
-  const inputs = Object.fromEntries(await Promise.all(Object.entries(INPUT_KEYS).map(async ([id, key]) => [id, await read(key)])));
+  const inputs = Object.fromEntries(await Promise.all(Object.entries(INPUT_KEYS).map(async ([id, key]) => {
+    const raw = await read(key);
+    return [id, raw == null && OPTIONAL_INPUTS.has(id) ? { countries: {} } : raw];
+  })));
   const payload = buildEconomicStress(inputs, nowMs);
   if (!ECONOMIC_COUNTRIES.every(code => Object.hasOwn(payload.countries, code))) throw new Error('Economic country list mismatch');
   if (!dryRun) {

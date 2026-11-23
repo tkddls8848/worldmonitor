@@ -4,7 +4,8 @@
 // the data in memory, and snapshots it to one NDJSON file. Loopback only.
 //
 // Scope: one owner, one machine. It is not a general Redis: only the commands
-// below exist, and EVAL runs only scripts that have a native equivalent here.
+// below exist. EVAL runs the hot scripts natively and any other script as
+// Lua through embedded-lua.mjs, against these same commands.
 import http from 'node:http';
 import crypto from 'node:crypto';
 import { createReadStream, createWriteStream } from 'node:fs';
@@ -12,6 +13,7 @@ import { mkdir, rename, rm } from 'node:fs/promises';
 import path from 'node:path';
 import readline from 'node:readline';
 import { createRequire } from 'node:module';
+import { luaAvailable, runLuaScript } from './embedded-lua.mjs';
 
 const require = createRequire(import.meta.url);
 const { COMPARE_AND_DELETE_SCRIPT } = require('../shared/compare-and-delete-script.cjs');
@@ -532,12 +534,20 @@ export function createEngine({ now = () => Date.now() } = {}) {
     const numKeys = toInt(numKeysRaw);
     return run(rest.slice(0, numKeys), rest.slice(numKeys));
   };
+  // Any other script runs as Lua (embedded-lua.mjs). Its digest is remembered
+  // so a later EVALSHA of the same text finds it, as in Redis.
+  const luaScript = (text) => (keys, argv) => runLuaScript(text, keys, argv, exec);
   commands.EVAL = ([script, numKeysRaw, ...rest]) => {
-    const run = scriptsBySha.get(sha1(script));
+    const digest = sha1(script);
+    let run = scriptsBySha.get(digest);
     if (!run) {
-      // Name the script: the caller usually logs only a failed write.
-      const firstLine = script.split('\n').find((line) => line.trim())?.trim().slice(0, 80) ?? '';
-      throw new Error(`ERR EVAL script is not supported by the embedded personal store (${firstLine})`);
+      if (!luaAvailable()) {
+        // Name the script: the caller usually logs only a failed write.
+        const firstLine = script.split('\n').find((line) => line.trim())?.trim().slice(0, 80) ?? '';
+        throw new Error(`ERR EVAL script is not supported by the embedded personal store (${firstLine})`);
+      }
+      run = luaScript(script);
+      if (scriptsBySha.size < 1000) scriptsBySha.set(digest, run);
     }
     return runScript(run, numKeysRaw, rest);
   };
