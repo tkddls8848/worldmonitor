@@ -20,7 +20,7 @@ async function read(value: unknown) {
   delete process.env.VERCEL_ENV;
   const redis = createRedisFetch({ [key]: value });
   globalThis.fetch = redis.fetchImpl;
-  return getSocialVelocity({} as never, {});
+  return getSocialVelocity({ request: new Request('https://example.test') } as never, {});
 }
 afterEach(() => {
   globalThis.fetch = originalFetch;
@@ -28,13 +28,9 @@ afterEach(() => {
   Object.assign(process.env, originalEnv);
 });
 
-test('rejects malformed cache envelopes and preserves a valid empty observation', async () => {
+test('degrades malformed or missing payloads and preserves a valid empty observation', async () => {
   for (const value of [null, [], 'bad', { posts: 'bad', fetchedAt: 123 }, { posts: [null], fetchedAt: 123 }, { extra: true }]) {
-    if (value && typeof value === 'object' && 'posts' in value && Array.isArray(value.posts)) {
-      assert.deepEqual(await read(value), { posts: [], fetchedAt: 0 });
-    } else {
-      await assert.rejects(read(value), { name: 'SeedUnavailableError', statusCode: 503 });
-    }
+    assert.deepEqual(await read(value), { posts: [], fetchedAt: 0 });
   }
   assert.deepEqual(await read({ posts: [], fetchedAt: 123 }), { posts: [], fetchedAt: 123 });
 });

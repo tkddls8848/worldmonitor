@@ -100,6 +100,7 @@ const cases = [
   { path: 'market/v1/list-gulf-quotes', key: 'market:gulf-quotes:v1', payload: { quotes: [], rateLimited: false }, field: 'quotes' },
   { path: 'economic/v1/get-oil-inventories', key: 'economic:crude-inventories:v1', payload: { weeks: [{ period: '2026-09-01', stocksMb: 440 }] }, field: 'crudeWeeks' },
   { path: 'intelligence/v1/get-pizzint-status', key: 'intelligence:pizzint:seed:v1', payload: { pizzint: { locations: [], defconLevel: 5 }, tensionPairs: [] }, field: 'tensionPairs' },
+  { path: 'intelligence/v1/get-social-velocity', key: 'intelligence:social:reddit:v1', payload: { posts: [], fetchedAt: 123 }, field: 'posts' },
 ];
 for (const entry of cases) {
   for (const failure of ['miss', 'http-error', 'timeout', 'malformed'] as const) {
@@ -112,6 +113,7 @@ for (const entry of cases) {
       assert.deepEqual(body[entry.field], []);
       if (entry.path.includes('etf')) assert.equal(body.timestamp, '');
       if (entry.path.includes('oil-inventories')) assert.equal(body.updatedAt, '');
+      if (entry.path.includes('social-velocity')) assert.equal(body.fetchedAt, 0);
       mode = 'hit';
       cache.set(entry.key, entry.payload);
       const recovered = await request(entry.path);
@@ -198,7 +200,6 @@ it('keeps an oil mapping exception out of HTTP caches without a fresh timestamp'
 
 const requiredCases = [
   ['conflict/v1/get-humanitarian-summary?country_code=US', 'conflict:humanitarian:v1:US', { summary: { countryCode: 'US' } }, 'summary'],
-  ['intelligence/v1/get-social-velocity', 'intelligence:social:reddit:v1', { posts: [], fetchedAt: 123 }, 'posts'],
   ['intelligence/v1/list-cross-source-signals', 'intelligence:cross-source-signals:v1', { signals: [] }, 'signals'],
   ['intelligence/v1/list-satellites', 'intelligence:satellites:tle:v1', { satellites: [] }, 'satellites'],
   ['intelligence/v1/list-security-advisories', 'intelligence:advisories:v1', { advisories: [], byCountry: {} }, 'advisories'],
