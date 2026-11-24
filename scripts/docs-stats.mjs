@@ -1715,7 +1715,7 @@ export function validateCategoryExplainerCopy(stats, readFile = read) {
   const file = CATEGORY_EXPLAINER_PATH;
   let text;
   try {
-    text = readFile(file);
+    text = readFile(file).replaceAll('\r\n', '\n');
   } catch {
     return [`${file}: file not found`];
   }

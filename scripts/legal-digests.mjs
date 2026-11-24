@@ -40,6 +40,7 @@ const SAME_DAY = process.argv.includes('--same-day');
  */
 export function normalizeLegalBody(mdx) {
   return mdx
+    .replaceAll('\r\n', '\n')
     .replace(/^---\n[\s\S]*?\n---\n/, '')
     .replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
     .replace(/^(#{1,6} .+?) \{#[^\s}]+\}$/gm, '$1')

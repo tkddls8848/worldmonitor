@@ -1,3 +1,4 @@
+import { isMainModule } from './lib/main-module.mjs';
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -428,7 +429,7 @@ export function applyOpenApiFilterParamSchemaFiles({ check = false } = {}) {
   return changed;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url, process.argv[1])) {
   const check = process.argv.includes('--check');
   const changed = applyOpenApiFilterParamSchemaFiles({ check });
   if (check && changed.length > 0) {
