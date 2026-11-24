@@ -901,6 +901,7 @@ async function quietAfterLive() {
 test('quiet hours keep health OK after the live payload expires', async () => {
   const run = await quietAfterLive();
   const payload = structuredClone(run.state.cache.get(payloadKey));
+  assert.equal(await run.seed(), 'quiet');
   await advance(run);
   assert.equal(run.state.cache.get(metaKey).data.recordCount, 0);
   assert.equal(classifyPizzint(run.state).status, 'OK', 'a zero-record heartbeat beside the unexpired payload is OK');
@@ -959,6 +960,7 @@ test('one failing venue among quiet venues does not advance the heartbeat', asyn
   const run = await quietAfterLive();
   const heartbeat = run.state.cache.get(metaKey).data.fetchedAt;
   run.state.besttime.set(run.ids[0], { ok: false, status: 429 });
+  assert.equal(await run.seed(), undefined);
   await advance(run);
   assert.equal(run.state.cache.get(metaKey).data.fetchedAt, heartbeat);
 });

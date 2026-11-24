@@ -6,7 +6,9 @@
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { createInterface } from 'node:readline';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { SOURCE_SKIPPED_EXIT_CODE } from './_seed-utils.mjs';
 
 const SCRIPTS = path.dirname(fileURLToPath(import.meta.url));
 const STATE_FILE = path.resolve(SCRIPTS, '..', '.personal', 'collect-state.json');
@@ -130,7 +132,7 @@ function writeState(state) {
   }
 }
 
-function runOne(name, timeoutMs) {
+function runOne(name, timeoutMs, log) {
   return new Promise((resolve) => {
     const started = Date.now();
     const child = spawn(process.execPath, [collectorScript(name)], { stdio: ['ignore', 'pipe', 'pipe'], env: process.env });
@@ -138,6 +140,11 @@ function runOne(name, timeoutMs) {
     const keep = (chunk) => { tail = (tail + chunk).slice(-2000); };
     child.stdout.on('data', keep);
     child.stderr.on('data', keep);
+    if (name.startsWith('bundle-')) {
+      createInterface({ input: child.stdout }).on('line', (line) => {
+        if (/^\[Bundle:[^\]]+\] section=\S+ status=SKIPPED reason=/.test(line)) log(`      ${line}`);
+      });
+    }
     const timer = setTimeout(() => child.kill(), timeoutMs);
     child.on('close', (code) => {
       clearTimeout(timer);
@@ -152,8 +159,15 @@ export async function collectOnce(names, { log = console.log, force = false } = 
   if (due.length < names.length) log(`아직 신선한 수집기 ${names.length - due.length}개는 건너뜁니다.`);
   const results = [];
   for (const name of due) {
-    const result = await runOne(name, collectorTimeoutMs(name));
+    const result = await runOne(name, collectorTimeoutMs(name), log);
     results.push(result);
+    if (result.code === SOURCE_SKIPPED_EXIT_CODE) {
+      result.ok = true;
+      result.skipped = true;
+      const reason = result.tail.split(/\r?\n/).findLast((line) => line.startsWith('NO SOURCE: '));
+      log(`SKIP ${name} (${reason?.slice('NO SOURCE: '.length) || 'no source data'})`);
+      continue;
+    }
     if (name === 'no2-activity' && result.ok && result.tail.includes('NO SOURCE: EARTHDATA_TOKEN unset')) {
       result.skipped = true;
       log('SKIP no2-activity (EARTHDATA_TOKEN unset)');

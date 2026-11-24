@@ -13,7 +13,7 @@ import { createServer } from 'node:http';
 import { lua, lauxlib, lualib, to_luastring, to_jsstring } from 'fengari';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { GRACEFUL_FETCH_FAILURE_EXIT_CODE, PUBLISH_BLOCKED_EXIT_CODE } from '../scripts/_seed-utils.mjs';
+import { GRACEFUL_FETCH_FAILURE_EXIT_CODE, PUBLISH_BLOCKED_EXIT_CODE, SOURCE_SKIPPED_EXIT_CODE } from '../scripts/_seed-utils.mjs';
 import { DAY, readSectionFreshness, bundleHeartbeatKey, BUNDLE_HEARTBEAT_TTL_SECONDS } from '../scripts/_bundle-runner.mjs';
 import { OWID_SOURCE_VERSION } from '../scripts/seed-owid-energy-mix.mjs';
 import { JODI_OIL_SOURCE_VERSION } from '../scripts/seed-jodi-oil.mjs';
@@ -1495,6 +1495,32 @@ test('an any-of requiredEnv group is satisfied by either alternative', async () 
       /section=ANY_OF status=CONFIG_ERROR reason=missing required environment configuration: WM_BUNDLE_TEST_SPECIFIC or WM_BUNDLE_TEST_SHARED/,
     );
     assert.doesNotMatch(neither.stdout, /anyof-ran/);
+
+    const optional = { ...section, skipMissingEnv: true };
+    const unconfigured = await runBundleWith([optional]);
+    assert.equal(unconfigured.code, 0);
+    assert.match(unconfigured.stdout, /section=ANY_OF status=SKIPPED reason=missing required environment configuration: WM_BUNDLE_TEST_SPECIFIC or WM_BUNDLE_TEST_SHARED/);
+    assert.match(unconfigured.stdout, /ran:0 skipped:1/);
+    const configured = await runBundleWith([optional], {}, { WM_BUNDLE_TEST_SHARED: 'http://shared:1' });
+    assert.equal(configured.code, 0);
+    assert.match(configured.stdout, /\[ANY_OF\] anyof-ran/);
+  } finally {
+    cleanup();
+  }
+});
+
+test('a source skip records its reason without claiming a successful publication', async () => {
+  const cleanup = writeFixture(
+    '_bundle-fixture-source-skipped.mjs',
+    "console.log('NO SOURCE: optional key unset');\nprocess.exit(" + SOURCE_SKIPPED_EXIT_CODE + ");\n",
+  );
+  try {
+    const { code, stdout } = await runBundleWith([
+      { label: 'OPTIONAL', script: '_bundle-fixture-source-skipped.mjs', intervalMs: 1, timeoutMs: 5000 },
+    ]);
+    assert.equal(code, 0);
+    assert.match(stdout, /section=OPTIONAL status=SKIPPED reason=optional key unset/);
+    assert.match(stdout, /ran:0 skipped:1 deferred:0 failed:0/);
   } finally {
     cleanup();
   }

@@ -21,6 +21,7 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { SOURCE_SKIPPED_EXIT_CODE } from '../scripts/_seed-utils.mjs';
 
 const SCRIPTS_DIR = fileURLToPath(new URL('../scripts/', import.meta.url));
 const DAY = 24 * 60 * 60 * 1000;
@@ -108,6 +109,22 @@ function runSeeder(fake, env = {}) {
     child.on('close', code => resolve({ code, stdout, stderr }));
   });
 }
+
+test('missing R2 credentials and no active version skip collection', async (t) => {
+  const fake = await startFakeUpstash({});
+  t.after(() => fake.close());
+  const { code, stdout, stderr } = await runSeeder(fake);
+  assert.equal(code, SOURCE_SKIPPED_EXIT_CODE, stdout + stderr);
+  assert.match(stdout, /NO SOURCE: CLOUDFLARE_R2_ACCOUNT_ID.*unset and no local or active Redis dataset/);
+});
+
+test('an invalid active version remains a failure when R2 credentials are absent', async (t) => {
+  const fake = await startFakeUpstash({ activeVersion: 'invalid' });
+  t.after(() => fake.close());
+  const { code, stdout, stderr } = await runSeeder(fake);
+  assert.equal(code, 1, stdout + stderr);
+  assert.match(stderr, /not a valid millisecond timestamp/);
+});
 
 test('the no-data fallback walks nothing and exits 0 while data is within its interval', async () => {
   const fake = await startFakeUpstash({ activeVersion: String(Date.now() - 60_000) });

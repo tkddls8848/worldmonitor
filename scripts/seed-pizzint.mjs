@@ -14,7 +14,7 @@
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import vm from 'node:vm';
-import { CHROME_UA, loadEnvFile } from './_seed-utils.mjs';
+import { CHROME_UA, loadEnvFile, SOURCE_SKIPPED_EXIT_CODE } from './_seed-utils.mjs';
 
 loadEnvFile(import.meta.url);
 
@@ -48,7 +48,9 @@ async function rest(command) {
     signal: AbortSignal.timeout(5_000),
   });
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-  return (await resp.json())?.result;
+  const reply = await resp.json();
+  if (!reply || reply.error || !Object.hasOwn(reply, 'result')) throw new Error('Invalid Redis response');
+  return reply.result;
 }
 
 const deps = {
@@ -81,14 +83,20 @@ vm.runInContext(
   { filename: 'ais-relay.cjs#pizzint' },
 );
 
-// Success means the payload was republished. seed-meta (the health heartbeat)
-// is left alone on purpose while every venue is closed or silent: the relay
-// refreshes it only within 24h of the last live reading.
+// A clean quiet poll preserves the payload and can refresh the health
+// heartbeat only within 24h of the last live reading.
 const startedAt = Date.now();
-await vm.runInContext('seedPizzint()', context);
-const payload = await deps.upstashGet('intelligence:pizzint:seed:v1');
-if (!Number.isFinite(payload?._seed?.fetchedAt) || payload._seed.fetchedAt < startedAt) {
-  console.error('[PizzINT] No observation was published this run');
-  process.exit(1);
+const outcome = await vm.runInContext('seedPizzint()', context);
+if (outcome === 'quiet') {
+  // Verify Redis is reachable even if the quiet heartbeat did not need a write.
+  await rest(['GET', 'intelligence:pizzint:seed:v1']);
+  console.log('NO SOURCE: no live PizzINT signals; preserving last good observation');
+  process.exitCode = SOURCE_SKIPPED_EXIT_CODE;
+} else {
+  const payload = await deps.upstashGet('intelligence:pizzint:seed:v1');
+  if (!Number.isFinite(payload?._seed?.fetchedAt) || payload._seed.fetchedAt < startedAt) {
+    console.error('[PizzINT] No observation was published this run');
+    process.exit(1);
+  }
+  console.log(`\n=== Done (${Date.now() - startedAt}ms) ===`);
 }
-console.log(`\n=== Done (${Date.now() - startedAt}ms) ===`);

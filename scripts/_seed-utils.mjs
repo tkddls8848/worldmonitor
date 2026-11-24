@@ -950,6 +950,10 @@ export const PERMANENT_4XX_STATUSES = new Set([400, 401, 403, 404, 410, 413, 422
 // generic crash.
 export const GRACEFUL_FETCH_FAILURE_EXIT_CODE = 75;
 
+// An optional source was unavailable or returned a clean poll without data.
+// No observation was published and the seed's success clock must not advance.
+export const SOURCE_SKIPPED_EXIT_CODE = 69;
+
 /**
  * Tag a fetch error as an upstream outage the seeder may ride out on last-good
  * data. Only tagged errors are eligible for runSeed's

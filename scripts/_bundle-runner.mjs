@@ -38,6 +38,7 @@ import {
   BUNDLE_COMPLETION_META_KEY_ENV,
   BUNDLE_SECTION_TIMEOUT_MS_ENV,
   GRACEFUL_FETCH_FAILURE_EXIT_CODE,
+  SOURCE_SKIPPED_EXIT_CODE,
   loadEnvFile,
   PUBLISH_BLOCKED_EXIT_CODE,
 } from './_seed-utils.mjs';
@@ -363,6 +364,7 @@ function spawnSeed(scriptPath, { timeoutMs, label, bundleStartedAtMs, completion
     // dropped a different subset of Run ID / Mode / seed_complete lines
     // despite identical code paths). Bundle-level lines survive reliably.
     let lastSeedComplete = null;
+    let skipReason;
     // BUNDLE_RUN_STARTED_AT_MS lets consumer seeders detect when a cohort
     // peer's seed-meta predates the current bundle run and fall back to a
     // hard default instead of reading a stale peer key. See plan
@@ -384,6 +386,7 @@ function spawnSeed(scriptPath, { timeoutMs, label, bundleStartedAtMs, completion
 
     streamLines(child.stdout, (line) => {
       console.log(`  [${label}] ${line}`);
+      if (line.startsWith('NO SOURCE: ')) skipReason = line.slice('NO SOURCE: '.length);
       const idx = line.indexOf('{"event":"seed_complete"');
       if (idx >= 0) {
         try {
@@ -432,6 +435,8 @@ function spawnSeed(scriptPath, { timeoutMs, label, bundleStartedAtMs, completion
         settle({ elapsed, ok: false, reason: `timeout after ${Math.round(timeoutMs / 1000)}s (signal ${signal || 'SIGTERM'})`, alreadyLogged: true });
       } else if (code === 0) {
         settle({ elapsed, ok: true, seedComplete: lastSeedComplete });
+      } else if (code === SOURCE_SKIPPED_EXIT_CODE) {
+        settle({ elapsed, skipped: true, reason: skipReason || 'no source data' });
       } else if (code === GRACEFUL_FETCH_FAILURE_EXIT_CODE) {
         settle({
           elapsed,
@@ -473,7 +478,8 @@ function spawnSeed(scriptPath, { timeoutMs, label, bundleStartedAtMs, completion
  *   intervalMs: number,
  *   timeoutMs?: number,
  *   dependsOn?: string[],    // labels that MUST run earlier in the array
- *   requiredEnv?: string[],  // deployment config required before any section runs
+ *   requiredEnv?: (string | string[])[], // required variables or any-of groups
+ *   skipMissingEnv?: boolean, // an unconfigured optional source is skipped
  * }>} sections
  * @param {{ maxBundleMs?: number, prefetchFreshness?: boolean, onTerminalComplete?: () => Promise<void> | void }} [opts]
  */
@@ -675,6 +681,11 @@ export async function runBundle(label, sections, opts = {}) {
     const missingEnv = missingEnvBySection.get(section.label);
     if (missingEnv) {
       const reason = `missing required environment configuration: ${missingEnv.join(', ')}`;
+      if (section.skipMissingEnv) {
+        console.log(`[Bundle:${label}] section=${section.label} status=SKIPPED reason=${reason}`);
+        skipped++;
+        continue;
+      }
       console.error(`  [${section.label}] Failed configuration: ${reason}`);
       console.error(`[Bundle:${label}] section=${section.label} status=CONFIG_ERROR reason=${reason}`);
       failed++;
@@ -747,7 +758,10 @@ export async function runBundle(label, sections, opts = {}) {
       useBundledCa: section.useBundledCa,
       useTsxLoader: section.useTsxLoader,
     });
-    if (result.ok) {
+    if (result.skipped) {
+      console.log(`[Bundle:${label}] section=${section.label} status=SKIPPED reason=${result.reason}`);
+      skipped++;
+    } else if (result.ok) {
       console.log(`  [${section.label}] Done (${result.elapsed}s)`);
       // Bundle-level per-section summary — emitted from parent stdout so
       // Railway log ingestion captures it reliably even when child lines

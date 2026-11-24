@@ -3,7 +3,7 @@
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
-import { loadEnvFile, GRACEFUL_FETCH_FAILURE_EXIT_CODE } from './_seed-utils.mjs';
+import { loadEnvFile, GRACEFUL_FETCH_FAILURE_EXIT_CODE, SOURCE_SKIPPED_EXIT_CODE } from './_seed-utils.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -533,17 +533,18 @@ export async function sweepLeakedVersionKeys(url, token, prefix) {
  * what turned an occasionally-expensive section into a permanently-due one
  * (#6806).
  *
- * @param {{ deep?: boolean }} [opts] `deep: false` trusts ZCARD/HLEN agreement
+ * @param {{ deep?: boolean, allowMissing?: boolean }} [opts] `deep: false` trusts ZCARD/HLEN agreement
  *   instead of walking every member. Use it for the repair path, where the
  *   published data is already live and the goal is to restore the marker
  *   cheaply rather than to re-audit a corpus that has not changed.
  */
 export async function backfillSeedMetaFromActiveVersion(url, token, prefix, opts = {}) {
-  const { deep = true } = opts;
+  const { deep = true, allowMissing = false } = opts;
   const activeKey = `${prefix}military:bases:active`;
   const activeResult = await pipelineRequest(url, token, [['GET', activeKey]]);
   const rawVersion = activeResult[0]?.result;
   if (rawVersion == null || rawVersion === '') {
+    if (allowMissing) return null;
     throw new Error('Data file not found locally or on R2, and no existing active version in Redis');
   }
 
@@ -694,32 +695,29 @@ async function main() {
   const volumePath = '/data/military-bases-final.json';
   const localPath = join(__dirname, 'data', 'military-bases-final.json');
   let dataPath = existsSync(volumePath) ? volumePath : existsSync(localPath) ? localPath : null;
+  const cfToken = process.env.CLOUDFLARE_R2_TOKEN?.trim() || process.env.CLOUDFLARE_API_TOKEN?.trim();
+  const cfAccountId = process.env.CLOUDFLARE_R2_ACCOUNT_ID?.trim();
+  const missingR2 = [!cfAccountId && 'CLOUDFLARE_R2_ACCOUNT_ID', !cfToken && 'CLOUDFLARE_R2_TOKEN or CLOUDFLARE_API_TOKEN'].filter(Boolean);
 
-  if (!dataPath) {
-    const cfToken = process.env.CLOUDFLARE_R2_TOKEN || process.env.CLOUDFLARE_API_TOKEN || '';
-    const cfAccountId = process.env.CLOUDFLARE_R2_ACCOUNT_ID || '';
-    if (cfToken && cfAccountId) {
-      console.log('  Local file not found — downloading from R2...');
-      try {
-        const r2Url = R2_BUCKET_URL.replace('{acct}', cfAccountId);
-        const resp = await fetch(r2Url, {
-          headers: { Authorization: `Bearer ${cfToken}` },
-          signal: AbortSignal.timeout(60_000),
-        });
-        if (resp.ok) {
-          const body = await resp.text();
-          mkdirSync(join(__dirname, 'data'), { recursive: true });
-          writeFileSync(localPath, body);
-          dataPath = localPath;
-          console.log(`  Downloaded ${(body.length / 1024 / 1024).toFixed(1)}MB from R2`);
-        } else {
-          console.log(`  R2 download failed: HTTP ${resp.status}`);
-        }
-      } catch (err) {
-        console.log(`  R2 download failed: ${err.message}`);
+  if (!dataPath && cfToken && cfAccountId) {
+    console.log('  Local file not found — downloading from R2...');
+    try {
+      const r2Url = R2_BUCKET_URL.replace('{acct}', cfAccountId);
+      const resp = await fetch(r2Url, {
+        headers: { Authorization: `Bearer ${cfToken}` },
+        signal: AbortSignal.timeout(60_000),
+      });
+      if (resp.ok) {
+        const body = await resp.text();
+        mkdirSync(join(__dirname, 'data'), { recursive: true });
+        writeFileSync(localPath, body);
+        dataPath = localPath;
+        console.log(`  Downloaded ${(body.length / 1024 / 1024).toFixed(1)}MB from R2`);
+      } else {
+        console.log(`  R2 download failed: HTTP ${resp.status}`);
       }
-    } else if (cfToken) {
-      console.log('  R2 download skipped: missing CLOUDFLARE_R2_ACCOUNT_ID');
+    } catch (err) {
+      console.log(`  R2 download failed: ${err.message}`);
     }
   }
 
@@ -728,7 +726,15 @@ async function main() {
     // Shallow on purpose (#6845): the corpus was validated when it was
     // published, no new data arrived, and re-walking all ~125k members costs
     // ~250 round trips — every day, proving nothing about freshness.
-    const backfilled = await backfillSeedMetaFromActiveVersion(redisUrl, redisToken, prefix, { deep: false });
+    const backfilled = await backfillSeedMetaFromActiveVersion(redisUrl, redisToken, prefix, {
+      deep: false,
+      allowMissing: missingR2.length > 0,
+    });
+    if (!backfilled) {
+      console.log(`NO SOURCE: ${missingR2.join(', ')} unset and no local or active Redis dataset`);
+      process.exitCode = SOURCE_SKIPPED_EXIT_CODE;
+      return;
+    }
     const ageMs = Date.now() - backfilled.fetchedAt;
     if (ageMs > SECTION_INTERVAL_MS) {
       console.warn(

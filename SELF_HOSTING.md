@@ -48,6 +48,7 @@ npm run tui:personal        # 터미널 대시보드. 종료는 q
 - 브라우저는 HTTP Basic 인증으로 로그인합니다. 사용자 이름은 `owner`, 비밀번호는 `WM_PERSONAL_PASSWORD`입니다.
 - `collect:personal`은 모든 묶음과 개별 수집기를 돌립니다. 아직 신선한 수집기는 건너뛰고, 마지막 성공 시각은 `.personal/collect-state.json`에 남깁니다.
 - `collect:personal`에 수집기 이름을 넘기면 신선도와 관계없이 그것만 실행합니다(`-- earthquakes bundle-climate`).
+- Cross-Strait Activity는 `JAPAN_MOD_PROXY_URL` 또는 `PROXY_URL`이 없으면 건너뜁니다. Military Bases는 로컬 데이터 파일이나 Redis의 활성 버전이 없고 R2 계정 ID 또는 토큰도 없으면 건너뜁니다. PizzINT는 제공자가 정상 응답했지만 실시간 신호가 없으면 마지막 관측값을 유지하고 `SKIP`을 기록합니다.
 - 서버를 다시 시작하면 내장 저장소가 만료되지 않은 키를 복원합니다.
 - 외부에서 접속하려면 HTTPS 역방향 프록시를 앞에 두고 서버는 루프백에 묶어 둡니다.
 
