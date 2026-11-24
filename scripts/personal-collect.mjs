@@ -1,4 +1,4 @@
-// Runs the existing collectors against the personal store, one at a time.
+// Runs the existing collectors against the personal store.
 // Stands in for the Railway cron services: `npm run collect:personal` for one
 // pass, `-- --watch 15` to repeat every 15 minutes, or name collectors to run
 // only those (`-- earthquakes bundle-climate`). A collector that needs an API
@@ -84,6 +84,23 @@ export const DEFAULT_COLLECTORS = [
   'insights', 'world-relations-ai', 'forecasts', 'correlation', 'digest-notifications', 'world-overview',
 ];
 
+// The bulk pass can take longer than these cadences even on a healthy machine.
+// Keep the digest with its consumer because the digest cells only live for 15min.
+const RELAY_WATCH_GROUPS = [
+  { names: ['news-digest', 'news-threat-summary'], every: STANDALONE_INTERVAL_MIN['news-threat-summary'] },
+  { names: ['shipping-stress'], every: STANDALONE_INTERVAL_MIN['shipping-stress'] },
+  { names: ['transit-summaries'], every: STANDALONE_INTERVAL_MIN['transit-summaries'] },
+];
+
+export function collectorWatchGroups(selected, watchMinutes, force) {
+  if (force) return [{ names: selected, every: watchMinutes, force }];
+  const fastNames = new Set(RELAY_WATCH_GROUPS.flatMap(({ names }) => names));
+  return [
+    ...RELAY_WATCH_GROUPS.map((group) => ({ ...group, force: true, fixedCadence: true })),
+    { names: selected.filter((name) => !fastNames.has(name)), every: watchMinutes, force: false },
+  ];
+}
+
 export function collectorScript(name) {
   if (!/^[a-z0-9-]+$/.test(name)) throw new Error(`Invalid collector name: ${name}`);
   const file = path.join(SCRIPTS, SCRIPT_ALIASES[name] ?? `seed-${name}.mjs`);
@@ -145,8 +162,7 @@ export async function collectOnce(names, { log = console.log, force = false } = 
     }
     log(`${result.ok ? ' OK ' : 'FAIL'} ${name} (${result.seconds}s)`);
     if (result.ok) {
-      state[name] = Date.now();
-      writeState(state);
+      writeState({ ...readState(), [name]: Date.now() });
     } else {
       const reason = result.tail.trim().split('\n').filter(Boolean).slice(-2).join(' | ');
       log(`      ${reason.slice(0, 300) || `exit ${result.code}`}`);
@@ -158,6 +174,17 @@ export async function collectOnce(names, { log = console.log, force = false } = 
   return results;
 }
 
+async function watchCollectors({ names, every, force, fixedCadence = false }) {
+  for (;;) {
+    const startedAt = Date.now();
+    await collectOnce(names, { force });
+    // Fast loops run at their feed cadence. The bulk loop and explicitly
+    // selected collectors retain the configured delay after a pass.
+    const passTime = fixedCadence ? Date.now() - startedAt : 0;
+    await new Promise((resolve) => setTimeout(resolve, Math.max(0, every * MIN - passTime)));
+  }
+}
+
 async function main(argv) {
   let watchMinutes = 0;
   const names = [];
@@ -167,13 +194,10 @@ async function main(argv) {
   }
   const selected = names.length ? names : DEFAULT_COLLECTORS;
   selected.forEach(collectorScript); // reject a typo before the first run
-  for (;;) {
-    // Naming collectors explicitly runs them even when they are still fresh.
-    await collectOnce(selected, { force: names.length > 0 });
-    if (!watchMinutes) return;
-    console.log(`${watchMinutes}분 뒤 다시 수집합니다. 중지하려면 Ctrl+C.`);
-    await new Promise((resolve) => setTimeout(resolve, watchMinutes * MIN));
-  }
+  // Naming collectors explicitly runs them even when they are still fresh.
+  const force = names.length > 0;
+  if (!watchMinutes) return collectOnce(selected, { force });
+  return Promise.all(collectorWatchGroups(selected, watchMinutes, force).map(watchCollectors));
 }
 
 if (process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url) {

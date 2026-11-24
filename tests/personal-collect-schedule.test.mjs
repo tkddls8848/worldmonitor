@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import {
-  DEFAULT_COLLECTORS, STANDALONE_INTERVAL_MIN, collectorScript, dueCollectors,
+  DEFAULT_COLLECTORS, STANDALONE_INTERVAL_MIN, collectorScript, collectorWatchGroups, dueCollectors,
 } from '../scripts/personal-collect.mjs';
 
 const SCRIPTS = fileURLToPath(new URL('../scripts/', import.meta.url));
@@ -20,6 +20,18 @@ test('every default collector resolves to a script, once', () => {
 test('every bundle is collected', () => {
   const bundles = readdirSync(SCRIPTS).filter((f) => /^seed-bundle-.*\.mjs$/.test(f)).map((f) => f.slice(5, -4));
   assert.deepEqual(bundles.filter((b) => !DEFAULT_COLLECTORS.includes(b)), []);
+});
+
+test('watch keeps relay feeds on their own cadence even during a slow bulk pass', () => {
+  const [news, shipping, transit, bulk] = collectorWatchGroups(DEFAULT_COLLECTORS, 15, false);
+  assert.deepEqual(news, { names: ['news-digest', 'news-threat-summary'], every: 15, force: true, fixedCadence: true });
+  assert.deepEqual(shipping, { names: ['shipping-stress'], every: 15, force: true, fixedCadence: true });
+  assert.deepEqual(transit, { names: ['transit-summaries'], every: 10, force: true, fixedCadence: true });
+  assert.equal(bulk.names.at(-1), 'world-overview');
+  const scheduled = [news, shipping, transit, bulk].flatMap((group) => group.names);
+  assert.equal(scheduled.length, DEFAULT_COLLECTORS.length);
+  assert.deepEqual(new Set(scheduled), new Set(DEFAULT_COLLECTORS));
+  assert.deepEqual(collectorWatchGroups(['hormuz'], 7, true), [{ names: ['hormuz'], every: 7, force: true }]);
 });
 
 test('the GPS interference feed is collected through its fetch script', () => {
