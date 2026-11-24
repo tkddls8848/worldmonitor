@@ -40,11 +40,19 @@ export async function warmPersonalDigest({
   const startedAt = Date.now();
   const results = await runDigestWarmCycle(cells, {
     spreadMs,
-    fetchCell: (cell) => fetchDigestWarmCell(cell, { fetchImpl: personalFetch, env: { API_BASE_URL: origin }, userAgent: USER_AGENT }),
+    fetchCell: (cell) => fetchDigestWarmCell(cell, {
+      fetchImpl: personalFetch,
+      env: { API_BASE_URL: origin },
+      userAgent: USER_AGENT,
+      includeFreshDigest: true,
+    }),
   });
   const summary = summarizeDigestWarmCycle(results, { fetchedAt: Date.now(), durMs: Date.now() - startedAt });
   const required = results.find((result) => `${result.edition}:${result.lang}` === REQUIRED_CELL);
-  return { ...summary, ok: required?.outcome === 'fresh' };
+  // Keep the actual response even when its cache cell expires before the
+  // staggered cycle finishes. Put the full English digest first for consumers.
+  const digests = [required?.digest, ...results.filter((result) => result !== required).map((result) => result.digest)];
+  return { ...summary, ok: required?.outcome === 'fresh', digests };
 }
 
 async function main() {

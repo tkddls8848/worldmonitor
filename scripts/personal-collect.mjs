@@ -67,12 +67,12 @@ const SCRIPT_ALIASES = { gpsjam: 'fetch-gpsjam.mjs' };
 
 // Bundles skip their own members while those are still fresh, so repeating a
 // pass is cheap. Standalone collectors without an interval run every pass.
-// news-digest builds the news:digest:v1 cells that insights, forecasts and
+// news-threat-summary warms the news:digest:v1 cells that insights, forecasts and
 // digest-notifications read, so it runs first; those readers run last, after
 // everything they summarise. digest-notifications composes the owner's daily
 // brief and decides on its own whether to regenerate the prose this pass.
 export const DEFAULT_COLLECTORS = [
-  'news-digest', 'news-threat-summary', 'earthquakes', 'natural-events', 'weather-alerts', 'internet-outages', 'cyber-threats',
+  'news-threat-summary', 'earthquakes', 'natural-events', 'weather-alerts', 'internet-outages', 'cyber-threats',
   'unrest-events', 'military-flights', 'conflict-intel', 'prediction-markets', 'service-statuses',
   'bundle-market-backup', 'bundle-relay-backup', 'bundle-climate', 'bundle-health',
   'bundle-energy-sources', 'bundle-derived-signals',
@@ -85,9 +85,8 @@ export const DEFAULT_COLLECTORS = [
 ];
 
 // The bulk pass can take longer than these cadences even on a healthy machine.
-// Keep the digest with its consumer because the digest cells only live for 15min.
 const RELAY_WATCH_GROUPS = [
-  { names: ['news-digest', 'news-threat-summary'], every: STANDALONE_INTERVAL_MIN['news-threat-summary'] },
+  { names: ['news-threat-summary'], every: STANDALONE_INTERVAL_MIN['news-threat-summary'] },
   { names: ['shipping-stress'], every: STANDALONE_INTERVAL_MIN['shipping-stress'] },
   { names: ['transit-summaries'], every: STANDALONE_INTERVAL_MIN['transit-summaries'] },
 ];

@@ -24,7 +24,7 @@ test('every bundle is collected', () => {
 
 test('watch keeps relay feeds on their own cadence even during a slow bulk pass', () => {
   const [news, shipping, transit, bulk] = collectorWatchGroups(DEFAULT_COLLECTORS, 15, false);
-  assert.deepEqual(news, { names: ['news-digest', 'news-threat-summary'], every: 15, force: true, fixedCadence: true });
+  assert.deepEqual(news, { names: ['news-threat-summary'], every: 15, force: true, fixedCadence: true });
   assert.deepEqual(shipping, { names: ['shipping-stress'], every: 15, force: true, fixedCadence: true });
   assert.deepEqual(transit, { names: ['transit-summaries'], every: 10, force: true, fixedCadence: true });
   assert.equal(bulk.names.at(-1), 'world-overview');

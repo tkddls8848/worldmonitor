@@ -11,9 +11,10 @@ const PASSWORD = 'collect-test-password-123';
 test('the digest is built before the collectors that read it', () => {
   assert.match(collectorScript('news-digest'), /seed-news-digest\.mjs$/);
   const at = (name) => DEFAULT_COLLECTORS.indexOf(name);
-  assert.ok(at('news-digest') >= 0, 'news-digest is a default collector');
+  assert.equal(at('news-threat-summary'), 0, 'the integrated digest warmer runs first');
+  assert.equal(at('news-digest'), -1, 'the standalone warmer is available by name');
   for (const reader of ['insights', 'forecasts', 'digest-notifications']) {
-    assert.ok(at(reader) > at('news-digest'), `${reader} runs after news-digest`);
+    assert.ok(at(reader) > at('news-threat-summary'), `${reader} runs after the digest warmer`);
   }
 });
 

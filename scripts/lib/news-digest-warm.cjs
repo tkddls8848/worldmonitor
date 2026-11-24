@@ -62,6 +62,7 @@ async function fetchDigestWarmCell(cell, {
   userAgent,
   relayKey,
   timeoutMs = DIGEST_WARM_REQUEST_TIMEOUT_MS,
+  includeFreshDigest = false,
 } = {}) {
   try {
     const resp = await fetchImpl(buildDigestWarmUrl(cell, env), {
@@ -72,7 +73,8 @@ async function fetchDigestWarmCell(cell, {
       signal: AbortSignal.timeout(timeoutMs),
     });
     const body = resp.ok ? await resp.json() : null;
-    return classifyDigestWarmResponse(resp.status, body);
+    const result = classifyDigestWarmResponse(resp.status, body);
+    return includeFreshDigest && result.outcome === 'fresh' ? { ...result, digest: body } : result;
   } catch (error) {
     const name = error && typeof error === 'object' ? error.name : '';
     return { outcome: 'failed', reason: name === 'TimeoutError' || name === 'AbortError' ? 'timeout' : 'error' };

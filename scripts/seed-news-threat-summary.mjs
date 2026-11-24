@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { loadEnvFile, readCanonicalValue, runSeed } from './_seed-utils.mjs';
-import { PERSONAL_DIGEST_CELLS } from './seed-news-digest.mjs';
+import { loadEnvFile, runSeed } from './_seed-utils.mjs';
+import { warmPersonalDigest } from './seed-news-digest.mjs';
 import { threatSummaryCountries } from './lib/news-threat-countries.cjs';
 
 const KEY = 'news:threat:summary:v1';
@@ -44,13 +44,14 @@ export function summarizeNewsThreat(digests, now = Date.now()) {
   return { byCountry, generatedAt: now };
 }
 
+export async function fetchNewsThreatSummary(options) {
+  const { digests } = await warmPersonalDigest(options);
+  return summarizeNewsThreat(digests);
+}
+
 if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
   loadEnvFile(import.meta.url);
-  await runSeed('news', 'threat-summary', KEY, async () => {
-    const digests = await Promise.all(PERSONAL_DIGEST_CELLS.map(({ edition, lang }) =>
-      readCanonicalValue(`news:digest:v1:${edition}:${lang}`)));
-    return summarizeNewsThreat(digests);
-  }, {
+  await runSeed('news', 'threat-summary', KEY, () => fetchNewsThreatSummary(), {
     ttlSeconds: TTL_SECONDS,
     extendTtlOnFailure: false,
     declareRecords: (data) => Object.keys(data.byCountry).length,
