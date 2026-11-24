@@ -408,6 +408,7 @@ const STANDALONE_KEYS = {
   worldOverview: BOOTSTRAP_CACHE_KEYS.worldOverview,
   federalRegister: BOOTSTRAP_CACHE_KEYS.federalRegister,
   treasuryAuctions: BOOTSTRAP_CACHE_KEYS.treasuryAuctions,
+  oecdCli: BOOTSTRAP_CACHE_KEYS.oecdCli,
   krCustomsTrade: BOOTSTRAP_CACHE_KEYS.krCustomsTrade,
   ukmtoIncidents: 'maritime:ukmto-incidents:v1',
   // ICESat-2 strategic reservoir levels (scripts/seed-reservoir-levels.mjs). Served by
@@ -861,6 +862,7 @@ const FIVE_FACTOR_SCORECARD_READ_MODEL_KEY = 'scorecard:five-factor:v1:read-mode
 const SEED_META = {
   krCustomsTrade: { key: 'seed-meta:kr-customs-trade:monthly', maxStaleMin: 4320 },
   fundingStress: { key: 'seed-meta:markets:funding-stress', maxStaleMin: 2880 },
+  oecdCli: { key: 'seed-meta:economic:oecd-cli', maxStaleMin: 4320 },
   treasuryAuctions: {
     key: 'seed-meta:markets:treasury-auctions', maxStaleMin: 180,
     activationKey: 'seed-activated:markets:treasury-auctions',

@@ -222,6 +222,7 @@ const EXCLUDED_BOOTSTRAP_KEYS = {
   worldOverview: "Internal first-screen world overview snapshot; not exposed as widget data",
   federalRegister: "Federal Register actions with source links in the battle board and country drawer",
   treasuryAuctions: "Treasury auction results and schedule with source links in the battle board",
+  oecdCli: "OECD leading indicators with source attribution in the battle board",
 };
 
 const EXCLUDED_RPC_ROUTES = {
