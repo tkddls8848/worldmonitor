@@ -103,16 +103,6 @@ function assertOnlyNegativeSentinels(calls: ReturnType<typeof installFetchMock>)
   assert.deepEqual([...new Set(payloads)], ['__WM_NEG__']);
 }
 
-function flightContext() {
-  return {
-    request: new Request('https://worldmonitor.app/api/aviation/v1/get-flight-status?flight_number=TK1952&date=2026-08-01', {
-      headers: { 'X-WorldMonitor-Key': 'test-key' },
-    }),
-    pathParams: {},
-    headers: {},
-  };
-}
-
 describe('RPC cache-hit reporting', { concurrency: 1 }, () => {
   it('reports a fresh imagery search as a miss and its immediate repeat as a hit', async () => {
     const calls = installFetchMock();

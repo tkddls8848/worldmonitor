@@ -13,6 +13,7 @@ import {
 } from '../src/config/map-layer-definitions';
 import { layerExplanationList, layerExplanationLookup, renderLayerExplanationCard } from '../src/utils/layer-explanation-card';
 import { escapeHtml } from '../src/utils/sanitize';
+import { STANDALONE_INTERVAL_MIN } from '../scripts/personal-collect.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const relaySource = readFileSync(resolve(root, 'scripts/ais-relay.cjs'), 'utf8');
@@ -124,13 +125,6 @@ function cyberRollingWindowMinutes(): number {
 function relayEnvDefaultMinutes(name: string): number {
   const match = relaySource.match(new RegExp(`const\\s+${name}\\s*=\\s*Math\\.max\\([^|]+\\|\\|\\s*([0-9_]+)\\)\\)`));
   assert.ok(match, `scripts/ais-relay.cjs must define numeric env default for ${name}`);
-  return evalNumberExpression(match[1]) / 60_000;
-}
-
-function aviationBreakerCacheMinutes(name: string): number {
-  const source = readSource('src/services/aviation/index.ts');
-  const match = source.match(new RegExp(`const\\s+${name}\\s*=\\s*createCircuitBreaker<[^>]+>\\(\\{[^}]*cacheTtlMs:\\s*([^,}\\n]+)`));
-  assert.ok(match, `src/services/aviation/index.ts must define ${name}.cacheTtlMs`);
   return evalNumberExpression(match[1]) / 60_000;
 }
 
@@ -248,12 +242,12 @@ describe('layer explanation metadata', () => {
     assertDuration(renderedFreshnessText('flights'), /every\s+([0-9]+)\s+(minute)s?/i, 5, 'FAA NMS seed cadence');
     assertDuration(renderedFreshnessText('flights'), /([0-9]+)-\s*(minute)\s+freshness budget/i, healthMaxStale('notamAirspace'), 'FAA NMS health freshness budget');
 
-    const aviationCadenceMin = maxStaleMin('scripts/seed-aviation.mjs', 'intl') / 3;
+    const aviationCadenceMin = STANDALONE_INTERVAL_MIN.aviation;
     assertDuration(renderedFreshnessText('flights'), /([0-9]+)-\s*(minute)\s+cadence/i, aviationCadenceMin, 'aviation disruption seed cadence');
     assertDuration(
       renderedFreshnessText('flights'),
       /([0-9]+)-\s*(minute)\s+polling cycle/i,
-      aviationBreakerCacheMinutes('breakerFlights'),
+      evalNumberExpression(readSource('src/components/AirlineIntelPanel.ts').match(/setInterval\(\(\) => void this.refresh\(\), ([^)]+)\)/)?.[1] ?? '') / 60_000,
       'aviation panel polling cycle',
     );
 

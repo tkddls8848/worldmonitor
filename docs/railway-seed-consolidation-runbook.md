@@ -1047,7 +1047,6 @@ All new services share these settings:
 | **Members** | Defense Industrial Base (10d), Submarine Cables (weekly), Chokepoint Baselines (400d, runs rarely), Demographics Capability (20d) |
 | **Wall-time budget** | `maxBundleMs: 570_000` in `scripts/seed-bundle-static-ref.mjs`. The five members reserve 545s in total, including the runner's 10s kill grace for each member (110 + 100 + 190 + 70 + 75). The runner starts every freshness gate concurrently; its heartbeat plus the slowest three-read gate have 20s of bounded preflight, leaving 5s for process overhead. Therefore **every due member is admissible on every tick**. Do not add another member without moving or reducing measured work; that would restore the starvation the split removed. |
 
-
 Defense Industrial Base writes `military:industrial-base:v1` from World Bank
 `MS.MIL.*` series and `military:arms-suppliers:v1` from SIPRI-derived five-year
 supplier shares. Both values have a 30-day TTL. Each source is eligible every
@@ -1378,7 +1377,7 @@ last-good observations with an unavailable source status.
 | **Watch paths** | `scripts/**`, `shared/**` |
 | **Replaces** | 6 services |
 | **Net savings** | 5 slots |
-| **Members** | BIS Data (12h), CBR Rates (daily), BoC Valet (daily), StatCan WDS (daily), China Macro (36h), China Release Calendar (36h), China Policy Events (6h), BIS Extended (12h), BLS Series (daily), Eurostat (daily), Eurostat House Prices (7d), Eurostat Government Debt (2d), Eurostat Industrial Production (daily), IMF Macro (30d), National Debt (30d), FAO FFPI (daily), World Bank External Debt (30d), BIS LBS (7d), FATF Listing (30d), Education Attainment (7d), World CPI IMF (daily), World CPI Eurostat (daily), World CPI JP e-Stat (daily), World CPI AU ABS (daily) |
+| **Members** | BIS Data (12h), CBR Rates (daily), BoC Valet (daily), StatCan WDS (daily), China Macro (36h), China Release Calendar (36h), China Policy Events (6h), BIS Extended (12h), BLS Series (daily), Eurostat (daily), Eurostat House Prices (7d), Eurostat Government Debt (2d), Eurostat Industrial Production (daily), IMF Macro (30d), National Debt (30d), FAO FFPI (daily), World Bank External Debt (30d), BIS LBS (7d), FATF Listing (30d), Education Attainment (7d), World CPI IMF (daily), World CPI Eurostat (daily), World CPI AU ABS (daily) |
 | **Wall budget** | 550 seconds, with bounded parallel freshness prefetch. The runner defers a section when its timeout plus 10-second kill grace cannot fit, leaving time for the scheduler's bounded acknowledgement before Railway's 600-second limit. Physical Premiums leads 08:00 and 09:00; Education leads Sunday 08:00 with Physical second. At 10:00, one macro member leads according to the persistent `bundle:turn:macro` cursor, followed by Physical and the remaining rotated members. The existing scheduler lease prevents overlapping rotation turns; completed failed runs advance the cursor too. Every macro member, including never-seeded food feeds, therefore receives a first admission slot within one rotation, even if earlier members repeatedly time out. Completed members skip through their interval gates. Apply the updated source-controlled cron only during an approved Railway rollout. |
 
 ### Bundle 9: seed-bundle-health
@@ -1391,7 +1390,7 @@ last-good observations with an unavailable source status.
 | **Watch paths** | `scripts/**`, `shared/**` |
 | **Replaces** | 4 services plus the China control-plane evaluator |
 | **Net savings** | 3 slots |
-| **Members** | China Coverage (hourly), Air Quality (hourly), Disease Outbreaks (daily), VPD Tracker (daily), Displacement (daily) |
+| **Members** | China Coverage (hourly), Disease Outbreaks (daily), VPD Tracker (daily), Displacement (daily) |
 
 ### Bundle 10: seed-bundle-market-backup
 

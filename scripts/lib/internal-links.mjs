@@ -62,7 +62,7 @@ const termOf = (w) => {
 };
 export const tokens = (text) => words(text).map(({ w }) => termOf(w)).filter(Boolean);
 
-// `GetAirportOpsSummary` -> `Get Airport Ops Summary`.
+// `ListAirportDelays` -> `List Airport Delays`.
 export const splitCamel = (s) => String(s).replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2');
 
 // Spans on one markdown line that must never hold or cross an inserted link:

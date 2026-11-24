@@ -1,17 +1,15 @@
 ---
 description: "Follow official disease outbreak reports and travel health notices in WorldMonitor."
-title: "Monitor Disease Outbreaks and Air Quality on One Map"
-metaTitle: "Disease Outbreak & Air Quality Monitoring | WorldMonitor"
-keywords: "disease outbreak map, epidemic monitoring dashboard, WHO outbreak tracker, air quality PM2.5 map, global health surveillance, health signals API"
+title: "Monitor Disease Outbreaks on a Global Map"
+metaTitle: "Disease Outbreak Monitoring | WorldMonitor"
+keywords: "disease outbreak map, epidemic monitoring dashboard, WHO outbreak tracker, global health surveillance, health signals API"
 audience: "Public-health analysts, NGO and travel-security teams, researchers, journalists, expats and frequent travelers"
 heroImage: "/blog/images/blog/disease-outbreak-air-quality-monitoring-health-signals.jpg"
 pubDate: "2026-07-21"
 modifiedDate: "2026-07-22"
 ---
 
-Health signals are geopolitical signals. An outbreak reshapes trade and travel; a smoke or smog crisis empties cities and moves elections; and health infrastructure under strain is one of the most concrete measures of a state losing capacity. Yet health monitoring usually lives in separate tools from the conflict, disaster, and market layers it interacts with.
-
-WorldMonitor folds both halves — outbreaks and air quality — into the same dashboard as everything else.
+WorldMonitor puts official disease outbreak reports and travel health notices on the same map as conflict, displacement, and infrastructure. An outbreak can reshape travel and trade, so seeing its geographic context helps analysts follow the wider effects.
 
 ## Outbreak tracking from official and specialist sources
 
@@ -26,16 +24,17 @@ Outbreaks appear in the **[Disease Outbreaks](https://www.worldmonitor.app/docs/
 
 ## One health layer, one query
 
-For agents and developers, the `get_health_signals` MCP tool returns current outbreak signals and air-quality readings in a single structured call, with the REST equivalents under the versioned health API. The [humanitarian workflow](/blog/posts/humanitarian-situational-awareness-ngo-security-monitoring-worldmonitor/) shows the field-security use; pairing it with [displacement data](/blog/posts/track-refugee-displacement-flows-unhcr-worldmonitor/) gives the fuller picture of pressure on a population.
+For agents and developers, the `get_health_signals` MCP tool returns current outbreak signals in a structured response, with the REST equivalents under the versioned health API. The [humanitarian workflow](/blog/posts/humanitarian-situational-awareness-ngo-security-monitoring-worldmonitor/) shows the field-security use; pairing it with [displacement data](/blog/posts/track-refugee-displacement-flows-unhcr-worldmonitor/) gives the fuller picture of pressure on a population.
 
 A useful habit from the [15-minute briefing routine](/blog/posts/daily-intelligence-briefing-workflow-15-minutes/): scan health signals for the countries already on your watchlist. Outbreaks rarely stay health stories — they become border stories, supply stories, and political stories, and the analysts who tracked them from the WHO bulletin onward are never surprised by that.
 
 ## Limits
 
-Outbreak reporting inherits the biases of surveillance: countries with strong health systems report more, so more reports don't always mean more disease. Official WHO confirmation lags the specialist press by design — that's what verification costs. Air-quality sensor density varies sharply by region, with the thinnest coverage often where conditions are worst. Read gaps as gaps, not as clean air or absent disease.
+Outbreak reporting inherits the biases of surveillance: countries with strong health systems report more, so more reports don't always mean more disease. Official WHO confirmation lags the specialist press by design — that's what verification costs. A reporting gap does not establish that a disease is absent.
 
 ## Primary data sources
 
+[WHO Disease Outbreak News](https://www.who.int/emergencies/disease-outbreak-news) and [CDC Travel Health Notices](https://wwwnc.cdc.gov/travel/notices) publish the official reports and notices.
 
 ## Frequently Asked Questions
 
@@ -43,13 +42,6 @@ Outbreak reporting inherits the biases of surveillance: countries with strong he
 
 WHO Disease Outbreak News via WHO's API, CDC travel health notices, Outbreak News Today's specialist reporting, and a structured outbreak-tracker dataset — merged and deduplicated.
 
-**Where does the air-quality data come from?**
-
-
 **Is this a replacement for official public-health guidance?**
 
 No. It's situational awareness — early, aggregated, and geographically contextualized. Decisions about vaccination, treatment, or travel restrictions belong with official guidance.
-
----
-
-**Epidemics and air don't respect the borders between your dashboards. One health layer, on the same map as everything it affects, is how you stop being surprised.**

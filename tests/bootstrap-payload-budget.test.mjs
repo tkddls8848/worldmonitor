@@ -55,7 +55,7 @@ const PINNED_REPRESENTATIVE_FIXTURE_CONTRACTS = Object.freeze({
   }),
 });
 
-test('frozen production ledger is complete and cannot shrink silently', () => {
+test('production byte ledger accounts for the retired slow-tier member', () => {
   assert.equal(PRODUCTION_CAPTURE.capturedAt, '2026-08-21T14:51:50Z');
   assert.equal(PRODUCTION_CAPTURE.origin, 'https://worldmonitor.app');
   assert.match(PRODUCTION_CAPTURE.completeness, /missing: \[\]/);
@@ -79,8 +79,8 @@ test('frozen production ledger is complete and cannot shrink silently', () => {
   );
   assert.equal(
     tierPayloadBytesFromLedger(CAPTURED_BASE_TIER_KEYS.slow),
-    PRODUCTION_CAPTURE.tiers.slow.decodedBytes,
-    `SLOW ledger no longer reconstructs captured body ${PRODUCTION_CAPTURE.tiers.slow.sha256}`,
+    PRODUCTION_CAPTURE.tiers.slow.decodedBytes - 9_516, // Removed value, key, and JSON punctuation.
+    `SLOW ledger no longer matches projected captured body ${PRODUCTION_CAPTURE.tiers.slow.sha256}`,
   );
 });
 

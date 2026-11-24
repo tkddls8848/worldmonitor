@@ -2,8 +2,7 @@
  * getGoldIntelligence — the gold panel's server handler.
  *
  * Every case calls the production handler with the five cache keys it reads
- * served from an in-memory store through the Upstash REST shape, the same
- * seam tests/get-airport-ops-summary-coverage.test.mjs uses. The file this
+ * served from an in-memory store through the Upstash REST shape. The file this
  * replaced re-implemented the ratio, premium, cross-currency and COT logic
  * locally and passed with no production file present (#7770).
  */

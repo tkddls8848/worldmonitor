@@ -123,10 +123,10 @@ async function executeIntent(intent: Intent): Promise<CommandResult> {
                 : s.severity === 'minor' ? '#f59e0b'
                 : '#ef4444';
             const sevLabel = s.severity === 'unknown' ? 'NO DATA' : s.severity.toUpperCase();
-            // A NOTAM-sourced row only knows the airport is open, not its delays.
-            const suffix = s.severity === 'unknown'
-                ? ''
-                : `<span>${s.avgDelayMinutes > 0 ? `+${s.avgDelayMinutes}m delay` : s.source === 'notam' ? 'Open' : 'Normal ops'}</span>`;
+            const detail = s.severity === 'unknown' ? '' : s.avgDelayMinutes > 0
+                ? `+${s.avgDelayMinutes}m delay`
+                : s.reason || (s.severity === 'normal' ? 'Normal ops' : '');
+            const suffix = detail ? `<span>${escapeHtml(detail)}</span>` : '';
             return `
       <div class="cmd-row">
         <strong>${escapeHtml(s.iata)}</strong>

@@ -84,7 +84,7 @@
     },
     {
       "name": "get_aviation_status",
-      "description": "Return the seeded airport disruption snapshot: one alert row per monitored airport (about 85 major airports worldwide) with iata, name, country and severity, built from AviationStack delay aggregates for international hubs, FAA ASWS delays for US airports and FAA NMS and ICAO NOTAM closures. Seeded about every 30 minutes and flagged stale after 90. The snapshot holds every monitored airport, so most rows are severity \"normal\" unless disrupted_only=true, and the default limit of 30 returns only part of it (0 for the whole list). Airport-level status only; no fares, schedules or flight tracks. Seeded-cache read with no live fetch: weight 1 on API plans, included in the signed-in free allowance.",
+      "description": "Return seeded FAA delays at monitored US airports and FAA NMS or ICAO NOTAM closures and restrictions at monitored airports. An airport without coverage has unknown status. Each row includes the IATA code, country, severity and source.",
       "_meta": {
         "worldmonitor/access": "free-account",
         "worldmonitor/category": "movement-infrastructure"
@@ -181,7 +181,7 @@
     },
     {
       "name": "get_health_signals",
-      "description": "Active disease outbreaks (WHO/ECDC etc.) and global air-quality station readings (OpenAQ/WAQI PM2.5). For health-risk screening.",
+      "description": "Active disease outbreaks from public health authorities such as WHO and ECDC.",
       "_meta": {
         "worldmonitor/access": "free-account",
         "worldmonitor/category": "health"
@@ -205,7 +205,7 @@
     },
     {
       "name": "get_climate_data",
-      "description": "Return the seeded climate bundle: temperature and precipitation anomalies against 30-year WMO normals, climate-relevant disaster alerts (ReliefWeb, GDACS, FIRMS), the NOAA Mauna Loa CO2 trend, OpenAQ/WAQI PM2.5 station readings, NSIDC/NOAA Arctic sea-ice extent and ocean-heat indicators, active weather alerts and climate news. Freshness follows each source seed time and budget (anomalies 9 h, CO2 3 days, sea ice 2 days), plus producer content-age limits for anomalies and news. Seeded-cache read with no live fetch: weight 1 on API plans, included in the signed-in free allowance.",
+      "description": "Return the seeded climate bundle: temperature and precipitation anomalies against 30-year WMO normals, climate-relevant disaster alerts (ReliefWeb, GDACS, FIRMS), the NOAA Mauna Loa CO2 trend, NSIDC/NOAA Arctic sea-ice extent and ocean-heat indicators, active weather alerts and climate news. Freshness follows each source seed time and budget (anomalies 9 h, CO2 3 days, sea ice 2 days), plus producer content-age limits for anomalies and news. Seeded-cache read with no live fetch: weight 1 on API plans, included in the signed-in free allowance.",
       "_meta": {
         "worldmonitor/access": "free-account",
         "worldmonitor/category": "environment-science"
@@ -245,7 +245,7 @@
     },
     {
       "name": "get_price_and_debt_indicators",
-      "description": "Return the seeded price and debt indicator bundle: the Economist Big Mac index by country, the FAO Food Price Index and per-country national debt levels. Each sub-dataset has its own staleness budget (Big Mac a week, FAO and debt 60 days). No tariff rates. Seeded-cache read with no live fetch: weight 1 on API plans, included in the signed-in free allowance.",
+      "description": "Return the seeded FAO Food Price Index and per-country national debt levels. Both datasets have a 60-day freshness budget.",
       "_meta": {
         "worldmonitor/access": "free-account",
         "worldmonitor/category": "markets-economy"

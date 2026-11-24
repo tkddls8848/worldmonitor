@@ -192,7 +192,6 @@ Per AGENTS.md, adding a new seeded key requires changes in **4 files**:
 ```ts
 epidemicTrends: 'health:epidemic-trends:v1',
 vaccinationCoverage: 'health:vaccination-coverage:v1',
-airQuality: 'health:air-quality:v1',
 pathogenSurveillance: 'health:pathogen-surveillance:v1',
 healthNews: 'health:news-intelligence:v1',
 ```
@@ -212,11 +211,11 @@ Register in `api/mcp.ts`:
 ```ts
 {
   name: 'get_health_data',
-  description: 'Global health intelligence: disease outbreaks (WHO/ProMED/CDC), epidemic case trends, vaccination coverage gaps, air quality health risk, pathogen/variant surveillance, and health news.',
+  description: 'Global health intelligence: disease outbreaks (WHO/ProMED/CDC), epidemic case trends, vaccination coverage gaps, pathogen/variant surveillance, and health news.',
   inputSchema: {
     type: 'object',
     properties: {
-      layer: { type: 'string', description: '"outbreaks" | "trends" | "vaccination" | "air-quality" | "pathogens" | "news" | empty for all' },
+      layer: { type: 'string', description: '"outbreaks" | "trends" | "vaccination" | "pathogens" | "news" | empty for all' },
       country: { type: 'string', description: 'ISO2 country code filter' },
     },
     required: [],
@@ -226,7 +225,6 @@ Register in `api/mcp.ts`:
     'health:vpd-tracker:realtime:v1',
     'health:epidemic-trends:v1',
     'health:vaccination-coverage:v1',
-    'health:air-quality:v1',
     'health:pathogen-surveillance:v1',
     'health:news-intelligence:v1',
   ],
@@ -243,10 +241,10 @@ Add to `src/config/variant.ts`:
 
 ```ts
 health: {
-  defaultPanels: ['disease-outbreaks', 'epidemic-trends', 'pathogen-alerts', 'health-news', 'vaccination-coverage', 'air-quality'],
-  mapLayers: ['disease-outbreaks', 'air-quality', 'vaccination-gaps'],
+  defaultPanels: ['disease-outbreaks', 'epidemic-trends', 'pathogen-alerts', 'health-news', 'vaccination-coverage'],
+  mapLayers: ['disease-outbreaks', 'vaccination-gaps'],
   theme: { primaryColor: '#0099DD', accentColor: '#E53935' },
-  refreshIntervals: { outbreaks: 6 * 60, news: 30, airQuality: 60 },
+  refreshIntervals: { outbreaks: 6 * 60, news: 30 },
   i18n: { title: 'Health Intelligence', subtitle: 'Global Disease & Epidemic Monitoring' },
 }
 ```
@@ -261,7 +259,6 @@ health: {
 | Our World in Data | None required | Free, public CSV |
 | Nextstrain | None required | Free, public JSON |
 | RSS feeds (all) | None required | Public |
-
 
 ---
 

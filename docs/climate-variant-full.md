@@ -242,7 +242,6 @@ Per AGENTS.md, adding a new seeded key requires changes in **4 files**:
 ```ts
 co2Monitoring: 'climate:co2-monitoring:v1',
 climateDisasters: 'climate:disasters:v1',
-climateAirQuality: 'climate:air-quality:v1',
 oceanIce: 'climate:ocean-ice:v1',
 climateNews: 'climate:news-intelligence:v1',
 climateZoneNormals: 'climate:zone-normals:v1',
@@ -266,7 +265,7 @@ Replace current entry in `api/mcp.ts`:
   inputSchema: {
     type: 'object',
     properties: {
-      layer: { type: 'string', description: '"anomalies" | "co2" | "disasters" | "air-quality" | "ocean-ice" | "news" | empty for all' },
+      layer: { type: 'string', description: '"anomalies" | "co2" | "disasters" | "ocean-ice" | "news" | empty for all' },
       region: { type: 'string', description: 'Region or zone name filter' },
     },
     required: [],
@@ -275,7 +274,6 @@ Replace current entry in `api/mcp.ts`:
     'climate:anomalies:v2',
     'climate:co2-monitoring:v1',
     'climate:disasters:v1',
-    'climate:air-quality:v1',
     'climate:ocean-ice:v1',
     'climate:news-intelligence:v1',
   ],
@@ -295,7 +293,6 @@ Replace current entry in `api/mcp.ts`:
 | ReliefWeb API | None | Free |
 | RSS feeds (all) | None | Public |
 | Copernicus CDS | `CDS_API_KEY` | Free (registration required) — only needed for CAMS/ERA5 advanced queries |
-
 
 ---
 
@@ -325,8 +322,8 @@ Add to `src/config/variant.ts`:
 
 ```ts
 climate: {
-  defaultPanels: ['climate-anomalies', 'co2-monitoring', 'climate-disasters', 'ocean-ice', 'air-quality', 'climate-news'],
-  mapLayers: ['climate-anomalies-heatmap', 'disasters', 'air-quality', 'wildfire'],
+  defaultPanels: ['climate-anomalies', 'co2-monitoring', 'climate-disasters', 'ocean-ice', 'climate-news'],
+  mapLayers: ['climate-anomalies-heatmap', 'disasters', 'wildfire'],
   theme: { primaryColor: '#00AA55', accentColor: '#FF6600' },
   refreshIntervals: { anomalies: 3 * 60, co2: 24 * 60, disasters: 6 * 60, news: 30 },
   i18n: { title: 'Climate Intelligence', subtitle: 'Atmospheric, Ocean & Disaster Monitoring' },

@@ -75,7 +75,10 @@ const NOTAM_TTL     = 7_200;  // 2h
 // closures stop being retained once health would call them stale.
 const NOTAM_MAX_STALE_MIN = 240;
 export const NEWS_TTL = 2_400;  // 40min
-const BOOTSTRAP_TTL = 7_200;  // 2h — matches FAA/NOTAM; survives ~4 missed cron ticks
+const BOOTSTRAP_FRESHNESS = {
+  ttlSeconds: 7_200,
+  maxStaleMin: 90, // api/health.js flightDelays freshness gate
+};
 
 // health.js expects these exact meta keys (api/health.js:222,223,269)
 const FAA_META_KEY   = 'seed-meta:aviation:faa';
@@ -1025,11 +1028,11 @@ async function writeDelaysBootstrap() {
     ]);
 
     const payload = buildDelaysBootstrapPayload({ faaPayload, notamPayload });
-    const ok = await upstashSet(BOOTSTRAP_KEY, payload, BOOTSTRAP_TTL);
+    const ok = await upstashSet(BOOTSTRAP_KEY, payload, BOOTSTRAP_FRESHNESS.ttlSeconds);
     if (ok) {
       // Only after the aggregate itself landed: a heartbeat written ahead of a
       // failed SET would claim freshness for a payload nobody stored. The meta
-      // TTL (writeSeedMeta's 7d default) deliberately outlives BOOTSTRAP_TTL, so
+      // TTL (writeSeedMeta's 7d default) deliberately outlives the aggregate TTL, so
       // an expired aggregate reads STALE_SEED against maxStaleMin rather than
       // losing its clock at the same moment it loses its data.
       await writeSeedMeta(BOOTSTRAP_KEY, payload.alerts.length, BOOTSTRAP_META_KEY);
@@ -1189,6 +1192,9 @@ async function runNewsSideCar() {
 }
 
 async function main() {
+  if (BOOTSTRAP_FRESHNESS.ttlSeconds <= BOOTSTRAP_FRESHNESS.maxStaleMin * 60) {
+    throw new Error('Aviation delay aggregate TTL must outlive its health staleness gate');
+  }
   console.log('=== Aviation Seeder (FAA, NOTAM, news) ===');
   await runFaaSideCar();
   await runNotamSideCar();
@@ -1197,7 +1203,10 @@ async function main() {
 }
 
 const isMain = process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/^.*[\\/]/, ''));
-if (isMain) main().catch((err) => {
+const startedAt = Date.now();
+if (isMain) main().then(() => {
+  console.log(`=== Done (${Date.now() - startedAt}ms) ===`);
+}).catch((err) => {
   const cause = err.cause ? ` (cause: ${err.cause.message || err.cause.code || err.cause})` : '';
   console.error('FATAL:', (err.message || err) + cause);
   process.exit(1);

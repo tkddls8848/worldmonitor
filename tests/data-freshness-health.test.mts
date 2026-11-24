@@ -144,12 +144,6 @@ describe('health freshness ingestion', () => {
             seedAgeMin: 900,
             maxStaleMin: 720,
           },
-          climateAnomalies: {
-            status: 'OK',
-            records: 8,
-            seedAgeMin: 20,
-            maxStaleMin: 180,
-          },
         },
       }),
     });

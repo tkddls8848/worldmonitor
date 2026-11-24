@@ -22,7 +22,7 @@ The **Trade Policy panel** (a Pro panel in the geopolitical, finance, and commod
 - **Bilateral trade flows** — UN COMTRADE data connects a tariff line to the actual goods volumes exposed to it.
 - **Trade and policy news** — classified feeds covering negotiations, retaliation threats, and carve-outs, because the gap between announcement and implementation is where planning happens.
 
-Around the dedicated panel, the free tier keeps the context instruments: the **Big Mac Index**, the **FAO Food Price Index**, retail **fuel prices**, and national-debt context — the consumer-facing end of the same transmission chain.
+Around the dedicated panel, the free tier keeps the context instruments: the **FAO Food Price Index**, retail **fuel prices**, and national-debt context — the consumer-facing end of the same transmission chain.
 
 ## From tariff line to decision
 
@@ -58,7 +58,7 @@ News tells you what was announced. The tracker pairs announcements with what's m
 
 **Is the Trade Policy panel free?**
 
-The dedicated panel is Pro. Context instruments — Big Mac Index, FAO Food Price Index, fuel prices, and trade news feeds — are part of the free dashboards.
+The dedicated panel is Pro. The free dashboards include the FAO Food Price Index, fuel prices, and trade news feeds.
 
 ---
 

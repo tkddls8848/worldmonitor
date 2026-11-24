@@ -9,7 +9,6 @@ import type {
 import type { MonitoredAirport } from '../../../../src/types';
 import {
   FAA_AIRPORTS,
-  DELAY_SEVERITY_THRESHOLDS,
 } from '../../../../src/config/airports';
 import { readCachedJson } from '../../../_shared/redis';
 export { getRelayBaseUrl, getRelayHeaders } from '../../../_shared/relay';
@@ -200,15 +199,6 @@ export function severityFromCancelRate(cancelRate: number): string {
   return 'normal';
 }
 
-export function determineSeverity(avgDelayMinutes: number, delayedPct?: number): string {
-  const t = DELAY_SEVERITY_THRESHOLDS;
-  if (avgDelayMinutes >= t.severe.avgDelayMinutes || (delayedPct && delayedPct >= t.severe.delayedPct)) return 'severe';
-  if (avgDelayMinutes >= t.major.avgDelayMinutes || (delayedPct && delayedPct >= t.major.delayedPct)) return 'major';
-  if (avgDelayMinutes >= t.moderate.avgDelayMinutes || (delayedPct && delayedPct >= t.moderate.delayedPct)) return 'moderate';
-  if (avgDelayMinutes >= t.minor.avgDelayMinutes || (delayedPct && delayedPct >= t.minor.delayedPct)) return 'minor';
-  return 'normal';
-}
-
 export function buildNotamAlert(
   airport: MonitoredAirport,
   reason: string,
@@ -246,7 +236,7 @@ export function buildNotamOpenAlert(airport: MonitoredAirport): AirportDelayAler
   };
 }
 
-// ---------- Shared NOTAM loader (used by both list-airport-delays and get-airport-ops-summary) ----------
+// ---------- NOTAM seed loader ----------
 
 const NOTAM_CACHE_KEY = 'aviation:notam:closures:v2';
 export interface LoadedNotamResult {

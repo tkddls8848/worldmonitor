@@ -1041,9 +1041,6 @@ describe('bootstrap hydration reuse (#7048)', () => {
     const aviation = roundTrip('Flight Delays v2', [{ updatedAt: new Date(1) }]);
     assert.ok(aviation[0]?.updatedAt instanceof Date);
 
-    const ops = roundTrip('Airport Ops', [{ updatedAt: new Date(1) }]);
-    assert.ok(ops[0]?.updatedAt instanceof Date);
-
     const prices = roundTrip('Flight Prices', {
       quotes: [
         { id: 'q1', expiresAt: new Date(2) },

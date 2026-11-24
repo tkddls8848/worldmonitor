@@ -139,11 +139,3 @@ export const MONITORED_AIRPORTS: MonitoredAirport[] = [
 export const FAA_AIRPORTS = MONITORED_AIRPORTS.filter(
   (a) => a.country === 'USA'
 ).map((a) => a.iata);
-
-// Severity thresholds
-export const DELAY_SEVERITY_THRESHOLDS = {
-  minor: { avgDelayMinutes: 15, delayedPct: 15 },
-  moderate: { avgDelayMinutes: 30, delayedPct: 30 },
-  major: { avgDelayMinutes: 45, delayedPct: 45 },
-  severe: { avgDelayMinutes: 60, delayedPct: 60 },
-};

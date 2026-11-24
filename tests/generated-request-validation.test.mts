@@ -156,27 +156,18 @@ describe('generated request validation', () => {
   });
 
   it('preserves optional zero-value defaults but still rejects invalid explicit values', () => {
-    assert.equal(validateGeneratedRequest('getAirportOpsSummary', {
-      airports: [],
+    assert.equal(validateGeneratedRequest('listAviationNews', {
+      maxItems: 0,
     }), undefined);
-    assert.equal(validateGeneratedRequest('listAirportFlights', {
-      airport: 'DXB',
-      direction: 'FLIGHT_DIRECTION_BOTH',
-      limit: 0,
-    }), undefined);
-    assert.deepEqual(validateGeneratedRequest('listAirportFlights', {
-      airport: 'DXB',
-      direction: 'FLIGHT_DIRECTION_BOTH',
-      limit: 101,
+    assert.deepEqual(validateGeneratedRequest('listAviationNews', {
+      maxItems: 51,
     }), [
-      { field: 'limit', description: 'number must be less than or equal to 100' },
+      { field: 'maxItems', description: 'number must be less than or equal to 50' },
     ]);
-    assert.deepEqual(validateGeneratedRequest('listAirportFlights', {
-      airport: 'DXB',
-      direction: 'FLIGHT_DIRECTION_BOTH',
-      limit: Number.NaN,
+    assert.deepEqual(validateGeneratedRequest('listAviationNews', {
+      maxItems: Number.NaN,
     }), [
-      { field: 'limit', description: 'value must be a finite number' },
+      { field: 'maxItems', description: 'value must be a finite number' },
     ]);
   });
 
@@ -208,28 +199,29 @@ describe('generated request validation', () => {
   });
 
   it('enforces every supported scalar and cardinality rule family', () => {
-    assert.deepEqual(validateGeneratedRequest('getFlightStatus', {
-      flightNumber: 'AB',
-      date: '2026-08-01',
+    assert.deepEqual(validateGeneratedRequest('searchFlightPrices', {
+      origin: 'AB',
+      destination: 'JFK',
+      departureDate: '2026-08-01',
     }), [
-      { field: 'flightNumber', description: 'string length must be at least 3' },
+      { field: 'origin', description: 'string length must be at least 3' },
     ]);
-    assert.deepEqual(validateGeneratedRequest('getFlightStatus', {
-      flightNumber: 'EK202',
-      date: '20260801',
+    assert.deepEqual(validateGeneratedRequest('searchFlightPrices', {
+      origin: 'DXB',
+      destination: 'JFK',
+      departureDate: '20260801',
     }), [
-      { field: 'date', description: 'string length must be exactly 10' },
+      { field: 'departureDate', description: 'string length must be exactly 10' },
     ]);
     assert.deepEqual(validateGeneratedRequest('getCountryRisk', {
       countryCode: 'us',
     }), [
       { field: 'countryCode', description: 'string must match pattern ^[A-Z]{2}$' },
     ]);
-    assert.deepEqual(validateGeneratedRequest('listAirportFlights', {
-      airport: 'DXB',
-      limit: -1,
+    assert.deepEqual(validateGeneratedRequest('listAviationNews', {
+      maxItems: -1,
     }), [
-      { field: 'limit', description: 'number must be greater than or equal to 1' },
+      { field: 'maxItems', description: 'number must be greater than or equal to 1' },
     ]);
     assert.deepEqual(validateGeneratedRequest('getIntelTimeline', {
       from: -1,
@@ -243,10 +235,10 @@ describe('generated request validation', () => {
     }), [
       { field: 'lat', description: 'number must be less than or equal to 90' },
     ]);
-    assert.deepEqual(validateGeneratedRequest('getAirportOpsSummary', {
-      airports: Array.from({ length: 21 }, (_, index) => `A${index}`),
+    assert.deepEqual(validateGeneratedRequest('getFredSeriesBatch', {
+      seriesIds: Array.from({ length: 21 }, (_, index) => `A${index}`),
     }), [
-      { field: 'airports', description: 'array must contain at most 20 item(s)' },
+      { field: 'seriesIds', description: 'array must contain at most 20 item(s)' },
     ]);
   });
 

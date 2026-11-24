@@ -7,8 +7,6 @@ import { describe, it } from 'node:test';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const apiDir = resolve(root, 'docs/api');
 const TARGETS = [
-  ['AviationService.openapi.json', 'GetAirportOpsSummary'],
-  ['AviationService.openapi.json', 'ListAirportFlights'],
   ['InfrastructureService.openapi.json', 'ListTemporalAnomalies'],
   ['MaritimeService.openapi.json', 'ListNavigationalWarnings'],
   ['ConflictService.openapi.json', 'ListAcledEvents'],

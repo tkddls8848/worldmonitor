@@ -22,7 +22,7 @@ const guideFiles = ['vs', 'alternatives', 'best'].flatMap((category) =>
 );
 
 function parseMarkdownEntry(baseDir, file) {
-  const source = readFileSync(join(baseDir, file), 'utf8');
+  const source = readFileSync(join(baseDir, file), 'utf8').replaceAll('\r\n', '\n');
   const frontmatter = source.match(/^---\n([\s\S]*?)\n---\n/);
   assert.ok(frontmatter, `${file}: missing frontmatter`);
   const field = (name) => {

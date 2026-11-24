@@ -1,6 +1,6 @@
 ---
 title: "Ground-Truth Inflation: Tracking Real Shelf Prices, Not Just CPI"
-description: "WorldMonitor tracks supermarket shelf prices across four UAE retailers and compares them with the Big Mac Index, FAO food prices, fuel prices, and IMF CPI."
+description: "WorldMonitor tracks supermarket shelf prices across four UAE retailers and compares them with FAO food prices, fuel prices, and IMF CPI."
 metaTitle: "Real-Time Shelf Price & Inflation Tracking | WorldMonitor"
 keywords: "real time inflation data, grocery price tracker, consumer prices API, shelf price monitoring, cost of living dashboard, food price index"
 audience: "Economists, macro analysts, journalists, expats, cost-of-living researchers"
@@ -32,7 +32,6 @@ Basket definitions for additional countries — the US, UK, Australia, India, Br
 Shelf-price truth is most useful next to its slower official cousins, so the platform keeps them adjacent:
 
 - **IMF WEO official CPI** with broad country coverage — the world-inflation reference layer.
-- The **Big Mac Index** — the classic purchasing-power shorthand.
 - The **[FAO Food Price Index](https://www.worldmonitor.app/docs/api-reference/economicservice/getfaofoodpriceindex)** — global food-commodity pressure upstream of your grocery store.
 - **Retail fuel prices** — the other price everyone feels weekly.
 
@@ -40,7 +39,7 @@ Read them as a chain: FAO tells you global food inputs are rising; tariff and fr
 
 ## For developers and agents
 
-The `get_consumer_prices` MCP tool (UAE today) returns the overview, category inflation, retailer spread, and movers in one structured call; the consumer-prices REST endpoints expose the same series, and `get_price_and_debt_indicators` adds the Big Mac, FAO, and fiscal context. For [macro traders](/blog/posts/geopolitics-to-markets-pipeline-macro-traders-worldmonitor/), shelf-price velocity is an inflation nowcast; for journalists, "bread rose 11% across four chains in three weeks" is a story with receipts.
+The `get_consumer_prices` MCP tool (UAE today) returns the overview, category inflation, retailer spread, and movers in one structured call; the consumer-prices REST endpoints expose the same series, and `get_price_and_debt_indicators` adds FAO food prices and fiscal context. For [macro traders](/blog/posts/geopolitics-to-markets-pipeline-macro-traders-worldmonitor/), shelf-price velocity is an inflation nowcast; for journalists, "bread rose 11% across four chains in three weeks" is a story with receipts.
 
 ## Limits
 

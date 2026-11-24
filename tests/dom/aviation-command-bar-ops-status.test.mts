@@ -15,10 +15,12 @@ afterEach(() => { document.body.innerHTML = ''; });
 const row = { iata: 'IKA', icao: 'OIIE', name: 'Imam Khomeini International', avgDelayMinutes: 0, delayType: 'general' };
 
 it.each([
-  ['notam', 'normal', 'Open'],
-  ['faa', 'normal', 'Normal ops'],
-] as const)('an ops row sourced to %s reads "%s / %s"', async (source, severity, text) => {
-  summaries.rows = [{ ...row, source, severity }];
+  ['notam', 'normal', 'general', 'Open'],
+  ['notam', 'severe', 'closure', 'Airport closed for maintenance'],
+  ['notam', 'major', 'general', 'Airspace restriction'],
+  ['faa', 'normal', 'general', 'Normal ops'],
+] as const)('an ops row sourced to %s shows %s %s with its cause', async (source, severity, delayType, text) => {
+  summaries.rows = [{ ...row, source, severity, delayType, reason: text }];
   const bar = new AviationCommandBar();
   bar.open();
   const input = document.querySelector<HTMLInputElement>('#aviation-cmd-input')!;
