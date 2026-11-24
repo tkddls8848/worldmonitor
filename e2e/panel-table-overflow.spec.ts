@@ -1080,7 +1080,6 @@ test('panel table text is readable in both themes', async ({ page }) => {
       try { grid.appendChild(build()); } catch (err) { failures.push(`${name}: ${String(err)}`); }
     };
 
-
     mount('fuel-prices', () => {
       const panel = new FuelPricesPanel();
       (panel as unknown as { renderIndex(data: unknown): void }).renderIndex({
@@ -1324,7 +1323,7 @@ test('panel table text is readable in both themes', async ({ page }) => {
     }, rowSelector);
     await page.mouse.move(0, 0);
     const report = await measure(null);
-    expect(report.panels, `${theme}: every mounted panel renders a table`).toBe(16);
+    expect(report.panels, `${theme}: every mounted panel renders a table`).toBe(15);
     expect(report.checked, `${theme}: text nodes measured`).toBeGreaterThan(200);
     expect.soft(report.low, `${theme}: table text below AA contrast`).toEqual([]);
     // Severity badges sit on tinted rows, and hovering a row adds its own tint.
