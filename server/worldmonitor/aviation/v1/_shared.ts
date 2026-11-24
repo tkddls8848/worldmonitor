@@ -15,8 +15,6 @@ import { readCachedJson } from '../../../_shared/redis';
 export { getRelayBaseUrl, getRelayHeaders } from '../../../_shared/relay';
 export { parseStringArray } from '../../../_shared/parse-string-array';
 
-export type IntlCoverage = { iata: string; status: 'normal' | 'disruption' | 'omitted' | 'failed'; flightCount: number };
-const COVERAGE_STATUSES = new Set<IntlCoverage['status']>(['normal', 'disruption', 'omitted', 'failed']);
 
 export function isValidAirportDelayAlert(value: unknown): value is AirportDelayAlert {
   if (!value || typeof value !== 'object') return false;
@@ -29,29 +27,11 @@ export function isValidAirportDelayAlert(value: unknown): value is AirportDelayA
     && (alert.totalFlights === undefined || Number.isFinite(alert.totalFlights));
 }
 
-export function isValidIntlCoverage(value: unknown): value is IntlCoverage {
-  if (!value || typeof value !== 'object') return false;
-  const coverage = value as Partial<IntlCoverage>;
-  return typeof coverage.iata === 'string' && typeof coverage.status === 'string'
-    && COVERAGE_STATUSES.has(coverage.status as IntlCoverage['status']);
-}
-
-// ---------- Constants ----------
-
 export const FAA_URL = 'https://nasstatus.faa.gov/api/airport-status-information';
-export const DEFAULT_WATCHED_AIRPORTS = ['IST', 'ESB', 'SAW', 'LHR', 'FRA', 'CDG'];
 
 // Shared by every route that turns a caller-supplied airport code into a PAID
-// AviationStack call. Rejecting non-IATA input before the fetch bounds cache-key
-// cardinality and stops arbitrary strings being used to probe upstream.
 export const IATA_RE = /^[A-Z]{3}$/;
 
-// Ceiling on how many airports one request may fan out to. get-carrier-ops
-// issues one paid AviationStack call PER AIRPORT, and `parseStringArray` puts no
-// bound on the list, so `?airports=A,B,...` was an unauthenticated multiplier on
-// spend — 26 codes meant 26 paid calls from one anonymous request. Sized to
-// DEFAULT_WATCHED_AIRPORTS so the full watched set still resolves in one call.
-export const MAX_AIRPORTS_PER_REQUEST = DEFAULT_WATCHED_AIRPORTS.length;
 
 // ---------- XML Parser ----------
 
@@ -205,7 +185,6 @@ export function toProtoSource(s: string): FlightDelaySource {
     faa: 'FLIGHT_DELAY_SOURCE_FAA',
     eurocontrol: 'FLIGHT_DELAY_SOURCE_EUROCONTROL',
     computed: 'FLIGHT_DELAY_SOURCE_COMPUTED',
-    aviationstack: 'FLIGHT_DELAY_SOURCE_AVIATIONSTACK',
     notam: 'FLIGHT_DELAY_SOURCE_NOTAM',
   };
   return map[s] || 'FLIGHT_DELAY_SOURCE_COMPUTED';

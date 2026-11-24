@@ -226,28 +226,6 @@ export const CHINA_COVERAGE_ENTRIES = Object.freeze([
     },
   },
   {
-    id: 'aviation.china-hubs',
-    label: 'China aviation hubs',
-    ownerIssue: 5273,
-    // Per-hub coverage comes from the canonical provider payload. Do not use
-    // bootstrap alerts here: they include presentation-only NORMAL/UNKNOWN rows.
-    launchStatus: 'launched',
-    transport: metaTransport('seed-meta:aviation:intl', 90),
-    content: {
-      key: 'aviation:delays-bootstrap:v2',
-      maxAgeMin: 120,
-      probe: {
-        kind: 'array-coverage',
-        path: ['coverage'],
-        field: 'iata',
-        values: ['PEK', 'PVG', 'CAN', 'SZX', 'CTU', 'KMG', 'URC', 'HKG'],
-        validField: 'status',
-        validValues: ['normal', 'disruption'],
-        timestampPaths: [['updatedAt']],
-      },
-    },
-  },
-  {
     id: 'macro.china-snapshot',
     label: 'Normalized China macro snapshot',
     ownerIssue: 5574,

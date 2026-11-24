@@ -888,7 +888,6 @@ contract needs to be made fully uniform beyond shared `runSeed` users.
 
 | # | Service Name | Service ID | Reason |
 |---|---|---|---|
-| 1 | seed-defense-patents (DISABLED) | `6f8bfd1b-7ccc-4db5-b03c-a2075b173e91` | Standalone remains deleted; producer restored in `seed-bundle-static-ref` using USPTO ODP |
 
 ### Replaced by seed-bundle-ecb-eu
 
@@ -1044,19 +1043,10 @@ All new services share these settings:
 | **Start command** | `node scripts/seed-bundle-static-ref.mjs` |
 | **Cron schedule** | `0 3 * * *` (daily at 03:00 UTC) |
 | **Watch paths** | `scripts/**`, `shared/**` |
-| **Replaces** | 4 services (including the retired defense-patents producer) |
 | **Net savings** | 3 slots |
-| **Members** | Defense Industrial Base (10d), Submarine Cables (weekly), Defense Patents (weekly), Chokepoint Baselines (400d, runs rarely), Demographics Capability (20d) |
+| **Members** | Defense Industrial Base (10d), Submarine Cables (weekly), Chokepoint Baselines (400d, runs rarely), Demographics Capability (20d) |
 | **Wall-time budget** | `maxBundleMs: 570_000` in `scripts/seed-bundle-static-ref.mjs`. The five members reserve 545s in total, including the runner's 10s kill grace for each member (110 + 100 + 190 + 70 + 75). The runner starts every freshness gate concurrently; its heartbeat plus the slowest three-read gate have 20s of bounded preflight, leaving 5s for process overhead. Therefore **every due member is admissible on every tick**. Do not add another member without moving or reducing measured work; that would restore the starvation the split removed. |
-| **Required variable** | `USPTO_API_KEY=${{shared.USPTO_API_KEY}}` |
 
-Defense Patents is an intentional data-series migration, not a continuation of
-the former grant/issue series. USPTO ODP Patent File Wrapper records represent
-applications, so `date` is the application filing date and `abstract` remains
-empty for wire compatibility. The producer marks the discontinuity with
-`sourceVersion: uspto-odp-v1` and `schemaVersion: 2`; operational comparisons
-must not treat pre-migration grant dates and post-migration filing dates as one
-continuous metric.
 
 Defense Industrial Base writes `military:industrial-base:v1` from World Bank
 `MS.MIL.*` series and `military:arms-suppliers:v1` from SIPRI-derived five-year
@@ -1096,7 +1086,6 @@ costs nothing. One service carries all three heavy members instead of three
 | **Lifecycle** | active — service `6285c37b-1327-46f1-bfd0-7454612764fb`, provisioned 2026-08-19, first tick published `bundle:heartbeat:static-ref-heavy` at 2026-08-20T04:01:04Z |
 | **Members** | Supply-Vulnerability (160s / daily), CII-Structural-Prior (90s / 30d, pending owner deployment), Mineral-Production (180s / 60d), Arms-Suppliers (370s / 14d), and Military-Bases (400s / 30d), ordered by the durable turn policy below |
 | **Wall-time budget** | `maxBundleMs: 570_000` |
-| **Required variable** | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `CLOUDFLARE_R2_ACCOUNT_ID` and one of `CLOUDFLARE_R2_TOKEN` / `CLOUDFLARE_API_TOKEN`. `USPTO_API_KEY` stays on leftover. The R2 pair is NOT optional here: `scripts/data/military-bases-final.json` is gitignored and the service has no volume, so without it Military-Bases falls back to the published version and exits non-zero once that is past its 30-day interval (#6845). |
 | **Heartbeat** | `bundle:heartbeat:static-ref-heavy` |
 
 The proposed CII prior section follows Supply-Vulnerability in the cadence class
@@ -1576,7 +1565,6 @@ acceptance checks.
 | 1 | digest-notifications | `01d644b8-057f-4040-a50e-500bd684daa8` | Notification dispatch, not a data seed |
 | 2 | seed-airport-delays | `444e9cc0-4eb2-4820-b430-3228e6ce9568` | Unique aviation domain |
 | 3 | seed-aviation | `a8e49386-64c1-4e1e-9f82-4eb69a55fce3` | Different keys from relay's aviation loop |
-| 4 | seed-bigmac | `e8269317-c717-498b-adcf-be693a2bb8d3` | Weekly, web scraping via Exa |
 | 5 | seed-chokepoint-exposure | `12e8e87d-1214-4ba3-a813-709f279a5ba9` | Derived from Comtrade flows |
 | 6 | seed-conflict-intel | `e4188e09-ae3b-4398-bb24-04f4b4b48b52` | Fast cadence (15min), notifications |
 | 7 | seed-cot | `23b2597f-1989-4904-9018-b3722a9e1bc2` | Weekly CFTC data |

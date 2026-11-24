@@ -51,7 +51,7 @@ test('forecast:bets:history:v1 is registered as a LIST key', () => {
 test('dataLenCommand issues LLEN for list keys and STRLEN for string keys', () => {
   assert.deepEqual(dataLenCommand(BETS_KEY), ['LLEN', BETS_KEY]);
   // A representative string key must be untouched.
-  const stringKey = STANDALONE_KEYS.defensePatents;
+  const stringKey = STANDALONE_KEYS.militaryFlights;
   assert.deepEqual(dataLenCommand(stringKey), ['STRLEN', stringKey]);
 });
 
@@ -100,10 +100,10 @@ test('a REAL per-command Redis error on the list key still surfaces REDIS_PARTIA
 });
 
 test('string keys keep NEG_SENTINEL semantics: strlen 10 is NOT data', () => {
-  const key = STANDALONE_KEYS.defensePatents;
-  const entry = classifyKey('defensePatents', key, {}, makeCtx({
+  const key = STANDALONE_KEYS.militaryFlights;
+  const entry = classifyKey('militaryFlights', key, {}, makeCtx({
     strens: { [key]: 10 },  // exactly '__WM_NEG__'
-    metaValues: { [SEED_META.defensePatents.key]: JSON.stringify({ fetchedAt: NOW - ONE_MIN_MS, recordCount: 3 }) },
+    metaValues: { [SEED_META.militaryFlights.key]: JSON.stringify({ fetchedAt: NOW - ONE_MIN_MS, recordCount: 3 }) },
   }));
   assert.equal(entry.status, 'EMPTY');
   assert.equal(entry.records, 0);

@@ -1908,7 +1908,6 @@ test('classifyKey: empty bootstrap key (no cascade) → EMPTY (crit)', () => {
 const ISSUE_5055_HEALTH_REGISTRATIONS = [
   ['energyPrices', 'economic:energy:v1:all', 'seed-meta:economic:energy-prices', 150],
   ['researchArxivHnTrending', 'research:arxiv:v1:cs.AI::50', 'seed-meta:research:arxiv-hn-trending', 150],
-  ['defensePatents', 'patents:defense:latest', 'seed-meta:military:defense-patents', 25200],
   ['acledIntel', 'conflict:acled:v1:all:0:0', 'seed-meta:conflict:acled-intel', 38],
   ['portwatchDisruptions', 'portwatch:disruptions:active:v1', 'seed-meta:portwatch:disruptions', 150],
   ['comtradeBilateralHs4', 'seed-meta:comtrade:bilateral-hs4', 'seed-meta:comtrade:bilateral-hs4', 50400],

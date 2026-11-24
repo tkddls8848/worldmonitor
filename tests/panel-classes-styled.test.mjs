@@ -1,14 +1,14 @@
 /**
  * Every class these panels emit must have a rule scoped under a panel root.
  *
- * The R&D Signal (defense-patents), Toronto Safety and AI Regulation panels
+ * The Toronto Safety and AI Regulation panels
  * shipped markup whose classes appeared in no stylesheet, so each panel
  * rendered as raw stacked text with no padding. The Hormuz commodity
  * dependency list put a country and its context in two bare spans, which ran
  * together as "DjiboutiSoybeans"; the rest of that panel is styled inline, so
  * only its dependency block is checked. A class that only matches an
  * unrelated rule elsewhere (`.stat`, `.count`, an RTL override) does not count:
- * the rule must name the panel root. DefensePatentsPanel paints its loading
+ * the rule must name the panel root.
  * state outside the list wrapper (a raw write the content-write ratchet keeps on
  * purpose), so that state is a second root. Shared tab primitives are checked
  * against any dashboard sheet.
@@ -31,7 +31,6 @@ import { readFileSync, readdirSync } from 'node:fs';
 const srcDir = new URL('../src/', import.meta.url);
 
 const PANELS = {
-  'components/DefensePatentsPanel.ts': { roots: ['defense-patents-panel', 'defense-patents-loading'], samples: ['defense-patent-row'] },
   'components/TorontoSafetyPanel.ts': { roots: ['toronto-safety-panel'], samples: ['intel-item'] },
   'components/RegulationPanel.ts': {
     roots: ['regulation-panel'],

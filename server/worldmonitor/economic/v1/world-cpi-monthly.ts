@@ -3,7 +3,6 @@
 // precedence and staleness rules are testable without a fixture server.
 //
 // Source precedence per country (highest first):
-//   1. estat-cpi     Japan only — the national release authority
 //   2. eurostat-hicp EU geos       — the harmonised European basket
 //   3. imf-hicp      European countries covered by the IMF harmonised series
 //   4. imf-cpi       default worldwide
@@ -19,7 +18,6 @@
 // from masking a current national print.
 
 export type WorldCpiSourceId =
-  | 'estat-cpi'
   | 'eurostat-hicp'
   | 'imf-hicp'
   | 'imf-cpi'
@@ -65,7 +63,6 @@ export interface WorldCpiWireCountry {
 }
 
 export const WORLD_CPI_SOURCES: WorldCpiSourceId[] = [
-  'estat-cpi',
   'eurostat-hicp',
   'imf-hicp',
   'imf-cpi',
@@ -75,14 +72,12 @@ export const WORLD_CPI_SOURCES: WorldCpiSourceId[] = [
 export const WORLD_CPI_CANONICAL_KEYS: Record<Exclude<WorldCpiSourceId, 'imf-hicp'>, string> = {
   'imf-cpi': 'economic:world-cpi:imf:v1',
   'eurostat-hicp': 'economic:world-cpi:eurostat:v1',
-  'estat-cpi': 'economic:world-cpi:estat:v1',
   'abs-cpi': 'economic:world-cpi:abs:v1',
 };
 
 export const WORLD_CPI_LATEST_KEYS: Record<Exclude<WorldCpiSourceId, 'imf-hicp'>, string> = {
   'imf-cpi': 'economic:world-cpi:imf:latest:v1',
   'eurostat-hicp': 'economic:world-cpi:eurostat:latest:v1',
-  'estat-cpi': 'economic:world-cpi:estat:latest:v1',
   'abs-cpi': 'economic:world-cpi:abs:latest:v1',
 };
 
@@ -92,7 +87,6 @@ export const WORLD_CPI_STORAGE_SOURCE: Record<WorldCpiSourceId, Exclude<WorldCpi
   'imf-cpi': 'imf-cpi',
   'imf-hicp': 'imf-cpi',
   'eurostat-hicp': 'eurostat-hicp',
-  'estat-cpi': 'estat-cpi',
   'abs-cpi': 'abs-cpi',
 };
 

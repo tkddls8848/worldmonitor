@@ -3138,7 +3138,6 @@ export class PanelLayoutManager implements AppModule {
     this.lazyDefaultPanel('cascade', () => import('@/components/CascadePanel'), 'CascadePanel');
     this.lazyDefaultPanel('satellite-fires', () => import('@/components/SatelliteFiresPanel'), 'SatelliteFiresPanel');
 
-    this.lazyDefaultPanel('defense-patents', () => import('@/components/DefensePatentsPanel'), 'DefensePatentsPanel');
     this.lazyDefaultPanel('toronto-safety', () => import('@/components/TorontoSafetyPanel'), 'TorontoSafetyPanel');
 
     // Correlation engine panels
@@ -3323,9 +3322,6 @@ export class PanelLayoutManager implements AppModule {
     );
     this.lazyPanel('grocery-basket', () =>
       this.importPanel('grocery-basket', () => import('@/components/GroceryBasketPanel'), 'GroceryBasketPanel', (GroceryBasketPanel) => new GroceryBasketPanel()),
-    );
-    this.lazyPanel('bigmac', () =>
-      this.importPanel('bigmac', () => import('@/components/BigMacPanel'), 'BigMacPanel', (BigMacPanel) => new BigMacPanel()),
     );
     this.lazyPanel('fx', () =>
       this.importPanel('fx', () => import('@/components/FxPanel'), 'FxPanel', (FxPanel) => new FxPanel()),

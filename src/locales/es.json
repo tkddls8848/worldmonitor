@@ -460,7 +460,6 @@
     "gulfIndices": "Índices del Golfo",
     "gulfCurrencies": "Monedas del Golfo",
     "gulfOil": "Petróleo del Golfo",
-    "bigmac": "Índice Big Mac real",
     "fearGreed": "Miedo y codicia",
     "marketImplications": "Implicaciones de Mercado de IA",
     "energyComplex": "Complejo Energético",
@@ -478,9 +477,6 @@
     "windyWebcams": "Cámara en Vivo Windy",
     "groceryBasket": "Índice de Canasta de Abarrotes",
     "groceryItem": "Artículo",
-    "bigmacDesc": "Precios del Big Mac en países de Medio Oriente (Índice Big Mac)",
-    "bigmacWow": "Semana a semana",
-    "bigmacCountry": "País",
     "faoFoodPriceIndex": "Precios de alimentos",
     "fuelPrices": "Precios de Combustible",
     "fuelPricesDesc": "Precios al por menor de gasolina y diésel en más de 30 países en todo el mundo",
@@ -2154,9 +2150,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Comparación global de precios de canasta básica en 24 países — monitorea la inflación real de bienes de consumo más allá del índice de precios al consumidor titular."
     },
-    "bigmac": {
-      "infoTooltip": "<strong>Real Big Mac Index</strong> El Big Mac Index de The Economist mide la paridad del poder adquisitivo comparando el precio de la hamburguesa de McDonald's entre países. Se actualiza cuando se publican nuevos datos (trimestral/anualmente)."
-    },
     "defiTokens": {
       "infoTooltip": "<strong>Tokens DeFi</strong> Precios y rendimiento a 24h/7d de los principales tokens de protocolos de finanzas descentralizadas: DEX, plataformas de préstamo y protocolos de rendimiento."
     },
@@ -2181,8 +2174,6 @@
     "airlineIntel": {
       "infoTooltip": "<strong>Inteligencia Aeronáutica</strong> Datos operativos de aerolíneas en tiempo real: suspensiones de rutas, cierres de espacio aéreo, avisos de transportistas y desvíos de emergencia. Fuente: NOTAM de autoridades de aviación y boletines de transportistas.",
       "noOpsData": "Sin datos operativos — cargando…",
-      "noFlights": "Sin vuelos — selecciona un aeropuerto en configuración.",
-      "noCarrierData": "Sin datos de operador aún.",
       "noTrackingData": "Sin datos de rastreo de aeronaves.",
       "noNews": "Sin noticias de aviación.",
       "enterRoute": "Ingresa una ruta y busca precios.",
@@ -2797,24 +2788,6 @@
         "low": "baja confianza"
       }
     },
-    "defensePatents": {
-      "title": "Señales de investigación y desarrollo",
-      "infoTooltip": "Solicitudes semanales de patentes de defensa y uso dual por Raytheon, Lockheed, Huawei, DARPA y otras organizaciones estratégicas. Categorías: H04B (comunicaciones), H01L (semiconductores), F42B (municiones), G06N (IA), C12N (biotecnología). Fuente: USPTO Open Data Portal.",
-      "loading": "Cargando presentaciones de investigación y desarrollo…",
-      "error": "No se pudieron cargar los datos de patentes.",
-      "empty": "Sin solicitudes en esta categoría.",
-      "viewOnUspto": "Ver en USPTO",
-      "tabs": {
-        "all": "Todo"
-      },
-      "cpcLabels": {
-        "H04B": "Comunicaciones",
-        "H01L": "Semiconductores",
-        "F42B": "Municiones",
-        "G06N": "IA",
-        "C12N": "Biotecnología"
-      }
-    },
     "correlation": {
       "loading": "Esperando datos...",
       "empty": "No se detectó convergencia activa",
@@ -3385,7 +3358,6 @@
         "faa": "ASWS de la FAA",
         "eurocontrol": "Eurocontrol",
         "computed": "Calculado",
-        "aviationstack": "Datos de vuelo",
         "notam": "NOTAM"
       },
       "regions": {
@@ -4849,11 +4821,10 @@
       "flights": {
         "category": "Aviación",
         "purpose": "Señala las perturbaciones aeroportuarias y los cierres NOTAM, los NOTAM de espacio aéreo vigentes ahora o que empiezan en un plazo de 24 horas (restricciones temporales de vuelo, zonas restringidas, peligrosas y prohibidas, zonas de operaciones militares, reservas y cierres de espacio aéreo) y las posiciones de aeronaves en vivo cuando hay seguimiento.",
-        "source": "FAA ASWS, AviationStack, FAA NOTAM Management Service (NMS-API) y NOTAM de la ICAO, adsb.lol (ODbL), Wingbits, recuperación del antiguo servicio OpenSky, relleno opcional no comercial airplanes.live/adsb.fi y el servicio de aviación. Los NOTAM de espacio aéreo se dibujan como polígonos cuando NMS los aporta, como círculos cuando el NOTAM da un radio de hasta 250 NM, y como marcadores en los demás casos.",
+        "source": "FAA ASWS, FAA NOTAM Management Service (NMS-API) y NOTAM de la ICAO, adsb.lol (ODbL), Wingbits, recuperación del antiguo servicio OpenSky, relleno opcional no comercial airplanes.live/adsb.fi y el servicio de aviación. Los NOTAM de espacio aéreo se dibujan como polígonos cuando NMS los aporta, como círculos cuando el NOTAM da un radio de hasta 250 NM, y como marcadores en los demás casos.",
         "freshness": "Las cargas de perturbación aeroportuaria siguen un ritmo de 30 minutos. Los NOTAM de espacio aéreo se cargan cada 5 minutos a partir de las extracciones de cambios de NMS, con una resincronización completa diaria, frente a un presupuesto de actualidad de 20 minutos. El panel de aviación también actualiza las vistas operativas en un ciclo de sondeo de 5 minutos.",
         "confidence": "Es lo más útil para priorizar perturbaciones. La cobertura de cada aeronave en vivo depende de la disponibilidad ADS-B y de los proveedores configurados. El texto del NOTAM es la autoridad tal como lo distribuye la FAA.",
         "limitations": {
-          "0": "Pueden aparecer datos de demostración simulados, respaldados por AviationStack, cuando falta una clave API.",
           "1": "Las posiciones de aeronaves en vivo pueden retrasarse o faltar donde la cobertura ADS-B es débil o está bloqueada.",
           "2": "Las zonas NOTAM de espacio aéreo solo se dibujan en el mapa deck.gl. El mapa SVG muestra marcadores de aeropuerto.",
           "3": "La mayoría de las TFR de Estados Unidos describen su forma solo en el texto, así que aparecen como un marcador en la posición del NOTAM y no como la forma restringida.",

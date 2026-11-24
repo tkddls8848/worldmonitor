@@ -66,7 +66,7 @@ describe('aviation bootstrap hydration path', () => {
         location: { latitude: 40.0799, longitude: 116.6031 }, region: 'AIRPORT_REGION_APAC',
         delayType: 'FLIGHT_DELAY_TYPE_GENERAL', severity: 'FLIGHT_DELAY_SEVERITY_NORMAL',
         avgDelayMinutes: 0, delayedFlightsPct: 0, cancelledFlights: 0, totalFlights: 0,
-        reason: 'Normal operations', source: 'FLIGHT_DELAY_SOURCE_AVIATIONSTACK', updatedAt: Date.now(),
+        reason: 'Open', source: 'FLIGHT_DELAY_SOURCE_NOTAM', updatedAt: Date.now(),
       },
     ];
 
@@ -88,7 +88,7 @@ describe('aviation bootstrap hydration path', () => {
       {
         KMG: { severity: 'unknown', source: 'unspecified' },
         URC: { severity: 'unknown', source: 'unspecified' },
-        PEK: { severity: 'normal', source: 'aviationstack' },
+        PEK: { severity: 'normal', source: 'notam' },
       },
     );
     assert.equal(requests.filter((url) => !url.includes('/api/bootstrap?')).length, 0,

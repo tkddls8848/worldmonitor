@@ -93,39 +93,6 @@ message VaccinationCoverageItem {
 }
 ```
 
-### Layer 4: Air Quality Health Risk (NEW)
-
-**What:** PM2.5 / AQI global readings mapped to health risk zones — direct bridge between climate/environment and health.
-
-**Sources:**
-
-- **OpenAQ API v3** (`OPENAQ_API_KEY`): `https://api.openaq.org/v3/locations?limit=1000&parameters_id=2&bbox={bbox}`
-  - Readings: `https://api.openaq.org/v3/sensors/{id}/measurements/daily`
-  - 12,000+ stations globally, free tier sufficient
-- **WAQI (World Air Quality Index)** — city-level aggregation: `https://api.waqi.info/map/bounds/?latlng={bbox}&token={key}`
-  - Key: `WAQI_API_KEY` (free tier: 1000 req/day)
-- **WHO AQI guidelines** as threshold overlay (hardcoded: PM2.5 annual mean > 15 µg/m³ = WHO limit)
-
-**Redis key:** `health:air-quality:v1`
-**Seed script:** `seed-health-air-quality.mjs`
-**Cache TTL:** 3600 (1h — hourly data available)
-**Proto RPC:** `ListAirQualityAlerts` → returns stations above WHO thresholds with health risk classification
-
-```proto
-message AirQualityAlert {
-  string city = 1;
-  string country_code = 2;
-  double lat = 3;
-  double lng = 4;
-  double pm25 = 5;          // µg/m³
-  int32 aqi = 6;            // 0–500 US AQI scale
-  string risk_level = 7;    // "good" | "moderate" | "unhealthy" | "hazardous"
-  string pollutant = 8;     // primary pollutant driving AQI
-  int64 measured_at = 9;
-  string source = 10;       // "OpenAQ" | "WAQI"
-}
-```
-
 ### Layer 5: Pathogen Surveillance (NEW)
 
 **What:** Emerging pathogen/variant tracking — early warning for novel strains.
@@ -188,7 +155,6 @@ message PathogenAlert {
 | `seed-vpd-tracker.mjs` | Daily (existing) | `health:vpd-tracker:realtime:v1` | 72h |
 | `seed-epidemic-trends.mjs` | Daily | `health:epidemic-trends:v1` | 24h |
 | `seed-vaccination-coverage.mjs` | Weekly (Sunday 02:00 UTC) | `health:vaccination-coverage:v1` | 7 days |
-| `seed-health-air-quality.mjs` | Every 1h | `health:air-quality:v1` | 1h |
 | `seed-pathogen-surveillance.mjs` | Every 12h | `health:pathogen-surveillance:v1` | 24h |
 | `seed-health-news.mjs` | Every 30min (or relay loop) | `health:news-intelligence:v1` | 1h |
 
@@ -205,9 +171,6 @@ service HealthService {
   }
   rpc GetVaccinationCoverage(GetVaccinationCoverageRequest) returns (GetVaccinationCoverageResponse) {
     option (sebuf.http.config) = {path: "/get-vaccination-coverage", method: HTTP_METHOD_GET};
-  }
-  rpc ListAirQualityAlerts(ListAirQualityAlertsRequest) returns (ListAirQualityAlertsResponse) {
-    option (sebuf.http.config) = {path: "/list-air-quality-alerts", method: HTTP_METHOD_GET};
   }
   rpc ListPathogenAlerts(ListPathogenAlertsRequest) returns (ListPathogenAlertsResponse) {
     option (sebuf.http.config) = {path: "/list-pathogen-alerts", method: HTTP_METHOD_GET};
@@ -294,14 +257,11 @@ health: {
 
 | Service | Key Name | Free Tier |
 |---------|----------|-----------|
-| WAQI (air quality) | `WAQI_API_KEY` | 1000 req/day (sufficient for hourly city aggregation) |
-| OpenAQ v3 (air quality) | `OPENAQ_API_KEY` | Required by current API docs |
 | WHO GHO API | None required | Free, public |
 | Our World in Data | None required | Free, public CSV |
 | Nextstrain | None required | Free, public JSON |
 | RSS feeds (all) | None required | Public |
 
-**At least 1 new API key is required (`OPENAQ_API_KEY`)**. `WAQI_API_KEY` remains optional; the seed still works with OpenAQ alone.
 
 ---
 
@@ -311,7 +271,6 @@ health: {
 2. **`seed-health-news.mjs`** — pure RSS aggregation, no key needed, fast win
 3. **`seed-pathogen-surveillance.mjs`** — Nextstrain JSON + WHO WER RSS
 4. **`seed-epidemic-trends.mjs`** — WHO GHO API (no key, daily data)
-5. **`seed-health-air-quality.mjs`** — OpenAQ (`OPENAQ_API_KEY`) + optional WAQI
 6. **`seed-vaccination-coverage.mjs`** — WHO immunization API (weekly, lowest priority)
 7. **Proto + handler additions** for each new RPC
 8. **MCP tool registration** `get_health_data`

@@ -80,118 +80,6 @@ export interface PaginationResponse {
   totalCount: number;
 }
 
-export interface GetAirportOpsSummaryRequest {
-  airports: string[];
-}
-
-export interface GetAirportOpsSummaryResponse {
-  summaries: AirportOpsSummary[];
-  cacheHit: boolean;
-}
-
-export interface AirportOpsSummary {
-  iata: string;
-  icao: string;
-  name: string;
-  timezone: string;
-  delayPct: number;
-  avgDelayMinutes: number;
-  cancellationRate: number;
-  totalFlights: number;
-  closureStatus: boolean;
-  notamFlags: string[];
-  severity: FlightDelaySeverity;
-  topDelayReasons: string[];
-  source: string;
-  updatedAt: number;
-}
-
-export interface ListAirportFlightsRequest {
-  airport: string;
-  direction: FlightDirection;
-  limit: number;
-}
-
-export interface ListAirportFlightsResponse {
-  flights: FlightInstance[];
-  totalAvailable: number;
-  source: string;
-  updatedAt: number;
-}
-
-export interface FlightInstance {
-  flightNumber: string;
-  date: string;
-  operatingCarrier?: Carrier;
-  origin?: AirportRef;
-  destination?: AirportRef;
-  scheduledDeparture: number;
-  estimatedDeparture: number;
-  actualDeparture: number;
-  scheduledArrival: number;
-  estimatedArrival: number;
-  actualArrival: number;
-  status: FlightInstanceStatus;
-  delayMinutes: number;
-  cancelled: boolean;
-  diverted: boolean;
-  gate: string;
-  terminal: string;
-  aircraftIcao24: string;
-  aircraftType: string;
-  codeshareFlightNumbers: string[];
-  source: string;
-  updatedAt: number;
-}
-
-export interface Carrier {
-  iataCode: string;
-  icaoCode: string;
-  name: string;
-}
-
-export interface AirportRef {
-  iata: string;
-  icao: string;
-  name: string;
-  timezone: string;
-}
-
-export interface GetCarrierOpsRequest {
-  airports: string[];
-  minFlights: number;
-}
-
-export interface GetCarrierOpsResponse {
-  carriers: CarrierOpsSummary[];
-  source: string;
-  updatedAt: number;
-}
-
-export interface CarrierOpsSummary {
-  carrier?: Carrier;
-  airport: string;
-  totalFlights: number;
-  delayedCount: number;
-  cancelledCount: number;
-  avgDelayMinutes: number;
-  delayPct: number;
-  cancellationRate: number;
-  updatedAt: number;
-}
-
-export interface GetFlightStatusRequest {
-  flightNumber: string;
-  date: string;
-  origin: string;
-}
-
-export interface GetFlightStatusResponse {
-  flights: FlightInstance[];
-  source: string;
-  cacheHit: boolean;
-}
-
 export interface TrackAircraftRequest {
   icao24: string;
   callsign: string;
@@ -281,6 +169,12 @@ export interface PriceQuote {
   observedAt: number;
   checkoutRef: string;
   expiresAt: number;
+}
+
+export interface Carrier {
+  iataCode: string;
+  icaoCode: string;
+  name: string;
 }
 
 export interface ListAviationNewsRequest {
@@ -375,13 +269,9 @@ export type CabinClass = "CABIN_CLASS_UNSPECIFIED" | "CABIN_CLASS_ECONOMY" | "CA
 
 export type FlightDelaySeverity = "FLIGHT_DELAY_SEVERITY_UNSPECIFIED" | "FLIGHT_DELAY_SEVERITY_NORMAL" | "FLIGHT_DELAY_SEVERITY_MINOR" | "FLIGHT_DELAY_SEVERITY_MODERATE" | "FLIGHT_DELAY_SEVERITY_MAJOR" | "FLIGHT_DELAY_SEVERITY_SEVERE" | "FLIGHT_DELAY_SEVERITY_UNKNOWN";
 
-export type FlightDelaySource = "FLIGHT_DELAY_SOURCE_UNSPECIFIED" | "FLIGHT_DELAY_SOURCE_FAA" | "FLIGHT_DELAY_SOURCE_EUROCONTROL" | "FLIGHT_DELAY_SOURCE_COMPUTED" | "FLIGHT_DELAY_SOURCE_AVIATIONSTACK" | "FLIGHT_DELAY_SOURCE_NOTAM";
+export type FlightDelaySource = "FLIGHT_DELAY_SOURCE_UNSPECIFIED" | "FLIGHT_DELAY_SOURCE_FAA" | "FLIGHT_DELAY_SOURCE_EUROCONTROL" | "FLIGHT_DELAY_SOURCE_COMPUTED" | "FLIGHT_DELAY_SOURCE_NOTAM";
 
 export type FlightDelayType = "FLIGHT_DELAY_TYPE_UNSPECIFIED" | "FLIGHT_DELAY_TYPE_GROUND_STOP" | "FLIGHT_DELAY_TYPE_GROUND_DELAY" | "FLIGHT_DELAY_TYPE_DEPARTURE_DELAY" | "FLIGHT_DELAY_TYPE_ARRIVAL_DELAY" | "FLIGHT_DELAY_TYPE_GENERAL" | "FLIGHT_DELAY_TYPE_CLOSURE";
-
-export type FlightDirection = "FLIGHT_DIRECTION_UNSPECIFIED" | "FLIGHT_DIRECTION_DEPARTURE" | "FLIGHT_DIRECTION_ARRIVAL" | "FLIGHT_DIRECTION_BOTH";
-
-export type FlightInstanceStatus = "FLIGHT_INSTANCE_STATUS_UNSPECIFIED" | "FLIGHT_INSTANCE_STATUS_SCHEDULED" | "FLIGHT_INSTANCE_STATUS_BOARDING" | "FLIGHT_INSTANCE_STATUS_DEPARTED" | "FLIGHT_INSTANCE_STATUS_AIRBORNE" | "FLIGHT_INSTANCE_STATUS_LANDED" | "FLIGHT_INSTANCE_STATUS_ARRIVED" | "FLIGHT_INSTANCE_STATUS_CANCELLED" | "FLIGHT_INSTANCE_STATUS_DIVERTED" | "FLIGHT_INSTANCE_STATUS_UNKNOWN";
 
 export type PositionSource = "POSITION_SOURCE_UNSPECIFIED" | "POSITION_SOURCE_OPENSKY" | "POSITION_SOURCE_WINGBITS" | "POSITION_SOURCE_SIMULATED";
 
@@ -432,10 +322,6 @@ export interface RouteDescriptor {
 export interface AviationServiceHandler {
   listAircraftEmergencies(ctx: ServerContext, req: ListAircraftEmergenciesRequest): Promise<ListAircraftEmergenciesResponse>;
   listAirportDelays(ctx: ServerContext, req: ListAirportDelaysRequest): Promise<ListAirportDelaysResponse>;
-  getAirportOpsSummary(ctx: ServerContext, req: GetAirportOpsSummaryRequest): Promise<GetAirportOpsSummaryResponse>;
-  listAirportFlights(ctx: ServerContext, req: ListAirportFlightsRequest): Promise<ListAirportFlightsResponse>;
-  getCarrierOps(ctx: ServerContext, req: GetCarrierOpsRequest): Promise<GetCarrierOpsResponse>;
-  getFlightStatus(ctx: ServerContext, req: GetFlightStatusRequest): Promise<GetFlightStatusResponse>;
   trackAircraft(ctx: ServerContext, req: TrackAircraftRequest): Promise<TrackAircraftResponse>;
   getYoutubeLiveStreamInfo(ctx: ServerContext, req: GetYoutubeLiveStreamInfoRequest): Promise<GetYoutubeLiveStreamInfoResponse>;
   searchFlightPrices(ctx: ServerContext, req: SearchFlightPricesRequest): Promise<SearchFlightPricesResponse>;
@@ -515,199 +401,6 @@ export function createAviationServiceRoutes(
 
           const result = await handler.listAirportDelays(ctx, body);
           return new Response(JSON.stringify(result as ListAirportDelaysResponse), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (err: unknown) {
-          if (err instanceof ValidationError) {
-            return new Response(JSON.stringify({ violations: err.violations }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-          if (options?.onError) {
-            return options.onError(err, req);
-          }
-          const message = "Internal server error";
-          return new Response(JSON.stringify({ message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      },
-    },
-    {
-      method: "GET",
-      path: "/api/aviation/v1/get-airport-ops-summary",
-      handler: async (req: Request): Promise<Response> => {
-        try {
-          const pathParams: Record<string, string> = {};
-          const url = new URL(req.url, "http://localhost");
-          const params = url.searchParams;
-          const body: GetAirportOpsSummaryRequest = {
-            airports: params.getAll("airports"),
-          };
-          if (options?.validateRequest) {
-            const bodyViolations = options.validateRequest("getAirportOpsSummary", body);
-            if (bodyViolations) {
-              throw new ValidationError(bodyViolations);
-            }
-          }
-
-          const ctx: ServerContext = {
-            request: req,
-            pathParams,
-            headers: Object.fromEntries(req.headers.entries()),
-          };
-
-          const result = await handler.getAirportOpsSummary(ctx, body);
-          return new Response(JSON.stringify(result as GetAirportOpsSummaryResponse), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (err: unknown) {
-          if (err instanceof ValidationError) {
-            return new Response(JSON.stringify({ violations: err.violations }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-          if (options?.onError) {
-            return options.onError(err, req);
-          }
-          const message = "Internal server error";
-          return new Response(JSON.stringify({ message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      },
-    },
-    {
-      method: "GET",
-      path: "/api/aviation/v1/list-airport-flights",
-      handler: async (req: Request): Promise<Response> => {
-        try {
-          const pathParams: Record<string, string> = {};
-          const url = new URL(req.url, "http://localhost");
-          const params = url.searchParams;
-          const body: ListAirportFlightsRequest = {
-            airport: params.get("airport") ?? "",
-            direction: (params.get("direction") ?? "FLIGHT_DIRECTION_UNSPECIFIED") as FlightDirection,
-            limit: Number(params.get("limit") ?? "0"),
-          };
-          if (options?.validateRequest) {
-            const bodyViolations = options.validateRequest("listAirportFlights", body);
-            if (bodyViolations) {
-              throw new ValidationError(bodyViolations);
-            }
-          }
-
-          const ctx: ServerContext = {
-            request: req,
-            pathParams,
-            headers: Object.fromEntries(req.headers.entries()),
-          };
-
-          const result = await handler.listAirportFlights(ctx, body);
-          return new Response(JSON.stringify(result as ListAirportFlightsResponse), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (err: unknown) {
-          if (err instanceof ValidationError) {
-            return new Response(JSON.stringify({ violations: err.violations }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-          if (options?.onError) {
-            return options.onError(err, req);
-          }
-          const message = "Internal server error";
-          return new Response(JSON.stringify({ message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      },
-    },
-    {
-      method: "GET",
-      path: "/api/aviation/v1/get-carrier-ops",
-      handler: async (req: Request): Promise<Response> => {
-        try {
-          const pathParams: Record<string, string> = {};
-          const url = new URL(req.url, "http://localhost");
-          const params = url.searchParams;
-          const body: GetCarrierOpsRequest = {
-            airports: params.getAll("airports"),
-            minFlights: Number(params.get("min_flights") ?? "0"),
-          };
-          if (options?.validateRequest) {
-            const bodyViolations = options.validateRequest("getCarrierOps", body);
-            if (bodyViolations) {
-              throw new ValidationError(bodyViolations);
-            }
-          }
-
-          const ctx: ServerContext = {
-            request: req,
-            pathParams,
-            headers: Object.fromEntries(req.headers.entries()),
-          };
-
-          const result = await handler.getCarrierOps(ctx, body);
-          return new Response(JSON.stringify(result as GetCarrierOpsResponse), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (err: unknown) {
-          if (err instanceof ValidationError) {
-            return new Response(JSON.stringify({ violations: err.violations }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-          if (options?.onError) {
-            return options.onError(err, req);
-          }
-          const message = "Internal server error";
-          return new Response(JSON.stringify({ message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      },
-    },
-    {
-      method: "GET",
-      path: "/api/aviation/v1/get-flight-status",
-      handler: async (req: Request): Promise<Response> => {
-        try {
-          const pathParams: Record<string, string> = {};
-          const url = new URL(req.url, "http://localhost");
-          const params = url.searchParams;
-          const body: GetFlightStatusRequest = {
-            flightNumber: params.get("flight_number") ?? "",
-            date: params.get("date") ?? "",
-            origin: params.get("origin") ?? "",
-          };
-          if (options?.validateRequest) {
-            const bodyViolations = options.validateRequest("getFlightStatus", body);
-            if (bodyViolations) {
-              throw new ValidationError(bodyViolations);
-            }
-          }
-
-          const ctx: ServerContext = {
-            request: req,
-            pathParams,
-            headers: Object.fromEntries(req.headers.entries()),
-          };
-
-          const result = await handler.getFlightStatus(ctx, body);
-          return new Response(JSON.stringify(result as GetFlightStatusResponse), {
             status: 200,
             headers: { "Content-Type": "application/json" },
           });

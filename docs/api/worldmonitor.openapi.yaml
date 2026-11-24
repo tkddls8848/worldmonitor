@@ -78,7 +78,7 @@ paths:
             tags:
                 - AviationService
             summary: ListAirportDelays
-            description: ListAirportDelays returns delay status for each monitored airport from seeded FAA and AviationStack data plus NOTAM closures, marking unreported hubs unknown.
+            description: ListAirportDelays returns delay status for each monitored airport from seeded FAA delay data and NOTAM closures, marking unreported hubs unknown.
             operationId: ListAirportDelays
             parameters:
                 - name: page_size
@@ -157,276 +157,6 @@ paths:
                                     "totalCount": 1
                             schema:
                                 $ref: '#/components/schemas/worldmonitor_aviation_v1_ListAirportDelaysResponse'
-                "400":
-                    description: Validation error
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/ValidationError'
-                                    - $ref: '#/components/schemas/JmespathProjectionError'
-                default:
-                    description: Error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Error'
-    /api/aviation/v1/get-airport-ops-summary:
-        get:
-            tags:
-                - AviationService
-            summary: GetAirportOpsSummary
-            description: GetAirportOpsSummary returns watched-airport operational health, including delay percentages, average delay minutes, cancellation rates and closure status.
-            operationId: GetAirportOpsSummary
-            parameters:
-                - name: airports
-                  in: query
-                  description: IATA airport codes to query (e.g., ["IST", "ESB", "LHR"]).
-                  required: false
-                  style: form
-                  explode: true
-                  example:
-                      - "JFK"
-                  schema:
-                    type: array
-                    items:
-                        type: string
-                - name: jmespath
-                  in: query
-                  description: |-
-                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
-                  required: false
-                  example: "keys(@)"
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: Successful response
-                    content:
-                        application/json:
-                            example:
-                                "cacheHit": true
-                                "summaries":
-                                    - "avgDelayMinutes": 1
-                                      "cancellationRate": 75.25
-                                      "closureStatus": true
-                                      "delayPct": 1.5
-                                      "iata": "JFK"
-                            schema:
-                                $ref: '#/components/schemas/worldmonitor_aviation_v1_GetAirportOpsSummaryResponse'
-                "400":
-                    description: Validation error
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/ValidationError'
-                                    - $ref: '#/components/schemas/JmespathProjectionError'
-                default:
-                    description: Error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Error'
-    /api/aviation/v1/list-airport-flights:
-        get:
-            tags:
-                - AviationService
-            summary: ListAirportFlights
-            description: ListAirportFlights returns recent arrivals and departures with direction and limit filters, status and carrier. Apply these filters to focus airport traffic.
-            operationId: ListAirportFlights
-            parameters:
-                - name: airport
-                  in: query
-                  description: IATA airport code (e.g., "IST").
-                  required: true
-                  example: "JFK"
-                  schema:
-                    type: string
-                - name: direction
-                  in: query
-                  description: Direction filter.
-                  required: false
-                  example: "FLIGHT_DIRECTION_DEPARTURE"
-                  schema:
-                    type: string
-                    enum:
-                        - 'FLIGHT_DIRECTION_DEPARTURE'
-                        - 'FLIGHT_DIRECTION_ARRIVAL'
-                        - 'FLIGHT_DIRECTION_BOTH'
-                - name: limit
-                  in: query
-                  description: Maximum number of flights to return (1-100).
-                  required: false
-                  example: 25
-                  schema:
-                    type: integer
-                    format: int32
-                - name: jmespath
-                  in: query
-                  description: |-
-                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
-                  required: false
-                  example: "keys(@)"
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: Successful response
-                    content:
-                        application/json:
-                            example:
-                                "flights":
-                                    - "actualArrival": 1
-                                      "actualDeparture": 1
-                                      "aircraftIcao24": "a835af"
-                                      "aircraftType": "all"
-                                      "cancelled": true
-                                "source": "example"
-                                "totalAvailable": 1
-                                "updatedAt": 1717200000000
-                            schema:
-                                $ref: '#/components/schemas/worldmonitor_aviation_v1_ListAirportFlightsResponse'
-                "400":
-                    description: Validation error
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/ValidationError'
-                                    - $ref: '#/components/schemas/JmespathProjectionError'
-                default:
-                    description: Error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Error'
-    /api/aviation/v1/get-carrier-ops:
-        get:
-            tags:
-                - AviationService
-            summary: GetCarrierOps
-            description: GetCarrierOps returns delay and cancellation metrics grouped by carrier. The response uses the fields defined by this RPC's protobuf response message.
-            operationId: GetCarrierOps
-            parameters:
-                - name: airports
-                  in: query
-                  description: IATA airport codes to aggregate carrier metrics from.
-                  required: false
-                  style: form
-                  explode: true
-                  example:
-                      - "JFK"
-                  schema:
-                    type: array
-                    items:
-                        type: string
-                - name: min_flights
-                  in: query
-                  description: |-
-                    Minimum number of flights required to include a carrier (default: 3).
-                     The generated GET decoder emits 0 when the query param is absent, and 0
-                     means "use the default" in the handler — an explicit 0 is not a usable
-                     filter (every group has >= 1 flight).
-                  required: false
-                  example: 1
-                  schema:
-                    type: integer
-                    format: int32
-                - name: jmespath
-                  in: query
-                  description: |-
-                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
-                  required: false
-                  example: "keys(@)"
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: Successful response
-                    content:
-                        application/json:
-                            example:
-                                "carriers":
-                                    - "airport": "JFK"
-                                      "avgDelayMinutes": 1
-                                      "cancellationRate": 75.25
-                                      "cancelledCount": 1
-                                      "carrier":
-                                          "iataCode": "JFK"
-                                          "icaoCode": "example"
-                                          "name": "WorldMonitor Analyst"
-                                "source": "example"
-                                "updatedAt": 1717200000000
-                            schema:
-                                $ref: '#/components/schemas/worldmonitor_aviation_v1_GetCarrierOpsResponse'
-                "400":
-                    description: Validation error
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/ValidationError'
-                                    - $ref: '#/components/schemas/JmespathProjectionError'
-                default:
-                    description: Error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Error'
-    /api/aviation/v1/get-flight-status:
-        get:
-            tags:
-                - AviationService
-            summary: GetFlightStatus
-            description: GetFlightStatus looks up the current status of a specific flight. The response uses the fields defined by this RPC's protobuf response message.
-            operationId: GetFlightStatus
-            parameters:
-                - name: flight_number
-                  in: query
-                  description: IATA flight number (e.g., "TK1952").
-                  required: true
-                  example: "JFK"
-                  schema:
-                    type: string
-                - name: date
-                  in: query
-                  description: Departure date in ISO 8601 format (e.g., "2026-03-05").
-                  required: true
-                  example: "2026-01-15"
-                  schema:
-                    type: string
-                - name: origin
-                  in: query
-                  description: Optional origin airport IATA code to disambiguate.
-                  required: false
-                  example: "JFK"
-                  schema:
-                    type: string
-                - name: jmespath
-                  in: query
-                  description: |-
-                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
-                  required: false
-                  example: "keys(@)"
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: Successful response
-                    content:
-                        application/json:
-                            example:
-                                "cacheHit": true
-                                "flights":
-                                    - "actualArrival": 1
-                                      "actualDeparture": 1
-                                      "aircraftIcao24": "a835af"
-                                      "aircraftType": "all"
-                                      "cancelled": true
-                                "source": "example"
-                            schema:
-                                $ref: '#/components/schemas/worldmonitor_aviation_v1_GetFlightStatusResponse'
                 "400":
                     description: Validation error
                     content:
@@ -542,7 +272,6 @@ paths:
             operationId: GetYoutubeLiveStreamInfo
             parameters:
                 - name: channel
-                  deprecated: true
                   in: query
                   description: 'Deprecated: YouTube channel handle or ID. Channel live detection is retired; a channel-only query returns error "channel_live_detection_retired".'
                   required: false
@@ -1318,51 +1047,6 @@ paths:
                                     "measuredAt": 1717200000000
                             schema:
                                 $ref: '#/components/schemas/worldmonitor_climate_v1_GetOceanIceDataResponse'
-                "400":
-                    description: Validation error
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/ValidationError'
-                                    - $ref: '#/components/schemas/JmespathProjectionError'
-                default:
-                    description: Error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Error'
-    /api/climate/v1/list-air-quality-data:
-        get:
-            tags:
-                - ClimateService
-            summary: ListAirQualityData
-            description: ListAirQualityData returns PM2.5 station readings from the last two hours from OpenAQ, plus WAQI when configured, with a US EPA AQI and risk level each.
-            operationId: ListAirQualityData
-            parameters:
-                - name: jmespath
-                  in: query
-                  description: |-
-                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
-                  required: false
-                  example: "keys(@)"
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: Successful response
-                    content:
-                        application/json:
-                            example:
-                                "fetchedAt": 1717200000000
-                                "stations":
-                                    - "aqi": 1
-                                      "city": "example"
-                                      "countryCode": "US"
-                                      "lat": 40.7128
-                                      "lng": -74.006
-                            schema:
-                                $ref: '#/components/schemas/worldmonitor_climate_v1_ListAirQualityDataResponse'
                 "400":
                     description: Validation error
                     content:
@@ -4390,54 +4074,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Error'
-    /api/economic/v1/list-bigmac-prices:
-        get:
-            tags:
-                - EconomicService
-            summary: ListBigMacPrices
-            description: ListBigMacPrices retrieves weekly Big Mac prices in local currency and USD for 49 countries via Exa web search, with cheapest, priciest and weekly change.
-            operationId: ListBigMacPrices
-            parameters:
-                - name: jmespath
-                  in: query
-                  description: |-
-                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
-                  required: false
-                  example: "keys(@)"
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: Successful response
-                    content:
-                        application/json:
-                            example:
-                                "cheapestCountry": "US"
-                                "countries":
-                                    - "available": true
-                                      "code": "example"
-                                      "currency": "USD"
-                                      "flag": "example"
-                                      "fxRate": 75.25
-                                "fetchedAt": "2026-01-15T12:00:00Z"
-                                "mostExpensiveCountry": "US"
-                                "prevFetchedAt": "2026-01-15T12:00:00Z"
-                            schema:
-                                $ref: '#/components/schemas/worldmonitor_economic_v1_ListBigMacPricesResponse'
-                "400":
-                    description: Validation error
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/ValidationError'
-                                    - $ref: '#/components/schemas/JmespathProjectionError'
-                default:
-                    description: Error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Error'
     /api/economic/v1/get-national-debt:
         get:
             tags:
@@ -6830,51 +6466,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Error'
-    /api/health/v1/list-air-quality-alerts:
-        get:
-            tags:
-                - HealthService
-            summary: ListAirQualityAlerts
-            description: ListAirQualityAlerts returns PM2.5 stations reporting in the last 2 hours from OpenAQ, supplemented by WAQI, with AQI and a derived health risk level.
-            operationId: ListAirQualityAlerts
-            parameters:
-                - name: jmespath
-                  in: query
-                  description: |-
-                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
-                  required: false
-                  example: "keys(@)"
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: Successful response
-                    content:
-                        application/json:
-                            example:
-                                "alerts":
-                                    - "aqi": 1
-                                      "city": "example"
-                                      "countryCode": "US"
-                                      "lat": 40.7128
-                                      "lng": -74.006
-                                "fetchedAt": 1717200000000
-                            schema:
-                                $ref: '#/components/schemas/worldmonitor_health_v1_ListAirQualityAlertsResponse'
-                "400":
-                    description: Validation error
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/ValidationError'
-                                    - $ref: '#/components/schemas/JmespathProjectionError'
-                default:
-                    description: Error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Error'
     /api/imagery/v1/search-imagery:
         get:
             tags:
@@ -7398,7 +6989,6 @@ paths:
                                 $ref: '#/components/schemas/Error'
     /api/infrastructure/v1/record-baseline-snapshot:
         post:
-            deprecated: true
             tags:
                 - InfrastructureService
             summary: RecordBaselineSnapshot
@@ -8659,7 +8249,6 @@ paths:
             operationId: GetCompanyEnrichment
             parameters:
                 - name: domain
-                  deprecated: true
                   in: query
                   description: |-
                     Deprecated compatibility input. Domain attribution remains disabled and
@@ -8780,7 +8369,6 @@ paths:
                   schema:
                     type: string
                 - name: domain
-                  deprecated: true
                   in: query
                   description: |-
                     Deprecated compatibility input. When present, attribution stays disabled
@@ -12490,74 +12078,6 @@ paths:
                                     "arrIata": "JFK"
                             schema:
                                 $ref: '#/components/schemas/worldmonitor_military_v1_GetWingbitsLiveFlightResponse'
-                "400":
-                    description: Validation error
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/ValidationError'
-                                    - $ref: '#/components/schemas/JmespathProjectionError'
-                default:
-                    description: Error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Error'
-    /api/military/v1/list-defense-patents:
-        get:
-            tags:
-                - MilitaryService
-            summary: ListDefensePatents
-            description: ListDefensePatents returns weekly-seeded USPTO filings by key defense and dual-use assignees, filterable by CPC class and assignee, up to 100 rows.
-            operationId: ListDefensePatents
-            parameters:
-                - name: cpc_code
-                  in: query
-                  description: CPC category filter (e.g. "H04B", "F42B"). Empty returns all categories.
-                  required: false
-                  example: "H04B"
-                  schema:
-                    type: string
-                - name: assignee
-                  in: query
-                  description: Assignee keyword filter (case-insensitive substring match). Empty returns all.
-                  required: false
-                  example: "example"
-                  schema:
-                    type: string
-                - name: limit
-                  in: query
-                  description: Maximum results to return (default 20, max 100).
-                  required: false
-                  example: 25
-                  schema:
-                    type: integer
-                    format: int32
-                - name: jmespath
-                  in: query
-                  description: |-
-                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
-                  required: false
-                  example: "keys(@)"
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: Successful response
-                    content:
-                        application/json:
-                            example:
-                                "fetchedAt": "2026-01-15T12:00:00Z"
-                                "patents":
-                                    - "abstract": ""
-                                      "assignee": "example"
-                                      "cpcCode": "example"
-                                      "cpcDesc": "example"
-                                      "date": "2026-01-15"
-                                "total": 1
-                            schema:
-                                $ref: '#/components/schemas/worldmonitor_military_v1_ListDefensePatentsResponse'
                 "400":
                     description: Validation error
                     content:
@@ -16953,7 +16473,7 @@ paths:
                         application/json:
                             example:
                                 "generatedAt": "2026-07-25T12:00:00.000Z"
-                                "payloadJson": "{\"generatedAt\":\"2026-07-25T12:00:00.000Z\",\"corridors\":[{\"id\":\"china-yangtze-river-delta\",\"name\":\"Yangtze River Delta\",\"description\":\"Reviewed coastal logistics corridor joining Shanghai, Jiangsu, and Zhejiang gateways.\",\"boundary\":[{\"lat\":28.4,\"lon\":118.2},{\"lat\":28.4,\"lon\":123.2},{\"lat\":33.4,\"lon\":123.2},{\"lat\":33.4,\"lon\":118.2},{\"lat\":28.4,\"lon\":118.2}],\"nodes\":[{\"id\":\"china-node:yrd-port-shanghai\",\"name\":\"Shanghai\",\"type\":\"port\",\"lat\":31.1918,\"lon\":121.6442,\"sourceOwner\":\"IMF PortWatch\",\"sourceSelector\":{\"family\":\"port\",\"id\":\"port1188\"}}],\"availability\":\"partial\",\"conditions\":[{\"family\":\"port\",\"providerId\":\"portwatch\",\"availability\":\"available\",\"reason\":null,\"sourceSignals\":[{\"id\":\"signal:portwatch:port1188:2026-07-25T11:00:00.000Z\",\"family\":\"port\",\"selectorId\":\"port1188\",\"availability\":\"available\",\"publisher\":{\"id\":\"publisher:imf-portwatch\",\"name\":\"IMF PortWatch\",\"type\":\"official\"},\"sourceUrl\":\"https://portwatch.imf.org/\",\"sourceScope\":\"node\",\"observationTime\":\"2026-07-25T11:00:00.000Z\",\"observationTimePrecision\":\"instant\",\"releaseTime\":null,\"releaseTimePrecision\":\"unknown\",\"retrievalTime\":\"2026-07-25T11:05:00.000Z\",\"retrievalTimePrecision\":\"instant\",\"revision\":null,\"transportFreshness\":\"fresh\",\"contentFreshness\":\"current\",\"summary\":\"PortWatch activity observation available for Shanghai.\",\"metrics\":{\"tankerCalls30d\":14}}],\"provenance\":{\"contractVersion\":\"decision-signal-provenance/v1\",\"signalId\":\"signal:corridor-condition:china-yangtze-river-delta:port:2026-07-25T11:00:00.000Z\",\"familyId\":\"composed_corridor_condition\",\"claims\":{\"publisher\":{\"status\":\"known\",\"value\":{\"id\":\"publisher:worldmonitor-derived\",\"name\":\"WorldMonitor derived output\",\"type\":\"derived_output\",\"registryReference\":null}},\"observation_time\":{\"status\":\"known\",\"value\":{\"role\":\"observation\",\"value\":\"2026-07-25T11:00:00.000Z\",\"precision\":\"instant\"}},\"source_url\":{\"status\":\"not_applicable\",\"reason\":\"The corridor condition links source URLs through its input signals.\"},\"original_reference\":{\"status\":\"not_applicable\",\"reason\":\"The corridor condition is composed from multiple source records.\"},\"original_language\":{\"status\":\"not_applicable\",\"reason\":\"The deterministic composition has no original-language text.\"},\"translation\":{\"status\":\"not_applicable\",\"reason\":\"The deterministic composition has no translated source text.\"},\"effective_time\":{\"status\":\"known\",\"value\":{\"role\":\"effective\",\"value\":\"2026-07-25T11:00:00.000Z\",\"precision\":\"instant\"}},\"publication_time\":{\"status\":\"not_applicable\",\"reason\":\"The computed condition is not a publisher release.\"},\"retrieval_time\":{\"status\":\"known\",\"value\":{\"role\":\"retrieval\",\"value\":\"2026-07-25T11:05:00.000Z\",\"precision\":\"instant\"}},\"revision\":{\"status\":\"known\",\"value\":{\"vintageId\":\"china-yangtze-river-delta:port:2026-07-25T11:00:00.000Z\",\"sequence\":1,\"state\":\"original\"}},\"supersession\":{\"status\":\"known\",\"value\":{\"state\":\"current\"}},\"extraction_confidence\":{\"status\":\"not_applicable\",\"reason\":\"Each input signal owns its extraction confidence.\"},\"classification_confidence\":{\"status\":\"known\",\"value\":{\"score\":1,\"method\":\"exact-reviewed-selector/v1\"}},\"corroboration\":{\"status\":\"known\",\"value\":{\"state\":\"single_source\",\"sourceSignalIds\":[\"signal:portwatch:port1188:2026-07-25T11:00:00.000Z\"]}},\"transport_freshness\":{\"status\":\"known\",\"value\":{\"state\":\"fresh\",\"assessedAt\":\"2026-07-25T12:00:00.000Z\",\"lastSuccessAt\":\"2026-07-25T11:05:00.000Z\"}},\"content_freshness\":{\"status\":\"known\",\"value\":{\"state\":\"current\",\"assessedAt\":\"2026-07-25T12:00:00.000Z\",\"contentAsOf\":\"2026-07-25T11:00:00.000Z\"}},\"derivation\":{\"status\":\"known\",\"value\":{\"methodId\":\"worldmonitor:china-corridor-condition\",\"methodVersion\":\"1\",\"computedAt\":\"2026-07-25T12:00:00.000Z\",\"inputSignalIds\":[\"signal:portwatch:port1188:2026-07-25T11:00:00.000Z\"]}}}}},{\"family\":\"aviation\",\"providerId\":\"provider:aviation\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"hazard\",\"providerId\":\"provider:hazard\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"power_energy\",\"providerId\":\"provider:power_energy\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"strategic_industry\",\"providerId\":\"provider:strategic_industry\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"trade\",\"providerId\":\"provider:trade\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null}]},{\"id\":\"china-greater-bay-area\",\"name\":\"Greater Bay Area\",\"description\":\"Reviewed Pearl River Delta corridor connecting Guangdong, Hong Kong, and Macao-facing port, airport, and industrial gateways.\",\"boundary\":[{\"lat\":20.5,\"lon\":111.5},{\"lat\":20.5,\"lon\":115.8},{\"lat\":24.8,\"lon\":115.8},{\"lat\":24.8,\"lon\":111.5},{\"lat\":20.5,\"lon\":111.5}],\"nodes\":[{\"id\":\"china-node:gba-port-shekou\",\"name\":\"Shekou Shenzhen\",\"type\":\"port\",\"lat\":22.47,\"lon\":113.9,\"sourceOwner\":\"IMF PortWatch\",\"sourceSelector\":{\"family\":\"port\",\"id\":\"port1189\"}}],\"availability\":\"partial\",\"conditions\":[{\"family\":\"port\",\"providerId\":\"portwatch\",\"availability\":\"available\",\"reason\":null,\"sourceSignals\":[{\"id\":\"signal:portwatch:port1189:2026-07-25T11:00:00.000Z\",\"family\":\"port\",\"selectorId\":\"port1189\",\"availability\":\"available\",\"publisher\":{\"id\":\"publisher:imf-portwatch\",\"name\":\"IMF PortWatch\",\"type\":\"official\"},\"sourceUrl\":\"https://portwatch.imf.org/\",\"sourceScope\":\"node\",\"observationTime\":\"2026-07-25T11:00:00.000Z\",\"observationTimePrecision\":\"instant\",\"releaseTime\":null,\"releaseTimePrecision\":\"unknown\",\"retrievalTime\":\"2026-07-25T11:05:00.000Z\",\"retrievalTimePrecision\":\"instant\",\"revision\":null,\"transportFreshness\":\"fresh\",\"contentFreshness\":\"current\",\"summary\":\"PortWatch activity observation available for Shekou Shenzhen.\",\"metrics\":{\"tankerCalls30d\":14}}],\"provenance\":{\"contractVersion\":\"decision-signal-provenance/v1\",\"signalId\":\"signal:corridor-condition:china-greater-bay-area:port:2026-07-25T11:00:00.000Z\",\"familyId\":\"composed_corridor_condition\",\"claims\":{\"publisher\":{\"status\":\"known\",\"value\":{\"id\":\"publisher:worldmonitor-derived\",\"name\":\"WorldMonitor derived output\",\"type\":\"derived_output\",\"registryReference\":null}},\"observation_time\":{\"status\":\"known\",\"value\":{\"role\":\"observation\",\"value\":\"2026-07-25T11:00:00.000Z\",\"precision\":\"instant\"}},\"source_url\":{\"status\":\"not_applicable\",\"reason\":\"The corridor condition links source URLs through its input signals.\"},\"original_reference\":{\"status\":\"not_applicable\",\"reason\":\"The corridor condition is composed from multiple source records.\"},\"original_language\":{\"status\":\"not_applicable\",\"reason\":\"The deterministic composition has no original-language text.\"},\"translation\":{\"status\":\"not_applicable\",\"reason\":\"The deterministic composition has no translated source text.\"},\"effective_time\":{\"status\":\"known\",\"value\":{\"role\":\"effective\",\"value\":\"2026-07-25T11:00:00.000Z\",\"precision\":\"instant\"}},\"publication_time\":{\"status\":\"not_applicable\",\"reason\":\"The computed condition is not a publisher release.\"},\"retrieval_time\":{\"status\":\"known\",\"value\":{\"role\":\"retrieval\",\"value\":\"2026-07-25T11:05:00.000Z\",\"precision\":\"instant\"}},\"revision\":{\"status\":\"known\",\"value\":{\"vintageId\":\"china-greater-bay-area:port:2026-07-25T11:00:00.000Z\",\"sequence\":1,\"state\":\"original\"}},\"supersession\":{\"status\":\"known\",\"value\":{\"state\":\"current\"}},\"extraction_confidence\":{\"status\":\"not_applicable\",\"reason\":\"Each input signal owns its extraction confidence.\"},\"classification_confidence\":{\"status\":\"known\",\"value\":{\"score\":1,\"method\":\"exact-reviewed-selector/v1\"}},\"corroboration\":{\"status\":\"known\",\"value\":{\"state\":\"single_source\",\"sourceSignalIds\":[\"signal:portwatch:port1189:2026-07-25T11:00:00.000Z\"]}},\"transport_freshness\":{\"status\":\"known\",\"value\":{\"state\":\"fresh\",\"assessedAt\":\"2026-07-25T12:00:00.000Z\",\"lastSuccessAt\":\"2026-07-25T11:05:00.000Z\"}},\"content_freshness\":{\"status\":\"known\",\"value\":{\"state\":\"current\",\"assessedAt\":\"2026-07-25T12:00:00.000Z\",\"contentAsOf\":\"2026-07-25T11:00:00.000Z\"}},\"derivation\":{\"status\":\"known\",\"value\":{\"methodId\":\"worldmonitor:china-corridor-condition\",\"methodVersion\":\"1\",\"computedAt\":\"2026-07-25T12:00:00.000Z\",\"inputSignalIds\":[\"signal:portwatch:port1189:2026-07-25T11:00:00.000Z\"]}}}}},{\"family\":\"aviation\",\"providerId\":\"provider:aviation\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"hazard\",\"providerId\":\"provider:hazard\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"power_energy\",\"providerId\":\"provider:power_energy\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"strategic_industry\",\"providerId\":\"provider:strategic_industry\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"trade\",\"providerId\":\"provider:trade\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null}]},{\"id\":\"china-bohai-rim\",\"name\":\"Bohai Rim\",\"description\":\"Reviewed northern maritime-industrial corridor spanning Beijing-Tianjin, Hebei, Shandong, Liaoning, and their major gateways.\",\"boundary\":[{\"lat\":35.5,\"lon\":116},{\"lat\":35.5,\"lon\":123.5},{\"lat\":42.2,\"lon\":123.5},{\"lat\":42.2,\"lon\":116},{\"lat\":35.5,\"lon\":116}],\"nodes\":[{\"id\":\"china-node:bohai-port-qingdao\",\"name\":\"Qingdao\",\"type\":\"port\",\"lat\":36.07,\"lon\":120.32,\"sourceOwner\":\"IMF PortWatch\",\"sourceSelector\":{\"family\":\"port\",\"id\":\"port1069\"}}],\"availability\":\"unavailable\",\"conditions\":[{\"family\":\"port\",\"providerId\":\"provider:port\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"aviation\",\"providerId\":\"provider:aviation\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"hazard\",\"providerId\":\"provider:hazard\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"power_energy\",\"providerId\":\"provider:power_energy\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"strategic_industry\",\"providerId\":\"provider:strategic_industry\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"trade\",\"providerId\":\"provider:trade\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null}]},{\"id\":\"china-western-land-sea-corridor\",\"name\":\"Western Land-Sea Corridor\",\"description\":\"Reviewed western corridor linking inland manufacturing hubs, Xinjiang land crossings, and Guangxi gateways to regional and maritime routes.\",\"boundary\":[{\"lat\":20.4,\"lon\":106.2},{\"lat\":20.4,\"lon\":110.4},{\"lat\":32.5,\"lon\":110.4},{\"lat\":47,\"lon\":91},{\"lat\":47,\"lon\":78.5},{\"lat\":41,\"lon\":78.5},{\"lat\":27,\"lon\":99.7},{\"lat\":22,\"lon\":105.8},{\"lat\":20.4,\"lon\":106.2}],\"nodes\":[{\"id\":\"china-node:western-port-qinzhou\",\"name\":\"Qinzhou\",\"type\":\"port\",\"lat\":21.6788,\"lon\":108.6383,\"sourceOwner\":\"IMF PortWatch\",\"sourceSelector\":{\"family\":\"port\",\"id\":\"port1071\"}}],\"availability\":\"unavailable\",\"conditions\":[{\"family\":\"port\",\"providerId\":\"provider:port\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"aviation\",\"providerId\":\"provider:aviation\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"hazard\",\"providerId\":\"provider:hazard\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"power_energy\",\"providerId\":\"provider:power_energy\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"strategic_industry\",\"providerId\":\"provider:strategic_industry\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"trade\",\"providerId\":\"provider:trade\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null}]}]}"
+                                "payloadJson": "{\"generatedAt\":\"2026-07-25T12:00:00.000Z\",\"corridors\":[{\"id\":\"china-yangtze-river-delta\",\"name\":\"Yangtze River Delta\",\"description\":\"Reviewed coastal logistics corridor joining Shanghai, Jiangsu, and Zhejiang gateways.\",\"boundary\":[{\"lat\":28.4,\"lon\":118.2},{\"lat\":28.4,\"lon\":123.2},{\"lat\":33.4,\"lon\":123.2},{\"lat\":33.4,\"lon\":118.2},{\"lat\":28.4,\"lon\":118.2}],\"nodes\":[{\"id\":\"china-node:yrd-port-shanghai\",\"name\":\"Shanghai\",\"type\":\"port\",\"lat\":31.1918,\"lon\":121.6442,\"sourceOwner\":\"IMF PortWatch\",\"sourceSelector\":{\"family\":\"port\",\"id\":\"port1188\"}}],\"availability\":\"partial\",\"conditions\":[{\"family\":\"port\",\"providerId\":\"portwatch\",\"availability\":\"available\",\"reason\":null,\"sourceSignals\":[{\"id\":\"signal:portwatch:port1188:2026-07-25T11:00:00.000Z\",\"family\":\"port\",\"selectorId\":\"port1188\",\"availability\":\"available\",\"publisher\":{\"id\":\"publisher:imf-portwatch\",\"name\":\"IMF PortWatch\",\"type\":\"official\"},\"sourceUrl\":\"https://portwatch.imf.org/\",\"sourceScope\":\"node\",\"observationTime\":\"2026-07-25T11:00:00.000Z\",\"observationTimePrecision\":\"instant\",\"releaseTime\":null,\"releaseTimePrecision\":\"unknown\",\"retrievalTime\":\"2026-07-25T11:05:00.000Z\",\"retrievalTimePrecision\":\"instant\",\"revision\":null,\"transportFreshness\":\"fresh\",\"contentFreshness\":\"current\",\"summary\":\"PortWatch activity observation available for Shanghai.\",\"metrics\":{\"tankerCalls30d\":14}}],\"provenance\":{\"contractVersion\":\"decision-signal-provenance/v1\",\"signalId\":\"signal:corridor-condition:china-yangtze-river-delta:port:2026-07-25T11:00:00.000Z\",\"familyId\":\"composed_corridor_condition\",\"claims\":{\"publisher\":{\"status\":\"known\",\"value\":{\"id\":\"publisher:worldmonitor-derived\",\"name\":\"WorldMonitor derived output\",\"type\":\"derived_output\",\"registryReference\":null}},\"observation_time\":{\"status\":\"known\",\"value\":{\"role\":\"observation\",\"value\":\"2026-07-25T11:00:00.000Z\",\"precision\":\"instant\"}},\"source_url\":{\"status\":\"not_applicable\",\"reason\":\"The corridor condition links source URLs through its input signals.\"},\"original_reference\":{\"status\":\"not_applicable\",\"reason\":\"The corridor condition is composed from multiple source records.\"},\"original_language\":{\"status\":\"not_applicable\",\"reason\":\"The deterministic composition has no original-language text.\"},\"translation\":{\"status\":\"not_applicable\",\"reason\":\"The deterministic composition has no translated source text.\"},\"effective_time\":{\"status\":\"known\",\"value\":{\"role\":\"effective\",\"value\":\"2026-07-25T11:00:00.000Z\",\"precision\":\"instant\"}},\"publication_time\":{\"status\":\"not_applicable\",\"reason\":\"The computed condition is not a publisher release.\"},\"retrieval_time\":{\"status\":\"known\",\"value\":{\"role\":\"retrieval\",\"value\":\"2026-07-25T11:05:00.000Z\",\"precision\":\"instant\"}},\"revision\":{\"status\":\"known\",\"value\":{\"vintageId\":\"china-yangtze-river-delta:port:2026-07-25T11:00:00.000Z\",\"sequence\":1,\"state\":\"original\"}},\"supersession\":{\"status\":\"known\",\"value\":{\"state\":\"current\"}},\"extraction_confidence\":{\"status\":\"not_applicable\",\"reason\":\"Each input signal owns its extraction confidence.\"},\"classification_confidence\":{\"status\":\"known\",\"value\":{\"score\":1,\"method\":\"exact-reviewed-selector/v1\"}},\"corroboration\":{\"status\":\"known\",\"value\":{\"state\":\"single_source\",\"sourceSignalIds\":[\"signal:portwatch:port1188:2026-07-25T11:00:00.000Z\"]}},\"transport_freshness\":{\"status\":\"known\",\"value\":{\"state\":\"fresh\",\"assessedAt\":\"2026-07-25T12:00:00.000Z\",\"lastSuccessAt\":\"2026-07-25T11:05:00.000Z\"}},\"content_freshness\":{\"status\":\"known\",\"value\":{\"state\":\"current\",\"assessedAt\":\"2026-07-25T12:00:00.000Z\",\"contentAsOf\":\"2026-07-25T11:00:00.000Z\"}},\"derivation\":{\"status\":\"known\",\"value\":{\"methodId\":\"worldmonitor:china-corridor-condition\",\"methodVersion\":\"1\",\"computedAt\":\"2026-07-25T12:00:00.000Z\",\"inputSignalIds\":[\"signal:portwatch:port1188:2026-07-25T11:00:00.000Z\"]}}}}},{\"family\":\"hazard\",\"providerId\":\"provider:hazard\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"power_energy\",\"providerId\":\"provider:power_energy\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"strategic_industry\",\"providerId\":\"provider:strategic_industry\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"trade\",\"providerId\":\"provider:trade\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null}]},{\"id\":\"china-greater-bay-area\",\"name\":\"Greater Bay Area\",\"description\":\"Reviewed Pearl River Delta corridor connecting Guangdong, Hong Kong, and Macao-facing port, airport, and industrial gateways.\",\"boundary\":[{\"lat\":20.5,\"lon\":111.5},{\"lat\":20.5,\"lon\":115.8},{\"lat\":24.8,\"lon\":115.8},{\"lat\":24.8,\"lon\":111.5},{\"lat\":20.5,\"lon\":111.5}],\"nodes\":[{\"id\":\"china-node:gba-port-shekou\",\"name\":\"Shekou Shenzhen\",\"type\":\"port\",\"lat\":22.47,\"lon\":113.9,\"sourceOwner\":\"IMF PortWatch\",\"sourceSelector\":{\"family\":\"port\",\"id\":\"port1189\"}}],\"availability\":\"partial\",\"conditions\":[{\"family\":\"port\",\"providerId\":\"portwatch\",\"availability\":\"available\",\"reason\":null,\"sourceSignals\":[{\"id\":\"signal:portwatch:port1189:2026-07-25T11:00:00.000Z\",\"family\":\"port\",\"selectorId\":\"port1189\",\"availability\":\"available\",\"publisher\":{\"id\":\"publisher:imf-portwatch\",\"name\":\"IMF PortWatch\",\"type\":\"official\"},\"sourceUrl\":\"https://portwatch.imf.org/\",\"sourceScope\":\"node\",\"observationTime\":\"2026-07-25T11:00:00.000Z\",\"observationTimePrecision\":\"instant\",\"releaseTime\":null,\"releaseTimePrecision\":\"unknown\",\"retrievalTime\":\"2026-07-25T11:05:00.000Z\",\"retrievalTimePrecision\":\"instant\",\"revision\":null,\"transportFreshness\":\"fresh\",\"contentFreshness\":\"current\",\"summary\":\"PortWatch activity observation available for Shekou Shenzhen.\",\"metrics\":{\"tankerCalls30d\":14}}],\"provenance\":{\"contractVersion\":\"decision-signal-provenance/v1\",\"signalId\":\"signal:corridor-condition:china-greater-bay-area:port:2026-07-25T11:00:00.000Z\",\"familyId\":\"composed_corridor_condition\",\"claims\":{\"publisher\":{\"status\":\"known\",\"value\":{\"id\":\"publisher:worldmonitor-derived\",\"name\":\"WorldMonitor derived output\",\"type\":\"derived_output\",\"registryReference\":null}},\"observation_time\":{\"status\":\"known\",\"value\":{\"role\":\"observation\",\"value\":\"2026-07-25T11:00:00.000Z\",\"precision\":\"instant\"}},\"source_url\":{\"status\":\"not_applicable\",\"reason\":\"The corridor condition links source URLs through its input signals.\"},\"original_reference\":{\"status\":\"not_applicable\",\"reason\":\"The corridor condition is composed from multiple source records.\"},\"original_language\":{\"status\":\"not_applicable\",\"reason\":\"The deterministic composition has no original-language text.\"},\"translation\":{\"status\":\"not_applicable\",\"reason\":\"The deterministic composition has no translated source text.\"},\"effective_time\":{\"status\":\"known\",\"value\":{\"role\":\"effective\",\"value\":\"2026-07-25T11:00:00.000Z\",\"precision\":\"instant\"}},\"publication_time\":{\"status\":\"not_applicable\",\"reason\":\"The computed condition is not a publisher release.\"},\"retrieval_time\":{\"status\":\"known\",\"value\":{\"role\":\"retrieval\",\"value\":\"2026-07-25T11:05:00.000Z\",\"precision\":\"instant\"}},\"revision\":{\"status\":\"known\",\"value\":{\"vintageId\":\"china-greater-bay-area:port:2026-07-25T11:00:00.000Z\",\"sequence\":1,\"state\":\"original\"}},\"supersession\":{\"status\":\"known\",\"value\":{\"state\":\"current\"}},\"extraction_confidence\":{\"status\":\"not_applicable\",\"reason\":\"Each input signal owns its extraction confidence.\"},\"classification_confidence\":{\"status\":\"known\",\"value\":{\"score\":1,\"method\":\"exact-reviewed-selector/v1\"}},\"corroboration\":{\"status\":\"known\",\"value\":{\"state\":\"single_source\",\"sourceSignalIds\":[\"signal:portwatch:port1189:2026-07-25T11:00:00.000Z\"]}},\"transport_freshness\":{\"status\":\"known\",\"value\":{\"state\":\"fresh\",\"assessedAt\":\"2026-07-25T12:00:00.000Z\",\"lastSuccessAt\":\"2026-07-25T11:05:00.000Z\"}},\"content_freshness\":{\"status\":\"known\",\"value\":{\"state\":\"current\",\"assessedAt\":\"2026-07-25T12:00:00.000Z\",\"contentAsOf\":\"2026-07-25T11:00:00.000Z\"}},\"derivation\":{\"status\":\"known\",\"value\":{\"methodId\":\"worldmonitor:china-corridor-condition\",\"methodVersion\":\"1\",\"computedAt\":\"2026-07-25T12:00:00.000Z\",\"inputSignalIds\":[\"signal:portwatch:port1189:2026-07-25T11:00:00.000Z\"]}}}}},{\"family\":\"hazard\",\"providerId\":\"provider:hazard\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"power_energy\",\"providerId\":\"provider:power_energy\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"strategic_industry\",\"providerId\":\"provider:strategic_industry\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"trade\",\"providerId\":\"provider:trade\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null}]},{\"id\":\"china-bohai-rim\",\"name\":\"Bohai Rim\",\"description\":\"Reviewed northern maritime-industrial corridor spanning Beijing-Tianjin, Hebei, Shandong, Liaoning, and their major gateways.\",\"boundary\":[{\"lat\":35.5,\"lon\":116},{\"lat\":35.5,\"lon\":123.5},{\"lat\":42.2,\"lon\":123.5},{\"lat\":42.2,\"lon\":116},{\"lat\":35.5,\"lon\":116}],\"nodes\":[{\"id\":\"china-node:bohai-port-qingdao\",\"name\":\"Qingdao\",\"type\":\"port\",\"lat\":36.07,\"lon\":120.32,\"sourceOwner\":\"IMF PortWatch\",\"sourceSelector\":{\"family\":\"port\",\"id\":\"port1069\"}}],\"availability\":\"unavailable\",\"conditions\":[{\"family\":\"port\",\"providerId\":\"provider:port\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"hazard\",\"providerId\":\"provider:hazard\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"power_energy\",\"providerId\":\"provider:power_energy\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"strategic_industry\",\"providerId\":\"provider:strategic_industry\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"trade\",\"providerId\":\"provider:trade\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null}]},{\"id\":\"china-western-land-sea-corridor\",\"name\":\"Western Land-Sea Corridor\",\"description\":\"Reviewed western corridor linking inland manufacturing hubs, Xinjiang land crossings, and Guangxi gateways to regional and maritime routes.\",\"boundary\":[{\"lat\":20.4,\"lon\":106.2},{\"lat\":20.4,\"lon\":110.4},{\"lat\":32.5,\"lon\":110.4},{\"lat\":47,\"lon\":91},{\"lat\":47,\"lon\":78.5},{\"lat\":41,\"lon\":78.5},{\"lat\":27,\"lon\":99.7},{\"lat\":22,\"lon\":105.8},{\"lat\":20.4,\"lon\":106.2}],\"nodes\":[{\"id\":\"china-node:western-port-qinzhou\",\"name\":\"Qinzhou\",\"type\":\"port\",\"lat\":21.6788,\"lon\":108.6383,\"sourceOwner\":\"IMF PortWatch\",\"sourceSelector\":{\"family\":\"port\",\"id\":\"port1071\"}}],\"availability\":\"unavailable\",\"conditions\":[{\"family\":\"port\",\"providerId\":\"provider:port\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"hazard\",\"providerId\":\"provider:hazard\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"power_energy\",\"providerId\":\"provider:power_energy\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"strategic_industry\",\"providerId\":\"provider:strategic_industry\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null},{\"family\":\"trade\",\"providerId\":\"provider:trade\",\"availability\":\"unavailable\",\"reason\":\"No reviewed source observation is available in this example.\",\"sourceSignals\":[],\"provenance\":null}]}]}"
                                 "upstreamUnavailable": false
                             schema:
                                 $ref: '#/components/schemas/worldmonitor_supply_chain_v1_GetChinaCorridorControlTowersResponse'
@@ -18556,7 +18076,6 @@ components:
                                         type: "string"
                                         enum:
                                             - "port"
-                                            - "aviation"
                                             - "hazard"
                                             - "power_energy"
                                             - "strategic_industry"
@@ -18588,7 +18107,6 @@ components:
                     type: "string"
                     enum:
                         - "port"
-                        - "aviation"
                         - "hazard"
                         - "power_energy"
                         - "strategic_industry"
@@ -18636,7 +18154,6 @@ components:
                                 type: "string"
                                 enum:
                                     - "port"
-                                    - "aviation"
                                     - "hazard"
                                     - "power_energy"
                                     - "strategic_industry"
@@ -21996,7 +21513,6 @@ components:
                         - FLIGHT_DELAY_SOURCE_FAA
                         - FLIGHT_DELAY_SOURCE_EUROCONTROL
                         - FLIGHT_DELAY_SOURCE_COMPUTED
-                        - FLIGHT_DELAY_SOURCE_AVIATIONSTACK
                         - FLIGHT_DELAY_SOURCE_NOTAM
                     description: FlightDelaySource represents the source of delay data.
                 updatedAt:
@@ -22035,362 +21551,6 @@ components:
                     format: int32
                     description: Total count of items matching the query, if known. Zero if the total is unknown.
             description: PaginationResponse contains pagination metadata returned alongside list results.
-        worldmonitor_aviation_v1_GetAirportOpsSummaryRequest:
-            type: object
-            properties:
-                airports:
-                    type: array
-                    items:
-                        type: string
-                        maxItems: 20
-                        minItems: 1
-                        description: IATA airport codes to query (e.g., ["IST", "ESB", "LHR"]).
-                    maxItems: 20
-                    minItems: 1
-            description: GetAirportOpsSummaryRequest specifies which airports to summarize.
-        worldmonitor_aviation_v1_GetAirportOpsSummaryResponse:
-            type: object
-            properties:
-                summaries:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/worldmonitor_aviation_v1_AirportOpsSummary'
-                cacheHit:
-                    type: boolean
-                    description: Whether the response was served from cache.
-            description: GetAirportOpsSummaryResponse contains operational summaries for requested airports.
-        worldmonitor_aviation_v1_AirportOpsSummary:
-            type: object
-            properties:
-                iata:
-                    type: string
-                    description: IATA airport code.
-                icao:
-                    type: string
-                    description: ICAO airport code.
-                name:
-                    type: string
-                    description: Airport name.
-                timezone:
-                    type: string
-                    description: IANA timezone (e.g., "Europe/Istanbul").
-                delayPct:
-                    type: number
-                    format: double
-                    description: Percentage of flights currently delayed (0-100).
-                avgDelayMinutes:
-                    type: integer
-                    format: int32
-                    description: Average delay in minutes across delayed flights.
-                cancellationRate:
-                    type: number
-                    format: double
-                    description: Cancellation rate as a percentage (0-100).
-                totalFlights:
-                    type: integer
-                    format: int32
-                    description: Total flights in the observation window.
-                closureStatus:
-                    type: boolean
-                    description: Whether the airport is currently closed.
-                notamFlags:
-                    type: array
-                    items:
-                        type: string
-                        description: Active NOTAM summary flags (e.g., "RWY 06/24 CLSD", "LOW VIS OPS").
-                severity:
-                    type: string
-                    enum:
-                        - FLIGHT_DELAY_SEVERITY_UNSPECIFIED
-                        - FLIGHT_DELAY_SEVERITY_NORMAL
-                        - FLIGHT_DELAY_SEVERITY_MINOR
-                        - FLIGHT_DELAY_SEVERITY_MODERATE
-                        - FLIGHT_DELAY_SEVERITY_MAJOR
-                        - FLIGHT_DELAY_SEVERITY_SEVERE
-                        - FLIGHT_DELAY_SEVERITY_UNKNOWN
-                    description: |-
-                        FlightDelaySeverity represents the severity of flight delays at an airport.
-                         Maps to TS union: 'normal' | 'minor' | 'moderate' | 'major' | 'severe' | 'unknown'.
-                topDelayReasons:
-                    type: array
-                    items:
-                        type: string
-                        description: Top reasons for delays.
-                source:
-                    type: string
-                    description: Data source identifier.
-                updatedAt:
-                    type: integer
-                    format: int64
-                    description: 'Last update time as Unix epoch milliseconds.. Warning: Values > 2^53 may lose precision in JavaScript'
-            description: AirportOpsSummary contains operational health metrics for a single airport.
-        worldmonitor_aviation_v1_ListAirportFlightsRequest:
-            type: object
-            properties:
-                airport:
-                    type: string
-                    maxLength: 4
-                    minLength: 3
-                    description: IATA airport code (e.g., "IST").
-                direction:
-                    type: string
-                    enum:
-                        - FLIGHT_DIRECTION_UNSPECIFIED
-                        - FLIGHT_DIRECTION_DEPARTURE
-                        - FLIGHT_DIRECTION_ARRIVAL
-                        - FLIGHT_DIRECTION_BOTH
-                    description: FlightDirection specifies whether to retrieve departures, arrivals, or both.
-                limit:
-                    type: integer
-                    maximum: 100
-                    minimum: 1
-                    format: int32
-                    description: Maximum number of flights to return (1-100).
-            required:
-                - airport
-            description: ListAirportFlightsRequest specifies parameters for retrieving recent flights at an airport.
-        worldmonitor_aviation_v1_ListAirportFlightsResponse:
-            type: object
-            properties:
-                flights:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/worldmonitor_aviation_v1_FlightInstance'
-                totalAvailable:
-                    type: integer
-                    format: int32
-                    description: Total number of flights available from the provider.
-                source:
-                    type: string
-                    description: Data source identifier.
-                updatedAt:
-                    type: integer
-                    format: int64
-                    description: 'Last update time as Unix epoch milliseconds.. Warning: Values > 2^53 may lose precision in JavaScript'
-            description: ListAirportFlightsResponse contains recent flights at an airport.
-        worldmonitor_aviation_v1_FlightInstance:
-            type: object
-            properties:
-                flightNumber:
-                    type: string
-                    description: IATA flight number (e.g., "TK1952").
-                date:
-                    type: string
-                    description: Departure date in ISO 8601 format (e.g., "2026-03-05").
-                operatingCarrier:
-                    $ref: '#/components/schemas/worldmonitor_aviation_v1_Carrier'
-                origin:
-                    $ref: '#/components/schemas/worldmonitor_aviation_v1_AirportRef'
-                destination:
-                    $ref: '#/components/schemas/worldmonitor_aviation_v1_AirportRef'
-                scheduledDeparture:
-                    type: integer
-                    format: int64
-                    description: 'Scheduled departure time as Unix epoch milliseconds (UTC).. Warning: Values > 2^53 may lose precision in JavaScript'
-                estimatedDeparture:
-                    type: integer
-                    format: int64
-                    description: 'Estimated departure time as Unix epoch milliseconds (UTC).. Warning: Values > 2^53 may lose precision in JavaScript'
-                actualDeparture:
-                    type: integer
-                    format: int64
-                    description: 'Actual departure time as Unix epoch milliseconds (UTC).. Warning: Values > 2^53 may lose precision in JavaScript'
-                scheduledArrival:
-                    type: integer
-                    format: int64
-                    description: 'Scheduled arrival time as Unix epoch milliseconds (UTC).. Warning: Values > 2^53 may lose precision in JavaScript'
-                estimatedArrival:
-                    type: integer
-                    format: int64
-                    description: 'Estimated arrival time as Unix epoch milliseconds (UTC).. Warning: Values > 2^53 may lose precision in JavaScript'
-                actualArrival:
-                    type: integer
-                    format: int64
-                    description: 'Actual arrival time as Unix epoch milliseconds (UTC).. Warning: Values > 2^53 may lose precision in JavaScript'
-                status:
-                    type: string
-                    enum:
-                        - FLIGHT_INSTANCE_STATUS_UNSPECIFIED
-                        - FLIGHT_INSTANCE_STATUS_SCHEDULED
-                        - FLIGHT_INSTANCE_STATUS_BOARDING
-                        - FLIGHT_INSTANCE_STATUS_DEPARTED
-                        - FLIGHT_INSTANCE_STATUS_AIRBORNE
-                        - FLIGHT_INSTANCE_STATUS_LANDED
-                        - FLIGHT_INSTANCE_STATUS_ARRIVED
-                        - FLIGHT_INSTANCE_STATUS_CANCELLED
-                        - FLIGHT_INSTANCE_STATUS_DIVERTED
-                        - FLIGHT_INSTANCE_STATUS_UNKNOWN
-                    description: FlightInstanceStatus represents the operational status of a flight occurrence.
-                delayMinutes:
-                    type: integer
-                    format: int32
-                    description: Delay in minutes (0 if on time, negative if early).
-                cancelled:
-                    type: boolean
-                    description: Whether the flight is cancelled.
-                diverted:
-                    type: boolean
-                    description: Whether the flight has been diverted.
-                gate:
-                    type: string
-                    description: Departure gate (if available).
-                terminal:
-                    type: string
-                    description: Departure terminal (if available).
-                aircraftIcao24:
-                    type: string
-                    description: ICAO 24-bit transponder address of the aircraft (hex, e.g., "4b1805").
-                aircraftType:
-                    type: string
-                    description: Aircraft type designator (e.g., "B738").
-                codeshareFlightNumbers:
-                    type: array
-                    items:
-                        type: string
-                        description: Codeshare flight numbers marketed under this operating flight.
-                source:
-                    type: string
-                    description: Data source provider name.
-                updatedAt:
-                    type: integer
-                    format: int64
-                    description: 'Last update time as Unix epoch milliseconds.. Warning: Values > 2^53 may lose precision in JavaScript'
-            description: FlightInstance represents a specific occurrence of a flight on a given date.
-        worldmonitor_aviation_v1_Carrier:
-            type: object
-            properties:
-                iataCode:
-                    type: string
-                    description: IATA two-letter airline code (e.g., "TK").
-                icaoCode:
-                    type: string
-                    description: ICAO three-letter airline code (e.g., "THY").
-                name:
-                    type: string
-                    description: Full airline name (e.g., "Turkish Airlines").
-            description: Carrier represents an airline or aircraft operator.
-        worldmonitor_aviation_v1_AirportRef:
-            type: object
-            properties:
-                iata:
-                    type: string
-                    description: IATA airport code (e.g., "IST").
-                icao:
-                    type: string
-                    description: ICAO airport code (e.g., "LTFM").
-                name:
-                    type: string
-                    description: Airport name (e.g., "Istanbul Airport").
-                timezone:
-                    type: string
-                    description: IANA timezone (e.g., "Europe/Istanbul").
-            description: AirportRef is a lightweight reference to an airport.
-        worldmonitor_aviation_v1_GetCarrierOpsRequest:
-            type: object
-            properties:
-                airports:
-                    type: array
-                    items:
-                        type: string
-                        maxItems: 20
-                        minItems: 1
-                        description: IATA airport codes to aggregate carrier metrics from.
-                    maxItems: 20
-                    minItems: 1
-                minFlights:
-                    type: integer
-                    minimum: 0
-                    format: int32
-                    description: |-
-                        Minimum number of flights required to include a carrier (default: 3).
-                         The generated GET decoder emits 0 when the query param is absent, and 0
-                         means "use the default" in the handler — an explicit 0 is not a usable
-                         filter (every group has >= 1 flight).
-            description: GetCarrierOpsRequest specifies parameters for carrier operations metrics.
-        worldmonitor_aviation_v1_GetCarrierOpsResponse:
-            type: object
-            properties:
-                carriers:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/worldmonitor_aviation_v1_CarrierOpsSummary'
-                source:
-                    type: string
-                    description: Data source identifier.
-                updatedAt:
-                    type: integer
-                    format: int64
-                    description: 'Last update time as Unix epoch milliseconds.. Warning: Values > 2^53 may lose precision in JavaScript'
-            description: GetCarrierOpsResponse contains carrier operations metrics.
-        worldmonitor_aviation_v1_CarrierOpsSummary:
-            type: object
-            properties:
-                carrier:
-                    $ref: '#/components/schemas/worldmonitor_aviation_v1_Carrier'
-                airport:
-                    type: string
-                    description: Airport IATA code this summary applies to.
-                totalFlights:
-                    type: integer
-                    format: int32
-                    description: Total flights observed.
-                delayedCount:
-                    type: integer
-                    format: int32
-                    description: Number of delayed flights.
-                cancelledCount:
-                    type: integer
-                    format: int32
-                    description: Number of cancelled flights.
-                avgDelayMinutes:
-                    type: integer
-                    format: int32
-                    description: Average delay in minutes across delayed flights.
-                delayPct:
-                    type: number
-                    format: double
-                    description: Delay percentage (0-100).
-                cancellationRate:
-                    type: number
-                    format: double
-                    description: Cancellation rate (0-100).
-                updatedAt:
-                    type: integer
-                    format: int64
-                    description: 'Last update time as Unix epoch milliseconds.. Warning: Values > 2^53 may lose precision in JavaScript'
-            description: CarrierOpsSummary contains delay and cancellation metrics for a carrier at an airport.
-        worldmonitor_aviation_v1_GetFlightStatusRequest:
-            type: object
-            properties:
-                flightNumber:
-                    type: string
-                    maxLength: 10
-                    minLength: 3
-                    description: IATA flight number (e.g., "TK1952").
-                date:
-                    type: string
-                    description: Departure date in ISO 8601 format (e.g., "2026-03-05").
-                origin:
-                    type: string
-                    description: Optional origin airport IATA code to disambiguate.
-            required:
-                - flightNumber
-                - date
-            description: GetFlightStatusRequest specifies a flight to look up.
-        worldmonitor_aviation_v1_GetFlightStatusResponse:
-            type: object
-            properties:
-                flights:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/worldmonitor_aviation_v1_FlightInstance'
-                source:
-                    type: string
-                    description: Data source identifier.
-                cacheHit:
-                    type: boolean
-                    description: Whether the response was served from cache.
-            description: GetFlightStatusResponse contains flight status results.
         worldmonitor_aviation_v1_TrackAircraftRequest:
             type: object
             properties:
@@ -22679,6 +21839,19 @@ components:
                     format: int64
                     description: 'Time when this quote expires, as Unix epoch milliseconds.. Warning: Values > 2^53 may lose precision in JavaScript'
             description: PriceQuote represents a single flight price offer from a provider.
+        worldmonitor_aviation_v1_Carrier:
+            type: object
+            properties:
+                iataCode:
+                    type: string
+                    description: IATA two-letter airline code (e.g., "TK").
+                icaoCode:
+                    type: string
+                    description: ICAO three-letter airline code (e.g., "THY").
+                name:
+                    type: string
+                    description: Full airline name (e.g., "Turkish Airlines").
+            description: Carrier represents an airline or aircraft operator.
         worldmonitor_aviation_v1_ListAviationNewsRequest:
             type: object
             properties:
@@ -23217,48 +22390,6 @@ components:
                 anomalyMkm2:
                     type: number
                     format: double
-        worldmonitor_climate_v1_ListAirQualityDataRequest:
-            type: object
-        worldmonitor_climate_v1_ListAirQualityDataResponse:
-            type: object
-            properties:
-                stations:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/worldmonitor_climate_v1_AirQualityStation'
-                fetchedAt:
-                    type: integer
-                    format: int64
-                    description: 'Warning: Values > 2^53 may lose precision in JavaScript'
-        worldmonitor_climate_v1_AirQualityStation:
-            type: object
-            properties:
-                city:
-                    type: string
-                countryCode:
-                    type: string
-                lat:
-                    type: number
-                    format: double
-                lng:
-                    type: number
-                    format: double
-                pm25:
-                    type: number
-                    format: double
-                aqi:
-                    type: integer
-                    format: int32
-                riskLevel:
-                    type: string
-                pollutant:
-                    type: string
-                measuredAt:
-                    type: integer
-                    format: int64
-                    description: 'Warning: Values > 2^53 may lose precision in JavaScript'
-                source:
-                    type: string
         worldmonitor_climate_v1_ListReservoirLevelsRequest:
             type: object
         worldmonitor_climate_v1_ListReservoirLevelsResponse:
@@ -26533,55 +25664,6 @@ components:
                     type: string
                 available:
                     type: boolean
-        worldmonitor_economic_v1_ListBigMacPricesRequest:
-            type: object
-        worldmonitor_economic_v1_ListBigMacPricesResponse:
-            type: object
-            properties:
-                countries:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/worldmonitor_economic_v1_BigMacCountryPrice'
-                fetchedAt:
-                    type: string
-                cheapestCountry:
-                    type: string
-                mostExpensiveCountry:
-                    type: string
-                wowAvgPct:
-                    type: number
-                    format: double
-                wowAvailable:
-                    type: boolean
-                prevFetchedAt:
-                    type: string
-        worldmonitor_economic_v1_BigMacCountryPrice:
-            type: object
-            properties:
-                code:
-                    type: string
-                name:
-                    type: string
-                currency:
-                    type: string
-                flag:
-                    type: string
-                localPrice:
-                    type: number
-                    format: double
-                usdPrice:
-                    type: number
-                    format: double
-                fxRate:
-                    type: number
-                    format: double
-                sourceSite:
-                    type: string
-                available:
-                    type: boolean
-                wowPct:
-                    type: number
-                    format: double
         worldmonitor_economic_v1_GetNationalDebtRequest:
             type: object
             description: GetNationalDebtRequest requests national debt data for all countries.
@@ -28475,7 +27557,7 @@ components:
                     description: ISO 3166-1 alpha-2 country code.
                 source:
                     type: string
-                    description: 'Which source supplied this series. One of: estat-cpi, eurostat-hicp, imf-cpi, imf-hicp, abs-cpi.'
+                    description: 'Which source supplied this series. One of: eurostat-hicp, imf-cpi, imf-hicp, abs-cpi.'
                 frequency:
                     type: string
                     description: 'Series frequency: M for monthly, Q for quarterly. Australia is quarterly.'
@@ -29869,48 +28951,6 @@ components:
                     format: int32
                     description: Case count if reported by source (0 = unknown).
             description: DiseaseOutbreakItem represents a single disease outbreak event.
-        worldmonitor_health_v1_ListAirQualityAlertsRequest:
-            type: object
-        worldmonitor_health_v1_ListAirQualityAlertsResponse:
-            type: object
-            properties:
-                alerts:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/worldmonitor_health_v1_AirQualityAlert'
-                fetchedAt:
-                    type: integer
-                    format: int64
-                    description: 'Warning: Values > 2^53 may lose precision in JavaScript'
-        worldmonitor_health_v1_AirQualityAlert:
-            type: object
-            properties:
-                city:
-                    type: string
-                countryCode:
-                    type: string
-                lat:
-                    type: number
-                    format: double
-                lng:
-                    type: number
-                    format: double
-                pm25:
-                    type: number
-                    format: double
-                aqi:
-                    type: integer
-                    format: int32
-                riskLevel:
-                    type: string
-                pollutant:
-                    type: string
-                measuredAt:
-                    type: integer
-                    format: int64
-                    description: 'Warning: Values > 2^53 may lose precision in JavaScript'
-                source:
-                    type: string
         worldmonitor_imagery_v1_SearchImageryRequest:
             type: object
             properties:
@@ -37729,65 +36769,6 @@ components:
                     type: string
                     description: Airline name (e.g. "Emirates"). Empty if no mapping.
             description: WingbitsLiveFlight contains real-time flight position data from the Wingbits ECS network.
-        worldmonitor_military_v1_ListDefensePatentsRequest:
-            type: object
-            properties:
-                cpcCode:
-                    type: string
-                    description: CPC category filter (e.g. "H04B", "F42B"). Empty returns all categories.
-                assignee:
-                    type: string
-                    description: Assignee keyword filter (case-insensitive substring match). Empty returns all.
-                limit:
-                    type: integer
-                    format: int32
-                    description: Maximum results to return (default 20, max 100).
-            description: ListDefensePatentsRequest filters defense/dual-use patent filings.
-        worldmonitor_military_v1_ListDefensePatentsResponse:
-            type: object
-            properties:
-                patents:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/worldmonitor_military_v1_DefensePatentFiling'
-                total:
-                    type: integer
-                    format: int32
-                    description: Total number of filings in the seeded dataset.
-                fetchedAt:
-                    type: string
-                    description: ISO 8601 timestamp when data was seeded.
-            description: ListDefensePatentsResponse contains recent defense/dual-use patent filings.
-        worldmonitor_military_v1_DefensePatentFiling:
-            type: object
-            properties:
-                patentId:
-                    type: string
-                    description: USPTO patent ID.
-                title:
-                    type: string
-                    description: Patent title.
-                date:
-                    type: string
-                    description: Filing date (YYYY-MM-DD).
-                assignee:
-                    type: string
-                    description: Primary assignee organization name.
-                cpcCode:
-                    type: string
-                    description: CPC classification code (e.g. "H04B", "F42B").
-                cpcDesc:
-                    type: string
-                    description: CPC class description.
-                abstract:
-                    type: string
-                    description: |-
-                        Compatibility field retained for existing clients. Always empty because
-                         USPTO Open Data Portal Patent File Wrapper records do not include abstracts.
-                url:
-                    type: string
-                    description: USPTO patent URL.
-            description: DefensePatentFiling is a single patent filing from a defense/dual-use organization.
         worldmonitor_military_v1_GetDefenseIndustrialBaseRequest:
             type: object
             properties:

@@ -196,9 +196,6 @@ function hasDirectionalMetric(signal: CorridorSourceSignal): boolean {
   switch (signal.family) {
     case 'port':
       return finiteMetric(signal.metrics.trendDelta);
-    case 'aviation':
-      return signal.metrics.providerStatus === 'normal'
-        || signal.metrics.providerStatus === 'disruption';
     case 'trade':
       return finiteMetric(signal.metrics.periodChangePct);
     case 'power_energy':
@@ -242,13 +239,6 @@ function activityDirectionForFamily(
     case 'port': {
       const value = averageMetric(directionalSignals, 'trendDelta');
       return value === null ? null : activityDirection(value);
-    }
-    case 'aviation': {
-      const normal = directionalSignals.filter((signal) =>
-        signal.metrics.providerStatus === 'normal').length;
-      const disruption = directionalSignals.filter((signal) =>
-        signal.metrics.providerStatus === 'disruption').length;
-      return activityDirection(normal - disruption);
     }
     case 'trade': {
       const value = averageMetric(directionalSignals, 'periodChangePct');

@@ -12,7 +12,7 @@ const FRED_SERIES = FRED_SEED_SERIES;
 // concurrency (allSettledWithConcurrency, FRED_CONCURRENCY). These tests pin that in.
 
 // The seeder logs one line per series (×24) plus per-failure warnings; silence for the file
-// (matches the bigmac suite — a synchronous warn burst can corrupt node:test's IPC parser).
+// (a synchronous warn burst can corrupt node:test's IPC parser).
 const realLog = console.log;
 const realWarn = console.warn;
 before(() => { console.log = () => {}; console.warn = () => {}; });

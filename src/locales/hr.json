@@ -542,10 +542,6 @@
     "gulfEconomies": "Gospodarstva Perzijskog Zaljeva",
     "groceryBasket": "Indeks Namirnica",
     "groceryItem": "Stavka",
-    "bigmac": "Pravi Indeks Big Maca",
-    "bigmacDesc": "Cijene Big Maca u zemljama Bliskog Istoka (Indeks Big Maca)",
-    "bigmacWow": "Promjena od tjedna do tjedna",
-    "bigmacCountry": "Država",
     "faoFoodPriceIndex": "Cijene hrane",
     "fuelPrices": "Cijene Goriva",
     "fuelPricesDesc": "Maloprodajne cijene benzina i dizelskog goriva u 30+ zemalja širom svijeta",
@@ -965,8 +961,6 @@
     "airlineIntel": {
       "infoTooltip": "<strong>Obavještajni sustav zrakoplovnih linija</strong> Podaci o realnom vremenu operativnog rada zrakoplovnih linija: suspenzija ruta, zatvaranja zračnog prostora, savjetodavne informacije za prijevoznike i hitne rute. Izvor: NOTAM od zrakoplovnih vlasti i bilteni prijevoznika.",
       "noOpsData": "Nema operativnih podataka — učitavanje…",
-      "noFlights": "Nema letova — odaberite aerodrom u postavkama.",
-      "noCarrierData": "Nema podataka o prijevozniku.",
       "noTrackingData": "Nema podataka o praćenju zrakoplova.",
       "noNews": "Nema vijesti iz avijacije.",
       "enterRoute": "Unesite rutu i pretražite cijene.",
@@ -2323,9 +2317,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Indeks maloprodaje hrane</strong> Globalna usporedba cijena maloprodajne košarice hrane u 24 zemlje — prati stvarnu inflaciju potrošačkih dobara izvan službenog indeksa cijena potrošačkih dobara."
     },
-    "bigmac": {
-      "infoTooltip": "<strong>Stvarni Big Mac indeks</strong> Indeks Big Mac časopisa The Economist mjeri paritet kupovne moći usporedbom cijena McDonaldova hamburgera u zemljama. Ažurira se kada su dostupni novi podaci (tromjesečno/godišnje)."
-    },
     "fuelPrices": {
       "infoTooltip": "<strong>Cijene goriva</strong> Maloprodajne cijene na crpkama za benzin i dizel u 30+ zemalja, normirane na USD/litar za usporedbu. Cijene potječu iz službenih vladinih programa otvorenih podataka i ažuriraju se tjedno. Najjeftinije i najskupnije zemlje su istaknuté. Promjena tjedna kroz tjedan se prikazuje kada su dostupni podaci iz prethodnog tjedna.",
       "countries": "zemlje"
@@ -2867,24 +2858,6 @@
         "high": "visoko povjerenje",
         "medium": "srednje povjerenje",
         "low": "nisko povjerenje"
-      }
-    },
-    "defensePatents": {
-      "title": "Signali istraživanja i razvoja",
-      "infoTooltip": "Tjedna podnošenja obrana i patenta dvojne namjene od strane Raytheona, Lockheed-a, Huawei-a, DARPE-a i drugih strateških organizacija. Kategorije: H04B (komunikacije), H01L (poluvodiči), F42B (municija), G06N (AI), C12N (biotehnologija). Izvor: USPTO Open Data Portal.",
-      "loading": "Učitavanje predložaka istraživanja i razvoja…",
-      "error": "Neuspjelo učitavanje podataka o patentima.",
-      "empty": "Nema podnošenja u ovoj kategoriji.",
-      "viewOnUspto": "Pogledaj na USPTO-u",
-      "tabs": {
-        "all": "Sve"
-      },
-      "cpcLabels": {
-        "H04B": "Komunikacije",
-        "H01L": "Poluvodići",
-        "F42B": "Municija",
-        "G06N": "AI",
-        "C12N": "Biotehnologija"
       }
     },
     "correlation": {
@@ -3463,7 +3436,6 @@
         "faa": "FAA ASWS",
         "eurocontrol": "Eurocontrol",
         "computed": "Izračunato",
-        "aviationstack": "Letni podaci",
         "notam": "NOTAM"
       },
       "regions": {
@@ -4859,11 +4831,10 @@
       "flights": {
         "category": "Zrakoplovstvo",
         "purpose": "Ističe poremećaje zračnih luka i zatvaranja NOTAM. Obuhvaća NOTAM zračnog prostora koji vrijede sada ili počinju unutar 24 sata, uključujući privremena ograničenja letova, ograničena, opasna i zabranjena područja, vojna operativna područja, rezervacije zračnog prostora i zatvaranja. Prikazuje i žive položaje zrakoplova kad je praćenje dostupno.",
-        "source": "FAA ASWS, AviationStack, FAA NOTAM Management Service (NMS-API) i NOTAM ICAO, adsb.lol (ODbL), Wingbits, oporavak starije usluge OpenSky, neobavezno nekomercijalno popunjavanje praznina s airplanes.live/adsb.fi i zrakoplovna usluga. NOTAM zračnog prostora crtaju se kao poligoni ondje gdje ih daje NMS, kao krugovi ondje gdje NOTAM navodi polumjer do 250 NM, a inače kao oznake.",
+        "source": "FAA ASWS, FAA NOTAM Management Service (NMS-API) i NOTAM ICAO, adsb.lol (ODbL), Wingbits, oporavak starije usluge OpenSky, neobavezno nekomercijalno popunjavanje praznina s airplanes.live/adsb.fi i zrakoplovna usluga. NOTAM zračnog prostora crtaju se kao poligoni ondje gdje ih daje NMS, kao krugovi ondje gdje NOTAM navodi polumjer do 250 NM, a inače kao oznake.",
         "freshness": "Punjenje poremećaja zračnih luka ide u taktu od 30 minuta. NOTAM zračnog prostora pune se svakih 5 minuta iz povlačenja promjena NMS, uz dnevnu punu resinkronizaciju, uz proračun ažurnosti od 20 minuta. Zrakoplovni panel također osvježava operativne prikaze u ciklusu upita od 5 minuta.",
         "confidence": "Najbolje za prvo razvrstavanje poremećaja. Pokrivenost pojedinih živih zrakoplova ovisi o dostupnosti ADS-B i postavljenim pružateljima. Tekst NOTAM mjerodavan je u obliku u kojem ga FAA distribuira.",
         "limitations": {
-          "0": "Simulirani pokazni podaci oslonjeni na AviationStack mogu se pojaviti kad nema ključa API.",
           "1": "Živi položaji zrakoplova mogu kasniti ili izostati ondje gdje je pokrivenost ADS-B slaba ili blokirana.",
           "2": "Područja NOTAM zračnog prostora crtaju se samo na karti deck.gl. Karta SVG pokazuje oznake zračnih luka.",
           "3": "Većina američkih TFR opisuje oblik samo u tekstu, pa se pojavljuju kao oznaka na položaju NOTAM, a ne kao oblik ograničenog područja.",

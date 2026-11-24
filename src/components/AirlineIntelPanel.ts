@@ -1,15 +1,10 @@
 import {
-    fetchAirportOpsSummary,
-    fetchAirportFlights,
-    fetchCarrierOps,
+    fetchFlightDelays,
+    type AirportDelayAlert,
     fetchAircraftPositions,
-    fetchFlightStatus,
     fetchAviationNews,
     fetchGoogleFlights,
     fetchGoogleDates,
-    type AirportOpsSummary,
-    type FlightInstance,
-    type CarrierOps,
     type PositionSample,
     type AviationNewsItem,
     type FlightDelaySeverity,
@@ -17,14 +12,13 @@ import {
     type DatePrice,
 } from '@/services/aviation';
 import { aviationWatchlist } from '@/services/aviation/watchlist';
-import { flightBoardTime } from '@/services/aviation/board-time';
 import { escapeHtml, sanitizeUrl } from '@/utils/sanitize';
 import { t } from '@/services/i18n';
 import { Panel } from './Panel';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 import type { ResolvedScope } from '@/services/tab-focus';
 import { airportCountry, headlineCountries, withoutOwnSourceSuffix } from '@/services/scope-attribution';
-import { PanelScopeFilter, focusedEmptyHtml, scopeTagHtml, type ScopeCountries } from './panel-scope-filter';
+import { PanelScopeFilter, focusedEmptyHtml, scopeTagHtml } from './panel-scope-filter';
 
 
 // ---- Helpers ----
@@ -40,17 +34,7 @@ const SEVERITY_COLOR: Record<FlightDelaySeverity, string> = {
     unknown: '#9ca3af',
 };
 
-const STATUS_BADGE: Record<string, string> = {
-    scheduled: '#6b7280', boarding: '#3b82f6', departed: '#8b5cf6',
-    airborne: '#22c55e', landed: '#14b8a6', arrived: '#0ea5e9',
-    cancelled: '#ef4444', diverted: '#f59e0b', unknown: '#6b7280',
-};
-
 function fmt(n: number | null | undefined): string { return n == null ? '—' : String(Math.round(n)); }
-function fmtTime(dt: Date | null | undefined): string {
-    if (!dt) return '—';
-    return dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-}
 function fmtMin(m: number): string {
     if (!m) return '—';
     return m < 60 ? `${m}m` : `${Math.floor(m / 60)}h ${m % 60}m`;
@@ -60,11 +44,11 @@ function localDateStr(): string {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-const TABS = ['ops', 'flights', 'airlines', 'tracking', 'news', 'prices'] as const;
+const TABS = ['ops', 'tracking', 'news', 'prices'] as const;
 type Tab = typeof TABS[number];
 
 const TAB_LABELS: Record<Tab, string> = {
-    ops: 'Ops', flights: 'Flights', airlines: 'Airlines',
+    ops: 'Ops',
     tracking: 'Track', news: 'News', prices: 'Prices',
 };
 
@@ -73,14 +57,10 @@ const TAB_LABELS: Record<Tab, string> = {
 export class AirlineIntelPanel extends Panel {
     private activeTab: Tab = 'ops';
     private airports: string[];
-    private opsData: AirportOpsSummary[] = [];
-    private flightsData: FlightInstance[] = [];
+    private opsData: AirportDelayAlert[] = [];
     // The airport the flights board was loaded for. The board mixes departures
     // and arrivals, and a row's direction is only readable relative to this.
-    private flightsAirport = '';
-    private carriersData: CarrierOps[] = [];
     private trackingData: PositionSample[] = [];
-    private trackingFlightData: FlightInstance[] = [];
     private trackingQuery = '';
     private newsData: AviationNewsItem[] = [];
     private googleFlightsData: GoogleFlightItinerary[] = [];
@@ -178,7 +158,6 @@ export class AirlineIntelPanel extends Panel {
             }
             if (target.id === 'trackClearBtn' || target.closest('#trackClearBtn')) {
                 this.trackingQuery = '';
-                this.trackingFlightData = [];
                 this.trackingData = [];
                 void this.loadTab('tracking');
             }
@@ -215,21 +194,6 @@ export class AirlineIntelPanel extends Panel {
     private scopeCandidates(): string[] {
         const resolved = this.scopeFilter.scope;
         return resolved ? [...resolved.chosen, ...resolved.neighbours] : [];
-    }
-
-    /**
-     * Countries of a flight's endpoints. The airport list is a hub list, not a
-     * directory, so an unknown endpoint must never push a flight out of the
-     * focus: with an unknown end the flight counts as in focus only when a
-     * known end is, and otherwise has no country (counted, one click away).
-     */
-    private flightCountries(f: FlightInstance): ScopeCountries {
-        const ends = [f.origin?.iata, f.destination?.iata].map((iata) => (iata ? airportCountry(iata) : null));
-        const known = ends.filter((c): c is string => !!c);
-        if (known.length === ends.length) return known;
-        const inFocus = new Set(this.scopeCandidates());
-        const hit = known.filter((c) => inFocus.has(c));
-        return hit;
     }
 
     /** Called by the map when new aircraft positions arrive. */
@@ -317,7 +281,6 @@ export class AirlineIntelPanel extends Panel {
     private handleTrackSearch(): void {
         const q = ((this.content.querySelector('#trackQueryInput') as HTMLInputElement)?.value || '').trim().toUpperCase();
         this.trackingQuery = q;
-        this.trackingFlightData = [];
         this.trackingData = [];
         void this.loadTab('tracking');
     }
@@ -329,8 +292,6 @@ export class AirlineIntelPanel extends Panel {
         });
         this.renderTab();
         if ((tab === 'ops' && !this.opsData.length) ||
-            (tab === 'flights' && !this.flightsData.length) ||
-            (tab === 'airlines' && !this.carriersData.length) ||
             (tab === 'tracking' && !this.trackingData.length) ||
             (tab === 'news' && !this.newsData.length)) {
             void this.loadTab(tab);
@@ -348,8 +309,13 @@ export class AirlineIntelPanel extends Panel {
         if (shouldLoadActiveTab) void this.loadTab(this.activeTab);
     }
 
+    private async fetchWatchedAirportDelays(): Promise<AirportDelayAlert[]> {
+        const alerts = await fetchFlightDelays();
+        return alerts.filter(alert => this.airports.includes(alert.iata));
+    }
+
     private async loadOps(): Promise<void> {
-        this.opsData = await fetchAirportOpsSummary(this.airports);
+        this.opsData = await this.fetchWatchedAirportDelays();
         if (this.activeTab === 'ops') this.renderTab();
     }
 
@@ -359,22 +325,11 @@ export class AirlineIntelPanel extends Panel {
         try {
             switch (tab) {
                 case 'ops':
-                    this.opsData = await fetchAirportOpsSummary(this.airports);
-                    break;
-                case 'flights': {
-                    const boardAirport = this.airports[0] ?? 'IST';
-                    this.flightsData = await fetchAirportFlights(boardAirport, 'both', 30);
-                    this.flightsAirport = boardAirport;
-                    break;
-                }
-                case 'airlines':
-                    this.carriersData = await fetchCarrierOps(this.airports);
+                    this.opsData = await this.fetchWatchedAirportDelays();
                     break;
                 case 'tracking':
                     if (this.trackingQuery) {
-                        if (/^[A-Z]{2}\d{1,4}$/.test(this.trackingQuery)) {
-                            this.trackingFlightData = await fetchFlightStatus(this.trackingQuery);
-                        } else if (/^[0-9A-F]{6}$/i.test(this.trackingQuery)) {
+                        if (/^[0-9A-F]{6}$/i.test(this.trackingQuery)) {
                             this.trackingData = await fetchAircraftPositions({ icao24: this.trackingQuery.toLowerCase() });
                         } else {
                             this.trackingData = await fetchAircraftPositions({ callsign: this.trackingQuery });
@@ -423,13 +378,11 @@ export class AirlineIntelPanel extends Panel {
 
     private renderTab(): void {
         if (this.loading) { this.scopeFilter.hideStrip(); this.renderLoading(); return; }
-        if (this.activeTab === 'airlines' || this.activeTab === 'tracking' || this.activeTab === 'prices') {
+        if (this.activeTab === 'tracking' || this.activeTab === 'prices') {
             this.scopeFilter.renderStrip(null, t('focus.filter.tabNotFiltered'));
         }
         switch (this.activeTab) {
             case 'ops': this.renderOps(); break;
-            case 'flights': this.renderFlights(); break;
-            case 'airlines': this.renderAirlines(); break;
             case 'tracking': this.renderTracking(); break;
             case 'news': this.renderNews(); break;
             case 'prices': this.renderPrices(); break;
@@ -455,55 +408,10 @@ export class AirlineIntelPanel extends Panel {
         <div class="ops-name">${escapeHtml(s.name || s.iata)}${scopeTagHtml(row)}</div>
         <div class="ops-severity" style="color:${SEVERITY_COLOR[s.severity] ?? '#aaa'}">${s.severity.toUpperCase()}</div>
         <div class="ops-delay">${s.avgDelayMinutes > 0 ? `+${s.avgDelayMinutes}m` : '—'}</div>
-        <div class="ops-cancel">${s.cancellationRate > 0 ? `${s.cancellationRate.toFixed(1)}% cxl` : ''}</div>
-        ${s.closureStatus ? '<div class="ops-closed">CLOSED</div>' : ''}
-        ${s.notamFlags.length ? `<div class="ops-notam">⚠️ NOTAM</div>` : ''}
+        ${s.delayType === 'closure' ? '<div class="ops-closed">CLOSED</div>' : ''}
+        ${s.source === 'notam' ? `<div class="ops-notam">⚠️ NOTAM</div>` : ''}
       </div>`).join('');
         this.setTrustedContent(trustedHtml(`<div class="ops-grid">${rows}</div>`, "legacy direct innerHTML migration"));
-    }
-
-    // ---- Flights tab ----
-    private renderFlights(): void {
-        if (!this.flightsData.length) {
-            this.scopeFilter.hideStrip();
-            this.setTrustedContent(trustedHtml(`<div class="no-data">${t('components.airlineIntel.noFlights')}</div>`, "legacy direct innerHTML migration"));
-            return;
-        }
-        const view = this.scopeFilter.view(this.flightsData, f => this.flightCountries(f));
-        this.scopeFilter.renderStrip(view);
-        if (view.emptyByFocus) {
-            this.setTrustedContent(trustedHtml(focusedEmptyHtml(t('focus.filter.emptyFlights')), 'focus empty state: escaped by focusedEmptyHtml'));
-            return;
-        }
-        const rows = view.rows.map(({ item: f, ...row }) => {
-            const color = STATUS_BADGE[f.status] ?? '#6b7280';
-            const when = flightBoardTime(f, this.flightsAirport);
-            return `
-        <div class="flight-row">
-          <div class="flight-num">${escapeHtml(f.flightNumber)}</div>
-          <div class="flight-route">${escapeHtml(f.origin.iata)} → ${escapeHtml(f.destination.iata)}${scopeTagHtml(row)}</div>
-          <div class="flight-time">${fmtTime(when)}</div>
-          <div class="flight-delay" style="color:${f.delayMinutes > 0 ? '#f97316' : '#aaa'}">${f.delayMinutes > 0 ? `+${f.delayMinutes}m` : ''}</div>
-          <div class="flight-status" style="color:${color}">${escapeHtml(f.status)}</div>
-        </div>`;
-        }).join('');
-        this.setTrustedContent(trustedHtml(`<div class="flights-list">${rows}</div>`, "legacy direct innerHTML migration"));
-    }
-
-    // ---- Airlines tab ----
-    private renderAirlines(): void {
-        if (!this.carriersData.length) {
-            this.setTrustedContent(trustedHtml(`<div class="no-data">${t('components.airlineIntel.noCarrierData')}</div>`, "legacy direct innerHTML migration"));
-            return;
-        }
-        const rows = this.carriersData.slice(0, 15).map(c => `
-      <div class="carrier-row">
-        <div class="carrier-name">${escapeHtml(c.carrierName || c.carrierIata)}</div>
-        <div class="carrier-flights">${c.totalFlights} flt</div>
-        <div class="carrier-delay" style="color:${c.delayPct > 30 ? '#ef4444' : '#aaa'}">${c.delayPct.toFixed(1)}% delayed</div>
-        <div class="carrier-cancel">${c.cancellationRate.toFixed(1)}% cxl</div>
-      </div>`).join('');
-        this.setTrustedContent(trustedHtml(`<div class="carriers-list">${rows}</div>`, "legacy direct innerHTML migration"));
     }
 
     // ---- Tracking tab ----
@@ -513,39 +421,12 @@ export class AirlineIntelPanel extends Panel {
             : '';
         const searchBar = `
       <div class="track-search" style="display:flex;gap:6px;padding:8px 0 6px">
-        <input id="trackQueryInput" class="price-input" placeholder="Flight (EK3) or callsign (UAE3)" value="${escapeHtml(this.trackingQuery)}" style="flex:1;min-width:0">
+        <input id="trackQueryInput" class="price-input" placeholder="Callsign or ICAO24" value="${escapeHtml(this.trackingQuery)}" style="flex:1;min-width:0">
         ${clearBtn}<button id="trackSearchBtn" class="icon-btn" style="padding:4px 10px">Track</button>
       </div>`;
 
         if (this.loading) {
             setTrustedHtml(this.content, trustedHtml(`${searchBar}<div class="panel-loading">${t('common.loading')}</div>`, "legacy direct innerHTML migration"));
-            return;
-        }
-
-        // Flight status results (searched by IATA flight number)
-        if (this.trackingFlightData.length) {
-            const rows = this.trackingFlightData.map(f => {
-                const depStr = f.estimatedDeparture
-                    ? `Dep ${fmtTime(f.estimatedDeparture)}`
-                    : '';
-                const arrStr = f.estimatedArrival
-                    ? ` · Arr ${fmtTime(f.estimatedArrival)}`
-                    : '';
-                const color = STATUS_BADGE[f.status] ?? '#6b7280';
-                return `
-          <div class="track-flight-card" style="padding:8px 0;border-bottom:1px solid var(--border)">
-            <div style="display:flex;gap:8px;align-items:baseline">
-              <strong>${escapeHtml(f.flightNumber)}</strong>
-              <span style="color:#9ca3af;font-size:calc(11px * var(--wm-panel-effective-scale, 1))">${escapeHtml(f.carrier.name || f.carrier.iata)}</span>
-              <span style="color:${color};font-size:calc(11px * var(--wm-panel-effective-scale, 1));margin-left:auto">${escapeHtml(f.status)}</span>
-            </div>
-            <div style="font-size:calc(12px * var(--wm-panel-effective-scale, 1));color:var(--text-dim)">${escapeHtml(f.origin.iata)} → ${escapeHtml(f.destination.iata)}${depStr ? ` · ${depStr}` : ''}${arrStr}</div>
-            ${f.aircraftType ? `<div style="font-size:calc(11px * var(--wm-panel-effective-scale, 1));color:#6b7280">${escapeHtml(f.aircraftType)}</div>` : ''}
-            ${(f.gate || f.terminal) ? `<div style="font-size:calc(11px * var(--wm-panel-effective-scale, 1));color:#6b7280">${f.gate ? `Gate ${escapeHtml(f.gate)}` : ''}${f.terminal ? `${f.gate ? ' · ' : ''}T${escapeHtml(f.terminal)}` : ''}</div>` : ''}
-            ${f.delayMinutes > 0 ? `<div style="color:#f97316;font-size:calc(12px * var(--wm-panel-effective-scale, 1))">+${f.delayMinutes}m delay</div>` : ''}
-          </div>`;
-            }).join('');
-            setTrustedHtml(this.content, trustedHtml(`${searchBar}<div>${rows}</div>`, "legacy direct innerHTML migration"));
             return;
         }
 

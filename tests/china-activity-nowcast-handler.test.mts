@@ -209,11 +209,6 @@ function corridorSnapshot(
           signal('port:shanghai', 'port', { trendDelta: 2 }),
           signal('port:ningbo', 'port', { trendDelta: 1 }),
         ]),
-        condition('aviation', [
-          signal('aviation:pvg', 'aviation', { providerStatus: 'normal' }),
-          signal('aviation:hkg', 'aviation', { providerStatus: 'disruption' }),
-          signal('aviation:can', 'aviation', { providerStatus: 'normal' }),
-        ]),
         condition('trade', [
           {
             ...signal('ccfi', 'trade', {
@@ -257,23 +252,19 @@ function energyContribution(corridors: ChinaCorridorControlTowerResponse) {
 
 function priorCorridorDirectionalSnapshot(
   directionalFamilies: ChinaCorridorDirectionalSnapshot['directionalFamilies'] =
-    ['aviation', 'port', 'trade'],
+    ['port', 'trade'],
 ): ChinaCorridorDirectionalSnapshot {
   return {
     schemaVersion: 3,
     generatedAt: '2026-07-24T12:00:00.000Z',
     corridorIds: ['china-yangtze-river-delta'],
     familyKeys: [
-      'china-yangtze-river-delta:aviation',
       'china-yangtze-river-delta:port',
       'china-yangtze-river-delta:power_energy',
       'china-yangtze-river-delta:trade',
     ],
     directionalFamilies,
     directionalSelectorKeys: [
-      'china-yangtze-river-delta:aviation:aviation:can',
-      'china-yangtze-river-delta:aviation:aviation:hkg',
-      'china-yangtze-river-delta:aviation:aviation:pvg',
       'china-yangtze-river-delta:port:port:ningbo',
       'china-yangtze-river-delta:port:port:shanghai',
       'china-yangtze-river-delta:trade:supply_chain:shipping:v2:CCFI',
@@ -320,43 +311,36 @@ describe('China activity nowcast cache/API composition (#5579)', () => {
     const breadth = inputs.proxyObservations
       .find((item) => item.seriesId === 'corridor_activity_breadth_change');
     assert.equal(breadth?.value, 1);
-    assert.equal(breadth?.priorValue, 2);
+    assert.equal(breadth?.priorValue, 1);
     assert.deepEqual(breadth?.provenance, {
       corridorIds: ['china-yangtze-river-delta'],
       familyKeys: [
-        'china-yangtze-river-delta:aviation',
         'china-yangtze-river-delta:port',
         'china-yangtze-river-delta:power_energy',
         'china-yangtze-river-delta:trade',
       ],
       generatedAt: EVALUATED_AT,
       priorGeneratedAt: '2026-07-24T12:00:00.000Z',
-      directionalFamilies: ['aviation', 'port', 'trade'],
-      priorDirectionalFamilies: ['aviation', 'port', 'trade'],
+      directionalFamilies: ['port', 'trade'],
+      priorDirectionalFamilies: ['port', 'trade'],
       directionalSelectorKeys: [
-        'china-yangtze-river-delta:aviation:aviation:can',
-        'china-yangtze-river-delta:aviation:aviation:hkg',
-        'china-yangtze-river-delta:aviation:aviation:pvg',
         'china-yangtze-river-delta:port:port:ningbo',
         'china-yangtze-river-delta:port:port:shanghai',
         'china-yangtze-river-delta:trade:supply_chain:shipping:v2:CCFI',
       ],
       priorDirectionalSelectorKeys: [
-        'china-yangtze-river-delta:aviation:aviation:can',
-        'china-yangtze-river-delta:aviation:aviation:hkg',
-        'china-yangtze-river-delta:aviation:aviation:pvg',
         'china-yangtze-river-delta:port:port:ningbo',
         'china-yangtze-river-delta:port:port:shanghai',
         'china-yangtze-river-delta:trade:supply_chain:shipping:v2:CCFI',
       ],
-      directionalFamilyCount: 3,
-      priorDirectionalFamilyCount: 3,
-      strengtheningFamilies: ['aviation', 'port', 'trade'],
-      priorStrengtheningFamilies: ['aviation', 'port'],
+      directionalFamilyCount: 2,
+      priorDirectionalFamilyCount: 2,
+      strengtheningFamilies: ['port', 'trade'],
+      priorStrengtheningFamilies: ['port'],
       weakeningFamilies: [],
       priorWeakeningFamilies: [],
-      activityBreadthValue: 3,
-      priorActivityBreadthValue: 2,
+      activityBreadthValue: 2,
+      priorActivityBreadthValue: 1,
       aggregation: 'signed_activity_family_count_change',
     });
   });
@@ -399,7 +383,7 @@ describe('China activity nowcast cache/API composition (#5579)', () => {
   });
 
   it('rejects a family missing from either snapshot instead of calling it unchanged (#6068)', () => {
-    const prior = priorCorridorDirectionalSnapshot(['aviation', 'port']);
+    const prior = priorCorridorDirectionalSnapshot(['port']);
     prior.familyKeys = prior.familyKeys.filter((key) => !key.endsWith(':trade'));
 
     const breadth = buildChinaActivityNowcastInputs({
@@ -433,7 +417,7 @@ describe('China activity nowcast cache/API composition (#5579)', () => {
       macro: macroSnapshot() as never,
       corridors: coverageOnly,
       marketValues: marketValues(),
-      priorCorridorSnapshot: priorCorridorDirectionalSnapshot(['aviation']),
+      priorCorridorSnapshot: priorCorridorDirectionalSnapshot(['port']),
     } as never).proxyObservations
       .find((item) => item.seriesId === 'corridor_activity_breadth_change');
 
@@ -458,7 +442,7 @@ describe('China activity nowcast cache/API composition (#5579)', () => {
       macro: macroSnapshot() as never,
       corridors: unavailableTrade,
       marketValues: marketValues(),
-      priorCorridorSnapshot: priorCorridorDirectionalSnapshot(['aviation', 'port', 'trade']),
+      priorCorridorSnapshot: priorCorridorDirectionalSnapshot(['port', 'trade']),
     }).proxyObservations.find((item) => item.seriesId === 'corridor_activity_breadth_change');
 
     assert.equal(breadth?.value, null);
@@ -533,7 +517,6 @@ describe('China activity nowcast cache/API composition (#5579)', () => {
       inputs.proxyObservations.filter((item) => item.value !== null).map((item) => item.seriesId),
       [
         'portwatch_tanker_calls_trend',
-        'aviation_hub_disruption_balance',
         'ccfi_freight_rate_change',
         'china_energy_demand_change',
         'china_input_commodity_change',
@@ -896,29 +879,25 @@ describe('China activity nowcast cache/API composition (#5579)', () => {
         generatedAt: EVALUATED_AT,
         corridorIds: ['china-yangtze-river-delta'],
         familyKeys: [
-          'china-yangtze-river-delta:aviation',
           'china-yangtze-river-delta:port',
           'china-yangtze-river-delta:power_energy',
           'china-yangtze-river-delta:trade',
         ],
-        directionalFamilies: ['aviation', 'port', 'power_energy', 'trade'],
+        directionalFamilies: ['port', 'power_energy', 'trade'],
         directionalSelectorKeys: [
-          'china-yangtze-river-delta:aviation:aviation:can',
-          'china-yangtze-river-delta:aviation:aviation:hkg',
-          'china-yangtze-river-delta:aviation:aviation:pvg',
           'china-yangtze-river-delta:port:port:ningbo',
           'china-yangtze-river-delta:port:port:shanghai',
           'china-yangtze-river-delta:power_energy:energy',
           'china-yangtze-river-delta:trade:supply_chain:shipping:v2:CCFI',
         ],
-        strengtheningFamilies: ['aviation', 'port', 'power_energy', 'trade'],
+        strengtheningFamilies: ['port', 'power_energy', 'trade'],
         weakeningFamilies: [],
     }]);
     assert.equal(response.state, 'agreement');
     assert.equal(response.comparisonWindow.days, 210);
     // Neither freight (#6066) nor energy (#6067) is structurally missing any
     // more; only the corridor breadth change still has no comparable prior.
-    assert.equal(response.confidence.eligibleFamilies, 6);
+    assert.equal(response.confidence.eligibleFamilies, 5);
     assert.equal(response.historicalEvaluation.available, false);
     assert.match(response.historicalEvaluation.reason, /historical proxy ledger/i);
     assert.deepEqual(
@@ -933,7 +912,7 @@ describe('China activity nowcast cache/API composition (#5579)', () => {
       getCorridors: async () => corridorSnapshot(energySignal(coverageOnlyMetrics())),
       readMarketBatch: async () => marketValues(),
     });
-    assert.equal(coverageOnly.confidence.eligibleFamilies, 5);
+    assert.equal(coverageOnly.confidence.eligibleFamilies, 4);
     assert.deepEqual(
       coverageOnly.missingInputs.map((item) => item.family),
       ['energy', 'corridor', 'atmosphere'],
@@ -1360,30 +1339,10 @@ describe('China activity nowcast fail-closed contract (#6060)', () => {
 
   it('stays insufficient below three non-flat proxy families', async () => {
     // Two non-flat families survive (commodity + market); the maritime family
-    // is content-stale and aviation is flat.
+    // is content-stale.
     const response = await composeChinaActivityNowcastSnapshot(EVALUATED_AT, {
       getMacro: async () => macroSnapshot() as never,
-      getCorridors: async () => {
-        const base = staleCorridorSnapshot();
-        return {
-          ...base,
-          corridors: base.corridors.map((corridor) => ({
-            ...corridor,
-            conditions: corridor.conditions.map((item) => (
-              item.family === 'aviation'
-                ? {
-                    ...item,
-                    // One normal and one disrupted hub nets to exactly zero.
-                    sourceSignals: [
-                      signal('aviation:pvg', 'aviation', { providerStatus: 'normal' }),
-                      signal('aviation:hkg', 'aviation', { providerStatus: 'disruption' }),
-                    ],
-                  }
-                : item
-            )),
-          })),
-        };
-      },
+      getCorridors: async () => staleCorridorSnapshot(),
       readMarketBatch: async () => marketValues(),
     });
 
@@ -1397,13 +1356,6 @@ describe('China activity nowcast fail-closed contract (#6060)', () => {
     assert.equal(response.confidence.level, 'insufficient');
     assert.match(response.confidence.reason, /At least 3 non-flat proxy families are required; 2 are eligible\./);
 
-    // An eligible-but-flat family is counted as coverage but never as a
-    // direction — that is the distinction the >=3 gate rests on.
-    const aviation = response.contributions
-      .find((item) => item.seriesId === 'aviation_hub_disruption_balance');
-    assert.equal(aviation?.included, true);
-    assert.equal(aviation?.direction, 'unchanged');
-    assert.equal(nonFlatFamilies.has('aviation'), false);
   });
 
   it('leaves unavailable once three non-flat families are restored', async () => {

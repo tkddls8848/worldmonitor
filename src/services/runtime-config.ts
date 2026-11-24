@@ -25,7 +25,6 @@ export type RuntimeSecretKey =
   | 'OLLAMA_MODEL'
   | 'WORLDMONITOR_API_KEY'
   | 'WTO_API_KEY'
-  | 'AVIATIONSTACK_API'
   | 'ICAO_API_KEY';
 
 export type RuntimeFeatureId =
@@ -49,7 +48,6 @@ export type RuntimeFeatureId =
   | 'aiOllama'
   | 'wtoTrade'
   | 'supplyChain'
-  | 'aviationStack'
   | 'ucdpConflicts'
   | 'icaoNotams';
 
@@ -89,7 +87,6 @@ const defaultToggles: Record<RuntimeFeatureId, boolean> = {
   aiOllama: true,
   wtoTrade: true,
   supplyChain: true,
-  aviationStack: true,
   icaoNotams: true,
 };
 
@@ -247,18 +244,11 @@ export const RUNTIME_FEATURES: RuntimeFeatureDefinition[] = [
     fallback: 'Chokepoints and minerals always available; shipping requires FRED key.',
   },
   {
-    id: 'aviationStack',
-    name: 'AviationStack flight delays',
-    description: 'Real-time international airport delay data via Railway relay (seed loop + proxy).',
-    requiredSecrets: ['WS_RELAY_URL'],
-    fallback: 'Non-US airports use simulated delay data.',
-  },
-  {
     id: 'icaoNotams',
     name: 'ICAO NOTAM closures (Middle East)',
     description: 'Airport closure detection for MENA airports from ICAO NOTAM data service.',
     requiredSecrets: ['ICAO_API_KEY'],
-    fallback: 'Closures detected only via AviationStack flight cancellation data.',
+    fallback: 'FAA NOTAM data remains available where configured.',
   },
 ];
 

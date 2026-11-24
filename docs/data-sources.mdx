@@ -21,7 +21,7 @@ Compare the dashboard with its underlying event-data services: [World Monitor vs
 | [Energy & Commodities](#energy-%26-commodities) | Gas storage, oil inventories, fuel prices, gold and metals | GIE AGSI+, U.S. EIA, IEA, CFTC |
 | [Infrastructure & Cyber](#infrastructure-%26-cyber) | Undersea cables, pipelines, ports, outages, threat IOCs | IODA, Cloudflare Radar, Submarine Cable Map, abuse.ch |
 | [Environment & Disasters](#environment-%26-disasters) | Earthquakes, disasters, wildfires, cyclones, climate anomalies | USGS, GDACS, NASA FIRMS/EONET, Open-Meteo |
-| [Aviation & Airspace](#aviation-%26-airspace) | Airport delays, NOTAM closures, flight tracking, prices | FAA, ICAO, AviationStack, adsb.lol |
+| [Aviation & Airspace](#aviation-%26-airspace) | Airport delays, NOTAM closures, flight tracking, prices | FAA, ICAO, adsb.lol |
 | [China Coverage](#china-coverage) | Official macro, policy, disclosures, cross-strait activity | NBS, SAFE, PBoC, Taiwan MND, SSE/SZSE |
 | Korea corporate disclosures | OpenDART major filings, ownership reports, and selected exchange notices for KOSPI and KOSDAQ issuers | Financial Supervisory Service OpenDART |
 | [Tech Ecosystem](#tech-ecosystem) | Company HQs, startups, cloud regions, research signals | Crunchbase News, GitHub, OSS Insight |
@@ -728,7 +728,7 @@ Granules are listed through NASA CMR and subset on the public SlideRule Earth se
 
 Airport operations, airspace closures, live flight tracking, and airline intelligence.
 
-- Airport delays and closures across monitored airports (FAA + AviationStack + ICAO NOTAM)
+- Airport delays and closures across monitored airports (FAA + ICAO NOTAM)
 - **Aviation intelligence** — 6-tab airline intel panel (ops, flights, airlines, tracking, news, prices) with customizable airport/airline watchlists, live ADS-B flight tracking, and flight price search
 
 **Key providers**
@@ -744,7 +744,6 @@ Airport operations, airspace closures, live flight tracking, and airline intelli
 | FAA ASWS | US airport delay and ground stop data | [nasstatus.faa.gov](https://nasstatus.faa.gov) |
 | ICAO | NOTAM airspace closure data | [icao.int](https://www.icao.int) |
 | FAA NOTAM Management Service | Worldwide NOTAMs for airport closures and the airspace areas on the Aviation layer (credentialed) | [faa.gov](https://www.faa.gov) |
-| AviationStack | International airport delay coverage | [aviationstack.com](https://aviationstack.com/) |
 
 Deep dives: [Airline intel panel](/panels/airline-intel)
 
@@ -755,7 +754,6 @@ Airports across the Americas, Europe, Asia-Pacific, MENA, and Africa are continu
 | Source             | Coverage                  | Method                                                                                                  |
 | ------------------ | ------------------------- | ------------------------------------------------------------------------------------------------------- |
 | **FAA ASWS**       | 14 US hub airports        | Real-time XML feed from `nasstatus.faa.gov` — ground delays, ground stops, arrival/departure delays, closures |
-| **AviationStack**  | 56 international airports  | Last 100 flights per airport — cancellation rate and average delay duration computed from flight records  |
 | **ICAO NOTAM API** | Watchlist airports worldwide | Real-time NOTAM (Notice to Air Missions) query for active airport/airspace closures                      |
 | **FAA NMS-API**    | Same NOTAM watchlist      | Worldwide FAA NOTAM store (domestic, FDC, international, military), kept current by daily bulk loads and delta pulls |
 
@@ -766,12 +764,10 @@ Only a JSON array from ICAO counts as a NOTAM observation, and an empty array is
 **FAA NOTAM Management Service.** `scripts/seed-notam-nms.mjs` authenticates with OAuth2 client credentials (`NOTAM_KEY`, `NOTAM_SECRET`). It loads each NOTAM classification in bulk at most once per 24 hours and pulls the changes since its last cursor on every other run, in line with the FAA limits of one bulk load per day and one delta pull per three minutes. Cancelled and replaced NOTAMs are removed, and so are NOTAMs past their end time. Two keys come out of the store:
 
 - `aviation:notam:nms:closures:v1`: aerodromes closed in full (Q-code `FALC` or an `AD CLSD` text) and aerodromes with restrictions in force. A closure with exceptions, such as `AD CLSD EXC MEDEVAC`, or one limited to IFR or night traffic counts as a restriction, and `AD CLSD TO ALL TFC` with no exception counts as closed. A closure to one traffic class that leaves airline service running, such as `AD AP CLSD TO NON SKED TRANSIENT GA ACFT EXC 24HR PPR` at Los Angeles, Boston or Las Vegas, is not counted. The aviation seeder merges this list ahead of ICAO when it is under 30 minutes old, filters it to the same watchlist, and attributes each alert to the source that reported it. The watchlist is the seeder's airport list in `scripts/seed-aviation.mjs`, the only list the Railway container ships, so it has to include every airport in `src/config/airports.ts`; a test enforces that. Once NMS has published in production, an NMS list that is missing or older than 30 minutes makes the aviation seeder keep its last-good closures instead of publishing ICAO alone, so closures do not vanish and re-alert when NMS recovers.
-- The same closures key also lists every aerodrome the FAA feed carries a NOTAM for, of any kind (`coveredIcaos`). The list is rebuilt on each bulk load and grows with each delta pull, so after a deploy that introduces it, the list is complete only from the next daily bulk load. A monitored airport that has no FAA or AviationStack delay data used to show **Coverage unavailable**. When the feed carries NOTAMs for that airport and none closes or restricts it, the airport now shows **Open**, with severity normal and source NOTAM. The label makes no claim about delays. An airport the feed carries nothing for still shows Coverage unavailable, because the absence of a closure NOTAM there says nothing. So does an airport whose flight information region (FIR) has an airspace closure in effect: a country-wide closure is filed against the FIR, not against each airport.
 - `aviation:notam:airspace:v1`: temporary flight restrictions and prohibited, restricted, danger, military and reserved areas, plus closed airspace, that are in effect now or start within 24 hours. They are drawn by the **Aviation** map layer (deck.gl renderer only). NOTAMs that give a radius are drawn as circles around the Q-line centre the radius is measured from, and radii above 250 NM are drawn as markers. NOTAMs that give a polygon are drawn as polygons. An FDC TFR without a radius, whose shape is described only in the text, is drawn as a marker.
 
 Both keys have a 20-minute health budget. The Railway service `seed-notam-nms` runs every 5 minutes against the FAA production host. The seeder runs a dry run against any non-production host, because staging serves FAA test NOTAMs. With `NMS_ALLOW_NONPROD_WRITE=1` a non-production run publishes the map layer only, never closures or the activation marker.
 
-**Severity thresholds**: Average delay ≥15min or ≥15% delayed flights = minor; ≥30min/30% = moderate; ≥45min/45% = major; ≥60min/60% = severe. Cancellation rate ≥80% with ≥10 flights = closure. AviationStack rates count each operating flight once (a codeshare row counts for the flight it names when that flight has no other row) and read departure times in the airport's own time zone. They are measured over flights already due (scheduled departure passed, or departed) when at least 10 are in the sample. With fewer due flights, the returned flights are the day's later departures, so they can show a closure (at least 80% cancelled) but no lower cancellation level: advance cancellations of later flights are schedule changes, not disruption. All results are cached for 30 minutes in Redis. When no AviationStack API key is configured, the system generates probabilistic simulated delays for demonstration — rush-hour windows and high-traffic airports receive higher delay probability.
 
 ### Aviation Intelligence Panel
 
@@ -779,14 +775,12 @@ The Airline Intel panel provides a comprehensive 6-tab aviation monitoring inter
 
 | Tab | Data | Source |
 | --- | --- | --- |
-| **Ops** | Delay percentages, cancellation rates, NOTAM closures, ground stops | FAA ASWS, AviationStack, ICAO |
-| **Flights** | Specific flight status with scheduled vs estimated times, divert/cancel flags | AviationStack flight lookup |
-| **Airlines** | Per-carrier statistics at monitored airports (delay %, cancellation rate, flight count) | AviationStack carrier ops |
+| **Ops** | FAA delays, ground stops and NOTAM closures | FAA ASWS, ICAO |
 | **Tracking** | Live ADS-B aircraft positions with altitude, ground speed, heading, on-ground status | adsb.lol (ODbL) / Wingbits / OpenSky |
 | **News** | 20+ recent aviation news items with entity matching (airlines, airports, aircraft types) | RSS feeds tagged `aviation` |
 | **Prices** | Multi-carrier price quotes with cabin selection (Economy/Business), currency conversion, non-stop filters | Travelpayouts cached data |
 
-**Aviation watchlist** — users customize a personal list of airports (IATA codes), airlines, and routes persisted to `localStorage` as `aviation:watchlist:v1`. The default watchlist includes IST, ESB, SAW, LHR, FRA, CDG airports and TK airline, reflecting common monitoring needs. The watchlist drives which airports appear in the Ops tab and which carriers are tracked in the Airlines tab.
+**Aviation watchlist** — users customize a personal list of airports (IATA codes), airlines, and routes persisted to `localStorage` as `aviation:watchlist:v1`. The default watchlist includes IST, ESB, SAW, LHR, FRA, CDG airports and TK airline, reflecting common monitoring needs. The watchlist drives which airports appear in the Ops tab and which entities are matched in the News tab.
 
 Delay severity is classified across five levels — normal, minor, moderate, major, severe — with each alert carrying a severity source (FAA, Eurocontrol, or computed from flight data). The panel auto-refreshes on a 5-minute polling cycle with a live indicator badge, and uses a `SmartPollLoop` with adaptive backoff on failures.
 
@@ -816,7 +810,7 @@ Its China-specific official lanes currently include:
 
 The composition also uses attributable global contracts for BIS, IMF, UN
 Comtrade reporter 156 and bilateral HS4 data, CCFI, IMF PortWatch,
-AviationStack, the China energy spine, the China market index, and reviewed
+the China energy spine, the China market index, and reviewed
 China news sources. Every displayed signal carries its publisher and
 observation or release date. A missing, stale, blocked, or partial source is
 shown as unavailable or degraded rather than as zero.
@@ -834,9 +828,7 @@ completed with dated content; a timeout, empty response, or undated feed stays
 visible as degraded coverage.
 
 The hourly Railway China coverage evaluator checks the transport heartbeat and
-content freshness independently for every launched contract. It uses the
-canonical eight-hub AviationStack `coverage` records—not the bootstrap's
-presentation-only airport rows—so an upstream omission remains observable.
+content freshness independently for every launched contract.
 The audit records aggregate status and reason codes only: it never logs
 credentials or raw upstream payloads. Detailed bilateral trade data remains
 Pro-only and is not included in the public China summary.

@@ -586,7 +586,6 @@ test('harness-mounted price and stock tables use the shared table style', async 
     const { initI18n } = await import('/src/services/i18n.ts');
     await initI18n();
     const { Panel } = await import('/src/components/Panel.ts');
-    const { BigMacPanel } = await import('/src/components/BigMacPanel.ts');
     const { FuelPricesPanel } = await import('/src/components/FuelPricesPanel.ts');
     const { ConsumerPricesPanel } = await import('/src/components/ConsumerPricesPanel.ts');
     const { EnergyComplexPanel } = await import('/src/components/EnergyComplexPanel.ts');
@@ -597,17 +596,6 @@ test('harness-mounted price and stock tables use the shared table style', async 
     grid.className = 'panels-grid';
     grid.style.cssText = 'height:auto;width:900px;grid-template-columns:900px';
     document.body.appendChild(grid);
-
-    const bigmac = new BigMacPanel();
-    (bigmac as unknown as { renderIndex(data: unknown): void }).renderIndex({
-      wowAvailable: true, wowAvgPct: 0.4, fetchedAt: '2026-11-03T00:00:00Z',
-      countries: [
-        { code: 'CH', name: 'Switzerland', flag: '🇨🇭', usdPrice: 8.17, wowPct: 0.6 },
-        { code: 'US', name: 'United States', flag: '🇺🇸', usdPrice: 5.69, wowPct: -0.2 },
-        { code: 'IN', name: 'India', flag: '🇮🇳', usdPrice: 2.54, wowPct: null },
-      ],
-    });
-    grid.appendChild(bigmac.getElement());
 
     const fuel = new FuelPricesPanel();
     (fuel as unknown as { renderIndex(data: unknown): void }).renderIndex({
@@ -676,7 +664,6 @@ test('harness-mounted price and stock tables use the shared table style', async 
   });
 
   const views: Array<{ name: string; root: string; cp?: { market: string; tab: string } }> = [
-    { name: 'bigmac', root: '.panel[data-panel="bigmac"]' },
     { name: 'fuel-prices', root: '.panel[data-panel="fuel-prices"]' },
     { name: 'consumer-prices markets', root: '.panel[data-panel="consumer-prices"]', cp: { market: 'all', tab: 'overview' } },
     { name: 'consumer-prices world', root: '.panel[data-panel="consumer-prices"]', cp: { market: 'all', tab: 'world' } },
@@ -1064,7 +1051,6 @@ test('panel table text is readable in both themes', async ({ page }) => {
     await import('/src/styles/main.css');
     const { initI18n } = await import('/src/services/i18n.ts');
     await initI18n();
-    const { BigMacPanel } = await import('/src/components/BigMacPanel.ts');
     const { FuelPricesPanel } = await import('/src/components/FuelPricesPanel.ts');
     const { GroceryBasketPanel } = await import('/src/components/GroceryBasketPanel.ts');
     const { ConsumerPricesPanel } = await import('/src/components/ConsumerPricesPanel.ts');
@@ -1094,18 +1080,6 @@ test('panel table text is readable in both themes', async ({ page }) => {
       try { grid.appendChild(build()); } catch (err) { failures.push(`${name}: ${String(err)}`); }
     };
 
-    mount('bigmac', () => {
-      const panel = new BigMacPanel();
-      (panel as unknown as { renderIndex(data: unknown): void }).renderIndex({
-        wowAvailable: true, wowAvgPct: 0.4, fetchedAt: '2026-11-03T00:00:00Z',
-        countries: [
-          { code: 'CH', name: 'Switzerland', flag: '🇨🇭', usdPrice: 8.17, wowPct: 0.6 },
-          { code: 'US', name: 'United States', flag: '🇺🇸', usdPrice: 5.69, wowPct: -0.2 },
-          { code: 'IN', name: 'India', flag: '🇮🇳', usdPrice: 2.54, wowPct: null },
-        ],
-      });
-      return panel.getElement();
-    });
 
     mount('fuel-prices', () => {
       const panel = new FuelPricesPanel();

@@ -74,7 +74,6 @@
     "gulfIndices": "Golfindices",
     "gulfCurrencies": "Golfvaluta",
     "gulfOil": "Golfolie",
-    "bigmac": "Echte Big Mac-index",
     "marketImplications": "AI-marktimplicaties",
     "energyComplex": "Energiecomplex",
     "oilInventories": "Olievoorraden",
@@ -91,9 +90,6 @@
     "windyWebcams": "Windy Live Webcam",
     "groceryBasket": "Boodschappenmandindex",
     "groceryItem": "Artikel",
-    "bigmacDesc": "Big Mac-prijzen in landen in het Midden-Oosten (Big Mac Index)",
-    "bigmacWow": "Week-op-week",
-    "bigmacCountry": "Land",
     "faoFoodPriceIndex": "Voedselprijzen",
     "fuelPrices": "Brandstofprijzen",
     "fuelPricesDesc": "Retailprijzen voor benzine en diesel in meer dan 30 landen wereldwijd",
@@ -1765,9 +1761,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Wereldwijd vergelijking van boodschappenprijzen in 24 landen — volgt inflatietrends van consumptiegoederen buiten de standaard consumentenprijsindex."
     },
-    "bigmac": {
-      "infoTooltip": "<strong>Echte Big Mac-index</strong> De Big Mac-index van The Economist meet koopkrachtpariteit door de prijzen van McDonald's-burgers tussen landen te vergelijken. Bijgewerkt bij publicatie van nieuwe gegevens (per kwartaal/jaar)."
-    },
     "defiTokens": {
       "infoTooltip": "<strong>DeFi-tokens</strong> Prijzen en 24u/7d-prestaties van de belangrijkste tokens van gedecentraliseerde financiële protocollen — DEX'en, leenplatforms en rendementsprotocollen."
     },
@@ -1792,8 +1785,6 @@
     "airlineIntel": {
       "infoTooltip": "<strong>Luchtvaart-intelligence</strong> Operationele luchtvaartgegevens in realtime: routeonderbrekingen, luchtruimsluitingen, adviezen van luchtvaartmaatschappijen en noodomleidingen. Bron: NOTAM van luchtvaartautoriteiten en bulletins van luchtvaartmaatschappijen.",
       "noOpsData": "Geen operationele gegevens — laden…",
-      "noFlights": "Geen vluchten — selecteer luchthaven in instellingen.",
-      "noCarrierData": "Nog geen vervoerdergegevens.",
       "noTrackingData": "Geen vliegtuigvolgingsgegevens.",
       "noNews": "Geen luchtvaartnieuws.",
       "enterRoute": "Voer route in en zoek naar prijzen.",
@@ -2399,24 +2390,6 @@
         "low": "lage betrouwbaarheid"
       }
     },
-    "defensePatents": {
-      "title": "Onderzoeks- en ontwikkelingssignalen",
-      "infoTooltip": "Wekelijkse verdedigings- en dual-use patentaanvragen van Raytheon, Lockheed, Huawei, DARPA en andere strategische organisaties. Categorieën: H04B (comms), H01L (halfgeleiders), F42B (munitie), G06N (AI), C12N (biotech). Bron: USPTO Open Data Portal.",
-      "loading": "Onderzoeks- en ontwikkelingsdossiers laden…",
-      "error": "Patentgegevens kunnen niet worden geladen.",
-      "empty": "Geen inzendingen in deze categorie.",
-      "viewOnUspto": "Bekijken op USPTO",
-      "tabs": {
-        "all": "Alle"
-      },
-      "cpcLabels": {
-        "H04B": "Communicatie",
-        "H01L": "Halfgeleiders",
-        "F42B": "Munitie",
-        "G06N": "AI",
-        "C12N": "Biotech"
-      }
-    },
     "correlation": {
       "loading": "Wachten op gegevens...",
       "empty": "Geen actieve convergentie gedetecteerd",
@@ -2980,7 +2953,6 @@
         "faa": "FAA ASWS",
         "eurocontrol": "Eurocontrol",
         "computed": "Berekend",
-        "aviationstack": "Vluchtgegevens",
         "notam": "NOTAM"
       },
       "regions": {
@@ -4827,11 +4799,10 @@
       "flights": {
         "category": "Luchtvaart",
         "purpose": "Laat luchthavenverstoring en NOTAM-sluitingen zien, luchtruim-NOTAM die nu gelden of binnen 24 uur beginnen (tijdelijke vluchtbeperkingen, beperkte, gevaarlijke en verboden gebieden, militaire oefengebieden, reserveringen en sluitingen van het luchtruim), en live vliegtuigposities wanneer volgen beschikbaar is.",
-        "source": "FAA ASWS, AviationStack, FAA NOTAM Management Service (NMS-API) en ICAO-NOTAM, adsb.lol (ODbL), Wingbits, herstel via de oude OpenSky-dienst, optionele niet-commerciële aanvulling airplanes.live/adsb.fi, en de luchtvaartdienst. Luchtruim-NOTAM worden als polygonen getekend waar NMS ze levert, als cirkels waar de NOTAM een straal tot 250 NM geeft, en anders als markering.",
+        "source": "FAA ASWS, FAA NOTAM Management Service (NMS-API) en ICAO-NOTAM, adsb.lol (ODbL), Wingbits, herstel via de oude OpenSky-dienst, optionele niet-commerciële aanvulling airplanes.live/adsb.fi, en de luchtvaartdienst. Luchtruim-NOTAM worden als polygonen getekend waar NMS ze levert, als cirkels waar de NOTAM een straal tot 250 NM geeft, en anders als markering.",
         "freshness": "Luchthavenverstoring wordt op een ritme van 30 minuten geladen. Luchtruim-NOTAM worden elke 5 minuten geladen uit wijzigingsophalingen van NMS, met een dagelijkse volledige hersynchronisatie, tegen een actualiteitsbudget van 20 minuten. Het luchtvaartpaneel ververst operationele weergaven ook in een opvraagcyclus van 5 minuten.",
         "confidence": "Het meest bruikbaar om verstoringen te sorteren. De dekking van elk live vliegtuig hangt af van de beschikbaarheid van ADS-B en van de ingestelde aanbieders. De NOTAM-tekst is gezaghebbend zoals de FAA die verspreidt.",
         "limitations": {
-          "0": "Gesimuleerde demogegevens op basis van AviationStack kunnen verschijnen wanneer een API-sleutel ontbreekt.",
           "1": "Live vliegtuigposities kunnen vertraagd of afwezig zijn waar de ADS-B-dekking zwak of geblokkeerd is.",
           "2": "NOTAM-gebieden in het luchtruim worden alleen op de deck.gl-kaart getekend. De SVG-kaart toont luchthavenmarkeringen.",
           "3": "De meeste Amerikaanse TFR beschrijven hun vorm alleen in de tekst, dus ze verschijnen als een markering op de NOTAM-positie en niet als de beperkte vorm.",

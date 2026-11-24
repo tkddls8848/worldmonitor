@@ -141,13 +141,13 @@ test('an unconfigured source adapter is moot, not a health problem', () => {
 // UNRELATED crit puts the fleet in. So a NOT_CONFIGURED key that is correctly
 // absent from `problems` can still be reported as a permanent problem in the
 // failure log the moment anything else breaks. This mirrors production: a
-// defensePatents crit holds the fleet DEGRADED while SAM is unconfigured.
+// communityPlatformWork crit holds the fleet DEGRADED while SAM is unconfigured.
 test('NOT_CONFIGURED stays out of the failure log even when the fleet is degraded', () => {
   const { collectFailureLogProblems, healthResponseBody, STATUS_COUNTS } = __testing__;
 
   const checks = {
     globalTendersSam: { status: 'NOT_CONFIGURED', records: 0, seedAgeMin: 103 },
-    defensePatents: { status: 'EMPTY', records: 0 },                 // real crit
+    communityPlatformWork: { status: 'EMPTY', records: 0 },                 // real crit
     newsRecallBenchmark: { status: 'EMPTY_ON_DEMAND', records: 0 },  // warn-for-visibility only
     seedEarthquakes: { status: 'OK', records: 42 },
   };
@@ -155,10 +155,10 @@ test('NOT_CONFIGURED stays out of the failure log even when the fleet is degrade
   const { problemKeys, sigKeys } = collectFailureLogProblems(checks);
 
   // The real fault is reported...
-  assert.deepEqual(problemKeys, ['defensePatents:EMPTY']);
+  assert.deepEqual(problemKeys, ['communityPlatformWork:EMPTY']);
   // ...and the dedupe signature must not carry SAM either, or every incident
   // signature is permanently salted with a non-problem.
-  assert.deepEqual(sigKeys, ['defensePatents:EMPTY']);
+  assert.deepEqual(sigKeys, ['communityPlatformWork:EMPTY']);
 
   // EMPTY_ON_DEMAND keeps its existing asymmetry: suppressed in the failure log,
   // but still surfaced in the compact problems map (prod reports it there today).
@@ -168,7 +168,7 @@ test('NOT_CONFIGURED stays out of the failure log even when the fleet is degrade
     summary: { total: 4, ok: 2, warn: 1, crit: 1 },
     checks,
   }, true);
-  assert.deepEqual(Object.keys(body.problems).sort(), ['defensePatents', 'newsRecallBenchmark']);
+  assert.deepEqual(Object.keys(body.problems).sort(), ['communityPlatformWork', 'newsRecallBenchmark']);
   assert.equal(STATUS_COUNTS.EMPTY_ON_DEMAND, 'warn');
 });
 
@@ -179,12 +179,12 @@ test('graced stale content stays in compact diagnostics but out of the failure l
       status: 'STALE_CONTENT',
       staleContentGraceUntil: new Date(now + 60_000).toISOString(),
     },
-    defensePatents: { status: 'EMPTY', records: 0 },
+    communityPlatformWork: { status: 'EMPTY', records: 0 },
   };
 
   const { problemKeys, sigKeys } = __testing__.collectFailureLogProblems(checks, now);
-  assert.deepEqual(problemKeys, ['defensePatents:EMPTY']);
-  assert.deepEqual(sigKeys, ['defensePatents:EMPTY']);
+  assert.deepEqual(problemKeys, ['communityPlatformWork:EMPTY']);
+  assert.deepEqual(sigKeys, ['communityPlatformWork:EMPTY']);
 
   const body = __testing__.healthResponseBody({
     status: 'DEGRADED',
@@ -201,7 +201,7 @@ test('graced stale content stays in compact diagnostics but out of the failure l
   } };
   assert.deepEqual(
     __testing__.collectFailureLogProblems(expired, now).sigKeys,
-    ['defensePatents:EMPTY', 'temporalAnomalies:STALE_CONTENT'],
+    ['communityPlatformWork:EMPTY', 'temporalAnomalies:STALE_CONTENT'],
   );
 });
 

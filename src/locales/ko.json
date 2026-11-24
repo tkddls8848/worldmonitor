@@ -456,7 +456,6 @@
     "gulfIndices": "걸프 지수",
     "gulfCurrencies": "걸프 통화",
     "gulfOil": "걸프 석유",
-    "bigmac": "실질 빅맥 지수",
     "marketImplications": "AI 시장 영향",
     "energyComplex": "에너지 복합체",
     "oilInventories": "석유 재고",
@@ -473,9 +472,6 @@
     "windyWebcams": "Windy 라이브 웹캠",
     "groceryBasket": "식료품 지수",
     "groceryItem": "품목",
-    "bigmacDesc": "중동 국가의 빅맥 가격(빅맥 지수)",
-    "bigmacWow": "주간 변화",
-    "bigmacCountry": "국가",
     "faoFoodPriceIndex": "식품 가격",
     "fuelPrices": "연료 가격",
     "fuelPricesDesc": "30개 이상의 국가에서의 소매 휘발유 및 경유 가격",
@@ -2154,9 +2150,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>식료품 지수</strong> 24개국의 글로벌 식료품 바구니 가격 비교 — 소비자물가지수를 넘어 실제 소비자 물품 인플레이션을 추적."
     },
-    "bigmac": {
-      "infoTooltip": "<strong>실질 빅맥 지수</strong> The Economist의 빅맥 지수는 국가별 맥도날드 버거 가격을 비교해 구매력 평가를 측정합니다. 새 데이터가 발표될 때(분기/연간) 갱신됩니다."
-    },
     "defiTokens": {
       "infoTooltip": "<strong>DeFi 토큰</strong> 주요 탈중앙화 금융 프로토콜 토큰의 가격과 24시간/7일 성과 — DEX, 대출 플랫폼, 수익 프로토콜."
     },
@@ -2181,8 +2174,6 @@
     "airlineIntel": {
       "infoTooltip": "<strong>항공 인텔리전스</strong> 실시간 항공사 운영 데이터: 노선 중단, 영공 폐쇄, 항공사 권고, 긴급 회항. 항공 당국 NOTAM 및 항공사 공지가 출처.",
       "noOpsData": "운영 데이터 없음 — 로딩 중…",
-      "noFlights": "항공편 없음 — 설정에서 공항을 선택하세요.",
-      "noCarrierData": "항공사 데이터 없음.",
       "noTrackingData": "항공기 추적 데이터 없음.",
       "noNews": "항공 뉴스 없음.",
       "enterRoute": "노선을 입력하고 가격을 검색하세요.",
@@ -2779,24 +2770,6 @@
         "low": "낮은 신뢰도"
       }
     },
-    "defensePatents": {
-      "title": "연구 개발 신호",
-      "infoTooltip": "Raytheon, Lockheed, Huawei, DARPA 및 기타 전략 기관의 주간 방위 및 이중용도 특허 출원. 카테고리: H04B (통신), H01L (반도체), F42B (탄약), G06N (AI), C12N (생명공학). 출처: USPTO Open Data Portal.",
-      "loading": "연구 개발 출원 로드 중…",
-      "error": "특허 데이터를 로드할 수 없습니다.",
-      "empty": "이 카테고리에는 출원이 없습니다.",
-      "viewOnUspto": "USPTO에서 보기",
-      "tabs": {
-        "all": "모두"
-      },
-      "cpcLabels": {
-        "H04B": "통신",
-        "H01L": "반도체",
-        "F42B": "탄약",
-        "G06N": "AI",
-        "C12N": "생명공학"
-      }
-    },
     "correlation": {
       "loading": "데이터를 기다리는 중입니다...",
       "empty": "검출된 활성 수렴이 없습니다.",
@@ -3354,7 +3327,6 @@
         "faa": "FAA ASWS",
         "eurocontrol": "Eurocontrol",
         "computed": "산출값",
-        "aviationstack": "항공편 데이터",
         "notam": "NOTAM"
       },
       "regions": {
@@ -4815,11 +4787,10 @@
       "flights": {
         "category": "항공",
         "purpose": "공항 차질과 NOTAM 폐쇄를 보여 줍니다. 지금 유효하거나 24시간 안에 시작하는 공역 NOTAM(임시 비행 제한, 제한 공역, 위험 공역, 금지 공역, 군 작전 공역, 공역 예약과 폐쇄)도 보여 줍니다. 추적이 되면 실시간 항공기 위치도 보여 줍니다.",
-        "source": "FAA ASWS, AviationStack, FAA NOTAM 관리 서비스(NMS-API)와 ICAO NOTAM, adsb.lol(ODbL), Wingbits, 이전 OpenSky 서비스 복구, 선택적 비상업 airplanes.live/adsb.fi 공백 보완, 그리고 항공 서비스입니다. 공역 NOTAM은 NMS가 형상을 주면 폴리곤, NOTAM이 반경을 최대 250해리로 주면 원, 그 밖에는 마커로 그립니다.",
+        "source": "FAA ASWS, FAA NOTAM 관리 서비스(NMS-API)와 ICAO NOTAM, adsb.lol(ODbL), Wingbits, 이전 OpenSky 서비스 복구, 선택적 비상업 airplanes.live/adsb.fi 공백 보완, 그리고 항공 서비스입니다. 공역 NOTAM은 NMS가 형상을 주면 폴리곤, NOTAM이 반경을 최대 250해리로 주면 원, 그 밖에는 마커로 그립니다.",
         "freshness": "공항 차질 시드는 30분 주기로 돕니다. 공역 NOTAM은 NMS 변경 조회로 5분마다 시드하고, 매일 전체를 다시 맞춥니다. 최신성 허용 시간은 20분입니다. 항공 패널은 운용 화면도 5분 주기 조회로 갱신합니다.",
         "confidence": "차질을 가르는 데 가장 맞습니다. 개별 실시간 항공기가 얼마나 보이는지는 ADS-B 가용성과 설정된 제공자에 달려 있습니다. NOTAM 본문은 FAA가 배포한 내용으로서 권위가 있습니다.",
         "limitations": {
-          "0": "API 키가 없으면 AviationStack에 기반한 모의 데모 데이터가 나올 수 있습니다.",
           "1": "ADS-B 범위가 약하거나 막힌 곳에서는 실시간 항공기 위치가 늦거나 빠질 수 있습니다.",
           "2": "공역 NOTAM 구역은 deck.gl 지도에만 그립니다. SVG 지도는 공항 마커를 보여 줍니다.",
           "3": "미국 TFR의 다수는 형상을 본문에만 적으므로, 제한 형상이 아니라 NOTAM 위치의 마커로 나옵니다.",

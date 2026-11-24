@@ -460,7 +460,6 @@
     "gulfIndices": "Indicii Golfului",
     "gulfCurrencies": "Monede din Golf",
     "gulfOil": "Petrolul din Golf",
-    "bigmac": "Indicele Big Mac real",
     "marketImplications": "Implicații pe piață AI",
     "energyComplex": "Complex energetic",
     "oilInventories": "Stocuri de petrol",
@@ -477,9 +476,6 @@
     "windyWebcams": "Cameră web live Windy",
     "groceryBasket": "Index cărucior",
     "groceryItem": "Produs",
-    "bigmacDesc": "Prețurile Big Mac în țările din Orientul Mijlociu (Big Mac Index)",
-    "bigmacWow": "Variație săptămânală",
-    "bigmacCountry": "Țară",
     "faoFoodPriceIndex": "Prețurile alimentelor",
     "fuelPrices": "Prețuri combustibil",
     "fuelPricesDesc": "Prețuri cu amănuntul pentru benzină și motorină în peste 30 de țări din întreaga lume",
@@ -2154,9 +2150,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Comparație globală a prețurilor coșului de alimente în 24 de țări — monitorizează inflația bunurilor de consum din lumea reală dincolo de indicele prețurilor de consum principal."
     },
-    "bigmac": {
-      "infoTooltip": "<strong>Indicele Big Mac real</strong> Indicele Big Mac al The Economist măsoară paritatea puterii de cumpărare comparând prețurile McDonald's între țări. Actualizat la fiecare nouă publicare (trimestrial/anual)."
-    },
     "defiTokens": {
       "infoTooltip": "<strong>Tokenuri DeFi</strong> Prețuri și performanță pe 24h/7z pentru principalele tokenuri de finanțe descentralizate — DEX-uri, platforme de creditare și protocoale de randament."
     },
@@ -2181,8 +2174,6 @@
     "airlineIntel": {
       "infoTooltip": "<strong>Informații aeronautice</strong> Date operaționale ale companiilor aeriene în timp real: suspendări de rute, închideri ale spațiului aerian, avize ale transportatorilor și devieri de urgență. Sursă: NOTAM ale autorităților aeronautice și buletine ale transportatorilor.",
       "noOpsData": "Niciun date operaționale — se încarcă…",
-      "noFlights": "Niciun zbor — selectați aeroport în setări.",
-      "noCarrierData": "Niciun date despre companii încă.",
       "noTrackingData": "Niciun date de urmărire a aeronavelor.",
       "noNews": "Niciun știri de aviație.",
       "enterRoute": "Introduceți ruta și căutați prețuri.",
@@ -2797,24 +2788,6 @@
         "low": "încredere scăzută"
       }
     },
-    "defensePatents": {
-      "title": "Semnale de cercetare și dezvoltare",
-      "infoTooltip": "Depuneri săptămânale de brevete în apărare și uz dual de la Raytheon, Lockheed, Huawei, DARPA și alte organizații strategice. Categorii: H04B (comunicații), H01L (semiconductori), F42B (muniție), G06N (AI), C12N (biotehnologie). Sursă: USPTO Open Data Portal.",
-      "loading": "Încărcare depuneri de cercetare și dezvoltare…",
-      "error": "Nu s-au putut încărca datele brevetelor.",
-      "empty": "Nicio depunere în această categorie.",
-      "viewOnUspto": "Vizualizare pe USPTO",
-      "tabs": {
-        "all": "Toate"
-      },
-      "cpcLabels": {
-        "H04B": "Comunicații",
-        "H01L": "Semiconductori",
-        "F42B": "Muniție",
-        "G06N": "AI",
-        "C12N": "Biotehnologie"
-      }
-    },
     "correlation": {
       "loading": "Se așteaptă datele...",
       "empty": "Nu s-a detectat nicio convergență activă",
@@ -3386,7 +3359,6 @@
         "faa": "FAA ASWS",
         "eurocontrol": "Eurocontrol",
         "computed": "Calculat",
-        "aviationstack": "Date de zbor",
         "notam": "NOTAM"
       },
       "regions": {
@@ -4849,11 +4821,10 @@
       "flights": {
         "category": "Aviație",
         "purpose": "Evidențiază întreruperile aeroportuare și închiderile NOTAM. Include NOTAM-urile de spațiu aerian în vigoare acum sau care încep în 24 de ore, adică restricții temporare de zbor, zone restricționate, periculoase și interzise, zone de operare militară, rezervări de spațiu aerian și închideri. Arată și pozițiile live ale aeronavelor când urmărirea este disponibilă.",
-        "source": "FAA ASWS, AviationStack, FAA NOTAM Management Service (NMS-API) și NOTAM ICAO, adsb.lol (ODbL), Wingbits, recuperarea serviciului OpenSky mai vechi, completare opțională necomercială a golurilor din airplanes.live/adsb.fi și serviciul de aviație. NOTAM-urile de spațiu aerian se desenează ca poligoane unde le furnizează NMS, ca cercuri unde NOTAM dă o rază de până la 250 NM, și ca marcaje în rest.",
+        "source": "FAA ASWS, FAA NOTAM Management Service (NMS-API) și NOTAM ICAO, adsb.lol (ODbL), Wingbits, recuperarea serviciului OpenSky mai vechi, completare opțională necomercială a golurilor din airplanes.live/adsb.fi și serviciul de aviație. NOTAM-urile de spațiu aerian se desenează ca poligoane unde le furnizează NMS, ca cercuri unde NOTAM dă o rază de până la 250 NM, și ca marcaje în rest.",
         "freshness": "Alimentarea întreruperilor aeroportuare rulează într-un ciclu de 30 de minute. NOTAM-urile de spațiu aerian se alimentează la fiecare 5 minute din extragerile de modificări NMS, cu o resincronizare completă zilnică, față de un buget de actualitate de 20 de minute. Panoul de aviație reîmprospătează și vederile operaționale într-un ciclu de interogare de 5 minute.",
         "confidence": "Cel mai bun pentru trierea întreruperilor. Acoperirea fiecărei aeronave live depinde de disponibilitatea ADS-B și de furnizorii configurați. Textul NOTAM este autoritativ așa cum îl distribuie FAA.",
         "limitations": {
-          "0": "Date demo simulate, bazate pe AviationStack, pot apărea când lipsește o cheie API.",
           "1": "Pozițiile live ale aeronavelor pot întârzia sau lipsi acolo unde acoperirea ADS-B este slabă sau blocată.",
           "2": "Zonele NOTAM de spațiu aerian se desenează doar pe harta deck.gl. Harta SVG arată marcaje de aeroport.",
           "3": "Cele mai multe TFR din SUA își descriu forma doar în text, deci apar ca marcaj la poziția NOTAM, nu ca forma restricționată.",

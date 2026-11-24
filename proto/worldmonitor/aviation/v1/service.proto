@@ -3,12 +3,8 @@ syntax = "proto3";
 package worldmonitor.aviation.v1;
 
 import "sebuf/http/annotations.proto";
-import "worldmonitor/aviation/v1/get_airport_ops_summary.proto";
-import "worldmonitor/aviation/v1/get_carrier_ops.proto";
-import "worldmonitor/aviation/v1/get_flight_status.proto";
 import "worldmonitor/aviation/v1/get_youtube_live_stream_info.proto";
 import "worldmonitor/aviation/v1/list_airport_delays.proto";
-import "worldmonitor/aviation/v1/list_airport_flights.proto";
 import "worldmonitor/aviation/v1/list_aviation_news.proto";
 import "worldmonitor/aviation/v1/search_flight_prices.proto";
 import "worldmonitor/aviation/v1/search_google_flights.proto";
@@ -27,42 +23,10 @@ service AviationService {
     option (sebuf.http.config) = {path: "/list-aircraft-emergencies", method: HTTP_METHOD_GET};
   }
 
-  // ListAirportDelays returns delay status for each monitored airport from seeded FAA and AviationStack data plus NOTAM closures, marking unreported hubs unknown.
+  // ListAirportDelays returns delay status for each monitored airport from seeded FAA delay data and NOTAM closures, marking unreported hubs unknown.
   rpc ListAirportDelays(ListAirportDelaysRequest) returns (ListAirportDelaysResponse) {
     option (sebuf.http.config) = {
       path: "/list-airport-delays"
-      method: HTTP_METHOD_GET
-    };
-  }
-
-  // GetAirportOpsSummary returns watched-airport operational health, including delay percentages, average delay minutes, cancellation rates and closure status.
-  rpc GetAirportOpsSummary(GetAirportOpsSummaryRequest) returns (GetAirportOpsSummaryResponse) {
-    option (sebuf.http.config) = {
-      path: "/get-airport-ops-summary"
-      method: HTTP_METHOD_GET
-    };
-  }
-
-  // ListAirportFlights returns recent arrivals and departures with direction and limit filters, status and carrier. Apply these filters to focus airport traffic.
-  rpc ListAirportFlights(ListAirportFlightsRequest) returns (ListAirportFlightsResponse) {
-    option (sebuf.http.config) = {
-      path: "/list-airport-flights"
-      method: HTTP_METHOD_GET
-    };
-  }
-
-  // GetCarrierOps returns delay and cancellation metrics grouped by carrier. The response uses the fields defined by this RPC's protobuf response message.
-  rpc GetCarrierOps(GetCarrierOpsRequest) returns (GetCarrierOpsResponse) {
-    option (sebuf.http.config) = {
-      path: "/get-carrier-ops"
-      method: HTTP_METHOD_GET
-    };
-  }
-
-  // GetFlightStatus looks up the current status of a specific flight. The response uses the fields defined by this RPC's protobuf response message.
-  rpc GetFlightStatus(GetFlightStatusRequest) returns (GetFlightStatusResponse) {
-    option (sebuf.http.config) = {
-      path: "/get-flight-status"
       method: HTTP_METHOD_GET
     };
   }

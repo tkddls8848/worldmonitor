@@ -6,11 +6,8 @@
  *
  * The handler reads two seed-backed caches:
  *   aviation:delays:faa:v1   — FAA ASWS aggregates for US airports
- *   aviation:delays:intl:v3  — AviationStack aggregates for ~51 intl airports
  *
- * FAA coverage is source-wide. International coverage is per hub: a cache hit
- * can still report one provider omission or failure. Uncovered airports must
- * stay UNKNOWN when no NOTAM applies to them.
+ * FAA coverage is source-wide. NOTAM coverage is per airport.
  *
  * The 'static source guarantees' section that used to open this file pinned
  * the handler's own boolean names, proto enum literals and panel markup by
@@ -33,7 +30,6 @@ import { validationFailure } from './helpers/validation-failure.mts';
 // property), so instead we stub at the HTTP boundary the redis helper uses:
 // Upstash REST GET/SET via globalThis.fetch. The handler reads:
 //   getCachedJson('aviation:delays:faa:v1', true)
-//   getCachedJson('aviation:delays:intl:v3')
 //   getCachedJson('seed-meta:aviation:notam', true)
 //   getCachedJson('aviation:notam:closures:v2', true)
 // and calls setCachedJson on the bootstrap key (we ignore writes).
@@ -98,11 +94,10 @@ beforeEach(() => {
   delete process.env.SEED_FALLBACK_NOTAM;
 });
 
-// Picked because they're stable members of FAA_AIRPORTS / AVIATIONSTACK_AIRPORTS /
 // NOTAM-only sets. If MONITORED_AIRPORTS shifts, swap to whatever's still in
 // each bucket — the assertions are structural, not airport-specific.
 const FAA_SAMPLE = 'JFK';            // in FAA_AIRPORTS
-const INTL_SAMPLE = 'LHR';           // in AVIATIONSTACK_AIRPORTS
+const INTL_SAMPLE = 'LHR';           // no FAA coverage
 const NOTAM_ONLY_SAMPLE = 'IKA';     // Tehran Imam Khomeini — not in either AS or FAA
 const context = () => ({ request: new Request('https://worldmonitor.app/api/aviation/v1/list-airport-delays') });
 
@@ -140,9 +135,8 @@ describe('listAirportDelays handler — coverage gating (#3707)', () => {
       'unavailable required delay seeds must not produce a cacheable UNKNOWN map');
   });
 
-  it('FAA HIT (empty alerts) + INTL MISS → US airports = NORMAL/FAA, non-US = UNKNOWN', async () => {
+  it('FAA hit with empty alerts → US airports = NORMAL/FAA, non-US = UNKNOWN', async () => {
     cacheStore.set('aviation:delays:faa:v1', { alerts: [] });
-    // intl missing
 
     const resp = await listAirportDelays(context(), {});
 
@@ -156,7 +150,7 @@ describe('listAirportDelays handler — coverage gating (#3707)', () => {
     const intlRow = resp.alerts.find(a => a.iata === INTL_SAMPLE);
     assert.ok(intlRow, `must include ${INTL_SAMPLE} row`);
     assert.equal(intlRow.severity, 'FLIGHT_DELAY_SEVERITY_UNKNOWN',
-      `${INTL_SAMPLE}: intl cache missed — must NOT be marked normal`);
+      `${INTL_SAMPLE}: no FAA or NOTAM coverage — must NOT be marked normal`);
     assert.equal(intlRow.source, 'FLIGHT_DELAY_SOURCE_UNSPECIFIED',
       `${INTL_SAMPLE}: source UNSPECIFIED when uncovered`);
 
@@ -166,7 +160,7 @@ describe('listAirportDelays handler — coverage gating (#3707)', () => {
       `${NOTAM_ONLY_SAMPLE}: NOTAM-only airport with no NOTAM and neither source → UNKNOWN`);
   });
 
-  it('both valid caches HIT, one airport in alerts list → alerted airport keeps alert, covered peers = NORMAL with right source', async () => {
+  it('FAA hit with one active alert → alerted airport keeps alert, covered peers = NORMAL with right source', async () => {
     const jfkAlert = {
       id: 'faa-JFK',
       iata: 'JFK',
@@ -187,10 +181,6 @@ describe('listAirportDelays handler — coverage gating (#3707)', () => {
       updatedAt: Date.now(),
     };
     cacheStore.set('aviation:delays:faa:v1', { alerts: [jfkAlert] });
-    cacheStore.set('aviation:delays:intl:v3', {
-      alerts: [],
-      coverage: [{ iata: INTL_SAMPLE, status: 'normal', flightCount: 12 }],
-    });
 
     const resp = await listAirportDelays(context(), {});
 
@@ -208,24 +198,14 @@ describe('listAirportDelays handler — coverage gating (#3707)', () => {
     assert.equal(peerFaa.source, 'FLIGHT_DELAY_SOURCE_FAA',
       'FAA-covered peer must be sourced to FAA, not COMPUTED');
 
-    // A peer intl airport → NORMAL with AVIATIONSTACK source.
-    const peerIntl = resp.alerts.find(a => a.iata === INTL_SAMPLE);
-    assert.ok(peerIntl);
-    assert.equal(peerIntl.severity, 'FLIGHT_DELAY_SEVERITY_NORMAL');
-    assert.equal(peerIntl.source, 'FLIGHT_DELAY_SOURCE_AVIATIONSTACK',
-      'intl-covered peer must be sourced to AVIATIONSTACK, not COMPUTED');
-
-    // A NOTAM-only airport with no NOTAM → UNKNOWN even though both feed-caches
-    // hit, because neither feed covers it.
     const notamOnly = resp.alerts.find(a => a.iata === NOTAM_ONLY_SAMPLE);
     assert.ok(notamOnly);
     assert.equal(notamOnly.severity, 'FLIGHT_DELAY_SEVERITY_UNKNOWN',
-      'NOTAM-only airport with no NOTAM and no AS/FAA coverage → UNKNOWN');
+      'NOTAM-only airport with no NOTAM and no FAA coverage → UNKNOWN');
   });
 
   it('a NOTAM-only airport the NOTAM feed covers is open, not UNKNOWN; a closure still wins', async () => {
     cacheStore.set('aviation:delays:faa:v1', { alerts: [] });
-    cacheStore.set('aviation:delays:intl:v3', { alerts: [], coverage: [] });
     cacheStore.set('aviation:notam:closures:v2', {
       closedIcaos: ['OEJN'], restrictedIcaos: [], reasons: { OEJN: 'AD CLSD' },
       coveredIcaos: ['OEJN', 'OIIE'],
@@ -242,43 +222,11 @@ describe('listAirportDelays handler — coverage gating (#3707)', () => {
     assert.equal(resp.alerts.find(a => a.iata === 'OSL').severity, 'FLIGHT_DELAY_SEVERITY_UNKNOWN');
   });
 
-  it('INTL cache HIT preserves per-hub provider omissions as UNKNOWN', async () => {
-    cacheStore.set('aviation:delays:faa:v1', { alerts: [] });
-    cacheStore.set('aviation:delays:intl:v3', {
-      alerts: [],
-      coverage: [
-        { iata: 'LHR', status: 'omitted', flightCount: 0 },
-        { iata: 'PEK', status: 'normal', flightCount: 12 },
-      ],
-    });
-
-    const resp = await listAirportDelays(context(), {});
-    const omitted = resp.alerts.find(a => a.iata === 'LHR');
-    assert.equal(omitted.severity, 'FLIGHT_DELAY_SEVERITY_UNKNOWN');
-    assert.equal(omitted.source, 'FLIGHT_DELAY_SOURCE_UNSPECIFIED');
-
-    const covered = resp.alerts.find(a => a.iata === 'PEK');
-    assert.equal(covered.severity, 'FLIGHT_DELAY_SEVERITY_NORMAL');
-    assert.equal(covered.source, 'FLIGHT_DELAY_SOURCE_AVIATIONSTACK');
-  });
-
-  it('legacy INTL cache HIT without coverage fails closed instead of assuming every hub is healthy', async () => {
-    cacheStore.set('aviation:delays:faa:v1', { alerts: [] });
-    cacheStore.set('aviation:delays:intl:v3', { alerts: [] });
-
-    const resp = await listAirportDelays(context(), {});
-    const intl = resp.alerts.find(a => a.iata === INTL_SAMPLE);
-    assert.ok(intl, `must include ${INTL_SAMPLE} row`);
-    assert.equal(intl.severity, 'FLIGHT_DELAY_SEVERITY_UNKNOWN');
-    assert.equal(intl.source, 'FLIGHT_DELAY_SOURCE_UNSPECIFIED');
-  });
-
   it('a malformed FAA cache payload (missing alerts array) is treated as a MISS', async () => {
     // Defensive: an unrelated object stored at the key (e.g. wrong shape after
     // a schema change without a key bump) must NOT register as "covered" —
     // otherwise we'd revert to fabricating NORMAL rows for every FAA airport.
     cacheStore.set('aviation:delays:faa:v1', { notTheRightField: true });
-    cacheStore.set('aviation:delays:intl:v3', { alerts: [] });
 
     const resp = await listAirportDelays(context(), {});
     const faa = resp.alerts.find(a => a.iata === FAA_SAMPLE);
@@ -286,39 +234,11 @@ describe('listAirportDelays handler — coverage gating (#3707)', () => {
       'malformed FAA payload must not be treated as coverage');
   });
 
-  it('a malformed INTL cache payload (missing alerts array) is treated as a MISS', async () => {
-    // Symmetric guard to the FAA test above: the INTL_CACHE_KEY branch has its
-    // own `Array.isArray(cached.alerts)` gate; this test proves it also rejects
-    // a wrong-shape payload and downgrades intl airports to UNKNOWN instead of
-    // synthesising NORMAL rows. (Review #3784.)
-    cacheStore.set('aviation:delays:faa:v1', { alerts: [] });
-    cacheStore.set('aviation:delays:intl:v3', { notTheRightField: true });
-
-    const resp = await listAirportDelays(context(), {});
-    const intl = resp.alerts.find(a => a.iata === INTL_SAMPLE);
-    assert.equal(intl.severity, 'FLIGHT_DELAY_SEVERITY_UNKNOWN',
-      'malformed INTL payload must not be treated as coverage');
-    assert.equal(intl.source, 'FLIGHT_DELAY_SOURCE_UNSPECIFIED',
-      'malformed INTL payload: source must be UNSPECIFIED when uncovered');
+  it('marks a null FAA alert as unavailable instead of cacheable coverage', async () => {
+    cacheStore.set('aviation:delays:faa:v1', { alerts: [null] });
+    const request = context().request;
+    const response = await listAirportDelays({ request }, {});
+    assert.equal(drainResponseHeaders(request)?.['X-No-Cache'], '1');
+    assert.equal(response.alerts.find(a => a.iata === FAA_SAMPLE)?.severity, 'FLIGHT_DELAY_SEVERITY_UNKNOWN');
   });
-
-  for (const [name, faa, intl] of [
-    ['null FAA alert', { alerts: [null] }, { alerts: [], coverage: [{ iata: INTL_SAMPLE, status: 'normal' }] }],
-    ['null INTL coverage row', { alerts: [] }, { alerts: [], coverage: [null] }],
-    ['invalid INTL coverage row', { alerts: [] }, { alerts: [], coverage: [{ iata: INTL_SAMPLE, status: 'invalid' }] }],
-  ]) {
-    it(`marks ${name} as unavailable instead of cacheable coverage`, async () => {
-      cacheStore.set('aviation:delays:faa:v1', faa);
-      cacheStore.set('aviation:delays:intl:v3', intl);
-      const request = new Request('https://worldmonitor.app/api/aviation/v1/list-airport-delays');
-
-      const response = await listAirportDelays({ request }, {});
-      assert.equal(drainResponseHeaders(request)?.['X-No-Cache'], '1');
-      if (name === 'null FAA alert') {
-        assert.equal(response.alerts.find(a => a.iata === FAA_SAMPLE)?.severity, 'FLIGHT_DELAY_SEVERITY_UNKNOWN');
-      } else {
-        assert.equal(response.alerts.find(a => a.iata === INTL_SAMPLE)?.severity, 'FLIGHT_DELAY_SEVERITY_UNKNOWN');
-      }
-    });
-  }
 });

@@ -15,7 +15,6 @@ export const HEALTH_CHECK_SOURCE_MAP: Record<string, readonly DataSourceId[]> = 
   displacement: ['unhcr'],
   climateAnomalies: ['climate'],
   climateDisasters: ['climate'],
-  climateAirQuality: ['climate'],
   predictionMarkets: ['polymarket'],
   forecasts: ['predictions'],
   pizzint: ['pizzint'],

@@ -1517,7 +1517,7 @@ describe('crawlable live intelligence view models', () => {
           severity: 'FLIGHT_DELAY_SEVERITY_MAJOR',
           avgDelayMinutes: 55,
           reason: 'Weather',
-          source: 'FLIGHT_DELAY_SOURCE_AVIATIONSTACK',
+          source: 'FLIGHT_DELAY_SOURCE_NOTAM',
           updatedAt: NOW - 60_000,
         },
         {
@@ -1533,7 +1533,7 @@ describe('crawlable live intelligence view models', () => {
           name: 'Kansai',
           location: { latitude: 34.43, longitude: 135.24 },
           severity: 'FLIGHT_DELAY_SEVERITY_NORMAL',
-          source: 'FLIGHT_DELAY_SOURCE_AVIATIONSTACK',
+          source: 'FLIGHT_DELAY_SOURCE_NOTAM',
           updatedAt: NOW - 60_000,
         },
         {
@@ -1561,7 +1561,7 @@ describe('crawlable live intelligence view models', () => {
           location: { latitude: 35.77, longitude: 140.39 },
           severity: 'FLIGHT_DELAY_SEVERITY_MAJOR',
           avgDelayMinutes: 55,
-          source: 'FLIGHT_DELAY_SOURCE_AVIATIONSTACK',
+          source: 'FLIGHT_DELAY_SOURCE_NOTAM',
           updatedAt: NOW - (25 * 60 * 60 * 1_000),
         }],
       }, [31, 129, 46, 146], NOW),

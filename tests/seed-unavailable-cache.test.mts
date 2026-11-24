@@ -29,7 +29,6 @@ import { createIntelligenceServiceRoutes } from '../src/generated/server/worldmo
 import { listCryptoSectors } from '../server/worldmonitor/market/v1/list-crypto-sectors';
 import { listEtfFlows } from '../server/worldmonitor/market/v1/list-etf-flows';
 import { listGulfQuotes } from '../server/worldmonitor/market/v1/list-gulf-quotes';
-import { listAirQualityData } from '../server/worldmonitor/climate/v1/list-air-quality-data';
 import { getOilInventories } from '../server/worldmonitor/economic/v1/get-oil-inventories';
 import { getPizzintStatus } from '../server/worldmonitor/intelligence/v1/get-pizzint-status';
 
@@ -47,7 +46,7 @@ const gateway = createDomainGateway([
   ...createSeismologyServiceRoutes({ listEarthquakes } as never, serverOptions),
   ...createConflictServiceRoutes({ getHumanitarianSummary } as never, serverOptions),
   ...createMarketServiceRoutes({ listCryptoQuotes, getPhysicalPremiums, getSectorSummary, listCryptoSectors, listEtfFlows, listGulfQuotes } as never, serverOptions),
-  ...createClimateServiceRoutes({ listClimateAnomalies, listAirQualityData } as never, serverOptions),
+  ...createClimateServiceRoutes({ listClimateAnomalies } as never, serverOptions),
   ...createEconomicServiceRoutes({ listWorldBankIndicators, getBlsSeries, getOilInventories } as never, serverOptions),
   ...createIntelligenceServiceRoutes({ getSocialVelocity, listCrossSourceSignals, listSatellites, listSecurityAdvisories, getPizzintStatus } as never, serverOptions),
 ]);
@@ -99,7 +98,6 @@ const cases = [
   { path: 'market/v1/list-crypto-sectors', key: 'market:crypto-sectors:v1', payload: { sectors: [{ id: 'ai', name: 'AI', change: 1 }] }, field: 'sectors' },
   { path: 'market/v1/list-etf-flows', key: 'market:etf-flows:v1', payload: { etfs: [], timestamp: '2026-09-01T00:00:00Z', rateLimited: false }, field: 'etfs' },
   { path: 'market/v1/list-gulf-quotes', key: 'market:gulf-quotes:v1', payload: { quotes: [], rateLimited: false }, field: 'quotes' },
-  { path: 'climate/v1/list-air-quality-data', key: 'climate:air-quality:v1', payload: { stations: [], fetchedAt: 123 }, field: 'stations' },
   { path: 'economic/v1/get-oil-inventories', key: 'economic:crude-inventories:v1', payload: { weeks: [{ period: '2026-09-01', stocksMb: 440 }] }, field: 'crudeWeeks' },
   { path: 'intelligence/v1/get-pizzint-status', key: 'intelligence:pizzint:seed:v1', payload: { pizzint: { locations: [], defconLevel: 5 }, tensionPairs: [] }, field: 'tensionPairs' },
 ];

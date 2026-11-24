@@ -12,7 +12,7 @@ The inventory is **generated, not hand-written**: `scripts/source-attribution.mj
 ## Observed Source Inventory
 
 {/* BEGIN GENERATED SOURCE ATTRIBUTION */}
-This generated inventory covers **895 active source hosts** representing **873 active providers** (**408 structured/API**, **470 feed**, and **30 operational-status** hosts). It is derived from source declarations in `scripts/`, `server/`, `api/`, and `src/`. Each row shows the configured provider identity and where the source is referenced. Syndication transports such as FeedBurner and Google News remain listed as hosts and are not counted as publishers.
+This generated inventory covers **888 active source hosts** representing **867 active providers** (**401 structured/API**, **470 feed**, and **30 operational-status** hosts). It is derived from source declarations in `scripts/`, `server/`, `api/`, and `src/`. Each row shows the configured provider identity and where the source is referenced. Syndication transports such as FeedBurner and Google News remain listed as hosts and are not counted as publishers.
 
 | Provider | Observed surface |
 | --- | --- |
@@ -56,16 +56,14 @@ This generated inventory covers **895 active source hosts** representing **873 a
 | api-nms.aim.faa.gov (api-nms.aim.faa.gov) | structured — scripts/seed-notam-nms.mjs |
 | api.abuseipdb.com (api.abuseipdb.com) | structured — scripts/ais-relay.cjs, scripts/local/local-api-server.mjs, scripts/seed-cyber-threats.mjs |
 | api.anthropic.com (api.anthropic.com) | structured — server/_shared/llm-anthropic.ts |
-| api.aviationstack.com (api.aviationstack.com) | structured — scripts/ais-relay.cjs, scripts/local/local-api-server.mjs, scripts/seed-aviation.mjs |
 | api.axios.com (api.axios.com) | feed — shared/news-catalog.json |
 | api.cammesa.com (api.cammesa.com) | structured — scripts/_regional-energy-source.mjs, scripts/shared/regional-energy-feeds.json |
 | api.cloudflare.com (api.cloudflare.com) | structured — scripts/_kv-storage.mjs, scripts/_r2-storage.mjs, scripts/local/local-api-server.mjs, scripts/seed-internet-outages.mjs, +1 more |
 | api.coingecko.com (api.coingecko.com) | structured — scripts/ais-relay.cjs |
 | api.data.gov.my (api.data.gov.my) | structured — scripts/_dosm-product-demand.mjs, scripts/backfill-fuel-prices-prev.mjs, scripts/seed-fuel-prices.mjs |
 | api.datos.gob.mx (api.datos.gob.mx) | structured — scripts/backfill-fuel-prices-prev.mjs |
-| api.e-stat.go.jp (api.e-stat.go.jp) | structured — scripts/seed-world-cpi-estat.mjs |
 | api.eia.gov (api.eia.gov) | structured — scripts/backfill-fuel-prices-prev.mjs, scripts/local/local-api-server.mjs, scripts/seed-economy.mjs, scripts/seed-eia-petroleum.mjs, +3 more |
-| api.exa.ai (api.exa.ai) | structured — scripts/ais-relay.cjs, scripts/seed-bigmac.mjs, scripts/seed-grocery-basket.mjs, server/worldmonitor/market/v1/stock-news-search.ts |
+| api.exa.ai (api.exa.ai) | structured — scripts/ais-relay.cjs, scripts/seed-grocery-basket.mjs, server/worldmonitor/market/v1/stock-news-search.ts |
 | api.fiscaldata.treasury.gov (api.fiscaldata.treasury.gov) | structured — scripts/seed-national-debt.mjs, scripts/seed-supply-chain-trade.mjs, scripts/seed-treasury-auctions.mjs |
 | api.gdeltproject.org (api.gdeltproject.org) | structured — scripts/seed-gdelt-intel.mjs, scripts/seed-unrest-events.mjs |
 | api.gdeltproject.org (storage.googleapis.com) | structured — scripts/_conflict-gdelt-bulk.mjs, scripts/_gdelt-bulk-materializer.mjs |
@@ -551,7 +549,6 @@ This generated inventory covers **895 active source hosts** representing **873 a
 | open-meteo.caseyjhand.com (open-meteo.caseyjhand.com) | Excluded / candidate — No current fetch observed |
 | open.alberta.ca (open.alberta.ca) | Excluded / candidate — No current fetch observed |
 | open.iub.gov.lv (open.iub.gov.lv) | structured — scripts/_global-tender-feeds.mjs |
-| OpenAQ (api.openaq.org) | structured — scripts/seed-health-air-quality.mjs |
 | opendap.earthdata.nasa.gov (opendap.earthdata.nasa.gov) | structured — scripts/seed-no2-activity.mjs |
 | openrouter.ai (openrouter.ai) | structured — scripts/eval-classify-labels.mjs, scripts/lib/brief-dedup-consts.mjs, scripts/local/local-api-server.mjs, scripts/regional-snapshot/weekly-brief.mjs |
 | OpenSanctions (api.opensanctions.org) | Excluded / candidate — No current fetch observed |
@@ -569,7 +566,6 @@ This generated inventory covers **895 active source hosts** representing **873 a
 | Pajhwok Afghan News (pajhwok.com) | feed — shared/news-catalog.json |
 | PAP (pap.pl) | feed — shared/news-catalog.json |
 | Parallel Search MCP (search.parallel.ai) | Excluded / candidate — No current fetch observed |
-| patents.google.com (patents.google.com) | structured — scripts/_defense-patents-source.mjs |
 | pe-fa-lp02a.9c9media.com (pe-fa-lp02a.9c9media.com) | Excluded / candidate — No current fetch observed |
 | petrobangla.org.bd (petrobangla.org.bd) | structured — scripts/shared/regional-energy-feeds.json |
 | ph.usembassy.gov (ph.usembassy.gov) | structured — scripts/seed-security-advisories.mjs |
@@ -799,8 +795,6 @@ This generated inventory covers **895 active source hosts** representing **873 a
 | USDA FAS PSD (api.fas.usda.gov) | structured — scripts/seed-food-stocks.mjs |
 | USDA FAS PSD (apps.fas.usda.gov) | Excluded / candidate — No current fetch observed |
 | USGS ScienceBase (Mineral Commodity Summaries) (www.sciencebase.gov) | structured — scripts/seed-mineral-production.mjs, scripts/seed-supply-vulnerability.mjs |
-| USPTO Open Data Portal (api.uspto.gov) | structured — scripts/_defense-patents-source.mjs |
-| USPTO Open Data Portal (data.uspto.gov) | structured — scripts/_defense-patents-source.mjs |
 | vancouversun.com (vancouversun.com) | feed — shared/news-catalog.json |
 | venturebeat.com (venturebeat.com) | feed — shared/news-catalog.json |
 | VIA Rail Tracker (unofficial) (tsimobile.viarail.ca) | structured — scripts/viarail-live.mjs |
@@ -830,7 +824,6 @@ This generated inventory covers **895 active source hosts** representing **873 a
 | Wired (www.wired.com) | feed — shared/news-catalog.json |
 | wits.worldbank.org (wits.worldbank.org) | structured — scripts/ais-relay.cjs, server/worldmonitor/trade/v1/_tradestats-tariff.ts, server/worldmonitor/trade/v1/get-bilateral-tariff.ts |
 | workos.com (workos.com) | Excluded / candidate — No current fetch observed |
-| World Air Quality Index (WAQI) (api.waqi.info) | structured — scripts/seed-health-air-quality.mjs |
 | World Bank Open Data (api.worldbank.org) | structured — scripts/_defense-industrial-source.mjs, scripts/_demographics-capability-source.mjs, scripts/ais-relay.cjs, scripts/seed-bis-lbs.mjs, +14 more |
 | World Bank Open Data (datacatalogfiles.worldbank.org) | structured — scripts/seed-cii-structural-prior.mjs |
 | World Monitor hosted API (api.worldmonitor.app) | structured — scripts/audit-resilience-cohorts.mjs, scripts/freeze-resilience-ranking.mjs, scripts/openapi-inject-servers.mjs, scripts/post-pr3427-force-refresh.mjs, +5 more |
@@ -1165,16 +1158,14 @@ This generated inventory covers **884 active source hosts** representing **861 a
 | api-nms.aim.faa.gov (api-nms.aim.faa.gov) | structured — scripts/seed-notam-nms.mjs |
 | api.abuseipdb.com (api.abuseipdb.com) | structured — scripts/ais-relay.cjs, scripts/seed-cyber-threats.mjs |
 | api.anthropic.com (api.anthropic.com) | structured — server/_shared/llm-anthropic.ts |
-| api.aviationstack.com (api.aviationstack.com) | structured — scripts/ais-relay.cjs, scripts/seed-aviation.mjs |
 | api.axios.com (api.axios.com) | feed — shared/news-catalog.json |
 | api.cammesa.com (api.cammesa.com) | structured — scripts/_regional-energy-source.mjs, scripts/shared/regional-energy-feeds.json |
 | api.cloudflare.com (api.cloudflare.com) | structured — scripts/_kv-storage.mjs, scripts/_r2-storage.mjs, scripts/cloudflare-cache-rule.mjs, scripts/seed-internet-outages.mjs, +1 more |
 | api.coingecko.com (api.coingecko.com) | structured — scripts/ais-relay.cjs |
 | api.data.gov.my (api.data.gov.my) | structured — scripts/_dosm-product-demand.mjs, scripts/backfill-fuel-prices-prev.mjs, scripts/seed-fuel-prices.mjs |
 | api.datos.gob.mx (api.datos.gob.mx) | structured — scripts/backfill-fuel-prices-prev.mjs |
-| api.e-stat.go.jp (api.e-stat.go.jp) | structured — scripts/seed-world-cpi-estat.mjs |
 | api.eia.gov (api.eia.gov) | structured — scripts/backfill-fuel-prices-prev.mjs, scripts/seed-economy.mjs, scripts/seed-eia-petroleum.mjs, scripts/seed-electricity-prices.mjs, +2 more |
-| api.exa.ai (api.exa.ai) | structured — scripts/ais-relay.cjs, scripts/lib/company-monitoring-exa.mjs, scripts/seed-bigmac.mjs, scripts/seed-grocery-basket.mjs, +1 more |
+| api.exa.ai (api.exa.ai) | structured — scripts/ais-relay.cjs, scripts/lib/company-monitoring-exa.mjs, scripts/seed-grocery-basket.mjs, +1 more |
 | api.fiscaldata.treasury.gov (api.fiscaldata.treasury.gov) | structured — scripts/seed-national-debt.mjs, scripts/seed-supply-chain-trade.mjs |
 | api.gdeltproject.org (api.gdeltproject.org) | structured — scripts/seed-gdelt-intel.mjs, scripts/seed-unrest-events.mjs |
 | api.gdeltproject.org (storage.googleapis.com) | structured — scripts/_conflict-gdelt-bulk.mjs, scripts/_gdelt-bulk-materializer.mjs |
@@ -1649,7 +1640,6 @@ This generated inventory covers **884 active source hosts** representing **861 a
 | open-meteo.caseyjhand.com (open-meteo.caseyjhand.com) | structured — src/services/mcp-store.ts |
 | open.alberta.ca (open.alberta.ca) | Excluded / candidate — No current fetch observed |
 | open.iub.gov.lv (open.iub.gov.lv) | structured — scripts/_global-tender-feeds.mjs |
-| OpenAQ (api.openaq.org) | structured — scripts/seed-health-air-quality.mjs |
 | openrouter.ai (openrouter.ai) | structured — scripts/eval-classify-labels.mjs, scripts/lib/brief-dedup-consts.mjs, scripts/lib/company-monitoring-classifier-client.mjs, scripts/regional-snapshot/weekly-brief.mjs |
 | OpenSanctions (api.opensanctions.org) | Excluded / candidate — No current fetch observed |
 | opensky-network.org (auth.opensky-network.org) | structured — scripts/seed-military-flights.mjs |
@@ -1665,7 +1655,6 @@ This generated inventory covers **884 active source hosts** representing **861 a
 | Pajhwok Afghan News (pajhwok.com) | feed — shared/news-catalog.json |
 | PAP (pap.pl) | feed — shared/news-catalog.json |
 | Parallel Search MCP (search.parallel.ai) | structured — src/services/mcp-store.ts |
-| patents.google.com (patents.google.com) | structured — scripts/_defense-patents-source.mjs |
 | pe-fa-lp02a.9c9media.com (pe-fa-lp02a.9c9media.com) | Excluded / candidate — No current fetch observed |
 | petrobangla.org.bd (petrobangla.org.bd) | structured — scripts/shared/regional-energy-feeds.json |
 | ph.usembassy.gov (ph.usembassy.gov) | structured — scripts/seed-security-advisories.mjs |
@@ -1891,8 +1880,6 @@ This generated inventory covers **884 active source hosts** representing **861 a
 | USDA FAS PSD (api.fas.usda.gov) | structured — scripts/seed-food-stocks.mjs |
 | USDA FAS PSD (apps.fas.usda.gov) | Excluded / candidate — No current fetch observed |
 | USGS ScienceBase (Mineral Commodity Summaries) (www.sciencebase.gov) | structured — scripts/seed-mineral-production.mjs, scripts/seed-supply-vulnerability.mjs |
-| USPTO Open Data Portal (api.uspto.gov) | structured — scripts/_defense-patents-source.mjs |
-| USPTO Open Data Portal (data.uspto.gov) | structured — scripts/_defense-patents-source.mjs |
 | vancouversun.com (vancouversun.com) | feed — shared/news-catalog.json |
 | venturebeat.com (venturebeat.com) | feed — shared/news-catalog.json |
 | VIA Rail Tracker (unofficial) (tsimobile.viarail.ca) | structured — scripts/viarail-live.mjs |
@@ -1922,7 +1909,6 @@ This generated inventory covers **884 active source hosts** representing **861 a
 | Wired (www.wired.com) | feed — shared/news-catalog.json |
 | wits.worldbank.org (wits.worldbank.org) | structured — api/mcp/skill-extension/generated.ts, scripts/ais-relay.cjs, server/worldmonitor/trade/v1/_tradestats-tariff.ts, server/worldmonitor/trade/v1/get-bilateral-tariff.ts |
 | workos.com (workos.com) | structured — api/oauth-authorization-server.ts |
-| World Air Quality Index (WAQI) (api.waqi.info) | structured — scripts/seed-health-air-quality.mjs |
 | World Bank Open Data (api.worldbank.org) | structured — scripts/_defense-industrial-source.mjs, scripts/_demographics-capability-source.mjs, scripts/ais-relay.cjs, scripts/seed-bis-lbs.mjs, +14 more |
 | World Bank Open Data (datacatalogfiles.worldbank.org) | structured — scripts/seed-cii-structural-prior.mjs |
 | World Monitor hosted API (api.worldmonitor.app) | feed+structured — api/a2a.ts, api/internal/mcp-grant-mint.ts, api/mcp/downstream.ts, api/mcp/skill-extension/generated.ts, +21 more |

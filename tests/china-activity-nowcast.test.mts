@@ -68,7 +68,7 @@ function proxy(
 const directionalDefinitions = [
   CHINA_ACTIVITY_PROXY_REGISTRY[0]!,
   CHINA_ACTIVITY_PROXY_REGISTRY[1]!,
-  CHINA_ACTIVITY_PROXY_REGISTRY[2]!,
+  CHINA_ACTIVITY_PROXY_REGISTRY[3]!,
   CHINA_ACTIVITY_PROXY_REGISTRY[4]!,
 ] as const;
 
@@ -81,7 +81,7 @@ describe('China activity nowcast method contract (#5579)', () => {
   it('publishes a reviewed, inspectable registry for every required proxy family', () => {
     assert.deepEqual(
       CHINA_ACTIVITY_PROXY_REGISTRY.map((definition) => definition.family),
-      ['freight', 'maritime', 'aviation', 'energy', 'commodity', 'corridor', 'market', 'atmosphere'],
+      ['freight', 'maritime', 'energy', 'commodity', 'corridor', 'market', 'atmosphere'],
     );
     assert.equal(
       new Set(CHINA_ACTIVITY_PROXY_REGISTRY.map((definition) => definition.id)).size,
@@ -147,7 +147,7 @@ describe('China activity nowcast method contract (#5579)', () => {
     assert.equal(result.state, 'agreement');
     assert.equal(result.official?.vintageId, 'nbs_industrial_value_added_yoy:2026-06:r1');
     assert.equal(result.contributions.filter((item) => item.included).length, 4);
-    assert.equal(result.missingInputs.length, 4);
+    assert.equal(result.missingInputs.length, 3);
     assert.ok(!('score' in result));
     assert.ok(result.contributions.every((item) => 'transformedValue' in item));
     assert.ok(result.contributions.every((item) => item.registry.decisionRationale.length > 0));
@@ -282,7 +282,7 @@ describe('China activity nowcast method contract (#5579)', () => {
     const result = evaluateChinaActivityNowcast({
       evaluatedAt: EVALUATED_AT,
       officialObservations: [official()],
-      proxyObservations: CHINA_ACTIVITY_PROXY_REGISTRY.slice(0, 3).map((definition, index) =>
+      proxyObservations: directionalDefinitions.slice(0, 3).map((definition, index) =>
         proxy(definition.id, index < 2 ? 1 : -1)),
     });
 

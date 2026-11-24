@@ -79,7 +79,7 @@ Important non-equivalences:
 | `GET /api/infrastructure/v1/list-service-statuses` | REST-only. `get_infrastructure_status` declares `list-internet-outages` only. |
 | `GET /api/supply-chain/v1/get-critical-minerals` | REST-only. `get_supply_chain_data` declares shipping stress and customs revenue only. |
 | `GET /api/research/v1/list-arxiv-papers`, `GET /api/research/v1/list-trending-repos`, `GET /api/research/v1/list-hackernews-items` | REST-only. `get_research_signals` declares `list-tech-events` only. |
-| `GET /api/aviation/v1/list-airport-delays`, `GET /api/aviation/v1/get-flight-status` | REST-only. MCP aviation coverage is via `get_airspace`, flight-search tools, and cache-backed `get_aviation_status`, not these routes. |
+| `GET /api/aviation/v1/list-airport-delays` | REST-only. MCP aviation coverage is via `get_airspace`, flight-search tools, and cache-backed `get_aviation_status`, not these routes. |
 
 Always cross-check against [the bundled OpenAPI spec](https://www.worldmonitor.app/openapi.yaml) for REST path names, parameters, and response shapes, and against [MCP API coverage](/mcp-overview#api-coverage) for MCP exposure.
 

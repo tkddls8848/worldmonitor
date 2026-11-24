@@ -18,7 +18,6 @@ import { CHINA_COMTRADE_NATIONAL_CAPTION } from '../../shared/china-factory-clus
 
 const FAMILY_LABELS: Record<ChinaCorridorSignalFamily, string> = {
   port: 'Ports',
-  aviation: 'Aviation',
   hazard: 'Hazards',
   power_energy: 'Power / energy',
   strategic_industry: 'Strategic industry',

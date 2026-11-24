@@ -462,29 +462,6 @@ function corridorProxyObservations(
     }),
   }));
 
-  const aviationSignals = uniqueSignals(corridors, 'aviation');
-  const statuses = aviationSignals
-    .map((signal) => signal.metrics.providerStatus)
-    .filter((value): value is string => value === 'normal' || value === 'disruption');
-  const aviationBalance = statuses.length === 0
-    ? null
-    : (
-      statuses.filter((value) => value === 'normal').length
-      - statuses.filter((value) => value === 'disruption').length
-    ) / statuses.length;
-  observations.push(corridorObservation({
-    evaluatedAt,
-    seriesId: 'aviation_hub_disruption_balance',
-    observationId: `aviation-balance:${corridors.generatedAt}`,
-    signals: aviationSignals,
-    value: aviationBalance,
-    provenance: corridorProvenance(aviationSignals, {
-      reviewedSignalCount: aviationSignals.length,
-      directionalSignalCount: statuses.length,
-      aggregation: 'normal_share_minus_disruption_share',
-    }),
-  }));
-
   const tradeSignals = uniqueSignals(corridors, 'trade');
   const ccfi = tradeSignals.find((signal) =>
     signal.selectorId === 'supply_chain:shipping:v2:CCFI'

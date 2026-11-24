@@ -49,7 +49,7 @@ test('readSeedSnapshot: envelope-wrapped value returns inner data only', async (
     _seed: { fetchedAt: 1, recordCount: 3, sourceVersion: 'v1', schemaVersion: 1, state: 'OK' },
     data: { countries: [{ code: 'US' }, { code: 'GB' }, { code: 'MY' }] },
   });
-  const snap = await readSeedSnapshot('economic:bigmac:v1');
+  const snap = await readSeedSnapshot('economic:grocery-basket:v1');
   assert.ok(new Headers(requests[0].headers).get('User-Agent'));
   assert.deepEqual(snap, { countries: [{ code: 'US' }, { code: 'GB' }, { code: 'MY' }] });
   assert.equal(snap._seed, undefined);
@@ -57,7 +57,7 @@ test('readSeedSnapshot: envelope-wrapped value returns inner data only', async (
 
 test('readSeedSnapshot: legacy bare-shape value passes through unchanged', async () => {
   mockFetch({ countries: [{ code: 'US' }], fetchedAt: 1234 });
-  const snap = await readSeedSnapshot('economic:bigmac:v1');
+  const snap = await readSeedSnapshot('economic:grocery-basket:v1');
   assert.deepEqual(snap, { countries: [{ code: 'US' }], fetchedAt: 1234 });
 });
 
@@ -189,7 +189,7 @@ test('readSeedSnapshot: timeoutMs bounds the whole read and defaults to 5s', asy
   AbortSignal.timeout = (ms) => { timeouts.push(ms); return originalTimeout.call(AbortSignal, ms); };
   try {
     mockFetch({ ok: 1 });
-    await readSeedSnapshot('economic:bigmac:v1');
+    await readSeedSnapshot('economic:grocery-basket:v1');
     await readSeedSnapshot('gdelt:bulk:materializer-state:v1', { strict: true, timeoutMs: 30_000 });
   } finally {
     AbortSignal.timeout = originalTimeout;

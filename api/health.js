@@ -297,7 +297,6 @@ const BOOTSTRAP_KEYS = {
   etfFlows:          'market:etf-flows:v1',
   climateAnomalies:  'climate:anomalies:v2',
   climateDisasters:  'climate:disasters:v1',
-  climateAirQuality: 'climate:air-quality:v1',
   co2Monitoring:     'climate:co2-monitoring:v1',
   oceanIce:          'climate:ocean-ice:v1',
   wildfires:         'wildfire:fires:v1',
@@ -347,7 +346,6 @@ const BOOTSTRAP_KEYS = {
   consumerPricesFreshness:  'consumer-prices:freshness:ae',
   consumerPricesCoverage:   'consumer-prices:coverage:ae',
   groceryBasket:     'economic:grocery-basket:v1',
-  bigmac:            'economic:bigmac:v1',
   fuelPrices:        'economic:fuel-prices:v1',
   faoFoodPriceIndex: 'economic:fao-ffpi:v1',
   nationalDebt:      'economic:national-debt:v1',
@@ -386,7 +384,6 @@ const BOOTSTRAP_KEYS = {
   euFsi:             'economic:fsi-eu:v1',
   shippingStress:    'supply_chain:shipping_stress:v1',
   diseaseOutbreaks:  'health:disease-outbreaks:v1',
-  healthAirQuality:  'health:air-quality:v1',
   socialVelocity:    'intelligence:social:reddit:v1',
   wsbTickers:        'intelligence:wsb-tickers:v1',
   vpdTrackerRealtime:   'health:vpd-tracker:realtime:v1',
@@ -541,7 +538,6 @@ const STANDALONE_KEYS = {
   usniFleet:             'usni-fleet:sebuf:v1',
   usniFleetStale:        'usni-fleet:sebuf:stale:v1',
   faaDelays:             'aviation:delays:faa:v1',
-  intlDelays:            'aviation:delays:intl:v3',
   notamClosures:         'aviation:notam:closures:v2',
   notamAirspace:         'aviation:notam:airspace:v1',
   notamNmsClosures:      'aviation:notam:nms:closures:v1',
@@ -587,7 +583,6 @@ const STANDALONE_KEYS = {
   globalTendersMalaysiaMyprocurement: 'economic:global-tenders:v1:source:malaysia-myprocurement',
   crossStraitActivityTaiwanMnd: 'military:cross-strait-activity:v1:source:taiwan-mnd',
   crossStraitActivityJapanMod:  'military:cross-strait-activity:v1:source:japan-mod',
-  defensePatents:        'patents:defense:latest',
   temporalAnomalies:     'temporal:anomalies:v1',
   displacement:          `displacement:summary:v1:${new Date().getUTCFullYear()}`,
   displacementPrev:      `displacement:summary:v1:${new Date().getUTCFullYear() - 1}`,
@@ -658,7 +653,6 @@ const STANDALONE_KEYS = {
 
   worldCpiImf:           'seed-meta:economic:world-cpi-imf',
   worldCpiEurostat:      'seed-meta:economic:world-cpi-eurostat',
-  worldCpiEstat:         'seed-meta:economic:world-cpi-estat',
   worldCpiAbs:           'seed-meta:economic:world-cpi-abs',
   // Meta-only probes for the yield-curve bundle. Every market's history is
   // sharded per year; the canonical payloads are too large to probe directly.
@@ -975,7 +969,6 @@ const SEED_META = {
   },
   climateAnomalies: { key: 'seed-meta:climate:anomalies',       maxStaleMin: 540 }, // bundled into seed-bundle-climate (cron `0 */3 * * *`, every 3h); 540 = 3× cron cadence per project convention. Prior 240 (1.33× cron) flipped to silent-EMPTY between minute 180 (TTL_DATA expiry) and 240 (alarm trigger) on every routine cron-jitter cycle — see scripts/seed-climate-anomalies.mjs CACHE_TTL comment.
   climateDisasters: { key: 'seed-meta:climate:disasters',       maxStaleMin: 720 }, // runs every 6h; 720min = 2x interval
-  climateAirQuality:{ key: 'seed-meta:health:air-quality',      maxStaleMin: 180 }, // hourly cron; 180 = 3x interval — shares meta key with healthAirQuality (same seeder run)
   climateZoneNormals: { key: 'seed-meta:climate:zone-normals',  maxStaleMin: 89280 }, // monthly cron on the 1st; 62d = 2x 31-day cadence
   co2Monitoring:    { key: 'seed-meta:climate:co2-monitoring',  maxStaleMin: 4320 }, // daily cron at 06:00 UTC; 72h tolerates two missed runs
   oceanIce:         { key: 'seed-meta:climate:ocean-ice',       maxStaleMin: 2880 }, // daily cron at 08:00 UTC; 48h = 2× interval, tolerates one missed run
@@ -1347,7 +1340,6 @@ const SEED_META = {
     },
   },
   militaryCii:      { key: 'seed-meta:intelligence:military-cii',  maxStaleMin: 45 }, // seed-military-cii cron ~10min; 45 = generous grace (relay-dependent; preserve-last-good runs still refresh meta)
-  defensePatents:   { key: 'seed-meta:military:defense-patents',  maxStaleMin: 25200 },
   satellites:       { key: 'seed-meta:intelligence:satellites',    maxStaleMin: 240 }, // CelesTrak every 120min; 240min = absorbs one missed cycle
   temporalAnomalies:{ key: 'seed-meta:temporal:anomalies',          maxStaleMin: 45 }, // rebuild-stamped ONLY (TEMPORAL_ANOMALIES_REBUILD_AFTER_MS=20min in infrastructure/v1/_shared.ts) — only producer-route traffic can rebuild and refresh this request-driven stamp, so a traffic lull can age it past 45min; 45min leaves ~2.25x margin. Data TTL is 60min so health reaches STALE_SEED before EMPTY. Content freshness is a separate clock: the producer stamps newestItemAt/maxContentAgeMin from all five COUNT_SOURCE_KEYS payloads (news, FIRMS, military flights, theater-posture vessels, AIS gaps — TEMPORAL_ANOMALIES_MAX_CONTENT_AGE_MIN); a frozen-but-200 upstream keeps fetchedAt fresh and reads STALE_CONTENT.
   weatherAlerts: {
@@ -1682,7 +1674,6 @@ const SEED_META = {
   techReadiness:    { key: 'seed-meta:economic:worldbank-techreadiness:v1', maxStaleMin: 10080 },
   progressData:     { key: 'seed-meta:economic:worldbank-progress:v1',     maxStaleMin: 10080 },
   renewableEnergy:  { key: 'seed-meta:economic:worldbank-renewable:v1',    maxStaleMin: 10080 },
-  intlDelays:       { key: 'seed-meta:aviation:intl',           maxStaleMin: 90 },
   // #6987: faaDelays used to have no entry here, on the grounds that it "shares
   // flightDelays's meta key". That sharing WAS the bug — it leaked FAA's
   // allowed-empty count into the aggregate probe, which is not allowed to be
@@ -1827,7 +1818,6 @@ const SEED_META = {
   },
   radiationWatch:      { key: 'seed-meta:radiation:observations',             maxStaleMin: 30 },
   groceryBasket:       { key: 'seed-meta:economic:grocery-basket',            maxStaleMin: 10080 }, // weekly seed; 10080 = 7 days
-  bigmac:              { key: 'seed-meta:economic:bigmac',                    maxStaleMin: 10080 }, // weekly seed; 10080 = 7 days
   fuelPrices:          { key: 'seed-meta:economic:fuel-prices',               maxStaleMin: 11520 }, // weekly cron (Tue 06:00 UTC); 8d = one run plus a day of grace, still under the 10d CACHE_TTL. Exactly 7d expired as each run started (WORLDMONITOR-1DG)
   faoFoodPriceIndex:   { key: 'seed-meta:economic:fao-ffpi',                  maxStaleMin: 86400 }, // monthly seed; 86400 = 60 days (2x interval)
   thermalEscalation:   { key: 'seed-meta:thermal:escalation',                 maxStaleMin: 360 }, // cron every 2h; 360 = 3x interval (was 240 = 2x)
@@ -2267,17 +2257,6 @@ const SEED_META = {
       activationKey: 'seed-activated:economic:world-cpi-eurostat',
     },
   },
-  worldCpiEstat: {
-    key: 'seed-meta:economic:world-cpi-estat',
-    maxStaleMin: 4320,
-    activationKey: 'seed-activated:economic:world-cpi-estat',
-    cutover: {
-      mode: 'activation-marker',
-      fromKey: null,
-      issue: 8538,
-      activationKey: 'seed-activated:economic:world-cpi-estat',
-    },
-  },
   worldCpiAbs: {
     key: 'seed-meta:economic:world-cpi-abs',
     maxStaleMin: 4320,
@@ -2398,7 +2377,6 @@ const SEED_META = {
   newsThreatSummary: { key: 'seed-meta:news:threat-summary',          maxStaleMin: 60 }, // relay classify writes every 15min (27-48min across restarts); 60min budget sits under the 2h payload TTL so this goes stale before the key vanishes
   shippingStress:    { key: 'seed-meta:supply_chain:shipping_stress',  maxStaleMin: 45 }, // relay loop every 15min; 45 = 3x interval (was 30 = 2×, too tight on relay hiccup)
   diseaseOutbreaks:  { key: 'seed-meta:health:disease-outbreaks',      maxStaleMin: 2880 }, // daily seed; 2880 = 48h = 2x interval
-  healthAirQuality:  { key: 'seed-meta:health:air-quality',            maxStaleMin: 180 }, // hourly cron; 180 = 3x interval for shared health/climate seed
   socialVelocity:    { key: 'seed-meta:intelligence:social-reddit',    maxStaleMin: 540 }, // relay loop every 180min (3h; was 60min, dropped now that ScrapeCreators handles Reddit); 540 = 3x interval. Co-pinned with SOCIAL_VELOCITY_TTL=43200 (ais-relay.cjs): the data-key TTL must STRICTLY exceed this (720min > 540min) so a dead relay shows STALE_SEED before the key expires to EMPTY.
   wsbTickers:        { key: 'seed-meta:intelligence:wsb-tickers',      maxStaleMin: 540 }, // relay loop every 180min (3h); 540 = 3x interval. Co-pinned with WSB_TICKERS_TTL=43200 (ais-relay.cjs); TTL strictly > maxStaleMin (see socialVelocity note).
   pizzint:           { key: 'seed-meta:intelligence:pizzint',          maxStaleMin: 45 }, // relay loop every 15min; 45 = 3x interval
@@ -2913,7 +2891,6 @@ const ON_DEMAND_KEYS = new Set([
   // with the world CPI endpoint before the macro-bundle tail sections run.
   'worldCpiImf',
   'worldCpiEurostat',
-  'worldCpiEstat',
   'worldCpiAbs',
   // Scheduled Toronto CAD producer deployment bridges. Each seeder writes a
   // permanent marker after its first successful canonical publish; health is
@@ -3134,7 +3111,6 @@ const ACTIVATION_MARKERS = {
   usInterestRates: SEED_META.usInterestRates.activationKey,
   worldCpiImf: SEED_META.worldCpiImf.activationKey,
   worldCpiEurostat: SEED_META.worldCpiEurostat.activationKey,
-  worldCpiEstat: SEED_META.worldCpiEstat.activationKey,
   worldCpiAbs: SEED_META.worldCpiAbs.activationKey,
   foodPricesPihps: SEED_META.foodPricesPihps.activationKey,
   foodPricesPbs: SEED_META.foodPricesPbs.activationKey,
@@ -3504,7 +3480,7 @@ function applyStaleContentGrace(checks, graceEvidenceByName, deadlines, now) {
 }
 
 const EMPTY_DATA_OK_KEYS = new Set([
-  'notamClosures', 'faaDelays', 'intlDelays', 'gpsjam', 'positiveGeoEvents', 'weatherAlerts', 'imdCycloneMarine', 'canadaRoads', 'canadaAlerts', 'canadaAlertsAbSource', 'canadaAlertsBcSource', 'canadaAlertsSkSource',
+  'notamClosures', 'faaDelays', 'gpsjam', 'positiveGeoEvents', 'weatherAlerts', 'imdCycloneMarine', 'canadaRoads', 'canadaAlerts', 'canadaAlertsAbSource', 'canadaAlertsBcSource', 'canadaAlertsSkSource',
   'earningsCalendar', 'econCalendar', 'cotPositioning',
   'usniFleet', // usniFleetStale covers the fallback; relay outages → WARN not CRIT
   'newsThreatSummary', // a quiet classify cycle writes `byCountry: {}` (0 records); MISSING_DATA_IS_FAILURE_KEYS makes a payload missing beside fresh seed-meta critical (expiry after the 2h TTL reads STALE_SEED, since seed-meta is stale by then)

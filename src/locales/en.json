@@ -562,10 +562,6 @@
     "gulfEconomies": "Gulf Economies",
     "groceryBasket": "Grocery Index",
     "groceryItem": "Item",
-    "bigmac": "Real Big Mac Index",
-    "bigmacDesc": "Big Mac prices across Middle East countries (Big Mac Index)",
-    "bigmacWow": "Week-over-week",
-    "bigmacCountry": "Country",
     "faoFoodPriceIndex": "Food prices",
     "fuelPrices": "Fuel Prices",
     "fuelPricesDesc": "Retail gasoline and diesel prices across 30+ countries worldwide",
@@ -1056,8 +1052,6 @@
     "airlineIntel": {
       "infoTooltip": "<strong>Airline Intelligence</strong> Real-time airline operational data: route suspensions, airspace closures, carrier advisories, and emergency diversions. Sourced from aviation authority NOTAMs and carrier bulletins.",
       "noOpsData": "No ops data — loading…",
-      "noFlights": "No flights — select airport in settings.",
-      "noCarrierData": "No carrier data yet.",
       "noTrackingData": "No aircraft tracking data.",
       "noNews": "No aviation news.",
       "enterRoute": "Enter route and search for prices.",
@@ -2436,9 +2430,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Global grocery basket price comparison across 24 countries — tracks real-world consumer goods inflation beyond headline consumer price index."
     },
-    "bigmac": {
-      "infoTooltip": "<strong>Real Big Mac Index</strong> The Economist's Big Mac Index measures purchasing power parity by comparing McDonald's burger prices across countries. Updated when new data is published (quarterly/annually)."
-    },
     "fuelPrices": {
       "infoTooltip": "<strong>Fuel Prices</strong> Retail pump prices for gasoline and diesel across 30+ countries, normalized to USD/liter for comparison. Prices are sourced from official government open-data programs and updated weekly. Cheapest and most expensive countries are highlighted. Week-over-week change shown when prior week data is available.",
       "countries": "countries"
@@ -3058,24 +3049,6 @@
         "low": "low confidence"
       }
     },
-    "defensePatents": {
-      "title": "Research and development signals",
-      "infoTooltip": "Weekly defense and dual-use patent filings by Raytheon, Lockheed, Huawei, DARPA, and other strategic organizations. Categories: H04B (comms), H01L (semiconductors), F42B (ammunition), G06N (AI), C12N (biotech). Source: USPTO Open Data Portal.",
-      "loading": "Loading research and development filings…",
-      "error": "Failed to load patent data.",
-      "empty": "No filings in this category.",
-      "viewOnUspto": "View on USPTO",
-      "tabs": {
-        "all": "All"
-      },
-      "cpcLabels": {
-        "H04B": "Comms",
-        "H01L": "Semiconductors",
-        "F42B": "Ammunition",
-        "G06N": "AI",
-        "C12N": "Biotech"
-      }
-    },
     "correlation": {
       "loading": "Waiting for data...",
       "waiting": "Waiting for the next data update. This panel updates automatically.",
@@ -3484,7 +3457,6 @@
         "faa": "FAA ASWS",
         "eurocontrol": "Eurocontrol",
         "computed": "Computed",
-        "aviationstack": "Flight Data",
         "notam": "NOTAM"
       },
       "regions": {
@@ -5311,11 +5283,10 @@
       "flights": {
         "category": "Aviation",
         "purpose": "Highlights airport disruption and NOTAM closures, airspace NOTAMs in effect now or starting within 24 hours (temporary flight restrictions, restricted, danger and prohibited areas, military operating areas, airspace reservations and closures), and live aircraft positions when tracking is available.",
-        "source": "FAA ASWS, AviationStack, FAA NOTAM Management Service (NMS-API) and ICAO NOTAMs, adsb.lol (ODbL), Wingbits, legacy OpenSky service recovery, optional non-commercial airplanes.live/adsb.fi gap-fill, and the aviation service. Airspace NOTAMs are drawn as polygons where NMS supplies them, circles where the NOTAM gives a radius up to 250 NM, and markers otherwise.",
+        "source": "FAA ASWS, FAA NOTAM Management Service (NMS-API) and ICAO NOTAMs, adsb.lol (ODbL), Wingbits, legacy OpenSky service recovery, optional non-commercial airplanes.live/adsb.fi gap-fill, and the aviation service. Airspace NOTAMs are drawn as polygons where NMS supplies them, circles where the NOTAM gives a radius up to 250 NM, and markers otherwise.",
         "freshness": "Airport disruption seeds run on a 30-minute cadence; airspace NOTAMs are seeded every 5 minutes from NMS change pulls with a daily full resync, against a 20-minute freshness budget; the aviation panel also refreshes operational views on a 5-minute polling cycle.",
         "confidence": "Best for disruption triage; individual live aircraft coverage depends on ADS-B availability and configured providers. NOTAM text is authoritative as distributed by the FAA.",
         "limitations": {
-          "0": "AviationStack-backed simulated demo data can appear when an API key is absent.",
           "1": "Live aircraft positions can be delayed or absent where ADS-B coverage is weak or blocked.",
           "2": "Airspace NOTAM areas are drawn on the deck.gl map only; the SVG map shows airport markers.",
           "3": "Most US TFRs describe their shape only in text, so they appear as a marker at the NOTAM position, not as the restricted shape.",

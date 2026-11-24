@@ -456,7 +456,6 @@
     "gulfIndices": "Chỉ số vùng Vịnh",
     "gulfCurrencies": "Tiền tệ vùng Vịnh",
     "gulfOil": "Dầu vùng Vịnh",
-    "bigmac": "Chỉ số Big Mac thực",
     "marketImplications": "Ảnh hưởng thị trường AI",
     "energyComplex": "Phức hợp Năng lượng",
     "oilInventories": "Tồn kho Dầu",
@@ -473,9 +472,6 @@
     "windyWebcams": "Webcam Trực tiếp Windy",
     "groceryBasket": "Chỉ số Rau quả",
     "groceryItem": "Mặt hàng",
-    "bigmacDesc": "Giá Big Mac trên các nước Trung Đông (Big Mac Index)",
-    "bigmacWow": "Thay đổi tuần so với tuần trước",
-    "bigmacCountry": "Quốc gia",
     "faoFoodPriceIndex": "Giá thực phẩm",
     "fuelPrices": "Giá Nhiên liệu",
     "fuelPricesDesc": "Giá xăng lẻ và dầu diesel trên 30+ quốc gia trên thế giới",
@@ -2144,9 +2140,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> So sánh giá rổ hàng tạp hóa toàn cầu trên 24 quốc gia — theo dõi lạm phát hàng tiêu dùng thực tế vượt quá chỉ số giá tiêu dùng chính thức."
     },
-    "bigmac": {
-      "infoTooltip": "<strong>Chỉ số Big Mac thực</strong> Chỉ số Big Mac của The Economist đo lường sức mua tương đương bằng cách so sánh giá hamburger McDonald's giữa các quốc gia. Cập nhật khi có dữ liệu mới (hàng quý/hàng năm)."
-    },
     "defiTokens": {
       "infoTooltip": "<strong>Token DeFi</strong> Giá và hiệu suất 24h/7d cho token các giao thức tài chính phi tập trung chính — sàn DEX, nền tảng cho vay và giao thức yield."
     },
@@ -2171,8 +2164,6 @@
     "airlineIntel": {
       "infoTooltip": "<strong>Tình báo hàng không</strong> Dữ liệu vận hành hãng hàng không thời gian thực: đình chỉ tuyến bay, đóng cửa không phận, cảnh báo hãng vận chuyển và chuyển hướng khẩn cấp. Nguồn: NOTAM từ cơ quan hàng không và bản tin của hãng vận chuyển.",
       "noOpsData": "Không có dữ liệu vận hành — đang tải...",
-      "noFlights": "Không có chuyến bay — chọn sân bay trong cài đặt.",
-      "noCarrierData": "Chưa có dữ liệu hãng bay.",
       "noTrackingData": "Không có dữ liệu theo dõi máy bay.",
       "noNews": "Không có tin tức hàng không.",
       "enterRoute": "Nhập tuyến đường và tìm kiếm giá.",
@@ -2769,24 +2760,6 @@
         "low": "độ tin cậy thấp"
       }
     },
-    "defensePatents": {
-      "title": "Tín hiệu nghiên cứu và phát triển",
-      "infoTooltip": "Đơn đăng ký sáng chế quốc phòng và hai chiều hàng tuần từ Raytheon, Lockheed, Huawei, DARPA và các tổ chức chiến lược khác. Danh mục: H04B (thông tin liên lạc), H01L (bán dẫn), F42B (đạn dược), G06N (AI), C12N (công nghệ sinh học). Nguồn: USPTO Open Data Portal.",
-      "loading": "Đang tải các hồ sơ nghiên cứu và phát triển…",
-      "error": "Không thể tải dữ liệu sáng chế.",
-      "empty": "Không có đơn đăng ký trong danh mục này.",
-      "viewOnUspto": "Xem trên USPTO",
-      "tabs": {
-        "all": "Tất cả"
-      },
-      "cpcLabels": {
-        "H04B": "Thông tin liên lạc",
-        "H01L": "Bán dẫn",
-        "F42B": "Đạn dược",
-        "G06N": "AI",
-        "C12N": "Công nghệ sinh học"
-      }
-    },
     "correlation": {
       "loading": "Đang chờ dữ liệu...",
       "empty": "Không phát hiện sự hội tụ hoạt động",
@@ -3344,7 +3317,6 @@
         "faa": "FAA ASWS",
         "eurocontrol": "Eurocontrol",
         "computed": "Tính toán",
-        "aviationstack": "Dữ liệu chuyến bay",
         "notam": "NOTAM"
       },
       "regions": {
@@ -4805,11 +4777,10 @@
       "flights": {
         "category": "Hàng không",
         "purpose": "Nêu gián đoạn sân bay và việc đóng theo NOTAM. Cũng nêu NOTAM không phận đang có hiệu lực hoặc bắt đầu trong vòng 24 giờ (hạn chế bay tạm thời, vùng hạn chế, vùng nguy hiểm, vùng cấm, khu vực hoạt động quân sự, khu vực đặt trước và đóng không phận). Khi theo dõi được, còn nêu vị trí máy bay trực tiếp.",
-        "source": "FAA ASWS, AviationStack, dịch vụ quản lý NOTAM của FAA (NMS-API) và NOTAM của ICAO, adsb.lol (ODbL), Wingbits, khôi phục dịch vụ OpenSky cũ, phần lấp chỗ trống phi thương mại tùy chọn từ airplanes.live/adsb.fi, và dịch vụ hàng không. NOTAM không phận được vẽ thành đa giác ở nơi NMS cung cấp hình, thành vòng tròn ở nơi NOTAM cho bán kính tối đa 250 hải lý, và thành điểm đánh dấu trong các trường hợp còn lại.",
+        "source": "FAA ASWS, dịch vụ quản lý NOTAM của FAA (NMS-API) và NOTAM của ICAO, adsb.lol (ODbL), Wingbits, khôi phục dịch vụ OpenSky cũ, phần lấp chỗ trống phi thương mại tùy chọn từ airplanes.live/adsb.fi, và dịch vụ hàng không. NOTAM không phận được vẽ thành đa giác ở nơi NMS cung cấp hình, thành vòng tròn ở nơi NOTAM cho bán kính tối đa 250 hải lý, và thành điểm đánh dấu trong các trường hợp còn lại.",
         "freshness": "Bản nạp gián đoạn sân bay chạy theo nhịp 30 phút. NOTAM không phận được nạp mỗi 5 phút từ các lần kéo thay đổi của NMS, kèm một lần đồng bộ đầy đủ mỗi ngày, theo hạn độ mới 20 phút. Bảng hàng không cũng làm mới các khung vận hành theo chu kỳ hỏi mỗi 5 phút.",
         "confidence": "Phù hợp nhất để phân loại gián đoạn. Phạm vi từng máy bay trực tiếp phụ thuộc ADS-B có sẵn hay không và nhà cung cấp đã cấu hình. Nội dung NOTAM có thẩm quyền theo bản mà FAA phân phối.",
         "limitations": {
-          "0": "Khi thiếu khóa API, có thể xuất hiện dữ liệu minh họa mô phỏng dựa trên AviationStack.",
           "1": "Vị trí máy bay trực tiếp có thể chậm hoặc vắng ở nơi phạm vi ADS-B yếu hoặc bị chặn.",
           "2": "Vùng NOTAM không phận chỉ được vẽ trên bản đồ deck.gl. Bản đồ SVG hiện điểm đánh dấu sân bay.",
           "3": "Phần lớn TFR của Hoa Kỳ chỉ mô tả hình trong nội dung, nên chúng hiện là điểm đánh dấu tại vị trí NOTAM, không phải hình vùng hạn chế.",

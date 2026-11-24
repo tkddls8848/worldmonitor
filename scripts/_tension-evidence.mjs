@@ -19,7 +19,6 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 export const SOURCES = {
   strikeEvents: { key: 'conflict:iran-events:v1', metaKey: 'seed-meta:conflict:iran-events', maxAgeMin: 45 },
   strikeTally: { key: 'conflict:strike-pressure:v1', metaKey: 'seed-meta:conflict:strike-pressure', maxAgeMin: 45 },
-  airportDelays: { key: 'aviation:delays:intl:v3', metaKey: 'seed-meta:aviation:intl', maxAgeMin: 90 },
   notamClosures: { key: 'aviation:notam:closures:v2', metaKey: 'seed-meta:aviation:notam', maxAgeMin: 240 },
   surgeHistory: { key: 'military:surges:history:v1', metaKey: 'seed-meta:military-surges', maxAgeMin: 30 },
   crossStrait: {
@@ -122,10 +121,7 @@ export const AIRPORTS = {
   UUEE: { country: 'RU', name: 'Moscow' },
 };
 
-const AIRPORT_STATUSES = ['closed', 'halted', 'restricted'];
-// aviationstack: closure = at least 80% of due flights cancelled, ground stop =
-// at least 50% (seed-aviation.mjs).
-const DELAY_STATUS = { FLIGHT_DELAY_TYPE_CLOSURE: 'closed', FLIGHT_DELAY_TYPE_GROUND_STOP: 'halted' };
+const AIRPORT_STATUSES = ['closed', 'restricted'];
 
 // The strike tally's severity layout (PRESSURE_SEVERITIES in
 // scripts/lib/middle-east-strikes.cjs); events outside it are not tallied.
@@ -220,25 +216,17 @@ function strikes(sources, _history, nowMs) {
 }
 
 function airports(sources, history, nowMs) {
-  const delays = usableSource(sources, 'airportDelays', nowMs);
   const notam = usableSource(sources, 'notamClosures', nowMs);
-  const delayAlerts = Array.isArray(delays?.data.alerts) ? delays.data.alerts : null;
   const notamUsable = notam && Array.isArray(notam.data.closedIcaos) && Array.isArray(notam.data.restrictedIcaos);
-  if (!delayAlerts && !notamUsable) return null;
+  if (!notamUsable) return null;
   const status = new Map();
   const mark = (icao, next) => {
     if (!(icao in AIRPORTS)) return;
     const current = status.get(icao);
     if (!current || AIRPORT_STATUSES.indexOf(next) < AIRPORT_STATUSES.indexOf(current)) status.set(icao, next);
   };
-  for (const alert of delayAlerts ?? []) {
-    const next = DELAY_STATUS[alert?.delayType];
-    if (next) mark(alert.icao, next);
-  }
-  if (notamUsable) {
-    for (const icao of notam.data.closedIcaos) mark(icao, 'closed');
-    for (const icao of notam.data.restrictedIcaos) mark(icao, 'restricted');
-  }
+  for (const icao of notam.data.closedIcaos) mark(icao, 'closed');
+  for (const icao of notam.data.restrictedIcaos) mark(icao, 'restricted');
   const today = utcDay(nowMs);
   const pairs = {};
   const days = {};
@@ -258,8 +246,7 @@ function airports(sources, history, nowMs) {
     };
     setDay(days, today, pairId, listed.length);
   }
-  const used = [delayAlerts && delays, notamUsable && notam].filter(Boolean);
-  return { observedAt: Math.min(...used.map(source => source.fetchedAt)), pairs, days };
+  return { observedAt: notam.fetchedAt, pairs, days };
 }
 
 function militaryAircraft(sources, _history, nowMs) {

@@ -68,7 +68,6 @@ test('the ACLED key survives more than one missed cron tick', () => {
   // is still in flight (11 SKIPPED ticks observed in a 12h window), so the EFFECTIVE
   // cadence is routinely longer than 15 minutes. A TTL equal to the interval cannot
   // survive that; the repo convention elsewhere is ~3x the interval (see
-  // seed-defense-patents.mjs: `CACHE_TTL = 1_814_400; // 21 days (3x weekly interval)`).
   const CRON_INTERVAL_SECONDS = 15 * 60;
   assert.ok(
     ACLED_TTL >= 2 * CRON_INTERVAL_SECONDS,

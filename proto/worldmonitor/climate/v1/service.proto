@@ -5,7 +5,6 @@ package worldmonitor.climate.v1;
 import "sebuf/http/annotations.proto";
 import "worldmonitor/climate/v1/get_co2_monitoring.proto";
 import "worldmonitor/climate/v1/get_ocean_ice_data.proto";
-import "worldmonitor/climate/v1/list_air_quality_data.proto";
 import "worldmonitor/climate/v1/list_climate_anomalies.proto";
 import "worldmonitor/climate/v1/list_climate_disasters.proto";
 import "worldmonitor/climate/v1/list_climate_news.proto";
@@ -33,11 +32,6 @@ service ClimateService {
   // GetOceanIceData returns NSIDC Arctic sea ice extent and anomaly with a 12-month trend, NASA sea level rise, NOAA 0-700m ocean heat content and SST anomaly.
   rpc GetOceanIceData(GetOceanIceDataRequest) returns (GetOceanIceDataResponse) {
     option (sebuf.http.config) = {path: "/get-ocean-ice-data", method: HTTP_METHOD_GET};
-  }
-
-  // ListAirQualityData returns PM2.5 station readings from the last two hours from OpenAQ, plus WAQI when configured, with a US EPA AQI and risk level each.
-  rpc ListAirQualityData(ListAirQualityDataRequest) returns (ListAirQualityDataResponse) {
-    option (sebuf.http.config) = {path: "/list-air-quality-data", method: HTTP_METHOD_GET};
   }
 
   // ListReservoirLevels returns ICESat-2 lidar levels and level changes for strategic reservoirs and lakes. Passes typically publish 50 to 70 days after overpass; see latest.ageDays.

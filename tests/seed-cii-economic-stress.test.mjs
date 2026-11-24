@@ -24,7 +24,7 @@ const flatDaily = (close = 1) => Array.from({ length: 133 }, (_, i) => ({ t: Dat
 function inputs() {
   const countries = Object.fromEntries(ECONOMIC_COUNTRIES.map(c => [c, { frequency: 'M', points: cpi }]));
   return { currency: { rates: ECONOMIC_COUNTRIES.map(countryCode => ({ countryCode, ...computeYoy(bars), daily90: cleanDailyQuotes(flatDaily()) })) },
-    inflation: { countries }, eurostat: { countries: {} }, japan: { countries: {} }, usCpi: { components: { headline: cpi.map(p => ({ ...p, date: `${p.date}-01` })) } }, yield: { countries: {} } };
+    inflation: { countries }, eurostat: { countries: {} }, usCpi: { components: { headline: cpi.map(p => ({ ...p, date: `${p.date}-01` })) } }, yield: { countries: {} } };
 }
 test('recorded Yahoo quote noise is cleaned or flagged upstream, and a real move survives', () => {
   // QAR is pegged at 3.64 and flips to a level 3.6% away on four sessions in ten: not comparable.
@@ -194,7 +194,6 @@ test('publishes the union of input countries, including unmeasured rows, with th
   const raw = inputs();
   raw.inflation.countries.NO = { frequency: 'M', points: cpi };
   raw.eurostat.countries.ES = { frequency: 'M', points: cpi };
-  raw.japan.countries.AU = { frequency: 'Q', points: [] };
   raw.yield.countries.CA = { curves: [] };
   raw.currency.rates.push({ countryCode: 'PH', daily90: cleanDailyQuotes(flatDaily()) });
   // Aggregates and malformed identifiers are not countries.
@@ -206,13 +205,12 @@ test('publishes the union of input countries, including unmeasured rows, with th
     publish: async options => { published = options; return true; },
     activateKey: async () => {}, nowMs: NOW,
   });
-  assert.deepEqual(Object.keys(payload.countries).sort(), [...ECONOMIC_COUNTRIES, 'NO', 'ES', 'AU', 'CA', 'PH'].sort());
+  assert.deepEqual(Object.keys(payload.countries).sort(), [...ECONOMIC_COUNTRIES, 'NO', 'ES', 'CA', 'PH'].sort());
   assert.equal(payload.countries.NO.measured, true);
   assert.equal(payload.countries.PH.measured, true);
   assert.equal(payload.countries.CA.measured, false);
-  assert.equal(payload.countries.AU.measured, false);
   assert.equal(payload.measuredCount, 34);
-  assert.equal(published.recordCount, 36);
+  assert.equal(published.recordCount, 35);
   assert.equal(published.data, payload);
   const scoredOnly = buildEconomicStress(inputs(), NOW);
   for (const code of ECONOMIC_COUNTRIES) assert.deepEqual(payload.countries[code], scoredOnly.countries[code]);
@@ -317,14 +315,15 @@ test('unreadable keys and failed publication cannot activate or overwrite last-g
   await seedEconomicStress({ read, dryRun: true, publish: async () => { writes++; }, activateKey: async () => { activations++; }, nowMs: NOW });
   assert.equal(writes, 0);
 });
-test('a missing e-Stat mirror (no ESTAT_APPID) still publishes; a missing required input does not', async () => {
+test('publishes Japan with IMF inflation and rejects missing required inputs', async () => {
   const raw = inputs();
   const readWithout = (absentId) => async key => {
     const id = Object.keys(INPUT_KEYS).find(k => INPUT_KEYS[k] === key);
     return id === absentId ? null : raw[id];
   };
-  const { payload } = await seedEconomicStress({ read: readWithout('japan'), dryRun: true, nowMs: NOW });
-  assert.ok(payload.countries.JP, 'Japan stays a published row');
+  raw.inflation.countries.JP = raw.inflation.countries.IN;
+  const { payload } = await seedEconomicStress({ read: readWithout(null), dryRun: true, nowMs: NOW });
+  assert.equal(payload.countries.JP.members.inflation.sourceKey, INPUT_KEYS.inflation);
   assert.ok(payload.measuredCount > 0);
   await assert.rejects(seedEconomicStress({ read: readWithout('eurostat'), dryRun: true, nowMs: NOW }), /Unreadable economic input: economic:world-cpi:eurostat:v1/);
 });

@@ -2295,7 +2295,7 @@ export async function fetchYahooFxRatesWithProvenance(fxSymbols, fallbacks = {})
 
 /**
  * Read the current canonical snapshot from Redis before a seed run overwrites it.
- * Used by seed scripts that compute WoW deltas (bigmac, grocery-basket).
+ * Used by seed scripts that compute WoW deltas (grocery-basket).
  * Returns null on any error by default — scripts must handle first-run (no prev
  * data). Pass strict:true when overwriting without the prior snapshot would lose
  * accumulated state; missing keys still return null, while read failures throw.
@@ -2346,7 +2346,7 @@ export async function readSeedSnapshot(
     if (strict && parsed === null) {
       throw new Error('Redis snapshot read returned a null stored snapshot');
     }
-    // Envelope-aware: WoW/prev baselines (bigmac, grocery-basket, fear-greed)
+    // Envelope-aware: WoW/prev baselines (grocery-basket, fear-greed)
     // must see bare legacy-shape data whether the last write was pre- or post-
     // contract-migration. unwrapEnvelope is a no-op on legacy values.
     const envelope = unwrapEnvelope(parsed);

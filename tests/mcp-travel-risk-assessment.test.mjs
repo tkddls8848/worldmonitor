@@ -115,8 +115,8 @@ function fullSources() {
         { id: 'cidrap-2-undated', disease: 'Leptospirosis', location: 'Java', countryCode: 'ID', alertLevel: '', publishedAt: iso(NOW), sourceName: 'CIDRAP', sourceUrl: 'https://www.cidrap.umn.edu/l2' },
       ] }),
       aviation: ok({ alerts: [
-        { iata: 'BKK', name: 'Suvarnabhumi Airport', city: 'Bangkok', country: 'Thailand', severity: 'FLIGHT_DELAY_SEVERITY_MINOR', reason: 'Departure delays of 20 minutes', source: 'FLIGHT_DELAY_SOURCE_AVIATIONSTACK', updatedAt: NOW - 3_600_000 },
-        { iata: 'CGK', name: 'Soekarno-Hatta International Airport', city: 'Jakarta', country: 'Indonesia', severity: 'FLIGHT_DELAY_SEVERITY_NORMAL', reason: 'Normal operations', source: 'FLIGHT_DELAY_SOURCE_AVIATIONSTACK', updatedAt: NOW - 3_600_000 },
+        { iata: 'BKK', name: 'Suvarnabhumi Airport', city: 'Bangkok', country: 'Thailand', severity: 'FLIGHT_DELAY_SEVERITY_MINOR', reason: 'Departure delays of 20 minutes', source: 'FLIGHT_DELAY_SOURCE_NOTAM', updatedAt: NOW - 3_600_000 },
+        { iata: 'CGK', name: 'Soekarno-Hatta International Airport', city: 'Jakarta', country: 'Indonesia', severity: 'FLIGHT_DELAY_SEVERITY_NORMAL', reason: 'Normal operations', source: 'FLIGHT_DELAY_SOURCE_NOTAM', updatedAt: NOW - 3_600_000 },
       ] }),
       outages: ok({ outages: [
         { title: 'Regional connectivity disruption', link: 'https://radar.cloudflare.com/o1', detectedAt: NOW - 6 * DAY, endedAt: NOW - 5 * DAY, country: 'Indonesia', cause: 'POWER_OUTAGE' },

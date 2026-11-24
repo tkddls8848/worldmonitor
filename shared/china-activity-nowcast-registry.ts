@@ -1,7 +1,6 @@
 export const CHINA_ACTIVITY_PROXY_FAMILIES = [
   'freight',
   'maritime',
-  'aviation',
   'energy',
   'commodity',
   'corridor',
@@ -114,36 +113,6 @@ export const CHINA_ACTIVITY_PROXY_REGISTRY: readonly Readonly<ChinaActivityProxy
         publisherName: 'IMF PortWatch',
         url: 'https://portwatch.imf.org/',
         provenance: 'Consumed from the reviewed #5578 port condition and exact source-signal timestamps.',
-      },
-    }),
-    proxyDefinition({
-      id: 'aviation_hub_disruption_balance',
-      label: 'Reviewed China aviation hub balance',
-      family: 'aviation',
-      decisionRationale: 'The normal-versus-disrupted balance across configured hubs is a transparent operational proxy and is not treated as passenger volume or verified output.',
-      unit: 'normal minus disrupted share',
-      frequency: 'intra-day',
-      transformation: {
-        kind: 'signed_value',
-        direction: 'same',
-        description: 'Compute the reviewed-hub normal share minus disrupted share; omitted hubs remain missing.',
-      },
-      lagRule: {
-        days: 0,
-        description: 'Align to the provider coverage timestamp without a hidden lead or lag.',
-      },
-      alignment: {
-        window: 'latest_point_in_window',
-        forwardFill: false,
-        interpolate: false,
-        description: 'Use a contemporaneous reviewed-hub snapshot only; never interpolate provider status.',
-      },
-      freshnessBudgetMinutes: 180,
-      source: {
-        publisherId: 'publisher:aviationstack',
-        publisherName: 'AviationStack',
-        url: 'https://aviationstack.com/',
-        provenance: 'Consumed from the reviewed #5578 aviation condition with configured IATA selectors.',
       },
     }),
     proxyDefinition({

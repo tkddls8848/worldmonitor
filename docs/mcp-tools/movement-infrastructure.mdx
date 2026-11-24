@@ -10,7 +10,6 @@ The `curl` examples assume `export WM_KEY="wm_…"`. With an OAuth token, replac
 
 ### `get_aviation_status`
 
-Return the seeded airport disruption snapshot: one alert row per monitored airport (about 85 major airports worldwide) with iata, name, country and severity, built from AviationStack delay aggregates for international hubs, FAA ASWS delays for US airports and FAA NMS and ICAO NOTAM closures. Seeded about every 30 minutes and flagged stale after 90. The snapshot holds every monitored airport, so most rows are severity "normal" unless disrupted_only=true, and the default limit of 30 returns only part of it (0 for the whole list). Airport-level status only; no fares, schedules or flight tracks. Seeded-cache read with no live fetch: weight 1 on API plans, included in the signed-in free allowance.
 
 **Parameters (tool-specific):**
 
@@ -218,7 +217,7 @@ Seeded Cloudflare Radar Internet snapshot in three datasets: `outages` (national
 
 | Name | Type | Description |
 |------|------|-------------|
-| `dataset` | `array<string: outages / traffic / ddos>` | Datasets to return: outages (Cloudflare Radar outage reports), traffic (traffic anomalies) or ddos (global DDoS protocol, vector and target summary). Omit for all three. |
+| `dataset` | `array<string: outages / traffic / ddos>` | Datasets to return: outages (Cloudflare Radar outage reports), traffic (traffic anomalies) or ddos (global DDoS protocol, vector and target summary). Omit for both. |
 | `country` | string | Filter outages and traffic anomalies to one country. Pass an ISO 3166-1 alpha-2 code (e.g. "IQ"), an alpha-3 code ("IRQ"), or a country name in any supported dashboard locale (e.g. English "Iraq", Arabic "العراق", German "Deutschland", Chinese "中国"). Unresolved inputs return Invalid params. DDoS summaries are global, so a DDoS-only call with country returns Invalid params. |
 | `severity` | string | Outage severity to keep, matched as a case-insensitive substring of OUTAGE_SEVERITY_TOTAL (nationwide), _MAJOR (regional) or _PARTIAL (other scopes), e.g. "total". Applies to outages only. |
 | `limit` | integer | Maximum items per list (outages, anomalies, DDoS protocols, vectors and target countries). Omitted keeps 30; 0 keeps every item. |

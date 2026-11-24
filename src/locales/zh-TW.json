@@ -456,7 +456,6 @@
     "gulfIndices": "海灣指數",
     "gulfCurrencies": "海灣貨幣",
     "gulfOil": "海灣石油",
-    "bigmac": "巨無霸指數",
     "fearGreed": "恐懼與貪婪指數",
     "marketImplications": "AI 市場影響",
     "energyComplex": "能源綜合體",
@@ -474,9 +473,6 @@
     "windyWebcams": "Windy 即時網路攝影機",
     "groceryBasket": "食品雜貨指數",
     "groceryItem": "商品",
-    "bigmacDesc": "中東國家的巨無霸漢堡價格（巨無霸指數）",
-    "bigmacWow": "周環比",
-    "bigmacCountry": "國家",
     "faoFoodPriceIndex": "食品價格",
     "fuelPrices": "燃料價格",
     "fuelPricesDesc": "全球 30 多個國家的零售汽油和柴油價格",
@@ -2144,9 +2140,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>雜貨籃指數</strong>全球24個國家的雜貨籃價格對比——跟蹤超越頭條消費者價格指數的真實消費品通脹。"
     },
-    "bigmac": {
-      "infoTooltip": "<strong>巨無霸指數</strong> 經濟學人的巨無霸指數透過比較各國麥當勞漢堡價格衡量購買力平價。新資料釋出時更新（每季度/每年）。"
-    },
     "defiTokens": {
       "infoTooltip": "<strong>DeFi 代幣</strong> 主要去中心化金融協議代幣（DEX、借貸平臺和收益協議）的價格及 24 小時/7 天表現。"
     },
@@ -2171,8 +2164,6 @@
     "airlineIntel": {
       "infoTooltip": "<strong>航空情報</strong> 即時航空公司運營資料：航線暫停、空域關閉、承運商公告和緊急改航。來源：航空當局NOTAM和承運商通報。",
       "noOpsData": "無運營資料 — 載入中…",
-      "noFlights": "無航班 — 在設定中選擇機場。",
-      "noCarrierData": "暫無運營商資料。",
       "noTrackingData": "無飛機追蹤資料。",
       "noNews": "無航空新聞。",
       "enterRoute": "輸入路線並搜尋價格。",
@@ -2769,24 +2760,6 @@
         "low": "低可信度"
       }
     },
-    "defensePatents": {
-      "title": "研究開發訊號",
-      "infoTooltip": "雷神、洛克希德、華為、DARPA 及其他戰略組織的周度國防和雙用途專利申請。分類：H04B（通訊）、H01L（半導體）、F42B（彈藥）、G06N（AI）、C12N（生物技術）。資料來源：美國專利商標局開放資料門戶。",
-      "loading": "正在載入研究開發檔案…",
-      "error": "載入專利資料失敗。",
-      "empty": "該分類中無申請。",
-      "viewOnUspto": "在美國專利商標局檢視",
-      "tabs": {
-        "all": "全部"
-      },
-      "cpcLabels": {
-        "H04B": "通訊",
-        "H01L": "半導體",
-        "F42B": "彈藥",
-        "G06N": "AI",
-        "C12N": "生物技術"
-      }
-    },
     "correlation": {
       "loading": "等待資料...",
       "empty": "未檢測到活躍收斂",
@@ -3344,7 +3317,6 @@
         "faa": "FAA ASWS",
         "eurocontrol": "Eurocontrol",
         "computed": "計算值",
-        "aviationstack": "航班資料",
         "notam": "NOTAM"
       },
       "regions": {
@@ -4805,11 +4777,10 @@
       "flights": {
         "category": "航空",
         "purpose": "標出機場中斷和NOTAM關閉。也顯示當前有效或在24小時內開始的空域NOTAM（臨時飛行限制、限制區、危險區、禁區、軍事活動區、空域保留和關閉）。在能夠跟蹤時，還顯示航空器的即時位置。",
-        "source": "FAA ASWS、AviationStack、FAA NOTAM管理服務（NMS-API）和ICAO NOTAM、adsb.lol（ODbL）、Wingbits、舊版OpenSky服務恢復、可選的非商業airplanes.live/adsb.fi補缺，以及航空服務。空域NOTAM在NMS提供形狀時畫成多邊形，在NOTAM給出不超過250海里的半徑時畫成圓，其餘畫成標記。",
+        "source": "FAA ASWS、FAA NOTAM管理服務（NMS-API）和ICAO NOTAM、adsb.lol（ODbL）、Wingbits、舊版OpenSky服務恢復、可選的非商業airplanes.live/adsb.fi補缺，以及航空服務。空域NOTAM在NMS提供形狀時畫成多邊形，在NOTAM給出不超過250海里的半徑時畫成圓，其餘畫成標記。",
         "freshness": "機場中斷種子按30分鐘節奏執行。空域NOTAM根據NMS變更拉取每5分鐘寫入一次種子，並每天做一次全量重新同步，新鮮度時限為20分鐘。航空面板還按5分鐘輪詢重新整理執行檢視。",
         "confidence": "最適合給中斷做分流。單架即時航空器的覆蓋取決於ADS-B是否可用以及配置的提供方。NOTAM正文以FAA分發的文字為準。",
         "limitations": {
-          "0": "沒有API金鑰時，可能出現基於AviationStack的模擬演示資料。",
           "1": "ADS-B覆蓋弱或被阻斷的地方，即時航空器位置可能延遲或缺失。",
           "2": "空域NOTAM區域只畫在deck.gl地圖上。SVG地圖顯示機場標記。",
           "3": "多數美國TFR只在正文裡描述形狀，因此顯示為NOTAM位置上的標記，而不是限制區形狀。",

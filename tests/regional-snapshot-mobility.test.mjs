@@ -172,20 +172,13 @@ describe('buildAirports', () => {
           alert({ iata: 'LAX', icao: 'KLAX', country: 'USA' }),
         ],
       },
-      'aviation:delays:intl:v3': {
-        alerts: [
-          alert({ iata: 'DXB', icao: 'OMDB', country: 'UAE', region: 'AIRPORT_REGION_MENA' }),
-          alert({ iata: 'LHR', icao: 'EGLL', country: 'UK', region: 'AIRPORT_REGION_EUROPE' }),
-        ],
-      },
     };
     const na = buildAirports('north-america', sources);
     assert.equal(na.length, 2);
     assert.deepEqual(na.map((a) => a.icao).sort(), ['KJFK', 'KLAX']);
 
     const mena = buildAirports('mena', sources);
-    assert.equal(mena.length, 1);
-    assert.equal(mena[0].icao, 'OMDB');
+    assert.deepEqual(mena, []);
   });
 
   it('filters out alerts below MAJOR severity', () => {
@@ -354,7 +347,7 @@ describe('buildNotamClosures', () => {
           EGLL: 'Fuel contamination alert',
         },
       },
-      'aviation:delays:intl:v3': {
+      'aviation:delays:faa:v1': {
         alerts: [
           { iata: 'DXB', icao: 'OMDB', country: 'UAE', region: 'AIRPORT_REGION_MENA', severity: 'FLIGHT_DELAY_SEVERITY_MAJOR', reason: 'x' },
           { iata: 'LHR', icao: 'EGLL', country: 'UK', region: 'AIRPORT_REGION_EUROPE', severity: 'FLIGHT_DELAY_SEVERITY_MAJOR', reason: 'x' },
@@ -388,7 +381,7 @@ describe('buildNotamClosures', () => {
         closedIcaos: ['OMDB'],
         reasons: { OMDB: longReason },
       },
-      'aviation:delays:intl:v3': {
+      'aviation:delays:faa:v1': {
         alerts: [
           { iata: 'DXB', icao: 'OMDB', country: 'UAE', region: 'AIRPORT_REGION_MENA', severity: 'FLIGHT_DELAY_SEVERITY_MAJOR', reason: 'x' },
         ],
@@ -408,7 +401,6 @@ describe('buildMobilityState', () => {
   it('returns a fully-populated shape matching the proto', () => {
     const sources = {
       'aviation:delays:faa:v1': { alerts: [alert({ iata: 'JFK', severity: 'FLIGHT_DELAY_SEVERITY_MAJOR' })] },
-      'aviation:delays:intl:v3': { alerts: [] },
       'aviation:notam:closures:v2': { closedIcaos: [], reasons: {} },
       'intelligence:gpsjam:v2': { hexes: [{ h3: 'h1', lat: 40, lon: -74, level: 'high', region: 'north-america' }] },
       'military:flights:v1': { flights: [{ lat: 40, lon: -74 }] },
@@ -439,7 +431,6 @@ describe('buildMobilityState', () => {
   it('never throws on malformed source objects', () => {
     const garbage = {
       'aviation:delays:faa:v1': 'not an object',
-      'aviation:delays:intl:v3': 42,
       'aviation:notam:closures:v2': null,
       'intelligence:gpsjam:v2': { hexes: 'also not an array' },
       'military:flights:v1': { flights: null },
@@ -541,7 +532,7 @@ describe('Mexico classifier parity (PR #2976 P2 #1)', () => {
 // ────────────────────────────────────────────────────────────────────────────
 //
 // classifyInputs() used to treat undated payloads as fresh, which meant
-// stalled FAA/NOTAM/AviationStack/GPS-jam seeders would never bump
+// stalled FAA/NOTAM/GPS-jam seeders would never bump
 // snapshot_confidence down. The fix threads a metaKey through each
 // freshness spec so the companion seed-meta:*.fetchedAt is the canonical
 // staleness signal.
@@ -550,7 +541,6 @@ describe('classifyInputs metaKey fallback (PR #2976 P2 #2)', () => {
   it('declares metaKey for every undated mobility input', () => {
     const mobilityKeys = new Set([
       'aviation:delays:faa:v1',
-      'aviation:delays:intl:v3',
       'aviation:notam:closures:v2',
       'intelligence:gpsjam:v2',
     ]);
@@ -570,7 +560,6 @@ describe('classifyInputs metaKey fallback (PR #2976 P2 #2)', () => {
 
   it('ALL_META_KEYS collects every declared metaKey', () => {
     assert.ok(ALL_META_KEYS.includes('seed-meta:aviation:faa'));
-    assert.ok(ALL_META_KEYS.includes('seed-meta:aviation:intl'));
     assert.ok(ALL_META_KEYS.includes('seed-meta:aviation:notam'));
     assert.ok(ALL_META_KEYS.includes('seed-meta:intelligence:gpsjam'));
   });

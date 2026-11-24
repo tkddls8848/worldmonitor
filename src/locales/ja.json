@@ -456,7 +456,6 @@
     "gulfIndices": "湾岸指数",
     "gulfCurrencies": "湾岸通貨",
     "gulfOil": "湾岸石油",
-    "bigmac": "実質ビッグマック指数",
     "marketImplications": "AI 市場への影響",
     "energyComplex": "エネルギー複合体",
     "oilInventories": "石油在庫",
@@ -473,9 +472,6 @@
     "windyWebcams": "Windy ライブ ウェブカメラ",
     "groceryBasket": "食料品指数",
     "groceryItem": "商品",
-    "bigmacDesc": "中東各国のビッグマック価格(ビッグマック指数)",
-    "bigmacWow": "週間変化率",
-    "bigmacCountry": "国",
     "faoFoodPriceIndex": "食品価格",
     "fuelPrices": "燃料価格",
     "fuelPricesDesc": "世界 30 か国以上の小売ガソリンおよびディーゼル価格",
@@ -2144,9 +2140,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>食料品指数</strong> 24カ国の食料品価格の世界的な比較 — 消費者物価指数を超える実際の消費者物価インフレを追跡。"
     },
-    "bigmac": {
-      "infoTooltip": "<strong>実質ビッグマック指数</strong> The Economist のビッグマック指数は、各国のマクドナルドのハンバーガー価格を比較して購買力平価を測定します。新しいデータの公表時（四半期/年次）に更新されます。"
-    },
     "defiTokens": {
       "infoTooltip": "<strong>DeFi トークン</strong> 主要な分散型金融プロトコルトークンの価格と 24h/7d パフォーマンス — DEX、レンディング、イールドプロトコル。"
     },
@@ -2171,8 +2164,6 @@
     "airlineIntel": {
       "infoTooltip": "<strong>航空インテリジェンス</strong> リアルタイムの航空会社運航データ：路線停止、空域閉鎖、運航会社の勧告、緊急迂回。航空当局のNOTAMおよび運航会社の速報がソース。",
       "noOpsData": "オペレーションデータなし — 読み込み中…",
-      "noFlights": "フライトなし — 設定で空港を選択してください。",
-      "noCarrierData": "キャリアデータはまだありません。",
       "noTrackingData": "航空機追跡データがありません。",
       "noNews": "航空ニュースはありません。",
       "enterRoute": "ルートを入力して料金を検索します。",
@@ -2769,24 +2760,6 @@
         "low": "低信頼度"
       }
     },
-    "defensePatents": {
-      "title": "研究開発シグナル",
-      "infoTooltip": "レイセオン、ロッキード、ファーウェイ、DARPA およびその他の戦略的組織による週単位の防衛・デュアルユース特許出願。カテゴリ: H04B (通信)、H01L (半導体)、F42B (弾薬)、G06N (AI)、C12N (バイオテク)。出典: USPTO Open Data Portal。",
-      "loading": "研究開発出願を読み込み中…",
-      "error": "特許データの読み込みに失敗しました。",
-      "empty": "このカテゴリに出願はありません。",
-      "viewOnUspto": "USPTO で表示",
-      "tabs": {
-        "all": "すべて"
-      },
-      "cpcLabels": {
-        "H04B": "通信",
-        "H01L": "半導体",
-        "F42B": "弾薬",
-        "G06N": "AI",
-        "C12N": "バイオテク"
-      }
-    },
     "correlation": {
       "loading": "データを待機中...",
       "empty": "アクティブな収束は検出されていません",
@@ -3344,7 +3317,6 @@
         "faa": "FAA ASWS",
         "eurocontrol": "Eurocontrol",
         "computed": "算出値",
-        "aviationstack": "フライトデータ",
         "notam": "NOTAM"
       },
       "regions": {
@@ -4805,11 +4777,10 @@
       "flights": {
         "category": "航空",
         "purpose": "空港の混乱とNOTAMによる閉鎖を示します。いま有効な空域NOTAMと、24時間以内に始まる空域NOTAM（一時飛行制限、制限空域、危険空域、禁止空域、軍事作戦空域、空域の予約と閉鎖）も示します。追跡できるときは、ライブの航空機位置も示します。",
-        "source": "FAA ASWS、AviationStack、FAAのNOTAM管理サービス（NMS-API）とICAOのNOTAM、adsb.lol（ODbL）、Wingbits、従来のOpenSkyサービスの復旧、任意の非商用のairplanes.live/adsb.fiによる補完、および航空サービスです。空域NOTAMは、NMSが形状を出す場合はポリゴン、NOTAMが半径を最大250海里で示す場合は円、それ以外はマーカーとして描きます。",
+        "source": "FAA ASWS、FAAのNOTAM管理サービス（NMS-API）とICAOのNOTAM、adsb.lol（ODbL）、Wingbits、従来のOpenSkyサービスの復旧、任意の非商用のairplanes.live/adsb.fiによる補完、および航空サービスです。空域NOTAMは、NMSが形状を出す場合はポリゴン、NOTAMが半径を最大250海里で示す場合は円、それ以外はマーカーとして描きます。",
         "freshness": "空港の混乱のシードは30分周期で動きます。空域NOTAMは、NMSの変更取得から5分ごとにシードし、毎日全件を再同期します。鮮度の許容時間は20分です。航空パネルは、運用の表示を5分周期のポーリングでも更新します。",
         "confidence": "混乱の切り分けに最も向きます。個々のライブ航空機がどこまで見えるかは、ADS-Bの有無と、設定した提供者によります。NOTAMの本文は、FAAが配信した内容として正規です。",
         "limitations": {
-          "0": "APIキーがないとき、AviationStackに基づく模擬のデモデータが出ることがあります。",
           "1": "ADS-Bのカバーが弱い場所、または遮られる場所では、ライブの航空機位置が遅れるか、欠けます。",
           "2": "空域NOTAMの区域は、deck.glの地図にだけ描きます。SVGの地図は、空港のマーカーを示します。",
           "3": "米国のTFRの多くは、形状を本文にしか書かないため、制限の形ではなく、NOTAMの位置のマーカーとして出ます。",

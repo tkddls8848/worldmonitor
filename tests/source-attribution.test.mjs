@@ -336,9 +336,6 @@ test('the issue audit providers are represented by named attribution rows', () =
     'CFTC Commitments of Traders',
     'FINRA',
     'SEC EDGAR',
-    'USPTO Open Data Portal',
-    'OpenAQ',
-    'World Air Quality Index (WAQI)',
     'Safecast',
     'EPA RadNet',
     'ENTSO-E Transparency Platform',
@@ -1156,20 +1153,20 @@ test('a reference carrying anything beyond a path fails the manifest gate', () =
 });
 
 test('a field this script owns sends the reviewer to the script, not to --write', () => {
-  // api.openaq.org is in PROVIDER_OVERRIDES, so --write reasserts its license.
+  // api.safecast.org is in PROVIDER_OVERRIDES, so --write reasserts its license.
   // Telling a reviewer to regenerate would destroy the edit they just made.
   const errors = validateManifest(
-    [{ host: 'api.openaq.org', kinds: ['structured'], references: [{ path: 'scripts/seed-air-quality.mjs' }] }],
+    [{ host: 'api.safecast.org', kinds: ['structured'], references: [{ path: 'scripts/seed-radiation-watch.mjs' }] }],
     {
       entries: [{
-        host: 'api.openaq.org',
-        provider: 'OpenAQ',
+        host: 'api.safecast.org',
+        provider: 'Safecast',
         license: 'CC BY 4.0 — reviewed by counsel',
-        attribution: 'OpenAQ, https://openaq.org/.',
+        attribution: 'Safecast; link to the measurement/API response.',
         observed: true,
         kind: 'structured',
         status: 'reviewed',
-        references: [{ path: 'scripts/seed-air-quality.mjs' }],
+        references: [{ path: 'scripts/seed-radiation-watch.mjs' }],
       }],
       logicalEntries: [],
     },

@@ -22,12 +22,12 @@ describe('China corridor API/cache composition (#5578)', () => {
     const snapshots = await loadChinaCorridorRawSnapshots(async (key, raw) => {
       calls.push(key);
       assert.equal(raw, true);
-      if (key === CHINA_CORRIDOR_SOURCE_KEYS.aviation) throw new Error('provider read failed');
+      if (key === CHINA_CORRIDOR_SOURCE_KEYS.energySpine) throw new Error('provider read failed');
       return { key };
     });
 
     assert.deepEqual(calls.sort(), Object.values(CHINA_CORRIDOR_SOURCE_KEYS).sort());
-    assert.equal(snapshots.aviation, null);
+    assert.equal(snapshots.energySpine, null);
     assert.deepEqual(snapshots.portwatchMeta, { key: CHINA_CORRIDOR_SOURCE_KEYS.portwatchMeta });
   });
 
@@ -45,7 +45,7 @@ describe('China corridor API/cache composition (#5578)', () => {
     assert.deepEqual(calls[0]?.keys.sort(), Object.values(CHINA_CORRIDOR_SOURCE_KEYS).sort());
     assert.equal(calls[0]?.raw, true);
     assert.deepEqual(snapshots.portwatchChina, { ports: [] });
-    assert.equal(snapshots.aviation, null);
+    assert.equal(snapshots.energySpine, null);
   });
 
   it('fails closed when the batch source read itself fails', async () => {
@@ -68,7 +68,7 @@ describe('China corridor API/cache composition (#5578)', () => {
       [CHINA_CORRIDOR_SOURCE_KEYS.portwatchMeta, { fetchedAt: Date.parse('2026-07-25T11:30:00.000Z') }],
     ]);
     const response = await composeChinaCorridorSnapshot(ASSESSED_AT, async (key) => {
-      if (key === CHINA_CORRIDOR_SOURCE_KEYS.aviation) throw new Error('aviation unavailable');
+      if (key === CHINA_CORRIDOR_SOURCE_KEYS.energySpine) throw new Error('energy unavailable');
       return values.get(key) ?? null;
     });
     assert.ok(response);
@@ -77,7 +77,7 @@ describe('China corridor API/cache composition (#5578)', () => {
     const port = yrd?.conditions.find((condition) => condition.family === 'port');
     assert.equal(port?.availability, 'partial');
     assert.equal(port?.sourceSignals.some((signal) => signal.selectorId === 'port1188' && signal.availability === 'available'), true);
-    assert.equal(yrd?.conditions.find((condition) => condition.family === 'aviation')?.availability, 'unavailable');
+    assert.equal(yrd?.conditions.find((condition) => condition.family === 'power_energy')?.availability, 'unavailable');
     assert.equal(yrd?.availability, 'partial');
   });
 

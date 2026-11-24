@@ -44,7 +44,7 @@ curl -fsSL https://www.worldmonitor.app/install.sh | bash
 
 **World Monitor 的托管数据管线。** 在生产环境中，种子脚本以定时的 Railway 服务运行（`scripts/railway-services.json` 中声明了 52 个），写入 World Monitor 自己的 Redis。自托管实例从空缓存开始。你需要在自己拥有的调度上、针对自己拥有的 Redis 运行 `./scripts/run-seeders.sh` 来填充它。
 
-**World Monitor 的提供方密钥与付费档位。** Finnhub、FRED、EIA、ACLED、NASA FIRMS、AISstream、AviationStack、Cloudflare Radar 以及各 LLM 提供方的密钥属于 World Monitor。你需要自带密钥。免费档位覆盖大多数数据源；Cloudflare Radar 是付费的，LLM 用量由你在 `LLM_API_URL` 指向的提供方计量，包括本地的 Ollama 或 LM Studio 端点。
+**World Monitor 的提供方密钥与付费档位。** Finnhub、FRED、EIA、ACLED、NASA FIRMS、AISstream、Cloudflare Radar 以及各 LLM 提供方的密钥属于 World Monitor。你需要自带密钥。免费档位覆盖大多数数据源；Cloudflare Radar 是付费的，LLM 用量由你在 `LLM_API_URL` 指向的提供方计量，包括本地的 Ollama 或 LM Studio 端点。
 
 **托管 API 与 MCP 服务器。** 调用 `worldmonitor.app` 端点、托管的 MCP 服务器，或以托管基础 URL 使用 SDK，都属于使用托管服务，受[最终用户许可协议](/zh/eula)与套餐管辖。自托管代码不需要套餐；调用 World Monitor 的服务器才需要。SDK 与 CLI 接受自托管基础 URL，因此你自己的实例可以应答同一套 API 表面。
 

@@ -411,32 +411,6 @@ export interface GroceryItemPrice {
   available: boolean;
 }
 
-export interface ListBigMacPricesRequest {
-}
-
-export interface ListBigMacPricesResponse {
-  countries: BigMacCountryPrice[];
-  fetchedAt: string;
-  cheapestCountry: string;
-  mostExpensiveCountry: string;
-  wowAvgPct: number;
-  wowAvailable: boolean;
-  prevFetchedAt: string;
-}
-
-export interface BigMacCountryPrice {
-  code: string;
-  name: string;
-  currency: string;
-  flag: string;
-  localPrice: number;
-  usdPrice: number;
-  fxRate: number;
-  sourceSite: string;
-  available: boolean;
-  wowPct: number;
-}
-
 export interface GetNationalDebtRequest {
 }
 
@@ -1337,7 +1311,6 @@ export interface EconomicServiceHandler {
   getBisCredit(ctx: ServerContext, req: GetBisCreditRequest): Promise<GetBisCreditResponse>;
   getFredSeriesBatch(ctx: ServerContext, req: GetFredSeriesBatchRequest): Promise<GetFredSeriesBatchResponse>;
   listGroceryBasketPrices(ctx: ServerContext, req: ListGroceryBasketPricesRequest): Promise<ListGroceryBasketPricesResponse>;
-  listBigMacPrices(ctx: ServerContext, req: ListBigMacPricesRequest): Promise<ListBigMacPricesResponse>;
   getNationalDebt(ctx: ServerContext, req: GetNationalDebtRequest): Promise<GetNationalDebtResponse>;
   listFuelPrices(ctx: ServerContext, req: ListFuelPricesRequest): Promise<ListFuelPricesResponse>;
   getBlsSeries(ctx: ServerContext, req: GetBlsSeriesRequest): Promise<GetBlsSeriesResponse>;
@@ -1893,43 +1866,6 @@ export function createEconomicServiceRoutes(
 
           const result = await handler.listGroceryBasketPrices(ctx, body);
           return new Response(JSON.stringify(result as ListGroceryBasketPricesResponse), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (err: unknown) {
-          if (err instanceof ValidationError) {
-            return new Response(JSON.stringify({ violations: err.violations }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-          if (options?.onError) {
-            return options.onError(err, req);
-          }
-          const message = "Internal server error";
-          return new Response(JSON.stringify({ message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      },
-    },
-    {
-      method: "GET",
-      path: "/api/economic/v1/list-bigmac-prices",
-      handler: async (req: Request): Promise<Response> => {
-        try {
-          const pathParams: Record<string, string> = {};
-          const body = {} as ListBigMacPricesRequest;
-
-          const ctx: ServerContext = {
-            request: req,
-            pathParams,
-            headers: Object.fromEntries(req.headers.entries()),
-          };
-
-          const result = await handler.listBigMacPrices(ctx, body);
-          return new Response(JSON.stringify(result as ListBigMacPricesResponse), {
             status: 200,
             headers: { "Content-Type": "application/json" },
           });

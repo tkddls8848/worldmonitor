@@ -74,7 +74,6 @@
     "gulfIndices": "Gulfindex",
     "gulfCurrencies": "Gulfvalutor",
     "gulfOil": "Gulfolja",
-    "bigmac": "Verkligt Big Mac-index",
     "marketImplications": "AI-marknadskonsekvenser",
     "energyComplex": "Energikomplex",
     "oilInventories": "Oljelagre",
@@ -91,9 +90,6 @@
     "windyWebcams": "Windy Live-webbkamera",
     "groceryBasket": "Matvaruindex",
     "groceryItem": "Vara",
-    "bigmacDesc": "Big Mac-priser i länder i Mellanöstern (Big Mac Index)",
-    "bigmacWow": "Vecka över vecka",
-    "bigmacCountry": "Land",
     "faoFoodPriceIndex": "Livsmedelspriser",
     "fuelPrices": "Bränslepriser",
     "fuelPricesDesc": "Detaljhandels bensin- och dieselpriser i 30+ länder världen över",
@@ -1765,9 +1761,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Global jämförelse av matvarukorgar i 24 länder — spårar konsumentprisinflation baserat på verkliga varor, bortom övergripande konsumentprisindex."
     },
-    "bigmac": {
-      "infoTooltip": "<strong>Verkligt Big Mac-index</strong> The Economists Big Mac-index mäter köpkraftsparitet genom att jämföra priset på McDonald's-hamburgare mellan länder. Uppdateras när nya data publiceras (kvartalsvis/årligen)."
-    },
     "defiTokens": {
       "infoTooltip": "<strong>DeFi-tokens</strong> Priser och 24h/7d-utveckling för de största tokens inom decentraliserad finans — DEX:er, utlåningsplattformar och avkastningsprotokoll."
     },
@@ -1792,8 +1785,6 @@
     "airlineIntel": {
       "infoTooltip": "<strong>Flygintelligens</strong> Flygbolags driftdata i realtid: linjenedläggningar, luftrumsstängningar, transportörsmeddelanden och nödomdirigeringar. Källa: NOTAM från luftfartsmyndigheter och transportörsbulletiner.",
       "noOpsData": "Ingen driftdata — läser in…",
-      "noFlights": "Inga flyg — välj flygplats i inställningar.",
-      "noCarrierData": "Ingen flygbolalsdata ännu.",
       "noTrackingData": "Ingen spårningsdata för flygplan.",
       "noNews": "Inga flygnyheter.",
       "enterRoute": "Ange rutt och sök efter priser.",
@@ -2399,24 +2390,6 @@
         "low": "lågt förtroende"
       }
     },
-    "defensePatents": {
-      "title": "Forskning- och utvecklingssignaler",
-      "infoTooltip": "Veckovisa ansökningar för försvars- och dual-use-patent från Raytheon, Lockheed, Huawei, DARPA och andra strategiska organisationer. Kategorier: H04B (kommunikation), H01L (halvledare), F42B (ammunition), G06N (AI), C12N (bioteknik). Källa: USPTO Open Data Portal.",
-      "loading": "Laddar forskning- och utvecklingsansökningar…",
-      "error": "Kunde inte läsa in patentdata.",
-      "empty": "Inga ansökningar i denna kategori.",
-      "viewOnUspto": "Visa på USPTO",
-      "tabs": {
-        "all": "Alla"
-      },
-      "cpcLabels": {
-        "H04B": "Kommunikation",
-        "H01L": "Halvledare",
-        "F42B": "Ammunition",
-        "G06N": "AI",
-        "C12N": "Bioteknik"
-      }
-    },
     "correlation": {
       "loading": "Väntar på data...",
       "empty": "Ingen aktiv konvergens upptäckt",
@@ -2980,7 +2953,6 @@
         "faa": "FAA ASWS",
         "eurocontrol": "Eurocontrol",
         "computed": "Beräknad",
-        "aviationstack": "Flygdata",
         "notam": "NOTAM"
       },
       "regions": {
@@ -4827,11 +4799,10 @@
       "flights": {
         "category": "Flyg",
         "purpose": "Lyfter flygplatsstörningar och NOTAM-stängningar. Det omfattar luftrums-NOTAM som gäller nu eller börjar inom 24 timmar, inräknat tillfälliga flygrestriktioner, restriktions-, fara- och förbjudna områden, militära operationsområden, luftrumsreservationer och stängningar. Visar också livepositioner för flygplan när spårning finns.",
-        "source": "FAA ASWS, AviationStack, FAA NOTAM Management Service (NMS-API) och ICAO NOTAM, adsb.lol (ODbL), Wingbits, återställning av den äldre OpenSky-tjänsten, valfri icke-kommersiell luckfyllnad från airplanes.live/adsb.fi och flygtjänsten. Luftrums-NOTAM ritas som polygoner där NMS levererar dem, som cirklar där NOTAM anger en radie upp till 250 NM, och annars som markörer.",
+        "source": "FAA ASWS, FAA NOTAM Management Service (NMS-API) och ICAO NOTAM, adsb.lol (ODbL), Wingbits, återställning av den äldre OpenSky-tjänsten, valfri icke-kommersiell luckfyllnad från airplanes.live/adsb.fi och flygtjänsten. Luftrums-NOTAM ritas som polygoner där NMS levererar dem, som cirklar där NOTAM anger en radie upp till 250 NM, och annars som markörer.",
         "freshness": "Inmatning av flygplatsstörningar går i en takt på 30 minuter. Luftrums-NOTAM matas in var 5:e minut från NMS-ändringshämtningar, med en daglig full omsynk, mot en aktualitetsbudget på 20 minuter. Flygpanelen uppdaterar också operativa vyer i en avfrågningscykel på 5 minuter.",
         "confidence": "Bäst för att sortera störningar. Täckningen för enskilda liveflygplan beror på ADS-B och konfigurerade leverantörer. NOTAM-texten gäller i den form FAA sprider den.",
         "limitations": {
-          "0": "Simulerade demodata som bygger på AviationStack kan synas när en API-nyckel saknas.",
           "1": "Livepositioner för flygplan kan vara fördröjda eller saknas där ADS-B-täckningen är svag eller blockerad.",
           "2": "Luftrums-NOTAM ritas bara på deck.gl-kartan. SVG-kartan visar flygplatsmarkörer.",
           "3": "De flesta amerikanska TFR beskriver formen bara i text, så de syns som en markör vid NOTAM-positionen, inte som den begränsade formen.",

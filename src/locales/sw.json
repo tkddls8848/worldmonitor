@@ -540,10 +540,6 @@
     "gulfEconomies": "Uchumi wa Ghuba",
     "groceryBasket": "Kielezo cha mboga",
     "groceryItem": "Kipengee",
-    "bigmac": "Halisi Big Mac Index",
-    "bigmacDesc": "Bei kubwa za Mac katika nchi zote za Mashariki ya Kati (Big Mac Index)",
-    "bigmacWow": "Wiki inayolingana na wiki",
-    "bigmacCountry": "Nchi",
     "faoFoodPriceIndex": "Bei za chakula",
     "fuelPrices": "Bei za Mafuta",
     "fuelPricesDesc": "Bei za rejareja za petroli na dizeli katika nchi 30+ duniani kote",
@@ -959,8 +955,6 @@
     "airlineIntel": {
       "infoTooltip": "<strong>Airline Intelligence</strong> Data ya uendeshaji wa shirika la ndege katika wakati halisi: kusimamishwa kwa njia, kufungwa kwa anga, ushauri wa watoa huduma na uchepushaji wa dharura. Imetolewa kutoka NOTAM za mamlaka ya usafiri wa anga na taarifa za mtoa huduma.",
       "noOpsData": "Hakuna data ya huduma - inapakia...",
-      "noFlights": "Hakuna ndege - chagua uwanja wa ndege katika mipangilio.",
-      "noCarrierData": "Bado hakuna data ya mtoa huduma.",
       "noTrackingData": "Hakuna data ya ufuatiliaji wa ndege.",
       "noNews": "Hakuna habari za usafiri wa anga.",
       "enterRoute": "Ingiza njia na utafute bei.",
@@ -2317,9 +2311,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Kulinganisha bei za kikapu cha chakula duniani kote katika nchi 24 — inafuatilia unyumbufu wa bei ya bidhaa za watumiaji wa dunia halisi zaidi ya fahirisi ya bei ya watumiaji."
     },
-    "bigmac": {
-      "infoTooltip": "<strong>Real Big Mac Index</strong> The Economist's Big Mac Index hupima usawa wa uwezo wa kununua kwa kulinganisha bei za baga za McDonald katika nchi zote. Inasasishwa data mpya inapochapishwa (robo mwaka/kila mwaka)."
-    },
     "fuelPrices": {
       "infoTooltip": "<strong>Fuel Prices</strong> Bei za pump ya rejareja kwa petroli na gesi kote nchi 30+, zilizosawazishwa kuwa USD/lita kwa kulinganisha. Bei zinakuja kutoka programu za data zilizofunguliwa za serikali na kusasishwa kila wiki. Nchi nyingi za bei nafuu zaidi na ghali zaidi zimeangaziwa. Mabadiliko ya juma kwa juma yanaonyeshwa wakati data ya juma iliyopita inapatikana.",
       "countries": "nchi"
@@ -2746,24 +2737,6 @@
         "high": "ujasiri wa juu",
         "medium": "ujasiri wa kati",
         "low": "kujiamini chini"
-      }
-    },
-    "defensePatents": {
-      "title": "Ishara za utafiti na maendeleo",
-      "infoTooltip": "Uwasilishaji wa hati miliki za ulinzi wa kila wiki na matumizi mawili ya Raytheon, Lockheed, Huawei, DARPA na mashirika mengine ya kimkakati. Kategoria: H04B (comms), H01L (semiconductors), F42B (risasi), G06N (AI), C12N (kibayoteki). Chanzo: USPTO Open Data Portal.",
-      "loading": "Kupakia filings ya utafiti na maendeleo…",
-      "error": "Imeshindwa kupakia data ya hataza.",
-      "empty": "Hakuna faili katika kategoria hii.",
-      "viewOnUspto": "Tazama kwenye USPTO",
-      "tabs": {
-        "all": "Wote"
-      },
-      "cpcLabels": {
-        "H04B": "Mawasiliano",
-        "H01L": "Semikondakta",
-        "F42B": "Risasi",
-        "G06N": "AI",
-        "C12N": "Bayoteknolojia"
       }
     },
     "correlation": {
@@ -3436,7 +3409,6 @@
         "faa": "FAA ASWS",
         "eurocontrol": "Udhibiti wa Euro",
         "computed": "Imekokotwa",
-        "aviationstack": "Data ya Ndege",
         "notam": "NOTAM"
       },
       "regions": {
@@ -4827,11 +4799,10 @@
       "flights": {
         "category": "Usafiri wa anga",
         "purpose": "Inaangazia usumbufu wa viwanja vya ndege na kufungwa kwa NOTAM, NOTAM za anga zinazotumika sasa au zinazoanza ndani ya saa 24 (vikwazo vya kuruka kwa muda, maeneo yenye vikwazo, hatari na yaliyokatazwa, maeneo ya operesheni za kijeshi, hifadhi za anga na kufungwa), na nafasi za ndege za moja kwa moja ufuatiliaji unapopatikana.",
-        "source": "FAA ASWS, AviationStack, Huduma ya Usimamizi ya NOTAM ya FAA (NMS-API) na NOTAM za ICAO, adsb.lol (ODbL), Wingbits, urejeshaji wa huduma ya zamani ya OpenSky, kujaza mapengo kwa hiari na bila biashara kupitia airplanes.live/adsb.fi, na huduma ya usafiri wa anga. NOTAM za anga huchorwa kama poligoni ambapo NMS huzitoa, duara ambapo NOTAM inatoa eneo la hadi 250 NM, na alama vinginevyo.",
+        "source": "FAA ASWS, Huduma ya Usimamizi ya NOTAM ya FAA (NMS-API) na NOTAM za ICAO, adsb.lol (ODbL), Wingbits, urejeshaji wa huduma ya zamani ya OpenSky, kujaza mapengo kwa hiari na bila biashara kupitia airplanes.live/adsb.fi, na huduma ya usafiri wa anga. NOTAM za anga huchorwa kama poligoni ambapo NMS huzitoa, duara ambapo NOTAM inatoa eneo la hadi 250 NM, na alama vinginevyo.",
         "freshness": "Mbegu za usumbufu wa viwanja vya ndege huendeshwa kila dakika 30. NOTAM za anga hupandwa kila dakika 5 kutoka kwa maombi ya mabadiliko ya NMS, na usawazishaji kamili wa kila siku, dhidi ya bajeti ya upya ya dakika 20. Paneli ya usafiri wa anga pia husasisha mwonekano wa uendeshaji kwa mzunguko wa kuuliza wa dakika 5.",
         "confidence": "Bora kwa uchambuzi wa kwanza wa usumbufu. Chanjo ya kila ndege ya moja kwa moja hutegemea upatikanaji wa ADS-B na watoa huduma waliosanidiwa. Maandishi ya NOTAM ndiyo yenye mamlaka kama FAA inavyoyasambaza.",
         "limitations": {
-          "0": "Data ya maonyesho ya kuiga inayotegemea AviationStack inaweza kuonekana wakati ufunguo wa API haupo.",
           "1": "Nafasi za ndege za moja kwa moja zinaweza kuchelewa au kukosekana ambapo chanjo ya ADS-B ni dhaifu au imezuiwa.",
           "2": "Maeneo ya NOTAM ya anga huchorwa kwenye ramani ya deck.gl tu. Ramani ya SVG inaonyesha alama za viwanja vya ndege.",
           "3": "TFR nyingi za Marekani zinaeleza umbo katika maandishi tu, kwa hiyo huonekana kama alama kwenye nafasi ya NOTAM, si umbo lililozuiliwa.",

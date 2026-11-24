@@ -10,7 +10,7 @@ The `curl` examples assume `export WM_KEY="wm_…"`. With an OAuth token, replac
 
 ### `get_climate_data`
 
-Return the seeded climate bundle: temperature and precipitation anomalies against 30-year WMO normals, climate-relevant disaster alerts (ReliefWeb, GDACS, FIRMS), the NOAA Mauna Loa CO2 trend, OpenAQ/WAQI PM2.5 station readings, NSIDC/NOAA Arctic sea-ice extent and ocean-heat indicators, active weather alerts and climate news. Freshness follows each source seed time and budget (anomalies 9 h, CO2 3 days, sea ice 2 days), plus producer content-age limits for anomalies and news. Seeded-cache read with no live fetch: weight 1 on API plans, included in the signed-in free allowance.
+Return the seeded climate bundle: temperature and precipitation anomalies against 30-year WMO normals, climate-relevant disaster alerts (ReliefWeb, GDACS, FIRMS), the NOAA Mauna Loa CO2 trend, NSIDC/NOAA Arctic sea-ice extent and ocean-heat indicators, active weather alerts and climate news. Freshness follows each source seed time and budget (anomalies 9 h, CO2 3 days, sea ice 2 days), plus producer content-age limits for anomalies and news. Seeded-cache read with no live fetch: weight 1 on API plans, included in the signed-in free allowance.
 
 **Parameters (tool-specific):**
 
@@ -20,7 +20,7 @@ Return the seeded climate bundle: temperature and precipitation anomalies agains
 | `country` | string | Country to filter the country-tagged datasets (climate disasters, air-quality stations) to, as an ISO 3166-1 alpha-2 or alpha-3 code or a country name. Unresolved inputs return Invalid params. |
 | `limit` | number | Cap each list dataset (anomalies, disasters, stations, news, alerts) to at most this many items (default 30, pass 0 for no cap). |
 
-- **API endpoints:** `GET /api/climate/v1/get-co2-monitoring`, `GET /api/climate/v1/get-ocean-ice-data`, `GET /api/climate/v1/list-air-quality-data`, `GET /api/climate/v1/list-climate-anomalies`, `GET /api/climate/v1/list-climate-disasters`, `GET /api/climate/v1/list-climate-news`
+- **API endpoints:** `GET /api/climate/v1/get-co2-monitoring`, `GET /api/climate/v1/get-ocean-ice-data`, `GET /api/climate/v1/list-climate-anomalies`, `GET /api/climate/v1/list-climate-disasters`, `GET /api/climate/v1/list-climate-news`
 - **Access:** `free-account` — callable by any signed-in account; free accounts spend the daily free allowance, Pro calls spend the daily quota. Accepts the universal `summary` argument.
 - **Kind:** cache read — sub-second response from Redis bootstrap cache.
 - **Freshness budget:** per slice — weather alerts **45 min**, climate news intelligence **90 min**, anomalies **9 h**, disasters **12 h**, air quality **3 h**, ocean/ice **48 h**, CO2 monitoring **72 h**. These seed budgets match `/api/health`. Anomalies and climate news also honor their producer content-age limits, currently **14 days** and **7 days**. The single `stale` flag ORs every check, so an expired seed, failed refresh, missing metadata, or expired content clock marks the bundle stale. `cached_at` is the oldest contributing seed time, not a shared expiry deadline. `dataset` narrows the returned data after the bundle freshness check.
@@ -115,7 +115,7 @@ Recent M4.5+ earthquakes (USGS and Earthquakes Canada / NRCan), active wildfires
 | `panel_request` | string | Server-issued Natural Disasters panel token, or the existing news token for its exact bounded map reads. Omit for an ordinary paid opening; a news token cannot widen its map scope. |
 | `refresh` | boolean | Paid standalone panel only. Explicitly open one new allocation. Omit panel_request and supply a UUID request_id. |
 | `request_id` | string | Client-generated UUID that names one standalone-panel refresh. Retrying with the same UUID reuses that allocation. |
-| `dataset` | `array<string: earthquakes / wildfires / other>` | Hazard lists to return: earthquakes (USGS and NRCan quakes), wildfires (NASA FIRMS fire detections) or other (natural hazard events such as storms and volcanoes). Omit for all three. |
+| `dataset` | `array<string: earthquakes / wildfires / other>` | Hazard lists to return: earthquakes (USGS and NRCan quakes), wildfires (NASA FIRMS fire detections) or other (natural hazard events such as storms and volcanoes). Omit for both. |
 | `min_magnitude` | number | Minimum magnitude to keep. For earthquakes this is the reported seismic magnitude (e.g. 6 keeps M6.0+); for other natural events it is compared with each event's magnitude in that event's own magnitudeUnit (tropical cyclones use maximum wind in knots). Rows without a magnitude are dropped; wildfires are unaffected. |
 | `active_only` | boolean | Keep only natural events that are still active (not closed). |
 | `limit` | number | Cap each hazard list to at most this many items (default 30, pass 0 for no cap). |
@@ -216,7 +216,7 @@ curl -s https://worldmonitor.app/mcp \
 
 ### `get_health_signals`
 
-Active disease outbreaks (WHO/ECDC etc.) and global air-quality station readings (OpenAQ/WAQI PM2.5). For health-risk screening.
+Active disease outbreaks (WHO/ECDC etc.). For health-risk screening.
 
 **Parameters (tool-specific):**
 
@@ -228,7 +228,7 @@ Active disease outbreaks (WHO/ECDC etc.) and global air-quality station readings
 | `min_aqi` | number | Minimum US EPA Air Quality Index (0-500 scale derived from PM2.5; e.g. 151 keeps "unhealthy" and worse). Stations below it, or with no AQI, are dropped; outbreaks are unaffected. |
 | `limit` | number | Cap the outbreak and station lists to at most this many items (default 30, pass 0 for no cap). |
 
-- **API endpoints:** `GET /api/health/v1/list-air-quality-alerts`, `GET /api/health/v1/list-disease-outbreaks`
+- **API endpoints:** `GET /api/health/v1/list-disease-outbreaks`
 - **Access:** `free-account` — callable by any signed-in account; free accounts spend the daily free allowance, Pro calls spend the daily quota. Accepts the universal `summary` argument.
 - **Kind:** cache read — sub-second response from Redis bootstrap cache.
 - **Freshness budget:** per slice — air quality **3 h**, disease outbreaks **48 h**. The single `stale` flag ORs both checks, so it flips as soon as either slice exceeds its own budget.

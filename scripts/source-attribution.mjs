@@ -227,12 +227,6 @@ export const PROVIDER_IDENTITY_GROUPS = Object.freeze({
     reason: 'The public catalog, CKAN API, and CART data host belong to one City of Toronto Open Data identity.',
     reviewReference: 'Issue #7036 and PR #7576 source migration',
   }),
-  'uspto-open-data': Object.freeze({
-    provider: 'USPTO Open Data Portal',
-    memberHosts: Object.freeze(['api.uspto.gov', 'data.uspto.gov']),
-    reason: 'The two official USPTO data hosts belong to one Open Data Portal provider identity.',
-    reviewReference: 'PR #6250',
-  }),
   wingbits: Object.freeze({
     provider: 'wingbits.com',
     memberHosts: Object.freeze(['customer-api.wingbits.com', 'ecs-api.wingbits.com', 'wingbits.com']),
@@ -726,32 +720,6 @@ const PROVIDER_OVERRIDES = {
     attribution: 'U.S. Securities and Exchange Commission (SEC).',
     status: 'reviewed',
   },
-  'api.uspto.gov': {
-    provider: 'USPTO Open Data Portal',
-    identityGroup: 'uspto-open-data',
-    license: 'U.S. government public data; USPTO terms apply',
-    attribution: 'U.S. Patent and Trademark Office (USPTO) Open Data Portal.',
-    status: 'reviewed',
-  },
-  'data.uspto.gov': {
-    provider: 'USPTO Open Data Portal',
-    identityGroup: 'uspto-open-data',
-    license: 'U.S. government public data; USPTO terms apply',
-    attribution: 'U.S. Patent and Trademark Office (USPTO) Open Data.',
-    status: 'reviewed',
-  },
-  'api.openaq.org': {
-    provider: 'OpenAQ',
-    license: 'CC BY 4.0 (dataset/API terms may vary by measurement source)',
-    attribution: 'OpenAQ, https://openaq.org/.',
-    status: 'reviewed',
-  },
-  'api.waqi.info': {
-    provider: 'World Air Quality Index (WAQI)',
-    license: 'WAQI API terms; attribution required',
-    attribution: 'World Air Quality Index (WAQI); link to the station/API response.',
-    status: 'terms-review',
-  },
   'api.safecast.org': {
     provider: 'Safecast',
     license: 'Safecast data/API terms; verify dataset license by endpoint',
@@ -1229,7 +1197,7 @@ const PROVIDER_OVERRIDES = {
 // a provider-bearing override a separate, explicit lifecycle event instead of
 // something `--write` can silently normalize into the manifest.
 export const PROVIDER_IDENTITY_REVIEW = Object.freeze({
-  sha256: '1dc0b3197e62757a0fb9ced8c99fc8426b68d33f23a353a6123b3be4adfdac5e',
+  sha256: '3a2ed5f190ad40768e16ae2cfa4bfde424726237f8d87283084611c4a312cd31',
   // 2026-11-22: identify the OpenDART API and DART viewer as distinct
   // Financial Supervisory Service disclosure endpoints; reuse terms remain under review.
   // 2026-11-22: add UCDP's bulk Candidate CSV downloads under CC BY 4.0.
@@ -1271,7 +1239,7 @@ export const PROVIDER_IDENTITY_REVIEW = Object.freeze({
   // SOURCE_ROOTS, so citing a host that is not already a registered source
   // invents a provider row for it. The B.C. catalogue URLs above are safe
   // because that host is itself an observed source; parallel.ai is not.
-  reviewReference: 'UCDP Dataset Download Center and Candidate Events Dataset Codebook v1.5, reviewed 2026-11-22 (https://ucdp.uu.se/downloads/; https://ucdp.uu.se/downloads/candidateged/ucdp-candidate-codebook1.5.pdf).',
+  reviewReference: 'Review 20261124 removed retired source identities. UCDP Dataset Download Center and Candidate Events Dataset Codebook v1.5, reviewed 2026-11-22 (https://ucdp.uu.se/downloads/; https://ucdp.uu.se/downloads/candidateged/ucdp-candidate-codebook1.5.pdf).',
 });
 
 export function providerIdentityDigest(providerOverrides = PROVIDER_OVERRIDES) {

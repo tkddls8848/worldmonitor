@@ -7,12 +7,11 @@ import { buildDelaysBootstrapPayload, BOOTSTRAP_KEY, BOOTSTRAP_META_KEY } from '
 import { MONITORED_AIRPORTS } from '../src/config/airports.ts';
 
 const FAA_KEY = 'aviation:delays:faa:v1';
-const INTL_KEY = 'aviation:delays:intl:v3';
-const coverage = [{ iata: 'LHR', status: 'normal', flightCount: 12 }];
+const NOTAM_KEY = 'aviation:notam:closures:v2';
 const faa = { alerts: [] };
-const intl = { alerts: [], coverage };
+const notam = { closedIcaos: [], restrictedIcaos: [], coveredIcaos: ['EGLL'], reasons: {} };
 
-for (const mode of ['healthy', 'miss', 'intl-error', 'timeout'] as const) {
+for (const mode of ['healthy', 'miss', 'notam-error', 'timeout'] as const) {
   test(`airport RPC preserves the producer bootstrap and metadata after ${mode} source reads`, async (t) => {
     for (const [name, value] of Object.entries({
       UPSTASH_REDIS_REST_URL: 'https://redis.test', UPSTASH_REDIS_REST_TOKEN: 'fixture-token',
@@ -28,7 +27,7 @@ for (const mode of ['healthy', 'miss', 'intl-error', 'timeout'] as const) {
       });
     }
     const seeded = buildDelaysBootstrapPayload({
-      faaPayload: faa, intlPayload: intl, notamPayload: null,
+      faaPayload: faa, notamPayload: notam,
       fillerRegistry: MONITORED_AIRPORTS.filter(a => ['JFK', 'LHR'].includes(a.iata)),
     });
     const originalPayload = JSON.stringify(seeded);
@@ -45,14 +44,14 @@ for (const mode of ['healthy', 'miss', 'intl-error', 'timeout'] as const) {
       if (url.pathname.startsWith('/get/')) {
         const key = decodeURIComponent(url.pathname.slice(5));
         reads.push(key);
-        if ([FAA_KEY, INTL_KEY].includes(key)) {
+        if ([FAA_KEY, NOTAM_KEY].includes(key)) {
           if (mode === 'timeout') {
             await delay(5_000, undefined, { signal: init?.signal ?? undefined });
             assert.fail('cache read must abort before five seconds');
           }
-          if (mode === 'intl-error' && key === INTL_KEY) return Response.json({ error: 'fixture read failure' }, { status: 503 });
+          if (mode === 'notam-error' && key === NOTAM_KEY) return Response.json({ error: 'fixture read failure' }, { status: 503 });
           if (mode === 'miss') return Response.json({ result: null });
-          return Response.json({ result: JSON.stringify(key === FAA_KEY ? faa : intl) });
+          return Response.json({ result: JSON.stringify(key === FAA_KEY ? faa : notam) });
         }
         return Response.json({ result: null });
       }
@@ -71,9 +70,9 @@ for (const mode of ['healthy', 'miss', 'intl-error', 'timeout'] as const) {
     const rpc = await listAirportDelays({
       request: new Request('https://worldmonitor.app/api/aviation/v1/list-airport-delays'),
     } as never, {} as never);
-    assert.ok(reads.includes(FAA_KEY) && reads.includes(INTL_KEY));
+    assert.ok(reads.includes(FAA_KEY) && reads.includes(NOTAM_KEY));
     const severity = (iata: string) => rpc.alerts.find(a => a.iata === iata)?.severity;
-    assert.equal(severity('JFK'), mode === 'healthy' || mode === 'intl-error' ? 'FLIGHT_DELAY_SEVERITY_NORMAL' : 'FLIGHT_DELAY_SEVERITY_UNKNOWN');
+    assert.equal(severity('JFK'), mode === 'healthy' || mode === 'notam-error' ? 'FLIGHT_DELAY_SEVERITY_NORMAL' : 'FLIGHT_DELAY_SEVERITY_UNKNOWN');
     assert.equal(severity('LHR'), mode === 'healthy' ? 'FLIGHT_DELAY_SEVERITY_NORMAL' : 'FLIGHT_DELAY_SEVERITY_UNKNOWN');
 
     const response = await bootstrap(new Request('https://api.worldmonitor.app/api/bootstrap?keys=flightDelays&public=1'));

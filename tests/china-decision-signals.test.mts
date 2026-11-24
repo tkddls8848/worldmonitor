@@ -371,8 +371,8 @@ describe('China decision-signal final composition (#5580)', () => {
             reason: 'freshness_budget_exceeded',
           },
           {
-            family: 'aviation',
-            seriesId: 'aviation_hub_disruption_balance',
+            family: 'energy',
+            seriesId: 'china_energy_demand_change',
             reason: 'marked_stale',
           },
         ],
@@ -386,7 +386,7 @@ describe('China decision-signal final composition (#5580)', () => {
     assert.equal(nowcast?.state, 'unavailable');
     assert.equal(nowcast?.metadata.unavailableCause, 'insufficient_data');
     assert.equal(Object.hasOwn(nowcast?.metadata ?? {}, 'rejectedItemCount'), false);
-    assert.deepEqual(nowcast?.metadata.missingInputFamilies, ['maritime', 'aviation']);
+    assert.deepEqual(nowcast?.metadata.missingInputFamilies, ['maritime', 'energy']);
     assert.deepEqual(nowcast?.metadata.missingInputs, [
       {
         family: 'maritime',
@@ -394,14 +394,14 @@ describe('China decision-signal final composition (#5580)', () => {
         reason: 'freshness_budget_exceeded',
       },
       {
-        family: 'aviation',
-        seriesId: 'aviation_hub_disruption_balance',
+        family: 'energy',
+        seriesId: 'china_energy_demand_change',
         reason: 'marked_stale',
       },
     ]);
     assert.match(nowcast?.reason ?? '', /^insufficient_data:/);
     assert.match(nowcast?.reason ?? '', /maritime.*freshness_budget_exceeded/);
-    assert.match(nowcast?.reason ?? '', /aviation.*marked_stale/);
+    assert.match(nowcast?.reason ?? '', /energy.*marked_stale/);
   });
 
   it('bounds nowcast missing inputs and preserves unavailable diagnostics through metadata compaction', () => {

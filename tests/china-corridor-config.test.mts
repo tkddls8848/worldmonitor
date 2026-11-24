@@ -24,7 +24,7 @@ describe('China logistics corridor configuration (#5578)', () => {
       assert.ok(corridor.nodes.some((node) => node.type === 'industrial'));
       assert.deepEqual(
         [...corridor.signalFamilies].sort(),
-        ['aviation', 'hazard', 'port', 'power_energy', 'strategic_industry', 'trade'],
+        ['hazard', 'port', 'power_energy', 'strategic_industry', 'trade'],
       );
       for (const node of corridor.nodes) {
         assert.match(node.id, /^china-node:/);
@@ -47,18 +47,11 @@ describe('China logistics corridor configuration (#5578)', () => {
     assert.deepEqual(findCorridorsForSourceSelector('port', 'port474'), [
       'china-greater-bay-area',
     ]);
-    assert.deepEqual(findCorridorsForSourceSelector('aviation', 'PVG'), [
-      'china-yangtze-river-delta',
-    ]);
-    assert.deepEqual(findCorridorsForSourceSelector('aviation', 'CTU'), [
-      'china-western-land-sea-corridor',
-    ]);
     assert.deepEqual(findCorridorsForSourceSelector('port', 'port1071'), [
       'china-western-land-sea-corridor',
     ]);
 
     assert.deepEqual(findCorridorsForSourceSelector('port', 'Shanghai'), []);
-    assert.deepEqual(findCorridorsForSourceSelector('aviation', 'Hong Kong International'), []);
     assert.deepEqual(findCorridorsForSourceSelector('port', 'port-does-not-exist'), []);
   });
 

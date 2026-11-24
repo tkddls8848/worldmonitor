@@ -357,7 +357,7 @@ npx @modelcontextprotocol/inspector https://worldmonitor.app/mcp
 | 工具 | 描述 |
 |------|-------------|
 | `get_natural_disasters` | USGS 地震、NASA FIRMS 野火、灾害事件。 |
-| `get_climate_data` | 相对 WMO 常态的气温/降水异常、GDACS/FIRMS 警报、Mauna Loa CO2、OpenAQ PM2.5、海冰、海洋热含量。 |
+| `get_climate_data` | 相对 WMO 常态的气温/降水异常、GDACS/FIRMS 警报、Mauna Loa CO2、海冰、海洋热含量。 |
 | `get_reservoir_levels` | 50 座战略水库和湖泊的 ICESat-2 激光雷达水位(相对 EGM2008 大地水准面的米数);状态、变化窗口、季节距平,可选 36 个月序列。 |
 | `get_radiation_data` | 全球辐射监测站读数 + 异常标记。 |
 | `get_research_signals` | 来自精选研究源的新兴技术事件。 |
@@ -366,7 +366,7 @@ npx @modelcontextprotocol/inspector https://worldmonitor.app/mcp
 
 | 工具 | 描述 |
 |------|-------------|
-| `get_health_signals` | 活跃疾病暴发（WHO/ECDC 等）和全球空气质量站点读数（OpenAQ/WAQI PM2.5）。用于健康风险筛查。 |
+| `get_health_signals` | 活跃疾病暴发（WHO/ECDC 等）。用于健康风险筛查。 |
 
 ### 人道主义与流离失所
 
@@ -411,7 +411,7 @@ npx @modelcontextprotocol/inspector https://worldmonitor.app/mcp
 |----------|---------------------|
 | `get_market_data` | `GET /api/market/v1/get-fear-greed-index`<br/>`GET /api/market/v1/get-physical-divergence-index`<br/>`GET /api/market/v1/get-physical-premiums`<br/>`GET /api/market/v1/get-sector-summary`<br/>`GET /api/market/v1/list-commodity-quotes`<br/>`GET /api/market/v1/list-crypto-quotes`<br/>`GET /api/market/v1/list-etf-flows`<br/>`GET /api/market/v1/list-gulf-quotes`<br/>`GET /api/market/v1/list-market-quotes` |
 | `get_economic_data` | `GET /api/economic/v1/get-ecb-fx-rates`<br/>`GET /api/economic/v1/get-economic-calendar`<br/>`GET /api/economic/v1/get-eu-yield-curve`<br/>`GET /api/economic/v1/list-fuel-prices`<br/>`GET /api/market/v1/get-cot-positioning`<br/>`GET /api/market/v1/list-earnings-calendar` |
-| `get_price_and_debt_indicators` | `GET /api/economic/v1/get-fao-food-price-index`<br/>`GET /api/economic/v1/get-national-debt`<br/>`GET /api/economic/v1/list-bigmac-prices` |
+| `get_price_and_debt_indicators` | `GET /api/economic/v1/get-fao-food-price-index`<br/>`GET /api/economic/v1/get-national-debt` |
 | `get_wto_trade_flows` | `GET /api/trade/v1/get-trade-flows` |
 | `get_no2_activity` | `GET /api/economic/v1/get-no2-activity` |
 | `get_tariff_averages` | `GET /api/trade/v1/get-tariff-trends` |
@@ -422,9 +422,9 @@ npx @modelcontextprotocol/inspector https://worldmonitor.app/mcp
 | `get_supply_chain_data` | `GET /api/supply-chain/v1/get-shipping-stress`<br/>`GET /api/trade/v1/get-customs-revenue` |
 | `get_chokepoint_status` | `GET /api/intelligence/v1/get-country-port-activity`<br/>`GET /api/supply-chain/v1/get-chokepoint-status` |
 | `get_five_factor_scorecard` | `GET /api/scorecard/v1/get-five-factor-scorecard`<br/>`GET /api/scorecard/v1/get-bloc-scorecard`<br/>`GET /api/scorecard/v1/list-five-factor-scorecards` |
-| `get_climate_data` | `GET /api/climate/v1/get-co2-monitoring`<br/>`GET /api/climate/v1/get-ocean-ice-data`<br/>`GET /api/climate/v1/list-air-quality-data`<br/>`GET /api/climate/v1/list-climate-anomalies`<br/>`GET /api/climate/v1/list-climate-disasters`<br/>`GET /api/climate/v1/list-climate-news` |
+| `get_climate_data` | `GET /api/climate/v1/get-co2-monitoring`<br/>`GET /api/climate/v1/get-ocean-ice-data`<br/>`GET /api/climate/v1/list-climate-anomalies`<br/>`GET /api/climate/v1/list-climate-disasters`<br/>`GET /api/climate/v1/list-climate-news` |
 | `get_reservoir_levels` | `GET /api/climate/v1/list-reservoir-levels` |
-| `get_health_signals` | `GET /api/health/v1/list-air-quality-alerts`<br/>`GET /api/health/v1/list-disease-outbreaks` |
+| `get_health_signals` | `GET /api/health/v1/list-disease-outbreaks` |
 | `get_conflict_events` | `GET /api/conflict/v1/list-iran-events`<br/>`GET /api/conflict/v1/list-ucdp-events`<br/>`GET /api/unrest/v1/list-unrest-events` |
 | `get_news_intelligence` | `GET /api/intelligence/v1/list-cross-source-signals`<br/>`GET /api/intelligence/v1/search-gdelt-documents` |
 | `get_country_risk` | `GET /api/intelligence/v1/get-country-risk` |
@@ -466,7 +466,7 @@ npx @modelcontextprotocol/inspector https://worldmonitor.app/mcp
 
 - **`mutating`** —— 写入、队列、webhook、缓存刷新或持久化副作用。示例：`GET /api/aviation/v1/list-airport-delays` 有意仅限 REST，因为其 GET handler 会刷新/持久化机场延误缓存状态；`get_aviation_status` 转而暴露已填充的缓存支撑快照。
 - **`llm-passthrough`** —— 每次调用直接进行的 LLM 工作，在通过 MCP 暴露之前需要专门设计的成本/威胁模型。
-- **`fetch-on-miss`** —— 在缓存为冷时可能调用付费或受限流的上游，或接受不适合缓存打包的高基数标识符。排除原因必须包含一个强制的次要信号：`high-cardinality-input`、`paid-upstream` 或 `llm-cost`。示例：`GET /api/conflict/v1/list-acled-events`、`GET /api/infrastructure/v1/list-service-statuses`、`GET /api/supply-chain/v1/get-critical-minerals` 以及 `GET /api/aviation/v1/get-flight-status`。
+- **`fetch-on-miss`** —— 在缓存为冷时可能调用付费或受限流的上游，或接受不适合缓存打包的高基数标识符。排除原因必须包含一个强制的次要信号：`high-cardinality-input`、`paid-upstream` 或 `llm-cost`。示例：`GET /api/conflict/v1/list-acled-events`、`GET /api/infrastructure/v1/list-service-statuses`、`GET /api/supply-chain/v1/get-critical-minerals`。
 - **`admin`** —— 位于明确管理员边界之后的仅限内部操作，例如管理员 key、仅限内部的中间件或仅限 cron 的路径。
 - **`manual-mapping`** —— 参数化的缓存 key 或内联的 Redis/Convex handler 需要人工分诊。示例：`GET /api/research/v1/list-arxiv-papers`、`GET /api/research/v1/list-trending-repos` 以及 `GET /api/research/v1/list-hackernews-items`；`get_research_signals` 仅声明 `GET /api/research/v1/list-tech-events`。
 - **`deferred-to-future-tool`** —— 其缓存 key 尚未被某个 MCP bundle 暴露的纯读取。示例：`GET /api/cyber/v1/list-cyber-threats` 计划用于未来的扩展领域工具，而非由如今缓存支撑的 `get_cyber_threats` 认领。

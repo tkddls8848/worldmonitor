@@ -1,6 +1,7 @@
+import { pathToFileURL } from 'node:url';
 // FAA ground stops and closures must reach the notification queue. On the
 // 2026-11-13 national ground stop the seeder published FAA alerts every tick
-// but only AviationStack alerts were ever dispatched, so no US airport alert
+// but FAA alerts were not dispatched, so no US airport alert
 // was queued during the stop. These tests run the real seeder against a fixture
 // Redis and a fixture FAA airport status feed.
 import assert from 'node:assert/strict';
@@ -83,16 +84,13 @@ function makeRunner() {
   writeFileSync(statePath, '[]');
   writeFileSync(envFile, '');
   const run = (feed, extraEnv = {}) => {
-    const result = spawnSync(process.execPath, ['--import', preloadPath, 'seed-aviation.mjs'], {
+    const result = spawnSync(process.execPath, ['--import', pathToFileURL(preloadPath).href, 'seed-aviation.mjs'], {
       cwd: join(root, 'scripts'),
       env: {
         PATH: process.env.PATH,
         UPSTASH_REDIS_REST_URL: 'https://seed-test.invalid',
         UPSTASH_REDIS_REST_TOKEN: 'fixture-token',
         ICAO_API_KEY: '',
-        AVIATIONSTACK_API: '',
-        AVIATIONSTACK_MONTHLY_BUDGET: '0',
-        AVIATIONSTACK_MIN_REFRESH_MIN: '0',
         WM_SEED_RETRY_DELAY_MS: '0',
         WM_SEED_ENV_FILE: envFile,
         TEST_STATE_PATH: statePath,
@@ -104,8 +102,7 @@ function makeRunner() {
     });
     assert.ifError(result.error);
     assert.equal(result.signal, null, result.stderr);
-    // No AVIATIONSTACK_API key, so the intl stage ends with its documented exit 75.
-    assert.equal(result.status, 75, result.stdout + result.stderr);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
     assert.match(result.stdout, /\[FAA\] wrote \d+ alerts/);
     const read = (prefix) => {
       const line = result.stdout.split('\n').find(l => l.startsWith(prefix));

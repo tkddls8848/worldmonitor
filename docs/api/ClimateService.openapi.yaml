@@ -241,51 +241,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Error'
-    /api/climate/v1/list-air-quality-data:
-        get:
-            tags:
-                - ClimateService
-            summary: ListAirQualityData
-            description: ListAirQualityData returns PM2.5 station readings from the last two hours from OpenAQ, plus WAQI when configured, with a US EPA AQI and risk level each.
-            operationId: ListAirQualityData
-            parameters:
-                - name: jmespath
-                  in: query
-                  description: |-
-                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
-                  required: false
-                  example: "keys(@)"
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: Successful response
-                    content:
-                        application/json:
-                            example:
-                                "fetchedAt": 1717200000000
-                                "stations":
-                                    - "aqi": 1
-                                      "city": "example"
-                                      "countryCode": "US"
-                                      "lat": 40.7128
-                                      "lng": -74.006
-                            schema:
-                                $ref: '#/components/schemas/ListAirQualityDataResponse'
-                "400":
-                    description: Validation error
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/ValidationError'
-                                    - $ref: '#/components/schemas/JmespathProjectionError'
-                default:
-                    description: Error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Error'
     /api/climate/v1/list-reservoir-levels:
         get:
             tags:
@@ -717,48 +672,6 @@ components:
                 anomalyMkm2:
                     type: number
                     format: double
-        ListAirQualityDataRequest:
-            type: object
-        ListAirQualityDataResponse:
-            type: object
-            properties:
-                stations:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/AirQualityStation'
-                fetchedAt:
-                    type: integer
-                    format: int64
-                    description: 'Warning: Values > 2^53 may lose precision in JavaScript'
-        AirQualityStation:
-            type: object
-            properties:
-                city:
-                    type: string
-                countryCode:
-                    type: string
-                lat:
-                    type: number
-                    format: double
-                lng:
-                    type: number
-                    format: double
-                pm25:
-                    type: number
-                    format: double
-                aqi:
-                    type: integer
-                    format: int32
-                riskLevel:
-                    type: string
-                pollutant:
-                    type: string
-                measuredAt:
-                    type: integer
-                    format: int64
-                    description: 'Warning: Values > 2^53 may lose precision in JavaScript'
-                source:
-                    type: string
         ListReservoirLevelsRequest:
             type: object
         ListReservoirLevelsResponse:

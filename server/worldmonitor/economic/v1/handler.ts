@@ -10,7 +10,6 @@ import { getBisPolicyRates } from './get-bis-policy-rates';
 import { getBisExchangeRates } from './get-bis-exchange-rates';
 import { getBisCredit } from './get-bis-credit';
 import { listGroceryBasketPrices } from './list-grocery-basket-prices';
-import { listBigMacPrices } from './list-bigmac-prices';
 import { getNationalDebt } from './get-national-debt';
 import { listFuelPrices } from './list-fuel-prices';
 import { getBlsSeries } from './get-bls-series';
@@ -50,7 +49,6 @@ export const economicHandler: EconomicServiceHandler = {
   getBisExchangeRates,
   getBisCredit,
   listGroceryBasketPrices,
-  listBigMacPrices,
   getNationalDebt,
   listFuelPrices,
   getBlsSeries,

@@ -24,7 +24,7 @@ Some endpoints explicitly reject anonymous browser session cookies and require a
 - `/api/intelligence/v1/classify-event`, `/api/intelligence/v1/search-intel-history`
 - `/api/intelligence/v1/get-country-intel-brief`, `/api/intelligence/v1/get-country-coverage` — country reads whose cost is live outbound fetches, unlike the cheap cached `get-country-risk`
 - `/api/scenario/v1/run-scenario`, `/api/supply-chain/v1/get-route-impact`
-- `/api/aviation/v1/get-flight-status`, `/api/trade/v1/list-comtrade-flows`
+- `/api/trade/v1/list-comtrade-flows`
 - Vendor / partner endpoints
 
 For these, you **must** send an API key; `X-WorldMonitor-Key` is the canonical header. An anonymous `wms_` session cookie on one of these routes is refused with `Pro authentication required`.

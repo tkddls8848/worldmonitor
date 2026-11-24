@@ -677,7 +677,6 @@ function stringExample(name, schema = {}, context = {}) {
   // The ODP Patent File Wrapper source cannot populate this compatibility
   // field. Keep the generated response example truthful instead of emitting
   // the generic non-empty string placeholder.
-  if (key === 'abstract' && (where.includes('listdefensepatents') || where.includes('list-defense-patents'))) return '';
   // Intel-history scope: `domain` collides with web-domain params on other
   // ops, so anchor on the exact accepted-values pattern instead of the name.
   // If the contract's pattern ever changes this falls through to the generic

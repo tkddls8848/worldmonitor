@@ -1,4 +1,4 @@
-import { fetchFlightStatus, fetchAirportOpsSummary, fetchFlightPrices, fetchAviationNews, fetchGoogleFlights } from '@/services/aviation';
+import { fetchFlightDelays, fetchFlightPrices, fetchAviationNews, fetchGoogleFlights } from '@/services/aviation';
 import { safeStorageSet } from '@/utils/safe-storage';
 import { escapeHtml, sanitizeUrl } from '@/utils/sanitize';
 import { MONITORED_AIRPORTS } from '@/config/airports';
@@ -11,7 +11,6 @@ import { declareOverlay } from '@/utils/open-modal';
 
 type Intent =
     | { type: 'OPS'; airports: string[] }
-    | { type: 'FLIGHT_STATUS'; flightNumber: string; origin?: string }
     | { type: 'PRICE_WATCH'; origin: string; destination: string; date?: string }
     | { type: 'NEWS_BRIEF'; entities: string[] }
     | { type: 'TRACK'; callsign?: string; icao24?: string }
@@ -82,15 +81,6 @@ function parseIntent(raw: string): Intent {
         if (airports.length) return { type: 'OPS', airports };
     }
 
-    // FLIGHT <IATA-FLIGHT> or <IATA-FLIGHT> [STATUS|FLIGHT|FLT]
-    if (/^(FLIGHT|FLT)\s+[A-Z]{2,3}\d{1,4}/.test(q) || /[A-Z]{2,3}\d{1,4}\s+(STATUS|FLIGHT|FLT)/.test(q) || /^STATUS\s+[A-Z]{2,3}\d{1,4}/.test(q)) {
-        const match = q.match(/[A-Z]{2,3}\d{1,4}/);
-        if (match) {
-            const origin = words.find(w => /^[A-Z]{3}$/.test(w) && w !== match[0]);
-            return { type: 'FLIGHT_STATUS', flightNumber: match[0], origin };
-        }
-    }
-
     // FLY / FLIGHTS / FARES / BOOK <ORG> <DST>  (supports city names)
     if (words.some(w => /^(FLY|FLIGHTS?|FARES?|BOOK)$/.test(w))) {
         const nonKeywords = words.filter(w => !/^(FLY|FLIGHTS?|FARES?|BOOK|TO|FROM|ON|FOR)$/.test(w) && !/^\d{4}-\d{2}-\d{2}$/.test(w));
@@ -123,7 +113,7 @@ type CommandResult = { html: string; error?: boolean };
 
 async function executeIntent(intent: Intent): Promise<CommandResult> {
     if (intent.type === 'OPS') {
-        const summaries = await fetchAirportOpsSummary(intent.airports);
+        const summaries = (await fetchFlightDelays()).filter(airport => intent.airports.includes(airport.iata));
         if (!summaries.length) return { html: '<div class="cmd-empty">No ops data found.</div>' };
         const rows = summaries.map(s => {
             // #3707: 'unknown' = no telemetry. Render desaturated grey + 'NO DATA'
@@ -142,36 +132,10 @@ async function executeIntent(intent: Intent): Promise<CommandResult> {
         <strong>${escapeHtml(s.iata)}</strong>
         <span style="color:${sevColor}">${sevLabel}</span>
         ${suffix}
-        ${s.closureStatus ? '<span style="color:#ef4444">CLOSED</span>' : ''}
+        ${s.delayType === 'closure' ? '<span style="color:#ef4444">CLOSED</span>' : ''}
       </div>`;
         }).join('');
         return { html: `<div class="cmd-section"><strong>✈️ Ops Snapshot</strong>${rows}</div>` };
-    }
-
-    if (intent.type === 'FLIGHT_STATUS') {
-        const flights = await fetchFlightStatus(intent.flightNumber, undefined, intent.origin);
-        if (!flights.length) return { html: `<div class="cmd-empty">No results for ${escapeHtml(intent.flightNumber)}.</div>` };
-        const f = flights[0]!;
-        const depStr = f.estimatedDeparture
-            ? `Dep ${f.estimatedDeparture.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}`
-            : '';
-        const arrStr = f.estimatedArrival
-            ? ` · Arr ${f.estimatedArrival.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}`
-            : '';
-        const carrierLabel = f.carrier.name || f.carrier.iata;
-        const gateLine = (f.gate || f.terminal)
-            ? `<div style="color:#9ca3af;font-size:calc(11px * var(--wm-panel-effective-scale, 1))">Gate ${escapeHtml(f.gate || '—')}${f.terminal ? ` · Terminal ${escapeHtml(f.terminal)}` : ''}</div>`
-            : '';
-        const acLine = f.aircraftType
-            ? `<div style="color:#9ca3af;font-size:calc(11px * var(--wm-panel-effective-scale, 1))">${escapeHtml(f.aircraftType)}</div>`
-            : '';
-        return {
-            html: `<div class="cmd-section">
-      <strong>✈️ ${escapeHtml(f.flightNumber)}</strong>${carrierLabel ? ` <span style="color:#9ca3af">(${escapeHtml(carrierLabel)})</span>` : ''}
-      <div>${escapeHtml(f.origin.iata)} → ${escapeHtml(f.destination.iata)} · ${f.status}${depStr ? ` · ${depStr}` : ''}${arrStr}</div>
-      ${acLine}${gateLine}
-      ${f.delayMinutes > 0 ? `<div style="color:#f97316">+${f.delayMinutes}m delay</div>` : ''}
-    </div>` };
     }
 
     if (intent.type === 'PRICE_WATCH') {
@@ -282,7 +246,7 @@ async function executeIntent(intent: Intent): Promise<CommandResult> {
     }
 
     return {
-        html: `<div class="cmd-empty">Try: <code>ops Dubai</code>, <code>flight EK3</code>, <code>fly London Dubai</code>, <code>brief TK</code></div>`,
+        html: `<div class="cmd-empty">Try: <code>ops JFK</code>, <code>track UAE3</code>, <code>fly London Dubai</code>, <code>brief TK</code></div>`,
         error: true,
     };
 }
@@ -330,7 +294,7 @@ export class AviationCommandBar {
           <span>✈️ Aviation Command</span>
           <button id="aviation-cmd-close" aria-label="Close">×</button>
         </div>
-        <input id="aviation-cmd-input" type="text" placeholder="ops Dubai  ·  flight EK3  ·  fly London Dubai  ·  brief" aria-label="Aviation command" autocomplete="off" spellcheck="false">
+        <input id="aviation-cmd-input" type="text" placeholder="ops JFK  ·  track UAE3  ·  fly London Dubai  ·  brief" aria-label="Aviation command" autocomplete="off" spellcheck="false">
         <div id="aviation-cmd-suggestions"></div>
         <div id="aviation-cmd-result"></div>
         <div id="aviation-cmd-history-list"></div>
@@ -430,7 +394,6 @@ export class AviationCommandBar {
         if (!el) return;
         const suggestions = [
             'ops IST', 'ops Dubai', 'ops London', 'ops LHR FRA', 'ops Lisbon',
-            'flight TK1', 'flight EK3', 'ME426 status',
             'fly IST LHR', 'fly Dubai London', 'fly LHR to DXB', 'fly BEY DXB',
             'brief', 'brief TK',
         ].filter(s => s.toLowerCase().startsWith(val.toLowerCase()) && s.toLowerCase() !== val.toLowerCase());

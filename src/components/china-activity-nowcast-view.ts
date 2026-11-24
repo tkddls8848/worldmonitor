@@ -24,7 +24,6 @@ const DIRECTION_LABELS: Record<ChinaActivityDirection, string> = {
 const FAMILY_LABELS: Record<ChinaActivityProxyFamily, string> = {
   freight: 'Freight',
   maritime: 'Maritime',
-  aviation: 'Aviation',
   energy: 'Energy',
   commodity: 'Commodity',
   corridor: 'Corridor',

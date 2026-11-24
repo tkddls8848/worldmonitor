@@ -35,11 +35,11 @@ test('getProviderCounters: returns a snapshot, not a reference', () => {
 });
 
 test('the counter set carries no provider without an edge incrementer', () => {
-  // #8093 deleted the edge AviationStack collector; a counter nothing
+  // A counter nothing
   // increments reads as a permanently healthy zero, which is worse than no
   // counter at all.
   for (const key of Object.keys(getProviderCounters())) {
-    assert.doesNotMatch(key, /^aviationStack|^notam/, `${key} has no incrementer left`);
+    assert.doesNotMatch(key, /^notam/, `${key} has no incrementer left`);
   }
 });
 

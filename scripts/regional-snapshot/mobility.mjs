@@ -1,9 +1,9 @@
 // @ts-check
+import { AIRPORTS } from '../seed-aviation.mjs';
 // Mobility v1 adapter. Replaces the Phase 0 empty stub with a real
 // MobilityState built from existing Redis inputs:
 //
 //   aviation:delays:faa:v1         — US airport delays (FAA ASWS)
-//   aviation:delays:intl:v3        — ~51 non-US airports (AviationStack)
 //   aviation:notam:closures:v2     — global ICAO NOTAM closures
 //   intelligence:gpsjam:v2         — global GPS jamming hexes → airspace
 //   military:flights:v1            — global military ADSB → reroute proxy
@@ -27,8 +27,10 @@
 
 // ── Region classification helpers ────────────────────────────────────────────
 
+const notamAirports = new Map(AIRPORTS.map(airport => [airport.icao, airport]));
+
 /**
- * Split AviationStack/FAA AirportRegion enum by country into snapshot regions.
+ * Split the airport enum by country into snapshot regions.
  * The airport registry uses `americas / europe / apac / mena / africa`; the
  * snapshot uses 7 finer regions. Americas splits by country (USA/CA/MX →
  * north-america, rest → latam) and APAC splits by country (IN/PK/BD/LK/AF →
@@ -255,11 +257,7 @@ function severityRank(severity) {
  */
 export function buildAirports(regionId, sources) {
   const faaAlerts = sources?.['aviation:delays:faa:v1']?.alerts;
-  const intlAlerts = sources?.['aviation:delays:intl:v3']?.alerts;
-  const allAlerts = [
-    ...(Array.isArray(faaAlerts) ? faaAlerts : []),
-    ...(Array.isArray(intlAlerts) ? intlAlerts : []),
-  ];
+  const allAlerts = Array.isArray(faaAlerts) ? faaAlerts : [];
 
   /** @type {import('../../shared/regions.types.js').AirportNodeStatus[]} */
   const out = [];
@@ -300,24 +298,10 @@ export function buildNotamClosures(regionId, sources) {
 
   if (candidates.size === 0) return [];
 
-  // Determine which ICAOs belong to this region by cross-referencing the
-  // existing airport alert stream (both FAA + intl carry country/region).
-  const faaAlerts = sources?.['aviation:delays:faa:v1']?.alerts;
-  const intlAlerts = sources?.['aviation:delays:intl:v3']?.alerts;
-  /** @type {Record<string, string>} */
-  const icaoToRegion = {};
-  for (const a of Array.isArray(faaAlerts) ? faaAlerts : []) {
-    const r = airportToSnapshotRegion(a);
-    if (a?.icao && r) icaoToRegion[String(a.icao)] = r;
-  }
-  for (const a of Array.isArray(intlAlerts) ? intlAlerts : []) {
-    const r = airportToSnapshotRegion(a);
-    if (a?.icao && r) icaoToRegion[String(a.icao)] = r;
-  }
-
   const out = [];
   for (const icao of candidates) {
-    if (icaoToRegion[icao] !== regionId) continue;
+    const airport = notamAirports.get(icao);
+    if (!airport || airportToSnapshotRegion(airport) !== regionId) continue;
     const reason = String(reasons[icao] ?? '').slice(0, 200);
     if (reason.length === 0) continue;
     out.push(`${icao}: ${reason}`);

@@ -25,7 +25,7 @@ export const STANDALONE_INTERVAL_MIN = {
   'fuel-prices': 1440, 'electricity-prices': 360, 'ember-electricity': 1440, 'energy-spine': 1440,
   'energy-intelligence': 240, 'chokepoint-flows': 240, 'hormuz': 720, 'supply-chain-trade': 360,
   'trade-flows': 960, 'comtrade-bilateral-hs4': 1440, 'hs2-chokepoint-exposure': 1440,
-  'bigmac': 1440, 'grocery-basket': 1440, 'sanctions-pressure': 240, 'regulatory-actions': 120,
+  'grocery-basket': 1440, 'sanctions-pressure': 240, 'regulatory-actions': 120,
   'gdelt-intel': 15, 'gdelt-bulk-materializer': 60, 'security-advisories': 30, 'ukmto-incidents': 20,
   'thermal-escalation': 120, 'military-cii': 15, 'military-maritime-news': 60, 'infra': 15,
   'aviation': 30, 'notam-nms': 30, 'ioda-outages': 30, 'fire-detections': 60, 'radiation-watch': 15,

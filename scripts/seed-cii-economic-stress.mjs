@@ -15,14 +15,9 @@ export const INPUT_KEYS = Object.freeze({
   currency: 'economic:fx:yoy:v1',
   inflation: 'economic:world-cpi:imf:v1',
   eurostat: 'economic:world-cpi:eurostat:v1',
-  japan: 'economic:world-cpi:estat:v1',
   usCpi: 'economic:us-cpi:v1',
   yield: 'economic:yield-curve:oecd-lt:v1',
 });
-// Mirrors a deployment may not run: e-Stat needs ESTAT_APPID. Without it the
-// mirror is empty and Japan's inflation member comes from the IMF series, as
-// for any country the mirror does not carry; the other inputs stay required.
-export const OPTIONAL_INPUTS = Object.freeze(new Set(['japan']));
 const DAY = 86400000;
 const INPUT_COUNTRY_CODES = new Set(Object.values(ISO3_TO_ISO2));
 
@@ -70,7 +65,7 @@ function currencyMember(raw, code, nowMs) {
 }
 
 function inflationMember(inputs, code, nowMs) {
-  const candidates = ['inflation', 'eurostat', 'japan'].flatMap(id => {
+  const candidates = ['inflation', 'eurostat'].flatMap(id => {
     const entry = inputs[id].countries[code];
     return entry ? [{ ...entry, sourceKey: INPUT_KEYS[id] }] : [];
   });
@@ -129,7 +124,7 @@ export function buildEconomicStress(inputs, nowMs = Date.now()) {
     ...ECONOMIC_COUNTRIES,
     ...inputs.currency.rates.map(row => row?.countryCode),
     ...dailyOnlyRows(inputs.currency).map(row => row?.countryCode),
-    ...['inflation', 'eurostat', 'japan', 'yield'].flatMap(id => Object.keys(inputs[id].countries)),
+    ...['inflation', 'eurostat', 'yield'].flatMap(id => Object.keys(inputs[id].countries)),
   ])].filter(code => INPUT_COUNTRY_CODES.has(code)).sort();
   const countries = Object.fromEntries(codes.map(code => [code, economicCountry(inputs, code, nowMs)]));
   return { schemaVersion: 1, generatedAt: nowMs, countries, measuredCount: Object.values(countries).filter(x => x.measured).length };
@@ -148,8 +143,7 @@ async function activate() {
 }
 export async function seedEconomicStress({ read = readInput, publish = writeExtraKeyWithMetaAtomically, activateKey = activate, dryRun = false, nowMs = Date.now() } = {}) {
   const inputs = Object.fromEntries(await Promise.all(Object.entries(INPUT_KEYS).map(async ([id, key]) => {
-    const raw = await read(key);
-    return [id, raw == null && OPTIONAL_INPUTS.has(id) ? { countries: {} } : raw];
+    return [id, await read(key)];
   })));
   const payload = buildEconomicStress(inputs, nowMs);
   if (!ECONOMIC_COUNTRIES.every(code => Object.hasOwn(payload.countries, code))) throw new Error('Economic country list mismatch');

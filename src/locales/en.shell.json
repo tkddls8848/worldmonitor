@@ -174,11 +174,7 @@
     "gulfEconomies": "Gulf Economies",
     "groceryBasket": "Grocery Index",
     "groceryItem": "Item",
-    "bigmac": "Real Big Mac Index",
     "fx": "Foreign exchange rates",
-    "bigmacDesc": "Big Mac prices across Middle East countries (Big Mac Index)",
-    "bigmacWow": "Week-over-week",
-    "bigmacCountry": "Country",
     "faoFoodPriceIndex": "Food prices",
     "fuelPrices": "Fuel Prices",
     "fuelPricesDesc": "Retail gasoline and diesel prices across 30+ countries worldwide",
@@ -533,9 +529,6 @@
     "altTokens": {
       "infoTooltip": "<strong>Alt Tokens</strong> Prices and 24h/7d performance for alternative and emerging crypto tokens outside the major-cap tiers."
     },
-    "bigmac": {
-      "infoTooltip": "<strong>Real Big Mac Index</strong> The Economist's Big Mac Index measures purchasing power parity by comparing McDonald's burger prices across countries. Updated when new data is published (quarterly/annually)."
-    },
     "fx": {
       "infoTooltip": "<strong>Currency rates</strong> Stress ranks 45 currencies by their largest decline over 24 months, with the 12-month change. Spot rates use separate US dollar and euro bases. Russian ruble rates are rubles per unit. Sources include Yahoo Finance, the European Central Bank and Bank of Russia."
     },
@@ -581,10 +574,6 @@
     },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>Daily Market Brief</strong> AI-generated daily summary of global market conditions, key macro trends, and sector-level signals — refreshes each trading day."
-    },
-    "defensePatents": {
-      "infoTooltip": "Weekly defense and dual-use patent filings by Raytheon, Lockheed, Huawei, DARPA, and other strategic organizations. Categories: H04B (comms), H01L (semiconductors), F42B (ammunition), G06N (AI), C12N (biotech). Source: USPTO Open Data Portal.",
-      "title": "Research and development signals"
     },
     "defiTokens": {
       "infoTooltip": "<strong>DeFi Tokens</strong> Prices and 24h/7d performance for major decentralized finance protocol tokens — DEXes, lending platforms, and yield protocols."

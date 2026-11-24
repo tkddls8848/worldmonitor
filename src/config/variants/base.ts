@@ -61,7 +61,6 @@ export const REFRESH_INTERVALS = {
   climateNews: 30 * 60 * 1000, // seeded every 30min; match cadence
   intelligence: 15 * 60 * 1000,
   correlationEngine: 5 * 60 * 1000,
-  defensePatents: 24 * 60 * 60 * 1000, // 24h — data is weekly, daily poll is sufficient
   wsbTickers: 10 * 60 * 1000,
   crossSourceSignals: 15 * 60 * 1000,
   hormuzTracker: 60 * 60 * 1000, // 1h — data updates daily

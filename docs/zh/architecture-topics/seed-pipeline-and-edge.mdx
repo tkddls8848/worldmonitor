@@ -22,7 +22,7 @@ Railway 定时服务持续用从外部 API 预计算的数据刷新 Redis 缓存
 | `seed-fire-detections` | NASA FIRMS VIIRS、CWFIS 全国在燃/计划火（CWFIF WFS）与 BC 当前火点（OpenMaps KML） | 10 分钟 | `wildfire:fires:v1` |
 | `seed-climate-anomalies` | Open-Meteo ERA5 | 15 分钟 | `climate:anomalies:v2` |
 | `seed-natural-events` | USGS + GDACS + NASA EONET | 2 小时 | `natural:events:v1` |
-| `seed-airport-delays` | FAA + AviationStack + ICAO NOTAM | 10 分钟 | `aviation:delays-bootstrap:v1` |
+| `seed-aviation` | FAA + ICAO NOTAM | 10 分钟 | `aviation:delays-bootstrap:v2` |
 | `seed-insights` | LLM 世界简报 + 头条（先 Ollama，后 OpenRouter） | 10 分钟 | `news:insights:v1` |
 | `seed-prediction-markets` | Polymarket Gamma API | 10 分钟 | `prediction:markets-bootstrap:v1` |
 | `seed-etf-flows` | Yahoo Finance（IBIT、FBTC、GBTC+） | 15 分钟 | `market:etf-flows:v1` |

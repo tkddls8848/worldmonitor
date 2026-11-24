@@ -273,7 +273,6 @@ const SPLIT_RISK_PANEL_IMPORTS: Array<[string, string, string]> = [
   ['regional-intelligence', '@/components/RegionalIntelligenceBoard', 'RegionalIntelligenceBoard'],
   ['gulf-economies', '@/components/GulfEconomiesPanel', 'GulfEconomiesPanel'],
   ['grocery-basket', '@/components/GroceryBasketPanel', 'GroceryBasketPanel'],
-  ['bigmac', '@/components/BigMacPanel', 'BigMacPanel'],
   ['fuel-prices', '@/components/FuelPricesPanel', 'FuelPricesPanel'],
   ['fao-food-price-index', '@/components/FaoFoodPriceIndexPanel', 'FaoFoodPriceIndexPanel'],
   ['climate-news', '@/components/ClimateNewsPanel', 'ClimateNewsPanel'],

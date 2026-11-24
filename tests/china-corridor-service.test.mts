@@ -315,7 +315,7 @@ describe('China corridor client service', () => {
     const parsed = parseChinaCorridorResponse(openApiExample());
     assert.equal(parsed.corridors.length, 4);
     assert.equal(
-      parsed.corridors.every((corridor) => corridor.conditions.length === 6),
+      parsed.corridors.every((corridor) => corridor.conditions.length === 5),
       true,
     );
   });

@@ -12,7 +12,7 @@ description: "查看 WorldMonitor 中国数据覆盖清单，了解官方宏观�
 
 | 管线 | 来源与方法 | 主要界面 | 更新契约 |
 | --- | --- | --- | --- |
-| 全球中国投影 | BIS、IMF、中国能源脊柱、UN Comtrade reporter 156、CCFI、中国市场指数、中国新闻源、八个审核航空枢纽、HKO 与西太平洋灾害 | 中国国家摘要与 operator 健康 | 按来源更新；每小时评估 |
+| 全球中国投影 | BIS、IMF、中国能源脊柱、UN Comtrade reporter 156、CCFI、中国市场指数、中国新闻源、HKO 与西太平洋灾害 | 中国国家摘要与 operator 健康 | 按来源更新；每小时评估 |
 | 官方宏观 | NBS 与 SAFE 的修订感知观测；PBoC 和 GACC 候选项保持显式不可用 | REST 快照与 Pro MCP `get_economic_data` 的 `china-macro` dataset | 36 小时 |
 | 官方发布日历 | NBS 发布日历，以及由 ChinaMoney/CFETS 公告核验的暂定 PBoC LPR 日期 | 中国宏观 bootstrap 与 Pro MCP `get_economic_data` 的 `china-release-calendar` dataset | 36 小时 |
 | 政策与执法 | CAC、SAMR、MIIT、MOFCOM、NDRC、PBOC 官方文件 | 中国国家简报与 `chinaPolicyEvents` bootstrap | 6 小时 |
@@ -42,7 +42,6 @@ description: "查看 WorldMonitor 中国数据覆盖清单，了解官方宏观�
 | `market.china-corporate-disclosures` | SSE/SZSE 官方企业披露 | `launched` |
 | `market.china-stock-connect` | SSE/SZSE 互联互通北向成交额与融资融券余额 | `launched` |
 | `news.china` | 中国新闻摘要 | `launched` |
-| `aviation.china-hubs` | 八个审核中国航空枢纽 | `launched` |
 | `macro.china-snapshot` | 规范化中国宏观快照 | `launched` |
 | `macro.china-release-calendar` | 中国发布日历 | `launched` |
 | `policy.official-events` | 官方政策与执法事件 | `launched` |

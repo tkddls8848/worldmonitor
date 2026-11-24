@@ -22,8 +22,6 @@ export const CHINA_CORRIDOR_SOURCE_KEYS: Readonly<
   portwatchChina: 'supply_chain:portwatch-ports:v1:CN',
   portwatchHongKong: 'supply_chain:portwatch-ports:v1:HK',
   portwatchMeta: 'seed-meta:supply_chain:portwatch-ports',
-  aviation: 'aviation:delays-bootstrap:v2',
-  aviationMeta: 'seed-meta:aviation:intl',
   westernPacificCyclones: 'natural:western-pacific-cyclones:v1',
   westernPacificCyclonesMeta: 'seed-meta:natural:western-pacific-cyclones',
   hkoWarnings: 'weather:hko-warnings:v1',

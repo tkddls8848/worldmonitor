@@ -1,16 +1,15 @@
 import { getRpcBaseUrl } from '@/services/rpc-client';
-import type { AirportDelayAlert as ProtoAlert, AirportOpsSummary as ProtoOpsSummary, FlightInstance as ProtoFlight, CarrierOpsSummary as ProtoCarrierOps, PositionSample as ProtoPosition, PriceQuote as ProtoPriceQuote, AviationNewsItem as ProtoAviationNews, CabinClass, GoogleFlightResult as ProtoGoogleFlightResult, DatePriceEntry as ProtoDatePriceEntry } from '@/generated/client/worldmonitor/aviation/v1/service_client';
+import type { AirportDelayAlert as ProtoAlert, PositionSample as ProtoPosition, PriceQuote as ProtoPriceQuote, AviationNewsItem as ProtoAviationNews, CabinClass, GoogleFlightResult as ProtoGoogleFlightResult, DatePriceEntry as ProtoDatePriceEntry } from '@/generated/client/worldmonitor/aviation/v1/service_client';
 import { createCircuitBreaker } from '@/utils/circuit-breaker';
 import { ensureHydrated, getHydratedData } from '@/services/bootstrap';
 import { AviationServiceClient } from '@/services/generated-rpc-clients';
 
 // ---- Consumer-friendly display types ----
 
-export type FlightDelaySource = 'faa' | 'eurocontrol' | 'computed' | 'aviationstack' | 'notam' | 'unspecified';
+export type FlightDelaySource = 'faa' | 'eurocontrol' | 'computed' | 'notam' | 'unspecified';
 export type FlightDelaySeverity = 'normal' | 'minor' | 'moderate' | 'major' | 'severe' | 'unknown';
 export type FlightDelayType = 'ground_stop' | 'ground_delay' | 'departure_delay' | 'arrival_delay' | 'general' | 'closure';
 export type AirportRegion = 'americas' | 'europe' | 'apac' | 'mena' | 'africa';
-export type FlightStatus = 'scheduled' | 'boarding' | 'departed' | 'airborne' | 'landed' | 'arrived' | 'cancelled' | 'diverted' | 'unknown';
 
 export interface AirportDelayAlert {
   id: string;
@@ -30,55 +29,6 @@ export interface AirportDelayAlert {
   totalFlights?: number;
   reason?: string;
   source: FlightDelaySource;
-  updatedAt: Date;
-}
-
-export interface AirportOpsSummary {
-  iata: string;
-  icao: string;
-  name: string;
-  delayPct: number;
-  avgDelayMinutes: number;
-  cancellationRate: number;
-  totalFlights: number;
-  closureStatus: boolean;
-  notamFlags: string[];
-  severity: FlightDelaySeverity;
-  topDelayReasons: string[];
-  source: string;
-  updatedAt: Date;
-}
-
-export interface FlightInstance {
-  flightNumber: string;
-  date: string;
-  carrier: { iata: string; name: string };
-  origin: { iata: string; name: string };
-  destination: { iata: string; name: string };
-  scheduledDeparture: Date | null;
-  scheduledArrival: Date | null;
-  estimatedDeparture: Date | null;
-  estimatedArrival: Date | null;
-  status: FlightStatus;
-  delayMinutes: number;
-  cancelled: boolean;
-  diverted: boolean;
-  gate: string;
-  terminal: string;
-  aircraftType: string;
-  source: string;
-}
-
-export interface CarrierOps {
-  carrierIata: string;
-  carrierName: string;
-  airport: string;
-  totalFlights: number;
-  delayedCount: number;
-  cancelledCount: number;
-  avgDelayMinutes: number;
-  delayPct: number;
-  cancellationRate: number;
   updatedAt: Date;
 }
 
@@ -196,24 +146,9 @@ const SOURCE_MAP: Record<string, FlightDelaySource> = {
   FLIGHT_DELAY_SOURCE_FAA: 'faa',
   FLIGHT_DELAY_SOURCE_EUROCONTROL: 'eurocontrol',
   FLIGHT_DELAY_SOURCE_COMPUTED: 'computed',
-  FLIGHT_DELAY_SOURCE_AVIATIONSTACK: 'aviationstack',
   FLIGHT_DELAY_SOURCE_NOTAM: 'notam',
 };
 
-const FLIGHT_STATUS_MAP: Record<string, FlightStatus> = {
-  FLIGHT_INSTANCE_STATUS_SCHEDULED: 'scheduled',
-  FLIGHT_INSTANCE_STATUS_BOARDING: 'boarding',
-  FLIGHT_INSTANCE_STATUS_DEPARTED: 'departed',
-  FLIGHT_INSTANCE_STATUS_AIRBORNE: 'airborne',
-  FLIGHT_INSTANCE_STATUS_LANDED: 'landed',
-  FLIGHT_INSTANCE_STATUS_ARRIVED: 'arrived',
-  FLIGHT_INSTANCE_STATUS_CANCELLED: 'cancelled',
-  FLIGHT_INSTANCE_STATUS_DIVERTED: 'diverted',
-};
-
-// ---- Normalizers ----
-
-function msToDt(ms: number): Date | null { return ms ? new Date(ms) : null; }
 
 function toDisplayAlert(p: ProtoAlert): AirportDelayAlert {
   return {
@@ -229,40 +164,6 @@ function toDisplayAlert(p: ProtoAlert): AirportDelayAlert {
     reason: p.reason || undefined,
     source: SOURCE_MAP[p.source] ?? 'computed',
     updatedAt: new Date(p.updatedAt),
-  };
-}
-
-function toDisplayOps(p: ProtoOpsSummary): AirportOpsSummary {
-  return {
-    iata: p.iata, icao: p.icao, name: p.name,
-    delayPct: p.delayPct, avgDelayMinutes: p.avgDelayMinutes, cancellationRate: p.cancellationRate,
-    totalFlights: p.totalFlights, closureStatus: p.closureStatus,
-    notamFlags: p.notamFlags ?? [], severity: SEVERITY_MAP[p.severity] ?? 'normal',
-    topDelayReasons: p.topDelayReasons ?? [], source: p.source, updatedAt: new Date(p.updatedAt),
-  };
-}
-
-function toDisplayFlight(p: ProtoFlight): FlightInstance {
-  return {
-    flightNumber: p.flightNumber, date: p.date,
-    carrier: { iata: p.operatingCarrier?.iataCode ?? '', name: p.operatingCarrier?.name ?? '' },
-    origin: { iata: p.origin?.iata ?? '', name: p.origin?.name ?? '' },
-    destination: { iata: p.destination?.iata ?? '', name: p.destination?.name ?? '' },
-    scheduledDeparture: msToDt(p.scheduledDeparture), scheduledArrival: msToDt(p.scheduledArrival),
-    estimatedDeparture: msToDt(p.estimatedDeparture || p.scheduledDeparture),
-    estimatedArrival: msToDt(p.estimatedArrival || p.scheduledArrival),
-    status: FLIGHT_STATUS_MAP[p.status ?? ''] ?? 'unknown',
-    delayMinutes: p.delayMinutes, cancelled: p.cancelled, diverted: p.diverted,
-    gate: p.gate, terminal: p.terminal, aircraftType: p.aircraftType, source: p.source,
-  };
-}
-
-function toDisplayCarrierOps(p: ProtoCarrierOps): CarrierOps {
-  return {
-    carrierIata: p.carrier?.iataCode ?? '', carrierName: p.carrier?.name ?? p.carrier?.iataCode ?? '',
-    airport: p.airport, totalFlights: p.totalFlights, delayedCount: p.delayedCount,
-    cancelledCount: p.cancelledCount, avgDelayMinutes: p.avgDelayMinutes,
-    delayPct: p.delayPct, cancellationRate: p.cancellationRate, updatedAt: new Date(p.updatedAt),
   };
 }
 
@@ -345,20 +246,6 @@ const breakerDelays = createCircuitBreaker<AirportDelayAlert[]>({
   })),
 });
 
-const breakerOps = createCircuitBreaker<AirportOpsSummary[]>({
-  name: 'Airport Ops',
-  cacheTtlMs: 6 * 60 * 1000,
-  persistCache: true,
-  revivePersistedData: (summaries) => summaries.map((summary) => ({
-    ...summary,
-    updatedAt: reviveDate(summary.updatedAt),
-  })),
-});
-type AirportFlightBoard = { flights: FlightInstance[]; source: string };
-
-const breakerFlights = createCircuitBreaker<AirportFlightBoard>({ name: 'Airport Flights', cacheTtlMs: 5 * 60 * 1000, persistCache: false });
-const breakerCarrier = createCircuitBreaker<CarrierOps[]>({ name: 'Carrier Ops', cacheTtlMs: 5 * 60 * 1000, persistCache: false });
-const breakerStatus = createCircuitBreaker<FlightInstance[]>({ name: 'Flight Status', cacheTtlMs: 6 * 60 * 1000, persistCache: false });
 const breakerTrack = createCircuitBreaker<PositionSample[]>({ name: 'Track Aircraft', cacheTtlMs: 15 * 1000, persistCache: false });
 const breakerPrices = createCircuitBreaker<{ quotes: PriceQuote[]; isDemoMode: boolean; isIndicative: boolean; degraded: boolean; error: string; provider: string }>({
   name: 'Flight Prices',
@@ -405,39 +292,6 @@ export async function fetchFlightDelays(): Promise<AirportDelayAlert[]> {
     const r = await client.listAirportDelays({ region: 'AIRPORT_REGION_UNSPECIFIED', minSeverity: 'FLIGHT_DELAY_SEVERITY_UNSPECIFIED', pageSize: 0, cursor: '' });
     return r.alerts.map(toDisplayAlert);
   }, [], { shouldCache: (r) => r.length > 0 });
-}
-
-export async function fetchAirportOpsSummary(airports: string[]): Promise<AirportOpsSummary[]> {
-  return breakerOps.execute(async () => {
-    const r = await client.getAirportOpsSummary({ airports });
-    return r.summaries.map(toDisplayOps);
-  }, [], { cacheKey: airports.join(',') });
-}
-
-export async function fetchAirportFlights(airport: string, direction: 'departure' | 'arrival' | 'both' = 'both', limit = 30): Promise<FlightInstance[]> {
-  const dirMap = { departure: 'FLIGHT_DIRECTION_DEPARTURE', arrival: 'FLIGHT_DIRECTION_ARRIVAL', both: 'FLIGHT_DIRECTION_BOTH' } as const;
-  const board = await breakerFlights.execute(async () => {
-    const r = await client.listAirportFlights({ airport, direction: dirMap[direction], limit });
-    return { flights: r.flights.map(toDisplayFlight), source: r.source };
-  }, { flights: [], source: 'error' }, {
-    cacheKey: `${airport}:${direction}:${limit}`,
-    shouldCache: (r) => r.source === 'aviationstack',
-  });
-  return board.flights;
-}
-
-export async function fetchCarrierOps(airports: string[]): Promise<CarrierOps[]> {
-  return breakerCarrier.execute(async () => {
-    const r = await client.getCarrierOps({ airports, minFlights: 3 });
-    return r.carriers.map(toDisplayCarrierOps);
-  }, [], { cacheKey: airports.join(',') });
-}
-
-export async function fetchFlightStatus(flightNumber: string, date?: string, origin?: string): Promise<FlightInstance[]> {
-  return breakerStatus.execute(async () => {
-    const r = await client.getFlightStatus({ flightNumber, date: date ?? '', origin: origin ?? '' });
-    return r.flights.map(toDisplayFlight);
-  }, [], { cacheKey: `${flightNumber}:${date ?? ''}:${origin ?? ''}` });
 }
 
 export async function fetchAircraftPositions(

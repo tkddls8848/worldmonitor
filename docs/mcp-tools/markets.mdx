@@ -130,7 +130,7 @@ Return seeded prediction-market contracts from multiple venues with current prob
 
 | Name | Type | Description |
 |------|------|-------------|
-| `category` | string: geopolitical / tech / finance | Bucket to return: geopolitical (including elections), tech (AI, crypto, science) or finance (economics). Finance also owns untagged non-geopolitical records. Omit for all three. |
+| `category` | string: geopolitical / tech / finance | Bucket to return: geopolitical (including elections), tech (AI, crypto, science) or finance (economics). Finance also owns untagged non-geopolitical records. Omit for both. |
 | `query` | string | Keep only markets whose title contains this text (case-insensitive). |
 | `source` | string: kalshi / polymarket | Venue whose contracts to keep. Kalshi currently provides no classifier tags, so source=kalshi with category=tech returns no records. |
 | `sort` | string: rank / move_24h / move_7d | Order each bucket by seed rank or absolute 24h/7d move before limiting. Missing moves go last. |

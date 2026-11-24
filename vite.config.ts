@@ -98,7 +98,7 @@ const PANEL_CLUSTER: Record<string, PanelChunkName> = {
   OilInventories: 'panels-energy', PipelineStatus: 'panels-energy',
   StorageFacilityMap: 'panels-energy', RenewableEnergy: 'panels-energy',
   // Defense / military / aviation
-  AirlineIntel: 'panels-defense', DefensePatents: 'panels-defense',
+  AirlineIntel: 'panels-defense',
   OrefSirens: 'panels-defense', StrategicPosture: 'panels-defense',
   StrategicRisk: 'panels-defense', ThermalEscalation: 'panels-defense',
   UcdpEvents: 'panels-defense', UkmtoIncidents: 'panels-defense',
@@ -109,7 +109,7 @@ const PANEL_CLUSTER: Record<string, PanelChunkName> = {
   LiveNews: 'panels-news', News: 'panels-news',
   PositiveNewsFeed: 'panels-news', TelegramIntel: 'panels-news', XIntel: 'panels-news',
   // Macro / prices / trade
-  BigMac: 'panels-economy', ConsumerPrices: 'panels-economy',
+  ConsumerPrices: 'panels-economy',
   Economic: 'panels-economy', GlobalProcurement: 'panels-economy',
   FaoFoodPriceIndex: 'panels-economy', FSI: 'panels-economy',
   GroceryBasket: 'panels-economy', GulfEconomies: 'panels-economy',

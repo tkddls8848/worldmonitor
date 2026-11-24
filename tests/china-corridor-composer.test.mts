@@ -62,17 +62,6 @@ function sourceBundle(): ChinaCorridorSourceBundle {
           }),
         ],
       },
-      aviation: {
-        providerId: 'aviationstack',
-        signals: [
-          signal({
-            id: 'signal:aviation:PVG:2026-07-25T11:00Z',
-            family: 'aviation',
-            selectorId: 'PVG',
-            summary: 'PVG operating signal available',
-          }),
-        ],
-      },
       hazard: {
         providerId: 'china-hazards',
         signals: [
@@ -181,20 +170,16 @@ describe('China corridor control-tower composition (#5578)', () => {
 
   it('keeps missing inputs explicitly unavailable without invented zero or normal values', () => {
     const bundle = sourceBundle();
-    bundle.families.aviation = {
-      providerId: 'aviationstack',
-      reason: 'provider cache missing',
-      signals: [],
-    };
+    bundle.families.power_energy = { providerId: "energy", signals: [], reason: "provider cache missing" };
 
     const response = composeChinaCorridorControlTowers(bundle);
     for (const corridor of response.corridors) {
-      const aviation = corridor.conditions.find((condition) => condition.family === 'aviation');
-      assert.ok(aviation);
-      assert.equal(aviation.availability, 'unavailable');
-      assert.equal(aviation.provenance, null);
-      assert.deepEqual(aviation.sourceSignals, []);
-      assert.equal(aviation.reason, 'provider cache missing');
+      const energy = corridor.conditions.find((condition) => condition.family === 'power_energy');
+      assert.ok(energy);
+      assert.equal(energy.availability, 'unavailable');
+      assert.equal(energy.provenance, null);
+      assert.deepEqual(energy.sourceSignals, []);
+      assert.equal(energy.reason, 'provider cache missing');
     }
     assert.doesNotMatch(JSON.stringify(response), /"delayMinutes":0|"status":"normal"/);
   });

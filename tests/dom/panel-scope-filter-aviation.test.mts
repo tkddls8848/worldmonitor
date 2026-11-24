@@ -7,21 +7,21 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { initTestI18n } from './helpers/i18n.mts';
-import type { AirportOpsSummary, AviationNewsItem, FlightInstance } from '@/services/aviation';
+import type { AirportDelayAlert, AviationNewsItem } from '@/services/aviation';
 import type { ResolvedScope } from '@/services/tab-focus';
 import { resolveScope } from '../../shared/tab-scope-resolve';
 
 const aviation = vi.hoisted(() => ({
-  fetchAirportOpsSummary: vi.fn(),
-  fetchAirportFlights: vi.fn(),
-  fetchCarrierOps: vi.fn(async () => []),
+  fetchFlightDelays: vi.fn(),
   fetchAircraftPositions: vi.fn(async () => []),
-  fetchFlightStatus: vi.fn(async () => []),
   fetchAviationNews: vi.fn(),
   fetchGoogleFlights: vi.fn(async () => ({ flights: [], degraded: false, error: '' })),
   fetchGoogleDates: vi.fn(async () => ({ dates: [], degraded: false, error: '' })),
 }));
 vi.mock('@/services/aviation', () => aviation);
+vi.mock('@/services/aviation/watchlist', () => ({
+  aviationWatchlist: { get: () => ({ airports: ['JFK', 'KUL', 'BKK', 'VTE'], airlines: [], routes: [] }) },
+}));
 
 const { AirlineIntelPanel } = await import('@/components/AirlineIntelPanel');
 
@@ -35,20 +35,12 @@ const scopeOf = (countries: string[], neighbours = true): ResolvedScope => {
 };
 const FOCUS = scopeOf(['TH', 'VN', 'ID']);
 
-function ops(iata: string, name: string): AirportOpsSummary {
+function ops(iata: string, name: string): AirportDelayAlert {
   return {
-    iata, icao: '', name, delayPct: 0, avgDelayMinutes: 0, cancellationRate: 0, totalFlights: 10,
-    closureStatus: false, notamFlags: [], severity: 'normal', topDelayReasons: [], source: 'test', updatedAt: new Date(0),
+    id: iata, iata, icao: '', name, city: '', country: '', lat: 0, lon: 0, region: 'americas',
+    delayType: 'general', severity: 'normal', avgDelayMinutes: 0, delayedFlightsPct: 0,
+    cancelledFlights: 0, totalFlights: 0, reason: 'Open', source: 'notam', updatedAt: new Date(0),
   };
-}
-
-function flight(number: string, from: string, to: string): FlightInstance {
-  return {
-    flightNumber: number, date: '2026-11-11', carrier: { iata: 'XX', name: 'Test Air' },
-    origin: { iata: from, name: from }, destination: { iata: to, name: to },
-    scheduledDeparture: null, scheduledArrival: null, estimatedDeparture: null, estimatedArrival: null,
-    status: 'scheduled', delayMinutes: 0, cancelled: false, diverted: false, gate: '', terminal: '', aircraftType: '', source: 'test',
-  } as FlightInstance;
 }
 
 function headline(title: string): AviationNewsItem {
@@ -57,7 +49,6 @@ function headline(title: string): AviationNewsItem {
 
 // BKK Thailand (chosen), KUL Malaysia (neighbour), JFK United States (hidden), VTE not a monitored airport (no country).
 const OPS = [ops('JFK', 'John F. Kennedy'), ops('KUL', 'Kuala Lumpur'), ops('BKK', 'Suvarnabhumi'), ops('VTE', 'Wattay')];
-const FLIGHTS = [flight('TK1', 'IST', 'JFK'), flight('TK2', 'IST', 'KUL'), flight('TK3', 'IST', 'BKK'), flight('ZZ9', 'AAA', 'BBB')];
 const NEWS = [
   headline('FAA orders new inspections for United States carriers'),
   headline('Thailand grounds a budget carrier after an incident'),
@@ -69,8 +60,7 @@ let panel: InstanceType<typeof AirlineIntelPanel>;
 beforeEach(() => {
   vi.useFakeTimers();
   localStorage.clear();
-  aviation.fetchAirportOpsSummary.mockReset().mockResolvedValue(OPS);
-  aviation.fetchAirportFlights.mockReset().mockResolvedValue(FLIGHTS);
+  aviation.fetchFlightDelays.mockReset().mockResolvedValue(OPS);
   aviation.fetchAviationNews.mockReset().mockResolvedValue(NEWS);
   panel = new AirlineIntelPanel();
   document.body.appendChild(panel.getElement());
@@ -95,7 +85,7 @@ describe('AirlineIntelPanel under a focus', () => {
   it('ops: the chosen country first, the neighbour marked, the rest counted; no refetch on focus changes', async () => {
     await settle();
     expect(opsCodes()).toEqual(['JFK', 'KUL', 'BKK', 'VTE']);
-    const opsCalls = aviation.fetchAirportOpsSummary.mock.calls.length;
+    const opsCalls = aviation.fetchFlightDelays.mock.calls.length;
 
     panel.applyScope(FOCUS);
     await settle();
@@ -112,12 +102,12 @@ describe('AirlineIntelPanel under a focus', () => {
     await settle();
     expect(opsCodes()).toEqual(['JFK', 'KUL', 'BKK', 'VTE']);
     expect(strip()?.hidden).toBe(true);
-    expect(aviation.fetchAirportOpsSummary.mock.calls.length).toBe(opsCalls);
+    expect(aviation.fetchFlightDelays.mock.calls.length).toBe(opsCalls);
   });
 
   it('ops: no watched airport in the focus is an empty state, not an error', async () => {
     panel.destroy();
-    aviation.fetchAirportOpsSummary.mockResolvedValue([ops('JFK', 'John F. Kennedy')]);
+    aviation.fetchFlightDelays.mockResolvedValue([ops('JFK', 'John F. Kennedy')]);
     panel = new AirlineIntelPanel();
     document.body.appendChild(panel.getElement());
     panel.notifyConnected();
@@ -128,33 +118,6 @@ describe('AirlineIntelPanel under a focus', () => {
     stripButton('show-all')?.click();
     await settle();
     expect(opsCodes()).toEqual(['JFK']);
-  });
-
-  it('flights: a flight counts by either end; unknown at both ends has no country', async () => {
-    panel.applyScope(FOCUS);
-    await settle();
-    tab('flights')?.click();
-    await settle();
-    const numbers = [...el().querySelectorAll('.flight-row .flight-num')].map((n) => n.textContent);
-    expect(numbers).toEqual(['TK3', 'TK2']);
-    expect(strip()?.textContent).toContain('1 hidden by focus');
-    expect(strip()?.textContent).toContain('1 item with no country');
-  });
-
-  it('flights: an endpoint outside the hub list never hides a flight; it counts as having no country', async () => {
-    aviation.fetchAirportFlights.mockResolvedValue([flight('TK9', 'IST', 'HAN'), flight('TK8', 'HAN', 'BKK')]);
-    panel.applyScope(scopeOf(['VN'], false));
-    await settle();
-    tab('flights')?.click();
-    await settle();
-    // HAN is not in the hub list. IST->HAN has no known end in the focus: counted, one click away.
-    // HAN->BKK: BKK is Thailand, outside a Vietnam-only focus, HAN unknown: also counted, not hidden.
-    expect(el().querySelectorAll('.flight-row').length).toBe(0);
-    expect(strip()?.textContent).toContain('2 items with no country');
-    expect(strip()?.textContent).not.toContain('hidden by focus');
-    stripButton('show-unattributed')?.click();
-    await settle();
-    expect([...el().querySelectorAll('.flight-row .flight-num')].map((n) => n.textContent).sort()).toEqual(['TK8', 'TK9']);
   });
 
   it('news: headlines attributed by the country they name', async () => {
@@ -171,7 +134,7 @@ describe('AirlineIntelPanel under a focus', () => {
   it('tabs that do not filter say so in the strip', async () => {
     panel.applyScope(FOCUS);
     await settle();
-    tab('airlines')?.click();
+    tab('tracking')?.click();
     await settle();
     expect(strip()?.hidden).toBe(false);
     expect(strip()?.textContent).toContain('This tab is not filtered by country');

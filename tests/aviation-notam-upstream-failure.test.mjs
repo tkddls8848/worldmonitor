@@ -1,3 +1,4 @@
+import { pathToFileURL } from 'node:url';
 // The NOTAM side-car must fail loudly. An ICAO outage (retired route, HTML
 // challenge, bad JSON, timeout, quota) once published `{closedIcaos: []}` plus a
 // fresh seed-meta:aviation:notam, so /api/health kept reporting OK while every
@@ -115,16 +116,13 @@ function runAviation(overrides = {}) {
   const envFile = join(directory, 'empty.env');
   writeFileSync(envFile, '');
   try {
-    const result = spawnSync(process.execPath, ['--import', path, 'seed-aviation.mjs'], {
+    const result = spawnSync(process.execPath, ['--import', pathToFileURL(path).href, 'seed-aviation.mjs'], {
       cwd: join(root, 'scripts'),
       env: {
         PATH: process.env.PATH,
         UPSTASH_REDIS_REST_URL: 'https://seed-test.invalid',
         UPSTASH_REDIS_REST_TOKEN: 'fixture-token',
         ICAO_API_KEY: 'fixture-icao-key',
-        AVIATIONSTACK_API: '',
-        AVIATIONSTACK_MONTHLY_BUDGET: '0',
-        AVIATIONSTACK_MIN_REFRESH_MIN: '0',
         WM_SEED_RETRY_DELAY_MS: '0',
         WM_SEED_ENV_FILE: envFile,
         ...overrides,
@@ -134,10 +132,7 @@ function runAviation(overrides = {}) {
     });
     assert.ifError(result.error);
     assert.equal(result.signal, null, result.stderr);
-    // The fixture has no AVIATIONSTACK_API key, so the intl stage ends with its
-    // documented exit 75 (tests/aviation-graceful-fetch.test.mjs). Anything else
-    // means the run crashed somewhere, NOTAM side-car included.
-    assert.equal(result.status, 75, result.stdout + result.stderr);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
     assert.doesNotMatch(result.stdout + result.stderr, /FATAL/);
     const stateLine = result.stdout.split('\n').find(line => line.startsWith('FIXTURE_STATE='));
     assert.ok(stateLine, result.stdout + result.stderr);

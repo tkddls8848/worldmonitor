@@ -82,7 +82,7 @@ WorldMonitor works with many public sources, but some feeds need keys.
 Examples of optional or source-specific keys include:
 
 - GROQ or OpenRouter for LLM-backed intelligence assessments
-- FRED, Finnhub, EIA, and AviationStack for economic and market data
+- FRED, Finnhub, and EIA for economic and market data
 - ACLED for conflict event access
 - NASA FIRMS for wildfire and thermal anomaly data
 - AISStream for maritime vessel data

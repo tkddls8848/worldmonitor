@@ -1,11 +1,9 @@
 import assert from 'node:assert/strict';
 import { afterEach, beforeEach, describe, it, mock } from 'node:test';
 
-import { getFlightStatus } from '../server/worldmonitor/aviation/v1/get-flight-status.ts';
 import { searchImagery } from '../server/worldmonitor/imagery/v1/search-imagery.ts';
 
 const ENV_KEYS = [
-  'AVIATIONSTACK_MONTHLY_BUDGET',
   'LOCAL_API_MODE',
   'UPSTASH_REDIS_REST_TOKEN',
   'UPSTASH_REDIS_REST_URL',
@@ -31,7 +29,6 @@ beforeEach(() => {
   process.env.VERCEL_ENV = 'production';
   process.env.WORLDMONITOR_VALID_KEYS = 'test-key';
   process.env.WS_RELAY_URL = 'https://relay.test';
-  process.env.AVIATIONSTACK_MONTHLY_BUDGET = '0';
 });
 
 afterEach(() => {
@@ -89,18 +86,6 @@ function installFetchMock(options: FetchMockOptions = {}) {
       });
     }
 
-    if (url.startsWith('https://relay.test/aviationstack')) {
-      calls.relay += 1;
-      return jsonResponse({
-        data: [{
-          flight: { iata: 'TK1952' },
-          airline: { iata: 'TK', icao: 'THY', name: 'Turkish Airlines' },
-          departure: { iata: 'IST', icao: 'LTFM', airport: 'Istanbul', scheduled: '2026-08-01T10:00:00Z' },
-          arrival: { iata: 'AMS', icao: 'EHAM', airport: 'Amsterdam', scheduled: '2026-08-01T13:00:00Z' },
-          flight_status: 'active',
-        }],
-      });
-    }
 
     throw new Error(`unexpected fetch: ${url}`);
   });
@@ -116,19 +101,6 @@ function assertOnlyNegativeSentinels(calls: ReturnType<typeof installFetchMock>)
   const payloads = redisPayloads(calls);
   assert.ok(payloads.length > 0, 'expected at least one Redis SET');
   assert.deepEqual([...new Set(payloads)], ['__WM_NEG__']);
-}
-
-function assertPositiveFlightCache(calls: ReturnType<typeof installFetchMock>) {
-  const payloads = redisPayloads(calls);
-  assert.ok(payloads.length > 0, 'expected at least one Redis SET');
-  for (const payload of payloads) {
-    assert.notEqual(payload, '__WM_NEG__', 'live lookup must not write a negative sentinel');
-    assert.equal(typeof payload, 'object');
-    assert.ok(payload !== null);
-    const record = payload as { flights?: unknown; source?: unknown };
-    assert.equal(record.source, 'aviationstack');
-    assert.ok(Array.isArray(record.flights) && record.flights.length > 0);
-  }
 }
 
 function flightContext() {
@@ -199,20 +171,4 @@ describe('RPC cache-hit reporting', { concurrency: 1 }, () => {
     assertOnlyNegativeSentinels(calls);
   });
 
-  it('reports a live flight lookup as a miss and its immediate repeat as a hit', async () => {
-    const calls = installFetchMock();
-    const request = { flightNumber: 'TK1952', date: '2026-08-01', origin: '' };
-
-    const cold = await getFlightStatus(flightContext(), request);
-    const warm = await getFlightStatus(flightContext(), request);
-
-    assert.equal(cold.cacheHit, false);
-    assert.equal(warm.cacheHit, true);
-    assert.equal(calls.relay, 1, 'the repeat must use the cached flight result');
-    assert.ok(cold.flights.length > 0);
-    assert.equal(cold.source, 'aviationstack');
-    assert.ok(warm.flights.length > 0);
-    assert.equal(warm.source, 'aviationstack');
-    assertPositiveFlightCache(calls);
-  });
 });

@@ -458,7 +458,6 @@
     "gulfIndices": "Körfez Endeksleri",
     "gulfCurrencies": "Körfez Para Birimleri",
     "gulfOil": "Körfez Petrolü",
-    "bigmac": "Gerçek Big Mac Endeksi",
     "marketImplications": "YZ Pazar Etkileri",
     "energyComplex": "Enerji Kompleksi",
     "oilInventories": "Petrol Envanterleri",
@@ -475,9 +474,6 @@
     "windyWebcams": "Windy Canlı Web Kamera",
     "groceryBasket": "Bakkal Endeksi",
     "groceryItem": "Ürün",
-    "bigmacDesc": "Orta Doğu ülkelerinde Big Mac fiyatları (Big Mac Endeksi)",
-    "bigmacWow": "Haftadan haftaya",
-    "bigmacCountry": "Ülke",
     "faoFoodPriceIndex": "Gıda fiyatları",
     "fuelPrices": "Yakıt Fiyatları",
     "fuelPricesDesc": "Dünya çapında 30+ ülkede perakende benzin ve dizel fiyatları",
@@ -2149,9 +2145,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Bakkal Endeksi</strong> 24 ülke arasında küresel bakkal sepeti fiyat karşılaştırması — manşet tüketici fiyat endeksinin ötesinde gerçek dünya tüketici malları enflasyonunu izler."
     },
-    "bigmac": {
-      "infoTooltip": "<strong>Gerçek Big Mac Endeksi</strong> The Economist'in Big Mac Endeksi, ülkeler arasında McDonald's burger fiyatlarını karşılaştırarak satın alma gücü paritesini ölçer. Yeni veri yayımlandığında güncellenir (üç aylık/yıllık)."
-    },
     "defiTokens": {
       "infoTooltip": "<strong>DeFi Tokenları</strong> Başlıca merkeziyetsiz finans protokol tokenlarının fiyatları ve 24s/7g performansı — DEX'ler, borç verme platformları ve getiri protokolleri."
     },
@@ -2176,8 +2169,6 @@
     "airlineIntel": {
       "infoTooltip": "<strong>Havacılık İstihbaratı</strong> Gerçek zamanlı havayolu operasyonel verileri: hat askıya almaları, hava sahası kapatmaları, taşıyıcı uyarıları ve acil yönlendirmeler. Kaynak: havacılık otoritesi NOTAM'ları ve taşıyıcı bültenleri.",
       "noOpsData": "Operasyon verisi yok — yükleniyor…",
-      "noFlights": "Uçuş yok — ayarlarda havaalanı seçin.",
-      "noCarrierData": "Taşıyıcı verisi henüz yok.",
       "noTrackingData": "Uçak takip verisi yok.",
       "noNews": "Havacılık haberi yok.",
       "enterRoute": "Rota girin ve fiyatları arayın.",
@@ -2783,24 +2774,6 @@
         "low": "düşük güven"
       }
     },
-    "defensePatents": {
-      "title": "Araştırma ve geliştirme sinyalleri",
-      "infoTooltip": "Raytheon, Lockheed, Huawei, DARPA ve diğer stratejik kuruluşların haftalık savunma ve çift kullanımlı patent başvuruları. Kategoriler: H04B (haberleşme), H01L (yarıiletkenler), F42B (mühimmat), G06N (AI), C12N (biyoteknoloji). Kaynak: USPTO Open Data Portal.",
-      "loading": "Araştırma ve geliştirme dosyaları yükleniyor…",
-      "error": "Patent verisi yüklenemedi.",
-      "empty": "Bu kategoride başvuru yok.",
-      "viewOnUspto": "USPTO'da görüntüle",
-      "tabs": {
-        "all": "Tümü"
-      },
-      "cpcLabels": {
-        "H04B": "Haberleşme",
-        "H01L": "Yarıiletkenler",
-        "F42B": "Mühimmat",
-        "G06N": "AI",
-        "C12N": "Biyoteknoloji"
-      }
-    },
     "correlation": {
       "loading": "Veri bekleniyor...",
       "empty": "Etkin yakınsama algılanmadı",
@@ -3365,7 +3338,6 @@
         "faa": "FAA ASWS",
         "eurocontrol": "Eurocontrol",
         "computed": "Hesaplanan",
-        "aviationstack": "Uçuş Verileri",
         "notam": "NOTAM"
       },
       "regions": {
@@ -4827,11 +4799,10 @@
       "flights": {
         "category": "Havacılık",
         "purpose": "Havalimanı kesintilerini ve NOTAM kapanışlarını, şu anda yürürlükte olan veya 24 saat içinde başlayan hava sahası NOTAM kayıtlarını (geçici uçuş kısıtları, tahditli, tehlike ve yasak sahalar, askeri harekat sahaları, hava sahası ayırmaları ve kapanışlar) ve izleme varsa canlı hava aracı konumlarını öne çıkarır.",
-        "source": "FAA ASWS, AviationStack, FAA NOTAM yönetim hizmeti (NMS-API) ve ICAO NOTAM kayıtları, adsb.lol (ODbL), Wingbits, eski OpenSky hizmetinin geri getirilmesi, isteğe bağlı ticari olmayan airplanes.live/adsb.fi boşluk doldurma ve havacılık hizmeti. Hava sahası NOTAM kayıtları, NMS poligon verdiğinde poligon, NOTAM 250 NM'ye kadar yarıçap verdiğinde daire, diğer durumlarda işaret olarak çizilir.",
+        "source": "FAA ASWS, FAA NOTAM yönetim hizmeti (NMS-API) ve ICAO NOTAM kayıtları, adsb.lol (ODbL), Wingbits, eski OpenSky hizmetinin geri getirilmesi, isteğe bağlı ticari olmayan airplanes.live/adsb.fi boşluk doldurma ve havacılık hizmeti. Hava sahası NOTAM kayıtları, NMS poligon verdiğinde poligon, NOTAM 250 NM'ye kadar yarıçap verdiğinde daire, diğer durumlarda işaret olarak çizilir.",
         "freshness": "Havalimanı kesintisi yüklemesi 30 dakikalık aralıkla çalışır. Hava sahası NOTAM kayıtları, NMS değişiklik çekimlerinden her 5 dakikada bir yüklenir, günde bir tam yeniden eşitleme yapılır ve 20 dakikalık güncellik bütçesine göre izlenir. Havacılık paneli operasyonel görünümleri de 5 dakikalık sorgulama döngüsüyle yeniler.",
         "confidence": "Kesinti elemesi için en uygunudur. Tekil canlı hava aracı kapsamı ADS-B erişimine ve yapılandırılmış sağlayıcılara bağlıdır. NOTAM metni, FAA'nın dağıttığı biçimiyle yetkilidir.",
         "limitations": {
-          "0": "API anahtarı yoksa AviationStack tabanlı benzetimli tanıtım verisi görünebilir.",
           "1": "ADS-B kapsamı zayıf veya engelli yerlerde canlı hava aracı konumları gecikebilir ya da hiç gelmeyebilir.",
           "2": "Hava sahası NOTAM alanları yalnızca deck.gl haritasında çizilir. SVG haritası havalimanı işaretlerini gösterir.",
           "3": "ABD TFR kayıtlarının çoğu biçimi yalnızca metinde anlatır, bu yüzden kısıtlı biçim olarak değil, NOTAM konumunda bir işaret olarak görünür.",

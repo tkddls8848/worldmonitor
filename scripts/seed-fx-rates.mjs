@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Dedicated FX rates seed — fetches all currencies used across bigmac + grocery-basket
+ * Dedicated FX rates seed — fetches all currencies used across grocery-basket
  * and writes them to shared:fx-rates:v1 (25h TTL).
  *
  * Deploy as a Railway cron service (daily, e.g. "0 6 * * *") so downstream
@@ -18,7 +18,7 @@ const CANONICAL_KEY = 'shared:fx-rates:v1';
 const CACHE_TTL = 25 * 3600; // 25 hours — covers daily cron with 1h drift buffer
 const MIN_LIVE_RATE_COUNT = 11; // Preserve the previous >10-key floor, now counting only real Yahoo quotes.
 
-// Union of all currencies used by bigmac + grocery-basket seeds
+// Union of all currencies used by grocery-basket seeds
 export const ALL_CURRENCIES = [
   // Americas
   'USD', 'CAD', 'MXN', 'BRL', 'ARS', 'COP', 'CLP',

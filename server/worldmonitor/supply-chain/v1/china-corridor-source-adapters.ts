@@ -18,8 +18,6 @@ export interface ChinaCorridorRawSnapshots {
   portwatchChina?: unknown;
   portwatchHongKong?: unknown;
   portwatchMeta?: unknown;
-  aviation?: unknown;
-  aviationMeta?: unknown;
   westernPacificCyclones?: unknown;
   westernPacificCyclonesMeta?: unknown;
   hkoWarnings?: unknown;
@@ -185,7 +183,7 @@ function unavailableSignal(input: {
 }
 
 function reviewedNodeSelectors(
-  family: 'port' | 'aviation',
+  family: 'port',
 ): Array<{ selectorId: string; nodeName: string }> {
   const seen = new Set<string>();
   return CHINA_LOGISTICS_CORRIDORS.flatMap((corridor) =>
@@ -280,71 +278,6 @@ function adaptPortwatch(
     }));
   }
   return family('portwatch', signals, 'PortWatch corridor coverage is missing or stale.');
-}
-
-function adaptAviation(
-  snapshots: ChinaCorridorRawSnapshots,
-  assessedAt: string,
-): CorridorFamilySource {
-  const payload = record(snapshots.aviation);
-  const transport = transportFreshness(snapshots.aviationMeta, 90, assessedAt);
-  const retrievalTime = metaTimestamp(snapshots.aviationMeta);
-  const signals = records(payload?.coverage).flatMap((coverage): CorridorSourceSignal[] => {
-    const selectorId = stringValue(coverage.iata);
-    const status = stringValue(coverage.status);
-    if (!selectorId || !status) return [];
-    const observedAt = isoTimestamp(coverage.updatedAt);
-    const covered = status === 'normal' || status === 'disruption';
-    const flightCount = covered ? numberValue(coverage.flightCount) : null;
-    return [sourceSignal({
-      id: `signal:aviationstack:${selectorId}:${observedAt ?? 'timestamp-unknown'}`,
-      family: 'aviation',
-      selectorId,
-      availability: covered ? 'available' : 'unavailable',
-      publisher: {
-        id: 'publisher:aviationstack',
-        name: 'AviationStack',
-        type: 'market',
-      },
-      sourceUrl: 'https://aviationstack.com/',
-      sourceScope: 'node',
-      observationTime: observedAt,
-      observationTimePrecision: observedAt ? 'instant' : 'unknown',
-      retrievalTime,
-      retrievalTimePrecision: retrievalTime ? 'instant' : 'unknown',
-      transportFreshness: transport,
-      contentFreshness: covered
-        ? contentFreshness(observedAt, 180, assessedAt)
-        : 'unavailable',
-      summary: covered
-        ? `${selectorId} provider status: ${status}.`
-        : `${selectorId} provider coverage unavailable (${status}).`,
-      metrics: metrics([
-        ['providerStatus', status],
-        ['flightCount', flightCount],
-      ]),
-    })];
-  });
-  const present = new Set(signals.map((signal) => signal.selectorId));
-  for (const expected of reviewedNodeSelectors('aviation')) {
-    if (present.has(expected.selectorId)) continue;
-    signals.push(unavailableSignal({
-      id: `signal:aviationstack:${expected.selectorId}:unavailable`,
-      family: 'aviation',
-      selectorId: expected.selectorId,
-      publisher: {
-        id: 'publisher:aviationstack',
-        name: 'AviationStack',
-        type: 'market',
-      },
-      sourceUrl: 'https://aviationstack.com/',
-      sourceScope: 'node',
-      retrievalTime,
-      transportFreshness: transport,
-      summary: `Aviation provider coverage unavailable for configured hub ${expected.nodeName}.`,
-    }));
-  }
-  return family('aviationstack', signals, 'Aviation provider coverage is missing, omitted, or stale.');
 }
 
 function adaptHazards(
@@ -912,7 +845,6 @@ export function buildChinaCorridorSourceBundle(
 ): ChinaCorridorSourceBundle {
   const families: Record<ChinaCorridorSignalFamily, CorridorFamilySource> = {
     port: adaptPortwatch(snapshots, assessedAt),
-    aviation: adaptAviation(snapshots, assessedAt),
     hazard: adaptHazards(snapshots, assessedAt),
     power_energy: adaptEnergy(snapshots, assessedAt),
     strategic_industry: adaptStrategicIndustry(snapshots, assessedAt),

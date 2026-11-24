@@ -27,21 +27,10 @@ These are bounded last-failure records, not an archive. A later failure replaces
 2. Under separate deployment authority, verify that each affected running deployment adopted that revision. A saved shared variable or successful image build alone is insufficient.
 3. Obtain a subsequent scheduled execution receipt bound to that deployment. Record its run ID, source revision, trigger, and actual publication outcome. Do not infer a scheduler trigger from a timestamp.
 4. Verify that canonical publication and actual `lastSuccessAt` advanced. For news, compare `servedGeneratedAt` and canonical generation independently from the CN feed projection.
-5. Verify a later China evaluation with all 16 launched entries healthy and an advanced actual `lastHealthyAt`. Check decision coverage separately when affected.
+5. Verify a later China evaluation with all 15 launched entries healthy and an advanced actual `lastHealthyAt`. Check decision coverage separately when affected.
 6. If the configured revision did not reach the running service, leave rollout acceptance open. If publication failed, preserve its failure evidence and investigate the first failed stage.
 
 Never record the secret value. Use platform configuration revision evidence where available. Do not rotate another key or switch providers to explain a failed rollout.
-
-## Verify aviation omission diagnostics
-
-The aviation producer emits `aviationstack_omission` for empty, missing, non-array, or codeshare-only flight data. The receipt includes the requested airport and date, HTTP status, data shape, counts, and bounded pagination numbers.
-
-1. Verify that the executing deployment contains the omission instrumentation from PR9688.
-2. Inspect an existing omission event from that deployment if one occurs. Do not force an omission or probe the provider to create evidence.
-3. Match the receipt to its execution and source publication. An event from an unrelated run is not adoption proof for the incident.
-4. Accept coverage recovery only from eight valid canonical hub rows, matching bootstrap rows, and a later healthy China evaluation.
-
-A merged diagnostic change does not explain an old CTU response or prove production adoption. If no qualifying event exists, record that observation gap.
 
 ## Separate evaluation delay from source failure
 
@@ -52,5 +41,5 @@ An off-cycle evaluation can delay admission at the next bundle tick. Before chan
 Run the focused local checks without production credentials:
 
 ```sh
-node --import tsx --test tests/last-failure.test.mjs tests/seed-insights-freshness.test.mjs tests/china-stock-connect.test.mts tests/china-corporate-disclosures.test.mts tests/china-coverage-health.test.mjs tests/bundle-runner.test.mjs tests/aviation-omission-receipt.test.mjs
+node --import tsx --test tests/last-failure.test.mjs tests/seed-insights-freshness.test.mjs tests/china-stock-connect.test.mts tests/china-corporate-disclosures.test.mts tests/china-coverage-health.test.mjs tests/bundle-runner.test.mjs
 ```

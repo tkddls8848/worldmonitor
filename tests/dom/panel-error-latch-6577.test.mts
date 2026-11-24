@@ -45,12 +45,12 @@
  *   - `showLoading()` (Panel.ts) clears the chip AND the countdown, but
  *     deliberately leaves `retryAttempt` alone.
  *   - the raw `replaceChildren(this.content, …)` loading branches in
- *     ServiceStatus/TechEvents/DefensePatents clear NEITHER — the chip stays red
+ *     ServiceStatus/TechEvents clear NEITHER — the chip stays red
  *     and the interval keeps ticking for the whole retry fetch.
  * Both preserve the rung, which is the only property asserted below.
  *
  * REACHABILITY — three of these five panels are latent, not live. Only
- * TechEventsPanel and DefensePatentsPanel call an RPC that can actually reject:
+ * TechEventsPanel call an RPC that can actually reject:
  *   - ServiceStatusPanel: `fetchServiceStatuses` runs inside a CircuitBreaker
  *     whose `execute()` never rejects, and both of its returns hardcode
  *     `success: true` — so `if (!data.success) throw` is dead code and
@@ -92,7 +92,6 @@ vi.mock('@/components/giving-renderer', () => ({
   renderGivingPanelContent: mockRenderGivingPanelContent,
 }));
 
-import { DefensePatentsPanel } from '@/components/DefensePatentsPanel';
 import { GdeltIntelPanel } from '@/components/GdeltIntelPanel';
 import { GivingPanel } from '@/components/GivingPanel';
 import { ServiceStatusPanel } from '@/components/ServiceStatusPanel';
@@ -223,33 +222,6 @@ describe('TechEventsPanel', () => {
     const panel = new TechEventsPanel('tech-events');
     mount(panel);
     expect(fetchEvents).toHaveBeenCalled();
-
-    await expectRecoveryClearsRetryState(
-      panel,
-      () => {
-        flags(panel).loading = false;
-        flags(panel).error = 'boom';
-        (panel as unknown as { render(): void }).render();
-      },
-      () => {
-        flags(panel).error = null;
-        (panel as unknown as { render(): void }).render();
-      },
-    );
-
-    panel.destroy();
-  });
-});
-
-describe('DefensePatentsPanel', () => {
-  it('clears the countdown and backoff when the patents list renders', async () => {
-    const fetchPatents = vi
-      .spyOn(DefensePatentsPanel.prototype as unknown as { fetchPatents(): Promise<void> }, 'fetchPatents')
-      .mockResolvedValue(undefined);
-
-    const panel = new DefensePatentsPanel();
-    mount(panel);
-    expect(fetchPatents).toHaveBeenCalled();
 
     await expectRecoveryClearsRetryState(
       panel,

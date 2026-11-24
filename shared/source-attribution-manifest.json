@@ -562,26 +562,6 @@
       ]
     },
     {
-      "host": "api.aviationstack.com",
-      "provider": "api.aviationstack.com",
-      "kind": "structured",
-      "observed": true,
-      "license": "Provider terms for this upstream API/dataset; verify before redistribution",
-      "attribution": "Credit api.aviationstack.com and link to the original upstream API/dataset.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/ais-relay.cjs"
-        },
-        {
-          "path": "scripts/local/local-api-server.mjs"
-        },
-        {
-          "path": "scripts/seed-aviation.mjs"
-        }
-      ]
-    },
-    {
       "host": "api.axiom.co",
       "provider": "Axiom telemetry",
       "kind": "structured",
@@ -739,20 +719,6 @@
       ]
     },
     {
-      "host": "api.e-stat.go.jp",
-      "provider": "api.e-stat.go.jp",
-      "kind": "structured",
-      "observed": true,
-      "license": "Provider terms for this upstream API/dataset; verify before redistribution",
-      "attribution": "Credit api.e-stat.go.jp and link to the original upstream API/dataset.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/seed-world-cpi-estat.mjs"
-        }
-      ]
-    },
-    {
       "host": "api.eia.gov",
       "provider": "api.eia.gov",
       "kind": "structured",
@@ -812,9 +778,6 @@
       "references": [
         {
           "path": "scripts/ais-relay.cjs"
-        },
-        {
-          "path": "scripts/seed-bigmac.mjs"
         },
         {
           "path": "scripts/seed-grocery-basket.mjs"
@@ -1040,20 +1003,6 @@
       "license": "Open Government Licence - British Columbia (OGL-BC). Confirmed on https://api.open511.gov.bc.ca/help. API Terms of Use for OGL-BC information also apply.",
       "attribution": "DriveBC Open511 (Province of British Columbia). Licensed under OGL-BC. https://api.open511.gov.bc.ca/help",
       "status": "excluded"
-    },
-    {
-      "host": "api.openaq.org",
-      "provider": "OpenAQ",
-      "kind": "structured",
-      "observed": true,
-      "license": "CC BY 4.0 (dataset/API terms may vary by measurement source)",
-      "attribution": "OpenAQ, https://openaq.org/.",
-      "status": "reviewed",
-      "references": [
-        {
-          "path": "scripts/seed-health-air-quality.mjs"
-        }
-      ]
     },
     {
       "host": "api.opensanctions.org",
@@ -1377,34 +1326,6 @@
         },
         {
           "path": "scripts/seed-usa-spending.mjs"
-        }
-      ]
-    },
-    {
-      "host": "api.uspto.gov",
-      "provider": "USPTO Open Data Portal",
-      "kind": "structured",
-      "observed": true,
-      "license": "U.S. government public data; USPTO terms apply",
-      "attribution": "U.S. Patent and Trademark Office (USPTO) Open Data Portal.",
-      "status": "reviewed",
-      "references": [
-        {
-          "path": "scripts/_defense-patents-source.mjs"
-        }
-      ]
-    },
-    {
-      "host": "api.waqi.info",
-      "provider": "World Air Quality Index (WAQI)",
-      "kind": "structured",
-      "observed": true,
-      "license": "WAQI API terms; attribution required",
-      "attribution": "World Air Quality Index (WAQI); link to the station/API response.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/seed-health-air-quality.mjs"
         }
       ]
     },
@@ -3190,20 +3111,6 @@
         },
         {
           "path": "server/worldmonitor/displacement/v1/cross-border-data.ts"
-        }
-      ]
-    },
-    {
-      "host": "data.uspto.gov",
-      "provider": "USPTO Open Data Portal",
-      "kind": "structured",
-      "observed": true,
-      "license": "U.S. government public data; USPTO terms apply",
-      "attribution": "U.S. Patent and Trademark Office (USPTO) Open Data.",
-      "status": "reviewed",
-      "references": [
-        {
-          "path": "scripts/_defense-patents-source.mjs"
         }
       ]
     },
@@ -7861,20 +7768,6 @@
       "references": [
         {
           "path": "shared/news-catalog.json"
-        }
-      ]
-    },
-    {
-      "host": "patents.google.com",
-      "provider": "patents.google.com",
-      "kind": "structured",
-      "observed": true,
-      "license": "Provider terms for this upstream API/dataset; verify before redistribution",
-      "attribution": "Credit patents.google.com and link to the original upstream API/dataset.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/_defense-patents-source.mjs"
         }
       ]
     },

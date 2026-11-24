@@ -199,7 +199,6 @@ export const COMMANDS: Command[] = [
   // guardrail's `panel:<id>'` parser ignores it, so panel parity stays intact.
   { id: 'panel:consumer-prices@world', keywords: ['inflation', 'global inflation', 'inflation by country', 'country inflation', 'inflation ranking', 'world inflation', 'imf inflation', 'highest inflation', 'cpi by country'], label: 'Panel: Global Inflation (by country)', icon: '\u{1F4C8}', category: 'panels' },
   { id: 'panel:grocery-basket', keywords: ['grocery', 'grocery basket', 'grocery index', 'food prices', 'supermarket'], label: 'Panel: Grocery Index', icon: '\u{1F96C}', category: 'panels' },
-  { id: 'panel:bigmac', keywords: ['bigmac', 'big mac', 'big mac index', 'purchasing power parity', 'ppp'], label: 'Panel: Big Mac Index', icon: '\u{1F354}', category: 'panels' },
   // Deliberately shares NO keyword with `panel:forex` (:240), which opens the
   // currency NEWS feed under the same 'fx'/'currencies'/'exchange rates' terms.
   // Duplicating those would put two same-icon entries side by side in CMD+K
@@ -221,7 +220,6 @@ export const COMMANDS: Command[] = [
   { id: 'panel:liquidity-shifts', keywords: ['liquidity', 'liquidity shifts', 'oil gold silver', 'top stocks', 'positioning'], label: 'Panel: Liquidity Shifts', icon: '\u{1F4B0}', category: 'panels' },
   { id: 'panel:positioning-247', keywords: ['positioning', '24/7', 'perp', 'perpetual', 'hyperliquid', 'funding rate', 'open interest', 'derivatives stress'], label: 'Panel: 24/7 Positioning', icon: '\u{1F4C8}', category: 'panels' },
   { id: 'panel:macro-tiles', keywords: ['macro tiles', 'macro indicators', 'macro overview'], label: 'Panel: Macro Indicators', icon: '\u{1F9E9}', category: 'panels' },
-  { id: 'panel:defense-patents', keywords: ['defense patents', 'r&d signal', 'military research', 'defense r&d'], label: 'Panel: R&D Signal', icon: '\u{1F9EA}', category: 'panels' },
   { id: 'panel:climate-news', keywords: ['climate news', 'climate headlines', 'environment news', 'climate intelligence', 'carbon brief', 'copernicus'], label: 'Panel: Climate News', icon: '\u{1F30D}', category: 'panels' },
   { id: 'panel:disease-outbreaks', keywords: ['disease outbreaks', 'outbreaks', 'who alerts', 'epidemic', 'health alerts', 'promed'], label: 'Panel: Disease Outbreaks', icon: '\u{1F9A0}', category: 'panels' },
   { id: 'panel:social-velocity', keywords: ['social velocity', 'reddit trending', 'social signals', 'viral', 'trending posts'], label: 'Panel: Social Velocity', icon: '\u{1F4F1}', category: 'panels' },

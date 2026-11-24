@@ -462,7 +462,6 @@
     "gulfIndices": "Indeksy Zatoki",
     "gulfCurrencies": "Waluty Zatoki",
     "gulfOil": "Ropa Zatoki",
-    "bigmac": "Rzeczywisty indeks Big Mac",
     "marketImplications": "Implikacje Rynkowe AI",
     "energyComplex": "Kompleks Energetyczny",
     "oilInventories": "Zapasy Ropy",
@@ -479,9 +478,6 @@
     "windyWebcams": "Windy Live Webkamera",
     "groceryBasket": "Indeks Koszyka Spożywczego",
     "groceryItem": "Artykuł",
-    "bigmacDesc": "Ceny Big Maca w krajach Bliskiego Wschodu (Big Mac Index)",
-    "bigmacWow": "Zmiana tygodniowa",
-    "bigmacCountry": "Kraj",
     "faoFoodPriceIndex": "Ceny żywności",
     "fuelPrices": "Ceny Paliw",
     "fuelPricesDesc": "Ceny detaliczne benzyny i oleju napędowego w ponad 30 krajach na całym świecie",
@@ -2159,9 +2155,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Globalne porównanie cen koszyka artykułów spożywczych w 24 krajach — śledzenie inflacji dóbr konsumpcyjnych poza oficjalnym wskaźnikiem cen konsumpcyjnych."
     },
-    "bigmac": {
-      "infoTooltip": "<strong>Rzeczywisty indeks Big Mac</strong> Indeks Big Mac tygodnika The Economist mierzy parytet siły nabywczej, porównując ceny burgerów McDonald's w różnych krajach. Aktualizowany po publikacji nowych danych (kwartalnie/rocznie)."
-    },
     "defiTokens": {
       "infoTooltip": "<strong>Tokeny DeFi</strong> Ceny i wyniki 24h/7d głównych tokenów protokołów zdecentralizowanych finansów — giełd DEX, platform pożyczkowych i protokołów zysku."
     },
@@ -2186,8 +2179,6 @@
     "airlineIntel": {
       "infoTooltip": "<strong>Wywiad lotniczy</strong> Dane operacyjne linii lotniczych w czasie rzeczywistym: zawieszenia tras, zamknięcia przestrzeni powietrznej, komunikaty przewoźników i awaryjne przekierowania. Źródło: NOTAM władz lotniczych i biuletyny przewoźników.",
       "noOpsData": "Brak danych operacyjnych — wczytywanie…",
-      "noFlights": "Brak lotów — wybierz lotnisko w ustawieniach.",
-      "noCarrierData": "Brak danych o przewoźniku.",
       "noTrackingData": "Brak danych śledzenia statku powietrznego.",
       "noNews": "Brak wiadomości z lotnictwa.",
       "enterRoute": "Podaj trasę i wyszukaj ceny.",
@@ -2811,24 +2802,6 @@
         "low": "niska pewność"
       }
     },
-    "defensePatents": {
-      "title": "Sygnały badań i rozwoju",
-      "infoTooltip": "Tygodniowe zgłoszenia patentów obronnych i dual-use przez Raytheon, Lockheed, Huawei, DARPA i inne organizacje strategiczne. Kategorie: H04B (komunikacja), H01L (półprzewodniki), F42B (amunicja), G06N (AI), C12N (biotechnologia). Źródło: USPTO Open Data Portal.",
-      "loading": "Wczytywanie zgłoszeń badań i rozwoju…",
-      "error": "Nie udało się załadować danych patentowych.",
-      "empty": "Brak zgłoszeń w tej kategorii.",
-      "viewOnUspto": "Wyświetl na USPTO",
-      "tabs": {
-        "all": "Wszystkie"
-      },
-      "cpcLabels": {
-        "H04B": "Komunikacja",
-        "H01L": "Półprzewodniki",
-        "F42B": "Amunicja",
-        "G06N": "AI",
-        "C12N": "Biotechnologia"
-      }
-    },
     "correlation": {
       "loading": "Oczekiwanie na dane...",
       "empty": "Brak wykrytej zbieżności",
@@ -3406,7 +3379,6 @@
         "faa": "FAA ASWS",
         "eurocontrol": "Eurokontrola",
         "computed": "Obliczone",
-        "aviationstack": "Dane lotów",
         "notam": "NOTAM"
       },
       "regions": {
@@ -4871,11 +4843,10 @@
       "flights": {
         "category": "Lotnictwo",
         "purpose": "Wyróżnia zakłócenia lotnisk i zamknięcia NOTAM. Obejmuje NOTAM przestrzeni powietrznej obowiązujące teraz albo zaczynające się w ciągu 24 godzin, w tym tymczasowe ograniczenia lotów, strefy ograniczone, niebezpieczne i zakazane, wojskowe strefy operacyjne, rezerwacje przestrzeni i zamknięcia. Pokazuje też pozycje statków powietrznych na żywo, gdy śledzenie jest dostępne.",
-        "source": "FAA ASWS, AviationStack, FAA NOTAM Management Service (NMS-API) i NOTAM ICAO, adsb.lol (ODbL), Wingbits, odtwarzanie starszej usługi OpenSky, opcjonalne niekomercyjne uzupełnianie luk z airplanes.live/adsb.fi oraz usługa lotnicza. NOTAM przestrzeni powietrznej są rysowane jako poligony tam, gdzie podaje je NMS, jako okręgi tam, gdzie NOTAM podaje promień do 250 NM, a w pozostałych przypadkach jako znaczniki.",
+        "source": "FAA ASWS, FAA NOTAM Management Service (NMS-API) i NOTAM ICAO, adsb.lol (ODbL), Wingbits, odtwarzanie starszej usługi OpenSky, opcjonalne niekomercyjne uzupełnianie luk z airplanes.live/adsb.fi oraz usługa lotnicza. NOTAM przestrzeni powietrznej są rysowane jako poligony tam, gdzie podaje je NMS, jako okręgi tam, gdzie NOTAM podaje promień do 250 NM, a w pozostałych przypadkach jako znaczniki.",
         "freshness": "Zasilanie zakłóceń lotnisk idzie w cyklu 30 minut. NOTAM przestrzeni powietrznej są zasilane co 5 minut z pobrań zmian NMS, z codzienną pełną resynchronizacją, przy budżecie aktualności 20 minut. Panel lotniczy odświeża też widoki operacyjne w cyklu odpytywania co 5 minut.",
         "confidence": "Najlepsze do wstępnej selekcji zakłóceń. Pokrycie pojedynczych statków powietrznych na żywo zależy od dostępności ADS-B i skonfigurowanych dostawców. Tekst NOTAM jest wiążący w postaci rozsyłanej przez FAA.",
         "limitations": {
-          "0": "Symulowane dane demonstracyjne oparte na AviationStack mogą się pojawić, gdy brakuje klucza API.",
           "1": "Pozycje statków powietrznych na żywo mogą być opóźnione albo nieobecne tam, gdzie pokrycie ADS-B jest słabe albo zablokowane.",
           "2": "Obszary NOTAM przestrzeni powietrznej są rysowane tylko na mapie deck.gl. Mapa SVG pokazuje znaczniki lotnisk.",
           "3": "Większość amerykańskich TFR opisuje kształt tylko w tekście, więc widać je jako znacznik w pozycji NOTAM, a nie jako kształt strefy ograniczonej.",

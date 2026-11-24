@@ -540,10 +540,6 @@
     "gulfEconomies": "Öböl Gazdaságok",
     "groceryBasket": "Bevásárlókosár Index",
     "groceryItem": "Termék",
-    "bigmac": "Valódi Big Mac Index",
-    "bigmacDesc": "Big Mac árak a Közel-Kelet országaiban (Big Mac Index)",
-    "bigmacWow": "Heti változás",
-    "bigmacCountry": "Ország",
     "faoFoodPriceIndex": "Élelmiszerárak",
     "fuelPrices": "Üzemanyag árak",
     "fuelPricesDesc": "Fogyasztói benzin és dízelár 30+ ország világszerte",
@@ -959,8 +955,6 @@
     "airlineIntel": {
       "infoTooltip": "<strong>Légitársasági értesítések</strong> Valós idejű légitársasági operatív adatok: útvonalszüneteltetések, légtérzárások, légitársaság figyelmeztetések és vészhelyzetből eredő eltérítések. Forrás: repülésügyi hatóságok NOTAM-ja és légitársaság-közlemények.",
       "noOpsData": "Nincs operatív adat — betöltés…",
-      "noFlights": "Nincsenek járatok — válassz repteret a beállításokban.",
-      "noCarrierData": "Még nincsenek légitársasági adatok.",
       "noTrackingData": "Nincsenek repülőgép-követési adatok.",
       "noNews": "Nincsenek légiközlekedési hírek.",
       "enterRoute": "Adj meg egy útvonalat és keress árakat.",
@@ -2314,9 +2308,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Élelmiszerindex</strong> Globális élelmiszerköri árösszehasonlítás 24 ország között – a valós fogyasztói árinfláció nyomon követése a fő fogyasztói árindex közül."
     },
-    "bigmac": {
-      "infoTooltip": "<strong>Valódi Big Mac Index</strong> Az Economist Big Mac Indexe a vásárlóerő-paritást méri a McDonald's hamburger árak összehasonlítása révén az országok között. Frissítve, amikor új adatok vannak közzétéve (negyedéves/éves)."
-    },
     "fuelPrices": {
       "infoTooltip": "<strong>Üzemanyagárak</strong> Benzin és dízel üzemanyag-töltőállomási árai 30+ országban, USD/literben normalizálva az összehasonlíthatóság érdekében. Az árak a kormányzati nyílt adatprogramokból származnak és hetente frissülnek. A legolcsóbb és legdrágább országok kiemelésre kerülnek. Heti változás jelenik meg, ha az előző heti adatok rendelkezésre állnak.",
       "countries": "országok"
@@ -2850,24 +2841,6 @@
         "high": "magas megbízhatóság",
         "medium": "közepes megbízhatóság",
         "low": "alacsony megbízhatóság"
-      }
-    },
-    "defensePatents": {
-      "title": "Kutatás és fejlesztés jelek",
-      "infoTooltip": "A Raytheon, Lockheed, Huawei, DARPA és más stratégiai szervezetek heti védelmi és kettős felhasználású szabadalmi bejelentései. Kategóriák: H04B (kommunikáció), H01L (félvezetők), F42B (lőszerek), G06N (MI), C12N (biotechnológia). Forrás: USPTO Open Data Portal.",
-      "loading": "Kutatás és fejlesztés bejelentések betöltése…",
-      "error": "Szabadalmi adatok betöltése sikertelen.",
-      "empty": "Nincsenek bejelentések ebben a kategóriában.",
-      "viewOnUspto": "Megtekintés az USPTO-n",
-      "tabs": {
-        "all": "Összes"
-      },
-      "cpcLabels": {
-        "H04B": "Kommunikáció",
-        "H01L": "Félvezetők",
-        "F42B": "Lőszer",
-        "G06N": "AI",
-        "C12N": "Biotechnológia"
       }
     },
     "correlation": {
@@ -3436,7 +3409,6 @@
         "faa": "FAA ASWS",
         "eurocontrol": "Eurocontrol",
         "computed": "Számított",
-        "aviationstack": "Repülési adatok",
         "notam": "NOTAM"
       },
       "regions": {
@@ -4827,11 +4799,10 @@
       "flights": {
         "category": "Légiközlekedés",
         "purpose": "Kiemeli a repülőtéri zavarokat és a NOTAM szerinti lezárásokat. Ide tartoznak a most érvényes vagy 24 órán belül kezdődő légtér-NOTAM-ok, köztük az ideiglenes repülési korlátozások, a korlátozott, veszélyes és tiltott területek, a katonai műveleti területek, a légtérfoglalások és a lezárások. Élő repülőgép-pozíciókat is mutat, ha van követés.",
-        "source": "FAA ASWS, AviationStack, FAA NOTAM Management Service (NMS-API) és ICAO NOTAM, adsb.lol (ODbL), Wingbits, a régi OpenSky szolgáltatás helyreállítása, opcionális nem kereskedelmi hiánykitöltés az airplanes.live/adsb.fi forrásból, valamint a légi szolgáltatás. A légtér-NOTAM-ok poligonként jelennek meg, ahol az NMS megadja őket, körként, ahol a NOTAM legfeljebb 250 NM sugarat ad, egyébként jelölőként.",
+        "source": "FAA ASWS, FAA NOTAM Management Service (NMS-API) és ICAO NOTAM, adsb.lol (ODbL), Wingbits, a régi OpenSky szolgáltatás helyreállítása, opcionális nem kereskedelmi hiánykitöltés az airplanes.live/adsb.fi forrásból, valamint a légi szolgáltatás. A légtér-NOTAM-ok poligonként jelennek meg, ahol az NMS megadja őket, körként, ahol a NOTAM legfeljebb 250 NM sugarat ad, egyébként jelölőként.",
         "freshness": "A repülőtéri zavarok feltöltése 30 perces ütemben fut. A légtér-NOTAM-ok 5 percenként töltődnek fel az NMS változáslehívásaiból, napi teljes újraszinkronnal, 20 perces frissességi kerettel. A légi panel a működési nézeteket is 5 perces lekérdezési ciklusban frissíti.",
         "confidence": "Zavarok első szűrésére a legalkalmasabb. Az egyes élő repülőgépek lefedettsége az ADS-B elérhetőségétől és a beállított szolgáltatóktól függ. A NOTAM szövege úgy mérvadó, ahogyan az FAA terjeszti.",
         "limitations": {
-          "0": "AviationStackre épülő szimulált demóadatok jelenhetnek meg, ha nincs API-kulcs.",
           "1": "Az élő repülőgép-pozíciók késhetnek vagy hiányozhatnak, ahol az ADS-B lefedettség gyenge vagy blokkolt.",
           "2": "A légtér-NOTAM területek csak a deck.gl térképen rajzolódnak ki. Az SVG térkép repülőtéri jelölőket mutat.",
           "3": "A legtöbb amerikai TFR a formáját csak szövegben írja le, ezért jelölőként látszik a NOTAM pozícióján, nem a korlátozott alakként.",

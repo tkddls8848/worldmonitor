@@ -113,26 +113,6 @@ describe('China corridor source adapters (#5578)', () => {
     assert.equal(bundle.families.port.signals[0]?.contentFreshness, 'current');
   });
 
-  it('does not turn omitted or failed aviation coverage into normal operations', () => {
-    const bundle = buildChinaCorridorSourceBundle({
-      aviation: {
-        coverage: [
-          { iata: 'PVG', status: 'normal', flightCount: 24, updatedAt: Date.parse('2026-07-25T11:00:00.000Z') },
-          { iata: 'HKG', status: 'omitted', flightCount: 0, updatedAt: Date.parse('2026-07-25T11:00:00.000Z') },
-          { iata: 'PEK', status: 'failed', flightCount: 0, updatedAt: Date.parse('2026-07-25T11:00:00.000Z') },
-        ],
-      },
-      aviationMeta: FRESH_META,
-    }, ASSESSED_AT);
-
-    const byAirport = new Map(bundle.families.aviation.signals.map((signal) => [signal.selectorId, signal]));
-    assert.equal(byAirport.get('PVG')?.availability, 'available');
-    assert.equal(byAirport.get('HKG')?.availability, 'unavailable');
-    assert.equal(byAirport.get('HKG')?.contentFreshness, 'unavailable');
-    assert.equal(byAirport.get('PEK')?.availability, 'unavailable');
-    assert.equal(byAirport.get('PEK')?.metrics.flightCount, undefined);
-  });
-
   it('assigns hazards only through reviewed coordinates and the explicit HKO scope', () => {
     const bundle = buildChinaCorridorSourceBundle({
       westernPacificCyclones: {

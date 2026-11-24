@@ -1,24 +1,21 @@
 ---
 title: "Airline Intelligence"
-description: "Six-tab aviation surface — airport ops, live flights, carriers, aircraft tracking, news, and cheapest-date pricing on a user-curated watchlist."
+description: "Four-tab aviation surface — airport ops, aircraft tracking, news, and cheapest-date pricing on a user-curated watchlist."
 ---
 
-The **Airline Intelligence** panel (internal id `airline-intel`) is the dashboard's civil-aviation command surface. It tracks a user-curated watchlist of airports and routes, surfaces delay and cancellation severity, tracks specific aircraft, and can quote real-time flight prices across a date grid. Built as six tabs so each aspect renders on its own without cross-panel context switching.
+The **Airline Intelligence** panel (internal id `airline-intel`) is the dashboard's civil-aviation command surface. It tracks a user-curated watchlist of airports and routes, surfaces FAA delays and NOTAM closures, tracks specific aircraft, and can quote real-time flight prices across a date grid. Built as four tabs so each aspect renders on its own without cross-panel context switching.
 
 ## What the panel shows
 
-Six tabs under a shared airport + route watchlist control:
+Four tabs under a shared airport + route watchlist control:
 
 | Tab id | Shows |
 |---|---|
-| `ops` | Airport ops summary per watchlist airport — delay / cancellation severity via `FlightDelaySeverity` (`normal` / `minor` / `moderate` / `major` / `severe`, colour-bucketed). |
-| `flights` | Live flight instances at watched airports, with per-flight status badges (`scheduled` / `boarding` / `departed` / `airborne` / `landed` / `arrived` / `cancelled` / `diverted` / `unknown`) and delay stats. |
-| `airlines` | Per-carrier ops: `CarrierOps` — delay rate, cancellation rate, on-time performance. |
+| `ops` | Airport ops summary per watchlist airport — FAA delay severity and NOTAM closures via `FlightDelaySeverity` (`normal` / `minor` / `moderate` / `major` / `severe`, colour-bucketed). |
 | `tracking` | Live aircraft positions (`PositionSample[]`) for tracked tails, plus an individual-flight status lookup. |
 | `news` | Aviation-relevant news items (`AviationNewsItem[]`). |
 | `prices` | Google Flights quotes for a specific itinerary and a date-grid of cheapest-day prices across a range. |
 
-`TABS` is declared as `['ops', 'flights', 'airlines', 'tracking', 'news', 'prices'] as const` in `src/components/AirlineIntelPanel.ts:54`. Watchlist comes from `aviationWatchlist.get()`; the initial airport slice and route are seeded on mount.
 
 Panel id is `airline-intel`; canonical component is `src/components/AirlineIntelPanel.ts`. Title resolves from i18n (`panels.airlineIntel`).
 
@@ -37,13 +34,9 @@ hydration first; the tab-specific calls below are direct REST RPCs.
 
 | Capability | Endpoint | Panel path |
 |---|---|---|
-| Airport delay alerts | `GET /api/aviation/v1/list-airport-delays` | Bootstrap-backed disruption layer and service fallback. |
-| Airport ops summaries | `GET /api/aviation/v1/get-airport-ops-summary` | `ops` tab for watched airports. |
-| Airport flight instances | `GET /api/aviation/v1/list-airport-flights` | `flights` tab for one watched airport. |
-| Carrier delay / cancellation rollups | `GET /api/aviation/v1/get-carrier-ops` | `airlines` tab for watched airports. |
-| Specific flight status | `GET /api/aviation/v1/get-flight-status` | `tracking` tab lookup. |
+| Airport delay alerts | `GET /api/aviation/v1/list-airport-delays` | Bootstrap-backed disruption layer and Ops tab for watched airports. |
 | Aircraft position tracking | `GET /api/aviation/v1/track-aircraft` | `tracking` tab and civil-airspace map workflows. |
-| YouTube video metadata | `GET /api/aviation/v1/get-youtube-live-stream-info` | Names a YouTube video through oEmbed. Channel live detection is retired: a channel-only query returns error `channel_live_detection_retired`, and the `channel`, `isLive` and `hlsUrl` fields are deprecated. Not part of the six-tab auto-refresh loop. |
+| YouTube video metadata | `GET /api/aviation/v1/get-youtube-live-stream-info` | Names a YouTube video through oEmbed. Channel live detection is retired: a channel-only query returns error `channel_live_detection_retired`, and the `channel`, `isLive` and `hlsUrl` fields are deprecated. Not part of the four-tab auto-refresh loop. |
 | Legacy flight price quotes | `GET /api/aviation/v1/search-flight-prices` | Direct quote search path with provider/degraded-state metadata. |
 | Aviation news | `GET /api/aviation/v1/list-aviation-news` | `news` tab. |
 | Google Flights itinerary search | `GET /api/aviation/v1/search-google-flights` | `prices` tab explicit search. |
@@ -63,5 +56,5 @@ Three distinct refresh paths in `src/components/AirlineIntelPanel.ts`:
 
 ## API reference
 
-- [Aviation service](https://github.com/koala73/worldmonitor/blob/main/docs/api/AviationService.openapi.yaml) — generated OpenAPI for the 11 RPCs above.
+- [Aviation service](https://github.com/koala73/worldmonitor/blob/main/docs/api/AviationService.openapi.yaml) — generated OpenAPI for the 7 RPCs above.
 - Related map layer: [Military & Civilian Flight Tracking](/military-tracking) for the live flights overlay that the `tracking` tab complements.

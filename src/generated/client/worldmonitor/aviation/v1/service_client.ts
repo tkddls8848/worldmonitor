@@ -80,118 +80,6 @@ export interface PaginationResponse {
   totalCount: number;
 }
 
-export interface GetAirportOpsSummaryRequest {
-  airports: string[];
-}
-
-export interface GetAirportOpsSummaryResponse {
-  summaries: AirportOpsSummary[];
-  cacheHit: boolean;
-}
-
-export interface AirportOpsSummary {
-  iata: string;
-  icao: string;
-  name: string;
-  timezone: string;
-  delayPct: number;
-  avgDelayMinutes: number;
-  cancellationRate: number;
-  totalFlights: number;
-  closureStatus: boolean;
-  notamFlags: string[];
-  severity: FlightDelaySeverity;
-  topDelayReasons: string[];
-  source: string;
-  updatedAt: number;
-}
-
-export interface ListAirportFlightsRequest {
-  airport: string;
-  direction: FlightDirection;
-  limit: number;
-}
-
-export interface ListAirportFlightsResponse {
-  flights: FlightInstance[];
-  totalAvailable: number;
-  source: string;
-  updatedAt: number;
-}
-
-export interface FlightInstance {
-  flightNumber: string;
-  date: string;
-  operatingCarrier?: Carrier;
-  origin?: AirportRef;
-  destination?: AirportRef;
-  scheduledDeparture: number;
-  estimatedDeparture: number;
-  actualDeparture: number;
-  scheduledArrival: number;
-  estimatedArrival: number;
-  actualArrival: number;
-  status: FlightInstanceStatus;
-  delayMinutes: number;
-  cancelled: boolean;
-  diverted: boolean;
-  gate: string;
-  terminal: string;
-  aircraftIcao24: string;
-  aircraftType: string;
-  codeshareFlightNumbers: string[];
-  source: string;
-  updatedAt: number;
-}
-
-export interface Carrier {
-  iataCode: string;
-  icaoCode: string;
-  name: string;
-}
-
-export interface AirportRef {
-  iata: string;
-  icao: string;
-  name: string;
-  timezone: string;
-}
-
-export interface GetCarrierOpsRequest {
-  airports: string[];
-  minFlights: number;
-}
-
-export interface GetCarrierOpsResponse {
-  carriers: CarrierOpsSummary[];
-  source: string;
-  updatedAt: number;
-}
-
-export interface CarrierOpsSummary {
-  carrier?: Carrier;
-  airport: string;
-  totalFlights: number;
-  delayedCount: number;
-  cancelledCount: number;
-  avgDelayMinutes: number;
-  delayPct: number;
-  cancellationRate: number;
-  updatedAt: number;
-}
-
-export interface GetFlightStatusRequest {
-  flightNumber: string;
-  date: string;
-  origin: string;
-}
-
-export interface GetFlightStatusResponse {
-  flights: FlightInstance[];
-  source: string;
-  cacheHit: boolean;
-}
-
 export interface TrackAircraftRequest {
   icao24: string;
   callsign: string;
@@ -281,6 +169,12 @@ export interface PriceQuote {
   observedAt: number;
   checkoutRef: string;
   expiresAt: number;
+}
+
+export interface Carrier {
+  iataCode: string;
+  icaoCode: string;
+  name: string;
 }
 
 export interface ListAviationNewsRequest {
@@ -375,13 +269,9 @@ export type CabinClass = "CABIN_CLASS_UNSPECIFIED" | "CABIN_CLASS_ECONOMY" | "CA
 
 export type FlightDelaySeverity = "FLIGHT_DELAY_SEVERITY_UNSPECIFIED" | "FLIGHT_DELAY_SEVERITY_NORMAL" | "FLIGHT_DELAY_SEVERITY_MINOR" | "FLIGHT_DELAY_SEVERITY_MODERATE" | "FLIGHT_DELAY_SEVERITY_MAJOR" | "FLIGHT_DELAY_SEVERITY_SEVERE" | "FLIGHT_DELAY_SEVERITY_UNKNOWN";
 
-export type FlightDelaySource = "FLIGHT_DELAY_SOURCE_UNSPECIFIED" | "FLIGHT_DELAY_SOURCE_FAA" | "FLIGHT_DELAY_SOURCE_EUROCONTROL" | "FLIGHT_DELAY_SOURCE_COMPUTED" | "FLIGHT_DELAY_SOURCE_AVIATIONSTACK" | "FLIGHT_DELAY_SOURCE_NOTAM";
+export type FlightDelaySource = "FLIGHT_DELAY_SOURCE_UNSPECIFIED" | "FLIGHT_DELAY_SOURCE_FAA" | "FLIGHT_DELAY_SOURCE_EUROCONTROL" | "FLIGHT_DELAY_SOURCE_COMPUTED" | "FLIGHT_DELAY_SOURCE_NOTAM";
 
 export type FlightDelayType = "FLIGHT_DELAY_TYPE_UNSPECIFIED" | "FLIGHT_DELAY_TYPE_GROUND_STOP" | "FLIGHT_DELAY_TYPE_GROUND_DELAY" | "FLIGHT_DELAY_TYPE_DEPARTURE_DELAY" | "FLIGHT_DELAY_TYPE_ARRIVAL_DELAY" | "FLIGHT_DELAY_TYPE_GENERAL" | "FLIGHT_DELAY_TYPE_CLOSURE";
-
-export type FlightDirection = "FLIGHT_DIRECTION_UNSPECIFIED" | "FLIGHT_DIRECTION_DEPARTURE" | "FLIGHT_DIRECTION_ARRIVAL" | "FLIGHT_DIRECTION_BOTH";
-
-export type FlightInstanceStatus = "FLIGHT_INSTANCE_STATUS_UNSPECIFIED" | "FLIGHT_INSTANCE_STATUS_SCHEDULED" | "FLIGHT_INSTANCE_STATUS_BOARDING" | "FLIGHT_INSTANCE_STATUS_DEPARTED" | "FLIGHT_INSTANCE_STATUS_AIRBORNE" | "FLIGHT_INSTANCE_STATUS_LANDED" | "FLIGHT_INSTANCE_STATUS_ARRIVED" | "FLIGHT_INSTANCE_STATUS_CANCELLED" | "FLIGHT_INSTANCE_STATUS_DIVERTED" | "FLIGHT_INSTANCE_STATUS_UNKNOWN";
 
 export type PositionSource = "POSITION_SOURCE_UNSPECIFIED" | "POSITION_SOURCE_OPENSKY" | "POSITION_SOURCE_WINGBITS" | "POSITION_SOURCE_SIMULATED";
 
@@ -482,111 +372,6 @@ export class AviationServiceClient {
     }
 
     return await resp.json() as ListAirportDelaysResponse;
-  }
-
-  async getAirportOpsSummary(req: GetAirportOpsSummaryRequest, options?: AviationServiceCallOptions): Promise<GetAirportOpsSummaryResponse> {
-    let path = "/api/aviation/v1/get-airport-ops-summary";
-    const params = new URLSearchParams();
-    if (req.airports && req.airports.length > 0) req.airports.forEach(v => params.append("airports", v));
-    const url = this.baseURL + path + (params.toString() ? "?" + params.toString() : "");
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...this.defaultHeaders,
-      ...options?.headers,
-    };
-
-    const resp = await this.fetchFn(url, {
-      method: "GET",
-      headers,
-      signal: options?.signal,
-    });
-
-    if (!resp.ok) {
-      return this.handleError(resp);
-    }
-
-    return await resp.json() as GetAirportOpsSummaryResponse;
-  }
-
-  async listAirportFlights(req: ListAirportFlightsRequest, options?: AviationServiceCallOptions): Promise<ListAirportFlightsResponse> {
-    let path = "/api/aviation/v1/list-airport-flights";
-    const params = new URLSearchParams();
-    if (req.airport != null && req.airport !== "") params.set("airport", String(req.airport));
-    if (req.direction != null && req.direction !== "FLIGHT_DIRECTION_UNSPECIFIED") params.set("direction", String(req.direction));
-    if (req.limit != null && req.limit !== 0) params.set("limit", String(req.limit));
-    const url = this.baseURL + path + (params.toString() ? "?" + params.toString() : "");
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...this.defaultHeaders,
-      ...options?.headers,
-    };
-
-    const resp = await this.fetchFn(url, {
-      method: "GET",
-      headers,
-      signal: options?.signal,
-    });
-
-    if (!resp.ok) {
-      return this.handleError(resp);
-    }
-
-    return await resp.json() as ListAirportFlightsResponse;
-  }
-
-  async getCarrierOps(req: GetCarrierOpsRequest, options?: AviationServiceCallOptions): Promise<GetCarrierOpsResponse> {
-    let path = "/api/aviation/v1/get-carrier-ops";
-    const params = new URLSearchParams();
-    if (req.airports && req.airports.length > 0) req.airports.forEach(v => params.append("airports", v));
-    if (req.minFlights != null && req.minFlights !== 0) params.set("min_flights", String(req.minFlights));
-    const url = this.baseURL + path + (params.toString() ? "?" + params.toString() : "");
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...this.defaultHeaders,
-      ...options?.headers,
-    };
-
-    const resp = await this.fetchFn(url, {
-      method: "GET",
-      headers,
-      signal: options?.signal,
-    });
-
-    if (!resp.ok) {
-      return this.handleError(resp);
-    }
-
-    return await resp.json() as GetCarrierOpsResponse;
-  }
-
-  async getFlightStatus(req: GetFlightStatusRequest, options?: AviationServiceCallOptions): Promise<GetFlightStatusResponse> {
-    let path = "/api/aviation/v1/get-flight-status";
-    const params = new URLSearchParams();
-    if (req.flightNumber != null && req.flightNumber !== "") params.set("flight_number", String(req.flightNumber));
-    if (req.date != null && req.date !== "") params.set("date", String(req.date));
-    if (req.origin != null && req.origin !== "") params.set("origin", String(req.origin));
-    const url = this.baseURL + path + (params.toString() ? "?" + params.toString() : "");
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...this.defaultHeaders,
-      ...options?.headers,
-    };
-
-    const resp = await this.fetchFn(url, {
-      method: "GET",
-      headers,
-      signal: options?.signal,
-    });
-
-    if (!resp.ok) {
-      return this.handleError(resp);
-    }
-
-    return await resp.json() as GetFlightStatusResponse;
   }
 
   async trackAircraft(req: TrackAircraftRequest, options?: AviationServiceCallOptions): Promise<TrackAircraftResponse> {

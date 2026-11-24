@@ -458,7 +458,6 @@
     "gulfIndices": "Golf-Indizes",
     "gulfCurrencies": "Golf-Währungen",
     "gulfOil": "Golf-Öl",
-    "bigmac": "Echter Big-Mac-Index",
     "marketImplications": "KI-Marktauswirkungen",
     "energyComplex": "Energiekomplex",
     "oilInventories": "Ölbestände",
@@ -475,9 +474,6 @@
     "windyWebcams": "Windy Live-Webcam",
     "groceryBasket": "Lebensmittelindex",
     "groceryItem": "Artikel",
-    "bigmacDesc": "Big-Mac-Preise in Ländern des Nahen Ostens (Big-Mac-Index)",
-    "bigmacWow": "Woche-über-Woche",
-    "bigmacCountry": "Land",
     "faoFoodPriceIndex": "Lebensmittelpreise",
     "fuelPrices": "Kraftstoffpreise",
     "fuelPricesDesc": "Einzelhandelsbenzin- und Dieselpreise in über 30 Ländern weltweit",
@@ -2149,9 +2145,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Lebensmittelindex</strong> Globaler Vergleich von Lebensmittelkorbpreisen in 24 Ländern – verfolgt die reale Verbraucherpreisinflation über den Schlagzeilenindex hinaus."
     },
-    "bigmac": {
-      "infoTooltip": "<strong>Realer Big-Mac-Index</strong> Der Big-Mac-Index des Economist misst die Kaufkraftparität anhand der McDonald's-Burgerpreise verschiedener Länder. Aktualisierung bei Veröffentlichung neuer Daten (quartalsweise/jährlich)."
-    },
     "defiTokens": {
       "infoTooltip": "<strong>DeFi-Token</strong> Kurse und 24h-/7d-Entwicklung der wichtigsten Token dezentraler Finanzprotokolle – DEXes, Kreditplattformen und Yield-Protokolle."
     },
@@ -2176,8 +2169,6 @@
     "airlineIntel": {
       "infoTooltip": "<strong>Airline-Aufklärung</strong> Betriebsdaten von Fluggesellschaften in Echtzeit: Routenaussetzungen, Luftraumsperrungen, Hinweise der Fluggesellschaften und Notfallumleitungen. Quelle: NOTAM der Luftfahrtbehörden und Bulletins der Fluggesellschaften.",
       "noOpsData": "Keine Betriebsdaten – werden geladen…",
-      "noFlights": "Keine Flüge – wählen Sie einen Flughafen in den Einstellungen.",
-      "noCarrierData": "Noch keine Airline-Daten.",
       "noTrackingData": "Keine Flugzeug-Verfolgungsdaten.",
       "noNews": "Keine Luftfahrtnachrichten.",
       "enterRoute": "Route eingeben und nach Preisen suchen.",
@@ -2783,24 +2774,6 @@
         "low": "geringe Konfidenz"
       }
     },
-    "defensePatents": {
-      "title": "Signale für Forschung und Entwicklung",
-      "infoTooltip": "Wöchentliche Anmeldungen von Verteidigungs- und Doppelverwendungspatenten von Raytheon, Lockheed, Huawei, DARPA und anderen strategischen Organisationen. Kategorien: H04B (Kommunikation), H01L (Halbleiter), F42B (Munition), G06N (KI), C12N (Biotechnologie). Quelle: USPTO Open Data Portal.",
-      "loading": "Forschungs- und Entwicklungsanmeldungen werden geladen…",
-      "error": "Fehler beim Laden der Patentdaten.",
-      "empty": "Keine Anmeldungen in dieser Kategorie.",
-      "viewOnUspto": "Auf USPTO anzeigen",
-      "tabs": {
-        "all": "Alle"
-      },
-      "cpcLabels": {
-        "H04B": "Kommunikation",
-        "H01L": "Halbleiter",
-        "F42B": "Munition",
-        "G06N": "KI",
-        "C12N": "Biotechnologie"
-      }
-    },
     "correlation": {
       "loading": "Warten auf Daten...",
       "empty": "Keine aktive Konvergenz erkannt",
@@ -3364,7 +3337,6 @@
         "faa": "FAA ASWS",
         "eurocontrol": "Eurocontrol",
         "computed": "Berechnet",
-        "aviationstack": "Flugdaten",
         "notam": "NOTAM"
       },
       "regions": {
@@ -4827,11 +4799,10 @@
       "flights": {
         "category": "Luftfahrt",
         "purpose": "Hebt Flughafenstörungen und NOTAM-Schließungen hervor, Luftraum-NOTAMs, die jetzt gelten oder innerhalb von 24 Stunden beginnen (vorübergehende Flugbeschränkungen, Sperr-, Gefahren- und Verbotsgebiete, militärische Operationsgebiete, Luftraumreservierungen und Schließungen), sowie Live-Flugzeugpositionen, wenn eine Ortung verfügbar ist.",
-        "source": "FAA ASWS, AviationStack, FAA NOTAM Management Service (NMS-API) und ICAO-NOTAMs, adsb.lol (ODbL), Wingbits, die ältere OpenSky-Wiederherstellung, optionale nicht-kommerzielle Lückenfüllung über airplanes.live/adsb.fi und der Luftfahrtdienst. Luftraum-NOTAMs werden als Polygone gezeichnet, wo NMS sie liefert, als Kreise, wo das NOTAM einen Radius bis 250 NM angibt, und sonst als Marker.",
+        "source": "FAA ASWS, FAA NOTAM Management Service (NMS-API) und ICAO-NOTAMs, adsb.lol (ODbL), Wingbits, die ältere OpenSky-Wiederherstellung, optionale nicht-kommerzielle Lückenfüllung über airplanes.live/adsb.fi und der Luftfahrtdienst. Luftraum-NOTAMs werden als Polygone gezeichnet, wo NMS sie liefert, als Kreise, wo das NOTAM einen Radius bis 250 NM angibt, und sonst als Marker.",
         "freshness": "Seeds zu Flughafenstörungen laufen im 30-Minuten-Takt; Luftraum-NOTAMs werden alle 5 Minuten aus NMS-Änderungsabrufen geseedet, mit einem täglichen vollständigen Neuabgleich, bei einem Aktualitätsbudget von 20 Minuten; das Luftfahrt-Panel aktualisiert operative Ansichten zusätzlich im 5-Minuten-Abruf.",
         "confidence": "Am besten zur Vorsortierung von Störungen; die Abdeckung einzelner Live-Flugzeuge hängt von ADS-B und den konfigurierten Anbietern ab. Der NOTAM-Text ist maßgeblich, wie ihn die FAA verteilt.",
         "limitations": {
-          "0": "Simulierte Demodaten auf AviationStack-Basis können erscheinen, wenn ein API-Schlüssel fehlt.",
           "1": "Live-Flugzeugpositionen können verzögert sein oder fehlen, wo die ADS-B-Abdeckung schwach oder blockiert ist.",
           "2": "Luftraum-NOTAM-Flächen werden nur auf der deck.gl-Karte gezeichnet; die SVG-Karte zeigt Flughafenmarker.",
           "3": "Die meisten US-TFR beschreiben ihre Form nur im Text und erscheinen daher als Marker an der NOTAM-Position, nicht als Sperrfläche.",

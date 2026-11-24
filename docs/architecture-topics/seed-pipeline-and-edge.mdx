@@ -23,7 +23,7 @@ Railway cron services continuously refresh the Redis cache with pre-computed dat
 | `seed-fire-detections` | NASA FIRMS VIIRS, CWFIS national active/prescribed fires (CWFIF WFS), and BC Wildfire current fire points (OpenMaps KML) | 10 min | `wildfire:fires:v1` |
 | `seed-climate-anomalies` | Open-Meteo ERA5 | 15 min | `climate:anomalies:v2` |
 | `seed-natural-events` | NHC + GDACS + NASA EONET + HKO warnings | 3 hours | `natural:events:v1` |
-| `seed-airport-delays` | FAA + AviationStack + ICAO NOTAM | 10 min | `aviation:delays-bootstrap:v1` |
+| `seed-aviation` | FAA + ICAO NOTAM | 10 min | `aviation:delays-bootstrap:v2` |
 | `seed-insights` | LLM world brief + top stories (Ollama, then OpenRouter) | 10 min | `news:insights:v1` |
 | `seed-prediction-markets` | Polymarket Gamma API | 10 min | `prediction:markets-bootstrap:v1` |
 | `seed-etf-flows` | Yahoo Finance (IBIT, FBTC, GBTC+) | 15 min | `market:etf-flows:v1` |

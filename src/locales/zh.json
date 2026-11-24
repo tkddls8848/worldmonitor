@@ -456,7 +456,6 @@
     "gulfIndices": "海湾指数",
     "gulfCurrencies": "海湾货币",
     "gulfOil": "海湾石油",
-    "bigmac": "巨无霸指数",
     "fearGreed": "恐惧与贪婪指数",
     "marketImplications": "AI 市场影响",
     "energyComplex": "能源综合体",
@@ -474,9 +473,6 @@
     "windyWebcams": "Windy 实时网络摄像头",
     "groceryBasket": "食品杂货指数",
     "groceryItem": "商品",
-    "bigmacDesc": "中东国家的巨无霸汉堡价格（巨无霸指数）",
-    "bigmacWow": "周环比",
-    "bigmacCountry": "国家",
     "faoFoodPriceIndex": "食品价格",
     "fuelPrices": "燃料价格",
     "fuelPricesDesc": "全球 30 多个国家的零售汽油和柴油价格",
@@ -2144,9 +2140,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>杂货篮指数</strong>全球24个国家的杂货篮价格对比——跟踪超越头条消费者价格指数的真实消费品通胀。"
     },
-    "bigmac": {
-      "infoTooltip": "<strong>巨无霸指数</strong> 经济学人的巨无霸指数通过比较各国麦当劳汉堡价格衡量购买力平价。新数据发布时更新（每季度/每年）。"
-    },
     "defiTokens": {
       "infoTooltip": "<strong>DeFi 代币</strong> 主要去中心化金融协议代币（DEX、借贷平台和收益协议）的价格及 24 小时/7 天表现。"
     },
@@ -2171,8 +2164,6 @@
     "airlineIntel": {
       "infoTooltip": "<strong>航空情报</strong> 实时航空公司运营数据：航线暂停、空域关闭、承运商公告和紧急改航。来源：航空当局NOTAM和承运商通报。",
       "noOpsData": "无运营数据 — 加载中…",
-      "noFlights": "无航班 — 在设置中选择机场。",
-      "noCarrierData": "暂无运营商数据。",
       "noTrackingData": "无飞机追踪数据。",
       "noNews": "无航空新闻。",
       "enterRoute": "输入路线并搜索价格。",
@@ -2769,24 +2760,6 @@
         "low": "低可信度"
       }
     },
-    "defensePatents": {
-      "title": "研究开发信号",
-      "infoTooltip": "雷神、洛克希德、华为、DARPA 及其他战略组织的周度国防和双用途专利申请。分类：H04B（通信）、H01L（半导体）、F42B（弹药）、G06N（AI）、C12N（生物技术）。数据来源：美国专利商标局开放数据门户。",
-      "loading": "正在加载研究开发文件…",
-      "error": "加载专利数据失败。",
-      "empty": "该分类中无申请。",
-      "viewOnUspto": "在美国专利商标局查看",
-      "tabs": {
-        "all": "全部"
-      },
-      "cpcLabels": {
-        "H04B": "通信",
-        "H01L": "半导体",
-        "F42B": "弹药",
-        "G06N": "AI",
-        "C12N": "生物技术"
-      }
-    },
     "correlation": {
       "loading": "等待数据...",
       "empty": "未检测到活跃收敛",
@@ -3344,7 +3317,6 @@
         "faa": "FAA ASWS",
         "eurocontrol": "Eurocontrol",
         "computed": "计算值",
-        "aviationstack": "航班数据",
         "notam": "NOTAM"
       },
       "regions": {
@@ -4805,11 +4777,10 @@
       "flights": {
         "category": "航空",
         "purpose": "标出机场中断和NOTAM关闭。也显示当前有效或在24小时内开始的空域NOTAM（临时飞行限制、限制区、危险区、禁区、军事活动区、空域保留和关闭）。在能够跟踪时，还显示航空器的实时位置。",
-        "source": "FAA ASWS、AviationStack、FAA NOTAM管理服务（NMS-API）和ICAO NOTAM、adsb.lol（ODbL）、Wingbits、旧版OpenSky服务恢复、可选的非商业airplanes.live/adsb.fi补缺，以及航空服务。空域NOTAM在NMS提供形状时画成多边形，在NOTAM给出不超过250海里的半径时画成圆，其余画成标记。",
+        "source": "FAA ASWS、FAA NOTAM管理服务（NMS-API）和ICAO NOTAM、adsb.lol（ODbL）、Wingbits、旧版OpenSky服务恢复、可选的非商业airplanes.live/adsb.fi补缺，以及航空服务。空域NOTAM在NMS提供形状时画成多边形，在NOTAM给出不超过250海里的半径时画成圆，其余画成标记。",
         "freshness": "机场中断种子按30分钟节奏运行。空域NOTAM根据NMS变更拉取每5分钟写入一次种子，并每天做一次全量重新同步，新鲜度时限为20分钟。航空面板还按5分钟轮询刷新运行视图。",
         "confidence": "最适合给中断做分流。单架实时航空器的覆盖取决于ADS-B是否可用以及配置的提供方。NOTAM正文以FAA分发的文本为准。",
         "limitations": {
-          "0": "没有API密钥时，可能出现基于AviationStack的模拟演示数据。",
           "1": "ADS-B覆盖弱或被阻断的地方，实时航空器位置可能延迟或缺失。",
           "2": "空域NOTAM区域只画在deck.gl地图上。SVG地图显示机场标记。",
           "3": "多数美国TFR只在正文里描述形状，因此显示为NOTAM位置上的标记，而不是限制区形状。",

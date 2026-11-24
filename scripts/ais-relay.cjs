@@ -4548,19 +4548,11 @@ async function startMarketDataSeedLoop() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Aviation Seed — Railway fetches AviationStack → writes to Redis
-// so Vercel handler serves from cache (avoids 114 API calls per miss)
-// ─────────────────────────────────────────────────────────────
-// AviationStack API key — used only by the /aviationstack live proxy below.
-// The aviation + NOTAM background seeds that used to live here were
-// consolidated into scripts/seed-aviation.mjs (standalone Railway cron).
-const AVIATIONSTACK_API_KEY = process.env.AVIATIONSTACK_API || '';
-
 // In-process dedup sets for non-aviation seed notifications (cyber + UCDP).
 // These track IDs already queued within a seed process's lifetime so the
 // loops below don't re-notify on every poll. Cleared at 500 entries to
 // bound memory. Aviation + NOTAM moved their dedup state to Redis
-// (notifications:dedup:aviation:prev-alerted:v1 / notam:prev-closed-state:v1).
+// (notifications:dedup:aviation:faa:prev-alerted:v1 / notam:prev-closed-state:v1).
 const cyberPrevAlertedIds = new Set();
 const ucdpPrevAlertedIds = new Set();
 
@@ -9001,7 +8993,6 @@ function getRouteGroup(pathname) {
   if (pathname.startsWith('/oref')) return 'oref';
   if (pathname === '/notam') return 'notam';
   if (pathname === '/yahoo-chart') return 'yahoo-chart';
-  if (pathname === '/aviationstack') return 'aviationstack';
   if (pathname === '/crypto-quotes') return 'crypto-quotes';
   return 'other';
 }
@@ -12254,88 +12245,6 @@ function handleCryptoQuotesRequest(req, res) {
 }
 
 
-// ── AviationStack Proxy ─────────────────────────────────────────────
-// Vercel handlers proxy flight queries through Railway to keep the API key
-// off Vercel edge and consolidate external calls on one egress IP.
-const aviationStackCache = new Map();
-const AVIATIONSTACK_CACHE_TTL_MS = 120_000; // 2 min
-
-function handleAviationStackRequest(req, res) {
-  if (!AVIATIONSTACK_API_KEY) {
-    return sendCompressed(req, res, 503, { 'Content-Type': 'application/json' },
-      JSON.stringify({ error: 'AviationStack not configured' }));
-  }
-
-  const url = new URL(req.url, `http://localhost:${PORT}`);
-  const params = new URLSearchParams(url.searchParams);
-  params.set('access_key', AVIATIONSTACK_API_KEY);
-
-  const cacheKey = params.toString();
-  const cached = aviationStackCache.get(cacheKey);
-  if (cached && Date.now() - cached.ts < AVIATIONSTACK_CACHE_TTL_MS) {
-    return sendCompressed(req, res, 200, {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'public, max-age=120, s-maxage=120',
-      'X-Aviation-Source': 'relay-cache',
-    }, cached.json);
-  }
-
-  const apiUrl = `https://api.aviationstack.com/v1/flights?${params}`;
-  const apiReq = https.get(apiUrl, {
-    signal: AbortSignal.timeout(10000),
-    headers: { 'User-Agent': CHROME_UA, Accept: 'application/json' },
-    timeout: 10000,
-  }, (upstream) => {
-    let body = '';
-    upstream.on('data', (chunk) => { body += chunk; });
-    upstream.on('end', () => {
-      if (upstream.statusCode !== 200) {
-        logThrottled('warn', `aviationstack-upstream-${upstream.statusCode}`,
-          `[Relay] AviationStack upstream ${upstream.statusCode}`);
-        return sendCompressed(req, res, upstream.statusCode || 502, {
-          'Content-Type': 'application/json',
-          'X-Aviation-Source': 'relay-upstream-error',
-        }, JSON.stringify({ error: `AviationStack upstream ${upstream.statusCode}` }));
-      }
-      aviationStackCache.set(cacheKey, { json: body, ts: Date.now() });
-      // Prune stale entries periodically
-      if (aviationStackCache.size > 200) {
-        const now = Date.now();
-        for (const [k, v] of aviationStackCache) {
-          if (now - v.ts > AVIATIONSTACK_CACHE_TTL_MS * 2) aviationStackCache.delete(k);
-        }
-      }
-      sendCompressed(req, res, 200, {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=120, s-maxage=120',
-        'X-Aviation-Source': 'relay-upstream',
-      }, body);
-    });
-  });
-  apiReq.on('error', (err) => {
-    logThrottled('error', 'aviationstack-error', `[Relay] AviationStack error: ${err.message}`);
-    if (cached) {
-      return sendCompressed(req, res, 200, {
-        'Content-Type': 'application/json',
-        'X-Aviation-Source': 'relay-stale',
-      }, cached.json);
-    }
-    sendCompressed(req, res, 502, { 'Content-Type': 'application/json' },
-      JSON.stringify({ error: 'AviationStack upstream error' }));
-  });
-  apiReq.on('timeout', () => {
-    apiReq.destroy();
-    if (cached) {
-      return sendCompressed(req, res, 200, {
-        'Content-Type': 'application/json',
-        'X-Aviation-Source': 'relay-stale',
-      }, cached.json);
-    }
-    sendCompressed(req, res, 504, { 'Content-Type': 'application/json' },
-      JSON.stringify({ error: 'AviationStack upstream timeout' }));
-  });
-}
-
 // ── Proxy fetch helper ─────────────────────────────────────────────
 // Resolves { ok, status, body } and never rejects. Written for the retired YouTube live
 // detection; the relay's PROXY_URL callers (Yahoo chart, USNI and others) still use it.
@@ -13461,8 +13370,6 @@ async function handleRelayRequest(req, res) {
     return handleCryptoQuotesRequest(req, res);
   } else if (pathname === '/notam') {
     return handleNotamProxyRequest(req, res);
-  } else if (pathname === '/aviationstack') {
-    return handleAviationStackRequest(req, res);
   } else if (pathname === '/google-flights/search') {
     return handleGoogleFlightsSearch(req, res);
   } else if (pathname === '/google-flights/search-dates') {
@@ -15436,7 +15343,7 @@ server.listen(PORT, RELAY_BIND_HOST, () => {
   startUcdpSeedLoop();
   startMarketDataSeedLoop();
   // Aviation + NOTAM seeds — standalone Railway cron — scripts/seed-aviation.mjs
-  // Writes aviation:delays:intl:v3, aviation:delays:faa:v1, aviation:notam:closures:v2,
+  // Writes aviation:delays:faa:v1, aviation:notam:closures:v2,
   // aviation:news::24:v1 and publishes aviation_closure/notam_closure events.
   // Energy spine seed — standalone Railway cron (0 6 * * *) — seed-energy-spine.mjs
   // Assembles per-country canonical energy keys from 6 domain sources daily.

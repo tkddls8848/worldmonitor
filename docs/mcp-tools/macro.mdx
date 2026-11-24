@@ -120,7 +120,7 @@ Retired. This Eurostat series is the `industrial-production` dataset of [`get_co
 
 ### `get_price_and_debt_indicators`
 
-Return the seeded price and debt indicator bundle: the Economist Big Mac index by country, the FAO Food Price Index and per-country national debt levels. Each sub-dataset has its own staleness budget (Big Mac a week, FAO and debt 60 days). No tariff rates. Seeded-cache read with no live fetch: weight 1 on API plans, included in the signed-in free allowance.
+Return the seeded price and debt indicator bundle: the FAO Food Price Index and per-country national debt levels. Each sub-dataset has its own staleness budget (60 days for each). No tariff rates. Seeded-cache read with no live fetch: weight 1 on API plans, included in the signed-in free allowance.
 
 Formerly `get_tariff_trends`. A call to that old name with only the tariffs dataset runs `get_tariff_averages` and returns the US MFN series. Any other dataset on the old name still returns this bundle. This bundle has carried no tariff series since #9301. The US MFN series is Pro data. Call `get_tariff_averages` with reporter `840` and no partner or product group. `dataset: ["tariffs"]` on this tool returns Invalid params.
 
@@ -128,14 +128,14 @@ Formerly `get_tariff_trends`. A call to that old name with only the tariffs data
 
 | Name | Type | Description |
 |------|------|-------------|
-| `dataset` | `array<string: bigmac / fao-ffpi / national-debt>` | Sub-datasets to return: bigmac (Economist Big Mac prices by country), fao-ffpi (FAO Food Price Index) or national-debt (debt by country). Omit for all three. |
-| `country` | string | Country to filter the per-country datasets (Big Mac prices, national debt) to, as an ISO 3166-1 alpha-2 or alpha-3 code or a country name (e.g. "US", "USA", "United States"). Unresolved inputs return Invalid params. |
-| `limit` | number | Cap each list dataset (BigMac countries, debt entries) to at most this many items (default 30, pass 0 for no cap). |
+| `dataset` | `array<string: fao-ffpi / national-debt>` | Sub-datasets to return: fao-ffpi (FAO Food Price Index) or national-debt (debt by country). Omit for both. |
+| `country` | string | Country to filter national debt to, as an ISO 3166-1 alpha-2 or alpha-3 code or a country name (e.g. "US", "USA", "United States"). Unresolved inputs return Invalid params. |
+| `limit` | number | Cap each list dataset (debt entries) to at most this many items (default 30, pass 0 for no cap). |
 
-- **API endpoints:** `GET /api/economic/v1/get-fao-food-price-index`, `GET /api/economic/v1/get-national-debt`, `GET /api/economic/v1/list-bigmac-prices`
+- **API endpoints:** `GET /api/economic/v1/get-fao-food-price-index`, `GET /api/economic/v1/get-national-debt`
 - **Access:** `free-account` — callable by any signed-in account; free accounts spend the daily free allowance, Pro calls spend the daily quota. Accepts the universal `summary` argument.
 - **Kind:** cache read — sub-second response from Redis bootstrap cache.
-- **Freshness budget:** per sub-dataset — BigMac **7 d**, FAO FFPI and national debt **60 d** each. The single `stale` flag ORs all three checks: it flips as soon as any one sub-dataset exceeds its own budget.
+- **Freshness budget:** per sub-dataset — FAO FFPI and national debt **60 d** each. The single `stale` flag ORs both checks: it flips as soon as any one sub-dataset exceeds its own budget.
 
 <CodeGroup>
 

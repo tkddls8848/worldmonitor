@@ -46,7 +46,7 @@ export const TRAVEL_RISK_FEEDS: readonly TravelRiskFeed[] = [
   { id: 'natural', key: 'natural:events:v1', metaKey: 'seed-meta:natural:events', maxStaleMin: 120, name: 'Natural events (GDACS, NASA EONET, NOAA NHC)' },
   { id: 'weather', key: 'weather:alerts:v1', metaKey: 'seed-meta:weather:alerts', maxStaleMin: 45, name: 'Weather alerts (US NWS, Environment Canada, WMO SWIC)' },
   { id: 'outbreaks', key: 'health:disease-outbreaks:v1', metaKey: 'seed-meta:health:disease-outbreaks', maxStaleMin: 2880, name: 'Disease outbreak reports (WHO, CDC, ECDC, CIDRAP and others)' },
-  { id: 'aviation', key: 'aviation:delays-bootstrap:v2', metaKey: 'seed-meta:aviation:delays-bootstrap', maxStaleMin: 90, name: 'Monitored airport status (AviationStack, FAA, airport NOTAMs)' },
+  { id: 'aviation', key: 'aviation:delays-bootstrap:v2', metaKey: 'seed-meta:aviation:delays-bootstrap', maxStaleMin: 90, name: 'Monitored airport status (FAA and airport NOTAMs)' },
   { id: 'outages', key: 'infra:outages:v1', metaKey: 'seed-meta:infra:outages', maxStaleMin: 30, name: 'Cloudflare Radar internet outage annotations' },
 ];
 
@@ -904,7 +904,6 @@ const AIRPORT_SEVERITY: Record<string, string> = {
 
 const AIRPORT_SOURCE: Record<string, string> = {
   FLIGHT_DELAY_SOURCE_FAA: 'FAA',
-  FLIGHT_DELAY_SOURCE_AVIATIONSTACK: 'AviationStack',
   FLIGHT_DELAY_SOURCE_NOTAM: 'Airport NOTAM',
 };
 

@@ -5,18 +5,7 @@ import { runBundle, DAY, WEEK } from './_bundle-runner.mjs';
 // Military-Bases, Mineral-Production) moved to seed-bundle-static-ref-heavy in
 // #6806 because they could not coexist with the remaining members under one 570s tick.
 //
-// What that split buys, and why it is worth a Railway service: the five members
-// below now total 545s of worst-case reservation (110 + 100 + 190 + 70 + 75)
-// against a 570s budget. The runner performs the heartbeat and every freshness
-// gate concurrently inside a bounded 20s preflight, leaving 5s for process
-// overhead. Every due member is therefore admissible on every tick. There is no
-// ordering question left in this bundle and no member can starve another. Before the split,
-// Arms-Suppliers measured 371s here and left 199s, which deferred Defense-Patents
-// and Mineral-Production by 13 seconds on 2026-08-18 — Mineral-Production on the
-// very tick its acknowledgement expired.
-//
-// Keep this total under 570s. Adding a member whose reservation does not fit
-// alongside the others reintroduces the ordering question this split removed.
+// The remaining members fit within the 570-second reservation budget.
 await runBundle('static-ref', [
   // Keep the two upstreams as separate processes. A World Bank failure cannot
   // prevent a healthy SIPRI publication, and the daily tick lets the wall-time
@@ -36,7 +25,6 @@ await runBundle('static-ref', [
   // landing-point-geo.json (360KB). 90s is ~4x that, which keeps room for a
   // slower link from Railway while reserving 100s instead of 310s.
   { label: 'Submarine-Cables', script: 'seed-submarine-cables.mjs', seedMetaKey: 'infrastructure:submarine-cables', canonicalKey: 'infrastructure:submarine-cables:v1', intervalMs: WEEK, timeoutMs: 90_000 },
-  { label: 'Defense-Patents', script: 'seed-defense-patents.mjs', seedMetaKey: 'military:defense-patents', canonicalKey: 'patents:defense:latest', intervalMs: WEEK, timeoutMs: 180_000, requiredEnv: ['USPTO_API_KEY'] },
   { label: 'Chokepoint-Baselines', script: 'seed-chokepoint-baselines.mjs', seedMetaKey: 'energy:chokepoint-baselines', canonicalKey: 'energy:chokepoint-baselines:v1', intervalMs: 400 * DAY, timeoutMs: 60_000 },
   // The data changes annually, but the 20-day refresh interval keeps the
   // deliberately short 30-day canonical TTL alive. A mixed last-good publish

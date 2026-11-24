@@ -30,7 +30,6 @@ import {
   eurostatHicpUrl,
   EUROSTAT_HICP_KEY,
 } from '../scripts/seed-world-cpi-eurostat.mjs';
-import { estatCpiPeriod, parseEstatCpi, ESTAT_CPI_KEY } from '../scripts/seed-world-cpi-estat.mjs';
 import { parseAbsCpiRows, ABS_CPI_KEY, ABS_CPI_ACTIVATION_KEY } from '../scripts/seed-world-cpi-abs.mjs';
 import {
   PREFERRED_SOURCE_MAX_LAG_MONTHS,
@@ -242,37 +241,6 @@ describe('Eurostat source', () => {
   });
 });
 
-describe('e-Stat source', () => {
-  it('decodes the e-Stat time code and rejects fiscal-year entries', () => {
-    assert.equal(estatCpiPeriod('2026000808'), '2026-08');
-    assert.equal(estatCpiPeriod('2025001212'), '2025-12');
-    assert.equal(estatCpiPeriod('2025100000'), undefined);
-    assert.equal(estatCpiPeriod('nonsense'), undefined);
-  });
-
-  it('extracts the national all-items series from a getStatsData payload', () => {
-    const payload = {
-      GET_STATS_DATA: {
-        STATISTICAL_DATA: {
-          DATA_INF: {
-            VALUE: [
-              { '@tab': '1', '@time': '2026000808', $: '114.3' },
-              { '@tab': '1', '@time': '2026000707', $: '114.2' },
-              { '@tab': '1', '@time': '2025100000', $: '999' },
-              { '@tab': '1', '@time': '2026000606', $: '' },
-            ],
-          },
-        },
-      },
-    };
-    // The parser preserves document order (e-Stat returns newest first);
-    // runSeed's normalization sorts ascending.
-    const normalized = buildNational(parseEstatCpi(payload));
-    assert.deepEqual(normalized.countries.JP.points, points([['2026-07', 114.2], ['2026-08', 114.3]]));
-    assert.deepEqual(parseEstatCpi({}), {});
-  });
-});
-
 describe('ABS source', () => {
   it('keeps quarterly rows only, in document order until normalized', () => {
     const rows = [
@@ -292,7 +260,6 @@ describe('source key parity', () => {
     assert.equal(IMF_CPI_KEY, WORLD_CPI_CANONICAL_KEYS['imf-cpi']);
     assert.equal(IMF_CPI_LATEST_KEY, WORLD_CPI_LATEST_KEYS['imf-cpi']);
     assert.equal(EUROSTAT_HICP_KEY, WORLD_CPI_CANONICAL_KEYS['eurostat-hicp']);
-    assert.equal(ESTAT_CPI_KEY, WORLD_CPI_CANONICAL_KEYS['estat-cpi']);
     assert.equal(ABS_CPI_KEY, WORLD_CPI_CANONICAL_KEYS['abs-cpi']);
   });
 
@@ -338,17 +305,6 @@ describe('country source selection', () => {
     const selected = selectCountrySeries(sources);
     assert.equal(selected.DE.source, 'imf-hicp');
     assert.equal(selected.DE.points[0].value, 136.34);
-  });
-
-  it('prefers the Japan e-Stat overlay over the IMF national series', () => {
-    const sources = {
-      'imf-cpi': sourcePayload({
-        JP: { frequency: 'M', points: points([['2026-08', 113.6]]) },
-      }),
-      'estat-cpi': sourcePayload({ JP: { frequency: 'M', points: points([['2026-07', 114.2], ['2026-08', 114.3]]) } }),
-    };
-    const selected = selectCountrySeries(sources);
-    assert.equal(selected.JP.source, 'estat-cpi');
   });
 
   it('keeps the IMF quarterly series for AU while it is fresh, and falls back to ABS when it lags', () => {
@@ -526,13 +482,6 @@ describe('latest window and content age', () => {
     const meta = cpiContentMeta(payload);
     assert.equal(meta.newestItemAt, Date.UTC(2026, 7, 1));
     assert.equal(meta.oldestItemAt, Date.UTC(2020, 0, 1));
-  });
-
-  it('declares the Japan source credential before bundle execution', () => {
-    const bundle = readFileSync(new URL('../scripts/seed-bundle-macro.mjs', import.meta.url), 'utf8');
-    const section = bundle.split('\n').find((line) => line.includes("label: 'World-CPI-JP'"));
-    assert.ok(section);
-    assert.match(section, /requiredEnv: \['ESTAT_APPID'\]/);
   });
 
   it('writes the ABS activation marker monitored by health', () => {

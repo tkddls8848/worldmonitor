@@ -12,7 +12,7 @@ description: "World Monitor MCP 工具参考：气候、气旋、自然灾害、
 
 ### `get_climate_data`
 
-气候情报：温度/降水异常（对比 30 年 WMO 常态）、气候相关灾害警报（ReliefWeb/GDACS/FIRMS）、大气 CO2 趋势（NOAA Mauna Loa）、空气质量（OpenAQ/WAQI PM2.5 站点）、北极海冰范围和海洋热指标（NSIDC/NOAA）、天气警报和气候新闻。
+气候情报：温度/降水异常（对比 30 年 WMO 常态）、气候相关灾害警报（ReliefWeb/GDACS/FIRMS）、大气 CO2 趋势（NOAA Mauna Loa）、北极海冰范围和海洋热指标（NSIDC/NOAA）、天气警报和气候新闻。
 
 **参数（工具特定）：**
 
@@ -22,7 +22,7 @@ description: "World Monitor MCP 工具参考：气候、气旋、自然灾害、
 | `country` | string | 将按国家标记的数据集（气候灾害、空气质量站点）筛选为一个 ISO 3166-1 alpha-2 代码。 |
 | `limit` | number | 将每个列表数据集（异常、灾害、站点、新闻、警报）限制为最多这么多项（默认 30，传 0 表示不限）。 |
 
-- **API 端点：** `GET /api/climate/v1/get-co2-monitoring`, `GET /api/climate/v1/get-ocean-ice-data`, `GET /api/climate/v1/list-air-quality-data`, `GET /api/climate/v1/list-climate-anomalies`, `GET /api/climate/v1/list-climate-disasters`, `GET /api/climate/v1/list-climate-news`
+- **API 端点：** `GET /api/climate/v1/get-co2-monitoring`, `GET /api/climate/v1/get-ocean-ice-data`, `GET /api/climate/v1/list-climate-anomalies`, `GET /api/climate/v1/list-climate-disasters`, `GET /api/climate/v1/list-climate-news`
 - **类型：** 缓存读取 — 来自 Redis 引导缓存的亚秒级响应。
 - **新鲜度预算：** 各子数据集使用与 `/api/health` 一致的播种时间预算：天气警报 **45 分钟**、气候新闻 **90 分钟**、异常 **9 小时**、灾害 **12 小时**、空气质量 **3 小时**、海洋/海冰 **48 小时**、CO2 监测 **72 小时**。异常和气候新闻还检查生产者的内容时效预算，目前分别为 **14 天**和 **7 天**。任一播种过期、刷新失败、元数据缺失或内容过期都会使整个捆绑包标记为 `stale: true`。`cached_at` 是所有来源中最早的播种时间，并非统一的过期时间。`dataset` 在捆绑包新鲜度检查后筛选返回的数据。
 
@@ -183,7 +183,7 @@ curl -s https://worldmonitor.app/mcp \
 
 ### `get_health_signals`
 
-活跃疾病暴发（WHO/ECDC 等）和全球空气质量站点读数（OpenAQ/WAQI PM2.5）。用于健康风险筛选。
+活跃疾病暴发（WHO/ECDC 等）。用于健康风险筛选。
 
 **参数（工具特定）：**
 
@@ -195,7 +195,7 @@ curl -s https://worldmonitor.app/mcp \
 | `min_aqi` | number | 丢弃低于此 AQI 值的空气质量站点。 |
 | `limit` | number | 将暴发和站点列表限制为最多这么多项（默认 30，传 0 表示不限）。 |
 
-- **API 端点：** `GET /api/health/v1/list-air-quality-alerts`, `GET /api/health/v1/list-disease-outbreaks`
+- **API 端点：** `GET /api/health/v1/list-disease-outbreaks`
 - **类型：** 缓存读取 — 来自 Redis 引导缓存的亚秒级响应。
 - **新鲜度预算：** 按切片计算——空气质量 **3 小时**、疾病暴发 **48 小时**。单一 `stale` 标志对两项检查取或，任一切片超出自身预算即翻转。
 

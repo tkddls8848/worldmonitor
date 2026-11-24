@@ -22,7 +22,7 @@ const configSrc = readFileSync(
   'utf8',
 );
 
-// Toronto Pearson — aviationstack + notam row; seeder already had coords.
+// Toronto Pearson — NOTAM row; seeder already had coords.
 const YYZ = { city: 'Toronto', lat: 43.6777, lon: -79.6248 };
 // JFK — was FAA-only-shaped (no lat/lon); now inline in the seeder registry.
 const JFK = { city: 'New York', lat: 40.6413, lon: -73.7781 };
@@ -92,11 +92,11 @@ describe('airportNotifyLocation', () => {
 
 describe('#6626 — the airport registry can locate every closure it can publish', () => {
   const notamRows = AIRPORTS.filter((a) => a.sources.includes('notam'));
-  const aviationstackRows = AIRPORTS.filter((a) => a.sources.includes('aviationstack'));
+  const faaRows = AIRPORTS.filter((a) => a.sources.includes('faa'));
 
-  it('has NOTAM and AviationStack rows to check', () => {
+  it('has NOTAM and FAA rows to check', () => {
     assert.ok(notamRows.length > 0, 'no notam-sourced rows found — the guard below would be vacuous');
-    assert.ok(aviationstackRows.length > 0, 'no aviationstack-sourced rows found');
+    assert.ok(faaRows.length > 0, 'no FAA-sourced rows found');
   });
 
   // This is the guard that would have caught the shipped gap: 27 NOTAM airports
@@ -111,7 +111,7 @@ describe('#6626 — the airport registry can locate every closure it can publish
   });
 
   it('resolves coordinates for every aviation_closure-reachable airport', () => {
-    const unlocated = aviationstackRows
+    const unlocated = faaRows
       .filter((a) => airportNotifyLocation(a).lat === undefined)
       .map((a) => `${a.iata}/${a.icao}`);
     assert.deepEqual(unlocated, [], `aviation_closure would publish unlocated: ${unlocated.join(', ')}`);

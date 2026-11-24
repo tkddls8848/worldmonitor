@@ -351,7 +351,7 @@ const ALLOWED_ENV_KEYS = new Set([
   'VITE_OPENSKY_RELAY_URL', 'OPENSKY_CLIENT_ID', 'OPENSKY_CLIENT_SECRET',
   'AISSTREAM_API_KEY', 'VITE_WS_RELAY_URL', 'FINNHUB_API_KEY', 'ALPHA_VANTAGE_API_KEY', 'NASA_FIRMS_API_KEY',
   'OLLAMA_API_URL', 'OLLAMA_MODEL', 'WORLDMONITOR_API_KEY', 'WTO_API_KEY',
-  'AVIATIONSTACK_API', 'ICAO_API_KEY', 'UCDP_ACCESS_TOKEN',
+  'ICAO_API_KEY', 'UCDP_ACCESS_TOKEN',
 ]);
 
 const CHROME_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
@@ -948,7 +948,6 @@ const cloudPreferredExact = new Set([
   '/api/cyber/v1/list-cyber-threats',
   '/api/maritime/v1/list-ukmto-incidents',
   '/api/bootstrap',
-  '/api/aviation/v1/get-airport-ops-summary',
   '/api/displacement/v1/get-displacement-summary',
   '/api/displacement/v1/get-internal-displacement',
   '/api/displacement/v1/get-cross-border-movements',
@@ -984,7 +983,6 @@ const cloudPreferredExact = new Set([
   '/api/economic/v1/get-us-interest-rates',
   '/api/economic/v1/get-us-treasury-par-yield-curve',
   '/api/economic/v1/get-world-cpi-monthly',
-  '/api/economic/v1/list-bigmac-prices',
   '/api/economic/v1/list-fuel-prices',
   '/api/economic/v1/list-global-tenders',
   '/api/economic/v1/list-grocery-basket-prices',
@@ -1034,7 +1032,6 @@ const cloudPreferredExact = new Set([
   '/api/military/v1/get-defense-industrial-base',
   '/api/military/v1/get-theater-posture',
   '/api/military/v1/get-usni-fleet-report',
-  '/api/military/v1/list-defense-patents',
   '/api/news/v1/list-news-pool',
   '/api/news/v1/list-source-items',
   '/api/news/v1/summarize-article-cache',
@@ -1759,19 +1756,6 @@ async function validateSecretAgainstProvider(key, rawValue, context = {}) {
     case 'WTO_API_KEY':
       return ok('WTO API key stored (live verification not available in sidecar)');
 
-    case 'AVIATIONSTACK_API': {
-      const response = await fetchWithTimeout(
-        `https://api.aviationstack.com/v1/flights?access_key=${encodeURIComponent(value)}&limit=1`,
-        { headers: { Accept: 'application/json', 'User-Agent': CHROME_UA } }
-      );
-      const text = await response.text();
-      if (isCloudflareChallenge403(response, text)) return ok('AviationStack key stored (Cloudflare blocked verification)');
-      let payload = null;
-      try { payload = JSON.parse(text); } catch { /* ignore */ }
-      if (payload?.error?.code === 101 || payload?.error?.code === 105) return fail('AviationStack rejected this key');
-      if (!response.ok && response.status !== 200) return fail(`AviationStack probe failed (${response.status})`);
-      return ok('AviationStack key verified');
-    }
 
     case 'ICAO_API_KEY':
       return ok('ICAO API key stored (verification requires NOTAM endpoint access)');

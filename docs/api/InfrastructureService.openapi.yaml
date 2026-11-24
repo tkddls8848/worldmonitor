@@ -453,7 +453,6 @@ paths:
                                 $ref: '#/components/schemas/Error'
     /api/infrastructure/v1/record-baseline-snapshot:
         post:
-            deprecated: true
             tags:
                 - InfrastructureService
             summary: RecordBaselineSnapshot

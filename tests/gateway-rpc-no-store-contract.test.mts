@@ -221,7 +221,6 @@ const PROTECTED_HIGH_TIER_EMPTY_HANDLERS = [
   'server/worldmonitor/economic/v1/get-crude-inventories.ts',
   'server/worldmonitor/economic/v1/get-nat-gas-storage.ts',
   'server/worldmonitor/economic/v1/list-fuel-prices.ts',
-  'server/worldmonitor/economic/v1/list-bigmac-prices.ts',
   'server/worldmonitor/economic/v1/get-fao-food-price-index.ts',
   'server/worldmonitor/economic/v1/get-bis-policy-rates.ts',
   'server/worldmonitor/economic/v1/get-bis-exchange-rates.ts',
@@ -241,7 +240,6 @@ const PROTECTED_HIGH_TIER_EMPTY_HANDLERS = [
   'server/worldmonitor/research/v1/list-hackernews-items.ts',
   'server/worldmonitor/research/v1/list-trending-repos.ts',
   'server/worldmonitor/military/v1/get-theater-posture.ts',
-  'server/worldmonitor/military/v1/list-defense-patents.ts',
 ] as const;
 
 const HEALTHY_EMPTY_ALLOWLIST = new Set([

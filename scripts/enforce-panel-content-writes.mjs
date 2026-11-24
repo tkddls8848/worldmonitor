@@ -123,14 +123,12 @@ export const DIRECT_WRITE_PATTERNS = [
  * those three by driving the remaining write to zero — an `x1` here is the
  * ratchet's terminal state, not an unfinished migration. All three are pinned:
  * TechEvents by `tests/dom/panel-error-latch-6577.test.mts`, ServiceStatus and
- * DefensePatents by `tests/dom/panel-content-write-6678.test.mts`.
  * `GivingPanel` left the inventory entirely and `GdeltIntelPanel` keeps only its
  * `insertAdjacentElement` sibling insert (see DIRECT_WRITE_PATTERNS).
  */
 export const LEGACY_DIRECT_CONTENT_WRITES = [
   'src/components/AirlineIntelPanel.ts :: setTrustedHtml(this.content, …) x8',
   'src/components/DeductionPanel.ts :: replaceChildren(this.content, …) x1',
-  'src/components/DefensePatentsPanel.ts :: replaceChildren(this.content, …) x1',
   'src/components/GdeltIntelPanel.ts :: this.content.insertAdjacentElement(…) x1',
   'src/components/GoodThingsDigestPanel.ts :: setTrustedHtml(this.content, …) x1',
   'src/components/HeroSpotlightPanel.ts :: setTrustedHtml(this.content, …) x1',

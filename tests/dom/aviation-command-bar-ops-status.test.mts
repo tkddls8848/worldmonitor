@@ -2,8 +2,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 
 const summaries = vi.hoisted(() => ({ rows: [] as unknown[] }));
 vi.mock('@/services/aviation', () => ({
-  fetchAirportOpsSummary: async () => summaries.rows,
-  fetchFlightStatus: async () => [],
+  fetchFlightDelays: async () => summaries.rows,
   fetchFlightPrices: async () => ({ quotes: [] }),
   fetchAviationNews: async () => [],
   fetchGoogleFlights: async () => ({ flights: [] }),
@@ -13,11 +12,11 @@ import { AviationCommandBar } from '@/components/AviationCommandBar';
 
 afterEach(() => { document.body.innerHTML = ''; });
 
-const row = { iata: 'IKA', icao: 'OIIE', name: 'Imam Khomeini International', avgDelayMinutes: 0, closureStatus: false };
+const row = { iata: 'IKA', icao: 'OIIE', name: 'Imam Khomeini International', avgDelayMinutes: 0, delayType: 'general' };
 
 it.each([
   ['notam', 'normal', 'Open'],
-  ['aviationstack', 'normal', 'Normal ops'],
+  ['faa', 'normal', 'Normal ops'],
 ] as const)('an ops row sourced to %s reads "%s / %s"', async (source, severity, text) => {
   summaries.rows = [{ ...row, source, severity }];
   const bar = new AviationCommandBar();

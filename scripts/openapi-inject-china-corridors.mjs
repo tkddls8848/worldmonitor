@@ -316,7 +316,7 @@ function responseExample() {
     corridors: [{
       id: 'china-yangtze-river-delta',
       name: 'Yangtze River Delta',
-      description: 'Reviewed coastal logistics corridor joining Shanghai, Jiangsu, and Zhejiang port, aviation, and advanced-manufacturing nodes.',
+      description: 'Reviewed coastal logistics corridor joining Shanghai, Jiangsu, and Zhejiang port and advanced-manufacturing nodes.',
       boundary: [
         { lat: 28.4, lon: 118.2 },
         { lat: 28.4, lon: 123.2 },
@@ -463,7 +463,6 @@ function responseExample() {
     }],
   };
   const unavailableFamilies = [
-    'aviation',
     'hazard',
     'power_energy',
     'strategic_industry',

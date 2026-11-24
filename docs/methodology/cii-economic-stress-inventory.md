@@ -34,7 +34,7 @@ Key prefixes below are literal. `:latest:v1` CPI companions contain projections 
 | --- | --- | --- | --- |
 | IMF national CPI (`seed-world-cpi-imf.mjs`) | `economic:world-cpi:imf:v1`; up to 120 monthly or 40 quarterly points per country | Monthly or quarterly; country-specific release lag. Latest periods in the matrix below. | 28/31 and 6/6 have history. TW, KP, CU absent. SY ends 2019-12, YE 2015-12, MM 2020-11. AE, AF and QA also substantially delayed. |
 | Eurostat HICP (`seed-world-cpi-eurostat.mjs`) | `economic:world-cpi:eurostat:v1`; monthly history | Monthly; DE/FR/PL latest 2026-09 | DE, FR, PL among the 31; none of the six. Alternative inflation series, not a second independent family. |
-| Japan CPI (`seed-world-cpi-estat.mjs`), Australia CPI (`seed-world-cpi-abs.mjs`) | `economic:world-cpi:estat:v1`, `economic:world-cpi:abs:v1` | JP monthly, latest 2026-09; AU quarterly, latest 2026-Q3. Both retain history. | JP among the 31; none of the six. |
+| Japan CPI (`seed-world-cpi-estat.mjs`), Australia CPI (`seed-world-cpi-abs.mjs`) |, `economic:world-cpi:abs:v1` | JP monthly, latest 2026-09; AU quarterly, latest 2026-Q3. Both retain history. | JP among the 31; none of the six. |
 | US CPI (`seed-us-cpi.mjs`) | `economic:us-cpi:v1` plus latest projection; headline and components | Monthly BLS/FRED history; publication lag, not daily inflation | US only. Components share the price family. |
 | Yahoo FX history (`seed-fx-yoy.mjs`) | `economic:fx:yoy:v1`; current/year-ago rate, dated two-year extrema and derived changes | Monthly bars plus newest bar; refreshed daily. Cached summary does not retain the full two-year path needed for arbitrary 90-day calculations. | 18/31 and 5/6. USD and shared currencies intentionally excluded; KH absent. Missing list below. |
 | Yahoo spot FX (`seed-fx-rates.mjs`) | `shared:fx-rates:v1`; current currency-to-USD rates | Current quotes; no per-currency observation date or trailing history in this payload | Auxiliary conversion data, not a stress series. VND is null in this read. USD is the numeraire, not an independent observation. |
@@ -150,7 +150,6 @@ These were also inspected so that global indicators, old reference values and pa
 | US FRED/rates / `economic:fred:batch:v1`, per-series keys; `economic:us-interest-rates:v1` and history partitions | Daily rates/spreads/stress indicators, monthly inflation; series-specific release dates | US/global market context. A US corporate spread is not a sovereign spread for all countries. |
 | ECB short rates / `economic:fred:v1:<series>:0` | Daily €STR / Euribor histories; publication lag | Euro-area funding context, not individual-country credit risk. |
 | Eurostat house prices / `economic:eurostat:house-prices:v1` | Annual housing indices | Slow reference context, not acute price stress. |
-| Big Mac / `economic:bigmac:v1` | Weekly search-based current price and previous snapshot comparison | Configured country list excludes KP and several other targets; existing EXA collection is key-gated. Not a representative national consumer-price basket. |
 | Grocery basket / `economic:grocery-basket:v1` and `:history` | Retailer observations and bounded snapshot history; search/scrape collection | Selected-country retailer baskets, not all 31; existing EXA/Firecrawl paths are key-gated. Retained history requires per-item comparability checks before use. |
 | Consumer prices / `consumer-prices:*:ae` | Retailer scrape/aggregate/publish pipeline; current index and 7/30/90-day series | AE default market. The manual fallback seeder is not the authoritative writer. No all-country coverage claim. |
 | Electricity / `energy:electricity:v1:<region>` | Hourly/day-ahead EU bidding-zone data and US regional EIA data; three-day TTL | DE, FR, PL zones among the 31; US regions are not a national retail price index. None of the six. Existing authenticated upstream paths; no new source proposed. |
@@ -168,7 +167,6 @@ For each key, these are the target-country entries present in this read; absence
 - `economic:bis:property-residential:v1`: 14/31 (US, RU, CN, IL, TR, PL, DE, FR, GB, IN, MX, BR, KR, JP); 4/6 (PH, TH, ID, MY).
 - `economic:bis:property-commercial:v1`: 5/31 (US, TR, DE, FR, JP); 2/6 (PH, ID).
 - `economic:fuel-prices:v1`: 9/31 (US, TW, PL, DE, FR, GB, MX, BR, QA); 2/6 (PH, MY).
-- `economic:bigmac:v1`: 20/31 (US, CN, UA, IL, TW, SA, PL, DE, FR, GB, IN, PK, MX, BR, AE, KR, LB, EG, JP, QA); 5/6 (PH, TH, ID, VN, MY).
 - `economic:grocery-basket:v1`: 15/31 (US, CN, SA, TR, DE, FR, GB, IN, PK, MX, BR, AE, KR, EG, JP); 2/6 (PH, ID).
 - `economic:eurostat:house-prices:v1`: 3/31 (PL, DE, FR); 0/6 (none).
 
@@ -178,7 +176,7 @@ The repository source-attribution ledger marks IMF, Yahoo, BIS, ECB, FRED, EIA, 
 
 Recorded exceptions include Bank of Canada reuse with attribution, SSB CC BY 4.0 and New Zealand Commerce Commission CC BY 4.0. The Taiwan MOEA oil survey entry explicitly has an unconfirmed reuse licence. Host-level exceptions must not be generalized to unrelated products on the same host.
 
-Existing IMF access supports an optional subscription header; FRED, EIA, e-Stat, retail search and some electricity paths use existing credentials. Reading their already-seeded keys introduces no new upstream subscription, but their access requirements must remain visible in the source decision. No new paid or key-gated source is proposed.
+Existing IMF access supports an optional subscription header; FRED, EIA, retail search and some electricity paths use existing credentials. Reading their already-seeded keys introduces no new upstream subscription, but their access requirements must remain visible in the source decision. No new paid or key-gated source is proposed.
 
 ## Remaining producer verification
 

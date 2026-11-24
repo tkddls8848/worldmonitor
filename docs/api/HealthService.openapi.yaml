@@ -51,51 +51,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Error'
-    /api/health/v1/list-air-quality-alerts:
-        get:
-            tags:
-                - HealthService
-            summary: ListAirQualityAlerts
-            description: ListAirQualityAlerts returns PM2.5 stations reporting in the last 2 hours from OpenAQ, supplemented by WAQI, with AQI and a derived health risk level.
-            operationId: ListAirQualityAlerts
-            parameters:
-                - name: jmespath
-                  in: query
-                  description: |-
-                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
-                  required: false
-                  example: "keys(@)"
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: Successful response
-                    content:
-                        application/json:
-                            example:
-                                "alerts":
-                                    - "aqi": 1
-                                      "city": "example"
-                                      "countryCode": "US"
-                                      "lat": 40.7128
-                                      "lng": -74.006
-                                "fetchedAt": 1717200000000
-                            schema:
-                                $ref: '#/components/schemas/ListAirQualityAlertsResponse'
-                "400":
-                    description: Validation error
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/ValidationError'
-                                    - $ref: '#/components/schemas/JmespathProjectionError'
-                default:
-                    description: Error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Error'
 components:
     schemas:
         JmespathProjectionError:
@@ -213,45 +168,3 @@ components:
                     format: int32
                     description: Case count if reported by source (0 = unknown).
             description: DiseaseOutbreakItem represents a single disease outbreak event.
-        ListAirQualityAlertsRequest:
-            type: object
-        ListAirQualityAlertsResponse:
-            type: object
-            properties:
-                alerts:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/AirQualityAlert'
-                fetchedAt:
-                    type: integer
-                    format: int64
-                    description: 'Warning: Values > 2^53 may lose precision in JavaScript'
-        AirQualityAlert:
-            type: object
-            properties:
-                city:
-                    type: string
-                countryCode:
-                    type: string
-                lat:
-                    type: number
-                    format: double
-                lng:
-                    type: number
-                    format: double
-                pm25:
-                    type: number
-                    format: double
-                aqi:
-                    type: integer
-                    format: int32
-                riskLevel:
-                    type: string
-                pollutant:
-                    type: string
-                measuredAt:
-                    type: integer
-                    format: int64
-                    description: 'Warning: Values > 2^53 may lose precision in JavaScript'
-                source:
-                    type: string

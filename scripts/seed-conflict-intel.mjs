@@ -73,9 +73,7 @@ const ACLED_RESOLUTION_CACHE_KEY = 'conflict:acled-resolution:v1:all:0:0';
 // interval, i.e. ZERO headroom. Railway SKIPS a tick whenever the previous run is
 // still in flight (11 skipped ticks in one 12h window), so one skip dropped the
 // data. Observed live: last good run 23 min old, key already gone, health crit.
-// 2700s = 45 min = 3x the interval, matching the convention in
-// seed-defense-patents.mjs (21d TTL for a weekly seed). Pinned by
-// tests/seed-ttl-outlives-health-staleness.
+// 2700s = 45 min = 3x the interval. Pinned by tests/seed-ttl-outlives-health-staleness.
 export const ACLED_TTL = 2700;
 const ACLED_DISPLAY_LOOKBACK_DAYS = 30;
 const ACLED_DISPLAY_LIMIT = 500;

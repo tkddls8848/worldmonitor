@@ -90,7 +90,6 @@ describe('China coverage manifest', () => {
       'supply-chain.ccfi',
       'market.china-index',
       'news.china',
-      'aviation.china-hubs',
       'macro.china-snapshot',
       'macro.china-release-calendar',
       'policy.official-events',
@@ -128,15 +127,6 @@ describe('China coverage manifest', () => {
       CHINA_COVERAGE_ENTRIES.find((entry) => entry.id === 'hazards.western-pacific-cyclones')?.launchStatus,
       'launched',
     );
-    assert.equal(
-      CHINA_COVERAGE_ENTRIES.find((entry) => entry.id === 'aviation.china-hubs')?.transport.key,
-      'seed-meta:aviation:intl',
-    );
-    assert.equal(
-      CHINA_COVERAGE_ENTRIES.find((entry) => entry.id === 'aviation.china-hubs')?.launchStatus,
-      'launched',
-      'the canonical per-hub coverage contract is now provider-backed',
-    );
     for (const id of ['energy.jodi-oil', 'energy.jodi-gas']) {
       assert.equal(
         CHINA_COVERAGE_ENTRIES.find((entry) => entry.id === id)?.launchStatus,
@@ -148,18 +138,6 @@ describe('China coverage manifest', () => {
       CHINA_COVERAGE_ENTRIES.find((entry) => entry.id === 'news.china')?.launchStatus,
       'launched',
       'China news is now backed by a source-specific projection, not global ranking',
-    );
-    assert.deepEqual(
-      CHINA_COVERAGE_ENTRIES.find((entry) => entry.id === 'aviation.china-hubs')?.content.probe,
-      {
-        kind: 'array-coverage',
-        path: ['coverage'],
-        field: 'iata',
-        values: ['PEK', 'PVG', 'CAN', 'SZX', 'CTU', 'KMG', 'URC', 'HKG'],
-        validField: 'status',
-        validValues: ['normal', 'disruption'],
-        timestampPaths: [['updatedAt']],
-      },
     );
   });
 
@@ -240,62 +218,6 @@ describe('China coverage manifest', () => {
       projected('healthy'),
     );
     assert.deepEqual(missing, { status: 'EMPTY', records: 0 });
-  });
-
-  it('counts canonical provider coverage rather than synthetic aviation bootstrap filler', () => {
-    const aviation = CHINA_COVERAGE_ENTRIES.find((entry) => entry.id === 'aviation.china-hubs');
-    const alerts = ['PEK', 'PVG', 'CAN', 'HKG'].map((iata) => ({
-      iata,
-      severity: 'FLIGHT_DELAY_SEVERITY_NORMAL',
-      updatedAt: NOW,
-    }));
-    const coverage = ['PEK', 'PVG', 'CAN', 'SZX', 'CTU', 'KMG', 'URC', 'HKG'].map((iata) => ({
-      iata,
-      status: 'normal',
-      updatedAt: NOW,
-    }));
-    const result = evaluate(
-      aviation,
-      { 'aviation:delays-bootstrap:v2': { alerts, coverage } },
-      { 'seed-meta:aviation:intl': { fetchedAt: NOW, status: 'ok' } },
-    );
-
-    assert.equal(result.entries[0].launchStatus, 'launched');
-    assert.equal(result.entries[0].status, 'healthy');
-    assert.equal(result.counts.launched, 1);
-    assert.equal(result.counts.planned, 0);
-
-    const providerFailure = evaluate(
-      aviation,
-      {
-        'aviation:delays-bootstrap:v2': {
-          alerts,
-          coverage: coverage.map((hub) => (hub.iata === 'URC' ? { ...hub, status: 'failed' } : hub)),
-        },
-      },
-      { 'seed-meta:aviation:intl': { fetchedAt: NOW, status: 'ok' } },
-    );
-    assert.equal(providerFailure.entries[0].status, 'degraded');
-    assert.deepEqual(providerFailure.entries[0].content, {
-      status: 'partial', ageMin: null, maxAgeMin: 120, required: 8, present: 7,
-    });
-    assert.ok(providerFailure.entries[0].reasonCodes.includes(CHINA_COVERAGE_REASON_CODES.CHINA_COVERAGE_PARTIAL));
-
-    const providerOmission = evaluate(
-      aviation,
-      {
-        'aviation:delays-bootstrap:v2': {
-          alerts,
-          coverage: coverage.map((hub) => (hub.iata === 'KMG' ? { ...hub, status: 'omitted' } : hub)),
-        },
-      },
-      { 'seed-meta:aviation:intl': { fetchedAt: NOW, status: 'ok' } },
-    );
-    assert.equal(providerOmission.entries[0].status, 'degraded');
-    assert.deepEqual(providerOmission.entries[0].content, {
-      status: 'partial', ageMin: null, maxAgeMin: 120, required: 8, present: 7,
-    });
-    assert.ok(providerOmission.entries[0].reasonCodes.includes(CHINA_COVERAGE_REASON_CODES.CHINA_COVERAGE_PARTIAL));
   });
 
   it('uses Railway market transport plus the seeded CN index payload for China market coverage', () => {

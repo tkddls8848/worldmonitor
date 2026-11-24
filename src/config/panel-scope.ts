@@ -184,13 +184,11 @@ export const PANEL_SCOPE_BEHAVIOUR: Readonly<Record<string, PanelScopeBehaviour>
   science: 'unsupported', // Science
   'satellite-fires': 'unsupported', // Fires
   'grocery-basket': 'unsupported', // Grocery Index
-  bigmac: 'unsupported', // Big Mac Index
   'disease-outbreaks': 'filters', // Disease Outbreaks
   'social-velocity': 'unsupported', // Social Velocity
   displacement: 'filters', // UNHCR Displacement
   'ukmto-incidents': 'unsupported', // UKMTO Incidents
   'climate-news': 'unsupported', // Climate News
-  'defense-patents': 'unsupported', // R&D Signal
   'toronto-safety': 'unsupported', // Toronto Safety
   'radiation-watch': 'filters', // Radiation Watch
   'thermal-escalation': 'unsupported', // Thermal Escalation

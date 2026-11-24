@@ -12,7 +12,6 @@ description: "World Monitor MCP 工具参考：航空、空域、海运、航班
 
 ### `get_aviation_status`
 
-返回缓存的机场中断快照：每个受监控机场（全球约 85 个主要机场）一行告警，含 iata、name、country 和 severity，由国际枢纽的 AviationStack 延误聚合、美国机场的 FAA ASWS 延误以及 ICAO NOTAM 关闭构成。约每 30 分钟写入种子、90 分钟后标记为过期。快照包含所有受监控机场，因此除非设置 disrupted_only=true，大多数行的 severity 为 "normal"；默认 limit 30 只返回其中一部分（0 返回完整列表）。仅机场级状态；不含票价、航班时刻或航迹。缓存读取，无实时抓取：API 套餐权重 1，包含在已登录免费额度内。country 为不区分大小写的名称子串，iata 选择单个机场，limit 限制列表长度（默认 30，0 表示不限）。
 
 **参数（工具特定）：**
 

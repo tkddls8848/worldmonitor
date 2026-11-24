@@ -62,27 +62,8 @@ function strikeSources({ priorDates = 10 } = {}) {
   };
 }
 
-function delayAlert(iata, icao, name, city, country, delayType, extra = {}) {
-  return {
-    id: `avstack-${iata}`, iata, icao, name, city, country,
-    location: { latitude: 0, longitude: 0 }, region: 'AIRPORT_REGION_MENA',
-    delayType, severity: 'FLIGHT_DELAY_SEVERITY_MAJOR', avgDelayMinutes: 25, delayedFlightsPct: 40,
-    cancelledFlights: 0, totalFlights: 60, reason: 'Avg 25min delay', source: 'FLIGHT_DELAY_SOURCE_AVIATIONSTACK',
-    updatedAt: NOW - 40 * MIN, ...extra,
-  };
-}
-
 function airportSources({ closed = ['OIIE'], restricted = ['OISS'] } = {}) {
   return {
-    airportDelays: fresh({
-      alerts: [
-        delayAlert('RUH', 'OERK', 'King Khalid International', 'Riyadh', 'Saudi Arabia', 'FLIGHT_DELAY_TYPE_GROUND_STOP',
-          { cancelledFlights: 66, totalFlights: 100, reason: '66% flights cancelled' }),
-        delayAlert('DOH', 'OTHH', 'Hamad International', 'Doha', 'Qatar', 'FLIGHT_DELAY_TYPE_GENERAL'),
-        delayAlert('TLV', 'LLBG', 'Ben Gurion Airport', 'Tel Aviv', 'Israel', 'FLIGHT_DELAY_TYPE_GENERAL'),
-      ],
-      coverage: [],
-    }, 40),
     notamClosures: fresh({
       closedIcaos: closed, restrictedIcaos: restricted,
       reasons: Object.fromEntries([...closed, ...restricted].map(icao => [icao, 'AD CLSD'])),
@@ -236,31 +217,30 @@ describe('strikes', () => {
 });
 
 describe('airports', () => {
-  it('counts closures, ground stops and restrictions per pair and names each airport once', () => {
+  it('counts closures and restrictions per pair and names each airport once', () => {
     const { live, day } = buildEvidence(airportSources(), {}, NOW);
     assert.deepEqual(item(live, 'iran_gcc', 'airports'), {
-      channel: 'airports', value: 3, baseline: null, countries: [],
+      channel: 'airports', value: 2, baseline: null, countries: [],
       airports: [
         { name: 'Tehran Imam Khomeini', status: 'closed' },
-        { name: 'Riyadh', status: 'halted' },
         { name: 'Shiraz', status: 'restricted' },
       ],
-      notable: true, observedAt: NOW - 40 * MIN,
+      notable: true, observedAt: NOW - 12 * MIN,
     });
     assert.equal(item(live, 'usa_iran', 'airports').value, 2);
     assert.equal(item(live, 'israel_iran', 'airports').value, 2, 'a general delay at Tel Aviv is not counted');
-    assert.deepEqual(item(live, 'saudi_arabia_yemen', 'airports').airports, [{ name: 'Riyadh', status: 'halted' }]);
+    assert.deepEqual(item(live, 'saudi_arabia_yemen', 'airports').airports, []);
     const taiwan = item(live, 'china_taiwan', 'airports');
     assert.equal(taiwan.value, 0);
     assert.equal(taiwan.notable, false);
-    assert.equal(day['2026-10-25'].iran_gcc.airports, 3);
+    assert.equal(day['2026-10-25'].iran_gcc.airports, 2);
   });
 
   it('keeps the worst status when both feeds report the same airport', () => {
     const closed = buildEvidence(airportSources({ closed: ['OERK'], restricted: [] }), {}, NOW).live;
     assert.deepEqual(item(closed, 'saudi_arabia_yemen', 'airports').airports, [{ name: 'Riyadh', status: 'closed' }]);
     const restricted = buildEvidence(airportSources({ closed: [], restricted: ['OERK'] }), {}, NOW).live;
-    assert.deepEqual(item(restricted, 'saudi_arabia_yemen', 'airports').airports, [{ name: 'Riyadh', status: 'halted' }]);
+    assert.deepEqual(item(restricted, 'saudi_arabia_yemen', 'airports').airports, [{ name: 'Riyadh', status: 'restricted' }]);
   });
 
   it('compares with the recorded usual once a week of days exists', () => {
@@ -271,21 +251,12 @@ describe('airports', () => {
     const { live } = buildEvidence(airportSources(), history, NOW);
     const gulf = item(live, 'iran_gcc', 'airports');
     assert.equal(gulf.baseline, 1);
-    assert.equal(gulf.notable, true, 'three disrupted airports against a usual one');
+    assert.equal(gulf.notable, true, 'two disrupted airports against a usual one');
     const saudi = item(live, 'saudi_arabia_yemen', 'airports');
     assert.equal(saudi.baseline, 1);
-    assert.equal(saudi.notable, false, 'one disrupted airport against a usual one');
+    assert.equal(saudi.notable, false, 'no current disruptions against a usual one');
   });
 
-  it('still reports the feed that is up when the other is stale', () => {
-    const sources = airportSources();
-    sources.airportDelays.fetchedAt = NOW - 120 * MIN;
-    const { live } = buildEvidence(sources, {}, NOW);
-    assert.deepEqual(item(live, 'iran_gcc', 'airports').airports, [
-      { name: 'Tehran Imam Khomeini', status: 'closed' },
-      { name: 'Shiraz', status: 'restricted' },
-    ]);
-  });
 });
 
 describe('military aircraft', () => {
@@ -388,7 +359,7 @@ describe('degraded sources', () => {
     assert.equal(item(live, 'china_taiwan', 'pla_aircraft'), undefined);
     assert.equal(item(live, 'usa_iran', 'military_aircraft').value, 7);
     assert.equal(item(live, 'saudi_arabia_yemen', 'strikes').value, 19);
-    assert.equal(item(live, 'iran_gcc', 'airports').value, 3);
+    assert.equal(item(live, 'iran_gcc', 'airports').value, 2);
   });
 
   it('returns an empty reading for every pair when nothing is available', () => {

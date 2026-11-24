@@ -462,7 +462,6 @@
     "gulfIndices": "Indexy Perského zálivu",
     "gulfCurrencies": "Měny Perského zálivu",
     "gulfOil": "Ropa Perského zálivu",
-    "bigmac": "Skutečný index Big Mac",
     "marketImplications": "AI implikace na trhu",
     "energyComplex": "Energetický komplex",
     "oilInventories": "Zásoby ropy",
@@ -479,9 +478,6 @@
     "windyWebcams": "Windy živá webkamera",
     "groceryBasket": "Index potravin",
     "groceryItem": "Položka",
-    "bigmacDesc": "Ceny Big Macu v zemích Středního východu (Big Mac Index)",
-    "bigmacWow": "Změna týden na týden",
-    "bigmacCountry": "Země",
     "faoFoodPriceIndex": "Ceny potravin",
     "fuelPrices": "Ceny paliv",
     "fuelPricesDesc": "Maloobchodní ceny benzínu a nafty v 30+ zemích po celém světě",
@@ -2159,9 +2155,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Globální srovnání cen nákupního košíku potravin v 24 zemích — sleduje skutečnou inflaci spotřebitelských zboží mimo hlavní index spotřebitelských cen."
     },
-    "bigmac": {
-      "infoTooltip": "<strong>Skutečný index Big Mac</strong> Index Big Mac časopisu The Economist měří paritu kupní síly porovnáním cen v McDonald's napříč zeměmi. Aktualizuje se s každým novým vydáním (čtvrtletně/ročně)."
-    },
     "defiTokens": {
       "infoTooltip": "<strong>DeFi tokeny</strong> Ceny a výkonnost za 24h/7d předních tokenů decentralizovaných financí — DEXy, úvěrové platformy a výnosové protokoly."
     },
@@ -2186,8 +2179,6 @@
     "airlineIntel": {
       "infoTooltip": "<strong>Letecké zpravodajství</strong> Provozní data leteckých společností v reálném čase: pozastavení tras, uzavření vzdušného prostoru, upozornění dopravců a nouzová přesměrování. Zdroj: NOTAM leteckých úřadů a bulletiny dopravců.",
       "noOpsData": "Žádná data operací — načítání…",
-      "noFlights": "Žádné lety — vyberte letiště v nastavení.",
-      "noCarrierData": "Zatím žádná data o letušti.",
       "noTrackingData": "Žádná data sledování letadel.",
       "noNews": "Žádné zprávy o letectví.",
       "enterRoute": "Zadejte trasu a vyhledávejte ceny.",
@@ -2811,24 +2802,6 @@
         "low": "nízká spolehlivost"
       }
     },
-    "defensePatents": {
-      "title": "Signály výzkumu a vývoje",
-      "infoTooltip": "Týdenní podání obranných a duálně použitelných patentů od společností Raytheon, Lockheed, Huawei, DARPA a dalších strategických organizací. Kategorie: H04B (komunikace), H01L (polovodiče), F42B (munice), G06N (AI), C12N (biotechnologie). Zdroj: USPTO Open Data Portal.",
-      "loading": "Načítání podání výzkumu a vývoje…",
-      "error": "Nepodařilo se načíst data patentů.",
-      "empty": "V této kategorii nejsou žádná podání.",
-      "viewOnUspto": "Zobrazit na USPTO",
-      "tabs": {
-        "all": "Vše"
-      },
-      "cpcLabels": {
-        "H04B": "Komunikace",
-        "H01L": "Polovodiče",
-        "F42B": "Munice",
-        "G06N": "AI",
-        "C12N": "Biotechnologie"
-      }
-    },
     "correlation": {
       "loading": "Čekání na data...",
       "empty": "Nebyla detekována žádná aktivní konvergence",
@@ -3407,7 +3380,6 @@
         "faa": "FAA ASWS",
         "eurocontrol": "Eurocontrol",
         "computed": "Vypočítáno",
-        "aviationstack": "Letová data",
         "notam": "NOTAM"
       },
       "regions": {
@@ -4871,11 +4843,10 @@
       "flights": {
         "category": "Letectví",
         "purpose": "Zvýrazňuje narušení letišť a uzavírky NOTAM. Zahrnuje NOTAM vzdušného prostoru, které platí teď nebo začínají do 24 hodin, včetně dočasných letových omezení, omezených, nebezpečných a zakázaných prostorů, vojenských operačních prostorů, rezervací vzdušného prostoru a uzavírek. Ukazuje i živé polohy letadel, když je sledování k dispozici.",
-        "source": "FAA ASWS, AviationStack, FAA NOTAM Management Service (NMS-API) a NOTAM ICAO, adsb.lol (ODbL), Wingbits, obnova starší služby OpenSky, volitelné nekomerční doplnění mezer z airplanes.live/adsb.fi a letecká služba. NOTAM vzdušného prostoru se kreslí jako polygony tam, kde je dodá NMS, jako kruhy tam, kde NOTAM udává poloměr do 250 NM, a jinak jako značky.",
+        "source": "FAA ASWS, FAA NOTAM Management Service (NMS-API) a NOTAM ICAO, adsb.lol (ODbL), Wingbits, obnova starší služby OpenSky, volitelné nekomerční doplnění mezer z airplanes.live/adsb.fi a letecká služba. NOTAM vzdušného prostoru se kreslí jako polygony tam, kde je dodá NMS, jako kruhy tam, kde NOTAM udává poloměr do 250 NM, a jinak jako značky.",
         "freshness": "Naplňování narušení letišť běží v taktu 30 minut. NOTAM vzdušného prostoru se naplňují každých 5 minut ze stahování změn NMS, s denní plnou resynchronizací, při rozpočtu aktuálnosti 20 minut. Letecký panel navíc obnovuje provozní pohledy v cyklu dotazování každých 5 minut.",
         "confidence": "Nejlepší k prvnímu třídění narušení. Pokrytí jednotlivých živých letadel závisí na dostupnosti ADS-B a nastavených poskytovatelích. Text NOTAM je závazný v podobě, v jaké ho šíří FAA.",
         "limitations": {
-          "0": "Simulovaná ukázková data opřená o AviationStack se mohou objevit, když chybí klíč API.",
           "1": "Živé polohy letadel mohou být zpožděné nebo chybět tam, kde je pokrytí ADS-B slabé nebo blokované.",
           "2": "Oblasti NOTAM vzdušného prostoru se kreslí jen na mapě deck.gl. Mapa SVG ukazuje značky letišť.",
           "3": "Většina amerických TFR popisuje tvar jen v textu, takže se objeví jako značka v poloze NOTAM, ne jako tvar omezeného prostoru.",

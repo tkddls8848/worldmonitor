@@ -144,7 +144,7 @@ describe('health freshness ingestion', () => {
             seedAgeMin: 900,
             maxStaleMin: 720,
           },
-          climateAirQuality: {
+          climateAnomalies: {
             status: 'OK',
             records: 8,
             seedAgeMin: 20,

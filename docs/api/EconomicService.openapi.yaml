@@ -781,54 +781,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Error'
-    /api/economic/v1/list-bigmac-prices:
-        get:
-            tags:
-                - EconomicService
-            summary: ListBigMacPrices
-            description: ListBigMacPrices retrieves weekly Big Mac prices in local currency and USD for 49 countries via Exa web search, with cheapest, priciest and weekly change.
-            operationId: ListBigMacPrices
-            parameters:
-                - name: jmespath
-                  in: query
-                  description: |-
-                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
-                  required: false
-                  example: "keys(@)"
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: Successful response
-                    content:
-                        application/json:
-                            example:
-                                "cheapestCountry": "US"
-                                "countries":
-                                    - "available": true
-                                      "code": "example"
-                                      "currency": "USD"
-                                      "flag": "example"
-                                      "fxRate": 75.25
-                                "fetchedAt": "2026-01-15T12:00:00Z"
-                                "mostExpensiveCountry": "US"
-                                "prevFetchedAt": "2026-01-15T12:00:00Z"
-                            schema:
-                                $ref: '#/components/schemas/ListBigMacPricesResponse'
-                "400":
-                    description: Validation error
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/ValidationError'
-                                    - $ref: '#/components/schemas/JmespathProjectionError'
-                default:
-                    description: Error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Error'
     /api/economic/v1/get-national-debt:
         get:
             tags:
@@ -3465,55 +3417,6 @@ components:
                     type: string
                 available:
                     type: boolean
-        ListBigMacPricesRequest:
-            type: object
-        ListBigMacPricesResponse:
-            type: object
-            properties:
-                countries:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/BigMacCountryPrice'
-                fetchedAt:
-                    type: string
-                cheapestCountry:
-                    type: string
-                mostExpensiveCountry:
-                    type: string
-                wowAvgPct:
-                    type: number
-                    format: double
-                wowAvailable:
-                    type: boolean
-                prevFetchedAt:
-                    type: string
-        BigMacCountryPrice:
-            type: object
-            properties:
-                code:
-                    type: string
-                name:
-                    type: string
-                currency:
-                    type: string
-                flag:
-                    type: string
-                localPrice:
-                    type: number
-                    format: double
-                usdPrice:
-                    type: number
-                    format: double
-                fxRate:
-                    type: number
-                    format: double
-                sourceSite:
-                    type: string
-                available:
-                    type: boolean
-                wowPct:
-                    type: number
-                    format: double
         GetNationalDebtRequest:
             type: object
             description: GetNationalDebtRequest requests national debt data for all countries.
@@ -5407,7 +5310,7 @@ components:
                     description: ISO 3166-1 alpha-2 country code.
                 source:
                     type: string
-                    description: 'Which source supplied this series. One of: estat-cpi, eurostat-hicp, imf-cpi, imf-hicp, abs-cpi.'
+                    description: 'Which source supplied this series. One of: eurostat-hicp, imf-cpi, imf-hicp, abs-cpi.'
                 frequency:
                     type: string
                     description: 'Series frequency: M for monthly, Q for quarterly. Australia is quarterly.'

@@ -460,7 +460,6 @@
     "gulfIndices": "Indices du Golfe",
     "gulfCurrencies": "Devises du Golfe",
     "gulfOil": "Pétrole du Golfe",
-    "bigmac": "Indice Big Mac réel",
     "marketImplications": "Implications de marché IA",
     "energyComplex": "Complexe énergétique",
     "oilInventories": "Inventaires pétroliers",
@@ -477,9 +476,6 @@
     "windyWebcams": "Webcam en direct Windy",
     "groceryBasket": "Indice d'épicerie",
     "groceryItem": "Article",
-    "bigmacDesc": "Prix du Big Mac dans les pays du Moyen-Orient (Indice Big Mac)",
-    "bigmacWow": "Variation sur une semaine",
-    "bigmacCountry": "Pays",
     "faoFoodPriceIndex": "Prix alimentaires",
     "fuelPrices": "Prix des carburants",
     "fuelPricesDesc": "Prix de l'essence et du diesel au détail dans plus de 30 pays à travers le monde",
@@ -2154,9 +2150,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Comparaison mondiale des prix du panier d'épicerie dans 24 pays — suivre l'inflation réelle des biens de consommation au-delà de l'indice des prix à la consommation."
     },
-    "bigmac": {
-      "infoTooltip": "<strong>Indice Big Mac réel</strong> L’indice Big Mac de The Economist mesure la parité de pouvoir d’achat en comparant le prix des burgers McDonald’s entre pays. Mis à jour à la publication de nouvelles données (trimestrielle/annuelle)."
-    },
     "defiTokens": {
       "infoTooltip": "<strong>Jetons DeFi</strong> Prix et performance 24 h/7 j des principaux jetons de protocoles de finance décentralisée — DEX, plateformes de prêt et protocoles de rendement."
     },
@@ -2181,8 +2174,6 @@
     "airlineIntel": {
       "infoTooltip": "<strong>Renseignement aérien</strong> Données opérationnelles des compagnies aériennes en temps réel : suspensions de routes, fermetures d'espace aérien, avis des transporteurs et déroutements d'urgence. Source : NOTAM des autorités aéronautiques et bulletins des transporteurs.",
       "noOpsData": "Aucune donnée opérationnelle — chargement…",
-      "noFlights": "Aucun vol — sélectionnez un aéroport dans les paramètres.",
-      "noCarrierData": "Aucune donnée de compagnie pour le moment.",
       "noTrackingData": "Aucune donnée de suivi d'aéronef.",
       "noNews": "Aucune actualité aéronautique.",
       "enterRoute": "Entrez une route et recherchez les tarifs.",
@@ -2797,24 +2788,6 @@
         "low": "confiance faible"
       }
     },
-    "defensePatents": {
-      "title": "Signaux de recherche et développement",
-      "infoTooltip": "Dépôts hebdomadaires de brevets de défense et à double usage par Raytheon, Lockheed, Huawei, DARPA et autres organisations stratégiques. Catégories : H04B (communications), H01L (semi-conducteurs), F42B (munitions), G06N (IA), C12N (biotechnologie). Source : USPTO Open Data Portal.",
-      "loading": "Chargement des dépôts de recherche et développement…",
-      "error": "Impossible de charger les données de brevets.",
-      "empty": "Aucun dépôt dans cette catégorie.",
-      "viewOnUspto": "Voir sur USPTO",
-      "tabs": {
-        "all": "Tous"
-      },
-      "cpcLabels": {
-        "H04B": "Communications",
-        "H01L": "Semi-conducteurs",
-        "F42B": "Munitions",
-        "G06N": "IA",
-        "C12N": "Biotechnologie"
-      }
-    },
     "correlation": {
       "loading": "En attente de données…",
       "empty": "Aucune convergence active détectée",
@@ -3385,7 +3358,6 @@
         "faa": "FAA-ASWS",
         "eurocontrol": "Eurocontrôle",
         "computed": "Calculé",
-        "aviationstack": "Données de vol",
         "notam": "NOTAM"
       },
       "regions": {
@@ -4849,11 +4821,10 @@
       "flights": {
         "category": "Aviation",
         "purpose": "Signale les perturbations aéroportuaires et les fermetures NOTAM, les NOTAM d'espace aérien en vigueur maintenant ou qui commencent sous 24 heures (restrictions temporaires de vol, zones réglementées, dangereuses et interdites, zones d'activité militaire, réservations et fermetures d'espace aérien), ainsi que les positions d'aéronefs en direct lorsque le suivi est disponible.",
-        "source": "FAA ASWS, AviationStack, FAA NOTAM Management Service (NMS-API) et NOTAM ICAO, adsb.lol (ODbL), Wingbits, reprise de l'ancien service OpenSky, complément facultatif non commercial airplanes.live/adsb.fi, et le service aviation. Les NOTAM d'espace aérien sont dessinés en polygones lorsque NMS les fournit, en cercles lorsque le NOTAM donne un rayon jusqu'à 250 NM, et en marqueurs sinon.",
+        "source": "FAA ASWS, FAA NOTAM Management Service (NMS-API) et NOTAM ICAO, adsb.lol (ODbL), Wingbits, reprise de l'ancien service OpenSky, complément facultatif non commercial airplanes.live/adsb.fi, et le service aviation. Les NOTAM d'espace aérien sont dessinés en polygones lorsque NMS les fournit, en cercles lorsque le NOTAM donne un rayon jusqu'à 250 NM, et en marqueurs sinon.",
         "freshness": "Les alimentations de perturbation aéroportuaire tournent sur un rythme de 30 minutes. Les NOTAM d'espace aérien sont alimentés toutes les 5 minutes à partir des récupérations de changements NMS, avec une resynchronisation complète quotidienne, selon un budget d'actualité de 20 minutes. Le panneau aviation rafraîchit aussi les vues opérationnelles sur un cycle d'interrogation de 5 minutes.",
         "confidence": "Idéal pour le tri des perturbations. La couverture de chaque aéronef en direct dépend de la disponibilité ADS-B et des fournisseurs configurés. Le texte NOTAM fait foi tel que la FAA le diffuse.",
         "limitations": {
-          "0": "Des données de démonstration simulées, appuyées sur AviationStack, peuvent apparaître lorsqu'une clé API est absente.",
           "1": "Les positions d'aéronefs en direct peuvent être retardées ou absentes là où la couverture ADS-B est faible ou bloquée.",
           "2": "Les zones NOTAM d'espace aérien ne sont dessinées que sur la carte deck.gl. La carte SVG montre des marqueurs d'aéroports.",
           "3": "La plupart des TFR des États-Unis ne décrivent leur forme que dans le texte. Elles apparaissent donc comme un marqueur à la position du NOTAM, et non comme la forme restreinte.",

@@ -1,5 +1,5 @@
 /**
- * #6678 moved the success writes of ServiceStatusPanel and DefensePatentsPanel
+ * #6678 moved the success writes of ServiceStatusPanel
  * onto `Panel.setContentNodes()`. The migration is deliberately RUNG-NEUTRAL:
  * each panel's LOADING render must not reset the error backoff it is climbing,
  * or a flapping upstream would retry every 15s forever instead of backing off.
@@ -12,7 +12,6 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { initTestI18n } from './helpers/i18n.mts';
 
-import { DefensePatentsPanel } from '@/components/DefensePatentsPanel';
 import { ServiceStatusPanel } from '@/components/ServiceStatusPanel';
 
 /** Base-class state these tests reach into. */
@@ -103,20 +102,4 @@ describe('loading branches keep the backoff rung after the success migration', (
     panel.destroy();
   });
 
-  it('DefensePatentsPanel keeps the rung across its loading render', () => {
-    vi.spyOn(
-      DefensePatentsPanel.prototype as unknown as { fetchPatents(): Promise<void> },
-      'fetchPatents',
-    ).mockResolvedValue(undefined);
-
-    const panel = new DefensePatentsPanel();
-    mount(panel);
-
-    driveFirstFailure(panel);
-    driveLoading(panel, '.defense-patents-loading');
-
-    expect(driveSecondFailure(panel)).toMatch(/\(30s\)/);
-
-    panel.destroy();
-  });
 });

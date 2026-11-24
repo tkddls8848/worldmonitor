@@ -109,27 +109,6 @@ export interface IceTrendPoint {
   anomalyMkm2: number;
 }
 
-export interface ListAirQualityDataRequest {
-}
-
-export interface ListAirQualityDataResponse {
-  stations: AirQualityStation[];
-  fetchedAt: number;
-}
-
-export interface AirQualityStation {
-  city: string;
-  countryCode: string;
-  lat: number;
-  lng: number;
-  pm25: number;
-  aqi: number;
-  riskLevel: string;
-  pollutant: string;
-  measuredAt: number;
-  source: string;
-}
-
 export interface ListReservoirLevelsRequest {
 }
 
@@ -261,7 +240,6 @@ export interface ClimateServiceHandler {
   listClimateDisasters(ctx: ServerContext, req: ListClimateDisastersRequest): Promise<ListClimateDisastersResponse>;
   getCo2Monitoring(ctx: ServerContext, req: GetCo2MonitoringRequest): Promise<GetCo2MonitoringResponse>;
   getOceanIceData(ctx: ServerContext, req: GetOceanIceDataRequest): Promise<GetOceanIceDataResponse>;
-  listAirQualityData(ctx: ServerContext, req: ListAirQualityDataRequest): Promise<ListAirQualityDataResponse>;
   listReservoirLevels(ctx: ServerContext, req: ListReservoirLevelsRequest): Promise<ListReservoirLevelsResponse>;
   listClimateNews(ctx: ServerContext, req: ListClimateNewsRequest): Promise<ListClimateNewsResponse>;
 }
@@ -421,43 +399,6 @@ export function createClimateServiceRoutes(
 
           const result = await handler.getOceanIceData(ctx, body);
           return new Response(JSON.stringify(result as GetOceanIceDataResponse), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (err: unknown) {
-          if (err instanceof ValidationError) {
-            return new Response(JSON.stringify({ violations: err.violations }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-          if (options?.onError) {
-            return options.onError(err, req);
-          }
-          const message = "Internal server error";
-          return new Response(JSON.stringify({ message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      },
-    },
-    {
-      method: "GET",
-      path: "/api/climate/v1/list-air-quality-data",
-      handler: async (req: Request): Promise<Response> => {
-        try {
-          const pathParams: Record<string, string> = {};
-          const body = {} as ListAirQualityDataRequest;
-
-          const ctx: ServerContext = {
-            request: req,
-            pathParams,
-            headers: Object.fromEntries(req.headers.entries()),
-          };
-
-          const result = await handler.listAirQualityData(ctx, body);
-          return new Response(JSON.stringify(result as ListAirQualityDataResponse), {
             status: 200,
             headers: { "Content-Type": "application/json" },
           });

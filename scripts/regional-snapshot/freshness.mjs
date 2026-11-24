@@ -50,7 +50,6 @@ export const FRESHNESS_REGISTRY = [
   // metaKey hints, classifyInputs would fall back to "undated = fresh" and
   // miss stalled seeders entirely.
   { key: 'aviation:delays:faa:v1',               maxAgeMin: 60,    feedsAxes: ['mobility'], metaKey: 'seed-meta:aviation:faa' },
-  { key: 'aviation:delays:intl:v3',              maxAgeMin: 90,    feedsAxes: ['mobility'], metaKey: 'seed-meta:aviation:intl' },
   { key: 'aviation:notam:closures:v2',           maxAgeMin: 120,   feedsAxes: ['mobility'], metaKey: 'seed-meta:aviation:notam' },
   { key: 'intelligence:gpsjam:v2',               maxAgeMin: 1440,  feedsAxes: ['mobility', 'airspace'], metaKey: 'seed-meta:intelligence:gpsjam' }, // gpsjam.org is a DAILY source (restored from Wingbits, PR #4987); 1440min matches api/health.js gpsjam.maxStaleMin so snapshots don't mark it stale hours after a healthy daily seed.
   // military:flights:v1 already carries top-level fetchedAt, no metaKey needed.
@@ -70,7 +69,7 @@ export const ALL_INPUT_KEYS = FRESHNESS_REGISTRY.map((s) => s.key);
  * Timestamp resolution order per input:
  *   1. If the spec has a `metaKey`, use metaPayloads[metaKey].fetchedAt.
  *      This is the canonical signal for sources whose data payload lacks
- *      a top-level timestamp (FAA alerts, AviationStack, NOTAM, GPS jam).
+ *      a top-level timestamp (FAA alerts, NOTAM, GPS jam).
  *   2. Otherwise, pull a timestamp from the primary payload via
  *      extractTimestamp (fetchedAt, generatedAt, timestamp, updatedAt,
  *      lastUpdate, seededAt).

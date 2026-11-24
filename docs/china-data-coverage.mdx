@@ -14,7 +14,7 @@ recently; a fresh evaluator heartbeat does not prove healthy China content.
 
 | Lane | Sources and method | Primary surface | Refresh contract |
 | --- | --- | --- | --- |
-| Global China projection | BIS, IMF, China energy spine, UN Comtrade reporter 156, CCFI, China market index, China news sources, eight reviewed aviation hubs, HKO, and Western Pacific hazards | China country summary and operator health | Source-specific; evaluated hourly |
+| Global China projection | BIS, IMF, China energy spine, UN Comtrade reporter 156, CCFI, China market index, China news sources, HKO, and Western Pacific hazards | China country summary and operator health | Source-specific; evaluated hourly |
 | Official macro | NBS and SAFE revision-aware observations; PBoC and GACC candidates remain explicit unavailable rows | REST snapshot and Pro MCP `get_economic_data` with dataset `china-macro` | 36 hours |
 | Official release calendar | NBS release calendar plus provisional PBoC LPR dates verified against ChinaMoney/CFETS notices | China macro bootstrap and Pro MCP `get_economic_data` with dataset `china-release-calendar` | 36 hours |
 | Policy and enforcement | CAC, SAMR, MIIT, MOFCOM, NDRC, and PBOC official documents | China country brief and `chinaPolicyEvents` bootstrap | 6 hours |
@@ -45,7 +45,6 @@ freshness or content status.
 | `market.china-corporate-disclosures` | Official SSE/SZSE corporate disclosures | `launched` |
 | `market.china-stock-connect` | SSE/SZSE Stock Connect northbound turnover and margin balance | `launched` |
 | `news.china` | China news digest | `launched` |
-| `aviation.china-hubs` | Eight reviewed China aviation hubs | `launched` |
 | `macro.china-snapshot` | Normalized China macro snapshot | `launched` |
 | `macro.china-release-calendar` | China release calendar | `launched` |
 | `policy.official-events` | Official policy and enforcement events | `launched` |

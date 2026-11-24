@@ -127,28 +127,6 @@ message ClimateDisaster {
 }
 ```
 
-### Layer 4: Air Quality & Pollution (NEW)
-
-**What:** Global PM2.5, AQI, ozone, NO2 readings — direct output of fossil fuel combustion and climate feedback loops.
-
-**Note:** This layer is SHARED with the Health variant (`health:air-quality:v1`). Climate domain gets the same data but a different RPC focused on pollution sources and trends rather than health risk.
-
-**Sources:**
-
-- **OpenAQ API v3** (`OPENAQ_API_KEY`): `https://api.openaq.org/v3/locations?limit=1000&parameters_id=2`
-  - Measurements: PM2.5, PM10, O3, NO2, CO, SO2, BC
-  - 12,000+ stations
-- **WAQI API** (`WAQI_API_KEY`): city aggregates + dominant pollutant
-- **Copernicus Atmosphere Monitoring Service (CAMS)** (free, no key for basic):
-  - Global forecast: `https://ads.atmosphere.copernicus.eu/api/v2/` (requires CDS API key)
-  - Alternative: CAMS Near-Real-Time: `https://atmosphere.copernicus.eu/charts/packages/nrta/`
-- **EPA AirNow** (US): `https://www.airnowapi.org/aq/observation/zipCode/current/?format=application/json&zipCode={zip}&API_KEY={key}`
-
-**Redis key:** `climate:air-quality:v1` (mirrors `health:air-quality:v1` — same seed, separate key)
-**Seed script:** Shared with health: `seed-health-air-quality.mjs` writes both keys
-**Cache TTL:** 3600 (1h)
-**Proto RPC:** `ListAirQualityData`
-
 ### Layer 5: Sea Level, Ice & Ocean Data (NEW)
 
 **What:** The long-term physical indicators of climate change — sea level rise, Arctic sea ice, ocean heat.
@@ -227,7 +205,6 @@ message IceTrendPoint {
 | `seed-climate-anomalies.mjs` | Every 3h (existing, fix baseline) | `climate:anomalies:v2` | 3h |
 | `seed-co2-monitoring.mjs` | Daily 06:00 UTC | `climate:co2-monitoring:v1` | 72h |
 | `seed-climate-disasters.mjs` | Every 6h | `climate:disasters:v1` | 6h |
-| `seed-health-air-quality.mjs` | Every 1h (shared) | `climate:air-quality:v1` | 1h |
 | `seed-climate-ocean-ice.mjs` | Daily 08:00 UTC | `climate:ocean-ice:v1` | 24h |
 | `seed-climate-news.mjs` | Every 30min (or relay loop) | `climate:news-intelligence:v1` | 1h |
 | `seed-reservoir-levels.mjs` | Daily (climate bundle) | `climate:reservoir-levels:v1` | 7d |
@@ -244,9 +221,6 @@ service ClimateService {
   }
   rpc ListClimateDisasters(ListClimateDisastersRequest) returns (ListClimateDisastersResponse) {
     option (sebuf.http.config) = {path: "/list-climate-disasters", method: HTTP_METHOD_GET};
-  }
-  rpc ListAirQualityData(ListAirQualityDataRequest) returns (ListAirQualityDataResponse) {
-    option (sebuf.http.config) = {path: "/list-air-quality-data", method: HTTP_METHOD_GET};
   }
   rpc GetOceanIceData(GetOceanIceDataRequest) returns (GetOceanIceDataResponse) {
     option (sebuf.http.config) = {path: "/get-ocean-ice-data", method: HTTP_METHOD_GET};
@@ -289,7 +263,6 @@ Replace current entry in `api/mcp.ts`:
 ```ts
 {
   name: 'get_climate_data',
-  description: 'Climate intelligence: temperature/precipitation anomalies (vs 30-year WMO normals), atmospheric CO2 trend (NOAA Mauna Loa), global disaster alerts (GDACS/ReliefWeb), air quality (OpenAQ/WAQI), sea level rise and Arctic ice extent (NSIDC/NOAA), and climate news.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -317,15 +290,12 @@ Replace current entry in `api/mcp.ts`:
 
 | Service | Key Name | Free Tier |
 |---------|----------|-----------|
-| WAQI (air quality) | `WAQI_API_KEY` | 1000 req/day |
-| OpenAQ v3 (air quality) | `OPENAQ_API_KEY` | Required by current API docs |
 | NOAA GML | None | Free |
 | NSIDC | None | Free |
 | ReliefWeb API | None | Free |
 | RSS feeds (all) | None | Public |
 | Copernicus CDS | `CDS_API_KEY` | Free (registration required) — only needed for CAMS/ERA5 advanced queries |
 
-**OpenAQ now requires `OPENAQ_API_KEY`.** `WAQI_API_KEY` is still optional, and `CDS_API_KEY` is only needed for CAMS/ERA5 advanced queries.
 
 ---
 
@@ -371,7 +341,6 @@ climate: {
 2. **`seed-co2-monitoring.mjs`** — NOAA GML text file parsing, no key, 30min effort, high impact (single most important climate number)
 3. **`seed-climate-news.mjs`** — RSS aggregation, no key, fast win
 4. **`seed-climate-disasters.mjs`** — ReliefWeb API (no key) + reuse GDACS from natural seeder
-5. **`seed-health-air-quality.mjs`** — OpenAQ (`OPENAQ_API_KEY`), writes both `health:air-quality:v1` and `climate:air-quality:v1`
 6. **`seed-climate-ocean-ice.mjs`** — NSIDC CSV parsing (no key), daily data
 7. **`seed-climate-zone-normals.mjs`** — one-time + monthly refresh, feeds anomaly baseline
 8. **Proto + handler additions** for each new RPC

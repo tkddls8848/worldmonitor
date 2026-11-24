@@ -571,7 +571,7 @@ export function detectCurrency(text) {
  * apply the project-shared FX rates (`getSharedFxRates`) at orchestration
  * time. Returning raw-native avoids duplicating the FX conversion layer
  * already maintained in `scripts/_seed-utils.mjs` for seed-grocery-basket,
- * seed-fuel-prices, seed-bigmac, etc.
+ * seed-fuel-prices.
  *
  * Returns { valueNative: number, currencyNative: string, aumYear: number }
  * or null if no usable row.

@@ -73,7 +73,6 @@ import type { StrategicPosturePanel } from '@/components/StrategicPosturePanel';
 import type { StrategicRiskPanel } from '@/components/StrategicRiskPanel';
 import type { GulfEconomiesPanel } from '@/components/GulfEconomiesPanel';
 import type { GroceryBasketPanel } from '@/components/GroceryBasketPanel';
-import type { BigMacPanel } from '@/components/BigMacPanel';
 import type { FuelPricesPanel } from '@/components/FuelPricesPanel';
 import type { FxPanel } from '@/components/FxPanel';
 import type { FaoFoodPriceIndexPanel } from '@/components/FaoFoodPriceIndexPanel';
@@ -87,7 +86,6 @@ import type { GridDisruptionClockPanel } from '@/components/GridDisruptionClockP
 import type { ChokepointStripPanel } from '@/components/ChokepointStripPanel';
 import type { ClimateNewsPanel } from '@/components/ClimateNewsPanel';
 import type { ConsumerPricesPanel } from '@/components/ConsumerPricesPanel';
-import type { DefensePatentsPanel } from '@/components/DefensePatentsPanel';
 import type { MacroTilesPanel } from '@/components/MacroTilesPanel';
 import type { FSIPanel } from '@/components/FSIPanel';
 import type { NqPulsePanel } from '@/components/NqPulsePanel';
@@ -581,10 +579,6 @@ export class App {
       const panel = this.state.panels['grocery-basket'] as GroceryBasketPanel | undefined;
       if (panel) primeTask('grocery-basket', () => panel.fetchData());
     }
-    if (shouldPrime('bigmac')) {
-      const panel = this.state.panels['bigmac'] as BigMacPanel | undefined;
-      if (panel) primeTask('bigmac', () => panel.fetchData());
-    }
     if (shouldPrime('fuel-prices')) {
       const panel = this.state.panels['fuel-prices'] as FuelPricesPanel | undefined;
       if (panel) primeTask('fuel-prices', () => panel.fetchData());
@@ -647,10 +641,6 @@ export class App {
     if (shouldPrime('consumer-prices')) {
       const panel = this.state.panels['consumer-prices'] as ConsumerPricesPanel | undefined;
       if (panel) primeTask('consumer-prices', () => panel.fetchData());
-    }
-    if (shouldPrime('defense-patents')) {
-      const panel = this.state.panels['defense-patents'] as DefensePatentsPanel | undefined;
-      if (panel) primeTask('defense-patents', () => { panel.refresh(); return Promise.resolve(); });
     }
     if (shouldPrime('macro-tiles')) {
       const panel = this.state.panels['macro-tiles'] as MacroTilesPanel | undefined;
@@ -3101,12 +3091,6 @@ export class App {
       () => this.isPanelNearViewport('macro-signals')
     );
     this.refreshScheduler.scheduleRefresh(
-      'defense-patents',
-      () => { (this.state.panels['defense-patents'] as DefensePatentsPanel).refresh(); return Promise.resolve(); },
-      REFRESH_INTERVALS.defensePatents,
-      () => this.isPanelNearViewport('defense-patents')
-    );
-    this.refreshScheduler.scheduleRefresh(
       'fear-greed',
       () => (this.state.panels['fear-greed'] as FearGreedPanel).fetchData(),
       REFRESH_INTERVALS.fearGreed,
@@ -3196,12 +3180,6 @@ export class App {
       () => this.isPanelNearViewport('grocery-basket')
     );
 
-    this.refreshScheduler.scheduleRefresh(
-      'bigmac',
-      () => (this.state.panels['bigmac'] as BigMacPanel).fetchData(),
-      REFRESH_INTERVALS.groceryBasket,
-      () => this.isPanelNearViewport('bigmac')
-    );
 
     this.refreshScheduler.scheduleRefresh(
       'fuel-prices',
