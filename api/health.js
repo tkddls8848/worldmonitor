@@ -408,6 +408,7 @@ const STANDALONE_KEYS = {
   worldOverview: BOOTSTRAP_CACHE_KEYS.worldOverview,
   federalRegister: BOOTSTRAP_CACHE_KEYS.federalRegister,
   treasuryAuctions: BOOTSTRAP_CACHE_KEYS.treasuryAuctions,
+  imfCofer: BOOTSTRAP_CACHE_KEYS.imfCofer,
   gpr: BOOTSTRAP_CACHE_KEYS.gpr,
   oecdCli: BOOTSTRAP_CACHE_KEYS.oecdCli,
   krCustomsTrade: BOOTSTRAP_CACHE_KEYS.krCustomsTrade,
@@ -863,6 +864,7 @@ const FIVE_FACTOR_SCORECARD_READ_MODEL_KEY = 'scorecard:five-factor:v1:read-mode
 const SEED_META = {
   krCustomsTrade: { key: 'seed-meta:kr-customs-trade:monthly', maxStaleMin: 4320 },
   fundingStress: { key: 'seed-meta:markets:funding-stress', maxStaleMin: 2880 },
+  imfCofer: { key: 'seed-meta:economic:imf-cofer', maxStaleMin: 4320 },
   gpr: { key: 'seed-meta:economic:gpr', maxStaleMin: 1080 },
   oecdCli: { key: 'seed-meta:economic:oecd-cli', maxStaleMin: 4320 },
   treasuryAuctions: {
