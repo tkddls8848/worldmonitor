@@ -26,6 +26,7 @@ export const STANDALONE_INTERVAL_MIN = {
   'economic-calendar': 360, 'economy': 45, 'fred-rates': 60, 'fx-rates': 1440, 'fx-yoy': 480,
   'fuel-prices': 1440, 'electricity-prices': 360, 'ember-electricity': 1440, 'energy-spine': 1440,
   'energy-intelligence': 240, 'chokepoint-flows': 240, 'hormuz': 720, 'supply-chain-trade': 360,
+  'transit-summaries': 10,
   'trade-flows': 960, 'comtrade-bilateral-hs4': 1440, 'hs2-chokepoint-exposure': 1440,
   'grocery-basket': 1440, 'sanctions-pressure': 240, 'regulatory-actions': 120,
   'gdelt-intel': 15, 'gdelt-bulk-materializer': 60, 'security-advisories': 30, 'ukmto-incidents': 20,
