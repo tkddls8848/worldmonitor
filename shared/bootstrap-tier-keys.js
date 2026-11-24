@@ -14,6 +14,7 @@ export const BOOTSTRAP_CACHE_KEYS = Object.freeze({
   krEcosMacro: 'kr:ecos-macro:v1',
   fundingStress: 'markets:funding-stress:v1',
   treasuryAuctions: 'markets:treasury-auctions:v1',
+  gpr: 'economic:gpr:v1',
   oecdCli: 'economic:oecd-cli:v1',
   ukmtoIncidents: 'maritime:ukmto-incidents:v1',
   earthquakes: 'seismology:earthquakes:v1',
@@ -253,6 +254,7 @@ const ON_DEMAND_KEY_NAMES = new Set([
   'iodaOutages',
   'federalRegister',
   'treasuryAuctions',
+  'gpr',
   'oecdCli',
   // The video each catalog YouTube channel has live now (#8545), fetched by the
   // live video players at play intent and only for slots that list a channel.
