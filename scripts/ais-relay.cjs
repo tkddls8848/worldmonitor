@@ -7719,13 +7719,7 @@ const SHIPPING_STRESS_REDIS_KEY = 'supply_chain:shipping_stress:v1';
 const SHIPPING_STRESS_TTL = 3600; // 1h — seed runs every 15min (4× safety margin)
 const SHIPPING_STRESS_INTERVAL_MS = 15 * 60 * 1000;
 
-const SHIPPING_CARRIERS = [
-  { symbol: 'BDRY', name: 'Breakwave Dry Bulk ETF',  carrierType: 'etf' },
-  { symbol: 'ZIM',  name: 'ZIM Integrated Shipping', carrierType: 'carrier' },
-  { symbol: 'MATX', name: 'Matson Inc',              carrierType: 'carrier' },
-  { symbol: 'SBLK', name: 'Star Bulk Carriers',      carrierType: 'carrier' },
-  { symbol: 'EGLE', name: 'Eagle Bulk Shipping',       carrierType: 'carrier' },
-];
+const { SHIPPING_CARRIERS, scoreShippingStress } = require('../shared/shipping-stress.js');
 
 let shippingStressInFlight = false;
 let shippingStressRetryTimer = null;
@@ -7758,10 +7752,7 @@ async function seedShippingStress() {
       shippingStressRetryTimer = setTimeout(() => { seedShippingStress().catch(() => {}); }, SHIPPING_STRESS_RETRY_MS);
       return;
     }
-    const avgChange = results.reduce((a, b) => a + b.changePct, 0) / results.length;
-    // Neutral market (0% change) → score=40 (moderate). Positive change = lower stress.
-    const stressScore = Math.min(100, Math.max(0, Math.round(40 - avgChange * 3)));
-    const stressLevel = stressScore >= 75 ? 'critical' : stressScore >= 50 ? 'elevated' : stressScore >= 25 ? 'moderate' : 'low';
+    const { stressScore, stressLevel } = scoreShippingStress(results);
     const payload = { carriers: results, stressScore, stressLevel, fetchedAt: Date.now() };
     const ok = await envelopeWrite(SHIPPING_STRESS_REDIS_KEY, payload, SHIPPING_STRESS_TTL, { recordCount: results.length, sourceVersion: 'shipping-stress' });
     await upstashSet('seed-meta:supply_chain:shipping_stress', { fetchedAt: Date.now(), recordCount: results.length }, 604800);

@@ -20,6 +20,7 @@ export const STANDALONE_INTERVAL_MIN = {
   'kr-customs-trade': 1440,
   'world-relations': 1440,
   'market-quotes': 15, 'commodity-quotes': 15, 'crypto-sectors': 30, 'fear-greed': 240,
+  'shipping-stress': 15,
   'market-breadth': 1440, 'aaii-sentiment': 1440, 'cot': 1440, 'earnings-calendar': 360,
   'economic-calendar': 360, 'economy': 45, 'fred-rates': 60, 'fx-rates': 1440, 'fx-yoy': 480,
   'fuel-prices': 1440, 'electricity-prices': 360, 'ember-electricity': 1440, 'energy-spine': 1440,

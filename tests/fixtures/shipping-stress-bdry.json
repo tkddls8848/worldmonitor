@@ -1,0 +1,23 @@
+{
+  "chart": {
+    "result": [
+      {
+        "meta": {
+          "regularMarketPrice": 12.94,
+          "chartPreviousClose": 12.6642
+        },
+        "indicators": {
+          "quote": [
+            {
+              "close": [
+                null,
+                12.9399995803833,
+                12.9399995803833
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
