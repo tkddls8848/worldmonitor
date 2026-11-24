@@ -254,6 +254,8 @@ GPS jamming and spoofing — increasingly used as electronic warfare in conflict
 
 ## News & OSINT
 
+The personal news-threat collector counts country-attributed headlines from the latest English RSS digests. It uses the digest's existing classification labels, deduplicates headlines across editions, and considers the previous six hours. No language-model key is needed.
+
 The news backbone: tiered RSS feeds across the published variants, a raw Telegram OSINT lane, live TV streams, and a webcam grid — every source disclosed, tiered, and bias-tagged.
 
 Publisher identity is the newsroom behind a feed, not the syndication transport that carries it. FeedBurner and Google News remain observed hosts; they are not catalog providers. Google News `site:` queries keep the named publisher (for example Reuters), while keyword aggregation queries do not invent one. Country of origin is the publisher's home country; countries covered are the geographies a named feed reports on, so BBC Hindi stays BBC (UK origin, India coverage) and an India-focused Reuters route stays Reuters.

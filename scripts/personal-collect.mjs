@@ -21,6 +21,7 @@ export const STANDALONE_INTERVAL_MIN = {
   'world-relations': 1440,
   'market-quotes': 15, 'commodity-quotes': 15, 'crypto-sectors': 30, 'fear-greed': 240,
   'shipping-stress': 15,
+  'news-threat-summary': 15,
   'market-breadth': 1440, 'aaii-sentiment': 1440, 'cot': 1440, 'earnings-calendar': 360,
   'economic-calendar': 360, 'economy': 45, 'fred-rates': 60, 'fx-rates': 1440, 'fx-yoy': 480,
   'fuel-prices': 1440, 'electricity-prices': 360, 'ember-electricity': 1440, 'energy-spine': 1440,
@@ -70,7 +71,7 @@ const SCRIPT_ALIASES = { gpsjam: 'fetch-gpsjam.mjs' };
 // everything they summarise. digest-notifications composes the owner's daily
 // brief and decides on its own whether to regenerate the prose this pass.
 export const DEFAULT_COLLECTORS = [
-  'news-digest', 'earthquakes', 'natural-events', 'weather-alerts', 'internet-outages', 'cyber-threats',
+  'news-digest', 'news-threat-summary', 'earthquakes', 'natural-events', 'weather-alerts', 'internet-outages', 'cyber-threats',
   'unrest-events', 'military-flights', 'conflict-intel', 'prediction-markets', 'service-statuses',
   'bundle-market-backup', 'bundle-relay-backup', 'bundle-climate', 'bundle-health',
   'bundle-energy-sources', 'bundle-derived-signals',
@@ -78,7 +79,7 @@ export const DEFAULT_COLLECTORS = [
   'bundle-portwatch', 'bundle-portwatch-port-activity', 'bundle-regional-energy', 'bundle-regional',
   'bundle-static-ref', 'bundle-static-ref-heavy', 'bundle-resilience', 'bundle-resilience-recovery',
   'bundle-resilience-energy-v2', 'bundle-resilience-validation',
-  ...Object.keys(STANDALONE_INTERVAL_MIN),
+  ...Object.keys(STANDALONE_INTERVAL_MIN).filter((name) => name !== 'news-threat-summary'),
   'insights', 'world-relations-ai', 'forecasts', 'correlation', 'digest-notifications', 'world-overview',
 ];
 

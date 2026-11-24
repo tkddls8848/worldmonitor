@@ -8,33 +8,13 @@
 
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
 import { describe, it } from 'node:test';
 
 import { extractCountryCode, extractCountryCodes, extractStoryCountries } from '../scripts/shared/geo-extract.mjs';
 
+import relay from '../scripts/lib/news-threat-countries.cjs';
+
 const RELAY_SOURCE = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
-
-function relaySlice(fromMarker, toFunction) {
-  const start = RELAY_SOURCE.indexOf(fromMarker);
-  assert.notEqual(start, -1, `could not find ${fromMarker} in ais-relay.cjs`);
-  const fnStart = RELAY_SOURCE.indexOf(`function ${toFunction}(`, start);
-  assert.notEqual(fnStart, -1, `could not find ${toFunction} in ais-relay.cjs`);
-  const bodyStart = RELAY_SOURCE.indexOf('{', fnStart);
-  let depth = 0;
-  for (let i = bodyStart; i < RELAY_SOURCE.length; i += 1) {
-    if (RELAY_SOURCE[i] === '{') depth += 1;
-    if (RELAY_SOURCE[i] === '}') depth -= 1;
-    if (depth === 0) return RELAY_SOURCE.slice(start, i + 1);
-  }
-  throw new Error(`unterminated ${toFunction} in ais-relay.cjs`);
-}
-
-const relay = Function(
-  'require',
-  `${relaySlice('const THREAT_COUNTRY_NAME_TO_ISO2 = {', 'threatSummaryCountries')}
-  return { matchCountryNamesInText, threatSummaryCountries };`,
-)(createRequire(new URL('../scripts/ais-relay.cjs', import.meta.url)));
 
 const SAUDI_HEADLINES = [
   ['Iran-backed Houthis warn of long conflict after Riyadh airport attack', ['IR', 'YE', 'SA']],

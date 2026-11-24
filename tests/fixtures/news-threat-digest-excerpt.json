@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-11-24T18:08:23.888Z",
+  "coverage": {
+    "state": "complete",
+    "servedStale": false
+  },
+  "categories": {
+    "politics": {
+      "items": [
+        {
+          "title": "Land mine casualties soar in Syria, two years after war",
+          "publishedAt": 1795533448000,
+          "threat": {
+            "level": "THREAT_LEVEL_HIGH",
+            "source": "keyword"
+          }
+        }
+      ]
+    }
+  }
+}
