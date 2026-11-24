@@ -24,16 +24,20 @@ export async function fetchIndicator(url, headers = {}) {
   return response;
 }
 
-export async function runIndicatorSeed(moduleUrl, name, fetchData, recordCount, maxStaleMin = 4320) {
+export async function runIndicatorSeed(moduleUrl, name, cacheKey, fetchData, {
+  recordCount, maxStaleMin = 4320, contentMeta, maxContentAgeMin,
+}) {
   if (!process.argv[1] || pathToFileURL(process.argv[1]).href !== moduleUrl) return;
   loadEnvFile(moduleUrl);
-  await runSeed('economic', name, `economic:${name}:v1`, fetchData, {
+  await runSeed('economic', name, cacheKey, fetchData, {
     // Keep the previous observation available after health starts reporting it stale.
     ttlSeconds: maxStaleMin * 60 * 2,
     maxStaleMin,
     sourceVersion: `${name}-v1`,
     validateFn: (value) => value != null && recordCount(value) > 0,
     recordCount,
+    contentMeta,
+    maxContentAgeMin,
     afterPublish: async () => {
       const { url, token } = getRedisCredentials();
       await redisCommand(url, token, ['SET', `seed-activated:economic:${name}`, '1', 'NX']);

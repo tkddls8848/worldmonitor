@@ -1,4 +1,5 @@
 import { XMLParser } from 'fast-xml-parser';
+import { DAY_MIN, tokensToContentMeta } from './_content-age-helpers.mjs';
 import { fetchIndicator, numeric, runIndicatorSeed } from './lib/global-indicators.mjs';
 
 const ENDPOINT = 'https://api.imf.org/external/sdmx/2.1/data/IMF.STA,COFER,/G001....Q';
@@ -41,10 +42,16 @@ export function parseCofer(xml) {
   return { latest: { ...current, usdYoyPp }, history };
 }
 
-await runIndicatorSeed(import.meta.url, 'imf-cofer', async () => {
+await runIndicatorSeed(import.meta.url, 'imf-cofer', 'economic:imf-cofer:v1', async () => {
   const start = new Date().getUTCFullYear() - 10;
   const response = await fetchIndicator(`${ENDPOINT}?startPeriod=${start}-Q1`, {
     Accept: 'application/vnd.sdmx.structurespecificdata+xml;version=2.1',
   });
   return parseCofer(await response.text());
-}, ({ history }) => history.length);
+}, {
+  recordCount: ({ history }) => history.length,
+  contentMeta: ({ history }, now) => tokensToContentMeta(history.map(({ period }) => period), now),
+  // With period-start timestamps, 80% of this budget spans three quarters.
+  // The prewarning therefore starts after the next quarterly release is due.
+  maxContentAgeMin: 345 * DAY_MIN,
+});

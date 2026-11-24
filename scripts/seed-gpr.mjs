@@ -1,5 +1,6 @@
 import * as XLSX from '@e965/xlsx';
 import iso3ToIso2 from '../shared/iso3-to-iso2.json' with { type: 'json' };
+import { DAY_MIN, tokensToContentMeta } from './_content-age-helpers.mjs';
 import { DAY_MS, fetchIndicator, numeric, runIndicatorSeed } from './lib/global-indicators.mjs';
 
 const DAILY_URL = 'https://www.matteoiacoviello.com/gpr_files/data_gpr_daily_recent.xls';
@@ -68,8 +69,13 @@ export function parseGpr(dailyBytes, monthlyBytes) {
   };
 }
 
-await runIndicatorSeed(import.meta.url, 'gpr', async () => {
+await runIndicatorSeed(import.meta.url, 'gpr', 'economic:gpr:v1', async () => {
   const [daily, monthly] = await Promise.all([DAILY_URL, MONTHLY_URL].map(async (url) =>
     (await fetchIndicator(url)).arrayBuffer()));
   return parseGpr(daily, monthly);
-}, ({ daily, countries }) => daily.length + Object.keys(countries).length, 1080);
+}, {
+  recordCount: ({ daily, countries }) => daily.length + Object.keys(countries).length,
+  maxStaleMin: 1080,
+  contentMeta: ({ daily }, now) => tokensToContentMeta([daily[0]?.date, daily.at(-1)?.date], now),
+  maxContentAgeMin: 14 * DAY_MIN, // Daily observations are published in a weekly file.
+});

@@ -1,5 +1,6 @@
 import Papa from 'papaparse';
 import iso3ToIso2 from '../shared/iso3-to-iso2.json' with { type: 'json' };
+import { DAY_MIN, tokensToContentMeta } from './_content-age-helpers.mjs';
 import { fetchIndicator, MONTH, numeric, runIndicatorSeed, shiftMonth } from './lib/global-indicators.mjs';
 
 const ENDPOINT = 'https://sdmx.oecd.org/public/rest/v1/data/OECD.SDD.STES,DSD_STES@DF_CLI,/.M.LI...AA...H';
@@ -53,7 +54,7 @@ export function parseCli(csv, archiveCsv = '') {
   return { series };
 }
 
-await runIndicatorSeed(import.meta.url, 'oecd-cli', async () => {
+await runIndicatorSeed(import.meta.url, 'oecd-cli', 'economic:oecd-cli:v1', async () => {
   const [csv, archive] = await Promise.all([
     fetchIndicator(`${ENDPOINT}?lastNObservations=6&format=csvfile`, {
       Accept: 'text/csv', 'Accept-Encoding': 'identity', 'Accept-Language': 'en',
@@ -64,4 +65,8 @@ await runIndicatorSeed(import.meta.url, 'oecd-cli', async () => {
     }),
   ]);
   return parseCli(csv, archive);
-}, ({ series }) => Object.keys(series).length);
+}, {
+  recordCount: ({ series }) => Object.keys(series).length,
+  contentMeta: ({ series }, now) => tokensToContentMeta(series.G20.period, now),
+  maxContentAgeMin: 85 * DAY_MIN, // Monthly release, with no August publication.
+});

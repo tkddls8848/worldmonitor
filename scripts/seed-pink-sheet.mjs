@@ -1,4 +1,5 @@
 import * as XLSX from '@e965/xlsx';
+import { DAY_MIN, tokensToContentMeta } from './_content-age-helpers.mjs';
 import { fetchIndicator, numeric, runIndicatorSeed, shiftMonth } from './lib/global-indicators.mjs';
 
 const LANDING_PAGE = 'https://www.worldbank.org/en/research/commodity-markets';
@@ -56,8 +57,12 @@ export function parsePinkSheet(bytes) {
   return { latest: { period: current.period, indices }, history, spikes };
 }
 
-await runIndicatorSeed(import.meta.url, 'pink-sheet', async () => {
+await runIndicatorSeed(import.meta.url, 'pink-sheet', 'economic:pink-sheet:v1', async () => {
   const page = await (await fetchIndicator(LANDING_PAGE)).text();
   const workbook = await fetchIndicator(findPinkSheetWorkbook(page));
   return parsePinkSheet(await workbook.arrayBuffer());
-}, ({ history }) => history.length);
+}, {
+  recordCount: ({ history }) => history.length,
+  contentMeta: ({ history }, now) => tokensToContentMeta(history.map(({ period }) => period), now),
+  maxContentAgeMin: 75 * DAY_MIN, // Monthly observations are released the following month.
+});
