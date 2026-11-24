@@ -1027,6 +1027,7 @@ paths:
             operationId: GetCompanyEnrichment
             parameters:
                 - name: domain
+                  deprecated: true
                   in: query
                   description: |-
                     Deprecated compatibility input. Domain attribution remains disabled and
@@ -1147,6 +1148,7 @@ paths:
                   schema:
                     type: string
                 - name: domain
+                  deprecated: true
                   in: query
                   description: |-
                     Deprecated compatibility input. When present, attribution stays disabled

@@ -13,6 +13,8 @@
 *.mts  text eol=lf
 *.mjs  text eol=lf
 *.proto text eol=lf
+# Preserve the existing protobuf source bytes for the legacy situation RPC.
+proto/worldmonitor/intelligence/v1/deduct_situation.proto -text -eol
 *.js   text eol=lf
 *.jsx  text eol=lf
 *.cjs  text eol=lf

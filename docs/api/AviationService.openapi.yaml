@@ -268,6 +268,7 @@ paths:
             operationId: GetYoutubeLiveStreamInfo
             parameters:
                 - name: channel
+                  deprecated: true
                   in: query
                   description: 'Deprecated: YouTube channel handle or ID. Channel live detection is retired; a channel-only query returns error "channel_live_detection_retired".'
                   required: false

@@ -127,7 +127,7 @@ export const DIRECT_WRITE_PATTERNS = [
  * `insertAdjacentElement` sibling insert (see DIRECT_WRITE_PATTERNS).
  */
 export const LEGACY_DIRECT_CONTENT_WRITES = [
-  'src/components/AirlineIntelPanel.ts :: setTrustedHtml(this.content, …) x8',
+  'src/components/AirlineIntelPanel.ts :: setTrustedHtml(this.content, …) x7',
   'src/components/DeductionPanel.ts :: replaceChildren(this.content, …) x1',
   'src/components/GdeltIntelPanel.ts :: this.content.insertAdjacentElement(…) x1',
   'src/components/GoodThingsDigestPanel.ts :: setTrustedHtml(this.content, …) x1',
