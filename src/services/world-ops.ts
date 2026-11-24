@@ -64,6 +64,7 @@ export function buildOpsEvents(
     disclosures?: readonly KrDartDisclosure[];
     federalRegister?: readonly FederalRegisterDocument[];
     treasuryCoupons?: readonly TreasuryCoupon[];
+    indicatorEvents?: readonly OpsEvent[];
     language?: string;
   } = {},
 ): OpsEvent[] {
@@ -165,6 +166,7 @@ export function buildOpsEvents(
       url: treasuryResultsUrl(item.resultsFile),
     }));
   const seen = new Set<string>();
+  const indicatorEvents = extras.indicatorEvents?.slice(0, 8) ?? [];
   const recentEvents = events
     .filter((event) => {
       if (seen.has(event.id)) return false;
@@ -172,8 +174,8 @@ export function buildOpsEvents(
       return true;
     })
     .sort(newestFirst)
-    .slice(0, 50 - federalEvents.length - auctionEvents.length);
-  return [...recentEvents, ...federalEvents, ...auctionEvents].sort(newestFirst);
+    .slice(0, 50 - federalEvents.length - auctionEvents.length - indicatorEvents.length);
+  return [...recentEvents, ...federalEvents, ...auctionEvents, ...indicatorEvents].sort(newestFirst);
 }
 
 const OUTAGE_RECENT_MS = 6 * 60 * 60 * 1000;

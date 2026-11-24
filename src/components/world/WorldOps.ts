@@ -214,7 +214,8 @@ export class WorldEventLog {
       const publicationDay = event.kind === 'federal-register'
         ? event.scheduledPublicationDate ?? timestamp.slice(0, 10)
         : undefined;
-      const displayDay = event.kind === 'treasury-auction' ? AUCTION_DAY.format(event.at) : publicationDay;
+      const displayDay = event.kind === 'treasury-auction' ? AUCTION_DAY.format(event.at)
+        : event.kind === 'global-indicator' ? timestamp.slice(0, 10) : publicationDay;
       const time = node('time', 'wfs-ops-event-time', displayDay ? displayDay.slice(5) : eventTime(event.at));
       time.dateTime = publicationDay ?? timestamp;
       const title = node('span', 'wfs-ops-event-title', event.title);

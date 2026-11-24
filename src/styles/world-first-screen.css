@@ -27,7 +27,7 @@
   --radius-xs: 2px;
   --radius-sm: 4px;
   display: grid;
-  grid-template-rows: 38px 0 32px minmax(0, 1fr) 48px;
+  grid-template-rows: 38px var(--wfs-gauge-height, 0px) 32px minmax(0, 1fr) 48px;
   width: 100%;
   height: 100%;
   min-height: 0;
@@ -98,7 +98,7 @@
   --ops-log-width: 248px;
   --ops-shadow-panel: 0 14px 34px rgba(0, 0, 0, 0.54);
   --ops-shadow-tip: 0 8px 20px rgba(0, 0, 0, 0.56);
-  grid-template-rows: 38px 26px 32px minmax(0, 1fr) 48px;
+  grid-template-rows: 38px calc(26px + var(--wfs-gauge-height, 0px)) 32px minmax(0, 1fr) 48px;
 }
 .wfs-root * {
   box-sizing: border-box;
@@ -241,6 +241,22 @@ a.wfs-ticker-item {
 .wfs-ticker-label {
   color: var(--text-secondary);
 }
+.wfs-root:has(.wfs-slot-telemetry .wfs-global-gauges:not([hidden])) { --wfs-gauge-height: 30px; }
+.wfs-root .wfs-slot-telemetry:has(.wfs-global-gauges:not([hidden])) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+}
+:root:not([data-theme="dark"]) .wfs-slot-telemetry:has(.wfs-global-gauges:not([hidden])) .ops-telemetry-bar { display: none; }
+.wfs-slot-telemetry .wfs-global-gauges { min-height: 30px; }
+.wfs-global-gauges:not([hidden]) {
+  display: flex;
+  overflow-x: auto;
+  border-top: 1px solid var(--border);
+}
+.wfs-global-gauges .wfs-ticker-item { flex: 0 0 auto; }
+.wfs-country-drawer__gauges { flex-wrap: wrap; }
 .wfs-ticker-item strong {
   font-size: 10px;
 }
@@ -594,7 +610,7 @@ a.wfs-ticker-item {
 }
 @media (max-width: 768px) {
   .wfs-root {
-    grid-template-rows: 38px 28px 30px minmax(0, 1fr) auto;
+    grid-template-rows: 38px calc(28px + var(--wfs-gauge-height, 0px)) 30px minmax(0, 1fr) auto;
   }
   .masthead-bar {
     padding: 0 10px;

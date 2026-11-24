@@ -11,6 +11,7 @@ vi.mock('@/services/world-ticker', async (importOriginal) => ({
   loadTickerItems: vi.fn(() => Promise.resolve([])),
 }));
 vi.mock('@/services/funding-stress', () => ({ loadFundingStress: mocks.stress }));
+vi.mock('@/services/bootstrap', () => ({ ensureHydrated: vi.fn((key: string) => Promise.resolve(mocks.data[key])) }));
 vi.mock('@/services/treasury-auctions', async (importOriginal) => ({
   ...await importOriginal<typeof import('@/services/treasury-auctions')>(), loadTreasuryAuctions: mocks.auctions,
 }));
@@ -52,6 +53,38 @@ afterEach(() => { document.body.replaceChildren(); vi.clearAllMocks(); mocks.fie
 beforeEach(() => { mocks.stress.mockResolvedValue(null); mocks.auctions.mockResolvedValue(null); mocks.outages.mockResolvedValue([]); mocks.ecos.mockResolvedValue(null); mocks.trade.mockResolvedValue(null); mocks.dart.mockResolvedValue([]); mocks.federalRegister.mockResolvedValue([]); });
 
 describe('mountWorldFirstScreen', () => {
+  it('shows global gauges and indicator log entries, and links a CLI turn to its country card', async () => {
+    const date = new Date().toISOString().slice(0, 10);
+    const startOfMonth = new Date(`${date.slice(0, 7)}-01T00:00:00Z`);
+    startOfMonth.setUTCDate(0);
+    const period = startOfMonth.toISOString().slice(0, 7);
+    const gpr = { date, value: 500, average30d: 300, normal: 180, dailySpike: true, sustainedSpike: true };
+    const cli = { period, value: 101, phase: 'expansion', change: 0.3, turningPoint: 'trough' };
+    mocks.data = {
+      oecdCli: { series: { G20: cli, US: cli } },
+      gpr: { latest: gpr, countries: { US: { period, value: 3.8 } }, spikes: [gpr] },
+      imfCofer: { latest: { period: '2026-Q2', shares: { USD: 56.7 }, usdYoyPp: -0.24 } },
+      pinkSheet: { latest: { period, indices: { energy: { yoyPct: 89.3 }, food: { yoyPct: 14.7 } } },
+        spikes: [{ period, key: 'energy', momPct: -12 }] },
+    };
+    mocks.load.mockResolvedValue({ snapshot, archivedDates: [] });
+    const { slots, ctx } = setup();
+    const mounted = mountWorldFirstScreen(ctx, slots, { openFullView() {}, openCountryBrief() {} });
+    try {
+      await vi.waitFor(() => expect(slots.telemetry.querySelectorAll('[data-gauge]')).toHaveLength(5));
+      expect(slots.telemetry.querySelector('[data-gauge="cofer"]')?.textContent).toContain('56.7%');
+      expect(slots.telemetry.querySelector('[data-gauge="gpr"]')?.textContent).toContain('300.0 / 180.0');
+      slots.dispatch.querySelector<HTMLButtonElement>('#logToggleBtn')?.click();
+      const rows = [...slots.stage.querySelectorAll<HTMLElement>('li[data-kind="global-indicator"]')];
+      expect(rows).toHaveLength(4);
+      const cliRow = rows.find((row) => row.textContent?.includes('CLI'));
+      cliRow?.querySelector('button')?.click();
+      expect(slots.stage.querySelectorAll('[data-section="country-indicators"] [data-gauge]')).toHaveLength(2);
+      expect(slots.stage.querySelector('[data-section="country-indicators"] [data-gauge="gpr"]')?.textContent).toContain('3.80');
+    } finally {
+      mounted.destroy();
+    }
+  });
   it('mounts chrome and reports an empty snapshot', async () => {
     mocks.load.mockResolvedValue({ snapshot: null, archivedDates: [] }); const { slots, map, ctx } = setup();
     const mounted = mountWorldFirstScreen(ctx, slots, { openFullView() {}, openCountryBrief() {} }); await vi.waitFor(() => expect(slots.stage.querySelector('.wfs-status-banner')?.getAttribute('data-state')).toBe('empty'));

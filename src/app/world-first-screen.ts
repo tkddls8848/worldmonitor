@@ -9,6 +9,8 @@ import { buildSupplementalTickerItems, loadTickerItems } from '@/services/world-
 import { loadFundingStress } from '@/services/funding-stress';
 import type { FundingStress } from '@/services/funding-stress';
 import { loadTreasuryAuctions, type TreasuryAuctions } from '@/services/treasury-auctions';
+import { globalIndicatorEvents, globalIndicatorGauges, loadGlobalIndicators, type GlobalIndicators } from '@/services/global-indicators';
+import { renderGlobalGauges } from '@/components/world/WorldGlobalGauges';
 import { getCurrentLanguage } from '@/services/i18n';
 import { loadIodaOutages } from '@/services/internet-outages-ioda';
 import { loadFederalRegister } from '@/services/federal-register';
@@ -61,6 +63,7 @@ export function mountWorldFirstScreen(
   let destroyed = false;
   let fundingStress: FundingStress | null = null;
   let treasuryAuctions: TreasuryAuctions | null = null;
+  let globalIndicators: GlobalIndicators | null = null;
   let outages: IodaOutage[] = [];
   let federalRegister: FederalRegisterDocument[] = [];
   let gasFlows: EuGasFlows | null = null;
@@ -104,7 +107,10 @@ export function mountWorldFirstScreen(
   const telemetry = document.createElement('div');
   telemetry.className = 'ops-telemetry-bar';
   telemetry.append(clocks.element, counters.element);
-  slots.telemetry.append(telemetry);
+  const gauges = document.createElement('section');
+  gauges.className = 'wfs-global-gauges';
+  gauges.hidden = true;
+  slots.telemetry.append(telemetry, gauges);
   const threatMount = masthead.element.querySelector<HTMLElement>('[data-slot="threat"]');
   threatMount?.append(threat.element);
   slots.stage.append(eventLog.element);
@@ -123,8 +129,10 @@ export function mountWorldFirstScreen(
       threat.setMetrics(metrics);
       counters.setCounters(metrics.counters);
     }
+    const language = getCurrentLanguage();
     const events = buildOpsEvents(snapshot, breakingAlerts, now, {
-      outages, disclosures: krDisclosures, federalRegister, treasuryCoupons: treasuryAuctions?.coupons, language: getCurrentLanguage(),
+      outages, disclosures: krDisclosures, federalRegister, treasuryCoupons: treasuryAuctions?.coupons, language,
+      indicatorEvents: globalIndicators ? globalIndicatorEvents(globalIndicators, language, now) : [],
     });
     eventLog.setEvents(events);
     dispatch.setLogState(logOpen, events.length);
@@ -168,6 +176,7 @@ export function mountWorldFirstScreen(
       .filter((outage) => outage.iso2 === selectedIso2 && (outage.end === null || outage.end >= Date.now() - 6 * 60 * 60 * 1000))
       .map(({ id, start, end, severity, signals, url }) => ({ id, start, end, severity, signals, url })),
       federalRegister: federalRegister.filter((item) => selectedIso2 && item.countries.includes(selectedIso2)).slice(0, 5),
+      indicators: globalIndicators ? globalIndicatorGauges(globalIndicators, getCurrentLanguage(), selectedIso2) : [],
       ...(selectedIso2 === 'KR' ? { korea: { asOf: krEcos?.asOf ?? 0, indicators: krEcos?.indicators ?? [], trade: krTrade, disclosures: krDisclosures } } : {}) };
     if (drawer.isOpen()) drawer.update(data); else drawer.open(data);
   }
@@ -282,9 +291,9 @@ export function mountWorldFirstScreen(
   async function refreshExtras(): Promise<void> {
     if (destroyed || !worldShown || extrasLoading) return;
     extrasLoading = true;
-    const [stressResult, outageResult, gasResult, ecosResult, tradeResult, dartResult, registerResult, auctionsResult] = await Promise.allSettled([
+    const [stressResult, outageResult, gasResult, ecosResult, tradeResult, dartResult, registerResult, auctionsResult, indicatorsResult] = await Promise.allSettled([
       loadFundingStress(), loadIodaOutages(), loadEuGasFlows(), loadKrEcosMacro(),
-      loadKrCustomsTrade(), loadKrDartDisclosures(), loadFederalRegister(), loadTreasuryAuctions(),
+      loadKrCustomsTrade(), loadKrDartDisclosures(), loadFederalRegister(), loadTreasuryAuctions(), loadGlobalIndicators(),
     ]);
     if (!destroyed) {
       if (stressResult.status === 'fulfilled') fundingStress = stressResult.value;
@@ -295,6 +304,11 @@ export function mountWorldFirstScreen(
       if (dartResult.status === 'fulfilled') krDisclosures = dartResult.value;
       if (registerResult.status === 'fulfilled') federalRegister = registerResult.value;
       if (auctionsResult.status === 'fulfilled') treasuryAuctions = auctionsResult.value;
+      if (indicatorsResult.status === 'fulfilled') {
+        globalIndicators = indicatorsResult.value;
+        const language = getCurrentLanguage();
+        renderGlobalGauges(gauges, globalIndicatorGauges(globalIndicators, language), language === 'ko' ? '글로벌 지표' : 'Global gauges');
+      }
       extrasLoadedAt = Date.now();
       refreshOps();
       if (selectedIso2) updateDrawer();
@@ -325,7 +339,7 @@ export function mountWorldFirstScreen(
       tickerTimer = null;
       if (extrasTimer !== null) clearInterval(extrasTimer);
       extrasTimer = null;
-      clocks.destroy(); eventLog.destroy(); counters.element.remove(); threat.element.remove(); telemetry.remove();
+      clocks.destroy(); eventLog.destroy(); counters.element.remove(); threat.element.remove(); telemetry.remove(); gauges.remove();
       removeCoordAxes();
       masthead.destroy(); dispatch.destroy(); shelf.destroy(); drawer.destroy();
       keyPlate.element.remove(); zoom.element.remove(); status.element.remove();

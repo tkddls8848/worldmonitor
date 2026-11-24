@@ -12,7 +12,7 @@ The inventory is **generated, not hand-written**: `scripts/source-attribution.mj
 ## Observed Source Inventory
 
 {/* BEGIN GENERATED SOURCE ATTRIBUTION */}
-This generated inventory covers **892 active source hosts** representing **870 active providers** (**405 structured/API**, **470 feed**, and **30 operational-status** hosts). It is derived from source declarations in `scripts/`, `server/`, `api/`, and `src/`. Each row shows the configured provider identity and where the source is referenced. Syndication transports such as FeedBurner and Google News remain listed as hosts and are not counted as publishers.
+This generated inventory covers **895 active source hosts** representing **873 active providers** (**408 structured/API**, **470 feed**, and **30 operational-status** hosts). It is derived from source declarations in `scripts/`, `server/`, `api/`, and `src/`. Each row shows the configured provider identity and where the source is referenced. Syndication transports such as FeedBurner and Google News remain listed as hosts and are not counted as publishers.
 
 | Provider | Observed surface |
 | --- | --- |
@@ -72,7 +72,7 @@ This generated inventory covers **892 active source hosts** representing **870 a
 | api.github.com (api.github.com) | structured — api/_github-release.js, scripts/freeze-github-stars.mjs, scripts/seed-fuel-prices.mjs, scripts/seed-research.mjs |
 | api.groq.com (api.groq.com) | Excluded / candidate — No current fetch observed |
 | api.iea.org (api.iea.org) | structured — scripts/seed-iea-oil-stocks.mjs |
-| api.imf.org (api.imf.org) | structured — scripts/_seed-utils.mjs, scripts/backtest-capital-flow-episodes.mjs, scripts/seed-capital-flows.mjs, scripts/seed-gold-cb-reserves.mjs, +1 more |
+| api.imf.org (api.imf.org) | structured — scripts/_seed-utils.mjs, scripts/backtest-capital-flow-episodes.mjs, scripts/seed-capital-flows.mjs, scripts/seed-gold-cb-reserves.mjs, +2 more |
 | api.indexnow.org (api.indexnow.org) | Excluded / candidate — No current fetch observed |
 | api.ioda.inetintel.cc.gatech.edu (api.ioda.inetintel.cc.gatech.edu) | structured — scripts/seed-ioda-outages.mjs |
 | api.mercadopublico.cl (api.mercadopublico.cl) | structured — scripts/_global-tender-feeds.mjs |
@@ -337,7 +337,7 @@ This generated inventory covers **892 active source hosts** representing **870 a
 | fpri.org (fpri.org) | feed — shared/news-catalog.json |
 | fr.africanews.com (fr.africanews.com) | feed — shared/news-catalog.json |
 | fr.euronews.com (fr.euronews.com) | feed — shared/news-catalog.json |
-| fred.stlouisfed.org (fred.stlouisfed.org) | structured — scripts/seed-oecd-lt-rates.mjs |
+| fred.stlouisfed.org (fred.stlouisfed.org) | structured — scripts/seed-oecd-cli.mjs, scripts/seed-oecd-lt-rates.mjs |
 | freeipapi.com (freeipapi.com) | structured — scripts/seed-cyber-threats.mjs |
 | ft.com (ft.com) | feed — shared/news-catalog.json |
 | fwdstart.me (fwdstart.me) | feed — shared/news-catalog.json |
@@ -642,7 +642,7 @@ This generated inventory covers **892 active source hosts** representing **870 a
 | schema.org (schema.org) | structured — scripts/build-accuracy-page.mjs, scripts/build-use-cases.mjs, scripts/comparison-shortlist.mjs |
 | schemas.agentskills.io (schemas.agentskills.io) | Excluded / candidate — No current fetch observed |
 | scmp.com (scmp.com) | feed — shared/news-catalog.json |
-| sdmx.oecd.org (sdmx.oecd.org) | Excluded / candidate — No current fetch observed |
+| sdmx.oecd.org (sdmx.oecd.org) | structured — scripts/seed-oecd-cli.mjs |
 | sealevel.nasa.gov (sealevel.nasa.gov) | structured — scripts/seed-climate-ocean-ice.mjs |
 | search.seznam.cz (search.seznam.cz) | Excluded / candidate — No current fetch observed |
 | search.worldbank.org (search.worldbank.org) | structured — scripts/seed-global-tenders.mjs |
@@ -743,6 +743,7 @@ This generated inventory covers **892 active source hosts** representing **870 a
 | thebulletin.org (thebulletin.org) | feed — shared/news-catalog.json |
 | thedefiant.io (thedefiant.io) | feed — shared/news-catalog.json |
 | thediplomat.com (thediplomat.com) | feed — shared/news-catalog.json |
+| thedocs.worldbank.org (thedocs.worldbank.org) | structured — scripts/seed-pink-sheet.mjs |
 | thehill.com (thehill.com) | feed — shared/news-catalog.json |
 | theinformation.com (theinformation.com) | feed — shared/news-catalog.json |
 | thejakartapost.com (thejakartapost.com) | feed — shared/news-catalog.json |
@@ -978,6 +979,7 @@ This generated inventory covers **892 active source hosts** representing **870 a
 | www.linkedin.com (www.linkedin.com) | structured — scripts/comparison-shortlist.mjs, src/services/story-share.ts |
 | www.livescience.com (www.livescience.com) | feed — shared/news-catalog.json |
 | www.lrt.lt (www.lrt.lt) | feed — shared/news-catalog.json |
+| www.matteoiacoviello.com (www.matteoiacoviello.com) | structured — scripts/seed-gpr.mjs |
 | www.mbie.govt.nz (www.mbie.govt.nz) | Excluded / candidate — No current fetch observed |
 | www.migracion.gob.pa (www.migracion.gob.pa) | structured — scripts/lib/border-route-sources.mjs, server/worldmonitor/displacement/v1/cross-border-data.ts |
 | www.miit.gov.cn (www.miit.gov.cn) | structured — api/miit-news.js, scripts/china-policy/adapters.mjs |
@@ -1089,7 +1091,7 @@ This generated inventory covers **892 active source hosts** representing **870 a
 | www.who.int (www.who.int) | feed+structured — scripts/seed-disease-outbreaks.mjs, scripts/seed-security-advisories.mjs, shared/news-catalog.json |
 | www.windy.com (www.windy.com) | structured — server/worldmonitor/webcam/v1/get-webcam-image.ts, src/services/webcams/index.ts |
 | www.winnipegfreepress.com (www.winnipegfreepress.com) | feed — shared/news-catalog.json |
-| www.worldbank.org (www.worldbank.org) | structured — server/worldmonitor/resilience/v1/_indicator-source-policy.ts |
+| www.worldbank.org (www.worldbank.org) | structured — scripts/seed-pink-sheet.mjs, server/worldmonitor/resilience/v1/_indicator-source-policy.ts |
 | www.ycombinator.com (www.ycombinator.com) | feed — shared/news-catalog.json |
 | www.yesmagazine.org (www.yesmagazine.org) | feed — shared/news-catalog.json |
 | www.ynetnews.com (www.ynetnews.com) | feed — shared/news-catalog.json |

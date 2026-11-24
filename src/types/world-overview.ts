@@ -1,6 +1,7 @@
 // View-model types for the world-overview first screen (plan 2026-11-22-world-first-screen).
 // Data shapes come from shared/world-overview.d.ts; these are what the map and the
 // first-screen components render.
+import type { GlobalIndicatorGauge } from './global-indicators';
 import type {
   WorldField,
   RelationKind,
@@ -137,6 +138,7 @@ export interface CountryDrawerData {
   outages: Array<{ id: string; start: number; end: number | null; severity: 'low' | 'medium' | 'high'; signals: string[]; url: string }>;
   korea?: KoreaDrawerData;
   federalRegister?: FederalRegisterDocument[];
+  indicators?: GlobalIndicatorGauge[];
 }
 
 export type WorldMarkRequest =
@@ -181,7 +183,7 @@ export interface OpsEvent {
   id: string;
   /** epoch ms */
   at: number;
-  kind: 'breaking' | 'relation' | 'issue' | 'outage' | 'disclosure' | 'federal-register' | 'treasury-auction';
+  kind: 'breaking' | 'relation' | 'issue' | 'outage' | 'disclosure' | 'federal-register' | 'treasury-auction' | 'global-indicator';
   title: string;
   iso2?: string;
   severity: OpsEventSeverity;

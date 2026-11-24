@@ -1,5 +1,5 @@
 import { pathToFileURL } from 'node:url';
-import { loadEnvFile, runSeed } from '../_seed-utils.mjs';
+import { getRedisCredentials, loadEnvFile, redisCommand, runSeed } from '../_seed-utils.mjs';
 
 export const DAY_MS = 86_400_000;
 export const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -28,10 +28,15 @@ export async function runIndicatorSeed(moduleUrl, name, fetchData, recordCount, 
   if (!process.argv[1] || pathToFileURL(process.argv[1]).href !== moduleUrl) return;
   loadEnvFile(moduleUrl);
   await runSeed('economic', name, `economic:${name}:v1`, fetchData, {
-    ttlSeconds: maxStaleMin * 60,
+    // Keep the previous observation available after health starts reporting it stale.
+    ttlSeconds: maxStaleMin * 60 * 2,
     maxStaleMin,
     sourceVersion: `${name}-v1`,
     validateFn: (value) => value != null && recordCount(value) > 0,
     recordCount,
+    afterPublish: async () => {
+      const { url, token } = getRedisCredentials();
+      await redisCommand(url, token, ['SET', `seed-activated:economic:${name}`, '1', 'NX']);
+    },
   });
 }

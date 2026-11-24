@@ -89,7 +89,7 @@
 .wfs-ops-event-mark[data-kind='outage'] { width: 4px; background: #38bdf8; }
 .wfs-ops-event-time { color: var(--text-muted, #657477); font: 9px var(--font-mono, monospace); }
 .wfs-ops-event-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
-.wfs-ops-event[data-kind='treasury-auction'] .wfs-ops-event-title { white-space: normal; }
+.wfs-ops-event:is([data-kind='treasury-auction'], [data-kind='global-indicator']) .wfs-ops-event-title { white-space: normal; }
 .wfs-ops-event-summary > span { display: block; }
 .wfs-ops-event-publication { color: var(--accent-text, #1e40af); font-weight: 700; }
 .wfs-ops-event-country { border: 1px solid var(--border, #c9d2ce); padding: 2px 4px; background: transparent; color: inherit; font: 9px var(--font-mono, monospace); cursor: pointer; }

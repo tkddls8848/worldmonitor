@@ -988,6 +988,9 @@
           "path": "scripts/seed-gold-cb-reserves.mjs"
         },
         {
+          "path": "scripts/seed-imf-cofer.mjs"
+        },
+        {
           "path": "scripts/seed-world-cpi-imf.mjs"
         }
       ]
@@ -4801,6 +4804,9 @@
       "attribution": "Credit fred.stlouisfed.org and link to the original upstream API/dataset.",
       "status": "terms-review",
       "references": [
+        {
+          "path": "scripts/seed-oecd-cli.mjs"
+        },
         {
           "path": "scripts/seed-oecd-lt-rates.mjs"
         }
@@ -9021,10 +9027,15 @@
       "host": "sdmx.oecd.org",
       "provider": "sdmx.oecd.org",
       "kind": "structured",
-      "observed": false,
+      "observed": true,
       "license": "Provider terms for this upstream API/dataset; verify before redistribution",
       "attribution": "Credit sdmx.oecd.org and link to the original upstream API/dataset.",
-      "status": "excluded"
+      "status": "terms-review",
+      "references": [
+        {
+          "path": "scripts/seed-oecd-cli.mjs"
+        }
+      ]
     },
     {
       "host": "sealevel.nasa.gov",
@@ -10255,6 +10266,20 @@
       "references": [
         {
           "path": "shared/news-catalog.json"
+        }
+      ]
+    },
+    {
+      "host": "thedocs.worldbank.org",
+      "provider": "thedocs.worldbank.org",
+      "kind": "structured",
+      "observed": true,
+      "license": "Provider terms for this upstream API/dataset; verify before redistribution",
+      "attribution": "Credit the World Bank Prospects Group and link to the Pink Sheet.",
+      "status": "terms-review",
+      "references": [
+        {
+          "path": "scripts/seed-pink-sheet.mjs"
         }
       ]
     },
@@ -13703,6 +13728,20 @@
       ]
     },
     {
+      "host": "www.matteoiacoviello.com",
+      "provider": "www.matteoiacoviello.com",
+      "kind": "structured",
+      "observed": true,
+      "license": "Creative Commons Attribution (CC BY)",
+      "attribution": "Credit Dario Caldara and Matteo Iacoviello and link to the Geopolitical Risk Index.",
+      "status": "terms-review",
+      "references": [
+        {
+          "path": "scripts/seed-gpr.mjs"
+        }
+      ]
+    },
+    {
       "host": "www.mbie.govt.nz",
       "provider": "www.mbie.govt.nz",
       "kind": "structured",
@@ -15485,6 +15524,9 @@
       "attribution": "Credit www.worldbank.org and link to the original upstream API/dataset.",
       "status": "terms-review",
       "references": [
+        {
+          "path": "scripts/seed-pink-sheet.mjs"
+        },
         {
           "path": "server/worldmonitor/resilience/v1/_indicator-source-policy.ts"
         }

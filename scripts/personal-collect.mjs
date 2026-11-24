@@ -33,6 +33,7 @@ export const STANDALONE_INTERVAL_MIN = {
   'country-history': 1440, 'webcams': 480, 'forecast-resolutions': 720, 'forecast-bets': 720,
   'funding-stress': 240,
   'treasury-auctions': 60,
+  'pink-sheet': 1440,
   'imf-cofer': 1440,
   'gpr': 360,
   'oecd-cli': 1440,

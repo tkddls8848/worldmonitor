@@ -2,6 +2,7 @@ import '../../styles/world-country-drawer.css';
 import { AI_DISCLAIMER_KO, KIND_LABEL_KO, TREND_LABEL_KO } from '../../../shared/world-overview.js';
 import { federalRegisterLabel } from '@/services/federal-register';
 import { federalRegisterPrePublicationLabel } from './WorldOps';
+import { renderGlobalGauges } from './WorldGlobalGauges';
 import type { CountryDrawerData, DrawerRelation, FederalRegisterDocument, SourceLink, WorldMarkRequest } from '../../types/world-overview';
 
 type RelationFilter = 'all' | 'worsening' | 'easing';
@@ -126,7 +127,14 @@ export class WorldCountryDrawer {
     const data = this.data;
     if (!data) return;
     const content = make('div', 'wfs-country-drawer__content');
-    content.append(this.renderHeader(data), this.renderNotice(data), this.renderIssues(data), this.renderRelations(data), this.renderOutages(data));
+    content.append(this.renderHeader(data));
+    if (data.indicators?.length) {
+      const indicators = make('section', 'wfs-global-gauges wfs-country-drawer__gauges');
+      indicators.dataset.section = 'country-indicators';
+      renderGlobalGauges(indicators, data.indicators, 'CLI / GPR');
+      content.append(indicators);
+    }
+    content.append(this.renderNotice(data), this.renderIssues(data), this.renderRelations(data), this.renderOutages(data));
     if (data.federalRegister?.length) content.append(this.renderFederalRegister(data.federalRegister));
     if (data.iso2 === 'KR') content.append(this.renderKorea(data));
     content.append(this.renderSources(data), this.renderFooter(data));
