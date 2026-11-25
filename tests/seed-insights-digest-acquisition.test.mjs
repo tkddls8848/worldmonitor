@@ -107,8 +107,8 @@ test('negative sentinels and malformed digests never escape acquisition', async 
   assert.equal(digest, null);
 });
 
-test('with API_BASE_URL unset the digest warm call goes to the personal server with the owner credential', async (t) => {
-  const names = ['API_BASE_URL', 'WM_PERSONAL_HOST', 'WM_PERSONAL_PORT', 'WM_PERSONAL_USERNAME', 'WM_PERSONAL_PASSWORD', 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN'];
+test('with API_BASE_URL unset the digest warm call goes to the personal server without a credential', async (t) => {
+  const names = ['API_BASE_URL', 'WM_PERSONAL_HOST', 'WM_PERSONAL_PORT', 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN'];
   const previous = Object.fromEntries(names.map((name) => [name, process.env[name]]));
   t.after(() => {
     for (const [name, value] of Object.entries(previous)) {
@@ -117,11 +117,9 @@ test('with API_BASE_URL unset the digest warm call goes to the personal server w
     }
   });
   delete process.env.API_BASE_URL;
-  delete process.env.WM_PERSONAL_USERNAME;
   Object.assign(process.env, {
     WM_PERSONAL_HOST: '127.0.0.1',
     WM_PERSONAL_PORT: '3999',
-    WM_PERSONAL_PASSWORD: 'p'.repeat(16),
     UPSTASH_REDIS_REST_URL: 'https://redis.example.test',
     UPSTASH_REDIS_REST_TOKEN: 'test-token',
   });
@@ -139,7 +137,7 @@ test('with API_BASE_URL unset the digest warm call goes to the personal server w
   assert.deepEqual(digest, ACCEPTED_DIGEST);
   assert.deepEqual(calls, [
     { origin: 'https://redis.example.test', authorization: 'Bearer test-token' },
-    { origin: 'http://127.0.0.1:3999', authorization: `Basic ${Buffer.from(`owner:${'p'.repeat(16)}`).toString('base64')}` },
+    { origin: 'http://127.0.0.1:3999', authorization: undefined },
   ]);
 });
 

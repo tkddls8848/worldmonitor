@@ -961,7 +961,7 @@ describe('ensures ranking aggregate is present every cron, with truthful meta', 
 
   it('runs without the seed refresh key: the personal server no longer checks it', () => {
     // Personal fork: get-resilience-ranking allows ?refresh=1 for every caller
-    // behind the personal server's Basic auth, so a missing key must not stop
+    // through the personal server, so a missing key must not stop
     // the seeder; the header is sent only when the key is set.
     assert.doesNotMatch(src, /requireSeedRefreshKey/, 'seeder must not fail fast on a missing refresh key');
     assert.doesNotMatch(src, /missing_seed_refresh_key/, 'seeder must not report a missing refresh key as a skip');

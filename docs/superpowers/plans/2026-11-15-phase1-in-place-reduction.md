@@ -38,7 +38,7 @@
 작업마다 다음을 순서대로 실행한다. `<N>`은 작업 번호, `<BASE_SHA>`는 작업 0이 `.personal/baseline/base/meta.json`에 적은 커밋이다.
 
 1. `npm run build:personal`: 종료 코드 0.
-2. `npm run start:personal`을 백그라운드로 띄운다. `curl -u owner:$WM_PERSONAL_PASSWORD http://127.0.0.1:3000/api/health?compact=1`이 200이어야 한다.
+2. `npm run start:personal`을 백그라운드로 띄운다. `curl http://127.0.0.1:3000/api/health?compact=1`이 200이어야 한다.
 3. `node scripts/local/baseline/capture.mjs --label after-<N>`: 끝까지 실행된다.
 4. `node scripts/local/baseline/compare.mjs <REF> after-<N>`: 마지막 줄이 `PASS`여야 한다. `<REF>`는 작업 0~7에서는 `base`, 작업 8부터는 작업 7이 만든 `base-unlocked`다. 세 가지를 확인한다.
    - 시나리오 결과가 같다.

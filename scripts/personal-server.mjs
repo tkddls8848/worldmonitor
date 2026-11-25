@@ -1,37 +1,38 @@
-// Container-free, password-protected ingress. Use an HTTPS reverse proxy for
-// remote access; the default listener is deliberately loopback-only.
+// Loopback-only ingress for the dashboard and local API.
 import http from 'node:http';
 import { spawn } from 'node:child_process';
-import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { readFile, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadEnvFile } from './_seed-utils.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const digest = value => createHash('sha256').update(value).digest();
+const LOOPBACK_HOSTS = ['127.0.0.1', 'localhost', '[::1]'];
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.ico': 'image/x-icon', '.woff2': 'font/woff2', '.wasm': 'application/wasm' };
 
 export function validatePersonalStore(url) {
   if (!url) return;
   const parsed = new URL(url);
-  if (!['http:', 'https:'].includes(parsed.protocol) || !['127.0.0.1', '[::1]', 'localhost'].includes(parsed.hostname) || parsed.username || parsed.password) {
+  if (!['http:', 'https:'].includes(parsed.protocol) || !LOOPBACK_HOSTS.includes(parsed.hostname) || parsed.username || parsed.password) {
     throw new Error('Personal mode requires a loopback Redis REST URL; remote shared stores are disabled');
   }
 }
 
-export async function createPersonalIngress({ password, username = 'owner', distDir, apiPort, token }) {
-  if (!password || password.length < 16) throw new Error('WM_PERSONAL_PASSWORD must contain at least 16 characters');
+export async function createPersonalIngress({ distDir, apiPort, token, allowedHosts = '' }) {
   if (!token) throw new Error('Internal API token is required');
   const root = await realpath(distDir);
   await stat(path.join(root, 'dashboard.html'));
-  const expected = digest(`Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`);
+  const additionalHosts = new Set(allowedHosts.split(',').map(host => host.trim()).filter(Boolean));
   return http.createServer(async (req, res) => {
     res.setHeader('Cache-Control', 'private, no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    if (!timingSafeEqual(digest(req.headers.authorization || ''), expected)) {
-      res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="WorldMonitor personal", charset="UTF-8"' });
-      res.end('인증이 필요합니다.');
+    const host = req.headers.host;
+    const port = req.socket.localPort;
+    const isLocalHost = LOOPBACK_HOSTS.some(name => host === `${name}:${port}` || (port === 80 && host === name));
+    if (req.headersDistinct.host?.length !== 1 || (!isLocalHost && !additionalHosts.has(host))) {
+      res.writeHead(403);
+      res.end();
       return;
     }
     try {
@@ -42,7 +43,8 @@ export async function createPersonalIngress({ password, username = 'owner', dist
       }
       if (pathname.startsWith('/api/')) {
         const origin = req.headers.origin;
-        if (origin && new URL(origin).host !== req.headers.host) {
+        const scheme = isLocalHost ? 'http' : 'https';
+        if (req.headers['sec-fetch-site'] === 'cross-site' || (origin && origin !== new URL(`${scheme}://${host}`).origin)) {
           res.writeHead(403); res.end(); return;
         }
         const headers = { ...req.headers };
@@ -143,11 +145,15 @@ export function publishLocalApiOrigin(apiPort, env = process.env) {
 
 export async function startPersonalServer() {
   loadEnvFile(import.meta.url);
+  const configuredHost = process.env.WM_PERSONAL_HOST || '127.0.0.1';
+  const host = configuredHost === '[::1]' ? '::1' : configuredHost;
+  if (!['127.0.0.1', 'localhost', '::1'].includes(host)) {
+    throw new Error('WM_PERSONAL_HOST must be 127.0.0.1, localhost, or ::1');
+  }
   validatePersonalStore(process.env.UPSTASH_REDIS_REST_URL);
   if (process.env.WM_PERSONAL_STORE !== 'embedded' && (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN)) {
     console.warn('로컬 데이터 저장소가 설정되지 않았습니다. Redis 기반 수집 데이터와 시나리오 작업은 사용할 수 없습니다.');
   }
-  if (!process.env.WM_PERSONAL_PASSWORD || process.env.WM_PERSONAL_PASSWORD.length < 16) throw new Error('Set WM_PERSONAL_PASSWORD (at least 16 characters) in the local env file; see SELF_HOSTING.md');
   process.env.LOCAL_API_MODE = 'docker';
   process.env.LOCAL_API_CLOUD_FALLBACK = 'false';
   process.env.LOCAL_API_TOKEN = randomBytes(32).toString('hex');
@@ -161,16 +167,22 @@ export async function startPersonalServer() {
     api = await createLocalApiServer({ port: 0, mode: 'docker', resourceDir: ROOT, cloudFallback: false });
     const { port: apiPort } = await api.start();
     publishLocalApiOrigin(apiPort);
-    const server = await createPersonalIngress({ password: process.env.WM_PERSONAL_PASSWORD, username: process.env.WM_PERSONAL_USERNAME || 'owner', distDir: path.join(ROOT, 'dist'), apiPort, token: process.env.LOCAL_API_TOKEN });
+    const server = await createPersonalIngress({
+      distDir: path.join(ROOT, 'dist'), apiPort, token: process.env.LOCAL_API_TOKEN,
+      allowedHosts: process.env.WM_PERSONAL_ALLOWED_HOSTS,
+    });
     const port = Number(process.env.WM_PERSONAL_PORT || 3000);
-    const host = process.env.WM_PERSONAL_HOST || '127.0.0.1';
-    await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, host, resolve); });
+    await new Promise((resolve, reject) => {
+      server.once('error', reject);
+      // Resolve localhost ourselves so the listener never depends on DNS.
+      server.listen(port, host === 'localhost' ? '127.0.0.1' : host, resolve);
+    });
     // Only with a store to read jobs from; the warning above covers the rest.
     worker = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN ? startScenarioWorker() : null;
     const close = async () => { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); await worker?.close(); await api.close(); await store?.close(); };
     process.once('SIGINT', () => void close());
     process.once('SIGTERM', () => void close());
-    console.log(`개인용 WorldMonitor: http://${host}:${port} (외부 접속에는 HTTPS 프록시를 사용하세요)`);
+    console.log(`개인용 WorldMonitor: http://${host === '::1' ? '[::1]' : host}:${server.address().port} (외부 접속에는 HTTPS 프록시를 사용하세요)`);
     return { server, close };
   } catch (error) { await worker?.close(); await api?.close(); await store?.close(); throw error; }
 }

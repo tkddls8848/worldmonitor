@@ -46,7 +46,7 @@ Grep the named symbol. Do not scan these files top to bottom.
 |---|---|
 | Health keys and seed staleness | `api/health.js`: `BOOTSTRAP_KEYS`, `STANDALONE_KEYS`, `SEED_META`, `ON_DEMAND_KEYS`, `readSeedMeta`, `classifyKey` |
 | Shared seeder helpers | `scripts/_seed-utils.mjs`: `loadEnvFile`, `resolveSeedMetaKey`, `writeSeedMeta`, `writeExtraKeyWithMetaAtomically`, `withRetry` |
-| Personal runtime | `scripts/personal-server.mjs` (Basic-auth ingress, embedded store, scenario worker), `scripts/personal-collect.mjs`: `DEFAULT_COLLECTORS`, `shared/personal-owner.js`: `PERSONAL_OWNER_ID` |
+| Personal runtime | `scripts/personal-server.mjs` (loopback ingress, embedded store, scenario worker), `scripts/personal-collect.mjs`: `DEFAULT_COLLECTORS`, `shared/personal-owner.js`: `PERSONAL_OWNER_ID` |
 | A shared term | `CONCEPTS.md`, one `###` heading per term; grep the term itself |
 
 Test path, command, and owning CI job. Read this instead of `.github/workflows/test.yml`.

@@ -34,7 +34,7 @@ Keys go in `.env.local` (never committed). `.env.example` lists every key.
 
 | Key | Required | Used for |
 |-----|----------|----------|
-| `WM_PERSONAL_PASSWORD` | Yes, 16+ characters | HTTP Basic login for the dashboard and API (user `owner`) |
+| `WM_PERSONAL_ALLOWED_HOSTS` | Optional | Exact Host values for a trusted HTTPS reverse proxy. The dashboard and API are served without a login. |
 | `WM_PERSONAL_STORE=embedded`, `UPSTASH_REDIS_REST_URL=http://127.0.0.1:8079`, `UPSTASH_REDIS_REST_TOKEN` | Yes | The embedded store inside the personal server |
 | `OPENROUTER_API_KEY` | For AI features | Summaries, briefs, scenarios, Trip Assessment, the chat analyst and history embeddings |
 | `ANTHROPIC_API_KEY` | No | Tried before OpenRouter when set; the chain falls back to OpenRouter |

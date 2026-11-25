@@ -101,7 +101,7 @@ The dev server runs at `http://localhost:3000` (override the port with `DEV_PORT
 
 ### Environment Variables
 
-Copy `.env.example` to `.env.local` and fill in the keys you need. The personal server requires `WM_PERSONAL_PASSWORD` and the embedded store settings; AI features need `OPENROUTER_API_KEY`. Without a data source's key its collector fails and its panel shows no data.
+Copy `.env.example` to `.env.local` and fill in the keys you need. The personal server uses the embedded store settings; AI features need `OPENROUTER_API_KEY`. Without a data source's key its collector fails and its panel shows no data.
 
 ## Preflight
 
@@ -147,7 +147,7 @@ or middleware configuration and may return source text or an error.
 
 - A deterministic browser test can stub HTTP responses while exercising real application assets, request construction, hydration, rendering, URL state, and reload behavior. State which responses are controlled.
 - A local unmocked RPC request exercises the Node dev router and registered handler. It needs the handler's credentials and dependencies to prove useful data. An empty response alone does not prove a provider or cache works.
-- Vite does not prove the personal server's ingress (Basic auth, no-store headers) or the built handler bundles. Use `npm run build:personal` and `npm run start:personal` when the acceptance criterion requires those paths.
+- Vite does not prove the personal server's ingress (loopback binding, Host checks, no-store headers) or the built handler bundles. Use `npm run build:personal` and `npm run start:personal` when the acceptance criterion requires those paths.
 - Worker and freshness changes require producer-to-reader checks and, when needed, source-specific natural-run evidence. A parent bundle success is insufficient. Do not run production seeders or deploy without authorization.
 
 Before handoff, run `git diff --check` and `git status --short`. Report the exercised

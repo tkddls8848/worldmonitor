@@ -272,7 +272,6 @@ async function openDashboard(page, cdp) {
 async function newSession(browser, cpu, env) {
   const context = await browser.newContext({
     viewport: VIEWPORT,
-    httpCredentials: { username: env.WM_PERSONAL_USERNAME || 'owner', password: env.WM_PERSONAL_PASSWORD || '' },
   });
   await context.addInitScript(initScript, EVENT_THRESHOLD_MS);
   // WM_PERF_FIRST_SCREEN=full|world pins the /dashboard first screen (the
@@ -544,7 +543,6 @@ export function buildReport({ label, createdAt, config, samples, failures }) {
 export async function measure({ label, runs, cpu, warmup = 1 }) {
   loadEnvFile(import.meta.url);
   const env = process.env;
-  if (!env.WM_PERSONAL_PASSWORD) throw new Error('WM_PERSONAL_PASSWORD is not set in .env.local');
   const { chromium } = await import('playwright');
 
   // Headless Chromium defaults to SwiftShader, which the app rejects for DeckGL

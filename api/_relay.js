@@ -69,8 +69,8 @@ export function createRelayHandler(cfg) {
       return jsonResponse({ error: 'Method not allowed' }, 405, { ...corsHeaders, Allow: 'GET, OPTIONS' });
     }
 
-    // Access control is the personal server's HTTP Basic auth; the legacy
-    // requireApiKey / requireRateLimit options are ignored.
+    // The personal ingress controls access. The legacy requireApiKey and
+    // requireRateLimit options are ignored.
 
     const relayBaseUrl = getRelayBaseUrl();
     if (!relayBaseUrl) {

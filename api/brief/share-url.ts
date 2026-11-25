@@ -6,8 +6,7 @@
  *            brief key is missing (reader can't share what doesn't exist)
  *   -> 503 service_unavailable                     on env/Upstash failure
  *
- * Access control is the personal server's HTTP Basic auth; the brief is
- * always the owner's (PERSONAL_OWNER_ID, shared/personal-owner.js).
+ * The brief belongs to the personal owner (PERSONAL_OWNER_ID, shared/personal-owner.js).
  *
  * Omitting ?slot= defaults to the user's most recent brief via the
  * brief:latest:{userId} pointer the digest cron writes. That covers

@@ -1,4 +1,4 @@
-// Personal fork: the personal server's Basic auth is the only access control.
+// Personal fork: the loopback ingress and local API handle access.
 // The gateway routes; it neither authenticates, meters nor rate-limits. A
 // premium RPC called with no cookie, Authorization or API key header must run
 // its handler and return 200 (Review Focus 1).

@@ -6,8 +6,7 @@
  * `_execute`, so the two surfaces cannot drift, and returns it as a file
  * (Markdown, or HTML that Word opens and that prints to PDF).
  *
- * Access control is the personal server's HTTP Basic auth; every request
- * that reaches this route is the owner's.
+ * The personal server uses a single owner identity for exports.
  *
  * Nothing is stored. The request carries countries, cities and dates only, as
  * the tool does; `parseTravelRiskArgs` refuses every other field and names the

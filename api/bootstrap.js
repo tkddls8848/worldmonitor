@@ -231,10 +231,8 @@ async function getCachedJsonBatch(keys) {
   return result;
 }
 
-// Access control is the personal server's HTTP Basic auth, so every request
-// gets the full payload. The kind only selects cache headers: the marked
-// public URLs stay shared-cacheable, everything else is the owner's no-store
-// read.
+// The personal server serves the full payload. The kind selects cache headers:
+// marked public URLs stay shared-cacheable, while other reads use no-store.
 function resolveBootstrapKind(req) {
   const publicBootstrap = classifyPublicBootstrapRequest(req);
   if (publicBootstrap) return publicBootstrap.authKind;
@@ -383,8 +381,7 @@ export default async function handler(req, _ctx) {
     }
   }
 
-  // The browser runtime sends API requests with credentials (the owner's
-  // Basic auth). Credentialed requests cannot consume ACAO: * responses, even
+  // Credentialed browser requests cannot consume ACAO: * responses, even
   // for public bootstrap data.
   const onDemandKey = auth.kind === 'public-on-demand' && names.length === 1
     ? names[0]

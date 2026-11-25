@@ -6,7 +6,7 @@ This fork is a single-owner personal setup on one machine. It has four parts:
 
 | Part | Command | Role |
 |------|---------|------|
-| Personal server | `npm run start:personal` (`scripts/personal-server.mjs`) | Serves the built dashboard (`dist/`) and the local API behind HTTP Basic auth (user `owner`, `WM_PERSONAL_PASSWORD`), `private, no-store` |
+| Personal server | `npm run start:personal` (`scripts/personal-server.mjs`) | Serves the built dashboard (`dist/`) and the local API on loopback, `private, no-store` |
 | Local API | `scripts/local/local-api-server.mjs`, started by the personal server | Runs the `api/` handlers (built with `npm run build:personal`) on a loopback port, with cloud fallback off |
 | Embedded store | `scripts/local/embedded-store.mjs`, started when `WM_PERSONAL_STORE=embedded` | Redis REST compatible store on `127.0.0.1:8079`, snapshot in `.personal/store.ndjson`; implements only the commands and pinned scripts the collectors and handlers use |
 | Collectors | `npm run collect:personal` (`scripts/personal-collect.mjs`) | Run the `seed-*` collectors against the store, once or with `--watch N` |
@@ -36,7 +36,7 @@ World Monitor is a real-time global intelligence dashboard built as a TypeScript
 │  │ DeckGLMap│  │ SVG Map  │  │  Panels   │  │  Workers    │  │
 │  └────┬─────┘  └────┬─────┘  └─────┬─────┘  └─────────────┘  │
 │       └─────────────┴──────────────┘                          │
-│                     │ fetch /api/* (Basic auth)               │
+│                     │ fetch /api/*                            │
 └─────────────────────┼────────────────────────────────────────┘
                       │
            ┌──────────▼──────────┐       ┌────────────────────┐
@@ -69,7 +69,7 @@ World Monitor is a real-time global intelligence dashboard built as a TypeScript
 
 | Process | Role |
 |---------|------|
-| Node.js personal server | Password-protected static dashboard, local API and embedded store |
+| Node.js personal server | Loopback-only static dashboard, local API and embedded store |
 | Collectors | Fetch enabled providers using the owner's credentials |
 | Scenario worker | Runs queued scenario jobs from the store |
 | Optional HTTPS proxy | Private external access to the same personal server |
@@ -264,7 +264,7 @@ The market backup bundle also persists 14 days of timestamped hourly Yahoo close
 ### Trust Boundaries
 
 ```
-Browser ↔ Personal ingress (Basic auth) ↔ Local API ↔ Upstream APIs
+Browser ↔ Personal ingress (loopback, Host allowlist) ↔ Local API ↔ Upstream APIs
 Collectors ↔ Upstream APIs, Embedded store
 ```
 
@@ -274,7 +274,7 @@ Collectors ↔ Upstream APIs, Embedded store
 
 ### Authentication
 
-One owner, HTTP Basic auth on every request (`WM_PERSONAL_PASSWORD`, 16+ characters). The browser runtime sends `same-origin` credentials for API calls in personal mode. Provider API keys stay in the server environment; `npm run security:vite-env-secrets -- --strict-local` keeps them out of `VITE_*` variables.
+The personal ingress listens only on loopback and serves the dashboard without a login. It checks Host on every request and rejects cross-origin API requests. `WM_PERSONAL_ALLOWED_HOSTS` adds exact Host values for a trusted reverse proxy. The app serves these hosts without authentication, so the proxy controls remote access. Provider API keys stay in the server environment; `npm run security:vite-env-secrets -- --strict-local` keeps them out of `VITE_*` variables.
 
 **Source files**: `scripts/personal-server.mjs`, `index.html`, `src/services/runtime.ts`, `scripts/check-vite-env-secrets.mjs`
 

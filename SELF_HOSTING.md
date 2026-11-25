@@ -5,7 +5,7 @@
 
 | 구성 요소 | 명령 | 역할 |
 |---|---|---|
-| 개인 서버 | `npm run start:personal` | 대시보드 화면과 로컬 API를 비밀번호로 보호해 제공합니다 |
+| 개인 서버 | `npm run start:personal` | 루프백에서 대시보드 화면과 로컬 API를 제공합니다 |
 | 내장 저장소 | 개인 서버 안에서 실행 | 수집 데이터와 갱신 시각을 메모리에 두고 `.personal/store.ndjson`에 기록합니다 |
 | 수집기 | `npm run collect:personal` | 외부 데이터 소스에서 데이터를 받아 내장 저장소에 씁니다 |
 | 터미널 대시보드 | `npm run tui:personal` | 같은 서버를 터미널에서 봅니다 |
@@ -21,7 +21,6 @@ Docker, nginx, Redis, Vercel, Railway, 계정 서비스는 필요 없습니다.
 필수 설정:
 
 ```sh
-WM_PERSONAL_PASSWORD=<16자 이상>
 WM_PERSONAL_STORE=embedded
 UPSTASH_REDIS_REST_URL=http://127.0.0.1:8079
 UPSTASH_REDIS_REST_TOKEN=<16자 이상의 임의 토큰>
@@ -33,7 +32,7 @@ OPENROUTER_API_KEY=<AI 요약, 브리프, 시나리오, 여행 위험 평가, �
 - `ANTHROPIC_API_KEY`: 있으면 LLM 호출이 Anthropic을 먼저 시도하고, 없거나 실패하면 OpenRouter로 넘어갑니다.
 - `EARTHDATA_TOKEN`: 산업 활동(NO₂) 수집에 사용합니다. [NASA Earthdata Login](https://urs.earthdata.nasa.gov)에서 가입하고 **Generate Token**을 선택합니다. **Applications > Authorized Apps**에서 **NASA GESDISC DATA ARCHIVE**를 승인합니다. 토큰이 없으면 NO₂ 수집을 건너뜁니다.
 - 데이터 소스별 키(예: `FRED_API_KEY`, `ACLED_*`, `NASA_FIRMS_API_KEY`): 키가 없는 수집기는 실패로 표시되고 나머지는 계속 진행합니다. 해당 패널은 데이터가 없다고 표시합니다.
-- `WM_PERSONAL_USERNAME`(기본 `owner`), `WM_PERSONAL_HOST`(기본 `127.0.0.1`), `WM_PERSONAL_PORT`(기본 `3000`).
+- `WM_PERSONAL_HOST`(기본 `127.0.0.1`)는 `127.0.0.1`, `localhost`, `::1`만 허용합니다. `WM_PERSONAL_PORT`의 기본값은 `3000`입니다.
 - `WM_INTEL_HISTORY_DB`: 이력 SQLite 파일 위치. 기본값은 `.personal/intel-history.sqlite`입니다.
 
 ## 실행
@@ -45,12 +44,12 @@ npm run collect:personal    # 수집기 1회 실행. 반복하려면: -- --watch
 npm run tui:personal        # 터미널 대시보드. 종료는 q
 ```
 
-- 브라우저는 HTTP Basic 인증으로 로그인합니다. 사용자 이름은 `owner`, 비밀번호는 `WM_PERSONAL_PASSWORD`입니다.
+- 대시보드는 로그인 없이 열립니다. 기본적으로 서버는 수신 포트가 붙은 `127.0.0.1`, `localhost`, `[::1]` Host 헤더만 받습니다. API는 다른 출처의 브라우저 요청을 거부합니다.
 - `collect:personal`은 모든 묶음과 개별 수집기를 돌립니다. 아직 신선한 수집기는 건너뛰고, 마지막 성공 시각은 `.personal/collect-state.json`에 남깁니다.
 - `collect:personal`에 수집기 이름을 넘기면 신선도와 관계없이 그것만 실행합니다(`-- earthquakes bundle-climate`).
 - Cross-Strait Activity는 `JAPAN_MOD_PROXY_URL` 또는 `PROXY_URL`이 없으면 건너뜁니다. Military Bases는 로컬 데이터 파일이나 Redis의 활성 버전이 없고 R2 계정 ID 또는 토큰도 없으면 건너뜁니다. PizzINT는 제공자가 정상 응답했지만 실시간 신호가 없으면 마지막 관측값을 유지하고 `SKIP`을 기록합니다.
 - 서버를 다시 시작하면 내장 저장소가 만료되지 않은 키를 복원합니다.
-- 외부에서 접속하려면 HTTPS 역방향 프록시를 앞에 두고 서버는 루프백에 묶어 둡니다.
+- 외부에서 접속하려면 접근을 제한하는 HTTPS 역방향 프록시를 사용합니다. 프록시가 원래 Host 헤더를 전달하도록 설정하고, `WM_PERSONAL_ALLOWED_HOSTS`에 해당 값을 쉼표로 구분한 정확한 `host[:port]` 목록으로 추가합니다(예: `monitor.example.net,monitor.example.net:8443`). 서버는 루프백에서만 수신하며, 허용한 호스트의 대시보드와 API는 애플리케이션 인증 없이 열립니다.
 
 ## 저장소
 

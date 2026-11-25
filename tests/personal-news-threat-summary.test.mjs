@@ -27,7 +27,7 @@ test('uses a valid response even if its cache expires while the other editions f
   let fullCache = digest;
   const requests = [];
   const result = await fetchNewsThreatSummary({
-    env: { WM_PERSONAL_PASSWORD: 'news-summary-test-password' },
+    env: {},
     cells: [{ edition: 'full', lang: 'en' }, { edition: 'tech', lang: 'en' }],
     spreadMs: 0,
     fetchImpl: async (input) => {
@@ -51,7 +51,7 @@ test('uses a valid response even if its cache expires while the other editions f
 
 test('preserves the full-English freshness gate even if a specialty edition succeeds', async () => {
   await assert.rejects(fetchNewsThreatSummary({
-    env: { WM_PERSONAL_PASSWORD: 'news-summary-test-password' },
+    env: {},
     cells: [{ edition: 'tech', lang: 'en' }, { edition: 'full', lang: 'en' }],
     spreadMs: 0,
     fetchImpl: async (input) => Response.json({

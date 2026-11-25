@@ -467,7 +467,7 @@ The distinction that lets one URL serve both crawlers and MCP clients. A `GET` c
 
 ### Credential Class
 
-> **This fork:** there are no MCP OAuth tokens, user API keys or plans. The personal server's owner credential (Basic auth at the ingress) is the only door; this entry describes the upstream design.
+> **This fork:** there are no MCP OAuth tokens, user API keys or plans. The personal server serves the dashboard and API on loopback without a login. This entry describes the upstream design.
 
 One of the independent doors through which a caller reaches MCP tooling: a pro OAuth token, minted for any entitlement that clears the mint gate (a paid tier with MCP access), or a user API key, available only to plans that include API access. The classes are resolved by different code paths and carry different hardcoded assumptions, but they are not plan boundaries — an API-tier subscriber legitimately holds both.
 

@@ -391,8 +391,7 @@ export default async function handler(req) {
         'Content-Type': 'text/plain; charset=utf-8',
         'X-Content-Type-Options': 'nosniff',
         'Content-Security-Policy': "sandbox; default-src 'none'",
-        // The personal server's Basic auth gates every GET. Shared caches do not
-        // key on the credential header, so this must not be public / s-maxage /
+        // Keep feed responses out of shared caches. Avoid public / s-maxage /
         // CDN-cached.
         // `private` keeps CDNs out; max-age lets the SPA feedCache persist.
         'Cache-Control': 'private, max-age=180',

@@ -53,7 +53,7 @@ export {
   composeInsightsSynthesis,
   resolveInsightsSynthesis,
 };
-import { wmApiAuthHint, wmApiBase, wmApiFetch } from './lib/personal-api.mjs';
+import { isPersonalApi, wmApiBase, wmApiFetch } from './lib/personal-api.mjs';
 import {
   OPENROUTER_FREE_BACKUP_MODEL,
   OPENROUTER_FREE_PRIMARY_MODEL,
@@ -752,7 +752,7 @@ async function warmDigestCache(language = 'en') {
       }
       console.warn(`  Digest warm returned no acceptable ${language} digest`);
     } else {
-      const keyNote = wmApiAuthHint(apiBase, resp.status) ?? (RELAY_API_KEY ? '' : ' (WORLDMONITOR_RELAY_KEY not set — Origin-only auth)');
+      const keyNote = isPersonalApi(apiBase) || RELAY_API_KEY ? '' : ' (WORLDMONITOR_RELAY_KEY not set — Origin-only auth)';
       console.warn(`  Digest warm failed: HTTP ${resp.status}${keyNote}`);
     }
   } catch (err) {

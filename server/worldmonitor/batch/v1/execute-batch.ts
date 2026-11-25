@@ -8,7 +8,7 @@
  * caching exactly as if it were sent directly.
  *
  * Personal server: the batch arrives at the local API (127.0.0.1:<port>) after
- * the Basic-auth ingress has checked the owner and stripped Authorization, and
+ * the loopback ingress has checked the Host and stripped Authorization, and
  * the local API refuses any request without its per-process transport token
  * (x-worldmonitor-local-token), which it removes before a handler runs. So the
  * sub-requests carry that token from this process's own LOCAL_API_TOKEN, never

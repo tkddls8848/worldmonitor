@@ -179,8 +179,7 @@ export default async function handler(req, _ctx) {
   }
 
   // R4 (#6654): this is the ONLY route that serves post bodies, and it must
-  // stay the first-party panel's route. Access control is the personal
-  // server's HTTP Basic auth.
+  // stay the first-party panel's route.
 
   const relayBaseUrl = getRelayBaseUrl();
   if (!relayBaseUrl) {

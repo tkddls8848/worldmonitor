@@ -1,5 +1,5 @@
 // Seeders that call the WorldMonitor API send those calls to the personal
-// server (personalOrigin) with the owner's Basic credential, and a seeder that
+// server (personalOrigin), and a seeder that
 // used the upstream RSS relay fetches its feeds directly unless RELAY_URL is
 // set. See tests/personal-seeders-no-upstream-hosts.test.mjs for the static guard.
 import assert from 'node:assert/strict';
@@ -7,11 +7,10 @@ import test from 'node:test';
 
 import { wmApiBase, wmApiFetch } from '../scripts/lib/personal-api.mjs';
 
-const PERSONAL_ENV = { WM_PERSONAL_HOST: '127.0.0.1', WM_PERSONAL_PORT: '3999', WM_PERSONAL_PASSWORD: 'p'.repeat(16) };
-const OWNER_AUTH = `Basic ${Buffer.from(`owner:${'p'.repeat(16)}`).toString('base64')}`;
+const PERSONAL_ENV = { WM_PERSONAL_HOST: '127.0.0.1', WM_PERSONAL_PORT: '3999' };
 
 function withEnv(t, values) {
-  const names = ['API_BASE_URL', 'RELAY_URL', 'WM_PERSONAL_HOST', 'WM_PERSONAL_PORT', 'WM_PERSONAL_USERNAME', 'WM_PERSONAL_PASSWORD'];
+  const names = ['API_BASE_URL', 'RELAY_URL', 'WM_PERSONAL_HOST', 'WM_PERSONAL_PORT'];
   const previous = Object.fromEntries(names.map((name) => [name, process.env[name]]));
   for (const name of names) delete process.env[name];
   Object.assign(process.env, values);
@@ -34,20 +33,10 @@ function recordFetch(t, body = '{}') {
 
 test('the API base is the personal server unless API_BASE_URL names another', () => {
   assert.equal(wmApiBase({}), 'http://127.0.0.1:3000');
+  assert.equal(wmApiBase({ WM_PERSONAL_HOST: '::1' }), 'http://[::1]:3000');
   assert.equal(wmApiBase({ WM_PERSONAL_HOST: '127.0.0.1', WM_PERSONAL_PORT: '3999' }), 'http://127.0.0.1:3999');
   assert.equal(wmApiBase({ API_BASE_URL: 'http://worldmonitor:8080/' }), 'http://worldmonitor:8080');
   assert.equal(wmApiBase({ API_BASE_URL: '   ' }), 'http://127.0.0.1:3000');
-});
-
-test('the owner credential goes to the personal server and nowhere else', async (t) => {
-  const calls = recordFetch(t);
-  const apiFetch = wmApiFetch(PERSONAL_ENV);
-  await apiFetch('http://127.0.0.1:3999/api/infrastructure/v1/list-service-statuses', { method: 'POST' });
-  await apiFetch('https://feeds.example.test/rss.xml');
-  assert.deepEqual(calls, [
-    { url: 'http://127.0.0.1:3999/api/infrastructure/v1/list-service-statuses', authorization: OWNER_AUTH },
-    { url: 'https://feeds.example.test/rss.xml', authorization: undefined },
-  ]);
 });
 
 const headerObject = (headers) => Object.fromEntries(new Headers(headers));
@@ -68,7 +57,7 @@ test('a request to the personal server drops the upstream Origin its ingress ref
   await apiFetch('http://127.0.0.1:3999/api/news/v1/list-feed-digest', { headers });
   await apiFetch('https://feeds.example.test/rss.xml', { headers });
   assert.deepEqual(seen, [
-    { url: 'http://127.0.0.1:3999/api/news/v1/list-feed-digest', headers: { 'user-agent': 'ua', authorization: OWNER_AUTH } },
+    { url: 'http://127.0.0.1:3999/api/news/v1/list-feed-digest', headers: { 'user-agent': 'ua' } },
     { url: 'https://feeds.example.test/rss.xml', headers: { 'user-agent': 'ua', origin: 'https://worldmonitor.app' } },
   ]);
   assert.equal(headers.Origin, 'https://worldmonitor.app', 'the caller\'s headers object is not mutated');
@@ -81,12 +70,12 @@ test('Headers objects and header tuples keep every header on the way to the pers
   await apiFetch(target, { headers: new Headers({ 'Content-Type': 'application/json', Origin: 'https://worldmonitor.app' }) });
   await apiFetch(target, { headers: [['Content-Type', 'application/json'], ['X-Trace', '1'], ['Origin', 'https://worldmonitor.app']] });
   assert.deepEqual(seen, [
-    { url: target, headers: { 'content-type': 'application/json', authorization: OWNER_AUTH } },
-    { url: target, headers: { 'content-type': 'application/json', 'x-trace': '1', authorization: OWNER_AUTH } },
+    { url: target, headers: { 'content-type': 'application/json' } },
+    { url: target, headers: { 'content-type': 'application/json', 'x-trace': '1' } },
   ]);
 });
 
-test('with API_BASE_URL on another host the owner credential stays home and Origin is kept', async (t) => {
+test('with API_BASE_URL on another host the upstream Origin is kept', async (t) => {
   const seen = recordHeaders(t);
   const env = { ...PERSONAL_ENV, API_BASE_URL: 'https://api.example.test' };
   const base = wmApiBase(env);
@@ -97,7 +86,7 @@ test('with API_BASE_URL on another host the owner credential stays home and Orig
   }]);
 });
 
-test('without a personal password the API fetch adds no credential', async (t) => {
+test('the personal API fetch adds no credential', async (t) => {
   const calls = recordFetch(t);
   await wmApiFetch({})('http://127.0.0.1:3000/api/version');
   assert.deepEqual(calls, [{ url: 'http://127.0.0.1:3000/api/version', authorization: undefined }]);
@@ -111,7 +100,7 @@ test('china-decision-signals reads its RPC from the personal server by default',
   await assert.rejects(() => fetchChinaDecisionSignals(), /six-group contract/);
   assert.deepEqual(calls, [{
     url: 'http://127.0.0.1:3999/api/intelligence/v1/get-china-decision-signals',
-    authorization: OWNER_AUTH,
+    authorization: undefined,
   }]);
 });
 
@@ -181,12 +170,4 @@ test('a direct advisory fetch gives up after three redirects', async (t) => {
   });
   assert.deepEqual(items, []);
   assert.equal(calls, 4, 'the original request plus three redirects');
-});
-
-test('an auth failure from the personal server names WM_PERSONAL_PASSWORD, not the relay key', async () => {
-  const { wmApiAuthHint } = await import('../scripts/lib/personal-api.mjs');
-  assert.match(wmApiAuthHint('http://127.0.0.1:3999/api/version', 401, PERSONAL_ENV), /WM_PERSONAL_PASSWORD/);
-  assert.equal(wmApiAuthHint('http://127.0.0.1:3999/api/version', 503, PERSONAL_ENV), '');
-  // Another API host keeps the caller's own (relay-key) hint.
-  assert.equal(wmApiAuthHint('https://api.example.test/api/version', 401, PERSONAL_ENV), null);
 });

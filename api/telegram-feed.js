@@ -228,7 +228,6 @@ export default async function handler(req) {
     return jsonResponse({ error: 'Method not allowed' }, 405, { ...corsHeaders, Allow: 'GET, OPTIONS' });
   }
 
-  // Access control is the personal server's HTTP Basic auth.
   const url = new URL(req.url);
   const mode = (url.searchParams.get('mode') || 'feed').trim().toLowerCase();
   if (!TELEGRAM_FEED_MODES.has(mode)) {

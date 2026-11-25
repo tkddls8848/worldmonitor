@@ -3,6 +3,8 @@
 // they list. tests/widget-endpoint-policy.test.mjs requires every bootstrap
 // registry key and generated GET route to be listed or excluded with a reason.
 
+const { personalOrigin } = require('./lib/classify-digest-request.cjs');
+
 const GROUPS = [
   'Markets',
   'Crypto',
@@ -403,7 +405,7 @@ const RPC_PATHS = new Set(RPCS.map(entry => entry.path));
 // upstream operator's hosted API.
 const API_ORIGIN = new URL(
   (typeof process.env.API_BASE_URL === 'string' && process.env.API_BASE_URL.trim())
-  || `http://${process.env.WM_PERSONAL_HOST || '127.0.0.1'}:${Number(process.env.WM_PERSONAL_PORT || 3000)}`,
+  || personalOrigin(),
 ).origin;
 
 const byGroup = (entries, line) => GROUPS

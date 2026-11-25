@@ -17,7 +17,7 @@
  *      long-form text message, and the next cron tick re-renders
  *      with a fresh cold start.
  *
- * Access control is the personal server's HTTP Basic auth. A `?t=`
+ * Through the personal server’s loopback ingress, a `?t=`
  * token on older links is ignored. The only brief owner is
  * PERSONAL_OWNER_ID (shared/personal-owner.js).
  *

@@ -32,8 +32,8 @@ async function sha256Hex(value: string): Promise<string> {
 
 /**
  * Principal token stored beside the job. The personal server has a single
- * owner behind HTTP Basic auth, so the token hashes that owner id. The
- * user: prefix keeps the token identical to the one written for a user id.
+ * owner, so the token hashes that owner id. The user: prefix keeps the token
+ * identical to the one written for a user id.
  */
 export async function scenarioOwnerToken(ownerId: string): Promise<string> {
   return sha256Hex(`user:${ownerId}`);

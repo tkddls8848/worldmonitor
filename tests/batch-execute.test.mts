@@ -10,8 +10,7 @@
  *      principal stamps do not;
  *   3. a batch can never recurse (marker header + /api/batch/* path both
  *      refuse).
- * Personal fork: the personal server's Basic auth is the only access control,
- * so sub-requests carry no rate-limit admission and nothing is pre-charged.
+ * Personal fork: sub-requests carry no rate-limit admission and nothing is pre-charged.
  */
 
 import assert from 'node:assert/strict';

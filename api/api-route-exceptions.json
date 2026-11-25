@@ -110,7 +110,7 @@
     {
       "path": "api/opensky.js",
       "category": "upstream-proxy",
-      "reason": "Personal-server OpenSky relay behind the personal server's HTTP Basic auth; not part of the public API offering.",
+      "reason": "Personal-server OpenSky relay through the personal server’s loopback ingress; not part of the public API offering.",
       "owner": "@SebastienMelki",
       "removal_issue": null
     },

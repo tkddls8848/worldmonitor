@@ -47,7 +47,7 @@ World Monitor is a client-side intelligence dashboard that aggregates publicly a
 ### API Keys & Secrets
 
 - **Personal server**: provider API keys stay in the server environment (`.env.local`, gitignored) and never reach the browser. `npm run build:personal` runs the strict VITE secret guard, which refuses a secret-looking `VITE_*` variable
-- **Access**: one owner; every dashboard and API request carries HTTP Basic auth (`WM_PERSONAL_PASSWORD`, 16+ characters) and is answered `private, no-store`
+- **Access**: the dashboard and API are unauthenticated on loopback. Ingress validates Host on every request, rejects cross-origin API requests, and sets `private, no-store`. A reverse proxy using `WM_PERSONAL_ALLOWED_HOSTS` controls access for its configured hosts
 - No API keys should ever be committed to the repository
 - The RSS proxy uses domain allowlisting to prevent SSRF. Both the local API's RSS proxy and the relay re-check the RSS allowlist on every redirect hop.
 

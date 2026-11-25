@@ -11,9 +11,6 @@
       "status": "excluded",
       "references": [
         {
-          "path": "scripts/local/baseline/capture.mjs"
-        },
-        {
           "path": "scripts/local/local-api-server.mjs"
         },
         {
@@ -11209,9 +11206,6 @@
         },
         {
           "path": "scripts/lib/brief-embedding.mjs"
-        },
-        {
-          "path": "scripts/lib/personal-api.mjs"
         },
         {
           "path": "scripts/lib/x-news-accounts.cjs"

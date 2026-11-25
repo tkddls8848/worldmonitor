@@ -138,8 +138,7 @@ describe('embed public data auth', () => {
       assert.equal(isPublicWeatherBootstrapRequest(req), false, url);
       assert.equal(isAnonymousWeatherBootstrapRequest(req), false, url);
       const res = await bootstrapHandler(req);
-      // Personal fork: Basic auth at the ingress is the gate; a non-public
-      // shape is served as the owner's read and never enters a shared cache.
+      // A non-public shape is served as the owner's read and stays out of shared caches.
       assert.equal(res.headers.get('cache-control'), 'no-store', `${url} stays off the shared cache`);
     }
   });

@@ -1,8 +1,7 @@
 /**
  * Shared gateway logic for the per-domain API handlers.
  *
- * Personal fork: the personal server's HTTP Basic auth
- * (scripts/personal-server.mjs) is the only access control. The gateway
+ * Personal fork: the loopback ingress and local API handle access. The gateway
  * routes; it does not authenticate, meter, rate-limit or record usage.
  *
  * dispatch():

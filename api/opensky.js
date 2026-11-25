@@ -22,6 +22,5 @@ function noStore(response) {
 }
 
 export default async function handler(req) {
-  // Access control is the personal server's HTTP Basic auth.
   return noStore(await relayHandler(req));
 }

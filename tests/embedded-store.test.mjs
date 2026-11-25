@@ -17,7 +17,6 @@ import SCORECARD_ATOMIC_PUBLISH_SCRIPT from '../scripts/shared/scorecard-atomic-
 import COUNTRY_HISTORY_WRITE_SCRIPT from '../scripts/shared/country-history-write-script.cjs';
 import { publishCountrySnapshots } from '../scripts/seed-country-history.mjs';
 import * as seedUtils from '../scripts/_seed-utils.mjs';
-import { createPersonalFetch } from '../scripts/personal-tui.mjs';
 import { DEFAULT_COLLECTORS, collectorScript } from '../scripts/personal-collect.mjs';
 import { APPEND_HISTORY_LUA, PUBLISH_PHYSICAL_PREMIUM_LUA } from '../scripts/seed-physical-premiums.mjs';
 import pizzintHistory from '../scripts/shared/pizzint-history.cjs';
@@ -275,23 +274,6 @@ test('the store refuses weak tokens and non-loopback binds', async () => {
   await assert.rejects(startEmbeddedStore({ token: TOKEN, port: 0, host: '0.0.0.0' }), /loopback/);
 });
 
-test('the terminal dashboard sends the owner password to the personal server only', async () => {
-  const seen = [];
-  const fetchImpl = async (input, init = {}) => { seen.push([String(input), new Headers(init.headers).get('authorization') ?? undefined, Object.fromEntries(new Headers(init.headers))]); return new Response('{}'); };
-  const personalFetch = createPersonalFetch({ origin: 'http://127.0.0.1:3000', password: 'test-password-123456', fetchImpl });
-  await personalFetch('http://127.0.0.1:3000/api/bootstrap?tier=fast', { headers: { accept: 'application/json' } });
-  await personalFetch('https://gibs.earthdata.nasa.gov/wms');
-  await personalFetch('http://127.0.0.1:3001/api/other-local-service');
-  assert.equal(seen[0][1], `Basic ${Buffer.from('owner:test-password-123456').toString('base64')}`);
-  assert.equal(seen[1][1], undefined);
-  assert.equal(seen[2][1], undefined);
-  assert.throws(() => createPersonalFetch({ origin: 'http://127.0.0.1:3000', password: '' }), /WM_PERSONAL_PASSWORD/);
-  // A Headers object or header tuples keep their entries next to the credential.
-  await personalFetch('http://127.0.0.1:3000/api/a', { headers: new Headers({ accept: 'application/json' }) });
-  await personalFetch('http://127.0.0.1:3000/api/b', { headers: [['accept', 'text/plain'], ['x-trace', '1']] });
-  assert.deepEqual(seen[3][2], { accept: 'application/json', authorization: seen[0][1] });
-  assert.deepEqual(seen[4][2], { accept: 'text/plain', authorization: seen[0][1], 'x-trace': '1' });
-});
 
 test('every default collector exists and names cannot escape scripts/', () => {
   // gpsjam is the one collector whose script keeps its fetch-* name.

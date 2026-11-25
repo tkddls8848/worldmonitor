@@ -1,5 +1,5 @@
 /**
- * A batch sent to the personal server, end to end: Basic-auth ingress ->
+ * A batch sent to the personal server, end to end: loopback ingress ->
  * local API (which requires its per-process transport token) -> the real
  * batch gateway -> each sub-operation back through the local API.
  *
@@ -15,7 +15,6 @@ import { after, before, describe, it } from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const LOCAL_TOKEN = 'batch-local-api-test-token-0123456789abcdef';
-const PASSWORD = 'batch-test-password-123456';
 // The local API replaces global fetch with an SSRF-guarded one that refuses
 // loopback ports other than its own; the test talks to the ingress as an
 // outside client would.
@@ -58,7 +57,7 @@ describe('batch through the personal server', () => {
     const quiet = { log() {}, warn() {}, error() {} };
     const api = await createLocalApiServer({ port: 0, apiDir, cloudFallback: false, logger: quiet });
     const { port: apiPort } = await api.start();
-    const ingress = await createPersonalIngress({ password: PASSWORD, distDir, apiPort, token: LOCAL_TOKEN });
+    const ingress = await createPersonalIngress({ distDir, apiPort, token: LOCAL_TOKEN });
     await new Promise<void>((resolve) => ingress.listen(0, '127.0.0.1', resolve));
     const address = ingress.address();
     base = `http://127.0.0.1:${typeof address === 'object' && address ? address.port : 0}`;
@@ -80,7 +79,6 @@ describe('batch through the personal server', () => {
     const response = await clientFetch(`${base}/api/batch/v1/execute`, {
       method: 'POST',
       headers: {
-        authorization: `Basic ${Buffer.from(`owner:${PASSWORD}`).toString('base64')}`,
         'content-type': 'application/json',
         // A caller-supplied token is stripped at the ingress and is not what
         // authenticates the sub-requests.

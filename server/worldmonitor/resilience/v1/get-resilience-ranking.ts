@@ -274,9 +274,8 @@ export const getResilienceRanking: ResilienceServiceHandler['getResilienceRankin
 ): Promise<GetResilienceRankingResponse> => {
   // ?refresh=1 forces a full recompute-and-publish instead of returning the
   // existing cache. A full warm is expensive (~222 score computations +
-  // chunked pipeline SETs). Personal fork: the personal server's Basic auth is
-  // the only gate, so every refresh request is allowed; a short Redis slot
-  // still bounds rapid/concurrent refresh attempts.
+  // chunked pipeline SETs). The personal server allows every refresh request.
+  // A short Redis slot bounds rapid or concurrent refresh attempts.
   const refreshRequested = isRefreshRequested(ctx);
   let refreshSlotDenied = false;
   let forceRefresh = false;

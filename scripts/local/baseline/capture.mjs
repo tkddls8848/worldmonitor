@@ -10,6 +10,8 @@ import { runLocalScenario } from '../../run-local-scenario.mjs';
 import { SCENARIO_TEMPLATES } from '../../scenario-worker.mjs';
 import { countErrors } from './diff.mjs';
 import { runTests } from './run-tests.mjs';
+import { loadEnvFile } from '../../_env-file.mjs';
+import { personalOrigin } from '../../lib/classify-digest-request.cjs';
 
 const ROOT = resolve(fileURLToPath(import.meta.url), '../../../..');
 const { values } = parseArgs({ options: { label: { type: 'string' } } });
@@ -17,15 +19,6 @@ if (!values.label || !/^[\w.-]+$/.test(values.label)) throw new Error('--label <
 const out = resolve(ROOT, '.personal/baseline', values.label);
 mkdirSync(out, { recursive: true });
 const save = (name, data) => writeFileSync(resolve(out, name), `${JSON.stringify(data, null, 2)}\n`);
-
-function readEnv(file) {
-  const env = {};
-  for (const line of readFileSync(file, 'utf8').split(/\r?\n/)) {
-    const m = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
-    if (m) env[m[1]] = m[2].trim().replace(/^["']|["']$/g, '');
-  }
-  return env;
-}
 // Returns { exitCode, output }; a failing command is never silently treated as clean.
 function run(cmd) {
   try {
@@ -54,11 +47,10 @@ for (const t of SCENARIO_TEMPLATES) {
 save('scenarios.json', scenarios);
 
 // Bootstrap and health: key names only.
-const env = readEnv(resolve(ROOT, '.env.local'));
-const auth = `Basic ${Buffer.from(`${env.WM_PERSONAL_USERNAME || 'owner'}:${env.WM_PERSONAL_PASSWORD}`).toString('base64')}`;
-const base = `http://127.0.0.1:${env.WM_PERSONAL_PORT || 3000}`;
+loadEnvFile(import.meta.url);
+const base = personalOrigin();
 async function getJson(path, attempt = 0) {
-  const res = await fetch(base + path, { headers: { Authorization: auth }, signal: AbortSignal.timeout(60_000) });
+  const res = await fetch(base + path, { signal: AbortSignal.timeout(60_000) });
   if (res.status === 503 && attempt < 12) { // health answers 503 while its background refresh is pending
     await new Promise((r) => setTimeout(r, 5_000));
     return getJson(path, attempt + 1);

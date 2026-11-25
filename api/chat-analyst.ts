@@ -1,6 +1,5 @@
 /**
- * Streaming chat analyst edge function. Access control is the personal
- * server's HTTP Basic auth; the caller is always the owner.
+ * Streaming chat analyst for the personal server’s single owner.
  *
  * POST /api/chat-analyst
  * Body: { history: {role,content}[], query: string, domainFocus?: string, geoContext?: string }

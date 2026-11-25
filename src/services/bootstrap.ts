@@ -244,8 +244,7 @@ async function fetchTier(
     // this URL answers ACAO `*` with no Allow-Credentials from both the edge and
     // the origin, which a browser refuses to hand to a credentialed request. Drop
     // the omit here and hydration fails as an opaque console CORS error, not a
-    // test. (Personal builds send it same-origin instead: runtime.ts
-    // withCredentials keeps the owner's Basic login on it.)
+    // test. Personal builds send it to the same-origin API.
     // The dashboard entry may already have started the fast tier
     // (bootstrap-prefetch.ts) before this chunk loaded.
     const primed = tier === 'fast' ? adoptPrimedBootstrapTier(requestUrl, signal) : null;

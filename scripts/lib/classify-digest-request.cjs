@@ -10,9 +10,11 @@
 
 // This fork has no hosted API: unless API_BASE_URL names another server, the
 // digest comes from the personal server (the same origin as personalOrigin()
-// in scripts/personal-tui.mjs, which the seeders use).
+// used by the other collectors).
 function personalOrigin(env = process.env) {
-  return `http://${env.WM_PERSONAL_HOST || '127.0.0.1'}:${Number(env.WM_PERSONAL_PORT || 3000)}`;
+  const host = env.WM_PERSONAL_HOST || '127.0.0.1';
+  const authority = host === '::1' ? '[::1]' : host;
+  return `http://${authority}:${Number(env.WM_PERSONAL_PORT || 3000)}`;
 }
 const DEFAULT_CLASSIFY_API_BASE = personalOrigin({});
 
@@ -87,6 +89,7 @@ function classifyDigestRetryDecision({ attempt = 0, error, status } = {}) {
 
 module.exports = {
   DEFAULT_CLASSIFY_API_BASE,
+  personalOrigin,
   CLASSIFY_DIGEST_RETRY_DELAYS_MS,
   resolveClassifyApiBase,
   buildClassifyDigestUrl,

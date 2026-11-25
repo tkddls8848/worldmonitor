@@ -18,7 +18,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { loadEnvFile } from './_seed-utils.mjs';
-import { createPersonalFetch, personalOrigin } from './personal-tui.mjs';
+import { personalOrigin } from './lib/classify-digest-request.cjs';
 
 const require = createRequire(import.meta.url);
 const { fetchDigestWarmCell, runDigestWarmCycle, summarizeDigestWarmCycle } = require('./lib/news-digest-warm.cjs');
@@ -36,12 +36,11 @@ export async function warmPersonalDigest({
   spreadMs = 5_000 * Math.max(0, cells.length - 1),
 } = {}) {
   const origin = personalOrigin(env);
-  const personalFetch = createPersonalFetch({ origin, username: env.WM_PERSONAL_USERNAME || 'owner', password: env.WM_PERSONAL_PASSWORD, fetchImpl });
   const startedAt = Date.now();
   const results = await runDigestWarmCycle(cells, {
     spreadMs,
     fetchCell: (cell) => fetchDigestWarmCell(cell, {
-      fetchImpl: personalFetch,
+      fetchImpl,
       env: { API_BASE_URL: origin },
       userAgent: USER_AGENT,
       includeFreshDigest: true,

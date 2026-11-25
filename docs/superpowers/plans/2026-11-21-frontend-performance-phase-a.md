@@ -123,7 +123,7 @@
 측정 방법:
 
 - 인증과 브라우저
-  - 인증: `.env.local`의 `WM_PERSONAL_USERNAME`(기본값 `owner`)과 `WM_PERSONAL_PASSWORD`를 `httpCredentials`로 넘긴다. 값은 출력하지 않는다. `.env.local`은 `scripts/_env-file.mjs`의 `loadEnvFile`로 읽는다.
+  - 개인 서버의 루프백 주소에서 로그인 없이 실행한다. `.env.local`은 `scripts/_env-file.mjs`의 `loadEnvFile`로 읽는다.
   - 브라우저: chromium, headless, 뷰포트 1600x1000(데스크톱 DeckGL 경로).
   - `--cpu 4`이면 CDP `Emulation.setCPUThrottlingRate { rate: 4 }`를 건다.
 - 측정 시작 전 준비: `addInitScript`로 PerformanceObserver를 건다.

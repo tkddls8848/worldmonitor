@@ -5,7 +5,7 @@
  *
  * Thin Finnhub-search wrapper with a short Upstash cache. Used by every user
  * (the market watchlist is not a PRO feature), so there's no entitlement
- * gate. Access control is the personal server's HTTP Basic auth.
+ * gate.
  */
 
 export const config = { runtime: 'edge' };

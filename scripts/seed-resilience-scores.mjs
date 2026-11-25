@@ -26,7 +26,7 @@ const WM_KEY = process.env.WORLDMONITOR_API_KEY
   || (process.env.WORLDMONITOR_VALID_KEYS ?? '').split(',').map((k) => k.trim()).filter(Boolean)[0]
   || '';
 // Optional seed-only secret for ranking ?refresh=1. The personal server allows
-// the refresh for every caller behind its Basic auth, so the header is sent
+// the refresh for every caller, so the header is sent
 // only when the key is set and a missing key does not stop the seeder.
 const WM_REFRESH_KEY = process.env.WORLDMONITOR_SEED_REFRESH_KEY?.trim() || '';
 const SEED_UA = 'Mozilla/5.0 (compatible; WorldMonitor-Seed/1.0)';

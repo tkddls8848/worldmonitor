@@ -3,7 +3,7 @@
  *
  * POST /api/travel-risk-assessment
  * Body: { countries: [{ country_code, cities?, arrive?, depart? }], date_from?, date_to?, task_label?, format: 'markdown' | 'html' }
- * Auth: the personal server's HTTP Basic auth; the caller is always the owner.
+ * The personal server uses a single owner identity.
  *
  * Returns the draft as a file attachment, text/markdown or text/html. The
  * logic is in server/_shared/travel-risk-export.ts so it can be tested without
