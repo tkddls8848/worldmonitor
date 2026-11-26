@@ -585,6 +585,26 @@ function extractSummarizeUnrest(_rule, { unrest }, countryCode, { summarizeUnres
   const { unrestCount } = summarizeUnrest(unrest, countryCode);
   return unrestCount > 0 ? unrestCount : null;
 }
+function extractDisplacementField(rule, { displacement }, countryCode, { getCountryDisplacement }) {
+  if (!getCountryDisplacement || displacement == null) return null;
+  const entry = getCountryDisplacement(displacement, countryCode);
+  return typeof entry?.[rule.field] === 'number' ? entry[rule.field] : null;
+}
+function extractNewsThreat(_rule, { newsThreat }, countryCode, { getThreatSummaryScore }) {
+  if (!getThreatSummaryScore || newsThreat == null) return null;
+  return getThreatSummaryScore(newsThreat, countryCode);
+}
+function extractTradeRestrictions(_rule, { tradeRestrictions }, countryCode, { countTradeRestrictions }) {
+  if (!countTradeRestrictions || tradeRestrictions == null) return null;
+  const count = countTradeRestrictions(tradeRestrictions, countryCode);
+  return count > 0 ? count : null;
+}
+function extractTradeBarriers(_rule, { tradeBarriers }, countryCode, { countTradeBarriers }) {
+  if (!countTradeBarriers || tradeBarriers == null) return null;
+  const count = countTradeBarriers(tradeBarriers, countryCode);
+  return count > 0 ? count : null;
+}
+
 const AGGREGATE_EXTRACTORS = {
   'summarize-cyber': extractSummarizeCyber,
   'summarize-outages-penalty': extractOutagesPenalty,

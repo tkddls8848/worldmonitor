@@ -202,7 +202,7 @@ describe('resilience scorer contracts', () => {
       economic: 56.5,
       infrastructure: 79.67,
       energy: 80,
-      'social-governance': 72.2,
+      'social-governance': 72.8,
       'health-food': 60.5,
       recovery: 49.63,
     });
@@ -276,8 +276,9 @@ describe('resilience scorer contracts', () => {
     // Round 2 P2-N2 inflation-stability scorer: stress score 69.91 -> 70.38.
     // Audit P2-1 tradePolicy severity scorer: stress score 70.38 -> 71.00.
     //   1 - 71.00/100 = 0.2900, clamped to 0.5.
-    assert.equal(stressScore, 71);
-    assert.equal(stressFactor, 0.29);
+    // Retiring the social input raises the fixture information score and coverage.
+    assert.equal(stressScore, 71.41);
+    assert.equal(stressFactor, 0.2859);
 
     const overallScore = round(
       buildDomainList(dimensions).reduce((sum, domain) => sum + domain.score * domain.weight, 0),
@@ -311,7 +312,7 @@ describe('resilience scorer contracts', () => {
     // Round 2 P2-N2 inflation-stability scorer: 66.12 -> 66.38.
     // PR #4088 import-HHI missing-year certainty derate: 66.38 -> 64.79.
     // Audit P2-1 tradePolicy severity scorer (on top of the derate): 64.79 -> 65.12.
-    assert.equal(overallScore, 65.75);
+    assert.equal(overallScore, 65.88);
   });
 
   it('baselineScore is computed from baseline + mixed dimensions only', async () => {

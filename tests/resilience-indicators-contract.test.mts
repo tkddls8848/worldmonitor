@@ -34,7 +34,7 @@ describe('resilience indicator RPC contract', () => {
     assert.match(service, /path: "\/get-resilience-indicators", method: HTTP_METHOD_GET/);
     assert.match(indicators, /name: "countryCode", required: true/);
     assert.match(indicators, /repeated ResilienceIndicator indicators = 8;/);
-    assert.equal(INDICATOR_REGISTRY.length, 72, 'response contract is defined for every registry row');
+    assert.equal(INDICATOR_REGISTRY.length, 71, 'response contract is defined for every registry row');
   });
 
   it('carries trace-aligned state, contribution, provenance and version metadata', () => {

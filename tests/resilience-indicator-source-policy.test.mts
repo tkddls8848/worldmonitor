@@ -71,10 +71,10 @@ const EXPECTED_RAW_ENABLED_SOURCES = {
 } as const;
 
 describe('resilience indicator raw-source policy', () => {
-  it('is exhaustive and unique for all 72 registry indicators', () => {
+  it('is exhaustive and unique for all 71 registry indicators', () => {
     const registryIds = INDICATOR_REGISTRY.map((indicator) => indicator.id);
     const policyIds = Object.keys(INDICATOR_SOURCE_POLICIES);
-    assert.equal(registryIds.length, 72);
+    assert.equal(registryIds.length, 71);
     assert.equal(new Set(registryIds).size, registryIds.length);
     assert.deepEqual(policyIds.toSorted(), registryIds.toSorted());
   });
