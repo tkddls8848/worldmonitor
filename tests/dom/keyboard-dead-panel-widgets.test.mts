@@ -8,9 +8,6 @@ import type {
   SectorExposureSummary,
 } from '@/services/supply-chain';
 
-/** Panel.setSafeContent debounces string content by 150ms. */
-const flushPanelContent = () => new Promise((resolve) => setTimeout(resolve, 200));
-
 beforeEach(() => {
   document.body.innerHTML = '';
 });
