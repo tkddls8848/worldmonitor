@@ -115,6 +115,7 @@ const NOT_A_RAILWAY_SERVICE = new Set([
   'seed-gas-storage-countries.mjs',        // bundle member
   'seed-gdelt-intel.mjs',
   'seed-owid-energy-mix.mjs',
+  'seed-country-reference.mjs',           // country-reference bundle member
   'seed-recall-benchmark.mjs',
   'seed-regional-briefs.mjs',
   'seed-regional-snapshots.mjs',

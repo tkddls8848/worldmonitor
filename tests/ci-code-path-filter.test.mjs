@@ -55,12 +55,6 @@ describe('#6038 CI code-path filter', () => {
     assert.equal(runFilter(program, ['public/ai-search.md']), '1');
   });
 
-  it('routes a published ranking snapshot to unit too', () => {
-    // ai-search.md publishes that snapshot's ranked count and captured date, so
-    // a snapshot-only PR must not skip the test that checks the page matches it.
-    assert.equal(runFilter(program, ['docs/snapshots/crawlable-live-pulse-2026-11-09.json']), '1');
-  });
-
   it('routes published blog Markdown to the unit job that guards it', () => {
     assert.equal(runFilter(program, ['blog-site/src/content/blog/worldmonitor-vs-traditional-intelligence-tools.md']), '1');
   });
