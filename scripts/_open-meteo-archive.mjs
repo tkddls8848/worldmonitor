@@ -23,6 +23,14 @@ export const _PROXY_DEFAULTS = Object.freeze({
 const MAX_RETRY_AFTER_MS = 60_000;
 const CURL_PROXY_TIMEOUT_MS = 15_000;
 const RETRYABLE_STATUSES = new Set([429, 503]);
+export const OPEN_METEO_DAILY_LIMIT_CODE = 'OPEN_METEO_DAILY_LIMIT';
+
+export function dailyLimitError() {
+  return Object.assign(new Error('Open-Meteo daily API limit exceeded; collection paused'), {
+    code: OPEN_METEO_DAILY_LIMIT_CODE, nonRetryable: true,
+  });
+}
+
 export const OPEN_METEO_DEADLINE_CODE = 'OPEN_METEO_DEADLINE';
 
 function createDeadlineError(label) {
@@ -165,6 +173,10 @@ export async function fetchOpenMeteoArchiveBatch(zones, opts) {
       return data;
     }
 
+    if (resp.status === 429) {
+      const body = await resp.json().catch(() => null);
+      if (/daily.*(?:limit|quota)/i.test(body?.reason ?? '')) throw dailyLimitError();
+    }
     lastDirectError = new Error(`HTTP ${resp.status}`);
 
     if (RETRYABLE_STATUSES.has(resp.status) && attempt < maxRetries) {

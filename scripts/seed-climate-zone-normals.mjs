@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
-import { pathToFileURL } from 'node:url';
+import { readFile, mkdir, writeFile, rename } from 'node:fs/promises';
+import { dirname } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadEnvFile, runSeed, sleep } from './_seed-utils.mjs';
 import { CLIMATE_ZONES, MIN_CLIMATE_ZONE_COUNT, hasRequiredClimateZones } from './_climate-zones.mjs';
-import { OPEN_METEO_DEADLINE_CODE, chunkItems, fetchOpenMeteoArchiveBatch } from './_open-meteo-archive.mjs';
+import { OPEN_METEO_DAILY_LIMIT_CODE, dailyLimitError, OPEN_METEO_DEADLINE_CODE, chunkItems, fetchOpenMeteoArchiveBatch } from './_open-meteo-archive.mjs';
 
 loadEnvFile(import.meta.url);
 
@@ -108,9 +110,23 @@ export async function fetchClimateZoneNormals({
   _now = Date.now,
   _sleep = sleep,
   _fetchArchiveBatch = fetchOpenMeteoArchiveBatch,
+  _loadProgress = async () => null,
+  _saveProgress = async () => {},
 } = {}) {
-  const normals = [];
-  const batches = chunkItems(CLIMATE_ZONES, NORMALS_BATCH_SIZE);
+  const saved = await _loadProgress();
+  const progress = saved?.version === 1 && saved.referencePeriod === '1991-2020'
+    ? saved : { version: 1, referencePeriod: '1991-2020', normals: [], retryAt: 0 };
+  if (progress.retryAt > _now()) throw dailyLimitError();
+  const normals = CLIMATE_ZONES.flatMap(zone => {
+    const cached = progress.normals?.find(entry => entry.zone === zone.name
+      && entry.location?.latitude === zone.lat && entry.location?.longitude === zone.lon
+      && entry.months?.length === 12
+      && Array.from({ length: 12 }, (_, i) => i + 1).every(month => entry.months.some(m =>
+        m.month === month && Number.isFinite(m.tempMean) && Number.isFinite(m.precipMean))));
+    return cached ? [cached] : [];
+  });
+  const remaining = CLIMATE_ZONES.filter(zone => !normals.some(entry => entry.zone === zone.name));
+  const batches = chunkItems(remaining, NORMALS_BATCH_SIZE);
   const deadlineAtMs = runStartedAtMs + NORMALS_FETCH_PHASE_SOFT_DEADLINE_MS;
   let deadlineExhausted = false;
 
@@ -136,7 +152,13 @@ export async function fetchClimateZoneNormals({
       });
       const batchNormals = buildZoneNormalsFromBatch(batch, payloads);
       normals.push(...batchNormals);
+      await _saveProgress({ ...progress, normals, retryAt: 0 });
     } catch (err) {
+      if (err?.code === OPEN_METEO_DAILY_LIMIT_CODE) {
+        // A full day is conservative; upstream does not specify its reset time.
+        await _saveProgress({ ...progress, normals, retryAt: _now() + 24 * 60 * 60 * 1000 });
+        throw err;
+      }
       console.log(`  [CLIMATE_NORMALS] ${err?.message ?? err}`);
       if (err?.code === OPEN_METEO_DEADLINE_CODE) {
         deadlineExhausted = true;
@@ -185,8 +207,24 @@ export function declareRecords(data) {
 }
 
 const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+export function normalsProgressStore(file) {
+  return {
+    async _loadProgress() {
+      try { return JSON.parse(await readFile(file, 'utf8')); }
+      catch (error) { if (error.code === 'ENOENT' || error instanceof SyntaxError) return null; throw error; }
+    },
+    async _saveProgress(progress) {
+      await mkdir(dirname(file), { recursive: true });
+      const temporary = `${file}.${process.pid}.tmp`;
+      await writeFile(temporary, JSON.stringify(progress));
+      await rename(temporary, file);
+    },
+  };
+}
+
 if (isMain) {
-  runSeed('climate', 'zone-normals', CLIMATE_ZONE_NORMALS_KEY, fetchClimateZoneNormals, {
+  const progressStore = normalsProgressStore(fileURLToPath(new URL('../.personal/climate-zone-normals.json', import.meta.url)));
+  runSeed('climate', 'zone-normals', CLIMATE_ZONE_NORMALS_KEY, () => fetchClimateZoneNormals(progressStore), {
     validateFn: validate,
     ttlSeconds: NORMALS_TTL,
     sourceVersion: 'open-meteo-wmo-1991-2020-v1',

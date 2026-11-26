@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { loadEnvFile, runSeed, sleep, verifySeedKey } from './_seed-utils.mjs';
 import { tokensToContentMeta, DAY_MIN } from './_content-age-helpers.mjs';
 import { CLIMATE_ZONES, MIN_CLIMATE_ZONE_COUNT, hasRequiredClimateZones } from './_climate-zones.mjs';
-import { chunkItems, fetchOpenMeteoArchiveBatch } from './_open-meteo-archive.mjs';
+import { OPEN_METEO_DAILY_LIMIT_CODE, chunkItems, fetchOpenMeteoArchiveBatch } from './_open-meteo-archive.mjs';
 import { CLIMATE_ZONE_NORMALS_KEY } from './seed-climate-zone-normals.mjs';
 
 loadEnvFile(import.meta.url);
@@ -164,6 +164,7 @@ export async function fetchClimateAnomalies() {
       });
       anomalies.push(...buildClimateAnomaliesFromBatch(batch, payloads, normalsIndex));
     } catch (err) {
+      if (err?.code === OPEN_METEO_DAILY_LIMIT_CODE) throw err;
       console.log(`  [CLIMATE] ${err?.message ?? err}`);
       failures += batch.length;
     }
