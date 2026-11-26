@@ -16,8 +16,7 @@ for (const [language, width] of [['fr', 1280], ['ar', 390]] as const) {
       upstreamUnavailable: false, stale: false, fetchedAt: Date.now(),
       points: [{ date: '2026-10-19', capturedAt: Date.UTC(2026, 9, 19, 0, 30),
         cii: { score: 62, version: 'v11', observedAt: Date.UTC(2026, 9, 19) },
-        resilience: { score: 47, version: 'v29:pc', observedAt: Date.UTC(2026, 9, 19) },
-        topEvents: [], keySignals: [], ciiVersionBreak: false, resilienceVersionBreak: false }],
+        topEvents: [], keySignals: [], ciiVersionBreak: false }],
     } }));
     await page.goto(`/dashboard?country=UA&expanded=1&lang=${language}`);
     const panel = page.locator('#country-deep-dive-panel');
@@ -53,9 +52,8 @@ for (const width of [1280, 390]) {
         points: [17, 18, 19].map((day, index) => ({
           date: `2026-10-${day}`, capturedAt: Date.UTC(2026, 9, day, 0, 30),
           cii: { score: 50 + index * 6, version: index === 2 ? 'v11' : 'v10', observedAt: Date.UTC(2026, 9, day) },
-          resilience: { score: 45 + index, version: 'v29:pc', observedAt: Date.UTC(2026, 9, day) },
           topEvents: [{ title: `Controlled Ukraine reporting for October ${day}`, link: `https://example.com/ukraine-${day}`, source: 'Controlled publisher', category: 'politics' }],
-          keySignals: [], ciiVersionBreak: index === 2, resilienceVersionBreak: false,
+          keySignals: [], ciiVersionBreak: index === 2,
         })),
       } });
     });
@@ -79,7 +77,7 @@ for (const width of [1280, 390]) {
     await expect(history.locator('a[href="https://example.com/ukraine-19"]')).toBeVisible();
     await expect(history).toContainText('Formula or observation gap');
     await expect(history.locator('.panel-locked-cta')).toHaveCount(0);
-    await history.locator('svg circle.country-history-resilience').first().click();
+    await history.locator('svg circle.country-history-cii').first().click();
     await expect(history.locator('.country-history-detail')).toContainText('2026-10-17');
     await expect(history.locator('a[href="https://example.com/ukraine-17"]')).toBeVisible();
     await expect(history.locator('a[href="https://example.com/ukraine-17"]')).toHaveAttribute('rel', 'noopener noreferrer');

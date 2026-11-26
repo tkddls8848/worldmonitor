@@ -126,10 +126,10 @@ function findBareCurlyBraces(lines) {
 describe('MDX lint covers the whole published tree', () => {
   it('includes nested public sources and excludes engineering records', () => {
     const names = docFiles.map(f => relative(DOCS_DIR, f).split(sep).join('/'));
-    for (const page of ['documentation.mdx', 'methodology/financial-system-exposure.md', 'zh/panels/world-clock.mdx']) {
+    for (const page of ['documentation.mdx', 'methodology/food-stocks.mdx', 'zh/panels/world-clock.mdx']) {
       assert.ok(names.includes(page), `published source missing from MDX lint: ${page}`);
     }
-    for (const page of ['local-backend-audit.md', 'methodology/financial-system-exposure-flag-flip-runbook.md']) {
+    for (const page of ['local-backend-audit.md']) {
       assert.ok(!names.includes(page), `excluded source still in MDX lint: ${page}`);
     }
   });

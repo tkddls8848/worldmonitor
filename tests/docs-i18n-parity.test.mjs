@@ -10,26 +10,22 @@
  */
 import { readFileSync, existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { parse as parseYaml } from 'yaml';
 
-const ROOT = new URL('../', import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const DOCS_JSON = join(ROOT, 'docs', 'docs.json');
 const DOCS_DIR = join(ROOT, 'docs');
-const ENGLISH_ONLY_APPENDICES = new Set([
-  'methodology/known-limitations',
-  'methodology/financial-system-exposure',
-  'methodology/swf-classification-rubric',
-]);
 
 function readZhDoc(page) {
-  return readFileSync(join(DOCS_DIR, 'zh', `${page}.mdx`), 'utf8');
+  return readFileSync(join(DOCS_DIR, 'zh', `${page}.mdx`), 'utf8').replace(/\r\n/g, '\n');
 }
 
 /** Parsed leading YAML frontmatter; empty when the block is absent. */
 function frontmatterFields(content) {
-  const block = content.match(/^---\n([\s\S]*?\n)?---\n/)?.[1] ?? '';
+  const block = content.replace(/\r\n/g, '\n').match(/^---\n([\s\S]*?\n)?---\n/)?.[1] ?? '';
   return parseYaml(block) ?? {};
 }
 
@@ -92,12 +88,6 @@ describe('docs i18n parity', () => {
   });
 
   for (const page of enPages) {
-    if (ENGLISH_ONLY_APPENDICES.has(page)) {
-      it(`English-only source appendix exists for ${page}`, () => {
-        assert.ok(existsSync(join(DOCS_DIR, `${page}.md`)));
-      });
-      continue;
-    }
     it(`zh/ counterpart exists for ${page}`, () => {
       const zhPath = join(DOCS_DIR, 'zh', page + '.mdx');
       assert.ok(existsSync(zhPath), `Missing zh/${page}.mdx`);

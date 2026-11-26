@@ -545,7 +545,7 @@ describe('pre-push hook wiring', () => {
       .split('\n')
       .filter((line) => line.includes('npx tsx --test'));
 
-    assert.equal(directRuns.length, 3);
+    assert.equal(directRuns.length, 2);
     assert.ok(
       directRuns.every((line) =>
         line.includes('--test-concurrency="$WM_PREPUSH_TEST_CONCURRENCY"'),

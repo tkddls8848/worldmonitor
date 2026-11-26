@@ -387,7 +387,7 @@ describe('every published MCP endpoint is the canonical one (#9722)', () => {
   });
 
   it('covers the onboarding surfaces the issue named', () => {
-    const scanned = new Set(files.map((file) => relative(ROOT, file)));
+    const scanned = new Set(files.map((file) => relative(ROOT, file).split(sep).join('/')));
     for (const required of [
       'README.md',
       'cli/src/core.mjs',
