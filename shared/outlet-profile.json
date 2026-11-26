@@ -1,4 +1,11 @@
 {
+  "_readme": [
+    "Reviewed outlet profiles, one per RSS catalog source name.",
+    "country: ISO2 home country of the publisher (INTL for intergovernmental or multi-publisher, EU for EU institutions).",
+    "audience: domestic | international | diaspora. language: ISO 639-1 of the ingested content.",
+    "ownershipClass: state | public-service | private | nonprofit | intergovernmental | unreviewed; never defaulted.",
+    "No political lean ratings. tests/outlet-profile-completeness.test.mts keeps this closed-world."
+  ],
   "+972 Magazine": {
     "country": "IL",
     "audience": "international",
