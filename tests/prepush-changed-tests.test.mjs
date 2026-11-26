@@ -31,7 +31,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SCRIPT = join(REPO_ROOT, 'scripts', 'prepush-changed-tests.sh');
@@ -123,13 +123,13 @@ function loadDomTestConfig(env = {}) {
   const probe = join(fixtureDir('wm-dom-config-probe-'), 'probe.mts');
   writeFileSync(
     probe,
-    `const m = await import(${JSON.stringify(join(REPO_ROOT, 'vitest.dom.config.mts'))});\n` +
+    `const m = await import(${JSON.stringify(pathToFileURL(join(REPO_ROOT, 'vitest.dom.config.mts')).href)});\n` +
       'console.log(JSON.stringify(m.default?.test ?? null));\n',
   );
   const childEnv = { ...process.env };
   delete childEnv.VITEST_MAX_THREADS;
   Object.assign(childEnv, env);
-  const out = execFileSync(join(REPO_ROOT, 'node_modules', '.bin', 'tsx'), [probe], {
+  const out = execFileSync(process.execPath, ['--import', pathToFileURL(join(REPO_ROOT, 'node_modules', 'tsx', 'dist', 'loader.mjs')).href, probe], {
     cwd: REPO_ROOT,
     encoding: 'utf8',
     env: childEnv,
@@ -214,7 +214,7 @@ describe('pre-push changed-test partition', () => {
     }
   });
 
-  test('a path containing a newline stays one path', () => {
+  test('a path containing a newline stays one path', { skip: process.platform === 'win32' ? 'Windows forbids newline filenames; exercised in Linux CI' : false }, () => {
     // The reason the list is NUL-delimited: a line reader would split this
     // into two entries, neither of which exists, and the old code would have
     // silently dropped both.
@@ -316,7 +316,7 @@ describe('partition stays in step with the vitest DOM project', () => {
   });
 });
 
-describe('runner dispatch', () => {
+describe('runner dispatch', { skip: process.platform === 'win32' ? 'Fixtures require POSIX PATH and executable shell stubs; exercised in Linux CI' : false }, () => {
   // The hook used to hold "is this list empty, and which runner do I invoke"
   // inline, where only a source grep could guard it — and a source grep stays
   // green when `-n` becomes `-z` or `|| exit 1` is dropped, silently skipping

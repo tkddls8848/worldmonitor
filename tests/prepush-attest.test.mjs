@@ -26,7 +26,7 @@ import { describe, test } from 'node:test';
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -120,7 +120,7 @@ describe('changed-path enumeration survives every legal git path', () => {
     'tests/with space.test.mjs': 'x\n',
   };
 
-  test('the unicode/backslash/space paths a plain --name-only read loses', () => {
+  test('the unicode/backslash/space paths a plain --name-only read loses', { skip: process.platform === 'win32' ? 'Windows treats backslash as a separator; exercised in Linux CI' : false }, () => {
     const root = makeRepo({ branchFiles: HOSTILE });
 
     // The old plumbing, reproduced: line-read `git diff --name-only`, then
@@ -138,7 +138,7 @@ describe('changed-path enumeration survives every legal git path', () => {
     assert.deepEqual(paths.sort(), Object.keys(HOSTILE).sort(), 'every legal path must survive');
   });
 
-  test('a path containing a newline stays one path', () => {
+  test('a path containing a newline stays one path', { skip: process.platform === 'win32' ? 'Windows forbids newline filenames; exercised in Linux CI' : false }, () => {
     // The reason this is NUL-delimited rather than `core.quotePath=false`: a
     // line-oriented reader splits this path into two nonexistent ones.
     const root = makeRepo({ branchFiles: { 'tests/two\nlines.test.mjs': 'x\n' } });
@@ -507,7 +507,7 @@ describe('pre-push wiring: the hook must consume these decisions', () => {
   });
 });
 
-describe('base-guard fetches lazily and only to disprove a violation (#6764)', () => {
+describe('base-guard fetches lazily and only to disprove a violation (#6764)', { skip: process.platform === 'win32' ? 'Fixtures require /bin/bash and POSIX executable stubs; exercised in Linux CI' : false }, () => {
   // The old hook fetched origin on EVERY push (2s warm, 72s cold) to protect
   // a guard that almost never fires. base-guard keeps the zero-fetch shortcut
   // for protected main, but refreshes mutable stacked bases before accepting a
@@ -765,7 +765,7 @@ describe('per-gate cache keys one gate on its own worktree inputs (#6765)', () =
   test('a second worktree with identical bytes shares the hit through the common cache dir', () => {
     const fx = makeGateRepo();
     gateWrite(fx, 'typecheck', 'true', 'true', ['src']);
-    const second = join(fx.root, '..', `${fx.root.split('/').pop()}-wt2`);
+    const second = join(fx.root, '..', `${basename(fx.root)}-wt2`);
     git(fx.root, ['worktree', 'add', '--detach', '--quiet', second, 'main']);
     fixtures.push(second);
     // The hook derives the cache dir from --git-common-dir, which resolves to
