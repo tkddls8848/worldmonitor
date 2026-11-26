@@ -329,10 +329,7 @@ async function embedBatchWithUsage(normalizedTitles, deps, usage) {
     // on the next run, never a correctness bug. Chunked to bound the
     // request body and stay inside the 10s pipeline budget: the
     // 512-dim vector serialises to ~9.4KB per SET command, so 200 ×
-    // 9.4KB ≈ 1.9MB per request, matching the chunking pattern used by
-    // sibling seeders (PIPE_BATCH=50 in seed-resilience-scores.mjs /
-    // seed-comtrade-bilateral-hs4.mjs, SET_BATCH=30 in
-    // resilience/v1/_shared.ts).
+    // 9.4KB ≈ 1.9MB per request, matching the batching used by the bilateral HS4 seeder.
     //
     // This comment previously claimed an unbatched pipeline "trips the
     // per-request body limit (50MB) at ~5,300 misses". That is WRONG.

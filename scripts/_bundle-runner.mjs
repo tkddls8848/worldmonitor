@@ -21,8 +21,7 @@
  * broken by adopting the runner.
  *
  * Deferral is only ever meant to shed load under pressure, so two guards keep
- * it from turning into a silent outage (#6556, where seed-bundle-resilience
- * deferred all three sections on every tick and exited 0 for six hours):
+ * it from turning into a silent outage (#6556):
  *   1. A section whose worst case does not fit the WHOLE budget can never be
  *      admitted on any tick. That is a static config error, not pressure, so
  *      runBundle throws before spawning anything.
@@ -586,9 +585,8 @@ export async function runBundle(label, sections, opts = {}) {
   // section whose worst case does not fit the REMAINING budget — a load-shed
   // that assumes the section fits the budget at all. When it does not, the
   // section is deferred on every tick forever and the bundle still exits 0:
-  // #6556 shipped maxBundleMs 570s against a cheapest section of 610s, so
-  // seed-bundle-resilience ran nothing for six hours under a green Railway
-  // badge. Throw instead, alongside the dependsOn contract above, so the
+  // #6556 shipped maxBundleMs 570s against a cheapest section of 610s.
+  // Throw alongside the dependsOn contract above so the
   // misconfiguration surfaces on the first tick rather than as data ageing
   // out half a day later.
   //

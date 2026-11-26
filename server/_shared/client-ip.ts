@@ -5,10 +5,7 @@
 // server/_shared/redis.ts, which Railway seeders load through the tsx loader in
 // containers that install no npm packages beyond tsx itself. A bare npm specifier
 // reachable from here crashes those crons with ERR_MODULE_NOT_FOUND at module
-// resolution time — that is how #5229 took down seed-bundle-resilience-
-// validation by importing this logic's previous home (rate-limit.ts, which
-// pulls @upstash/ratelimit). tests/resilience-validation-import-graph.test.mjs
-// enforces the invariant.
+// resolution time (#5229).
 
 // Sentinel returned when no trusted client-IP header is present. Routed
 // through the Upstash limiter as a single shared bucket so the entire

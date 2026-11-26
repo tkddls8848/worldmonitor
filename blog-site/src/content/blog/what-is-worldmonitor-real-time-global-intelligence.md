@@ -34,19 +34,18 @@ That correlation layer is the product's central idea: separate weak signals beco
 
 ## What Is Included in the Free Dashboard?
 
-The public dashboard exposes a shared map-layer catalog, curated news feeds backed by observed upstream hosts, [country briefs](/countries/), [instability scores](/country-instability-index/), [chokepoints](/chokepoints/), infrastructure, markets, disasters, and watchlists. Every layer except the Resilience layer is available on the free plan, and the dashboard can be opened without an account.
+The public dashboard exposes a shared map-layer catalog, curated news feeds backed by observed upstream hosts, [country briefs](/countries/), [instability scores](/country-instability-index/), [chokepoints](/chokepoints/), infrastructure, markets, disasters, and watchlists. The dashboard opens without an account.
 
 World Monitor currently maintains:
 
 - The Tier-1 country registry in the high-frequency Country [Instability Index](/blog/posts/country-instability-index-methodology-explained/)
-- The public Country [Resilience Index](/blog/posts/country-resilience-index-methodology-explained/) universe
 - Stock exchanges and central-bank or supranational institutions in the generated market catalog
 - Interface languages, including right-to-left Arabic
 - Dashboard variants (registry keys): `full`, `tech`, `finance`, `commodity`, `happy`, and `energy`
 
 These counts are generated from the repository rather than estimated in editorial copy. The current plans, limits, and capability summary are also published in [machine-readable pricing](https://www.worldmonitor.app/pricing.md).
 
-## How Do the Country Risk Scores Work?
+## How Does the Country Instability Index Work?
 
 The **Country Instability Index (CII)** is a high-frequency 0–100 score for the Tier-1 country registry. It blends a curated editorial baseline with live event pressure from unrest, conflict, security, and information signals, and publishes a signed 24-hour movement delta. It is a triage signal, not a probability or a substitute for source review.
 

@@ -2,15 +2,12 @@
 
 ## Context
 
-Issue #6441 adds five absolute country capability scores without changing the
-Country Resilience Index (CRI). The scorecard must support reproducible country
+Issue #6441 adds five absolute country capability scores. The scorecard must support reproducible country
 and bloc calculations, show the source observation behind every component, and
 return explicit unavailable reasons instead of inferred values.
 
 The refreshed Step 0 audit is the architecture contract. In particular:
 
-- scorecard inputs do not enter the CRI `INDICATOR_REGISTRY`;
-- CRI dimensions, memberships, scorers, keys, and versions do not change;
 - food and energy bloc scores aggregate physical quantities before scoring;
 - demographics, technology, and defense bloc scores population-weight the
   unrounded continuous country sub-scores;
@@ -143,16 +140,6 @@ hash still has its metadata field; the full canonical value remains the last-goo
   parts of methodology 1.0.0.
 - The persistence schema is never exposed directly through protobuf or MCP.
 - Unsupported snapshot, registry, or methodology versions fail explicitly.
-- CRI seeded inputs and output bytes are not modified by this feature.
-
-## Compatibility with #6507
-
-Issue #6507 can later add indicator-level CRI evidence without changing this
-scorecard. This feature does not widen `GetResilienceScoreResponse`, reuse the
-CRI `INDICATOR_REGISTRY`, or claim the CRI indicator-evidence namespace. Its
-`ScorecardEvidence` message and internal evidence ledger are scorecard-specific.
-The two surfaces can share source observations in a future version, but neither
-one depends on the other for v1 delivery.
 
 ## Consequences
 

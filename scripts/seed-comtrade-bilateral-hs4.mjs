@@ -63,9 +63,7 @@ const LOCK_TTL_MS = 30 * 60 * 1000; // 30 min
 // a month. A full run is ~400 keyed calls, but both October 2026 runs were
 // refused from request ~252 onward, so the usable allowance per run is lower
 // than that. The keyed route is no longer this seeder's alone either:
-// seed-recovery-import-hhi and seed-recovery-reexport-share now run in the
-// seed-bundle-resilience-recovery Railway service (import-hhi wrote 173
-// reporters at 2026-11-01 00:07 UTC). orderCountriesForRun keeps a short run
+// the import concentration seeder also uses the key. orderCountriesForRun keeps a short run
 // from starving the same reporters every month.
 // Override for force-reseed scenarios: FORCE_RESEED=true bypasses the gate.
 export const FRESHNESS_GATE_MS = 24 * 24 * 60 * 60 * 1000;
