@@ -165,6 +165,25 @@ async function loadCountryDeepDivePanel(options = {}) {
         return { scores: new Map(), current: false };
       }
     `],
+    ['demographics-service-stub', `
+      const state = globalThis.__wmCountryDeepDiveTestState;
+      const demographicsResponse = ${demographicsResponse};
+      const demographicsMode = ${demographicsMode};
+      export async function getDemographicsCapability(options) {
+        state.demographicsCalls.push({
+          countryCode: options.countryCode,
+          hasSignal: options.signal instanceof AbortSignal,
+        });
+        // Held open and deliberately not wired to the signal: models a read the
+        // panel supersedes without aborting it.
+        if (demographicsMode === 'deferred') {
+          return new Promise((resolve, reject) => {
+            state.demographicsPending.push({ countryCode: options.countryCode, resolve, reject });
+          });
+        }
+        return { ...demographicsResponse, countryCode: options.countryCode };
+      }
+    `],
     ['supply-chain-stub', `
       export function getFoodStocks() { return Promise.resolve({ unavailable: true, records: [] }); }
       export function fetchMultiSectorExposure() { return Promise.resolve([]); }
@@ -268,6 +287,7 @@ async function loadCountryDeepDivePanel(options = {}) {
     ['@/config/geo', 'geo-stub'],
     ['@/config/chokepoint-registry', 'chokepoint-registry-stub'],
     ['@/utils/supplier-route-risk', 'supplier-route-risk-stub'],
+    ['@/services/demographics-capability', 'demographics-service-stub'],
     ['@/services/supply-chain', 'supply-chain-stub'],
     ['@/services/runtime', 'runtime-stub'],
     ['@/generated/client/worldmonitor/intelligence/v1/service_client', 'intelligence-client-stub'],

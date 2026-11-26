@@ -83,6 +83,7 @@ function createCountryBriefSource(fetcher: typeof fetch & { clear?: () => void; 
       };
     },
     food: async (code: string, signal: AbortSignal) => mode === 'website' ? (await import('@/services/supply-chain')).getFoodStocks({ countryCode: code, signal }) : supply.getFoodStocks({ countryCode: code, commodity: '' }, { signal }),
+    demographics: async (code: string, signal: AbortSignal) => mode === 'website' ? (await import('@/services/demographics-capability')).getDemographicsCapability({ countryCode: code, signal }) : intelligence.getDemographicsCapability({ countryCode: code }, { signal }),
     factors: async (code: string, signal: AbortSignal) => mode === 'website' ? (await import('@/services/scorecard')).getFiveFactorScorecard(code, signal) : scorecard.getFiveFactorScorecard({ countryCode: code }, { signal }),
     cost: (code: string, chokepoint: string, days: number, signal: AbortSignal) => mode === 'website' ? fetchMultiSectorCostShock(code, chokepoint, days, { signal }) : supply.getMultiSectorCostShock({ iso2: code, chokepointId: chokepoint, closureDays: days }, { signal }),
     bypass: (chokepointId: string, signal: AbortSignal) => mode === 'website' ? fetchBypassOptions(chokepointId, 'container', 100) : supply.getBypassOptions({ chokepointId, cargoType: 'container', closurePct: 100 }, { signal }),

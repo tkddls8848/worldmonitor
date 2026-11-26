@@ -15,6 +15,7 @@ export const BRIEF_SECTIONS = {
   assessment: ['overview', 'sources'],
   facts: ['overview', 'society'],
   factors: ['overview'],
+  demographics: ['society'],
   food: ['resources'],
   energy: ['resources'],
   maritime: ['resources', 'economy'],

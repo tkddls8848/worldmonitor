@@ -24,6 +24,7 @@ import "worldmonitor/intelligence/v1/get_gdelt_topic_timeline.proto";
 import "worldmonitor/intelligence/v1/list_cross_source_signals.proto";
 import "worldmonitor/intelligence/v1/list_market_implications.proto";
 import "worldmonitor/intelligence/v1/get_country_energy_profile.proto";
+import "worldmonitor/intelligence/v1/get_demographics_capability.proto";
 import "worldmonitor/intelligence/v1/compute_energy_shock.proto";
 import "worldmonitor/intelligence/v1/get_country_port_activity.proto";
 import "worldmonitor/intelligence/v1/get_country_coverage.proto";
@@ -199,6 +200,11 @@ service IntelligenceService {
   // ListMarketImplications returns AI-generated trade-implication cards from live world state. The response uses the fields defined by this RPC's protobuf response message.
   rpc ListMarketImplications(ListMarketImplicationsRequest) returns (ListMarketImplicationsResponse) {
     option (sebuf.http.config) = {path: "/list-market-implications", method: HTTP_METHOD_GET};
+  }
+
+  // GetDemographicsCapability returns age, education and industrial-workforce observations for one country. The response uses the fields defined by this RPC's protobuf response message.
+  rpc GetDemographicsCapability(GetDemographicsCapabilityRequest) returns (GetDemographicsCapabilityResponse) {
+    option (sebuf.http.config) = {path: "/get-demographics-capability", method: HTTP_METHOD_GET};
   }
 
   // GetCountryEnergyProfile returns a country's power mix, JODI oil and gas balances, IEA stock cover, Ember electricity, gas storage, prices, and SPR policy.

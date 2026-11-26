@@ -761,6 +761,61 @@ export interface TransmissionNode {
   logic: string;
 }
 
+export interface GetDemographicsCapabilityRequest {
+  countryCode: string;
+}
+
+export interface GetDemographicsCapabilityResponse {
+  countryCode: string;
+  available: boolean;
+  fetchedAt: string;
+  stages: DemographicsCapabilityStage[];
+  ageStructure?: DemographicsAgeStructure;
+  education?: DemographicsEducation;
+  industrialWorkforce?: DemographicsIndustrialWorkforce;
+}
+
+export interface DemographicsCapabilityStage {
+  name: string;
+  status: string;
+  fetchedAt: string;
+  recordCount: number;
+  newestObservationYear: number;
+}
+
+export interface DemographicsAgeStructure {
+  available: boolean;
+  medianAgeYears?: CapabilityObservation;
+  oldAgeDependencyRatioPercent?: CapabilityObservation;
+  totalDependencyRatioPercent?: CapabilityObservation;
+  workingAgePopulationPeople?: CapabilityObservation;
+  workingAgePopulationProjected10yPeople?: CapabilityObservation;
+}
+
+export interface CapabilityObservation {
+  available: boolean;
+  value: number;
+  year: number;
+  source: string;
+  unit: string;
+  sourceStatus?: string;
+}
+
+export interface DemographicsEducation {
+  available: boolean;
+  tertiaryEnrollmentGrossPercent?: CapabilityObservation;
+  stemGraduatesSharePercent?: CapabilityObservation;
+  researchersPerMillion?: CapabilityObservation;
+}
+
+export interface DemographicsIndustrialWorkforce {
+  available: boolean;
+  craftTradesEmploymentPeople?: CapabilityObservation;
+  plantMachineOperatorsEmploymentPeople?: CapabilityObservation;
+  trainedIndustrialWorkforcePeople?: CapabilityObservation;
+  manufacturingEmploymentSharePercent?: CapabilityObservation;
+}
+
 export interface GetCountryEnergyProfileRequest {
   countryCode: string;
 }
@@ -1397,6 +1452,7 @@ export interface IntelligenceServiceHandler {
   getGdeltTopicTimeline(ctx: ServerContext, req: GetGdeltTopicTimelineRequest): Promise<GetGdeltTopicTimelineResponse>;
   listCrossSourceSignals(ctx: ServerContext, req: ListCrossSourceSignalsRequest): Promise<ListCrossSourceSignalsResponse>;
   listMarketImplications(ctx: ServerContext, req: ListMarketImplicationsRequest): Promise<ListMarketImplicationsResponse>;
+  getDemographicsCapability(ctx: ServerContext, req: GetDemographicsCapabilityRequest): Promise<GetDemographicsCapabilityResponse>;
   getCountryEnergyProfile(ctx: ServerContext, req: GetCountryEnergyProfileRequest): Promise<GetCountryEnergyProfileResponse>;
   computeEnergyShockScenario(ctx: ServerContext, req: ComputeEnergyShockScenarioRequest): Promise<ComputeEnergyShockScenarioResponse>;
   getCountryPortActivity(ctx: ServerContext, req: GetCountryPortActivityRequest): Promise<CountryPortActivityResponse>;
@@ -2426,6 +2482,53 @@ export function createIntelligenceServiceRoutes(
 
           const result = await handler.listMarketImplications(ctx, body);
           return new Response(JSON.stringify(result as ListMarketImplicationsResponse), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        } catch (err: unknown) {
+          if (err instanceof ValidationError) {
+            return new Response(JSON.stringify({ violations: err.violations }), {
+              status: 400,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+          if (options?.onError) {
+            return options.onError(err, req);
+          }
+          const message = "Internal server error";
+          return new Response(JSON.stringify({ message }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+      },
+    },
+    {
+      method: "GET",
+      path: "/api/intelligence/v1/get-demographics-capability",
+      handler: async (req: Request): Promise<Response> => {
+        try {
+          const pathParams: Record<string, string> = {};
+          const url = new URL(req.url, "http://localhost");
+          const params = url.searchParams;
+          const body: GetDemographicsCapabilityRequest = {
+            countryCode: params.get("countryCode") ?? "",
+          };
+          if (options?.validateRequest) {
+            const bodyViolations = options.validateRequest("getDemographicsCapability", body);
+            if (bodyViolations) {
+              throw new ValidationError(bodyViolations);
+            }
+          }
+
+          const ctx: ServerContext = {
+            request: req,
+            pathParams,
+            headers: Object.fromEntries(req.headers.entries()),
+          };
+
+          const result = await handler.getDemographicsCapability(ctx, body);
+          return new Response(JSON.stringify(result as GetDemographicsCapabilityResponse), {
             status: 200,
             headers: { "Content-Type": "application/json" },
           });

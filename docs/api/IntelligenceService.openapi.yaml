@@ -491,7 +491,10 @@ paths:
             tags:
                 - IntelligenceService
             summary: GetCountryCoverage
-            description: "GetCountryCoverage returns the country panel's visible coverage timeline:\r\n clustered news incidents reconciled against first-party structured records,\r\n with per-producer freshness so an empty list is never silent."
+            description: |-
+                GetCountryCoverage returns the country panel's visible coverage timeline:
+                 clustered news incidents reconciled against first-party structured records,
+                 with per-producer freshness so an empty list is never silent.
             operationId: GetCountryCoverage
             parameters:
                 - name: country_code
@@ -875,7 +878,10 @@ paths:
             tags:
                 - IntelligenceService
             summary: GetCompanyEnrichment
-            description: "GetCompanyEnrichment aggregates a per-company intelligence composite: SEC EDGAR\r\n identity and recent filings (via authoritative ticker-to-CIK resolution), market\r\n profile and earnings surprises from Finnhub, and recent news mentions."
+            description: |-
+                GetCompanyEnrichment aggregates a per-company intelligence composite: SEC EDGAR
+                 identity and recent filings (via authoritative ticker-to-CIK resolution), market
+                 profile and earnings surprises from Finnhub, and recent news mentions.
             operationId: GetCompanyEnrichment
             parameters:
                 - name: domain
@@ -986,7 +992,10 @@ paths:
             tags:
                 - IntelligenceService
             summary: ListCompanySignals
-            description: "ListCompanySignals discovers classified intelligence signals for a company from\r\n authoritative sources: SEC 8-K material events and recent news mentions, with\r\n per-type summary rollups. Fiscal period ends are not used as event timestamps."
+            description: |-
+                ListCompanySignals discovers classified intelligence signals for a company from
+                 authoritative sources: SEC 8-K material events and recent news mentions, with
+                 per-type summary rollups. Fiscal period ends are not used as event timestamps.
             operationId: ListCompanySignals
             parameters:
                 - name: company
@@ -1063,7 +1072,9 @@ paths:
             tags:
                 - IntelligenceService
             summary: SearchSecFilings
-            description: "SearchSecFilings runs a full-text search over SEC EDGAR filings with optional\r\n form-type and date-range filters."
+            description: |-
+                SearchSecFilings runs a full-text search over SEC EDGAR filings with optional
+                 form-type and date-range filters.
             operationId: SearchSecFilings
             parameters:
                 - name: query
@@ -1146,7 +1157,9 @@ paths:
             tags:
                 - IntelligenceService
             summary: ListMaterialEvents
-            description: "ListMaterialEvents returns the pre-seeded stream of recent SEC 8-K material-event\r\n filings (M&A, executive changes, restatements, bankruptcies) across all filers."
+            description: |-
+                ListMaterialEvents returns the pre-seeded stream of recent SEC 8-K material-event
+                 filings (M&A, executive changes, restatements, bankruptcies) across all filers.
             operationId: ListMaterialEvents
             parameters:
                 - name: item_code
@@ -1466,6 +1479,100 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Error'
+    /api/intelligence/v1/get-demographics-capability:
+        get:
+            tags:
+                - IntelligenceService
+            summary: GetDemographicsCapability
+            description: GetDemographicsCapability returns age, education and industrial-workforce observations for one country. The response uses the fields defined by this RPC's protobuf response message.
+            operationId: GetDemographicsCapability
+            parameters:
+                - name: countryCode
+                  in: query
+                  description: Required ISO 3166-1 alpha-2 country code.
+                  required: true
+                  example: "US"
+                  schema:
+                    type: string
+                - name: jmespath
+                  in: query
+                  description: |-
+                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
+                  required: false
+                  example: "keys(@)"
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: Successful response
+                    content:
+                        application/json:
+                            example:
+                                "ageStructure":
+                                    "available": true
+                                    "medianAgeYears":
+                                        "available": true
+                                        "source": "Example dataset"
+                                        "unit": "years"
+                                        "value": 1.5
+                                        "year": 2024
+                                    "oldAgeDependencyRatioPercent":
+                                        "available": true
+                                        "source": "Example dataset"
+                                        "unit": "percent"
+                                        "value": 1.5
+                                        "year": 2024
+                                    "totalDependencyRatioPercent":
+                                        "available": true
+                                        "source": "Example dataset"
+                                        "unit": "percent"
+                                        "value": 1.5
+                                        "year": 2024
+                                    "workingAgePopulationPeople":
+                                        "available": true
+                                        "source": "Example dataset"
+                                        "unit": "people"
+                                        "value": 1.5
+                                        "year": 2024
+                                "available": true
+                                "countryCode": "US"
+                                "education":
+                                    "available": true
+                                    "researchersPerMillion":
+                                        "available": true
+                                        "source": "Example dataset"
+                                        "unit": "people per million"
+                                        "value": 1.5
+                                        "year": 2024
+                                    "stemGraduatesSharePercent":
+                                        "available": true
+                                        "source": "Example dataset"
+                                        "unit": "percent"
+                                        "value": 1.5
+                                        "year": 2024
+                                    "tertiaryEnrollmentGrossPercent":
+                                        "available": true
+                                        "source": "Example dataset"
+                                        "unit": "percent"
+                                        "value": 1.5
+                                        "year": 2024
+                                "fetchedAt": "2026-01-15T12:00:00Z"
+                            schema:
+                                $ref: '#/components/schemas/GetDemographicsCapabilityResponse'
+                "400":
+                    description: Validation error
+                    content:
+                        application/json:
+                            schema:
+                                oneOf:
+                                    - $ref: '#/components/schemas/ValidationError'
+                                    - $ref: '#/components/schemas/JmespathProjectionError'
+                default:
+                    description: Error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
     /api/intelligence/v1/get-country-energy-profile:
         get:
             tags:
@@ -1657,7 +1764,9 @@ paths:
             tags:
                 - IntelligenceService
             summary: GetChinaDecisionSignals
-            description: "GetChinaDecisionSignals composes the six launched China decision-parity\r\n domains into one bounded provenance-preserving public snapshot."
+            description: |-
+                GetChinaDecisionSignals composes the six launched China decision-parity
+                 domains into one bounded provenance-preserving public snapshot.
             operationId: GetChinaDecisionSignals
             parameters:
                 - name: jmespath
@@ -1698,7 +1807,9 @@ paths:
             tags:
                 - IntelligenceService
             summary: GetRegionalSnapshot
-            description: "GetRegionalSnapshot returns the latest RegionalSnapshot for a region, The response uses the fields defined by this RPC's protobuf response message.\r\n refreshed every 6h. Premium-gated."
+            description: |-
+                GetRegionalSnapshot returns the latest RegionalSnapshot for a region, The response uses the fields defined by this RPC's protobuf response message.
+                 refreshed every 6h. Premium-gated.
             operationId: GetRegionalSnapshot
             parameters:
                 - name: region_id
@@ -1782,7 +1893,10 @@ paths:
             tags:
                 - IntelligenceService
             summary: GetRegimeHistory
-            description: "GetRegimeHistory returns the region's regime transition log newest-first.\r\n Entries are append-only from the seed writer, recorded only when\r\n diffRegionalSnapshot reports regime_changed. Premium-gated."
+            description: |-
+                GetRegimeHistory returns the region's regime transition log newest-first.
+                 Entries are append-only from the seed writer, recorded only when
+                 diffRegionalSnapshot reports regime_changed. Premium-gated.
             operationId: GetRegimeHistory
             parameters:
                 - name: region_id
@@ -1848,7 +1962,9 @@ paths:
             tags:
                 - IntelligenceService
             summary: GetRegionalBrief
-            description: "GetRegionalBrief returns the latest weekly intelligence brief for a region.\r\n Written by scripts/seed-regional-briefs.mjs on a weekly cron. Premium-gated."
+            description: |-
+                GetRegionalBrief returns the latest weekly intelligence brief for a region.
+                 Written by scripts/seed-regional-briefs.mjs on a weekly cron. Premium-gated.
             operationId: GetRegionalBrief
             parameters:
                 - name: region_id
@@ -1901,7 +2017,11 @@ paths:
             tags:
                 - IntelligenceService
             summary: SearchIntelHistory
-            description: "SearchIntelHistory searches stored historical intelligence events by\r\n semantic similarity to a free-text query. Each cache miss costs one\r\n embeddings call, so the route has its own fail-closed rate policy.\r\n Premium-gated."
+            description: |-
+                SearchIntelHistory searches stored historical intelligence events by
+                 semantic similarity to a free-text query. Each cache miss costs one
+                 embeddings call, so the route has its own fail-closed rate policy.
+                 Premium-gated.
             operationId: SearchIntelHistory
             requestBody:
                 content:
@@ -1950,7 +2070,10 @@ paths:
             tags:
                 - IntelligenceService
             summary: GetIntelTimeline
-            description: "GetIntelTimeline returns the durable historical intelligence store\r\n newest-first for one domain and/or country. Pure index read — no\r\n embedding, no ranking. Premium-gated."
+            description: |-
+                GetIntelTimeline returns the durable historical intelligence store
+                 newest-first for one domain and/or country. Pure index read — no
+                 embedding, no ranking. Premium-gated.
             operationId: GetIntelTimeline
             parameters:
                 - name: domain
@@ -2055,7 +2178,10 @@ paths:
             tags:
                 - IntelligenceService
             summary: GetSimilarEvents
-            description: "GetSimilarEvents returns historical precedents for a described situation.\r\n Same vector search as SearchIntelHistory over a longer free-text input,\r\n so it is likewise embeddings-backed and rate-policied. Premium-gated."
+            description: |-
+                GetSimilarEvents returns historical precedents for a described situation.
+                 Same vector search as SearchIntelHistory over a longer free-text input,
+                 so it is likewise embeddings-backed and rate-policied. Premium-gated.
             operationId: GetSimilarEvents
             requestBody:
                 content:
@@ -6298,6 +6424,122 @@ components:
                     type: string
                 logic:
                     type: string
+        GetDemographicsCapabilityRequest:
+            type: object
+            properties:
+                countryCode:
+                    type: string
+                    description: Required ISO 3166-1 alpha-2 country code.
+            required:
+                - countryCode
+        GetDemographicsCapabilityResponse:
+            type: object
+            properties:
+                countryCode:
+                    type: string
+                available:
+                    type: boolean
+                    description: True when at least one validated observation exists for the country.
+                fetchedAt:
+                    type: string
+                    description: ISO-8601 time the canonical snapshot was generated.
+                stages:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/DemographicsCapabilityStage'
+                ageStructure:
+                    $ref: '#/components/schemas/DemographicsAgeStructure'
+                education:
+                    $ref: '#/components/schemas/DemographicsEducation'
+                industrialWorkforce:
+                    $ref: '#/components/schemas/DemographicsIndustrialWorkforce'
+        DemographicsCapabilityStage:
+            type: object
+            properties:
+                name:
+                    type: string
+                    description: 'Stable stage name: wpp, education, or ilostat.'
+                status:
+                    type: string
+                    description: Seeder state, normally fresh, retained, or unavailable.
+                fetchedAt:
+                    type: string
+                    description: ISO-8601 time of the data retained for this stage.
+                recordCount:
+                    type: integer
+                    minimum: 0
+                    format: int32
+                    description: Number of country records retained for the stage.
+                newestObservationYear:
+                    type: integer
+                    minimum: 0
+                    format: int32
+                    description: Most recent source observation year retained for the stage.
+            description: Independent fetch-stage state. One failed stage must not hide healthy groups.
+        DemographicsAgeStructure:
+            type: object
+            properties:
+                available:
+                    type: boolean
+                medianAgeYears:
+                    $ref: '#/components/schemas/CapabilityObservation'
+                oldAgeDependencyRatioPercent:
+                    $ref: '#/components/schemas/CapabilityObservation'
+                totalDependencyRatioPercent:
+                    $ref: '#/components/schemas/CapabilityObservation'
+                workingAgePopulationPeople:
+                    $ref: '#/components/schemas/CapabilityObservation'
+                workingAgePopulationProjected10yPeople:
+                    $ref: '#/components/schemas/CapabilityObservation'
+        CapabilityObservation:
+            type: object
+            properties:
+                available:
+                    type: boolean
+                    description: True when value, year, source and unit pass validation.
+                value:
+                    type: number
+                    format: double
+                    description: 'Numeric observation. Read available first: zero is also the proto3 placeholder.'
+                year:
+                    type: integer
+                    minimum: 0
+                    format: int32
+                    description: Source year; not the seed year.
+                source:
+                    type: string
+                    description: Provider or dataset attribution.
+                unit:
+                    type: string
+                    description: 'Unit: percent, people, or years.'
+                sourceStatus:
+                    type: string
+                    description: Provider or input status; absent is unknown.
+            description: CapabilityObservation keeps a measured zero distinct from a missing value.
+        DemographicsEducation:
+            type: object
+            properties:
+                available:
+                    type: boolean
+                tertiaryEnrollmentGrossPercent:
+                    $ref: '#/components/schemas/CapabilityObservation'
+                stemGraduatesSharePercent:
+                    $ref: '#/components/schemas/CapabilityObservation'
+                researchersPerMillion:
+                    $ref: '#/components/schemas/CapabilityObservation'
+        DemographicsIndustrialWorkforce:
+            type: object
+            properties:
+                available:
+                    type: boolean
+                craftTradesEmploymentPeople:
+                    $ref: '#/components/schemas/CapabilityObservation'
+                plantMachineOperatorsEmploymentPeople:
+                    $ref: '#/components/schemas/CapabilityObservation'
+                trainedIndustrialWorkforcePeople:
+                    $ref: '#/components/schemas/CapabilityObservation'
+                manufacturingEmploymentSharePercent:
+                    $ref: '#/components/schemas/CapabilityObservation'
         GetCountryEnergyProfileRequest:
             type: object
             properties:

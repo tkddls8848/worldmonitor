@@ -2,7 +2,7 @@
 // Source: proto/worldmonitor/**/*.proto buf.validate annotations.
 
 export const GENERATED_PROTO_VALIDATION_RULE_COUNT = 717;
-export const GENERATED_REQUEST_METHOD_COUNT = 187;
+export const GENERATED_REQUEST_METHOD_COUNT = 188;
 
 export const GENERATED_REQUEST_TYPES = {
   "analyzeStock": "worldmonitor.market.v1.AnalyzeStockRequest",
@@ -43,6 +43,7 @@ export const GENERATED_REQUEST_TYPES = {
   "getCountryVulnerabilities": "worldmonitor.supply_chain.v1.GetCountryVulnerabilitiesRequest",
   "getCrossBorderMovements": "worldmonitor.displacement.v1.GetCrossBorderMovementsRequest",
   "getDefenseIndustrialBase": "worldmonitor.military.v1.GetDefenseIndustrialBaseRequest",
+  "getDemographicsCapability": "worldmonitor.intelligence.v1.GetDemographicsCapabilityRequest",
   "getDisplacementSummary": "worldmonitor.displacement.v1.GetDisplacementSummaryRequest",
   "getEconomicCalendar": "worldmonitor.economic.v1.GetEconomicCalendarRequest",
   "getEnergyCapacity": "worldmonitor.economic.v1.GetEnergyCapacityRequest",
@@ -1584,6 +1585,14 @@ export const GENERATED_MESSAGE_RULES = {
       "cursor": {
         "kind": "string",
         "stringMaxLen": 200,
+        "stringMaxBytes": 65536
+      }
+    }
+  },
+  "worldmonitor.intelligence.v1.GetDemographicsCapabilityRequest": {
+    "fields": {
+      "countryCode": {
+        "kind": "string",
         "stringMaxBytes": 65536
       }
     }

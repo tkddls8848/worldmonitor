@@ -211,6 +211,7 @@
                     "group": "Economy & supply",
                     "pages": [
                       "methodology/food-stocks",
+                      "methodology/demographics-capability",
                       "methodology/capital-flows",
                       "methodology/defense-industrial-base",
                       "methodology/mineral-production",
@@ -800,6 +801,7 @@
                     "group": "经济与供应",
                     "pages": [
                       "zh/methodology/food-stocks",
+                      "zh/methodology/demographics-capability",
                       "zh/methodology/capital-flows",
                       "zh/methodology/defense-industrial-base",
                       "zh/methodology/mineral-production",

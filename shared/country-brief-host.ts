@@ -74,6 +74,7 @@ export const COUNTRY_READERS = {
   risk: { path: '/api/intelligence/v1/get-country-risk', args: z.object({ country_code: z.string().regex(/^[A-Z]{2}$/) }).strict() },
   stock: { path: '/api/market/v1/get-country-stock-index', args: z.object({ country_code: z.string().regex(/^[A-Z]{2}$/) }).strict() },
   food: { path: '/api/supply-chain/v1/get-food-stocks', args: z.object({ countryCode: z.string().regex(/^(?:[A-Z]{2}|WORLD)$/), commodity: z.string().max(40).default('') }).strict() },
+  demographics: { path: '/api/intelligence/v1/get-demographics-capability', args: z.object({ countryCode: z.string().regex(/^[A-Z]{2}$/) }).strict() },
   factors: { path: '/api/scorecard/v1/get-five-factor-scorecard', args: z.object({ countryCode: z.string().regex(/^[A-Z]{2}$/) }).strict() },
   debt: { path: '/api/economic/v1/get-national-debt', args: z.object({  }).strict() },
   flows: { path: '/api/trade/v1/list-comtrade-flows', args: z.object({ reporter_code: z.string().regex(/^\d{1,3}$/), cmd_code: z.string().regex(/^\d{0,6}$/).default(''), anomalies_only: z.enum(['true', 'false']).default('false') }).strict() },

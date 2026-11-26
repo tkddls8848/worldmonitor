@@ -74,6 +74,7 @@ import { countryEvidenceMarkdownArtifact } from '@/utils/export';
 import { attemptWebCountryDownload, countryDownloadMessage, type CountryTextDownload } from '@/utils/country-text-download';
 import type { CountryEvidenceBundleInput } from '@/utils/export';
 import { ciiBandForLevel } from './CountryDeepDivePanel-cii';
+import { renderDemographicsCapabilitySection } from './CountryDeepDivePanel-demographics-capability';
 import { renderDefenseIndustrialSection } from './CountryDeepDivePanel-defense-industrial';
 import { renderFiveFactorScorecardSection } from './CountryDeepDivePanel-five-factor-scorecard';
 import { combineAbortSignals } from '@/services/timeout-signal';
@@ -187,6 +188,8 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
   private factsBody: HTMLElement | null = null;
   private foodStocksRequestId = 0;
   private foodStocksBody: HTMLElement | null = null;
+  private demographicsBody: HTMLElement | null = null;
+  private demographicsCapabilityRequestId = 0;
   private fiveFactorScorecardRequestId = 0;
   private fiveFactorScorecardAbortController: AbortController | null = null;
   private fiveFactorScorecardBody: HTMLElement | null = null;
@@ -417,6 +420,7 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     if (origin === 'control' && this.historyRegistered) overlayHistory.close('deep-dive');
     this.historyRegistered = false;
     this.foodStocksRequestId += 1;
+    this.demographicsCapabilityRequestId += 1;
     this.tearDownFiveFactorScorecard();
     this.tearDownFollowButton();
     if (this.isMaximizedState) {
@@ -687,6 +691,7 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     const code = this.currentCode;
     this.renderAtlasExposure(true);
     if (this.foodStocksBody) void this.renderFoodStocks(code, this.foodStocksBody);
+    if (this.demographicsBody) void this.renderDemographicsCapability(code, this.demographicsBody);
     if (this.fiveFactorScorecardBody) {
       this.fiveFactorScorecardAbortController?.abort();
       const request = new AbortController();
@@ -3632,6 +3637,18 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     }
 
 
+    const [demographicsCard, demographicsBody] = this.sectionCard(
+      'demographics',
+      t('countryBrief.demographicsCapability.title'),
+      t('countryBrief.demographicsCapability.help'),
+    );
+    this.demographicsBody = demographicsBody;
+    if (isPro) {
+      demographicsBody.append(this.makeLoading(t('countryBrief.demographicsCapability.loading')));
+      void this.renderDemographicsCapability(code, demographicsBody);
+    } else {
+      demographicsBody.append(this.makeProLocked(t('countryBrief.demographicsCapability.proLocked')));
+    }
 
     const [fiveFactorScorecardCard, fiveFactorScorecardBody] = this.sectionCard(
       'factors',
@@ -3727,7 +3744,7 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     marketsBody.append(this.makeLoading(t('countryBrief.loadingMarkets')));
     briefBody.append(this.makeLoading(t('countryBrief.generatingBrief')));
 
-    bodyGrid.append(fiveFactorScorecardCard, factsCard, ...(chinaSummaryCard ? [chinaSummaryCard] : []), signalsCard, timelineCard, ...(historyCard ? [historyCard] : []), newsCard, militaryCard, sanctionsCard, economicCard, no2ActivityCard, housingCard, debtCard, comtradeCard, tariffCard, tradeCard, costShockCalcCard, productImportsCard, marketsCard, energyCard, maritimeCard, commodityVulnerabilityCard, foodStocksCard, infraCard);
+    bodyGrid.append(fiveFactorScorecardCard, factsCard, ...(chinaSummaryCard ? [chinaSummaryCard] : []), signalsCard, timelineCard, ...(historyCard ? [historyCard] : []), newsCard, militaryCard, sanctionsCard, economicCard, no2ActivityCard, housingCard, debtCard, comtradeCard, tariffCard, tradeCard, costShockCalcCard, productImportsCard, marketsCard, energyCard, maritimeCard, commodityVulnerabilityCard, foodStocksCard, infraCard, demographicsCard);
     const lead = this.el('div', 'cdp-overview-lead');
     lead.append(briefCard, summaryGrid);
     shell.append(header, lead, bodyGrid);
@@ -3818,6 +3835,37 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
         if (error instanceof CountrySectionError && error.state === 'locked') this.setSectionFailure('food', 'locked', error.message);
         else this.setSectionFailure('food', 'unavailable', t('countryBrief.foodStocksUnavailable'));
       }
+    }
+  }
+
+  private async renderDemographicsCapability(code: string, body: HTMLElement): Promise<void> {
+    const requestId = ++this.demographicsCapabilityRequestId;
+    const stillCurrent = (): boolean => requestId === this.demographicsCapabilityRequestId;
+    const signal = this.signal;
+    try {
+      if (typeof location === 'undefined') {
+        if (stillCurrent()) body.replaceChildren(this.makeEmpty(t('countryBrief.demographicsCapability.unavailable')));
+        return;
+      }
+      const { getDemographicsCapability } = await import('@/services/demographics-capability');
+      if (!stillCurrent() || signal.aborted) return;
+      const data = await (this.source ? this.source.demographics(code, signal) : getDemographicsCapability({ countryCode: code, signal }));
+      if (!stillCurrent()) return;
+      if (!data.available) {
+        body.replaceChildren(this.makeEmpty(t('countryBrief.demographicsCapability.unavailable')));
+        return;
+      }
+      body.replaceChildren(renderDemographicsCapabilitySection(
+        data,
+        (label, value, chipClass) => this.metric(label, value, chipClass),
+        t,
+      ));
+    } catch (error) {
+      const aborted = (error as { name?: string })?.name === 'AbortError' || signal.aborted || !stillCurrent();
+      if (!aborted) {
+        console.warn('[CountryDeepDivePanel] demographics capability load failed', error);
+      }
+      if (stillCurrent()) this.setSectionFailure('demographics', error instanceof CountrySectionError ? error.state : 'unavailable', t('countryBrief.demographicsCapability.unavailable'));
     }
   }
 
@@ -3912,6 +3960,8 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     this.sections = [];
     this.foodStocksRequestId++;
     this.foodStocksBody = null;
+    this.demographicsCapabilityRequestId++;
+    this.demographicsBody = null;
     this.tearDownFiveFactorScorecard();
     this.tearDownFollowButton();
     this.selectedSectorHs2 = null;
