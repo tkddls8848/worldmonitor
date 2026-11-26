@@ -4533,11 +4533,7 @@
     "upgradeToPro": "Upgrade la Pro",
     "features": {
       "orefSirens1": "Alerte în timp real pentru rachete și rachete Israel",
-      "orefSirens2": "Hartă zonelor de sirenă cu clasificare amenințărilor",
-      "telegramIntel1": "Canale de informații deschise Telegram selectate",
-      "telegramIntel2": "Actualizări conflicte și geopolitice aproape în timp real",
-      "xIntel1": "Curated public news accounts on X",
-      "xIntel2": "API-fresh posts with official permalinks"
+      "orefSirens2": "Hartă zonelor de sirenă cu clasificare amenințărilor"
     }
   },
   "auth": {

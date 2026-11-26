@@ -4489,11 +4489,7 @@
     "upgradeToPro": "Nâng cấp lên Pro",
     "features": {
       "orefSirens1": "Cảnh báo tên lửa và rocket Israel theo thời gian thực",
-      "orefSirens2": "Lập bản đồ vùng còi với phân loại mối đe dọa",
-      "telegramIntel1": "Các kênh thông tin nguồn mở Telegram được tuyển chọn",
-      "telegramIntel2": "Các cập nhật xung đột và địa chính trị gần thời gian thực",
-      "xIntel1": "Curated public news accounts on X",
-      "xIntel2": "API-fresh posts with official permalinks"
+      "orefSirens2": "Lập bản đồ vùng còi với phân loại mối đe dọa"
     }
   },
   "auth": {

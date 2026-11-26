@@ -4555,11 +4555,7 @@
     "upgradeToPro": "Przejdź na Pro",
     "features": {
       "orefSirens1": "Alerty rakietowe i rakietowe Izraela w czasie rzeczywistym",
-      "orefSirens2": "Mapowanie stref syren z klasyfikacją zagrożeń",
-      "telegramIntel1": "Wyselekcjonowane kanały otwartego wywiadu Telegram",
-      "telegramIntel2": "Aktualizacje konfliktów i geopolityki w czasie bliskim rzeczywistemu",
-      "xIntel1": "Curated public news accounts on X",
-      "xIntel2": "API-fresh posts with official permalinks"
+      "orefSirens2": "Mapowanie stref syren z klasyfikacją zagrożeń"
     }
   },
   "auth": {

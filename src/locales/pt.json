@@ -4533,11 +4533,7 @@
     "upgradeToPro": "Atualizar para Pro",
     "features": {
       "orefSirens1": "Alertas em tempo real de mísseis e foguetes de Israel",
-      "orefSirens2": "Mapeamento de zona de sirene com classificação de ameaça",
-      "telegramIntel1": "Canais curados de inteligência de código aberto no Telegram",
-      "telegramIntel2": "Atualizações de conflito e geopolítica em tempo quase real",
-      "xIntel1": "Curated public news accounts on X",
-      "xIntel2": "API-fresh posts with official permalinks"
+      "orefSirens2": "Mapeamento de zona de sirene com classificação de ameaça"
     }
   },
   "auth": {

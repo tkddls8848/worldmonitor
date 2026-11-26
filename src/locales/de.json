@@ -4511,11 +4511,7 @@
     "upgradeToPro": "Auf Pro upgraden",
     "features": {
       "orefSirens1": "Echtzeitwarnungen bei Raketen- und Lenkflugkörperangriffen auf Israel",
-      "orefSirens2": "Sirenenzonenkartierung mit Bedrohungsklassifizierung",
-      "telegramIntel1": "Kuratierte Telegram-Kanäle zur Open-Source-Intelligence",
-      "telegramIntel2": "Konflikts- und geopolitische Updates in Echtzeit",
-      "xIntel1": "Kuratierte X-Nachrichtenkonten",
-      "xIntel2": "Aktuelle API-Beiträge und Permalinks"
+      "orefSirens2": "Sirenenzonenkartierung mit Bedrohungsklassifizierung"
     }
   },
   "auth": {

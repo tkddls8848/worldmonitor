@@ -4538,11 +4538,7 @@
     "upgradeToPro": "Nadogradite se na Pro",
     "features": {
       "orefSirens1": "Upozorenja o raketama i raketama u izraelskom realnom vremenu",
-      "orefSirens2": "Mapiranje zone sirena s klasifikacijom prijetnje",
-      "telegramIntel1": "Kurirani канали otvorenih izvora obavještajnih podataka na Telegramu",
-      "telegramIntel2": "Ažuriranja o konfliktima i geopolitici u blizini realnog vremena",
-      "xIntel1": "Curated public news accounts on X",
-      "xIntel2": "API-fresh posts with official permalinks"
+      "orefSirens2": "Mapiranje zone sirena s klasifikacijom prijetnje"
     }
   },
   "contextMenu": {

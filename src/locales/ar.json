@@ -4599,11 +4599,7 @@
     "upgradeToPro": "الترقية إلى Pro",
     "features": {
       "orefSirens1": "تنبيهات الصواريخ والقذائف الإسرائيلية في الوقت الفعلي",
-      "orefSirens2": "خريطة مناطق الإنذار مع تصنيف التهديدات",
-      "telegramIntel1": "قنوات الاستخبارات مفتوحة المصدر المختارة على تيليجرام",
-      "telegramIntel2": "تحديثات النزاعات والجيوسياسة في الوقت الفعلي تقريباً",
-      "xIntel1": "Curated public news accounts on X",
-      "xIntel2": "API-fresh posts with official permalinks"
+      "orefSirens2": "خريطة مناطق الإنذار مع تصنيف التهديدات"
     }
   },
   "auth": {

@@ -4499,11 +4499,7 @@
     "upgradeToPro": "Pro로 업그레이드",
     "features": {
       "orefSirens1": "실시간 이스라엘 미사일 및 로켓 경보",
-      "orefSirens2": "경보 영역 지도 및 위협 분류",
-      "telegramIntel1": "큐레이션된 텔레그램 오픈소스 인텔리전스 채널",
-      "telegramIntel2": "거의 실시간 분쟁 및 지정학 업데이트",
-      "xIntel1": "Curated public news accounts on X",
-      "xIntel2": "API-fresh posts with official permalinks"
+      "orefSirens2": "경보 영역 지도 및 위협 분류"
     }
   },
   "auth": {

@@ -266,11 +266,7 @@
     "upgradeToPro": "Upgrade to Pro",
     "features": {
       "orefSirens1": "Real-time Israel missile & rocket alerts",
-      "orefSirens2": "Siren zone mapping with threat classification",
-      "telegramIntel1": "Curated Telegram open-source intelligence channels",
-      "telegramIntel2": "Near-real-time conflict & geopolitical updates",
-      "xIntel1": "Curated X news accounts",
-      "xIntel2": "API-fresh posts and permalinks"
+      "orefSirens2": "Siren zone mapping with threat classification"
     }
   },
   "auth": {

@@ -4506,11 +4506,7 @@
     "upgradeToPro": "प्रो में अपग्रेड करें",
     "features": {
       "orefSirens1": "रियल-टाइम इज़राइल मिसाइल और रॉकेट अलर्ट",
-      "orefSirens2": "सायरन क्षेत्र का नक्शा और खतरे की श्रेणीकरण",
-      "telegramIntel1": "क्यूरेटेड Telegram ओपन-सोर्स इंटेलिजेंस चैनल",
-      "telegramIntel2": "करीब रियल-टाइम संघर्ष और भू-राजनीतिक अपडेट",
-      "xIntel1": "Curated public news accounts on X",
-      "xIntel2": "API-fresh posts with official permalinks"
+      "orefSirens2": "सायरन क्षेत्र का नक्शा और खतरे की श्रेणीकरण"
     }
   },
   "contextMenu": {

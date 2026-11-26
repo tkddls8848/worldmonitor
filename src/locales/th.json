@@ -4489,11 +4489,7 @@
     "upgradeToPro": "อัปเกรดเป็น Pro",
     "features": {
       "orefSirens1": "การแจ้งเตือนจรวดและขีปนาวุธของอิสราเอลแบบเรียลไทม์",
-      "orefSirens2": "การแมปโซนไซเรนพร้อมการจำแนกภัยคุกคาม",
-      "telegramIntel1": "ช่องทาง open-source intelligence ของ Telegram ที่คัดสรรมา",
-      "telegramIntel2": "การอัปเดตข้อขัดแย้งและภูมิรัฐศาสตร์เกือบเรียลไทม์",
-      "xIntel1": "Curated public news accounts on X",
-      "xIntel2": "API-fresh posts with official permalinks"
+      "orefSirens2": "การแมปโซนไซเรนพร้อมการจำแนกภัยคุกคาม"
     }
   },
   "auth": {

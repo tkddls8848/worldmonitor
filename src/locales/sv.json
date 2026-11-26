@@ -4511,11 +4511,7 @@
     "upgradeToPro": "Uppgradera till Pro",
     "features": {
       "orefSirens1": "Varningar om missiler och raketer från Israel i realtid",
-      "orefSirens2": "Sirenzoner med hotklassificering",
-      "telegramIntel1": "Kurerad Telegram-underrättelseinformation från öppna källor",
-      "telegramIntel2": "Uppdateringar om konflikter och geopolitik nästan i realtid",
-      "xIntel1": "Curated public news accounts on X",
-      "xIntel2": "API-fresh posts with official permalinks"
+      "orefSirens2": "Sirenzoner med hotklassificering"
     }
   },
   "auth": {

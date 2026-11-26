@@ -4506,11 +4506,7 @@
     "upgradeToPro": "ارتقا به Pro",
     "features": {
       "orefSirens1": "هشدارهای لحظه‌ای موشک و راکت اسرائیل",
-      "orefSirens2": "نقشه‌برداری مناطق آژیر با طبقه‌بندی تهدید",
-      "telegramIntel1": "کانال‌های اطلاعاتی منبع‌باز تلگرام منتخب",
-      "telegramIntel2": "به‌روزرسانی‌های تقریباً لحظه‌ای درگیری و ژئوپلیتیک",
-      "xIntel1": "Curated public news accounts on X",
-      "xIntel2": "API-fresh posts with official permalinks"
+      "orefSirens2": "نقشه‌برداری مناطق آژیر با طبقه‌بندی تهدید"
     }
   },
   "contextMenu": {

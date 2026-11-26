@@ -4489,11 +4489,7 @@
     "upgradeToPro": "升級到 Pro",
     "features": {
       "orefSirens1": "即時以色列導彈和火箭警報",
-      "orefSirens2": "警報區域地圖及威脅分類",
-      "telegramIntel1": "精選Telegram開源情報頻道",
-      "telegramIntel2": "近即時衝突與地緣政治更新",
-      "xIntel1": "Curated public news accounts on X",
-      "xIntel2": "API-fresh posts with official permalinks"
+      "orefSirens2": "警報區域地圖及威脅分類"
     }
   },
   "auth": {

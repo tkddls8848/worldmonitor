@@ -4511,11 +4511,7 @@
     "upgradeToPro": "Pro'ya Yüksel",
     "features": {
       "orefSirens1": "Gerçek zamanlı İsrail füze ve roket uyarıları",
-      "orefSirens2": "Tehdit sınıflandırması ile siren bölgesi haritalaması",
-      "telegramIntel1": "Küratörlü Telegram açık kaynak istihbaratı kanalları",
-      "telegramIntel2": "Neredeyse gerçek zamanlı çatışma ve jeopolitik güncellemeleri",
-      "xIntel1": "Curated public news accounts on X",
-      "xIntel2": "API-fresh posts with official permalinks"
+      "orefSirens2": "Tehdit sınıflandırması ile siren bölgesi haritalaması"
     }
   },
   "auth": {

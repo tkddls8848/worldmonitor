@@ -4511,11 +4511,7 @@
     "upgradeToPro": "Upgrade naar Pro",
     "features": {
       "orefSirens1": "Waarschuwingen voor Israëlische raketaanvallen in realtime",
-      "orefSirens2": "Sirènezone-mapping met dreiging classificatie",
-      "telegramIntel1": "Samengestelde open-source intelligence Telegram-kanalen",
-      "telegramIntel2": "Updates over conflicten en geopolitieke situaties vrijwel in realtime",
-      "xIntel1": "Curated public news accounts on X",
-      "xIntel2": "API-fresh posts with official permalinks"
+      "orefSirens2": "Sirènezone-mapping met dreiging classificatie"
     }
   },
   "auth": {
