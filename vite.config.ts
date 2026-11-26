@@ -107,7 +107,7 @@ const PANEL_CLUSTER: Record<string, PanelChunkName> = {
   DailyMarketBrief: 'panels-news', GdeltIntel: 'panels-news',
   GoodThingsDigest: 'panels-news', LatestBrief: 'panels-news',
   LiveNews: 'panels-news', News: 'panels-news',
-  PositiveNewsFeed: 'panels-news', TelegramIntel: 'panels-news', XIntel: 'panels-news',
+  PositiveNewsFeed: 'panels-news',
   // Macro / prices / trade
   ConsumerPrices: 'panels-economy',
   Economic: 'panels-economy', GlobalProcurement: 'panels-economy',
@@ -1089,7 +1089,12 @@ export default defineConfig(({ mode }) => {
             // fetched the stylesheet for import('./App'), and a failed download
             // aborted the dashboard boot (WORLDMONITOR-XT). Guarded by
             // tests/dashboard-critical-css.test.mjs.
-            if (id.endsWith('/src/styles/base-layer.css')) {
+            // The first-screen and country-drawer styles are also static App
+            // dependencies and must share this initial stylesheet.
+            if (id.endsWith('/src/styles/base-layer.css')
+              || id.endsWith('/src/styles/world-mode.css')
+              || id.endsWith('/src/styles/world-ops.css')
+              || id.endsWith('/src/styles/world-country-drawer.css')) {
               return 'dashboard-styles';
             }
             if (id.includes('node_modules')) {
