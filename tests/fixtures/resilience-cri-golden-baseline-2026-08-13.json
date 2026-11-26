@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "artifactKind": "cri-golden-baseline",
   "issue": 7728,
-  "acceptedSourceCommit": "88e5a8663c7dabf853804bb15cc278b270f734fc",
+  "acceptedSourceCommit": "4f243e7d335f65ff3d412583c2952e503268eae8",
   "formula": "pc",
   "scorerCacheIdentity": {
     "scoreCachePrefix": "resilience:score:v30:",
@@ -18,7 +18,7 @@
   "inputFixture": {
     "path": "tests/fixtures/resilience-whole-index-pairs-2026-08-13.json",
     "capturedAt": "2026-08-13",
-    "sha256": "f338cf0daa5a6d05e58aeaf585149a1d07bdd8a3d1dd56173adb295122007c94"
+    "sha256": "0c8f915ad646f7b8909f9b728fce0aed3344281e3b9a89f814afa4f99186ab81"
   },
   "inputOverrides": {
     "economic:worldbank-techreadiness:v1": "synthetic deterministic payload (fixture input gap), carried over from tests/five-factor-scorecard-cri-isolation.test.mts baseline side"

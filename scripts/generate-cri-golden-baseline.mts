@@ -270,7 +270,9 @@ function sha256Hex(buffer: Buffer | string): string {
 }
 
 export async function sha256File(filePath: string): Promise<string> {
-  return sha256Hex(await readFile(filePath));
+  // Hash the committed LF form even when Git checks the JSON out as CRLF.
+  const fixture = await readFile(filePath, 'utf8');
+  return sha256Hex(fixture.replace(/\r\n/g, '\n'));
 }
 
 function git(args: string[], options: { allowFailure?: boolean; cwd?: string } = {}): string | null {

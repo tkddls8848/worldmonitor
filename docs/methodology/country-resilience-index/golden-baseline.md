@@ -26,7 +26,7 @@ golden bytes plus the identity needed to interpret them:
   `server/worldmonitor/resilience/v1/_shared.ts`).
 - `frozenClockIso` and `envFlags` — the fixed clock and feature flags the
   comparison runs under.
-- `inputFixture` — path, capture date, and sha256 of the frozen input fixture
+- `inputFixture` — path, capture date, and SHA-256 of the frozen input fixture with LF line endings
   `tests/fixtures/resilience-whole-index-pairs-2026-08-13.json`.
 - `golden` — the exact `JSON.stringify` bytes for country scores and ranking.
 
