@@ -1,6 +1,7 @@
 import type { BreakingAlert } from '@/services/breaking-news-alerts';
-import type { TickerItem, WorldField, WorldLoadState } from '@/types/world-overview';
-import { FIELD_LABEL_KO, WORLD_FIELDS } from '../../../shared/world-overview.js';
+import type { FillLevel, RelationKind, TickerItem, WorldField, WorldLoadState } from '@/types/world-overview';
+import { WORLD_BLOC_COLORS, WORLD_FILL_COLORS, WORLD_HOTSPOT_COLORS, WORLD_UNREST_OUTLINE } from '@/config/world-overview-palette';
+import { FIELD_LABEL_KO, KIND_LABEL_KO, WORLD_FIELDS } from '../../../shared/world-overview.js';
 import css from '@/styles/world-first-screen.css?inline';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 
@@ -162,58 +163,61 @@ export class WorldDispatchBar {
   }
 }
 
-const fieldKinds: Partial<Record<WorldField, string[]>> = {
-  military: ['지원'],
-  diplomacy: ['동맹'],
-  geopolitics: ['긴장'],
-  politics: [],
-  finance: ['제재', '경제 의존'],
-};
+function setSwatch(node: HTMLElement, light: readonly number[], dark: readonly number[]): void {
+  node.style.setProperty('--wfs-swatch-light', `rgb(${light.slice(0, 3).join(' ')})`);
+  node.style.setProperty('--wfs-swatch-dark', `rgb(${dark.slice(0, 3).join(' ')})`);
+}
+
 export class WorldKeyPlate {
   readonly element: HTMLElement;
-  private fields: readonly WorldField[] = WORLD_FIELDS;
+  private title = el('small', 'wfs-cii-title', 'CII');
+  private scale = el('div', 'wfs-cii-scale');
+  private lines = el('div', 'wfs-line-legend');
+
   constructor() {
     installStyle();
     this.element = el('aside', 'atlas-key-plate');
-    this.render();
-  }
-  setFields(fields: readonly WorldField[]): void {
-    this.fields = fields;
-    this.render();
-  }
-  private render(): void {
-    this.element.replaceChildren();
     const title = el('strong', 'wfs-key-title');
-    title.append(el('span', '', '지도 범례'));
-    if (this.fields.includes('military')) title.append(el('small', '', 'CII'));
-    this.element.append(title);
-    if (this.fields.includes('military')) {
-      const levels = ['평온', '관심', '주의', '경계', '고위험'];
-      const scale = el('div', 'wfs-cii-scale');
-      levels.forEach((label, i) => {
-        const chip = el('span', 'wfs-cii-step', label);
-        chip.dataset.level = String(i);
-        scale.append(chip);
-      });
-      this.element.append(scale);
+    title.append(el('span', '', '지도 범례'), this.title);
+    const levels: Record<FillLevel, string> = { 0: '평온', 1: '관심', 2: '주의', 3: '경계', 4: '고위험' };
+    for (const [key, label] of Object.entries(levels)) {
+      const level = Number(key) as FillLevel;
+      const chip = el('span', 'wfs-cii-step', label);
+      chip.dataset.level = key;
+      setSwatch(chip, WORLD_FILL_COLORS.light[level], WORLD_FILL_COLORS.dark[level]);
+      this.scale.append(chip);
     }
-    const lines = el('div', 'wfs-line-legend');
-    const kinds = new Set(this.fields.flatMap((f) => fieldKinds[f] ?? []));
-    for (const k of kinds) {
-      const item = el('span', 'wfs-line-key', k);
-      item.dataset.kind = k;
-      lines.append(item);
-    }
-    if (kinds.size) this.element.append(lines);
     const markers = el('div', 'wfs-marker-legend');
     for (const [kind, label] of [
       ['hotspot-elevated', '관심 지역'], ['hotspot-high', '고위험 관심 지역'], ['waterway', '전략 해상 요충지'],
+      ['conflict', '분쟁 지역'], ['hotspot-ring', '주요 분쟁국'], ['unrest', '사회 불안'], ['bloc', '외교 블록 경계'],
     ]) {
       const item = el('span', 'wfs-marker-key', label);
       item.dataset.marker = kind;
+      if (kind === 'hotspot-ring') setSwatch(item, WORLD_HOTSPOT_COLORS.light, WORLD_HOTSPOT_COLORS.dark);
+      if (kind === 'unrest') setSwatch(item, WORLD_UNREST_OUTLINE.light, WORLD_UNREST_OUTLINE.dark);
+      if (kind === 'bloc') {
+        for (const [theme, colors] of Object.entries(WORLD_BLOC_COLORS)) {
+          item.style.setProperty(`--wfs-blocs-${theme}`, colors.map((color) => `rgb(${color.slice(0, 3).join(' ')})`).join(', '));
+        }
+      }
       markers.append(item);
     }
-    this.element.append(markers);
+    this.element.append(title, this.scale, this.lines, markers);
+    this.setView(false, []);
+  }
+
+  setView(showCii: boolean, relationKinds: readonly RelationKind[]): void {
+    this.title.hidden = this.scale.hidden = !showCii;
+    this.lines.replaceChildren();
+    const kinds = new Set(relationKinds);
+    for (const kind of Object.keys(KIND_LABEL_KO) as RelationKind[]) {
+      if (!kinds.has(kind)) continue;
+      const label = KIND_LABEL_KO[kind];
+      const item = el('span', 'wfs-line-key', label);
+      item.dataset.kind = label;
+      this.lines.append(item);
+    }
   }
 }
 

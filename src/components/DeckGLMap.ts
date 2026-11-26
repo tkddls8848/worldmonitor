@@ -6618,6 +6618,17 @@ export class DeckGLMap {
       this.deckFrameProvider.wake();
       this.committedLayers = built;
       this.deckOverlay?.setProps({ layers: built });
+      if (this.worldOverviewMode) {
+        const ids = built.map(deckLayerId);
+        const legend = [
+          ids.includes('world-overview-fill') && 'fill',
+          ids.includes('world-overview-lines') && 'lines',
+          ids.includes('world-overview-hotspots') && 'hotspots',
+          ids.includes('world-overview-unrest-outline') && 'unrest',
+          ids.some((id) => id?.startsWith('world-overview-bloc-')) && 'blocs',
+        ].filter(Boolean).join(' ');
+        if (this.container.dataset.worldLegend !== legend) this.container.dataset.worldLegend = legend;
+      }
       recordDeckLayersDebug(built);
       if (!this.worldFirstDrawMarked && built.some((layer) => deckLayerId(layer) === 'world-overview-fill')) {
         this.worldFirstDrawMarked = true;
@@ -6839,6 +6850,7 @@ export class DeckGLMap {
   public setWorldOverviewMode(on: boolean): void {
     if (this.worldOverviewMode === on) return;
     this.worldOverviewMode = on;
+    if (!on) delete this.container.dataset.worldLegend;
     this.syncWorldBasemap();
     this.syncWorldPulse();
     this.render();

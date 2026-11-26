@@ -161,13 +161,13 @@ export function mountWorldFirstScreen(
   slots.dispatch.append(dispatch.element);
   slots.shelf.append(shelf.element);
   slots.stage.append(keyPlate.element, zoom.element, status.element, drawer.element);
-  keyPlate.setFields(fields);
   shelf.setFields(fields);
 
   function makeView(): void {
     if (!snapshot) return;
     currentView = buildWorldMapView(snapshot, fields, selectedIso2);
     map.setWorldOverview(currentView);
+    keyPlate.setView(fields.includes('military'), currentView.lines.map((line) => line.kind));
   }
 
   function updateDrawer(): void {
@@ -198,7 +198,6 @@ export function mountWorldFirstScreen(
   function updateFields(next: WorldField[]): void {
     fields = next;
     setWorldFields(fields);
-    keyPlate.setFields(fields);
     shelf.setFields(fields);
     makeView();
   }

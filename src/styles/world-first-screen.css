@@ -132,12 +132,8 @@
 :root[data-theme="dark"] .atlas-key-plate { left: 34px; bottom: 12px; padding: 9px 11px; border-color: var(--border-strong); border-top: 2px solid var(--rule-ink); box-shadow: var(--ops-shadow-tip); }
 :root[data-theme="dark"] .wfs-key-title { font-weight: 700; }
 :root[data-theme="dark"] .wfs-key-title small { color: var(--text-muted); }
-:root[data-theme="dark"] .wfs-cii-step { background: #171e1b; color: var(--text-secondary); }
-:root[data-theme="dark"] .wfs-cii-step[data-level="0"] { background: #171e1b; }
-:root[data-theme="dark"] .wfs-cii-step[data-level="1"] { background: #23302b; }
-:root[data-theme="dark"] .wfs-cii-step[data-level="2"] { background: #6d5729; }
-:root[data-theme="dark"] .wfs-cii-step[data-level="3"] { background: #a84e24; color: #fff; }
-:root[data-theme="dark"] .wfs-cii-step[data-level="4"] { background: #c82e43; color: #fff; }
+:root[data-theme="dark"] .wfs-cii-step { color: var(--text-secondary); }
+:root[data-theme="dark"] .wfs-cii-step:is([data-level="3"], [data-level="4"]) { color: #fff; }
 :root[data-theme="dark"] .zoom-controls { right: 14px; top: 20px; gap: 0; }
 :root[data-theme="dark"] .wfs-zoom-button { border-radius: 0; box-shadow: none; }
 :root[data-theme="dark"] .wfs-zoom-button + .wfs-zoom-button { border-top: 0; }
@@ -378,7 +374,13 @@ a.wfs-ticker-item {
   color: var(--text-muted);
   font: 10px var(--font-mono);
 }
-.wfs-cii-scale {
+.wfs-cii-title,
+.wfs-cii-scale,
+.wfs-line-legend { display: none; }
+.wfs-slot-stage:has(#mapContainer.deckgl-mode[data-world-legend~="fill"]) .wfs-cii-title:not([hidden]) {
+  display: inline;
+}
+.wfs-slot-stage:has(#mapContainer.deckgl-mode[data-world-legend~="fill"]) .wfs-cii-scale:not([hidden]) {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 2px;
@@ -389,50 +391,32 @@ a.wfs-ticker-item {
   place-items: center;
   font-size: 8px;
   color: var(--text-primary);
-  background: #f3f4ef;
-}
-.wfs-cii-step[data-level="1"] {
-  background: #d5dfd8;
-}
-.wfs-cii-step[data-level="2"] {
-  background: #ebd296;
-}
-.wfs-cii-step[data-level="3"] {
-  background: #df884b;
+  background: var(--wfs-swatch);
 }
 .wfs-cii-step[data-level="4"] {
-  background: #b8293d;
   color: white;
 }
-/* Dark atlas steps (FINAL-SPEC-OPTION-A §2.3). */
-:root[data-theme="dark"] .wfs-cii-step {
-  background: #232724;
+.wfs-cii-step,
+.wfs-marker-key {
+  --wfs-swatch: var(--wfs-swatch-light);
 }
-:root[data-theme="dark"] .wfs-cii-step[data-level="1"] {
-  background: #343c37;
+:root[data-theme="dark"] :is(.wfs-cii-step, .wfs-marker-key) {
+  --wfs-swatch: var(--wfs-swatch-dark);
 }
-:root[data-theme="dark"] .wfs-cii-step[data-level="2"] {
-  background: #7a6030;
-}
-:root[data-theme="dark"] .wfs-cii-step[data-level="3"] {
-  background: #b4592b;
-}
-:root[data-theme="dark"] .wfs-cii-step[data-level="4"] {
-  background: #c93a4c;
-}
-.wfs-line-legend {
+.wfs-slot-stage:has(#mapContainer.deckgl-mode[data-world-legend~="lines"]) .wfs-line-legend:not(:empty) {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-top: 8px;
   color: var(--text-secondary);
   font-size: 9px;
 }
-.wfs-marker-legend { display: none; }
-/* The SVG fallback renders its own overlays in place of the DeckGL world layers. */
-.wfs-slot-stage:has(#mapContainer.svg-mode) .atlas-key-plate :is(.wfs-key-title small, .wfs-cii-scale, .wfs-line-legend) {
-  display: none;
+/* Leave the SVG Layers disclosure at the bottom-left clear. */
+.wfs-root .wfs-slot-stage:has(#mapContainer.svg-mode) .atlas-key-plate {
+  top: 62px;
+  bottom: auto;
 }
-.wfs-slot-stage:has(#mapContainer.svg-mode :is(.hotspot-marker, .waterway-diamond)) .wfs-marker-legend {
+.wfs-marker-legend {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 10px;
@@ -446,7 +430,11 @@ a.wfs-ticker-item {
 }
 .wfs-slot-stage:has(#mapContainer.svg-mode .hotspot-marker:not(.high)) [data-marker="hotspot-elevated"],
 .wfs-slot-stage:has(#mapContainer.svg-mode .hotspot-marker.high) [data-marker="hotspot-high"],
-.wfs-slot-stage:has(#mapContainer.svg-mode .waterway-diamond) [data-marker="waterway"] {
+.wfs-slot-stage:has(#mapContainer.svg-mode .waterway-diamond) [data-marker="waterway"],
+.wfs-slot-stage:has(#mapContainer.svg-mode .conflict-zone) [data-marker="conflict"],
+.wfs-slot-stage:has(#mapContainer.deckgl-mode[data-world-legend~="hotspots"]) [data-marker="hotspot-ring"],
+.wfs-slot-stage:has(#mapContainer.deckgl-mode[data-world-legend~="unrest"]) [data-marker="unrest"],
+.wfs-slot-stage:has(#mapContainer.deckgl-mode[data-world-legend~="blocs"]) [data-marker="bloc"] {
   display: inline-flex;
 }
 .wfs-marker-key::before {
@@ -461,6 +449,24 @@ a.wfs-ticker-item {
   border-radius: 0;
   background: var(--status-live);
   transform: rotate(45deg);
+}
+.wfs-marker-key[data-marker="conflict"]::before {
+  border: 1px dashed var(--red);
+  border-radius: 0;
+  background: color-mix(in srgb, var(--semantic-critical) 20%, transparent);
+}
+.wfs-marker-key[data-marker="hotspot-ring"]::before,
+.wfs-marker-key[data-marker="unrest"]::before {
+  border: 1px solid var(--wfs-swatch);
+  background: transparent;
+}
+.wfs-marker-key[data-marker="unrest"]::before { border-radius: 0; }
+.wfs-marker-key[data-marker="bloc"]::before {
+  border-radius: 0;
+  background: linear-gradient(90deg, var(--wfs-blocs-light));
+}
+:root[data-theme="dark"] .wfs-marker-key[data-marker="bloc"]::before {
+  background: linear-gradient(90deg, var(--wfs-blocs-dark));
 }
 .wfs-line-key:before {
   content: "";
@@ -717,10 +723,6 @@ a.wfs-ticker-item {
   }
   .wfs-cii-step {
     height: 12px;
-    font-size: 0;
-  }
-  .wfs-line-legend {
-    display: none;
   }
   .zoom-controls {
     top: 8px;
@@ -784,8 +786,6 @@ a.wfs-ticker-item {
   :root[data-theme="dark"] .coord-axis-top,
   :root[data-theme="dark"] .coord-axis-left { display: none; }
   :root[data-theme="dark"] .atlas-key-plate { left: 8px; top: 8px; bottom: auto; width: 178px; padding: 6px 8px; }
-  .wfs-root .wfs-slot-stage:has(#mapContainer.svg-mode) .atlas-key-plate { top: 62px; }
-  :root[data-theme="dark"] .wfs-line-legend { display: none; }
   :root[data-theme="dark"] .zoom-controls { right: 8px; top: 8px; }
   :root[data-theme="dark"] .bottom-shelf { flex-direction: column; height: auto; min-height: 78px; }
   :root[data-theme="dark"] .wfs-domain-tabs { width: 100%; border-bottom: 1px solid var(--border); overflow-x: auto; }

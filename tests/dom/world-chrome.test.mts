@@ -38,8 +38,17 @@ describe('world screen chrome', () => {
     expect(onDateChange).toHaveBeenLastCalledWith('2026-11-21'); expect(shelf.element.querySelector('.wfs-timelapse')!.textContent).toContain('재생');
     shelf.destroy();
   });
-  it('shows only line kinds for enabled fields and status states', () => {
-    const key = new WorldKeyPlate(); key.setFields(['military']); expect(key.element.textContent).not.toContain('동맹');
+  it('shows the styles for the current map view without duplicate relation keys', () => {
+    const key = new WorldKeyPlate();
+    key.setView(true, ['tension', 'tension']);
+    expect(key.element.querySelector<HTMLElement>('.wfs-cii-scale')?.hidden).toBe(false);
+    expect(key.element.querySelector<HTMLElement>('[data-level="4"]')?.style.getPropertyValue('--wfs-swatch-dark')).toBe('rgb(200 46 67)');
+    expect([...key.element.querySelectorAll('.wfs-line-key')].map((item) => item.textContent)).toEqual(['긴장']);
+    key.setView(false, ['support']);
+    expect(key.element.querySelector<HTMLElement>('.wfs-cii-scale')?.hidden).toBe(true);
+    expect([...key.element.querySelectorAll('.wfs-line-key')].map((item) => item.textContent)).toEqual(['지원']);
+  });
+  it('shows map data status states', () => {
     const status = new WorldStatusBanner(); status.setState('loading'); expect(status.element.textContent).toContain('불러오는');
     status.setState('empty'); expect(status.element.textContent).toContain('데이터 없음');
     status.setState('error', '연결 오류'); expect(status.element.textContent).toContain('연결 오류');
