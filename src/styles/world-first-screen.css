@@ -398,10 +398,10 @@ a.wfs-ticker-item {
 }
 .wfs-cii-step,
 .wfs-marker-key {
-  --wfs-swatch: var(--wfs-swatch-light);
+  --wfs-swatch: var(--wfs-swatch-light, transparent);
 }
 :root[data-theme="dark"] :is(.wfs-cii-step, .wfs-marker-key) {
-  --wfs-swatch: var(--wfs-swatch-dark);
+  --wfs-swatch: var(--wfs-swatch-dark, transparent);
 }
 .wfs-slot-stage:has(#mapContainer.deckgl-mode[data-world-legend~="lines"]) .wfs-line-legend:not(:empty) {
   display: flex;
@@ -463,10 +463,10 @@ a.wfs-ticker-item {
 .wfs-marker-key[data-marker="unrest"]::before { border-radius: 0; }
 .wfs-marker-key[data-marker="bloc"]::before {
   border-radius: 0;
-  background: linear-gradient(90deg, var(--wfs-blocs-light));
+  background: linear-gradient(90deg, var(--wfs-blocs-light, transparent, transparent));
 }
 :root[data-theme="dark"] .wfs-marker-key[data-marker="bloc"]::before {
-  background: linear-gradient(90deg, var(--wfs-blocs-dark));
+  background: linear-gradient(90deg, var(--wfs-blocs-dark, transparent, transparent));
 }
 .wfs-line-key:before {
   content: "";
