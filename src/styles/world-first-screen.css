@@ -256,7 +256,11 @@ a.wfs-ticker-item {
   gap: 0;
 }
 :root:not([data-theme="dark"]) .wfs-slot-telemetry:has(.wfs-global-gauges:not([hidden])) .ops-telemetry-bar { display: none; }
-.wfs-slot-telemetry .wfs-global-gauges { min-height: 30px; }
+.wfs-slot-telemetry .wfs-global-gauges {
+  min-height: 30px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) var(--surface-subtle);
+}
 .wfs-global-gauges:not([hidden]) {
   display: flex;
   overflow-x: auto;
@@ -653,6 +657,9 @@ a.wfs-ticker-item {
   .wfs-root {
     --wfs-masthead-height: 64px;
     grid-template-rows: var(--wfs-masthead-height) var(--wfs-gauge-height, 0px) 30px minmax(0, 1fr) auto;
+  }
+  :root[data-theme="dark"] .wfs-root {
+    grid-template-rows: var(--wfs-masthead-height) calc(26px + var(--wfs-gauge-height, 0px)) 30px minmax(0, 1fr) auto;
   }
   .masthead-bar {
     display: grid;
