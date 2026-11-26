@@ -4,8 +4,9 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { test } from 'node:test';
 
-const relay = readFileSync(new URL('../scripts/personal-collector-tasks.cjs', import.meta.url), 'utf8');
-const source = relay.slice(relay.indexOf('function upstashEval('), relay.indexOf('function buildEnvelope('));
+const helpers = readFileSync(new URL('../scripts/_personal-provider-helpers.cjs', import.meta.url), 'utf8');
+const source = helpers.match(/function upstashEval\([\s\S]*?\n  \}/)?.[0];
+assert.ok(source, 'missing shared Redis EVAL helper');
 
 for (const event of ['error', 'aborted']) {
   test(`archive transport settles after response ${event}`, async () => {

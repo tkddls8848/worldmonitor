@@ -114,7 +114,7 @@ test('a video lookup YouTube never answers ends at the 5 s oEmbed deadline with 
 test('the relay no longer serves, proxies or configures YouTube live detection', () => {
   // Positive controls: the absence checks below read the real route table and the helper the relay keeps.
   assert.match(relaySource, /pathname === '\/yahoo-chart'/, 'the relay route table must still be readable');
-  assert.match(relaySource, /function fetchViaProxy\(/, 'the shared proxy helper stays for its PROXY_URL callers');
+  assert.match(relaySource, /fetchViaProxy\(yahooUrl, proxy\)/, 'Yahoo still uses the shared proxy helper');
   assert.doesNotMatch(relaySource, /['"]\/youtube-live['"]/, 'the /youtube-live route falls through to the relay 404');
   assert.doesNotMatch(relaySource, /YOUTUBE_PROXY_URL/);
   assert.doesNotMatch(relaySource, /function handleYouTubeLiveRequest|function ytFetchDirect|function ytFetch\(|ytLiveCache|YT_CACHE_TTL/);

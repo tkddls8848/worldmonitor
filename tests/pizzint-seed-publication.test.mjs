@@ -5,9 +5,11 @@ import vm from 'node:vm';
 import { __testing__ as health } from '../api/health.js';
 
 const relay = readFileSync(new URL('../scripts/personal-collector-tasks.cjs', import.meta.url), 'utf8');
-const envelopeWriter = relay.slice(relay.indexOf('function buildEnvelope('), relay.indexOf('// Envelope-aware read.'));
-const envelopeReader = relay.slice(relay.indexOf('async function envelopeRead('), relay.indexOf('function notifySimpleHash('));
-const producer = relay.slice(relay.indexOf('const PIZZINT_SEED_INTERVAL_MS'), relay.indexOf('function logThrottled('));
+const helpers = readFileSync(new URL('../scripts/_personal-provider-helpers.cjs', import.meta.url), 'utf8');
+const envelopeWriter = helpers.slice(helpers.indexOf('function buildEnvelope('), helpers.indexOf('async function envelopeRead('));
+const envelopeReader = helpers.match(/async function envelopeRead\([\s\S]*?\n  \}/)?.[0];
+assert.ok(envelopeReader, 'missing shared envelope reader');
+const producer = relay.slice(relay.indexOf('const PIZZINT_SEED_INTERVAL_MS'), relay.indexOf('return {seedSectorSummary'));
 const history = await import('../scripts/shared/pizzint-history.cjs');
 const { pizzintVenuePoint } = await import('../scripts/shared/pizzint-location.cjs');
 const emptyResponse = {
@@ -61,7 +63,7 @@ function harness() {
     },
     upstashEval: async () => state.historyWait ? await state.historyWait : [1, 0, 0, 1],
   });
-  vm.runInContext(envelopeWriter + envelopeReader + producer, context);
+  vm.runInContext([envelopeWriter, envelopeReader, producer].join('\n'), context);
   return { state, seed: () => vm.runInContext('seedPizzint()', context) };
 }
 

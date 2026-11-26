@@ -1,4 +1,3 @@
-// @notification-source: domain (AIS and OREF)
 // In-process data adapters for the single-owner server. No listener or public client fanout.
 // Batch datasets belong to personal-collect.mjs; only live AIS/OREF loops run here.
 module.exports.createPersonalProviders = function createPersonalProviders(options = {}) {
@@ -69,23 +68,7 @@ const OPENSKY_COOLDOWN_KEY = cooldownKeyForAccount(OPENSKY_ACCOUNT_FINGERPRINT);
 
 const { createGuardedLookup, SSRF_BLOCKED_ERROR_CODE } = require('./lib/notification-webhook-ssrf.cjs');
 
-// API fan-out of rss_alert / market_alert queue messages (news.breaking,
-// market.move). The webhook worker that drained it was removed; the list is
-// capped and expires on its own.
-const {
-  API_FANOUT_EVENT_TYPES,
-  API_FANOUT_LIST_CAP,
-  API_FANOUT_LIST_KEY,
-  API_FANOUT_LIST_TTL_SECONDS,
-  API_FANOUT_TEE_SCRIPT,
-  occurrenceEventIdFor,
-} = require('./lib/occurrence-events.cjs');
-
-const {
-  buildDedupMaterial,
-  classifySetNxResult,
-  recordDedupOutcome,
-} = require('./shared/notification-dedup.cjs');
+const { CHROME_UA, createPersonalRedisClient, createThrottledLogger, fetchViaProxy } = require('./_personal-provider-helpers.cjs');
 
 const {
   AVIATION_MIN_SERVED_COVERAGE,
@@ -308,164 +291,11 @@ const OREF_LOCAL_FILE = (() => {
   return path.join(OREF_DATA_DIR, 'oref-history.json');
 })();
 
-// ─────────────────────────────────────────────────────────────
-// Upstash Redis REST helpers — persist OREF history across restarts
-// ─────────────────────────────────────────────────────────────
-const UPSTASH_REDIS_REST_URL = process.env.UPSTASH_REDIS_REST_URL || '';
-
-const UPSTASH_REDIS_REST_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || '';
-
-const UPSTASH_ENABLED = !!(UPSTASH_REDIS_REST_URL && UPSTASH_REDIS_REST_TOKEN);
-
-// Node's https module can't speak to a plain-http endpoint — resolve the
-// matching client once at startup instead of hardcoding https.request at
-// each upstash* call site below.
-const UPSTASH_HTTP_MODULE = UPSTASH_REDIS_REST_URL.startsWith('http://') ? http : https;
+const { UPSTASH_ENABLED, upstashGet, upstashSet, upstashEval, envelopeWrite, envelopeRead } = createPersonalRedisClient();
 
 const RELAY_ENV_PREFIX = '';
 
 const OREF_REDIS_KEY = `${RELAY_ENV_PREFIX}relay:oref:history:v1`;
-
-const CHROME_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
-
-function upstashGet(key, onFailure, timeoutMs = 5000) {
-  return new Promise((resolve) => {
-    if (!UPSTASH_ENABLED) return resolve(null);
-    let settled = false;
-    const finish = (value) => {
-      if (settled) return;
-      settled = true;
-      resolve(value);
-    };
-    const fail = (reason) => {
-      if (settled) return;
-      settled = true;
-      if (onFailure) onFailure(reason);
-      resolve(null);
-    };
-    const requestTimeoutMs = Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : 5000;
-    const url = new URL(`/get/${encodeURIComponent(key)}`, UPSTASH_REDIS_REST_URL);
-    const req = UPSTASH_HTTP_MODULE.request(url, {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${UPSTASH_REDIS_REST_TOKEN}` },
-      timeout: requestTimeoutMs,
-    }, (resp) => {
-      if (resp.statusCode < 200 || resp.statusCode >= 300) {
-        resp.resume();
-        return fail(`HTTP ${resp.statusCode}`);
-      }
-      let data = '';
-      resp.on('data', (chunk) => { data += chunk; });
-      resp.on('end', () => {
-        try {
-          const parsed = JSON.parse(data);
-          if (parsed?.result) {
-            try {
-              return finish(JSON.parse(parsed.result));
-            } catch (e) {
-              return fail(`JSON result parse failed: ${(e && e.message) || e}`);
-            }
-          }
-          finish(null);
-        } catch (e) {
-          fail(`JSON response parse failed: ${(e && e.message) || e}`);
-        }
-      });
-    });
-    req.on('error', (e) => fail((e && e.message) || e));
-    req.on('timeout', () => { req.destroy(); fail('timeout'); });
-    req.end();
-  });
-}
-
-function upstashSet(key, value, ttlSeconds) {
-  return new Promise((resolve) => {
-    if (!UPSTASH_ENABLED) return resolve(false);
-    const url = new URL('/', UPSTASH_REDIS_REST_URL);
-    const body = JSON.stringify(['SET', key, JSON.stringify(value), 'EX', String(ttlSeconds)]);
-    const req = UPSTASH_HTTP_MODULE.request(url, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${UPSTASH_REDIS_REST_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      timeout: 5000,
-    }, (resp) => {
-      let data = '';
-      resp.on('data', (chunk) => { data += chunk; });
-      resp.on('end', () => {
-        try {
-          const parsed = JSON.parse(data);
-          resolve(parsed?.result === 'OK');
-        } catch { resolve(false); }
-      });
-    });
-    req.on('error', () => resolve(false));
-    req.on('timeout', () => { req.destroy(); resolve(false); });
-    req.end(body);
-  });
-}
-
-// Only wm:events:queue is pushed here. Nothing consumes that queue in the
-// personal build, so the LPUSH carries an LTRIM in the same pipeline that
-// keeps the newest 1000 entries.
-function upstashLpush(key, value) {
-  return new Promise((resolve) => {
-    if (!UPSTASH_ENABLED) return resolve(false);
-    const url = new URL('/pipeline', UPSTASH_REDIS_REST_URL);
-    const serialized = typeof value === 'string' ? value : JSON.stringify(value);
-    const body = JSON.stringify([['LPUSH', key, serialized], ['LTRIM', key, '0', '999']]);
-    const req = UPSTASH_HTTP_MODULE.request(url, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${UPSTASH_REDIS_REST_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      timeout: 5000,
-    }, (resp) => {
-      let data = '';
-      resp.on('data', (chunk) => { data += chunk; });
-      resp.on('end', () => {
-        try {
-          const pushed = JSON.parse(data)?.[0]?.result;
-          resolve(typeof pushed === 'number' && pushed > 0);
-        } catch { resolve(false); }
-      });
-    });
-    req.on('error', () => resolve(false));
-    req.on('timeout', () => { req.destroy(); resolve(false); });
-    req.end(body);
-  });
-}
-
-function upstashSetNx(key, value, ttlSeconds) {
-  return new Promise((resolve) => {
-    if (!UPSTASH_ENABLED) return resolve('disabled');
-    const url = new URL('/', UPSTASH_REDIS_REST_URL);
-    const serialized = typeof value === 'string' ? value : JSON.stringify(value);
-    const body = JSON.stringify(['SET', key, serialized, 'NX', 'EX', String(ttlSeconds)]);
-    const req = UPSTASH_HTTP_MODULE.request(url, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${UPSTASH_REDIS_REST_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      timeout: 5000,
-    }, (resp) => {
-      let data = '';
-      resp.on('data', (chunk) => { data += chunk; });
-      resp.on('end', () => {
-        try {
-          const parsed = JSON.parse(data);
-          resolve(classifySetNxResult(parsed?.result));
-        } catch { resolve('error'); }
-      });
-    });
-    req.on('error', () => resolve('error'));
-    req.on('timeout', () => { req.destroy(); resolve('error'); });
-    req.end(body);
-  });
-}
 
 // ─────────────────────────────────────────────────────────────
 // Boot-seed freshness guard
@@ -546,180 +376,6 @@ function startBootSeedLoop(label, metaKey, intervalMs, seedFn, onInitialError, o
     seedFn().catch(onInitialError);
     startInterval();
   });
-}
-
-function upstashDel(key) {
-  return new Promise((resolve) => {
-    if (!UPSTASH_ENABLED) return resolve(false);
-    const url = new URL('/', UPSTASH_REDIS_REST_URL);
-    const body = JSON.stringify(['DEL', key]);
-    const req = UPSTASH_HTTP_MODULE.request(url, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${UPSTASH_REDIS_REST_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      timeout: 5000,
-    }, (resp) => {
-      let data = '';
-      resp.on('data', (chunk) => { data += chunk; });
-      resp.on('end', () => {
-        try { resolve(JSON.parse(data)?.result === 1); } catch { resolve(false); }
-      });
-    });
-    req.on('error', () => resolve(false));
-    req.on('timeout', () => { req.destroy(); resolve(false); });
-    req.end(body);
-  });
-}
-
-function upstashEval(script, keys, args) {
-  return new Promise((resolve) => {
-    if (!UPSTASH_ENABLED) return resolve(null);
-    const url = new URL('/', UPSTASH_REDIS_REST_URL);
-    const body = JSON.stringify(['EVAL', script, String(keys.length), ...keys, ...args.map((arg) => String(arg))]);
-    const req = UPSTASH_HTTP_MODULE.request(url, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${UPSTASH_REDIS_REST_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      timeout: 5000,
-    }, (resp) => {
-      let data = '';
-      resp.on('error', () => resolve(null));
-      resp.on('aborted', () => resolve(null));
-      resp.on('data', (chunk) => { data += chunk; });
-      resp.on('end', () => {
-        try { resolve(JSON.parse(data)?.result); } catch { resolve(null); }
-      });
-    });
-    req.on('error', () => resolve(null));
-    req.on('timeout', () => { req.destroy(); resolve(null); });
-    req.end(body);
-  });
-}
-
-// ─────────────────────────────────────────────────────────────
-// Seed envelope — canonical { _seed, data } shape. Mirrored from
-// scripts/_seed-envelope-source.mjs (ESM; can't be require()'d from CJS).
-// Source of truth lives there + api/_seed-envelope.js + server/_shared/seed-envelope.ts.
-// Parity enforced by scripts/verify-seed-envelope-parity.mjs.
-// ─────────────────────────────────────────────────────────────
-function buildEnvelope({ fetchedAt, recordCount, sourceVersion, schemaVersion, state, failedDatasets, errorReason, groupId, data }) {
-  const _seed = { fetchedAt, recordCount, sourceVersion, schemaVersion, state };
-  if (failedDatasets != null) _seed.failedDatasets = failedDatasets;
-  if (errorReason != null) _seed.errorReason = errorReason;
-  if (groupId != null) _seed.groupId = groupId;
-  return { _seed, data };
-}
-
-// Wrap `data` in a seed envelope and write to Redis at `key` with `ttlSeconds`.
-// meta: { fetchedAt?, recordCount, sourceVersion, schemaVersion?, state?, zeroOk?, groupId? }
-//   - state: omit to derive ('OK_ZERO' when recordCount===0 && zeroOk, else 'OK')
-//   - schemaVersion: defaults to 1
-function envelopeWrite(key, data, ttlSeconds, meta) {
-  const recordCount = Number(meta?.recordCount ?? 0) || 0;
-  const state = meta?.state || (recordCount === 0 && meta?.zeroOk ? 'OK_ZERO' : 'OK');
-  const envelope = buildEnvelope({
-    fetchedAt: meta?.fetchedAt ?? Date.now(),
-    recordCount,
-    sourceVersion: meta?.sourceVersion || 'ais-relay',
-    schemaVersion: meta?.schemaVersion ?? 1,
-    state,
-    groupId: meta?.groupId,
-    data,
-  });
-  return upstashSet(key, envelope, ttlSeconds);
-}
-
-// Envelope-aware read. Mirrors server/_shared/redis.ts::getCachedJson semantics:
-// returns the bare payload for contract-mode canonical keys ({_seed, data}) and
-// passes legacy shapes through unchanged. MUST be used for any seeded canonical
-// key — reading raw via upstashGet() on an enveloped key iterates {_seed, data}
-// as payload keys and silently corrupts downstream consumers.
-async function envelopeRead(key, onFailure) {
-  const raw = await upstashGet(key, onFailure);
-  if (raw && typeof raw === 'object' && !Array.isArray(raw) && '_seed' in raw && 'data' in raw) {
-    return raw.data;
-  }
-  return raw;
-}
-
-function notifySimpleHash(str) {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
-  return Math.abs(h).toString(36);
-}
-
-/**
- * Second copy of a queued rss_alert / market_alert message for API-key webhook
- * subscribers. The notification relay RPOPs wm:events:queue destructively, so
- * the Shipping v2 worker drains its own list (wm:events:api:v1). One Lua round
- * trip pushes, caps and expires it; a failure here never touches the queue
- * publish that already succeeded, it only loses the event for API tenants.
- */
-function teeApiFanout(eventType, msg) {
-  if (!UPSTASH_ENABLED) return;
-  upstashEval(API_FANOUT_TEE_SCRIPT, [API_FANOUT_LIST_KEY], [msg, API_FANOUT_LIST_CAP, API_FANOUT_LIST_TTL_SECONDS])
-    .then((result) => {
-      if (Number(result) !== 1) console.warn(`[Notify] API fan-out tee did not confirm (${eventType})`);
-    })
-    .catch((e) => console.warn(`[Notify] API fan-out tee failed (${eventType}):`, e?.message || e));
-}
-
-async function publishNotificationEvent({ eventType, payload, severity, variant, dedupTtl = 1800 }) {
-  try {
-    // Include variant in dedup key so each variant can independently publish the same title
-    // (e.g. finance and world users both receive an alert for the same headline).
-    // Slot B: when payload.coalesceKey is set (e.g. NWS VTEC family), key on it
-    // instead of the title hash so adjacent-zone alerts for the same logical
-    // event collapse at the publisher (queue stays clean) instead of N times
-    // per recipient at the relay.
-    const variantSuffix = variant ? `:${variant}` : '';
-    const dedupMaterial = buildDedupMaterial(eventType, payload?.title, payload?.coalesceKey);
-    const dedupKey = `wm:notif:scan-dedup:${eventType}${variantSuffix}:${notifySimpleHash(dedupMaterial)}`;
-    const dedupResult = await upstashSetNx(dedupKey, '1', dedupTtl);
-    const dedupDecision = recordDedupOutcome(dedupResult, {
-      surface: 'ais-relay',
-      eventType,
-      severity,
-      fallbackKey: dedupKey,
-      fallbackTtlSeconds: dedupTtl,
-      emitTelemetry: recordNotificationDedupSetNxError,
-    });
-    // Returns true once the event is queued or was already queued; callers
-    // that keep their own edge state retry on false.
-    if (!dedupDecision.shouldPublish) {
-      if (!dedupDecision.isDuplicate) return false;
-      console.log(`[Notify] Dedup hit — ${eventType}: ${String(payload.title ?? '').slice(0, 60)}`);
-      return true;
-    }
-    const publishedAt = Date.now();
-    const fanout = API_FANOUT_EVENT_TYPES.has(eventType);
-    // Stable per-story / per-move id for API subscribers (occurrence-events.cjs).
-    // The relay ignores it; it rides along in the queue message unchanged.
-    if (fanout && payload && typeof payload === 'object' && !payload.eventId) {
-      const eventId = occurrenceEventIdFor(eventType, payload, publishedAt);
-      if (eventId) payload = { ...payload, eventId };
-    }
-    const msg = JSON.stringify({ eventType, payload, severity: dedupDecision.severity, ...(variant ? { variant } : {}), publishedAt });
-    const ok = await upstashLpush('wm:events:queue', msg);
-    if (ok) {
-      if (fanout) teeApiFanout(eventType, msg);
-      console.log(`[Notify] Queued ${dedupDecision.severity} event: ${eventType} — ${String(payload.title ?? '').slice(0, 60)}`);
-      return true;
-    } else {
-      // Rollback the dedup key so the next poll cycle can retry — avoids silent
-      // suppression for the full dedupTtl when a transient LPUSH fails.
-      console.warn(`[Notify] LPUSH failed for ${eventType} — rolling back dedup key`);
-      upstashDel(dedupKey).catch(() => {});
-      return false;
-    }
-  } catch (e) {
-    console.warn(`[Notify] publishNotificationEvent error (${eventType}):`, e?.message || e);
-    return false;
-  }
 }
 
 let upstreamSocket = null;
@@ -846,6 +502,7 @@ const requestRateBuckets = new Map();
 
  // key: route:ip -> { count, resetAt }
 const logThrottleState = new Map();
+const logThrottled = createThrottledLogger(logThrottleState);
 
  // key: event key -> timestamp
 
@@ -1170,20 +827,6 @@ async function orefFetchAlerts() {
         timestamp: new Date().toISOString(),
       });
       orefState._persistVersion++;
-
-      const orefTitle = alerts[0]?.title || 'Siren alert';
-      const orefLocations = alerts.flatMap(a => Array.isArray(a.data) ? a.data : []);
-      const orefShown = orefLocations.slice(0, 3);
-      const orefOverflow = orefLocations.length - orefShown.length;
-      const orefLocationSuffix = orefShown.length
-        ? ' — ' + orefShown.join(', ') + (orefOverflow > 0 ? ` +${orefOverflow} areas` : '')
-        : '';
-      publishNotificationEvent({
-        eventType: 'oref_siren',
-        payload: { title: orefTitle + orefLocationSuffix, source: source === 'tzeva-adom' ? 'Tzeva Adom / Pikud HaOref' : 'OREF Pikud HaOref', countryCode: 'IL' },
-        severity: 'critical',
-        variant: undefined,
-      }).catch(e => console.warn('[Notify] OREF publish error:', e?.message));
     }
 
     const cutoff = Date.now() - 24 * 60 * 60 * 1000;
@@ -1889,14 +1532,6 @@ function brotliSyncBuffer(body) {
   }
 }
 
-function logThrottled(level, key, ...args) {
-  const now = Date.now();
-  const last = logThrottleState.get(key) || 0;
-  if (now - last < RELAY_LOG_THROTTLE_MS) return;
-  logThrottleState.set(key, now);
-  console[level](...args);
-}
-
 const METRICS_WINDOW_SECONDS = Math.max(10, Number(process.env.RELAY_METRICS_WINDOW_SECONDS || 60));
 
 const relayMetricsBuckets = new Map();
@@ -1920,9 +1555,6 @@ const relayMetricsLifetime = {
   openskyFallback: 0,
   openskyTerminalFailure: 0,
   drops: 0,
-  notificationDedupSetNxErrors: 0,
-  notificationDedupSetNxFailOpen: 0,
-  notificationDedupSetNxFailClosed: 0,
   googleFlightsRequests: 0,
   googleFlightsServed: 0,
   googleFlightsSuccess: 0,
@@ -1978,9 +1610,6 @@ function createRelayMetricsBucket() {
     openskyFallback: 0,
     openskyTerminalFailure: 0,
     drops: 0,
-    notificationDedupSetNxErrors: 0,
-    notificationDedupSetNxFailOpen: 0,
-    notificationDedupSetNxFailClosed: 0,
     queueMax: 0,
     googleFlightsRequests: 0,
     googleFlightsServed: 0,
@@ -2120,12 +1749,6 @@ function sampleRelayQueueSize(queueSize) {
   const bucket = getRelayMetricsBucket();
   if (queueSize > bucket.queueMax) bucket.queueMax = queueSize;
   if (queueSize > relayMetricsQueueMaxLifetime) relayMetricsQueueMaxLifetime = queueSize;
-}
-
-function recordNotificationDedupSetNxError({ line, action }) {
-  incrementRelayMetric('notificationDedupSetNxErrors');
-  incrementRelayMetric(action === 'fail_open' ? 'notificationDedupSetNxFailOpen' : 'notificationDedupSetNxFailClosed');
-  console.warn(line);
 }
 
 // AIS aggregate state for snapshot API (server-side fanout)
@@ -4815,16 +4438,6 @@ function handleCryptoQuotesRequest(req, res) {
   });
 }
 
-// ── Proxy fetch helper ─────────────────────────────────────────────
-// Resolves { ok, status, body } and never rejects. Written for the retired YouTube live
-// detection; the relay's PROXY_URL callers (Yahoo chart, USNI and others) still use it.
-function fetchViaProxy(targetUrl, proxy) {
-  const { proxyFetch } = require('./_proxy-utils.cjs');
-  return proxyFetch(targetUrl, proxy, { headers: { 'User-Agent': CHROME_UA } })
-    .then(r => ({ ok: r.ok, status: r.status, body: r.buffer.toString('utf8') }))
-    .catch(() => ({ ok: false, status: 0, body: '' }));
-}
-
 // ─────────────────────────────────────────────────────────────
 // NOTAM proxy — ICAO API times out from Vercel edge, relay proxies
 // ─────────────────────────────────────────────────────────────
@@ -6243,9 +5856,6 @@ function getRelayRollingMetrics() {
     rollup.openskyFallback += bucket.openskyFallback;
     rollup.openskyTerminalFailure += bucket.openskyTerminalFailure;
     rollup.drops += bucket.drops;
-    rollup.notificationDedupSetNxErrors += bucket.notificationDedupSetNxErrors;
-    rollup.notificationDedupSetNxFailOpen += bucket.notificationDedupSetNxFailOpen;
-    rollup.notificationDedupSetNxFailClosed += bucket.notificationDedupSetNxFailClosed;
     rollup.googleFlightsRequests += bucket.googleFlightsRequests;
     rollup.googleFlightsServed += bucket.googleFlightsServed;
     rollup.googleFlightsSuccess += bucket.googleFlightsSuccess;
@@ -6372,11 +5982,6 @@ function getRelayRollingMetrics() {
       dropsPerSec: Number((rollup.drops / METRICS_WINDOW_SECONDS).toFixed(4)),
       upstreamPaused,
     },
-    notifications: {
-      dedupSetNxErrors: rollup.notificationDedupSetNxErrors,
-      dedupSetNxFailOpen: rollup.notificationDedupSetNxFailOpen,
-      dedupSetNxFailClosed: rollup.notificationDedupSetNxFailClosed,
-    },
     aviation: {
       coverage: aviationCoverage,
       minimumServedCoverage: AVIATION_MIN_SERVED_COVERAGE,
@@ -6456,9 +6061,6 @@ function getRelayRollingMetrics() {
       openskyFallback: relayMetricsLifetime.openskyFallback,
       openskyTerminalFailure: relayMetricsLifetime.openskyTerminalFailure,
       drops: relayMetricsLifetime.drops,
-      notificationDedupSetNxErrors: relayMetricsLifetime.notificationDedupSetNxErrors,
-      notificationDedupSetNxFailOpen: relayMetricsLifetime.notificationDedupSetNxFailOpen,
-      notificationDedupSetNxFailClosed: relayMetricsLifetime.notificationDedupSetNxFailClosed,
       queueMax: relayMetricsQueueMaxLifetime,
       googleFlightsRequests: relayMetricsLifetime.googleFlightsRequests,
       googleFlightsServed: relayMetricsLifetime.googleFlightsServed,

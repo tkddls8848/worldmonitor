@@ -265,10 +265,11 @@ describe('handler transit data strategy', () => {
 // ---------------------------------------------------------------------------
 describe('envelopeRead helper', () => {
   // Extract and eval the helper — it is pure aside from upstashGet, which we stub.
-  const helperSrc = relaySrc.match(/async function envelopeRead\([\s\S]*?\n\}/)?.[0];
+  const helpers = readFileSync(resolve(root, 'scripts/_personal-provider-helpers.cjs'), 'utf8');
+  const helperSrc = helpers.match(/async function envelopeRead\([\s\S]*?\n  \}/)?.[0];
 
-  it('is defined in personal-providers.cjs next to envelopeWrite', () => {
-    assert.ok(helperSrc, 'envelopeRead not found in personal-providers.cjs');
+  it('is defined next to envelopeWrite in the shared provider helpers', () => {
+    assert.ok(helperSrc, 'envelopeRead not found in the shared provider helpers');
   });
 
   function buildEnvelopeRead(stub) {
