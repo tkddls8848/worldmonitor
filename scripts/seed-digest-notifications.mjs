@@ -100,7 +100,6 @@ function compactDroppedEphemeralLiveTitle(title) {
 
 const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL ?? '';
 const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN ?? '';
-const ANALYST_RELAY_SECRET = process.env.RELAY_SHARED_SECRET ?? '';
 const DIGEST_LAST_RUN_KEY = 'digest:last-run';
 const DIGEST_LAST_RUN_META_KEY = 'seed-meta:digest:last-run';
 const DIGEST_LAST_RUN_TTL_SECONDS = 7 * 24 * 60 * 60;
@@ -143,105 +142,6 @@ const BRIEF_ONLY_COMPOSE_BUDGET_MS = (() => {
   return (Number.isFinite(raw) && raw > 0 ? raw : 8) * 60_000;
 })();
 
-// Phase 3c — analyst-backed whyMatters enrichment via an internal Vercel
-// edge endpoint. When the endpoint is reachable + returns a string, it
-// takes priority over the direct-Gemini path. On any failure the cron
-// falls through to its existing Gemini cache+LLM chain. There is no remote
-// default: the personal build calls the endpoint only when
-// BRIEF_WHY_MATTERS_ENDPOINT_URL names one, so RELAY_SHARED_SECRET is never
-// sent to the upstream operator's worldmonitor.app as a Bearer token.
-const BRIEF_WHY_MATTERS_ENDPOINT_URL = process.env.BRIEF_WHY_MATTERS_ENDPOINT_URL ?? '';
-
-/**
- * Lowercase + collapse whitespace to mirror extractor-side gate in
- * server/worldmonitor/news/v1/list-feed-digest.ts
- * (normalizeForDescriptionEquality). Duplicated (not imported) because
- * that module is .ts on a different loader path; a shared .mjs helper
- * would be a cleaner home if more surfaces adopt this check.
- */
-function normalizeForDescriptionEquality(s) {
-  return String(s ?? '').toLowerCase().replace(/\s+/g, ' ').trim();
-}
-
-/**
- * POST one story to the analyst whyMatters endpoint. Returns the
- * string on success, null on any failure (auth, non-200, parse error,
- * timeout, missing value). The cron's `generateWhyMatters` is
- * responsible for falling through to the direct-Gemini path on null.
- *
- * Ground-truth signal: logs `source` (cache|analyst|gemini) and
- * `producedBy` (analyst|gemini|null) at the call site so the cron's
- * log stream has a forensic trail of which path actually produced each
- * story's whyMatters — needed for shadow-diff review and for the
- * "stop writing v2" decision once analyst coverage is proven.
- * (See feedback_gate_on_ground_truth_not_configured_state.md.)
- */
-async function callAnalystWhyMatters(story) {
-  if (!ANALYST_RELAY_SECRET || !BRIEF_WHY_MATTERS_ENDPOINT_URL) return null;
-  // Forward a trimmed story payload so the endpoint only sees the
-  // fields it validates. `description` is NEW for prompt-v2 — when
-  // upstream has a real one (falls back to headline via
-  // shared/brief-filter.js:134), it gives the LLM a grounded sentence
-  // beyond the headline. Skip when it equals the headline (no signal).
-  const payload = {
-    headline: story.headline ?? '',
-    source: story.source ?? '',
-    threatLevel: story.threatLevel ?? '',
-    category: story.category ?? '',
-    country: story.country ?? '',
-  };
-  if (
-    typeof story.description === 'string' &&
-    story.description.length > 0 &&
-    // Normalize-equality (case + whitespace) mirrors the extractor-side gate
-    // in list-feed-digest.ts (normalizeForDescriptionEquality) so a feed
-    // whose description only differs from the headline by casing/spacing
-    // doesn't leak as "grounding" content here.
-    normalizeForDescriptionEquality(story.description) !==
-      normalizeForDescriptionEquality(story.headline ?? '')
-  ) {
-    payload.description = story.description;
-  }
-  try {
-    const resp = await fetch(BRIEF_WHY_MATTERS_ENDPOINT_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${ANALYST_RELAY_SECRET}`,
-        'Content-Type': 'application/json',
-        // Explicit UA — Node undici's default is short/empty enough to
-        // trip middleware.ts's "No user-agent or suspiciously short"
-        // 403 path. Defense-in-depth alongside the PUBLIC_API_PATHS
-        // allowlist. Distinct from ops curl / UptimeRobot so log grep
-        // disambiguates cron traffic from operator traffic.
-        'User-Agent': 'worldmonitor-digest-notifications/1.0',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({ story: payload }),
-      signal: AbortSignal.timeout(15_000),
-    });
-    if (!resp.ok) {
-      console.warn(`[digest] brief-why-matters endpoint HTTP ${resp.status}`);
-      return null;
-    }
-    const data = await resp.json();
-    if (!data || typeof data.whyMatters !== 'string') return null;
-    // Emit the ground-truth provenance at the call site. `source` tells
-    // us cache vs. live; `producedBy` tells us which LLM wrote the
-    // string (or the cached value's original producer on cache hits).
-    const src = typeof data.source === 'string' ? data.source : 'unknown';
-    const producedBy = typeof data.producedBy === 'string' ? data.producedBy : 'unknown';
-    console.log(
-      `[brief-llm] whyMatters source=${src} producedBy=${producedBy} hash=${data.hash ?? 'n/a'}`,
-    );
-    return data.whyMatters;
-  } catch (err) {
-    console.warn(
-      `[digest] brief-why-matters endpoint call failed: ${err instanceof Error ? err.message : String(err)}`,
-    );
-    return null;
-  }
-}
-
 // Personalised digest prose honours the user's AI routing policy
 // (docs/internal/ai-routing-policy.md). The policy lived in Convex; the
 // personal build has one owner who picks providers by the API keys they set,
@@ -253,7 +153,6 @@ const resolveAiRoutingPolicy = async () => ({ kind: 'default' });
 // inside composeAndStoreBriefForUser().
 const briefLlmDeps = {
   callLLM,
-  callAnalystWhyMatters,
   async cacheGet(key) {
     const raw = await upstashRest('GET', key);
     if (typeof raw !== 'string' || raw.length === 0) return null;
