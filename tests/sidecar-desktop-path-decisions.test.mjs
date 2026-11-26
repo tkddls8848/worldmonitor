@@ -1,5 +1,6 @@
 import { it } from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 const root = resolve(import.meta.dirname, '..');
@@ -33,7 +34,10 @@ it('every server route family has one local API entry', () => {
   const families = serverFamilies();
   assert.ok(families.length >= 36);
   assert.ok(families.some(f => f.key === 'v2/shipping'));
-  for (const f of families) assert.ok(f.bundled !== f.versioned, f.key);
+  for (const f of families) {
+    assert.ok(f.bundled !== f.versioned, f.key);
+    execFileSync('git', ['check-ignore', '-q', `${f.urlPrefix.slice(1)}[rpc].js`], { cwd: root });
+  }
 });
 it('versioned handlers are bundled without a cloud-only exception', () => {
   assert.ok(buildScript.includes("entries.push(path.join(versionDir, family.name, '[rpc].ts'))"));

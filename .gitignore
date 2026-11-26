@@ -97,6 +97,7 @@ api/[[][[].*.js
 
 # Compiled sidecar domain handler bundles (built by scripts/build-sidecar-handlers.mjs)
 api/*/v1/\[rpc\].js
+api/v[0-9]*/*/\[rpc\].js
 # Personal edge entries (PERSONAL_EDGE_ENTRIES in scripts/build-sidecar-handlers.mjs)
 /api/chat-analyst.js
 /api/latest-brief.js
