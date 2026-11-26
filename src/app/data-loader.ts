@@ -450,7 +450,6 @@ export class DataLoaderManager implements AppModule {
   private loadAllDataQueuedForceAll = false;
   private loadAllDataQueuedFullPass = false;
   private readonly viewportHydration = new ViewportHydrationLedger();
-  private xIntelAbortController: AbortController | null = null;
   // True once a live X fetch has rendered. Gates whether a later transport
   // failure may blank the panel (it may not) or must surface an error (it must,
   // when nothing good is on screen yet).
@@ -595,8 +594,6 @@ export class DataLoaderManager implements AppModule {
     this.globalTenderGeneration += 1;
     this.activeGlobalTenderScopedGeneration = null;
     this.applyTimeRangeFilterToNewsPanelsDebounced.cancel();
-    this.xIntelAbortController?.abort();
-    this.xIntelAbortController = null;
     this.orefDisposed = true;
     this.orefUnsubscribe?.();
     this.orefUnsubscribe = null;

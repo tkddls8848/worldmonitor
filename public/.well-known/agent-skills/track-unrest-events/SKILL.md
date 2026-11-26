@@ -98,7 +98,6 @@ Use this skill for aggregate situational awareness and source-attributed reporti
 
 - For armed-conflict battle events and fatality bands, use `track-conflict-events`.
 - For broad news coverage about a protest topic, use `fetch-news-digest` or `GET /api/intelligence/v1/search-gdelt-documents`.
-- For Telegram OSINT chatter, use `GET /api/intelligence/v1/list-telegram-feed`.
 - Via MCP, use the unrest/conflict intelligence tools on `https://worldmonitor.app/mcp`.
 
 ## References

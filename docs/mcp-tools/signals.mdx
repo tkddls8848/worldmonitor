@@ -179,38 +179,6 @@ curl -s https://worldmonitor.app/mcp \
 
 </CodeGroup>
 
-### `list_x_feed`
-
-Curated public news-account posts from monitored X accounts. Returns permalink plus derived facts only — never tweet bodies. Use this to see which accounts posted recently, not to redistribute post text.
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|---------:|-------------|
-| `limit` | number | no | Maximum posts to return; values are clamped to 1-200 and 50 is used when omitted. |
-| `topic` | string | no | Curated topic bucket to keep, such as breaking, conflict, geopolitics or cyber. Omit for every topic. |
-| `account` | string | no | Handle of one monitored account; a leading @ is removed. Omit for every account. |
-
-- **API endpoints:** `GET /api/intelligence/v1/list-x-feed`
-- **Access:** `subscription` — requires a Pro subscription. RPC tool: no `summary` argument (use `jmespath` to trim the response).
-- **Kind:** live RPC — proxies a fetch to the WorldMonitor API on each call. Edge-runtime timeout: **10.0s**.
-- **Content policy:** post text is R4. MCP/embed partners receive facts + permalink only.
-
-<CodeGroup>
-
-```bash curl
-curl -s https://worldmonitor.app/mcp \
-  -H "X-WorldMonitor-Key: $WM_KEY" \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "jsonrpc":"2.0","id":1,
-    "method":"tools/call",
-    "params":{"name":"list_x_feed","arguments":{"limit":20,"topic":"breaking"}}
-  }'
-```
-
-</CodeGroup>
-
 ### `get_temporal_anomalies`
 
 Temporal anomaly watch: current event counts vs day-of-week and seasonal baselines, scored by z-score severity. News velocity, satellite fire detections, and other tracked streams are compared against 90-day Welford baselines keyed by weekday and month. Each anomaly carries the observed count, expected baseline count, z-score, multiplier, and a severity band (medium ≥ 1.5σ, high ≥ 2σ, critical ≥ 3σ). An empty anomaly list with fresh data means activity is within normal bounds — that is itself signal.
