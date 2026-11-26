@@ -1,6 +1,6 @@
 'use strict';
 
-// Deterministic upstreams for ais-relay-ingestion.test.cjs. This file is only
+// Deterministic upstreams for personal-providers-ingestion.test.cjs. This file is only
 // loaded through NODE_OPTIONS by that test; production relay processes never
 // load it.
 const { EventEmitter } = require('node:events');

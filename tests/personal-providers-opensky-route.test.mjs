@@ -9,7 +9,7 @@
 // Reintroducing a cascade would be a cost regression that no panel would show.
 //
 // personal-providers.cjs is a non-exported monolith that executes on import (see its own note at
-// the top), so — as with tests/ais-relay-opensky-proxy-tls.test.mjs — the durable
+// the top), so — as with tests/personal-providers-opensky-proxy-tls.test.mjs — the durable
 // coverage is a source guard plus a behavioural test of the shared helper it overrides.
 
 import { test } from 'node:test';

@@ -39,7 +39,7 @@ async function stop(child) {
 // Spawns the relay with the test preload and resolves { child, port } once
 // test mode is ready. extraEnv layers on top of the shared baseline.
 function spawnRelay(extraEnv) {
-  const preload = path.join(__dirname, 'ais-relay-test-preload.cjs');
+  const preload = path.join(__dirname, 'personal-providers-test-preload.cjs');
   const relay = path.join(__dirname, '../tests/_lib/personal-providers-host.cjs');
   const child = spawn(process.execPath, [relay], {
     cwd: path.join(__dirname, '..'),

@@ -106,7 +106,7 @@ const DEPLOYABLE = /^(seed-|fetch-|process-|publish-|.*-relay|.*-worker)/;
  * Regenerate with: railway serviceInstance{startCommand} across all services (see issue #6141).
  */
 const NOT_A_RAILWAY_SERVICE = new Set([
-  'ais-relay-test-preload.cjs',            // test harness preload
+  'personal-providers-test-preload.cjs',            // test harness preload
   'fetch-country-boundary-overrides.mjs',  // one-shot data prep
   'fetch-mirta-bases.mjs',
   'fetch-osm-bases.mjs',

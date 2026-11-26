@@ -93,7 +93,7 @@ npm run lint:boundaries
 npm run test:related       # data tests the change can reach (POSIX shells)
 npm run test:data          # all node:test suites in tests/ (CI runs these on every push)
 npm run test:dom           # DOM suites in tests/dom/
-npm run test:api           # api/ handler and relay suites
+npm run test:api           # api/ handler and personal provider suites
 npm run test:e2e:full      # Playwright end-to-end tests (full variant)
 ```
 

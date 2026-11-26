@@ -1,4 +1,4 @@
-import { createRelayHandler } from './_relay.js';
+import { createRelayHandler } from './_personal-providers.js';
 
 export const config = { runtime: 'edge' };
 

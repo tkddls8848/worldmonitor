@@ -2874,7 +2874,7 @@ export const getClientRateLimitKey = () => 'test';
 export const checkScopedRateLimit = async () => ({ allowed: true, degraded: false });
 export const RATE_LIMIT_DEGRADED_HEADERS = { 'X-RateLimit-Mode': 'degraded', 'Retry-After': '5' };`);
     const imported = await importPatchedTsModule('server/worldmonitor/aviation/v1/track-aircraft.ts', {
-      './_shared': resolve(root, 'server/_shared/relay.ts'),
+      './_shared': resolve(root, 'server/_shared/personal-providers.ts'),
       '../../../_shared/constants': resolve(root, 'server/_shared/constants.ts'),
       '../../../_shared/redis': resolve(root, 'server/_shared/redis.ts'),
       '../../../_shared/hash': resolve(root, 'server/_shared/hash.ts'),
@@ -3277,7 +3277,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       './_bounds': resolve(root, 'server/worldmonitor/military/v1/_bounds.ts'),
       '../../../_shared/constants': resolve(root, 'server/_shared/constants.ts'),
       '../../../_shared/redis': resolve(root, 'server/_shared/redis.ts'),
-      '../../../_shared/relay': resolve(root, 'server/_shared/relay.ts'),
+      '../../../_shared/personal-providers': resolve(root, 'server/_shared/personal-providers.ts'),
       '../../../_shared/response-headers': resolve(root, 'server/_shared/response-headers.ts'),
       '../../../_shared/provider-redistribution': resolve(root, 'server/_shared/provider-redistribution.ts'),
     });

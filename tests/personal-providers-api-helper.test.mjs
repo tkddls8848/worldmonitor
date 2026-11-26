@@ -14,7 +14,7 @@ function restoreEnv() {
 process.env.LOCAL_API_ORIGIN = 'https://relay.example.com';
 process.env.LOCAL_API_TOKEN = 'test-secret';
 
-const { getRelayBaseUrl, getRelayHeaders, fetchWithTimeout, createRelayHandler } = await import('../api/_relay.js');
+const { getRelayBaseUrl, getRelayHeaders, fetchWithTimeout, createRelayHandler } = await import('../api/_personal-providers.js');
 
 function makeRequest(url, opts = {}) {
   return new Request(url, {

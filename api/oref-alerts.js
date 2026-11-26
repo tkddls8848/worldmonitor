@@ -1,4 +1,4 @@
-import { createRelayHandler } from './_relay.js';
+import { createRelayHandler } from './_personal-providers.js';
 import { getCorsHeaders, isDisallowedOrigin } from './_cors.js';
 import { jsonResponse } from './_json-response.js';
 

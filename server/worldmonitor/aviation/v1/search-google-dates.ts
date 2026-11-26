@@ -6,7 +6,7 @@ import type {
 import { ValidationError } from '../../../../src/generated/server/worldmonitor/aviation/v1/service_server';
 // @ts-expect-error — JS module, no declaration file
 import { sha256Hex } from '../../../../api/_crypto.js';
-import { getRelayBaseUrl, getRelayHeaders, relayFailureMessage } from '../../../_shared/relay';
+import { getRelayBaseUrl, getRelayHeaders, relayFailureMessage } from '../../../_shared/personal-providers';
 import { parseStringArray } from '../../../_shared/parse-string-array';
 import { normalizePassengerCount } from '../../../_shared/passenger-count';
 import { cachedFetchJsonWithMeta } from '../../../_shared/redis';

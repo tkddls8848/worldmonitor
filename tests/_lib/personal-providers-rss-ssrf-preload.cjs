@@ -1,4 +1,4 @@
-// Transport shim preloaded into a spawned relay by tests/ais-relay-rss-ssrf-e2e.test.mjs.
+// Transport shim preloaded into a spawned relay by tests/personal-providers-rss-ssrf-e2e.test.mjs.
 // The mode is read from a control file on every call so the test can flip it
 // between requests without restarting the relay:
 //   reroute -> connections to TARGET go to 127.0.0.1:LOCAL_PORT (no lookup runs)

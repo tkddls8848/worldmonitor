@@ -10,7 +10,7 @@ import type {
   SnapshotCandidateReport,
 } from '../../../../src/generated/server/worldmonitor/maritime/v1/service_server';
 
-import { getRelayBaseUrl, getRelayHeaders } from '../../../_shared/relay';
+import { getRelayBaseUrl, getRelayHeaders } from '../../../_shared/personal-providers';
 
 // ========================================================================
 // Helpers

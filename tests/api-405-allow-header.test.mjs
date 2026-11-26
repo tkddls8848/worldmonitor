@@ -12,7 +12,7 @@ import { describe, it } from 'node:test';
 process.env.UPSTASH_REDIS_REST_URL ||= 'https://example.upstash.io';
 process.env.UPSTASH_REDIS_REST_TOKEN ||= 'test-token';
 
-const { createRelayHandler } = await import('../api/_relay.js');
+const { createRelayHandler } = await import('../api/_personal-providers.js');
 const { default: rssProxy } = await import('../api/rss-proxy.js');
 
 const ORIGIN = 'https://worldmonitor.app';

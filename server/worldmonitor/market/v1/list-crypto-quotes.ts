@@ -35,7 +35,7 @@ import {
 } from './_shared';
 import { cachedFetchJson, logCacheReadError, readCachedJson } from '../../../_shared/redis';
 import { sha256Hex } from '../../../_shared/hash';
-import { getRelayBaseUrl, getRelayHeaders } from '../../../_shared/relay';
+import { getRelayBaseUrl, getRelayHeaders } from '../../../_shared/personal-providers';
 import { markNoCacheResponse, setResponseHeader } from '../../../_shared/response-headers';
 
 const SEED_CACHE_KEY = 'market:crypto:v1';

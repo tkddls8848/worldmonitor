@@ -14,7 +14,7 @@
  * out of the production source and eval them together, so the assertions run
  * against the shipped code, not a copy.
  *
- * Run: node --test scripts/ais-relay-ais-gaps.test.cjs
+ * Run: node --test scripts/personal-providers-ais-gaps.test.cjs
  */
 'use strict';
 

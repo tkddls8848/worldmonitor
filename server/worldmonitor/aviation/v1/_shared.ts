@@ -11,7 +11,7 @@ import {
   FAA_AIRPORTS,
 } from '../../../../src/config/airports';
 import { readCachedJson } from '../../../_shared/redis';
-export { getRelayBaseUrl, getRelayHeaders } from '../../../_shared/relay';
+export { getRelayBaseUrl, getRelayHeaders } from '../../../_shared/personal-providers';
 export { parseStringArray } from '../../../_shared/parse-string-array';
 
 

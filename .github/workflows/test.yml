@@ -620,7 +620,7 @@ jobs:
       - run: npm run typecheck:dom-tests
       - run: npm run test:dom
 
-  # The api/ handler suites and the relay ingestion suites (`npm run test:api`).
+  # The api/ handler suites and the personal provider suites (`npm run test:api`).
   # They are node:test files outside tests/, so neither unit-shards nor
   # dom-tests runs them.
   api-tests:

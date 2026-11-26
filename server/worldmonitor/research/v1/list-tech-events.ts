@@ -23,7 +23,7 @@ import filterParamContracts from '../../../../shared/openapi-filter-param-contra
 import { CHROME_UA } from '../../../_shared/constants';
 import { resolveTechEventsPaging, type TechEventsPagingPresence } from './_tech-events-paging';
 import { cachedFetchJson } from '../../../_shared/redis';
-import { getRelayBaseUrl, getRelayHeaders } from '../../../_shared/relay';
+import { getRelayBaseUrl, getRelayHeaders } from '../../../_shared/personal-providers';
 
 const REDIS_CACHE_KEY = 'research:tech-events:v1';
 const REDIS_CACHE_TTL = 21600; // 6 hr — weekly event data

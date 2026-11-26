@@ -1,4 +1,4 @@
-// Edge function copy — canonical version at server/_shared/relay.ts
+// Edge function copy — canonical version at server/_shared/personal-providers.ts
 import { getCorsHeaders, getPublicCorsHeaders, isDisallowedOrigin } from './_cors.js';
 import { jsonResponse } from './_json-response.js';
 
@@ -23,7 +23,7 @@ export async function fetchWithTimeout(url, options, timeoutMs = 15000) {
 
 /** Build the final relay response — wraps non-JSON errors in a JSON envelope
  *  so the client can always parse the body (guards against Cloudflare HTML 502s).
- *  Exported so that standalone handlers (e.g. telegram-feed.js) can reuse it. */
+ *  Used by the personal provider handler. */
 export function buildRelayResponse(response, body, headers) {
   const ct = (response.headers.get('content-type') || '').toLowerCase();
   // Treat any JSON-compatible type as JSON: application/json, application/problem+json,

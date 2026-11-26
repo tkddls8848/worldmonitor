@@ -140,7 +140,7 @@ Entries are bundled per file, a constraint enforced by `tests/edge-functions.tes
 | File | Purpose |
 |------|---------|
 | `_cors.js` | Origin allowlist |
-| `_relay.js` | Internal calls to the adapters inside the personal server; no external relay configuration |
+| `_personal-providers.js` | Internal calls to the adapters inside the personal server; no external relay configuration |
 | `_upstash-json.js` | Store reads for legacy entries |
 | `_json-response.js` | JSON response helper |
 
@@ -224,18 +224,9 @@ CI enforces generated code freshness via `.github/workflows/proto-check.yml`: ru
 
 ### Collectors
 
-`npm run collect:personal` (`scripts/personal-collect.mjs`) runs the collectors one at a time against the embedded store, once or every N minutes with `-- --watch N`. `DEFAULT_COLLECTORS` lists every bundle and the standalone collectors it runs; a collector whose API key is missing fails on its own and the pass continues. Bundles skip members that are still fresh. Standalone collectors in `STANDALONE_INTERVAL_MIN` skip a pass while their last success (kept in `.personal/collect-state.json`) is younger than their interval. `seed-pizzint.mjs` runs the relay's PizzINT producer block against the store, since the relay itself does not run in personal mode.
+`npm run collect:personal` (`scripts/personal-collect.mjs`) runs the collectors one at a time against the embedded store, once or every N minutes with `-- --watch N`. `DEFAULT_COLLECTORS` lists every bundle and the standalone collectors it runs; a collector whose API key is missing fails on its own and the pass continues. Bundles skip members that are still fresh. Standalone collectors in `STANDALONE_INTERVAL_MIN` skip a pass while their last success (kept in `.personal/collect-state.json`) is younger than their interval. `seed-pizzint.mjs` runs the collector's PizzINT producer block against the store, since the relay itself does not run in personal mode.
 
-The relay service (`scripts/personal-providers.cjs`) carries continuous seed loops:
-
-- Market data (stocks, commodities, crypto, stablecoins, sectors, ETF flows, gulf quotes)
-- Aviation (international delays)
-- Positive events
-- GPSJAM (GPS interference)
-- Risk scores (CII)
-- UCDP events
-
-The `bundle-relay-backup` and `bundle-market-backup` collectors cover these datasets when the relay is not running.
+The personal server runs the AIS and OREF live loops in-process. The collector runs batch producers through standalone seed scripts and the backup bundles.
 
 The market backup bundle also persists 14 days of timestamped hourly Yahoo closes for the news-to-market correlation panel. This series is an on-demand bootstrap key, so it does not increase the default hydration payload.
 
@@ -326,9 +317,9 @@ The five-factor scorecard adds an atomic two-key read pattern: `scorecard:five-f
 
 `tests/dom/*.test.mts` run under vitest with happy-dom (`npm run test:dom`).
 
-### API and relay tests
+### API and personal provider tests
 
-`api/*.test.mjs` and the relay suites in `scripts/*.test.cjs` (`npm run test:api`) test CORS handling, bootstrap, health, feed proxies and the relay ingestion paths.
+`api/*.test.mjs` and the personal provider suites in `scripts/*.test.cjs` (`npm run test:api`) test CORS handling, bootstrap, health, feed proxies and the personal provider ingestion paths.
 
 ### End-to-End
 
@@ -361,7 +352,7 @@ Runs before every `git push`:
 |----------|---------|--------|
 | `typecheck.yml` | PR, push to main | `tsc --noEmit` (TypeScript 7) for src, API, contract-test and e2e tsconfigs |
 | `lint-code.yml` | PR, push to main | `biome` job: unicode safety, Biome lint, import boundaries, sebuf API-contract enforcement, bootstrap/live-video/TUI catalog sync checks, `lint:outbound-deadlines` (fails any `fetch()` call with no signal), safe-local-storage and overlay-reload policies, and the VITE secret guard. `markdown` job: markdownlint-cli2 on every push to main and, on PRs, only when markdown, its config, or package.json changes |
-| `test.yml` | PR, push to main | Always-on `docs-stats` guardrails (including docs-only changes; it runs `npm run generate:check`, which fails when any committed derived file in `scripts/generate-derived.mjs` is stale). `test:data` runs on five `unit-shards` balanced by measured per-file durations: the `changes` job looks up the newest `data-test-durations-v1-*` cache entry once, every shard restores that exact entry (falling back together to the committed `scripts/shared/data-test-durations.json`), and one shard per run blends its own timings into a new entry. `unit-built-output` runs the suites that read built output. Shards check out full history blobless and restore the `scripts/` and `blog-site/` installed trees from one cache entry. `dom-tests` typechecks and runs `tests/dom/`. `api-tests` runs `npm run test:api` (the `api/` handler and relay suites). `variant-smoke` shards and `variant-smoke-full` run the Playwright ci-smoke specs; `consumer-prices` and `resilience-validation-smoke` are conditional gates |
+| `test.yml` | PR, push to main | Always-on `docs-stats` guardrails (including docs-only changes; it runs `npm run generate:check`, which fails when any committed derived file in `scripts/generate-derived.mjs` is stale). `test:data` runs on five `unit-shards` balanced by measured per-file durations: the `changes` job looks up the newest `data-test-durations-v1-*` cache entry once, every shard restores that exact entry (falling back together to the committed `scripts/shared/data-test-durations.json`), and one shard per run blends its own timings into a new entry. `unit-built-output` runs the suites that read built output. Shards check out full history blobless and restore the `scripts/` and `blog-site/` installed trees from one cache entry. `dom-tests` typechecks and runs `tests/dom/`. `api-tests` runs `npm run test:api` (the `api/` handler and personal provider suites). `variant-smoke` shards and `variant-smoke-full` run the Playwright ci-smoke specs; `consumer-prices` and `resilience-validation-smoke` are conditional gates |
 | `proto-check.yml` | PR (proto changes), push to main | Generated code matches committed output at the exact head (`internal-generate`; on internal branches `internal-auto-generate` commits any drift) and at the merge result (`internal-merge-freshness`). The aggregate `proto-freshness` ignores a superseded head's merge verdict. `CODEGEN_INPUT_PATHS` must stay aligned with `PROTO_INPUTS` in `.husky/pre-push` |
 
 The personal fork builds no container images and deploys nothing from CI.

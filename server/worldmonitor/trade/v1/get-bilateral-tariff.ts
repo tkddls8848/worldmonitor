@@ -40,7 +40,7 @@ import type {
 } from '../../../../src/generated/server/worldmonitor/trade/v1/service_server';
 import { cachedFetchJson } from '../../../_shared/redis';
 import { CHROME_UA } from '../../../_shared/constants';
-import { getRelayBaseUrl, getRelayHeaders } from '../../../_shared/relay';
+import { getRelayBaseUrl, getRelayHeaders } from '../../../_shared/personal-providers';
 
 export const WITS_SDMX_BASE = 'https://wits.worldbank.org/API/V1/SDMX/V21/datasource/TRN';
 export const WITS_META_BASE = 'https://wits.worldbank.org/API/V1/wits/datasource/trn';

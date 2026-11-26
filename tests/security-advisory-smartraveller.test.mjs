@@ -6,7 +6,7 @@
 // or `503`), so `byCountry` carried US levels only. Three defects were stacked:
 //   1. Transport: Smartraveller's Akamai edge never answers a request without an
 //      Accept-Encoding header, and the relay sent none (covered in
-//      tests/ais-relay-rss-ssrf-e2e.test.mjs).
+//      tests/personal-providers-rss-ssrf-e2e.test.mjs).
 //   2. Dates: every item's pubDate ends in AEST or AEDT, which Date cannot
 //      parse, and the RangeError from toISOString() dropped the whole feed.
 //   3. Levels: the feed numbers advice on a five-point scale where 1/5 is "No

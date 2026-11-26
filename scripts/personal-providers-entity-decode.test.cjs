@@ -6,7 +6,7 @@
  * Instead we lift the real function body out of the production source and eval
  * it, so the assertions run against the shipped code, not a copy.
  *
- * Run: node --test scripts/ais-relay-entity-decode.test.cjs
+ * Run: node --test scripts/personal-providers-entity-decode.test.cjs
  */
 'use strict';
 

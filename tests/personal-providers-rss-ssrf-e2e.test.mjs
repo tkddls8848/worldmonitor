@@ -3,7 +3,7 @@
 // negative cache, a mixed public/private answer set, the body cap, every
 // redirect hop shape, and the request headers an edge requires before it
 // answers. The relay is spawned with a transport shim
-// (tests/_lib/ais-relay-rss-ssrf-preload.cjs) so no real DNS or network is used.
+// (tests/_lib/personal-providers-rss-ssrf-preload.cjs) so no real DNS or network is used.
 
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 import zlib from 'node:zlib';
 
 const relayScript = fileURLToPath(new URL('./_lib/personal-providers-host.cjs', import.meta.url));
-const preload = fileURLToPath(new URL('./_lib/ais-relay-rss-ssrf-preload.cjs', import.meta.url));
+const preload = fileURLToPath(new URL('./_lib/personal-providers-rss-ssrf-preload.cjs', import.meta.url));
 const TARGET = 'feeds.bbci.co.uk';
 
 async function listen(server) {

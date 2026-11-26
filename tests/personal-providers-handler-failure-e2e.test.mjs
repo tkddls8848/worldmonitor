@@ -4,7 +4,7 @@
 // escaped (the router's own awaits, or a handler's catch block) became an
 // unhandled rejection and Node 24 exited the relay, taking AIS, Telegram and
 // every other route down with it. Faults are injected by
-// tests/_lib/ais-relay-handler-fault-preload.cjs, with no real network.
+// tests/_lib/personal-providers-handler-fault-preload.cjs, with no real network.
 
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 
 const relayScript = fileURLToPath(new URL('./_lib/personal-providers-host.cjs', import.meta.url));
-const preload = fileURLToPath(new URL('./_lib/ais-relay-handler-fault-preload.cjs', import.meta.url));
+const preload = fileURLToPath(new URL('./_lib/personal-providers-handler-fault-preload.cjs', import.meta.url));
 const RELAY_SECRET = 'relay-secret';
 
 function request(port, pathname) {

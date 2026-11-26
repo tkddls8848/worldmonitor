@@ -1,7 +1,7 @@
 // Drives the real relay process: /notam must forward only a list of ICAO
 // location codes. A `locations` value carrying `&`, `#` or another parameter
 // would otherwise be pasted into the ICAO query string, after the API key.
-// The ICAO request is answered by tests/_lib/ais-relay-notam-preload.cjs.
+// The ICAO request is answered by tests/_lib/personal-providers-notam-preload.cjs.
 
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -11,7 +11,7 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 const relayScript = fileURLToPath(new URL('./_lib/personal-providers-host.cjs', import.meta.url));
-const preload = fileURLToPath(new URL('./_lib/ais-relay-notam-preload.cjs', import.meta.url));
+const preload = fileURLToPath(new URL('./_lib/personal-providers-notam-preload.cjs', import.meta.url));
 const SECRET = 'relay-secret';
 
 async function listen(server) {

@@ -1,5 +1,5 @@
 // Fault injection preloaded into a spawned relay by
-// tests/ais-relay-handler-failure-e2e.test.mjs. RELAY_TEST_FAULT is a
+// tests/personal-providers-handler-failure-e2e.test.mjs. RELAY_TEST_FAULT is a
 // comma-separated list:
 //   ucdp   -> the UCDP API answers page 0 with two pages, and the page 1 fetch
 //             fails with a non-Error value, so the /ucdp-events handler's own

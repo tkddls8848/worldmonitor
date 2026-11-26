@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { once } from 'node:events';
 import { test } from 'node:test';
-import { fetchWithTimeout } from '../api/_relay.js';
+import { fetchWithTimeout } from '../api/_personal-providers.js';
 import { run } from '../cli/src/run.mjs';
 
 async function stalledBodyServer(t) {

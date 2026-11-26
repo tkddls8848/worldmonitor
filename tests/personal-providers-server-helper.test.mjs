@@ -1,6 +1,6 @@
-import { getRelayBaseUrl, getRelayHeaders } from '../server/_shared/relay.ts';
+import { getRelayBaseUrl, getRelayHeaders } from '../server/_shared/personal-providers.ts';
 /**
- * Tests for server/_shared/relay.ts helper functions.
+ * Tests for server/_shared/personal-providers.ts helper functions.
  * Uses dynamic import with environment variable stubbing.
  */
 
@@ -54,13 +54,13 @@ describe('personal adapter helpers', () => {
 
 describe('relay.ts — consumer import verification', () => {
   const consumers = [
-    { file: 'server/worldmonitor/aviation/v1/_shared.ts', importPath: '../../../_shared/relay' },
-    { file: 'server/worldmonitor/intelligence/v1/_relay.ts', importPath: '../../../_shared/relay' },
-    { file: 'server/worldmonitor/research/v1/list-tech-events.ts', importPath: '../../../_shared/relay' },
-    { file: 'server/worldmonitor/maritime/v1/get-vessel-snapshot.ts', importPath: '../../../_shared/relay' },
-    { file: 'server/worldmonitor/market/v1/_shared.ts', importPath: '../../../_shared/relay' },
-    { file: 'server/worldmonitor/news/v1/list-feed-digest.ts', importPath: '../../../_shared/relay' },
-    { file: 'server/worldmonitor/military/v1/list-military-flights.ts', importPath: '../../../_shared/relay' },
+    { file: 'server/worldmonitor/aviation/v1/_shared.ts', importPath: '../../../_shared/personal-providers' },
+    { file: 'server/worldmonitor/intelligence/v1/_relay.ts', importPath: '../../../_shared/personal-providers' },
+    { file: 'server/worldmonitor/research/v1/list-tech-events.ts', importPath: '../../../_shared/personal-providers' },
+    { file: 'server/worldmonitor/maritime/v1/get-vessel-snapshot.ts', importPath: '../../../_shared/personal-providers' },
+    { file: 'server/worldmonitor/market/v1/_shared.ts', importPath: '../../../_shared/personal-providers' },
+    { file: 'server/worldmonitor/news/v1/list-feed-digest.ts', importPath: '../../../_shared/personal-providers' },
+    { file: 'server/worldmonitor/military/v1/list-military-flights.ts', importPath: '../../../_shared/personal-providers' },
   ];
 
   for (const { file, importPath } of consumers) {
@@ -73,7 +73,7 @@ describe('relay.ts — consumer import verification', () => {
     });
   }
 
-  it('no local getRelayBaseUrl/getRelayHeaders/getRelayRequestHeaders definitions in server/ (except _shared/relay.ts)', () => {
+  it('no local getRelayBaseUrl/getRelayHeaders/getRelayRequestHeaders definitions in server/ (except _shared/personal-providers.ts)', () => {
     const dupeFiles = [
       'server/worldmonitor/aviation/v1/_shared.ts',
       'server/worldmonitor/intelligence/v1/_relay.ts',
@@ -112,11 +112,11 @@ describe('relay.ts — consumer import verification', () => {
     );
   });
 
-  it('api/_relay.js has canonical version comment', () => {
-    const src = readFileSync(resolve('api/_relay.js'), 'utf-8');
+  it('api/_personal-providers.js has canonical version comment', () => {
+    const src = readFileSync(resolve('api/_personal-providers.js'), 'utf-8');
     assert.ok(
-      src.includes('canonical version at server/_shared/relay.ts'),
-      'api/_relay.js must have comment pointing to canonical server-side implementation',
+      src.includes('canonical version at server/_shared/personal-providers.ts'),
+      'api/_personal-providers.js must have comment pointing to canonical server-side implementation',
     );
   });
 });

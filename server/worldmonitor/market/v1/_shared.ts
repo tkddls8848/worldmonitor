@@ -3,7 +3,7 @@
  */
 import { normalizeStockSymbol } from '../../../../shared/stock-symbol';
 import { CHROME_UA } from '../../../_shared/constants';
-import { getRelayBaseUrl, getRelayHeaders } from '../../../_shared/relay';
+import { getRelayBaseUrl, getRelayHeaders } from '../../../_shared/personal-providers';
 export { getRelayBaseUrl, getRelayHeaders };
 import cryptoConfig from '../../../../shared/crypto.json';
 import stablecoinConfig from '../../../../shared/stablecoins.json';

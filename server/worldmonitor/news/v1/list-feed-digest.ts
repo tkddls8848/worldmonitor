@@ -126,7 +126,7 @@ import {
   STORY_TTL,
   DIGEST_ACCUMULATOR_TTL,
 } from '../../../_shared/cache-keys';
-import { getRelayBaseUrl, getRelayHeaders } from '../../../_shared/relay';
+import { getRelayBaseUrl, getRelayHeaders } from '../../../_shared/personal-providers';
 import { isOwnApiFeed, ownApiFeedRequest } from '../../../_shared/own-api-feed';
 import diplomacyKeywordsData from '../../../../shared/diplomacy-keywords.json';
 import { normalizeFeedDateZone } from '../../../../shared/feed-date-zone.js';

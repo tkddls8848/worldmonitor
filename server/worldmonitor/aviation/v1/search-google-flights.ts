@@ -8,7 +8,7 @@ import { IATA_RE } from './_shared';
 import { clientSearchError } from './_search-error';
 // @ts-expect-error — JS module, no declaration file
 import { sha256Hex } from '../../../../api/_crypto.js';
-import { getRelayBaseUrl, getRelayHeaders, relayFailureMessage } from '../../../_shared/relay';
+import { getRelayBaseUrl, getRelayHeaders, relayFailureMessage } from '../../../_shared/personal-providers';
 import { parseStringArray } from '../../../_shared/parse-string-array';
 import { normalizePassengerCount } from '../../../_shared/passenger-count';
 import { cachedFetchJsonWithMeta } from '../../../_shared/redis';

@@ -55,7 +55,7 @@ Test path, command, and owning CI job. Read this instead of `.github/workflows/t
 |---|---|---|
 | `tests/*.test.mjs`, `tests/*.test.mts`, `cli/test/`, `api/security/report.test.mjs` | `npm run test:related` locally; `npm run test:data` is the full suite | `unit-shards` |
 | `tests/dom/` | `npm run test:dom` | `dom-tests` |
-| `api/` node suites except `api/security/report.test.mjs`, and the relay suites in `scripts/*.test.cjs` | `npm run test:api` | `api-tests` |
+| `api/` node suites except `api/security/report.test.mjs`, and the personal provider suites in `scripts/*.test.cjs` | `npm run test:api` | `api-tests` |
 
 Find a suite by subject with `ls tests/ | grep <subject>` before searching the tree.
 

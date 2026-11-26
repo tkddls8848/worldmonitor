@@ -1,5 +1,5 @@
 import { getCorsHeaders, isDisallowedOrigin } from './_cors.js';
-import { getRelayBaseUrl, getRelayHeaders } from './_relay.js';
+import { getRelayBaseUrl, getRelayHeaders } from './_personal-providers.js';
 import { isAllowedDomain, hostMatchForms } from './_rss-allowed-domain-match.js';
 import { RSS_BROWSER_UA, rssFetchHeadersForHost } from './_rss-fetch-headers.js';
 import { jsonResponse } from './_json-response.js';

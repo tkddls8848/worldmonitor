@@ -1,4 +1,4 @@
-// Preloaded into a spawned relay by tests/ais-relay-notam-locations-e2e.test.mjs.
+// Preloaded into a spawned relay by tests/personal-providers-notam-locations-e2e.test.mjs.
 // Answers the ICAO NOTAM request locally and logs the exact upstream query, so
 // the test can see what the relay sent. No real network is used.
 'use strict';
