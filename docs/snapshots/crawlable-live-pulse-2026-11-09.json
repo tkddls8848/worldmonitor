@@ -3,7 +3,6 @@
   "capturedAt": "2026-11-09",
   "capturedAtMs": 1794199571306,
   "apiBase": "https://www.worldmonitor.app",
-  "resilienceSnapshotPath": "docs/snapshots/resilience-ranking-2026-11-01.json",
   "countries": {
     "AD": {
       "partial": true,

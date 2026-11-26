@@ -69,7 +69,6 @@ World Monitor's API is organized into domain-specific services:
 | **Prediction** | [Polymarket](https://polymarket.com/) data, forecast probabilities |
 | **Radiation** | Normalized environmental radiation readings |
 | **Research** | Academic papers, trending repos, tech news |
-| **Resilience** | Country Resilience Index (CRI) scores and rankings |
 | **Sanctions** | Sanctions lists and designations |
 | **Scenario** | Scenario engine: jobs, status, and template catalog |
 | **Seismology** | [USGS](https://earthquake.usgs.gov/) earthquake monitoring |

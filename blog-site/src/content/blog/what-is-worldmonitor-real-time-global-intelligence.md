@@ -49,8 +49,6 @@ These counts are generated from the repository rather than estimated in editoria
 
 The **Country Instability Index (CII)** is a high-frequency 0–100 score for the Tier-1 country registry. It blends a curated editorial baseline with live event pressure from unrest, conflict, security, and information signals, and publishes a signed 24-hour movement delta. It is a triage signal, not a probability or a substitute for source review.
 
-The **Country Resilience Index (CRI)** measures a different question: how well a country can absorb and recover from shocks. It covers 71 indicators across 21 active dimensions and six weighted domains for the public rankable universe, with coverage and imputation provenance exposed alongside the score. Read the [CII methodology](https://www.worldmonitor.app/docs/country-instability-index) and [CRI methodology](https://www.worldmonitor.app/docs/methodology/country-resilience-index) before using either index in a decision workflow.
-
 ## Who Uses World Monitor?
 
 World Monitor is designed for people who need cross-domain context but should not have to assemble it from dozens of tabs:

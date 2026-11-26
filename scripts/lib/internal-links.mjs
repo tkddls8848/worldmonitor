@@ -29,7 +29,7 @@ export const RUBRIC = {
     + 'option is a phrase a reader would expect to lead to the target.',
   lessons: [
     "A phrase with a verb in it ('X turns Y', 'enqueues a job', 'partners receive derived facts') is a sentence fragment, never an anchor.",
-    "A name that belongs to a different page is a wrong anchor even when the words overlap: 'Country Instability Index' does not lead to the Country Resilience Index.",
+    "Use the destination page's name when two titles share similar wording.",
     "A phrase that stops before its noun phrase ends ('premium stock' in 'premium stock analysis', 'military flight' in 'military flight tracking') is a fragment: pick the complete phrase when it is offered.",
     'An API operation is the right target when the sentence describes the data that operation returns, not when it only mentions the API in general.',
   ],
