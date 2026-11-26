@@ -6,7 +6,7 @@ import { matchesCountryText } from '../server/worldmonitor/resilience/v1/_dimens
 // Issue #3744: AMBIGUOUS_ALIASES previously skipped every alias for
 // countries whose only name collides with another token (Niger,
 // Georgia, Guinea, Samoa, Sudan, Dominica), permanently zeroing their
-// Reddit-velocity signal in informationCognitive. These tests assert
+// country matching in the live stress scorers. These tests assert
 // the disambiguated replacement matches the country only when context
 // rules out the collision.
 

@@ -202,7 +202,7 @@ test('RPC serves a well-formed IMF dataset exactly as seeded, matching public bo
 test('public payload helpers stay equivalent across Edge and worker packaging', () => {
   const edge = readFileSync(new URL('../api/_bootstrap-public-payload.js', import.meta.url), 'utf8');
   const worker = readFileSync(new URL('../scripts/_bootstrap-public-payload.mjs', import.meta.url), 'utf8');
-  assert.equal(worker.replaceAll('-dashboard.mjs', '-dashboard.js').replace('./_social-velocity.mjs', './_social-velocity.js'), edge);
+  assert.equal(worker.replaceAll('-dashboard.mjs', '-dashboard.js'), edge);
 });
 
 test('fast and slow selectors stay within their tier; missing values retain their names', async t => {
@@ -214,7 +214,6 @@ test('fast and slow selectors stay within their tier; missing values retain thei
     const body = await response.json();
     assert.deepEqual(body.data, {});
     assert.ok(body.missing.length > 0);
-    assert.ok(!body.missing.includes('wsbTickers'));
     assert.ok(!body.missing.includes('pipelinesGas'));
     assert.ok(reads.every(key => !key.startsWith('preview:')));
   }

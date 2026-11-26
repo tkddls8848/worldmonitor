@@ -498,7 +498,6 @@
     "etfFlows": "Mtiririko wa fedha wa Bitcoin",
     "stablecoins": "Stablecoins",
     "deduction": "Kata Hali",
-    "wsbTickerScanner": "Skena ya WallStreetBets",
     "ucdpEvents": "Matukio ya Migogoro ya Silaha",
     "giving": "Utoaji wa Kimataifa",
     "displacement": "Wakimbizi na uhama",
@@ -2579,12 +2578,6 @@
     },
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Sehemu ya kuzalisha umeme kutoka kwa nishati inayoweza kubalika kwa eneo na mwaka, pamoja na uwezo uliowekwa wa Wamarekani kwa jua, upepo, na kola (MW). Vyanzo: World Bank (EG.ELC.RNEW.ZS) na US Energy Information Administration."
-    },
-    "socialVelocity": {
-      "infoTooltip": "<strong>Kasi ya Jamii</strong> Mada zinazovuma na maudhui ya virusi yenye umuhimu wa kijiografia na kisiasa. Hupima kasi ya mitandao ya kijamii: jinsi hadithi inavyoenea kwa kasi ikilinganishwa na msingi. Husaidia kueleza masimulizi yanayoibuka kabla ya kugusa habari kuu."
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>WallStreetBets Ticker Scanner</strong> Kutaja tiketi halisi kwa wakati kutoka r/wallstreetbets, r/stocks, na r/investing. Kiwango kwa utambuzi wa kutaja na ushirikiano. Kasi inapima jinsi tiketi inavyozezesha kasi haraka katika machapisho."
     },
     "conservationWins": {
       "infoTooltip": "<strong>Uhifadhi Washinda</strong> Habari chanya za uhifadhi: ongezeko la idadi ya spishi, hatua muhimu za kurejesha makazi, na juhudi za kutoweka. Imetolewa kutoka kwa IUCN, WWF, na machapisho ya utafiti wa uhifadhi."

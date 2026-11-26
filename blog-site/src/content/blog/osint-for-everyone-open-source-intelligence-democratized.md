@@ -109,7 +109,7 @@ When a region's escalation score spikes, it surfaces in the Strategic Risk panel
 
 ## Sharing Intelligence
 
-Found something significant? World Monitor's story sharing lets you export intelligence briefs to Twitter/X, LinkedIn, WhatsApp, Telegram, and Reddit, complete with auto-generated Open Graph images for social previews.
+Found something significant? World Monitor's story sharing lets you export intelligence briefs to Twitter/X, LinkedIn, WhatsApp, and Telegram, complete with auto-generated Open Graph images for social previews.
 
 You can also share map states via URL: the map position, active layers, time range, and selected data points are all encoded in a shareable link. Send a colleague a URL and they see exactly what you see.
 

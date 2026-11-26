@@ -8690,96 +8690,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Error'
-    /api/intelligence/v1/list-wsb-tickers:
-        get:
-            tags:
-                - IntelligenceService
-            summary: ListWsbTickers
-            description: ListWsbTickers ranks the top 50 tickers mentioned on r/wallstreetbets, r/stocks, and r/investing by velocity. The response uses the fields defined by this RPC's protobuf response message.
-            operationId: ListWsbTickers
-            parameters:
-                - name: jmespath
-                  in: query
-                  description: |-
-                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
-                  required: false
-                  example: "keys(@)"
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: Successful response
-                    content:
-                        application/json:
-                            example:
-                                "tickers":
-                                    - "mentionCount": 1
-                                      "subreddits":
-                                          - "example"
-                                      "symbol": "AAPL"
-                                      "totalScore": 42
-                                      "velocityScore": 42.5
-                            schema:
-                                $ref: '#/components/schemas/worldmonitor_intelligence_v1_ListWsbTickersResponse'
-                "400":
-                    description: Validation error
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/ValidationError'
-                                    - $ref: '#/components/schemas/JmespathProjectionError'
-                default:
-                    description: Error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Error'
-    /api/intelligence/v1/get-social-velocity:
-        get:
-            tags:
-                - IntelligenceService
-            summary: GetSocialVelocity
-            description: GetSocialVelocity returns hot posts from r/worldnews and r/geopolitics ranked by a velocity score of upvotes, ratio, and recency, refreshed every 3 hours.
-            operationId: GetSocialVelocity
-            parameters:
-                - name: jmespath
-                  in: query
-                  description: |-
-                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
-                  required: false
-                  example: "keys(@)"
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: Successful response
-                    content:
-                        application/json:
-                            example:
-                                "fetchedAt": 1717200000000
-                                "posts":
-                                    - "createdAt": 1717200000000
-                                      "id": "example-id"
-                                      "numComments": 1
-                                      "score": 42
-                                      "subreddit": "example"
-                            schema:
-                                $ref: '#/components/schemas/worldmonitor_intelligence_v1_GetSocialVelocityResponse'
-                "400":
-                    description: Validation error
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/ValidationError'
-                                    - $ref: '#/components/schemas/JmespathProjectionError'
-                default:
-                    description: Error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Error'
     /api/intelligence/v1/get-country-energy-profile:
         get:
             tags:
@@ -31602,90 +31512,6 @@ components:
                     type: string
                 logic:
                     type: string
-        worldmonitor_intelligence_v1_ListWsbTickersRequest:
-            type: object
-            description: Current WSB snapshot.
-        worldmonitor_intelligence_v1_ListWsbTickersResponse:
-            type: object
-            properties:
-                tickers:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/worldmonitor_intelligence_v1_WsbTicker'
-            description: Up to 50 ranked tickers.
-        worldmonitor_intelligence_v1_WsbTicker:
-            type: object
-            properties:
-                symbol:
-                    type: string
-                    description: Market symbol.
-                mentionCount:
-                    type: integer
-                    format: int32
-                    description: Total mentions.
-                totalScore:
-                    type: integer
-                    format: int32
-                    description: Sum of source post scores.
-                subreddits:
-                    type: array
-                    items:
-                        type: string
-                        description: Source subreddits.
-                velocityScore:
-                    type: number
-                    format: double
-                    description: Relative mention velocity score.
-            description: Mentions by ticker.
-        worldmonitor_intelligence_v1_GetSocialVelocityRequest:
-            type: object
-        worldmonitor_intelligence_v1_GetSocialVelocityResponse:
-            type: object
-            properties:
-                posts:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/worldmonitor_intelligence_v1_SocialVelocityPost'
-                fetchedAt:
-                    type: integer
-                    format: int64
-                    description: 'Warning: Values > 2^53 may lose precision in JavaScript'
-        worldmonitor_intelligence_v1_SocialVelocityPost:
-            type: object
-            properties:
-                id:
-                    type: string
-                    description: Reddit post ID.
-                title:
-                    type: string
-                    description: Post title.
-                subreddit:
-                    type: string
-                    description: Subreddit name (without r/ prefix).
-                url:
-                    type: string
-                    description: Direct URL to the post.
-                score:
-                    type: integer
-                    format: int32
-                    description: Reddit score (upvotes - downvotes).
-                upvoteRatio:
-                    type: number
-                    format: double
-                    description: Upvote ratio (0.0–1.0).
-                numComments:
-                    type: integer
-                    format: int32
-                    description: Number of comments.
-                velocityScore:
-                    type: number
-                    format: double
-                    description: Composite velocity score accounting for recency, score, and ratio.
-                createdAt:
-                    type: integer
-                    format: int64
-                    description: 'Unix epoch milliseconds when posted.. Warning: Values > 2^53 may lose precision in JavaScript'
-            description: SocialVelocityPost represents a trending Reddit post with velocity scoring.
         worldmonitor_intelligence_v1_GetCountryEnergyProfileRequest:
             type: object
             properties:
@@ -38805,7 +38631,7 @@ components:
             properties:
                 id:
                     type: string
-                    description: Stable indicator identifier from the 72-row registry.
+                    description: Stable indicator identifier from the 71-row registry.
                 dimension:
                     type: string
                     description: Stable identifier of the dimension that owns this indicator.

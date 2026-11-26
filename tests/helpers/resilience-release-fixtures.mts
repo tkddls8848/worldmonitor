@@ -269,7 +269,6 @@ export function buildReleaseGateFixtures(): ReleaseGateFixtureMap {
   const unrestEvents: Array<Record<string, unknown>> = [];
   const ucdpEvents: Array<Record<string, unknown>> = [];
   const displacementCountries: Array<Record<string, unknown>> = [];
-  const socialPosts: Array<Record<string, unknown>> = [];
   const threatSummary: Record<string, Record<string, number>> = {};
 
   for (const descriptor of descriptors) {
@@ -382,11 +381,6 @@ export function buildReleaseGateFixtures(): ReleaseGateFixtureMap {
       hostTotal: Math.round(10 ** clamp(6.3 - quality / 22, 1.8, 5.8)),
     });
 
-    socialPosts.push(
-      { title: `${descriptor.name} resilience watch`, velocityScore: round(clamp(stressed / 2.5, 1, 80), 1) },
-      { title: `${descriptor.name} infrastructure stability update`, velocityScore: round(clamp(stressed / 3.2, 1, 65), 1) },
-    );
-
     threatSummary[descriptor.code] = {
       critical: Math.max(0, Math.round(stressed / 24)),
       high: Math.max(0, Math.round(stressed / 16)),
@@ -455,7 +449,6 @@ export function buildReleaseGateFixtures(): ReleaseGateFixtureMap {
   fixtures['unrest:events:v1'] = { events: unrestEvents };
   fixtures['conflict:ucdp-events:v1'] = { events: ucdpEvents };
   fixtures[`displacement:summary:v1:${new Date().getFullYear()}`] = { summary: { countries: displacementCountries } };
-  fixtures['intelligence:social:reddit:v1'] = { posts: socialPosts };
   fixtures['news:threat:summary:v1'] = threatSummary;
 
   const recoveryFiscalCountries: Record<string, Record<string, unknown>> = {};

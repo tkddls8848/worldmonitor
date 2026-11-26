@@ -708,7 +708,7 @@ components:
             properties:
                 id:
                     type: string
-                    description: Stable indicator identifier from the 72-row registry.
+                    description: Stable indicator identifier from the 71-row registry.
                 dimension:
                     type: string
                     description: Stable identifier of the dimension that owns this indicator.

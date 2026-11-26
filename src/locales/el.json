@@ -461,7 +461,6 @@
     "oilInventories": "Αποθέματα Πετρελαίου",
     "energyCrisis": "Tracker Ενεργειακής Κρίσης",
     "goldIntelligence": "Πληροφορίες χρυσού",
-    "wsbTickerScanner": "WallStreetBets ticker scanner",
     "internetDisruptions": "Διακοπές Διαδικτύου",
     "internetDisruptionsTabs": {
       "outages": "Διακοπές",
@@ -2293,9 +2292,6 @@
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Μερίδιο δημιουργίας ηλεκτρικής ενέργειας από ανανεώσιμες πηγές κατά περιοχή και έτος, συν εγκατεστημένη χωρητικότητα ΗΠΑ για ηλιακή, αιολική και γαιάνθρακα (MW). Πηγές: Παγκόσμια Τράπεζα (EG.ELC.RNEW.ZS) και Υπηρεσία Πληροφοριών Ενέργειας ΗΠΑ."
     },
-    "socialVelocity": {
-      "infoTooltip": "<strong>Κοινωνική Ταχύτητα</strong> Θέματα που κάνουν τάση και viral περιεχόμενο με γεωπολιτική σημασία. Μετρά την ταχύτητα στα κοινωνικά μέσα: πόσο γρήγορα εξαπλώνεται μια ιστορία σε σχέση με τη βασική γραμμή. Βοηθά στην ανάδειξη αναδυόμενων αφηγήσεων πριν φτάσουν στα mainstream μέσα."
-    },
     "conservationWins": {
       "infoTooltip": "<strong>Επιτυχίες Διατήρησης</strong> Θετικά νέα για τη διατήρηση: ανάκαμψη πληθυσμών ειδών, ορόσημα αποκατάστασης οικοτόπων και προσπάθειες αντι-εξαφάνισης. Πηγή: IUCN, WWF και δημοσιεύσεις έρευνας διατήρησης."
     },
@@ -2519,9 +2515,6 @@
     },
     "goldIntelligence": {
       "infoTooltip": "<strong>Gold intelligence</strong> Τιμές χρυσού σε διάφορα νομίσματα, αναλογίες χρυσού/ασημιού και χρυσού/λευκόχρυσου, και θέσεις managed-money futures. Οι πηγές περιλαμβάνουν το Yahoo Finance και την Επιτροπή Εμπορίας Εμπορευμάτων Futures."
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>WallStreetBets Ticker Scanner</strong> Αναφορές τίκερ σε πραγματικό χρόνο από r/wallstreetbets, r/stocks και r/investing. Κατάταξη κατά συχνότητα αναφοράς και δέσμευσης. Η ταχύτητα μετρά πόσο γρήγορα ένας τίκερ κερδίζει ορμή σε όλες τις αναρτήσεις."
     },
     "proBanner": {
       "badge": "PRO",

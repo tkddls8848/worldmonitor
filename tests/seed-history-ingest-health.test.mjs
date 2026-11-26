@@ -46,7 +46,7 @@ process.env.WORLDMONITOR_VALID_KEYS = 'test-key';
 process.env.RESILIENCE_PILLAR_COMBINE_ENABLED = 'true';
 process.env.RESILIENCE_SCHEMA_V2_ENABLED = 'true';
 
-const RESILIENCE_INTERVAL_PROBE_KEY = 'resilience:intervals:v12:US';
+const RESILIENCE_INTERVAL_PROBE_KEY = 'resilience:intervals:v13:US';
 const RESILIENCE_INTERVAL_METHODOLOGY = 'weight-perturbation-sensitivity-v3';
 const EDUCATION_META_KEY = 'seed-meta:resilience:education-attainment';
 const EDUCATION_DATA_KEY = 'resilience:education-attainment:v1';

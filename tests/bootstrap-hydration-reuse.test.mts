@@ -32,7 +32,6 @@ type Harness = {
     topTargetLocations: Array<{ countryCode: string }>;
   }>;
   fetchTrafficAnomalies: (country?: string) => Promise<{ anomalies: Array<{ id: string }>; totalCount: number }>;
-  fetchSocialVelocity: () => Promise<{ posts: Array<{ id: string }>; fetchedAt: number }>;
   fetchDiseaseOutbreaks: () => Promise<{ outbreaks: Array<{ id: string }>; fetchedAt: number }>;
   fetchImdCycloneMarine: () => Promise<{
     coverageState: string;
@@ -125,7 +124,6 @@ const FLIGHT_DELAY = {
   delayedFlightsPct: 12, cancelledFlights: 0, totalFlights: 100, reason: 'weather',
   source: 'FLIGHT_DELAY_SOURCE_FAA', updatedAt: 1_754_000_000_000,
 };
-const SOCIAL_POST = { id: 'post-1', title: 'headline', velocity: 42 };
 const OUTBREAK = { id: 'out-1', disease: 'Cholera', country: 'YY', cases: 10 };
 const DDOS_ATTACK = {
   protocol: [{ label: 'TCP', percentage: 80 }], vector: [],
@@ -209,7 +207,6 @@ before(async () => {
         "export { fetchFlightDelays } from './src/services/aviation/index.ts';",
         "export { fetchDdosAttacks } from './src/services/infrastructure/index.ts';",
         "export { fetchTrafficAnomalies } from './src/services/infrastructure/index.ts';",
-        "export { fetchSocialVelocity } from './src/services/social-velocity.ts';",
         "export { fetchDiseaseOutbreaks } from './src/services/disease-outbreaks.ts';",
         "export { fetchImdCycloneMarine } from './src/services/imd-cyclone-marine.ts';",
         "export { fetchSanctionsPressure } from './src/services/sanctions-pressure.ts';",
@@ -675,18 +672,6 @@ describe('bootstrap hydration reuse (#7048)', () => {
     await harness.fetchTrafficAnomalies('CA');
     await harness.fetchTrafficAnomalies('CA');
     assert.equal(rpcUrlCount(requests), 1, 'the confirmed empty country result stays cached after its first RPC');
-  });
-
-  it('socialVelocity (no breaker): the hydration handoff answers recurring reads', async () => {
-    const requests = bootstrapStub({ socialVelocity: { posts: [SOCIAL_POST], fetchedAt: 1 } });
-    await harness.fetchBootstrapData();
-
-    const first = await harness.fetchSocialVelocity();
-    const second = await harness.fetchSocialVelocity();
-
-    assert.equal(first.posts.length, 1);
-    assert.deepEqual(second, first);
-    assert.equal(rpcUrlCount(requests), 0);
   });
 
   it('diseaseOutbreaks retries unavailable hydration and retains confirmed-empty RPC data', async () => {

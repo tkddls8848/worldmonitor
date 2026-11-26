@@ -5,7 +5,7 @@
 // cadence — but the process is usually recycled long before that interval
 // elapses, so the boot seed is the de-facto scheduler. During a reboot storm
 // that re-fetches every upstream on every boot (~8 min apart) instead of on its
-// interval: paid ScrapeCreators credits, plus rate-limit/ban risk for Reddit,
+// interval: rate-limit/ban risk for
 // Yahoo, CoinGecko, UCDP, OpenSky, etc.
 //
 // `bootSeedDelayMs(label, metaKey, intervalMs)` gates the boot seed on the

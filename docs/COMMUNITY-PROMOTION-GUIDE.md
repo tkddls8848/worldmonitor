@@ -84,7 +84,7 @@ Native app for macOS, Windows, and Linux via Tauri. API keys stored in OS keycha
 
 ### 10. Story Sharing & Social Export
 
-Generate intelligence briefs for any country and share to Twitter/X, LinkedIn, WhatsApp, Telegram, Reddit. Includes canvas-rendered PNG images with QR codes linking back to the live dashboard.
+Generate intelligence briefs for any country and share to Twitter/X, LinkedIn, WhatsApp and Telegram. Includes canvas-rendered PNG images with QR codes linking back to the live dashboard.
 
 **Show**: Generate a story for a country → share dialog with platform options.
 

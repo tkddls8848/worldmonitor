@@ -399,7 +399,7 @@ describe('Bootstrap tier definitions', () => {
   // so a key earns its place there only if a client actually reads its hydration.
   // Scan the source for real consumers — do NOT trust PENDING_CONSUMERS here: it is
   // an allow-list that goes stale the moment a consumer is wired up (euGasStorage,
-  // correlationCards and wsbTickers were all still on it long after they had one).
+  // and correlationCards were all still on it long after they had one).
   // A key with no getHydratedData/ensureHydrated call site is freight: ship it
   // on demand instead (#5300).
   it('every tier key has a hydration consumer — a tier is not a dumping ground', () => {

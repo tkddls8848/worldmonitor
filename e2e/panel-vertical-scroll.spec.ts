@@ -36,30 +36,24 @@ for (const width of [1440, 390]) {
       document.body.style.cssText = 'overflow:auto;height:auto;display:block';
       document.body.append(grid);
       const { ClimateNewsPanel } = await import('/src/components/ClimateNewsPanel.ts');
-      const { SocialVelocityPanel } = await import('/src/components/SocialVelocityPanel.ts');
       const { DiseaseOutbreaksPanel } = await import('/src/components/DiseaseOutbreaksPanel.ts');
       const { InternetDisruptionsPanel } = await import('/src/components/InternetDisruptionsPanel.ts');
       const { EarningsCalendarPanel } = await import('/src/components/EarningsCalendarPanel.ts');
       const { EconomicCalendarPanel } = await import('/src/components/EconomicCalendarPanel.ts');
       const { MaterialEventsPanel } = await import('/src/components/MaterialEventsPanel.ts');
-      const { WsbTickerScannerPanel } = await import('/src/components/WsbTickerScannerPanel.ts');
       const { Panel } = await import('/src/components/Panel.ts');
       const climate = new ClimateNewsPanel();
-      const social = new SocialVelocityPanel();
       const disease = new DiseaseOutbreaksPanel();
       const internet = new InternetDisruptionsPanel();
       const earnings = new EarningsCalendarPanel();
       const economic = new EconomicCalendarPanel();
       const material = new MaterialEventsPanel();
-      const wsb = new WsbTickerScannerPanel();
-      const panels: InstanceType<typeof Panel>[] = [climate, social, disease, internet, earnings, economic, material, wsb];
+      const panels: InstanceType<typeof Panel>[] = [climate, disease, internet, earnings, economic, material];
       for (const panel of panels) grid.append(panel.getElement());
       const now = Date.now();
       const rows = Array.from({ length: 40 }, (_, i) => i);
-      social.updateData(rows.map(i => ({ id: `${i}`, title: `Social headline ${i}`, subreddit: 'worldnews', url: `https://example.test/${i}`, score: 100, upvoteRatio: 0.9, numComments: 20, velocityScore: 90 - i, createdAt: now })));
       disease.updateData(rows.map(i => ({ id: `${i}`, disease: `Outbreak ${i}`, location: 'Test location', countryCode: 'US', alertLevel: 'high', summary: 'Fixture outbreak summary.', sourceUrl: 'https://example.test', publishedAt: now, sourceName: 'Test source', lat: 0, lng: 0, cases: 1 })));
       internet.setOutages(rows.map(i => ({ id: `${i}`, country: 'United States', title: `Outage ${i}`, description: 'Fixture outage', lat: 0, lon: 0, severity: 'major', pubDate: new Date(now), link: 'https://example.test', outageDate: new Date(now), categories: [], cause: '' })));
-      wsb.updateData(rows.map(i => ({ symbol: `SYM${i}`, mentionCount: 100 - i, totalScore: 100, subreddits: ['wallstreetbets'], velocityScore: 90 - i })));
       await Promise.all([climate.fetchData(), earnings.fetchData(), economic.fetchData(), material.fetchData()]);
       // CSS-only list fixtures cover secondary sections whose provider/model
       // setup is unrelated to scrolling. They use the production Panel shell.
@@ -140,22 +134,9 @@ for (const width of [1440, 390]) {
       await content.hover();
       await page.mouse.wheel(0, 200);
       await expect.poll(() => content.evaluate(el => el.scrollTop)).toBeGreaterThan(0);
-      if (['climate-news', 'internet-disruptions', 'wsb-ticker-scanner'].includes(id)) {
+      if (['climate-news', 'internet-disruptions'].includes(id)) {
         await panel.screenshot({ path: testInfo.outputPath(`${id}-${width}.png`) });
       }
-    }
-    // A narrow sidebar forces horizontal overflow even when the table fits a phone.
-    if (width === 1440) {
-      await page.locator('[data-panel="wsb-ticker-scanner"]').evaluate(el => { el.style.width = '220px'; });
-    }
-    const table = page.locator('[data-panel="wsb-ticker-scanner"] .table-scroll');
-    expect(await table.evaluate(el => getComputedStyle(el).overflowX)).toBe('auto');
-    await table.focus();
-    await expect(table).toBeFocused();
-    if (width === 1440) {
-      expect(await table.evaluate(el => el.scrollWidth - el.clientWidth)).toBeGreaterThan(0);
-      await table.press('ArrowRight');
-      await expect.poll(() => table.evaluate(el => el.scrollLeft)).toBeGreaterThan(0);
     }
   });
 }

@@ -3689,14 +3689,6 @@ a.hub-top-story {
 .ec-countdown { color: var(--text-dim); font-style: italic; }
 .ec-empty { padding: 20px 0; text-align: center; color: var(--text-dim); }
 
-/* WSB Ticker Scanner */
-.wsb-table th { white-space: nowrap; }
-.wsb-table th[data-sort] { cursor: pointer; user-select: none; }
-.wsb-num { text-align: right; }
-.wsb-rank { min-width: 20px; color: var(--text-dim); text-align: right; }
-.wsb-ticker { color: var(--text); font-family: var(--font-mono); font-weight: 700; }
-.wsb-velocity { min-width: 80px; vertical-align: middle; }
-.wsb-empty { padding: 16px; text-align: center; color: var(--text-dim); }
 
 /* ----------------------------------------------------------
    FX panel (#6199) — stress table + the two spot-rate tables

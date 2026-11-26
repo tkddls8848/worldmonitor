@@ -292,8 +292,7 @@
                       "panels/strategic-posture",
                       "panels/threat-timeline",
                       "panels/stock-analysis",
-                      "panels/stock-backtest",
-                      "panels/wsb-ticker-scanner"
+                      "panels/stock-backtest"
                     ]
                   },
                   {
@@ -890,8 +889,7 @@
                       "zh/panels/strategic-posture",
                       "zh/panels/threat-timeline",
                       "zh/panels/stock-analysis",
-                      "zh/panels/stock-backtest",
-                      "zh/panels/wsb-ticker-scanner"
+                      "zh/panels/stock-backtest"
                     ]
                   },
                   {

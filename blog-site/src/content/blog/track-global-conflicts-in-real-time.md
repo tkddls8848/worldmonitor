@@ -156,7 +156,7 @@ Jump between regions instantly with named preset views: Global, Americas, Europe
 
 Build a picture, then share it. World Monitor encodes your entire view state (map position, active layers, time range) into a URL. Send it to a colleague, and they see exactly what you see.
 
-For public sharing, the story export feature generates social-ready briefs with Open Graph images for Twitter/X, LinkedIn, WhatsApp, Telegram, and Reddit.
+For public sharing, the story export feature generates social-ready briefs with Open Graph images for Twitter/X, LinkedIn, WhatsApp, and Telegram.
 
 Before relying on a generated brief, use the [AI intelligence summary review workflow](/blog/posts/ai-intelligence-summary-reliability/) to check its sources, timing and inferences.
 

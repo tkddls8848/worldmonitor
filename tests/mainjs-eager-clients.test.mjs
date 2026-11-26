@@ -19,7 +19,6 @@ const repoRoot = resolve(__dirname, '..');
 const EAGER_SERVICE_FILES = [
   'src/services/gdelt-intel.ts',
   'src/services/security-advisories.ts',
-  'src/services/social-velocity.ts',
   'src/services/pizzint.ts',
 ];
 

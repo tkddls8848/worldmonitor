@@ -148,37 +148,6 @@ curl -s https://worldmonitor.app/mcp \
 
 </CodeGroup>
 
-### `get_social_velocity`
-
-The 30 posts from r/worldnews and r/geopolitics with the highest `velocityScore` (log of score × upvote ratio × a 6-hour recency decay), with score, upvote ratio, comment count and the permalink as `url`. The relay refreshes it about every 3 hours and the envelope flags it stale after 9 hours, the same budget as `/api/health`. Posts are unverified user submissions: the tool measures public attention, not events.
-
-**Parameters (tool-specific):**
-
-| Name | Type | Description |
-|------|------|-------------|
-| `subreddit` | string | Subreddit name without the r/ prefix, matched exactly, ignoring case: "worldnews" or "geopolitics". Omit for both. |
-| `limit` | number | Maximum posts to return, highest velocityScore first. Omitted keeps 30; 0 keeps every post in the snapshot. |
-
-- **API endpoints:** `GET /api/intelligence/v1/get-social-velocity`
-- **Access:** `free-account` — callable by any signed-in account; free accounts spend the daily free allowance, Pro calls spend the daily quota. Accepts the universal `summary` argument.
-- **Kind:** cache read — sub-second response from Redis bootstrap cache.
-- **Freshness budget:** up to **9 h** before `stale: true` is flagged (the relay refreshes about every 3 h; same budget as `/api/health`).
-
-<CodeGroup>
-
-```bash curl
-curl -s https://worldmonitor.app/mcp \
-  -H "X-WorldMonitor-Key: $WM_KEY" \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "jsonrpc":"2.0","id":1,
-    "method":"tools/call",
-    "params":{"name":"get_social_velocity","arguments":{}}
-  }'
-```
-
-</CodeGroup>
-
 ### `get_temporal_anomalies`
 
 Temporal anomaly watch: current event counts vs day-of-week and seasonal baselines, scored by z-score severity. News velocity, satellite fire detections, and other tracked streams are compared against 90-day Welford baselines keyed by weekday and month. Each anomaly carries the observed count, expected baseline count, z-score, multiplier, and a severity band (medium ≥ 1.5σ, high ≥ 2σ, critical ≥ 3σ). An empty anomaly list with fresh data means activity is within normal bounds — that is itself signal.

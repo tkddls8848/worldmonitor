@@ -89,7 +89,7 @@ const PANEL_CLUSTER: Record<string, PanelChunkName> = {
   NqCatalysts: 'panels-markets', NqPulse: 'panels-markets',
   Positioning: 'panels-markets', Stablecoin: 'panels-markets',
   StockAnalysis: 'panels-markets', StockBacktest: 'panels-markets',
-  WsbTickerScanner: 'panels-markets', YieldCurve: 'panels-markets',
+  YieldCurve: 'panels-markets',
   // Energy / commodities / supply infra
   ChokepointStrip: 'panels-energy', EnergyComplex: 'panels-energy',
   EnergyCrisis: 'panels-energy', EnergyDisruptions: 'panels-energy',
@@ -146,7 +146,7 @@ const PANEL_CLUSTER: Record<string, PanelChunkName> = {
   PopulationExposure: 'panels-risk', RadiationWatch: 'panels-risk',
   SatelliteFires: 'panels-risk',
   SecurityAdvisories: 'panels-risk', ServiceStatus: 'panels-risk',
-  SocialVelocity: 'panels-risk', SpeciesComeback: 'panels-risk',
+  SpeciesComeback: 'panels-risk',
   TechEvents: 'panels-risk',
   ThreatTimeline: 'panels-risk',
   TechHubs: 'panels-risk', TechReadiness: 'panels-risk', TorontoSafety: 'panels-risk',

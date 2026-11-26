@@ -498,7 +498,6 @@
     "etfFlows": "Bitcoin alap tőkeáramlása",
     "stablecoins": "Stablecoinok",
     "deduction": "Helyzet leszámítása",
-    "wsbTickerScanner": "WallStreetBets ticker szkenner",
     "ucdpEvents": "Fegyveres konfliktusok",
     "giving": "Globális Adományozás",
     "displacement": "Menekültek és lakóhelyvesztés",
@@ -2576,12 +2575,6 @@
     },
     "renewable": {
       "infoTooltip": "<strong>Megújuló energia</strong> A megújuló forrásokból származó villamos energia részesedése régió és év szerint, valamint az Egyesült Államok telepített kapacitása a napelemes, szél és szén energiához (MW). Források: Világbank (EG.ELC.RNEW.ZS) és az Egyesült Államok Energiainformációs Adminisztrációja."
-    },
-    "socialVelocity": {
-      "infoTooltip": "<strong>Social Velocity</strong> Trendelő témák és virálos tartalom geopolitikai szignifikanciával. Méri a közösségi média sebességét: milyen gyorsan terjed egy történet az alapvonalhoz képest. Segít felszínre hozni az új narratívákat, mielőtt azok a főáramú hírekbe kerülnének."
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>WallStreetBets Ticker Scanner</strong> Valós idejű ticker megtekintések az r/wallstreetbets, r/stocks és r/investing oldalakról. A megtekintés gyakorisága és az elköteleződés alapján rangsorolva. A sebesség azt méri, hogy milyen gyorsan nyer lendületet egy ticker a bejegyzések között."
     },
     "conservationWins": {
       "infoTooltip": "<strong>Conservation Wins</strong> Pozitív természetvédelmi hírek: fajpopulációs helyreállítások, élőhelyek restaurálási mérföldköveinek és de-extinkciós erőfeszítések. Forrás: IUCN, WWF és természetvédelmi kutatási publikációk."

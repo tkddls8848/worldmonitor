@@ -1,6 +1,6 @@
 ---
 title: "Country Resilience Index"
-description: "Live resilience scoring with 169 of 196 countries ranked, using 72 indicators across 21 dimensions and 6 domains, with a monthly crawlable snapshot."
+description: "Live resilience scoring with 169 of 196 countries ranked, using 71 indicators across 21 dimensions and 6 domains, with a monthly crawlable snapshot."
 ---
 
 _Methodology maintained by [Elie Habib](https://www.worldmonitor.app/blog/authors/elie-habib/), founder of World Monitor. Published revisions are recorded in the [corrections log](/corrections)._
@@ -77,7 +77,7 @@ Live API scores refresh every 6 hours. The crawlable country snapshot is publish
 
 Upstream feeds can include more territories than the published ranking covers. The public ranking is filtered to the rankable universe before publication.
 
-Everything on this page describes the **currently shipping** index: 72 indicators across 21 active dimensions and 6 domains, the `schemaVersion "2.0"` shape, 3 pillars (plus 2 structurally-retired dimensions kept in the registry at `coverage=0` for schema continuity), the pillar-combined penalized `overall_score`, and the energy v2 construct. Version flags, rollback paths, and the runtime manifest are covered under [For developers](#for-developers).
+Everything on this page describes the **currently shipping** index: 71 indicators across 21 active dimensions and 6 domains, the `schemaVersion "2.0"` shape, 3 pillars (plus 2 structurally-retired dimensions kept in the registry at `coverage=0` for schema continuity), the pillar-combined penalized `overall_score`, and the energy v2 construct. Version flags, rollback paths, and the runtime manifest are covered under [For developers](#for-developers).
 
 ## Construct contract
 
@@ -108,7 +108,7 @@ CRI is surfaced across three places in the product, all driven from the same cur
 
 All three dashboard surfaces are free to view. Direct score and ranking API calls require the normal Pro/API auth path, while the runtime manifest is public at `/api/resilience/v1/get-runtime-manifest`; see [Resilience service](https://github.com/koala73/worldmonitor/blob/main/docs/api/ResilienceService.openapi.yaml) for the HTTP contract.
 
-The Pro-only `/api/resilience/v1/get-resilience-indicators` method explains one country across the complete 72-row registry. It reports the exact normalized component scores and runtime weights used by the active scorer, then reconciles post-policy effective contributions to each published dimension score. Rows also distinguish observed, imputed, missing, fallback, source-failure, inactive, retired, and not-applicable states. The existing `get-resilience-score` response remains unchanged. Raw source values are selective and fail closed under the [indicator redistribution audit](./resilience-indicator-licensing.mdx); restricted rows still return WorldMonitor's normalized score, contribution, source attribution, and source year when known.
+The Pro-only `/api/resilience/v1/get-resilience-indicators` method explains one country across the complete 71-row registry. It reports the exact normalized component scores and runtime weights used by the active scorer, then reconciles post-policy effective contributions to each published dimension score. Rows also distinguish observed, imputed, missing, fallback, source-failure, inactive, retired, and not-applicable states. The existing `get-resilience-score` response remains unchanged. Raw source values are selective and fail closed under the [indicator redistribution audit](./resilience-indicator-licensing.mdx); restricted rows still return WorldMonitor's normalized score, contribution, source attribution, and source year when known.
 
 ## What goes into it
 
@@ -124,7 +124,7 @@ static country profile:
 
 Data comes from official and authoritative providers: World Bank, IMF, WHO, WTO, UNHCR, UCDP, BIS, IEA, FAO, Reporters Sans Frontieres, and the Institute for Economics and Peace, among others. The full list is in [Data Sources](#data-sources).
 
-CRI scores the 196-country public rankable universe on a 0-100 scale using 72 indicators across 21 active dimensions and 6 domains, plus 2 structurally-retired dimensions kept in the registry at `coverage=0` for schema continuity. The ranking handler can route low-confidence or headline-ineligible countries to `greyedOut[]`, but the rankable universe itself is fixed by the committed UN-member + SAR whitelist.
+CRI scores the 196-country public rankable universe on a 0-100 scale using 71 indicators across 21 active dimensions and 6 domains, plus 2 structurally-retired dimensions kept in the registry at `coverage=0` for schema continuity. The ranking handler can route low-confidence or headline-ineligible countries to `greyedOut[]`, but the rankable universe itself is fixed by the committed UN-member + SAR whitelist.
 
 ## Domains and Weights
 
@@ -397,12 +397,13 @@ relabeling is tracked in #3737.
 
 | Indicator | Description | Direction | Goalposts (worst-best) | Weight | Source | Cadence |
 |---|---|---|---|---|---|---|
-| rsfPressFreedom | RSF press freedom score | Lower is better | 100 - 0 | 0.55 | RSF | Annual |
-| socialVelocity | Reddit social velocity (log10(velocity+1)) | Lower is better | 3 - 0 | 0.15 | Reddit intelligence | Hourly relay (freshness budget: 180 min) |
-| newsThreatScore | AI news threat severity (critical 4x, high 2x, medium 1x, low 0.5x) | Lower is better | 20 - 0 | 0.30 | News threat analysis | Daily |
+| rsfPressFreedom | RSF press freedom score | Lower is better | 100 - 0 | 0.6470588235294118 | RSF | Annual |
+| newsThreatScore | AI news threat severity (critical 4x, high 2x, medium 1x, low 0.5x) | Lower is better | 20 - 0 | 0.35294117647058826 | News threat analysis | Daily |
 
-**Language-coverage weighting.** `socialVelocity` and `newsThreatScore` are
-English-source-sensitive signals, so their score weights are multiplied by the
+The social velocity indicator was retired. Its weight was redistributed in proportion to the two remaining weights, preserving the 11:6 ratio of press freedom to news threats.
+
+**Language-coverage weighting.** `newsThreatScore` is an
+English-source-sensitive signal, so its score weight is multiplied by the
 country's language-coverage tier. The raw signal values are not divided or
 amplified. Lower-coverage countries therefore lean more heavily on the static
 RSF press-freedom signal while preserving nominal coverage math for the
@@ -813,7 +814,6 @@ publishing (#7609).
 | GPSJam | GPS jamming incidents | Daily | Global |
 | Supply-chain monitor | Shipping stress, transit disruption | Daily | Global |
 | Unrest monitoring | Severity-weighted civil unrest events | Realtime | Global |
-| Reddit intelligence | Social velocity scores | Hourly relay (freshness budget: 180 min) | Global |
 | News threat analysis | AI-scored news threat severity | Daily | Global |
 | Energy mix data | Gas, coal, renewable shares | Annual | Global |
 | GIE AGSI+ | Gas storage fill levels | Daily | European countries |
@@ -861,10 +861,10 @@ The CRI is designed to be auditable end-to-end: given the Redis snapshot at any 
 
 | Key | Type | TTL | Written by | Read by |
 |---|---|---|---|---|
-| `resilience:score:v29:{countryCode}` | JSON | 6 hours | `buildResilienceScore` in `server/worldmonitor/resilience/v1/_shared.ts` | `getResilienceScore` handler |
-| `resilience:ranking:v29` | JSON | 12 hours | `getResilienceRanking` warm path, only when at least 90% of countries are scored (`RANKING_CACHE_MIN_COVERAGE = 0.90`) | `getResilienceRanking` handler |
-| `resilience:history:v23:{countryCode}` | sorted set | indefinite, trimmed to 30 days | `appendHistory` during scoring | trend and `change30d` computation |
-| `resilience:intervals:v12:{countryCode}` | JSON | 7 days; freshness monitored via `seed-meta`/health cadence | `scripts/seed-resilience-scores.mjs` | `getResilienceScore` (optional `scoreInterval` field) and `getResilienceRanking` (`rankStable`) |
+| `resilience:score:v30:{countryCode}` | JSON | 6 hours | `buildResilienceScore` in `server/worldmonitor/resilience/v1/_shared.ts` | `getResilienceScore` handler |
+| `resilience:ranking:v30` | JSON | 12 hours | `getResilienceRanking` warm path, only when at least 90% of countries are scored (`RANKING_CACHE_MIN_COVERAGE = 0.90`) | `getResilienceRanking` handler |
+| `resilience:history:v24:{countryCode}` | sorted set | indefinite, trimmed to 30 days | `appendHistory` during scoring | trend and `change30d` computation |
+| `resilience:intervals:v13:{countryCode}` | JSON | 7 days; freshness monitored via `seed-meta`/health cadence | `scripts/seed-resilience-scores.mjs` | `getResilienceScore` (optional `scoreInterval` field) and `getResilienceRanking` (`rankStable`) |
 | `seed-meta:resilience:static` | JSON | 400 days | `scripts/seed-resilience-static.mjs` at the end of each successful seed run | scorer for `dataVersion` population, health checks |
 | `resilience:static:{countryCode}` | JSON | 400 days | `scripts/seed-resilience-static.mjs` | scorer for all baseline signals (WGI, WHO, FAO, GPI, RSF, and so on) |
 | `resilience:static:index:v1` | JSON | 400 days | `scripts/seed-resilience-static.mjs` | warmup path to enumerate countries |
@@ -909,7 +909,7 @@ Items 1-3 are the now-active energy v2 repair; items 4-6 are landed repairs pres
 
 **The five mechanisms now in the score:**
 
-1. **Source-comprehensiveness flag (PR #3452, §U5).** 20 indicators are tagged `comprehensive: false` because their absence does not imply "nothing is happening" — event-only or sensor feeds (GPS jamming, internet outages, port activity), curated lists with partial coverage (BIS CBS/DSR, BIS REER, WTO), LMIC-only or bilateral series, and retired/rollback-only constructs. For these, `IMPUTE` swaps from the optimistic `stable-absence` (85, certainty 0.6) to the conservative `unmonitored` (50, certainty 0.3). Microstates that previously rode an "absence is good news" assumption no longer get the free lift. UCDP, IPC, and FATF are not examples here in the current registry.
+1. **Source-comprehensiveness flag (PR #3452, §U5).** 19 indicators are tagged `comprehensive: false` because their absence does not imply "nothing is happening" — event-only or sensor feeds (GPS jamming, internet outages, port activity), curated lists with partial coverage (BIS CBS/DSR, BIS REER, WTO), LMIC-only or bilateral series, and retired/rollback-only constructs. For these, `IMPUTE` swaps from the optimistic `stable-absence` (85, certainty 0.6) to the conservative `unmonitored` (50, certainty 0.3). Microstates that previously rode an "absence is good news" assumption no longer get the free lift. UCDP, IPC, and FATF are not examples here in the current registry.
 2. **Coverage penalty multiplier (PR #3452, §U4).** Imputed indicators carry a 0.5× weight in the dimension blend. The dimension still scores, the imputed value still influences the result, but it does so at half-strength. Combined with the comprehensiveness flag this means a country whose dimension is entirely curated-list-absent contributes weight 0.15 (0.3 × 0.5) instead of weight 1.0 — the dim is functionally informational, not load-bearing.
 3. **Per-capita normalization with 0.5M tiny-state floor (PR #3452, §U6).** `unrestEvents` and `ucdpConflict` divide by `max(populationMillions, 0.5)`. Tiny states with absolute event counts of zero used to score the same as large states with zero events; now the per-capita event rate is what enters normalization, and the floor caps the divisor so a country at 0.05M doesn't get a 200× artificial boost. UNHCR `displacementTotal` and `displacementHosted` are still scored on log10 absolute displaced-person counts, not population-normalized rates. The IMF labor seeder writes population to the static record (PR #3452 review-round-1 fix corrected a 1e6× units bug — the field is `populationMillions` but the upstream IMF `LP` series is in raw persons; fixed in commit 724dd4e95).
 4. **Headline-eligible gate (PR #3469, §U7).** A country is `headlineEligible: true` only if `overallCoverage >= 0.65 AND (populationMillions >= 0.2 OR overallCoverage >= 0.85) AND !lowConfidence`. Ineligible countries surface in `greyedOut[]` (still served via the raw API for analysts who want them) but are excluded from the public ranking. This is the single change that solved the inflation defect end-to-end: the previously-inflated PW, NR, AD, FM, KI, GD, GQ, ER cohort is now routed by the headline-eligible gate instead of being described as part of the headline ranking.
@@ -992,7 +992,7 @@ Self-assessed against the standard composite-indicator review axes on a 0-10 sca
 | **Explainability** | 7.5 | Per-dimension confidence grid in the widget shows coverage %, imputation class, and freshness for every dimension on every country. Tooltip text is generated from the taxonomy so analysts can click through to the meaning without reading this document. Gap: no waterfall chart of individual signal contributions yet, that lands in Phase 3 T3.3. |
 | **Reproducibility** | 8.0 | Every dimension's sourceKey, cadence, and goalpost lives in `_indicator-registry.ts` and is linted against this doc. Cache keys were already versioned in the v1.1 implementation; see the Redis keys table above for the current score, ranking, history, and interval prefixes. `dataVersion` is written by the seed and plumbed to the widget footer. Gap: the benchmark and backtest scripts do not yet run on a CI cron; those land in Phase 2 T2.7. |
 | **Source quality** | 7.0 | World Bank, IMF, WHO, IEA, UNHCR, UCDP, IPC, BIS, FAO, RSF, GPI: all authoritative. Gap: curated-list sources (BIS ~40 economies, WTO) do not cover the full WorldMonitor country set, which is why the `unmonitored` imputation class exists. Phase 2 T2.9 adds language-normalized information signal to reduce English-press bias. |
-| **Timeliness** | 6.5 | Structural sources are annual (WGI, GPI, RSF, WHO, IMF macro) and dominate the total weight of the index. BIS EER is monthly. The Freshness classifier (T1.5) surfaces this at the dimension level so users can see which parts of a country score are 12 months old. The stress-side stack already includes realtime/hourly or daily inputs (`internetOutages`, `infraOutages`, `unrestEvents` at realtime; `socialVelocity` via the hourly Reddit relay with a 180-minute health budget; `cyberThreats`, `gpsJamming`, `shippingStress`, `transitDisruption`, `euGasStorageStress`, `energyPriceStress`, `newsThreatScore` at daily), while `ucdpConflict` follows annual UCDP GED releases with separate seeder-liveness monitoring. Gap: the live-shock pillar relies on those signals but the structural pillar is still capped by annual sources; Phase 2 T2.2 adds FX volatility at daily cadence to narrow the cadence gap on the currency-external dimension and the Phase 3 reference-edition split will formalize annual vs rolling cadences per pillar. |
+| **Timeliness** | 6.5 | Structural sources are annual (WGI, GPI, RSF, WHO, IMF macro) and dominate the total weight of the index. BIS EER is monthly. The Freshness classifier (T1.5) surfaces this at the dimension level so users can see which parts of a country score are 12 months old. The stress-side stack already includes realtime/hourly or daily inputs (`internetOutages`, `infraOutages`, `unrestEvents` at realtime; `cyberThreats`, `gpsJamming`, `shippingStress`, `transitDisruption`, `euGasStorageStress`, `energyPriceStress`, `newsThreatScore` at daily), while `ucdpConflict` follows annual UCDP GED releases with separate seeder-liveness monitoring. Gap: the live-shock pillar relies on those signals but the structural pillar is still capped by annual sources; Phase 2 T2.2 adds FX volatility at daily cadence to narrow the cadence gap on the currency-external dimension and the Phase 3 reference-edition split will formalize annual vs rolling cadences per pillar. |
 | **Sensitivity** | 7.0 | Weight-perturbation Monte Carlo sensitivity (#2823) exists in the backtesting layer. Phase 1 did not add new sensitivity work. Overall p5/p95 score sensitivity bands are computed under the active score formula and exposed (#2877, #2885, #3967), and the widget renders the overall `[p05–p95]` range next to the score. The band is a formula-aware weight-perturbation sensitivity range, not an input-data uncertainty interval. Gap: no waterfall chart of individual signal contributions yet; that lands in Phase 3 T3.3. |
 
 **Phase 1 acceptance gate status: met.** Both required thresholds (Methodology ≥7.5, Explainability ≥7.5) are satisfied with honest rationales. The two gaps flagged in each axis are tracked against Phase 2 and Phase 3 tasks in the upgrade plan.
@@ -1056,13 +1056,17 @@ Self-assessed against the standard composite-indicator review axes on a 0-10 sca
 | Axis | Score | Rationale |
 |---|---|---|
 | **Validation** | 8.0 | Cross-index benchmark against INFORM, UNDP HDI, and the WorldRiskIndex vulnerability component with explicit directional hypotheses. Outcome backtest across 7 event families with AUC release gates. Sensitivity suite with 4-pass perturbation and ceiling detection. Gap: external expert review (Phase 3 T3.8b) not yet complete. |
-| **Data** | 9.0 | The current registry contains 72 indicators across 21 active dimensions and 6 domains (plus 2 structurally-retired dimensions kept for schema continuity). Recovery capacity uses real import-HHI data where Comtrade quota/backfill limits permit; `fuelStockDays` is retired from the core score and retained only as an experimental registry surface. Signal tiering registry tags every indicator Core/Enrichment/Experimental with coverage + license audit. Gap: reserve-margin integration, external expert review, formal refresh SLAs, and attribution/explanation surfaces. |
+| **Data** | 9.0 | The current registry contains 71 indicators across 21 active dimensions and 6 domains (plus 2 structurally-retired dimensions kept for schema continuity). Recovery capacity uses real import-HHI data where Comtrade quota/backfill limits permit; `fuelStockDays` is retired from the core score and retained only as an experimental registry surface. Signal tiering registry tags every indicator Core/Enrichment/Experimental with coverage + license audit. Gap: reserve-margin integration, external expert review, formal refresh SLAs, and attribution/explanation surfaces. |
 | **Architecture** | 9.0 | Three-pillar schema with schemaVersion feature flag for backward compat. Penalized weighted mean aggregation with documented alpha. Domain-weighted pillar scores. Cache-key versioning (bumped per schema change). Language normalization corrects English-press bias. Gap: alpha tuning is initial (0.5), needs backtest-driven refinement after live data accumulates. |
 | **Methodology** | 8.5 | Every dimension has a named source, direction, goalpost, weight, cadence, imputation class, AND tier. Four-class imputation taxonomy live end-to-end. Freshness classifier surfaces staleness at the dimension level. Methodology doc linter enforces parity. Gap: three-pillar weight rationale is defensible but not yet empirically optimized. |
 | **Explainability** | 8.0 | Per-dimension confidence grid with imputation icon + freshness badge. Pillar structure makes the index decomposable (structural vs live-shock vs recovery). Gap: no waterfall chart yet (Phase 3 T3.3), no change attribution (Phase 3 T3.5). |
 | **Timeliness** | 7.0 | Stress-side indicators include realtime/daily inputs, with UCDP conflict pressure updated on annual GED releases and monitored separately for seeder liveness. Language normalization corrects for source-density bias. Recovery capacity adds monthly reserve + debt signals. Gap: structural sources still annual (WGI/GPI/RSF/WHO). Phase 3 reference-edition split formalizes annual vs rolling cadences per pillar. |
 
 **Phase 2 acceptance gate status: met.** All three required thresholds (Validation >= 8.0, Data >= 9.0, Architecture >= 9.0) are satisfied. The gaps flagged in each axis are tracked against Phase 3 tasks in the upgrade plan.
+
+### November 2026 personal fork retirement
+
+The information and cognitive dimension now uses press freedom and news threats. Proportional weights preserve their relative contribution and increase measured coverage when either input is observed. Score and ranking caches move to v30, history to v24, and sensitivity intervals to v13.
 
 ### v2.1 (April 2026) — PR 1 energy construct repair (active)
 

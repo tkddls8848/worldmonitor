@@ -687,8 +687,8 @@ describe('methodology doc parity (Plan 2026-04-26-002 §U8)', () => {
     );
     assert.equal(
       SCORER_DOC_PARITY_SPECS.filter((spec) => spec.extraction === 'scorer-source' || spec.extraction === 'custom-source').length,
-      42,
-      'Expected 42 scorer/doc parity rows to derive weights from scorer source or a custom scorer-source extractor.',
+      41,
+      'Expected 41 scorer/doc parity rows to derive weights from scorer source or a custom scorer-source extractor.',
     );
     assert.deepEqual(
       SCORER_DOC_PARITY_SPECS
@@ -998,10 +998,10 @@ describe('methodology doc parity (Plan 2026-04-26-002 §U8)', () => {
 
   it('source-comprehensiveness changelog examples match the current registry', () => {
     const falseCount = INDICATOR_REGISTRY.filter((indicator) => indicator.comprehensive === false).length;
-    assert.equal(falseCount, 20, 'update docs and this assertion together when comprehensive:false registry count changes');
+    assert.equal(falseCount, 19, 'update docs and this assertion together when comprehensive:false registry count changes');
 
     const changelog = extractSectionText(docText, 'v17 (April 2026) — universe + coverage rebuild (plan 2026-04-26-002)');
-    assert.match(changelog, /20 indicators are tagged `comprehensive: false`/);
+    assert.match(changelog, /19 indicators are tagged `comprehensive: false`/);
     assert.match(changelog, /UCDP, IPC, and FATF are not examples here in the current registry/);
     assert.doesNotMatch(
       changelog,
@@ -1322,7 +1322,7 @@ describe('methodology doc parity (Plan 2026-04-26-002 §U8)', () => {
     );
     assert.match(
       docText,
-      /`socialVelocity` and `newsThreatScore`[\s\S]{0,220}multiplied by the\s+country's language-coverage tier/,
+      /`newsThreatScore`[\s\S]{0,220}multiplied by the\s+country's language-coverage tier/,
       'methodology doc must explain that language coverage attenuates weights, not raw signal values.',
     );
   });

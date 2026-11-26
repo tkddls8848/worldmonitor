@@ -58,7 +58,6 @@ describe('source-comprehensiveness flag (Plan 2026-04-26-002 §U5)', () => {
     const mustBeNonComprehensive = [
       'unrestEvents',               // GDELT-like event feed (load-bearing for §U5)
       'newsThreatScore',            // English-bias news summary
-      'socialVelocity',             // Reddit (English-bias)
       'cyberThreats',               // event feed
       'internetOutages',            // event feed
       'gpsJamming',                 // event feed

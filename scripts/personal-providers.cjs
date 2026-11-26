@@ -306,8 +306,8 @@ const OREF_REDIS_KEY = `${RELAY_ENV_PREFIX}relay:oref:history:v1`;
 // but the process is usually recycled long before that interval elapses, so the
 // boot seed, not the interval, is the de-facto scheduler. During a reboot storm
 // that means every upstream gets re-fetched on every boot (~8 min apart in the
-// wild, observed 2026-06-06) instead of on its interval: paid credits burned for
-// ScrapeCreators, and rate-limit/ban risk for Reddit, Yahoo, CoinGecko, UCDP,
+// wild, observed 2026-06-06) instead of on its interval, increasing abuse
+// and rate-limit risk for Yahoo, CoinGecko, UCDP,
 // OpenSky, CelesTrak, USNI, etc.
 //
 // bootSeedDelayMs gates the immediate boot seed on the existing seed-meta age:

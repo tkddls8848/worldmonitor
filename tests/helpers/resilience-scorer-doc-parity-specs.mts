@@ -98,7 +98,7 @@ const SCORER_TABLE_BINDINGS = [
     methodologySection: 'Information & Cognitive',
     dimension: 'informationCognitive',
     scorerName: 'scoreInformationCognitive',
-    ids: ['rsfPressFreedom', 'socialVelocity', 'newsThreatScore'],
+    ids: ['rsfPressFreedom', 'newsThreatScore'],
   },
   {
     methodologySection: 'Health & Public Service',

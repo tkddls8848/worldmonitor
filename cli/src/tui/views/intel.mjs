@@ -1,5 +1,5 @@
-// Intel: GDELT topic feeds, security advisories, sanctions pressure, social
-// velocity, government spending and tech events.
+// Intel: GDELT topic feeds, security advisories, sanctions pressure,
+// government spending and tech events.
 import { ATTR } from '../term/screen.mjs';
 import { splitH, splitV } from '../ui/layout.mjs';
 import { bar, heading, kv, panel, segments } from '../ui/widgets.mjs';
@@ -9,7 +9,7 @@ import { PaneView, selectedItem } from './base.mjs';
 
 export class IntelView extends PaneView {
   constructor(app) {
-    super(app, { id: 'intel', label: 'Intel', paneIds: ['topics', 'articles', 'advisories', 'social'], sources: ['fast', 'slow'] });
+    super(app, { id: 'intel', label: 'Intel', paneIds: ['topics', 'articles', 'advisories'], sources: ['fast', 'slow'] });
     this.focus = 1;
   }
 
@@ -28,18 +28,12 @@ export class IntelView extends PaneView {
     return [...list].sort((a, b) => rank(b.level) - rank(a.level) || String(b.pubDate || '').localeCompare(String(a.pubDate || '')));
   }
 
-  social() {
-    return [...(this.data.socialVelocity?.posts || [])].sort((a, b) => (b.velocityScore || 0) - (a.velocityScore || 0));
-  }
-
   selectedUrl() {
     switch (this.focusedPane) {
       case 'articles':
         return selectedItem(this.lists.articles, this.articles())?.url || null;
       case 'advisories':
         return selectedItem(this.lists.advisories, this.advisories())?.link || null;
-      case 'social':
-        return selectedItem(this.lists.social, this.social())?.url || null;
       default:
         return null;
     }
@@ -64,10 +58,10 @@ export class IntelView extends PaneView {
     const [topicsR, articlesR] = splitH(left, [16, 'fill']);
     this.renderTopics(ctx, topicsR);
     this.renderArticles(ctx, articlesR);
-    const [sanctionsR, advisoriesR, socialR] = splitV(right, [9, '42%', 'fill']);
+    const [sanctionsR, advisoriesR, spendingR] = splitV(right, [9, '55%', 'fill']);
     this.renderSanctions(ctx, sanctionsR);
     this.renderAdvisories(ctx, advisoriesR);
-    this.renderSocial(ctx, socialR);
+    this.renderSpending(ctx, spendingR);
   }
 
   renderTopics(ctx, r) {
@@ -144,26 +138,11 @@ export class IntelView extends PaneView {
     );
   }
 
-  renderSocial(ctx, r) {
-    const { t, now } = ctx;
-    const posts = this.social();
-    const [socialR, spendR] = splitV(r, ['60%', 'fill']);
-    const inner = panel(ctx, socialR, { title: 'Social velocity', focused: this.isFocused('social'), right: 'Reddit', onClick: () => this.focusPane('social') });
-    this.lists.social.draw(
-      ctx,
-      inner,
-      posts,
-      (p, _i, { width, selected }) => [
-        { text: `${String(Math.round(p.velocityScore || 0)).padStart(4)} `, fg: t.accent2, attr: ATTR.BOLD },
-        { text: `r/${String(p.subreddit || '').slice(0, 12).padEnd(12)} `, fg: t.dim },
-        { text: String(p.title || '').slice(0, Math.max(8, width - 32)).padEnd(Math.max(8, width - 32)), fg: selected ? t.selText : t.text },
-        { text: ` ↑${fmtNum(p.score, 0)} ${ageOf(p.createdAt, now)}`, fg: t.dim },
-      ],
-      this.listOpts('social', { empty: 'loading posts…' }),
-    );
+  renderSpending(ctx, r) {
+    const { t } = ctx;
     const sp = this.data.spending;
     const ev = this.data.techEvents?.events || [];
-    const inner2 = panel(ctx, spendR, { title: 'Spending & events', right: sp ? `US awards ${sp.periodStart}→${sp.periodEnd} $${fmtNum(sp.totalAmount, 0)}` : '' });
+    const inner2 = panel(ctx, r, { title: 'Spending & events', right: sp ? `US awards ${sp.periodStart}→${sp.periodEnd} $${fmtNum(sp.totalAmount, 0)}` : '' });
     let y = inner2.y;
     for (const a of (sp?.awards || []).slice(0, Math.max(0, Math.floor(inner2.h / 2)))) {
       if (y >= inner2.y + inner2.h) break;

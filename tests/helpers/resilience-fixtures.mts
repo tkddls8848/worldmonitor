@@ -313,15 +313,6 @@ export const RESILIENCE_FIXTURES: FixtureMap = {
       ],
     },
   },
-  'intelligence:social:reddit:v1': {
-    posts: [
-      { title: 'Norway grid resilience remains strong', velocityScore: 5 },
-      { title: 'United States election unrest concerns rise again', velocityScore: 25 },
-      { title: 'United States cyber incident response under pressure', velocityScore: 18 },
-      { title: 'Yemen crisis worsens as conflict expands', velocityScore: 80 },
-      { title: 'Yemen aid access collapses amid strikes', velocityScore: 65 },
-    ],
-  },
   'news:threat:summary:v1': {
     byCountry: {
       NO: { critical: 0, high: 0, medium: 0, low: 1 },

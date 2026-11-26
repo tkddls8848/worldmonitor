@@ -463,7 +463,6 @@
     "oilInventories": "Inventaires pétroliers",
     "energyCrisis": "Suivi de la crise énergétique",
     "goldIntelligence": "Intelligence de l'or",
-    "wsbTickerScanner": "Analyseur de symboles WallStreetBets",
     "internetDisruptions": "Perturbations Internet",
     "internetDisruptionsTabs": {
       "outages": "Pannes",
@@ -2303,9 +2302,6 @@
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Part de la génération d'électricité à partir d'énergies renouvelables par région et année, plus la capacité installée aux États-Unis pour le solaire, l'éolien et le charbon (MW). Sources : Banque mondiale (EG.ELC.RNEW.ZS) et Administration de l'information sur l'énergie des États-Unis."
     },
-    "socialVelocity": {
-      "infoTooltip": "<strong>Vélocité sociale</strong> Sujets tendance et contenus viraux à portée géopolitique. Mesure la vélocité des médias sociaux : la rapidité de propagation d'une histoire par rapport à la ligne de base. Aide à faire émerger des récits naissants avant qu'ils n'atteignent les médias traditionnels."
-    },
     "conservationWins": {
       "infoTooltip": "<strong>Victoires de conservation</strong> Nouvelles positives de conservation : récupération de populations d'espèces, jalons de restauration d'habitats et efforts de dé-extinction. Source : IUCN, WWF et publications de recherche en conservation."
     },
@@ -2530,9 +2526,6 @@
     },
     "goldIntelligence": {
       "infoTooltip": "<strong>Gold intelligence</strong> Prix de l'or dans plusieurs devises, ratios or/argent et or/platine, et positions futures de fonds gérés. Les sources incluent Yahoo Finance et la Commission de la Commodity Futures Trading."
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>WallStreetBets Ticker Scanner</strong> Mentions de titres en temps réel de r/wallstreetbets, r/stocks et r/investing. Classées par fréquence de mention et engagement. La vélocité mesure la rapidité avec laquelle un titre gagne du dynamisme à travers les publications."
     },
     "proBanner": {
       "badge": "PRO",

@@ -203,7 +203,6 @@ export const MISSION_PRESETS: readonly MissionPreset[] = [
       'latam',
       'asia',
       'us',
-      'social-velocity',
       'live-webcams',
       'security-advisories',
     ],

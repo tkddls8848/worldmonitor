@@ -77,7 +77,7 @@ message ResilienceIndicatorDimension {
 
 // One registry indicator and its effective contribution to a dimension.
 message ResilienceIndicator {
-  // Stable indicator identifier from the 72-row registry.
+  // Stable indicator identifier from the 71-row registry.
   string id = 1;
   // Stable identifier of the dimension that owns this indicator.
   string dimension = 2;

@@ -98,15 +98,14 @@ describe('resilience indicator trace', () => {
   it('uses runtime weight for scoring share and preserves nominal weight', () => {
     const trace = createIndicatorTraceCollector();
     const result = weightedBlend([
-      { indicatorId: 'rsfPressFreedom', score: 50, weight: 0.55 },
-      { indicatorId: 'socialVelocity', score: 0, weight: 0.03, nominalWeight: 0.15 },
-      { indicatorId: 'newsThreatScore', score: 100, weight: 0.06, nominalWeight: 0.30 },
+      { indicatorId: 'rsfPressFreedom', score: 50, weight: 0.6470588235294118 },
+      { indicatorId: 'newsThreatScore', score: 100, weight: 0.35294117647058826 * 0.2, nominalWeight: 0.35294117647058826 },
     ], { dimensionId: 'informationCognitive', trace });
 
     const rows = rowsFor(trace, 'informationCognitive', result.score);
-    const velocity = rows.find((row) => row.indicatorId === 'socialVelocity')!;
-    assert.equal(velocity.runtimeWeight, 0.03);
-    assert.equal(velocity.nominalWeight, 0.15);
+    const news = rows.find((row) => row.indicatorId === 'newsThreatScore')!;
+    assert.equal(news.runtimeWeight, 0.35294117647058826 * 0.2);
+    assert.equal(news.nominalWeight, 0.35294117647058826);
     assert.equal(rows.reduce((sum, row) => sum + row.effectiveContribution, 0), result.score);
   });
 
@@ -147,12 +146,12 @@ describe('resilience indicator trace', () => {
     assert.equal(dimension.indicators.reduce((sum, row) => sum + row.effectiveContribution, 0), 15);
   });
 
-  it('materializes all 72 registry rows once and in canonical order', () => {
+  it('materializes all 71 registry rows once and in canonical order', () => {
     const snapshot = materializeIndicatorTrace(createIndicatorTraceCollector(), scoreMap());
-    assert.equal(snapshot.indicators.length, 72);
+    assert.equal(snapshot.indicators.length, 71);
     assert.deepEqual(snapshot.indicators.map((row) => row.indicatorId), RESILIENCE_INDICATOR_IDS);
     assert.deepEqual(snapshot.indicators.map((row) => row.indicatorId), INDICATOR_REGISTRY.map((row) => row.id));
-    assert.equal(new Set(snapshot.indicators.map((row) => row.indicatorId)).size, 72);
+    assert.equal(new Set(snapshot.indicators.map((row) => row.indicatorId)).size, 71);
     assert.ok(snapshot.indicators.every((row) => !row.includedInDimensionScore && row.effectiveContribution === 0));
     assert.ok(snapshot.indicators.every((row) => row.runtimeWeightsAvailable === false));
     assert.deepEqual(

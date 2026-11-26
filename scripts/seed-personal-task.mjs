@@ -11,8 +11,6 @@ export const PERSONAL_TASKS = {
   'tech-events': ['seedTechEvents', 'research:tech-events-bootstrap:v1', 240],
   'corridor-risk': ['seedCorridorRisk', 'supply_chain:corridorrisk:v1', 60],
   'usni-fleet': ['seedUsniFleet', 'usni-fleet:sebuf:v1', 180],
-  'social-velocity': ['seedSocialVelocity', 'intelligence:social:reddit:v1', 180],
-  'wsb-tickers': ['seedWsbTickers', 'intelligence:wsb-tickers:v1', 180],
   gscpi: ['seedGscpi', 'economic:fred:v1:GSCPI:0', 1440],
   pizzint: ['seedPizzint', 'intelligence:pizzint:seed:v1', 15],
 };

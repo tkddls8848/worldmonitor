@@ -384,8 +384,6 @@ const BOOTSTRAP_KEYS = {
   euFsi:             'economic:fsi-eu:v1',
   shippingStress:    'supply_chain:shipping_stress:v1',
   diseaseOutbreaks:  'health:disease-outbreaks:v1',
-  socialVelocity:    'intelligence:social:reddit:v1',
-  wsbTickers:        'intelligence:wsb-tickers:v1',
   vpdTrackerRealtime:   'health:vpd-tracker:realtime:v1',
   vpdTrackerHistorical: 'health:vpd-tracker:historical:v1',
   electricityPrices:    'energy:electricity:v1:index',
@@ -716,7 +714,7 @@ const STANDALONE_KEYS = {
   // Atomic country evidence + derived five-factor results (#6441). The public
   // API and MCP service read this key only; no request-time source fan-out.
   scorecardFiveFactor:       'scorecard:five-factor:v1',
-  resilienceRanking:        'resilience:ranking:v29',
+  resilienceRanking:        'resilience:ranking:v30',
   energySpineCountries:     'energy:spine:v1:_countries',
   energyExposure:           'energy:exposure:v1:index',
   energyMixAll:             'energy:mix:v1:_all',
@@ -756,7 +754,7 @@ const STANDALONE_KEYS = {
   regionalEnergyAnptl:    'energy:regional:anptl:v1',
   regionalEnergyCreg:     'energy:regional:creg:v1',
   regionalEnergyUrsea:    'energy:regional:ursea:v1',
-  resilienceIntervals:      'resilience:intervals:v12:US',
+  resilienceIntervals:      'resilience:intervals:v13:US',
   sprPolicies:              'energy:spr-policies:v1',
   pipelinesGas:             'energy:pipelines:gas:v1',
   pipelinesOil:             'energy:pipelines:oil:v1',
@@ -2373,8 +2371,6 @@ const SEED_META = {
   newsThreatSummary: { key: 'seed-meta:news:threat-summary',          maxStaleMin: 60 }, // relay classify writes every 15min (27-48min across restarts); 60min budget sits under the 2h payload TTL so this goes stale before the key vanishes
   shippingStress:    { key: 'seed-meta:supply_chain:shipping_stress',  maxStaleMin: 45 }, // relay loop every 15min; 45 = 3x interval (was 30 = 2×, too tight on relay hiccup)
   diseaseOutbreaks:  { key: 'seed-meta:health:disease-outbreaks',      maxStaleMin: 2880 }, // daily seed; 2880 = 48h = 2x interval
-  socialVelocity:    { key: 'seed-meta:intelligence:social-reddit',    maxStaleMin: 540 }, // relay loop every 180min (3h; was 60min, dropped now that ScrapeCreators handles Reddit); 540 = 3x interval. Co-pinned with SOCIAL_VELOCITY_TTL=43200 (personal-providers.cjs): the data-key TTL must STRICTLY exceed this (720min > 540min) so a dead relay shows STALE_SEED before the key expires to EMPTY.
-  wsbTickers:        { key: 'seed-meta:intelligence:wsb-tickers',      maxStaleMin: 540 }, // relay loop every 180min (3h); 540 = 3x interval. Co-pinned with WSB_TICKERS_TTL=43200 (personal-providers.cjs); TTL strictly > maxStaleMin (see socialVelocity note).
   pizzint:           { key: 'seed-meta:intelligence:pizzint',          maxStaleMin: 45 }, // relay loop every 15min; 45 = 3x interval
   // Same relay loop and cadence as pizzint above, so the same 3x-interval budget.
   // The archive write is fire-and-forget alongside live publication, so this can

@@ -31,7 +31,7 @@ WorldMonitor 从数十家发布机构购买、抓取并据以计算数据。其�
 
 ## 详细策略
 
-Pro 指标下钻会返回全部 72 行已注册指标，并在评分器具备归一化分数时一并返回该分数。只有在以下条件全部成立时才会返回原始来源值：该观测值是实测得到的、每个参与贡献的提供方都已完成再分发审查、响应中包含所需署名，且确切的贡献种子具有抓取时间戳。插补、回退、缺失、未启用、已退役、不适用、来源失败、提供方不明确或抓取时间不明确的行，永远不会包含原始值。
+Pro 指标下钻会返回全部 71 行已注册指标，并在评分器具备归一化分数时一并返回该分数。只有在以下条件全部成立时才会返回原始来源值：该观测值是实测得到的、每个参与贡献的提供方都已完成再分发审查、响应中包含所需署名，且确切的贡献种子具有抓取时间戳。插补、回退、缺失、未启用、已退役、不适用、来源失败、提供方不明确或抓取时间不明确的行，永远不会包含原始值。
 
 指标注册表中宽泛的 `license` 标签属于来源清单元数据，并不构成再分发许可。`server/worldmonitor/resilience/v1/_indicator-source-policy.ts` 中的可执行策略更为严格，并依据每个观测值的确切提供方溯源作出判断。
 
@@ -55,7 +55,7 @@ REST 与 MCP 的发现接口不为该响应公布 JMESPath 投影能力。两个
 | 审查未完成 | [国际货币基金组织](https://www.imf.org/en/Data)与各国债务来源 | `govRevenuePct`、`debtGrowthRate`、`currentAccountPct`、`unemploymentPct`、`inflationStability`、`recoveryGovRevenue`、`recoveryFiscalBalance`、`recoveryDebtToGdp`、`debtSustainabilityGap` | 在确切的 IMF 或各国债务提供方条款与署名被记录为已审查之前，抑制原始值。 |
 | 审查未完成 | [加拿大统计局 Web Data Service](https://www.statcan.gc.ca/en/developers/wds/user-guide) | 加拿大的 `unemploymentPct` 与 `inflationStability` 观测值 | 加拿大覆盖层会记录确切的加拿大统计局观测日期、发布时间、Web Data Service 端点与[开放许可](https://www.statcan.gc.ca/en/terms-conditions/open-licence)。在确切的向量级再分发决策通过审查之前，原始输出在指标策略下仍失败关闭。 |
 | 审查未完成 | [世界贸易组织](https://data.wto.org/)与 [FATF](https://www.fatf-gafi.org/en/countries/black-and-grey-lists.html) | `tradeRestrictions`、`tradeBarriers`、`fatfListingStatus` | 抑制原始值。展示归一化结果时须标注并链接到确切出版物。 |
-| 审查未完成 | 网络安全、断网、GPS、航运、运输、社交与新闻订阅源 | `cyberThreats`、`internetOutages`、`gpsJamming`、`shippingStress`、`transitDisruption`、`infraOutages`、`socialVelocity`、`newsThreatScore` | 这些订阅源综合了 Cloudflare Radar、GPSJam/ADS-B Exchange、Yahoo Finance、PortWatch/AIS、Reddit/ScrapeCreators、各出版方以及多家威胁情报提供方。在该确切观测值使用的每个提供方都通过审查之前，抑制原始值。 |
+| 审查未完成 | 网络安全、断网、GPS、航运、运输、新闻订阅源 | `cyberThreats`、`internetOutages`、`gpsJamming`、`shippingStress`、`transitDisruption`、`infraOutages`、`newsThreatScore` | 这些订阅源综合了 Cloudflare Radar、GPSJam/ADS-B Exchange、Yahoo Finance、PortWatch/AIS、各出版方以及多家威胁情报提供方。在该确切观测值使用的每个提供方都通过审查之前，抑制原始值。 |
 | 审查未完成 | 能源类提供方 | `lowCarbonGenerationShare`、`euGasStorageStress`、`energyPriceStress` | 低碳 OWID 图表使用 Ember 与 Energy Institute 的数据，其确切数据集条款尚未记录。GIE AGSI 以及确切的 FRED/上游能源价格序列同样需要完成审查。抑制原始值。 |
 | 审查未完成 | UNHCR、ACLED/GDELT 与无国界记者组织 | `displacementTotal`、`unrestEvents`、`displacementHosted`、`rsfPressFreedom`、`recoveryDisplacementVelocity` | 在确切的提供方条款通过审查之前，抑制原始值。归一化结果仍须保留提供方标注与来源链接。 |
 | 审查未完成 | [世卫组织全球卫生观察站](https://www.who.int/data/gho) | `uhcIndex`、`measlesCoverage`、`hospitalBeds`、`physiciansPer1k`、`healthExpPerCapitaUsd` | 注册表中历史遗留的公有领域标签不能替代当前的再分发审查。抑制原始值。 |

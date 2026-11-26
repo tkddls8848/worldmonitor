@@ -132,7 +132,6 @@
     "etfFlows": "Bitcoin fund flows",
     "stablecoins": "Stablecoins",
     "deduction": "Deduct Situation",
-    "wsbTickerScanner": "WallStreetBets ticker scanner",
     "ucdpEvents": "Armed Conflict Events",
     "giving": "Global Giving",
     "displacement": "Refugees and displacement",
@@ -738,9 +737,6 @@
     "serviceStatus": {
       "infoTooltip": "<strong>Service Status</strong> Live operational status of major cloud platforms, financial infrastructure, and critical internet services. Sourced from official status pages (AWS, Azure, GCP, Cloudflare, exchanges). Incidents may indicate broader disruption events."
     },
-    "socialVelocity": {
-      "infoTooltip": "<strong>Social Velocity</strong> Trending topics and viral content with geopolitical significance. Measures social media velocity: how rapidly a story spreads relative to baseline. Helps surface emerging narratives before they hit mainstream news."
-    },
     "stablecoins": {
       "infoTooltip": "<strong>Stablecoins</strong> Peg health, market cap, and 24h volume for major USD-pegged tokens (USDT, USDC, DAI, BUSD). A broken peg signals systemic risk."
     },
@@ -783,9 +779,6 @@
     },
     "worldClock": {
       "infoTooltip": "<strong>World Clock</strong> Live local times and market session status for major global financial centers. Shows open/closed status for NYSE, LSE, TSE, SGX, and other exchanges."
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>WallStreetBets Ticker Scanner</strong> Real-time ticker mentions from r/wallstreetbets, r/stocks, and r/investing. Ranked by mention frequency and engagement. Velocity measures how rapidly a ticker gains momentum across posts."
     },
     "yieldCurve": {
       "infoTooltip": "<strong>Yield Curve &amp; Rates</strong> US Treasury yield curve (2Y, 5Y, 10Y, 30Y) and key rate spreads including the 10Y-2Y inversion indicator. Also shows Euro area rates (EURIBOR, ESTR). An inverted curve historically precedes recessions. Source: Federal Reserve Economic Data."

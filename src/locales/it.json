@@ -463,7 +463,6 @@
     "oilInventories": "Giacenze di Petrolio",
     "energyCrisis": "Tracker Crisi Energetica",
     "goldIntelligence": "Intelligence sull'oro",
-    "wsbTickerScanner": "Scanner dei ticker di WallStreetBets",
     "internetDisruptions": "Interruzioni Internet",
     "internetDisruptionsTabs": {
       "outages": "Disservizi",
@@ -2303,9 +2302,6 @@
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Quota della generazione di elettricità da fonti rinnovabili per regione e anno, più la capacità installata negli Stati Uniti per solare, eolico e carbone (MW). Fonti: Banca Mondiale (EG.ELC.RNEW.ZS) e Amministrazione dell'Informazione Energetica statunitense."
     },
-    "socialVelocity": {
-      "infoTooltip": "<strong>Velocità sociale</strong> Argomenti di tendenza e contenuti virali con rilevanza geopolitica. Misura la velocità sui social media: quanto rapidamente una storia si diffonde rispetto alla linea di base. Aiuta a far emergere narrazioni nascenti prima che raggiungano i media tradizionali."
-    },
     "conservationWins": {
       "infoTooltip": "<strong>Successi della conservazione</strong> Notizie positive sulla conservazione: recupero di popolazioni di specie, traguardi di ripristino degli habitat e sforzi di de-estinzione. Fonte: IUCN, WWF e pubblicazioni di ricerca sulla conservazione."
     },
@@ -2530,9 +2526,6 @@
     },
     "goldIntelligence": {
       "infoTooltip": "<strong>Gold intelligence</strong> Prezzi dell'oro in diverse valute, rapporti oro/argento e oro/platino, e posizioni futures del denaro gestito. Le fonti includono Yahoo Finance e la Commodity Futures Trading Commission."
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>WallStreetBets Ticker Scanner</strong> Menzioni di ticker in tempo reale da r/wallstreetbets, r/stocks e r/investing. Classificate per frequenza e coinvolgimento di menzioni. La velocità misura quanto rapidamente un ticker guadagna slancio nei post."
     },
     "proBanner": {
       "badge": "PRO",

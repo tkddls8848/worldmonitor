@@ -173,7 +173,7 @@ Every view state (map position, active layers, selected panels, time range) is e
 
 ### Story Sharing
 
-Export intelligence briefs to Twitter/X, LinkedIn, WhatsApp, Telegram, and Reddit with auto-generated Open Graph preview images.
+Export intelligence briefs to Twitter/X, LinkedIn, WhatsApp, and Telegram with auto-generated Open Graph preview images.
 
 ### Desktop App
 

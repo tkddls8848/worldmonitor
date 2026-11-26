@@ -219,7 +219,7 @@ function spearmanCorrelation(ranksA, ranksB) {
 // events, unrest events, cyber threats, GPS jamming hexes, internet
 // outages, displacement summary, supply-chain shipping / transit
 // stress, trade restrictions / barriers, sanctions counts, energy
-// price stress, social Reddit, BIS DSR / EER, news threat summary)
+// price stress, BIS DSR / EER, news threat summary)
 // cannot be deterministically reduced to a single per-country scalar
 // without re-running the scorer's own windowing / severity-weighting
 // math, which would duplicate production logic and drift. These are
@@ -348,7 +348,6 @@ const EXTRACTION_RULES = {
 
   // ── informationCognitive ────────────────────────────────────────────
   rsfPressFreedom: { type: 'static-path', path: ['rsf', 'score'] },
-  socialVelocity: { type: 'summarize-social-velocity' },
   newsThreatScore: { type: 'news-threat-score' },
 
   // ── education ───────────────────────────────────────────────────────
@@ -586,38 +585,12 @@ function extractSummarizeUnrest(_rule, { unrest }, countryCode, { summarizeUnres
   const { unrestCount } = summarizeUnrest(unrest, countryCode);
   return unrestCount > 0 ? unrestCount : null;
 }
-function extractSocialVelocity(_rule, { socialVelocity }, countryCode, { summarizeSocialVelocity }) {
-  if (!summarizeSocialVelocity || socialVelocity == null) return null;
-  const v = summarizeSocialVelocity(socialVelocity, countryCode);
-  return v > 0 ? v : null;
-}
-function extractDisplacementField(rule, { displacement }, countryCode, { getCountryDisplacement }) {
-  if (!getCountryDisplacement || displacement == null) return null;
-  const entry = getCountryDisplacement(displacement, countryCode);
-  return typeof entry?.[rule.field] === 'number' ? entry[rule.field] : null;
-}
-function extractNewsThreat(_rule, { newsThreat }, countryCode, { getThreatSummaryScore }) {
-  if (!getThreatSummaryScore || newsThreat == null) return null;
-  return getThreatSummaryScore(newsThreat, countryCode);
-}
-function extractTradeRestrictions(_rule, { tradeRestrictions }, countryCode, { countTradeRestrictions }) {
-  if (!countTradeRestrictions || tradeRestrictions == null) return null;
-  const count = countTradeRestrictions(tradeRestrictions, countryCode);
-  return count > 0 ? count : null;
-}
-function extractTradeBarriers(_rule, { tradeBarriers }, countryCode, { countTradeBarriers }) {
-  if (!countTradeBarriers || tradeBarriers == null) return null;
-  const count = countTradeBarriers(tradeBarriers, countryCode);
-  return count > 0 ? count : null;
-}
-
 const AGGREGATE_EXTRACTORS = {
   'summarize-cyber': extractSummarizeCyber,
   'summarize-outages-penalty': extractOutagesPenalty,
   'summarize-gps-penalty': extractGpsPenalty,
   'summarize-ucdp': extractSummarizeUcdp,
   'summarize-unrest': extractSummarizeUnrest,
-  'summarize-social-velocity': extractSocialVelocity,
   'displacement-field': extractDisplacementField,
   'news-threat-score': extractNewsThreat,
   'count-trade-restrictions': extractTradeRestrictions,
@@ -662,7 +635,7 @@ async function readExtractionSources(countryCode, reader) {
     externalDebt, importHhi, fuelStocks, imfMacro, imfLabor,
     nationalDebt, sanctionsCounts,
     cyber, outages, gps, ucdp, unrest, newsThreat, displacement,
-    socialVelocity, tradeRestrictions, tradeBarriers,
+    tradeRestrictions, tradeBarriers,
     ...bulkV1Payloads
   ] = await Promise.all([
     reader(`resilience:static:${countryCode}`),
@@ -684,7 +657,6 @@ async function readExtractionSources(countryCode, reader) {
     reader('unrest:events:v1'),
     reader('news:threat:summary:v1'),
     reader(`displacement:summary:v1:${currentYear}`),
-    reader('intelligence:social:reddit:v1'),
     reader('trade:restrictions:v1:tariff-overview:50'),
     reader('trade:barriers:v1:tariff-gap:50'),
     ...BULK_V1_KEYS.map((k) => reader(k)),
@@ -695,7 +667,7 @@ async function readExtractionSources(countryCode, reader) {
     externalDebt, importHhi, fuelStocks, imfMacro, imfLabor,
     nationalDebt, sanctionsCounts,
     cyber, outages, gps, ucdp, unrest, newsThreat, displacement,
-    socialVelocity, tradeRestrictions, tradeBarriers,
+    tradeRestrictions, tradeBarriers,
     bulkV1,
   };
 }
@@ -782,7 +754,6 @@ async function main() {
     summarizeGps,
     summarizeUcdp,
     summarizeUnrest,
-    summarizeSocialVelocity,
     getCountryDisplacement,
     getThreatSummaryScore,
     countTradeRestrictions,
@@ -794,7 +765,6 @@ async function main() {
     summarizeGps,
     summarizeUcdp,
     summarizeUnrest,
-    summarizeSocialVelocity,
     getCountryDisplacement,
     getThreatSummaryScore,
     countTradeRestrictions,

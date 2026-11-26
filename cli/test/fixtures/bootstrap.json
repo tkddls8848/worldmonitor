@@ -1722,55 +1722,6 @@
    "stressLevel": "moderate",
    "fetchedAt": 1792264532262
   },
-  "socialVelocity": {
-   "posts": [
-    {
-     "id": "1x8dp89",
-     "title": "Zelenskyy Says Starlink Speed Restrictions Look Deliberate",
-     "subreddit": "worldnews",
-     "url": "https://reddit.com/r/worldnews/comments/1x8dp89/zelenskyy_says_starlink_speed_restrictions_look/",
-     "score": 659,
-     "upvoteRatio": 0.9824304538799414,
-     "numComments": 25,
-     "velocityScore": 573.3,
-     "createdAt": 1792252565000
-    },
-    {
-     "id": "1x8cmz0",
-     "title": "Israeli settlers attack European delegation convoy in West Bank, beat French mayor",
-     "subreddit": "worldnews",
-     "url": "https://reddit.com/r/worldnews/comments/1x8cmz0/israeli_settlers_attack_european_delegation/",
-     "score": 674,
-     "upvoteRatio": 0.9201995012468828,
-     "numComments": 67,
-     "velocityScore": 476.5,
-     "createdAt": 1792249909000
-    },
-    {
-     "id": "1x8a9m9",
-     "title": "Bank of England governor walks out of IMF summit in protest against Russia | Andrew Bailey",
-     "subreddit": "worldnews",
-     "url": "https://reddit.com/r/worldnews/comments/1x8a9m9/bank_of_england_governor_walks_out_of_imf_summit/",
-     "score": 1333,
-     "upvoteRatio": 0.9882611885546588,
-     "numComments": 26,
-     "velocityScore": 424,
-     "createdAt": 1792243699000
-    },
-    {
-     "id": "1x88igv",
-     "title": "Zelensky Calls Trump\u2019s Sanctions Waiver a Mistake",
-     "subreddit": "worldnews",
-     "url": "https://reddit.com/r/worldnews/comments/1x88igv/zelensky_calls_trumps_sanctions_waiver_a_mistake/",
-     "score": 1955,
-     "upvoteRatio": 0.9864729458917836,
-     "numComments": 51,
-     "velocityScore": 350.1,
-     "createdAt": 1792238482000
-    }
-   ],
-   "fetchedAt": 1792254875378
-  },
   "temporalAnomalies": {
    "anomalies": [
     {

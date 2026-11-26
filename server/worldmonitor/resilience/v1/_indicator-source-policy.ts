@@ -310,7 +310,6 @@ const OWID_LOW_CARBON = incompletePolicy(
 const UNHCR = incompletePolicy('UNHCR', 'https://www.unhcr.org/refugee-statistics/', 'UNHCR Refugee Data Finder; link to the source dataset.');
 const UNREST = incompletePolicy('ACLED / GDELT', null, 'Credit the exact ACLED or GDELT source used for the observation.');
 const RSF = incompletePolicy('Reporters Without Borders', 'https://rsf.org/en/index', 'Reporters Without Borders, World Press Freedom Index.');
-const REDDIT = incompletePolicy('Reddit / ScrapeCreators', 'https://www.reddit.com/', 'Credit Reddit and the exact upstream collection provider.');
 const NEWS = incompletePolicy('WorldMonitor derived news signal and upstream publishers', null, 'Credit the contributing publishers and link to source items.');
 const WHO = incompletePolicy('World Health Organization Global Health Observatory', 'https://www.who.int/data/gho', 'World Health Organization Global Health Observatory; link to the source indicator.');
 const IPC = incompletePolicy('IPC via Humanitarian Data Exchange', 'https://data.humdata.org/', 'Integrated Food Security Phase Classification via HDX; link to the source dataset.');
@@ -420,7 +419,6 @@ export const INDICATOR_SOURCE_POLICIES = {
   ucdpConflict: UCDP,
   displacementHosted: UNHCR,
   rsfPressFreedom: RSF,
-  socialVelocity: REDDIT,
   newsThreatScore: NEWS,
   femaleUpperSecondaryAttainment: WORLD_BANK_EDUCATION,
   uhcIndex: WHO,

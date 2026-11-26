@@ -461,7 +461,6 @@
     "oilInventories": "Petrol Envanterleri",
     "energyCrisis": "Enerji Krizi İzleyicisi",
     "goldIntelligence": "Altın İstihbaratı",
-    "wsbTickerScanner": "WallStreetBets ticker tarayıcı",
     "internetDisruptions": "İnternet Kesintileri",
     "internetDisruptionsTabs": {
       "outages": "Kesintiler",
@@ -2293,9 +2292,6 @@
     "renewable": {
       "infoTooltip": "<strong>Yenilenebilir Enerji</strong> Bölge ve yıla göre yenilenebilir kaynaklardan elektrik üretimi payı, artı ABD güneş, rüzgar ve kömür için kurulu kapasitesi (MW). Kaynaklar: Dünya Bankası (EG.ELC.RNEW.ZS) ve ABD Enerji Bilgi İdaresi."
     },
-    "socialVelocity": {
-      "infoTooltip": "<strong>Sosyal Hız</strong> Jeopolitik önem taşıyan trend konular ve viral içerik. Sosyal medya hızını ölçer: bir haberin baz çizgisine göre ne kadar hızlı yayıldığını. Ana akım haberlere ulaşmadan önce ortaya çıkan anlatıları tespit etmeye yardımcı olur."
-    },
     "conservationWins": {
       "infoTooltip": "<strong>Koruma Başarıları</strong> Olumlu doğa koruma haberleri: tür popülasyon toparlanmaları, habitat restorasyon kilometre taşları ve de-ekstinksiyon çabaları. Kaynak: IUCN, WWF ve koruma araştırma yayınları."
     },
@@ -2519,9 +2515,6 @@
     },
     "goldIntelligence": {
       "infoTooltip": "<strong>Altın istihbaratı</strong> Çeşitli para birimlerinde altın fiyatları, altın/gümüş ve altın/platin oranları ve yönetilen fon vadeli işlem pozisyonları. Kaynaklar Yahoo Finance ve Commodity Futures Trading Commission'u içerir."
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>WallStreetBets Sembol Tarayıcısı</strong> r/wallstreetbets, r/stocks ve r/investing'den gerçek zamanlı sembol bahisleri. Bahis sıklığı ve katılım tarafından sıralanmış. Hız, bir sembolün yazılarda ne kadar hızlı momentum kazandığını ölçer."
     },
     "proBanner": {
       "badge": "PRO",

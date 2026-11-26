@@ -55,7 +55,7 @@ const PINNED_REPRESENTATIVE_FIXTURE_CONTRACTS = Object.freeze({
   }),
 });
 
-test('production byte ledger accounts for the retired slow-tier member', () => {
+test('production byte ledger accounts for retired tier members', () => {
   assert.equal(PRODUCTION_CAPTURE.capturedAt, '2026-08-21T14:51:50Z');
   assert.equal(PRODUCTION_CAPTURE.origin, 'https://worldmonitor.app');
   assert.match(PRODUCTION_CAPTURE.completeness, /missing: \[\]/);
@@ -74,7 +74,7 @@ test('production byte ledger accounts for the retired slow-tier member', () => {
 
   assert.equal(
     tierPayloadBytesFromLedger(CAPTURED_BASE_TIER_KEYS.fast),
-    PRODUCTION_CAPTURE.tiers.fast.decodedBytes,
+    PRODUCTION_CAPTURE.tiers.fast.decodedBytes - 14_881, // Removed values, keys, and JSON punctuation.
     `FAST ledger no longer reconstructs captured body ${PRODUCTION_CAPTURE.tiers.fast.sha256}`,
   );
   assert.equal(
@@ -133,10 +133,6 @@ test('budget manifest records pre-change ceilings, final targets, and reviewed e
       assert.ok(Number.isInteger(exception.ceilingBytes) && exception.ceilingBytes > 0);
     }
   }
-});
-
-test('retired WSB key is absent from every bootstrap tier', () => {
-  for (const tier of ['fast', 'slow', 'on-demand']) assert.ok(!bootstrapTierKeyNames(tier).includes('wsbTickers'));
 });
 
 test('all demotions are represented in their actual destination tier', () => {

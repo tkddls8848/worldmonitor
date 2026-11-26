@@ -142,36 +142,6 @@ curl -s https://worldmonitor.app/mcp \
 
 </CodeGroup>
 
-### `get_social_velocity`
-
-r/worldnews 与 r/geopolitics 中 `velocityScore`（得分对数 × 点赞率 × 6 小时衰减）最高的 30 条帖子，含得分、点赞率、评论数和链接（字段 `url`）。中继约每 3 小时刷新一次，超过 9 小时标记为过期，与 `/api/health` 的预算一致。帖子是未经核实的用户投稿：该工具衡量公众关注度，而非事件本身。
-
-**参数（工具特定）：**
-
-| 名称 | 类型 | 描述 |
-|------|------|-------------|
-| `subreddit` | string | 筛选为一个子版块（例如 "worldnews"、"geopolitics"）。 |
-| `limit` | number | 将帖子列表限制为最多这么多项（默认 30，传 0 表示不限）。 |
-
-- **API 端点：** `GET /api/intelligence/v1/get-social-velocity`
-- **类型：** 缓存读取 — 来自 Redis 引导缓存的亚秒级响应。
-- **新鲜度预算：** 标记 `stale: true` 前最多 **9 小时**（中继约每 3 小时刷新一次；与 `/api/health` 预算一致）。
-
-<CodeGroup>
-
-```bash curl
-curl -s https://worldmonitor.app/mcp \
-  -H "X-WorldMonitor-Key: $WM_KEY" \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "jsonrpc":"2.0","id":1,
-    "method":"tools/call",
-    "params":{"name":"get_social_velocity","arguments":{}}
-  }'
-```
-
-</CodeGroup>
-
 ### `get_temporal_anomalies`
 
 时间异常监测：将当前事件计数与按星期和季节划分的基线进行对比，并按 z 分数评定严重度。新闻速度、卫星火点检测等被跟踪的数据流会与按工作日和月份分键的 90 天 Welford 基线比较。每个异常包含观测计数、预期基线计数、z 分数、倍数和严重度等级（medium ≥ 1.5σ、high ≥ 2σ、critical ≥ 3σ）。数据新鲜且异常列表为空，说明活动处于正常范围内 — 这本身就是信号。

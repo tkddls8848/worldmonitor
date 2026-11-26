@@ -113,7 +113,6 @@ export function getShareUrls(data: StoryData): Record<string, string> {
   return {
     twitter: `https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(url)}`,
     linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
-    reddit: `https://reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(`${data.countryName} Intelligence Brief - World Monitor`)}`,
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
     whatsapp: `https://wa.me/?text=${encodeURIComponent(shareTexts.whatsapp(data))}`,
     telegram: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(shareTexts.telegram(data))}`,

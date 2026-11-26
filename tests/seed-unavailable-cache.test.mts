@@ -14,7 +14,6 @@ import { listEarthquakes } from '../server/worldmonitor/seismology/v1/list-earth
 import { listSecurityAdvisories } from '../server/worldmonitor/intelligence/v1/list-security-advisories';
 import { listSatellites } from '../server/worldmonitor/intelligence/v1/list-satellites';
 import { listCrossSourceSignals } from '../server/worldmonitor/intelligence/v1/list-cross-source-signals';
-import { getSocialVelocity } from '../server/worldmonitor/intelligence/v1/get-social-velocity';
 import { createConflictServiceRoutes } from '../src/generated/server/worldmonitor/conflict/v1/service_server';
 import { getHumanitarianSummary } from '../server/worldmonitor/conflict/v1/get-humanitarian-summary';
 import { getBlsSeries } from '../server/worldmonitor/economic/v1/get-bls-series';
@@ -48,7 +47,7 @@ const gateway = createDomainGateway([
   ...createMarketServiceRoutes({ listCryptoQuotes, getPhysicalPremiums, getSectorSummary, listCryptoSectors, listEtfFlows, listGulfQuotes } as never, serverOptions),
   ...createClimateServiceRoutes({ listClimateAnomalies } as never, serverOptions),
   ...createEconomicServiceRoutes({ listWorldBankIndicators, getBlsSeries, getOilInventories } as never, serverOptions),
-  ...createIntelligenceServiceRoutes({ getSocialVelocity, listCrossSourceSignals, listSatellites, listSecurityAdvisories, getPizzintStatus } as never, serverOptions),
+  ...createIntelligenceServiceRoutes({ listCrossSourceSignals, listSatellites, listSecurityAdvisories, getPizzintStatus } as never, serverOptions),
 ]);
 
 before(async () => {
@@ -100,7 +99,6 @@ const cases = [
   { path: 'market/v1/list-gulf-quotes', key: 'market:gulf-quotes:v1', payload: { quotes: [], rateLimited: false }, field: 'quotes' },
   { path: 'economic/v1/get-oil-inventories', key: 'economic:crude-inventories:v1', payload: { weeks: [{ period: '2026-09-01', stocksMb: 440 }] }, field: 'crudeWeeks' },
   { path: 'intelligence/v1/get-pizzint-status', key: 'intelligence:pizzint:seed:v1', payload: { pizzint: { locations: [], defconLevel: 5 }, tensionPairs: [] }, field: 'tensionPairs' },
-  { path: 'intelligence/v1/get-social-velocity', key: 'intelligence:social:reddit:v1', payload: { posts: [], fetchedAt: 123 }, field: 'posts' },
 ];
 for (const entry of cases) {
   for (const failure of ['miss', 'http-error', 'timeout', 'malformed'] as const) {
@@ -113,7 +111,6 @@ for (const entry of cases) {
       assert.deepEqual(body[entry.field], []);
       if (entry.path.includes('etf')) assert.equal(body.timestamp, '');
       if (entry.path.includes('oil-inventories')) assert.equal(body.updatedAt, '');
-      if (entry.path.includes('social-velocity')) assert.equal(body.fetchedAt, 0);
       mode = 'hit';
       cache.set(entry.key, entry.payload);
       const recovered = await request(entry.path);

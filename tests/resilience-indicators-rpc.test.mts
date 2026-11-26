@@ -252,7 +252,7 @@ describe('GetResilienceIndicators handler', () => {
     assert.equal(reads, 0);
   });
 
-  test('exercises the real scorer trace once and returns all 72 registry rows', async () => {
+  test('exercises the real scorer trace once and returns all 71 registry rows', async () => {
     const warnings = mock.method(console, 'warn', () => {});
     const infos = mock.method(console, 'info', () => {});
     const reads = new Map<string, number>();
@@ -271,8 +271,8 @@ describe('GetResilienceIndicators handler', () => {
       );
       assert.equal(response.countryCode, 'DE');
       assert.equal(response.dataVersion, '2026-08-29');
-      assert.equal(response.indicators.length, 72);
-      assert.equal(new Set(response.indicators.map((row) => row.id)).size, 72);
+      assert.equal(response.indicators.length, 71);
+      assert.equal(new Set(response.indicators.map((row) => row.id)).size, 71);
       for (const dimension of response.dimensions) {
         if (!dimension.reconciliationAvailable) {
           assert.equal(dimension.active, false, dimension.id);
@@ -467,7 +467,7 @@ describe('GetResilienceIndicators handler', () => {
     assert.equal(cache.size, 0);
     fail = false;
     const response = await handler(ctx, { countryCode: 'DE' });
-    assert.equal(response.indicators.length, 72);
+    assert.equal(response.indicators.length, 71);
     assert.equal(cache.size, 1);
   });
 

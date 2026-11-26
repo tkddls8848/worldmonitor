@@ -28,7 +28,7 @@ export const config = { runtime: 'edge' };
 
 // Keep these literals in sync with scripts/_resilience-intervals.mjs. Edge
 // functions cannot import from scripts/, so tests enforce this mirror.
-const RESILIENCE_INTERVAL_KEY_PREFIX = 'resilience:intervals:v12:';
+const RESILIENCE_INTERVAL_KEY_PREFIX = 'resilience:intervals:v13:';
 const RESILIENCE_INTERVAL_MIN_RECORD_COUNT = 180;
 const RESILIENCE_INTERVAL_METHODOLOGY = 'weight-perturbation-sensitivity-v3';
 const RESILIENCE_INTERVAL_SOURCE_VERSION = `resilience-intervals:${RESILIENCE_INTERVAL_KEY_PREFIX}${RESILIENCE_INTERVAL_METHODOLOGY}`;
@@ -240,8 +240,6 @@ const SEED_DOMAINS = {
   // Corporate intelligence (#5695): intervalMin = maxStaleMin / 2 (api/health.js: 2880 / 120).
   'intelligence:sec-cik-map': { key: 'seed-meta:intelligence:sec-cik-map', intervalMin: 1440, minRecordCount: 5000 },
   'intelligence:sec-8k-stream': { key: 'seed-meta:intelligence:sec-8k-stream', intervalMin: 60, minRecordCount: 50 },
-  'intelligence:social-reddit': { key: 'seed-meta:intelligence:social-reddit', intervalMin: 270 }, // 180min relay loop (3h; dropped from 60min now that ScrapeCreators handles Reddit); intervalMin = maxStaleMin / 2 (540 / 2), matching api/health.js
-  'intelligence:wsb-tickers': { key: 'seed-meta:intelligence:wsb-tickers', intervalMin: 270 }, // 180min relay loop (3h); intervalMin = maxStaleMin / 2 (540 / 2), matching api/health.js
   'trade:customs-revenue':    { key: 'seed-meta:trade:customs-revenue',    intervalMin: 720 },
   'trade:us-hts:catalog':     { key: 'seed-meta:trade:us-hts:catalog',     intervalMin: 720, minRecordCount: 100, activationKey: 'seed-activated:trade:us-hts' }, // intervalMin = maxStaleMin / 2, matching api/health.js
   'comtrade:bilateral-hs4':   { key: 'seed-meta:comtrade:bilateral-hs4',   intervalMin: 25200, minRecordCount: 110 }, // intervalMin*2 = health.js 35d budget for the monthly Railway seed; minRecordCount matches api/health.js + MIN_COUNTRY_COVERAGE

@@ -22,8 +22,6 @@ import { listMaterialEvents } from './list-material-events';
 import { getGdeltTopicTimeline } from './get-gdelt-topic-timeline';
 import { listCrossSourceSignals } from './list-cross-source-signals';
 import { listMarketImplications } from './list-market-implications';
-import { listWsbTickers } from './list-wsb-tickers';
-import { getSocialVelocity } from './get-social-velocity';
 import { getCountryEnergyProfile } from './get-country-energy-profile';
 import { computeEnergyShockScenario } from './compute-energy-shock';
 import { getCountryPortActivity } from './get-country-port-activity';
@@ -58,8 +56,6 @@ export const intelligenceHandler: IntelligenceServiceHandler = {
   getGdeltTopicTimeline,
   listCrossSourceSignals,
   listMarketImplications,
-  getSocialVelocity,
-  listWsbTickers,
   getCountryEnergyProfile,
   computeEnergyShockScenario,
   getCountryPortActivity,

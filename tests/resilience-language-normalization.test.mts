@@ -73,7 +73,6 @@ describe('language coverage normalization (Phase 2 T2.9)', () => {
         if (key === `resilience:static:${countryCode}`) {
           return { rsf: { score: 60, rank: 50, year: 2025 } };
         }
-        if (key === 'intelligence:social:reddit:v1') return { posts: [] };
         if (key === 'news:threat:summary:v1') {
           return {
             byCountry: { [countryCode]: { critical: 0, high: 2, medium: 4, low: 2 } },

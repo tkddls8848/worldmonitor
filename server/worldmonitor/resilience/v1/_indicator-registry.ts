@@ -920,8 +920,8 @@ export const INDICATOR_REGISTRY = [
     comprehensive: true,
   },
 
-  // ── informationCognitive (3 sub-metrics) ──────────────────────────────────
-  // The velocity + news-threat sub-indicators are weight-attenuated by
+  // ── informationCognitive (2 sub-metrics) ──────────────────────────────────
+  // The news threat indicator weight is attenuated by
   // `getLanguageCoverageFactor` (_language-coverage.ts) so that countries with
   // sparse English-language news coverage lean more heavily on the static RSF
   // press-freedom indicator (which is coverage-independent). See #3736 for the
@@ -932,7 +932,7 @@ export const INDICATOR_REGISTRY = [
     description: 'Reporters Sans Frontieres press freedom score (0-100)',
     direction: 'lowerBetter',
     goalposts: { worst: 100, best: 0 },
-    weight: 0.55,
+    weight: 0.6470588235294118,
     sourceKey: 'resilience:static:{ISO2}',
     scope: 'global',
     cadence: 'annual',
@@ -942,27 +942,12 @@ export const INDICATOR_REGISTRY = [
     comprehensive: true,
   },
   {
-    id: 'socialVelocity',
-    dimension: 'informationCognitive',
-    description: 'Reddit social velocity score (log10(velocity+1)); sub-indicator weight scales with English-language coverage',
-    direction: 'lowerBetter',
-    goalposts: { worst: 3, best: 0 },
-    weight: 0.15,
-    sourceKey: 'intelligence:social:reddit:v1',
-    scope: 'global',
-    cadence: 'realtime',
-    tier: 'core',
-    coverage: 195,
-    license: 'open-attribution',
-    comprehensive: false,
-  },
-  {
     id: 'newsThreatScore',
     dimension: 'informationCognitive',
     description: 'AI news threat summary (critical=4x, high=2x, medium=1x, low=0.5x); sub-indicator weight scales with English-language coverage',
     direction: 'lowerBetter',
     goalposts: { worst: 20, best: 0 },
-    weight: 0.3,
+    weight: 0.35294117647058826,
     sourceKey: 'news:threat:summary:v1',
     scope: 'global',
     cadence: 'daily',

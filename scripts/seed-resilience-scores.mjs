@@ -76,8 +76,8 @@ const RANKING_REFRESH_SLOW_MS = 45_000;
 // v27 → v28 for #6511: the owner-controlled financialSystemExposure flag is
 // live in production, so score and ranking writes must move out of the
 // education-only namespace before the next refresh.
-export const RESILIENCE_SCORE_CACHE_PREFIX = 'resilience:score:v29:';
-export const RESILIENCE_RANKING_CACHE_KEY = 'resilience:ranking:v29';
+export const RESILIENCE_SCORE_CACHE_PREFIX = 'resilience:score:v30:';
+export const RESILIENCE_RANKING_CACHE_KEY = 'resilience:ranking:v30';
 // Must match the server-side RESILIENCE_RANKING_CACHE_TTL_SECONDS. Extended
 // to 12h (2x the cron interval) so a missed/slow cron can't create an
 // EMPTY_ON_DEMAND gap before the next successful rebuild.

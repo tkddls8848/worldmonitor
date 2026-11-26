@@ -35,8 +35,7 @@ export const CAPTURED_BASE_TIER_KEYS = Object.freeze({
     'marketQuotes', 'commodityQuotes', 'macroSignals', 'shippingRates', 'chokepoints',
     'positiveGeoEvents', 'theaterPosture', 'riskScores', 'flightDelays', 'insights',
     'predictions', 'temporalAnomalies', 'weatherAlerts', 'canadaAlerts', 'spending',
-    'gdeltIntel', 'correlationCards', 'forecasts', 'shippingStress', 'socialVelocity',
-    'wsbTickers',
+    'gdeltIntel', 'correlationCards', 'forecasts', 'shippingStress',
   ]),
   slow: Object.freeze([
     'sectors', 'etfFlows', 'bisPolicy', 'bisExchange', 'bisCredit', 'chinaMacro',
@@ -84,8 +83,6 @@ export const CAPTURED_KEY_DECODED_BYTES = Object.freeze({
   correlationCards: 87_842,
   forecasts: 40_048,
   shippingStress: 4_288,
-  socialVelocity: 10_574,
-  wsbTickers: 4_275,
   sectors: 4_086,
   etfFlows: 1_848,
   bisPolicy: 1_395,

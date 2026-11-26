@@ -77,7 +77,6 @@
     "oilInventories": "Estoques de Petróleo",
     "energyCrisis": "Rastreador de Crise Energética",
     "goldIntelligence": "Inteligência de Ouro",
-    "wsbTickerScanner": "Scanner de ticker WallStreetBets",
     "internetDisruptions": "Interrupções de Internet",
     "internetDisruptionsTabs": {
       "outages": "Interrupções",
@@ -1917,9 +1916,6 @@
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Participação da geração de eletricidade a partir de fontes renováveis por região e ano, além da capacidade instalada dos EUA para solar, vento e carvão (MW). Fontes: Banco Mundial (EG.ELC.RNEW.ZS) e Administração de Informações de Energia dos EUA."
     },
-    "socialVelocity": {
-      "infoTooltip": "<strong>Velocidade social</strong> Tópicos em tendência e conteúdo viral com significado geopolítico. Mede a velocidade nas redes sociais: quão rapidamente uma história se espalha em relação à linha de base. Ajuda a identificar narrativas emergentes antes de chegarem aos media tradicionais."
-    },
     "conservationWins": {
       "infoTooltip": "<strong>Conquistas da conservação</strong> Notícias positivas de conservação: recuperação de populações de espécies, marcos de restauração de habitats e esforços de des-extinção. Fonte: IUCN, WWF e publicações de investigação em conservação."
     },
@@ -2144,9 +2140,6 @@
     },
     "goldIntelligence": {
       "infoTooltip": "<strong>Gold intelligence</strong> Preços do ouro em várias moedas, razões ouro/prata e ouro/platina, e posições de futuros de managed money. As fontes incluem Yahoo Finance e a Commodity Futures Trading Commission."
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>WallStreetBets Ticker Scanner</strong> Menções de ticker em tempo real de r/wallstreetbets, r/stocks e r/investing. Classificadas por frequência de menção e engajamento. Velocidade mede a rapidez com que um ticker ganha impulso nos posts."
     },
     "proBanner": {
       "badge": "PRO",

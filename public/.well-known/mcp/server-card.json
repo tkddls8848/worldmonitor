@@ -322,14 +322,6 @@
       }
     },
     {
-      "name": "get_social_velocity",
-      "description": "Return the 30 Reddit posts from r/worldnews and r/geopolitics with the highest velocityScore (log of score x upvote ratio x a 6-hour recency decay), each with title, subreddit, url (the Reddit permalink), score, upvoteRatio, numComments and createdAt. Measures what is drawing public attention on Reddit now, not what happened: posts are unverified user submissions with no classification or corroboration, there is no history beyond the current snapshot, and no other social platform is covered. Refreshed about every 3 hours, flagged stale after 9 hours. Seeded-cache read: weight 1 on API plans, included in the signed-in free allowance.",
-      "_meta": {
-        "worldmonitor/access": "free-account",
-        "worldmonitor/category": "geopolitical-security"
-      }
-    },
-    {
       "name": "get_temporal_anomalies",
       "description": "Temporal anomaly watch: current event counts vs day-of-week and seasonal baselines, scored by z-score severity. Surfaces where activity is statistically abnormal right now — news velocity, satellite fire detections, and other tracked streams are compared against 90-day Welford baselines keyed by weekday and month, so a Tuesday in July is only compared to prior Tuesdays in July. Each anomaly carries the observed count, expected baseline count, z-score, multiplier, and a severity band (medium >= 1.5σ, high >= 2σ, critical >= 3σ). Filter by stream type, region, or minimum severity. An empty anomaly list with fresh data means activity is within normal bounds — that is itself signal. Statistical deviations per stream only: no story content, no cross-domain alert rollup. Seeded-cache read: weight 1 on API plans, included in the signed-in free allowance.",
       "_meta": {
@@ -452,7 +444,7 @@
     },
     {
       "name": "get_resilience_indicators",
-      "description": "Explain one country's resilience dimension scores across all 72 registered indicators. Returns normalized scores, observed or imputed state, runtime weights, contributions reconciled to each dimension, observation age and source provenance. Raw values are included only when redistribution is permitted. 51 indicators update annually; 11 move with current events (realtime or daily feeds such as the news threat score and Reddit velocity), so a short-term score change can come from those. Answers why a country scores as it does, indicator by indicator; carries no instability index, travel advisory, sanctions status, story list or narrative. Requires a WorldMonitor Pro subscription; weight 2 on API plans. Read-only.",
+      "description": "Explain one country's resilience dimension scores across all 71 registered indicators. Returns normalized scores, observed or imputed state, runtime weights, contributions reconciled to each dimension, observation age and source provenance. Raw values are included only when redistribution is permitted. 51 indicators update annually; 11 move with current events (realtime or daily feeds such as the news threat score and Reddit velocity), so a short-term score change can come from those. Answers why a country scores as it does, indicator by indicator; carries no instability index, travel advisory, sanctions status, story list or narrative. Requires a WorldMonitor Pro subscription; weight 2 on API plans. Read-only.",
       "_meta": {
         "worldmonitor/access": "subscription",
         "worldmonitor/category": "markets-economy"

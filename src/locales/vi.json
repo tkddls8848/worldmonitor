@@ -459,7 +459,6 @@
     "oilInventories": "Tồn kho Dầu",
     "energyCrisis": "Theo dõi Khủng hoảng Năng lượng",
     "goldIntelligence": "Thông tin Vàng",
-    "wsbTickerScanner": "WallStreetBets ticker scanner",
     "internetDisruptions": "Gián đoạn Internet",
     "internetDisruptionsTabs": {
       "outages": "Mất điện",
@@ -2283,9 +2282,6 @@
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Tỷ lệ sinh điện từ năng lượng tái tạo theo khu vực và năm, cộng với công suất lắp đặt của Mỹ cho năng lượng mặt trời, gió và than (MW). Nguồn: World Bank (EG.ELC.RNEW.ZS) và Cơ quan Thông tin Năng lượng Mỹ."
     },
-    "socialVelocity": {
-      "infoTooltip": "<strong>Tốc độ xã hội</strong> Chủ đề xu hướng và nội dung lan truyền có ý nghĩa địa chính trị. Đo tốc độ mạng xã hội: một câu chuyện lan truyền nhanh đến mức nào so với đường cơ sở. Giúp phát hiện các tường thuật mới nổi trước khi chúng đến truyền thông chính thống."
-    },
     "conservationWins": {
       "infoTooltip": "<strong>Thành tựu bảo tồn</strong> Tin tức tích cực về bảo tồn: phục hồi quần thể loài, cột mốc phục hồi môi trường sống và nỗ lực phục hồi loài tuyệt chủng. Nguồn: IUCN, WWF và các ấn phẩm nghiên cứu bảo tồn."
     },
@@ -2508,9 +2504,6 @@
     },
     "goldIntelligence": {
       "infoTooltip": "<strong>Gold intelligence</strong> Giá vàng theo nhiều tiền tệ, tỷ lệ vàng/bạc và vàng/bạch kim, và vị thế hợp đồng tương lai tiền được quản lý. Các nguồn bao gồm Yahoo Finance và Ủy ban Thương mại Hợp đồng Tương lai."
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>WallStreetBets Ticker Scanner</strong> Đề cập mã ticker theo thời gian thực từ r/wallstreetbets, r/stocks và r/investing. Xếp hạng theo tần suất đề cập và mức độ tham gia. Vận tốc đo lường tốc độ mà mã ticker tăng đà trên các bài viết."
     },
     "proBanner": {
       "badge": "PRO",

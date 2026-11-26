@@ -910,7 +910,6 @@ describe('resilience dimension scorers', () => {
   it('scoreInformationCognitive: correctly unwraps news:threat:summary:v1 { byCountry } envelope', async () => {
     const reader = async (key: string): Promise<unknown | null> => {
       if (key === 'resilience:static:US') return RESILIENCE_FIXTURES['resilience:static:US'];
-      if (key === 'intelligence:social:reddit:v1') return RESILIENCE_FIXTURES['intelligence:social:reddit:v1'];
       if (key === 'news:threat:summary:v1') return {
         byCountry: { US: { critical: 1, high: 3, medium: 2, low: 1 } },
         generatedAt: '2026-04-06T00:00:00.000Z',
@@ -925,7 +924,6 @@ describe('resilience dimension scorers', () => {
   it('scoreInformationCognitive: zero news threats in loaded feed gets null', async () => {
     const reader = async (key: string): Promise<unknown | null> => {
       if (key === 'resilience:static:XX') return { rsf: { score: 80, rank: 20, year: 2025 } };
-      if (key === 'intelligence:social:reddit:v1') return { posts: [] };
       if (key === 'news:threat:summary:v1') return {
         byCountry: { US: { critical: 1, high: 2, medium: 3, low: 1 } },
         generatedAt: '2026-04-06T00:00:00.000Z',
@@ -933,14 +931,13 @@ describe('resilience dimension scorers', () => {
       return null;
     };
     const score = await scoreInformationCognitive('XX', reader);
-    assert.ok(score.score === 20, `RSF only (no threat, no velocity), got ${score.score}`);
+    assert.ok(score.score === 20, `RSF only (no threat), got ${score.score}`);
   });
 
   it('scoreInformationCognitive: RSF raw score direction stays lower-better', async () => {
     const reader = async (key: string): Promise<unknown | null> => {
       if (key === 'resilience:static:NO') return { rsf: { score: 6.52, rank: 3, year: 2025 } };
       if (key === 'resilience:static:YE') return { rsf: { score: 69.22, rank: 169, year: 2025 } };
-      if (key === 'intelligence:social:reddit:v1') return { posts: [] };
       if (key === 'news:threat:summary:v1') return { byCountry: {}, generatedAt: '2026-04-06T00:00:00.000Z' };
       return null;
     };
@@ -955,8 +952,8 @@ describe('resilience dimension scorers', () => {
   });
 
   // Regression for #3736 / #3787 — the old implementation divided raw
-  // velocity/threat by `langFactor`, amplifying signal for minimal-coverage
-  // countries up to 5x. The fix attenuates the sub-indicator WEIGHTS by
+  // the threat value by `langFactor`, amplifying signal for minimal-coverage
+  // countries up to 5x. The fix attenuates the news threat weight by
   // langFactor instead; raw signal values flow through unchanged.
   //
   // This test pins the EXACT post-fix scores so regressions in either
@@ -964,7 +961,7 @@ describe('resilience dimension scorers', () => {
   //   - Re-introducing divide-amplification would saturate BF's threat
   //     score at the worst goalpost, collapsing BF.score to ~26.
   //   - Attenuating weights too aggressively (e.g. `weight: 0` instead of
-  //     `weight: 0.30 * langFactor`) would pin BF.score to its RSF-only
+  //     `weight: 0.35294117647058826 * langFactor`) would pin BF.score to its RSF-only
   //     baseline of 40.
   //   - The correct fix lands BF.score ≈ 41 (RSF dominates but threat still
   //     contributes a small attenuated weight).
@@ -978,7 +975,6 @@ describe('resilience dimension scorers', () => {
     // Threat = 9 → normalizeLowerBetter(9, 0, 20) = 55.
     const makeReader = (iso: string) => async (key: string): Promise<unknown | null> => {
       if (key === `resilience:static:${iso}`) return { rsf: { score: 60, rank: 50, year: 2025 } };
-      if (key === 'intelligence:social:reddit:v1') return { posts: [] };
       if (key === 'news:threat:summary:v1') return {
         byCountry: { [iso]: { critical: 0, high: 2, medium: 4, low: 2 } },
         generatedAt: '2026-04-06T00:00:00.000Z',
@@ -989,11 +985,11 @@ describe('resilience dimension scorers', () => {
     const primary = await scoreInformationCognitive('US', makeReader('US')); // lf=1.0
     const minimal = await scoreInformationCognitive('BF', makeReader('BF')); // lf=0.2
 
-    // US (lf=1.0): (40*0.55 + 55*0.30) / (0.55+0.30) = 38.5 / 0.85 = 45.29
+    // US (lf=1.0): (40*11 + 55*6) / 17 = 45.29
     assert.equal(Math.round(primary.score), 45,
       `US (primary, lf=1.0) should score ~45 on this fixture; got ${primary.score}. Likely a regression in the weight or normalize logic.`);
 
-    // BF (lf=0.2): (40*0.55 + 55*0.06) / (0.55+0.06) = 25.3 / 0.61 = 41.48
+    // BF (lf=0.2): (40*11 + 55*6*0.2) / (11+6*0.2) = 41.48
     // Under the old divide-amplification bug, this would have been ~26 (threat
     // saturates at worst-goalpost). Under "attenuate too hard" (weight=0), this
     // would be exactly 40 (RSF-only). The 41 value is the correct fix.

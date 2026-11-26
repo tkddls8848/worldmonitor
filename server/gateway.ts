@@ -313,7 +313,6 @@ const RPC_CACHE_TIER: Record<string, CacheTier> = {
   // Daily seed (#9722); the CDN key carries the country_code, region_id and kind filters.
   '/api/economic/v1/get-no2-activity': 'slow',
   '/api/intelligence/v1/list-market-implications': 'slow',
-  '/api/intelligence/v1/list-wsb-tickers': 'no-store',
   '/api/economic/v1/get-ecb-fx-rates': 'slow',
   '/api/economic/v1/get-eurostat-country-data': 'slow',
   '/api/economic/v1/get-eu-gas-storage': 'slow',
@@ -343,7 +342,6 @@ const RPC_CACHE_TIER: Record<string, CacheTier> = {
   '/api/scenario/v1/list-scenario-templates': 'daily',
   '/api/scenario/v1/get-scenario-status': 'slow-browser',
   '/api/health/v1/list-disease-outbreaks': 'slow',
-  '/api/intelligence/v1/get-social-velocity': 'fast',
   '/api/intelligence/v1/get-country-energy-profile': 'slow',
   '/api/intelligence/v1/compute-energy-shock': 'fast',
   '/api/intelligence/v1/get-country-port-activity': 'slow',

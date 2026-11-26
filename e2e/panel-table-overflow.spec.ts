@@ -773,7 +773,6 @@ test('harness-mounted formerly inline-styled tables use the shared table style',
     const { HeatmapPanel } = await import('/src/components/MarketPanel.ts');
     const { EconomicCalendarPanel } = await import('/src/components/EconomicCalendarPanel.ts');
     const { YieldCurvePanel } = await import('/src/components/YieldCurvePanel.ts');
-    const { WsbTickerScannerPanel } = await import('/src/components/WsbTickerScannerPanel.ts');
     const { StockAnalysisPanel } = await import('/src/components/StockAnalysisPanel.ts');
     const { SupplyChainPanel } = await import('/src/components/SupplyChainPanel.ts');
     const { TradePolicyPanel } = await import('/src/components/TradePolicyPanel.ts');
@@ -828,14 +827,6 @@ test('harness-mounted formerly inline-styled tables use the shared table style',
       return panel.getElement();
     });
 
-    mount('wsb', () => {
-      const panel = new WsbTickerScannerPanel();
-      panel.updateData([
-        { symbol: 'NVDA', mentionCount: 412, totalScore: 18400, subreddits: ['wallstreetbets', 'stocks'], velocityScore: 84 },
-        { symbol: 'TSLA', mentionCount: 230, totalScore: 9100, subreddits: ['wallstreetbets'], velocityScore: 31 },
-      ]);
-      return panel.getElement();
-    });
 
     mount('stock-analysis', () => {
       const panel = new StockAnalysisPanel();
@@ -907,7 +898,7 @@ test('harness-mounted formerly inline-styled tables use the shared table style',
   expect(errors, 'every panel mounts').toEqual([]);
 
   const expected: Record<string, number> = {
-    heatmap: 1, 'economic-calendar': 1, 'yield-curve': 1, 'wsb-ticker-scanner': 1, 'stock-analysis': 1, 'probe-stock-expanded': 2, 'supply-chain': 4, 'trade-policy': 3,
+    heatmap: 1, 'economic-calendar': 1, 'yield-curve': 1, 'stock-analysis': 1, 'probe-stock-expanded': 2, 'supply-chain': 4, 'trade-policy': 3,
   };
   const headers = new Set<string>();
   for (const [id, count] of Object.entries(expected)) {
@@ -1058,7 +1049,6 @@ test('panel table text is readable in both themes', async ({ page }) => {
     const { SatelliteFiresPanel } = await import('/src/components/SatelliteFiresPanel.ts');
     const { StockBacktestPanel } = await import('/src/components/StockBacktestPanel.ts');
     const { StockAnalysisPanel } = await import('/src/components/StockAnalysisPanel.ts');
-    const { WsbTickerScannerPanel } = await import('/src/components/WsbTickerScannerPanel.ts');
     const { FxPanel } = await import('/src/components/FxPanel.ts');
     const { PipelineStatusPanel } = await import('/src/components/PipelineStatusPanel.ts');
     const { StorageFacilityMapPanel } = await import('/src/components/StorageFacilityMapPanel.ts');
@@ -1208,13 +1198,6 @@ test('panel table text is readable in both themes', async ({ page }) => {
       return panel.getElement();
     });
 
-    mount('wsb', () => {
-      const panel = new WsbTickerScannerPanel();
-      panel.updateData([84, 60, 31, 12].map((velocityScore, i) => ({
-        symbol: ['NVDA', 'GME', 'TSLA', 'AMD'][i]!, mentionCount: 400 - i * 90, totalScore: 18_400 - i * 4000, subreddits: ['wallstreetbets'], velocityScore,
-      })));
-      return panel.getElement();
-    });
 
     mount('fx', () => {
       const panel = new FxPanel();

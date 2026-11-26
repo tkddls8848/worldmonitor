@@ -77,7 +77,6 @@
     "oilInventories": "Oljelagre",
     "energyCrisis": "Energikristöversikt",
     "goldIntelligence": "Guldintelligens",
-    "wsbTickerScanner": "WallStreetBets tickerscanner",
     "internetDisruptions": "Internetavbrott",
     "internetDisruptionsTabs": {
       "outages": "Strömavbrott",
@@ -1909,9 +1908,6 @@
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Andel elproduktion från förnybar energi efter region och år, plus USA installerad kapacitet för sol, vind och kol (MW). Källor: World Bank (EG.ELC.RNEW.ZS) och US Energy Information Administration."
     },
-    "socialVelocity": {
-      "infoTooltip": "<strong>Social hastighet</strong> Trendande ämnen och viralt innehåll med geopolitisk betydelse. Mäter hastigheten i sociala medier: hur snabbt en story sprids i förhållande till baslinjen. Hjälper till att lyfta fram framväxande narrativ innan de når etablerade medier."
-    },
     "conservationWins": {
       "infoTooltip": "<strong>Bevarandesegrar</strong> Positiva naturvårdsnyheter: återhämtning av artpopulationer, milstolpar i habitatåterställning och de-extinktionsinsatser. Källa: IUCN, WWF och publikationer inom naturvårdsforskning."
     },
@@ -2135,9 +2131,6 @@
     },
     "goldIntelligence": {
       "infoTooltip": "<strong>Gold intelligence</strong> Guldpriser i flera valutor, guld/silver- och guld/platina-kvoter och förvaltad penningfutures-positionering. Källor inkluderar Yahoo Finance och Commodity Futures Trading Commission."
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>WallStreetBets Ticker Scanner</strong> Realtidsmärkesnämnanden från r/wallstreetbets, r/stocks och r/investing. Rangerad efter nämnningsfrekvens och engagemang. Velocity mäter hur snabbt en ticker ökar momentum över inlägg."
     },
     "proBanner": {
       "badge": "PRO",

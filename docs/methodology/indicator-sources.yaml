@@ -870,7 +870,7 @@
 - indicator: rsfPressFreedom
   dimension: informationCognitive
   domain: social-governance
-  weight: 0.55
+  weight: 0.6470588235294118
   direction: lower-better
   scoringTier: core
   source: Reporters Sans Frontieres
@@ -882,41 +882,10 @@
   mechanismTestRationale: RSF press-freedom risk directly measures information-environment fragility and independent-verification constraints; lower RSF score is better.
   constructStatus: observed-mechanism
 
-- indicator: languageNormalizedSocialVelocity
-  dimension: informationCognitive
-  domain: social-governance
-  weight: TBD
-  direction: composite
-  source: Reddit + cross-source + internal language-coverage-weighting
-  seriesId: Internal
-  seriesUrl: Internal seed
-  coveragePct: 0.95
-  lastObservedYear: 2026
-  license: Mixed
-  mechanismTestRationale: Language-normalized social-information velocity measures information-shock propagation speed adjusted for source-density bias.
-  constructStatus: observed-mechanism
-  reviewNotes: Legacy catalog alias only; active informationCognitive parity is represented by rsfPressFreedom, socialVelocity, and newsThreatScore.
-
-- indicator: socialVelocity
-  dimension: informationCognitive
-  domain: social-governance
-  weight: 0.15
-  direction: lower-better
-  scoringTier: core
-  source: Reddit social monitor
-  seriesId: intelligence:social:reddit:v1
-  seriesUrl: Internal seed
-  coveragePct: 0.88
-  lastObservedYear: 2026
-  license: Open with attribution
-  mechanismTestRationale: Social velocity measures information-shock propagation speed after language-coverage weighting.
-  constructStatus: observed-mechanism
-  reviewNotes: Active informationCognitive Core scorer input.
-
 - indicator: newsThreatScore
   dimension: informationCognitive
   domain: social-governance
-  weight: 0.30
+  weight: 0.35294117647058826
   direction: lower-better
   scoringTier: core
   source: AI news threat summary

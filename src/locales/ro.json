@@ -463,7 +463,6 @@
     "oilInventories": "Stocuri de petrol",
     "energyCrisis": "Tracker criză energetică",
     "goldIntelligence": "Informații despre aur",
-    "wsbTickerScanner": "Scanner de simboluri WallStreetBets",
     "internetDisruptions": "Întreruperi de internet",
     "internetDisruptionsTabs": {
       "outages": "Pene",
@@ -2303,9 +2302,6 @@
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Ponderea generării de electricitate din surse regenerabile pe regiune și an, plus capacitate instalată în SUA pentru energie solară, vânt și cărbune (MW). Surse: Banca Mondială (EG.ELC.RNEW.ZS) și Administrația pentru Informații Energetice a SUA."
     },
-    "socialVelocity": {
-      "infoTooltip": "<strong>Velocitate socială</strong> Subiecte în tendințe și conținut viral cu semnificație geopolitică. Măsoară viteza în social media: cât de rapid se răspândește o știre față de linia de bază. Ajută la identificarea narativelor emergente înainte de a ajunge în mass-media."
-    },
     "conservationWins": {
       "infoTooltip": "<strong>Realizări în conservare</strong> Știri pozitive despre conservare: recuperarea populațiilor de specii, repere în restaurarea habitatelor și eforturi de de-extincție. Sursă: IUCN, WWF și publicații de cercetare în conservare."
     },
@@ -2530,9 +2526,6 @@
     },
     "goldIntelligence": {
       "infoTooltip": "<strong>Gold intelligence</strong> Prețuri aur în mai multe valute, rapoarte aur/argint și aur/platină, și poziții futures pe bani gestionați. Sursele includ Yahoo Finance și Comisia pentru Comerțul cu Futures pe Mărfuri."
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>WallStreetBets Ticker Scanner</strong> Mențiuni de ticker în timp real din r/wallstreetbets, r/stocks și r/investing. Clasificate după frecvența mențiunilor și implicare. Viteza măsoară cât de rapid câștigă o ticker momentum în postări."
     },
     "proBanner": {
       "badge": "PRO",

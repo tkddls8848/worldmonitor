@@ -1,18 +1,6 @@
-/**
- * #7023 (phase-2 residual) — keyboard access for the two remaining
- * click-only table widgets:
- *
- *   - WsbTickerScannerPanel exposes native sort buttons while keeping
- *     aria-sort on each column header.
- *   - CountryDeepDivePanel exposes native disclosure buttons inside its
- *     sector rows without overriding the table row semantics.
- *
- * Both widgets rebuild their DOM after activation, so these tests also prove
- * that focus moves to the equivalent replacement control.
- */
+/** Keyboard disclosure and focus restoration for the country sector table (#7023). */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { WsbTickerScannerPanel } from '@/components/WsbTickerScannerPanel';
 import { CountryDeepDivePanel } from '@/components/CountryDeepDivePanel';
 import type { CountryBriefSource } from '@/services/country-brief-source';
 import type {
@@ -23,82 +11,9 @@ import type {
 /** Panel.setSafeContent debounces string content by 150ms. */
 const flushPanelContent = () => new Promise((resolve) => setTimeout(resolve, 200));
 
-function ticker(symbol: string, mentionCount: number, totalScore: number) {
-  return {
-    symbol,
-    mentionCount,
-    uniquePosts: 1,
-    totalScore,
-    avgUpvoteRatio: 0.9,
-    subreddits: ['wallstreetbets'],
-    velocityScore: 1,
-  };
-}
-
 beforeEach(() => {
   document.body.innerHTML = '';
 });
-describe('WsbTickerScannerPanel sortable headers (#7023)', () => {
-  async function renderedPanel(): Promise<{ panel: WsbTickerScannerPanel; content: HTMLElement }> {
-    const panel = new WsbTickerScannerPanel();
-    document.body.appendChild(panel.getElement());
-    panel.updateData([ticker('GME', 50, 10), ticker('AMC', 20, 90)]);
-    await flushPanelContent();
-    const content = panel.getElement().querySelector<HTMLElement>('.panel-content');
-    expect(content).toBeTruthy();
-    return { panel, content: content! };
-  }
-
-  it('uses native sort buttons while aria-sort stays on the column headers', async () => {
-    const { content } = await renderedPanel();
-    const headers = [...content.querySelectorAll<HTMLElement>('th[data-sort]')];
-    const buttons = [...content.querySelectorAll<HTMLButtonElement>('button[data-sort]')];
-
-    expect(headers).toHaveLength(3);
-    expect(buttons).toHaveLength(3);
-    for (const th of headers) {
-      expect(th.hasAttribute('tabindex')).toBe(false);
-    }
-    for (const button of buttons) {
-      expect(button.type).toBe('button');
-    }
-
-    // Default sort: mentionCount descending.
-    expect(content.querySelector('th[data-sort="mentionCount"]')!.getAttribute('aria-sort')).toBe('descending');
-    expect(content.querySelector('th[data-sort="totalScore"]')!.hasAttribute('aria-sort')).toBe(false);
-  });
-
-  it('sorts through the native control and restores focus after the debounced render', async () => {
-    const { content } = await renderedPanel();
-    const button = content.querySelector<HTMLButtonElement>('button[data-sort="totalScore"]')!;
-
-    button.focus();
-    button.click();
-    await flushPanelContent();
-
-    const replacement = content.querySelector<HTMLButtonElement>('button[data-sort="totalScore"]')!;
-    const rows = [...content.querySelectorAll<HTMLElement>('tbody tr')];
-    expect(rows[0]?.textContent ?? '').toContain('AMC');
-    expect(content.querySelector('th[data-sort="totalScore"]')!.getAttribute('aria-sort')).toBe('descending');
-    expect(document.activeElement).toBe(replacement);
-  });
-
-  it('keeps focus when the active sort button flips the direction', async () => {
-    const { content } = await renderedPanel();
-    const button = content.querySelector<HTMLButtonElement>('button[data-sort="mentionCount"]')!;
-
-    button.focus();
-    button.click();
-    await flushPanelContent();
-
-    const replacement = content.querySelector<HTMLButtonElement>('button[data-sort="mentionCount"]')!;
-    expect(content.querySelector('th[data-sort="mentionCount"]')!.getAttribute('aria-sort')).toBe('ascending');
-    const rows = [...content.querySelectorAll<HTMLElement>('tbody tr')];
-    expect(rows[0]?.textContent ?? '').toContain('AMC');
-    expect(document.activeElement).toBe(replacement);
-  });
-});
-
 describe('CountryDeepDivePanel sector rows (#7023)', () => {
   type CdpInternals = {
     tradeExposureBody: HTMLElement | null;

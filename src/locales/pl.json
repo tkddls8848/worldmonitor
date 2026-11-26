@@ -465,7 +465,6 @@
     "oilInventories": "Zapasy Ropy",
     "energyCrisis": "Tracker Kryzysu Energetycznego",
     "goldIntelligence": "Wywiad o złocie",
-    "wsbTickerScanner": "Skaner tickerów WallStreetBets",
     "internetDisruptions": "Przerwy w Internecie",
     "internetDisruptionsTabs": {
       "outages": "Awarie",
@@ -2313,9 +2312,6 @@
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Udział energii elektrycznej z odnawialnych źródeł energii według regionu i roku, plus zainstalowana pojemność USA dla energii słonecznej, wiatru i węgla (MW). Źródła: Bank Światowy (EG.ELC.RNEW.ZS) i US Energy Information Administration."
     },
-    "socialVelocity": {
-      "infoTooltip": "<strong>Prędkość społecznościowa</strong> Trendy i wiralowe treści o znaczeniu geopolitycznym. Mierzy prędkość w mediach społecznościowych: jak szybko historia rozprzestrzenia się w stosunku do linii bazowej. Pomaga wychwycić pojawiające się narracje, zanim dotrą do mediów głównego nurtu."
-    },
     "conservationWins": {
       "infoTooltip": "<strong>Sukcesy ochrony przyrody</strong> Pozytywne wiadomości o ochronie przyrody: odbudowa populacji gatunków, kamienie milowe odtwarzania siedlisk i wysiłki de-ekstynkcji. Źródło: IUCN, WWF i publikacje badań nad ochroną przyrody."
     },
@@ -2541,9 +2537,6 @@
     },
     "goldIntelligence": {
       "infoTooltip": "<strong>Gold intelligence</strong> Ceny złota w kilku walutach, stosunki złota/srebra i złota/platyny oraz pozycje futures zarządzanych pieniędzy. Źródła obejmują Yahoo Finance i Commodity Futures Trading Commission."
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>WallStreetBets Ticker Scanner</strong> Wzmianki tickerów w czasie rzeczywistym z r/wallstreetbets, r/stocks i r/investing. Uszeregowane według częstotliwości wzmianek i zaangażowania. Velocity mierzy, jak szybko ticker zyskuje dynamikę w całych postach."
     },
     "proBanner": {
       "badge": "PRO",

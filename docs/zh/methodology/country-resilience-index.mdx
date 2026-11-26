@@ -1,6 +1,6 @@
 ---
 title: "国家韧性指数"
-description: "面向 196 个国家的实时韧性评分体系，其中 169 个国家进入排名（169/196），基于 21 个维度、6 个领域的 72 项公开指标给出 0 到 100 的单一分数，衡量国家在严重冲击下吸收并恢复的能力。实时 API 每 6 小时刷新，可抓取的国家快照每月发布。"
+description: "面向 196 个国家的实时韧性评分体系，其中 169 个国家进入排名（169/196），基于 21 个维度、6 个领域的 71 项公开指标给出 0 到 100 的单一分数，衡量国家在严重冲击下吸收并恢复的能力。实时 API 每 6 小时刷新，可抓取的国家快照每月发布。"
 ---
 
 _本方法论由 World Monitor 创始人 [Elie Habib](https://www.worldmonitor.app/blog/authors/elie-habib/) 维护。已发布的修订记录在[更正日志](/zh/corrections)中。_
@@ -9,7 +9,7 @@ _本方法论由 World Monitor 创始人 [Elie Habib](https://www.worldmonitor.a
 
 国家韧性指数对 196 个国家各问同一个问题：**当事情严重出错时，这个国家能多好地吸收它、并重新站起来？**
 
-它是一个 0–100 的单一分数，每 6 小时刷新，由 72 项公开指标构建而成。分数高不代表这个国家富裕、安全或宜居。它意味着：当冲击到来时——货币危机、大停电、干旱、网络攻击、邻国战争——这个国家拥有承受住并恢复过来所需的财政空间、制度、基础设施与物资储备。
+它是一个 0–100 的单一分数，每 6 小时刷新，由 71 项公开指标构建而成。分数高不代表这个国家富裕、安全或宜居。它意味着：当冲击到来时——货币危机、大停电、干旱、网络攻击、邻国战争——这个国家拥有承受住并恢复过来所需的财政空间、制度、基础设施与物资储备。
 
 ### 如何读懂分数
 
@@ -37,7 +37,7 @@ _本方法论由 World Monitor 创始人 [Elie Habib](https://www.worldmonitor.a
 
 ```mermaid
 flowchart TD
-  A["72 项公开指标"] --> B["按固定目标点<br/>各自换算到 0-100"]
+  A["71 项公开指标"] --> B["按固定目标点<br/>各自换算到 0-100"]
   B --> C["21 个维度<br/>指标的加权混合"]
   C --> D["领域<br/>维度的覆盖率加权均值"]
   D --> E["3 个支柱<br/>结构 / 实时冲击 / 恢复"]
@@ -54,7 +54,7 @@ flowchart TD
 
 上游数据源可能包含比公开排名更广的领土集合。公开排名在发布前会过滤到可排名范围。
 
-本页描述的全部内容都是指数**当前发布**的状态：72 个指标覆盖 21 个活跃维度与 6 个领域，`schemaVersion "2.0"` 形状，3 个支柱（加上 2 个为模式连续性保留在注册表中、`coverage=0` 的结构性退役维度），支柱组合惩罚 `overall_score`，以及能源 v2 构造。版本标志、回退路径与运行时清单见[面向开发者](#面向开发者)。
+本页描述的全部内容都是指数**当前发布**的状态：71 个指标覆盖 21 个活跃维度与 6 个领域，`schemaVersion "2.0"` 形状，3 个支柱（加上 2 个为模式连续性保留在注册表中、`coverage=0` 的结构性退役维度），支柱组合惩罚 `overall_score`，以及能源 v2 构造。版本标志、回退路径与运行时清单见[面向开发者](#面向开发者)。
 
 ## 构造合约
 
@@ -80,7 +80,7 @@ CRI 在产品的三个位置呈现，均由同一当前发布分数驱动：
 
 三个仪表盘面均可免费查看。直接分数和排名 API 调用需要正常的 Pro/API 认证路径，而运行时清单在 `/api/resilience/v1/get-runtime-manifest` 公开；请参见 [Resilience service](https://github.com/koala73/worldmonitor/blob/main/docs/api/ResilienceService.openapi.yaml) 了解 HTTP 合约。
 
-仅限 Pro 的 `/api/resilience/v1/get-resilience-indicators` 方法可在完整的 72 行注册表上解释单个国家的分数。它报告活动评分器所使用的确切归一化分量分数与运行时权重，然后把策略生效后的有效贡献与每个已发布的维度分数对账。各行还区分已观测、插补、缺失、回退、来源失败、未启用、已退役与不适用等状态。现有的 `get-resilience-score` 响应保持不变。原始来源值是选择性提供的，并在[指标再分发审查](./resilience-indicator-licensing.mdx)下失败关闭；受限行仍会返回 WorldMonitor 的归一化分数、贡献、来源署名，以及已知时的来源年份。
+仅限 Pro 的 `/api/resilience/v1/get-resilience-indicators` 方法可在完整的 71 行注册表上解释单个国家的分数。它报告活动评分器所使用的确切归一化分量分数与运行时权重，然后把策略生效后的有效贡献与每个已发布的维度分数对账。各行还区分已观测、插补、缺失、回退、来源失败、未启用、已退役与不适用等状态。现有的 `get-resilience-score` 响应保持不变。原始来源值是选择性提供的，并在[指标再分发审查](./resilience-indicator-licensing.mdx)下失败关闭；受限行仍会返回 WorldMonitor 的归一化分数、贡献、来源署名，以及已知时的来源年份。
 
 ## 它由什么构成
 
@@ -92,7 +92,7 @@ CRI 在产品的三个位置呈现，均由同一当前发布分数驱动：
 
 数据来源于官方和权威提供商：世界银行、IMF、WHO、WTO、UNHCR、UCDP、BIS、IEA、FAO、无国界记者和经济学与和平研究所等。完整清单见[数据来源](#数据来源)。
 
-WorldMonitor 国家韧性指数以 0-100 分对 196 国公开可排名范围评分，使用 72 个指标覆盖 21 个活跃维度和 6 个领域（加上 2 个结构性退役维度为模式连续性在注册表中以 `coverage=0` 保留）。排名处理器仍可将低置信度或标题不合格的国家路由到 `greyedOut[]`，但可排名范围本身由提交的 UN 成员 + SAR 白名单固定。
+WorldMonitor 国家韧性指数以 0-100 分对 196 国公开可排名范围评分，使用 71 个指标覆盖 21 个活跃维度和 6 个领域（加上 2 个结构性退役维度为模式连续性在注册表中以 `coverage=0` 保留）。排名处理器仍可将低置信度或标题不合格的国家路由到 `greyedOut[]`，但可排名范围本身由提交的 UN 成员 + SAR 白名单固定。
 
 ## 领域与权重
 
@@ -298,11 +298,12 @@ v2 下退役：`electricityConsumption`（富裕代理，修复计划 §3.1）�
 
 | 指标 | 描述 | 方向 | 目标阈值（最差-最好） | 权重 | 来源 | 频率 |
 |---|---|---|---|---|---|---|
-| rsfPressFreedom | RSF 新闻自由分数 | 越低越好 | 100 - 0 | 0.55 | RSF | 年度 |
-| socialVelocity | Reddit 社交速度（log10(velocity+1)） | 越低越好 | 3 - 0 | 0.15 | Reddit 情报 | 小时 relay（新鲜度预算：180 分钟） |
-| newsThreatScore | AI 新闻威胁严重性（关键 4x、高 2x、中 1x、低 0.5x） | 越低越好 | 20 - 0 | 0.30 | 新闻威胁分析 | 每日 |
+| rsfPressFreedom | RSF 新闻自由分数 | 越低越好 | 100 - 0 | 0.6470588235294118 | RSF | 年度 |
+| newsThreatScore | AI 新闻威胁严重性（关键 4x、高 2x、中 1x、低 0.5x） | 越低越好 | 20 - 0 | 0.35294117647058826 | 新闻威胁分析 | 每日 |
 
-**语言覆盖加权。** `socialVelocity` 和 `newsThreatScore` 是英语来源敏感信号，因此其分数权重乘以国家的语言覆盖层级。原始信号值不被除或放大。低覆盖国家因此更依赖静态 RSF 新闻自由信号，同时为维度保留标称覆盖率数学。未列出的国家默认为 `minimal` 层。
+退役社交速度指标后，按原比例重新分配其权重，新闻自由和新闻威胁的相对权重仍为 11:6。
+
+**语言覆盖加权。** `newsThreatScore` 对英语来源覆盖敏感，因此其权重乘以国家的语言覆盖层级。原始信号值不被除或放大。低覆盖国家因此更依赖静态 RSF 新闻自由信号，同时为维度保留标称覆盖率数学。未列出的国家默认为 `minimal` 层。
 
 | 层级 | 乘数 | 国家 |
 |---|---:|---|
@@ -602,7 +603,6 @@ API 响应包含 `imputationShare`（0.0-1.0），表示来自插补（合成）
 | GPSJam | GPS 干扰事件 | 每日 | 全球 |
 | 供应链监控 | 航运压力、运输中断 | 每日 | 全球 |
 | 动荡监控 | 严重性加权民间动荡事件 | 实时 | 全球 |
-| Reddit 情报 | 社交速度分数 | 小时 relay（新鲜度预算：180 分钟） | 全球 |
 | 新闻威胁分析 | AI 评分新闻威胁严重性 | 每日 | 全球 |
 | 能源组合数据 | 天然气、煤炭、可再生份额 | 年度 | 全球 |
 | GIE AGSI+ | 天然气存储填充水平 | 每日 | 欧洲国家 |
@@ -650,10 +650,10 @@ CRI 设计为端到端可审计：给定任一时刻的 Redis 快照，读者应
 
 | 键 | 类型 | TTL | 写入方 | 读取方 |
 |---|---|---|---|---|
-| `resilience:score:v29:{countryCode}` | JSON | 6 小时 | `server/worldmonitor/resilience/v1/_shared.ts` 中的 `buildResilienceScore` | `getResilienceScore` 处理器 |
-| `resilience:ranking:v29` | JSON | 12 小时 | `getResilienceRanking` 暖路径，仅当至少 90% 国家已评分时（`RANKING_CACHE_MIN_COVERAGE = 0.90`） | `getResilienceRanking` 处理器 |
-| `resilience:history:v23:{countryCode}` | 有序集合 | 无限期，修剪至 30 天 | 评分期间 `appendHistory` | 趋势和 `change30d` 计算 |
-| `resilience:intervals:v12:{countryCode}` | JSON | 7 天；通过 `seed-meta`/健康频率监控新鲜度 | `scripts/seed-resilience-scores.mjs` | `getResilienceScore`（可选 `scoreInterval` 字段）和 `getResilienceRanking`（`rankStable`） |
+| `resilience:score:v30:{countryCode}` | JSON | 6 小时 | `server/worldmonitor/resilience/v1/_shared.ts` 中的 `buildResilienceScore` | `getResilienceScore` 处理器 |
+| `resilience:ranking:v30` | JSON | 12 小时 | `getResilienceRanking` 暖路径，仅当至少 90% 国家已评分时（`RANKING_CACHE_MIN_COVERAGE = 0.90`） | `getResilienceRanking` 处理器 |
+| `resilience:history:v24:{countryCode}` | 有序集合 | 无限期，修剪至 30 天 | 评分期间 `appendHistory` | 趋势和 `change30d` 计算 |
+| `resilience:intervals:v13:{countryCode}` | JSON | 7 天；通过 `seed-meta`/健康频率监控新鲜度 | `scripts/seed-resilience-scores.mjs` | `getResilienceScore`（可选 `scoreInterval` 字段）和 `getResilienceRanking`（`rankStable`） |
 | `seed-meta:resilience:static` | JSON | 400 天 | 每次成功种子运行结束时的 `scripts/seed-resilience-static.mjs` | 评分器用于 `dataVersion` 填充、健康检查 |
 | `resilience:static:{countryCode}` | JSON | 400 天 | `scripts/seed-resilience-static.mjs` | 评分器用于所有基线信号（WGI、WHO、FAO、GPI、RSF 等） |
 | `resilience:static:index:v1` | JSON | 400 天 | `scripts/seed-resilience-static.mjs` | 枚举国家的预热路径 |
@@ -781,7 +781,7 @@ v17.1 在评分时将修复扩展到 `liquidReserveAdequacy`（无种子器变�
 | **可解释性** | 7.5 | widget 中按维度置信网格显示每个国家每个维度的覆盖率%、插补类和新鲜度。工具提示文本从分类法生成，使分析师可点击查看含义而无需阅读本文档。间隙：尚无个别信号贡献瀑布图，Phase 3 T3.3 落地。 |
 | **可复现性** | 8.0 | 每个维度的 sourceKey、频率和目标阈值在 `_indicator-registry.ts` 中并与本文档 lint。缓存键已在 v1.1 实现中版本化；见上方 Redis 键表了解当前分数、排名、历史和区间前缀。`dataVersion` 由种子写入并管道到 widget 页脚。间隙：基准和回测脚本尚未在 CI cron 上运行；Phase 2 T2.7 落地。 |
 | **来源质量** | 7.0 | 世界银行、IMF、WHO、IEA、UNHCR、UCDP、IPC、BIS、FAO、RSF、GPI：均权威。间隙：精选列表来源（BIS 约 40 经济体、WTO）不覆盖完整 WorldMonitor 国家集，这是 `unmonitored` 插补类存在的原因。Phase 2 T2.9 添加语言归一化信息信号以减少英语媒体偏差。 |
-| **时效性** | 6.5 | 结构来源为年度（WGI、GPI、RSF、WHO、IMF 宏观）并主导指数总权重。BIS EER 为月度。新鲜度分类器（T1.5）在维度级呈现，使用户可看到国家分数的哪些部分已 12 个月。压力侧栈已包含实时/小时或每日输入（`internetOutages`、`infraOutages`、`unrestEvents` 实时；`socialVelocity` 通过小时 Reddit relay 带 180 分钟健康预算；`cyberThreats`、`gpsJamming`、`shippingStress`、`transitDisruption`、`euGasStorageStress`、`energyPriceStress`、`newsThreatScore` 每日），而 `ucdpConflict` 遵循年度 UCDP GED 发布并带单独种子器活性监控。间隙：实时冲击支柱依赖这些信号但结构支柱仍受年度来源限制；Phase 2 T2.2 添加日频率 FX 波动率以缩小货币外部维度频率差距，Phase 3 参考版拆分将按支柱形式化年度与滚动频率。 |
+| **时效性** | 6.5 | 结构来源为年度（WGI、GPI、RSF、WHO、IMF 宏观）并主导指数总权重。BIS EER 为月度。新鲜度分类器（T1.5）在维度级呈现，使用户可看到国家分数的哪些部分已 12 个月。压力侧栈已包含实时/小时或每日输入（`internetOutages`、`infraOutages`、`unrestEvents` 实时；`cyberThreats`、`gpsJamming`、`shippingStress`、`transitDisruption`、`euGasStorageStress`、`energyPriceStress`、`newsThreatScore` 每日），而 `ucdpConflict` 遵循年度 UCDP GED 发布并带单独种子器活性监控。间隙：实时冲击支柱依赖这些信号但结构支柱仍受年度来源限制；Phase 2 T2.2 添加日频率 FX 波动率以缩小货币外部维度频率差距，Phase 3 参考版拆分将按支柱形式化年度与滚动频率。 |
 | **敏感度** | 7.0 | 权重扰动蒙特卡洛敏感度（#2823）存在于回测层。Phase 1 未添加新敏感度工作。总分 p5/p95 分数敏感度带在活跃分数公式下计算并暴露（#2877、#2885、#3967），widget 在分数旁渲染总分 `[p05–p95]` 范围。该带是公式感知的权重扰动敏感度范围，非输入数据不确定性区间。间隙：尚无个别信号贡献瀑布图；Phase 3 T3.3 落地。 |
 
 **Phase 1 验收门状态：满足。** 两个必需阈值（Methodology ≥7.5、Explainability ≥7.5）以诚实理由满足。每个轴中标记的两个间隙针对升级计划中 Phase 2 和 Phase 3 任务追踪。
@@ -845,7 +845,7 @@ v17.1 在评分时将修复扩展到 `liquidReserveAdequacy`（无种子器变�
 | 轴 | 分数 | 理由 |
 |---|---|---|
 | **验证** | 8.0 | 跨指数基准对 INFORM、UNDP HDI 和 WorldRiskIndex 脆弱性组件，含显式方向假设。7 事件族结果回测带 AUC 发布门。4 遍扰动和天花板检测敏感度套件。间隙：外部专家审查（Phase 3 T3.8b）尚未完成。 |
-| **数据** | 9.0 | 当前指标注册表包含 72 个指标，覆盖 21 个活跃维度和 6 个领域（另有 2 个结构性退役维度为模式连续性保留）。恢复能力在 Comtrade 配额/回填限制允许处使用真实进口 HHI 数据；`fuelStockDays` 从核心分数退役，仅作为实验注册表面保留。信号分层注册表标记每个指标 Core/Enrichment/Experimental 含覆盖率 + 许可审计。间隙：储备保证金集成、外部专家审查、正式刷新 SLA 和归属/解释面。 |
+| **数据** | 9.0 | 当前指标注册表包含 71 个指标，覆盖 21 个活跃维度和 6 个领域（另有 2 个结构性退役维度为模式连续性保留）。恢复能力在 Comtrade 配额/回填限制允许处使用真实进口 HHI 数据；`fuelStockDays` 从核心分数退役，仅作为实验注册表面保留。信号分层注册表标记每个指标 Core/Enrichment/Experimental 含覆盖率 + 许可审计。间隙：储备保证金集成、外部专家审查、正式刷新 SLA 和归属/解释面。 |
 | **架构** | 9.0 | 三支柱模式带 schemaVersion 特性标志向后兼容。惩罚加权均值聚合带文档化 alpha。领域加权支柱分数。缓存键版本化（按模式变更升级）。语言归一化纠正英语媒体偏差。间隙：alpha 调优是初始的（0.5），需在实时数据积累后回测驱动优化。 |
 | **方法论** | 8.5 | 每个维度有命名来源、方向、目标阈值、权重、频率、插补类和层。四类插补分类法端到端活跃。新鲜度分类器在维度级呈现陈旧度。方法论文档 linter 强制对等。间隙：三支柱权重理由可辩护但尚未经验优化。 |
 | **可解释性** | 8.0 | 按维度置信网格带插补图标 + 新鲜度徽章。支柱结构使指数可分解（结构 vs 实时冲击 vs 恢复）。间隙：尚无瀑布图（Phase 3 T3.3），无变更归属（Phase 3 T3.5）。 |

@@ -460,7 +460,6 @@
     "oilInventories": "石油庫存",
     "energyCrisis": "能源危機追蹤器",
     "goldIntelligence": "黃金情報",
-    "wsbTickerScanner": "WallStreetBets股票掃描器",
     "internetDisruptions": "網際網路中斷",
     "internetDisruptionsTabs": {
       "outages": "中斷",
@@ -2283,9 +2282,6 @@
     "renewable": {
       "infoTooltip": "<strong>可再生能源</strong>各地區和年份可再生能源發電份額，以及美國太陽能、風能和煤炭的安裝容量（兆瓦）。資料來源：世界銀行（EG.ELC.RNEW.ZS）和美國能源資訊署。"
     },
-    "socialVelocity": {
-      "infoTooltip": "<strong>社交傳播速度</strong> 具有地緣政治意義的熱門話題和病毒式內容。衡量社交媒體速度：一個故事相對於基線的傳播速度。幫助在新興敘事到達主流媒體之前發現它們。"
-    },
     "conservationWins": {
       "infoTooltip": "<strong>保育成就</strong> 正面的保育新聞：物種種群恢復、棲息地修復里程碑和反滅絕努力。來源：IUCN、WWF和保育研究出版物。"
     },
@@ -2508,9 +2504,6 @@
     },
     "goldIntelligence": {
       "infoTooltip": "<strong>黃金情報</strong>多種貨幣黃金價格、黃金/白銀和黃金/鉑金比率以及管理資金期貨頭寸。資料來源包括雅虎財經和商品期貨交易委員會。"
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>華爾街賭徒股票程式碼掃描器</strong>來自r/wallstreetbets、r/stocks和r/investing的即時股票程式碼提及。按提及頻率和互動排名。速度衡量股票程式碼在帖子中獲得動量的速度。"
     },
     "proBanner": {
       "badge": "PRO",

@@ -465,7 +465,6 @@
     "oilInventories": "Zásoby ropy",
     "energyCrisis": "Sledovač energetické krize",
     "goldIntelligence": "Zlatá inteligence",
-    "wsbTickerScanner": "Skener WallStreetBets",
     "internetDisruptions": "Přerušení internetu",
     "internetDisruptionsTabs": {
       "outages": "Výpadky",
@@ -2313,9 +2312,6 @@
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Podíl elektřiny z obnovitelných zdrojů dle regionu a roku, plus nainstalovaná kapacita v USA pro slunečníenergie, větrnou energii a uhlí (MW). Zdroje: Světová banka (EG.ELC.RNEW.ZS) a US Energy Information Administration."
     },
-    "socialVelocity": {
-      "infoTooltip": "<strong>Sociální rychlost</strong> Trendy a virální obsah s geopolitickým významem. Měří rychlost na sociálních médiích: jak rychle se příběh šíří vůči základní linii. Pomáhá odhalit vznikající narativy dříve, než se dostanou do mainstreamových médií."
-    },
     "conservationWins": {
       "infoTooltip": "<strong>Úspěchy v ochraně přírody</strong> Pozitivní zprávy o ochraně přírody: obnova populací druhů, milníky v obnově biotopů a snahy o de-extinkci. Zdroj: IUCN, WWF a publikace výzkumu v oblasti ochrany."
     },
@@ -2541,9 +2537,6 @@
     },
     "goldIntelligence": {
       "infoTooltip": "<strong>Gold intelligence</strong> Ceny zlata v několika měnách, poměry zlato/stříbro a zlato/platina a pozice managed-money futures. Zdroje zahrnují Yahoo Finance a Commodity Futures Trading Commission."
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>WallStreetBets Ticker Scanner</strong> Zmínky tickerů v reálném čase z r/wallstreetbets, r/stocks a r/investing. Řazeno podle frekvence zmínek a zapojení. Rychlost měří, jak rychle ticker získává momentum v příspěvcích."
     },
     "proBanner": {
       "badge": "PRO",

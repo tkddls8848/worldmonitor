@@ -498,7 +498,6 @@
     "etfFlows": "बिटकॉइन फंड प्रवाह",
     "stablecoins": "स्थिर कॉइन्स",
     "deduction": "स्थिति का निष्कर्ष",
-    "wsbTickerScanner": "WallStreetBets टिकर स्कैनर",
     "ucdpEvents": "सशस्त्र संघर्ष की घटनाएं",
     "giving": "वैश्विक दान",
     "displacement": "शरणार्थी और विस्थापन",
@@ -2576,12 +2575,6 @@
     },
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> क्षेत्र और वर्ष के अनुसार नवीकरणीय स्रोतों से electricity generation का share, साथ ही solar, wind और coal के लिए US installed capacity (MW)। स्रोत: World Bank (EG.ELC.RNEW.ZS) और US Energy Information Administration।"
-    },
-    "socialVelocity": {
-      "infoTooltip": "<strong>सोशल वेलोसिटी</strong> भू-राजनीतिक महत्व वाले ट्रेंडिंग विषय और वायरल सामग्री। सामाजिक मीडिया में कहानी फैलने की गति को मापता है। मुख्यधारा समाचार से पहले उभरती कथाएँ दिखाने में मदद करता है।"
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>WallStreetBets Ticker Scanner</strong> r/wallstreetbets, r/stocks और r/investing से real-time ticker mentions। Mention frequency और engagement के आधार पर ranked। Velocity मापता है कि एक ticker कितनी तेजी से posts में momentum प्राप्त करता है।"
     },
     "conservationWins": {
       "infoTooltip": "<strong>संरक्षण सफलताएं</strong> सकारात्मक संरक्षण समाचार: प्रजाति आबादी की पुनर्प्राप्ति, आवास पुनर्स्थापना मील के पत्थर, और विलुप्ति रद्द प्रयास। स्रोत: IUCN, WWF, और संरक्षण अनुसंधान प्रकाशन।"

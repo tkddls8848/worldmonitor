@@ -1120,20 +1120,6 @@
       ]
     },
     {
-      "host": "api.scrapecreators.com",
-      "provider": "api.scrapecreators.com",
-      "kind": "structured",
-      "observed": true,
-      "license": "Provider terms for this upstream API/dataset; verify before redistribution",
-      "attribution": "Credit api.scrapecreators.com and link to the original upstream API/dataset.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/personal-collector-tasks.cjs"
-        }
-      ]
-    },
-    {
       "host": "api.search.brave.com",
       "provider": "Brave Search API",
       "kind": "structured",
@@ -7284,20 +7270,6 @@
       ]
     },
     {
-      "host": "oauth.reddit.com",
-      "provider": "oauth.reddit.com",
-      "kind": "structured",
-      "observed": true,
-      "license": "Provider terms for this upstream API/dataset; verify before redistribution",
-      "attribution": "Credit oauth.reddit.com and link to the original upstream API/dataset.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/personal-collector-tasks.cjs"
-        }
-      ]
-    },
-    {
       "host": "oauth2.googleapis.com",
       "provider": "oauth2.googleapis.com",
       "kind": "structured",
@@ -8373,23 +8345,6 @@
       "references": [
         {
           "path": "shared/news-catalog.json"
-        }
-      ]
-    },
-    {
-      "host": "reddit.com",
-      "provider": "reddit.com",
-      "kind": "structured",
-      "observed": true,
-      "license": "Excluded: first-party, control-plane, UI, or rendering transport",
-      "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "scripts/personal-collector-tasks.cjs"
-        },
-        {
-          "path": "src/services/story-share.ts"
         }
       ]
     },
@@ -14276,20 +14231,6 @@
       "references": [
         {
           "path": "scripts/seed-yield-curve-au.mjs"
-        }
-      ]
-    },
-    {
-      "host": "www.reddit.com",
-      "provider": "www.reddit.com",
-      "kind": "structured",
-      "observed": true,
-      "license": "Provider terms for this upstream API/dataset; verify before redistribution",
-      "attribution": "Credit www.reddit.com and link to the original upstream API/dataset.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/personal-collector-tasks.cjs"
         }
       ]
     },

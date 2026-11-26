@@ -460,7 +460,6 @@
     "oilInventories": "石油库存",
     "energyCrisis": "能源危机追踪器",
     "goldIntelligence": "黄金情报",
-    "wsbTickerScanner": "WallStreetBets股票扫描器",
     "internetDisruptions": "互联网中断",
     "internetDisruptionsTabs": {
       "outages": "中断",
@@ -2283,9 +2282,6 @@
     "renewable": {
       "infoTooltip": "<strong>可再生能源</strong>各地区和年份可再生能源发电份额，以及美国太阳能、风能和煤炭的安装容量（兆瓦）。数据来源：世界银行（EG.ELC.RNEW.ZS）和美国能源信息署。"
     },
-    "socialVelocity": {
-      "infoTooltip": "<strong>社交传播速度</strong> 具有地缘政治意义的热门话题和病毒式内容。衡量社交媒体速度：一个故事相对于基线的传播速度。帮助在新兴叙事到达主流媒体之前发现它们。"
-    },
     "conservationWins": {
       "infoTooltip": "<strong>保育成就</strong> 正面的保育新闻：物种种群恢复、栖息地修复里程碑和反灭绝努力。来源：IUCN、WWF和保育研究出版物。"
     },
@@ -2508,9 +2504,6 @@
     },
     "goldIntelligence": {
       "infoTooltip": "<strong>黄金情报</strong>多种货币黄金价格、黄金/白银和黄金/铂金比率以及管理资金期货头寸。数据来源包括雅虎财经和商品期货交易委员会。"
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>华尔街赌徒股票代码扫描仪</strong>来自r/wallstreetbets、r/stocks和r/investing的实时股票代码提及。按提及频率和互动排名。速度衡量股票代码在帖子中获得动量的速度。"
     },
     "proBanner": {
       "badge": "PRO",

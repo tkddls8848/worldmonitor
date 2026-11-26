@@ -1688,22 +1688,6 @@ test('classifyKey: predictionMarkets is OK when every pool meets its floor', () 
   assert.deepEqual(entry.poolCounts, { geopolitical: 1, tech: 1, finance: 18 });
 });
 
-test('classifyKey: socialVelocity error seed-meta → SEED_ERROR while data is preserved', () => {
-  const entry = classifyKey('socialVelocity', BOOTSTRAP_KEYS.socialVelocity, { allowOnDemand: false },
-    makeCtx({
-      strens: { [BOOTSTRAP_KEYS.socialVelocity]: 1234 },
-      metaValues: {
-        'seed-meta:intelligence:social-reddit': seedMeta({
-          status: 'error',
-          errorReason: 'empty_reddit_response: r/worldnews HTTP 403; r/geopolitics HTTP 403',
-        }),
-      },
-    }));
-  assert.equal(entry.status, 'SEED_ERROR');
-  assert.equal(STATUS_COUNTS[entry.status], 'warn');
-  assert.equal(entry.records, 5);
-});
-
 test('classifyKey: gdelt timeline repair metadata → SEED_ERROR while canonical articles remain available', () => {
   const entry = classifyKey('gdeltIntel', BOOTSTRAP_KEYS.gdeltIntel, { allowOnDemand: false },
     makeCtx({
@@ -1840,62 +1824,6 @@ test('classifyKey: a permanently blocked humanitarian provider surfaces as SEED_
 
   assert.equal(entry.status, 'SEED_ERROR');
   assert.equal(STATUS_COUNTS[entry.status], 'warn');
-});
-
-test('classifyKey: socialVelocity/wsbTickers tolerate the 3h cadence — fresh at 300min → OK', () => {
-  // Cadence dropped 1h→3h (ScrapeCreators), so maxStaleMin was raised 180→540.
-  // A healthy seed-meta aged 300min (5h, inside 540) must NOT false-alarm.
-  for (const [name, metaKey] of [
-    ['socialVelocity', 'seed-meta:intelligence:social-reddit'],
-    ['wsbTickers', 'seed-meta:intelligence:wsb-tickers'],
-  ]) {
-    const entry = classifyKey(name, BOOTSTRAP_KEYS[name], { allowOnDemand: false },
-      makeCtx({
-        strens: { [BOOTSTRAP_KEYS[name]]: 4096 },
-        metaValues: { [metaKey]: seedMeta({ fetchedAt: NOW - 300 * ONE_MIN_MS }) },
-      }));
-    assert.equal(entry.status, 'OK', `${name} at 300min should be OK`);
-  }
-});
-
-test('classifyKey: dead relay, data still present (9h–12h window) → STALE_SEED (warn)', () => {
-  // A dead relay stops refreshing seed-meta, but the data key lives for its full
-  // 12h TTL (> maxStaleMin=540min/9h), so 540–720min is a real present-but-stale
-  // window → STALE_SEED. This is reachable in production ONLY because the data-key
-  // TTL (43200s) STRICTLY exceeds maxStaleMin; at TTL==maxStaleMin the key would
-  // expire exactly when staleness begins and classifyKey would emit EMPTY instead.
-  for (const [name, metaKey] of [
-    ['socialVelocity', 'seed-meta:intelligence:social-reddit'],
-    ['wsbTickers', 'seed-meta:intelligence:wsb-tickers'],
-  ]) {
-    const entry = classifyKey(name, BOOTSTRAP_KEYS[name], { allowOnDemand: false },
-      makeCtx({
-        strens: { [BOOTSTRAP_KEYS[name]]: 4096 },
-        metaValues: { [metaKey]: seedMeta({ fetchedAt: NOW - 600 * ONE_MIN_MS }) },
-      }));
-    assert.equal(entry.status, 'STALE_SEED', `${name} at 600min (data present) should be STALE_SEED`);
-    assert.equal(STATUS_COUNTS[entry.status], 'warn');
-  }
-});
-
-test('classifyKey: dead relay past the 12h TTL, data key expired → EMPTY (crit) escalation', () => {
-  // Once the data key expires (after the 12h TTL on a fully-dead relay),
-  // hasData=false → classifyKey hits the !hasData branch (checked BEFORE seedStale,
-  // api/health.js) and returns EMPTY (crit), escalating from the earlier STALE_SEED
-  // warn. Verified shape: { status: 'EMPTY', records: 0 }.
-  for (const [name, metaKey] of [
-    ['socialVelocity', 'seed-meta:intelligence:social-reddit'],
-    ['wsbTickers', 'seed-meta:intelligence:wsb-tickers'],
-  ]) {
-    const entry = classifyKey(name, BOOTSTRAP_KEYS[name], { allowOnDemand: false },
-      makeCtx({
-        // no strens entry → data key absent (expired)
-        metaValues: { [metaKey]: seedMeta({ fetchedAt: NOW - 800 * ONE_MIN_MS }) },
-      }));
-    assert.equal(entry.status, 'EMPTY', `${name} with expired data should be EMPTY`);
-    assert.equal(STATUS_COUNTS[entry.status], 'crit');
-    assert.equal(entry.records, 0);
-  }
 });
 
 test('classifyKey: empty bootstrap key (no cascade) → EMPTY (crit)', () => {

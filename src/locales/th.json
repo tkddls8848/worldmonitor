@@ -459,7 +459,6 @@
     "oilInventories": "คลังสินค้าน้ำมัน",
     "energyCrisis": "ตัวติดตามวิกฤตพลังงาน",
     "goldIntelligence": "ข่าวกรรมการทอง",
-    "wsbTickerScanner": "WallStreetBets ticker scanner",
     "internetDisruptions": "การหยุดชะงักของอินเทอร์เน็ต",
     "internetDisruptionsTabs": {
       "outages": "การหยุดให้บริการ",
@@ -2283,9 +2282,6 @@
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> ส่วนแบ่งการผลิตไฟฟ้าจากพลังงานหมุนเวียนตามภูมิภาคและปี บวกกับความจุที่ติดตั้ง US สำหรับโซลาร์ ลม และถ่านหิน (MW) แหล่งที่มา: World Bank (EG.ELC.RNEW.ZS) และ US Energy Information Administration"
     },
-    "socialVelocity": {
-      "infoTooltip": "<strong>ความเร็วทางสังคม</strong> หัวข้อที่กำลังเป็นกระแสและเนื้อหาไวรัลที่มีความสำคัญทางภูมิรัฐศาสตร์ วัดความเร็วของโซเชียลมีเดีย: เรื่องราวแพร่กระจายเร็วแค่ไหนเมื่อเทียบกับเส้นฐาน ช่วยเปิดเผยเรื่องเล่าที่กำลังเกิดขึ้นก่อนที่จะถึงสื่อกระแสหลัก"
-    },
     "conservationWins": {
       "infoTooltip": "<strong>ความสำเร็จด้านการอนุรักษ์</strong> ข่าวเชิงบวกเกี่ยวกับการอนุรักษ์: การฟื้นตัวของประชากรสัตว์ เหตุการณ์สำคัญในการฟื้นฟูถิ่นที่อยู่อาศัย และความพยายามในการฟื้นคืนสายพันธุ์ที่สูญพันธุ์ แหล่งข้อมูล: IUCN, WWF และสิ่งพิมพ์วิจัยด้านการอนุรักษ์"
     },
@@ -2508,9 +2504,6 @@
     },
     "goldIntelligence": {
       "infoTooltip": "<strong>Gold intelligence</strong> ราคาทองคำในสกุลเงินหลายประเภท อัตราส่วนทอง/เงิน และทอง/แพลตินัม และตำแหน่ง futures เงินจัดการ แหล่งที่มารวมถึง Yahoo Finance และ Commodity Futures Trading Commission"
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>WallStreetBets Ticker Scanner</strong> การกล่าวถึง ticker แบบเรียลไทม์จาก r/wallstreetbets r/stocks และ r/investing จัดอันดับตามความถี่การกล่าวถึงและการมีส่วนร่วม ความเร็ววัดความเร็วของการที่ ticker ได้รับโมเมนตัมในโพสต์"
     },
     "proBanner": {
       "badge": "PRO",

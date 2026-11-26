@@ -60,7 +60,6 @@ export const FAST_FIRST_PAINT_JUSTIFICATION = Object.freeze({
   gdeltIntel: 'GDELT intel first-wave.',
   shippingRates: 'Supply-chain first-wave rates.',
   shippingStress: 'Supply-chain first-wave stress.',
-  socialVelocity: 'Retained once the 20% target is met to avoid another default dashboard request.',
 });
 
 export const REPRESENTATIVE_FIXTURE_CONTRACTS = Object.freeze({

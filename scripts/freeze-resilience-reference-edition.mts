@@ -187,11 +187,6 @@ function pruneRedisValue(key: string, value: unknown, countryRefs: CountryRefere
     return withReferenceSlice({ ...value, hexes }, countryRefs, value.hexes.length, hexes.length);
   }
 
-  if (key === 'intelligence:social:reddit:v1' && Array.isArray(value.posts)) {
-    const posts = value.posts.filter((post) => matchesRecordCountry(post, countryRefs, [], ['title']));
-    return withReferenceSlice({ ...value, posts }, countryRefs, value.posts.length, posts.length);
-  }
-
   if (key === 'unrest:events:v1' && Array.isArray(value.events)) {
     const events = value.events.filter((event) =>
       matchesRecordCountry(event, countryRefs, ['country'], ['country', 'title', 'summary'])

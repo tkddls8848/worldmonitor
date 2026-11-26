@@ -392,11 +392,6 @@ interface CountryDisplacement {
   hostTotal?: number;
 }
 
-interface SocialVelocityPost {
-  title?: string;
-  velocityScore?: number;
-}
-
 const RESILIENCE_STATIC_PREFIX = 'resilience:static:';
 const RESILIENCE_SHIPPING_STRESS_KEY = 'supply_chain:shipping_stress:v1';
 const RESILIENCE_TRANSIT_SUMMARIES_KEY = 'supply_chain:transit-summaries:v1';
@@ -437,7 +432,6 @@ export const CYBER_DISCOVERY_HALF_LIFE_DAYS = 1;
 const RESILIENCE_UNREST_KEY = 'unrest:events:v1';
 const RESILIENCE_UCDP_KEY = 'conflict:ucdp-events:v1';
 const RESILIENCE_DISPLACEMENT_PREFIX = 'displacement:summary:v1';
-const RESILIENCE_SOCIAL_VELOCITY_KEY = 'intelligence:social:reddit:v1';
 const RESILIENCE_NEWS_THREAT_SUMMARY_KEY = 'news:threat:summary:v1';
 const RESILIENCE_ENERGY_PRICES_KEY = 'economic:energy:v1:all';
 const RESILIENCE_ENERGY_MIX_KEY_PREFIX = 'energy:mix:v1:';
@@ -1135,7 +1129,7 @@ function matchesCountryIdentifier(value: unknown, countryCode: string): boolean 
 }
 
 // Per-alias disambiguation. The previous AMBIGUOUS_ALIASES blocklist
-// silently zeroed Reddit velocity for any country whose only alias was
+// silently missed matches for any country whose only alias was
 // ambiguous (Niger, Georgia, Guinea, Samoa, Sudan, Dominica — see #3744).
 // Replaced with predicates that accept the match only when surrounding
 // context rules out the colliding token. Aliases not listed here are
@@ -1653,13 +1647,6 @@ export function getCountryDisplacement(raw: unknown, countryCode: string): Count
   const summary = (raw as { summary?: { countries?: CountryDisplacement[] } } | null)?.summary;
   const countries = Array.isArray(summary?.countries) ? summary.countries : [];
   return countries.find((entry) => matchesCountryIdentifier(entry.code, countryCode)) ?? null;
-}
-
-export function summarizeSocialVelocity(raw: unknown, countryCode: string): number {
-  const posts: SocialVelocityPost[] = Array.isArray((raw as { posts?: unknown[] } | null)?.posts)
-    ? ((raw as { posts?: SocialVelocityPost[] }).posts ?? [])
-    : [];
-  return posts.reduce((sum, post) => sum + (matchesCountryText(post.title, countryCode) ? (safeNum(post.velocityScore) ?? 0) : 0), 0);
 }
 
 export function getThreatSummaryScore(raw: unknown, countryCode: string): number | null {
@@ -3420,45 +3407,20 @@ export async function scoreInformationCognitive(
   reader: ResilienceSeedReader = defaultSeedReader,
   options?: ResilienceScoreOptions,
 ): Promise<ResilienceDimensionScore> {
-  const [staticRecord, socialVelocityRaw, threatSummaryRaw] = await Promise.all([
+  const [staticRecord, threatSummaryRaw] = await Promise.all([
     readStaticCountry(countryCode, reader),
-    reader(RESILIENCE_SOCIAL_VELOCITY_KEY),
     reader(RESILIENCE_NEWS_THREAT_SUMMARY_KEY),
   ]);
   const rsfScore = safeNum(staticRecord?.rsf?.score);
-  const velocity = summarizeSocialVelocity(socialVelocityRaw, countryCode);
   const threatScore = getThreatSummaryScore(threatSummaryRaw, countryCode);
 
-  // Language-coverage adjustment (fixes #3736).
-  //
-  // The previous implementation divided raw velocity + threatScore by
-  // `langFactor` (range 0.2..1.0), which AMPLIFIED signal for countries with
-  // sparse English-language news coverage by up to 5x. Effect: a small uptick
-  // in coverage-poor countries scored worse than a substantial signal in
-  // coverage-rich ones — exactly the inverse of what the data justifies.
-  //
-  // Correct framing: sparse English coverage means LOW CONFIDENCE in the
-  // observable velocity/threat sub-signals, not a higher inferred underlying
-  // signal. Apply `langFactor` to the WEIGHT of those sub-indicators, not to
-  // the signal value itself. Raw signals flow through unchanged; coverage-poor
-  // countries lean more heavily on the static RSF press-freedom indicator
-  // (which IS coverage-independent and the most reliable annual signal).
-  //
-  // #3787 follow-up: the velocity/threat sub-indicators also pass `nominalWeight`
-  // so that `weightedBlend` computes the dimension's `coverage` field against
-  // the un-attenuated design-time weights (0.15 + 0.30 + 0.55 = 1.0). Without
-  // this, attenuating `weight` would shrink the coverage denominator alongside
-  // the numerator, and a minimal-coverage country reporting the same data shape
-  // as a primary-coverage country would inadvertently report a HIGHER coverage
-  // value — the inverse of the intended semantic. With nominalWeight, coverage
-  // stays a stable measurement of "what fraction of designed signal we observed"
-  // independent of the confidence-weighting applied to the score.
+  // Apply language coverage to the news weight. The nominal weight keeps
+  // input coverage independent of the confidence adjustment (#3736, #3787).
   const langFactor = getLanguageCoverageFactor(countryCode);
 
   return tracedBlend('informationCognitive', [
-    tracedMetric('rsfPressFreedom', { score: rsfScore == null ? null : normalizeLowerBetter(rsfScore, 0, 100), weight: 0.55, rawValue: rsfScore, rawUnit: 'rsf_score', sourceYear: staticRecord?.rsf?.year ?? null }),
-    tracedMetric('socialVelocity', { score: velocity > 0 ? normalizeLowerBetter(Math.log10(velocity + 1), 0, 3) : null, weight: 0.15 * langFactor, nominalWeight: 0.15, rawValue: velocity, rawUnit: 'velocity_sum', provenanceHint: `language-coverage-factor=${langFactor}` }),
-    tracedMetric('newsThreatScore', { score: threatScore == null ? null : normalizeLowerBetter(threatScore, 0, 20), weight: 0.30 * langFactor, nominalWeight: 0.30, rawValue: threatScore, rawUnit: 'weighted_threat_count', provenanceHint: `language-coverage-factor=${langFactor}` }),
+    tracedMetric('rsfPressFreedom', { score: rsfScore == null ? null : normalizeLowerBetter(rsfScore, 0, 100), weight: 0.6470588235294118, rawValue: rsfScore, rawUnit: 'rsf_score', sourceYear: staticRecord?.rsf?.year ?? null }),
+    tracedMetric('newsThreatScore', { score: threatScore == null ? null : normalizeLowerBetter(threatScore, 0, 20), weight: 0.35294117647058826 * langFactor, nominalWeight: 0.35294117647058826, rawValue: threatScore, rawUnit: 'weighted_threat_count', provenanceHint: `language-coverage-factor=${langFactor}` }),
   ], options);
 }
 

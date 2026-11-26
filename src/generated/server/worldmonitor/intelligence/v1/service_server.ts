@@ -763,41 +763,6 @@ export interface TransmissionNode {
   logic: string;
 }
 
-export interface ListWsbTickersRequest {
-}
-
-export interface ListWsbTickersResponse {
-  tickers: WsbTicker[];
-}
-
-export interface WsbTicker {
-  symbol: string;
-  mentionCount: number;
-  totalScore: number;
-  subreddits: string[];
-  velocityScore: number;
-}
-
-export interface GetSocialVelocityRequest {
-}
-
-export interface GetSocialVelocityResponse {
-  posts: SocialVelocityPost[];
-  fetchedAt: number;
-}
-
-export interface SocialVelocityPost {
-  id: string;
-  title: string;
-  subreddit: string;
-  url: string;
-  score: number;
-  upvoteRatio: number;
-  numComments: number;
-  velocityScore: number;
-  createdAt: number;
-}
-
 export interface GetCountryEnergyProfileRequest {
   countryCode: string;
 }
@@ -1434,8 +1399,6 @@ export interface IntelligenceServiceHandler {
   getGdeltTopicTimeline(ctx: ServerContext, req: GetGdeltTopicTimelineRequest): Promise<GetGdeltTopicTimelineResponse>;
   listCrossSourceSignals(ctx: ServerContext, req: ListCrossSourceSignalsRequest): Promise<ListCrossSourceSignalsResponse>;
   listMarketImplications(ctx: ServerContext, req: ListMarketImplicationsRequest): Promise<ListMarketImplicationsResponse>;
-  listWsbTickers(ctx: ServerContext, req: ListWsbTickersRequest): Promise<ListWsbTickersResponse>;
-  getSocialVelocity(ctx: ServerContext, req: GetSocialVelocityRequest): Promise<GetSocialVelocityResponse>;
   getCountryEnergyProfile(ctx: ServerContext, req: GetCountryEnergyProfileRequest): Promise<GetCountryEnergyProfileResponse>;
   computeEnergyShockScenario(ctx: ServerContext, req: ComputeEnergyShockScenarioRequest): Promise<ComputeEnergyShockScenarioResponse>;
   getCountryPortActivity(ctx: ServerContext, req: GetCountryPortActivityRequest): Promise<CountryPortActivityResponse>;
@@ -2465,80 +2428,6 @@ export function createIntelligenceServiceRoutes(
 
           const result = await handler.listMarketImplications(ctx, body);
           return new Response(JSON.stringify(result as ListMarketImplicationsResponse), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (err: unknown) {
-          if (err instanceof ValidationError) {
-            return new Response(JSON.stringify({ violations: err.violations }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-          if (options?.onError) {
-            return options.onError(err, req);
-          }
-          const message = "Internal server error";
-          return new Response(JSON.stringify({ message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      },
-    },
-    {
-      method: "GET",
-      path: "/api/intelligence/v1/list-wsb-tickers",
-      handler: async (req: Request): Promise<Response> => {
-        try {
-          const pathParams: Record<string, string> = {};
-          const body = {} as ListWsbTickersRequest;
-
-          const ctx: ServerContext = {
-            request: req,
-            pathParams,
-            headers: Object.fromEntries(req.headers.entries()),
-          };
-
-          const result = await handler.listWsbTickers(ctx, body);
-          return new Response(JSON.stringify(result as ListWsbTickersResponse), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (err: unknown) {
-          if (err instanceof ValidationError) {
-            return new Response(JSON.stringify({ violations: err.violations }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-          if (options?.onError) {
-            return options.onError(err, req);
-          }
-          const message = "Internal server error";
-          return new Response(JSON.stringify({ message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      },
-    },
-    {
-      method: "GET",
-      path: "/api/intelligence/v1/get-social-velocity",
-      handler: async (req: Request): Promise<Response> => {
-        try {
-          const pathParams: Record<string, string> = {};
-          const body = {} as GetSocialVelocityRequest;
-
-          const ctx: ServerContext = {
-            request: req,
-            pathParams,
-            headers: Object.fromEntries(req.headers.entries()),
-          };
-
-          const result = await handler.getSocialVelocity(ctx, body);
-          return new Response(JSON.stringify(result as GetSocialVelocityResponse), {
             status: 200,
             headers: { "Content-Type": "application/json" },
           });

@@ -101,6 +101,4 @@ export { EnergyDisruptionsPanel } from './EnergyDisruptionsPanel';
 export { EnergyRiskOverviewPanel } from './EnergyRiskOverviewPanel';
 export * from './ClimateNewsPanel';
 export * from './DiseaseOutbreaksPanel';
-export * from './SocialVelocityPanel';
-export * from './WsbTickerScannerPanel';
 export * from './EnergyCrisisPanel';

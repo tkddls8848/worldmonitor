@@ -93,7 +93,6 @@ export const PANEL_SCOPE_BEHAVIOUR: Readonly<Record<string, PanelScopeBehaviour>
   'economic-calendar': 'global', // Economic Calendar
   'cot-positioning': 'global', // COT Positioning
   derivatives: 'global', // Derivatives & Options
-  'wsb-ticker-scanner': 'global', // WSB Ticker Scanner
   'nq-pulse': 'global', // NQ Pulse
   'nq-catalysts': 'global', // NQ Catalysts
   'fao-food-price-index': 'global', // FAO Food Price Index
@@ -185,7 +184,6 @@ export const PANEL_SCOPE_BEHAVIOUR: Readonly<Record<string, PanelScopeBehaviour>
   'satellite-fires': 'unsupported', // Fires
   'grocery-basket': 'unsupported', // Grocery Index
   'disease-outbreaks': 'filters', // Disease Outbreaks
-  'social-velocity': 'unsupported', // Social Velocity
   displacement: 'filters', // UNHCR Displacement
   'ukmto-incidents': 'unsupported', // UKMTO Incidents
   'climate-news': 'unsupported', // Climate News

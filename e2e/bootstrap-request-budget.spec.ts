@@ -8,7 +8,7 @@ import {
   waitForStartup,
 } from './bootstrap-request-budget-fixtures';
 
-const DEMOTED_ON_DEMAND_KEYS = ['flightDelays', 'wsbTickers'] as const;
+const DEMOTED_ON_DEMAND_KEYS = ['flightDelays'] as const;
 
 type BootstrapRequestLog = {
   tier: string[];

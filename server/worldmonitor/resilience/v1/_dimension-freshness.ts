@@ -103,8 +103,6 @@ const SOURCE_KEY_META_OVERRIDES: Readonly<Record<string, string>> = {
   'energy:gas-storage': 'energy:gas-storage-countries',
   // personal-providers.cjs writes seed-meta:news:threat-summary (single dash).
   'news:threat:summary': 'news:threat-summary',
-  // personal-providers.cjs writes seed-meta:intelligence:social-reddit (single dash).
-  'intelligence:social:reddit': 'intelligence:social-reddit',
 };
 
 /**

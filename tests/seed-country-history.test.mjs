@@ -23,7 +23,7 @@ const now = Date.UTC(2026, 9, 19, 0, 30);
 const inputs = () => ({
   now, countries: ['US', 'FR'],
   risk: { ciiScores: [{ region: 'US', combinedScore: 0, computedAt: now - 1000, methodologyVersion: 'v11' }] },
-  ranking: { items: [{ countryCode: 'US', overallScore: 65 }], greyedOut: [], fetchedAt: new Date(now - 3600000).toISOString(), _scoreCacheIdentity: 'v29:pc:active' },
+  ranking: { items: [{ countryCode: 'US', overallScore: 65 }], greyedOut: [], fetchedAt: new Date(now - 3600000).toISOString(), _scoreCacheIdentity: 'v30:pc:active' },
   digest: { generatedAt: new Date(now - 1000).toISOString(), coverage: { state: 'complete' }, categories: { politics: { items: [
     { title: 'United States talks begin', link: 'https://example.com/1', source: 'Example', publishedAt: now - 1000 },
     { title: 'United States talks begin', link: 'https://example.com/1', source: 'Example', publishedAt: now - 1000 },
@@ -35,7 +35,7 @@ test('daily composition preserves observed zero, absence, source clocks, formula
   const [us, fr] = composeCountrySnapshots(inputs());
   assert.equal(us.date, '2026-10-19');
   assert.deepEqual(us.cii, { score: 0, version: 'v11', observedAt: now - 1000 });
-  assert.equal(us.resilience.version, 'v29:pc:active');
+  assert.equal(us.resilience.version, 'v30:pc:active');
   assert.equal(us.topEvents.length, 1);
   assert.equal(us.topEvents[0].category, 'politics');
   assert.equal(fr.cii, undefined);

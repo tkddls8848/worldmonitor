@@ -317,7 +317,6 @@ npx @modelcontextprotocol/inspector https://worldmonitor.app/mcp
 | `get_sanctions_data` | OFAC SDN 实体 + 各国制裁压力评分。 |
 | `get_news_intelligence` | AI 分类的威胁新闻、GDELT 信号、跨来源情报。 |
 | `get_positive_events` | 外交协议、人道主义援助、和平倡议。 |
-| `get_social_velocity` | Reddit r/worldnews + r/geopolitics 按速度评分排序的前 30 条帖子。 |
 | `get_china_decision_signals` | 保留规范溯源的六领域中国摘要，明确显示各领域降级；不暴露详细双边贸易行或 operator 健康信息。 |
 
 ### NLP 实用工具（按需）
@@ -429,7 +428,6 @@ npx @modelcontextprotocol/inspector https://worldmonitor.app/mcp
 | `get_news_intelligence` | `GET /api/intelligence/v1/list-cross-source-signals`<br/>`GET /api/intelligence/v1/search-gdelt-documents` |
 | `get_country_risk` | `GET /api/intelligence/v1/get-country-risk` |
 | `get_country_brief` | `GET /api/intelligence/v1/get-country-intel-brief` |
-| `get_social_velocity` | `GET /api/intelligence/v1/get-social-velocity` |
 | `get_china_decision_signals` | `GET /api/intelligence/v1/get-china-decision-signals` |
 | `get_company_intelligence` | `GET /api/intelligence/v1/get-company-enrichment`<br/>`GET /api/intelligence/v1/list-company-signals`<br/>`GET /api/intelligence/v1/search-sec-filings`<br/>`GET /api/intelligence/v1/list-material-events` |
 | `search_intel_history` | `POST /api/intelligence/v1/search-intel-history` |

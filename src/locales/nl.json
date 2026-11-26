@@ -77,7 +77,6 @@
     "oilInventories": "Olievoorraden",
     "energyCrisis": "Energiecrisistracker",
     "goldIntelligence": "Goudinformatie",
-    "wsbTickerScanner": "WallStreetBets-tickerscanner",
     "internetDisruptions": "Internetverstoringen",
     "internetDisruptionsTabs": {
       "outages": "Uitval",
@@ -1909,9 +1908,6 @@
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Aandeel hernieuwbare energie in elektriciteitsproductie per regio en jaar, plus US-installaties voor zonne-, wind- en kolenenergie (MW). Bronnen: World Bank (EG.ELC.RNEW.ZS) en US Energy Information Administration."
     },
-    "socialVelocity": {
-      "infoTooltip": "<strong>Sociale snelheid</strong> Trending onderwerpen en virale content met geopolitieke betekenis. Meet de snelheid op sociale media: hoe snel een verhaal zich verspreidt ten opzichte van de basislijn. Helpt opkomende narratieven te signaleren voordat ze de reguliere media bereiken."
-    },
     "conservationWins": {
       "infoTooltip": "<strong>Natuurbehoudssuccessen</strong> Positief natuurbehoudsnieuws: herstel van dierenpopulaties, mijlpalen in habitatherstel en de-extinctie-inspanningen. Bron: IUCN, WWF en natuurbehoudsonderzoekspublicaties."
     },
@@ -2135,9 +2131,6 @@
     },
     "goldIntelligence": {
       "infoTooltip": "<strong>Gold intelligence</strong> Goudprijzen in verschillende valuta's, goud/zilver- en goud/platinaratio's, en managed-money futures-posities. Bronnen zijn onder andere Yahoo Finance en de Commodity Futures Trading Commission."
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>WallStreetBets Ticker Scanner</strong> Real-time tickervermeldingen van r/wallstreetbets, r/stocks en r/investing. Gerangschikt op vermeldingsfrequentie en engagement. Snelheid meet hoe snel een ticker vaart krijgt via berichten."
     },
     "proBanner": {
       "badge": "PRO",

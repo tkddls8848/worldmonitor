@@ -18,7 +18,7 @@ const QUALIFIED_HEADLINE_NAMES = {
   GN: ['guinea conakry'],
 };
 const RISK_KEY = 'risk:scores:sebuf:stale:v14';
-const RANKING_KEY = 'resilience:ranking:v29';
+const RANKING_KEY = 'resilience:ranking:v30';
 const DIGEST_KEY = 'news:digest:v1:full:en';
 const fresh = (time, now, age) => Number.isFinite(time) && time > 0 && time <= now && now - time <= age;
 const validScore = value => typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 100;

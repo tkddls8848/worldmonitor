@@ -169,8 +169,6 @@ import type { SupplyChainPanel } from '@/components/SupplyChainPanel';
 import type { ChinaCorridorPanel } from '@/components/ChinaCorridorPanel';
 import type { ChinaActivityNowcastPanel } from '@/components/ChinaActivityNowcastPanel';
 import type { DiseaseOutbreaksPanel } from '@/components/DiseaseOutbreaksPanel';
-import type { SocialVelocityPanel } from '@/components/SocialVelocityPanel';
-import type { WsbTickerScannerPanel } from '@/components/WsbTickerScannerPanel';
 import type { AAIISentimentPanel } from '@/components/AAIISentimentPanel';
 import type { MarketBreadthPanel } from '@/components/MarketBreadthPanel';
 import type { SatelliteFiresPanel } from '@/components/SatelliteFiresPanel';
@@ -200,7 +198,6 @@ import { fetchCachedRiskScores, getCachedScores, toCountryScore, type CachedRisk
 import type { NewsItem as ProtoNewsItem } from '@/generated/client/worldmonitor/news/v1/service_client';
 import { fetchMarketImplications } from '@/services/market-implications';
 import { fetchDiseaseOutbreaks } from '@/services/disease-outbreaks';
-import { fetchSocialVelocity } from '@/services/social-velocity';
 import {
   hydrateGeoHubPanelFromClusters,
   hydrateTechHubPanelFromClusters,
@@ -350,7 +347,6 @@ const HYDRATION_TIER_TWO = new Set([
   'cables',
   'cableHealth',
   'diseaseOutbreaks',
-  'socialVelocity',
   'economicStress',
   'sanctions',
   'resilienceRanking',
@@ -365,7 +361,6 @@ const HYDRATION_TIER_FOUR = new Set([
   'simulation-outcome',
   'pizzint',
   'marketImplications',
-  'wsbTickers',
   'techReadiness',
   'thermalEscalation',
   'crossSourceSignals',
@@ -1267,8 +1262,6 @@ export class DataLoaderManager implements AppModule {
     }
     if (this.ctx.mapLayers.natural) tasks.push({ name: 'natural', task: () => runGuarded('natural', () => this.loadNatural()) });
     if (this.ctx.mapLayers.diseaseOutbreaks || shouldLoad('disease-outbreaks')) tasks.push({ name: 'diseaseOutbreaks', task: () => runGuarded('diseaseOutbreaks', () => this.loadDiseaseOutbreaks()) });
-    if (shouldLoad('social-velocity')) tasks.push({ name: 'socialVelocity', task: () => runGuarded('socialVelocity', () => this.loadSocialVelocity()) });
-    if (shouldLoad('wsb-ticker-scanner')) tasks.push({ name: 'wsbTickers', task: () => runGuarded('wsbTickers', () => this.loadWsbTickers()) });
     if (shouldLoad('economic')) tasks.push({ name: 'economicStress', task: () => runGuarded('economicStress', () => this.loadEconomicStress()) });
     if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.weather) tasks.push({ name: 'weather', task: () => runGuarded('weather', () => this.loadWeatherAlerts()) });
     if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.pipelines) tasks.push({ name: 'pipelineRegistries', task: () => runGuarded('pipelineRegistries', () => this.loadPipelineRegistries()) });
@@ -4478,28 +4471,6 @@ export class DataLoaderManager implements AppModule {
       }
     } catch (e) {
       console.error('[App] Disease outbreaks load failed:', e);
-    }
-  }
-
-  async loadSocialVelocity(): Promise<void> {
-    try {
-      const data = await fetchSocialVelocity();
-      if (data.posts?.length) {
-        const panel = this.ctx.panels['social-velocity'] as SocialVelocityPanel | undefined;
-        panel?.updateData(data.posts);
-      }
-    } catch (e) {
-      console.error('[App] Social velocity load failed:', e);
-    }
-  }
-
-  async loadWsbTickers(): Promise<void> {
-    const panel = this.ctx.panels['wsb-ticker-scanner'] as WsbTickerScannerPanel | undefined;
-    if (!panel) return;
-    try {
-      await panel.fetchData();
-    } catch (e) {
-      console.error('[App] WSB tickers load failed:', e);
     }
   }
 

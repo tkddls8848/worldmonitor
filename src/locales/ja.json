@@ -459,7 +459,6 @@
     "oilInventories": "石油在庫",
     "energyCrisis": "エネルギー危機トラッカー",
     "goldIntelligence": "ゴールド インテリジェンス",
-    "wsbTickerScanner": "ウォールストリートベッツティッカースキャナー",
     "internetDisruptions": "インターネット 障害",
     "internetDisruptionsTabs": {
       "outages": "障害",
@@ -2283,9 +2282,6 @@
     "renewable": {
       "infoTooltip": "<strong>再生可能エネルギー</strong> 地域および年別の再生可能エネルギーからの発電シェア、および米国の太陽光、風力、石炭の設置済み容量（MW）。出典：世界銀行（EG.ELC.RNEW.ZS）およびUS Energy Information Administration。"
     },
-    "socialVelocity": {
-      "infoTooltip": "<strong>ソーシャルベロシティ</strong> 地政学的重要性を持つトレンドトピックとバイラルコンテンツ。ソーシャルメディアの速度を測定：ベースラインに対してストーリーがどれだけ速く拡散するか。主流メディアに届く前に新興ナラティブの浮上を支援。"
-    },
     "conservationWins": {
       "infoTooltip": "<strong>保全の成果</strong> ポジティブな保全ニュース：種の個体数回復、生息地復元のマイルストーン、脱絶滅の取り組み。ソース：IUCN、WWFおよび保全研究出版物。"
     },
@@ -2508,9 +2504,6 @@
     },
     "goldIntelligence": {
       "infoTooltip": "<strong>金情報</strong> 複数通貨での金価格、金/銀および金/プラチナの比率、マネージドマネー先物ポジション。情報源はYahoo Financeおよび商品先物取引委員会。"
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>ウォールストリートベッツ ティッカースキャナー</strong> r/wallstreetbets、r/stocks、r/investingからのリアルタイムティッカーメンション。メンション頻度とエンゲージメントでランク付け。ベロシティはティッカーが投稿全体でどれだけ急速に勢いを増しているかを測定します。"
     },
     "proBanner": {
       "badge": "PRO",

@@ -73,7 +73,6 @@
   "get_sanctions_data",
   "get_signal_convergence",
   "get_similar_events",
-  "get_social_velocity",
   "get_sources",
   "get_stock_research",
   "get_supply_chain_cost_shock",

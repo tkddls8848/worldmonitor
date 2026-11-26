@@ -50,11 +50,14 @@ const CAPTURED_RECOMPUTE_SOURCE = 'country-sliced Redis input snapshot recompute
 // construct with those dimensions disabled (see `manifestPredatesEducation`).
 // Activation therefore cannot move this comparison until the reference edition
 // is re-frozen with the new keys present, which is a post-deploy capture.
-const CURRENT_COMBINED_SCORER_CACHE_PREFIX = 'resilience:score:v29:';
+// v30 removes a live-shock input present in the frozen capture. The same
+// dimension also contributes to social-governance domain scores.
+const CURRENT_COMBINED_SCORER_CACHE_PREFIX = 'resilience:score:v30:';
 const EXPECTED_CURRENT_SCORER_DRIFT_COUNTRIES = new Set(EXPECTED_COUNTRIES);
 const EXPECTED_CURRENT_SCORER_DRIFT_FIELDS = new Set([
   'overallScore',
   'domains.infrastructure.score',
+  'domains.social-governance.score',
   'pillars.live-shock-exposure.score',
   'domains.economic.score',
   'pillars.structural-readiness.score',

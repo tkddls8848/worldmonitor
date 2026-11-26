@@ -1292,7 +1292,6 @@ const EXCLUDED_HOSTS = new Set([
   'www.facebook.com',
   'wa.me',
   't.me',
-  'reddit.com',
   'openrouter.ai',
   // AI model provider (server/_shared/llm-anthropic.ts), not an ingested dataset.
   'api.anthropic.com',

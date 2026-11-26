@@ -382,7 +382,7 @@ describe('readFreshnessMap (T1.5 propagation pass)', () => {
   });
 
   it('skips bare zero-record seed-meta unless the producer explicitly marks the zero as healthy', async () => {
-    const sourceKey = 'intelligence:social:reddit:v1';
+    const sourceKey = 'news:threat:summary:v1';
     const metaKey = resolveSeedMetaKey(sourceKey);
 
     const bareZeroReader = async (key: string): Promise<unknown | null> => {
@@ -512,10 +512,6 @@ describe('resolveSeedMetaKey (T1.5 propagation pass, P1 fix)', () => {
       'seed-meta:energy:gas-storage-countries',
     );
     assert.equal(resolveSeedMetaKey('news:threat:summary:v1'), 'seed-meta:news:threat-summary');
-    assert.equal(
-      resolveSeedMetaKey('intelligence:social:reddit:v1'),
-      'seed-meta:intelligence:social-reddit',
-    );
   });
 });
 

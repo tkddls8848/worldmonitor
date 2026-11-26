@@ -464,7 +464,6 @@
     "oilInventories": "Inventarios de Petróleo",
     "energyCrisis": "Rastreador de Crisis Energética",
     "goldIntelligence": "Inteligencia de Oro",
-    "wsbTickerScanner": "Escáner de tickers de WallStreetBets",
     "internetDisruptions": "Interrupciones de Internet",
     "internetDisruptionsTabs": {
       "outages": "Apagones",
@@ -2303,9 +2302,6 @@
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Participación de generación de electricidad de fuentes renovables por región y año, más capacidad instalada estadounidense de solar, eólica y carbón (MW). Fuentes: Banco Mundial (EG.ELC.RNEW.ZS) y Administración de Información de Energía de EE.UU."
     },
-    "socialVelocity": {
-      "infoTooltip": "<strong>Velocidad social</strong> Temas en tendencia y contenido viral con significado geopolítico. Mide la velocidad en redes sociales: qué tan rápido se propaga una historia respecto a la línea base. Ayuda a identificar narrativas emergentes antes de que lleguen a los medios convencionales."
-    },
     "conservationWins": {
       "infoTooltip": "<strong>Logros de conservación</strong> Noticias positivas de conservación: recuperación de poblaciones de especies, hitos de restauración de hábitats y esfuerzos de des-extinción. Fuente: IUCN, WWF y publicaciones de investigación en conservación."
     },
@@ -2530,9 +2526,6 @@
     },
     "goldIntelligence": {
       "infoTooltip": "<strong>Gold intelligence</strong> Precios del oro en varias monedas, ratios oro/plata y oro/platino, y posiciones de futuros de dinero administrado. Las fuentes incluyen Yahoo Finance y la Comisión de Comercio de Futuros de Materias Primas."
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>WallStreetBets Ticker Scanner</strong> Menciones de tickers en tiempo real de r/wallstreetbets, r/stocks e r/investing. Clasificadas por frecuencia de mención y engagement. La velocidad mide qué tan rápidamente un ticker gana impulso en publicaciones."
     },
     "proBanner": {
       "badge": "PRO",

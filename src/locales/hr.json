@@ -500,7 +500,6 @@
     "etfFlows": "Tokovi Bitcoin fondova",
     "stablecoins": "Stablecoini",
     "deduction": "Odbitna Situacija",
-    "wsbTickerScanner": "Skener tickera WallStreetBets",
     "ucdpEvents": "Događaji Oružanih Sukoba",
     "giving": "Globalno Davanje",
     "displacement": "Izbjeglice i raseljeni",
@@ -2590,12 +2589,6 @@
     },
     "renewable": {
       "infoTooltip": "<strong>Obnovljiva energija</strong> Udio proizvodnje električne energije iz obnovljivih izvora po regiji i godini, te instalirani kapacitet SAD-a za solarnu energiju, vjetar i ugljen (MW). Izvori: Svjetska banka (EG.ELC.RNEW.ZS) i Američka administracija za energetske informacije."
-    },
-    "socialVelocity": {
-      "infoTooltip": "<strong>Social Velocity</strong> Trendske teme i virusni sadržaj s geopolitičkom važnošću. Mjeri brzinu društvenih mreža: kako brzo se priča širi u odnosu na osnovu. Pomaže pri otkrivanju emerging narativa prije nego što stignu u mainstream vijesti."
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>WallStreetBets Ticker Scanner</strong> Spomen oznaka dionica u realnom vremenu iz r/wallstreetbets, r/stocks i r/investing. Rangirane po učestalosti spominjanja i angažmanu. Brzina mjeri kako brzo oznaka dionice dobiva zamah kroz članke."
     },
     "conservationWins": {
       "infoTooltip": "<strong>Conservation Wins</strong> Pozitivne vijesti o zaštiti: oporavci populacija vrsta, kameni mnogih oporavka staništa i nastojanja de-extincije. Iz IUCN, WWF i publikacija konzervacijskih istraživanja."

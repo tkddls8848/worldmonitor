@@ -520,7 +520,6 @@
     "etfFlows": "Bitcoin fund flows",
     "stablecoins": "Stablecoins",
     "deduction": "Deduct Situation",
-    "wsbTickerScanner": "WallStreetBets ticker scanner",
     "ucdpEvents": "Armed Conflict Events",
     "giving": "Global Giving",
     "displacement": "Refugees and displacement",
@@ -2706,12 +2705,6 @@
     },
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Share of electricity generation from renewables by region and year, plus US installed capacity for solar, wind, and coal (MW). Sources: World Bank (EG.ELC.RNEW.ZS) and US Energy Information Administration."
-    },
-    "socialVelocity": {
-      "infoTooltip": "<strong>Social Velocity</strong> Trending topics and viral content with geopolitical significance. Measures social media velocity: how rapidly a story spreads relative to baseline. Helps surface emerging narratives before they hit mainstream news."
-    },
-    "wsbTickerScanner": {
-      "infoTooltip": "<strong>WallStreetBets Ticker Scanner</strong> Real-time ticker mentions from r/wallstreetbets, r/stocks, and r/investing. Ranked by mention frequency and engagement. Velocity measures how rapidly a ticker gains momentum across posts."
     },
     "conservationWins": {
       "infoTooltip": "<strong>Conservation Wins</strong> Positive conservation news: species population recoveries, habitat restoration milestones, and de-extinction efforts. Sourced from IUCN, WWF, and conservation research publications."

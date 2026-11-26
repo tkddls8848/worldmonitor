@@ -165,7 +165,7 @@
     "legal:pdfs:check": "node scripts/build-legal-pdfs.mjs --check",
     "docs:dates": "node scripts/generate-docs-page-dates.mjs",
     "docs:dates:check": "node scripts/generate-docs-page-dates.mjs --check",
-    "test:api": "node --test api/_cors.test.mjs api/bootstrap-auth.test.mjs api/bootstrap-cors.test.mjs api/health-cors.test.mjs api/youtube/embed.test.mjs api/miit-news.test.mjs api/rss-proxy.test.mjs api/rss-proxy-body.test.mjs scripts/personal-providers-rss.test.cjs scripts/personal-providers-ingestion.test.cjs scripts/personal-providers-entity-decode.test.cjs scripts/personal-providers-ais-gaps.test.cjs scripts/personal-providers-opensky-shared-cooldown.test.cjs api/loaders-xml-wms-regression.test.mjs"
+    "test:api": "node --test api/_cors.test.mjs api/bootstrap-auth.test.mjs api/bootstrap-cors.test.mjs api/health-cors.test.mjs api/youtube/embed.test.mjs api/miit-news.test.mjs api/rss-proxy.test.mjs api/rss-proxy-body.test.mjs scripts/personal-providers-rss.test.cjs scripts/personal-providers-ingestion.test.cjs scripts/personal-providers-ais-gaps.test.cjs scripts/personal-providers-opensky-shared-cooldown.test.cjs api/loaders-xml-wms-regression.test.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

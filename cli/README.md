@@ -53,7 +53,7 @@ The dashboard boots in a couple of seconds. Views:
 | `9` | Climate | Earthquakes, hazards and outbreaks, weather alerts, climate anomalies, planet vitals |
 | `0` | Predict | Prediction markets by domain and AI scenario forecasts |
 | `Alt+1` | Live | The dashboard's live news channels and webcams, played in the terminal |
-| `Alt+2` | Intel | GDELT topic feeds, sanctions pressure, travel advisories, social velocity, spending |
+| `Alt+2` | Intel | GDELT topic feeds, sanctions pressure, travel advisories, spending |
 | `Alt+3` | System | Platform health, per-source freshness, themes, player status |
 
 Controls: `Tab` / `Shift+Tab` switch views, `←` `→` move between panes, `↑` `↓`
