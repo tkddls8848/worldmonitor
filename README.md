@@ -2,7 +2,7 @@
 
 [简体中文](README.zh-CN.md) | [日本語](README.ja-JP.md) | [Русский](README.ru.md)
 
-A single-owner fork of [World Monitor](https://github.com/koala73/worldmonitor), the real-time global intelligence dashboard. It runs on one machine as a personal dashboard, a local API, an embedded data store and the data collectors. It has no accounts, payments, analytics or hosted deployment.
+A single-owner fork of [World Monitor](https://github.com/koala73/worldmonitor), the real-time global intelligence dashboard. It runs on one machine as a personal dashboard, a local API, an embedded data store and the data collectors. Live AIS and siren adapters run inside the personal server; no separate relay is required. It has no accounts, payments, analytics or hosted deployment.
 
 The World Monitor name and wordmark identify the official site at [www.worldmonitor.app](https://www.worldmonitor.app). This fork is not that site. The translated READMEs above still describe the upstream project. The upstream MCP server (`https://worldmonitor.app/mcp`), public API, desktop app and SDKs belong to the official service; this fork runs none of them.
 
@@ -30,7 +30,7 @@ npm run collect:personal    # one collector pass; add `-- --watch 15` to repeat 
 npm run tui:personal        # terminal dashboard against the personal server
 ```
 
-Keys go in `.env.local` (never committed). `.env.example` lists every key.
+Keys go in `.env.local` (never committed). `.env.example` lists the local runtime settings and common optional source keys.
 
 | Key | Required | Used for |
 |-----|----------|----------|

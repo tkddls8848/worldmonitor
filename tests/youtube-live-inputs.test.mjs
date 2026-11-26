@@ -4,7 +4,7 @@ import { afterEach, test } from 'node:test';
 import handler from '../api/youtube/live.js';
 const originalFetch = globalThis.fetch;
 const originalEnv = { ...process.env };
-const relaySource = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
+const relaySource = readFileSync(new URL('../scripts/personal-providers.cjs', import.meta.url), 'utf8');
 const RETIRED = { error: 'channel_live_detection_retired' };
 const OEMBED_FOUND = () => Response.json({ author_name: 'Synthetic channel', title: 'Synthetic video' });
 function edge(oembed = OEMBED_FOUND) {

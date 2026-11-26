@@ -25,7 +25,7 @@ function isDegenerateBbox(req: TrackAircraftRequest): boolean {
 }
 
 // The Wingbits relay tiles a viewport into 30-degree areas and rejects more
-// than 36 (scripts/ais-relay.cjs WINGBITS_MAX_VIEWPORT_AREAS). Expects the
+// than 36 (scripts/personal-providers.cjs WINGBITS_MAX_VIEWPORT_AREAS). Expects the
 // clamped, sorted viewport trackAircraft builds.
 const RELAY_TILE_DEGREES = 30;
 const RELAY_MAX_VIEWPORT_AREAS = 36;

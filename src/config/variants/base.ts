@@ -49,8 +49,6 @@ export const REFRESH_INTERVALS = {
   supplyChain: 60 * 60 * 1000,
   chinaCorridors: 15 * 60 * 1000,
   chinaActivityNowcast: 15 * 60 * 1000,
-  telegramIntel: 60 * 1000,
-  xIntel: 15 * 60 * 1000,
   gulfEconomies: 10 * 60 * 1000,
   groceryBasket: 6 * 60 * 60 * 1000,
   fuelPrices: 6 * 60 * 60 * 1000,

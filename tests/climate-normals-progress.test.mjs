@@ -47,3 +47,13 @@ test('normals survive restart, pause after quota, then resume only missing zones
     assert.deepEqual(seen, CLIMATE_ZONES.slice(2).map(z => z.name));
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
+
+test('checkpoint failure stops collection before spending more quota', async () => {
+  let calls = 0;
+  await assert.rejects(fetchClimateZoneNormals({
+    _fetchArchiveBatch: async zones => { calls++; return zones.map(() => ({ daily })); },
+    _saveProgress: async () => { throw new Error('disk full'); },
+    _sleep: () => assert.fail('must stop immediately'),
+  }), /disk full/);
+  assert.equal(calls, 1);
+});

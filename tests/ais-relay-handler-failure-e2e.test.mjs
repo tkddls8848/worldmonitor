@@ -15,7 +15,7 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 
-const relayScript = fileURLToPath(new URL('../scripts/ais-relay.cjs', import.meta.url));
+const relayScript = fileURLToPath(new URL('./_lib/personal-providers-host.cjs', import.meta.url));
 const preload = fileURLToPath(new URL('./_lib/ais-relay-handler-fault-preload.cjs', import.meta.url));
 const RELAY_SECRET = 'relay-secret';
 
@@ -96,17 +96,11 @@ test('relay: a throw escaping a dispatched async handler is a 500 and the relay 
   await assertSurvives(child, port, log, '/ucdp-events');
 });
 
-test("relay: a throw from the router's own await is a 500 and the relay keeps serving", async (t) => {
-  const { child, port, log } = await startRelay(t, 'status');
-  await assertSurvives(child, port, log, '/status');
-  assert.match(log.text, /\[Relay\] request handler failed: Error budget store unavailable/);
-});
-
 // The streamed-response branch cannot be reached through the real relay
 // without a handler that fails mid-body, so it runs the shared failure helper
 // directly against the real source.
 test('relay request failure helper: 500 before headers, socket destroyed after', () => {
-  const source = readFileSync(relayScript, 'utf8');
+  const source = readFileSync(new URL('../scripts/personal-providers.cjs', import.meta.url), 'utf8');
   const sectionOf = (start, end) => {
     const from = source.indexOf(start);
     const to = source.indexOf(end, from);

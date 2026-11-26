@@ -26,44 +26,8 @@ describe('UCDP retained window is intentionally smaller than CII classification 
     );
   });
 
-  it('guards the full-window fetch and capped legacy events slice', () => {
-    const standaloneSeed = readRepoFile('scripts/seed-ucdp-events.mjs');
-    const relay = readRepoFile('scripts/ais-relay.cjs');
-
-    assert.match(
-      standaloneSeed,
-      /fetchAnnualWindow\(/,
-      'standalone seed must fetch the annual window by date',
-    );
-    assert.match(
-      standaloneSeed,
-      /const MAX_EVENTS = 2000;/,
-      'standalone UCDP seed event cap changed; update this guard and public docs deliberately',
-    );
-    assert.match(
-      standaloneSeed,
-      /const TRAILING_WINDOW_MS = 365 \* 24 \* 60 \* 60 \* 1000;/,
-      'standalone UCDP seed retention changed; align with scorer or document the smaller window',
-    );
-    assert.match(
-      relay,
-      /ucdpFetchAnnualWindow\(/,
-      'relay must fetch the annual window by date',
-    );
-    assert.match(
-      relay,
-      /const UCDP_MAX_EVENTS = 2000;/,
-      'relay Redis UCDP seed event cap changed; update this guard and public docs deliberately',
-    );
-    assert.match(
-      relay,
-      /const UCDP_TRAILING_WINDOW_MS = 365 \* 24 \* 60 \* 60 \* 1000;/,
-      'relay UCDP retention changed; align with scorer or document the smaller window',
-    );
-  });
-
   it('documents the relay reader page cap separately from Redis writer retention', () => {
-    const relay = readRepoFile('scripts/ais-relay.cjs');
+    const relay = readRepoFile('scripts/personal-providers.cjs');
     const methodology = readRepoFile('docs/methodology/cii-risk-scores.mdx');
     const changelog = readRepoFile('docs/changelog.mdx');
 

@@ -5,7 +5,7 @@ import { extractGscpiObservations } from '../scripts/_fred-seeder.mjs';
 
 describe('extractGscpiObservations', () => {
   it('reads the ais-relay FRED-compatible shape (observations under .series)', () => {
-    // This is the actual shape ais-relay.cjs writes — see seedGscpi() in that file.
+    // This is the actual shape personal-providers.cjs writes — see seedGscpi() in that file.
     const parsed = {
       series: {
         series_id: 'GSCPI',

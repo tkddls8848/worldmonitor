@@ -8,7 +8,7 @@
 // spend a SECOND account credit retrying the one error class a different IP cannot fix.
 // Reintroducing a cascade would be a cost regression that no panel would show.
 //
-// ais-relay.cjs is a non-exported monolith that executes on import (see its own note at
+// personal-providers.cjs is a non-exported monolith that executes on import (see its own note at
 // the top), so — as with tests/ais-relay-opensky-proxy-tls.test.mjs — the durable
 // coverage is a source guard plus a behavioural test of the shared helper it overrides.
 
@@ -19,7 +19,7 @@ import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const { classifyUpstreamOutcome } = require('../scripts/_ingestion-coverage.cjs');
-const SRC = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
+const SRC = readFileSync(new URL('../scripts/personal-providers.cjs', import.meta.url), 'utf8');
 
 /** Balanced `{...}` starting at or after `from`. */
 function balancedBlockAt(from, label) {
@@ -39,7 +39,7 @@ function balancedBlockAt(from, label) {
 /** Extract the balanced `{...}` literal that follows a marker. */
 function blockAfter(marker) {
   const start = SRC.indexOf(marker);
-  assert.notEqual(start, -1, `marker not found in ais-relay.cjs: ${marker}`);
+  assert.notEqual(start, -1, `marker not found in personal-providers.cjs: ${marker}`);
   return balancedBlockAt(start, marker);
 }
 
@@ -49,7 +49,7 @@ function blockAfter(marker) {
  */
 function functionBody(name) {
   const start = SRC.indexOf(`function ${name}(`);
-  assert.notEqual(start, -1, `function ${name} not found in ais-relay.cjs`);
+  assert.notEqual(start, -1, `function ${name} not found in personal-providers.cjs`);
   const paramsOpen = SRC.indexOf('(', start);
   let depth = 0;
   for (let i = paramsOpen; i < SRC.length; i += 1) {
@@ -169,35 +169,4 @@ test('routeRejection is wired for OpenSky only — other routes keep folding 403
     'Only the opensky route may declare routeRejection. Adding it elsewhere silently '
     + 'moves 403s out of those routes\' authRejection counters.',
   );
-});
-
-// This would have caught a half-wired openskyRouteRejection: a counter present in the
-// lifetime object but missing from the bucket factory or the rollup reads a constant
-// zero, so the health surface reports "no IP rejections" whether or not there are any.
-test('every rolling metric is declared in the bucket factory and summed in the rollup', () => {
-  const keysOf = (blk) => new Set([...blk.matchAll(/^\s*(\w+):\s*0,/gm)].map((m) => m[1]));
-  const lifetime = keysOf(blockAfter('const relayMetricsLifetime ='));
-  const bucket = keysOf(blockAfter('function createRelayMetricsBucket()'));
-  const rollup = new Set(
-    [...SRC.matchAll(/rollup\.(\w+)\s*\+=\s*bucket\.(\w+)/g)]
-      .filter((m) => m[1] === m[2])
-      .map((m) => m[1]),
-  );
-
-  assert.ok(lifetime.has('openskyRouteRejection'), 'openskyRouteRejection must be a lifetime counter');
-  assert.deepEqual([...lifetime].filter((k) => !bucket.has(k)), [], 'lifetime counters missing from createRelayMetricsBucket');
-  assert.deepEqual([...lifetime].filter((k) => !rollup.has(k)), [], 'lifetime counters never summed into the rollup');
-});
-
-test('/health reports the selected route alongside the two blocked-for-different-reasons signals', () => {
-  const aviation = blockAfter('    aviation: {');
-  assert.match(aviation, /openskyRoute: OPENSKY_ROUTE,/, 'operators must see which route is live');
-  assert.match(
-    aviation,
-    /openskyRouteRequested: OPENSKY_ROUTE_REQUESTED/,
-    'the requested route must be reported alongside the effective one — the two differing '
-    + 'IS the "proxy configured but unusable" signal',
-  );
-  assert.match(aviation, /openskyRouteRejection: rollup\.openskyRouteRejection/, '403/451 → flip the route');
-  assert.match(aviation, /openskyProviderBlocked/, '429 → the account is out of credits; no route change helps');
 });

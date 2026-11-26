@@ -1,7 +1,7 @@
 // #7084: the relay's digest-derived alert candidates must skip stale replays,
 // but independent fresh X candidates must still run through the combined
 // classification pass. The selection logic lives in scripts/lib so this mixed
-// input behavior can be executed here; ais-relay.cjs boots on import.
+// input behavior can be executed here; personal-providers.cjs boots on import.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
@@ -89,17 +89,6 @@ describe('relay digest stale gate (#7084)', () => {
 
     assert.deepEqual([...candidates.keys()], ['fresh RSS event', 'fresh X event']);
     assert.equal(candidates.get('fresh RSS event').source, 'Reuters');
-  });
-
-  it('is actually required by the relay at the digest alert pass', () => {
-    // Wiring pin only — the behavioral coverage is above. The relay cannot be
-    // imported (it boots on require), so the one thing asserted against its
-    // source is that it consumes this module rather than a private copy.
-    const { readFileSync } = require('node:fs');
-    const src = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
-    assert.match(src, /require\('\.\/lib\/digest-stale-gate\.cjs'\)/);
-    assert.match(src, /isStaleDigestReplay\(digest\)/);
-    assert.match(src, /buildClassifyCandidateMap\(digest, xCandidates/);
   });
 });
 

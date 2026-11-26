@@ -184,12 +184,6 @@ The field is omitted entirely when nothing was rewritten, so callers that ignore
 
 ## Telegram
 
-### `GET /api/telegram-feed`
-
-First-party browser path for the topic-tabbed Telegram Intel panel. Accepts `limit`, `topic`, and `channel`; there is no per-user (`userId`) form. Requires the dashboard session credential (`wms_`) and responds `private, max-age=30` — it is not publicly cacheable, and an uncredentialed request returns `401` with `no-store`. Message text is R4.
-
-For programmatic and partner access use the authenticated RPC [`GET /api/intelligence/v1/list-telegram-feed`](/panels/telegram-intel) instead.
-
 ## YouTube
 
 ### `GET /api/youtube/embed?videoId=...`

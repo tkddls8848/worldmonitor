@@ -278,7 +278,7 @@ describe('listTechEvents cold-start cache write', () => {
     );
   });
 
-  // Both seeders (scripts/ais-relay.cjs seedTechEvents, scripts/seed-research.mjs)
+  // Both seeders (scripts/personal-providers.cjs seedTechEvents, scripts/seed-research.mjs)
   // write the full deduped list with no limit and no day horizon. The fetch path
   // used to cap at 200/365, so once the corpus grew past 200 a fallback-warmed
   // key held a different, shorter set than a seeder-warmed one — the same

@@ -27,7 +27,7 @@
 // behaviour rather than the intuitive one. The parser does not special-case
 // the sentinel — `{ level: '_skip', category: 'x' }` is a valid shape — but
 // no deployed writer emits that row. Both relay skip-writes are
-// `{ level: '_skip', timestamp }` with NO `category` (scripts/ais-relay.cjs
+// `{ level: '_skip', timestamp }` with NO `category` (scripts/personal-providers.cjs
 // :3892 and :3968), and classify-event.ts's negative path stores the bare
 // string NEG_SENTINEL, never an object. So every production `_skip` row is
 // rejected by the shape check and caught by enrichWithAiCache's `!hit`,
@@ -235,7 +235,7 @@ describe('parseClassifyCacheHit — rejects malformed cache values wholesale', (
   });
 
   it('the REAL relay `_skip` row (no category) → null, so the caller never sees the sentinel', () => {
-    // scripts/ais-relay.cjs:3892 and :3968 both write exactly this shape.
+    // scripts/personal-providers.cjs:3892 and :3968 both write exactly this shape.
     // It has no `category`, so the shape check rejects it and
     // enrichWithAiCache's `!hit` catches it before its `hit.level ===
     // '_skip'` comparison can ever be true. Locking this here so a future

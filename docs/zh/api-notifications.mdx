@@ -134,12 +134,6 @@ function verify(rawBody, headers, signingSecret) {
 
 ## Telegram
 
-### `GET /api/telegram-feed`
-
-主题标签页式 Telegram Intel 面板的第一方浏览器路径。接受 `limit`、`topic` 和 `channel` 参数；不存在按用户（`userId`）的调用形式。需要仪表盘会话凭证（`wms_`），响应为 `private, max-age=30` — 不可被公开缓存，无凭证的请求返回 `401` 并附带 `no-store`。消息正文为 R4。
-
-程序化访问与合作方访问请改用已认证的 RPC [`GET /api/intelligence/v1/list-telegram-feed`](/zh/panels/telegram-intel)。
-
 ## YouTube
 
 ### `GET /api/youtube/embed?videoId=...`

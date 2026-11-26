@@ -1,4 +1,4 @@
-// Runtime proof of the social-velocity seed-meta contract in scripts/ais-relay.cjs
+// Runtime proof of the social-velocity seed-meta contract in scripts/personal-collector-tasks.cjs
 // (#8690, replacing the source-text checks in social-velocity-seed-health.test.mjs).
 //
 // The relay is a long-running process that starts servers on import, so the
@@ -18,12 +18,12 @@ const CANONICAL_KEY = 'intelligence:social:reddit:v1';
 const META_KEY = 'seed-meta:intelligence:social-reddit';
 const RETRY_MS = 20 * 60 * 1000;
 
-const source = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
+const source = readFileSync(new URL('../scripts/personal-collector-tasks.cjs', import.meta.url), 'utf8');
 const region = source.slice(
   source.indexOf('const SOCIAL_VELOCITY_REDIS_KEY ='),
-  source.indexOf('async function startSocialVelocitySeedLoop()'),
+  source.indexOf('const WSB_TICKERS_REDIS_KEY ='),
 );
-assert.ok(region.length > 0, 'social-velocity region markers must exist in scripts/ais-relay.cjs');
+assert.ok(region.length > 0, 'social-velocity region markers must exist in scripts/personal-collector-tasks.cjs');
 
 type Listing = { ok: boolean; status?: number; source?: string; posts?: unknown[] };
 type Options = {
@@ -90,7 +90,7 @@ describe('social velocity seed-meta contract', () => {
     const [meta] = h.metaWrites();
     assert.equal(meta.status, 'error');
     assert.equal(meta.errorReason, 'empty_reddit_response: r/worldnews HTTP 429 (direct); r/geopolitics HTTP 503 (direct)');
-    assert.deepEqual(h.timers, [RETRY_MS]);
+    assert.deepEqual(h.timers, [], 'the personal scheduler owns retry timing');
   });
 
   it('reports an empty but successful listing distinctly from a fetch failure', async () => {
@@ -106,7 +106,7 @@ describe('social velocity seed-meta contract', () => {
     assert.equal(meta.status, 'error');
     assert.equal(meta.errorReason, 'seed_error: socket hang up');
     assert.ok(h.calls.some((c) => c.op === 'upstashExpire' && c.key === CANONICAL_KEY));
-    assert.deepEqual(h.timers, [RETRY_MS]);
+    assert.deepEqual(h.timers, [], 'the personal scheduler owns retry timing');
   });
 
   it('bounds and flattens the error reason', async () => {

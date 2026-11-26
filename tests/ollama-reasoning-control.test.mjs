@@ -13,7 +13,6 @@ const require = createRequire(import.meta.url);
 const OLLAMA_CALL_SITES = [
   'server/_shared/llm.ts',
   'scripts/lib/llm-chain.cjs',
-  'scripts/ais-relay.cjs',
   'scripts/seed-insights.mjs',
 ];
 

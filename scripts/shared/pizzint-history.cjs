@@ -155,7 +155,7 @@ function decodePizzintHistoryRecord(value) {
 
 // Quality describes what the provider returned, never what we inferred about it.
 // It deliberately ignores location.noLiveSignal: that field carries the DEFCON
-// scorer's dead-sensor inference (scripts/ais-relay.cjs), which is correct for
+// scorer's dead-sensor inference (scripts/personal-providers.cjs), which is correct for
 // the live index -- where a false zero reports false calm -- and wrong for a
 // baseline archive, where a discarded zero inflates the baseline it is meant to
 // measure. An empty venue is an observation; see isSuspectZero for the doubt.

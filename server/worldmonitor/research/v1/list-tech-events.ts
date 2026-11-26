@@ -267,7 +267,7 @@ const EXTERNAL_SOURCE_COUNT = 2;
  *
  * Takes no request and applies no narrowing, by design. This is the writer for
  * the shared, request-independent `research:tech-events:v1` key, so it must
- * produce what the seeders produce (scripts/ais-relay.cjs `seedTechEvents`,
+ * produce what the seeders produce (scripts/personal-providers.cjs `seedTechEvents`,
  * scripts/seed-research.mjs) — they apply no type/mappable/days/limit filter
  * either. #5427 happened because this function accepted a request and narrowed
  * by it, so one caller's view became every caller's view for the 6h TTL. With

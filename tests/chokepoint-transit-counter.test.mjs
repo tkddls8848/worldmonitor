@@ -8,7 +8,7 @@ import { classifyVesselType } from '../shared/ais-vessel-type.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
-const relaySrc = readFileSync(resolve(root, 'scripts/ais-relay.cjs'), 'utf-8');
+const relaySrc = readFileSync(resolve(root, 'scripts/personal-providers.cjs'), 'utf-8');
 
 // classifyVesselType used to be sliced out of the relay with a regex and
 // rebuilt via `new Function`, so the test exercised a copy rather than the

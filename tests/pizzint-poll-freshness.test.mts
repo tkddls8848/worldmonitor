@@ -12,7 +12,7 @@ import { REFRESH_INTERVALS } from '../src/config/variants/base.ts';
 // publishes a new BestTime reading every 15 min; one published between polls
 // must appear on the next poll.
 const SHORTEST_JITTERED_POLL_MS = REFRESH_INTERVALS.pizzint * 0.9;
-// The relay's poll interval (PIZZINT_SEED_INTERVAL_MS in scripts/ais-relay.cjs).
+// The relay's poll interval (PIZZINT_SEED_INTERVAL_MS in scripts/personal-collector-tasks.cjs).
 const RELAY_POLL_MS = 15 * 60 * 1000;
 
 type Status = { locationsOpen: number };

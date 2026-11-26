@@ -11,7 +11,7 @@
 //      (CLASSIFY_CACHE_PREFIX constant + buildClassifyCacheKey helper)
 //   2. server/worldmonitor/news/v1/list-feed-digest.ts — digest reader
 //      (now imports buildClassifyCacheKey from the shared module above)
-//   3. scripts/ais-relay.cjs — relay reader+writer (independent inline
+//   3. scripts/personal-providers.cjs — relay reader+writer (independent inline
 //      helper, cannot import from .ts)
 //
 // When the prefix is bumped (v3 → v4 → v5 …), all three sites MUST update
@@ -55,7 +55,7 @@ describe('classify cache prefix audit (U4)', () => {
     // cache-prefix-bump-propagation-scope learning calls out. Excludes
     // node_modules, local worktrees, and generated build outputs.
     const allowedExtensions = ['.ts', '.mjs', '.cjs', '.js', '.json'];
-    const excludePatterns = ['node_modules', '.git', '.claude', 'dist', 'build', 'coverage', 'target'];
+    const excludePatterns = ['node_modules', '.personal', '.git', '.claude', 'dist', 'build', 'coverage', 'target'];
     const results = [];
 
     function walk(currentDir) {

@@ -1,6 +1,6 @@
 // Alert selection + normalisation for scripts/seed-weather-alerts.mjs and the
 // live ais-relay weather writer, plus weatherAlertNotifyLocation() which
-// scripts/ais-relay.cjs dynamically imports to attach location to weather_alert
+// scripts/personal-providers.cjs dynamically imports to attach location to weather_alert
 // notification payloads (see the COPY entry in Dockerfile.relay — the relay
 // cannot boot without this file).
 // Kept in its own module so the selection rules are unit-testable without
@@ -421,7 +421,7 @@ export function mergeAlertSources(parts = {}, { totalLimit = MAX_ALERTS, perSour
  * Returns a stable family key like "nws:KSGF.SV.W.0034" or undefined if the
  * VTEC string is missing or malformed.
  *
- * Lives here rather than in ais-relay.cjs so the notification selection below
+ * Lives here rather than in personal-providers.cjs so the notification selection below
  * (and its tests) can call the REAL parser instead of a copy.
  */
 export function deriveWeatherCoalesceKey(vtec) {

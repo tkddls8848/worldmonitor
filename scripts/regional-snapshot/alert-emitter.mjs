@@ -29,7 +29,7 @@
 // Best-effort: `emitRegionalAlerts` never throws. Each event publisher
 // call is guarded independently, so one failure cannot block other events
 // or the snapshot persist that called it. The default publisher uses the
-// same Upstash REST pattern as ais-relay.cjs:
+// same Upstash REST pattern as personal-providers.cjs:
 //   1. SET NX on wm:notif:scan-dedup:{eventType}:{hash} (6h TTL)
 //   2. LPUSH on wm:events:queue with JSON {eventType, payload, severity,
 //      publishedAt}
@@ -179,7 +179,7 @@ export function buildAlertEvents(region, snapshot, diff) {
 
 /**
  * FNV-1a-ish 32-bit hash. Matches the `notifySimpleHash` style used in
- * ais-relay.cjs so dedup keys don't collide across emitters.
+ * personal-providers.cjs so dedup keys don't collide across emitters.
  *
  * @param {string} str
  * @returns {string}
@@ -333,7 +333,7 @@ async function upstashEnqueueOnce(url, token, dedupKey, ttlSeconds, queueKey, va
  *   4. If LPUSH fails → DEL the dedup key so the next cron cycle can retry.
  *      Otherwise the alert would be silently suppressed for the full dedup
  *      window even though nothing was enqueued. Matches the rollback path in
- *      ais-relay.cjs
+ *      personal-providers.cjs
  *      publishNotificationEvent().
  *
  * Never throws. Returns an outcome object so tests can assert exactly
@@ -427,7 +427,7 @@ export async function publishEventWithOps(event, ops) {
 
 /**
  * Default publisher. Walks the same SET-NX → LPUSH → DEL-on-failure path
- * as ais-relay.cjs publishNotificationEvent(). Thin wrapper over
+ * as personal-providers.cjs publishNotificationEvent(). Thin wrapper over
  * publishEventWithOps that binds real Upstash REST calls.
  *
  * @param {object} event

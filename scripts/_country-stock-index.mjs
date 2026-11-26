@@ -1,4 +1,4 @@
-// Deliberately free of filesystem reads. scripts/ais-relay.cjs imports this
+// Deliberately free of filesystem reads. scripts/personal-providers.cjs imports this
 // module, and every file this module touches joins the relay's Railway
 // runtime-dependency closure. The whole-enum work-list lives in
 // ./_country-stock-index-registry.mjs for that reason.

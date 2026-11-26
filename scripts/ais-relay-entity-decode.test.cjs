@@ -1,7 +1,7 @@
 /**
- * Regression tests for _decodeRedditEntities in ais-relay.cjs (#5436).
+ * Regression tests for _decodeRedditEntities in personal-collector-tasks.cjs (#5436).
  *
- * ais-relay.cjs starts an HTTP/WebSocket server, poll loops, and intervals at
+ * personal-collector-tasks.cjs starts an HTTP/WebSocket server, poll loops, and intervals at
  * top level (no require.main guard), so it cannot be require()d from a test.
  * Instead we lift the real function body out of the production source and eval
  * it, so the assertions run against the shipped code, not a copy.
@@ -15,11 +15,11 @@ const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
 const test = require('node:test');
 
-const relaySource = readFileSync(join(__dirname, 'ais-relay.cjs'), 'utf8');
+const relaySource = readFileSync(join(__dirname, 'personal-collector-tasks.cjs'), 'utf8');
 
 function loadFunction(name) {
   const match = relaySource.match(new RegExp(`function ${name}\\([^)]*\\) \\{[\\s\\S]*?\\n\\}`));
-  assert.ok(match, `could not locate ${name}() in ais-relay.cjs`);
+  assert.ok(match, `could not locate ${name}() in personal-collector-tasks.cjs`);
   // eslint-disable-next-line no-new-func
   return new Function(`${match[0]}; return ${name};`)();
 }

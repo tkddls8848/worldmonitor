@@ -2,20 +2,6 @@ import { compactWildfireDashboardPayload } from './_wildfire-dashboard.js';
 import { compactNaturalEventsDashboardPayload } from './_natural-events-dashboard.js';
 import { normalizeSocialVelocity } from './_social-velocity.js';
 
-export function stripXFeedRestrictedFields(value) {
-  if (value == null || typeof value !== 'object' || Array.isArray(value)) return value;
-  const { pollState: _pollState, ...rest } = value;
-  if (!Array.isArray(rest.items)) return rest;
-  return {
-    ...rest,
-    items: rest.items.map((item) => {
-      if (item == null || typeof item !== 'object' || Array.isArray(item)) return item;
-      const { text: _text, ...itemRest } = item;
-      return itemRest;
-    }),
-  };
-}
-
 export function restoreWildfireBootstrapMetadata(value, seed) {
   if (seed == null) return value;
   if (value == null || typeof value !== 'object' || Array.isArray(value)) return value;
@@ -34,7 +20,6 @@ export function sanitizeBootstrapValue(name, value) {
     const { enrichmentMeta: _internal, ...rest } = value;
     return rest;
   }
-  if (name === 'xFeed') return stripXFeedRestrictedFields(value);
   if (name === 'wildfires') return compactWildfireDashboardPayload(value);
   if (name === 'naturalEvents') return compactNaturalEventsDashboardPayload(value);
   if (name === 'chokepoints' && Array.isArray(value.chokepoints)) {

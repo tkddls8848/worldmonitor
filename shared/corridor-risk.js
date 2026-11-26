@@ -3,7 +3,7 @@
  *
  * Lives in `shared/` because the AIS relay ingests this feed and the relay
  * image copies `shared/` but not `server/` (see Dockerfile.relay). Both pieces
- * were previously inline in ais-relay.cjs, where the only way to test them was
+ * were previously inline in personal-providers.cjs, where the only way to test them was
  * to regex them out of the source and re-implement the banding in the test —
  * which then passed no matter what the relay actually did.
  */

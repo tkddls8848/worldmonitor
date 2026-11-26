@@ -41,7 +41,7 @@ const parseModuleSrc = readFileSync(resolve(here, '../scripts/wildfire/cwfis-wfs
 const testSrc = readFileSync(fileURLToPath(import.meta.url), 'utf8');
 const seederSrc = readFileSync(resolve(here, '../scripts/seed-fire-detections.mjs'), 'utf8');
 const thermalSrc = readFileSync(resolve(here, '../scripts/lib/thermal-escalation.mjs'), 'utf8');
-const aisRelaySrc = readFileSync(resolve(here, '../scripts/ais-relay.cjs'), 'utf8');
+const aisRelaySrc = readFileSync(resolve(here, '../scripts/personal-providers.cjs'), 'utf8');
 
 function firmsDetection(overrides = {}) {
   return {

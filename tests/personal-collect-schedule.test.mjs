@@ -41,16 +41,11 @@ test('the GPS interference feed is collected through its fetch script', () => {
 
 test('the fixed relations collector runs daily', () => assert.equal(STANDALONE_INTERVAL_MIN['world-relations'], 1440));
 
-test('the pizza index collector still finds the relay blocks it runs', () => {
+test('the pizza index uses an ordinary collector function without evaluating source text', () => {
   assert.ok(DEFAULT_COLLECTORS.includes('pizzint'));
-  const relay = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
   const seeder = readFileSync(collectorScript('pizzint'), 'utf8');
-  const markers = [...seeder.matchAll(/relayBlock\('([^']+)', '([^']+)'\)/g)];
-  assert.equal(markers.length, 3);
-  for (const [, start, end] of markers) {
-    const from = relay.indexOf(start);
-    assert.ok(from >= 0 && relay.indexOf(end, from) > from, `${start} … ${end}`);
-  }
+  assert.match(seeder, /createPersonalCollectorTasks/);
+  assert.doesNotMatch(seeder, /runInContext|relayBlock/);
 });
 
 test('the AI relations collector runs right after insights', () => {

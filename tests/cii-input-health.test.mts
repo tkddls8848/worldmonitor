@@ -181,7 +181,7 @@ describe('CII input health, producer to verdict', () => {
   });
 
   it('reads the relay threat summary envelope: empty is quiet, populated is live, absent is missing', async () => {
-    // The exact shape scripts/ais-relay.cjs seedClassify writes. A quiet cycle
+    // The exact shape scripts/personal-providers.cjs seedClassify writes. A quiet cycle
     // publishes `byCountry: {}`; only a vanished key is a dead input.
     const envelope = (byCountry: Record<string, unknown>) => JSON.stringify({
       _seed: { fetchedAt: NOW, recordCount: Object.keys(byCountry).length, sourceVersion: 'news-threat-summary', schemaVersion: 1, state: Object.keys(byCountry).length ? 'OK' : 'OK_ZERO' },

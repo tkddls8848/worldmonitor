@@ -1,5 +1,5 @@
 /**
- * Regression tests for the RSS proxy cache in ais-relay.cjs.
+ * Regression tests for the RSS proxy cache in personal-providers.cjs.
  *
  * Tests negative caching, in-flight dedup failure behavior, and no-cascade guarantees.
  * Run: node --test scripts/ais-relay-rss.test.cjs

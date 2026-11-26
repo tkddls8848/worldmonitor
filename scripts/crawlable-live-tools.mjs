@@ -1019,7 +1019,7 @@ export function militaryFlightsViewModel(payload, now = Date.now()) {
   };
 }
 
-// The relay stores the seed for 45 minutes (PIZZINT_SEED_TTL in ais-relay.cjs);
+// The relay stores the seed for 45 minutes (PIZZINT_SEED_TTL in personal-providers.cjs);
 // the margin covers edge caching. Older than this is not the current level.
 const MAX_PIZZINT_AGE_MS = 60 * 60 * 1_000;
 

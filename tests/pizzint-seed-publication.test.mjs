@@ -4,10 +4,10 @@ import { test } from 'node:test';
 import vm from 'node:vm';
 import { __testing__ as health } from '../api/health.js';
 
-const relay = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
+const relay = readFileSync(new URL('../scripts/personal-collector-tasks.cjs', import.meta.url), 'utf8');
 const envelopeWriter = relay.slice(relay.indexOf('function buildEnvelope('), relay.indexOf('// Envelope-aware read.'));
 const envelopeReader = relay.slice(relay.indexOf('async function envelopeRead('), relay.indexOf('function notifySimpleHash('));
-const producer = relay.slice(relay.indexOf('const PIZZINT_SEED_INTERVAL_MS'), relay.indexOf('function startPizzintSeedLoop()'));
+const producer = relay.slice(relay.indexOf('const PIZZINT_SEED_INTERVAL_MS'), relay.indexOf('function logThrottled('));
 const history = await import('../scripts/shared/pizzint-history.cjs');
 const { pizzintVenuePoint } = await import('../scripts/shared/pizzint-location.cjs');
 const emptyResponse = {

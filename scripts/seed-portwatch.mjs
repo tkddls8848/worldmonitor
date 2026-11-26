@@ -314,7 +314,7 @@ async function fetchCsvExport(fetchDeadlineAtMs) {
  * The pattern was bursty: 2 of 3 chokepoints in the same Promise.allSettled
  * batch came back empty, with no log line and no retry, while a manual
  * fetch from any other IP returned 179 features for the same query. The
- * 0-record outcome propagated through `seedTransitSummaries` (ais-relay.cjs)
+ * 0-record outcome propagated through `seedTransitSummaries` (personal-providers.cjs)
  * → `dataAvailable: Boolean(cpData)` flipped false → /api/health flagged
  * `chokepoints: COVERAGE_PARTIAL`.
  *

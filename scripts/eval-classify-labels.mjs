@@ -16,7 +16,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  extractRelayOpenRouterModel, extractRelayPrompt, extractRpcOpenRouterModel, extractRpcPrompt,
+  extractRpcOpenRouterModel, extractRpcPrompt,
   promptSha, scoreAlertLabels,
 } from './lib/classify-eval.mjs';
 import { OPENROUTER_PROVIDER_ROUTING } from './_llm-model-timeouts.mjs';
@@ -50,7 +50,7 @@ const arg = (name) => { const i = argv.indexOf(`--${name}`); return i < 0 ? unde
 const path = arg('path');
 const capture = arg('capture');
 const force = argv.includes('--force');
-if (path && path !== 'relay' && path !== 'rpc') throw new Error('--path must be relay or rpc');
+if (path && path !== 'rpc') throw new Error('--path must be rpc (the duplicate relay classifier was removed)');
 if (capture && !path) throw new Error('--capture needs --path');
 
 // --fixture picks the judged set: the tuning set by default, or the held-out set
@@ -79,10 +79,9 @@ if (!path) {
 
 const apiKey = (process.env.OPENROUTER_API_KEY || '').trim();
 if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set (try node --env-file=.env.local)');
-const relaySrc = readFileSync(resolve(root, 'scripts/ais-relay.cjs'), 'utf8');
 const rpcSrc = readFileSync(resolve(root, 'server/worldmonitor/intelligence/v1/classify-event.ts'), 'utf8');
-const prompt = path === 'relay' ? extractRelayPrompt(relaySrc) : extractRpcPrompt(rpcSrc);
-const model = arg('model') || (path === 'relay' ? extractRelayOpenRouterModel(relaySrc) : extractRpcOpenRouterModel(rpcSrc));
+const prompt = extractRpcPrompt(rpcSrc);
+const model = arg('model') || extractRpcOpenRouterModel(rpcSrc);
 const usage = { usd: 0, failedRequests: 0 };
 
 async function complete(userContent, maxTokens) {
@@ -113,25 +112,6 @@ async function complete(userContent, maxTokens) {
   return '';
 }
 
-// Mirrors classifyFetchLlmSingle in scripts/ais-relay.cjs: same sanitising, same budget.
-async function runRelay() {
-  const out = new Array(fixture.rows.length).fill(null);
-  for (let base = 0; base < fixture.rows.length; base += RELAY_CHUNK) {
-    const chunk = fixture.rows.slice(base, base + RELAY_CHUNK);
-    const lines = chunk.map((r, i) => `${i}|${r.title.replace(/[\n\r]/g, ' ').replace(/\|/g, '/').slice(0, 200).trim()}`);
-    const content = await complete(lines.join('\n'), chunk.length * 40);
-    let entries = [];
-    try { entries = JSON.parse(content.match(/\[[\s\S]*\]/)?.[0] ?? '[]'); } catch { /* counted as unlabelled */ }
-    // As seedClassifyForVariant: the first entry per index wins, and an entry needs a valid
-    // level AND category to be cached at all.
-    for (const e of entries) {
-      if (!Number.isInteger(e?.i) || !chunk[e.i] || out[base + e.i] !== null) continue;
-      if (LEVELS.includes(e.l) && CATEGORIES.includes(e.c)) out[base + e.i] = e.l;
-    }
-  }
-  return out;
-}
-
 // Mirrors classifyEvent in classify-event.ts: one title, max_tokens 200, 500-char clip.
 async function runRpc() {
   const out = new Array(fixture.rows.length).fill(null);
@@ -150,7 +130,7 @@ async function runRpc() {
 }
 
 const startedAt = Date.now();
-const labels = path === 'relay' ? await runRelay() : await runRpc();
+const labels = await runRpc();
 const captured = `captured ${new Date().toISOString().slice(0, 10)}`;
 const run = { path, model, promptSha: promptSha(prompt), note: arg('note') ? `${arg('note')} (${captured})` : captured, labels };
 report(capture || 'live run', run);

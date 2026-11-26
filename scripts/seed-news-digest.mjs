@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Personal-mode stand-in for the relay's digest warm cycle (seedDigestWarm in
-// scripts/ais-relay.cjs). The `news:digest:v1:<edition>:<lang>` cells are
+// scripts/personal-providers.cjs). The `news:digest:v1:<edition>:<lang>` cells are
 // written only by a list-feed-digest build, and a build runs only when that
 // (edition, language) pair is requested. Upstream the relay requests every pair
 // on a 17-minute loop; here nothing did unless the dashboard was open, so the

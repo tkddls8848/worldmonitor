@@ -13,7 +13,7 @@ beforeEach(() => {
   process.env.WORLDMONITOR_VALID_KEYS = TEST_KEY;
   delete process.env.UPSTASH_REDIS_REST_URL;
   delete process.env.UPSTASH_REDIS_REST_TOKEN;
-  delete process.env.WS_RELAY_URL;
+  delete process.env.LOCAL_API_ORIGIN;
 });
 afterEach(() => {
   globalThis.fetch = originalFetch;
@@ -79,7 +79,7 @@ test('a response arriving after timeout has its body canceled', { timeout: 5000 
 });
 
 test('a failed body read aborts transport, releases its reader and uses relay fallback', async () => {
-  process.env.WS_RELAY_URL = 'wss://relay.example.com';
+  process.env.LOCAL_API_ORIGIN = 'https://relay.example.com';
   let signal;
   const body = new ReadableStream({ pull(controller) { controller.error(new Error('connection lost')); } });
   spyFetch((_url, init, calls) => {
@@ -172,7 +172,7 @@ test('preserves split UTF-8 at the exact byte limit and clears the completed dea
 });
 
 test('oversize direct body falls back to bounded relay with inert output and cache markers', async () => {
-  process.env.WS_RELAY_URL = 'wss://relay.example.com';
+  process.env.LOCAL_API_ORIGIN = 'https://relay.example.com';
   const calls = spyFetch((_url, _init, seen) => seen.length === 1
     ? new Response('x'.repeat(5 * 1024 * 1024 + 1))
     : new Response('<rss/>', { headers: { 'X-Cache': 'STALE', 'X-Relay-Stale': '1' } }));
@@ -188,7 +188,7 @@ test('oversize direct body falls back to bounded relay with inert output and cac
 });
 
 test('oversize relay retry preserves the original non-ok direct body and status', async () => {
-  process.env.WS_RELAY_URL = 'wss://relay.example.com';
+  process.env.LOCAL_API_ORIGIN = 'https://relay.example.com';
   spyFetch((_url, _init, seen) => seen.length === 1
     ? new Response('upstream unavailable', { status: 503 })
     : new Response('x'.repeat(5 * 1024 * 1024 + 1)));
@@ -198,7 +198,7 @@ test('oversize relay retry preserves the original non-ok direct body and status'
 });
 
 test('relay-only body stalls time out and abort the relay transport', { timeout: 5000 }, async (t) => {
-  process.env.WS_RELAY_URL = 'wss://relay.example.com';
+  process.env.LOCAL_API_ORIGIN = 'https://relay.example.com';
   t.mock.timers.enable({ apis: ['setTimeout'] });
   let signal;
   let canceled = false;

@@ -23,10 +23,8 @@ function feedUrls(url) {
  */
 export async function loadOutletCatalog(repoRoot) {
   const importTs = (relativePath) => import(pathToFileURL(join(repoRoot, relativePath)).href);
-  const [server, telegram, x, tiers, provenance] = await Promise.all([
+  const [server, tiers, provenance] = await Promise.all([
     importTs('server/worldmonitor/news/v1/_feeds.ts'),
-    importTs('shared/telegram-channel-trust.ts'),
-    importTs('shared/x-account-trust.ts'),
     importTs('server/_shared/source-tiers.ts'),
     importTs('shared/source-provenance.ts'),
   ]);
@@ -60,8 +58,6 @@ export async function loadOutletCatalog(repoRoot) {
   } finally {
     cleanup();
   }
-  for (const channel of telegram.TELEGRAM_CHANNEL_TRUST) add(channel.name, 'telegram', { handle: channel.handle });
-  for (const account of x.X_ACCOUNT_TRUST) add(account.sourceName, 'x');
   for (const name of Object.keys(tiers.SOURCE_TIERS)) add(name, 'tier');
   for (const name of Object.keys(provenance.SOURCE_PROPAGANDA_RISK)) add(name, 'provenance');
   return outlets;

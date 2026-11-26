@@ -3,7 +3,7 @@
 // Incident 2026-09-23: /api/health reported techEvents EMPTY (records=0, crit) while
 // seedAgeMin stayed fresh. Two producers shared one freshness key:
 //
-//   - scripts/ais-relay.cjs seedTechEvents() writes research:tech-events:v1 +
+//   - scripts/personal-collector-tasks.cjs seedTechEvents() writes research:tech-events:v1 +
 //     research:tech-events-bootstrap:v1 + seed-meta:research:tech-events (6h loop).
 //   - scripts/seed-research.mjs fetchAll() writes research:tech-events:v1 via
 //     writeExtraKeyWithMeta, whose default meta derivation strips ':v1' — so it
@@ -91,9 +91,9 @@ test('curated-only and empty payloads preserve the previous mirror and heartbeat
 });
 
 test('the relay preserves data during an outage and publishes after recovery', async () => {
-  const source = readFileSync(resolve(here, '../scripts/ais-relay.cjs'), 'utf8');
-  const start = source.indexOf('const TECH_EVENTS_SEED_INTERVAL_MS');
-  const end = source.indexOf('async function startTechEventsSeedLoop()', start);
+  const source = readFileSync(resolve(here, '../scripts/personal-collector-tasks.cjs'), 'utf8');
+  const start = source.indexOf('const TECH_EVENTS_TTL_SECONDS');
+  const end = source.indexOf('const CORRIDOR_RISK_REDIS_KEY', start);
   assert.ok(start >= 0 && end > start);
   const writes = [];
   let feed = null;

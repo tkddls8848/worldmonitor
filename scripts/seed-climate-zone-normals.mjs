@@ -114,7 +114,7 @@ export async function fetchClimateZoneNormals({
   _saveProgress = async () => {},
 } = {}) {
   const saved = await _loadProgress();
-  const progress = saved?.version === 1 && saved.referencePeriod === '1991-2020'
+  const progress = saved?.version === 1 && saved.referencePeriod === '1991-2020' && Array.isArray(saved.normals)
     ? saved : { version: 1, referencePeriod: '1991-2020', normals: [], retryAt: 0 };
   if (progress.retryAt > _now()) throw dailyLimitError();
   const normals = CLIMATE_ZONES.flatMap(zone => {
@@ -152,7 +152,7 @@ export async function fetchClimateZoneNormals({
       });
       const batchNormals = buildZoneNormalsFromBatch(batch, payloads);
       normals.push(...batchNormals);
-      await _saveProgress({ ...progress, normals, retryAt: 0 });
+
     } catch (err) {
       if (err?.code === OPEN_METEO_DAILY_LIMIT_CODE) {
         // A full day is conservative; upstream does not specify its reset time.
@@ -165,6 +165,9 @@ export async function fetchClimateZoneNormals({
         break;
       }
     }
+
+    // Do not spend more quota when a completed batch cannot be checkpointed.
+    await _saveProgress({ ...progress, normals, retryAt: 0 });
 
     if (batchIndex < batches.length - 1) {
       const remainingMs = deadlineAtMs - _now();

@@ -208,28 +208,3 @@ describe('fetchJevLabel', () => {
     assert.equal(calls, 1);
   });
 });
-
-describe('relay wiring: shadow mode decides nothing', () => {
-  const relay = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
-  const main = (name) => relay.slice(relay.indexOf(`async function ${name}(`));
-
-  it('observes AFTER the label is cached and the alert is published, and never feeds back', () => {
-    const body = main('seedClassifyForVariant');
-    const write = body.indexOf('upstashSet(classifyCacheKey(chunk[idx])');
-    const publish = body.indexOf("eventType: 'rss_alert'");
-    const observe = body.indexOf('observeJevShadow(');
-    assert.ok(write > 0 && publish > write && observe > publish, 'order: cache write, alert publish, shadow observe');
-    assert.doesNotMatch(body, /=\s*await observeJevShadow\([^)]*\);[\s\S]{0,400}upstashSet\(classifyCacheKey/, 'the tally must not reach a label write');
-  });
-
-  it('the cached row and the alert rule are exactly main\'s: no Jev field, no gate', () => {
-    assert.match(relay, /upstashSet\(classifyCacheKey\(chunk\[idx\]\), \{ level, category, timestamp: Date\.now\(\) \}, CLASSIFY_CACHE_TTL\)/);
-    assert.doesNotMatch(relay, /pAlert|jevGateAllowsAlert|shouldPublishClassifiedAlert/);
-  });
-
-  it('caps the shadow log so it cannot grow without bound', () => {
-    assert.equal(SHADOW_LOG_KEY, 'classify:jev-shadow:v1');
-    assert.ok(SHADOW_LOG_MAX > 0 && SHADOW_LOG_MAX <= 5000);
-    assert.match(relay, /LTRIM/);
-  });
-});

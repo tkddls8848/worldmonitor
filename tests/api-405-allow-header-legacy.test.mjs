@@ -13,16 +13,12 @@ process.env.UPSTASH_REDIS_REST_URL ||= 'https://example.upstash.io';
 process.env.UPSTASH_REDIS_REST_TOKEN ||= 'test-token';
 
 const { default: correlationRuntimeMode } = await import('../api/correlation-runtime-mode.js');
-const { default: xFeed } = await import('../api/x-feed.js');
-const { default: telegramFeed } = await import('../api/telegram-feed.js');
 const { default: securityReport } = await import('../api/security/report.js');
 
 const ORIGIN = 'https://worldmonitor.app';
 
 const CASES = [
   { name: 'correlation-runtime-mode', path: '/api/correlation-runtime-mode', handler: correlationRuntimeMode, allow: 'GET, OPTIONS', refused: 'POST' },
-  { name: 'x-feed', path: '/api/x-feed', handler: xFeed, allow: 'GET, OPTIONS', refused: 'POST' },
-  { name: 'telegram-feed', path: '/api/telegram-feed', handler: telegramFeed, allow: 'GET, OPTIONS', refused: 'POST' },
   { name: 'security/report', path: '/api/security/report', handler: securityReport, allow: 'POST, OPTIONS', refused: 'GET' },
 ];
 

@@ -16,7 +16,7 @@ import { escapeHtml } from '../src/utils/sanitize';
 import { STANDALONE_INTERVAL_MIN } from '../scripts/personal-collect.mjs';
 
 const root = resolve(import.meta.dirname, '..');
-const relaySource = readFileSync(resolve(root, 'scripts/ais-relay.cjs'), 'utf8');
+const relaySource = readFileSync(resolve(root, 'scripts/personal-providers.cjs'), 'utf8');
 const healthSource = readFileSync(resolve(root, 'api/health.js'), 'utf8');
 const enLocale = JSON.parse(readFileSync(resolve(root, 'src/locales/en.json'), 'utf8')) as LocaleTree;
 const deLocale = JSON.parse(readFileSync(resolve(root, 'src/locales/de.json'), 'utf8')) as LocaleTree;
@@ -104,27 +104,27 @@ const REMOVED_WARM_PING_MINUTES = { cii: 8, chokepoints: 6 } as const;
 
 function relayConstMinutes(name: string): number {
   const match = relaySource.match(new RegExp(`const\\s+${name}\\s*=\\s*([^;\\n]+);`));
-  assert.ok(match, `scripts/ais-relay.cjs must define ${name}`);
+  assert.ok(match, `scripts/personal-providers.cjs must define ${name}`);
   return evalNumberExpression(match[1]) / 60_000;
 }
 
 function relayFunctionConstNumber(functionName: string, name: string): number {
   const start = relaySource.indexOf(`async function ${functionName}(`);
-  assert.notEqual(start, -1, `scripts/ais-relay.cjs must define ${functionName}()`);
+  assert.notEqual(start, -1, `scripts/personal-providers.cjs must define ${functionName}()`);
   const nextFunction = relaySource.indexOf('\nasync function ', start + 1);
   const body = relaySource.slice(start, nextFunction === -1 ? undefined : nextFunction);
   const match = body.match(new RegExp(`const\\s+${name}\\s*=\\s*([^;\\n]+);`));
-  assert.ok(match, `scripts/ais-relay.cjs ${functionName}() must define ${name}`);
+  assert.ok(match, `scripts/personal-providers.cjs ${functionName}() must define ${name}`);
   return evalNumberExpression(match[1]);
 }
 
 function cyberRollingWindowMinutes(): number {
-  return relayFunctionConstNumber('seedCyberThreats', 'days') * 24 * 60;
+  return constNumber('scripts/seed-cyber-threats.mjs', 'DEFAULT_DAYS') * 24 * 60;
 }
 
 function relayEnvDefaultMinutes(name: string): number {
   const match = relaySource.match(new RegExp(`const\\s+${name}\\s*=\\s*Math\\.max\\([^|]+\\|\\|\\s*([0-9_]+)\\)\\)`));
-  assert.ok(match, `scripts/ais-relay.cjs must define numeric env default for ${name}`);
+  assert.ok(match, `scripts/personal-providers.cjs must define numeric env default for ${name}`);
   return evalNumberExpression(match[1]) / 60_000;
 }
 
@@ -235,7 +235,7 @@ describe('layer explanation metadata', () => {
     const naturalTtlMin = constNumber('scripts/seed-natural-events.mjs', 'CACHE_TTL') / 60;
     assert.ok(naturalTtlMin > naturalStaleMin, 'natural data must outlive its health stale budget so staleness alarms before expiry');
 
-    assertDuration(renderedFreshnessText('weather'), /every\s+([0-9]+)\s+(minute)s?/i, relayConstMinutes('WEATHER_SEED_INTERVAL_MS'), 'weather relay seed cadence');
+    assertDuration(renderedFreshnessText('weather'), /every\s+([0-9]+)\s+(minute)s?/i, STANDALONE_INTERVAL_MIN['weather-alerts'], 'weather relay seed cadence');
     assertDuration(renderedFreshnessText('weather'), /([0-9]+)-\s*(minute)\s+freshness budget/i, healthMaxStale('weatherAlerts'), 'weather health freshness budget');
 
     // Airspace NOTAMs are drawn by the Aviation layer, so its card owns the NMS cadence.
@@ -251,12 +251,12 @@ describe('layer explanation metadata', () => {
       'aviation panel polling cycle',
     );
 
-    assertDuration(renderedFreshnessText('ucdpEvents'), /every\s+([0-9]+)\s+(hour)s?/i, relayConstMinutes('UCDP_POLL_INTERVAL_MS'), 'UCDP relay seed cadence');
-    assert.equal(healthMaxStale('ucdpEvents'), relayConstMinutes('UCDP_POLL_INTERVAL_MS') + 60, 'UCDP health budget should be cadence plus one hour grace');
+    assertDuration(renderedFreshnessText('ucdpEvents'), /every\s+([0-9]+)\s+(hour)s?/i, 6 * 60, 'UCDP relay seed cadence');
+    assert.equal(healthMaxStale('ucdpEvents'), 6 * 60 + 60, 'UCDP health budget should be cadence plus one hour grace');
 
-    assertDuration(renderedFreshnessText('cyberThreats'), /every\s+([0-9]+)\s+(hour)s?/i, relayConstMinutes('CYBER_SEED_INTERVAL_MS'), 'cyber relay seed cadence');
+    assertDuration(renderedFreshnessText('cyberThreats'), /every\s+([0-9]+)\s+(hour)s?/i, STANDALONE_INTERVAL_MIN['cyber-threats'], 'cyber relay seed cadence');
     assertDuration(renderedFreshnessText('cyberThreats'), /([0-9]+)-\s*(day)\s+rolling window/i, cyberRollingWindowMinutes(), 'cyber IOC rolling window');
-    assert.equal(healthMaxStale('cyberThreats'), relayConstMinutes('CYBER_SEED_INTERVAL_MS') * 2, 'cyber health budget should stay 2x relay cadence');
+    assert.equal(healthMaxStale('cyberThreats'), STANDALONE_INTERVAL_MIN['cyber-threats'] * 2, 'cyber health budget should stay 2x relay cadence');
 
     assertDuration(renderedFreshnessText('ciiChoropleth'), /every\s+([0-9]+)\s+(minute)s?/i, REMOVED_WARM_PING_MINUTES.cii, 'CII warm-ping cadence');
     assertDuration(renderedFreshnessText('ciiChoropleth'), /([0-9]+)-\s*(minute)\s+freshness budget/i, healthMaxStale('riskScores'), 'CII health freshness budget');
@@ -272,7 +272,7 @@ describe('layer explanation metadata', () => {
     for (const layer of ['waterways', 'tradeRoutes'] as const) {
       const text = renderedFreshnessText(layer);
       assertDuration(text, /every\s+([0-9]+)\s+(minute)s?/i, REMOVED_WARM_PING_MINUTES.chokepoints, `${layer} chokepoint warm-ping cadence`);
-      assertDuration(text, /refresh\s+every\s+([0-9]+)\s+(minute)s?/i, relayConstMinutes('TRANSIT_SUMMARY_INTERVAL_MS'), `${layer} transit-summary cadence`);
+      assertDuration(text, /refresh\s+every\s+([0-9]+)\s+(minute)s?/i, STANDALONE_INTERVAL_MIN['transit-summaries'], `${layer} transit-summary cadence`);
     }
 
     // Hotspot levels are recomputed from the dashboard news, which reloads on the feeds refresh loop.
@@ -317,7 +317,7 @@ describe('layer explanation metadata', () => {
       'weather limitations must not still claim coverage is US + Canada only',
     );
     const weatherEvidence = getLayerExplanation('weather').evidence;
-    for (const path of ['scripts/ais-relay.cjs', 'scripts/_weather-alert-select.mjs', 'api/health.js', 'src/services/weather.ts']) {
+    for (const path of ['scripts/personal-providers.cjs', 'scripts/_weather-alert-select.mjs', 'api/health.js', 'src/services/weather.ts']) {
       assert.ok(weatherEvidence.includes(path), `weather evidence must cite ${path}`);
     }
   });

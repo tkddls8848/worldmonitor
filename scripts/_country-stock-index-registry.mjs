@@ -5,7 +5,7 @@ import { countryStockIndexKey } from './_country-stock-index.mjs';
 /**
  * The whole-enum work-list, kept OUT of `_country-stock-index.mjs` on purpose.
  *
- * `scripts/ais-relay.cjs` imports that module for the CN key and the snapshot
+ * `scripts/personal-providers.cjs` imports that module for the CN key and the snapshot
  * builder, and it never needs this list. Putting the `readFileSync` there would
  * add `shared/openapi-filter-param-contracts.json` to the relay's Railway
  * runtime-dependency closure (tests/railway-watch-path-audit.test.mjs), forcing

@@ -3,21 +3,14 @@ import { getCorsHeaders, getPublicCorsHeaders, isDisallowedOrigin } from './_cor
 import { jsonResponse } from './_json-response.js';
 
 export function getRelayBaseUrl() {
-  const relayUrl = process.env.WS_RELAY_URL;
-  if (!relayUrl) return null;
-  return relayUrl.replace('wss://', 'https://').replace('ws://', 'http://').replace(/\/$/, '');
+  const origin = process.env.LOCAL_API_ORIGIN;
+  return origin ? `${origin}/api/local-providers` : null;
 }
 
 export function getRelayHeaders(baseHeaders = {}) {
   const headers = { ...baseHeaders };
-  const relaySecret = process.env.RELAY_SHARED_SECRET || '';
-  if (relaySecret) {
-    const relayHeader = (process.env.RELAY_AUTH_HEADER || 'x-relay-key').toLowerCase();
-    headers[relayHeader] = relaySecret;
-    if (relayHeader !== 'authorization') {
-      headers.Authorization = `Bearer ${relaySecret}`;
-    }
-  }
+  headers['User-Agent'] ||= 'WorldMonitor-Personal/1.0';
+  if (process.env.LOCAL_API_TOKEN) headers['x-worldmonitor-local-token'] = process.env.LOCAL_API_TOKEN;
   return headers;
 }
 
@@ -75,7 +68,7 @@ export function createRelayHandler(cfg) {
     const relayBaseUrl = getRelayBaseUrl();
     if (!relayBaseUrl) {
       if (cfg.fallback) return cfg.fallback(req, corsHeaders);
-      return jsonResponse({ error: 'WS_RELAY_URL is not configured' }, 503, corsHeaders);
+      return jsonResponse({ error: 'Personal data adapters are not running' }, 503, corsHeaders);
     }
 
     try {

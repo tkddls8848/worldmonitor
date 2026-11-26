@@ -122,12 +122,6 @@ describe('strike pressure floor and boost', () => {
 });
 
 describe('confirmed strike days', () => {
-  it('the relay tally ranks a day by the same severity weights the scorer applies', () => {
-    const require = createRequire(import.meta.url);
-    const strikes = require('../scripts/lib/middle-east-strikes.cjs');
-    assert.deepEqual({ ...strikes.PRESSURE_WEIGHTS }, { ...CII_STRIKE_SEVERITY_WEIGHTS });
-    assert.deepEqual(strikes.PRESSURE_SEVERITIES, ['critical', 'high', 'elevated', 'moderate']);
-  });
 
   it('weighs the relay tally by severity and moves Gaza to Israel like every strike input', () => {
     const days = confirmedStrikeDaysFromSeed(tally({

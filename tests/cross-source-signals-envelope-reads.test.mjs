@@ -289,8 +289,8 @@ const FIXTURES = [
     expectTheater: 'Middle East',
     expectDetectedAt: (p) => Date.parse(p.history[0].timestamp),
     key: 'relay:oref:history:v1',
-    enveloped: true, // ais-relay.cjs:1401 envelopeWrite
-    // OREF history shape: scripts/ais-relay.cjs:1352.
+    enveloped: true, // personal-providers.cjs:1401 envelopeWrite
+    // OREF history shape: scripts/personal-providers.cjs:1352.
     payload: {
       history: [{
         timestamp: iso(3 * HOUR),

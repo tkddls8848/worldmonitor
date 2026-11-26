@@ -764,8 +764,6 @@ describe('panel-config guardrails', () => {
     const allowedPairs = new Set([
       'ai-regulation|fin-regulation',
       'fin-regulation|ai-regulation',
-      'intel|x-intel',
-      'x-intel|intel',
     ]);
     const typos = [];
     for (let i = 0; i < keys.length; i++) {

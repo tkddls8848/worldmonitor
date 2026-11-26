@@ -4,13 +4,10 @@
 //   ucdp   -> the UCDP API answers page 0 with two pages, and the page 1 fetch
 //             fails with a non-Error value, so the /ucdp-events handler's own
 //             catch (`err.message`) throws after its first await.
-//   status -> the X Post budget store rejects, so the router's own
-//             `await xPostBudget.status()` on /status throws.
 // No real network is used.
 'use strict';
 
 const https = require('node:https');
-const path = require('node:path');
 const { EventEmitter } = require('node:events');
 const { PassThrough } = require('node:stream');
 
@@ -35,13 +32,4 @@ if (faults.has('ucdp')) {
     });
     return request;
   };
-}
-
-if (faults.has('status')) {
-  const budget = require(path.join(__dirname, '..', '..', 'scripts', 'lib', 'x-post-budget.cjs'));
-  const createXPostBudget = budget.createXPostBudget;
-  budget.createXPostBudget = (...args) => ({
-    ...createXPostBudget(...args),
-    status: async () => { throw new Error('budget store unavailable'); },
-  });
 }

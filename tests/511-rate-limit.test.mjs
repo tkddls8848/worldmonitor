@@ -11,7 +11,7 @@ import {
 
 const SEEDER_SOURCE = readFileSync(new URL('../scripts/seed-provincial-511.mjs', import.meta.url), 'utf8');
 const ADAPTER_SOURCE = readFileSync(new URL('../scripts/lib/provincial-511.mjs', import.meta.url), 'utf8');
-const RELAY_SOURCE = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
+const RELAY_SOURCE = readFileSync(new URL('../scripts/personal-providers.cjs', import.meta.url), 'utf8');
 describe('per-host 511 limiter (#6618 v1)', () => {
   it('does not import the seeder from tests', () => {
     const self = readFileSync(new URL(import.meta.url), 'utf8');

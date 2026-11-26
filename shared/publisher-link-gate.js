@@ -19,7 +19,7 @@
  *
  * Reached by five runtimes, so this module is dependency-free on purpose:
  * the Vercel Edge digest handler (via `server/.../_publisher-link-gate.ts`),
- * the Railway relay (`scripts/ais-relay.cjs`, CJS require), the
+ * the Railway relay (`scripts/personal-providers.cjs`, CJS require), the
  * digest-notifications cron (`scripts/seed-digest-notifications.mjs` +
  * `scripts/lib/`, ESM import), the Vite browser bundle, and plain
  * `node --test`. No JSON imports (`with { type: 'json' }` breaks the Vercel

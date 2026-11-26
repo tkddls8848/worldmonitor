@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
-const src = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
+const src = readFileSync(new URL('../scripts/personal-providers.cjs', import.meta.url), 'utf8');
 
 function extractFunction(name) {
   const start = src.indexOf(`function ${name}(`);

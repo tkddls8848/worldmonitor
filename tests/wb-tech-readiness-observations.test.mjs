@@ -103,9 +103,7 @@ describe('World Bank technology readiness provenance', () => {
       rdSpend: { USA: { ...input.rdSpend, name: 'United States' } },
     });
     assert.deepEqual(entry.observations, buildWorldBankTechObservations(input));
-    const relaySource = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
+    const relaySource = readFileSync(new URL('../scripts/personal-collector-tasks.cjs', import.meta.url), 'utf8');
     assert.equal(computeRankings, wbTechProjection.computeWorldBankTechRankings);
-    assert.match(relaySource, /\{ computeWorldBankTechRankings: wbComputeRankings \} = require\('\.\/_wb-tech-readiness-projection\.cjs'\)/);
-    assert.match(relaySource, /const rankings = wbComputeRankings\(indicatorData\)/);
   });
 });

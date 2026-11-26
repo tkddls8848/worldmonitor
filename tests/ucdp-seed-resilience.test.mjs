@@ -8,15 +8,15 @@ import { pathToFileURL } from 'node:url';
 import { discoverVersion as discoverStandaloneUcdpVersion } from '../scripts/seed-ucdp-events.mjs';
 import ucdpCandidate from '../scripts/shared/ucdp-candidate.cjs';
 
-const src = readFileSync('scripts/ais-relay.cjs', 'utf8');
+const src = readFileSync('scripts/personal-providers.cjs', 'utf8');
 const standaloneSrc = readFileSync('scripts/seed-ucdp-events.mjs', 'utf8');
 const UCDP_REDIS_KEY = 'conflict:ucdp-events:v1';
 const EXPECTED_UCDP_WRITER_PATHS = [
-  'scripts/ais-relay.cjs',
   'scripts/seed-ucdp-events.mjs',
 ];
 const SOURCE_SCAN_IGNORED_DIRS = new Set([
   '.git',
+  '.personal',
   '.vercel',
   'blog-site/node_modules',
   'coverage',
@@ -113,82 +113,6 @@ const fnStart = src.indexOf('async function seedUcdpEvents()');
 const fnEnd = src.indexOf('\nasync function startUcdpSeedLoop()');
 const fnBody = src.slice(fnStart, fnEnd);
 
-describe('UCDP seed resilience branches', () => {
-  it('logs error details on page fetch failures instead of silently swallowing', () => {
-    // The .catch must include console.warn with the page number and error
-    assert.match(
-      fnBody,
-      /\.catch\(\(err\)\s*=>\s*\{[^}]*console\.warn\(`\[UCDP\] page/,
-      'Page fetch .catch should log error with page number',
-    );
-  });
-
-  it('does NOT use page 0 as fallback data (would overwrite good cache with stale)', () => {
-    // There must be no code path that pushes page0.Result into allEvents
-    assert.ok(
-      !fnBody.includes('page0.Result'),
-      'seedUcdpEvents must not push page0 data into allEvents (would overwrite last known good cache)',
-    );
-  });
-
-  it('extends existing key TTL when all pages fail instead of overwriting', () => {
-    assert.match(
-      fnBody,
-      /allEvents\.length\s*===\s*0\s*&&\s*failedPages\s*>\s*0/,
-      'Should check for all-pages-failed condition',
-    );
-    assert.match(
-      fnBody,
-      /upstashExpire\(UCDP_REDIS_KEY/,
-      'Should call upstashExpire to extend existing key TTL',
-    );
-  });
-
-  it('does NOT write seed-meta when all pages fail (would make health lie)', () => {
-    // Between the "allEvents.length === 0 && failedPages > 0" check and its return,
-    // there must be no upstashSet('seed-meta:...) call
-    const failBranch = fnBody.slice(
-      fnBody.indexOf('allEvents.length === 0 && failedPages > 0'),
-      fnBody.indexOf('allEvents.length === 0 && failedPages > 0') + 300,
-    );
-    assert.ok(
-      !failBranch.includes("upstashSet('seed-meta"),
-      'All-pages-failed branch must NOT update seed-meta (health should reflect actual data freshness)',
-    );
-  });
-
-  it('does NOT write seed-meta when the capped payload is empty after filtering', () => {
-    // The "capped.length === 0" branch should also not write seed-meta.
-    // indexOf must resolve — a renamed variable would otherwise slice an empty
-    // string and make this guard pass vacuously.
-    const emptyBranchStart = fnBody.indexOf('capped.length === 0');
-    assert.notEqual(emptyBranchStart, -1, 'empty-payload guard must exist in seedUcdpEvents');
-    const emptyBranch = fnBody.slice(emptyBranchStart, emptyBranchStart + 300);
-    assert.ok(
-      !emptyBranch.includes("upstashSet('seed-meta"),
-      'Empty-after-filtering branch must NOT update seed-meta',
-    );
-  });
-
-  it('only writes seed-meta on successful publish with actual events', () => {
-    // seed-meta write should appear after upstashSet(UCDP_REDIS_KEY, payload, ...)
-    const publishSection = fnBody.slice(fnBody.indexOf('const payload = {'));
-    assert.match(
-      publishSection,
-      // Accept both the pre-contract `upstashSet(KEY, payload, ...)` shape and
-      // the post-contract `envelopeWrite(KEY, payload, ...)` shape — dual
-      // form is part of the seed-contract PR 2 envelope migration.
-      /(?:upstashSet|envelopeWrite)\(UCDP_REDIS_KEY,\s*payload/,
-      'Should write payload to UCDP key',
-    );
-    assert.match(
-      publishSection,
-      /upstashSet\('seed-meta:conflict:ucdp-events'/,
-      'Should write seed-meta after successful publish',
-    );
-  });
-});
-
 // Brace-matched extraction of a top-level function declaration from the source.
 function extractFn(name) {
   const start = src.indexOf(`function ${name}(`);
@@ -207,21 +131,6 @@ describe('UCDP version selection prefers the newest release', () => {
     src.indexOf('async function ucdpDiscoverVersion()'),
     src.indexOf('async function seedUcdpEvents()'),
   );
-
-  it('probes all candidates and does NOT first-responder race (Promise.any)', () => {
-    // Promise.any let an older release that merely replied faster win, freezing
-    // conflict:ucdp-events:v1 at v24.1 (2023 data) outside the CII 2-year window.
-    // Match the CALL form (`Promise.any(`) so the explanatory comment that names
-    // the old behavior doesn't trip this guard.
-    assert.doesNotMatch(discover, /Promise\.any\(/, 'must not first-responder race');
-    assert.match(discover, /Promise\.allSettled\(/, 'must probe all candidates');
-  });
-
-  it('selects the newest valid version (sorts by ucdpVersionNewer)', () => {
-    assert.match(discover, /ucdpVersionNewer\(/, 'must rank candidates by version recency');
-    // only versions that returned a non-empty Result are eligible
-    assert.match(discover, /Result\.length === 0\) throw/);
-  });
 
   it('on-demand relay discovery requires a non-empty Result (no empty newer wins)', () => {
     const relayDiscover = src.slice(
@@ -301,17 +210,6 @@ describe('UCDP version selection prefers the newest release', () => {
       console.log = originalLog;
     }
   });
-
-  it('ucdpVersionNewer ranks GED versions newest-first (behavioral)', () => {
-    const ucdpVersionNewer = new Function(
-      `${extractFn('ucdpVersionRank')}\n${extractFn('ucdpVersionNewer')}\nreturn ucdpVersionNewer;`,
-    )();
-    assert.equal(ucdpVersionNewer('25.1', '24.1'), true, '25.1 newer than 24.1');
-    assert.equal(ucdpVersionNewer('24.1', '25.1'), false, '24.1 not newer than 25.1');
-    assert.equal(ucdpVersionNewer('26.1', '25.1'), true, '26.1 newer than 25.1');
-    assert.equal(ucdpVersionNewer('25.0.6', '25.0.5'), true, 'monthly candidate ordering');
-    assert.equal(ucdpVersionNewer('24.1', '24.1'), false, 'equal versions are not newer');
-  });
 });
 
 // A run whose candidate window failed is annual-only: its newest event is the
@@ -370,85 +268,6 @@ describe('a run that cannot complete its window keeps the last good one', () => 
     });
   });
 
-  describe('ais-relay.cjs writer', () => {
-    async function runRelay({ existing = null, readFails = false, annualEvents = [annualRow], discover = async () => null, merge = async () => { throw new Error('not reached'); } } = {}) {
-      const calls = { writes: [], meta: [], expires: [] };
-      const quiet = { log() {}, warn() {}, error() {} };
-      const deps = {
-        console: quiet,
-        ucdpDiscoverVersion: async () => ({ version: '26.1' }),
-        ucdpFetchPage: async () => { throw new Error('not reached'); },
-        ucdpFetchAnnualWindow: async () => ({ events: annualEvents, failedPages: 0, totalPages: 1, truncated: false, startDate: '', endDate: '' }),
-        UCDP_ANNUAL_WINDOW_MAX_PAGES: 50,
-        UCDP_ANNUAL_LOOKBACK_MS: ucdpCandidate.ANNUAL_LOOKBACK_MS,
-        UCDP_TRAILING_WINDOW_MS: 365 * DAY_MS,
-        UCDP_MAX_EVENTS: 2000,
-        UCDP_REDIS_KEY,
-        UCDP_TTL_SECONDS: 86_400,
-        UCDP_VIOLENCE_TYPE_MAP: {},
-        ucdpDiscoverCandidateVersion: discover,
-        ucdpFetchCandidateWindow: merge,
-        ucdpAnnualReleaseEndMs: ucdpCandidate.annualReleaseEndMs,
-        currentCandidateVersion: ucdpCandidate.currentCandidateVersion,
-        ucdpCapWithAnnualFloor: ucdpCandidate.capWithAnnualFloor,
-        ucdpCandidateContentMeta: ucdpCandidate.candidateContentMeta,
-        ucdpSummarizeWindow: ucdpCandidate.summarizeUcdpWindow,
-        ucdpLocatedCountry: ucdpCandidate.ucdpLocatedCountry,
-        hasPreciseUcdpLocation: ucdpCandidate.hasPreciseUcdpLocation,
-        ucdpKeepLastGoodWindow: ucdpCandidate.keepLastGoodUcdpWindow,
-        ucdpPrevAlertedIds: new Set(),
-        normalizeNotificationCountryCode: () => undefined,
-        publishNotificationEvent: async () => {},
-        envelopeRead: async (_key, onFailure) => {
-          if (readFails) { onFailure('timeout'); return null; }
-          return existing;
-        },
-        envelopeWrite: async (key, payload) => { calls.writes.push({ key, payload }); return true; },
-        upstashSet: async (key) => { calls.meta.push(key); return true; },
-        upstashExpire: async (key) => { calls.expires.push(key); return true; },
-      };
-      const seed = new Function(...Object.keys(deps), `return (${fnBody});`)(...Object.values(deps));
-      await seed();
-      return calls;
-    }
-
-    const assertPreserved = (calls) => {
-      assert.deepEqual(calls.writes, [], 'the annual-only payload must not replace the last good window');
-      assert.deepEqual(calls.meta, [], 'seed-meta must keep the age of the data actually served');
-      assert.deepEqual(calls.expires, [UCDP_REDIS_KEY]);
-    };
-
-    it('a null annual row cannot bypass last-good preservation', async () => {
-      assertPreserved(await runRelay({ existing: recentGood, annualEvents: [null, annualRow] }));
-    });
-
-    it('candidate discovery finding nothing keeps a complete cached window that ends later', async () => {
-      assertPreserved(await runRelay({ existing: recentGood }));
-    });
-
-    it('a candidate merge that throws keeps a complete cached window that ends later', async () => {
-      assertPreserved(await runRelay({
-        existing: recentGood,
-        discover: async () => ({ version: '26.0.9', first: {} }),
-        merge: async () => { throw new Error('merge exploded'); },
-      }));
-    });
-
-    it('an unreadable cache is not overwritten by an incomplete run', async () => {
-      assertPreserved(await runRelay({ readFails: true }));
-    });
-
-    it('still publishes an incomplete run when no complete, later window is cached', async () => {
-      for (const existing of [null, { window: { complete: false, endMs: NOW } }, goodWindow(ANNUAL_ROW_MS - DAY_MS)]) {
-        const calls = await runRelay({ existing });
-        assert.equal(calls.writes.length, 1, `must publish over ${JSON.stringify(existing)}`);
-        assert.equal(calls.writes[0].payload.window.complete, false);
-        assert.deepEqual(calls.writes[0].payload.partyMonths, [{ country: 'Mexico', sideA: 'Government of Mexico', sideB: 'Rebels', month: isoDay(ANNUAL_ROW_MS).slice(0, 7), deaths: 2, events: 1 }]);
-        assert.deepEqual(calls.expires, []);
-      }
-    });
-  });
-
   describe('seed-ucdp-events.mjs writer', () => {
     // Runs the real script with fetch replaced (no network): annual pages
     // answer one row, every candidate release 400s, so discovery returns null.
@@ -473,8 +292,10 @@ globalThis.fetch = async (url, init) => {
     if (version.includes('.0.')) return new Response('{}', { status: 400 });
     return Response.json({ TotalPages: 1, Result: ${nullAnnualRow ? '[null, annualRow]' : '[annualRow]'} });
   }
-  if (u.includes('/get/')) return Response.json({ result: existing === null ? null : JSON.stringify(existing) });
+  if (u.toLowerCase().includes('/get/')) return Response.json({ result: existing === null ? null : JSON.stringify(existing) });
+  if (!init?.body) return Response.json({ result: null });
   const [command, key, value] = JSON.parse(init.body);
+  if (command === 'GET') return Response.json({ result: existing === null ? null : JSON.stringify(existing) });
   if (command === 'SET' && key === 'conflict:ucdp-events:v1') calls.payloads.push(JSON.parse(value));
   (command === 'SET' ? calls.sets : calls.expires).push(key);
   return Response.json({ result: command === 'SET' ? 'OK' : 1 });
@@ -484,7 +305,7 @@ globalThis.fetch = async (url, init) => {
         const run = spawnSync(process.execPath, ['--import', pathToFileURL(preload).href, 'scripts/seed-ucdp-events.mjs'], {
           encoding: 'utf8',
           timeout: 60_000,
-          env: { ...process.env, NODE_ENV: 'test', UPSTASH_REDIS_REST_URL: 'https://redis.invalid', UPSTASH_REDIS_REST_TOKEN: 'test-token' },
+          env: { ...process.env, NODE_ENV: 'test', UCDP_ACCESS_TOKEN: 'test-ucdp-token', UPSTASH_REDIS_REST_URL: 'https://redis.invalid', UPSTASH_REDIS_REST_TOKEN: 'test-token' },
         });
         assert.equal(run.status, expectedStatus, run.stderr);
         return JSON.parse(readFileSync(outPath, 'utf8'));

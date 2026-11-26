@@ -999,15 +999,7 @@ function computeStats({ sourceAttribution: suppliedAttribution } = {}) {
   const centralBankBlock = financeGeo.slice(centralBankStart, centralBankEnd);
   const centralBankInstitutionCount = (centralBankBlock.match(/\bid:\s*'/g) || []).length;
 
-  const telegram = JSON.parse(read('data/telegram-channels.json'));
-  const telegramFullEnabled = Array.isArray(telegram?.channels?.full)
-    ? telegram.channels.full.filter((c) => c?.enabled !== false)
-    : [];
-  const telegramFullTierCounts = telegramFullEnabled.reduce((acc, c) => {
-    const tier = String(c?.tier ?? 'unknown');
-    acc[tier] = (acc[tier] || 0) + 1;
-    return acc;
-  }, {});
+
 
   // LEADER_NAMES moved to shared/keyword-spike-core.js (issue #5697) so the
   // server-side get_keyword_spikes MCP tool shares the tracked list.
@@ -1074,8 +1066,6 @@ function computeStats({ sourceAttribution: suppliedAttribution } = {}) {
     airportCount,
     stockExchangeCount,
     centralBankInstitutionCount,
-    telegramFullEnabledChannels: telegramFullEnabled.length,
-    telegramFullTierCounts,
     leaderNames,
     populationPriorityCountries,
     sebufVersion: makefileVar(makefile, 'SEBUF_VERSION'),

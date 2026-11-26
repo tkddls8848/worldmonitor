@@ -21,7 +21,7 @@
 // paying an annotator for every title. Review them with
 // scripts/eval-jev-classify.mjs --shadow-report.
 //
-// Lives outside ais-relay.cjs because the relay boots a live server on
+// Lives outside personal-providers.cjs because the relay boots a live server on
 // require, so nothing inside it can be unit-tested.
 
 const { jevEndpoint, checkJevEndpoint, buildJevRequest, parseJevAnswers, hasNonLatinLetters } = require('../../shared/jev-classify.js');

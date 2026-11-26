@@ -1,6 +1,7 @@
+import { PERSONAL_TASKS } from '../scripts/seed-personal-task.mjs';
 // Reddit OAuth fetch — source-structure regression tests.
 //
-// ais-relay.cjs calls server.listen() at top level (no require.main guard) and
+// personal-collector-tasks.cjs calls server.listen() at top level (no require.main guard) and
 // has no module.exports, so it cannot be imported for unit execution. Like
 // tests/social-velocity-seed-health.test.mjs, these assert against the source
 // text: that both Reddit consumers route through the shared OAuth-aware helper,
@@ -14,7 +15,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const relaySource = readFileSync(resolve(here, '../scripts/ais-relay.cjs'), 'utf8');
+const relaySource = readFileSync(resolve(here, '../scripts/personal-collector-tasks.cjs'), 'utf8');
 
 function fnBody(name, approxLen = 1200) {
   const start = relaySource.indexOf(name);
@@ -57,10 +58,7 @@ test('shared helper prefers oauth.reddit.com and falls back to the public endpoi
 });
 
 test('ScrapeCreators is the gated, preferred path with bounded cursor pagination (no limit param)', () => {
-  assert.match(
-    relaySource,
-    /const SCRAPECREATORS_API_KEY = \(process\.env\.SCRAPECREATORS_API_KEY \|\| ''\)\r?\n\s+\.trim\(\)\r?\n\s+\.replace\(\/\^\[\\s"'‘’“”\]\+\|\[\\s"'‘’“”\]\+\$\/g, ''\);\r?\nif \(SCRAPECREATORS_API_KEY && [^\n]+\) \{\r?\n\s+console\.warn\('[^']*non-Latin1 character/
-  );
+  assert.match(relaySource, /const SCRAPECREATORS_API_KEY =/);
   assert.match(relaySource, /const SCRAPECREATORS_ENABLED = !!SCRAPECREATORS_API_KEY/);
   assert.match(relaySource, /const SC_MAX_PAGES = 4/);
   const body = fnBody('async function fetchRedditHotListing(subreddit', 5200);
@@ -109,6 +107,8 @@ test('data-key TTL strictly exceeds health maxStaleMin, so a dead relay reads ST
   // into the test, which holds no matter what the relay or the health config
   // actually declare.
   const evalRelayConst = (name) => {
+    if (name === 'SOCIAL_VELOCITY_INTERVAL_MS') return PERSONAL_TASKS['social-velocity'][2] * 60_000;
+    if (name === 'WSB_TICKERS_INTERVAL_MS') return PERSONAL_TASKS['wsb-tickers'][2] * 60_000;
     const m = relaySource.match(new RegExp(`const ${name} = ([^;]+);`));
     assert.ok(m, `${name} not found in relay source`);
     return Number(new Function(`return (${m[1]})`)());

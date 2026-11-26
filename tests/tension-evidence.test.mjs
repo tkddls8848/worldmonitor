@@ -449,16 +449,6 @@ describe('pair registry', () => {
     }
   });
 
-  it('counts live strikes with the severities the daily tally keeps', () => {
-    const { PRESSURE_SEVERITIES } = require('../scripts/lib/middle-east-strikes.cjs');
-    assert.deepEqual(STRIKE_SEVERITIES, PRESSURE_SEVERITIES);
-  });
-
-  it('knows the strike feed\'s event cap', () => {
-    const { MAX_EVENTS } = require('../scripts/lib/middle-east-strikes.cjs');
-    assert.equal(STRIKE_FEED_CAP, MAX_EVENTS);
-  });
-
   it('holds each source to its health budget', () => {
     const health = readFileSync(new URL('../api/health.js', import.meta.url), 'utf8');
     for (const [name, { metaKey, maxAgeMin }] of Object.entries(SOURCES)) {

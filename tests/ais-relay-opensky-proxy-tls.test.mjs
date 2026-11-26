@@ -19,7 +19,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const SRC = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
+const SRC = readFileSync(new URL('../scripts/personal-providers.cjs', import.meta.url), 'utf8');
 
 test('OpenSky proxy fetches never pass an already-TLS tunnel socket via `socket:` (double-TLS → EPROTO #5074)', () => {
   const antipattern = SRC.match(/socket:\s*tlsSocket/g) || [];

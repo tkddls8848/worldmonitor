@@ -239,8 +239,6 @@ export const DEFERRED_PANEL_NATURAL_FOOTPRINTS: Readonly<Record<string, Deferred
   'storage-facility-map': { rowSpan: 2 },
   'strategic-posture': { rowSpan: 2 },
   'supply-chain': { rowSpan: 2 },
-  'telegram-intel': { rowSpan: 2 },
-  'x-intel': { rowSpan: 2 },
   'threat-timeline': { rowSpan: 2 },
   'trade-policy': { rowSpan: 2 },
   'ucdp-events': { rowSpan: 2 },
@@ -371,7 +369,6 @@ export interface PanelLayoutManagerCallbacks {
   primeVisiblePanelData: () => void;
   updateMonitorResults: () => void;
   loadSecurityAdvisories?: () => Promise<void>;
-  loadTelegramIntel?: () => Promise<void>;
   applyMapLayerChange?: (layer: keyof MapLayers, enabled: boolean, source: 'programmatic') => void;
 }
 
@@ -3283,18 +3280,6 @@ export class PanelLayoutManager implements AppModule {
       'oref-sirens',
       () => import('@/components/OrefSirensPanel'),
       'OrefSirensPanel',
-    );
-
-    this.lazyDefaultPanel(
-      'telegram-intel',
-      () => import('@/components/TelegramIntelPanel'),
-      'TelegramIntelPanel',
-    );
-
-    this.lazyDefaultPanel(
-      'x-intel',
-      () => import('@/components/XIntelPanel'),
-      'XIntelPanel',
     );
 
     this.lazyPanel('gcc-investments', async () => {

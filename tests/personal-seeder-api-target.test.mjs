@@ -117,7 +117,7 @@ test('security-advisories fetches each feed directly when no relay is configured
 });
 
 // Direct fetches replace the relay's per-hop redirect checks
-// (scripts/ais-relay.cjs fetchWithRedirects): at most 3 hops, each to an
+// (scripts/personal-providers.cjs fetchWithRedirects): at most 3 hops, each to an
 // allowed domain over http(s) on the default port.
 async function advisoryFetchFeed() {
   return (await import('../scripts/seed-security-advisories.mjs')).fetchFeed;

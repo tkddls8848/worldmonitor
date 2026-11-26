@@ -40,7 +40,7 @@ const cwfisModuleSrc = readFileSync(resolve(here, '../scripts/wildfire/cwfis-wfs
 const firmsModuleSrc = readFileSync(resolve(here, '../scripts/wildfire/firms-area.mjs'), 'utf8');
 const testSrc = readFileSync(fileURLToPath(import.meta.url), 'utf8');
 const seederSrc = readFileSync(resolve(here, '../scripts/seed-fire-detections.mjs'), 'utf8');
-const aisRelaySrc = readFileSync(resolve(here, '../scripts/ais-relay.cjs'), 'utf8');
+const aisRelaySrc = readFileSync(resolve(here, '../scripts/personal-providers.cjs'), 'utf8');
 
 function firmsDetection(overrides = {}) {
   return {

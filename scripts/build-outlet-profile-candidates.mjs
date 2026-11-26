@@ -18,7 +18,6 @@ import { resolveHostOrigin } from './source-origin.mjs';
 import { loadSourceGeography } from './source-catalog-identity.mjs';
 import { publisherFamilyFor } from '../shared/publisher-families.js';
 import { SOURCE_PROPAGANDA_RISK, getSourceType } from '../shared/source-provenance.ts';
-import { TELEGRAM_CHANNEL_TRUST } from '../shared/telegram-channel-trust.ts';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const includeProfiled = process.argv.includes('--all');
@@ -38,12 +37,6 @@ function publisherHost(rawUrl) {
   return url.hostname.toLowerCase();
 }
 
-const telegramRegions = new Map(
-  Object.values(JSON.parse(readFileSync(join(repoRoot, 'data/telegram-channels.json'), 'utf8')).channels)
-    .flat()
-    .map((channel) => [channel.handle, channel.region]),
-);
-const telegramByName = new Map(TELEGRAM_CHANNEL_TRUST.map((entry) => [entry.name, entry]));
 const profiles = JSON.parse(readFileSync(join(repoRoot, 'shared/outlet-profile.json'), 'utf8'));
 const geography = loadSourceGeography(repoRoot);
 const catalog = await loadOutletCatalog(repoRoot);
@@ -53,8 +46,7 @@ for (const [name, outlet] of [...catalog].sort(([a], [b]) => a.localeCompare(b, 
   if (!includeProfiled && Object.prototype.hasOwnProperty.call(profiles, name)) continue;
   const hosts = [...new Set([...outlet.urls].map(publisherHost).filter(Boolean))];
   const hostOrigins = Object.fromEntries(hosts.map((host) => [host, resolveHostOrigin(host) ?? null]));
-  const risk = SOURCE_PROPAGANDA_RISK[name] ?? telegramByName.get(name);
-  const telegram = telegramByName.get(name);
+  const risk = SOURCE_PROPAGANDA_RISK[name];
   candidates[name] = {
     kinds: [...outlet.kinds],
     hosts,
@@ -64,8 +56,6 @@ for (const [name, outlet] of [...catalog].sort(([a], [b]) => a.localeCompare(b, 
     stateAffiliated: risk?.stateAffiliated ?? null,
     sourceType: getSourceType(name),
     family: publisherFamilyFor(name) || null,
-    telegramHandle: telegram?.handle ?? null,
-    telegramRegion: telegram ? telegramRegions.get(telegram.handle) ?? null : null,
     provenanceNote: risk?.note ?? null,
   };
 }

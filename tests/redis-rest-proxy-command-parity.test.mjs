@@ -28,12 +28,6 @@ import {
   PUBLISH_PHYSICAL_PREMIUM_LUA,
   PUBLISH_DIVERGENCE_LUA,
 } from '../scripts/seed-physical-premiums.mjs';
-import {
-  RESERVE_LUA,
-  SETTLE_LUA,
-  ACK_RECEIPTS_LUA,
-  STATUS_LUA,
-} from '../scripts/lib/x-post-budget.cjs';
 import { SOURCE_RETRY_CLAIM_SCRIPT } from '../scripts/_bundle-runner.mjs';
 import {
   PUBLISH_ACTIVE_AND_META_SCRIPT,
@@ -85,10 +79,6 @@ function buildGate() {
       commandForExecution,
       ALLOWED_COMMANDS,
       ALLOWED_EVAL_SCRIPTS,
-      X_POST_BUDGET_RESERVE_SCRIPT,
-      X_POST_BUDGET_STATUS_SCRIPT,
-      LEGACY_X_POST_BUDGET_RESERVE_SCRIPT,
-      LEGACY_X_POST_BUDGET_STATUS_SCRIPT,
     };
   `)();
 }
@@ -363,44 +353,6 @@ describe('redis-rest-proxy command gate', () => {
     }
   });
 
-  it('pins every X Post budget script by exact bytes', () => {
-    const gate = buildGate();
-    for (const script of [RESERVE_LUA, SETTLE_LUA, ACK_RECEIPTS_LUA, STATUS_LUA]) {
-      assert.equal(gate.ALLOWED_EVAL_SCRIPTS.has(script), true);
-      assert.equal(accepts(gate, ['EVAL', script, '1', 'budget-key']), true);
-      assert.equal(
-        accepts(gate, ['EVAL', `${script} `, '1', 'budget-key']),
-        false,
-        'a one-character script variant must stay blocked',
-      );
-    }
-  });
-
-  it('accepts current and immediately prior X budget callers during rollout', () => {
-    const gate = buildGate();
-    const legacyScripts = [
-      [
-        gate.LEGACY_X_POST_BUDGET_RESERVE_SCRIPT,
-        gate.X_POST_BUDGET_RESERVE_SCRIPT,
-        '16673cafd28e2c29b645f1fd6c5a98465f9d4d6e4aa2af4b8e1d9ffb67de03ce',
-      ],
-      [
-        gate.LEGACY_X_POST_BUDGET_STATUS_SCRIPT,
-        gate.X_POST_BUDGET_STATUS_SCRIPT,
-        'dd44c93034f8fdfb89b1460e651e158e213c92a37f532d58954e537367fcd99e',
-      ],
-    ];
-    for (const [script, currentScript, expectedHash] of legacyScripts) {
-      assert.equal(createHash('sha256').update(script).digest('hex'), expectedHash);
-      assert.equal(gate.ALLOWED_EVAL_SCRIPTS.has(script), true);
-      assert.equal(accepts(gate, ['EVAL', script, '1', 'budget-key']), true);
-      assert.equal(gate.commandForExecution(['EVAL', script, '1', 'budget-key'])[1], currentScript);
-      assert.equal(accepts(gate, ['EVAL', `${script} `, '1', 'budget-key']), false);
-    }
-    assert.notEqual(gate.LEGACY_X_POST_BUDGET_RESERVE_SCRIPT, RESERVE_LUA);
-    assert.notEqual(gate.LEGACY_X_POST_BUDGET_STATUS_SCRIPT, STATUS_LUA);
-  });
-
   it('admits the compare-and-delete script releaseLock actually sends', async () => {
     const gate = buildGate();
     const previousUrl = process.env.UPSTASH_REDIS_REST_URL;
@@ -463,22 +415,6 @@ describe('redis-rest-proxy command gate', () => {
     assert.match(logged, /Command not allowed: EVAL \(script not in the pinned allowlist\)/);
   });
 
-  it('admits the AIS relay owner-checked lock release', () => {
-    const gate = buildGate();
-    const relaySrc = readFileSync(resolve(repoRoot, 'scripts/ais-relay.cjs'), 'utf8');
-    const marker = 'function upstashReleaseLockIfOwner';
-    const start = relaySrc.indexOf(marker);
-    assert.ok(start >= 0, 'upstashReleaseLockIfOwner not found');
-    const nextFn = relaySrc.slice(start + marker.length).search(/\n(?:async )?function /);
-    assert.ok(nextFn >= 0, 'next function after upstashReleaseLockIfOwner not found');
-    const body = relaySrc.slice(start, start + marker.length + nextFn);
-    assert.match(
-      body,
-      /JSON\.stringify\(\['EVAL', COMPARE_AND_DELETE_SCRIPT, '1', key, owner\]\)/,
-    );
-    assert.equal(accepts(gate, ['EVAL', COMPARE_AND_DELETE_SCRIPT, '1', 'lock', 'owner']), true);
-    assert.equal(accepts(gate, ['EVAL', `${COMPARE_AND_DELETE_SCRIPT} `, '1', 'lock', 'owner']), false);
-  });
 
   it('rewrites the pre-pin seed lock release onto the pinned compare-and-delete', () => {
     const gate = buildGate();

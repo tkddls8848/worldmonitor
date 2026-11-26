@@ -3,7 +3,7 @@
  *
  * Canonical RSS data: shared/source-tiers.json — loaded here via
  * resolveJsonModule (for Vercel edge + the main relay container) and by
- * scripts/ais-relay.cjs via requireShared('source-tiers.json').
+ * scripts/personal-providers.cjs via requireShared('source-tiers.json').
  * `requireShared()` resolves from
  * `../shared` OR `./shared` depending on packaging root, so Railway services
  * using rootDirectory=scripts (which cannot see repo-root shared/) pick up
@@ -15,13 +15,9 @@
  * channels or accounts from leaving stale public tier keys.
  */
 import sourceTiersData from '../../shared/source-tiers.json';
-import { TELEGRAM_SOURCE_TIERS } from '../../shared/telegram-channel-trust';
-import { X_ACCOUNT_SOURCE_TIERS } from '../../shared/x-account-trust';
 
 export const SOURCE_TIERS: Record<string, number> = {
   ...(sourceTiersData as Record<string, number>),
-  ...TELEGRAM_SOURCE_TIERS,
-  ...X_ACCOUNT_SOURCE_TIERS,
 };
 
 export function getSourceTier(sourceName: string): number {

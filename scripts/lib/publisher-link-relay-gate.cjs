@@ -18,7 +18,7 @@
 // family table alone and fails closed (blank link) when the family names no
 // domains.
 //
-// Self-contained on purpose: ais-relay.cjs boots on require, so anything it
+// Self-contained on purpose: personal-providers.cjs boots on require, so anything it
 // needs must be a dependency-free CJS module importable without side
 // effects (same reason digest-stale-gate.cjs lives here). Pure logic is in
 // shared/publisher-link-gate.js; this file only wires the curated domain

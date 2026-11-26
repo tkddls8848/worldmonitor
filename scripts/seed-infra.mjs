@@ -32,7 +32,7 @@ const TIMEOUT = 30_000;
 // 401 for s-maxage, poisoning a POP). Send X-WorldMonitor-Key when configured;
 // fall through to Origin-only when unset to preserve local dev behaviour.
 // Set WORLDMONITOR_RELAY_KEY on the Railway service to a value already
-// present in Vercel's WORLDMONITOR_VALID_KEYS. Same pattern as ais-relay.cjs.
+// present in Vercel's WORLDMONITOR_VALID_KEYS. Same pattern as personal-providers.cjs.
 const RELAY_API_KEY = process.env.WORLDMONITOR_RELAY_KEY || '';
 
 function warmPingHeaders() {

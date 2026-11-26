@@ -14,7 +14,7 @@ import { extractCountryCode, extractCountryCodes, extractStoryCountries } from '
 
 import relay from '../scripts/lib/news-threat-countries.cjs';
 
-const RELAY_SOURCE = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
+const RELAY_SOURCE = readFileSync(new URL('../scripts/personal-providers.cjs', import.meta.url), 'utf8');
 
 const SAUDI_HEADLINES = [
   ['Iran-backed Houthis warn of long conflict after Riyadh airport attack', ['IR', 'YE', 'SA']],
@@ -175,11 +175,5 @@ describe('relay threat summary attribution', () => {
     );
     assert.deepEqual(relay.threatSummaryCountries('South Sudan peace talks resume'), ['SS']);
     assert.deepEqual(relay.threatSummaryCountries('Markets rally as inflation cools'), []);
-  });
-
-  it('feeds both classify loops through the summary attribution, not the alert-routing one', () => {
-    const accumulations = [...RELAY_SOURCE.matchAll(/for \(const code of (\w+)\(([^)]*)\)\) \{\s*if \(!byCountry\[code\]\)/g)];
-    assert.equal(accumulations.length, 2, 'cached-hit and fresh-classification loops');
-    for (const [, fn] of accumulations) assert.equal(fn, 'threatSummaryCountries');
   });
 });

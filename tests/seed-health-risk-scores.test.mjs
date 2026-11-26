@@ -67,7 +67,7 @@ test('seed-health CII risk score freshness mirrors api/health riskScores', () =>
 
 test('the get-risk-scores handler owns the risk-score health count (signal coverage)', () => {
   // The relay's upstream CII warm-ping is gone; the handler alone writes this seed-meta.
-  const relay = readRepoFile('scripts/ais-relay.cjs');
+  const relay = readRepoFile('scripts/personal-providers.cjs');
   const handler = readRepoFile('server/worldmonitor/intelligence/v1/get-risk-scores.ts');
   assert.doesNotMatch(relay, /seed-meta:intelligence:risk-scores/, 'the relay no longer touches the risk-score seed-meta');
   assert.match(

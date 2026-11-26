@@ -145,7 +145,7 @@ interface ChokepointConfig {
 
 type DirectionLabel = 'eastbound' | 'westbound' | 'northbound' | 'southbound';
 
-// Compact summary written by ais-relay.cjs — no history array; per-id history
+// Compact summary written by personal-providers.cjs — no history array; per-id history
 // lives in `supply_chain:transit-summaries:history:v1:{id}` and is served by
 // GetChokepointHistory on card expand.
 interface PreBuiltTransitSummary {

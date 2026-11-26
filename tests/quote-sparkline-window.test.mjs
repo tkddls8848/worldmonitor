@@ -216,29 +216,6 @@ describe('commodity seeders publish the 24-hour sparkline', () => {
     assert.equal(urls.length, 1);
     assert.equal(quote.sparklineStartAt, undefined);
   });
-
-  it('the relay fetches history once per session, not every cycle', async () => {
-    const source = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
-    const start = source.indexOf('const _sparklineHistories');
-    const end = source.indexOf('function fetchYahooChartDirect(');
-    assert.ok(start > 0 && end > start, 'relay sparkline helper found');
-    const calls = [];
-    const fetchOnce = async (_symbol, query) => { calls.push(query); return { chart: structuredClone(history) }; };
-    const commoditySparkline = Function(
-      '_fetchYahooChartOnce', 'sleep', 'SPARKLINE_HISTORY_QUERY', 'SPARKLINE_HISTORY_RETRY_SECONDS', 'buildQuoteSparkline', 'logThrottled',
-      `${source.slice(start, end)}\nreturn _commoditySparkline;`,
-    )(fetchOnce, async () => {}, SPARKLINE_HISTORY_QUERY, SPARKLINE_HISTORY_RETRY_SECONDS, buildQuoteSparkline, () => {});
-
-    const first = await commoditySparkline('BZ=F', { chart: today, lastTradeAt: T0 + 52 * MINUTE });
-    await commoditySparkline('BZ=F', { chart: today, lastTradeAt: T0 + 57 * MINUTE });
-    assert.deepEqual(calls, [SPARKLINE_HISTORY_QUERY]);
-    assert.equal(first.sparkline.length, SPARKLINE_WINDOW_SECONDS / SPARKLINE_INTERVAL_SECONDS);
-    assert.equal(first.sparklineIntervalSeconds, SPARKLINE_INTERVAL_SECONDS);
-
-    const nextDay = minuteChart(T0 + 86400, wobble(10, 92));
-    await commoditySparkline('BZ=F', { chart: nextDay, lastTradeAt: T0 + 86400 + 9 * MINUTE });
-    assert.equal(calls.length, 2, 'a new session refetches history');
-  });
 });
 
 describe('bad ticks on thin and boundary bars', () => {
@@ -410,30 +387,6 @@ describe('cotton raw bars and revised history, 2026-11-09 through 11', () => {
 });
 
 describe('adaptive FX filtering reaches both commodity writers', () => {
-  it('the cron and relay publish the same filtered live USDTRY series', async () => {
-    const fixture = JSON.parse(readFileSync(new URL('./fixtures/usdtry-5m-2026-11-11.json', import.meta.url), 'utf8'));
-    const today = chart(fixture.close.map((_, i) => fixture.sparklineStartAt / 1000 + i * 300), fixture.close, '5m');
-    today.chart.result[0].meta.regularMarketTime = today.chart.result[0].timestamp.at(-1);
-    today.chart.result[0].meta.chartPreviousClose = fixture.close[0];
-    const history = chart([], []);
-    const { fetchYahooQuoteChart } = await import('../scripts/_yahoo-fetch.mjs');
-    const cron = await fetchYahooQuoteChart('USDTRY=X', {
-      fetchJson: async (url) => structuredClone(url.endsWith(SPARKLINE_HISTORY_QUERY) ? history : today),
-      delayMs: 0, sparklineWindow: true,
-    });
-    const source = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
-    const start = source.indexOf('const _sparklineHistories');
-    const end = source.indexOf('function fetchYahooChartDirect(');
-    assert.ok(start > 0 && end > start);
-    const commoditySparkline = Function(
-      '_fetchYahooChartOnce', 'sleep', 'SPARKLINE_HISTORY_QUERY', 'SPARKLINE_HISTORY_RETRY_SECONDS', 'buildQuoteSparkline', 'logThrottled',
-      `${source.slice(start, end)}\nreturn _commoditySparkline;`,
-    )(async () => ({ chart: history }), async () => {}, SPARKLINE_HISTORY_QUERY, SPARKLINE_HISTORY_RETRY_SECONDS, buildQuoteSparkline, () => {});
-    const relay = await commoditySparkline('USDTRY=X', { chart: today, lastTradeAt: today.chart.result[0].meta.regularMarketTime });
-    assert.deepEqual(cron.sparkline, relay.sparkline);
-    assert.ok(!cron.sparkline.includes(50.131));
-    assert.equal(cron.sparkline.at(-1), fixture.close.at(-1));
-  });
 });
 
 describe('the cron seeder caches the history chart per session', () => {
@@ -513,20 +466,6 @@ describe('history caches need a session to key on', () => {
     assert.equal(urls.filter((u) => u.endsWith(SPARKLINE_HISTORY_QUERY)).length, 2);
     assert.equal(store.size, 0, 'nothing cached under an undefined session');
   });
-
-  it('the relay never reuses history when the quote has no session time', async () => {
-    const source = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
-    const start = source.indexOf('const _sparklineHistories');
-    const end = source.indexOf('function fetchYahooChartDirect(');
-    const calls = [];
-    const commoditySparkline = Function(
-      '_fetchYahooChartOnce', 'sleep', 'SPARKLINE_HISTORY_QUERY', 'SPARKLINE_HISTORY_RETRY_SECONDS', 'buildQuoteSparkline', 'logThrottled',
-      `${source.slice(start, end)}\nreturn _commoditySparkline;`,
-    )(async (_s, q) => { calls.push(q); return { chart: structuredClone(history) }; }, async () => {}, SPARKLINE_HISTORY_QUERY, SPARKLINE_HISTORY_RETRY_SECONDS, buildQuoteSparkline, () => {});
-    await commoditySparkline('BZ=F', { chart: undated(), lastTradeAt: undefined });
-    await commoditySparkline('BZ=F', { chart: undated(), lastTradeAt: undefined });
-    assert.equal(calls.length, 2);
-  });
 });
 
 describe('a failed history request backs off instead of retrying every cycle', () => {
@@ -569,32 +508,6 @@ describe('a failed history request backs off instead of retrying every cycle', (
     refuse = false;
     const recovered = await run();
     assert.equal(historyRequests(), 2, 'after the back-off the request is made again');
-    assert.equal(recovered.sparkline.length, SPARKLINE_WINDOW_SECONDS / SPARKLINE_INTERVAL_SECONDS);
-  });
-
-  it('the relay skips the history request for a while after it fails', async (t) => {
-    t.mock.timers.enable({ apis: ['Date'], now: T0 * 1000 });
-    const source = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
-    const start = source.indexOf('const _sparklineHistories');
-    const end = source.indexOf('function fetchYahooChartDirect(');
-    let refuse = true;
-    const calls = [];
-    const commoditySparkline = Function(
-      '_fetchYahooChartOnce', 'sleep', 'SPARKLINE_HISTORY_QUERY', 'SPARKLINE_HISTORY_RETRY_SECONDS', 'buildQuoteSparkline', 'logThrottled',
-      `${source.slice(start, end)}\nreturn _commoditySparkline;`,
-    )(async (_s, q) => { calls.push(q); return refuse ? null : { chart: structuredClone(history) }; }, async () => {}, SPARKLINE_HISTORY_QUERY, SPARKLINE_HISTORY_RETRY_SECONDS, buildQuoteSparkline, () => {});
-    const quote = { chart: today, lastTradeAt: T0 + 52 * MINUTE };
-
-    await commoditySparkline('BZ=F', quote);
-    t.mock.timers.tick(5 * MINUTE * 1000);
-    const backedOff = await commoditySparkline('BZ=F', quote);
-    assert.equal(calls.length, 1, 'the next cycle does not ask again');
-    assert.equal(backedOff.sparklineStartAt, T0 * 1000, 'today\'s bars still publish');
-
-    refuse = false;
-    t.mock.timers.tick(SPARKLINE_HISTORY_RETRY_SECONDS * 1000);
-    const recovered = await commoditySparkline('BZ=F', quote);
-    assert.equal(calls.length, 2, 'after the back-off the request is made again');
     assert.equal(recovered.sparkline.length, SPARKLINE_WINDOW_SECONDS / SPARKLINE_INTERVAL_SECONDS);
   });
 });

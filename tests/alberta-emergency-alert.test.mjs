@@ -33,7 +33,7 @@ const FIXTURE_PATH = join(root, 'tests/fixtures/alberta-emergency-alert.atom');
 // Captured 2026-08-13 from AEA_ATOM_URL with CHROME_UA (Chrome/134). HTTP 200 application/atom+xml.
 const FIXTURE = readFileSync(FIXTURE_PATH, 'utf8');
 const SEEDER_SOURCE = readFileSync(join(root, 'scripts/seed-alberta-emergency-alert.mjs'), 'utf8');
-const RELAY_SOURCE = readFileSync(join(root, 'scripts/ais-relay.cjs'), 'utf8');
+const RELAY_SOURCE = readFileSync(join(root, 'scripts/personal-providers.cjs'), 'utf8');
 const LIB_SOURCE = readFileSync(join(root, 'scripts/lib/alberta-emergency-alert.mjs'), 'utf8');
 
 function atomResponse(body, { status = 200, headers = {} } = {}) {

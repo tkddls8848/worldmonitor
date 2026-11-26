@@ -10,7 +10,7 @@
 // Three things this exists to fix:
 //
 // 1. A REFUSED CREDENTIAL used to be indistinguishable from a transient
-//    handshake failure. `ais-relay.cjs` only special-cased 429, so a revoked or
+//    handshake failure. `personal-providers.cjs` only special-cased 429, so a revoked or
 //    malformed AISSTREAM_API_KEY walked the ordinary ladder forever — knocking on
 //    a provider that had already said no, ~288 times a day. An auth rejection is
 //    now TERMINAL: only valid data or a credential change leaves it, and the slow

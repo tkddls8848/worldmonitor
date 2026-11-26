@@ -165,7 +165,7 @@
     "legal:pdfs:check": "node scripts/build-legal-pdfs.mjs --check",
     "docs:dates": "node scripts/generate-docs-page-dates.mjs",
     "docs:dates:check": "node scripts/generate-docs-page-dates.mjs --check",
-    "test:api": "node --test api/_cors.test.mjs api/bootstrap-auth.test.mjs api/bootstrap-cors.test.mjs api/health-cors.test.mjs api/youtube/embed.test.mjs api/miit-news.test.mjs api/rss-proxy.test.mjs api/rss-proxy-body.test.mjs scripts/ais-relay-rss.test.cjs scripts/ais-relay-ingestion.test.cjs scripts/ais-relay-entity-decode.test.cjs scripts/ais-relay-seed-fetchedat.test.cjs scripts/ais-relay-ais-gaps.test.cjs scripts/ais-relay-opensky-shared-cooldown.test.cjs api/loaders-xml-wms-regression.test.mjs"
+    "test:api": "node --test api/_cors.test.mjs api/bootstrap-auth.test.mjs api/bootstrap-cors.test.mjs api/health-cors.test.mjs api/youtube/embed.test.mjs api/miit-news.test.mjs api/rss-proxy.test.mjs api/rss-proxy-body.test.mjs scripts/ais-relay-rss.test.cjs scripts/ais-relay-ingestion.test.cjs scripts/ais-relay-entity-decode.test.cjs scripts/ais-relay-ais-gaps.test.cjs scripts/ais-relay-opensky-shared-cooldown.test.cjs api/loaders-xml-wms-regression.test.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
@@ -247,7 +247,6 @@
     "satellite.js": "^6.0.2",
     "stream-json": "file:vendor/stream-json",
     "supercluster": "^8.0.1",
-    "telegram": "^2.26.22",
     "topojson-client": "^3.1.0",
     "undici": "8.12.3",
     "uqr": "^0.1.2",

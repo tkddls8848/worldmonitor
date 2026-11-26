@@ -289,7 +289,7 @@ describe('VIA Rail live registration (no bootstrap / seeder import / ais-relay)'
     assert.doesNotMatch(seeder, /ais-relay/);
     assert.doesNotMatch(parser, /ais-relay/);
 
-    const relay = read('scripts/ais-relay.cjs');
+    const relay = read('scripts/personal-providers.cjs');
     assert.doesNotMatch(relay, /viarail|tsimobile\.viarail\.ca/);
   });
 

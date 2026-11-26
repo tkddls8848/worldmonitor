@@ -347,9 +347,9 @@ globalThis.fetch = async function ipv4Fetch(input, init) {
 const ALLOWED_ENV_KEYS = new Set([
   'OPENROUTER_API_KEY', 'EXA_API_KEYS', 'BRAVE_API_KEYS', 'SERPAPI_API_KEYS', 'FRED_API_KEY', 'EIA_API_KEY',
   'CLOUDFLARE_API_TOKEN', 'ACLED_ACCESS_TOKEN', 'URLHAUS_AUTH_KEY',
-  'OTX_API_KEY', 'ABUSEIPDB_API_KEY', 'WINGBITS_API_KEY', 'WS_RELAY_URL',
-  'VITE_OPENSKY_RELAY_URL', 'OPENSKY_CLIENT_ID', 'OPENSKY_CLIENT_SECRET',
-  'AISSTREAM_API_KEY', 'VITE_WS_RELAY_URL', 'FINNHUB_API_KEY', 'ALPHA_VANTAGE_API_KEY', 'NASA_FIRMS_API_KEY',
+  'OTX_API_KEY', 'ABUSEIPDB_API_KEY', 'WINGBITS_API_KEY',
+   'OPENSKY_CLIENT_ID', 'OPENSKY_CLIENT_SECRET',
+  'AISSTREAM_API_KEY',  'FINNHUB_API_KEY', 'ALPHA_VANTAGE_API_KEY', 'NASA_FIRMS_API_KEY',
   'OLLAMA_API_URL', 'OLLAMA_MODEL', 'WORLDMONITOR_API_KEY', 'WTO_API_KEY',
   'ICAO_API_KEY', 'UCDP_ACCESS_TOKEN',
 ]);
@@ -804,67 +804,6 @@ function toHeaders(nodeHeaders, options = {}) {
   return headers;
 }
 
-// Desktop builds once forwarded a signed-in user's bearer under this header.
-// Sign-in is gone; the header is stripped on every hop and never forwarded.
-const CLOUD_USER_AUTHORIZATION_HEADER = 'x-worldmonitor-user-authorization';
-
-// The cloud edge 403s missing, short, and library user agents. The renderer's
-// hop arrives through Rust with none, and a WebView UA would misreport the caller.
-function cloudUserAgent() {
-  return `WorldMonitor-Desktop/${process.env.LOCAL_API_APP_VERSION || 'unknown'} (sidecar)`;
-}
-
-function cloudUrl(remoteBase, pathname) {
-  const target = new URL(remoteBase);
-  target.pathname = `${target.pathname.replace(/\/$/, '')}${pathname}`;
-  return target;
-}
-
-async function proxyToCloud(requestUrl, req, context) {
-  const deadline = AbortSignal.timeout(CLOUD_PROXY_TIMEOUT_MS);
-  const target = cloudUrl(context.remoteBase, requestUrl.pathname);
-  target.search = requestUrl.search;
-  const body = ['GET', 'HEAD'].includes(req.method) ? undefined : await readBody(req);
-  const headers = toHeaders(req.headers, { stripOrigin: true });
-  headers.delete(LOCAL_API_TRANSPORT_HEADER);
-  // Strip sidecar auth token — meaningless to cloud API.
-  headers.delete('Authorization');
-  // Never forward an operator's proxy cookies to the cloud.
-  headers.delete('Cookie');
-  headers.delete(CLOUD_USER_AUTHORIZATION_HEADER);
-  headers.set('User-Agent', cloudUserAgent());
-  // Strip conditional headers so cloud always returns fresh 200, not 304.
-  // The browser may have stale ETags from previous sessions with empty data.
-  headers.delete('If-None-Match');
-  headers.delete('If-Modified-Since');
-  // Identify sidecar as trusted origin so the cloud API key validator
-  // doesn't reject the request (no origin + no key = 401).
-  headers.set('Origin', 'https://worldmonitor.app');
-  // Inject the configured enterprise key for cloud calls that pass through the
-  // sidecar so auth-gated endpoints (e.g. /api/mcp-proxy per PR #3768, issue
-  // #3723) succeed without each renderer call having to attach it. Renderer-
-  // supplied X-WorldMonitor-Key (e.g. a wm_ user key from runtime config) wins
-  // — don't clobber it.
-  if (!headers.has('X-WorldMonitor-Key')) {
-    const wmKey = process.env.WORLDMONITOR_API_KEY;
-    if (wmKey) headers.set('X-WorldMonitor-Key', wmKey);
-  }
-  const clientAbort = new AbortController();
-  const onClientClose = () => clientAbort.abort();
-  req.socket.once('close', onClientClose);
-  if (req.socket.destroyed) clientAbort.abort();
-  try {
-    return await fetch(target, {
-      method: req.method,
-      headers,
-      body,
-      signal: AbortSignal.any([clientAbort.signal, deadline]),
-    });
-  } finally {
-    req.socket.off('close', onClientClose);
-  }
-}
-
 const CLIENT_LIMIT_MAX_KEYS = 10_000;
 
 // nginx sets X-Real-IP from the connection (or a trusted proxy's header), so
@@ -917,226 +856,6 @@ function pickModule(pathname, routes) {
 const moduleCache = new Map();
 const failedImports = new Set();
 const fallbackCounts = new Map();
-const cloudPreferred = new Set();
-
-// Routes/prefixes that should always proxy to cloud. The sidecar lacks
-// WS_RELAY_URL (Yahoo/Finnhub relay) and seeded Redis data. These routes
-// return 200-with-empty-data locally, so normal cloudFallback won't trigger.
-//
-// `/api/market/v1/` covers ListMarketQuotes, so the desktop app gets the same
-// seed-first contract as the web dashboard — including custom watchlist
-// symbols resolved through the cloud provider adapter (#6305). Serving it
-// locally would find no seed snapshot and report every symbol unavailable.
-const cloudPreferredPrefixes = !process.env.WS_RELAY_URL
-  ? [
-    '/api/market/v1/',
-    '/api/economic/v1/',
-    '/api/infrastructure/v1/',
-    '/api/news/v1/',
-    '/api/research/v1/',
-  ]
-  : [];
-// These routes read seed-owned Redis snapshots that the local sidecar does not
-// hold. They must stay cloud-preferred even when a desktop configures WS relay;
-// relay availability does not provide Upstash credentials to local handlers.
-// Seed-only RPC routes in families that also have live handlers (#5906); the
-// whole-family cases are in cloudPreferredSeedOnlyPrefixes below.
-// tests/sidecar-cloud-preferred-seed-only.test.mjs derives this set from the
-// generated route tables and fails when an entry is not a real RPC path, when
-// its handler reaches an upstream itself, or when a seed-only route is missing.
-const cloudPreferredExact = new Set([
-  '/api/cyber/v1/list-cyber-threats',
-  '/api/maritime/v1/list-ukmto-incidents',
-  '/api/bootstrap',
-  '/api/displacement/v1/get-displacement-summary',
-  '/api/displacement/v1/get-internal-displacement',
-  '/api/displacement/v1/get-cross-border-movements',
-  '/api/economic/v1/get-bis-credit',
-  '/api/economic/v1/get-bis-exchange-rates',
-  '/api/economic/v1/get-bis-policy-rates',
-  '/api/economic/v1/get-bls-series',
-  '/api/economic/v1/get-capital-flows',
-  '/api/economic/v1/get-china-macro-snapshot',
-  '/api/economic/v1/get-crude-inventories',
-  '/api/economic/v1/get-ecb-fx-rates',
-  '/api/economic/v1/get-economic-calendar',
-  '/api/economic/v1/get-economic-stress',
-  '/api/economic/v1/get-energy-capacity',
-  '/api/economic/v1/get-energy-crisis-policies',
-  '/api/economic/v1/get-energy-prices',
-  '/api/economic/v1/get-eu-fsi',
-  '/api/economic/v1/get-eu-gas-storage',
-  '/api/economic/v1/get-eu-yield-curve',
-  '/api/economic/v1/get-eurostat-country-data',
-  '/api/economic/v1/get-fao-food-price-index',
-  '/api/economic/v1/get-food-prices',
-  '/api/economic/v1/get-fred-series',
-  '/api/economic/v1/get-fred-series-batch',
-  '/api/economic/v1/get-government-yield-curve',
-  '/api/economic/v1/get-macro-signals',
-  '/api/economic/v1/get-nat-gas-storage',
-  '/api/economic/v1/get-national-debt',
-  '/api/economic/v1/get-no2-activity',
-  '/api/economic/v1/get-oil-inventories',
-  '/api/economic/v1/get-oil-stocks-analysis',
-  '/api/economic/v1/get-us-cpi-monthly',
-  '/api/economic/v1/get-us-interest-rates',
-  '/api/economic/v1/get-us-treasury-par-yield-curve',
-  '/api/economic/v1/get-world-cpi-monthly',
-  '/api/economic/v1/list-fuel-prices',
-  '/api/economic/v1/list-global-tenders',
-  '/api/economic/v1/list-grocery-basket-prices',
-  '/api/forecast/v1/get-forecasts',
-  '/api/forecast/v1/get-simulation-outcome',
-  '/api/forecast/v1/get-simulation-package',
-  '/api/infrastructure/v1/get-bootstrap-data',
-  '/api/infrastructure/v1/get-temporal-baseline',
-  '/api/infrastructure/v1/list-internet-ddos-attacks',
-  '/api/infrastructure/v1/list-internet-outages',
-  '/api/infrastructure/v1/list-internet-traffic-anomalies',
-  '/api/infrastructure/v1/list-temporal-anomalies',
-  '/api/intelligence/v1/compute-energy-shock',
-  '/api/intelligence/v1/get-china-decision-signals',
-  '/api/intelligence/v1/get-country-energy-profile',
-  '/api/intelligence/v1/get-country-history',
-  '/api/intelligence/v1/get-country-port-activity',
-  '/api/intelligence/v1/get-country-risk',
-  '/api/intelligence/v1/get-gdelt-topic-timeline',
-  '/api/intelligence/v1/get-pizzint-status',
-  '/api/intelligence/v1/get-regional-brief',
-  '/api/intelligence/v1/get-regional-snapshot',
-  '/api/intelligence/v1/get-social-velocity',
-  '/api/intelligence/v1/list-cross-source-signals',
-  '/api/intelligence/v1/list-gps-interference',
-  '/api/intelligence/v1/list-market-implications',
-  '/api/intelligence/v1/list-material-events',
-  '/api/intelligence/v1/list-satellites',
-  '/api/intelligence/v1/list-security-advisories',
-  '/api/intelligence/v1/list-wsb-tickers',
-  '/api/market/v1/get-cot-positioning',
-  '/api/market/v1/get-fear-greed-index',
-  '/api/market/v1/get-gold-intelligence',
-  '/api/market/v1/get-hyperliquid-flow',
-  '/api/market/v1/get-market-breadth-history',
-  '/api/market/v1/get-physical-divergence-index',
-  '/api/market/v1/get-physical-premiums',
-  '/api/market/v1/get-sector-summary',
-  '/api/market/v1/list-ai-tokens',
-  '/api/market/v1/list-commodity-quotes',
-  '/api/market/v1/list-crypto-sectors',
-  '/api/market/v1/list-defi-tokens',
-  '/api/market/v1/list-earnings-calendar',
-  '/api/market/v1/list-etf-flows',
-  '/api/market/v1/list-gulf-quotes',
-  '/api/market/v1/list-other-tokens',
-  '/api/military/v1/get-defense-industrial-base',
-  '/api/military/v1/get-theater-posture',
-  '/api/military/v1/get-usni-fleet-report',
-  '/api/news/v1/list-news-pool',
-  '/api/news/v1/list-source-items',
-  '/api/news/v1/summarize-article-cache',
-  '/api/research/v1/list-arxiv-papers',
-  '/api/research/v1/list-hackernews-items',
-  '/api/research/v1/list-trending-repos',
-  '/api/resilience/v1/get-demographics-capability',
-  '/api/resilience/v1/get-food-stocks',
-  '/api/resilience/v1/get-runtime-manifest',
-  '/api/scenario/v1/get-scenario-status',
-  '/api/supply-chain/v1/get-bypass-options',
-  '/api/supply-chain/v1/get-chokepoint-dependencies',
-  '/api/supply-chain/v1/get-chokepoint-history',
-  '/api/supply-chain/v1/get-country-vulnerabilities',
-  '/api/supply-chain/v1/get-fuel-shortage-detail',
-  '/api/supply-chain/v1/get-mineral-production',
-  '/api/supply-chain/v1/get-multi-sector-cost-shock',
-  '/api/supply-chain/v1/get-pipeline-detail',
-  '/api/supply-chain/v1/get-shipping-rates',
-  '/api/supply-chain/v1/get-shipping-stress',
-  '/api/supply-chain/v1/get-storage-facility-detail',
-  '/api/supply-chain/v1/list-energy-disruptions',
-  '/api/supply-chain/v1/list-fuel-shortages',
-  '/api/supply-chain/v1/list-pipelines',
-  '/api/supply-chain/v1/list-storage-facilities',
-  '/api/supply-chain/v1/list-vulnerability-rankings',
-  '/api/trade/v1/get-customs-revenue',
-  '/api/trade/v1/get-tariff-trends',
-  '/api/trade/v1/get-trade-barriers',
-  '/api/trade/v1/get-trade-flows',
-  '/api/trade/v1/get-trade-restrictions',
-  '/api/trade/v1/list-comtrade-flows',
-  '/api/v2/shipping/route-intelligence',
-  '/api/webcam/v1/list-webcams',
-]);
-// Route families whose EVERY handler only reads seed-owned Redis (#5906). The
-// sidecar never holds Upstash credentials (UPSTASH_* is not in
-// ALLOWED_ENV_KEYS), a Redis miss degrades to an empty 200, and an empty 200
-// never trips the `!response.ok` cloud fallback — so served locally these
-// families render blank panels with no error anywhere. Always cloud,
-// WS_RELAY_URL or not. A family that gains a live handler moves to exact
-// entries; the contract test above enforces that.
-const cloudPreferredSeedOnlyPrefixes = [
-  '/api/climate/v1/',
-  '/api/conflict/v1/',
-  '/api/consumer-prices/v1/',
-  '/api/health/v1/',
-  '/api/natural/v1/',
-  '/api/orbital/v1/',
-  '/api/positive-events/v1/',
-  '/api/prediction/v1/',
-  '/api/radiation/v1/',
-  '/api/safety/v1/',
-  '/api/sanctions/v1/',
-  '/api/seismology/v1/',
-  '/api/thermal/v1/',
-  '/api/unrest/v1/',
-  '/api/world-overview/v1/',
-  '/api/wildfire/v1/',
-];
-const cloudPreferredAlwaysPrefixes = ['/api/scorecard/v1/'];
-// Routes whose answer lives in cloud-only state: cross-user aggregates and the
-// security-report sink. The sidecar holds none of it, so served locally
-// they answer 5xx or empty. Until #9906 they reached the cloud only by accident:
-// a static Upstash import kept them from loading on desktop at all.
-// reverse-geocode belongs here too: its shared Nominatim limiter fails closed
-// without Upstash (503 locally), and its geocode cache is the cloud's Redis.
-// Cyber network enrichment also needs cloud authorization and shared budgets.
-const cloudPreferredServerStateRoutes = new Set([
-  '/api/cyber/v1/get-network-info',
-  '/api/reverse-geocode',
-  '/api/security/report',
-]);
-
-// Versioned route families (api/v{N}/{domain}) the desktop deliberately never
-// bundles — scripts/build-sidecar-handlers.mjs refuses to build an undeclared
-// one, and its CLOUD_ONLY_ROUTE_FAMILIES must list exactly these (#5907).
-// Routed to the cloud on purpose, WS_RELAY_URL or not: route-intelligence reads
-// seed-owned Redis (empty 200 locally, so `!ok` fallback never fires). The
-// webhook RPCs are retired (410). With no remote configured nothing is proxied.
-// Before this list the family reached the cloud only via the 404 "handler
-// missing" fallback — undeclared, and invisible when cloudFallback is off.
-const cloudOnlyRouteFamilyPrefixes = ['/api/v2/shipping/'];
-
-function isCloudPreferred(pathname) {
-  if (cloudPreferred.has(pathname)) return true;
-  if (cloudPreferredExact.has(pathname)) return true;
-  if (cloudPreferredServerStateRoutes.has(pathname)) return true;
-  return cloudPreferredAlwaysPrefixes.some(p => pathname.startsWith(p))
-    || cloudPreferredSeedOnlyPrefixes.some(p => pathname.startsWith(p))
-    || cloudOnlyRouteFamilyPrefixes.some(p => pathname.startsWith(p))
-    || cloudPreferredPrefixes.some(p => pathname.startsWith(p));
-}
-
-async function isLocalOnlyRequest(req, pathname) {
-  if (req.method !== 'POST' || pathname !== '/api/news/v1/summarize-article') return false;
-  const body = await readBody(req);
-  if (!body?.length) return false;
-  try {
-    const parsed = JSON.parse(body.toString('utf8'));
-    return parsed?.provider === 'ollama' && parsed?.mode === 'translate';
-  } catch {
-    return false;
-  }
-}
 
 const TRAFFIC_LOG_MAX = 200;
 const trafficLog = [];
@@ -1189,25 +908,15 @@ async function importHandler(modulePath) {
     moduleCache.set(modulePath, mod);
     return mod;
   } catch (error) {
-    if (error.code === 'ERR_MODULE_NOT_FOUND') {
+    if (error.code === 'ERR_MODULE_NOT_FOUND' || error.code === 'MODULE_NOT_FOUND') {
       failedImports.add(modulePath);
     }
     throw error;
   }
 }
 
-function remoteBaseLooksPrivate(remoteBase) {
-  let parsed;
-  try { parsed = new URL(remoteBase); } catch { return false; }
-  const hostname = parsed.hostname.replace(/^\[|\]$/g, '');
-  if (hostname === 'localhost') return true;
-  if (isIP(hostname)) return isPrivateIP(hostname);
-  return false;
-}
-
 function resolveConfig(options = {}) {
   const port = Number(options.port ?? process.env.LOCAL_API_PORT ?? 46123);
-  const remoteBase = String(options.remoteBase ?? process.env.LOCAL_API_REMOTE_BASE ?? '').replace(/\/$/, '');
   const resourceDir = String(options.resourceDir ?? process.env.LOCAL_API_RESOURCE_DIR ?? process.cwd());
   const apiDir = options.apiDir
     ? String(options.apiDir)
@@ -1216,12 +925,7 @@ function resolveConfig(options = {}) {
       path.join(resourceDir, '_up_', 'api'),
     ].find((candidate) => existsSync(candidate)) ?? path.join(resourceDir, 'api');
   const dataDir = String(options.dataDir ?? process.env.LOCAL_API_DATA_DIR ?? resourceDir);
-  const mode = String(options.mode ?? process.env.LOCAL_API_MODE ?? 'desktop-sidecar');
-  const requestedFallback = String(options.cloudFallback ?? process.env.LOCAL_API_CLOUD_FALLBACK ?? '') === 'true';
-  // No remote is configured by default: without one there is nothing to fall back to.
-  const cloudFallback = mode === 'docker' || !remoteBase ? false : requestedFallback;
-  // Programmatic dev/test escape hatch only; CLI/env startup keeps private remoteBase blocked.
-  const allowPrivateRemoteBase = options.allowPrivateRemoteBase === true;
+  const mode = String(options.mode ?? 'desktop-sidecar');
   // Programmatic-only test escape hatch for adding extra origins to the
   // private-fetch allowlist (e.g. distinct upstream test servers). Mirrors
   // allowPrivateRemoteBase: no env-var path, so production startup can't
@@ -1230,26 +934,14 @@ function resolveConfig(options = {}) {
     ? options.allowPrivateFetchOrigins.filter((o) => typeof o === 'string' && o.length > 0)
     : [];
   const logger = options.logger ?? console;
-  if (mode === 'docker' && requestedFallback) {
-    logger.warn('[local-api] Cloud fallback disabled in Docker mode');
-  }
-  if (cloudFallback && !allowPrivateRemoteBase && remoteBaseLooksPrivate(remoteBase)) {
-    logger.warn(
-      `[local-api] cloudFallback enabled but remoteBase=${remoteBase} is private/loopback; ` +
-      'requests will be blocked by SSRF protection. Pass allowPrivateRemoteBase=true programmatically for dev/test.'
-    );
-  }
 
   return {
     port,
-    remoteBase,
     resourceDir,
     dataDir,
     apiDir,
     mode,
-    cloudFallback,
     rssProxyLimits: new Map(),
-    allowPrivateRemoteBase,
     allowPrivateFetchOrigins,
     logger,
   };
@@ -1264,59 +956,12 @@ async function handleLocalServiceStatus(context) {
   return json({
     success: true,
     timestamp: new Date().toISOString(),
-    summary: { operational: 2, degraded: 0, outage: 0, unknown: 0 },
+    summary: { operational: 1, degraded: 0, outage: 0, unknown: 0 },
     services: [
-      { id: 'local-api', name: 'Local Desktop API', category: 'dev', status: 'operational', description: `Running on 127.0.0.1:${context.port}` },
-      { id: 'cloud-pass-through', name: 'Cloud pass-through', category: 'cloud', status: 'operational', description: `Fallback target ${context.remoteBase}` },
+      { id: 'local-api', name: 'Personal API', category: 'dev', status: 'operational', description: `Running on 127.0.0.1:${context.port}` },
     ],
-    local: { enabled: true, mode: context.mode, port: context.port, remoteBase: context.remoteBase },
+    local: { enabled: true, mode: context.mode, port: context.port },
   });
-}
-
-function startCloudRequestLog() {
-  const startedAt = Date.now();
-  const load = `upstream ${_activeUpstream}/${MAX_CONCURRENT_UPSTREAM} active, ${_upstreamQueue.length} queued`;
-  return {
-    prefix: `[local-api] ${new Date(startedAt).toISOString()}`,
-    timing: () => `in ${Date.now() - startedAt}ms (${load})`,
-  };
-}
-
-async function tryCloudFallback(requestUrl, req, context, reason) {
-  const { prefix, timing } = startCloudRequestLog();
-  if (reason) {
-    const route = requestUrl.pathname;
-    const count = (fallbackCounts.get(route) || 0) + 1;
-    fallbackCounts.set(route, count);
-    if (count === 1) {
-      const brief = reason instanceof Error
-        ? (reason.code === 'ERR_MODULE_NOT_FOUND' ? 'missing npm dependency' : reason.message)
-        : reason;
-      context.logger.warn(`${prefix} ${route} → cloud (${brief})`);
-    } else if (count === 5 || count % 100 === 0) {
-      context.logger.warn(`${prefix} ${route} → cloud x${count}`);
-    }
-  }
-  try {
-    const resp = await proxyToCloud(requestUrl, req, context);
-    if (!resp.ok) {
-      context.logger.warn(`${prefix} cloud returned ${resp.status} for ${requestUrl.pathname} ${timing()}`);
-    }
-    return resp;
-  } catch (error) {
-    if (error?.code === 'ERR_SSRF_BLOCKED') {
-      // error.message already carries "SSRF blocked: <reason> (url=<redacted>)".
-      // Surface the actionable remediation so a misconfigured LOCAL_API_REMOTE_BASE
-      // doesn't read as a vague 5xx.
-      context.logger.error(
-        `[local-api] cloud fallback blocked by SSRF protection for ${requestUrl.pathname}: ${error.message}. ` +
-        'If remoteBase intentionally points at a private/loopback host, pass allowPrivateRemoteBase=true programmatically.'
-      );
-    } else {
-      context.logger.error(`${prefix} cloud fallback failed for ${requestUrl.pathname} ${timing()}`, error);
-    }
-    return null;
-  }
 }
 
 const SIDECAR_ALLOWED_ORIGINS = [
@@ -1446,17 +1091,6 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 12000) {
   const requestOptions = { ...fetchOptions, headers: fetchHeaders, signal };
   if (allowPrivateNetwork) requestOptions[ALLOW_PRIVATE_NETWORK_FETCH] = true;
   return fetch(fetchUrl, requestOptions);
-}
-
-function relayToHttpUrl(rawUrl) {
-  try {
-    const parsed = new URL(rawUrl);
-    if (parsed.protocol === 'ws:') parsed.protocol = 'http:';
-    if (parsed.protocol === 'wss:') parsed.protocol = 'https:';
-    return parsed.toString().replace(/\/$/, '');
-  } catch {
-    return null;
-  }
 }
 
 function isAuthFailure(status, text = '') {
@@ -1704,16 +1338,6 @@ async function validateSecretAgainstProvider(key, rawValue, context = {}) {
     case 'OLLAMA_MODEL':
       return ok('Model name stored');
 
-    case 'WS_RELAY_URL':
-    case 'VITE_WS_RELAY_URL':
-    case 'VITE_OPENSKY_RELAY_URL': {
-      const probeUrl = relayToHttpUrl(value);
-      if (!probeUrl) return fail('Relay URL is invalid');
-      const response = await fetchWithTimeout(probeUrl, { method: 'GET' });
-      if (response.status >= 500) return fail(`Relay probe failed (${response.status})`);
-      return ok('Relay URL is reachable');
-    }
-
     case 'OPENSKY_CLIENT_ID':
     case 'OPENSKY_CLIENT_SECRET': {
       const contextClientId = typeof context.OPENSKY_CLIENT_ID === 'string' ? context.OPENSKY_CLIENT_ID.trim() : '';
@@ -1872,8 +1496,6 @@ async function dispatch(requestUrl, req, routes, context) {
       mode: context.mode,
       port: context.port,
       apiDir: context.apiDir,
-      remoteBase: context.remoteBase,
-      cloudFallback: context.cloudFallback,
       routes: routes.length,
     });
   }
@@ -2028,7 +1650,6 @@ async function dispatch(requestUrl, req, routes, context) {
             }
             moduleCache.clear();
             failedImports.clear();
-            cloudPreferred.clear();
             return json({ ok: true, key });
           }
           return json({ error: 'key not in allowlist' }, 403);
@@ -2065,7 +1686,6 @@ async function dispatch(requestUrl, req, routes, context) {
       if (results.some(r => r.ok)) {
         moduleCache.clear();
         failedImports.clear();
-        cloudPreferred.clear();
       }
       return json({ ok: true, results });
     } catch { /* bad JSON */ }
@@ -2091,20 +1711,8 @@ async function dispatch(requestUrl, req, routes, context) {
     }
   }
 
-  const localOnly = await isLocalOnlyRequest(req, requestUrl.pathname);
-  const cloudPreferredAttempted = !localOnly && context.cloudFallback && isCloudPreferred(requestUrl.pathname);
-  if (cloudPreferredAttempted) {
-    const cloudResponse = await tryCloudFallback(requestUrl, req, context, 'cloud-preferred');
-    if (cloudResponse) return cloudResponse;
-  }
-  const allowCloudFallback = !localOnly && context.cloudFallback && !cloudPreferredAttempted;
-
   const modulePath = pickModule(requestUrl.pathname, routes);
   if (!modulePath || !existsSync(modulePath)) {
-    if (allowCloudFallback) {
-      const cloudResponse = await tryCloudFallback(requestUrl, req, context, 'handler missing');
-      if (cloudResponse) return cloudResponse;
-    }
     logOnce(context.logger, requestUrl.pathname, 'no local handler');
     return json({ error: 'No local handler for this endpoint', endpoint: requestUrl.pathname }, 404);
   }
@@ -2113,10 +1721,6 @@ async function dispatch(requestUrl, req, routes, context) {
     const mod = await importHandler(modulePath);
     if (typeof mod.default !== 'function') {
       logOnce(context.logger, requestUrl.pathname, 'invalid handler module');
-      if (allowCloudFallback) {
-        const cloudResponse = await tryCloudFallback(requestUrl, req, context, `invalid handler module`);
-        if (cloudResponse) return cloudResponse;
-      }
       return json({ error: 'Invalid handler module', endpoint: requestUrl.pathname }, 500);
     }
 
@@ -2135,7 +1739,7 @@ async function dispatch(requestUrl, req, routes, context) {
     // not expose it to route handlers, where Authorization is caller identity
     // (OAuth bearer) and X-WorldMonitor-Key is the caller's API key.
     hdrs.delete(LOCAL_API_TRANSPORT_HEADER);
-    hdrs.delete(CLOUD_USER_AUTHORIZATION_HEADER);
+    hdrs.delete('x-worldmonitor-user-authorization');
     if (hdrs.get('Authorization') === `Bearer ${expectedToken}`) {
       hdrs.delete('Authorization');
     }
@@ -2148,26 +1752,13 @@ async function dispatch(requestUrl, req, routes, context) {
     const response = await mod.default(request);
     if (!(response instanceof Response)) {
       logOnce(context.logger, requestUrl.pathname, 'handler returned non-Response');
-      if (allowCloudFallback) {
-        const cloudResponse = await tryCloudFallback(requestUrl, req, context, 'handler returned non-Response');
-        if (cloudResponse) return cloudResponse;
-      }
       return json({ error: 'Handler returned invalid response', endpoint: requestUrl.pathname }, 500);
-    }
-
-    if (!response.ok && allowCloudFallback) {
-      const cloudResponse = await tryCloudFallback(requestUrl, req, context, `local status ${response.status}`);
-      if (cloudResponse) { cloudPreferred.add(requestUrl.pathname); return cloudResponse; }
     }
 
     return response;
   } catch (error) {
     const reason = error.code === 'ERR_MODULE_NOT_FOUND' ? 'missing dependency' : error.message;
     logOnce(context.logger, requestUrl.pathname, reason);
-    if (allowCloudFallback) {
-      const cloudResponse = await tryCloudFallback(requestUrl, req, context, error);
-      if (cloudResponse) { cloudPreferred.add(requestUrl.pathname); return cloudResponse; }
-    }
     return json({ error: 'Local handler error', reason, endpoint: requestUrl.pathname }, 502);
   }
 }
@@ -2176,7 +1767,6 @@ async function dispatch(requestUrl, req, routes, context) {
 // test doesn't have to wait out the real production values.
 // Production code never calls this.
 export const __testing__ = {
-  isCloudPreferred,
   canCompress,
   jsonForScript,
   isYahooFinanceHost,
@@ -2215,6 +1805,17 @@ export async function createLocalApiServer(options = {}) {
       res.writeHead(404, { 'content-type': 'application/json', ...makeCorsHeaders(req) });
       res.end(JSON.stringify({ error: 'Not found' }));
       return;
+    }
+
+    if (requestUrl.pathname.startsWith('/api/local-providers/')) {
+      if (!tokenMatches(req.headers[LOCAL_API_TRANSPORT_HEADER], process.env.LOCAL_API_TOKEN || '')) {
+        res.writeHead(401); res.end(); return;
+      }
+      if (!options.providers || req.method !== 'GET') {
+        res.writeHead(options.providers ? 405 : 503); res.end(); return;
+      }
+      req.url = requestUrl.pathname.slice('/api/local-providers'.length) + requestUrl.search;
+      return options.providers.handle(req, res);
     }
 
     const start = Date.now();
@@ -2336,15 +1937,6 @@ export async function createLocalApiServer(options = {}) {
         // passes the SSRF check, so this path is docker-only.
         addConfiguredPrivateOrigin('UPSTASH_REDIS_REST_URL', 'Redis calls will be SSRF-blocked');
 
-        // docker-compose.yml points WS_RELAY_URL at the compose-internal relay
-        // (http://ais-relay:3004). Without trusting it, every relay-backed route
-        // (x-feed, telegram-feed, rss-proxy) is SSRF-blocked and answers 502
-        // "Hostname resolves to a private/reserved IP address".
-        // Relay handlers fetch ws(s):// values over http(s):// (getRelayBaseUrl
-        // in api/_relay.js), so trust the origin they actually fetch.
-        addConfiguredPrivateOrigin('WS_RELAY_URL', 'relay calls will be SSRF-blocked',
-          (url) => url.replace(/^ws(s?):\/\//i, 'http$1://'));
-
         // SELF_HOSTING.md documents LLM_API_URL for compose-network or LAN
         // endpoints; OLLAMA_API_URL is the supported desktop runtime setting.
         // Without trusting their exact configured origins, the global SSRF
@@ -2352,9 +1944,6 @@ export async function createLocalApiServer(options = {}) {
         for (const envKey of ['LLM_API_URL', 'OLLAMA_API_URL']) {
           addConfiguredPrivateOrigin(envKey, 'LLM calls will be SSRF-blocked');
         }
-      }
-      if (context.allowPrivateRemoteBase) {
-        try { extraAllowedPrivateOrigins.push(new URL(context.remoteBase).origin); } catch {}
       }
       for (const origin of context.allowPrivateFetchOrigins) {
         try { extraAllowedPrivateOrigins.push(new URL(origin).origin); } catch {}
@@ -2368,7 +1957,7 @@ export async function createLocalApiServer(options = {}) {
         try { writeFileSync(portFile, String(boundPort)); } catch {}
       }
 
-      context.logger.log(`[local-api] listening on http://127.0.0.1:${boundPort} (apiDir=${context.apiDir}, routes=${routes.length}, cloudFallback=${context.cloudFallback})`);
+      context.logger.log(`[local-api] listening on http://127.0.0.1:${boundPort} (apiDir=${context.apiDir}, routes=${routes.length})`);
 
       return { port: boundPort };
     },

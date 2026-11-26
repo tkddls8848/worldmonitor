@@ -17,7 +17,7 @@ const BACKUP_CACHE_KEY = 'theater-posture:sebuf:backup:v1';
 
 // All theater posture assembly (product-only OpenSky fallback + redistributable
 // providers + classification)
-// happens on Railway (ais-relay.cjs seedTheaterPosture loop + seed-military-flights.mjs).
+// happens on Railway (personal-providers.cjs seedTheaterPosture loop + seed-military-flights.mjs).
 // This handler reads pre-built data from Redis only.
 // Gold standard: Vercel reads, Railway writes.
 

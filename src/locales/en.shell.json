@@ -140,8 +140,6 @@
     "populationExposure": "Population Exposure",
     "securityAdvisories": "Security Advisories",
     "orefSirens": "Israel Sirens",
-    "telegramIntel": "Telegram Intel",
-    "xIntel": "X News Accounts",
     "startups": "Startups & venture capital",
     "vcblogs": "Venture capital insights & essays",
     "regionalStartups": "Global Startup News",
@@ -774,9 +772,6 @@
     "techReadiness": {
       "infoTooltip": "<strong>Technology readiness</strong> World Bank composite score, 0–100. Weights are research and development 35%, internet 30%, broadband 20%, and mobile 15%. Internet users are a population percentage; mobile subscriptions are per 100 people; research spending is a share of economic output. Missing values show a dash. Data spans 2019–2024."
     },
-    "telegramIntel": {
-      "infoTooltip": "Real-time signals from monitored Telegram open-source intelligence channels"
-    },
     "thermalEscalation": {
       "infoTooltip": "Seeded FIRMS/VIIRS thermal anomaly clusters with baseline comparison, persistence tracking, and strategic context. This panel answers where thermal activity is abnormal and which clusters may signal conflict, industrial disruption, or escalation.",
       "title": "Thermal Escalation"
@@ -912,8 +907,15 @@
     "gpsJamming": {
       "title": "Satellite navigation interference"
     },
-    "pipeline":{"title":"PIPELINE"},
-    "militaryFlight":{"climbRate":"CLIMB RATE","manufacturer":"MANUFACTURER","owner":"OWNER","builtYear":"YEAR BUILT"},
+    "pipeline": {
+      "title": "PIPELINE"
+    },
+    "militaryFlight": {
+      "climbRate": "CLIMB RATE",
+      "manufacturer": "MANUFACTURER",
+      "owner": "OWNER",
+      "builtYear": "YEAR BUILT"
+    },
     "militaryCluster": {
       "showLess": "Show less"
     }
@@ -940,7 +942,21 @@
     "team": "Team",
     "teamDashboards": "Team dashboards"
   },
-  "preferences":{"panelFontScale":"Text size","followGlobalFontScale":"Use global"},
-  "countryHistory":{"title":"Daily country history"},
-  "teamDashboards":{"desc":"Dashboards your team shares. Open one to add it as a new tab.","empty":"Your team hasn't shared a dashboard yet. Share this tab to give everyone on your team its panels, sizes and map.","open":"Open {{name}} as a new tab","stopSharing":"Stop sharing {{name}}","shareTab":"Share this tab with your team","shareChanges":"Share this tab's changes with your team","behind":"Your team changed this dashboard after you opened it.","getLatest":"Get the latest version"}
+  "preferences": {
+    "panelFontScale": "Text size",
+    "followGlobalFontScale": "Use global"
+  },
+  "countryHistory": {
+    "title": "Daily country history"
+  },
+  "teamDashboards": {
+    "desc": "Dashboards your team shares. Open one to add it as a new tab.",
+    "empty": "Your team hasn't shared a dashboard yet. Share this tab to give everyone on your team its panels, sizes and map.",
+    "open": "Open {{name}} as a new tab",
+    "stopSharing": "Stop sharing {{name}}",
+    "shareTab": "Share this tab with your team",
+    "shareChanges": "Share this tab's changes with your team",
+    "behind": "Your team changed this dashboard after you opened it.",
+    "getLatest": "Get the latest version"
+  }
 }

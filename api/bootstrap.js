@@ -45,8 +45,6 @@ const FAST_KEYS = new Set(bootstrapTierKeyNames('fast', { iranEventsEnabled: IRA
 // `text` is the X post body: the first-party panel may render it (via
 // /api/x-feed), but alerts, MCP, and embed/OEM partners get derived facts plus
 // a permalink only. `pollState` is seed-internal cursor state.
-// Kept in sync with stripXFeedRestrictedFields in scripts/publish-bootstrap-tiers.mjs.
-export { stripXFeedRestrictedFields } from './_bootstrap-public-payload.js';
 
 function bootstrapRedisReadKeys(keys) {
   const extra = extraCanadaAlertsCutoverReadKeys(keys, BOOTSTRAP_CACHE_KEYS.canadaAlerts);

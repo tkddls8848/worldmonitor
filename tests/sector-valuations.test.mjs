@@ -11,7 +11,7 @@ import {
   parseV7Quote,
 } from '../scripts/_yahoo-sector-valuations.cjs';
 
-const src = readFileSync('scripts/ais-relay.cjs', 'utf8');
+const src = readFileSync('scripts/personal-collector-tasks.cjs', 'utf8');
 const valuationFetcherSrc = readFileSync('scripts/_yahoo-sector-valuations.cjs', 'utf8');
 
 const extractFn = (name) => {
@@ -111,7 +111,7 @@ describe('authenticated Yahoo quoteSummary integration (static analysis)', () =>
   const fnChunk = src.slice(fnStart, fnStart + 300);
   const sectorSeedSrc = extractFn('seedSectorSummary');
 
-  it('exists in ais-relay.cjs', () => {
+  it('exists in personal-collector-tasks.cjs', () => {
     assert.ok(fnStart > -1, 'fetchYahooQuoteSummary function not found');
   });
 

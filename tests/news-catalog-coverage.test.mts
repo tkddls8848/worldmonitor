@@ -228,25 +228,3 @@ describe('digests serve the categories that used to need per-feed browser fetche
     assert.deepEqual(mismatches, []);
   });
 });
-
-describe('relay classify covers every digest edition within its cycle', () => {
-  const relay = readFileSync(join(root, 'scripts/ais-relay.cjs'), 'utf8');
-  const editions = JSON.parse(readFileSync(join(root, 'scripts/shared/news-digest-editions.json'), 'utf8')) as string[];
-  const minutes = (name: string) => {
-    const match = relay.match(new RegExp(`const ${name} = (\\d+) \\* 60 \\* 1000;`));
-    assert.ok(match, `${name} not found in ais-relay.cjs`);
-    return Number(match[1]);
-  };
-
-  it('iterates the generated edition list, which matches the digest editions', () => {
-    assert.match(relay, /const CLASSIFY_VARIANTS = requireShared\('news-digest-editions\.json'\);/);
-    assert.deepEqual([...editions].sort(), [...VALID_VARIANTS].sort());
-  });
-
-  it('keeps the waits between editions inside the classify interval', () => {
-    const interval = minutes('CLASSIFY_SEED_INTERVAL_MS');
-    const staggerTotal = minutes('CLASSIFY_STAGGER_TOTAL_MS');
-    const perEdition = Math.floor(staggerTotal / Math.max(1, editions.length - 1));
-    assert.ok((editions.length - 1) * perEdition < interval, `${editions.length} editions overrun the ${interval}-minute interval`);
-  });
-});

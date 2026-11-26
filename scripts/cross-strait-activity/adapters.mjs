@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
-import { fetchJapanXOutcome, JAPAN_X_MAX_TEXT_LENGTH } from './japan-x.mjs';
+const JAPAN_POST_MAX_TEXT_LENGTH = 16000;
 
 const {
   parseProxyConfig,
@@ -2018,7 +2018,7 @@ function persistedStringsWithinLimit(value, longTextCandidates = null) {
     return Object.entries(value).every(([key, nested]) => (
       key.length <= MAX_PERSISTED_STRING_LENGTH
       && (key === 'text' && longTextCandidates?.has(value)
-        ? typeof nested === 'string' && nested.length <= JAPAN_X_MAX_TEXT_LENGTH
+        ? typeof nested === 'string' && nested.length <= JAPAN_POST_MAX_TEXT_LENGTH
         : persistedStringsWithinLimit(nested, longTextCandidates))
     ));
   }
@@ -2668,8 +2668,6 @@ export async function fetchCrossStraitActivitySnapshot({
   proxyRequestFn = proxyFetch,
   proxyConnectFn = proxyConnectTunnel,
   proxyConnectProbeFn = null,
-  japanXToken = process.env.X_BEARER_TOKEN || '',
-  japanXBudget,
 } = {}) {
   const generatedAt = new Date(now).toISOString();
   const previousMnd = (previousSnapshot?.observations ?? [])
@@ -2718,15 +2716,7 @@ export async function fetchCrossStraitActivitySnapshot({
     ?? (previousSourceHealth?.id === CROSS_STRAIT_SOURCE_CONTRACTS.japanMod.id
       ? previousSourceHealth
       : null);
-  const japanOutcomePromise = japanXToken.trim()
-    ? fetchJapanXOutcome({
-        token: japanXToken,
-        now,
-        previousSource: previousJapanSource,
-        fetchFn,
-        budget: japanXBudget,
-      })
-    : fetchJapanIndexOutcome(fetchFn, sleepFn, {
+  const japanOutcomePromise = fetchJapanIndexOutcome(fetchFn, sleepFn, {
         proxyFetchFn: resolvedJapanProxyFetchFn,
         proxyConnectProbeFn: resolvedJapanProxyConnectProbeFn,
         now,

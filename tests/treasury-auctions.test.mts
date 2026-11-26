@@ -3,7 +3,6 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { BOOTSTRAP_CACHE_KEYS, bootstrapTierKeyNames } from '../api/_bootstrap-tier-keys.js';
 import { __testing__ as health } from '../api/health.js';
-import { EXCLUDED_BOOTSTRAP_KEYS } from '../scripts/_widget-data-policy.cjs';
 import { DEFAULT_COLLECTORS, STANDALONE_INTERVAL_MIN } from '../scripts/personal-collect.mjs';
 import { buildTreasuryAuctions, fetchTreasuryAuctions } from '../scripts/seed-treasury-auctions.mjs';
 import { compareAuctionDemand } from '../shared/treasury-auction-demand.mjs';
@@ -85,7 +84,6 @@ test('registers hourly collection, health and on-demand hydration, and builds so
   assert.ok(DEFAULT_COLLECTORS.includes('treasury-auctions'));
   assert.equal(STANDALONE_INTERVAL_MIN['treasury-auctions'], 60);
   assert.ok(bootstrapTierKeyNames('on-demand').includes('treasuryAuctions'));
-  assert.ok(Object.hasOwn(EXCLUDED_BOOTSTRAP_KEYS, 'treasuryAuctions'));
   assert.equal(health.STANDALONE_KEYS.treasuryAuctions, BOOTSTRAP_CACHE_KEYS.treasuryAuctions);
   assert.equal(health.SEED_META.treasuryAuctions.key, 'seed-meta:markets:treasury-auctions');
   assert.equal(health.SEED_META.treasuryAuctions.maxStaleMin, 180);

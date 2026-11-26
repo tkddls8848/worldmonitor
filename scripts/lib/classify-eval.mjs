@@ -20,7 +20,7 @@ function staticTemplate(text, what) {
   return text;
 }
 
-// scripts/ais-relay.cjs — the batch prompt (50 titles per completion).
+// scripts/personal-providers.cjs — the batch prompt (50 titles per completion).
 export function extractRelayPrompt(relaySrc) {
   return staticTemplate(mustMatch(relaySrc, /const CLASSIFY_SYSTEM_PROMPT = `([\s\S]*?)`;/, 'CLASSIFY_SYSTEM_PROMPT'), 'CLASSIFY_SYSTEM_PROMPT');
 }

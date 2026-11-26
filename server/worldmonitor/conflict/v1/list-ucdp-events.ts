@@ -10,7 +10,7 @@ import { resolveCountryCode } from '../../../../shared/country-code-resolve';
 
 const CACHE_KEY = 'conflict:ucdp-events:v1';
 
-// All UCDP fetching happens on Railway (ais-relay.cjs seedUcdpEvents loop).
+// All UCDP fetching happens on Railway (personal-providers.cjs seedUcdpEvents loop).
 // This handler reads pre-seeded data from Redis only.
 // Gold standard: Vercel reads, Railway writes.
 

@@ -845,7 +845,7 @@ function responseValidators(resp: Response): FeedValidators | undefined {
   return etag || lastModified ? { etag, lastModified } : undefined;
 }
 
-/** Mirrors `RSS_MAX_BODY_BYTES` in scripts/ais-relay.cjs (the relay leg's cap). */
+/** Mirrors `RSS_MAX_BODY_BYTES` in scripts/personal-providers.cjs (the relay leg's cap). */
 const RSS_MAX_BODY_BYTES = 5 * 1024 * 1024;
 
 /**
@@ -1785,7 +1785,7 @@ async function enrichWithAiCache(items: ParsedItem[]): Promise<void> {
     const hit = parseClassifyCacheHit(cached.get(key));
     // `hit.level === '_skip'` is currently unreachable and kept only as
     // defence-in-depth: both relay skip-writes emit `{ level: '_skip',
-    // timestamp }` with no `category` (scripts/ais-relay.cjs:3892, :3968),
+    // timestamp }` with no `category` (scripts/personal-providers.cjs:3892, :3968),
     // so the shape check above already rejects them and `!hit` catches them
     // here. It stays because it is the correct guard the moment any writer
     // starts pairing the sentinel with a category — do not read it as the

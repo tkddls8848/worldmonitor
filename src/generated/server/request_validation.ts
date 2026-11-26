@@ -2,7 +2,7 @@
 // Source: proto/worldmonitor/**/*.proto buf.validate annotations.
 
 export const GENERATED_PROTO_VALIDATION_RULE_COUNT = 717;
-export const GENERATED_REQUEST_METHOD_COUNT = 192;
+export const GENERATED_REQUEST_METHOD_COUNT = 190;
 
 export const GENERATED_REQUEST_TYPES = {
   "analyzeStock": "worldmonitor.market.v1.AnalyzeStockRequest",
@@ -161,7 +161,6 @@ export const GENERATED_REQUEST_TYPES = {
   "listStorageFacilities": "worldmonitor.supply_chain.v1.ListStorageFacilitiesRequest",
   "listStoredStockBacktests": "worldmonitor.market.v1.ListStoredStockBacktestsRequest",
   "listTechEvents": "worldmonitor.research.v1.ListTechEventsRequest",
-  "listTelegramFeed": "worldmonitor.intelligence.v1.ListTelegramFeedRequest",
   "listThermalEscalations": "worldmonitor.thermal.v1.ListThermalEscalationsRequest",
   "listTrendingRepos": "worldmonitor.research.v1.ListTrendingReposRequest",
   "listUcdpEvents": "worldmonitor.conflict.v1.ListUcdpEventsRequest",
@@ -169,7 +168,6 @@ export const GENERATED_REQUEST_TYPES = {
   "listVulnerabilityRankings": "worldmonitor.supply_chain.v1.ListVulnerabilityRankingsRequest",
   "listWebcams": "worldmonitor.webcam.v1.ListWebcamsRequest",
   "listWorldBankIndicators": "worldmonitor.economic.v1.ListWorldBankIndicatorsRequest",
-  "listXFeed": "worldmonitor.intelligence.v1.ListXFeedRequest",
   "lookupSanctionEntity": "worldmonitor.sanctions.v1.LookupSanctionEntityRequest",
   "recordBaselineSnapshot": "worldmonitor.infrastructure.v1.RecordBaselineSnapshotRequest",
   "registerInterest": "worldmonitor.leads.v1.RegisterInterestRequest",
@@ -1760,30 +1758,6 @@ export const GENERATED_MESSAGE_RULES = {
   "worldmonitor.intelligence.v1.ListSatellitesRequest": {
     "fields": {
       "country": {
-        "kind": "string",
-        "stringMaxBytes": 65536
-      }
-    }
-  },
-  "worldmonitor.intelligence.v1.ListTelegramFeedRequest": {
-    "fields": {
-      "topic": {
-        "kind": "string",
-        "stringMaxBytes": 65536
-      },
-      "channel": {
-        "kind": "string",
-        "stringMaxBytes": 65536
-      }
-    }
-  },
-  "worldmonitor.intelligence.v1.ListXFeedRequest": {
-    "fields": {
-      "topic": {
-        "kind": "string",
-        "stringMaxBytes": 65536
-      },
-      "account": {
         "kind": "string",
         "stringMaxBytes": 65536
       }

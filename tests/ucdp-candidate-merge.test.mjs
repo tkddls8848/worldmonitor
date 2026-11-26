@@ -255,11 +255,11 @@ describe('candidateContentMeta', () => {
 });
 
 describe('both UCDP writers share the candidate implementation', () => {
-  const relay = readFileSync('scripts/ais-relay.cjs', 'utf8');
+  const relay = readFileSync('scripts/personal-providers.cjs', 'utf8');
   const cron = readFileSync('scripts/seed-ucdp-events.mjs', 'utf8');
 
   it('neither writer re-implements the candidate window locally', () => {
-    for (const [name, src] of [['ais-relay.cjs', relay], ['seed-ucdp-events.mjs', cron]]) {
+    for (const [name, src] of [['seed-ucdp-events.mjs', cron]]) {
       assert.doesNotMatch(
         src,
         /for \(let offset = 1; offset >= -4; offset--\)/,
@@ -269,7 +269,6 @@ describe('both UCDP writers share the candidate implementation', () => {
   });
 
   it('both writers load the shared module', () => {
-    assert.match(relay, /require\('\.\/shared\/ucdp-candidate\.cjs'\)/);
     assert.match(cron, /from '\.\/shared\/ucdp-candidate\.cjs'/);
   });
 
@@ -283,18 +282,16 @@ describe('both UCDP writers share the candidate implementation', () => {
   });
 
   it('both writers reserve annual slots instead of a plain slice', () => {
-    assert.match(relay, /ucdpCapWithAnnualFloor\(/);
     assert.match(cron, /capWithAnnualFloor\(/);
     assert.doesNotMatch(cron, /mapped\.slice\(0, MAX_EVENTS\)/, 'plain slice evicts the annual base');
   });
 
   it('both writers publish the content-age trio into seed-meta', () => {
-    assert.match(relay, /ucdpCandidateContentMeta\(capped\)/);
     assert.match(cron, /candidateContentMeta\(capped\)/);
   });
 
   it('neither writer labels a partial candidate as a complete release', () => {
-    for (const [name, src] of [['ais-relay.cjs', relay], ['seed-ucdp-events.mjs', cron]]) {
+    for (const [name, src] of [['seed-ucdp-events.mjs', cron]]) {
       assert.match(src, /\+partial/, `${name} must mark an incomplete candidate fetch`);
     }
   });

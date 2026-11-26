@@ -76,8 +76,8 @@ test('bootstrap sanitizes cached posts while preserving missing data', async () 
 });
 
 test('real seeder publishes only Reddit permalinks and the reader accepts its output', async () => {
-  const source = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
-  const region = source.slice(source.indexOf('const SOCIAL_VELOCITY_REDIS_KEY ='), source.indexOf('async function startSocialVelocitySeedLoop()'));
+  const source = readFileSync(new URL('../scripts/personal-collector-tasks.cjs', import.meta.url), 'utf8');
+  const region = source.slice(source.indexOf('const SOCIAL_VELOCITY_REDIS_KEY ='), source.indexOf('const WSB_TICKERS_REDIS_KEY ='));
   let payload: unknown;
   const seed = runInNewContext(region + '\nseedSocialVelocity', {
     URL, Date, console: { log() {}, warn() {}, error() {} },

@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import { loadEnvFile } from './_seed-utils.mjs';
 import { unwrapEnvelope } from './_seed-envelope-source.mjs';
 import { compactUcdpDashboardPayload, UCDP_BOOTSTRAP_KEY, UCDP_BOOTSTRAP_META_KEY } from './_ucdp-dashboard.mjs';
-// GED Candidate discovery/fetch/merge is shared with scripts/ais-relay.cjs so the
+// GED Candidate discovery/fetch/merge is shared with scripts/personal-providers.cjs so the
 // two UCDP writers cannot drift (they already had, on discovery concurrency and
 // probe timeout). CJS module imported from ESM, as seed-market-quotes.mjs does
 // with scripts/shared/notification-dedup.cjs.
@@ -254,7 +254,7 @@ async function main() {
   // down fires on the FINAL event count, so once a healthy candidate refills the
   // payload it can no longer detect that the annual base is missing — the run
   // would publish a thin candidate-only release over the last good annual
-  // payload and stamp it with a fresh seed-meta. ais-relay.cjs has always had
+  // payload and stamp it with a fresh seed-meta. personal-providers.cjs has always had
   // this guard ahead of its merge; this writer did not.
   if (allEvents.length === 0 && failedPages > 0) {
     console.warn(`  All ${failedPages} annual pages failed — extending existing key TTL (preserving last good data)`);

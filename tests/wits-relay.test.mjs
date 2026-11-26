@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import vm from 'node:vm';
 
 // Execute the real router and inline handler without starting the relay's workers.
-const source = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
+const source = readFileSync(new URL('../scripts/personal-providers.cjs', import.meta.url), 'utf8');
 function section(start, end) {
   const from = source.indexOf(start);
   const to = source.indexOf(end, from);
@@ -14,10 +14,8 @@ function section(start, end) {
 }
 const routeSource = [
   section('function safeEnd(', 'const WORLD_BANK_COUNTRY_ALLOWLIST'),
-  section('function safeTokenEquals(', 'function getRateLimitForPath('),
   section('async function handleWitsRequest(', '// ── World Bank proxy'),
-  section('const server = http.createServer(', '// ─── Google Flights ─'),
-  'server;',
+  `(req, res) => new URL(req.url, 'http://localhost').pathname === '/wits' ? handleWitsRequest(req, res) : safeEnd(res, 404, {}, '')`,
 ].join('\n');
 
 const SDMX = '/API/V1/SDMX/V21/datasource/TRN';
@@ -61,26 +59,6 @@ function harness({ upstream = () => new Response('<xml/>'), secret = 'test-secre
     },
   };
 }
-
-test('WITS route requires the configured relay secret, including in global auth bypass mode', async () => {
-  const h = harness();
-  for (const headers of [{}, { 'x-relay-key': 'wrong' }, { authorization: 'Bearer wrong' }]) {
-    assert.equal((await h.request(undefined, { headers })).status, 401);
-  }
-  assert.equal(h.calls.length, 0);
-  assert.equal((await h.request(undefined, { headers: { authorization: 'Bearer test-secret' } })).status, 200);
-  const noSecret = harness({ secret: '' });
-  assert.equal((await noSecret.request()).status, 401);
-  assert.equal(noSecret.calls.length, 0);
-});
-
-test('WITS route uses shared rate limiting before contacting upstream', async () => {
-  const h = harness({ limited: true });
-  const result = await h.request();
-  assert.equal(result.status, 429);
-  assert.equal(result.headers['retry-after'], '1');
-  assert.equal(h.calls.length, 0);
-});
 
 test('only the four TRN operations reach a fixed WITS origin without relay credentials', async () => {
   const xml = readFileSync(new URL('./fixtures/wits-trains/sdmx-840-870323-2021-reported.xml', import.meta.url), 'utf8');

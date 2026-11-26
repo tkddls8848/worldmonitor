@@ -32,10 +32,9 @@
 //   - rootDirectory: scripts
 //   - startCommand: node seed-military-cii.mjs
 //   - Cron schedule: "*/10 * * * *" (every 10min UTC)
-//   - Required env: UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN, WS_RELAY_URL
-//   - Optional env: RELAY_SHARED_SECRET, RELAY_AUTH_HEADER
 
 import { pathToFileURL } from 'node:url';
+import { personalOrigin } from './lib/classify-digest-request.cjs';
 import { loadEnvFile, CHROME_UA, getRedisCredentials, acquireLockSafely, releaseLock, withRetry, writeFreshnessMetadata } from './_seed-utils.mjs';
 // Flights, vessels and AIS disruptions are placed by real borders through the
 // CII scorer's own module, so this seeder and the CII cannot disagree on a coordinate.
@@ -335,39 +334,26 @@ async function preserveLastGoodMilitaryCii(url, token, reason, missingSuffix = '
 
 // ── Relay ────────────────────────────────────────────────────────────────────────────
 
-function getRelayBaseUrl() {
-  const relayUrl = process.env.WS_RELAY_URL;
-  if (!relayUrl) return null;
-  return relayUrl.replace(/^ws(s?):\/\//, 'http$1://').replace(/\/$/, '');
-}
-
-function getRelayHeaders() {
-  const headers = { Accept: 'application/json', 'User-Agent': CHROME_UA };
-  const relaySecret = process.env.RELAY_SHARED_SECRET;
-  if (relaySecret) {
-    const relayHeader = (process.env.RELAY_AUTH_HEADER || 'x-relay-key').toLowerCase();
-    headers[relayHeader] = relaySecret;
-    if (relayHeader !== 'authorization') headers.Authorization = `Bearer ${relaySecret}`;
-  }
-  return headers;
-}
-
 // Returns { ok, candidateReports, disruptions }. ok=false when the relay is missing or
 // unreachable (after retries) — the caller must NOT publish the empty arrays as fresh data.
 async function fetchRelaySnapshot() {
-  const base = getRelayBaseUrl();
-  if (!base) {
-    console.warn('  WS_RELAY_URL not set — vessels + AIS disruptions skipped');
-    return { ok: false, candidateReports: [], disruptions: [] };
-  }
+  const base = personalOrigin();
   try {
     const data = await withRetry(async () => {
-      const resp = await fetch(`${base}/ais/snapshot?candidates=true`, {
-        headers: getRelayHeaders(),
+      const resp = await fetch(`${base}/api/maritime/v1/get-vessel-snapshot?include_candidates=true`, {
+        headers: { Accept: 'application/json', 'User-Agent': CHROME_UA },
         signal: AbortSignal.timeout(RELAY_TIMEOUT_MS),
       });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      return resp.json();
+      const payload = await resp.json();
+      if (!payload.dataAvailable || !payload.snapshot?.status?.connected) throw new Error('AIS snapshot is unavailable');
+      return {
+        candidateReports: payload.snapshot.candidateReports,
+        disruptions: (payload.snapshot.disruptions || []).map(d => ({
+          ...d, lat: d.location?.latitude, lon: d.location?.longitude,
+          severity: String(d.severity || '').replace('AIS_DISRUPTION_SEVERITY_', '').toLowerCase(),
+        })),
+      };
     }, 2, 1000);
     // Cap to bound classification work — a hostile/buggy relay must not OOM the job
     // or overrun the lock TTL. Consumers in get-risk-scores cap reads at maxLen=10000.

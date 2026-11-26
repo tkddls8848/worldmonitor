@@ -4,7 +4,7 @@ import { runInNewContext } from 'node:vm';
 import { EventEmitter } from 'node:events';
 import { afterEach, test } from 'node:test';
 import handler from '../api/polymarket.js';
-const source = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
+const source = readFileSync(new URL('../scripts/personal-providers.cjs', import.meta.url), 'utf8');
 const region = source.slice(source.indexOf('const POLYMARKET_ENABLED ='), source.indexOf('// Periodic cache cleanup to prevent memory leaks', source.indexOf('const POLYMARKET_ENABLED =')));
 const originalEnv = { ...process.env };
 const originalFetch = globalThis.fetch;
@@ -56,7 +56,7 @@ test('relay restricts endpoint and enum values while canonicalizing tags and lim
   assert.deepEqual(JSON.parse(events.data), [{ id: 'one' }]);
 });
 test('Edge forwards only canonical query fields', async () => {
-  process.env.WS_RELAY_URL = 'https://relay.example';
+  process.env.LOCAL_API_ORIGIN = 'https://relay.example';
   process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example';
   process.env.UPSTASH_REDIS_REST_TOKEN = 'synthetic';
   process.env.WORLDMONITOR_VALID_KEYS = 'synthetic';

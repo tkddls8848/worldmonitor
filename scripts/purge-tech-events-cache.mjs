@@ -11,7 +11,7 @@
  * new poisoning, but it does not clear an entry that was already poisoned
  * before the deploy — that entry keeps being served until it expires on its
  * own TTL (the fallback writes 6h) or the relay's next cycle overwrites it
- * (`TECH_EVENTS_SEED_INTERVAL_MS` is 6h in scripts/ais-relay.cjs). So the
+ * (`TECH_EVENTS_SEED_INTERVAL_MS` is 6h in scripts/personal-providers.cjs). So the
  * symptom can outlive the fix by up to ~6h and look like the fix did not
  * work. One DEL makes recovery immediate: the next read repopulates from the
  * seeder, or from the now-widest cold-start fallback.
@@ -22,7 +22,7 @@
  * docs/solutions/workflow-issues/purging-the-live-product-catalog-three-layer-cache.md.
  *
  * SCOPE — deliberately ONE key. `research:tech-events-bootstrap:v1` is NOT
- * purged: only the seeders ever write it (scripts/ais-relay.cjs writes both
+ * purged: only the seeders ever write it (scripts/personal-providers.cjs writes both
  * keys from the same full event list), and the cold-start fallback never
  * touches it, so it was never poisoned by #5427. Purging it would force a
  * needless re-seed of a correct value.

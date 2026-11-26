@@ -494,7 +494,7 @@ test('max-deadline Lua self-heals scalars and respects OpenSky account rotation'
 });
 
 test('relay and seeder wire the shared atomic helpers instead of SET/DEL', () => {
-  const relay = readFileSync(join(here, '../scripts/ais-relay.cjs'), 'utf8');
+  const relay = readFileSync(join(here, '../scripts/personal-providers.cjs'), 'utf8');
   const seeder = readFileSync(join(here, '../scripts/seed-military-flights.mjs'), 'utf8');
   assert.match(relay, /maxDeadlineSetCommand/);
   assert.match(relay, /OPENSKY_MAX_DEADLINE_SET_LUA/);

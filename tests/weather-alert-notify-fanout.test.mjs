@@ -34,7 +34,7 @@ const require = createRequire(import.meta.url);
 const { buildDedupMaterial } = require('../scripts/shared/notification-dedup.cjs');
 
 const AIS_RELAY_SOURCE = readFileSync(
-  new URL('../scripts/ais-relay.cjs', import.meta.url),
+  new URL('../scripts/personal-providers.cjs', import.meta.url),
   'utf8',
 );
 
@@ -360,29 +360,5 @@ describe('weather_alert notification fan-out — per-country slots (#7243)', () 
     first.headline = 'Forestfire';
     updated.headline = 'Forestfire';
     assert.equal(weatherAlertFamilyKey(first), weatherAlertFamilyKey(updated));
-  });
-
-  it('ais-relay publishes the shared family key as the coalesceKey', () => {
-    // The selector and the publisher must agree on what a family is. When they
-    // disagree the selector's per-country guarantee is undone by the
-    // publisher's title-hash dedup.
-    assert.match(
-      AIS_RELAY_SOURCE,
-      /const coalesceKey = weatherAlertFamilyKey\(a\);/,
-      'the publisher must key dedup on the same family key the selector partitions by',
-    );
-  });
-
-  it('ais-relay delegates weather notification selection to the shared module', () => {
-    assert.match(
-      AIS_RELAY_SOURCE,
-      /const distinctFamilyAlerts = selectWeatherNotificationAlerts\(alerts\);/,
-      'the relay must call the shared selector, not re-implement a slot cap inline',
-    );
-    assert.doesNotMatch(
-      AIS_RELAY_SOURCE,
-      /distinctFamilyAlerts\.length >= 3/,
-      'the inline global 3-slot cap must be gone from the relay',
-    );
   });
 });

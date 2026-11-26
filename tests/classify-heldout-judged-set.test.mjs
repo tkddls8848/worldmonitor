@@ -12,8 +12,6 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  extractRelayOpenRouterModel,
-  extractRelayPrompt,
   extractRpcOpenRouterModel,
   extractRpcPrompt,
   isAlertLevel,
@@ -26,7 +24,6 @@ const HELDOUT = 'tests/fixtures/classify-judged-headlines-heldout.json';
 const load = (p) => JSON.parse(readFileSync(resolve(root, p), 'utf8'));
 const heldout = load(HELDOUT);
 const tuning = load('tests/fixtures/classify-judged-headlines.json');
-const relaySrc = readFileSync(resolve(root, 'scripts/ais-relay.cjs'), 'utf8');
 const rpcSrc = readFileSync(resolve(root, 'server/worldmonitor/intelligence/v1/classify-event.ts'), 'utf8');
 const LEVELS = ['critical', 'high', 'medium', 'low', 'info'];
 
@@ -58,10 +55,6 @@ describe('held-out judged set', () => {
     // If this reds, the prompt or model changed: re-capture the held-out runs too
     // (`--fixture ${HELDOUT} --path relay|rpc --capture <name> --force`), or the
     // out-of-sample numbers describe a classifier that no longer ships.
-    for (const name of ['relay-after', 'relay-after-rerun']) {
-      assert.equal(heldout.runs[name].promptSha, promptSha(extractRelayPrompt(relaySrc)), name);
-      assert.equal(heldout.runs[name].model, extractRelayOpenRouterModel(relaySrc), name);
-    }
     assert.equal(heldout.runs['rpc-after'].promptSha, promptSha(extractRpcPrompt(rpcSrc)));
     assert.equal(heldout.runs['rpc-after'].model, extractRpcOpenRouterModel(rpcSrc));
   });

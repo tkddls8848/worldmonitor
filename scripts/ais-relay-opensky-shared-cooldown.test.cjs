@@ -44,7 +44,7 @@ async function stop(child) {
 
 function spawnRelay(extraEnv) {
   const preload = path.join(__dirname, 'ais-relay-test-preload.cjs');
-  const relay = path.join(__dirname, 'ais-relay.cjs');
+  const relay = path.join(__dirname, '../tests/_lib/personal-providers-host.cjs');
   const child = spawn(process.execPath, [relay], {
     cwd: path.join(__dirname, '..'),
     env: {

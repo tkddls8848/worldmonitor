@@ -265,7 +265,7 @@ const FAA_META = Object.fromEntries(
   AIRPORTS.filter(a => a.sources.includes('faa')).map(a => [a.iata, a]),
 );
 
-// Protobuf enum mappers (mirror ais-relay.cjs mappings; consumers parse strings)
+// Protobuf enum mappers (mirror personal-providers.cjs mappings; consumers parse strings)
 const REGION_MAP = {
   americas: 'AIRPORT_REGION_AMERICAS',
   europe:   'AIRPORT_REGION_EUROPE',
@@ -292,7 +292,7 @@ const SEVERITY_MAP = {
 
 // ─── Inline Upstash helpers (LPUSH + SETNX + GET/SET) ────────────────────────
 // These aren't in _seed-utils.mjs (which focuses on SET/GET/EXPIRE). Pattern
-// mirrors ais-relay.cjs upstashLpush/upstashSetNx/upstashSet/upstashGet so the
+// mirrors personal-providers.cjs upstashLpush/upstashSetNx/upstashSet/upstashGet so the
 // notification queue + prev-state reads speak the same wire protocol.
 
 async function upstashCommand(cmd) {
@@ -364,7 +364,7 @@ async function upstashDel(key) {
 }
 
 // ─── Notification publishing ─────────────────────────────────────────────────
-// Mirrors ais-relay.cjs::publishNotificationEvent: LPUSH the event onto
+// Mirrors personal-providers.cjs::publishNotificationEvent: LPUSH the event onto
 // wm:events:queue, guarded by a SETNX dedup key (TTL = dedupTtl). On LPUSH
 // failure, rollback the dedup key so the next run can retry. Returns true only
 // when this call queued the event. A dedup hit returns false: a failed rollback

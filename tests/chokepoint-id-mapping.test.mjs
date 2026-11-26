@@ -73,7 +73,7 @@ describe('portwatchNameToId', () => {
 });
 
 import { readFileSync } from 'node:fs';
-const relaySrc = readFileSync('scripts/ais-relay.cjs', 'utf8');
+const relaySrc = readFileSync('scripts/personal-providers.cjs', 'utf8');
 const handlerSrc = readFileSync('server/worldmonitor/supply-chain/v1/get-chokepoint-status.ts', 'utf8');
 
 describe('chokepoint threat levels', () => {

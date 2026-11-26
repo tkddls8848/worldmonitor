@@ -3,7 +3,7 @@
 /**
  * Stable event ids and the API fan-out list contract for occurrence events.
  *
- * CommonJS so scripts/ais-relay.cjs can require it at the publish site.
+ * CommonJS so scripts/personal-providers.cjs can require it at the publish site.
  * Dockerfile.relay COPYs this file (tests/dockerfile-relay-imports.test.mjs).
  * The personal fork removed the Shipping v2 webhook worker that drained the
  * fan-out list; the list stays capped (API_FANOUT_LIST_CAP) and expires on

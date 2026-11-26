@@ -28,7 +28,7 @@ const ROOT = process.cwd();
 
 const PRODUCER_FILES = [
   // Server-side domain producers (Railway / Vercel)
-  { path: 'scripts/ais-relay.cjs',                     expected: 'domain' },
+  { path: 'scripts/personal-providers.cjs',                     expected: 'domain' },
   { path: 'scripts/seed-aviation.mjs',                  expected: 'domain' },
   { path: 'scripts/regional-snapshot/alert-emitter.mjs', expected: 'domain' },
   // Server-side RSS producer: watchlist_story_alert events built from

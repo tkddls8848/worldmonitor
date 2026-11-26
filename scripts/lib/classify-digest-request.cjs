@@ -4,7 +4,7 @@
 // auth/transport? The previous inline https.get against the hardcoded
 // production API host silently classified 0 titles on every self-host install.
 //
-// Lives in scripts/lib rather than inline in ais-relay.cjs so the URL, scheme,
+// Lives in scripts/lib rather than inline in personal-providers.cjs so the URL, scheme,
 // and header contract can execute in tests without importing the boot-on-require
 // relay — same reason as digest-stale-gate.cjs.
 

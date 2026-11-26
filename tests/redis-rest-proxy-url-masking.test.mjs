@@ -1,6 +1,6 @@
 // scripts/local/redis-rest-proxy.mjs connects to Redis (and calls server.listen) as a
 // top-level side effect on import, so it can't be required directly in a unit
-// test — same constraint as scripts/ais-relay.cjs (see
+// test — same constraint as scripts/personal-providers.cjs (see
 // relay-boot-seed-freshness-guard.test.mjs). Extract maskRedisUrl's real
 // source via regex and eval it standalone instead.
 import { describe, it } from 'node:test';

@@ -128,33 +128,6 @@ test('server/worldmonitor/news/v1/list-feed-digest.ts sources keywords from cano
   );
 });
 
-// Drift guards for the two intentionally-untouched mirror sites.
-// ais-relay.cjs is the Railway-deployed monolith (refactoring it
-// would break its bundled deploy assumptions); parallel-analysis.ts
-// is a client-side ML helper with a narrower scope (flashpoint only).
-// They keep their inline literals — but the literals MUST match the
-// canonical JSON, so future edits in either file fail this test
-// unless the JSON is updated in lockstep.
-
-test('scripts/ais-relay.cjs RELAY_* literals match canonical JSON', async () => {
-  const src = await readFromRoot('scripts/ais-relay.cjs');
-  assert.deepEqual(
-    parseStringArrayLiteral(src, 'RELAY_DIPLOMACY_KEYWORDS'),
-    canonical.diplomacyKeywords,
-    'RELAY_DIPLOMACY_KEYWORDS drifted from shared/diplomacy-keywords.json',
-  );
-  assert.deepEqual(
-    parseStringArrayLiteral(src, 'RELAY_FLASHPOINT_SCORING_KEYWORDS'),
-    canonical.flashpointKeywords,
-    'RELAY_FLASHPOINT_SCORING_KEYWORDS drifted from shared/diplomacy-keywords.json',
-  );
-  assert.deepEqual(
-    parsePairArrayLiteral(src, 'RELAY_DIPLOMACY_FLASHPOINT_PAIRS'),
-    canonical.diplomacyFlashpointPairs,
-    'RELAY_DIPLOMACY_FLASHPOINT_PAIRS drifted from shared/diplomacy-keywords.json',
-  );
-});
-
 test('src/services/parallel-analysis.ts FLASHPOINT_KEYWORDS matches canonical JSON', async () => {
   const src = await readFromRoot('src/services/parallel-analysis.ts');
   assert.deepEqual(

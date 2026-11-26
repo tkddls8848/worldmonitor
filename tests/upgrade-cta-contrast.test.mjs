@@ -217,7 +217,6 @@ const STATUS_TEXT = [
   ['main.css', '.panel-summary-error'],
   ['main.css', '.gdelt-trend-value.negative'],
   ['main.css', '.gdelt-trend-value.positive'],
-  ['main.css', '.telegram-intel-preview-card.is-error'],
   ['main.css', '.insights-convergence .insights-section-title'],
   ['main.css', '.insight-badge.velocity.elevated'],
   ['main.css', '.history-event.cyclical'],
@@ -276,7 +275,7 @@ describe('accent and green backgrounds keep readable text in both themes', () =>
 
   it('finds the rules it is meant to guard', () => {
     assert.ok(checked >= 20, `only ${checked} rules matched; the scan is broken`);
-    for (const selector of ['.wl-pill.active', '.telegram-follow-btn:hover', '.re-route-card__rank', '.re-picker__item--active', '.widget-chat-msg.user']) {
+    for (const selector of ['.wl-pill.active', '.re-route-card__rank', '.re-picker__item--active', '.widget-chat-msg.user']) {
       assert.ok(judged.includes(selector), `${selector} is no longer judged`);
     }
   });

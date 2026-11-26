@@ -2,7 +2,7 @@
  * RPC: ListMarketQuotes -- seed-first stock/index quotes.
  *
  * The fixed Railway seed snapshot (`market:stocks-bootstrap:v1`, written by
- * scripts/ais-relay.cjs and scripts/seed-market-quotes.mjs) answers the default
+ * scripts/personal-providers.cjs and scripts/seed-market-quotes.mjs) answers the default
  * symbol universe with no upstream call at all. Only symbols the snapshot does
  * not carry — the user's custom watchlist tickers, which the picker resolved
  * through Finnhub search, plus any default the seeder dropped this cycle —

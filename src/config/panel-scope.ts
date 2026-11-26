@@ -192,9 +192,7 @@ export const PANEL_SCOPE_BEHAVIOUR: Readonly<Record<string, PanelScopeBehaviour>
   'toronto-safety': 'unsupported', // Toronto Safety
   'radiation-watch': 'filters', // Radiation Watch
   'thermal-escalation': 'unsupported', // Thermal Escalation
-  'oref-sirens': 'unsupported', // Israel Sirens
-  'telegram-intel': 'unsupported', // Telegram Intel
-  'x-intel': 'unsupported', // X News Accounts
+  'oref-sirens': 'unsupported', // X News Accounts
   'national-debt': 'unsupported', // Global Debt Clock
   'cross-source-signals': 'unsupported', // Cross-Source Signals
   'regional-intelligence': 'unsupported', // Regional Intelligence
@@ -227,8 +225,6 @@ export const PANEL_SCOPE_REASONS: Readonly<Record<string, string>> = Object.free
   'strategic-risk': 'A composite overview already cut to the top 5 countries and zones.',
   cascade: 'Driven by the infrastructure node the user picks, not by country.',
   'gdelt-intel': 'Fetched per topic; a country filter would need a new query.',
-  'telegram-intel': 'Posts name a country only in free text, and many are untranslated.',
-  'x-intel': 'Posts name a country only in free text.',
   monitors: 'Matches keywords the user chose to watch: a focus must not hide what the user asked for.',
   'live-news': 'Video channels have no subject country; geoAvailability says where a channel can be watched, not what it covers.',
   climate: 'Anomalies are regional zones, not countries; a zone-to-country rule is needed before filtering. A zone centroid does not represent every affected country.',

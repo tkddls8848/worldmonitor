@@ -229,7 +229,7 @@ const MAX_DIRECT_REDIRECTS = 3;
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 
 // Without a relay the seeder fetches publishers itself, so it applies the
-// relay's per-hop rule (scripts/ais-relay.cjs fetchWithRedirects): at most three
+// relay's per-hop rule (scripts/personal-providers.cjs fetchWithRedirects): at most three
 // redirects, each to an allowed domain over http(s) on the default port. A
 // redirect anywhere else, such as the local store on 127.0.0.1:8079, fails the
 // feed instead of being followed.

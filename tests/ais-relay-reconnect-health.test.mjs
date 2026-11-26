@@ -10,7 +10,7 @@ import { brotliDecompressSync, gunzipSync } from 'node:zlib';
 import { WebSocketServer } from 'ws';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const relayScript = path.resolve(here, '..', 'scripts', 'ais-relay.cjs');
+const relayScript = path.resolve(here, '_lib', 'personal-providers-host.cjs');
 const delayedCompressionHook = path.resolve(
   here,
   'fixtures',

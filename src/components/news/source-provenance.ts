@@ -8,13 +8,10 @@ import {
   getSourceTier,
   getSourceTierBadgeTitle,
   getSourceType,
-  resolveRegisteredTelegramSourceName,
-  resolveTelegramSourceName,
 } from '@/config/feeds';
 import type { PropagandaRisk } from '@/types';
 import { escapeHtml } from '@/utils/sanitize';
 
-export { resolveRegisteredTelegramSourceName, resolveTelegramSourceName };
 
 export interface PrimarySourceProvenanceHtml {
   riskBadge: string;
@@ -36,7 +33,6 @@ export interface PrimarySourceProvenanceBadges {
 
 /**
  * Structured provenance badges for a display-name lookup.
- * Shared by the NewsPanel HTML renderer and TelegramIntelPanel DOM renderer
  * so both surfaces stay on the same CSS classes.
  */
 export function getPrimarySourceProvenanceBadges(sourceName: string): PrimarySourceProvenanceBadges {

@@ -53,6 +53,7 @@ test('personal ingress serves the dashboard and API without credentials', async 
   assert.equal(dashboard.status, 200);
   assert.equal(dashboard.headers.get('www-authenticate'), null);
   assert.equal((await fetch(base + '/api/example')).status, 200);
+  assert.equal((await fetch(base + '/api/local-providers/oref/alerts')).status, 404);
   assert.equal((await fetch(base + '/%2e%2e%2fsecret')).status, 400);
 
   const response = await fetch(base + '/api/example', {

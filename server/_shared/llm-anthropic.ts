@@ -102,7 +102,7 @@ function textOf(content: Array<{ type: string; text?: string }>): string {
  * Billed tokens for a response. With server-side fallback, every attempt
  * (the declined one included) is in `usage.iterations` and the top-level
  * counters cover only the attempt that answered — the same rule the relay
- * widget agent applies (scripts/ais-relay.cjs addUsage).
+ * widget agent applies (scripts/personal-providers.cjs addUsage).
  */
 export function anthropicBilledTokens(usage: unknown): { promptTokens: number; completionTokens: number } {
   const u = (usage ?? {}) as { input_tokens?: number; output_tokens?: number; iterations?: unknown };
@@ -128,7 +128,7 @@ export async function anthropicComplete(opts: {
 }): Promise<AnthropicCompletion> {
   const client = createClient(opts.apiKey);
   // `fallbacks` is newer than the SDK's request type; the relay widget agent
-  // sends it the same way (scripts/ais-relay.cjs WIDGET_SONNET_PARAMS).
+  // sends it the same way (scripts/personal-providers.cjs WIDGET_SONNET_PARAMS).
   const response = await client.messages.create(
     buildParams(opts) as unknown as Anthropic.MessageCreateParamsNonStreaming,
     { headers: { 'anthropic-beta': FALLBACK_BETA }, timeout: opts.timeoutMs, signal: AbortSignal.timeout(opts.timeoutMs) },

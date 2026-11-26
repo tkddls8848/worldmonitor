@@ -19,8 +19,6 @@ import "worldmonitor/intelligence/v1/list_material_events.proto";
 import "worldmonitor/intelligence/v1/list_gps_interference.proto";
 import "worldmonitor/intelligence/v1/list_oref_alerts.proto";
 import "worldmonitor/intelligence/v1/list_satellites.proto";
-import "worldmonitor/intelligence/v1/list_telegram_feed.proto";
-import "worldmonitor/intelligence/v1/list_x_feed.proto";
 import "worldmonitor/intelligence/v1/search_gdelt_documents.proto";
 import "worldmonitor/intelligence/v1/get_gdelt_topic_timeline.proto";
 import "worldmonitor/intelligence/v1/list_cross_source_signals.proto";
@@ -140,22 +138,7 @@ service IntelligenceService {
     };
   }
 
-  // ListTelegramFeed returns recent OSINT messages from monitored Telegram channels via the relay, filterable by topic or channel, up to 200 per request.
-  rpc ListTelegramFeed(ListTelegramFeedRequest) returns (ListTelegramFeedResponse) {
-    option (sebuf.http.config) = {
-      path: "/list-telegram-feed"
-      method: HTTP_METHOD_GET
-    };
-  }
 
-  // ListXFeed retrieves curated public news-account posts from monitored X
-  // accounts. Returns permalink plus derived facts only — post text is R4.
-  rpc ListXFeed(ListXFeedRequest) returns (ListXFeedResponse) {
-    option (sebuf.http.config) = {
-      path: "/list-x-feed"
-      method: HTTP_METHOD_GET
-    };
-  }
 
   // GetCompanyEnrichment aggregates a per-company intelligence composite: SEC EDGAR
   // identity and recent filings (via authoritative ticker-to-CIK resolution), market

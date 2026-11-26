@@ -25,7 +25,7 @@ export const ARXIV_TTL = 10800;
 export const HN_TTL = 10800;
 const TECH_EVENTS_TTL = 28800; // 8h — outlives maxStaleMin:480 for health buffer
 // Distinct seed-meta key for this seeder's tech-events mirror. MUST NOT share
-// seed-meta:research:tech-events with scripts/ais-relay.cjs: the relay writes
+// seed-meta:research:tech-events with scripts/personal-providers.cjs: the relay writes
 // research:tech-events-bootstrap:v1 (the payload /api/health counts and
 // bootstrap hydration serves) plus that meta, and defers its boot seed while
 // the meta is younger than its 6h interval. The default meta-key derivation

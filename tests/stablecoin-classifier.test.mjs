@@ -96,7 +96,7 @@ describe('classifyStablecoin — peg boundaries', () => {
 
 describe('classifyStablecoin — byte parity with the replaced inline copies', () => {
   // The pre-#6319 seeder/relay shaping, frozen verbatim (modulo formatting).
-  // scripts/ais-relay.cjs and scripts/seed-stablecoin-markets.mjs carried
+  // scripts/personal-providers.cjs and scripts/seed-stablecoin-markets.mjs carried
   // this exact logic; both wrote market:stablecoins:v1.
   function legacySeederShape(coin) {
     const price = coin.current_price || 0;
@@ -160,7 +160,6 @@ describe('classifyStablecoin — byte parity with the replaced inline copies', (
 
 describe('every writer of market:stablecoins:v1 uses the shared classifier', () => {
   const WRITERS = [
-    'scripts/ais-relay.cjs',
     'scripts/seed-stablecoin-markets.mjs',
     'server/worldmonitor/market/v1/list-stablecoin-markets.ts',
   ];

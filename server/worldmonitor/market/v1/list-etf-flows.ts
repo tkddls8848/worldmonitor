@@ -1,6 +1,6 @@
 /**
  * RPC: ListEtfFlows -- reads seeded BTC spot ETF data from Railway seed cache.
- * All external Yahoo Finance calls happen in ais-relay.cjs on Railway.
+ * All external Yahoo Finance calls happen in personal-providers.cjs on Railway.
  */
 
 import type {

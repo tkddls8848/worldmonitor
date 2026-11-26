@@ -13,7 +13,7 @@
  *
  * NOT warm-pinged:
  * - getUSNIFleetReport: Redis-read-only since the AIS relay took over the
- *   USNI seed (usni-fleet:sebuf:v1, scripts/ais-relay.cjs). A POST here read
+ *   USNI seed (usni-fleet:sebuf:v1, scripts/personal-providers.cjs). A POST here read
  *   the cache the relay had already written and returned it — no fetch, no
  *   parse, nothing warmed — while logging "OK (N items)" as if it had.
  *

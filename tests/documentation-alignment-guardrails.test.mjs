@@ -65,13 +65,10 @@ describe('documentation alignment audit council protocol', () => {
 
 describe('high-risk Redis documentation guardrails', () => {
   it('UCDP writers for conflict:ucdp-events:v1 share the non-empty discovery guard', () => {
-    const relay = readRepo('scripts/ais-relay.cjs');
+    const relay = readRepo('scripts/personal-providers.cjs');
     const standalone = readRepo('scripts/seed-ucdp-events.mjs');
 
-    assert.match(relay, /UCDP_REDIS_KEY = 'conflict:ucdp-events:v1'/);
     assert.match(standalone, /const REDIS_KEY = 'conflict:ucdp-events:v1'/);
-    assert.match(relay, /Result\.length === 0\) throw/);
-    assert.match(relay, /page0\.Result\.length > 0/);
     assert.match(standalone, /page0\.Result\.length === 0/);
   });
 

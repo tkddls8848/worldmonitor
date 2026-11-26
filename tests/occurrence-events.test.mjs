@@ -53,7 +53,7 @@ describe('rssEventId', () => {
   });
 
   it('collapses near-duplicate headlines of one story across every classify variant to one id', () => {
-    // The relay classifies per variant (CLASSIFY_VARIANTS in ais-relay.cjs) and
+    // The relay classifies per variant (CLASSIFY_VARIANTS in personal-providers.cjs) and
     // its classify cache is keyed by the exact title, so each reworded copy of
     // a story is a separate LLM miss and a separate rss_alert publish. The feeds
     // differ in tracking parameters, scheme, www, fragment and trailing slash.

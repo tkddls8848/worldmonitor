@@ -6,6 +6,7 @@ import { readFile, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadEnvFile } from './_seed-utils.mjs';
+import providersModule from './personal-providers.cjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const LOOPBACK_HOSTS = ['127.0.0.1', 'localhost', '[::1]'];
@@ -27,6 +28,9 @@ export async function createPersonalIngress({ distDir, apiPort, token, allowedHo
   return http.createServer(async (req, res) => {
     res.setHeader('Cache-Control', 'private, no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
+    if ((req.url || '').split('?')[0].startsWith('/api/local-providers')) {
+      res.writeHead(404); res.end(); return;
+    }
     const host = req.headers.host;
     const port = req.socket.localPort;
     const isLocalHost = LOOPBACK_HOSTS.some(name => host === `${name}:${port}` || (port === 80 && host === name));
@@ -162,11 +166,14 @@ export async function startPersonalServer() {
   const store = await startPersonalStore();
   let api;
   let worker = null;
+  let providers = null;
   try {
     const { createLocalApiServer } = await import('./local/local-api-server.mjs');
-    api = await createLocalApiServer({ port: 0, mode: 'docker', resourceDir: ROOT, cloudFallback: false });
+    providers = providersModule.createPersonalProviders();
+    api = await createLocalApiServer({ port: 0, mode: 'docker', resourceDir: ROOT, cloudFallback: false, providers });
     const { port: apiPort } = await api.start();
     publishLocalApiOrigin(apiPort);
+    providers.start();
     const server = await createPersonalIngress({
       distDir: path.join(ROOT, 'dist'), apiPort, token: process.env.LOCAL_API_TOKEN,
       allowedHosts: process.env.WM_PERSONAL_ALLOWED_HOSTS,
@@ -179,12 +186,12 @@ export async function startPersonalServer() {
     });
     // Only with a store to read jobs from; the warning above covers the rest.
     worker = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN ? startScenarioWorker() : null;
-    const close = async () => { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); await worker?.close(); await api.close(); await store?.close(); };
+    const close = async () => { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); await worker?.close(); await providers?.close(); await api.close(); await store?.close(); };
     process.once('SIGINT', () => void close());
     process.once('SIGTERM', () => void close());
     console.log(`개인용 WorldMonitor: http://${host === '::1' ? '[::1]' : host}:${server.address().port} (외부 접속에는 HTTPS 프록시를 사용하세요)`);
     return { server, close };
-  } catch (error) { await worker?.close(); await api?.close(); await store?.close(); throw error; }
+  } catch (error) { await worker?.close(); await providers?.close(); await api?.close(); await store?.close(); throw error; }
 }
 
 if (process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url) {

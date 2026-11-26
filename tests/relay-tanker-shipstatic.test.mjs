@@ -6,7 +6,7 @@
 // The fix caches ShipType and ShipName per MMSI from ShipStaticData (AIS Type
 // 5) and resolves each PositionReport through that cache.
 //
-// scripts/ais-relay.cjs starts servers on import, so the vessel-aggregate
+// scripts/personal-providers.cjs starts servers on import, so the vessel-aggregate
 // region is evaluated in a vm context with its outer constants and the
 // chokepoint/transit collaborators stubbed; the functions under test and the
 // Maps they write are read back from that context. One text check stays, with
@@ -19,13 +19,13 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { describe, it } from 'node:test';
 
-const RELAY = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
+const RELAY = readFileSync(new URL('../scripts/personal-providers.cjs', import.meta.url), 'utf8');
 
 function vesselRegion() {
   const start = RELAY.indexOf('const MAX_VESSEL_META = 50000;');
   const cleanup = RELAY.indexOf('function cleanupAggregates()');
   const end = RELAY.indexOf('\nfunction ', cleanup + 10);
-  assert.ok(start > -1 && cleanup > start && end > cleanup, 'vessel aggregate region markers must exist in scripts/ais-relay.cjs');
+  assert.ok(start > -1 && cleanup > start && end > cleanup, 'vessel aggregate region markers must exist in scripts/personal-providers.cjs');
   return RELAY.slice(start, end);
 }
 

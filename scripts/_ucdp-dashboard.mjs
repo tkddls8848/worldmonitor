@@ -37,7 +37,7 @@ import { exposureLocationKey } from './shared/exposure-location-key.mjs';
 import countryNames from './shared/country-name-to-iso2.cjs';
 import iso3ToIso2 from './shared/iso3-to-iso2.json' with { type: 'json' };
 
-// Both UCDP writers (scripts/ais-relay.cjs and scripts/seed-ucdp-events.mjs)
+// Both UCDP writers (scripts/personal-providers.cjs and scripts/seed-ucdp-events.mjs)
 // publish the projection under these keys. The bootstrap slow tier reads the
 // first; api/health.js watches the second.
 export const UCDP_BOOTSTRAP_KEY = 'conflict:ucdp-events-bootstrap:v1';

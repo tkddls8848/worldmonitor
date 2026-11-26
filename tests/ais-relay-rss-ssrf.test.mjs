@@ -4,7 +4,7 @@
 // route into a read primitive against the Railway network. The fetch must
 // vet every DNS answer and connect only to a vetted address.
 //
-// ais-relay.cjs is a non-exported monolith that executes on import, so the
+// personal-providers.cjs is a non-exported monolith that executes on import, so the
 // durable coverage is a behavioural test of the shared lookup helper plus a
 // source guard that the /rss fetch actually wires it in.
 
@@ -22,7 +22,7 @@ const {
   SSRF_BLOCKED_ERROR_CODE,
 } = require('../scripts/lib/notification-webhook-ssrf.cjs');
 
-const RELAY_SRC = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
+const RELAY_SRC = readFileSync(new URL('../scripts/personal-providers.cjs', import.meta.url), 'utf8');
 
 function lookupResult(lookup, hostname, options) {
   return new Promise((resolve) => {

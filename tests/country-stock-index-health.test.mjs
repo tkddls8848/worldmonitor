@@ -53,7 +53,7 @@ test('the closed-market fast path is not gated on the best-effort country keys',
 });
 
 test('the shared country-index module stays free of filesystem reads', () => {
-  // scripts/ais-relay.cjs imports this module for the CN key and the snapshot
+  // scripts/personal-providers.cjs imports this module for the CN key and the snapshot
   // builder. Every file it touches joins the always-on relay's Railway
   // runtime-dependency closure (tests/railway-watch-path-audit.test.mjs), so a
   // readFileSync here forces a relay redeploy whenever an unrelated country
@@ -65,7 +65,7 @@ test('the shared country-index module stays free of filesystem reads', () => {
   const registrySource = readFileSync(new URL('../scripts/_country-stock-index-registry.mjs', import.meta.url), 'utf8');
   assert.match(registrySource, /openapi-filter-param-contracts\.json/, 'the registry module owns the enum read');
 
-  const relaySource = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
+  const relaySource = readFileSync(new URL('../scripts/personal-providers.cjs', import.meta.url), 'utf8');
   assert.doesNotMatch(
     relaySource,
     /_country-stock-index-registry/,

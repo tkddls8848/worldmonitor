@@ -12,7 +12,7 @@ const { gateRelayStoryLink } = require('./publisher-link-relay-gate.cjs');
 // close this for young replays). Fresh X candidates are independent inputs and
 // must remain eligible during the same pass.
 //
-// Lives in scripts/lib rather than inline in ais-relay.cjs for the same
+// Lives in scripts/lib rather than inline in personal-providers.cjs for the same
 // reason as x-poll-cycle.cjs: the relay file boots on import, so anything
 // only reachable there can only ever get regex-on-source "coverage" — see
 // the comment above createXPollCycle for what that shipped.

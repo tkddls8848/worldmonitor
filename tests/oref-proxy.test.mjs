@@ -1,7 +1,7 @@
 /**
  * OREF Proxy Connectivity Test
  *
- * Tests the curl-based proxy approach used by ais-relay.cjs
+ * Tests the curl-based proxy approach used by personal-providers.cjs
  * to reach oref.org.il through a residential proxy with Israel exit node.
  *
  * Requires OREF_PROXY_AUTH env var (format: user:pass@host:port)

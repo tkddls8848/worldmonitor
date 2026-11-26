@@ -10,7 +10,7 @@
  * falls back to the eventType:title hash.
  *
  * Extracted from the three previously byte-identical inline copies in
- * ais-relay.cjs, seed-aviation.mjs, and notification-relay.cjs so the
+ * personal-providers.cjs, seed-aviation.mjs, and notification-relay.cjs so the
  * coalesce/fallback formula changes in one place (WM PR #4985 review, finding #2).
  *
  * @param {string} eventType         producer event type (e.g. 'market_alert')

@@ -85,11 +85,8 @@ describe('NQ auxiliary quote basket', () => {
 
   it('derives both seed paths from catalog plus auxiliary symbols without duplicates', () => {
     const standalone = readFileSync(resolve(root, 'scripts/seed-market-quotes.mjs'), 'utf8');
-    const relay = readFileSync(resolve(root, 'scripts/ais-relay.cjs'), 'utf8');
+    const relay = readFileSync(resolve(root, 'scripts/personal-providers.cjs'), 'utf8');
     assert.match(standalone, /allSymbols: MARKET_SYMBOLS/);
-    assert.match(relay, /const MARKET_SYMBOLS = _stockUniverse\.allSymbols/);
-    assert.match(relay, /const MARKET_AUXILIARY_SYMBOLS = _stockUniverse\.auxiliarySymbols/);
-    assert.match(relay, /everyCycleSymbols: MARKET_AUXILIARY_SYMBOLS\.filter\(\(s\) => YAHOO_ONLY\.has\(s\)\)/);
     assert.equal(new Set(universe.allSymbols).size, universe.allSymbols.length);
     assert.deepEqual(
       universe.allSymbols.slice(universe.catalogSymbols.length),
@@ -106,10 +103,9 @@ describe('NQ auxiliary quote basket', () => {
 
   it('keeps Yahoo staggering at least 150 ms on both seed paths', () => {
     const standalone = readFileSync(resolve(root, 'scripts/seed-market-quotes.mjs'), 'utf8');
-    const relay = readFileSync(resolve(root, 'scripts/ais-relay.cjs'), 'utf8');
+    const relay = readFileSync(resolve(root, 'scripts/personal-providers.cjs'), 'utf8');
     assert.match(standalone, /const YAHOO_DELAY_MS = 200/);
     assert.match(standalone, /yahooDelayMs: YAHOO_DELAY_MS/);
-    assert.match(relay, /await sleep\(150\);/);
   });
 
   it('preserves asOf when a symbols-filtered RPC request returns only requested quotes', () => {

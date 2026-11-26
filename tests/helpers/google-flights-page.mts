@@ -70,7 +70,7 @@ type RelayHandler = (req: { url: string }, res: RelayResponse) => Promise<void>;
 
 /** Load the relay's real Google Flights section without starting its daemon. */
 export function loadGoogleFlightsRelay(provider: typeof fetch, outcomes: string[] = []) {
-  const source = readFileSync(new URL('../../scripts/ais-relay.cjs', import.meta.url), 'utf8');
+  const source = readFileSync(new URL('../../scripts/personal-providers.cjs', import.meta.url), 'utf8');
   const start = source.indexOf('// ─── Google Flights ─');
   const end = source.indexOf('// ─── Widget Agent ─', start);
   if (start < 0 || end < start) throw new Error('Google Flights section markers moved');

@@ -147,7 +147,7 @@ async function downloadCandidateCsvWindow(fetchImpl = fetch) {
 // annual base — it is an addition, never a replacement (a candidate alone is
 // ~1.8k events vs the annual's ~418k).
 //
-// This module exists because scripts/ais-relay.cjs (the primary relay seeder)
+// This module exists because scripts/personal-providers.cjs (the primary relay seeder)
 // and scripts/seed-ucdp-events.mjs (the Railway backup cron) must not drift:
 // the first cut of this feature duplicated the logic and the two copies had
 // already diverged on discovery concurrency and probe timeout. CommonJS so the

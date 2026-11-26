@@ -110,8 +110,6 @@ const SECURITY_PANEL_KEYS = new Set<string>([
   'escalation-correlation',
   'economic-correlation',
   'disaster-correlation',
-  'telegram-intel',
-  'x-intel',
   'cross-source-signals',
   'chat-analyst',
   'thermal-escalation',

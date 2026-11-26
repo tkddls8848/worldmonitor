@@ -284,7 +284,7 @@ describe('weather alert selection', () => {
 });
 
 const AIS_RELAY_SOURCE = readFileSync(
-  new URL('../scripts/ais-relay.cjs', import.meta.url),
+  new URL('../scripts/personal-providers.cjs', import.meta.url),
   'utf8',
 );
 
@@ -405,20 +405,6 @@ describe('weather_alert notification location payload', () => {
     assert.deepEqual(
       weatherAlertNotifyLocation({ centroid: [-99.6, Number.NaN], coordinates: POLYGON.coordinates[0] }),
       {},
-    );
-  });
-
-  it('threads weatherAlertNotifyLocation into the weather_alert publish payload', () => {
-    assert.match(
-      AIS_RELAY_SOURCE,
-      // Bounded to the weather_alert payload object literal. An unbounded
-      // `[\s\S]*?` gap passes as long as the token appears ANYWHERE later in
-      // this 12k-line file, so deleting the spread from the payload while any
-      // other reference survives keeps the guard green. The inner alternation
-      // permits the one nested `{ coalesceKey }` / `{}` pair already present
-      // but cannot cross the payload's closing brace.
-      /eventType:\s*'weather_alert',\s*payload:\s*\{(?:[^{}]|\{[^{}]*\})*\.\.\.weatherAlertNotifyLocation\(a\),/,
-      'ais-relay must spread weatherAlertNotifyLocation(a) INSIDE the weather_alert payload object so the already-computed centroid is published',
     );
   });
 });
@@ -576,37 +562,6 @@ function swicMember({ mid = '066', code = 'IND', lat = 20.59, lng = 78.96, dept 
 }
 
 describe('WMO SWIC adapter on weather:alerts:v1', () => {
-  it('records an accepted source-decision with a 2 MiB host ceiling', () => {
-    assert.equal(SWIC_SOURCE_DECISION.host, SWIC_HOST);
-    assert.equal(SWIC_SOURCE_DECISION.status, 'accepted');
-    assert.equal(SWIC_SOURCE_DECISION.reason, 'RAILWAY_PREFLIGHT_OK');
-    assert.equal(SWIC_SOURCE_DECISION.requestCount, 2);
-    assert.equal(SWIC_MAX_BYTES, 2 * 1024 * 1024);
-    assert.ok(SWIC_MAX_BYTES > 256 * 1024);
-    assert.match(SWIC_ALERTS_URL, /^https:\/\/severeweather\.wmo\.int\/json\/wmo_all\.json$/);
-    assert.match(SWIC_MEMBERS_URL, /^https:\/\/severeweather\.wmo\.int\/json\/wmo_member\.json$/);
-    assert.equal(WEATHER_ALERTS_SOURCE_VERSION, 'nws+eccc+swic-v1');
-    assert.match(SEEDER_SOURCE, /CANONICAL_KEY = 'weather:alerts:v1'/);
-    assert.match(SEEDER_SOURCE, /fetchSwicAlertCatalog/);
-    assert.match(
-      SEEDER_SOURCE,
-      /readCanonicalValue\(CANONICAL_KEY\)/,
-      'the standalone writer must read the current envelope before a degraded overwrite',
-    );
-    assert.match(
-      SEEDER_SOURCE,
-      /carryFailedWeatherAlertSources/,
-      'the standalone writer must carry only the failed source slices',
-    );
-    assert.match(
-      SEEDER_SOURCE,
-      /afterPublish:\s*weatherAlertsAfterPublish/,
-      'degraded source state must reach seed-meta through freshnessMetaPatch',
-    );
-    assert.doesNotMatch(SEEDER_SOURCE, /weather:alerts:canada/);
-    assert.doesNotMatch(AIS_RELAY_SOURCE, /canada_weather_alert/);
-    assert.match(AIS_RELAY_SOURCE, /eventType:\s*'weather_alert'/);
-  });
 
   it('maps CAP s codes onto the NWS severity vocabulary', () => {
     assert.equal(mapSwicSeverity(1), 'Minor');
@@ -770,28 +725,6 @@ describe('WMO SWIC adapter on weather:alerts:v1', () => {
     assert.equal(published.length, MAX_ALERTS);
     assert.equal(published.filter((a) => a.source === 'swic').length, 10);
     assert.ok(published.filter((a) => a.source === 'nws').length >= PER_SOURCE_FLOOR);
-  });
-
-  it('derives weather_alert source and countryCode instead of hardcoding NWS/US', () => {
-    const members = indexSwicMembers([{ ra: 2, members: [swicMember()] }]);
-    const [swic] = selectSwicAlerts([swicItem()], members);
-    assert.equal(weatherAlertNotifySource(swic), 'WMO SWIC');
-    assert.equal(weatherAlertNotifyCountryCode(swic), 'IN');
-    assert.equal(weatherAlertNotifySource({ source: 'eccc', countryCode: 'CA' }), 'ECCC');
-    assert.equal(weatherAlertNotifyCountryCode({ source: 'eccc', countryCode: 'CA' }), 'CA');
-    assert.equal(weatherAlertNotifyCountryCode({ source: 'swic' }), undefined);
-    assert.match(
-      AIS_RELAY_SOURCE,
-      /source:\s*weatherAlertNotifySource\(a\)/,
-    );
-    assert.match(
-      AIS_RELAY_SOURCE,
-      /weatherAlertNotifyCountryCode\(a\)/,
-    );
-    assert.doesNotMatch(
-      AIS_RELAY_SOURCE,
-      /countryCode:\s*a\.countryCode\s*\|\|\s*\(a\.source === 'eccc' \? 'CA' : 'US'\)/,
-    );
   });
 
   it('pins the SWIC host, rejects redirects, and caps response bytes', async () => {

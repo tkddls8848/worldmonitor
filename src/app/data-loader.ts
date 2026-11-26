@@ -122,8 +122,6 @@ import { fetchImdCycloneMarine } from '@/services/imd-cyclone-marine';
 import { fetchSecurityAdvisories } from '@/services/security-advisories';
 import { fetchThermalEscalations } from '@/services/thermal-escalation';
 import { fetchCrossSourceSignals } from '@/services/cross-source-signals';
-import { fetchTelegramFeed, getTelegramIntelGeneration } from '@/services/telegram-intel';
-import { fetchXFeed, isUsableHydratedXFeed } from '@/services/x-intel';
 import { fetchOrefAlerts, startOrefPolling, stopOrefPolling, onOrefAlertsUpdate, type OrefAlertsResponse } from '@/services/oref-alerts';
 import { getResilienceRanking } from '@/services/resilience';
 import { buildResilienceChoroplethMap } from '@/components/resilience-choropleth-utils';
@@ -456,7 +454,6 @@ export class DataLoaderManager implements AppModule {
   // True once a live X fetch has rendered. Gates whether a later transport
   // failure may blank the panel (it may not) or must surface an error (it must,
   // when nothing good is on screen yet).
-  private xIntelHasLiveData = false;
 
   private digestBreaker = { state: 'closed' as 'closed' | 'open' | 'half-open', failures: 0, cooldownUntil: 0 };
   // Notification freshness belongs to the exact news generation committed to
@@ -3559,9 +3556,6 @@ export class DataLoaderManager implements AppModule {
 
     // Security advisories
     tasks.push(this.loadSecurityAdvisories());
-
-    tasks.push(this.loadTelegramIntel());
-    tasks.push(this.loadXIntel());
     tasks.push(this.loadOrefAlerts());
 
     // GPS/GNSS jamming (cloud-only — seeded by Wingbits API via fetch-gpsjam.mjs)
@@ -4970,72 +4964,6 @@ export class DataLoaderManager implements AppModule {
       console.error('[App] Radiation watch fetch failed:', error);
       this.callPanel('radiation-watch', 'showError');
       dataFreshness.recordError('radiation', String(error));
-    }
-  }
-
-  async loadTelegramIntel(): Promise<void> {
-    const generation = getTelegramIntelGeneration();
-    const isCurrent = () => !this.ctx.isDestroyed
-      && generation === getTelegramIntelGeneration();
-    try {
-      const result = await fetchTelegramFeed();
-      if (!isCurrent()) return;
-      this.callPanel('telegram-intel', 'setData', result, generation);
-    } catch (error) {
-      if (!isCurrent()) return;
-      console.error('[App] Telegram intel fetch failed:', error);
-      this.callPanel('telegram-intel', 'setData', {
-        source: 'telegram', enabled: false, count: 0, updatedAt: null, items: [],
-      }, generation);
-    }
-  }
-
-  async loadXIntel(): Promise<void> {
-    // `xFeed` is intentionally NOT a bootstrap tier key (R4, #6654): its items
-    // carry post bodies, and every tier is served unauthenticated at
-    // `?tier=<t>&public=1` with ACAO:*. So this read is inert today and always
-    // returns undefined — the panel gets its data from the fetch below.
-    // Deliberately kept rather than deleted: it is the hydrated-else-fetch
-    // fallback the DOM tests in tests/dom/x-intel-data-loader.test.mts exercise,
-    // and it is what would resume working if the key is ever re-registered with
-    // `text` stripped on the bootstrap path. Note the bootstrap coverage guards
-    // in tests/bootstrap.test.mjs only run key -> consumer, so nothing flags a
-    // consumer whose key is absent.
-    const hydrated = getHydratedData('xFeed') as import('@/services/x-intel').XFeedResponse | undefined;
-    const hydratedUsable = isUsableHydratedXFeed(hydrated);
-    if (hydratedUsable && !this.ctx.isDestroyed) {
-      this.callPanel('x-intel', 'setData', hydrated);
-    }
-    const controller = new AbortController();
-    this.xIntelAbortController?.abort();
-    this.xIntelAbortController = controller;
-    try {
-      const result = await fetchXFeed(50, controller.signal);
-      if (controller.signal.aborted || this.ctx.isDestroyed) return;
-      this.callPanel('x-intel', 'setData', result);
-      this.xIntelHasLiveData = true;
-    } catch (error) {
-      if (controller.signal.aborted || this.ctx.isDestroyed) return;
-      console.error('[App] X news-account fetch failed:', error);
-      if (hydratedUsable) return;
-      // A transport failure is NOT `enabled: false`. That sentinel means "the
-      // relay has no X credentials", and reusing it here rendered the permanent
-      // "disabled" copy over a panel that was showing good posts a moment
-      // earlier. With hydration now intentionally absent (xFeed is not a
-      // bootstrap key, R4), `hydratedUsable` is always false, so every transient
-      // 502 hit this path.
-      //
-      // Once a live fetch has succeeded, keep that render: the panel refreshes
-      // every 15 min, so one failed poll should not blank it. Note showError
-      // also calls replaceContent, so it is NOT a "keep what's on screen" path —
-      // hence the explicit early return rather than falling through to it.
-      if (this.xIntelHasLiveData) return;
-      // Nothing good on screen yet (first load, or only expired hydration we
-      // deliberately refused to render): surface the failure rather than leave a
-      // stuck loading state.
-      this.callPanel('x-intel', 'showError');
-    } finally {
-      if (this.xIntelAbortController === controller) this.xIntelAbortController = null;
     }
   }
 

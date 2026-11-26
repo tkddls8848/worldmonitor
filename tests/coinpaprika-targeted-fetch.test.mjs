@@ -113,7 +113,7 @@ describe('fetchCoinPaprikaTickersById', () => {
 
 describe('ais-relay CoinPaprika fallback', () => {
   it('does not fetch the full CoinPaprika ticker catalog in the primary market seed path', () => {
-    const src = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
+    const src = readFileSync(new URL('../scripts/personal-providers.cjs', import.meta.url), 'utf8');
 
     assert.doesNotMatch(src, /api\.coinpaprika\.com\/v1\/tickers\?quotes=USD/);
     assert.match(src, /api\.coinpaprika\.com\/v1\/tickers\/\$\{encodeURIComponent\(id\)\}\?quotes=USD/);

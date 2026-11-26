@@ -65,7 +65,7 @@ function hasTerminalMarker(rawSrc: string): boolean {
     /exiting 0 \(not a crash\)/.test(src) ||     // scripts/_bundle-runner.mjs clean exit
     /_bundle-runner/.test(src) ||                // delegates to the bundle runner
     // A long-running service's shutdown handler. Matched on the HANDLER REGISTRATION, not on the
-    // logged text: ais-relay.cjs builds its line as `[Relay] ${signal} received`, so grepping the
+    // logged text: personal-providers.cjs builds its line as `[Relay] ${signal} received`, so grepping the
     // source for the literal "SIGTERM received" finds nothing even though the runtime output has
     // it. Source-level guards must match what is WRITTEN, not what is printed.
     /process\.on\(\s*['"`]SIGTERM['"`]/.test(src) ||
@@ -162,7 +162,7 @@ describe('hasTerminalMarker predicate', () => {
   });
 
   it('matches the SOURCE, not the runtime output', () => {
-    // ais-relay.cjs logs `[Relay] ${signal} received — shutting down`, so the literal string
+    // personal-providers.cjs logs `[Relay] ${signal} received — shutting down`, so the literal string
     // "SIGTERM received" never appears in the file even though it appears in every log. Matching
     // the interpolated output is why three real services first read as unvouchable here.
     assert.equal(hasTerminalMarker('console.log(`[Relay] ${signal} received — shutting down`)'), false);

@@ -1,6 +1,6 @@
 /**
  * RPC: GetSectorSummary -- reads seeded sector data from Railway seed cache.
- * All external Finnhub/Yahoo Finance calls happen in ais-relay.cjs on Railway.
+ * All external Finnhub/Yahoo Finance calls happen in personal-providers.cjs on Railway.
  */
 
 import type {

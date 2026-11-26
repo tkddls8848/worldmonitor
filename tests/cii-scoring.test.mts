@@ -625,7 +625,7 @@ function acledEvent(country: string, type: string, fatalities = 0) {
 }
 
 // Mirror of the real `conflict:ucdp-events:v1` row shape (seed-ucdp-events.mjs /
-// ais-relay.cjs): { country, violenceType, deathsBest, dateStart }. There is NO
+// personal-providers.cjs): { country, violenceType, deathsBest, dateStart }. There is NO
 // `intensity_level`/`type_of_violence` field — the scorer classifies per-country
 // using deaths + event count over a 2-year window (deriveUcdpClassifications parity).
 function ucdpEvent(country: string, deathsBest = 1, dateStart = Date.now()) {
@@ -1336,39 +1336,6 @@ describe('CII scoring', () => {
     const lowSev = scoreFor(computeCIIScores([], aux2), 'IL')!;
     assert.ok(highSev.combinedScore > lowSev.combinedScore,
       `High severity strikes (${highSev.combinedScore}) should exceed moderate (${lowSev.combinedScore})`);
-  });
-
-  it('a Saudi strike from the Middle East strike feed raises SA, not Iran', () => {
-    const require = createRequire(import.meta.url);
-    const strikes = require('../scripts/lib/middle-east-strikes.cjs');
-    const now = Date.now();
-    const post = { id: 'saudidcd:7001', channel: 'saudidcd', url: 'https://t.me/SaudiDCD/7001', ts: new Date(now - 600_000).toISOString(), text: 'Projectile debris fell in Riyadh' };
-    const candidate = strikes.buildTelegramCandidate(post, { isStrike: true, kind: 'strike', place: 'Riyadh', countryIso2: 'SA', severity: 'critical' }, now);
-    const events = strikes.deriveStrikeEvents([candidate], now);
-    assert.equal(events.length, 1);
-    const withStrike = emptyAux();
-    withStrike.iranEvents = events;
-    const baseline = computeCIIScores([], emptyAux());
-    const scored = computeCIIScores([], withStrike);
-    assert.ok(scoreFor(scored, 'SA')!.combinedScore > scoreFor(baseline, 'SA')!.combinedScore,
-      `SA ${scoreFor(scored, 'SA')!.combinedScore} must exceed ${scoreFor(baseline, 'SA')!.combinedScore}`);
-    assert.equal(scoreFor(scored, 'IR')!.combinedScore, scoreFor(baseline, 'IR')!.combinedScore, 'the strike must not land on Iran');
-  });
-
-  it('a strike event scores to the country it carries, even at sea', () => {
-    const require = createRequire(import.meta.url);
-    const strikes = require('../scripts/lib/middle-east-strikes.cjs');
-    const now = Date.now();
-    const post = { id: 'saudidcd:7002', channel: 'saudidcd', url: 'https://t.me/SaudiDCD/7002', ts: new Date(now - 600_000).toISOString(), text: 'Tanker struck in the Strait of Hormuz' };
-    const candidate = strikes.buildTelegramCandidate(post, { isStrike: true, kind: 'strike', place: 'Strait of Hormuz', countryIso2: 'IR', severity: 'high' }, now);
-    const [event] = strikes.deriveStrikeEvents([candidate], now);
-    assert.equal(event.countryCode, 'IR');
-    const withStrike = emptyAux();
-    withStrike.iranEvents = strikesAt({ ...event, severity: 'critical' });
-    const baseline = computeCIIScores([], emptyAux());
-    const scored = computeCIIScores([], withStrike);
-    assert.ok(scoreFor(scored, 'IR')!.combinedScore > scoreFor(baseline, 'IR')!.combinedScore,
-      'open water in the strait is in no country polygon; the event\'s countryCode must carry it to Iran');
   });
 
   it('a strike event\'s country wins over its coordinates, and a non-Tier-1 country scores nowhere', () => {

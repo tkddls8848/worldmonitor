@@ -1,15 +1,11 @@
 {
-  "name": "worldmonitor-railway-relay",
+  "name": "worldmonitor-collectors",
   "version": "1.1.1",
-  "description": "Railway relay: AIS/OpenSky + RSS proxy + Telegram OSINT poller",
-  "main": "ais-relay.cjs",
+  "description": "Personal WorldMonitor data collectors",
   "scripts": {
-    "start": "node ais-relay.cjs",
-    "telegram:session": "node telegram/session-auth.mjs",
     "seed-bundle-regional": "node seed-bundle-regional.mjs"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.91.1",
     "@aws-sdk/client-s3": "^3.1009.0",
     "@e965/xlsx": "0.20.3",
     "@noble/hashes": "1.4.0",
@@ -24,7 +20,6 @@
     "pdfjs-dist": "6.2.108",
     "satellite.js": "^6.0.2",
     "sax": "^1.6.0",
-    "telegram": "^2.22.2",
     "tsx": "^4.21.0",
     "undici": "^8.12.3",
     "ws": "^8.21.0",

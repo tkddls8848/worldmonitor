@@ -19,7 +19,7 @@ const CLASSIFY_CACHE_TTL = 86400;
 const VALID_LEVELS: readonly string[] = CLASSIFY_VALID_LEVELS;
 const VALID_CATEGORIES: readonly string[] = CLASSIFY_VALID_CATEGORIES;
 
-// Same model as the relay's classify seed (scripts/ais-relay.cjs), which writes the
+// Same model as the relay's classify seed (scripts/personal-providers.cjs), which writes the
 // same `classify:sebuf:v6` rows. Against 413 blind-judged headlines, this prompt on
 // the shared Flash default raised 93 false critical/high labels for 43 real ones;
 // v4.1 with the "Do not under-rate high" block below raised 20 for 43. Pinned by

@@ -4,7 +4,7 @@
 // deliberately: the payload is ~12KB, so the cadence is about timeliness rather
 // than bandwidth, and an emergency-alert layer that lags is worthless.
 // Seeder for Alberta Emergency Alert Atom (#6610).
-// Do not add Canada loops to ais-relay.cjs. Do not merge into the NWS weather alerts Redis key.
+// Do not add Canada loops to personal-providers.cjs. Do not merge into the NWS weather alerts Redis key.
 
 import { loadEnvFile, CHROME_UA, runSeed } from './_seed-utils.mjs';
 import {

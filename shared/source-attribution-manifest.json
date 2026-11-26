@@ -480,9 +480,6 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
-        },
-        {
           "path": "scripts/local/local-api-server.mjs"
         },
         {
@@ -499,9 +496,6 @@
       "attribution": "adsb.lol; preserve ODbL attribution and link to https://adsb.lol/.",
       "status": "reviewed",
       "references": [
-        {
-          "path": "scripts/ais-relay.cjs"
-        },
         {
           "path": "scripts/seed-military-flights.mjs"
         },
@@ -643,7 +637,7 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-providers.cjs"
         }
       ]
     },
@@ -660,7 +654,7 @@
           "path": "scripts/_seed-utils.mjs"
         },
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-providers.cjs"
         },
         {
           "path": "server/worldmonitor/market/v1/_shared.ts"
@@ -774,9 +768,6 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
-        },
-        {
           "path": "scripts/seed-grocery-basket.mjs"
         },
         {
@@ -807,9 +798,6 @@
       "attribution": "Firecrawl; link to the retrieved source page.",
       "status": "terms-review",
       "references": [
-        {
-          "path": "scripts/ais-relay.cjs"
-        },
         {
           "path": "scripts/seed-grocery-basket.mjs"
         }
@@ -1141,7 +1129,7 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-collector-tasks.cjs"
         }
       ]
     },
@@ -1154,9 +1142,6 @@
       "attribution": "Brave Search; link to the result and original publisher.",
       "status": "terms-review",
       "references": [
-        {
-          "path": "scripts/ais-relay.cjs"
-        },
         {
           "path": "server/worldmonitor/market/v1/stock-news-search.ts"
         }
@@ -1291,7 +1276,7 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-providers.cjs"
         }
       ]
     },
@@ -1318,9 +1303,6 @@
       "attribution": "Credit api.usaspending.gov and link to the original upstream API/dataset.",
       "status": "terms-review",
       "references": [
-        {
-          "path": "scripts/ais-relay.cjs"
-        },
         {
           "path": "scripts/seed-usa-spending.mjs"
         }
@@ -1390,7 +1372,7 @@
           "path": "scripts/_demographics-capability-source.mjs"
         },
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-providers.cjs"
         },
         {
           "path": "scripts/seed-bis-lbs.mjs"
@@ -1498,24 +1480,10 @@
       "host": "api.x.com",
       "provider": "X API",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "X Developer Agreement and Policy; ingest and retain only allowed fields and honor deletion, protection, and withholding signals",
       "attribution": "Credit X and preserve author and source links when the allowed use permits display.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/cross-strait-activity/japan-x.mjs"
-        },
-        {
-          "path": "scripts/lib/x-news-accounts.cjs"
-        },
-        {
-          "path": "scripts/lib/x-post-budget.cjs"
-        },
-        {
-          "path": "scripts/verify-x-accounts.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "apis.data.go.kr",
@@ -1912,7 +1880,7 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-collector-tasks.cjs"
         }
       ]
     },
@@ -2195,9 +2163,6 @@
       "status": "excluded",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
-        },
-        {
           "path": "server/_shared/brief-carousel-render.ts"
         }
       ]
@@ -2224,7 +2189,7 @@
           "path": "scripts/_orbital-catalog.mjs"
         },
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-collector-tasks.cjs"
         }
       ]
     },
@@ -2601,7 +2566,7 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-collector-tasks.cjs"
         }
       ]
     },
@@ -2750,10 +2715,10 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/local/local-api-server.mjs"
         },
         {
-          "path": "scripts/local/local-api-server.mjs"
+          "path": "scripts/personal-providers.cjs"
         },
         {
           "path": "scripts/seed-military-flights.mjs"
@@ -3180,7 +3145,7 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-providers.cjs"
         },
         {
           "path": "scripts/seed-aviation.mjs"
@@ -3262,7 +3227,7 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-collector-tasks.cjs"
         },
         {
           "path": "scripts/seed-research.mjs"
@@ -4569,10 +4534,10 @@
           "path": "api/symbol-search.ts"
         },
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/local/local-api-server.mjs"
         },
         {
-          "path": "scripts/local/local-api-server.mjs"
+          "path": "scripts/personal-collector-tasks.cjs"
         },
         {
           "path": "scripts/seed-earnings-calendar.mjs"
@@ -4799,7 +4764,7 @@
           "path": "scripts/_forecast-market-settlements.mjs"
         },
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-providers.cjs"
         },
         {
           "path": "scripts/seed-prediction-markets.mjs"
@@ -6316,9 +6281,6 @@
       "status": "excluded",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
-        },
-        {
           "path": "scripts/local/embedded-store.mjs"
         },
         {
@@ -6326,6 +6288,9 @@
         },
         {
           "path": "scripts/local/redis-rest-proxy.mjs"
+        },
+        {
+          "path": "scripts/personal-providers.cjs"
         },
         {
           "path": "server/worldmonitor/research/v1/list-tech-events.ts"
@@ -7083,7 +7048,7 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-collector-tasks.cjs"
         },
         {
           "path": "shared/news-catalog.json"
@@ -7328,7 +7293,7 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-collector-tasks.cjs"
         }
       ]
     },
@@ -7611,7 +7576,7 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-providers.cjs"
         },
         {
           "path": "scripts/seed-military-flights.mjs"
@@ -8043,7 +8008,7 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-providers.cjs"
         }
       ]
     },
@@ -8251,7 +8216,10 @@
           "path": "scripts/_yahoo-sector-valuations.cjs"
         },
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-collector-tasks.cjs"
+        },
+        {
+          "path": "scripts/personal-providers.cjs"
         },
         {
           "path": "scripts/seed-commodity-quotes.mjs"
@@ -8372,9 +8340,6 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
-        },
-        {
           "path": "scripts/build-plane-alert-watchlist.mjs"
         },
         {
@@ -8421,7 +8386,7 @@
       "status": "excluded",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-collector-tasks.cjs"
         },
         {
           "path": "src/services/story-share.ts"
@@ -9798,16 +9763,7 @@
       "status": "excluded",
       "references": [
         {
-          "path": "api/telegram-feed.js"
-        },
-        {
-          "path": "scripts/ais-relay.cjs"
-        },
-        {
           "path": "src/services/story-share.ts"
-        },
-        {
-          "path": "src/services/telegram-intel.ts"
         }
       ]
     },
@@ -10650,10 +10606,10 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/local/local-api-server.mjs"
         },
         {
-          "path": "scripts/local/local-api-server.mjs"
+          "path": "scripts/personal-providers.cjs"
         },
         {
           "path": "scripts/seed-ucdp-events.mjs"
@@ -10782,9 +10738,6 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
-        },
-        {
           "path": "scripts/local/local-api-server.mjs"
         },
         {
@@ -10814,7 +10767,7 @@
           "path": "scripts/_proxy-utils.cjs"
         },
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-providers.cjs"
         }
       ]
     },
@@ -11146,7 +11099,7 @@
       "status": "reviewed",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-providers.cjs"
         },
         {
           "path": "server/worldmonitor/trade/v1/_tradestats-tariff.ts"
@@ -11199,16 +11152,10 @@
           "path": "scripts/cross-strait-activity/adapters.mjs"
         },
         {
-          "path": "scripts/cross-strait-activity/japan-x.mjs"
-        },
-        {
           "path": "scripts/eval-classify-labels.mjs"
         },
         {
           "path": "scripts/lib/brief-embedding.mjs"
-        },
-        {
-          "path": "scripts/lib/x-news-accounts.cjs"
         },
         {
           "path": "scripts/mcp-live-smoke.mjs"
@@ -13097,7 +13044,7 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-providers.cjs"
         },
         {
           "path": "src/components/AviationCommandBar.ts"
@@ -13898,7 +13845,7 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-collector-tasks.cjs"
         }
       ]
     },
@@ -14075,7 +14022,7 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-providers.cjs"
         }
       ]
     },
@@ -14145,7 +14092,7 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-collector-tasks.cjs"
         },
         {
           "path": "scripts/seed-conflict-intel.mjs"
@@ -14342,7 +14289,7 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-collector-tasks.cjs"
         }
       ]
     },
@@ -14874,7 +14821,7 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/ais-relay.cjs"
+          "path": "scripts/personal-collector-tasks.cjs"
         },
         {
           "path": "scripts/seed-research.mjs"
@@ -15804,9 +15751,6 @@
       "references": [
         {
           "path": "scripts/comparison-shortlist.mjs"
-        },
-        {
-          "path": "scripts/cross-strait-activity/japan-x.mjs"
         }
       ]
     },

@@ -57,10 +57,6 @@ const ALLOWED = [
   ['origin', 'server/cors.ts', "const allowOrigin = isAllowedOrigin(origin) ? origin : 'https://worldmonitor.app';"],
   ['origin', 'server/cors.ts', "'Access-Control-Allow-Origin': origin || 'https://worldmonitor.app',"],
   // The relay's CORS allowlist: browser origins it answers, not targets.
-  ['origin', 'scripts/ais-relay.cjs', "'https://worldmonitor.app',"],
-  ['origin', 'scripts/ais-relay.cjs', "'https://tech.worldmonitor.app',"],
-  ['origin', 'scripts/ais-relay.cjs', "'https://finance.worldmonitor.app',"],
-  ['origin', 'scripts/ais-relay.cjs', "if (url.hostname.endsWith('.worldmonitor.app') && url.protocol === 'https:') return origin;"],
   // HDX HAPI's app_identifier: the client name and contact address the
   // conflict seeders send to HAPI, like a User-Agent. Nothing is sent to it.
   ['user-agent', 'shared/hapi-app-identifier.json', '"email": "monitor@worldmonitor.app"'],
@@ -138,7 +134,7 @@ function seederClosure() {
 
 // The AIS relay (a long-running collector) and every module it requires.
 function relayClosure() {
-  return importClosure([path.join(SCRIPTS, 'ais-relay.cjs')]);
+  return importClosure([path.join(SCRIPTS, 'personal-providers.cjs')]);
 }
 
 function importClosure(roots) {
@@ -294,7 +290,7 @@ test('no seeder, or module a seeder imports, targets the upstream operator hosts
 test('the AIS relay, and every module it requires, targets no upstream operator host', () => {
   const { files } = relayClosure();
   const names = new Set(files.map(rel));
-  for (const expected of ['scripts/ais-relay.cjs', 'scripts/_widget-data-policy.cjs', 'scripts/lib/classify-digest-request.cjs']) {
+  for (const expected of ['scripts/personal-providers.cjs']) {
     assert.ok(names.has(expected), `${expected} is part of the relay closure`);
   }
   const offenders = offendersIn(files.filter((file) => !ATTRIBUTION_LEDGERS.has(rel(file))));

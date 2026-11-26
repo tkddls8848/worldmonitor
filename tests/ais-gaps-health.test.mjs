@@ -18,13 +18,13 @@ describe('aisGaps health registration (#7574)', () => {
     assert.equal(
       STANDALONE_KEYS.aisGaps,
       'maritime:ais-gaps:v1',
-      'STANDALONE_KEYS.aisGaps must match AIS_GAPS_REDIS_KEY in scripts/ais-relay.cjs and COUNT_SOURCE_KEYS.ais_gaps',
+      'STANDALONE_KEYS.aisGaps must match AIS_GAPS_REDIS_KEY in scripts/personal-providers.cjs and COUNT_SOURCE_KEYS.ais_gaps',
     );
   });
 
   it('registers the seed-meta freshness entry with the pinned budget', () => {
     assert.equal(SEED_META.aisGaps.key, 'seed-meta:maritime:ais-gaps');
-    // Co-pinned with AIS_GAPS_TTL=3600 in scripts/ais-relay.cjs: the data TTL
+    // Co-pinned with AIS_GAPS_TTL=3600 in scripts/personal-providers.cjs: the data TTL
     // must STRICTLY exceed this budget so a dead relay reads STALE_SEED
     // before the envelope expires to EMPTY.
     assert.equal(SEED_META.aisGaps.maxStaleMin, 30);

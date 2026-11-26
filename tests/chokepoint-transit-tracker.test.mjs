@@ -8,7 +8,7 @@ import { createTransitTracker } from '../shared/chokepoint-transit-tracker.js';
 import { CHOKEPOINT_TRANSIT_GATES } from '../shared/chokepoint-transit-gates.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const relaySrc = readFileSync(resolve(__dirname, '../scripts/ais-relay.cjs'), 'utf-8');
+const relaySrc = readFileSync(resolve(__dirname, '../scripts/personal-providers.cjs'), 'utf-8');
 
 const MIN = 60 * 1000;
 const HOUR = 60 * MIN;

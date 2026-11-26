@@ -9,6 +9,7 @@ import path from 'node:path';
 import { createInterface } from 'node:readline';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { SOURCE_SKIPPED_EXIT_CODE } from './_seed-utils.mjs';
+import { PERSONAL_TASKS } from './seed-personal-task.mjs';
 
 const SCRIPTS = path.dirname(fileURLToPath(import.meta.url));
 const STATE_FILE = path.resolve(SCRIPTS, '..', '.personal', 'collect-state.json');
@@ -19,6 +20,8 @@ const MIN = 60_000;
 // `--watch 15` does not refetch daily and weekly sources every 15 minutes.
 // Roughly a third of each dataset's maxStaleMin in api/health.js.
 export const STANDALONE_INTERVAL_MIN = {
+  ...Object.fromEntries(Object.entries(PERSONAL_TASKS).map(([name, entry]) => [name, entry[2]])),
+  'weather-alerts': 15, 'cyber-threats': 120,
   'kr-customs-trade': 1440,
   'world-relations': 1440,
   'market-quotes': 15, 'commodity-quotes': 15, 'crypto-sectors': 30, 'fear-greed': 240,
@@ -82,12 +85,12 @@ export const DEFAULT_COLLECTORS = [
   'bundle-portwatch', 'bundle-portwatch-port-activity', 'bundle-regional-energy', 'bundle-regional',
   'bundle-static-ref', 'bundle-static-ref-heavy', 'bundle-resilience', 'bundle-resilience-recovery',
   'bundle-resilience-energy-v2', 'bundle-resilience-validation',
-  ...Object.keys(STANDALONE_INTERVAL_MIN).filter((name) => name !== 'news-threat-summary'),
+  ...Object.keys(STANDALONE_INTERVAL_MIN).filter((name) => !['news-threat-summary', 'weather-alerts', 'cyber-threats'].includes(name)),
   'insights', 'world-relations-ai', 'forecasts', 'correlation', 'digest-notifications', 'world-overview',
 ];
 
 // The bulk pass can take longer than these cadences even on a healthy machine.
-const RELAY_WATCH_GROUPS = [
+const FAST_WATCH_GROUPS = [
   { names: ['news-threat-summary'], every: STANDALONE_INTERVAL_MIN['news-threat-summary'] },
   { names: ['shipping-stress'], every: STANDALONE_INTERVAL_MIN['shipping-stress'] },
   { names: ['transit-summaries'], every: STANDALONE_INTERVAL_MIN['transit-summaries'] },
@@ -95,16 +98,16 @@ const RELAY_WATCH_GROUPS = [
 
 export function collectorWatchGroups(selected, watchMinutes, force) {
   if (force) return [{ names: selected, every: watchMinutes, force }];
-  const fastNames = new Set(RELAY_WATCH_GROUPS.flatMap(({ names }) => names));
+  const fastNames = new Set(FAST_WATCH_GROUPS.flatMap(({ names }) => names));
   return [
-    ...RELAY_WATCH_GROUPS.map((group) => ({ ...group, force: true, fixedCadence: true })),
+    ...FAST_WATCH_GROUPS.map((group) => ({ ...group, force: true, fixedCadence: true })),
     { names: selected.filter((name) => !fastNames.has(name)), every: watchMinutes, force: false },
   ];
 }
 
 export function collectorScript(name) {
   if (!/^[a-z0-9-]+$/.test(name)) throw new Error(`Invalid collector name: ${name}`);
-  const file = path.join(SCRIPTS, SCRIPT_ALIASES[name] ?? `seed-${name}.mjs`);
+  const file = path.join(SCRIPTS, PERSONAL_TASKS[name] ? 'seed-personal-task.mjs' : SCRIPT_ALIASES[name] ?? `seed-${name}.mjs`);
   if (!existsSync(file)) throw new Error(`Unknown collector: ${name} (no scripts/seed-${name}.mjs)`);
   return file;
 }
@@ -135,7 +138,7 @@ function writeState(state) {
 function runOne(name, timeoutMs, log) {
   return new Promise((resolve) => {
     const started = Date.now();
-    const child = spawn(process.execPath, [collectorScript(name)], { stdio: ['ignore', 'pipe', 'pipe'], env: process.env });
+    const child = spawn(process.execPath, [collectorScript(name), ...(PERSONAL_TASKS[name] ? [name] : [])], { stdio: ['ignore', 'pipe', 'pipe'], env: process.env });
     let tail = '';
     const keep = (chunk) => { tail = (tail + chunk).slice(-2000); };
     child.stdout.on('data', keep);

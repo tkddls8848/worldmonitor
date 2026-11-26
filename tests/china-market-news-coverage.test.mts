@@ -73,20 +73,11 @@ describe('China A/H-share market coverage (#5272)', () => {
     assert.deepEqual(railwayMirror, canonical);
   });
 
-  it('keeps both seeders on the complete shared catalog instead of private symbol lists', () => {
-    const relay = readText('scripts/ais-relay.cjs');
+  it('keeps the collector on the complete shared catalog instead of private symbol lists', () => {
     const standalone = readText('scripts/seed-market-quotes.mjs');
-    assert.match(relay, /loadMarketSeedUniverse\(_stockCfg\)/);
     assert.match(standalone, /loadMarketSeedUniverse\(stocksConfig\)/);
     assert.equal(canonical.symbols.length, 94); // 93 + KRW=X (USD/KRW for the first-screen ticker)
     assert.ok(canonical.symbols.every((entry) => entry.region), 'every catalog symbol needs region metadata');
-  });
-
-  it('makes the long-running Railway relay consume stock symbols and metadata from the shared config', () => {
-    const relay = readText('scripts/ais-relay.cjs');
-    assert.match(relay, /const _stockCfg = requireShared\('stocks\.json'\)/);
-    assert.match(relay, /loadMarketSeedUniverse\(_stockCfg\)/);
-    assert.match(relay, /const MARKET_META = _stockUniverse\.metaBySymbol/);
   });
 
   it('keeps available quotes when one requested China symbol is unavailable', async () => {

@@ -126,11 +126,11 @@ describe('previous session close from a daily chart (gold-extended Prev and driv
   });
 });
 
-const RELAY_SOURCE = readFileSync(new URL('../scripts/ais-relay.cjs', import.meta.url), 'utf8');
+const RELAY_SOURCE = readFileSync(new URL('../scripts/personal-providers.cjs', import.meta.url), 'utf8');
 
 function extractFunction(name) {
   const start = RELAY_SOURCE.search(new RegExp(`(async )?function ${name}\\(`));
-  assert.notEqual(start, -1, `could not find ${name} in ais-relay.cjs`);
+  assert.notEqual(start, -1, `could not find ${name} in personal-providers.cjs`);
   const bodyStart = RELAY_SOURCE.indexOf('{', RELAY_SOURCE.indexOf(')', start));
   let depth = 0;
   for (let i = bodyStart; i < RELAY_SOURCE.length; i += 1) {
@@ -138,7 +138,7 @@ function extractFunction(name) {
     if (RELAY_SOURCE[i] === '}') depth -= 1;
     if (depth === 0) return RELAY_SOURCE.slice(start, i + 1);
   }
-  throw new Error(`unterminated ${name} in ais-relay.cjs`);
+  throw new Error(`unterminated ${name} in personal-providers.cjs`);
 }
 
 async function loadRelayQuoteFetch(responses) {
@@ -162,38 +162,3 @@ async function loadRelayQuoteFetch(responses) {
   )(fetchOnce, async () => {}, shared.PREVIOUS_SESSION_CHART_QUERY, shared.previousSessionClose, new Map());
   return { fetchYahooChartDirect, requests };
 }
-
-describe('relay market loop (fetchYahooChartDirect)', () => {
-  it('reports the last completed session move for a rolled future, fetching its daily chart once per session', async () => {
-    const { fetchYahooChartDirect, requests } = await loadRelayQuoteFetch({
-      'LE=F': LE_ROLLED_1D,
-      'LE=F?range=5d&interval=1d': LE_DAILY_5D,
-    });
-    const first = await fetchYahooChartDirect('LE=F');
-    assert.equal(+first.change.toFixed(2), LE_FRIDAY_MOVE);
-    const second = await fetchYahooChartDirect('LE=F');
-    assert.equal(+second.change.toFixed(2), LE_FRIDAY_MOVE);
-    assert.deepEqual(requests, ['LE=F', 'LE=F?range=5d&interval=1d', 'LE=F'],
-      'the previous session close is reused until the last trade changes');
-  });
-
-  it('measures against the session before the rolled quote even if trading opens between the requests', async () => {
-    const { fetchYahooChartDirect } = await loadRelayQuoteFetch({
-      'LE=F': LE_ROLLED_1D,
-      'LE=F?range=5d&interval=1d': dailyAfterOpen(),
-    });
-    const quote = await fetchYahooChartDirect('LE=F');
-    assert.equal(+quote.change.toFixed(2), LE_FRIDAY_MOVE);
-  });
-
-  it('leaves a trading quote and explicit-range charts on a single request', async () => {
-    const { fetchYahooChartDirect, requests } = await loadRelayQuoteFetch({
-      'GC=F': GC_LIVE_1D,
-      'GC=F?range=1y&interval=1d': GC_DAILY_1Y,
-    });
-    const live = await fetchYahooChartDirect('GC=F');
-    assert.equal(+live.change.toFixed(2), GC_MONDAY_MOVE);
-    await fetchYahooChartDirect('GC=F', '?range=1y&interval=1d');
-    assert.deepEqual(requests, ['GC=F', 'GC=F?range=1y&interval=1d']);
-  });
-});

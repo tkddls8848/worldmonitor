@@ -555,12 +555,6 @@ export class App {
       const panel = this.state.panels['energy-crisis'] as EnergyCrisisPanel | undefined;
       if (panel) primeTask('energy-crisis', () => panel.fetchData());
     }
-    if (shouldPrime('telegram-intel')) {
-      primeTask('telegram-intel', () => this.dataLoader.loadTelegramIntel());
-    }
-    if (shouldPrime('x-intel')) {
-      primeTask('x-intel', () => this.dataLoader.loadXIntel());
-    }
     if (shouldPrime('gulf-economies')) {
       const panel = this.state.panels['gulf-economies'] as GulfEconomiesPanel | undefined;
       if (panel) primeTask('gulf-economies', () => panel.fetchData());
@@ -1378,7 +1372,6 @@ export class App {
       },
       updateMonitorResults: () => this.dataLoader.updateMonitorResults(),
       loadSecurityAdvisories: () => this.dataLoader.loadSecurityAdvisories(),
-      loadTelegramIntel: () => this.dataLoader.loadTelegramIntel(),
       applyMapLayerChange: (layer, enabled, source) => this.eventHandlers.applyMapLayerChange(layer, enabled, source),
     });
 
@@ -3137,21 +3130,6 @@ export class App {
       () => this.dataLoader.loadCrossSourceSignals(),
       REFRESH_INTERVALS.crossSourceSignals,
       () => this.isPanelNearViewport('cross-source-signals'),
-    );
-
-    // Telegram Intel (near real-time, 60s refresh)
-    this.refreshScheduler.scheduleRefresh(
-      'telegram-intel',
-      () => this.dataLoader.loadTelegramIntel(),
-      REFRESH_INTERVALS.telegramIntel,
-      () => this.isPanelNearViewport('telegram-intel')
-    );
-
-    this.refreshScheduler.scheduleRefresh(
-      'x-intel',
-      () => this.dataLoader.loadXIntel(),
-      REFRESH_INTERVALS.xIntel,
-      () => this.isPanelNearViewport('x-intel')
     );
 
     this.refreshScheduler.scheduleRefresh(

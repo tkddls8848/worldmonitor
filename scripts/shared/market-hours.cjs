@@ -2,7 +2,7 @@
 
 /**
  * US equity (NYSE/Nasdaq) market-hours helper — shared by CommonJS relays
- * (ais-relay.cjs) and ESM seeders (seed-market-quotes.mjs). Static
+ * (personal-providers.cjs) and ESM seeders (seed-market-quotes.mjs). Static
  * `module.exports = { ... }` so Node ESM named imports work
  * (`import { getUsEquitySession } from './shared/market-hours.cjs'`).
  *

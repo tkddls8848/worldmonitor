@@ -169,7 +169,7 @@ describe('GDELT consumers read materialized Redis products', () => {
   });
 
   it('the relay no longer owns a direct GDELT positive-events loop', () => {
-    const source = read('scripts/ais-relay.cjs');
+    const source = read('scripts/personal-providers.cjs');
     const startup = source.slice(source.indexOf('server.listen(PORT'));
     assert.doesNotMatch(startup, /\bstartPositiveEventsSeedLoop\(\)/);
   });

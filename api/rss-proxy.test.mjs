@@ -68,8 +68,8 @@ beforeEach(() => {
   process.env.WORLDMONITOR_VALID_KEYS = TEST_KEY;
   delete process.env.UPSTASH_REDIS_REST_URL;
   delete process.env.UPSTASH_REDIS_REST_TOKEN;
-  delete process.env.WS_RELAY_URL;
-  delete process.env.RELAY_SHARED_SECRET;
+  delete process.env.LOCAL_API_ORIGIN;
+  delete process.env.LOCAL_API_TOKEN;
   // getRatelimit() caches limiters in a module-level Map keyed by policy, so a
   // limiter built against the fake Upstash host in one test would survive into
   // the next even after the env vars are deleted. Reset the cache each time.
@@ -207,8 +207,8 @@ test('rejects direct RSS fetches that exceed the redirect limit', async () => {
 });
 
 test('preserves Railway relay fallback for direct-fetch transport failures', async () => {
-  process.env.WS_RELAY_URL = 'wss://relay.example.com';
-  process.env.RELAY_SHARED_SECRET = 'relay-secret';
+  process.env.LOCAL_API_ORIGIN = 'https://relay.example.com';
+  process.env.LOCAL_API_TOKEN = 'relay-secret';
   const calls = [];
 
   globalThis.fetch = async (input, init = {}) => {
@@ -229,13 +229,13 @@ test('preserves Railway relay fallback for direct-fetch transport failures', asy
   assert.match(await res.text(), /relay/);
   assert.equal(calls.length, 2);
   assert.equal(calls[0].url, feedUrl);
-  assert.equal(calls[1].url, `https://relay.example.com/rss?url=${encodeURIComponent(feedUrl)}`);
-  assert.equal(calls[1].headers['x-relay-key'], 'relay-secret');
+  assert.equal(calls[1].url, `https://relay.example.com/api/local-providers/rss?url=${encodeURIComponent(feedUrl)}`);
+  assert.equal(calls[1].headers['x-worldmonitor-local-token'], 'relay-secret');
 });
 
 test('keeps stale Railway RSS bodies private with reflected credentialed CORS', async () => {
-  process.env.WS_RELAY_URL = 'wss://relay.example.com';
-  process.env.RELAY_SHARED_SECRET = 'relay-secret';
+  process.env.LOCAL_API_ORIGIN = 'https://relay.example.com';
+  process.env.LOCAL_API_TOKEN = 'relay-secret';
   const calls = [];
 
   globalThis.fetch = async (input, init = {}) => {
@@ -266,8 +266,8 @@ test('keeps stale Railway RSS bodies private with reflected credentialed CORS', 
 });
 
 test('keeps legacy plain STALE relay responses non-cacheable during rollout', async () => {
-  process.env.WS_RELAY_URL = 'wss://relay.example.com';
-  process.env.RELAY_SHARED_SECRET = 'relay-secret';
+  process.env.LOCAL_API_ORIGIN = 'https://relay.example.com';
+  process.env.LOCAL_API_TOKEN = 'relay-secret';
   const calls = [];
 
   globalThis.fetch = async (input, init = {}) => {
@@ -298,7 +298,7 @@ test('preserves the original direct-fetch diagnostic when the relay fallback its
   // Both legs fail, but the relay's throw must not replace directError as the
   // reported failure — the #5378 suite only ever covered relay returning
   // null/Response, never throwing.
-  process.env.WS_RELAY_URL = 'wss://relay.example.com';
+  process.env.LOCAL_API_ORIGIN = 'https://relay.example.com';
   for (const relayError of [new Error('boom relay leg'), null]) {
     const calls = [];
 
@@ -326,7 +326,7 @@ test('preserves the original non-ok direct response when the relay retry itself 
   // Direct fetch succeeds but is non-ok; the relay retry then throws instead
   // of returning null/a Response. The original non-ok direct response must
   // still be what's returned, not an unhandled relay exception.
-  process.env.WS_RELAY_URL = 'wss://relay.example.com';
+  process.env.LOCAL_API_ORIGIN = 'https://relay.example.com';
   for (const relayError of [new Error('boom relay retry'), null]) {
     const calls = [];
 
@@ -600,8 +600,8 @@ for (const hostname of [
   'feeds.capi24.com', 'islandtimes.org', 'www.atlanticcouncil.org',
 ]) {
   test(`routes relay-only ${hostname} straight to Railway without shared caching`, async () => {
-    process.env.WS_RELAY_URL = 'wss://relay.example.com';
-    process.env.RELAY_SHARED_SECRET = 'relay-secret';
+    process.env.LOCAL_API_ORIGIN = 'https://relay.example.com';
+    process.env.LOCAL_API_TOKEN = 'relay-secret';
 
     const feedUrl = `https://${hostname}/feed?edition=world&lang=en`;
     const calls = spyFetch(() => new Response('<rss><channel><title>relay</title></channel></rss>', {
@@ -616,7 +616,7 @@ for (const hostname of [
     // Exactly one call, to the relay — the direct fetch is skipped entirely
     // because Vercel edge IPs are blocked by these hosts.
     assert.deepEqual(calls.map((c) => c.url), [
-      `https://relay.example.com/rss?url=${encodeURIComponent(feedUrl)}`,
+      `https://relay.example.com/api/local-providers/rss?url=${encodeURIComponent(feedUrl)}`,
     ]);
     assert.equal(res.headers.get('Cache-Control'), 'private, max-age=180');
     assert.equal(res.headers.get('CDN-Cache-Control'), null);
@@ -626,7 +626,7 @@ for (const hostname of [
 }
 
 test('routes the apex form of a www-registered relay-only host to Railway (www-tolerant match)', async () => {
-  process.env.WS_RELAY_URL = 'wss://relay.example.com';
+  process.env.LOCAL_API_ORIGIN = 'https://relay.example.com';
 
   // 'www.cisa.gov' is relay-only; a request for the bare apex 'cisa.gov' is
   // still allowlisted (www-tolerant) and MUST route to the relay. With an
@@ -644,7 +644,7 @@ test('routes the apex form of a www-registered relay-only host to Railway (www-t
   assert.equal(res.status, 200);
   // Exactly one call, to the relay — no direct fetch to cisa.gov.
   assert.deepEqual(calls.map((c) => c.url), [
-    `https://relay.example.com/rss?url=${encodeURIComponent(feedUrl)}`,
+    `https://relay.example.com/api/local-providers/rss?url=${encodeURIComponent(feedUrl)}`,
   ]);
   assert.equal(res.headers.get('CDN-Cache-Control'), null);
 });
@@ -683,7 +683,7 @@ test('passes a non-2xx upstream status through without caching it', async () => 
 
 for (const status of [403, 429, 503]) {
   test(`recovers through the relay after a direct ${status}`, async () => {
-    process.env.WS_RELAY_URL = 'wss://relay.example.com';
+    process.env.LOCAL_API_ORIGIN = 'https://relay.example.com';
     const feedUrl = 'https://techcrunch.com/feed';
 
     const calls = spyFetch((url) => (
@@ -704,14 +704,14 @@ for (const status of [403, 429, 503]) {
     assert.equal(res.headers.get('CDN-Cache-Control'), null);
     assert.deepEqual(calls.map((c) => c.url), [
       feedUrl,
-      `https://relay.example.com/rss?url=${encodeURIComponent(feedUrl)}`,
+      `https://relay.example.com/api/local-providers/rss?url=${encodeURIComponent(feedUrl)}`,
     ]);
   });
 }
 
 for (const status of [403, 503]) {
   test(`preserves the direct response when the relay retry returns ${status}`, async () => {
-    process.env.WS_RELAY_URL = 'wss://relay.example.com';
+    process.env.LOCAL_API_ORIGIN = 'https://relay.example.com';
     const feedUrl = 'https://techcrunch.com/feed';
     const calls = spyFetch((_url, _init, seen) => seen.length === 1
       ? new Response('original direct error', { status: 404 })
@@ -725,13 +725,13 @@ for (const status of [403, 503]) {
     assert.equal(res.headers.get('X-Relay-Stale'), null);
     assert.equal(res.headers.get('Cache-Control'), 'private, max-age=180');
     assert.equal(res.headers.get('CDN-Cache-Control'), null);
-    assert.deepEqual(calls.map((c) => c.url), [feedUrl, `https://relay.example.com/rss?url=${encodeURIComponent(feedUrl)}`]);
+    assert.deepEqual(calls.map((c) => c.url), [feedUrl, `https://relay.example.com/api/local-providers/rss?url=${encodeURIComponent(feedUrl)}`]);
   });
 }
 
 for (const relay of [false, true]) {
   test(`uses inert text and private caching for ${relay ? 'relay' : 'direct'} responses without content-type`, async () => {
-    if (relay) process.env.WS_RELAY_URL = 'wss://relay.example.com';
+    if (relay) process.env.LOCAL_API_ORIGIN = 'https://relay.example.com';
     const calls = spyFetch(() => {
       const res = new Response('<rss><channel/></rss>', { headers: {
         'Cache-Control': 'public, max-age=86400',
@@ -756,12 +756,12 @@ for (const relay of [false, true]) {
     assert.equal(res.headers.get('Access-Control-Allow-Origin'), 'https://worldmonitor.app');
     assert.equal(res.headers.get('Access-Control-Allow-Credentials'), 'true');
     assert.equal(res.headers.get('Vary'), 'Origin');
-    assert.deepEqual(calls.map((c) => c.url), [relay ? `https://relay.example.com/rss?url=${encodeURIComponent(feedUrl)}` : feedUrl]);
+    assert.deepEqual(calls.map((c) => c.url), [relay ? `https://relay.example.com/api/local-providers/rss?url=${encodeURIComponent(feedUrl)}` : feedUrl]);
   });
 }
 
 test('maps a direct-fetch AbortError to 504 Feed timeout', async () => {
-  // No WS_RELAY_URL, so the relay fallback returns null and the AbortError is
+  // No LOCAL_API_ORIGIN, so the relay fallback returns null and the AbortError is
   // rethrown into the outer catch, which classifies it as a timeout (504). Note:
   // this asserts only the 504 mapping. The `if (!isTimeout)` Sentry-suppression
   // gate is NOT verified here — captureSilentError is a no-op under
@@ -783,7 +783,7 @@ test('maps a direct-fetch AbortError to 504 Feed timeout', async () => {
 
 test('maps a generic direct-fetch error to 502 Failed to fetch feed when no relay is configured', async (t) => {
   const log = t.mock.method(console, 'error', () => {});
-  // Non-Abort throw + WS_RELAY_URL unset -> fetchViaRailway returns null ->
+  // Non-Abort throw + LOCAL_API_ORIGIN unset -> fetchViaRailway returns null ->
   // directError rethrows into the outer catch: the handler's generic-failure
   // branch and the ONLY captureSilentError call site. Untested before this.
   const message = 'fetch failed https://internal.example/?key=synthetic-secret';
@@ -800,7 +800,7 @@ test('maps a generic direct-fetch error to 502 Failed to fetch feed when no rela
 });
 
 test('maps a relay-only host to 502 when the relay is unavailable', async () => {
-  // Relay-only domain + WS_RELAY_URL unset -> fetchViaRailway returns null ->
+  // Relay-only domain + LOCAL_API_ORIGIN unset -> fetchViaRailway returns null ->
   // handler throws 'Railway relay unavailable ...' into the same 502 branch.
   const calls = spyFetch();
 
@@ -825,10 +825,10 @@ for (const { feedUrl, deadlineMs, retry = false } of [
 ]) {
   test(`${feedUrl} ${retry ? 'relay retry' : 'initial fetch'} expires at exactly ${deadlineMs}ms`, { timeout: 5000 }, async (t) => {
     const relayOnly = feedUrl.includes('rss.cnn.com');
-    if (retry || relayOnly) process.env.WS_RELAY_URL = 'wss://relay.example.com';
+    if (retry || relayOnly) process.env.LOCAL_API_ORIGIN = 'https://relay.example.com';
     t.mock.timers.enable({ apis: ['setTimeout'] });
     const fetchStarted = Promise.withResolvers();
-    const relayUrl = `https://relay.example.com/rss?url=${encodeURIComponent(feedUrl)}`;
+    const relayUrl = `https://relay.example.com/api/local-providers/rss?url=${encodeURIComponent(feedUrl)}`;
     const timedUrl = retry || relayOnly ? relayUrl : feedUrl;
     let signal;
     const calls = spyFetch((url, init) => {
@@ -939,7 +939,7 @@ test('keeps a browser UA on the CBC path — a bot UA would be 403ed (#6624)', a
 });
 
 test('does not treat an upstream CBC 403 as a cacheable success (#6624)', async () => {
-  // No relay configured (beforeEach deletes WS_RELAY_URL). A 403 must be
+  // No relay configured (beforeEach deletes LOCAL_API_ORIGIN). A 403 must be
   // forwarded, not rewritten to empty-200, so last-good is not poisoned
   // by coverage-less success.
   const calls = spyFetch(() => new Response('Forbidden', { status: 403 }));
@@ -954,7 +954,7 @@ test('does not treat an upstream CBC 403 as a cacheable success (#6624)', async 
 for (const relay of [false, true]) {
   for (const mime of ['text/html', 'application/xhtml+xml', 'image/svg+xml', 'application/xml', 'application/rss+xml']) {
     test(`serves hostile ${mime} as inert text through ${relay ? 'relay' : 'direct'} fetch`, async () => {
-      if (relay) process.env.WS_RELAY_URL = 'wss://relay.example.com';
+      if (relay) process.env.LOCAL_API_ORIGIN = 'https://relay.example.com';
       const body = '<?xml-stylesheet href="https://attacker.invalid/style.xsl"?><html xmlns="http://www.w3.org/1999/xhtml"><script>alert(1)</script></html>';
       const calls = spyFetch(() => new Response(body, { headers: {
         'Content-Type': mime,

@@ -33,7 +33,7 @@ const {
   classifyDigestRetryDecision,
 } = require('../scripts/lib/classify-digest-request.cjs');
 
-const relaySrc = readFileSync(resolve(__dirname, '..', 'scripts', 'ais-relay.cjs'), 'utf8');
+const relaySrc = readFileSync(resolve(__dirname, '..', 'scripts', 'personal-providers.cjs'), 'utf8');
 
 function classifyFnSrc() {
   const start = relaySrc.indexOf('async function seedClassifyForVariant');
@@ -149,26 +149,5 @@ describe('classify digest request builder (#7437)', () => {
       }),
       { retry: false, delayMs: 0 },
     );
-  });
-});
-
-describe('ais-relay Classify wiring (#7437)', () => {
-  it('builds the digest request from the executable helper, not a hardcoded host', () => {
-    const classifyFn = classifyFnSrc();
-    assert.match(classifyFn, /buildClassifyDigestUrl\(variant\)/);
-    assert.match(classifyFn, /classifyDigestTransport\(digestUrl\)/);
-    assert.match(classifyFn, /buildClassifyDigestHeaders\(/);
-    assert.doesNotMatch(classifyFn, /list-feed-digest\?variant=/);
-    assert.doesNotMatch(classifyFn, /https\.get\(digestUrl/);
-  });
-
-  it('logs non-200 digest status and fetch errors instead of returning zeros silently', () => {
-    const classifyFn = classifyFnSrc();
-    assert.match(classifyFn, /formatClassifyDigestFetchFailure\(/);
-    assert.match(classifyFn, /\[Classify\] digest fetch error:/);
-    assert.match(classifyFn, /fetchFailed:\s*true/);
-    assert.match(relaySrc, /shouldWriteClassifySeedMeta\(\{ fetchOk, fetchFailed \}\)/);
-    assert.match(classifyFn, /classifyDigestRetryDecision\(/);
-    assert.match(classifyFn, /CLASSIFY_DIGEST_RETRY_DELAYS_MS\.length \+ 1/);
   });
 });

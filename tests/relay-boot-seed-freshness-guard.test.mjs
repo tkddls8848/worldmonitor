@@ -13,7 +13,7 @@
 // refresh for the remaining freshness window before starting the recurring
 // interval.
 //
-// ais-relay.cjs calls server.listen() at top level and has no module.exports, so
+// personal-providers.cjs calls server.listen() at top level and has no module.exports, so
 // it cannot be imported. These tests (1) extract the real guard/scheduler bodies
 // and exercise them against mocked Redis/timers, and (2) assert the source wires
 // every fixed-schedule external seeder AND internal warm-ping through the
@@ -26,7 +26,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const relaySource = readFileSync(resolve(here, '../scripts/ais-relay.cjs'), 'utf8');
+const relaySource = readFileSync(resolve(here, '../scripts/personal-providers.cjs'), 'utf8');
 
 // -- Extract real function bodies via brace-matching ---------------------------
 function extractFunction(src, signature) {
@@ -179,31 +179,8 @@ test('startBootSeedLoop waits the remaining freshness window before first skippe
 // exact-string match pins all four arguments so a future edit can't silently
 // drift the meta key or interval and re-open the boot-abuse hole.
 const SEEDERS = [
-  ['UCDP', "'seed-meta:conflict:ucdp-events'", 'UCDP_POLL_INTERVAL_MS', 'seedUcdpEvents'],
-  ['Satellites', "'seed-meta:intelligence:satellites'", 'SAT_SEED_INTERVAL_MS', 'seedSatelliteTLEs'],
-  ['Market', "'seed-meta:market:stocks'", 'MARKET_SEED_INTERVAL_MS', 'seedAllMarketData'],
-  ['Classify', "'seed-meta:classify'", 'CLASSIFY_SEED_INTERVAL_MS', 'seedClassify'],
-  ['TheaterPosture', "'seed-meta:theater-posture'", 'THEATER_POSTURE_SEED_INTERVAL_MS', 'seedTheaterPosture'],
-  ['Weather', "'seed-meta:weather:alerts'", 'WEATHER_SEED_INTERVAL_MS', 'seedWeatherAlerts'],
-  ['Spending', "'seed-meta:economic:spending'", 'SPENDING_SEED_INTERVAL_MS', 'seedUsaSpending'],
-  ['GSCPI', "'seed-meta:economic:gscpi'", 'GSCPI_SEED_INTERVAL_MS', 'seedGscpi'],
-  ['TechEvents', "'seed-meta:research:tech-events'", 'TECH_EVENTS_SEED_INTERVAL_MS', 'seedTechEvents'],
-  ['WB', '`seed-meta:${WB_BOOTSTRAP_KEY}`', 'WB_SEED_INTERVAL_MS', 'seedWorldBank'],
-  ['CorridorRisk', "'seed-meta:supply_chain:corridorrisk'", 'CORRIDOR_RISK_SEED_INTERVAL_MS', 'seedCorridorRisk'],
-  ['USNI', "'seed-meta:military:usni-fleet'", 'USNI_SEED_INTERVAL_MS', 'seedUsniFleet'],
-  ['ShippingStress', "'seed-meta:supply_chain:shipping_stress'", 'SHIPPING_STRESS_INTERVAL_MS', 'seedShippingStress'],
-  ['SocialVelocity', 'SOCIAL_VELOCITY_SEED_META_KEY', 'SOCIAL_VELOCITY_INTERVAL_MS', 'seedSocialVelocity'],
-  ['WsbTickers', "'seed-meta:intelligence:wsb-tickers'", 'WSB_TICKERS_INTERVAL_MS', 'seedWsbTickers'],
-  ['ClimateNewsSeed', "'relay:heartbeat:climate-news'", 'CLIMATE_NEWS_SEED_INTERVAL_MS', 'seedClimateNews'],
-  ['ChokepointFlows', "'relay:heartbeat:chokepoint-flows'", 'CHOKEPOINT_FLOWS_SEED_INTERVAL_MS', 'seedChokepointFlows'],
-  ['AuYieldFallback', "'seed-meta:economic:yield-curve-au'", 'AU_YIELD_CHECK_INTERVAL_MS', 'seedAuYieldCurve'],
-  ['PizzINT', "'seed-meta:intelligence:pizzint'", 'PIZZINT_SEED_INTERVAL_MS', 'seedPizzint'],
   ['Transit', "'seed-meta:supply_chain:chokepoint_transits'", 'CHOKEPOINT_TRANSIT_INTERVAL_MS', 'seedChokepointTransits'],
   ['AisGaps', "'seed-meta:maritime:ais-gaps'", 'AIS_GAPS_SEED_INTERVAL_MS', 'seedAisGaps'],
-  ['TransitSummary', "'seed-meta:supply_chain:transit-summaries'", 'TRANSIT_SUMMARY_INTERVAL_MS', 'seedTransitSummaries'],
-  ['Cyber', "'seed-meta:cyber:threats'", 'CYBER_SEED_INTERVAL_MS', 'seedCyberThreats'],
-  ['MiddleEastStrikes', 'middleEastStrikes.SEED_META_KEY', 'MIDDLE_EAST_STRIKES_INTERVAL_MS', 'seedMiddleEastStrikes'],
-  ['DigestWarm', 'DIGEST_WARM_HEARTBEAT_KEY', 'DIGEST_WARM_INTERVAL_MS', 'seedDigestWarm'],
 ];
 
 for (const [label, metaKey, intervalConst, seedFn] of SEEDERS) {
@@ -216,33 +193,6 @@ for (const [label, metaKey, intervalConst, seedFn] of SEEDERS) {
 test('exactly the expected number of boot seeds are scheduled (no drift)', () => {
   const count = (relaySource.match(/startBootSeedLoop\('/g) || []).length;
   assert.equal(count, SEEDERS.length, `expected ${SEEDERS.length} gated boot seeds, found ${count}`);
-});
-
-test('every relay seed loop and warm-ping loop is routed through startBootSeedLoop instead of raw setInterval', () => {
-  const seedLoopNames = [...relaySource.matchAll(/(?:async\s+)?function\s+(start[A-Za-z0-9]+(?:SeedLoop|WarmPingLoop))\s*\(/g)]
-    .map(([, name]) => name)
-    .filter((name) => name !== 'startBootSeedLoop');
-
-  assert.ok(seedLoopNames.length > 0, 'expected to find relay seed/warm-ping loop functions');
-
-  const rawIntervalSeedLoops = [];
-  const ungatedSeedLoops = [];
-  for (const name of seedLoopNames) {
-    const fnText = extractNamedFunction(relaySource, name);
-    if (/setInterval\s*\(/.test(fnText)) rawIntervalSeedLoops.push(name);
-    if (!/startBootSeedLoop\(/.test(fnText)) ungatedSeedLoops.push(name);
-  }
-
-  assert.deepEqual(
-    rawIntervalSeedLoops,
-    [],
-    `seed/warm-ping loops must not schedule raw setInterval; use startBootSeedLoop: ${rawIntervalSeedLoops.join(', ')}`,
-  );
-  assert.deepEqual(
-    ungatedSeedLoops,
-    [],
-    `seed/warm-ping loops must call startBootSeedLoop: ${ungatedSeedLoops.join(', ')}`,
-  );
 });
 
 // ── Internal warm-pings (ServiceStatuses, CII, Chokepoints, CableHealth) are

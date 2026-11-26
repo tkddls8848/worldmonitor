@@ -204,15 +204,3 @@ describe('heartbeat', () => {
     assert.ok(health.includes('newsDigestWarmRelayHeartbeat: SEED_META.newsDigestWarmRelayHeartbeat.activationKey'));
   });
 });
-
-describe('relay wiring', () => {
-  const relay = readFileSync(join(root, 'scripts/ais-relay.cjs'), 'utf8');
-
-  it('starts the warm loop over the generated cells', () => {
-    assert.match(relay, /const DIGEST_WARM_CELLS = requireShared\('news-digest-warm-cells\.json'\);/);
-    assert.match(relay, /^ {2}startDigestWarmLoop\(\);$/m);
-  });
-
-  it('ships the module and the cell list in the relay image', () => {
-  });
-});

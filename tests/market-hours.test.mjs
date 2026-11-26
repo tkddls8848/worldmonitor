@@ -1,6 +1,6 @@
 // #4922d: market-hours awareness — shared US-equity session helper
 // (scripts/shared/market-hours.cjs), its server-side TS twin, and the
-// closed-market seeding gates in seed-market-quotes.mjs / ais-relay.cjs.
+// closed-market seeding gates in seed-market-quotes.mjs / personal-providers.cjs.
 //
 // Every session assertion passes an EXPLICIT Date — never wall-clock.
 // ET offsets: EDT (UTC-4) mid-March..early-Nov, EST (UTC-5) otherwise.
@@ -119,14 +119,5 @@ describe('closed-market seeding gates (source-textual, #4922d)', () => {
     assert.match(src, /isMultiMarketEquityTradingDay\(/);
     assert.match(src, /extendExistingTtl\(/, 'must reuse the runSeed phase-1 graceful helper');
     assert.match(src, /process\.exit\(0\)/, 'closed-market skip is exit 0, never 75');
-  });
-
-  it('ais-relay gates the equity block only, with a state-transition log', () => {
-    const src = readSrc('scripts/ais-relay.cjs');
-    assert.match(src, /require\('\.\/shared\/market-hours\.cjs'\)/);
-    assert.match(src, /isMultiMarketEquityTradingDay\(/);
-    assert.match(src, /if \(_marketSeedRun\)/, 'overlong market refreshes must not overlap');
-    // crypto is 24/7 — its seeding call must not sit behind the equity gate
-    assert.match(src, /const cr = await seedCryptoQuotes\(\);/);
   });
 });

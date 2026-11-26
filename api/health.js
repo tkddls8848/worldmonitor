@@ -796,7 +796,7 @@ const STANDALONE_KEYS = {
   goldExtended:             'market:gold-extended:v1',
   goldEtfFlows:             'market:gold-etf-flows:v1',
   goldCbReserves:           'market:gold-cb-reserves:v1',
-  // Relay-side loop heartbeats. ais-relay.cjs writes these on successful child
+  // Relay-side loop heartbeats. personal-providers.cjs writes these on successful child
   // exit for the two execFile-spawned seeders (chokepoint-flows, climate-news).
   // A stale heartbeat means the relay loop itself is broken (child dying at
   // import, parent event-loop blocked, container in a restart loop, etc.)
@@ -811,8 +811,6 @@ const STANDALONE_KEYS = {
   // (#6691) that member seed-meta budgets (17.5d+) cannot see.
   staticRefBundleTick:           'bundle:heartbeat:static-ref',
   staticRefHeavyBundleTick:      'bundle:heartbeat:static-ref-heavy',
-  telegramFeed:                  'intelligence:telegram-feed:v1',
-  xFeed:                         'intelligence:x-feed:v1',
   digestNotifications:           'digest:last-run',
   webcams:                       'webcam:cameras:active',
   forecastResolutions:           'forecast:resolutions:v1',
@@ -1613,8 +1611,6 @@ const SEED_META = {
       activationKey: 'seed-activated:gdelt:bulk:country-articles',
     },
   },
-  telegramFeed:     { key: 'seed-meta:intelligence:telegram-feed:v1', maxStaleMin: 10 }, // 60s poll interval; 10min grace catches poll failures before they go stale in the panel
-  xFeed:            { key: 'seed-meta:intelligence:x-feed:v1', maxStaleMin: 45 }, // Fixed 15min List slots; 45min = 3 missed slots. Freshness advances only after an accepted page is published.
   digestNotifications: { key: 'seed-meta:digest:last-run',          maxStaleMin: 90 }, // Railway digest-notifications cron runs every 30min; 90 = 3x cadence and detects a dead cron before daily digests are missed.
   forecasts:        { key: 'seed-meta:forecast:predictions',       maxStaleMin: 90 },
   forecastProbabilityTrail: {
@@ -2377,8 +2373,8 @@ const SEED_META = {
   newsThreatSummary: { key: 'seed-meta:news:threat-summary',          maxStaleMin: 60 }, // relay classify writes every 15min (27-48min across restarts); 60min budget sits under the 2h payload TTL so this goes stale before the key vanishes
   shippingStress:    { key: 'seed-meta:supply_chain:shipping_stress',  maxStaleMin: 45 }, // relay loop every 15min; 45 = 3x interval (was 30 = 2×, too tight on relay hiccup)
   diseaseOutbreaks:  { key: 'seed-meta:health:disease-outbreaks',      maxStaleMin: 2880 }, // daily seed; 2880 = 48h = 2x interval
-  socialVelocity:    { key: 'seed-meta:intelligence:social-reddit',    maxStaleMin: 540 }, // relay loop every 180min (3h; was 60min, dropped now that ScrapeCreators handles Reddit); 540 = 3x interval. Co-pinned with SOCIAL_VELOCITY_TTL=43200 (ais-relay.cjs): the data-key TTL must STRICTLY exceed this (720min > 540min) so a dead relay shows STALE_SEED before the key expires to EMPTY.
-  wsbTickers:        { key: 'seed-meta:intelligence:wsb-tickers',      maxStaleMin: 540 }, // relay loop every 180min (3h); 540 = 3x interval. Co-pinned with WSB_TICKERS_TTL=43200 (ais-relay.cjs); TTL strictly > maxStaleMin (see socialVelocity note).
+  socialVelocity:    { key: 'seed-meta:intelligence:social-reddit',    maxStaleMin: 540 }, // relay loop every 180min (3h; was 60min, dropped now that ScrapeCreators handles Reddit); 540 = 3x interval. Co-pinned with SOCIAL_VELOCITY_TTL=43200 (personal-providers.cjs): the data-key TTL must STRICTLY exceed this (720min > 540min) so a dead relay shows STALE_SEED before the key expires to EMPTY.
+  wsbTickers:        { key: 'seed-meta:intelligence:wsb-tickers',      maxStaleMin: 540 }, // relay loop every 180min (3h); 540 = 3x interval. Co-pinned with WSB_TICKERS_TTL=43200 (personal-providers.cjs); TTL strictly > maxStaleMin (see socialVelocity note).
   pizzint:           { key: 'seed-meta:intelligence:pizzint',          maxStaleMin: 45 }, // relay loop every 15min; 45 = 3x interval
   // Same relay loop and cadence as pizzint above, so the same 3x-interval budget.
   // The archive write is fire-and-forget alongside live publication, so this can
@@ -2511,7 +2507,7 @@ const SEED_META = {
   aaiiSentiment:        { key: 'seed-meta:market:aaii-sentiment',       maxStaleMin: 20160 }, // weekly cron; 20160min = 14 days = 2x weekly cadence
   portwatchChokepointsRef: { key: 'seed-meta:portwatch:chokepoints-ref', maxStaleMin: 60 * 24 * 14 }, // seed-bundle-portwatch runs this at WEEK cadence; 14d = 2× interval
   chokepointFlows:      { key: 'seed-meta:energy:chokepoint-flows',     maxStaleMin: 720 }, // 6h cron; 720min = 2x interval
-  // Relay-side heartbeat written by ais-relay.cjs on successful child exit.
+  // Relay-side heartbeat written by personal-providers.cjs on successful child exit.
   // Detects "relay loop fires but child dies at import/runtime" failures
   // (e.g. ERR_MODULE_NOT_FOUND from a missing Dockerfile COPY) 4h earlier
   // than the 720min seed-meta threshold above. TTL is 18h on the writer.
@@ -3159,9 +3155,9 @@ const ACTIVATION_MARKERS = {
   worldPairTrends: SEED_META.worldPairTrends.activationKey,
   tensionEvidence: SEED_META.tensionEvidence.activationKey,
   gdeltCountryEvents: SEED_META.gdeltCountryEvents.activationKey,
-  // Written by scripts/ais-relay.cjs after the first healthy strike-pressure publish.
+  // Written by scripts/personal-providers.cjs after the first healthy strike-pressure publish.
   strikePressure: 'seed-activated:conflict:strike-pressure',
-  // Written by scripts/ais-relay.cjs after the first healthy digest warm cycle.
+  // Written by scripts/personal-providers.cjs after the first healthy digest warm cycle.
   newsDigestWarmRelayHeartbeat: SEED_META.newsDigestWarmRelayHeartbeat.activationKey,
   physicalPremiums: SEED_META.physicalPremiums.activationKey,
   // Written by publishUsHtsIndex in scripts/seed-supply-chain-trade.mjs.
@@ -3564,7 +3560,6 @@ const ZERO_RECORD_DATA_OK_KEYS = new Set([
   'strikePressure',
   // A current List query can validly return no Posts. The relay still writes
   // the canonical snapshot, so a missing xFeed key remains a hard failure.
-  'xFeed',
   // Both Toronto CAD sources publish an explicit {records:[]} envelope on a
   // quiet tick. Keep zero valid without softening a missing payload after each
   // activation marker exists.

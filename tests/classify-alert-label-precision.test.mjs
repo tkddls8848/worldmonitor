@@ -22,7 +22,7 @@ import {
 import { getLlmAttemptTimeoutMs, isDeepseekV4FlashModel } from '../scripts/_llm-model-timeouts.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const relaySrc = readFileSync(resolve(root, 'scripts/ais-relay.cjs'), 'utf8');
+const relaySrc = readFileSync(resolve(root, 'scripts/personal-providers.cjs'), 'utf8');
 const rpcSrc = readFileSync(resolve(root, 'server/worldmonitor/intelligence/v1/classify-event.ts'), 'utf8');
 const fixture = JSON.parse(readFileSync(resolve(root, 'tests/fixtures/classify-judged-headlines.json'), 'utf8'));
 
@@ -151,12 +151,6 @@ describe('the judged evidence', () => {
 });
 
 describe('production is the configuration that was measured', () => {
-  it('relay: model and prompt match the captured "relay-after" run', () => {
-    const run = fixture.runs['relay-after'];
-    assert.equal(extractRelayOpenRouterModel(relaySrc), run.model);
-    assert.equal(promptSha(extractRelayPrompt(relaySrc)), run.promptSha,
-      'CLASSIFY_SYSTEM_PROMPT changed: re-run `node scripts/eval-classify-labels.mjs --path relay --capture relay-after` and review the scores');
-  });
 
   it('RPC: model and prompt match the captured "rpc-after" run', () => {
     const run = fixture.runs['rpc-after'];
@@ -165,10 +159,6 @@ describe('production is the configuration that was measured', () => {
       'classify-event systemPrompt changed: re-run `node scripts/eval-classify-labels.mjs --path rpc --capture rpc-after` and review the scores');
     // That the model is actually SENT is proven behaviourally in
     // tests/classify-event-model-override.test.mts.
-  });
-
-  it('both writers of the classify cache carry the same "high" boundary block', () => {
-    assert.equal(extractHighBoundaryBlock(extractRelayPrompt(relaySrc)), extractHighBoundaryBlock(extractRpcPrompt(rpcSrc)));
   });
 
   it('the new model keeps the Flash completion-timeout cap', () => {

@@ -75,3 +75,5 @@ SQLite에 저장된 노출 데이터를 쓸 때는 `--database personal.sqlite`�
 이 구성은 계정, 결제, 분석, 오류 보고가 없는 개인용입니다.
 다른 사람에게 공개하려면 개인정보 처리방침을 먼저 작성해야 합니다.
 필요한 공개 항목은 [docs/internal/public-launch-disclosures.md](docs/internal/public-launch-disclosures.md)에 정리되어 있습니다.
+
+AIS and OREF run inside the personal server. Set `AISSTREAM_API_KEY` for vessel traffic; OREF uses Tzeva Adom without an account key. No `WS_RELAY_URL`, relay secret, Telegram session or X credentials are needed. Scheduled sector, satellite, tech-event, corridor-risk, USNI, Reddit and PizzINT producers run through `collect:personal`, not server restart loops. The local API does not fall back to the public WorldMonitor service.

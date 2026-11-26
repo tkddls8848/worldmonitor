@@ -1,7 +1,7 @@
 // The ONE deviation → peg-status mapping and provider-row shaping for
 // `market:stablecoins:v1`, shared by all three writers of that key:
 //
-//   - scripts/ais-relay.cjs            (backup seeder, CJS: requireShared)
+//   - scripts/personal-providers.cjs            (backup seeder, CJS: requireShared)
 //   - scripts/seed-stablecoin-markets.mjs (primary seeder, ESM: static import
 //     of the scripts/shared/ mirror)
 //   - server/worldmonitor/market/v1/list-stablecoin-markets.ts (gap lookups,

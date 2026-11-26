@@ -29,7 +29,7 @@ const APP_OWNED_KEYS = Object.freeze([
   // raw = false), so the snapshot and its freshness stamp live in the
   // deployment's own namespace on preview. The Railway CII/chokepoint
   // warm-pings only hit the routes over HTTP — they never write these keys
-  // to Redis directly (scripts/ais-relay.cjs: "The RPC handler owns
+  // to Redis directly (scripts/personal-providers.cjs: "The RPC handler owns
   // seed-meta:intelligence:risk-scores").
   'temporal:anomalies:v1', // infrastructure/v1/list-temporal-anomalies
   'seed-meta:temporal:anomalies',

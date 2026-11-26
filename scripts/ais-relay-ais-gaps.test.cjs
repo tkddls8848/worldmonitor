@@ -8,7 +8,7 @@
  * never be reconstructed from it), published as `maritime:ais-gaps:v1` and
  * consumed by the temporal-anomalies rebuild via COUNT_SOURCE_KEYS.
  *
- * ais-relay.cjs starts an HTTP/WebSocket server and poll loops at top level
+ * personal-providers.cjs starts an HTTP/WebSocket server and poll loops at top level
  * (no require.main guard), so it cannot be require()d from a test. As in
  * scripts/ais-relay-seed-fetchedat.test.cjs, we lift the real function bodies
  * out of the production source and eval them together, so the assertions run
@@ -23,7 +23,7 @@ const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
 const test = require('node:test');
 
-const relaySource = readFileSync(join(__dirname, 'ais-relay.cjs'), 'utf8');
+const relaySource = readFileSync(join(__dirname, 'personal-providers.cjs'), 'utf8');
 
 // Same extraction harness as scripts/ais-relay-seed-fetchedat.test.cjs,
 // widened to `[\s\S]*?` inside the parameter list so default-valued params
@@ -31,7 +31,7 @@ const relaySource = readFileSync(join(__dirname, 'ais-relay.cjs'), 'utf8');
 function loadFunctions(names) {
   const bodies = names.map((name) => {
     const match = relaySource.match(new RegExp(`(?:async\\s+)?function ${name}\\([\\s\\S]*?\\) \\{[\\s\\S]*?\\n\\}`));
-    assert.ok(match, `could not locate ${name}() in ais-relay.cjs`);
+    assert.ok(match, `could not locate ${name}() in personal-providers.cjs`);
     return match[0];
   });
   // eslint-disable-next-line no-new-func
@@ -47,7 +47,7 @@ assert.ok(relaySource.includes("'seed-meta:maritime:ais-gaps'"),
 // Pin the shipped constants the eval'd functions otherwise free-resolve: a
 // relay-side change to either would silently desync this test from production.
 assert.ok(relaySource.includes('const GAP_THRESHOLD = 60 * 60 * 1000'),
-  'GAP_THRESHOLD must stay 1h in ais-relay.cjs');
+  'GAP_THRESHOLD must stay 1h in personal-providers.cjs');
 assert.ok(relaySource.includes('const AIS_GAPS_TTL = 3600'),
   'AIS_GAPS_TTL must stay 3600 (must strictly exceed the 30min health budget)');
 // The prior fix MUST come from vesselLastFixSeen (retention > GAP_THRESHOLD)

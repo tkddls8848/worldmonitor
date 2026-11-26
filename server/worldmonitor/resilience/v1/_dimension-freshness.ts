@@ -101,9 +101,9 @@ const SOURCE_KEY_META_OVERRIDES: Readonly<Record<string, string>> = {
   'energy:mix': 'economic:owid-energy-mix',
   // GIE gas storage per-country keys share one meta key.
   'energy:gas-storage': 'energy:gas-storage-countries',
-  // ais-relay.cjs writes seed-meta:news:threat-summary (single dash).
+  // personal-providers.cjs writes seed-meta:news:threat-summary (single dash).
   'news:threat:summary': 'news:threat-summary',
-  // ais-relay.cjs writes seed-meta:intelligence:social-reddit (single dash).
+  // personal-providers.cjs writes seed-meta:intelligence:social-reddit (single dash).
   'intelligence:social:reddit': 'intelligence:social-reddit',
 };
 

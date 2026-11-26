@@ -10,7 +10,7 @@ import http from 'node:http';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-const relayScript = fileURLToPath(new URL('../scripts/ais-relay.cjs', import.meta.url));
+const relayScript = fileURLToPath(new URL('./_lib/personal-providers-host.cjs', import.meta.url));
 const preload = fileURLToPath(new URL('./_lib/ais-relay-notam-preload.cjs', import.meta.url));
 const SECRET = 'relay-secret';
 

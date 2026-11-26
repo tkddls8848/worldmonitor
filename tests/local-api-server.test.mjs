@@ -17,22 +17,6 @@ import { runInNewContext } from 'node:vm';
 delete process.env.WS_RELAY_URL;
 const { createLocalApiServer, __testing__ } = await import('../scripts/local/local-api-server.mjs');
 
-// Served locally, these answer 5xx; the cloud holds their state. Before #9906
-// a failed Upstash import hid that.
-// reverse-geocode answers 503 locally: its Nominatim limiter fails closed
-// without Upstash, and its geocode cache is the cloud's Redis.
-test('prefers the cloud for routes whose state lives only in the cloud (#9906)', () => {
-  for (const pathname of [
-    '/api/reverse-geocode',
-    '/api/security/report',
-  ]) {
-    assert.equal(__testing__.isCloudPreferred(pathname), true, pathname);
-  }
-  for (const pathname of ['/api/opensky', '/api/oref-alerts', '/api/polymarket', '/api/telegram-feed', '/api/x-feed']) {
-    assert.equal(__testing__.isCloudPreferred(pathname), false, pathname);
-  }
-});
-
 test('jsonForScript keeps any value inside an inline <script> as data', () => {
   const { jsonForScript } = __testing__;
   const hostile = '</script><script>alert(1)</script>\u2028\u2029<!--&';
@@ -51,65 +35,6 @@ test('isYahooFinanceHost matches finance.yahoo.com and its subdomains only', () 
   }
   for (const host of ['evilfinance.yahoo.com', 'finance.yahoo.com.evil.example', 'yahoo.com', 'example.com', 'finance.yahoo.com..']) {
     assert.equal(isYahooFinanceHost(host), false, host);
-  }
-});
-
-test('keeps seed-owned WSB snapshots cloud-preferred', () => {
-  assert.equal(__testing__.isCloudPreferred('/api/intelligence/v1/list-wsb-tickers'), true);
-});
-
-test('keeps seed-owned defense snapshots cloud-preferred regardless of relay configuration', () => {
-  assert.equal(__testing__.isCloudPreferred('/api/bootstrap'), true);
-  assert.equal(__testing__.isCloudPreferred('/api/military/v1/get-defense-industrial-base'), true);
-  assert.equal(__testing__.isCloudPreferred('/api/scorecard/v1/get-five-factor-scorecard'), true);
-  assert.equal(__testing__.isCloudPreferred('/api/scorecard/v1/get-bloc-scorecard'), true);
-  assert.equal(__testing__.isCloudPreferred('/api/scorecard/v1/list-five-factor-scorecards'), true);
-});
-
-test('keeps seed-owned commodity vulnerability snapshots cloud-preferred', async () => {
-  const endpoints = [
-    '/api/supply-chain/v1/get-country-vulnerabilities',
-    '/api/supply-chain/v1/get-chokepoint-dependencies',
-    '/api/supply-chain/v1/list-vulnerability-rankings',
-  ];
-  for (const endpoint of endpoints) {
-    assert.equal(__testing__.isCloudPreferred(endpoint), true);
-  }
-
-  const remote = await setupRemoteServer();
-  const unavailableHandler = `
-    export default async function handler() {
-      return new Response(JSON.stringify({ source: 'local-empty', upstreamUnavailable: true }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' }
-      });
-    }
-  `;
-  const localApi = await setupApiDir(Object.fromEntries(
-    endpoints.map((endpoint) => [`${endpoint.slice('/api/'.length)}.js`, unavailableHandler]),
-  ));
-  const app = await createLocalApiServer({
-    port: 0,
-    apiDir: localApi.apiDir,
-    remoteBase: remote.remoteBase,
-    cloudFallback: 'true',
-    allowPrivateRemoteBase: true,
-    logger: { log() { }, warn() { }, error() { } },
-  });
-  const { port } = await app.start();
-
-  try {
-    for (const endpoint of endpoints) {
-      const response = await authFetch(`http://127.0.0.1:${port}${endpoint}`);
-      assert.equal(response.status, 200);
-      const body = await response.json();
-      assert.equal(body.source, 'remote');
-    }
-    assert.deepEqual(remote.hits, endpoints);
-  } finally {
-    await app.close();
-    await localApi.cleanup();
-    await remote.close();
   }
 });
 
@@ -165,25 +90,7 @@ async function withCloudAuthSidecar(run) {
 }
 
 for (const rendererUserAgent of [undefined, 'Mozilla/5.0 (Macintosh) AppleWebKit/605.1.15']) {
-  test(`cloud requests carry the sidecar user agent when the renderer sent ${rendererUserAgent ? 'a WebView UA' : 'none'}`, async () => {
-    await withCloudAuthSidecar(async ({ remote, url }) => {
-      const response = await authFetch(url, rendererUserAgent ? { headers: { 'User-Agent': rendererUserAgent } } : {});
-      assert.equal(response.status, 200);
-      assert.equal(remote.calls[0].headers['user-agent'], 'WorldMonitor-Desktop/9.8.7 (sidecar)');
-    });
-  });
 }
-
-test('a configured product key reaches the cloud, a forwarded user bearer does not', async () => {
-  await withCloudAuthSidecar(async ({ remote, url }) => {
-    process.env.WORLDMONITOR_API_KEY = 'desktop-product-key';
-    const headers = { 'X-WorldMonitor-User-Authorization': 'Bearer clerk-jwt' };
-    assert.equal((await authFetch(url, { headers })).status, 200);
-    assert.equal(remote.calls[0].headers['x-worldmonitor-key'], 'desktop-product-key');
-    assert.equal(remote.calls[0].headers.authorization, undefined);
-    assert.equal(remote.calls[0].headers['x-worldmonitor-user-authorization'], undefined);
-  });
-});
 
 test('local handlers never see the forwarded user credential', async () => {
   const localApi = await setupApiDir({
@@ -204,53 +111,7 @@ test('local handlers never see the forwarded user credential', async () => {
   }
 });
 
-test('a forwarded user credential that is not a bearer is dropped', async () => {
-  await withCloudAuthSidecar(async ({ remote, url }) => {
-    const headers = { 'X-WorldMonitor-User-Authorization': 'Basic Zm9vOmJhcg==' };
-    assert.equal((await authFetch(url, { headers })).status, 200);
-    assert.equal(remote.calls[0].headers.authorization, undefined);
-    assert.equal(remote.calls[0].headers['x-worldmonitor-key'], undefined);
-    assert.equal(remote.calls[0].headers['x-worldmonitor-user-authorization'], undefined);
-  });
-});
-
-test('routes seed-only displacement requests to cloud before a local empty 200', async () => {
-  const endpoint = '/api/displacement/v1/get-displacement-summary';
-  const seeded = { summary: { year: 2025, countries: [{ code: 'SYR' }], topFlows: [] }, fetchedAt: 123456, dataAvailable: true };
-  const hits = [];
-  const remote = createServer((req, res) => {
-    hits.push(req.url);
-    res.writeHead(200, { 'content-type': 'application/json' });
-    res.end(JSON.stringify(seeded));
-  });
-  const remotePort = await listen(remote);
-  const localApi = await setupApiDir({
-    'displacement/v1/get-displacement-summary.js': `export default async function handler() {
-      return Response.json({ dataAvailable: false, fetchedAt: 0 });
-    }`,
-  });
-  const app = await createLocalApiServer({
-    port: 0, apiDir: localApi.apiDir,
-    remoteBase: `http://127.0.0.1:${remotePort}`, cloudFallback: 'true', allowPrivateRemoteBase: true,
-    logger: { log() {}, warn() {}, error() {} },
-  });
-  const { port } = await app.start();
-  try {
-    const query = '?year=0&flow_limit=50';
-    const response = await authFetch(`http://127.0.0.1:${port}${endpoint}${query}`);
-    assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), seeded);
-    assert.deepEqual(hits, [`${endpoint}${query}`]);
-    assert.equal(__testing__.isCloudPreferred(endpoint), true);
-  } finally {
-    await app.close();
-    await localApi.cleanup();
-    await new Promise((resolve, reject) => remote.close(error => error ? reject(error) : resolve()));
-  }
-});
-
 test('keeps desktop Ollama headline translation on the local handler (#9476)', async () => {
-  assert.equal(__testing__.isCloudPreferred('/api/news/v1/summarize-article'), true);
   const savedEnv = {
     WS_RELAY_URL: process.env.WS_RELAY_URL,
     LOCAL_API_MODE: process.env.LOCAL_API_MODE,
@@ -338,28 +199,29 @@ test('keeps desktop Ollama headline translation on the local handler (#9476)', a
 
     const paid = await postSummarize({ provider: 'groq', mode: 'brief', headlines: ['Markets'] });
     assert.equal(paid.status, 200);
-    assert.equal((await paid.json()).source, 'remote');
+    assert.equal((await paid.json()).source, 'local-summarize');
     assert.deepEqual(ollamaHits, ['/v1/chat/completions']);
-    assert.deepEqual(summarizeHits(), ['/api/news/v1/summarize-article']);
+    assert.deepEqual(summarizeHits(), []);
 
     const otherTranslate = await postSummarize({ provider: 'groq', mode: 'translate', headlines: ['Hello'] });
-    assert.equal((await otherTranslate.json()).source, 'remote');
+    assert.equal((await otherTranslate.json()).source, 'local-summarize');
     assert.deepEqual(ollamaHits, ['/v1/chat/completions']);
 
     const ollamaBrief = await postSummarize({ provider: 'ollama', mode: 'brief', headlines: ['Local summary'] });
-    assert.equal((await ollamaBrief.json()).source, 'remote');
+    assert.equal((await ollamaBrief.json()).source, 'local-summarize');
     assert.deepEqual(ollamaHits, ['/v1/chat/completions']);
 
     const digest = await authFetch(`${base}/api/news/v1/list-feed-digest`);
     assert.equal(digest.status, 200);
-    assert.equal((await digest.json()).source, 'remote');
+    assert.equal((await digest.json()).source, 'local-news');
 
     const malformed = await authFetch(`${base}/api/news/v1/summarize-article`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: '{',
     });
-    assert.equal((await malformed.json()).source, 'remote');
+    assert.equal(malformed.status, 502);
+    assert.deepEqual(remote.hits, [], 'all requests and failures remain local');
 
     const failed = await postSummarize({
       provider: 'ollama',
@@ -403,168 +265,13 @@ test('keeps desktop Ollama headline translation on the local handler (#9476)', a
 });
 
 for (const failure of ['silent', 'trickle', 'refused']) {
-  test(`cloud-preferred requests use local fallback when cloud is ${failure}`, async () => {
-    const endpoint = '/api/displacement/v1/get-displacement-summary';
-    const hits = [];
-    const timers = new Set();
-    const remote = createServer((req, res) => {
-      hits.push(req.url);
-      if (failure === 'trickle') {
-        res.writeHead(200, { 'content-type': 'application/json' });
-        res.write('{');
-        const timer = setInterval(() => res.write(' '), 50);
-        timers.add(timer);
-        res.once('close', () => { clearInterval(timer); timers.delete(timer); });
-      }
-    });
-    const remotePort = await listen(remote);
-    if (failure === 'refused') await new Promise(resolve => remote.close(resolve));
-    const localApi = await setupApiDir({
-      'displacement/v1/get-displacement-summary.js': `export default async function handler(req) {
-        return Response.json({ source: 'local-empty', dataAvailable: false, body: await req.json() });
-      }`,
-    });
-    const app = await createLocalApiServer({
-      port: 0, apiDir: localApi.apiDir,
-      remoteBase: `http://127.0.0.1:${remotePort}`, cloudFallback: 'true', allowPrivateRemoteBase: true,
-      logger: { log() {}, warn() {}, error() {} },
-    });
-    const { port } = await app.start();
-    let deadline;
-    try {
-      const response = await Promise.race([
-        authFetch(`http://127.0.0.1:${port}${endpoint}`, {
-          method: 'POST', headers: { 'content-type': 'application/json' }, body: '{"year":2025}',
-        }),
-        new Promise((_, reject) => {
-          deadline = setTimeout(() => reject(new Error('cloud attempt did not reach local fallback within 4s')), 4000);
-        }),
-      ]);
-      assert.equal(response.status, 200);
-      assert.deepEqual(await response.json(), { source: 'local-empty', dataAvailable: false, body: { year: 2025 } });
-      assert.deepEqual(hits, failure === 'refused' ? [] : [endpoint]);
-    } finally {
-      clearTimeout(deadline);
-      for (const timer of timers) clearInterval(timer);
-      remote.closeAllConnections();
-      if (remote.listening) await new Promise(resolve => remote.close(resolve));
-      await app.close();
-      await localApi.cleanup();
-    }
-  });
 }
 
 for (const allowPrivateRemoteBase of [false, true]) {
-  test(`cloud proxy preserves its configured base and SSRF guard with private opt-in ${allowPrivateRemoteBase}`, async () => {
-    const remote = await setupRemoteServer();
-    const localApi = await setupApiDir({
-      'displacement/v1/get-displacement-summary.js': 'export default () => Response.json({ source: "local-empty" });',
-    });
-    const app = await createLocalApiServer({
-      port: 0, apiDir: localApi.apiDir, remoteBase: `${remote.remoteBase}/cloud-prefix`,
-      cloudFallback: 'true', allowPrivateRemoteBase,
-      logger: { log() {}, warn() {}, error() {} },
-    });
-    const { port } = await app.start();
-    try {
-      const endpoint = '/api/displacement/v1/get-displacement-summary';
-      const response = await authFetch(`http://127.0.0.1:${port}${endpoint}?url=http://169.254.169.254/secret`);
-      assert.equal(response.status, 200);
-      const body = await response.json();
-      assert.equal(body.source, allowPrivateRemoteBase ? 'remote' : 'local-empty');
-      assert.deepEqual(remote.hits, allowPrivateRemoteBase ? [`/cloud-prefix${endpoint}`] : []);
-    } finally {
-      await app.close();
-      await localApi.cleanup();
-      await remote.close();
-    }
-  });
 }
 
 for (const localFailure of ['missing', 'error-response', 'throw']) {
-  test(`does not retry a timed-out cloud-preferred POST when the local handler is ${localFailure}`, async () => {
-    const endpoint = '/api/v2/shipping/webhooks';
-    let cloudCalls = 0;
-    const remote = createServer((_req, _res) => {
-      cloudCalls++;
-    });
-    const remotePort = await listen(remote);
-    const handlers = {
-      'error-response': 'export default () => Response.json({ error: "unavailable" }, { status: 503 });',
-      throw: 'export default () => { throw new Error("local unavailable"); };',
-    };
-    const localApi = await setupApiDir(localFailure === 'missing' ? {} : {
-      'v2/shipping/webhooks.js': handlers[localFailure],
-    });
-    const app = await createLocalApiServer({
-      port: 0, apiDir: localApi.apiDir,
-      remoteBase: `http://127.0.0.1:${remotePort}`, cloudFallback: 'true', allowPrivateRemoteBase: true,
-      logger: { log() {}, warn() {}, error() {} },
-    });
-    const { port } = await app.start();
-    let deadline;
-    try {
-      const response = await Promise.race([
-        authFetch(`http://127.0.0.1:${port}${endpoint}`, {
-          method: 'POST', headers: { 'content-type': 'application/json' }, body: '{"url":"https://example.com/hook"}',
-        }),
-        new Promise((_, reject) => {
-          deadline = setTimeout(() => reject(new Error('cloud-preferred POST was retried after its deadline')), 4000);
-        }),
-      ]);
-      assert.equal(response.status, { missing: 404, 'error-response': 503, throw: 502 }[localFailure]);
-      assert.equal(cloudCalls, 1, 'a POST may already have applied its side effect before the cloud response stalls');
-    } finally {
-      clearTimeout(deadline);
-      remote.closeAllConnections();
-      await new Promise(resolve => remote.close(resolve));
-      await app.close();
-      await localApi.cleanup();
-    }
-  });
 }
-
-test('cloud proxy cancels its upstream request when the desktop client disconnects', async () => {
-  let cloudRequest;
-  let cloudClosed;
-  const received = new Promise(resolve => { cloudRequest = resolve; });
-  const closed = new Promise(resolve => { cloudClosed = resolve; });
-  const remote = createServer((_req, res) => {
-    res.once('close', cloudClosed);
-    cloudRequest();
-  });
-  const remotePort = await listen(remote);
-  const localApi = await setupApiDir({
-    'displacement/v1/get-displacement-summary.js': 'export default () => Response.json({ dataAvailable: false });',
-  });
-  const app = await createLocalApiServer({
-    port: 0, apiDir: localApi.apiDir,
-    remoteBase: `http://127.0.0.1:${remotePort}`, cloudFallback: 'true', allowPrivateRemoteBase: true,
-    logger: { log() {}, warn() {}, error() {} },
-  });
-  const { port } = await app.start();
-  const client = httpRequest(`http://127.0.0.1:${port}/api/displacement/v1/get-displacement-summary`, {
-    headers: { Authorization: `Bearer ${TEST_LOCAL_API_TOKEN}` },
-  });
-  client.on('error', () => {});
-  let deadline;
-  try {
-    const timeout = new Promise((_, reject) => {
-      deadline = setTimeout(() => reject(new Error('cloud proxy disconnect test did not settle within 1s')), 1000);
-    });
-    client.end();
-    await Promise.race([received, timeout]);
-    client.destroy();
-    await Promise.race([closed, timeout]);
-  } finally {
-    clearTimeout(deadline);
-    client.destroy();
-    remote.closeAllConnections();
-    await new Promise(resolve => remote.close(resolve));
-    await app.close();
-    await localApi.cleanup();
-  }
-});
 
 // The sidecar default-denies when LOCAL_API_TOKEN is unset (security fix:
 // previously "unset" meant "auth disabled", which made any standalone run
@@ -984,134 +691,6 @@ async function setupResourceDirWithUpApi(files) {
   };
 }
 
-test('returns local error directly when cloudFallback is off (default)', async () => {
-  const remote = await setupRemoteServer();
-  const localApi = await setupApiDir({
-    'fred-data.js': `
-      export default async function handler() {
-        return new Response(JSON.stringify({ source: 'local-error' }), {
-          status: 500,
-          headers: { 'content-type': 'application/json' }
-        });
-      }
-    `,
-  });
-
-  const app = await createLocalApiServer({
-    port: 0,
-    apiDir: localApi.apiDir,
-    remoteBase: remote.remoteBase,
-    logger: { log() { }, warn() { }, error() { } },
-  });
-  const { port } = await app.start();
-
-  try {
-    const response = await authFetch(`http://127.0.0.1:${port}/api/fred-data`);
-    assert.equal(response.status, 500);
-    const body = await response.json();
-    assert.equal(body.source, 'local-error');
-    assert.equal(remote.hits.length, 0);
-  } finally {
-    await app.close();
-    await localApi.cleanup();
-    await remote.close();
-  }
-});
-
-test('falls back to cloud when cloudFallback is enabled and local handler returns 500', async () => {
-  const remote = await setupRemoteServer();
-  const localApi = await setupApiDir({
-    'fred-data.js': `
-      export default async function handler() {
-        return new Response(JSON.stringify({ source: 'local-error' }), {
-          status: 500,
-          headers: { 'content-type': 'application/json' }
-        });
-      }
-    `,
-  });
-
-  const app = await createLocalApiServer({
-    port: 0,
-    apiDir: localApi.apiDir,
-    remoteBase: remote.remoteBase,
-    cloudFallback: 'true',
-    allowPrivateRemoteBase: true,
-    logger: { log() { }, warn() { }, error() { } },
-  });
-  const { port } = await app.start();
-
-  try {
-    const response = await authFetch(`http://127.0.0.1:${port}/api/fred-data`);
-    assert.equal(response.status, 200);
-    const body = await response.json();
-    assert.equal(body.source, 'remote');
-    assert.equal(remote.hits.includes('/api/fred-data'), true);
-  } finally {
-    await app.close();
-    await localApi.cleanup();
-    await remote.close();
-  }
-});
-
-test('preserves POST body when cloud fallback is triggered after local non-OK response', async () => {
-  const remoteBodies = [];
-  const remote = createServer((req, res) => {
-    const chunks = [];
-    req.on('data', (chunk) => chunks.push(chunk));
-    req.on('end', () => {
-      const body = Buffer.concat(chunks).toString('utf8');
-      remoteBodies.push(body);
-      res.writeHead(200, { 'content-type': 'application/json' });
-      res.end(JSON.stringify({ source: 'remote', body }));
-    });
-  });
-  const remotePort = await listen(remote);
-
-  const localApi = await setupApiDir({
-    'post-fail.js': `
-      export default async function handler(req) {
-        await req.text();
-        return new Response(JSON.stringify({ source: 'local-error' }), {
-          status: 500,
-          headers: { 'content-type': 'application/json' }
-        });
-      }
-    `,
-  });
-
-  const app = await createLocalApiServer({
-    port: 0,
-    apiDir: localApi.apiDir,
-    remoteBase: `http://127.0.0.1:${remotePort}`,
-    cloudFallback: 'true',
-    allowPrivateRemoteBase: true,
-    logger: { log() { }, warn() { }, error() { } },
-  });
-  const { port } = await app.start();
-
-  try {
-    const payload = JSON.stringify({ secret: 'keep-body' });
-    const response = await authFetch(`http://127.0.0.1:${port}/api/post-fail`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: payload,
-    });
-    assert.equal(response.status, 200);
-
-    const body = await response.json();
-    assert.equal(body.source, 'remote');
-    assert.equal(body.body, payload);
-    assert.equal(remoteBodies[0], payload);
-  } finally {
-    await app.close();
-    await localApi.cleanup();
-    await new Promise((resolve, reject) => {
-      remote.close((error) => (error ? reject(error) : resolve()));
-    });
-  }
-});
-
 test('uses local handler response when local handler succeeds', async () => {
   const remote = await setupRemoteServer();
   const localApi = await setupApiDir({
@@ -1138,31 +717,6 @@ test('uses local handler response when local handler succeeds', async () => {
     assert.equal(response.status, 200);
     const body = await response.json();
     assert.equal(body.source, 'local-ok');
-    assert.equal(remote.hits.length, 0);
-  } finally {
-    await app.close();
-    await localApi.cleanup();
-    await remote.close();
-  }
-});
-
-test('returns 404 when local route does not exist and cloudFallback is off', async () => {
-  const remote = await setupRemoteServer();
-  const localApi = await setupApiDir({});
-
-  const app = await createLocalApiServer({
-    port: 0,
-    apiDir: localApi.apiDir,
-    remoteBase: remote.remoteBase,
-    logger: { log() { }, warn() { }, error() { } },
-  });
-  const { port } = await app.start();
-
-  try {
-    const response = await authFetch(`http://127.0.0.1:${port}/api/not-found`);
-    assert.equal(response.status, 404);
-    const body = await response.json();
-    assert.equal(body.error, 'No local handler for this endpoint');
     assert.equal(remote.hits.length, 0);
   } finally {
     await app.close();
@@ -1300,68 +854,6 @@ test('preserves caller Authorization while hiding the sidecar transport token', 
       transportToken: null,
     });
   } finally {
-    await app.close();
-    await localApi.cleanup();
-  }
-});
-
-test('serves /api/youtube/live from the local handler and never contacts the cloud', async () => {
-  // The personal server must not reach the upstream operator's hosts. The
-  // route used to bypass the cloudFallback flag and always proxy to
-  // remoteBase; it now runs the local api/youtube/live.js bundle like any
-  // other route, even when a remoteBase is configured.
-  const remote = await setupRemoteServer();
-  const localApi = await setupApiDir({
-    'youtube/live.js': `
-      export default async function handler(req) {
-        const videoId = new URL(req.url).searchParams.get('videoId');
-        return new Response(JSON.stringify({ source: 'local', videoId }), {
-          status: 200,
-          headers: { 'content-type': 'application/json' },
-        });
-      }
-    `,
-  });
-  const app = await createLocalApiServer({
-    port: 0,
-    apiDir: localApi.apiDir,
-    remoteBase: remote.remoteBase,
-    allowPrivateRemoteBase: true,
-    mode: 'docker',
-    logger: { log() { }, warn() { }, error() { } },
-  });
-  const { port } = await app.start();
-
-  try {
-    const headers = { 'X-WorldMonitor-Local-Token': TEST_LOCAL_API_TOKEN };
-    const youtubeResponse = await fetch(`http://127.0.0.1:${port}/api/youtube/live?videoId=dQw4w9WgXcQ`, { headers });
-    assert.equal(youtubeResponse.status, 200);
-    assert.deepEqual(await youtubeResponse.json(), { source: 'local', videoId: 'dQw4w9WgXcQ' });
-    assert.deepEqual(remote.hits, []);
-  } finally {
-    await app.close();
-    await localApi.cleanup();
-    await remote.close();
-  }
-});
-
-test('has no cloud remoteBase unless one is configured', async () => {
-  const saved = process.env.LOCAL_API_REMOTE_BASE;
-  delete process.env.LOCAL_API_REMOTE_BASE;
-  const localApi = await setupApiDir({});
-  const app = await createLocalApiServer({
-    port: 0,
-    apiDir: localApi.apiDir,
-    logger: { log() { }, warn() { }, error() { } },
-  });
-  const { port } = await app.start();
-  try {
-    const response = await fetch(`http://127.0.0.1:${port}/api/service-status`);
-    const body = await response.json();
-    assert.equal(body.local.remoteBase, '');
-    assert.ok(!JSON.stringify(body).includes('worldmonitor.app'), 'no upstream host in the local status');
-  } finally {
-    if (saved === undefined) delete process.env.LOCAL_API_REMOTE_BASE; else process.env.LOCAL_API_REMOTE_BASE = saved;
     await app.close();
     await localApi.cleanup();
   }
@@ -1525,73 +1017,6 @@ for (const inputKind of ['string', 'URL', 'Request']) test(`blocks handler ${inp
   } finally {
     delete process.env.WM_TEST_UPSTREAM;
     await app.close();
-    await localApi.cleanup();
-    await new Promise((resolve, reject) => {
-      upstream.close((error) => (error ? reject(error) : resolve()));
-    });
-  }
-});
-
-for (const relayScheme of ['http', 'ws']) test(`allows only Docker mode to fetch configured private ${relayScheme}:// WS_RELAY_URL origin`, async () => {
-  const originalRelayUrl = process.env.WS_RELAY_URL;
-  let upstreamHits = 0;
-
-  const upstream = createServer((_req, res) => {
-    upstreamHits += 1;
-    res.writeHead(200, { 'content-type': 'application/json' });
-    res.end(JSON.stringify({ ok: true }));
-  });
-  const upstreamPort = await listen(upstream);
-  const relayOrigin = `${relayScheme}://127.0.0.1:${upstreamPort}`;
-
-  // Mirrors getRelayBaseUrl() in api/_relay.js: relay handlers fetch ws(s)://
-  // values over http(s)://, so the allowlist must trust the fetched origin.
-  const localApi = await setupApiDir({
-    'relay-probe.js': `
-      export default async function handler() {
-        const base = process.env.WS_RELAY_URL.replace('wss://', 'https://').replace('ws://', 'http://');
-        const upstream = await fetch(base + '/telegram/feed');
-        const payload = await upstream.text();
-        return new Response(payload, {
-          status: upstream.status,
-          headers: { 'content-type': 'application/json' },
-        });
-      }
-    `,
-  });
-
-  async function runProbe(mode) {
-    const app = await createLocalApiServer({
-      port: 0,
-      apiDir: localApi.apiDir,
-      mode,
-      logger: { log() { }, warn() { }, error() { } },
-    });
-    const { port } = await app.start();
-    try {
-      return await authFetch(`http://127.0.0.1:${port}/api/relay-probe`);
-    } finally {
-      await app.close();
-    }
-  }
-
-  process.env.WS_RELAY_URL = relayOrigin;
-
-  try {
-    const dockerResponse = await runProbe('docker');
-    assert.equal(dockerResponse.status, 200);
-    assert.deepEqual(await dockerResponse.json(), { ok: true });
-    assert.equal(upstreamHits, 1);
-
-    const desktopResponse = await runProbe('desktop-sidecar');
-    assert.equal(desktopResponse.status, 502);
-    const desktopBody = await desktopResponse.json();
-    assert.equal(desktopBody.error, 'Local handler error');
-    assert.match(desktopBody.reason, /SSRF blocked/);
-    assert.equal(upstreamHits, 1);
-  } finally {
-    if (originalRelayUrl === undefined) delete process.env.WS_RELAY_URL;
-    else process.env.WS_RELAY_URL = originalRelayUrl;
     await localApi.cleanup();
     await new Promise((resolve, reject) => {
       upstream.close((error) => (error ? reject(error) : resolve()));
@@ -2119,75 +1544,6 @@ test('ignores a leftover GROQ_API_KEY in LLM health (#8885)', async () => {
   }
 });
 
-test('uses canonical app origin when proxying to cloud fallback (cloudFallback enabled)', async () => {
-  const remote = await setupRemoteServer();
-  const localApi = await setupApiDir({});
-
-  const app = await createLocalApiServer({
-    port: 0,
-    apiDir: localApi.apiDir,
-    remoteBase: remote.remoteBase,
-    cloudFallback: 'true',
-    allowPrivateRemoteBase: true,
-    logger: { log() { }, warn() { }, error() { } },
-  });
-  const { port } = await app.start();
-
-  try {
-    const response = await authFetch(`http://127.0.0.1:${port}/api/no-local-handler`, {
-      headers: { Origin: 'https://tauri.localhost' },
-    });
-    assert.equal(response.status, 200);
-    const body = await response.json();
-    assert.equal(body.source, 'remote');
-    assert.equal(body.origin, 'https://worldmonitor.app');
-    assert.equal(remote.origins[0], 'https://worldmonitor.app');
-  } finally {
-    await app.close();
-    await localApi.cleanup();
-    await remote.close();
-  }
-});
-
-test('blocks cloud fallback in Docker mode even when explicitly requested', async () => {
-  const remote = await setupRemoteServer();
-  const localApi = await setupApiDir({
-    'docker-test.js': `
-      export default async function handler() {
-        return new Response(JSON.stringify({ source: 'local-error' }), {
-          status: 500,
-          headers: { 'content-type': 'application/json' }
-        });
-      }
-    `,
-  });
-
-  const warnings = [];
-  const app = await createLocalApiServer({
-    port: 0,
-    apiDir: localApi.apiDir,
-    remoteBase: remote.remoteBase,
-    cloudFallback: 'true',
-    mode: 'docker',
-    logger: { log() {}, warn(...args) { warnings.push(args.join(' ')); }, error() {} },
-  });
-  const { port } = await app.start();
-
-  try {
-    const response = await authFetch(`http://127.0.0.1:${port}/api/docker-test`);
-    // Should NOT fall back to cloud; should return the local 500 directly
-    assert.equal(response.status, 500);
-    const body = await response.json();
-    assert.equal(body.source, 'local-error');
-    // Should have logged a warning about Docker mode blocking fallback
-    assert.ok(warnings.some(w => w.includes('Docker mode')), 'Should warn about Docker mode blocking fallback');
-  } finally {
-    await app.close();
-    await localApi.cleanup();
-    await remote.close();
-  }
-});
-
 test('responds to OPTIONS preflight with CORS headers', async () => {
   const localApi = await setupApiDir({
     'data.js': `
@@ -2303,7 +1659,7 @@ test('Docker rejects native administration without changing configuration, cache
   const relayCalls = [];
   const operatorRelay = 'https://operator-relay.example';
   const otherRelay = 'https://untrusted-relay.example';
-  process.env.WS_RELAY_URL = operatorRelay;
+  process.env.LOCAL_API_ORIGIN = operatorRelay;
   process.env.RELAY_SHARED_SECRET = 'synthetic-relay-secret';
   delete process.env.RELAY_AUTH_HEADER;
   globalThis.fetch = (input, options) => {
@@ -2389,10 +1745,10 @@ test('Docker rejects native administration without changing configuration, cache
       const relay = await fetch(`${base}/api/oref-alerts`, { headers: proxyHeaders });
       assert.equal(relay.status, 200);
       assert.equal(relayCalls.length, 1);
-      assert.equal(relayCalls[0].url, `${operatorRelay}/oref/alerts`);
-      assert.equal(relayCalls[0].headers.get('x-relay-key'), 'synthetic-relay-secret');
-      assert.equal(relayCalls[0].headers.get('authorization'), 'Bearer synthetic-relay-secret');
-      assert.equal(process.env.WS_RELAY_URL, operatorRelay);
+      assert.equal(relayCalls[0].url, `${operatorRelay}/api/local-providers/oref/alerts`);
+      assert.equal(relayCalls[0].headers.get('x-worldmonitor-local-token'), TEST_LOCAL_API_TOKEN);
+      assert.equal(relayCalls[0].headers.get('authorization'), null);
+      assert.equal(process.env.LOCAL_API_ORIGIN, operatorRelay);
       const missing = await authFetch(`${base}/api/missing`);
       assert.match((await missing.json()).reason, /cached-failure/);
       const health = await fetch(`${base}/api/sidecar-health`);
@@ -4619,37 +3975,18 @@ test('rss-proxy aborts the upstream fetch when the client disconnects', async ()
   }
 });
 
-test('cloud fallback logs a timestamp, duration and upstream load for each failed cloud request', async () => {
-  const remote = createServer((req, res) => {
-    if (req.url.startsWith('/api/test/v1/unavailable')) {
-      res.writeHead(502, { 'content-type': 'application/json' });
-      res.end('{}');
-      return;
-    }
-    req.socket.destroy();
-  });
-  const remotePort = await listen(remote);
-  const localApi = await setupApiDir({});
-  const lines = [];
-  const capture = (...args) => lines.push(args.map(String).join(' '));
-  const app = await createLocalApiServer({
-    port: 0, apiDir: localApi.apiDir,
-    remoteBase: `http://127.0.0.1:${remotePort}`, cloudFallback: 'true', allowPrivateRemoteBase: true,
-    logger: { log() {}, warn: capture, error: capture },
-  });
+test('personal provider dispatch requires internal token and never needs a relay listener', async t => {
+  const calls = [];
+  const app = await createLocalApiServer({ port: 0, mode: 'docker', providers: { handle(req,res) {
+    calls.push(req.url); res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify({ alerts: [] }));
+  } }, logger: { log() {}, warn() {}, error() {} } });
   const { port } = await app.start();
-  try {
-    await authFetch(`http://127.0.0.1:${port}/api/test/v1/unavailable`);
-    await authFetch(`http://127.0.0.1:${port}/api/test/v1/dropped`);
-    const timed = String.raw`\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z`;
-    const load = String.raw`in \d+ms \(upstream \d+\/6 active, \d+ queued\)`;
-    assert.ok(lines.some(line => new RegExp(`^\\[local-api\\] ${timed} /api/test/v1/unavailable → cloud \\(handler missing\\)$`).test(line)), lines.join('\n'));
-    assert.ok(lines.some(line => new RegExp(`^\\[local-api\\] ${timed} cloud returned 502 for /api/test/v1/unavailable ${load}$`).test(line)), lines.join('\n'));
-    assert.ok(lines.some(line => new RegExp(`^\\[local-api\\] ${timed} cloud fallback failed for /api/test/v1/dropped ${load} `).test(line)), lines.join('\n'));
-  } finally {
-    remote.closeAllConnections();
-    await new Promise(resolve => remote.close(resolve));
-    await app.close();
-    await localApi.cleanup();
-  }
+  t.after(() => app.close());
+  const url = 'http://127.0.0.1:' + port + '/api/local-providers/oref/alerts';
+  assert.equal((await fetch(url)).status, 401);
+  assert.equal((await fetch(url, { method: 'POST', headers: { 'x-worldmonitor-local-token': TEST_LOCAL_API_TOKEN } })).status, 405);
+  const response = await fetch(url, { headers: { 'x-worldmonitor-local-token': TEST_LOCAL_API_TOKEN } });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { alerts: [] });
+  assert.deepEqual(calls, ['/oref/alerts']);
 });

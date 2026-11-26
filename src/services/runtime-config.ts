@@ -13,8 +13,6 @@ export type RuntimeSecretKey =
   | 'OTX_API_KEY'
   | 'ABUSEIPDB_API_KEY'
   | 'WINGBITS_API_KEY'
-  | 'WS_RELAY_URL'
-  | 'VITE_OPENSKY_RELAY_URL'
   | 'OPENSKY_CLIENT_ID'
   | 'OPENSKY_CLIENT_SECRET'
   | 'AISSTREAM_API_KEY'
@@ -196,14 +194,14 @@ export const RUNTIME_FEATURES: RuntimeFeatureDefinition[] = [
     id: 'aisRelay',
     name: 'AIS vessel tracking',
     description: 'Live vessel ingestion via AISStream WebSocket.',
-    requiredSecrets: ['WS_RELAY_URL', 'AISSTREAM_API_KEY'],
+    requiredSecrets: ['AISSTREAM_API_KEY'],
     fallback: 'AIS layer is disabled.',
   },
   {
     id: 'openskyRelay',
     name: 'OpenSky military flights (legacy)',
     description: 'OpenSky OAuth credentials for military flight data (legacy direct proxy).',
-    requiredSecrets: ['VITE_OPENSKY_RELAY_URL', 'OPENSKY_CLIENT_ID', 'OPENSKY_CLIENT_SECRET'],
+    requiredSecrets: ['OPENSKY_CLIENT_ID', 'OPENSKY_CLIENT_SECRET'],
     fallback: 'Military flights fall back to limited/no data.',
   },
   {

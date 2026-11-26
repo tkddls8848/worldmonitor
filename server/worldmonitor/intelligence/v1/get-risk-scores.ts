@@ -361,7 +361,7 @@ const ISO3_TO_ISO2: Record<string, string> = iso3ToIso2Json;
 // deriveUcdpClassifications + getUcdpFloor) ---
 //
 // The cached `conflict:ucdp-events:v1` payload (written by scripts/seed-ucdp-events.mjs and
-// scripts/ais-relay.cjs) emits per-event rows shaped as
+// scripts/personal-providers.cjs) emits per-event rows shaped as
 // `{ country, location, violenceType, deathsBest, dateStart, ... }`. There is NO
 // `intensity_level` or `type_of_violence` field — the pre-existing scorer read those two
 // non-existent keys, so `parseInt(...) === 0` for every event and the UCDP floor/coverage

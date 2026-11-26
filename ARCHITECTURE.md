@@ -140,7 +140,7 @@ Entries are bundled per file, a constraint enforced by `tests/edge-functions.tes
 | File | Purpose |
 |------|---------|
 | `_cors.js` | Origin allowlist |
-| `_relay.js` | Factory for proxying requests to the relay service |
+| `_relay.js` | Internal calls to the adapters inside the personal server; no external relay configuration |
 | `_upstash-json.js` | Store reads for legacy entries |
 | `_json-response.js` | JSON response helper |
 
@@ -226,7 +226,7 @@ CI enforces generated code freshness via `.github/workflows/proto-check.yml`: ru
 
 `npm run collect:personal` (`scripts/personal-collect.mjs`) runs the collectors one at a time against the embedded store, once or every N minutes with `-- --watch N`. `DEFAULT_COLLECTORS` lists every bundle and the standalone collectors it runs; a collector whose API key is missing fails on its own and the pass continues. Bundles skip members that are still fresh. Standalone collectors in `STANDALONE_INTERVAL_MIN` skip a pass while their last success (kept in `.personal/collect-state.json`) is younger than their interval. `seed-pizzint.mjs` runs the relay's PizzINT producer block against the store, since the relay itself does not run in personal mode.
 
-The relay service (`scripts/ais-relay.cjs`) carries continuous seed loops:
+The relay service (`scripts/personal-providers.cjs`) carries continuous seed loops:
 
 - Market data (stocks, commodities, crypto, stablecoins, sectors, ETF flows, gulf quotes)
 - Aviation (international delays)
@@ -247,7 +247,7 @@ The market backup bundle also persists 14 days of timestamped hourly Yahoo close
 
 `api/health.js` checks every bootstrap and standalone key. For each key it reads `seed-meta:<key>` and compares `fetchedAt` against `maxStaleMin`. Cascade groups handle fallback chains (e.g., theater-posture: live, stale, backup). Returns per-key status: OK, STALE, WARN, EMPTY.
 
-**Source files**: `api/bootstrap.js`, `api/health.js`, `scripts/_seed-utils.mjs`, `scripts/seed-*.mjs`, `scripts/ais-relay.cjs`, `src/services/bootstrap.ts`, `src/app/refresh-scheduler.ts`
+**Source files**: `api/bootstrap.js`, `api/health.js`, `scripts/_seed-utils.mjs`, `scripts/seed-*.mjs`, `scripts/personal-providers.cjs`, `src/services/bootstrap.ts`, `src/app/refresh-scheduler.ts`
 
 ---
 
@@ -410,3 +410,5 @@ The personal fork builds no container images and deploys nothing from CI.
 │   └── workers/            Web Workers (analysis, ML, vector DB)
 └── tests/                  Unit/integration tests (node:test) and tests/dom (vitest)
 ```
+
+The personal server starts `scripts/personal-providers.cjs` in-process for AIS, OREF and on-demand provider requests. It opens no relay listener. The private adapter route is blocked at ingress and accepts only the server-generated transport token. Batch tasks run only under `personal-collect.mjs`; `personal-collector-tasks.cjs` contains the remaining one-shot producers. Hosted cloud fallback, Telegram/X account feeds, the relay widget generator and downstream WebSocket fanout are removed.

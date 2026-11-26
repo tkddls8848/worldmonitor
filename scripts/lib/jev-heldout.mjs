@@ -172,7 +172,7 @@ export const fixtureSha = (fixture) => promptSha(JSON.stringify({
   }),
 }));
 
-// ais-relay.cjs calls the shadow observer without maxTextChars, so its default applies.
+// personal-providers.cjs calls the shadow observer without maxTextChars, so its default applies.
 const MAX_TEXT_CHARS = 200;
 
 // The Nouls go in their own request, as they were measured; production's level request
