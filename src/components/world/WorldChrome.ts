@@ -37,6 +37,9 @@ export class WorldMasthead {
   constructor(private callbacks: { onToggleTheme(): void; onOpenFullView(): void; onTickerClick(id: string): void }) {
     installStyle();
     this.element = el('header', 'masthead-bar');
+    this.ticker.tabIndex = 0;
+    this.ticker.setAttribute('role', 'region');
+    this.ticker.setAttribute('aria-label', '시세 지표');
     const brand = el('div', 'wfs-brand');
     brand.append(el('strong', '', 'WorldMonitor'), el('span', '', 'GLOBAL INTELLIGENCE'));
     const threatMount = el('div', 'wfs-threat-mount');
@@ -95,7 +98,7 @@ export class WorldDispatchBar {
   private alerts: BreakingAlert[] = [];
   private index = 0;
   private badge = el('span', 'wfs-alert-badge', '속보');
-  private headline = el('span', 'wfs-dispatch-headline', '선택한 날짜와 분야 조건에 해당하는 속보가 없습니다.');
+  private headline = el('span', 'wfs-dispatch-headline');
   private meta = el('span', 'wfs-dispatch-time');
   private locate = el('button', 'wfs-locate', '지도 이동');
   private prev = el('button', 'wfs-page', '‹');
@@ -133,6 +136,7 @@ export class WorldDispatchBar {
       if (alert) this.callbacks.onLocate(alert);
     });
     this.element.append(this.badge, this.headline, this.meta, this.locate, this.prev, this.next, this.logToggle);
+    this.render();
     document.addEventListener('wm:breaking-news', this.listener);
   }
   setLogState(open: boolean, count: number): void {
@@ -144,7 +148,7 @@ export class WorldDispatchBar {
   }
   private render(): void {
     const alert = this.alerts[this.index];
-    this.headline.textContent = alert?.headline ?? '선택한 날짜와 분야 조건에 해당하는 속보가 없습니다.';
+    this.headline.textContent = alert?.headline ?? '아직 수신한 속보가 없습니다.';
     this.meta.textContent = alert
       ? `${alert.source} · ${new Intl.DateTimeFormat('ko-KR', { hour: '2-digit', minute: '2-digit' }).format(alert.timestamp)}`
       : '';
@@ -201,6 +205,15 @@ export class WorldKeyPlate {
       lines.append(item);
     }
     if (kinds.size) this.element.append(lines);
+    const markers = el('div', 'wfs-marker-legend');
+    for (const [kind, label] of [
+      ['hotspot-elevated', '관심 지역'], ['hotspot-high', '고위험 관심 지역'], ['waterway', '전략 해상 요충지'],
+    ]) {
+      const item = el('span', 'wfs-marker-key', label);
+      item.dataset.marker = kind;
+      markers.append(item);
+    }
+    this.element.append(markers);
   }
 }
 

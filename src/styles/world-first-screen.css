@@ -219,11 +219,18 @@
   overflow-x: auto;
   white-space: nowrap;
   flex: 1;
-  scrollbar-width: none;
+  min-width: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) var(--surface-subtle);
+}
+.wfs-ticker:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 .wfs-ticker-item {
   display: flex;
   align-items: center;
+  flex: 0 0 auto;
   gap: 6px;
   padding: 3px 11px;
   border: 0;
@@ -255,7 +262,6 @@ a.wfs-ticker-item {
   overflow-x: auto;
   border-top: 1px solid var(--border);
 }
-.wfs-global-gauges .wfs-ticker-item { flex: 0 0 auto; }
 .wfs-country-drawer__gauges { flex-wrap: wrap; }
 .wfs-ticker-item strong {
   font-size: 10px;
@@ -416,6 +422,41 @@ a.wfs-ticker-item {
   margin-top: 8px;
   color: var(--text-secondary);
   font-size: 9px;
+}
+.wfs-marker-legend { display: none; }
+/* The SVG fallback renders its own overlays in place of the DeckGL world layers. */
+.wfs-slot-stage:has(#mapContainer.svg-mode) .atlas-key-plate :is(.wfs-key-title small, .wfs-cii-scale, .wfs-line-legend) {
+  display: none;
+}
+.wfs-slot-stage:has(#mapContainer.svg-mode :is(.hotspot-marker, .waterway-diamond)) .wfs-marker-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  color: var(--text-secondary);
+  font-size: 9px;
+}
+.wfs-marker-key {
+  display: none;
+  align-items: center;
+  gap: 5px;
+}
+.wfs-slot-stage:has(#mapContainer.svg-mode .hotspot-marker:not(.high)) [data-marker="hotspot-elevated"],
+.wfs-slot-stage:has(#mapContainer.svg-mode .hotspot-marker.high) [data-marker="hotspot-high"],
+.wfs-slot-stage:has(#mapContainer.svg-mode .waterway-diamond) [data-marker="waterway"] {
+  display: inline-flex;
+}
+.wfs-marker-key::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--yellow);
+}
+.wfs-marker-key[data-marker="hotspot-high"]::before { background: var(--red); }
+.wfs-marker-key[data-marker="waterway"]::before {
+  border-radius: 0;
+  background: var(--status-live);
+  transform: rotate(45deg);
 }
 .wfs-line-key:before {
   content: "";
@@ -610,7 +651,7 @@ a.wfs-ticker-item {
 }
 @media (max-width: 768px) {
   .wfs-root {
-    grid-template-rows: 38px calc(28px + var(--wfs-gauge-height, 0px)) 30px minmax(0, 1fr) auto;
+    grid-template-rows: 38px var(--wfs-gauge-height, 0px) 30px minmax(0, 1fr) auto;
   }
   .masthead-bar {
     padding: 0 10px;
@@ -727,6 +768,7 @@ a.wfs-ticker-item {
   :root[data-theme="dark"] .coord-axis-top,
   :root[data-theme="dark"] .coord-axis-left { display: none; }
   :root[data-theme="dark"] .atlas-key-plate { left: 8px; top: 8px; bottom: auto; width: 178px; padding: 6px 8px; }
+  .wfs-root .wfs-slot-stage:has(#mapContainer.svg-mode) .atlas-key-plate { top: 62px; }
   :root[data-theme="dark"] .wfs-line-legend { display: none; }
   :root[data-theme="dark"] .zoom-controls { right: 8px; top: 8px; }
   :root[data-theme="dark"] .bottom-shelf { flex-direction: column; height: auto; min-height: 78px; }

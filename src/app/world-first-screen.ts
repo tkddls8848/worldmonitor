@@ -288,12 +288,21 @@ export function mountWorldFirstScreen(
       }, getCurrentLanguage())]);
     }).catch(() => { /* keep the last row */ });
   };
+  async function refreshIndicators(): Promise<void> {
+    const data = await loadGlobalIndicators();
+    if (destroyed) return;
+    globalIndicators = data;
+    const language = getCurrentLanguage();
+    renderGlobalGauges(gauges, globalIndicatorGauges(data, language), language === 'ko' ? '글로벌 지표' : 'Global gauges');
+    refreshOps();
+    if (selectedIso2) updateDrawer();
+  }
   async function refreshExtras(): Promise<void> {
     if (destroyed || !worldShown || extrasLoading) return;
     extrasLoading = true;
-    const [stressResult, outageResult, gasResult, ecosResult, tradeResult, dartResult, registerResult, auctionsResult, indicatorsResult] = await Promise.allSettled([
+    const [stressResult, outageResult, gasResult, ecosResult, tradeResult, dartResult, registerResult, auctionsResult] = await Promise.allSettled([
       loadFundingStress(), loadIodaOutages(), loadEuGasFlows(), loadKrEcosMacro(),
-      loadKrCustomsTrade(), loadKrDartDisclosures(), loadFederalRegister(), loadTreasuryAuctions(), loadGlobalIndicators(),
+      loadKrCustomsTrade(), loadKrDartDisclosures(), loadFederalRegister(), loadTreasuryAuctions(),
     ]);
     if (!destroyed) {
       if (stressResult.status === 'fulfilled') fundingStress = stressResult.value;
@@ -304,11 +313,6 @@ export function mountWorldFirstScreen(
       if (dartResult.status === 'fulfilled') krDisclosures = dartResult.value;
       if (registerResult.status === 'fulfilled') federalRegister = registerResult.value;
       if (auctionsResult.status === 'fulfilled') treasuryAuctions = auctionsResult.value;
-      if (indicatorsResult.status === 'fulfilled') {
-        globalIndicators = indicatorsResult.value;
-        const language = getCurrentLanguage();
-        renderGlobalGauges(gauges, globalIndicatorGauges(globalIndicators, language), language === 'ko' ? '글로벌 지표' : 'Global gauges');
-      }
       extrasLoadedAt = Date.now();
       refreshOps();
       if (selectedIso2) updateDrawer();
@@ -318,12 +322,17 @@ export function mountWorldFirstScreen(
   }
   function startExtrasTimer(): void {
     if (destroyed || !worldShown || extrasTimer !== null) return;
-    extrasTimer = setInterval(() => { void refreshExtras(); }, RELOAD_AFTER_MS);
+    extrasTimer = setInterval(() => {
+      void refreshIndicators();
+      void refreshExtras();
+    }, RELOAD_AFTER_MS);
   }
   tickerRefresh();
   let tickerTimer: ReturnType<typeof setInterval> | null = setInterval(tickerRefresh, TICKER_REFRESH_MS);
 
   void loadToday();
+  void refreshIndicators();
+  startExtrasTimer();
   // Line endpoints resolve from country geometry; redraw once it is loaded.
   void preloadCountryGeometry().then(() => { if (!destroyed) makeView(); }).catch(() => { /* lines stay hidden */ });
   return {
@@ -351,7 +360,10 @@ export function mountWorldFirstScreen(
       map.setWorldOverviewMode(true);
       clocks.start();
       startExtrasTimer();
-      if (Date.now() - extrasLoadedAt >= RELOAD_AFTER_MS) void refreshExtras();
+      if (Date.now() - extrasLoadedAt >= RELOAD_AFTER_MS) {
+        void refreshIndicators();
+        void refreshExtras();
+      }
       if (currentView) map.setWorldOverview(currentView);
       if (Date.now() - lastLoadedAt > RELOAD_AFTER_MS) void loadToday();
     },

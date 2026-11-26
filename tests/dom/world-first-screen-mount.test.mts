@@ -53,6 +53,19 @@ afterEach(() => { document.body.replaceChildren(); vi.clearAllMocks(); mocks.fie
 beforeEach(() => { mocks.stress.mockResolvedValue(null); mocks.auctions.mockResolvedValue(null); mocks.outages.mockResolvedValue([]); mocks.ecos.mockResolvedValue(null); mocks.trade.mockResolvedValue(null); mocks.dart.mockResolvedValue([]); mocks.federalRegister.mockResolvedValue([]); });
 
 describe('mountWorldFirstScreen', () => {
+  it('renders available gauges while the world snapshot and supplemental data are pending', async () => {
+    mocks.data = { imfCofer: { latest: { period: '2026-Q2', shares: { USD: 56.7 } } } };
+    mocks.load.mockImplementationOnce(() => new Promise(() => {}));
+    const { slots, ctx } = setup();
+    const mounted = mountWorldFirstScreen(ctx, slots, { openFullView() {}, openCountryBrief() {} });
+    try {
+      await vi.waitFor(() => expect(slots.telemetry.querySelector('[data-gauge="cofer"]')?.textContent).toContain('56.7%'));
+      expect(slots.stage.querySelector('.wfs-status-banner')?.getAttribute('data-state')).toBe('loading');
+      expect(mocks.stress).not.toHaveBeenCalled();
+    } finally {
+      mounted.destroy();
+    }
+  });
   it('shows global gauges and indicator log entries, and links a CLI turn to its country card', async () => {
     const date = new Date().toISOString().slice(0, 10);
     const startOfMonth = new Date(`${date.slice(0, 7)}-01T00:00:00Z`);
