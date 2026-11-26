@@ -577,14 +577,12 @@ fi
 
 # Determine which test categories to run based on changed files
 # (CHANGED_PATHS + RUN_ALL were computed above, before the invariant gates.)
-RUN_RESILIENCE=false
 RUN_SEED=false
 RUN_SERVER=false
 RUN_FRONTEND=false
 
 if path_matches '^scripts/'; then RUN_SEED=true; fi
 if path_matches '^server/'; then RUN_SERVER=true; fi
-if path_matches 'resilience'; then RUN_RESILIENCE=true; fi
 if path_matches '^(src/|api/)'; then RUN_FRONTEND=true; fi
 # RUN_ALL means "run broad invariant checks below", not "run every unit test".
 # Touching tests/ used to trigger the full local suite, but that suite now
@@ -664,12 +662,7 @@ for changed_path in "${CHANGED_PATHS[@]}"; do
 done
 SERVER_TESTS=("tests/handlers.test.mts" "tests/server-handlers.test.mjs")
 
-# Subtract any test file that's already going to be run by a category
-# glob (RUN_RESILIENCE's resilience-* glob, RUN_SERVER's SERVER_TESTS
-# list, or RUN_SEED's derived SEED_TESTS list). Without this, a changed
-# resilience/handlers/seed test file is captured in BOTH the category run
-# AND the TESTS_CHANGED run, so the same test executes twice on every
-# push. Per greptile-apps review on PR #3928.
+# Subtract files already covered by the server or seed category runs.
 #
 # IMPORTANT: gated on RUN_ALL != true. When RUN_ALL=true the category
 # runners below are skipped (only CI runs the full suite), so there's
@@ -687,10 +680,6 @@ if [ "$RUN_ALL" != true ] && [ "${#TESTS_CHANGED[@]}" -gt 0 ]; then
 
   DEDUPED=()
   for candidate in "${TESTS_CHANGED[@]}"; do
-    # RUN_RESILIENCE runs a `tests/resilience-*` glob, so match it by prefix.
-    if [ "$RUN_RESILIENCE" = true ]; then
-      case "$candidate" in tests/resilience-*) continue ;; esac
-    fi
     covered=false
     for other in "${ALREADY_COVERED[@]}"; do
       if [ "$candidate" = "$other" ]; then covered=true; break; fi
@@ -705,10 +694,6 @@ if [ "$RUN_ALL" = true ]; then
 fi
 
 if [ "$RUN_ALL" != true ]; then
-  if [ "$RUN_RESILIENCE" = true ]; then
-    echo "Running resilience tests (resilience files changed)..."
-    timeout 120 npx tsx --test --test-concurrency="$WM_PREPUSH_TEST_CONCURRENCY" tests/resilience-*.test.mjs tests/resilience-*.test.mts || exit 1
-  fi
   if [ "$RUN_SEED" = true ]; then
     echo "Running seed tests (scripts/ changed)..."
     if [ "${#SEED_TESTS[@]}" -gt 0 ]; then
@@ -723,7 +708,7 @@ if [ "$RUN_ALL" != true ]; then
     echo "Running server handler tests (server/ changed)..."
     timeout 120 npx tsx --test --test-concurrency="$WM_PREPUSH_TEST_CONCURRENCY" "${SERVER_TESTS[@]}" || exit 1
   fi
-  if [ "$RUN_RESILIENCE" = false ] && [ "$RUN_SEED" = false ] && [ "$RUN_SERVER" = false ] \
+  if [ "$RUN_SEED" = false ] && [ "$RUN_SERVER" = false ] \
     && [ "${#TESTS_CHANGED[@]}" -eq 0 ] && [ "${#DOM_TESTS_CHANGED[@]}" -eq 0 ]; then
     echo "Skipping unit tests (frontend-only changes; CI runs the full suite on PR open)."
   fi

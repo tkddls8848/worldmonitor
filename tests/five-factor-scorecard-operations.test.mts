@@ -65,23 +65,12 @@ describe('five-factor operational wiring', () => {
     ).status, 'EMPTY');
   });
 
-  it('places the measured cheap section last with safe admission arithmetic', () => {
-    const bundle = readFileSync(new URL('../scripts/seed-bundle-resilience.mjs', import.meta.url), 'utf8');
-    assert.match(bundle, /label:\s*'Five-Factor-Scorecard'/);
-    assert.match(bundle, /timeoutMs:\s*180_000/);
-    assert.match(bundle, /196 countries in 1\.82s/);
-    assert.match(bundle, /3,716,740-byte snapshot/);
-    assert.ok(bundle.indexOf("label: 'Five-Factor-Scorecard'") > bundle.indexOf("label: 'Food-Stocks'"));
-
-    const killGraceMs = 10_000;
-    const admissionHeadroomMs = 15_000;
-    const scoresReservation = 240_000 + killGraceMs;
-    const staticReservation = 280_000 + killGraceMs;
-    const scorecardReservation = 180_000 + killGraceMs;
-    const maxBundleMs = 570_000;
-    assert.ok(scoresReservation + staticReservation + scorecardReservation + admissionHeadroomMs > maxBundleMs,
-      'scorecard must defer rather than start after full Scores + Static reservations');
-    assert.ok(scoresReservation + scorecardReservation + admissionHeadroomMs < maxBundleMs,
-      'scorecard must fit on the next normal tick when long-cadence sections skip');
+  it('runs the scorecard after the reference source sections', () => {
+    const bundle = readFileSync(new URL('../scripts/seed-bundle-country-reference.mjs', import.meta.url), 'utf8');
+    assert.match(bundle, /label:\s*'Five-Factor-Scorecard'[^\n]*timeoutMs:\s*180_000/);
+    for (const label of ['Country-Reference', 'Food-Stocks', 'Low-Carbon-Generation', 'Power-Losses']) {
+      assert.ok(bundle.indexOf("label: '" + label + "'") < bundle.indexOf("label: 'Five-Factor-Scorecard'"));
+    }
   });
+
 });

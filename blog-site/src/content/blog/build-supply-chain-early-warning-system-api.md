@@ -21,7 +21,7 @@ Three signals, three endpoints:
 
 1. **Lane exposure:** which chokepoints does each of my trade lanes depend on? (`/api/v2/shipping/route-intelligence`)
 2. **Live disruption:** push notification when a [chokepoint](/blog/posts/what-is-a-maritime-chokepoint/)'s disruption score crosses my threshold (`/api/v2/shipping/webhooks`)
-3. **Country context:** structural resilience of origin and destination countries (`/api/resilience/v1/get-resilience-score`)
+3. **Country context:** current risk for origin and destination countries (`/api/intelligence/v1/get-country-risk`)
 
 A small receiver service glues them together and posts to Slack.
 
@@ -149,7 +149,7 @@ The `lanesExposedTo()` lookup is your exposure matrix from Step 1. That is what 
 Chokepoints are not the only failure mode. A supplier country sliding into instability disrupts production before anything reaches a port. Pull structural resilience for your origin countries. For the route example, inspect the [United Arab Emirates](https://www.worldmonitor.app/countries/united-arab-emirates/) and [Netherlands](https://www.worldmonitor.app/countries/netherlands/) profiles. The request below uses [Egypt](https://www.worldmonitor.app/countries/egypt/), the Suez transit country:
 
 ```bash
-curl -s 'https://api.worldmonitor.app/api/resilience/v1/get-resilience-score?countryCode=EG' \
+curl -s 'https://api.worldmonitor.app/api/intelligence/v1/get-country-risk?countryCode=EG' \
   -H 'X-WorldMonitor-Key: wm_YOUR_KEY'
 ```
 

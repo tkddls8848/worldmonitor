@@ -104,26 +104,6 @@ describe('MapContainer.suppressDataLayers', () => {
     expect(svg.drawn()).toEqual({ ...SAVED, fires: true });
   });
 
-  it.each([
-    ['resilienceScore', 'ciiChoropleth'],
-    ['ciiChoropleth', 'resilienceScore'],
-  ] as const)('enabling %s while suppressed turns %s off, as deck.gl draws one choropleth at a time', (picked, displaced) => {
-    const deck = svgMap({ ...SAVED, [displaced]: true });
-    const map = container(null);
-    Object.assign(map, { useDeckGL: true, deckGLMap: deck });
-    const saved = vi.fn();
-    map.setOnLayerChange(saved);
-    map.suppressDataLayers(true);
-    map.enableLayer(picked);
-    expect(deck.enableLayer).not.toHaveBeenCalled();
-    expect(saved.mock.calls, 'the app saves the displaced layer as off before the picked one').toEqual([
-      [displaced, false, 'programmatic'],
-      [picked, true, 'programmatic'],
-    ]);
-    expect(map.getState().layers).toMatchObject({ [picked]: true, [displaced]: false });
-    map.suppressDataLayers(false);
-    expect(deck.drawn()).toMatchObject({ [picked]: true, [displaced]: false });
-  });
 });
 
 describe('MapContainer.setCenter', () => {

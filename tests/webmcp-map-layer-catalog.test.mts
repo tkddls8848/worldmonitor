@@ -180,21 +180,6 @@ describe('listMapLayerCatalog', () => {
     assert.equal(deckOnlyEntry?.reason, 'layer_not_executable');
   });
 
-  it('explains resilienceScore as layer_not_executable when deck.gl is inactive', () => {
-    const world = collectPages({ monitor: 'world', limit: MAX_MAP_LAYER_PAGE_SIZE });
-    assert.ok(world.ids.includes('resilienceScore'));
-    const cursor = world.ids[world.ids.indexOf('resilienceScore') - 1];
-    const entry = listMapLayerCatalog(snapshot({ deckGlActive: false, hasPremium: true }), {
-      monitor: 'world',
-      cursor,
-      limit: 1,
-    }, BUDGETS);
-    assert.equal(entry.ok, true);
-    if (!entry.ok) return;
-    assert.equal(entry.layers[0]?.id, 'resilienceScore');
-    assert.equal(entry.layers[0]?.available, false);
-    assert.equal(entry.layers[0]?.reason, 'layer_not_executable');
-  });
 
   it('shrinks the page to fit a tight output budget', () => {
     const tight = { targetOutputChars: 200 };

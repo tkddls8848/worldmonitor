@@ -29,8 +29,6 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // the whole API. Every path must exist in exactly one generated service spec
 // and carry a 200 application/json example, or the generator throws.
 export const SANDBOX_OPERATIONS = [
-  '/api/resilience/v1/get-resilience-score',
-  '/api/resilience/v1/get-resilience-ranking',
   '/api/intelligence/v1/get-country-risk',
   '/api/intelligence/v1/get-country-intel-brief',
   '/api/market/v1/list-market-quotes',

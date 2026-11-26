@@ -18,7 +18,6 @@
 - Tests run per file: `node --import tsx --test tests/<file>`. `npm run test:related` cannot spawn on Windows; do not use it.
 - Known Windows-only failures exist (CRLF, `C:\C:\` paths). Before calling a failure yours, rerun the same file with your own paths stashed (`git stash push -- <your paths>`, run, `git stash pop`). Report it as baseline only if it also fails on HEAD.
 - `git config core.autocrlf` is `true` here. Tests build CSV/XML fixtures as inline strings, never as checked-in `.csv`/`.xml` files, and parsers accept `\r\n`.
-- Preserve unrelated work: `docs/methodology/country-resilience-index/validation/backtest-results.json` is modified and is not yours. Stage explicit paths only; never `git add -A`, never stash that file.
 - Commit to local `main` after each task. Do not push; the controller pushes. Every commit message ends with this trailer paragraph:
   ```
   Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

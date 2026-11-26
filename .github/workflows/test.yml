@@ -26,7 +26,6 @@ jobs:
     outputs:
       code: ${{ steps.diff.outputs.code }}
       browser: ${{ steps.diff.outputs.browser }}
-      validation: ${{ steps.diff.outputs.validation }}
       consumer_prices: ${{ steps.diff.outputs.consumer_prices }}
       durations_key: ${{ steps.durations.outputs.cache-matched-key }}
     steps:
@@ -61,7 +60,6 @@ jobs:
           emit_all_true() {
             echo "browser=true" >> "$GITHUB_OUTPUT"
             echo "code=true" >> "$GITHUB_OUTPUT"
-            echo "validation=true" >> "$GITHUB_OUTPUT"
             echo "consumer_prices=true" >> "$GITHUB_OUTPUT"
           }
           ZERO=0000000000000000000000000000000000000000
@@ -116,13 +114,6 @@ jobs:
           fi
           CODE=$(printf '%s\n' "$FILES" | awk '
             /^docs\/research\/seo-ai-visibility\// { count++; next }
-            # Committed resilience acceptance artifacts are docs-path data that
-            # tests/dry-run-resilience-education-flip.test.mts validates —
-            # recomputing gates, checking provenance, and rejecting a
-            # self-declared verdict. That validator lives in the `unit` job, so
-            # without this rule the guard skips on exactly the PR that commits
-            # an artifact and can only ever fire on unrelated changes.
-            /^docs\/snapshots\/resilience-.*-acceptance-.*\.json$/ { count++; next }
             # Per-service OpenAPI specs are generated machine artifacts consumed
             # by tests/openapi-filter-param-schemas.test.mjs, which enumerates
             # every JSON spec. Keep the JSON/YAML siblings on the same `unit`
@@ -145,12 +136,6 @@ jobs:
             # that edits the file (#6038). NOTE: no apostrophes in this awk
             # program - it is single-quoted in the shell, so one would end it.
             /^public\/ai-search\.md$/ { count++; next }
-            # A published ranking snapshot is the source of the ranked-country
-            # figure and captured date in public/ai-search.md. A snapshot-only
-            # PR would otherwise set code=false, skip the byte test, and land a
-            # snapshot whose figures the committed page no longer matches -
-            # surfacing later as a confusing failure on an unrelated PR.
-            /^docs\/snapshots\/resilience-ranking-[0-9-]+\.json$/ { count++; next }
             /^blog-site\/src\/content\/blog\/.*\.md$/ { count++; next }
             /^blog-site\/src\/content\/guides\/.*\.md$/ { count++; next }
             # public/home.md is the agent-mode homepage and the residue guard
@@ -178,21 +163,6 @@ jobs:
             END { print count + 0 }
           ')
           echo "browser=$( [ "$BROWSER" -gt 0 ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
-          # resilience-validation-smoke job: run the no-secrets artifact/schema
-          # and script-contract gate when the validation bundle,
-          # its committed artifacts, or its focused tests change.
-          VALIDATION=$(printf '%s\n' "$FILES" | awk '
-            /^docs\/methodology\/country-resilience-index\/validation\// { count++ }
-            /^package\.json$/ || /^package-lock\.json$/ { count++ }
-            /^scripts\/benchmark-resilience-external\.mjs$/ { count++ }
-            /^scripts\/backtest-resilience-outcomes\.mjs$/ { count++ }
-            /^scripts\/validate-resilience-sensitivity\.mjs$/ { count++ }
-            /^scripts\/seed-bundle-resilience-validation\.mjs$/ { count++ }
-            /^scripts\/_bundle-runner\.mjs$/ { count++ }
-            /^tests\/(resilience-validation-artifacts-schema|benchmark-resilience-external|backtest-resilience-outcomes|resilience-sensitivity-v2|seed-bundle-resilience-validation)\.test\.(mjs|mts)$/ { count++ }
-            END { print count + 0 }
-          ')
-          echo "validation=$( [ "$VALIDATION" -gt 0 ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
           # Consumer-prices-core has its own lockfile and Vitest suite, so run
           # it whenever package code, tests, or its CI definition changes.
           CONSUMER_PRICES=$(printf '%s\n' "$FILES" | awk '
@@ -834,21 +804,3 @@ jobs:
             echo "Variant smoke jobs did not satisfy the change selection."
             exit 1
           fi
-
-  # The focused suite is already inside `unit` / test:data. This job exists
-  # only for validation-docs PRs that skip `unit` (docs/ is carved out of
-  # `code`). `validation` alone also fired on every code PR and push, paying
-  # a second npm ci for files unit had just run, so it is gated on `code` as
-  # well (#7772); deploy-gate counts the resulting skip as passing.
-  resilience-validation-smoke:
-    needs: changes
-    if: needs.changes.outputs.validation == 'true' && needs.changes.outputs.code != 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: '24'
-      - uses: ./.github/actions/install-root-deps
-      - run: npm run test:resilience-validation-smoke

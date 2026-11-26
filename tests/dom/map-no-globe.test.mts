@@ -104,7 +104,7 @@ vi.mock('@/components/Map', () => ({ MapComponent: rendererStub('svg') }));
 
 const { MapContainer } = await import('@/components/MapContainer');
 
-const INITIAL_LAYERS = { resilienceScore: false } as unknown as MapLayers;
+const INITIAL_LAYERS = { ciiChoropleth: false } as unknown as MapLayers;
 
 function stubWebGL(kind: 'webgl2' | 'none'): void {
   const original = HTMLCanvasElement.prototype.getContext;
@@ -203,7 +203,7 @@ describe('map without the 3D globe', () => {
   it('RF3: an agent request for 3d is denied with globe_unavailable and the map stays flat', async () => {
     const setLayers = vi.fn();
     const ctx = {
-      mapLayers: { resilienceScore: true } as unknown as MapLayers,
+      mapLayers: { ciiChoropleth: true } as unknown as MapLayers,
       map: {
         isDeckGLActive: () => true,
         setLayers,
@@ -222,7 +222,7 @@ describe('map without the 3D globe', () => {
       effective: { mode: '2d', renderer: 'deck' },
     });
     expect(setLayers).not.toHaveBeenCalled();
-    expect(ctx.mapLayers.resilienceScore).toBe(true);
+    expect(ctx.mapLayers.ciiChoropleth).toBe(true);
     expect(localStorage.getItem(LEGACY_MAP_MODE_KEY)).toBe(JSON.stringify('globe'));
 
     const flat = await applyAgentBusAction(ctx, { type: 'set_map_mode', mode: '2d' });

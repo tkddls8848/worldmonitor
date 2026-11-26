@@ -19,7 +19,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MCP_CANONICAL_ENDPOINT } from '../shared/mcp-host-policy.ts';
 
@@ -240,7 +240,7 @@ describe('published agent corpus names the serving host (#7660)', () => {
     // Guards the scanner itself: a glob or extension change that silently
     // stopped covering the corpus would make this suite pass vacuously.
     const scanned = new Set(
-      [...scanFiles(PUBLIC_DIR), ...scanFiles(BLOG_SOURCE_DIR)].map((f) => relative(ROOT, f))
+      [...scanFiles(PUBLIC_DIR), ...scanFiles(BLOG_SOURCE_DIR)].map((f) => relative(ROOT, f).split(sep).join('/'))
     );
     for (const required of [
       'public/api/llms.txt',

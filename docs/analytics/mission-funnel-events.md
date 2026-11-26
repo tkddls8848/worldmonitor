@@ -106,8 +106,6 @@ Fixed now, before any preview is exposed:
 
 ### Crisis-desk caveat (KTD7)
 
-crisis-desk's preview is the pre-existing ResilienceWidget locked surface: it
-has **no dismiss affordance**, so threshold 1's dismissal-rate arm cannot fire
 for it — its rollback signal is the `mission-selected` floor only. Its viewed
 events share the global once-per-session dedupe, but unlike the component
 previews it still renders on terminal verification failure (it gates real

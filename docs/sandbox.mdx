@@ -16,7 +16,7 @@ curl https://www.worldmonitor.app/sandbox/index.json
 Each entry lists the operation, its production URL, and a `fixture` URL. Fetching a fixture returns the **exact envelope shape** the production endpoint returns, wrapped with the request metadata:
 
 ```bash
-curl https://www.worldmonitor.app/sandbox/get-resilience-score.json
+curl https://www.worldmonitor.app/sandbox/get-country-risk.json
 ```
 
 ```json
@@ -24,8 +24,8 @@ curl https://www.worldmonitor.app/sandbox/get-resilience-score.json
   "sandbox": true,
   "operation": {
     "method": "GET",
-    "path": "/api/resilience/v1/get-resilience-score",
-    "productionUrl": "https://api.worldmonitor.app/api/resilience/v1/get-resilience-score"
+    "path": "/api/intelligence/v1/get-country-risk",
+    "productionUrl": "https://api.worldmonitor.app/api/intelligence/v1/get-country-risk"
   },
   "request": { "query": { "countryCode": "US" } },
   "response": { "status": 200, "body": { "...": "schema-valid example payload" } }

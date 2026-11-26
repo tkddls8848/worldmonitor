@@ -570,7 +570,7 @@ describe('DeckGLMap layer performance notice', () => {
     const keep = checkedToggles()
       .filter(input => !input.closest('.layer-toggle-locked'))
       .map(input => input.closest<HTMLElement>('.layer-toggle')!.dataset.layer!)
-      .filter(key => key !== 'ciiChoropleth' && key !== 'resilienceScore')
+      .filter(key => key !== 'ciiChoropleth')
       .slice(0, 13);
     map.setLayers({ ...allLayersOff(), ...Object.fromEntries(keep.map(key => [key, true])) });
     expect(checkedToggles()).toHaveLength(13);

@@ -174,7 +174,6 @@ const layers = {
   iranAttacks: false,
 
   ciiChoropleth: false,
-  resilienceScore: false,
   miningSites: false,
   processingPlants: false,
   commodityPorts: false,

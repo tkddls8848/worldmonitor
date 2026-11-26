@@ -79,8 +79,6 @@ export function buildFixtures(now = new Date()) {
     get_country_risk: { country_code: 'US' },
     get_country_coverage: { country_code: 'US' },
     get_food_stocks: { country_code: 'WORLD' },
-    get_demographics_capability: { country_code: 'US' },
-    get_resilience_indicators: { country_code: 'US' },
     get_consumer_prices: { country_code: 'AE' },
     get_fred_series: { series_ids: ['BAMLC0A0CM'] },
     get_airspace: { country_code: 'US' },

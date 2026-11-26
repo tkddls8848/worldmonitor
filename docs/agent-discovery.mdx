@@ -39,7 +39,7 @@ Link: </.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+j
 | Endpoint | Standard | What it returns |
 |---|---|---|
 | [`/.well-known/api-catalog`](https://worldmonitor.app/.well-known/api-catalog) | [RFC 9727](https://datatracker.ietf.org/doc/html/rfc9727) | JSON linkset bundling every other discovery URL — start here if you want one fetch and a map |
-| [`/openapi.yaml`](https://www.worldmonitor.app/openapi.yaml) | OpenAPI 3.1 | Single bundled spec covering **every** REST service (Conflict, Resilience, Market, Economic, Maritime, Aviation, Climate, …) — feed it to any code-generator |
+| [`/openapi.yaml`](https://www.worldmonitor.app/openapi.yaml) | OpenAPI 3.1 | Single bundled spec covering **every** REST service (Conflict, Market, Economic, Maritime, Aviation, Climate, …) — feed it to any code-generator |
 | [`/openapi.json`](https://www.worldmonitor.app/openapi.json) | OpenAPI 3.1 | Minified JSON bundle for tooling and scanners that only parse JSON. Same operations, parameters, request bodies and responses as `/openapi.yaml`; shared structures are `$ref`-collapsed and component schemas no operation can reach are omitted, to stay under scanner body caps |
 | [`/api-versioning.md`](https://www.worldmonitor.app/api-versioning.md) | Policy | Static markdown REST compatibility, deprecation, and sunset contract (RFC 9745 `Link rel="deprecation"`) |
 | [`/docs/api-versioning`](https://www.worldmonitor.app/docs/api-versioning) | Policy | HTML twin of the same REST compatibility, deprecation notice, and sunset-header contract |
@@ -51,10 +51,10 @@ Link: </.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+j
 | [`/.well-known/mcp/docs-server-card.json`](https://worldmonitor.app/.well-known/mcp/docs-server-card.json) | MCP | Server card for the **documentation** MCP server at `/docs/mcp` (see below) — separate from the data server card above |
 | [`/.well-known/agent-card.json`](https://worldmonitor.app/.well-known/agent-card.json) | [A2A](https://a2a-protocol.org) | Agent card for the `/a2a` JSON-RPC concierge (see below) — transport, protocol version, skills, no auth required |
 | [`/.well-known/http-message-signatures-directory`](https://worldmonitor.app/.well-known/http-message-signatures-directory) | [RFC 9421](https://datatracker.ietf.org/doc/html/rfc9421) / Web Bot Auth | Ed25519 public-key directory (`application/http-message-signatures-directory+json`) so third parties can verify WorldMonitor-originated signed automated requests. Keys advertise a rolling 24 h `nbf`/`exp` window; cached `public, max-age=3600` |
-| [`/.well-known/agent-skills/index.json`](https://worldmonitor.app/.well-known/agent-skills/index.json) | (custom) | Index of pre-packaged agent skills (`fetch-country-brief`, `fetch-resilience-score`, …) — each skill is a self-contained recipe |
+| [`/.well-known/agent-skills/index.json`](https://worldmonitor.app/.well-known/agent-skills/index.json) | (custom) | Index of pre-packaged agent skills (`fetch-country-brief`, …) — each skill is a self-contained recipe |
 | [`/plugin.json`](https://www.worldmonitor.app/plugin.json) | [Agent Plugins 1.0.0](https://agent-plugins.org/specification) | Manifest for the World Monitor agent plugin (`name: worldmonitor`). The GitHub repository is the plugin package: root `plugin.json`, `mcp.json`, and regular `skills/*/SKILL.md` files (not git symlinks — Windows checkouts and zip extracts still get YAML frontmatter). Plugin recipes match the well-known catalog except REST examples use the public site origin `https://www.worldmonitor.app` |
 | [`/llms.txt`](https://www.worldmonitor.app/llms.txt) | [llmstxt.org](https://llmstxt.org) | LLM-friendly markdown briefing — overview, capabilities, links |
-| [`/llms-full.txt`](https://www.worldmonitor.app/llms-full.txt) | (extension) | Full LLM corpus: product brief plus inlined glossary, chokepoint methodology and explainers, Country Resilience Index methodology, corrections log, and the published ranking snapshot |
+| [`/llms-full.txt`](https://www.worldmonitor.app/llms-full.txt) | (extension) | Full LLM corpus: product brief plus inlined glossary, chokepoint methodology and explainers, and the corrections log |
 | [`/api/health?compact=1`](https://api.worldmonitor.app/api/health?compact=1) | (custom) | Public platform availability plus per-key seed problems, freshness, and record counts — agents can gate fetches on this |
 
 The header-discoverable static assets (`.well-known/*`, `/openapi.yaml`, `/openapi.json`, `/plugin.json`) serve `Access-Control-Allow-Origin: *` and are cached `public, max-age=3600` — safe to memoize. `/api/health?compact=1` uses the normal API CORS allowlist and is **not** cached (`private, no-store`) because it reflects real-time seed freshness; agents should hit it fresh whenever they need to gate on data availability. Top-level `HEALTHY` means the platform is available and can coexist with contained source warnings. Strict data-quality gates must inspect `summary.warn` and `problems`, not the top-level status alone.
@@ -145,7 +145,7 @@ See [MCP Server](/mcp-overview) for client-specific config snippets.
 If you don't want OAuth, REST endpoints and the MCP endpoint accept a user API key or operator-issued enterprise key in `X-WorldMonitor-Key`:
 
 ```bash
-curl -s https://api.worldmonitor.app/api/resilience/v1/get-resilience-ranking \
+curl -s https://api.worldmonitor.app/api/intelligence/v1/get-risk-scores \
   -H "X-WorldMonitor-Key: $WM_KEY"
 ```
 
@@ -155,7 +155,7 @@ PRO subscribers get a key from [worldmonitor.app/pro](https://www.worldmonitor.a
 
 MCP `skills/list` returns a bounded catalog in one complete response, with no continuation cursor, to meet the platform publishing limit across the entire catalog. Existing skill URIs remain readable through `skills/get` and `resources/read`. The well-known index below and the plugin package contain the full recipe collection.
 
-`/.well-known/agent-skills/index.json` lists pre-packaged skills — each is a self-contained recipe an agent can ingest without reading the OpenAPI. Useful for narrow tasks where you'd rather hand the agent "fetch a country brief" than "read the OpenAPI specs and figure it out." See the [Agent Skills Catalog](/agent-skills) for a human-readable list of every recipe. The catalog spans country briefs, risk and resilience, chokepoints, markets, cyber, sanctions, aviation, military flights, maritime traffic, energy shocks, trade flows, unrest, webcams, climate hazards, health alerts, and forecasts.
+`/.well-known/agent-skills/index.json` lists pre-packaged skills — each is a self-contained recipe an agent can ingest without reading the OpenAPI. Useful for narrow tasks where you'd rather hand the agent "fetch a country brief" than "read the OpenAPI specs and figure it out." See the [Agent Skills Catalog](/agent-skills) for a human-readable list of every recipe. The catalog spans country briefs, country risk, chokepoints, markets, cyber, sanctions, aviation, military flights, maritime traffic, energy shocks, trade flows, unrest, webcams, climate hazards, health alerts, and forecasts.
 
 ## Why this matters
 

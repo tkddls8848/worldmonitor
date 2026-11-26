@@ -948,22 +948,6 @@ describe('mission preset renderer filtering', () => {
     assert.ok(Object.values(filtered).some(Boolean), 'filtered fallback should keep executable default layers');
   });
 
-  it('removes supply-chain resilienceScore on the mobile/SVG fallback path', () => {
-    const applied = applyMissionPresetToState(
-      'supply-chain-risk',
-      makePanelSettings('full'),
-      DEFAULT_MAP_LAYERS,
-      'full',
-    );
-
-    assert.equal(applied.mapLayers.resilienceScore, true);
-
-    const filtered = filterMissionLayersForRenderer(applied.mapLayers, 'svg', DEFAULT_MAP_LAYERS);
-
-    assert.equal(filtered.resilienceScore, false);
-    assert.equal(filtered.tradeRoutes, true);
-    assert.ok(Object.values(filtered).some(Boolean), 'renderer filtering should keep executable supply-chain layers');
-  });
 });
 
 describe('mission preset persistence', () => {
@@ -1361,7 +1345,6 @@ describe('mission preset shell integration', () => {
     assert.equal(localStorage.getItem(MISSION_PRESET_STORAGE_KEY), 'supply-chain-risk');
     assert.deepEqual(readJsonStorage<string[]>('panel-order'), callbacks.appliedOrders[0]);
     assert.equal(readJsonStorage<MapLayers>('worldmonitor-layers').tradeRoutes, true);
-    assert.equal(readJsonStorage<MapLayers>('worldmonitor-layers').resilienceScore, true);
     assert.deepEqual(ctx.map.calls.setView.at(-1), { view: 'global', zoom: 2.3 });
     assert.equal(ctx.map.calls.setTimeRange.at(-1), '7d');
     assert.equal(callbacks.waitForAisCalls, 1, 'AIS layer enable should initialize the AIS stream path');
@@ -1399,12 +1382,8 @@ describe('mission preset shell integration', () => {
     manager.applyMissionPreset('supply-chain-risk');
     await waitForMissionTimers();
 
-    assert.equal(ctx.mapLayers.resilienceScore, false);
-    assert.equal(readJsonStorage<MapLayers>('worldmonitor-layers').resilienceScore, false);
     assert.equal(ctx.mapLayers.tradeRoutes, true);
     assert.ok(callbacks.loadDataForLayer.includes('tradeRoutes'));
-    assert.equal(callbacks.loadDataForLayer.includes('resilienceScore'), false);
-    assert.equal(callbacks.stopLayerActivity.includes('resilienceScore'), false);
   });
 
   for (const action of ['applyMissionPreset', 'applyMissionPresetForWebMcp', 'resetMissionPreset'] as const) {

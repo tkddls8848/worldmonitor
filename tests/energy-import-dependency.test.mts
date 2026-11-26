@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { resolveEnergyImportDependency } from '../server/worldmonitor/intelligence/v1/_energy-import-dependency.ts';
-import { getEnergyImportDependencyObservedSources } from '../server/worldmonitor/resilience/v1/_energy-import-dependency-source.ts';
+import { getEnergyImportDependencyObservedSources } from '../server/worldmonitor/intelligence/v1/_energy-import-dependency-source.ts';
 
 describe('getEnergyImportDependencyObservedSources', () => {
   it('maps the Eurostat static source to the exact audited dataset', () => {

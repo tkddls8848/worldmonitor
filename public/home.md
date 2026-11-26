@@ -23,7 +23,7 @@ World Monitor is useful when a question depends on more than one live signal. Ty
 - What changed in a country, region, market, or supply route since the last briefing?
 - Does a conflict, sanction, outage, or chokepoint disruption have a credible transmission path into commodities or markets?
 - Are military flights, vessel movements, alerts, infrastructure conditions, and local reporting pointing in the same direction?
-- Which sources support a country-risk or resilience assessment, and how fresh are those observations?
+- Which sources support a country-risk assessment, and how fresh are those observations?
 - What should an analyst monitor next as an event develops?
 
 The dashboard supports these tasks with country briefs, conflict tracking, resilience and instability views, market and macro data, shipping intelligence, satellite and aviation layers, cyber-threat signals, weather and natural-disaster alerts, forecasts, and source-attributed news.
@@ -42,7 +42,7 @@ Users can compare these parts on one map and then open the underlying panels for
 
 - A global map with a shared catalog of conflict, military, infrastructure, environment, transport, and market layers
 - Curated news and OSINT feeds grouped by topic and product variant
-- CII v14 for 31 Tier-1 countries, resilience scores for the 196-country public rankable universe, and global live conflict tracking
+- CII v14 for 31 Tier-1 countries, and global live conflict tracking
 - Market quotes, sector heatmaps, macro indicators, and commodity context
 - Shipping chokepoints, ports, and vessel-transit intelligence
 - Aircraft, satellites, GPS interference, submarine cables, energy assets, and datacenters
@@ -77,7 +77,7 @@ Start with the short [llms.txt briefing](https://www.worldmonitor.app/llms.txt),
 - [MCP server](https://worldmonitor.app/mcp): Streamable HTTP for structured tool calls. Run `tools/list` to get the current tool inventory instead of relying on a copied count.
 - [REST API](https://www.worldmonitor.app/docs/api-reference): structured endpoints described by the [OpenAPI contract](https://www.worldmonitor.app/openapi.yaml).
 - [Agent-mode homepage](https://www.worldmonitor.app/?mode=agent): a compact JSON summary of endpoints, authentication, capabilities, and discovery files.
-- [Agent Skills](https://worldmonitor.app/.well-known/agent-skills/index.json): task-focused instructions for common country, resilience, and intelligence workflows.
+- [Agent Skills](https://worldmonitor.app/.well-known/agent-skills/index.json): task-focused instructions for common country and intelligence workflows.
 - [Agent Plugin metadata](https://www.worldmonitor.app/plugin.json): public metadata for the Agent Plugins 1.0.0 repository package. Install from https://github.com/koala73/worldmonitor (root `plugin.json`, `mcp.json`, and `skills/*/SKILL.md` live in the repository, not as sibling HTTP files).
 - [A2A agent card](https://worldmonitor.app/.well-known/agent-card.json): service identity and protocol discovery for agent-to-agent clients.
 - [SDK guide](https://www.worldmonitor.app/docs/sdks) and [worldmonitor CLI](https://www.npmjs.com/package/worldmonitor): supported clients for applications and shell workflows.

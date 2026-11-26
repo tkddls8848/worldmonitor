@@ -1,6 +1,6 @@
 ---
 title: "Pro 情报套件"
-description: "仅限 Pro 的衍生数据集：实物金属溢价与背离、矿产集中度、国防工业基础、人口结构、粮食库存、韧性指标与供应脆弱性，附每个数据集的 REST 路由、种子节奏，以及存在时的 MCP 表面。所有数据集均为只读，并带有明确的来源出处与缺失数据信号。"
+description: "仅限 Pro 的衍生数据集：实物金属溢价与背离、矿产集中度、国防工业基础、人口结构、粮食库存与供应脆弱性，附每个数据集的 REST 路由、种子节奏，以及存在时的 MCP 表面。所有数据集均为只读，并带有明确的来源出处与缺失数据信号。"
 ---
 
 一组衍生数据集位于 Pro 层之后。每一个都回答原始数据源无法回答的问题：不是"黄金价格是多少"，而是"当前黄金的实物溢价是否异常"；不是"钴在哪里"，而是"谁在精炼它，集中度有多高"。
@@ -74,35 +74,15 @@ TIV 是转让量指标，不是货币。不要用货币符号呈现它。
 
 SIPRI 的许可允许衍生合计值，不允许再分发完整数据库，因此提供的是各国供应国份额而非贸易登记册本身。参见[国防工业基础方法论](/zh/methodology/defense-industrial-base)。
 
-## 人口结构与劳动力能力
-
-`GET /api/resilience/v1/get-demographics-capability?countryCode=DE` · MCP `get_demographics_capability`
-
-一个国家的三个独立组别：年龄结构（联合国世界人口展望）、教育管道（UNESCO UIS 与世界银行 WDI）、工业劳动力构成（ILOSTAT）。
-
-每项指标都携带自己的观测年份、来源、单位与 `available` 标志，三个组别各自独立解析——一个国家可能拥有最新的年龄结构而完全没有 ILOSTAT 覆盖。请在读取数值前先读每项指标的 `available`；这些组别不共享同一时钟。
-
-参见[人口结构能力方法论](/zh/methodology/demographics-capability)。
-
 ## 粮食库存
 
-`GET /api/resilience/v1/get-food-stocks?countryCode=WORLD` · MCP `get_food_stocks`
+`GET /api/supply-chain/v1/get-food-stocks?countryCode=WORLD` · MCP `get_food_stocks`
 
 USDA PSD 谷物期末库存、产量、消费量以及库存消费比，按国家与商品划分。`countryCode=WORLD` 返回全球平衡表。`commodity` 接受 `wheat`、`corn`、`rice`、`soybeans`、`barley`、`palmOil`。当 PSD 没有完整平衡表时，FAOSTAT 粮食平衡表提供同一日历年的产量与国内供应量。FAOSTAT 行没有库存测量值，因此在使用库存数字之前，请先读 `hasEndingStocks` 与 `hasStocksToUse`。
 
 销售年度不是日历年度，且因国家与商品而异。两个国家标注为"2025/26"的数据可能覆盖不同月份——切勿当作同一时期比较。每一行都注明自己的销售年度正是出于此因。
 
 参见[粮食库存方法论](/zh/methodology/food-stocks)。
-
-## 韧性指标
-
-`GET /api/resilience/v1/get-resilience-indicators?countryCode=DE` · MCP `get_resilience_indicators`
-
-国家韧性评分之下的可解释层：全部 72 项注册指标及其归一化得分、完整状态分类、运行时权重、按维度对账的贡献值、观测时效与来源出处。状态包括 `observed`、`imputed`、`missing`、`fallback`、`not-applicable`、`source-failure`、`inactive` 与 `retired`；读取数值前请先读对应的可用性标志。
-
-原始数据值仅在上游许可允许再分发时出现；其他情况下仅提供归一化得分而不含底层数字。这是许可边界，而非数据缺失——参见[韧性指标许可](/zh/methodology/resilience-indicator-licensing)。
-
-此路由没有仪表盘界面。它面向需要审计评分而非阅读评分的 API 与 MCP 调用方。参见[韧性指标方法论](/zh/methodology/resilience-indicators)与[国家韧性指数](/zh/methodology/country-resilience-index)。
 
 ## 商品供应脆弱性
 

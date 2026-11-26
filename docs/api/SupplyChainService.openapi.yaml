@@ -875,7 +875,6 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetRouteImpact
-            description: 'GetRouteImpact returns route-level trade exposure: lane value, primary exporter concentration, strategic products, resilience score, dependency flags, and Comtrade provenance. PRO-gated.'
             operationId: GetRouteImpact
             parameters:
                 - name: fromIso2
@@ -1688,6 +1687,67 @@ paths:
                                       "countryIso2": "US"
                             schema:
                                 $ref: '#/components/schemas/ListVulnerabilityRankingsResponse'
+                "400":
+                    description: Validation error
+                    content:
+                        application/json:
+                            schema:
+                                oneOf:
+                                    - $ref: '#/components/schemas/ValidationError'
+                                    - $ref: '#/components/schemas/JmespathProjectionError'
+                default:
+                    description: Error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+    /api/supply-chain/v1/get-food-stocks:
+        get:
+            tags:
+                - SupplyChainService
+            summary: GetFoodStocks
+            description: GetFoodStocks returns USDA stocks-to-use and FAOSTAT supply by country or WORLD.
+            operationId: GetFoodStocks
+            parameters:
+                - name: countryCode
+                  in: query
+                  description: ISO 3166-1 alpha-2, or WORLD. Empty returns the unfiltered snapshot.
+                  required: false
+                  example: "US"
+                  schema:
+                    type: string
+                - name: commodity
+                  in: query
+                  description: Commodity slug (wheat, corn, rice, soybeans, barley, palmOil). Empty = all.
+                  required: false
+                  example: "corn"
+                  schema:
+                    type: string
+                - name: jmespath
+                  in: query
+                  description: |-
+                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
+                  required: false
+                  example: "keys(@)"
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: Successful response
+                    content:
+                        application/json:
+                            example:
+                                "calorieWeightedStocksToUse": 1.5
+                                "fetchedAt": "2026-01-15T12:00:00Z"
+                                "records":
+                                    - "commodity": "corn"
+                                      "consumptionTmt": 1.5
+                                      "countryCode": "US"
+                                      "endingStocksTmt": 1.5
+                                      "exportsTmt": 1.5
+                                "unavailable": false
+                            schema:
+                                $ref: '#/components/schemas/GetFoodStocksResponse'
                 "400":
                     description: Validation error
                     content:
@@ -4341,9 +4401,6 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/StrategicProduct'
-                resilienceScore:
-                    type: number
-                    format: double
                 dependencyFlags:
                     type: array
                     items:
@@ -5309,3 +5366,98 @@ components:
                 upstreamUnavailable:
                     type: boolean
                     description: True when the published country index could not be read.
+        GetFoodStocksRequest:
+            type: object
+            properties:
+                countryCode:
+                    type: string
+                    description: ISO 3166-1 alpha-2, or WORLD. Empty returns the unfiltered snapshot.
+                commodity:
+                    type: string
+                    description: Commodity slug (wheat, corn, rice, soybeans, barley, palmOil). Empty = all.
+            description: GetFoodStocksRequest filters the seeded USDA-style food-stocks snapshot.
+        GetFoodStocksResponse:
+            type: object
+            properties:
+                records:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/FoodStockRecord'
+                fetchedAt:
+                    type: string
+                    description: ISO-8601 time the seeder wrote resilience:food-stocks:v1. Empty when unavailable.
+                unavailable:
+                    type: boolean
+                    description: True when the seed is missing or unreadable (not a confirmed zero).
+                calorieWeightedStocksToUse:
+                    type: number
+                    format: double
+                    description: Calorie-weighted stocks-to-use for the requested country, or 0 when unknown / unfiltered.
+            description: GetFoodStocksResponse is the filtered seed snapshot.
+        FoodStockRecord:
+            type: object
+            properties:
+                countryCode:
+                    type: string
+                    description: ISO 3166-1 alpha-2, or "WORLD" for the global balance sheet.
+                commodity:
+                    type: string
+                    description: 'Commodity slug: wheat, corn, rice, soybeans, barley, palmOil.'
+                marketingYear:
+                    type: string
+                    description: Marketing year label stored verbatim, e.g. "2025/26". Never a calendar year.
+                stocksToUse:
+                    type: number
+                    format: double
+                    description: |-
+                        Ending stocks divided by total use (0.18 = 18%). Read hasStocksToUse
+                         BEFORE this value: proto3 has no presence for a bare double, so an unknown
+                         ratio and a genuine 0% are the same wire value. USDA/PSD estimates ending
+                         stocks only for selected countries, so a minor producer routinely reports
+                         real production and consumption with no stocks series at all — and 0.0% on
+                         a food-security surface reads as famine, not as "not measured".
+                hasStocksToUse:
+                    type: boolean
+                    description: False when stocks_to_use is a placeholder rather than a measurement.
+                endingStocksTmt:
+                    type: number
+                    format: double
+                    description: |-
+                        Ending stocks in thousand metric tons. Read has_ending_stocks first, for
+                         the same reason as stocks_to_use above.
+                hasEndingStocks:
+                    type: boolean
+                    description: False when ending_stocks_tmt is a placeholder rather than a measurement.
+                totalUseTmt:
+                    type: number
+                    format: double
+                    description: |-
+                        1000 MT. PSD country: consumption + exports. WORLD: consumption.
+                         FAOSTAT: domestic-supply quantity.
+                productionTmt:
+                    type: number
+                    format: double
+                    description: Production in thousand metric tons. Zero when unknown.
+                consumptionTmt:
+                    type: number
+                    format: double
+                    description: |-
+                        1000 MT. PSD: domestic consumption. FAOSTAT: domestic-supply quantity.
+                         Zero when unknown.
+                importsTmt:
+                    type: number
+                    format: double
+                    description: Imports in thousand metric tons. Zero when unknown.
+                exportsTmt:
+                    type: number
+                    format: double
+                    description: Exports in thousand metric tons. Zero when unknown.
+                unit:
+                    type: string
+                    description: Unit the raw quantities are stored in, typically "1000 MT".
+                source:
+                    type: string
+                    description: |-
+                        "psd" or "faostat". FAOSTAT Food Balances supplies production and
+                         domestic-supply, but no stocks.
+            description: One country (or WORLD) × commodity production/stocks balance from the seeded snapshot.

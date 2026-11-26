@@ -2,7 +2,7 @@
 // Source: proto/worldmonitor/**/*.proto buf.validate annotations.
 
 export const GENERATED_PROTO_VALIDATION_RULE_COUNT = 717;
-export const GENERATED_REQUEST_METHOD_COUNT = 190;
+export const GENERATED_REQUEST_METHOD_COUNT = 187;
 
 export const GENERATED_REQUEST_TYPES = {
   "analyzeStock": "worldmonitor.market.v1.AnalyzeStockRequest",
@@ -43,14 +43,13 @@ export const GENERATED_REQUEST_TYPES = {
   "getCountryVulnerabilities": "worldmonitor.supply_chain.v1.GetCountryVulnerabilitiesRequest",
   "getCrossBorderMovements": "worldmonitor.displacement.v1.GetCrossBorderMovementsRequest",
   "getDefenseIndustrialBase": "worldmonitor.military.v1.GetDefenseIndustrialBaseRequest",
-  "getDemographicsCapability": "worldmonitor.resilience.v1.GetDemographicsCapabilityRequest",
   "getDisplacementSummary": "worldmonitor.displacement.v1.GetDisplacementSummaryRequest",
   "getEconomicCalendar": "worldmonitor.economic.v1.GetEconomicCalendarRequest",
   "getEnergyCapacity": "worldmonitor.economic.v1.GetEnergyCapacityRequest",
   "getEnergyCrisisPolicies": "worldmonitor.economic.v1.GetEnergyCrisisPoliciesRequest",
   "getEnergyPrices": "worldmonitor.economic.v1.GetEnergyPricesRequest",
   "getFiveFactorScorecard": "worldmonitor.scorecard.v1.GetFiveFactorScorecardRequest",
-  "getFoodStocks": "worldmonitor.resilience.v1.GetFoodStocksRequest",
+  "getFoodStocks": "worldmonitor.supply_chain.v1.GetFoodStocksRequest",
   "getForecasts": "worldmonitor.forecast.v1.GetForecastsRequest",
   "getFredSeries": "worldmonitor.economic.v1.GetFredSeriesRequest",
   "getFredSeriesBatch": "worldmonitor.economic.v1.GetFredSeriesBatchRequest",
@@ -76,8 +75,6 @@ export const GENERATED_REQUEST_TYPES = {
   "getRegimeHistory": "worldmonitor.intelligence.v1.GetRegimeHistoryRequest",
   "getRegionalBrief": "worldmonitor.intelligence.v1.GetRegionalBriefRequest",
   "getRegionalSnapshot": "worldmonitor.intelligence.v1.GetRegionalSnapshotRequest",
-  "getResilienceIndicators": "worldmonitor.resilience.v1.GetResilienceIndicatorsRequest",
-  "getResilienceScore": "worldmonitor.resilience.v1.GetResilienceScoreRequest",
   "getRiskScores": "worldmonitor.intelligence.v1.GetRiskScoresRequest",
   "getRouteExplorerLane": "worldmonitor.supply_chain.v1.GetRouteExplorerLaneRequest",
   "getRouteImpact": "worldmonitor.supply_chain.v1.GetRouteImpactRequest",
@@ -2526,42 +2523,6 @@ export const GENERATED_MESSAGE_RULES = {
       }
     }
   },
-  "worldmonitor.resilience.v1.GetDemographicsCapabilityRequest": {
-    "fields": {
-      "countryCode": {
-        "kind": "string",
-        "stringMaxBytes": 65536
-      }
-    }
-  },
-  "worldmonitor.resilience.v1.GetFoodStocksRequest": {
-    "fields": {
-      "countryCode": {
-        "kind": "string",
-        "stringMaxBytes": 65536
-      },
-      "commodity": {
-        "kind": "string",
-        "stringMaxBytes": 65536
-      }
-    }
-  },
-  "worldmonitor.resilience.v1.GetResilienceIndicatorsRequest": {
-    "fields": {
-      "countryCode": {
-        "kind": "string",
-        "stringMaxBytes": 65536
-      }
-    }
-  },
-  "worldmonitor.resilience.v1.GetResilienceScoreRequest": {
-    "fields": {
-      "countryCode": {
-        "kind": "string",
-        "stringMaxBytes": 65536
-      }
-    }
-  },
   "worldmonitor.safety.v1.GetTorontoSafetyRequest": {
     "fields": {
       "dataset": {
@@ -2873,6 +2834,18 @@ export const GENERATED_MESSAGE_RULES = {
         "required": true,
         "stringLen": 2,
         "stringPattern": "^[A-Z]{2}$",
+        "stringMaxBytes": 65536
+      }
+    }
+  },
+  "worldmonitor.supply_chain.v1.GetFoodStocksRequest": {
+    "fields": {
+      "countryCode": {
+        "kind": "string",
+        "stringMaxBytes": 65536
+      },
+      "commodity": {
+        "kind": "string",
         "stringMaxBytes": 65536
       }
     }

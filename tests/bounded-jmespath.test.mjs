@@ -125,7 +125,7 @@ describe('searchBoundedJmespath', () => {
 
   it('returns HTTP 400 on the public gateway path and still serves a normal projection', async () => {
     const { createDomainGateway } = await import('../server/gateway.ts');
-    const path = '/api/resilience/v1/get-runtime-manifest';
+    const path = '/api/intelligence/v1/get-country-history';
     const handler = createDomainGateway([{
       method: 'GET', path, handler: async () => Response.json({ version: 1 }),
     }]);

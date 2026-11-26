@@ -38,7 +38,7 @@ Link: </.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+j
 | 端点 | 标准 | 返回内容 |
 |---|---|---|
 | [`/.well-known/api-catalog`](https://worldmonitor.app/.well-known/api-catalog) | [RFC 9727](https://datatracker.ietf.org/doc/html/rfc9727) | JSON 链接集，打包了所有其他发现 URL——如果你只想要一次请求和一张地图，从这里开始 |
-| [`/openapi.yaml`](https://www.worldmonitor.app/openapi.yaml) | OpenAPI 3.1 | 单一打包规范，覆盖**所有** REST 服务（Conflict、Resilience、Market、Economic、Maritime、Aviation、Climate……）——可喂给任何代码生成器 |
+| [`/openapi.yaml`](https://www.worldmonitor.app/openapi.yaml) | OpenAPI 3.1 | 单一打包规范，覆盖**所有** REST 服务（Conflict、Market、Economic、Maritime、Aviation、Climate……）——可喂给任何代码生成器 |
 | [`/openapi.json`](https://www.worldmonitor.app/openapi.json) | OpenAPI 3.1 | 压缩 JSON 打包，面向只解析 JSON 的工具与扫描器。操作、参数、请求体与响应与 `/openapi.yaml` 完全一致；为控制在扫描器的响应体大小上限内，共享结构以 `$ref` 合并，并省略任何操作都无法引用到的组件 schema |
 | [`/.well-known/mcp/server-card.json`](https://worldmonitor.app/.well-known/mcp/server-card.json) | MCP | 传输方式（`streamableHttp`）、端点、OAuth 资源、作用域、流式、能力标志 |
 | [`/.well-known/mcp/server.json`](https://worldmonitor.app/.well-known/mcp/server.json) | MCP | 与 `server-card.json` 相同的载荷，使用较新的 well-known 文件名。这**不是**仓库根目录的 MCP 注册表 `server.json` |
@@ -48,7 +48,7 @@ Link: </.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+j
 | [`/.well-known/mcp/docs-server-card.json`](https://worldmonitor.app/.well-known/mcp/docs-server-card.json) | MCP | `/docs/mcp` 处**文档** MCP 服务器的服务器卡片（见下文）——与上面的数据服务器卡片相互独立 |
 | [`/.well-known/agent-card.json`](https://worldmonitor.app/.well-known/agent-card.json) | [A2A](https://a2a-protocol.org) | `/a2a` JSON-RPC 接待智能体的 Agent Card（见下文）——传输方式、协议版本、技能，无需认证 |
 | [`/.well-known/http-message-signatures-directory`](https://worldmonitor.app/.well-known/http-message-signatures-directory) | [RFC 9421](https://datatracker.ietf.org/doc/html/rfc9421) / Web Bot Auth | Ed25519 公钥目录（`application/http-message-signatures-directory+json`），供第三方验证源自 WorldMonitor 的签名自动化请求。密钥携带滚动 24 小时 `nbf`/`exp` 窗口；缓存 `public, max-age=3600` |
-| [`/.well-known/agent-skills/index.json`](https://worldmonitor.app/.well-known/agent-skills/index.json) | （自定义） | 预打包智能体技能索引（`fetch-country-brief`、`fetch-resilience-score`……）——每个技能都是一份自包含的配方 |
+| [`/.well-known/agent-skills/index.json`](https://worldmonitor.app/.well-known/agent-skills/index.json) | （自定义） | 预打包智能体技能索引（`fetch-country-brief`……）——每个技能都是一份自包含的配方 |
 | [`/plugin.json`](https://www.worldmonitor.app/plugin.json) | [Agent Plugins 1.0.0](https://agent-plugins.org/specification) | World Monitor 智能体插件清单（`name: worldmonitor`）。GitHub 仓库即插件包：根目录 `plugin.json`、`mcp.json` 与常规 `skills/*/SKILL.md` 文件（不是 git 符号链接——Windows 检出和 zip 解压仍能得到 YAML 前置元数据）。插件配方与 well-known 目录一致，只是 REST 示例使用公开站点源 `https://www.worldmonitor.app` |
 | [`/llms.txt`](https://www.worldmonitor.app/llms.txt) | [llmstxt.org](https://llmstxt.org) | LLM 友好的 markdown 简报——概述、能力、链接 |
 | [`/llms-full.txt`](https://www.worldmonitor.app/llms-full.txt) | （扩展） | 完整 LLM 语料：产品简报，外加内联的术语表、咽喉点方法论与解说、国家韧性指数方法论、更正日志，以及已发布的排名快照 |
@@ -134,7 +134,7 @@ https://worldmonitor.app/mcp
 如果你不想用 OAuth，REST 端点和 MCP 端点接受用户 API 密钥或运营商签发的企业密钥，置于 `X-WorldMonitor-Key` 中：
 
 ```bash
-curl -s https://api.worldmonitor.app/api/resilience/v1/get-resilience-ranking \
+curl -s https://api.worldmonitor.app/api/intelligence/v1/get-risk-scores \
   -H "X-WorldMonitor-Key: $WM_KEY"
 ```
 
@@ -142,7 +142,7 @@ PRO 订阅者可从 [worldmonitor.app/pro](https://www.worldmonitor.app/pro) 获
 
 ### 即插即用智能体技能
 
-`/.well-known/agent-skills/index.json` 列出了预打包的技能——每个都是一份自包含配方，智能体无需阅读 OpenAPI 即可消化。适用于你宁愿让智能体"获取国家简报"而非"阅读 OpenAPI 规范然后自己搞清楚"的窄任务。请参见 [Agent Skills Catalog](/zh/agent-skills) 获取每份配方的人类可读列表。当前目录涵盖国家简报、风险与韧性、咽喉要道、市场、网络、制裁、航空、军用航班、海上交通、能源冲击、贸易流、动荡、网络摄像头、气候灾害、健康告警和预报。
+`/.well-known/agent-skills/index.json` 列出了预打包的技能——每个都是一份自包含配方，智能体无需阅读 OpenAPI 即可消化。适用于你宁愿让智能体"获取国家简报"而非"阅读 OpenAPI 规范然后自己搞清楚"的窄任务。请参见 [Agent Skills Catalog](/zh/agent-skills) 获取每份配方的人类可读列表。当前目录涵盖国家简报、国家风险、咽喉要道、市场、网络、制裁、航空、军用航班、海上交通、能源冲击、贸易流、动荡、网络摄像头、气候灾害、健康告警和预报。
 
 ## 为什么这很重要
 

@@ -153,7 +153,6 @@ function enableUnavailableReason(
   );
   if (runtimeReason) return runtimeReason;
   if (!pageAllowed.has(layerKey)) return 'variant_disallowed';
-  if (layerKey === 'resilienceScore' && !snapshot.deckGlActive) return 'layer_not_executable';
   if (!isLayerExecutable(layerKey, snapshot.rendererKind)) return 'layer_not_executable';
   if (snapshot.targetCancellationSupported !== true) return 'target_cancellation_unsupported';
   return undefined;

@@ -62,7 +62,7 @@ const EXEMPT = {
     'Forward-looking release calendar — its payload is UPCOMING economic events, ' +
     'not historical observations. Content-age does not apply; freshness is the ' +
     'seeder run itself (seed-meta liveness).',
-  'seed-resilience-static.mjs':
+  'seed-country-reference.mjs':
     'Static baseline dataset (per file name and design) — a reference snapshot ' +
     'refreshed infrequently, with no rolling observation date. Content-age does ' +
     'not apply.',
@@ -85,10 +85,6 @@ const EXEMPT = {
     'Hand-rolled main() seeder with no runSeed / writeFreshnessMetadata path — ' +
     'content-age requires its freshness-metadata write path to be established ' +
     'first (a seeder-structure change beyond content-age wiring).',
-  'seed-sovereign-wealth.mjs':
-    'Per-fund `aumYear` is null for every Wikipedia-list-sourced fund (the list ' +
-    'article carries no per-row data-year). Content-age over only the official / ' +
-    'IFSWF subset would mislabel the dataset; needs per-fund vintage coverage first.',
 };
 
 function listSeeders() {

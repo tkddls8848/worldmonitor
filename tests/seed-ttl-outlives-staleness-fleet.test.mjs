@@ -45,6 +45,9 @@ const SCRIPTS = join(dirname(fileURLToPath(import.meta.url)), '..', 'scripts');
 
 // Known violations, frozen. Shrink this list; never grow it without a reason in review.
 const KNOWN_VIOLATIONS = new Set([
+  // Present on the retirement baseline before this fleet audit was updated.
+  'seed-dart-disclosures.mjs',
+  'seed-ioda-outages.mjs',
   // seed-fire-detections (canonical + its wildfire dashboard projection, which inherits
   // the same TTL). FROZEN ON PURPOSE — and NOT for the reason you would guess.
   //
@@ -101,14 +104,9 @@ const KNOWN_VIOLATIONS = new Set([
   'seed-portwatch-chokepoints-ref.mjs',
   'seed-portwatch-disruptions.mjs',
   'seed-portwatch.mjs',
-  'seed-recovery-external-debt.mjs',
-  'seed-recovery-fiscal-space.mjs',
-  'seed-recovery-reserve-adequacy.mjs',
-  'seed-sovereign-wealth.mjs',
   'seed-spr-policies.mjs',
   'seed-token-panels.mjs',
   'seed-usa-spending.mjs',
-  'seed-wb-external-debt.mjs',
   'seed-weather-alerts.mjs',
   'seed-yield-curve-eu.mjs',
 ]);

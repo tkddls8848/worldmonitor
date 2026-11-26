@@ -174,14 +174,6 @@ import {
 } from '@/services/country-geometry';
 import type { DiseaseOutbreakItem } from '@/services/disease-outbreaks';
 import type { FeatureCollection, Geometry } from 'geojson';
-import type { ResilienceRankingItem } from '@/services/resilience';
-import {
-  RESILIENCE_CHOROPLETH_COLORS,
-  buildResilienceChoroplethMap,
-  formatResilienceChoroplethLevel,
-  normalizeExclusiveChoropleths,
-} from './resilience-choropleth-utils';
-import { formatResilienceServerLevel } from './resilience-widget-utils';
 
 import { mountWebcamPinButton } from '@/services/webcams/pinned-store';
 import type { WebcamEntry, WebcamCluster } from '@/generated/client/worldmonitor/webcam/v1/service_client';
@@ -824,8 +816,6 @@ export class DeckGLMap {
   // CII choropleth data
   private ciiScoresMap: Map<string, { score: number; level: string }> = new Map();
   private ciiScoresVersion = 0;
-  private resilienceScoresMap: ReturnType<typeof buildResilienceChoroplethMap> = new Map();
-  private resilienceScoresVersion = 0;
   private no2Activity: No2ActivitySnapshot | null = null;
   private no2CountryRegions: Map<string, No2ActivityRegionView> = new Map();
   private no2ClusterRegions: No2ActivityRegionView[] = [];
@@ -1047,7 +1037,7 @@ export class DeckGLMap {
     this.state = {
       ...initialState,
       pan: { ...initialState.pan },
-      layers: normalizeExclusiveChoropleths(initialState.layers, null),
+      layers: { ...initialState.layers },
     };
     this.hotspots = [...INTEL_HOTSPOTS];
 
@@ -2508,10 +2498,6 @@ export class DeckGLMap {
     if (mapLayers.ciiChoropleth) {
       const ciiLayer = this.createCIIChoroplethLayer();
       if (ciiLayer) layers.push(ciiLayer);
-    }
-    if (mapLayers.resilienceScore) {
-      const resilienceLayer = this.createResilienceChoroplethLayer();
-      if (resilienceLayer) layers.push(resilienceLayer);
     }
     if (mapLayers.no2Activity) layers.push(...this.createNo2ActivityLayers());
     // Sanctions choropleth
@@ -5016,27 +5002,6 @@ export class DeckGLMap {
     });
   }
 
-  private createResilienceChoroplethLayer(): GeoJsonLayer | null {
-    if (!this.countriesGeoJsonData || this.resilienceScoresMap.size === 0) return null;
-    const scores = this.resilienceScoresMap;
-    return new GeoJsonLayer({
-      id: 'resilience-choropleth-layer',
-      data: this.getCulledCountriesGeoJson() ?? this.countriesGeoJsonData,
-      filled: true,
-      stroked: true,
-      getFillColor: (feature: { properties?: Record<string, unknown> }) => {
-        const code = feature.properties?.['ISO3166-1-Alpha-2'] as string | undefined;
-        const entry = code ? scores.get(code) : undefined;
-        return entry ? RESILIENCE_CHOROPLETH_COLORS[entry.level] : [0, 0, 0, 0];
-      },
-      getLineColor: [80, 80, 80, 80] as [number, number, number, number],
-      getLineWidth: 1,
-      lineWidthMinPixels: 0.5,
-      pickable: true,
-      updateTriggers: { getFillColor: [this.resilienceScoresVersion] },
-    });
-  }
-
   /**
    * Country polygons filled by NO2 activity state, with the industrial
    * clusters drawn as outlined boxes on top so a cluster reads against its
@@ -5438,29 +5403,6 @@ export class DeckGLMap {
         const levelColor = DeckGLMap.CII_LEVEL_HEX[ciiEntry.level] ?? '#888';
         return { html: `<div class="deckgl-tooltip"><strong>${text(ciiName)}</strong><br/>Country instability: <span style="color:${levelColor};font-weight:600">${numericLabel(ciiEntry.score)}/100</span><br/><span style="text-transform:capitalize;opacity:.7">${text(ciiEntry.level)}</span></div>` };
       }
-      case 'resilience-choropleth-layer': {
-        const resilienceName = obj.properties?.name ?? 'Unknown';
-        const resilienceCode = obj.properties?.['ISO3166-1-Alpha-2'];
-        const resilienceEntry = resilienceCode ? this.resilienceScoresMap.get(resilienceCode as string) : undefined;
-        if (!resilienceEntry) {
-          return { html: `<div class="deckgl-tooltip"><strong>${text(resilienceName)}</strong><br/><span style="opacity:.7">No resilience data</span></div>` };
-        }
-        if (resilienceEntry.level === 'insufficient_data') {
-          return { html: `<div class="deckgl-tooltip"><strong>${text(resilienceName)}</strong><br/><span style="opacity:.7">Insufficient data</span></div>` };
-        }
-        const [red, green, blue] = RESILIENCE_CHOROPLETH_COLORS[resilienceEntry.level];
-        const levelColor = `rgb(${red}, ${green}, ${blue})`;
-        const visualBand = formatResilienceChoroplethLevel(resilienceEntry.level);
-        const serverLevel = formatResilienceServerLevel(resilienceEntry.serverLevel);
-        const confidenceNote = resilienceEntry.lowConfidence
-          ? '<br/><span style="opacity:.7">Low confidence</span>'
-          : resilienceEntry.outsideHeadlineRanking
-            ? '<br/><span style="opacity:.7">Outside headline ranking</span>'
-            : '';
-        return {
-          html: `<div class="deckgl-tooltip"><strong>${text(resilienceName)}</strong><br/>Resilience: <span style="color:${levelColor};font-weight:600">${numericLabel(resilienceEntry.overallScore, 1)}/100</span><br/><span style="text-transform:capitalize;opacity:.7">Visual band: ${text(visualBand)}</span><br/><span style="text-transform:capitalize;opacity:.7">API level: ${text(serverLevel)}</span>${confidenceNote}</div>`,
-        };
-      }
       case 'species-recovery-layer': {
         return { html: `<div class="deckgl-tooltip"><strong>${text(obj.commonName)}</strong><br/>${text(obj.recoveryZone?.name ?? obj.region)}<br/><span style="opacity:.7">Status: ${text(obj.recoveryStatus)}</span></div>` };
       }
@@ -5500,7 +5442,6 @@ export class DeckGLMap {
     'cii-choropleth-layer',
     'world-overview-fill',
     'happiness-choropleth-layer',
-    'resilience-choropleth-layer',
     'no2-activity-countries',
   ]);
 
@@ -6104,9 +6045,6 @@ export class DeckGLMap {
           if (toggleEl?.hasAttribute('data-layer-hidden')) continue;
           targetOn.add(k);
         }
-        if (targetOn.has('resilienceScore') && targetOn.has('ciiChoropleth')) {
-          targetOn.delete('ciiChoropleth');
-        }
         for (const def of layerDefs) {
           const nextVal = targetOn.has(def.key);
           if (Boolean(this.state.layers[def.key]) !== nextVal) {
@@ -6138,16 +6076,6 @@ export class DeckGLMap {
           const enabled = (input as HTMLInputElement).checked;
           const prevRadar = this.state.layers.weather;
           const prevCyber = this.state.layers.cyberThreats;
-          if (enabled && (layer === 'resilienceScore' || layer === 'ciiChoropleth')) {
-            const conflictingLayer = layer === 'resilienceScore' ? 'ciiChoropleth' : 'resilienceScore';
-            if (this.state.layers[conflictingLayer]) {
-              this.state.layers[conflictingLayer] = false;
-              const conflictingToggle = this.container.querySelector(`.layer-toggle[data-layer="${conflictingLayer}"] input`) as HTMLInputElement | null;
-              if (conflictingToggle) conflictingToggle.checked = false;
-              this.setLayerReady(conflictingLayer, false);
-              this.onLayerChange?.(conflictingLayer, false, 'programmatic');
-            }
-          }
           this.state.layers[layer] = enabled;
           if (layer === 'military' && !enabled) this.clearFlightTrails();
           if (layer === 'flights') this.manageAircraftTimer(enabled);
@@ -6424,7 +6352,7 @@ export class DeckGLMap {
 
     // Point markers carry their Layers-menu glyph on the map (#10139), so this
     // legend only explains colour scales and status levels the glyph cannot:
-    // hotspot alert levels, disease alert levels, resilience bands, zone fills
+    // hotspot alert levels, disease alert levels, zone fills
     // and line colours. It shows only entries for active layers and hides
     // itself when none apply.
     // SVG shapes for different marker types
@@ -6436,26 +6364,17 @@ export class DeckGLMap {
     };
 
     const isLight = getCurrentTheme() === 'light';
-    const resilienceLegendItems: { shape: string; label: string; layerKey: keyof MapLayers }[] = [
-      { shape: shapes.square('rgb(239, 68, 68)'), label: 'Resilience: Very Low', layerKey: 'resilienceScore' },
-      { shape: shapes.square('rgb(249, 115, 22)'), label: 'Resilience: Low', layerKey: 'resilienceScore' },
-      { shape: shapes.square('rgb(234, 179, 8)'), label: 'Resilience: Moderate', layerKey: 'resilienceScore' },
-      { shape: shapes.square('rgb(132, 204, 22)'), label: 'Resilience: High', layerKey: 'resilienceScore' },
-      { shape: shapes.square('rgb(34, 197, 94)'), label: 'Resilience: Very High', layerKey: 'resilienceScore' },
-    ];
     const legendItems: { shape: string; label: string; layerKey: keyof MapLayers }[] = SITE_VARIANT === 'tech'
       ? [
         { shape: shapes.circle('rgb(231, 76, 60)'), label: t('components.deckgl.legend.diseaseAlert'), layerKey: 'diseaseOutbreaks' },
         { shape: shapes.circle('rgb(230, 126, 34)'), label: t('components.deckgl.legend.diseaseWarning'), layerKey: 'diseaseOutbreaks' },
         { shape: shapes.circle('rgb(241, 196, 15)'), label: t('components.deckgl.legend.diseaseWatch'), layerKey: 'diseaseOutbreaks' },
-        ...resilienceLegendItems,
       ]
       : SITE_VARIANT === 'finance'
         ? [
           { shape: shapes.circle('rgb(231, 76, 60)'), label: t('components.deckgl.legend.diseaseAlert'), layerKey: 'diseaseOutbreaks' },
           { shape: shapes.circle('rgb(230, 126, 34)'), label: t('components.deckgl.legend.diseaseWarning'), layerKey: 'diseaseOutbreaks' },
           { shape: shapes.circle('rgb(241, 196, 15)'), label: t('components.deckgl.legend.diseaseWatch'), layerKey: 'diseaseOutbreaks' },
-          ...resilienceLegendItems,
         ]
         : SITE_VARIANT === 'happy'
           ? [
@@ -6465,7 +6384,6 @@ export class DeckGLMap {
             { shape: shapes.circle('rgb(231, 76, 60)'), label: t('components.deckgl.legend.diseaseAlert'), layerKey: 'diseaseOutbreaks' },
             { shape: shapes.circle('rgb(230, 126, 34)'), label: t('components.deckgl.legend.diseaseWarning'), layerKey: 'diseaseOutbreaks' },
             { shape: shapes.circle('rgb(241, 196, 15)'), label: t('components.deckgl.legend.diseaseWatch'), layerKey: 'diseaseOutbreaks' },
-            ...resilienceLegendItems,
           ]
           : SITE_VARIANT === 'commodity'
             ? [
@@ -6473,7 +6391,6 @@ export class DeckGLMap {
               { shape: shapes.circle('rgb(231, 76, 60)'), label: t('components.deckgl.legend.diseaseAlert'), layerKey: 'diseaseOutbreaks' },
               { shape: shapes.circle('rgb(230, 126, 34)'), label: t('components.deckgl.legend.diseaseWarning'), layerKey: 'diseaseOutbreaks' },
               { shape: shapes.circle('rgb(241, 196, 15)'), label: t('components.deckgl.legend.diseaseWatch'), layerKey: 'diseaseOutbreaks' },
-              ...resilienceLegendItems,
             ]
             : [
               { shape: shapes.circle('rgb(255, 68, 68)'), label: t('components.deckgl.legend.highAlert'), layerKey: 'hotspots' },
@@ -6483,7 +6400,6 @@ export class DeckGLMap {
               { shape: shapes.circle('rgb(231, 76, 60)'), label: t('components.deckgl.legend.diseaseAlert'), layerKey: 'diseaseOutbreaks' },
               { shape: shapes.circle('rgb(230, 126, 34)'), label: t('components.deckgl.legend.diseaseWarning'), layerKey: 'diseaseOutbreaks' },
               { shape: shapes.circle('rgb(241, 196, 15)'), label: t('components.deckgl.legend.diseaseWatch'), layerKey: 'diseaseOutbreaks' },
-              ...resilienceLegendItems,
             ];
 
     setTrustedHtml(legend, trustedHtml(`
@@ -6985,7 +6901,7 @@ export class DeckGLMap {
     const prevRadar = this.state.layers.weather;
     const prevCyber = this.state.layers.cyberThreats;
     const prevBases = this.state.layers.bases;
-    this.state.layers = normalizeExclusiveChoropleths(next, this.state.layers);
+    this.state.layers = next;
     if (!this.state.layers.military) this.clearFlightTrails();
     this.manageAircraftTimer(this.state.layers.flights);
     if (this.state.layers.bases && !prevBases) this.debouncedFetchBases();
@@ -8293,12 +8209,6 @@ export class DeckGLMap {
     this.render();
   }
 
-  public setResilienceRanking(items: ResilienceRankingItem[], greyedOut: ResilienceRankingItem[] = []): void {
-    this.resilienceScoresMap = buildResilienceChoroplethMap(items, greyedOut);
-    this.resilienceScoresVersion++;
-    this.render();
-  }
-
   public setSpeciesRecoveryZones(species: SpeciesRecovery[]): void {
     this.speciesRecoveryZones = species.filter(
       (s): s is SpeciesRecovery & { recoveryZone: { name: string; lat: number; lon: number } } =>
@@ -8527,19 +8437,6 @@ export class DeckGLMap {
   // Enable layer programmatically
   public enableLayer(layer: keyof MapLayers): void {
     if (!this.state.layers[layer]) {
-      if (layer === 'resilienceScore' && this.state.layers.ciiChoropleth) {
-        this.state.layers.ciiChoropleth = false;
-        const ciiToggle = this.container.querySelector(`.layer-toggle[data-layer="ciiChoropleth"] input`) as HTMLInputElement | null;
-        if (ciiToggle) ciiToggle.checked = false;
-        this.setLayerReady('ciiChoropleth', false);
-        this.onLayerChange?.('ciiChoropleth', false, 'programmatic');
-      } else if (layer === 'ciiChoropleth' && this.state.layers.resilienceScore) {
-        this.state.layers.resilienceScore = false;
-        const resilienceToggle = this.container.querySelector(`.layer-toggle[data-layer="resilienceScore"] input`) as HTMLInputElement | null;
-        if (resilienceToggle) resilienceToggle.checked = false;
-        this.setLayerReady('resilienceScore', false);
-        this.onLayerChange?.('resilienceScore', false, 'programmatic');
-      }
       this.state.layers[layer] = true;
       const toggle = this.container.querySelector(`.layer-toggle[data-layer="${layer}"] input`) as HTMLInputElement;
       if (toggle) toggle.checked = true;
@@ -8558,20 +8455,6 @@ export class DeckGLMap {
   public toggleLayer(layer: keyof MapLayers): void {
     const prevRadar = this.state.layers.weather;
     const prevCyber = this.state.layers.cyberThreats;
-    const nextEnabled = !this.state.layers[layer];
-    if (nextEnabled && layer === 'resilienceScore' && this.state.layers.ciiChoropleth) {
-      this.state.layers.ciiChoropleth = false;
-      const ciiToggle = this.container.querySelector(`.layer-toggle[data-layer="ciiChoropleth"] input`) as HTMLInputElement | null;
-      if (ciiToggle) ciiToggle.checked = false;
-      this.setLayerReady('ciiChoropleth', false);
-      this.onLayerChange?.('ciiChoropleth', false, 'programmatic');
-    } else if (nextEnabled && layer === 'ciiChoropleth' && this.state.layers.resilienceScore) {
-      this.state.layers.resilienceScore = false;
-      const resilienceToggle = this.container.querySelector(`.layer-toggle[data-layer="resilienceScore"] input`) as HTMLInputElement | null;
-      if (resilienceToggle) resilienceToggle.checked = false;
-      this.setLayerReady('resilienceScore', false);
-      this.onLayerChange?.('resilienceScore', false, 'programmatic');
-    }
     this.state.layers[layer] = !this.state.layers[layer];
     if (layer === 'military' && !this.state.layers[layer]) this.clearFlightTrails();
     const toggle = this.container.querySelector(`.layer-toggle[data-layer="${layer}"] input`) as HTMLInputElement;

@@ -1,6 +1,6 @@
 ---
 title: "Daily country history"
-description: "Daily CII, resilience and selected headline snapshots, with source versions, observation gaps and retention limits."
+description: "Daily CII and selected headline snapshots, with source versions, observation gaps and retention limits."
 ---
 
 _Methodology maintained by [Elie Habib](https://www.worldmonitor.app/blog/authors/elie-habib/), founder of World Monitor. Published revisions are recorded in the [corrections log](/corrections)._
@@ -11,7 +11,7 @@ The archive starts when its daily worker is activated. It cannot reconstruct ear
 
 ## Snapshot contents
 
-Each UTC date contains a capture time, optional CII and resilience scores, and up to five headlines.
+Each UTC date contains a capture time, optional CII scores, and up to five headlines.
 Each score carries its source observation time and formula identity.
 Headlines retain a title, source, category and HTTP or HTTPS link. The archive stores no article body.
 Selection uses explicit country-name mentions in the English digest headline. It is not a complete event census.
@@ -20,15 +20,14 @@ News selection covers the preceding 24 hours. A partial digest remains marked `n
 
 CII is available for its monitored country set. Resilience uses the published ranking cache, including scored countries outside the headline ranking.
 Missing scores remain absent. An observed numeric zero remains zero.
-The resilience observation time is the ranking publication time, not the observation date of each underlying indicator.
 
 ## Comparison limits
 
-Higher CII means more instability. Higher resilience means more capacity.
+Higher CII means more instability.
 They measure different concepts and must not be combined into one risk trend.
 
 Each series stops across missing dates, missing scores or a formula change.
-The response marks these with `ciiVersionBreak` and `resilienceVersionBreak`.
+The response marks these with `ciiVersionBreak`.
 Compare changes only within a continuous series with the same formula identity.
 The archive does not interpolate missing days or replace them with zero.
 
@@ -61,7 +60,7 @@ If a deep result exceeds the output budget, it retains one selected headline per
 ## Freshness and activation
 
 The worker runs daily around 00:30 UTC after its Railway service is provisioned.
-It reads existing CII, resilience and news caches. It does not invoke score builders.
+It reads existing CII and news caches. It does not invoke score builders.
 Publication replaces the current date atomically, trims records older than 365 UTC days, and stamps health only after confirmed publication.
 An older overlapping run cannot replace a newer capture.
 
@@ -69,6 +68,5 @@ An older overlapping run cannot replace a newer capture.
 `stale=true` means the archive is unavailable or the last successful publication is over 36 hours old.
 The health endpoint reports pending activation before the first publication and detects a stopped cron after activation.
 
-There is no automatic backfill. Existing resilience history covers a different score/time contract and lacks captured headlines.
 Importing it as complete daily snapshots would imply observations the archive never made.
 Existing CII history remains available through its existing tools.

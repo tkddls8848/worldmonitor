@@ -182,7 +182,6 @@ const FULL_MAP_LAYERS: MapLayers = {
   renewableInstallations: false,
   tradeRoutes: false,
   ciiChoropleth: false,
-  resilienceScore: false,
   // Commodity layers (disabled in full variant)
   miningSites: false,
   processingPlants: false,
@@ -245,7 +244,6 @@ const FULL_MOBILE_MAP_LAYERS: MapLayers = {
   renewableInstallations: false,
   tradeRoutes: false,
   ciiChoropleth: false,
-  resilienceScore: false,
   // Commodity layers (disabled in full variant)
   miningSites: false,
   processingPlants: false,
@@ -350,7 +348,6 @@ const TECH_MAP_LAYERS: MapLayers = {
   tradeRoutes: false,
   iranAttacks: false,
   ciiChoropleth: false,
-  resilienceScore: false,
   // Commodity layers (disabled in tech variant)
   miningSites: false,
   processingPlants: false,
@@ -408,7 +405,6 @@ const TECH_MOBILE_MAP_LAYERS: MapLayers = {
   tradeRoutes: false,
   iranAttacks: false,
   ciiChoropleth: false,
-  resilienceScore: false,
   // Commodity layers (disabled in tech variant)
   miningSites: false,
   processingPlants: false,
@@ -548,7 +544,6 @@ const FINANCE_MAP_LAYERS: MapLayers = {
   tradeRoutes: true,
   iranAttacks: false,
   ciiChoropleth: false,
-  resilienceScore: false,
   // Commodity layers (disabled in finance variant)
   miningSites: false,
   processingPlants: false,
@@ -606,7 +601,6 @@ const FINANCE_MOBILE_MAP_LAYERS: MapLayers = {
   tradeRoutes: false,
   iranAttacks: false,
   ciiChoropleth: false,
-  resilienceScore: false,
   // Commodity layers (disabled in finance variant)
   miningSites: false,
   processingPlants: false,
@@ -680,7 +674,6 @@ const HAPPY_MAP_LAYERS: MapLayers = {
   tradeRoutes: false,
   iranAttacks: false,
   ciiChoropleth: false,
-  resilienceScore: false,
   // Commodity layers (disabled)
   miningSites: false,
   processingPlants: false,
@@ -738,7 +731,6 @@ const HAPPY_MOBILE_MAP_LAYERS: MapLayers = {
   tradeRoutes: false,
   iranAttacks: false,
   ciiChoropleth: false,
-  resilienceScore: false,
   // Commodity layers (disabled)
   miningSites: false,
   processingPlants: false,
@@ -842,7 +834,6 @@ const COMMODITY_MAP_LAYERS: MapLayers = {
   tradeRoutes: true,
   iranAttacks: false,
   ciiChoropleth: false,
-  resilienceScore: false,
   // Commodity layers (enabled)
   miningSites: true,
   processingPlants: true,
@@ -900,7 +891,6 @@ const COMMODITY_MOBILE_MAP_LAYERS: MapLayers = {
   tradeRoutes: false,
   iranAttacks: false,
   ciiChoropleth: false,
-  resilienceScore: false,
   // Commodity layers (limited on mobile)
   miningSites: true,
   processingPlants: false,
@@ -1001,7 +991,6 @@ const ENERGY_MAP_LAYERS: MapLayers = {
   tradeRoutes: true,
   iranAttacks: false,
   ciiChoropleth: false,
-  resilienceScore: false,
   // Commodity layers — selected (energy-relevant subset)
   miningSites: false,
   processingPlants: false,
@@ -1057,7 +1046,6 @@ const ENERGY_MOBILE_MAP_LAYERS: MapLayers = {
   tradeRoutes: false,
   iranAttacks: false,
   ciiChoropleth: false,
-  resilienceScore: false,
   miningSites: false,
   processingPlants: false,
   commodityPorts: true,

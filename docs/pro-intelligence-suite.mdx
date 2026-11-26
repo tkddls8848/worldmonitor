@@ -1,11 +1,11 @@
 ---
 title: "Pro Intelligence Suite"
-description: "The Pro-only derived datasets — physical metals premiums and divergence, mineral concentration, defense industrial base, demographics, food stocks, resilience indicators, and supply vulnerability — with each dataset's REST route, seed cadence, and MCP surface where one exists. The five-factor scorecard REST routes are free; see the Access section."
+description: "The Pro-only derived datasets — physical metals premiums and divergence, mineral concentration, defense industrial base, food stocks, and supply vulnerability — with each dataset's REST route, seed cadence, and MCP surface where one exists. The five-factor scorecard REST routes are free; see the Access section."
 ---
 
 A family of derived datasets ships behind the Pro tier. Each one answers a question the raw feeds cannot: not *what is the gold price* but *is the physical premium abnormal for gold right now*; not *where is cobalt* but *who refines it, and how concentrated is that*.
 
-They share a read-only contract, not one pipeline. Seed cadence and surfaces differ by dataset: physical premiums refresh daily and feed the divergence index; mineral production every 60 days; the defense-industrial World Bank snapshot every 10 days and SIPRI supplier shares every 14; demographics every 20 days; food stocks every 30 days; supply-vulnerability and the five-factor scorecard project daily derived snapshots; resilience indicators are built from the score trace on demand. A sebuf RPC serves each read. Most routes also have an MCP wrapper, but not all — `list-vulnerability-rankings` is REST-only. None of them accept a write. All of them carry explicit provenance and explicit missing-data signals, so an absent number never has to be read as a zero.
+They share a read-only contract, not one pipeline. Seed cadence and surfaces differ by dataset: physical premiums refresh daily and feed the divergence index; mineral production every 60 days; the defense-industrial World Bank snapshot every 10 days and SIPRI supplier shares every 14; food stocks every 30 days; supply-vulnerability and the five-factor scorecard project daily derived snapshots. A sebuf RPC serves each read. Most routes also have an MCP wrapper, but not all — `list-vulnerability-rankings` is REST-only. None of them accept a write. All of them carry explicit provenance and explicit missing-data signals, so an absent number never has to be read as a zero.
 
 ## Access
 
@@ -126,35 +126,15 @@ TIV is a transfer-volume indicator, not money. Do not render it with a currency 
 
 SIPRI's license permits derived aggregates, not redistribution of the full database, which is why per-country supplier shares are served and the trade register is not. See [Defense industrial base methodology](/methodology/defense-industrial-base).
 
-## Demographics and workforce capability
-
-`GET /api/resilience/v1/get-demographics-capability?countryCode=DE` · MCP `get_demographics_capability`
-
-Three independent groups for one country: age structure (UN World Population Prospects), the education pipeline (UNESCO UIS and World Bank WDI), and industrial workforce composition (ILOSTAT).
-
-Every metric carries its own observation year, source, unit and `available` flag, and the three groups are resolved independently — a country can have current age structure and no ILOSTAT coverage at all. Read each metric's `available` before its value; the groups do not share a clock.
-
-See [Demographics capability methodology](/methodology/demographics-capability).
-
 ## Food stocks
 
-`GET /api/resilience/v1/get-food-stocks?countryCode=WORLD` · MCP `get_food_stocks`
+`GET /api/supply-chain/v1/get-food-stocks?countryCode=WORLD` · MCP `get_food_stocks`
 
 USDA PSD cereal ending stocks, production, use, and the stocks-to-use ratio, per country and commodity. `countryCode=WORLD` returns the global balance. `commodity` accepts `wheat`, `corn`, `rice`, `soybeans`, `barley`, `palmOil`. When PSD has no complete balance, FAOSTAT Food Balances supplies a same-year production and domestic-supply pair. FAOSTAT rows have no stock measurement, so read `hasEndingStocks` and `hasStocksToUse` before you use the stock numbers.
 
 Marketing years are not calendar years, and they differ by country and commodity. Two countries' figures for "2025/26" can cover different months — never compare them as if the label meant one period. Each row states its own marketing year for exactly this reason.
 
 See [Food stocks methodology](/methodology/food-stocks).
-
-## Resilience indicators
-
-`GET /api/resilience/v1/get-resilience-indicators?countryCode=DE` · MCP `get_resilience_indicators`
-
-The explainability layer under the country resilience score: all 71 registered indicators with their normalized score, full state taxonomy, runtime weight, contribution reconciled to its dimension, observation age, and source provenance. States include `observed`, `imputed`, `missing`, `fallback`, `not-applicable`, `source-failure`, `inactive`, and `retired`; read the matching availability flags before numeric values.
-
-Raw source values appear only where the upstream license permits redistribution; elsewhere the normalized score is served without the underlying number. That is a licensing boundary, not missing data — see [Resilience indicator licensing](/methodology/resilience-indicator-licensing).
-
-This route has no dashboard surface. It exists for API and MCP callers who need to audit a score rather than read it. See [Resilience indicators methodology](/methodology/resilience-indicators) and the [Country resilience index](/methodology/country-resilience-index).
 
 ## Commodity supply vulnerability
 
@@ -188,7 +168,7 @@ separately from the REST API.
 | `GET /api/scorecard/v1/get-bloc-scorecard?preset=NATO` | `get_five_factor_scorecard` | One bloc — preset or custom `members` |
 | `GET /api/scorecard/v1/list-five-factor-scorecards` | `get_five_factor_scorecard` (no selector) | Compact scorecards for the cohort |
 
-Five pillar scores — food, energy, demographics, technology, defense — projected over the resilience engine and served with per-pillar sub-scores, bands, input coverage, and machine-readable insufficient-data reasons.
+Five pillar scores — food, energy, technology, defense — built from source snapshots and served with per-pillar sub-scores, bands, input coverage, and machine-readable insufficient-data reasons.
 
 The single rule that matters when parsing these: **read `hasScore`, `available` and `hasValue` before any numeric field.** These are proto3 messages, so an absent number serializes as `0`. A pillar with `hasScore: false` and `subScore: 0` has insufficient data — it is not a country scoring zero on defense. A country or bloc read carries source provenance and raw observations; the list drops the evidence ledger for a compact cohort read.
 

@@ -4,7 +4,6 @@ import {
   stockResearchSymbolFromPath,
 } from '@/features/stock-research/stock-research-route';
 import { openStockResearchOverlay } from '@/features/stock-research/stock-research-overlay';
-import { normalizeExclusiveChoropleths } from '@/components/resilience-choropleth-utils';
 import type { AppContext } from '@/app/app-context';
 import type { LoadAllDataTrigger } from '@/app/viewport-hydration-ledger';
 import {
@@ -794,9 +793,7 @@ export class App {
     // Blocked storage is a supported no-persistence mode. Seed the same
     // defaults as a first visit and skip migrations that only mutate storage.
     if (!storageAvailable) {
-      mapLayers = normalizeExclusiveChoropleths(
-        sanitizeLayersForVariant({ ...defaultLayers }, currentVariant as MapVariant), null,
-      );
+      mapLayers = sanitizeLayersForVariant({ ...defaultLayers }, currentVariant as MapVariant);
       panelSettings = getInitialPanelSettingsForVariant(currentVariant);
     } else if (appliedPanelLayoutVariant !== currentVariant) {
       // Variant changed - reset all settings to variant defaults.
@@ -810,9 +807,7 @@ export class App {
       // not delete local ownership), so a genuine variant-reset clear only
       // propagates cross-device when it is an explicit value.
       localStorage.setItem(STORAGE_KEYS.mapLayerGateOwnership, '[]');
-      mapLayers = normalizeExclusiveChoropleths(
-        sanitizeLayersForVariant({ ...defaultLayers }, currentVariant as MapVariant), null,
-      );
+      mapLayers = sanitizeLayersForVariant({ ...defaultLayers }, currentVariant as MapVariant);
       // Load existing panel prefs (if any), disable panels not belonging to the new variant
       const newVariantKeys = new Set(VARIANT_DEFAULTS[currentVariant] ?? []);
       const hadLegacyPanelLayoutState = localStorage.getItem(PANEL_ORDER_KEY) !== null
@@ -853,12 +848,10 @@ export class App {
         }
       }
     } else {
-      mapLayers = normalizeExclusiveChoropleths(
-        sanitizeLayersForVariant(
+      mapLayers = sanitizeLayersForVariant(
           loadFromStorage<MapLayers>(STORAGE_KEYS.mapLayers, defaultLayers),
           currentVariant as MapVariant,
-        ), null,
-      );
+        );
       // Restore layers the retired free-tier gate turned off.
       mapLayers = this.restoreGateOwnedMapLayers(mapLayers);
 
@@ -1003,7 +996,7 @@ export class App {
     // Drop saved entries for retired panels so Settings omits dead toggles.
     let droppedRetiredPanel = false;
     for (const key of Object.keys(panelSettings)) {
-      if (!key.startsWith('mcp-') && key !== 'social-velocity' && key !== 'wsb-ticker-scanner') continue;
+      if (!key.startsWith('mcp-') && key !== 'social-velocity' && key !== 'wsb-ticker-scanner' ) continue;
       delete panelSettings[key];
       droppedRetiredPanel = true;
     }
@@ -1011,7 +1004,7 @@ export class App {
 
     if (storageAvailable) {
       // One-time migration: prune removed panel keys from stored settings and order
-      const PANEL_PRUNE_KEY = 'worldmonitor-panel-prune-v1';
+      const PANEL_PRUNE_KEY = 'worldmonitor-panel-prune-v2';
       if (!localStorage.getItem(PANEL_PRUNE_KEY)) {
         const validKeys = new Set(Object.keys(ALL_PANELS));
         let pruned = false;
@@ -1052,9 +1045,7 @@ export class App {
 
     const initialUrlState: ParsedMapUrlState | null = parseMapUrlState(window.location.search, mapLayers);
     if (initialUrlState.layers) {
-      mapLayers = normalizeExclusiveChoropleths(
-        sanitizeLayersForVariant(initialUrlState.layers, currentVariant as MapVariant), null,
-      );
+      mapLayers = sanitizeLayersForVariant(initialUrlState.layers, currentVariant as MapVariant);
       initialUrlState.layers = mapLayers;
     }
     if (!CYBER_LAYER_ENABLED) {

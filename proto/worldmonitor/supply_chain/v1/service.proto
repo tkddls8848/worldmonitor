@@ -3,6 +3,7 @@ syntax = "proto3";
 package worldmonitor.supply_chain.v1;
 
 import "sebuf/http/annotations.proto";
+import "worldmonitor/supply_chain/v1/get_food_stocks.proto";
 import "worldmonitor/supply_chain/v1/get_shipping_rates.proto";
 import "worldmonitor/supply_chain/v1/get_chokepoint_status.proto";
 import "worldmonitor/supply_chain/v1/get_chokepoint_history.proto";
@@ -104,7 +105,6 @@ service SupplyChainService {
     option (sebuf.http.config) = {path: "/get-route-explorer-lane", method: HTTP_METHOD_GET};
   }
 
-  // GetRouteImpact returns route-level trade exposure: lane value, primary exporter concentration, strategic products, resilience score, dependency flags, and Comtrade provenance. PRO-gated.
   rpc GetRouteImpact(GetRouteImpactRequest) returns (GetRouteImpactResponse) {
     option (sebuf.http.config) = {path: "/get-route-impact", method: HTTP_METHOD_GET};
   }
@@ -179,5 +179,9 @@ service SupplyChainService {
   // ListVulnerabilityRankings returns a bounded global ranking with optional filters. The response uses the fields defined by this RPC's protobuf response message.
   rpc ListVulnerabilityRankings(ListVulnerabilityRankingsRequest) returns (ListVulnerabilityRankingsResponse) {
     option (sebuf.http.config) = {path: "/list-vulnerability-rankings", method: HTTP_METHOD_GET};
+  }
+  // GetFoodStocks returns USDA stocks-to-use and FAOSTAT supply by country or WORLD.
+  rpc GetFoodStocks(GetFoodStocksRequest) returns (GetFoodStocksResponse) {
+    option (sebuf.http.config) = {path: "/get-food-stocks", method: HTTP_METHOD_GET};
   }
 }

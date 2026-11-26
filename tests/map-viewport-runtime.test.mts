@@ -68,10 +68,6 @@ before(async () => {
           '@/utils/lcp-debug': 'export const markLcpDebug = () => {};',
           '@/config/map-layer-definitions': `
             export const getLayersForVariant = () => [];
-            export const sanitizeResilienceScoreForRenderer = (layers, isDeckGLActive) =>
-              layers.resilienceScore && !isDeckGLActive
-                ? { ...layers, resilienceScore: false }
-                : layers;
             export const resolveLayerLabel = (key) => key;
             export const bindLayerSearch = () => () => {};
             export const getLayerExplanation = () => null;
@@ -275,6 +271,7 @@ describe('concrete renderer startup', () => {
         events, ready, entered,
         renderer: {
           getState: () => internals.initialState,
+          setWorldOverviewMode() {},
           setChokepointData: (value: unknown) => { assert.deepEqual(value, data); events.push('replay'); },
         },
       };

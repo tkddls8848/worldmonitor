@@ -8,12 +8,9 @@ import { fileURLToPath } from 'node:url';
 import { composeCountrySnapshots, publishCountrySnapshots, readCountryHistorySources } from '../scripts/seed-country-history.mjs';
 import { CII_RISK_SCORE_CACHE_KEYS } from '../api/_cii-risk-cache-keys.js';
 
-test('daily source namespaces match the current CII, resilience and news publishers', () => {
+test('daily source namespaces match the current CII and news publishers', () => {
   const source = readFileSync(new URL('../scripts/seed-country-history.mjs', import.meta.url), 'utf8');
   assert.ok(source.includes(`const RISK_KEY = '${CII_RISK_SCORE_CACHE_KEYS.stale}'`));
-  const resilience = readFileSync(new URL('../scripts/seed-resilience-scores.mjs', import.meta.url), 'utf8');
-  const rankingKey = resilience.match(/RESILIENCE_RANKING_CACHE_KEY = '([^']+)'/)[1];
-  assert.ok(source.includes(`const RANKING_KEY = '${rankingKey}'`));
   const news = readFileSync(new URL('../server/worldmonitor/news/v1/list-feed-digest.ts', import.meta.url), 'utf8');
   assert.ok(news.includes('news:digest:v1:'));
   assert.ok(source.includes("const DIGEST_KEY = 'news:digest:v1:full:en'"));
@@ -23,7 +20,6 @@ const now = Date.UTC(2026, 9, 19, 0, 30);
 const inputs = () => ({
   now, countries: ['US', 'FR'],
   risk: { ciiScores: [{ region: 'US', combinedScore: 0, computedAt: now - 1000, methodologyVersion: 'v11' }] },
-  ranking: { items: [{ countryCode: 'US', overallScore: 65 }], greyedOut: [], fetchedAt: new Date(now - 3600000).toISOString(), _scoreCacheIdentity: 'v30:pc:active' },
   digest: { generatedAt: new Date(now - 1000).toISOString(), coverage: { state: 'complete' }, categories: { politics: { items: [
     { title: 'United States talks begin', link: 'https://example.com/1', source: 'Example', publishedAt: now - 1000 },
     { title: 'United States talks begin', link: 'https://example.com/1', source: 'Example', publishedAt: now - 1000 },
@@ -35,18 +31,15 @@ test('daily composition preserves observed zero, absence, source clocks, formula
   const [us, fr] = composeCountrySnapshots(inputs());
   assert.equal(us.date, '2026-10-19');
   assert.deepEqual(us.cii, { score: 0, version: 'v11', observedAt: now - 1000 });
-  assert.equal(us.resilience.version, 'v30:pc:active');
   assert.equal(us.topEvents.length, 1);
   assert.equal(us.topEvents[0].category, 'politics');
   assert.equal(fr.cii, undefined);
-  assert.equal(fr.resilience, undefined);
   assert.equal(fr.topEvents.length, 0);
 });
 
 test('unavailable, malformed and stale source snapshots cannot become daily history', () => {
   for (const change of [
     { risk: null }, { risk: { ciiScores: [], stale: true } },
-    { ranking: { ...inputs().ranking, fetchedAt: new Date(now - 13 * 3600000).toISOString() } },
     { digest: { ...inputs().digest, coverage: { state: 'unavailable' } } },
     { risk: { ciiScores: [{ ...inputs().risk.ciiScores[0], combinedScore: null }] } },
   ]) assert.throws(() => composeCountrySnapshots({ ...inputs(), ...change }));
@@ -59,7 +52,7 @@ test('missing or stale CII cache warms from the personal risk-scores API before 
     url: 'https://redis.test', token: 'fixture', now,
     command: async (_url, _token, args) => {
       calls.push(args);
-      return { result: [null, JSON.stringify(data.ranking), JSON.stringify(data.digest)] };
+      return { result: [null, JSON.stringify(data.digest)] };
     },
     warmRiskScores: async () => data.risk,
   });
@@ -68,20 +61,13 @@ test('missing or stale CII cache warms from the personal risk-scores API before 
   assert.deepEqual(composeCountrySnapshots({ ...data, ...sources }).map(row => row.countryCode), ['US', 'FR']);
 });
 
-test('a fresh ranking made only of scoreable greyed-out countries remains a usable history source', () => {
-  const data = inputs();
-  data.ranking.items = [];
-  data.ranking.greyedOut = [{ countryCode: 'US', overallScore: 65 }];
-  const [snapshot] = composeCountrySnapshots(data);
-  assert.equal(snapshot.resilience.score, 65);
-});
 
 test('missing or stale news digest warms from the local digest RPC', async () => {
   const data = inputs();
   data.digest.generatedAt = new Date(now + 1000).toISOString();
   const sources = await readCountryHistorySources({
     url: 'https://redis.test', token: 'fixture', now,
-    command: async () => ({ result: [JSON.stringify(data.risk), JSON.stringify(data.ranking), null] }),
+    command: async () => ({ result: [JSON.stringify(data.risk), null] }),
     warmNewsDigest: async () => data.digest,
   });
   assert.equal(sources.digest, data.digest);
@@ -126,14 +112,13 @@ test('the daily executable recovers transient source reads and bounds permanent 
       const data = ${JSON.stringify(inputs())};
       const shift = Date.now() - data.now;
       data.risk.ciiScores[0].computedAt += shift;
-      data.ranking.fetchedAt = new Date(Date.now()).toISOString();
       data.digest.generatedAt = new Date(Date.now()).toISOString();
       globalThis.fetch = async (_url, init) => {
         const args = JSON.parse(init.body);
         if (args[0] === 'MGET') {
           reads++;
           if (!${recover} || reads === 1) return new Response('fixture failure', { status: ${status} });
-          return Response.json({ result: [data.risk, data.ranking, data.digest].map(JSON.stringify) });
+          return Response.json({ result: [data.risk, data.digest].map(JSON.stringify) });
         }
         if (args[0] !== 'EVAL') throw new Error('unexpected command');
         writes++;

@@ -137,7 +137,6 @@ export function createBlankMapLayers(): MapLayers {
     iranAttacks: false,
     gpsJamming: false,
     ciiChoropleth: false,
-    resilienceScore: false,
     miningSites: false,
     processingPlants: false,
     commodityPorts: false,

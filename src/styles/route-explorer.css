@@ -247,14 +247,6 @@
 .re-leftrail__label { color: var(--text-dim, #8b949e); }
 .re-leftrail__value { font-weight: 500; }
 
-.re-leftrail__resilience-meta {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  font-size: calc(11px * var(--wm-panel-effective-scale, 1));
-  color: var(--text-dim, #8b949e);
-}
-
 .re-leftrail__placeholder,
 .re-leftrail__empty,
 .re-leftrail__placeholder-text {
@@ -559,25 +551,6 @@
 .re-impact__flag--single_source_critical { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
 .re-impact__flag--single_corridor_critical { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
 .re-impact__flag--diversifiable { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
-
-.re-impact__resilience {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  font-size: calc(14px * var(--wm-panel-effective-scale, 1));
-  margin-bottom: 16px;
-  color: var(--text-dim, #8b949e);
-}
-
-.re-resilience-confidence,
-.re-resilience-interval {
-  font-size: calc(11px * var(--wm-panel-effective-scale, 1));
-  color: var(--text-dim, #8b949e);
-}
-
-.re-resilience-confidence--low {
-  color: var(--semantic-elevated, #f59e0b);
-}
 
 .re-impact__products-title {
   font-size: calc(14px * var(--wm-panel-effective-scale, 1));

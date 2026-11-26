@@ -224,11 +224,9 @@ export interface CountryHistoryPoint {
   date: string;
   capturedAt: number;
   cii?: CountryHistoryScore;
-  resilience?: CountryHistoryScore;
   topEvents: CountryHistoryEvent[];
   keySignals: string[];
   ciiVersionBreak: boolean;
-  resilienceVersionBreak: boolean;
 }
 
 export interface CountryHistoryScore {

@@ -39,7 +39,7 @@ World Monitor uses a multi-tier AI pipeline to process and summarize information
 4. **Threat Classification**: A three-stage pipeline automatically categorizes incoming news by severity and type.
 5. **Country Intelligence Briefs**: Full-page dossiers for any country, combining instability scores, AI analysis, event timelines, and prediction market data.
 
-Browser-side ML features can run locally using lightweight models, with no data leaving the user's device. Server-authoritative APIs publish CII/CRI scores, briefs, forecasts, MCP tools, and cached operational data; cloud AI providers such as OpenRouter are used only for the features that explicitly configure them.
+Browser-side ML features can run locally using lightweight models, with no data leaving the user's device. Server-authoritative APIs publish CII scores, briefs, forecasts, MCP tools, and cached operational data; cloud AI providers such as OpenRouter are used only for the features that explicitly configure them.
 
 ---
 
@@ -176,15 +176,6 @@ situational awareness, not a prediction or a safety rating.
 Scores are classified as: Low (0-30), Normal (31-50), Elevated (51-65),
 High (66-80), Critical (81-100). The full public methodology is
 `/docs/methodology/cii-risk-scores`.
-
-### Country Resilience Index (CRI)
-
-The Country Resilience Index scores the 196-country public rankable universe
-from 0 to 100 across 71 indicators, 21 active dimensions, 6 domains, and 3 pillars. It uses
-official and authoritative sources, transparent goalposts, coverage tracking,
-and imputation taxonomy so analysts can see how much of each score is observed
-versus imputed. CRI complements CII: CII measures near-term stress; CRI measures
-shock-absorption and recovery capacity.
 
 ### Hotspot Detection
 

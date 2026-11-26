@@ -9,8 +9,6 @@ import { h } from '@/utils/dom-utils';
  * feature-flag infrastructure exists, so a code entry plus the normal deploy
  * pipeline is the honest rollback mechanism).
  *
- * crisis-desk is deliberately absent: its preview is the ResilienceWidget
- * locked state that already ships inside `cii` (KTD7 — instrumentation only).
  * The untouched comparison missions (tech-ai-watch, good-news-explorer) and
  * Country Watcher (whose conversion moment is the follow cap) must never gain
  * entries in Release 1 — the before/after read depends on it.

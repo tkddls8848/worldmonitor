@@ -207,7 +207,7 @@ Universal arguments:
 
 ### Spoken mode for voice agents
 
-`response_mode: "spoken"` serves voice and avatar agents that read an answer aloud. It is accepted by `get_country_risk`, `get_world_brief`, `get_chokepoint_status`, `get_forecast_predictions`, `get_prediction_markets`, `get_media_perspective` and `get_resilience_indicators`; each advertises the argument in its `inputSchema` and the envelope branch in its `outputSchema`. Any other tool rejects the argument with `-32602` (`violations[].field === "response_mode"`), as does an unknown mode value. The default, `"full"`, is byte-identical to omitting the argument.
+`response_mode: "spoken"` serves voice and avatar agents that read an answer aloud. It is accepted by `get_country_risk`, `get_world_brief`, `get_chokepoint_status`, `get_forecast_predictions`, `get_prediction_markets`, `get_media_perspective`; each advertises the argument in its `inputSchema` and the envelope branch in its `outputSchema`. Any other tool rejects the argument with `-32602` (`violations[].field === "response_mode"`), as does an unknown mode value. The default, `"full"`, is byte-identical to omitting the argument.
 
 The response replaces the documented payload with:
 

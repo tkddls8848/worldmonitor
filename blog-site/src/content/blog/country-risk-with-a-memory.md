@@ -1,15 +1,15 @@
 ---
 title: "Country risk with a memory"
-description: "How daily country snapshots help analysts compare CII, resilience and selected headlines without hiding missing days or formula changes."
+description: "How daily country snapshots help analysts compare CII and selected headlines without hiding missing days or formula changes."
 metaTitle: "Daily country history and risk trends | World Monitor"
-keywords: "country risk history, CII timeline, resilience history, daily country snapshots"
+keywords: "country risk history, CII timeline, daily country snapshots"
 audience: "Country-risk analysts and monitoring teams"
 heroImage: "/blog/images/blog/country-risk-monitoring-workflow-for-analysts.jpg"
 pubDate: "2026-10-19"
 ---
 
 A current score tells you where to look. A dated record helps you explain what changed.
-World Monitor's daily country history pairs CII and resilience observations with selected source-linked headlines.
+World Monitor's daily country history pairs CII observations with selected source-linked headlines.
 History starts when the daily archive worker is activated. An empty archive means no daily snapshots are available yet.
 
 Open a country's detail panel and select a date in **Daily country history**.
@@ -17,7 +17,6 @@ The panel shows the available scores, their formula identities and the headlines
 Follow a headline link to inspect the publisher's reporting.
 
 The two score lines answer different questions. Higher CII means more instability.
-Higher resilience means more capacity to withstand shocks.
 Reading both can help frame a question, but adding them together would produce a number with no defined meaning.
 
 Missing days stay missing. The chart breaks its lines when a score is unavailable or its formula changes.

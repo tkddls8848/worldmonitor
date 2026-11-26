@@ -199,24 +199,18 @@
                     ]
                   },
                   {
-                    "group": "Country risk & resilience",
+                    "group": "Country risk",
                     "pages": [
                       "country-instability-index",
                       "methodology/cii-risk-scores",
                       "methodology/country-history",
-                      "methodology/country-resilience-index",
-                      "methodology/resilience-indicators",
-                      "methodology/resilience-indicator-licensing",
                       "methodology/known-limitations",
-                      "methodology/financial-system-exposure",
-                      "methodology/swf-classification-rubric",
                       "methodology/five-factor-scorecard"
                     ]
                   },
                   {
                     "group": "Economy & supply",
                     "pages": [
-                      "methodology/demographics-capability",
                       "methodology/food-stocks",
                       "methodology/capital-flows",
                       "methodology/defense-industrial-base",
@@ -535,10 +529,6 @@
                   {
                     "group": "Infrastructure",
                     "openapi": "api/InfrastructureService.openapi.yaml"
-                  },
-                  {
-                    "group": "Resilience",
-                    "openapi": "api/ResilienceService.openapi.yaml"
                   }
                 ]
               },
@@ -804,16 +794,12 @@
                       "zh/country-instability-index",
                       "zh/methodology/cii-risk-scores",
                       "zh/methodology/country-history",
-                      "zh/methodology/country-resilience-index",
-                      "zh/methodology/resilience-indicators",
-                      "zh/methodology/resilience-indicator-licensing",
                       "zh/methodology/five-factor-scorecard"
                     ]
                   },
                   {
                     "group": "经济与供应",
                     "pages": [
-                      "zh/methodology/demographics-capability",
                       "zh/methodology/food-stocks",
                       "zh/methodology/capital-flows",
                       "zh/methodology/defense-industrial-base",
@@ -1132,10 +1118,6 @@
                   {
                     "group": "基础设施",
                     "openapi": "api/InfrastructureService.openapi.yaml"
-                  },
-                  {
-                    "group": "韧性",
-                    "openapi": "api/ResilienceService.openapi.yaml"
                   }
                 ]
               },

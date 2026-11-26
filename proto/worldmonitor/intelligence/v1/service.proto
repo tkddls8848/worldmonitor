@@ -65,7 +65,7 @@ service IntelligenceService {
     option (sebuf.http.config) = {path: "/classify-event", method: HTTP_METHOD_GET};
   }
 
-  // GetCountryHistory returns daily snapshots of a country's CII and resilience scores, top events, and key signals, with depth set by the caller's plan.
+  // GetCountryHistory returns daily snapshots of a country's CII score, top events, and key signals, with depth set by the caller's plan.
   rpc GetCountryHistory(GetCountryHistoryRequest) returns (GetCountryHistoryResponse) {
     option (sebuf.http.config) = {
       path: "/get-country-history"

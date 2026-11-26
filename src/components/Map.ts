@@ -703,7 +703,7 @@ export class MapComponent {
       'positiveEvents', 'kindness', 'happiness', 'speciesRecovery', 'renewableInstallations',
     ];
     // Energy variant — SVG/mobile fallback. Only include keys that actually render
-    // in this file (commodityPorts/climate/tradeRoutes/resilienceScore do not,
+    // in this file (commodityPorts/climate/tradeRoutes do not,
     // so they're omitted). Mirrors VARIANT_LAYER_ORDER.energy in
     // src/config/map-layer-definitions.ts but filtered to the SVG-capable subset.
     const energyLayers: (keyof MapLayers)[] = [
@@ -721,7 +721,7 @@ export class MapComponent {
     ];
     // Commodity variant — SVG/mobile fallback. Only include keys that actually
     // render in this file (miningSites/processingPlants/commodityPorts/climate/
-    // tradeRoutes/resilienceScore do not, so they're omitted). Mirrors
+    // tradeRoutes do not, so they're omitted). Mirrors
     // VARIANT_LAYER_ORDER.commodity in src/config/map-layer-definitions.ts but
     // filtered to the SVG-capable subset. COMMODITY_MAP_LAYERS turns all eleven
     // on; MAX_SVG_LAYERS = 9 then disables the last two active buttons on first

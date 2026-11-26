@@ -87,9 +87,9 @@ export class CountryHistory {
   }
 
   private renderDetail(detail: HTMLElement, point: CountryHistoryPoint): void {
-    const scores = [point.cii ? `CII ${point.cii.score.toFixed(0)} · ${point.cii.version}` : t('countryHistory.ciiMissing'), point.resilience ? `${t('countryHistory.resilience')} ${point.resilience.score.toFixed(0)} · ${point.resilience.version}` : t('countryHistory.resilienceMissing')];
-    detail.replaceChildren(this.element('strong', point.date), this.element('p', scores.join(' / ')));
-    if (point.ciiVersionBreak || point.resilienceVersionBreak) detail.append(this.element('p', t('countryHistory.break'), 'country-history-notice'));
+    const score = point.cii ? `CII ${point.cii.score.toFixed(0)} · ${point.cii.version}` : t('countryHistory.ciiMissing');
+    detail.replaceChildren(this.element('strong', point.date), this.element('p', score));
+    if (point.ciiVersionBreak) detail.append(this.element('p', t('countryHistory.break'), 'country-history-notice'));
     if (point.keySignals.includes('news_partial')) detail.append(this.element('p', t('countryHistory.partial')));
     const list = this.element('ul');
     for (const event of point.topEvents) {
@@ -114,34 +114,32 @@ export class CountryHistory {
     svg.setAttribute('aria-label', t('countryHistory.chart'));
     const first = Date.parse(points[0]!.date), last = Date.parse(points[points.length - 1]!.date);
     const x = (point: CountryHistoryPoint) => last === first ? 300 : 10 + (Date.parse(point.date) - first) / (last - first) * 580;
-    for (const kind of ['cii', 'resilience'] as const) {
-      let previous: CountryHistoryPoint | null = null;
-      for (const point of points) {
-        const score = point[kind];
-        if (!score) { previous = null; continue; }
-        const prior = previous?.[kind];
-        const broken = kind === 'cii' ? point.ciiVersionBreak : point.resilienceVersionBreak;
-        if (previous && prior && !broken) {
-          const path = document.createElementNS(ns, 'path');
-          path.setAttribute('d', `M${x(previous)},${100 - prior.score * .9} L${x(point)},${100 - score.score * .9}`);
-          path.setAttribute('class', `country-history-${kind}`);
-          svg.append(path);
-        }
-        const circle = document.createElementNS(ns, 'circle');
-        circle.setAttribute('cx', String(x(point))); circle.setAttribute('cy', String(100 - score.score * .9));
-        circle.setAttribute('r', point.topEvents.length ? '4' : '2');
-        circle.setAttribute('class', `country-history-${kind}`);
-        circle.setAttribute('role', 'button');
-        circle.setAttribute('tabindex', '-1');
-        circle.setAttribute('aria-label', t('countryHistory.selectDate', { date: point.date, count: point.topEvents.length }));
-        const selectDate = () => this.mount.querySelector<HTMLButtonElement>(`[data-history-date="${point.date}"]`)?.click();
-        circle.addEventListener('click', selectDate);
-        circle.addEventListener('keydown', event => {
-          if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectDate(); }
-        });
-        svg.append(circle);
-        previous = point;
+    let previous: CountryHistoryPoint | null = null;
+    for (const point of points) {
+      const score = point.cii;
+      if (!score) { previous = null; continue; }
+      const prior = previous?.cii;
+      const broken = point.ciiVersionBreak;
+      if (previous && prior && !broken) {
+        const path = document.createElementNS(ns, 'path');
+        path.setAttribute('d', `M${x(previous)},${100 - prior.score * .9} L${x(point)},${100 - score.score * .9}`);
+        path.setAttribute('class', 'country-history-cii');
+        svg.append(path);
       }
+      const circle = document.createElementNS(ns, 'circle');
+      circle.setAttribute('cx', String(x(point))); circle.setAttribute('cy', String(100 - score.score * .9));
+      circle.setAttribute('r', point.topEvents.length ? '4' : '2');
+      circle.setAttribute('class', 'country-history-cii');
+      circle.setAttribute('role', 'button');
+      circle.setAttribute('tabindex', '-1');
+      circle.setAttribute('aria-label', t('countryHistory.selectDate', { date: point.date, count: point.topEvents.length }));
+      const selectDate = () => this.mount.querySelector<HTMLButtonElement>(`[data-history-date="${point.date}"]`)?.click();
+      circle.addEventListener('click', selectDate);
+      circle.addEventListener('keydown', event => {
+        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectDate(); }
+      });
+      svg.append(circle);
+      previous = point;
     }
     return svg;
   }

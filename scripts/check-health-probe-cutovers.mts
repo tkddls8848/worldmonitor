@@ -1,6 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { randomUUID } from 'node:crypto';
-import { unlinkSync, writeFileSync } from 'node:fs';
+import { registerHooks } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
 const HEALTH_URL = new URL('../api/health.js', import.meta.url);
@@ -166,24 +165,43 @@ function resolveCommit(ref: string): string {
 }
 
 /**
- * Load the base revision's exported SEED_META registry in an isolated temporary module.
+ * Load the base registry and its sibling API helpers from the same revision.
  */
 async function readBaseSeedMeta(ref: string) {
   const commit = resolveCommit(ref);
-  const source = execFileSync('git', ['show', `${commit}:api/health.js`], {
-    encoding: 'utf8',
-    maxBuffer: 10 * 1024 * 1024,
+  const apiUrl = new URL('./', HEALTH_URL);
+  const fromBase = (url: URL) => {
+    url.searchParams.set('health-cutover-base', commit);
+    return url.href;
+  };
+  const hooks = registerHooks({
+    resolve(specifier, context, nextResolve) {
+      const parent = context.parentURL ? new URL(context.parentURL) : null;
+      if (parent?.searchParams.get('health-cutover-base') === commit && /^\.\/_[-\w]+\.js$/.test(specifier)) {
+        return { url: fromBase(new URL(specifier, parent)), shortCircuit: true };
+      }
+      return nextResolve(specifier, context);
+    },
+    load(url, context, nextLoad) {
+      if (!url.startsWith(apiUrl.href)) return nextLoad(url, context);
+      const moduleUrl = new URL(url);
+      if (moduleUrl.searchParams.get('health-cutover-base') !== commit) return nextLoad(url, context);
+      const filename = moduleUrl.pathname.slice(apiUrl.pathname.length);
+      const source = execFileSync('git', ['show', `${commit}:api/${filename}`], {
+        encoding: 'utf8',
+        maxBuffer: 10 * 1024 * 1024,
+      });
+      return { format: 'module', source, shortCircuit: true };
+    },
   });
-  const temporaryUrl = new URL(`../api/.health-cutover-base-${randomUUID()}.mjs`, import.meta.url);
-  writeFileSync(temporaryUrl, source, { flag: 'wx' });
   try {
-    const module = await import(temporaryUrl.href);
+    const module = await import(fromBase(new URL(HEALTH_URL)));
     if (!isRecord(module.__testing__) || !isRecord(module.__testing__.SEED_META)) {
       throw new Error(`api/health.js at ${commit} does not export __testing__.SEED_META`);
     }
     return { commit, seedMeta: module.__testing__.SEED_META };
   } finally {
-    unlinkSync(temporaryUrl);
+    hooks.deregister();
   }
 }
 

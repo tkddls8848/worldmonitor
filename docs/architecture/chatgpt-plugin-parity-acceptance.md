@@ -31,7 +31,6 @@ The website and acceptance connection's tiers have not been proved equal. These 
 | ID | Surface | Existing data/render owner | Required proof | Current verdict |
 |---|---|---|---|---|
 | C01 | CII summary | Cached risk score, `CountryDeepDivePanel-cii` | Same score, components, band, trend, observation time; no zero on outage | Shared renderer and host risk read; outage fixture shows unavailable; live score comparison open |
-| C02 | Resilience summary | `ResilienceWidget`, resilience service | Same domains, confidence, imputation/staleness and gate states | Shared widget and scoped source; denial fixture verified; live domain comparison open |
 | C03 | Assessment | Country AI endpoint, `updateBrief` | Exact accepted assessment, citations and generation time; unsafe claims withheld | Shared assessment renderer; server quality risk remains open |
 | C04 | Facts | `getCountryFacts`, `updateCountryFacts` | Same leadership, capital, population, area and source context | Shared renderer; US/UA facts, switching and lowercase input normalization verified with fixtures |
 | C05 | Five factors | Scorecard service and renderer | All five factors and exact underlying measurements, keyboard tabs | Shared renderer; exact factor evidence fixture verified |

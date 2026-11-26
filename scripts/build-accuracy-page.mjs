@@ -1416,7 +1416,6 @@ function relatedSection(baseUrl, tpl) {
       <ul class="related">
         <li><a href="/blog/posts/ai-forecast-accuracy-brier-scorecard-worldmonitor/">Why we publish the ledger</a></li>
         <li><a href="/country-instability-index/">Country Instability Index</a></li>
-        <li><a href="/countries/">Country Resilience Index</a></li>
         <li><a href="/crises/">Crisis trackers</a></li>
         <li><a href="/docs/methodology/cii-risk-scores">CII methodology</a></li>
       </ul>`;

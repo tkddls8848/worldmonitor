@@ -17,7 +17,7 @@ const jsonLd = {
   url: pageUrl,
   name: 'World Monitor Global Intelligence Glossary',
   description:
-    'Definitions of the global-intelligence, OSINT, resilience-scoring, and maritime-chokepoint terms used across World Monitor.',
+    'Definitions of the global-intelligence, OSINT, and maritime-chokepoint terms used across World Monitor.',
   inLanguage: 'en-US',
   isPartOf: { '@id': 'https://www.worldmonitor.app/#website' },
   publisher: { '@id': 'https://www.worldmonitor.app/#organization' },
@@ -30,7 +30,7 @@ const jsonLd = {
     '@type': 'DefinedTermSet',
     name: 'World Monitor Global Intelligence Glossary',
     description:
-      'Definitions of the global-intelligence, OSINT, resilience-scoring, and maritime-chokepoint terms used across World Monitor.',
+      'Definitions of the global-intelligence, OSINT, and maritime-chokepoint terms used across World Monitor.',
     url: pageUrl,
     inLanguage: 'en-US',
     hasDefinedTerm: sorted.map((t) => ({
@@ -57,9 +57,9 @@ const breadcrumbLd = {
 
 <Base
   title="Global Intelligence Glossary"
-  description="Plain-English definitions of global intelligence, OSINT, country risk, resilience, detection, and maritime chokepoints for World Monitor readers and analysts."
+  description="Plain-English definitions of global intelligence, OSINT, country risk, detection, and maritime chokepoints for World Monitor readers and analysts."
   metaTitle="Global Intelligence & OSINT Glossary | World Monitor"
-  keywords="OSINT glossary, country instability index, country resilience index, maritime chokepoint, geographic convergence, focal point detection"
+  keywords="OSINT glossary, country instability index, maritime chokepoint, geographic convergence, focal point detection"
   jsonLd={jsonLd}
   breadcrumbLd={breadcrumbLd}
 >

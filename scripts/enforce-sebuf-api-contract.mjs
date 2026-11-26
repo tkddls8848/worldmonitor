@@ -98,7 +98,8 @@ const allApiFiles = walk(API_DIR).filter(isSourceFile);
 // Filter out gitignored paths in one batch.
 function filterIgnored(files) {
   if (files.length === 0) return [];
-  const relPaths = files.map((f) => relative(ROOT, f)).join('\n');
+  const gitPath = (file) => relative(ROOT, file).split(sep).join('/');
+  const relPaths = files.map(gitPath).join('\n');
   let ignored = new Set();
   try {
     // --stdin returns the ignored paths (one per line). Exit 0 = some matched,
@@ -108,7 +109,7 @@ function filterIgnored(files) {
       encoding: 'utf8',
       stdio: ['pipe', 'pipe', 'pipe'],
     });
-    ignored = new Set(output.split('\n').filter(Boolean));
+    ignored = new Set(output.split(/\r?\n/).filter(Boolean));
   } catch (err) {
     // exit code 1 = no paths ignored; treat as empty.
     if (err.status === 1) {
@@ -117,7 +118,7 @@ function filterIgnored(files) {
       throw err;
     }
   }
-  return files.filter((f) => !ignored.has(relative(ROOT, f)));
+  return files.filter((f) => !ignored.has(gitPath(f)));
 }
 
 const candidateFiles = filterIgnored(allApiFiles);

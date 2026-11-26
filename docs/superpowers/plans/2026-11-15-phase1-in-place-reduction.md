@@ -478,7 +478,6 @@
   - `server/_shared/`: `premium-check`, `pro-entitlement`, `entitlement-check`, `entitlement-coverage`, `embed-entitlement`, `embed-session`, `auth-session`, `user-api-key`, `api-key-rate-limit`, `account-rate-limit`, `rate-limit`, `direct-llm-quota`, `backtest-stock-quota`, `turnstile`, `channel-oauth-state`, `notify-fields`, `internal-auth`, `pro-mcp-gate`, `pro-mcp-token`, `mcp-internal-hmac`, `usage-identity`, `high-usage-alarm`, `desktop-key-principal`, `desktop-key-meter`, `idempotency`, `sub-request-admission`, `api-only-paths`, `embed-key`
   - `entitlement-check`를 import하는 `server/error-mapper.ts`, `_shared/ai-routing-policy.ts`, `_shared/travel-risk-export.ts`에서 그 의존을 지운다.
   - 의존을 지우는 방식: 권한 오류 타입은 쓰이는 곳이 없어지면 함께 지우고, 라우팅 정책은 사용자 대신 기본 정책을 쓴다.
-  - `get-resilience-ranking.ts:13`의 `internal-auth` 사용은 지우고, 시드 새로 고침 분기는 항상 허용한다.
 - Delete: `scripts/generate-entitlement-crosswalk.mjs`와 `entitlement:crosswalk*` 스크립트. `scripts/lib/openapi-codegen.mjs`의 `entitlement-check`·`premium-paths` 읽기 부분을 지우되, OpenAPI 생성 자체는 남긴다.
 - Delete: `scripts/company-monitoring-worker.mjs`, `scripts/lib/company-monitoring-*`, `company-monitoring:*` 스크립트와 테스트
   - 설계 문서 8.2에 다음을 추가한다(설계자 판단, 소유자가 고칠 수 있음). 회사 모니터링은 사용자가 지정한 회사를 X·Exa 유료 API로 살피는 사용자별 기능이고, 작업 선택·임대·기록을 Convex가 맡는다. 전 세계 공통 피드가 아니므로 데이터 폭 축소로 보지 않는다.

@@ -924,7 +924,7 @@ function emptyAuxiliarySources(): AuxiliarySources {
 
 // Iran-events domain sunset (war ended 2026-07). Default OFF: the strike feed
 // no longer contributes to CII/risk scores. Set IRAN_EVENTS_ENABLED=true to
-// restore. Mirrors the *_ENABLED env idiom in resilience/v1/_shared.ts.
+// restore.
 const IRAN_EVENTS_ENABLED = (process.env.IRAN_EVENTS_ENABLED ?? 'false').toLowerCase() === 'true';
 
 /** A Redis key the build consumes. `raw` is explicit because seeder keys are bare and app-owned keys are prefixed (#7674). */

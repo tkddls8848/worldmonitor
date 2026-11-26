@@ -8,22 +8,6 @@
   "authGuide": "https://www.worldmonitor.app/auth.md",
   "operations": [
     {
-      "operationId": "GetResilienceScore",
-      "method": "GET",
-      "path": "/api/resilience/v1/get-resilience-score",
-      "summary": "GetResilienceScore",
-      "fixture": "https://www.worldmonitor.app/sandbox/get-resilience-score.json",
-      "productionUrl": "https://api.worldmonitor.app/api/resilience/v1/get-resilience-score"
-    },
-    {
-      "operationId": "GetResilienceRanking",
-      "method": "GET",
-      "path": "/api/resilience/v1/get-resilience-ranking",
-      "summary": "GetResilienceRanking",
-      "fixture": "https://www.worldmonitor.app/sandbox/get-resilience-ranking.json",
-      "productionUrl": "https://api.worldmonitor.app/api/resilience/v1/get-resilience-ranking"
-    },
-    {
       "operationId": "GetCountryRisk",
       "method": "GET",
       "path": "/api/intelligence/v1/get-country-risk",

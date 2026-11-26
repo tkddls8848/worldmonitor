@@ -26,8 +26,6 @@ export type CountryBriefEvidenceKind =
   | 'advisory'
   | 'airport'
   | 'sanctions'
-  | 'resilience'
-  | 'resilience-dimension'
   | 'energy'
   | 'chokepoint'
   | 'market'
@@ -62,11 +60,6 @@ export interface CountryAirportNotam {
 }
 
 const ADVISORIES_KEY = 'intelligence:advisories:v1';
-// Mirrors RESILIENCE_SCORE_CACHE_PREFIX in resilience/v1/_shared.ts. Importing
-// it would pull the resilience scoring engine into the intelligence edge
-// bundle; tests/resilience-cache-keys-health-sync.test.mts fails this file on
-// the next prefix bump instead.
-const RESILIENCE_SCORE_CACHE_PREFIX = 'resilience:score:v30:';
 const SANCTIONS_COUNTS_KEY = 'sanctions:country-counts:v1';
 // The counts map carries no timestamp of its own; the seeder writes this meta
 // record beside it in the same publish.
@@ -83,14 +76,13 @@ const SITE_ORIGIN = 'https://www.worldmonitor.app';
 export const FORECAST_SCORECARD_URL = `${SITE_ORIGIN}/accuracy/`;
 
 const HOUR_MS = 60 * 60 * 1000;
-const DAY_MS = 24 * HOUR_MS;
 const MAX_FUTURE_SKEW_MS = 5 * 60 * 1000;
 
 // Oldest as-of each kind may carry, roughly twice its writer's cadence: past
 // that the writer has missed runs and the value is no longer "current". The
 // CII stale key is rewritten on every score compute (hourly cron, 1h TTL);
 // advisories run hourly; sanctions every 6h but a full OFAC+SEMA pull can slip
-// a cycle; markets every 30 min; forecasts hourly with a 6h TTL; resilience
+// a cycle, markets every 30 minutes, and forecasts hourly with a 6h TTL.
 // statics refresh weekly, and dataVersion is a date, so allow two weeks.
 export const EVIDENCE_MAX_AGE_MS = Object.freeze({
   cii: 2 * HOUR_MS,
@@ -99,12 +91,10 @@ export const EVIDENCE_MAX_AGE_MS = Object.freeze({
   // may describe an airport that has since reopened.
   airport: 2 * HOUR_MS,
   sanctions: 36 * HOUR_MS,
-  resilience: 14 * DAY_MS,
   market: 6 * HOUR_MS,
   forecast: 48 * HOUR_MS,
 });
 
-const MAX_WEAKEST_DIMENSIONS = 3;
 const MAX_MARKETS = 5;
 const MAX_FORECASTS = 3;
 const MAX_AIRPORTS = 3;
@@ -120,40 +110,6 @@ export const COUNTRY_BRIEF_ADVISORY_LABELS: Readonly<Record<string, string>> = O
   caution: 'Exercise Increased Caution',
   normal: 'Exercise Normal Precautions',
 });
-
-// Dimension display names from the resilience pages (DIMENSION_LABELS in the
-// removed scripts/build-crawlable-corpus.mjs; tests/country-brief-evidence.test.mts
-// pins the last published table).
-export const RESILIENCE_DIMENSION_LABELS: Readonly<Record<string, string>> = Object.freeze({
-  macroFiscal: 'Macro-fiscal position',
-  currencyExternal: 'Currency and external balance',
-  tradePolicy: 'Trade policy resilience',
-  financialSystemExposure: 'Financial-system exposure',
-  cyberDigital: 'Cyber and digital capacity',
-  logisticsSupply: 'Logistics and supply chains',
-  infrastructure: 'Core infrastructure',
-  energy: 'Energy system resilience',
-  governanceInstitutional: 'Governance and institutions',
-  socialCohesion: 'Social cohesion',
-  borderSecurity: 'Border security',
-  informationCognitive: 'Information environment',
-  education: 'Education capacity',
-  healthPublicService: 'Health and public services',
-  foodWater: 'Food and water security',
-  fiscalSpace: 'Fiscal space',
-  reserveAdequacy: 'Reserve adequacy',
-  externalDebtCoverage: 'External-debt coverage',
-  importConcentration: 'Import concentration',
-  stateContinuity: 'State continuity',
-  fuelStockDays: 'Fuel-stock buffer',
-  liquidReserveAdequacy: 'Liquid-reserve adequacy',
-  sovereignFiscalBuffer: 'Sovereign fiscal buffer',
-});
-
-// The corpus hides these (RETIRED_DIMENSION_IDS), so the brief must too.
-const RETIRED_DIMENSION_IDS = new Set(['fuelStockDays', 'reserveAdequacy']);
-
-const RESILIENCE_LEVELS = new Set(['high', 'medium', 'low']);
 
 const MARKET_VENUES: Readonly<Record<string, string>> = Object.freeze({
   polymarket: 'Polymarket',
@@ -352,63 +308,6 @@ function sanctionsEvidence(raw: unknown, meta: unknown, code: string, name: stri
 
 // Mirrors the corpus's hasObservedValue: an empty imputationClass is the
 // allow-list for "observed", so a new withheld class fails closed.
-function isObservedDimension(dimension: Json): boolean {
-  const coverage = finite(dimension.coverage);
-  return typeof dimension.id === 'string'
-    && !RETIRED_DIMENSION_IDS.has(dimension.id)
-    && finite(dimension.score) !== null
-    && coverage !== null
-    && coverage > 0
-    && String(dimension.imputationClass ?? '') === '';
-}
-
-function resilienceEvidence(raw: unknown, name: string, nowMs: number): EvidenceDraft[] {
-  if (!isObject(raw)) return [];
-  const dataVersion = typeof raw.dataVersion === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.dataVersion)
-    ? Date.parse(`${raw.dataVersion}T00:00:00Z`)
-    : null;
-  if (!isFresh(dataVersion, EVIDENCE_MAX_AGE_MS.resilience, nowMs)) return [];
-  const asOf = new Date(dataVersion).toISOString();
-  const date = formatDate(dataVersion);
-  const items: EvidenceDraft[] = [];
-
-  const overall = finite(raw.overallScore);
-  const level = typeof raw.level === 'string' ? raw.level : '';
-  // An unpublished headline (headlineEligible false) is shown as
-  // "unpublished" on the page, so the brief cannot cite its score.
-  if (overall !== null && overall >= 0 && overall <= 100 && RESILIENCE_LEVELS.has(level) && raw.headlineEligible !== false) {
-    const value = formatScore(overall);
-    items.push({
-      kind: 'resilience',
-      label: 'Country Resilience Index',
-      value: `${value} (${level})`,
-      factText: `${name} has a Country Resilience Index score of ${value}, a ${level} resilience level, as of ${date}.`,
-      asOf,
-    });
-  }
-
-  const dimensions = (Array.isArray(raw.domains) ? raw.domains : [])
-    .flatMap((domain) => (isObject(domain) && Array.isArray(domain.dimensions) ? domain.dimensions : []))
-    .filter((dimension): dimension is Json => isObject(dimension) && isObservedDimension(dimension))
-    .filter((dimension) => RESILIENCE_DIMENSION_LABELS[dimension.id as string] !== undefined)
-    .sort((left, right) => (left.score as number) - (right.score as number) || String(left.id).localeCompare(String(right.id)))
-    .slice(0, MAX_WEAKEST_DIMENSIONS);
-  for (const dimension of dimensions) {
-    const label = RESILIENCE_DIMENSION_LABELS[dimension.id as string]!;
-    const value = formatScore(dimension.score as number);
-    items.push({
-      kind: 'resilience-dimension',
-      label,
-      value,
-      factText: `${label} is one of ${name}'s weakest observed Country Resilience Index dimensions, at ${value} as of ${date}.`,
-      asOf,
-    });
-  }
-  return items;
-}
-
-// Reuses the handler's own resolveEnergyImportDependency read, so the brief
-// and its cache key agree on the energy year.
 function energyEvidence(energy: ResolvedEnergyImportDependency, name: string): EvidenceDraft[] {
   if (!energy?.available || finite(energy.value) === null || !Number.isInteger(energy.year) || energy.year <= 0) return [];
   const value = formatPercent(energy.value);
@@ -573,11 +472,10 @@ export async function buildCountryBriefEvidence(
     readKey(ADVISORIES_KEY),
     readKey(SANCTIONS_COUNTS_KEY),
     readKey(SANCTIONS_COUNTS_META_KEY),
-    readKey(`${RESILIENCE_SCORE_CACHE_PREFIX}${code}`),
     readKey(MARKETS_COUNTRY_INDEX_KEY),
     readKey(FORECASTS_KEY),
   ]);
-  const [airportNotams, imageryFlags, cii, advisories, sanctions, sanctionsMeta, resilience, markets, forecasts] = reads
+  const [airportNotams, imageryFlags, cii, advisories, sanctions, sanctionsMeta, markets, forecasts] = reads
     .map((read) => (read.status === 'fulfilled' ? read.value : null));
 
   // Each builder is isolated too: one source's unexpected shape must not
@@ -587,7 +485,6 @@ export async function buildCountryBriefEvidence(
     () => advisoryEvidence(advisories, code, name, nowMs),
     () => airportEvidence(Array.isArray(airportNotams) ? airportNotams as CountryAirportNotam[] : [], name),
     () => sanctionsEvidence(sanctions, sanctionsMeta, code, name, nowMs),
-    () => resilienceEvidence(resilience, name, nowMs),
     () => energyEvidence(opts.energyImportDependency, name),
     () => chokepointEvidence(code, name, nowMs),
     () => marketEvidence(markets, code, name, nowMs),

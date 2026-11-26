@@ -105,7 +105,6 @@ export function classifySearchMatchEffect(
       return panelId && isPanelEnabled(panelId) ? 'view-state' : 'persistent';
     }
     case 'view':
-      if (action === 'resilience') return 'persistent';
       if (action === 'dark' || action === 'light') return 'persistent';
       if (EXTERNAL_NAVIGATION_VIEW_ACTIONS.has(action)) return 'external-navigation';
       return 'persistent';

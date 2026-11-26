@@ -15,7 +15,6 @@ import {
 import type { ResolvedEnergyImportDependency } from '../server/worldmonitor/intelligence/v1/_energy-import-dependency.ts';
 import { UNAVAILABLE_ENERGY_IMPORT_DEPENDENCY } from '../server/worldmonitor/intelligence/v1/_energy-import-dependency.ts';
 import { CII_RISK_SCORE_CACHE_KEYS } from '../server/_shared/cache-keys.ts';
-import { RESILIENCE_SCORE_CACHE_PREFIX } from '../server/worldmonitor/resilience/v1/_shared.ts';
 import { CHOKEPOINT_REGISTRY } from '../server/_shared/chokepoint-registry.ts';
 import { instabilityBand, CII_SCORE_BANDS } from '../shared/cii-band.js';
 import { CHOKEPOINT_COUNTRY_CODES } from '../shared/chokepoint-countries.js';
@@ -38,7 +37,6 @@ const SANCTIONS_KEY = 'sanctions:country-counts:v1';
 const SANCTIONS_META_KEY = 'seed-meta:sanctions:country-counts';
 const MARKETS_KEY = 'prediction:markets-country-index:v1';
 const FORECASTS_KEY = 'forecast:predictions-bootstrap:v1';
-const RESILIENCE_KEY_IR = `${RESILIENCE_SCORE_CACHE_PREFIX}IR`;
 
 // A CII component value that must never leak into a public evidence item.
 const CII_COMPONENT_SENTINEL = 13.37;
@@ -77,39 +75,6 @@ function fullFixtures(): Record<string, unknown> {
     },
     [SANCTIONS_KEY]: { IR: 1234, EG: 12 },
     [SANCTIONS_META_KEY]: { fetchedAt: NOW - 3 * HOUR, recordCount: 2 },
-    [RESILIENCE_KEY_IR]: {
-      countryCode: 'IR',
-      overallScore: 38.2,
-      level: 'low',
-      headlineEligible: true,
-      dataVersion: '2026-09-20',
-      domains: [
-        {
-          id: 'economic',
-          score: 30,
-          weight: 0.2,
-          dimensions: [
-            { id: 'macroFiscal', score: 22.5, coverage: 0.8, observedWeight: 1, imputedWeight: 0, imputationClass: '' },
-            // Lowest score of all, but withheld: no reading, never "weakest".
-            { id: 'currencyExternal', score: 2, coverage: 0, observedWeight: 0, imputedWeight: 1, imputationClass: 'source-failure' },
-            { id: 'tradePolicy', score: 30.04, coverage: 0.6, observedWeight: 1, imputedWeight: 0, imputationClass: '' },
-          ],
-        },
-        {
-          id: 'governance',
-          score: 25,
-          weight: 0.2,
-          dimensions: [
-            { id: 'energy', score: 3, coverage: 0.5, observedWeight: 0, imputedWeight: 1, imputationClass: 'not-applicable' },
-            { id: 'borderSecurity', score: 4, coverage: 0.9, observedWeight: 0, imputedWeight: 1, imputationClass: 'stable-absence' },
-            { id: 'governanceInstitutional', score: 18, coverage: 1, observedWeight: 1, imputedWeight: 0, imputationClass: '' },
-            { id: 'socialCohesion', score: 40, coverage: 1, observedWeight: 1, imputedWeight: 0, imputationClass: '' },
-            // Retired dimension: the corpus never shows it.
-            { id: 'fuelStockDays', score: 1, coverage: 1, observedWeight: 1, imputedWeight: 0, imputationClass: '' },
-          ],
-        },
-      ],
-    },
     [MARKETS_KEY]: {
       fetchedAt: NOW - 20 * 60 * 1000,
       countries: {
@@ -221,38 +186,6 @@ const EXPECTED_IRAN: CountryBriefEvidenceItem[] = [
   },
   {
     id: 'E4',
-    kind: 'resilience',
-    label: 'Country Resilience Index',
-    value: '38.2 of 100 (low)',
-    factText: 'Iran has a Country Resilience Index score of 38.2 of 100, a low resilience level, as of Sep 20, 2026.',
-    asOf: '2026-09-20T00:00:00.000Z',
-  },
-  {
-    id: 'E5',
-    kind: 'resilience-dimension',
-    label: 'Governance and institutions',
-    value: '18 of 100',
-    factText: "Governance and institutions is one of Iran's weakest observed Country Resilience Index dimensions, at 18 of 100 as of Sep 20, 2026.",
-    asOf: '2026-09-20T00:00:00.000Z',
-  },
-  {
-    id: 'E6',
-    kind: 'resilience-dimension',
-    label: 'Macro-fiscal position',
-    value: '22.5 of 100',
-    factText: "Macro-fiscal position is one of Iran's weakest observed Country Resilience Index dimensions, at 22.5 of 100 as of Sep 20, 2026.",
-    asOf: '2026-09-20T00:00:00.000Z',
-  },
-  {
-    id: 'E7',
-    kind: 'resilience-dimension',
-    label: 'Trade policy resilience',
-    value: '30 of 100',
-    factText: "Trade policy resilience is one of Iran's weakest observed Country Resilience Index dimensions, at 30 of 100 as of Sep 20, 2026.",
-    asOf: '2026-09-20T00:00:00.000Z',
-  },
-  {
-    id: 'E8',
     kind: 'energy',
     label: 'Net energy import dependency',
     value: '-46%',
@@ -260,7 +193,7 @@ const EXPECTED_IRAN: CountryBriefEvidenceItem[] = [
     asOf: '2023-12-31T00:00:00.000Z',
   },
   {
-    id: 'E9',
+    id: 'E5',
     kind: 'chokepoint',
     label: 'Chokepoint tracker',
     value: 'Strait of Hormuz',
@@ -269,7 +202,7 @@ const EXPECTED_IRAN: CountryBriefEvidenceItem[] = [
     url: 'https://www.worldmonitor.app/chokepoints/strait-of-hormuz/',
   },
   {
-    id: 'E10',
+    id: 'E6',
     kind: 'market',
     label: 'Polymarket prediction market',
     value: '23%',
@@ -278,7 +211,7 @@ const EXPECTED_IRAN: CountryBriefEvidenceItem[] = [
     url: 'https://polymarket.com/event/iran-deal',
   },
   {
-    id: 'E11',
+    id: 'E7',
     kind: 'market',
     label: 'Kalshi prediction market',
     value: '8%',
@@ -286,7 +219,7 @@ const EXPECTED_IRAN: CountryBriefEvidenceItem[] = [
     asOf: new Date(NOW - 20 * 60 * 1000).toISOString(),
   },
   {
-    id: 'E12',
+    id: 'E8',
     kind: 'forecast',
     label: 'World Monitor forecast',
     value: '62%',
@@ -331,7 +264,7 @@ describe('buildCountryBriefEvidence (U2)', () => {
     const items = await build(t, store);
     assert.deepEqual(
       [...new Set(items.map((item) => item.kind))],
-      ['sanctions', 'resilience', 'resilience-dimension', 'energy', 'chokepoint', 'forecast'],
+      ['sanctions', 'energy', 'chokepoint', 'forecast'],
     );
   });
 
@@ -348,22 +281,7 @@ describe('buildCountryBriefEvidence (U2)', () => {
     assert.equal(byKind(items, 'cii').length, 1);
   });
 
-  it('never picks an unavailable, imputed, not-applicable or retired dimension as weakest', async (t) => {
-    const items = byKind(await build(t, fullFixtures()), 'resilience-dimension');
-    const labels = items.map((item) => item.label);
-    for (const excluded of ['Currency and external balance', 'Energy system resilience', 'Border security', 'Fuel-stock buffer']) {
-      assert.ok(!labels.includes(excluded), `${excluded} must not be chosen as weakest`);
-    }
-    assert.equal(items.length, 3);
-  });
 
-  it('keeps the dimension items but drops the overall score when the headline is unpublished', async (t) => {
-    const store = fullFixtures();
-    (store[RESILIENCE_KEY_IR] as { headlineEligible: boolean }).headlineEligible = false;
-    const items = await build(t, store);
-    assert.equal(byKind(items, 'resilience').length, 0);
-    assert.equal(byKind(items, 'resilience-dimension').length, 3);
-  });
 
   it('omits a CII score older than its cutoff', async (t) => {
     const store = fullFixtures();
@@ -373,11 +291,10 @@ describe('buildCountryBriefEvidence (U2)', () => {
     assert.equal(byKind(await build(t, store), 'cii').length, 0);
   });
 
-  it('omits stale advisories, sanctions, resilience, markets and forecasts past their cutoffs', async (t) => {
+  it('omits stale advisories, sanctions, markets and forecasts past their cutoffs', async (t) => {
     const store = fullFixtures();
     (store[ADVISORIES_KEY] as { fetchedAt: string }).fetchedAt = new Date(NOW - EVIDENCE_MAX_AGE_MS.advisory - 1).toISOString();
     (store[SANCTIONS_META_KEY] as { fetchedAt: number }).fetchedAt = NOW - EVIDENCE_MAX_AGE_MS.sanctions - 1;
-    (store[RESILIENCE_KEY_IR] as { dataVersion: string }).dataVersion = '2026-09-01';
     (store[MARKETS_KEY] as { fetchedAt: number }).fetchedAt = NOW - EVIDENCE_MAX_AGE_MS.market - 1;
     (store[FORECASTS_KEY] as { generatedAt: number }).generatedAt = NOW - EVIDENCE_MAX_AGE_MS.forecast - 1;
     const kinds = (await build(t, store)).map((item) => item.kind);
@@ -533,34 +450,6 @@ describe('mirrors of public page vocabulary stay in sync', () => {
   // The resilience corpus pages (scripts/build-crawlable-corpus.mjs) were
   // removed from the personal build. This is their DIMENSION_LABELS table as
   // last published, so the brief keeps the wording readers knew.
-  it('dimension labels match the corpus DIMENSION_LABELS table', () => {
-    const corpus = {
-      macroFiscal: 'Macro-fiscal position',
-      currencyExternal: 'Currency and external balance',
-      tradePolicy: 'Trade policy resilience',
-      financialSystemExposure: 'Financial-system exposure',
-      cyberDigital: 'Cyber and digital capacity',
-      logisticsSupply: 'Logistics and supply chains',
-      infrastructure: 'Core infrastructure',
-      energy: 'Energy system resilience',
-      governanceInstitutional: 'Governance and institutions',
-      socialCohesion: 'Social cohesion',
-      borderSecurity: 'Border security',
-      informationCognitive: 'Information environment',
-      education: 'Education capacity',
-      healthPublicService: 'Health and public services',
-      foodWater: 'Food and water security',
-      fiscalSpace: 'Fiscal space',
-      reserveAdequacy: 'Reserve adequacy',
-      externalDebtCoverage: 'External-debt coverage',
-      importConcentration: 'Import concentration',
-      stateContinuity: 'State continuity',
-      fuelStockDays: 'Fuel-stock buffer',
-      liquidReserveAdequacy: 'Liquid-reserve adequacy',
-      sovereignFiscalBuffer: 'Sovereign fiscal buffer',
-    };
-    assert.deepEqual(RESILIENCE_DIMENSION_LABELS, corpus);
-  });
 
   it('chokepoint tracker slugs match the corpus slugify for every registry entry', () => {
     for (const entry of CHOKEPOINT_REGISTRY) {

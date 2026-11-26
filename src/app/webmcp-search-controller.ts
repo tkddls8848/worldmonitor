@@ -367,7 +367,7 @@ export class WebMcpSearchController {
     }
     const [category = '', action = ''] = match.command.id.split(':', 2);
     return ['nav', 'country-map', 'layer', 'layers', 'time'].includes(category)
-      || (category === 'view' && ['resilience', 'route-explorer'].includes(action));
+      || (category === 'view' && action === 'route-explorer');
   }
 
   private resolveLiveMatch(

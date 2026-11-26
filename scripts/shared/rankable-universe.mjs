@@ -1,42 +1,4 @@
-// Plan 2026-04-26-002 §U2 (PR 1) — single source of truth for the
-// "what's a country in the headline ranking" decision.
-//
-// Reads the committed JSON whitelist at
-// `scripts/shared/sovereign-status.json` (193 UN member states + 3
-// standalone SARs: HK, MO, TW).
-//
-// **Why scripts/shared/ and NOT server/.../cohorts/ or registries/:**
-// the seed-bundle-resilience Railway service runs with rootDirectory=scripts/
-// and ONLY ships files under scripts/ into the container (memory:
-// `worldmonitor-scripts-package-json-install-scope`). PR #3435 originally
-// put the JSON under `server/.../registries/` — that resolved fine
-// locally and on Vercel but ENOENT'd at Railway runtime, taking the
-// resilience cron down. `scripts/shared/` is the canonical location
-// for shared JSON consumed by both seeders and server-side code
-// (alongside iso2-to-iso3.json, country-names.json etc.).
-//
-// The JSON shape is a per-country PROPERTY registry
-// (`{ entries: [{iso2, status}] }`), not a cohort membership list.
-// PR #3433's cohort shape gate scans `server/.../cohorts/` and would
-// reject this file's shape; living in `scripts/shared/` keeps it
-// outside that gate's scope.
-//
-// Both seeders (`scripts/seed-resilience-static.mjs` and
-// `scripts/seed-resilience-scores.mjs`) consume `isInRankableUniverse`
-// to ensure their universes match. Earlier behavior: the static seeder
-// admitted every ISO2 from any source map (~222 entries including
-// AS/GU/GL/IM/GI/FK). Post-PR-1: ~196 entries.
-//
-// HK/MO/TW are tagged `sar` so they remain in the dataset but can be
-// separated by the `headlineEligible` gate in PR 2/6 if/when that
-// policy ships.
-//
-// Implementation: reads via fs.readFileSync (rather than ES JSON
-// import) so this module works under plain `node` without an import-
-// assertion or tsx loader. The same JSON is also read by
-// `tests/resilience-cohort-anti-inversion.test.mts` via the same
-// pattern.
-
+// Shared country universe for reference data, country history, and scorecards.
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';

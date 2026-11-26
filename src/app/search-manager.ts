@@ -600,9 +600,6 @@ export class SearchManager implements AppModule {
     }
     if (category === 'layer') return this.isLayerCommandExecutable(action);
     if (category === 'layers') return this.hasVisibleLayerPreset(action);
-    if (category === 'view' && action === 'resilience') {
-      return this.isLayerCommandExecutable('resilienceScore');
-    }
     if (category === 'country-map') return getCountryBbox(action) !== null;
     return ['nav', 'country', 'time', 'view', 'orbital'].includes(category);
   }
@@ -638,7 +635,6 @@ export class SearchManager implements AppModule {
       case 'country-map':
         return getCountryBbox(action) !== null;
       case 'view':
-        if (action === 'resilience') return this.isLayerCommandExecutable('resilienceScore');
         // Settings/route-explorer emit their own content-bearing or account-
         // tier analytics, refresh tears down the capability response, and
         // fullscreen requires a transient user activation WebMCP cannot grant.

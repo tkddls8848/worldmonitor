@@ -5,8 +5,6 @@ import { describe, it } from 'node:test';
 
 import { __testing__ as health } from '../api/health.js';
 import {
-  EDUCATION_PRIORITY_UTC_DAY,
-  EDUCATION_PRIORITY_UTC_HOUR,
   orderMacroSections,
 } from '../scripts/_macro-bundle-order.mjs';
 import { PHYSICAL_DIVERGENCE_PAPER_MAX_AGE_MS } from '../shared/physical-divergence-staleness.js';
@@ -31,20 +29,9 @@ describe('physical premium production registration', () => {
     );
   });
 
-  it('protects the physical publisher with an early slot and one retry window', () => {
-    const orderAt = (instant) => orderMacroSections(
-      new Date(instant),
-      'Education',
-      'Physical',
-      ['BIS', 'China'],
-    );
-
-    assert.equal(EDUCATION_PRIORITY_UTC_DAY, 0);
-    assert.equal(EDUCATION_PRIORITY_UTC_HOUR, 8);
-    assert.deepEqual(orderAt('2026-09-06T08:00:00Z'), ['Education', 'Physical', 'BIS', 'China']);
-    assert.deepEqual(orderAt('2026-09-06T09:00:00Z'), ['Physical', 'BIS', 'China', 'Education']);
-    assert.deepEqual(orderAt('2026-09-07T08:00:00Z'), ['Physical', 'BIS', 'China', 'Education']);
-    assert.deepEqual(orderMacroSections(new Date('2026-09-06T10:00:00Z'), 'Education', 'Physical', ['BIS', 'China'], 1), ['China', 'Physical', 'BIS', 'Education']);
+  it('protects the physical publisher in ordinary and rotated runs', () => {
+    assert.deepEqual(orderMacroSections('Physical', ['BIS', 'China']), ['Physical', 'BIS', 'China']);
+    assert.deepEqual(orderMacroSections('Physical', ['BIS', 'China'], 1), ['China', 'Physical', 'BIS']);
   });
 
   it('aligns paper freshness with the daily publisher and health alarm', () => {

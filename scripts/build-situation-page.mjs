@@ -164,7 +164,7 @@ ${sections.outages}
       <ol class="routine">
         <li>Open the <a href="/dashboard">live map</a>. The map and its panels are free and need no account.</li>
         <li>Pick a situation above and open its tracker page, or the map view it links to, for the event-level detail behind the monthly figure.</li>
-        <li>Open a <a href="/countries/">country page</a> for that country's instability and resilience scores and its recent reporting.</li>
+        <li>Open a <a href="/countries/">country page</a> for that country's instability score and its recent reporting.</li>
         <li>Set an alert rule on a paid plan. Rules filter by event type, severity and country, deliver to Slack, Microsoft Teams, Discord, Telegram, email, browser push or a signed webhook, and run in real time or as a daily, twice-daily or weekly digest. See the <a href="/docs/api-notifications">notifications reference</a>.</li>
         <li>Connect an agent. The <a href="/docs/mcp-overview">MCP server</a>, the REST API, the Python, Go and Ruby SDKs and the npm CLI read the same data; setup steps are on the <a href="/agent/">agent page</a>.</li>
       </ol>

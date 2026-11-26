@@ -123,8 +123,6 @@ import { fetchSecurityAdvisories } from '@/services/security-advisories';
 import { fetchThermalEscalations } from '@/services/thermal-escalation';
 import { fetchCrossSourceSignals } from '@/services/cross-source-signals';
 import { fetchOrefAlerts, startOrefPolling, stopOrefPolling, onOrefAlertsUpdate, type OrefAlertsResponse } from '@/services/oref-alerts';
-import { getResilienceRanking } from '@/services/resilience';
-import { buildResilienceChoroplethMap } from '@/components/resilience-choropleth-utils';
 import { getNo2ActivityData } from '@/services/no2-activity';
 import { addExposureCoverage, enrichEventsWithExposure, ucdpExposureEvents } from '@/services/population-exposure';
 import { debounce, getCircuitBreakerCooldownInfo } from '@/utils';
@@ -349,7 +347,6 @@ const HYDRATION_TIER_TWO = new Set([
   'diseaseOutbreaks',
   'economicStress',
   'sanctions',
-  'resilienceRanking',
   'radiation',
 ]);
 const HYDRATION_TIER_FOUR = new Set([
@@ -1284,9 +1281,6 @@ export class DataLoaderManager implements AppModule {
     if (this.ctx.mapLayers.reservoirLevels || (this.ctx.panelSettings['reservoir-levels']?.enabled && shouldLoad('reservoir-levels'))) {
       tasks.push({ name: 'reservoirLevels', task: () => runGuarded('reservoirLevels', () => this.loadReservoirLevels()) });
     }
-    if (this.ctx.mapLayers.resilienceScore) {
-      tasks.push({ name: 'resilienceRanking', task: () => runGuarded('resilienceRanking', () => this.loadResilienceRanking()) });
-    }
     if (SITE_VARIANT !== 'happy' && shouldLoad('radiation-watch')) {
       // Only the Radiation Watch panel reads this; the map layer was removed.
       // `name` stays 'radiation' for hydration tiering (#6770).
@@ -1408,9 +1402,6 @@ export class DataLoaderManager implements AppModule {
           break;
         case 'diseaseOutbreaks':
           await this.loadDiseaseOutbreaks();
-          break;
-        case 'resilienceScore':
-          await this.loadResilienceRanking();
           break;
         case 'no2Activity':
           await this.loadNo2Activity();
@@ -4898,25 +4889,6 @@ export class DataLoaderManager implements AppModule {
     }
     this.ctx.map?.setNo2Activity(snapshot);
     this.ctx.map?.setLayerReady('no2Activity', snapshot.regions.length > 0);
-  }
-
-  async loadResilienceRanking(): Promise<void> {
-    if (!this.ctx.map?.isDeckGLActive?.()) {
-      this.ctx.map?.setResilienceRanking([]);
-      this.ctx.map?.setLayerReady('resilienceScore', false);
-      return;
-    }
-
-    try {
-      const result = await getResilienceRanking();
-      this.ctx.map?.setResilienceRanking(result.items, result.greyedOut ?? []);
-      const displayable = buildResilienceChoroplethMap(result.items, result.greyedOut ?? []);
-      this.ctx.map?.setLayerReady('resilienceScore', displayable.size > 0);
-    } catch (error) {
-      console.error('[App] Resilience ranking fetch failed:', error);
-      this.ctx.map?.setResilienceRanking([]);
-      this.ctx.map?.setLayerReady('resilienceScore', false);
-    }
   }
 
   async loadRadiationWatch(): Promise<void> {

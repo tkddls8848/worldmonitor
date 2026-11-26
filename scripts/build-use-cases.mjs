@@ -264,7 +264,6 @@ function renderCountryRiskUseCase({ tpl, baseUrl, lastmod }) {
 
       <h2>End-to-end workflow</h2>
       <ol>
-        <li id="step-establish-a-baseline"><strong>Establish a baseline.</strong> Read the Country Instability Index (fast clock) beside the Country Resilience Index (slow clock) for each exposure. Record the score, band, and 24-hour delta. Live country pages publish the current snapshot at <a href="/countries/">/countries/</a>.</li>
         <li id="step-review-current-instability-and-forecasts"><strong>Review current instability and forecasts.</strong> Open the country brief, inspect component drivers (unrest, conflict, security, information), and note any prediction-market contracts tied to the country without treating them as proof.</li>
         <li id="step-check-corroborating-economic-and-security-signals"><strong>Check corroborating economic and security signals.</strong> Look for independent families near the exposure — hotspot trends, keyword monitors, infrastructure adjacency, chokepoints, travel advisories, or sanctions context — and require more than repeated headlines.</li>
         <li id="step-record-uncertainty"><strong>Record uncertainty.</strong> Write what is observed, what is inferred, what is stale, and what coverage gaps can explain missing signals. Absence of a sensor is not proof of calm.</li>
@@ -273,7 +272,6 @@ function renderCountryRiskUseCase({ tpl, baseUrl, lastmod }) {
 
       <h2>Product proof used by this workflow</h2>
       <ul>
-        <li>Country Instability Index and Country Resilience Index on crawlable country pages and in the live dashboard country brief.</li>
         <li>Country brief dossier with component breakdown and infrastructure context.</li>
         <li>Hotspot trends, keyword monitors, and convergence cues for daily watch.</li>
         <li>Optional Pro notification channels for automated watch.</li>
@@ -308,7 +306,6 @@ function renderCountryRiskUseCase({ tpl, baseUrl, lastmod }) {
         <li><a href="/countries/">Country risk and resilience corpus</a></li>
         <li><a href="/blog/posts/country-risk-monitoring-workflow-for-analysts/">Editorial workflow article</a></li>
         <li><a href="/blog/posts/country-instability-index-methodology-explained/">CII methodology</a></li>
-        <li><a href="/docs/methodology/country-resilience-index">CRI methodology</a></li>
       </ul>
       <p class="source">Canonical treatment: this page owns the evergreen task framing. <a href="/countries/">/countries/</a> remains the live evidence surface. The blog workflow article remains distinct supporting editorial — not a duplicate indexable procedure.</p>`;
 
@@ -316,7 +313,6 @@ function renderCountryRiskUseCase({ tpl, baseUrl, lastmod }) {
   const workflowSteps = [
     {
       name: 'Establish a baseline',
-      text: 'Read the Country Instability Index (fast clock) beside the Country Resilience Index (slow clock) for each exposure. Record the score, band, and 24-hour delta.',
     },
     {
       name: 'Review current instability and forecasts',
@@ -353,7 +349,6 @@ function renderCountryRiskUseCase({ tpl, baseUrl, lastmod }) {
       faqPageLd([
         [
           'How do you monitor country risk with World Monitor?',
-          'Establish a baseline with the Country Instability Index and Country Resilience Index, review live instability and forecasts, check corroborating economic and security signals, record uncertainty, then set the follow-up or escalation into an exact product state.',
         ],
         [
           'Who is the country-risk workflow for?',

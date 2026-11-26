@@ -8,21 +8,18 @@ import { BUNDLE_PREFLIGHT_HEADROOM_MS, KILL_GRACE_MS } from '../scripts/_bundle-
 import { extractBundleSections, resolveExpr } from './helpers/bundle-section-parser.mjs';
 
 const source = readFileSync(new URL('../scripts/seed-bundle-macro.mjs', import.meta.url), 'utf8');
-const macro = extractBundleSections(source).filter(s => !['Physical-Premiums', 'Education-Attainment'].includes(s.label))
+const macro = extractBundleSections(source).filter(s => s.label !== 'Physical-Premiums')
   .map(s => ({ label: s.label, timeoutMs: resolveExpr(source, s.timeoutMsExpr) }));
 const physical = { label: 'Physical', timeoutMs: 480_000 };
-const education = { label: 'Education', timeoutMs: 300_000 };
-const retry = new Date('2026-11-05T10:00:00Z');
 
 test('each macro source receives an admissible lead slot even if every earlier due job always times out', () => {
   const foodSources = JSON.parse(readFileSync(new URL('../shared/food-price-sources.json', import.meta.url)));
   assert.equal(macro.filter(s => s.label.startsWith('Food-')).length, foodSources.length);
   const admitted = new Set();
   for (let turn = 0; turn < macro.length; turn++) {
-    const ordered = orderMacroSections(retry, education, physical, macro, turn);
-    assert.equal(new Set(ordered).size, macro.length + 2);
+    const ordered = orderMacroSections(physical, macro, turn);
+    assert.equal(new Set(ordered).size, macro.length + 1);
     assert.equal(ordered[1], physical);
-    assert.equal(ordered.at(-1), education);
     let elapsed = BUNDLE_PREFLIGHT_HEADROOM_MS;
     for (const section of ordered) {
       const worstCase = section.timeoutMs + KILL_GRACE_MS;
@@ -33,16 +30,13 @@ test('each macro source receives an admissible lead slot even if every earlier d
     assert.ok(admitted.has(ordered[0].label), 'never-seeded lead fits the budget without relying on fetchedAt');
   }
   for (const section of macro) assert.ok(admitted.has(section.label), section.label);
-  assert.equal(orderMacroSections(retry, education, physical, macro, macro.length)[0], macro[0]);
+  assert.equal(orderMacroSections(physical, macro, macro.length)[0], macro[0]);
 });
 
-test('08:00 and 09:00 preserve Physical retry admission independently of the 10:00 cursor', () => {
-  assert.equal(orderMacroSections(new Date('2026-11-05T08:00:00Z'), education, physical, macro)[0], physical);
-  assert.equal(orderMacroSections(new Date('2026-11-08T08:00:00Z'), education, physical, macro)[0], education);
-  const retryOrder = orderMacroSections(new Date('2026-11-08T09:00:00Z'), education, physical, macro);
-  assert.equal(retryOrder[0], physical);
+test('normal execution reserves the first slot for physical premiums', () => {
+  assert.equal(orderMacroSections(physical, macro)[0], physical);
   assert.ok(BUNDLE_PREFLIGHT_HEADROOM_MS + physical.timeoutMs + KILL_GRACE_MS <= 550_000);
-  for (const invalid of [-1, NaN, 0.5]) assert.throws(() => orderMacroSections(retry, education, physical, macro, invalid));
+  for (const invalid of [-1, NaN, 0.5]) assert.throws(() => orderMacroSections(physical, macro, invalid));
 });
 
 test('macro retries persist their turn and acknowledge completed failures through the runner hook', async () => {

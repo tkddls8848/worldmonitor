@@ -33,7 +33,6 @@ The website supplies its normal authenticated service adapter. The plugin suppli
 | `src/app/country-intel.ts` | Selection, request ownership, country context, enrichment, map focus | Preserve human/agent ownership, cancellation and country-switch guards. Extract domain projections from dashboard caches; do not fabricate an `AppContext`. |
 | `src/components/CountryDeepDivePanel.ts` | Renderer, output capture, several direct requests, account controls | Keep the rendered sections. Move owned requests into the shared controller; inject explicit actions and access state. |
 | `src/components/country-brief-presentation.ts` | Topics, reading modes, section navigation/status | Reuse in both hosts. Keep one section catalog. |
-| `src/components/ResilienceWidget.ts` | Rendering, requests, browser account subscriptions | Separate its data/access input from Clerk and mission subscriptions. Preserve existing gate semantics on the website. |
 | `src/components/CountryTimeline.ts` | Timeline rendering | Supply normalized events through the shared country model. It does not need a new host-specific renderer. |
 | `src/components/CountryBriefOutput.ts` | Report/story presentation from rendered country sections | Use the same settled section snapshot; test actual downloads in the sandbox. |
 | `api/mcp/registry/rpc-tools.ts` | Narrative country brief and existing data tools | Preserve contracts. Add explicit view routing rather than widening the AI tool into an implicit full-dashboard fetch. |

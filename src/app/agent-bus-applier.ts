@@ -1,5 +1,4 @@
 import { SITE_VARIANT } from '@/config/variant';
-import { normalizeExclusiveChoropleths } from '@/components/resilience-choropleth-utils';
 import {
   getAllowedLayerKeys,
   isLayerExecutable,
@@ -310,7 +309,6 @@ function applySetLayers(ctx: AppContext, action: Extract<AgentBusAction, { type:
 
   const allowed = getAllowedLayerKeys(currentMapVariant(options));
   const kind = currentRendererKind(ctx, options);
-  const isDeckGLActive = Boolean(ctx.map.isDeckGLActive?.());
   const runtimeAvailability = options.getMapLayerRuntimeAvailability?.()
     ?? ALL_MAP_LAYERS_RUNTIME_AVAILABLE;
   const nextLayers = { ...ctx.mapLayers };
@@ -336,10 +334,6 @@ function applySetLayers(ctx: AppContext, action: Extract<AgentBusAction, { type:
       continue;
     }
 
-    if (enabled && rawKey === 'resilienceScore' && !isDeckGLActive) {
-      targets.push({ target: rawKey, status: 'denied', reason: 'layer_not_executable' });
-      continue;
-    }
     if (enabled && !isLayerExecutable(rawKey, kind)) {
       targets.push({ target: rawKey, status: 'denied', reason: 'layer_not_executable' });
       continue;
@@ -354,7 +348,7 @@ function applySetLayers(ctx: AppContext, action: Extract<AgentBusAction, { type:
     return denied('No requested layers can be applied.', 'no_allowed_layers', targets, action);
   }
 
-  const normalized = normalizeExclusiveChoropleths(nextLayers, ctx.mapLayers);
+  const normalized = nextLayers;
   for (const target of targets) {
     if (target.status !== 'applied' || !isMapLayerKey(target.target)) continue;
     const requested = action.layers[target.target];

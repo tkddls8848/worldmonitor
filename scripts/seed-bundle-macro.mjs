@@ -3,10 +3,8 @@ import { runBundle, HOUR, DAY } from './_bundle-runner.mjs';
 import { CHINA_MACRO_CACHE_KEY } from './_china-macro-contract.mjs';
 import { orderMacroSections } from './_macro-bundle-order.mjs';
 import { claimBundleTurn, acknowledgeBundleTurn } from './_bundle-turn.mjs';
-import { EDUCATION_SECTION_TIMEOUT_MS } from './seed-education-attainment.mjs';
 import { PHYSICAL_PREMIUM_SECTION_TIMEOUT_MS } from './seed-physical-premiums.mjs';
 
-const EDUCATION_SECTION = { label: 'Education-Attainment', script: 'seed-education-attainment.mjs', seedMetaKey: 'resilience:education-attainment', canonicalKey: 'resilience:education-attainment:v1', completionMetaKey: 'seed-completion:resilience:education-attainment', intervalMs: 7 * DAY, timeoutMs: EDUCATION_SECTION_TIMEOUT_MS };
 // SGE SHAU/SHAG daily PM benchmarks joined only to the already-seeded
 // commodity and FX snapshots. Keep this section outside MACRO_SECTIONS so it
 // always receives an early admission slot with 80 seconds of bundle headroom.
@@ -23,11 +21,8 @@ const MACRO_SECTIONS = [
   // being SIGTERM'd here, which the runner counts as a hard section failure.
   // 300_000 matches the peer sections and leaves the publish phase headroom.
   { label: 'CBR-Rates', script: 'seed-cbr-rates.mjs', seedMetaKey: 'economic:cbr-rates', canonicalKey: 'economic:cbr-rates:v1', completionMetaKey: 'seed-completion:economic:cbr-rates', intervalMs: DAY, timeoutMs: 300_000 },
-  // Bank of Canada Valet (CAD FX + overnight target + 2/5/10y yields) and
-  // Statistics Canada WDS (same-day cube radar + CPI/LFS for the CA overlay).
-  // Independent clocks: Valet is recent=1, WDS is the seeder UTC date path.
+  // Bank of Canada Valet (CAD FX, overnight target and 2/5/10y yields).
   { label: 'BoC-Valet', script: 'seed-boc-valet.mjs', seedMetaKey: 'economic:boc-valet', canonicalKey: 'economic:boc-valet:v1', completionMetaKey: 'seed-completion:economic:boc-valet', intervalMs: DAY, timeoutMs: 120_000 },
-  { label: 'StatCan-WDS', script: 'seed-statcan-wds.mjs', seedMetaKey: 'economic:statcan-wds', canonicalKey: 'economic:statcan-wds:v1', completionMetaKey: 'seed-completion:economic:statcan-wds', intervalMs: DAY, timeoutMs: 120_000 },
   // Official-source requests are sequential and bounded per host. Blocked
   // PBoC/GACC candidates stay explicitly unavailable rather than using proxies.
   { label: 'China-Macro', script: 'seed-china-macro.mjs', seedMetaKey: 'economic:china-macro', freshnessMetaKey: 'seed-meta:economic:china-macro-transport', completionMetaKey: 'seed-meta:economic:china-macro-complete', canonicalKey: CHINA_MACRO_CACHE_KEY, requireCanonical: true, intervalMs: 36 * HOUR, timeoutMs: 240_000 },
@@ -45,11 +40,6 @@ const MACRO_SECTIONS = [
   { label: 'IMF-Macro', script: 'seed-imf-macro.mjs', seedMetaKey: 'economic:imf-macro', canonicalKey: 'economic:imf:macro:v2', intervalMs: 30 * DAY, timeoutMs: 300_000 },
   { label: 'National-Debt', script: 'seed-national-debt.mjs', seedMetaKey: 'economic:national-debt', canonicalKey: 'economic:national-debt:v1', intervalMs: 30 * DAY, timeoutMs: 300_000 },
   { label: 'FAO-FFPI', script: 'seed-fao-food-price-index.mjs', seedMetaKey: 'economic:fao-ffpi', canonicalKey: 'economic:fao-ffpi:v1', intervalMs: DAY, timeoutMs: 120_000 },
-  // plan 2026-04-25-004 Phase 2: financialSystemExposure component seeders.
-  // Bundle placement = Option A per Codex R1 #5 (less operational overhead
-  // than provisioning a new bundle service). All 3 feed the new dim's
-  // fail-closed preflight (RESILIENCE_FIN_SYS_EXPOSURE_ENABLED=true).
-  { label: 'WB-External-Debt', script: 'seed-wb-external-debt.mjs', seedMetaKey: 'economic:wb-external-debt', canonicalKey: 'economic:wb-external-debt:v1', intervalMs: 30 * DAY, timeoutMs: 300_000 },
   { label: 'BIS-LBS', script: 'seed-bis-lbs.mjs', seedMetaKey: 'economic:bis-lbs', canonicalKey: 'economic:bis-lbs:v1', intervalMs: 7 * DAY, timeoutMs: 300_000 },
   // Cross-country capital flows: IMF BOP quarterly + annual + PIP and two BIS
   // LBS pulls, all in parallel, plus World Bank GDP. PIP (~43s) is the long
@@ -120,11 +110,8 @@ const MACRO_SECTIONS = [
 
 ];
 
-// Education is normally last; give it first priority on the 08:00 Sunday tick.
-// Physical leads the other 08:00 ticks and every 09:00 retry. The 10:00 tick gives a different macro
-// member the first slot on each completed run, followed by Physical. Reuse the
-// leased Redis cursor so failures, restarts and fresh sections cannot keep new
-// food sources permanently behind the same expensive due sections.
+// Physical premiums lead normal runs. The 10:00 UTC tick rotates the lead
+// source so slow or failing members cannot always crowd out later sources.
 const runAt = new Date();
 const rotates = runAt.getUTCHours() === 10;
 const claim = rotates ? await claimBundleTurn('macro') : null;
@@ -133,8 +120,6 @@ if (rotates && !claim) {
   process.exit(0);
 }
 const sections = orderMacroSections(
-  runAt,
-  EDUCATION_SECTION,
   PHYSICAL_PREMIUM_SECTION,
   MACRO_SECTIONS,
   claim?.turn ?? null,

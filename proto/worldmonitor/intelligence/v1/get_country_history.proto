@@ -31,12 +31,14 @@ message CountryHistoryPoint {
   int64 captured_at = 2 [(sebuf.http.int64_encoding) = INT64_ENCODING_NUMBER];
   // Absent means unavailable; zero is observed.
   CountryHistoryScore cii = 3;
-  CountryHistoryScore resilience = 4;
+  reserved 4;
+  reserved "resilience";
   repeated CountryHistoryEvent top_events = 5;
   repeated string key_signals = 6;
   // Do not join trends across missing dates, absent scores or formula changes.
   bool cii_version_break = 7;
-  bool resilience_version_break = 8;
+  reserved 8;
+  reserved "resilience_version_break";
 }
 
 message GetCountryHistoryResponse {

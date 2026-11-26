@@ -54,7 +54,7 @@ export const CURATED_COMMANDS = {
   risk: {
     tool: 'get_country_risk',
     args: [{ name: 'country_code', required: true }],
-    summary: 'Country risk / resilience scores (ISO 3166-1 alpha-2 code).',
+    summary: 'Country risk scores (ISO 3166-1 alpha-2 code).',
   },
   markets: { tool: 'get_market_data', args: [], summary: 'Equities, commodities, crypto and FX quotes.' },
   conflicts: {
@@ -380,7 +380,7 @@ DASHBOARD
 DATA COMMANDS (MCP tools/call — need --api-key except call get_sources)
   world                    Live global situation brief
   country <ISO>            AI strategic brief for a country (ISO alpha-2)
-  risk <ISO>               Country risk / resilience scores
+  risk <ISO>               Country risk scores
   markets                  Equities, commodities, crypto, FX quotes
   conflicts                Recent conflict events (--country, --limit…)
   cyber                    Cyber-threat indicators (--min_severity…)

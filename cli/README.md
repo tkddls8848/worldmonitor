@@ -102,7 +102,7 @@ export WORLDMONITOR_API_KEY=wm_xxxxxxxx
 
 worldmonitor world                       # live global situation brief
 worldmonitor country IR                  # AI strategic brief for a country
-worldmonitor risk DE                      # country risk / resilience scores
+worldmonitor risk DE                      # country risk scores
 worldmonitor conflicts --country IR --limit 5
 worldmonitor markets --asset_class crypto
 worldmonitor call get_cyber_threats --min_severity 7
@@ -119,7 +119,7 @@ Data commands map to MCP `tools/call`. `call get_sources` is the sole credential
 
 - `world` — live global situation brief
 - `country <ISO>` — AI strategic brief for a country (ISO 3166-1 alpha-2)
-- `risk <ISO>` — country risk / resilience scores
+- `risk <ISO>` — country risk scores
 - `markets` — equities, commodities, crypto, FX quotes
 - `conflicts` — recent conflict events (`--country`, `--min_fatalities`, `--limit`)
 - `cyber` — cyber-threat indicators (`--min_severity`, `--threat_type`, `--country`)

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join, resolve, delimiter } from 'node:path';
 import { test } from 'node:test';
 import { runInNewContext } from 'node:vm';
 import { parse } from 'yaml';
@@ -55,7 +55,7 @@ esac
     });
     const result = spawnSync('bash', ['-euo', 'pipefail', '-c', script], {
       cwd: root, encoding: 'utf8', timeout: 10_000,
-      env: { ...process.env, FIXTURE: dir, PATH: `${dir}:${process.env.PATH}`, GITHUB_OUTPUT: join(dir, 'output') },
+      env: { ...process.env, FIXTURE: dir, PATH: `${dir}${delimiter}${process.env.PATH}`, GITHUB_OUTPUT: join(dir, 'output') },
     });
     assert.equal(result.status, 0, result.stderr);
     return Object.fromEntries(readFileSync(join(dir, 'output'), 'utf8').trim().split('\n').map((line) => line.split('=')));
@@ -119,21 +119,6 @@ test('unusable, incomplete and moved diff metadata runs every Test job', () => {
   }
 });
 
-test('resilience-validation-smoke runs only for validation changes that skip unit', () => {
-  const job = workflow.jobs['resilience-validation-smoke'];
-  const runs = (outputs) => runInNewContext(job.if, { needs: { changes: { outputs } } }, { timeout: 1000 });
-  const validationDoc = 'docs/methodology/country-resilience-index/validation/benchmark.md';
-  for (const event of ['pull_request', 'push']) {
-    const docsOnly = classify([validationDoc], { event });
-    assert.equal(docsOnly.validation, 'true');
-    assert.equal(docsOnly.code, 'false');
-    assert.equal(runs(docsOnly), true, `${event}: unit is skipped, so this job is the only run of the validation suite`);
-    const withCode = classify([validationDoc, 'scripts/_bundle-runner.mjs'], { event });
-    assert.equal(withCode.validation, 'true');
-    assert.equal(withCode.code, 'true');
-    assert.equal(runs(withCode), false, `${event}: unit already runs the same files inside test:data`);
-  }
-});
 
 test('required unit aggregate rejects failed, cancelled and unexpected skips', () => {
   const aggregate = workflow.jobs.unit;

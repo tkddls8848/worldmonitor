@@ -13,10 +13,7 @@ import { markLcpDebug } from '@/utils/lcp-debug';
 import type { FocusFitBounds } from '@/utils/focus-map';
 import { type FrameBounds, type OrbitalTarget, type PassTrack, type TrackPoint } from '@/services/orbital/track-geometry';
 import { mercatorCenterForOffset, visibleMapArea, type ScreenOffset } from '@/utils/map-point-offset';
-import {
-  sanitizeResilienceScoreForRenderer,
-  type RendererKind,
-} from '@/config/map-layer-definitions';
+import type { RendererKind } from '@/config/map-layer-definitions';
 import { t } from '@/services/i18n';
 import type { MapComponent } from './Map';
 import type { DeckGLMap, DeckMapView, CountryClickPayload } from './DeckGLMap';
@@ -53,7 +50,6 @@ import type { KindnessPoint } from '@/services/kindness-data';
 import type { HappinessData } from '@/services/happiness-data';
 import type { SpeciesRecovery } from '@/services/conservation-data';
 import type { RenewableInstallation } from '@/services/renewable-installations';
-import type { ResilienceRankingItem } from '@/services/resilience';
 import type { GpsJamHex } from '@/services/gps-interference';
 import type { IranEvent } from '@/services/conflict';
 import type { WebcamEntry, WebcamCluster } from '@/generated/client/worldmonitor/webcam/v1/service_client';
@@ -173,11 +169,6 @@ interface TechEventMarker {
 type FireMarker = { lat: number; lon: number; brightness: number; frp: number; confidence: number; region: string; acq_date: string; daynight: string };
 type CIIScore = { code: string; score: number; level: string };
 
-const EXCLUSIVE_CHOROPLETHS: Partial<Record<string, keyof MapLayers>> = {
-  resilienceScore: 'ciiChoropleth',
-  ciiChoropleth: 'resilienceScore',
-};
-
 function noLayers(layers: MapLayers): MapLayers {
   return Object.fromEntries(Object.keys(layers).map((key) => [key, false])) as unknown as MapLayers;
 }
@@ -286,10 +277,8 @@ export class MapContainer {
   private cachedKindnessData: KindnessPoint[] | null = null;
   private cachedHappinessScores: HappinessData | null = null;
   private cachedCIIScores: CIIScore[] | null = null;
-  private cachedResilienceRanking: ResilienceRankingItem[] | null = null;
   private cachedNo2Activity: No2ActivitySnapshot | null = null;
   private cachedReservoirLevels: ReservoirLevel[] | null = null;
-  private cachedResilienceGreyedOut: ResilienceRankingItem[] = [];
   private cachedSpeciesRecovery: SpeciesRecovery[] | null = null;
   private cachedRenewableInstallations: RenewableInstallation[] | null = null;
   private cachedHotspotActivity: NewsItem[] | null = null;
@@ -329,13 +318,6 @@ export class MapContainer {
     this.container.addEventListener('wheel', this.invalidateViewportAuthority, { passive: true });
     this.container.addEventListener('touchstart', this.invalidateViewportAuthority, { passive: true });
     this.container.addEventListener('keydown', this.invalidateViewportAuthority);
-
-    if (this.initialState.layers) {
-      const layers = sanitizeResilienceScoreForRenderer(this.initialState.layers, this.useDeckGL);
-      if (layers !== this.initialState.layers) {
-        this.initialState = { ...this.initialState, layers };
-      }
-    }
 
     // init() attaches the resize observer synchronously (before its first await),
     // so the constructor does not need to start it separately.
@@ -396,15 +378,6 @@ export class MapContainer {
     this.container.removeAttribute('aria-busy');
     this.container.textContent = '';
     this.container.classList.add(modeClass);
-  }
-
-  private sanitizeNonDeckLayers(): void {
-    if (this.initialState.layers) {
-      const layers = sanitizeResilienceScoreForRenderer(this.initialState.layers, false);
-      if (layers !== this.initialState.layers) {
-        this.initialState = { ...this.initialState, layers };
-      }
-    }
   }
 
   private isCurrentRendererInit(token: number): boolean {
@@ -631,7 +604,6 @@ export class MapContainer {
     markLcpDebug('wm:map:svg-init-start');
     this.useDeckGL = false;
     this.deckGLMap = null;
-    this.sanitizeNonDeckLayers();
     const { MapComponent } = await import('./Map');
     if (!this.isCurrentRendererInit(token)) return;
     this.prepareRendererDom('svg-mode');
@@ -804,7 +776,6 @@ export class MapContainer {
     if (this.cachedKindnessData) this.setKindnessData(this.cachedKindnessData);
     if (this.cachedHappinessScores) this.setHappinessScores(this.cachedHappinessScores);
     if (this.cachedCIIScores) this.setCIIScores(this.cachedCIIScores);
-    if (this.cachedResilienceRanking) this.setResilienceRanking(this.cachedResilienceRanking, this.cachedResilienceGreyedOut);
     if (this.cachedNo2Activity) this.setNo2Activity(this.cachedNo2Activity);
     if (this.cachedReservoirLevels) this.setReservoirLevels(this.cachedReservoirLevels);
     if (this.cachedSpeciesRecovery) this.setSpeciesRecoveryZones(this.cachedSpeciesRecovery);
@@ -1002,14 +973,12 @@ export class MapContainer {
   }
 
   public setLayers(layers: MapLayers, _options: { bypassEntitlementSanitization?: boolean } = {}): void {
-    // Strip resilience on non-DeckGL.
-    const sanitized = sanitizeResilienceScoreForRenderer(layers, this.useDeckGL);
-    this.initialState = { ...this.initialState, layers: sanitized };
+    this.initialState = { ...this.initialState, layers };
     if (this.suppressedLayers) {
-      this.suppressedLayers = sanitized;
+      this.suppressedLayers = layers;
       return;
     }
-    this.drawLayers(sanitized);
+    this.drawLayers(layers);
   }
 
   public setWorldOverviewMode(on: boolean): void {
@@ -1421,14 +1390,6 @@ export class MapContainer {
     if (this.useDeckGL) this.deckGLMap?.setNo2Activity(snapshot);
   }
 
-  public setResilienceRanking(items: ResilienceRankingItem[], greyedOut: ResilienceRankingItem[] = []): void {
-    this.cachedResilienceRanking = items;
-    this.cachedResilienceGreyedOut = greyedOut;
-    if (this.useDeckGL) {
-      this.deckGLMap?.setResilienceRanking(items, greyedOut);
-    }
-  }
-
   public setSpeciesRecoveryZones(species: SpeciesRecovery[]): void {
     this.cachedSpeciesRecovery = species;
     if (this.useDeckGL) {
@@ -1598,7 +1559,6 @@ export class MapContainer {
 
   // Layer enable/disable and trigger methods
   public enableLayer(layer: keyof MapLayers): void {
-    if (layer === 'resilienceScore' && !this.useDeckGL) return;
     this.initialState = {
       ...this.initialState,
       layers: { ...this.initialState.layers, [layer]: true },
@@ -1606,13 +1566,6 @@ export class MapContainer {
     if (this.suppressedLayers) {
       // Saved now and drawn when the layers come back.
       if (this.suppressedLayers[layer]) return;
-      const displaced = this.useDeckGL ? EXCLUSIVE_CHOROPLETHS[layer as string] : undefined;
-      if (displaced && this.suppressedLayers[displaced]) {
-        // deck.gl draws one choropleth at a time; turn the other off as its enableLayer would.
-        this.suppressedLayers = { ...this.suppressedLayers, [displaced]: false };
-        this.initialState = { ...this.initialState, layers: { ...this.initialState.layers, [displaced]: false } };
-        this.cachedOnLayerChange?.(displaced, false, 'programmatic');
-      }
       this.suppressedLayers = { ...this.suppressedLayers, [layer]: true };
       this.cachedOnLayerChange?.(layer, true, 'programmatic');
       return;

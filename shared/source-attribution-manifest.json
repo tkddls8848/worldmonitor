@@ -1370,40 +1370,16 @@
           "path": "scripts/seed-cii-structural-prior.mjs"
         },
         {
-          "path": "scripts/seed-education-attainment.mjs"
-        },
-        {
-          "path": "scripts/seed-fossil-electricity-share.mjs"
+          "path": "scripts/seed-country-reference.mjs"
         },
         {
           "path": "scripts/seed-power-reliability.mjs"
-        },
-        {
-          "path": "scripts/seed-recovery-external-debt.mjs"
-        },
-        {
-          "path": "scripts/seed-recovery-reserve-adequacy.mjs"
-        },
-        {
-          "path": "scripts/seed-resilience-static.mjs"
-        },
-        {
-          "path": "scripts/seed-sovereign-wealth.mjs"
-        },
-        {
-          "path": "scripts/seed-wb-external-debt.mjs"
         },
         {
           "path": "scripts/seed-wb-indicators.mjs"
         },
         {
           "path": "server/worldmonitor/economic/v1/list-world-bank-indicators.ts"
-        },
-        {
-          "path": "server/worldmonitor/resilience/v1/_dimension-scorers.ts"
-        },
-        {
-          "path": "server/worldmonitor/resilience/v1/_indicator-source-policy.ts"
         }
       ]
     },
@@ -1417,28 +1393,13 @@
       "status": "excluded",
       "references": [
         {
-          "path": "scripts/audit-resilience-cohorts.mjs"
-        },
-        {
-          "path": "scripts/freeze-resilience-ranking.mjs"
-        },
-        {
           "path": "scripts/openapi-inject-servers.mjs"
-        },
-        {
-          "path": "scripts/post-pr3427-force-refresh.mjs"
-        },
-        {
-          "path": "scripts/post-pr3487-force-refresh.mjs"
         },
         {
           "path": "scripts/validate-rss-feeds.mjs"
         },
         {
           "path": "scripts/validate-seed-migration.mjs"
-        },
-        {
-          "path": "scripts/verify-import-hhi-coverage.mjs"
         },
         {
           "path": "src/services/runtime.ts"
@@ -2478,9 +2439,6 @@
           "path": "scripts/seed-recovery-import-hhi.mjs"
         },
         {
-          "path": "scripts/seed-recovery-reexport-share.mjs"
-        },
-        {
           "path": "scripts/seed-supply-vulnerability.mjs"
         },
         {
@@ -2894,13 +2852,7 @@
           "path": "scripts/_conflict-hapi.mjs"
         },
         {
-          "path": "scripts/benchmark-resilience-external.mjs"
-        },
-        {
           "path": "scripts/seed-idmc-idu-displacement.mjs"
-        },
-        {
-          "path": "scripts/seed-resilience-static.mjs"
         }
       ]
     },
@@ -3080,18 +3032,10 @@
       "host": "data.worldbank.org",
       "provider": "data.worldbank.org",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: first-party, control-plane, UI, or rendering transport",
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "scripts/seed-education-attainment.mjs"
-        },
-        {
-          "path": "scripts/seed-wb-external-debt.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "datacatalogfiles.worldbank.org",
@@ -3380,15 +3324,10 @@
       "host": "drmkc.jrc.ec.europa.eu",
       "provider": "drmkc.jrc.ec.europa.eu",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this upstream API/dataset; verify before redistribution",
       "attribution": "Credit drmkc.jrc.ec.europa.eu and link to the original upstream API/dataset.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/benchmark-resilience-external.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "dtmapi.iom.int",
@@ -3515,16 +3454,13 @@
           "path": "scripts/_eurostat-utils.mjs"
         },
         {
+          "path": "scripts/seed-country-reference.mjs"
+        },
+        {
           "path": "scripts/seed-economic-calendar.mjs"
         },
         {
           "path": "scripts/seed-eurostat-country-data.mjs"
-        },
-        {
-          "path": "scripts/seed-resilience-static.mjs"
-        },
-        {
-          "path": "server/worldmonitor/resilience/v1/_indicator-source-policy.ts"
         },
         {
           "path": "shared/news-catalog.json"
@@ -3739,9 +3675,6 @@
       "attribution": "Credit en.wikipedia.org and link to the original upstream API/dataset.",
       "status": "terms-review",
       "references": [
-        {
-          "path": "scripts/seed-sovereign-wealth.mjs"
-        },
         {
           "path": "server/worldmonitor/intelligence/v1/get-country-facts.ts"
         }
@@ -4727,15 +4660,10 @@
       "host": "gain.nd.edu",
       "provider": "gain.nd.edu",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this upstream API/dataset; verify before redistribution",
       "attribution": "Credit gain.nd.edu and link to the original upstream API/dataset.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/benchmark-resilience-external.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "gamma-api.polymarket.com",
@@ -4817,15 +4745,10 @@
       "host": "ghoapi.azureedge.net",
       "provider": "ghoapi.azureedge.net",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this upstream API/dataset; verify before redistribution",
       "attribution": "Credit ghoapi.azureedge.net and link to the original upstream API/dataset.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/seed-resilience-static.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "gibs.earthdata.nasa.gov",
@@ -5139,15 +5062,10 @@
       "host": "hdr.undp.org",
       "provider": "UNDP Human Development Report",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "UNDP data terms; dataset-specific license applies",
       "attribution": "United Nations Development Programme (UNDP) Human Development Report.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/benchmark-resilience-external.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "health.aws.amazon.com",
@@ -7631,12 +7549,6 @@
       "references": [
         {
           "path": "scripts/seed-low-carbon-generation.mjs"
-        },
-        {
-          "path": "server/worldmonitor/resilience/v1/_dimension-scorers.ts"
-        },
-        {
-          "path": "server/worldmonitor/resilience/v1/_indicator-source-policy.ts"
         }
       ]
     },
@@ -8162,9 +8074,6 @@
       "status": "reviewed",
       "references": [
         {
-          "path": "scripts/freeze-resilience-ranking.mjs"
-        },
-        {
           "path": "server/worldmonitor/intelligence/v1/get-country-facts.ts"
         }
       ]
@@ -8232,15 +8141,10 @@
       "host": "radar.cloudflare.com",
       "provider": "radar.cloudflare.com",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this upstream API/dataset; verify before redistribution",
       "attribution": "Credit radar.cloudflare.com and link to the original upstream API/dataset.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "server/worldmonitor/resilience/v1/_indicator-source-policy.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "radar.mcp.cloudflare.com",
@@ -8491,15 +8395,10 @@
       "host": "rsf.org",
       "provider": "Reporters Without Borders (RSF)",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "RSF terms; attribution required",
       "attribution": "Reporters Without Borders (RSF) World Press Freedom Index.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/seed-resilience-static.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "rsmcnewdelhi.imd.gov.in",
@@ -10589,15 +10488,10 @@
       "host": "uis.unesco.org",
       "provider": "uis.unesco.org",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this upstream API/dataset; verify before redistribution",
       "attribution": "Credit uis.unesco.org and link to the original upstream API/dataset.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "server/worldmonitor/resilience/v1/_indicator-source-policy.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "ukrinform.net",
@@ -13194,15 +13088,10 @@
       "host": "www.ifswf.org",
       "provider": "International Forum of Sovereign Wealth Funds",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms; attribution and redistribution require review",
       "attribution": "International Forum of Sovereign Wealth Funds (IFSWF); link to the source.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/seed-sovereign-wealth.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "www.in.gr",
@@ -14565,15 +14454,10 @@
       "host": "www.statcan.gc.ca",
       "provider": "www.statcan.gc.ca",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this upstream API/dataset; verify before redistribution",
       "attribution": "Credit www.statcan.gc.ca and link to the original upstream API/dataset.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "server/worldmonitor/resilience/v1/_indicator-source-policy.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "www.stats.gov.cn",
@@ -14683,15 +14567,10 @@
       "host": "www.swfinstitute.org",
       "provider": "SWF Institute",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms; attribution and redistribution require review",
       "attribution": "SWF Institute; link to the source publication.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/seed-sovereign-wealth.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "www.szse.cn",
@@ -15136,15 +15015,10 @@
       "host": "www.visionofhumanity.org",
       "provider": "Vision of Humanity / Global Peace Index",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Vision of Humanity terms; attribution required",
       "attribution": "Institute for Economics & Peace, Global Peace Index / Vision of Humanity.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/seed-resilience-static.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "www.viwanda.go.tz",
@@ -15301,9 +15175,6 @@
       "references": [
         {
           "path": "scripts/seed-pink-sheet.mjs"
-        },
-        {
-          "path": "server/worldmonitor/resilience/v1/_indicator-source-policy.ts"
         }
       ]
     },
@@ -15341,9 +15212,6 @@
           "path": "scripts/build-use-cases.mjs"
         },
         {
-          "path": "scripts/capture-resilience-energy-v2-acceptance.mjs"
-        },
-        {
           "path": "scripts/check-live-video-sources.mjs"
         },
         {
@@ -15354,9 +15222,6 @@
         },
         {
           "path": "scripts/discover-content-corpus-pages.mjs"
-        },
-        {
-          "path": "scripts/freeze-resilience-ranking.mjs"
         },
         {
           "path": "scripts/generate-sandbox-fixtures.mjs"
@@ -15387,6 +15252,9 @@
         },
         {
           "path": "scripts/measure-desktop-mainthread.mjs"
+        },
+        {
+          "path": "scripts/seed-country-reference.mjs"
         },
         {
           "path": "scripts/seed-no2-activity.mjs"
@@ -15609,21 +15477,10 @@
       "host": "www150.statcan.gc.ca",
       "provider": "Statistics Canada",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Statistics Canada Open Licence (Open Government Licence — Canada); use, reproduce, publish, freely distribute or sell with attribution (https://www.statcan.gc.ca/en/terms-conditions/open-licence)",
       "attribution": "Statistics Canada. Web Data Service. https://www.statcan.gc.ca/en/developers/wds/user-guide",
-      "status": "reviewed",
-      "references": [
-        {
-          "path": "scripts/lib/statcan-wds.mjs"
-        },
-        {
-          "path": "server/worldmonitor/resilience/v1/_canada-national-overlay.ts"
-        },
-        {
-          "path": "server/worldmonitor/resilience/v1/_indicator-source-policy.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "www2.moeaea.gov.tw",

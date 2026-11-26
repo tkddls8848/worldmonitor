@@ -19,16 +19,7 @@ Country risk has two time horizons, and conflating them is the most common analy
 
 **The fast clock: Country Instability Index (CII).** A 0–100 score, recomputed continuously, that blends a country's structural baseline (40%) with live event pressure (60%): unrest, conflict, security activity, and information signals. A score of 35 is normal background noise; 70 means active crisis. The five bands (Low, Normal, Elevated, High, Critical) and a signed 24-hour delta tell you both where a country sits and which direction it is moving. The [full methodology is public](/blog/posts/country-instability-index-methodology-explained/), which matters: a score you cannot decompose is a score you cannot defend in front of a board.
 
-**The slow clock: Country [Resilience Index](/blog/posts/country-resilience-index-methodology-explained/).** Computed for the public rankable country universe across 71 indicators, 21 active dimensions, and 6 domains, and refreshed every six hours, this measures structural capacity: energy, infrastructure, health systems, governance, economic buffers. It answers a different question: when a shock hits, does this country absorb it or shatter?
-
-Read the two together and you get four meaningful quadrants:
-
-| | High resilience | Low resilience |
-|---|---|---|
-| **Low instability** | Stable; routine monitoring | Fragile calm; watch closely |
-| **High instability** | Turbulent but absorbing | Crisis with no floor; act |
-
-A protest wave in a high-resilience country is news. The same wave in a low-resilience country is a supply-chain event.
+Check advisories, sanctions, and transport dependencies alongside the CII score.
 
 ## Step 2: Build the Dossier
 
@@ -62,16 +53,16 @@ The daily check catches trends. Alerts catch the 3 a.m. event. With a Pro accoun
 - **Alert rules:** event-driven triggers, with quiet hours so the watch respects your time zone
 - **Webhooks:** HMAC-signed deliveries for teams piping alerts into SIEM, ticketing, or data platforms
 
-Developers can go further: poll country scores on a schedule via the REST API, or wire a [supply-chain early-warning system](/blog/posts/build-supply-chain-early-warning-system-api/) that combines [chokepoint](/blog/posts/what-is-a-maritime-chokepoint/) webhooks with country resilience. And if your team runs AI agents, the [MCP server](/blog/posts/worldmonitor-mcp-server-ai-agents-real-time-intelligence/) exposes `get_country_risk` and `get_country_brief` so an agent can run the entire Step 3 checklist and write the summary itself.
+Developers can go further: poll country scores on a schedule via the REST API, or wire a [supply-chain early-warning system](/blog/posts/build-supply-chain-early-warning-system-api/) that combines [chokepoint](/blog/posts/what-is-a-maritime-chokepoint/) webhooks with country brief evidence. And if your team runs AI agents, the [MCP server](/blog/posts/worldmonitor-mcp-server-ai-agents-real-time-intelligence/) exposes `get_country_risk` and `get_country_brief` so an agent can run the entire Step 3 checklist and write the summary itself.
 
 ## A Worked Example: Five-Country Supplier Footprint
 
 Say your exposure is [Taiwan](https://www.worldmonitor.app/countries/taiwan/) (semiconductors), [Mexico](https://www.worldmonitor.app/countries/mexico/) (assembly), [Poland](https://www.worldmonitor.app/countries/poland/) (logistics hub), [Egypt](https://www.worldmonitor.app/countries/egypt/) (Suez transit and cable landings), and [Vietnam](https://www.worldmonitor.app/countries/vietnam/) (electronics). Open each profile for its published evidence and observation dates.
 
-- **Baseline:** Taiwan has moderate CII and very high resilience, but a single chokepoint ([Taiwan Strait](https://www.worldmonitor.app/crises/taiwan-strait-tensions/)) dominates the risk picture. Egypt sits in an elevated CII band with mid-table resilience: the fragile-calm quadrant. Vietnam has low instability; your watch there is purely infrastructure and weather.
+- **Baseline:** Taiwan has moderate CII, but a single chokepoint ([Taiwan Strait](https://www.worldmonitor.app/crises/taiwan-strait-tensions/)) dominates the risk picture. Egypt sits in an elevated CII band. Vietnam has low instability; your watch there is purely infrastructure and weather.
 - **Dossier signals:** for Taiwan, PLA exercise activity and [Taiwan Strait](https://www.worldmonitor.app/chokepoints/taiwan-strait/) transit changes; for Egypt, [Suez](https://www.worldmonitor.app/chokepoints/suez-canal/) disruption score and [internet outages](https://www.worldmonitor.app/tools/internet-outages/); for Mexico, cartel-related unrest events near your specific corridors, not the national average.
 - **Daily watch:** CII deltas plus a keyword monitor per supplier city.
-- **Automation:** chokepoint webhooks on Taiwan Strait and Suez at threshold 60; weekly resilience-change report on all five.
+- **Automation:** chokepoint webhooks on Taiwan Strait and Suez at threshold 60; weekly country-risk report on all five.
 
 Total setup time: about half an hour. Annual cost: less than one hour of the consultancy that wrote the PDF.
 
@@ -85,15 +76,15 @@ For the evergreen task page that keeps this procedure durable and product-handof
 
 **What is the difference between country risk and country instability?**
 
-Instability (CII) measures short-horizon stress: what is happening now and this week. Country risk in the broad sense also includes structural fragility (resilience), exposure pathways (infrastructure, chokepoints), and persistence (sanctions, advisories). A complete picture needs both clocks.
+Instability (CII) measures short-horizon stress: what is happening now and this week. Country risk in the broad sense also includes exposure pathways (infrastructure, chokepoints), and persistence (sanctions, advisories).
 
 **How many countries does World Monitor score?**
 
-The Country Instability Index covers its Tier-1 country registry with full real-time signal fusion; resilience scores cover the public rankable country universe. Country briefs, conflict events, advisories, and news signals are global.
+The Country Instability Index covers its Tier-1 country registry with full real-time signal fusion. Country briefs, conflict events, advisories, and news signals are global.
 
 **Can I export the scores into my own risk model?**
 
-Yes. Every score shown in the dashboard is available through the [REST API](/blog/posts/build-on-worldmonitor-developer-api-open-source/) (`get-country-risk`, `get-resilience-score`, `get-resilience-ranking`) under an API plan, with an OpenAPI 3.1 spec for codegen.
+Yes. Every score shown in the dashboard is available through the [REST API](/blog/posts/build-on-worldmonitor-developer-api-open-source/) (`get-country-risk`) under an API plan, with an OpenAPI 3.1 spec for codegen.
 
 ---
 

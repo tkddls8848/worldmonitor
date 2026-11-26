@@ -6,12 +6,9 @@ import {
   PREDICTION_MARKET_MIN_POOL_COUNTS,
 } from './_pool-coverage.js';
 import {
-  EDUCATION_MIN_RANKABLE_RECORD_COUNT,
   SUPPLY_VULNERABILITY_MIN_RANKABLE_RECORD_COUNT,
-  parseEducationPayloadRankableRecordCount,
   parseRankableRecordCount,
 } from './_rankable-coverage.js';
-import { unwrapEnvelope } from './_seed-envelope.js';
 import { projectChinaDecisionGroupDiagnostics } from './_china-decision-health.js';
 import { assessCiiInputs } from './_cii-input-health.js';
 import {
@@ -26,15 +23,6 @@ import { isAppOwnedRedisKey } from './_redis-key-ownership.js';
 
 export const config = { runtime: 'edge' };
 
-// Keep these literals in sync with scripts/_resilience-intervals.mjs. Edge
-// functions cannot import from scripts/, so tests enforce this mirror.
-const RESILIENCE_INTERVAL_KEY_PREFIX = 'resilience:intervals:v13:';
-const RESILIENCE_INTERVAL_MIN_RECORD_COUNT = 180;
-const RESILIENCE_INTERVAL_METHODOLOGY = 'weight-perturbation-sensitivity-v3';
-const RESILIENCE_INTERVAL_SOURCE_VERSION = `resilience-intervals:${RESILIENCE_INTERVAL_KEY_PREFIX}${RESILIENCE_INTERVAL_METHODOLOGY}`;
-const RESILIENCE_INTERVAL_PROBE_KEY = `${RESILIENCE_INTERVAL_KEY_PREFIX}US`;
-const RESILIENCE_INTERVAL_SCORE_MIN = 0;
-const RESILIENCE_INTERVAL_SCORE_MAX = 100;
 const CHINA_DECISION_SIGNAL_GROUP_IDS = Object.freeze([
   'macro',
   'policy-enforcement',
@@ -217,7 +205,6 @@ const SEED_DOMAINS = {
   'economic:bis-property-commercial':  { key: 'seed-meta:economic:bis-property-commercial',  intervalMin: 720 }, // 12h cron; only written when CPP slice fetched fresh entries
   'economic:cbr-rates':                { key: 'seed-meta:economic:cbr-rates',                intervalMin: 1440, minRecordCount: 31 }, // daily cron (seed-bundle-macro); api/health.js maxStaleMin 4320 = 3x. minRecordCount mirrors MIN_RATE_COUNT (30) + the key rate.
   'economic:boc-valet':                { key: 'seed-meta:economic:boc-valet',                intervalMin: 1440, minRecordCount: 19 }, // daily cron (seed-bundle-macro); api/health.js maxStaleMin 4320 = 3x. minRecordCount = 15 FX + policy + 3 yields.
-  'economic:statcan-wds':              { key: 'seed-meta:economic:statcan-wds',              intervalMin: 1440, minRecordCount: 2 }, // daily cron; floor is CPI YoY + LFS unemployment. Empty change-list is valid quiet.
   'research:tech-events':    { key: 'seed-meta:research:tech-events',     intervalMin: 240 },
   // Seeder-owned meta for the research:tech-events:v1 mirror (scripts/
   // seed-research.mjs). MUST stay distinct from the relay-owned
@@ -266,29 +253,6 @@ const SEED_DOMAINS = {
   'resilience:static':        { key: 'seed-meta:resilience:static',        intervalMin: 288000 }, // annual October snapshot; intervalMin = health.js maxStaleMin / 2 (400d alert threshold)
   'resilience:food-stocks':   { key: 'seed-meta:resilience:food-stocks',   intervalMin: 43200 }, // monthly WASDE; intervalMin = health.js maxStaleMin / 2 (86400 / 2)
   'demographics:capability':  { key: 'seed-meta:demographics:capability', intervalMin: 18000, minRecordCount: 150 }, // static-ref every 20d; 25d /api/health budget expressed as intervalMin * 2.
-  'resilience:education-attainment': {
-    key: 'seed-meta:resilience:education-attainment',
-    intervalMin: 5760, // 11520min /api/health budget expressed as intervalMin * 2.
-    minRankableRecordCount: EDUCATION_MIN_RANKABLE_RECORD_COUNT,
-    dataProbe: {
-      key: 'resilience:education-attainment:v1',
-      kind: 'education_coverage',
-      minRankableRecordCount: EDUCATION_MIN_RANKABLE_RECORD_COUNT,
-    },
-  },
-  'resilience:intervals':     {
-    key: 'seed-meta:resilience:intervals',
-    intervalMin: 420, // Same 840min freshness budget as api/health.js, expressed as intervalMin * 2.
-    minRecordCount: RESILIENCE_INTERVAL_MIN_RECORD_COUNT,
-    dataProbe: {
-      key: RESILIENCE_INTERVAL_PROBE_KEY,
-      kind: 'resilience_interval',
-      methodology: RESILIENCE_INTERVAL_METHODOLOGY,
-      formula: currentResilienceCacheFormula(),
-      educationState: currentResilienceEducationState(),
-      sourceVersion: RESILIENCE_INTERVAL_SOURCE_VERSION,
-    },
-  },
   'regulatory:actions':       { key: 'seed-meta:regulatory:actions',       intervalMin: 120 }, // 2h cron; intervalMin = maxStaleMin / 3
   'economic:owid-energy-mix': { key: 'seed-meta:economic:owid-energy-mix', intervalMin: 25200 }, // monthly cron on 1st; intervalMin = health.js maxStaleMin / 2 (50400 / 2)
   'economic:fao-ffpi':        { key: 'seed-meta:economic:fao-ffpi',        intervalMin: 43200 }, // monthly seed; intervalMin = health.js maxStaleMin / 2 (86400 / 2)
@@ -297,7 +261,6 @@ const SEED_DOMAINS = {
   'economic:imf-external':    { key: 'seed-meta:economic:imf-external',    intervalMin: 50400 }, // monthly WEO seed; intervalMin = health.js maxStaleMin / 2 (100800 / 2)
   // plan 2026-04-25-004 Phase 2: financialSystemExposure component seeders.
   // intervalMin = health.js maxStaleMin / 2 (mirrors the IMF-pattern). Bundle: scripts/seed-bundle-macro.mjs.
-  'economic:wb-external-debt': { key: 'seed-meta:economic:wb-external-debt', intervalMin: 50400 }, // annual WB IDS publication; intervalMin = health.js maxStaleMin / 2 (100800 / 2)
   'economic:capital-flows':    { key: 'seed-meta:economic:capital-flows',    intervalMin: 7200 },  // weekly; intervalMin = health.js maxStaleMin / 2 (14400 / 2)
   'economic:bis-lbs':          { key: 'seed-meta:economic:bis-lbs',          intervalMin: 7200 },  // BIS LBS quarterly; intervalMin = health.js maxStaleMin / 2 (14400 / 2)
   'economic:fatf-listing':     { key: 'seed-meta:economic:fatf-listing',     intervalMin: 30240 }, // FATF plenary 3×/year; intervalMin = health.js maxStaleMin / 2 (60480 / 2)
@@ -328,8 +291,6 @@ const SEED_DOMAINS = {
   'economic:eurostat-house-prices': { key: 'seed-meta:economic:eurostat-house-prices', intervalMin: 36000 }, // weekly cron, annual data; intervalMin = health.js maxStaleMin / 2 (72000 / 2)
   'economic:eurostat-gov-debt-q':   { key: 'seed-meta:economic:eurostat-gov-debt-q',   intervalMin: 10080 }, // 2d cron, quarterly data; intervalMin = health.js maxStaleMin / 2 (20160 / 2)
   'economic:eurostat-industrial-production': { key: 'seed-meta:economic:eurostat-industrial-production', intervalMin: 3600 }, // daily cron, monthly data; intervalMin = health.js maxStaleMin / 2 (7200 / 2)
-  'resilience:recovery:reexport-share':   { key: 'seed-meta:resilience:recovery:reexport-share',   intervalMin: 43200 }, // monthly bundle cron (30d); intervalMin*2 = 60d matches health.js maxStaleMin
-  'resilience:recovery:sovereign-wealth': { key: 'seed-meta:resilience:recovery:sovereign-wealth', intervalMin: 43200 }, // monthly bundle cron (30d); intervalMin*2 = 60d matches health.js maxStaleMin
   // #5736 — historical-intelligence ingest health. Distinct from each
   // collector's own seed key above: scripts/_seed-history.mjs appends to the
   // Convex intel-history store fail-open, so a permanently broken relay leg
@@ -384,182 +345,15 @@ function parseFiniteRecordCount(raw) {
   return null;
 }
 
-function isEnabledEnv(name, defaultValue) {
-  return String(process.env[name] ?? defaultValue).toLowerCase() === 'true';
-}
-
-function isResiliencePillarCombineEnabled() {
-  return process.env.RESILIENCE_PILLAR_COMBINE_ENABLED?.trim().toLowerCase() !== 'false';
-}
-
-function currentResilienceCacheFormula() {
-  // Mirrors server/worldmonitor/resilience/v1/_shared.ts currentCacheFormula().
-  // Edge functions cannot import the server module, so this is intentionally
-  // duplicated and guarded by tests.
-  return isResiliencePillarCombineEnabled() &&
-    isEnabledEnv('RESILIENCE_SCHEMA_V2_ENABLED', 'true')
-    ? 'pc'
-    : 'd6';
-}
-
-function currentResilienceEducationState() {
-  return isEnabledEnv('RESILIENCE_EDUCATION_ENABLED', 'true')
-    ? 'education-on'
-    : 'education-off';
-}
-
-function isValidResilienceIntervalPayload(payload) {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return false;
-  if (typeof payload.p05 !== 'number' || !Number.isFinite(payload.p05)) return false;
-  if (typeof payload.p95 !== 'number' || !Number.isFinite(payload.p95)) return false;
-  return (
-    payload.p05 >= RESILIENCE_INTERVAL_SCORE_MIN &&
-    payload.p05 <= RESILIENCE_INTERVAL_SCORE_MAX &&
-    payload.p95 >= RESILIENCE_INTERVAL_SCORE_MIN &&
-    payload.p95 <= RESILIENCE_INTERVAL_SCORE_MAX &&
-    payload.p05 <= payload.p95
-  );
-}
-
-function evaluateDataProbe(cfg, raw) {
-  if (!cfg) return null;
-  const requiredFormula = cfg.kind === 'resilience_interval'
-    ? currentResilienceCacheFormula()
-    : cfg.formula ?? null;
-  const requiredEducationState = cfg.kind === 'resilience_interval'
-    ? currentResilienceEducationState()
-    : cfg.educationState ?? null;
-  if (!raw) {
-    return {
-      ok: false,
-      status: 'data_missing',
-      key: cfg.key,
-      requiredMethodology: cfg.methodology ?? null,
-      requiredSourceVersion: cfg.sourceVersion ?? null,
-      requiredFormula,
-      requiredEducationState,
-    };
-  }
-
-  const parsed = unwrapEnvelope(parseJsonValue(raw)).data;
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    return {
-      ok: false,
-      status: 'data_invalid',
-      key: cfg.key,
-      requiredMethodology: cfg.methodology ?? null,
-      requiredSourceVersion: cfg.sourceVersion ?? null,
-      requiredFormula,
-      requiredEducationState,
-    };
-  }
-
-  const methodology = typeof parsed.methodology === 'string' ? parsed.methodology : null;
-  const formula = typeof parsed._formula === 'string' ? parsed._formula : null;
-  const educationState = typeof parsed._educationState === 'string' ? parsed._educationState : null;
-  if (cfg.kind === 'education_coverage') {
-    const rankableRecordCount = parseEducationPayloadRankableRecordCount(parsed);
-    const ok = rankableRecordCount != null && rankableRecordCount >= cfg.minRankableRecordCount;
-    return {
-      ok,
-      status: ok ? 'ok' : 'coverage_partial',
-      key: cfg.key,
-      rankableRecordCount,
-      minRankableRecordCount: cfg.minRankableRecordCount,
-    };
-  }
-  if (cfg.methodology && methodology !== cfg.methodology) {
-    return {
-      ok: false,
-      status: 'methodology_mismatch',
-      key: cfg.key,
-      methodology,
-      formula,
-      requiredMethodology: cfg.methodology,
-      requiredSourceVersion: cfg.sourceVersion ?? null,
-      requiredFormula,
-      educationState,
-      requiredEducationState,
-    };
-  }
-
-  if (requiredFormula && formula !== requiredFormula) {
-    return {
-      ok: false,
-      status: 'formula_mismatch',
-      key: cfg.key,
-      formula,
-      requiredFormula,
-      educationState,
-      requiredEducationState,
-      methodology,
-      requiredMethodology: cfg.methodology ?? null,
-      requiredSourceVersion: cfg.sourceVersion ?? null,
-    };
-  }
-
-  const educationStateMatches = educationState === requiredEducationState;
-  if (requiredEducationState && !educationStateMatches) {
-    return {
-      ok: false,
-      status: 'construct_mismatch',
-      key: cfg.key,
-      formula,
-      requiredFormula,
-      educationState,
-      requiredEducationState,
-      methodology,
-      requiredMethodology: cfg.methodology ?? null,
-      requiredSourceVersion: cfg.sourceVersion ?? null,
-    };
-  }
-
-  if (cfg.kind === 'resilience_interval' && !isValidResilienceIntervalPayload(parsed)) {
-    return {
-      ok: false,
-      status: 'data_invalid',
-      key: cfg.key,
-      formula,
-      requiredFormula,
-      educationState,
-      requiredEducationState,
-      methodology,
-      requiredMethodology: cfg.methodology ?? null,
-      requiredSourceVersion: cfg.sourceVersion ?? null,
-      p05: typeof parsed.p05 === 'number' && Number.isFinite(parsed.p05) ? parsed.p05 : null,
-      p95: typeof parsed.p95 === 'number' && Number.isFinite(parsed.p95) ? parsed.p95 : null,
-    };
-  }
-
-  return {
-    ok: true,
-    status: 'ok',
-    key: cfg.key,
-    methodology,
-    requiredMethodology: cfg.methodology ?? null,
-    requiredSourceVersion: cfg.sourceVersion ?? null,
-    formula,
-    requiredFormula,
-    educationState,
-    requiredEducationState,
-    computedAt: typeof parsed.computedAt === 'string' ? parsed.computedAt : null,
-  };
-}
-
 async function getSeedBatch(entries) {
   const commands = [];
   const metaSlots = [];
-  const probeSlots = [];
   const activationSlots = [];
   const contentFreshnessActivationSlots = [];
   const batchKey = (key) => (isAppOwnedRedisKey(key) ? applyRedisKeyPrefix(key) : key);
   for (const [domain, cfg] of entries) {
     metaSlots.push({ domain, key: cfg.key, index: commands.length });
     commands.push(['GET', batchKey(cfg.key)]);
-    if (cfg.dataProbe?.key) {
-      probeSlots.push({ domain, index: commands.length });
-      commands.push(['GET', batchKey(cfg.dataProbe.key)]);
-    }
     if (cfg.activationKey) {
       activationSlots.push({ domain, index: commands.length });
       commands.push(['EXISTS', batchKey(cfg.activationKey)]);
@@ -578,16 +372,12 @@ async function getSeedBatch(entries) {
   if (!data) throw new Error('Redis not configured');
 
   const metaMap = new Map();
-  const probeMap = new Map();
   for (const slot of metaSlots) {
     const raw = data[slot.index]?.result;
     if (raw) {
       const parsed = parseJsonValue(raw);
       if (parsed) metaMap.set(slot.key, parsed);
     }
-  }
-  for (const slot of probeSlots) {
-    probeMap.set(slot.domain, data[slot.index]?.result ?? null);
   }
   // Both maps are THREE-valued (#6095, matching api/health.js and
   // api/mcp/freshness.ts): `readExistsFlags` adds a domain only when the
@@ -602,7 +392,7 @@ async function getSeedBatch(entries) {
     contentFreshnessActivationSlots.map((slot) => data[slot.index]),
     contentFreshnessActivationSlots.map((slot) => slot.domain),
   );
-  return { metaMap, probeMap, activatedMap, contentFreshnessActivatedMap };
+  return { metaMap, activatedMap, contentFreshnessActivatedMap };
 }
 
 // Per-country states the bilateral HS4 seeder records when it could not
@@ -624,9 +414,8 @@ export async function handleSeedHealth(req, options = {}) {
   let metaMap;
   let activatedMap = new Map();
   let contentFreshnessActivatedMap = new Map();
-  let probeMap;
   try {
-    ({ metaMap, probeMap, activatedMap, contentFreshnessActivatedMap } = await getSeedBatch(entries));
+    ({ metaMap, activatedMap, contentFreshnessActivatedMap } = await getSeedBatch(entries));
   } catch {
     return jsonResponse({ error: 'Redis unavailable' }, 503, cors);
   }
@@ -762,13 +551,6 @@ export async function handleSeedHealth(req, options = {}) {
       && !sourceUnavailable
       && !sourceBlocked);
     const isError = meta.status === 'error' || sourceError;
-    const probe = evaluateDataProbe(cfg.dataProbe, probeMap.get(domain));
-    const sourceMismatch = Boolean(
-      cfg.dataProbe?.sourceVersion &&
-      typeof meta.sourceVersion === 'string' &&
-      meta.sourceVersion !== '' &&
-      meta.sourceVersion !== cfg.dataProbe.sourceVersion
-    );
     const contentFreshness = buildContentFreshnessAssessment(
       meta,
       cfg.requireContentFreshness,
@@ -812,8 +594,6 @@ export async function handleSeedHealth(req, options = {}) {
       || rankableCoveragePartial
       || redistributionPolicyPartial
       || isError
-      || sourceMismatch
-      || probe?.ok === false
       || contentFreshnessInvalid
       || contentFreshnessStale;
     if (stale || coveragePartial) staleCount++;
@@ -834,10 +614,6 @@ export async function handleSeedHealth(req, options = {}) {
         ? 'not_configured'
         : isError
         ? 'error'
-        : sourceMismatch
-          ? 'source_version_mismatch'
-          : probe?.ok === false
-            ? probe.status
             : freshnessStale
               ? 'stale'
               : coveragePartial
@@ -880,7 +656,6 @@ export async function handleSeedHealth(req, options = {}) {
     // Explicit coverage flag so consumers that only inspect `stale` still see
     // pool/aggregate shortfalls (pool shortfall keeps stale:false by design).
     if (coveragePartial) seeds[domain].coveragePartial = true;
-    if (probe) seeds[domain].dataProbe = probe;
     // #5736: without this, `status: "error"` names no cause and an operator has
     // to read raw Redis to learn WHY — which is the log-diving the issue exists
     // to end. Bounded, producer-controlled vocabulary only (`http_401`,

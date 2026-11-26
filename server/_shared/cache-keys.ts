@@ -161,7 +161,7 @@ export const ROUTE_EXPLORER_LANE_KEY = (
  * NOT in bootstrap — request-varying, PRO-gated. 24h Redis TTL.
  */
 export const ROUTE_IMPACT_KEY = (fromIso2: string, toIso2: string, hs2: string) =>
-  `supply-chain:route-impact:${fromIso2}:${toIso2}:${hs2}:v1` as const;
+  `supply-chain:route-impact:${fromIso2}:${toIso2}:${hs2}:v2` as const;
 
 /**
  * Shared chokepoint status cache key — written by get-chokepoint-status, read by bypass-options and cost-shock handlers.

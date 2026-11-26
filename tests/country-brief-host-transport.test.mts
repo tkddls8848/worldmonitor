@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createHostCountryFetch, CountrySectionError } from '../src/services/country-brief-host-transport';
 import { IntelligenceServiceClient } from '../src/generated/client/worldmonitor/intelligence/v1/service_client';
 import { ScorecardServiceClient } from '../src/generated/client/worldmonitor/scorecard/v1/service_client';
-import { ResilienceServiceClient } from '../src/generated/client/worldmonitor/resilience/v1/service_client';
+import { SupplyChainServiceClient } from '../src/generated/client/worldmonitor/supply_chain/v1/service_client';
 import { SupplyChainServiceClient } from '../src/generated/client/worldmonitor/supply_chain/v1/service_client';
 import { countryRiskDirectViewSchema, normalizeCountryDirectRead } from '../shared/country-brief-host';
 
@@ -67,10 +67,10 @@ it('uses generated country query names without passing browser credentials to th
     return { state: 'ready', section: args.section, value: { unavailable: true }, retrievedAt: '2026-10-01T00:00:00.000Z' };
   });
   const score = new ScorecardServiceClient('https://www.worldmonitor.app', { fetch, defaultHeaders: { Authorization: 'must-not-leave-frame' } });
-  const resilience = new ResilienceServiceClient('https://www.worldmonitor.app', { fetch });
+  const supplyChain = new SupplyChainServiceClient('https://www.worldmonitor.app', { fetch });
   const supply = new SupplyChainServiceClient('https://www.worldmonitor.app', { fetch });
   await score.getFiveFactorScorecard({ countryCode: 'US' });
-  await resilience.getFoodStocks({ countryCode: 'WORLD', commodity: '' });
+  await supplyChain.getFoodStocks({ countryCode: 'WORLD', commodity: '' });
   await supply.getMultiSectorCostShock({ iso2: 'US', chokepointId: 'hormuz', closureDays: 30 });
   await supply.getBypassOptions({ chokepointId: 'hormuz', cargoType: 'container', closurePct: 100 });
   assert.deepEqual(calls.map(call => call.args), [

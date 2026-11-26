@@ -96,7 +96,7 @@ describe('embed URL contract', () => {
     // `satellites` is no longer a map layer; the parser drops the unknown key.
     assert.equal(Object.hasOwn(parsed.layers, 'satellites'), false);
     assert.equal(parsed.layers.sanctions, false);
-    assert.equal(parsed.layers.resilienceScore, false);
+    assert.equal(Object.hasOwn(parsed.layers, 'resilienceScore'), false);
     assert.equal(parsed.layers.ciiChoropleth, false);
   });
 

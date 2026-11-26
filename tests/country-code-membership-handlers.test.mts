@@ -5,8 +5,6 @@ import { getCountryIntelBrief } from '../server/worldmonitor/intelligence/v1/get
 import { getCountryCoverage, type CountryCoverageDependencies } from '../server/worldmonitor/intelligence/v1/get-country-coverage.ts';
 import { getCountryFacts } from '../server/worldmonitor/intelligence/v1/get-country-facts.ts';
 import { getCountryStockIndex } from '../server/worldmonitor/market/v1/get-country-stock-index.ts';
-import { getResilienceScore } from '../server/worldmonitor/resilience/v1/get-resilience-score.ts';
-import { getResilienceIndicators } from '../server/worldmonitor/resilience/v1/get-resilience-indicators.ts';
 import { installRedis } from './helpers/fake-upstash-redis.mts';
 import { validationFailure } from './helpers/validation-failure.mts';
 
@@ -141,38 +139,6 @@ describe('get-country-stock-index', () => {
     const response = await read('BV');
     assert.equal(response.available, false);
     assert.equal(response.code, 'BV');
-    assert.deepEqual(fetched, []);
-  });
-});
-
-describe('get-resilience-score', () => {
-  const read = (countryCode: string) => getResilienceScore(
-    ctxFor('/api/resilience/v1/get-resilience-score'),
-    { countryCode },
-  );
-
-  it('rejects unassigned codes on countryCode before scoring or caching anything', async () => {
-    for (const code of UNASSIGNED) {
-      await assert.rejects(read(code), validationFailure('countryCode', /assigned ISO 3166-1 alpha-2/), code);
-    }
-    assert.deepEqual(fetched, []);
-  });
-
-  it('keeps the required-field violation for an empty code', async () => {
-    await assert.rejects(read(''), validationFailure('countryCode', /required/));
-  });
-});
-
-describe('get-resilience-indicators', () => {
-  const read = (countryCode: string) => getResilienceIndicators(
-    ctxFor('/api/resilience/v1/get-resilience-indicators'),
-    { countryCode },
-  );
-
-  it('rejects unassigned codes on countryCode before scoring or caching anything', async () => {
-    for (const code of UNASSIGNED) {
-      await assert.rejects(read(code), validationFailure('countryCode', /assigned ISO 3166-1 alpha-2/), code);
-    }
     assert.deepEqual(fetched, []);
   });
 });

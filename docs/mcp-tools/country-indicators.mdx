@@ -1,7 +1,7 @@
 ---
 title: "MCP tools: Country indicators & resources"
 sidebarTitle: "Country indicators & resources"
-description: "World Monitor MCP tool reference for NO2 activity, demographics, scorecards, resilience, minerals, mine sites and dated macro history: parameters, freshness, backing API endpoints and example calls."
+description: "World Monitor MCP tool reference for NO2 activity, scorecards, minerals, mine sites and dated macro history: parameters, freshness, backing API endpoints and example calls."
 ---
 
 Part of the [MCP Tools Reference](/mcp-tools-reference), which indexes every tool. Connection, auth, plans and errors are in the [MCP Server overview](/mcp-overview).
@@ -44,38 +44,6 @@ curl -s https://worldmonitor.app/mcp \
 
 </CodeGroup>
 
-### `get_demographics_capability`
-
-Country age structure, education capacity, and industrial-workforce observations from UN WPP, World Bank/UNESCO UIS, and ILOSTAT. The three groups are independent: one source can be unavailable while the other groups remain usable.
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|---------:|-------------|
-| `country_code` | string | yes | ISO alpha-2 or alpha-3 code, or a country name in any supported dashboard locale (e.g. `"Egypt"`, `"مصر"`). |
-
-- **API endpoint:** `GET /api/resilience/v1/get-demographics-capability`
-- **Access:** `subscription` — requires a Pro subscription. RPC tool: no `summary` argument (use `jmespath` to trim the response).
-- **Kind:** subscription RPC proxy over the annual demographics seed.
-- **Freshness:** read each observation's `year`; it is the source observation year, not the seed run year. Stage metadata reports whether the current snapshot is `fresh`, retained a last-good stage, or is unavailable.
-
-Each observation returns `available`, `value`, `year`, `source`, and `unit`. Always check `available` before reading `value`: an unavailable proto3 number is serialized as zero. The combined trained-industrial-workforce observation is published only when the two underlying ILOSTAT occupation groups form a valid same-year cohort.
-
-<CodeGroup>
-
-```bash curl
-curl -s https://worldmonitor.app/mcp \
-  -H "X-WorldMonitor-Key: $WM_KEY" \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "jsonrpc":"2.0","id":1,
-    "method":"tools/call",
-    "params":{"name":"get_demographics_capability","arguments":{"country_code":"DE"}}
-  }'
-```
-
-</CodeGroup>
-
 ### `get_five_factor_scorecard`
 
 Return the frozen v1 scorecard. Pass one of a country code, an official bloc preset, or a custom member list for that country or bloc with its full evidence; pass none of them for the compact list of every scored country. The response comes from one atomic seeded snapshot, so its country, bloc and list evidence share the same cohort and methodology version.
@@ -95,7 +63,7 @@ Two selectors in one call return Invalid params before any allowance is spent.
 - **Kind:** canonical RPC proxy over `scorecard:five-factor:v1`; it does not fetch source datasets at request time.
 - **Freshness:** daily seed with a 36-hour freshness budget. Read `computedAt`, `methodologyVersion`, and the seed health metadata separately when operational freshness matters.
 
-Read `hasScore` before every pillar `score` and `subScore`. A false flag means the proto3 zero is a placeholder, not a resilience score. Read each input's `available` and `hasValue` before its numeric `value`. `insufficientReasons` and `unavailableReason` explain missing coverage, including the source-policy case `redistribution-blocked`.
+Read `hasScore` before every pillar `score` and `subScore`. A false flag means the proto3 zero is a placeholder, not a pillar score. Read each input's `available` and `hasValue` before its numeric `value`. `insufficientReasons` and `unavailableReason` explain missing coverage, including the source-policy case `redistribution-blocked`.
 
 The list (no selector) keeps each country's pillar score, band, input coverage and insufficient-data reasons, but omits raw inputs and source observations so the complete country set stays within the output budget. Use a selector when you need input provenance, raw observations, or bloc aggregation.
 
@@ -141,43 +109,6 @@ curl -s https://worldmonitor.app/mcp \
 ### `list_five_factor_scorecards`
 
 Retired. The compact list of every scored country is [`get_five_factor_scorecard`](#get_five_factor_scorecard) called with no `country_code`, `preset` or `members`. Calls to the old name still work: they run that list call and return a `deprecation` notice that names the replacement.
-
-### `get_resilience_indicators`
-
-Explain one country's Country Resilience Index score across the complete 71-row indicator registry. Each row carries the normalized component score, the runtime weight the active scorer used, the post-policy effective contribution, the observed or imputed state, observation age, and source provenance. Contributions reconcile to each published dimension score, so a score can be audited without reimplementing the conditional formulas.
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|---------:|-------------|
-| `country_code` | string | yes | ISO alpha-2 or alpha-3 code, or a country name in any supported dashboard locale (e.g. `"Egypt"`, `"مصر"`). |
-
-- **API endpoint:** `GET /api/resilience/v1/get-resilience-indicators`
-- **Access:** `subscription` — requires a Pro subscription on both the REST and MCP paths.
-- **Kind:** request-local trace of the scorer branch that actually ran; it is not a second scoring implementation.
-- **Freshness:** reads the immutable trace generation referenced by the six-hour public score cache. The trace lives in a separate seven-hour sidecar so score and ranking reads stay small.
-- **Spoken mode:** `response_mode: "spoken"` returns 2-3 sentences: the number of scored dimensions and the data snapshot month, the two strongest and two weakest dimensions in plain words, and how many indicators are directly observed. Citations are the score plus each distinct indicator source with URL and retrieval time.
-
-This tool does not accept `jmespath`. Both runtimes reject a non-empty projection with JSON-RPC `-32602` or HTTP 400, because a projection could detach a permitted raw value from the attribution and retrieval fields that authorize redistributing it.
-
-Rows distinguish `observed`, `imputed`, `missing`, `fallback`, `source-failure`, `inactive`, `retired`, and `not-applicable` states. Read the state before the value: a retired or inactive row is explicit and does not claim a false reconciliation.
-
-Raw source values are selective and fail closed. A row includes a raw value only when the observation is measured, every contributing provider has a completed redistribution review, the required attribution is present, and the contributing seed has a retrieval timestamp. A restricted row still returns WorldMonitor's normalized score, contribution, source attribution, and source year when known — suppression is reported through the raw-policy status and reason, never as a numeric zero. `observationProvenance` distinguishes an exact selected source from registry-only attribution. See the [indicator licensing decisions](/methodology/resilience-indicator-licensing) for the per-source table.
-
-`sourceYear` is when the provider measured the phenomenon; `retrievedAt` is when WorldMonitor fetched it. They are not interchangeable, and observation age is always derived from the observation date. For a composite, `sourceYear` is the oldest contributing year.
-
-The public `get_resilience_score` response is unaffected by this tool and remains schema compatible.
-
-```bash
-curl -s https://worldmonitor.app/mcp \
-  -H "X-WorldMonitor-Key: $WM_KEY" \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "jsonrpc":"2.0","id":1,
-    "method":"tools/call",
-    "params":{"name":"get_resilience_indicators","arguments":{"country_code":"DE"}}
-  }'
-```
 
 ### `get_mineral_production`
 

@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { finiteObservation, parseYahooChart } from '../scripts/_seed-utils.mjs';
-import { computeCpiYoy, latestUnemployment, parseVectorSeries } from '../scripts/lib/statcan-wds.mjs';
 
 // Every one of these is Number()-coercible to 0, which is a publishable reading.
 const MISSING = [null, undefined, '', '   ', false, true, [], [12], {}, NaN, Infinity, -Infinity];
@@ -33,32 +32,9 @@ test('a measured zero and quoted numeric values survive', () => {
   assert.equal(finiteObservation(-2), -2);
 });
 
-test('a suppressed StatCan observation is omitted, not published as zero', () => {
-  for (const value of MISSING) {
-    assert.deepEqual(parseVectorSeries(vectorDoc([value]), 123).points, [],
-      `published a point for ${String(value)}`);
-  }
-});
 
-test('a suppressed latest month cannot overwrite the unemployment rate with zero', () => {
-  const series = parseVectorSeries(vectorDoc([6.5, null]), 123);
-  const latest = latestUnemployment(series.points);
-  assert.equal(latest.unemploymentPct, 6.5);
-  assert.equal(latest.refPer, '2026-01-01');
-});
 
-test('a genuine StatCan zero is still a measurement', () => {
-  assert.deepEqual(
-    parseVectorSeries(vectorDoc([0, '0', ' 6.5 ', -2]), 123).points.map(p => p.value),
-    [0, 0, 6.5, -2],
-  );
-});
 
-test('a suppressed month does not fabricate a CPI year-over-year move', () => {
-  const withHole = parseVectorSeries(vectorDoc([160, null]), 123);
-  assert.deepEqual(withHole.points.map(p => p.value), [160]);
-  assert.equal(computeCpiYoy(withHole.points), null);
-});
 
 test('a quote with no price is dropped rather than published priceless', () => {
   for (const price of MISSING) {

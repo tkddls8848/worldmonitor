@@ -754,7 +754,6 @@ export interface MapLayers {
   // CII choropleth layer
   ciiChoropleth: boolean;
   // Resilience choropleth layer
-  resilienceScore: boolean;
   // Commodity variant layers
   miningSites: boolean;
   processingPlants: boolean;

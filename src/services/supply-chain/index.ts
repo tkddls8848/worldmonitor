@@ -1,3 +1,4 @@
+import type { GetFoodStocksResponse } from '@/generated/client/worldmonitor/supply_chain/v1/service_client';
 import { getRpcBaseUrl } from '@/services/rpc-client';
 import type { CargoType } from '@/config/bypass-corridors';
 import type { GetShippingRatesResponse, GetChokepointStatusResponse, GetChokepointHistoryResponse, GetCriticalMineralsResponse, GetMineralProductionResponse, GetShippingStressResponse, GetCountryChokepointIndexResponse, GetBypassOptionsResponse, GetCountryCostShockResponse, GetCountryProductsResponse, GetMultiSectorCostShockResponse, GetSectorDependencyResponse, GetRouteExplorerLaneResponse, GetRouteImpactResponse, GetCountryVulnerabilitiesResponse, GetChokepointDependenciesResponse, ListVulnerabilityRankingsResponse, ShippingIndex, ChokepointInfo, CriticalMineral, MineralProducer, ShippingRatePoint, ChokepointExposureEntry, BypassOption, TransitDayCount, CountryProduct, ProductExporter, MultiSectorCostShock, CommodityVulnerability, ChokepointDependency, VulnerabilityInput } from '@/generated/client/worldmonitor/supply_chain/v1/service_client';
@@ -435,7 +436,6 @@ const emptyRouteImpact: GetRouteImpactResponse = {
   primaryExporterIso2: '',
   primaryExporterShare: 0,
   topStrategicProducts: [],
-  resilienceScore: 0,
   dependencyFlags: [],
   hs2InSeededUniverse: false,
   comtradeSource: 'missing',
@@ -570,4 +570,18 @@ export async function fetchMultiSectorCostShock(
   } catch {
     return { ...emptyMultiSectorShock, iso2, chokepointId, closureDays };
   }
+}
+
+export async function getFoodStocks(
+  opts: { countryCode?: string; commodity?: string; signal?: AbortSignal } = {},
+): Promise<GetFoodStocksResponse> {
+  return client.getFoodStocks(
+    {
+      countryCode: opts.countryCode ? opts.countryCode.trim().toUpperCase() : '',
+      commodity: opts.commodity ?? '',
+    },
+    // Forwarded so a panel close or country switch actually cancels the request
+    // rather than only discarding its result.
+    opts.signal ? { signal: opts.signal } : undefined,
+  );
 }

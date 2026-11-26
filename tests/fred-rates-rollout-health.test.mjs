@@ -268,9 +268,6 @@ function installHealthPipelineMock(recordCount, {
       if (op === 'GET' && key === CHINA_COVERAGE_SUMMARY_KEY) {
         return { result: JSON.stringify(chinaCoverageSummary ?? healthyChinaSummary) };
       }
-      if (op === 'GET' && key === STANDALONE_KEYS.educationAttainment) {
-        return { result: JSON.stringify({ countries: educationCountries }) };
-      }
       if (op === 'GET' && key === STANDALONE_KEYS.ciiEconomicStress) {
         return { result: JSON.stringify({ schemaVersion: 1, countries: Object.fromEntries(SEED_META.ciiStructuralPrior.requiredCountries.map(code => [code, {
           measured: true, members: { inflation: { status: 'fresh', value: 0, observedAt: new Date(DEPLOYED_AT).toISOString(), expiresAt: DEPLOYED_AT + 86400000 } },

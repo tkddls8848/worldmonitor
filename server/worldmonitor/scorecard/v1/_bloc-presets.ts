@@ -1,4 +1,4 @@
-import { isInRankableUniverse } from '../../resilience/v1/_rankable-universe';
+import { isInRankableUniverse } from '../../../_shared/rankable-universe';
 
 export type ScorecardBlocPreset = 'USMCA' | 'EU27' | 'BRICS' | 'GCC' | 'ASEAN' | 'NATO';
 export type ScorecardBlocSelection = { id: string; label: string; members: string[] };

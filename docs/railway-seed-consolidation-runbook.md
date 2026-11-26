@@ -915,13 +915,6 @@ contract needs to be made fully uniform beyond shared `runSeed` users.
 | 11 | seed-chokepoint-baselines | `de51db71-3492-4521-873c-90b9c08dd8b4` | infrequent (400d TTL) |
 | 12 | seed-military-bases | `54b44749-c318-4392-aebe-aaf8308db1e9` | infrequent (one-time) |
 
-### Replaced by seed-bundle-resilience
-
-| # | Service Name | Service ID | Original Cron |
-|---|---|---|---|
-| 13 | seed-resilience-scores | `e87c212a-eab6-4a85-9e43-b855ca207823` | every 6h |
-| 14 | seed-resilience-static | `e0709305-0270-4f53-b133-7d74e8260400` | annual window |
-
 ### Replaced by seed-bundle-derived-signals
 
 | # | Service Name | Service ID | Original Cron |
@@ -1139,21 +1132,6 @@ enrolled in `scripts/railway-native-autodeploy-fleet.json` and lose its
 `source.checkSuites` to `false` at the same time — a clone inherits Railway's
 `true` default, and wait-for-CI reads the head commit's entire check suite, so
 any red check anywhere strands this service's builds.
-
-### Bundle 4: seed-bundle-resilience
-
-| Setting | Value |
-|---|---|
-| **Service name** | `seed-bundle-resilience` |
-| **Start command** | `node scripts/seed-bundle-resilience.mjs` |
-| **Cron schedule** | `0 */6 * * *` (every 6h) |
-| **Watch paths** | `scripts/**`, `shared/**` |
-| **Replaces** | 2 services |
-| **Net savings** | 1 slot |
-| **Members** | Resilience Scores (2h admission interval), Resilience Static (90d, skips most runs), Food Stocks (monthly USDA PSD + FAOSTAT fill; needs `USDA_FAS_PSD_API_KEY`), Five-Factor Scorecard (daily Redis-only scoring) |
-| **Wall budget** | 570 seconds, below Railway's 10-minute container kill. Section timeouts are 240s / 280s / 480s / 180s, so every member fits alone once the runner's 10s kill grace is added. Resilience Scores stays first because it keeps the ranking and interval caches alive. Five-Factor Scorecard stays last: if a long-cadence section consumes its reservation, the runner defers scorecard before start; it fits on the next normal tick when Static and Food skip. The 180s scorecard reservation contains the 25s source-read deadline, Redis retry ceiling, atomic publication, and process-cleanup headroom. |
-| **Scorecard measurement** | Read-only production-source `--dry-run` on 2026-08-29: 196 countries, 3,716,740 serialized bytes, 1.82s wall time, and 220,577,792-byte maximum RSS. Validation passed and Redis was not modified. This is placement and payload-size evidence, not deployment or production-acceptance evidence. |
-| **Do not** | raise any section timeout above `maxBundleMs - 10_000`. A section whose timeout plus kill grace exceeds the budget is deferred on **every** tick while the bundle still exits 0 — #6556 ran this service dead for six hours behind a green badge. `tests/bundle-budget-admission.test.mjs` fails the PR, and `runBundle` refuses to start, but the arithmetic is worth knowing before you edit. |
 
 ### Bundle 5: seed-bundle-derived-signals
 
@@ -1377,8 +1355,8 @@ last-good observations with an unavailable source status.
 | **Watch paths** | `scripts/**`, `shared/**` |
 | **Replaces** | 6 services |
 | **Net savings** | 5 slots |
-| **Members** | BIS Data (12h), CBR Rates (daily), BoC Valet (daily), StatCan WDS (daily), China Macro (36h), China Release Calendar (36h), China Policy Events (6h), BIS Extended (12h), BLS Series (daily), Eurostat (daily), Eurostat House Prices (7d), Eurostat Government Debt (2d), Eurostat Industrial Production (daily), IMF Macro (30d), National Debt (30d), FAO FFPI (daily), World Bank External Debt (30d), BIS LBS (7d), FATF Listing (30d), Education Attainment (7d), World CPI IMF (daily), World CPI Eurostat (daily), World CPI AU ABS (daily) |
-| **Wall budget** | 550 seconds, with bounded parallel freshness prefetch. The runner defers a section when its timeout plus 10-second kill grace cannot fit, leaving time for the scheduler's bounded acknowledgement before Railway's 600-second limit. Physical Premiums leads 08:00 and 09:00; Education leads Sunday 08:00 with Physical second. At 10:00, one macro member leads according to the persistent `bundle:turn:macro` cursor, followed by Physical and the remaining rotated members. The existing scheduler lease prevents overlapping rotation turns; completed failed runs advance the cursor too. Every macro member, including never-seeded food feeds, therefore receives a first admission slot within one rotation, even if earlier members repeatedly time out. Completed members skip through their interval gates. Apply the updated source-controlled cron only during an approved Railway rollout. |
+| **Members** | BIS Data (12h), CBR Rates (daily), BoC Valet (daily), China Macro (36h), China Release Calendar (36h), China Policy Events (6h), BIS Extended (12h), BLS Series (daily), Eurostat (daily), Eurostat House Prices (7d), Eurostat Government Debt (2d), Eurostat Industrial Production (daily), IMF Macro (30d), National Debt (30d), FAO FFPI (daily), BIS LBS (7d), FATF Listing (30d), World CPI IMF (daily), World CPI Eurostat (daily), World CPI AU ABS (daily) |
+| **Wall budget** | 550 seconds, with bounded parallel freshness prefetch. The runner defers a section when its timeout plus 10-second kill grace cannot fit, leaving time for the scheduler's bounded acknowledgement before Railway's 600-second limit. Physical Premiums leads 08:00 and 09:00. At 10:00, one macro member leads according to the persistent `bundle:turn:macro` cursor, followed by Physical and the remaining rotated members. The existing scheduler lease prevents overlapping rotation turns; completed failed runs advance the cursor too. Every macro member, including never-seeded food feeds, therefore receives a first admission slot within one rotation, even if earlier members repeatedly time out. Completed members skip through their interval gates. Apply the updated source-controlled cron only during an approved Railway rollout. |
 
 ### Bundle 9: seed-bundle-health
 
@@ -1466,39 +1444,6 @@ import graph. After deploying the relay change, verify `[AuYieldFallback]`
 execution, matching canonical/latest/year data, a newer seed heartbeat, and
 the public AU health verdict. A healthy response after a manual seed is not
 proof that this scheduled fallback has run.
-
-## Registry-covered live resilience services
-
-These live Country Resilience services are not slot-saving consolidation
-migrations and should not be counted in the 35-slot savings plan above. They
-are listed here so their Railway start commands are first-class registry-covered
-entries.
-
-### seed-bundle-resilience-recovery
-
-| Setting | Value |
-|---|---|
-| **Service name** | `seed-bundle-resilience-recovery` |
-| **Start command** | `node scripts/seed-bundle-resilience-recovery.mjs` |
-| **Cron schedule** | Monthly recovery cadence; use the active Railway schedule for the existing service |
-| **Watch paths** | `scripts/**`, `shared/**` |
-| **Purpose** | Dedicated Country Resilience recovery inputs bundle |
-| **Members** | Fiscal Space, Reserve Adequacy, External Debt, Import HHI, Fuel Stocks, Re-export Share, Sovereign Wealth |
-| **Note** | This is the service referenced by the Import-HHI controls below. It is registry-covered so nixpacks packaging and start-command drift are tested. |
-
-### seed-bundle-resilience-energy-v2
-
-| Setting | Value |
-|---|---|
-| **Service name** | `seed-bundle-resilience-energy-v2` |
-| **Start command** | `node scripts/seed-bundle-resilience-energy-v2.mjs` |
-| **Cron schedule** | `0 6 * * *` (daily 06:00 UTC; per-slot interval gates real seeds to 7 days) |
-| **Watch paths** | `scripts/**`, `shared/**` |
-| **Purpose** | Dedicated Country Resilience energy-v2 input bundle |
-| **Members** | Low Carbon Generation, Fossil Electricity Share, Power Losses |
-| **Note** | Daily cron avoids the weekly dead window described in `scripts/seed-bundle-resilience-energy-v2.mjs`; the bundle's 7-day section intervals prevent unnecessary World Bank polling. |
-
----
 
 ## Services that STAY unchanged (54 total)
 
@@ -1653,7 +1598,7 @@ fetch('https://backboard.railway.com/graphql/v2',{method:'POST',
 | seed-crypto-sectors | `node scripts/seed-crypto-sectors.mjs` | **planned — not provisioned** | CoinGecko crypto sector performance |
 | seed-market-breadth | `node scripts/seed-market-breadth.mjs` | daily (30d history window) | S&P 500 breadth (% above 20/50/200-day, computed from the TradingView constituent scan) |
 | seed-weather-alerts | `node scripts/seed-weather-alerts.mjs` | **planned — not provisioned** | NWS active weather alerts |
-| seed-fx-yoy | `node scripts/seed-fx-yoy.mjs` | daily (25h TTL) | Wide-coverage FX YoY + 24m drawdown (resilience FX-stress inputs) |
+| seed-fx-yoy | `node scripts/seed-fx-yoy.mjs` | daily (25h TTL) | Wide-coverage FX YoY + 24m drawdown |
 | seed-comtrade-bilateral-hs4 | `node scripts/seed-comtrade-bilateral-hs4.mjs` | **`0 6 1 * *` (monthly, verified 2026-07-27)** | UN Comtrade bilateral HS4 trade flows — only scheduled consumer of the keyed 500/mo Comtrade quota |
 | seed-hs2-chokepoint-exposure | `node scripts/seed-hs2-chokepoint-exposure.mjs` | periodic (TTL-extended) | HS2 chokepoint trade-exposure (derived) |
 | seed-service-statuses | `node scripts/seed-service-statuses.mjs` | **planned — not provisioned** | Service-status warm-ping; primary seeder is the AIS relay loop |
@@ -1705,7 +1650,6 @@ Start with lowest-risk, highest-savings bundles.
 |---|---|---|---|---|
 | 1 | seed-bundle-ecb-eu | 3 | Low (daily, same API) | Daily |
 | 2 | seed-bundle-static-ref | 3 | Low (daily tick, static data) | Daily |
-| 3 | seed-bundle-resilience | 1 | Low (6h, annual window) | 6h |
 | 4 | seed-bundle-portwatch | 3 | Medium (hourly, 4 members) | Hourly |
 | 5 | seed-bundle-climate | 4 | Medium (3h, 5 members) | 3h |
 | 6 | seed-bundle-energy-sources | 5 | Medium (daily, 6 members) | Daily |
@@ -1746,98 +1690,6 @@ Each bundle service inherits the same env vars as the individual seeds it replac
 The simplest approach: use Railway's "shared variables" or copy all env vars from the `worldmonitor` (ais-relay) service, which has a superset of all API keys.
 
 ---
-
-## Import-HHI Comtrade 429 Runbook
-
-Issue #3979 covers the residual operational failure mode for the Country Resilience Index `importConcentration` dimension: AE/RU/NO/CH can still remain absent from `resilience:recovery:import-hhi:v1` when UN Comtrade rejects the monthly recovery bundle for key budget, pacing, or reporter metadata reasons.
-
-**Decision:** treat this as Comtrade quota/pacing while the seed logs show HTTP 429 or quota-exhausted HTTP 403 responses. Do not change `importConcentration` scoring until the rate-limit path has been addressed and a force-refresh proves that Comtrade is returning non-quota responses for the watched reporters.
-
-### Controls
-
-Set these on the Railway service that runs `node scripts/seed-bundle-resilience-recovery.mjs`:
-
-| Variable | Default | Use when |
-|---|---:|---|
-| `COMTRADE_PRIMARY_API_KEYS` | required | Add keys first when multiple reporters are missing with 429s or quota-exhausted 403s. |
-| `IMPORT_HHI_PER_KEY_DELAY_MS` | `1500` | Increase to `10000`-`15000` if logs still show import-HHI 429s. `PER_KEY_DELAY_MS` is accepted as a legacy alias. |
-| `IMPORT_HHI_MAX_CONCURRENCY` | key count | Set to `1` if quota failures look IP-level or global, not per-key. |
-| `IMPORT_HHI_VERBOSE` | unset | Set to `1` only for a diagnostic force-refresh; logs per-reporter status. |
-
-Reporter cohort splitting is the last resort. Prefer more `COMTRADE_PRIMARY_API_KEYS`, then wider per-key delay, then lower concurrency. The import-HHI seeder fetches the watched #3979 reporters first when they are missing, so a replenished force-refresh should recover AE/RU/NO/CH before unrelated registry backfill can consume the hourly provider budget. Aggressive incident pacing such as `IMPORT_HHI_PER_KEY_DELAY_MS=15000` with `IMPORT_HHI_MAX_CONCURRENCY=1` can exceed the 30-minute bundle window; that mode intentionally relies on checkpoint/resume across ticks, not one-pass completion. Cohort splitting should only be used if a single full pass still exhausts the provider budget after the first three controls.
-
-The import-HHI publish gate requires AE/RU/NO/CH as well as the normal country-count floor. If one of those watched reporters is still absent, the seed run fails validation with `emptyDataIsFailure: true`, does not refresh seed-meta, and leaves the bundle eligible to retry instead of stranding a fresh-but-incomplete canonical payload for the full monthly interval.
-
-If a watched reporter is still missing and the seed log says `status=200 rows=0`, stop treating that reporter as a key-budget problem. Inspect Comtrade reporter metadata, data availability, and query-shape filters (`customsCode`, `motCode`, `cmdCode`) before considering any scoring change. The known non-M49 reporter-code exceptions are pinned in `scripts/shared/comtrade-reporter-overrides.json`; as of the #3979 follow-up this includes Norway (`NO=579`) and Switzerland (`CH=757`). Russia (`RU=643`) currently needs the seed-only stale period fallback (`Y-5..Y-8`) because Comtrade returns zero annual import rows for the standard `Y-1..Y-4` window but still exposes 2018 rows.
-
-### Force-Refresh
-
-After deploying a pacing/key-budget change, bypass the 30-day freshness gate:
-
-```bash
-IMPORT_HHI_VERBOSE=1 FORCE_RESEED=true node scripts/seed-recovery-import-hhi.mjs
-```
-
-Then warm live scores so `importConcentration` reads the refreshed canonical key:
-
-```bash
-API_BASE_URL=https://api.worldmonitor.app \
-WORLDMONITOR_SEED_REFRESH_KEY=<seed-refresh-key> \
-WORLDMONITOR_API_KEY=<read-key> \
-node scripts/seed-resilience-scores.mjs
-```
-
-`WORLDMONITOR_SEED_REFRESH_KEY` is required: the resilience score seeder uses it
-for the seed-only `get-resilience-ranking?refresh=1` recompute path. Keep
-`WORLDMONITOR_API_KEY` or `WORLDMONITOR_VALID_KEYS` available too so laggard
-per-country score warms can fall back to the normal premium read endpoint. In
-Railway, the service environment should already provide the Upstash Redis
-credentials; for a local force-run, export `UPSTASH_REDIS_REST_URL` and
-`UPSTASH_REDIS_REST_TOKEN` as well.
-
-If the run is fixing missing interval data, the success signal is the
-`seed_complete` log for `domain="resilience:scores"` with
-`intervalsWritten > 0` and no `status="ERROR"`. A failed interval recovery
-sets `status="ERROR"` plus `intervalFailureReason` and includes the diagnostic
-counts `intervalMissingScorePayloadCount`, `intervalStaleScorePayloadCount`,
-`intervalInvalidScorePayloadCount`, `intervalMalformedScorePayloadCount`,
-`intervalFormulaSkipCount`, and `intervalPayloadSkipCount`.
-
-Verify the public audit surfaces after the run:
-
-```bash
-curl -fsS https://api.worldmonitor.app/api/resilience/v1/get-runtime-manifest \
-  | jq '{formulaTag, rankingCache, constructVersions, intervals}'
-curl -fsS https://api.worldmonitor.app/api/health \
-  | jq '.checks.resilienceIntervals'
-```
-
-Pass condition for interval recovery: runtime manifest reports
-`intervals.available=true`, and `/api/health` reports
-`resilienceIntervals.status="OK"` with `records > 0`.
-
-### Verification
-
-Verify both Redis and the live score API:
-
-```bash
-WORLDMONITOR_API_KEY=<key> node scripts/verify-import-hhi-coverage.mjs
-```
-
-Pass condition for AE/RU/NO/CH:
-
-- `resilience:recovery:import-hhi:v1.countries.<ISO2>` is present.
-- `seed-meta:resilience:recovery:import-hhi` is fresh.
-- Live `GetResilienceScore` has `importConcentration.coverage > 0`.
-- Live `importConcentration.imputationClass` is empty.
-
-If the live API key is not available during Redis-only triage, use:
-
-```bash
-IMPORT_HHI_VERIFY_REDIS_ONLY=1 node scripts/verify-import-hhi-coverage.mjs
-```
-
-Redis-only verification is not sufficient to close #3979; it only confirms that the seeder recovered the canonical payload before score warmup.
 
 ## UKMTO incidents
 

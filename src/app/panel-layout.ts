@@ -2,7 +2,6 @@ import type { AppContext, AppModule } from '@/app/app-context';
 import type { LoadAllDataTrigger } from '@/app/viewport-hydration-ledger';
 import { CORRELATION_DOMAINS } from '@/types/correlation';
 import type { CorrelationPanel } from '@/components/CorrelationPanel';
-import { normalizeExclusiveChoropleths } from '@/components/resilience-choropleth-utils';
 import { replayPendingCalls, clearAllPendingCalls } from '@/app/pending-panel-data';
 import { hasPanelSettingEntry, newsPanelKeyForCategory, newsPanelKeyLookupsFor } from '@/app/news-panel-keys';
 import {
@@ -2953,8 +2952,7 @@ export class PanelLayoutManager implements AppModule {
     // comment called for: panel setup is map-tolerant: callback uses are `?.`-guarded,
     // and the one eager bridge (SupplyChainPanel -> MapContainer) is replayed below.
     // ctx.currentTimeRange already defaults to '7d' (App.ts:899). The map's direct
-    // uses — construction, the supply-chain bridge replay, the resilienceScore tweak,
-    // initEscalationGetters/getTimeRange and onTimeRangeChanged — are grouped together
+    // uses — construction, the supply-chain bridge replay, initEscalationGetters/getTimeRange and onTimeRangeChanged — are grouped together
     // after the registration block (just before the onTimeRangeChanged wiring).
     // Failed-fetch reload guard: src/main.ts:285-290 (installChunkReloadGuard).
     const mapModulePromise = import('@/components/MapContainer');
@@ -3645,10 +3643,6 @@ export class PanelLayoutManager implements AppModule {
       timeRange: '7d',
     });
 
-    if (this.ctx.mapLayers.resilienceScore && !this.ctx.map.isDeckGLActive?.()) {
-      this.ctx.mapLayers = { ...this.ctx.mapLayers, resilienceScore: false };
-      saveToStorage(STORAGE_KEYS.mapLayers, this.ctx.mapLayers);
-    }
 
     this.ctx.map.initEscalationGetters();
     this.ctx.currentTimeRange = this.ctx.map.getTimeRange();
@@ -3765,10 +3759,7 @@ export class PanelLayoutManager implements AppModule {
     }
 
     if (layers) {
-      let normalized = normalizeExclusiveChoropleths(layers, this.ctx.mapLayers);
-      if (normalized.resilienceScore && !this.ctx.map.isDeckGLActive?.()) {
-        normalized = { ...normalized, resilienceScore: false };
-      }
+      const normalized = layers;
       // A shared link is not a user preference, so it must never overwrite the
       // saved (and cloud-synced) map-layer selection.
       this.ctx.initialUrlState.layers = normalized;

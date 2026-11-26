@@ -469,7 +469,6 @@ export interface GetRouteImpactResponse {
   primaryExporterIso2: string;
   primaryExporterShare: number;
   topStrategicProducts: StrategicProduct[];
-  resilienceScore: number;
   dependencyFlags: DependencyFlag[];
   hs2InSeededUniverse: boolean;
   comtradeSource: string;
@@ -863,6 +862,35 @@ export interface ListVulnerabilityRankingsResponse {
   upstreamUnavailable: boolean;
 }
 
+export interface GetFoodStocksRequest {
+  countryCode: string;
+  commodity: string;
+}
+
+export interface GetFoodStocksResponse {
+  records: FoodStockRecord[];
+  fetchedAt: string;
+  unavailable: boolean;
+  calorieWeightedStocksToUse: number;
+}
+
+export interface FoodStockRecord {
+  countryCode: string;
+  commodity: string;
+  marketingYear: string;
+  stocksToUse: number;
+  hasStocksToUse: boolean;
+  endingStocksTmt: number;
+  hasEndingStocks: boolean;
+  totalUseTmt: number;
+  productionTmt: number;
+  consumptionTmt: number;
+  importsTmt: number;
+  exportsTmt: number;
+  unit: string;
+  source: string;
+}
+
 export type CorridorStatus = "CORRIDOR_STATUS_UNSPECIFIED" | "CORRIDOR_STATUS_ACTIVE" | "CORRIDOR_STATUS_PROPOSED" | "CORRIDOR_STATUS_UNAVAILABLE";
 
 export type DependencyFlag = "DEPENDENCY_FLAG_UNSPECIFIED" | "DEPENDENCY_FLAG_SINGLE_SOURCE_CRITICAL" | "DEPENDENCY_FLAG_SINGLE_CORRIDOR_CRITICAL" | "DEPENDENCY_FLAG_COMPOUND_RISK" | "DEPENDENCY_FLAG_DIVERSIFIABLE";
@@ -943,6 +971,7 @@ export interface SupplyChainServiceHandler {
   getCountryVulnerabilities(ctx: ServerContext, req: GetCountryVulnerabilitiesRequest): Promise<GetCountryVulnerabilitiesResponse>;
   getChokepointDependencies(ctx: ServerContext, req: GetChokepointDependenciesRequest): Promise<GetChokepointDependenciesResponse>;
   listVulnerabilityRankings(ctx: ServerContext, req: ListVulnerabilityRankingsRequest): Promise<ListVulnerabilityRankingsResponse>;
+  getFoodStocks(ctx: ServerContext, req: GetFoodStocksRequest): Promise<GetFoodStocksResponse>;
 }
 
 export function createSupplyChainServiceRoutes(
@@ -2078,6 +2107,54 @@ export function createSupplyChainServiceRoutes(
 
           const result = await handler.listVulnerabilityRankings(ctx, body);
           return new Response(JSON.stringify(result as ListVulnerabilityRankingsResponse), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        } catch (err: unknown) {
+          if (err instanceof ValidationError) {
+            return new Response(JSON.stringify({ violations: err.violations }), {
+              status: 400,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+          if (options?.onError) {
+            return options.onError(err, req);
+          }
+          const message = "Internal server error";
+          return new Response(JSON.stringify({ message }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+      },
+    },
+    {
+      method: "GET",
+      path: "/api/supply-chain/v1/get-food-stocks",
+      handler: async (req: Request): Promise<Response> => {
+        try {
+          const pathParams: Record<string, string> = {};
+          const url = new URL(req.url, "http://localhost");
+          const params = url.searchParams;
+          const body: GetFoodStocksRequest = {
+            countryCode: params.get("countryCode") ?? "",
+            commodity: params.get("commodity") ?? "",
+          };
+          if (options?.validateRequest) {
+            const bodyViolations = options.validateRequest("getFoodStocks", body);
+            if (bodyViolations) {
+              throw new ValidationError(bodyViolations);
+            }
+          }
+
+          const ctx: ServerContext = {
+            request: req,
+            pathParams,
+            headers: Object.fromEntries(req.headers.entries()),
+          };
+
+          const result = await handler.getFoodStocks(ctx, body);
+          return new Response(JSON.stringify(result as GetFoodStocksResponse), {
             status: 200,
             headers: { "Content-Type": "application/json" },
           });

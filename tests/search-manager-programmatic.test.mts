@@ -1899,36 +1899,6 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
     assert.equal(scenario.manager.isCommandExecutable(satellitePasses), false);
   });
 
-  it('reports successful synchronous healing of stale locked resilience state for free users', async () => {
-    for (const command of [
-      commandMatch('layer:resilienceScore', 'layers', 'Resilience layer'),
-      commandMatch('view:resilience', 'view', 'Resilience view'),
-    ]) {
-      if (command.kind !== 'command') throw new Error('expected command match');
-      const commandId = command.command.id;
-      const scenario = makeScenario([command]);
-      scenario.runtime.auth = {};
-      scenario.runtime.premium = false;
-      scenario.runtime.pro = false;
-      scenario.ctx.mapLayers.resilienceScore = true;
-
-      const response = await scenario.manager.searchDashboard('needle', 'all', 10);
-      const issued = response.results[0];
-      assert.ok(issued);
-      assert.equal(issued.executable, true, `${commandId} must remain available to turn off`);
-      assert.deepEqual(await scenario.manager.openSearchResult(issued.key), {
-        ok: true,
-        status: 'opened',
-        type: 'command',
-      }, commandId);
-      assert.equal(
-        scenario.ctx.mapLayers.resilienceScore,
-        false,
-        `${commandId} must heal stale enabled state`,
-      );
-      assert.equal(scenario.modal.closeCalls, 1, commandId);
-    }
-  });
 
   it('does not treat an incidental preset overlap as a meaningful agent action', () => {
     const finance = makeScenario([], 'finance');

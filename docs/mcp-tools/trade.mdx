@@ -200,7 +200,7 @@ USDA PSD cereal stocks-to-use by marketing year. Ask for a country plus optional
 | `country_code` | string | yes | ISO alpha-2 or alpha-3 code, or a country name in any supported dashboard locale (e.g. `"Egypt"`, `"مصر"`), or `WORLD` for the global balance. |
 | `commodity` | string | no | `wheat`, `corn`, `rice`, `soybeans`, `barley`, or `palmOil` (note the camelCase). Empty = all six. |
 
-- **API endpoints:** `GET /api/resilience/v1/get-food-stocks`
+- **API endpoints:** `GET /api/supply-chain/v1/get-food-stocks`
 - **Access:** `subscription` — requires a Pro subscription. RPC tool: no `summary` argument (use `jmespath` to trim the response).
 - **Kind:** RPC proxy — the MCP layer resolves the country to ISO-2; the handler owns WORLD vs ISO-2 and commodity filtering.
 - **Freshness budget:** oldest world marketing year present (WASDE monthly cycle; 60-day fetch-age / 120-day content-age).

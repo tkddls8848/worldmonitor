@@ -75,7 +75,6 @@ import { attemptWebCountryDownload, countryDownloadMessage, type CountryTextDown
 import type { CountryEvidenceBundleInput } from '@/utils/export';
 import { ciiBandForLevel } from './CountryDeepDivePanel-cii';
 import { renderDefenseIndustrialSection } from './CountryDeepDivePanel-defense-industrial';
-import { renderDemographicsCapabilitySection } from './CountryDeepDivePanel-demographics-capability';
 import { renderFiveFactorScorecardSection } from './CountryDeepDivePanel-five-factor-scorecard';
 import { combineAbortSignals } from '@/services/timeout-signal';
 import { CountrySectionError } from '@/services/country-brief-error';
@@ -164,7 +163,6 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
   private outputClose: (() => void) | null = null;
   private atlasRevision = 0;
   private hostedAtlasRead: Promise<void> = Promise.resolve();
-  private hostedResilienceRead: Promise<unknown> = Promise.resolve();
   private hostedAtlasBody: HTMLElement | null = null;
   private hostedAtlas: { code: string; signal: AbortSignal; pipelines?: ListPipelinesResponse; facilities?: ListStorageFacilitiesResponse; shortages?: ListFuelShortagesResponse } | null = null;
   private atlasSelection: { type: 'pipeline' | 'storage' | 'shortage'; id: string } | null = null;
@@ -187,13 +185,8 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
   private timelineBody: HTMLElement | null = null;
   private scoreCard: HTMLElement | null = null;
   private factsBody: HTMLElement | null = null;
-  private resilienceWidget: import('@/components/ResilienceWidget').ResilienceWidget | null = null;
-  private pendingResilienceEnergyMix: CountryEnergyProfileData | null = null;
-  private resilienceWidgetRequestId = 0;
   private foodStocksRequestId = 0;
   private foodStocksBody: HTMLElement | null = null;
-  private demographicsBody: HTMLElement | null = null;
-  private demographicsCapabilityRequestId = 0;
   private fiveFactorScorecardRequestId = 0;
   private fiveFactorScorecardAbortController: AbortController | null = null;
   private fiveFactorScorecardBody: HTMLElement | null = null;
@@ -423,9 +416,7 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     this.presentation?.destroy();
     if (origin === 'control' && this.historyRegistered) overlayHistory.close('deep-dive');
     this.historyRegistered = false;
-    this.destroyResilienceWidget();
     this.foodStocksRequestId += 1;
-    this.demographicsCapabilityRequestId += 1;
     this.tearDownFiveFactorScorecard();
     this.tearDownFollowButton();
     if (this.isMaximizedState) {
@@ -696,14 +687,12 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     const code = this.currentCode;
     this.renderAtlasExposure(true);
     if (this.foodStocksBody) void this.renderFoodStocks(code, this.foodStocksBody);
-    if (this.demographicsBody) void this.renderDemographicsCapability(code, this.demographicsBody);
     if (this.fiveFactorScorecardBody) {
       this.fiveFactorScorecardAbortController?.abort();
       const request = new AbortController();
       this.fiveFactorScorecardAbortController = request;
       void this.renderFiveFactorScorecard(code, this.fiveFactorScorecardBody, request.signal);
     }
-    void this.resilienceWidget?.refresh();
   }
 
   public async settleHostedOpeningReads(): Promise<void> {
@@ -712,7 +701,7 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     await new Promise<void>((resolve, reject) => {
       const abort = () => reject(signal.reason);
       signal.addEventListener('abort', abort, { once: true });
-      void Promise.allSettled([this.hostedAtlasRead, this.hostedResilienceRead]).then(() => {
+      void this.hostedAtlasRead.catch(() => {}).then(() => {
         signal.removeEventListener('abort', abort);
         resolve();
       });
@@ -1395,8 +1384,6 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
   public updateEnergyProfile(data: CountryEnergyProfileData): void {
     if (!this.energyBody) return;
     this.renderEnergyProfile(data);
-    this.pendingResilienceEnergyMix = data;
-    this.resilienceWidget?.setEnergyMix(data);
   }
 
   private renderEnergyProfile(data: CountryEnergyProfileData): void {
@@ -3588,7 +3575,7 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     }
 
     const summaryGrid = this.el('div', 'cdp-summary-grid');
-    summaryGrid.append(scoreCard, this.renderResilienceWidgetSlot(code));
+    summaryGrid.append(scoreCard);
 
     const bodyGrid = this.el('div', 'cdp-grid');
     const [signalsCard, signalBody] = this.sectionCard('signals', t('countryBrief.activeSignals'));
@@ -3644,18 +3631,7 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
       foodStocksBody.append(this.makeProLocked(t('countryBrief.foodStocksProLocked')));
     }
 
-    const [demographicsCard, demographicsBody] = this.sectionCard(
-      'demographics',
-      t('countryBrief.demographicsCapability.title'),
-      t('countryBrief.demographicsCapability.help'),
-    );
-    this.demographicsBody = demographicsBody;
-    if (isPro) {
-      demographicsBody.append(this.makeLoading(t('countryBrief.demographicsCapability.loading')));
-      void this.renderDemographicsCapability(code, demographicsBody);
-    } else {
-      demographicsBody.append(this.makeProLocked(t('countryBrief.demographicsCapability.proLocked')));
-    }
+
 
     const [fiveFactorScorecardCard, fiveFactorScorecardBody] = this.sectionCard(
       'factors',
@@ -3751,7 +3727,7 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     marketsBody.append(this.makeLoading(t('countryBrief.loadingMarkets')));
     briefBody.append(this.makeLoading(t('countryBrief.generatingBrief')));
 
-    bodyGrid.append(fiveFactorScorecardCard, factsCard, ...(chinaSummaryCard ? [chinaSummaryCard] : []), signalsCard, timelineCard, ...(historyCard ? [historyCard] : []), newsCard, militaryCard, sanctionsCard, economicCard, no2ActivityCard, housingCard, debtCard, comtradeCard, tariffCard, tradeCard, costShockCalcCard, productImportsCard, marketsCard, energyCard, maritimeCard, commodityVulnerabilityCard, foodStocksCard, infraCard, demographicsCard);
+    bodyGrid.append(fiveFactorScorecardCard, factsCard, ...(chinaSummaryCard ? [chinaSummaryCard] : []), signalsCard, timelineCard, ...(historyCard ? [historyCard] : []), newsCard, militaryCard, sanctionsCard, economicCard, no2ActivityCard, housingCard, debtCard, comtradeCard, tariffCard, tradeCard, costShockCalcCard, productImportsCard, marketsCard, energyCard, maritimeCard, commodityVulnerabilityCard, foodStocksCard, infraCard);
     const lead = this.el('div', 'cdp-overview-lead');
     lead.append(briefCard, summaryGrid);
     shell.append(header, lead, bodyGrid);
@@ -3772,7 +3748,7 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
         if (stillCurrent()) body.replaceChildren(this.makeEmpty(t('countryBrief.foodStocksUnavailable')));
         return;
       }
-      const { getFoodStocks } = await import('@/services/resilience');
+      const { getFoodStocks } = await import('@/services/supply-chain');
       // allSettled, not all: the WORLD lookup is a shared comparison column, and
       // a gateway-level rejection on it alone (billing verification, rate limit,
       // Clerk token race) must not discard country data that arrived fine.
@@ -3841,37 +3817,6 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
         if (error instanceof CountrySectionError && error.state === 'locked') this.setSectionFailure('food', 'locked', error.message);
         else this.setSectionFailure('food', 'unavailable', t('countryBrief.foodStocksUnavailable'));
       }
-    }
-  }
-
-  private async renderDemographicsCapability(code: string, body: HTMLElement): Promise<void> {
-    const requestId = ++this.demographicsCapabilityRequestId;
-    const stillCurrent = (): boolean => requestId === this.demographicsCapabilityRequestId;
-    const signal = this.signal;
-    try {
-      if (typeof location === 'undefined') {
-        if (stillCurrent()) body.replaceChildren(this.makeEmpty(t('countryBrief.demographicsCapability.unavailable')));
-        return;
-      }
-      const { getDemographicsCapability } = await import('@/services/resilience');
-      if (!stillCurrent() || signal.aborted) return;
-      const data = await (this.source ? this.source.demographics(code, signal) : getDemographicsCapability({ countryCode: code, signal }));
-      if (!stillCurrent()) return;
-      if (!data.available) {
-        body.replaceChildren(this.makeEmpty(t('countryBrief.demographicsCapability.unavailable')));
-        return;
-      }
-      body.replaceChildren(renderDemographicsCapabilitySection(
-        data,
-        (label, value, chipClass) => this.metric(label, value, chipClass),
-        t,
-      ));
-    } catch (error) {
-      const aborted = (error as { name?: string })?.name === 'AbortError' || signal.aborted || !stillCurrent();
-      if (!aborted) {
-        console.warn('[CountryDeepDivePanel] demographics capability load failed', error);
-      }
-      if (stillCurrent()) this.setSectionFailure('demographics', error instanceof CountrySectionError ? error.state : 'unavailable', t('countryBrief.demographicsCapability.unavailable'));
     }
   }
 
@@ -3947,62 +3892,6 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     return translated === key ? slug : translated;
   }
 
-  private destroyResilienceWidget(): void {
-    this.resilienceWidgetRequestId += 1;
-    this.resilienceWidget?.destroy();
-    this.resilienceWidget = null;
-    this.pendingResilienceEnergyMix = null;
-  }
-
-  private renderResilienceWidgetSlot(code: string): HTMLElement {
-    const slot = this.el('div', 'cdp-card resilience-widget');
-    slot.append(this.makeLoading(t('countryBrief.loadingResilienceScore')));
-    const requestId = ++this.resilienceWidgetRequestId;
-
-    const renderFallback = (error: unknown) => {
-      if (requestId !== this.resilienceWidgetRequestId) return;
-      this.resilienceWidget?.destroy();
-      this.resilienceWidget = null;
-      console.warn('[CountryDeepDivePanel] Failed to load resilience widget', error);
-      slot.replaceChildren(this.makeEmpty(t('countryBrief.resilienceScoreUnavailable')));
-    };
-
-    this.hostedResilienceRead = import('@/components/ResilienceWidget')
-      .then(({ ResilienceWidget }) => {
-        if (requestId !== this.resilienceWidgetRequestId) return;
-        if (typeof ResilienceWidget !== 'function') throw new Error('ResilienceWidget export is unavailable.');
-        const widget = new ResilienceWidget(code, this.source?.mode === 'host' ? { load: country => this.source!.resilience(country, this.signal) } : undefined);
-        try {
-          if (this.pendingResilienceEnergyMix) {
-            widget.setEnergyMix(this.pendingResilienceEnergyMix);
-          }
-          this.replaceResilienceSlot(slot, widget.getElement());
-          this.resilienceWidget = widget;
-        } catch (error) {
-          widget.destroy();
-          throw error;
-        }
-      })
-      .catch(renderFallback);
-
-    return slot;
-  }
-
-  private replaceResilienceSlot(slot: HTMLElement, next: HTMLElement): void {
-    if (typeof slot.replaceWith === 'function') {
-      slot.replaceWith(next);
-      return;
-    }
-    if (typeof slot.parentNode?.replaceChild === 'function') {
-      slot.parentNode.replaceChild(next, slot);
-      return;
-    }
-    if (typeof slot.parentNode?.insertBefore === 'function' && typeof slot.parentNode?.removeChild === 'function') {
-      slot.parentNode.insertBefore(next, slot);
-      slot.parentNode.removeChild(slot);
-    }
-  }
-
   private tearDownFollowButton(): void {
     if (this.followButtonTeardown) {
       try {
@@ -4021,11 +3910,8 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     this.presentation = null;
     this.sections = [];
     this.foodStocksRequestId++;
-    this.demographicsCapabilityRequestId++;
     this.foodStocksBody = null;
-    this.demographicsBody = null;
     this.tearDownFiveFactorScorecard();
-    this.destroyResilienceWidget();
     this.tearDownFollowButton();
     this.selectedSectorHs2 = null;
     this.sectorBypassAbort?.abort();
@@ -4541,11 +4427,10 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
       }));
       for (const [id, title, selector] of [
         ['instability', 'Country Instability Index', '.cdp-score-card'],
-        ['resilience-model', 'Resilience Score', '.resilience-widget'],
       ]) {
         const card = this.content.querySelector<HTMLElement>(selector!);
-        if (card) sections.unshift({ id: id!, title: title!, topics: ['overview', 'resilience'],
-          state: card.querySelector('.cdp-loading-inline, .resilience-widget__loading') ? 'loading' : card.querySelector('.cdp-empty') ? 'unavailable' : card.querySelector('.resilience-widget__locked') ? 'locked' : 'ready',
+        if (card) sections.unshift({ id: id!, title: title!, topics: ['overview'],
+          state: card.querySelector('.cdp-loading-inline') ? 'loading' : card.querySelector('.cdp-empty') ? 'unavailable' : 'ready',
           content: freezeBriefContent(card) });
       }
       const assessment = this.el('div', 'cdp-story-assessment');

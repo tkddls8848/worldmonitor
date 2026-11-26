@@ -68,7 +68,7 @@ function createHandler(options: { handlerCdnCacheHeader?: string; publicRouteBod
     },
     {
       method: 'GET',
-      path: '/api/resilience/v1/get-resilience-score',
+      path: '/api/supply-chain/v1/get-food-stocks',
       handler: async () => new Response(JSON.stringify({ ok: true }), { status: 200 }),
     },
   ]);

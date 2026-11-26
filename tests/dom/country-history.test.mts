@@ -8,8 +8,6 @@ vi.mock('@/services/country-history', () => ({ fetchCountryHistory: vi.fn() }));
 const fixture = (allowedDays = 7) => ({
   country: 'US', requestedDays: 7, allowedDays, effectiveDays: 7, returnedDays: 2, stale: false, upstreamUnavailable: false, fetchedAt: Date.now(),
   points: [
-    { date: '2026-10-17', capturedAt: 1792197000000, cii: { score: 0, version: 'v10', observedAt: 1792197000000 }, topEvents: [], keySignals: [], ciiVersionBreak: false, resilienceVersionBreak: false },
-    { date: '2026-10-19', capturedAt: 1792369800000, cii: { score: 40, version: 'v11', observedAt: 1792369800000 }, topEvents: [{ title: 'United States talks begin', link: 'https://example.com/talks', source: 'Example', category: 'politics' }], keySignals: [], ciiVersionBreak: true, resilienceVersionBreak: true },
   ],
 });
 

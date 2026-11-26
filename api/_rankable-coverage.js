@@ -1,4 +1,3 @@
-export const EDUCATION_MIN_RANKABLE_RECORD_COUNT = 180;
 
 // Supply-vulnerability rankable-record floor shared by api/health.js and
 // api/seed-health.js so the two health surfaces cannot drift apart. Mirrors
@@ -31,24 +30,4 @@ export function parseRankableRecordCount(meta) {
   const codes = meta.countrySet.split(',').map((code) => code.trim());
   if (codes.length === 0 || codes.some((code) => !isRankableCountryCode(code))) return null;
   return new Set(codes).size;
-}
-
-export function parseEducationPayloadRankableRecordCount(payload) {
-  if (payload == null || typeof payload !== 'object' || Array.isArray(payload)) return null;
-  const countries = payload.countries;
-  if (countries == null || typeof countries !== 'object' || Array.isArray(countries)) return null;
-
-  let count = 0;
-  for (const [countryCode, record] of Object.entries(countries)) {
-    if (!isRankableCountryCode(countryCode) || record == null || typeof record !== 'object' || Array.isArray(record)) continue;
-    const value = record.value;
-    const year = record.year;
-    if (
-      typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 100 &&
-      typeof year === 'number' && Number.isSafeInteger(year) && year >= 1900 && year <= 2200
-    ) {
-      count += 1;
-    }
-  }
-  return count;
 }

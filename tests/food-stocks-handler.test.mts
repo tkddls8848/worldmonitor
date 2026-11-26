@@ -8,10 +8,10 @@ import {
   flattenSnapshot,
   normalizeFoodStocksCommodity,
   normalizeFoodStocksCountry,
-} from '../server/worldmonitor/resilience/v1/_food-stocks-query.ts';
+} from '../server/worldmonitor/supply-chain/v1/_food-stocks-query.ts';
 
 const HANDLER_SRC = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), '..', 'server', 'worldmonitor', 'resilience', 'v1', 'get-food-stocks.ts'),
+  join(dirname(fileURLToPath(import.meta.url)), '..', 'server', 'worldmonitor', 'supply-chain', 'v1', 'get-food-stocks.ts'),
   'utf8',
 );
 

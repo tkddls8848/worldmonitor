@@ -176,7 +176,6 @@ export class RouteExplorer {
     this.impactData = null;
     this.clearMapState();
     this.leftRail?.updateLane(null, mode);
-    this.leftRail?.updateResilience(null);
     this.currentTab?.update(null);
     this.alternativesTab?.update(null);
     this.landTab?.update(null);
@@ -205,7 +204,6 @@ export class RouteExplorer {
       if (!data.noModeledLane) {
         this.applyMapState(data);
       }
-      void this.fetchResilience(data.toIso2);
       void this.fetchImpact(data.fromIso2, data.toIso2, data.hs2);
     } catch {
       if (gen !== this.generationId) return;
@@ -214,21 +212,6 @@ export class RouteExplorer {
       this.showError();
     } finally {
       if (gen === this.generationId) this.isLoading = false;
-    }
-  }
-
-  private async fetchResilience(iso2: string): Promise<void> {
-    const gen = this.generationId;
-    try {
-      const { getResilienceScore } = await import('@/services/resilience');
-      const res = await getResilienceScore(iso2);
-      if (!this.isOpen || gen !== this.generationId) return;
-      this.leftRail.updateResilience(res);
-      this.impactTab.updateResilience(res);
-    } catch {
-      if (gen !== this.generationId) return;
-      this.leftRail.updateResilience(null);
-      this.impactTab.updateResilience(null);
     }
   }
 

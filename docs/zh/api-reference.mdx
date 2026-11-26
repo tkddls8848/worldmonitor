@@ -9,7 +9,7 @@ WorldMonitor 通过一族带版本号的 REST 服务对外提供数据。每个�
 https://api.worldmonitor.app/api/<service>/v1/<rpc-name>
 ```
 
-`<rpc-name>` 使用 kebab-case（例如 `list-acled-events`、`get-resilience-ranking`）。每个服务的认证方式一致 — 传入用户 API key，例如 `X-WorldMonitor-Key: wm_0123456789abcdef0123456789abcdef01234567`、运维签发的企业 key，或在受支持时使用仪表盘的浏览器会话。详见 [身份验证](/zh/usage-auth)。
+`<rpc-name>` 使用 kebab-case（例如 `list-acled-events`、`get-risk-scores`）。每个服务的认证方式一致 — 传入用户 API key，例如 `X-WorldMonitor-Key: wm_0123456789abcdef0123456789abcdef01234567`、运维签发的企业 key，或在受支持时使用仪表盘的浏览器会话。详见 [身份验证](/zh/usage-auth)。
 
 左侧边栏中的分组页面为已归档的服务分组呈现 OpenAPI 规范 — 请求参数、响应 schema 与在线试用。打包规范仍是完整的机器可读来源。
 

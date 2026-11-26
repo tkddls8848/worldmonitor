@@ -50,7 +50,7 @@ describe('DeckGLMap layer presets, group counts, hidden-toggle protection, and c
     localStorage.clear();
   });
 
-  it('applies presets, fires onLayerChange per changed layer, updates group counts, respects hideLayerToggle, and keeps choropleths exclusive', () => {
+  it('applies presets, fires onLayerChange per changed layer, updates group counts, respects hideLayerToggle', () => {
     const host = document.getElementById('mapHost')!;
     const initialLayers: MapLayers = { ...DEFAULT_MAP_LAYERS, pipelines: false };
     const map = new DeckGLMap(host, {
@@ -95,21 +95,6 @@ describe('DeckGLMap layer presets, group counts, hidden-toggle protection, and c
     expect(countBadges.every((text) => text?.startsWith('0/'))).toBe(true);
 
     // Choropleth mutual exclusivity via toggles (unconditional — fail loudly if missing)
-    const resInput = host.querySelector<HTMLInputElement>('.layer-toggle[data-layer="resilienceScore"] input');
-    const ciiInput = host.querySelector<HTMLInputElement>('.layer-toggle[data-layer="ciiChoropleth"] input');
-    expect(resInput).toBeTruthy();
-    expect(ciiInput).toBeTruthy();
 
-    resInput!.checked = true;
-    resInput!.dispatchEvent(new Event('change'));
-    expect(map.getState().layers.resilienceScore).toBe(true);
-
-    ciiInput!.checked = true;
-    ciiInput!.dispatchEvent(new Event('change'));
-    expect(map.getState().layers.ciiChoropleth).toBe(true);
-    expect(map.getState().layers.resilienceScore).toBe(false);
-    expect(resInput!.checked).toBe(false);
-
-    map.destroy();
   });
 });

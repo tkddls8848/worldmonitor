@@ -16,7 +16,7 @@ curl https://www.worldmonitor.app/sandbox/index.json
 每个条目列出操作本身、生产环境 URL 以及 `fixture` 地址。获取任一 fixture 会返回与生产端点**完全一致的响应信封结构**，并附带请求元数据:
 
 ```bash
-curl https://www.worldmonitor.app/sandbox/get-resilience-score.json
+curl https://www.worldmonitor.app/sandbox/get-country-risk.json
 ```
 
 ```json
@@ -24,8 +24,8 @@ curl https://www.worldmonitor.app/sandbox/get-resilience-score.json
   "sandbox": true,
   "operation": {
     "method": "GET",
-    "path": "/api/resilience/v1/get-resilience-score",
-    "productionUrl": "https://api.worldmonitor.app/api/resilience/v1/get-resilience-score"
+    "path": "/api/intelligence/v1/get-country-risk",
+    "productionUrl": "https://api.worldmonitor.app/api/intelligence/v1/get-country-risk"
   },
   "request": { "query": { "countryCode": "US" } },
   "response": { "status": 200, "body": { "...": "符合 schema 的示例负载" } }

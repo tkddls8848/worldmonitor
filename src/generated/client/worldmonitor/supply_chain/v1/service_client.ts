@@ -469,7 +469,6 @@ export interface GetRouteImpactResponse {
   primaryExporterIso2: string;
   primaryExporterShare: number;
   topStrategicProducts: StrategicProduct[];
-  resilienceScore: number;
   dependencyFlags: DependencyFlag[];
   hs2InSeededUniverse: boolean;
   comtradeSource: string;
@@ -861,6 +860,35 @@ export interface ListVulnerabilityRankingsResponse {
   generatedAt: string;
   methodologyVersion: string;
   upstreamUnavailable: boolean;
+}
+
+export interface GetFoodStocksRequest {
+  countryCode: string;
+  commodity: string;
+}
+
+export interface GetFoodStocksResponse {
+  records: FoodStockRecord[];
+  fetchedAt: string;
+  unavailable: boolean;
+  calorieWeightedStocksToUse: number;
+}
+
+export interface FoodStockRecord {
+  countryCode: string;
+  commodity: string;
+  marketingYear: string;
+  stocksToUse: number;
+  hasStocksToUse: boolean;
+  endingStocksTmt: number;
+  hasEndingStocks: boolean;
+  totalUseTmt: number;
+  productionTmt: number;
+  consumptionTmt: number;
+  importsTmt: number;
+  exportsTmt: number;
+  unit: string;
+  source: string;
 }
 
 export type CorridorStatus = "CORRIDOR_STATUS_UNSPECIFIED" | "CORRIDOR_STATUS_ACTIVE" | "CORRIDOR_STATUS_PROPOSED" | "CORRIDOR_STATUS_UNAVAILABLE";
@@ -1558,6 +1586,32 @@ export class SupplyChainServiceClient {
     }
 
     return await resp.json() as ListVulnerabilityRankingsResponse;
+  }
+
+  async getFoodStocks(req: GetFoodStocksRequest, options?: SupplyChainServiceCallOptions): Promise<GetFoodStocksResponse> {
+    let path = "/api/supply-chain/v1/get-food-stocks";
+    const params = new URLSearchParams();
+    if (req.countryCode != null && req.countryCode !== "") params.set("countryCode", String(req.countryCode));
+    if (req.commodity != null && req.commodity !== "") params.set("commodity", String(req.commodity));
+    const url = this.baseURL + path + (params.toString() ? "?" + params.toString() : "");
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...this.defaultHeaders,
+      ...options?.headers,
+    };
+
+    const resp = await this.fetchFn(url, {
+      method: "GET",
+      headers,
+      signal: options?.signal,
+    });
+
+    if (!resp.ok) {
+      return this.handleError(resp);
+    }
+
+    return await resp.json() as GetFoodStocksResponse;
   }
 
   private async handleError(resp: Response): Promise<never> {

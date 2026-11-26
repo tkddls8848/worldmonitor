@@ -1269,9 +1269,6 @@ const LOGICAL_ENTRIES = [
 // hard-fails the whole scan the moment an unrelated edit shifts it.
 const DYNAMIC_HOSTS = [
   { host: 'webcams.windy.com', kind: 'structured', path: 'shared/pinned-webcams.ts' },
-  { host: 'www.swfinstitute.org', kind: 'structured', path: 'scripts/seed-sovereign-wealth.mjs' },
-  { host: 'www.ifswf.org', kind: 'structured', path: 'scripts/seed-sovereign-wealth.mjs' },
-  { host: 'www.visionofhumanity.org', kind: 'structured', path: 'scripts/seed-resilience-static.mjs' },
   { host: 'earth-search.aws.element84.com', kind: 'structured', path: 'server/worldmonitor/imagery/v1/search-imagery.ts' },
 ];
 

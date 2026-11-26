@@ -37,7 +37,6 @@ describe('LAYER_REGISTRY — renderer axis', () => {
     assert.deepEqual(LAYER_REGISTRY.storageFacilities.renderers, ['deck']);
     assert.deepEqual(LAYER_REGISTRY.fuelShortages.renderers, ['deck']);
     assert.deepEqual(LAYER_REGISTRY.diseaseOutbreaks.renderers, ['deck']);
-    assert.deepEqual(LAYER_REGISTRY.resilienceScore.renderers, ['deck']);
     assert.deepEqual(LAYER_REGISTRY.liveTankers.renderers, ['deck']);
   });
 
@@ -72,12 +71,6 @@ describe('isLayerExecutable — renderer gate', () => {
       'SVG fallback must NOT execute a deck-only layer');
   });
 
-  test('resilienceScore is executable only under kind "deck"', () => {
-    assert.equal(isLayerExecutable('resilienceScore', 'deck'), true,
-      'DeckGL should execute resilienceScore');
-    assert.equal(isLayerExecutable('resilienceScore', 'svg'), false,
-      'SVG fallback must NOT execute resilienceScore');
-  });
 
   test('ciiChoropleth is executable under "deck" but not "svg"', () => {
     // DeckGLMap paints the CII choropleth; the SVG fallback has no CII paint
@@ -112,7 +105,6 @@ describe('locked map-layer ownership', () => {
   test('sanitizeLayersForVariant never returns its input, so identity guards are dead', () => {
     const layers = {
       conflicts: true,
-      resilienceScore: false,
     } as unknown as MapLayers;
 
     const out = sanitizeLayersForVariant(layers, 'full');
@@ -130,10 +122,10 @@ describe('locked map-layer ownership', () => {
   });
 
   test('compares layer snapshots semantically instead of by object identity', () => {
-    const layers = { conflicts: true, resilienceScore: false } as unknown as MapLayers;
+    const layers = { conflicts: true, iranAttacks: false } as unknown as MapLayers;
     assert.equal(mapLayerStatesEqual(layers, { ...layers }), true);
     assert.equal(
-      mapLayerStatesEqual(layers, { ...layers, resilienceScore: true }),
+      mapLayerStatesEqual(layers, { ...layers, iranAttacks: true }),
       false,
     );
   });
@@ -141,41 +133,29 @@ describe('locked map-layer ownership', () => {
   test('restores only valid locked layers owned by the gate', () => {
     const restored = restoreGateOwnedLockedLayers(
       {
-        resilienceScore: false,
+        iranAttacks: false,
         conflicts: false,
       } as unknown as MapLayers,
-      new Set(['resilienceScore', 'conflicts', 'removed-layer']),
+      new Set(['iranAttacks', 'conflicts', 'removed-layer']),
     );
 
-    assert.equal(restored.resilienceScore, true);
+    assert.equal(restored.iranAttacks, true);
     assert.equal(restored.conflicts, false, 'ordinary user-disabled layers stay disabled');
     assert.equal('removed-layer' in restored, false, 'unknown historical keys are ignored');
   });
 
-  test('does not let stale resilience ownership override an enabled CII choropleth', () => {
-    const restored = restoreGateOwnedLockedLayers(
-      {
-        resilienceScore: false,
-        ciiChoropleth: true,
-      } as unknown as MapLayers,
-      new Set(['resilienceScore']),
-    );
-
-    assert.equal(restored.resilienceScore, false);
-    assert.equal(restored.ciiChoropleth, true);
-  });
 
 });
 
 describe('isLayerCommandAllowed — CMD+K toggle policy', () => {
   test('layers that render on the active map stay toggleable', () => {
-    assert.equal(isLayerCommandAllowed('resilienceScore', 'deck'), true);
+    assert.equal(isLayerCommandAllowed('no2Activity', 'deck'), true);
     assert.equal(isLayerCommandAllowed('ciiChoropleth', 'deck'), true);
   });
 
   test('renderer compatibility blocks commands', () => {
-    // resilience renders only on deck: the SVG fallback is blocked.
-    assert.equal(isLayerCommandAllowed('resilienceScore', 'svg'), false);
+    // NO2 renders only on deck: the SVG fallback is blocked.
+    assert.equal(isLayerCommandAllowed('no2Activity', 'svg'), false);
     // storageFacilities is deck-only: the SVG fallback cannot run it.
     assert.equal(isLayerCommandAllowed('storageFacilities', 'svg'), false);
     // ciiChoropleth renders on deck but not the SVG fallback.
@@ -201,9 +181,9 @@ describe('isLayerExecutable — matrix of layer x kind', () => {
     // storageFacilities = ['deck'] (deck-only)
     { key: 'storageFacilities', kind: 'deck',  expect: true,  why: 'deck-only layer on deck' },
     { key: 'storageFacilities', kind: 'svg',   expect: false, why: 'deck-only layer rejects the SVG fallback' },
-    // resilienceScore = ['deck'] (deck-only, locked)
-    { key: 'resilienceScore',   kind: 'deck',  expect: true,  why: 'resilience on deck' },
-    { key: 'resilienceScore',   kind: 'svg',   expect: false, why: 'resilience rejects SVG fallback' },
+    // iranAttacks = ['deck'] (deck-only, locked)
+    { key: 'no2Activity',    kind: 'deck',  expect: true,  why: 'NO2 on deck' },
+    { key: 'no2Activity',    kind: 'svg',   expect: false, why: 'NO2 rejects SVG fallback' },
     // ciiChoropleth = ['deck']
     { key: 'ciiChoropleth',     kind: 'deck',  expect: true,  why: 'CII on deck' },
     { key: 'ciiChoropleth',     kind: 'svg',   expect: false, why: 'CII rejects the SVG fallback' },

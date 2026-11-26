@@ -493,13 +493,11 @@ export class SearchSelectionDispatcher {
         const layer = (LAYER_KEY_MAP[action] || action) as keyof MapLayers;
         if (!(layer in ctx.mapLayers) || !getAllowedLayerKeys(this.variant()).has(layer)) return false;
         const renderer: RendererKind = ctx.map?.isDeckGLActive?.() ? 'deck' : 'svg';
-        const deckGL = ctx.map?.isDeckGLActive?.() ?? false;
         const current = ctx.mapLayers[layer];
         if (!isLayerCommandAllowed(layer, renderer)) {
           return false;
         }
-        let next = !current;
-        if (next && layer === 'resilienceScore' && !deckGL) next = false;
+        const next = !current;
         ctx.mapLayers[layer] = next;
         this.bindings.saveToStorage(STORAGE_KEYS.mapLayers, ctx.mapLayers);
         if (next) ctx.map?.enableLayer(layer);
@@ -553,21 +551,6 @@ export class SearchSelectionDispatcher {
           ctx.unifiedSettings?.open();
         } else if (action === 'refresh') {
           window.location.reload();
-        } else if (action === 'resilience') {
-          const layer = 'resilienceScore' as keyof MapLayers;
-          if (!getAllowedLayerKeys(this.variant()).has(layer)) return false;
-          const current = ctx.mapLayers[layer];
-          const renderer: RendererKind = ctx.map?.isDeckGLActive?.() ? 'deck' : 'svg';
-          const deckGL = ctx.map?.isDeckGLActive?.() ?? false;
-          if (!isLayerCommandAllowed(layer, renderer)) {
-            return false;
-          }
-          let next = !current;
-          if (next && !deckGL) next = false;
-          ctx.mapLayers[layer] = next;
-          this.bindings.saveToStorage(STORAGE_KEYS.mapLayers, ctx.mapLayers);
-          if (next) ctx.map?.enableLayer(layer);
-          else ctx.map?.setLayers(ctx.mapLayers);
         } else if (action === 'route-explorer') {
           void import('@/components/RouteExplorer/RouteExplorer').then((module) => {
             const explorer = module.getRouteExplorer();

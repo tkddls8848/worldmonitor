@@ -14,17 +14,14 @@ import { computeLane } from '../../server/worldmonitor/supply-chain/v1/get-route
 const {
   fetchRouteExplorerLane,
   fetchRouteImpact,
-  getResilienceScore,
   hasPremiumAccess,
 } = vi.hoisted(() => ({
   fetchRouteExplorerLane: vi.fn(),
   fetchRouteImpact: vi.fn(),
-  getResilienceScore: vi.fn(),
   hasPremiumAccess: vi.fn(() => true),
 }));
 
 vi.mock('@/services/supply-chain', () => ({ fetchRouteExplorerLane, fetchRouteImpact }));
-vi.mock('@/services/resilience', () => ({ getResilienceScore }));
 
 import { RouteExplorer } from '@/components/RouteExplorer/RouteExplorer';
 
@@ -54,7 +51,6 @@ describe('RouteExplorer map lane', () => {
     window.history.replaceState({}, '', '/?explorer=from:SA,to:IN,hs:27');
     fetchRouteExplorerLane.mockReset();
     fetchRouteImpact.mockReset().mockResolvedValue(null);
-    getResilienceScore.mockReset().mockResolvedValue(null);
     explorer = new RouteExplorer();
     map = fakeMap();
     explorer.setMap(map);

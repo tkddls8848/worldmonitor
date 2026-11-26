@@ -29,7 +29,7 @@ This is the API-section companion to the site-wide briefing at https://www.world
 
 - **Live world brief & signals** — `get_world_brief`, `get_news_intelligence`, `get_natural_disasters`, `get_cyber_threats`, `get_aviation_status`.
 - **Country situation brief.** `get_country_brief`. Key-free sample: `https://www.worldmonitor.app/sandbox/get-country-intel-brief.json`. The live REST route requires an API key.
-- **Country risk and resilience.** `get_country_risk`. Key-free sample: `https://www.worldmonitor.app/sandbox/get-resilience-score.json`. The live REST route requires an API key.
+- **Country risk.** `get_country_risk`. Key-free sample: `https://www.worldmonitor.app/sandbox/get-country-risk.json`. The live REST route requires an API key.
 - **"Does this event move markets?"** — `get_conflict_events`, `get_sanctions_data`, `get_chokepoint_status`, `get_market_data`, `get_maritime_activity`.
 - **Commodity & supply-chain disruption** — `get_supply_chain_data`, `get_energy_intelligence`, `get_commodity_geo`, `get_maritime_activity`.
 - **Forecasting & prediction markets** — `get_forecast_predictions`, `get_forecast_scorecard`, `get_prediction_markets`.

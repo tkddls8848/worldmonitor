@@ -139,7 +139,6 @@ export const MISSION_PRESETS: readonly MissionPreset[] = [
       'sanctions',
       'weather',
       'natural',
-      'resilienceScore',
     ],
   },
   {

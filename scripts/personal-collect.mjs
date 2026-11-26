@@ -58,13 +58,14 @@ export const STANDALONE_INTERVAL_MIN = {
 // breaker could publish a partial result, leaving their Redis locks alive much
 // longer than collect-state considered the run fresh.
 export const PERSONAL_COLLECTOR_TIMEOUT_MIN = Object.freeze({
+  'bundle-country-reference': 65, // monthly import HHI can take 30 minutes on its own
   'no2-activity': 15, // seed fetch phase is capped at 12 minutes
   'supply-chain-trade': 20, // seed deadline is 17 minutes (15m lock + 2m margin)
   'comtrade-bilateral-hs4': 27, // longer pass than the 6m generic cap, still below its 30m lock
 });
 
 export function collectorTimeoutMs(name) {
-  return (name.startsWith('bundle-') ? 30 : PERSONAL_COLLECTOR_TIMEOUT_MIN[name] ?? 6) * MIN;
+  return (PERSONAL_COLLECTOR_TIMEOUT_MIN[name] ?? (name.startsWith('bundle-') ? 30 : 6)) * MIN;
 }
 
 // Collectors whose script is not named seed-<name>.mjs.
@@ -83,9 +84,8 @@ export const DEFAULT_COLLECTORS = [
   'bundle-market-backup', 'bundle-relay-backup', 'bundle-climate', 'bundle-health',
   'bundle-energy-sources', 'bundle-derived-signals',
   'bundle-macro', 'bundle-yield-curves', 'bundle-ecb-eu', 'bundle-imf-extended', 'bundle-canada',
-  'bundle-portwatch', 'bundle-portwatch-port-activity', 'bundle-regional-energy', 'bundle-regional',
-  'bundle-static-ref', 'bundle-static-ref-heavy', 'bundle-resilience', 'bundle-resilience-recovery',
-  'bundle-resilience-energy-v2', 'bundle-resilience-validation',
+  'bundle-portwatch', 'bundle-portwatch-port-activity', 'bundle-regional-energy', 'bundle-country-reference', 'bundle-regional',
+  'bundle-static-ref', 'bundle-static-ref-heavy',
   ...Object.keys(STANDALONE_INTERVAL_MIN).filter((name) => !['news-threat-summary', 'weather-alerts', 'cyber-threats'].includes(name)),
   'insights', 'world-relations-ai', 'forecasts', 'correlation', 'digest-notifications', 'world-overview',
 ];

@@ -89,10 +89,6 @@ export const NO2_ATTRIBUTION_EXPRESSION = '{attribution: attribution, generatedA
 export const REST_ATTRIBUTION_EXPRESSIONS: Readonly<Record<string, string>> = {
   '/api/economic/v1/get-no2-activity': NO2_ATTRIBUTION_EXPRESSION,
   '/api/displacement/v1/get-cross-border-movements': 'movements[].{source: source, sourceUrl: sourceUrl, license: license, licenseUrl: licenseUrl, notice: notice}',
-  // Same payload as the get_resilience_indicators tool: its `_execute` returns
-  // this endpoint's JSON verbatim, so the expression is identical.
-  '/api/resilience/v1/get-resilience-indicators':
-    'indicators[].{indicatorId: id, retrievedAt: retrievedAt, sources: sources[].{key: key, name: name, attribution: attribution, license: license, url: url, licenseUrl: licenseUrl, attributionUrl: attributionUrl}}',
   // Flat response, one dataset per request (`?dataset=`), with the licence
   // assertion at the top level — see queryTorontoSafety's return shape.
   '/api/safety/v1/get-toronto-safety':

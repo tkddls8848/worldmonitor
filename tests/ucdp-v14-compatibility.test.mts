@@ -4,7 +4,6 @@ import { it } from 'node:test';
 import { loadCiiFixtures } from '../scripts/lib/cii-fixtures.mts';
 import { computeCiiScoreTable } from '../server/worldmonitor/intelligence/v1/get-risk-scores.ts';
 import { CII_FORMULA_VERSION } from '../server/worldmonitor/intelligence/v1/_risk-config.ts';
-import { summarizeUcdp } from '../server/worldmonitor/resilience/v1/_dimension-scorers.ts';
 import { TIER1_COUNTRIES } from '../server/worldmonitor/intelligence/v1/_shared.ts';
 
 const require = createRequire(import.meta.url);
@@ -32,7 +31,4 @@ it('released v14 reads the same sample-month inputs and table with the additive 
   assert.deepEqual(newTable.aux.ucdpEvents, oldTable.aux.ucdpEvents);
   assert.deepEqual(newTable.rows, oldTable.rows);
   assert.deepEqual(newTable.scores, oldTable.scores);
-  for (const code of Object.keys(TIER1_COUNTRIES)) {
-    assert.deepEqual(summarizeUcdp(newPayload, code), summarizeUcdp(oldPayload, code));
-  }
 });

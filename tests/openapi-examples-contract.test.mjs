@@ -651,12 +651,12 @@ function honeypotRequestViolations(spec, label) {
 describe('OpenAPI examples contract', () => {
   // Bump these exact surface counts when adding or removing proto services/RPCs.
   it('audits the known service operation surface', () => {
-    assert.equal(serviceSpecs.length, 41, `expected 41 service specs, found ${serviceSpecs.length}`);
+    assert.equal(serviceSpecs.length, 40, `expected 40 service specs, found ${serviceSpecs.length}`);
     const total = serviceSpecs.reduce((sum, file) => {
       const spec = JSON.parse(readFileSync(resolve(apiDir, file), 'utf8'));
       return sum + operationEntries(spec).length;
     }, 0);
-    assert.equal(total, 253, `expected 253 OpenAPI operations, found ${total}`);
+    assert.equal(total, 248, `expected 248 OpenAPI operations, found ${total}`);
   });
 
   it('adds schema-valid request and response examples to every service JSON spec', () => {
@@ -668,9 +668,9 @@ describe('OpenAPI examples contract', () => {
       totals.requestExpected += result.requestExpected;
       totals.responseExpected += result.responseExpected;
     }
-    assert.equal(totals.operations, 253);
+    assert.equal(totals.operations, 248);
     assert.ok(totals.requestExpected >= 137, `expected at least 137 request example targets, found ${totals.requestExpected}`);
-    assert.equal(totals.responseExpected, 253);
+    assert.equal(totals.responseExpected, 248);
   });
 
   // record-baseline-snapshot's nested updates[].type is a bare string (no schema
@@ -709,14 +709,14 @@ describe('OpenAPI examples contract', () => {
       const spec = loadYaml(readFileSync(resolve(apiDir, yamlFile), 'utf8'));
       operations += assertOperationExamples(spec, yamlFile).operations;
     }
-    assert.equal(operations, 253);
+    assert.equal(operations, 248);
   });
 
   it('adds request and response examples to the unified OpenAPI bundle', () => {
     const bundle = loadUnifiedOpenApiSpec();
     const result = assertOperationExamples(bundle, 'worldmonitor.openapi.yaml');
-    assert.equal(result.operations, 253);
-    assert.equal(result.responseExpected, 253);
+    assert.equal(result.operations, 248);
+    assert.equal(result.responseExpected, 248);
   });
 
   it('labels aircraft emergency examples synthetic and documents projected response shapes', () => {
@@ -1035,32 +1035,6 @@ describe('OpenAPI curated example values', () => {
     }
   });
 
-  it('uses valid available demographics observations in each published example', () => {
-    const specs = [
-      ['ResilienceService.openapi.json', JSON.parse(readFileSync(resolve(apiDir, 'ResilienceService.openapi.json'), 'utf8'))],
-      ['ResilienceService.openapi.yaml', loadYaml(readFileSync(resolve(apiDir, 'ResilienceService.openapi.yaml'), 'utf8'))],
-      ['worldmonitor.openapi.yaml', loadUnifiedOpenApiSpec()],
-    ];
-    for (const [label, spec] of specs) {
-      const example = spec.paths['/api/resilience/v1/get-demographics-capability'].get.responses['200'].content[JSON_MEDIA].example;
-      let checked = 0;
-      for (const group of Object.values(example)) {
-        if (!group || typeof group !== 'object' || Array.isArray(group)) continue;
-        for (const [field, observation] of Object.entries(group)) {
-          if (!observation || typeof observation !== 'object' || observation.available !== true) continue;
-          checked += 1;
-          assert.ok(Number.isInteger(observation.year) && observation.year >= 1900
-            && observation.year <= new Date().getUTCFullYear() + 50, `${label}: ${field} needs a valid source year`);
-          assert.ok(Number.isFinite(observation.value) && observation.value >= 0, `${label}: ${field} needs a valid value`);
-          assert.ok(observation.source?.trim(), `${label}: ${field} needs source attribution`);
-          const unit = field.endsWith('Years') ? 'years' : field.endsWith('People') ? 'people'
-            : field === 'researchersPerMillion' ? 'people per million' : 'percent';
-          assert.equal(observation.unit, unit, `${label}: ${field} unit must match the reader contract`);
-        }
-      }
-      assert.ok(checked > 0, `${label}: expected available observations`);
-    }
-  });
 
   it('uses a truthful partial-estimate Giving response example', () => {
     const specs = [

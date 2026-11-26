@@ -18,7 +18,6 @@ const QUALIFIED_HEADLINE_NAMES = {
   GN: ['guinea conakry'],
 };
 const RISK_KEY = 'risk:scores:sebuf:stale:v14';
-const RANKING_KEY = 'resilience:ranking:v30';
 const DIGEST_KEY = 'news:digest:v1:full:en';
 const fresh = (time, now, age) => Number.isFinite(time) && time > 0 && time <= now && now - time <= age;
 const validScore = value => typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 100;
@@ -37,28 +36,22 @@ function usableDigestSnapshot(digest, now) {
 }
 
 export async function readCountryHistorySources({ url, token, now = Date.now(), command = redisCommand, warmRiskScores, warmNewsDigest }) {
-  const { result } = await withRetry(() => command(url, token, ['MGET', RISK_KEY, RANKING_KEY, DIGEST_KEY]), SEED_REDIS_RETRY_ATTEMPTS - 1);
-  if (!Array.isArray(result) || result.length !== 3) throw new Error('country history input read failed');
-  const [riskValue, ranking, digestValue] = result.map(raw => unwrapEnvelope(raw).data);
+  const { result } = await withRetry(() => command(url, token, ['MGET', RISK_KEY, DIGEST_KEY]), SEED_REDIS_RETRY_ATTEMPTS - 1);
+  if (!Array.isArray(result) || result.length !== 2) throw new Error('country history input read failed');
+  const [riskValue, digestValue] = result.map(raw => unwrapEnvelope(raw).data);
   const risk = usableRiskSnapshot(riskValue, now) || !warmRiskScores
     ? riskValue
     : await warmRiskScores();
   const digest = usableDigestSnapshot(digestValue, now) || !warmNewsDigest
     ? digestValue
     : await warmNewsDigest();
-  return { risk, ranking, digest };
+  return { risk, digest };
 }
 
-export function composeCountrySnapshots({ countries, risk, ranking, digest, now }) {
+export function composeCountrySnapshots({ countries, risk, digest, now }) {
   if (!usableRiskSnapshot(risk, now)) throw new Error('country history CII source unavailable');
-  const rankingAt = Date.parse(ranking?.fetchedAt);
-  if (!Array.isArray(ranking?.items) || !Array.isArray(ranking?.greyedOut) || ranking.partial
-    || ![...ranking.items, ...ranking.greyedOut].some(row => validScore(row?.overallScore))
-    || typeof ranking._scoreCacheIdentity !== 'string' || !ranking._scoreCacheIdentity
-    || !fresh(rankingAt, now, 12 * 3600000)) throw new Error('country history resilience source unavailable');
   if (!usableDigestSnapshot(digest, now)) throw new Error('country history news source unavailable');
   const scores = new Map(risk.ciiScores.map(row => [row.region, row]));
-  const resilience = new Map([...ranking.items, ...ranking.greyedOut].map(row => [row.countryCode, row]));
   const events = Object.entries(digest.categories).flatMap(([category, bucket]) => {
     if (!Array.isArray(bucket?.items)) throw new Error('country history malformed news bucket');
     return bucket.items.map(item => ({ ...item, category }));
@@ -68,7 +61,6 @@ export function composeCountrySnapshots({ countries, risk, ranking, digest, now 
     .sort((a, b) => (b.importanceScore || 0) - (a.importanceScore || 0) || b.publishedAt - a.publishedAt);
   return countries.map(countryCode => {
     const cii = scores.get(countryCode);
-    const res = resilience.get(countryCode);
     const names = [...Object.entries(COUNTRY_NAMES).filter(([name, code]) => code === countryCode && !AMBIGUOUS_HEADLINE_NAMES.has(name)).map(([name]) => name),
       ...(QUALIFIED_HEADLINE_NAMES[countryCode] ?? [])].map(name => ` ${words(name)} `);
     const exclusions = Object.entries(COUNTRY_NAMES)
@@ -85,9 +77,8 @@ export function composeCountrySnapshots({ countries, risk, ranking, digest, now 
     return {
       countryCode, date: new Date(now).toISOString().slice(0, 10), capturedAt: now,
       ...(cii ? { cii: { score: cii.combinedScore, version: cii.methodologyVersion, observedAt: cii.computedAt } } : {}),
-      ...(res && validScore(res.overallScore) ? { resilience: { score: res.overallScore, version: ranking._scoreCacheIdentity, observedAt: rankingAt } } : {}),
       topEvents,
-      keySignals: [!cii && 'cii_unavailable', (!res || !validScore(res.overallScore)) && 'resilience_unavailable', digest.coverage.state === 'partial' && 'news_partial'].filter(Boolean),
+      keySignals: [!cii && 'cii_unavailable', digest.coverage.state === 'partial' && 'news_partial'].filter(Boolean),
     };
   });
 }
@@ -111,7 +102,7 @@ async function main() {
   if (!url || !token) throw new Error('Redis credentials are required');
   const sourceCheckAt = Date.now();
   const apiFetch = wmApiFetch();
-  const { risk, ranking, digest } = await readCountryHistorySources({
+  const { risk, digest } = await readCountryHistorySources({
     url, token, now: sourceCheckAt,
     warmRiskScores: async () => {
       const response = await apiFetch(`${wmApiBase()}/api/intelligence/v1/get-risk-scores`, {
@@ -132,7 +123,7 @@ async function main() {
   });
   // RPC warmups generate source timestamps after the initial store read.
   const now = Date.now();
-  const snapshots = composeCountrySnapshots({ countries: listRankableCountries(), risk, ranking, digest, now });
+  const snapshots = composeCountrySnapshots({ countries: listRankableCountries(), risk, digest, now });
   await publishCountrySnapshots(url, token, snapshots, now);
   console.log(`[country-history] published=${snapshots.length} date=${snapshots[0].date}`);
 }

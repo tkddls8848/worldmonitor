@@ -481,7 +481,6 @@ function sebufApiPlugin(): Plugin {
       tradeServerMod, tradeHandlerMod,
       supplyChainServerMod, supplyChainHandlerMod,
       naturalServerMod, naturalHandlerMod,
-      resilienceServerMod, resilienceHandlerMod,
       scenarioServerMod, scenarioHandlerMod,
       shippingV2ServerMod, shippingV2HandlerMod,
       batchServerMod, batchHandlerMod,
@@ -545,8 +544,6 @@ function sebufApiPlugin(): Plugin {
         import('./server/worldmonitor/supply-chain/v1/handler'),
         import('./src/generated/server/worldmonitor/natural/v1/service_server'),
         import('./server/worldmonitor/natural/v1/handler'),
-        import('./src/generated/server/worldmonitor/resilience/v1/service_server'),
-        import('./server/worldmonitor/resilience/v1/handler'),
         import('./src/generated/server/worldmonitor/scenario/v1/service_server'),
         import('./server/worldmonitor/scenario/v1/handler'),
         import('./src/generated/server/worldmonitor/shipping/v2/service_server'),
@@ -606,7 +603,6 @@ function sebufApiPlugin(): Plugin {
       ...tradeServerMod.createTradeServiceRoutes(tradeHandlerMod.tradeHandler, serverOptions),
       ...supplyChainServerMod.createSupplyChainServiceRoutes(supplyChainHandlerMod.supplyChainHandler, serverOptions),
       ...naturalServerMod.createNaturalServiceRoutes(naturalHandlerMod.naturalHandler, serverOptions),
-      ...resilienceServerMod.createResilienceServiceRoutes(resilienceHandlerMod.resilienceHandler, serverOptions),
       ...scenarioServerMod.createScenarioServiceRoutes(scenarioHandlerMod.scenarioHandler, serverOptions),
       ...shippingV2ServerMod.createShippingV2ServiceRoutes(shippingV2HandlerMod.shippingV2Handler, serverOptions),
       ...batchServerMod.createBatchServiceRoutes(batchHandlerMod.batchHandler, serverOptions),
@@ -1218,17 +1214,6 @@ export default defineConfig(({ mode }) => {
             // runtime TDZ that crashed the WebGL map into the SVG fallback).
             if (id.endsWith('/src/components/DeckGLMap.ts')) {
               return 'deck-stack';
-            }
-            // Co-locate ResilienceWidget with its only runtime importer
-            // (CountryDeepDivePanel, panels-intel). As a standalone chunk its
-            // import() was a second network hop on every deep-dive open, and
-            // filtering middleboxes that stub the *Widget*-named chunk URL with
-            // an empty 200 made the import resolve WITHOUT the export
-            // (Sentry WORLDMONITOR-T6). In-chunk resolution removes that
-            // surface and the waterfall hop; shared deps (resilience-widget-
-            // utils, services/resilience) already live in shared chunks.
-            if (id.endsWith('/src/components/ResilienceWidget.ts')) {
-              return 'panels-intel';
             }
             if (id.includes('/src/components/') && id.endsWith('.ts')) {
               const panelChunk = panelChunkForComponentId(id);

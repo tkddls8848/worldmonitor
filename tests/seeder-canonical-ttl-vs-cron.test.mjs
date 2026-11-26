@@ -81,14 +81,8 @@ const KNOWN_VIOLATIONS = {
   'IMF-Labor:seed-imf-labor.mjs': '35d TTL vs 30d cron (1.17×)',
   'IMF-External:seed-imf-external.mjs': '35d TTL vs 30d cron (1.17×)',
   'National-Debt:seed-national-debt.mjs': '65d TTL vs 30d cron (2.17×) — close, could just bump to 90d',
-  'WB-External-Debt:seed-wb-external-debt.mjs': '35d TTL vs 30d cron (1.17×)',
 
   // ── Recovery cohort (annual data, infrequent crons) ──
-  'Fiscal-Space:seed-recovery-fiscal-space.mjs': '35d TTL vs 30d cron (1.17×)',
-  'Reserve-Adequacy:seed-recovery-reserve-adequacy.mjs': '35d TTL vs 30d cron (1.17×)',
-  'External-Debt:seed-recovery-external-debt.mjs': '35d TTL vs 30d cron (1.17×)',
-  'Reexport-Share:seed-recovery-reexport-share.mjs': '35d TTL vs 30d cron (1.17×)',
-  'Sovereign-Wealth:seed-sovereign-wealth.mjs': '35d TTL vs 30d cron (1.17×)',
 
   // ── Portwatch ──
   'PW-Disruptions:seed-portwatch-disruptions.mjs': '2h TTL vs 1h cron (2×) — borderline',

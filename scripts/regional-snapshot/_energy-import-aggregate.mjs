@@ -14,8 +14,8 @@
 // getEnergyImportDependencyObservedSources().
 
 export const ENERGY_IMPORT_SOURCE_KEY = 'resilience:static:energy-import:v1';
-export const RESILIENCE_STATIC_INDEX_KEY = 'resilience:static:index:v1';
-export const RESILIENCE_STATIC_PREFIX = 'resilience:static:';
+export const COUNTRY_REFERENCE_INDEX_KEY = 'resilience:static:index:v1';
+export const COUNTRY_REFERENCE_PREFIX = 'resilience:static:';
 
 const AUDITED_IMPORT_SOURCES = new Set(['worldbank', 'eurostat']);
 
@@ -32,7 +32,7 @@ export function isAuditedImportSource(source) {
  * @returns {string}
  */
 export function countryStaticKey(iso2) {
-  return `${RESILIENCE_STATIC_PREFIX}${String(iso2).trim().toUpperCase()}`;
+  return `${COUNTRY_REFERENCE_PREFIX}${String(iso2).trim().toUpperCase()}`;
 }
 
 /**
@@ -149,7 +149,7 @@ export async function hydrateEnergyImportAggregate(sources, readKeys, sourceMeta
   if (sources[ENERGY_IMPORT_SOURCE_KEY] && typeof sources[ENERGY_IMPORT_SOURCE_KEY] === 'object') {
     return sources;
   }
-  const index = sources[RESILIENCE_STATIC_INDEX_KEY];
+  const index = sources[COUNTRY_REFERENCE_INDEX_KEY];
   if (reportsFailedDataset(index, 'iea') || reportsFailedDataset(sourceMeta, 'iea')) {
     throw new Error('Energy-import hydration rejected failed resilience-static IEA dataset');
   }
@@ -165,8 +165,8 @@ export async function hydrateEnergyImportAggregate(sources, readKeys, sourceMeta
     if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) {
       throw new Error(`Energy-import hydration received invalid Redis payload: ${key}`);
     }
-    const iso2 = key.startsWith(RESILIENCE_STATIC_PREFIX)
-      ? key.slice(RESILIENCE_STATIC_PREFIX.length)
+    const iso2 = key.startsWith(COUNTRY_REFERENCE_PREFIX)
+      ? key.slice(COUNTRY_REFERENCE_PREFIX.length)
       : key;
     if (/^[A-Z]{2}$/.test(iso2)) countryRecords[iso2] = payload;
   }

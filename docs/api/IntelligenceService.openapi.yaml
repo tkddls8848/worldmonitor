@@ -298,7 +298,7 @@ paths:
             tags:
                 - IntelligenceService
             summary: GetCountryHistory
-            description: GetCountryHistory returns daily snapshots of a country's CII and resilience scores, top events, and key signals, with depth set by the caller's plan.
+            description: GetCountryHistory returns daily snapshots of a country's CII score, top events, and key signals, with depth set by the caller's plan.
             operationId: GetCountryHistory
             parameters:
                 - name: country
@@ -4889,8 +4889,6 @@ components:
                     description: 'Warning: Values > 2^53 may lose precision in JavaScript'
                 cii:
                     $ref: '#/components/schemas/CountryHistoryScore'
-                resilience:
-                    $ref: '#/components/schemas/CountryHistoryScore'
                 topEvents:
                     type: array
                     items:
@@ -4902,8 +4900,6 @@ components:
                 ciiVersionBreak:
                     type: boolean
                     description: Do not join trends across missing dates, absent scores or formula changes.
-                resilienceVersionBreak:
-                    type: boolean
         CountryHistoryScore:
             type: object
             properties:

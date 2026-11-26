@@ -33,7 +33,7 @@ function makeCtx(overrides: Partial<AppContext> = {}): AppContext {
     conflicts: false,
     weather: false,
     ciiChoropleth: false,
-    resilienceScore: false,
+    no2Activity: false,
     storageFacilities: false,
   } as unknown as MapLayers;
   return {
@@ -210,7 +210,7 @@ describe('agent bus applier', () => {
       type: 'set_layers',
       layers: {
         conflicts: true,
-        resilienceScore: true,
+        no2Activity: true,
         storageFacilities: true,
         notARealLayer: true,
       },
@@ -219,14 +219,14 @@ describe('agent bus applier', () => {
 
     assert.equal(result.ok, true);
     assert.equal(ctx.mapLayers.conflicts, true);
-    assert.equal(ctx.mapLayers.resilienceScore, false);
+    assert.equal(ctx.mapLayers.no2Activity, false);
     assert.equal(ctx.mapLayers.storageFacilities, false);
     assert.equal(mapCalls.setLayersCalls.length, 1);
     assert.deepEqual(
       result.targets.map((target) => [target.target, target.status, target.reason ?? '']),
       [
         ['conflicts', 'applied', ''],
-        ['resilienceScore', 'denied', 'layer_not_executable'],
+        ['no2Activity', 'denied', 'layer_not_executable'],
         ['storageFacilities', 'denied', 'layer_not_executable'],
         ['notARealLayer', 'denied', 'unknown_layer'],
       ],
@@ -245,11 +245,10 @@ describe('agent bus applier', () => {
         isDeckGLActive: () => true,
       } as never,
     });
-    ctx.mapLayers.resilienceScore = true;
     const layerChanges: Array<[keyof MapLayers, boolean, 'programmatic']> = [];
     const result = applyAgentBusAction(ctx, {
       type: 'set_layers',
-      layers: { ciiChoropleth: true, resilienceScore: false },
+      layers: { ciiChoropleth: true },
     }, {
       ...entitled,
       applyLayerChange: (layer, enabled, source) => { layerChanges.push([layer, enabled, source]); },
@@ -258,11 +257,8 @@ describe('agent bus applier', () => {
     assert.equal(result.ok, true);
     assert.equal(ctx.mapLayers.ciiChoropleth, true,
       'enhanced layers remain available to free users');
-    assert.equal(ctx.mapLayers.resilienceScore, false,
-      'free users must be able to clear stale locked state');
     assert.deepEqual(layerChanges, [
       ['ciiChoropleth', true, 'programmatic'],
-      ['resilienceScore', false, 'programmatic'],
     ]);
   });
 
@@ -291,97 +287,19 @@ describe('agent bus applier', () => {
     const before = ctx.mapLayers;
     const result = applyAgentBusAction(ctx, {
       type: 'set_layers',
-      layers: { resilienceScore: true },
+      layers: { no2Activity: true },
     }, entitled);
     const mapCalls = (ctx.map as never as { _calls: { setLayersCalls: MapLayers[] } })._calls;
 
     assert.equal(result.ok, false);
     assert.equal(result.reason, 'no_allowed_layers');
     assert.equal(ctx.mapLayers, before);
-    assert.equal(ctx.mapLayers.resilienceScore, false);
+    assert.equal(ctx.mapLayers.no2Activity, false);
     assert.equal(mapCalls.setLayersCalls.length, 0);
   });
 
-  it('rejects resilienceScore outside DeckGL even for premium users', () => {
-    const ctx = makeCtx();
-    const result = applyAgentBusAction(ctx, {
-      type: 'set_layers',
-      layers: { resilienceScore: true },
-    }, { ...entitled, hasPremiumAccess: () => true });
-    const mapCalls = (ctx.map as never as { _calls: { setLayersCalls: MapLayers[] } })._calls;
 
-    assert.equal(result.ok, false);
-    assert.equal(result.reason, 'no_allowed_layers');
-    assert.equal(result.targets[0]?.reason, 'layer_not_executable');
-    assert.equal(ctx.mapLayers.resilienceScore, false);
-    assert.equal(mapCalls.setLayersCalls.length, 0);
-  });
 
-  it('normalizes mutually exclusive choropleth layers before applying', () => {
-    const layerChanges: Array<[keyof MapLayers, boolean, 'programmatic']> = [];
-    const ctx = makeCtx({
-      map: {
-        setCenter: () => {},
-        setView: () => {},
-        setLayers: () => {},
-        isDeckGLActive: () => true,
-      } as never,
-    });
-    ctx.mapLayers.ciiChoropleth = true;
-
-    const result = applyAgentBusAction(ctx, {
-      type: 'set_layers',
-      layers: { resilienceScore: true },
-    }, {
-      ...entitled,
-      hasPremiumAccess: () => true,
-      applyLayerChange: (layer, enabled, source) => { layerChanges.push([layer, enabled, source]); },
-    });
-
-    assert.equal(result.ok, true);
-    assert.equal(ctx.mapLayers.resilienceScore, true);
-    assert.equal(ctx.mapLayers.ciiChoropleth, false);
-    assert.deepEqual(layerChanges, [
-      ['ciiChoropleth', false, 'programmatic'],
-      ['resilienceScore', true, 'programmatic'],
-    ]);
-  });
-
-  it('reports a normalized-off requested choropleth as an exclusive conflict', () => {
-    const layerChanges: Array<[keyof MapLayers, boolean, 'programmatic']> = [];
-    const ctx = makeCtx({
-      map: {
-        setCenter: () => {},
-        setView: () => {},
-        setLayers: () => {},
-        isDeckGLActive: () => true,
-      } as never,
-    });
-
-    const result = applyAgentBusAction(ctx, {
-      type: 'set_layers',
-      layers: { ciiChoropleth: true, resilienceScore: true },
-    }, {
-      ...entitled,
-      hasPremiumAccess: () => true,
-      applyLayerChange: (layer, enabled, source) => { layerChanges.push([layer, enabled, source]); },
-    });
-
-    assert.equal(result.ok, true);
-    assert.equal(ctx.mapLayers.ciiChoropleth, true);
-    assert.equal(ctx.mapLayers.resilienceScore, false);
-    assert.deepEqual(result.targets, [
-      { target: 'ciiChoropleth', status: 'applied' },
-      {
-        target: 'resilienceScore',
-        status: 'denied',
-        reason: 'exclusive_layer_conflict',
-      },
-    ]);
-    assert.deepEqual(layerChanges, [
-      ['ciiChoropleth', true, 'programmatic'],
-    ]);
-  });
 
   it('denies feature-disabled cyber and unconfigured AIS/outages even when keys exist', () => {
     const ctx = makeCtx();
@@ -540,12 +458,12 @@ describe('agent bus applier', () => {
     const ctx = makeCtx({
       map: { isDeckGLActive: () => true, setLayers: () => { throw new Error('layers must not change'); } } as never,
     });
-    ctx.mapLayers = { ...ctx.mapLayers, resilienceScore: true };
+    ctx.mapLayers = { ...ctx.mapLayers, no2Activity: true };
 
     const result = await applyAgentBusAction(ctx, { type: 'set_map_mode', mode: '3d' });
     assert.equal(result.status, 'denied');
     assert.equal(result.reason, 'globe_unavailable');
     assert.deepEqual(result.effective, { mode: '2d', renderer: 'deck' });
-    assert.equal(ctx.mapLayers.resilienceScore, true);
+    assert.equal(ctx.mapLayers.no2Activity, true);
   });
 });

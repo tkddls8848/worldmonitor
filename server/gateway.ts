@@ -352,12 +352,7 @@ const RPC_CACHE_TIER: Record<string, CacheTier> = {
   // and therefore requires an explicit gateway cache tier. The two semantic
   // reads are POSTs and cache successful results inside their handlers.
   '/api/intelligence/v1/get-intel-timeline': 'slow',
-  '/api/resilience/v1/get-resilience-score': 'slow',
-  '/api/resilience/v1/get-resilience-indicators': 'slow',
-  '/api/resilience/v1/get-resilience-ranking': 'slow',
-  '/api/resilience/v1/get-food-stocks': 'slow',
-  '/api/resilience/v1/get-demographics-capability': 'slow',
-  '/api/resilience/v1/get-runtime-manifest': 'no-store',
+  '/api/supply-chain/v1/get-food-stocks': 'slow',
   '/api/scorecard/v1/get-five-factor-scorecard': 'slow',
   '/api/scorecard/v1/list-five-factor-scorecards': 'slow',
   '/api/scorecard/v1/get-bloc-scorecard': 'slow',
@@ -387,7 +382,6 @@ export const PUBLIC_NO_AUTH_RPC_PATHS = new Set<string>([
   '/api/scorecard/v1/get-bloc-scorecard',
   '/api/scorecard/v1/list-five-factor-scorecards',
   '/api/intelligence/v1/get-china-decision-signals',
-  '/api/resilience/v1/get-runtime-manifest',
   // #9093 "Report an error": readers report without an account by design. The
   // gates are the handler's honeypot and validation and a bounded review queue
   // that refuses rather than evicts (the personal build has no per-IP limits). Reports are never applied automatically.

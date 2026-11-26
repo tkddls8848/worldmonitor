@@ -81,8 +81,6 @@ export const LAYER_REGISTRY: Record<keyof MapLayers, LayerDefinition> = {
   // Only DeckGLMap builds the CII choropleth polygons; the SVG/mobile
   // fallback has no CII paint path.
   ciiChoropleth:            def('ciiChoropleth',            '&#127758;', 'ciiChoropleth',            'Country Instability', ['deck']),
-  // DeckGLMap owns the resilience choropleth; only DeckGL has a paint path.
-  resilienceScore:          def('resilienceScore',          '&#128200;', 'resilienceScore',          'Country Resilience', ['deck']),
   sanctions:                def('sanctions',                '&#128683;', 'sanctions',                'Sanctions', ['svg', 'deck']),
   no2Activity:              def('no2Activity',              '&#127981;', 'no2Activity',              'Industrial Activity', ['deck']),
   reservoirLevels:          def('reservoirLevels',          '&#128167;', 'reservoirLevels',          'Water Levels'),
@@ -158,29 +156,29 @@ const VARIANT_LAYER_ORDER: Record<MapVariant, Array<keyof MapLayers>> = {
     'ucdpEvents', 'displacement', 'climate', 'weather',
     'outages', 'cyberThreats', 'natural', 'fires',
     'waterways', 'economic', 'minerals', 'gpsJamming',
-    'ciiChoropleth', 'resilienceScore', 'sanctions', 'no2Activity', 'reservoirLevels', 'webcams',
+    'ciiChoropleth', 'sanctions', 'no2Activity', 'reservoirLevels', 'webcams',
     'diseaseOutbreaks',
   ],
   tech: [
     'startupHubs', 'techHQs', 'accelerators', 'cloudRegions',
     'datacenters', 'cables', 'outages', 'cyberThreats',
-    'techEvents', 'resilienceScore', 'natural', 'fires',
+    'techEvents', 'natural', 'fires',
   ],
   finance: [
     'stockExchanges', 'financialCenters', 'centralBanks', 'commodityHubs',
     'gulfInvestments', 'tradeRoutes', 'cables', 'pipelines',
     'outages', 'weather', 'economic', 'waterways',
-    'resilienceScore', 'natural', 'cyberThreats', 'sanctions',
+    'natural', 'cyberThreats', 'sanctions',
   ],
   happy: [
-    'positiveEvents', 'kindness', 'happiness', 'resilienceScore',
+    'positiveEvents', 'kindness', 'happiness',
     'speciesRecovery', 'renewableInstallations',
   ],
   commodity: [
     'miningSites', 'processingPlants', 'commodityPorts', 'commodityHubs',
     'minerals', 'pipelines', 'waterways', 'tradeRoutes',
     'ais', 'economic', 'fires', 'climate',
-    'resilienceScore', 'natural', 'weather', 'outages', 'sanctions',
+    'natural', 'weather', 'outages', 'sanctions',
   ],
   energy: [
     // Core energy infrastructure — mirror of ENERGY_MAP_LAYERS in panels.ts
@@ -188,7 +186,6 @@ const VARIANT_LAYER_ORDER: Record<MapVariant, Array<keyof MapLayers>> = {
     'ais', 'liveTankers', 'tradeRoutes', 'minerals',
     // Energy-adjacent context
     'sanctions', 'fires', 'climate', 'reservoirLevels', 'weather', 'outages', 'natural',
-    'resilienceScore',
   ],
 };
 
@@ -250,15 +247,6 @@ export function sanitizeLayersForVariant(layers: MapLayers, variant: MapVariant)
   return sanitized;
 }
 
-export function sanitizeResilienceScoreForRenderer(
-  layers: MapLayers,
-  isDeckGLActive: boolean,
-): MapLayers {
-  return layers.resilienceScore && !isDeckGLActive
-    ? { ...layers, resilienceScore: false }
-    : layers;
-}
-
 /**
  * Checks whether a layer can actually render under the active renderer. Used
  * by both the layer picker UI and the CMD+K dispatcher to hide / silently-skip
@@ -297,11 +285,10 @@ export function mapLayerStatesEqual(a: MapLayers, b: MapLayers): boolean {
 
 /**
  * Layers the retired free-tier gate could force off (`premium: 'locked'`
- * before the personal build unlocked them: resilienceScore on web, plus
- * iranAttacks and gpsJamming on desktop). Ownership markers stored by that
+ * before the personal build unlocked them: iranAttacks and gpsJamming on desktop). Ownership markers stored by that
  * gate name only these keys, so restoration is limited to them.
  */
-const RETIRED_GATE_LOCKED_LAYERS: ReadonlySet<string> = new Set(['resilienceScore', 'iranAttacks', 'gpsJamming']);
+const RETIRED_GATE_LOCKED_LAYERS: ReadonlySet<string> = new Set(['iranAttacks', 'gpsJamming']);
 
 /** Restore only valid layers previously disabled by the retired free gate. */
 export function restoreGateOwnedLockedLayers(
@@ -312,10 +299,6 @@ export function restoreGateOwnedLockedLayers(
   const restored = { ...layers };
   for (const rawKey of gateOwned) {
     const key = rawKey as keyof MapLayers;
-    // CII and resilience are mutually exclusive choropleths. Ownership can
-    // outlive a later user choice to enable CII while free; that stale marker
-    // must be consumed without overriding the newer CII preference.
-    if (key === 'resilienceScore' && restored.ciiChoropleth === true) continue;
     if (!RETIRED_GATE_LOCKED_LAYERS.has(key) || !LAYER_REGISTRY[key] || restored[key] === true) continue;
     restored[key] = true;
     changed = true;
@@ -483,7 +466,7 @@ export const MAP_LAYER_GROUPS: readonly MapLayerGroupDef[] = [
     id: 'overlays',
     labelKo: '국가 지표 · 오버레이',
     labelEn: 'Indicators & Overlays',
-    keys: ['ciiChoropleth', 'resilienceScore', 'webcams', 'positiveEvents', 'kindness', 'happiness', 'speciesRecovery', 'renewableInstallations'],
+    keys: ['ciiChoropleth', 'webcams', 'positiveEvents', 'kindness', 'happiness', 'speciesRecovery', 'renewableInstallations'],
   },
 ] as const;
 

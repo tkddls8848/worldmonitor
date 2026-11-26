@@ -4,7 +4,7 @@ import { describe, it } from 'node:test';
 
 import { __testing__ } from '../api/health.js';
 import { PSD_COMMODITIES, normalizePsdCountryCode } from '../scripts/_food-stocks-helpers.mjs';
-import { normalizeFoodStocksCountry } from '../server/worldmonitor/resilience/v1/_food-stocks-query.ts';
+import { normalizeFoodStocksCountry } from '../server/worldmonitor/supply-chain/v1/_food-stocks-query.ts';
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -25,9 +25,9 @@ describe('food stocks production registration (#6440)', () => {
     assert.match(read('api/seed-health.js'), /'resilience:food-stocks':\s*\{ key: 'seed-meta:resilience:food-stocks',\s*intervalMin: 43200/);
   });
 
-  it('schedules the seeder in the resilience bundle', () => {
+  it('schedules the seeder in the country reference bundle', () => {
     assert.match(
-      read('scripts/seed-bundle-resilience.mjs'),
+      read('scripts/seed-bundle-country-reference.mjs'),
       /label: 'Food-Stocks'[\s\S]*script: 'seed-food-stocks\.mjs'[\s\S]*seedMetaKey: 'resilience:food-stocks'[\s\S]*intervalMs: 30 \* DAY/,
     );
     assert.match(read('scripts/seed-food-stocks.mjs'), /lockTtlMs:\s*540_000/);
@@ -44,7 +44,7 @@ describe('food stocks production registration (#6440)', () => {
   });
 
   it('registers the RPC in the slow cache tier', () => {
-    assert.match(read('server/gateway.ts'), /'\/api\/resilience\/v1\/get-food-stocks': 'slow'/);
+    assert.match(read('server/gateway.ts'), /'\/api\/supply-chain\/v1\/get-food-stocks': 'slow'/);
   });
 });
 

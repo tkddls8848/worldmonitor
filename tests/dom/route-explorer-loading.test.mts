@@ -5,11 +5,9 @@ import type { GetRouteExplorerLaneResponse } from '@/generated/server/worldmonit
 const {
   fetchRouteExplorerLane,
   fetchRouteImpact,
-  getResilienceScore,
 } = vi.hoisted(() => ({
   fetchRouteExplorerLane: vi.fn(),
   fetchRouteImpact: vi.fn(),
-  getResilienceScore: vi.fn(),
 }));
 
 vi.mock('@/services/supply-chain', () => ({
@@ -17,7 +15,6 @@ vi.mock('@/services/supply-chain', () => ({
   fetchRouteImpact,
 }));
 
-vi.mock('@/services/resilience', () => ({ getResilienceScore }));
 
 import { RouteExplorer } from '@/components/RouteExplorer/RouteExplorer';
 
@@ -62,7 +59,6 @@ describe('RouteExplorer loading lifecycle', () => {
     window.history.replaceState({}, '', '/?explorer=from:US,to:DE,hs:27');
     fetchRouteExplorerLane.mockReset();
     fetchRouteImpact.mockReset();
-    getResilienceScore.mockReset();
     explorer = new RouteExplorer();
   });
 

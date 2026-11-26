@@ -125,7 +125,7 @@ Instructions and limits: https://www.worldmonitor.app/docs/features#team-dashboa
       "price_usd_monthly": 0,
       "signup_required": false,
       "features": [
-        "global map coverage (Resilience is Pro)",
+        "global map coverage",
         "curated feeds",
         "country briefs",
         "chokepoints",

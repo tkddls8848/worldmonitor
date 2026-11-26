@@ -16,7 +16,7 @@ function parsePoint(raw: unknown, country: string, start: number, now: number): 
     || point.capturedAt < date || point.capturedAt >= date + DAY
     || !Array.isArray(point.topEvents) || point.topEvents.length > 5
     || !Array.isArray(point.keySignals) || !point.keySignals.every((s: unknown) => typeof s === 'string')) throw new Error('invalid history point');
-  for (const score of [point.cii, point.resilience]) {
+  for (const score of [point.cii]) {
     if (score !== undefined && (!score || typeof score.score !== 'number' || !Number.isFinite(score.score) || score.score < 0 || score.score > 100
       || typeof score.version !== 'string' || !score.version || typeof score.observedAt !== 'number'
       || !Number.isFinite(score.observedAt) || score.observedAt <= 0 || score.observedAt > point.capturedAt)) throw new Error('invalid history score');
@@ -26,7 +26,7 @@ function parsePoint(raw: unknown, country: string, start: number, now: number): 
       || event.title.length > 300 || event.link.length > 1024 || event.source.length > 100 || event.category.length > 100
       || !/^https?:\/\//i.test(event.link)) throw new Error('invalid history event');
   }
-  return { date: point.date, capturedAt: point.capturedAt, cii: point.cii, resilience: point.resilience, topEvents: point.topEvents, keySignals: point.keySignals, ciiVersionBreak: false, resilienceVersionBreak: false };
+  return { date: point.date, capturedAt: point.capturedAt, cii: point.cii, topEvents: point.topEvents, keySignals: point.keySignals.filter((signal: string) => signal !== 'resilience_unavailable'), ciiVersionBreak: false };
 }
 
 export const getCountryHistory: IntelligenceServiceHandler['getCountryHistory'] = async (ctx, req) => {
@@ -54,7 +54,6 @@ export const getCountryHistory: IntelligenceServiceHandler['getCountryHistory'] 
       const previous = points[i - 1]!, current = points[i]!;
       const gap = Date.parse(current.date) - Date.parse(previous.date) !== DAY;
       current.ciiVersionBreak = gap || !previous.cii || previous.cii.version !== current.cii?.version;
-      current.resilienceVersionBreak = gap || !previous.resilience || previous.resilience.version !== current.resilience?.version;
     }
     return { ...base, points, returnedDays: points.length, fetchedAt: meta.fetchedAt, stale: now - meta.fetchedAt > 36 * 3600000, upstreamUnavailable: false };
   } catch {

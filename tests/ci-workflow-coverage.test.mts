@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, resolve } from 'node:path';
+import { dirname, resolve, delimiter } from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { runInNewContext } from 'node:vm';
@@ -83,7 +83,7 @@ describe('browser-loss artifact capture (#6501, #7880)', () => {
         mkdirSync(resolve(dir, 'bin'));
         // Model Playwright opening its debug file before clearing outputDir.
         // Two workers then emit evidence that must survive the same invocation.
-        writeFileSync(resolve(dir, 'bin/npm'), `#!${process.execPath}
+        writeFileSync(resolve(dir, 'bin/npm'), `#!/usr/bin/env node
 const fs = require('node:fs');
 if (process.env.DEBUG !== 'pw:browser') process.exit(98);
 const fd = process.env.DEBUG_FILE ? fs.openSync(process.env.DEBUG_FILE, 'w') : 2;
@@ -98,7 +98,7 @@ process.exit(${exitCode});
         writeFileSync(resolve(dir, 'bin/free'), '#!/bin/sh\nprintf "Mem: 16384 2048 14336\\n"\n', { mode: 0o755 });
         const result = spawnSync('bash', ['-c', step.run.replaceAll('${{ matrix.shard }}', '1')], {
           cwd: dir,
-          env: { ...process.env, ...step.env, PATH: `${dir}/bin:${process.env.PATH}` },
+          env: { ...process.env, ...step.env, PATH: `${resolve(dir, "bin")}${delimiter}${process.env.PATH}` },
           encoding: 'utf8',
           timeout: 15_000,
         });
@@ -123,7 +123,6 @@ const workflowText = readdirSync(workflowsDir)
 const REQUIRED_PR_SCRIPTS = [
   'test:data',
   'test:api',
-  'test:resilience-validation-smoke',
 ] as const;
 
 // Every regression guard the combined ci-smoke invocation must keep exercising.
@@ -168,7 +167,6 @@ const REQUIRED_TEST_JOBS = [
   'unit',
   'api-tests',
   'variant-smoke-full',
-  'resilience-validation-smoke',
   'desktop-config',
   'desktop-node-windows',
   'desktop-rust',
@@ -180,7 +178,6 @@ const TIMEOUT_CAPPED_TEST_JOBS = [
   'variant-smoke-shards',
   'variant-smoke-pro-webmcp',
   'variant-smoke-full',
-  'resilience-validation-smoke',
   'desktop-config',
   'desktop-node-windows',
   'desktop-rust',
@@ -218,15 +215,6 @@ const GATE_CHECK_EXEMPTIONS: Record<string, { workflow: string; coveredBy: strin
   'variant-smoke-shards': { workflow: 'Test', coveredBy: 'variant-smoke-full' },
   'variant-smoke-pro-webmcp': { workflow: 'Test', coveredBy: 'variant-smoke-full' },
 };
-
-const REQUIRED_RESILIENCE_VALIDATION_INPUTS = [
-  'docs/methodology/country-resilience-index/validation/',
-  'scripts/benchmark-resilience-external.mjs',
-  'scripts/backtest-resilience-outcomes.mjs',
-  'scripts/validate-resilience-sensitivity.mjs',
-  'scripts/seed-bundle-resilience-validation.mjs',
-  'scripts/_bundle-runner.mjs',
-] as const;
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -973,29 +961,7 @@ describe('CI workflow coverage', () => {
     );
   });
 
-  it('keeps resilience validation bundle inputs in the CI change filter', () => {
-    assert.ok(
-      testWorkflow.includes('validation: ${{ steps.diff.outputs.validation }}'),
-      'test.yml must expose a validation change output',
-    );
-    for (const input of REQUIRED_RESILIENCE_VALIDATION_INPUTS) {
-      assert.ok(testWorkflow.includes(workflowRegexNeedle(input)), `test.yml must cover ${input}`);
-    }
-  });
 
-  it('runs resilience-validation-smoke only for validation changes that skip unit', () => {
-    const job = testJobBlock('resilience-validation-smoke');
-    assert.match(
-      job,
-      /\n {4}if: needs\.changes\.outputs\.validation == 'true' && needs\.changes\.outputs\.code != 'true'\n/,
-      'the smoke job is the validation-docs path; unit already runs the same files whenever code changed (#7772)',
-    );
-    assert.doesNotMatch(
-      job,
-      /outputs\.code == 'true'/,
-      'a second npm ci on every code PR re-runs tests already inside test:data',
-    );
-  });
 
   it('path-filters Test jobs on push to main instead of compiling everything', () => {
     const changes = testWorkflow.slice(testWorkflow.indexOf('id: diff'));

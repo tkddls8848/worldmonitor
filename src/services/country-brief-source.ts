@@ -4,7 +4,7 @@ import { combineAbortSignals } from './timeout-signal';
 import { CountrySectionError } from './country-brief-error';
 import { IS_EMBEDDED_PREVIEW } from '@/utils/embedded-preview';
 import type { createHostCountryFetch } from './country-brief-host-transport';
-import { IntelligenceServiceClient, MarketServiceClient, MilitaryServiceClient, MaritimeServiceClient, EconomicServiceClient, TradeServiceClient, SupplyChainServiceClient, ResilienceServiceClient, ScorecardServiceClient, PredictionServiceClient } from '@/services/generated-rpc-clients';
+import { IntelligenceServiceClient, MarketServiceClient, MilitaryServiceClient, MaritimeServiceClient, EconomicServiceClient, TradeServiceClient, SupplyChainServiceClient, ScorecardServiceClient, PredictionServiceClient } from '@/services/generated-rpc-clients';
 import { getRpcBaseUrl } from '@/services/rpc-client';
 import { fetchMultiSectorCostShock, fetchMultiSectorExposure, fetchBypassOptions, fetchChokepointStatus, HS2_SHORT_LABELS, SEEDED_HS2_CODES } from '@/services/supply-chain';
 
@@ -13,7 +13,6 @@ function createCountryBriefSource(fetcher: typeof fetch & { clear?: () => void; 
   const options = { fetch: fetcher };
   const intelligence = new IntelligenceServiceClient(base, mode === 'website' ? { fetch: fetchWebsiteCountrySignals } : options);
   const supply = new SupplyChainServiceClient(base, options);
-  const resilience = new ResilienceServiceClient(base, options);
   const scorecard = new ScorecardServiceClient(base, options);
   return {
     mode,
@@ -83,10 +82,8 @@ function createCountryBriefSource(fetcher: typeof fetch & { clear?: () => void; 
         },
       };
     },
-    food: async (code: string, signal: AbortSignal) => mode === 'website' ? (await import('@/services/resilience')).getFoodStocks({ countryCode: code, signal }) : resilience.getFoodStocks({ countryCode: code, commodity: '' }, { signal }),
-    demographics: async (code: string, signal: AbortSignal) => mode === 'website' ? (await import('@/services/resilience')).getDemographicsCapability({ countryCode: code, signal }) : resilience.getDemographicsCapability({ countryCode: code }, { signal }),
+    food: async (code: string, signal: AbortSignal) => mode === 'website' ? (await import('@/services/supply-chain')).getFoodStocks({ countryCode: code, signal }) : supply.getFoodStocks({ countryCode: code, commodity: '' }, { signal }),
     factors: async (code: string, signal: AbortSignal) => mode === 'website' ? (await import('@/services/scorecard')).getFiveFactorScorecard(code, signal) : scorecard.getFiveFactorScorecard({ countryCode: code }, { signal }),
-    resilience: async (code: string, signal: AbortSignal) => mode === 'website' ? (await import('@/services/resilience')).getResilienceScore(code) : resilience.getResilienceScore({ countryCode: code }, { signal }),
     cost: (code: string, chokepoint: string, days: number, signal: AbortSignal) => mode === 'website' ? fetchMultiSectorCostShock(code, chokepoint, days, { signal }) : supply.getMultiSectorCostShock({ iso2: code, chokepointId: chokepoint, closureDays: days }, { signal }),
     bypass: (chokepointId: string, signal: AbortSignal) => mode === 'website' ? fetchBypassOptions(chokepointId, 'container', 100) : supply.getBypassOptions({ chokepointId, cargoType: 'container', closurePct: 100 }, { signal }),
     chokepoints: (signal: AbortSignal) => mode === 'website' ? fetchChokepointStatus() : supply.getChokepointStatus({}, { signal }),

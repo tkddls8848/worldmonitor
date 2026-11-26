@@ -41,7 +41,8 @@ message GetRouteImpactResponse {
   string primary_exporter_iso2 = 2;
   double primary_exporter_share = 3;
   repeated StrategicProduct top_strategic_products = 4;
-  double resilience_score = 5;
+  reserved 5;
+  reserved "resilience_score";
   repeated DependencyFlag dependency_flags = 6;
   bool hs2_in_seeded_universe = 7;
   string comtrade_source = 8;
