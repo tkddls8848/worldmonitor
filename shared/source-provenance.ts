@@ -7,6 +7,18 @@ import { CONFIGURED_SOURCE_PROVENANCE_DECLARATIONS } from './source-provenance-d
 export type SourceType = 'wire' | 'gov' | 'intel' | 'mainstream' | 'market' | 'tech' | 'other' | 'unknown';
 
 export const SOURCE_TYPES: Record<string, SourceType> = {
+  "CNA": "mainstream",
+  "Middle East Eye": "mainstream",
+  "Times of Israel": "mainstream",
+  "The Hacker News": "tech",
+  "Al Arabiya": "mainstream",
+  "Haaretz": "mainstream",
+  "IRNA": "wire",
+  "Iran International": "mainstream",
+  "Jerusalem Post": "mainstream",
+  "The Economist": "mainstream",
+  "Wall Street Journal": "market",
+
   // Wire services - fastest, most authoritative
   'Reuters': 'wire', 'Reuters World': 'wire', 'Reuters Business': 'wire',
   'Reuters Nasdaq Futures': 'wire',
@@ -241,6 +253,27 @@ export const UNREVIEWED_SOURCE_RISK: Readonly<SourceRiskProfile> = Object.freeze
 });
 
 export const SOURCE_PROPAGANDA_RISK: Record<string, SourceRiskProfile> = {
+  "CNA": {"risk":"low","stateAffiliated":"Singapore","note":"Established Mediacorp newsroom; retain the same CNA publisher identity as RSS. Ownership: https://www.mediacorp.sg/online-links-policy"},
+  "Middle East Eye": {"risk":"medium","stateAffiliated":"Qatar","note":"Qatar-linked Middle East newsroom; established outlet, not a wire"},
+  "Times of Israel": {"risk":"low","knownBiases":["Israeli mainstream"],"note":"English-language Israeli newspaper"},
+  "The Hacker News": {"risk":"medium","note":"Cybersecurity news specialist; not a general wire"},
+  "Breaking Defense": {"risk":"medium","note":"Defense trade press; specialty desk, not a wire"},
+  "CISA": {"risk":"high","stateAffiliated":"USA","note":"Official US cybersecurity agency publisher; treat statements as government claims"},
+  "CNN World": {"risk":"medium","note":"US cable news world desk; established outlet, not a wire"},
+  "Defense One": {"risk":"medium","note":"Defense trade press; specialty desk, not a wire"},
+  "Haaretz": {"risk":"low","note":"Israeli newspaper of record with editorial standards"},
+  "IAEA": {"risk":"medium","note":"UN nuclear watchdog official publisher; treat statements as institutional claims"},
+  "Iran International": {"risk":"medium","stateAffiliated":"Saudi Arabia","knownBiases":["Iranian opposition"],"note":"Saudi-funded Iranian exile broadcaster; established newsroom, not independent of a state sponsor"},
+  "Janes": {"risk":"low","note":"Defense intelligence publisher with editorial standards"},
+  "Krebs Security": {"risk":"low","note":"Independent cybersecurity reporting"},
+  "Nikkei Asia": {"risk":"low","note":"Nikkei English-language Asia desk"},
+  "State Dept": {"risk":"high","stateAffiliated":"USA","note":"Official US State Department publisher; treat statements as government claims"},
+  "The Economist": {"risk":"low","note":"Weekly news magazine with editorial standards"},
+  "The War Zone": {"risk":"medium","note":"Defense specialty desk; not a wire"},
+  "UK MOD": {"risk":"high","stateAffiliated":"UK","note":"Official UK Ministry of Defence publisher; treat statements as government claims"},
+  "UN News": {"risk":"medium","note":"Official UN news publisher; treat statements as institutional claims"},
+  "Wall Street Journal": {"risk":"low","note":"US business newspaper with editorial standards"},
+
   // High risk - State-controlled media
   'Xinhua': { risk: 'high', stateAffiliated: 'China', note: 'Official CCP news agency' },
   'TASS': { risk: 'high', stateAffiliated: 'Russia', note: 'Russian state news agency' },
