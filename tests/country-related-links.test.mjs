@@ -206,8 +206,8 @@ describe('related-country rendering', () => {
       select().get('LB'),
       escapeHtml,
     );
-    assert.match(html, /<a href="\/countries\/israel\/">Israel resilience and risk profile<\/a>/);
-    assert.equal(relatedCountryAnchorText({ name: 'Lebanon' }), 'Lebanon resilience and risk profile');
+    assert.match(html, /<a href="\/countries\/israel\/">Israel risk profile<\/a>/);
+    assert.equal(relatedCountryAnchorText({ name: 'Lebanon' }), 'Lebanon risk profile');
     assert.doesNotMatch(html, /#\d|click here|ranked|score/i);
   });
 

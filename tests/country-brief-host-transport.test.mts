@@ -4,7 +4,6 @@ import { createHostCountryFetch, CountrySectionError } from '../src/services/cou
 import { IntelligenceServiceClient } from '../src/generated/client/worldmonitor/intelligence/v1/service_client';
 import { ScorecardServiceClient } from '../src/generated/client/worldmonitor/scorecard/v1/service_client';
 import { SupplyChainServiceClient } from '../src/generated/client/worldmonitor/supply_chain/v1/service_client';
-import { SupplyChainServiceClient } from '../src/generated/client/worldmonitor/supply_chain/v1/service_client';
 import { countryRiskDirectViewSchema, normalizeCountryDirectRead } from '../shared/country-brief-host';
 
 it('keeps the local read budget with its admission across country switches and cache clearing', async () => {

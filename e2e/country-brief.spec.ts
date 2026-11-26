@@ -57,7 +57,7 @@ for (const width of [1280, 390]) {
         })),
       } });
     });
-    await page.goto('/dashboard?country=UA&expanded=1');
+    await page.goto('/dashboard?country=UA&expanded=1&lang=en');
     await expectCountry(page);
     const openHistory = async () => {
       await page.getByRole('navigation', { name: 'Country topics' }).getByRole('button', { name: 'Security', exact: true }).click();
@@ -242,6 +242,7 @@ test('country shortcut keeps the dashboard canonical and shares a working dashbo
 
 test('country brief renders exact RPC records and preserves the country after reload', async ({ page, countryBrief }, testInfo) => {
   countryBrief.response.fetchedAt = Date.parse('2026-10-09T07:41:45.410Z');
+  await page.addInitScript(() => localStorage.setItem('wm-locale-explicit', 'en'));
   await page.goto('/dashboard?country=UA');
   await expectCountry(page);
   await expectMarkets(page);

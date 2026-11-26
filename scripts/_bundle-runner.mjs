@@ -186,7 +186,7 @@ export async function readSectionFreshness(section, readKey = readRedisKey) {
   // writes a fresh `fetchedAt` under the NEW sourceVersion, so without it the
   // gate would pass on the very run it must reject. Applying that check to
   // every section instead would strip the fresh-fetchedAt backoff that
-  // sections like Resilience-Static (90-day interval) rely on, making them due
+  // sections like Country-Reference (90-day interval) rely on, making them due
   // on every tick — the #6806 failure this docstring forbids.
   const isErrorMarker = (meta) => meta?.status === 'error' || meta?.state === 'ERROR';
   const acceptsVersion = (meta) => (

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { basename, join } from 'node:path';
+import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { readSectionFreshness } from '../scripts/_bundle-runner.mjs';
@@ -14,10 +14,11 @@ const SCRIPTS_DIR = fileURLToPath(new URL('../scripts/', import.meta.url));
 const COMPLETION_KEY_PREFIX = 'seed-completion:';
 
 function virtualFiles(entries) {
-  const files = new Map(Object.entries(entries));
+  const files = new Map(Object.entries(entries).map(([path, content]) => [resolve(path), content]));
   return (path) => {
-    if (!files.has(path)) throw new Error(`missing virtual file ${path}`);
-    return files.get(path);
+    const absolutePath = resolve(path);
+    if (!files.has(absolutePath)) throw new Error(`missing virtual file ${path}`);
+    return files.get(absolutePath);
   };
 }
 

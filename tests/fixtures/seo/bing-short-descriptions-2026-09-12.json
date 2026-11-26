@@ -8,7 +8,6 @@
   "https://www.worldmonitor.app/docs/zh/china-decision-signals",
   "https://www.worldmonitor.app/docs/api-reference/militaryservice/getaircraftdetails",
   "https://www.worldmonitor.app/docs/zh/panels/x-intel",
-  "https://www.worldmonitor.app/docs/zh/methodology/resilience-indicator-licensing",
   "https://www.worldmonitor.app/docs/api-reference/marketservice/getmarketbreadthhistory",
   "https://www.worldmonitor.app/docs/zh/methodology/defense-industrial-base",
   "https://www.worldmonitor.app/docs/zh/methodology/physical-divergence-index",
@@ -46,7 +45,6 @@
   "https://www.worldmonitor.app/docs/api-reference/economicservice/getbispolicyrates",
   "https://www.worldmonitor.app/docs/api-reference/economicservice/geteconomicstress",
   "https://www.worldmonitor.app/docs/api-reference/economicservice/getecbfxrates",
-  "https://www.worldmonitor.app/docs/api-reference/resilienceservice/getresilienceranking",
   "https://www.worldmonitor.app/docs/api-reference/marketservice/getfeargreedindex",
   "https://www.worldmonitor.app/docs/api-reference/economicservice/getenergycapacity"
 ]

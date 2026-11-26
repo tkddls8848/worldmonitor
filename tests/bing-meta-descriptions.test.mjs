@@ -33,8 +33,8 @@ function descriptionFor(url) {
   return COMPARISON_PAGES.find((page) => page.path === pathname)?.metaDescription;
 }
 
-test('all 50 supplied Bing URLs have unique, complete 150–160 character descriptions', () => {
-  assert.equal(urls.length, 50, 'The supplied export contains 50 URLs, not the reported 132');
+test('the surviving Bing export URLs have unique, complete 150–160 character descriptions', () => {
+  assert.equal(urls.length, 48);
   assert.equal(new Set(urls).size, urls.length);
   const descriptions = new Set();
   for (const url of urls) {

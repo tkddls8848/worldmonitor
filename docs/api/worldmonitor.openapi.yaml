@@ -15374,6 +15374,9 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetRouteImpact
+            description: |-
+                GetRouteImpact returns trade value, primary exporter share, strategic products
+                 and dependency flags for an origin, destination, and HS2 sector.
             operationId: GetRouteImpact
             parameters:
                 - name: fromIso2
@@ -16205,7 +16208,9 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetFoodStocks
-            description: GetFoodStocks returns USDA stocks-to-use and FAOSTAT supply by country or WORLD.
+            description: |-
+                GetFoodStocks returns dated USDA stocks-to-use ratios, with FAOSTAT supply
+                 context where available, for a single country or the worldwide aggregate.
             operationId: GetFoodStocks
             parameters:
                 - name: countryCode

@@ -77,7 +77,7 @@ fi
 # already hard-caps every section with its own wall-clock timer (SIGTERM→SIGKILL on
 # the section's child PID — immune to the DNS-hang blind spot) and runs sections
 # sequentially, so a bundle's *legitimate* total can exceed SEED_TIMEOUT (e.g.
-# resilience-recovery's Import-HHI section alone budgets 30min). Wrapping a bundle in
+# the country-reference bundle's Import-HHI section alone budgets 30min). Wrapping a bundle in
 # the outer cap would false-kill it mid-run and orphan the in-flight section child.
 SEED_TIMEOUT="${SEED_TIMEOUT:-1800}"
 

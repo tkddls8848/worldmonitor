@@ -105,6 +105,8 @@ service SupplyChainService {
     option (sebuf.http.config) = {path: "/get-route-explorer-lane", method: HTTP_METHOD_GET};
   }
 
+  // GetRouteImpact returns trade value, primary exporter share, strategic products
+  // and dependency flags for an origin, destination, and HS2 sector.
   rpc GetRouteImpact(GetRouteImpactRequest) returns (GetRouteImpactResponse) {
     option (sebuf.http.config) = {path: "/get-route-impact", method: HTTP_METHOD_GET};
   }
@@ -180,7 +182,8 @@ service SupplyChainService {
   rpc ListVulnerabilityRankings(ListVulnerabilityRankingsRequest) returns (ListVulnerabilityRankingsResponse) {
     option (sebuf.http.config) = {path: "/list-vulnerability-rankings", method: HTTP_METHOD_GET};
   }
-  // GetFoodStocks returns USDA stocks-to-use and FAOSTAT supply by country or WORLD.
+  // GetFoodStocks returns dated USDA stocks-to-use ratios, with FAOSTAT supply
+  // context where available, for a single country or the worldwide aggregate.
   rpc GetFoodStocks(GetFoodStocksRequest) returns (GetFoodStocksResponse) {
     option (sebuf.http.config) = {path: "/get-food-stocks", method: HTTP_METHOD_GET};
   }

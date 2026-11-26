@@ -381,6 +381,9 @@
       "falling": "Falling",
       "stable": "Stable"
     },
+    "demographicsCapability": {
+      "title": "Demographics & Workforce"
+    },
     "fiveFactorScorecard": {
       "title": "Five-Factor Resilience Scorecard"
     },

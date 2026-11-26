@@ -10,16 +10,17 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { describe, it } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
-const ROOT = new URL('../', import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const DOCS_DIR = join(ROOT, 'docs');
 const OPENAPI_YAML = join(DOCS_DIR, 'api/worldmonitor.openapi.yaml');
 const HTTP_METHODS = new Set(['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace']);
 const MIN_LENGTH = 110;
 
 function frontmatterFields(content) {
-  const block = content.match(/^---\n([\s\S]*?\n)?---\n/)?.[1] ?? '';
+  const block = content.replace(/\r\n/g, '\n').match(/^---\n([\s\S]*?\n)?---\n/)?.[1] ?? '';
   return parseYaml(block) ?? {};
 }
 

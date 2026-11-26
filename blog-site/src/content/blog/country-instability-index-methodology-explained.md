@@ -78,13 +78,12 @@ Floors are the model's defense against its own optimism. A country in an active 
 
 ## What the CII Deliberately Does Not Do
 
-The three common index types answer different questions:
+The CII and Fragile States Index answer different questions:
 
 | Index | Main question | Coverage and cadence |
 |-------|---------------|----------------------|
 | Country Instability Index (CII) | How much current stress is the country under? | 31 Tier-1 countries, updated continuously |
 | Fragile States Index (FSI) | Which states show long-term structural fragility? | Broad global coverage, published annually |
-
 
 **It does not predict.** The CII describes current pressure. For forward-looking signals, World Monitor pairs it with [prediction markets and AI forecasting](/blog/posts/prediction-markets-ai-forecasting-geopolitics/), different tools for a different question.
 
