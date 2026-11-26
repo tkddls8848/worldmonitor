@@ -69,7 +69,7 @@ test('SVG legend describes visible overlays and leaves the Layers control clicka
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.addInitScript(() => {
     const getContext = HTMLCanvasElement.prototype.getContext;
-    HTMLCanvasElement.prototype.getContext = function (type: string, options?: unknown) {
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, options?: unknown) {
       return type.startsWith('webgl') ? null : Reflect.apply(getContext, this, [type, options]);
     } as typeof getContext;
   });
@@ -94,8 +94,8 @@ test('legend matches DeckGL fills, relation kinds, and hotspot rings that reach 
   await page.addInitScript(() => {
     // Keep real WebGL2 and allow its software implementation in the test browser.
     const getExtension = WebGL2RenderingContext.prototype.getExtension;
-    WebGL2RenderingContext.prototype.getExtension = function (name: string) {
-      return name === 'WEBGL_debug_renderer_info' ? null : getExtension.call(this, name);
+    WebGL2RenderingContext.prototype.getExtension = function (this: WebGL2RenderingContext, name: string) {
+      return name === 'WEBGL_debug_renderer_info' ? null : Reflect.apply(getExtension, this, [name]);
     };
   });
   await openWorldLegendFixture(page);
