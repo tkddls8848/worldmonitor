@@ -54,11 +54,14 @@ describe('WorldCountryDrawer', () => {
     const onSelectCountry = vi.fn();
     const onMark = vi.fn().mockResolvedValue(undefined);
     const drawer = new WorldCountryDrawer({ onClose: vi.fn(), onSelectCountry, onMark, onOpenFullPanels: vi.fn() });
-    drawer.open(drawerData());
+    drawer.open(drawerData({ relations: [relationData, { ...relationData, id: 'fixed-1', origin: 'fixed' }] }));
     drawer.element.querySelector<HTMLButtonElement>('[data-counterpart="JP"]')!.click();
     expect(onSelectCountry).toHaveBeenCalledWith('JP');
     drawer.element.querySelector<HTMLButtonElement>('[data-mark-item="rel-1"]')!.click();
     expect(onMark).toHaveBeenCalledWith({ itemKind: 'relation', itemKey: 'rel-1', action: 'mark' });
+    expect(drawer.element.querySelector('[data-mark-item="fixed-1"]')).toBeNull();
+    drawer.element.querySelector<HTMLButtonElement>('[data-mark-item="KR"]')!.click();
+    expect(onMark).toHaveBeenLastCalledWith({ itemKind: 'issue', itemKey: 'KR', action: 'mark' });
     drawer.open(drawerData({ isToday: false }));
     expect(drawer.element.querySelector('[data-mark-item]')).toBeNull();
     drawer.open(drawerData({ relations: [{ ...relationData, mark: { state: 'hidden', markId: 'm1', markedAt: 1 } }] }));
@@ -72,9 +75,14 @@ describe('WorldCountryDrawer', () => {
   it('shows empty-state copy and opens source links safely in a new tab', () => {
     const drawer = new WorldCountryDrawer({ onClose: vi.fn(), onSelectCountry: vi.fn(), onMark: vi.fn().mockResolvedValue(undefined), onOpenFullPanels: vi.fn() });
     drawer.open(drawerData({ issue: null, relations: [], blocs: [] }));
-    expect(drawer.element.textContent).toContain('오늘 등록된 핵심 이슈가 없습니다');
+    expect(drawer.element.textContent).toContain('등록된 핵심 이슈가 없습니다.');
+    expect(drawer.element.querySelector('[data-mark-item]')).toBeNull();
+    expect(drawer.element.textContent).not.toContain('신고할 요약이 없습니다');
     expect(drawer.element.textContent).toContain('표시할 국가 간 관계가 없습니다');
     expect(drawer.element.textContent).toContain('최근 인터넷 차단 기록이 없습니다');
+    drawer.open(drawerData({ issue: { summaryKo: '  ', sources: [] }, aiStatus: 'missing' }));
+    expect(drawer.element.querySelector('[data-section="issues"] .wfs-country-drawer__empty')?.textContent).toBe('등록된 핵심 이슈가 없습니다.');
+    expect(drawer.element.querySelector('[data-mark-item="KR"]')).toBeNull();
     drawer.open(drawerData());
     for (const link of drawer.element.querySelectorAll<HTMLAnchorElement>('a[data-source-link]')) {
       expect(link.target).toBe('_blank');

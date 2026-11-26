@@ -179,31 +179,20 @@ export class WorldCountryDrawer {
     if (data.aiStatus === 'stale') copy.append(document.createTextNode(' 요약 데이터가 오래되었습니다.'));
     if (data.aiStatus === 'missing') copy.append(document.createTextNode(' AI 요약 자료가 없습니다.'));
     notice.append(copy);
-    const feedback = make('button', 'wfs-country-drawer__mark', '틀림 신고');
-    feedback.type = 'button';
-    feedback.disabled = !data.isToday || data.aiStatus === 'missing';
-    feedback.title = data.isToday ? 'AI 요약이 틀렸다고 표시' : '오늘 자료에서만 신고할 수 있습니다';
-    feedback.addEventListener('click', () => {
-      if (data.isToday && data.issue && !data.issue.mark) void this.options.onMark({ itemKind: 'issue', itemKey: data.iso2, action: 'mark' });
-    });
     if (data.issue) {
-      const mark = this.renderMark(data.issue.mark, data.isToday, { itemKind: 'issue', itemKey: data.iso2, action: 'mark' });
+      const mark = this.renderMark(data.issue.mark, data.isToday, { itemKind: 'issue', itemKey: data.iso2, action: 'mark' },
+        data.aiStatus !== 'missing' && Boolean(data.issue.summaryKo.trim()));
       if (mark) notice.append(mark);
-      else if (!data.issue.mark && data.isToday) notice.append(feedback);
-    } else {
-      notice.append(make('span', 'wfs-country-drawer__mark-unavailable', data.isToday ? '신고할 요약이 없습니다' : '오늘 자료만 신고할 수 있습니다'));
     }
     return notice;
   }
 
   private renderIssues(data: CountryDrawerData): HTMLElement {
-    const section = this.section('issues', '오늘의 핵심 이슈');
-    if (!data.issue) {
-      section.append(make('p', 'wfs-country-drawer__empty', '오늘 등록된 핵심 이슈가 없습니다'));
-      return section;
-    }
-    const summary = make('p', 'wfs-country-drawer__issue-summary', data.issue.summaryKo || '오늘 등록된 핵심 이슈가 없습니다');
-    section.append(summary);
+    const section = this.section('issues', '핵심 이슈');
+    const summary = data.issue?.summaryKo.trim();
+    section.append(summary
+      ? make('p', 'wfs-country-drawer__issue-summary', summary)
+      : make('p', 'wfs-country-drawer__empty', '등록된 핵심 이슈가 없습니다.'));
     return section;
   }
 
@@ -246,12 +235,14 @@ export class WorldCountryDrawer {
     const detail = make('p', 'wfs-country-drawer__relation-detail', `${direction} ${kind} · ${trend}`);
     const label = make('p', 'wfs-country-drawer__relation-label', relation.label);
     card.append(counterpart, detail, label);
-    const mark = this.renderMark(relation.mark, data.isToday, { itemKind: 'relation', itemKey: relation.id, action: 'mark' });
-    if (mark) card.append(mark);
+    if (relation.origin === 'ai') {
+      const mark = this.renderMark(relation.mark, data.isToday, { itemKind: 'relation', itemKey: relation.id, action: 'mark' });
+      if (mark) card.append(mark);
+    }
     return card;
   }
 
-  private renderMark(mark: { state: 'hidden' | 'reappeared'; markId: string; markedAt: number } | undefined, isToday: boolean, request: MarkRequest): HTMLElement | null {
+  private renderMark(mark: { state: 'hidden' | 'reappeared'; markId: string; markedAt: number } | undefined, isToday: boolean, request: MarkRequest, canMark = true): HTMLElement | null {
     if (mark?.state === 'reappeared') return make('p', 'wfs-country-drawer__reappeared', '다시 나타남, 이전에 틀림으로 표시함');
     if (mark?.state === 'hidden') {
       const button = make('button', 'wfs-country-drawer__unmark', '틀림으로 표시함 · 취소');
@@ -261,10 +252,10 @@ export class WorldCountryDrawer {
       button.addEventListener('click', () => { if (isToday) void this.options.onMark({ action: 'unmark', markId: mark.markId }); });
       return button;
     }
-    if (!isToday) return null;
+    if (!isToday || !canMark) return null;
     const button = make('button', 'wfs-country-drawer__mark', '틀림 신고');
     button.type = 'button';
-    button.dataset.markItem = request.itemKind === 'relation' ? request.itemKey : request.itemKey;
+    button.dataset.markItem = request.itemKey;
     button.addEventListener('click', () => void this.options.onMark(request));
     return button;
   }
@@ -399,7 +390,7 @@ export class WorldCountryDrawer {
   private renderFooter(data: CountryDrawerData): HTMLElement {
     const footer = make('footer', 'wfs-country-drawer__footer');
     footer.dataset.section = 'footer';
-    const button = make('button', 'wfs-country-drawer__full-panels', '이 국가의 전체 86개 패널 열기');
+    const button = make('button', 'wfs-country-drawer__full-panels', '전체 보기에서 국가 브리핑 열기');
     button.type = 'button';
     button.addEventListener('click', () => this.options.onOpenFullPanels(data.iso2));
     footer.append(button);

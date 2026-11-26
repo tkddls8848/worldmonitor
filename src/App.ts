@@ -232,16 +232,6 @@ export class App {
   private chokepointDeepLinkTimer: number | null = null;
   /** World first screen news refresh; cleared when the full view starts. */
   private worldNewsTimer: number | null = null;
-  /** World first screen drawer → "이 국가의 전체 86개 패널 열기" (full view is already open). */
-  private readonly handleWorldOpenCountryBrief = (event: Event): void => {
-    const code = (event as CustomEvent<{ code?: string }>).detail?.code;
-    if (!code || this.state.isDestroyed) return;
-    const name = CountryIntelManager.resolveCountryName(code);
-    void this.countryIntel.openCountryBriefByCode(code, name).catch((err) => {
-      console.error('[CountryBrief] Failed to open country brief:', err);
-    });
-  };
-
   private stockDeepLinkTimer: number | null = null;
   // At most one automatic precise mobile recenter per startup (#7778). Set
   // when the late position callback fires; cleared on destroy/re-init so a new
@@ -2406,7 +2396,6 @@ export class App {
       document.documentElement.dataset.wmEventHandlersReady = 'true';
     }
 
-    window.addEventListener('wm:world:open-country-brief', this.handleWorldOpenCountryBrief);
     this.countryIntel.onBriefStateChange(({ visible }) => {
       // The loading panel opens with a placeholder code; the deep link stays
       // pending until a real country shows or the panel closes.
@@ -2762,7 +2751,6 @@ export class App {
       this.state.breakingBanner?.destroy();
       if (this.worldNewsTimer !== null) window.clearInterval(this.worldNewsTimer);
       this.worldNewsTimer = null;
-      window.removeEventListener('wm:world:open-country-brief', this.handleWorldOpenCountryBrief);
       destroyBreakingNewsAlerts();
       this.cachedModeBannerEl?.remove();
       this.cachedModeBannerEl = null;

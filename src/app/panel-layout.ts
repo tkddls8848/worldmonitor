@@ -1079,7 +1079,7 @@ export class PanelLayoutManager implements AppModule {
       openFullView: () => { void this.enterFullView(); },
       openCountryBrief: (iso2: string) => {
         void this.enterFullView().then(() => {
-          window.dispatchEvent(new CustomEvent('wm:world:open-country-brief', { detail: { code: iso2 } }));
+          if (!this.ctx.isDestroyed && !this.worldMode) this.callbacks.openCountryBrief(iso2);
         });
       },
     });
@@ -1089,7 +1089,10 @@ export class PanelLayoutManager implements AppModule {
   public async enterFullView(): Promise<void> {
     this.worldScreen?.onLeave();
     setFirstScreenMode('full');
-    if (!this.worldMode) return;
+    if (!this.worldMode) {
+      await this.fullViewBuilding;
+      return;
+    }
     this.worldMode = false;
     document.documentElement.classList.remove(WORLD_MODE_CLASS);
     if (this.worldSlots) this.worldSlots.root.hidden = true;

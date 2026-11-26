@@ -68,6 +68,7 @@ function modeLayout(): { layout: InstanceType<typeof PanelLayoutManager>; map: F
   Reflect.set(layout, 'worldScreen', null);
   Reflect.set(layout, 'worldSlots', null);
   Reflect.set(layout, 'fullViewStarter', null);
+  Reflect.set(layout, 'callbacks', { openCountryBrief: vi.fn() });
   Reflect.set(layout, 'ensureMap', async () => {});
   const build = vi.fn(async function (this: object) {
     await Promise.resolve();
@@ -115,6 +116,18 @@ describe('first screen mode switch', () => {
     expect(starter).toHaveBeenCalledTimes(1);
     expect(getFirstScreenMode()).toBe('full');
     expect((document.getElementById('worldFirstScreen') as HTMLElement).hidden).toBe(true);
+  });
+
+  it('opens the selected country brief after full-view setup, including during a pending switch', async () => {
+    const { layout } = modeLayout();
+    await bootWorld(layout);
+    const hooks = mountMock.mount.mock.lastCall?.[2] as { openCountryBrief(iso2: string): void };
+    const openBrief = Reflect.get(layout, 'callbacks').openCountryBrief;
+    const build = layout.enterFullView();
+    hooks.openCountryBrief('UA');
+    expect(openBrief).not.toHaveBeenCalled();
+    await build;
+    await vi.waitFor(() => expect(openBrief).toHaveBeenCalledWith('UA'));
   });
 
   it('returning to the world view reuses the shell and does not rebuild the full view', async () => {
