@@ -76,6 +76,10 @@ const SCRIPT_ALIASES = { gpsjam: 'fetch-gpsjam.mjs' };
 // digest-notifications read, so it runs first; those readers run last, after
 // everything they summarise. digest-notifications composes the owner's daily
 // brief and decides on its own whether to regenerate the prose this pass.
+// Reddit needs approved Data API access. Without it these two only fail, so they
+// run on request (`npm run collect:personal -- social-velocity wsb-tickers`).
+const REDDIT_COLLECTORS = ['social-velocity', 'wsb-tickers'];
+
 export const DEFAULT_COLLECTORS = [
   'news-threat-summary', 'earthquakes', 'natural-events', 'weather-alerts', 'internet-outages', 'cyber-threats',
   'unrest-events', 'military-flights', 'conflict-intel', 'prediction-markets', 'service-statuses',
@@ -85,7 +89,7 @@ export const DEFAULT_COLLECTORS = [
   'bundle-portwatch', 'bundle-portwatch-port-activity', 'bundle-regional-energy', 'bundle-regional',
   'bundle-static-ref', 'bundle-static-ref-heavy', 'bundle-resilience', 'bundle-resilience-recovery',
   'bundle-resilience-energy-v2', 'bundle-resilience-validation',
-  ...Object.keys(STANDALONE_INTERVAL_MIN).filter((name) => !['news-threat-summary', 'weather-alerts', 'cyber-threats'].includes(name)),
+  ...Object.keys(STANDALONE_INTERVAL_MIN).filter((name) => !['news-threat-summary', 'weather-alerts', 'cyber-threats', ...REDDIT_COLLECTORS].includes(name)),
   'insights', 'world-relations-ai', 'forecasts', 'correlation', 'digest-notifications', 'world-overview',
 ];
 
