@@ -21,6 +21,7 @@ const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.ur
 type TierRow = { tier: DeclaredTier; cells: string[] };
 
 function tierTable(markdown: string, heading: string): TierRow[] {
+  markdown = markdown.replace(/\r\n/g, '\n');
   const start = markdown.indexOf(`\n${heading}\n`);
   assert.ok(start >= 0, `heading ${heading} not found`);
   const rows: TierRow[] = [];

@@ -10,7 +10,7 @@ const ENV_KEYS = [
   'VERCEL_ENV',
   'VERCEL_GIT_COMMIT_SHA',
   'WORLDMONITOR_VALID_KEYS',
-  'WS_RELAY_URL',
+  'LOCAL_API_ORIGIN',
 ] as const;
 
 const originalEnv = new Map<string, string | undefined>();
@@ -28,7 +28,7 @@ beforeEach(() => {
   process.env.UPSTASH_REDIS_REST_TOKEN = 'redis-token';
   process.env.VERCEL_ENV = 'production';
   process.env.WORLDMONITOR_VALID_KEYS = 'test-key';
-  process.env.WS_RELAY_URL = 'https://relay.test';
+  process.env.LOCAL_API_ORIGIN = 'https://relay.test';
 });
 
 afterEach(() => {

@@ -304,7 +304,7 @@ describe('digest feed parser: adversarial feeds parse in linear time', () => {
 describe('digest direct feed fetch: 5 MiB body cap', () => {
   const MiB = 1024 * 1024;
   const CAP_FEED = { name: 'Big Feed', url: 'https://big.example.org/feed.xml' };
-  const envKeys = ['UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN', 'VERCEL_ENV', 'LOCAL_API_MODE', 'WS_RELAY_URL'] as const;
+  const envKeys = ['UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN', 'VERCEL_ENV', 'LOCAL_API_MODE', 'LOCAL_API_ORIGIN'] as const;
 
   function streamedFeed(totalBytes: number, onPull: (bytes: number) => void): Response {
     const encoder = new TextEncoder();
@@ -330,7 +330,7 @@ describe('digest direct feed fetch: 5 MiB body cap', () => {
     const originalFetch = globalThis.fetch;
     process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example';
     process.env.UPSTASH_REDIS_REST_TOKEN = 'token';
-    for (const key of ['VERCEL_ENV', 'LOCAL_API_MODE', 'WS_RELAY_URL'] as const) delete process.env[key];
+    for (const key of ['VERCEL_ENV', 'LOCAL_API_MODE', 'LOCAL_API_ORIGIN'] as const) delete process.env[key];
     __resetKeyPrefixCacheForTests();
     const redis = createRedisFetch({});
     let pulled = 0;

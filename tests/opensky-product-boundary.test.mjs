@@ -5,13 +5,13 @@ import handler from '../api/opensky.js';
 
 describe('OpenSky legacy proxy product boundary', () => {
   const originalFetch = globalThis.fetch;
-  const originalRelayUrl = process.env.WS_RELAY_URL;
+  const originalRelayUrl = process.env.LOCAL_API_ORIGIN;
   const originalValidKeys = process.env.WORLDMONITOR_VALID_KEYS;
   const originalProductKey = process.env.WORLDMONITOR_API_KEY;
   const originalLocalMode = process.env.LOCAL_API_MODE;
 
   beforeEach(() => {
-    process.env.WS_RELAY_URL = 'https://relay.test';
+    process.env.LOCAL_API_ORIGIN = 'https://relay.test';
     process.env.WORLDMONITOR_VALID_KEYS = 'desktop-product-key';
     process.env.WORLDMONITOR_API_KEY = 'desktop-product-key';
     process.env.LOCAL_API_MODE = 'tauri-sidecar';
@@ -19,8 +19,8 @@ describe('OpenSky legacy proxy product boundary', () => {
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
-    if (originalRelayUrl == null) delete process.env.WS_RELAY_URL;
-    else process.env.WS_RELAY_URL = originalRelayUrl;
+    if (originalRelayUrl == null) delete process.env.LOCAL_API_ORIGIN;
+    else process.env.LOCAL_API_ORIGIN = originalRelayUrl;
     if (originalValidKeys == null) delete process.env.WORLDMONITOR_VALID_KEYS;
     else process.env.WORLDMONITOR_VALID_KEYS = originalValidKeys;
     if (originalProductKey == null) delete process.env.WORLDMONITOR_API_KEY;
@@ -47,7 +47,7 @@ describe('OpenSky legacy proxy product boundary', () => {
       },
     }));
     assert.equal(response.status, 200);
-    assert.equal(upstreamUrl, 'https://relay.test/opensky?icao24=abc123');
+    assert.equal(upstreamUrl, 'https://relay.test/api/local-providers/opensky?icao24=abc123');
     assert.deepEqual(await response.json(), { states: [['abc123']] });
     assert.equal(response.headers.get('Cache-Control'), 'private, no-store');
     assert.equal(response.headers.get('CDN-Cache-Control'), 'no-store');

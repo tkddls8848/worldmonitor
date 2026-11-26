@@ -38,6 +38,8 @@ test('all 50 supplied Bing URLs have unique, complete 150–160 character descri
   assert.equal(new Set(urls).size, urls.length);
   const descriptions = new Set();
   for (const url of urls) {
+    // These panels were removed from the personal fork; retain the historical export.
+    if (/\/docs\/(?:zh\/)?panels\/(?:x-intel|telegram-intel)$/.test(new URL(url).pathname)) continue;
     // The /pro marketing page was removed with pro-test/; it has no description source.
     if (new URL(url).pathname === '/pro') continue;
     const description = descriptionFor(url);

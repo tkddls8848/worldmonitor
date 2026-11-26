@@ -68,8 +68,8 @@ const ORIGINAL_ENV = {
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
   localApiMode: process.env.LOCAL_API_MODE,
   validKeys: process.env.WORLDMONITOR_VALID_KEYS,
-  relayUrl: process.env.WS_RELAY_URL,
-  relaySecret: process.env.RELAY_SHARED_SECRET,
+  relayUrl: process.env.LOCAL_API_ORIGIN,
+  relaySecret: process.env.LOCAL_API_TOKEN,
   relayHeader: process.env.RELAY_AUTH_HEADER,
 };
 const REDIS_HOST = 'https://redis.test';
@@ -95,8 +95,8 @@ beforeEach(() => {
   edgeRedirectValidation = false;
   redirectStatus = undefined;
   upstreamRedirects = [];
-  delete process.env.WS_RELAY_URL;
-  delete process.env.RELAY_SHARED_SECRET;
+  delete process.env.LOCAL_API_ORIGIN;
+  delete process.env.LOCAL_API_TOKEN;
   delete process.env.RELAY_AUTH_HEADER;
   process.env.UPSTASH_REDIS_REST_URL = REDIS_HOST;
   process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
@@ -129,7 +129,7 @@ beforeEach(() => {
       }
       const target = isRelay ? `https://wits.worldbank.org${url.searchParams.get('path')}` : href;
       if (isRelay) {
-        assert.equal(url.pathname, '/wits');
+        assert.equal(url.pathname, '/api/local-providers/wits');
         relayCalls.push({ url: target, headers: new Headers(init?.headers) });
         assert.equal(init?.redirect, 'manual');
         if (relayStatus !== undefined) return new Response('Relay unavailable', { status: relayStatus });
@@ -156,8 +156,8 @@ afterEach(() => {
     ['UPSTASH_REDIS_REST_TOKEN', ORIGINAL_ENV.token],
     ['LOCAL_API_MODE', ORIGINAL_ENV.localApiMode],
     ['WORLDMONITOR_VALID_KEYS', ORIGINAL_ENV.validKeys],
-    ['WS_RELAY_URL', ORIGINAL_ENV.relayUrl],
-    ['RELAY_SHARED_SECRET', ORIGINAL_ENV.relaySecret],
+    ['LOCAL_API_ORIGIN', ORIGINAL_ENV.relayUrl],
+    ['LOCAL_API_TOKEN', ORIGINAL_ENV.relaySecret],
     ['RELAY_AUTH_HEADER', ORIGINAL_ENV.relayHeader],
   ] as const) {
     if (value === undefined) delete process.env[name];
@@ -403,8 +403,8 @@ describe('WITS relay transport', () => {
     test(`Edge fetch accepts WITS reads with configuredRelay=${configuredRelay}`, async () => {
       edgeRedirectValidation = true;
       if (configuredRelay) {
-        process.env.WS_RELAY_URL = 'https://relay.test';
-        process.env.RELAY_SHARED_SECRET = 'local-relay-secret';
+        process.env.LOCAL_API_ORIGIN = 'https://relay.test';
+        process.env.LOCAL_API_TOKEN = 'local-relay-secret';
       }
       const res = await getBilateralTariff(premiumCtx(), request({}));
       assert.equal(res.upstreamUnavailable, false);
@@ -416,8 +416,8 @@ describe('WITS relay transport', () => {
       test(`WITS HTTP ${status} stays unavailable without following Location with configuredRelay=${configuredRelay}`, async () => {
         redirectStatus = status;
         if (configuredRelay) {
-          process.env.WS_RELAY_URL = 'https://relay.test';
-          process.env.RELAY_SHARED_SECRET = 'local-relay-secret';
+          process.env.LOCAL_API_ORIGIN = 'https://relay.test';
+          process.env.LOCAL_API_TOKEN = 'local-relay-secret';
         }
         const res = await getBilateralTariff(premiumCtx(), request({}));
         assert.equal(res.upstreamUnavailable, true);
@@ -433,9 +433,8 @@ describe('WITS relay transport', () => {
   }
 
   test('configured relay carries rows and metadata with auth and no direct WITS request', async () => {
-    process.env.WS_RELAY_URL = 'wss://relay.test/';
-    process.env.RELAY_SHARED_SECRET = 'local-relay-secret';
-    process.env.RELAY_AUTH_HEADER = 'X-Custom-Relay-Key';
+    process.env.LOCAL_API_ORIGIN = 'https://relay.test/';
+    process.env.LOCAL_API_TOKEN = 'local-relay-secret';
 
     const res = await getBilateralTariff(premiumCtx(), request({ partnerCountry: '484' }));
     assert.equal(res.appliedRate?.rate, 0);
@@ -448,15 +447,15 @@ describe('WITS relay transport', () => {
       `${META}/country/all`,
     ]));
     for (const call of relayCalls) {
-      assert.equal(call.headers.get('x-custom-relay-key'), 'local-relay-secret');
-      assert.equal(call.headers.get('authorization'), 'Bearer local-relay-secret');
+      assert.equal(call.headers.get('x-worldmonitor-local-token'), 'local-relay-secret');
+      assert.equal(call.headers.get('authorization'), null);
       assert.match(call.headers.get('accept')!, /application\/xml/);
     }
   });
 
   test('configured relay also carries the MFN AVE request', async () => {
-    process.env.WS_RELAY_URL = 'https://relay.test';
-    process.env.RELAY_SHARED_SECRET = 'local-relay-secret';
+    process.env.LOCAL_API_ORIGIN = 'https://relay.test';
+    process.env.LOCAL_API_TOKEN = 'local-relay-secret';
     const res = await getBilateralTariff(premiumCtx(), request({ hsCode: '220421' }));
     assert.equal(res.upstreamUnavailable, false);
     assert.ok(relayCalls.some(c => c.url === trainsRowsUrl('840', '220421', 2021, 'aveestimated')));
@@ -465,8 +464,8 @@ describe('WITS relay transport', () => {
 
   for (const status of [401, 403, 404, 502, 504]) {
     test(`relay HTTP ${status} stays unavailable without retrying direct WITS`, async () => {
-      process.env.WS_RELAY_URL = 'https://relay.test';
-      process.env.RELAY_SHARED_SECRET = 'local-relay-secret';
+      process.env.LOCAL_API_ORIGIN = 'https://relay.test';
+      process.env.LOCAL_API_TOKEN = 'local-relay-secret';
       relayStatus = status;
       const res = await getBilateralTariff(premiumCtx(), request({}));
       assert.equal(res.upstreamUnavailable, true);
@@ -477,8 +476,8 @@ describe('WITS relay transport', () => {
   }
 
   test('relay NoRecordsFound remains not covered', async () => {
-    process.env.WS_RELAY_URL = 'https://relay.test';
-    process.env.RELAY_SHARED_SECRET = 'local-relay-secret';
+    process.env.LOCAL_API_ORIGIN = 'https://relay.test';
+    process.env.LOCAL_API_TOKEN = 'local-relay-secret';
     const res = await getBilateralTariff(premiumCtx(), request({ hsCode: '999999' }));
     assert.equal(res.unavailableReason, R.notCovered);
     assert.equal(res.upstreamUnavailable, false);
@@ -486,14 +485,14 @@ describe('WITS relay transport', () => {
   });
 
   test('without a relay URL direct WITS does not receive relay credentials', async () => {
-    process.env.RELAY_SHARED_SECRET = 'local-relay-secret';
+    process.env.LOCAL_API_TOKEN = 'local-relay-secret';
     const res = await getBilateralTariff(premiumCtx(), request({}));
     assert.equal(res.upstreamUnavailable, false);
     assert.ok(witsCalls.length > 0);
     assert.deepEqual(relayCalls, []);
     for (const headers of directHeaders) {
       assert.equal(headers.has('authorization'), false);
-      assert.equal(headers.has('x-relay-key'), false);
+      assert.equal(headers.has('x-worldmonitor-local-token'), false);
     }
   });
 });

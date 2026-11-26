@@ -1,11 +1,4 @@
 {
-  "_readme": [
-    "Reviewed outlet profiles, one per catalog source name (RSS, Telegram, X).",
-    "country: ISO2 home country of the publisher (INTL for intergovernmental or multi-publisher, EU for EU institutions).",
-    "audience: domestic | international | diaspora. language: ISO 639-1 of the ingested content.",
-    "ownershipClass: state | public-service | private | nonprofit | intergovernmental | unreviewed; never defaulted.",
-    "No political lean ratings. tests/outlet-profile-completeness.test.mts keeps this closed-world."
-  ],
   "+972 Magazine": {
     "country": "IL",
     "audience": "international",
@@ -86,20 +79,6 @@
     "audience": "domestic",
     "language": "en",
     "ownershipClass": "public-service"
-  },
-  "Abu Ali Express": {
-    "country": "IL",
-    "audience": "domestic",
-    "language": "he",
-    "ownershipClass": "private",
-    "note": "Individually run Israeli Telegram channel."
-  },
-  "Abu Ali Express EN": {
-    "country": "IL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "private",
-    "note": "Israeli-run military OSINT channel operated by an individual blogger."
   },
   "Acquired Episodes": {
     "country": "INTL",
@@ -228,12 +207,6 @@
     "ownershipClass": "unreviewed",
     "note": "Google News topic query aggregating many publishers; no single owner."
   },
-  "Air Force of the Armed Forces of Ukraine": {
-    "country": "UA",
-    "audience": "domestic",
-    "language": "uk",
-    "ownershipClass": "state"
-  },
   "Aïr Info": {
     "country": "NE",
     "audience": "domestic",
@@ -252,13 +225,6 @@
     "audience": "international",
     "language": "en",
     "ownershipClass": "state"
-  },
-  "Al-Saa EN": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Ownership and base of this Telegram desk are not identifiable."
   },
   "All-In Podcast": {
     "country": "INTL",
@@ -437,13 +403,6 @@
     "audience": "domestic",
     "language": "hu",
     "ownershipClass": "private"
-  },
-  "Aurora Intel": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous OSINT aggregator; ownership not public."
   },
   "Australian Mining": {
     "country": "AU",
@@ -637,13 +596,6 @@
     "ownershipClass": "private",
     "note": "First-party Binance channel; Binance has no single home jurisdiction."
   },
-  "Bint Jbeil News": {
-    "country": "LB",
-    "audience": "domestic",
-    "language": "ar",
-    "ownershipClass": "unreviewed",
-    "note": "Local southern Lebanon Telegram desk; ownership not verifiable."
-  },
   "Bitcoin Magazine": {
     "country": "US",
     "audience": "international",
@@ -684,18 +636,6 @@
   },
   "Bloomberg Markets": {
     "country": "US",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "private"
-  },
-  "BMKG InaTEWS": {
-    "country": "ID",
-    "audience": "domestic",
-    "language": "id",
-    "ownershipClass": "state"
-  },
-  "BNO News": {
-    "country": "NL",
     "audience": "international",
     "language": "en",
     "ownershipClass": "private"
@@ -960,13 +900,6 @@
     "language": "es",
     "ownershipClass": "private"
   },
-  "Clash Report": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous conflict aggregator; ownership not public."
-  },
   "Cloud Outages": {
     "country": "INTL",
     "audience": "international",
@@ -1119,12 +1052,6 @@
     "ownershipClass": "unreviewed",
     "note": "Google News topic search aggregating many publishers; no single owner."
   },
-  "CrowdStrike": {
-    "country": "US",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "private"
-  },
   "Crunchbase News": {
     "country": "US",
     "audience": "international",
@@ -1170,27 +1097,6 @@
     "language": "en",
     "ownershipClass": "private"
   },
-  "CyberDetective": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Telegram OSINT channel with no disclosed operator."
-  },
-  "Cybersecurity Boardroom": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous Telegram aggregator; operator unknown."
-  },
-  "CYBERWAR.COM": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous cyber aggregator channel; ownership not public."
-  },
   "Dabanga Sudan": {
     "country": "NL",
     "audience": "diaspora",
@@ -1234,25 +1140,11 @@
     "language": "en",
     "ownershipClass": "private"
   },
-  "Dark Web Informer": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Individually run monitoring channel; ownership not public."
-  },
   "Dawn": {
     "country": "PK",
     "audience": "domestic",
     "language": "en",
     "ownershipClass": "private"
-  },
-  "DD Geopolitics": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous Telegram aggregator with no disclosed operator."
   },
   "De Telegraaf": {
     "country": "NL",
@@ -1285,18 +1177,6 @@
     "language": "en",
     "ownershipClass": "private"
   },
-  "DeepState": {
-    "country": "UA",
-    "audience": "domestic",
-    "language": "uk",
-    "ownershipClass": "private"
-  },
-  "DefaPress (Iran MOD)": {
-    "country": "IR",
-    "audience": "domestic",
-    "language": "fa",
-    "ownershipClass": "state"
-  },
   "Defense News": {
     "country": "US",
     "audience": "international",
@@ -1322,12 +1202,6 @@
     "language": "en",
     "ownershipClass": "unreviewed",
     "note": "Google News topic query aggregating many publishers; no single owner."
-  },
-  "Department of War": {
-    "country": "US",
-    "audience": "domestic",
-    "language": "en",
-    "ownershipClass": "state"
   },
   "Der Spiegel": {
     "country": "DE",
@@ -1422,19 +1296,6 @@
     "language": "da",
     "ownershipClass": "public-service",
     "note": "State-funded Danish broadcaster with statutory editorial independence."
-  },
-  "Dragon Watch": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous Telegram OSINT aggregator; operator unknown."
-  },
-  "Drop Site News": {
-    "country": "US",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "private"
   },
   "DW News": {
     "country": "DE",
@@ -1543,12 +1404,6 @@
     "audience": "domestic",
     "language": "es",
     "ownershipClass": "private"
-  },
-  "Emirates News Agency (WAM)": {
-    "country": "AE",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "state"
   },
   "Enab Baladi English": {
     "country": "TR",
@@ -1677,13 +1532,6 @@
     "language": "en",
     "ownershipClass": "private"
   },
-  "FalconFeeds.io": {
-    "country": "IN",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "private",
-    "note": "Commercial threat-intel service run by an India-based company."
-  },
   "FAO GIEWS": {
     "country": "INTL",
     "audience": "international",
@@ -1702,12 +1550,6 @@
     "language": "en",
     "ownershipClass": "state",
     "note": "IRGC-linked agency; ingested via an English Google News site: query."
-  },
-  "Fars News EN": {
-    "country": "IR",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "state"
   },
   "FAS": {
     "country": "US",
@@ -1811,13 +1653,6 @@
     "ownershipClass": "unreviewed",
     "note": "Google News topic query aggregating many publishers; no single owner."
   },
-  "Fotros Resistance": {
-    "country": "INTL",
-    "audience": "diaspora",
-    "language": "fa",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous Iranian opposition Telegram channel; operator and base unknown."
-  },
   "Fox Business": {
     "country": "US",
     "audience": "domestic",
@@ -1856,13 +1691,6 @@
     "language": "en",
     "ownershipClass": "public-service",
     "note": "State-funded France Médias Monde broadcaster with statutory editorial independence."
-  },
-  "France 24 EN": {
-    "country": "FR",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "public-service",
-    "note": "State-funded France Medias Monde broadcaster with a statutory independence charter."
   },
   "France 24 LatAm": {
     "country": "FR",
@@ -1933,27 +1761,6 @@
     "audience": "domestic",
     "language": "en",
     "ownershipClass": "private"
-  },
-  "GeoPol Watch": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous geopolitical aggregator; ownership not public."
-  },
-  "GeopoliticalCenter": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous Telegram aggregator; owner not identifiable."
-  },
-  "Geopolitics Prime": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous Telegram aggregator with no disclosed operator."
   },
   "GitHub Blog": {
     "country": "US",
@@ -2199,13 +2006,6 @@
     "language": "en",
     "ownershipClass": "private"
   },
-  "Hamas-Israel War": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous faction-aligned aggregator; ownership not public."
-  },
   "Handelsblatt": {
     "country": "DE",
     "audience": "domestic",
@@ -2301,18 +2101,6 @@
     "audience": "international",
     "language": "en",
     "ownershipClass": "intergovernmental"
-  },
-  "IDF": {
-    "country": "IL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "state"
-  },
-  "IDF Official": {
-    "country": "IL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "state"
   },
   "IEA Critical Minerals": {
     "country": "INTL",
@@ -2424,13 +2212,6 @@
     "ownershipClass": "nonprofit",
     "note": "Editorially run from Medellín; host is a US-registered .org."
   },
-  "Intel Crab": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Pseudonymous X OSINT account with no disclosed operator."
-  },
   "Interfax EN": {
     "country": "RU",
     "audience": "international",
@@ -2469,19 +2250,6 @@
     "ownershipClass": "state",
     "note": "London-based Iranian exile broadcaster, Saudi-funded per repo state affiliation."
   },
-  "Iran International EN": {
-    "country": "GB",
-    "audience": "diaspora",
-    "language": "en",
-    "ownershipClass": "state",
-    "note": "London-based Iranian exile broadcaster with Saudi-linked funding."
-  },
-  "IRGC Official": {
-    "country": "IR",
-    "audience": "domestic",
-    "language": "fa",
-    "ownershipClass": "state"
-  },
   "IRNA": {
     "country": "IR",
     "audience": "international",
@@ -2514,12 +2282,6 @@
     "audience": "domestic",
     "language": "en",
     "ownershipClass": "private"
-  },
-  "Israel Home Front Command": {
-    "country": "IL",
-    "audience": "domestic",
-    "language": "he",
-    "ownershipClass": "state"
   },
   "ISW": {
     "country": "US",
@@ -2608,12 +2370,6 @@
     "language": "hr",
     "ownershipClass": "private"
   },
-  "Kaspersky": {
-    "country": "RU",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "private"
-  },
   "Kathimerini": {
     "country": "GR",
     "audience": "domestic",
@@ -2631,13 +2387,6 @@
     "audience": "international",
     "language": "en",
     "ownershipClass": "private"
-  },
-  "Kian Meli (Iran)": {
-    "country": "IR",
-    "audience": "domestic",
-    "language": "fa",
-    "ownershipClass": "unreviewed",
-    "note": "Personal Persian-language Telegram channel; operator and location undisclosed."
   },
   "Kitco Gold": {
     "country": "CA",
@@ -2763,13 +2512,6 @@
     "language": "fr",
     "ownershipClass": "private"
   },
-  "Lebanon Update": {
-    "country": "LB",
-    "audience": "domestic",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Telegram breaking-news aggregator; operator unknown."
-  },
   "leFaso.net": {
     "country": "BF",
     "audience": "domestic",
@@ -2822,12 +2564,6 @@
   },
   "Live Science": {
     "country": "US",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "private"
-  },
-  "LiveUAMap": {
-    "country": "UA",
     "audience": "international",
     "language": "en",
     "ownershipClass": "private"
@@ -2987,27 +2723,6 @@
     "language": "en",
     "ownershipClass": "nonprofit"
   },
-  "Middle East Now Breaking": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous Telegram aggregator; owner not identifiable."
-  },
-  "Middle East Observer": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Telegram observer channel with no disclosed operator."
-  },
-  "Middle East Spectator": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous Telegram OSINT aggregator; operator unknown."
-  },
   "MIIT (China)": {
     "country": "CN",
     "audience": "domestic",
@@ -3098,13 +2813,6 @@
     "language": "en",
     "ownershipClass": "nonprofit"
   },
-  "monitor": {
-    "country": "UA",
-    "audience": "domestic",
-    "language": "uk",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous Ukrainian Telegram monitor channel; owner not identifiable."
-  },
   "Montreal Gazette": {
     "country": "CA",
     "audience": "domestic",
@@ -3161,12 +2869,6 @@
     "language": "en",
     "ownershipClass": "private"
   },
-  "NATO": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "intergovernmental"
-  },
   "Natural Gas & LNG": {
     "country": "INTL",
     "audience": "international",
@@ -3186,13 +2888,6 @@
     "audience": "international",
     "language": "en",
     "ownershipClass": "private"
-  },
-  "Naya for Iraq": {
-    "country": "IQ",
-    "audience": "domestic",
-    "language": "ar",
-    "ownershipClass": "unreviewed",
-    "note": "Iraq-focused Telegram desk with no disclosed owner."
   },
   "NBC News": {
     "country": "US",
@@ -3239,12 +2934,6 @@
     "ownershipClass": "unreviewed",
     "note": "Google News keyword search aggregating many publishers; no single owner."
   },
-  "New York Times": {
-    "country": "US",
-    "audience": "domestic",
-    "language": "en",
-    "ownershipClass": "private"
-  },
   "New York Times World": {
     "country": "US",
     "audience": "domestic",
@@ -3262,13 +2951,6 @@
     "audience": "domestic",
     "language": "ru",
     "ownershipClass": "private"
-  },
-  "NEXTA": {
-    "country": "PL",
-    "audience": "diaspora",
-    "language": "ru",
-    "ownershipClass": "private",
-    "note": "Belarusian exile outlet operating from Warsaw."
   },
   "NFT News": {
     "country": "INTL",
@@ -3478,54 +3160,6 @@
     "language": "en",
     "ownershipClass": "private"
   },
-  "OSINT Industries": {
-    "country": "GB",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "private"
-  },
-  "OSINT Live": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous Telegram aggregator; owner not identifiable."
-  },
-  "OSINT Technical": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Pseudonymous X OSINT account with no disclosed operator."
-  },
-  "Osint Updates": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous Telegram OSINT aggregator; operator unknown."
-  },
-  "OSINTdefender": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Individually run OSINT aggregator; ownership not public."
-  },
-  "OSIntOps News": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous Telegram aggregator; owner not identifiable."
-  },
-  "OsintTV": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous Telegram video aggregator."
-  },
   "Ottawa Citizen": {
     "country": "CA",
     "audience": "domestic",
@@ -3682,12 +3316,6 @@
     "language": "en",
     "ownershipClass": "state"
   },
-  "PressTV (Iran State)": {
-    "country": "IR",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "state"
-  },
   "Primicias": {
     "country": "EC",
     "audience": "domestic",
@@ -3712,13 +3340,6 @@
     "audience": "domestic",
     "language": "el",
     "ownershipClass": "private"
-  },
-  "Quds News": {
-    "country": "PS",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Palestinian news network Telegram channel; ownership opaque."
   },
   "Radio Ndeke Luka": {
     "country": "CF",
@@ -3796,13 +3417,6 @@
     "audience": "domestic",
     "language": "it",
     "ownershipClass": "private"
-  },
-  "Resistance Trench": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous advocacy Telegram channel; owner and base not identifiable."
   },
   "Resource World": {
     "country": "INTL",
@@ -3937,19 +3551,6 @@
     "ownershipClass": "unreviewed",
     "note": "Google News keyword search aggregating many publishers; no single owner."
   },
-  "RN Intel": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous Telegram OSINT aggregator."
-  },
-  "Rocket Alert": {
-    "country": "IL",
-    "audience": "domestic",
-    "language": "en",
-    "ownershipClass": "state"
-  },
   "RT": {
     "country": "RU",
     "audience": "international",
@@ -3999,12 +3600,6 @@
     "language": "en",
     "ownershipClass": "private"
   },
-  "Saberin (IRGC Intel)": {
-    "country": "IR",
-    "audience": "domestic",
-    "language": "fa",
-    "ownershipClass": "state"
-  },
   "SAFE (China)": {
     "country": "CN",
     "audience": "domestic",
@@ -4029,12 +3624,6 @@
     "audience": "international",
     "language": "en",
     "ownershipClass": "nonprofit"
-  },
-  "Saudi Civil Defense": {
-    "country": "SA",
-    "audience": "domestic",
-    "language": "ar",
-    "ownershipClass": "state"
   },
   "Schneier": {
     "country": "US",
@@ -4074,13 +3663,6 @@
     "language": "en",
     "ownershipClass": "unreviewed",
     "note": "Google News keyword search aggregating many publishers; no single owner."
-  },
-  "Securelist by Kaspersky": {
-    "country": "RU",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "private",
-    "note": "Kaspersky research blog; company is Moscow-headquartered with a UK holding entity."
   },
   "Seed & Pre-Seed": {
     "country": "INTL",
@@ -4195,12 +3777,6 @@
     "audience": "international",
     "language": "en",
     "ownershipClass": "private"
-  },
-  "Singapore Government": {
-    "country": "SG",
-    "audience": "domestic",
-    "language": "en",
-    "ownershipClass": "state"
   },
   "Singularity Hub": {
     "country": "US",
@@ -4401,12 +3977,6 @@
     "language": "en",
     "ownershipClass": "private"
   },
-  "Tasnim News EN": {
-    "country": "IR",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "state"
-  },
   "TASS": {
     "country": "RU",
     "audience": "international",
@@ -4545,31 +4115,11 @@
     "language": "en",
     "ownershipClass": "private"
   },
-  "The Cradle": {
-    "country": "LB",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "private",
-    "note": "Beirut-based outlet; ownership not publicly disclosed."
-  },
-  "The CyberWire": {
-    "country": "US",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "private"
-  },
   "The Daily Star": {
     "country": "BD",
     "audience": "domestic",
     "language": "en",
     "ownershipClass": "private"
-  },
-  "The Defender Dome": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous Telegram conflict aggregator."
   },
   "The Defiant": {
     "country": "US",
@@ -4626,13 +4176,6 @@
     "language": "en",
     "ownershipClass": "private"
   },
-  "The Iran Watcher": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "English-language Iran and Persian Gulf monitor; ownership not public."
-  },
   "The Narwhal": {
     "country": "CA",
     "audience": "domestic",
@@ -4687,13 +4230,6 @@
     "audience": "international",
     "language": "en",
     "ownershipClass": "nonprofit"
-  },
-  "The Spectator Index": {
-    "country": "GB",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Headline aggregator account; ownership not disclosed."
   },
   "The Star (Malaysia)": {
     "country": "MY",
@@ -4878,12 +4414,6 @@
     "ownershipClass": "unreviewed",
     "note": "Google News topic query aggregating many publishers; no single owner."
   },
-  "Ukraine State Emergency Service": {
-    "country": "UA",
-    "audience": "domestic",
-    "language": "uk",
-    "ownershipClass": "state"
-  },
   "Ukrainska Pravda": {
     "country": "UA",
     "audience": "domestic",
@@ -4942,24 +4472,11 @@
     "ownershipClass": "unreviewed",
     "note": "Google News topic query aggregating many publishers; no single owner."
   },
-  "US CENTCOM": {
-    "country": "US",
-    "audience": "domestic",
-    "language": "en",
-    "ownershipClass": "state"
-  },
   "USNI News": {
     "country": "US",
     "audience": "international",
     "language": "en",
     "ownershipClass": "nonprofit"
-  },
-  "Vahid Online": {
-    "country": "US",
-    "audience": "diaspora",
-    "language": "fa",
-    "ownershipClass": "private",
-    "note": "Independent Iranian journalist publishing from exile."
   },
   "Vancouver Sun": {
     "country": "CA",
@@ -5040,13 +4557,6 @@
     "language": "en",
     "ownershipClass": "nonprofit"
   },
-  "vx-underground": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous malware-research collective; ownership not public."
-  },
   "WAFA English": {
     "country": "PS",
     "audience": "international",
@@ -5068,19 +4578,6 @@
   "War on the Rocks": {
     "country": "US",
     "audience": "international",
-    "language": "en",
-    "ownershipClass": "private"
-  },
-  "Warfare Analysis": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous analysis channel; ownership not public."
-  },
-  "Washington Post": {
-    "country": "US",
-    "audience": "domestic",
     "language": "en",
     "ownershipClass": "private"
   },
@@ -5132,13 +4629,6 @@
     "language": "en",
     "ownershipClass": "private"
   },
-  "Witness": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Anonymous conflict aggregator; ownership not public."
-  },
   "World Gold Council": {
     "country": "INTL",
     "audience": "international",
@@ -5187,12 +4677,6 @@
     "country": "US",
     "audience": "international",
     "language": "en",
-    "ownershipClass": "private"
-  },
-  "Yedioth News": {
-    "country": "IL",
-    "audience": "domestic",
-    "language": "he",
     "ownershipClass": "private"
   },
   "Yemen Online": {

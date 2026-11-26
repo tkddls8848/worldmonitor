@@ -15,7 +15,7 @@ import { createRedisFetch, type FakeRedisState } from './helpers/fake-upstash-re
 const FEED = { name: 'Reuters World', url: 'https://feeds.example.org/world.xml' };
 const VARIANT = 'full';
 const KEY = rssFeedCacheKey(VARIANT, FEED.url);
-const envKeys = ['UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN', 'VERCEL_ENV', 'LOCAL_API_MODE', 'WS_RELAY_URL'] as const;
+const envKeys = ['UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN', 'VERCEL_ENV', 'LOCAL_API_MODE', 'LOCAL_API_ORIGIN'] as const;
 const oldEnv = Object.fromEntries(envKeys.map((key) => [key, process.env[key]]));
 const originalFetch = globalThis.fetch;
 
@@ -60,7 +60,7 @@ beforeEach(() => {
   process.env.UPSTASH_REDIS_REST_TOKEN = 'token';
   delete process.env.VERCEL_ENV;
   delete process.env.LOCAL_API_MODE;
-  delete process.env.WS_RELAY_URL;
+  delete process.env.LOCAL_API_ORIGIN;
   __resetKeyPrefixCacheForTests();
 });
 
@@ -205,7 +205,7 @@ describe('deadline-aborted fetches', () => {
   });
 
   it('does not start the relay fallback once the deadline has aborted', async () => {
-    process.env.WS_RELAY_URL = 'https://relay.example';
+    process.env.LOCAL_API_ORIGIN = 'https://relay.example';
     const deadline = new AbortController();
     install(() => {
       deadline.abort();

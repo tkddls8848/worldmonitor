@@ -4,7 +4,7 @@ import { jsonResponse } from './_json-response.js';
 
 export function getRelayBaseUrl() {
   const origin = process.env.LOCAL_API_ORIGIN;
-  return origin ? `${origin}/api/local-providers` : null;
+  return origin ? `${origin.replace(/\/$/, '')}/api/local-providers` : null;
 }
 
 export function getRelayHeaders(baseHeaders = {}) {

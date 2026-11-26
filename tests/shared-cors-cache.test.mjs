@@ -86,7 +86,7 @@ test('shared responses use public CORS and RSS is the private exception (#7216)'
   t.after(restoreEnvironment);
 
   delete process.env.DODO_API_KEY;
-  delete process.env.RELAY_SHARED_SECRET;
+  delete process.env.LOCAL_API_TOKEN;
   delete process.env.UPSTASH_REDIS_REST_URL;
   delete process.env.UPSTASH_REDIS_REST_TOKEN;
   process.env.WORLDMONITOR_VALID_KEYS = 'shared-cors-test-key';

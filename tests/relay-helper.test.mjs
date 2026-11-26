@@ -11,8 +11,8 @@ function restoreEnv() {
   Object.assign(process.env, originalEnv);
 }
 
-process.env.WS_RELAY_URL = 'wss://relay.example.com';
-process.env.RELAY_SHARED_SECRET = 'test-secret';
+process.env.LOCAL_API_ORIGIN = 'https://relay.example.com';
+process.env.LOCAL_API_TOKEN = 'test-secret';
 
 const { getRelayBaseUrl, getRelayHeaders, fetchWithTimeout, createRelayHandler } = await import('../api/_relay.js');
 
@@ -48,59 +48,22 @@ function mockFetchError(message = 'Network error') {
   mockFetch(async () => { throw new Error(message); });
 }
 
-describe('getRelayBaseUrl', () => {
+describe('personal adapter address and transport headers', () => {
   afterEach(restoreEnv);
-
-  it('converts wss:// to https://', () => {
-    process.env.WS_RELAY_URL = 'wss://relay.example.com';
-    assert.equal(getRelayBaseUrl(), 'https://relay.example.com');
+  it('uses the internal provider prefix', () => {
+    process.env.LOCAL_API_ORIGIN = 'http://127.0.0.1:3001';
+    assert.equal(getRelayBaseUrl(), 'http://127.0.0.1:3001/api/local-providers');
   });
-
-  it('converts ws:// to http://', () => {
-    process.env.WS_RELAY_URL = 'ws://relay.example.com';
-    assert.equal(getRelayBaseUrl(), 'http://relay.example.com');
-  });
-
-  it('strips trailing slash', () => {
-    process.env.WS_RELAY_URL = 'https://relay.example.com/';
-    assert.equal(getRelayBaseUrl(), 'https://relay.example.com');
-  });
-
-  it('returns null when not set', () => {
-    delete process.env.WS_RELAY_URL;
+  it('returns null without a running local API', () => {
+    delete process.env.LOCAL_API_ORIGIN;
     assert.equal(getRelayBaseUrl(), null);
   });
-
-  it('returns null for empty string', () => {
-    process.env.WS_RELAY_URL = '';
-    assert.equal(getRelayBaseUrl(), null);
-  });
-});
-
-describe('getRelayHeaders', () => {
-  afterEach(restoreEnv);
-
-  it('injects relay secret and Authorization', () => {
-    process.env.RELAY_SHARED_SECRET = 'my-secret';
-    delete process.env.RELAY_AUTH_HEADER;
-    const headers = getRelayHeaders({ Accept: 'application/json' });
-    assert.equal(headers.Accept, 'application/json');
-    assert.equal(headers['x-relay-key'], 'my-secret');
-    assert.equal(headers.Authorization, 'Bearer my-secret');
-  });
-
-  it('uses custom auth header name', () => {
-    process.env.RELAY_SHARED_SECRET = 'sec';
-    process.env.RELAY_AUTH_HEADER = 'X-Custom-Key';
-    const headers = getRelayHeaders();
-    assert.equal(headers['x-custom-key'], 'sec');
-    assert.equal(headers.Authorization, 'Bearer sec');
-  });
-
-  it('returns base headers only when no secret', () => {
-    process.env.RELAY_SHARED_SECRET = '';
-    const headers = getRelayHeaders({ Accept: 'text/xml' });
+  it('forwards the internal token and preserves provider headers', () => {
+    process.env.LOCAL_API_TOKEN = 'internal-token';
+    const headers = getRelayHeaders({Accept: 'text/xml', 'x-worldmonitor-local-token': 'wrong'});
     assert.equal(headers.Accept, 'text/xml');
+    assert.equal(headers['x-worldmonitor-local-token'], 'internal-token');
+    assert.ok(headers['User-Agent']);
     assert.equal(headers.Authorization, undefined);
   });
 });
@@ -144,7 +107,7 @@ describe('createRelayHandler', () => {
     assert.equal(failed.headers.get('cache-control'), 'no-store');
   });
   it('uses public CORS only on successful public relay responses', async () => {
-    process.env.WS_RELAY_URL = 'wss://relay.example.com';
+    process.env.LOCAL_API_ORIGIN = 'https://relay.example.com';
     mockFetchOk();
     const handler = createRelayHandler({ relayPath: '/test', publicCors: true });
     const response = await handler(makeRequest('https://worldmonitor.app/api/test'));
@@ -158,8 +121,8 @@ describe('createRelayHandler', () => {
     assert.equal(denied.status, 403);
   });
   beforeEach(() => {
-    process.env.WS_RELAY_URL = 'wss://relay.example.com';
-    process.env.RELAY_SHARED_SECRET = 'test-secret';
+    process.env.LOCAL_API_ORIGIN = 'https://relay.example.com';
+    process.env.LOCAL_API_TOKEN = 'test-secret';
   });
   afterEach(() => {
     globalThis.fetch = originalFetch;
@@ -207,13 +170,13 @@ describe('createRelayHandler', () => {
     assert.equal(res.status, 200);
   });
 
-  it('responds 503 when WS_RELAY_URL not set', async () => {
-    delete process.env.WS_RELAY_URL;
+  it('responds 503 when LOCAL_API_ORIGIN not set', async () => {
+    delete process.env.LOCAL_API_ORIGIN;
     const handler = createRelayHandler({ relayPath: '/test' });
     const res = await handler(makeRequest('https://worldmonitor.app/api/test'));
     assert.equal(res.status, 503);
     const body = await res.json();
-    assert.equal(body.error, 'WS_RELAY_URL is not configured');
+    assert.equal(body.error, 'Personal data adapters are not running');
   });
 
   it('proxies relay response with correct status and body', async () => {
@@ -351,7 +314,7 @@ describe('createRelayHandler', () => {
   });
 
   it('calls fallback when relay unavailable', async () => {
-    delete process.env.WS_RELAY_URL;
+    delete process.env.LOCAL_API_ORIGIN;
     const handler = createRelayHandler({
       relayPath: '/test',
       fallback: (_req, cors) => new Response('{"fallback":true}', {

@@ -25,7 +25,7 @@ beforeEach(async () => {
   delete process.env.WORLDMONITOR_VALID_KEYS;
   delete process.env.VERCEL;
   delete process.env.VERCEL_ENV;
-  process.env.WS_RELAY_URL = 'https://relay.example';
+  process.env.LOCAL_API_ORIGIN = 'https://relay.example';
   session = 'wms_test-browser-session';
   redis = installRedis({});
   calls = [];
@@ -36,8 +36,8 @@ beforeEach(async () => {
     const url = new URL(String(input)); calls.push(url);
     if (url.hostname === 'redis.example') return redis.fetchImpl(input, init);
     assert.equal(url.hostname, 'relay.example');
-    if (url.pathname === '/wingbits/track') return Response.json({ positions: wingbitsPositions, source: 'wingbits' }, { status: wingbitsStatus });
-    assert.equal(url.pathname, '/opensky/states/all');
+    if (url.pathname === '/api/local-providers/wingbits/track') return Response.json({ positions: wingbitsPositions, source: 'wingbits' }, { status: wingbitsStatus });
+    assert.equal(url.pathname, '/api/local-providers/opensky/states/all');
     return Response.json({ states: [['abc123', 'UAE20 ', null, null, 1, 55, 25, 1000, false, 100, 90, 0]] }, { status: openSkyStatus });
   }) as typeof fetch;
 });
@@ -131,7 +131,7 @@ for (const status of [400, 401, 403, 404, 422]) test(`Wingbits bbox ${status} do
   wingbitsStatus = status;
   const result = await read({ swLat: 24, swLon: 54, neLat: 26, neLon: 56 });
   assert.equal(result.source, 'none');
-  assert.deepEqual(providers().map(url => url.pathname), ['/wingbits/track']);
+  assert.deepEqual(providers().map(url => url.pathname), ['/api/local-providers/wingbits/track']);
 });
 test('oversized bbox answers empty before cache/provider work', async () => {
   for (const options of [
@@ -167,14 +167,14 @@ test('gateway answers 200 empty for a viewport just above the relay area limit w
 });
 test('identifier lookup with an oversized viewport skips only the bbox tier', async () => {
   const result = await read({ swLat: -90, swLon: -180, neLat: 90, neLon: 180, icao24: 'abc123' });
-  assert.deepEqual(providers().map(url => url.pathname), ['/opensky/states/all']);
+  assert.deepEqual(providers().map(url => url.pathname), ['/api/local-providers/opensky/states/all']);
   assert.equal(providers()[0]!.searchParams.get('icao24'), 'abc123');
   assert.notEqual(result.source, 'wingbits');
 });
 for (const status of [408, 429, 503]) test(`Wingbits ${status} outage retains display fallback`, async () => {
   wingbitsStatus = status;
   assert.equal((await read({ swLat: 24, swLon: 54, neLat: 26, neLon: 56 })).source, 'opensky');
-  assert.deepEqual(providers().map(url => url.pathname), ['/wingbits/track', '/opensky/states/all']);
+  assert.deepEqual(providers().map(url => url.pathname), ['/api/local-providers/wingbits/track', '/api/local-providers/opensky/states/all']);
 });
 
 test('client track breaker stays closed across repeated zoom-outs past the relay area limit', async () => {

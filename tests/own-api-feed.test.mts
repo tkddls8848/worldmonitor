@@ -13,7 +13,7 @@ const ENV = { LOCAL_API_ORIGIN: 'http://127.0.0.1:45678', LOCAL_API_TOKEN: 'loca
 const RSS = '<?xml version="1.0"?><rss version="2.0"><channel><title>MIIT (China)</title></channel></rss>';
 
 function withEnv(t: test.TestContext, values: Record<string, string | undefined>) {
-  const names = ['LOCAL_API_ORIGIN', 'LOCAL_API_TOKEN', 'WS_RELAY_URL'];
+  const names = ['LOCAL_API_ORIGIN', 'LOCAL_API_TOKEN', 'LOCAL_API_ORIGIN'];
   const previous = Object.fromEntries(names.map((name) => [name, process.env[name]]));
   for (const name of names) delete process.env[name];
   for (const [name, value] of Object.entries(values)) if (value !== undefined) process.env[name] = value;
@@ -61,7 +61,7 @@ test('without a local API the path feed fails without any request', async (t) =>
 });
 
 test('a path feed is never sent to the relay', async (t) => {
-  withEnv(t, { WS_RELAY_URL: 'https://relay.example.test' });
+  withEnv(t, { LOCAL_API_ORIGIN: 'https://relay.example.test' });
   const fetch = t.mock.method(globalThis, 'fetch', async () => new Response(RSS));
   const result = await fetchViaRelay('/api/miit-news', new AbortController().signal);
   assert.equal(result.attempted, false);

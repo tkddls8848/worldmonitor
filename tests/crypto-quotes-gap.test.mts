@@ -19,7 +19,7 @@ const ORIGINAL_ENV = {
   UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
   UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
   LOCAL_API_MODE: process.env.LOCAL_API_MODE,
-  WS_RELAY_URL: process.env.WS_RELAY_URL,
+  LOCAL_API_ORIGIN: process.env.LOCAL_API_ORIGIN,
   VERCEL_ENV: process.env.VERCEL_ENV,
 };
 const ORIGINAL_FETCH = globalThis.fetch;
@@ -47,7 +47,7 @@ afterEach(() => {
   restoreEnv('UPSTASH_REDIS_REST_URL');
   restoreEnv('UPSTASH_REDIS_REST_TOKEN');
   restoreEnv('LOCAL_API_MODE');
-  restoreEnv('WS_RELAY_URL');
+  restoreEnv('LOCAL_API_ORIGIN');
   restoreEnv('VERCEL_ENV');
   __resetKeyPrefixCacheForTests();
 });
@@ -266,7 +266,7 @@ describe('listCryptoQuotes parameterized gap resolution (#6306)', () => {
 
   it('a provider miss is relayed; relay resolves it', async () => {
     configureRemoteRedis();
-    process.env.WS_RELAY_URL = 'https://relay.example.test';
+    process.env.LOCAL_API_ORIGIN = 'https://relay.example.test';
     const { calls } = stubFetch({
       seed: SEED,
       provider: { coingecko: [], coinpaprika: [] },
@@ -466,7 +466,7 @@ describe('crypto quote provider boundary', () => {
   for (const redisFailure of ['seed', 'gap'] as const) {
     it(`${redisFailure} cache failure prevents provider and relay work`, async () => {
       configureRemoteRedis();
-      process.env.WS_RELAY_URL = 'https://relay.example.test';
+      process.env.LOCAL_API_ORIGIN = 'https://relay.example.test';
       const { calls, writes } = stubFetch({ seed: SEED, redisFailure });
       const warnings: unknown[][] = [];
       console.warn = (...args) => { warnings.push(args); };

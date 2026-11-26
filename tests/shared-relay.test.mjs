@@ -1,9 +1,10 @@
+import { getRelayBaseUrl, getRelayHeaders } from '../server/_shared/relay.ts';
 /**
  * Tests for server/_shared/relay.ts helper functions.
  * Uses dynamic import with environment variable stubbing.
  */
 
-import { describe, it, before, after } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -35,171 +36,21 @@ function withEnv(vars, fn) {
 
 // ─── Load relay module functions inline (avoids ESM import caching issues) ───
 
-function loadRelayFunctions() {
-  const src = readFileSync(resolve('server/_shared/relay.ts'), 'utf-8');
-
-  // Extract and evaluate the two functions using Function constructor
-  // to avoid module caching problems with env var tests
-  const CHROME_UA = 'WorldMonitor-Test-UA';
-
-  const getRelayBaseUrl = () => {
-    const relayUrl = process.env.WS_RELAY_URL;
-    if (!relayUrl) return null;
-    return relayUrl.replace(/^ws(s?):\/\//, 'http$1://').replace(/\/$/, '');
-  };
-
-  const getRelayHeaders = (extra = {}) => {
-    const headers = {
-      Accept: 'application/json',
-      'User-Agent': CHROME_UA,
-      ...extra,
-    };
-    const relaySecret = process.env.RELAY_SHARED_SECRET;
-    if (!relaySecret) return headers;
-    const relayHeader = (process.env.RELAY_AUTH_HEADER || 'x-relay-key').toLowerCase();
-    headers[relayHeader] = relaySecret;
-    if (relayHeader !== 'authorization') {
-      headers.Authorization = `Bearer ${relaySecret}`;
-    }
-    return headers;
-  };
-
-  // Verify source file still matches expected logic shape
-  assert.ok(src.includes('replace(/^ws(s?):\\/\\//'), 'relay.ts must use single-regex wss:// transform');
-  assert.ok(src.includes('...extra'), 'relay.ts must spread extra before auth headers');
-  assert.ok(src.includes("relayHeader !== 'authorization'"), 'relay.ts must guard against Authorization header collision');
-
-  return { getRelayBaseUrl, getRelayHeaders };
-}
-
-const { getRelayBaseUrl, getRelayHeaders } = loadRelayFunctions();
-
-// ─── getRelayBaseUrl tests ────────────────────────────────────────────────────
-
-describe('getRelayBaseUrl', () => {
-  it('returns null when WS_RELAY_URL is unset', () => {
-    withEnv({ WS_RELAY_URL: undefined }, () => {
-      assert.equal(getRelayBaseUrl(), null);
-    });
+describe('personal adapter helpers', () => {
+  it('reads the running API origin on every call', () => {
+    withEnv({LOCAL_API_ORIGIN: undefined}, () => assert.equal(getRelayBaseUrl(), null));
+    withEnv({LOCAL_API_ORIGIN: 'http://127.0.0.1:3001'}, () => assert.equal(getRelayBaseUrl(), 'http://127.0.0.1:3001/api/local-providers'));
   });
-
-  it('transforms wss:// to https://', () => {
-    withEnv({ WS_RELAY_URL: 'wss://relay.example.com' }, () => {
-      assert.equal(getRelayBaseUrl(), 'https://relay.example.com');
-    });
-  });
-
-  it('transforms ws:// to http://', () => {
-    withEnv({ WS_RELAY_URL: 'ws://relay.example.com' }, () => {
-      assert.equal(getRelayBaseUrl(), 'http://relay.example.com');
-    });
-  });
-
-  it('strips trailing slash', () => {
-    withEnv({ WS_RELAY_URL: 'wss://relay.example.com/' }, () => {
-      assert.equal(getRelayBaseUrl(), 'https://relay.example.com');
-    });
-  });
-
-  it('preserves https:// URLs unchanged', () => {
-    withEnv({ WS_RELAY_URL: 'https://relay.example.com' }, () => {
-      assert.equal(getRelayBaseUrl(), 'https://relay.example.com');
+  it('keeps provider headers and authenticates only the internal hop', () => {
+    withEnv({LOCAL_API_TOKEN: 'internal'}, () => {
+      const headers = getRelayHeaders({Accept: 'text/xml', 'User-Agent': 'test', 'x-worldmonitor-local-token': 'wrong'});
+      assert.equal(headers.Accept, 'text/xml');
+      assert.equal(headers['User-Agent'], 'test');
+      assert.equal(headers['x-worldmonitor-local-token'], 'internal');
+      assert.equal(headers.Authorization, undefined);
     });
   });
 });
-
-// ─── getRelayHeaders tests ────────────────────────────────────────────────────
-
-describe('getRelayHeaders — no auth', () => {
-  before(() => {
-    delete process.env.RELAY_SHARED_SECRET;
-    delete process.env.RELAY_AUTH_HEADER;
-  });
-
-  it('default Accept is application/json', () => {
-    const h = getRelayHeaders();
-    assert.equal(h['Accept'], 'application/json');
-  });
-
-  it('sets User-Agent', () => {
-    const h = getRelayHeaders();
-    assert.ok(h['User-Agent'], 'User-Agent should be set');
-  });
-
-  it('no Authorization header when secret unset', () => {
-    const h = getRelayHeaders();
-    assert.equal(h['Authorization'], undefined);
-  });
-
-  it('extra.Accept overrides default Accept', () => {
-    const h = getRelayHeaders({ Accept: 'application/rss+xml' });
-    assert.equal(h['Accept'], 'application/rss+xml');
-  });
-
-  it('extra spread adds custom headers', () => {
-    const h = getRelayHeaders({ 'X-Custom': 'val' });
-    assert.equal(h['X-Custom'], 'val');
-    assert.equal(h['Accept'], 'application/json');
-  });
-
-  it('aviation User-Agent override works', () => {
-    const h = getRelayHeaders({ 'User-Agent': 'WorldMonitor-Server/1.0' });
-    assert.equal(h['User-Agent'], 'WorldMonitor-Server/1.0');
-  });
-});
-
-describe('getRelayHeaders — with auth', () => {
-  before(() => {
-    process.env.RELAY_SHARED_SECRET = 'test-secret-abc';
-    delete process.env.RELAY_AUTH_HEADER;
-  });
-
-  after(() => {
-    delete process.env.RELAY_SHARED_SECRET;
-  });
-
-  it('sets Authorization: Bearer when secret present', () => {
-    const h = getRelayHeaders();
-    assert.equal(h['Authorization'], 'Bearer test-secret-abc');
-  });
-
-  it('sets default x-relay-key header', () => {
-    const h = getRelayHeaders();
-    assert.equal(h['x-relay-key'], 'test-secret-abc');
-  });
-
-  it('respects custom RELAY_AUTH_HEADER', () => {
-    withEnv({ RELAY_AUTH_HEADER: 'x-wm-relay' }, () => {
-      const h = getRelayHeaders();
-      assert.equal(h['x-wm-relay'], 'test-secret-abc');
-      assert.equal(h['x-relay-key'], undefined, 'default header should not be set when custom header used');
-    });
-  });
-
-  it('auth headers cannot be overridden via extra (auth set after spread)', () => {
-    const h = getRelayHeaders({ Authorization: 'Bearer FAKE' });
-    assert.equal(h['Authorization'], 'Bearer test-secret-abc', 'auth should not be overridable via extra');
-  });
-
-  it('Accept override still works with auth', () => {
-    const h = getRelayHeaders({ Accept: 'text/xml' });
-    assert.equal(h['Accept'], 'text/xml');
-    assert.equal(h['Authorization'], 'Bearer test-secret-abc');
-  });
-
-  it('RELAY_AUTH_HEADER=Authorization: sets only the direct secret, no Bearer duplicate', () => {
-    withEnv({ RELAY_AUTH_HEADER: 'Authorization' }, () => {
-      const h = getRelayHeaders();
-      // The relay checks req.headers['authorization'] as a direct value first.
-      // If we also set Authorization: Bearer secret, Undici merges both keys
-      // into "secret, Bearer secret" which fails the relay's direct-compare check.
-      assert.equal(h['authorization'], 'test-secret-abc', 'direct secret key must be set');
-      assert.equal(h['Authorization'], undefined, 'Bearer duplicate must NOT be set when relayHeader === authorization');
-    });
-  });
-});
-
-// ─── Structural tests ─────────────────────────────────────────────────────────
 
 describe('relay.ts — consumer import verification', () => {
   const consumers = [

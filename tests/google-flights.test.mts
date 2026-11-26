@@ -3,8 +3,8 @@ import { describe, it, beforeEach, afterEach } from 'node:test';
 
 const originalFetch = globalThis.fetch;
 
-process.env.WS_RELAY_URL = 'http://relay.test';
-process.env.RELAY_SHARED_SECRET = 'test-secret';
+process.env.LOCAL_API_ORIGIN = 'http://relay.test';
+process.env.LOCAL_API_TOKEN = 'test-secret';
 
 const { searchGoogleFlights } = await import('../server/worldmonitor/aviation/v1/search-google-flights.ts');
 const { searchGoogleDates } = await import('../server/worldmonitor/aviation/v1/search-google-dates.ts');

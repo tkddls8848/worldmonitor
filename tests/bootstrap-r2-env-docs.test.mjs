@@ -16,24 +16,10 @@ const PUBLISHER_ENV = ['R2_BOOTSTRAP_ACCESS_KEY_ID', 'R2_BOOTSTRAP_SECRET_ACCESS
 const EDGE_ENV = ['R2_BOOTSTRAP_READ_KEY_ID', 'R2_BOOTSTRAP_READ_SECRET'];
 
 describe('bootstrap R2 environment documentation', () => {
-  it('.env.example documents the live scoped credential names without values or VITE aliases', () => {
-    for (const name of [...SHARED_ENV, ...PUBLISHER_ENV, ...EDGE_ENV]) {
-      const matches = envExample.match(new RegExp(`^${name}=.*$`, 'gm')) ?? [];
-      assert.equal(matches.length, 1, `${name} must be documented exactly once`);
+  it('personal setup does not require hosted R2 credentials', () => {
+    for (const name of [...SHARED_ENV.filter(name => name.startsWith('R2_')), ...PUBLISHER_ENV, ...EDGE_ENV]) {
+      assert.doesNotMatch(envExample, new RegExp('^' + name + '=', 'm'));
     }
-
-    assert.match(envExample, /^R2_BOOTSTRAP_BUCKET=worldmonitor-bootstrap$/m);
-    assert.match(envExample, /^IRAN_EVENTS_ENABLED=false$/m);
-    for (const name of [...PUBLISHER_ENV, ...EDGE_ENV]) {
-      assert.match(envExample, new RegExp(`^${name}=$`, 'm'), `${name} must not contain a credential value`);
-      assert.doesNotMatch(envExample, new RegExp(`^VITE_${name}=`, 'm'), `${name} must never have a client-visible alias`);
-    }
-
-    assert.doesNotMatch(
-      envExample,
-      /^R2_BOOTSTRAP_READ_SECRET_ACCESS_KEY=/m,
-      'documentation must use the live edge secret name, not an invented alias',
-    );
   });
 
   it('runbook keeps publisher and edge credentials in separate production environments', () => {

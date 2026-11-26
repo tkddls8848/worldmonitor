@@ -72,7 +72,7 @@ type RelayHandler = (req: { url: string }, res: RelayResponse) => Promise<void>;
 export function loadGoogleFlightsRelay(provider: typeof fetch, outcomes: string[] = []) {
   const source = readFileSync(new URL('../../scripts/personal-providers.cjs', import.meta.url), 'utf8');
   const start = source.indexOf('// ─── Google Flights ─');
-  const end = source.indexOf('// ─── Widget Agent ─', start);
+  const end = source.indexOf('// ─── End Widget Agent ─', start);
   if (start < 0 || end < start) throw new Error('Google Flights section markers moved');
   return runInNewContext(`${source.slice(start, end)}\n({ search: handleGoogleFlightsSearch, dates: handleGoogleFlightsDates })`, {
     URL, Date, AbortSignal, Buffer, process: { env: {} }, console: { warn() {}, error() {} },
@@ -86,7 +86,7 @@ export function relayTransport(handler: RelayHandler, fallback: typeof fetch): t
     const url = new URL(String(input));
     if (url.hostname !== 'relay.example') return fallback(input, init);
     let status = 200; let headers: Record<string, string> = {}; let body = '';
-    await handler({ url: url.pathname + url.search }, { writeHead(code, value) { status = code; headers = value; }, end(value) { body = value; } });
+    await handler({ url: url.pathname.replace('/api/local-providers', '') + url.search }, { writeHead(code, value) { status = code; headers = value; }, end(value) { body = value; } });
     return new Response(body, { status, headers });
   }) as typeof fetch;
 }

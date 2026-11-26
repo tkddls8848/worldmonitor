@@ -242,33 +242,6 @@ test('public algorithms docs describe tracked leader names without overclaiming 
   assert.doesNotMatch(algorithmsDoc, /16 compound terms for world leaders/);
 });
 
-test('public data-source docs disclose Telegram source-bias metadata', () => {
-  const telegramConfig = JSON.parse(readRepo('data/telegram-channels.json')) as {
-    channels?: Record<string, Array<Record<string, unknown>>>;
-  };
-  const dataSourcesDoc = readRepo('docs/data-sources.mdx');
-  const fullChannels = telegramConfig.channels?.full || [];
-  const channelLabels = fullChannels.map((channel) => String(channel.label || channel.handle || ''));
-
-  assert.ok(
-    channelLabels.includes('IDF Official'),
-    `Telegram disclosure guard expects an official belligerent-party channel example. Available labels: ${channelLabels.join(', ')}`,
-  );
-  assert.ok(
-    channelLabels.includes('IRGC Official'),
-    `Telegram disclosure guard expects a state/belligerent official channel example. Available labels: ${channelLabels.join(', ')}`,
-  );
-  assert.ok(fullChannels.every((channel) => typeof channel.tier === 'number'));
-  assert.ok(fullChannels.every((channel) => !('stateAffiliation' in channel)));
-  assert.ok(fullChannels.every((channel) => !('propagandaRisk' in channel)));
-
-  assert.match(dataSourcesDoc, /official, state-affiliated, partisan, and belligerent-party channels/);
-  assert.match(dataSourcesDoc, /raw OSINT leads, not endorsed truth/);
-  assert.match(dataSourcesDoc, /additive `TELEGRAM_SOURCE_TIERS` overlay/);
-  assert.match(dataSourcesDoc, /honest mapping from the private operational `tier`/);
-  assert.match(dataSourcesDoc, /cannot leave stale tier keys in the RSS registry/);
-  assert.match(dataSourcesDoc, /anonymous OSINT aggregators stay specialty or aggregator tier/);
-});
 test('public algorithms docs describe flow_drop the way the detector actually works', () => {
   // #6422: the cross-stream table described `flow_drop` as "ETF flow estimates
   // reverse direction while price continues - Smart money divergence". The

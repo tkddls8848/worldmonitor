@@ -20,7 +20,7 @@ beforeEach(async () => {
   delete process.env.WORLDMONITOR_VALID_KEYS;
   delete process.env.VERCEL;
   delete process.env.VERCEL_ENV;
-  process.env.WS_RELAY_URL = 'https://relay.example';
+  process.env.LOCAL_API_ORIGIN = 'https://relay.example';
   delete process.env.LOCAL_API_MODE;
   session = 'wms_test-browser-session';
   redis = installRedis({});
@@ -79,7 +79,7 @@ test('valid leap day and supported aliases reach only the configured relay', asy
   await read({ startDate: '2028-02-29', endDate: '2028-02-29', maxStops: '0', cabinClass: 'business', departureWindow: '0-24', airlines: ['U2'] });
   const url = feeds()[0]!;
   assert.equal(url.origin, 'https://relay.example');
-  assert.equal(url.pathname, '/google-flights/search-dates');
+  assert.equal(url.pathname, '/api/local-providers/google-flights/search-dates');
   assert.equal(url.searchParams.get('max_stops'), 'NON_STOP');
   assert.equal(url.searchParams.get('cabin_class'), 'BUSINESS');
   await read({ startDate: '2028-02-29', endDate: '2028-02-29', maxStops: 'NON_STOP', cabinClass: 'BUSINESS', departureWindow: '0-24', airlines: ['U2'] });

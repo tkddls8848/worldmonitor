@@ -20,7 +20,7 @@ beforeEach(async () => {
   delete process.env.WORLDMONITOR_VALID_KEYS;
   delete process.env.VERCEL;
   delete process.env.VERCEL_ENV;
-  process.env.WS_RELAY_URL = 'https://relay.example';
+  process.env.LOCAL_API_ORIGIN = 'https://relay.example';
   delete process.env.LOCAL_API_MODE;
   session = 'wms_test-browser-session';
   redis = installRedis({});

@@ -30,7 +30,7 @@ test('OREF keeps origin and method checks ahead of canonical redirects', async (
 
 test('canonical OREF responses retain aggregation without a caller limiter', async () => {
   const saved = { ...process.env };
-  process.env.WS_RELAY_URL = 'https://relay.example';
+  process.env.LOCAL_API_ORIGIN = 'https://relay.example';
   process.env.UPSTASH_REDIS_REST_URL = 'https://oref-redis.example';
   process.env.UPSTASH_REDIS_REST_TOKEN = 'synthetic';
   const relayPaths = [];
@@ -50,10 +50,10 @@ test('canonical OREF responses retain aggregation without a caller limiter', asy
       assert.equal(response.status, 200);
       assert.match(response.headers.get('Cache-Control'), /^public,/);
     }
-    assert.deepEqual(relayPaths, ['/oref/alerts', '/oref/history']);
+    assert.deepEqual(relayPaths, ['/api/local-providers/oref/alerts', '/api/local-providers/oref/history']);
     assert.equal(rateCalls, 0); // personal fork: no per-caller limiter
   } finally {
-    for (const key of ['WS_RELAY_URL', 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN']) {
+    for (const key of ['LOCAL_API_ORIGIN', 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN']) {
       if (saved[key] === undefined) delete process.env[key]; else process.env[key] = saved[key];
     }
   }

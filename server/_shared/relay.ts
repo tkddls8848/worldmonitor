@@ -2,7 +2,7 @@ import { CHROME_UA } from './constants';
 
 export function getRelayBaseUrl(): string | null {
   const origin = process.env.LOCAL_API_ORIGIN;
-  return origin ? `${origin}/api/local-providers` : null;
+  return origin ? `${origin.replace(/\/$/, '')}/api/local-providers` : null;
 }
 
 export function getRelayHeaders(extra: Record<string, string> = {}): Record<string, string> {

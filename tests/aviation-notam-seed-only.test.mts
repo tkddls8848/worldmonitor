@@ -9,7 +9,7 @@ const originalEnv = { ...process.env };
 beforeEach(() => {
   const redis = installRedis({});
   process.env.ICAO_API_KEY = 'configured-but-not-for-public-reads';
-  process.env.WS_RELAY_URL = 'https://relay.example';
+  process.env.LOCAL_API_ORIGIN = 'https://relay.example';
   globalThis.fetch = (async (input, init) => {
     const url = new URL(String(input));
     if (url.hostname === 'redis.example') return redis.fetchImpl(input, init);

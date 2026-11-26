@@ -7,7 +7,7 @@
   "totalTolerancePct": 0.25,
   "totalToleranceBytes": 16384,
   "total": {
-    "raw": 338746
+    "raw": 337155
   },
   "chunks": {
     "i18n": {
@@ -15,25 +15,25 @@
       "files": 1
     },
     "main": {
-      "raw": 286286,
+      "raw": 284695,
       "files": 1
     }
   },
   "deferred": {
     "total": {
-      "raw": 1314476
+      "raw": 1381480
     },
     "chunks": {
       "App": {
-        "raw": 1094209,
+        "raw": 1252637,
         "files": 1
       },
       "dom-utils": {
-        "raw": 17412,
+        "raw": 17371,
         "files": 1
       },
       "panel-display-name": {
-        "raw": 191900,
+        "raw": 100517,
         "files": 1
       },
       "persistent-cache": {

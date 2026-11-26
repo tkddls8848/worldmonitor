@@ -304,12 +304,6 @@ Client (1 RPC call) → listFeedDigest → Redis check (digest:v1:{variant}:{lan
 
 这消除了每客户端的源扇出 — 1,000 个并发用户各自轮询 25 个源类别，本会在每个轮询周期产生 25,000 次边缘调用。通过服务端聚合，他们恰好产生 1 次（若摘要已缓存则为 0 次）。
 
-### X 新闻账号
-
-
-
-这是精选的公开新闻账号监测，不是通用关注列表。
-
 ### 实时网络摄像头监视网格
 
 来自 5 个地区地缘政治热点的 22 路 YouTube 直播流提供持续的视觉态势感知：
@@ -333,7 +327,7 @@ Client (1 RPC call) → listFeedDigest → Redis check (digest:v1:{variant}:{lan
 | 分级       | 描述                                | 示例                                    |
 | ---------- | ----------------------------------- | --------------------------------------- |
 | **Tier 1** | 通讯社和官方机构                    | Reuters、AP News、AFP、Pentagon             |
-| **Tier 2** | 主要媒体                            | BBC、CNN World、New York Times、The Guardian、Al Jazeera |
+| **Tier 2** | 主要媒体                            | BBC、CNN World、Guardian World、The Guardian、Al Jazeera |
 | **Tier 3** | 专业、地区和智库来源                | Defense One、Breaking Defense、The War Zone |
 | **Tier 4** | 聚合器和博客                        | Hacker News、The Verge、Yahoo Finance       |
 

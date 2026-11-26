@@ -2105,7 +2105,7 @@ describe('theater posture caching behavior', { concurrency: 1 }, () => {
     const { module, cleanup } = await importTheaterPosture();
     const restoreEnv = withEnv({
       LOCAL_API_MODE: 'sidecar',
-      WS_RELAY_URL: undefined,
+      LOCAL_API_ORIGIN: undefined,
       WINGBITS_API_KEY: undefined,
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
@@ -2151,7 +2151,7 @@ describe('theater posture caching behavior', { concurrency: 1 }, () => {
     const { module, cleanup } = await importTheaterPosture();
     const restoreEnv = withEnv({
       LOCAL_API_MODE: 'sidecar',
-      WS_RELAY_URL: undefined,
+      LOCAL_API_ORIGIN: undefined,
       WINGBITS_API_KEY: undefined,
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
@@ -2887,7 +2887,7 @@ export const RATE_LIMIT_DEGRADED_HEADERS = { 'X-RateLimit-Mode': 'degraded', 'Re
   it('serves a bbox from Wingbits without spending an OpenSky request', async () => {
     const { module, cleanup } = await importTrackAircraft();
     const restoreEnv = withEnv({
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       UPSTASH_REDIS_REST_URL: undefined,
       UPSTASH_REDIS_REST_TOKEN: undefined,
     });
@@ -2934,7 +2934,7 @@ export const RATE_LIMIT_DEGRADED_HEADERS = { 'X-RateLimit-Mode': 'degraded', 'Re
   it('treats an empty Wingbits response as authoritative and uses OpenSky only after Wingbits fails', async () => {
     const { module, cleanup } = await importTrackAircraft();
     const restoreEnv = withEnv({
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       UPSTASH_REDIS_REST_URL: undefined,
       UPSTASH_REDIS_REST_TOKEN: undefined,
     });
@@ -2991,7 +2991,7 @@ export const RATE_LIMIT_DEGRADED_HEADERS = { 'X-RateLimit-Mode': 'degraded', 'Re
   it('issues zero bbox provider calls for an icao24-only request with absent bbox params', async () => {
     const { module, cleanup } = await importTrackAircraft();
     const restoreEnv = withEnv({
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       UPSTASH_REDIS_REST_URL: undefined,
       UPSTASH_REDIS_REST_TOKEN: undefined,
     });
@@ -3047,7 +3047,7 @@ export const RATE_LIMIT_DEGRADED_HEADERS = { 'X-RateLimit-Mode': 'degraded', 'Re
   it('pins the worst-case timeout ladder for an icao24-only request to a single 8s tier', async () => {
     const { module, cleanup } = await importTrackAircraft();
     const restoreEnv = withEnv({
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       UPSTASH_REDIS_REST_URL: undefined,
       UPSTASH_REDIS_REST_TOKEN: undefined,
     });
@@ -3093,7 +3093,7 @@ export const RATE_LIMIT_DEGRADED_HEADERS = { 'X-RateLimit-Mode': 'degraded', 'Re
   it('returns positions from the icao24 tier when the relay responds with data', async () => {
     const { module, cleanup } = await importTrackAircraft();
     const restoreEnv = withEnv({
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       UPSTASH_REDIS_REST_URL: undefined,
       UPSTASH_REDIS_REST_TOKEN: undefined,
     });
@@ -3135,7 +3135,7 @@ export const RATE_LIMIT_DEGRADED_HEADERS = { 'X-RateLimit-Mode': 'degraded', 'Re
   it('keeps OpenSky in the product but excludes it from API-key responses', async () => {
     const { module, cleanup } = await importTrackAircraft();
     const restoreEnv = withEnv({
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       UPSTASH_REDIS_REST_URL: undefined,
       UPSTASH_REDIS_REST_TOKEN: undefined,
     });
@@ -3184,7 +3184,7 @@ export const RATE_LIMIT_DEGRADED_HEADERS = { 'X-RateLimit-Mode': 'degraded', 'Re
   it('treats an asymmetric bbox (equal lat, different lon) as non-degenerate', async () => {
     const { module, cleanup } = await importTrackAircraft();
     const restoreEnv = withEnv({
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       UPSTASH_REDIS_REST_URL: undefined,
       UPSTASH_REDIS_REST_TOKEN: undefined,
     });
@@ -3223,7 +3223,7 @@ export const RATE_LIMIT_DEGRADED_HEADERS = { 'X-RateLimit-Mode': 'degraded', 'Re
   it('keeps the all-provider failure path inside the edge response deadline', async () => {
     const { module, cleanup } = await importTrackAircraft();
     const restoreEnv = withEnv({
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       UPSTASH_REDIS_REST_URL: undefined,
       UPSTASH_REDIS_REST_TOKEN: undefined,
     });
@@ -3312,7 +3312,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -3403,7 +3403,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -3514,7 +3514,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -3564,7 +3564,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: undefined,
+      LOCAL_API_ORIGIN: undefined,
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -3610,7 +3610,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -3656,7 +3656,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -3716,7 +3716,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -3792,7 +3792,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -3886,7 +3886,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -3948,7 +3948,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -4011,7 +4011,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -4081,7 +4081,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -4138,7 +4138,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -4202,7 +4202,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -4265,7 +4265,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -4356,7 +4356,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -4424,7 +4424,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -4482,7 +4482,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
         UPSTASH_REDIS_REST_URL: 'https://redis.test',
         UPSTASH_REDIS_REST_TOKEN: 'token',
         LOCAL_API_MODE: undefined,
-        WS_RELAY_URL: 'wss://relay.test',
+        LOCAL_API_ORIGIN: 'https://relay.test',
         VERCEL_ENV: undefined,
         VERCEL_GIT_COMMIT_SHA: undefined,
       });
@@ -4553,7 +4553,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
         UPSTASH_REDIS_REST_URL: 'https://redis.test',
         UPSTASH_REDIS_REST_TOKEN: 'token',
         LOCAL_API_MODE: undefined,
-        WS_RELAY_URL: 'wss://relay.test',
+        LOCAL_API_ORIGIN: 'https://relay.test',
         VERCEL_ENV: undefined,
         VERCEL_GIT_COMMIT_SHA: undefined,
       });
@@ -4612,7 +4612,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -4678,7 +4678,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -4739,7 +4739,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: 'wss://relay.test',
+      LOCAL_API_ORIGIN: 'https://relay.test',
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -4776,7 +4776,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
     const { module, cleanup } = await importListMilitaryFlights();
     const restoreEnv = withEnv({
       LOCAL_API_MODE: 'sidecar',
-      WS_RELAY_URL: undefined,
+      LOCAL_API_ORIGIN: undefined,
       UPSTASH_REDIS_REST_URL: undefined,
       UPSTASH_REDIS_REST_TOKEN: undefined,
     });
@@ -4827,7 +4827,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
     const { module, cleanup } = await importListMilitaryFlights();
     const restoreEnv = withEnv({
       LOCAL_API_MODE: 'sidecar',
-      WS_RELAY_URL: undefined,
+      LOCAL_API_ORIGIN: undefined,
       UPSTASH_REDIS_REST_URL: undefined,
       UPSTASH_REDIS_REST_TOKEN: undefined,
     });
@@ -4876,7 +4876,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: undefined,
+      LOCAL_API_ORIGIN: undefined,
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -4926,7 +4926,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: 'sidecar',
-      WS_RELAY_URL: undefined,
+      LOCAL_API_ORIGIN: undefined,
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -5026,7 +5026,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: undefined,
+      LOCAL_API_ORIGIN: undefined,
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -5077,7 +5077,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: undefined,
+      LOCAL_API_ORIGIN: undefined,
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -5135,7 +5135,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: undefined,
+      LOCAL_API_ORIGIN: undefined,
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });
@@ -5210,7 +5210,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: undefined,
       UPSTASH_REDIS_REST_TOKEN: undefined,
       LOCAL_API_MODE: 'sidecar',
-      WS_RELAY_URL: undefined,
+      LOCAL_API_ORIGIN: undefined,
     });
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async () => {
@@ -5242,7 +5242,7 @@ describe('military flights bbox behavior', { concurrency: 1 }, () => {
       UPSTASH_REDIS_REST_URL: 'https://redis.test',
       UPSTASH_REDIS_REST_TOKEN: 'token',
       LOCAL_API_MODE: undefined,
-      WS_RELAY_URL: undefined,
+      LOCAL_API_ORIGIN: undefined,
       VERCEL_ENV: undefined,
       VERCEL_GIT_COMMIT_SHA: undefined,
     });

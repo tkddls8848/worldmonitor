@@ -7,7 +7,7 @@ import { CHOKEPOINTS, getChokepointStatus } from '../server/worldmonitor/supply-
 
 const originalFetch = globalThis.fetch;
 const originalDateNow = Date.now;
-const ENV_KEYS = ['UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN', 'WS_RELAY_URL'] as const;
+const ENV_KEYS = ['UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN', 'LOCAL_API_ORIGIN'] as const;
 const originalEnv = new Map<string, string | undefined>();
 
 function redisHarness(externalFetch: (url: string) => Promise<Response>) {
@@ -53,7 +53,7 @@ beforeEach(() => {
   for (const key of ENV_KEYS) originalEnv.set(key, process.env[key]);
   process.env.UPSTASH_REDIS_REST_URL = 'https://redis.test';
   process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
-  process.env.WS_RELAY_URL = 'https://relay.test';
+  process.env.LOCAL_API_ORIGIN = 'https://relay.test';
 });
 
 afterEach(() => {
@@ -214,7 +214,7 @@ describe('chokepoint source availability', () => {
     Date.now = () => Date.parse('2026-09-02T00:00:00.000Z');
     const harness = redisHarness(async (url) => {
       if (url.includes('msi.nga.mil')) return new Response('unavailable', { status: 503 });
-      if (url.startsWith('https://relay.test/ais/snapshot')) {
+      if (url.startsWith('https://relay.test/api/local-providers/ais/snapshot')) {
         return Response.json({
           density: [],
           disruptions: [{
@@ -265,7 +265,7 @@ describe('chokepoint source availability', () => {
   it('reports global source outages as incomplete health coverage', async () => {
     const harness = redisHarness(async (url) => {
       if (url.includes('msi.nga.mil')) return new Response('unavailable', { status: 503 });
-      if (url.startsWith('https://relay.test/ais/snapshot')) {
+      if (url.startsWith('https://relay.test/api/local-providers/ais/snapshot')) {
         return Response.json({
           density: [],
           disruptions: [],
@@ -309,7 +309,7 @@ describe('chokepoint source availability', () => {
           }],
         });
       }
-      if (url.startsWith('https://relay.test/ais/snapshot')) {
+      if (url.startsWith('https://relay.test/api/local-providers/ais/snapshot')) {
         return Response.json({
           density: [],
           disruptions: [],
@@ -345,7 +345,7 @@ describe('chokepoint source availability', () => {
         return new Response(await readFile(new URL(url.slice(url.lastIndexOf('/') + 1), memoDir), 'utf8'));
       }
       if (url.includes('msi.nga.mil')) return new Response('MSI IS CURRENTLY UNDER MAINTENANCE', { status: 503 });
-      if (url.startsWith('https://relay.test/ais/snapshot')) {
+      if (url.startsWith('https://relay.test/api/local-providers/ais/snapshot')) {
         return Response.json({
           density: [],
           disruptions: [],
@@ -372,7 +372,7 @@ describe('chokepoint source availability', () => {
     Date.now = () => Date.parse('2026-03-05T00:00:00.000Z');
     const harness = redisHarness(async (url) => {
       if (url.includes('msi.nga.mil')) return Response.json([]);
-      if (url.startsWith('https://relay.test/ais/snapshot')) {
+      if (url.startsWith('https://relay.test/api/local-providers/ais/snapshot')) {
         return Response.json({
           density: [],
           disruptions: [],
@@ -431,7 +431,7 @@ describe('chokepoint source availability', () => {
   it('maps the IMF PortWatch official figures onto the wire and carries absence as empty, not as a flag', async () => {
     const harness = redisHarness(async (url) => {
       if (url.includes('msi.nga.mil')) return Response.json([]);
-      if (url.startsWith('https://relay.test/ais/snapshot')) return Response.json({
+      if (url.startsWith('https://relay.test/api/local-providers/ais/snapshot')) return Response.json({
         density: [], disruptions: [], snapshotAt: Date.now(), status: { connected: true, vessels: 10, messages: 20 },
       });
       throw new Error(`unexpected fetch: ${url}`);
@@ -503,7 +503,7 @@ describe('chokepoint source availability', () => {
     const original = capture.body.chokepoints.find((cp: { id: string }) => cp.id === 'hormuz_strait');
     const harness = redisHarness(async (url) => {
       if (url.includes('msi.nga.mil')) return Response.json([]);
-      if (url.startsWith('https://relay.test/ais/snapshot')) return Response.json({
+      if (url.startsWith('https://relay.test/api/local-providers/ais/snapshot')) return Response.json({
         density: [], disruptions: [], snapshotAt: Date.now(), status: { connected: true, vessels: 10, messages: 20 },
       });
       throw new Error(`unexpected fetch: ${url}`);
