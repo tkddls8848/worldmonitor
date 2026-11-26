@@ -39,9 +39,6 @@ async function renderRows(headlines, sourceProvenance) {
     const panel = harness.createPanel();
     panel.show('China', 'CN', null, EMPTY_SIGNALS);
     panel.updateNews(headlines);
-    for (let attempt = 0; attempt < 25 && harness.getWidgets().length === 0; attempt += 1) {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    }
     return [...harness.getPanelRoot().querySelectorAll('.cdp-news-entry')].map((entry) => ({
       meta: entry.querySelector('.cdp-news-meta')?.textContent ?? '',
       metaTitle: entry.querySelector('.cdp-news-meta')?.getAttribute('title') ?? null,

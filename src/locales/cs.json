@@ -4616,7 +4616,7 @@
     "window": "Období",
     "days": "{{days}} dní",
     "observed": "{{count}} snímků za {{days}} dní",
-    "legend": "CII (jantarová): vyšší hodnota znamená větší nestabilitu. Odolnost (zelená): vyšší hodnota znamená větší kapacitu. Body označují dny s vybranými titulky.",
+    "legend": "CII (jantarová): vyšší hodnota znamená větší nestabilitu. Body označují dny s vybranými titulky.",
     "chart": "CII",
     "selectDate": "{{date}}, {{count}} vybraných titulků",
     "empty": "V tomto období nejsou denní snímky. Historie se hromadí po aktivaci.",

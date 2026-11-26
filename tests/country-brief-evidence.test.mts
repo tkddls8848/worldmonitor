@@ -6,7 +6,6 @@ import {
   COUNTRY_BRIEF_ADVISORY_LABELS,
   EVIDENCE_MAX_AGE_MS,
   FORECAST_SCORECARD_URL,
-  RESILIENCE_DIMENSION_LABELS,
   chokepointTrackerSlug,
   countryAirportNotamsFrom,
   countryImageryFlagsFrom,

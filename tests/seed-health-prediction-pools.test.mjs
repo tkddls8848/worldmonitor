@@ -8,24 +8,16 @@ const originalEnv = {
   UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
   UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
   WORLDMONITOR_VALID_KEYS: process.env.WORLDMONITOR_VALID_KEYS,
-  RESILIENCE_PILLAR_COMBINE_ENABLED: process.env.RESILIENCE_PILLAR_COMBINE_ENABLED,
-  RESILIENCE_SCHEMA_V2_ENABLED: process.env.RESILIENCE_SCHEMA_V2_ENABLED,
 };
 
 process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example.test';
 process.env.UPSTASH_REDIS_REST_TOKEN = 'token';
 process.env.WORLDMONITOR_VALID_KEYS = 'test-key';
-process.env.RESILIENCE_PILLAR_COMBINE_ENABLED = 'true';
-process.env.RESILIENCE_SCHEMA_V2_ENABLED = 'true';
 
 const { default: handler } = await import('../api/seed-health.js');
 
 const PREDICTION_META_KEY = 'seed-meta:prediction:markets';
 const PORTWATCH_META_KEY = 'seed-meta:supply_chain:portwatch-ports';
-const RESILIENCE_INTERVAL_PROBE_KEY = 'resilience:intervals:v13:US';
-const RESILIENCE_INTERVAL_METHODOLOGY = 'weight-perturbation-sensitivity-v3';
-const EDUCATION_META_KEY = 'seed-meta:resilience:education-attainment';
-const EDUCATION_DATA_KEY = 'resilience:education-attainment:v1';
 const CHINA_DECISION_META_KEY = 'seed-meta:intelligence:china-decision-signals';
 const CHINA_DECISION_GROUP_IDS = [
   'macro',
@@ -49,8 +41,6 @@ before(() => {
   process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example.test';
   process.env.UPSTASH_REDIS_REST_TOKEN = 'token';
   process.env.WORLDMONITOR_VALID_KEYS = 'test-key';
-  process.env.RESILIENCE_PILLAR_COMBINE_ENABLED = 'true';
-  process.env.RESILIENCE_SCHEMA_V2_ENABLED = 'true';
 });
 
 after(() => {
@@ -76,28 +66,6 @@ function installSeedHealthPipelineMock(poolCounts, { fetchedAt = Date.now() } = 
             ...(poolCounts === undefined ? {} : { poolCounts }),
           }),
         };
-      }
-      if (key === RESILIENCE_INTERVAL_PROBE_KEY) {
-        return {
-          result: JSON.stringify({
-            p05: 65.2,
-            p95: 72.8,
-            _formula: 'pc',
-            _educationState: 'education-on',
-            methodology: RESILIENCE_INTERVAL_METHODOLOGY,
-            computedAt: '2026-06-11T12:00:00.000Z',
-          }),
-        };
-      }
-      if (key === EDUCATION_META_KEY) {
-        return { result: JSON.stringify({
-          fetchedAt,
-          recordCount: sovereignStatus.entries.length,
-          rankableRecordCount: sovereignStatus.entries.length,
-        }) };
-      }
-      if (key === EDUCATION_DATA_KEY) {
-        return { result: JSON.stringify(educationPayload()) };
       }
       if (key === PORTWATCH_META_KEY) {
         return {

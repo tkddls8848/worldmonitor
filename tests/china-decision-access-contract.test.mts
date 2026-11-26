@@ -16,20 +16,11 @@ const CHINA_META_KEY = 'seed-meta:intelligence:china-decision-signals';
 const PORTWATCH_META_KEY = 'seed-meta:supply_chain:portwatch-ports';
 const PREDICTION_META_KEY = 'seed-meta:prediction:markets';
 const OPERATOR_KEY = 'china-decision-test-operator-key';
-const RESILIENCE_INTERVAL_PROBE_KEY = 'resilience:intervals:v13:US';
-const RESILIENCE_INTERVAL_METHODOLOGY = 'weight-perturbation-sensitivity-v3';
-const RESILIENCE_INTERVAL_SOURCE_VERSION =
-  `resilience-intervals:resilience:intervals:v13:${RESILIENCE_INTERVAL_METHODOLOGY}`;
-const EDUCATION_META_KEY = 'seed-meta:resilience:education-attainment';
-const EDUCATION_DATA_KEY = 'resilience:education-attainment:v1';
 const originalFetch = globalThis.fetch;
 const originalEnv = {
   UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
   UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
   WORLDMONITOR_VALID_KEYS: process.env.WORLDMONITOR_VALID_KEYS,
-  RESILIENCE_PILLAR_COMBINE_ENABLED: process.env.RESILIENCE_PILLAR_COMBINE_ENABLED,
-  RESILIENCE_SCHEMA_V2_ENABLED: process.env.RESILIENCE_SCHEMA_V2_ENABLED,
-  RESILIENCE_EDUCATION_ENABLED: process.env.RESILIENCE_EDUCATION_ENABLED,
 };
 
 afterEach(() => {
@@ -52,49 +43,12 @@ function installSeedHealthPipelineMock(chinaMeta: ChinaMeta) {
   process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example.test';
   process.env.UPSTASH_REDIS_REST_TOKEN = 'redis-token';
   process.env.WORLDMONITOR_VALID_KEYS = OPERATOR_KEY;
-  process.env.RESILIENCE_PILLAR_COMBINE_ENABLED = 'false';
-  process.env.RESILIENCE_SCHEMA_V2_ENABLED = 'true';
-  process.env.RESILIENCE_EDUCATION_ENABLED = 'true';
 
   globalThis.fetch = async (_url, init) => {
     const commands = JSON.parse(String(init?.body));
     const results = commands.map(([operation, key]: [string, string]) => {
       if (operation === 'EXISTS') return { result: 0 };
       assert.equal(operation, 'GET');
-      if (key === RESILIENCE_INTERVAL_PROBE_KEY) {
-        return {
-          result: JSON.stringify({
-            p05: 65.2,
-            p95: 72.8,
-            _formula: 'd6',
-            _educationState: 'education-on',
-            methodology: RESILIENCE_INTERVAL_METHODOLOGY,
-            computedAt: new Date(chinaMeta.fetchedAt).toISOString(),
-          }),
-        };
-      }
-      if (key === EDUCATION_META_KEY) {
-        return {
-          result: JSON.stringify({
-            fetchedAt: chinaMeta.fetchedAt,
-            recordCount: sovereignStatus.entries.length,
-            rankableRecordCount: sovereignStatus.entries.length,
-            sourceVersion: 'test',
-          }),
-        };
-      }
-      if (key === EDUCATION_DATA_KEY) {
-        return {
-          result: JSON.stringify({
-            countries: Object.fromEntries(
-              sovereignStatus.entries.map((entry, index) => [
-                entry.iso2,
-                { value: 35 + (index % 45), year: 2024 },
-              ]),
-            ),
-          }),
-        };
-      }
       if (key === CHINA_META_KEY) return { result: JSON.stringify(chinaMeta) };
       if (key === PORTWATCH_META_KEY) {
         return {
@@ -134,9 +88,7 @@ function installSeedHealthPipelineMock(chinaMeta: ChinaMeta) {
           recordCount: 1_000_000,
           rankableRecordCount: 1_000_000,
           redistributionPolicyVersion: 1,
-          sourceVersion: key === 'seed-meta:resilience:intervals'
-            ? RESILIENCE_INTERVAL_SOURCE_VERSION
-            : 'test',
+          sourceVersion: 'test',
           ...(key === CII_RISK_SCORES_META_KEY ? { inputs: healthyCiiInputs() } : {}),
         }),
       };

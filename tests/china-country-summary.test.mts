@@ -111,19 +111,11 @@ const summary = {
   ],
 };
 
-async function waitForResilienceWidget(harness: Awaited<ReturnType<typeof createCountryDeepDivePanelHarness>>): Promise<void> {
-  for (let attempt = 0; attempt < 25; attempt += 1) {
-    if (harness.getPanelRoot()?.querySelector('.resilience-widget-stub')) return;
-    await new Promise((resolve) => setTimeout(resolve, 0));
-  }
-}
-
 test('China summary is scoped to China, exposes per-group states, and safely attributes sources', async () => {
   const harness = await createCountryDeepDivePanelHarness();
   try {
     const panel = harness.createPanel();
     panel.show('China', 'CN', null, emptySignals);
-    await waitForResilienceWidget(harness);
 
     const card = harness.getPanelRoot()?.querySelector<HTMLElement>('.cdp-china-summary');
     assert.ok(card, 'China should receive the dedicated country summary');
@@ -213,7 +205,6 @@ test('China summary is scoped to China, exposes per-group states, and safely att
     );
 
     panel.show('Japan', 'JP', null, emptySignals);
-    await waitForResilienceWidget(harness);
     assert.equal(harness.getPanelRoot()?.querySelector('.cdp-china-summary'), null, 'the summary clears when the country changes');
 
     panel.updateChinaCountrySummary(summary);
@@ -224,7 +215,6 @@ test('China summary is scoped to China, exposes per-group states, and safely att
     );
 
     panel.show('China', 'cn', null, emptySignals);
-    await waitForResilienceWidget(harness);
     panel.updateChinaCountrySummary(summary);
     assert.match(
       harness.getPanelRoot()?.querySelector('.cdp-china-summary')?.textContent ?? '',

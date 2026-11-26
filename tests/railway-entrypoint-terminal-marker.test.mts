@@ -118,8 +118,6 @@ const NOT_A_RAILWAY_SERVICE = new Set([
   'seed-recall-benchmark.mjs',
   'seed-regional-briefs.mjs',
   'seed-regional-snapshots.mjs',
-  'seed-resilience-scores.mjs',
-  'seed-resilience-static.mjs',
 ]);
 
 function collectEntryPoints(): { path: string; src: string }[] {

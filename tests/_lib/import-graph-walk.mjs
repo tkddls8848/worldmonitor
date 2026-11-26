@@ -1,8 +1,7 @@
 // Shared static import-graph machinery for the Dockerfile/container guard
 // tests (#5231 review follow-up). Single home for the comment-stripping
 // tokenizer, edge extraction, resolution, Dockerfile COPY parsing, and BFS
-// walks that were previously hand-copied across three guards:
-//   - tests/resilience-validation-import-graph.test.mjs (walkContainerGraph)
+// walks that were previously hand-copied across these guards:
 //   - tests/dockerfile-relay-imports.test.mjs (collectRelativeImports/resolveNodeRelative)
 //   - tests/dockerfile-digest-notifications-imports.test.mjs (same scanner, copied)
 // A fix to an extraction edge case lands here once and covers all three.

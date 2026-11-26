@@ -4550,7 +4550,7 @@
     "window": "Khoảng thời gian",
     "days": "{{days}} ngày",
     "observed": "{{count}} ảnh chụp trong {{days}} ngày",
-    "legend": "CII (hổ phách): cao hơn nghĩa là bất ổn hơn. Khả năng chống chịu (xanh lá): cao hơn nghĩa là năng lực lớn hơn. Các chấm đánh dấu ngày có tiêu đề được chọn.",
+    "legend": "CII (hổ phách): cao hơn nghĩa là bất ổn hơn. Các chấm đánh dấu ngày có tiêu đề được chọn.",
     "chart": "CII",
     "selectDate": "{{date}}, {{count}} tiêu đề được chọn",
     "empty": "Không có ảnh chụp hằng ngày trong khoảng này. Lịch sử được tích lũy sau khi kích hoạt.",

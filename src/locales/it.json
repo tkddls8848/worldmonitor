@@ -4594,7 +4594,7 @@
     "window": "Periodo",
     "days": "{{days}} giorni",
     "observed": "{{count}} istantanee in {{days}} giorni",
-    "legend": "CII (ambra): valori più alti indicano maggiore instabilità. Resilienza (verde): valori più alti indicano maggiore capacità. I punti indicano i giorni con titoli selezionati.",
+    "legend": "CII (ambra): valori più alti indicano maggiore instabilità. I punti indicano i giorni con titoli selezionati.",
     "chart": "CII",
     "selectDate": "{{date}}, {{count}} titoli selezionati",
     "empty": "Nessuna istantanea giornaliera in questo periodo. Lo storico si accumula dopo l’attivazione.",

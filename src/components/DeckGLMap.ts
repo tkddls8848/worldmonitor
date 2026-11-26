@@ -6897,11 +6897,10 @@ export class DeckGLMap {
   }
 
   public setLayers(layers: MapLayers): void {
-    const next = layers;
     const prevRadar = this.state.layers.weather;
     const prevCyber = this.state.layers.cyberThreats;
     const prevBases = this.state.layers.bases;
-    this.state.layers = next;
+    this.state.layers = { ...layers };
     if (!this.state.layers.military) this.clearFlightTrails();
     this.manageAircraftTimer(this.state.layers.flights);
     if (this.state.layers.bases && !prevBases) this.debouncedFetchBases();

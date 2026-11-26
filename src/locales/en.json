@@ -5,7 +5,7 @@
     "window": "Window",
     "days": "{{days}} days",
     "observed": "{{count}} snapshots in {{days}} days",
-    "legend": "CII (amber): higher means more instability. Resilience (green): higher means more capacity. Dots mark days with selected headlines.",
+    "legend": "CII (amber): higher means more instability. Dots mark days with selected headlines.",
     "chart": "Daily CII scores. Gaps and formula changes break the line.",
     "selectDate": "{{date}}, {{count}} selected headlines",
     "empty": "No daily snapshots in this window. History accumulates after activation.",

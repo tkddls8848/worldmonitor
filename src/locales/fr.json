@@ -4594,7 +4594,7 @@
     "window": "Période",
     "days": "{{days}} jours",
     "observed": "{{count}} instantanés sur {{days}} jours",
-    "legend": "CII (ambre) : une valeur élevée indique plus d’instabilité. Résilience (vert) : une valeur élevée indique plus de capacité. Les points indiquent les jours avec des titres sélectionnés.",
+    "legend": "CII (ambre) : une valeur élevée indique plus d’instabilité. Les points indiquent les jours avec des titres sélectionnés.",
     "chart": "Scores CII quotidiens. Les lacunes et changements de formule interrompent la courbe.",
     "selectDate": "{{date}}, {{count}} titres sélectionnés",
     "empty": "Aucun instantané quotidien sur cette période. L’historique s’accumule après l’activation.",

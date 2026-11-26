@@ -109,10 +109,6 @@ describe('CountryDeepDivePanel source provenance', () => {
           pubDate: '2026-07-24T08:00:00.000Z',
         },
       ]);
-      for (let attempt = 0; attempt < 25 && harness.getWidgets().length === 0; attempt += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 0));
-      }
-      assert.equal(harness.getWidgets().length, 1, 'expected the lazy widget load to settle before cleanup');
 
       const rows = [...harness.getPanelRoot().querySelectorAll('.cdp-news-item')];
       assert.equal(rows.length, 5);
@@ -199,9 +195,6 @@ describe('CountryDeepDivePanel source provenance', () => {
       assert.match(section.textContent, /countryBrief.noFacts/);
       assert.doesNotMatch(section.textContent, /Wikidata|Wikipedia|Reference years/);
     } finally {
-      for (let attempt = 0; attempt < 25 && harness.getWidgets().length === 0; attempt += 1) {
-        await new Promise(resolve => setTimeout(resolve, 0));
-      }
       harness.cleanup();
     }
   });
@@ -230,9 +223,6 @@ describe('CountryDeepDivePanel source provenance', () => {
       assert.equal(section.querySelectorAll('.cdp-pro-metric-value').length, 0);
       assert.doesNotMatch(section.textContent, /OFAC|Active|Configured dataset/);
     } finally {
-      for (let attempt = 0; attempt < 25 && harness.getWidgets().length === 0; attempt += 1) {
-        await new Promise(resolve => setTimeout(resolve, 0));
-      }
       harness.cleanup();
     }
   });
@@ -269,9 +259,6 @@ describe('CountryDeepDivePanel source provenance', () => {
         assert.doesNotMatch(section.textContent, /Fixture access required/);
       }
     } finally {
-      for (let attempt = 0; attempt < 25 && harness.getWidgets().length === 0; attempt += 1) {
-        await new Promise(resolve => setTimeout(resolve, 0));
-      }
       harness.cleanup();
     }
   });

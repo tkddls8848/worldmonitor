@@ -33,8 +33,6 @@ const { __testing__ } = await import('../api/health.js');
 const DOMAIN = 'intelligence:market-implications';
 const META_KEY = 'seed-meta:intelligence:market-implications';
 const PREDICTION_META_KEY = 'seed-meta:prediction:markets';
-const RESILIENCE_INTERVAL_PROBE_KEY = 'resilience:intervals:v13:US';
-const RESILIENCE_INTERVAL_METHODOLOGY = 'weight-perturbation-sensitivity-v3';
 const TEST_NOW = Date.parse('2026-08-06T09:00:00.000Z');
 const ONE_MIN_MS = 60_000;
 
@@ -80,17 +78,6 @@ function installPipelineMock(marketImplicationsMeta, now = TEST_NOW) {
             fetchedAt: now,
             recordCount: 38,
             poolCounts: { geopolitical: 18, tech: 12, finance: 8 },
-          }),
-        };
-      }
-      if (key === RESILIENCE_INTERVAL_PROBE_KEY) {
-        return {
-          result: JSON.stringify({
-            p05: 65.2,
-            p95: 72.8,
-            _formula: 'pc',
-            methodology: RESILIENCE_INTERVAL_METHODOLOGY,
-            computedAt: '2026-06-11T12:00:00.000Z',
           }),
         };
       }

@@ -535,10 +535,6 @@ describe('CountryDeepDivePanel product imports section', () => {
     const panel = harness.createPanel();
     try {
       panel.show('United States', 'US', null, {});
-      for (let attempt = 0; attempt < 25 && harness.getWidgets().length === 0; attempt += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 0));
-      }
-      assert.equal(harness.getWidgets().length, 1, 'lazy widgets must settle before cleanup');
       const card = harness.getPanelRoot().querySelector('.cdp-grid').querySelector('#cdp-section-products');
       assert.ok(card, 'Product Imports must be mounted in the brief grid');
       assert.ok(card.classList.contains('cdp-card'));

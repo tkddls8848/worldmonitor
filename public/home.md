@@ -26,7 +26,7 @@ World Monitor is useful when a question depends on more than one live signal. Ty
 - Which sources support a country-risk assessment, and how fresh are those observations?
 - What should an analyst monitor next as an event develops?
 
-The dashboard supports these tasks with country briefs, conflict tracking, resilience and instability views, market and macro data, shipping intelligence, satellite and aviation layers, cyber-threat signals, weather and natural-disaster alerts, forecasts, and source-attributed news.
+The dashboard supports these tasks with country briefs, conflict tracking, instability views, market and macro data, shipping intelligence, satellite and aviation layers, cyber-threat signals, weather and natural-disaster alerts, forecasts, and source-attributed news.
 
 ## How the correlation surface works
 
@@ -42,7 +42,7 @@ Users can compare these parts on one map and then open the underlying panels for
 
 - A global map with a shared catalog of conflict, military, infrastructure, environment, transport, and market layers
 - Curated news and OSINT feeds grouped by topic and product variant
-- CII v14 for 31 Tier-1 countries, and global live conflict tracking
+- CII v14 for 31 Tier-1 countries and global live conflict tracking
 - Market quotes, sector heatmaps, macro indicators, and commodity context
 - Shipping chokepoints, ports, and vessel-transit intelligence
 - Aircraft, satellites, GPS interference, submarine cables, energy assets, and datacenters

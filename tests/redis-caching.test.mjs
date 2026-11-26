@@ -2222,8 +2222,6 @@ describe('country intel brief caching behavior', { concurrency: 1 }, () => {
       './_shared': resolve(root, 'server/worldmonitor/intelligence/v1/_shared.ts'),
       './_country-brief-context': resolve(root, 'server/worldmonitor/intelligence/v1/_country-brief-context.ts'),
       './_energy-import-dependency': resolve(root, 'server/worldmonitor/intelligence/v1/_energy-import-dependency.ts'),
-      '../../resilience/v1/_energy-import-dependency-source': resolve(root, 'server/worldmonitor/resilience/v1/_energy-import-dependency-source.ts'),
-      '../../resilience/v1/_indicator-source-policy': resolve(root, 'server/worldmonitor/resilience/v1/_indicator-source-policy.ts'),
       '../../../_shared/constants': resolve(root, 'server/_shared/constants.ts'),
       '../../../_shared/redis': resolve(root, 'server/_shared/redis.ts'),
       '../../../_shared/llm-health': resolve(root, 'tests/helpers/llm-health-stub.ts'),

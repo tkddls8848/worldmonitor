@@ -44,7 +44,7 @@ describe('agent-mode view (/?mode=agent)', () => {
       assert.match(view.quickstart[key], /^curl /, `quickstart.${key} must be a runnable curl line`);
     }
     // The sandbox quickstart must reference a fixture that actually ships.
-    assert.doesNotThrow(() => readFileSync(join(ROOT, 'public/sandbox/get-resilience-score.json')));
+    assert.doesNotThrow(() => readFileSync(join(ROOT, 'public/sandbox/get-country-risk.json')));
   });
 
   it('advertises every official SDK ecosystem with an install command', () => {

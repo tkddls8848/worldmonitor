@@ -4616,7 +4616,7 @@
     "window": "Okres",
     "days": "{{days}} dni",
     "observed": "{{count}} zapisów w ciągu {{days}} dni",
-    "legend": "CII (bursztynowy): wyższa wartość oznacza większą niestabilność. Odporność (zielony): wyższa wartość oznacza większy potencjał. Punkty oznaczają dni z wybranymi nagłówkami.",
+    "legend": "CII (bursztynowy): wyższa wartość oznacza większą niestabilność. Punkty oznaczają dni z wybranymi nagłówkami.",
     "chart": "CII",
     "selectDate": "{{date}}, {{count}} wybranych nagłówków",
     "empty": "Brak dziennych zapisów w tym okresie. Historia gromadzi się po aktywacji.",

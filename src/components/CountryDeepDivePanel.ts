@@ -3749,6 +3749,7 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
         return;
       }
       const { getFoodStocks } = await import('@/services/supply-chain');
+      if (!stillCurrent()) return;
       // allSettled, not all: the WORLD lookup is a shared comparison column, and
       // a gateway-level rejection on it alone (billing verification, rate limit,
       // Clerk token race) must not discard country data that arrived fine.

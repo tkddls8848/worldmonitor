@@ -22,7 +22,6 @@ const STALE_META_KEYS = new Set([
   'seed-meta:military-surges',
 ]);
 const MISSING_META_KEYS = new Set();
-const RESILIENCE_INTERVAL_PROBE_KEY = 'resilience:intervals:v13:US';
 const seedHealthSource = readFileSync(resolve(import.meta.dirname, '../api/seed-health.js'), 'utf8');
 const healthSource = readFileSync(resolve(import.meta.dirname, '../api/health.js'), 'utf8');
 
@@ -70,17 +69,6 @@ function installSeedHealthPipelineMock({
         };
       }
 
-      if (key === RESILIENCE_INTERVAL_PROBE_KEY) {
-        return {
-          result: JSON.stringify({
-            p05: 65.2,
-            p95: 72.8,
-            _formula: 'pc',
-            methodology: 'weight-perturbation-sensitivity-v3',
-            computedAt: '2026-08-03T00:00:00.000Z',
-          }),
-        };
-      }
 
       if (STALE_META_KEYS.has(key)) {
         return { result: JSON.stringify({ fetchedAt: now - 31 * 60 * 1000, recordCount: 1 }) };

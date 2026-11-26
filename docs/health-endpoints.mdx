@@ -295,8 +295,6 @@ The `resilienceStaticIndex` check also publishes `failedDatasets` when its
 static-index seed metadata names failed source adapters. This is a validated,
 deduplicated list of at most 50 adapter keys. A non-empty list makes the check
 `SEED_ERROR` and remains visible in the public `?compact=1` problem projection.
-The sibling `resilienceStaticFao` check shares the producer heartbeat but does
-not inherit failures for unrelated adapters.
 
 ### JODI China Row
 

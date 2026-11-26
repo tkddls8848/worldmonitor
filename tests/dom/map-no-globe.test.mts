@@ -260,13 +260,15 @@ describe('map without the 3D globe', () => {
 });
 
 describe('flat map interaction', () => {
+  const deckGLModule = vi.importActual<typeof import('@/components/DeckGLMap')>('@/components/DeckGLMap');
+
   afterEach(() => {
     vi.unstubAllEnvs();
   });
 
   it.each(['3d', 'flat', ''])('locks pitch and rotation whatever VITE_MAP_INTERACTION_MODE is (%j)', async (mode) => {
     vi.stubEnv('VITE_MAP_INTERACTION_MODE', mode);
-    const { DeckGLMap } = await vi.importActual<typeof import('@/components/DeckGLMap')>('@/components/DeckGLMap');
+    const { DeckGLMap } = await deckGLModule;
     const basemap = document.createElement('div');
     basemap.id = 'deckgl-basemap';
     document.body.append(basemap);
@@ -288,7 +290,7 @@ describe('flat map interaction', () => {
   });
 
   it('stops twist and keyboard rotation on the primary and the fallback map, keeping pinch zoom', async () => {
-    const { DeckGLMap } = await vi.importActual<typeof import('@/components/DeckGLMap')>('@/components/DeckGLMap');
+    const { DeckGLMap } = await deckGLModule;
     const basemap = document.createElement('div');
     basemap.id = 'deckgl-basemap';
     document.body.append(basemap);

@@ -300,8 +300,7 @@ function pctChange(latest, prev) {
 
 // Household debt service ratio. BIS_DSR key dimensions:
 // FREQ.BORROWERS_CTY.DSR_BORROWERS e.g. Q.US.H (households), Q.US.P (private
-// non-financial). The UI labels this "Household DSR" and resilience scoring
-// uses it as `householdDebtService`, so we MUST prefer H — picking P would
+// non-financial). The UI labels this "Household DSR". Picking P would
 // mislabel private-non-financial data as household data. Countries without
 // an H series are dropped (honest absence beats silent mis-attribution).
 export function buildDsr(rows) {

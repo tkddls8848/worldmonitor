@@ -485,12 +485,12 @@ describe('premium gateway bearer token auth', () => {
       },
       {
         method: 'GET',
-        path: '/api/resilience/v1/get-resilience-score',
+        path: '/api/scorecard/v1/get-five-factor-scorecard',
         handler: async () => new Response(JSON.stringify({ ok: true }), { status: 200 }),
       },
       {
         method: 'GET',
-        path: '/api/resilience/v1/get-resilience-ranking',
+        path: '/api/supply-chain/v1/get-food-stocks',
         handler: async () => new Response(JSON.stringify({ ok: true }), { status: 200 }),
       },
       {
@@ -551,10 +551,10 @@ describe('premium gateway bearer token auth', () => {
 
 
 
-  it('accepts valid Pro bearer token on resilience premium endpoints → 200', async () => {
+  it('accepts valid Pro bearer token on scorecard and food stock endpoints → 200', async () => {
     const token = await signToken({ sub: 'user_pro', plan: 'pro' });
 
-    const scoreRes = await handler(new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-score?countryCode=US', {
+    const scoreRes = await handler(new Request('https://worldmonitor.app/api/scorecard/v1/get-five-factor-scorecard?countryCode=US', {
       headers: {
         Origin: 'https://worldmonitor.app',
         Authorization: `Bearer ${token}`,
@@ -562,13 +562,13 @@ describe('premium gateway bearer token auth', () => {
     }));
     assert.equal(scoreRes.status, 200);
 
-    const rankingRes = await handler(new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-ranking', {
+    const stocksRes = await handler(new Request('https://worldmonitor.app/api/supply-chain/v1/get-food-stocks?countryCode=US', {
       headers: {
         Origin: 'https://worldmonitor.app',
         Authorization: `Bearer ${token}`,
       },
     }));
-    assert.equal(rankingRes.status, 200);
+    assert.equal(stocksRes.status, 200);
   });
 
 

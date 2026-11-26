@@ -4604,7 +4604,7 @@
     "window": "Razdoblje",
     "days": "{{days}} dana",
     "observed": "{{count}} snimki u {{days}} dana",
-    "legend": "CII (jantarno): više vrijednosti znače veću nestabilnost. Otpornost (zeleno): više vrijednosti znače veći kapacitet. Točke označavaju dane s odabranim naslovima.",
+    "legend": "CII (jantarno): više vrijednosti znače veću nestabilnost. Točke označavaju dane s odabranim naslovima.",
     "chart": "CII",
     "selectDate": "{{date}}, {{count}} odabranih naslova",
     "empty": "Nema dnevnih snimki u ovom razdoblju. Povijest se prikuplja nakon aktivacije.",

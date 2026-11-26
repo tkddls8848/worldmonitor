@@ -4572,7 +4572,7 @@
     "window": "Dönem",
     "days": "{{days}} gün",
     "observed": "{{days}} günde {{count}} anlık görüntü",
-    "legend": "CII (kehribar): yüksek değer daha fazla istikrarsızlık demektir. Dayanıklılık (yeşil): yüksek değer daha fazla kapasite demektir. Noktalar seçili başlıkların bulunduğu günleri gösterir.",
+    "legend": "CII (kehribar): yüksek değer daha fazla istikrarsızlık demektir. Noktalar seçili başlıkların bulunduğu günleri gösterir.",
     "chart": "CII",
     "selectDate": "{{date}}, {{count}} seçili başlık",
     "empty": "Bu dönemde günlük anlık görüntü yok. Geçmiş, etkinleştirmeden sonra birikir.",

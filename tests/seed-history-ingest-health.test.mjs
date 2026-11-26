@@ -34,22 +34,12 @@ const originalEnv = {
   UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
   UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
   WORLDMONITOR_VALID_KEYS: process.env.WORLDMONITOR_VALID_KEYS,
-  RESILIENCE_PILLAR_COMBINE_ENABLED: process.env.RESILIENCE_PILLAR_COMBINE_ENABLED,
-  RESILIENCE_SCHEMA_V2_ENABLED: process.env.RESILIENCE_SCHEMA_V2_ENABLED,
 };
 
 process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example.test';
 process.env.UPSTASH_REDIS_REST_TOKEN = 'token';
 process.env.WORLDMONITOR_VALID_KEYS = 'test-key';
-// Pins currentResilienceCacheFormula() to 'pc' so the seed-health data probe
-// below is answerable — mirrors tests/seed-health-portwatch-port-activity.test.mjs.
-process.env.RESILIENCE_PILLAR_COMBINE_ENABLED = 'true';
-process.env.RESILIENCE_SCHEMA_V2_ENABLED = 'true';
 
-const RESILIENCE_INTERVAL_PROBE_KEY = 'resilience:intervals:v13:US';
-const RESILIENCE_INTERVAL_METHODOLOGY = 'weight-perturbation-sensitivity-v3';
-const EDUCATION_META_KEY = 'seed-meta:resilience:education-attainment';
-const EDUCATION_DATA_KEY = 'resilience:education-attainment:v1';
 const PORTWATCH_META_KEY = 'seed-meta:supply_chain:portwatch-ports';
 const PORTWATCH_CONTENT_FRESHNESS_ACTIVATION_KEY =
   'seed-activated:supply_chain:portwatch-ports:content-freshness';
@@ -1127,9 +1117,7 @@ describe('a prolonged relay rejection is visible in /api/seed-health', () => {
 
   /**
    * Answer every seed-meta GET with a fresh, healthy record so the assertions
-   * below isolate the ingest entries — including the resilience-intervals data
-   * probe, whose absence would otherwise stale the aggregate for an unrelated
-   * reason and make `overall` untrustworthy. `ingestMetaByKey` overrides
+   * below isolate the ingest entries. `ingestMetaByKey` overrides
    * specific keys.
    */
   function installSeedHealthMock(ingestMetaByKey, { activated = true } = {}) {
@@ -1148,33 +1136,6 @@ describe('a prolonged relay rejection is visible in /api/seed-health', () => {
         if (Object.hasOwn(ingestMetaByKey, key)) {
           const value = ingestMetaByKey[key];
           return { result: value == null ? null : JSON.stringify(value) };
-        }
-        if (key === RESILIENCE_INTERVAL_PROBE_KEY) {
-          return {
-            result: JSON.stringify({
-              p05: 65.2,
-              p95: 72.8,
-              _formula: 'pc',
-              _educationState: 'education-on',
-              methodology: RESILIENCE_INTERVAL_METHODOLOGY,
-              computedAt: '2026-06-11T12:00:00.000Z',
-            }),
-          };
-        }
-        if (key === EDUCATION_META_KEY) {
-          return { result: JSON.stringify({
-            fetchedAt: Date.now(),
-            recordCount: sovereignStatus.entries.length,
-            rankableRecordCount: sovereignStatus.entries.length,
-          }) };
-        }
-        if (key === EDUCATION_DATA_KEY) {
-          return { result: JSON.stringify({
-            countries: Object.fromEntries(sovereignStatus.entries.map((entry, index) => [
-              entry.iso2,
-              { value: 35 + (index % 45), year: 2024 },
-            ])),
-          }) };
         }
         if (key === 'seed-meta:military:bases') {
           // #6845: the bases domain now carries a 100k integrity floor; the

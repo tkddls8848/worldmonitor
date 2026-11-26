@@ -4572,7 +4572,7 @@
     "window": "Kipindi",
     "days": "Siku {{days}}",
     "observed": "Picha {{count}} katika siku {{days}}",
-    "legend": "CII (kahawia ya kaharabu): thamani kubwa inaonyesha kutokuwa na utulivu zaidi. Ustahimilivu (kijani): thamani kubwa inaonyesha uwezo zaidi. Nukta zinaonyesha siku zenye vichwa vya habari vilivyochaguliwa.",
+    "legend": "CII (kahawia ya kaharabu): thamani kubwa inaonyesha kutokuwa na utulivu zaidi. Nukta zinaonyesha siku zenye vichwa vya habari vilivyochaguliwa.",
     "chart": "CII",
     "selectDate": "{{date}}, vichwa vya habari {{count}} vilivyochaguliwa",
     "empty": "Hakuna picha za kila siku katika kipindi hiki. Historia hukusanywa baada ya kuwezeshwa.",

@@ -236,11 +236,6 @@ function installHealthPipelineMock(recordCount, {
           operationallyCovered: config.decisionGroups.length,
         };
       }
-      if (config.requireResilienceCacheState) {
-        meta._formula = 'pc';
-        meta._educationState = 'education-on';
-        meta._intervalMethodology = 'weight-perturbation-sensitivity-v3';
-      }
     }
     return meta;
   };

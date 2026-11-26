@@ -50,12 +50,7 @@ export function liveUpdatedMarkup({ asOf, fallbackLabel, prefix = 'Published pul
 
 export const OBSERVED_EVIDENCE = Object.freeze({ coverage: true });
 
-// A dimension carries an imputationClass ONLY when observedWeight === 0 -- see the
-// four-class taxonomy in proto/worldmonitor/resilience/v1/resilience.proto and
-// server/worldmonitor/resilience/v1/_shared.ts. So an empty class is the allow-list
-// for "observed", exactly as buildMicrostateEvidenceProfile already requires.
-// Enumerating the withheld classes instead would fail OPEN on any fifth class
-// (it already omitted 'stable-absence', whose imputed scores run 85-88).
+// Imputed values must stay out of live chokepoint observations.
 export function hasObservedValue(value, { coverage, evidenceState = '' } = {}) {
   const numericValue = typeof value === 'string' ? value.replace(/,/g, '').trim() : value;
   const numericCoverage = Number(coverage);

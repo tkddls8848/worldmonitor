@@ -29,7 +29,7 @@ These subscription licenses cover the hosted Service and its outputs. They are s
 - Price: $0/month
 - Signup required: No
 - Best for: Public situational awareness, OSINT research, market/geopolitical context, news monitoring
-- Includes: all registered map layers except the Pro-only Resilience layer, curated feeds backed by observed upstream hosts, country briefs, hotspots, instability scores, chokepoints, cables, cascade analysis, breaking alert pipeline and watchlists
+- Includes: all registered map layers, curated feeds backed by observed upstream hosts, country briefs, hotspots, instability scores, chokepoints, cables, cascade analysis, breaking alert pipeline and watchlists
 - Limits: 3 dashboard tabs; free dashboard refresh cadence is typically 5-15 minutes; advanced analyst, digest, API and team workflows require paid plans
 - MCP: 5 cached-data MCP calls/day with a free account; other MCP tools require a paid plan
 
@@ -40,7 +40,7 @@ These subscription licenses cover the hosted Service and its outputs. They are s
 - Annual savings: 3 months free versus monthly billing
 - Best for: Investors, analysts, researchers, traders and operators who need the decision layer on top of the free dashboard
 - Seats: 1 named user
-- Includes: WM Analyst chat across live services with citations, Scenario Engine, Route Explorer, cost-shock modelling and supply-chain stress tests (chokepoints, cascades, vulnerability rankings), intel memory with historical search and similar-event lookup, physical metals divergence, mineral production concentration, sovereign debt series, personal AI digest, custom widget builder, the Resilience map layer, uncapped panels, sources and followed countries, and MCP access under one key
+- Includes: WM Analyst chat across live services with citations, Scenario Engine, Route Explorer, cost-shock modelling and supply-chain stress tests (chokepoints, cascades, vulnerability rankings), intel memory with historical search and similar-event lookup, physical metals divergence, mineral production concentration, sovereign debt series, personal AI digest, custom widget builder, uncapped panels, sources and followed countries, and MCP access under one key
 - License: Personal use
 - Limits: 10 custom dashboards, 500 dashboard-AI requests/day, MCP + SDK 50 calls/day
 - Digest cadence: Daily, twice-daily or weekly

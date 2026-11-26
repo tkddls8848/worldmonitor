@@ -42,7 +42,7 @@ const sidecarSelfFetchOrigins = new Set();
 // The Redis REST origin (UPSTASH_REDIS_REST_URL) is the cache every handler
 // reads, not an upstream. Holding one of the six upstream slots per cache read
 // queued those reads behind slow upstream fetches until their 1.5 s Redis
-// timeout fired, so a resilience score or a panel read its inputs as missing.
+// timeout fired, so a panel read its inputs as missing.
 const sidecarCacheOrigins = new Set();
 
 function normalizeRequestBody(body) {

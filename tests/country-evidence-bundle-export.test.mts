@@ -865,9 +865,6 @@ describe('country evidence bundle export', () => {
         pubDate: '2026-06-10T06:00:00.000Z',
         threat: { level: 'medium' },
       }]);
-      for (let attempt = 0; attempt < 25 && harness.getWidgets().length === 0; attempt += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 0));
-      }
 
       const button = harness.getPanelRoot()?.querySelector('.cdp-evidence-export-btn') as HTMLButtonElement | null;
       assert.ok(button, 'expected evidence export button');

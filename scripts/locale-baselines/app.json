@@ -2186,7 +2186,7 @@
   "countryHistory.ciiMissing": "CII unavailable",
   "countryHistory.days": "{{days}} days",
   "countryHistory.empty": "No daily snapshots in this window. History accumulates after activation.",
-  "countryHistory.legend": "CII (amber): higher means more instability. Resilience (green): higher means more capacity. Dots mark days with selected headlines.",
+  "countryHistory.legend": "CII (amber): higher means more instability. Dots mark days with selected headlines.",
   "countryHistory.loading": "Loading daily history…",
   "countryHistory.noEvents": "No selected headlines were captured for this date. This does not prove no events occurred.",
   "countryHistory.observed": "{{count}} snapshots in {{days}} days",

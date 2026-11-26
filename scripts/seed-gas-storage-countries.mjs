@@ -272,7 +272,7 @@ export async function main() {
       [GAS_STORAGE_META_KEY, JSON.stringify(metaPayload)],
     );
     const expires = entries.map(([key]) => ['EXPIRE', key, GAS_STORAGE_TTL_SECONDS]);
-    // Earlier runs published these countries as 0% full; resilience scored that as an empty store.
+    // Earlier runs published 0% full for countries with no storage.
     const retired = noStorageCountries.map((iso2) => ['DEL', `${GAS_STORAGE_KEY_PREFIX}${iso2}`]);
     const commands = [['MSET', ...entries.flat()], ...expires, ...retired];
     const results = await redisPipeline(commands, true);

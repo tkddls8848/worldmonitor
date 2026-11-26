@@ -81,7 +81,6 @@ const DEFERRED_RPC_CLIENT_CHUNKS = [
   'rpc-client-prediction-v1',
   'rpc-client-radiation-v1',
   'rpc-client-research-v1',
-  'rpc-client-resilience-v1',
   'rpc-client-sanctions-v1',
   'rpc-client-scenario-v1',
   'rpc-client-seismology-v1',

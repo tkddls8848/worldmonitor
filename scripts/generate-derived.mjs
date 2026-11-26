@@ -20,7 +20,7 @@
 //
 // The personal build removed the public-exposure generators (product facts,
 // country corpus slugs, llms.txt, AI search, agent skills index, welcome
-// teasers, resilience coverage copy) and the steps for removed infrastructure
+// and teasers) and the steps for removed infrastructure
 // (MCP source providers, Sentry Convex probe filters, desktop version). Their
 // last committed outputs that kept code still reads stay as static files.
 import { spawn, spawnSync } from 'node:child_process';

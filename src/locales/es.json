@@ -4594,7 +4594,7 @@
     "window": "Período",
     "days": "{{days}} días",
     "observed": "{{count}} capturas en {{days}} días",
-    "legend": "CII (ámbar): los valores altos indican mayor inestabilidad. Resiliencia (verde): los valores altos indican mayor capacidad. Los puntos marcan días con titulares seleccionados.",
+    "legend": "CII (ámbar): los valores altos indican mayor inestabilidad. Los puntos marcan días con titulares seleccionados.",
     "chart": "Puntuaciones diarias del CII. Las lagunas y cambios de fórmula interrumpen la línea.",
     "selectDate": "{{date}}, {{count}} titulares seleccionados",
     "empty": "No hay capturas diarias en este período. El historial se acumula tras la activación.",

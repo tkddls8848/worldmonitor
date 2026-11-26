@@ -6,9 +6,9 @@ description: Open the WorldMonitor country interface in a UI-capable MCP host. U
 
 # fetch-country-brief
 
-For a country-brief request in ChatGPT or another MCP Apps host, call `open_country_brief` with `country_code`. This opens the shared country interface with topic navigation, evidence, resilience, energy and trade sections. It loads dated observations through the authorized host connection. Do not replace the interface with an AI paragraph.
+For a country-brief request in ChatGPT or another MCP Apps host, call `open_country_brief` with `country_code`. This opens the shared country interface with topic navigation, evidence, energy and trade sections. It loads dated observations through the authorized host connection. Do not replace the interface with an AI paragraph.
 
-For a follow-up, use the view's `select_country_view` action when available, or call `open_country_brief` with the same country and requested `topic`. Valid topics are `overview`, `all`, `resilience`, `security`, `economy`, `resources`, `society` and `sources`.
+For a follow-up, use the view's `select_country_view` action when available, or call `open_country_brief` with the same country and requested `topic`. Valid topics are `overview`, `all`, `security`, `economy`, `resources`, `society` and `sources`.
 
 Only use `get_country_brief` or the HTTP endpoint below when the user explicitly asks for a text assessment or the client cannot render MCP Apps. The assessment is one part of the country view. An unavailable or locked section does not mean zero activity. Preserve source dates and distinguish an observation from its retrieval date.
 

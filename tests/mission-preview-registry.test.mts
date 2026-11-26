@@ -6,8 +6,7 @@
  *  1. Every registry entry targets a real panel key in the FULL catalog and a
  *     real mission preset id — key drift fails here, not silently in prod.
  *  2. One preview per treated mission (R8's one-invitation rule).
- *  3. crisis-desk has NO entry (KTD7 — its ResilienceWidget preview already
- *     ships; Release 1 adds instrumentation only).
+ *  3. crisis-desk has no registered mission preview.
  *  4. The untouched comparison missions and Country Watcher have NO entries
  *     (their absence is what makes the before/after read clean; Country
  *     Watcher's conversion moment is the follow cap, not a preview).

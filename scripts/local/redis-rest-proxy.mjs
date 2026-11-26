@@ -79,7 +79,7 @@ const ALLOWED_COMMANDS = new Set([
   // SSCAN is key-scoped set iteration; SMEMBERS already dumps the same set.
   'SSCAN',
   // ZREMRANGEBY* are the retention trims (#7087 accumulator + forecast-evidence
-  // prune, resilience 30-day history trim). Without them a self-hosted install
+  // prune and history trim). Without them a self-hosted install
   // answers the prune with a per-command error inside an HTTP 200 pipeline, so
   // the caller only sees `*_confirmed=false` and the ZSET grows without bound.
   'ZADD', 'ZREM', 'ZRANGE', 'ZRANGEBYSCORE', 'ZREMRANGEBYSCORE', 'ZREMRANGEBYRANK',
@@ -758,11 +758,8 @@ async function runCommand(args) {
 // every such seeder, not just the fire seeder's, so on a self-hosted install
 // `wildfire:fires:v1` was simply never written (#7099).
 //
-// The 5 MB bound covers atomicPublish only. seed-forecasts.mjs and
-// backtest-resilience-outcomes.mjs each keep a local redisSet() that writes to this
-// proxy with no size check, so they are outside the arithmetic above — both
-// already degrade gracefully on a 4xx (nonRetryable + warn), and both write small
-// cache values in practice.
+// The 5 MB bound covers atomicPublish. Forecast writes use a separate path
+// and publish small values in practice.
 const DEFAULT_MAX_BODY_BYTES = 16 * 1024 * 1024; // 16 MB
 
 function resolveMaxBodyBytes(env = process.env) {

@@ -15,8 +15,7 @@
  * crisis anniversary has passed.
  *
  * Why this exists: BIS WS_EER (`economic:bis:eer:v1`) only covers 12 G10 +
- * select EM economies — none of which experience the FX moves the resilience
- * methodology's FX Stress family actually targets (Argentina, Egypt, Turkey,
+ * select EM economies, excluding many high-volatility currencies (Argentina, Egypt, Turkey,
  * Pakistan, Nigeria, etc. are absent from BIS coverage). Yahoo Finance
  * covers the full set of currencies needed for this signal.
  *
@@ -242,8 +241,8 @@ export function needsFallback(daily90, nowMs = Date.now()) {
   return !Number.isFinite(asOfMs) || nowMs - asOfMs > FX_DAILY_MAX_AGE_DAYS * DAY_MS;
 }
 
-// The daily series is optional; the YoY rows the resilience score reads are
-// not. runSeed rejects the whole fetch at its deadline and publishes nothing,
+// The daily series is optional. The year-over-year rows are required. The
+// seed rejects the whole fetch at its deadline and publishes nothing,
 // so the optional request is skipped unless its worst case fits beside the
 // remaining required requests (at the slowest pace seen so far) and a publish
 // reserve. Its worst case is a hard cap: one direct attempt plus the proxy
@@ -331,8 +330,7 @@ async function fetchFxYoy({ fetchDeadlineAtMs = Infinity } = {}) {
         slowestRequestMs = Math.max(slowestRequestMs, Date.now() - startedAt);
       }
       const yoy = computeYoy(series);
-      // A failed, thin or skipped daily series costs the CII member only; the
-      // YoY row the resilience score reads is still published.
+      // Publish the year-over-year row even if the CII daily series is unavailable.
       let daily90 = null;
       if (!hasTimeForOptionalFetch({ nowMs: Date.now(), deadlineAtMs: fetchDeadlineAtMs, remainingRequired: currencies.length - done, slowestRequestMs })) {
         dailyFailures.push({ currency, error: 'skipped: time budget' });

@@ -31,7 +31,7 @@ export type FxStressRow = {
   yoyChange: number | null;
   /** Worst peak-to-trough % loss over the last 24 monthly bars; never positive. */
   drawdown24m: number;
-  /** True when the drawdown reaches the resilience methodology's stress threshold. */
+  /** True when the drawdown reaches the FX stress threshold. */
   stressed: boolean;
   peakRate: number | null;
   peakDate: string | null;
@@ -123,12 +123,7 @@ export type FxPanelRows = {
   degraded: FxSourceId[];
 };
 
-/**
- * The drawdown at which the resilience FX Stress family calls a currency
- * stressed (`scripts/backtest-resilience-outcomes.mjs:348`). Reused here so the
- * panel highlights exactly what the methodology would label, rather than
- * inventing a second, quietly different threshold.
- */
+/** Threshold for flagging currency drawdowns in the FX monitoring panel. */
 export const FX_STRESS_THRESHOLD_PCT = -15;
 
 /**

@@ -412,7 +412,7 @@ describe('CII docs drift guards', () => {
     );
   });
 
-  it('public and developer surfaces do not retain stale CII, CRI, or platform-count claims', () => {
+  it('public and developer surfaces do not retain stale CII or platform-count claims', () => {
     const publicHome = readFileSync(resolve(root, 'public', 'home.md'), 'utf8');
     const agentViewText = readFileSync(resolve(root, 'public', 'agent-view.json'), 'utf8');
     const agentView = JSON.parse(agentViewText) as { capabilities?: unknown };
@@ -448,17 +448,15 @@ describe('CII docs drift guards', () => {
 
     // inventory-contract: public-fixed-algorithm-claims; classification: exact; reason: CII v14 has a versioned fixed country universe
     assert.match(pressKit, /server-authoritative CII v14[\s\S]{0,120}31 Tier-1 countries/i);
-    // inventory-contract: public-fixed-algorithm-claims; classification: exact; reason: CRI uses a closed public rankable universe
-    assert.match(pressKit, /Country Resilience Index[\s\S]{0,140}196-country public rankable universe/i);
     assert.match(pressKit, /named thematic variants/i);
     assert.match(pressKit, /registered map layer types/i);
     assert.match(pressKit, /curated RSS feeds/i);
     assert.match(pressKit, /Locale support follows the runtime registry/i);
     assert.match(communityGuide, /specialized views/i);
-    // inventory-contract: public-fixed-algorithm-claims; classification: exact; reason: both public algorithm universes are fixed contracts
+    // inventory-contract: public-fixed-algorithm-claims; classification: exact; reason: CII v14 has a versioned fixed country universe
     assert.match(
       publicHome,
-      /^- CII v14 for 31 Tier-1 countries, resilience scores for the 196-country public rankable universe, and global live conflict tracking$/m,
+      /^- CII v14 for 31 Tier-1 countries and global live conflict tracking$/m,
     );
     assert.ok(Array.isArray(agentView.capabilities), 'public/agent-view.json capabilities must be an array');
     // inventory-contract: public-fixed-algorithm-claims; classification: exact; reason: CII v14 has a versioned fixed country universe
@@ -466,17 +464,10 @@ describe('CII docs drift guards', () => {
       agentView.capabilities.includes('global live conflict events and CII v14 scores for 31 Tier-1 countries'),
       'public/agent-view.json must publish the current CII coverage',
     );
-    // inventory-contract: public-fixed-algorithm-claims; classification: exact; reason: CRI uses a closed public rankable universe
-    assert.ok(
-      agentView.capabilities.includes(
-        'country resilience scores across the 196-country public rankable universe, with domain/pillar breakdown',
-      ),
-      'public/agent-view.json must distinguish the 196-country CRI universe from CII coverage',
-    );
     assert.doesNotMatch(
       `${publicHome}\n${agentViewText}`,
       /\b(?:CII(?: v\d+)?|Country Instability Index|country instability\/risk scores)\b[^\n]{0,100}(?:\(\s*196 countries\s*\)|\b(?:for|across|covers?)\s+(?:all\s+)?196 countries\b)/i,
-      'public surfaces must not attribute the 196-country CRI universe to CII',
+      'public surfaces must not attribute a 196-country universe to CII',
     );
     assert.doesNotMatch(
       `${communityGuide}\n${readFileSync(resolve(root, 'AGENTS.md'), 'utf8')}`,

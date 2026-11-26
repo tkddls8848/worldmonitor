@@ -376,8 +376,8 @@ describe('seed-health classifies mixed producer keys for preview (#7674)', () =>
       'route-owned chokepoint metadata must use the preview namespace');
     assert.ok(requestedKeys.has(`${PREFIX}seed-meta:cable-health`),
       'route-owned cable metadata must use the preview namespace');
-    assert.ok(requestedKeys.has('resilience:education-attainment:v1'),
-      'Railway-owned data probes must stay raw');
+    assert.ok(requestedKeys.has('seed-meta:prediction:markets'),
+      'Collector-owned seed metadata must stay raw');
     assert.ok(requestedKeys.has('seed-activated:news:feed-health'),
       'Railway-owned activation markers must stay raw');
     assert.ok(!requestedKeys.has('seed-meta:intelligence:risk-scores'),

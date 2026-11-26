@@ -8,10 +8,8 @@ import { getRpcNoStoreReasonFromPayload } from './cache-contract.js';
 // reads against Upstash REST from a workstation — `getCachedJson` then
 // silently times out and the caller falls through to score=0 / null,
 // which masquerades as missing data. Set REDIS_OP_TIMEOUT_MS=10000 (or
-// REDIS_PIPELINE_TIMEOUT_MS=30000) when running e.g.
-// scripts/compare-resilience-current-vs-proposed.mjs locally so the
-// acceptance-gate output reflects real production behavior, not
-// timeout-induced zeros. Production should keep the defaults.
+// REDIS_PIPELINE_TIMEOUT_MS=30000) for local scripts with many parallel reads.
+// Production should keep the defaults.
 //
 // Guard intentionally requires a strictly-positive integer. `|| default`
 // alone would reject 0 (good — AbortSignal.timeout(0) would abort instantly)

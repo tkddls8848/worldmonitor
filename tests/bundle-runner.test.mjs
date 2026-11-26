@@ -1199,7 +1199,7 @@ test('budget check accounts for SIGKILL grace when deferring', async () => {
 });
 
 test('a section whose worst case exceeds the whole budget is rejected at startup', async () => {
-  // #6556: seed-bundle-resilience declared maxBundleMs 570s against sections
+  // #6556: a historical bundle declared maxBundleMs 570s against sections
   // whose cheapest worst case was 610s, so EVERY tick deferred EVERY section
   // and exited 0. Railway painted SUCCESS for six hours while the service was
   // dead. A section that cannot fit the whole budget can never be admitted on

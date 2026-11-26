@@ -7,8 +7,7 @@
 //   LUR — Unemployment rate, %
 //   LP  — Population, persons (millions)
 //
-// Per WorldMonitor #3027 — feeds resilience macroFiscal scoring (LUR
-// sub-metric) and CountryDeepDivePanel demographic tiles (LP).
+// Supplies labor and population data for country briefs.
 
 import { loadEnvFile, runSeed, loadSharedConfig, imfSdmxFetchIndicator, imfSdmxFetchIndicatorWithRelease } from './_seed-utils.mjs';
 // Sprint 4 IMF/WEO cohort content-age helper — see header for forecast-year semantics.
@@ -58,15 +57,7 @@ export function buildLaborCountries({ unemployment = {}, population = {} }) {
 
     if (!lur && !lp) continue;
 
-    // IMF SDMX `LP` indicator returns Population in PERSONS (raw count,
-    // e.g. US ≈ 342_594_000), not millions. The downstream field is named
-    // `populationMillions` and consumed as such by every reader (resilience
-    // per-capita normalization in _dimension-scorers.ts; cohort builder in
-    // dry-run-resilience-rebalance.mjs; src/services/imf-country-data.ts).
-    // Divide by 1e6 here so the field name matches its semantic. Pre-fix
-    // the field stored raw persons, silently breaking the §U6 per-capita
-    // normalization (denominator was 1e6× too large → unrest score
-    // saturated at 100 for every country).
+    // IMF sends population as a raw count. Readers use millions.
     const popMillions = lp?.value != null ? lp.value / 1_000_000 : null;
     countries[iso2] = {
       unemploymentPct: lur?.value ?? null,

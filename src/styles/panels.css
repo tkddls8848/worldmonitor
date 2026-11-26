@@ -3732,7 +3732,7 @@ a.hub-top-story {
   font-size: calc(9px * var(--wm-panel-effective-scale, 1));
   color: var(--text-dim);
 }
-/* Currencies past the resilience methodology's -15% drawdown threshold. */
+/* Currencies past the -15% stress threshold. */
 .fx-table tbody tr.fx-stressed td.fx-ccy {
   box-shadow: inset 2px 0 0 var(--negative, #f87171);
 }

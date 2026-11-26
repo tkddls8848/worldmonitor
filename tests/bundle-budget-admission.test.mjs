@@ -12,7 +12,7 @@
 // deferral is not an error, so the bundle still exits 0 and Railway paints
 // SUCCESS.
 //
-// #6556: `seed-bundle-resilience` shipped `maxBundleMs: 570_000` alongside
+// #6556: a bundle shipped `maxBundleMs: 570_000` alongside
 // sections of 600s, 900s and 600s. The cheapest needed 610s. All three were
 // deferred on every tick, `ran:0`, exit 0, green badge — and the service
 // published nothing for six hours. The only detector was seed-meta ageing past

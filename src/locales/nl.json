@@ -4572,7 +4572,7 @@
     "window": "Periode",
     "days": "{{days}} dagen",
     "observed": "{{count}} momentopnamen in {{days}} dagen",
-    "legend": "CII (amber): hoger betekent meer instabiliteit. Veerkracht (groen): hoger betekent meer capaciteit. Punten markeren dagen met geselecteerde koppen.",
+    "legend": "CII (amber): hoger betekent meer instabiliteit. Punten markeren dagen met geselecteerde koppen.",
     "chart": "CII",
     "selectDate": "{{date}}, {{count}} geselecteerde koppen",
     "empty": "Geen dagelijkse momentopnamen in deze periode. Geschiedenis wordt opgebouwd na activering.",

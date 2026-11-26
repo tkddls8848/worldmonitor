@@ -3104,9 +3104,7 @@ function parseFredRatesRolloutUntil(results) {
 
 // A PR that bumps a versioned data key (`family:vN:...`) deploys this reader on
 // merge, but a cron writer keeps its previous code until its next scheduled
-// tick (a Railway deploy does not run the job). #9044 moved resilienceIntervals
-// from v11 to v12 at 08:55 UTC on 2026-10-08, and health read EMPTY (crit) for
-// three hours beside a fresh seed-meta written by the v11 code. A fresh writer
+// scheduled tick. A fresh writer
 // whose `sourceVersion` names an older version of the read key's family is that
 // state, so the absent key gets the ROLLOUT_PENDING window the FRED rollout
 // uses. The window is the key's own staleness budget capped at one day, claimed

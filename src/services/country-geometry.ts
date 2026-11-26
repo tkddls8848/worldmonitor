@@ -32,7 +32,7 @@ const COUNTRY_OVERRIDE_TIMEOUT_MS = 3_000;
  * as a canonical country for deep-dive / API calls. The bundled
  * `countries.geojson` historically stamped Taiwan as `CN-TW`; map hover/click
  * read that property raw and opened country briefs with a non-ISO2 code, so
- * resilience/scorecard validators returned `ValidationError: Validation failed`
+ * scorecard validators returned `ValidationError: Validation failed`
  * (Sentry WORLDMONITOR-162). Keep this table as the single remap, rewrite
  * feature properties on load so MapLibre filters stay aligned with the index,
  * and expose `canonicalizeCountryCode` for call sites that already hold a code.

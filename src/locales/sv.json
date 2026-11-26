@@ -4572,7 +4572,7 @@
     "window": "Period",
     "days": "{{days}} dagar",
     "observed": "{{count}} ögonblicksbilder under {{days}} dagar",
-    "legend": "CII (bärnsten): högre värden betyder större instabilitet. Motståndskraft (grönt): högre värden betyder större kapacitet. Punkter markerar dagar med utvalda rubriker.",
+    "legend": "CII (bärnsten): högre värden betyder större instabilitet. Punkter markerar dagar med utvalda rubriker.",
     "chart": "CII",
     "selectDate": "{{date}}, {{count}} utvalda rubriker",
     "empty": "Inga dagliga ögonblicksbilder under denna period. Historiken byggs upp efter aktivering.",

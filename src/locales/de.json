@@ -4572,7 +4572,7 @@
     "window": "Zeitraum",
     "days": "{{days}} Tage",
     "observed": "{{count}} Momentaufnahmen in {{days}} Tagen",
-    "legend": "CII (bernsteinfarben): Höhere Werte bedeuten mehr Instabilität. Resilienz (grün): Höhere Werte bedeuten mehr Kapazität. Punkte markieren Tage mit ausgewählten Schlagzeilen.",
+    "legend": "CII (bernsteinfarben): Höhere Werte bedeuten mehr Instabilität. Punkte markieren Tage mit ausgewählten Schlagzeilen.",
     "chart": "Tägliche CII-Werte. Lücken und Formeländerungen unterbrechen die Linie.",
     "selectDate": "{{date}}, {{count}} ausgewählte Schlagzeilen",
     "empty": "Keine täglichen Momentaufnahmen in diesem Zeitraum. Der Verlauf wächst nach der Aktivierung.",

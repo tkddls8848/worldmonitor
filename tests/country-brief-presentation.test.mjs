@@ -2,12 +2,6 @@ import { it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createCountryDeepDivePanelHarness } from './helpers/country-deep-dive-panel-harness.mjs';
 
-async function settleWidgets(harness) {
-  for (let i = 0; i < 25 && !harness.getWidgets().length; i++) {
-    await new Promise(resolve => setTimeout(resolve, 0));
-  }
-}
-
 it('keeps all fetched headlines while marking only the first three for summary', async () => {
   const harness = await createCountryDeepDivePanelHarness();
   try {
@@ -20,7 +14,6 @@ it('keeps all fetched headlines while marking only the first three for summary',
     assert.equal(root.querySelectorAll('.cdp-news-item').length, 11);
     assert.equal(root.querySelectorAll('.cdp-expanded-only .cdp-news-item').length, 8);
     assert.match(root.querySelector('#cdp-section-news').textContent, /Read all 11 headlines/);
-    await settleWidgets(harness);
     panel.hide();
   } finally {
     harness.cleanup();
@@ -49,7 +42,6 @@ it('lists cited evidence under the brief sources in summary and full views', asy
       assert.match(html, /<details class="cdp-brief-sources cdp-brief-evidence">E2 Fiscal space<\/details>/);
       assert.ok(html.indexOf('Finland budget talks') < html.indexOf('cdp-brief-evidence'), 'evidence follows the sources list');
     }
-    await settleWidgets(harness);
     panel.hide();
   } finally {
     harness.cleanup();

@@ -4594,7 +4594,7 @@
     "window": "Perioadă",
     "days": "{{days}} zile",
     "observed": "{{count}} instantanee în {{days}} zile",
-    "legend": "CII (chihlimbar): valorile mai mari indică mai multă instabilitate. Reziliență (verde): valorile mai mari indică o capacitate mai mare. Punctele marchează zilele cu titluri selectate.",
+    "legend": "CII (chihlimbar): valorile mai mari indică mai multă instabilitate. Punctele marchează zilele cu titluri selectate.",
     "chart": "CII",
     "selectDate": "{{date}}, {{count}} titluri selectate",
     "empty": "Nu există instantanee zilnice în această perioadă. Istoricul se acumulează după activare.",

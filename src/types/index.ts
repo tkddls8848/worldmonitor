@@ -753,7 +753,6 @@ export interface MapLayers {
   gpsJamming: boolean;
   // CII choropleth layer
   ciiChoropleth: boolean;
-  // Resilience choropleth layer
   // Commodity variant layers
   miningSites: boolean;
   processingPlants: boolean;

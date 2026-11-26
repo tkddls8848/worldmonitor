@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => {
 
 vi.mock('@/services/scenario', () => ({ runScenario: mocks.runScenario, getScenarioStatus: mocks.getScenarioStatus }));
 vi.mock('@/services/supply-chain', () => ({
+  getFoodStocks: vi.fn(async () => ({ unavailable: true, records: [] })),
   fetchBypassOptions: async () => ({ options: [] }),
   fetchChokepointHistory: async () => ({ history: [] }),
 }));

@@ -280,12 +280,12 @@ function renderCountryRiskUseCase({ tpl, baseUrl, lastmod }) {
 
       <h2>Worked example: five-country supplier footprint</h2>
       <p>Suppose exposure is Taiwan (semiconductors), Mexico (assembly), Poland (logistics), Egypt (Suez and cable landings), and Vietnam (electronics).</p>
-      <p>Baseline reading places Taiwan in a moderate-instability / high-resilience quadrant where a single chokepoint dominates, while Egypt sits in a more fragile calm. The monitoring decision changes when Taiwan Strait or Suez signals move, or when a supplier-city keyword monitor fires — not when a generic “regional tension” headline repeats. The analyst leaves the session with a dated note, threshold watchers, and an opened Taiwan country brief rather than a vague “keep an eye on Asia” reminder.</p>
+      <p>The baseline puts Taiwan Strait and Suez activity alongside dated country instability readings. The monitoring decision changes when Taiwan Strait or Suez signals move, or when a supplier-city keyword monitor fires — not when a generic “regional tension” headline repeats. The analyst leaves the session with a dated note, threshold watchers, and an opened Taiwan country brief rather than a vague “keep an eye on Asia” reminder.</p>
 
       <h2>Provenance, freshness, and limits</h2>
       <ul>
         <li><strong>Provenance:</strong> CII/CRI methodology pages and country corpus pages disclose inputs; treat blog methodology posts as supporting editorial.</li>
-        <li><strong>Freshness:</strong> live instability updates continuously in product; resilience snapshots refresh on a published cadence. Always record observation time in the monitoring note.</li>
+        <li><strong>Freshness:</strong> live instability updates continuously in product; structural inputs refresh according to their source cadence. Always record observation time in the monitoring note.</li>
         <li><strong>Blind spots:</strong> media-based event data can lag or miss closed societies; multipliers and baselines are model judgments; prediction markets are forecasts, not observations.</li>
         <li><strong>What World Monitor cannot prove:</strong> intent, classified activity, or that a quiet sensor means a quiet ground truth.</li>
       </ul>
@@ -303,7 +303,7 @@ function renderCountryRiskUseCase({ tpl, baseUrl, lastmod }) {
       <h2>Supporting material</h2>
       <ul class="related">
         <li><a href="/use-cases/">All use cases</a></li>
-        <li><a href="/countries/">Country risk and resilience corpus</a></li>
+        <li><a href="/countries/">Country risk corpus</a></li>
         <li><a href="/blog/posts/country-risk-monitoring-workflow-for-analysts/">Editorial workflow article</a></li>
         <li><a href="/blog/posts/country-instability-index-methodology-explained/">CII methodology</a></li>
       </ul>
@@ -477,7 +477,7 @@ function renderVerifyBreakingNewsUseCase({ tpl, baseUrl, lastmod }) {
         <li><a href="/use-cases/">All use cases</a></li>
         <li><a href="/use-cases/monitor-country-risk/">Monitor country risk</a></li>
         <li><a href="/blog/posts/verify-breaking-news-osint-workflow-journalists/">OSINT editorial workflow article</a></li>
-        <li><a href="/countries/">Country risk and resilience corpus</a></li>
+        <li><a href="/countries/">Country risk corpus</a></li>
         <li><a href="/docs/natural-disasters">Natural disaster tracking</a></li>
       </ul>
       <p class="source">Canonical treatment: this page owns the evergreen verification procedure. The <a href="/blog/posts/verify-breaking-news-osint-workflow-journalists/">OSINT blog article</a> remains dated supporting editorial with minute-by-minute narrative — not a duplicate indexable task page. No redirect.</p>`;
@@ -630,7 +630,7 @@ function renderSupplyChainDisruptionsUseCase({ tpl, baseUrl, lastmod }) {
       <ul>
         <li>Chokepoint and waterway pages plus live <code>chokepoint=</code> map deep links.</li>
         <li>AIS / trade-route layers, hotspot escalation, sanctions context, flights, and cable/infrastructure adjacency where relevant.</li>
-        <li>Country risk and resilience pages for supplier geographies.</li>
+        <li>Country risk pages for supplier geographies.</li>
         <li>Commodity Monitor and related market surfaces for confirmation — labeled as markets, not causal proof.</li>
         <li>Optional Pro alerts plus API/MCP automation for continuing watch.</li>
       </ul>
@@ -644,7 +644,7 @@ function renderSupplyChainDisruptionsUseCase({ tpl, baseUrl, lastmod }) {
       <h2>Provenance, freshness, and limits</h2>
       <ul>
         <li><strong>Provenance:</strong> chokepoint methodology, AIS aggregators, sanctions lists, country indexes, and market feeds each have distinct publishers.</li>
-        <li><strong>Freshness:</strong> maritime and hotspot layers can move within hours; resilience and some policy datasets refresh more slowly. Stamp observation time.</li>
+        <li><strong>Freshness:</strong> maritime and hotspot layers can move within hours; structural and some policy datasets refresh more slowly. Stamp observation time.</li>
         <li><strong>Blind spots:</strong> dark shipping, delayed AIS in thin-coverage regions, model latency, and commodity series that lag the physical constraint.</li>
         <li><strong>What World Monitor cannot prove:</strong> that an event will cause a specific price, shortage, delay, or customer impact.</li>
       </ul>

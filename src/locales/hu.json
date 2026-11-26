@@ -4572,7 +4572,7 @@
     "window": "Időszak",
     "days": "{{days}} nap",
     "observed": "{{count}} pillanatkép {{days}} nap alatt",
-    "legend": "CII (borostyán): a magasabb érték nagyobb instabilitást jelent. Ellenálló képesség (zöld): a magasabb érték nagyobb kapacitást jelent. A pontok a kiválasztott hírcímeket tartalmazó napokat jelölik.",
+    "legend": "CII (borostyán): a magasabb érték nagyobb instabilitást jelent. A pontok a kiválasztott hírcímeket tartalmazó napokat jelölik.",
     "chart": "CII",
     "selectDate": "{{date}}, {{count}} kiválasztott hírcím",
     "empty": "Ebben az időszakban nincsenek napi pillanatképek. Az előzmények az aktiválás után gyűlnek.",

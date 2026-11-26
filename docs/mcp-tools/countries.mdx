@@ -46,7 +46,7 @@ curl -s https://worldmonitor.app/mcp \
 
 ### `get_country_history`
 
-Daily country snapshots with optional CII and resilience scores, their source versions and observation times, and up to five linked headlines per date. The archive starts at activation without backfill. Missing dates and scores remain absent; formula changes and observation gaps break chart continuity. No headline does not prove that no event occurred.
+Daily country snapshots with optional CII scores, their source versions and observation times, and up to five linked headlines per date. The archive starts at activation without backfill. Missing dates and scores remain absent; formula changes and observation gaps break chart continuity. No headline does not prove that no event occurred.
 
 **Parameters:**
 
@@ -109,7 +109,7 @@ Open the embedded country view. It reuses the website country panel, topics, evi
 | Name | Type | Required | Description |
 |------|------|---------:|-------------|
 | `country_code` | string | **yes** | Country name or ISO2 code; resolved to a recognized country. |
-| `topic` | string | no | `overview`, `all`, `resilience`, `security`, `economy`, `resources`, `society` or `sources`. Defaults to overview. |
+| `topic` | string | no | `overview`, `all`, `security`, `economy`, `resources`, `society` or `sources`. Defaults to overview. |
 
 The result identifies the country and topic and links `ui://worldmonitor/country-view-v4.html`. Data loads progressively through server tools. The Signals section can show authorized military observations, static country classification and five additional values from bounded returned samples. Missing source evidence remains unknown. Sample scope, original dates, unknown snapshot clocks and retained observations stay visible. Follow/notification settings use a website handoff.
 

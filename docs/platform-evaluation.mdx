@@ -34,7 +34,6 @@ The following cycles describe specific product surfaces. REST and MCP freshness 
 | Market data | The dashboard refreshes market quotes every 12 minutes | MCP market data uses a 30-minute freshness budget. CFTC, FRED, and other institutional series follow their own publication schedules. |
 | Dashboard news and OSINT | 20-minute dashboard refresh cycle | Publisher timing varies. A refresh can return the same latest article when no new item is published. |
 | Conflict and unrest | GDELT bulk materialisation runs on a 15-minute cycle | The MCP unrest slice permits data up to 2 hours old before it is marked stale. Other conflict sources keep source-specific schedules. |
-| Country Resilience Index | Scheduled every 6 hours | A successful cycle does not imply that every upstream series published a new value. |
 | Institutional economic data | Daily, weekly, or monthly | BIS, Eurostat, IMF, World Bank, and similar datasets retain their native release calendars. |
 
 These are operating targets, not a promise that an upstream publisher will release a new observation in each window. Cache-backed API and MCP responses include timestamps and a `stale` indicator where supported. See the [MCP tool reference](/mcp-tools-reference) for per-tool freshness budgets, [Health endpoints](/health-endpoints) for monitoring semantics, and [status.worldmonitor.app](https://status.worldmonitor.app/) for current service status.

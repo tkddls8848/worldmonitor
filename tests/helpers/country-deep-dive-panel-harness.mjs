@@ -39,7 +39,6 @@ function defineGlobal(name, value) {
 }
 
 async function loadCountryDeepDivePanel(options = {}) {
-  const resilienceWidgetMode = options.resilienceWidgetMode ?? 'success';
   const sourceProvenance = JSON.stringify(options.sourceProvenance ?? {});
   const demographicsResponse = JSON.stringify(options.demographicsResponse ?? {
     countryCode: '',
@@ -55,65 +54,6 @@ async function loadCountryDeepDivePanel(options = {}) {
   const demographicsMode = JSON.stringify(options.demographicsMode ?? 'success');
   const tempDir = createTempDir('wm-country-deep-dive-');
   const outfile = join(tempDir, 'CountryDeepDivePanel.bundle.mjs');
-  const resilienceWidgetStub = resilienceWidgetMode === 'import-reject'
-    ? `
-      throw new Error('synthetic resilience widget chunk failure');
-      export class ResilienceWidget {}
-    `
-    : resilienceWidgetMode === 'constructor-throw'
-      ? `
-        export class ResilienceWidget {
-          constructor() {
-            throw new Error('synthetic resilience widget constructor failure');
-          }
-        }
-      `
-      : resilienceWidgetMode === 'get-element-throw'
-        ? `
-          const state = globalThis.__wmCountryDeepDiveTestState;
-          export class ResilienceWidget {
-            constructor(code) {
-              this.code = code;
-              this.destroyCount = 0;
-              this.energyMixData = null;
-              state.widgets.push(this);
-            }
-            setEnergyMix(data) {
-              this.energyMixData = data;
-            }
-            getElement() {
-              throw new Error('synthetic resilience widget getElement failure');
-            }
-            destroy() {
-              this.destroyCount += 1;
-            }
-          }
-        `
-      : `
-        const state = globalThis.__wmCountryDeepDiveTestState;
-        export class ResilienceWidget {
-          constructor(code) {
-            this.code = code;
-            this.destroyCount = 0;
-            this.energyMixData = null;
-            this.element = document.createElement('section');
-            this.element.className = 'resilience-widget-stub';
-            this.element.setAttribute('data-country-code', code);
-            this.element.textContent = 'Resilience ' + code;
-            state.widgets.push(this);
-          }
-          setEnergyMix(data) {
-            this.energyMixData = data;
-          }
-          getElement() {
-            return this.element;
-          }
-          destroy() {
-            this.destroyCount += 1;
-          }
-        }
-      `;
-
   const stubModules = new Map([
     ['feeds-stub', `
       const sourceProvenance = ${sourceProvenance};
@@ -226,6 +166,7 @@ async function loadCountryDeepDivePanel(options = {}) {
       }
     `],
     ['supply-chain-stub', `
+      export function getFoodStocks() { return Promise.resolve({ unavailable: true, records: [] }); }
       export function fetchMultiSectorExposure() { return Promise.resolve([]); }
       export const SEEDED_HS2_CODES = [];
       export function fetchBypassOptions() { return Promise.resolve({ corridors: [] }); }
@@ -247,28 +188,6 @@ async function loadCountryDeepDivePanel(options = {}) {
     `],
     ['intelligence-client-stub', `
       export class IntelligenceServiceClient {}
-    `],
-    ['resilience-service-stub', `
-      const state = globalThis.__wmCountryDeepDiveTestState;
-      const demographicsResponse = ${demographicsResponse};
-      const demographicsMode = ${demographicsMode};
-      export async function getFoodStocks() {
-        return { commodities: [], unavailable: true };
-      }
-      export async function getDemographicsCapability(options) {
-        state.demographicsCalls.push({
-          countryCode: options.countryCode,
-          hasSignal: options.signal instanceof AbortSignal,
-        });
-        // Held open and deliberately not wired to the signal: models a read the
-        // panel supersedes without aborting it.
-        if (demographicsMode === 'deferred') {
-          return new Promise((resolve, reject) => {
-            state.demographicsPending.push({ countryCode: options.countryCode, resolve, reject });
-          });
-        }
-        return { ...demographicsResponse, countryCode: options.countryCode };
-      }
     `],
     ['scorecard-service-stub', `
       const state = globalThis.__wmCountryDeepDiveTestState;
@@ -311,7 +230,6 @@ async function loadCountryDeepDivePanel(options = {}) {
         return scorecardResponse;
       }
     `],
-    ['resilience-widget-stub', resilienceWidgetStub],
     ['overlay-history-stub', `
       const state = globalThis.__wmCountryDeepDiveTestState;
       export const overlayHistory = {
@@ -351,11 +269,8 @@ async function loadCountryDeepDivePanel(options = {}) {
     ['@/config/chokepoint-registry', 'chokepoint-registry-stub'],
     ['@/utils/supplier-route-risk', 'supplier-route-risk-stub'],
     ['@/services/supply-chain', 'supply-chain-stub'],
-    ['./ResilienceWidget', 'resilience-widget-stub'],
-    ['@/components/ResilienceWidget', 'resilience-widget-stub'],
     ['@/services/runtime', 'runtime-stub'],
     ['@/generated/client/worldmonitor/intelligence/v1/service_client', 'intelligence-client-stub'],
-    ['@/services/resilience', 'resilience-service-stub'],
     ['@/services/scorecard', 'scorecard-service-stub'],
     ['@/utils/overlay-history', 'overlay-history-stub'],
   ]);
@@ -413,7 +328,6 @@ export async function createCountryDeepDivePanelHarness(options = {}) {
   };
   const browserEnvironment = createBrowserEnvironment();
   const state = {
-    widgets: [],
     loadFailures: [],
     demographicsCalls: [],
     demographicsPending: [],
@@ -480,8 +394,11 @@ export async function createCountryDeepDivePanelHarness(options = {}) {
     originalWarn(...args);
   };
 
+  const panels = [];
   function createPanel(download = async () => ({ state: 'attempted' })) {
-    return new CountryDeepDivePanel(null, undefined, download);
+    const panel = new CountryDeepDivePanel(null, undefined, download);
+    panels.push(panel);
+    return panel;
   }
 
   function getPanelRoot() {
@@ -489,6 +406,7 @@ export async function createCountryDeepDivePanelHarness(options = {}) {
   }
 
   function cleanup() {
+    for (const panel of panels) panel.hide();
     console.warn = originalWarn;
     cleanupBundle();
     delete globalThis.__wmCountryDeepDiveTestState;
@@ -508,9 +426,6 @@ export async function createCountryDeepDivePanelHarness(options = {}) {
     createPanel,
     document: browserEnvironment.document,
     getPanelRoot,
-    getWidgets() {
-      return state.widgets;
-    },
     /** console.warn lines the panel writes for a real (non-cancelled) load failure. */
     getLoadFailures() {
       return state.loadFailures;

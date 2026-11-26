@@ -8,7 +8,7 @@ canonical: "https://www.worldmonitor.app/agents.md"
 
 > How AI agents should work with worldmonitor.app: machine surfaces, authentication, crawl policy, rate limits, and discovery endpoints. Prefer the structured surfaces below over scraping the HTML dashboard — the dashboard is a WebGL SPA and yields nothing useful to a text parser.
 
-World Monitor is a real-time global intelligence dashboard: curated news feeds, a shared map-layer catalog, concrete panel implementations, country risk/resilience scores, AI briefs, forecasts, and market/supply-chain correlation, served as machine-readable JSON with documented methodology and provenance.
+World Monitor is a real-time global intelligence dashboard: curated news feeds, a shared map-layer catalog, concrete panel implementations, country instability scores, AI briefs, forecasts, and market/supply-chain correlation, served as machine-readable JSON with documented methodology and provenance.
 
 ## Machine surfaces (use these)
 

@@ -626,19 +626,14 @@ test('operator seed-health matches the fail-closed Japan blocked classification'
     UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
     UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
     WORLDMONITOR_VALID_KEYS: process.env.WORLDMONITOR_VALID_KEYS,
-    RESILIENCE_PILLAR_COMBINE_ENABLED: process.env.RESILIENCE_PILLAR_COMBINE_ENABLED,
-    RESILIENCE_SCHEMA_V2_ENABLED: process.env.RESILIENCE_SCHEMA_V2_ENABLED,
   };
   const operatorKey = 'cross-strait-source-health-test-key';
   const japanMetaKey = 'seed-meta:military:cross-strait-activity:japan-mod';
   const taiwanMetaKey = 'seed-meta:military:cross-strait-activity:taiwan-mnd';
-  const probeKey = 'resilience:intervals:v13:US';
 
   process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example.test';
   process.env.UPSTASH_REDIS_REST_TOKEN = 'redis-token';
   process.env.WORLDMONITOR_VALID_KEYS = operatorKey;
-  process.env.RESILIENCE_PILLAR_COMBINE_ENABLED = 'false';
-  process.env.RESILIENCE_SCHEMA_V2_ENABLED = 'true';
 
   const readEntry = async ({
     japanMeta,
@@ -658,24 +653,11 @@ test('operator seed-health matches the fail-closed Japan blocked classification'
         if (key === taiwanMetaKey && taiwanMeta) {
           return { result: JSON.stringify(taiwanMeta) };
         }
-        if (key === probeKey) {
-          return {
-            result: JSON.stringify({
-              p05: 65.2,
-              p95: 72.8,
-              _formula: 'd6',
-              methodology: 'weight-perturbation-sensitivity-v3',
-              computedAt: new Date().toISOString(),
-            }),
-          };
-        }
         return {
           result: JSON.stringify({
             fetchedAt: Date.now(),
             recordCount: 10_000,
-            sourceVersion: key === 'seed-meta:resilience:intervals'
-              ? 'resilience-intervals:resilience:intervals:v13:weight-perturbation-sensitivity-v3'
-              : 'test',
+            sourceVersion: 'test',
           }),
         };
       });

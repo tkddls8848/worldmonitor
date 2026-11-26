@@ -8,15 +8,11 @@ const originalEnv = {
   UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
   UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
   WORLDMONITOR_VALID_KEYS: process.env.WORLDMONITOR_VALID_KEYS,
-  RESILIENCE_PILLAR_COMBINE_ENABLED: process.env.RESILIENCE_PILLAR_COMBINE_ENABLED,
-  RESILIENCE_SCHEMA_V2_ENABLED: process.env.RESILIENCE_SCHEMA_V2_ENABLED,
 };
 
 process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example.test';
 process.env.UPSTASH_REDIS_REST_TOKEN = 'token';
 process.env.WORLDMONITOR_VALID_KEYS = 'test-key';
-process.env.RESILIENCE_PILLAR_COMBINE_ENABLED = 'true';
-process.env.RESILIENCE_SCHEMA_V2_ENABLED = 'true';
 
 const { handleSeedHealth } = await import('../api/seed-health.js');
 
@@ -25,10 +21,6 @@ const PORTWATCH_CONTENT_BUDGET_MINUTES = 10 * 24 * 60;
 const TEST_NOW = Date.parse('2026-08-03T14:42:58.000Z');
 const DECISION_META_KEY = 'seed-meta:intelligence:china-decision-signals';
 const PREDICTION_META_KEY = 'seed-meta:prediction:markets';
-const RESILIENCE_INTERVAL_PROBE_KEY = 'resilience:intervals:v13:US';
-const RESILIENCE_INTERVAL_METHODOLOGY = 'weight-perturbation-sensitivity-v3';
-const EDUCATION_META_KEY = 'seed-meta:resilience:education-attainment';
-const EDUCATION_DATA_KEY = 'resilience:education-attainment:v1';
 const PHYSICAL_DIVERGENCE_META_KEY = 'seed-meta:market:physical-divergence';
 const PHYSICAL_DIVERGENCE_ACTIVATION_KEY = 'seed-activated:market:physical-divergence';
 
@@ -45,8 +37,6 @@ before(() => {
   process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example.test';
   process.env.UPSTASH_REDIS_REST_TOKEN = 'token';
   process.env.WORLDMONITOR_VALID_KEYS = 'test-key';
-  process.env.RESILIENCE_PILLAR_COMBINE_ENABLED = 'true';
-  process.env.RESILIENCE_SCHEMA_V2_ENABLED = 'true';
 });
 
 after(() => {
@@ -132,28 +122,6 @@ function installSeedHealthPipelineMock(
             poolCounts: { geopolitical: 18, tech: 12, finance: 8 },
           }),
         };
-      }
-      if (key === RESILIENCE_INTERVAL_PROBE_KEY) {
-        return {
-          result: JSON.stringify({
-            p05: 65.2,
-            p95: 72.8,
-            _formula: 'pc',
-            _educationState: 'education-on',
-            methodology: RESILIENCE_INTERVAL_METHODOLOGY,
-            computedAt: '2026-06-11T12:00:00.000Z',
-          }),
-        };
-      }
-      if (key === EDUCATION_META_KEY) {
-        return { result: JSON.stringify({
-          fetchedAt: now,
-          recordCount: sovereignStatus.entries.length,
-          rankableRecordCount: sovereignStatus.entries.length,
-        }) };
-      }
-      if (key === EDUCATION_DATA_KEY) {
-        return { result: JSON.stringify(educationPayload()) };
       }
       // This fixture isolates the PortWatch entry. Keep every unrelated
       // coverage-gated feed above its floor so a new minRecordCount contract
