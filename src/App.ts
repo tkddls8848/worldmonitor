@@ -1000,16 +1000,14 @@ export class App {
       }
     }
 
-    // MCP panels are retired (their /api/mcp-proxy backend is gone). A stored
-    // `mcp-*` entry would only list a dead toggle, so drop it; the saved MCP
-    // specs themselves are simply never read again.
-    let droppedRetiredMcpPanel = false;
+    // Drop saved entries for retired panels so Settings omits dead toggles.
+    let droppedRetiredPanel = false;
     for (const key of Object.keys(panelSettings)) {
-      if (!key.startsWith('mcp-')) continue;
+      if (!key.startsWith('mcp-') && key !== 'social-velocity' && key !== 'wsb-ticker-scanner') continue;
       delete panelSettings[key];
-      droppedRetiredMcpPanel = true;
+      droppedRetiredPanel = true;
     }
-    if (droppedRetiredMcpPanel && storageAvailable) saveToStorage(STORAGE_KEYS.panels, panelSettings);
+    if (droppedRetiredPanel && storageAvailable) saveToStorage(STORAGE_KEYS.panels, panelSettings);
 
     if (storageAvailable) {
       // One-time migration: prune removed panel keys from stored settings and order
