@@ -122,7 +122,7 @@ export const DIRECT_WRITE_PATTERNS = [
  * loading paint would flatten the retry ladder to its 15s floor. Do NOT "finish"
  * those three by driving the remaining write to zero — an `x1` here is the
  * ratchet's terminal state, not an unfinished migration. All three are pinned:
- * TechEvents by `tests/dom/panel-error-latch-6577.test.mts`, ServiceStatus and
+ * ServiceStatus and
  * `GivingPanel` left the inventory entirely and `GdeltIntelPanel` keeps only its
  * `insertAdjacentElement` sibling insert (see DIRECT_WRITE_PATTERNS).
  */
@@ -139,7 +139,6 @@ export const LEGACY_DIRECT_CONTENT_WRITES = [
   'src/components/RenewableEnergyPanel.ts :: this.content.appendChild(…) x3',
   'src/components/ServiceStatusPanel.ts :: replaceChildren(this.content, …) x1',
   'src/components/SupplyChainPanel.ts :: this.content.prepend(…) x1',
-  'src/components/TechEventsPanel.ts :: replaceChildren(this.content, …) x1',
 ];
 
 /**

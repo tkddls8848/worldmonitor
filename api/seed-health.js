@@ -201,14 +201,6 @@ const SEED_DOMAINS = {
   'economic:bis-property-commercial':  { key: 'seed-meta:economic:bis-property-commercial',  intervalMin: 720 }, // 12h cron; only written when CPP slice fetched fresh entries
   'economic:cbr-rates':                { key: 'seed-meta:economic:cbr-rates',                intervalMin: 1440, minRecordCount: 31 }, // daily cron (seed-bundle-macro); api/health.js maxStaleMin 4320 = 3x. minRecordCount mirrors MIN_RATE_COUNT (30) + the key rate.
   'economic:boc-valet':                { key: 'seed-meta:economic:boc-valet',                intervalMin: 1440, minRecordCount: 19 }, // daily cron (seed-bundle-macro); api/health.js maxStaleMin 4320 = 3x. minRecordCount = 15 FX + policy + 3 yields.
-  'research:tech-events':    { key: 'seed-meta:research:tech-events',     intervalMin: 240 },
-  // Seeder-owned meta for the research:tech-events:v1 mirror (scripts/
-  // seed-research.mjs). MUST stay distinct from the relay-owned
-  // seed-meta:research:tech-events above: the relay defers its boot seed while
-  // the shared key is fresh, so a second writer there starves the bootstrap
-  // payload (incident 2026-09-23). This entry gives the hourly mirror its own
-  // heartbeat instead of riding the relay's.
-  'research:tech-events-seeder': { key: 'seed-meta:research:tech-events:seeder', intervalMin: 90 },
   'research:arxiv-hn-trending': { key: 'seed-meta:research:arxiv-hn-trending', intervalMin: 75 },
   'intelligence:gdelt-intel': { key: 'seed-meta:intelligence:gdelt-intel', intervalMin: 23 }, // 15min materializer cron (#5863); intervalMin = maxStaleMin / 2 (45 / 2), matching api/health.js — was 210 against the retired 4h DOC cron.
   'gdelt:bulk:country-articles': { key: 'seed-meta:gdelt:bulk:country-articles', intervalMin: 23 }, // same materializer tick; standalone health key for the per-country index (#7748).

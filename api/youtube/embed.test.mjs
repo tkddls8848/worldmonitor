@@ -7,7 +7,7 @@ const TRUSTED_RETURN_URL_ORIGINS = [
   'https://www.worldmonitor.app',
   'https://app.worldmonitor.app',
   'https://api.worldmonitor.app',
-  'https://tech.worldmonitor.app',
+  'https://energy.worldmonitor.app',
   'https://finance.worldmonitor.app',
   'https://commodity.worldmonitor.app',
   'https://energy.worldmonitor.app',
@@ -162,8 +162,8 @@ test('rejects vendor, unknown, and look-alike origins for both player and parent
     assert.equal(config.origin, 'https://worldmonitor.app', origin);
     assert.equal(config.parentOrigin, 'https://worldmonitor.app', origin);
 
-    query.set('origin', 'https://tech.worldmonitor.app');
-    assert.equal((await render(`?${query}`)).config.parentOrigin, 'https://tech.worldmonitor.app', origin);
+    query.set('origin', 'https://energy.worldmonitor.app');
+    assert.equal((await render(`?${query}`)).config.parentOrigin, 'https://energy.worldmonitor.app', origin);
   }
 });
 

@@ -74,6 +74,8 @@ describe('loadTabsState', () => {
       'toronto-safety': widget,
       'live-webcams': widget,
       'positive-feed': widget,
+      startups: widget,
+      events: widget,
       'windy-webcams': widget,
       'live-youtube': widget,
       'pinned-webcams': widget,

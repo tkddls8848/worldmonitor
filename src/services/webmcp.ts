@@ -2052,13 +2052,13 @@ export function buildWebMcpTools(
       name: WEBMCP_SPA_TOOL.switchMonitor,
       title: 'Switch Monitor',
       description:
-        'Switch the visible dashboard to World (full), Tech (tech), Finance (finance), Commodity (commodity), Energy (energy), or Good News (happy) through the header variant switcher. Use those stable keys, not display labels. Returns the selected destination and effective dashboard state.',
+        'Switch the visible dashboard to World (full), Finance (finance), Commodity (commodity), or Energy (energy) through the header variant switcher. Use those stable keys, not display labels. Returns the selected destination and effective dashboard state.',
       inputSchema: {
         type: 'object',
         properties: {
           monitor: {
             type: 'string',
-            description: 'Stable monitor key: full, tech, finance, commodity, energy, or happy.',
+            description: 'Stable monitor key: full, finance, commodity, or energy.',
             enum: [...SITE_VARIANTS],
           },
         },

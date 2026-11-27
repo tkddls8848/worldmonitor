@@ -860,7 +860,6 @@ export class EventHandlerManager implements AppModule {
       || t('header.search') === '검색';
     const variantChoices: Array<{ key: string; icon: string; label: string }> = [
       { key: 'full', icon: '🌍', label: t('header.world') },
-      { key: 'tech', icon: '💻', label: t('header.tech') },
       { key: 'finance', icon: '📈', label: t('header.finance') },
       { key: 'commodity', icon: '⛏️', label: t('header.commodity') },
       { key: 'energy', icon: '⚡', label: t('header.energy') },

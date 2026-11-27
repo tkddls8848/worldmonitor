@@ -1113,13 +1113,13 @@
       "id": "switch_monitor_direct",
       "category": "dashboard_control",
       "promptKind": "direct",
-      "prompt": "Switch the dashboard to the Tech monitor.",
+      "prompt": "Switch the dashboard to the Finance monitor.",
       "expectedPlans": [
         [
           {
             "tool": "switch_monitor",
             "arguments": {
-              "monitor": "tech"
+              "monitor": "finance"
             }
           }
         ]

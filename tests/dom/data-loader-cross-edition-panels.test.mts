@@ -142,10 +142,10 @@ describe('cross-edition panels read the digests of every edition that carries th
   });
 
   it('drops items from sources the user disabled', async () => {
-    vi.stubGlobal('fetch', digestFetch({ tech: editionDigest('podcasts', ['Kept Show', 'Disabled Show']) }));
+    vi.stubGlobal('fetch', digestFetch({ finance: editionDigest('forex', ['Kept Show', 'Disabled Show']) }));
     const loader = await makeLoader();
 
-    const items = await loader.loadNewsCategory('podcasts', feeds(['Kept Show']), null, true, OPTIONS);
+    const items = await loader.loadNewsCategory('forex', feeds(['Kept Show']), null, true, OPTIONS);
 
     expect(items.length).toBeGreaterThan(0);
     expect(items.every(i => i.source === 'Kept Show')).toBe(true);
@@ -153,23 +153,22 @@ describe('cross-edition panels read the digests of every edition that carries th
 
   it('makes one digest request per edition for several panels in a refresh', async () => {
     const fetchMock = digestFetch({
-      tech: mergeDigests(editionDigest('podcasts', ['Show']), editionDigest('thinktanks', ['Institute'])),
-      full: editionDigest('thinktanks', ['Institute']),
+      finance: mergeDigests(editionDigest('forex', ['Show']), editionDigest('bonds', ['Institute'])),
     });
     vi.stubGlobal('fetch', fetchMock);
     const loader = await makeLoader();
 
-    await loader.loadNewsCategory('podcasts', feeds(['Show']), null, true, OPTIONS);
-    await loader.loadNewsCategory('thinktanks', feeds(['Institute']), null, true, OPTIONS);
+    await loader.loadNewsCategory('forex', feeds(['Show']), null, true, OPTIONS);
+    await loader.loadNewsCategory('bonds', feeds(['Institute']), null, true, OPTIONS);
 
-    expect(editionsRequested(fetchMock).filter(e => e === 'tech')).toHaveLength(1);
+    expect(editionsRequested(fetchMock).filter(e => e === 'finance')).toHaveLength(1);
   });
 
   it('sends digest items through breaking alerts and trending headlines', async () => {
-    vi.stubGlobal('fetch', digestFetch({ tech: editionDigest('podcasts', ['Show']) }));
+    vi.stubGlobal('fetch', digestFetch({ finance: editionDigest('forex', ['Show']) }));
     const loader = await makeLoader();
 
-    await loader.loadNewsCategory('podcasts', feeds(['Show']), null, true, OPTIONS);
+    await loader.loadNewsCategory('forex', feeds(['Show']), null, true, OPTIONS);
 
     expect(mocks.checkBatchForBreakingAlerts).toHaveBeenCalledTimes(1);
     const alerted = mocks.checkBatchForBreakingAlerts.mock.calls[0]![0] as NewsItemLike[];
@@ -181,12 +180,12 @@ describe('cross-edition panels read the digests of every edition that carries th
   });
 
   it('does not alert on a stale digest replay', async () => {
-    const stale = editionDigest('podcasts', ['Show']);
+    const stale = editionDigest('forex', ['Show']);
     stale.coverage = { state: 'ok', servedStale: true } as never;
-    vi.stubGlobal('fetch', digestFetch({ tech: stale }));
+    vi.stubGlobal('fetch', digestFetch({ finance: stale }));
     const loader = await makeLoader();
 
-    await loader.loadNewsCategory('podcasts', feeds(['Show']), null, true, OPTIONS);
+    await loader.loadNewsCategory('forex', feeds(['Show']), null, true, OPTIONS);
 
     expect(mocks.checkBatchForBreakingAlerts).not.toHaveBeenCalled();
   });

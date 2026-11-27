@@ -258,7 +258,6 @@ const BOOTSTRAP_KEYS = {
   ucdpEventsBootstrap: 'conflict:ucdp-events-bootstrap:v1',
   weatherAlerts:     'weather:alerts:v1',
   spending:          'economic:spending:v1',
-  techEvents:        'research:tech-events-bootstrap:v1',
   gdeltIntel:        'intelligence:gdelt-intel:v1',
   correlationCards:   'correlation:cards-bootstrap:v1',
   crossStraitActivity: 'military:cross-strait-activity:v1',
@@ -717,7 +716,6 @@ const STANDALONE_KEYS = {
   forecastBets:                  'forecast:bets:history:v1',
   forecastFunnel:                'forecast:funnel:health:v1',
   researchArxivHnTrending:       'research:arxiv:v1:cs.AI::50',
-  techEventsSeeder:              'research:tech-events:v1',
   // #5736 — historical-intelligence ingest health, one record per collector.
   // These are NOT the collectors' canonical keys: scripts/_seed-history.mjs
   // appends to the Convex intel-history store fail-open, so a permanently
@@ -1335,24 +1333,6 @@ const SEED_META = {
     key: 'seed-meta:economic:global-tenders:malaysia-myprocurement', maxStaleMin: 1440, sourceFailureWithinBudgetOk: true,
     activationKey: 'seed-activated:economic:global-tenders:malaysia-myprocurement',
     cutover: { mode: 'activation-marker', fromKey: null, issue: 10052, activationKey: 'seed-activated:economic:global-tenders:malaysia-myprocurement' },
-  },
-  techEvents:       { key: 'seed-meta:research:tech-events',       maxStaleMin: 480 },
-  techEventsSeeder: {
-    key: 'seed-meta:research:tech-events:seeder',
-    maxStaleMin: 180,
-    cutover: {
-      mode: 'preseed',
-      fromKey: null,
-      issue: 8572,
-      verifiedAt: '2026-09-24T08:57:09.430Z',
-      evidence: {
-        platform: 'railway',
-        service: 'seed-research',
-        probeKey: 'seed-meta:research:tech-events:seeder',
-        compactHealthStatus: 'OK',
-        reference: 'https://github.com/koala73/worldmonitor/blob/codex/8572-tech-events-feed-health/docs/snapshots/tech-events-seeder-preseed-2026-09-24.json',
-      },
-    },
   },
   researchArxivHnTrending: { key: 'seed-meta:research:arxiv-hn-trending', maxStaleMin: 150 },
   gdeltIntel:       { key: 'seed-meta:intelligence:gdelt-intel',   maxStaleMin: 45 }, // 15min bulk materializer; 45min = 3× cadence and expires before the 24h canonical key.

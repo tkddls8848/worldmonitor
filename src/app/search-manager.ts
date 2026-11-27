@@ -28,10 +28,6 @@ import { getCachedMilitaryBases, preloadMilitaryBases } from '@/services/militar
 import { UNDERSEA_CABLES, NUCLEAR_FACILITIES } from '@/config/geo-map';
 import { PIPELINES } from '@/config/pipelines';
 import { AI_DATA_CENTERS } from '@/config/ai-datacenters';
-import { TECH_COMPANIES } from '@/config/tech-companies';
-import { AI_RESEARCH_LABS } from '@/config/ai-research-labs';
-import { STARTUP_ECOSYSTEMS } from '@/config/startup-ecosystems';
-import { TECH_HQS, ACCELERATORS } from '@/config/tech-geo';
 import { STOCK_EXCHANGES, FINANCIAL_CENTERS, CENTRAL_BANKS, COMMODITY_HUBS } from '@/config/finance-geo';
 import { t } from '@/services/i18n';
 import { saveToStorage, setTheme } from '@/utils';
@@ -263,63 +259,12 @@ export class SearchManager implements AppModule {
   }
 
   private setupSearchModal(): void {
-    const searchOptions = SITE_VARIANT === 'tech'
-      ? { placeholder: t('modals.search.placeholderTech') }
-      : SITE_VARIANT === 'finance'
+    const searchOptions = SITE_VARIANT === 'finance'
           ? { placeholder: t('modals.search.placeholderFinance') }
           : { placeholder: t('modals.search.placeholder') };
     this.ctx.searchModal = new SearchModal(this.ctx.container, searchOptions);
 
-    if (SITE_VARIANT === 'tech') {
-      this.ctx.searchModal.registerSource('techcompany', TECH_COMPANIES.map(c => ({
-        id: c.id,
-        title: c.name,
-        subtitle: `${c.sector} ${c.city} ${c.keyProducts?.join(' ') || ''}`.trim(),
-        data: c,
-      })));
-
-      this.ctx.searchModal.registerSource('ailab', AI_RESEARCH_LABS.map(l => ({
-        id: l.id,
-        title: l.name,
-        subtitle: `${l.type} ${l.city} ${l.focusAreas?.join(' ') || ''}`.trim(),
-        data: l,
-      })));
-
-      this.ctx.searchModal.registerSource('startup', STARTUP_ECOSYSTEMS.map(s => ({
-        id: s.id,
-        title: s.name,
-        subtitle: `${s.ecosystemTier} ${s.topSectors?.join(' ') || ''} ${s.notableStartups?.join(' ') || ''}`.trim(),
-        data: s,
-      })));
-
-      this.ctx.searchModal.registerSource('datacenter', AI_DATA_CENTERS.map(d => ({
-        id: d.id,
-        title: d.name,
-        subtitle: `${d.owner} ${d.chipType || ''}`.trim(),
-        data: d,
-      })));
-
-      this.ctx.searchModal.registerSource('cable', UNDERSEA_CABLES.map(c => ({
-        id: c.id,
-        title: c.name,
-        subtitle: c.major ? 'Major internet backbone' : 'Undersea cable',
-        data: c,
-      })));
-
-      this.ctx.searchModal.registerSource('techhq', TECH_HQS.map(h => ({
-        id: h.id,
-        title: h.company,
-        subtitle: `${h.type === 'faang' ? 'Big Tech' : h.type === 'unicorn' ? 'Unicorn' : 'Public'} • ${h.city}, ${h.country}`,
-        data: h,
-      })));
-
-      this.ctx.searchModal.registerSource('accelerator', ACCELERATORS.map(a => ({
-        id: a.id,
-        title: a.name,
-        subtitle: `${a.type} • ${a.city}, ${a.country}${a.notable ? ` • ${a.notable.slice(0, 2).join(', ')}` : ''}`,
-        data: a,
-      })));
-    } else {
+    {
       this.ctx.searchModal.registerSource('hotspot', INTEL_HOTSPOTS.map(h => ({
         id: h.id,
         title: h.name,
@@ -409,7 +354,7 @@ export class SearchManager implements AppModule {
     // compatibility (a deck-only layer can't run on the SVG fallback). Without
     // them, layer commands surface where they'd silently fail the
     // variant/renderer guard (e.g. `layer:storageFacilities` on
-    // tech/finance/commodity/happy, or SVG-mobile).
+    // finance, commodity, energy, or SVG mobile).
     this.ctx.searchModal.setLayerExecutableFn((layerKey) => {
       const key = (LAYER_KEY_MAP[layerKey] || layerKey) as keyof MapLayers;
       if (!(key in this.ctx.mapLayers)) return false;
@@ -745,11 +690,6 @@ export class SearchManager implements AppModule {
       case 'nuclear': return 'nuclear';
       case 'earthquake': return 'natural';
       case 'outage': return 'outages';
-      case 'techcompany':
-      case 'techhq': return 'techHQs';
-      case 'startup': return 'startupHubs';
-      case 'techevent': return 'techEvents';
-      case 'accelerator': return 'accelerators';
       case 'exchange': return 'stockExchanges';
       case 'financialcenter': return 'financialCenters';
       case 'centralbank': return 'centralBanks';
@@ -831,14 +771,7 @@ export class SearchManager implements AppModule {
       data: m,
     })), sourceOptions);
 
-    if (SITE_VARIANT === 'tech') {
-      this.ctx.searchModal.registerSource('techevent', this.ctx.latestTechEvents.map((e) => ({
-        id: e.id,
-        title: e.title,
-        subtitle: `${e.location} • ${new Date(e.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
-        data: e,
-      })), sourceOptions);
-    }
+
   }
 
   /**

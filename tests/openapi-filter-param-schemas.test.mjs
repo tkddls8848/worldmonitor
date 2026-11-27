@@ -49,7 +49,6 @@ const EXPECTED_ENUMS = [
   ['MilitaryService', '/api/military/v1/list-military-bases', 'get', 'type', FILTER_PARAM_CONTRACTS.militaryBaseTypes],
   ['MilitaryService', '/api/military/v1/list-military-bases', 'get', 'kind', FILTER_PARAM_CONTRACTS.militaryBaseKinds],
   ['PredictionService', '/api/prediction/v1/list-prediction-markets', 'get', 'category', PREDICTION_MARKET_CATEGORIES],
-  ['ResearchService', '/api/research/v1/list-tech-events', 'get', 'type', FILTER_PARAM_CONTRACTS.researchTechEventTypes],
   ['ResearchService', '/api/research/v1/list-hackernews-items', 'get', 'feed_type', FILTER_PARAM_CONTRACTS.researchHackerNewsFeedTypes],
 ];
 
@@ -154,9 +153,6 @@ describe('OpenAPI filter parameter schemas', () => {
     assert.match(bls.description, /USPRIV/);
     assert.doesNotMatch(bls.description, /CES0500000001|CIU1010000000000A/);
 
-    const techEvents = getParam(readJsonSpec('ResearchService'), '/api/research/v1/list-tech-events', 'get', 'type');
-    assert.match(techEvents.description, /conference/);
-    assert.doesNotMatch(techEvents.description, /conferences/);
 
     const hn = getParam(readJsonSpec('ResearchService'), '/api/research/v1/list-hackernews-items', 'get', 'feed_type');
     assert.match(hn.description, /job/);

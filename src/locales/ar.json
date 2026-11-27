@@ -311,7 +311,6 @@
   },
   "header": {
     "world": "العالم",
-    "tech": "التقنية",
     "live": "مباشر",
     "search": "بحث",
     "settings": "الإعدادات",
@@ -431,23 +430,9 @@
     "displacement": "اللاجئون والنزوح",
     "climate": "شذوذات مناخية",
     "populationExposure": "التعرض السكاني",
-    "startups": "الشركات الناشئة ورأس المال الاستثماري",
-    "vcblogs": "رؤى ومقالات رأس المال الاستثماري",
-    "regionalStartups": "أخبار الشركات الناشئة العالمية",
-    "unicorns": "متتبع اليونيكورن",
-    "accelerators": "المسرّعات وأيام العروض",
-    "security": "الأمن السيبراني",
-    "policy": "سياسات وتنظيمات AI",
     "regulation": "لوحة تنظيمات AI",
     "finRegulation": "التنظيم المالي",
-    "hardware": "أشباه الموصلات والعتاد",
-    "cloud": "السحابة والبنية التحتية",
-    "dev": "مجتمع المطورين",
-    "github": "GitHub الرائج",
     "ipo": "القوائم العامة واندماج شركات الواجهات",
-    "funding": "التمويل ورأس المال الاستثماري",
-    "producthunt": "Product Hunt",
-    "events": "فعاليات تقنية",
     "serviceStatus": "حالة الخدمات",
     "techReadiness": "مؤشر الجاهزية التقنية",
     "gccInvestments": "استثمارات مجلس التعاون الخليجي",
@@ -1188,15 +1173,10 @@
         "oceania": "أوقيانوسيا"
       },
       "layers": {
-        "startupHubs": "مراكز الشركات الناشئة",
-        "techHQs": "مقرات شركات التقنية",
-        "accelerators": "المسرّعات",
-        "cloudRegions": "مناطق السحابة",
         "aiDataCenters": "مراكز بيانات AI",
         "underseaCables": "الكابلات البحرية",
         "internetOutages": "انقطاعات الإنترنت",
         "cyberThreats": "التهديدات السيبرانية",
-        "techEvents": "فعاليات تقنية",
         "naturalEvents": "أحداث طبيعية",
         "fires": "حرائق",
         "intelHotspots": "بؤر استخباراتية",
@@ -1239,8 +1219,6 @@
         "aircraft": "طائرات",
         "protest": "احتجاج",
         "protestsCount": "{{count}} احتجاج",
-        "techHQsCount": "{{count}} مقر تقني",
-        "techEventsCount": "{{count}} فعالية تقنية",
         "dataCentersCount": "{{count}} مركز بيانات",
         "underseaCable": "كابل بحري",
         "pipeline": "خط أنابيب",
@@ -1290,7 +1268,6 @@
         "descriptions": {
           "techStartupHubs": "أنظمة بيئية رئيسية للشركات الناشئة (سان فرانسيسكو، نيويورك، لندن، إلخ.)",
           "techCloudRegions": "مناطق مراكز بيانات AWS و Azure و GCP",
-          "techHQs": "مقرات شركات التقنية الكبرى",
           "techAccelerators": "مواقع Y Combinator و Techstars و 500 Startups",
           "infraCables": "كابلات ألياف ضوئية بحرية رئيسية (العمود الفقري للإنترنت)",
           "infraDatacenters": "مجموعات حوسبة AI بـ 10,000+ GPU",
@@ -1335,7 +1312,6 @@
           "infraCyberThreats": "هجمات سيبرانية وأحداث أمنية",
           "mineralsFull": "رواسب المعادن الاستراتيجية ومواقع التعدين",
           "techCyberThreats": "هجمات سيبرانية وأحداث أمنية",
-          "techEvents": "مؤتمرات وفعاليات تقنية كبرى",
           "techFires": "حرائق غابات نشطة بالقرب من البنية التحتية التقنية",
           "geoBoundaries": "مناطق منزوعة السلاح وخطوط الهدنة والحدود المتنازع عليها",
           "ciiChoropleth": "خريطة حرارية لمؤشر عدم الاستقرار القطري — تلون الدول حسب التقييم (أخضر=مستقرة، أحمر=حرجة)",
@@ -1529,22 +1505,6 @@
       },
       "dataFreshness": "حداثة البيانات",
       "sourcesDetail": "{{active}}/{{total}} مصادر"
-    },
-    "techEvents": {
-      "loading": "جارٍ تحميل الفعاليات التقنية...",
-      "noEvents": "لا توجد فعاليات لعرضها",
-      "showOnMap": "عرض على الخريطة",
-      "moreInfo": "مزيد من المعلومات",
-      "upcoming": "القادمة",
-      "conferences": "المؤتمرات",
-      "earnings": "الأرباح",
-      "all": "الكل",
-      "conferencesCount": "{{count}} مؤتمرات",
-      "onMap": "{{count}} على الخريطة",
-      "techmemeEvents": "فعاليات Techmeme ↗",
-      "today": "اليوم",
-      "soon": "قريبًا",
-      "infoTooltip": "<strong>أحداث التقنية</strong> أحداث تقنية قادمة وحديثة: مؤتمرات، إطلاق منتجات، جلسات استماع تنظيمية، ومكالمات أرباح. مجمعة من تقويمات الأحداث الرسمية ومصادر الصناعة."
     },
     "techReadiness": {
       "ranked": "مصنّفة",
@@ -3534,59 +3494,6 @@
         "public": "عام",
         "publicPrivate": "عام/خاص"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "مركز ضخم",
-        "major": "مركز رئيسي",
-        "emerging": "ناشئ",
-        "hub": "مركز"
-      },
-      "unicorns": "يونيكورن"
-    },
-    "cloudRegion": {
-      "provider": "المزوّد",
-      "availabilityZones": "مناطق التوفر"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "تقنية كبرى",
-        "unicorn": "يونيكورن",
-        "public": "عامة",
-        "tech": "تقنية"
-      },
-      "marketCap": "القيمة السوقية",
-      "employees": "الموظفون"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "مسرّعة",
-        "incubator": "حاضنة",
-        "studio": "استوديو شركات ناشئة"
-      },
-      "founded": "تأسست",
-      "notableAlumni": "خريجون بارزون"
-    },
-    "techEvent": {
-      "days": {
-        "today": "اليوم",
-        "tomorrow": "غداً",
-        "inDays": "بعد {{count}} أيام"
-      },
-      "date": "التاريخ",
-      "moreInformation": "مزيد من المعلومات"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}} شركة",
-      "bigTechCount": "{{count}} تقنية كبرى",
-      "unicornsCount": "{{count}} يونيكورن",
-      "publicCount": "{{count}} عامة",
-      "sampled": "عرض قائمة عيّنة من {{count}} شركة."
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}} فعالية",
-      "upcomingWithin2Weeks": "{{count}} قادمة خلال أسبوعين",
-      "sampled": "عرض قائمة عيّنة من {{count}} فعالية."
     },
     "militaryFlight": {
       "types": {

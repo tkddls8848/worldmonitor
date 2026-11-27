@@ -303,7 +303,6 @@
   },
   "header": {
     "world": "СВЯТ",
-    "tech": "ТЕХНОЛОГИЯ",
     "live": "ЖИВО",
     "search": "Търсене",
     "settings": "НАСТРОЙКИ",
@@ -426,23 +425,9 @@
     "populationExposure": "Експозиция на население",
     "securityAdvisories": "Препоръки за сигурност",
     "orefSirens": "Сирени на Израел",
-    "startups": "Стартъпи и венчурен капитал",
-    "vcblogs": "Вижтесла на венчурния капитал и статии",
-    "regionalStartups": "Световни стартъп новини",
-    "unicorns": "Проследяване на еднорози",
-    "accelerators": "Ускорители & Demo Days",
-    "security": "Кибербезопасност",
-    "policy": "AI политика & регулация",
     "regulation": "AI табло на регулация",
     "finRegulation": "Финансово регулиране",
-    "hardware": "Полупроводници & хардуер",
-    "cloud": "Облак & инфраструктура",
-    "dev": "Разработчишка общност",
-    "github": "GitHub Trending",
     "ipo": "Публични листинги и сливане на компании-празници",
-    "funding": "Финансиране и венчурен капитал",
-    "producthunt": "Product Hunt",
-    "events": "Технологични събития",
     "serviceStatus": "Статус на услугата",
     "techReadiness": "Индекс на технологическа готовност",
     "gccInvestments": "Инвестиции на Съвета за сътрудничество на Персийския залив",
@@ -1216,15 +1201,10 @@
         "oceania": "Океания"
       },
       "layers": {
-        "startupHubs": "Стартъп центрове",
-        "techHQs": "Технологични централи",
-        "accelerators": "Ускорители",
-        "cloudRegions": "Облачни региони",
         "aiDataCenters": "AI центрове за данни",
         "underseaCables": "Подводни кабели",
         "internetOutages": "Прекъсвания в интернета",
         "cyberThreats": "Киберугрози",
-        "techEvents": "Технологични събития",
         "naturalEvents": "Природни събития",
         "fires": "Пожари",
         "intelHotspots": "Intel гореща точка",
@@ -1267,8 +1247,6 @@
         "aircraft": "самолети",
         "protest": "Протест",
         "protestsCount": "{{count}} протеста",
-        "techHQsCount": "{{count}} технологични централи",
-        "techEventsCount": "{{count}} технологични събития",
         "dataCentersCount": "{{count}} центъра за данни",
         "underseaCable": "Подводен кабел",
         "pipeline": "Тръбопровод",
@@ -1318,7 +1296,6 @@
         "descriptions": {
           "techStartupHubs": "Основни стартъп екосистеми (SF, NYC, Лондон и др.)",
           "techCloudRegions": "Региони за центрове за данни на AWS, Azure, GCP",
-          "techHQs": "Централи на водещи технологични компании",
           "techAccelerators": "Локации на Y Combinator, Techstars, 500 Startups",
           "infraCables": "Основни подводни оптични кабели (гръбнак на интернет)",
           "infraDatacenters": "Клъстери за AI изчисления >=10 000 GPU",
@@ -1361,7 +1338,6 @@
           "infraCyberThreats": "Кибератаки и инциденти със сигурността",
           "mineralsFull": "Стратегически минерални находища и мини",
           "techCyberThreats": "Кибератаки и инциденти със сигурността",
-          "techEvents": "Водещи технологични конференции и събития",
           "techFires": "Активни пожари в близост до технологична инфраструктура",
           "financeGulfInvestments": "Инвестиции на суверенните фондове за богатство на Съвета на сътрудничеството на Персийския залив и преки чужди инвестиции",
           "tradeRoutes": "Основни световни корабоплавателни маршрути през стратегически тесни места",
@@ -1562,22 +1538,6 @@
       },
       "dataFreshness": "Актуалност на данните",
       "sourcesDetail": "{{active}}/{{total}} източника"
-    },
-    "techEvents": {
-      "loading": "Зареждане на технологични събития...",
-      "noEvents": "Няма събития за показване",
-      "showOnMap": "Показване на карта",
-      "moreInfo": "Повече информация",
-      "upcoming": "Предстоящи",
-      "conferences": "Конференции",
-      "earnings": "Печаления",
-      "all": "Всички",
-      "conferencesCount": "{{count}} конференции",
-      "onMap": "{{count}} на карта",
-      "techmemeEvents": "Techmeme события ↗",
-      "today": "ДНЕС",
-      "soon": "СКОРО",
-      "infoTooltip": "<strong>Технологични събития</strong> Предстоящи и скорошни технологични събития: конференции, продуктови представяния, регулаторни изслушвания и разговори за печалби. Агрегирани от официални календари и индустриални източници."
     },
     "techReadiness": {
       "ranked": "Класирани",
@@ -3458,59 +3418,6 @@
         "public": "Публичен",
         "publicPrivate": "Публично-частен"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "МЕГА ХЪБ",
-        "major": "ОСНОВНА ХЪБ",
-        "emerging": "ПОЯВЯВАЩО СЕ",
-        "hub": "ХЪБ"
-      },
-      "unicorns": "ЕДНОРОЗИ"
-    },
-    "cloudRegion": {
-      "provider": "ДОСТАВЧИК",
-      "availabilityZones": "ЗОНИ НА НАЛИЧНОСТ"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "ГОЛЯМО ТЕХНОЛОГИЯ",
-        "unicorn": "ЕДНОРОГ",
-        "public": "ПУБЛИЧНА",
-        "tech": "ТЕХНОЛОГИЯ"
-      },
-      "marketCap": "ПАЗАРНА КАПИТАЛИЗАЦИЯ",
-      "employees": "СЛУЖИТЕЛИ"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "УСКОРИТЕЛЬ",
-        "incubator": "ИНКУБАТОР",
-        "studio": "СТАРТЪП СТУДИО"
-      },
-      "founded": "ОСНОВАНА",
-      "notableAlumni": "ЗАБЕЛЕЖИТЕЛНИ ALUMNI"
-    },
-    "techEvent": {
-      "days": {
-        "today": "ДНЕС",
-        "tomorrow": "УТРЕ",
-        "inDays": "В {{count}} ДНЕЙ"
-      },
-      "date": "ДАТА",
-      "moreInformation": "Повече информация"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}} КОМПАНИИ",
-      "bigTechCount": "{{count}} голямо технология",
-      "unicornsCount": "{{count}} еднорози",
-      "publicCount": "{{count}} публична",
-      "sampled": "Показване на вземана проба списък на {{count}} компании."
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}} СЪБИТИЕ",
-      "upcomingWithin2Weeks": "{{count}} предстоящи в рамките на 2 седмици",
-      "sampled": "Показване на вземана проба списък на {{count}} събитие."
     },
     "militaryFlight": {
       "types": {

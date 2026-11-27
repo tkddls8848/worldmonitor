@@ -303,7 +303,6 @@
   },
   "header": {
     "world": "DUNYA",
-    "tech": "TEKNOLOJI",
     "live": "CANLI",
     "search": "Ara",
     "settings": "AYARLAR",
@@ -426,23 +425,9 @@
     "populationExposure": "Nufus Maruziyeti",
     "securityAdvisories": "Güvenlik Uyarıları",
     "orefSirens": "İsrail Sirenleri",
-    "startups": "Startuplar ve venture capital",
-    "vcblogs": "Venture capital içgörüleri ve yazıları",
-    "regionalStartups": "Kuresel Girisim Haberleri",
-    "unicorns": "Unicorn Takibi",
-    "accelerators": "Hizlandiricilar ve Demo Gunleri",
-    "security": "Siber Guvenlik",
-    "policy": "Yapay Zeka Politikasi ve Duzenlemeler",
     "regulation": "Yapay Zeka Duzenleme Paneli",
     "finRegulation": "Finansal Düzenleme",
-    "hardware": "Yaricileticiler ve Donanim",
-    "cloud": "Bulut ve Altyapi",
-    "dev": "Gelistirici Toplulugu",
-    "github": "GitHub Trendler",
     "ipo": "Halka arzlar ve boş şirket birleşmeleri",
-    "funding": "Finansman ve venture capital",
-    "producthunt": "Product Hunt",
-    "events": "Teknoloji Etkinlikleri",
     "serviceStatus": "Hizmet Durumu",
     "techReadiness": "Teknoloji Hazirlik Endeksi",
     "gccInvestments": "Körfez İşbirliği Konseyi yatırımları",
@@ -1216,15 +1201,10 @@
         "oceania": "Okyanusya"
       },
       "layers": {
-        "startupHubs": "Girisim Merkezleri",
-        "techHQs": "Teknoloji Merkezleri",
-        "accelerators": "Hizlandiricilar",
-        "cloudRegions": "Bulut Bolgeleri",
         "aiDataCenters": "Yapay Zeka Veri Merkezleri",
         "underseaCables": "Denizalti Kablolari",
         "internetOutages": "Internet Kesintileri",
         "cyberThreats": "Siber Tehditler",
-        "techEvents": "Teknoloji Etkinlikleri",
         "naturalEvents": "Dogal Olaylar",
         "fires": "Yanginlar",
         "intelHotspots": "Istihbarat Sicak Noktalari",
@@ -1267,8 +1247,6 @@
         "aircraft": "ucak",
         "protest": "Protesto",
         "protestsCount": "{{count}} protesto",
-        "techHQsCount": "{{count}} teknoloji merkezi",
-        "techEventsCount": "{{count}} teknoloji etkinligi",
         "dataCentersCount": "{{count}} veri merkezi",
         "underseaCable": "Denizalti Kablosu",
         "pipeline": "Boru Hatti",
@@ -1318,7 +1296,6 @@
         "descriptions": {
           "techStartupHubs": "Buyuk girisim ekosistemleri (SF, NYC, Londra vb.)",
           "techCloudRegions": "AWS, Azure, GCP veri merkezi bolgeleri",
-          "techHQs": "Buyuk teknoloji sirketlerinin genel merkezi",
           "techAccelerators": "Y Combinator, Techstars, 500 Startups konumlari",
           "infraCables": "Buyuk denizalti fiber optik kablolar (internet omurgasi)",
           "infraDatacenters": "10.000+ GPU'lu yapay zeka islem kumeleri",
@@ -1361,7 +1338,6 @@
           "infraCyberThreats": "Siber saldırılar ve güvenlik olayları",
           "mineralsFull": "Stratejik mineral yatakları ve madencilik alanları",
           "techCyberThreats": "Siber saldırılar ve güvenlik olayları",
-          "techEvents": "Büyük teknoloji konferansları ve etkinlikleri",
           "techFires": "Teknoloji altyapısına yakın aktif orman yangınları",
           "financeGulfInvestments": "Körfez İşbirliği Konseyi egemen varlık fonu yatırımları ve doğrudan yabancı yatırım",
           "tradeRoutes": "Limanları stratejik darboğazlar üzerinden bağlayan başlıca küresel deniz yolları",
@@ -1562,22 +1538,6 @@
       },
       "dataFreshness": "Veri Güncelliği",
       "sourcesDetail": "{{active}}/{{total}} kaynak"
-    },
-    "techEvents": {
-      "loading": "Teknoloji etkinlikleri yukleniyor...",
-      "noEvents": "Gosterilecek etkinlik yok",
-      "showOnMap": "Haritada goster",
-      "moreInfo": "Daha fazla bilgi",
-      "upcoming": "Yaklaşan",
-      "conferences": "Konferanslar",
-      "earnings": "Bilançolar",
-      "all": "Tümü",
-      "conferencesCount": "{{count}} konferans",
-      "onMap": "Haritada {{count}}",
-      "techmemeEvents": "Techmeme Etkinlikleri ↗",
-      "today": "BUGÜN",
-      "soon": "YAKINDA",
-      "infoTooltip": "<strong>Teknoloji Etkinlikleri</strong> Yaklaşan ve son teknoloji etkinlikleri: konferanslar, ürün lansmanları, düzenleyici oturumlar ve kazanç görüşmeleri. Resmi etkinlik takvimleri ve sektör kaynaklarından derlenmektedir."
     },
     "techReadiness": {
       "ranked": "Sıralanan",
@@ -3458,59 +3418,6 @@
         "public": "Kamu",
         "publicPrivate": "Kamu/Özel"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "MEGA MERKEZ",
-        "major": "BUYUK MERKEZ",
-        "emerging": "GELISMEKTE",
-        "hub": "MERKEZ"
-      },
-      "unicorns": "UNICORN'LAR"
-    },
-    "cloudRegion": {
-      "provider": "SAGLAYICI",
-      "availabilityZones": "KULLANILABILIRLIK BOLGELERI"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "BUYUK TEKNOLOJI",
-        "unicorn": "UNICORN",
-        "public": "HALKA ACIK",
-        "tech": "TEKNOLOJI"
-      },
-      "marketCap": "PIYASA DEGERI",
-      "employees": "CALISANLAR"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "HIZLANDIRICI",
-        "incubator": "KULUCKA MERKEZI",
-        "studio": "GIRISIM STUDYOSU"
-      },
-      "founded": "KURULUS",
-      "notableAlumni": "ONEMLI MEZUNLAR"
-    },
-    "techEvent": {
-      "days": {
-        "today": "BUGUN",
-        "tomorrow": "YARIN",
-        "inDays": "{{count}} GUN ICINDE"
-      },
-      "date": "TARIH",
-      "moreInformation": "Daha Fazla Bilgi"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}} SIRKET",
-      "bigTechCount": "{{count}} Buyuk Teknoloji",
-      "unicornsCount": "{{count}} Unicorn",
-      "publicCount": "{{count}} Halka Acik",
-      "sampled": "{{count}} sirketin orneklendirilmis listesi gosteriliyor."
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}} ETKINLIK",
-      "upcomingWithin2Weeks": "2 hafta icinde {{count}} yaklasan",
-      "sampled": "{{count}} etkinligin orneklendirilmis listesi gosteriliyor."
     },
     "militaryFlight": {
       "types": {

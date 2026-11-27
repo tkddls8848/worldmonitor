@@ -21,7 +21,6 @@ import type { MapLayers } from '../types';
 
 export const WEBMCP_MAP_LAYER_MONITORS = [
   'world',
-  'tech',
   'finance',
   'commodity',
   'energy',
@@ -44,7 +43,7 @@ const RENDERER_SET = new Set<string>(WEBMCP_MAP_LAYER_RENDERERS);
 const STATE_SET = new Set<string>(WEBMCP_MAP_LAYER_STATES);
 const LAYER_ID_PATTERN = new RegExp(DASHBOARD_LAYER_ACTION_TARGET_ID_PATTERN);
 const MAP_VARIANTS = new Set<MapVariant>([
-  'full', 'tech', 'finance',  'commodity', 'energy',
+  'full', 'finance',  'commodity', 'energy',
 ]);
 
 export type MapLayerCatalogInvalidReason =
@@ -196,7 +195,7 @@ export function parseMapLayerCatalogArgs(
     if (typeof args.monitor !== 'string' || !MONITOR_SET.has(args.monitor)) {
       return invalid(
         'invalid_monitor',
-        'monitor must be one of: world, tech, finance, commodity, energy.',
+        'monitor must be one of: world, finance, commodity, energy.',
       );
     }
     monitor = args.monitor as WebMcpMapLayerMonitor;

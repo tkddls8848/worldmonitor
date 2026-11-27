@@ -135,7 +135,7 @@ describe('shared page canonical helper', () => {
   });
 
   it('preserves the accepted canonical origin while removing query and fragment', () => {
-    assert.equal(pageCanonicalUrl('https://tech.worldmonitor.app/agent/', `${ORIGIN}/agent/?utm_source=a#tools`), `${ORIGIN}/agent/`);
+    assert.equal(pageCanonicalUrl('https://energy.worldmonitor.app/agent/', `${ORIGIN}/agent/?utm_source=a#tools`), `${ORIGIN}/agent/`);
     assert.equal(pageCanonicalUrl(`${ORIGIN}/x`, 'https://worldmonitor.app/x/'), 'https://worldmonitor.app/x/');
   });
 });
@@ -144,7 +144,7 @@ describe('canonical parity with the real agent HTML page', () => {
   const html = readFileSync(new URL('public/agent/index.html', root), 'utf8');
   const canonical = `${ORIGIN}/agent/`;
 
-  for (const origin of [ORIGIN, 'https://tech.worldmonitor.app']) {
+  for (const origin of [ORIGIN, 'https://energy.worldmonitor.app']) {
     for (const method of ['GET', 'HEAD']) {
       for (const representation of ['html', 'markdown']) {
         it(`${origin} ${method} with ${representation} sibling preserves the HTML declaration`, async () => {

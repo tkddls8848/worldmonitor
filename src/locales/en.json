@@ -392,7 +392,6 @@
   },
   "header": {
     "world": "WORLD",
-    "tech": "TECH",
     "live": "LIVE",
     "cached": "CACHED",
     "unavailable": "UNAVAILABLE",
@@ -520,23 +519,9 @@
     "populationExposure": "Population Exposure",
     "securityAdvisories": "Security Advisories",
     "orefSirens": "Israel Sirens",
-    "startups": "Startups & venture capital",
-    "vcblogs": "Venture capital insights & essays",
-    "regionalStartups": "Global Startup News",
-    "unicorns": "Unicorn Tracker",
-    "accelerators": "Accelerators & Demo Days",
-    "security": "Cybersecurity",
-    "policy": "AI Policy & Regulation",
     "regulation": "AI Regulation Dashboard",
     "finRegulation": "Financial Regulation",
-    "hardware": "Semiconductors & Hardware",
-    "cloud": "Cloud & Infrastructure",
-    "dev": "Developer Community",
-    "github": "GitHub Trending",
     "ipo": "Public listings & shell-company mergers",
-    "funding": "Funding & venture capital",
-    "producthunt": "Product Hunt",
-    "events": "Tech Events",
     "serviceStatus": "Service Status",
     "internetDisruptions": "Internet Disruptions",
     "internetDisruptionsTabs": {
@@ -1464,15 +1449,10 @@
         "oceania": "Oceania"
       },
       "layers": {
-        "startupHubs": "Startup Hubs",
-        "techHQs": "Tech HQs",
-        "accelerators": "Accelerators",
-        "cloudRegions": "Cloud Regions",
         "aiDataCenters": "AI Data Centers",
         "underseaCables": "Undersea Cables",
         "internetOutages": "Internet Disruptions",
         "cyberThreats": "Cyber Threats",
-        "techEvents": "Tech Events",
         "naturalEvents": "Natural Events",
         "fires": "Fires",
         "intelHotspots": "Intel Hotspots",
@@ -1515,8 +1495,6 @@
         "aircraft": "aircraft",
         "protest": "Protest",
         "protestsCount": "{{count}} protests",
-        "techHQsCount": "{{count}} tech HQs",
-        "techEventsCount": "{{count}} tech events",
         "dataCentersCount": "{{count}} data centers",
         "underseaCable": "Undersea Cable",
         "pipeline": "Pipeline",
@@ -1566,7 +1544,6 @@
         "descriptions": {
           "techStartupHubs": "Major startup ecosystems (SF, NYC, London, etc.)",
           "techCloudRegions": "AWS, Azure, GCP data center regions",
-          "techHQs": "Headquarters of major tech companies",
           "techAccelerators": "Y Combinator, Techstars, 500 Startups locations",
           "infraCables": "Major undersea fiber optic cables (internet backbone)",
           "infraDatacenters": "AI compute clusters >=10,000 GPUs",
@@ -1609,7 +1586,6 @@
           "infraCyberThreats": "Cyber attacks and security events",
           "mineralsFull": "Strategic mineral deposits and mining sites",
           "techCyberThreats": "Cyber attacks and security events",
-          "techEvents": "Major tech conferences and events",
           "techFires": "Active wildfires near tech infrastructure",
           "financeGulfInvestments": "Gulf Cooperation Council sovereign wealth fund investments and foreign direct investment",
           "tradeRoutes": "Major global shipping lanes connecting ports through strategic chokepoints",
@@ -1796,22 +1772,6 @@
         "hoursAgo": "{{count}}h ago"
       },
       "infoTooltip": "<strong>Methodology</strong> Composite score (0-100) blending:<ul><li>50% Country Instability (top 5 weighted)</li><li>30% Geographic convergence zones</li><li>20% Infrastructure incidents</li></ul>Auto-refreshes every 5 minutes."
-    },
-    "techEvents": {
-      "infoTooltip": "<strong>Tech Events</strong> Upcoming and recent technology events: conferences, product launches, regulatory hearings, and earnings calls. Aggregated from official event calendars and industry sources.",
-      "loading": "Loading tech events...",
-      "noEvents": "No events to display",
-      "showOnMap": "Show on map",
-      "moreInfo": "More info",
-      "upcoming": "Upcoming",
-      "conferences": "Conferences",
-      "earnings": "Earnings",
-      "all": "All",
-      "conferencesCount": "{{count}} conferences",
-      "onMap": "{{count}} on map",
-      "techmemeEvents": "Techmeme Events ↗",
-      "today": "TODAY",
-      "soon": "SOON"
     },
     "techReadiness": {
       "ranked": "Ranked",
@@ -3573,59 +3533,6 @@
         "public": "Public",
         "publicPrivate": "Public/Private"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "MEGA HUB",
-        "major": "MAJOR HUB",
-        "emerging": "EMERGING",
-        "hub": "HUB"
-      },
-      "unicorns": "UNICORNS"
-    },
-    "cloudRegion": {
-      "provider": "PROVIDER",
-      "availabilityZones": "AVAILABILITY ZONES"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "BIG TECH",
-        "unicorn": "UNICORN",
-        "public": "PUBLIC",
-        "tech": "TECH"
-      },
-      "marketCap": "MARKET CAP",
-      "employees": "EMPLOYEES"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "ACCELERATOR",
-        "incubator": "INCUBATOR",
-        "studio": "STARTUP STUDIO"
-      },
-      "founded": "FOUNDED",
-      "notableAlumni": "NOTABLE ALUMNI"
-    },
-    "techEvent": {
-      "days": {
-        "today": "TODAY",
-        "tomorrow": "TOMORROW",
-        "inDays": "IN {{count}} DAYS"
-      },
-      "date": "DATE",
-      "moreInformation": "More Information"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}} COMPANIES",
-      "bigTechCount": "{{count}} Big Tech",
-      "unicornsCount": "{{count}} Unicorns",
-      "publicCount": "{{count}} Public",
-      "sampled": "Showing a sampled list of {{count}} companies."
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}} EVENTS",
-      "upcomingWithin2Weeks": "{{count}} upcoming within 2 weeks",
-      "sampled": "Showing a sampled list of {{count}} events."
     },
     "militaryFlight": {
       "types": {

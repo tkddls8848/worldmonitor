@@ -945,29 +945,6 @@ export class App {
         }
         localStorage.setItem(PANEL_ORDER_MIGRATION_KEY, 'done');
       }
-
-      // Tech variant migration: move insights to top (after live-news)
-      if (currentVariant === 'tech') {
-        const TECH_INSIGHTS_MIGRATION_KEY = 'worldmonitor-tech-insights-top-v1';
-        if (!localStorage.getItem(TECH_INSIGHTS_MIGRATION_KEY)) {
-          const savedOrder = localStorage.getItem(PANEL_ORDER_KEY);
-          if (savedOrder) {
-            try {
-              const order: string[] = JSON.parse(savedOrder);
-              const filtered = order.filter(k => k !== 'insights' && k !== 'live-news');
-              const newOrder: string[] = [];
-              if (order.includes('live-news')) newOrder.push('live-news');
-              if (order.includes('insights')) newOrder.push('insights');
-              newOrder.push(...filtered);
-              localStorage.setItem(PANEL_ORDER_KEY, JSON.stringify(newOrder));
-              console.log('[App] Tech variant: Migrated insights panel to top');
-            } catch {
-              // Invalid saved order, will use defaults
-            }
-          }
-          localStorage.setItem(TECH_INSIGHTS_MIGRATION_KEY, 'done');
-        }
-      }
     }
 
     // Drop saved entries for retired panels so Settings omits dead toggles.
@@ -1273,7 +1250,6 @@ export class App {
       newsByCategory: {},
       latestMarkets: [],
       latestPredictions: [],
-      latestTechEvents: [],
       latestClusters: [],
       intelligenceCache: {},
       cyberThreatsCache: null,

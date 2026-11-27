@@ -17,10 +17,8 @@ Thank you for helping spread the word about World Monitor! This guide provides t
 | Link | Description |
 |------|-------------|
 | [worldmonitor.app](https://worldmonitor.app) | Main dashboard — geopolitics, military, conflicts |
-| [tech.worldmonitor.app](https://tech.worldmonitor.app) | Tech variant — startups, AI/ML, cybersecurity |
 | [finance.worldmonitor.app](https://finance.worldmonitor.app) | Finance variant — markets, exchanges, central banks |
 | [commodity.worldmonitor.app](https://commodity.worldmonitor.app) | Commodity variant — mining, metals, energy, supply chains |
-| [happy.worldmonitor.app](https://happy.worldmonitor.app) | Happy variant — positive news, breakthroughs, conservation |
 | [energy.worldmonitor.app](https://energy.worldmonitor.app) | Energy variant — oil, gas, chokepoints, energy security |
 | [GitHub](https://github.com/koala73/worldmonitor) | Source code (AGPL-3.0) |
 

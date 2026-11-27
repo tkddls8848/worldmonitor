@@ -116,7 +116,7 @@ No external state library. `AppContext` is a central mutable object holding: map
 
 ### Variant System
 
-Detected by hostname (`tech.worldmonitor.app` → tech, `finance.worldmonitor.app` → finance, etc.) or the `VITE_VARIANT` build variable; the personal build uses `full`. Controls: default panels, map layers, refresh intervals, theme, UI text. Variant change resets all settings to defaults.
+Detected by hostname (`finance.worldmonitor.app` → finance, etc.) or the `VITE_VARIANT` build variable; the personal build uses `full`. Controls: default panels, map layers, refresh intervals, theme, UI text. Variant change resets all settings to defaults.
 
 **Source files**: `src/main.ts`, `src/App.ts`, `src/app/`, `src/components/Panel.ts`, `src/components/DeckGLMap.ts`, `src/components/Map.ts`, `src/config/variant.ts`, `src/workers/`
 

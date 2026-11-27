@@ -64,10 +64,8 @@ Public discovery endpoints do not make every data operation anonymous. An MCP or
 ## Live instances
 
 - [World Monitor](https://www.worldmonitor.app/dashboard) — geopolitics, military activity, conflicts, and infrastructure
-- [Tech Monitor](https://tech.worldmonitor.app/dashboard) — startups, AI and machine learning, cloud, and cybersecurity
 - [Finance Monitor](https://finance.worldmonitor.app/dashboard) — global markets, trading, and central banks
 - [Commodity Monitor](https://commodity.worldmonitor.app/dashboard) — mining, metals, energy, and supply chains
-- [Happy Monitor](https://happy.worldmonitor.app/dashboard) — positive news, breakthroughs, and conservation
 - [Energy Monitor](https://energy.worldmonitor.app/dashboard) — power, oil and gas, chokepoints, and disruption timelines
 
 ## For AI agents

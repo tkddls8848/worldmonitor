@@ -305,7 +305,6 @@
   },
   "header": {
     "world": "LUME",
-    "tech": "TEHNOLOGIE",
     "live": "ÎN DIRECT",
     "search": "Căutare",
     "settings": "SETĂRI",
@@ -428,23 +427,9 @@
     "populationExposure": "Expunerea populației",
     "securityAdvisories": "Aviz de securitate",
     "orefSirens": "Sirene Israel",
-    "startups": "Startup-uri și capital de risc",
-    "vcblogs": "Perspective și articole de capital de risc",
-    "regionalStartups": "Știri globale startup-uri",
-    "unicorns": "Monitor unicorni",
-    "accelerators": "Acceleratoare și Zile Demo",
-    "security": "Securitate Cibernetică",
-    "policy": "Politica și reglementarea AI",
     "regulation": "Tabloul de bord pentru reglementarea AI",
     "finRegulation": "Reglementare financiară",
-    "hardware": "Semiconductori",
-    "cloud": "Cloud și infrastructură",
-    "dev": "Comunitatea dezvoltatorilor",
-    "github": "Tendințe GitHub",
     "ipo": "Listări publice și fuziuni cu societăți-cărămidă",
-    "funding": "Finanțare și capital de risc",
-    "producthunt": "Product Hunt",
-    "events": "Evenimente tehnice",
     "serviceStatus": "Stare serviciu",
     "techReadiness": "Indicele de pregătire tehnică",
     "gccInvestments": "Investiții Gulf Cooperation Council",
@@ -1219,15 +1204,10 @@
         "oceania": "Oceania"
       },
       "layers": {
-        "startupHubs": "Hub-uri startup-uri",
-        "techHQs": "Sedii centrale tech",
-        "accelerators": "Acceleratoare",
-        "cloudRegions": "Regiunile cloud",
         "aiDataCenters": "Centre de date AI",
         "underseaCables": "Cabluri submarine",
         "internetOutages": "Întreruperea internetului",
         "cyberThreats": "Amenințări cibernetice",
-        "techEvents": "Evenimente tehnice",
         "naturalEvents": "Evenimente naturale",
         "fires": "Incendii",
         "intelHotspots": "Hotspot-uri Intel",
@@ -1270,8 +1250,6 @@
         "aircraft": "aeronave",
         "protest": "Protest",
         "protestsCount": "{{count}} proteste",
-        "techHQsCount": "{{count}} sediul tehnic",
-        "techEventsCount": "{{count}} evenimente tehnice",
         "dataCentersCount": "{{count}} centre de date",
         "underseaCable": "Cablu submarin",
         "pipeline": "Conducta",
@@ -1321,7 +1299,6 @@
         "descriptions": {
           "techStartupHubs": "Ecosisteme majore de startup (SF, NYC, Londra etc.)",
           "techCloudRegions": "Regiunile centrelor de date AWS, Azure, GCP",
-          "techHQs": "Sedii centrale ale companiilor tech",
           "techAccelerators": "Y Combinator, Techstars, 500 de locații Startup-uri",
           "infraCables": "Cabluri majore submarine de fibră optică (backbone internet)",
           "infraDatacenters": "Clustere de calcul AI >=10.000 de GPU",
@@ -1364,7 +1341,6 @@
           "infraCyberThreats": "Atacuri cibernetice și evenimente de securitate",
           "mineralsFull": "Zăcăminte minerale strategice și situri miniere",
           "techCyberThreats": "Atacuri cibernetice și evenimente de securitate",
-          "techEvents": "Conferințe și evenimente tehnologice majore",
           "techFires": "Incendii active în apropierea infrastructurii tehnologice",
           "financeGulfInvestments": "Investiții ale fondurilor suverane și investiții străine directe ale Consilului de Cooperare al Golfului",
           "tradeRoutes": "Principalele linii maritime globale care conectează porturile prin puncte strategice de blocare",
@@ -1566,22 +1542,6 @@
       },
       "dataFreshness": "Actualitatea datelor",
       "sourcesDetail": "{{active}}/{{total}} surse"
-    },
-    "techEvents": {
-      "loading": "Se încarcă evenimentele tehnice...",
-      "noEvents": "Nu există evenimente de afișat",
-      "showOnMap": "Arată pe hartă",
-      "moreInfo": "Mai multe informații",
-      "upcoming": "Urmează",
-      "conferences": "Conferințe",
-      "earnings": "Câștigurile",
-      "all": "Toate",
-      "conferencesCount": "{{count}} conferințe",
-      "onMap": "{{count}} pe hartă",
-      "techmemeEvents": "Evenimente Techmeme ↗",
-      "today": "AZI",
-      "soon": "CURÂND",
-      "infoTooltip": "<strong>Evenimente tech</strong> Evenimente tehnologice viitoare și recente: conferințe, lansări de produse, audieri de reglementare și apeluri de rezultate. Agregate din calendare oficiale de evenimente și surse din industrie."
     },
     "techReadiness": {
       "ranked": "Clasificate",
@@ -3479,59 +3439,6 @@
         "public": "Public",
         "publicPrivate": "Public/Privat"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "MEGA-HUB",
-        "major": "HUB MAJOR",
-        "emerging": "EMERGENȚĂ",
-        "hub": "HUB"
-      },
-      "unicorns": "UNICORNII"
-    },
-    "cloudRegion": {
-      "provider": "FURNIZOR",
-      "availabilityZones": "ZONE DE DISPONIBILITATE"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "BIG TECH",
-        "unicorn": "UNICORN",
-        "public": "PUBLIC",
-        "tech": "TEHNOLOGIE"
-      },
-      "marketCap": "PAC DE PIATA",
-      "employees": "ANGAJATI"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "ACCELERATOR",
-        "incubator": "INCUBATOR",
-        "studio": "STUDIO DE START-UP-URI"
-      },
-      "founded": "FONDAT",
-      "notableAlumni": "ALUNI NOTABILI"
-    },
-    "techEvent": {
-      "days": {
-        "today": "AZI",
-        "tomorrow": "MÂINE",
-        "inDays": "ÎN {{count}} ZILE"
-      },
-      "date": "DATA",
-      "moreInformation": "Mai multe informații"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}} COMPANII",
-      "bigTechCount": "{{count}} Big Tech",
-      "unicornsCount": "{{count}} Unicorni",
-      "publicCount": "{{count}} publice",
-      "sampled": "Se afișează o listă eșantionată de companii {{count}}."
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}} EVENIMENTE",
-      "upcomingWithin2Weeks": "{{count}} urmează în 2 săptămâni",
-      "sampled": "Se afișează o listă eșantionată de evenimente {{count}}."
     },
     "militaryFlight": {
       "types": {

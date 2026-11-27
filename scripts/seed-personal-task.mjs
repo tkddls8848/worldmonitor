@@ -8,7 +8,6 @@ import { parseStoredSeedJson } from './_seed-payload-codec.mjs';
 export const PERSONAL_TASKS = {
   'sector-summary': ['seedSectorSummary', 'market:sectors:v2', 30],
   satellites: ['seedSatelliteTLEs', 'intelligence:satellites:tle:v1', 120],
-  'tech-events': ['seedTechEvents', 'research:tech-events-bootstrap:v1', 240],
   'corridor-risk': ['seedCorridorRisk', 'supply_chain:corridorrisk:v1', 60],
   'usni-fleet': ['seedUsniFleet', 'usni-fleet:sebuf:v1', 180],
   gscpi: ['seedGscpi', 'economic:fred:v1:GSCPI:0', 1440],

@@ -1,13 +1,13 @@
 // Users can add any panel to any variant's layout. Loaders gated on
 // `SITE_VARIANT === 'full'` left those panels on their loading state forever:
-// Intel Feed and Fires under the Tech variant on desktop (#9396).
+// Intel Feed and Fires under the Finance variant on desktop (#9396).
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AppContext } from '@/app/app-context';
 
 vi.mock('@/config', async (importOriginal) => ({
   ...await importOriginal<typeof import('@/config')>(),
-  SITE_VARIANT: 'tech',
+  SITE_VARIANT: 'finance',
 }));
 vi.mock('@/services/analysis-worker', () => ({
   analysisWorker: { clusterNews: vi.fn(), analyzeCorrelations: vi.fn() },
@@ -57,12 +57,12 @@ describe('cross-variant panel hydration', () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response('{}')));
   });
 
-  it('loads the Intel Feed a Tech user added to their layout', async () => {
+  it('loads the Intel Feed a Finance user added to their layout', async () => {
     const loadIntelNews = await loadNewsWith({ intel: { name: 'Intel Feed', enabled: true, priority: 1 } });
     expect(loadIntelNews).toHaveBeenCalled();
   });
 
-  it('does not load intel for a Tech layout without the panel', async () => {
+  it('does not load intel for a Finance layout without the panel', async () => {
     const loadIntelNews = await loadNewsWith({ intel: { name: 'Intel Feed', enabled: false, priority: 1 } });
     expect(loadIntelNews).not.toHaveBeenCalled();
   });
@@ -79,7 +79,7 @@ describe('variantShipsOrUserEnabled', () => {
   it('hydrates a panel its variant ships, or one the user enabled', async () => {
     const { variantShipsOrUserEnabled } = await import('@/app/panel-data-gate');
     expect(variantShipsOrUserEnabled({ variant: 'full', owningVariants: ['full'], panelEnabled: false })).toBe(true);
-    expect(variantShipsOrUserEnabled({ variant: 'tech', owningVariants: ['full'], panelEnabled: true })).toBe(true);
-    expect(variantShipsOrUserEnabled({ variant: 'tech', owningVariants: ['full'], panelEnabled: false })).toBe(false);
+    expect(variantShipsOrUserEnabled({ variant: 'finance', owningVariants: ['full'], panelEnabled: true })).toBe(true);
+    expect(variantShipsOrUserEnabled({ variant: 'finance', owningVariants: ['full'], panelEnabled: false })).toBe(false);
   });
 });

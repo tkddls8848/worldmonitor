@@ -24,7 +24,7 @@ test('security report endpoint accepts Reporting API batches and redacts URLs in
       {
         type: 'coep',
         age: 10,
-        url: 'https://tech.worldmonitor.app/panel?token=secret',
+        url: 'https://energy.worldmonitor.app/panel?token=secret',
         body: {
           type: 'corp-not-same-origin',
           disposition: 'reporting',

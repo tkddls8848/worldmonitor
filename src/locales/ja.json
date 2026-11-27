@@ -301,7 +301,6 @@
   },
   "header": {
     "world": "世界",
-    "tech": "テック",
     "live": "ライブ",
     "search": "検索",
     "settings": "設定",
@@ -424,23 +423,9 @@
     "populationExposure": "人口露出度",
     "securityAdvisories": "セキュリティアドバイザリー",
     "orefSirens": "イスラエルのサイレン",
-    "startups": "スタートアップ・ベンチャーキャピタル",
-    "vcblogs": "ベンチャーキャピタル見識・エッセイ",
-    "regionalStartups": "グローバルスタートアップニュース",
-    "unicorns": "ユニコーントラッカー",
-    "accelerators": "アクセラレーター & デモデイ",
-    "security": "サイバーセキュリティ",
-    "policy": "AI政策・規制",
     "regulation": "AI規制ダッシュボード",
     "finRegulation": "金融規制",
-    "hardware": "半導体・ハードウェア",
-    "cloud": "クラウド・インフラ",
-    "dev": "開発者コミュニティ",
-    "github": "GitHubトレンド",
     "ipo": "新規公開・特殊買収目的会社合併",
-    "funding": "資金調達・ベンチャーキャピタル",
-    "producthunt": "Product Hunt",
-    "events": "テックイベント",
     "serviceStatus": "サービス状態",
     "techReadiness": "テック準備度指数",
     "gccInvestments": "湾岸協力会議投資",
@@ -1213,15 +1198,10 @@
         "oceania": "オセアニア"
       },
       "layers": {
-        "startupHubs": "スタートアップハブ",
-        "techHQs": "テック本社",
-        "accelerators": "アクセラレーター",
-        "cloudRegions": "クラウドリージョン",
         "aiDataCenters": "AIデータセンター",
         "underseaCables": "海底ケーブル",
         "internetOutages": "インターネット障害",
         "cyberThreats": "サイバー脅威",
-        "techEvents": "テックイベント",
         "naturalEvents": "自然災害",
         "fires": "火災",
         "intelHotspots": "インテルホットスポット",
@@ -1264,8 +1244,6 @@
         "aircraft": "機",
         "protest": "抗議活動",
         "protestsCount": "{{count}}件の抗議活動",
-        "techHQsCount": "{{count}}件のテック本社",
-        "techEventsCount": "{{count}}件のテックイベント",
         "dataCentersCount": "{{count}}件のデータセンター",
         "underseaCable": "海底ケーブル",
         "pipeline": "パイプライン",
@@ -1315,7 +1293,6 @@
         "descriptions": {
           "techStartupHubs": "主要スタートアップエコシステム（SF、NYC、ロンドン等）",
           "techCloudRegions": "AWS、Azure、GCPのデータセンターリージョン",
-          "techHQs": "主要テック企業の本社",
           "techAccelerators": "Y Combinator、Techstars、500 Startupsの拠点",
           "infraCables": "主要海底光ファイバーケーブル（インターネットの基幹）",
           "infraDatacenters": "10,000 GPU以上のAIコンピュートクラスター",
@@ -1358,7 +1335,6 @@
           "infraCyberThreats": "サイバー攻撃およびセキュリティイベント",
           "mineralsFull": "戦略的鉱物資源の鉱床と採掘拠点",
           "techCyberThreats": "サイバー攻撃およびセキュリティイベント",
-          "techEvents": "主要テックカンファレンスとイベント",
           "techFires": "テックインフラ付近の活動中の山火事",
           "financeGulfInvestments": "湾岸協力会議ソブリンウェルスファンド投資および直接投資",
           "tradeRoutes": "戦略的なチョークポイントを通じて港を結ぶ主要な世界の航路",
@@ -1558,22 +1534,6 @@
       },
       "dataFreshness": "データの鮮度",
       "sourcesDetail": "{{active}}/{{total}} ソース"
-    },
-    "techEvents": {
-      "loading": "テックイベントを読み込み中...",
-      "noEvents": "表示するイベントなし",
-      "showOnMap": "マップで表示",
-      "moreInfo": "詳細",
-      "upcoming": "今後の予定",
-      "conferences": "カンファレンス",
-      "earnings": "決算",
-      "all": "すべて",
-      "conferencesCount": "{{count}} 件のカンファレンス",
-      "onMap": "地図上に {{count}} 件",
-      "techmemeEvents": "Techmeme イベント ↗",
-      "today": "今日",
-      "soon": "まもなく",
-      "infoTooltip": "<strong>テックイベント</strong> 今後および最近のテクノロジーイベント：カンファレンス、製品ローンチ、規制公聴会、決算コール。公式イベントカレンダーおよび業界ソースから集約。"
     },
     "techReadiness": {
       "ranked": "順位あり",
@@ -3437,59 +3397,6 @@
         "public": "公的",
         "publicPrivate": "官民"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "メガハブ",
-        "major": "メジャーハブ",
-        "emerging": "新興",
-        "hub": "ハブ"
-      },
-      "unicorns": "ユニコーン"
-    },
-    "cloudRegion": {
-      "provider": "プロバイダー",
-      "availabilityZones": "アベイラビリティゾーン"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "ビッグテック",
-        "unicorn": "ユニコーン",
-        "public": "上場",
-        "tech": "テック"
-      },
-      "marketCap": "時価総額",
-      "employees": "従業員数"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "アクセラレーター",
-        "incubator": "インキュベーター",
-        "studio": "スタートアップスタジオ"
-      },
-      "founded": "設立",
-      "notableAlumni": "著名な卒業企業"
-    },
-    "techEvent": {
-      "days": {
-        "today": "本日",
-        "tomorrow": "明日",
-        "inDays": "{{count}}日後"
-      },
-      "date": "日付",
-      "moreInformation": "詳細情報"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}}社",
-      "bigTechCount": "ビッグテック{{count}}社",
-      "unicornsCount": "ユニコーン{{count}}社",
-      "publicCount": "上場{{count}}社",
-      "sampled": "{{count}}社のサンプルリストを表示。"
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}}件のイベント",
-      "upcomingWithin2Weeks": "2週間以内に{{count}}件開催予定",
-      "sampled": "{{count}}件のイベントのサンプルリストを表示。"
     },
     "militaryFlight": {
       "types": {

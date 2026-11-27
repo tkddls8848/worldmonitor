@@ -14,7 +14,7 @@ import {
 // <variant>.worldmonitor.app/dashboard → /dashboard-<variant>.html).
 // Desktop/self-host variant builds are NOT in scope — they run
 // htmlVariantPlugin at build time with VITE_VARIANT set.
-export const WEB_DASHBOARD_VARIANTS = ['tech', 'finance', 'commodity',  'energy'] as const;
+export const WEB_DASHBOARD_VARIANTS = ['finance', 'commodity', 'energy'] as const;
 
 export function renderVariantSeoSummaryHtml(variant: VariantSeoKey): string {
   const paragraphs = VARIANT_SEO_PARAGRAPHS[variant];
@@ -54,7 +54,7 @@ export function variantDashboardFileName(variant: string): string {
 
 // HTML-escape for text content and double-quoted attribute values (same
 // contexts as middleware.ts escHtml — VARIANT_META values are hand-edited
-// prose; '&' already occurs in the tech title).
+// prose; '&' already occurs in a variant title).
 function escHtml(s: string): string {
   return s
     .replace(/&/g, '&amp;')

@@ -301,7 +301,6 @@
   },
   "header": {
     "world": "세계",
-    "tech": "기술",
     "live": "실시간",
     "search": "검색",
     "settings": "설정",
@@ -424,23 +423,9 @@
     "populationExposure": "인구 노출",
     "securityAdvisories": "보안 권고",
     "orefSirens": "이스라엘 공습 경보",
-    "startups": "스타트업 & 벤처캐피탈",
-    "vcblogs": "벤처캐피탈 인사이트 & 에세이",
-    "regionalStartups": "글로벌 스타트업 뉴스",
-    "unicorns": "유니콘 추적",
-    "accelerators": "액셀러레이터 & 데모데이",
-    "security": "사이버 보안",
-    "policy": "AI 정책 & 규제",
     "regulation": "AI 규제 대시보드",
     "finRegulation": "금융 규제",
-    "hardware": "반도체 & 하드웨어",
-    "cloud": "클라우드 & 인프라",
-    "dev": "개발자 커뮤니티",
-    "github": "GitHub 트렌딩",
     "ipo": "상장 & 기업공개합병",
-    "funding": "펀딩 & 벤처캐피탈",
-    "producthunt": "Product Hunt",
-    "events": "기술 이벤트",
     "serviceStatus": "서비스 상태",
     "techReadiness": "기술 준비 지수",
     "gccInvestments": "걸프협력회의 투자",
@@ -1213,15 +1198,10 @@
         "oceania": "오세아니아"
       },
       "layers": {
-        "startupHubs": "스타트업 허브",
-        "techHQs": "기술 본사",
-        "accelerators": "액셀러레이터",
-        "cloudRegions": "클라우드 리전",
         "aiDataCenters": "AI 데이터 센터",
         "underseaCables": "해저 케이블",
         "internetOutages": "인터넷 장애",
         "cyberThreats": "사이버 위협",
-        "techEvents": "기술 이벤트",
         "naturalEvents": "자연재해",
         "fires": "화재",
         "intelHotspots": "정보 핫스팟",
@@ -1272,8 +1252,6 @@
         "aircraft": "대",
         "protest": "시위",
         "protestsCount": "시위 {{count}}건",
-        "techHQsCount": "기술 본사 {{count}}곳",
-        "techEventsCount": "기술 이벤트 {{count}}건",
         "dataCentersCount": "데이터 센터 {{count}}곳",
         "underseaCable": "해저 케이블",
         "pipeline": "파이프라인",
@@ -1323,7 +1301,6 @@
         "descriptions": {
           "techStartupHubs": "주요 스타트업 생태계 (SF, NYC, 런던 등)",
           "techCloudRegions": "AWS, Azure, GCP 데이터 센터 리전",
-          "techHQs": "주요 기술 기업 본사",
           "techAccelerators": "Y Combinator, Techstars, 500 Startups 위치",
           "infraCables": "주요 해저 광케이블 (인터넷 백본)",
           "infraDatacenters": "GPU 10,000대 이상 AI 컴퓨팅 클러스터",
@@ -1366,7 +1343,6 @@
           "infraCyberThreats": "사이버 공격 및 보안 이벤트",
           "mineralsFull": "전략 광물 매장지 및 채굴 현장",
           "techCyberThreats": "사이버 공격 및 보안 이벤트",
-          "techEvents": "주요 기술 컨퍼런스 및 이벤트",
           "techFires": "기술 인프라 인근 활성 산불",
           "financeGulfInvestments": "걸프협력회의 국부펀드 투자 및 해외직접투자",
           "tradeRoutes": "전략적 병목 지점을 경유하여 항구를 연결하는 주요 글로벌 해운 항로",
@@ -1566,22 +1542,6 @@
       },
       "dataFreshness": "데이터 최신성",
       "sourcesDetail": "{{active}}/{{total}}개 출처"
-    },
-    "techEvents": {
-      "loading": "테크 이벤트 불러오는 중...",
-      "noEvents": "표시할 이벤트 없음",
-      "showOnMap": "지도에 표시",
-      "moreInfo": "자세히 보기",
-      "upcoming": "예정",
-      "conferences": "컨퍼런스",
-      "earnings": "실적 발표",
-      "all": "전체",
-      "conferencesCount": "컨퍼런스 {{count}}건",
-      "onMap": "지도에 {{count}}건",
-      "techmemeEvents": "Techmeme 이벤트 ↗",
-      "today": "오늘",
-      "soon": "곧",
-      "infoTooltip": "<strong>테크 이벤트</strong> 예정 및 최근 기술 이벤트: 컨퍼런스, 제품 출시, 규제 청문회, 실적 콜. 공식 이벤트 캘린더 및 업계 소스에서 집계."
     },
     "techReadiness": {
       "ranked": "순위 포함",
@@ -3445,59 +3405,6 @@
         "public": "공공",
         "publicPrivate": "민관"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "메가 허브",
-        "major": "주요 허브",
-        "emerging": "신흥",
-        "hub": "허브"
-      },
-      "unicorns": "유니콘"
-    },
-    "cloudRegion": {
-      "provider": "제공업체",
-      "availabilityZones": "가용 영역"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "빅테크",
-        "unicorn": "유니콘",
-        "public": "상장",
-        "tech": "테크"
-      },
-      "marketCap": "시가총액",
-      "employees": "임직원"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "액셀러레이터",
-        "incubator": "인큐베이터",
-        "studio": "스타트업 스튜디오"
-      },
-      "founded": "설립",
-      "notableAlumni": "주요 졸업 기업"
-    },
-    "techEvent": {
-      "days": {
-        "today": "오늘",
-        "tomorrow": "내일",
-        "inDays": "{{count}}일 후"
-      },
-      "date": "날짜",
-      "moreInformation": "상세 정보"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}}개 기업",
-      "bigTechCount": "빅테크 {{count}}곳",
-      "unicornsCount": "유니콘 {{count}}곳",
-      "publicCount": "상장사 {{count}}곳",
-      "sampled": "{{count}}개 기업 중 샘플 목록을 표시합니다."
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}}건의 이벤트",
-      "upcomingWithin2Weeks": "2주 이내 {{count}}건 예정",
-      "sampled": "{{count}}건의 이벤트 중 샘플 목록을 표시합니다."
     },
     "militaryFlight": {
       "types": {

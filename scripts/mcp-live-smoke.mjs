@@ -112,7 +112,7 @@ import { runMcpProxyProbe } from './mcp-proxy-live-smoke.mjs';
 const CANONICAL_ORIGIN = 'https://worldmonitor.app';
 const CANONICAL_MCP = `${CANONICAL_ORIGIN}/mcp`;
 const CANONICAL_LINK_RE = /<https:\/\/worldmonitor\.app\/mcp>;\s*rel="canonical"/i;
-const DEFAULT_ALIAS_LABELS = ['www', 'tech', 'finance', 'commodity', 'energy'];
+const DEFAULT_ALIAS_LABELS = ['www', 'finance', 'commodity', 'energy'];
 // Served aliases keep the transport (shared/mcp-host-policy.ts). The smoke
 // checks their connect-time challenge names the alias's own OAuth document.
 const DEFAULT_SERVED_ALIAS_LABELS = ['api'];

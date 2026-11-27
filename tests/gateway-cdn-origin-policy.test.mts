@@ -96,9 +96,9 @@ describe('gateway CDN origin policy', () => {
   });
 
   it('keeps per-origin CORS without shared CDN caching for session-bearing production subdomain GETs', async () => {
-    const res = await requestPublicRoute('https://tech.worldmonitor.app');
+    const res = await requestPublicRoute('https://energy.worldmonitor.app');
     assert.equal(res.status, 200);
-    assert.equal(res.headers.get('Access-Control-Allow-Origin'), 'https://tech.worldmonitor.app');
+    assert.equal(res.headers.get('Access-Control-Allow-Origin'), 'https://energy.worldmonitor.app');
     assert.equal(res.headers.get('Vary'), 'Origin');
     assertNoSharedCacheHeaders(res);
   });

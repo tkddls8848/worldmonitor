@@ -42,23 +42,23 @@ afterEach(() => {
 describe('UnifiedSettings panel categories follow the active variant', () => {
   it('hides categories scoped to another variant, even when they list panels this variant has', () => {
     // Fixture assumptions: tests run as the full variant, and `markets` sits in
-    // both the full-scoped marketsFinance and the tech-only techMarkets category.
+    // both the full-scoped marketsFinance and the finMarkets category.
     expect(SITE_VARIANT).toBe('full');
     expect(PANEL_CATEGORY_MAP.marketsFinance!.variants).toContain('full');
     expect(PANEL_CATEGORY_MAP.marketsFinance!.panelKeys).toContain('markets');
-    expect(PANEL_CATEGORY_MAP.techMarkets!.variants).not.toContain('full');
-    expect(PANEL_CATEGORY_MAP.techMarkets!.panelKeys).toContain('markets');
+    expect(PANEL_CATEGORY_MAP.finMarkets!.variants).not.toContain('full');
+    expect(PANEL_CATEGORY_MAP.finMarkets!.panelKeys).toContain('markets');
 
     const settings = createSettings();
     settings.open('panels');
 
     expect(pillKeys()).toContain('marketsFinance');
-    expect(pillKeys()).not.toContain('techMarkets');
+    expect(pillKeys()).not.toContain('finMarkets');
 
     // Positive control: the in-variant category lists `markets`.
     expect(selectCategory('marketsFinance')).toContain('markets');
     // A stale or injected out-of-variant category lists nothing.
-    expect(selectCategory('techMarkets')).toEqual([]);
+    expect(selectCategory('finMarkets')).toEqual([]);
     settings.close();
   });
 });

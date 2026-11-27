@@ -301,7 +301,6 @@
   },
   "header": {
     "world": "世界",
-    "tech": "科技",
     "live": "即時",
     "search": "搜尋",
     "settings": "設定",
@@ -424,23 +423,9 @@
     "populationExposure": "人口暴露",
     "securityAdvisories": "安全警告",
     "orefSirens": "以色列警報",
-    "startups": "初創公司與風險投資",
-    "vcblogs": "風險投資見解與文章",
-    "regionalStartups": "全球創業新聞",
-    "unicorns": "獨角獸追蹤",
-    "accelerators": "加速器與演示日",
-    "security": "網路安全",
-    "policy": "AI政策與監管",
     "regulation": "AI監管儀表盤",
     "finRegulation": "金融監管",
-    "hardware": "半導體與硬體",
-    "cloud": "雲端計算與基礎設施",
-    "dev": "開發者社群",
-    "github": "GitHub趨勢",
     "ipo": "公開上市與特殊目的收購公司合併",
-    "funding": "融資與風險投資",
-    "producthunt": "Product Hunt",
-    "events": "科技活動",
     "serviceStatus": "服務狀態",
     "techReadiness": "科技就緒指數",
     "gccInvestments": "海灣合作委員會投資",
@@ -1213,15 +1198,10 @@
         "oceania": "大洋洲"
       },
       "layers": {
-        "startupHubs": "創業中心",
-        "techHQs": "科技總部",
-        "accelerators": "加速器",
-        "cloudRegions": "雲端計算區域",
         "aiDataCenters": "AI資料中心",
         "underseaCables": "海底電纜",
         "internetOutages": "網際網路中斷",
         "cyberThreats": "網路威脅",
-        "techEvents": "科技活動",
         "naturalEvents": "自然事件",
         "fires": "火災",
         "intelHotspots": "情報熱點",
@@ -1264,8 +1244,6 @@
         "aircraft": "架飛機",
         "protest": "抗議活動",
         "protestsCount": "{{count}}起抗議",
-        "techHQsCount": "{{count}}個科技總部",
-        "techEventsCount": "{{count}}個科技活動",
         "dataCentersCount": "{{count}}個資料中心",
         "underseaCable": "海底電纜",
         "pipeline": "管道",
@@ -1315,7 +1293,6 @@
         "descriptions": {
           "techStartupHubs": "主要創業生態系統（舊金山、紐約、倫敦等）",
           "techCloudRegions": "AWS、Azure、GCP資料中心區域",
-          "techHQs": "大型科技公司總部",
           "techAccelerators": "Y Combinator、Techstars、500 Startups所在地",
           "infraCables": "主要海底光纖電纜（網際網路骨幹）",
           "infraDatacenters": "AI算力叢集 >=10,000 GPU",
@@ -1358,7 +1335,6 @@
           "infraCyberThreats": "網路攻擊和安全事件",
           "mineralsFull": "戰略礦產資源礦床和採礦點",
           "techCyberThreats": "網路攻擊和安全事件",
-          "techEvents": "主要科技會議和活動",
           "techFires": "科技基礎設施附近的活躍野火",
           "financeGulfInvestments": "海灣合作委員會主權財富基金投資和外國直接投資",
           "tradeRoutes": "連線港口並經過戰略咽喉要道的全球主要航運通道",
@@ -1558,22 +1534,6 @@
       },
       "dataFreshness": "資料新鮮度",
       "sourcesDetail": "{{active}}/{{total}} 個資料來源"
-    },
-    "techEvents": {
-      "loading": "正在載入科技活動...",
-      "noEvents": "無可顯示的活動",
-      "showOnMap": "在地圖上顯示",
-      "moreInfo": "更多資訊",
-      "upcoming": "即將舉行",
-      "conferences": "會議",
-      "earnings": "財報",
-      "all": "全部",
-      "conferencesCount": "{{count}} 場會議",
-      "onMap": "{{count}} 個在地圖上",
-      "techmemeEvents": "Techmeme 活動 ↗",
-      "today": "今天",
-      "soon": "即將",
-      "infoTooltip": "<strong>科技活動</strong> 即將舉行和近期的科技活動：會議、產品釋出、監管聽證會和財報電話會議。從官方活動日曆和行業來源彙總。"
     },
     "techReadiness": {
       "ranked": "已排名",
@@ -3437,59 +3397,6 @@
         "public": "公共",
         "publicPrivate": "公私合營"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "超級樞紐",
-        "major": "主要樞紐",
-        "emerging": "新興",
-        "hub": "樞紐"
-      },
-      "unicorns": "獨角獸"
-    },
-    "cloudRegion": {
-      "provider": "提供商",
-      "availabilityZones": "可用區"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "大型科技",
-        "unicorn": "獨角獸",
-        "public": "上市公司",
-        "tech": "科技"
-      },
-      "marketCap": "市值",
-      "employees": "員工數"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "加速器",
-        "incubator": "孵化器",
-        "studio": "創業工作室"
-      },
-      "founded": "成立時間",
-      "notableAlumni": "知名校友"
-    },
-    "techEvent": {
-      "days": {
-        "today": "今天",
-        "tomorrow": "明天",
-        "inDays": "{{count}}天後"
-      },
-      "date": "日期",
-      "moreInformation": "更多資訊"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}}家公司",
-      "bigTechCount": "{{count}}家大型科技",
-      "unicornsCount": "{{count}}家獨角獸",
-      "publicCount": "{{count}}家上市公司",
-      "sampled": "顯示{{count}}家公司的抽樣列表。"
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}}個活動",
-      "upcomingWithin2Weeks": "{{count}}個活動將在2周內舉行",
-      "sampled": "顯示{{count}}個活動的抽樣列表。"
     },
     "militaryFlight": {
       "types": {

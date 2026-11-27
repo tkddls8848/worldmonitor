@@ -110,7 +110,7 @@ describe('coverage catalog panel groups', () => {
     assert.equal(markets.length, 1);
     assert.deepEqual(markets[0].variants, ['finance'], 'picker categories do not decide where a panel exists');
     assert.equal(markets[0].pro, true);
-    assert.equal(groups[0].panels[0].variants.length, 5);
+    assert.equal(groups[0].panels[0].variants.length, 4);
   });
 
   it('fails when a panel is in no picker category or a written description names no panel', () => {

@@ -33,7 +33,6 @@ export * from './CascadePanel';
 export * from './StrategicRiskPanel';
 export * from './StrategicPosturePanel';
 export * from './IntelligenceGapBadge';
-export * from './TechEventsPanel';
 export * from './ServiceStatusPanel';
 export * from './InternetDisruptionsPanel';
 export * from './InsightsPanel';

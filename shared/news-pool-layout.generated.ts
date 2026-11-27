@@ -24,29 +24,6 @@ export const NEWS_POOL_LAYOUT: NewsPoolLayout = {
       "science",
       "intel"
     ],
-    "tech": [
-      "tech",
-      "ai",
-      "startups",
-      "vcblogs",
-      "regionalStartups",
-      "unicorns",
-      "accelerators",
-      "security",
-      "policy",
-      "github",
-      "funding",
-      "cloud",
-      "layoffs",
-      "finance",
-      "dev",
-      "ipo",
-      "producthunt",
-      "hardware",
-      "outages",
-      "thinktanks",
-      "podcasts"
-    ],
     "finance": [
       "markets",
       "forex",
@@ -301,13 +278,6 @@ export const NEWS_POOL_LAYOUT: NewsPoolLayout = {
       "lang": "zh",
       "contentLanguages": [
         "zh"
-      ]
-    },
-    {
-      "edition": "tech",
-      "lang": "en",
-      "contentLanguages": [
-        "en"
       ]
     },
     {

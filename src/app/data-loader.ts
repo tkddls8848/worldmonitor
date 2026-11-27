@@ -194,7 +194,7 @@ import {
 // dashboard critical path (#4404).
 import type { GeoHubsPanel } from '@/components/GeoHubsPanel';
 import type { TechHubsPanel } from '@/components/TechHubsPanel';
-import { EconomicServiceClient, MarketServiceClient, ResearchServiceClient } from '@/services/generated-rpc-clients';
+import { EconomicServiceClient, MarketServiceClient } from '@/services/generated-rpc-clients';
 
 import { protoItemToNewsItem } from '@/services/news-digest-items';
 import { fetchSourceItems, fillFreeSlots, sourcesBelowCap } from '@/app/news-source-fill';
@@ -328,7 +328,6 @@ const HYDRATION_TIER_TWO = new Set([
   'flights',
   'cyberThreats',
   'iranAttacks',
-  'techEvents',
   'cables',
   'cableHealth',
   'diseaseOutbreaks',
@@ -1216,7 +1215,6 @@ export class DataLoaderManager implements AppModule {
     if (this.ctx.mapLayers.flights) tasks.push({ name: 'flights', task: () => runGuarded('flights', () => this.loadFlightDelays()) });
     if (CYBER_LAYER_ENABLED && this.ctx.mapLayers.cyberThreats) tasks.push({ name: 'cyberThreats', task: () => runGuarded('cyberThreats', () => this.loadCyberThreats()) });
     if (IRAN_ATTACKS_ENABLED && (this.ctx.mapLayers.iranAttacks || shouldLoadAny(['cii', 'strategic-risk', 'strategic-posture']))) tasks.push({ name: 'iranAttacks', task: () => runGuarded('iranAttacks', () => this.loadIranEvents()) });
-    if ((this.ctx.mapLayers.techEvents || SITE_VARIANT === 'tech')) tasks.push({ name: 'techEvents', task: () => runGuarded('techEvents', () => this.loadTechEvents()) });
     if ((shouldLoad('sanctions-pressure') || this.ctx.mapLayers.sanctions)) {
       tasks.push({ name: 'sanctions', task: () => runGuarded('sanctions', () => this.loadSanctionsPressure()) });
     }
@@ -1230,7 +1228,7 @@ export class DataLoaderManager implements AppModule {
       tasks.push({ name: 'radiation', task: () => runGuarded('radiation', () => this.loadRadiationWatch()) });
     }
 
-    // tech-readiness ships in the full and tech defaults. shouldLoad() alone is
+    // tech-readiness ships in the full defaults. shouldLoad() alone is
     // not enough — loadAllData(true) on boot (App.ts:1226) bypasses the viewport
     // check via forceAll — so gate on the variant defaults, and also load a
     // panel the user added on another edition: the seed is global.
@@ -1316,11 +1314,6 @@ export class DataLoaderManager implements AppModule {
           break;
         case 'military':
           await this.loadMilitary();
-          break;
-        case 'techEvents':
-          console.log('[loadDataForLayer] Loading techEvents...');
-          await this.loadTechEvents();
-          console.log('[loadDataForLayer] techEvents loaded');
           break;
         case 'iranAttacks':
           await this.loadIranEvents();
@@ -1990,7 +1983,7 @@ export class DataLoaderManager implements AppModule {
     // post-toggle set for a load that used the pre-toggle one.
     const disabledAtLoadStart = new Set(this.ctx.disabledSources);
 
-    const maxCategoryConcurrency = SITE_VARIANT === 'tech' ? 4 : 5;
+    const maxCategoryConcurrency = 5;
     const loadsIntel = this.hydratesPanel('intel', ['full']);
     const categoryConcurrency = Math.max(1, Math.min(maxCategoryConcurrency, categories.length));
     const categoryServedStale = new Map<string, boolean>();
@@ -3074,68 +3067,6 @@ export class DataLoaderManager implements AppModule {
     this.ctx.map?.setLayerReady('natural', hasEarthquakes || hasEonet || imdEvents.length > 0);
   }
 
-  async loadTechEvents(): Promise<void> {
-    console.log('[loadTechEvents] Called. SITE_VARIANT:', SITE_VARIANT, 'techEvents layer:', this.ctx.mapLayers.techEvents);
-    if (SITE_VARIANT !== 'tech' && !this.ctx.mapLayers.techEvents) {
-      console.log('[loadTechEvents] Skipping - not tech variant and layer disabled');
-      return;
-    }
-
-    try {
-      // Try hydrated bootstrap data first (instant, no RPC)
-      const hydrated = getHydratedData('techEvents') as { events?: Array<{ id: string; title: string; type: string; location: string; coords?: { lat: number; lng: number; country: string; virtual?: boolean }; startDate: string; endDate: string; url: string }> } | undefined;
-      let events = hydrated?.events;
-
-      if (!events?.length) {
-        // Fallback: RPC call
-        const client = new ResearchServiceClient(getRpcBaseUrl(), { fetch: (...args: Parameters<typeof fetch>) => globalThis.fetch(...args) });
-        const data = await client.listTechEvents({
-          type: 'conference',
-          mappable: true,
-          days: 90,
-          limit: 50,
-        });
-        if (!data.success) throw new Error(data.error || 'Unknown error');
-        events = data.events;
-      } else {
-        // Filter hydrated data to match map layer needs (conferences, mappable, 90 days)
-        const cutoff = new Date();
-        cutoff.setDate(cutoff.getDate() + 90);
-        events = events.filter(e =>
-          e.type === 'conference' &&
-          e.coords && !e.coords.virtual &&
-          new Date(e.startDate) <= cutoff,
-        ).slice(0, 50);
-      }
-
-      const now = new Date();
-      const mapEvents = (events || []).map((e: any) => ({
-        id: e.id,
-        title: e.title,
-        location: e.location,
-        lat: e.coords?.lat ?? 0,
-        lng: e.coords?.lng ?? 0,
-        country: e.coords?.country ?? '',
-        startDate: e.startDate,
-        endDate: e.endDate,
-        url: e.url,
-        daysUntil: Math.ceil((new Date(e.startDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
-      }));
-
-      this.ctx.latestTechEvents = mapEvents;
-      this.ctx.map?.setTechEvents(mapEvents);
-      this.ctx.map?.setLayerReady('techEvents', mapEvents.length > 0);
-      this.ctx.statusPanel?.updateFeed('Tech Events', { status: 'ok', itemCount: mapEvents.length });
-
-      this.updateSearchIndex();
-    } catch (error) {
-      console.error('[App] Failed to load tech events:', error);
-      this.ctx.latestTechEvents = [];
-      this.ctx.map?.setTechEvents([]);
-      this.ctx.map?.setLayerReady('techEvents', false);
-      this.ctx.statusPanel?.updateFeed('Tech Events', { status: 'error', errorMessage: String(error) });
-    }
-  }
 
   async loadPipelineRegistries(options: { refresh?: boolean } = {}): Promise<void> {
     try {

@@ -305,7 +305,6 @@
   },
   "header": {
     "world": "MUNDO",
-    "tech": "TECNOLOGÍA",
     "live": "VIVO",
     "search": "Buscar",
     "settings": "AJUSTES",
@@ -425,23 +424,9 @@
     "displacement": "Refugiados y desplazados",
     "climate": "Anomalías climáticas",
     "populationExposure": "Exposición de la población",
-    "startups": "Startups y capital de riesgo",
-    "vcblogs": "Perspectivas y ensayos de capital de riesgo",
-    "regionalStartups": "Noticias globales de startups",
-    "unicorns": "Rastreador de unicornios",
-    "accelerators": "Aceleradores y días de demostración",
-    "security": "Ciberseguridad",
-    "policy": "Política y regulación de IA",
     "regulation": "Panel de regulación de IA",
     "finRegulation": "Regulación financiera",
-    "hardware": "Semiconductores y Hardware",
-    "cloud": "Nube e Infraestructura",
-    "dev": "Comunidad de desarrolladores",
-    "github": "Tendencias de GitHub",
     "ipo": "Cotizaciones públicas y fusiones de empresas pantalla",
-    "funding": "Financiación y capital de riesgo",
-    "producthunt": "Búsqueda de productos",
-    "events": "Eventos tecnológicos",
     "serviceStatus": "Estado del servicio",
     "techReadiness": "Índice de preparación tecnológica",
     "techHubs": "Centros tecnológicos de moda",
@@ -1060,15 +1045,10 @@
       },
       "timeAll": "Todo",
       "layers": {
-        "startupHubs": "Centros de inicio",
-        "techHQs": "Sedes tecnológicas",
-        "accelerators": "Aceleradores",
-        "cloudRegions": "Regiones de la nube",
         "aiDataCenters": "Centros de datos de IA",
         "underseaCables": "Cables submarinos",
         "internetOutages": "Cortes de Internet",
         "cyberThreats": "Amenazas cibernéticas",
-        "techEvents": "Eventos tecnológicos",
         "naturalEvents": "Eventos naturales",
         "fires": "Incendios",
         "intelHotspots": "Puntos de acceso Intel",
@@ -1118,8 +1098,6 @@
         "aircraft": "aeronave",
         "protest": "Protesta",
         "protestsCount": "{{count}} protestas",
-        "techHQsCount": "{{count}} sedes técnicas",
-        "techEventsCount": "{{count}} eventos tecnológicos",
         "dataCentersCount": "{{count}} centros de datos",
         "underseaCable": "Cable submarino",
         "pipeline": "Tubería",
@@ -1169,7 +1147,6 @@
         "descriptions": {
           "techStartupHubs": "Principales ecosistemas de startups (SF, Nueva York, Londres, etc.)",
           "techCloudRegions": "Regiones de centros de datos de AWS, Azure y GCP",
-          "techHQs": "Sedes de las principales empresas tecnológicas",
           "techAccelerators": "Y Combinator, Techstars, 500 ubicaciones de startups",
           "infraCables": "Principales cables submarinos de fibra óptica (troncal de Internet)",
           "infraDatacenters": "Clústeres de computación de IA >=10 000 GPU",
@@ -1213,7 +1190,6 @@
           "infraCyberThreats": "Ciberataques y eventos de seguridad",
           "mineralsFull": "Depósitos de minerales estratégicos y sitios de minería",
           "techCyberThreats": "Ciberataques y eventos de seguridad",
-          "techEvents": "Principales conferencias y eventos tecnológicos",
           "techFires": "Incendios forestales activos cerca de infraestructura tecnológica",
           "financeGulfInvestments": "Inversiones de fondos soberanos del Consejo de Cooperación del Golfo e inversión extranjera directa",
           "geoBoundaries": "Zonas desmilitarizadas, líneas de alto el fuego y fronteras en disputa",
@@ -1418,22 +1394,6 @@
       "emojiKeyLabel": "Clave de emoji",
       "emojiKeyAir": "Activos aéreos",
       "emojiKeyNaval": "Activos navales"
-    },
-    "techEvents": {
-      "loading": "Cargando eventos tecnológicos...",
-      "noEvents": "No hay eventos para mostrar",
-      "showOnMap": "Mostrar en el mapa",
-      "moreInfo": "Más información",
-      "upcoming": "Próximos",
-      "conferences": "Conferencias",
-      "earnings": "Resultados",
-      "all": "Todos",
-      "conferencesCount": "{{count}} conferencias",
-      "onMap": "{{count}} en el mapa",
-      "techmemeEvents": "Eventos de Techmeme ↗",
-      "today": "HOY",
-      "soon": "PRÓXIMAMENTE",
-      "infoTooltip": "<strong>Eventos tecnológicos</strong> Eventos tecnológicos próximos y recientes: conferencias, lanzamientos de productos, audiencias regulatorias y llamadas de resultados. Agregados de calendarios oficiales y fuentes de la industria."
     },
     "techReadiness": {
       "ranked": "Clasificados",
@@ -3471,59 +3431,6 @@
         "public": "Público",
         "publicPrivate": "Público/Privado"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "MEGA CENTRO",
-        "major": "CENTRO PRINCIPAL",
-        "emerging": "EMERGENTE",
-        "hub": "CENTRO"
-      },
-      "unicorns": "UNICORNIOS"
-    },
-    "cloudRegion": {
-      "provider": "PROVEEDOR",
-      "availabilityZones": "ZONAS DE DISPONIBILIDAD"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "GRAN TECNOLOGÍA",
-        "unicorn": "UNICORNIO",
-        "public": "PÚBLICO",
-        "tech": "TECNOLOGÍA"
-      },
-      "marketCap": "LÍMITE DE MERCADO",
-      "employees": "EMPLEADOS"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "ACELERADOR",
-        "incubator": "INCUBADORA",
-        "studio": "ESTUDIO DE INICIO"
-      },
-      "founded": "FUNDADO",
-      "notableAlumni": "ALUMNOS NOTABLES"
-    },
-    "techEvent": {
-      "days": {
-        "today": "HOY",
-        "tomorrow": "MAÑANA",
-        "inDays": "EN {{count}} DÍAS"
-      },
-      "date": "FECHA",
-      "moreInformation": "Más información"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}} EMPRESAS",
-      "bigTechCount": "{{count}} Gran tecnología",
-      "unicornsCount": "{{count}} Unicornios",
-      "publicCount": "{{count}} Público",
-      "sampled": "Mostrando una lista de muestra de {{count}} empresas."
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}} EVENTOS",
-      "upcomingWithin2Weeks": "{{count}} próximamente dentro de 2 semanas",
-      "sampled": "Mostrando una lista de muestra de {{count}} eventos."
     },
     "militaryFlight": {
       "types": {

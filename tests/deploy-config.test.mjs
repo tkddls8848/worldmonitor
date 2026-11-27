@@ -258,7 +258,7 @@ describe('welcome landing page routing', () => {
     assert.equal(variantUrls.full, 'https://www.worldmonitor.app/dashboard');
 
     const nonFullUrls = Object.entries(variantUrls).filter(([variant]) => variant !== 'full');
-    assert.ok(nonFullUrls.length >= 4, 'expected non-full variant metadata entries');
+    assert.ok(nonFullUrls.length >= 3, 'expected non-full variant metadata entries');
     for (const [variant, url] of nonFullUrls) {
       assert.equal(
         new URL(url).pathname,
@@ -430,7 +430,7 @@ describe('security header guardrails', () => {
         env: {
           WM_REQUIRE_WEBMCP: '1',
           WM_WEBMCP_PRODUCTION: '1',
-          WM_WEBMCP_PRODUCTION_URL: 'https://tech.worldmonitor.app',
+          WM_WEBMCP_PRODUCTION_URL: 'https://finance.worldmonitor.app',
           WM_WEBMCP_DEPLOYED_SHA: deployedSha,
         },
         error: /WM_WEBMCP_PRODUCTION_URL must be https:\/\/www\.worldmonitor\.app/,
@@ -1341,7 +1341,7 @@ describe('skeleton brand text extraction (#5541)', () => {
 });
 
 // #6832/#6833/#6834/#6835/#6836 — one Vercel project serves every host, so
-// shared HTML/XML on tech/finance/commodity/happy/energy/api is crawled as
+// shared HTML/XML on finance/commodity/energy/api is crawled as
 // alternates (or, for RSS, duplicates with no user-selected canonical).
 describe('variant-host canonicalization (#6833–#6836)', () => {
 

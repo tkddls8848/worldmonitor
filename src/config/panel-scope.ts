@@ -58,16 +58,9 @@ export const PANEL_SCOPE_BEHAVIOUR: Readonly<Record<string, PanelScopeBehaviour>
   economic: 'global', // Macro Stress
   polymarket: 'global', // Predictions
   'world-clock': 'global', // World Clock
-  startups: 'global', // Startups & VC
-  vcblogs: 'global', // VC Insights & Essays
-  unicorns: 'global', // Unicorn Tracker
-  accelerators: 'global', // Accelerators & Demo Days
+   // Accelerators & Demo Days
   crypto: 'global', // Crypto
-  github: 'global', // GitHub Trending
   ipo: 'global', // IPOs, Earnings & M&A
-  funding: 'global', // Funding & VC
-  producthunt: 'global', // Product Hunt
-  events: 'global', // Tech Events
   'service-status': 'global', // Service Status
   'etf-flows': 'global', // BTC ETF Tracker
   stablecoins: 'global', // Stablecoins
@@ -132,19 +125,12 @@ export const PANEL_SCOPE_BEHAVIOUR: Readonly<Record<string, PanelScopeBehaviour>
   'fuel-prices': 'unsupported', // Fuel Prices
   ai: 'unsupported', // AI/ML
   tech: 'unsupported', // Technology
-  regionalStartups: 'unsupported', // Global Startup News
-  security: 'unsupported', // Cybersecurity
-  policy: 'unsupported', // AI Policy & Regulation
   layoffs: 'unsupported', // Layoffs Tracker
   finance: 'unsupported', // Financial
-  hardware: 'unsupported', // Semiconductors & Hardware
-  cloud: 'unsupported', // Cloud & Infrastructure
-  dev: 'unsupported', // Developer Community
   'internet-disruptions': 'filters', // Internet Disruptions
   'global-procurement': 'unsupported', // Global Procurement
   'tech-readiness': 'unsupported', // Tech Readiness Index
   'tech-hubs': 'unsupported', // Hot Tech Hubs
-  'ai-regulation': 'unsupported', // AI Regulation Dashboard
   'markets-news': 'unsupported', // Markets News
   forex: 'unsupported', // Forex & Currencies
   'commodities-news': 'unsupported', // Commodities News

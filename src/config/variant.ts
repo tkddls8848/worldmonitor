@@ -1,7 +1,7 @@
 /**
  * Every variant a user can switch to.
  */
-export const SITE_VARIANTS = ['full', 'tech', 'finance',  'commodity', 'energy'] as const;
+export const SITE_VARIANTS = ['full', 'finance', 'commodity', 'energy'] as const;
 
 export type SiteVariant = (typeof SITE_VARIANTS)[number];
 
@@ -32,7 +32,6 @@ export const SITE_VARIANT: string = (() => {
   // without a global `location`, and this module must stay importable there.
   const h = window.location?.hostname;
   if (!h) return buildVariant;
-  if (h.startsWith('tech.')) return 'tech';
   if (h.startsWith('finance.')) return 'finance';
   if (h.startsWith('commodity.')) return 'commodity';
   if (h.startsWith('energy.')) return 'energy';

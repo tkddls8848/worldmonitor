@@ -19,19 +19,6 @@
     "middleeast": "Mellanöstern",
     "layoffs": "Uppsägningar Tracker",
     "ai": "AI och maskininlärning",
-    "startups": "Startups och riskkapital",
-    "vcblogs": "Riskkapitalinsikter och artiklar",
-    "regionalStartups": "Globala uppstartsnyheter",
-    "unicorns": "Enhörningsspårare",
-    "accelerators": "Acceleratorer och demodagar",
-    "funding": "Finansiering och riskkapital",
-    "producthunt": "Produktjakt",
-    "security": "Cybersäkerhet",
-    "policy": "AI policy och reglering",
-    "hardware": "Halvledare och hårdvara",
-    "cloud": "Moln och infrastruktur",
-    "dev": "Utvecklargemenskap",
-    "github": "GitHub-trending",
     "ipo": "Börsintroduktioner och fusioner med skalbolag",
     "thinktanks": "Tankesmedjor",
     "science": "Vetenskap",
@@ -50,7 +37,6 @@
     "serviceStatus": "Servicestatus",
     "stablecoins": "Stablecoins",
     "deduction": "Bedöm situation",
-    "events": "Tekniska evenemang",
     "techHubs": "Teknikhubbar",
     "techReadiness": "Teknikberedskapsindex",
     "ucdpEvents": "UCDP-konflikthändelser",
@@ -514,15 +500,10 @@
       },
       "timeAll": "Alla",
       "layers": {
-        "startupHubs": "Startuphubbar",
-        "techHQs": "Tekniska huvudkontor",
-        "accelerators": "Acceleratorer",
-        "cloudRegions": "Molnregioner",
         "aiDataCenters": "AI-datacenter",
         "underseaCables": "Undervattenskablar",
         "internetOutages": "Internetavbrott",
         "cyberThreats": "Cyberhot",
-        "techEvents": "Tekniska evenemang",
         "naturalEvents": "Naturliga händelser",
         "fires": "Bränder",
         "intelHotspots": "INTEL-HOTSPOTS",
@@ -572,8 +553,6 @@
         "aircraft": "flygplan",
         "protest": "Protest",
         "protestsCount": "{{count}} protester",
-        "techHQsCount": "{{count}} tekniska huvudkontor",
-        "techEventsCount": "{{count}} tekniska händelser",
         "dataCentersCount": "{{count}} datacenter",
         "underseaCable": "Undervattenskabel",
         "pipeline": "Rörledning",
@@ -623,7 +602,6 @@
         "descriptions": {
           "techStartupHubs": "Stora start-ekosystem (SF, NYC, London, etc.)",
           "techCloudRegions": "AWS, Azure, GCP datacenterregioner",
-          "techHQs": "Huvudkontor för stora teknikföretag",
           "techAccelerators": "Y Combinator, Techstars, 500 startups-platser",
           "infraCables": "Större undervattens fiberoptiska kablar (internetstomme)",
           "infraDatacenters": "AI-beräkningskluster >=10 000 GPU:er",
@@ -668,7 +646,6 @@
           "infraCyberThreats": "Cyberattacker och säkerhetshändelser",
           "mineralsFull": "Strategiska mineralfyndigheter och gruvplatser",
           "techCyberThreats": "Cyberattacker och säkerhetshändelser",
-          "techEvents": "Stora teknikkonferenser och evenemang",
           "techFires": "Aktiva skogsbränder nära teknikinfrastruktur",
           "geoBoundaries": "Demilitariserade zoner, eldupphörslinjer och omtvistade gränser",
           "ciiChoropleth": "Landinstabilitetsindexvärmekarta — färger länder efter poäng (grön=stabil, röd=kritisk)",
@@ -861,22 +838,6 @@
       "emojiKeyLabel": "Emoji-nyckel",
       "emojiKeyAir": "Luftresurser",
       "emojiKeyNaval": "Sjöresurser"
-    },
-    "techEvents": {
-      "loading": "Laddar tekniska händelser...",
-      "noEvents": "Inga händelser att visa",
-      "showOnMap": "Visa på kartan",
-      "moreInfo": "Mer info",
-      "upcoming": "Kommande",
-      "conferences": "Konferenser",
-      "earnings": "Rapporter",
-      "all": "Alla",
-      "conferencesCount": "{{count}} konferenser",
-      "onMap": "{{count}} på kartan",
-      "techmemeEvents": "Techmeme-evenemang ↗",
-      "today": "IDAG",
-      "soon": "SNART",
-      "infoTooltip": "<strong>Teknikevenemang</strong> Kommande och senaste teknikevenemang: konferenser, produktlanseringar, regulatoriska utfrågningar och resultatsamtal. Samlade från officiella evenemangskalendrar och branschkällor."
     },
     "techReadiness": {
       "ranked": "Rankade",
@@ -3071,59 +3032,6 @@
         "publicPrivate": "Offentlig/privat"
       }
     },
-    "startupHub": {
-      "tiers": {
-        "mega": "MEGANAV",
-        "major": "STORA HUB",
-        "emerging": "UPPKOMST",
-        "hub": "NAV"
-      },
-      "unicorns": "ENHÖRNINGAR"
-    },
-    "cloudRegion": {
-      "provider": "LEVERANTÖR",
-      "availabilityZones": "TILLGÄNGLIGHETSZONER"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "STOR TEKNIK",
-        "unicorn": "ENHÖRNING",
-        "public": "OFFENTLIG",
-        "tech": "TEKNIK"
-      },
-      "marketCap": "MARKNADSKAP",
-      "employees": "ANSTÄLLDA"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "ACCELERATOR",
-        "incubator": "INKUBATOR",
-        "studio": "STARTUPSTUDIO"
-      },
-      "founded": "GRUNDAD",
-      "notableAlumni": "BETYDANDE ALUMNER"
-    },
-    "techEvent": {
-      "days": {
-        "today": "I DAG",
-        "tomorrow": "I MORGON",
-        "inDays": "OM {{count}} DAGAR"
-      },
-      "date": "DATUM",
-      "moreInformation": "Mer information"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}} FÖRETAG",
-      "bigTechCount": "{{count}} Big Tech",
-      "unicornsCount": "{{count}} Enhörningar",
-      "publicCount": "{{count}} Offentlig",
-      "sampled": "Visar en urvalslista över {{count}} företag."
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}} HÄNDELSER",
-      "upcomingWithin2Weeks": "{{count}} kommande inom 2 veckor",
-      "sampled": "Visar en provlista med {{count}} händelser."
-    },
     "militaryFlight": {
       "types": {
         "fighter": "Kämpe",
@@ -3871,7 +3779,6 @@
   },
   "header": {
     "world": "VÄRLD",
-    "tech": "TEKNIK",
     "viewOnGitHub": "Visa på GitHub",
     "live": "LIVE",
     "search": "Söka",

@@ -316,13 +316,6 @@
     "tariffs",
     "debt-ceiling"
   ],
-  "researchTechEventTypes": [
-    "all",
-    "conference",
-    "earnings",
-    "ipo",
-    "other"
-  ],
   "researchHackerNewsFeedTypes": [
     "top",
     "new",

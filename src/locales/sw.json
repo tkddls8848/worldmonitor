@@ -372,7 +372,6 @@
   },
   "header": {
     "world": "ULIMWENGU",
-    "tech": "TEKNOLOJIA",
     "live": "MUBASHARA",
     "cached": "ILIYO HAKI",
     "unavailable": "HAIPATIKANI",
@@ -500,23 +499,9 @@
     "populationExposure": "Mfiduo wa Idadi ya Watu",
     "securityAdvisories": "Ushauri wa Usalama",
     "orefSirens": "King'ora za Israel",
-    "startups": "Startups na mtaji wa kufadhili biashara changa",
-    "vcblogs": "Maarifa na insha za mtaji wa kufadhili biashara changa",
-    "regionalStartups": "Habari za Kuanzishwa Ulimwenguni",
-    "unicorns": "Kifuatiliaji cha Nyati",
-    "accelerators": "Vichapishi & Siku za Maonyesho",
-    "security": "Usalama wa mtandao",
-    "policy": "Sera na Udhibiti wa AI",
     "regulation": "Dashibodi ya Udhibiti wa AI",
     "finRegulation": "Udhibiti wa Fedha",
-    "hardware": "Semikondakta na maunzi",
-    "cloud": "Wingu na Miundombinu",
-    "dev": "Jumuiya ya Wasanidi Programu",
-    "github": "GitHub Inavuma",
     "ipo": "Orodha za umma na muunganisho wa kampuni za ganda",
-    "funding": "Ufadhili na mtaji wa kufadhili biashara changa",
-    "producthunt": "Uwindaji wa Bidhaa",
-    "events": "Matukio ya Teknolojia",
     "serviceStatus": "Hali ya Huduma",
     "internetDisruptions": "Kukatizwa kwa Mtandao",
     "internetDisruptionsTabs": {
@@ -1358,15 +1343,10 @@
         "oceania": "Oceania"
       },
       "layers": {
-        "startupHubs": "Vituo vya Kuanzisha",
-        "techHQs": "Makao makuu ya Teknolojia",
-        "accelerators": "Viongeza kasi",
-        "cloudRegions": "Mikoa ya Cloud",
         "aiDataCenters": "Vituo vya Data vya AI",
         "underseaCables": "Nyaya za Undersea",
         "internetOutages": "Kukatizwa kwa Mtandao",
         "cyberThreats": "Vitisho vya Mtandao",
-        "techEvents": "Matukio ya Teknolojia",
         "naturalEvents": "Matukio ya Asili",
         "fires": "Moto",
         "intelHotspots": "Maeneo moto ya ujasusi",
@@ -1409,8 +1389,6 @@
         "aircraft": "ndege",
         "protest": "Maandamano",
         "protestsCount": "{{count}} maandamano",
-        "techHQsCount": "Makao makuu ya teknolojia {{count}}",
-        "techEventsCount": "Matukio {{count}} ya teknolojia",
         "dataCentersCount": "Vituo {{count}} vya data",
         "underseaCable": "Cable ya Undersea",
         "pipeline": "Bomba",
@@ -1460,7 +1438,6 @@
         "descriptions": {
           "techStartupHubs": "Mifumo mikuu ya uanzishaji (SF, NYC, London, n.k.)",
           "techCloudRegions": "Mikoa ya kituo cha data cha AWS, Azure, GCP",
-          "techHQs": "Makao makuu ya makampuni makubwa ya teknolojia",
           "techAccelerators": "Y Combinator, Techstars, maeneo 500 ya Kuanzisha",
           "infraCables": "Kebo kuu za nyuzi za chini ya bahari (mgongo wa mtandao)",
           "infraDatacenters": "AI inakokotoa makundi >=10,000 GPU",
@@ -1503,7 +1480,6 @@
           "infraCyberThreats": "Mashambulizi ya mtandaoni na matukio ya usalama",
           "mineralsFull": "Mkakati wa amana za madini na maeneo ya uchimbaji madini",
           "techCyberThreats": "Mashambulizi ya mtandaoni na matukio ya usalama",
-          "techEvents": "Mikutano na hafla kuu za teknolojia",
           "techFires": "Moto wa nyika unaoendelea karibu na miundombinu ya teknolojia",
           "financeGulfInvestments": "Uwekezaji wa mifuko ya utajiri wa serikali za Baraza la Ushirikiano la Ghuba na uwekezaji wa moja kwa moja kutoka nje",
           "tradeRoutes": "Njia kuu za kimataifa za meli zinazounganisha bandari kupitia sehemu za kimkakati za chokepoints",
@@ -1704,22 +1680,6 @@
         "hoursAgo": "Saa {{count}} zilizopita"
       },
       "infoTooltip": "<strong>Mbinu</strong> Alama ya mchanganyiko (0-100):<ul><li>50% Kutokuwa na Uthabiti wa Nchi (50 bora zaidi)</li><li>30% ya maeneo ya muunganiko wa kijiografia</li><li>20% ya matukio ya miundombinu</li></ul>Husasishwa upya kiotomatiki kila baada ya dakika 5."
-    },
-    "techEvents": {
-      "infoTooltip": "<strong>Matukio ya Kiteknolojia</strong> Matukio yajayo na ya hivi majuzi ya teknolojia: mikutano, uzinduzi wa bidhaa, mikutano ya udhibiti na simu za mapato. Imejumlishwa kutoka kwa kalenda rasmi za matukio na vyanzo vya tasnia.",
-      "loading": "Inapakia matukio ya kiteknolojia...",
-      "noEvents": "Hakuna matukio ya kuonyesha",
-      "showOnMap": "Onyesha kwenye ramani",
-      "moreInfo": "Maelezo zaidi",
-      "upcoming": "Ijayo",
-      "conferences": "Mikutano",
-      "earnings": "Mapato",
-      "all": "Wote",
-      "conferencesCount": "mikutano {{count}}",
-      "onMap": "{{count}} kwenye ramani",
-      "techmemeEvents": "Matukio ya Techmeme ↗",
-      "today": "LEO",
-      "soon": "HIVI KARIBUNI"
     },
     "techReadiness": {
       "ranked": "Zenye nafasi",
@@ -3527,59 +3487,6 @@
         "public": "Umma",
         "publicPrivate": "Umma/Binafsi"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "KITOVU KIKUU",
-        "major": "KITOVU KIKUU",
-        "emerging": "INAYOJITOKEZA",
-        "hub": "KITOVU"
-      },
-      "unicorns": "NYATI"
-    },
-    "cloudRegion": {
-      "provider": "MTOAJI",
-      "availabilityZones": "MAENEO YA KUPATIKANA"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "TEKNHAM KUBWA",
-        "unicorn": "NYATI",
-        "public": "UMMA",
-        "tech": "TEKNOLOJIA"
-      },
-      "marketCap": "KIFUNGO CHA SOKO",
-      "employees": "WAFANYAKAZI"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "KIKONGEZEKA",
-        "incubator": "KITOTOLEO",
-        "studio": "ANZA STUDIO"
-      },
-      "founded": "IMEANZISHWA",
-      "notableAlumni": "WASOMI MASHUHURI"
-    },
-    "techEvent": {
-      "days": {
-        "today": "LEO",
-        "tomorrow": "KESHO",
-        "inDays": "KATIKA SIKU {{count}}"
-      },
-      "date": "TAREHE",
-      "moreInformation": "Taarifa Zaidi"
-    },
-    "techHQCluster": {
-      "companiesCount": "MAKAMPUNI {{count}}",
-      "bigTechCount": "{{count}} Big Tech",
-      "unicornsCount": "{{count}} Nyati",
-      "publicCount": "{{count}} Umma",
-      "sampled": "Inaonyesha orodha ya sampuli ya kampuni {{count}}."
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}} MATUKIO",
-      "upcomingWithin2Weeks": "{{count}} yajayo ndani ya wiki 2",
-      "sampled": "Inaonyesha sampuli ya orodha ya matukio {{count}}."
     },
     "militaryFlight": {
       "types": {

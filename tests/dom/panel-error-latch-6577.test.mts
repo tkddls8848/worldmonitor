@@ -45,12 +45,12 @@
  *   - `showLoading()` (Panel.ts) clears the chip AND the countdown, but
  *     deliberately leaves `retryAttempt` alone.
  *   - the raw `replaceChildren(this.content, …)` loading branches in
- *     ServiceStatus/TechEvents clear NEITHER — the chip stays red
+ *     ServiceStatus clear NEITHER — the chip stays red
  *     and the interval keeps ticking for the whole retry fetch.
  * Both preserve the rung, which is the only property asserted below.
  *
  * REACHABILITY — three of these five panels are latent, not live. Only
- * TechEventsPanel call an RPC that can actually reject:
+ * ServiceStatusPanel calls an RPC that can actually reject:
  *   - ServiceStatusPanel: `fetchServiceStatuses` runs inside a CircuitBreaker
  *     whose `execute()` never rejects, and both of its returns hardcode
  *     `success: true` — so `if (!data.success) throw` is dead code and
@@ -83,9 +83,9 @@ vi.mock('@/services/gdelt-intel', async (importOriginal) => ({
 }));
 
 
+import { Panel } from '@/components/Panel';
 import { GdeltIntelPanel } from '@/components/GdeltIntelPanel';
 import { ServiceStatusPanel } from '@/components/ServiceStatusPanel';
-import { TechEventsPanel } from '@/components/TechEventsPanel';
 
 /** Base-class state these tests reach into to observe the latch. */
 interface PanelInternals {
@@ -203,32 +203,6 @@ describe('ServiceStatusPanel', () => {
   });
 });
 
-describe('TechEventsPanel', () => {
-  it('clears the countdown and backoff when the events list renders', async () => {
-    const fetchEvents = vi
-      .spyOn(TechEventsPanel.prototype as unknown as { fetchEvents(): Promise<void> }, 'fetchEvents')
-      .mockResolvedValue(undefined);
-
-    const panel = new TechEventsPanel('tech-events');
-    mount(panel);
-    expect(fetchEvents).toHaveBeenCalled();
-
-    await expectRecoveryClearsRetryState(
-      panel,
-      () => {
-        flags(panel).loading = false;
-        flags(panel).error = 'boom';
-        (panel as unknown as { render(): void }).render();
-      },
-      () => {
-        flags(panel).error = null;
-        (panel as unknown as { render(): void }).render();
-      },
-    );
-
-    panel.destroy();
-  });
-});
 
 describe('GdeltIntelPanel', () => {
   /**
@@ -272,86 +246,13 @@ describe('GdeltIntelPanel', () => {
 });
 
 
-/**
- * The inverse half of #6577, and the reason none of the five edits above may be
- * copied onto a loading branch. A SUCCESS render must reset `retryAttempt`; a
- * LOADING render must NOT — otherwise every retry re-arms at the 15s floor and
- * the ladder never climbs toward the 180s cap.
- *
- * Without these two cases the rule lives only in the prose above, so a
- * contributor "fixing" the red chip that lingers during a retry fetch could swap
- * a loading branch onto `clearErrorState()` and defeat exponential backoff with
- * a fully green suite.
- *
- * Both loading shapes are covered because they differ in what else they touch:
- * the raw `replaceChildren` branch clears neither chip nor countdown, while
- * `showLoading()` clears both. Only the rung is asserted, since that is the one
- * property both must share.
- *
- * TechEventsPanel is the vehicle for both because it is one of only two panels
- * in this file whose error path is genuinely reachable in production, so the
- * rung it reports is a real one. Note the asymmetry, though: the first case
- * drives TechEvents' OWN loading branch (the raw `replaceChildren` at
- * TechEventsPanel.ts:71 — the only loading shape it has), while the second calls
- * the inherited `showLoading()` directly. TechEvents never calls `showLoading()`
- * itself; the panels that take that shape are GdeltIntelPanel (:76) and
- * GivingPanel (:28, constructor only). The second case is therefore a
- * base-class contract test riding on a convenient subclass, not a per-call-site
- * test of TechEvents — it pins `Panel.showLoading()` for every panel that uses it.
- */
-describe('loading renders preserve the backoff rung', () => {
-  function newPanel(): TechEventsPanel {
-    vi.spyOn(
-      TechEventsPanel.prototype as unknown as { fetchEvents(): Promise<void> },
-      'fetchEvents',
-    ).mockResolvedValue(undefined);
-    const panel = new TechEventsPanel('tech-events');
-    mount(panel);
-    return panel;
-  }
-
-  /** Drive the real error site once: rung 0 is consumed, `retryAttempt` becomes 1. */
-  function driveFirstFailure(panel: TechEventsPanel): void {
-    flags(panel).loading = false;
-    flags(panel).error = 'boom';
-    (panel as unknown as { render(): void }).render();
-    // Non-vacuity: prove we really are at rung 1 before the loading render, so a
-    // later "(30s)" cannot be an accident of the panel never having failed.
-    expect(countdownText(panel)).toMatch(/\(15s\)/);
-    expect(internals(panel).retryAttempt).toBe(1);
-  }
-
-  /** Drive the real error site again; the countdown reports the rung it re-entered at. */
-  function driveSecondFailure(panel: TechEventsPanel): string | null {
-    flags(panel).loading = false;
-    flags(panel).error = 'boom';
-    (panel as unknown as { render(): void }).render();
-    return countdownText(panel);
-  }
-
-  it('keeps the rung across the raw replaceChildren loading branch', () => {
-    const panel = newPanel();
-    driveFirstFailure(panel);
-
-    flags(panel).loading = true;
-    (panel as unknown as { render(): void }).render();
-
-    expect(internals(panel).content.querySelector('.tech-events-loading')).not.toBeNull();
-
-    // 30s, not 15s: the loading render must not have reset the backoff.
-    expect(driveSecondFailure(panel)).toMatch(/\(30s\)/);
-
-    panel.destroy();
-  });
-
-  it('keeps the rung across showLoading()', () => {
-    const panel = newPanel();
-    driveFirstFailure(panel);
-
-    panel.showLoading();
-
-    expect(driveSecondFailure(panel)).toMatch(/\(30s\)/);
-
-    panel.destroy();
-  });
+it('preserves the retry backoff across the loading state', () => {
+  const panel = new Panel({ id: 'loading-backoff', title: 'Loading backoff' });
+  mount(panel);
+  panel.showError('boom', () => {});
+  expect(countdownText(panel)).toMatch(/\(15s\)/);
+  panel.showLoading();
+  panel.showError('boom', () => {});
+  expect(countdownText(panel)).toMatch(/\(30s\)/);
+  panel.destroy();
 });

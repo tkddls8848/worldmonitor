@@ -23,10 +23,8 @@ World Monitor runs named thematic variants from a single codebase, each tailored
 | Variant | Domain | Focus |
 |---------|--------|-------|
 | **World Monitor** | worldmonitor.app | Geopolitics, military, conflicts, infrastructure |
-| **Tech Monitor** | tech.worldmonitor.app | AI/ML, startups, cybersecurity, tech ecosystems |
 | **Finance Monitor** | finance.worldmonitor.app | Markets, central banks, Gulf FDI, commodities |
 | **Commodity Monitor** | commodity.worldmonitor.app | Mining, metals, energy, critical minerals |
-| **Happy Monitor** | happy.worldmonitor.app | Good news, conservation, positive global trends |
 | **Energy Monitor** | energy.worldmonitor.app | Energy security, oil and gas, chokepoints, policy response |
 
 ### AI Intelligence Layer

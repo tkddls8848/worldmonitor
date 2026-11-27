@@ -4,20 +4,18 @@ type LayerSnapshot = { id: string; dataCount: number };
 type OverlaySnapshot = {
   protestMarkers: number;
   datacenterMarkers: number;
-  techEventMarkers: number;
-  techHQMarkers: number;
   hotspotMarkers: number;
 };
 
 type VisualScenarioSummary = {
   id: string;
-  variant: 'both' | 'full' | 'tech' | 'finance' | 'commodity' | 'energy';
+  variant: 'both' | 'full' | 'finance' | 'commodity' | 'energy';
 };
 
 type HarnessWindow = Window & {
   __mapHarness?: {
     ready: boolean;
-    variant: 'full' | 'tech' | 'finance' | 'commodity' | 'energy';
+    variant: 'full' | 'finance' | 'commodity' | 'energy';
     seedAllDynamicData: () => void;
     setProtestsScenario: (scenario: 'alpha' | 'beta') => void;
     setPulseProtestsScenario: (
@@ -80,38 +78,6 @@ const EXPECTED_FULL_DECK_LAYERS = [
   'news-locations-layer',
 ];
 
-const EXPECTED_TECH_DECK_LAYERS = [
-  'cables-layer',
-  'pipelines-layer',
-  'conflict-zones-layer',
-  'bases-layer',
-  'nuclear-layer',
-  'hotspots-layer',
-  'datacenters-layer',
-  'earthquakes-layer',
-  'natural-events-layer',
-  'fires-layer',
-  'weather-layer',
-  'outages-layer',
-  'cyber-threats-layer',
-  'ais-density-layer',
-  'ais-disruptions-layer',
-  'ports-layer',
-  'cable-advisories-layer',
-  'repair-ships-layer',
-  'flight-delays-layer',
-  'military-vessels-layer',
-  'military-vessel-clusters-layer',
-  'military-flights-layer',
-  'military-flight-clusters-layer',
-  'waterways-layer',
-  'economic-centers-layer',
-  'minerals-layer',
-  'startup-hubs-layer',
-  'accelerators-layer',
-  'cloud-regions-layer',
-  'news-locations-layer',
-];
 
 const EXPECTED_FINANCE_DECK_LAYERS = [
   ...EXPECTED_FULL_DECK_LAYERS,
@@ -214,9 +180,7 @@ test.describe('DeckGL map harness', () => {
       return w.__mapHarness?.variant ?? 'full';
     });
 
-    const expectedVariant = process.env.VITE_VARIANT === 'tech'
-      ? 'tech'
-      : process.env.VITE_VARIANT === 'energy'
+    const expectedVariant = process.env.VITE_VARIANT === 'energy'
       ? 'energy'
       : process.env.VITE_VARIANT === 'finance'
       ? 'finance'
@@ -304,9 +268,7 @@ test.describe('DeckGL map harness', () => {
       return w.__mapHarness?.variant ?? 'full';
     });
 
-    const expectedDeckLayers = variant === 'tech'
-      ? EXPECTED_TECH_DECK_LAYERS
-      : variant === 'energy'
+    const expectedDeckLayers = variant === 'energy'
       ? EXPECTED_ENERGY_DECK_LAYERS
       : variant === 'finance'
       ? EXPECTED_FINANCE_DECK_LAYERS
@@ -352,32 +314,6 @@ test.describe('DeckGL map harness', () => {
       }, { timeout: 20000 })
       .toBeGreaterThan(0);
 
-    if (variant === 'tech') {
-      await page.evaluate(() => {
-        const w = window as HarnessWindow;
-        w.__mapHarness?.setCamera({ lon: -122.42, lat: 37.77, zoom: 5.2 });
-      });
-
-      await expect
-        .poll(async () => {
-          return await page.evaluate(() => {
-            const w = window as HarnessWindow;
-            const layers = w.__mapHarness?.getDeckLayerSnapshot() ?? [];
-            return layers.find((layer) => layer.id === 'tech-hq-clusters-layer')?.dataCount ?? 0;
-          });
-        }, { timeout: 20000 })
-        .toBeGreaterThan(0);
-
-      await expect
-        .poll(async () => {
-          return await page.evaluate(() => {
-            const w = window as HarnessWindow;
-            const layers = w.__mapHarness?.getDeckLayerSnapshot() ?? [];
-            return layers.find((layer) => layer.id === 'tech-event-clusters-layer')?.dataCount ?? 0;
-          });
-        }, { timeout: 20000 })
-        .toBeGreaterThan(0);
-    }
   });
 
   test('renders GCC investments layer when enabled in finance variant', async ({ page }) => {

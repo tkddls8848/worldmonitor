@@ -166,29 +166,29 @@ describe('renderVariantDashboardHtml (#4996)', () => {
     }
   });
 
-  it('rewrites brand meta, English discovery links, social images, and h1 for tech', () => {
-    const html = renderVariantDashboardHtml(fixture, 'tech');
-    const tech = VARIANT_META.tech;
-    assert.ok(html.includes(`<title>${escHtml(tech.title)}</title>`), 'title');
-    assert.ok(html.includes(`<meta name="description" content="${escHtml(tech.description)}" />`), 'description');
-    assert.ok(html.includes(`<meta property="og:site_name" content="Tech Monitor" />`), 'og:site_name');
-    assert.ok(html.includes(`<meta name="application-name" content="Tech Monitor" />`), 'application-name');
-    assert.ok(html.includes(`<meta name="subject" content="${escHtml(tech.subject)}" />`), 'subject');
+  it('rewrites brand meta, English discovery links, social images, and h1 for finance', () => {
+    const html = renderVariantDashboardHtml(fixture, 'finance');
+    const finance = VARIANT_META.finance;
+    assert.ok(html.includes(`<title>${escHtml(finance.title)}</title>`), 'title');
+    assert.ok(html.includes(`<meta name="description" content="${escHtml(finance.description)}" />`), 'description');
+    assert.ok(html.includes(`<meta property="og:site_name" content="Finance Monitor" />`), 'og:site_name');
+    assert.ok(html.includes(`<meta name="application-name" content="Finance Monitor" />`), 'application-name');
+    assert.ok(html.includes(`<meta name="subject" content="${escHtml(finance.subject)}" />`), 'subject');
     assert.ok(
-      html.includes(`<link rel="alternate" hreflang="en" href="${tech.url}" />`),
+      html.includes(`<link rel="alternate" hreflang="en" href="${finance.url}" />`),
       'English alternate moves to the variant host without query-string application state',
     );
     assert.ok(
-      html.includes(`<link rel="alternate" hreflang="x-default" href="${tech.url}" />`),
+      html.includes(`<link rel="alternate" hreflang="x-default" href="${finance.url}" />`),
       'x-default alternate moves to the variant host',
     );
     assert.doesNotMatch(html, /hreflang="[^"]+"\s+href="[^"]*[?&]lang=/);
     assert.ok(
-      html.includes('content="https://tech.worldmonitor.app/favico/tech/og-image.png"'),
+      html.includes('content="https://finance.worldmonitor.app/favico/finance/og-image.png"'),
       'og/twitter image points at the variant OG asset',
     );
     assert.ok(html.includes('<meta property="og:image:width" content="1200" />'), 'og:image:width untouched');
-    assert.ok(html.includes(`<h1 class="app-heading">${escHtml(tech.title)}</h1>`), 'h1');
+    assert.ok(html.includes(`<h1 class="app-heading">${escHtml(finance.title)}</h1>`), 'h1');
   });
 
   it('rewrites SoftwareApplication and attaches WebPage plus breadcrumbs instead of claiming the site', () => {
@@ -226,16 +226,16 @@ describe('renderVariantDashboardHtml (#4996)', () => {
   });
 
   it('injects variant-specific SEO summary and noscript differentiation copy', () => {
-    const html = renderVariantDashboardHtml(fixture, 'tech');
+    const html = renderVariantDashboardHtml(fixture, 'finance');
     assert.match(html, /<section class="app-seo-summary">/);
     assert.doesNotMatch(
       html,
       /<section class="app-seo-summary"[^>]*aria-hidden/,
       'variant SEO summary must stay in the accessibility tree (#7607)',
     );
-    assert.match(html, /Tech Monitor is the World Monitor variant/);
+    assert.match(html, /Finance Monitor is the World Monitor markets and trading dashboard/);
     assert.match(html, /<main id="dashboard-noscript"/);
-    assert.match(html, /Tech Monitor requires JavaScript for the live map/);
+    assert.match(html, /Finance Monitor requires JavaScript for the live map/);
     assert.doesNotMatch(html, /Full dashboard SEO summary placeholder/);
     assert.doesNotMatch(html, /Full dashboard noscript placeholder/);
   });
@@ -247,7 +247,7 @@ describe('renderVariantDashboardHtml (#4996)', () => {
 
   it('throws loudly when an anchor is missing (markup drift guard)', () => {
     const withoutCanonical = fixture.replace(/<link rel="canonical"[^>]*>\n/, '');
-    assert.throws(() => renderVariantDashboardHtml(withoutCanonical, 'tech'), /anchor "canonical" matched 0/);
+    assert.throws(() => renderVariantDashboardHtml(withoutCanonical, 'finance'), /anchor "canonical" matched 0/);
   });
 
   it('throws loudly when an anchor is duplicated', () => {
@@ -255,7 +255,7 @@ describe('renderVariantDashboardHtml (#4996)', () => {
       `<link rel="canonical" href="${FULL.url}" />`,
       `<link rel="canonical" href="${FULL.url}" />\n    <link rel="canonical" href="${FULL.url}" />`,
     );
-    assert.throws(() => renderVariantDashboardHtml(doubled, 'tech'), /anchor "canonical" matched 2/);
+    assert.throws(() => renderVariantDashboardHtml(doubled, 'finance'), /anchor "canonical" matched 2/);
   });
 
   it('throws when a query-string locale is reintroduced as an indexable alternate', () => {
@@ -264,7 +264,7 @@ describe('renderVariantDashboardHtml (#4996)', () => {
       `<link rel="alternate" hreflang="en" href="${FULL.url}" />\n    <link rel="alternate" hreflang="fr" href="${FULL.url}?lang=fr" />`,
     );
     assert.throws(
-      () => renderVariantDashboardHtml(withPseudoLocale, 'tech'),
+      () => renderVariantDashboardHtml(withPseudoLocale, 'finance'),
       /anchor "hreflang alternates" matched 3 time\(s\), expected 2\.\.2/,
     );
   });
@@ -275,6 +275,6 @@ describe('renderVariantDashboardHtml (#4996)', () => {
   });
 
   it('names output files after the variant', () => {
-    assert.equal(variantDashboardFileName('tech'), 'dashboard-tech.html');
+    assert.equal(variantDashboardFileName('finance'), 'dashboard-finance.html');
   });
 });

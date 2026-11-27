@@ -374,7 +374,6 @@
   },
   "header": {
     "world": "SVIJET",
-    "tech": "TEHNOLOGIJA",
     "live": "UŽIVO",
     "cached": "KEŠIRANO",
     "unavailable": "NEDOSTUPNO",
@@ -502,23 +501,9 @@
     "populationExposure": "Izloženost Stanovništva",
     "securityAdvisories": "Sigurnosne Preporuke",
     "orefSirens": "Sirene u Izraelu",
-    "startups": "Startupsi i ulaganja rizičnog kapitala",
-    "vcblogs": "Uvidi i članci rizičnog kapitala",
-    "regionalStartups": "Globalne Startup Vijesti",
-    "unicorns": "Pratilac Jednoroga",
-    "accelerators": "Akceleratatori & Demo Dani",
-    "security": "Kibernetska Sigurnost",
-    "policy": "AI Politika & Regulacija",
     "regulation": "AI Ploča Regulacije",
     "finRegulation": "Financijska Regulacija",
-    "hardware": "Polupropvodnici & Hardver",
-    "cloud": "Cloud & Infrastruktura",
-    "dev": "Zajednica Razvijatelja",
-    "github": "GitHub Trending",
     "ipo": "Javni popisi i spajanja shell-tvrtki",
-    "funding": "Financiranje i ulaganja rizičnog kapitala",
-    "producthunt": "Product Hunt",
-    "events": "Tech Događaji",
     "serviceStatus": "Status Usluge",
     "internetDisruptions": "Prekidi Interneta",
     "internetDisruptionsTabs": {
@@ -1365,15 +1350,10 @@
         "oceania": "Oceanija"
       },
       "layers": {
-        "startupHubs": "Startup Hub-ovi",
-        "techHQs": "Tehnološke Glavnice",
-        "accelerators": "Akceleratori",
-        "cloudRegions": "Područja Oblaka",
         "aiDataCenters": "AI Data Centri",
         "underseaCables": "Podmorski Kabeli",
         "internetOutages": "Prekidi Interneta",
         "cyberThreats": "Kibernetske Prijetnje",
-        "techEvents": "Tehnološki Događaji",
         "naturalEvents": "Prirodni Događaji",
         "fires": "Požari",
         "intelHotspots": "Intel Žarišta",
@@ -1416,8 +1396,6 @@
         "aircraft": "zrakoplova",
         "protest": "Prosvjed",
         "protestsCount": "{{count}} protesta",
-        "techHQsCount": "{{count}} tehnoloških sjedišta",
-        "techEventsCount": "{{count}} tehnoloških događaja",
         "dataCentersCount": "{{count}} podatkovnih centara",
         "underseaCable": "Podvodni kabel",
         "pipeline": "Cjevovod",
@@ -1467,7 +1445,6 @@
         "descriptions": {
           "techStartupHubs": "Glavni ekosistemi startupa (SF, NYC, London, itd.)",
           "techCloudRegions": "AWS, Azure, GCP regije podatkovnih centara",
-          "techHQs": "Sjedišta najvećih tehnoloških tvrtki",
           "techAccelerators": "Y Combinator, Techstars, 500 Startups lokacije",
           "infraCables": "Glavnih podmorskih optičkih kablova (internetska osnovna mreža)",
           "infraDatacenters": "AI compute klasteri >=10.000 GPU-a",
@@ -1510,7 +1487,6 @@
           "infraCyberThreats": "Cyber napadi i sigurnosni incidenti",
           "mineralsFull": "Strateški depoziti mineralnih sirovina i rudnici",
           "techCyberThreats": "Cyber napadi i sigurnosni incidenti",
-          "techEvents": "Velike tehnološke konferencije i događaji",
           "techFires": "Aktivne šumske požare blizu tehnološke infrastrukture",
           "financeGulfInvestments": "Ulaganja fondova bogatstva suverenih država Vijeća za saradnju Zaljeva i izravne strane investicije",
           "tradeRoutes": "Glavne globalne brodske rute koje povezuju luke kroz strateške uske grle",
@@ -1712,22 +1688,6 @@
       },
       "dataFreshness": "Svježina podataka",
       "sourcesDetail": "{{active}}/{{total}} izvora"
-    },
-    "techEvents": {
-      "infoTooltip": "<strong>Tehnološki eventi</strong> Nadolazeći i nedavni tehnološki eventi: konferencije, lansiranja proizvoda, regulatorna saslušanja i earnings callovi. Agregirani iz službenih kalenda događaja i industrijskih izvora.",
-      "loading": "Učitavanje tehnoloških događaja...",
-      "noEvents": "Nema događaja za prikaz",
-      "showOnMap": "Prikaži na karti",
-      "moreInfo": "Više informacija",
-      "upcoming": "Nadolazeći",
-      "conferences": "Konferencije",
-      "earnings": "Financijski rezultati",
-      "all": "Sve",
-      "conferencesCount": "{{count}} konferencija",
-      "onMap": "{{count}} na karti",
-      "techmemeEvents": "Techmeme događaji ↗",
-      "today": "DANAS",
-      "soon": "USKORO"
     },
     "techReadiness": {
       "ranked": "Rangirane",
@@ -3554,59 +3514,6 @@
         "public": "Javno",
         "publicPrivate": "Javno/privatno"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "MEGA ČVORIŠTE",
-        "major": "VELIKI HUB",
-        "emerging": "U NASTAJANJU",
-        "hub": "ČVORIŠTE"
-      },
-      "unicorns": "UNICORNI"
-    },
-    "cloudRegion": {
-      "provider": "PRUŽATELJ",
-      "availabilityZones": "ZONE DOSTUPNOSTI"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "BIG TECH",
-        "unicorn": "JEDNOROG",
-        "public": "JAVNO",
-        "tech": "TEHNOLOGIJA"
-      },
-      "marketCap": "TRŽIŠNA VRIJEDNOST",
-      "employees": "ZAPOSLENICI"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "AKCELERATOR",
-        "incubator": "INKUBATOR",
-        "studio": "STARTUP STUDIO"
-      },
-      "founded": "OSNOVAN",
-      "notableAlumni": "ZNAČAJNI ALUMNI"
-    },
-    "techEvent": {
-      "days": {
-        "today": "DANAS",
-        "tomorrow": "SUTRA",
-        "inDays": "ZA {{count}} DANA"
-      },
-      "date": "DATUM",
-      "moreInformation": "Više informacija"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}} TVRTKI",
-      "bigTechCount": "{{count}} Big Tech",
-      "unicornsCount": "{{count}} Unicorna",
-      "publicCount": "{{count}} Javnih",
-      "sampled": "Prikazivanje uzorkovanog popisa od {{count}} tvrtki."
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}} DOGAĐAJA",
-      "upcomingWithin2Weeks": "{{count}} predstojećih tijekom 2 tjedna",
-      "sampled": "Prikazivanje uzorkovanog popisa od {{count}} događaja."
     },
     "militaryFlight": {
       "types": {

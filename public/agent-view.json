@@ -137,7 +137,6 @@
   },
   "instances": {
     "geopolitics": "https://www.worldmonitor.app/dashboard",
-    "tech": "https://tech.worldmonitor.app/dashboard",
     "finance": "https://finance.worldmonitor.app/dashboard",
     "commodities": "https://commodity.worldmonitor.app/dashboard",
     "energy": "https://energy.worldmonitor.app/dashboard"

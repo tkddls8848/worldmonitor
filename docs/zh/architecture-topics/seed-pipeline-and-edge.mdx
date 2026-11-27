@@ -87,7 +87,6 @@ World Monitor 使用 Vercel Edge Functions 作为轻量 API 层，分为两代�
 
 | 主机名 | 变体 |
 | --- | --- |
-| `tech.worldmonitor.app` | `tech` |
 | `finance.worldmonitor.app` | `finance` |
 | `commodity.worldmonitor.app` | `commodity` |
 | `energy.worldmonitor.app` | `energy` |
@@ -100,4 +99,3 @@ World Monitor 使用 Vercel Edge Functions 作为轻量 API 层，分为两代�
 - **即时切换** — 用户在标题栏切换变体，无需整页导航或 DNS 查询
 - **共享 CDN 缓存** — 静态 SPA 资源在各变体间相同；只有运行时配置不同。CDN 缓存命中率比独立部署高 4 倍
 - **单一 CI 管道** — 一次构建、一次部署、一套边缘函数。无跨部署配置漂移
-- **社交机器人路由** — OG 图片端点根据请求主机名生成变体专属预览卡片，因此分享 Tech Monitor 链接会生成科技品牌社交预览

@@ -91,7 +91,7 @@ const EMBED_LAYER_ALIASES = new Map<string, EmbedLayerId>(([
 ] as const).map(([alias, id]) => [alias.toLowerCase(), id]));
 
 const VALID_THEMES = new Set<EmbedTheme>(['dark', 'light']);
-const VALID_VARIANTS = new Set<EmbedVariant>(['full', 'tech', 'finance', 'commodity',  'energy']);
+const VALID_VARIANTS = new Set<EmbedVariant>(['full', 'finance', 'commodity', 'energy']);
 
 export function createBlankMapLayers(): MapLayers {
   return {
@@ -118,11 +118,6 @@ export function createBlankMapLayers(): MapLayers {
     ucdpEvents: false,
     displacement: false,
     climate: false,
-    startupHubs: false,
-    cloudRegions: false,
-    accelerators: false,
-    techHQs: false,
-    techEvents: false,
     stockExchanges: false,
     financialCenters: false,
     centralBanks: false,

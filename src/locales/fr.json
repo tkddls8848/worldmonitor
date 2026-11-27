@@ -305,7 +305,6 @@
   },
   "header": {
     "world": "MONDE",
-    "tech": "TECHNO",
     "live": "EN DIRECT",
     "search": "Recherche",
     "settings": "PARAMÈTRES",
@@ -424,23 +423,9 @@
     "displacement": "Réfugiés et déplacements",
     "climate": "Anomalies climatiques",
     "populationExposure": "Exposition de la population",
-    "startups": "Startups & capital-risque",
-    "vcblogs": "Perspectives et articles du capital-risque",
-    "regionalStartups": "Actualités startups mondiales",
-    "unicorns": "Suivi des licornes",
-    "accelerators": "Accélérateurs & Demo Days",
-    "security": "Cybersécurité",
-    "policy": "Politique & Régulation IA",
     "regulation": "Tableau de bord régulation IA",
     "finRegulation": "Réglementation financière",
-    "hardware": "Semiconducteurs & Matériel",
-    "cloud": "Cloud et infrastructure",
-    "dev": "Communauté développeurs",
-    "github": "Tendances GitHub",
     "ipo": "Introductions en bourse & fusions de sociétés-écrans",
-    "funding": "Financement & capital-risque",
-    "producthunt": "Product Hunt",
-    "events": "Événements Tech",
     "serviceStatus": "État des services",
     "techReadiness": "Indice de maturité technologique",
     "techHubs": "Pôles Technologiques",
@@ -1179,15 +1164,10 @@
         "oceania": "Océanie"
       },
       "layers": {
-        "startupHubs": "Pôles startups",
-        "techHQs": "Sièges tech",
-        "accelerators": "Accélérateurs",
-        "cloudRegions": "Régions cloud",
         "aiDataCenters": "Centres de données IA",
         "underseaCables": "Câbles sous-marins",
         "internetOutages": "Pannes Internet",
         "cyberThreats": "Menaces cyber",
-        "techEvents": "Événements tech",
         "naturalEvents": "Événements naturels",
         "fires": "Incendies",
         "intelHotspots": "Points chauds renseignement",
@@ -1230,8 +1210,6 @@
         "aircraft": "aéronef",
         "protest": "Protestation",
         "protestsCount": "{{count}} protestations",
-        "techHQsCount": "{{count}} QG techniques",
-        "techEventsCount": "{{count}} événements techniques",
         "dataCentersCount": "{{count}} centres de données",
         "underseaCable": "Câble sous-marin",
         "pipeline": "Oléoduc",
@@ -1281,7 +1259,6 @@
         "descriptions": {
           "techStartupHubs": "Grands écosystèmes de startups (SF, NYC, Londres, etc.)",
           "techCloudRegions": "Régions des centres de données AWS, Azure et GCP",
-          "techHQs": "Sièges de grandes entreprises technologiques",
           "techAccelerators": "Y Combinator, Techstars, 500 emplacements de startups",
           "infraCables": "Principaux câbles à fibres optiques sous-marins (backbone Internet)",
           "infraDatacenters": "Clusters de calcul IA >=10 000 GPU",
@@ -1326,7 +1303,6 @@
           "infraCyberThreats": "Cyberattaques et événements de sécurité",
           "mineralsFull": "Gisements de minéraux stratégiques et sites miniers",
           "techCyberThreats": "Cyberattaques et événements de sécurité",
-          "techEvents": "Grandes conférences et événements technologiques",
           "techFires": "Incendies actifs à proximité d'infrastructures technologiques",
           "geoBoundaries": "Zones démilitarisées, lignes de cessez-le-feu et frontières contestées",
           "ciiChoropleth": "Carte thermique de l'Indice d'instabilité des pays — colore les pays selon leur score (vert=stable, rouge=critique)",
@@ -1526,22 +1502,6 @@
       },
       "dataFreshness": "Fraîcheur des données",
       "sourcesDetail": "{{active}}/{{total}} sources"
-    },
-    "techEvents": {
-      "loading": "Chargement des événements tech...",
-      "noEvents": "Aucun événement à afficher",
-      "showOnMap": "Voir sur la carte",
-      "moreInfo": "Plus d'infos",
-      "upcoming": "À venir",
-      "conferences": "Conférences",
-      "earnings": "Résultats financiers",
-      "all": "Tout",
-      "conferencesCount": "{{count}} conférences",
-      "onMap": "{{count}} sur la carte",
-      "techmemeEvents": "Événements Techmeme ↗",
-      "today": "AUJOURD’HUI",
-      "soon": "BIENTÔT",
-      "infoTooltip": "<strong>Événements tech</strong> Événements technologiques à venir et récents : conférences, lancements de produits, auditions réglementaires et appels de résultats. Agrégés à partir de calendriers officiels et sources de l'industrie."
     },
     "techReadiness": {
       "ranked": "Classés",
@@ -3471,59 +3431,6 @@
         "public": "Public",
         "publicPrivate": "Public/Privé"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "MÉGA HUB",
-        "major": "PÔLE MAJEUR",
-        "emerging": "ÉMERGENT",
-        "hub": "MOYEU"
-      },
-      "unicorns": "LICORNES"
-    },
-    "cloudRegion": {
-      "provider": "FOURNISSEUR",
-      "availabilityZones": "ZONES DE DISPONIBILITÉ"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "GRANDE TECHNOLOGIE",
-        "unicorn": "LICORNE",
-        "public": "PUBLIQUE",
-        "tech": "TECHNOLOGIE"
-      },
-      "marketCap": "CAP. MARCHÉE",
-      "employees": "EMPLOYÉS"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "ACCÉLÉRATEUR",
-        "incubator": "INCUBATEUR",
-        "studio": "STUDIO DE DÉMARRAGE"
-      },
-      "founded": "FONDÉ",
-      "notableAlumni": "Anciens élèves notables"
-    },
-    "techEvent": {
-      "days": {
-        "today": "AUJOURD'HUI",
-        "tomorrow": "DEMAIN",
-        "inDays": "DANS {{count}} JOURS"
-      },
-      "date": "DATE",
-      "moreInformation": "Plus d'informations"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}} ENTREPRISES",
-      "bigTechCount": "{{count}} Grande technologie",
-      "unicornsCount": "{{count}} Licornes",
-      "publicCount": "{{count}} Publique",
-      "sampled": "Affichage d'une liste échantillonnée de {{count}} entreprises."
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}} ÉVÉNEMENTS",
-      "upcomingWithin2Weeks": "{{count}} à venir dans 2 semaines",
-      "sampled": "Affichage d'une liste échantillonnée d'événements {{count}}."
     },
     "militaryFlight": {
       "types": {

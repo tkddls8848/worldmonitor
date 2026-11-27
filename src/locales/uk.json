@@ -376,7 +376,6 @@
   },
   "header": {
     "world": "СВІТ",
-    "tech": "ТЕХНОЛОГІЇ",
     "live": "LIVE",
     "cached": "КЕШОВАНО",
     "unavailable": "НЕДОСТУПНО",
@@ -504,23 +503,9 @@
     "populationExposure": "Експозиція населення",
     "securityAdvisories": "Рекомендації з безпеки",
     "orefSirens": "Сирени Ізраїлю",
-    "startups": "Стартапи та венчурний капітал",
-    "vcblogs": "Вибіркові матеріали та статті венчурного капіталу",
-    "regionalStartups": "Світові стартап-новини",
-    "unicorns": "Трекер єдинорогів",
-    "accelerators": "Акселератори й Demo Days",
-    "security": "Кібербезпека",
-    "policy": "Політика та регулювання AI",
     "regulation": "Панель регулювання AI",
     "finRegulation": "Фінансове регулювання",
-    "hardware": "Напівпровідники й обладнання",
-    "cloud": "Хмара й інфраструктура",
-    "dev": "Спільнота розробників",
-    "github": "GitHub Trending",
     "ipo": "Публічні листинги та злиття з компаніями-оболонками",
-    "funding": "Фінансування та венчурний капітал",
-    "producthunt": "Product Hunt",
-    "events": "Технологічні заходи",
     "serviceStatus": "Стан служби",
     "internetDisruptions": "Збої в інтернеті",
     "internetDisruptionsTabs": {
@@ -1366,15 +1351,10 @@
         "oceania": "Океанія"
       },
       "layers": {
-        "startupHubs": "Стартап-хаби",
-        "techHQs": "Технологічні штаб-квартири",
-        "accelerators": "Акселератори",
-        "cloudRegions": "Хмарні регіони",
         "aiDataCenters": "AI дата-центри",
         "underseaCables": "Підводні кабелі",
         "internetOutages": "Інтернет-збої",
         "cyberThreats": "Кіберзагрози",
-        "techEvents": "Технологічні події",
         "naturalEvents": "Природні явища",
         "fires": "Пожежі",
         "intelHotspots": "Місця розвідувального інтересу",
@@ -1417,8 +1397,6 @@
         "aircraft": "військовий літак",
         "protest": "Протест",
         "protestsCount": "{{count}} протестів",
-        "techHQsCount": "{{count}} технологічних штаб-квартир",
-        "techEventsCount": "{{count}} технологічних подій",
         "dataCentersCount": "{{count}} центрів обробки даних",
         "underseaCable": "Підводний кабель",
         "pipeline": "Трубопровід",
@@ -1468,7 +1446,6 @@
         "descriptions": {
           "techStartupHubs": "Великі стартап-екосистеми (SF, NYC, London тощо)",
           "techCloudRegions": "Регіони дата-центрів AWS, Azure, GCP",
-          "techHQs": "Штаб-квартири великих технологічних компаній",
           "techAccelerators": "Місця розташування Y Combinator, Techstars, 500 Startups",
           "infraCables": "Основні підводні оптоволоконні кабелі (інтернет-магістраль)",
           "infraDatacenters": "Кластери ШІ обчислень >=10 000 GPU",
@@ -1511,7 +1488,6 @@
           "infraCyberThreats": "Кібератаки та інциденти безпеки",
           "mineralsFull": "Родовища стратегічних мінералів та гірничі підприємства",
           "techCyberThreats": "Кібератаки та інциденти безпеки",
-          "techEvents": "Великі технологічні конференції та заходи",
           "techFires": "Активні лісові пожежі біля технологічної інфраструктури",
           "financeGulfInvestments": "Інвестиції суверенного фонду багатства та прямі іноземні інвестиції Ради співпраці країн Перської затоки",
           "tradeRoutes": "Основні світові морські маршрути, що з'єднують порти через стратегічні вузькі місця",
@@ -1714,22 +1690,6 @@
         "hoursAgo": "{{count}}г тому"
       },
       "infoTooltip": "<strong>Методологія</strong> Комплексна оцінка (0–100) на основі:<ul><li>50% нестабільність країни (топ-5 зважені)</li><li>30% географічні зони конвергенції</li><li>20% інциденти інфраструктури</li></ul>Автоматичне оновлення кожні 5 хвилин."
-    },
-    "techEvents": {
-      "infoTooltip": "<strong>Технологічні події</strong> Майбутні та недавні технологічні події: конференції, запуски продуктів, нормативні слухання та дзвінки про прибутки. Агреговано з офіційних календарів подій та джерел галузі.",
-      "loading": "Завантаження технологічних подій...",
-      "noEvents": "Немає подій для відображення",
-      "showOnMap": "Показати на карті",
-      "moreInfo": "Більше інформації",
-      "upcoming": "Майбутні",
-      "conferences": "Конференції",
-      "earnings": "Звіти про прибутки",
-      "all": "Усі",
-      "conferencesCount": "{{count}} конференція",
-      "onMap": "{{count}} на карті",
-      "techmemeEvents": "Techmeme Events ↗",
-      "today": "СЬОГОДНІ",
-      "soon": "НЕЗАБАРОМ"
     },
     "techReadiness": {
       "ranked": "У рейтингу",
@@ -3569,59 +3529,6 @@
         "public": "Державний",
         "publicPrivate": "Державно-приватний"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "МЕГА-ЦЕНТР",
-        "major": "ВЕЛИКИЙ ЦЕНТР",
-        "emerging": "РОЗВИВАЄТЬСЯ",
-        "hub": "ЦЕНТР"
-      },
-      "unicorns": "ЄДИНОРОГИ"
-    },
-    "cloudRegion": {
-      "provider": "ПОСТАЧАЛЬНИК",
-      "availabilityZones": "ЗОНИ ДОСТУПНОСТІ"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "ВЕЛИКІ ТЕХНОЛОГІЧНІ",
-        "unicorn": "ЄДИНОРОГИ",
-        "public": "ПУБЛІЧНІ",
-        "tech": "ТЕХНОЛОГІЧНІ"
-      },
-      "marketCap": "КАПІТАЛІЗАЦІЯ",
-      "employees": "СПІВРОБІТНИКИ"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "ПРИСКОРЮВАЧ",
-        "incubator": "ІНКУБАТОР",
-        "studio": "СТАРТАП-СТУДІЯ"
-      },
-      "founded": "ЗАСНОВАНО",
-      "notableAlumni": "ВІДОМІ ВИПУСКНИКИ"
-    },
-    "techEvent": {
-      "days": {
-        "today": "СЬОГОДНІ",
-        "tomorrow": "ЗАВТРА",
-        "inDays": "ЧЕРЕЗ {{count}} ДНІВ"
-      },
-      "date": "ДАТА",
-      "moreInformation": "Більше інформації"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}} КОМПАНІЙ",
-      "bigTechCount": "{{count}} великих технологічних",
-      "unicornsCount": "{{count}} єдинорогів",
-      "publicCount": "{{count}} публічних",
-      "sampled": "Показано вибіркований перелік {{count}} компаній."
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}} ПОДІЙ",
-      "upcomingWithin2Weeks": "{{count}} найближчих протягом 2 тижнів",
-      "sampled": "Показано вибіркований перелік {{count}} подій."
     },
     "militaryFlight": {
       "types": {

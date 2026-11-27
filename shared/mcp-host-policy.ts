@@ -14,7 +14,6 @@ export const MCP_CANONICAL_ENDPOINT_ERROR_DATA = {
 export const MCP_PRODUCTION_ALIAS_LABELS = [
   'www',
   'api',
-  'tech',
   'finance',
   'commodity',
   'energy',

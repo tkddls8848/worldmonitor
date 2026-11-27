@@ -27,7 +27,6 @@ export const COVERAGE_INPUT_PATHS = Object.freeze([
 
 const VARIANTS = Object.freeze([
   { id: 'full', name: 'World Monitor', host: 'www.worldmonitor.app' },
-  { id: 'tech', name: 'Tech Monitor', host: 'tech.worldmonitor.app' },
   { id: 'finance', name: 'Finance Monitor', host: 'finance.worldmonitor.app' },
   { id: 'commodity', name: 'Commodity Monitor', host: 'commodity.worldmonitor.app' },
   { id: 'energy', name: 'Energy Monitor', host: 'energy.worldmonitor.app' },

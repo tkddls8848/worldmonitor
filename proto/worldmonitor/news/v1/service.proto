@@ -29,7 +29,7 @@ service NewsService {
     option (sebuf.http.config) = {path: "/summarize-article-cache", method: HTTP_METHOD_GET};
   }
 
-  // ListFeedDigest returns RSS headlines grouped by category for a site variant (full, tech, finance, happy, commodity, energy) and language, with coverage state.
+  // ListFeedDigest returns RSS headlines grouped by category for a site variant (full, finance, commodity, energy) and language, with coverage state.
   rpc ListFeedDigest(ListFeedDigestRequest) returns (ListFeedDigestResponse) {
     option (sebuf.http.config) = {path: "/list-feed-digest", method: HTTP_METHOD_GET};
   }

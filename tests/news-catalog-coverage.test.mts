@@ -129,9 +129,9 @@ describe('digests serve the categories that used to need per-feed browser fetche
     }
   });
 
-  it('the tech digest schedules podcasts and think tanks, the finance digest nq-news', () => {
-    assert.ok(scheduled('tech').has('podcasts'));
-    assert.ok(scheduled('tech').has('thinktanks'));
+  it('the full digest keeps tech and think tanks and the finance digest keeps nq-news', () => {
+    assert.ok(scheduled('full').has('tech'));
+    assert.ok(scheduled('full').has('thinktanks'));
     assert.ok(scheduled('finance').has('nq-news'));
   });
 
@@ -143,29 +143,6 @@ describe('digests serve the categories that used to need per-feed browser fetche
       .map(entry => entry.feed.name);
     assert.ok(latamSources('pt').includes('Folha de S.Paulo'));
     assert.ok(!latamSources('en').includes('Folha de S.Paulo'));
-  });
-
-  it('the tech digest fetches its regional startup sources (U6 batch 2)', () => {
-    const regional = digestTesting.buildDigestFeedBatches('tech', 'en').batches.flat()
-      .filter(entry => entry.category === 'regionalStartups')
-      .map(entry => entry.feed.name);
-    for (const name of ['YourStory', 'KrASIA', 'MENA Startups', 'Africa Tech News', 'FinTech LATAM']) {
-      assert.ok(regional.includes(name), `tech digest must fetch ${name}`);
-    }
-  });
-
-  it('the tech digest fetches every tech source the browser shows (U6 batch 3)', () => {
-    const fetched = new Set(digestTesting.buildDigestFeedBatches('tech', 'en').batches.flat()
-      .map(entry => `${entry.category}|${entry.feed.name}`));
-    const browserOnly = catalog.feeds.flatMap(feed => feed.placements
-      .filter(p => p.edition === 'tech' && p.browserOrder !== undefined && (!feed.lang || feed.lang === 'en'))
-      .map(p => `${p.category}|${feed.name}`))
-      .filter(key => !fetched.has(key));
-    assert.deepEqual(browserOnly, []);
-    for (const name of ['DevOps.com', 'FwdStart Newsletter']) {
-      const feed = catalog.feeds.find(f => f.name === name);
-      assert.match(feed?.url ?? '', /^https:\/\//, `${name} must have an absolute URL the server can fetch`);
-    }
   });
 
   it('every English digest fetches every source its edition shows (U6 batch 4)', () => {
@@ -182,11 +159,6 @@ describe('digests serve the categories that used to need per-feed browser fetche
       }
     }
     assert.deepEqual(missing, []);
-    // GitHub Trending dates only its channel and links to github.com, so its
-    // entry opts in to both.
-    const trending = catalog.feeds.find(f => f.name === 'GitHub Trending') as { channelDated?: boolean; linkHosts?: string[] } | undefined;
-    assert.equal(trending?.channelDated, true);
-    assert.deepEqual(trending?.linkHosts, ['github.com']);
     for (const name of ['FAS', 'Ransomware.live']) {
       const feed = catalog.feeds.find(f => f.name === name);
       assert.match(feed?.url ?? '', /^https:\/\/news\.google\.com\/rss\/search\?q=site:[^&]+\+when:\d+d&/,

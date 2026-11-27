@@ -108,6 +108,8 @@ const FULL_PANELS: Record<string, PanelConfig> = {
   'climate-news': { name: 'Climate News', enabled: false, priority: 2 },
   'population-exposure': { name: 'Population Exposure', enabled: true, priority: 2 },
   'security-advisories': { name: 'Security Advisories', enabled: true, priority: 2 },
+  'service-status': { name: 'Service Status', enabled: false, priority: 2 },
+  'internet-disruptions': { name: 'Internet Disruptions', enabled: false, priority: 2 },
   'sanctions-pressure': { name: 'Sanctions Pressure', enabled: true, priority: 2 },
   'radiation-watch': { name: 'Radiation Watch', enabled: true, priority: 2 },
   'thermal-escalation': { name: 'Thermal Escalation', enabled: true, priority: 2 },
@@ -158,11 +160,6 @@ const FULL_MAP_LAYERS: MapLayers = {
   reservoirLevels: false,
   no2Activity: false,
   // Tech layers (disabled in full variant)
-  startupHubs: false,
-  cloudRegions: false,
-  accelerators: false,
-  techHQs: false,
-  techEvents: false,
   // Finance layers (disabled in full variant)
   stockExchanges: false,
   financialCenters: false,
@@ -213,11 +210,6 @@ const FULL_MOBILE_MAP_LAYERS: MapLayers = {
   reservoirLevels: false,
   no2Activity: false,
   // Tech layers (disabled in full variant)
-  startupHubs: false,
-  cloudRegions: false,
-  accelerators: false,
-  techHQs: false,
-  techEvents: false,
   // Finance layers (disabled in full variant)
   stockExchanges: false,
   financialCenters: false,
@@ -237,147 +229,8 @@ const FULL_MOBILE_MAP_LAYERS: MapLayers = {
 // ============================================
 // TECH VARIANT (Tech/AI/Startups)
 // ============================================
-const TECH_PANELS: Record<string, PanelConfig> = {
-  map: { name: 'Global Tech Map', enabled: true, priority: 1 },
-  'live-news': { name: 'Tech Headlines', enabled: true, priority: 1 },
-  insights: { name: 'AI Insights', enabled: true, priority: 1 },
-  ai: { name: 'AI/ML News', enabled: true, priority: 1 },
-  tech: { name: 'Technology', enabled: true, priority: 1 },
-  startups: { name: 'Startups & VC', enabled: true, priority: 1 },
-  vcblogs: { name: 'VC Insights & Essays', enabled: true, priority: 1 },
-  regionalStartups: { name: 'Global Startup News', enabled: true, priority: 1 },
-  unicorns: { name: 'Unicorn Tracker', enabled: true, priority: 1 },
-  accelerators: { name: 'Accelerators & Demo Days', enabled: true, priority: 1 },
-  security: { name: 'Cybersecurity', enabled: true, priority: 1 },
-  policy: { name: 'AI Policy & Regulation', enabled: true, priority: 1 },
-  layoffs: { name: 'Layoffs Tracker', enabled: true, priority: 1 },
-  markets: { name: 'Tech Stocks', enabled: true, priority: 2 },
-  finance: { name: 'Financial News', enabled: true, priority: 2 },
-  crypto: { name: 'Crypto', enabled: true, priority: 2 },
-  hardware: { name: 'Semiconductors & Hardware', enabled: true, priority: 2 },
-  cloud: { name: 'Cloud & Infrastructure', enabled: true, priority: 2 },
-  dev: { name: 'Developer Community', enabled: true, priority: 2 },
-  github: { name: 'GitHub Trending', enabled: true, priority: 1 },
-  ipo: { name: 'IPO & SPAC', enabled: true, priority: 2 },
-  polymarket: { name: 'Tech Predictions', enabled: true, priority: 2 },
-  funding: { name: 'Funding & VC', enabled: true, priority: 1 },
-  producthunt: { name: 'Product Hunt', enabled: true, priority: 1 },
-  events: { name: 'Tech Events', enabled: true, priority: 1 },
-  'internet-disruptions': { name: 'Internet Disruptions', enabled: true, priority: 2 },
-  'service-status': { name: 'Service Status', enabled: true, priority: 2 },
-  economic: { name: 'Macro Stress', enabled: true, priority: 2 },
-  'global-procurement': { name: 'Global Procurement', enabled: true, priority: 1 },
-  'tech-readiness': { name: 'Tech Readiness Index', enabled: true, priority: 1 },
-  'macro-signals': { name: 'Market Regime', enabled: true, priority: 2 },
-  'etf-flows': { name: 'BTC ETF Tracker', enabled: true, priority: 2 },
-  stablecoins: { name: 'Stablecoins', enabled: true, priority: 2 },
-  'airline-intel': { name: 'Airline Intelligence', enabled: true, priority: 2 },
-  'world-clock': { name: 'World Clock', enabled: true, priority: 2 },
-  monitors: { name: 'My Monitors', enabled: true, priority: 2 },
-  'latest-brief': { name: 'Latest Brief', enabled: true, priority: 1 },
-  'tech-hubs': { name: 'Hot Tech Hubs', enabled: false, priority: 2 },
-  'ai-regulation': { name: 'AI Regulation Dashboard', enabled: false, priority: 2 },
-};
 
-const TECH_MAP_LAYERS: MapLayers = {
-  gpsJamming: false,
 
-  conflicts: false,
-  bases: false,
-  cables: true,
-  pipelines: false,
-  hotspots: false,
-  ais: false,
-  nuclear: false,
-  sanctions: false,
-  weather: false,
-  economic: false,
-  waterways: false,
-  outages: true,
-  cyberThreats: false,
-  datacenters: true,
-  protests: false,
-  flights: false,
-  military: false,
-  natural: true,
-  minerals: false,
-  fires: false,
-  // Data source layers
-  ucdpEvents: false,
-  displacement: false,
-  climate: false,
-  // Tech layers (enabled in tech variant)
-  startupHubs: true,
-  cloudRegions: true,
-  accelerators: false,
-  techHQs: true,
-  techEvents: true,
-  // Finance layers (disabled in tech variant)
-  stockExchanges: false,
-  financialCenters: false,
-  centralBanks: false,
-  commodityHubs: false,
-  gulfInvestments: false,
-  renewableInstallations: false,
-  tradeRoutes: false,
-  iranAttacks: false,
-  ciiChoropleth: false,
-  // Commodity layers (disabled in tech variant)
-  miningSites: false,
-  processingPlants: false,
-  commodityPorts: false,
-  diseaseOutbreaks: false,
-};
-
-const TECH_MOBILE_MAP_LAYERS: MapLayers = {
-  gpsJamming: false,
-
-  conflicts: false,
-  bases: false,
-  cables: false,
-  pipelines: false,
-  hotspots: false,
-  ais: false,
-  nuclear: false,
-  sanctions: false,
-  weather: false,
-  economic: false,
-  waterways: false,
-  outages: true,
-  cyberThreats: false,
-  datacenters: true,
-  protests: false,
-  flights: false,
-  military: false,
-  natural: true,
-  minerals: false,
-  fires: false,
-  // Data source layers
-  ucdpEvents: false,
-  displacement: false,
-  climate: false,
-  // Tech layers (limited on mobile)
-  startupHubs: true,
-  cloudRegions: false,
-  accelerators: false,
-  techHQs: false,
-  techEvents: true,
-  // Finance layers (disabled in tech variant)
-  stockExchanges: false,
-  financialCenters: false,
-  centralBanks: false,
-  commodityHubs: false,
-  gulfInvestments: false,
-  renewableInstallations: false,
-  tradeRoutes: false,
-  iranAttacks: false,
-  ciiChoropleth: false,
-  // Commodity layers (disabled in tech variant)
-  miningSites: false,
-  processingPlants: false,
-  commodityPorts: false,
-  diseaseOutbreaks: false,
-};
 
 // ============================================
 // FINANCE VARIANT (Markets/Trading)
@@ -487,11 +340,6 @@ const FINANCE_MAP_LAYERS: MapLayers = {
   displacement: false,
   climate: false,
   // Tech layers (disabled in finance variant)
-  startupHubs: false,
-  cloudRegions: false,
-  accelerators: false,
-  techHQs: false,
-  techEvents: false,
   // Finance layers (enabled in finance variant)
   stockExchanges: true,
   financialCenters: true,
@@ -537,11 +385,6 @@ const FINANCE_MOBILE_MAP_LAYERS: MapLayers = {
   displacement: false,
   climate: false,
   // Tech layers (disabled)
-  startupHubs: false,
-  cloudRegions: false,
-  accelerators: false,
-  techHQs: false,
-  techEvents: false,
   // Finance layers (limited on mobile)
   stockExchanges: true,
   financialCenters: false,
@@ -636,13 +479,8 @@ const COMMODITY_MAP_LAYERS: MapLayers = {
   // Data source layers
   ucdpEvents: false,
   displacement: false,
-  climate: true,         // Climate events disrupt supply chains
+  climate: true, // Climate events disrupt supply chains
   // Tech layers (disabled)
-  startupHubs: false,
-  cloudRegions: false,
-  accelerators: false,
-  techHQs: false,
-  techEvents: false,
   // Finance layers (enabled for commodity hubs)
   stockExchanges: false,
   financialCenters: false,
@@ -688,11 +526,6 @@ const COMMODITY_MOBILE_MAP_LAYERS: MapLayers = {
   displacement: false,
   climate: false,
   // Tech layers (disabled)
-  startupHubs: false,
-  cloudRegions: false,
-  accelerators: false,
-  techHQs: false,
-  techEvents: false,
   // Finance layers (limited on mobile)
   stockExchanges: false,
   financialCenters: false,
@@ -760,33 +593,28 @@ const ENERGY_MAP_LAYERS: MapLayers = {
   conflicts: false,
   bases: false,
   cables: false,
-  pipelines: true,        // First-class energy asset (Week 2 registry lands here)
+  pipelines: true, // First-class energy asset (Week 2 registry lands here)
   hotspots: false,
-  ais: true,              // Tanker positions at chokepoints
+  ais: true, // Tanker positions at chokepoints
   nuclear: false,
-  sanctions: true,        // Energy sanctions flows
+  sanctions: true, // Energy sanctions flows
   weather: true,
   economic: false,
-  waterways: true,        // Strategic chokepoints (Hormuz, Suez, Bab el-Mandeb, etc.)
-  outages: true,          // Power / energy system status
+  waterways: true, // Strategic chokepoints (Hormuz, Suez, Bab el-Mandeb, etc.)
+  outages: true, // Power / energy system status
   cyberThreats: false,
   datacenters: false,
   protests: false,
   flights: false,
   military: false,
-  natural: true,          // Earthquakes near energy infrastructure
-  minerals: true,         // Critical-minerals + energy-transition overlap
-  fires: true,            // Fires near energy infrastructure / oilfields
+  natural: true, // Earthquakes near energy infrastructure
+  minerals: true, // Critical-minerals + energy-transition overlap
+  fires: true, // Fires near energy infrastructure / oilfields
   // Data source layers
   ucdpEvents: false,
   displacement: false,
   climate: true,
   // Tech layers (disabled)
-  startupHubs: false,
-  cloudRegions: false,
-  accelerators: false,
-  techHQs: false,
-  techEvents: false,
   // Finance layers (energy hubs = commodity hubs for our purposes)
   stockExchanges: false,
   financialCenters: false,
@@ -800,11 +628,11 @@ const ENERGY_MAP_LAYERS: MapLayers = {
   // Commodity layers — selected (energy-relevant subset)
   miningSites: false,
   processingPlants: false,
-  commodityPorts: true,   // LNG import/export + crude terminals
+  commodityPorts: true, // LNG import/export + crude terminals
   diseaseOutbreaks: false,
   storageFacilities: true, // UGS / SPR / LNG / crude hubs (Day 9-10 registry)
-  fuelShortages: true,     // Global fuel shortage alerts (Day 11-12 registry)
-  liveTankers: true,       // AIS ship type 80-89 inside chokepoint bboxes (parity-push PR 3)
+  fuelShortages: true, // Global fuel shortage alerts (Day 11-12 registry)
+  liveTankers: true, // AIS ship type 80-89 inside chokepoint bboxes (parity-push PR 3)
   reservoirLevels: false,
 };
 
@@ -833,11 +661,6 @@ const ENERGY_MOBILE_MAP_LAYERS: MapLayers = {
   ucdpEvents: false,
   displacement: false,
   climate: false,
-  startupHubs: false,
-  cloudRegions: false,
-  accelerators: false,
-  techHQs: false,
-  techEvents: false,
   stockExchanges: false,
   financialCenters: false,
   centralBanks: false,
@@ -861,11 +684,10 @@ const ENERGY_MOBILE_MAP_LAYERS: MapLayers = {
 // UNIFIED PANEL REGISTRY
 // ============================================
 
-type PanelVariant = 'full' | 'tech' | 'finance' | 'commodity' | 'energy';
+type PanelVariant = 'full' | 'finance' | 'commodity' | 'energy';
 
 const VARIANT_PANEL_CONFIGS: Record<PanelVariant, Record<string, PanelConfig>> = {
   full: FULL_PANELS,
-  tech: TECH_PANELS,
   finance: FINANCE_PANELS,
   commodity: COMMODITY_PANELS,
   energy: ENERGY_PANELS,
@@ -884,6 +706,21 @@ export function isPanelNativeToVariant(panelId: string, variant: string): boolea
 }
 
 export const RETIRED_PANEL_IDS: ReadonlySet<string> = new Set([
+  'startups',
+  'vcblogs',
+  'regionalStartups',
+  'unicorns',
+  'accelerators',
+  'security',
+  'policy',
+  'hardware',
+  'cloud',
+  'dev',
+  'github',
+  'funding',
+  'producthunt',
+  'events',
+  'ai-regulation',
   'positive-feed',
   'progress',
   'counters',
@@ -907,7 +744,6 @@ export function isRetiredPanel(panelId: string): boolean {
 export const ALL_PANELS: Record<string, PanelConfig> = {
   ...COMMODITY_PANELS,
   ...ENERGY_PANELS,
-  ...TECH_PANELS,
   ...FINANCE_PANELS,
   ...FULL_PANELS,
 };
@@ -915,7 +751,6 @@ export const ALL_PANELS: Record<string, PanelConfig> = {
 /** Per-variant canonical panel order (keys = which panels are enabled by default). */
 export const VARIANT_DEFAULTS: Record<string, string[]> = {
   full:      Object.keys(VARIANT_PANEL_CONFIGS.full),
-  tech:      Object.keys(VARIANT_PANEL_CONFIGS.tech),
   finance:   Object.keys(VARIANT_PANEL_CONFIGS.finance),
   commodity: Object.keys(VARIANT_PANEL_CONFIGS.commodity),
   energy:    Object.keys(VARIANT_PANEL_CONFIGS.energy),
@@ -931,10 +766,6 @@ export const VARIANT_PANEL_OVERRIDES: Partial<Record<string, Partial<Record<stri
     map:         { name: 'Global Markets Map' },
     'live-news': { name: 'Market Headlines' },
     insights:    { name: 'AI Market Insights' },
-  },
-  tech: {
-    map:         { name: 'Global Tech Map' },
-    'live-news': { name: 'Tech Headlines' },
   },
   commodity: {
     map:         { name: 'Commodity Map' },
@@ -1036,9 +867,7 @@ export const DEFAULT_PANELS: Record<string, PanelConfig> = Object.fromEntries(
   )
 );
 
-export const DEFAULT_MAP_LAYERS = SITE_VARIANT === 'tech'
-    ? TECH_MAP_LAYERS
-    : SITE_VARIANT === 'finance'
+export const DEFAULT_MAP_LAYERS = SITE_VARIANT === 'finance'
       ? FINANCE_MAP_LAYERS
       : SITE_VARIANT === 'commodity'
         ? COMMODITY_MAP_LAYERS
@@ -1046,9 +875,7 @@ export const DEFAULT_MAP_LAYERS = SITE_VARIANT === 'tech'
           ? ENERGY_MAP_LAYERS
           : FULL_MAP_LAYERS;
 
-export const MOBILE_DEFAULT_MAP_LAYERS = SITE_VARIANT === 'tech'
-    ? TECH_MOBILE_MAP_LAYERS
-    : SITE_VARIANT === 'finance'
+export const MOBILE_DEFAULT_MAP_LAYERS = SITE_VARIANT === 'finance'
       ? FINANCE_MOBILE_MAP_LAYERS
       : SITE_VARIANT === 'commodity'
         ? COMMODITY_MOBILE_MAP_LAYERS
@@ -1112,30 +939,8 @@ export const PANEL_CATEGORY_MAP: Record<string, { labelKey: string; panelKeys: s
   },
   dataTracking: {
     labelKey: 'header.panelCatDataTracking',
-    panelKeys: ['monitors', 'ukmto-incidents', 'satellite-fires', 'ucdp-events', 'displacement', 'climate', 'reservoir-levels', 'climate-news', 'population-exposure', 'security-advisories', 'radiation-watch', 'grid-disruption-clock', 'oref-sirens', 'airline-intel', 'world-clock', 'tech-readiness', 'disease-outbreaks', 'fao-food-price-index', 'grocery-basket'],
+    panelKeys: ['monitors', 'ukmto-incidents', 'satellite-fires', 'ucdp-events', 'displacement', 'climate', 'reservoir-levels', 'climate-news', 'population-exposure', 'security-advisories', 'service-status', 'internet-disruptions', 'radiation-watch', 'grid-disruption-clock', 'oref-sirens', 'airline-intel', 'world-clock', 'tech-readiness', 'disease-outbreaks', 'fao-food-price-index', 'grocery-basket'],
     variants: ['full', 'energy'],
-  },
-
-  // Tech variant
-  techAi: {
-    labelKey: 'header.panelCatTechAi',
-    panelKeys: ['ai', 'tech', 'hardware', 'cloud', 'dev', 'github', 'producthunt', 'events', 'service-status', 'tech-readiness', 'internet-disruptions', 'tech-hubs'],
-    variants: ['tech'],
-  },
-  startupsVc: {
-    labelKey: 'header.panelCatStartupsVc',
-    panelKeys: ['startups', 'vcblogs', 'regionalStartups', 'unicorns', 'accelerators', 'funding', 'ipo'],
-    variants: ['tech'],
-  },
-  securityPolicy: {
-    labelKey: 'header.panelCatSecurityPolicy',
-    panelKeys: ['security', 'policy', 'ai-regulation'],
-    variants: ['tech'],
-  },
-  techMarkets: {
-    labelKey: 'header.panelCatMarkets',
-    panelKeys: ['markets', 'finance', 'crypto', 'economic', 'global-procurement', 'sanctions-pressure', 'polymarket', 'macro-signals', 'etf-flows', 'stablecoins', 'layoffs', 'monitors', 'world-clock'],
-    variants: ['tech'],
   },
 
   // Finance variant

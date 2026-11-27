@@ -169,13 +169,6 @@ export const OPENAPI_FILTER_PARAM_SCHEMA_OVERRIDES = [
     },
   },
   {
-    path: '/api/research/v1/list-tech-events',
-    method: 'get',
-    name: 'type',
-    description: `Event type filter: ${quotedList(FILTER_PARAM_CONTRACTS.researchTechEventTypes)}. Empty = all.`,
-    schema: { type: 'string', enum: FILTER_PARAM_CONTRACTS.researchTechEventTypes },
-  },
-  {
     path: '/api/research/v1/list-hackernews-items',
     method: 'get',
     name: 'feed_type',

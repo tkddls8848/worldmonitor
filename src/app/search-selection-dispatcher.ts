@@ -21,10 +21,6 @@ import type { NewsItem, MapLayers, MilitaryBase } from '@/types';
 import { UNDERSEA_CABLES, NUCLEAR_FACILITIES } from '@/config/geo-map';
 import { PIPELINES } from '@/config/pipelines';
 import { AI_DATA_CENTERS } from '@/config/ai-datacenters';
-import { TECH_COMPANIES } from '@/config/tech-companies';
-import { AI_RESEARCH_LABS } from '@/config/ai-research-labs';
-import { STARTUP_ECOSYSTEMS } from '@/config/startup-ecosystems';
-import { TECH_HQS, ACCELERATORS } from '@/config/tech-geo';
 import { STOCK_EXCHANGES, FINANCIAL_CENTERS, CENTRAL_BANKS, COMMODITY_HUBS } from '@/config/finance-geo';
 
 export interface SearchSelectionDispatcherBindings {
@@ -284,79 +280,6 @@ export class SearchSelectionDispatcher {
       case 'outage':
         ctx.map?.setView('global');
         break;
-      case 'techcompany': {
-        return this.schedule((commitMatch) => {
-          const company = this.resolveScheduledResultData<typeof TECH_COMPANIES[0]>(
-            result,
-            commitMatch,
-          );
-          if (!company) return false;
-          ctx.map?.setView('global');
-          ctx.map?.enableLayer('techHQs');
-          ctx.mapLayers.techHQs = true;
-          ctx.map?.setCenter(company.lat, company.lon, 4);
-        }, 300, epoch);
-      }
-      case 'ailab': {
-        return this.schedule((commitMatch) => {
-          const lab = this.resolveScheduledResultData<typeof AI_RESEARCH_LABS[0]>(
-            result,
-            commitMatch,
-          );
-          if (!lab) return false;
-          ctx.map?.setView('global');
-          ctx.map?.setCenter(lab.lat, lab.lon, 4);
-        }, 300, epoch);
-      }
-      case 'startup': {
-        return this.schedule((commitMatch) => {
-          const ecosystem = this.resolveScheduledResultData<typeof STARTUP_ECOSYSTEMS[0]>(
-            result,
-            commitMatch,
-          );
-          if (!ecosystem) return false;
-          ctx.map?.setView('global');
-          ctx.map?.enableLayer('startupHubs');
-          ctx.mapLayers.startupHubs = true;
-          ctx.map?.setCenter(ecosystem.lat, ecosystem.lon, 4);
-        }, 300, epoch);
-      }
-      case 'techevent': {
-        return this.schedule((commitMatch) => {
-          const event = this.resolveScheduledResultData<{ lat: number; lng: number }>(
-            result,
-            commitMatch,
-          );
-          if (!event) return false;
-          ctx.map?.setView('global');
-          ctx.map?.enableLayer('techEvents');
-          ctx.mapLayers.techEvents = true;
-          ctx.map?.setCenter(event.lat, event.lng, 5);
-        }, 300, epoch);
-      }
-      case 'techhq': {
-        return this.schedule((commitMatch) => {
-          const hq = this.resolveScheduledResultData<typeof TECH_HQS[0]>(result, commitMatch);
-          if (!hq) return false;
-          ctx.map?.setView('global');
-          ctx.map?.enableLayer('techHQs');
-          ctx.mapLayers.techHQs = true;
-          ctx.map?.setCenter(hq.lat, hq.lon, 4);
-        }, 300, epoch);
-      }
-      case 'accelerator': {
-        return this.schedule((commitMatch) => {
-          const accelerator = this.resolveScheduledResultData<typeof ACCELERATORS[0]>(
-            result,
-            commitMatch,
-          );
-          if (!accelerator) return false;
-          ctx.map?.setView('global');
-          ctx.map?.enableLayer('accelerators');
-          ctx.mapLayers.accelerators = true;
-          ctx.map?.setCenter(accelerator.lat, accelerator.lon, 4);
-        }, 300, epoch);
-      }
       case 'exchange': {
         return this.schedule((commitMatch) => {
           const exchange = this.resolveScheduledResultData<typeof STOCK_EXCHANGES[0]>(

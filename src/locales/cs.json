@@ -307,7 +307,6 @@
   },
   "header": {
     "world": "SVĚT",
-    "tech": "TECHNOLOGIE",
     "live": "ŽIVĚ",
     "search": "Hledat",
     "settings": "NASTAVENÍ",
@@ -430,23 +429,9 @@
     "populationExposure": "Expozice obyvatelstva",
     "securityAdvisories": "Bezpečnostní varování",
     "orefSirens": "Sirény v Izraeli",
-    "startups": "Startupy a rizikový kapitál",
-    "vcblogs": "Poznatky a články o rizikovém kapitálu",
-    "regionalStartups": "Globální startupové zprávy",
-    "unicorns": "Sledování jednorožců",
-    "accelerators": "Akcelerátory a Demo Days",
-    "security": "Kybernetická bezpečnost",
-    "policy": "AI politika a regulace",
     "regulation": "Dashboard AI regulací",
     "finRegulation": "Finanční regulace",
-    "hardware": "Polovodiče a hardware",
-    "cloud": "Cloud a infrastruktura",
-    "dev": "Vývojářská komunita",
-    "github": "GitHub trendy",
     "ipo": "Veřejná uvedení a fúze fikcí podniků",
-    "funding": "Financování a rizikový kapitál",
-    "producthunt": "Product Hunt",
-    "events": "Tech události",
     "serviceStatus": "Stav služeb",
     "techReadiness": "Index tech. připravenosti",
     "gccInvestments": "Investice Rady pro spolupráci v Zálivu",
@@ -1222,15 +1207,10 @@
         "oceania": "Oceánie"
       },
       "layers": {
-        "startupHubs": "Startup centra",
-        "techHQs": "Tech centrály",
-        "accelerators": "Akcelerátory",
-        "cloudRegions": "Cloud regiony",
         "aiDataCenters": "AI datová centra",
         "underseaCables": "Podmořské kabely",
         "internetOutages": "Výpadky internetu",
         "cyberThreats": "Kybernetické hrozby",
-        "techEvents": "Tech události",
         "naturalEvents": "Přírodní události",
         "fires": "Požáry",
         "intelHotspots": "Zpravodajské hotspoty",
@@ -1273,8 +1253,6 @@
         "aircraft": "letadla",
         "protest": "Protest",
         "protestsCount": "počet protestů: {{count}}",
-        "techHQsCount": "{{count}} tech centrál",
-        "techEventsCount": "{{count}} tech událostí",
         "dataCentersCount": "{{count}} datových center",
         "underseaCable": "Podmořský kabel",
         "pipeline": "Potrubí",
@@ -1324,7 +1302,6 @@
         "descriptions": {
           "techStartupHubs": "Hlavní startupové ekosystémy (SF, NYC, Londýn atd.)",
           "techCloudRegions": "Datová centra AWS, Azure, GCP",
-          "techHQs": "Centrály velkých tech společností",
           "techAccelerators": "Lokace Y Combinator, Techstars, 500 Startups",
           "infraCables": "Hlavní podmořské optické kabely (páteř internetu)",
           "infraDatacenters": "Výpočetní clustery AI >=10 000 GPU",
@@ -1367,7 +1344,6 @@
           "infraCyberThreats": "Kybernetické útoky a bezpečnostní události",
           "mineralsFull": "Naleziště strategických minerálů a těžební místa",
           "techCyberThreats": "Kybernetické útoky a bezpečnostní události",
-          "techEvents": "Významné tech konference a události",
           "techFires": "Aktivní lesní požáry v blízkosti tech infrastruktury",
           "financeGulfInvestments": "Investice suverénních fondů a přímé zahraniční investice Rady pro spolupráci v Zálivu",
           "tradeRoutes": "Hlavní světové námořní trasy spojující přístavy přes strategická úzká hrdla",
@@ -1561,22 +1537,6 @@
       },
       "dataFreshness": "Aktuálnost dat",
       "sourcesDetail": "{{active}}/{{total}} zdrojů"
-    },
-    "techEvents": {
-      "loading": "Načítání tech událostí...",
-      "noEvents": "Žádné události k zobrazení",
-      "showOnMap": "Zobrazit na mapě",
-      "moreInfo": "Více informací",
-      "upcoming": "Nadcházející",
-      "conferences": "Konference",
-      "earnings": "Výsledky hospodaření",
-      "all": "Vše",
-      "conferencesCount": "{{count}} konferencí",
-      "onMap": "{{count}} na mapě",
-      "techmemeEvents": "Události Techmeme ↗",
-      "today": "DNES",
-      "soon": "BRZY",
-      "infoTooltip": "<strong>Technologické události</strong> Nadcházející a nedávné technologické události: konference, uvedení produktů, regulační slyšení a hovory o výsledcích. Agregováno z oficiálních kalendářů a průmyslových zdrojů."
     },
     "techReadiness": {
       "ranked": "V žebříčku",
@@ -3492,59 +3452,6 @@
         "public": "Veřejný",
         "publicPrivate": "Veřejný/soukromý"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "MEGA CENTRUM",
-        "major": "HLAVNÍ CENTRUM",
-        "emerging": "ROZVÍJEJÍCÍ SE",
-        "hub": "CENTRUM"
-      },
-      "unicorns": "JEDNOROŽCI"
-    },
-    "cloudRegion": {
-      "provider": "POSKYTOVATEL",
-      "availabilityZones": "ZÓNY DOSTUPNOSTI"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "BIG TECH",
-        "unicorn": "JEDNOROŽEC",
-        "public": "VEŘEJNÉ",
-        "tech": "TECHNOLOGIE"
-      },
-      "marketCap": "TRŽNÍ KAPITALIZACE",
-      "employees": "ZAMĚSTNANCI"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "AKCELERÁTOR",
-        "incubator": "INKUBÁTOR",
-        "studio": "STARTUPOVÉ STUDIO"
-      },
-      "founded": "ZALOŽENO",
-      "notableAlumni": "VÝZNAMNÍ ABSOLVENTI"
-    },
-    "techEvent": {
-      "days": {
-        "today": "DNES",
-        "tomorrow": "ZÍTRA",
-        "inDays": "ZA {{count}} DNÍ"
-      },
-      "date": "DATUM",
-      "moreInformation": "Více informací"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}} SPOLEČNOSTÍ",
-      "bigTechCount": "Big Tech: {{count}}",
-      "unicornsCount": "Jednorožců: {{count}}",
-      "publicCount": "Veřejných: {{count}}",
-      "sampled": "Zobrazen vzorkovaný seznam {{count}} společností."
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}} UDÁLOSTÍ",
-      "upcomingWithin2Weeks": "{{count}} nadcházejících během 2 týdnů",
-      "sampled": "Zobrazen vzorkovaný seznam {{count}} událostí."
     },
     "militaryFlight": {
       "types": {

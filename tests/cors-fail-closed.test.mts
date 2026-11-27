@@ -9,7 +9,7 @@ const TRUSTED_RETURN_URL_ORIGINS = [
   'https://www.worldmonitor.app',
   'https://app.worldmonitor.app',
   'https://api.worldmonitor.app',
-  'https://tech.worldmonitor.app',
+  'https://energy.worldmonitor.app',
   'https://finance.worldmonitor.app',
   'https://commodity.worldmonitor.app',
   'https://energy.worldmonitor.app',
@@ -178,12 +178,12 @@ describe('isAllowedOrigin — Vercel preview origins', () => {
 
   const ALLOWED = [
     ['apex production origin', 'https://worldmonitor.app'],
-    ['production subdomain', 'https://tech.worldmonitor.app'],
+    ['production subdomain', 'https://energy.worldmonitor.app'],
     ['trailing-dot FQDN apex (#6411)', 'https://worldmonitor.app.'],
-    ['trailing-dot FQDN subdomain (#6411)', 'https://tech.worldmonitor.app.'],
+    ['trailing-dot FQDN subdomain (#6411)', 'https://energy.worldmonitor.app.'],
     ['Google Translate www proxy (#6411)', 'https://www-worldmonitor-app.translate.goog'],
     ['Google Translate apex proxy (#6411)', 'https://worldmonitor-app.translate.goog'],
-    ['Google Translate tech proxy (#6411)', 'https://tech-worldmonitor-app.translate.goog'],
+    ['Google Translate tech proxy (#6411)', 'https://energy-worldmonitor-app.translate.goog'],
   ];
 
   const REJECTED = [
@@ -391,7 +391,7 @@ describe('bounded CORS Origin validation (#9315)', () => {
     });
 
     it(`${surface} preserves raw trailing-dot origins and rejects internal empty labels`, () => {
-      for (const origin of ['https://worldmonitor.app...', 'https://tech-worldmonitor-app.translate.goog...']) {
+      for (const origin of ['https://worldmonitor.app...', 'https://energy-worldmonitor-app.translate.goog...']) {
         assert.equal(allows(origin), true);
         const req = new Request('https://api.worldmonitor.app/x', { headers: { Origin: origin } });
         for (const headers of [getCorsHeaders(req), getCorsHeadersJs(req)]) {
@@ -514,7 +514,7 @@ describe('credentialed CORS app-host boundary', () => {
     });
     it(`${surface} rejects non-default ports on translated app origins`, () => {
       assert.equal(allows('https://worldmonitor-app.translate.goog:8443'), false);
-      assert.equal(allows('https://tech-worldmonitor-app.translate.goog.:8443'), false);
+      assert.equal(allows('https://energy-worldmonitor-app.translate.goog.:8443'), false);
       assert.equal(allows('https://worldmonitor-app.translate.goog:443'), true);
     });
     it(`${surface} rejects vendor, unknown and nested hosts including translated forms`, () => {

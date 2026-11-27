@@ -453,7 +453,7 @@ describe('digest coverage follows the selected browser response', () => {
       let edition: number[];
       try {
         home = await callerDeadline(() => internal.tryFetchDigest());
-        edition = await callerDeadline(() => internal.fetchEditionDigest('tech', 'en'));
+        edition = await callerDeadline(() => internal.fetchEditionDigest('finance', 'en'));
       } finally {
         timeout.mockRestore();
       }

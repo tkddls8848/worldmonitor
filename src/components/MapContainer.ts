@@ -148,18 +148,6 @@ export class ViewportTransitionError extends Error {
   }
 }
 
-interface TechEventMarker {
-  id: string;
-  title: string;
-  location: string;
-  lat: number;
-  lng: number;
-  country: string;
-  startDate: string;
-  endDate: string;
-  url: string | null;
-  daysUntil: number;
-}
 
 type FireMarker = { lat: number; lon: number; brightness: number; frp: number; confidence: number; region: string; acq_date: string; daynight: string };
 type CIIScore = { code: string; score: number; level: string };
@@ -256,7 +244,6 @@ export class MapContainer {
   private cachedMilitaryVesselClusters: MilitaryVesselCluster[] | null = null;
   private cachedNaturalEvents: NaturalEvent[] | null = null;
   private cachedFires: FireMarker[] | null = null;
-  private cachedTechEvents: TechEventMarker[] | null = null;
   private cachedUcdpEvents: UcdpGeoEvent[] | null = null;
   private cachedDisplacementFlows: DisplacementFlow[] | null = null;
   private cachedInternalDisplacement: InternalDisplacementData | null = null;
@@ -746,7 +733,6 @@ export class MapContainer {
     if (this.cachedMilitaryVessels) this.setMilitaryVessels(this.cachedMilitaryVessels, this.cachedMilitaryVesselClusters ?? []);
     if (this.cachedNaturalEvents) this.setNaturalEvents(this.cachedNaturalEvents);
     if (this.cachedFires) this.setFires(this.cachedFires);
-    if (this.cachedTechEvents) this.setTechEvents(this.cachedTechEvents);
     if (this.cachedUcdpEvents) this.setUcdpEvents(this.cachedUcdpEvents);
     if (this.cachedDisplacementFlows) this.setDisplacementFlows(this.cachedDisplacementFlows);
     if (this.cachedInternalDisplacement) this.setInternalDisplacement(this.cachedInternalDisplacement);
@@ -1178,14 +1164,6 @@ export class MapContainer {
     }
   }
 
-  public setTechEvents(events: TechEventMarker[]): void {
-    this.cachedTechEvents = events;
-    if (this.useDeckGL) {
-      this.deckGLMap?.setTechEvents(events);
-    } else {
-      this.svgMap?.setTechEvents(events);
-    }
-  }
 
   public setUcdpEvents(events: UcdpGeoEvent[]): void {
     this.cachedUcdpEvents = events;
@@ -1905,7 +1883,6 @@ export class MapContainer {
     this.cachedMilitaryVesselClusters = null;
     this.cachedNaturalEvents = null;
     this.cachedFires = null;
-    this.cachedTechEvents = null;
     this.cachedUcdpEvents = null;
     this.cachedDisplacementFlows = null;
     this.cachedClimateAnomalies = null;

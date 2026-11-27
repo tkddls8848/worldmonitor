@@ -20,7 +20,6 @@ import {
   COMMODITY_PORTS,
 } from '../config';
 // Tech-geo + ai-datacenters + geo-map tables imported directly so they stay off the eager @/config barrel (#4404).
-import { STARTUP_HUBS, ACCELERATORS, TECH_HQS, CLOUD_REGIONS } from '../config/tech-geo';
 import { AI_DATA_CENTERS } from '../config/ai-datacenters';
 import { UNDERSEA_CABLES, NUCLEAR_FACILITIES, ECONOMIC_CENTERS, CRITICAL_MINERALS } from '../config/geo-map';
 import type { PassTrack, TrackPoint } from '../services/orbital/track-geometry';
@@ -54,7 +53,7 @@ import type { WeatherAlert } from '../services/weather';
 import { CHINA_LOGISTICS_CORRIDORS } from '../../shared/china-logistics-corridors';
 
 type Scenario = 'alpha' | 'beta';
-type HarnessVariant = 'full' | 'tech' | 'finance' | 'commodity' | 'energy';
+type HarnessVariant = 'full' | 'finance' | 'commodity' | 'energy';
 type HarnessLayerKey = keyof MapLayers;
 type PulseProtestScenario =
   | 'none'
@@ -71,8 +70,6 @@ type LayerSnapshot = {
 type OverlaySnapshot = {
   protestMarkers: number;
   datacenterMarkers: number;
-  techEventMarkers: number;
-  techHQMarkers: number;
   hotspotMarkers: number;
 };
 
@@ -258,11 +255,6 @@ const allLayersEnabled: MapLayers = {
   ucdpEvents: true,
   displacement: true,
   climate: true,
-  startupHubs: true,
-  cloudRegions: true,
-  accelerators: true,
-  techHQs: true,
-  techEvents: true,
   stockExchanges: true,
   financialCenters: true,
   centralBanks: true,
@@ -307,11 +299,6 @@ const allLayersDisabled: MapLayers = {
   ucdpEvents: false,
   displacement: false,
   climate: false,
-  startupHubs: false,
-  cloudRegions: false,
-  accelerators: false,
-  techHQs: false,
-  techEvents: false,
   stockExchanges: false,
   financialCenters: false,
   centralBanks: false,
@@ -824,8 +811,6 @@ const getProtestClusterCount = (): number => {
 const getOverlaySnapshot = (): OverlaySnapshot => ({
   protestMarkers: document.querySelectorAll('.protest-marker').length,
   datacenterMarkers: document.querySelectorAll('.datacenter-marker').length,
-  techEventMarkers: document.querySelectorAll('.tech-event-marker').length,
-  techHQMarkers: document.querySelectorAll('.tech-hq-marker').length,
   hotspotMarkers: document.querySelectorAll('.hotspot').length,
 });
 
@@ -869,7 +854,6 @@ const seededCameras = {
   military: toCamera(56.3, 26.1, 5.2),
   natural: toCamera(-118.2, 34.1, 4.8),
   fires: toCamera(-60.1, -5.4, 5.0),
-  techEvents: toCamera(-122.42, 37.77, 5.2),
   news: toCamera(2.35, 48.85, 5.0),
   renewableInstallations: toCamera(-117.2, 34.05, 5.2),
   diseaseOutbreaks: toCamera(36.82, -1.29, 5.2),
@@ -885,10 +869,6 @@ const [waterwayLon, waterwayLat] = firstLatLon(STRATEGIC_WATERWAYS, [32.0, 30.0]
 const [economicLon, economicLat] = firstLatLon(ECONOMIC_CENTERS, [-74.0, 40.7]);
 const [datacenterLon, datacenterLat] = firstLatLon(AI_DATA_CENTERS, [-121.9, 37.3]);
 const [mineralLon, mineralLat] = firstLatLon(CRITICAL_MINERALS, [135.0, -27.0]);
-const [startupLon, startupLat] = firstLatLon(STARTUP_HUBS, [-122.08, 37.38]);
-const [acceleratorLon, acceleratorLat] = firstLatLon(ACCELERATORS, [-122.41, 37.77]);
-const [techHQLon, techHQLat] = firstLatLon(TECH_HQS, [-122.0, 37.3]);
-const [cloudRegionLon, cloudRegionLat] = firstLatLon(CLOUD_REGIONS, [-122.3, 37.6]);
 const [aptLon, aptLat] = firstLatLon(APT_GROUPS, [116.4, 39.9]);
 const [portLon, portLat] = firstLatLon(PORTS, [32.5, 29.9]);
 const [exchangeLon, exchangeLat] = firstLatLon(STOCK_EXCHANGES, [-74.0, 40.7]);
@@ -1092,46 +1072,6 @@ const VISUAL_SCENARIOS: VisualScenario[] = [
     expectedSelectors: [],
   },
   {
-    id: 'startup-hubs-z5',
-    variant: 'tech',
-    enabledLayers: ['startupHubs'],
-    camera: toCamera(startupLon, startupLat, 5.2),
-    expectedDeckLayers: ['startup-hubs-layer'],
-    expectedSelectors: [],
-  },
-  {
-    id: 'accelerators-z5',
-    variant: 'tech',
-    enabledLayers: ['accelerators'],
-    camera: toCamera(acceleratorLon, acceleratorLat, 5.2),
-    expectedDeckLayers: ['accelerators-layer'],
-    expectedSelectors: [],
-  },
-  {
-    id: 'cloud-regions-z5',
-    variant: 'tech',
-    enabledLayers: ['cloudRegions'],
-    camera: toCamera(cloudRegionLon, cloudRegionLat, 5.2),
-    expectedDeckLayers: ['cloud-regions-layer'],
-    expectedSelectors: [],
-  },
-  {
-    id: 'tech-hqs-z5',
-    variant: 'tech',
-    enabledLayers: ['techHQs'],
-    camera: toCamera(techHQLon, techHQLat, 5.2),
-    expectedDeckLayers: ['tech-hq-clusters-layer'],
-    expectedSelectors: [],
-  },
-  {
-    id: 'tech-events-z5',
-    variant: 'tech',
-    enabledLayers: ['techEvents'],
-    camera: seededCameras.techEvents,
-    expectedDeckLayers: ['tech-event-clusters-layer'],
-    expectedSelectors: [],
-  },
-  {
     id: 'stock-exchanges-z5',
     variant: 'finance',
     enabledLayers: ['stockExchanges'],
@@ -1206,9 +1146,7 @@ const filterScenariosForVariant = (variant: HarnessVariant): VisualScenario[] =>
   );
 };
 
-const currentHarnessVariant: HarnessVariant = SITE_VARIANT === 'tech'
-  ? 'tech'
-  : SITE_VARIANT === 'energy'
+const currentHarnessVariant: HarnessVariant = SITE_VARIANT === 'energy'
   ? 'energy'
   : SITE_VARIANT === 'finance'
   ? 'finance'
@@ -1612,32 +1550,6 @@ const seedAllDynamicData = (): void => {
       region: 'Harness Fire Region',
       acq_date: '2026-02-01',
       daynight: 'D',
-    },
-  ]);
-  map.setTechEvents([
-    {
-      id: 'e2e-tech-event-1',
-      title: 'Harness Summit Alpha',
-      location: 'Harness City',
-      lat: 37.77,
-      lng: -122.42,
-      country: 'US',
-      startDate: '2026-03-10',
-      endDate: '2026-03-12',
-      url: 'https://example.com/alpha',
-      daysUntil: 20,
-    },
-    {
-      id: 'e2e-tech-event-2',
-      title: 'Harness Summit Beta',
-      location: 'Harness City',
-      lat: 37.77,
-      lng: -122.42,
-      country: 'US',
-      startDate: '2026-04-01',
-      endDate: '2026-04-02',
-      url: 'https://example.com/beta',
-      daysUntil: 42,
     },
   ]);
   map.setNewsLocations(SEEDED_NEWS_LOCATIONS);

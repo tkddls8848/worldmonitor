@@ -301,7 +301,6 @@
   },
   "header": {
     "world": "โลก",
-    "tech": "เทคโนโลยี",
     "live": "สด",
     "search": "ค้นหา",
     "settings": "การตั้งค่า",
@@ -424,23 +423,9 @@
     "populationExposure": "ประชากรที่ได้รับผลกระทบ",
     "securityAdvisories": "คำเตือนด้านความปลอดภัย",
     "orefSirens": "ไซเรนในอิสราเอล",
-    "startups": "บริษัทเริ่มต้นและเงินทุนสนับสนุน",
-    "vcblogs": "ข้อมูลเชิงลึกและบทความเงินทุนสนับสนุน",
-    "regionalStartups": "ข่าวสตาร์ทอัพทั่วโลก",
-    "unicorns": "ตัวติดตามยูนิคอร์น",
-    "accelerators": "แอคเซเลอเรเตอร์และ Demo Days",
-    "security": "ความปลอดภัยไซเบอร์",
-    "policy": "นโยบายและกฎระเบียบ AI",
     "regulation": "แดชบอร์ดกฎระเบียบ AI",
     "finRegulation": "กฎระเบียบทางการเงิน",
-    "hardware": "เซมิคอนดักเตอร์และฮาร์ดแวร์",
-    "cloud": "คลาวด์และโครงสร้างพื้นฐาน",
-    "dev": "ชุมชนนักพัฒนา",
-    "github": "GitHub มาแรง",
     "ipo": "บริษัทจดทะเบียนในตลาดสาธารณะและการควบรวมบริษัทเชลล์",
-    "funding": "การจัดหาเงินทุนและเงินทุนสนับสนุน",
-    "producthunt": "Product Hunt",
-    "events": "งานเทคโนโลยี",
     "serviceStatus": "สถานะบริการ",
     "techReadiness": "ดัชนีความพร้อมด้านเทคโนโลยี",
     "gccInvestments": "การลงทุนของสภาความร่วมมือของประเทศในอ่าวเปอร์เซีย",
@@ -1213,15 +1198,10 @@
         "oceania": "โอเชียเนีย"
       },
       "layers": {
-        "startupHubs": "ศูนย์กลางสตาร์ทอัพ",
-        "techHQs": "สำนักงานใหญ่เทคโนโลยี",
-        "accelerators": "แอคเซเลอเรเตอร์",
-        "cloudRegions": "ภูมิภาคคลาวด์",
         "aiDataCenters": "ศูนย์ข้อมูล AI",
         "underseaCables": "สายเคเบิลใต้ทะเล",
         "internetOutages": "การหยุดชะงักอินเทอร์เน็ต",
         "cyberThreats": "ภัยคุกคามไซเบอร์",
-        "techEvents": "งานเทคโนโลยี",
         "naturalEvents": "เหตุการณ์ธรรมชาติ",
         "fires": "ไฟ",
         "intelHotspots": "จุดร้อนข่าวกรอง",
@@ -1264,8 +1244,6 @@
         "aircraft": "อากาศยาน",
         "protest": "การประท้วง",
         "protestsCount": "การประท้วง {{count}} รายการ",
-        "techHQsCount": "สำนักงานใหญ่เทคโนโลยี {{count}} แห่ง",
-        "techEventsCount": "งานเทคโนโลยี {{count}} งาน",
         "dataCentersCount": "ศูนย์ข้อมูล {{count}} แห่ง",
         "underseaCable": "สายเคเบิลใต้ทะเล",
         "pipeline": "ท่อส่ง",
@@ -1315,7 +1293,6 @@
         "descriptions": {
           "techStartupHubs": "ระบบนิเวศสตาร์ทอัพสำคัญ (SF, NYC, ลอนดอน ฯลฯ)",
           "techCloudRegions": "ภูมิภาคศูนย์ข้อมูล AWS, Azure, GCP",
-          "techHQs": "สำนักงานใหญ่ของบริษัทเทคโนโลยีรายใหญ่",
           "techAccelerators": "สาขา Y Combinator, Techstars, 500 Startups",
           "infraCables": "สายเคเบิลไฟเบอร์ออปติกใต้ทะเลหลัก (โครงข่ายหลักอินเทอร์เน็ต)",
           "infraDatacenters": "คลัสเตอร์คำนวณ AI >=10,000 GPU",
@@ -1358,7 +1335,6 @@
           "infraCyberThreats": "การโจมตีทางไซเบอร์และเหตุการณ์ด้านความปลอดภัย",
           "mineralsFull": "แหล่งแร่ยุทธศาสตร์และพื้นที่ทำเหมือง",
           "techCyberThreats": "การโจมตีทางไซเบอร์และเหตุการณ์ด้านความปลอดภัย",
-          "techEvents": "การประชุมและงานเทคโนโลยีสำคัญ",
           "techFires": "ไฟป่าที่กำลังลุกไหม้ใกล้โครงสร้างพื้นฐานเทคโนโลยี",
           "financeGulfInvestments": "การลงทุนของกองทุนอธิปไตยและการลงทุนโดยตรงจากต่างประเทศของสภาความร่วมมือของประเทศในอ่าวเปอร์เซีย",
           "tradeRoutes": "เส้นทางเดินเรือหลักของโลกที่เชื่อมต่อท่าเรือผ่านจุดยุทธศาสตร์",
@@ -1558,22 +1534,6 @@
       },
       "dataFreshness": "ความสดใหม่ของข้อมูล",
       "sourcesDetail": "{{active}}/{{total}} แหล่ง"
-    },
-    "techEvents": {
-      "loading": "กำลังโหลดงานเทคโนโลยี...",
-      "noEvents": "ไม่มีงานที่จะแสดง",
-      "showOnMap": "แสดงบนแผนที่",
-      "moreInfo": "ข้อมูลเพิ่มเติม",
-      "upcoming": "ที่จะมาถึง",
-      "conferences": "การประชุม",
-      "earnings": "ผลประกอบการ",
-      "all": "ทั้งหมด",
-      "conferencesCount": "{{count}} การประชุม",
-      "onMap": "{{count}} บนแผนที่",
-      "techmemeEvents": "งาน Techmeme ↗",
-      "today": "วันนี้",
-      "soon": "เร็ว ๆ นี้",
-      "infoTooltip": "<strong>กิจกรรมเทคโนโลยี</strong> กิจกรรมเทคโนโลยีที่จะมาถึงและล่าสุด: การประชุม การเปิดตัวผลิตภัณฑ์ การพิจารณาด้านกฎระเบียบ และการประชุมผลประกอบการ รวบรวมจากปฏิทินกิจกรรมอย่างเป็นทางการและแหล่งข้อมูลในอุตสาหกรรม"
     },
     "techReadiness": {
       "ranked": "ได้รับการจัดอันดับ",
@@ -3437,59 +3397,6 @@
         "public": "รัฐ",
         "publicPrivate": "รัฐร่วมเอกชน"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "ฮับขนาดใหญ่",
-        "major": "ฮับสำคัญ",
-        "emerging": "กำลังเติบโต",
-        "hub": "ฮับ"
-      },
-      "unicorns": "ยูนิคอร์น"
-    },
-    "cloudRegion": {
-      "provider": "ผู้ให้บริการ",
-      "availabilityZones": "โซนพร้อมใช้งาน"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "บริษัทเทคโนโลยีใหญ่",
-        "unicorn": "ยูนิคอร์น",
-        "public": "บริษัทจดทะเบียน",
-        "tech": "เทคโนโลยี"
-      },
-      "marketCap": "มูลค่าตลาด",
-      "employees": "พนักงาน"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "แอคเซอเลอเรเตอร์",
-        "incubator": "อินคิวเบเตอร์",
-        "studio": "สตาร์ทอัพสตูดิโอ"
-      },
-      "founded": "ก่อตั้ง",
-      "notableAlumni": "ศิษย์เก่าที่มีชื่อเสียง"
-    },
-    "techEvent": {
-      "days": {
-        "today": "วันนี้",
-        "tomorrow": "พรุ่งนี้",
-        "inDays": "ในอีก {{count}} วัน"
-      },
-      "date": "วันที่",
-      "moreInformation": "ข้อมูลเพิ่มเติม"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}} บริษัท",
-      "bigTechCount": "Big Tech {{count}} แห่ง",
-      "unicornsCount": "ยูนิคอร์น {{count}} แห่ง",
-      "publicCount": "บริษัทมหาชน {{count}} แห่ง",
-      "sampled": "แสดงรายการตัวอย่าง {{count}} บริษัท"
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}} กิจกรรม",
-      "upcomingWithin2Weeks": "{{count}} รายการภายใน 2 สัปดาห์",
-      "sampled": "แสดงรายการตัวอย่าง {{count}} กิจกรรม"
     },
     "militaryFlight": {
       "types": {

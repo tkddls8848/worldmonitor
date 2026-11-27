@@ -372,7 +372,6 @@
   },
   "header": {
     "world": "VILÁG",
-    "tech": "TECHNOLÓGIA",
     "live": "ÉLŐBEN",
     "cached": "GYORSÍTÓTÁRAZOTT",
     "unavailable": "NEM ELÉRHETŐ",
@@ -500,23 +499,9 @@
     "populationExposure": "Népesség kitettség",
     "securityAdvisories": "Biztonsági tanácsok",
     "orefSirens": "Izraeli szirénák",
-    "startups": "Startupok és kockázatitőke",
-    "vcblogs": "Kockázatitőke-bejegyzések és tanulmányok",
-    "regionalStartups": "Globális Startup hírek",
-    "unicorns": "Unikornis-követő",
-    "accelerators": "Akcelerátorok & Demo Days",
-    "security": "Kiberbiztonsság",
-    "policy": "AI Politika & Szabályozás",
     "regulation": "AI Szabályozási Irányítópult",
     "finRegulation": "Pénzügyi Szabályozás",
-    "hardware": "Félvezetők & Hardware",
-    "cloud": "Cloud & Infrastruktúra",
-    "dev": "Fejlesztői Közösség",
-    "github": "GitHub Trending",
     "ipo": "Nyilvános jegyzések és shell-vállalat fúziók",
-    "funding": "Finanszírozás és kockázatitőke",
-    "producthunt": "Product Hunt",
-    "events": "Tech Események",
     "serviceStatus": "Szolgáltatás Státusza",
     "internetDisruptions": "Internet Zavarok",
     "internetDisruptionsTabs": {
@@ -1358,15 +1343,10 @@
         "oceania": "Óceánia"
       },
       "layers": {
-        "startupHubs": "Startup központok",
-        "techHQs": "Tech főhadiszállások",
-        "accelerators": "Akcelerátorok",
-        "cloudRegions": "Felhő régiók",
         "aiDataCenters": "AI adatközpontok",
         "underseaCables": "Tengeri kábelek",
         "internetOutages": "Internet zavarok",
         "cyberThreats": "Kiber fenyegetések",
-        "techEvents": "Tech események",
         "naturalEvents": "Természeti események",
         "fires": "Tüzek",
         "intelHotspots": "Hírszerzési gócpontok",
@@ -1409,8 +1389,6 @@
         "aircraft": "repülőgépek",
         "protest": "Tüntetés",
         "protestsCount": "{{count}} tüntetés",
-        "techHQsCount": "{{count}} technológiai központ",
-        "techEventsCount": "{{count}} technológiai esemény",
         "dataCentersCount": "{{count}} adatközpont",
         "underseaCable": "Tengerfenéki kábel",
         "pipeline": "Csővezeték",
@@ -1460,7 +1438,6 @@
         "descriptions": {
           "techStartupHubs": "Nagyobb startup-ökoszisztémák (SF, NYC, London, stb.)",
           "techCloudRegions": "AWS, Azure, GCP adatközpont-régiók",
-          "techHQs": "Nagyobb technológiai cégek központjai",
           "techAccelerators": "Y Combinator, Techstars, 500 Startups helyszínek",
           "infraCables": "Nagyobb tengerfenéki optikai kábelek (internetes gerinc)",
           "infraDatacenters": "AI számítási fürtök >=10 000 GPU-val",
@@ -1503,7 +1480,6 @@
           "infraCyberThreats": "Kibernetikai támadások és biztonsági incidensek",
           "mineralsFull": "Stratégiai ásványlelőhelyek és bányászati helyek",
           "techCyberThreats": "Kibernetikai támadások és biztonsági incidensek",
-          "techEvents": "Fő technológiai konferenciák és események",
           "techFires": "Aktív erdőtüzek a technológiai infrastruktúra közelében",
           "financeGulfInvestments": "Golf-öbölbeli Együttműködési Tanács szuverenitási alapok és külföldi közvetlen beruházások",
           "tradeRoutes": "Fő globális szállítási útvonalak portokat stratégiai szűk keresztmetszeteken keresztül összekötve",
@@ -1704,22 +1680,6 @@
       },
       "dataFreshness": "Adatok frissessége",
       "sourcesDetail": "{{active}}/{{total}} forrás"
-    },
-    "techEvents": {
-      "infoTooltip": "<strong>Technológiai események</strong> Közelgő és közelmúltbeli technológiaesemények: konferenciák, termékbemutatók, szabályozási meghallgatások és eredményhirdetések. Az oficális eseménynaptárakból és az iparág forrásaiból összegyűjtve.",
-      "loading": "Technológiaesemények betöltése...",
-      "noEvents": "Nincsenek megjeleníthető események",
-      "showOnMap": "Megjelenítés a térképen",
-      "moreInfo": "További információ",
-      "upcoming": "Közelgő",
-      "conferences": "Konferenciák",
-      "earnings": "Bevételek",
-      "all": "Összes",
-      "conferencesCount": "{{count}} konferencia",
-      "onMap": "{{count}} a térképen",
-      "techmemeEvents": "Techmeme események ↗",
-      "today": "MA",
-      "soon": "HAMAROSAN"
     },
     "techReadiness": {
       "ranked": "Rangsorolt",
@@ -3527,59 +3487,6 @@
         "public": "Állami",
         "publicPrivate": "Állami/magán"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "MEGA KÖZPONT",
-        "major": "FŐVÁROSI HUB",
-        "emerging": "FEJLŐDŐ",
-        "hub": "KÖZPONT"
-      },
-      "unicorns": "EGYSZARVÚAK"
-    },
-    "cloudRegion": {
-      "provider": "SZOLGÁLTATÓ",
-      "availabilityZones": "ELÉRHETŐSÉGI ZÓNÁK"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "BIG TECH",
-        "unicorn": "EGYSZARVÚ",
-        "public": "NYILVÁNOS",
-        "tech": "TECHNOLÓGIA"
-      },
-      "marketCap": "PIACI KAPITALIZÁCIÓ",
-      "employees": "ALKALMAZOTTAK"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "ACCELERÁTOR",
-        "incubator": "INKUBÁTOR",
-        "studio": "STARTUP STÚDIÓ"
-      },
-      "founded": "ALAPÍTVA",
-      "notableAlumni": "NEVEZETES ALUMNI"
-    },
-    "techEvent": {
-      "days": {
-        "today": "MA",
-        "tomorrow": "HOLNAP",
-        "inDays": "{{count}} NAP MÚLVA"
-      },
-      "date": "DÁTUM",
-      "moreInformation": "További információ"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}} VÁLLALAT",
-      "bigTechCount": "{{count}} Big Tech",
-      "unicornsCount": "{{count}} Egyszarvú",
-      "publicCount": "{{count}} Nyilvános",
-      "sampled": "{{count}} vállalat mintavételes listáját mutatjuk."
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}} ESEMÉNY",
-      "upcomingWithin2Weeks": "{{count}} hamarosan, 2 héten belül",
-      "sampled": "{{count}} esemény mintavételes listáját mutatjuk."
     },
     "militaryFlight": {
       "types": {

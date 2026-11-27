@@ -3,7 +3,7 @@ import type { Feed } from '@/types';
 // ─────────────────────────────────────────────────────────────────────────────
 // Panel-driven (not variant-driven) feed resolution.
 //
-// A "variant" (full / tech / finance / commodity / energy / happy) is only a
+// A "variant" (full / finance / commodity / energy) is only a
 // PRESET — the default set of enabled panels. Users freely customize: a `full`
 // user can add the Tech `startups` panel, a `tech` user can add `middleeast`,
 // etc. The data layer must follow the user's ENABLED PANELS, not the variant.

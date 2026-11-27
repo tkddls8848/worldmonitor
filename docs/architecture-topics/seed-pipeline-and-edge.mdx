@@ -89,7 +89,6 @@ All published dashboard variants serve from a **single Vercel deployment**. The 
 
 | Hostname | Variant |
 | --- | --- |
-| `tech.worldmonitor.app` | `tech` |
 | `finance.worldmonitor.app` | `finance` |
 | `commodity.worldmonitor.app` | `commodity` |
 | `energy.worldmonitor.app` | `energy` |
@@ -102,4 +101,3 @@ This architecture replaced the original multi-deployment approach (separate Verc
 - **Instant switching** — users toggle variants in the header bar without a full page navigation or DNS lookup
 - **Shared CDN cache** — the static SPA assets are identical across variants; only runtime configuration differs. CDN cache hit rates are 4× higher than with separate deployments
 - **Single CI pipeline** — one build, one deployment, one set of edge functions. No cross-deployment configuration drift
-- **Social bot routing** — the OG image endpoint generates variant-specific preview cards based on the requesting hostname, so sharing a Tech Monitor link produces tech-branded social previews

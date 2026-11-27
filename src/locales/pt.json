@@ -19,19 +19,6 @@
     "middleeast": "Médio Oriente",
     "layoffs": "Rastreador de demissões",
     "ai": "IA e aprendizado de máquina",
-    "startups": "Startups e capital de risco",
-    "vcblogs": "Insights e ensaios de capital de risco",
-    "regionalStartups": "Notícias globais sobre startups",
-    "unicorns": "Rastreador de Unicórnio",
-    "accelerators": "Aceleradores e dias de demonstração",
-    "funding": "Financiamento e capital de risco",
-    "producthunt": "Caça ao produto",
-    "security": "Cibersegurança",
-    "policy": "Política e Regulamento de IA",
-    "hardware": "Semicondutores e Hardware",
-    "cloud": "Nuvem e infraestrutura",
-    "dev": "Comunidade de desenvolvedores",
-    "github": "Tendências do GitHub",
     "ipo": "Listagens públicas e fusões de empresas de fachada",
     "thinktanks": "Grupos de reflexão",
     "science": "Ciência",
@@ -50,7 +37,6 @@
     "serviceStatus": "Status do serviço",
     "stablecoins": "Moedas estáveis",
     "deduction": "Deduzir situação",
-    "events": "Eventos tecnológicos",
     "techHubs": "Centros de tecnologia importantes",
     "techReadiness": "Índice de prontidão tecnológica",
     "ucdpEvents": "Eventos de conflito UCDP",
@@ -515,15 +501,10 @@
       },
       "timeAll": "Todos",
       "layers": {
-        "startupHubs": "Centros de inicialização",
-        "techHQs": "Sedes tecnológicas",
-        "accelerators": "Aceleradores",
-        "cloudRegions": "Regiões de nuvem",
         "aiDataCenters": "Centros de dados de IA",
         "underseaCables": "Cabos Submarinos",
         "internetOutages": "Interrupções na Internet",
         "cyberThreats": "Ameaças cibernéticas",
-        "techEvents": "Eventos tecnológicos",
         "naturalEvents": "Eventos Naturais",
         "fires": "Incêndios",
         "intelHotspots": "Pontos de acesso Intel",
@@ -573,8 +554,6 @@
         "aircraft": "aeronave",
         "protest": "Protesto",
         "protestsCount": "{{count}} protestos",
-        "techHQsCount": "{{count}} sedes técnicas",
-        "techEventsCount": "{{count}} eventos de tecnologia",
         "dataCentersCount": "Centros de dados {{count}}",
         "underseaCable": "Cabo Submarino",
         "pipeline": "Gasoduto",
@@ -624,7 +603,6 @@
         "descriptions": {
           "techStartupHubs": "Principais ecossistemas de startups (SF, NYC, Londres, etc.)",
           "techCloudRegions": "Regiões de data center AWS, Azure e GCP",
-          "techHQs": "Sedes de grandes empresas de tecnologia",
           "techAccelerators": "Y Combinator, Techstars, 500 locais de startups",
           "infraCables": "Principais cabos submarinos de fibra óptica (backbone de internet)",
           "infraDatacenters": "Clusters de computação de IA >=10.000 GPUs",
@@ -669,7 +647,6 @@
           "infraCyberThreats": "Ataques cibernéticos e eventos de segurança",
           "mineralsFull": "Depósitos de minerais estratégicos e locais de mineração",
           "techCyberThreats": "Ataques cibernéticos e eventos de segurança",
-          "techEvents": "Grandes conferências e eventos de tecnologia",
           "techFires": "Incêndios ativos perto de infraestrutura tecnológica",
           "geoBoundaries": "Zonas desmilitarizadas, linhas de cessar-fogo e fronteiras disputadas",
           "ciiChoropleth": "Mapa de calor do Índice de Instabilidade do País — colore os países por pontuação (verde=estável, vermelho=crítico)",
@@ -862,22 +839,6 @@
       "emojiKeyLabel": "Legenda de Emoji",
       "emojiKeyAir": "Ativos Aéreos",
       "emojiKeyNaval": "Ativos Navais"
-    },
-    "techEvents": {
-      "loading": "Carregando eventos de tecnologia...",
-      "noEvents": "Nenhum evento para exibir",
-      "showOnMap": "Mostrar no mapa",
-      "moreInfo": "Mais informações",
-      "upcoming": "Próximos",
-      "conferences": "Conferências",
-      "earnings": "Resultados",
-      "all": "Todos",
-      "conferencesCount": "{{count}} conferências",
-      "onMap": "{{count}} no mapa",
-      "techmemeEvents": "Eventos do Techmeme ↗",
-      "today": "HOJE",
-      "soon": "EM BREVE",
-      "infoTooltip": "<strong>Eventos tech</strong> Eventos tecnológicos próximos e recentes: conferências, lançamentos de produtos, audiências regulatórias e chamadas de resultados. Agregados de calendários oficiais e fontes da indústria."
     },
     "techReadiness": {
       "ranked": "Classificados",
@@ -3090,59 +3051,6 @@
         "publicPrivate": "Público/Privado"
       }
     },
-    "startupHub": {
-      "tiers": {
-        "mega": "MEGA CENTRO",
-        "major": "CENTRO PRINCIPAL",
-        "emerging": "EMERGENTE",
-        "hub": "EIXO"
-      },
-      "unicorns": "UNICÓRNIOS"
-    },
-    "cloudRegion": {
-      "provider": "FORNECEDOR",
-      "availabilityZones": "ZONAS DE DISPONIBILIDADE"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "GRANDE TECNOLOGIA",
-        "unicorn": "UNICÓRNIO",
-        "public": "PÚBLICO",
-        "tech": "TECNOLOGIA"
-      },
-      "marketCap": "CAPITALIZAÇÃO DE MERCADO",
-      "employees": "FUNCIONÁRIOS"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "ACELERADOR",
-        "incubator": "INCUBADORA",
-        "studio": "ESTÚDIO DE INICIALIZAÇÃO"
-      },
-      "founded": "FUNDADO",
-      "notableAlumni": "ALUNOS NOTÁVEIS"
-    },
-    "techEvent": {
-      "days": {
-        "today": "HOJE",
-        "tomorrow": "AMANHÃ",
-        "inDays": "EM {{count}} DIAS"
-      },
-      "date": "DATA",
-      "moreInformation": "Mais informações"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}} EMPRESAS",
-      "bigTechCount": "{{count}} Grande tecnologia",
-      "unicornsCount": "{{count}} Unicórnios",
-      "publicCount": "{{count}} Público",
-      "sampled": "Mostrando uma lista de amostra de empresas {{count}}."
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}} EVENTOS",
-      "upcomingWithin2Weeks": "{{count}} próximo dentro de 2 semanas",
-      "sampled": "Mostrando uma lista de amostra de eventos {{count}}."
-    },
     "militaryFlight": {
       "types": {
         "fighter": "Lutador",
@@ -3891,7 +3799,6 @@
   },
   "header": {
     "world": "MUNDO",
-    "tech": "TECNOLOGIA",
     "viewOnGitHub": "Ver no GitHub",
     "live": "AO VIVO",
     "search": "Procurar",

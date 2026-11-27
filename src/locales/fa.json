@@ -372,7 +372,6 @@
   },
   "header": {
     "world": "جهان",
-    "tech": "فناوری",
     "live": "زنده",
     "cached": "ذخیره‌شده",
     "unavailable": "در دسترس نیست",
@@ -500,23 +499,9 @@
     "populationExposure": "جمعیت در معرض",
     "securityAdvisories": "هشدارهای امنیتی",
     "orefSirens": "آژیرهای اسرائیل",
-    "startups": "استارتاپ‌ها و سرمایه‌گذاری ریسک",
-    "vcblogs": "بینش‌ها و مقالات سرمایه‌گذاری ریسک",
-    "regionalStartups": "اخبار استارتاپ‌های جهان",
-    "unicorns": "ردیاب یونیکورن‌ها",
-    "accelerators": "شتاب‌دهنده‌ها و روزهای دمو",
-    "security": "امنیت سایبری",
-    "policy": "سیاست و مقررات AI",
     "regulation": "داشبورد مقررات AI",
     "finRegulation": "مقررات مالی",
-    "hardware": "نیمه‌رساناها و سخت‌افزار",
-    "cloud": "ابر و زیرساخت",
-    "dev": "جامعه توسعه‌دهندگان",
-    "github": "GitHub Trending",
     "ipo": "فهرست‌های عمومی و ادغام شرکت پوسته",
-    "funding": "بودجه و سرمایه‌گذاری ریسک",
-    "producthunt": "Product Hunt",
-    "events": "رویدادهای فناوری",
     "serviceStatus": "وضعیت سرویس‌ها",
     "internetDisruptions": "اختلالات اینترنت",
     "internetDisruptionsTabs": {
@@ -1358,15 +1343,10 @@
         "oceania": "اقیانوسیه"
       },
       "layers": {
-        "startupHubs": "مراکز استارتاپی",
-        "techHQs": "دفاتر مرکزی فناوری",
-        "accelerators": "شتاب‌دهنده‌ها",
-        "cloudRegions": "مناطق ابری",
         "aiDataCenters": "مراکز داده AI",
         "underseaCables": "کابل‌های زیردریایی",
         "internetOutages": "اختلالات اینترنت",
         "cyberThreats": "تهدیدهای سایبری",
-        "techEvents": "رویدادهای فناوری",
         "naturalEvents": "رویدادهای طبیعی",
         "fires": "آتش‌سوزی‌ها",
         "intelHotspots": "کانون‌های اطلاعاتی",
@@ -1409,8 +1389,6 @@
         "aircraft": "هواپیما",
         "protest": "اعتراض",
         "protestsCount": "{{count}} اعتراض",
-        "techHQsCount": "{{count}} دفتر مرکزی فناوری",
-        "techEventsCount": "{{count}} رویداد فناوری",
         "dataCentersCount": "{{count}} مرکز داده",
         "underseaCable": "کابل زیردریایی",
         "pipeline": "خط لوله",
@@ -1460,7 +1438,6 @@
         "descriptions": {
           "techStartupHubs": "زیست‌بوم‌های اصلی استارتاپی (SF، NYC، لندن و غیره)",
           "techCloudRegions": "مناطق مراکز داده AWS، Azure و GCP",
-          "techHQs": "دفاتر مرکزی شرکت‌های بزرگ فناوری",
           "techAccelerators": "مکان‌های Y Combinator، Techstars و 500 Startups",
           "infraCables": "کابل‌های اصلی فیبر نوری زیردریایی (ستون فقرات اینترنت)",
           "infraDatacenters": "خوشه‌های محاسباتی AI با 10,000 GPU یا بیشتر",
@@ -1503,7 +1480,6 @@
           "infraCyberThreats": "حملات سایبری و رویدادهای امنیتی",
           "mineralsFull": "ذخایر معدنی راهبردی و معادن",
           "techCyberThreats": "حملات سایبری و رویدادهای امنیتی",
-          "techEvents": "کنفرانس‌ها و رویدادهای مهم فناوری",
           "techFires": "آتش‌سوزی‌های فعال نزدیک زیرساخت فناوری",
           "financeGulfInvestments": "سرمایه‌گذاری‌های صندوق دولتی و سرمایه‌گذاری مستقیم خارجی شورای همکاری خلیج فارس",
           "tradeRoutes": "مسیرهای اصلی کشتیرانی جهانی که بنادر را از طریق گلوگاه‌های راهبردی به هم وصل می‌کنند",
@@ -1704,22 +1680,6 @@
         "hoursAgo": "{{count}} ساعت پیش"
       },
       "infoTooltip": "<strong>روش‌شناسی</strong> امتیاز ترکیبی (0-100) از ترکیب:<ul><li>50% بی‌ثباتی کشورها (۵ کشور برتر وزن‌دهی‌شده)</li><li>30% مناطق همگرایی جغرافیایی</li><li>20% حوادث زیرساختی</li></ul>هر ۵ دقیقه به‌طور خودکار به‌روز می‌شود."
-    },
-    "techEvents": {
-      "infoTooltip": "<strong>رویدادهای فناوری</strong> رویدادهای فناوری پیش رو و اخیر: کنفرانس‌ها، رونمایی محصولات، جلسات نظارتی و تماس‌های گزارش سود. گردآوری‌شده از تقویم‌های رسمی رویدادها و منابع صنعتی.",
-      "loading": "در حال بارگذاری رویدادهای فناوری...",
-      "noEvents": "رویدادی برای نمایش وجود ندارد",
-      "showOnMap": "نمایش روی نقشه",
-      "moreInfo": "اطلاعات بیشتر",
-      "upcoming": "پیش رو",
-      "conferences": "کنفرانس‌ها",
-      "earnings": "گزارش‌های سود",
-      "all": "همه",
-      "conferencesCount": "{{count}} کنفرانس",
-      "onMap": "{{count}} روی نقشه",
-      "techmemeEvents": "رویدادهای Techmeme ↗",
-      "today": "امروز",
-      "soon": "به‌زودی"
     },
     "techReadiness": {
       "ranked": "رتبه‌بندی‌شده",
@@ -3527,59 +3487,6 @@
         "public": "دولتی",
         "publicPrivate": "دولتی/خصوصی"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "کانون بزرگ",
-        "major": "کانون عمده",
-        "emerging": "نوظهور",
-        "hub": "کانون"
-      },
-      "unicorns": "یونیکورن‌ها"
-    },
-    "cloudRegion": {
-      "provider": "ارائه‌دهنده",
-      "availabilityZones": "مناطق دسترس‌پذیری"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "غول‌های فناوری",
-        "unicorn": "یونیکورن",
-        "public": "سهامی عام",
-        "tech": "فناوری"
-      },
-      "marketCap": "ارزش بازار",
-      "employees": "کارکنان"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "شتاب‌دهنده",
-        "incubator": "مرکز رشد",
-        "studio": "استودیوی استارتاپ"
-      },
-      "founded": "تأسیس",
-      "notableAlumni": "فارغ‌التحصیلان برجسته"
-    },
-    "techEvent": {
-      "days": {
-        "today": "امروز",
-        "tomorrow": "فردا",
-        "inDays": "{{count}} روز دیگر"
-      },
-      "date": "تاریخ",
-      "moreInformation": "اطلاعات بیشتر"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}} شرکت",
-      "bigTechCount": "{{count}} غول فناوری",
-      "unicornsCount": "{{count}} یونیکورن",
-      "publicCount": "{{count}} سهامی عام",
-      "sampled": "نمایش فهرستی نمونه از {{count}} شرکت."
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}} رویداد",
-      "upcomingWithin2Weeks": "{{count}} رویداد طی ۲ هفته آینده",
-      "sampled": "نمایش فهرستی نمونه از {{count}} رویداد."
     },
     "militaryFlight": {
       "types": {

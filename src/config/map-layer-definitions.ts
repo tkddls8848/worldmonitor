@@ -8,7 +8,7 @@ import type { MapLayers } from '@/types';
  * picker, dispatcher, and shell stay in lockstep.
  */
 export type RendererKind = 'svg' | 'deck';
-export type MapVariant = 'full' | 'tech' | 'finance' | 'commodity' | 'energy';
+export type MapVariant = 'full' | 'finance' | 'commodity' | 'energy';
 
 export interface LayerDefinition {
   key: keyof MapLayers;
@@ -49,62 +49,57 @@ const def = (
 });
 
 export const LAYER_REGISTRY: Record<keyof MapLayers, LayerDefinition> = {
-  iranAttacks:              def('iranAttacks',              '&#127919;', 'iranAttacks',              'Middle East Strikes', ['svg', 'deck']),
-  hotspots:                 def('hotspots',                 '&#127919;', 'intelHotspots',            'Intel Hotspots'),
-  conflicts:                def('conflicts',                '&#9876;',   'conflictZones',            'Conflict Zones'),
+  iranAttacks:              def('iranAttacks', '&#127919;', 'iranAttacks', 'Middle East Strikes', ['svg', 'deck']),
+  hotspots:                 def('hotspots', '&#127919;', 'intelHotspots', 'Intel Hotspots'),
+  conflicts:                def('conflicts', '&#9876;', 'conflictZones', 'Conflict Zones'),
 
-  bases:                    def('bases',                    '&#127963;', 'militaryBases',            'Military Bases'),
-  nuclear:                  def('nuclear',                  '&#9762;',   'nuclearSites',             'Nuclear Sites'),
+  bases:                    def('bases', '&#127963;', 'militaryBases', 'Military Bases'),
+  nuclear:                  def('nuclear', '&#9762;', 'nuclearSites', 'Nuclear Sites'),
 
-  cables:                   def('cables',                   '&#128268;', 'underseaCables',           'Undersea Cables'),
-  pipelines:                def('pipelines',                '&#128738;', 'pipelines',                'Pipelines'),
-  datacenters:              def('datacenters',              '&#128421;', 'aiDataCenters',            'AI Data Centers'),
-  military:                 def('military',                 '&#9992;',   'militaryActivity',         'Military Activity'),
-  aircraftEmergencies:       def('aircraftEmergencies',       '&#9888;',   'aircraftEmergencies',      'Aircraft Emergencies', ['svg', 'deck']),
-  ais:                      def('ais',                      '&#128674;', 'shipTraffic',              'Ship Traffic'),
-  tradeRoutes:              def('tradeRoutes',              '&#9875;',   'tradeRoutes',              'Trade Routes'),
-  flights:                  def('flights',                  '&#9992;',   'flightDelays',             'Aviation'),
-  protests:                 def('protests',                 '&#128226;', 'protests',                 'Protests'),
-  ucdpEvents:               def('ucdpEvents',               '&#9876;',   'ucdpEvents',               'Armed Conflict Events'),
-  displacement:             def('displacement',             '&#128101;', 'displacementFlows',        'Displacement Flows'),
-  climate:                  def('climate',                  '&#127787;', 'climateAnomalies',         'Climate Anomalies'),
-  weather:                  def('weather',                  '&#9928;',   'weatherAlerts',            'Weather Alerts'),
-  outages:                  def('outages',                  '&#128225;', 'internetOutages',          'Internet Disruptions'),
-  cyberThreats:             def('cyberThreats',             '&#128737;', 'cyberThreats',             'Cyber Threats'),
-  natural:                  def('natural',                  '&#127755;', 'naturalEvents',            'Natural Events'),
-  fires:                    def('fires',                    '&#128293;', 'fires',                    'Fires'),
-  waterways:                def('waterways',                '&#9875;',   'strategicWaterways',       'Chokepoints'),
-  economic:                 def('economic',                 '&#128176;', 'economicCenters',          'Economic Centers'),
-  minerals:                 def('minerals',                 '&#128142;', 'criticalMinerals',         'Critical Minerals'),
-  gpsJamming:               def('gpsJamming',               '&#128225;', 'gpsJamming',               'GPS Jamming', ['svg', 'deck']),
+  cables:                   def('cables', '&#128268;', 'underseaCables', 'Undersea Cables'),
+  pipelines:                def('pipelines', '&#128738;', 'pipelines', 'Pipelines'),
+  datacenters:              def('datacenters', '&#128421;', 'aiDataCenters', 'AI Data Centers'),
+  military:                 def('military', '&#9992;', 'militaryActivity', 'Military Activity'),
+  aircraftEmergencies:       def('aircraftEmergencies', '&#9888;', 'aircraftEmergencies', 'Aircraft Emergencies', ['svg', 'deck']),
+  ais:                      def('ais', '&#128674;', 'shipTraffic', 'Ship Traffic'),
+  tradeRoutes:              def('tradeRoutes', '&#9875;', 'tradeRoutes', 'Trade Routes'),
+  flights:                  def('flights', '&#9992;', 'flightDelays', 'Aviation'),
+  protests:                 def('protests', '&#128226;', 'protests', 'Protests'),
+  ucdpEvents:               def('ucdpEvents', '&#9876;', 'ucdpEvents', 'Armed Conflict Events'),
+  displacement:             def('displacement', '&#128101;', 'displacementFlows', 'Displacement Flows'),
+  climate:                  def('climate', '&#127787;', 'climateAnomalies', 'Climate Anomalies'),
+  weather:                  def('weather', '&#9928;', 'weatherAlerts', 'Weather Alerts'),
+  outages:                  def('outages', '&#128225;', 'internetOutages', 'Internet Disruptions'),
+  cyberThreats:             def('cyberThreats', '&#128737;', 'cyberThreats', 'Cyber Threats'),
+  natural:                  def('natural', '&#127755;', 'naturalEvents', 'Natural Events'),
+  fires:                    def('fires', '&#128293;', 'fires', 'Fires'),
+  waterways:                def('waterways', '&#9875;', 'strategicWaterways', 'Chokepoints'),
+  economic:                 def('economic', '&#128176;', 'economicCenters', 'Economic Centers'),
+  minerals:                 def('minerals', '&#128142;', 'criticalMinerals', 'Critical Minerals'),
+  gpsJamming:               def('gpsJamming', '&#128225;', 'gpsJamming', 'GPS Jamming', ['svg', 'deck']),
   // Only DeckGLMap builds the CII choropleth polygons; the SVG/mobile
   // fallback has no CII paint path.
-  ciiChoropleth:            def('ciiChoropleth',            '&#127758;', 'ciiChoropleth',            'Country Instability', ['deck']),
-  sanctions:                def('sanctions',                '&#128683;', 'sanctions',                'Sanctions', ['svg', 'deck']),
-  no2Activity:              def('no2Activity',              '&#127981;', 'no2Activity',              'Industrial Activity', ['deck']),
-  reservoirLevels:          def('reservoirLevels',          '&#128167;', 'reservoirLevels',          'Water Levels'),
-  startupHubs:              def('startupHubs',              '&#128640;', 'startupHubs',              'Startup Hubs', ['svg', 'deck']),
-  techHQs:                  def('techHQs',                  '&#127970;', 'techHQs',                  'Tech HQs', ['svg', 'deck']),
-  accelerators:             def('accelerators',             '&#9889;',   'accelerators',             'Accelerators', ['svg', 'deck']),
-  cloudRegions:             def('cloudRegions',             '&#9729;',   'cloudRegions',             'Cloud Regions', ['svg', 'deck']),
-  techEvents:               def('techEvents',               '&#128197;', 'techEvents',               'Tech Events'),
-  stockExchanges:           def('stockExchanges',           '&#127963;', 'stockExchanges',           'Stock Exchanges', ['svg', 'deck']),
-  financialCenters:         def('financialCenters',         '&#128176;', 'financialCenters',         'Financial Centers', ['svg', 'deck']),
-  centralBanks:             def('centralBanks',             '&#127974;', 'centralBanks',             'Central Banks', ['svg', 'deck']),
-  commodityHubs:            def('commodityHubs',            '&#128230;', 'commodityHubs',            'Commodity Hubs', ['svg', 'deck']),
-  gulfInvestments:          def('gulfInvestments',          '&#127760;', 'gulfInvestments',          'GCC Investments', ['deck']),
-  renewableInstallations:   def('renewableInstallations',   '&#9889;',   'renewableInstallations',   'Clean Energy', ['deck']),
-  miningSites:              def('miningSites',              '&#128301;', 'miningSites',              'Mining Sites', ['deck']),
-  processingPlants:         def('processingPlants',         '&#127981;', 'processingPlants',         'Processing Plants', ['deck']),
-  commodityPorts:           def('commodityPorts',           '&#9973;',   'commodityPorts',           'Commodity Ports', ['deck']),
+  ciiChoropleth:            def('ciiChoropleth', '&#127758;', 'ciiChoropleth', 'Country Instability', ['deck']),
+  sanctions:                def('sanctions', '&#128683;', 'sanctions', 'Sanctions', ['svg', 'deck']),
+  no2Activity:              def('no2Activity', '&#127981;', 'no2Activity', 'Industrial Activity', ['deck']),
+  reservoirLevels:          def('reservoirLevels', '&#128167;', 'reservoirLevels', 'Water Levels'),
+  stockExchanges:           def('stockExchanges', '&#127963;', 'stockExchanges', 'Stock Exchanges', ['svg', 'deck']),
+  financialCenters:         def('financialCenters', '&#128176;', 'financialCenters', 'Financial Centers', ['svg', 'deck']),
+  centralBanks:             def('centralBanks', '&#127974;', 'centralBanks', 'Central Banks', ['svg', 'deck']),
+  commodityHubs:            def('commodityHubs', '&#128230;', 'commodityHubs', 'Commodity Hubs', ['svg', 'deck']),
+  gulfInvestments:          def('gulfInvestments', '&#127760;', 'gulfInvestments', 'GCC Investments', ['deck']),
+  renewableInstallations:   def('renewableInstallations', '&#9889;', 'renewableInstallations', 'Clean Energy', ['deck']),
+  miningSites:              def('miningSites', '&#128301;', 'miningSites', 'Mining Sites', ['deck']),
+  processingPlants:         def('processingPlants', '&#127981;', 'processingPlants', 'Processing Plants', ['deck']),
+  commodityPorts:           def('commodityPorts', '&#9973;', 'commodityPorts', 'Commodity Ports', ['deck']),
   // weatherRadar removed — radar tiles now auto-start when Weather Alerts layer is toggled on
-  diseaseOutbreaks:         def('diseaseOutbreaks',         '&#129440;', 'diseaseOutbreaks',         'Disease Outbreaks', ['deck']),
+  diseaseOutbreaks:         def('diseaseOutbreaks', '&#129440;', 'diseaseOutbreaks', 'Disease Outbreaks', ['deck']),
   // DeckGL-only layers: `renderers: ['deck']` hides them from the SVG/mobile
   // fallback's CMD+K dispatch (Map.ts has no SVG render path for either
   // marker/pin type). Add 'svg' here once that renderer gains real support.
-  storageFacilities:        def('storageFacilities',        '&#127959;', 'storageFacilities',        'Storage Facilities', ['deck']),
-  fuelShortages:            def('fuelShortages',            '&#9881;',   'fuelShortages',            'Fuel Shortages', ['deck']),
-  liveTankers:              def('liveTankers',              '&#128674;', 'liveTankers',              'Live Tanker Positions', ['deck']),
+  storageFacilities:        def('storageFacilities', '&#127959;', 'storageFacilities', 'Storage Facilities', ['deck']),
+  fuelShortages:            def('fuelShortages', '&#9881;', 'fuelShortages', 'Fuel Shortages', ['deck']),
+  liveTankers:              def('liveTankers', '&#128674;', 'liveTankers', 'Live Tanker Positions', ['deck']),
 };
 
 export const V1_LAYER_EXPLANATION_KEYS = [
@@ -152,11 +147,6 @@ const VARIANT_LAYER_ORDER: Record<MapVariant, Array<keyof MapLayers>> = {
     'waterways', 'economic', 'minerals', 'gpsJamming',
     'ciiChoropleth', 'sanctions', 'no2Activity', 'reservoirLevels',
     'diseaseOutbreaks',
-  ],
-  tech: [
-    'startupHubs', 'techHQs', 'accelerators', 'cloudRegions',
-    'datacenters', 'cables', 'outages', 'cyberThreats',
-    'techEvents', 'natural', 'fires',
   ],
   finance: [
     'stockExchanges', 'financialCenters', 'centralBanks', 'commodityHubs',
@@ -344,10 +334,9 @@ export const LAYER_SYNONYMS: Record<string, Array<keyof MapLayers>> = {
   bank: ['centralBanks', 'financialCenters'],
   stock: ['stockExchanges'],
   trade: ['tradeRoutes', 'waterways'],
-  cloud: ['cloudRegions', 'datacenters'],
+  cloud: [ 'datacenters'],
   ai: ['datacenters'],
-  startup: ['startupHubs', 'accelerators'],
-  tech: ['techHQs', 'techEvents', 'startupHubs', 'cloudRegions', 'datacenters'],
+  startup: [ ],
   gps: ['gpsJamming'],
   jamming: ['gpsJamming'],
   mineral: ['minerals', 'miningSites'],
@@ -439,7 +428,7 @@ export const MAP_LAYER_GROUPS: readonly MapLayerGroupDef[] = [
       'waterways', 'economic', 'tradeRoutes', 'minerals', 'no2Activity',
       'stockExchanges', 'financialCenters', 'centralBanks', 'commodityHubs', 'gulfInvestments',
       'miningSites', 'processingPlants', 'commodityPorts',
-      'startupHubs', 'techHQs', 'accelerators', 'cloudRegions', 'techEvents',
+
     ],
   },
   {

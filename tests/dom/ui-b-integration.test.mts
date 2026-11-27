@@ -722,16 +722,15 @@ describe('Option B integration: real PanelLayoutManager reveal, tray race, botto
     expect(infraGroup!.style.display).toBe('');
     expect(secGroup!.style.display).toBe('none');
 
-    // Real variant sanitization: applying Hazards on tech keeps outages & natural while Energy's pipelines is stripped
+    // Real variant sanitization: applying Hazards on finance keeps natural hazards and strips storage facilities
     const hazardsPreset = MAP_LAYER_PRESETS.find((p) => p.id === 'hazards')!;
     const energyPreset = MAP_LAYER_PRESETS.find((p) => p.id === 'energy')!;
     const rawLayers: MapLayers = { ...DEFAULT_MAP_LAYERS };
     for (const k of Object.keys(rawLayers) as Array<keyof MapLayers>) rawLayers[k] = false;
     for (const k of [...hazardsPreset.layers, ...energyPreset.layers]) rawLayers[k] = true;
 
-    const sanitizedTech = sanitizeLayersForVariant(rawLayers, 'tech');
-    expect(sanitizedTech.outages).toBe(true);
-    expect(sanitizedTech.natural).toBe(true);
-    expect(sanitizedTech.pipelines).toBe(false);
+    const sanitizedFinance = sanitizeLayersForVariant(rawLayers, 'finance');
+    expect(sanitizedFinance.natural).toBe(true);
+    expect(sanitizedFinance.storageFacilities).toBe(false);
   });
 });

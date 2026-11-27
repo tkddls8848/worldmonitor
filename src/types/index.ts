@@ -717,11 +717,6 @@ export interface MapLayers {
   displacement: boolean;
   climate: boolean;
   // Tech variant layers
-  startupHubs: boolean;
-  cloudRegions: boolean;
-  accelerators: boolean;
-  techHQs: boolean;
-  techEvents: boolean;
   // Finance variant layers
   stockExchanges: boolean;
   financialCenters: boolean;
@@ -1581,39 +1576,7 @@ export interface MapProtestCluster {
   sampled?: boolean;
 }
 
-export interface MapTechHQCluster {
-  id: string;
-  /** Explicit leaf/group discriminant set at Supercluster flatten time (see DeckGLMap). */
-  _kind: 'leaf' | 'group';
-  _clusterId?: number;
-  lat: number;
-  lon: number;
-  count: number;
-  items: TechHQ[];
-  city: string;
-  country: string;
-  primaryType: 'faang' | 'unicorn' | 'public';
-  faangCount?: number;
-  unicornCount?: number;
-  publicCount?: number;
-  sampled?: boolean;
-}
 
-export interface MapTechEventCluster {
-  id: string;
-  /** Explicit leaf/group discriminant set at Supercluster flatten time (see DeckGLMap). */
-  _kind: 'leaf' | 'group';
-  _clusterId?: number;
-  lat: number;
-  lon: number;
-  count: number;
-  items: Array<{ id: string; title: string; location: string; lat: number; lng: number; country: string; startDate: string; endDate: string; url: string | null; daysUntil: number }>;
-  location: string;
-  country: string;
-  soonestDaysUntil: number;
-  soonCount?: number;
-  sampled?: boolean;
-}
 
 export interface MapDatacenterCluster {
   id: string;

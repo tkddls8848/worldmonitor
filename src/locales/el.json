@@ -303,7 +303,6 @@
   },
   "header": {
     "world": "ΚΟΣΜΟΣ",
-    "tech": "ΤΕΧΝΟΛΟΓΙΑ",
     "live": "ΖΩΝΤΑΝΑ",
     "search": "Αναζήτηση",
     "settings": "ΡΥΘΜΙΣΕΙΣ",
@@ -426,23 +425,9 @@
     "populationExposure": "Έκθεση Πληθυσμού",
     "securityAdvisories": "Προειδοποιήσεις Ασφαλείας",
     "orefSirens": "Σειρήνες Ισραήλ",
-    "startups": "Νεοφυείς και επιχειρηματικά κεφάλαια",
-    "vcblogs": "Αναλύσεις και δοκίμια επιχειρηματικών κεφαλαίων",
-    "regionalStartups": "Παγκόσμια Νέα Startups",
-    "unicorns": "Ανιχνευτής Unicorns",
-    "accelerators": "Επιταχυντές και Demo Days",
-    "security": "Κυβερνοασφάλεια",
-    "policy": "Πολιτική & Ρύθμιση AI",
     "regulation": "Πίνακας Ρύθμισης AI",
     "finRegulation": "Χρηματοοικονομική Ρύθμιση",
-    "hardware": "Ημιαγωγοί & Υλικό",
-    "cloud": "Cloud & Υποδομές",
-    "dev": "Κοινότητα Προγραμματιστών",
-    "github": "GitHub Trending",
     "ipo": "Δημόσιες εισαγωγές και συγχωνεύσεις εταιρειών-κελυφών",
-    "funding": "Χρηματοδότηση και επιχειρηματικά κεφάλαια",
-    "producthunt": "Product Hunt",
-    "events": "Tech Εκδηλώσεις",
     "serviceStatus": "Κατάσταση Υπηρεσιών",
     "techReadiness": "Δείκτης Τεχνολογικής Ετοιμότητας",
     "gccInvestments": "Επενδύσεις Συμβουλίου Συνεργασίας του Κόλπου",
@@ -1216,15 +1201,10 @@
         "oceania": "Ωκεανία"
       },
       "layers": {
-        "startupHubs": "Κόμβοι νεοφυών",
-        "techHQs": "Tech Έδρες",
-        "accelerators": "Επιταχυντές",
-        "cloudRegions": "Cloud Περιοχές",
         "aiDataCenters": "Κέντρα Δεδομένων AI",
         "underseaCables": "Υποθαλάσσια Καλώδια",
         "internetOutages": "Διακοπές Διαδικτύου",
         "cyberThreats": "Κυβερνοαπειλές",
-        "techEvents": "Tech Εκδηλώσεις",
         "naturalEvents": "Φυσικά Φαινόμενα",
         "fires": "Πυρκαγιές",
         "intelHotspots": "Εστίες Πληροφοριών",
@@ -1267,8 +1247,6 @@
         "aircraft": "αεροσκάφη",
         "protest": "Διαμαρτυρία",
         "protestsCount": "{{count}} διαμαρτυρίες",
-        "techHQsCount": "{{count}} tech έδρες",
-        "techEventsCount": "{{count}} tech εκδηλώσεις",
         "dataCentersCount": "{{count}} κέντρα δεδομένων",
         "underseaCable": "Υποθαλάσσιο Καλώδιο",
         "pipeline": "Αγωγός",
@@ -1318,7 +1296,6 @@
         "descriptions": {
           "techStartupHubs": "Σημαντικά οικοσυστήματα startups (SF, NYC, Λονδίνο, κ.λπ.)",
           "techCloudRegions": "Περιοχές κέντρων δεδομένων AWS, Azure, GCP",
-          "techHQs": "Έδρες μεγάλων εταιρειών τεχνολογίας",
           "techAccelerators": "Τοποθεσίες Y Combinator, Techstars, 500 Startups",
           "infraCables": "Σημαντικά υποθαλάσσια καλώδια οπτικών ινών (ραχοκοκαλιά διαδικτύου)",
           "infraDatacenters": "Συστοιχίες υπολογιστών AI >=10.000 GPUs",
@@ -1361,7 +1338,6 @@
           "infraCyberThreats": "Κυβερνοεπιθέσεις και γεγονότα ασφαλείας",
           "mineralsFull": "Στρατηγικά κοιτάσματα ορυκτών και εξορυκτικές τοποθεσίες",
           "techCyberThreats": "Κυβερνοεπιθέσεις και γεγονότα ασφαλείας",
-          "techEvents": "Σημαντικά συνέδρια τεχνολογίας και εκδηλώσεις",
           "techFires": "Ενεργές πυρκαγιές κοντά σε τεχνολογικές υποδομές",
           "financeGulfInvestments": "Επενδύσεις κυριαρχικών ταμείων του Συμβουλίου Συνεργασίας του Κόλπου και άμεσες ξένες επενδύσεις",
           "tradeRoutes": "Κύριες παγκόσμιες ναυτιλιακές γραμμές που συνδέουν λιμάνια μέσω στρατηγικών σημείων",
@@ -1562,22 +1538,6 @@
       },
       "dataFreshness": "Επικαιρότητα δεδομένων",
       "sourcesDetail": "{{active}}/{{total}} πηγές"
-    },
-    "techEvents": {
-      "loading": "Φόρτωση tech εκδηλώσεων...",
-      "noEvents": "Δεν υπάρχουν εκδηλώσεις",
-      "showOnMap": "Εμφάνιση στον χάρτη",
-      "moreInfo": "Περισσότερα",
-      "upcoming": "Επερχόμενες",
-      "conferences": "Συνέδρια",
-      "earnings": "Οικονομικά Αποτελέσματα",
-      "all": "Όλα",
-      "conferencesCount": "{{count}} συνέδρια",
-      "onMap": "{{count}} στον χάρτη",
-      "techmemeEvents": "Εκδηλώσεις Techmeme ↗",
-      "today": "ΣΗΜΕΡΑ",
-      "soon": "ΣΥΝΤΟΜΑ",
-      "infoTooltip": "<strong>Τεχνολογικά Γεγονότα</strong> Επερχόμενα και πρόσφατα τεχνολογικά γεγονότα: συνέδρια, παρουσιάσεις προϊόντων, ρυθμιστικές ακροάσεις και κλήσεις κερδών. Συγκεντρωμένα από επίσημα ημερολόγια εκδηλώσεων και πηγές του κλάδου."
     },
     "techReadiness": {
       "ranked": "Με κατάταξη",
@@ -3458,59 +3418,6 @@
         "public": "Δημόσιο",
         "publicPrivate": "Δημόσιο/Ιδιωτικό"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "ΜΕΓΑ ΚΟΜΒΟΣ",
-        "major": "ΜΕΓΑΛΟΣ ΚΟΜΒΟΣ",
-        "emerging": "ΑΝΑΔΥΟΜΕΝΟ",
-        "hub": "ΚΟΜΒΟΣ"
-      },
-      "unicorns": "ΜΟΝΟΚΕΡΟΙ"
-    },
-    "cloudRegion": {
-      "provider": "ΠΑΡΟΧΟΣ",
-      "availabilityZones": "ΖΩΝΕΣ ΔΙΑΘΕΣΙΜΟΤΗΤΑΣ"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "ΜΕΓΑΛΕΣ ΤΕΧΝΟΛΟΓΙΚΕΣ",
-        "unicorn": "ΜΟΝΟΚΕΡΟΣ",
-        "public": "ΕΙΣΗΓΜΕΝΗ",
-        "tech": "ΤΕΧΝΟΛΟΓΙΑ"
-      },
-      "marketCap": "ΚΕΦΑΛΑΙΟΠΟΙΗΣΗ",
-      "employees": "ΕΡΓΑΖΟΜΕΝΟΙ"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "ΕΠΙΤΑΧΥΝΤΗΣ",
-        "incubator": "ΘΕΡΜΟΚΟΙΤΙΔΑ",
-        "studio": "ΣΤΟΥΝΤΙΟ ΝΕΟΦΥΩΝ"
-      },
-      "founded": "ΙΔΡΥΘΗΚΕ",
-      "notableAlumni": "ΑΞΙΟΣΗΜΕΙΩΤΟΙ ΑΠΟΦΟΙΤΟΙ"
-    },
-    "techEvent": {
-      "days": {
-        "today": "ΣΗΜΕΡΑ",
-        "tomorrow": "ΑΥΡΙΟ",
-        "inDays": "ΣΕ {{count}} ΗΜΕΡΕΣ"
-      },
-      "date": "ΗΜΕΡΟΜΗΝΙΑ",
-      "moreInformation": "Περισσότερες Πληροφορίες"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}} ΕΤΑΙΡΕΙΕΣ",
-      "bigTechCount": "{{count}} Big Tech",
-      "unicornsCount": "{{count}} μονόκεροι",
-      "publicCount": "{{count}} Εισηγμένες",
-      "sampled": "Εμφάνιση δειγματοληπτικής λίστας {{count}} εταιρειών."
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}} ΕΚΔΗΛΩΣΕΙΣ",
-      "upcomingWithin2Weeks": "{{count}} επερχόμενες εντός 2 εβδομάδων",
-      "sampled": "Εμφάνιση δειγματοληπτικής λίστας {{count}} εκδηλώσεων."
     },
     "militaryFlight": {
       "types": {

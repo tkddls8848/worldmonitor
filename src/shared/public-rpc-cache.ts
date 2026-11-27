@@ -37,7 +37,7 @@ const PUBLIC_SHARED_RPC_PATHS = new Set([
   ...LIVE_TOPIC_RPC_PATHS,
 ]);
 
-const NEWS_VARIANTS = new Set(['full', 'tech', 'finance',  'commodity', 'energy']);
+const NEWS_VARIANTS = new Set(['full', 'finance',  'commodity', 'energy']);
 // The ONE list of digest languages. list-feed-digest.ts rejects any other lang
 // with a 400 (#8360); a hand-copied second list would let the handler and this
 // public-shape classifier drift apart.

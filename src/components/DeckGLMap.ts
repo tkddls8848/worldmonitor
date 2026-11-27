@@ -38,8 +38,6 @@ import type {
   NaturalEvent,
   UcdpGeoEvent,
   MapProtestCluster,
-  MapTechHQCluster,
-  MapTechEventCluster,
   MapDatacenterCluster,
   CyberThreat,
   CableHealthRecord,
@@ -125,7 +123,6 @@ import {
 } from '@/config';
 // Tech-geo + ai-datacenters + geo-map tables imported directly so their chunks stay
 // off the eager @/config barrel and load only with this lazy renderer (#4404).
-import { STARTUP_HUBS, ACCELERATORS, TECH_HQS, CLOUD_REGIONS } from '@/config/tech-geo';
 import { AI_DATA_CENTERS } from '@/config/ai-datacenters';
 import { UNDERSEA_CABLES, NUCLEAR_FACILITIES, ECONOMIC_CENTERS, CRITICAL_MINERALS, SANCTIONED_COUNTRIES_ALPHA2 } from '@/config/geo-map';
 import type { GulfInvestment } from '@/types';
@@ -235,18 +232,6 @@ interface HotspotWithBreaking extends Hotspot {
   hasBreaking?: boolean;
 }
 
-interface TechEventMarker {
-  id: string;
-  title: string;
-  location: string;
-  lat: number;
-  lng: number;
-  country: string;
-  startDate: string;
-  endDate: string;
-  url: string | null;
-  daysUntil: number;
-}
 
 // View presets with longitude, latitude, zoom
 const VIEW_PRESETS: Record<DeckMapView, { longitude: number; latitude: number; zoom: number }> = {
@@ -706,7 +691,6 @@ export class DeckGLMap {
   private baseConfigLoadPending = false;
   private naturalEvents: NaturalEvent[] = [];
   private firmsFireData: Array<{ lat: number; lon: number; brightness: number; frp: number; confidence: number; region: string; acq_date: string; daynight: string }> = [];
-  private techEvents: TechEventMarker[] = [];
   private flightDelays: AirportDelayAlert[] = [];
   private aircraftPositions: PositionSample[] = [];
   private aircraftFetchTimer: ReturnType<typeof setInterval> | null = null;
@@ -933,13 +917,9 @@ export class DeckGLMap {
   private layerCache: Map<string, Layer> = new Map();
   private lastZoomThreshold = 0;
   private protestSC: Supercluster | null = null;
-  private techHQSC: Supercluster | null = null;
-  private techEventSC: Supercluster | null = null;
   private datacenterSC: Supercluster | null = null;
   private datacenterSCSource: AIDataCenter[] = [];
   private protestClusters: MapProtestCluster[] = [];
-  private techHQClusters: MapTechHQCluster[] = [];
-  private techEventClusters: MapTechEventCluster[] = [];
   private datacenterClusters: MapDatacenterCluster[] = [];
   private lastSCZoom = -1;
   private lastSCBoundsKey = '';
@@ -1056,7 +1036,7 @@ export class DeckGLMap {
       this.startWeatherRadar();
     }
     // Kick off lazy APT load if cyberThreats is already on at init (e.g. from URL/localStorage)
-    if (this.state.layers.cyberThreats && SITE_VARIANT !== 'tech') {
+    if (this.state.layers.cyberThreats) {
       this.loadAptGroups();
     }
   }
@@ -1703,77 +1683,7 @@ export class DeckGLMap {
     this.lastSCZoom = -1;
   }
 
-  private rebuildTechHQSupercluster(): void {
-    const points = TECH_HQS.map((h, i) => ({
-      type: 'Feature' as const,
-      geometry: { type: 'Point' as const, coordinates: [h.lon, h.lat] as [number, number] },
-      properties: {
-        index: i,
-        city: h.city,
-        country: h.country,
-        type: h.type,
-      },
-    }));
-    this.techHQSC = new Supercluster({
-      radius: 50,
-      maxZoom: 14,
-      map: (props: Record<string, unknown>) => ({
-        index: Number(props.index ?? 0),
-        city: String(props.city ?? ''),
-        country: String(props.country ?? ''),
-        faangCount: props.type === 'faang' ? 1 : 0,
-        unicornCount: props.type === 'unicorn' ? 1 : 0,
-        publicCount: props.type === 'public' ? 1 : 0,
-      }),
-      reduce: (acc: Record<string, unknown>, props: Record<string, unknown>) => {
-        acc.faangCount = Number(acc.faangCount ?? 0) + Number(props.faangCount ?? 0);
-        acc.unicornCount = Number(acc.unicornCount ?? 0) + Number(props.unicornCount ?? 0);
-        acc.publicCount = Number(acc.publicCount ?? 0) + Number(props.publicCount ?? 0);
-        if (!acc.city && props.city) acc.city = props.city;
-        if (!acc.country && props.country) acc.country = props.country;
-      },
-    });
-    this.techHQSC.load(points);
-    this.lastSCZoom = -1;
-  }
 
-  private rebuildTechEventSupercluster(): void {
-    const points = this.techEvents.map((e, i) => ({
-      type: 'Feature' as const,
-      geometry: { type: 'Point' as const, coordinates: [e.lng, e.lat] as [number, number] },
-      properties: {
-        index: i,
-        location: e.location,
-        country: e.country,
-        daysUntil: e.daysUntil,
-      },
-    }));
-    this.techEventSC = new Supercluster({
-      radius: 50,
-      maxZoom: 14,
-      map: (props: Record<string, unknown>) => {
-        const daysUntil = Number(props.daysUntil ?? Number.MAX_SAFE_INTEGER);
-        return {
-          index: Number(props.index ?? 0),
-          location: String(props.location ?? ''),
-          country: String(props.country ?? ''),
-          soonestDaysUntil: Number.isFinite(daysUntil) ? daysUntil : Number.MAX_SAFE_INTEGER,
-          soonCount: Number.isFinite(daysUntil) && daysUntil <= 14 ? 1 : 0,
-        };
-      },
-      reduce: (acc: Record<string, unknown>, props: Record<string, unknown>) => {
-        acc.soonestDaysUntil = Math.min(
-          Number(acc.soonestDaysUntil ?? Number.MAX_SAFE_INTEGER),
-          Number(props.soonestDaysUntil ?? Number.MAX_SAFE_INTEGER),
-        );
-        acc.soonCount = Number(acc.soonCount ?? 0) + Number(props.soonCount ?? 0);
-        if (!acc.location && props.location) acc.location = props.location;
-        if (!acc.country && props.country) acc.country = props.country;
-      },
-    });
-    this.techEventSC.load(points);
-    this.lastSCZoom = -1;
-  }
 
   private rebuildDatacenterSupercluster(): void {
     // Share the stable detail-layer array (#7777) so cluster leaf indexes
@@ -1824,16 +1734,13 @@ export class DeckGLMap {
     const boundsKey = `${bbox[0].toFixed(4)}:${bbox[1].toFixed(4)}:${bbox[2].toFixed(4)}:${bbox[3].toFixed(4)}`;
     const layers = this.state.layers;
     const useProtests = layers.protests && this.protestSuperclusterSource.length > 0;
-    const useTechHQ = SITE_VARIANT === 'tech' && layers.techHQs;
-    const useTechEvents = SITE_VARIANT === 'tech' && layers.techEvents && this.techEvents.length > 0;
     const useDatacenterClusters = layers.datacenters && zoom < 5;
-    const layerMask = `${Number(useProtests)}${Number(useTechHQ)}${Number(useTechEvents)}${Number(useDatacenterClusters)}`;
+    const layerMask = `${Number(useProtests)}${Number(useDatacenterClusters)}`;
     if (zoom === this.lastSCZoom && boundsKey === this.lastSCBoundsKey && layerMask === this.lastSCMask) return;
     this.lastSCZoom = zoom;
     this.lastSCBoundsKey = boundsKey;
     this.lastSCMask = layerMask;
 
-    if (useTechHQ && !this.techHQSC) this.rebuildTechHQSupercluster();
     if (useDatacenterClusters && !this.datacenterSC) this.rebuildDatacenterSupercluster();
 
     if (useProtests && this.protestSC) {
@@ -1887,85 +1794,7 @@ export class DeckGLMap {
       this.protestClusters = [];
     }
 
-    if (useTechHQ && this.techHQSC) {
-      this.techHQClusters = this.techHQSC.getClusters(bbox, zoom).map(f => {
-        const coords = f.geometry.coordinates as [number, number];
-        if (f.properties.cluster) {
-          const props = f.properties as Record<string, unknown>;
-          const faangCount = Number(props.faangCount ?? 0);
-          const unicornCount = Number(props.unicornCount ?? 0);
-          const publicCount = Number(props.publicCount ?? 0);
-          const clusterCount = Number(f.properties.point_count ?? 0);
-          const primaryType = faangCount >= unicornCount && faangCount >= publicCount
-            ? 'faang'
-            : unicornCount >= publicCount
-              ? 'unicorn'
-              : 'public';
-          return {
-            id: `hc-${f.properties.cluster_id}`,
-            _kind: 'group' as const,
-            _clusterId: f.properties.cluster_id!,
-            lat: coords[1], lon: coords[0],
-            count: clusterCount,
-            items: [] as import('@/config/tech-geo').TechHQ[],
-            city: String(props.city ?? ''),
-            country: String(props.country ?? ''),
-            primaryType,
-            faangCount,
-            unicornCount,
-            publicCount,
-            sampled: clusterCount > DeckGLMap.MAX_CLUSTER_LEAVES,
-          };
-        }
-        const item = TECH_HQS[f.properties.index]!;
-        return {
-          id: `hp-${f.properties.index}`, _kind: 'leaf' as const, lat: item.lat, lon: item.lon,
-          count: 1, items: [item], city: item.city, country: item.country,
-          primaryType: item.type,
-          faangCount: item.type === 'faang' ? 1 : 0,
-          unicornCount: item.type === 'unicorn' ? 1 : 0,
-          publicCount: item.type === 'public' ? 1 : 0,
-          sampled: false,
-        };
-      });
-    } else {
-      this.techHQClusters = [];
-    }
 
-    if (useTechEvents && this.techEventSC) {
-      this.techEventClusters = this.techEventSC.getClusters(bbox, zoom).map(f => {
-        const coords = f.geometry.coordinates as [number, number];
-        if (f.properties.cluster) {
-          const props = f.properties as Record<string, unknown>;
-          const clusterCount = Number(f.properties.point_count ?? 0);
-          const soonestDaysUntil = Number(props.soonestDaysUntil ?? Number.MAX_SAFE_INTEGER);
-          const soonCount = Number(props.soonCount ?? 0);
-          return {
-            id: `ec-${f.properties.cluster_id}`,
-            _kind: 'group' as const,
-            _clusterId: f.properties.cluster_id!,
-            lat: coords[1], lon: coords[0],
-            count: clusterCount,
-            items: [] as TechEventMarker[],
-            location: String(props.location ?? ''),
-            country: String(props.country ?? ''),
-            soonestDaysUntil: Number.isFinite(soonestDaysUntil) ? soonestDaysUntil : Number.MAX_SAFE_INTEGER,
-            soonCount,
-            sampled: clusterCount > DeckGLMap.MAX_CLUSTER_LEAVES,
-          };
-        }
-        const item = this.techEvents[f.properties.index]!;
-        return {
-          id: `ep-${f.properties.index}`, _kind: 'leaf' as const, lat: item.lat, lon: item.lng,
-          count: 1, items: [item], location: item.location, country: item.country,
-          soonestDaysUntil: item.daysUntil,
-          soonCount: item.daysUntil <= 14 ? 1 : 0,
-          sampled: false,
-        };
-      });
-    } else {
-      this.techEventClusters = [];
-    }
 
     if (useDatacenterClusters && this.datacenterSC) {
       const activeDCs = this.datacenterSCSource;
@@ -2355,7 +2184,7 @@ export class DeckGLMap {
     }
 
     // APT Groups layer — loaded lazily when cyberThreats layer is enabled
-    if (mapLayers.cyberThreats && SITE_VARIANT !== 'tech' && this.aptGroups.length > 0 && !this.aptGroupsLayerFailed) {
+    if (mapLayers.cyberThreats && this.aptGroups.length > 0 && !this.aptGroupsLayerFailed) {
       layers.push(this.createAPTGroupsLayer());
     }
 
@@ -2409,23 +2238,7 @@ export class DeckGLMap {
     }
 
     // Tech variant layers (Supercluster-based deck.gl layers for HQs and events)
-    if (SITE_VARIANT === 'tech') {
-      if (mapLayers.startupHubs) {
-        layers.push(this.createStartupHubsLayer());
-      }
-      if (mapLayers.techHQs) {
-        layers.push(...this.createTechHQClusterLayers());
-      }
-      if (mapLayers.accelerators) {
-        layers.push(this.createAcceleratorsLayer());
-      }
-      if (mapLayers.cloudRegions) {
-        layers.push(this.createCloudRegionsLayer());
-      }
-      if (mapLayers.techEvents && this.techEvents.length > 0) {
-        layers.push(...this.createTechEventClusterLayers());
-      }
-    }
+
 
     // Gulf FDI investments layer
     if (mapLayers.gulfInvestments) {
@@ -4299,44 +4112,8 @@ export class DeckGLMap {
   }
 
   // Tech variant layers
-  private createStartupHubsLayer(): ScatterplotLayer {
-    return new ScatterplotLayer({
-      id: 'startup-hubs-layer',
-      data: STARTUP_HUBS,
-      getPosition: (d) => [d.lon, d.lat],
-      getRadius: 10000,
-      getFillColor: COLORS.startupHub,
-      radiusMinPixels: 5,
-      radiusMaxPixels: 12,
-      pickable: true,
-    });
-  }
 
-  private createAcceleratorsLayer(): ScatterplotLayer {
-    return new ScatterplotLayer({
-      id: 'accelerators-layer',
-      data: ACCELERATORS,
-      getPosition: (d) => [d.lon, d.lat],
-      getRadius: 6000,
-      getFillColor: COLORS.accelerator,
-      radiusMinPixels: 3,
-      radiusMaxPixels: 8,
-      pickable: true,
-    });
-  }
 
-  private createCloudRegionsLayer(): ScatterplotLayer {
-    return new ScatterplotLayer({
-      id: 'cloud-regions-layer',
-      data: CLOUD_REGIONS,
-      getPosition: (d) => [d.lon, d.lat],
-      getRadius: 12000,
-      getFillColor: COLORS.cloudRegion,
-      radiusMinPixels: 4,
-      radiusMaxPixels: 12,
-      pickable: true,
-    });
-  }
 
   private createProtestClusterLayers(): Layer[] {
     this.updateClusterData();
@@ -4402,108 +4179,7 @@ export class DeckGLMap {
     return layers;
   }
 
-  private createTechHQClusterLayers(): Layer[] {
-    this.updateClusterData();
-    const layers: Layer[] = [];
-    const zoom = this.maplibreMap?.getZoom() || 2;
 
-    layers.push(new ScatterplotLayer<MapTechHQCluster>({
-      id: 'tech-hq-clusters-layer',
-      data: this.techHQClusters,
-      getPosition: d => [d.lon, d.lat],
-      getRadius: d => 10000 + d.count * 1500,
-      radiusMinPixels: 5,
-      radiusMaxPixels: 18,
-      getFillColor: d => {
-        if (d.primaryType === 'faang') return [0, 220, 120, 150] as [number, number, number, number];
-        if (d.primaryType === 'unicorn') return [255, 100, 200, 135] as [number, number, number, number];
-        return [80, 160, 255, 135] as [number, number, number, number];
-      },
-      pickable: true,
-      updateTriggers: { getRadius: this.lastSCZoom },
-    }));
-
-    const multiClusters = this.techHQClusters.filter(c => c.count > 1);
-    if (multiClusters.length > 0) {
-      layers.push(new TextLayer<MapTechHQCluster>({
-        id: 'tech-hq-clusters-badge',
-        data: multiClusters,
-        getText: d => String(d.count),
-        getPosition: d => [d.lon, d.lat],
-        background: true,
-        getBackgroundColor: [0, 0, 0, 180],
-        backgroundPadding: [4, 2, 4, 2],
-        getColor: [255, 255, 255, 255],
-        getSize: 12,
-        getPixelOffset: [0, -14],
-        pickable: false,
-        fontFamily: 'system-ui, sans-serif',
-        fontWeight: 700,
-      }));
-    }
-
-    if (zoom >= 3) {
-      const singles = this.techHQClusters.filter(c => c.count === 1);
-      if (singles.length > 0) {
-        layers.push(new TextLayer<MapTechHQCluster>({
-          id: 'tech-hq-clusters-label',
-          data: singles,
-          getText: d => d.items[0]?.company ?? '',
-          getPosition: d => [d.lon, d.lat],
-          getSize: 11,
-          getColor: [220, 220, 220, 200],
-          getPixelOffset: [0, 12],
-          pickable: false,
-          fontFamily: 'system-ui, sans-serif',
-        }));
-      }
-    }
-
-    layers.push(this.createEmptyGhost('tech-hq-clusters-layer'));
-    return layers;
-  }
-
-  private createTechEventClusterLayers(): Layer[] {
-    this.updateClusterData();
-    const layers: Layer[] = [];
-
-    layers.push(new ScatterplotLayer<MapTechEventCluster>({
-      id: 'tech-event-clusters-layer',
-      data: this.techEventClusters,
-      getPosition: d => [d.lon, d.lat],
-      getRadius: d => 10000 + d.count * 1500,
-      radiusMinPixels: 5,
-      radiusMaxPixels: 18,
-      getFillColor: d => {
-        if (d.soonestDaysUntil <= 14) return [255, 220, 50, 150] as [number, number, number, number];
-        return [80, 140, 255, 135] as [number, number, number, number];
-      },
-      pickable: true,
-      updateTriggers: { getRadius: this.lastSCZoom },
-    }));
-
-    const multiClusters = this.techEventClusters.filter(c => c.count > 1);
-    if (multiClusters.length > 0) {
-      layers.push(new TextLayer<MapTechEventCluster>({
-        id: 'tech-event-clusters-badge',
-        data: multiClusters,
-        getText: d => String(d.count),
-        getPosition: d => [d.lon, d.lat],
-        background: true,
-        getBackgroundColor: [0, 0, 0, 180],
-        backgroundPadding: [4, 2, 4, 2],
-        getColor: [255, 255, 255, 255],
-        getSize: 12,
-        getPixelOffset: [0, -14],
-        pickable: false,
-        fontFamily: 'system-ui, sans-serif',
-        fontWeight: 700,
-      }));
-    }
-
-    layers.push(this.createEmptyGhost('tech-event-clusters-layer'));
-    return layers;
-  }
 
   private createDatacenterClusterLayers(): Layer[] {
     this.updateClusterData();
@@ -4957,18 +4633,6 @@ export class DeckGLMap {
           return { html: `<div class="deckgl-tooltip"><strong>${text(item?.title || t('components.deckgl.tooltip.protest'))}</strong><br/>${text(item?.city || item?.country || '')}</div>` };
         }
         return { html: `<div class="deckgl-tooltip"><strong>${text(t('components.deckgl.tooltip.protestsCount', { count: numericLabel(obj.count) }))}</strong><br/>${text(obj.country)}</div>` };
-      case 'tech-hq-clusters-layer':
-        if (obj.count === 1) {
-          const hq = obj.items?.[0];
-          return { html: `<div class="deckgl-tooltip"><strong>${text(hq?.company || '')}</strong><br/>${text(hq?.city || '')}</div>` };
-        }
-        return { html: `<div class="deckgl-tooltip"><strong>${text(t('components.deckgl.tooltip.techHQsCount', { count: numericLabel(obj.count) }))}</strong><br/>${text(obj.city)}</div>` };
-      case 'tech-event-clusters-layer':
-        if (obj.count === 1) {
-          const ev = obj.items?.[0];
-          return { html: `<div class="deckgl-tooltip"><strong>${text(ev?.title || '')}</strong><br/>${text(ev?.location || '')}</div>` };
-        }
-        return { html: `<div class="deckgl-tooltip"><strong>${text(t('components.deckgl.tooltip.techEventsCount', { count: numericLabel(obj.count) }))}</strong><br/>${text(obj.location)}</div>` };
       case 'datacenter-clusters-layer':
         if (obj.count === 1) {
           const dc = obj.items?.[0];
@@ -5045,16 +4709,6 @@ export class DeckGLMap {
         return { html: `<div class="deckgl-tooltip"><strong>${text(obj.shortName)}</strong><br/>${text(obj.city)}, ${text(obj.country)}</div>` };
       case 'commodity-hubs-layer':
         return { html: `<div class="deckgl-tooltip"><strong>${text(obj.name)}</strong><br/>${text(obj.type)} · ${text(obj.city)}</div>` };
-      case 'startup-hubs-layer':
-        return { html: `<div class="deckgl-tooltip"><strong>${text(obj.city)}</strong><br/>${text(obj.country)}</div>` };
-      case 'tech-hqs-layer':
-        return { html: `<div class="deckgl-tooltip"><strong>${text(obj.company)}</strong><br/>${text(obj.city)}</div>` };
-      case 'accelerators-layer':
-        return { html: `<div class="deckgl-tooltip"><strong>${text(obj.name)}</strong><br/>${text(obj.city)}</div>` };
-      case 'cloud-regions-layer':
-        return { html: `<div class="deckgl-tooltip"><strong>${text(obj.provider)}</strong><br/>${text(obj.region)}</div>` };
-      case 'tech-events-layer':
-        return { html: `<div class="deckgl-tooltip"><strong>${text(obj.title)}</strong><br/>${text(obj.location)}</div>` };
       case 'disease-outbreaks-layer': {
         const item = (obj as { item: DiseaseOutbreakItem }).item;
         if (!item) return null;
@@ -5310,70 +4964,6 @@ export class DeckGLMap {
       }
       return;
     }
-    if (layerId === 'tech-hq-clusters-layer') {
-      const cluster = info.object as MapTechHQCluster;
-      if (cluster.items.length === 0 && cluster._clusterId != null && this.techHQSC) {
-        try {
-          const leaves = this.techHQSC.getLeaves(cluster._clusterId, DeckGLMap.MAX_CLUSTER_LEAVES);
-          cluster.items = leaves.map(l => TECH_HQS[l.properties.index]).filter(Boolean) as typeof TECH_HQS;
-          cluster.sampled = cluster.items.length < cluster.count;
-        } catch (e) {
-          console.warn('[DeckGLMap] stale techHQ cluster', cluster._clusterId, e);
-          return;
-        }
-      }
-      if (cluster.count === 1 && cluster.items[0]) {
-        this.popup.show({ type: 'techHQ', data: cluster.items[0], x: info.x, y: info.y });
-      } else {
-        this.popup.show({
-          type: 'techHQCluster',
-          data: {
-            items: cluster.items,
-            city: cluster.city,
-            country: cluster.country,
-            count: cluster.count,
-            faangCount: cluster.faangCount,
-            unicornCount: cluster.unicornCount,
-            publicCount: cluster.publicCount,
-            sampled: cluster.sampled,
-          },
-          x: info.x,
-          y: info.y,
-        });
-      }
-      return;
-    }
-    if (layerId === 'tech-event-clusters-layer') {
-      const cluster = info.object as MapTechEventCluster;
-      if (cluster.items.length === 0 && cluster._clusterId != null && this.techEventSC) {
-        try {
-          const leaves = this.techEventSC.getLeaves(cluster._clusterId, DeckGLMap.MAX_CLUSTER_LEAVES);
-          cluster.items = leaves.map(l => this.techEvents[l.properties.index]).filter((x): x is TechEventMarker => !!x);
-          cluster.sampled = cluster.items.length < cluster.count;
-        } catch (e) {
-          console.warn('[DeckGLMap] stale techEvent cluster', cluster._clusterId, e);
-          return;
-        }
-      }
-      if (cluster.count === 1 && cluster.items[0]) {
-        this.popup.show({ type: 'techEvent', data: cluster.items[0], x: info.x, y: info.y });
-      } else {
-        this.popup.show({
-          type: 'techEventCluster',
-          data: {
-            items: cluster.items,
-            location: cluster.location,
-            country: cluster.country,
-            count: cluster.count,
-            soonCount: cluster.soonCount,
-            sampled: cluster.sampled,
-          },
-          x: info.x,
-          y: info.y,
-        });
-      }
-      return;
-    }
     if (layerId === 'datacenter-clusters-layer') {
       const cluster = info.object as MapDatacenterCluster;
       if (cluster.items.length === 0 && cluster._clusterId != null && this.datacenterSC) {
@@ -5452,11 +5042,6 @@ export class DeckGLMap {
       'flight-delays-layer': 'flight',
       'notam-overlay-layer': 'flight',
       'aircraft-positions-layer': 'aircraft',
-      'startup-hubs-layer': 'startupHub',
-      'tech-hqs-layer': 'techHQ',
-      'accelerators-layer': 'accelerator',
-      'cloud-regions-layer': 'cloudRegion',
-      'tech-events-layer': 'techEvent',
       'apt-groups-layer': 'apt',
       'minerals-layer': 'mineral',
       'ais-disruptions-layer': 'ais',
@@ -5885,29 +5470,6 @@ export class DeckGLMap {
       </div>
     `;
 
-    const techHelpContent = `
-      ${helpHeader}
-      <div class="layer-help-content">
-        ${helpSection('techEcosystem', [
-      helpItem(label('startupHubs'), 'techStartupHubs'),
-      helpItem(label('cloudRegions'), 'techCloudRegions'),
-      helpItem(label('techHQs'), 'techHQs'),
-      helpItem(label('accelerators'), 'techAccelerators'),
-      helpItem(label('techEvents'), 'techEvents'),
-    ])}
-        ${helpSection('infrastructure', [
-      helpItem(label('underseaCables'), 'infraCables'),
-      helpItem(label('aiDataCenters'), 'infraDatacenters'),
-      helpItem(label('internetOutages'), 'infraOutages'),
-      helpItem(label('cyberThreats'), 'techCyberThreats'),
-    ])}
-        ${helpSection('naturalEconomic', [
-      helpItem(label('naturalEvents'), 'naturalEventsTech'),
-      helpItem(label('fires'), 'techFires'),
-      helpItem(staticLabel('countries'), 'countriesOverlay'),
-    ])}
-      </div>
-    `;
 
     const financeHelpContent = `
       ${helpHeader}
@@ -5986,9 +5548,7 @@ export class DeckGLMap {
       </div>
     `;
 
-    setTrustedHtml(popup, trustedHtml(SITE_VARIANT === 'tech'
-      ? techHelpContent
-      : SITE_VARIANT === 'finance'
+    setTrustedHtml(popup, trustedHtml(SITE_VARIANT === 'finance'
         ? financeHelpContent
         : fullHelpContent, "legacy direct innerHTML migration"));
 
@@ -6033,13 +5593,7 @@ export class DeckGLMap {
     };
 
     const isLight = getCurrentTheme() === 'light';
-    const legendItems: { shape: string; label: string; layerKey: keyof MapLayers }[] = SITE_VARIANT === 'tech'
-      ? [
-        { shape: shapes.circle('rgb(231, 76, 60)'), label: t('components.deckgl.legend.diseaseAlert'), layerKey: 'diseaseOutbreaks' },
-        { shape: shapes.circle('rgb(230, 126, 34)'), label: t('components.deckgl.legend.diseaseWarning'), layerKey: 'diseaseOutbreaks' },
-        { shape: shapes.circle('rgb(241, 196, 15)'), label: t('components.deckgl.legend.diseaseWatch'), layerKey: 'diseaseOutbreaks' },
-      ]
-      : SITE_VARIANT === 'finance'
+    const legendItems: { shape: string; label: string; layerKey: keyof MapLayers }[] = SITE_VARIANT === 'finance'
         ? [
           { shape: shapes.circle('rgb(231, 76, 60)'), label: t('components.deckgl.legend.diseaseAlert'), layerKey: 'diseaseOutbreaks' },
           { shape: shapes.circle('rgb(230, 126, 34)'), label: t('components.deckgl.legend.diseaseWarning'), layerKey: 'diseaseOutbreaks' },
@@ -7391,11 +6945,6 @@ export class DeckGLMap {
     this.render();
   }
 
-  public setTechEvents(events: TechEventMarker[]): void {
-    this.techEvents = events;
-    this.rebuildTechEventSupercluster();
-    this.render();
-  }
 
   public setUcdpEvents(events: UcdpGeoEvent[]): void {
     this.ucdpEvents = events;

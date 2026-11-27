@@ -143,7 +143,6 @@ const PANEL_CLUSTER: Record<string, PanelChunkName> = {
   PopulationExposure: 'panels-risk', RadiationWatch: 'panels-risk',
   SatelliteFires: 'panels-risk',
   SecurityAdvisories: 'panels-risk', ServiceStatus: 'panels-risk',
-  TechEvents: 'panels-risk',
   TechHubs: 'panels-risk', TechReadiness: 'panels-risk',
   ThreatTimeline: 'panels-risk',
   WorldClock: 'panels-risk',
@@ -322,7 +321,7 @@ function chunkSizeWarningPolicyPlugin(): Plugin {
 
 // Emit dashboard-<variant>.html siblings of dashboard.html for the variant
 // subdomains (#4996). The web deployment serves the 'full' build to every
-// host, so tech/finance/commodity/happy/energy.worldmonitor.app/dashboard
+// host, so finance/commodity/energy.worldmonitor.app/dashboard
 // shipped full-brand meta and a cross-host canonical pointing at www —
 // crawlers saw five duplicate pages that all declared themselves NOT to be
 // the sitemap URL they were fetched from. vercel.json host-based rewrites

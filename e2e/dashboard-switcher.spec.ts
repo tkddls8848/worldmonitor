@@ -49,7 +49,7 @@ test('dashboard names remain readable from tablet through desktop', async ({ pag
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog', { name: 'Mission presets', exact: true })).toBeHidden();
   await page.setViewportSize({ width: 834, height: 900 });
-  await page.locator('.variant-option[data-variant="tech"]').click();
-  await expect(page.locator('.variant-option.active[data-variant="tech"]')).toBeVisible();
-  expect(await page.evaluate(() => localStorage.getItem('worldmonitor-variant'))).toBe('tech');
+  await page.locator('.variant-option[data-variant="finance"]').click();
+  await expect(page.locator('.variant-option.active[data-variant="finance"]')).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem('worldmonitor-variant'))).toBe('finance');
 });

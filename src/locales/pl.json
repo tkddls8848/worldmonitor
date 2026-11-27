@@ -307,7 +307,6 @@
   },
   "header": {
     "world": "ŚWIAT",
-    "tech": "TECHNOLOGIE",
     "live": "NA ŻYWO",
     "search": "Szukaj",
     "settings": "USTAWIENIA",
@@ -426,23 +425,9 @@
     "displacement": "Uchodźcy i przesiedlenia",
     "climate": "Anomalie klimatyczne",
     "populationExposure": "Narażenie ludności",
-    "startups": "Startupy i kapitał wysokiego ryzyka",
-    "vcblogs": "Wglądy i eseje kapitału wysokiego ryzyka",
-    "regionalStartups": "Globalne wiadomości o startupach",
-    "unicorns": "Śledzenie jednorożców",
-    "accelerators": "Akceleratory i Demo Days",
-    "security": "Cyberbezpieczeństwo",
-    "policy": "Polityka i regulacje AI",
     "regulation": "Pulpit regulacji AI",
     "finRegulation": "Regulacje finansowe",
-    "hardware": "Półprzewodniki i Sprzęt",
-    "cloud": "Chmura i Infrastruktura",
-    "dev": "Społeczność deweloperów",
-    "github": "Trendy GitHub",
     "ipo": "Notowania publiczne i fuzje spółek pustych",
-    "funding": "Finansowanie i kapitał wysokiego ryzyka",
-    "producthunt": "Polowanie na produkt",
-    "events": "Wydarzenia technologiczne",
     "serviceStatus": "Stan usług",
     "techReadiness": "Indeks gotowości technologicznej",
     "techHubs": "Gorące centra technologiczne",
@@ -1023,15 +1008,10 @@
       },
       "timeAll": "Wszystko",
       "layers": {
-        "startupHubs": "Huby startowe",
-        "techHQs": "Siedziba techniczna",
-        "accelerators": "Akceleratory",
-        "cloudRegions": "Regiony chmur",
         "aiDataCenters": "Centra danych AI",
         "underseaCables": "Kable podmorskie",
         "internetOutages": "Awarie Internetu",
         "cyberThreats": "Zagrożenia cybernetyczne",
-        "techEvents": "Wydarzenia techniczne",
         "naturalEvents": "Zdarzenia naturalne",
         "fires": "Pożary",
         "intelHotspots": "Hotspoty Intela",
@@ -1081,8 +1061,6 @@
         "aircraft": "samolot",
         "protest": "Protest",
         "protestsCount": "{{count}} protestuje",
-        "techHQsCount": "{{count}} centrala techniczna",
-        "techEventsCount": "{{count}} wydarzenia techniczne",
         "dataCentersCount": "{{count}} centra danych",
         "underseaCable": "Podmorski kabel",
         "pipeline": "Rurociąg",
@@ -1132,7 +1110,6 @@
         "descriptions": {
           "techStartupHubs": "Główne ekosystemy startupowe (SF, NYC, Londyn itp.)",
           "techCloudRegions": "Regiony centrów danych AWS, Azure i GCP",
-          "techHQs": "Siedziby największych firm technologicznych",
           "techAccelerators": "Y Combinator, Techstars, 500 lokalizacji startupów",
           "infraCables": "Główne podmorskie kable światłowodowe (szkielet internetowy)",
           "infraDatacenters": "Klastry obliczeniowe AI >=10 000 procesorów graficznych",
@@ -1177,7 +1154,6 @@
           "infraCyberThreats": "Cyberataki i zdarzenia bezpieczeństwa",
           "mineralsFull": "Złoża minerałów strategicznych i kopalnie",
           "techCyberThreats": "Cyberataki i zdarzenia bezpieczeństwa",
-          "techEvents": "Główne konferencje i wydarzenia technologiczne",
           "techFires": "Aktywne pożary w pobliżu infrastruktury technologicznej",
           "geoBoundaries": "Strefy zdemilitaryzowane, linie zawieszenia broni i sporne granice",
           "ciiChoropleth": "Mapa ciepła Country Instability Index — koduje kraje według wyniku (zielony=stabilny, czerwony=krytyczny)",
@@ -1381,22 +1357,6 @@
       "emojiKeyLabel": "Legenda emoji",
       "emojiKeyAir": "Zasoby powietrzne",
       "emojiKeyNaval": "Zasoby morskie"
-    },
-    "techEvents": {
-      "loading": "Ładowanie wydarzeń technicznych...",
-      "noEvents": "Brak wydarzeń do wyświetlenia",
-      "showOnMap": "Pokaż na mapie",
-      "moreInfo": "Więcej informacji",
-      "upcoming": "Nadchodzące",
-      "conferences": "Konferencje",
-      "earnings": "Wyniki finansowe",
-      "all": "Wszystkie",
-      "conferencesCount": "Konferencje: {{count}}",
-      "onMap": "Na mapie: {{count}}",
-      "techmemeEvents": "Wydarzenia Techmeme ↗",
-      "today": "DZIŚ",
-      "soon": "WKRÓTCE",
-      "infoTooltip": "<strong>Wydarzenia technologiczne</strong> Nadchodzące i ostatnie wydarzenia technologiczne: konferencje, premiery produktów, przesłuchania regulacyjne i telekonferencje wynikowe. Agregowane z oficjalnych kalendarzy wydarzeń i źródeł branżowych."
     },
     "techReadiness": {
       "ranked": "Sklasyfikowane",
@@ -3492,59 +3452,6 @@
         "public": "Publiczny",
         "publicPrivate": "Publiczno-prywatny"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "MEGAHUB",
-        "major": "GŁÓWNY HUB",
-        "emerging": "POWSTAJĄCE",
-        "hub": "CENTRUM"
-      },
-      "unicorns": "JEDNOROŻCE"
-    },
-    "cloudRegion": {
-      "provider": "DOSTAWCA",
-      "availabilityZones": "STREFY DOSTĘPNOŚCI"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "WIELKA TECHNOLOGIA",
-        "unicorn": "JEDNOROŻEC",
-        "public": "PUBLICZNY",
-        "tech": "TECHNOLOGIE"
-      },
-      "marketCap": "KAPITAŁ RYNKOWY",
-      "employees": "PRACOWNICY"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "AKCELERATOR",
-        "incubator": "INKUBATOR",
-        "studio": "STUDIO STARTOWE"
-      },
-      "founded": "ZAŁOŻONY",
-      "notableAlumni": "ZNANI ALUMINI"
-    },
-    "techEvent": {
-      "days": {
-        "today": "DZISIAJ",
-        "tomorrow": "JUTRO",
-        "inDays": "ZA {{count}} DNI"
-      },
-      "date": "DATA",
-      "moreInformation": "Więcej informacji"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}} FIRMY",
-      "bigTechCount": "{{count}} Wielka technologia",
-      "unicornsCount": "{{count}} Jednorożce",
-      "publicCount": "{{count}} Publiczne",
-      "sampled": "Wyświetlanie przykładowej listy {{count}} firm."
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}} WYDARZENIA",
-      "upcomingWithin2Weeks": "{{count}} pojawi się w ciągu 2 tygodni",
-      "sampled": "Wyświetlanie przykładowej listy zdarzeń {{count}}."
     },
     "militaryFlight": {
       "types": {

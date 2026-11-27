@@ -51,7 +51,6 @@ const HOMEPAGE_TOOL_NAMES = [
 ];
 const PRODUCTION_DASHBOARDS = [
   { origin: 'https://www.worldmonitor.app', variant: 'full' },
-  { origin: 'https://tech.worldmonitor.app', variant: 'tech' },
   { origin: 'https://finance.worldmonitor.app', variant: 'finance' },
   { origin: 'https://commodity.worldmonitor.app', variant: 'commodity' },
   { origin: 'https://energy.worldmonitor.app', variant: 'energy' },
@@ -1490,7 +1489,7 @@ test.describe('top-level WebMCP dashboard contract', () => {
 
     const historyBefore = await page.evaluate(() => window.history.length);
     const locationBefore = new URL(page.url());
-    const observedSwitch = await executeDashboardToolObserved(page, 'switch_monitor', { monitor: 'tech' });
+    const observedSwitch = await executeDashboardToolObserved(page, 'switch_monitor', { monitor: 'commodity' });
     const switchResult = observedSwitch.output;
     const { targetCancellationSupported } = observedSwitch;
 
@@ -1516,15 +1515,15 @@ test.describe('top-level WebMCP dashboard contract', () => {
       expect(await page.evaluate(() => window.history.length)).toBe(historyBefore);
     } else {
       // Chrome 153+: the same mark says the signal arrived, so the switch must
-      // apply and local/dev reloads into the staged tech variant.
+      // apply and local/dev reloads into the staged commodity variant.
       expect(switchResult).toMatchObject({
         ok: true,
         status: 'applied',
-        destination: 'tech',
+        destination: 'commodity',
       });
       // stageVariantSelection + reload may already be in flight when executeTool
-      // resolves; wait on the post-reload tech chrome rather than loadState alone.
-      await expect(page.locator('.variant-option.active[data-variant="tech"]')).toBeVisible({
+      // resolves; wait on the post-reload commodity chrome rather than loadState alone.
+      await expect(page.locator('.variant-option.active[data-variant="commodity"]')).toBeVisible({
         timeout: 60_000,
       });
       await expect.poll(async () => page.evaluate(async () => (
@@ -1533,7 +1532,7 @@ test.describe('top-level WebMCP dashboard contract', () => {
       context = await executeDashboardTool(page, 'get_dashboard_context', {}) as {
         variant?: string;
       };
-      expect(context.variant).toBe('tech');
+      expect(context.variant).toBe('commodity');
     }
 
     await attachJsonEvidence(testInfo, 'webmcp-navigation.json', {
@@ -2235,12 +2234,12 @@ test.describe('top-level WebMCP dashboard contract', () => {
         (await document.modelContext?.getTools())?.map((tool) => tool.name).sort() ?? []
       )), { timeout: 60_000 }).toEqual(DASHBOARD_TOOL_NAMES);
       const embedResponsePromise = page.waitForResponse((response) => (
-        response.url() === 'https://tech.worldmonitor.app/embed'
+        response.url() === 'https://commodity.worldmonitor.app/embed'
       ));
       await page.evaluate(() => {
         const iframe = document.createElement('iframe');
         iframe.id = 'webmcp-cross-origin-denial';
-        iframe.src = 'https://tech.worldmonitor.app/embed';
+        iframe.src = 'https://commodity.worldmonitor.app/embed';
         document.body.appendChild(iframe);
       });
       const embedResponse = await embedResponsePromise;
@@ -2253,7 +2252,7 @@ test.describe('top-level WebMCP dashboard contract', () => {
       }, {
         message: 'cross-origin embed frame attachment',
         timeout: 30_000,
-      }).toBe('https://tech.worldmonitor.app/embed');
+      }).toBe('https://commodity.worldmonitor.app/embed');
       const iframe = await page.locator('#webmcp-cross-origin-denial').elementHandle();
       const embedFrame = await iframe?.contentFrame();
       expect(embedFrame).toBeTruthy();
@@ -2312,7 +2311,7 @@ test.describe('top-level WebMCP dashboard contract', () => {
         (await document.modelContext!.getTools({ fromOrigins: [origin] }))
           .map((tool) => tool.name)
           .sort()
-      ), 'https://tech.worldmonitor.app');
+      ), 'https://commodity.worldmonitor.app');
       expect(crossOriginTools).toEqual(parentTools);
       expect(crossOriginTools).not.toContain('wmProductionEmbedDeniedProbe');
 
@@ -2331,7 +2330,7 @@ test.describe('top-level WebMCP dashboard contract', () => {
           toolNames: homepageToolNames,
         },
         crossOriginEmbed: {
-          origin: 'https://tech.worldmonitor.app',
+          origin: 'https://commodity.worldmonitor.app',
           path: '/embed',
           originAgentCluster: embedResponse.headers()['origin-agent-cluster'] ?? null,
           originTrialPresent: Boolean(embedResponse.headers()['origin-trial']),

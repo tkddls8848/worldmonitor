@@ -180,7 +180,6 @@ const RPC_CACHE_TIER: Record<string, CacheTier> = {
   '/api/sanctions/v1/lookup-sanction-entity': 'no-store',
   '/api/radiation/v1/list-radiation-observations': 'slow',
   '/api/thermal/v1/list-thermal-escalations': 'slow',
-  '/api/research/v1/list-tech-events': 'daily',
   '/api/military/v1/get-usni-fleet-report': 'daily',
   '/api/conflict/v1/list-ucdp-events': 'daily',
   '/api/conflict/v1/get-humanitarian-summary': 'daily',

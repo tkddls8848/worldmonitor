@@ -45,7 +45,6 @@ import { EnergyCrisisPanel } from '@/components/EnergyCrisisPanel';
 import { LiveNewsPanel } from '@/components/LiveNewsPanel';
 import { PlaybackControl } from '@/components/PlaybackControl';
 import { ServiceStatusPanel } from '@/components/ServiceStatusPanel';
-import { TechEventsPanel } from '@/components/TechEventsPanel';
 import { closeStoryModal, openStoryModal } from '@/components/StoryModal';
 import type { StoryData } from '@/services/story-data';
 import { fetchServiceStatuses } from '@/services/infrastructure';
@@ -248,45 +247,6 @@ describe('ServiceStatusPanel empty fleet', () => {
   });
 });
 
-describe('TechEventsPanel map pin', () => {
-  it('calls the injected map handler instead of a window event', () => {
-    const panel = new TechEventsPanel('events');
-    document.body.appendChild(panel.getElement());
-    const visited: Array<[number, number]> = [];
-    const events: string[] = [];
-    window.addEventListener('tech-event-location', () => { events.push('fired'); });
-    panel.setMapNavigateHandler((lat, lng) => { visited.push([lat, lng]); });
-    const view = panel as unknown as {
-      loading: boolean;
-      error: string | null;
-      viewMode: string;
-      events: unknown[];
-      render: () => void;
-    };
-    view.loading = false;
-    view.error = null;
-    view.viewMode = 'conferences';
-    view.events = [{
-      id: 'conf-1',
-      title: 'Test Conf',
-      type: 'conference',
-      location: 'Paris',
-      startDate: '2099-01-01',
-      endDate: '2099-01-02',
-      url: 'https://example.com',
-      source: 'test',
-      description: '',
-      coords: { lat: 48.8, lng: 2.3, country: 'FR', original: 'Paris', virtual: false },
-    }];
-    view.render();
-
-    panel.getElement().querySelector<HTMLButtonElement>('.event-map-link')?.click();
-
-    expect(visited).toEqual([[48.8, 2.3]]);
-    expect(events).toEqual([]);
-    panel.destroy();
-  });
-});
 
 describe('StoryModal stale canvas', () => {
   it('does not paint a canvas that finishes after the modal moved on', async () => {

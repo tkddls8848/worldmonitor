@@ -90,9 +90,6 @@ export function getSourcePanelId(sourceName: string): string {
 // #5957) — the full-variant news catalog is the reference set the audit counts.
 export const FULL_FEEDS: Record<string, Feed[]> = browserFeeds('full');
 
-// Tech/AI variant feeds
-const TECH_FEEDS: Record<string, Feed[]> = browserFeeds('tech');
-
 // Finance/Trading variant feeds (all free RSS / Google News proxies)
 const FINANCE_FEEDS: Record<string, Feed[]> = browserFeeds('finance');
 
@@ -106,9 +103,7 @@ const COMMODITY_FEEDS: Record<string, Feed[]> = browserFeeds('commodity');
 const ENERGY_FEEDS: Record<string, Feed[]> = browserFeeds('energy');
 
 // Variant-aware exports
-export const FEEDS = SITE_VARIANT === 'tech'
-  ? TECH_FEEDS
-  : SITE_VARIANT === 'finance'
+export const FEEDS = SITE_VARIANT === 'finance'
     ? FINANCE_FEEDS
     : SITE_VARIANT === 'commodity'
         ? COMMODITY_FEEDS
@@ -129,7 +124,6 @@ export const ON_DEMAND_FEEDS: Record<string, Feed[]> = browserFeeds('ondemand');
 
 export const CANONICAL_FEEDS: Record<string, Feed[]> = mergeCanonicalFeeds([
   FULL_FEEDS,
-  TECH_FEEDS,
   FINANCE_FEEDS,
   COMMODITY_FEEDS,
   ENERGY_FEEDS,
@@ -149,13 +143,9 @@ export const SOURCE_REGION_MAP: Record<string, { labelKey: string; feedKeys: str
   intel: { labelKey: 'header.sourceRegionIntel', feedKeys: [] },
 
   // Tech variant regions
-  techNews: { labelKey: 'header.sourceRegionTechNews', feedKeys: ['tech', 'hardware'] },
   aiMl: { labelKey: 'header.sourceRegionAiMl', feedKeys: ['ai'] },
-  startupsVc: { labelKey: 'header.sourceRegionStartupsVc', feedKeys: ['startups', 'vcblogs', 'funding', 'unicorns', 'accelerators', 'ipo'] },
-  regionalTech: { labelKey: 'header.sourceRegionRegionalTech', feedKeys: ['regionalStartups'] },
   developer: { labelKey: 'header.sourceRegionDeveloper', feedKeys: ['github', 'cloud', 'dev', 'producthunt', 'outages'] },
   cybersecurity: { labelKey: 'header.sourceRegionCybersecurity', feedKeys: ['security'] },
-  techPolicy: { labelKey: 'header.sourceRegionTechPolicy', feedKeys: ['policy', 'thinktanks'] },
   techMedia: { labelKey: 'header.sourceRegionTechMedia', feedKeys: ['podcasts', 'layoffs', 'finance'] },
 
   // Finance variant regions

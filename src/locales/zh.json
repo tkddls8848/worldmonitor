@@ -301,7 +301,6 @@
   },
   "header": {
     "world": "世界",
-    "tech": "科技",
     "live": "实时",
     "search": "搜索",
     "settings": "设置",
@@ -424,23 +423,9 @@
     "populationExposure": "人口暴露",
     "securityAdvisories": "安全警告",
     "orefSirens": "以色列警报",
-    "startups": "初创公司与风险投资",
-    "vcblogs": "风险投资见解与文章",
-    "regionalStartups": "全球创业新闻",
-    "unicorns": "独角兽追踪",
-    "accelerators": "加速器与演示日",
-    "security": "网络安全",
-    "policy": "AI政策与监管",
     "regulation": "AI监管仪表盘",
     "finRegulation": "金融监管",
-    "hardware": "半导体与硬件",
-    "cloud": "云计算与基础设施",
-    "dev": "开发者社区",
-    "github": "GitHub趋势",
     "ipo": "公开上市与特殊目的收购公司合并",
-    "funding": "融资与风险投资",
-    "producthunt": "Product Hunt",
-    "events": "科技活动",
     "serviceStatus": "服务状态",
     "techReadiness": "科技就绪指数",
     "gccInvestments": "海湾合作委员会投资",
@@ -1213,15 +1198,10 @@
         "oceania": "大洋洲"
       },
       "layers": {
-        "startupHubs": "创业中心",
-        "techHQs": "科技总部",
-        "accelerators": "加速器",
-        "cloudRegions": "云计算区域",
         "aiDataCenters": "AI数据中心",
         "underseaCables": "海底电缆",
         "internetOutages": "互联网中断",
         "cyberThreats": "网络威胁",
-        "techEvents": "科技活动",
         "naturalEvents": "自然事件",
         "fires": "火灾",
         "intelHotspots": "情报热点",
@@ -1264,8 +1244,6 @@
         "aircraft": "架飞机",
         "protest": "抗议活动",
         "protestsCount": "{{count}}起抗议",
-        "techHQsCount": "{{count}}个科技总部",
-        "techEventsCount": "{{count}}个科技活动",
         "dataCentersCount": "{{count}}个数据中心",
         "underseaCable": "海底电缆",
         "pipeline": "管道",
@@ -1315,7 +1293,6 @@
         "descriptions": {
           "techStartupHubs": "主要创业生态系统（旧金山、纽约、伦敦等）",
           "techCloudRegions": "AWS、Azure、GCP数据中心区域",
-          "techHQs": "大型科技公司总部",
           "techAccelerators": "Y Combinator、Techstars、500 Startups所在地",
           "infraCables": "主要海底光纤电缆（互联网骨干）",
           "infraDatacenters": "AI算力集群 >=10,000 GPU",
@@ -1358,7 +1335,6 @@
           "infraCyberThreats": "网络攻击和安全事件",
           "mineralsFull": "战略矿产资源矿床和采矿点",
           "techCyberThreats": "网络攻击和安全事件",
-          "techEvents": "主要科技会议和活动",
           "techFires": "科技基础设施附近的活跃野火",
           "financeGulfInvestments": "海湾合作委员会主权财富基金投资和外国直接投资",
           "tradeRoutes": "连接港口并经过战略咽喉要道的全球主要航运通道",
@@ -1558,22 +1534,6 @@
       },
       "dataFreshness": "数据新鲜度",
       "sourcesDetail": "{{active}}/{{total}} 个数据源"
-    },
-    "techEvents": {
-      "loading": "正在加载科技活动...",
-      "noEvents": "无可显示的活动",
-      "showOnMap": "在地图上显示",
-      "moreInfo": "更多信息",
-      "upcoming": "即将举行",
-      "conferences": "会议",
-      "earnings": "财报",
-      "all": "全部",
-      "conferencesCount": "{{count}} 场会议",
-      "onMap": "{{count}} 个在地图上",
-      "techmemeEvents": "Techmeme 活动 ↗",
-      "today": "今天",
-      "soon": "即将",
-      "infoTooltip": "<strong>科技活动</strong> 即将举行和近期的科技活动：会议、产品发布、监管听证会和财报电话会议。从官方活动日历和行业来源汇总。"
     },
     "techReadiness": {
       "ranked": "已排名",
@@ -3437,59 +3397,6 @@
         "public": "公共",
         "publicPrivate": "公私合营"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "超级枢纽",
-        "major": "主要枢纽",
-        "emerging": "新兴",
-        "hub": "枢纽"
-      },
-      "unicorns": "独角兽"
-    },
-    "cloudRegion": {
-      "provider": "提供商",
-      "availabilityZones": "可用区"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "大型科技",
-        "unicorn": "独角兽",
-        "public": "上市公司",
-        "tech": "科技"
-      },
-      "marketCap": "市值",
-      "employees": "员工数"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "加速器",
-        "incubator": "孵化器",
-        "studio": "创业工作室"
-      },
-      "founded": "成立时间",
-      "notableAlumni": "知名校友"
-    },
-    "techEvent": {
-      "days": {
-        "today": "今天",
-        "tomorrow": "明天",
-        "inDays": "{{count}}天后"
-      },
-      "date": "日期",
-      "moreInformation": "更多信息"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}}家公司",
-      "bigTechCount": "{{count}}家大型科技",
-      "unicornsCount": "{{count}}家独角兽",
-      "publicCount": "{{count}}家上市公司",
-      "sampled": "显示{{count}}家公司的抽样列表。"
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}}个活动",
-      "upcomingWithin2Weeks": "{{count}}个活动将在2周内举行",
-      "sampled": "显示{{count}}个活动的抽样列表。"
     },
     "militaryFlight": {
       "types": {

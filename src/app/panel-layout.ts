@@ -174,7 +174,6 @@ const STORAGE_ATLAS_PANEL_KEY = 'storage-facility-map';
 /** Mirror of OVERVIEW_DEFAULT_PANELS so first-screen boot knows Overview panels synchronously without blocking on dynamic imports. */
 const INITIAL_OVERVIEW_PANELS: Readonly<Record<string, readonly string[]>> = {
   full: ['insights', 'strategic-risk', 'cii', 'threat-timeline', 'markets', 'energy-complex', 'latest-brief'],
-  tech: ['insights', 'ai', 'tech', 'startups', 'markets', 'internet-disruptions', 'latest-brief'],
   finance: ['insights', 'markets', 'heatmap', 'macro-signals', 'fear-greed', 'daily-market-brief', 'latest-brief'],
   commodity: ['insights', 'commodities', 'energy-complex', 'gold-intelligence', 'supply-chain', 'markets', 'latest-brief'],
   energy: ['energy-risk-overview', 'chokepoint-strip', 'insights', 'energy-complex', 'oil-inventories', 'hormuz-tracker', 'latest-brief'],
@@ -182,7 +181,6 @@ const INITIAL_OVERVIEW_PANELS: Readonly<Record<string, readonly string[]>> = {
 
 export const VARIANT_SWITCHER_DASHBOARD_URLS = {
   full: 'https://www.worldmonitor.app/dashboard',
-  tech: 'https://tech.worldmonitor.app/dashboard',
   finance: 'https://finance.worldmonitor.app/dashboard',
   commodity: 'https://commodity.worldmonitor.app/dashboard',
   energy: 'https://energy.worldmonitor.app/dashboard',
@@ -742,7 +740,6 @@ export class PanelLayoutManager implements AppModule {
         const vTarget = (v: string) => !local && SITE_VARIANT !== v && inIframe ? 'target="_blank" rel="noopener"' : '';
         return `
             <a href="${vHref('full')}" class="variant-option ${SITE_VARIANT === 'full' ? 'active' : ''}" data-variant="full" ${vTarget('full')}><span class="variant-icon">🌍</span><span class="variant-label">${t('header.world')}</span></a>
-            <a href="${vHref('tech')}" class="variant-option ${SITE_VARIANT === 'tech' ? 'active' : ''}" data-variant="tech" ${vTarget('tech')}><span class="variant-icon">💻</span><span class="variant-label">${t('header.tech')}</span></a>
             <a href="${vHref('finance')}" class="variant-option ${SITE_VARIANT === 'finance' ? 'active' : ''}" data-variant="finance" ${vTarget('finance')}><span class="variant-icon">📈</span><span class="variant-label">${t('header.finance')}</span></a>
             <a href="${vHref('commodity')}" class="variant-option ${SITE_VARIANT === 'commodity' ? 'active' : ''}" data-variant="commodity" ${vTarget('commodity')}><span class="variant-icon">⛏️</span><span class="variant-label">${t('header.commodity')}</span></a>
             <a href="${vHref('energy')}" class="variant-option ${SITE_VARIANT === 'energy' ? 'active' : ''}" data-variant="energy" ${vTarget('energy')}><span class="variant-icon">⚡</span><span class="variant-label">${t('header.energy')}</span></a>`;
@@ -835,7 +832,6 @@ export class PanelLayoutManager implements AppModule {
         ${(() => {
         const variants = [
           { key: 'full', icon: '🌍', label: t('header.world') },
-          { key: 'tech', icon: '💻', label: t('header.tech') },
           { key: 'finance', icon: '📈', label: t('header.finance') },
           { key: 'commodity', icon: '⛏️', label: t('header.commodity') },
           { key: 'energy', icon: '⚡', label: t('header.energy') },
@@ -2992,19 +2988,6 @@ export class PanelLayoutManager implements AppModule {
     this.createNewsPanel('middleeast', 'panels.middleeast');
     this.createNewsPanel('layoffs', 'panels.layoffs');
     this.createNewsPanel('ai', 'panels.ai');
-    this.createNewsPanel('startups', 'panels.startups');
-    this.createNewsPanel('vcblogs', 'panels.vcblogs');
-    this.createNewsPanel('regionalStartups', 'panels.regionalStartups');
-    this.createNewsPanel('unicorns', 'panels.unicorns');
-    this.createNewsPanel('accelerators', 'panels.accelerators');
-    this.createNewsPanel('funding', 'panels.funding');
-    this.createNewsPanel('producthunt', 'panels.producthunt');
-    this.createNewsPanel('security', 'panels.security');
-    this.createNewsPanel('policy', 'panels.policy');
-    this.createNewsPanel('hardware', 'panels.hardware');
-    this.createNewsPanel('cloud', 'panels.cloud');
-    this.createNewsPanel('dev', 'panels.dev');
-    this.createNewsPanel('github', 'panels.github');
     this.createNewsPanel('ipo', 'panels.ipo');
     this.createNewsPanel('thinktanks', 'panels.thinktanks');
     this.createNewsPanel('science', 'panels.science');
@@ -3298,24 +3281,12 @@ export class PanelLayoutManager implements AppModule {
       return new LiveNewsPanel();
     });
 
-    this.lazyPanel('events', () =>
-      this.importPanel(
-        'events',
-        () => import('@/components/TechEventsPanel'),
-        'TechEventsPanel',
-        (TechEventsPanel) => {
-          const panel = new TechEventsPanel('events');
-          panel.setMapNavigateHandler((lat, lng) => { this.ctx.map?.setCenter(lat, lng, 10); });
-          return panel;
-        },
-      ),
-    );
     this.lazyDefaultPanel('internet-disruptions', () => import('@/components/InternetDisruptionsPanel'), 'InternetDisruptionsPanel');
     this.lazyDefaultPanel('service-status', () => import('@/components/ServiceStatusPanel'), 'ServiceStatusPanel');
 
     this.lazyImportedPanel('tech-readiness', () => import('@/components/TechReadinessPanel'), 'TechReadinessPanel', (TechReadinessPanel) => {
       const p = new TechReadinessPanel();
-      // Auto-refresh where the variant ships the panel (full + tech) or the
+      // Auto-refresh where the variant ships the panel (full) or the
       // user enabled it. The seed is global, so it loads on every edition.
       if (isPanelInVariantDefaults('tech-readiness') || this.ctx.panelSettings['tech-readiness']?.enabled === true) {
         void p.refresh();
@@ -3357,7 +3328,6 @@ export class PanelLayoutManager implements AppModule {
       return p;
     });
 
-    this.lazyImportedPanel('ai-regulation', () => import('@/components/RegulationPanel'), 'RegulationPanel', (RegulationPanel) => new RegulationPanel('ai-regulation'));
 
     this.lazyPanel('macro-signals', () =>
       this.importPanel('macro-signals', () => import('@/components/MacroSignalsPanel'), 'MacroSignalsPanel', (MacroSignalsPanel) => new MacroSignalsPanel()),

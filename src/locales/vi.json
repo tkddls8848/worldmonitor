@@ -301,7 +301,6 @@
   },
   "header": {
     "world": "THẾ GIỚI",
-    "tech": "CÔNG NGHỆ",
     "live": "TRỰC TIẾP",
     "search": "Tìm kiếm",
     "settings": "CÀI ĐẶT",
@@ -424,23 +423,9 @@
     "populationExposure": "Dân số bị Ảnh hưởng",
     "securityAdvisories": "Cảnh báo An ninh",
     "orefSirens": "Cảnh báo Israel",
-    "startups": "Khởi nghiệp và vốn đầu tư mạo hiểm",
-    "vcblogs": "Thông tin và bài luận về vốn đầu tư mạo hiểm",
-    "regionalStartups": "Tin Khởi nghiệp Toàn cầu",
-    "unicorns": "Theo dõi Unicorn",
-    "accelerators": "Vườn ươm & Ngày Demo",
-    "security": "An ninh Mạng",
-    "policy": "Chính sách & Quy định AI",
     "regulation": "Bảng Quy định AI",
     "finRegulation": "Quy định Tài chính",
-    "hardware": "Bán dẫn & Phần cứng",
-    "cloud": "Đám mây & Hạ tầng",
-    "dev": "Cộng đồng Lập trình viên",
-    "github": "GitHub Xu hướng",
     "ipo": "Niêm yết công khai và sáp nhập công ty vỏ",
-    "funding": "Tài trợ và vốn đầu tư mạo hiểm",
-    "producthunt": "Product Hunt",
-    "events": "Sự kiện Công nghệ",
     "serviceStatus": "Trạng thái Dịch vụ",
     "techReadiness": "Chỉ số Sẵn sàng Công nghệ",
     "gccInvestments": "Các khoản đầu tư của Hội đồng Hợp tác Vùng Vịnh",
@@ -1213,15 +1198,10 @@
         "oceania": "Châu Đại Dương"
       },
       "layers": {
-        "startupHubs": "Trung tâm Khởi nghiệp",
-        "techHQs": "Trụ sở Công nghệ",
-        "accelerators": "Vườn ươm",
-        "cloudRegions": "Vùng Đám mây",
         "aiDataCenters": "Trung tâm Dữ liệu AI",
         "underseaCables": "Cáp ngầm",
         "internetOutages": "Gián đoạn Internet",
         "cyberThreats": "Mối đe dọa Mạng",
-        "techEvents": "Sự kiện Công nghệ",
         "naturalEvents": "Thiên tai",
         "fires": "Cháy rừng",
         "intelHotspots": "Điểm nóng Tình báo",
@@ -1264,8 +1244,6 @@
         "aircraft": "máy bay",
         "protest": "Biểu tình",
         "protestsCount": "{{count}} cuộc biểu tình",
-        "techHQsCount": "{{count}} trụ sở công nghệ",
-        "techEventsCount": "{{count}} sự kiện công nghệ",
         "dataCentersCount": "{{count}} trung tâm dữ liệu",
         "underseaCable": "Cáp ngầm",
         "pipeline": "Đường ống",
@@ -1315,7 +1293,6 @@
         "descriptions": {
           "techStartupHubs": "Hệ sinh thái khởi nghiệp lớn (SF, NYC, London, v.v.)",
           "techCloudRegions": "Vùng trung tâm dữ liệu AWS, Azure, GCP",
-          "techHQs": "Trụ sở các công ty công nghệ lớn",
           "techAccelerators": "Vị trí Y Combinator, Techstars, 500 Startups",
           "infraCables": "Cáp quang ngầm chính (xương sống internet)",
           "infraDatacenters": "Cụm tính toán AI >=10.000 GPU",
@@ -1358,7 +1335,6 @@
           "infraCyberThreats": "Tấn công mạng và sự kiện an ninh",
           "mineralsFull": "Mỏ khoáng sản chiến lược và địa điểm khai thác",
           "techCyberThreats": "Tấn công mạng và sự kiện an ninh",
-          "techEvents": "Hội nghị và sự kiện công nghệ lớn",
           "techFires": "Cháy rừng đang hoạt động gần hạ tầng công nghệ",
           "financeGulfInvestments": "Quỹ tài sản có chủ quyền và đầu tư trực tiếp nước ngoài của Hội đồng Hợp tác Vùng Vịnh",
           "tradeRoutes": "Các tuyến vận tải biển chính toàn cầu kết nối các cảng qua các điểm chiến lược",
@@ -1558,22 +1534,6 @@
       },
       "dataFreshness": "Độ mới Dữ liệu",
       "sourcesDetail": "{{active}}/{{total}} nguồn"
-    },
-    "techEvents": {
-      "loading": "Đang tải sự kiện công nghệ...",
-      "noEvents": "Không có sự kiện để hiển thị",
-      "showOnMap": "Hiện trên bản đồ",
-      "moreInfo": "Thêm thông tin",
-      "upcoming": "Sắp tới",
-      "conferences": "Hội nghị",
-      "earnings": "Báo cáo Thu nhập",
-      "all": "Tất cả",
-      "conferencesCount": "{{count}} hội nghị",
-      "onMap": "{{count}} trên bản đồ",
-      "techmemeEvents": "Sự kiện Techmeme ↗",
-      "today": "HÔM NAY",
-      "soon": "SẮP TỚI",
-      "infoTooltip": "<strong>Sự kiện công nghệ</strong> Các sự kiện công nghệ sắp tới và gần đây: hội nghị, ra mắt sản phẩm, phiên điều trần quản lý và cuộc gọi thu nhập. Tổng hợp từ lịch sự kiện chính thức và nguồn ngành."
     },
     "techReadiness": {
       "ranked": "Có xếp hạng",
@@ -3437,59 +3397,6 @@
         "public": "Công",
         "publicPrivate": "Công/Tư"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "TRUNG TÂM SIÊU LỚN",
-        "major": "TRUNG TÂM LỚN",
-        "emerging": "ĐANG NỔI",
-        "hub": "TRUNG TÂM"
-      },
-      "unicorns": "UNICORN"
-    },
-    "cloudRegion": {
-      "provider": "NHÀ CUNG CẤP",
-      "availabilityZones": "VÙNG KHẢ DỤNG"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "CÔNG NGHỆ LỚN",
-        "unicorn": "KỲ LÂN",
-        "public": "NIÊM YẾT",
-        "tech": "CÔNG NGHỆ"
-      },
-      "marketCap": "VỐN HÓA THỊ TRƯỜNG",
-      "employees": "NHÂN VIÊN"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "VƯỜN ƯƠM",
-        "incubator": "Ươm tạo",
-        "studio": "STUDIO KHỞI NGHIỆP"
-      },
-      "founded": "NĂM THÀNH LẬP",
-      "notableAlumni": "CỰU THÀNH VIÊN NỔI BẬT"
-    },
-    "techEvent": {
-      "days": {
-        "today": "HÔM NAY",
-        "tomorrow": "NGÀY MAI",
-        "inDays": "TRONG {{count}} NGÀY"
-      },
-      "date": "NGÀY",
-      "moreInformation": "Thêm Thông tin"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}} CÔNG TY",
-      "bigTechCount": "{{count}} Công nghệ lớn",
-      "unicornsCount": "{{count}} Unicorn",
-      "publicCount": "{{count}} Niêm yết",
-      "sampled": "Hiển thị danh sách mẫu gồm {{count}} công ty."
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}} SỰ KIỆN",
-      "upcomingWithin2Weeks": "{{count}} sắp diễn ra trong 2 tuần",
-      "sampled": "Hiển thị danh sách mẫu gồm {{count}} sự kiện."
     },
     "militaryFlight": {
       "types": {

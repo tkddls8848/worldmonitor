@@ -14,10 +14,8 @@
 
 <p align="center">
   <a href="https://www.worldmonitor.app"><img src="https://img.shields.io/badge/Web_App-worldmonitor.app-blue?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Web 应用"></a>&nbsp;
-  <a href="https://tech.worldmonitor.app"><img src="https://img.shields.io/badge/Tech_Variant-tech.worldmonitor.app-0891b2?style=for-the-badge&logo=googlechrome&logoColor=white" alt="科技变体"></a>&nbsp;
   <a href="https://finance.worldmonitor.app"><img src="https://img.shields.io/badge/Finance_Variant-finance.worldmonitor.app-059669?style=for-the-badge&logo=googlechrome&logoColor=white" alt="金融变体"></a>&nbsp;
   <a href="https://commodity.worldmonitor.app"><img src="https://img.shields.io/badge/Commodity_Variant-commodity.worldmonitor.app-b45309?style=for-the-badge&logo=googlechrome&logoColor=white" alt="大宗商品变体"></a>&nbsp;
-  <a href="https://happy.worldmonitor.app"><img src="https://img.shields.io/badge/Happy_Variant-happy.worldmonitor.app-f59e0b?style=for-the-badge&logo=googlechrome&logoColor=white" alt="正能量变体"></a>&nbsp;
   <a href="https://energy.worldmonitor.app"><img src="https://img.shields.io/badge/Energy_Variant-energy.worldmonitor.app-eab308?style=for-the-badge&logo=googlechrome&logoColor=white" alt="能源变体"></a>
 </p>
 
@@ -54,7 +52,7 @@
 - **国家不稳定指数（CII）** — 面向一级国家注册表的服务器权威 CII v14 压力评分
 - **金融雷达** — 证券交易所、大宗商品、加密货币，以及市场综合指标
 - **本地 AI** — 通过 Ollama 运行全部功能，无需 API 密钥
-- **站点变体**，均来自同一代码库（World Monitor、Tech Monitor、Finance Monitor、Commodity Monitor、Happy Monitor、Energy Monitor）
+- **站点变体**，均来自同一代码库（World Monitor、Finance Monitor、Commodity Monitor、Energy Monitor）
 - **原生桌面应用**（Tauri 2），支持 macOS、Windows 和 Linux
 - **多语言界面**，提供本地语言信息流和 RTL 支持
 
@@ -91,10 +89,8 @@ npm run dev
 针对特定变体进行开发：
 
 ```bash
-npm run dev:tech       # tech.worldmonitor.app
 npm run dev:finance    # finance.worldmonitor.app
 npm run dev:commodity  # commodity.worldmonitor.app
-npm run dev:happy      # happy.worldmonitor.app
 npm run dev:energy     # energy.worldmonitor.app
 ```
 

@@ -305,7 +305,6 @@
   },
   "header": {
     "world": "MONDO",
-    "tech": "TECNOLOGIA",
     "live": "IN DIRETTA",
     "search": "Cerca",
     "settings": "IMPOSTAZIONI",
@@ -425,23 +424,9 @@
     "displacement": "Rifugiati e sfollati",
     "climate": "Anomalie climatiche",
     "populationExposure": "Esposizione della popolazione",
-    "startups": "Startup e venture capital",
-    "vcblogs": "Insight e saggi di venture capital",
-    "regionalStartups": "Notizie globali sulle startup",
-    "unicorns": "Tracciamento unicorni",
-    "accelerators": "Acceleratori e Demo Day",
-    "security": "Sicurezza informatica",
-    "policy": "Politica e regolamentazione IA",
     "regulation": "Dashboard regolamentazione IA",
     "finRegulation": "Regolamentazione finanziaria",
-    "hardware": "Semiconduttori e Hardware",
-    "cloud": "Cloud e Infrastruttura",
-    "dev": "Comunità di sviluppatori",
-    "github": "Tendenze GitHub",
     "ipo": "Quotazioni pubbliche e fusioni di società di comodo",
-    "funding": "Finanziamenti e venture capital",
-    "producthunt": "Caccia al prodotto",
-    "events": "Eventi tecnologici",
     "serviceStatus": "Stato del servizio",
     "techReadiness": "Indice di prontezza tecnologica",
     "techHubs": "Hub tecnologici caldi",
@@ -1060,15 +1045,10 @@
       },
       "timeAll": "Tutto",
       "layers": {
-        "startupHubs": "Hub di avvio",
-        "techHQs": "Quartieri tecnologici",
-        "accelerators": "Acceleratori",
-        "cloudRegions": "Regioni cloud",
         "aiDataCenters": "Data center IA",
         "underseaCables": "Cavi sottomarini",
         "internetOutages": "Interruzioni internet",
         "cyberThreats": "Minacce cyber",
-        "techEvents": "Eventi tecnologici",
         "naturalEvents": "Eventi naturali",
         "fires": "Incendi",
         "intelHotspots": "Hotspot di intelligence",
@@ -1118,8 +1098,6 @@
         "aircraft": "aereo",
         "protest": "Protesta",
         "protestsCount": "{{count}} proteste",
-        "techHQsCount": "{{count}} quartier generali tecnologici",
-        "techEventsCount": "{{count}} eventi tecnici",
         "dataCentersCount": "{{count}} data center",
         "underseaCable": "Cavo sottomarino",
         "pipeline": "Conduttura",
@@ -1169,7 +1147,6 @@
         "descriptions": {
           "techStartupHubs": "Principali ecosistemi di startup (SF, New York, Londra, ecc.)",
           "techCloudRegions": "Regioni dei data center AWS, Azure e GCP",
-          "techHQs": "Quartieri delle principali aziende tecnologiche",
           "techAccelerators": "Y Combinator, Techstars, 500 sedi di startup",
           "infraCables": "Principali cavi in fibra ottica sottomarini (dorsale Internet)",
           "infraDatacenters": "Cluster di calcolo AI >=10.000 GPU",
@@ -1213,7 +1190,6 @@
           "infraCyberThreats": "Attacchi informatici ed eventi di sicurezza",
           "mineralsFull": "Giacimenti di minerali strategici e siti minerari",
           "techCyberThreats": "Attacchi informatici ed eventi di sicurezza",
-          "techEvents": "Principali conferenze ed eventi tecnologici",
           "techFires": "Incendi attivi vicino a infrastrutture tecnologiche",
           "financeGulfInvestments": "Investimenti dei fondi sovrani del Consiglio di cooperazione del Golfo e investimenti esteri diretti",
           "geoBoundaries": "Zone demilitarizzate, linee di cessate il fuoco e confini contestati",
@@ -1418,22 +1394,6 @@
       "emojiKeyLabel": "Legenda Emoji",
       "emojiKeyAir": "Asset Aerei",
       "emojiKeyNaval": "Asset Navali"
-    },
-    "techEvents": {
-      "loading": "Caricamento eventi tecnici...",
-      "noEvents": "Nessun evento da visualizzare",
-      "showOnMap": "Mostra sulla mappa",
-      "moreInfo": "Maggiori informazioni",
-      "upcoming": "In arrivo",
-      "conferences": "Conferenze",
-      "earnings": "Utili",
-      "all": "Tutti",
-      "conferencesCount": "{{count}} conferenze",
-      "onMap": "{{count}} sulla mappa",
-      "techmemeEvents": "Eventi Techmeme ↗",
-      "today": "OGGI",
-      "soon": "PROSSIMAMENTE",
-      "infoTooltip": "<strong>Eventi tech</strong> Eventi tecnologici imminenti e recenti: conferenze, lanci di prodotti, audizioni regolatorie e chiamate sugli utili. Aggregati da calendari ufficiali e fonti del settore."
     },
     "techReadiness": {
       "ranked": "In classifica",
@@ -3471,59 +3431,6 @@
         "public": "Pubblico",
         "publicPrivate": "Pubblico/Privato"
       }
-    },
-    "startupHub": {
-      "tiers": {
-        "mega": "MEGA CENTRO",
-        "major": "GRANDE CENTRO",
-        "emerging": "EMERGENTE",
-        "hub": "CENTRO"
-      },
-      "unicorns": "UNICORNI"
-    },
-    "cloudRegion": {
-      "provider": "FORNITORE",
-      "availabilityZones": "ZONE DI DISPONIBILITÀ"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "GRANDE TECNOLOGIA",
-        "unicorn": "UNICORNO",
-        "public": "PUBBLICO",
-        "tech": "TECNICA"
-      },
-      "marketCap": "CAP. DI MERCATO",
-      "employees": "DIPENDENTI"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "ACCELERATORE",
-        "incubator": "INCUBATRICE",
-        "studio": "STUDIO DI AVVIO"
-      },
-      "founded": "FONDATO",
-      "notableAlumni": "ALUNNI NOTEVOLI"
-    },
-    "techEvent": {
-      "days": {
-        "today": "OGGI",
-        "tomorrow": "DOMANI",
-        "inDays": "TRA {{count}} GIORNI"
-      },
-      "date": "DATA",
-      "moreInformation": "Ulteriori informazioni"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}} AZIENDE",
-      "bigTechCount": "{{count}} Grande tecnologia",
-      "unicornsCount": "{{count}} Unicorni",
-      "publicCount": "{{count}} Pubblico",
-      "sampled": "Visualizzazione di un elenco campione di aziende {{count}}."
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}} EVENTI",
-      "upcomingWithin2Weeks": "{{count}} in arrivo entro 2 settimane",
-      "sampled": "Visualizzazione di un elenco campione di eventi {{count}}."
     },
     "militaryFlight": {
       "types": {

@@ -22,7 +22,7 @@ describe('cross-domain dismissal', () => {
   });
 
   it('keeps a dismissal that only the shared cookie still holds', () => {
-    stubHost('tech.worldmonitor.app');
+    stubHost('finance.worldmonitor.app');
     const jar = installCookieJar({ persist: true });
 
     setDismissed(KEY);

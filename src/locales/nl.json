@@ -19,19 +19,6 @@
     "middleeast": "Midden-Oosten",
     "layoffs": "Ontslagen-tracker",
     "ai": "AI en machine learning",
-    "startups": "Start-ups & durfkapitaal",
-    "vcblogs": "Inzichten en essays over venture capital",
-    "regionalStartups": "Wereldwijd startupnieuws",
-    "unicorns": "Eenhoorn-tracker",
-    "accelerators": "Accelerators & Demodagen",
-    "funding": "Financiering & venture capital",
-    "producthunt": "Productjacht",
-    "security": "Cyberbeveiliging",
-    "policy": "AI-beleid en -regelgeving",
-    "hardware": "Halfgeleiders en hardware",
-    "cloud": "Cloud en infrastructuur",
-    "dev": "Ontwikkelaarsgemeenschap",
-    "github": "GitHub-trending",
     "ipo": "Beursgang & fusies van lege beursvennootschappen",
     "thinktanks": "Denktanks",
     "science": "Wetenschap",
@@ -50,7 +37,6 @@
     "serviceStatus": "Servicestatus",
     "stablecoins": "Stabiele munten",
     "deduction": "Situatie afleiden",
-    "events": "Technische evenementen",
     "techHubs": "Hottech-hubs",
     "techReadiness": "Tech Readiness-index",
     "ucdpEvents": "UCDP-conflictgebeurtenissen",
@@ -514,15 +500,10 @@
       },
       "timeAll": "Alle",
       "layers": {
-        "startupHubs": "Opstarthubs",
-        "techHQs": "Technische hoofdkantoren",
-        "accelerators": "Versnellers",
-        "cloudRegions": "Cloudregio's",
         "aiDataCenters": "AI-datacenters",
         "underseaCables": "Onderzeese kabels",
         "internetOutages": "Internetstoringen",
         "cyberThreats": "Cyberbedreigingen",
-        "techEvents": "Technische evenementen",
         "naturalEvents": "Natuurlijke gebeurtenissen",
         "fires": "Branden",
         "intelHotspots": "Intel-hotspots",
@@ -572,8 +553,6 @@
         "aircraft": "vliegtuigen",
         "protest": "Protest",
         "protestsCount": "{{count}} protesten",
-        "techHQsCount": "{{count}} technische hoofdkantoren",
-        "techEventsCount": "{{count}} technische evenementen",
         "dataCentersCount": "{{count}} datacenters",
         "underseaCable": "Onderzeese kabel",
         "pipeline": "Pijpleiding",
@@ -623,7 +602,6 @@
         "descriptions": {
           "techStartupHubs": "Grote startup-ecosystemen (SF, NYC, Londen, etc.)",
           "techCloudRegions": "AWS-, Azure- en GCP-datacenterregio's",
-          "techHQs": "Hoofdkwartier van grote technologiebedrijven",
           "techAccelerators": "Y Combinator, Techstars, 500 Startups-locaties",
           "infraCables": "Grote onderzeese glasvezelkabels (internetbackbone)",
           "infraDatacenters": "AI-rekenclusters >=10.000 GPU's",
@@ -668,7 +646,6 @@
           "infraCyberThreats": "Cyberaanvallen en beveiligingsincidenten",
           "mineralsFull": "Strategische minerale afzettingen en mijnbouwlocaties",
           "techCyberThreats": "Cyberaanvallen en beveiligingsincidenten",
-          "techEvents": "Grote techconferenties en evenementen",
           "techFires": "Actieve bosbranden nabij technische infrastructuur",
           "geoBoundaries": "Gedemilitariseerde zones, staakt-het-vuren-lijnen en betwiste grenzen",
           "ciiChoropleth": "Country Instability Index heatmap — landen ingekleurd naar score (groen=stabiel, rood=kritiek)",
@@ -861,22 +838,6 @@
       "emojiKeyLabel": "Emojicode",
       "emojiKeyAir": "Luchtvaartuigen",
       "emojiKeyNaval": "Marineeenheden"
-    },
-    "techEvents": {
-      "loading": "Technische evenementen laden...",
-      "noEvents": "Er zijn geen evenementen om weer te geven",
-      "showOnMap": "Toon op kaart",
-      "moreInfo": "Meer informatie",
-      "upcoming": "Aankomend",
-      "conferences": "Conferenties",
-      "earnings": "Kwartaalcijfers",
-      "all": "Alles",
-      "conferencesCount": "{{count}} conferenties",
-      "onMap": "{{count}} op kaart",
-      "techmemeEvents": "Techmeme-evenementen ↗",
-      "today": "VANDAAG",
-      "soon": "BINNENKORT",
-      "infoTooltip": "<strong>Tech-evenementen</strong> Aankomende en recente technologie-evenementen: conferenties, productlanceringen, regelgevende hoorzittingen en winstgesprekken. Samengesteld uit officiële evenementenkalenders en industriebronnen."
     },
     "techReadiness": {
       "ranked": "Met rang",
@@ -3071,59 +3032,6 @@
         "publicPrivate": "Publiek/privaat"
       }
     },
-    "startupHub": {
-      "tiers": {
-        "mega": "MEGA-HUB",
-        "major": "BELANGRIJK HUB",
-        "emerging": "OPKOMEND",
-        "hub": "MIDDELPUNT"
-      },
-      "unicorns": "EENHOORN"
-    },
-    "cloudRegion": {
-      "provider": "AANBIEDER",
-      "availabilityZones": "BESCHIKBAARHEIDSZONES"
-    },
-    "techHQ": {
-      "types": {
-        "faang": "GROTE TECH",
-        "unicorn": "EENHOORN",
-        "public": "OPENBAAR",
-        "tech": "TECH"
-      },
-      "marketCap": "MARKTKAP",
-      "employees": "MEDEWERKERS"
-    },
-    "accelerator": {
-      "types": {
-        "accelerator": "GASPEDAAL",
-        "incubator": "INcubator",
-        "studio": "START STUDIO"
-      },
-      "founded": "GEVONDEN",
-      "notableAlumni": "OPMERKELIJKE ALUMNI"
-    },
-    "techEvent": {
-      "days": {
-        "today": "VANDAAG",
-        "tomorrow": "MORGEN",
-        "inDays": "BINNEN {{count}} DAGEN"
-      },
-      "date": "DATUM",
-      "moreInformation": "Meer informatie"
-    },
-    "techHQCluster": {
-      "companiesCount": "{{count}} BEDRIJVEN",
-      "bigTechCount": "{{count}} Grote technologie",
-      "unicornsCount": "{{count}} Eenhoorns",
-      "publicCount": "{{count}} Openbaar",
-      "sampled": "Toont een voorbeeldlijst van {{count}} bedrijven."
-    },
-    "techEventCluster": {
-      "eventsCount": "{{count}} EVENEMENTEN",
-      "upcomingWithin2Weeks": "{{count}} verwacht binnen 2 weken",
-      "sampled": "Er wordt een voorbeeldlijst met {{count}} gebeurtenissen weergegeven."
-    },
     "militaryFlight": {
       "types": {
         "fighter": "Vechter",
@@ -3871,7 +3779,6 @@
   },
   "header": {
     "world": "WERELD",
-    "tech": "TECH",
     "viewOnGitHub": "Bekijk op GitHub",
     "live": "LIVE",
     "search": "Zoekopdracht",

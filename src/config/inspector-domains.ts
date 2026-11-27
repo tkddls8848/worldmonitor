@@ -46,15 +46,6 @@ export const OVERVIEW_DEFAULT_PANELS: Readonly<Record<string, readonly string[]>
     'energy-complex',
     'latest-brief',
   ],
-  tech: [
-    'insights',
-    'ai',
-    'tech',
-    'startups',
-    'markets',
-    'internet-disruptions',
-    'latest-brief',
-  ],
   finance: [
     'insights',
     'markets',
@@ -112,9 +103,6 @@ const SECURITY_PANEL_KEYS = new Set<string>([
   'geo-hubs',
   'regional-intelligence',
   'deduction',
-  'security',
-  'policy',
-  'ai-regulation',
 ]);
 
 const MARKETS_EQUITIES_KEYS = new Set<string>([
@@ -232,18 +220,6 @@ const NEWS_TOPICAL_KEYS = new Set<string>([
   'layoffs',
   'science',
   'climate-news',
-  'startups',
-  'vcblogs',
-  'regionalStartups',
-  'unicorns',
-  'accelerators',
-  'hardware',
-  'cloud',
-  'dev',
-  'github',
-  'funding',
-  'producthunt',
-  'events',
   'tech-hubs',
 ]);
 

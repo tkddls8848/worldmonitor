@@ -8,7 +8,6 @@
   },
   "header": {
     "world": "WORLD",
-    "tech": "TECH",
     "live": "LIVE",
     "cached": "CACHED",
     "unavailable": "UNAVAILABLE",
@@ -136,23 +135,9 @@
     "populationExposure": "Population Exposure",
     "securityAdvisories": "Security Advisories",
     "orefSirens": "Israel Sirens",
-    "startups": "Startups & venture capital",
-    "vcblogs": "Venture capital insights & essays",
-    "regionalStartups": "Global Startup News",
-    "unicorns": "Unicorn Tracker",
-    "accelerators": "Accelerators & Demo Days",
-    "security": "Cybersecurity",
-    "policy": "AI Policy & Regulation",
     "regulation": "AI Regulation Dashboard",
     "finRegulation": "Financial Regulation",
-    "hardware": "Semiconductors & Hardware",
-    "cloud": "Cloud & Infrastructure",
-    "dev": "Developer Community",
-    "github": "GitHub Trending",
     "ipo": "Public listings & shell-company mergers",
-    "funding": "Funding & venture capital",
-    "producthunt": "Product Hunt",
-    "events": "Tech Events",
     "serviceStatus": "Service Status",
     "internetDisruptions": "Internet Disruptions",
     "internetDisruptionsTabs": {
@@ -735,9 +720,6 @@
     },
     "supplyChain": {
       "infoTooltip": "<strong>Supply Chain Monitor</strong> Global logistics and resource tracking:<ul><li><strong>Chokepoints</strong>: Maritime transit status, disruption scores, and vessel counts</li><li><strong>Shipping</strong>: Baltic Dry Index and freight rate trends</li><li><strong>Minerals</strong>: Critical mineral concentration risk (producer concentration index) and top producers</li></ul>Click a chokepoint card to expand transit history chart."
-    },
-    "techEvents": {
-      "infoTooltip": "<strong>Tech Events</strong> Upcoming and recent technology events: conferences, product launches, regulatory hearings, and earnings calls. Aggregated from official event calendars and industry sources."
     },
     "techHubs": {
       "infoTooltip": "<strong>Tech Hub Activity</strong><br>Shows tech hubs with the most news activity.<br><br><em>Activity levels:</em><br>• <span style=\"color: {{highColor}}\">High</span> — Breaking news or 50+ score<br>• <span style=\"color: {{elevatedColor}}\">Elevated</span> — Score 20-49<br>• <span style=\"color: {{lowColor}}\">Low</span> — Score below 20<br><br>Click a hub to zoom to its location."
