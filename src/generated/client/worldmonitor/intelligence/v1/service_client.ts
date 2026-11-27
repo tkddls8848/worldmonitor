@@ -630,32 +630,6 @@ export interface SecFilingSearchResult {
   accession: string;
 }
 
-export interface ListMaterialEventsRequest {
-  itemCode: string;
-  limit: number;
-}
-
-export interface ListMaterialEventsResponse {
-  events: MaterialEvent[];
-  unavailable: boolean;
-  fetchedAtMs: number;
-}
-
-export interface MaterialEvent {
-  company: string;
-  cik: string;
-  form: string;
-  accession: string;
-  filedAtMs: number;
-  items: MaterialEventItem[];
-  url: string;
-}
-
-export interface MaterialEventItem {
-  code: string;
-  description: string;
-}
-
 export interface GetCountryFactsRequest {
   countryCode: string;
 }
@@ -1852,32 +1826,6 @@ export class IntelligenceServiceClient {
     }
 
     return await resp.json() as SearchSecFilingsResponse;
-  }
-
-  async listMaterialEvents(req: ListMaterialEventsRequest, options?: IntelligenceServiceCallOptions): Promise<ListMaterialEventsResponse> {
-    let path = "/api/intelligence/v1/list-material-events";
-    const params = new URLSearchParams();
-    if (req.itemCode != null && req.itemCode !== "") params.set("item_code", String(req.itemCode));
-    if (req.limit != null && req.limit !== 0) params.set("limit", String(req.limit));
-    const url = this.baseURL + path + (params.toString() ? "?" + params.toString() : "");
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...this.defaultHeaders,
-      ...options?.headers,
-    };
-
-    const resp = await this.fetchFn(url, {
-      method: "GET",
-      headers,
-      signal: options?.signal,
-    });
-
-    if (!resp.ok) {
-      return this.handleError(resp);
-    }
-
-    return await resp.json() as ListMaterialEventsResponse;
   }
 
   async getCountryFacts(req: GetCountryFactsRequest, options?: IntelligenceServiceCallOptions): Promise<GetCountryFactsResponse> {

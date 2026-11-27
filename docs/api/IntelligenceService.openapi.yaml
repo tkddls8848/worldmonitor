@@ -1152,69 +1152,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Error'
-    /api/intelligence/v1/list-material-events:
-        get:
-            tags:
-                - IntelligenceService
-            summary: ListMaterialEvents
-            description: |-
-                ListMaterialEvents returns the pre-seeded stream of recent SEC 8-K material-event
-                 filings (M&A, executive changes, restatements, bankruptcies) across all filers.
-            operationId: ListMaterialEvents
-            parameters:
-                - name: item_code
-                  in: query
-                  description: Filter to a single 8-K item code, such as "5.02" (executive changes).
-                  required: false
-                  example: "example"
-                  schema:
-                    type: string
-                - name: limit
-                  in: query
-                  description: Maximum events to return (default 25, capped at 100).
-                  required: false
-                  example: 25
-                  schema:
-                    type: integer
-                    format: int32
-                - name: jmespath
-                  in: query
-                  description: |-
-                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
-                  required: false
-                  example: "keys(@)"
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: Successful response
-                    content:
-                        application/json:
-                            example:
-                                "events":
-                                    - "accession": "example"
-                                      "cik": "example"
-                                      "company": "example"
-                                      "filedAtMs": 1
-                                      "form": "example"
-                                "fetchedAtMs": 1
-                                "unavailable": false
-                            schema:
-                                $ref: '#/components/schemas/ListMaterialEventsResponse'
-                "400":
-                    description: Validation error
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/ValidationError'
-                                    - $ref: '#/components/schemas/JmespathProjectionError'
-                default:
-                    description: Error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Error'
     /api/intelligence/v1/get-country-facts:
         get:
             tags:
@@ -6101,67 +6038,6 @@ components:
                 accession:
                     type: string
                     description: EDGAR accession number, such as "0000320193-26-000123".
-        ListMaterialEventsRequest:
-            type: object
-            properties:
-                itemCode:
-                    type: string
-                    description: Filter to a single 8-K item code, such as "5.02" (executive changes).
-                limit:
-                    type: integer
-                    format: int32
-                    description: Maximum events to return (default 25, capped at 100).
-            description: Request for the pre-seeded stream of recent SEC 8-K material-event filings.
-        ListMaterialEventsResponse:
-            type: object
-            properties:
-                events:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/MaterialEvent'
-                unavailable:
-                    type: boolean
-                    description: True when the seeded stream is not available in the cache.
-                fetchedAtMs:
-                    type: integer
-                    format: int64
-                    description: 'Unix timestamp in milliseconds when the stream was last seeded.. Warning: Values > 2^53 may lose precision in JavaScript'
-            description: Recent SEC 8-K material-event filings across all filers, newest first.
-        MaterialEvent:
-            type: object
-            properties:
-                company:
-                    type: string
-                    description: Filer display name.
-                cik:
-                    type: string
-                    description: SEC Central Index Key of the filer (zero-padded 10 digits).
-                form:
-                    type: string
-                    description: Form type, such as "8-K" or "8-K/A".
-                accession:
-                    type: string
-                    description: EDGAR accession number.
-                filedAtMs:
-                    type: integer
-                    format: int64
-                    description: 'Unix timestamp in milliseconds when the filing was accepted.. Warning: Values > 2^53 may lose precision in JavaScript'
-                items:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/MaterialEventItem'
-                url:
-                    type: string
-                    description: Link to the filing index on sec.gov.
-        MaterialEventItem:
-            type: object
-            properties:
-                code:
-                    type: string
-                    description: 8-K item code, such as "2.02".
-                description:
-                    type: string
-                    description: Human-readable item description, such as "Results of Operations and Financial Condition".
         GetCountryFactsRequest:
             type: object
             properties:

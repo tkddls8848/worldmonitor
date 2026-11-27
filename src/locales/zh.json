@@ -420,7 +420,6 @@
     "orefSirens": "以色列警报",
     "regulation": "AI监管仪表盘",
     "finRegulation": "金融监管",
-    "ipo": "公开上市与特殊目的收购公司合并",
     "serviceStatus": "服务状态",
     "techReadiness": "科技就绪指数",
     "gccInvestments": "海湾合作委员会投资",
@@ -1925,12 +1924,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>杂货篮指数</strong>全球24个国家的杂货篮价格对比——跟踪超越头条消费者价格指数的真实消费品通胀。"
     },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>高级股票分析</strong> 针对自选股列表的 AI 分析 — 买入/持有/卖出信号、目标价、主要风险和催化剂，每日更新。"
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>高级回测</strong> 针对自选股列表的历史表现回测 — 历史收益、最大回撤和波动率指标。"
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>每日市场简报</strong> AI 生成的全球市场状况、关键宏观趋势和板块级信号每日摘要 — 每个交易日刷新。"
     },
@@ -1984,25 +1977,6 @@
         "failedToLoad": "加载失败"
       },
       "methodologyNote": "警报 / 警告 / 监视级别来自编辑关键词分类器 — 请参阅 /docs/methodology/disease-alert-level 了解关键词表和限制。"
-    },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>财报日历</strong>主要上市公司即将发布和最近发布的财报。显示每股收益预期值与实际值、收入和超预期/未达预期分类。数据来源：财务数据供应商。",
-      "title": "财报日历",
-      "today": "今日 · {{date}}",
-      "tomorrow": "明日 · {{date}}",
-      "epsActual": "每股收益{{value}}",
-      "epsEstimate": "每股收益预期{{value}}",
-      "revenueActual": "{{value}} 收入",
-      "revenueEstimate": "{{value}} 预期",
-      "surprise": {
-        "beat": "超预期",
-        "miss": "未达预期",
-        "inLine": "符合预期"
-      },
-      "errors": {
-        "noData": "无财报数据",
-        "failedToLoad": "加载失败"
-      }
     },
     "economicCalendar": {
       "infoTooltip": "<strong>经济日历</strong>定期宏观经济数据发布：消费者价格指数、非农就业人数、国内生产总值、采购经理指数和央行决议。显示预期值与实际值与前值。高影响事件突出显示。数据来源：经济数据供应商。"

@@ -1183,7 +1183,7 @@ test.describe('top-level WebMCP dashboard contract', () => {
           output: parseOutput(await window.__wmExecuteWebMcpTool(
             provider,
             panelTool,
-            { panelId: 'stock-analysis' },
+            { panelId: 'daily-market-brief' },
           )),
         };
       } catch (error) {
@@ -1743,7 +1743,7 @@ test.describe('top-level WebMCP dashboard contract', () => {
       test.skip(true, 'Host omitted the target-side AbortSignal; persist proof requires cancellation.');
     }
 
-    // full variant lists every bundled preset except finance-only nq-day-trader
+    // full variant lists every bundled preset for the full dashboard
     // (8 after country-watcher landed in #7650, 9 with the full-only
     // protective-travel preset from #10453).
     expect(first.listOutput).toMatchObject({

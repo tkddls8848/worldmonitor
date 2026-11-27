@@ -67,12 +67,12 @@ describe('canonicalHref / hrefFor', () => {
   it("writes each surface's own link convention", () => {
     const docs = { kind: 'docs' };
     const blog = { kind: 'blog' };
-    const docT = { kind: 'docs', url: `${SITE}/docs/panels/stock-analysis` };
+    const docT = { kind: 'docs', url: `${SITE}/docs/panels/indicators-and-signals` };
     const blogT = { kind: 'blog', url: `${SITE}/blog/posts/a/` };
     const siteT = { kind: 'site', url: `${SITE}/chokepoints/suez-canal/` };
-    assert.equal(hrefFor(docs, docT), '/panels/stock-analysis');
+    assert.equal(hrefFor(docs, docT), '/panels/indicators-and-signals');
     assert.equal(hrefFor(blog, blogT), '/blog/posts/a/');
-    assert.equal(hrefFor(blog, docT), `${SITE}/docs/panels/stock-analysis`);
+    assert.equal(hrefFor(blog, docT), `${SITE}/docs/panels/indicators-and-signals`);
     assert.equal(hrefFor(docs, siteT), `${SITE}/chokepoints/suez-canal/`);
   });
 

@@ -116,7 +116,7 @@ describe('news panel ↔ feed coverage (panel-layout createNewsPanel ⇔ feeds.t
   ]);
 
   // CANONICAL_FEEDS is the union of every edition's browser categories,
-  // including the on-demand edition (nq-news).
+  // including directly registered categories.
   test('every createNewsPanel(...) key resolves to feeds in CANONICAL_FEEDS', () => {
     // NB: do NOT run stripComments() on panel-layout.ts — unlike the pure-data
     // feed maps, it contains regex literals (e.g. /-([a-z])/g) that the naive

@@ -79,7 +79,7 @@ Subscriber stock research through existing MarketService routes. Analysis and ba
 
 The response is `{operation, data}`, retaining the existing API payload, including availability, generated timestamps, risk factors, model/fallback provenance and simulation basis. Empty saved results and unavailable analyses do not imply a zero return. Technical backtests omit point-in-time fundamentals and do not establish future performance.
 
-- **API endpoints:** `GET /api/market/v1/analyze-stock`, `GET /api/market/v1/backtest-stock`, `GET /api/market/v1/get-stock-analysis-history`, `GET /api/market/v1/list-stored-stock-backtests`.
+- **API endpoints:** `GET /api/market/v1/analyze-stock`.
 - **Access:** subscription. Existing MCP metering, gateway subscription checks, provider quotas, billing denial and retry/backoff contracts remain active. Cold analysis may take longer than seeded reads. The tool may save shared snapshots, so its read-only and idempotent hints are false; its destructive hint is false.
 - **Output budget:** 512 KiB. For a large watchlist use fewer symbols/snapshots or `jmespath` to select the fields needed. A budget-exceeded envelope is not complete history.
 
@@ -93,7 +93,7 @@ Per-company corporate intelligence from SEC EDGAR and market data (#5695). Compa
 
 | Name | Type | Description |
 |------|------|-------------|
-| `view` | `string: enrichment / signals / filings-search / material-events` | Which dataset to return: one company's profile (`enrichment`), its classified events (`signals`), EDGAR full-text search (`filings-search`) or the market-wide 8-K stream (`material-events`). Omitted: `enrichment`. |
+| `view` | `string: enrichment / signals / filings-search` | Which dataset to return: one company's profile (`enrichment`), its classified events (`signals`), EDGAR full-text search (`filings-search`). Omitted: `enrichment`. |
 | `ticker` | string | Exchange ticker symbol, such as `AAPL`. Preferred company key for `enrichment` and `signals`. |
 | `name` | string | Company name fallback when no ticker is known; case-insensitive exact SEC title only, and only when that title maps to a single CIK. Prefer ticker. |
 | `query` | string | `filings-search` only: full-text query. Required for that view. |
@@ -102,9 +102,9 @@ Per-company corporate intelligence from SEC EDGAR and market data (#5695). Compa
 | `item_code` | string | `material-events` only: keep filings that report this 8-K item number, written N.NN as in `items[].code` of returned events, such as `5.02` (officer departures and appointments) or `1.01` (material agreements). Omitted: all items. |
 | `limit` | integer | Number of results to return. `filings-search` accepts at most 25 (omitted: 10); `material-events` accepts up to 100 (omitted: 25). Above 25 on `filings-search` returns error `limit_out_of_range`. Ignored by `enrichment` and `signals`. |
 
-- **API endpoints:** `GET /api/intelligence/v1/get-company-enrichment`, `GET /api/intelligence/v1/list-company-signals`, `GET /api/intelligence/v1/search-sec-filings`, `GET /api/intelligence/v1/list-material-events`
+- **API endpoints:** `GET /api/intelligence/v1/get-company-enrichment`, `GET /api/intelligence/v1/list-company-signals`, `GET /api/intelligence/v1/search-sec-filings`
 - **Access:** `subscription` — requires a Pro subscription. RPC tool: no `summary` argument (use `jmespath` to trim the response).
-- **Kind:** canonical-route proxy — `enrichment` fans out to SEC submissions, Finnhub profile + earnings surprises, and news mentions; `signals` uses timestamped SEC filings + news (not fiscal period ends). Each upstream is independently cached. `filings-search` proxies EDGAR full-text search; `material-events` reads the seeded market-wide 8-K stream (30-minute cadence).
+- **Kind:** canonical-route proxy — `enrichment` fans out to SEC submissions, Finnhub profile + earnings surprises, and news mentions; `signals` uses timestamped SEC filings + news (not fiscal period ends). Each upstream is independently cached. `filings-search` proxies EDGAR full-text search.
 - **Freshness:** every view's payload carries its own timestamp (`enrichedAtMs`, `discoveredAtMs`, `fetchedAtMs`); `material-events.fetchedAtMs` is the seed time of the stream snapshot.
 
 <CodeGroup>

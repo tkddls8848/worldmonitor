@@ -351,72 +351,6 @@ export interface Fundamentals {
   financialCurrency?: string;
 }
 
-export interface GetStockAnalysisHistoryRequest {
-  symbols: string[];
-  limitPerSymbol: number;
-  includeNews: boolean;
-}
-
-export interface GetStockAnalysisHistoryResponse {
-  items: StockAnalysisHistoryItem[];
-}
-
-export interface StockAnalysisHistoryItem {
-  symbol: string;
-  snapshots: AnalyzeStockResponse[];
-}
-
-export interface BacktestStockRequest {
-  symbol: string;
-  name: string;
-  evalWindowDays: number;
-}
-
-export interface BacktestStockResponse {
-  available: boolean;
-  symbol: string;
-  name: string;
-  display: string;
-  currency: string;
-  evalWindowDays: number;
-  evaluationsRun: number;
-  actionableEvaluations: number;
-  winRate: number;
-  directionAccuracy: number;
-  avgSimulatedReturnPct: number;
-  cumulativeSimulatedReturnPct: number;
-  latestSignal: string;
-  latestSignalScore: number;
-  summary: string;
-  generatedAt: string;
-  evaluations: BacktestStockEvaluation[];
-  engineVersion: string;
-  ratingBasis: string;
-}
-
-export interface BacktestStockEvaluation {
-  analysisAt: number;
-  signal: string;
-  signalScore: number;
-  entryPrice: number;
-  exitPrice: number;
-  simulatedReturnPct: number;
-  directionCorrect: boolean;
-  outcome: string;
-  stopLoss: number;
-  takeProfit: number;
-  analysisId: string;
-}
-
-export interface ListStoredStockBacktestsRequest {
-  symbols: string[];
-  evalWindowDays: number;
-}
-
-export interface ListStoredStockBacktestsResponse {
-  items: BacktestStockResponse[];
-}
-
 export interface GetFearGreedIndexRequest {
 }
 
@@ -517,28 +451,6 @@ export interface CotInstrument {
   smallTraderLong: string;
   smallTraderShort: string;
   smallTraderAvailable: boolean;
-}
-
-export interface GetInsiderTransactionsRequest {
-  symbol: string;
-}
-
-export interface GetInsiderTransactionsResponse {
-  unavailable: boolean;
-  symbol: string;
-  totalBuys: number;
-  totalSells: number;
-  netValue: number;
-  transactions: InsiderTransaction[];
-  fetchedAt: string;
-}
-
-export interface InsiderTransaction {
-  name: string;
-  shares: number;
-  value: number;
-  transactionCode: string;
-  transactionDate: string;
 }
 
 export interface GetMarketBreadthHistoryRequest {
@@ -993,86 +905,6 @@ export class MarketServiceClient {
     return await resp.json() as AnalyzeStockResponse;
   }
 
-  async getStockAnalysisHistory(req: GetStockAnalysisHistoryRequest, options?: MarketServiceCallOptions): Promise<GetStockAnalysisHistoryResponse> {
-    let path = "/api/market/v1/get-stock-analysis-history";
-    const params = new URLSearchParams();
-    if (req.symbols && req.symbols.length > 0) req.symbols.forEach(v => params.append("symbols", v));
-    if (req.limitPerSymbol != null && req.limitPerSymbol !== 0) params.set("limit_per_symbol", String(req.limitPerSymbol));
-    if (req.includeNews) params.set("include_news", String(req.includeNews));
-    const url = this.baseURL + path + (params.toString() ? "?" + params.toString() : "");
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...this.defaultHeaders,
-      ...options?.headers,
-    };
-
-    const resp = await this.fetchFn(url, {
-      method: "GET",
-      headers,
-      signal: options?.signal,
-    });
-
-    if (!resp.ok) {
-      return this.handleError(resp);
-    }
-
-    return await resp.json() as GetStockAnalysisHistoryResponse;
-  }
-
-  async backtestStock(req: BacktestStockRequest, options?: MarketServiceCallOptions): Promise<BacktestStockResponse> {
-    let path = "/api/market/v1/backtest-stock";
-    const params = new URLSearchParams();
-    if (req.symbol != null && req.symbol !== "") params.set("symbol", String(req.symbol));
-    if (req.name != null && req.name !== "") params.set("name", String(req.name));
-    if (req.evalWindowDays != null && req.evalWindowDays !== 0) params.set("eval_window_days", String(req.evalWindowDays));
-    const url = this.baseURL + path + (params.toString() ? "?" + params.toString() : "");
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...this.defaultHeaders,
-      ...options?.headers,
-    };
-
-    const resp = await this.fetchFn(url, {
-      method: "GET",
-      headers,
-      signal: options?.signal,
-    });
-
-    if (!resp.ok) {
-      return this.handleError(resp);
-    }
-
-    return await resp.json() as BacktestStockResponse;
-  }
-
-  async listStoredStockBacktests(req: ListStoredStockBacktestsRequest, options?: MarketServiceCallOptions): Promise<ListStoredStockBacktestsResponse> {
-    let path = "/api/market/v1/list-stored-stock-backtests";
-    const params = new URLSearchParams();
-    if (req.symbols && req.symbols.length > 0) req.symbols.forEach(v => params.append("symbols", v));
-    if (req.evalWindowDays != null && req.evalWindowDays !== 0) params.set("eval_window_days", String(req.evalWindowDays));
-    const url = this.baseURL + path + (params.toString() ? "?" + params.toString() : "");
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...this.defaultHeaders,
-      ...options?.headers,
-    };
-
-    const resp = await this.fetchFn(url, {
-      method: "GET",
-      headers,
-      signal: options?.signal,
-    });
-
-    if (!resp.ok) {
-      return this.handleError(resp);
-    }
-
-    return await resp.json() as ListStoredStockBacktestsResponse;
-  }
-
   async getFearGreedIndex(_req: GetFearGreedIndexRequest, options?: MarketServiceCallOptions): Promise<GetFearGreedIndexResponse> {
     let path = "/api/market/v1/get-fear-greed-index";
     const url = this.baseURL + path;
@@ -1143,31 +975,6 @@ export class MarketServiceClient {
     }
 
     return await resp.json() as GetCotPositioningResponse;
-  }
-
-  async getInsiderTransactions(req: GetInsiderTransactionsRequest, options?: MarketServiceCallOptions): Promise<GetInsiderTransactionsResponse> {
-    let path = "/api/market/v1/get-insider-transactions";
-    const params = new URLSearchParams();
-    if (req.symbol != null && req.symbol !== "") params.set("symbol", String(req.symbol));
-    const url = this.baseURL + path + (params.toString() ? "?" + params.toString() : "");
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...this.defaultHeaders,
-      ...options?.headers,
-    };
-
-    const resp = await this.fetchFn(url, {
-      method: "GET",
-      headers,
-      signal: options?.signal,
-    });
-
-    if (!resp.ok) {
-      return this.handleError(resp);
-    }
-
-    return await resp.json() as GetInsiderTransactionsResponse;
   }
 
   async getMarketBreadthHistory(_req: GetMarketBreadthHistoryRequest, options?: MarketServiceCallOptions): Promise<GetMarketBreadthHistoryResponse> {

@@ -496,7 +496,6 @@
     "orefSirens": "Sirene u Izraelu",
     "regulation": "AI Ploča Regulacije",
     "finRegulation": "Financijska Regulacija",
-    "ipo": "Javni popisi i spajanja shell-tvrtki",
     "serviceStatus": "Status Usluge",
     "internetDisruptions": "Prekidi Interneta",
     "internetDisruptionsTabs": {
@@ -2067,12 +2066,6 @@
         "twentyDayTrend": "Trend premije za dvadeset trgovačkih dana"
       }
     },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>Premijska analiza dionica</strong> AI-pokrenuta analiza za dionice na vašoj listi praćenja — signali kupnje/držanja/prodaje, ciljne cijene, ključni rizici i katalizatori ažurirani dnevno."
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>Premijsko testiranje unazad</strong> Testiranja povijesne izvedbe za dionice na vašoj listi praćenja — prethodne povrate, maksimalno osciliranje i metrike volatilnosti."
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>Dnevni tržišni pregled</strong> AI-generirani dnevni sažetak svjetskih tržišnih uvjeta, ključnih makroekonomskih trendova i signala na razini sektora — osvježava se svakim danom trgovanja."
     },
@@ -2281,25 +2274,6 @@
       },
       "errors": {
         "noData": "Nema dostupnih podataka o izbijanju",
-        "failedToLoad": "Učitavanje nije uspjelo"
-      }
-    },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>Kalendar zarada</strong> Nadolazeća i nedavna objavljivanja zarada za velike javne tvrtke. Prikazuje procjene dobiti po dionici u odnosu na stvarne vrijednosti, prihod i klasifikaciju prekoračenja/propusta. Izvor: pružatelji financijskih podataka.",
-      "title": "Kalendar zarada",
-      "today": "DANAS · {{date}}",
-      "tomorrow": "SUTRA · {{date}}",
-      "epsActual": "dobit po dionici {{value}}",
-      "epsEstimate": "procjena dobiti po dionici {{value}}",
-      "revenueActual": "{{value}} prihod",
-      "revenueEstimate": "{{value}} proc",
-      "surprise": {
-        "beat": "PREMAŠENO",
-        "miss": "MANJAK",
-        "inLine": "U SKLADU"
-      },
-      "errors": {
-        "noData": "Nema podataka o zaradama",
         "failedToLoad": "Učitavanje nije uspjelo"
       }
     },

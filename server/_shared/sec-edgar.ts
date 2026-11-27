@@ -16,8 +16,6 @@ export const SEC_USER_AGENT = 'WorldMonitor/2.0 (monitor@worldmonitor.app)';
 
 // Seeded by scripts/seed-sec-cik-map.mjs (slim {TICKER: {cik, name}} map).
 export const SEC_CIK_MAP_KEY = 'intelligence:sec-cik-map:v1';
-// Seeded by scripts/seed-sec-8k-stream.mjs ({events, fetchedAt}).
-export const SEC_8K_STREAM_KEY = 'intelligence:sec-8k-stream:v1';
 
 const SUBMISSIONS_TTL = 21_600; // 6h — recent-filings freshness vs. SEC load
 const SEARCH_TTL = 900;
@@ -50,7 +48,7 @@ export function isRelevantForm(form: string): boolean {
 
 // 8-K item taxonomy (17 CFR 249.308). `high`/`medium` items are genuine
 // intelligence signals; `routine` items (earnings boilerplate exhibits, Reg FD)
-// are surfaced in filing lists but excluded from the material-events stream.
+// are surfaced in filing lists when they carry relevant material disclosures.
 // The seeder keeps its own small material-code set — tests assert it matches
 // the high+medium codes here.
 export const MATERIAL_8K_ITEMS: Record<string, { description: string; materiality: 'high' | 'medium' | 'routine' }> = {

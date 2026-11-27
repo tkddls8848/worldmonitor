@@ -345,7 +345,7 @@ Free-text substring filters and ISO-only fields retain their existing contracts.
 | `get_chokepoint_status` | Live maritime chokepoint status: per-chokepoint vessel transit counts (10-min cadence), rolling transit summaries, per-port activity, plus static reference data and flow aggregates. Covers Suez, Hormuz, Malacca, Bab-el-Mandeb, Panama, etc. |
 | `get_consumer_prices` | Per-country consumer-prices intelligence: 30-day overview, category-level inflation, retailer spread (essentials basket), top movers, and source freshness. Requires `country_code` (currently only `ae` is seeded). |
 | `get_procurement_opportunities` | Pro-gated canonical global procurement search; compact output defaults to 10 records and caps at 25. Keyword relevance is never bidding eligibility. |
-| `get_company_intelligence` | Verified per-company SEC intelligence: enrichment, timestamped signals, filing search, and market-wide material 8-K events. |
+| `get_company_intelligence` | Verified per-company SEC intelligence: enrichment, timestamped signals, filing search. |
 | `get_commodity_geo` | 71 major mining sites worldwide (gold, silver, copper, lithium, cobalt, rare earths, nickel, platinum, palladium, iron ore, uranium). |
 | `get_mineral_production` | Who mines / refines a commodity (USGS MCS shares + HHI; BGS fill). |
 | `get_food_stocks` | USDA PSD cereal stocks-to-use per country (or `WORLD`) by marketing year, optional per-commodity filter. |
@@ -498,7 +498,7 @@ Reverse lookup workflow:
 | `get_country_risk` | `GET /api/intelligence/v1/get-country-risk` |
 | `get_country_brief` | `GET /api/intelligence/v1/get-country-intel-brief` |
 | `get_china_decision_signals` | `GET /api/intelligence/v1/get-china-decision-signals` |
-| `get_company_intelligence` | `GET /api/intelligence/v1/get-company-enrichment`<br/>`GET /api/intelligence/v1/list-company-signals`<br/>`GET /api/intelligence/v1/search-sec-filings`<br/>`GET /api/intelligence/v1/list-material-events` |
+| `get_company_intelligence` | `GET /api/intelligence/v1/get-company-enrichment`<br/>`GET /api/intelligence/v1/list-company-signals`<br/>`GET /api/intelligence/v1/search-sec-filings` |
 | `search_intel_history` | `POST /api/intelligence/v1/search-intel-history` |
 | `get_intel_timeline` | `GET /api/intelligence/v1/get-intel-timeline` |
 | `get_similar_events` | `POST /api/intelligence/v1/get-similar-events` |

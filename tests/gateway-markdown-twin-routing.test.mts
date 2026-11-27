@@ -11,7 +11,7 @@ const CALLER_IP = '198.51.100.7';
 // What Vercel reports as the peer when a function fetches its own hostname.
 const EGRESS_IP = '203.0.113.50';
 const FACT = '/api/news/v1/search-fact-checks';
-const PREMIUM = '/api/market/v1/get-insider-transactions';
+const PREMIUM = '/api/market/v1/analyze-stock';
 const NO_STORE = '/api/intelligence/v1/get-country-history';
 const BROWSER_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/126.0 Safari/537.36';
 

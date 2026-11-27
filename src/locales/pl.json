@@ -422,7 +422,6 @@
     "populationExposure": "Narażenie ludności",
     "regulation": "Pulpit regulacji AI",
     "finRegulation": "Regulacje finansowe",
-    "ipo": "Notowania publiczne i fuzje spółek pustych",
     "serviceStatus": "Stan usług",
     "techReadiness": "Indeks gotowości technologicznej",
     "techHubs": "Gorące centra technologiczne",
@@ -1940,12 +1939,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Globalne porównanie cen koszyka artykułów spożywczych w 24 krajach — śledzenie inflacji dóbr konsumpcyjnych poza oficjalnym wskaźnikiem cen konsumpcyjnych."
     },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>Analiza akcji Premium</strong> Analiza AI akcji z Twojej listy obserwowanych — sygnały kupuj/trzymaj/sprzedaj, ceny docelowe, kluczowe ryzyka i katalizatory aktualizowane codziennie."
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>Backtesting Premium</strong> Historyczne testy wsteczne akcji z Twojej listy obserwowanych — dawne zwroty, maksymalne obsunięcie i miary zmienności."
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>Dzienny przegląd rynku</strong> Generowane przez AI codzienne podsumowanie sytuacji na rynkach światowych, kluczowych trendów makro i sygnałów sektorowych — odświeżane w każdy dzień sesyjny."
     },
@@ -2014,25 +2007,6 @@
         "failedToLoad": "Nie udało się załadować"
       },
       "methodologyNote": "Poziomy Alert / Ostrzeżenie / Obserwacja pochodzą z edytorskiego klasyfikatora słów kluczowych — zobacz /docs/methodology/disease-alert-level w celu uzyskania tabeli słów kluczowych i ograniczeń."
-    },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>Earnings Calendar</strong> Nadchodzące i niedawne publikacje wyników finansowych dla głównych spółek publicznych. Wyświetla szacunki zysków na akcję versus rzeczywistość, przychody i klasyfikację beat/miss. Źródło: dostawcy danych finansowych.",
-      "title": "Kalendarz Wyników",
-      "today": "DZIŚ · {{date}}",
-      "tomorrow": "JUTRO · {{date}}",
-      "epsActual": "zysk na akcję {{value}}",
-      "epsEstimate": "zysk na akcję szac. {{value}}",
-      "revenueActual": "{{value}} przychód",
-      "revenueEstimate": "{{value}} prognoza",
-      "surprise": {
-        "beat": "POWYŻEJ",
-        "miss": "PONIŻEJ",
-        "inLine": "W LINII"
-      },
-      "errors": {
-        "noData": "Brak danych o wynikach",
-        "failedToLoad": "Nie udało się załadować"
-      }
     },
     "economicCalendar": {
       "infoTooltip": "<strong>Economic Calendar</strong> Zaplanowane publikacje makroekonomiczne: wskaźnik cen konsumpcyjnych, zatrudnienie poza rolnictwem, produkt krajowy brutto, wskaźnik menedżerów zakupów i decyzje banków centralnych. Wyświetla prognozę versus rzeczywistość versus poprzednia wartość. Zdarzenia o wysokim wpływie są wyróżnione. Źródło: dostawcy danych ekonomicznych."

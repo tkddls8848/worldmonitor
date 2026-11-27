@@ -494,7 +494,6 @@
     "orefSirens": "Izraeli szirénák",
     "regulation": "AI Szabályozási Irányítópult",
     "finRegulation": "Pénzügyi Szabályozás",
-    "ipo": "Nyilvános jegyzések és shell-vállalat fúziók",
     "serviceStatus": "Szolgáltatás Státusza",
     "internetDisruptions": "Internet Zavarok",
     "internetDisruptionsTabs": {
@@ -2058,12 +2057,6 @@
         "twentyDayTrend": "Húsz kereskedési napos prémium trend"
       }
     },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>Premium Részvényelemzés</strong> AI-alapú elemzés a megfigyelési listájában szereplő részvényekre — vételi/tartási/eladási jelzések, árcelok, kulcsrisikók és katalizátorok napi frissítésekkel."
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>Premium Backtesting</strong> Történeti teljesítménytesztek a megfigyelési listájában szereplő részvényekre — múltbeli hozamok, maximális visszaesés és volatilitási mutatók."
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>Napi Piaci Összefoglaló</strong> AI által generált napi összegzés a globális piaci körülményekről, fő makrotrendekről és szektorszintű jelekről — minden kereskedési napon frissül."
     },
@@ -2267,25 +2260,6 @@
       },
       "errors": {
         "noData": "Nincs elérhető kitörési adat",
-        "failedToLoad": "Betöltés sikertelen"
-      }
-    },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>Nyereséges közlemények naptára</strong> Küszöbönálló és közelmúltbeli nyereséges közlemények a nagy nyilvános vállalatok számára. Megjeleníti az egy részvényre jutó nyereség becsléseit az aktualokkal, a bevételeket és az eltalálást/rossz besorolást. Forrás: pénzügyi adatszolgáltatók.",
-      "title": "Gyorsjelentési naptár",
-      "today": "MAI NAP · {{date}}",
-      "tomorrow": "HOLNAP · {{date}}",
-      "epsActual": "egy részvényre jutó nyereség {{value}}",
-      "epsEstimate": "egy részvényre jutó nyereség becs. {{value}}",
-      "revenueActual": "{{value}} bevétel",
-      "revenueEstimate": "{{value}} becsült",
-      "surprise": {
-        "beat": "MEGTÉRÜLT",
-        "miss": "HIÁNYZIK",
-        "inLine": "MEGFELELŐ"
-      },
-      "errors": {
-        "noData": "Nincs nyereségadat",
         "failedToLoad": "Betöltés sikertelen"
       }
     },

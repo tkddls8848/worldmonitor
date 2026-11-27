@@ -31,14 +31,12 @@ export const NEWS_POOL_LAYOUT: NewsPoolLayout = {
       "commodities",
       "centralbanks",
       "economic",
-      "ipo",
       "derivatives",
       "fintech",
       "fin-regulation",
       "institutional",
       "analysis",
-      "gccNews",
-      "nq-news"
+      "gccNews"
     ],
     "commodity": [
       "commodity-news",

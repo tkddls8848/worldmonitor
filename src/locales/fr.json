@@ -420,7 +420,6 @@
     "populationExposure": "Exposition de la population",
     "regulation": "Tableau de bord régulation IA",
     "finRegulation": "Réglementation financière",
-    "ipo": "Introductions en bourse & fusions de sociétés-écrans",
     "serviceStatus": "État des services",
     "techReadiness": "Indice de maturité technologique",
     "techHubs": "Pôles Technologiques",
@@ -1935,12 +1934,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Comparaison mondiale des prix du panier d'épicerie dans 24 pays — suivre l'inflation réelle des biens de consommation au-delà de l'indice des prix à la consommation."
     },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>Analyse boursière Premium</strong> Analyse par IA des actions de votre liste de suivi — signaux achat/conservation/vente, objectifs de cours, risques clés et catalyseurs mis à jour quotidiennement."
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>Backtesting Premium</strong> Backtests historiques des actions de votre liste de suivi — rendements passés, perte maximale et indicateurs de volatilité."
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>Brief marchés quotidien</strong> Synthèse quotidienne générée par IA des conditions des marchés mondiaux, des grandes tendances macro et des signaux sectoriels — actualisée chaque jour de bourse."
     },
@@ -2004,25 +1997,6 @@
         "failedToLoad": "Impossible de charger"
       },
       "methodologyNote": "Les niveaux Alerte / Avertissement / Surveillance proviennent d'un classificateur de mots clés éditoriaux — voir /docs/methodology/disease-alert-level pour le tableau des mots clés et les limitations."
-    },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>Earnings Calendar</strong> Publications de résultats à venir et récentes pour les grandes sociétés publiques. Affiche les estimations de bénéfice par action par rapport aux réalisations, le chiffre d'affaires et la classification des dépassements/manques. Source : fournisseurs de données financières.",
-      "title": "Calendrier des résultats",
-      "today": "AUJOURD'HUI · {{date}}",
-      "tomorrow": "DEMAIN · {{date}}",
-      "epsActual": "bénéfice par action {{value}}",
-      "epsEstimate": "bénéfice par action estimé {{value}}",
-      "revenueActual": "CA {{value}}",
-      "revenueEstimate": "{{value}} est.",
-      "surprise": {
-        "beat": "DÉPASSEMENT",
-        "miss": "MANQUEMENT",
-        "inLine": "CONFORME"
-      },
-      "errors": {
-        "noData": "Aucune donnée de résultats",
-        "failedToLoad": "Impossible de charger"
-      }
     },
     "economicCalendar": {
       "infoTooltip": "<strong>Economic Calendar</strong> Publications macroéconomiques prévues : indice des prix à la consommation, emplois non agricoles, produit intérieur brut, indice des directeurs d'achat et décisions des banques centrales. Affiche la prévision par rapport au réalisé par rapport à la période précédente. Les événements à fort impact sont mis en évidence. Source : fournisseurs de données économiques."

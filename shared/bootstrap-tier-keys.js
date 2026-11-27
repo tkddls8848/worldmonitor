@@ -127,7 +127,6 @@ export const BOOTSTRAP_CACHE_KEYS = Object.freeze({
   fuelShortages: 'energy:fuel-shortages:v1',
   energyDisruptions: 'energy:disruptions:v1',
   energyCrisisPolicies: 'energy:crisis-policies:v1',
-  aaiiSentiment: 'market:aaii-sentiment:v1',
   breadthHistory: 'market:breadth-history:v1',
   marketCorrelationSeries: 'market:correlation-series:v1',
 });
@@ -163,7 +162,6 @@ const SLOW_KEY_NAMES = new Set([
   'lngVulnerability',
   'fuelShortages',
   'energyCrisisPolicies',
-  'aaiiSentiment',
   'breadthHistory',
 ]);
 

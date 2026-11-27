@@ -420,7 +420,6 @@
     "orefSirens": "이스라엘 공습 경보",
     "regulation": "AI 규제 대시보드",
     "finRegulation": "금융 규제",
-    "ipo": "상장 & 기업공개합병",
     "serviceStatus": "서비스 상태",
     "techReadiness": "기술 준비 지수",
     "gccInvestments": "걸프협력회의 투자",
@@ -1933,12 +1932,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>식료품 지수</strong> 24개국의 글로벌 식료품 바구니 가격 비교 — 소비자물가지수를 넘어 실제 소비자 물품 인플레이션을 추적."
     },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>프리미엄 주식 분석</strong> 관심 종목에 대한 AI 분석 — 매수/보유/매도 신호, 목표가, 주요 리스크와 촉매를 매일 갱신합니다."
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>프리미엄 백테스트</strong> 관심 종목의 과거 성과 백테스트 — 과거 수익률, 최대 낙폭, 변동성 지표."
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>일일 시장 브리핑</strong> 글로벌 시장 상황, 주요 거시 동향, 섹터별 신호를 AI가 매일 요약 — 거래일마다 갱신됩니다."
     },
@@ -1992,25 +1985,6 @@
         "failedToLoad": "로드 실패"
       },
       "methodologyNote": "Alert / Warning / Watch 수준은 편집 키워드 분류기에서 제공 — 키워드 표 및 제한사항은 /docs/methodology/disease-alert-level 참조"
-    },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>실적 발표 일정</strong> 주요 상장 회사의 예정된 실적 발표 및 최근 실적 발표. 주당순이익 추정치 대 실제값, 수익, 상향/하향 분류 표시. 출처: 금융 데이터 제공업체.",
-      "title": "어닝 캘린더",
-      "today": "오늘 · {{date}}",
-      "tomorrow": "내일 · {{date}}",
-      "epsActual": "주당순이익 {{value}}",
-      "epsEstimate": "주당순이익 추정치 {{value}}",
-      "revenueActual": "{{value}} 매출",
-      "revenueEstimate": "{{value}} 예상",
-      "surprise": {
-        "beat": "상회",
-        "miss": "하회",
-        "inLine": "부합"
-      },
-      "errors": {
-        "noData": "어닝 데이터 없음",
-        "failedToLoad": "로드 실패"
-      }
     },
     "economicCalendar": {
       "infoTooltip": "<strong>경제 일정</strong> 예정된 거시경제 발표: 소비자물가지수, 비농업 고용, 국내총생산, 구매관리자지수, 중앙은행 결정. 예상치 대 실제값 대 이전 수치 표시. 높은 영향도 지표 강조. 출처: 경제 데이터 제공업체."

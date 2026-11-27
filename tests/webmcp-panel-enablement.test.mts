@@ -61,10 +61,10 @@ function evaluate(overrides: {
 describe('isPanelNativeToVariant', () => {
   it('treats catalog keys as native only to the monitors that define them', () => {
     assert.equal(isPanelNativeToVariant('markets', 'full'), true);
-    assert.equal(isPanelNativeToVariant('nq-pulse', 'finance'), true);
-    assert.equal(isPanelNativeToVariant('nq-pulse', 'full'), false);
+    assert.equal(isPanelNativeToVariant('derivatives', 'finance'), true);
+    assert.equal(isPanelNativeToVariant('derivatives', 'full'), false);
     assert.equal(isPanelNativeToVariant('giving', 'full'), false);
-    assert.equal(Object.prototype.hasOwnProperty.call(ALL_PANELS, 'nq-pulse'), true);
+    assert.equal(Object.prototype.hasOwnProperty.call(ALL_PANELS, 'derivatives'), true);
   });
 });
 
@@ -129,13 +129,13 @@ describe('evaluateSetPanelEnabled', () => {
 
   it('no-ops a cross-variant panel that is already in the requested state', () => {
     const panelSettings = cloneSettings('full');
-    panelSettings['nq-pulse'] = {
-      ...panelSettings['nq-pulse']!,
+    panelSettings['derivatives'] = {
+      ...panelSettings['derivatives']!,
       enabled: true,
     };
     const result = evaluate({
       panelSettings,
-      panelId: 'nq-pulse',
+      panelId: 'derivatives',
       enabled: true,
     });
     assert.equal(result.ok, true);
@@ -146,7 +146,7 @@ describe('evaluateSetPanelEnabled', () => {
   it('refuses to enable a panel that is not native to the current monitor', () => {
     const full = evaluate({
       variant: 'full',
-      panelId: 'nq-pulse',
+      panelId: 'derivatives',
       enabled: true,
     });
     assert.equal(full.ok, false);
@@ -510,11 +510,11 @@ describe('set_panel_enabled WebMCP adapter', () => {
       }),
       openSearchResult: async () => ({ ok: true, status: 'opened' as const }),
       setPanelEnabled: async (panelId) => {
-        if (panelId === 'stock-analysis') {
+        if (panelId === 'daily-market-brief') {
           return {
             ok: false,
             status: 'denied' as const,
-            panelId: 'stock-analysis',
+            panelId: 'daily-market-brief',
             requestedEnabled: true,
             effectiveEnabled: false,
             changed: false,
@@ -550,7 +550,7 @@ describe('set_panel_enabled WebMCP adapter', () => {
     assert.ok(tool);
     const signal = { signal: new AbortController().signal };
 
-    const unentitled = await tool.execute({ panelId: 'stock-analysis', enabled: true }, signal);
+    const unentitled = await tool.execute({ panelId: 'daily-market-brief', enabled: true }, signal);
     assert.equal((unentitled as { status?: string }).status, 'denied');
     assert.equal((unentitled as { reason?: string }).reason, 'panel_not_entitled');
     assert.equal(events.at(-1)?.data?.outcome, 'denied');
@@ -560,7 +560,7 @@ describe('set_panel_enabled WebMCP adapter', () => {
     assert.equal((unknown as { reason?: string }).reason, 'unknown_panel');
     assert.equal(events.at(-1)?.data?.reason, 'validation');
 
-    const incompatible = await tool.execute({ panelId: 'nq-pulse', enabled: true }, signal);
+    const incompatible = await tool.execute({ panelId: 'derivatives', enabled: true }, signal);
     assert.equal((incompatible as { reason?: string }).reason, 'panel_incompatible');
     assert.equal(events.at(-1)?.data?.reason, 'unavailable');
   });

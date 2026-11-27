@@ -494,7 +494,6 @@
     "orefSirens": "King'ora za Israel",
     "regulation": "Dashibodi ya Udhibiti wa AI",
     "finRegulation": "Udhibiti wa Fedha",
-    "ipo": "Orodha za umma na muunganisho wa kampuni za ganda",
     "serviceStatus": "Hali ya Huduma",
     "internetDisruptions": "Kukatizwa kwa Mtandao",
     "internetDisruptionsTabs": {
@@ -2061,12 +2060,6 @@
         "twentyDayTrend": "Mwenendo wa ziada wa siku ishirini za biashara"
       }
     },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>Uchanganuzi wa Malipo ya Hisa</strong> Uchambuzi unaoendeshwa na AI wa hisa katika orodha yako ya kutazama — nunua/shikilia/uza mawimbi, malengo ya bei, hatari kuu na vichochezi husasishwa kila siku."
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>Premium Backtesting</strong> Majaribio ya nyuma ya utendaji wa kihistoria kwa hisa katika orodha yako ya kutazama — marejesho ya zamani, upungufu wa juu zaidi na vipimo vya tete."
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>Muhtasari wa Soko la Kila Siku</strong> Muhtasari wa kila siku unaozalishwa na AI wa hali ya soko la kimataifa, mitindo kuu ya jumla, na ishara za kiwango cha sekta - huonyesha upya kila siku ya biashara."
     },
@@ -2270,25 +2263,6 @@
       },
       "errors": {
         "noData": "Hakuna data ya mlipuko inayopatikana",
-        "failedToLoad": "Imeshindwa kupakia"
-      }
-    },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>Earnings Calendar</strong> Kutolewa kwa faida inayokuja na ya karibuni kwa kampuni kubwa za umma. Inaonyesha makadirio ya sehemu halisi ya faida kwa kulinganisha na matukio halisi, mapato, na uainishaji wa kushangilia/kupoteza. Chanzo: wanatolea data ya fedha.",
-      "title": "Kalenda ya Mapato",
-      "today": "LEO · {{date}}",
-      "tomorrow": "KESHO · {{date}}",
-      "epsActual": "sehemu halisi ya faida {{value}}",
-      "epsEstimate": "sehemu halisi ya faida iliyokadiriwa {{value}}",
-      "revenueActual": "{{value}} mch",
-      "revenueEstimate": "makadirio {{value}}",
-      "surprise": {
-        "beat": "PIGA",
-        "miss": "CHINI YA MATARAJIO",
-        "inLine": "KATIKA MSTARI"
-      },
-      "errors": {
-        "noData": "Hakuna data ya mapato",
         "failedToLoad": "Imeshindwa kupakia"
       }
     },

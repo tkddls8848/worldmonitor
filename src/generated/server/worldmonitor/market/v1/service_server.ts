@@ -351,72 +351,6 @@ export interface Fundamentals {
   financialCurrency?: string;
 }
 
-export interface GetStockAnalysisHistoryRequest {
-  symbols: string[];
-  limitPerSymbol: number;
-  includeNews: boolean;
-}
-
-export interface GetStockAnalysisHistoryResponse {
-  items: StockAnalysisHistoryItem[];
-}
-
-export interface StockAnalysisHistoryItem {
-  symbol: string;
-  snapshots: AnalyzeStockResponse[];
-}
-
-export interface BacktestStockRequest {
-  symbol: string;
-  name: string;
-  evalWindowDays: number;
-}
-
-export interface BacktestStockResponse {
-  available: boolean;
-  symbol: string;
-  name: string;
-  display: string;
-  currency: string;
-  evalWindowDays: number;
-  evaluationsRun: number;
-  actionableEvaluations: number;
-  winRate: number;
-  directionAccuracy: number;
-  avgSimulatedReturnPct: number;
-  cumulativeSimulatedReturnPct: number;
-  latestSignal: string;
-  latestSignalScore: number;
-  summary: string;
-  generatedAt: string;
-  evaluations: BacktestStockEvaluation[];
-  engineVersion: string;
-  ratingBasis: string;
-}
-
-export interface BacktestStockEvaluation {
-  analysisAt: number;
-  signal: string;
-  signalScore: number;
-  entryPrice: number;
-  exitPrice: number;
-  simulatedReturnPct: number;
-  directionCorrect: boolean;
-  outcome: string;
-  stopLoss: number;
-  takeProfit: number;
-  analysisId: string;
-}
-
-export interface ListStoredStockBacktestsRequest {
-  symbols: string[];
-  evalWindowDays: number;
-}
-
-export interface ListStoredStockBacktestsResponse {
-  items: BacktestStockResponse[];
-}
-
 export interface GetFearGreedIndexRequest {
 }
 
@@ -517,28 +451,6 @@ export interface CotInstrument {
   smallTraderLong: string;
   smallTraderShort: string;
   smallTraderAvailable: boolean;
-}
-
-export interface GetInsiderTransactionsRequest {
-  symbol: string;
-}
-
-export interface GetInsiderTransactionsResponse {
-  unavailable: boolean;
-  symbol: string;
-  totalBuys: number;
-  totalSells: number;
-  netValue: number;
-  transactions: InsiderTransaction[];
-  fetchedAt: string;
-}
-
-export interface InsiderTransaction {
-  name: string;
-  shares: number;
-  value: number;
-  transactionCode: string;
-  transactionDate: string;
 }
 
 export interface GetMarketBreadthHistoryRequest {
@@ -773,13 +685,9 @@ export interface MarketServiceHandler {
   getPriceHistory(ctx: ServerContext, req: GetPriceHistoryRequest): Promise<GetPriceHistoryResponse>;
   listGulfQuotes(ctx: ServerContext, req: ListGulfQuotesRequest): Promise<ListGulfQuotesResponse>;
   analyzeStock(ctx: ServerContext, req: AnalyzeStockRequest): Promise<AnalyzeStockResponse>;
-  getStockAnalysisHistory(ctx: ServerContext, req: GetStockAnalysisHistoryRequest): Promise<GetStockAnalysisHistoryResponse>;
-  backtestStock(ctx: ServerContext, req: BacktestStockRequest): Promise<BacktestStockResponse>;
-  listStoredStockBacktests(ctx: ServerContext, req: ListStoredStockBacktestsRequest): Promise<ListStoredStockBacktestsResponse>;
   getFearGreedIndex(ctx: ServerContext, req: GetFearGreedIndexRequest): Promise<GetFearGreedIndexResponse>;
   listEarningsCalendar(ctx: ServerContext, req: ListEarningsCalendarRequest): Promise<ListEarningsCalendarResponse>;
   getCotPositioning(ctx: ServerContext, req: GetCotPositioningRequest): Promise<GetCotPositioningResponse>;
-  getInsiderTransactions(ctx: ServerContext, req: GetInsiderTransactionsRequest): Promise<GetInsiderTransactionsResponse>;
   getMarketBreadthHistory(ctx: ServerContext, req: GetMarketBreadthHistoryRequest): Promise<GetMarketBreadthHistoryResponse>;
   getGoldIntelligence(ctx: ServerContext, req: GetGoldIntelligenceRequest): Promise<GetGoldIntelligenceResponse>;
   getPerpPositioning(ctx: ServerContext, req: GetPerpPositioningRequest): Promise<GetPerpPositioningResponse>;
@@ -1208,152 +1116,6 @@ export function createMarketServiceRoutes(
     },
     {
       method: "GET",
-      path: "/api/market/v1/get-stock-analysis-history",
-      handler: async (req: Request): Promise<Response> => {
-        try {
-          const pathParams: Record<string, string> = {};
-          const url = new URL(req.url, "http://localhost");
-          const params = url.searchParams;
-          const body: GetStockAnalysisHistoryRequest = {
-            symbols: params.getAll("symbols"),
-            limitPerSymbol: Number(params.get("limit_per_symbol") ?? "0"),
-            includeNews: params.get("include_news") === "true",
-          };
-          if (options?.validateRequest) {
-            const bodyViolations = options.validateRequest("getStockAnalysisHistory", body);
-            if (bodyViolations) {
-              throw new ValidationError(bodyViolations);
-            }
-          }
-
-          const ctx: ServerContext = {
-            request: req,
-            pathParams,
-            headers: Object.fromEntries(req.headers.entries()),
-          };
-
-          const result = await handler.getStockAnalysisHistory(ctx, body);
-          return new Response(JSON.stringify(result as GetStockAnalysisHistoryResponse), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (err: unknown) {
-          if (err instanceof ValidationError) {
-            return new Response(JSON.stringify({ violations: err.violations }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-          if (options?.onError) {
-            return options.onError(err, req);
-          }
-          const message = "Internal server error";
-          return new Response(JSON.stringify({ message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      },
-    },
-    {
-      method: "GET",
-      path: "/api/market/v1/backtest-stock",
-      handler: async (req: Request): Promise<Response> => {
-        try {
-          const pathParams: Record<string, string> = {};
-          const url = new URL(req.url, "http://localhost");
-          const params = url.searchParams;
-          const body: BacktestStockRequest = {
-            symbol: params.get("symbol") ?? "",
-            name: params.get("name") ?? "",
-            evalWindowDays: Number(params.get("eval_window_days") ?? "0"),
-          };
-          if (options?.validateRequest) {
-            const bodyViolations = options.validateRequest("backtestStock", body);
-            if (bodyViolations) {
-              throw new ValidationError(bodyViolations);
-            }
-          }
-
-          const ctx: ServerContext = {
-            request: req,
-            pathParams,
-            headers: Object.fromEntries(req.headers.entries()),
-          };
-
-          const result = await handler.backtestStock(ctx, body);
-          return new Response(JSON.stringify(result as BacktestStockResponse), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (err: unknown) {
-          if (err instanceof ValidationError) {
-            return new Response(JSON.stringify({ violations: err.violations }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-          if (options?.onError) {
-            return options.onError(err, req);
-          }
-          const message = "Internal server error";
-          return new Response(JSON.stringify({ message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      },
-    },
-    {
-      method: "GET",
-      path: "/api/market/v1/list-stored-stock-backtests",
-      handler: async (req: Request): Promise<Response> => {
-        try {
-          const pathParams: Record<string, string> = {};
-          const url = new URL(req.url, "http://localhost");
-          const params = url.searchParams;
-          const body: ListStoredStockBacktestsRequest = {
-            symbols: params.getAll("symbols"),
-            evalWindowDays: Number(params.get("eval_window_days") ?? "0"),
-          };
-          if (options?.validateRequest) {
-            const bodyViolations = options.validateRequest("listStoredStockBacktests", body);
-            if (bodyViolations) {
-              throw new ValidationError(bodyViolations);
-            }
-          }
-
-          const ctx: ServerContext = {
-            request: req,
-            pathParams,
-            headers: Object.fromEntries(req.headers.entries()),
-          };
-
-          const result = await handler.listStoredStockBacktests(ctx, body);
-          return new Response(JSON.stringify(result as ListStoredStockBacktestsResponse), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (err: unknown) {
-          if (err instanceof ValidationError) {
-            return new Response(JSON.stringify({ violations: err.violations }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-          if (options?.onError) {
-            return options.onError(err, req);
-          }
-          const message = "Internal server error";
-          return new Response(JSON.stringify({ message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      },
-    },
-    {
-      method: "GET",
       path: "/api/market/v1/get-fear-greed-index",
       handler: async (req: Request): Promise<Response> => {
         try {
@@ -1453,53 +1215,6 @@ export function createMarketServiceRoutes(
 
           const result = await handler.getCotPositioning(ctx, body);
           return new Response(JSON.stringify(result as GetCotPositioningResponse), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (err: unknown) {
-          if (err instanceof ValidationError) {
-            return new Response(JSON.stringify({ violations: err.violations }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-          if (options?.onError) {
-            return options.onError(err, req);
-          }
-          const message = "Internal server error";
-          return new Response(JSON.stringify({ message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      },
-    },
-    {
-      method: "GET",
-      path: "/api/market/v1/get-insider-transactions",
-      handler: async (req: Request): Promise<Response> => {
-        try {
-          const pathParams: Record<string, string> = {};
-          const url = new URL(req.url, "http://localhost");
-          const params = url.searchParams;
-          const body: GetInsiderTransactionsRequest = {
-            symbol: params.get("symbol") ?? "",
-          };
-          if (options?.validateRequest) {
-            const bodyViolations = options.validateRequest("getInsiderTransactions", body);
-            if (bodyViolations) {
-              throw new ValidationError(bodyViolations);
-            }
-          }
-
-          const ctx: ServerContext = {
-            request: req,
-            pathParams,
-            headers: Object.fromEntries(req.headers.entries()),
-          };
-
-          const result = await handler.getInsiderTransactions(ctx, body);
-          return new Response(JSON.stringify(result as GetInsiderTransactionsResponse), {
             status: 200,
             headers: { "Content-Type": "application/json" },
           });

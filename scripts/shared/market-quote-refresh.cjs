@@ -27,7 +27,7 @@ function freshSymbolSet(freshQuotes) {
 
 /**
  * Batch `asOf` must not advance when any published quote was retained from
- * last-good. NQ Pulse labels the whole basket from this stamp, so a fresh
+ * last-good. Market readers age the basket from this stamp, so a fresh
  * timestamp on stale Yahoo-only rows would read as Current.
  */
 function resolveMergedQuotesAsOf(freshQuotes, mergedQuotes, previousAsOf, fetchedAtMs) {

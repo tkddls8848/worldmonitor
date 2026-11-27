@@ -26,15 +26,12 @@ const read = (rel) => readFileSync(resolve(repoRoot, rel), 'utf8');
 //   );
 const LAZY_PANEL_CLIENTS = [
   'src/components/CotPositioningPanel.ts',
-  'src/components/EarningsCalendarPanel.ts',
   'src/components/EconomicCalendarPanel.ts',
   'src/components/FSIPanel.ts',
   'src/components/FearGreedPanel.ts',
   'src/components/LiquidityShiftsPanel.ts',
   'src/components/MacroTilesPanel.ts',
   'src/components/MarketBreadthPanel.ts',
-  'src/components/MaterialEventsPanel.ts',
-  'src/components/NqCatalystsPanel.ts',
   'src/components/PositioningPanel.ts',
   'src/components/YieldCurvePanel.ts',
 ];

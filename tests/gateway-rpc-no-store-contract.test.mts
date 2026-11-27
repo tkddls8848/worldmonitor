@@ -120,7 +120,7 @@ describe('gateway RPC no-store contract', () => {
       jsonRoute('/api/forecast/v1/get-forecasts', { forecasts: [], generatedAt: 0, degraded: true, stale: false, error: 'forecast_backend_unavailable' }),
       // Keep this cache-semantics test off provider-backed routes, whose
       // fail-closed endpoint budgets intentionally require Redis to be live.
-      jsonRoute('/api/market/v1/get-stock-analysis-history', { available: false, symbol: 'XYZ', error: '' }),
+      jsonRoute('/api/market/v1/analyze-stock', { available: false, symbol: 'XYZ', error: '' }),
       jsonRoute('/api/climate/v1/list-climate-anomalies', { anomalies: [], dataAvailable: false }),
     ]);
 
@@ -128,7 +128,7 @@ describe('gateway RPC no-store contract', () => {
       '/api/scenario/v1/get-scenario-status?jobId=scenario:1712345678901:abcdefgh',
       '/api/intelligence/v1/get-risk-scores',
       '/api/forecast/v1/get-forecasts',
-      '/api/market/v1/get-stock-analysis-history?symbol=XYZ',
+      '/api/market/v1/analyze-stock?symbol=XYZ',
       '/api/climate/v1/list-climate-anomalies',
     ]) {
       const res = await handler(request(path));

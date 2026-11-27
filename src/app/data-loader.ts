@@ -78,8 +78,6 @@ import {
   getMarketWatchlistEntries,
   resolveEffectiveMarketWatchlist,
 } from '@/services/market-watchlist';
-import { fetchStockAnalysesForTargets, getStockAnalysisTargets, type StockAnalysisResult } from '@/services/stock-analysis';
-import { fetchInsiderTransactions } from '@/services/insider-transactions';
 import { selectCompleteHydratedMarketQuotes } from '@/services/market-hydration';
 import { transitionCiiAvailability } from '@/services/cii-availability';
 import {
@@ -87,21 +85,6 @@ import {
   resolveStockMarketAvailability,
 } from '@/services/market-availability';
 import { LatestRequestGuard } from '@/utils/latest-request-guard';
-import {
-  fetchStockBacktestsForTargets,
-  fetchStoredStockBacktests,
-  getMissingOrStaleStoredStockBacktests,
-  hasFreshStoredStockBacktests,
-  type StockBacktestResult,
-} from '@/services/stock-backtest';
-import {
-  fetchStockAnalysisHistory,
-  getMissingOrStaleStockAnalysisSymbols,
-  hasFreshStockAnalysisHistory,
-  getLatestStockAnalysisSnapshots,
-  mergeStockAnalysisHistory,
-  type StockAnalysisHistory,
-} from '@/services/stock-analysis-history';
 import { checkBatchForBreakingAlerts, dispatchOrefBreakingAlert } from '@/services/breaking-news-alerts';
 import { mlWorker } from '@/services/ml-worker';
 import { clusterNewsHybrid, clusterNewsWithWorkerFallback } from '@/services/clustering';
@@ -144,8 +127,6 @@ import type {
 } from '@/components/MarketPanel';
 import type { ChinaCorporateDisclosureSnapshot } from '@/components/market-disclosures';
 
-import type { StockAnalysisPanel } from '@/components/StockAnalysisPanel';
-import type { StockBacktestPanel } from '@/components/StockBacktestPanel';
 import type { PredictionPanel } from '@/components/PredictionPanel';
 import type { InsightsPanel } from '@/components/InsightsPanel';
 import type { StrategicPosturePanel } from '@/components/StrategicPosturePanel';
@@ -161,7 +142,6 @@ import type { SupplyChainPanel } from '@/components/SupplyChainPanel';
 import type { ChinaCorridorPanel } from '@/components/ChinaCorridorPanel';
 import type { ChinaActivityNowcastPanel } from '@/components/ChinaActivityNowcastPanel';
 import type { DiseaseOutbreaksPanel } from '@/components/DiseaseOutbreaksPanel';
-import type { AAIISentimentPanel } from '@/components/AAIISentimentPanel';
 import type { MarketBreadthPanel } from '@/components/MarketBreadthPanel';
 import type { SatelliteFiresPanel } from '@/components/SatelliteFiresPanel';
 // #4571: renewable-energy-data (+ its transitive economic edge) dynamic-imported
@@ -194,7 +174,6 @@ import { EconomicServiceClient, MarketServiceClient } from '@/services/generated
 import { protoItemToNewsItem } from '@/services/news-digest-items';
 import { fetchSourceItems, fillFreeSlots, sourcesBelowCap } from '@/app/news-source-fill';
 import { digestCarriesFeed } from '../../shared/news-catalog-browser';
-import { normalizeStockSymbol } from '../../shared/stock-symbol';
 
 type PhysicalPremiumFetcher = typeof import('@/services/market')['fetchPhysicalPremiums'];
 type PhysicalDivergenceFetcher = typeof import('@/services/market')['fetchPhysicalDivergence'];
@@ -331,8 +310,6 @@ const HYDRATION_TIER_TWO = new Set([
   'radiation',
 ]);
 const HYDRATION_TIER_FOUR = new Set([
-  'stockAnalysis',
-  'stockBacktest',
   'dailyMarketBrief',
   'predictions',
   'forecasts',
@@ -401,7 +378,6 @@ export class DataLoaderManager implements AppModule {
 
   private boundMarketWatchlistHandler: (() => void) | null = null;
   private dailyBriefGeneration = 0;
-  private _stockAnalysisGeneration = 0;
   private readonly marketLoadGuard = new LatestRequestGuard();
   private readonly physicalComparisonLoadGuard = new LatestRequestGuard();
   private readonly mineralProductionLoadGuard = new LatestRequestGuard();
@@ -537,16 +513,7 @@ export class DataLoaderManager implements AppModule {
 
   init(): void {
     this.boundMarketWatchlistHandler = () => {
-      void this.loadMarkets().then(async () => {
-        // All three loaders own a different panel and swallow their own
-        // failures, so serializing them only added latency to a watchlist
-        // edit. The boot path already fans them out the same way (#6770).
-        await Promise.all([
-          this.loadStockAnalysis(),
-          this.loadStockBacktest(),
-          this.loadDailyMarketBrief(true),
-        ]);
-      });
+      void this.loadMarkets().then(() => this.loadDailyMarketBrief(true));
     };
     window.addEventListener('wm-market-watchlist-changed', this.boundMarketWatchlistHandler as EventListener);
 
@@ -1100,12 +1067,6 @@ export class DataLoaderManager implements AppModule {
     {
       if (shouldLoadAny(['markets', 'heatmap', 'commodities', 'energy-complex'])) {
         tasks.push({ name: 'markets', task: () => runGuarded('markets', () => this.loadMarkets()) });
-      }
-      if (shouldLoad('stock-analysis')) {
-        tasks.push({ name: 'stockAnalysis', task: () => runGuarded('stockAnalysis', () => this.loadStockAnalysis()) });
-      }
-      if (shouldLoad('stock-backtest')) {
-        tasks.push({ name: 'stockBacktest', task: () => runGuarded('stockBacktest', () => this.loadStockBacktest()) });
       }
       // The daily market brief is loaded by the post-hydration pass below
       // (search for `loadDailyMarketBrief()`), which calls it directly.
@@ -2132,164 +2093,6 @@ export class DataLoaderManager implements AppModule {
       }
     }
 
-  }
-
-  async loadStockAnalysis(): Promise<void> {
-    const panel = this.ctx.panels['stock-analysis'] as StockAnalysisPanel | undefined;
-    if (!panel) return;
-
-    // Bump generation so any in-flight insider fetch from a prior invocation
-    // of loadStockAnalysis no-ops instead of re-rendering stale snapshots on
-    // top of the current render.
-    const generation = ++this._stockAnalysisGeneration;
-
-    try {
-      const targets = getStockAnalysisTargets();
-      const targetSymbols = targets.map((target) => target.symbol);
-      const storedHistory = await fetchStockAnalysisHistory(targets.length);
-      const cachedSnapshots = getLatestStockAnalysisSnapshots(storedHistory, targets.length);
-      const historyIsFresh = hasFreshStockAnalysisHistory(storedHistory, targetSymbols);
-
-      if (cachedSnapshots.length > 0) {
-        panel.renderAnalyses(cachedSnapshots, storedHistory, 'cached');
-      }
-
-      if (historyIsFresh) {
-        // No live fetch coming — safe to enrich the cached render with
-        // insiders now. This is the only cached-path insider fetch; when a
-        // live fetch is about to run we defer insider enrichment until after
-        // the live render so we never re-render stale cached snapshots over
-        // fresh live data.
-        if (cachedSnapshots.length > 0) {
-          void this.loadInsiderDataForPanel(panel, targetSymbols, cachedSnapshots, storedHistory, 'cached', generation)
-            .catch((error) => console.error('[StockAnalysis] insider fetch failed:', error));
-        }
-        return;
-      }
-
-      const staleSymbols = getMissingOrStaleStockAnalysisSymbols(storedHistory, targetSymbols);
-      const staleTargets = targets.filter((target) => staleSymbols.includes(target.symbol));
-      const results = await fetchStockAnalysesForTargets(staleTargets);
-      if (results.length === 0) {
-        if (cachedSnapshots.length === 0) {
-          panel.showRetrying('Stock analysis is waiting for eligible watchlist symbols.');
-          return;
-        }
-        // Live fetch returned nothing but we already rendered cachedSnapshots
-        // above. Enrich the displayed cached snapshots with insider data so
-        // the user still sees the insider section.
-        void this.loadInsiderDataForPanel(panel, targetSymbols, cachedSnapshots, storedHistory, 'cached', generation)
-          .catch((error) => console.error('[StockAnalysis] insider fetch failed:', error));
-        return;
-      }
-      const nextHistory = mergeStockAnalysisHistory(storedHistory, results);
-      // Build a combined view so a partial refetch does not shrink the panel:
-      // preserve still-fresh cached snapshots for symbols we did NOT refetch,
-      // and use live results for symbols we did. Watchlist order is preserved.
-      const resultBySymbol = new Map(results.map((r) => [normalizeStockSymbol(r.symbol), r]));
-      const combined: StockAnalysisResult[] = [];
-      for (const target of targets) {
-        const live = resultBySymbol.get(normalizeStockSymbol(target.symbol));
-        if (live) {
-          combined.push(live);
-          continue;
-        }
-        const cached = storedHistory[normalizeStockSymbol(target.symbol)]?.[0];
-        if (cached?.available) combined.push(cached);
-      }
-      const snapshotsToRender = combined.length > 0 ? combined : results;
-      panel.renderAnalyses(snapshotsToRender, nextHistory, 'live');
-      void this.loadInsiderDataForPanel(panel, targetSymbols, snapshotsToRender, nextHistory, 'live', generation)
-        .catch((error) => console.error('[StockAnalysis] insider fetch failed:', error));
-    } catch (error) {
-      console.error('[StockAnalysis] failed:', error);
-      const cachedHistory = await fetchStockAnalysisHistory().catch(() => ({}));
-      const cachedSnapshots = getLatestStockAnalysisSnapshots(cachedHistory);
-      if (cachedSnapshots.length > 0) {
-        panel.renderAnalyses(cachedSnapshots, cachedHistory, 'cached');
-        return;
-      }
-      panel.showError('Premium stock analysis is temporarily unavailable.');
-    }
-  }
-
-  private async loadInsiderDataForPanel(
-    panel: StockAnalysisPanel,
-    symbols: string[],
-    snapshotsToReRender: StockAnalysisResult[],
-    historyForReRender: StockAnalysisHistory,
-    source: 'live' | 'cached',
-    generation: number,
-  ): Promise<void> {
-    const results = await Promise.allSettled(symbols.map(s => fetchInsiderTransactions(s)));
-    // If another loadStockAnalysis invocation has started while this fetch
-    // was in flight, drop the result entirely — both setInsiderData and the
-    // re-render would clobber the current state.
-    if (generation !== this._stockAnalysisGeneration) return;
-    for (let i = 0; i < symbols.length; i++) {
-      const r = results[i];
-      if (r && r.status === 'fulfilled') {
-        panel.setInsiderData(symbols[i]!, r.value);
-      } else {
-        panel.setInsiderData(symbols[i]!, { unavailable: true, symbol: symbols[i]!, totalBuys: 0, totalSells: 0, netValue: 0, transactions: [], fetchedAt: '' });
-      }
-    }
-    // Re-render the panel so the insider section becomes visible now that
-    // setInsiderData has populated insiderBySymbol. Guard once more in case
-    // something awaited between the setInsiderData calls above.
-    if (generation !== this._stockAnalysisGeneration) return;
-    panel.renderAnalyses(snapshotsToReRender, historyForReRender, source);
-  }
-
-  async loadStockBacktest(): Promise<void> {
-    const panel = this.ctx.panels['stock-backtest'] as StockBacktestPanel | undefined;
-    if (!panel) return;
-
-    try {
-      const targets = getStockAnalysisTargets();
-      const targetSymbols = targets.map((target) => target.symbol);
-      const stored = await fetchStoredStockBacktests(targets.length);
-      if (stored.length > 0) {
-        panel.renderBacktests(stored, 'cached');
-      }
-      if (hasFreshStoredStockBacktests(stored, targetSymbols)) {
-        return;
-      }
-
-      const staleSymbols = getMissingOrStaleStoredStockBacktests(stored, targetSymbols);
-      const staleTargets = targets.filter((target) => staleSymbols.includes(target.symbol));
-      const results = await fetchStockBacktestsForTargets(staleTargets);
-      if (results.length === 0) {
-        if (stored.length === 0) {
-          panel.showRetrying('Backtesting is waiting for eligible watchlist symbols.');
-        }
-        return;
-      }
-      // Build a combined view so a partial refetch does not shrink the panel:
-      // keep still-fresh cached backtests for symbols we did NOT refetch, swap
-      // in live results for the ones we did. Watchlist order is preserved.
-      const resultBySymbol = new Map(results.map((r) => [normalizeStockSymbol(r.symbol), r]));
-      const storedBySymbol = new Map(stored.map((s) => [normalizeStockSymbol(s.symbol), s]));
-      const combined: StockBacktestResult[] = [];
-      for (const target of targets) {
-        const live = resultBySymbol.get(normalizeStockSymbol(target.symbol));
-        if (live) {
-          combined.push(live);
-          continue;
-        }
-        const cached = storedBySymbol.get(normalizeStockSymbol(target.symbol));
-        if (cached) combined.push(cached);
-      }
-      panel.renderBacktests(combined.length > 0 ? combined : results);
-    } catch (error) {
-      console.error('[StockBacktest] failed:', error);
-      const stored = await fetchStoredStockBacktests().catch(() => []);
-      if (stored.length > 0) {
-        panel.renderBacktests(stored, 'cached');
-        return;
-      }
-      panel.showError('Premium stock backtesting is temporarily unavailable.');
-    }
   }
 
   async loadMarkets(): Promise<void> {
@@ -4534,16 +4337,6 @@ export class DataLoaderManager implements AppModule {
     } catch (error) {
       console.error('[App] Thermal escalation fetch failed:', error);
       this.callPanel('thermal-escalation', 'showError');
-    }
-  }
-
-  async loadAaiiSentiment(): Promise<void> {
-    const panel = this.ctx.panels['aaii-sentiment'] as AAIISentimentPanel | undefined;
-    if (!panel) return;
-    try {
-      await panel.fetchData();
-    } catch (e) {
-      console.error('[App] AAII sentiment load failed:', e);
     }
   }
 

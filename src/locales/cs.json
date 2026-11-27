@@ -426,7 +426,6 @@
     "orefSirens": "Sirény v Izraeli",
     "regulation": "Dashboard AI regulací",
     "finRegulation": "Finanční regulace",
-    "ipo": "Veřejná uvedení a fúze fikcí podniků",
     "serviceStatus": "Stav služeb",
     "techReadiness": "Index tech. připravenosti",
     "gccInvestments": "Investice Rady pro spolupráci v Zálivu",
@@ -1940,12 +1939,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Globální srovnání cen nákupního košíku potravin v 24 zemích — sleduje skutečnou inflaci spotřebitelských zboží mimo hlavní index spotřebitelských cen."
     },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>Prémiová analýza akcií</strong> AI analýza akcií ve vašem seznamu sledovaných — signály koupit/držet/prodat, cílové ceny, klíčová rizika a katalyzátory. Aktualizováno denně."
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>Prémiový backtesting</strong> Historický backtesting vašeho seznamu sledovaných — historické výnosy, maximální propad a ukazatele volatility."
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>Denní přehled trhů</strong> Denní souhrn generovaný AI o podmínkách na světových trzích, klíčových makro trendech a sektorových signálech — obnovuje se každý obchodní den."
     },
@@ -2014,25 +2007,6 @@
         "failedToLoad": "Selhalo načítání"
       },
       "methodologyNote": "Úrovně Alert / Warning / Watch pocházejí z redakčního klíčového slova klasifikátoru — viz /docs/methodology/disease-alert-level pro tabulku klíčových slov a omezení."
-    },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>Earnings Calendar</strong> Nadcházející a nedávné hlášení zisků velkých veřejných společností. Ukazuje odhady zisků na akcii versus skutečné údaje, příjmy a klasifikaci úspěchu/neúspěchu. Zdroj: poskytovatelé finančních dat.",
-      "title": "Kalendář výsledků",
-      "today": "DNES · {{date}}",
-      "tomorrow": "ZÍTRA · {{date}}",
-      "epsActual": "zisk na akcii {{value}}",
-      "epsEstimate": "zisk na akcii odhad {{value}}",
-      "revenueActual": "{{value}} tržby",
-      "revenueEstimate": "{{value}} odhad",
-      "surprise": {
-        "beat": "PŘEKONÁNO",
-        "miss": "NESPLNENO",
-        "inLine": "V SOULADU"
-      },
-      "errors": {
-        "noData": "Nejsou k dispozici údaje o výsledcích",
-        "failedToLoad": "Selhalo načítání"
-      }
     },
     "economicCalendar": {
       "infoTooltip": "<strong>Economic Calendar</strong> Naplánované makroekonomické uvolňování dat: index spotřebitelských cen, nezaměstnanost mimo zemědělství, hrubý domácí produkt, index nákupních manažerů a rozhodnutí centrální banky. Ukazuje prognózu versus skutečnost versus předchozí. Vysoce dopadové události jsou zvýrazněny. Zdroj: poskytovatelé ekonomických dat."

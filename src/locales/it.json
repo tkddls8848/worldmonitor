@@ -421,7 +421,6 @@
     "populationExposure": "Esposizione della popolazione",
     "regulation": "Dashboard regolamentazione IA",
     "finRegulation": "Regolamentazione finanziaria",
-    "ipo": "Quotazioni pubbliche e fusioni di società di comodo",
     "serviceStatus": "Stato del servizio",
     "techReadiness": "Indice di prontezza tecnologica",
     "techHubs": "Hub tecnologici caldi",
@@ -1935,12 +1934,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Confronto dei prezzi del paniere alimentare globale in 24 paesi — traccia l'inflazione reale dei beni di consumo oltre l'indice dei prezzi al consumo ufficiale."
     },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>Analisi Azioni Premium</strong> Analisi basata sull'IA per le azioni nella tua watchlist — segnali di acquisto/tenere/vendita, obiettivi di prezzo, rischi chiave e catalizzatori aggiornati giornalmente."
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>Backtesting Premium</strong> Backtest storico delle prestazioni per le azioni nella tua watchlist — rendimenti passati, massimo drawdown e metriche di volatilità."
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>Brief Giornaliero di Mercato</strong> Riepilogo giornaliero generato dall'IA sulle condizioni di mercato globale, principali tendenze macro e segnali a livello settoriale — si aggiorna ogni giorno di negoziazione."
     },
@@ -2004,25 +1997,6 @@
         "failedToLoad": "Caricamento non riuscito"
       },
       "methodologyNote": "I livelli Alert / Warning / Watch provengono da un classificatore di parole chiave editoriale — vedi /docs/methodology/disease-alert-level per la tabella delle parole chiave e i limiti."
-    },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>Earnings Calendar</strong> Rapporti di utili imminenti e recenti per le principali società quotate in borsa. Mostra stime degli utili per azione rispetto ai dati effettivi, ricavi e classificazione di battuta/mancanza. Fonte: fornitori di dati finanziari.",
-      "title": "Calendario Risultati",
-      "today": "OGGI · {{date}}",
-      "tomorrow": "DOMANI · {{date}}",
-      "epsActual": "utili per azione {{value}}",
-      "epsEstimate": "utili per azione stima {{value}}",
-      "revenueActual": "{{value}} ricavi",
-      "revenueEstimate": "{{value}} stima",
-      "surprise": {
-        "beat": "SUPERATO",
-        "miss": "MANCATO",
-        "inLine": "IN LINEA"
-      },
-      "errors": {
-        "noData": "Nessun dato sui risultati",
-        "failedToLoad": "Caricamento non riuscito"
-      }
     },
     "economicCalendar": {
       "infoTooltip": "<strong>Economic Calendar</strong> Rilasci macroeconomici programmati: indice dei prezzi al consumo, buste paga non agricole, prodotto interno lordo, indice dei responsabili degli acquisti e decisioni delle banche centrali. Mostra previsione vs dato effettivo vs precedente. Gli eventi ad alto impatto sono evidenziati. Fonte: fornitori di dati economici."

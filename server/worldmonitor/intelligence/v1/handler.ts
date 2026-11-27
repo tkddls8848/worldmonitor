@@ -18,7 +18,6 @@ import { listOrefAlerts } from './list-oref-alerts';
 import { getCompanyEnrichment } from './get-company-enrichment';
 import { listCompanySignals } from './list-company-signals';
 import { searchSecFilings } from './search-sec-filings';
-import { listMaterialEvents } from './list-material-events';
 import { getGdeltTopicTimeline } from './get-gdelt-topic-timeline';
 import { listCrossSourceSignals } from './list-cross-source-signals';
 import { listMarketImplications } from './list-market-implications';
@@ -53,7 +52,6 @@ export const intelligenceHandler: IntelligenceServiceHandler = {
   getCompanyEnrichment,
   listCompanySignals,
   searchSecFilings,
-  listMaterialEvents,
   getGdeltTopicTimeline,
   listCrossSourceSignals,
   listMarketImplications,

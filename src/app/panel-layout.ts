@@ -52,7 +52,6 @@ import {
   restoreProGatedPanels,
 } from '@/config';
 import { BETA_MODE } from '@/config/beta';
-import { NQ_PULSE_DISCLOSURE } from '@/config/nq-context';
 import { t } from '@/services/i18n';
 import { getPanelDisplayName } from '@/services/panel-display-name';
 import { getCurrentTheme } from '@/utils';
@@ -2557,7 +2556,6 @@ export class PanelLayoutManager implements AppModule {
 
   private static readonly NEWS_PANEL_TOOLTIPS: Record<string, string> = {
     centralbanks: t('components.centralBankWatch.infoTooltip'),
-    'nq-news': NQ_PULSE_DISCLOSURE,
   };
 
   private createNewsPanel(key: string, labelKey: string): void {
@@ -2935,10 +2933,6 @@ export class PanelLayoutManager implements AppModule {
 
     this.lazyDefaultPanel('heatmap', () => import('@/components/MarketPanel'), 'HeatmapPanel');
     this.lazyDefaultPanel('markets', () => import('@/components/MarketPanel'), 'MarketPanel');
-    this.lazyDefaultPanel('stock-analysis', () => import('@/components/StockAnalysisPanel'), 'StockAnalysisPanel');
-    this.lazyDefaultPanel('stock-backtest', () => import('@/components/StockBacktestPanel'), 'StockBacktestPanel');
-    // Web premium gating for stock-analysis and stock-backtest is handled
-    // reactively by updatePanelGating() via auth state subscription.
 
     this.lazyImportedPanel('monitors', () => import('@/components/MonitorPanel'), 'MonitorPanel', (MonitorPanel) => {
       const monitorPanel = new MonitorPanel(this.ctx.monitors);
@@ -2983,7 +2977,6 @@ export class PanelLayoutManager implements AppModule {
     this.createNewsPanel('middleeast', 'panels.middleeast');
     this.createNewsPanel('layoffs', 'panels.layoffs');
     this.createNewsPanel('ai', 'panels.ai');
-    this.createNewsPanel('ipo', 'panels.ipo');
     this.createNewsPanel('thinktanks', 'panels.thinktanks');
     this.createNewsPanel('science', 'panels.science');
     this.lazyDefaultPanel('economic', () => import('@/components/EconomicPanel'), 'EconomicPanel');
@@ -3328,16 +3321,11 @@ export class PanelLayoutManager implements AppModule {
       this.importPanel('macro-signals', () => import('@/components/MacroSignalsPanel'), 'MacroSignalsPanel', (MacroSignalsPanel) => new MacroSignalsPanel()),
     );
     this.lazyDefaultPanel('fear-greed', () => import('@/components/FearGreedPanel'), 'FearGreedPanel');
-    this.lazyDefaultPanel('aaii-sentiment', () => import('@/components/AAIISentimentPanel'), 'AAIISentimentPanel');
     this.lazyDefaultPanel('market-breadth', () => import('@/components/MarketBreadthPanel'), 'MarketBreadthPanel');
     this.lazyDefaultPanel('news-market-correlation', () => import('@/components/NewsMarketCorrelationPanel'), 'NewsMarketCorrelationPanel');
     this.lazyDefaultPanel('macro-tiles', () => import('@/components/MacroTilesPanel'), 'MacroTilesPanel');
     this.lazyDefaultPanel('fsi', () => import('@/components/FSIPanel'), 'FSIPanel');
-    this.lazyDefaultPanel('nq-pulse', () => import('@/components/NqPulsePanel'), 'NqPulsePanel');
-    this.lazyDefaultPanel('nq-catalysts', () => import('@/components/NqCatalystsPanel'), 'NqCatalystsPanel');
     this.lazyDefaultPanel('yield-curve', () => import('@/components/YieldCurvePanel'), 'YieldCurvePanel');
-    this.lazyDefaultPanel('earnings-calendar', () => import('@/components/EarningsCalendarPanel'), 'EarningsCalendarPanel');
-    this.lazyDefaultPanel('material-events', () => import('@/components/MaterialEventsPanel'), 'MaterialEventsPanel');
     this.lazyDefaultPanel('economic-calendar', () => import('@/components/EconomicCalendarPanel'), 'EconomicCalendarPanel');
     this.lazyDefaultPanel('cot-positioning', () => import('@/components/CotPositioningPanel'), 'CotPositioningPanel');
     this.lazyDefaultPanel('liquidity-shifts', () => import('@/components/LiquidityShiftsPanel'), 'LiquidityShiftsPanel');

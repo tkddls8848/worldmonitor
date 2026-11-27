@@ -494,7 +494,6 @@
     "orefSirens": "इज्राइल सायरन",
     "regulation": "एआई नियम डैशबोर्ड",
     "finRegulation": "वित्तीय नियम",
-    "ipo": "सार्वजनिक सूचियां और शेल-कंपनी विलय",
     "serviceStatus": "सेवा की स्थिति",
     "internetDisruptions": "इंटरनेट बाधाएं",
     "internetDisruptionsTabs": {
@@ -2058,12 +2057,6 @@
         "twentyDayTrend": "बीस कारोबारी दिन का प्रीमियम प्रवृत्ति"
       }
     },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>प्रीमियम स्टॉक विश्लेषण</strong> आपकी वॉचलिस्ट में स्टॉक्स के लिए एआई-चालित विश्लेषण — खरीद/रोकने/बेचने के संकेत, मूल्य लक्ष्य, प्रमुख जोखिम, और कारक दैनिक अपडेट।"
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>प्रीमियम बैकटेस्टिंग</strong> आपकी वॉचलिस्ट में स्टॉक्स के लिए ऐतिहासिक प्रदर्शन बैकटेस्ट — पिछला रिटर्न, अधिकतम ड्रा डाउन, और अस्थिरता मेट्रिक्स।"
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>दैनिक बाजार सारांश</strong> वैश्विक बाजार स्थिति, प्रमुख मैक्रो प्रवृत्तियों, और सेक्टर स्तर संकेतों का AI-जनित दैनिक सारांश — हर ट्रेडिंग दिन ताजा होता है।"
     },
@@ -2267,25 +2260,6 @@
       },
       "errors": {
         "noData": "कोई प्रकोप डेटा उपलब्ध नहीं",
-        "failedToLoad": "लोड करने में विफल"
-      }
-    },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>Earnings Calendar</strong> प्रमुख सार्वजनिक कंपनियों के लिए आने वाली और हाल की earnings रिलीज़। Earnings per share अनुमान बनाम वास्तविक, राजस्व और beat/miss classification दिखाता है। स्रोत: वित्तीय डेटा प्रदाता।",
-      "title": "कमाई कैलेंडर",
-      "today": "आज · {{date}}",
-      "tomorrow": "कल · {{date}}",
-      "epsActual": "प्रति शेयर आय {{value}}",
-      "epsEstimate": "अनुमानित प्रति शेयर आय {{value}}",
-      "revenueActual": "{{value}} राजस्व",
-      "revenueEstimate": "{{value}} अनुमान",
-      "surprise": {
-        "beat": "बीट",
-        "miss": "मिस",
-        "inLine": "समान"
-      },
-      "errors": {
-        "noData": "कोई कमाई डेटा नहीं",
         "failedToLoad": "लोड करने में विफल"
       }
     },

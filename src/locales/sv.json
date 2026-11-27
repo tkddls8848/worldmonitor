@@ -18,7 +18,6 @@
     "middleeast": "Mellanöstern",
     "layoffs": "Uppsägningar Tracker",
     "ai": "AI och maskininlärning",
-    "ipo": "Börsintroduktioner och fusioner med skalbolag",
     "thinktanks": "Tankesmedjor",
     "science": "Vetenskap",
     "africa": "Afrika",
@@ -1553,12 +1552,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Global jämförelse av matvarukorgar i 24 länder — spårar konsumentprisinflation baserat på verkliga varor, bortom övergripande konsumentprisindex."
     },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>Premium aktieanalys</strong> AI-driven analys av aktierna på din bevakningslista — köp/behåll/sälj-signaler, riktkurser, huvudrisker och katalysatorer som uppdateras dagligen."
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>Premium backtesting</strong> Historiska backtester för aktierna på din bevakningslista — tidigare avkastning, största nedgång och volatilitetsmått."
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>Daglig marknadsbrief</strong> AI-genererad daglig sammanfattning av globala marknadsförhållanden, viktiga makrotrender och sektorsignaler — uppdateras varje handelsdag."
     },
@@ -1617,25 +1610,6 @@
         "failedToLoad": "Misslyckades att ladda"
       },
       "methodologyNote": "Nivåerna Alert / Warning / Watch kommer från en redaktionell nyckelordklassificerare — se /docs/methodology/disease-alert-level för nyckelordstabellen och begränsningarna."
-    },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>Earnings Calendar</strong> Kommande och senaste vinstrapporter från stora börsnoterade företag. Visar vinst per aktie-uppskattningar jämfört med faktiska resultat, intäkter och slag/miss-klassificering. Källa: finansiell dataproviders.",
-      "title": "Vinstkalender",
-      "today": "IDAG · {{date}}",
-      "tomorrow": "IMORGON · {{date}}",
-      "epsActual": "vinst per aktie {{value}}",
-      "epsEstimate": "vinst per aktie-uppskattning {{value}}",
-      "revenueActual": "{{value}} intäkter",
-      "revenueEstimate": "{{value}} uppsk.",
-      "surprise": {
-        "beat": "ÖVERTRÄFFAD",
-        "miss": "MISSAD",
-        "inLine": "VÄNTAD"
-      },
-      "errors": {
-        "noData": "Ingen vinstdata",
-        "failedToLoad": "Misslyckades att ladda"
-      }
     },
     "economicCalendar": {
       "infoTooltip": "<strong>Economic Calendar</strong> Schemalagda makroekonomiska releaser: konsumentprisindex, icke-jordbruksanställning, bruttonationalprodukt, inköpschefindex och centralbanksbeslut. Visar prognos kontra faktisk kontra tidigare. Höggravitetsfall markerade. Källa: ekonomisk dataproviders."

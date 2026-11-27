@@ -630,32 +630,6 @@ export interface SecFilingSearchResult {
   accession: string;
 }
 
-export interface ListMaterialEventsRequest {
-  itemCode: string;
-  limit: number;
-}
-
-export interface ListMaterialEventsResponse {
-  events: MaterialEvent[];
-  unavailable: boolean;
-  fetchedAtMs: number;
-}
-
-export interface MaterialEvent {
-  company: string;
-  cik: string;
-  form: string;
-  accession: string;
-  filedAtMs: number;
-  items: MaterialEventItem[];
-  url: string;
-}
-
-export interface MaterialEventItem {
-  code: string;
-  description: string;
-}
-
 export interface GetCountryFactsRequest {
   countryCode: string;
 }
@@ -1446,7 +1420,6 @@ export interface IntelligenceServiceHandler {
   getCompanyEnrichment(ctx: ServerContext, req: GetCompanyEnrichmentRequest): Promise<GetCompanyEnrichmentResponse>;
   listCompanySignals(ctx: ServerContext, req: ListCompanySignalsRequest): Promise<ListCompanySignalsResponse>;
   searchSecFilings(ctx: ServerContext, req: SearchSecFilingsRequest): Promise<SearchSecFilingsResponse>;
-  listMaterialEvents(ctx: ServerContext, req: ListMaterialEventsRequest): Promise<ListMaterialEventsResponse>;
   getCountryFacts(ctx: ServerContext, req: GetCountryFactsRequest): Promise<GetCountryFactsResponse>;
   listSecurityAdvisories(ctx: ServerContext, req: ListSecurityAdvisoriesRequest): Promise<ListSecurityAdvisoriesResponse>;
   getGdeltTopicTimeline(ctx: ServerContext, req: GetGdeltTopicTimelineRequest): Promise<GetGdeltTopicTimelineResponse>;
@@ -2219,54 +2192,6 @@ export function createIntelligenceServiceRoutes(
 
           const result = await handler.searchSecFilings(ctx, body);
           return new Response(JSON.stringify(result as SearchSecFilingsResponse), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (err: unknown) {
-          if (err instanceof ValidationError) {
-            return new Response(JSON.stringify({ violations: err.violations }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-          if (options?.onError) {
-            return options.onError(err, req);
-          }
-          const message = "Internal server error";
-          return new Response(JSON.stringify({ message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      },
-    },
-    {
-      method: "GET",
-      path: "/api/intelligence/v1/list-material-events",
-      handler: async (req: Request): Promise<Response> => {
-        try {
-          const pathParams: Record<string, string> = {};
-          const url = new URL(req.url, "http://localhost");
-          const params = url.searchParams;
-          const body: ListMaterialEventsRequest = {
-            itemCode: params.get("item_code") ?? "",
-            limit: Number(params.get("limit") ?? "0"),
-          };
-          if (options?.validateRequest) {
-            const bodyViolations = options.validateRequest("listMaterialEvents", body);
-            if (bodyViolations) {
-              throw new ValidationError(bodyViolations);
-            }
-          }
-
-          const ctx: ServerContext = {
-            request: req,
-            pathParams,
-            headers: Object.fromEntries(req.headers.entries()),
-          };
-
-          const result = await handler.listMaterialEvents(ctx, body);
-          return new Response(JSON.stringify(result as ListMaterialEventsResponse), {
             status: 200,
             headers: { "Content-Type": "application/json" },
           });

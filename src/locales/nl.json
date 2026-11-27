@@ -18,7 +18,6 @@
     "middleeast": "Midden-Oosten",
     "layoffs": "Ontslagen-tracker",
     "ai": "AI en machine learning",
-    "ipo": "Beursgang & fusies van lege beursvennootschappen",
     "thinktanks": "Denktanks",
     "science": "Wetenschap",
     "africa": "Afrika",
@@ -1553,12 +1552,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Wereldwijd vergelijking van boodschappenprijzen in 24 landen — volgt inflatietrends van consumptiegoederen buiten de standaard consumentenprijsindex."
     },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>Premium aandelenanalyse</strong> AI-analyse van aandelen in je volglijst — koop/houd/verkoopsignalen, koersdoelen, belangrijkste risico's en katalysatoren, dagelijks bijgewerkt."
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>Premium backtesting</strong> Historische backtests van aandelen in je volglijst — rendementen uit het verleden, maximale daling en volatiliteitsstatistieken."
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>Dagelijkse marktbriefing</strong> Door AI gegenereerde dagelijkse samenvatting van wereldwijde marktomstandigheden, belangrijke macrotrends en sectorsignalen — elke handelsdag ververst."
     },
@@ -1617,25 +1610,6 @@
         "failedToLoad": "Laden mislukt"
       },
       "methodologyNote": "Alert / Warning / Watch niveaus komen uit een redactionele trefwoord-classificatie — zie /docs/methodology/disease-alert-level voor de trefwoordtabel en beperkingen."
-    },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>Earnings Calendar</strong> Aankomende en recente winstpublicaties van grote beursgenoteerde bedrijven. Toont winst per aandeel-schattingen versus werkelijke waarden, omzet en beat/miss-classificatie. Bron: financiële gegevensleveranciers.",
-      "title": "Winstverwachtingskalender",
-      "today": "VANDAAG · {{date}}",
-      "tomorrow": "MORGEN · {{date}}",
-      "epsActual": "winst per aandeel {{value}}",
-      "epsEstimate": "winst per aandeel geschat {{value}}",
-      "revenueActual": "{{value}} omzet",
-      "revenueEstimate": "{{value}} schatting",
-      "surprise": {
-        "beat": "BETER DAN VERWACHT",
-        "miss": "SLECHTER DAN VERWACHT",
-        "inLine": "IN LIJN"
-      },
-      "errors": {
-        "noData": "Geen winstverwachtingsgegevens",
-        "failedToLoad": "Laden mislukt"
-      }
     },
     "economicCalendar": {
       "infoTooltip": "<strong>Economic Calendar</strong> Geplande macro-economische releases: consumentenprijsindex, loonlijsten buiten landbouw, bruto binnenlands product, inkoopmanagersindex en besluiten van centrale banken. Toont prognose versus werkelijk versus vorig. Belangrijke gebeurtenissen zijn gemarkeerd. Bron: economische gegevensleveranciers."

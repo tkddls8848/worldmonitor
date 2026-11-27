@@ -514,7 +514,6 @@
     "orefSirens": "Israel Sirens",
     "regulation": "AI Regulation Dashboard",
     "finRegulation": "Financial Regulation",
-    "ipo": "Public listings & shell-company mergers",
     "serviceStatus": "Service Status",
     "internetDisruptions": "Internet Disruptions",
     "internetDisruptionsTabs": {
@@ -2175,12 +2174,6 @@
         "silver": "Silver"
       }
     },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>Premium Stock Analysis</strong> AI-powered analysis for stocks in your watchlist — buy/hold/sell signals, price targets, key risks, and catalysts updated daily."
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>Premium Backtesting</strong> Historical performance backtests for stocks in your watchlist — past returns, max drawdown, and volatility metrics."
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>Daily Market Brief</strong> AI-generated daily summary of global market conditions, key macro trends, and sector-level signals — refreshes each trading day."
     },
@@ -2392,25 +2385,6 @@
       },
       "errors": {
         "noData": "No outbreak data available",
-        "failedToLoad": "Failed to load"
-      }
-    },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>Earnings Calendar</strong> Upcoming and recent earnings releases for major public companies. Shows earnings per share estimates vs actuals, revenue, and beat/miss classification. Source: financial data providers.",
-      "title": "Earnings Calendar",
-      "today": "TODAY · {{date}}",
-      "tomorrow": "TOMORROW · {{date}}",
-      "epsActual": "earnings per share {{value}}",
-      "epsEstimate": "earnings per share est {{value}}",
-      "revenueActual": "{{value}} rev",
-      "revenueEstimate": "{{value}} est",
-      "surprise": {
-        "beat": "BEAT",
-        "miss": "MISS",
-        "inLine": "IN LINE"
-      },
-      "errors": {
-        "noData": "No earnings data",
         "failedToLoad": "Failed to load"
       }
     },

@@ -968,13 +968,6 @@
     "language": "en",
     "ownershipClass": "private"
   },
-  "Earnings Reports": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Google News keyword search aggregating many publishers; no single owner."
-  },
   "ECB Watch": {
     "country": "INTL",
     "audience": "international",
@@ -1735,13 +1728,6 @@
     "language": "en",
     "ownershipClass": "private"
   },
-  "IPO News": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Google News topic query aggregating many publishers; no single owner."
-  },
   "iPolitics": {
     "country": "CA",
     "audience": "domestic",
@@ -2038,13 +2024,6 @@
     "language": "en",
     "ownershipClass": "public-service"
   },
-  "M&A News": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Google News topic query aggregating many publishers; no single owner."
-  },
   "Maclean's": {
     "country": "CA",
     "audience": "domestic",
@@ -2249,13 +2228,6 @@
     "language": "en",
     "ownershipClass": "private"
   },
-  "Nasdaq-100 & QQQ": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Google News topic query aggregating many publishers; no single owner."
-  },
   "National Post": {
     "country": "CA",
     "audience": "domestic",
@@ -2382,13 +2354,6 @@
     "audience": "domestic",
     "language": "en",
     "ownershipClass": "nonprofit"
-  },
-  "NQ Influence Basket": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Google News keyword search aggregating many publishers; no single owner."
   },
   "NRC": {
     "country": "NL",
@@ -2788,12 +2753,6 @@
     "language": "en",
     "ownershipClass": "private"
   },
-  "Reuters Nasdaq Futures": {
-    "country": "GB",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "private"
-  },
   "Reuters Science": {
     "country": "GB",
     "audience": "international",
@@ -2937,13 +2896,6 @@
     "audience": "international",
     "language": "en",
     "ownershipClass": "private"
-  },
-  "Semiconductors": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "unreviewed",
-    "note": "Google News topic query aggregating many publishers; no single owner."
   },
   "Seznam Zprávy": {
     "country": "CZ",

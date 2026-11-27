@@ -28,7 +28,6 @@
         "commodities",
         "centralbanks",
         "economic",
-        "ipo",
         "derivatives",
         "fintech",
         "fin-regulation",
@@ -54,9 +53,7 @@
         "energy",
         "supply-chain"
       ],
-      "ondemand": [
-        "nq-news"
-      ]
+      "ondemand": []
     },
     "server": {
       "full": [
@@ -85,14 +82,12 @@
         "commodities",
         "centralbanks",
         "economic",
-        "ipo",
         "derivatives",
         "fintech",
         "fin-regulation",
         "institutional",
         "analysis",
-        "gccNews",
-        "nq-news"
+        "gccNews"
       ],
       "commodity": [
         "commodity-news",
@@ -117,9 +112,6 @@
   "gateExempt": {
     "energy": [
       "supply-chain"
-    ],
-    "finance": [
-      "nq-news"
     ]
   },
   "categoryNotes": [
@@ -2783,16 +2775,6 @@
           "category": "centralbanks",
           "serverOrder": 0,
           "browserOrder": 0
-        },
-        {
-          "edition": "ondemand",
-          "category": "nq-news",
-          "browserOrder": 2
-        },
-        {
-          "edition": "finance",
-          "category": "nq-news",
-          "serverOrder": 2
         }
       ]
     },
@@ -4469,21 +4451,6 @@
           "category": "intel",
           "browserOrder": 32,
           "type": "cyber"
-        }
-      ]
-    },
-    {
-      "name": "IPO News",
-      "url": "https://news.google.com/rss/search?q=(IPO%20OR%20%22initial%20public%20offering%22%20OR%20%22stock%20market%20debut%22)%20when%3A2d&hl=en-US&gl=US&ceid=US:en",
-      "browser": {
-        "url": "https://news.google.com/rss/search?q=(IPO+OR+\"initial+public+offering\"+OR+SPAC+OR+\"direct+listing\")+when:3d&hl=en-US&gl=US&ceid=US:en"
-      },
-      "placements": [
-        {
-          "edition": "finance",
-          "category": "ipo",
-          "serverOrder": 0,
-          "browserOrder": 0
         }
       ]
     },
@@ -6745,30 +6712,6 @@
       ]
     },
     {
-      "name": "Earnings Reports",
-      "url": "https://news.google.com/rss/search?q=(\"earnings+report\"+OR+\"quarterly+earnings\"+OR+\"revenue+beat\"+OR+\"earnings+miss\")+when:2d&hl=en-US&gl=US&ceid=US:en",
-      "placements": [
-        {
-          "edition": "finance",
-          "category": "ipo",
-          "browserOrder": 1,
-          "serverOrder": 1
-        }
-      ]
-    },
-    {
-      "name": "M&A News",
-      "url": "https://news.google.com/rss/search?q=(\"merger\"+OR+\"acquisition\"+OR+\"takeover+bid\"+OR+\"buyout\")+billion+when:3d&hl=en-US&gl=US&ceid=US:en",
-      "placements": [
-        {
-          "edition": "finance",
-          "category": "ipo",
-          "browserOrder": 2,
-          "serverOrder": 2
-        }
-      ]
-    },
-    {
       "name": "GoldSeek",
       "url": "https://www.goldseek.com/rss.xml",
       "notes": [
@@ -6987,70 +6930,6 @@
           "category": "supply-chain",
           "browserOrder": 3,
           "serverOrder": 3
-        }
-      ]
-    },
-    {
-      "name": "Reuters Nasdaq Futures",
-      "url": "https://news.google.com/rss/search?q=site:reuters.com+(Nasdaq+futures+OR+NQ+OR+\"E-mini\")+when:1d&hl=en-US&gl=US&ceid=US:en",
-      "placements": [
-        {
-          "edition": "ondemand",
-          "category": "nq-news",
-          "browserOrder": 0
-        },
-        {
-          "edition": "finance",
-          "category": "nq-news",
-          "serverOrder": 0
-        }
-      ]
-    },
-    {
-      "name": "Nasdaq-100 & QQQ",
-      "url": "https://news.google.com/rss/search?q=(\"Nasdaq-100\"+OR+QQQ+OR+\"Nasdaq+100\")+when:1d&hl=en-US&gl=US&ceid=US:en",
-      "placements": [
-        {
-          "edition": "ondemand",
-          "category": "nq-news",
-          "browserOrder": 1
-        },
-        {
-          "edition": "finance",
-          "category": "nq-news",
-          "serverOrder": 1
-        }
-      ]
-    },
-    {
-      "name": "NQ Influence Basket",
-      "url": "https://news.google.com/rss/search?q=(AAPL+OR+Apple+OR+MSFT+OR+Microsoft+OR+NVDA+OR+NVIDIA+OR+AMZN+OR+Amazon+OR+GOOGL+OR+Alphabet+OR+META+OR+AVGO+OR+Broadcom+OR+TSLA+OR+Tesla)+when:1d&hl=en-US&gl=US&ceid=US:en",
-      "placements": [
-        {
-          "edition": "ondemand",
-          "category": "nq-news",
-          "browserOrder": 3
-        },
-        {
-          "edition": "finance",
-          "category": "nq-news",
-          "serverOrder": 3
-        }
-      ]
-    },
-    {
-      "name": "Semiconductors",
-      "url": "https://news.google.com/rss/search?q=(semiconductor+OR+chip+OR+\"AI+chip\"+OR+TSMC+OR+ASML)+when:1d&hl=en-US&gl=US&ceid=US:en",
-      "placements": [
-        {
-          "edition": "ondemand",
-          "category": "nq-news",
-          "browserOrder": 4
-        },
-        {
-          "edition": "finance",
-          "category": "nq-news",
-          "serverOrder": 4
         }
       ]
     },

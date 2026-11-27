@@ -50,7 +50,7 @@ describe('mission preview registry', () => {
   });
 
   it('keeps crisis-desk, the untouched comparisons, and country-watcher preview-free', () => {
-    for (const id of ['crisis-desk', 'tech-ai-watch', 'good-news-explorer', 'country-watcher', 'nq-day-trader']) {
+    for (const id of ['crisis-desk', 'tech-ai-watch', 'good-news-explorer', 'country-watcher']) {
       assert.equal(
         (registry.MISSION_PREVIEW_REGISTRY as Record<string, unknown>)[id],
         undefined,

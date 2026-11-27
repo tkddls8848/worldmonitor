@@ -129,10 +129,10 @@ describe('digests serve the categories that used to need per-feed browser fetche
     }
   });
 
-  it('the full digest keeps tech and think tanks and the finance digest keeps nq-news', () => {
+  it('the full digest keeps tech and think tanks and the finance digest keeps regulatory news', () => {
     assert.ok(scheduled('full').has('tech'));
     assert.ok(scheduled('full').has('thinktanks'));
-    assert.ok(scheduled('finance').has('nq-news'));
+    assert.ok(scheduled('finance').has('fin-regulation'));
   });
 
   // AE1: a source migrated out of the browser-only list is fetched by the

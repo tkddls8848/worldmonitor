@@ -424,7 +424,6 @@
     "orefSirens": "Sirene Israel",
     "regulation": "Tabloul de bord pentru reglementarea AI",
     "finRegulation": "Reglementare financiară",
-    "ipo": "Listări publice și fuziuni cu societăți-cărămidă",
     "serviceStatus": "Stare serviciu",
     "techReadiness": "Indicele de pregătire tehnică",
     "gccInvestments": "Investiții Gulf Cooperation Council",
@@ -1935,12 +1934,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Comparație globală a prețurilor coșului de alimente în 24 de țări — monitorizează inflația bunurilor de consum din lumea reală dincolo de indicele prețurilor de consum principal."
     },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>Analiză premium a acțiunilor</strong> Analiză AI pentru acțiunile din lista dvs. de urmărire — semnale cumpără/păstrează/vinde, prețuri țintă, riscuri cheie și catalizatori. Actualizată zilnic."
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>Backtesting premium</strong> Backtesting istoric pentru lista dvs. de urmărire — randamente istorice, scădere maximă și indicatori de volatilitate."
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>Sinteza zilnică a piețelor</strong> Sinteză zilnică generată de AI despre condițiile piețelor globale, tendințele macro cheie și semnalele sectoriale — actualizată în fiecare zi de tranzacționare."
     },
@@ -2004,25 +1997,6 @@
         "failedToLoad": "Încărcare eșuată"
       },
       "methodologyNote": "Nivelurile Alert / Warning / Watch provin dintr-un clasificator de cuvinte cheie editorial — consultați /docs/methodology/disease-alert-level pentru tabelul de cuvinte cheie și limitări."
-    },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>Earnings Calendar</strong> Lansări de venituri viitoare și recente pentru companii publice majore. Arată estimări versus actuale ale câștigurilor pe acțiune, venituri și clasificare beat/miss. Sursă: furnizori de date financiare.",
-      "title": "Calendar de Câștiguri",
-      "today": "ASTAZI · {{date}}",
-      "tomorrow": "MÂINE · {{date}}",
-      "epsActual": "câștiguri pe acțiune {{value}}",
-      "epsEstimate": "estimare câștiguri pe acțiune {{value}}",
-      "revenueActual": "{{value}} venit",
-      "revenueEstimate": "est. {{value}}",
-      "surprise": {
-        "beat": "DEPĂȘIT",
-        "miss": "RATAT",
-        "inLine": "CONFORM"
-      },
-      "errors": {
-        "noData": "Niciun dat despre câștiguri",
-        "failedToLoad": "Încărcare eșuată"
-      }
     },
     "economicCalendar": {
       "infoTooltip": "<strong>Economic Calendar</strong> Lansări macroeconomice programate: indicele prețurilor de consum, salarii nefarmiere, produsul intern brut, indicele managerilor de achiziții și decizii ale băncilor centrale. Arată prognoză versus actual versus anterior. Evenimente cu impact ridicat sunt evidențiate. Sursă: furnizori de date economice."

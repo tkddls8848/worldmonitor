@@ -1,5 +1,5 @@
 // Corporate-intelligence data product (#5695): SEC EDGAR helpers, seeder pure
-// functions, and the four intelligence/v1 handler behaviors. Replaces
+// functions, and the three intelligence/v1 handler behaviors. Replaces
 // tests/disabled-company-rpcs.test.mts, which locked the pre-#5695 disabled
 // state (empty envelopes + source-level forbid list) — the handlers now do real
 // work behind verified CIK attribution, so the lock is retired with it.
@@ -25,15 +25,6 @@ import {
   sanitizeTicker,
 } from '../server/_shared/sec-edgar';
 import { safeHttpUrl } from '../server/worldmonitor/intelligence/v1/_company-shared';
-import {
-  MATERIAL_ITEM_CODES,
-  build8kStreamSnapshot,
-  filterMaterialEvents,
-  isSecGovUrl,
-  mergeEventWindow,
-  parse8kAtomFeed,
-  validate8kStream,
-} from '../scripts/seed-sec-8k-stream.mjs';
 import { MIN_CIK_ENTRIES, slimCikMap, validateCikMap } from '../scripts/seed-sec-cik-map.mjs';
 import { getCompanyEnrichment } from '../server/worldmonitor/intelligence/v1/get-company-enrichment';
 import { listCompanySignals } from '../server/worldmonitor/intelligence/v1/list-company-signals';
@@ -219,114 +210,6 @@ const ATOM_FIXTURE = `<?xml version="1.0" encoding="ISO-8859-1" ?>
 <updated>2026-07-27T17:00:00-04:00</updated>
 </entry>
 </feed>`;
-
-describe('seed-sec-8k-stream pure functions', () => {
-  it('keeps the material set aligned with the server taxonomy', () => {
-    assert.deepEqual([...MATERIAL_ITEM_CODES].sort(), materialItemCodes().sort());
-  });
-
-  it('parses the getcurrent Atom feed into typed events (8-K forms only)', () => {
-    const events = parse8kAtomFeed(ATOM_FIXTURE);
-    assert.equal(events.length, 2);
-    const [huron, rtb] = events;
-    assert.equal(huron.company, 'Huron Consulting Group Inc.');
-    assert.equal(huron.cik, '0001289848');
-    assert.equal(huron.form, '8-K');
-    assert.equal(huron.accession, '0001628280-26-049857');
-    assert.equal(huron.items.length, 1);
-    assert.equal(huron.items[0].code, '5.02');
-    assert.match(huron.items[0].description, /^Departure of Directors/);
-    assert.equal(huron.filedAtMs, Date.parse('2026-07-27T17:29:58-04:00'));
-    assert.match(huron.url, /^https:\/\/www\.sec\.gov\/Archives/);
-    assert.equal(rtb.form, '8-K/A');
-  });
-
-  it('stores only sec.gov filing links', () => {
-    assert.equal(isSecGovUrl('https://www.sec.gov/Archives/edgar/data/1/2/3-index.htm'), true);
-    assert.equal(isSecGovUrl('https://sec.gov/x'), true);
-    assert.equal(isSecGovUrl('https://evil.example/x'), false);
-    assert.equal(isSecGovUrl('javascript:alert(1)'), false);
-    assert.equal(isSecGovUrl('http://www.sec.gov/x'), false);
-    assert.equal(isSecGovUrl(''), false);
-    // A feed entry carrying a foreign host yields an empty url, never the host.
-    const poisoned = ATOM_FIXTURE.replace('https://www.sec.gov/Archives/edgar/data/1289848/000162828026049857/0001628280-26-049857-index.htm', 'https://evil.example/pwn');
-    const events = parse8kAtomFeed(poisoned);
-    assert.equal(events[0].url, '');
-  });
-
-  it('filters routine-only filings out of the material stream', () => {
-    const material = filterMaterialEvents(parse8kAtomFeed(ATOM_FIXTURE));
-    assert.equal(material.length, 1);
-    assert.equal(material[0].items[0].code, '5.02');
-  });
-
-  it('merges the rolling window: dedupe by accession, cutoff, newest first', () => {
-    const now = Date.parse('2026-07-27T22:00:00Z');
-    const day = 24 * 3600 * 1000;
-    const old = { company: 'Old', cik: '1', form: '8-K', accession: 'A-old', filedAtMs: now - 8 * day, items: [{ code: '5.02', description: 'x' }], url: '' };
-    const kept = { company: 'Kept', cik: '2', form: '8-K', accession: 'A-kept', filedAtMs: now - 2 * day, items: [{ code: '2.01', description: 'x' }], url: '' };
-    const updated = { company: 'Updated v1', cik: '3', form: '8-K', accession: 'A-dup', filedAtMs: now - 3 * day, items: [{ code: '4.02', description: 'x' }], url: '' };
-    const fresh = { company: 'Updated v2', cik: '3', form: '8-K/A', accession: 'A-dup', filedAtMs: now - day, items: [{ code: '4.02', description: 'x' }], url: '' };
-    const merged = mergeEventWindow([old, kept, updated], [fresh], now);
-    assert.deepEqual(merged.map((e: { accession: string }) => e.accession), ['A-dup', 'A-kept']);
-    assert.equal(merged[0].company, 'Updated v2');
-  });
-
-  it('drops far-future events so clock skew cannot pin the top of the stream', () => {
-    const now = Date.parse('2026-07-27T22:00:00Z');
-    const day = 24 * 3600 * 1000;
-    const real = { company: 'Real', cik: '1', form: '8-K', accession: 'A-real', filedAtMs: now - day, items: [{ code: '5.02', description: 'x' }], url: '' };
-    const future = { company: 'Skewed', cik: '2', form: '8-K', accession: 'A-future', filedAtMs: now + 5 * day, items: [{ code: '5.02', description: 'x' }], url: '' };
-    const merged = mergeEventWindow([future], [real], now);
-    assert.deepEqual(merged.map((e: { accession: string }) => e.accession), ['A-real']);
-  });
-
-  it('rejects an empty successful feed instead of republishing old events as fresh', () => {
-    const previous = {
-      events: [{
-        company: 'Old',
-        cik: '1',
-        form: '8-K',
-        accession: 'A-old',
-        filedAtMs: Date.now() - 86_400_000,
-        items: [{ code: '5.02', description: 'x' }],
-        url: '',
-      }],
-    };
-    assert.throws(
-      () => build8kStreamSnapshot(previous, '<feed xmlns="http://www.w3.org/2005/Atom"></feed>', Date.now()),
-      /no entries/i,
-    );
-  });
-
-  it('rejects a routine-only feed instead of advancing last-good freshness', () => {
-    const previous = {
-      events: [{
-        company: 'Old',
-        cik: '1',
-        form: '8-K',
-        accession: 'A-old',
-        filedAtMs: Date.now() - 86_400_000,
-        items: [{ code: '5.02', description: 'x' }],
-        url: '',
-      }],
-    };
-    const routineOnly = ATOM_FIXTURE.replace(
-      /Item 5\.02:[^\n]+/,
-      'Item 7.01: Regulation FD Disclosure',
-    );
-    assert.throws(
-      () => build8kStreamSnapshot(previous, routineOnly, Date.now()),
-      /no material events/i,
-    );
-  });
-
-  it('enforces the stream coverage floor at the exact boundary', () => {
-    const event = { accession: 'a' };
-    assert.equal(validate8kStream({ events: Array(49).fill(event), fetchedAt: new Date().toISOString() }), false);
-    assert.equal(validate8kStream({ events: Array(50).fill(event), fetchedAt: new Date().toISOString() }), true);
-  });
-});
 
 describe('seed-sec-cik-map pure functions', () => {
   it('slims the index-keyed registry into a ticker map, first occurrence wins', () => {

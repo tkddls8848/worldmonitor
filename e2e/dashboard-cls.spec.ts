@@ -71,8 +71,6 @@ const seededDeferredPanelOrder = [
   'energy-complex',
   'oil-inventories',
   'markets',
-  'stock-analysis',
-  'stock-backtest',
   'daily-market-brief',
   'chat-analyst',
   'economic',

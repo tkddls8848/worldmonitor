@@ -75,9 +75,6 @@ This set drives the reactive UI gating — when auth state changes, panels in th
 ```ts
 const WEB_PREMIUM_API_PATHS = new Set([
   '/api/market/v1/analyze-stock',
-  '/api/market/v1/get-stock-analysis-history',
-  '/api/market/v1/backtest-stock',
-  '/api/market/v1/list-stored-stock-backtests',
   '/api/my-domain/v1/my-endpoint',  // <-- add here
 ]);
 ```
@@ -89,9 +86,6 @@ When a fetch request matches a path in this set and the user has a Clerk session
 ```ts
 const PREMIUM_RPC_PATHS = new Set([
   '/api/market/v1/analyze-stock',
-  '/api/market/v1/get-stock-analysis-history',
-  '/api/market/v1/backtest-stock',
-  '/api/market/v1/list-stored-stock-backtests',
   '/api/my-domain/v1/my-endpoint',  // <-- add here
 ]);
 ```
@@ -102,8 +96,6 @@ The gateway validates the bearer token via local JWKS verification (jose) and ch
 
 | Panel | Variants | Gate type |
 |-------|----------|-----------|
-| `stock-analysis` | full, finance | `locked` (web) |
-| `stock-backtest` | full, finance | `locked` (web) |
 | `daily-market-brief` | full, finance | `locked` (web) |
 
 ### Desktop Behavior

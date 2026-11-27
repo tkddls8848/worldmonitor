@@ -14,7 +14,6 @@ import { aiRoutingCacheSuffix, resolveAiRouting, toLlmRoutingPolicy } from '../.
 import { cachedFetchJson, getCachedJson } from '../../../_shared/redis';
 import { CHROME_UA, yahooGate } from '../../../_shared/constants';
 import { UPSTREAM_TIMEOUT_MS, sanitizeSymbol } from './_shared';
-import { storeStockAnalysisSnapshot } from './premium-stock-store';
 import { searchRecentStockHeadlines } from './stock-news-search';
 
 export type Candle = {
@@ -2086,7 +2085,6 @@ export async function analyzeStock(
     // The analysis history and backtest ledger are one shared store per
     // symbol. A restricted caller's analysis stays in its own cache namespace
     // and out of that store, so the store keeps a single provenance.
-    if (aiRouting.kind === 'default') await storeStockAnalysisSnapshot(response, includeNews);
     return response;
   };
 

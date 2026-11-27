@@ -610,7 +610,6 @@ describe('mission preset definitions', () => {
         'energy-security',
         'osint-newsroom',
         'macro-market-watch',
-        'nq-day-trader',
         'country-watcher',
         'protective-travel',
       ],
@@ -673,67 +672,6 @@ describe('applyMissionPresetToState', () => {
     ]);
     assert.equal(applied.mapLayers.conflicts, true);
     assert.equal(applied.mapLayers.ciiChoropleth, true);
-  });
-
-  it('lists NQ Day Trader only on finance and rejects it on other variants', () => {
-    const financeIds = getMissionPresetsForVariant('finance').map((preset) => preset.id);
-    assert.equal(financeIds.length, 7);
-    assert.ok(financeIds.includes('nq-day-trader'));
-    for (const variant of VARIANTS.filter((item) => item !== 'finance')) {
-      const ids = getMissionPresetsForVariant(variant).map((preset) => preset.id);
-      // Protective Travel is offered on the full variant only (#10453).
-      const expected = variant === 'full' ? 7 : 6;
-      assert.equal(ids.length, expected, `${variant} should keep the six shared missions${variant === 'full' ? ' plus Protective Travel' : ''}`);
-      assert.ok(!ids.includes('nq-day-trader'), `${variant} must not offer NQ Day Trader`);
-    }
-
-    const before = makePanelSettings('full');
-    const snapshot = structuredClone(before);
-    assert.throws(
-      () => applyMissionPresetToState('nq-day-trader', before, DEFAULT_MAP_LAYERS, 'full'),
-      /not available on this variant/,
-    );
-    assert.deepEqual(before, snapshot);
-  });
-
-  it('applies the NQ Day Trader workspace without touching the market watchlist', () => {
-    const originalWatchlist = '["AAPL","MSFT","NVDA"]';
-    localStorage.setItem(MARKET_WATCHLIST_STORAGE_KEY, originalWatchlist);
-
-    const current = makePanelSettings('finance');
-    const applied = applyMissionPresetToState('nq-day-trader', current, DEFAULT_MAP_LAYERS, 'finance');
-
-    assert.equal(applied.preset.id, 'nq-day-trader');
-    assert.equal(applied.preset.view, 'america');
-    assert.equal(applied.preset.timeRange, '24h');
-    assert.deepEqual(applied.panelOrder, [
-      'nq-pulse',
-      'nq-catalysts',
-      'nq-news',
-      'live-news',
-      'heatmap',
-      'economic',
-      'fear-greed',
-      'fsi',
-      'yield-curve',
-      'markets',
-    ]);
-    for (const key of applied.panelOrder) {
-      assert.equal(applied.panelSettings[key]?.enabled, true, `${key} should be enabled`);
-    }
-    assert.equal(applied.mapLayers.stockExchanges, true);
-    assert.equal(applied.mapLayers.financialCenters, true);
-    assert.equal(applied.mapLayers.centralBanks, true);
-    assert.equal(applied.mapLayers.economic, true);
-    assert.equal(applied.mapLayers.outages, true);
-    assert.equal(applied.mapLayers.conflicts, false);
-    assert.equal(localStorage.getItem(MARKET_WATCHLIST_STORAGE_KEY), originalWatchlist);
-
-    const reset = resetMissionPresetState(applied.panelSettings, DEFAULT_MAP_LAYERS, 'finance');
-    assert.equal(reset.panelSettings['nq-pulse']?.enabled, false);
-    assert.equal(reset.panelSettings['nq-catalysts']?.enabled, false);
-    assert.equal(reset.panelSettings['nq-news']?.enabled, false);
-    assert.equal(localStorage.getItem(MARKET_WATCHLIST_STORAGE_KEY), originalWatchlist);
   });
 
   it('filters enabled panels to the active variant instead of creating mini-variants', () => {
@@ -898,12 +836,6 @@ describe('mission preset persistence', () => {
     localStorage.setItem(MISSION_PRESET_STORAGE_KEY, 'stale');
 
     assert.equal(loadStoredMissionPreset(), null);
-  });
-
-  it('ignores a stored NQ Day Trader preset on a non-finance variant', () => {
-    localStorage.setItem(MISSION_PRESET_STORAGE_KEY, 'nq-day-trader');
-    assert.equal(loadStoredMissionPreset('full'), null);
-    assert.equal(loadStoredMissionPreset('finance')?.id, 'nq-day-trader');
   });
 
   it('does not throw when storage is unavailable', () => {
@@ -1358,7 +1290,7 @@ describe('mission preset shell integration', () => {
     await waitForMissionTimers();
 
     assert.equal(ctx.panelSettings.markets?.enabled, true);
-    assert.deepEqual(callbacks.appliedOrders[0]?.slice(0, 4), ['markets', 'heatmap', 'market-breadth', 'earnings-calendar']);
+    assert.deepEqual(callbacks.appliedOrders[0]?.slice(0, 4), ['markets', 'heatmap', 'market-breadth', 'macro-signals']);
     assert.equal(localStorage.getItem(MISSION_PRESET_STORAGE_KEY), null);
 
     assert.doesNotThrow(() => manager.resetMissionPreset());

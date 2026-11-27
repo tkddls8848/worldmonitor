@@ -27,7 +27,7 @@ export const STANDALONE_INTERVAL_MIN = {
   'market-quotes': 15, 'commodity-quotes': 15, 'fear-greed': 240,
   'shipping-stress': 15,
   'news-threat-summary': 15,
-  'market-breadth': 1440, 'aaii-sentiment': 1440, 'cot': 1440, 'earnings-calendar': 360,
+  'market-breadth': 1440, 'cot': 1440, 'earnings-calendar': 360,
   'economic-calendar': 360, 'economy': 45, 'fred-rates': 60, 'fx-rates': 1440, 'fx-yoy': 480,
   'fuel-prices': 1440, 'electricity-prices': 360, 'ember-electricity': 1440, 'energy-spine': 1440,
   'energy-intelligence': 240, 'chokepoint-flows': 240, 'hormuz': 720, 'supply-chain-trade': 360,

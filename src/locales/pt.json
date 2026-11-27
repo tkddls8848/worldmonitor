@@ -18,7 +18,6 @@
     "middleeast": "Médio Oriente",
     "layoffs": "Rastreador de demissões",
     "ai": "IA e aprendizado de máquina",
-    "ipo": "Listagens públicas e fusões de empresas de fachada",
     "thinktanks": "Grupos de reflexão",
     "science": "Ciência",
     "africa": "África",
@@ -1556,12 +1555,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Comparação de preços da cesta de compras global em 24 países — monitora a inflação de bens de consumo do mundo real além do índice de preços ao consumidor divulgado."
     },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>Análise de ações Premium</strong> Análise com IA das ações da sua lista — sinais de compra/manutenção/venda, preços-alvo, principais riscos e catalisadores atualizados diariamente."
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>Backtesting Premium</strong> Backtests históricos das ações da sua lista — retornos passados, perda máxima e métricas de volatilidade."
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>Resumo diário do mercado</strong> Resumo diário gerado por IA das condições do mercado global, principais tendências macro e sinais setoriais — atualizado a cada pregão."
     },
@@ -1625,25 +1618,6 @@
         "failedToLoad": "Falha ao carregar"
       },
       "methodologyNote": "Os níveis de Alerta / Aviso / Observação vêm de um classificador de palavras-chave editorial — veja /docs/methodology/disease-alert-level para a tabela de palavras-chave e limitações."
-    },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>Earnings Calendar</strong> Lançamentos de lucros futuros e recentes para grandes empresas públicas. Mostra estimativas de lucro por ação versus resultados reais, receita e classificação de acerto/erro. Fonte: fornecedores de dados financeiros.",
-      "title": "Calendário de Resultados",
-      "today": "HOJE · {{date}}",
-      "tomorrow": "AMANHÃ · {{date}}",
-      "epsActual": "lucro por ação {{value}}",
-      "epsEstimate": "lucro por ação est {{value}}",
-      "revenueActual": "{{value}} rec",
-      "revenueEstimate": "{{value}} est.",
-      "surprise": {
-        "beat": "SUPEROU",
-        "miss": "FICOU AQUÉM",
-        "inLine": "CONFORME ESPERADO"
-      },
-      "errors": {
-        "noData": "Nenhum dado de resultados",
-        "failedToLoad": "Falha ao carregar"
-      }
     },
     "economicCalendar": {
       "infoTooltip": "<strong>Economic Calendar</strong> Lançamentos macroeconômicos programados: índice de preços ao consumidor, folha de pagamento não-agrícola, produto interno bruto, índice de gerentes de compras e decisões de bancos centrais. Mostra previsão vs real vs anterior. Eventos de alto impacto destacados. Fonte: fornecedores de dados econômicos."

@@ -156,14 +156,13 @@ The Intelligence service now exposes a company-resolution and filing workflow bu
 1. Resolve an exact ticker, or a unique exact SEC company title, to its CIK.
 2. Build company enrichment from SEC identity and recent 10-K, 10-Q, and 8-K filings, then add market profile, earnings surprises, and recent news mentions when available.
 3. Classify timestamped company signals from material 8-K events and news. Fiscal period ends remain enrichment facts instead of being mislabeled as event timestamps.
-4. Search SEC EDGAR filings directly or read the seeded, market-wide material-event stream.
+4. Search SEC EDGAR filings directly.
 
 | Workflow | Endpoint |
 |---|---|
 | Company enrichment | `GET /api/intelligence/v1/get-company-enrichment` |
 | Timestamped company signals | `GET /api/intelligence/v1/list-company-signals` |
 | SEC filing full-text search | `GET /api/intelligence/v1/search-sec-filings` |
-| Market-wide material 8-K events | `GET /api/intelligence/v1/list-material-events` |
 
 Unresolved companies return an explicit empty envelope; the service does not use prefix matching or invent a company/domain association. Agents can access the same four views through the MCP `get_company_intelligence` tool.
 

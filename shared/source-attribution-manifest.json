@@ -4233,9 +4233,6 @@
         },
         {
           "path": "server/worldmonitor/market/v1/_quote-provider.ts"
-        },
-        {
-          "path": "server/worldmonitor/market/v1/get-insider-transactions.ts"
         }
       ]
     },
@@ -10591,9 +10588,6 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/seed-aaii-sentiment.mjs"
-        },
-        {
           "path": "scripts/seed-fear-greed.mjs"
         }
       ]
@@ -13615,9 +13609,6 @@
         },
         {
           "path": "scripts/seed-regulatory-actions.mjs"
-        },
-        {
-          "path": "scripts/seed-sec-8k-stream.mjs"
         },
         {
           "path": "scripts/seed-sec-cik-map.mjs"

@@ -237,30 +237,30 @@ describe('enabledNewsCategoryKeys', () => {
   });
 });
 
-describe('on-demand NQ News resolution', () => {
-  test('nq-news is absent from the preset work-list until that panel is enabled', () => {
+describe('on-demand finance news resolution', () => {
+  test('fin-regulation is absent from the preset work-list until that panel is enabled', () => {
     const canonical = {
       politics: [f('BBC', 'bbc')],
-      'nq-news': [f('Reuters Nasdaq Futures', 'nq1')],
+      'fin-regulation': [f('Fixture financial news', 'nq1')],
     };
     const preset = { politics: [f('BBC', 'bbc')] };
     const disabled = resolveNewsCategories(
       preset,
       canonical,
-      enabledNewsCategoryKeys(new Map([['nq-news', 'nq-news']]), { 'nq-news': { enabled: false } }),
+      enabledNewsCategoryKeys(new Map([['fin-regulation', 'fin-regulation']]), { 'fin-regulation': { enabled: false } }),
     );
     assert.deepStrictEqual(disabled.map((category) => category.key), ['politics']);
 
     const enabled = resolveNewsCategories(
       preset,
       canonical,
-      enabledNewsCategoryKeys(new Map([['nq-news', 'nq-news']]), { 'nq-news': { enabled: true } }),
+      enabledNewsCategoryKeys(new Map([['fin-regulation', 'fin-regulation']]), { 'fin-regulation': { enabled: true } }),
     );
     assert.deepStrictEqual(
       enabled.map((category) => ({ key: category.key, isCustom: category.isCustom })),
       [
         { key: 'politics', isCustom: false },
-        { key: 'nq-news', isCustom: true },
+        { key: 'fin-regulation', isCustom: true },
       ],
     );
   });

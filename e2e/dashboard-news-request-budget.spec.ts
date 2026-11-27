@@ -872,8 +872,6 @@ const SCROLL_HYDRATION_PANEL_ORDER = [
   'polymarket',
   'commodities',
   'markets',
-  'stock-analysis',
-  'stock-backtest',
   'daily-market-brief',
   'economic',
   'finance',

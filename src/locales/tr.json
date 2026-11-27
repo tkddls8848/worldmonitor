@@ -422,7 +422,6 @@
     "orefSirens": "İsrail Sirenleri",
     "regulation": "Yapay Zeka Duzenleme Paneli",
     "finRegulation": "Finansal Düzenleme",
-    "ipo": "Halka arzlar ve boş şirket birleşmeleri",
     "serviceStatus": "Hizmet Durumu",
     "techReadiness": "Teknoloji Hazirlik Endeksi",
     "gccInvestments": "Körfez İşbirliği Konseyi yatırımları",
@@ -1930,12 +1929,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Bakkal Endeksi</strong> 24 ülke arasında küresel bakkal sepeti fiyat karşılaştırması — manşet tüketici fiyat endeksinin ötesinde gerçek dünya tüketici malları enflasyonunu izler."
     },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>Premium Hisse Analizi</strong> İzleme listenizdeki hisseler için yapay zekâ destekli analiz — al/tut/sat sinyalleri, hedef fiyatlar, temel riskler ve katalizörler her gün güncellenir."
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>Premium Geriye Dönük Test</strong> İzleme listenizdeki hisseler için geçmiş performans testleri — geçmiş getiriler, maksimum düşüş ve oynaklık metrikleri."
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>Günlük Piyasa Özeti</strong> Küresel piyasa koşulları, temel makro eğilimler ve sektör sinyallerinin yapay zekâ ile oluşturulan günlük özeti — her işlem günü yenilenir."
     },
@@ -1994,25 +1987,6 @@
         "failedToLoad": "Yüklenemedi"
       },
       "methodologyNote": "Uyarı / Dikkat / İzleme seviyeleri editöryel anahtar kelime sınıflandırıcısından gelir — anahtar kelime tablosu ve sınırlamalar için /docs/methodology/disease-alert-level bölümüne bakın."
-    },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>Kazanç Takvimi</strong> Büyük halka açık şirketlerin yaklaşan ve son kazanç açıklamaları. Hisse başına kazanç tahminleri ile gerçekleri, gelir ve başarı/başarısızlık sınıflandırmasını gösterir. Kaynak: finansal veri sağlayıcıları.",
-      "title": "Kazanç Takvimi",
-      "today": "BUGÜN · {{date}}",
-      "tomorrow": "YARIN · {{date}}",
-      "epsActual": "hisse başına kazanç {{value}}",
-      "epsEstimate": "hisse başına kazanç tah {{value}}",
-      "revenueActual": "{{value}} gelir",
-      "revenueEstimate": "{{value}} tahmini",
-      "surprise": {
-        "beat": "AŞTI",
-        "miss": "KAÇIRDI",
-        "inLine": "UYUMLU"
-      },
-      "errors": {
-        "noData": "Kazanç verisi yok",
-        "failedToLoad": "Yüklenemedi"
-      }
     },
     "economicCalendar": {
       "infoTooltip": "<strong>Ekonomik Takvim</strong> Planlanmış makroekonomik açıklamalar: tüketici fiyat endeksi, tarım dışı istihdam, gayri safi yurtiçi hasıla, satın alma müdürleri endeksi ve merkez bankası kararları. Tahmin vs gerçek vs önceki dönem gösterilir. Yüksek etkili olaylar vurgulanır. Kaynak: ekonomik veri sağlayıcıları."

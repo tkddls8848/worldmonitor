@@ -315,7 +315,6 @@ const BOOTSTRAP_KEYS = {
   vpdTrackerHistorical: 'health:vpd-tracker:historical:v1',
   electricityPrices:    'energy:electricity:v1:index',
   gasStorageCountries: 'energy:gas-storage:v1:_countries',
-  aaiiSentiment:       'market:aaii-sentiment:v1',
   ddosAttacks:         'cf:radar:ddos:v1',
   economicStress:      'economic:stress-index:v1',
   trafficAnomalies:    'cf:radar:traffic-anomalies:v1',
@@ -437,10 +436,8 @@ const STANDALONE_KEYS = {
   minerals:              'supply_chain:minerals:v2',
   mineralProduction:     'supply-chain:mineral-production:v1',
   gpsjam:                'intelligence:gpsjam:v2',
-  // Corporate intelligence (issue #5695): SEC ticker→CIK registry + 8-K
-  // material-events stream. Health-monitored, not bootstrap-hydrated.
+  // Corporate intelligence (issue #5695): SEC ticker→CIK registry.
   secCikMap:             'intelligence:sec-cik-map:v1',
-  sec8kStream:           'intelligence:sec-8k-stream:v1',
   theaterPosture:        'theater_posture:sebuf:stale:v1',
   theaterPostureLive:    'theater-posture:sebuf:v1',
   theaterPostureBackup:  'theater-posture:sebuf:backup:v1',
@@ -1515,7 +1512,6 @@ const SEED_META = {
   },
   securityAdvisories:  { key: 'seed-meta:intelligence:advisories',           maxStaleMin: 120 },
   secCikMap:           { key: 'seed-meta:intelligence:sec-cik-map',          maxStaleMin: 2880, minRecordCount: 5000 }, // daily bundle section; 2880min = 48h = 2x interval. minRecordCount mirrors MIN_CIK_ENTRIES in scripts/seed-sec-cik-map.mjs.
-  sec8kStream:         { key: 'seed-meta:intelligence:sec-8k-stream',        maxStaleMin: 120, minRecordCount: 50 }, // 30min bundle section; 120min = 4x interval. minRecordCount mirrors MIN_STREAM_EVENTS in scripts/seed-sec-8k-stream.mjs — a drained window means Atom-parse decay, not a quiet market.
   customsRevenue:      { key: 'seed-meta:trade:customs-revenue',              maxStaleMin: 1440 },
   // 6h cron, 24h data TTL (US_HTS_TTL); 132 measures in HTS 2026 Rev 21.
   // seed-supply-chain-trade sets the marker after its first catalog publish.
@@ -2256,7 +2252,6 @@ const SEED_META = {
   fuelShortages:        { key: 'seed-meta:energy:fuel-shortages',       maxStaleMin: 2880 },   // 2d — daily cron × 2 headroom (classifier-driven post-launch)
   energyDisruptions:    { key: 'seed-meta:energy:disruptions',          maxStaleMin: 20_160 }, // 14d — weekly cron × 2 headroom
   energyCrisisPolicies: { key: 'seed-meta:energy:crisis-policies',      maxStaleMin: 60 * 24 * 400 }, // static data, ~400d TTL matches seeder
-  aaiiSentiment:        { key: 'seed-meta:market:aaii-sentiment',       maxStaleMin: 20160 }, // weekly cron; 20160min = 14 days = 2x weekly cadence
   portwatchChokepointsRef: { key: 'seed-meta:portwatch:chokepoints-ref', maxStaleMin: 60 * 24 * 14 }, // seed-bundle-portwatch runs this at WEEK cadence; 14d = 2× interval
   chokepointFlows:      { key: 'seed-meta:energy:chokepoint-flows',     maxStaleMin: 720 }, // 6h cron; 720min = 2x interval
   // Relay-side heartbeat written by personal-providers.cjs on successful child exit.

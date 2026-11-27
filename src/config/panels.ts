@@ -44,8 +44,6 @@ const FULL_PANELS: Record<string, PanelConfig> = {
   'energy-complex': { name: 'Energy Complex', enabled: true, priority: 1 },
   'oil-inventories': { name: 'Oil Inventories', enabled: true, priority: 60 },
   markets: { name: 'Markets', enabled: true, priority: 1 },
-  'stock-analysis': { name: 'Stock Analysis', enabled: true, priority: 1 },
-  'stock-backtest': { name: 'Backtesting', enabled: true, priority: 1 },
   'daily-market-brief': { name: 'Daily Market Brief', enabled: true, priority: 1 },
   'chat-analyst': { name: 'WM Analyst', enabled: true, priority: 1 },
   economic: { name: 'Macro Stress', enabled: true, priority: 1 },
@@ -66,14 +64,11 @@ const FULL_PANELS: Record<string, PanelConfig> = {
   'satellite-fires': { name: 'Fires', enabled: true, priority: 2 },
   'macro-signals': { name: 'Market Regime', enabled: true, priority: 2 },
   'fear-greed': { name: 'Fear & Greed', enabled: true, priority: 2 },
-  'aaii-sentiment': { name: 'AAII Sentiment', enabled: false, priority: 2 },
   'market-breadth': { name: 'Market Breadth', enabled: true, priority: 2 },
   'news-market-correlation': { name: 'News ↔ Markets', enabled: true, priority: 1 },
   'macro-tiles': { name: 'Macro Indicators', enabled: false, priority: 2 },
   'fsi': { name: 'Financial Stress', enabled: false, priority: 2 },
   'yield-curve': { name: 'Yield Curve', enabled: false, priority: 2 },
-  'earnings-calendar': { name: 'Earnings Calendar', enabled: false, priority: 2 },
-  'material-events': { name: 'SEC Material Events', enabled: false, priority: 2 },
   'economic-calendar': { name: 'Economic Calendar', enabled: false, priority: 2 },
   'cot-positioning': { name: 'COT Positioning', enabled: true, priority: 2 },
   'liquidity-shifts': { name: 'Liquidity Shifts', enabled: true, priority: 2 },
@@ -237,8 +232,6 @@ const FINANCE_PANELS: Record<string, PanelConfig> = {
   'live-news': { name: 'Market Headlines', enabled: true, priority: 1 },
   insights: { name: 'AI Market Insights', enabled: true, priority: 1 },
   markets: { name: 'Live Markets', enabled: true, priority: 1 },
-  'stock-analysis': { name: 'Stock Analysis', enabled: true, priority: 1 },
-  'stock-backtest': { name: 'Backtesting', enabled: true, priority: 1 },
   'daily-market-brief': { name: 'Daily Market Brief', enabled: true, priority: 1 },
   'markets-news': { name: 'Markets News', enabled: true, priority: 2 },
   forex: { name: 'Forex & Currencies', enabled: true, priority: 1 },
@@ -265,18 +258,14 @@ const FINANCE_PANELS: Record<string, PanelConfig> = {
   'china-corridors': { name: 'China Logistics Corridors', enabled: false, priority: 2 },
   'china-activity-nowcast': { name: 'China Activity Nowcast', enabled: false, priority: 2 },
   'economic-news': { name: 'Economic News', enabled: true, priority: 2 },
-  ipo: { name: 'IPOs, Earnings & M&A', enabled: true, priority: 1 },
   heatmap: { name: 'Sector Heatmap', enabled: true, priority: 1 },
   'macro-signals': { name: 'Market Regime', enabled: true, priority: 1 },
   'macro-tiles': { name: 'Macro Indicators', enabled: true, priority: 1 },
   'fear-greed': { name: 'Fear & Greed', enabled: true, priority: 1 },
-  'aaii-sentiment': { name: 'AAII Sentiment', enabled: true, priority: 2 },
   'market-breadth': { name: 'Market Breadth', enabled: true, priority: 1 },
   'news-market-correlation': { name: 'News ↔ Markets', enabled: true, priority: 1 },
   'fsi': { name: 'Financial Stress', enabled: true, priority: 1 },
   'yield-curve': { name: 'Yield Curve', enabled: true, priority: 1 },
-  'earnings-calendar': { name: 'Earnings Calendar', enabled: true, priority: 1 },
-  'material-events': { name: 'SEC Material Events', enabled: false, priority: 2 },
   'economic-calendar': { name: 'Economic Calendar', enabled: true, priority: 1 },
   'cot-positioning': { name: 'COT Positioning', enabled: true, priority: 2 },
   'liquidity-shifts': { name: 'Liquidity Shifts', enabled: true, priority: 1 },
@@ -296,9 +285,6 @@ const FINANCE_PANELS: Record<string, PanelConfig> = {
   'world-clock': { name: 'World Clock', enabled: true, priority: 2 },
   monitors: { name: 'My Monitors', enabled: true, priority: 2 },
   'latest-brief': { name: 'Latest Brief', enabled: true, priority: 1 },
-  'nq-pulse': { name: 'NQ Pulse', enabled: false, priority: 1 },
-  'nq-catalysts': { name: 'NQ Catalysts', enabled: false, priority: 1 },
-  'nq-news': { name: 'NQ News', enabled: false, priority: 2 },
 };
 
 const FINANCE_MAP_LAYERS: MapLayers = {
@@ -695,6 +681,15 @@ export function isPanelNativeToVariant(panelId: string, variant: string): boolea
 }
 
 export const RETIRED_PANEL_IDS: ReadonlySet<string> = new Set([
+  'nq-pulse',
+  'nq-catalysts',
+  'nq-news',
+  'stock-analysis',
+  'stock-backtest',
+  'aaii-sentiment',
+  'earnings-calendar',
+  'ipo',
+  'material-events',
   'crypto',
   'etf-flows',
   'stablecoins',
@@ -926,7 +921,7 @@ export const PANEL_CATEGORY_MAP: Record<string, { labelKey: string; panelKeys: s
   },
   marketsFinance: {
     labelKey: 'header.panelCatMarketsFinance',
-    panelKeys: ['commodities', 'energy-complex', 'energy-risk-overview', 'pipeline-status', 'storage-facility-map', 'renewable', 'oil-inventories', 'fuel-prices', 'chokepoint-strip', 'fuel-shortages', 'energy-disruptions', 'hormuz-tracker', 'energy-crisis', 'markets', 'stock-analysis', 'stock-backtest', 'daily-market-brief', 'economic', 'global-procurement', 'trade-policy', 'sanctions-pressure', 'supply-chain', 'china-corridors', 'china-activity-nowcast', 'finance', 'polymarket', 'macro-signals', 'gulf-economies', 'consumer-prices', 'heatmap', 'aaii-sentiment', 'cot-positioning', 'earnings-calendar', 'material-events', 'economic-calendar', 'fear-greed', 'fsi', 'macro-tiles', 'market-breadth', 'news-market-correlation', 'liquidity-shifts', 'national-debt', 'positioning-247', 'yield-curve', 'gold-intelligence', 'fx', 'market-implications'],
+    panelKeys: ['commodities', 'energy-complex', 'energy-risk-overview', 'pipeline-status', 'storage-facility-map', 'renewable', 'oil-inventories', 'fuel-prices', 'chokepoint-strip', 'fuel-shortages', 'energy-disruptions', 'hormuz-tracker', 'energy-crisis', 'markets', 'daily-market-brief', 'economic', 'global-procurement', 'trade-policy', 'sanctions-pressure', 'supply-chain', 'china-corridors', 'china-activity-nowcast', 'finance', 'polymarket', 'macro-signals', 'gulf-economies', 'consumer-prices', 'heatmap', 'cot-positioning', 'economic-calendar', 'fear-greed', 'fsi', 'macro-tiles', 'market-breadth', 'news-market-correlation', 'liquidity-shifts', 'national-debt', 'positioning-247', 'yield-curve', 'gold-intelligence', 'fx', 'market-implications'],
     variants: ['full', 'energy'],
   },
   topical: {
@@ -943,7 +938,7 @@ export const PANEL_CATEGORY_MAP: Record<string, { labelKey: string; panelKeys: s
   // Finance variant
   finMarkets: {
     labelKey: 'header.panelCatMarkets',
-    panelKeys: ['fintech', 'markets', 'stock-analysis', 'stock-backtest', 'daily-market-brief', 'markets-news', 'heatmap', 'macro-signals', 'analysis', 'polymarket', 'nq-pulse', 'nq-catalysts', 'nq-news'],
+    panelKeys: ['fintech', 'markets', 'daily-market-brief', 'markets-news', 'heatmap', 'macro-signals', 'analysis', 'polymarket'],
     variants: ['finance'],
   },
   fixedIncomeFx: {
@@ -963,7 +958,7 @@ export const PANEL_CATEGORY_MAP: Record<string, { labelKey: string; panelKeys: s
   },
   dealsInstitutional: {
     labelKey: 'header.panelCatDeals',
-    panelKeys: ['ipo', 'derivatives', 'institutional', 'fin-regulation'],
+    panelKeys: ['derivatives', 'institutional', 'fin-regulation'],
     variants: ['finance'],
   },
   gulfMena: {

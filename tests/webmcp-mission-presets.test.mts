@@ -97,20 +97,6 @@ describe('webmcp mission preset catalog', () => {
     assert.ok(JSON.stringify(result).length <= WEBMCP_TOOL_BUDGETS.outputJsonChars);
   });
 
-  it('omits NQ Day Trader from non-finance monitors and lists it on finance', () => {
-    for (const variant of SITE_VARIANTS.filter((item) => item !== 'finance')) {
-      const result = listMissionPresetCatalog(live({ variant }));
-      assert.equal(result.presets.some((preset) => preset.id === 'nq-day-trader'), false);
-      assert.equal(result.count, getMissionPresetsForVariant(variant).length);
-    }
-    const finance = listMissionPresetCatalog(live({ variant: 'finance' }));
-    assert.equal(finance.presets.some((preset) => preset.id === 'nq-day-trader'), true);
-    assert.equal(finance.count, getMissionPresetsForVariant('finance').length);
-    // Full offers Protective Travel, which finance does not (#10453), so the counts match.
-    assert.equal(finance.count, getMissionPresetsForVariant('full').length);
-    assert.equal(getMissionPresetsForVariant('full').some((preset) => preset.id === 'protective-travel'), true);
-  });
-
   it('excludes presets reserved for a different monitor', () => {
     const result = listMissionPresetCatalog(live({ variant: 'finance' }));
     assert.ok(!result.presets.some((preset) => preset.id === 'protective-travel'));
@@ -162,7 +148,6 @@ describe('webmcp mission preset catalog', () => {
   it('filters available=true to eligible presets only', () => {
     const result = listMissionPresetCatalog(live({ variant: 'finance' }), { available: true });
     assert.ok(result.presets.every((preset) => preset.available));
-    assert.ok(result.presets.some((preset) => preset.id === 'nq-day-trader'));
     assert.ok(result.presets.some((preset) => preset.id === 'country-watcher'));
     assert.ok(!result.presets.some((preset) => preset.id === 'protective-travel'));
   });

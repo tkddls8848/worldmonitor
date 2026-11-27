@@ -420,7 +420,6 @@
     "orefSirens": "Cảnh báo Israel",
     "regulation": "Bảng Quy định AI",
     "finRegulation": "Quy định Tài chính",
-    "ipo": "Niêm yết công khai và sáp nhập công ty vỏ",
     "serviceStatus": "Trạng thái Dịch vụ",
     "techReadiness": "Chỉ số Sẵn sàng Công nghệ",
     "gccInvestments": "Các khoản đầu tư của Hội đồng Hợp tác Vùng Vịnh",
@@ -1925,12 +1924,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> So sánh giá rổ hàng tạp hóa toàn cầu trên 24 quốc gia — theo dõi lạm phát hàng tiêu dùng thực tế vượt quá chỉ số giá tiêu dùng chính thức."
     },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>Phân tích Cổ phiếu Premium</strong> Phân tích bằng AI cho cổ phiếu trong danh mục theo dõi — tín hiệu mua/giữ/bán, mục tiêu giá, rủi ro chính và chất xúc tác cập nhật hàng ngày."
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>Backtest Premium</strong> Backtest hiệu suất lịch sử cho cổ phiếu trong danh mục theo dõi — lợi nhuận quá khứ, sụt giảm tối đa và chỉ số biến động."
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>Bản tóm tắt Thị trường Hàng ngày</strong> Tóm tắt hàng ngày bằng AI về tình hình thị trường toàn cầu, xu hướng vĩ mô chính và tín hiệu cấp ngành — cập nhật mỗi ngày giao dịch."
     },
@@ -1984,25 +1977,6 @@
         "failedToLoad": "Không tải được"
       },
       "methodologyNote": "Mức Cảnh báo / Cảnh báo / Theo dõi đến từ bộ phân loại từ khóa biên tập — xem /docs/methodology/disease-alert-level để xem bảng từ khóa và các hạn chế."
-    },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>Earnings Calendar</strong> Các phát hành thu nhập sắp tới và gần đây cho các công ty công khai lớn. Hiển thị ước tính lợi nhuận trên mỗi cổ phiếu so với thực tế, doanh thu và phân loại vượt/thất bại. Nguồn: nhà cung cấp dữ liệu tài chính.",
-      "title": "Lịch Công Bố Thu Nhập",
-      "today": "HÔM NAY · {{date}}",
-      "tomorrow": "NGÀY MAI · {{date}}",
-      "epsActual": "lợi nhuận trên mỗi cổ phiếu {{value}}",
-      "epsEstimate": "ước tính lợi nhuận trên mỗi cổ phiếu {{value}}",
-      "revenueActual": "{{value}} doanh thu",
-      "revenueEstimate": "{{value}} dự kiến",
-      "surprise": {
-        "beat": "VƯỢT",
-        "miss": "DƯỚI",
-        "inLine": "ĐÚNG MỨC"
-      },
-      "errors": {
-        "noData": "Không có dữ liệu thu nhập",
-        "failedToLoad": "Không tải được"
-      }
     },
     "economicCalendar": {
       "infoTooltip": "<strong>Economic Calendar</strong> Phát hành kinh tế vĩ mô được lên lịch: chỉ số giá tiêu dùng, tính bảng lương ngoài nông nghiệp, tổng sản phẩm quốc nội, chỉ số quản lý mua hàng và quyết định ngân hàng trung ương. Hiển thị dự báo so với thực tế so với trước. Các sự kiện tác động cao được làm nổi bật. Nguồn: nhà cung cấp dữ liệu kinh tế."

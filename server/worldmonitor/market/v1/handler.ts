@@ -18,13 +18,9 @@ import { getCountryStockIndex } from './get-country-stock-index';
 import { getPriceHistory } from './get-price-history';
 import { listGulfQuotes } from './list-gulf-quotes';
 import { analyzeStock } from './analyze-stock';
-import { getStockAnalysisHistory } from './get-stock-analysis-history';
-import { backtestStock } from './backtest-stock';
-import { listStoredStockBacktests } from './list-stored-stock-backtests';
 import { getFearGreedIndex } from './get-fear-greed-index';
 import { listEarningsCalendar } from './list-earnings-calendar';
 import { getCotPositioning } from './get-cot-positioning';
-import { getInsiderTransactions } from './get-insider-transactions';
 import { getMarketBreadthHistory } from './get-market-breadth-history';
 import { getGoldIntelligence } from './get-gold-intelligence';
 import { getPerpPositioning } from './get-perp-positioning';
@@ -41,13 +37,9 @@ export const marketHandler: MarketServiceHandler = {
   getPriceHistory,
   listGulfQuotes,
   analyzeStock,
-  getStockAnalysisHistory,
-  backtestStock,
-  listStoredStockBacktests,
   getFearGreedIndex,
   listEarningsCalendar,
   getCotPositioning,
-  getInsiderTransactions,
   getMarketBreadthHistory,
   getGoldIntelligence,
   getPerpPositioning,

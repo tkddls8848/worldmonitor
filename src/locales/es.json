@@ -421,7 +421,6 @@
     "populationExposure": "Exposición de la población",
     "regulation": "Panel de regulación de IA",
     "finRegulation": "Regulación financiera",
-    "ipo": "Cotizaciones públicas y fusiones de empresas pantalla",
     "serviceStatus": "Estado del servicio",
     "techReadiness": "Índice de preparación tecnológica",
     "techHubs": "Centros tecnológicos de moda",
@@ -1935,12 +1934,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Comparación global de precios de canasta básica en 24 países — monitorea la inflación real de bienes de consumo más allá del índice de precios al consumidor titular."
     },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>Análisis de acciones Premium</strong> Análisis con IA de las acciones de tu lista de seguimiento: señales de compra/mantener/venta, precios objetivo, riesgos clave y catalizadores, actualizados a diario."
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>Backtesting Premium</strong> Backtests de rendimiento histórico de las acciones de tu lista de seguimiento: rentabilidad pasada, caída máxima y métricas de volatilidad."
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>Resumen diario de mercados</strong> Resumen diario generado por IA sobre las condiciones de los mercados globales, las principales tendencias macro y las señales por sector; se actualiza cada día hábil."
     },
@@ -2004,25 +1997,6 @@
         "failedToLoad": "Error al cargar"
       },
       "methodologyNote": "Los niveles Alert / Warning / Watch provienen de un clasificador de palabras clave editorial — véase /docs/methodology/disease-alert-level para la tabla de palabras clave y limitaciones."
-    },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>Earnings Calendar</strong> Próximas y recientes publicaciones de ganancias de empresas públicas importantes. Muestra estimaciones versus datos reales de ganancia por acción, ingresos y clasificación de superación/no superación de expectativas. Fuente: proveedores de datos financieros.",
-      "title": "Calendario de Resultados",
-      "today": "HOY · {{date}}",
-      "tomorrow": "MAÑANA · {{date}}",
-      "epsActual": "ganancia por acción {{value}}",
-      "epsEstimate": "ganancia por acción est {{value}}",
-      "revenueActual": "{{value}} ing",
-      "revenueEstimate": "{{value}} est.",
-      "surprise": {
-        "beat": "SUPERÓ",
-        "miss": "INCUMPLIÓ",
-        "inLine": "EN LÍNEA"
-      },
-      "errors": {
-        "noData": "Sin datos de resultados",
-        "failedToLoad": "Error al cargar"
-      }
     },
     "economicCalendar": {
       "infoTooltip": "<strong>Economic Calendar</strong> Publicaciones macroeconómicas programadas: índice de precios al consumidor, nóminas no agrícolas, producto interno bruto, índice de gestores de compras y decisiones de bancos centrales. Muestra pronóstico versus datos reales versus anterior. Eventos de alto impacto destacados. Fuente: proveedores de datos económicos."

@@ -476,8 +476,8 @@ test('shared-style table headers line up with their cells in RTL', async ({ brow
   }
 });
 
-// FX and the watchlist render outside the fixture dashboard, so
-// they mount in the runtime harness with injected data. Their cells carry
+// FX renders outside the fixture dashboard, so
+// it mounts in the runtime harness with injected data. Its cells carry
 // gain/loss classes, accent columns and dimmed reference values.
 test('harness-mounted shared-style tables keep the shared header and their cell colours', async ({ page }) => {
   await page.goto('/tests/runtime-harness.html');
@@ -485,9 +485,7 @@ test('harness-mounted shared-style tables keep the shared header and their cell 
     await import('/src/styles/main.css');
     const { initI18n } = await import('/src/services/i18n.ts');
     await initI18n();
-    const { Panel } = await import('/src/components/Panel.ts');
     const { FxPanel } = await import('/src/components/FxPanel.ts');
-    const { WatchlistTableView } = await import('/src/components/WatchlistTableView.ts');
 
     document.getElementById('runtime-harness')?.remove();
     const grid = document.createElement('div');
@@ -509,20 +507,6 @@ test('harness-mounted shared-style tables keep the shared header and their cell 
     grid.appendChild(fx.getElement());
     (window as unknown as { fxProbe: unknown }).fxProbe = fx;
 
-    const watch = new Panel({ id: 'probe-watchlist', title: 'Watchlist' });
-    const view = new WatchlistTableView<{ symbol: string; change: number }>({
-      columns: [
-        { key: 'symbol', label: 'Symbol', cell: (item) => item.symbol },
-        { key: 'change', label: 'Change', align: 'right', cell: (item) => `${item.change}%` },
-      ],
-      filters: [{ key: 'all', label: 'All', match: () => true }],
-      sortOptions: [{ key: 'symbol', label: 'Symbol', cmp: (a, b) => a.symbol.localeCompare(b.symbol) }],
-      defaultSort: 'symbol', defaultFilter: 'all',
-      getKey: (item) => item.symbol, getSearchText: (item) => item.symbol, renderDetail: () => '',
-    });
-    view.setItems([{ symbol: 'AAPL', change: 1.2 }, { symbol: 'MSFT', change: -0.4 }]);
-    watch.getElement().querySelector('.panel-content')!.innerHTML = view.render();
-    grid.appendChild(watch.getElement());
     await new Promise((r) => setTimeout(r, 300));
   });
 
@@ -530,7 +514,6 @@ test('harness-mounted shared-style tables keep the shared header and their cell 
     { name: 'fx stress', root: '.panel[data-panel="fx"]', tab: 'stress' },
     { name: 'fx spot', root: '.panel[data-panel="fx"]', tab: 'spot' },
     { name: 'fx rub', root: '.panel[data-panel="fx"]', tab: 'rub' },
-    { name: 'watchlist', root: '.panel[data-panel="probe-watchlist"]' },
   ];
   let headerColour = '';
   for (const { name, root, tab } of views) {
@@ -757,10 +740,8 @@ test('harness-mounted formerly inline-styled tables use the shared table style',
     const { HeatmapPanel } = await import('/src/components/MarketPanel.ts');
     const { EconomicCalendarPanel } = await import('/src/components/EconomicCalendarPanel.ts');
     const { YieldCurvePanel } = await import('/src/components/YieldCurvePanel.ts');
-    const { StockAnalysisPanel } = await import('/src/components/StockAnalysisPanel.ts');
     const { SupplyChainPanel } = await import('/src/components/SupplyChainPanel.ts');
     const { TradePolicyPanel } = await import('/src/components/TradePolicyPanel.ts');
-    const { Panel } = await import('/src/components/Panel.ts');
 
     document.getElementById('runtime-harness')?.remove();
     const grid = document.createElement('div');
@@ -812,25 +793,6 @@ test('harness-mounted formerly inline-styled tables use the shared table style',
     });
 
 
-    mount('stock-analysis', () => {
-      const panel = new StockAnalysisPanel();
-      const internals = panel as unknown as { insiderBySymbol: Record<string, unknown>; renderInsiderSection(symbol: string): string };
-      internals.insiderBySymbol.AAPL = {
-        unavailable: false, totalBuys: 1_200_000, totalSells: 8_400_000, netValue: -7_200_000,
-        transactions: [
-          { name: 'Jane Doe', transactionCode: 'S', shares: 12000, value: 2_300_000, transactionDate: '2026-10-12' },
-          { name: 'John Roe', transactionCode: 'P', shares: 5000, value: 960_000, transactionDate: '2026-09-30' },
-        ],
-      };
-      const insider = internals.renderInsiderSection('AAPL');
-      // An expanded watchlist row nests the insider table inside the outer
-      // table's tbody (WatchlistTableView detail row).
-      const expanded = new Panel({ id: 'probe-stock-expanded', title: 'Stock Analysis expanded' });
-      fill(expanded.getElement(), `<table class="wm-table watchlist-table"><thead><tr><th scope="col">Symbol</th><th scope="col">Signal</th></tr></thead>
-        <tbody><tr><td>AAPL</td><td>Buy</td></tr><tr class="watchlist-detail-row"><td colspan="2">${insider}</td></tr></tbody></table>`);
-      grid.appendChild(expanded.getElement());
-      return fill(panel.getElement(), insider);
-    });
 
     mount('supply-chain', () => {
       const panel = new SupplyChainPanel();
@@ -882,7 +844,7 @@ test('harness-mounted formerly inline-styled tables use the shared table style',
   expect(errors, 'every panel mounts').toEqual([]);
 
   const expected: Record<string, number> = {
-    heatmap: 1, 'economic-calendar': 1, 'yield-curve': 1, 'stock-analysis': 1, 'probe-stock-expanded': 2, 'supply-chain': 4, 'trade-policy': 3,
+    heatmap: 1, 'economic-calendar': 1, 'yield-curve': 1, 'supply-chain': 4, 'trade-policy': 3,
   };
   const headers = new Set<string>();
   for (const [id, count] of Object.entries(expected)) {
@@ -1031,8 +993,6 @@ test('panel table text is readable in both themes', async ({ page }) => {
     const { ConsumerPricesPanel } = await import('/src/components/ConsumerPricesPanel.ts');
     const { RadiationWatchPanel } = await import('/src/components/RadiationWatchPanel.ts');
     const { SatelliteFiresPanel } = await import('/src/components/SatelliteFiresPanel.ts');
-    const { StockBacktestPanel } = await import('/src/components/StockBacktestPanel.ts');
-    const { StockAnalysisPanel } = await import('/src/components/StockAnalysisPanel.ts');
     const { FxPanel } = await import('/src/components/FxPanel.ts');
     const { PipelineStatusPanel } = await import('/src/components/PipelineStatusPanel.ts');
     const { StorageFacilityMapPanel } = await import('/src/components/StorageFacilityMapPanel.ts');
@@ -1159,28 +1119,7 @@ test('panel table text is readable in both themes', async ({ page }) => {
       return panel.getElement();
     });
 
-    mount('stock-backtest', () => {
-      const panel = new StockBacktestPanel();
-      const result = (symbol: string, avg: number, winRate: number) => ({
-        symbol, name: symbol, display: symbol, available: true, evaluationsRun: 30, actionableEvaluations: 24,
-        winRate, directionAccuracy: winRate, avgSimulatedReturnPct: avg, cumulativeSimulatedReturnPct: avg * 4,
-        latestSignal: 'Buy', latestSignalScore: 70, summary: '', generatedAt: '2026-11-03T00:00:00Z', evaluations: [],
-      });
-      panel.renderBacktests([result('FLNC', 6.7, 93.8), result('ENTG', -2.4, 48.3), result('LLY', 0, 32.1)] as never);
-      return panel.getElement();
-    });
 
-    mount('stock-analysis', () => {
-      const panel = new StockAnalysisPanel();
-      const item = (symbol: string, changePercent: number) => ({
-        available: true, symbol, name: symbol, display: symbol, currency: 'USD', currentPrice: 182.4, changePercent,
-        signal: changePercent > 0 ? 'Buy' : 'Sell', signalScore: 70, confidence: 'High', trendStatus: 'Bull', volumeStatus: 'Normal',
-        macdStatus: 'Bullish', rsiStatus: 'Neutral', summary: '', action: '', bullishFactors: [], riskFactors: [], headlines: [],
-        generatedAt: '2026-11-03T00:00:00Z', analysisAt: Date.now(), engineVersion: 'e2e', analystConsensus: null, priceTarget: null, recentUpgrades: [],
-      });
-      panel.renderAnalyses([item('AAPL', 1.2), item('INTC', -2.94)] as never);
-      return panel.getElement();
-    });
 
 
     mount('fx', () => {

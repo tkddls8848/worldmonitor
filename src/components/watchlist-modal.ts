@@ -3,7 +3,7 @@
  *
  * The watchlist drives the Markets panel through a replaceable built-in base
  * plus additive searched tickers. The same effective selection feeds Premium
- * Stock Analysis, Backtesting, and the Daily Market Brief, so the editor is
+ * the Daily Market Brief, so the editor is
  * reachable from every panel that consumes it rather than living only on the
  * Markets header.
  */
@@ -75,7 +75,7 @@ export function openWatchlistModal(): void {
       <div style="color:var(--text-dim);font-size:calc(12px * var(--wm-panel-effective-scale, 1));line-height:1.5;margin-bottom:12px">
         Choose the built-in market universe by region, then add searchable
         company tickers below. Searchable additions stay visible and removable,
-        and lead Premium Stock Analysis, Backtesting and Daily Market Brief.
+        and inform Daily Market Brief.
       </div>
       <section aria-labelledby="wmCatalogHeading">
         <div class="wl-section-heading" id="wmCatalogHeading">Built-in catalog</div>

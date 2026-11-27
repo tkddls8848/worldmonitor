@@ -1,5 +1,4 @@
 {
-  "aaii-sentiment": "Shows the weekly AAII Investor Sentiment Survey split into bullish, neutral and bearish readings, with eight-week averages.",
   "ai-regulation": "Tracks AI laws and regulatory actions by country in timeline, upcoming-deadline, regulation and country views, from a list kept in the app's config.",
   "china-activity-nowcast": "Compares China's official activity releases with logistics, commodity, market and satellite NO2 proxies to show where the two agree or diverge.",
   "china-corridors": "Tracks four China logistics corridors using port, aviation, hazard, energy and trade data from sources such as IMF PortWatch and UN Comtrade.",
@@ -23,12 +22,8 @@
   "map": "Maps conflicts, military activity, hotspots, nuclear sites, sanctions, weather and outages as toggleable layers on a WebGL map with an optional 3D globe.",
   "market-breadth": "Charts the share of S&P 500 stocks trading above their 20, 50 and 200-day moving averages, computed from a TradingView screener scan.",
   "markets-news": "Lists market and business headlines from news feeds including CNBC, MarketWatch, Yahoo Finance and Reuters Markets.",
-  "material-events": "Lists recent SEC Form 8-K material-event filings with company, item code, description, filing time and a link to the filing on sec.gov.",
   "national-debt": "Shows government debt by country as a running clock built on IMF World Economic Outlook data and US Treasury FiscalData, sortable by debt-to-GDP.",
   "news-market-correlation": "Charts GDELT news volume on a topic against an asset's price and reports their Pearson correlation and which series leads by up to six hours.",
-  "nq-catalysts": "Lists high-impact US economic releases for the next week and upcoming earnings from Nasdaq heavyweights such as Apple, Microsoft and NVIDIA.",
-  "nq-news": "Lists Nasdaq futures and tech headlines from news feeds including Reuters Nasdaq Futures, Nasdaq-100 & QQQ, Federal Reserve and Semiconductors.",
-  "nq-pulse": "Shows quotes for Nasdaq-100 futures, the QQQ fund, the VXN volatility index and the 10-year Treasury yield as context, not execution-grade data.",
   "other-tokens": "Lists prices and 24-hour and 7-day performance for alternative crypto tokens outside the major-cap tiers, using CoinGecko data.",
   "pipeline-status": "Lists oil and gas pipelines from a curated registry, each badged flowing, reduced or offline, with a detail drawer of disruption events.",
   "polymarket": "Lists prediction markets from Polymarket and Kalshi with the yes/no probability, trading volume and closing date of each question.",

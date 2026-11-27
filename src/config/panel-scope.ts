@@ -59,26 +59,18 @@ export const PANEL_SCOPE_BEHAVIOUR: Readonly<Record<string, PanelScopeBehaviour>
   polymarket: 'global', // Predictions
   'world-clock': 'global', // World Clock
    // Accelerators & Demo Days
-  ipo: 'global', // IPOs, Earnings & M&A
   'service-status': 'global', // Service Status
-  'stock-analysis': 'global', // Stock Analysis
-  'stock-backtest': 'global', // Backtesting
   'daily-market-brief': 'global', // Daily Market Brief
   fx: 'global', // FX Rates
   bonds: 'global', // Fixed Income
   'macro-tiles': 'global', // Macro Indicators
   'fear-greed': 'global', // Fear & Greed
-  'aaii-sentiment': 'global', // AAII Sentiment
   'market-breadth': 'global', // Market Breadth
   fsi: 'global', // Financial Stress
   'yield-curve': 'global', // Yield Curve
-  'earnings-calendar': 'global', // Earnings Calendar
-  'material-events': 'global', // SEC Material Events
   'economic-calendar': 'global', // Economic Calendar
   'cot-positioning': 'global', // COT Positioning
   derivatives: 'global', // Derivatives & Options
-  'nq-pulse': 'global', // NQ Pulse
-  'nq-catalysts': 'global', // NQ Catalysts
   'fao-food-price-index': 'global', // FAO Food Price Index
   'market-implications': 'global', // AI Market Implications
   // Not supported yet. The map follows the focus itself (fit and outline) and is not a Panel.
@@ -134,7 +126,6 @@ export const PANEL_SCOPE_BEHAVIOUR: Readonly<Record<string, PanelScopeBehaviour>
   institutional: 'unsupported', // Hedge Funds & PE
   analysis: 'unsupported', // Market Analysis
   gccNews: 'unsupported', // GCC Business News
-  'nq-news': 'unsupported', // NQ News
   'threat-timeline': 'unsupported', // Threat Timeline
   'strategic-posture': 'unsupported', // AI Strategic Posture
   forecast: 'unsupported', // AI Forecasts

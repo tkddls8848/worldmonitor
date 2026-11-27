@@ -86,11 +86,7 @@ import type { ClimateNewsPanel } from '@/components/ClimateNewsPanel';
 import type { ConsumerPricesPanel } from '@/components/ConsumerPricesPanel';
 import type { MacroTilesPanel } from '@/components/MacroTilesPanel';
 import type { FSIPanel } from '@/components/FSIPanel';
-import type { NqPulsePanel } from '@/components/NqPulsePanel';
-import type { NqCatalystsPanel } from '@/components/NqCatalystsPanel';
 import type { YieldCurvePanel } from '@/components/YieldCurvePanel';
-import type { EarningsCalendarPanel } from '@/components/EarningsCalendarPanel';
-import type { MaterialEventsPanel } from '@/components/MaterialEventsPanel';
 import type { EconomicCalendarPanel } from '@/components/EconomicCalendarPanel';
 import type { CotPositioningPanel } from '@/components/CotPositioningPanel';
 import type { LiquidityShiftsPanel } from '@/components/LiquidityShiftsPanel';
@@ -624,25 +620,9 @@ export class App {
       const panel = this.state.panels['fsi'] as FSIPanel | undefined;
       if (panel) primeTask('fsi', () => panel.fetchData());
     }
-    if (shouldPrime('nq-pulse')) {
-      const panel = this.state.panels['nq-pulse'] as NqPulsePanel | undefined;
-      if (panel) primeTask('nq-pulse', () => panel.fetchData());
-    }
-    if (shouldPrime('nq-catalysts')) {
-      const panel = this.state.panels['nq-catalysts'] as NqCatalystsPanel | undefined;
-      if (panel) primeTask('nq-catalysts', () => panel.fetchData());
-    }
     if (shouldPrime('yield-curve')) {
       const panel = this.state.panels['yield-curve'] as YieldCurvePanel | undefined;
       if (panel) primeTask('yield-curve', () => panel.fetchData());
-    }
-    if (shouldPrime('earnings-calendar')) {
-      const panel = this.state.panels['earnings-calendar'] as EarningsCalendarPanel | undefined;
-      if (panel) primeTask('earnings-calendar', () => panel.fetchData());
-    }
-    if (shouldPrime('material-events')) {
-      const panel = this.state.panels['material-events'] as MaterialEventsPanel | undefined;
-      if (panel) primeTask('material-events', () => panel.fetchData());
     }
     if (shouldPrime('economic-calendar')) {
       const panel = this.state.panels['economic-calendar'] as EconomicCalendarPanel | undefined;
@@ -663,9 +643,6 @@ export class App {
     if (shouldPrime('gold-intelligence')) {
       const panel = this.state.panels['gold-intelligence'] as GoldIntelligencePanel | undefined;
       if (panel) primeTask('gold-intelligence', () => panel.fetchData());
-    }
-    if (shouldPrime('aaii-sentiment')) {
-      primeTask('aaiiSentiment', () => this.dataLoader.loadAaiiSentiment());
     }
     if (shouldPrime('market-breadth')) {
       primeTask('marketBreadth', () => this.dataLoader.loadMarketBreadth());
@@ -709,12 +686,6 @@ export class App {
 
     if (shouldPrime('trade-policy')) {
       primeTask('tradePolicy', () => this.dataLoader.loadTradePolicy());
-    }
-    if (shouldPrime('stock-analysis')) {
-      primeTask('stockAnalysis', () => this.dataLoader.loadStockAnalysis());
-    }
-    if (shouldPrime('stock-backtest')) {
-      primeTask('stockBacktest', () => this.dataLoader.loadStockBacktest());
     }
     if (shouldPrime('daily-market-brief')) {
       primeTask('dailyMarketBrief', () => this.dataLoader.loadDailyMarketBrief());
@@ -2583,7 +2554,7 @@ export class App {
     // Pre-2026-05-01 the source cap was enforced by Array.sort().slice(),
     // which silently auto-disabled every source past alphabetical position
     // LEGACY_FREE_MAX_SOURCES — catastrophically erasing late-alphabet categories
-    // (Layoffs, Semiconductors, IPO, Funding, Product Hunt, …). Storage
+    // (Layoffs and Semiconductors). Storage
     // didn't track auto-disabled vs user-disabled, so a heuristic that runs
     // on every load would silently undo a user who legitimately disabled
     // every source in a category — and re-undo it on every refresh forever.
@@ -2942,27 +2913,10 @@ export class App {
 
     if (SITE_VARIANT === 'finance') {
       this.refreshScheduler.scheduleRefresh(
-        // inFlight lock key matches the hydration loader's runGuarded key so
-        // boot and refresh one-flight each other (loadStockAnalysis has no
-        // internal guard). The panel/viewport key stays kebab below (#6770).
-        'stockAnalysis',
-        () => this.dataLoader.loadStockAnalysis(),
-        REFRESH_INTERVALS.stockAnalysis,
-        () => this.isPanelNearViewport('stock-analysis'),
-      );
-      this.refreshScheduler.scheduleRefresh(
         'daily-market-brief',
         () => this.dataLoader.loadDailyMarketBrief(),
         REFRESH_INTERVALS.dailyMarketBrief,
         () => this.isPanelNearViewport('daily-market-brief'),
-      );
-      this.refreshScheduler.scheduleRefresh(
-        // inFlight lock key matches the hydration loader's runGuarded key
-        // (loadStockBacktest has no internal guard); panel key stays kebab (#6770).
-        'stockBacktest',
-        () => this.dataLoader.loadStockBacktest(),
-        REFRESH_INTERVALS.stockBacktest,
-        () => this.isPanelNearViewport('stock-backtest'),
       );
       this.refreshScheduler.scheduleRefresh(
         'market-implications',
@@ -3156,34 +3110,10 @@ export class App {
       () => this.isPanelNearViewport('fsi')
     );
     this.refreshScheduler.scheduleRefresh(
-      'nq-pulse',
-      () => (this.state.panels['nq-pulse'] as NqPulsePanel).fetchData(),
-      REFRESH_INTERVALS.nqPulse,
-      () => this.isPanelNearViewport('nq-pulse')
-    );
-    this.refreshScheduler.scheduleRefresh(
-      'nq-catalysts',
-      () => (this.state.panels['nq-catalysts'] as NqCatalystsPanel).fetchData(),
-      REFRESH_INTERVALS.nqCatalysts,
-      () => this.isPanelNearViewport('nq-catalysts')
-    );
-    this.refreshScheduler.scheduleRefresh(
       'yield-curve',
       () => (this.state.panels['yield-curve'] as YieldCurvePanel).fetchData(),
       REFRESH_INTERVALS.yieldCurve,
       () => this.isPanelNearViewport('yield-curve')
-    );
-    this.refreshScheduler.scheduleRefresh(
-      'earnings-calendar',
-      () => (this.state.panels['earnings-calendar'] as EarningsCalendarPanel).fetchData(),
-      REFRESH_INTERVALS.earningsCalendar,
-      () => this.isPanelNearViewport('earnings-calendar')
-    );
-    this.refreshScheduler.scheduleRefresh(
-      'material-events',
-      () => (this.state.panels['material-events'] as MaterialEventsPanel).fetchData(),
-      REFRESH_INTERVALS.materialEvents,
-      () => this.isPanelNearViewport('material-events')
     );
     this.refreshScheduler.scheduleRefresh(
       'economic-calendar',
@@ -3202,12 +3132,6 @@ export class App {
       () => (this.state.panels['gold-intelligence'] as GoldIntelligencePanel).fetchData(),
       REFRESH_INTERVALS.goldIntelligence,
       () => this.isPanelNearViewport('gold-intelligence')
-    );
-    this.refreshScheduler.scheduleRefresh(
-      'aaii-sentiment',
-      () => this.dataLoader.loadAaiiSentiment(),
-      REFRESH_INTERVALS.aaiiSentiment,
-      () => this.isPanelNearViewport('aaii-sentiment')
     );
     this.refreshScheduler.scheduleRefresh(
       'market-breadth',

@@ -57,7 +57,7 @@ curl -s https://worldmonitor.app/mcp \
 
 | 名称 | 类型 | 描述 |
 |------|------|------|
-| `view` | `string: enrichment / signals / filings-search / material-events` | 默认 `enrichment`。 |
+| `view` | `string: enrichment / signals / filings-search` | 默认 `enrichment`。 |
 | `ticker` | string | 交易所股票代码，例如 `AAPL`；是 `enrichment` 与 `signals` 的首选公司键。 |
 | `name` | string | 无股票代码时的公司名称；仅接受映射到单一 CIK 的 SEC 法定名称精确匹配。 |
 | `query` | string | 仅 `filings-search`：必填全文查询。 |
@@ -66,7 +66,7 @@ curl -s https://worldmonitor.app/mcp \
 | `item_code` | string | 仅 `material-events`：筛选一个 8-K 条目代码，例如 `5.02`。 |
 | `limit` | integer | `filings-search` 最多 25，`material-events` 最多 100；超出视图上限会被拒绝。 |
 
-- **API 端点：** `GET /api/intelligence/v1/get-company-enrichment`、`GET /api/intelligence/v1/list-company-signals`、`GET /api/intelligence/v1/search-sec-filings`、`GET /api/intelligence/v1/list-material-events`
+- **API 端点：** `GET /api/intelligence/v1/get-company-enrichment`、`GET /api/intelligence/v1/list-company-signals`、`GET /api/intelligence/v1/search-sec-filings`
 - **类型：** 规范路由代理 — `enrichment` 汇总 SEC、Finnhub 盈利事实与新闻；`signals` 仅使用具备权威时间戳的 SEC 申报与新闻，不把财政期末当作事件时间。
 - **新鲜度：** 每个视图都携带自己的真实来源时间戳（`enrichedAtMs`、`discoveredAtMs` 或 `fetchedAtMs`）。
 

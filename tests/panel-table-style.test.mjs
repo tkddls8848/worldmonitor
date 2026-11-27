@@ -80,7 +80,7 @@ function exactCellRules(css, name) {
 
 describe('panel table style', () => {
   it('scans the panel tables', () => {
-    assert.ok(tables.length >= 35, `only ${tables.length} panel tables found; the scan is broken`);
+    assert.ok(tables.length >= 34, `only ${tables.length} panel tables found; the scan is broken`);
     for (const path of OUT_OF_SCOPE) {
       assert.ok(panelFiles.includes(path) || OUT_OF_SCOPE.has(path), `${path} is gone; update the list`);
     }
@@ -110,15 +110,6 @@ describe('panel table style', () => {
       }
     }
     assert.deepEqual(inline, []);
-  });
-
-  // Virtual scrolling sizes the spacer rows as rows x --watchlist-row-height.
-  // Shared cell padding or a border on them would shift every row below.
-  it('watchlist spacer rows drop the shared cell padding and border', () => {
-    const css = read('src/styles/panels.css').replace(/\/\*[\s\S]*?\*\//g, '');
-    const rule = css.match(/\.watchlist-table tbody tr\.watchlist-virtual-spacer > td\s*\{([^}]*)\}/)?.[1] ?? '';
-    assert.match(rule, /(?:^|;)\s*padding:\s*0;/, 'spacer cells keep padding: 0');
-    assert.match(rule, /(?:^|;)\s*border:\s*0;/, 'spacer cells keep border: 0');
   });
 
   it('migrated tables do not redeclare the shared header and cell style', () => {

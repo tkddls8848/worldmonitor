@@ -224,9 +224,7 @@ export async function openStockResearchOverlay(rawSymbol: string, stock?: Market
       const aligned = headline.alignedTradingDate
         ? ` aligned ${escapeHtml(headline.alignedTradingDate)}`
         : '';
-      // sanitizeUrl, not escapeHtml: headline.link is relayed third-party news
-      // data and escapeHtml cannot reject a javascript:/data: scheme. Matches
-      // StockAnalysisPanel's handling of the same field.
+      // Headline URLs come from third-party news. Validate the scheme before rendering.
       const href = sanitizeUrl(headline.link);
       const title = escapeHtml(headline.title);
       const label = href
@@ -256,7 +254,6 @@ export async function openStockResearchOverlay(rawSymbol: string, stock?: Market
         <p>${escapeHtml(analysis.ratingSummary || analysis.summary || 'No analysis summary.')}</p>
         ${sentiment}
         ${headlines ? `<ul class="stock-research-news">${headlines}</ul>` : '<p>No headlines.</p>'}
-        <p class="stock-research-backtest">Backtest remains in the Premium Stock Backtest panel.</p>
       `, 'Stock research analysis values are escaped before rendering'),
     );
   } catch {

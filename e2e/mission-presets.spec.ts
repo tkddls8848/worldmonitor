@@ -152,11 +152,6 @@ test.describe('mission presets', () => {
     await openMissionPopover(page);
 
     await expect(page.locator('.mission-preset-card')).toHaveCount(MISSION_CARD_COUNT);
-    if (ACTIVE_VARIANT === 'finance') {
-      await expect(page.locator('[data-mission-id="nq-day-trader"]')).toContainText('NQ Day Trader');
-    } else {
-      await expect(page.locator('[data-mission-id="nq-day-trader"]')).toHaveCount(0);
-    }
     await applyMission(page, 'supply-chain-risk', 'Supply');
     await page.locator('[data-inspector-tab="markets"]').click();
 

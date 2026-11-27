@@ -41,7 +41,6 @@ function installRateLimitRedisFake(): void {
 }
 
 const ISSUE_4609_GATED_ROUTES = [
-  { method: 'GET', path: '/api/market/v1/get-insider-transactions' },
   { method: 'POST', path: '/api/forecast/v1/trigger-simulation' },
   { method: 'POST', path: '/api/scenario/v1/run-scenario' },
   { method: 'GET', path: '/api/scenario/v1/get-scenario-status' },
@@ -56,9 +55,6 @@ const ISSUE_4609_GATED_ROUTES = [
   { method: 'GET', path: '/api/trade/v1/list-comtrade-flows' },
   { method: 'GET', path: '/api/trade/v1/get-tariff-trends' },
   { method: 'GET', path: '/api/market/v1/analyze-stock' },
-  { method: 'GET', path: '/api/market/v1/get-stock-analysis-history' },
-  { method: 'GET', path: '/api/market/v1/backtest-stock' },
-  { method: 'GET', path: '/api/market/v1/list-stored-stock-backtests' },
 ] as const;
 
 // A browser-session-shaped key, for tests that send one like the dashboard did.

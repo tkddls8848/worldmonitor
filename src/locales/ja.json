@@ -420,7 +420,6 @@
     "orefSirens": "イスラエルのサイレン",
     "regulation": "AI規制ダッシュボード",
     "finRegulation": "金融規制",
-    "ipo": "新規公開・特殊買収目的会社合併",
     "serviceStatus": "サービス状態",
     "techReadiness": "テック準備度指数",
     "gccInvestments": "湾岸協力会議投資",
@@ -1925,12 +1924,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>食料品指数</strong> 24カ国の食料品価格の世界的な比較 — 消費者物価指数を超える実際の消費者物価インフレを追跡。"
     },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>プレミアム株式分析</strong> ウォッチリスト銘柄の AI 分析 — 買い/保有/売りシグナル、目標株価、主要リスク、カタリストを毎日更新。"
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>プレミアム・バックテスト</strong> ウォッチリスト銘柄の過去パフォーマンスのバックテスト — 過去リターン、最大ドローダウン、ボラティリティ指標。"
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>デイリー市場ブリーフ</strong> 世界の市場環境、主要なマクロトレンド、セクター別シグナルを AI が毎日要約 — 取引日ごとに更新。"
     },
@@ -1984,25 +1977,6 @@
         "failedToLoad": "読み込みに失敗しました"
       },
       "methodologyNote": "Alert / Warning / Watch レベルは編集用キーワード分類器から取得されます — キーワード表と制限事項については /docs/methodology/disease-alert-level を参照してください。"
-    },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>決算カレンダー</strong> 主要上場企業の決算発表の予定および実績。EPS推定値と実績、売上高、ビート/ミス分類を表示。出典：金融データプロバイダー。",
-      "title": "決算カレンダー",
-      "today": "今日 · {{date}}",
-      "tomorrow": "明日 · {{date}}",
-      "epsActual": "1株あたり利益 {{value}}",
-      "epsEstimate": "1株あたり利益推定値 {{value}}",
-      "revenueActual": "{{value}} 売上",
-      "revenueEstimate": "{{value}} 予想",
-      "surprise": {
-        "beat": "超過",
-        "miss": "未達",
-        "inLine": "予想通り"
-      },
-      "errors": {
-        "noData": "決算データはありません",
-        "failedToLoad": "読み込みに失敗しました"
-      }
     },
     "economicCalendar": {
       "infoTooltip": "<strong>経済カレンダー</strong> 予定された経済指標発表：消費者物価指数、非農業部門雇用者数、国内総生産、購買担当者指数、中央銀行決定。予測値、実績値、前回値を表示。高インパクトイベントはハイライト。出典：経済データプロバイダー。"

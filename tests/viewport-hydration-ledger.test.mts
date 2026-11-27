@@ -75,13 +75,13 @@ describe('ViewportHydrationLedger', () => {
 
   it('forgets every entry when the context changes, such as premium access', () => {
     const ledger = new ViewportHydrationLedger();
-    const panels = { 'stock-analysis': {} };
+    const panels = { 'daily-market-brief': {} };
     ledger.beginPass(false);
-    ledger.markServed(panels, ['stock-analysis']);
+    ledger.markServed(panels, ['daily-market-brief']);
     ledger.claim('premium-tail');
 
     ledger.beginPass(true);
-    assert.deepEqual([...ledger.collectUnserved(panels, () => true)], ['stock-analysis']);
+    assert.deepEqual([...ledger.collectUnserved(panels, () => true)], ['daily-market-brief']);
     assert.equal(ledger.claim('premium-tail'), true);
   });
 

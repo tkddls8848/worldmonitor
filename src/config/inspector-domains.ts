@@ -107,8 +107,6 @@ const SECURITY_PANEL_KEYS = new Set<string>([
 const MARKETS_EQUITIES_KEYS = new Set<string>([
   'markets',
   'heatmap',
-  'stock-analysis',
-  'stock-backtest',
   'daily-market-brief',
   'market-implications',
   'finance',
@@ -119,17 +117,13 @@ const MARKETS_EQUITIES_KEYS = new Set<string>([
   'centralbanks',
   'economic',
   'economic-news',
-  'ipo',
   'macro-signals',
   'macro-tiles',
   'fear-greed',
-  'aaii-sentiment',
   'market-breadth',
   'news-market-correlation',
   'fsi',
   'yield-curve',
-  'earnings-calendar',
-  'material-events',
   'economic-calendar',
   'cot-positioning',
   'liquidity-shifts',
@@ -147,9 +141,6 @@ const MARKETS_EQUITIES_KEYS = new Set<string>([
   'consumer-prices',
   'grocery-basket',
   'fao-food-price-index',
-  'nq-pulse',
-  'nq-catalysts',
-  'nq-news',
 ]);
 
 const MARKETS_ENERGY_KEYS = new Set<string>([

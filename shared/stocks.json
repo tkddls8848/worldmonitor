@@ -105,12 +105,10 @@
     "^FTSE", "^GDAXI", "^FCHI", "^SSMI", "^AEX", "^IBEX", "FTSEMIB.MI", "NESN.SW",
     "^N225", "^KS11", "KRW=X", "^TWII", "^AXJO", "^STI", "^JKSE", "9984.T", "7203.T", "005930.KS", "9988.HK",
     "^TASI.SR", "DFMGI.AE", "2222.SR", "2010.SR", "^BVSP", "^GSPTSE", "^MXX", "^MERV", "SHOP.TO",
-    "NQ=F", "QQQ", "^VXN", "^TNX"
+    "QQQ", "^TNX"
   ],
   "auxiliarySymbols": [
-    { "symbol": "NQ=F", "name": "E-mini Nasdaq-100", "display": "NQ", "region": "us" },
     { "symbol": "QQQ", "name": "Invesco QQQ", "display": "QQQ", "region": "us" },
-    { "symbol": "^VXN", "name": "Nasdaq-100 VIX", "display": "VXN", "region": "us" },
     { "symbol": "^TNX", "name": "US 10-Year Yield", "display": "US 10Y", "region": "us" }
   ],
   "regions": {

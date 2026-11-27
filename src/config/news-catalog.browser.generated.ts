@@ -1866,20 +1866,6 @@ export const BROWSER_NEWS_CATALOG: BrowserCatalog = {
           "url": "https://news.google.com/rss/search?q=(\"housing+market\"+OR+\"home+prices\"+OR+\"mortgage+rates\"+OR+REIT)+when:3d&hl=en-US&gl=US&ceid=US:en"
         }
       ],
-      "ipo": [
-        {
-          "name": "IPO News",
-          "url": "https://news.google.com/rss/search?q=(IPO+OR+\"initial+public+offering\"+OR+SPAC+OR+\"direct+listing\")+when:3d&hl=en-US&gl=US&ceid=US:en"
-        },
-        {
-          "name": "Earnings Reports",
-          "url": "https://news.google.com/rss/search?q=(\"earnings+report\"+OR+\"quarterly+earnings\"+OR+\"revenue+beat\"+OR+\"earnings+miss\")+when:2d&hl=en-US&gl=US&ceid=US:en"
-        },
-        {
-          "name": "M&A News",
-          "url": "https://news.google.com/rss/search?q=(\"merger\"+OR+\"acquisition\"+OR+\"takeover+bid\"+OR+\"buyout\")+billion+when:3d&hl=en-US&gl=US&ceid=US:en"
-        }
-      ],
       "derivatives": [
         {
           "name": "Options Market",
@@ -2349,30 +2335,7 @@ export const BROWSER_NEWS_CATALOG: BrowserCatalog = {
         }
       ]
     },
-    "ondemand": {
-      "nq-news": [
-        {
-          "name": "Reuters Nasdaq Futures",
-          "url": "https://news.google.com/rss/search?q=site:reuters.com+(Nasdaq+futures+OR+NQ+OR+\"E-mini\")+when:1d&hl=en-US&gl=US&ceid=US:en"
-        },
-        {
-          "name": "Nasdaq-100 & QQQ",
-          "url": "https://news.google.com/rss/search?q=(\"Nasdaq-100\"+OR+QQQ+OR+\"Nasdaq+100\")+when:1d&hl=en-US&gl=US&ceid=US:en"
-        },
-        {
-          "name": "Federal Reserve",
-          "url": "https://www.federalreserve.gov/feeds/press_all.xml"
-        },
-        {
-          "name": "NQ Influence Basket",
-          "url": "https://news.google.com/rss/search?q=(AAPL+OR+Apple+OR+MSFT+OR+Microsoft+OR+NVDA+OR+NVIDIA+OR+AMZN+OR+Amazon+OR+GOOGL+OR+Alphabet+OR+META+OR+AVGO+OR+Broadcom+OR+TSLA+OR+Tesla)+when:1d&hl=en-US&gl=US&ceid=US:en"
-        },
-        {
-          "name": "Semiconductors",
-          "url": "https://news.google.com/rss/search?q=(semiconductor+OR+chip+OR+\"AI+chip\"+OR+TSMC+OR+ASML)+when:1d&hl=en-US&gl=US&ceid=US:en"
-        }
-      ]
-    }
+    "ondemand": {}
   },
   "intel": [
     {
@@ -2623,14 +2586,12 @@ export const BROWSER_NEWS_CATALOG: BrowserCatalog = {
       "commodities",
       "centralbanks",
       "economic",
-      "ipo",
       "derivatives",
       "fintech",
       "fin-regulation",
       "institutional",
       "analysis",
-      "gccNews",
-      "nq-news"
+      "gccNews"
     ],
     "commodity": [
       "commodity-news",

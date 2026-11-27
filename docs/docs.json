@@ -283,9 +283,7 @@
                       "panels/daily-market-brief",
                       "panels/regional-intelligence",
                       "panels/strategic-posture",
-                      "panels/threat-timeline",
-                      "panels/stock-analysis",
-                      "panels/stock-backtest"
+                      "panels/threat-timeline"
                     ]
                   },
                   {
@@ -860,9 +858,7 @@
                       "zh/panels/daily-market-brief",
                       "zh/panels/regional-intelligence",
                       "zh/panels/strategic-posture",
-                      "zh/panels/threat-timeline",
-                      "zh/panels/stock-analysis",
-                      "zh/panels/stock-backtest"
+                      "zh/panels/threat-timeline"
                     ]
                   },
                   {

@@ -646,11 +646,11 @@ describe('durable last-good publish gate — executed, not described (#7084)', (
           categories: {
             politics: { items: [{ link: 'https://a.test/1' }] },
             podcasts: { items: [] },
-            'nq-news': { items: [{ link: 'https://c.test/1' }] },
+            'fixture-exempt': { items: [{ link: 'https://c.test/1' }] },
           },
         },
         revoked: [],
-        exempt: ['podcasts', 'nq-news'],
+        exempt: ['podcasts', 'fixture-exempt'],
       },
     ];
     for (const { data, revoked, exempt = [] } of cases) {

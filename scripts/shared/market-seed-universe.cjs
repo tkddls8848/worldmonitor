@@ -3,10 +3,9 @@
 /**
  * Shared market-quote seed universe for the standalone seeder and Railway relay.
  *
- * `symbols` remains the Markets catalog. `auxiliarySymbols` is the NQ context
- * basket: seeders fetch both, default dashboard hydration stays on
- * `defaultSymbols` / catalog only, and seed-coverage validation ignores
- * auxiliary misses so a missing VXN cannot fail an otherwise healthy refresh.
+ * `symbols` remains the Markets catalog. `auxiliarySymbols` carries supporting quotes
+ * outside the default dashboard catalog. Coverage validation applies to
+ * catalog symbols.
  */
 
 function uniquePreserveOrder(symbols) {

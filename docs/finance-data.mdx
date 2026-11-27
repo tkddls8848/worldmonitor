@@ -27,13 +27,9 @@ These tables are the human-facing route map for finance, market, macro, energy, 
 | Price history | `GET /api/market/v1/get-price-history` | Widget agent dated daily closes (1mo to 1y) for up to four tracked commodity, market or Gulf symbols. |
 | Gulf quotes | `GET /api/market/v1/list-gulf-quotes` | Gulf Economies panel; bootstrap-first via `gulfQuotes`. |
 | Premium stock analysis | `GET /api/market/v1/analyze-stock` | PRO stock-analysis card with technicals, headlines, targets, and AI synthesis. |
-| Stock analysis history | `GET /api/market/v1/get-stock-analysis-history` | PRO cached/shared premium analysis ledger. |
-| Stock backtest | `GET /api/market/v1/backtest-stock` | PRO on-demand replay of the technical-only stock signal. |
-| Stored stock backtests | `GET /api/market/v1/list-stored-stock-backtests` | PRO Premium Backtesting panel stored snapshots. |
 | Fear & Greed | `GET /api/market/v1/get-fear-greed-index` | Fear & Greed panel plus US KCFSI portion of Financial Stress; bootstrap-first via `fearGreedIndex`. |
 | Earnings calendar | `GET /api/market/v1/list-earnings-calendar` | Earnings Calendar tile. |
 | COT positioning | `GET /api/market/v1/get-cot-positioning` | COT Positioning tile and gold positioning context. |
-| PRO insider transactions | `GET /api/market/v1/get-insider-transactions` | Insider Activity section in the locked Premium Stock Analysis surface. |
 | Market breadth history | `GET /api/market/v1/get-market-breadth-history` | Market Breadth panel; bootstrap-first via `breadthHistory`. |
 | Gold intelligence | `GET /api/market/v1/get-gold-intelligence` | Gold Intelligence panel direct REST fetch. |
 | Commodity and FX positioning | `GET /api/market/v1/get-perp-positioning` | 24/7 Positioning panel; bootstrap-first via `perpPositioning`. |

@@ -419,7 +419,6 @@
     "populationExposure": "Bevölkerungsexposition",
     "regulation": "KI-Regulierungs-Dashboard",
     "finRegulation": "Finanzregulierung",
-    "ipo": "Public Listings & Shell-Company-Fusionen",
     "serviceStatus": "Dienststatus",
     "techReadiness": "Tech-Bereitschaftsindex",
     "techHubs": "Heiße Tech-Hubs",
@@ -1930,12 +1929,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>Lebensmittelindex</strong> Globaler Vergleich von Lebensmittelkorbpreisen in 24 Ländern – verfolgt die reale Verbraucherpreisinflation über den Schlagzeilenindex hinaus."
     },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>Premium-Aktienanalyse</strong> KI-gestützte Analyse für Aktien auf Ihrer Watchlist – Kauf-/Halte-/Verkaufssignale, Kursziele, wesentliche Risiken und Katalysatoren, täglich aktualisiert."
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>Premium-Backtesting</strong> Historische Backtests für Aktien auf Ihrer Watchlist – vergangene Renditen, maximaler Drawdown und Volatilitätskennzahlen."
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>Täglicher Marktbericht</strong> KI-generierte tägliche Zusammenfassung der globalen Marktlage, wichtiger Makrotrends und Signale auf Sektorebene – wird an jedem Handelstag aktualisiert."
     },
@@ -1994,25 +1987,6 @@
         "failedToLoad": "Fehler beim Laden"
       },
       "methodologyNote": "Alert- / Warn- / Watch-Level stammen von einem redaktionellen Keyword-Klassifikator – siehe /docs/methodology/disease-alert-level für die Keyword-Tabelle und Einschränkungen."
-    },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>Gewinnkalender</strong> Bevorstehende und letzte Gewinnergebnisse großer börsennotierter Unternehmen. Zeigt Gewinn pro Aktie-Schätzungen im Vergleich zu Ist-Werten, Umsatz und Beat/Miss-Klassifizierung. Quelle: Finanzdienstleister.",
-      "title": "Quartalszahlen-Kalender",
-      "today": "HEUTE · {{date}}",
-      "tomorrow": "MORGEN · {{date}}",
-      "epsActual": "Gewinn pro Aktie {{value}}",
-      "epsEstimate": "Gewinn pro Aktie Schätzung {{value}}",
-      "revenueActual": "{{value}} Umsatz",
-      "revenueEstimate": "{{value}} Schätzung",
-      "surprise": {
-        "beat": "ÜBERTROFFEN",
-        "miss": "VERFEHLT",
-        "inLine": "WIE ERWARTET"
-      },
-      "errors": {
-        "noData": "Keine Quartalszahlen verfügbar",
-        "failedToLoad": "Fehler beim Laden"
-      }
     },
     "economicCalendar": {
       "infoTooltip": "<strong>Wirtschaftskalender</strong> Geplante makroökonomische Veröffentlichungen: Verbraucherpreisindex, Nonfarm-Beschäftigung, Bruttoinlandsprodukt, Einkaufsmanagerindex und Zentralbankentscheidungen. Zeigt Prognose vs. Ist vs. Vorher. Hochauswirkende Ereignisse sind hervorgehoben. Quelle: Wirtschaftsdatendienstleister."

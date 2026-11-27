@@ -8,18 +8,6 @@ const KEY = 'market:earnings-calendar:v1';
 const TTL = 129600; // 36h — 3× a 12h cron interval
 export const EARNINGS_CALENDAR_CAP = 100;
 
-// Keep aligned with NQ_INFLUENCE_SYMBOLS in src/config/nq-context.ts.
-export const NQ_INFLUENCE_EARNINGS_SYMBOLS = [
-  'AAPL',
-  'MSFT',
-  'NVDA',
-  'AMZN',
-  'GOOGL',
-  'META',
-  'AVGO',
-  'TSLA',
-];
-
 function toDateStr(d) {
   return d.toISOString().slice(0, 10);
 }
@@ -29,25 +17,8 @@ function compareEarningsEntries(a, b) {
   return (b.revenueEstimate ?? 0) - (a.revenueEstimate ?? 0);
 }
 
-/**
- * Reserve every matching NQ influence report from the normalized window,
- * then fill remaining capacity with general chronological rows.
- */
-export function boundEarningsCalendar(normalized, {
-  cap = EARNINGS_CALENDAR_CAP,
-  reservedSymbols = NQ_INFLUENCE_EARNINGS_SYMBOLS,
-} = {}) {
-  const reservedSet = new Set(reservedSymbols);
-  const reserved = [];
-  const general = [];
-  for (const entry of Array.isArray(normalized) ? normalized : []) {
-    if (reservedSet.has(entry.symbol)) reserved.push(entry);
-    else general.push(entry);
-  }
-  reserved.sort(compareEarningsEntries);
-  general.sort(compareEarningsEntries);
-  const remaining = Math.max(0, cap - reserved.length);
-  return [...reserved, ...general.slice(0, remaining)].sort(compareEarningsEntries);
+export function boundEarningsCalendar(entries) {
+  return [...entries].sort(compareEarningsEntries).slice(0, EARNINGS_CALENDAR_CAP);
 }
 
 async function fetchAll() {
@@ -115,9 +86,7 @@ async function fetchAll() {
       if (e.revenueEstimate != null && e.revenueEstimate > 0) return e.revenueEstimate >= 10_000_000;
       if (e.epsEstimate != null) return Math.abs(e.epsEstimate) >= 0.05;
       return false;
-    })
-    // Within same date, largest companies first; across dates, chronological
-    .sort(compareEarningsEntries);
+    });
 
   const earnings = boundEarningsCalendar(normalized);
 

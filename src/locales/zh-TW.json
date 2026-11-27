@@ -420,7 +420,6 @@
     "orefSirens": "以色列警報",
     "regulation": "AI監管儀表盤",
     "finRegulation": "金融監管",
-    "ipo": "公開上市與特殊目的收購公司合併",
     "serviceStatus": "服務狀態",
     "techReadiness": "科技就緒指數",
     "gccInvestments": "海灣合作委員會投資",
@@ -1925,12 +1924,6 @@
     "groceryBasket": {
       "infoTooltip": "<strong>雜貨籃指數</strong>全球24個國家的雜貨籃價格對比——跟蹤超越頭條消費者價格指數的真實消費品通脹。"
     },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>進階股票分析</strong> 針對自選股列表的 AI 分析 — 買入/持有/賣出訊號、目標價、主要風險和催化劑，每日更新。"
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>進階回測</strong> 針對自選股列表的歷史表現回測 — 歷史收益、最大回撤和波動率指標。"
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>每日市場簡報</strong> AI 生成的全球市場狀況、關鍵宏觀趨勢和板塊級訊號每日摘要 — 每個交易日重新整理。"
     },
@@ -1984,25 +1977,6 @@
         "failedToLoad": "載入失敗"
       },
       "methodologyNote": "警報 / 警告 / 監視級別來自編輯關鍵詞分類器 — 請參閱 /docs/methodology/disease-alert-level 瞭解關鍵詞表和限制。"
-    },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>財報日曆</strong>主要上市公司即將釋出和最近釋出的財報。顯示每股收益預期值與實際值、收入和超預期/未達預期分類。資料來源：財務資料供應商。",
-      "title": "財報日曆",
-      "today": "今日 · {{date}}",
-      "tomorrow": "明日 · {{date}}",
-      "epsActual": "每股收益{{value}}",
-      "epsEstimate": "每股收益預期{{value}}",
-      "revenueActual": "{{value}} 收入",
-      "revenueEstimate": "{{value}} 預期",
-      "surprise": {
-        "beat": "超預期",
-        "miss": "未達預期",
-        "inLine": "符合預期"
-      },
-      "errors": {
-        "noData": "無財報資料",
-        "failedToLoad": "載入失敗"
-      }
     },
     "economicCalendar": {
       "infoTooltip": "<strong>經濟日曆</strong>定期宏觀經濟資料釋出：消費者價格指數、非農就業人數、國內生產總值、採購經理指數和央行決議。顯示預期值與實際值與前值。高影響事件突出顯示。資料來源：經濟資料供應商。"

@@ -13,14 +13,8 @@ for (const width of [1440, 390]) {
       items: rows.map(i => ({ id: `news-${i}`, title: `Climate headline ${i}`, summary: 'Fixture climate reporting for scrolling verification.', url: `https://example.test/${i}`, sourceName: 'Test source', publishedAt: now - i * 60_000 })),
       dataAvailable: true, fetchedAt: now,
     } }));
-    await page.route(/list-earnings-calendar/, route => route.fulfill({ json: {
-      earnings: rows.map(i => ({ symbol: `SYM${i}`, company: `Company ${i}`, date: '2026-11-05', hour: 'bmo', epsEstimate: 1, revenueEstimate: 1000, epsActual: 0, revenueActual: 0, hasActuals: false, surpriseDirection: '' })),
-    } }));
     await page.route(/get-economic-calendar/, route => route.fulfill({ json: {
       events: rows.map(i => ({ event: `Economic event ${i}`, country: 'US', date: new Date(now + i * 60_000).toISOString(), impact: 'High', actual: '', estimate: '1', previous: '2', unit: '%' })),
-    } }));
-    await page.route(/list-material-events/, route => route.fulfill({ json: {
-      events: rows.map(i => ({ company: `Filer ${i}`, cik: `${i}`, form: '8-K', filedAtMs: now - i * 60_000, items: [{ code: '2.02', description: 'Results' }], url: `https://www.sec.gov/Archives/${i}` })),
     } }));
     await page.goto('/tests/runtime-harness.html');
     const ids = await page.evaluate(async () => {
@@ -38,23 +32,19 @@ for (const width of [1440, 390]) {
       const { ClimateNewsPanel } = await import('/src/components/ClimateNewsPanel.ts');
       const { DiseaseOutbreaksPanel } = await import('/src/components/DiseaseOutbreaksPanel.ts');
       const { InternetDisruptionsPanel } = await import('/src/components/InternetDisruptionsPanel.ts');
-      const { EarningsCalendarPanel } = await import('/src/components/EarningsCalendarPanel.ts');
       const { EconomicCalendarPanel } = await import('/src/components/EconomicCalendarPanel.ts');
-      const { MaterialEventsPanel } = await import('/src/components/MaterialEventsPanel.ts');
       const { Panel } = await import('/src/components/Panel.ts');
       const climate = new ClimateNewsPanel();
       const disease = new DiseaseOutbreaksPanel();
       const internet = new InternetDisruptionsPanel();
-      const earnings = new EarningsCalendarPanel();
       const economic = new EconomicCalendarPanel();
-      const material = new MaterialEventsPanel();
-      const panels: InstanceType<typeof Panel>[] = [climate, disease, internet, earnings, economic, material];
+      const panels: InstanceType<typeof Panel>[] = [climate, disease, internet, economic];
       for (const panel of panels) grid.append(panel.getElement());
       const now = Date.now();
       const rows = Array.from({ length: 40 }, (_, i) => i);
       disease.updateData(rows.map(i => ({ id: `${i}`, disease: `Outbreak ${i}`, location: 'Test location', countryCode: 'US', alertLevel: 'high', summary: 'Fixture outbreak summary.', sourceUrl: 'https://example.test', publishedAt: now, sourceName: 'Test source', lat: 0, lng: 0, cases: 1 })));
       internet.setOutages(rows.map(i => ({ id: `${i}`, country: 'United States', title: `Outage ${i}`, description: 'Fixture outage', lat: 0, lon: 0, severity: 'major', pubDate: new Date(now), link: 'https://example.test', outageDate: new Date(now), categories: [], cause: '' })));
-      await Promise.all([climate.fetchData(), earnings.fetchData(), economic.fetchData(), material.fetchData()]);
+      await Promise.all([climate.fetchData(), economic.fetchData()]);
       // CSS-only list fixtures cover secondary sections whose provider/model
       // setup is unrelated to scrolling. They use the production Panel shell.
       for (const className of ['id-ddos', 'oref-wave-list', 'cascade-countries', 'risk-alerts', 'economic-content', 'deduction-panel-content']) {

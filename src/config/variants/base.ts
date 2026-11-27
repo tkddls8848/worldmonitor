@@ -27,10 +27,8 @@ export const REFRESH_INTERVALS = {
   cableHealth: 2 * 60 * 60 * 1000,
   flights: 2 * 60 * 60 * 1000,
   cyberThreats: 10 * 60 * 1000,
-  stockAnalysis: 15 * 60 * 1000,
   dailyMarketBrief: 60 * 60 * 1000,
   marketImplications: 3 * 60 * 60 * 1000,
-  stockBacktest: 4 * 60 * 60 * 1000,
   serviceStatus: 3 * 60 * 1000,
   macroSignals: 15 * 60 * 1000,
   fearGreed: 30 * 60 * 1000,
@@ -71,14 +69,9 @@ export const REFRESH_INTERVALS = {
   macroTiles: 30 * 60 * 1000,
   fsi: 30 * 60 * 1000,
   yieldCurve: 30 * 60 * 1000,
-  earningsCalendar: 60 * 60 * 1000,
-  materialEvents: 15 * 60 * 1000,
   economicCalendar: 60 * 60 * 1000,
   cotPositioning: 60 * 60 * 1000,
   goldIntelligence: 5 * 60 * 1000,
-  nqPulse: 5 * 60 * 1000,
-  nqCatalysts: 5 * 60 * 1000,
-  aaiiSentiment: 60 * 60 * 1000, // weekly data; hourly refresh is sufficient
   marketBreadth: 60 * 60 * 1000, // seeded daily; hourly refresh is sufficient
   newsMarketCorrelation: 15 * 60 * 1000, // matches the timestamped market-series seed cadence
 };

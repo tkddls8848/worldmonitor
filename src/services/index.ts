@@ -42,5 +42,3 @@ export * from './radiation';
 export * from './breaking-news-alerts';
 export * from './sanctions-pressure';
 export * from './thermal-escalation';
-export * from './stock-analysis-history';
-export * from './stock-backtest';
