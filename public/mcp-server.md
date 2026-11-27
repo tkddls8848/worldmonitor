@@ -29,7 +29,6 @@ Call `get_mcp_allowance({})` to read the current verified account allowance when
 
 When a denial's `error.data` carries `checkoutTool: "start_upgrade"`, call `start_upgrade({plan})` with its `recommendedPlan` to get a personal checkout link for the signed-in account. The user pays in a browser; the tool never charges and spends no daily allowance. After payment, `get_mcp_allowance` reports the paid limit without re-authorization.
 
-
 To report a bug, a missing capability, wrong data or a security concern, call `report_issue({kind, summary})`. It needs no credentials and spends no allowance; pass a failed call's `error.data.requestId` as `requestId`. Vulnerability details belong in the private [advisory form](https://github.com/koala73/worldmonitor/security/advisories/new); see the [tool reference](https://www.worldmonitor.app/docs/mcp-tools-reference#report_issue).
 
 ## MCP Apps
