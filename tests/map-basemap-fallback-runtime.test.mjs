@@ -70,12 +70,13 @@ async function createHarness({ failReplacement = true, scheduleMicrotask = queue
     webglLost: false,
     renderRafId: null,
     countryPulseRaf: null,
+    worldPulseRaf: null,
     activeFlightTrails: new Map(),
     deckFrameProvider: { wake() {}, dispose() {} },
     layerCache: new Map(),
   });
   for (const name of ['settleViewportMovement', 'stopTradeAnimation', 'stopPulseAnimation',
-    'stopDayNightTimer', 'stopWeatherRadar', 'stopLiveTankersLoop']) map[name] = () => {};
+    'stopDayNightTimer', 'stopWeatherRadar', 'stopLiveTankersLoop', 'removeWorldPulseListeners']) map[name] = () => {};
   for (const name of ['debouncedRebuildLayers', 'debouncedFetchBases', 'debouncedFetchAircraft',
     'rafUpdateLayers', 'heavyGate']) map[name] = { cancel() {} };
   await map.initMapLibre();

@@ -57,6 +57,7 @@ function createHarness() {
     layerCache: new Map(),
     renderRafId: null,
     countryPulseRaf: null,
+    worldPulseRaf: null,
     debouncedRebuildLayers: cancelable(),
     debouncedFetchBases: cancelable(),
     debouncedFetchAircraft: cancelable(),
@@ -65,7 +66,8 @@ function createHarness() {
     deckFrameProvider: { wake() {}, dispose() {} },
   });
   for (const name of ['settleViewportMovement', 'stopTradeAnimation', 'stopPulseAnimation',
-    'stopDayNightTimer', 'stopWeatherRadar', 'stopLiveTankersLoop', 'detachMapLibreInteractionHandlers']) {
+    'stopDayNightTimer', 'stopWeatherRadar', 'stopLiveTankersLoop', 'detachMapLibreInteractionHandlers',
+    'removeWorldPulseListeners']) {
     instance[name] = () => {};
   }
   return { instance, requests, effects, zoomOut: () => { zoom = 1; instance.fetchViewportAircraft(); } };

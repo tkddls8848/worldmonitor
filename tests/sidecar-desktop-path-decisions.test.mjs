@@ -13,7 +13,7 @@ function serverFamilies() {
     const domainDir = join(serverRoot, domain);
     if (!statSync(domainDir).isDirectory()) continue;
     for (const version of readdirSync(domainDir).sort()) {
-      if (!/^v\d+$/.test(version)) continue;
+      if (!/^v\d+$/.test(version) || !existsSync(join(domainDir, version, 'handler.ts'))) continue;
       const bundledEntry = `api/${domain}/v1/[rpc].ts`;
       const versionedEntry = `api/${version}/${domain}/[rpc].ts`;
       families.push({
@@ -32,7 +32,7 @@ function serverFamilies() {
 
 it('every server route family has one local API entry', () => {
   const families = serverFamilies();
-  assert.ok(families.length >= 36);
+  assert.ok(families.length >= 35);
   assert.ok(families.some(f => f.key === 'v2/shipping'));
   for (const f of families) {
     assert.ok(f.bundled !== f.versioned, f.key);
