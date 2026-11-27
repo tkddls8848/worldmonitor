@@ -464,8 +464,6 @@
       "ddos": "DDoS 攻擊",
       "anomalies": "異常"
     },
-    "liveWebcams": "即時網路攝影機",
-    "windyWebcams": "Windy 即時網路攝影機",
     "groceryBasket": "食品雜貨指數",
     "groceryItem": "商品",
     "faoFoodPriceIndex": "食品價格",
@@ -849,23 +847,6 @@
     }
   },
   "components": {
-    "webcams": {
-      "paused": "攝影機已暫停",
-      "regions": {
-        "all": "全部",
-        "mideast": "中東",
-        "europe": "歐洲",
-        "americas": "美洲",
-        "asia": "亞洲",
-        "space": "太空"
-      },
-      "play": "觀看即時直播",
-      "previewStatus": "準備播放",
-      "connecting": "正在連線…",
-      "unverified": "無法確認此直播流是否即時",
-      "offline": "{{city}} 目前離線",
-      "noFeeds": "此地區目前沒有即時攝影機"
-    },
     "positiveNewsFeed": {
       "noStories": "此類別暫無報道"
     },
@@ -1467,8 +1448,6 @@
       "badgeAnimDesc": "在面板標題中顯示更新徽章動畫",
       "headlineMemoryLabel": "標題記憶",
       "headlineMemoryDesc": "記住已閱標題以突出顯示新內容",
-      "streamAlwaysOnLabel": "自動播放即時攝影機",
-      "streamAlwaysOnDesc": "直播攝影機影片出現在螢幕上時立即開始載入。保持關閉可僅在您手動啟動時載入影片。",
       "analysisFrameworksLabel": "分析框架",
       "analysisFrameworksActivePerPanel": "每個面板啟用",
       "analysisFrameworksSkillLibrary": "技能庫",
@@ -1509,7 +1488,7 @@
       "briefStoryDetails": "報道詳情 ({{count}})",
       "streamIdleStopLabel": "空閒時停止即時影片",
       "streamIdleStopNever": "從不",
-      "streamIdleStopDesc": "在此時間內無活動後停止即時新聞和即時網路攝影機，並在面板中顯示通知。",
+      "streamIdleStopDesc": "在此時間內無活動後停止即時新聞，並在面板中顯示通知。",
       "liveNewsAutoplayLabel": "自動播放即時新聞",
       "liveNewsAutoplayDesc": "即時新聞影片出現在螢幕上時自動開始播放，靜音狀態。關閉此選項可僅在您手動啟動時載入影片。"
     },
@@ -2268,9 +2247,6 @@
       "analysisDate": "WTO分析 {{date}}",
       "indexNote": "貨運指數（按體積），2025年1–3月平均值 = 100"
     },
-    "liveWebcams": {
-      "infoTooltip": "<strong>即時攝影機</strong> 來自全球地緣政治重要地點的直播：衝突區、首都、邊境口岸和戰略咽喉要道。流媒體來自YouTube和公共網路。"
-    },
     "macroTiles": {
       "infoTooltip": "<strong>宏觀指標</strong>美國、歐元區和中國價格、活動、政策和貨幣指標。中國需要當前新聞報道。每個區塊顯示其資料來源和觀測日期。"
     },
@@ -2288,9 +2264,6 @@
     },
     "yieldCurve": {
       "infoTooltip": "<strong>收益率曲線和利率</strong>美國國債收益率曲線（2年、5年、10年、30年）和關鍵利率差，包括10年-2年倒掛指標。還顯示歐元區利率（EURIBOR、ESTR）。倒掛曲線在歷史上先於經濟衰退。資料來源：美聯儲經濟資料。"
-    },
-    "pinnedWebcams": {
-      "pinFromMap": "從地圖固定網路攝影機"
     },
     "breakthroughsTicker": {
       "noData": "暫無科學突破"

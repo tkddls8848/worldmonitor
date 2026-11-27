@@ -51,7 +51,6 @@ World Monitor aggregates publicly available data from dozens of sources. No prop
 
 - **Curated RSS feeds** from wire services, government sources, major outlets, and specialized publications
 - **Live news streams** from major news networks
-- **Live webcams** from geopolitical hotspots
 - **Telegram OSINT channels** with explicit source metadata
 
 ### Geopolitical & Security

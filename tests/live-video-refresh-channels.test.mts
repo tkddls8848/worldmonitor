@@ -21,7 +21,6 @@ describe('scripts/shared/live-video-refresh-channels.generated.json', () => {
 
   it('lists only catalog slots, never a canary on its own', () => {
     const slotNames = new Set([
-      ...Object.keys(DEFAULT_CATALOG.webcams).map((id) => `webcams/${id}`),
       ...Object.keys(DEFAULT_CATALOG.news).map((id) => `live-news/${id}`),
     ]);
     for (const { channelId, slots } of committed.channels) {

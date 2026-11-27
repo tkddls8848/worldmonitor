@@ -1128,7 +1128,7 @@ test.describe('dashboard container scroll hydration (#5876)', () => {
   test('scroll during initial fan-out hydrates an already-mounted panel without another gesture', async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 1280, height: 720 });
     const first = [
-      'live-news', 'intel', 'gdelt-intel', 'live-webcams', 'insights',
+      'live-news', 'intel', 'gdelt-intel', 'insights',
       'threat-timeline', 'strategic-posture', 'stablecoins', 'forecast',
     ];
     const order = [...first, ...SCROLL_HYDRATION_PANEL_ORDER.filter((key) => !first.includes(key))];

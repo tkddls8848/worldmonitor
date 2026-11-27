@@ -6,7 +6,7 @@ Date: 2026-10-17, map/globe, brief and expand-everything added 2026-10-18. Statu
 
 Make `worldmonitor` (the npm CLI) a full terminal dashboard. Running the bare
 command in a terminal opens an interactive, mouse-aware TUI that shows the same
-data the web dashboard shows, including the live news channels and webcams,
+data the web dashboard shows, including the live news channels,
 with a sci-fi visual language: colour themes, animations, tickers, radar
 sweeps, a braille world map. The original web dashboard stays one command away
 as `worldmonitor web`.
@@ -25,7 +25,7 @@ path into a product surface of its own and makes the CLI worth installing.
   opens the hosted dashboard in the default browser.
 - Shows every bootstrap dataset the dashboard ships, grouped into views:
   Overview, News, Markets, Conflict, Cyber, Climate, Predictions, Live, Intel,
-  System. Live view plays the real news channels and webcams in the terminal.
+  System. Live view plays the real news channels in the terminal.
 - Mouse: click tabs, panels, list rows, buttons; scroll wheel in lists; keyboard
   parity for everything.
 - Themes (at least five), switchable at runtime and persisted. Animations: boot
@@ -96,7 +96,7 @@ cli/src/tui/
   data/client.mjs       HTTP client: anonymous session mint, 401 re-mint, timeouts, close()
   data/store.mjs        source table, refresh schedule, retry backoff, lazy sources
   data/select.mjs       selectors that turn bootstrap and digest payloads into view models
-  data/catalog.generated.json  live channels, webcams, world-map bitmap
+  data/catalog.generated.json  live channels, world-map bitmap
   views/*.mjs           one module per tab (base.mjs holds shared pane behaviour)
   video.mjs             mpv / yt-dlp / browser fallback, http(s)-only link opener
   web.mjs               `worldmonitor web`: local dev server in a checkout, else hosted
@@ -172,7 +172,7 @@ Boundary rules from `AGENTS.md` hold: `cli/` imports nothing from `src/` or
   anomalies, CO2, ocean ice, climate news.
 - Predictions: Polymarket style prediction markets by domain and scenario
   forecasts with confidence.
-- Live: built-in news channels (by region) and webcams; `Enter` plays in the
+- Live: built-in news channels (by region); `Enter` plays in the
   terminal through mpv (`--vo=kitty` on Kitty-protocol terminals, else
   `--vo=tct`); `w` opens an external mpv window; `b` opens in the browser.
 - Intel: GDELT intel topics, insights top stories, sanctions pressure, cross
@@ -219,7 +219,6 @@ in the browser, `s` cycles stream sources.
 
 - Individual AIS vessel positions: the public vessel snapshot carries density
   zones, disruptions and (when present) tanker reports, not per-ship tracks.
-- Webcam positions on the map (the catalog has no coordinates for them).
 - Sixel / Kitty raster output for imagery instead of half blocks.
 
 - MCP-backed country brief overlay when an API key is present.

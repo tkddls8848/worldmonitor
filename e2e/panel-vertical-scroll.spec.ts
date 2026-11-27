@@ -57,7 +57,7 @@ for (const width of [1440, 390]) {
       await Promise.all([climate.fetchData(), earnings.fetchData(), economic.fetchData(), material.fetchData()]);
       // CSS-only list fixtures cover secondary sections whose provider/model
       // setup is unrelated to scrolling. They use the production Panel shell.
-      for (const className of ['id-ddos', 'oref-wave-list', 'cascade-countries', 'risk-alerts', 'pinned-webcams-list', 'economic-content', 'deduction-panel-content']) {
+      for (const className of ['id-ddos', 'oref-wave-list', 'cascade-countries', 'risk-alerts', 'economic-content', 'deduction-panel-content']) {
         const panel = new Panel({ id: `scroll-${className}`, title: className, collapsible: true });
         const list = document.createElement('div');
         list.className = className;

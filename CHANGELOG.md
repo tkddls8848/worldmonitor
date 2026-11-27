@@ -19,7 +19,6 @@ All notable changes to World Monitor are documented here.
 
 - **Spoken response mode on seven analytical MCP tools** (#9722): `get_country_risk`, `get_world_brief`, `get_chokepoint_status`, `get_forecast_predictions`, `get_prediction_markets`, `get_media_perspective` and `get_resilience_indicators` accept `response_mode: "spoken"` and answer with 2-3 plain-language sentences for text-to-speech plus a `citations` array (source, title, URL, `asOf`, `stale`) instead of the full payload. Sentences are templated from the tool's structured fields (`api/mcp/spoken-narrators.ts`), never model-written, so every number spoken is in the data and the same data always reads the same way; stale snapshots, last-known-good briefs, old risk readings, partial media reads and failed upstream reads change the wording. The mode is advertised in each tool's `inputSchema` and as a `{spoken, citations}` branch of its `outputSchema`; other tools and unknown modes are rejected with `-32602`, `jmespath` projects the envelope, and `summary` cannot be combined with it. Tool count unchanged.
 
-- **Webcam discovery and recent media through MCP** (#5704, MCP server 1.47.0, 99 tools): `find_webcams` reads the existing seeded viewport catalog; `get_webcam_media` resolves one selected camera through WebcamService with at most one Windy request. Results separate catalog freshness, capture time and URL resolution time, retain Windy attribution, and report unavailable media without a generic server error. Windy v3 player URLs now come from `player.<timespan>` and detail links from `urls.detail`. Media is recent visual context without guaranteed live conditions.
 
 - **Sentinel-5P NO2 activity by country and cluster** (#9722, MCP server 1.46.0, 97 tools): `GET /api/economic/v1/get-no2-activity` serves the global NO2 activity dataset that `seed-no2-activity` publishes, validated through the shared contract at the Redis boundary and filtered by `country_code` (the country plus its clusters), `region_id` and `kind`. Each region carries the current 56-day window and its valid days, the baseline years, `changePercent`, `direction` and an `exclusion` from the closed vocabulary; `baseline_backfill_pending` is a first-class state while prior years are still being fetched. The response states `generatedAt`, `stale` (72 h, matching `/api/health`), the `methodVersion` that pins the method constants, and the Copernicus credit line. `unavailableReason` separates `NOT_COVERED` (a filter that names no registered region) from seed, contract and cache faults. The MCP tool `get_no2_activity` proxies the route at subscription access, weight 2, and takes country names and alpha-3 codes. The `tools/list` description budget moves from 64 KiB to 68 KiB.
 - **Industrial activity (NO2) map layer and country brief line** (#9722): an opt-in deck.gl layer colors the 167 countries and 32 industrial clusters of the Sentinel-5P NO2 dataset by direction (strengthening, weakening, unchanged), with baseline-pending and excluded regions as their own states, a legend carrying the Copernicus credit, and a hover card with the change, window, valid days and exclusion. The country brief gains an Industrial Activity (NO2) section with the same states. Both read `GET /api/economic/v1/get-no2-activity`; the layer reads it only while on, never at bootstrap.
@@ -116,8 +115,7 @@ All notable changes to World Monitor are documented here.
   `{"error":"channel_live_detection_retired"}`, cacheable for one day;
   `?videoId=` still returns the video's oEmbed title and channel name.
   **Migration:** pass `video_id` (`videoId` on `/api/youtube/live`) to name a
-  video. There is no replacement for channel live detection; Live News and Live
-  Webcams play verified streams listed in `src/config/live-video-sources.ts`.
+  video. There is no replacement for channel live detection; Live News plays verified streams listed in `src/config/live-video-sources.ts`.
 
 - **Corporate intelligence is live; `get-company-enrichment` and
   `list-company-signals` are no longer deprecated** (#5695). Both
@@ -217,7 +215,7 @@ All notable changes to World Monitor are documented here.
 - **Route Explorer**: standalone full-screen modal (CMD+K) for planning shipments between any two countries. Includes Current/Alternatives/Land/Impact tabs, keyboard-first navigation, URL state sharing, strategic-product trade data, dependency flags, and free-tier blur with public route highlight (#2980, #2982, #2994, #2996, #2997, #2998)
 - US Treasury customs revenue in Trade Policy panel with monthly data, FYTD year-over-year comparison, and revenue spike highlighting (#1663)
 - Security advisories gold standard migration: Railway cron seed fetches 24 government RSS feeds hourly, Vercel reads Redis only (#1637)
-- CMD+K full panel coverage: all 55 panels now searchable (was 31), including AI forecasts, correlation panels, webcams, displacement, security advisories (#1656)
+- CMD+K full panel coverage: all 55 panels now searchable (was 31), including AI forecasts, correlation panels, displacement, security advisories (#1656)
 - Chokepoint transit intelligence with 3 free data sources: IMF PortWatch (vessel transit counts), CorridorRisk (risk intelligence), AISStream (24h crossing counter) (#1560)
 - 13 monitored chokepoints (was 6): added Cape of Good Hope, Gibraltar, Bosporus Strait (absorbs Dardanelles), Korea, Dover, Kerch, Lombok (#1560, #1572)
 - Expandable chokepoint cards with TradingView lightweight-charts 180-day time-series (tanker vs cargo) (#1560)
@@ -294,7 +292,7 @@ All notable changes to World Monitor are documented here.
 - Close button and hover-pause on all marker tooltips (#1371)
 - Invalid 'satelliteImagery' removed from LAYER_SYNONYMS (#1370)
 - Risk scores seeding gap and seed-meta key mismatch (#1366)
-- Consistent LIVE header pattern across news and webcams panels (#1367)
+- Consistent LIVE header pattern across news panels (#1367)
 - Globe null guards in path accessor callbacks (#1372)
 - Node_modules guard in pre-push hook, pinned Node 22 (#1368)
 - Typecheck CI workflow: removed paths-ignore, added push trigger (#1373)
@@ -381,7 +379,6 @@ All notable changes to World Monitor are documented here.
 - **Health**: treat missing seed-meta as stale (#1128), resolve BIS credit and theater posture warnings (#1124), add WB seed loop (#1239), UCDP auth handling (#1252)
 - **Country Brief**: formatting, duplication, and news cap fixes (#1219), prevent modal stuck on geocode failure (#1134)
 - **Economic**: guard BIS and spending data against undefined (#1162, #1169)
-- **Webcams**: detect blocked YouTube embeds on web (#1107), use iframe load event fallback (#1123), MTV Lebanon as live stream (#1122)
 - **Desktop**: recover stranded routing fixes and unified error UX (#1160), DRY debounce, error handling, retry cap (#1084), debounce cache writes, batch secret push, lazy panels (#1077)
 - **PWA**: bump SW nuke key to v2 for CF-cached 404s (#1081), one-time SW nuke on first visit (#1079)
 - **Performance**: only show layer warning when adding layers, not removing (#1265), reduce unnecessary Vercel edge invocations (#1176)
@@ -445,7 +442,6 @@ All notable changes to World Monitor are documented here.
 - **CSP**: restore unsafe-inline for Vercel bot-challenge pages (#788), add missing script hash and finance variant (#798)
 - **Runtime**: route all /api/* calls through CDN edge instead of direct Vercel (#780)
 - **Desktop**: detect Linux node target from host arch (#742), harden Windows installer update path + map resize (#739), close update toast after clicking download (#738), only open valid http(s) links externally (#723)
-- **Webcams**: replace dead Tel Aviv live stream (#732), replace stale Jerusalem feed (#849)
 - Story header uses full domain WORLDMONITOR.APP (#799)
 - Open variant nav links in same window instead of new tab (#721)
 - Suppress map renders during resize drag (#728)
@@ -505,7 +501,6 @@ All notable changes to World Monitor are documented here.
 - Breaking news active alert banner with audio for critical/high items (#508)
 - AviationStack integration for non-US airports + NOTAM closure detection (#552, #581, #583)
 - RT (Russia Today) HLS livestream + RSS feeds (#585, #586)
-- Iran webcams tab with 4 feeds (#569, #572, #601)
 - CBC News optional live channel (#502)
 - Strategic risk score wired to theater posture + breaking news (#584)
 - CII scoring: security advisories, Iran strikes, OREF sirens, GPS jamming (#547, #559, #570, #579)
@@ -714,19 +709,16 @@ All notable changes to World Monitor are documented here.
 
 ### Added
 
-- **Live Webcams Panel**: 2x2 grid of live YouTube webcam feeds from global hotspots with region filters (Middle East, Europe, Asia-Pacific, Americas), grid/single view toggle, idle detection, and full i18n support (#111)
 - **Linux download**: added `.AppImage` option to download banner
 
 ### Changed
 
 - **Mobile detection**: use viewport width only for mobile detection; touch-capable notebooks (e.g. ROG Flow X13) now get desktop layout (#113)
-- **Webcam feeds**: curated Tel Aviv, Mecca, LA, Miami; replaced dead Tokyo feed; diverse ALL grid with Jerusalem, Tehran, Kyiv, Washington
 
 ### Fixed
 
 - **Le Monde RSS**: English feed URL updated (`/en/rss/full.xml` → `/en/rss/une.xml`) to fix 404
 - **Workbox precache**: added `html` to `globPatterns` so `navigateFallback` works for offline PWA
-- **Panel ordering**: one-time migration ensures Live Webcams follows Live News for existing users
 - **Mobile popups**: improved sheet/touch/controls layout (#109)
 - **Intelligence alerts**: disabled on mobile to reduce noise (#110)
 - **RSS proxy**: added 8 missing domains to allowlist

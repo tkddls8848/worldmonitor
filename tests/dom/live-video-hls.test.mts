@@ -62,10 +62,10 @@ function openHlsTile(onPlayingChange?: (playing: boolean) => void, onMutedChange
   document.body.appendChild(container);
   const states: LiveVideoState[] = [];
   session = openLiveVideo(container, {
-    source: { slot: 'webcams/hls-test', entries: [STREAM], origin: 'builtin' },
+    source: { slot: 'live-news/hls-test', entries: [STREAM], origin: 'builtin' },
     autoplay: true,
     muted: true,
-    presentation: { title: 'HLS live webcam', className: 'webcam-iframe', controls: false },
+    presentation: { title: 'HLS Live News', className: 'live-news-iframe', controls: false },
     onState: (state) => states.push(state),
     onPlayingChange,
     onMutedChange,

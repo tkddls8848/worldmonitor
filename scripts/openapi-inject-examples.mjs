@@ -1188,19 +1188,6 @@ function exampleForSchema(schema, spec, context = {}, depth = 0, seen = new Set(
       }],
     };
   }
-  if (depth === 0 && context.operationId === 'GetWebcamImage'
-    && context.exampleSurface === 'response') {
-    return {
-      thumbnailUrl: 'https://example.com/cam.jpg',
-      playerUrl: '',
-      title: 'Port camera',
-      windyUrl: 'https://www.windy.com/webcams/123',
-      lastUpdated: '2026-01-15T12:00:00.000Z',
-      resolvedAt: 1768478460000,
-      mediaType: 'snapshot',
-      error: '',
-    };
-  }
   if (depth === 0 && context.operationId === 'GetCountrySignalObservations'
     && context.exampleSurface === 'response') {
     return {

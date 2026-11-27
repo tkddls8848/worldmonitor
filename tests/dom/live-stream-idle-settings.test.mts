@@ -5,8 +5,7 @@ import {
   getLiveStreamSettings,
   LIVE_MEDIA_IDLE_STOP_STORAGE_KEY,
   setLiveMediaIdleStop,
-  setLiveStreamsAlwaysOn,
-  subscribeLiveStreamsAlwaysOnChange,
+  setLiveNewsAutoplay,
   subscribeLiveStreamsSettingsChange,
   type LiveStreamSettings,
 } from '@/services/live-stream-settings';
@@ -56,25 +55,12 @@ describe('live stream settings storage', () => {
     expect(localStorage.getItem(LIVE_MEDIA_IDLE_STOP_STORAGE_KEY)).toBe('never');
     setLiveMediaIdleStop(240);
     expect(localStorage.getItem(LIVE_MEDIA_IDLE_STOP_STORAGE_KEY)).toBe('240');
-    expect(getLiveStreamSettings()).toEqual({ newsAutoplay: true, alwaysOn: false, idleStop: 240 });
-  });
-
-  it('pins the effective idle value before turning autoplay on, so the idle select does not flip', () => {
-    setLiveStreamsAlwaysOn(true);
-    expect(localStorage.getItem(LIVE_MEDIA_IDLE_STOP_STORAGE_KEY)).toBe('60');
-    expect(getLiveStreamSettings()).toEqual({ newsAutoplay: true, alwaysOn: true, idleStop: 60 });
-  });
-
-  it('pins a legacy always-on user at never before turning autoplay off', () => {
-    localStorage.setItem(ALWAYS_ON_KEY, 'true');
-    setLiveStreamsAlwaysOn(false);
-    expect(getLiveStreamSettings()).toEqual({ newsAutoplay: true, alwaysOn: false, idleStop: 'never' });
+    expect(getLiveStreamSettings()).toEqual({ newsAutoplay: true, idleStop: 240 });
   });
 
   it('never overwrites an idle value the user already chose', () => {
     localStorage.setItem(LIVE_MEDIA_IDLE_STOP_STORAGE_KEY, '30');
-    setLiveStreamsAlwaysOn(true);
-    setLiveStreamsAlwaysOn(false);
+    setLiveNewsAutoplay(false);
     expect(localStorage.getItem(LIVE_MEDIA_IDLE_STOP_STORAGE_KEY)).toBe('30');
   });
 });
@@ -97,10 +83,10 @@ describe('live stream settings subscription', () => {
 
   it('delivers a fresh snapshot for local writes', () => {
     setLiveMediaIdleStop(15);
-    setLiveStreamsAlwaysOn(true);
+    setLiveNewsAutoplay(false);
     expect(seen).toEqual([
-      { newsAutoplay: true, alwaysOn: false, idleStop: 15 },
-      { newsAutoplay: true, alwaysOn: true, idleStop: 15 },
+      { newsAutoplay: true, idleStop: 15 },
+      { newsAutoplay: false, idleStop: 15 },
     ]);
   });
 
@@ -110,14 +96,14 @@ describe('live stream settings subscription', () => {
     localStorage.setItem(ALWAYS_ON_KEY, 'true');
     dispatchStorage(ALWAYS_ON_KEY);
     expect(seen).toEqual([
-      { newsAutoplay: true, alwaysOn: false, idleStop: 'never' },
-      { newsAutoplay: true, alwaysOn: true, idleStop: 'never' },
+      { newsAutoplay: true, idleStop: 'never' },
+      { newsAutoplay: true, idleStop: 'never' },
     ]);
   });
 
   it('fires when another tab clears storage', () => {
     dispatchStorage(null);
-    expect(seen).toEqual([{ newsAutoplay: true, alwaysOn: false, idleStop: 60 }]);
+    expect(seen).toEqual([{ newsAutoplay: true, idleStop: 60 }]);
   });
 
   it('ignores storage events for unrelated keys', () => {
@@ -135,32 +121,9 @@ describe('live stream settings subscription', () => {
     dispatchCloudApplied(['worldmonitor-theme', LIVE_MEDIA_IDLE_STOP_STORAGE_KEY]);
     dispatchCloudApplied([ALWAYS_ON_KEY]);
     expect(seen).toEqual([
-      { newsAutoplay: true, alwaysOn: false, idleStop: 120 },
-      { newsAutoplay: true, alwaysOn: false, idleStop: 120 },
+      { newsAutoplay: true, idleStop: 120 },
+      { newsAutoplay: true, idleStop: 120 },
     ]);
-  });
-
-  it('delivers only autoplay changes to an always-on subscriber, whatever the source', () => {
-    const alwaysOnChanges: boolean[] = [];
-    const stop = subscribeLiveStreamsAlwaysOnChange((alwaysOn) => alwaysOnChanges.push(alwaysOn));
-
-    setLiveMediaIdleStop(15);
-    localStorage.setItem(LIVE_MEDIA_IDLE_STOP_STORAGE_KEY, '30');
-    dispatchStorage(LIVE_MEDIA_IDLE_STOP_STORAGE_KEY);
-    dispatchCloudApplied([LIVE_MEDIA_IDLE_STOP_STORAGE_KEY]);
-    expect(alwaysOnChanges).toEqual([]);
-
-    setLiveStreamsAlwaysOn(true);
-    setLiveStreamsAlwaysOn(true);
-    localStorage.setItem(ALWAYS_ON_KEY, 'false');
-    dispatchStorage(ALWAYS_ON_KEY);
-    localStorage.setItem(ALWAYS_ON_KEY, 'true');
-    dispatchCloudApplied([ALWAYS_ON_KEY]);
-    expect(alwaysOnChanges).toEqual([true, false, true]);
-
-    stop();
-    setLiveStreamsAlwaysOn(false);
-    expect(alwaysOnChanges).toEqual([true, false, true]);
   });
 
   it('stops delivering after unsubscribe, and unsubscribe is idempotent', () => {

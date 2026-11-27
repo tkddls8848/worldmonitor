@@ -82,7 +82,7 @@ describe('projectionPointAtScreenCentre (#7112)', () => {
  */
 const FEED_SHAPES: Array<[string, unknown, [number, number]]> = [
   ['vessel / flight / base / hotspot (lon,lat)', { lon: 12, lat: 34 }, [34, 12]],
-  ['webcam (lng)', { lng: 12, lat: 34 }, [34, 12]],
+  ['short longitude', { lng: 12, lat: 34 }, [34, 12]],
   ['tech event (lng, null location)', { lng: 12, lat: 34, location: null }, [34, 12]],
   ['iran event (longitude/latitude)', { longitude: 12, latitude: 34 }, [34, 12]],
   ['earthquake (location.*)', { location: { longitude: 12, latitude: 34 } }, [34, 12]],

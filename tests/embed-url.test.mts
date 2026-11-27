@@ -86,13 +86,12 @@ describe('embed URL contract', () => {
   });
 
   it('drops premium, authenticated, and high-frequency layers from public embeds', () => {
-    const parsed = parseEmbedParams('?layers=ais,flights,military,liveTankers,webcams,satellites,sanctions,resilienceScore,ciiChoropleth,conflicts');
+    const parsed = parseEmbedParams('?layers=ais,flights,military,liveTankers,satellites,sanctions,resilienceScore,ciiChoropleth,conflicts');
     assert.deepEqual(parsed.layerIds, ['conflicts']);
     assert.equal(parsed.layers.ais, false);
     assert.equal(parsed.layers.flights, false);
     assert.equal(parsed.layers.military, false);
     assert.equal(parsed.layers.liveTankers, false);
-    assert.equal(parsed.layers.webcams, false);
     // `satellites` is no longer a map layer; the parser drops the unknown key.
     assert.equal(Object.hasOwn(parsed.layers, 'satellites'), false);
     assert.equal(parsed.layers.sanctions, false);

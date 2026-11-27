@@ -467,8 +467,6 @@
       "ddos": "DDoS",
       "anomalies": "Anomalie"
     },
-    "liveWebcams": "Webcam dal Vivo",
-    "windyWebcams": "Webcam Windy dal Vivo",
     "groceryBasket": "Indice Paniere Alimentare",
     "groceryItem": "Articolo",
     "faoFoodPriceIndex": "Prezzi alimentari",
@@ -863,23 +861,6 @@
       "showingMatches": "Mostra {{count}} di {{total}} corrispondenze",
       "match": "corrispondenza",
       "matches": "corrispondenze"
-    },
-    "webcams": {
-      "regions": {
-        "all": "TUTTE",
-        "mideast": "MEDIORIENTE",
-        "europe": "EUROPA",
-        "americas": "AMERICHE",
-        "asia": "ASIA",
-        "space": "SPAZIO"
-      },
-      "paused": "Webcam in pausa",
-      "play": "Guarda in diretta",
-      "previewStatus": "Pronto per la riproduzione",
-      "connecting": "Connessione in corso…",
-      "unverified": "Impossibile confermare che il flusso è in diretta",
-      "offline": "{{city}} è offline in questo momento",
-      "noFeeds": "Nessuna webcam in diretta in questa regione al momento"
     },
     "regulation": {
       "timeline": "Cronologia",
@@ -1817,8 +1798,6 @@
       "badgeAnimDesc": "Animare i badge di aggiornamento nelle intestazioni dei pannelli",
       "headlineMemoryLabel": "Memoria titoli",
       "headlineMemoryDesc": "Ricordare i titoli visti per evidenziare quelli nuovi",
-      "streamAlwaysOnLabel": "Riproduzione automatica webcam live",
-      "streamAlwaysOnDesc": "Avvia i video webcam in diretta non appena sono visibili. Mantieni disattivato per caricarli solo quando li avvii manualmente.",
       "analysisFrameworksLabel": "Framework di Analisi",
       "analysisFrameworksActivePerPanel": "Attivo per pannello",
       "analysisFrameworksSkillLibrary": "Libreria competenze",
@@ -1860,7 +1839,7 @@
       "briefFreshness": "Generato {{minutes}}m fa · fonte più recente {{hours}}h fa",
       "briefStoryDetails": "Dettagli della notizia ({{count}})",
       "streamIdleStopLabel": "Arresta il video in diretta durante l'inattività",
-      "streamIdleStopDesc": "Interrompe Live News e Live Webcams dopo questo periodo di inattività e mostra un avviso nel pannello.",
+      "streamIdleStopDesc": "Interrompe Live News dopo questo periodo di inattività e mostra un avviso nel pannello.",
       "streamIdleStopNever": "Mai",
       "liveNewsAutoplayLabel": "Riproduzione automatica notizie in diretta",
       "liveNewsAutoplayDesc": "Avvia il video delle notizie in diretta, senza audio, non appena è visibile. Disattiva per caricare il video solo quando lo avvii manualmente."
@@ -2288,9 +2267,6 @@
       "analysisDate": "Analisi WTO {{date}}",
       "indexNote": "Indice dei carichi per volume, media gennaio–marzo 2025 = 100"
     },
-    "liveWebcams": {
-      "infoTooltip": "<strong>Webcam in diretta</strong> Feed in diretta da luoghi geopoliticamente significativi in tutto il mondo: zone di conflitto, capitali, valichi di frontiera e punti di strozzatura strategici. Stream da YouTube e reti pubbliche."
-    },
     "macroTiles": {
       "infoTooltip": "<strong>Macro indicators</strong> Indicatori di prezzi, attività, politica e valute per Stati Uniti, area dell'euro e Cina. La Cina richiede una copertura attuale. Ogni riquadro mostra la sua fonte e la data di osservazione."
     },
@@ -2308,9 +2284,6 @@
     },
     "yieldCurve": {
       "infoTooltip": "<strong>Yield Curve &amp; Rates</strong> Curva dei rendimenti dei Treasury statunitensi (2Y, 5Y, 10Y, 30Y) e spread di tassi chiave incluso l'indicatore di inversione 10Y-2Y. Mostra anche i tassi dell'area dell'euro (EURIBOR, ESTR). Una curva invertita storicamente precede le recessioni. Fonte: Dati economici della Federal Reserve."
-    },
-    "pinnedWebcams": {
-      "pinFromMap": "Fissa una webcam dalla mappa"
     },
     "breakthroughsTicker": {
       "noData": "Nessuna scoperta scientifica ancora"

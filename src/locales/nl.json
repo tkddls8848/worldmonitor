@@ -83,8 +83,6 @@
       "ddos": "DDoS",
       "anomalies": "Anomalieën"
     },
-    "liveWebcams": "Live webcams",
-    "windyWebcams": "Windy Live Webcam",
     "groceryBasket": "Boodschappenmandindex",
     "groceryItem": "Artikel",
     "faoFoodPriceIndex": "Voedselprijzen",
@@ -478,23 +476,6 @@
       "showingMatches": "Toont {{count}} van {{total}} overeenkomsten",
       "match": "overeenkomst",
       "matches": "wedstrijden"
-    },
-    "webcams": {
-      "regions": {
-        "all": "ALLE",
-        "mideast": "MIDDEN-OOSTEN",
-        "europe": "EUROPA",
-        "americas": "AMERIKA",
-        "asia": "AZIË",
-        "space": "RUIMTE"
-      },
-      "paused": "Webcams gepauzeerd",
-      "play": "Bekijk live",
-      "previewStatus": "Klaar om af te spelen",
-      "connecting": "Verbinding wordt tot stand gebracht…",
-      "unverified": "Kan niet bevestigen dat deze stream live is",
-      "offline": "{{city}} is momenteel offline",
-      "noFeeds": "Geen live webcams in deze regio op dit moment"
     },
     "playback": {
       "live": "Live",
@@ -1281,8 +1262,6 @@
       "badgeAnimDesc": "Update-badges in paneelkoppen animeren",
       "headlineMemoryLabel": "Koptekstgeheugen",
       "headlineMemoryDesc": "Gezien koppen onthouden om nieuwe te markeren",
-      "streamAlwaysOnLabel": "Live webcams automatisch afspelen",
-      "streamAlwaysOnDesc": "Start de live webcamvideo's automatisch zodra deze op het scherm verschijnen. Laat dit uit om ze alleen te laden wanneer je deze zelf start.",
       "analysisFrameworksLabel": "Analyseframeworks",
       "analysisFrameworksActivePerPanel": "Actief per paneel",
       "analysisFrameworksSkillLibrary": "Vaardighedenbibliotheek",
@@ -1323,7 +1302,7 @@
       "briefFreshness": "Gegenereerd {{minutes}}m geleden · nieuwste bron {{hours}}h oud",
       "briefStoryDetails": "Details van het bericht ({{count}})",
       "streamIdleStopLabel": "Livevideostream stoppen bij inactiviteit",
-      "streamIdleStopDesc": "Stopt Live News en Live Webcams na deze periode zonder activiteit en toont een melding in het paneel.",
+      "streamIdleStopDesc": "Stopt Live News na deze periode zonder activiteit en toont een melding in het paneel.",
       "streamIdleStopNever": "Nooit",
       "liveNewsAutoplayLabel": "Automatisch afspelen van live nieuws",
       "liveNewsAutoplayDesc": "Start de live nieuwsvideo automatisch, zonder geluid, zodra deze op het scherm verschijnt. Zet dit uit om de video alleen te laden wanneer je deze zelf start."
@@ -1896,9 +1875,6 @@
       "analysisDate": "WTO-analyse {{date}}",
       "indexNote": "Verzendingsindex op volume, gemiddelde januari–maart 2025 = 100"
     },
-    "liveWebcams": {
-      "infoTooltip": "<strong>Live webcams</strong> Livestreams van geopolitiek significante locaties wereldwijd: conflictzones, hoofdsteden, grensovergangen en strategische knelpunten. Streams van YouTube en openbare netwerken."
-    },
     "macroTiles": {
       "infoTooltip": "<strong>Macro indicators</strong> VS, eurozone en China prijs-, activiteits-, beleid- en valuta-indicatoren. China vereist huidige berichtgeving. Elk vak toont zijn bron en observatiedatum."
     },
@@ -1916,9 +1892,6 @@
     },
     "yieldCurve": {
       "infoTooltip": "<strong>Yield Curve &amp; Rates</strong> US Treasury yield curve (2Y, 5Y, 10Y, 30Y) en belangrijke spread-indicatoren inclusief de 10Y-2Y inversie-indicator. Toont ook eurozone-rente (EURIBOR, ESTR). Een geïnverteerde curve voorafgaat historisch gezien aan recessies. Bron: Federal Reserve Economic Data."
-    },
-    "pinnedWebcams": {
-      "pinFromMap": "Pin een webcam vanuit de kaart"
     },
     "breakthroughsTicker": {
       "noData": "Nog geen wetenschappelijke doorbraken"

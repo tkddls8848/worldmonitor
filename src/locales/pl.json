@@ -469,8 +469,6 @@
       "ddos": "DDoS",
       "anomalies": "Anomalie"
     },
-    "liveWebcams": "Live Webkamery",
-    "windyWebcams": "Windy Live Webkamera",
     "groceryBasket": "Indeks Koszyka Spożywczego",
     "groceryItem": "Artykuł",
     "faoFoodPriceIndex": "Ceny żywności",
@@ -866,23 +864,6 @@
       "showingMatches": "Wyświetlanie {{count}} z {{total}} dopasowań",
       "match": "mecz",
       "matches": "zapałki"
-    },
-    "webcams": {
-      "regions": {
-        "all": "WSZYSTKIE",
-        "mideast": "BLISKI WSCHÓD",
-        "europe": "EUROPA",
-        "americas": "AMERYKI",
-        "asia": "AZJA",
-        "space": "KOSMOS"
-      },
-      "paused": "Kamery wstrzymane",
-      "play": "Oglądaj na żywo",
-      "previewStatus": "Gotowe do odtworzenia",
-      "connecting": "Łączenie…",
-      "unverified": "Nie można potwierdzić, że ten strumień jest na żywo",
-      "offline": "{{city}} jest teraz offline",
-      "noFeeds": "W tej chwili brak aktywnych kamer internetowych w tym regionie"
     },
     "regulation": {
       "timeline": "Oś czasu",
@@ -1727,8 +1708,6 @@
       "badgeAnimDesc": "Animuj odznaki aktualizacji w nagłówkach paneli",
       "headlineMemoryLabel": "Pamięć nagłówków",
       "headlineMemoryDesc": "Zapamiętuj widziane nagłówki, aby wyróżnić nowe",
-      "streamAlwaysOnLabel": "Automatyczne odtwarzanie transmisji na żywo z kamer",
-      "streamAlwaysOnDesc": "Rozpoczyna transmisje z kamer internetowych zaraz po ich pojawienia się na ekranie. Pozostaw tę opcję wyłączoną, aby załadować je tylko po ręcznym uruchomieniu.",
       "analysisFrameworksLabel": "Frameworki analizy",
       "analysisFrameworksActivePerPanel": "Aktywne na panelu",
       "analysisFrameworksSkillLibrary": "Biblioteka umiejętności",
@@ -1771,7 +1750,7 @@
       "briefFreshness": "Wygenerowano {{minutes}}m temu · najnowsze źródło sprzed {{hours}}h",
       "briefStoryDetails": "Szczegóły wiadomości ({{count}})",
       "streamIdleStopLabel": "Zatrzymaj transmisję live gdy nieaktywna",
-      "streamIdleStopDesc": "Zatrzymuje Live News i Live Webcams po tym czasie bez aktywności i wyświetla powiadomienie w panelu.",
+      "streamIdleStopDesc": "Zatrzymuje Live News po tym czasie bez aktywności i wyświetla powiadomienie w panelu.",
       "streamIdleStopNever": "Nigdy",
       "liveNewsAutoplayLabel": "Automatyczne odtwarzanie aktualności na żywo",
       "liveNewsAutoplayDesc": "Rozpoczyna odtwarzanie wideo aktualności na żywo, bez dźwięku, zaraz po jego pojawienia się na ekranie. Wyłącz tę opcję, aby wideo załadowało się tylko po jego ręcznym uruchomieniu."
@@ -2298,9 +2277,6 @@
       "analysisDate": "Analiza WTO {{date}}",
       "indexNote": "Indeks wysyłek według objętości, średnia ze stycznia–marca 2025 = 100"
     },
-    "liveWebcams": {
-      "infoTooltip": "<strong>Kamery na żywo</strong> Transmisje na żywo z geopolitycznie istotnych miejsc na całym świecie: strefy konfliktu, stolice, przejścia graniczne i strategiczne wąskie gardła. Transmisje z YouTube i sieci publicznych."
-    },
     "macroTiles": {
       "infoTooltip": "<strong>Macro indicators</strong> Wskaźniki cen, aktywności, polityki i walut dla USA, strefy euro i Chin. Chiny wymagają aktualnego pokrycia. Każdy kafelek pokazuje jego źródło i datę obserwacji."
     },
@@ -2318,9 +2294,6 @@
     },
     "yieldCurve": {
       "infoTooltip": "<strong>Yield Curve &amp; Rates</strong> Krzywa rentowności obligacji skarbowych USA (2Y, 5Y, 10Y, 30Y) i kluczowe spready stóp procentowych, w tym wskaźnik inwersji 10Y-2Y. Wyświetla również stopy strefy euro (EURIBOR, ESTR). Odwrócona krzywa historycznie poprzedza recesje. Źródło: Federal Reserve Economic Data."
-    },
-    "pinnedWebcams": {
-      "pinFromMap": "Przypnij kamerę internetową z mapy"
     },
     "breakthroughsTicker": {
       "noData": "Brak przełomów naukowych"

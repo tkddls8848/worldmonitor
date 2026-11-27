@@ -77,7 +77,6 @@ World Monitor's API is organized into domain-specific services:
 | **Thermal** | Thermal escalation and fire-hotspot detection |
 | **Trade** | WTO and US Treasury trade-policy intelligence |
 | **Unrest** | Social unrest from GDELT |
-| **Webcam** | Live public webcam feeds |
 | **Wildfire** | Wildfire tracking and perimeters |
 
 Each domain has its own edge function, proto definitions, and TypeScript client.

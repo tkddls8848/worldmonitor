@@ -435,7 +435,7 @@ function renderVerifyBreakingNewsUseCase({ tpl, baseUrl, lastmod }) {
         <li id="step-capture-the-claim-precisely"><strong>Capture the claim precisely.</strong> Write the exact wording, claimed location, time window, and decision deadline. Separate what is asserted from what is merely implied.</li>
         <li id="step-assess-the-original-source"><strong>Assess the original source.</strong> Note publication time, first-hand vs derivative media, and the repost chain. Treat wire pickup as reach, not independent confirmation.</li>
         <li id="step-check-news-velocity-without-equating-repetition-to-proof"><strong>Check news velocity without equating repetition to proof.</strong> Look at topic velocity, hotspot movement, and outlet diversity. Many copies of one video are still one source family.</li>
-        <li id="step-test-only-relevant-independent-signals"><strong>Test only relevant independent signals.</strong> Use AIS/maritime, aviation/NOTAMs, FIRMS thermal, seismic, connectivity/outages, webcams, or country context when the claim’s physics or geography would leave a fingerprint. Skip layers that cannot speak to this claim.</li>
+        <li id="step-test-only-relevant-independent-signals"><strong>Test only relevant independent signals.</strong> Use AIS/maritime, aviation/NOTAMs, FIRMS thermal, seismic, connectivity/outages or country context when the claim’s physics or geography would leave a fingerprint. Skip layers that cannot speak to this claim.</li>
         <li id="step-record-freshness-fit-and-contradictions"><strong>Record freshness, fit, and contradictions.</strong> Log observation time, spatial/temporal mismatch, missing coverage that can explain a quiet sensor, and any signal that conflicts with the claim.</li>
         <li id="step-assign-a-qualified-outcome"><strong>Assign a qualified outcome.</strong> Choose supported, contradicted, unresolved, or stale — with uncertainty visible — then continue into the exact dashboard, Pro alert, API, or MCP action below.</li>
       </ol>
@@ -451,14 +451,14 @@ function renderVerifyBreakingNewsUseCase({ tpl, baseUrl, lastmod }) {
 
       <h2>Worked example: Gulf port explosion claim</h2>
       <p>A social post claims a major explosion at a Gulf port with operations halted. Capture the exact port name, claimed minute, and the video’s alleged capture time.</p>
-      <p><strong>Supporting path:</strong> AIS cells near the berth show ships holding offshore, FIRMS records a thermal anomaly inside the claimed window, and a nearby webcam shows an abnormal skyline. The note records “supported pending primary reporting” with observation timestamps.</p>
+      <p><strong>Supporting path:</strong> AIS cells near the berth show ships holding offshore, FIRMS records a thermal anomaly inside the claimed window. The note records “supported pending primary reporting” with observation timestamps.</p>
       <p><strong>Uncertainty path:</strong> the same claim with only social reposts, no AIS anomaly in a thinly covered AIS region, no thermal hit on the next satellite pass, and a silent seismic network near a dense station field becomes “unresolved / possibly recycled.” Absence of AIS here is weak evidence of calm, not proof the event did not occur.</p>
 
       <h2>Provenance, freshness, and limits</h2>
       <ul>
         <li><strong>Provenance:</strong> AIS aggregators, NASA FIRMS, USGS seismic catalogs, flight/NOTAM feeds, Cloudflare Radar-style connectivity signals, and World Monitor convergence scoring each disclose different publishers and coverage.</li>
         <li><strong>Freshness:</strong> AIS and flights can move in minutes; thermal passes can lag hours; news velocity can spike before sensors settle. Always stamp the verification note with observation time.</li>
-        <li><strong>Blind spots:</strong> thin AIS regions, small events below sensor thresholds, cloud-obscured thermal passes, webcam geometry, and claims about intent rather than physics.</li>
+        <li><strong>Blind spots:</strong> thin AIS regions, small events below sensor thresholds, cloud-obscured thermal passes, and claims about intent rather than physics.</li>
         <li><strong>What World Monitor cannot prove:</strong> that a quiet map means nothing happened, or that repeated headlines are independent confirmations.</li>
       </ul>
 
@@ -498,7 +498,7 @@ function renderVerifyBreakingNewsUseCase({ tpl, baseUrl, lastmod }) {
     },
     {
       name: 'Test only relevant independent signals',
-      text: 'Use AIS/maritime, aviation/NOTAMs, FIRMS thermal, seismic, connectivity/outages, webcams, or country context when the claim’s physics or geography would leave a fingerprint. Skip layers that cannot speak to this claim.',
+      text: 'Use AIS/maritime, aviation/NOTAMs, FIRMS thermal, seismic, connectivity/outages or country context when the claim’s physics or geography would leave a fingerprint. Skip layers that cannot speak to this claim.',
     },
     {
       name: 'Record freshness, fit, and contradictions',

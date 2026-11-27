@@ -42,7 +42,7 @@ Activate curated layer combinations with a single command:
 
 ### Panel Shortcuts (50+)
 
-Open any panel: news feed, intelligence brief, CII rankings, markets, commodities, crypto, predictions, webcams, world brief, strategic posture, and dozens more.
+Open any panel: news feed, intelligence brief, CII rankings, markets, commodities, crypto, predictions, world brief, strategic posture, and dozens more.
 
 ### View Controls
 
@@ -117,7 +117,7 @@ The command palette is panel-aware. When you have specific panels open, related 
 
 1. Cmd+K → country name → Enter (dossier)
 2. Cmd+K → "intelligence" preset → Enter (all OSINT layers)
-3. Cmd+K → "webcam" → Enter (live video)
+3. Cmd+K → "live news" → Enter (live video)
 4. Cmd+K → "telegram" → Enter (OSINT channels)
 
 ### Market Open Preparation (45 seconds)

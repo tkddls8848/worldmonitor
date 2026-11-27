@@ -11,10 +11,7 @@ interface ActiveLiveMedia {
   stop: (reason: LiveMediaStopReason) => void;
 }
 
-// One entry per panel. A panel that owns a single player (Live News) registers here so
-// switching its stream replaces the previous one. Panels do NOT evict each other: explicitly
-// played feeds coexist (the dashboard "wall"), gated only by user intent. Multi-stream panels
-// (the webcam grid) track their own active set and stay out of this map.
+// One entry per panel. Switching a panel's stream replaces its previous stream.
 const activeLiveMedia = new Map<string, ActiveLiveMedia>();
 
 function stopActiveEntry(entry: ActiveLiveMedia, reason: LiveMediaStopReason): void {
@@ -61,8 +58,7 @@ export function getActiveLiveMedia(panelId?: string): ActiveLiveMediaSnapshot | 
   };
 }
 
-// "Play all" cascade: each live panel registers a starter so the first play intent anywhere
-// (a webcam tile or Live News) lights up every live panel at once. Starters are idempotent.
+// A play request triggers the registered starters. Starters are idempotent.
 type LiveMediaStarter = () => void;
 const liveMediaStarters = new Map<string, LiveMediaStarter>();
 

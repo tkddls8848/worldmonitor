@@ -8,13 +8,12 @@ import { parseSourceEntry } from '../../src/services/live-video/model.ts';
 export const MAX_REFRESH_CHANNELS = 60;
 
 /**
- * Every channel a catalog slot lists, once, in catalog order (webcams, then Live News), with the slots that list it
- * (`webcams/<id>`, `live-news/<id>`). With `includeCanaries`, the audit canaries follow as `canary/<n>`.
+ * Every channel a catalog slot lists, once, in catalog order, with the slots that list it
+ * (`live-news/<id>`). With `includeCanaries`, the audit canaries follow as `canary/<n>`.
  * Throws above MAX_REFRESH_CHANNELS.
  */
 export function refreshChannels(catalog, { includeCanaries = false } = {}) {
   const sources = [
-    ...Object.entries(catalog.webcams ?? {}).map(([id, entries]) => [`webcams/${id}`, entries]),
     ...Object.entries(catalog.news ?? {}).map(([id, entries]) => [`live-news/${id}`, entries]),
     ...(includeCanaries ? (catalog.canaries ?? []).map((entry, index) => [`canary/${index + 1}`, [entry]]) : []),
   ];

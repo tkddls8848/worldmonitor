@@ -757,7 +757,6 @@ export interface MapLayers {
   miningSites: boolean;
   processingPlants: boolean;
   commodityPorts: boolean;
-  webcams: boolean;
   // Health layers
   diseaseOutbreaks: boolean;
   // Energy variant layers (new — optional so existing MapLayers literals

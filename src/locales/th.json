@@ -463,8 +463,6 @@
       "ddos": "DDoS",
       "anomalies": "ความผิดปกติ"
     },
-    "liveWebcams": "กล้องเว็บสด",
-    "windyWebcams": "กล้องเว็บสด Windy",
     "groceryBasket": "ดัชนีสินค้าชุมชน",
     "groceryItem": "สินค้า",
     "faoFoodPriceIndex": "ราคาอาหาร",
@@ -849,23 +847,6 @@
     }
   },
   "components": {
-    "webcams": {
-      "paused": "กล้องหยุดชั่วคราว",
-      "regions": {
-        "all": "ทั้งหมด",
-        "mideast": "ตะวันออกกลาง",
-        "europe": "ยุโรป",
-        "americas": "อเมริกา",
-        "asia": "เอเชีย",
-        "space": "อวกาศ"
-      },
-      "play": "ดูสด",
-      "previewStatus": "พร้อมที่จะเล่น",
-      "connecting": "กำลังเชื่อมต่อ…",
-      "unverified": "ไม่สามารถยืนยันว่าสตรีมนี้ออนไลน์ได้",
-      "offline": "{{city}} ออฟไลน์ในขณะนี้",
-      "noFeeds": "ไม่มีเว็บแคมสดในภูมิภาคนี้ในขณะนี้"
-    },
     "positiveNewsFeed": {
       "noStories": "ยังไม่มีเรื่องราวในหมวดนี้"
     },
@@ -1467,8 +1448,6 @@
       "badgeAnimDesc": "แสดงแอนิเมชันป้ายอัปเดตบนส่วนหัวของแผง",
       "headlineMemoryLabel": "หน่วยความจำพาดหัว",
       "headlineMemoryDesc": "จดจำพาดหัวที่เคยดูเพื่อเน้นข่าวใหม่",
-      "streamAlwaysOnLabel": "เล่นเว็บแคมสดโดยอัตโนมัติ",
-      "streamAlwaysOnDesc": "เริ่มเล่นวิดีโอเว็บแคมสดโดยอัตโนมัติ ทันทีที่ปรากฏบนหน้าจอ ปิดตัวเลือกนี้เพื่อโหลดเฉพาะเมื่อคุณเล่นด้วยตัวเอง",
       "analysisFrameworksLabel": "กรอบการวิเคราะห์",
       "analysisFrameworksActivePerPanel": "ใช้งานต่อแผง",
       "analysisFrameworksSkillLibrary": "ไลบรารีทักษะ",
@@ -1508,7 +1487,7 @@
       "briefFreshness": "สร้างเมื่อ {{minutes}}m ที่แล้ว · แหล่งข้อมูลล่าสุด {{hours}}h เก่า",
       "briefStoryDetails": "รายละเอียดข่าว ({{count}})",
       "streamIdleStopLabel": "หยุดวิดีโอสดเมื่อไม่มีกิจกรรม",
-      "streamIdleStopDesc": "หยุด Live News และ Live Webcams หลังจากที่ไม่มีกิจกรรมนาน ๆ และแสดงประกาศในแผง",
+      "streamIdleStopDesc": "หยุด Live News หลังจากที่ไม่มีกิจกรรมนาน ๆ และแสดงประกาศในแผง",
       "streamIdleStopNever": "ไม่เลย",
       "liveNewsAutoplayLabel": "เล่นข่าวสดโดยอัตโนมัติ",
       "liveNewsAutoplayDesc": "เริ่มเล่นวิดีโอข่าวสดโดยปิดเสียง ทันทีที่ปรากฏบนหน้าจอ ปิดตัวเลือกนี้เพื่อโหลดวิดีโอเฉพาะเมื่อคุณเล่นด้วยตัวเอง"
@@ -2268,9 +2247,6 @@
       "analysisDate": "การวิเคราะห์ WTO {{date}}",
       "indexNote": "ดัชนีการขนส่งจากปริมาณ ค่าเฉลี่ยเดือนมกราคม–มีนาคม 2025 = 100"
     },
-    "liveWebcams": {
-      "infoTooltip": "<strong>เว็บแคมสด</strong> ถ่ายทอดสดจากสถานที่ที่มีความสำคัญทางภูมิรัฐศาสตร์ทั่วโลก: เขตขัดแย้ง เมืองหลวง จุดข้ามพรมแดน และจุดคอขวดเชิงยุทธศาสตร์ สตรีมจาก YouTube และเครือข่ายสาธารณะ"
-    },
     "macroTiles": {
       "infoTooltip": "<strong>Macro indicators</strong> ราคา US euro area และ China กิจกรรม นโยบาย และตัวบ่งชี้สกุลเงิน China ต้องการหลักฐานการครอบคลุมปัจจุบัน แต่ละไทล์แสดงแหล่งที่มาและวันที่สังเกตการณ์"
     },
@@ -2288,9 +2264,6 @@
     },
     "yieldCurve": {
       "infoTooltip": "<strong>Yield Curve &amp; Rates</strong> เส้นอัตราผลตอบแทนพันธบัตรสหรัฐฯ (2Y, 5Y, 10Y, 30Y) และสเปรดอัตราสำคัญรวมถึงตัวบ่งชี้การกลับด้าน 10Y-2Y นอกจากนี้ยังแสดงอัตรา Euro area (EURIBOR, ESTR) เส้นโค้งแบบกลับด้านในอดีตนำหน้าการถดถอย แหล่งที่มา: Federal Reserve Economic Data"
-    },
-    "pinnedWebcams": {
-      "pinFromMap": "ปักหมุดกล้องเว็บแคมจากแผนที่"
     },
     "breakthroughsTicker": {
       "noData": "ยังไม่มีความก้าวหน้าทางวิทยาศาสตร์"

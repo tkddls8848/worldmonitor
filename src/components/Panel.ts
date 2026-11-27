@@ -81,8 +81,7 @@ function getRowSpan(element: HTMLElement): number {
   if (spanClass !== null && element.classList.contains('resized')) return spanClass;
 
   // Otherwise the rendered span is the resize baseline the user sees. The
-  // natural webcam wall takes three rows (#8276), and the CLS-pinned span-2
-  // defaults take four on desktop, so their classes understate it.
+  // CLS-pinned span-2 defaults take four rows on desktop, so their classes understate it.
   if (typeof window !== 'undefined' && typeof window.getComputedStyle === 'function') {
     const match = /^span\s+([1-4])(?:\s|$)/.exec(window.getComputedStyle(element).gridRowStart);
     if (match) return Number(match[1]);
@@ -318,7 +317,7 @@ export class Panel {
       this.header.appendChild(this.countEl);
     }
 
-    if (options.id !== 'live-news' && options.id !== 'live-webcams') {
+    if (options.id !== 'live-news') {
       this.appendExpandModalButton();
     }
 
@@ -1551,7 +1550,7 @@ export class Panel {
   private filterChoiceListener: ((value: string | null) => void) | null = null;
 
   /**
-   * A panel's own filter choice (forecast region, webcam region; #10453
+   * A panel's own filter choice (forecast region; #10453
    * phase 2). A panel that owns one overrides `getFilterChoice` (null while
    * unfiltered) and `setFilterChoice`, and calls `reportFilterChoice` when
    * the user changes it. The layout saves the value with the tab, so it

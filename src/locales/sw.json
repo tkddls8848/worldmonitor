@@ -530,8 +530,6 @@
     "techReadiness": "Kielezo cha Utayari wa Tech",
     "gccInvestments": "Uwekezaji wa Baraza la Ushirikiano la Ghuba",
     "geoHubs": "Hubs za Kijiografia",
-    "liveWebcams": "Kamera za Wavuti za moja kwa moja",
-    "windyWebcams": "Kamera ya moja kwa moja ya Windy",
     "gulfEconomies": "Uchumi wa Ghuba",
     "groceryBasket": "Kielezo cha mboga",
     "groceryItem": "Kipengee",
@@ -921,26 +919,6 @@
     }
   },
   "components": {
-    "webcams": {
-      "paused": "Kamera za wavuti zimesitishwa",
-      "play": "Tazama moja kwa moja",
-      "previewStatus": "Tayari kucheza",
-      "regions": {
-        "all": "YOTE",
-        "mideast": "KATI",
-        "europe": "ULAYA",
-        "americas": "MAREKANI",
-        "asia": "ASIA",
-        "space": "NAFASI"
-      },
-      "connecting": "Inaunganisha…",
-      "unverified": "Haiwezekani kuthibitisha kwamba mtiririko huu ni wa moja kwa moja",
-      "offline": "{{city}} haiko hewani kwa sasa",
-      "noFeeds": "Hakuna kamera za wavuti za moja kwa moja katika eneo hili kwa sasa"
-    },
-    "pinnedWebcams": {
-      "pinFromMap": "Bandika kamera ya wavuti kutoka kwenye ramani"
-    },
     "positiveNewsFeed": {
       "noStories": "Bado hakuna hadithi katika kategoria hii"
     },
@@ -1627,8 +1605,6 @@
       "analysisFrameworksFromAgentskills": "Kutoka kwa agentskills.io",
       "analysisFrameworksPasteJson": "Bandika JSON",
       "analysisFrameworksSaveToLibrary": "Hifadhi kwenye Maktaba",
-      "streamAlwaysOnLabel": "Kucheza kamera moja kwa moja kiotomatiki",
-      "streamAlwaysOnDesc": "Huanza video za kamera moja kwa moja mara tu zinavyoonekana. Acha hii kuwa imezimwa ili kupakia hizo tu wakati unapozisimamisha mwenyewe.",
       "frameworkNote": "Inatumika kwa uchanganuzi unaozalishwa na mteja pekee",
       "loadingServerInsights": "Inapakia maarifa ya seva...",
       "usingCachedBrief": "Inatumia muhtasari ulioakibishwa...",
@@ -1660,7 +1636,7 @@
       "briefFreshness": "Ilizalishwa dakika {{minutes}} zilizopita · chanzo kipya zaidi cha saa {{hours}}",
       "briefStoryDetails": "Maelezo ya habari ({{count}})",
       "streamIdleStopLabel": "Simamisha video moja kwa moja wakati umekaa bila kufanya kitu",
-      "streamIdleStopDesc": "Husimamisha Habari za Moja kwa Moja na Kamera za Moja kwa Moja baada ya muda huu bila shughuli na kuonyesha onyo katika paneli.",
+      "streamIdleStopDesc": "Husimamisha Habari za Moja kwa Moja baada ya muda huu bila shughuli na kuonyesha onyo katika paneli.",
       "streamIdleStopNever": "Kamwe",
       "liveNewsAutoplayLabel": "Taslimia kiotomatiki habari moja kwa moja",
       "liveNewsAutoplayDesc": "Huanza video ya habari moja kwa moja, bila sauti, mara tu inapoonekana. Zima hii ili kupakia video tu wakati unapoisimamisha mwenyewe."
@@ -2564,9 +2540,6 @@
       "units": {
         "index": "fahirisi"
       }
-    },
-    "liveWebcams": {
-      "infoTooltip": "<strong>Kamera za Wavuti za Moja kwa Moja</strong> Mipasho ya moja kwa moja kutoka maeneo muhimu ya kijiografia duniani kote: maeneo ya migogoro, miji mikuu, vivuko vya mipaka, na maeneo ya kimkakati ya kukokota. Mitiririko kutoka kwa YouTube na mitandao ya umma."
     },
     "macroTiles": {
       "infoTooltip": "<strong>Macro indicators</strong> Wamarekani, eneo la euro na viashiria vya bei ya China, shughuli, sera na fedha. China inahitaji kufuatiliwa kwa sasa. Kila tile inaonyesha chanzo chake na tarehe ya uchunguzi."

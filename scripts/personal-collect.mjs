@@ -38,7 +38,7 @@ export const STANDALONE_INTERVAL_MIN = {
   'thermal-escalation': 120, 'military-cii': 15, 'military-maritime-news': 60, 'infra': 15,
   'aviation': 30, 'notam-nms': 30, 'ioda-outages': 30, 'fire-detections': 60, 'radiation-watch': 15,
   'imd-cyclone-marine': 60, 'no2-activity': 1440, 'cve-reference': 720, 'research': 45,
-  'country-history': 1440, 'webcams': 480, 'forecast-resolutions': 720, 'forecast-bets': 720,
+  'country-history': 1440, 'forecast-resolutions': 720, 'forecast-bets': 720,
   'funding-stress': 240,
   'treasury-auctions': 60,
   'pink-sheet': 1440,

@@ -97,7 +97,7 @@ export class FakeYouTubePlayer implements YouTubePlayerLike {
 export interface FakeYouTubeIframeApi {
   readonly namespace: YouTubeNamespaceLike;
   readonly players: FakeYouTubePlayer[];
-  /** The newest player whose iframe has this title, e.g. 'Jerusalem live webcam'. */
+  /** The newest player whose iframe has this title, e.g. 'Live News'. */
   playerFor(title: string): FakeYouTubePlayer;
 }
 

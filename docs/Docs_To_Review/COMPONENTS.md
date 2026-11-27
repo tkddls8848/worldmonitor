@@ -691,19 +691,6 @@ domain-specific markup.
 | **DOM** | `.prediction-item` with question text, volume, yes/no percentage bars. |
 | **Variant** | All |
 
-#### LiveWebcamsPanel
-
-| Field | Detail |
-|---|---|
-| **File** | `src/components/LiveWebcamsPanel.ts` |
-| **Panel ID** | `live-webcams` |
-| **Purpose** | Grid of live YouTube webcam feeds from global locations. |
-| **Data** | Hardcoded `WEBCAM_FEEDS` (YouTube channels). |
-| **Variant** | All |
-| **Notes** | Region filters, grid/single view toggle, idle pause. |
-
----
-
 ### Markets & Finance Panels
 
 #### MarketPanel
@@ -1085,7 +1072,6 @@ small UI affordances.
 | NewsPanel | ✅ | ✅ | ✅ |
 | LiveNewsPanel | ✅ | ✅ | — |
 | PredictionPanel | ✅ | ✅ | ✅ |
-| LiveWebcamsPanel | ✅ | ✅ | ✅ |
 | MarketPanel | ✅ | ✅ | ✅ |
 | HeatmapPanel | ✅ | ✅ | ✅ |
 | CommoditiesPanel | ✅ | ✅ | ✅ |
@@ -1162,7 +1148,6 @@ graph TD
         NP[NewsPanel]
         LNP[LiveNewsPanel]
         PP[PredictionPanel]
-        LWP[LiveWebcamsPanel]
     end
 
     subgraph Markets["Markets & Finance"]
@@ -1307,7 +1292,6 @@ export { StrategicRiskPanel } from './StrategicRiskPanel';
 export { RegulationPanel } from './RegulationPanel';
 export { ServiceStatusPanel } from './ServiceStatusPanel';
 export { RuntimeConfigPanel } from './RuntimeConfigPanel';
-export { LiveWebcamsPanel } from './LiveWebcamsPanel';
 
 // Map system
 export { DeckGLMap } from './DeckGLMap';

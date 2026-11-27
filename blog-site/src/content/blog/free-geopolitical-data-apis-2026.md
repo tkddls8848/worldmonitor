@@ -144,7 +144,7 @@ Start with the job, not the source:
 | Job | Start with | Add next |
 |---|---|---|
 | Conflict event map | ACLED | UCDP for historical baseline, GDELT for narrative confirmation |
-| Breaking-news verification | GDELT | WorldMonitor news intelligence, webcams, USGS/FIRMS/Radar when relevant |
+| Breaking-news verification | GDELT | WorldMonitor news intelligence, USGS/FIRMS/Radar when relevant |
 | Country-risk score | WorldMonitor | ACLED, UCDP, sanctions, advisory, macro, and news sources |
 | Disaster/infrastructure alert | USGS or FIRMS | Cloudflare Radar, news, port/aviation data |
 | Internet outage context | Cloudflare Radar | news, conflict events, power/weather signals |

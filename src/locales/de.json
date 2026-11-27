@@ -465,8 +465,6 @@
       "ddos": "DDoS",
       "anomalies": "Anomalien"
     },
-    "liveWebcams": "Live-Webcams",
-    "windyWebcams": "Windy Live-Webcam",
     "groceryBasket": "Lebensmittelindex",
     "groceryItem": "Artikel",
     "faoFoodPriceIndex": "Lebensmittelpreise",
@@ -860,23 +858,6 @@
       "showingMatches": "{{count}} von {{total}} Treffern werden angezeigt",
       "match": "Treffer",
       "matches": "Treffer"
-    },
-    "webcams": {
-      "regions": {
-        "all": "ALLE",
-        "mideast": "NAHOST",
-        "europe": "EUROPA",
-        "americas": "AMERIKA",
-        "asia": "ASIEN",
-        "space": "WELTRAUM"
-      },
-      "paused": "Webcams pausiert",
-      "play": "Live ansehen",
-      "previewStatus": "Bereit zum Abspielen",
-      "connecting": "Verbindung wird hergestellt…",
-      "unverified": "Dieser Stream kann nicht als live bestätigt werden",
-      "offline": "{{city}} ist gerade offline",
-      "noFeeds": "Keine Live-Webcams in dieser Region verfügbar"
     },
     "regulation": {
       "timeline": "Zeitleiste",
@@ -1813,8 +1794,6 @@
       "badgeAnimDesc": "Update-Badges in Panel-Kopfzeilen animieren",
       "headlineMemoryLabel": "Schlagzeilen-Speicher",
       "headlineMemoryDesc": "Gesehene Schlagzeilen merken, um neue hervorzuheben",
-      "streamAlwaysOnLabel": "Automatische Wiedergabe von Live-Webcams",
-      "streamAlwaysOnDesc": "Startet die Live-Webcam-Videos automatisch, sobald sie auf dem Bildschirm angezeigt werden. Lassen Sie dies deaktiviert, um sie nur zu laden, wenn Sie sie selbst starten.",
       "analysisFrameworksLabel": "Analyse-Frameworks",
       "analysisFrameworksActivePerPanel": "Aktiv pro Panel",
       "analysisFrameworksSkillLibrary": "Skill-Bibliothek",
@@ -1855,7 +1834,7 @@
       "briefFreshness": "Generiert vor {{minutes}}m · neueste Quelle {{hours}}h alt",
       "briefStoryDetails": "Details zur Meldung ({{count}})",
       "streamIdleStopLabel": "Live-Video bei Inaktivität stoppen",
-      "streamIdleStopDesc": "Stoppt Live News und Live Webcams nach dieser Zeit ohne Aktivität und zeigt einen Hinweis im Panel an.",
+      "streamIdleStopDesc": "Stoppt Live News nach dieser Zeit ohne Aktivität und zeigt einen Hinweis im Panel an.",
       "streamIdleStopNever": "Nie",
       "liveNewsAutoplayLabel": "Live-News automatisch abspielen",
       "liveNewsAutoplayDesc": "Startet das Live-News-Video automatisch und stummgeschaltet, sobald es auf dem Bildschirm angezeigt wird. Deaktivieren Sie dies, um das Video nur zu laden, wenn Sie es selbst starten."
@@ -2278,9 +2257,6 @@
       "analysisDate": "WTO-Analyse {{date}}",
       "indexNote": "Versandindex nach Volumen, Durchschnitt Januar–März 2025 = 100"
     },
-    "liveWebcams": {
-      "infoTooltip": "<strong>Live-Webcams</strong> Liveübertragungen von geopolitisch bedeutsamen Orten weltweit: Konfliktzonen, Hauptstädte, Grenzübergänge und strategische Engpässe. Streams von YouTube und öffentlichen Netzwerken."
-    },
     "macroTiles": {
       "infoTooltip": "<strong>Makro-Indikatoren</strong> US-, Euroraum- und China-Preise, Aktivitäts-, Politik- und Währungsindikatoren. China erfordert aktuelle Berichterstattung. Jede Kachel zeigt ihre Quelle und das Beobachtungsdatum."
     },
@@ -2298,9 +2274,6 @@
     },
     "yieldCurve": {
       "infoTooltip": "<strong>Zinskurve &amp; Zinssätze</strong> US-Treasury-Zinskurve (2Y, 5Y, 10Y, 30Y) und wichtige Zinsaufschläge einschließlich des 10Y-2Y-Inversions-Indikators. Zeigt auch Euroraum-Zinssätze (EURIBOR, ESTR). Eine invertierte Kurve geht historisch Rezessionen voraus. Quelle: Federal Reserve Economic Data."
-    },
-    "pinnedWebcams": {
-      "pinFromMap": "Webcam von der Karte hinzufügen"
     },
     "breakthroughsTicker": {
       "noData": "Noch keine wissenschaftlichen Durchbrüche"

@@ -1883,8 +1883,7 @@ canvas,
 #panelsGrid > .panel[data-panel="energy-complex"]:not(.span-2):not(.span-3):not(.span-4):not(.panel-wide):not(.resized),
 #panelsGrid > .panel[data-panel="global-procurement"]:not(.span-2):not(.span-3):not(.span-4):not(.panel-wide):not(.resized),
 #panelsGrid > .panel[data-panel="strategic-posture"]:not(.span-2):not(.span-3):not(.span-4):not(.panel-wide):not(.resized),
-#panelsGrid > .panel[data-panel="cascade"]:not(.span-2):not(.span-3):not(.span-4):not(.panel-wide):not(.resized),
-#panelsGrid > .panel[data-panel="live-webcams"]:not(.span-2):not(.span-3):not(.span-4):not(.panel-wide):not(.resized) {
+#panelsGrid > .panel[data-panel="cascade"]:not(.span-2):not(.span-3):not(.span-4):not(.panel-wide):not(.resized) {
   height: var(--dashboard-panel-row-max);
 }
 
@@ -1906,20 +1905,6 @@ canvas,
   height: calc(var(--dashboard-panel-row-max) * 2 + var(--dashboard-grid-gap));
 }
 
-/* The webcam wall is a 2x2 viewport surface, not a document-height panel.
-   Keep the CLS reservation on normal/tall windows, but cap the natural
-   footprint on short desktop windows so all four cells remain reachable in
-   the viewport. Explicit user-resized spans retain the normal resize
-   contract. The first-grid reservation prevents the two rows from collapsing
-   below their minimum track height on unusually short viewports. Reserve the
-   sticky dashboard chrome above the scrolled panel as well. */
-#panelsGrid > .panel[data-panel="live-webcams"].panel-wide:not(.resized):not(.span-1):not(.span-2):not(.span-3):not(.span-4) {
-  height: min(
-    calc(var(--dashboard-panel-row-max) * 2 + var(--dashboard-grid-gap)),
-    max(var(--dashboard-first-grid-reservation), calc(100dvh - 64px))
-  );
-}
-
 /* The pins above assume a row grows to its panel's height, but the track max
    in grid-auto-rows is a fixed length, not an intrinsic size. In an auto-height
    grid every implicit row therefore resolves to its 200px base, and a 380px pin
@@ -1928,7 +1913,7 @@ canvas,
    them: two rows (404px) for a one-row pin, four (812px) for a two-row pin.
    .panel.span-2 sets its span with !important, so the four-row rule must too.
    Desktop grid only: on mobile the grid is a flex column, spans are inert, and
-   the pinned heights above still apply. Live News and Live Webcams are .panel-wide
+   the pinned heights above still apply. Live News is .panel-wide
    and sized by the #8276 rules below. */
 @media (min-width: 769px) {
   #panelsGrid > .panel[data-panel="threat-timeline"]:not(.span-1):not(.span-2):not(.span-3):not(.span-4):not(.panel-wide):not(.resized),
@@ -1956,7 +1941,7 @@ canvas,
 /* #8276: Reserve enough grid rows for the natural wide video panels.
    Let the panels fill their grid area without overlapping the next row.
    Preserve user-resized spans and the mobile layout.
-   The webcam wall is a 2x2 grid and takes three rows. Live News is one 16:9
+   Live News is one 16:9
    player: at the widths the panel actually gets (386-830px) a third row was
    111-290px of empty panel under the video, so it takes two (404px). */
 @media (min-width: 769px) {
@@ -1965,22 +1950,6 @@ canvas,
     height: 100%;
   }
 
-  #panelsGrid > .panel[data-panel="live-webcams"].panel-wide:not(.panel-collapsed):not(.resized):not(.span-1):not(.span-2):not(.span-3):not(.span-4) {
-    grid-row: span 3;
-    height: 100%;
-  }
-}
-
-/* #8276: Keep the natural webcam wall compact on short desktop viewports.
-   Two 200px grid rows plus the 4px gap provide a 404px footprint.
-   The breakpoint prevents the default three-row footprint from
-   exceeding the webcam panel's former viewport-height limit.
-   Explicit user-resized spans remain untouched. */
-@media (min-width: 769px) and (height < 672px) {
-  #panelsGrid > .panel[data-panel="live-webcams"].panel-wide:not(.panel-collapsed):not(.resized):not(.span-1):not(.span-2):not(.span-3):not(.span-4) {
-    grid-row: span 2;
-    height: 100%;
-  }
 }
 
 /* The Live News player fills whatever height its panel has, at the natural
@@ -2007,13 +1976,11 @@ canvas,
    the wrapped bar would outgrow the row and overlap the next panel, so
    collapse hides them too. */
 @media (min-width: 769px) {
-  .panel[data-panel="live-news"].panel-collapsed,
-  .panel[data-panel="live-webcams"].panel-collapsed {
+  .panel[data-panel="live-news"].panel-collapsed {
     grid-row: span 1 !important;
   }
 
-  .panel[data-panel="live-news"].panel-collapsed .live-news-toolbar,
-  .panel[data-panel="live-webcams"].panel-collapsed .webcam-toolbar {
+  .panel[data-panel="live-news"].panel-collapsed .live-news-toolbar {
     display: none;
   }
 }
@@ -3208,7 +3175,7 @@ body.panel-resize-active iframe {
   cursor: grabbing;
 }
 
-/* Live News – Channel settings button (same style as webcam view buttons) */
+/* Live News – Channel settings button */
 .live-news-settings-btn {
   padding: 4px 8px;
   background: transparent;
@@ -3867,8 +3834,7 @@ body.panel-resize-active iframe {
     var(--bg);
 }
 
-.live-media-shell-status,
-.webcam-preview-status {
+.live-media-shell-status {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -3906,8 +3872,7 @@ body.panel-resize-active iframe {
   font-weight: 700;
 }
 
-.live-media-shell .offline-retry,
-.webcam-preview-play {
+.live-media-shell .offline-retry {
   appearance: none;
   margin-top: 2px;
   min-height: 28px;
@@ -3926,16 +3891,14 @@ body.panel-resize-active iframe {
   transition: background 0.2s ease, border-color 0.2s ease;
 }
 
-.live-media-shell .offline-retry:hover,
-.webcam-preview-play:hover {
+.live-media-shell .offline-retry:hover {
   /* White (#fff, from the base rule) on --red is 3.41:1; --red-strong clears
      AA (≈5:1). axe doesn't audit :hover, but this is the same defect class. */
   background: var(--red-strong);
   border-color: var(--red-strong);
 }
 
-.live-media-shell .offline-retry:focus-visible,
-.webcam-preview-play:focus-visible {
+.live-media-shell .offline-retry:focus-visible {
   outline: 2px solid rgba(248, 113, 113, 0.72);
   outline-offset: 2px;
 }
@@ -4241,351 +4204,6 @@ body.live-news-fullscreen-active .panels-grid > *:not(.live-news-fullscreen) {
   cursor: pointer;
 }
 
-/* Live Webcams Panel */
-.panel[data-panel="live-webcams"] .panel-content {
-  padding: 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.webcam-content {
-  overflow: hidden !important;
-}
-
-.webcam-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 8px;
-  background: var(--darken-heavy);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.webcam-toolbar-group {
-  display: flex;
-  gap: 4px;
-}
-
-.webcam-region-btn,
-.webcam-view-btn {
-  padding: 4px 8px;
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  font-family: inherit;
-  font-size: calc(10px * var(--wm-panel-effective-scale, 1));
-  cursor: pointer;
-  transition: all 0.2s;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.webcam-region-btn:hover,
-.webcam-view-btn:hover {
-  border-color: var(--text-dim);
-  color: var(--text);
-}
-
-.webcam-region-btn.active {
-  background: var(--red-strong);
-  border-color: var(--red-strong);
-  color: white;
-}
-
-.webcam-view-btn.active {
-  background: var(--red-strong);
-  border-color: var(--red-strong);
-  color: white;
-}
-
-.webcam-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 2px;
-  flex: 1;
-  min-height: 0;
-  height: 0;
-  background: #000;
-  overflow: hidden;
-}
-
-.webcam-cell {
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-  background: #000;
-  min-height: 0;
-  height: 100%;
-}
-
-.webcam-preview-tile {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  /* Centred so the play control stays in view however short the tile is
-     (a phone gives the panel ~140px of content). */
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 10px;
-  text-align: center;
-  cursor: pointer;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 38%),
-    linear-gradient(135deg, rgba(220, 38, 38, 0.24), rgba(0, 0, 0, 0.88));
-}
-
-.webcam-preview-title {
-  color: #fff;
-  font-family: var(--font-mono);
-  font-size: calc(13px * var(--wm-panel-effective-scale, 1));
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: uppercase;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-}
-
-.webcam-preview-meta {
-  color: rgba(255, 255, 255, 0.72);
-  font-size: calc(10px * var(--wm-panel-effective-scale, 1));
-  text-transform: uppercase;
-}
-
-.webcam-preview-play {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 36px;
-  margin-top: 4px;
-  padding: 8px 16px;
-  /* Solid, so the prompt reads as the action on the dark tile: white on
-     --red-strong clears AA. */
-  background: var(--red-strong);
-  border-color: var(--red-strong);
-  font-size: calc(11px * var(--wm-panel-effective-scale, 1));
-}
-
-/* Drawn, not a glyph: U+25B6 renders as an emoji on iOS. */
-.webcam-preview-play::before {
-  content: '';
-  width: 0;
-  height: 0;
-  border-top: 5px solid transparent;
-  border-bottom: 5px solid transparent;
-  border-left: 8px solid currentColor;
-}
-
-.webcam-preview-tile:hover .webcam-preview-play,
-.webcam-preview-play:hover {
-  border-color: #fff;
-}
-
-.webcam-cell:hover .webcam-cell-label {
-  opacity: 1;
-}
-
-.webcam-cell-label {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  padding: 6px 10px;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  z-index: 2;
-  opacity: 0.85;
-  transition: opacity 0.2s;
-  pointer-events: none;
-}
-
-.webcam-expand-btn {
-  pointer-events: auto;
-  margin-left: auto;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
-  color: #fff;
-  padding: 2px 4px;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s;
-  line-height: 1;
-}
-
-.webcam-cell:hover .webcam-expand-btn {
-  opacity: 0.7;
-}
-
-.webcam-expand-btn:hover {
-  opacity: 1 !important;
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.webcam-city {
-  font-family: var(--font-mono);
-  font-size: calc(10px * var(--wm-panel-effective-scale, 1));
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: 1px;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-}
-
-.webcam-live-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--red);
-  animation: live-blink 1.5s ease-in-out infinite;
-  flex-shrink: 0;
-}
-
-.webcam-iframe {
-  width: 100%;
-  height: 100%;
-  border: 0;
-  display: block;
-  pointer-events: auto;
-}
-
-.webcam-single {
-  position: relative;
-  flex: 1;
-  background: #000;
-  aspect-ratio: 16 / 9;
-}
-
-.webcam-embed-fallback {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 16px;
-  text-align: center;
-  background: rgba(0, 0, 0, 0.78);
-  backdrop-filter: blur(2px);
-}
-
-.webcam-embed-fallback-text {
-  color: var(--text);
-  font-size: calc(12px * var(--wm-panel-effective-scale, 1));
-  max-width: 280px;
-}
-
-.webcam-embed-fallback-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-}
-
-.webcam-embed-fallback .offline-retry {
-  margin: 0;
-}
-
-.webcam-switcher {
-  display: flex;
-  gap: 4px;
-  padding: 6px 8px;
-  background: var(--darken-heavy);
-  border-top: 1px solid var(--border);
-  flex-shrink: 0;
-  flex-wrap: wrap;
-}
-
-.webcam-feed-btn {
-  padding: 4px 8px;
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  font-family: inherit;
-  font-size: calc(10px * var(--wm-panel-effective-scale, 1));
-  cursor: pointer;
-  transition: all 0.2s;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.webcam-feed-btn:hover {
-  border-color: var(--text-dim);
-  color: var(--text);
-}
-
-.webcam-feed-btn.active {
-  background: var(--red-strong);
-  border-color: var(--red-strong);
-  color: white;
-}
-
-.webcam-back-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  border-color: var(--text-dim);
-  margin-inline-end: 4px;
-}
-
-.webcam-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  min-height: 200px;
-  color: var(--text-dim);
-  font-size: calc(12px * var(--wm-panel-effective-scale, 1));
-}
-
-.webcam-idle-notice {
-  min-height: 200px;
-}
-
-.webcam-tile-status {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: calc(10px * var(--wm-panel-effective-scale, 1));
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-}
-
-.webcam-offline-note {
-  padding: 4px 8px;
-  color: var(--text-dim);
-  font-size: calc(10px * var(--wm-panel-effective-scale, 1));
-  background: var(--darken-heavy);
-  border-top: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-@media (max-width: 768px) {
-  .webcam-grid {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto;
-  }
-
-  .webcam-grid .webcam-cell:nth-child(n+3) {
-    display: none;
-  }
-
-  .webcam-view-btn {
-    display: none;
-  }
-}
-
-
-
 /* Mobile: make toolbars swipeable (horizontal scroll) */
 @media (max-width: 768px) {
   /* Live News channels */
@@ -4611,256 +4229,6 @@ body.live-news-fullscreen-active .panels-grid > *:not(.live-news-fullscreen) {
     scroll-snap-align: start;
     flex: 0 0 auto;
   }
-
-  /* Webcams regions */
-  .webcam-toolbar {
-    align-items: flex-start;
-  }
-
-  .webcam-toolbar-group {
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x proximity;
-    touch-action: pan-x;
-    min-width: 0;
-    flex-wrap: nowrap;
-  }
-
-  .webcam-toolbar-group::-webkit-scrollbar {
-    display: none;
-  }
-
-  .webcam-toolbar-group {
-    scrollbar-width: none;
-  }
-
-  .webcam-region-btn {
-    scroll-snap-align: start;
-    flex: 0 0 auto;
-  }
-}
-
-/* ── Pinned Webcams Panel ── */
-.pinned-webcams-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 4px;
-  aspect-ratio: 16 / 9;
-  width: 100%;
-}
-
-.pinned-webcam-slot {
-  position: relative;
-  background: var(--bg-secondary, #1a1a2e);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.pinned-webcam-slot--empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pinned-webcam-iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-  display: block;
-}
-
-.pinned-webcam-placeholder {
-  color: var(--text-muted, #666);
-  font-size: calc(0.75rem * var(--wm-panel-effective-scale, 1));
-  text-align: center;
-  padding: 8px;
-}
-
-.pinned-webcam-label {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 6px;
-  background: rgba(0, 0, 0, 0.7);
-  font-size: calc(0.65rem * var(--wm-panel-effective-scale, 1));
-}
-
-.pinned-webcam-title {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: #eee;
-}
-
-.pinned-webcam-toggle,
-.pinned-webcam-unpin {
-  background: none;
-  border: none;
-  color: #aaa;
-  cursor: pointer;
-  font-size: calc(0.7rem * var(--wm-panel-effective-scale, 1));
-  padding: 0 2px;
-  line-height: 1;
-}
-
-.pinned-webcam-toggle:hover,
-.pinned-webcam-unpin:hover {
-  color: #fff;
-}
-
-/* Pinned list below grid */
-.pinned-webcams-list {
-  margin-top: 8px;
-}
-
-.pinned-webcams-list-header {
-  font-size: calc(0.7rem * var(--wm-panel-effective-scale, 1));
-  color: var(--text-muted, #888);
-  padding: 4px 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.pinned-webcam-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 8px;
-  font-size: calc(0.75rem * var(--wm-panel-effective-scale, 1));
-}
-
-.pinned-webcam-row--active {
-  background: rgba(0, 212, 255, 0.08);
-}
-
-.pinned-webcam-row-name {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.pinned-webcam-row-country {
-  color: var(--text-muted, #888);
-  font-size: calc(0.65rem * var(--wm-panel-effective-scale, 1));
-}
-
-.pinned-webcam-row-toggle {
-  background: none;
-  border: 1px solid var(--border-color, #333);
-  color: var(--text-secondary, #aaa);
-  border-radius: 3px;
-  padding: 1px 6px;
-  font-size: calc(0.65rem * var(--wm-panel-effective-scale, 1));
-  cursor: pointer;
-}
-
-.pinned-webcam-row--active .pinned-webcam-row-toggle {
-  border-color: var(--accent, #00d4ff);
-  color: var(--accent, #00d4ff);
-}
-
-.pinned-webcam-row-remove {
-  background: none;
-  border: none;
-  color: var(--text-muted, #666);
-  cursor: pointer;
-  font-size: calc(0.7rem * var(--wm-panel-effective-scale, 1));
-  padding: 0 2px;
-}
-
-.pinned-webcam-row-remove:hover {
-  color: var(--error, #ff4444);
-}
-
-/* Pin button in map tooltips */
-.webcam-pin-btn {
-  background: none;
-  border: 1px solid var(--border-color, #444);
-  color: var(--text-secondary, #ccc);
-  border-radius: 3px;
-  padding: 2px 8px;
-  font-size: calc(0.75rem * var(--wm-panel-effective-scale, 1));
-  cursor: pointer;
-  margin-top: 4px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.webcam-pin-btn:hover {
-  border-color: var(--accent, #00d4ff);
-  color: var(--accent, #00d4ff);
-}
-
-/* Toast notification (localStorage full, etc.) */
-.wm-toast {
-  position: fixed;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--bg-secondary, #1a1a2e);
-  border: 1px solid var(--error, #ff4444);
-  color: var(--text-primary, #eee);
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: calc(0.8rem * var(--wm-panel-effective-scale, 1));
-  z-index: 10000;
-  pointer-events: none;
-  animation: wm-toast-fade 3s ease-in-out;
-}
-
-@keyframes wm-toast-fade {
-  0%, 80% { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-.webcam-pin-btn--pinned {
-  opacity: 0.6;
-  cursor: default;
-  border-color: var(--accent, #00d4ff);
-  color: var(--accent, #00d4ff);
-}
-
-/* DeckGL webcam click popup */
-.deckgl-webcam-popup {
-  background: var(--bg-secondary, #1a1a2e);
-  border: 1px solid var(--border-color, #333);
-  border-radius: 6px;
-  padding: 8px 12px;
-  min-width: 140px;
-  pointer-events: auto;
-}
-
-.deckgl-webcam-popup-title {
-  font-size: calc(0.8rem * var(--wm-panel-effective-scale, 1));
-  font-weight: 600;
-  margin-bottom: 2px;
-}
-
-.deckgl-webcam-popup-location {
-  font-size: calc(0.7rem * var(--wm-panel-effective-scale, 1));
-  color: var(--text-muted, #888);
-  margin-bottom: 6px;
-}
-
-.deckgl-webcam-popup-link {
-  display: block;
-  margin: 4px 0;
-  color: var(--accent, #00d4ff);
-  font-size: calc(0.75rem * var(--wm-panel-effective-scale, 1));
-  text-decoration: none;
-}
-
-.deckgl-webcam-popup-link:hover {
-  text-decoration: underline;
 }
 
 /* News Items */

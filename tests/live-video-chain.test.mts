@@ -23,7 +23,7 @@ const AJE_CHANNEL = 'https://www.youtube.com/channel/UCNye-wNBqNL5ZzHSJj3l8Bg';
 const AJE_HLS = 'https://live-hls-apps-aje-fa.getaj.net/AJE/index.m3u8';
 
 function source(entries: readonly string[], origin: LiveVideoSource['origin'] = 'builtin'): ParsedSource {
-  return parseSource({ slot: 'webcams/test', entries, origin });
+  return parseSource({ slot: 'live-news/test', entries, origin });
 }
 
 function candidate(entry: string): Candidate {
@@ -82,14 +82,14 @@ describe('startChain', () => {
 
   it('tries recently failed candidates last', () => {
     const parsed = source([JERUSALEM, AJE_CHANNEL]);
-    const step = startChain(parsed, new Set([failureKey('webcams/test', candidate(JERUSALEM))]));
+    const step = startChain(parsed, new Set([failureKey('live-news/test', candidate(JERUSALEM))]));
     assert.deepEqual(step.effect, { type: 'mount', index: 1 });
     assert.deepEqual(step.state.order, [1, 0]);
   });
 
   it('still tries everything when every candidate failed recently', () => {
     const parsed = source([JERUSALEM, AJE_CHANNEL]);
-    const memory = new Set(parsed.candidates.map(({ candidate: c }) => failureKey('webcams/test', c)));
+    const memory = new Set(parsed.candidates.map(({ candidate: c }) => failureKey('live-news/test', c)));
     assert.deepEqual(startChain(parsed, memory).effect, { type: 'mount', index: 0 });
   });
 });
@@ -237,9 +237,9 @@ describe('advanceChain', () => {
 describe('failureKey', () => {
   it('separates slots and candidates', () => {
     const video = candidate(JERUSALEM);
-    assert.notEqual(failureKey('webcams/a', video), failureKey('webcams/b', video));
-    assert.notEqual(failureKey('webcams/a', video), failureKey('webcams/a', candidate(AJE_CHANNEL)));
-    assert.equal(failureKey('webcams/a', video), failureKey('webcams/a', candidate('zp6LNSoq000')));
+    assert.notEqual(failureKey('live-news/a', video), failureKey('live-news/b', video));
+    assert.notEqual(failureKey('live-news/a', video), failureKey('live-news/a', candidate(AJE_CHANNEL)));
+    assert.equal(failureKey('live-news/a', video), failureKey('live-news/a', candidate('zp6LNSoq000')));
   });
 });
 

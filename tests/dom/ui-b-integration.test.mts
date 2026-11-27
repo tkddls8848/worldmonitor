@@ -511,11 +511,10 @@ describe('Option B integration: real PanelLayoutManager reveal, tray race, botto
     ];
     const settings: Record<string, PanelConfig> = {
       'live-news': { name: 'Live News', enabled: true, priority: 1 },
-      'live-webcams': { name: 'Live Webcams', enabled: true, priority: 1 },
       'gdelt-intel': { name: 'Live Intelligence', enabled: true, priority: 2 },
       ...Object.fromEntries(overviewKeys.map((k) => [k, { name: k, enabled: true, priority: 1 }])),
     };
-    localStorage.setItem('panel-order', JSON.stringify(['live-news', 'live-webcams', ...overviewKeys]));
+    localStorage.setItem('panel-order', JSON.stringify(['live-news', ...overviewKeys]));
 
     const { manager } = makeLayoutManager(settings);
     const mgrAny = manager as unknown as {
@@ -530,7 +529,6 @@ describe('Option B integration: real PanelLayoutManager reveal, tray race, botto
     // 1. Default Overview mounts all 7 curated panels immediately and defers non-Overview panels
     mgrAny.initialVisiblePanelSet = mgrAny.computeInitialVisiblePanelSet();
     expect(mgrAny.shouldMountPanelImmediately('live-news')).toBe(false);
-    expect(mgrAny.shouldMountPanelImmediately('live-webcams')).toBe(false);
     expect(mgrAny.shouldMountPanelImmediately('gdelt-intel')).toBe(false);
     for (const key of overviewKeys) {
       expect(mgrAny.shouldMountPanelImmediately(key)).toBe(true);

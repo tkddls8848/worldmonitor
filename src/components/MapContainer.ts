@@ -52,7 +52,6 @@ import type { SpeciesRecovery } from '@/services/conservation-data';
 import type { RenewableInstallation } from '@/services/renewable-installations';
 import type { GpsJamHex } from '@/services/gps-interference';
 import type { IranEvent } from '@/services/conflict';
-import type { WebcamEntry, WebcamCluster } from '@/generated/client/worldmonitor/webcam/v1/service_client';
 import type { TrafficAnomaly as ProtoTrafficAnomaly, DdosLocationHit } from '@/generated/client/worldmonitor/infrastructure/v1/service_client';
 import type { AcledConflictEvent } from '@/generated/client/worldmonitor/conflict/v1/service_client';
 import type { DiseaseOutbreakItem } from '@/services/disease-outbreaks';
@@ -284,7 +283,6 @@ export class MapContainer {
   private cachedHotspotActivity: NewsItem[] | null = null;
   private cachedEscalationFlights: MilitaryFlight[] | null = null;
   private cachedEscalationVessels: MilitaryVessel[] | null = null;
-  private cachedWebcams: Array<WebcamEntry | WebcamCluster> | null = null;
   private cachedTrafficAnomalies: ProtoTrafficAnomaly[] | null = null;
   private cachedDdosLocations: DdosLocationHit[] | null = null;
   private cachedChokepointData: GetChokepointStatusResponse | null | undefined;
@@ -789,10 +787,6 @@ export class MapContainer {
       const supported = this.applyChinaCorridorSelection(this.cachedChinaCorridorSelection);
       this.cachedOnChinaCorridorRendererCapabilityChange?.(supported);
     }
-    if (this.cachedWebcams) {
-      if (this.useDeckGL) this.deckGLMap?.setWebcams(this.cachedWebcams);
-      else this.svgMap?.setWebcams(this.cachedWebcams);
-    }
     for (const [layer, loading] of this.layerLoadingState) this.setLayerLoading(layer, loading);
     for (const [layer, hasData] of this.layerReadyState) this.setLayerReady(layer, hasData);
     if (this.cachedScenarioState !== undefined) this.applyScenarioState(this.cachedScenarioState);
@@ -1061,12 +1055,6 @@ export class MapContainer {
     if (!this.useDeckGL) {
       this.svgMap?.setConflictEvents(events);
     }
-  }
-
-  public setWebcams(markers: Array<WebcamEntry | WebcamCluster>): void {
-    this.cachedWebcams = markers;
-    if (this.useDeckGL) { this.deckGLMap?.setWebcams(markers); }
-    else { this.svgMap?.setWebcams(markers); }
   }
 
   public setWeatherAlerts(alerts: WeatherAlert[]): void {

@@ -71,13 +71,17 @@ describe('loadTabsState', () => {
     const widget = { name: 'Custom widget', enabled: true, priority: 2 };
     const settings = {
       'cw-example': widget,
-      'toronto-safety': { name: 'Toronto Safety', enabled: true, priority: 2 },
+      'toronto-safety': widget,
+      'live-webcams': widget,
+      'windy-webcams': widget,
+      'live-youtube': widget,
+      'pinned-webcams': widget,
     };
-    const order = ['toronto-safety', 'cw-example'];
-    saveTabsState({ ...sample, tabs: [{ ...tab, panelSettings: settings, panelOrder: order, bottomSet: order }] });
+    const order = Object.keys(settings);
+    saveTabsState({ ...sample, tabs: [{ ...tab, panelSettings: settings, panelOrder: order, bottomSet: order, panelFilters: { 'live-webcams': 'europe', forecast: 'asia' } }] });
     assert.deepEqual(loadTabsState(), {
       ...sample,
-      tabs: [{ ...tab, panelSettings: { 'cw-example': widget }, panelOrder: ['cw-example'], bottomSet: ['cw-example'] }],
+      tabs: [{ ...tab, panelSettings: { 'cw-example': widget }, panelOrder: ['cw-example'], bottomSet: ['cw-example'], panelFilters: { forecast: 'asia' } }],
     });
   });
 });

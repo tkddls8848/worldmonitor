@@ -40,6 +40,5 @@
   "species": "Shows species recovery stories with photos, IUCN category badges and population trend sparklines, curated from sources such as USFWS, IUCN and WWF.",
   "spotlight": "Shows the newest humanity-and-kindness story from the positive news feeds as a featured card with photo, excerpt and map location.",
   "storage-facility-map": "Lists gas storage sites, strategic petroleum reserves, LNG terminals and crude tank farms from a curated registry with an operational status badge.",
-  "threat-timeline": "Charts the daily count of intelligence insights by threat level over the last seven days, with a trend readout and alerts grouped by severity.",
-  "windy-webcams": "Shows the Windy webcams you pin from the map as embedded live players, with controls to pause or unpin each stream."
+  "threat-timeline": "Charts the daily count of intelligence insights by threat level over the last seven days, with a trend readout and alerts grouped by severity."
 }

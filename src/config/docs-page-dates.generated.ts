@@ -416,7 +416,6 @@ export const DOCS_PAGE_DATES: Record<string, { datePublished: string; dateModifi
   "usage-errors": {"datePublished":"2026-04-19","dateModified":"2026-11-10"},
   "usage-quickstart": {"datePublished":"2026-04-19","dateModified":"2026-10-20"},
   "usage-rate-limits": {"datePublished":"2026-04-19","dateModified":"2026-11-14"},
-  "webcam-layer": {"datePublished":"2026-03-14","dateModified":"2026-09-20"},
   "webmcp": {"datePublished":"2026-08-20","dateModified":"2026-11-13"},
   "webmcp-maintenance": {"datePublished":"2026-08-29","dateModified":"2026-11-18"},
   "zh/about": {"datePublished":"2026-07-11","dateModified":"2026-10-19"},
@@ -587,7 +586,6 @@ export const DOCS_PAGE_DATES: Record<string, { datePublished: string; dateModifi
   "zh/usage-errors": {"datePublished":"2026-07-11","dateModified":"2026-11-10"},
   "zh/usage-quickstart": {"datePublished":"2026-07-11","dateModified":"2026-09-21"},
   "zh/usage-rate-limits": {"datePublished":"2026-07-11","dateModified":"2026-11-14"},
-  "zh/webcam-layer": {"datePublished":"2026-07-11","dateModified":"2026-09-20"},
   "zh/webmcp": {"datePublished":"2026-08-20","dateModified":"2026-11-13"},
   "zh/webmcp-maintenance": {"datePublished":"2026-08-29","dateModified":"2026-11-18"},
 };

@@ -711,7 +711,6 @@ const STANDALONE_KEYS = {
   staticRefBundleTick:           'bundle:heartbeat:static-ref',
   staticRefHeavyBundleTick:      'bundle:heartbeat:static-ref-heavy',
   digestNotifications:           'digest:last-run',
-  webcams:                       'webcam:cameras:active',
   forecastResolutions:           'forecast:resolutions:v1',
   forecastProbabilityTrail:      'forecast:probability-trail:v1',
   forecastArchive:               'forecast:archive:v1',
@@ -2423,7 +2422,6 @@ const SEED_META = {
   // the flag flips. See the ON_DEMAND_KEYS "do not add back" note below.
   lowCarbonGeneration:     { key: 'seed-meta:resilience:low-carbon-generation',     maxStaleMin: 11520 },
   powerLosses:             { key: 'seed-meta:resilience:power-losses',              maxStaleMin: 11520 },
-  webcams:                 { key: 'seed-meta:webcam:cameras:geo',                   maxStaleMin: 1440 }, // seed-webcams writes 24h geo/meta keys plus a 30h active pointer; stale at 24h before the layer goes blank.
   // #5736 — history-ingest freshness per collector. `fetchedAt` here is the
   // last HEALTHY append (success, or a correctly-detected unconfigured run),
   // NEVER the last attempt, so a relay that rejects every chunk ages this out

@@ -137,7 +137,7 @@ function reseedCommandForSurface(surface) {
 
 /**
  * 'main-DYSz1bMh.js' -> 'main'. Vite content hashes are exactly 8 chars of
- * [A-Za-z0-9_-] and may themselves contain '-' ('_live-webcams-origin-BScNR-MD.js'),
+ * [A-Za-z0-9_-] and may themselves contain '-' ('_live-news-origin-BScNR-MD.js'),
  * so the greedy prefix keeps the longest possible chunk name and strips only
  * the final hash segment. Returns null for anything that is not a hashed JS
  * chunk (.br/.map siblings, un-hashed dist-root files, CSS).

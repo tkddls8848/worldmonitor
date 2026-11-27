@@ -3,7 +3,7 @@ title: "终端仪表盘"
 description: "在终端中运行 World Monitor：实时世界地图、新闻、市场、冲突、军机、网络威胁、气候、预测市场与直播电视，支持鼠标与配色主题，无需 API 密钥。仪表盘随 worldmonitor npm 包提供，用 npx worldmonitor 即可启动，显示与网页仪表盘相同的实时数据，按 q 退出。"
 ---
 
-World Monitor 也可以在终端中以全屏仪表盘的形式运行。它与[命令行客户端](/zh/cli)一同包含在 [`worldmonitor`](https://www.npmjs.com/package/worldmonitor) npm 包中，无需 API 密钥，显示的实时数据与[网页仪表盘](https://www.worldmonitor.app/dashboard)相同：世界地图、新闻排名、市场、冲突与不稳定性、军机与航运、网络威胁、气候灾害、预测市场、直播电视与网络摄像头，以及平台健康状况。
+World Monitor 也可以在终端中以全屏仪表盘的形式运行。它与[命令行客户端](/zh/cli)一同包含在 [`worldmonitor`](https://www.npmjs.com/package/worldmonitor) npm 包中，无需 API 密钥，显示的实时数据与[网页仪表盘](https://www.worldmonitor.app/dashboard)相同：世界地图、新闻排名、市场、冲突与不稳定性、军机与航运、网络威胁、气候灾害、预测市场、直播电视，以及平台健康状况。
 
 <Frame caption="Overview：实时世界地图（地震、冲突、骚乱、灾害、火点、网络与断网标记）、AI 世界简报、热点新闻排名、市场行情与战区态势。">
   <img src="/images/tui/overview.webp" alt="World Monitor 终端仪表盘的 Overview 视图" />
@@ -29,7 +29,7 @@ worldmonitor                # open the dashboard (same as `worldmonitor tui`)
 - **至少 80×24 的交互式终端。** 窗口越大，可并排显示的面板越多；160×45 或更大可获得本页所示的完整布局。
 - **支持真彩色与鼠标的终端**效果最佳，例如 Ghostty、kitty、WezTerm、iTerm2、Konsole、Alacritty 或 VS Code 终端。不报告真彩色支持的终端（包括 macOS 自带的“终端”）使用 256 色。
 - **包含盲文与制表符字符的字体**，用于绘制地图与面板边框。大多数现代终端字体都包含这些字符。
-- **可选：** 安装 [mpv](https://mpv.io) 与 [yt-dlp](https://github.com/yt-dlp/yt-dlp) 以在终端中播放直播电视与网络摄像头。未安装时，直播流会在浏览器中打开。
+- **可选：** 安装 [mpv](https://mpv.io) 与 [yt-dlp](https://github.com/yt-dlp/yt-dlp) 以在终端中播放直播电视。未安装时，直播流会在浏览器中打开。
 
 ## 视图
 
@@ -47,7 +47,7 @@ worldmonitor                # open the dashboard (same as `worldmonitor tui`)
 | `8` | Cyber | 威胁指标、DDoS 协议与向量构成、服务状态、互联网中断、流量异常 |
 | `9` | Climate | 地震、自然灾害、疫情、气象预警、气候异常、地球体征 |
 | `0` | Predict | 按领域划分的预测市场与 AI 情景预测 |
-| `Alt+1` | Live | 直播新闻频道与网络摄像头，在终端或浏览器中播放 |
+| `Alt+1` | Live | 直播新闻频道，在终端或浏览器中播放 |
 | `Alt+2` | Intel | GDELT 主题、制裁压力、旅行建议、社交热度、美国政府支出、科技活动 |
 | `Alt+3` | System | 平台健康、各数据源新鲜度、主题与动画设置、播放器状态 |
 
@@ -136,13 +136,9 @@ Brief 视图把 AI 世界简报做成一个页面：左侧是简报段落与编�
 
 ### Live
 
-<Frame caption="Live：仪表盘的新闻频道与网络摄像头，以及每个频道的直播源与本地播放器状态。">
-  <img src="/images/tui/live.webp" alt="Live 视图：新闻频道、网络摄像头与播放器控制" />
-</Frame>
-
 | 按键 | 操作 |
 |---|---|
-| `Enter` | 在终端内播放所选频道或摄像头 |
+| `Enter` | 在终端内播放所选频道 |
 | `w` | 在 mpv 窗口中播放 |
 | `b` | 在浏览器中打开 |
 | `s` | 尝试下一个直播源 |

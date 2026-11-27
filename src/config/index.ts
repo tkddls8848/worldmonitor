@@ -50,7 +50,8 @@ export {
 // Panel configuration - imported from panels.ts
 export {
   DEFAULT_PANELS,
-  TORONTO_SAFETY_PANEL_ID,
+  isRetiredPanel,
+  RETIRED_PANEL_IDS,
   DEFAULT_MAP_LAYERS,
   MOBILE_DEFAULT_MAP_LAYERS,
   LAYER_TO_SOURCE,

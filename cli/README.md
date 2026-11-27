@@ -7,7 +7,7 @@
 Official command-line client for the [World Monitor](https://worldmonitor.app)
 global-intelligence platform. Run `worldmonitor` for a full terminal dashboard
 (news, markets, conflict, military flights, cyber, climate, predictions, live
-news channels and webcams, intel, platform health) with mouse support, themes
+news channels, intel, platform health) with mouse support, themes
 and animations. Script country briefs, risk scores, and
 conflict / cyber / market / news feeds — plus any registered MCP tool — from
 your shell or an agent, without writing an API integration.
@@ -52,7 +52,7 @@ The dashboard boots in a couple of seconds. Views:
 | `8` | Cyber | Threat indicators, DDoS mix, service status, internet outages and traffic anomalies |
 | `9` | Climate | Earthquakes, hazards and outbreaks, weather alerts, climate anomalies, planet vitals |
 | `0` | Predict | Prediction markets by domain and AI scenario forecasts |
-| `Alt+1` | Live | The dashboard's live news channels and webcams, played in the terminal |
+| `Alt+1` | Live | The dashboard's live news channels, played in the terminal |
 | `Alt+2` | Intel | GDELT topic feeds, sanctions pressure, travel advisories, spending |
 | `Alt+3` | System | Platform health, per-source freshness, themes, player status |
 

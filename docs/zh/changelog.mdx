@@ -14,7 +14,7 @@ World Monitor 的所有重要变更均记录于此。通过 [RSS](https://www.wo
 - **路线浏览器**：独立的全屏模态框（CMD+K），用于规划任意两个国家之间的货物运输。包含当前/备选/陆路/影响标签页，支持键盘优先导航、URL 状态分享、战略产品贸易数据、依赖标识，以及免费版模糊处理与公开路线高亮（#2980, #2982, #2994, #2996, #2997, #2998）
 - 贸易政策面板新增 **美国海关关税收入**，包含月度数据、财年至今（FYTD）同比对比，以及收入峰值高亮（#1663）
 - **安全旅行提醒金标准迁移**：Railway 定时任务种子每小时抓取 24 个政府 RSS 源，Vercel 仅读取 Redis（#1637）
-- **CMD+K 全面板覆盖**：全部 55 个面板现均可搜索（原为 31 个），包括 AI 预测、相关性面板、摄像头、流离失所、安全旅行提醒（#1656）
+- **CMD+K 全面板覆盖**：全部 55 个面板现均可搜索（原为 31 个），包括 AI 预测、相关性面板、流离失所、安全旅行提醒（#1656）
 - 咽喉要道过境情报接入 3 个免费数据源：IMF PortWatch、CorridorRisk、AISStream（#1560）
 - 监测的咽喉要道增至 13 个（原为 6 个）：新增好望角、直布罗陀、博斯普鲁斯海峡（合并达达尼尔海峡）、朝鲜海峡、多佛尔、刻赤、龙目海峡（#1560, #1572）
 - 可展开的咽喉要道卡片，集成 TradingView 轻量图表展示 180 天时间序列（#1560）
@@ -25,7 +25,7 @@ World Monitor 的所有重要变更均记录于此。通过 [RSS](https://www.wo
 ### 变更
 
 - **预测 `projections` 不再返回**（2026-10-07；#8967）。`GET /api/forecast/v1/get-forecasts`、`forecast:predictions:v2` 负载以及 `get_forecast_predictions` 与 `get_forecast_case` MCP 工具不再在预测中返回 `projections`（`h24`、`d7`、`d30`）。这些数值是未评分的编辑性曲线，不是概率，且五个领域中有四个违反概率法则（同一事件的 30 天数值低于 24 小时数值）。`Forecast.projections`（字段 17）作为已弃用字段保留在 v1 proto 与 OpenAPI 中，但不再填充；根据 2026-10-07 的决定立即生效，没有弃用过渡期。**迁移：**结合 `timeHorizon` 读取 `probability`；没有按时间范围的数值可替代。按时间范围评分（#7075）不受影响：种子器仍计算这些数值并保存在内部历史中，由结果账本对每个时点型时间范围契约评分。
-- **YouTube 频道直播检测已停用**（#8167；#5503）。该检测通过住宅代理抓取 youtube.com 频道页面，#5503 指出这违反 YouTube 服务条款。在 `GET /api/aviation/v1/get-youtube-live-stream-info` 上，只传频道的查询现返回错误 `channel_live_detection_retired`，且不会请求 YouTube；`isLive` 始终为 `false`，`hlsUrl` 始终为空。`channel` 查询字段以及 `isLive` 与 `hlsUrl` 响应字段已弃用，为保持 v1 线格式兼容而保留；该操作本身未弃用。`GET /api/youtube/live?channel=` 现返回 HTTP 410 与 `{"error":"channel_live_detection_retired"}`，可缓存一天；`?videoId=` 仍返回该视频的 oEmbed 标题与频道名称。**迁移：**传入 `video_id`（在 `/api/youtube/live` 上为 `videoId`）以获取视频名称。频道直播检测没有替代方案；实时新闻与实时摄像头播放 `src/config/live-video-sources.ts` 中列出的已验证直播流。
+- **YouTube 频道直播检测已停用**（#8167；#5503）。该检测通过住宅代理抓取 youtube.com 频道页面，#5503 指出这违反 YouTube 服务条款。在 `GET /api/aviation/v1/get-youtube-live-stream-info` 上，只传频道的查询现返回错误 `channel_live_detection_retired`，且不会请求 YouTube；`isLive` 始终为 `false`，`hlsUrl` 始终为空。`channel` 查询字段以及 `isLive` 与 `hlsUrl` 响应字段已弃用，为保持 v1 线格式兼容而保留；该操作本身未弃用。`GET /api/youtube/live?channel=` 现返回 HTTP 410 与 `{"error":"channel_live_detection_retired"}`，可缓存一天；`?videoId=` 仍返回该视频的 oEmbed 标题与频道名称。**迁移：**传入 `video_id`（在 `/api/youtube/live` 上为 `videoId`）以获取视频名称。频道直播检测没有替代方案；实时新闻播放 `src/config/live-video-sources.ts` 中列出的已验证直播流。
 - **七条情报套件路由现在需要 Pro**（#7433；#6436、#6438、#6439、#6448、#6449）。**这移除了此前可用的免费访问。** `GET /api/market/v1/get-physical-premiums`、`/api/market/v1/get-physical-divergence-index`、`/api/supply-chain/v1/get-mineral-production`、`/api/military/v1/get-defense-industrial-base`、`/api/supply-chain/v1/get-country-vulnerabilities`、`/api/supply-chain/v1/get-chokepoint-dependencies` 与 `/api/supply-chain/v1/list-vulnerability-rankings` 此前未设门禁，向匿名调用方提供完整负载；这七条现已列为权限 tier 1。匿名调用方收到 `401`；已登录的免费账户收到 `403`，其中 `error.data.reason = "upgrade-required"` 并附 `upgradeUrl`。**两者都不可重试**——只有携带 `X-Billing-Verification` 的 `503` 可以重试。在仪表盘中，免费用户现在会在国家深度页的国防工业与商品脆弱性卡片处、以及霍尔木兹追踪器的依赖区块处看到升级卡片；供应链矿产标签页回退到免费矿藏表格并附说明；商品面板的**实物**标签页则完全不再出现，因为该标签页仅在存在 Pro 数据时才构建。`/api/military/v1/get-defense-industrial-base` 另外移除了其匿名 `public=1` 共享缓存形态——该形态此前完全绕过权限检查——因此它不再拥有 CDN 共享响应。有一条路径刻意保持不变：`get_market_data` MCP 工具是基于缓存的数据包，其数据集包含 `physical-premium` 与 `physical-divergence`，已登录的免费账户仍可在其每日配额内调用。访问约定详见 [Pro 情报套件](/zh/pro-intelligence-suite)。
 - **MCP 缓存工具默认上限**：`get_country_macro`、`get_eu_housing_cycle`、`get_eu_quarterly_gov_debt` 与 `get_eu_industrial_production` 现在省略 `limit` 时将返回的国家映射上限设为 30 条。这使这些工具与文档中其他缓存工具使用的 MCP `DEFAULT_LIST_LIMIT` 行为一致，但这是一项面向消费者的默认值变更：需要完整国家集合的集成必须显式传入 `limit: 0`。
 - **CII 公式 `v14`**：托管位置网络数据与本国军事活动不再计分，适用于全球（2026-10-21）。移除网络加成（最高 12）：它读取的每个网络源（AbuseIPDB、Feodo Tracker、URLhaus、C2Intel、OTX）定位的是滥用 IP、C2 服务器或恶意 URL 的托管地，而不是遭受攻击的国家，因此为数据中心国家计分（10 月 20 日：美国 129 行、中国 172 行、英国 40 行，而乌克兰 2 行，以色列、沙特阿拉伯与也门为 0），且 AbuseIPDB 的 500 行 CRITICAL 在黑名单调用失败时随之消失（原因未被记录，每日请求上限是可能原因之一），使英国、法国、德国和美国一夜之间变动最多 12 分。安全分量现在只计位于该国的外国军机与军舰，权重与 v13 相同；本国航班此前按运营方在全球任何位置计数，因此英国皇家空军与法国的例行训练使英国、法国、德国与美国的安全分量持续处于 95-100。网络种子器在黑名单调用失败时保留上一份有效的 24 小时 AbuseIPDB 列表，而不再发布空列表，网络面板与地图不再闪烁。`riskScores` 健康覆盖现需冲突与新闻两个族（`minRecordCount` 为 2）。按 10 月 21 日实时输入：英国 33 -> 20、法国 43 -> 28、德国 34 -> 20、美国 33 -> 21；沙特阿拉伯、也门、以色列与叙利亚不变；乌克兰、俄罗斯与伊朗只失去托管位置网络分及至多两分本国军事分。托管被标记基础设施或本国飞机在飞的国家 `combinedScore` 下降；风险评分缓存键族迁移至 `risk:scores:sebuf:v14`，发射的 `methodology_version` 现为 `v14`。
@@ -110,7 +110,7 @@ World Monitor 的所有重要变更均记录于此。通过 [RSS](https://www.wo
 - 所有标记工具提示上的关闭按钮与悬停暂停（#1371）
 - 从 LAYER_SYNONYMS 移除无效的 'satelliteImagery'（#1370）
 - 修复风险评分种子间隙与 seed-meta 键不匹配（#1366）
-- 新闻与摄像头面板间一致的 LIVE 页头模式（#1367）
+- 新闻面板中一致的 LIVE 页头模式（#1367）
 - 路径访问器回调中的地球空值守卫（#1372）
 - pre-push 钩子中的 node_modules 守卫，固定 Node 22（#1368）
 - 类型检查 CI 工作流：移除 paths-ignore，新增 push 触发器（#1373）
@@ -199,7 +199,6 @@ World Monitor 的所有重要变更均记录于此。通过 [RSS](https://www.wo
 - **健康**：将缺失的 seed-meta 视为过期（#1128）、解决 BIS 信用与战区态势警告（#1124）、新增 WB 种子循环（#1239）、UCDP 认证处理（#1252）
 - **国家简报**：格式化、重复与新闻上限修复（#1219）、防止地理编码失败时模态框卡住（#1134）
 - **经济**：为 BIS 与支出数据防御 undefined（#1162, #1169）
-- **摄像头**：在 Web 端检测被屏蔽的 YouTube 嵌入（#1107）、使用 iframe 加载事件回退（#1123）、MTV Lebanon 作为直播流（#1122）
 - **桌面**：恢复搁置的路由修复与统一错误 UX（#1160）、DRY 防抖、错误处理、重试上限（#1084）、防抖缓存写入、批量密钥推送、惰性面板（#1077）
 - **PWA**：针对 CF 缓存的 404 将 SW 清除键升至 v2（#1081）、首次访问时一次性 SW 清除（#1079）
 - **性能**：仅在添加图层时显示图层警告，而非移除时（#1265）、减少不必要的 Vercel 边缘调用（#1176）
@@ -267,7 +266,6 @@ World Monitor 的所有重要变更均记录于此。通过 [RSS](https://www.wo
 - **CSP**：为 Vercel 机器人挑战页面恢复 unsafe-inline（#788）、添加缺失的脚本哈希与金融变体（#798）
 - **运行时**：所有 /api/* 调用通过 CDN 边缘路由，而非直接访问 Vercel（#780）
 - **桌面**：从主机架构检测 Linux node 目标（#742）、加固 Windows 安装器更新路径 + 地图调整大小（#739）、点击下载后关闭更新提示（#738）、仅在外部打开有效的 http(s) 链接（#723）
-- **摄像头**：替换失效的特拉维夫直播流（#732）、替换陈旧的耶路撒冷源（#849）
 - Story 页头使用完整域名 WORLDMONITOR.APP（#799）
 - 在同一窗口而非新标签页中打开变体导航链接（#721）
 - 在拖拽调整大小时抑制地图渲染（#728）
@@ -327,7 +325,6 @@ World Monitor 的所有重要变更均记录于此。通过 [RSS](https://www.wo
 - 针对关键/高优先级条目的突发新闻激活警报横幅，附带音频（#508）
 - 针对非美国机场的 AviationStack 集成 + NOTAM 关闭检测（#552, #581, #583）
 - RT（今日俄罗斯）HLS 直播流 + RSS 源（#585, #586）
-- 伊朗摄像头标签页，含 4 个源（#569, #572, #601）
 - CBC News 可选直播频道（#502）
 - 战略风险评分接入战区态势 + 突发新闻（#584）
 - CII 评分：安全旅行提醒、伊朗打击、OREF 警报、GPS 干扰（#547, #559, #570, #579）
@@ -536,19 +533,16 @@ World Monitor 的所有重要变更均记录于此。通过 [RSS](https://www.wo
 
 ### 新增
 
-- **实时摄像头面板**：来自全球热点地区的 2x2 网格 YouTube 实时摄像头源，附带区域过滤（中东、欧洲、亚太、美洲）、网格/单视图切换、空闲检测与完整 i18n 支持（#111）
 - **Linux 下载**：在下载横幅新增 `.AppImage` 选项
 
 ### 变更
 
 - **移动端检测**：仅使用视口宽度进行移动端检测；支持触控的笔记本（如 ROG Flow X13）现获得桌面布局（#113）
-- **摄像头源**：精选特拉维夫、麦加、洛杉矶、迈阿密；替换失效的东京源；多样化 ALL 网格含耶路撒冷、德黑兰、基辅、华盛顿
 
 ### 修复
 
 - **Le Monde RSS**：更新英文数据源 URL（`/en/rss/full.xml` → `/en/rss/une.xml`）以修复 404
 - **Workbox 预缓存**：将 `html` 添加到 `globPatterns`，使 `navigateFallback` 在离线 PWA 下工作
-- **面板排序**：一次性迁移确保现有用户的实时摄像头紧跟实时新闻之后
 - **移动端弹窗**：改进 sheet/触控/控件布局（#109）
 - **情报警报**：在移动端禁用以减少噪声（#110）
 - **RSS 代理**：将 8 个缺失域名加入白名单

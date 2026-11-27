@@ -53,7 +53,7 @@ describe('Panel keyboard resize accessibility', () => {
   });
 
   it('synchronizes natural video panel spans after mounting and viewport resize (#8276)', () => {
-    for (const id of ['live-news', 'live-webcams']) {
+    for (const id of ['live-news']) {
       const panel = new Panel({
         id,
         title: id,

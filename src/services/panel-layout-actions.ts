@@ -208,7 +208,6 @@ export interface FullscreenToggleable {
 
 /**
  * Exit every other fullscreen panel first, then enter `enteringPanelId`.
- * Order matters: Live News and Live Webcams share `live-news-fullscreen-active`.
  */
 export function applyExclusiveFullscreenEnter(
   panels: PanelLayoutEntry[],

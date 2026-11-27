@@ -1547,7 +1547,6 @@ acceptance checks.
 | 40 | seed-thermal-escalation | `71d124d5-a4fb-42c3-9c5b-2fb0e5645e5b` | Derived from fire detections |
 | 41 | seed-trade-flows | `dd3097f7-df65-4b0e-89ca-86a5fac7d558` | UN Comtrade, 6 reporters |
 | 42 | seed-unrest-events | `33c8c2a1-ad66-45ec-ac7e-609d69a59455` | ACLED + materialized GDELT bulk events |
-| 43 | seed-webcams | `2bf93afa-1922-4f9c-936d-f5054051b8a5` | Paginated across 8 regions |
 
 **Inventory check:** 4 infra + 4 long-running + 3 consumer + 46 delete + 43 standalone = **100**
 
@@ -1602,7 +1601,7 @@ fetch('https://backboard.railway.com/graphql/v2',{method:'POST',
 | seed-comtrade-bilateral-hs4 | `node scripts/seed-comtrade-bilateral-hs4.mjs` | **`0 6 1 * *` (monthly, verified 2026-07-27)** | UN Comtrade bilateral HS4 trade flows — only scheduled consumer of the keyed 500/mo Comtrade quota |
 | seed-hs2-chokepoint-exposure | `node scripts/seed-hs2-chokepoint-exposure.mjs` | periodic (TTL-extended) | HS2 chokepoint trade-exposure (derived) |
 | seed-service-statuses | `node scripts/seed-service-statuses.mjs` | **planned — not provisioned** | Service-status warm-ping; primary seeder is the AIS relay loop |
-| seed-live-video-resolved | `node seed-live-video-resolved.mjs` | **`0 */6 * * *` (verified 2026-09-24)** (health budget 1080 min) | The video each catalog YouTube channel has live now, for the Live News and Live Webcams players (#8545); scripts-root service `11581ac4-24ea-4cfc-bf17-471e41305364` (Railpack, `rootDirectory` `scripts`), reads channel `/live` pages through `LIVE_VIDEO_PROXY_URL` or `PROXY_URL` |
+| seed-live-video-resolved | `node seed-live-video-resolved.mjs` | **`0 */6 * * *` (verified 2026-09-24)** (health budget 1080 min) | The video each catalog YouTube channel has live now, for the Live News players (#8545); scripts-root service `11581ac4-24ea-4cfc-bf17-471e41305364` (Railpack, `rootDirectory` `scripts`), reads channel `/live` pages through `LIVE_VIDEO_PROXY_URL` or `PROXY_URL` |
 | seed-no2-activity | `node seed-no2-activity.mjs` | **`20 6 * * *` (provisioned 2026-10-27, service `359e5bd7-4160-41d6-8792-f4aff20a3006`)** (health budget 4320 min) | NASA OMI/Aura OMNO2d v004 tropospheric NO2 activity for 167 countries and 32 industrial clusters, including the four China nowcast clusters. Fetches one 0.25-degree grid per available UTC day, refreshes the trailing 10 dates, and backfills up to 60 missing window dates per run. Requires `EARTHDATA_TOKEN` from [NASA Earthdata Login](https://urs.earthdata.nasa.gov) (Generate Token; authorize NASA GESDISC DATA ARCHIVE under Applications > Authorized Apps). |
 | seed-imd-cyclone-marine | `node seed-imd-cyclone-marine.mjs` | **`*/15 * * * *` (verified 2026-09-05)** | Official IMD sea-area and coastal marine bulletins from public pages; scripts-root Nixpacks service `5f943d96-5f89-4817-941b-fdc36b71722e` |
 | seed-natural-events | `node seed-natural-events.mjs` | **`*/30 * * * *` (verified 2026-11-07, service `7119c932-05f5-4727-a54f-e4e2de2a907f`)** (health budget 120 min) | EONET, GDACS, NHC, HKO and western-Pacific cyclone events. Sole producer of `natural:events:v1` since 2026-11-07; it also ran as a seed-bundle-climate section until then |

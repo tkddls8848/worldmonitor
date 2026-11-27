@@ -258,9 +258,9 @@ describe('redis caching behavior', { concurrency: 1 }, () => {
       };
 
       const results = [
-        redis.cachedFetchJsonWithMeta('webcam:test:admission', 60, fetcher, 120, { shouldFetch }),
-        redis.cachedFetchJsonWithMeta('webcam:test:admission', 60, fetcher, 120, { shouldFetch }),
-        redis.cachedFetchJsonWithMeta('webcam:test:admission', 60, fetcher, 120, { shouldFetch }),
+        redis.cachedFetchJsonWithMeta('test:admission', 60, fetcher, 120, { shouldFetch }),
+        redis.cachedFetchJsonWithMeta('test:admission', 60, fetcher, 120, { shouldFetch }),
+        redis.cachedFetchJsonWithMeta('test:admission', 60, fetcher, 120, { shouldFetch }),
       ];
       await admissionReached.promise;
       admission.resolve(true);

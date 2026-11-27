@@ -57,7 +57,6 @@ export const DECK_POINT_LAYER_CATEGORY: Readonly<Record<string, keyof MapLayers>
   'minerals-layer': 'minerals',
   'disease-outbreaks-layer': 'diseaseOutbreaks',
   'live-tankers-layer': 'liveTankers',
-  'webcam-layer': 'webcams',
   'startup-hubs-layer': 'startupHubs',
   'tech-hq-clusters-layer': 'techHQs',
   'accelerators-layer': 'accelerators',

@@ -15,15 +15,12 @@ const CANARY_2 = 'https://www.youtube.com/channel/UCknLrEdhRCp1aegoMqRaCZg';
 const BBC_HLS = 'https://vs-hls-push-uk.live.fastly.md.bbci.co.uk/x=4/iptv_hd_abr_v1.m3u8';
 
 const baseCatalog = {
-  webcams: {
-    jerusalem: [watch('zp6LNSoq000')],
-    kyiv: [watch('e2gC37ILQmk'), watch('VGnFLdQW39A')],
-    taipei: [watch('z_fY1pj1VBw')],
-    sydney: [watch('5uZa3-RMFos')],
-    'tel-aviv': [watch('oDCAAfOSqvA')],
-  },
-  gridPriority: ['jerusalem', 'kyiv', 'taipei', 'sydney', 'tel-aviv'],
   news: {
+    sky: [watch('zp6LNSoq000')],
+    france24: [watch('e2gC37ILQmk'), watch('VGnFLdQW39A')],
+    nhk: [watch('z_fY1pj1VBw')],
+    'abc-australia': [watch('5uZa3-RMFos')],
+    'dw': [watch('oDCAAfOSqvA')],
     bloomberg: [watch('QB5BNdBFujE')],
     'bbc-news': [BBC_HLS],
     rtve: [watch('KQp-e_XQnDE')],
@@ -32,11 +29,11 @@ const baseCatalog = {
 };
 
 const SURFACES = {
-  'webcams/jerusalem': ['Webcam grid cell 1', true],
-  'webcams/kyiv': ['Webcam grid cell 2', true],
-  'webcams/taipei': ['Webcam grid cell 3', true],
-  'webcams/sydney': ['Webcam grid cell 4', true],
-  'webcams/tel-aviv': ['Webcam (Middle East)', false],
+  'live-news/sky': ['Live News default (full)', true],
+  'live-news/france24': ['Live News default (full)', true],
+  'live-news/nhk': ['Live News default (full)', true],
+  'live-news/abc-australia': ['Live News default (full)', true],
+  'live-news/dw': ['Live News optional', false],
   'live-news/bloomberg': ['Live News default (full, tech)', true],
   'live-news/bbc-news': ['Live News optional', false],
   'live-news/rtve': ['Live News optional', false],
@@ -60,7 +57,6 @@ const dead = (entry) => attempt(entry, 'failed', { evidence: { errorCode: 150 } 
 /** A report for `catalog`: every entry live unless `problems` gives a slot its status and attempts. */
 function reportFor(catalog, problems = {}, shownInstead = {}) {
   const slots = [
-    ...Object.entries(catalog.webcams).map(([id, entries]) => [`webcams/${id}`, entries]),
     ...Object.entries(catalog.news).map(([id, entries]) => [`live-news/${id}`, entries]),
   ].map(([slot, entries]) => {
     const [surface, shownByDefault] = SURFACES[slot];
@@ -102,7 +98,7 @@ describe('live video audit issue', () => {
     const dir = mkdtempSync(join(tmpdir(), 'live-video-audit-summary-'));
     t.after(() => rmSync(dir, { recursive: true, force: true }));
     const summaryPath = join(dir, 'summary.md');
-    const report = reportFor(baseCatalog, { 'webcams/jerusalem': { status: 'needs-replacement', attempts: [dead(watch('zp6LNSoq000'))] } }, { 'webcams/jerusalem': 'webcams/tel-aviv' });
+    const report = reportFor(baseCatalog, { 'live-news/sky': { status: 'needs-replacement', attempts: [dead(watch('zp6LNSoq000'))] } });
     const { calls, gh } = fakeGh([]);
 
     const result = await publish(report, { gh, runUrl: 'https://github.com/owner/repo/actions/runs/7', summaryPath });
@@ -116,7 +112,7 @@ describe('live video audit issue', () => {
     assert.equal(title, ISSUE_TITLE);
     assert.equal(calls[2].payload.state, undefined, 'a new issue sends no state');
     assert.match(body, /^\| Slot \| Where it shows \| Status \| Entry \| Why \| Shown instead \| Live now \|$/m);
-    assert.match(body, /^\| webcams\/jerusalem \| Webcam grid cell 1 \| needs-replacement \| `https:\/\/www\.youtube\.com\/watch\?v=zp6LNSoq000` \| YouTube player error 150: [^|]+ \| webcams\/tel-aviv \| — \|$/m);
+    assert.match(body, /^\| live-news\/sky \| Live News default \(full\) \| needs-replacement \| `https:\/\/www\.youtube\.com\/watch\?v=zp6LNSoq000` \| YouTube player error 150: [^|]+ \| — \| — \|$/m);
     assert.match(body, /actions\/runs\/7/);
     assert.match(body, /Canaries: 2 of 2 live/);
     assert.match(body, /npm run live-video:check -- <url>/);
@@ -125,7 +121,7 @@ describe('live video audit issue', () => {
   });
 
   it('updates the open issue whose title matches exactly, ignoring pull requests and near misses', async () => {
-    const report = reportFor(baseCatalog, { 'webcams/kyiv': { status: 'needs-replacement', attempts: [dead(watch('e2gC37ILQmk')), dead(watch('VGnFLdQW39A'))] } });
+    const report = reportFor(baseCatalog, { 'live-news/france24': { status: 'needs-replacement', attempts: [dead(watch('e2gC37ILQmk')), dead(watch('VGnFLdQW39A'))] } });
     const { calls, gh } = fakeGh([
       { number: 3, title: `${ISSUE_TITLE} (old)` },
       { number: 4, title: ISSUE_TITLE, pull_request: {} },
@@ -140,11 +136,11 @@ describe('live video audit issue', () => {
     assert.deepEqual(calls[1].args, ['api', '--method', 'PATCH', 'repos/owner/repo/issues/6', '--input', '-']);
     assert.equal(calls[1].payload.title, ISSUE_TITLE);
     assert.equal(calls[1].payload.state, 'open', 'an issue closed between the lookup and the update is reopened');
-    assert.match(calls[1].payload.body, /webcams\/kyiv/);
+    assert.match(calls[1].payload.body, /live-news\/france24/);
   });
 
   it('reopens the most recently updated closed issue with the exact title instead of creating another, with a Regressed comment', async () => {
-    const report = reportFor(baseCatalog, { 'webcams/kyiv': { status: 'needs-replacement', attempts: [dead(watch('e2gC37ILQmk')), dead(watch('VGnFLdQW39A'))] } });
+    const report = reportFor(baseCatalog, { 'live-news/france24': { status: 'needs-replacement', attempts: [dead(watch('e2gC37ILQmk')), dead(watch('VGnFLdQW39A'))] } });
     const { calls, gh } = fakeGh([], [
       { number: 11, title: ISSUE_TITLE, state: 'closed', updated_at: '2026-08-01T05:20:00Z' },
       { number: 17, title: ISSUE_TITLE, state: 'closed', updated_at: '2026-09-10T05:20:00Z' },
@@ -161,14 +157,14 @@ describe('live video audit issue', () => {
     assert.deepEqual(calls[2].args, ['api', '--method', 'PATCH', 'repos/owner/repo/issues/17', '--input', '-']);
     assert.equal(calls[2].payload.title, ISSUE_TITLE);
     assert.equal(calls[2].payload.state, 'open');
-    assert.match(calls[2].payload.body, /webcams\/kyiv/);
+    assert.match(calls[2].payload.body, /live-news\/france24/);
     assert.deepEqual(calls[3].args, ['api', '--method', 'POST', 'repos/owner/repo/issues/17/comments', '--input', '-']);
     assert.match(calls[3].payload.body, /^Regressed: 1 slot\(s\) need attention as of 2026-09-15T05:17:00\.000Z\./);
     assert.match(calls[3].payload.body, /actions\/runs\/9/);
   });
 
   it('creates a new issue only when no open or closed issue has the exact title', async () => {
-    const report = reportFor(baseCatalog, { 'webcams/kyiv': { status: 'needs-replacement', attempts: [dead(watch('e2gC37ILQmk')), dead(watch('VGnFLdQW39A'))] } });
+    const report = reportFor(baseCatalog, { 'live-news/france24': { status: 'needs-replacement', attempts: [dead(watch('e2gC37ILQmk')), dead(watch('VGnFLdQW39A'))] } });
     const { calls, gh } = fakeGh([{ number: 3, title: ISSUE_TITLE.toUpperCase() }], [
       { number: 19, title: `${ISSUE_TITLE} (old)`, state: 'closed', updated_at: '2026-09-14T05:20:00Z' },
       { number: 20, title: ISSUE_TITLE, state: 'closed', updated_at: '2026-09-14T06:00:00Z', pull_request: {} },
@@ -181,7 +177,7 @@ describe('live video audit issue', () => {
   });
 
   it('ignores an open issue with the exact title that the audit did not author', async () => {
-    const report = reportFor(baseCatalog, { 'webcams/kyiv': { status: 'needs-replacement', attempts: [dead(watch('e2gC37ILQmk')), dead(watch('VGnFLdQW39A'))] } });
+    const report = reportFor(baseCatalog, { 'live-news/france24': { status: 'needs-replacement', attempts: [dead(watch('e2gC37ILQmk')), dead(watch('VGnFLdQW39A'))] } });
     const { calls, gh } = fakeGh(
       [{ number: 30, title: ISSUE_TITLE, user: { login: 'someone' } }],
       [{ number: 31, title: ISSUE_TITLE, state: 'closed', updated_at: '2026-09-14T05:20:00Z', user: { login: 'someone' } }],
@@ -219,9 +215,9 @@ describe('live video audit issue', () => {
   });
 
   it('closes the issue, or files none, when the only empty slots are hidden from viewers', async (t) => {
-    const catalog = { ...baseCatalog, webcams: { ...baseCatalog.webcams, 'tel-aviv': [] }, news: { ...baseCatalog.news, rtve: [] } };
+    const catalog = { ...baseCatalog, news: { ...baseCatalog.news, 'dw': [], rtve: [] } };
     const report = reportFor(catalog, {
-      'webcams/tel-aviv': { status: 'empty', attempts: [] },
+      'live-news/dw': { status: 'empty', attempts: [] },
       'live-news/rtve': { status: 'empty', attempts: [] },
     });
     const dir = mkdtempSync(join(tmpdir(), 'live-video-audit-hidden-'));
@@ -242,7 +238,7 @@ describe('live video audit issue', () => {
   });
 
   it('publishes on the canaries the checker recorded, without probing them again', async () => {
-    const report = reportFor(baseCatalog, { 'webcams/jerusalem': { status: 'needs-replacement', attempts: [dead(watch('zp6LNSoq000'))] } });
+    const report = reportFor(baseCatalog, { 'live-news/sky': { status: 'needs-replacement', attempts: [dead(watch('zp6LNSoq000'))] } });
     report.canaries = [dead(CANARY_1), live(CANARY_2)];
     const { calls, gh } = fakeGh([]);
 
@@ -271,12 +267,12 @@ describe('live video audit issue', () => {
       'a missing canary': { ...complete(), canaries: [live(CANARY_1)] },
       'a canary for another entry': { ...complete(), canaries: [live(CANARY_1), live(CANARY_1)] },
       'a missing slot': { ...complete(), slots: complete().slots.slice(1) },
-      'an unknown slot': { ...complete(), slots: [...complete().slots.slice(1), { ...complete().slots[0], slot: 'webcams/atlantis' }] },
+      'an unknown slot': { ...complete(), slots: [...complete().slots.slice(1), { ...complete().slots[0], slot: 'live-news/atlantis' }] },
       'a repeated slot': { ...complete(), slots: [complete().slots[1], ...complete().slots.slice(1)] },
     };
     const mutate = (edit) => {
       const report = complete();
-      edit(report.slots.find((slot) => slot.slot === 'webcams/kyiv'));
+      edit(report.slots.find((slot) => slot.slot === 'live-news/france24'));
       return report;
     };
     Object.assign(variants, {
@@ -290,7 +286,7 @@ describe('live video audit issue', () => {
       'a non-boolean shownByDefault': mutate((slot) => { slot.shownByDefault = 'yes'; }),
       'a non-string shownInstead': mutate((slot) => { slot.shownInstead = 3; }),
       'a why carrying Markdown': mutate((slot) => { slot.attempts[0].why = 'YouTube player error 150 @koala73'; }),
-      'a surface carrying an issue reference': mutate((slot) => { slot.surface = 'Webcam grid #2'; }),
+      'a surface carrying an issue reference': mutate((slot) => { slot.surface = 'Live News #2'; }),
       'a shownInstead carrying a link': mutate((slot) => { slot.shownInstead = '[x](https://evil.example)'; }),
       'a suggestedEntry that is a channel': mutate((slot) => { slot.suggestedEntry = CANARY_1; }),
       'a suggestedEntry with a short id': mutate((slot) => { slot.suggestedEntry = watch('abc123DEF4'); }),
@@ -312,7 +308,7 @@ describe('live video audit issue', () => {
       attempts: [attempt(BBC_HLS, 'failed', { why: 'manifest returned HTTP 403', unverifiableFromRunner: true, evidence: { httpStatus: 403 } })],
     };
     const report = reportFor(baseCatalog, {
-      'webcams/jerusalem': { status: 'needs-replacement', attempts: [dead(watch('zp6LNSoq000'))] },
+      'live-news/sky': { status: 'needs-replacement', attempts: [dead(watch('zp6LNSoq000'))] },
       'live-news/bbc-news': geoBlocked,
     });
     const { calls, gh } = fakeGh([]);
@@ -366,53 +362,14 @@ describe('live video audit issue', () => {
     assert.doesNotMatch(readFileSync(quietPath, 'utf8'), /Alone checks skipped/);
   });
 
-  it('counts an empty grid hotspot as "no entries configured", first, with the slot shown in its cell', async () => {
-    const catalog = { ...baseCatalog, webcams: { ...baseCatalog.webcams, jerusalem: [] } };
-    const report = reportFor(catalog, {
-      'webcams/jerusalem': { status: 'empty', attempts: [] },
-      'live-news/bloomberg': { status: 'needs-replacement', attempts: [dead(watch('QB5BNdBFujE'))] },
-    }, { 'webcams/jerusalem': 'webcams/tel-aviv' });
-    report.slots.reverse();
-    const { calls, gh } = fakeGh([]);
-
-    assert.deepEqual(await publish(report, { gh, catalog }), { findings: 2, action: 'created' });
-    const { body } = calls.at(-1).payload;
-    const rows = body.split('\n').filter((line) => /^\| (webcams|live-news)\//.test(line));
-    assert.equal(rows[0], '| webcams/jerusalem | Webcam grid cell 1 | empty | — | no entries configured | webcams/tel-aviv | — |');
-    assert.match(rows[1], /^\| live-news\/bloomberg \|/);
-    assert.match(body, /^Daily live video source audit: 2 slot\(s\) need attention, 2 of them shown by default\.$/m);
-    assert.doesNotMatch(body, /### Unfilled slots/);
-  });
-
-  it('lists hotspot wall slots first, then other slots shown by default, then the rest', async () => {
-    const report = reportFor(baseCatalog, {
-      'webcams/kyiv': { status: 'needs-replacement', attempts: [dead(watch('e2gC37ILQmk')), dead(watch('VGnFLdQW39A'))] },
-      'webcams/tel-aviv': { status: 'needs-replacement', attempts: [dead(watch('oDCAAfOSqvA'))] },
-      'live-news/bloomberg': { status: 'needs-replacement', attempts: [dead(watch('QB5BNdBFujE'))] },
-      'live-news/rtve': { status: 'needs-replacement', attempts: [dead(watch('KQp-e_XQnDE'))] },
-    });
-    report.slots.reverse();
-    const { calls, gh } = fakeGh([]);
-
-    await publish(report, { gh });
-
-    const { body } = calls.at(-1).payload;
-    const order = ['### Shown by default', '| webcams/kyiv |', '| live-news/bloomberg |', '### Not shown by default', '| webcams/tel-aviv |', '| live-news/rtve |']
-      .map((needle) => [needle, body.indexOf(needle)]);
-    for (const [needle, index] of order) assert.ok(index >= 0, `${needle} is missing:\n${body}`);
-    assert.deepEqual(order.map(([needle]) => needle), [...order].sort((a, b) => a[1] - b[1]).map(([needle]) => needle));
-    assert.match(body, /^Daily live video source audit: 4 slot\(s\) need attention, 2 of them shown by default\.$/m);
-  });
-
   it('lists hidden empty slots by surface under "Unfilled slots", without counting them', async () => {
     const catalog = {
       ...baseCatalog,
-      webcams: { ...baseCatalog.webcams, 'tel-aviv': [] },
-      news: { ...baseCatalog.news, 'bbc-news': [], rtve: [] },
+      news: { ...baseCatalog.news, dw: [], 'bbc-news': [], rtve: [] },
     };
     const report = reportFor(catalog, {
-      'webcams/kyiv': { status: 'degraded', attempts: [dead(watch('e2gC37ILQmk')), live(watch('VGnFLdQW39A'))] },
-      'webcams/tel-aviv': { status: 'empty', attempts: [] },
+      'live-news/france24': { status: 'degraded', attempts: [dead(watch('e2gC37ILQmk')), live(watch('VGnFLdQW39A'))] },
+      'live-news/dw': { status: 'empty', attempts: [] },
       'live-news/bbc-news': { status: 'empty', attempts: [] },
       'live-news/rtve': { status: 'empty', attempts: [] },
     });
@@ -423,29 +380,28 @@ describe('live video audit issue', () => {
     assert.match(body, /^Daily live video source audit: 1 slot\(s\) need attention, 1 of them shown by default\.$/m);
     assert.doesNotMatch(body, /### Not shown by default/);
     const section = body.indexOf('### Unfilled slots (hidden from viewers)');
-    assert.ok(section > body.indexOf('| webcams/kyiv |'), body);
+    assert.ok(section > body.indexOf('| live-news/france24 |'), body);
     assert.ok(section < body.indexOf('### Fix a slot'), body);
-    assert.equal(body.indexOf('webcams/tel-aviv'), body.indexOf('webcams/tel-aviv', section), 'tel-aviv appears only in the unfilled section');
+    assert.equal(body.indexOf('live-news/dw'), body.indexOf('live-news/dw', section), 'dw appears only in the unfilled section');
     assert.equal(body.indexOf('live-news/rtve'), body.indexOf('live-news/rtve', section), 'rtve appears only in the unfilled section');
-    assert.match(body, /^- Webcam \(Middle East\): webcams\/tel-aviv$/m);
-    assert.match(body, /^- Live News optional: live-news\/bbc-news, live-news\/rtve$/m);
+    assert.match(body, /^- Live News optional: live-news\/dw, live-news\/bbc-news, live-news\/rtve$/m);
     assert.doesNotMatch(body, /\| empty \|/);
   });
 
-  it('fills the shown-instead column with the stand-in slot, the live backup entry, or a dash', async () => {
+  it('fills the shown-instead column with the live backup entry or a dash', async () => {
     const report = reportFor(baseCatalog, {
-      'webcams/jerusalem': { status: 'needs-replacement', attempts: [dead(watch('zp6LNSoq000'))] },
-      'webcams/kyiv': { status: 'degraded', attempts: [dead(watch('e2gC37ILQmk')), live(watch('VGnFLdQW39A'))] },
+      'live-news/sky': { status: 'needs-replacement', attempts: [dead(watch('zp6LNSoq000'))] },
+      'live-news/france24': { status: 'degraded', attempts: [dead(watch('e2gC37ILQmk')), live(watch('VGnFLdQW39A'))] },
       'live-news/bloomberg': { status: 'needs-replacement', attempts: [dead(watch('QB5BNdBFujE'))] },
-    }, { 'webcams/jerusalem': 'webcams/tel-aviv' });
+    });
     const { calls, gh } = fakeGh([]);
 
     await publish(report, { gh });
 
-    const rows = calls.at(-1).payload.body.split('\n').filter((line) => /^\| (webcams|live-news)\//.test(line));
+    const rows = calls.at(-1).payload.body.split('\n').filter((line) => /^\| live-news\//.test(line));
     const shownInstead = rows.map((row) => row.split(' | ').at(-2));
-    assert.deepEqual(rows.map((row) => row.split(' | ')[0].slice(2)), ['webcams/jerusalem', 'webcams/kyiv', 'live-news/bloomberg']);
-    assert.deepEqual(shownInstead, ['webcams/tel-aviv', 'entry 2 (live)', '—']);
+    assert.deepEqual(rows.map((row) => row.split(' | ')[0].slice(2)), ['live-news/sky', 'live-news/france24', 'live-news/bloomberg']);
+    assert.deepEqual(shownInstead, ['—', 'entry 2 (live)', '—']);
   });
 
   describe('resolved channels', () => {
@@ -488,10 +444,8 @@ describe('live video audit issue', () => {
         : { status: 'unreadable', reason: 'timeout', videoId: null, channelId: id, title: null }]));
       const writes = [];
       const surfaces = {
-        webcamFeeds: Object.keys(catalog.webcams).map((id) => ({ id, region: 'europe' })),
-        gridCells: 4,
         newsDefaults: { full: ['bloomberg'] },
-        newsOptional: ['bbc-news', 'rtve'],
+        newsOptional: Object.keys(catalog.news),
       };
       await runCheck(['--all', '--report', 'audit.json'], {
         write: () => {}, catalog, surfaces, probeYouTube, resolveChannels,
@@ -512,31 +466,31 @@ describe('live video audit issue', () => {
       why: 'the player no longer reports whether a video is live (isLive missing)',
       unverifiableFromRunner: true,
     });
-    const report = reportFor(baseCatalog, { 'webcams/kyiv': { status: 'degraded', attempts: [dead(watch('e2gC37ILQmk')), unverified] } });
+    const report = reportFor(baseCatalog, { 'live-news/france24': { status: 'degraded', attempts: [dead(watch('e2gC37ILQmk')), unverified] } });
     const { calls, gh } = fakeGh([]);
 
     assert.deepEqual(await publish(report, { gh }), { findings: 1, action: 'created' });
     const { body } = calls.at(-1).payload;
-    assert.deepEqual(body.split('\n').filter((line) => line.startsWith('| webcams/kyiv |')), [
-      '| webcams/kyiv | Webcam grid cell 2 | degraded | `https://www.youtube.com/watch?v=e2gC37ILQmk` | YouTube player error 150: the owner does not allow embedding, or the video is unavailable here | entry 2 (unverified) | — |',
+    assert.deepEqual(body.split('\n').filter((line) => line.startsWith('| live-news/france24 |')), [
+      '| live-news/france24 | Live News default (full) | degraded | `https://www.youtube.com/watch?v=e2gC37ILQmk` | YouTube player error 150: the owner does not allow embedding, or the video is unavailable here | entry 2 (unverified) | — |',
     ]);
     assert.doesNotMatch(body, /### Could not verify from the runner/);
   });
 
   it('counts a slot as a finding when a dead entry sits behind one the runner could not verify', async () => {
-    const catalog = { ...baseCatalog, webcams: { ...baseCatalog.webcams, kyiv: [BBC_HLS, watch('e2gC37ILQmk'), watch('VGnFLdQW39A')] } };
+    const catalog = { ...baseCatalog, news: { ...baseCatalog.news, france24: [BBC_HLS, watch('e2gC37ILQmk'), watch('VGnFLdQW39A')] } };
     const blocked = attempt(BBC_HLS, 'failed', { why: 'manifest returned HTTP 403', unverifiableFromRunner: true, evidence: { httpStatus: 403 } });
     const report = reportFor(catalog, {
-      'webcams/kyiv': { status: 'degraded', attempts: [blocked, dead(watch('e2gC37ILQmk')), dead(watch('VGnFLdQW39A'))] },
+      'live-news/france24': { status: 'degraded', attempts: [blocked, dead(watch('e2gC37ILQmk')), dead(watch('VGnFLdQW39A'))] },
     });
     const { calls, gh } = fakeGh([{ number: 6, title: ISSUE_TITLE }]);
 
     assert.deepEqual(await publish(report, { gh, catalog }), { findings: 1, action: 'updated' });
     const { body } = calls.at(-1).payload;
     assert.match(body, /^Daily live video source audit: 1 slot\(s\) need attention, 1 of them shown by default\.$/m);
-    assert.deepEqual(body.split('\n').filter((line) => line.startsWith('| webcams/kyiv |')), [
-      '| webcams/kyiv | Webcam grid cell 2 | degraded | entry 2: `https://www.youtube.com/watch?v=e2gC37ILQmk` | YouTube player error 150: the owner does not allow embedding, or the video is unavailable here | entry 1 (unverified) | — |',
-      '| webcams/kyiv | Webcam grid cell 2 | degraded | entry 3: `https://www.youtube.com/watch?v=VGnFLdQW39A` | YouTube player error 150: the owner does not allow embedding, or the video is unavailable here | entry 1 (unverified) | — |',
+    assert.deepEqual(body.split('\n').filter((line) => line.startsWith('| live-news/france24 |')), [
+      '| live-news/france24 | Live News default (full) | degraded | entry 2: `https://www.youtube.com/watch?v=e2gC37ILQmk` | YouTube player error 150: the owner does not allow embedding, or the video is unavailable here | entry 1 (unverified) | — |',
+      '| live-news/france24 | Live News default (full) | degraded | entry 3: `https://www.youtube.com/watch?v=VGnFLdQW39A` | YouTube player error 150: the owner does not allow embedding, or the video is unavailable here | entry 1 (unverified) | — |',
     ]);
     assert.doesNotMatch(body, /### Could not verify from the runner/);
   });
@@ -545,10 +499,8 @@ describe('live video audit issue', () => {
     const SKY_HLS = 'https://linear.sky.test/live/master.m3u8';
     const catalog = { ...baseCatalog, news: { bloomberg: [SKY_HLS], 'bbc-news': [watch('bbcNewsLive')], rtve: [watch('KQp-e_XQnDE')] } };
     const surfaces = {
-      webcamFeeds: Object.keys(catalog.webcams).map((id) => ({ id, region: 'europe' })),
-      gridCells: 4,
       newsDefaults: { full: ['bloomberg'] },
-      newsOptional: ['bloomberg', 'bbc-news', 'rtve'],
+      newsOptional: Object.keys(catalog.news),
       newsGeoAvailability: { 'bbc-news': ['GB'] },
     };
     const liveVerdict = { verdict: { verdict: 'live', video: { videoId: 'gCNeDWCI0vo', isLive: true, title: 'Live', author: 'Channel' } } };
@@ -583,8 +535,8 @@ describe('live video audit issue', () => {
       checkedAt: '2026-09-15T05:17:00.000Z',
       canaries: [live(CANARY_1)],
       slots: [{
-        slot: 'webcams/kyiv',
-        surface: 'Webcam grid cell 2',
+        slot: 'live-news/france24',
+        surface: 'Live News default (full)',
         shownByDefault: true,
         status: 'unverifiable-from-runner',
         attempts: [stalled, dead(watch('VGnFLdQW39A'))],
@@ -596,12 +548,12 @@ describe('live video audit issue', () => {
 
     const section = body.indexOf('### Could not verify from the runner');
     assert.ok(section > 0, body);
-    assert.match(body.slice(section), /\| webcams\/kyiv \| Webcam grid cell 2 \| `https:\/\/www\.youtube\.com\/watch\?v=e2gC37ILQmk` \| the player frame loaded but never became ready \|/);
+    assert.match(body.slice(section), /\| live-news\/france24 \| Live News default \(full\) \| `https:\/\/www\.youtube\.com\/watch\?v=e2gC37ILQmk` \| the player frame loaded but never became ready \|/);
     assert.doesNotMatch(body, /VGnFLdQW39A/, 'a definitively dead entry is never listed as runner-dependent');
   });
 
   it('throws before any GitHub call, and without re-probing, when no canary in the report is live', async () => {
-    const report = reportFor(baseCatalog, { 'webcams/jerusalem': { status: 'needs-replacement', attempts: [dead(watch('zp6LNSoq000'))] } });
+    const report = reportFor(baseCatalog, { 'live-news/sky': { status: 'needs-replacement', attempts: [dead(watch('zp6LNSoq000'))] } });
     report.canaries = [dead(CANARY_1), dead(CANARY_2)];
 
     await assert.rejects(publish(report, { gh: unexpectedGh }), /every audit canary failed twice/);
@@ -613,7 +565,7 @@ describe('live video audit issue', () => {
     const hostileGeo = 'https://evil.example/![](p)/[x](y).m3u8';
     const catalog = { ...baseCatalog, news: { ...baseCatalog.news, 'bbc-news': [hostileGeo], rtve: [hostileHls] } };
     const report = reportFor(catalog, {
-      'webcams/kyiv': {
+      'live-news/france24': {
         status: 'needs-replacement',
         attempts: [
           attempt(watch('e2gC37ILQmk'), 'recording', { why: 'ended recording (isLive=false, duration 24,181 s)', evidence: { title: hostile, author: hostile } }),
@@ -641,8 +593,8 @@ describe('live video audit issue', () => {
     assert.doesNotMatch(body, /^second line/m, 'a newline in probe text started a new Markdown line');
     const cellCount = (row) => row.slice(2, -2).split(/(?<!\\)\|/).length;
     const rowsFor = (slot) => body.split('\n').filter((line) => line.startsWith(`| ${slot} |`));
-    assert.equal(rowsFor('webcams/kyiv').length, 2);
-    for (const row of [...rowsFor('webcams/kyiv'), ...rowsFor('live-news/rtve')]) assert.equal(cellCount(row), 7, row);
+    assert.equal(rowsFor('live-news/france24').length, 2);
+    for (const row of [...rowsFor('live-news/france24'), ...rowsFor('live-news/rtve')]) assert.equal(cellCount(row), 7, row);
     assert.equal(rowsFor('live-news/bbc-news').length, 1);
     for (const row of rowsFor('live-news/bbc-news')) assert.equal(cellCount(row), 4, row);
     assert.match(body, /`@koala73 @github\/staff 'tick' \[x\]\(https:\/\/evil\.example\)/, 'the title stays readable inside its code span');
@@ -669,7 +621,7 @@ describe('live video audit issue', () => {
       news[`unfilled-${i}`] = [];
       slots.push({ slot: `live-news/unfilled-${i}`, surface: 'Live News optional', shownByDefault: false, status: 'empty', attempts: [], shownInstead: null });
     }
-    const catalog = { webcams: {}, gridPriority: [], news, canaries: [CANARY_1, CANARY_2] };
+    const catalog = { news, canaries: [CANARY_1, CANARY_2] };
     const report = { checkedAt: '2026-09-15T05:17:00.000Z', canaries: catalog.canaries.map(live), slots };
     const dir = mkdtempSync(join(tmpdir(), 'live-video-audit-size-'));
     t.after(() => rmSync(dir, { recursive: true, force: true }));
@@ -702,7 +654,9 @@ describe('live video audit issue', () => {
 });
 
 describe('live video audit command line', () => {
-  it('reports a real-catalog audit through a fake gh, and fails on a missing report', async (t) => {
+  it('reports a real-catalog audit through a fake gh, and fails on a missing report', {
+    skip: process.platform === 'win32' && 'The fake gh is a POSIX executable',
+  }, async (t) => {
     const dir = mkdtempSync(join(tmpdir(), 'live-video-audit-cli-'));
     t.after(() => rmSync(dir, { recursive: true, force: true }));
     const reportPath = join(dir, 'live-video-audit.json');
@@ -747,7 +701,7 @@ if (query.includes('is:open')) {
     assert.ok(result.findings > 0, 'every slot entry failed');
     const payload = JSON.parse(readFileSync(payloadPath, 'utf8'));
     assert.equal(payload.title, ISSUE_TITLE);
-    assert.match(payload.body, /^\| (webcams|live-news)\/[a-z0-9-]+ \| [^|]+ \| needs-replacement \| `[^`]+` \| (YouTube player error 150|manifest returned HTTP 404)/m);
+    assert.match(payload.body, /^\| live-news\/[a-z0-9-]+ \| [^|]+ \| needs-replacement \| `[^`]+` \| (YouTube player error 150|manifest returned HTTP 404)/m);
 
     const missing = runReporter({ LIVE_VIDEO_AUDIT_REPORT: join(dir, 'missing.json') });
     assert.equal(missing.status, 1);

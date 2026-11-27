@@ -2,7 +2,7 @@
 
 **Status**: Confirmed impossible. All JS/CSS approaches exhausted.
 **Date**: February 2026
-**Affects**: Live News panel, Live Webcams panel (macOS desktop app)
+**Affects**: Live News panel (macOS desktop app)
 **Root cause**: WKWebView blocks programmatic media playback in cross-origin iframes without a direct user gesture.
 
 ---
@@ -112,8 +112,6 @@ The previous architecture served embeds from `https://worldmonitor.app/api/youtu
 | File | Change |
 |------|--------|
 | `src-tauri/sidecar/local-api-server.mjs` | MutationObserver, retry chain, overlay fixes, `postMessage('*')`, `Permissions-Policy` header |
-| `src/styles/main.css` | `.webcam-iframe { pointer-events: auto }` (was `none`), expand button styles |
-| `src/components/LiveWebcamsPanel.ts` | Expand button in grid cells, `localhost` embed URLs |
 | `src/components/LiveNewsPanel.ts` | `localhost` embed URLs, `embedOrigin` getter |
 | `index.html` | CSP `frame-src` added `http://localhost:*` |
 | `src-tauri/tauri.conf.json` | CSP `frame-src` added `http://localhost:*` |

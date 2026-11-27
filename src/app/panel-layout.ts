@@ -229,7 +229,6 @@ export const DEFERRED_PANEL_NATURAL_FOOTPRINTS: Readonly<Record<string, Deferred
   'gdelt-intel': { rowSpan: 2 },
   'internet-disruptions': { rowSpan: 2 },
   'live-news': { className: 'panel-wide' },
-  'live-webcams': { className: 'panel-wide' },
   'news-market-correlation': { rowSpan: 2, className: 'panel-wide' },
   'oil-inventories': { rowSpan: 2 },
   'pipeline-status': { rowSpan: 2 },
@@ -241,7 +240,6 @@ export const DEFERRED_PANEL_NATURAL_FOOTPRINTS: Readonly<Record<string, Deferred
   'threat-timeline': { rowSpan: 2 },
   'trade-policy': { rowSpan: 2 },
   'ucdp-events': { rowSpan: 2 },
-  'windy-webcams': { className: 'panel-wide' },
 };
 
 const DEFERRED_DYNAMIC_PANEL_FOOTPRINTS: Readonly<Record<string, DeferredPanelShellFootprint>> = {
@@ -3325,8 +3323,6 @@ export class PanelLayoutManager implements AppModule {
       return new LiveNewsPanel();
     });
 
-    this.lazyDefaultPanel('live-webcams', () => import('@/components/LiveWebcamsPanel'), 'LiveWebcamsPanel');
-    this.lazyDefaultPanel('windy-webcams', () => import('@/components/PinnedWebcamsPanel'), 'PinnedWebcamsPanel');
 
     this.lazyPanel('events', () =>
       this.importPanel(
@@ -3533,7 +3529,7 @@ export class PanelLayoutManager implements AppModule {
 
       // Option B: place the curated Overview panels first so the initial
       // 1-column inspector renders high-signal summary cards immediately while
-      // heavy video/webcam streams stay deferred in the bottom tray until opened.
+      // heavy video streams stay deferred in the bottom tray until opened.
       const overviewPriority = INITIAL_OVERVIEW_PANELS[SITE_VARIANT] ?? INITIAL_OVERVIEW_PANELS.full ?? [];
       for (let i = overviewPriority.length - 1; i >= 0; i -= 1) {
         const key = overviewPriority[i]!;

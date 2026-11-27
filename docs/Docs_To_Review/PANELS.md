@@ -253,7 +253,6 @@ The full (geopolitical) variant ships **37 panels** focused on OSINT, defense in
 |---|----------|-------------|----------|-----------------|-------------|
 | 1 | `map` | Global Map | 1 | `MapContainer` | MapLibre + deck.gl |
 | 2 | `live-news` | Live News | 1 | `LiveNewsPanel` | Multi-source RSS aggregation |
-| 3 | `live-webcams` | Live Webcams | 1 | `LiveWebcamsPanel` | Curated webcam streams |
 | 4 | `insights` | AI Insights | 1 | `InsightsPanel` | Groq/OpenRouter LLM summarization |
 | 5 | `strategic-posture` | AI Strategic Posture | 1 | `StrategicPosturePanel` | Theater posture API |
 | 6 | `cii` | Country Instability | 1 | `CIIPanel` | Composite instability index |
@@ -301,7 +300,6 @@ The tech variant ships **34 panels** focused on technology news, AI/ML, startup 
 |---|----------|-------------|----------|-----------------|-------------|
 | 1 | `map` | Global Tech Map | 1 | `MapContainer` | MapLibre + deck.gl |
 | 2 | `live-news` | Tech Headlines | 1 | `LiveNewsPanel` | Tech RSS aggregation |
-| 3 | `live-webcams` | Live Webcams | 2 | `LiveWebcamsPanel` | Curated webcam streams |
 | 4 | `insights` | AI Insights | 1 | `InsightsPanel` | Groq/OpenRouter LLM summarization |
 | 5 | `ai` | AI/ML News | 1 | `NewsPanel` | AI/ML RSS feeds |
 | 6 | `tech` | Technology | 1 | `NewsPanel` | Technology RSS feeds |
@@ -346,7 +344,6 @@ The finance variant ships **29 panels** focused on markets, trading, macro indic
 |---|----------|-------------|----------|-----------------|-------------|
 | 1 | `map` | Global Markets Map | 1 | `MapContainer` | MapLibre + deck.gl |
 | 2 | `live-news` | Market Headlines | 1 | `LiveNewsPanel` | Financial RSS aggregation |
-| 3 | `live-webcams` | Live Webcams | 2 | `LiveWebcamsPanel` | Curated webcam streams |
 | 4 | `insights` | AI Market Insights | 1 | `InsightsPanel` | Groq/OpenRouter LLM summarization |
 | 5 | `markets` | Live Markets | 1 | `MarketPanel` | Finnhub / Yahoo Finance |
 | 6 | `markets-news` | Markets News | 2 | `NewsPanel` | Markets RSS feeds |
@@ -386,7 +383,6 @@ This matrix shows which panel IDs are available in each variant. Panels that app
 |----------|:----:|:----:|:-------:|-------|
 | `map` | ✅ | ✅ | ✅ | Different names per variant |
 | `live-news` | ✅ | ✅ | ✅ | Different names per variant |
-| `live-webcams` | ✅ | ✅ | ✅ | Priority 1 in full, priority 2 in tech/finance |
 | `insights` | ✅ | ✅ | ✅ | Different names per variant |
 | `markets` | ✅ | ✅ | ✅ | "Markets" / "Tech Stocks" / "Live Markets" |
 | `economic` | ✅ | ✅ | ✅ | "Economic Indicators" / "Economic Indicators" / "Economic Data" |
@@ -630,7 +626,6 @@ When the application adds new panels (in a code update), the saved panel order i
 4. Insert missing panels after the `politics` panel position (or at position 0)
 5. Always place `monitors` panel last
 6. Always place `live-news` panel first (CSS grid constraint — it spans 2 columns)
-7. Always place `live-webcams` immediately after `live-news`
 
 ---
 
@@ -673,7 +668,6 @@ Panel (base)
 ├── PopulationExposurePanel ← Population exposure
 ├── InvestmentsPanel   ← GCC investment tracker
 ├── LiveNewsPanel      ← Breaking news aggregation
-├── LiveWebcamsPanel   ← Multi-stream webcam view
 ├── TechEventsPanel    ← Technology events
 ├── ServiceStatusPanel ← Service uptime monitor
 ├── TechReadinessPanel ← World Bank tech index
@@ -924,7 +918,6 @@ Quick reference for locating panel component source files:
 | `PopulationExposurePanel` | `src/components/PopulationExposurePanel.ts` |
 | `InvestmentsPanel` | `src/components/InvestmentsPanel.ts` |
 | `LiveNewsPanel` | `src/components/LiveNewsPanel.ts` |
-| `LiveWebcamsPanel` | `src/components/LiveWebcamsPanel.ts` |
 | `TechEventsPanel` | `src/components/TechEventsPanel.ts` |
 | `ServiceStatusPanel` | `src/components/ServiceStatusPanel.ts` |
 | `TechReadinessPanel` | `src/components/TechReadinessPanel.ts` |

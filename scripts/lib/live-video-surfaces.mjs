@@ -3,7 +3,6 @@
 // longer be read fails loudly instead of silently placing nothing (as mcp-preset-liveness.mjs does).
 import { readFileSync } from 'node:fs';
 
-const WEBCAMS_PANEL = 'src/components/LiveWebcamsPanel.ts';
 // The Live News channel lists live in src/services/live-channels.ts (#8293), not in the panel.
 const NEWS_PANEL = 'src/services/live-channels.ts';
 
@@ -25,19 +24,11 @@ function readObjects(body, objectPattern, file, name) {
 }
 
 /**
- * @param {{ webcamsPanel: string, newsPanel: string }} sources the two panel files' text
- * @returns {{ webcamFeeds: { id: string, region: string }[], gridCells: number,
+ * @param {{ newsPanel: string }} sources the channel registry's text
+ * @returns {{
  *   newsDefaults: Record<string, string[]>, newsOptional: string[], newsGeoAvailability: Record<string, string[]> }}
  */
-export function extractLiveVideoSurfaces({ webcamsPanel, newsPanel }) {
-  const [feeds] = arrays(webcamsPanel, 'WEBCAM_FEEDS');
-  if (!feeds) throw new Error(`${WEBCAMS_PANEL}: cannot find WEBCAM_FEEDS`);
-  const webcamFeeds = readObjects(feeds.body, /\{\s*id:\s*'([^']+)'[^}]*?\bregion:\s*'([^']+)'[^}]*\}/g, WEBCAMS_PANEL, 'WEBCAM_FEEDS')
-    .map(([, id, region]) => ({ id, region }));
-
-  const gridCells = Number(/const MAX_GRID_CELLS\s*=\s*(\d+)\s*;/.exec(webcamsPanel)?.[1]);
-  if (!Number.isSafeInteger(gridCells) || gridCells < 1) throw new Error(`${WEBCAMS_PANEL}: cannot read MAX_GRID_CELLS`);
-
+export function extractLiveVideoSurfaces({ newsPanel }) {
   const newsDefaults = {};
   let newsOptional = null;
   // The channels that only play in some countries: the audit runner is outside them, so a region block is expected.
@@ -56,12 +47,11 @@ export function extractLiveVideoSurfaces({ webcamsPanel, newsPanel }) {
   if (!newsOptional) throw new Error(`${NEWS_PANEL}: cannot find OPTIONAL_LIVE_CHANNELS`);
   if (Object.keys(newsDefaults).length === 0) throw new Error(`${NEWS_PANEL}: cannot find a default *_LIVE_CHANNELS list`);
 
-  return { webcamFeeds, gridCells, newsDefaults, newsOptional, newsGeoAvailability };
+  return { newsDefaults, newsOptional, newsGeoAvailability };
 }
 
 export function readLiveVideoSurfaces(root = new URL('../../', import.meta.url)) {
   return extractLiveVideoSurfaces({
-    webcamsPanel: readFileSync(new URL(WEBCAMS_PANEL, root), 'utf8'),
     newsPanel: readFileSync(new URL(NEWS_PANEL, root), 'utf8'),
   });
 }

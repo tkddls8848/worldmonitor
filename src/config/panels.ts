@@ -16,8 +16,6 @@ const IRAN_ATTACKS_ENABLED = typeof window !== 'undefined' && import.meta.env.VI
 const FULL_PANELS: Record<string, PanelConfig> = {
   map: { name: 'Global Map', enabled: true, priority: 1 },
   'live-news': { name: 'Live News', enabled: true, priority: 1 },
-  'live-webcams': { name: 'Live Webcams', enabled: true, priority: 1 },
-  'windy-webcams': { name: 'Windy Live Webcam', enabled: false, priority: 2 },
   insights: { name: 'AI Insights', enabled: true, priority: 1 },
   'threat-timeline': { name: 'Threat Timeline', enabled: true, priority: 1 },
   'strategic-posture': { name: 'AI Strategic Posture', enabled: true, priority: 1 },
@@ -185,7 +183,6 @@ const FULL_MAP_LAYERS: MapLayers = {
   miningSites: false,
   processingPlants: false,
   commodityPorts: false,
-  webcams: false,
   diseaseOutbreaks: false,
 };
 
@@ -247,7 +244,6 @@ const FULL_MOBILE_MAP_LAYERS: MapLayers = {
   miningSites: false,
   processingPlants: false,
   commodityPorts: false,
-  webcams: false,
   diseaseOutbreaks: false,
 };
 
@@ -257,8 +253,6 @@ const FULL_MOBILE_MAP_LAYERS: MapLayers = {
 const TECH_PANELS: Record<string, PanelConfig> = {
   map: { name: 'Global Tech Map', enabled: true, priority: 1 },
   'live-news': { name: 'Tech Headlines', enabled: true, priority: 1 },
-  'live-webcams': { name: 'Live Webcams', enabled: true, priority: 2 },
-  'windy-webcams': { name: 'Windy Live Webcam', enabled: false, priority: 2 },
   insights: { name: 'AI Insights', enabled: true, priority: 1 },
   ai: { name: 'AI/ML News', enabled: true, priority: 1 },
   tech: { name: 'Technology', enabled: true, priority: 1 },
@@ -351,7 +345,6 @@ const TECH_MAP_LAYERS: MapLayers = {
   miningSites: false,
   processingPlants: false,
   commodityPorts: false,
-  webcams: false,
   diseaseOutbreaks: false,
 };
 
@@ -408,7 +401,6 @@ const TECH_MOBILE_MAP_LAYERS: MapLayers = {
   miningSites: false,
   processingPlants: false,
   commodityPorts: false,
-  webcams: false,
   diseaseOutbreaks: false,
 };
 
@@ -418,8 +410,6 @@ const TECH_MOBILE_MAP_LAYERS: MapLayers = {
 const FINANCE_PANELS: Record<string, PanelConfig> = {
   map: { name: 'Global Markets Map', enabled: true, priority: 1 },
   'live-news': { name: 'Market Headlines', enabled: true, priority: 1 },
-  'live-webcams': { name: 'Live Webcams', enabled: true, priority: 2 },
-  'windy-webcams': { name: 'Windy Live Webcam', enabled: false, priority: 2 },
   insights: { name: 'AI Market Insights', enabled: true, priority: 1 },
   markets: { name: 'Live Markets', enabled: true, priority: 1 },
   'stock-analysis': { name: 'Stock Analysis', enabled: true, priority: 1 },
@@ -547,7 +537,6 @@ const FINANCE_MAP_LAYERS: MapLayers = {
   miningSites: false,
   processingPlants: false,
   commodityPorts: false,
-  webcams: false,
   diseaseOutbreaks: false,
 };
 
@@ -604,7 +593,6 @@ const FINANCE_MOBILE_MAP_LAYERS: MapLayers = {
   miningSites: false,
   processingPlants: false,
   commodityPorts: false,
-  webcams: false,
   diseaseOutbreaks: false,
 };
 
@@ -677,7 +665,6 @@ const HAPPY_MAP_LAYERS: MapLayers = {
   miningSites: false,
   processingPlants: false,
   commodityPorts: false,
-  webcams: false,
   diseaseOutbreaks: false,
 };
 
@@ -734,7 +721,6 @@ const HAPPY_MOBILE_MAP_LAYERS: MapLayers = {
   miningSites: false,
   processingPlants: false,
   commodityPorts: false,
-  webcams: false,
   diseaseOutbreaks: false,
 };
 
@@ -837,7 +823,6 @@ const COMMODITY_MAP_LAYERS: MapLayers = {
   miningSites: true,
   processingPlants: true,
   commodityPorts: true,
-  webcams: false,
   diseaseOutbreaks: false,
 };
 
@@ -894,7 +879,6 @@ const COMMODITY_MOBILE_MAP_LAYERS: MapLayers = {
   miningSites: true,
   processingPlants: false,
   commodityPorts: true,
-  webcams: false,
   diseaseOutbreaks: false,
 };
 
@@ -994,7 +978,6 @@ const ENERGY_MAP_LAYERS: MapLayers = {
   miningSites: false,
   processingPlants: false,
   commodityPorts: true,   // LNG import/export + crude terminals
-  webcams: false,
   diseaseOutbreaks: false,
   storageFacilities: true, // UGS / SPR / LNG / crude hubs (Day 9-10 registry)
   fuelShortages: true,     // Global fuel shortage alerts (Day 11-12 registry)
@@ -1048,7 +1031,6 @@ const ENERGY_MOBILE_MAP_LAYERS: MapLayers = {
   miningSites: false,
   processingPlants: false,
   commodityPorts: true,
-  webcams: false,
   diseaseOutbreaks: false,
   storageFacilities: true,
   fuelShortages: true,
@@ -1083,9 +1065,20 @@ export function isPanelNativeToVariant(panelId: string, variant: string): boolea
   return Boolean(configs && Object.prototype.hasOwnProperty.call(configs, panelId));
 }
 
-/** All panels from all variants — canonical cross-variant registry. */
-export const TORONTO_SAFETY_PANEL_ID = 'toronto-safety';
+export const RETIRED_PANEL_IDS: ReadonlySet<string> = new Set([
+  'toronto-safety',
+  'live-webcams',
+  'windy-webcams',
+  'live-youtube',
+  'pinned-webcams',
+]);
 
+export function isRetiredPanel(panelId: string): boolean {
+  return RETIRED_PANEL_IDS.has(panelId);
+}
+
+
+/** All panels from all variants — canonical cross-variant registry. */
 export const ALL_PANELS: Record<string, PanelConfig> = {
   ...HAPPY_PANELS,
   ...COMMODITY_PANELS,
@@ -1271,7 +1264,7 @@ export const PANEL_CATEGORY_MAP: Record<string, { labelKey: string; panelKeys: s
   // All variants — essential panels
   core: {
     labelKey: 'header.panelCatCore',
-    panelKeys: ['map', 'live-news', 'live-webcams', 'windy-webcams', 'insights', 'strategic-posture', 'latest-brief'],
+    panelKeys: ['map', 'live-news', 'insights', 'strategic-posture', 'latest-brief'],
   },
 
   // Full (geopolitical) variant — marketsFinance/topical/dataTracking are

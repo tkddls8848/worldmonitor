@@ -75,7 +75,7 @@ export class LiveNewsPanel extends Panel {
     if (document.hidden) stopLiveMediaPlayback('live-news', 'hidden');
     else this.startAlwaysOnPlaybackIfVisible();
   };
-  // Live News autoplay (on by default); the webcam wall keeps its own opt-in.
+  // Live News autoplay (on by default).
   private alwaysOn = getLiveNewsAutoplay();
   private unsubscribeStreamSettings: (() => void) | null = null;
   private unsubscribeIdle: (() => void) | null = null;

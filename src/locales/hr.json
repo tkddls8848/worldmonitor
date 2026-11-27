@@ -532,8 +532,6 @@
     "techReadiness": "Indeks Tehnološke Spremnosti",
     "gccInvestments": "Ulaganja Vijeća za suradnju Perzijskog zaljeva",
     "geoHubs": "Geopolitički Čvorišta",
-    "liveWebcams": "Užive Kamere",
-    "windyWebcams": "Windy Uživa Kamera",
     "gulfEconomies": "Gospodarstva Perzijskog Zaljeva",
     "groceryBasket": "Indeks Namirnica",
     "groceryItem": "Stavka",
@@ -927,26 +925,6 @@
     }
   },
   "components": {
-    "webcams": {
-      "paused": "Web kamere pauziran",
-      "regions": {
-        "all": "SVE",
-        "mideast": "BLISKI ISTOK",
-        "europe": "EUROPA",
-        "americas": "AMERIKE",
-        "asia": "AZIJA",
-        "space": "SVEMIR"
-      },
-      "play": "Gledaj uživo",
-      "previewStatus": "Spremno za reprodukciju",
-      "connecting": "Povezivanje…",
-      "unverified": "Ne mogu potvrditi je li ovaj stream uživo",
-      "offline": "{{city}} je trenutno izvan mreže",
-      "noFeeds": "Nema živih web kamera u ovoj regiji u ovom trenutku"
-    },
-    "pinnedWebcams": {
-      "pinFromMap": "Prikvačite web kameru sa karte"
-    },
     "positiveNewsFeed": {
       "noStories": "Nema članka u ovoj kategoriji"
     },
@@ -1634,8 +1612,6 @@
       "analysisFrameworksFromAgentskills": "Iz agentskills.io",
       "analysisFrameworksPasteJson": "Zalijepi JSON",
       "analysisFrameworksSaveToLibrary": "Spremi u knjižnicu",
-      "streamAlwaysOnLabel": "Automatska reprodukcija živih web-kamera",
-      "streamAlwaysOnDesc": "Pokreće video uživo web-kamera čim se pojave na zaslonu. Ostavite isključeno da se učitavaju samo kada ih sami pokrenete.",
       "frameworkNote": "Primjenjuje se samo na analizu generirane od strane klijenta",
       "loadingServerInsights": "Učitavanje server uvida...",
       "usingCachedBrief": "Korištenje keširanih sažetaka...",
@@ -1668,7 +1644,7 @@
       "briefFreshness": "Generirano prije {{minutes}}m · najnoviji izvor star {{hours}}h",
       "briefStoryDetails": "Detalji priče ({{count}})",
       "streamIdleStopLabel": "Zaustavi live video kada je korisnik neaktivan",
-      "streamIdleStopDesc": "Zaustavlja Live News i Live Webcams nakon ovog vremena bez aktivnosti i prikazuje obavijest u panelu.",
+      "streamIdleStopDesc": "Zaustavlja Live News nakon ovog vremena bez aktivnosti i prikazuje obavijest u panelu.",
       "streamIdleStopNever": "Nikada",
       "liveNewsAutoplayLabel": "Automatska reprodukcija uživo vijesti",
       "liveNewsAutoplayDesc": "Pokreće video uživo vijesti, utišan, čim se pojavi na zaslonu. Isključite ovo da se video učita samo kada ga sami pokrenete."
@@ -2575,9 +2551,6 @@
       "units": {
         "index": "indeks"
       }
-    },
-    "liveWebcams": {
-      "infoTooltip": "<strong>Live Webcams</strong> Živući prijenos iz geopolitički važnih lokacija diljem svijeta: područja sukoba, glavnih gradova, graničnih prijelaza i strateških tjesnaca. Tokovi iz YouTubea i javnih mreža."
     },
     "macroTiles": {
       "infoTooltip": "<strong>Makroekonomski indikatori</strong> SAD, eurozona i kineski indikatori cijena, aktivnosti, politike i valuta. Kina zahtijeva trenutnu pokrivenost. Svaki prikaz pokazuje svoj izvor i datum promatranja."

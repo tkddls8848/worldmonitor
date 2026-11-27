@@ -1319,7 +1319,7 @@ test.describe('top-level WebMCP dashboard contract', () => {
           }
         };
         const panelSearch = await execute(searchTool, {
-          query: 'live webcams',
+          query: 'live news',
           scope: 'panels',
           limit: 8,
         });
@@ -1344,7 +1344,7 @@ test.describe('top-level WebMCP dashboard contract', () => {
           allowed: {
             ...allowedOpen,
             executable: allowedResult?.executable,
-            query: 'live webcams',
+            query: 'live news',
           },
         };
         if (targetCancellationSupported === true) return probe;

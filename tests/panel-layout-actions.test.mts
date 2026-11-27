@@ -199,10 +199,10 @@ describe('exclusive panel fullscreen', () => {
   it('exits the previous fullscreen panel before a second panel enters', () => {
     const body = { classActive: false };
     const liveNews = createSharedClassPanel(body);
-    const liveWebcams = createSharedClassPanel(body);
+    const secondPanel = createSharedClassPanel(body);
     const registry: Record<string, ReturnType<typeof createSharedClassPanel>> = {
       'live-news': liveNews,
-      'live-webcams': liveWebcams,
+      'second-panel': secondPanel,
     };
 
     liveNews.setFullscreen(true);
@@ -211,23 +211,23 @@ describe('exclusive panel fullscreen', () => {
 
     const panels = [
       entry('live-news', 'sidebar', 0, { fullscreen: true, fullscreenCapable: true }),
-      entry('live-webcams', 'sidebar', 1, { fullscreenCapable: true }),
+      entry('second-panel', 'sidebar', 1, { fullscreenCapable: true }),
     ];
-    assert.deepEqual(otherFullscreenPanelIds(panels, 'live-webcams'), ['live-news']);
+    assert.deepEqual(otherFullscreenPanelIds(panels, 'second-panel'), ['live-news']);
 
     const result = applyExclusiveFullscreenEnter(
       panels,
       (id) => registry[id],
-      'live-webcams',
+      'second-panel',
     );
     assert.deepEqual(result, { exitedIds: ['live-news'], entered: true });
     assert.equal(liveNews.isFullscreenActive(), false);
-    assert.equal(liveWebcams.isFullscreenActive(), true);
+    assert.equal(secondPanel.isFullscreenActive(), true);
     assert.equal(body.classActive, true);
 
-    liveWebcams.setFullscreen(false);
+    secondPanel.setFullscreen(false);
     assert.equal(liveNews.isFullscreenActive(), false);
-    assert.equal(liveWebcams.isFullscreenActive(), false);
+    assert.equal(secondPanel.isFullscreenActive(), false);
     assert.equal(body.classActive, false);
   });
 

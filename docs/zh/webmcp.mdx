@@ -136,7 +136,7 @@ Chrome 149–151 虽已暴露 `registerTool()`，但调用已注册回调时只�
 | `get_panel_layout` | 可选字符串 `cursor`（上一页 `nextCursor` 面板 ID）；不允许其他属性。 | 只读返回有效布局：稳定面板 ID、命名区域（`sidebar` / `bottom`）、顺序索引、折叠与全屏状态，以及区域可用性。`panelsTruncated` 为 true 时用 `nextCursor` 继续。 |
 | `set_panel_collapsed` | 必填字符串 `panelId`，长度 1–96，模式 `^[A-Za-z0-9][A-Za-z0-9@_-]*$`；必填布尔值 `collapsed`；不允许其他属性。 | 经可见折叠控件与持久化路径折叠或展开已挂载面板。状态已匹配时幂等成功。不支持的面板返回 `collapse_unsupported`。需要目标侧取消。 |
 | `move_panel` | 必填字符串 `panelId`；必填字符串 `region`（`sidebar` 或 `bottom`）；必填整数 `index` ≥ 0；不允许其他属性。 | 经与键盘重排相同的持久化路径，将已挂载面板移到命名区域与从 0 开始的索引。不使用指针坐标。底部区域不可用时返回 `region_unavailable`。需要目标侧取消。 |
-| `set_panel_fullscreen` | 必填字符串 `panelId`；必填布尔值 `fullscreen`；不允许其他属性。 | 经可见全屏控件进入或退出面板全屏（直播新闻 / 网络摄像头）。仅会话视图状态；不支持的面板返回 `fullscreen_unsupported`。 |
+| `set_panel_fullscreen` | 必填字符串 `panelId`；必填布尔值 `fullscreen`；不允许其他属性。 | 经可见全屏控件进入或退出面板全屏（直播新闻）。仅会话视图状态；不支持的面板返回 `fullscreen_unsupported`。 |
 | `set_map_view` | 二选一且只能选一：`view`；或 `lat` 加 `lon`。`view` 可为 `global`、`america`、`mena`、`eu`、`asia`、`latam`、`africa`、`oceania`；`lat` 范围 -85.051129–85.051129，`lon` 范围 -180–180，可选 `zoom` 范围 1–10。 | 移动可见地图。 |
 | `set_map_layers` | 必填对象 `layers`，含 1–10 个布尔项；键长 1–30，匹配 `^[a-z][A-Za-z0-9_-]*$`；顶层不允许其他属性。 | 启用或禁用允许的可见图层，并返回逐图层结果。 |
 | `set_time_range` | 必填字符串 `timeRange`：`1h`、`6h`、`24h`、`48h`、`7d` 或 `all`；不允许其他属性。 | 通过仪表板控件设置可见地图时间范围。返回请求值与生效值。 |

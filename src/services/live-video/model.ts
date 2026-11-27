@@ -285,7 +285,7 @@ export type SourceOrigin = 'builtin' | 'custom';
 
 /** What a panel hands the session. Entries are raw strings; parsing happens once, inside. */
 export interface LiveVideoSource {
-  /** Named in telemetry and the audit, e.g. 'webcams/taipei'. */
+  /** Named in telemetry and the audit, e.g. 'live-news/cnn'. */
   readonly slot: string;
   readonly entries: readonly string[];
   /** Only a user-added video may keep playing an ended recording; built-in sources never do. */

@@ -463,8 +463,6 @@
       "ddos": "DDoS",
       "anomalies": "Bất thường"
     },
-    "liveWebcams": "Webcam Trực tiếp",
-    "windyWebcams": "Webcam Trực tiếp Windy",
     "groceryBasket": "Chỉ số Rau quả",
     "groceryItem": "Mặt hàng",
     "faoFoodPriceIndex": "Giá thực phẩm",
@@ -849,23 +847,6 @@
     }
   },
   "components": {
-    "webcams": {
-      "paused": "Webcam đã tạm dừng",
-      "regions": {
-        "all": "TẤT CẢ",
-        "mideast": "TRUNG ĐÔNG",
-        "europe": "CHÂU ÂU",
-        "americas": "CHÂU MỸ",
-        "asia": "CHÂU Á",
-        "space": "KHÔNG GIAN"
-      },
-      "play": "Xem trực tiếp",
-      "previewStatus": "Sẵn sàng phát",
-      "connecting": "Đang kết nối…",
-      "unverified": "Không thể xác nhận luồng này đang phát trực tiếp",
-      "offline": "{{city}} hiện đang ngoại tuyến",
-      "noFeeds": "Không có webcam trực tiếp trong khu vực này lúc này"
-    },
     "positiveNewsFeed": {
       "noStories": "Chưa có bài viết trong danh mục này"
     },
@@ -1467,8 +1448,6 @@
       "badgeAnimDesc": "Hoạt ảnh huy hiệu cập nhật trên tiêu đề bảng",
       "headlineMemoryLabel": "Bộ nhớ tiêu đề",
       "headlineMemoryDesc": "Ghi nhớ tiêu đề đã xem để làm nổi bật tin mới",
-      "streamAlwaysOnLabel": "Tự động phát webcam trực tiếp",
-      "streamAlwaysOnDesc": "Bắt đầu phát các video webcam trực tiếp ngay khi chúng xuất hiện trên màn hình. Để tắt để chỉ tải chúng khi bạn bắt đầu phát.",
       "analysisFrameworksLabel": "Khung phân tích",
       "analysisFrameworksActivePerPanel": "Hoạt động theo bảng điều khiển",
       "analysisFrameworksSkillLibrary": "Thư viện kỹ năng",
@@ -1508,7 +1487,7 @@
       "briefFreshness": "Được tạo {{minutes}}m trước · nguồn mới nhất {{hours}}h tuổi",
       "briefStoryDetails": "Chi tiết tin tức ({{count}})",
       "streamIdleStopLabel": "Dừng video trực tiếp khi không hoạt động",
-      "streamIdleStopDesc": "Dừng Live News và Live Webcams sau khoảng thời gian này nếu không có hoạt động và hiển thị thông báo trong panel.",
+      "streamIdleStopDesc": "Dừng Live News sau khoảng thời gian này nếu không có hoạt động và hiển thị thông báo trong panel.",
       "streamIdleStopNever": "Không bao giờ",
       "liveNewsAutoplayLabel": "Tự động phát tin tức trực tiếp",
       "liveNewsAutoplayDesc": "Bắt đầu phát video tin tức trực tiếp, không âm thanh, ngay khi nó xuất hiện trên màn hình. Tắt tùy chọn này để chỉ tải video khi bạn bắt đầu phát."
@@ -2268,9 +2247,6 @@
       "analysisDate": "Phân tích WTO {{date}}",
       "indexNote": "Chỉ số lượng hàng hóa, mức trung bình tháng 1–3 năm 2025 = 100"
     },
-    "liveWebcams": {
-      "infoTooltip": "<strong>Webcam trực tiếp</strong> Luồng phát trực tiếp từ các địa điểm có ý nghĩa địa chính trị trên toàn thế giới: vùng xung đột, thủ đô, cửa khẩu biên giới và các điểm nghẽn chiến lược. Luồng từ YouTube và mạng công cộng."
-    },
     "macroTiles": {
       "infoTooltip": "<strong>Macro indicators</strong> Chỉ báo giá, hoạt động, chính sách và tiền tệ của Mỹ, khu vực euro và Trung Quốc. Trung Quốc yêu cầu tính bao quát hiện tại. Mỗi tile hiển thị nguồn và ngày quan sát của nó."
     },
@@ -2288,9 +2264,6 @@
     },
     "yieldCurve": {
       "infoTooltip": "<strong>Yield Curve &amp; Rates</strong> Đường cong lợi suất Kho bạc Mỹ (2Y, 5Y, 10Y, 30Y) và các mức chênh lệch lãi suất chính bao gồm chỉ báo đảo ngược 10Y-2Y. Cũng hiển thị lãi suất khu vực euro (EURIBOR, ESTR). Một đường cong đảo ngược có lịch sử trước những đợt suy thoái. Nguồn: Dữ liệu Kinh tế Cục Dự trữ Liên bang."
-    },
-    "pinnedWebcams": {
-      "pinFromMap": "Ghim một camera từ bản đồ"
     },
     "breakthroughsTicker": {
       "noData": "Chưa có bước đột phá khoa học nào"

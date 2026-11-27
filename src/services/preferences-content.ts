@@ -5,12 +5,10 @@ import {
   formatIdleStopMinutes,
   getLiveMediaIdleStop,
   getLiveNewsAutoplay,
-  getLiveStreamsAlwaysOn,
   LIVE_MEDIA_IDLE_STOP_OPTIONS,
   parseLiveMediaIdleStop,
   setLiveMediaIdleStop,
   setLiveNewsAutoplay,
-  setLiveStreamsAlwaysOn,
 } from '@/services/live-stream-settings';
 import type { StreamQuality } from '@/services/ai-flow-settings';
 import { getThemePreference, setThemePreference, type ThemePreference } from '@/utils/theme-manager';
@@ -388,12 +386,6 @@ const videoSection: PreferenceSectionSpec = {
       t('components.insights.liveNewsAutoplayDesc'),
       getLiveNewsAutoplay(),
     );
-    html += toggleRowHtml(
-      'us-live-streams-always-on',
-      t('components.insights.streamAlwaysOnLabel'),
-      t('components.insights.streamAlwaysOnDesc'),
-      getLiveStreamsAlwaysOn(),
-    );
     html += selectHtml(
       'us-live-media-idle-stop',
       t('components.insights.streamIdleStopLabel'),
@@ -415,10 +407,6 @@ const videoSection: PreferenceSectionSpec = {
     },
     'us-live-news-autoplay': (target) => {
       setLiveNewsAutoplay(target.checked);
-      return true;
-    },
-    'us-live-streams-always-on': (target) => {
-      setLiveStreamsAlwaysOn(target.checked);
       return true;
     },
     'us-live-media-idle-stop': (target) => {

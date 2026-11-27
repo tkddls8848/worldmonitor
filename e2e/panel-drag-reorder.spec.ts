@@ -272,7 +272,7 @@ test.describe('monitor panel reload', () => {
   }
 
   test('restores saved keyword tags after a deferred mount and reload', async ({ page }, testInfo) => {
-    await loadMonitorDashboard(page, ['live-news', 'live-webcams', 'monitors']);
+    await loadMonitorDashboard(page, ['live-news', 'insights', 'monitors']);
     const panel = page.locator('.panel[data-panel="monitors"]');
     await expect(async () => { await panel.scrollIntoViewIfNeeded(); }).toPass();
     await expect(panel.locator('.monitor-input')).toBeVisible();
@@ -292,7 +292,7 @@ test.describe('monitor panel reload', () => {
   });
 
   test('keeps My Monitors in its saved position after refresh', async ({ page }, testInfo) => {
-    const order = ['monitors', 'live-news', 'live-webcams'];
+    const order = ['monitors', 'live-news', 'insights'];
     await loadMonitorDashboard(page, order);
     const visibleOrder = () => page.locator('#panelsGrid > .panel[data-panel]:not(.hidden)')
       .evaluateAll(elements => elements.map(element => (element as HTMLElement).dataset.panel));

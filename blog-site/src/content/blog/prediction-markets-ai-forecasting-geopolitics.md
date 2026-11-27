@@ -119,7 +119,7 @@ When all six point in the same direction, confidence is high. When they diverge,
 2. Combine with **CII scores** and **displacement data** for vulnerability mapping
 3. Use **AI Deduction** to assess potential population displacement scenarios
 4. Pre-position resources based on highest-probability escalation paths
-5. Monitor **webcams** and **news velocity** for early indicators that forecasts are materializing
+5. Monitor **news velocity** for early indicators that forecasts are materializing
 
 ## Prediction Markets as a Leading Indicator
 
@@ -130,7 +130,7 @@ Research consistently shows prediction markets move before traditional indicator
 - **Policy decisions:** Market odds adjust on insider signals before official announcements
 - **Economic events:** Rate decision probabilities incorporate real-time data
 
-By integrating these leading indicators alongside lagging indicators (news reports, conflict databases) and coincident indicators (live tracking, webcams, CII), World Monitor gives you the full temporal spectrum of intelligence.
+By integrating these leading indicators alongside lagging indicators (news reports, conflict databases) and coincident indicators (live tracking, CII), World Monitor gives you the full temporal spectrum of intelligence.
 
 ## The Country Intelligence Dossier: Forecasting Context
 

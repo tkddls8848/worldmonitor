@@ -39,7 +39,6 @@ body:
         - Desktop app (Tauri)
         - Settings / API keys
         - Settings / LLMs (Ollama, OpenRouter)
-        - Live webcams
         - Other
     validations:
       required: true

@@ -1,6 +1,6 @@
 ---
 title: "A Journalist's OSINT Workflow: Verifying Breaking News in Ten Minutes"
-description: "Cross-check breaking news against ship traffic, flight data, satellite fire detection, internet outages, and webcams with this OSINT workflow."
+description: "Cross-check breaking news against ship traffic, flight data, satellite fire detection, internet outages, with this OSINT workflow."
 metaTitle: "OSINT Breaking News Verification Workflow | World Monitor"
 keywords: "OSINT verification techniques, verify breaking news, OSINT for journalists, open source verification tools, fact-checking breaking news, news verification workflow"
 audience: "Journalists, fact-checkers, newsroom researchers, OSINT analysts, media literacy educators"
@@ -49,7 +49,7 @@ Then place the event in its context with the country's brief and [instability sc
 
 ## Minute 8–10: Look at It
 
-Sometimes you can simply look. World Monitor streams live webcams from geopolitical hotspots (Tehran, Tel Aviv, Kyiv, Taipei, and others) alongside live news channels. If the claimed event is in view of a camera, you have a primary source with a timestamp. Even nearby cameras help: a city skyline behaving completely normally fifteen minutes after a claimed "massive explosion" is evidence too.
+Use local reporting or public imagery when it covers the location and time of the claim. Record the observation time alongside any other signals.
 
 ## What This Workflow Catches, and What It Does Not
 

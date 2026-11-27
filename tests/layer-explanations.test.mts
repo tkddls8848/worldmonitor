@@ -217,12 +217,12 @@ describe('layer explanation metadata', () => {
   });
 
   test('unsupported layers degrade to fallback metadata without fabricating freshness', () => {
-    const explanation = getLayerExplanation('webcams');
-    const copy = copyBlock('webcams');
+    const explanation = getLayerExplanation('kindness');
+    const copy = copyBlock('kindness');
 
     assert.equal(explanation.coverage, 'fallback');
-    assert.equal(explanation.key, 'webcams');
-    assert.equal(hasCuratedLayerExplanation('webcams'), false);
+    assert.equal(explanation.key, 'kindness');
+    assert.equal(hasCuratedLayerExplanation('kindness'), false);
     assert.match(copy.source, /Not curated/i);
     assert.match(copy.freshness, /No layer-level freshness contract/i);
     assert.match(copy.confidence, /Unknown/i);

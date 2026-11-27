@@ -137,8 +137,6 @@ export const PANEL_SCOPE_BEHAVIOUR: Readonly<Record<string, PanelScopeBehaviour>
   'hormuz-tracker': 'unsupported', // Hormuz Trade Tracker
   'energy-crisis': 'unsupported', // Energy Crisis Tracker
   'fuel-prices': 'unsupported', // Fuel Prices
-  'live-webcams': 'unsupported', // Live Webcams
-  'windy-webcams': 'unsupported', // Windy Live Webcam
   ai: 'unsupported', // AI/ML
   tech: 'unsupported', // Technology
   regionalStartups: 'unsupported', // Global Startup News
@@ -216,8 +214,6 @@ export const PANEL_SCOPE_REASONS: Readonly<Record<string, string>> = Object.free
   'trade-policy': 'Six data sets of mixed shape; tariffs and customs revenue are US-only.',
   'regional-intelligence': 'Boards are macro regions, not countries: needs a region chosen from the focus, not a filter.',
   forecast: 'Forecasts name a country or a theatre in free text and several are global; the region pill travels with the tab instead.',
-  'live-webcams': 'Feeds belong to five regions, some to none ("Space"); the region pill travels with the tab instead.',
-  'windy-webcams': 'At most 4 pinned cameras the user chose: filtering them hides the user\'s own pins.',
   'cross-source-signals': 'Signals name a theatre, not a country.',
   'strategic-risk': 'A composite overview already cut to the top 5 countries and zones.',
   cascade: 'Driven by the infrastructure node the user picks, not by country.',

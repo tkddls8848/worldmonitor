@@ -180,9 +180,9 @@ describe('WebMCP dashboard panel catalog', () => {
     assert.equal(byId.get('markets')?.unavailableReason, 'panel_not_live');
     assert.equal(byId.get('strategic-risk')?.entitled, false);
     assert.equal(byId.get('strategic-risk')?.unavailableReason, 'panel_not_entitled');
-    assert.equal(byId.get('windy-webcams')?.enabled, false);
-    assert.equal(byId.get('windy-webcams')?.mounted, false);
-    assert.equal(byId.get('windy-webcams')?.unavailableReason, 'panel_disabled');
+    assert.equal(byId.get('science')?.enabled, false);
+    assert.equal(byId.get('science')?.mounted, false);
+    assert.equal(byId.get('science')?.unavailableReason, 'panel_disabled');
     assert.equal('unavailableReason' in (byId.get('map') ?? {}), false);
   });
 

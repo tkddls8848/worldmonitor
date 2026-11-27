@@ -18,7 +18,8 @@ import {
   getEffectivePanelConfig,
   getInitialPanelSettingsForVariant,
   restoreProGatedPanels,
-  TORONTO_SAFETY_PANEL_ID,
+  isRetiredPanel,
+  RETIRED_PANEL_IDS,
   userSetPanelEnabled,
 } from '@/config';
 import {
@@ -866,8 +867,6 @@ export class App {
       if (!localStorage.getItem(PANEL_KEY_RENAMES_MIGRATION_KEY)) {
         let migrated = false;
         const keyRenames: Array<[string, string]> = [
-          ['live-youtube', 'live-webcams'],
-          ['pinned-webcams', 'windy-webcams'],
           ...(SITE_VARIANT === 'finance' ? [['regulation', 'fin-regulation'] as [string, string]] : []),
         ];
         // In non-finance variants, 'regulation' was dead config (no feeds). Just prune it.
@@ -998,7 +997,7 @@ export class App {
     let droppedRetiredPanel = false;
     for (const key of Object.keys(panelSettings)) {
       if (!key.startsWith('mcp-') && key !== 'social-velocity' && key !== 'wsb-ticker-scanner'
-        && key !== TORONTO_SAFETY_PANEL_ID) continue;
+        && !isRetiredPanel(key)) continue;
       delete panelSettings[key];
       droppedRetiredPanel = true;
     }
@@ -1006,13 +1005,13 @@ export class App {
 
     if (storageAvailable) {
       const PANEL_PRUNE_KEY = 'worldmonitor-panel-prune-v2';
-      const PANEL_RETIREMENT_KEY = 'worldmonitor-panel-retirement-v1';
+      const PANEL_RETIREMENT_KEY = 'worldmonitor-panel-retirement-v2';
       const needsLegacyPrune = !localStorage.getItem(PANEL_PRUNE_KEY);
       const needsPanelRetirement = !safeStorageGet(PANEL_RETIREMENT_KEY);
       if (needsLegacyPrune) {
         let pruned = false;
         for (const key of Object.keys(panelSettings)) {
-          if (!Object.prototype.hasOwnProperty.call(ALL_PANELS, key)) {
+          if (!Object.prototype.hasOwnProperty.call(ALL_PANELS, key) && !isDynamicPanel(key)) {
             delete panelSettings[key];
             pruned = true;
           }
@@ -1026,17 +1025,21 @@ export class App {
             if (!raw) continue;
             const arr = JSON.parse(raw);
             if (!Array.isArray(arr)) continue;
-            const filtered = arr.filter((k: string) =>
-              k !== TORONTO_SAFETY_PANEL_ID && (!needsLegacyPrune || Object.prototype.hasOwnProperty.call(ALL_PANELS, k)));
+            const filtered = arr.filter((key: unknown) =>
+              typeof key === 'string'
+              && !isRetiredPanel(key)
+              && (!needsLegacyPrune || Object.prototype.hasOwnProperty.call(ALL_PANELS, key) || isDynamicPanel(key)));
             if (filtered.length !== arr.length) localStorage.setItem(orderKey, JSON.stringify(filtered));
           } catch { localStorage.removeItem(orderKey); }
         }
         if (needsLegacyPrune) localStorage.setItem(PANEL_PRUNE_KEY, 'done');
       }
       if (needsPanelRetirement) {
-        clearPanelSpanEntry(TORONTO_SAFETY_PANEL_ID);
-        clearPanelColSpanEntry(TORONTO_SAFETY_PANEL_ID);
-        if (loadPanelCollapsed()[TORONTO_SAFETY_PANEL_ID]) savePanelCollapsed(TORONTO_SAFETY_PANEL_ID, false);
+        for (const panelId of RETIRED_PANEL_IDS) {
+          clearPanelSpanEntry(panelId);
+          clearPanelColSpanEntry(panelId);
+          if (loadPanelCollapsed()[panelId]) savePanelCollapsed(panelId, false);
+        }
         safeStorageSet(PANEL_RETIREMENT_KEY, 'done');
       }
 

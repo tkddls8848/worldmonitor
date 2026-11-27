@@ -469,8 +469,6 @@
       "ddos": "DDoS",
       "anomalies": "Anomálie"
     },
-    "liveWebcams": "Živé webkamery",
-    "windyWebcams": "Windy živá webkamera",
     "groceryBasket": "Index potravin",
     "groceryItem": "Položka",
     "faoFoodPriceIndex": "Ceny potravin",
@@ -858,23 +856,6 @@
     }
   },
   "components": {
-    "webcams": {
-      "regions": {
-        "all": "VŠE",
-        "mideast": "BLÍZKÝ VÝCHOD",
-        "europe": "EVROPA",
-        "americas": "AMERIKA",
-        "asia": "ASIE",
-        "space": "VESMÍR"
-      },
-      "paused": "Webkamery pozastaveny",
-      "play": "Sledujte naživo",
-      "previewStatus": "Připraveno k přehrání",
-      "connecting": "Připojování…",
-      "unverified": "Nelze potvrdit, že je tento stream živý",
-      "offline": "{{city}} je nyní offline",
-      "noFeeds": "V této oblasti nejsou momentálně žádné živé webkamery"
-    },
     "monitor": {
       "placeholder": "Klíčová slova (oddělená čárkou)",
       "add": "+ Přidat monitor",
@@ -1464,8 +1445,6 @@
       "badgeAnimDesc": "Animovat odznáčky aktualizací v záhlaví panelů",
       "headlineMemoryLabel": "Paměť titulků",
       "headlineMemoryDesc": "Zapamatovat si zobrazené titulky pro zvýraznění nových",
-      "streamAlwaysOnLabel": "Automatické přehrávání živých kamer",
-      "streamAlwaysOnDesc": "Spustí živá videa z webkamer, jakmile se zobrazí na obrazovce. Ponechte vypnuté, chcete-li je načíst pouze sami.",
       "analysisFrameworksLabel": "Analytické rámce",
       "analysisFrameworksActivePerPanel": "Aktivní na panel",
       "analysisFrameworksSkillLibrary": "Knihovna dovedností",
@@ -1508,7 +1487,7 @@
       "briefFreshness": "Vygenerováno před {{minutes}}m · nejnovější zdroj starý {{hours}}h",
       "briefStoryDetails": "Podrobnosti zprávy ({{count}})",
       "streamIdleStopLabel": "Zastavit živé video při nečinnosti",
-      "streamIdleStopDesc": "Zastaví Live News a Live Webcams po této době bez aktivity a zobrazí upozornění na panelu.",
+      "streamIdleStopDesc": "Zastaví Live News po této době bez aktivity a zobrazí upozornění na panelu.",
       "streamIdleStopNever": "Nikdy",
       "liveNewsAutoplayLabel": "Automatické přehrávání živých zpráv",
       "liveNewsAutoplayDesc": "Spustí video živých zpráv ztlumeně, jakmile se zobrazí na obrazovce. Vypněte, chcete-li video načíst pouze sami."
@@ -2298,9 +2277,6 @@
         "index": "index"
       }
     },
-    "liveWebcams": {
-      "infoTooltip": "<strong>Živé kamery</strong> Živé přenosy z geopoliticky významných míst po celém světě: konfliktní zóny, hlavní města, hraniční přechody a strategické úzké profily. Streamy z YouTube a veřejných sítí."
-    },
     "macroTiles": {
       "infoTooltip": "<strong>Macro indicators</strong> Ceny, aktivita, politika a ukazatele měn pro USA, eurozónu a Čínu. Čína vyžaduje aktuální pokrytí. Každá dlaždice zobrazuje svůj zdroj a datum pozorování."
     },
@@ -2318,9 +2294,6 @@
     },
     "yieldCurve": {
       "infoTooltip": "<strong>Yield Curve &amp; Rates</strong> Křivka výnosů amerických státních dluhopisů (2Y, 5Y, 10Y, 30Y) a klíčové rozpětí sazeb včetně indikátoru inverze 10Y-2Y. Také zobrazuje sazby eurozóny (EURIBOR, ESTR). Invertovaná křivka historicky předchází recesím. Zdroj: Federal Reserve Economic Data."
-    },
-    "pinnedWebcams": {
-      "pinFromMap": "Připněte webkameru z mapy"
     },
     "breakthroughsTicker": {
       "noData": "Zatím žádné vědecké objevy"

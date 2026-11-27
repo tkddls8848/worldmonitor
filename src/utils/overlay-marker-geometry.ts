@@ -11,7 +11,7 @@ import type { LatLng } from './map-marker-budget';
 
 /**
  * Reads a marker's coordinates across every feed shape `renderOverlays` iterates
- * (#7112): most expose `lon`/`lat`, webcams use `lng`, Iran events use the long
+ * (#7112): most expose `lon`/`lat`, Iran events use the long
  * spellings, earthquakes and ACLED events nest them under `location`, conflict
  * zones carry a `[lon, lat]` `center` tuple and weather alerts a `[lon, lat]`
  * `centroid`. A shape with none of them yields NaN, which `proximityRank`

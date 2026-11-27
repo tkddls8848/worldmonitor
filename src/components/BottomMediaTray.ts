@@ -13,7 +13,7 @@ function isKo(): boolean {
 
 /**
  * Collapsible 34px bottom dock bar & slide-up tray for heavy media / assistant
- * panels (Live News, Live Webcams, WM AI Analyst) and multi-column grid toggle.
+ * panels (Live News, WM AI Analyst) and multi-column grid toggle.
  * Stays collapsed on first load so live streams never hijack the initial screen.
  */
 export class BottomMediaTray {
@@ -89,7 +89,6 @@ export class BottomMediaTray {
 
     const triggers: Array<{ id: BottomTrayPanelId; icon: string; labelKo: string; labelEn: string }> = [
       { id: 'live-news', icon: '📺', labelKo: '실시간 뉴스', labelEn: 'Live News' },
-      { id: 'live-webcams', icon: '📷', labelKo: '라이브 웹캠', labelEn: 'Live Webcams' },
       { id: 'chat-analyst', icon: '💬', labelKo: 'AI 애널리스트', labelEn: 'AI Analyst' },
     ];
 

@@ -43,7 +43,6 @@ const shouldSeedDeferredFootprint = !isHappyVariant;
 const seededDeferredPanelId = 'supply-chain';
 const seededDeferredPanelOrder = [
   'live-news',
-  'live-webcams',
   'insights',
   'threat-timeline',
   'strategic-posture',

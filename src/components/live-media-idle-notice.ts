@@ -3,7 +3,7 @@ import { playAllLiveMedia } from '@/services/live-media-controller';
 import { formatIdleStopMinutes, setLiveMediaIdleStop } from '@/services/live-stream-settings';
 import { showToast } from '@/utils/toast';
 
-export type LiveMediaIdlePanelId = 'live-news' | 'live-webcams';
+export type LiveMediaIdlePanelId = 'live-news';
 
 export interface LiveMediaIdleNoticeOptions {
   readonly heading: string;

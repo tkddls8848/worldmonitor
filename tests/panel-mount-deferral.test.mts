@@ -134,14 +134,14 @@ describe('panel mount deferral', () => {
   it('reserves natural lazy-panel row and column footprints before hydration', () => {
     const document = installDom();
     const naturalFootprints = {
-      'live-webcams': { className: 'panel-wide' },
+      'live-news': { className: 'panel-wide' },
       'supply-chain': { rowSpan: 2 },
     };
 
     const wideShell = createDeferredPanelShell(
-      'live-webcams',
-      'Live Webcams',
-      getDeferredPanelShellFootprint({ panelId: 'live-webcams', naturalFootprints }),
+      'live-news',
+      'Live News',
+      getDeferredPanelShellFootprint({ panelId: 'live-news', naturalFootprints }),
     );
     const tallShell = createDeferredPanelShell(
       'supply-chain',
@@ -163,9 +163,9 @@ describe('panel mount deferral', () => {
     const grid = document.createElement('div');
     grid.className = 'panels-grid';
     const shell = createDeferredPanelShell(
-      'live-webcams',
-      'Live Webcams',
-      getDeferredPanelShellFootprint({ panelId: 'live-webcams', savedColSpans: { 'live-webcams': 3 } }),
+      'live-news',
+      'Live News',
+      getDeferredPanelShellFootprint({ panelId: 'live-news', savedColSpans: { 'live-news': 3 } }),
     );
     grid.appendChild(shell);
     document.body.appendChild(grid);
@@ -176,12 +176,12 @@ describe('panel mount deferral', () => {
   it('lets saved user spans override natural deferred-shell footprints', () => {
     const document = installDom();
     const footprint = getDeferredPanelShellFootprint({
-      panelId: 'live-webcams',
-      naturalFootprints: { 'live-webcams': { className: 'panel-wide', rowSpan: 2 } },
-      savedRowSpans: { 'live-webcams': 3 },
-      savedColSpans: { 'live-webcams': 1 },
+      panelId: 'live-news',
+      naturalFootprints: { 'live-news': { className: 'panel-wide', rowSpan: 2 } },
+      savedRowSpans: { 'live-news': 3 },
+      savedColSpans: { 'live-news': 1 },
     });
-    const shell = createDeferredPanelShell('live-webcams', 'Live Webcams', footprint);
+    const shell = createDeferredPanelShell('live-news', 'Live News', footprint);
     document.body.appendChild(shell);
 
     assert.equal(shell.classList.contains('panel-wide'), true);
@@ -221,9 +221,9 @@ describe('panel mount deferral', () => {
 
   it('suppresses a saved col-span that matches the panel-wide default of 2', () => {
     const footprint = getDeferredPanelShellFootprint({
-      panelId: 'live-webcams',
-      naturalFootprints: { 'live-webcams': { className: 'panel-wide' } },
-      savedColSpans: { 'live-webcams': 2 },
+      panelId: 'live-news',
+      naturalFootprints: { 'live-news': { className: 'panel-wide' } },
+      savedColSpans: { 'live-news': 2 },
     });
 
     assert.equal(footprint.className, 'panel-wide');

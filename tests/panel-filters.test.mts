@@ -11,9 +11,9 @@ import {
 } from '../src/services/panel-filters.ts';
 
 test('normalizePanelFilters keeps well-formed string choices', () => {
-  assert.deepEqual(normalizePanelFilters({ forecast: 'asia', 'live-webcams': 'europe' }), {
+  assert.deepEqual(normalizePanelFilters({ forecast: 'asia', 'second-panel': 'europe' }), {
     forecast: 'asia',
-    'live-webcams': 'europe',
+    'second-panel': 'europe',
   });
 });
 
@@ -73,28 +73,28 @@ test('entries round trip in a stable order', () => {
 });
 
 test('planPanelFilterApply hands a tab its choices and records which panels it set', () => {
-  const plan = planPanelFilterApply(['forecast', 'live-webcams', 'markets'], { forecast: 'asia' }, new Set());
+  const plan = planPanelFilterApply(['forecast', 'second-panel', 'markets'], { forecast: 'asia' }, new Set());
   assert.deepEqual(plan.updates, [{ key: 'forecast', value: 'asia' }]);
   assert.deepEqual([...plan.applied], ['forecast']);
 });
 
 test('planPanelFilterApply resets a panel the previous tab set and this tab does not', () => {
-  const plan = planPanelFilterApply(['forecast', 'live-webcams'], { 'live-webcams': 'europe' }, new Set(['forecast', 'live-webcams']));
+  const plan = planPanelFilterApply(['forecast', 'second-panel'], { 'second-panel': 'europe' }, new Set(['forecast', 'second-panel']));
   assert.deepEqual(plan.updates, [
     { key: 'forecast', value: null },
-    { key: 'live-webcams', value: 'europe' },
+    { key: 'second-panel', value: 'europe' },
   ]);
-  assert.deepEqual([...plan.applied], ['live-webcams']);
+  assert.deepEqual([...plan.applied], ['second-panel']);
 });
 
 test('planPanelFilterApply leaves a panel alone when neither tab chose for it (a saved browser preference stays)', () => {
-  const plan = planPanelFilterApply(['live-webcams'], undefined, new Set());
+  const plan = planPanelFilterApply(['second-panel'], undefined, new Set());
   assert.deepEqual(plan.updates, []);
   assert.equal(plan.applied.size, 0);
 });
 
 test('planPanelFilterApply keeps a tab key for a panel that is not mounted yet', () => {
-  const plan = planPanelFilterApply(['forecast'], { 'live-webcams': 'europe' }, new Set());
+  const plan = planPanelFilterApply(['forecast'], { 'second-panel': 'europe' }, new Set());
   assert.deepEqual(plan.updates, []);
-  assert.deepEqual([...plan.applied], ['live-webcams']);
+  assert.deepEqual([...plan.applied], ['second-panel']);
 });

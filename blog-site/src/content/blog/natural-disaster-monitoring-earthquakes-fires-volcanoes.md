@@ -112,7 +112,7 @@ This data is invaluable for humanitarian organizations planning response operati
 2. Check population exposure overlay for affected population estimate
 3. Review infrastructure cascade for damaged utilities and transport
 4. Toggle satellite fire detection for secondary fires
-5. Check webcam feeds from nearest major city
+5. Check local news and official alerts
 6. Monitor news panel for early situation reports
 7. Share situation briefing via URL state to team
 
@@ -152,7 +152,7 @@ World Monitor's **Custom Keyword Monitors** let you set persistent alerts for na
 - When matching headlines appear in the curated RSS catalog, they're highlighted in your custom color
 - Monitors persist across sessions via localStorage
 
-Combined with the map layers, you have a complete early warning system: spatial data on the map, textual alerts in the news panel, AI analysis in the brief, and [live video for ground truth](/blog/posts/live-webcams-from-geopolitical-hotspots/).
+Combined with the map layers, you have a complete early warning system: spatial data on the map, textual alerts in the news panel, AI analysis in the brief, and live news for reporting.
 
 ## Why World Monitor for Disaster Monitoring
 
@@ -162,7 +162,7 @@ Dedicated disaster monitoring platforms exist (GDACS, ReliefWeb, PDC Global). Wo
 - Infrastructure dependency mapping
 - Financial market impact (commodity prices, exchange status)
 - AI analysis for rapid situation synthesis
-- Multi-source verification (satellite, seismic, news, webcam, OSINT)
+- Multi-source verification (satellite, seismic, news, OSINT)
 
 A disaster doesn't happen in isolation. Its impact depends on the political stability of the affected country, the infrastructure that fails, the markets that react, and the humanitarian capacity available. World Monitor shows all of these in one view. Learn more about [what World Monitor is and how it works](/blog/posts/what-is-worldmonitor-real-time-global-intelligence/).
 

@@ -416,14 +416,11 @@ recovery restarts only a dead live renderer and is bounded within its time windo
 
 Owners: [`panel-layout.ts`](../../src/app/panel-layout.ts),
 [`tab-store.ts`](../../src/services/tab-store.ts),
-[`webcams/pinned-store.ts`](../../src/services/webcams/pinned-store.ts),
 [`agent-bus-applier.ts`](../../src/app/agent-bus-applier.ts).
 Panel regions: configured enabled/disabled, entitled/gated, lazy unregistered/registered/
-loading/mounted/destroyed, expanded/collapsed. Tabs: stored/active/removed. Webcam pin:
-unpinned/hidden/active. Actions: applied/denied/invalid/skipped (terminal per action).
+loading/mounted/destroyed, expanded/collapsed. Tabs: stored/active/removed. Actions: applied/denied/invalid/skipped (terminal per action).
 Invariants: configured enablement differs from runtime entitlement; only successful
-persistence is reported as persisted; destroyed app rejects mutation; active pin is configured
-and visible; collapse state must survive layout changes.
+persistence is reported as persisted; destroyed app rejects mutation; collapse state must survive layout changes.
 
 | From | Event / guard | To / effect |
 |---|---|---|

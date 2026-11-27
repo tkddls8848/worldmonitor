@@ -22,7 +22,6 @@ const TABBED_PANEL = 'gdelt-intel';
 const PANELS_READY_COUNT = 6;
 const EXCLUDED_PANELS = {
   'live-news': 'video panel, never shows a loading state',
-  'live-webcams': 'video panel, never shows a loading state',
   forecast: 'stays in its loading state indefinitely in the personal setup (no data source)',
 };
 // src/components/SearchModal.ts SEARCH_DEBOUNCE_MS

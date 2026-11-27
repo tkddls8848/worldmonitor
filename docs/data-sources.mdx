@@ -16,7 +16,7 @@ Compare the dashboard with its underlying event-data services: [World Monitor vs
 | [Geopolitics & Conflict](#geopolitics-%26-conflict) | Conflict events, protests, displacement, travel advisories, rocket alerts, prediction markets | ACLED, UCDP, GDELT, UNHCR/OCHA, Polymarket |
 | [Demographics & Human Capital](#demographics-%26-human-capital) | Age structure, education capacity, researchers, and industrial workforce | UN WPP, UNESCO UIS, World Bank WDI, ILOSTAT |
 | [Military & Strategic](#military-%26-strategic) | Bases, live military flights, naval activity, satellites, GPS jamming | adsb.lol, Wingbits, CelesTrak, gpsjam.org |
-| [News & OSINT](#news-%26-osint) | Tiered news feeds, live TV and webcams | Reuters, BBC, AP, and Al Jazeera |
+| [News & OSINT](#news-%26-osint) | Tiered news feeds, live TV | Reuters, BBC, AP, and Al Jazeera |
 | [Finance & Economics](#finance-%26-economics) | Markets, macro series, central banks, crypto, trade flows | FRED, ECB, BIS, Eurostat, World Bank, CoinGecko |
 | [Energy & Commodities](#energy-%26-commodities) | Gas storage, oil inventories, fuel prices, gold and metals | GIE AGSI+, U.S. EIA, IEA, CFTC |
 | [Infrastructure & Cyber](#infrastructure-%26-cyber) | Undersea cables, pipelines, ports, outages, threat IOCs | IODA, Cloudflare Radar, Submarine Cable Map, abuse.ch |
@@ -257,13 +257,13 @@ GPS jamming and spoofing — increasingly used as electronic warfare in conflict
 
 The personal news-threat collector warms the English RSS digests and counts country-attributed headlines from the same API responses. It uses the digest's existing classification labels, deduplicates headlines across editions, and considers the previous six hours. No language-model key is needed.
 
-The news backbone: tiered RSS feeds across the published variants, live TV streams, and a webcam grid — every source disclosed, tiered, and bias-tagged.
+The news backbone: tiered RSS feeds across the published variants, live TV streams — every source disclosed, tiered, and bias-tagged.
 
 Publisher identity is the newsroom behind a feed, not the syndication transport that carries it. FeedBurner and Google News remain observed hosts; they are not catalog providers. Google News `site:` queries keep the named publisher (for example Reuters), while keyword aggregation queries do not invent one. Country of origin is the publisher's home country; countries covered are the geographies a named feed reports on, so BBC Hindi stays BBC (UK origin, India coverage) and an India-focused Reuters route stays Reuters.
 
 - Tiered global news network spanning politics, regional desks, finance, tech, energy, think tanks, and crisis monitors — the complete per-variant inventory is disclosed [below](#server-side-feed-aggregation)
 - Curated public news-account monitoring on X (official API user timelines; post text is R4)
-- Live TV news streams and a webcam surveillance grid from geopolitical hotspots
+- Live TV news streams
 - Curated positive-news network for the Happy variant (Good News Network, Positive.News, Reasons to be Cheerful, and more)
 - Every feed carries source tier, propaganda-risk rating, and state-affiliation metadata
 
@@ -382,22 +382,6 @@ Client (1 RPC call) → listFeedDigest → Redis check (digest:v1:{variant}:{lan
 The digest cache key is `news:digest:v1:{variant}:{lang}` with a 900-second TTL. Individual feed results are separately cached per URL: healthy parsed feeds use 3600 seconds, while empty or failed zero-item parses use 300 seconds so transient blocks are retried sooner. Items per feed are capped at 5, categories at 20 items each. XML parsing is edge-runtime-compatible (regex-based, no DOM parser), handling both RSS item and Atom entry formats. Each item is keyword-classified at aggregation time. An in-memory fallback cache (capped at 50 entries) provides last-known-good data if Redis fails.
 
 This eliminates per-client feed fan-out — 1,000 concurrent users each polling 25 feed categories would have generated 25,000 edge invocations per poll cycle. With server-side aggregation, they generate exactly 1 (or 0 if the digest is cached).
-
-### Live Webcam Surveillance Grid
-
-The YouTube live-stream catalog covers geopolitical hotspots across global regions and provides continuous visual situational awareness:
-
-| Region           | Cities                                                                 |
-| ---------------- | ---------------------------------------------------------------------- |
-| **Middle East**  | Jerusalem (Western Wall), multi-camera Middle East feed, Mecca, Istanbul, Medina |
-| **Europe**       | Ukraine (Kyiv, Odesa, Kharkiv and more), Paris, St. Petersburg, London |
-| **Americas**     | Washington DC, New York, Los Angeles, Miami                            |
-| **Asia-Pacific** | Taipei, Shanghai, Tokyo, Seoul, Sydney                                 |
-| **Space**        | ISS Earth view, Earth from orbit                                       |
-
-The webcam panel supports two viewing modes: a 2×2 grid (default strategic selection: Jerusalem, Middle East, Ukraine, Washington DC) and a single-feed expanded view. Region tabs (ALL/MIDEAST/EUROPE/AMERICAS/ASIA/SPACE) filter the available feeds.
-
-Resource management is aggressive — iframes are lazy-loaded via Intersection Observer (only rendered when the panel scrolls into view), stopped with an explanatory notice after a configurable period without mouse, keyboard or touch input, and destroyed from the DOM entirely when the browser tab is hidden. On Tauri desktop, YouTube embeds load through the local sidecar (`/api/youtube-embed`), which gives the player an http parent origin that YouTube accepts. Each feed is a curated YouTube live stream; broadcasters end and restart streams, so the IDs are re-checked for liveness.
 
 ### Source Credibility & Feed Tiering
 

@@ -36,41 +36,41 @@ function panel(): Panel & { choice: string | null } {
 
 describe('PanelLayoutManager panel filter choices', () => {
   it('records a choice restored when a lazy panel mounts, so the next tab switch resets it', () => {
-    const webcams = panel();
+    const filterPanel = panel();
     const self: Fake = {
       appliedPanelFilters: new Set(),
-      ctx: { panels: { 'live-webcams': webcams } },
-      activeTab: () => ({ panelFilters: { 'live-webcams': 'europe' } }),
+      ctx: { panels: { 'second-panel': filterPanel } },
+      activeTab: () => ({ panelFilters: { 'second-panel': 'europe' } }),
       tabsState: null,
       onPanelFilterChanged: vi.fn(),
     };
-    method<(key: string, p: Panel) => void>('bindPanelFilterChoice').call(self, 'live-webcams', webcams);
-    expect(webcams.choice).toBe('europe');
-    expect(self.appliedPanelFilters.has('live-webcams')).toBe(true);
+    method<(key: string, p: Panel) => void>('bindPanelFilterChoice').call(self, 'second-panel', filterPanel);
+    expect(filterPanel.choice).toBe('europe');
+    expect(self.appliedPanelFilters.has('second-panel')).toBe(true);
 
     // Switching to a tab with no choice for the panel puts it back to its default.
     method<(filters: Record<string, string> | undefined) => void>('applyTabPanelFilters').call(self, undefined);
-    expect(webcams.choice).toBeNull();
+    expect(filterPanel.choice).toBeNull();
     expect(self.appliedPanelFilters.size).toBe(0);
   });
 
   it('records the active tab choices at startup, before any panel mounts', () => {
-    const webcams = panel();
+    const filterPanel = panel();
     const self: Fake = {
       appliedPanelFilters: new Set(),
       ctx: { panels: {} },
-      activeTab: () => ({ panelFilters: { 'live-webcams': 'asia', forecast: '' } }),
+      activeTab: () => ({ panelFilters: { 'second-panel': 'asia', forecast: '' } }),
       tabsState: null,
       onPanelFilterChanged: vi.fn(),
     };
     method<() => void>('seedAppliedPanelFilters').call(self);
-    expect([...self.appliedPanelFilters].sort()).toEqual(['forecast', 'live-webcams']);
+    expect([...self.appliedPanelFilters].sort()).toEqual(['forecast', 'second-panel']);
 
     // The panel mounts later and the user then moves to a tab without a choice.
-    self.ctx.panels['live-webcams'] = webcams;
-    webcams.choice = 'asia';
+    self.ctx.panels['second-panel'] = filterPanel;
+    filterPanel.choice = 'asia';
     method<(filters: Record<string, string> | undefined) => void>('applyTabPanelFilters').call(self, undefined);
-    expect(webcams.choice).toBeNull();
+    expect(filterPanel.choice).toBeNull();
   });
 
   it('applies the active tab choices to panels that mounted before the tabs loaded (reload)', () => {
@@ -93,15 +93,15 @@ describe('PanelLayoutManager panel filter choices', () => {
   });
 
   it('keeps an explicit All choice as a value, not an absent key', () => {
-    const webcams = panel();
+    const filterPanel = panel();
     const self: Fake = {
       appliedPanelFilters: new Set(),
-      ctx: { panels: { 'live-webcams': webcams } },
-      activeTab: () => ({ panelFilters: { 'live-webcams': 'all' } }),
+      ctx: { panels: { 'second-panel': filterPanel } },
+      activeTab: () => ({ panelFilters: { 'second-panel': 'all' } }),
       tabsState: null,
       onPanelFilterChanged: vi.fn(),
     };
-    method<(key: string, p: Panel) => void>('bindPanelFilterChoice').call(self, 'live-webcams', webcams);
-    expect(webcams.choice).toBe('all');
+    method<(key: string, p: Panel) => void>('bindPanelFilterChoice').call(self, 'second-panel', filterPanel);
+    expect(filterPanel.choice).toBe('all');
   });
 });

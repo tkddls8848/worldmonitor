@@ -195,7 +195,7 @@ describe('mobile P0 navigation shell (#5201)', () => {
 
   it('shows first-time mobile visitors the map, and keeps it collapsed only for viewers who collapsed it', () => {
     // The map is the product's first impression; a first visit landed on a
-    // paused player and a black webcam box instead. Tapping Today or the
+    // paused player instead. Tapping Today or the
     // collapse control still saves 'true', so a viewer's own choice persists.
     // The inline shell scripts and the hydrated reader must agree, or the map
     // collapses then snaps open on boot.

@@ -1783,19 +1783,6 @@ test('classifyKey: empty on-demand standalone key → EMPTY_ON_DEMAND (warn)', (
   assert.equal(STATUS_COUNTS[entry.status], 'warn');
 });
 
-test('classifyKey: webcams active pointer is registered with seed-meta freshness', () => {
-  const entry = classifyKey('webcams', STANDALONE_KEYS.webcams, { allowOnDemand: true },
-    makeCtx({
-      strens: { [STANDALONE_KEYS.webcams]: 13 },
-      metaValues: { 'seed-meta:webcam:cameras:geo': seedMeta({ recordCount: 65000 }) },
-    }));
-
-  assert.equal(STANDALONE_KEYS.webcams, 'webcam:cameras:active');
-  assert.equal(entry.status, 'OK');
-  assert.equal(entry.records, 65000);
-  assert.equal(entry.maxStaleMin, 1440);
-});
-
 const BUNDLE_TICKS = [
   ['staticRefBundleTick', 'static-ref', 'scripts/seed-bundle-static-ref.mjs', 6691],
   ['staticRefHeavyBundleTick', 'static-ref-heavy', 'scripts/seed-bundle-static-ref-heavy.mjs', 6806],

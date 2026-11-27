@@ -3,7 +3,7 @@ title: "Terminal Dashboard"
 description: "Run World Monitor in your terminal: live world map, news, markets, conflict, military flights, cyber, climate, prediction markets and live TV, with mouse support and colour themes. No API key needed."
 ---
 
-World Monitor also runs as a full-screen dashboard in your terminal. It ships in the [`worldmonitor`](https://www.npmjs.com/package/worldmonitor) npm package next to the [command-line client](/cli), needs no API key, and shows the same live data as the [web dashboard](https://www.worldmonitor.app/dashboard): a world map, ranked news, markets, conflict and instability, military flights and shipping, cyber threats, climate hazards, prediction markets, live TV and webcams, and platform health.
+World Monitor also runs as a full-screen dashboard in your terminal. It ships in the [`worldmonitor`](https://www.npmjs.com/package/worldmonitor) npm package next to the [command-line client](/cli), needs no API key, and shows the same live data as the [web dashboard](https://www.worldmonitor.app/dashboard): a world map, ranked news, markets, conflict and instability, military flights and shipping, cyber threats, climate hazards, prediction markets, live TV, and platform health.
 
 <Frame caption="Overview: the live world map with quakes, conflict, unrest, hazards, fires, cyber and outage markers, the AI world brief, ranked top stories, a market strip and theater posture.">
   <img src="/images/tui/overview.webp" alt="World Monitor terminal dashboard, Overview view" />
@@ -29,7 +29,7 @@ Running `worldmonitor` with no arguments in an interactive terminal opens the da
 - **An interactive terminal of at least 80×24.** Larger windows show more panes side by side; 160×45 or more gives the full layout shown on this page.
 - **A terminal with truecolor and mouse support** for the best result, such as Ghostty, kitty, WezTerm, iTerm2, Konsole, Alacritty or the VS Code terminal. Terminals that do not report truecolor, including macOS Terminal, get 256 colours.
 - **A font with braille and box-drawing characters** for the map and panel borders. Most current terminal fonts include them.
-- **Optional:** [mpv](https://mpv.io) and [yt-dlp](https://github.com/yt-dlp/yt-dlp) to play live TV and webcams in the terminal. Without them, streams open in your browser.
+- **Optional:** [mpv](https://mpv.io) and [yt-dlp](https://github.com/yt-dlp/yt-dlp) to play live TV in the terminal. Without them, streams open in your browser.
 
 ## Views
 
@@ -47,7 +47,7 @@ Switch views with the number keys, `Tab` / `Shift+Tab`, or by clicking a tab.
 | `8` | Cyber | Threat indicators, DDoS protocol and vector mix, service status, internet outages, traffic anomalies |
 | `9` | Climate | Earthquakes, natural hazards, disease outbreaks, weather alerts, climate anomalies, planetary vitals |
 | `0` | Predict | Prediction markets by domain and AI scenario forecasts |
-| `Alt+1` | Live | Live news channels and webcams, played in the terminal or the browser |
+| `Alt+1` | Live | Live news channels, played in the terminal or the browser |
 | `Alt+2` | Intel | GDELT topics, sanctions pressure, travel advisories, US spending awards, tech events |
 | `Alt+3` | System | Platform health, per-source freshness, theme and animation settings, video player status |
 
@@ -136,13 +136,9 @@ Military flights and vessel data load only while this view is open. The selected
 
 ### Live
 
-<Frame caption="Live: the dashboard's news channels and webcams, with each channel's stream sources and the local player status.">
-  <img src="/images/tui/live.webp" alt="Live view with news channels, webcams and player controls" />
-</Frame>
-
 | Key | Action |
 |---|---|
-| `Enter` | Play the selected channel or webcam inside the terminal |
+| `Enter` | Play the selected channel inside the terminal |
 | `w` | Play in an mpv window |
 | `b` | Open in the browser |
 | `s` | Try the next stream source |

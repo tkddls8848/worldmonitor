@@ -154,7 +154,6 @@ describe('listMapLayerCatalog', () => {
 
   it('filters 2D renderer compatibility without dropping disabled layers', () => {
     const twoD = collectPages({ renderer: '2d', limit: MAX_MAP_LAYER_PAGE_SIZE });
-    assert.ok(twoD.ids.includes('webcams'));
     assert.ok(twoD.ids.includes('no2Activity'));
     assert.equal(twoD.ids.includes('conflicts'), true);
     const flatRenderable = twoD.ids.every((id) => {

@@ -204,7 +204,7 @@ describe('BottomMediaTray', () => {
     expect(grid.contains(liveNewsEl)).toBe(true);
 
     // Missing panel closes drawer cleanly instead of leaving an empty shell
-    await tray.open('live-webcams', 'Live Webcams');
+    await tray.open('chat-analyst', 'AI Analyst');
     expect(tray.getActivePanelId()).toBeNull();
     expect(tray.getElement().querySelector<HTMLElement>('.bottom-tray-drawer')?.hidden).toBe(true);
 

@@ -9,7 +9,7 @@ import { CHANNEL_PAGE_TIMEOUT_MS, fetchChannelLivePage, resolveChannelsLive } fr
 import { refreshChannels } from './lib/live-video-refresh.mjs';
 import { readLiveVideoSurfaces } from './lib/live-video-surfaces.mjs';
 import { isMainModule } from './lib/main-module.mjs';
-import { AUDIT_CANARIES, LIVE_NEWS_SOURCES, WEBCAM_GRID_PRIORITY, WEBCAM_SOURCES } from '../src/config/live-video-sources.ts';
+import { AUDIT_CANARIES, LIVE_NEWS_SOURCES } from '../src/config/live-video-sources.ts';
 import { classifyAttempt, LIVE_VIDEO_TIMING, parseSourceEntry } from '../src/services/live-video/model.ts';
 
 const PROBE_ORIGIN = 'https://www.worldmonitor.app';
@@ -31,7 +31,7 @@ const RESOLVE_CONCURRENCY = 4;
 const BROWSER_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36';
 const INDENT = ' '.repeat(12);
 const CATALOG_FILE = 'src/config/live-video-sources.ts';
-export const DEFAULT_CATALOG = { webcams: WEBCAM_SOURCES, gridPriority: WEBCAM_GRID_PRIORITY, news: LIVE_NEWS_SOURCES, canaries: AUDIT_CANARIES };
+export const DEFAULT_CATALOG = { news: LIVE_NEWS_SOURCES, canaries: AUDIT_CANARIES };
 const PROXY_ENV = 'LIVE_VIDEO_AUDIT_PROXY_URL';
 const BATCH_SIZE_ENV = 'LIVE_VIDEO_BATCH_SIZE';
 /** The most players LIVE_VIDEO_BATCH_SIZE may put on one page. */
@@ -39,7 +39,7 @@ const MAX_BATCH_SIZE = 16;
 const { parseProxyConfigForAttempt } = createRequire(import.meta.url)('./_proxy-utils.cjs');
 
 const USAGE = `Usage: npm run live-video:check -- <entry> [<entry> ...]
-       npm run live-video:check -- --slot webcams/<id>
+       npm run live-video:check -- --slot live-news/<id>
        npm run live-video:check -- --slot live-news/<id>
        npm run live-video:check -- --all [--report <file>]
 
@@ -103,7 +103,7 @@ export function parseCheckArgs(argv) {
   }
   if (argv.length === 1 && argv[0] === '--all') return { mode: 'all' };
   if (argv[0] === '--slot') {
-    if (argv.length !== 2 || argv[1].startsWith('--')) throw new Error(`--slot needs a slot, e.g. --slot webcams/kyiv\n\n${USAGE}`);
+    if (argv.length !== 2 || argv[1].startsWith('--')) throw new Error(`--slot needs a slot, e.g. --slot live-news/cnn\n\n${USAGE}`);
     return { mode: 'slot', slot: argv[1] };
   }
   const option = argv.find((arg) => arg.startsWith('--') && !/^[A-Za-z0-9_-]{11}$/.test(arg));
@@ -678,7 +678,6 @@ export async function probeHlsCandidates(candidates, fetchImpl = defaultFetch) {
 /** Every catalog slot in check order, as [slot, entries]. */
 export function catalogSlots(catalog) {
   return [
-    ...Object.entries(catalog.webcams).map(([id, entries]) => [`webcams/${id}`, entries]),
     ...Object.entries(catalog.news ?? {}).map(([id, entries]) => [`live-news/${id}`, entries]),
   ];
 }
@@ -875,37 +874,8 @@ export function slotStatus(attempts) {
   return attempts.some((attempt) => attempt.unverifiableFromRunner) ? 'degraded' : 'needs-replacement';
 }
 
-const NOTHING_LIVE = new Set(['empty', 'needs-replacement']);
-
-function titleCase(key) {
-  return key.split('-').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-}
-
-/**
- * Where customers see each slot, by the panels' own rules. The "all regions" wall is the first
- * `gridCells` slots of the grid priority; a wall slot with nothing live gives its cell to the next
- * spare that plays (LiveWebcamsPanel.gridFeeds). An empty wall slot keeps its cell here, so the
- * owner sees which hotspot is missing and which slot fills in for it.
- */
-export function placeSlots(catalog, statusBySlot, surfaces) {
-  const nothingLive = (id) => NOTHING_LIVE.has(statusBySlot.get(`webcams/${id}`));
-  const priority = catalog.gridPriority ?? [];
-  const intended = priority.slice(0, surfaces.gridCells);
-  const spares = priority.slice(surfaces.gridCells).filter((id) => !nothingLive(id));
-  const wall = intended.map((id) => (nothingLive(id) && spares.length > 0 ? spares.shift() : id));
-  const regions = new Map(surfaces.webcamFeeds.map((feed) => [feed.id, feed.region]));
+export function placeSlots(catalog, surfaces) {
   const placements = new Map();
-
-  for (const id of Object.keys(catalog.webcams)) {
-    const slot = `webcams/${id}`;
-    const region = regions.get(id);
-    if (!region) throw new Error(`${slot} is not a feed in LiveWebcamsPanel.ts WEBCAM_FEEDS, so the audit cannot say where it shows`);
-    const cell = intended.includes(id) ? intended.indexOf(id) : wall.indexOf(id);
-    placements.set(slot, cell < 0
-      ? { surface: `Webcam (${titleCase(region)})`, shownByDefault: false, shownInstead: null }
-      : { surface: `Webcam grid cell ${cell + 1}`, shownByDefault: true, shownInstead: intended[cell] === id && wall[cell] !== id ? `webcams/${wall[cell]}` : null });
-  }
-
   for (const id of Object.keys(catalog.news ?? {})) {
     const slot = `live-news/${id}`;
     const variants = Object.entries(surfaces.newsDefaults).filter(([, ids]) => ids.includes(id)).map(([variant]) => variant);
@@ -934,7 +904,7 @@ export function buildAuditReport({ catalog, rows, surfaces, checkedAt, resolutio
     suggestedEntry: suggestedEntryFor(entries.map((_, index) => byName.get(entryName(slot, index)))),
   }));
   const statuses = new Map(slots.map(({ slot, attempts }) => [slot, slotStatus(attempts)]));
-  const placements = placeSlots(catalog, statuses, surfaces);
+  const placements = placeSlots(catalog, surfaces);
   return {
     checkedAt,
     resolution: resolution ?? { attempted: 0, live: 0, notLive: 0, unreadable: 0 },
@@ -1009,7 +979,7 @@ export async function runCheck(argv, options = {}) {
 
   // Place every slot before the slow probe, so a panel list that can no longer be read fails first.
   const placement = args.report ? surfaces ?? readLiveVideoSurfaces() : null;
-  if (placement) placeSlots(catalog, new Map(), placement);
+  if (placement) placeSlots(catalog, placement);
   const checkedAt = now().toISOString();
 
   const rows = targets.entries.map(({ name, entry }) => ({ name, parsed: parseSourceEntry(entry) }));

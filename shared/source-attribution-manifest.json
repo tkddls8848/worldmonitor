@@ -1298,23 +1298,6 @@
       ]
     },
     {
-      "host": "api.windy.com",
-      "provider": "api.windy.com",
-      "kind": "structured",
-      "observed": true,
-      "license": "Provider terms for this upstream API/dataset; verify before redistribution",
-      "attribution": "Credit api.windy.com and link to the original upstream API/dataset.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/seed-webcams.mjs"
-        },
-        {
-          "path": "server/worldmonitor/webcam/v1/get-webcam-image.ts"
-        }
-      ]
-    },
-    {
       "host": "api.worldbank.org",
       "provider": "World Bank Open Data",
       "kind": "structured",
@@ -10687,20 +10670,6 @@
       ]
     },
     {
-      "host": "webcams.windy.com",
-      "provider": "webcams.windy.com",
-      "kind": "structured",
-      "observed": true,
-      "license": "Excluded: first-party, control-plane, UI, or rendering transport",
-      "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "shared/pinned-webcams.ts"
-        }
-      ]
-    },
-    {
       "host": "websummit.com",
       "provider": "websummit.com",
       "kind": "structured",
@@ -14879,23 +14848,6 @@
         },
         {
           "path": "shared/news-catalog.json"
-        }
-      ]
-    },
-    {
-      "host": "www.windy.com",
-      "provider": "www.windy.com",
-      "kind": "structured",
-      "observed": true,
-      "license": "Provider terms for this upstream API/dataset; verify before redistribution",
-      "attribution": "Credit www.windy.com and link to the original upstream API/dataset.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "server/worldmonitor/webcam/v1/get-webcam-image.ts"
-        },
-        {
-          "path": "src/services/webcams/index.ts"
         }
       ]
     },

@@ -1,12 +1,13 @@
 import { expect, test } from '@playwright/test';
 
-test('wide live video panels do not overlap adjacent dashboard panels (#8276)', async ({
+test('Live News does not overlap adjacent dashboard panels (#8276)', async ({
   page,
 }) => {
   test.setTimeout(120_000);
 
   await page.addInitScript(() => {
     localStorage.setItem('worldmonitor-variant', 'full');
+    localStorage.setItem('worldmonitor-first-screen-mode', '"full"');
     localStorage.setItem('worldmonitor-mission-preset-dismissed-v1', '1');
     localStorage.setItem('wm-layer-warning-dismissed', 'true');
     localStorage.setItem('wm-inspector-tab-v1', 'news');
@@ -21,49 +22,27 @@ test('wide live video panels do not overlap adjacent dashboard panels (#8276)', 
     height: 866,
   });
 
-  await page.goto('/dashboard', {
-    waitUntil: 'domcontentloaded',
-  });
+  await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
   const news = page.locator(
     '#panelsGrid > .panel[data-panel="live-news"]',
-  );
-
-  const webcams = page.locator(
-    '#panelsGrid > .panel[data-panel="live-webcams"]',
   );
 
   await expect(news).toHaveCount(1, {
     timeout: 60_000,
   });
 
-  await expect(webcams).toHaveCount(1, {
-    timeout: 60_000,
-  });
-
   await expect(news).not.toHaveClass(/panel-deferred-shell/, { timeout: 60_000 });
-  await expect(webcams).not.toHaveClass(/panel-deferred-shell/, { timeout: 60_000 });
 
-  // The webcam wall takes three rows on a tall viewport. Live News holds one
-  // 16:9 player, so it takes two rows at every height (#10458 follow-up): a
-  // third row was 111-290px of empty panel under the video.
-  const cases = [
-    { height: 590, span: 2 },
-    { height: 671, span: 2 },
-    { height: 672, span: 3 },
-    { height: 866, span: 3 },
-  ];
-
-  for (const viewport of cases) {
+  // Live News holds one player and takes two rows at every desktop height.
+  for (const height of [590, 671, 672, 866]) {
     await page.setViewportSize({
       width: 1600,
-      height: viewport.height,
+      height,
     });
-    // Live Webcams pauses off-screen in the scrollable inspector column;
-    // scroll it into view so its 2x2 webcam grid hydrates and stays active.
-    await webcams.scrollIntoViewIfNeeded();
+    await news.scrollIntoViewIfNeeded();
     await expect.poll(
-      async () => page.evaluate(({ span }) => {
+      async () => page.evaluate(() => {
         const grid = document.querySelector('#panelsGrid');
 
         if (!grid) return false;
@@ -76,80 +55,46 @@ test('wide live video panels do not overlap adjacent dashboard panels (#8276)', 
 
         const parsedGap = Number.parseFloat(getComputedStyle(grid).rowGap);
         const rowGap = Number.isFinite(parsedGap) ? parsedGap : 4;
-        const ids = ['live-news', 'live-webcams'];
+        const panel = panels.find(candidate => candidate.dataset.panel === 'live-news');
+        if (!panel) return false;
 
-        return ids.every(id => {
-          const panel = panels.find(
-            candidate => candidate.dataset.panel === id,
-          );
+        const wantHeight = 2 * 200 + rowGap;
+        const rect = panel.getBoundingClientRect();
+        const style = getComputedStyle(panel);
+        const next = panels
+          .filter(candidate => candidate !== panel)
+          .map(candidate => ({
+            panel: candidate,
+            rect: candidate.getBoundingClientRect(),
+          }))
+          .filter(candidate => {
+            const horizontalOverlap =
+              Math.min(rect.right, candidate.rect.right) -
+              Math.max(rect.left, candidate.rect.left);
 
-          if (!panel) return false;
+            return (
+              horizontalOverlap > 20 &&
+              candidate.rect.top > rect.top + 5
+            );
+          })
+          .sort(
+            (a, b) => a.rect.top - b.rect.top,
+          )[0];
 
-          const wantSpan = id === 'live-news' ? 2 : span;
-          const wantHeight = wantSpan * 200 + (wantSpan - 1) * rowGap;
+        if (!next) return false;
 
-          const rect = panel.getBoundingClientRect();
-          const style = getComputedStyle(panel);
+        const gap = next.rect.top - rect.bottom;
 
-          // Every desktop webcam cell must fit inside the webcam grid; a
-          // height cap that clips the 2x2 grid would otherwise still pass.
-          const webcamGrid = id === 'live-webcams'
-            ? panel.querySelector<HTMLElement>('.webcam-grid')
-            : null;
-          const gridRect = webcamGrid?.getBoundingClientRect();
-          const webcamCells = webcamGrid
-            ? Array.from(webcamGrid.querySelectorAll<HTMLElement>('.webcam-cell'))
-            : [];
-          const webcamCellsVisible = id !== 'live-webcams' || (
-            !!gridRect &&
-            webcamCells.length === 4 &&
-            webcamCells.every(cell => {
-              const cellRect = cell.getBoundingClientRect();
-              return (
-                getComputedStyle(cell).display !== 'none' &&
-                cellRect.height > 0 &&
-                cellRect.top >= gridRect.top - 2 &&
-                cellRect.bottom <= gridRect.bottom + 2
-              );
-            })
-          );
-
-          const next = panels
-            .filter(candidate => candidate !== panel)
-            .map(candidate => ({
-              panel: candidate,
-              rect: candidate.getBoundingClientRect(),
-            }))
-            .filter(candidate => {
-              const horizontalOverlap =
-                Math.min(rect.right, candidate.rect.right) -
-                Math.max(rect.left, candidate.rect.left);
-
-              return (
-                horizontalOverlap > 20 &&
-                candidate.rect.top > rect.top + 5
-              );
-            })
-            .sort(
-              (a, b) => a.rect.top - b.rect.top,
-            )[0];
-
-          if (!next) return false;
-
-          const gap = next.rect.top - rect.bottom;
-
-          return (
-            style.gridRowStart === `span ${wantSpan}` &&
-            Math.abs(rect.height - wantHeight) <= 2 &&
-            Math.abs(gap - rowGap) <= 2 &&
-            webcamCellsVisible &&
-            !panel.classList.contains('resized')
-          );
-        });
-      }, viewport),
+        return (
+          style.gridRowStart === 'span 2' &&
+          Math.abs(rect.height - wantHeight) <= 2 &&
+          Math.abs(gap - rowGap) <= 2 &&
+          !panel.classList.contains('resized')
+        );
+      }),
       {
         message:
-          `Video panel layout at 1600x${viewport.height}`,
+          `Video panel layout at 1600x${height}`,
         timeout: 30_000,
       },
     ).toBe(true);
@@ -182,24 +127,19 @@ test('wide live video panels do not overlap adjacent dashboard panels (#8276)', 
   });
   // A collapsed video panel is only a header, so it reserves one grid row
   // instead of the two-row .panel-wide footprint.
-  for (const panel of [news, webcams]) {
+  {
+    const panel = news;
     await panel.locator('.panel-collapse-btn').click();
     await expect(panel).toHaveClass(/panel-collapsed/);
     await expect.poll(() => footprint(panel)).toMatchObject({ span: 'span 1' });
     expect((await footprint(panel)).height).toBeLessThanOrEqual(200);
   }
-  const collapsedOverlap = await page.evaluate(() => {
-    const rect = (id: string) => document
-      .querySelector(`#panelsGrid > .panel[data-panel="${id}"]`)!
-      .getBoundingClientRect();
-    return Math.round(rect('live-news').bottom - rect('live-webcams').top);
-  });
-  expect(collapsedOverlap).toBeLessThanOrEqual(0);
   const expectedRowGap = await page.evaluate(() => parseFloat(getComputedStyle(document.querySelector('#panelsGrid')!).rowGap) || 4);
-  for (const panel of [news, webcams]) {
+  {
+    const panel = news;
     await panel.locator('.panel-collapse-btn').click();
     await expect(panel).not.toHaveClass(/panel-collapsed/);
-    const expectedSpan = panel === news ? 2 : 3;
+    const expectedSpan = 2;
     await expect.poll(() => footprint(panel)).toEqual({
       span: `span ${expectedSpan}`,
       height: expectedSpan * 200 + (expectedSpan - 1) * expectedRowGap,
@@ -213,13 +153,14 @@ test('wide live video panels do not overlap adjacent dashboard panels (#8276)', 
   expect(await deadSpaceBelowPlayer(), 'four-row player stays inside the panel').toBeGreaterThanOrEqual(0);
 });
 
-test('collapsing a user-resized video panel releases its grid rows (#10185)', async ({
+test('collapsing user-resized Live News releases its grid rows (#10185)', async ({
   page,
 }) => {
   test.setTimeout(120_000);
 
   await page.addInitScript(() => {
     localStorage.setItem('worldmonitor-variant', 'full');
+    localStorage.setItem('worldmonitor-first-screen-mode', '"full"');
     localStorage.setItem('worldmonitor-mission-preset-dismissed-v1', '1');
     localStorage.setItem('wm-layer-warning-dismissed', 'true');
     localStorage.setItem('wm-inspector-tab-v1', 'news');
@@ -254,7 +195,7 @@ test('collapsing a user-resized video panel releases its grid rows (#10185)', as
     };
   }, id);
 
-  for (const id of ['live-news', 'live-webcams']) {
+  for (const id of ['live-news']) {
     const panel = page.locator(`#panelsGrid > .panel[data-panel="${id}"]`);
     const toggle = panel.locator('.panel-collapse-btn');
     const handle = panel.locator(':scope > .panel-resize-handle');
@@ -284,6 +225,8 @@ test('collapsing a user-resized video panel releases its grid rows (#10185)', as
 
     await page.reload({ waitUntil: 'domcontentloaded' });
     await expect(panel).toHaveClass(/panel-collapsed/, { timeout: 60_000 });
+    await panel.scrollIntoViewIfNeeded();
+    await expect(panel).not.toHaveClass(/panel-deferred-shell/);
     await expect.poll(() => footprint(id)).toMatchObject({ span: 'span 1' });
 
     await toggle.click();
@@ -295,16 +238,17 @@ test('collapsing a user-resized video panel releases its grid rows (#10185)', as
   }
 
   expect(await page.evaluate(() => localStorage.getItem('worldmonitor-panel-spans')))
-    .toBe(JSON.stringify({ 'live-news': 4, 'live-webcams': 4 }));
+    .toBe(JSON.stringify({ 'live-news': 4 }));
 });
 
-test('legacy bottom-set video panels migrate into the inspector grid and release rows on collapse (#10185)', async ({
+test('legacy bottom-set Live News migrates into the inspector grid and releases rows on collapse (#10185)', async ({
   page,
 }, testInfo) => {
   test.setTimeout(120_000);
   await page.setViewportSize({ width: 1920, height: 1080 });
   await page.addInitScript(() => {
     localStorage.setItem('worldmonitor-variant', 'full');
+    localStorage.setItem('worldmonitor-first-screen-mode', '"full"');
     localStorage.setItem('worldmonitor-mission-preset-dismissed-v1', '1');
     localStorage.setItem('wm-layer-warning-dismissed', 'true');
     localStorage.setItem('wm-inspector-tab-v1', 'news');
@@ -318,17 +262,17 @@ test('legacy bottom-set video panels migrate into the inspector grid and release
     const order = Array.from(document.querySelectorAll<HTMLElement>('.panel[data-panel]'))
       .map(panel => panel.dataset.panel!);
     localStorage.setItem('panel-order', JSON.stringify(order));
-    localStorage.setItem('panel-order-bottom-set', JSON.stringify(['live-news', 'live-webcams']));
+    localStorage.setItem('panel-order-bottom-set', JSON.stringify(['live-news']));
   });
   await page.reload({ waitUntil: 'domcontentloaded' });
 
   await expect(page.locator('#mapBottomGrid > .panel')).toHaveCount(0);
 
-  for (const id of ['live-news', 'live-webcams']) {
+  for (const id of ['live-news']) {
     const panel = page.locator(`#panelsGrid > .panel[data-panel="${id}"]`);
     const handle = panel.locator(':scope > .panel-resize-handle');
     const toggle = panel.locator('.panel-collapse-btn');
-    const toolbar = panel.locator(id === 'live-news' ? '.live-news-toolbar' : '.webcam-toolbar');
+    const toolbar = panel.locator('.live-news-toolbar');
     const span = () => panel.evaluate(element => getComputedStyle(element).gridRowStart);
     await expect(panel).toBeVisible({ timeout: 60_000 });
     await panel.evaluate(element => element.scrollIntoView({ block: 'nearest' }));
@@ -360,5 +304,5 @@ test('legacy bottom-set video panels migrate into the inspector grid and release
     await expect(handle).toBeVisible();
   }
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('worldmonitor-panel-spans')!)))
-    .toEqual({ 'live-news': 4, 'live-webcams': 4 });
+    .toEqual({ 'live-news': 4 });
 });

@@ -312,12 +312,6 @@ export class EventHandlerManager implements AppModule {
   };
   private readonly debouncedUrlSync = debounce(this.writeUrlState, 250);
 
-  private readonly debouncedWebcamReload = debounce(() => {
-    if (this.ctx.mapLayers?.webcams) {
-      this.callbacks.loadDataForLayer('webcams');
-    }
-  }, 350);
-
   constructor(ctx: AppContext, callbacks: EventHandlerCallbacks) {
     this.ctx = ctx;
     this.callbacks = callbacks;
@@ -436,7 +430,6 @@ export class EventHandlerManager implements AppModule {
   destroy(): void {
     this.closeEmbedDialog();
     this.debouncedUrlSync.cancel();
-    this.debouncedWebcamReload.cancel();
     if (this.boundFullscreenHandler) {
       document.removeEventListener('fullscreenchange', this.boundFullscreenHandler);
       this.boundFullscreenHandler = null;
@@ -682,7 +675,7 @@ export class EventHandlerManager implements AppModule {
       userSetPanelEnabled(config, false);
       // Live-media teardown is handled centrally by applyPanelSettings() below, which
       // calls stopLiveMediaForClose() on every now-disabled panel. Calling it here too
-      // double-fired the lifecycle hook for live-news / live-webcams.
+      // double-fired the lifecycle hook for Live News.
       saveToStorage(STORAGE_KEYS.panels, this.ctx.panelSettings);
       this.applyPanelSettings();
       this.ctx.unifiedSettings?.refreshPanelToggles();
@@ -1364,7 +1357,6 @@ export class EventHandlerManager implements AppModule {
           regionSelect.value = state.view;
         }
       }
-      this.debouncedWebcamReload();
     });
 
     // Skip the immediate sync only when applyInitialUrlState() will start an

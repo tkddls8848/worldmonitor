@@ -120,7 +120,6 @@ export const STORAGE_KEYS = {
   disabledFeedsSchema: 'worldmonitor-disabled-feeds-schema',
   liveChannels: 'worldmonitor-live-channels',
   activeChannel: 'worldmonitor-active-channel',
-  webcamPrefs: 'worldmonitor-webcam-prefs',
 } as const;
 
 // Type definitions for variant configs

@@ -11,14 +11,12 @@ delete process.env.LOCAL_API_MODE;
 
 const { getKeyPrefix } = await import('../server/_shared/redis');
 const { listPredictionMarkets } = await import('../server/worldmonitor/prediction/v1/list-prediction-markets');
-const { listWebcams } = await import('../server/worldmonitor/webcam/v1/list-webcams');
 const { getUSNIFleetReport } = await import('../server/worldmonitor/military/v1/get-usni-fleet-report');
 const { getHumanitarianSummary } = await import('../server/worldmonitor/conflict/v1/get-humanitarian-summary');
 const { getHumanitarianSummaryBatch } = await import('../server/worldmonitor/conflict/v1/get-humanitarian-summary-batch');
 
 const cache = new Map<string, unknown>();
 const commands: unknown[][] = [];
-const camera = { webcamId: 'camera-1', title: 'Harbor', lat: 20, lng: 10, category: 'city', country: 'XX' };
 const market = { title: 'Will the event occur?', yesPrice: 60, volume: 100, url: 'https://example.test/event/one' };
 
 beforeEach(() => {
@@ -40,12 +38,7 @@ beforeEach(() => {
           result: cache.has(command[1]) ? JSON.stringify(cache.get(command[1])) : null,
         })));
       }
-      if (body[0][0] === 'GEOSEARCH') {
-        assert.equal(body[0][1], 'webcam:cameras:geo:123');
-        return Response.json([{ result: [camera.webcamId] }]);
-      }
-      assert.deepEqual(body[0], ['HMGET', 'webcam:cameras:meta:123', camera.webcamId]);
-      return Response.json([{ result: [JSON.stringify(camera)] }]);
+      assert.fail('Unexpected Redis pipeline command');
     }
     assert.equal(body[0], 'SET');
     commands.push(body);
@@ -105,20 +98,4 @@ it('serves canonical humanitarian seeds through the batch RPC', async () => {
   const result = await getHumanitarianSummaryBatch({} as never, { countryCodes: ['YE', 'SD', 'YE'] });
   assert.deepEqual(result, { results: { YE: summary }, fetched: 1, requested: 2 });
   assert.deepEqual(commands, [['GET', 'conflict:humanitarian:v1:SD'], ['GET', 'conflict:humanitarian:v1:YE']]);
-});
-
-it('uses the raw webcam catalog while keeping the response cache deployment-scoped', async () => {
-  cache.set('webcam:cameras:active', 123);
-  const req = { zoom: 10, boundW: 9, boundE: 11, boundS: 19, boundN: 21 };
-  const expected = { webcams: [camera], clusters: [], totalInView: 1 };
-  assert.deepEqual(await listWebcams({} as never, req), expected);
-  assert.deepEqual(await listWebcams({} as never, req), expected);
-  assert.deepEqual(commands.filter(c => c[0] === 'GET'), [
-    ['GET', 'webcam:cameras:active'],
-    ['GET', 'preview:12345678:webcam:resp:123:10:9:19:11:21'],
-    ['GET', 'webcam:cameras:active'],
-    ['GET', 'preview:12345678:webcam:resp:123:10:9:19:11:21'],
-  ]);
-  assert.equal(commands.filter(c => c[0] === 'GEOSEARCH').length, 1);
-  assert.equal(commands.find(c => c[0] === 'SET')?.[1], 'preview:12345678:webcam:resp:123:10:9:19:11:21');
 });

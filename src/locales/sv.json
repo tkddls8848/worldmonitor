@@ -83,8 +83,6 @@
       "ddos": "DDoS",
       "anomalies": "Anomalier"
     },
-    "liveWebcams": "Live-webbkameror",
-    "windyWebcams": "Windy Live-webbkamera",
     "groceryBasket": "Matvaruindex",
     "groceryItem": "Vara",
     "faoFoodPriceIndex": "Livsmedelspriser",
@@ -478,23 +476,6 @@
       "showingMatches": "Visar {{count}} av {{total}} matchningar",
       "match": "träff",
       "matches": "träffar"
-    },
-    "webcams": {
-      "regions": {
-        "all": "ALLA",
-        "mideast": "MELLANÖSTERN",
-        "europe": "EUROPA",
-        "americas": "AMERIKA",
-        "asia": "ASIEN",
-        "space": "RYMDEN"
-      },
-      "paused": "Webbkameror pausade",
-      "play": "Se live",
-      "previewStatus": "Redo att spela",
-      "connecting": "Ansluter…",
-      "unverified": "Kan inte bekräfta att denna ström är live",
-      "offline": "{{city}} är offline just nu",
-      "noFeeds": "Inga aktiva webbkameror i denna region just nu"
     },
     "playback": {
       "live": "LIVE",
@@ -1281,8 +1262,6 @@
       "badgeAnimDesc": "Animera uppdateringsemblem i panelrubriker",
       "headlineMemoryLabel": "Rubrikminne",
       "headlineMemoryDesc": "Kom ihåg sedda rubriker för att markera nya",
-      "streamAlwaysOnLabel": "Spela live-webbkameror automatiskt",
-      "streamAlwaysOnDesc": "Startar direktwebkameravideoerna så snart de visas på skärmen. Lämna detta avstängt för att endast ladda dem när du startar dem själv.",
       "analysisFrameworksLabel": "Analysramverk",
       "analysisFrameworksActivePerPanel": "Aktiv per panel",
       "analysisFrameworksSkillLibrary": "Kompetensbibliotek",
@@ -1323,7 +1302,7 @@
       "briefFreshness": "Genererad {{minutes}}m sedan · senaste källa {{hours}}h gammal",
       "briefStoryDetails": "Detaljer om nyheten ({{count}})",
       "streamIdleStopLabel": "Stoppa livevideo när inaktiv",
-      "streamIdleStopDesc": "Stoppar Live News och Live Webcams efter denna tid utan aktivitet och visar ett meddelande i panelen.",
+      "streamIdleStopDesc": "Stoppar Live News efter denna tid utan aktivitet och visar ett meddelande i panelen.",
       "streamIdleStopNever": "Aldrig",
       "liveNewsAutoplayLabel": "Automatisk uppspelning av direktnyheter",
       "liveNewsAutoplayDesc": "Startar direktnyhetsvideon, avstängd, så snart den visas på skärmen. Stäng av detta för att endast ladda videon när du startar den själv."
@@ -1896,9 +1875,6 @@
         "index": "index"
       }
     },
-    "liveWebcams": {
-      "infoTooltip": "<strong>Livewebbkameror</strong> Livesändningar från geopolitiskt betydelsefulla platser världen över: konfliktzoner, huvudstäder, gränsövergångar och strategiska flaskhalsar. Strömmar från YouTube och offentliga nätverk."
-    },
     "macroTiles": {
       "infoTooltip": "<strong>Makroindikatorer</strong> USA, euroområdet och Kina priser, aktivitet, politik och valutaindikatorer. Kina kräver aktuell bevakning. Varje ruta visar sin källa och observationsdatum."
     },
@@ -1916,9 +1892,6 @@
     },
     "yieldCurve": {
       "infoTooltip": "<strong>Yield Curve &amp; Rates</strong> US Treasury avkastningskurva (2Y, 5Y, 10Y, 30Y) och nyckelräntespreadar inklusive 10Y-2Y-inversionsindikatorn. Visar också euroområdets räntor (EURIBOR, ESTR). En inverterad kurva föregick historiskt lågkonjunkturer. Källa: Federal Reserve Economic Data."
-    },
-    "pinnedWebcams": {
-      "pinFromMap": "Fäst en webbkamera från kartan"
     },
     "breakthroughsTicker": {
       "noData": "Inga vetenskapliga genombrott ännu"

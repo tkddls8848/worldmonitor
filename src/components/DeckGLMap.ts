@@ -175,9 +175,6 @@ import {
 import type { DiseaseOutbreakItem } from '@/services/disease-outbreaks';
 import type { FeatureCollection, Geometry } from 'geojson';
 
-import { mountWebcamPinButton } from '@/services/webcams/pinned-store';
-import type { WebcamEntry, WebcamCluster } from '@/generated/client/worldmonitor/webcam/v1/service_client';
-import { fetchWebcamImage } from '@/services/webcams';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 import { summarizeRenderTiming, formatRenderTiming } from '@/components/map/render-timing';
 import { DeferredHeavyCommit } from '@/components/map/deferred-layer-commit';
@@ -187,7 +184,6 @@ import { NOTAM_AIRSPACE_COLORS, notamAirspaceTooltip } from '@/components/map/no
 import { NO2_ACTIVITY_LEGEND, no2ActivityFill, no2ActivityTooltip, NO2_ACTIVITY_COLORS } from '@/components/map/no2-activity-style';
 import type { No2ActivityRegionView, No2ActivitySnapshot } from '@/services/economic/no2-activity';
 import type { NotamAirspaceRestriction } from '@/services/notam-airspace';
-import { dispatchWebcamLayerClick, resolveWebcamStreamUrl, type WebcamLeafLike } from '@/components/map/webcam-click';
 import {
   type BBox,
   type BoundedFeature,
@@ -493,16 +489,6 @@ type HighlightedMarker = { id: string; lon: number; lat: number; name: string; s
 /** GpsJamHex with its H3 cell boundary precomputed once at ingestion (see setGpsJamming). */
 type GpsJamHexWithPolygon = GpsJamHex & { polygon: [number, number][] };
 
-/**
- * Webcam markers carry an explicit leaf/group discriminant tagged at setWebcams
- * ingestion as a `_kind: 'webcam' | 'webcam-cluster'` union.
- * Existing consumers still narrow on `'count' in d`; `_kind` makes the
- * distinction available at the type level for new code without re-deriving it.
- */
-type WebcamLeafMarker = WebcamEntry & { _kind: 'webcam' };
-type WebcamClusterMarker = WebcamCluster & { _kind: 'webcam-cluster' };
-type WebcamMarker = WebcamLeafMarker | WebcamClusterMarker;
-
 interface BypassArcDatum {
   source: [number, number];
   target: [number, number];
@@ -777,7 +763,6 @@ export class DeckGLMap {
   private happinessSource = '';
   private speciesRecoveryZones: Array<SpeciesRecovery & { recoveryZone: { name: string; lat: number; lon: number } }> = [];
   private renewableInstallations: RenewableInstallation[] = [];
-  private webcamData: WebcamMarker[] = [];
   private countriesGeoJsonData: FeatureCollection<Geometry> | null = null;
   private worldOverviewMode = false;
   private worldBasemapHooked = false;
@@ -2515,22 +2500,6 @@ export class DeckGLMap {
     // Phase 8: Renewable energy installations
     if (mapLayers.renewableInstallations && this.renewableInstallations.length > 0) {
       layers.push(this.createRenewableInstallationsLayer());
-    }
-
-    // Webcam layer (server-side clustered markers)
-    if (mapLayers.webcams && this.webcamData.length > 0) {
-      layers.push(new ScatterplotLayer<WebcamMarker>({
-        id: 'webcam-layer',
-        data: this.webcamData,
-        getPosition: (d) => [d.lng, d.lat],
-        getRadius: (d) => ('count' in d ? Math.min(8 + d.count * 0.5, 24) : 6),
-        getFillColor: (d) => ('count' in d ? [0, 212, 255, 180] : [255, 215, 0, 200]) as [number, number, number, number],
-        radiusUnits: 'pixels',
-        pickable: true,
-        // Consume the pick (return true) so MapLibreOverlay onClick → handleClick
-        // does not double-fire. Cluster vs leaf is routed in handleWebcamLayerClick.
-        onClick: (info) => this.handleWebcamLayerClick(info),
-      }));
     }
 
     layers.push(...this.createOrbitalTrackLayers());
@@ -5427,12 +5396,6 @@ export class DeckGLMap {
           </div>`,
         };
       }
-      case 'webcam-layer': {
-        const label = 'count' in obj
-          ? `${numericLabel(obj.count)} webcams`
-          : (obj.title || obj.name || 'Webcam');
-        return { html: `<div class="deckgl-tooltip"><strong>${text(label)}</strong></div>` };
-      }
       default:
         return null;
     }
@@ -5650,11 +5613,6 @@ export class DeckGLMap {
       return;
     }
 
-    if (layerId === 'webcam-layer') {
-      this.handleWebcamLayerClick(info);
-      return;
-    }
-
     if (layerId === 'trade-routes-layer') {
       const segment = info.object as TradeRouteSegment;
       const waypoints = ROUTE_WAYPOINTS_MAP.get(segment.routeId) ?? [];
@@ -5763,91 +5721,6 @@ export class DeckGLMap {
     }
     if (popupType === 'conflict') {
       this.popup.loadConflictHistory(data as import('@/types').ConflictZone);
-    }
-  }
-
-  /**
-   * Layer-level webcam pick. Returns true so deck.gl consumes the event and the
-   * global MapLibreOverlay handler does not run a second time (#3877 / #4230).
-   * Clusters zoom in instead of opening a tab per camera.
-   */
-  private handleWebcamLayerClick(info: PickingInfo): boolean {
-    return dispatchWebcamLayerClick(info.object, {
-      onLeaf: (webcam) => {
-        this.showWebcamClickPopup(webcam, info.x, info.y);
-      },
-      onCluster: (cluster) => {
-        const currentZoom = this.maplibreMap?.getZoom() ?? this.state.zoom;
-        this.setCenter(cluster.lat, cluster.lng, Math.min(currentZoom + 2, 14));
-      },
-    });
-  }
-
-  private async showWebcamClickPopup(webcam: WebcamLeafLike, x: number, y: number): Promise<void> {
-    // Remove any existing popup
-    this.container.querySelector('.deckgl-webcam-popup')?.remove();
-
-    const popup = document.createElement('div');
-    popup.className = 'deckgl-webcam-popup';
-    popup.style.position = 'absolute';
-    popup.style.left = x + 'px';
-    popup.style.top = y + 'px';
-    popup.style.zIndex = '1000';
-
-    const titleEl = document.createElement('div');
-    titleEl.className = 'deckgl-webcam-popup-title';
-    titleEl.textContent = webcam.title || webcam.webcamId || '';
-    popup.appendChild(titleEl);
-
-    const locationEl = document.createElement('div');
-    locationEl.className = 'deckgl-webcam-popup-location';
-    locationEl.textContent = webcam.country || '';
-    popup.appendChild(locationEl);
-
-    const id = webcam.webcamId;
-    const streamUrl = resolveWebcamStreamUrl(webcam);
-    if (streamUrl) {
-      const link = document.createElement('a');
-      link.className = 'deckgl-webcam-popup-link';
-      link.href = streamUrl;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.textContent = 'Open on Windy \u2197';
-      popup.appendChild(link);
-    }
-
-    let imageData: Awaited<ReturnType<typeof fetchWebcamImage>> | null = null;
-    const pinBtn = mountWebcamPinButton(() => ({
-      webcamId: id,
-      title: webcam.title || imageData?.title || '',
-      lat: webcam.lat,
-      lng: webcam.lng,
-      category: webcam.category || 'other',
-      country: webcam.country || '',
-      playerUrl: imageData?.playerUrl || '',
-    }));
-    popup.appendChild(pinBtn);
-
-    const cleanup = () => {
-      popup.remove();
-      document.removeEventListener('click', closeHandler);
-      clearTimeout(autoDismiss);
-    };
-    const closeHandler = (e: MouseEvent) => {
-      if (!popup.contains(e.target as Node)) cleanup();
-    };
-    const autoDismiss = setTimeout(cleanup, 8000);
-    setTimeout(() => document.addEventListener('click', closeHandler), 0);
-
-    // Show immediately so a slow image fetch cannot look like a dead click.
-    this.container.appendChild(popup);
-
-    imageData = await fetchWebcamImage(id).catch(() => null);
-    if (!popup.isConnected) return;
-
-    if (imageData?.windyUrl) {
-      const existing = popup.querySelector<HTMLAnchorElement>('.deckgl-webcam-popup-link');
-      if (existing) existing.href = imageData.windyUrl;
     }
   }
 
@@ -7765,15 +7638,6 @@ export class DeckGLMap {
 
   public setClimateAnomalies(anomalies: ClimateAnomaly[]): void {
     this.climateAnomalies = anomalies;
-    this.render();
-  }
-
-  public setWebcams(markers: Array<WebcamEntry | WebcamCluster>): void {
-    this.webcamData = markers.map((m) =>
-      'count' in m
-        ? { ...m, _kind: 'webcam-cluster' as const }
-        : { ...m, _kind: 'webcam' as const },
-    );
     this.render();
   }
 

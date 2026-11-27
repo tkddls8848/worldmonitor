@@ -37,7 +37,7 @@ export type LiveVideoState =
   | { readonly phase: 'offline'; readonly reason: OfflineReason; readonly watchUrl: string | null };
 
 export interface LiveVideoPresentation {
-  /** iframe/video title, e.g. 'Taipei live webcam'. */
+  /** iframe/video title, e.g. 'Live News'. */
   readonly title: string;
   readonly className: string;
   readonly controls: boolean;

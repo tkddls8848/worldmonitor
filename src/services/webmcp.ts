@@ -2374,7 +2374,7 @@ export function buildWebMcpTools(
       name: WEBMCP_SPA_TOOL.setPanelFullscreen,
       title: 'Set Panel Fullscreen',
       description:
-        'Enter or exit panel fullscreen by stable ID through the same visible fullscreen control as Live News and Live Webcams. Idempotent when the state already matches. Session view-state only; it does not persist across reload.',
+        'Enter or exit panel fullscreen by stable ID through the same visible fullscreen control as Live News. Idempotent when the state already matches. Session view-state only; it does not persist across reload.',
       inputSchema: {
         type: 'object',
         properties: {

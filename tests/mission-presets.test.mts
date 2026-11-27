@@ -1283,11 +1283,11 @@ describe('mission preset shell integration', () => {
     assert.equal(preset!.requiresFocus, true);
     assert.equal(preset!.asksForCountries, true);
     // The issue's list: map, live news, advisories, unrest, weather and natural
-    // hazards, aviation, health, internet outages, webcams, instability,
+    // hazards, aviation, health, internet outages, instability,
     // keyword monitors. Unrest, weather and hazards have no panel; they are layers.
     for (const key of [
       'map', 'live-news', 'security-advisories', 'airline-intel', 'disease-outbreaks',
-      'internet-disruptions', 'live-webcams', 'cii', 'monitors',
+      'internet-disruptions', 'cii', 'monitors',
     ]) {
       assert.ok(preset!.panels.includes(key), `protective-travel is missing panel ${key}`);
     }

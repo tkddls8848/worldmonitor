@@ -463,8 +463,6 @@
       "ddos": "DDoS",
       "anomalies": "異常"
     },
-    "liveWebcams": "ライブ ウェブカメラ",
-    "windyWebcams": "Windy ライブ ウェブカメラ",
     "groceryBasket": "食料品指数",
     "groceryItem": "商品",
     "faoFoodPriceIndex": "食品価格",
@@ -849,23 +847,6 @@
     }
   },
   "components": {
-    "webcams": {
-      "paused": "ウェブカメラ一時停止中",
-      "regions": {
-        "all": "すべて",
-        "mideast": "中東",
-        "europe": "ヨーロッパ",
-        "americas": "アメリカ",
-        "asia": "アジア",
-        "space": "宇宙"
-      },
-      "play": "ライブで視聴",
-      "previewStatus": "再生準備完了",
-      "connecting": "接続中…",
-      "unverified": "このストリームがライブ配信中であることを確認できません",
-      "offline": "{{city}} は現在オフラインです",
-      "noFeeds": "この地域に現在ライブウェブカメラがありません"
-    },
     "positiveNewsFeed": {
       "noStories": "このカテゴリにはまだ記事がありません"
     },
@@ -1467,8 +1448,6 @@
       "badgeAnimDesc": "パネルヘッダーの更新バッジをアニメーション表示",
       "headlineMemoryLabel": "ヘッドラインメモリ",
       "headlineMemoryDesc": "閲覧済みの見出しを記憶して新着を強調",
-      "streamAlwaysOnLabel": "ライブウェブカメラの自動再生",
-      "streamAlwaysOnDesc": "ライブウェブカメラビデオが画面に表示されると同時に自動再生されます。これをオフにしておくと、自分で再生を開始したときだけ読み込まれます。",
       "analysisFrameworksLabel": "分析フレームワーク",
       "analysisFrameworksActivePerPanel": "パネルごとのアクティブ",
       "analysisFrameworksSkillLibrary": "スキルライブラリ",
@@ -1508,7 +1487,7 @@
       "briefFreshness": "{{minutes}}m前に生成 · 最新ソース{{hours}}h前",
       "briefStoryDetails": "記事の詳細 ({{count}})",
       "streamIdleStopLabel": "アイドル時にライブ動画を停止",
-      "streamIdleStopDesc": "設定した時間、操作がない状態が続くと、ライブニュースとライブウェブカメラを停止し、パネルに通知を表示します。",
+      "streamIdleStopDesc": "設定した時間、操作がない状態が続くと、ライブニュースを停止し、パネルに通知を表示します。",
       "streamIdleStopNever": "なし",
       "liveNewsAutoplayLabel": "ライブニュースの自動再生",
       "liveNewsAutoplayDesc": "ライブニュースビデオが画面に表示されると同時にミュート状態で自動再生されます。これをオフにすると、自分で再生を開始したときだけビデオが読み込まれます。"
@@ -2268,9 +2247,6 @@
       "analysisDate": "WTO分析 {{date}}",
       "indexNote": "出荷量指数、2025年1～3月平均 = 100"
     },
-    "liveWebcams": {
-      "infoTooltip": "<strong>ライブウェブカメラ</strong> 世界中の地政学的に重要な場所からのライブ映像：紛争地域、首都、国境検問所、戦略的チョークポイント。YouTubeおよび公共ネットワークからのストリーム。"
-    },
     "macroTiles": {
       "infoTooltip": "<strong>マクロ指標</strong> 米国、ユーロ圏、中国の物価、経済活動、政策および通貨指標。中国の現在の報道が必要です。各タイルにはその出典と観察日が表示されます。"
     },
@@ -2288,9 +2264,6 @@
     },
     "yieldCurve": {
       "infoTooltip": "<strong>イールドカーブ & レート</strong> 米国債利回り曲線（2年、5年、10年、30年）および主要金利スプレッド（10年-2年逆転インジケータを含む）。ユーロ圏レート（EURIBOR、ESTR）も表示。逆転曲線は歴史的に景気後退に先行します。出典：連邦準備制度経済データ。"
-    },
-    "pinnedWebcams": {
-      "pinFromMap": "地図からウェブカメラをピン留め"
     },
     "breakthroughsTicker": {
       "noData": "科学的ブレークスルーはまだありません"

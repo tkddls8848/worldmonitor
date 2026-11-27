@@ -93,7 +93,7 @@ export const OVERVIEW_DEFAULT_PANELS: Readonly<Record<string, readonly string[]>
 };
 
 /** Panels hosted in the bottom slide-up media & assistant tray for 1-click access without cluttering the first screen. */
-export const BOTTOM_TRAY_PANELS = ['live-news', 'live-webcams', 'chat-analyst'] as const;
+export const BOTTOM_TRAY_PANELS = ['live-news', 'chat-analyst'] as const;
 export type BottomTrayPanelId = (typeof BOTTOM_TRAY_PANELS)[number];
 
 /** Canonical 6-domain panel sets covering all 168 unique panels across variants. */
@@ -232,8 +232,6 @@ const NEWS_TOPICAL_KEYS = new Set<string>([
   'insights',
   'latest-brief',
   'live-news',
-  'live-webcams',
-  'windy-webcams',
   'energy',
   'gov',
   'thinktanks',

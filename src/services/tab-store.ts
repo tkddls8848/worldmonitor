@@ -1,6 +1,6 @@
 import type { PanelConfig } from '@/types';
 import { SITE_VARIANT } from '@/config/variant';
-import { ALL_PANELS, TORONTO_SAFETY_PANEL_ID } from '@/config/panels';
+import { ALL_PANELS, isRetiredPanel } from '@/config/panels';
 import { isDynamicPanel, resetMissionPresetState } from '@/services/mission-presets';
 import { safeStorageGet, safeStorageRemove, safeStorageSet } from '@/utils/safe-storage';
 import { normalizeScope, type TabScope } from '../../shared/tab-scope';
@@ -35,7 +35,7 @@ export interface PanelTab {
    */
   scope?: TabScope;
   /**
-   * Panels' own filter choices (forecast region, webcam region; #10453
+   * Panels' own filter choices (forecast region; #10453
    * phase 2). Written by `PanelLayoutManager` when a panel reports a change,
    * applied when the tab becomes active, and shared with a team dashboard.
    */
@@ -85,9 +85,11 @@ export function normalizeTabsState(parsed: unknown): TabsState | null {
     && Array.isArray(t.panelOrder) && Array.isArray(t.bottomSet));
   if (tabs.length === 0) return null;
   for (const tab of tabs) {
-    delete tab.panelSettings[TORONTO_SAFETY_PANEL_ID];
-    tab.panelOrder = tab.panelOrder.filter((key) => key !== TORONTO_SAFETY_PANEL_ID);
-    tab.bottomSet = tab.bottomSet.filter((key) => key !== TORONTO_SAFETY_PANEL_ID);
+    for (const key of Object.keys(tab.panelSettings)) {
+      if (isRetiredPanel(key)) delete tab.panelSettings[key];
+    }
+    tab.panelOrder = tab.panelOrder.filter((key) => !isRetiredPanel(key));
+    tab.bottomSet = tab.bottomSet.filter((key) => !isRetiredPanel(key));
     const team = tab.team as unknown;
     if (team === undefined) continue;
     const ok = !!team && typeof team === 'object'
@@ -104,7 +106,8 @@ export function normalizeTabsState(parsed: unknown): TabsState | null {
   for (const tab of tabs) {
     if (tab.panelFilters === undefined) continue;
     const filters = normalizePanelFilters(tab.panelFilters);
-    if (filters) tab.panelFilters = filters;
+    const activeFilters = Object.entries(filters ?? {}).filter(([key]) => !isRetiredPanel(key));
+    if (activeFilters.length) tab.panelFilters = Object.fromEntries(activeFilters);
     else delete tab.panelFilters;
   }
   const activeTabId = tabs.some((t) => t.id === candidate.activeTabId)
@@ -173,7 +176,7 @@ export function normalizeNewTabPanels(parsed: unknown): NewTabPanels | null {
   for (const entry of parsed) {
     if (!entry || typeof entry !== 'object') continue;
     const { key, on } = entry as Partial<NewTabPanelChoice>;
-    if (typeof key !== 'string' || key === '' || key === TORONTO_SAFETY_PANEL_ID
+    if (typeof key !== 'string' || key === '' || isRetiredPanel(key)
       || typeof on !== 'boolean' || seen.has(key)) continue;
     seen.add(key);
     out.push({ key, on });

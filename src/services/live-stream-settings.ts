@@ -1,8 +1,7 @@
 /**
- * Live stream playback preferences shared across Live News + Live Webcams.
+ * Live News playback preferences.
  *
  * `newsAutoplay` starts Live News, muted, once it is visible. It defaults on.
- * `alwaysOn` starts the Live Webcams wall the same way; that default requires user intent.
  * `idleStop` is how long live video keeps playing without user activity.
  */
 
@@ -25,7 +24,6 @@ export const DEFAULT_LIVE_MEDIA_IDLE_STOP: LiveMediaIdleStopMinutes = 60;
 
 export interface LiveStreamSettings {
   readonly newsAutoplay: boolean;
-  readonly alwaysOn: boolean;
   readonly idleStop: LiveMediaIdleStop;
 }
 
@@ -61,11 +59,6 @@ export function formatIdleStopMinutes(minutes: number, locale: string): string {
     .format(inHours ? minutes / 60 : minutes);
 }
 
-/** Whether the Live Webcams wall autoplays as soon as it is visible. */
-export function getLiveStreamsAlwaysOn(): boolean {
-  return readRaw(STORAGE_KEY_LIVE_STREAMS_ALWAYS_ON) === 'true';
-}
-
 function browserAsksToSaveData(): boolean {
   try {
     const connection = (navigator as Navigator & { connection?: { saveData?: unknown } }).connection;
@@ -78,9 +71,7 @@ function browserAsksToSaveData(): boolean {
 /**
  * Whether Live News starts, muted, as soon as it is visible. A first-time visitor should land on a
  * moving dashboard, so this defaults on. The exceptions are a browser in Data Saver mode and a viewer
- * who had switched off the older toggle, which used to cover Live News and Live Webcams together.
- * Only Live News autoplays by default: the webcam wall is most of live media's measured memory and
- * frame-time cost (#4334), so it stays behind `alwaysOn`.
+ * who had switched off the older autoplay toggle.
  */
 export function getLiveNewsAutoplay(): boolean {
   const saved = readRaw(LIVE_NEWS_AUTOPLAY_STORAGE_KEY);
@@ -98,12 +89,12 @@ export function getLiveNewsAutoplay(): boolean {
  */
 export function getLiveMediaIdleStop(): LiveMediaIdleStop {
   return parseLiveMediaIdleStop(readRaw(LIVE_MEDIA_IDLE_STOP_STORAGE_KEY))
-    ?? (getLiveStreamsAlwaysOn() ? 'never' : DEFAULT_LIVE_MEDIA_IDLE_STOP);
+    ?? (readRaw(STORAGE_KEY_LIVE_STREAMS_ALWAYS_ON) === 'true' ? 'never' : DEFAULT_LIVE_MEDIA_IDLE_STOP);
 }
 
 /** A snapshot of both preferences as they currently read from storage. */
 export function getLiveStreamSettings(): LiveStreamSettings {
-  return { newsAutoplay: getLiveNewsAutoplay(), alwaysOn: getLiveStreamsAlwaysOn(), idleStop: getLiveMediaIdleStop() };
+  return { newsAutoplay: getLiveNewsAutoplay(), idleStop: getLiveMediaIdleStop() };
 }
 
 /** Saves the idle-stop duration and notifies subscribers in this tab. */
@@ -115,21 +106,6 @@ export function setLiveMediaIdleStop(value: LiveMediaIdleStop): void {
 /** Saves the Live News autoplay preference and notifies subscribers in this tab. */
 export function setLiveNewsAutoplay(autoplay: boolean): void {
   writeRaw(LIVE_NEWS_AUTOPLAY_STORAGE_KEY, String(autoplay));
-  notify();
-}
-
-/** Saves the webcam autoplay preference and notifies subscribers in this tab. */
-export function setLiveStreamsAlwaysOn(alwaysOn: boolean): void {
-  // The idle default derives from always-on, so pin it first or toggling autoplay would flip the idle select.
-  if (parseLiveMediaIdleStop(readRaw(LIVE_MEDIA_IDLE_STOP_STORAGE_KEY)) === undefined) {
-    writeRaw(LIVE_MEDIA_IDLE_STOP_STORAGE_KEY, String(getLiveMediaIdleStop()));
-  }
-  // Live News falls back to this key only for values older clients wrote, so pin it before a webcam
-  // toggle overwrites them: switching webcams on and off must not turn Live News autoplay off.
-  if (readRaw(LIVE_NEWS_AUTOPLAY_STORAGE_KEY) === null) {
-    writeRaw(LIVE_NEWS_AUTOPLAY_STORAGE_KEY, String(getLiveNewsAutoplay()));
-  }
-  writeRaw(STORAGE_KEY_LIVE_STREAMS_ALWAYS_ON, String(alwaysOn));
   notify();
 }
 
@@ -155,16 +131,6 @@ export function subscribeLiveStreamsSettingsChange(cb: (settings: LiveStreamSett
     window.removeEventListener('storage', onStorage);
     window.removeEventListener(CLOUD_PREFS_APPLIED_EVENT, onCloudApplied);
   };
-}
-
-/** Calls `cb` only when the autoplay preference changes, from any of the sources `subscribeLiveStreamsSettingsChange` covers. */
-export function subscribeLiveStreamsAlwaysOnChange(cb: (alwaysOn: boolean) => void): () => void {
-  let last = getLiveStreamsAlwaysOn();
-  return subscribeLiveStreamsSettingsChange(({ alwaysOn }) => {
-    if (alwaysOn === last) return;
-    last = alwaysOn;
-    cb(alwaysOn);
-  });
 }
 
 /** Calls `cb` only when the Live News autoplay preference changes, from the same sources. */

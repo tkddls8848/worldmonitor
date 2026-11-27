@@ -15,7 +15,6 @@
  * NOT seeded (inherently on-demand):
  * - search-imagery: per-bbox/datetime STAC query (cache key is hash of params)
  * - get-giving-summary: uses hardcoded baselines, NO external fetches
- * - get-webcam-image: per-webcamId Windy API lookup
  */
 
 import { loadEnvFile, CHROME_UA } from './_seed-utils.mjs';

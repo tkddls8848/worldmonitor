@@ -2,11 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   getLiveNewsAutoplay,
-  getLiveStreamsAlwaysOn,
   getLiveStreamSettings,
   LIVE_NEWS_AUTOPLAY_STORAGE_KEY,
   setLiveNewsAutoplay,
-  setLiveStreamsAlwaysOn,
   subscribeLiveNewsAutoplayChange,
 } from '@/services/live-stream-settings';
 import { CLOUD_SYNC_KEYS, ABSENCE_TOLERANT_SYNC_KEYS, resolveCloudBlobKeyAction } from '@/utils/sync-keys';
@@ -31,10 +29,9 @@ describe('Live News autoplay preference', () => {
     setSaveData(undefined);
   });
 
-  it('autoplays Live News by default while webcams stay click-to-play', () => {
+  it('autoplays Live News by default', () => {
     expect(getLiveNewsAutoplay()).toBe(true);
-    expect(getLiveStreamsAlwaysOn()).toBe(false);
-    expect(getLiveStreamSettings()).toMatchObject({ newsAutoplay: true, alwaysOn: false });
+    expect(getLiveStreamSettings()).toMatchObject({ newsAutoplay: true });
   });
 
   it('does not autoplay by default when the browser asks to save data', () => {
@@ -55,20 +52,6 @@ describe('Live News autoplay preference', () => {
     expect(getLiveNewsAutoplay()).toBe(true);
   });
 
-  it('keeps Live News autoplay when the webcam toggle is switched on and off again', () => {
-    setLiveStreamsAlwaysOn(true);
-    setLiveStreamsAlwaysOn(false);
-    expect(getLiveStreamsAlwaysOn()).toBe(false);
-    expect(getLiveNewsAutoplay()).toBe(true);
-    expect(localStorage.getItem(LIVE_NEWS_AUTOPLAY_STORAGE_KEY)).toBe('true');
-  });
-
-  it('keeps a legacy opt-out when the webcam toggle changes', () => {
-    localStorage.setItem(ALWAYS_ON_KEY, 'false');
-    setLiveStreamsAlwaysOn(true);
-    expect(getLiveNewsAutoplay()).toBe(false);
-  });
-
   it('lets the saved Live News choice win over every default', () => {
     setLiveNewsAutoplay(false);
     expect(localStorage.getItem(LIVE_NEWS_AUTOPLAY_STORAGE_KEY)).toBe('false');
@@ -78,8 +61,6 @@ describe('Live News autoplay preference', () => {
     setSaveData(true);
     setLiveNewsAutoplay(true);
     expect(getLiveNewsAutoplay()).toBe(true);
-    // The webcam preference is a separate setting.
-    expect(getLiveStreamsAlwaysOn()).toBe(false);
   });
 
   it('notifies on a local change, another tab, or a cloud row, and only when the value changes', () => {

@@ -102,7 +102,6 @@ export const LAYER_REGISTRY: Record<keyof MapLayers, LayerDefinition> = {
   miningSites:              def('miningSites',              '&#128301;', 'miningSites',              'Mining Sites', ['deck']),
   processingPlants:         def('processingPlants',         '&#127981;', 'processingPlants',         'Processing Plants', ['deck']),
   commodityPorts:           def('commodityPorts',           '&#9973;',   'commodityPorts',           'Commodity Ports', ['deck']),
-  webcams:                  def('webcams',                  '&#128247;', 'webcams',                  'Live Webcams'),
   // weatherRadar removed — radar tiles now auto-start when Weather Alerts layer is toggled on
   diseaseOutbreaks:         def('diseaseOutbreaks',         '&#129440;', 'diseaseOutbreaks',         'Disease Outbreaks', ['deck']),
   // DeckGL-only layers: `renderers: ['deck']` hides them from the SVG/mobile
@@ -156,7 +155,7 @@ const VARIANT_LAYER_ORDER: Record<MapVariant, Array<keyof MapLayers>> = {
     'ucdpEvents', 'displacement', 'climate', 'weather',
     'outages', 'cyberThreats', 'natural', 'fires',
     'waterways', 'economic', 'minerals', 'gpsJamming',
-    'ciiChoropleth', 'sanctions', 'no2Activity', 'reservoirLevels', 'webcams',
+    'ciiChoropleth', 'sanctions', 'no2Activity', 'reservoirLevels',
     'diseaseOutbreaks',
   ],
   tech: [
@@ -383,9 +382,6 @@ export const LAYER_SYNONYMS: Record<string, Array<keyof MapLayers>> = {
   pollution: ['no2Activity'],
   industrial: ['no2Activity'],
   satellite: ['no2Activity'],
-  webcam: ['webcams'],
-  camera: ['webcams'],
-  livecam: ['webcams'],
 };
 
 export function resolveLayerLabel(def: LayerDefinition, tFn?: (key: string) => string): string {
@@ -466,7 +462,7 @@ export const MAP_LAYER_GROUPS: readonly MapLayerGroupDef[] = [
     id: 'overlays',
     labelKo: '국가 지표 · 오버레이',
     labelEn: 'Indicators & Overlays',
-    keys: ['ciiChoropleth', 'webcams', 'positiveEvents', 'kindness', 'happiness', 'speciesRecovery', 'renewableInstallations'],
+    keys: ['ciiChoropleth', 'positiveEvents', 'kindness', 'happiness', 'speciesRecovery', 'renewableInstallations'],
   },
 ] as const;
 

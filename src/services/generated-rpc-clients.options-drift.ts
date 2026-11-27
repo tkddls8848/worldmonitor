@@ -27,7 +27,6 @@ import type { SupplyChainServiceClientOptions } from '@/generated/client/worldmo
 import type { ThermalServiceClientOptions } from '@/generated/client/worldmonitor/thermal/v1/service_client';
 import type { TradeServiceClientOptions } from '@/generated/client/worldmonitor/trade/v1/service_client';
 import type { UnrestServiceClientOptions } from '@/generated/client/worldmonitor/unrest/v1/service_client';
-import type { WebcamServiceClientOptions } from '@/generated/client/worldmonitor/webcam/v1/service_client';
 import type { WildfireServiceClientOptions } from '@/generated/client/worldmonitor/wildfire/v1/service_client';
 
 type AssertOptionsMatch<Canonical, Candidate> = (<T>() => T extends Canonical ? 1 : 2) extends (<T>() => T extends Candidate ? 1 : 2)
@@ -77,7 +76,6 @@ export type LazyRpcClientOptionsDriftChecks = AssertAllOptionsMatch<[
   AssertOptionsMatch<MarketServiceClientOptions, ThermalServiceClientOptions>,
   AssertOptionsMatch<MarketServiceClientOptions, TradeServiceClientOptions>,
   AssertOptionsMatch<MarketServiceClientOptions, UnrestServiceClientOptions>,
-  AssertOptionsMatch<MarketServiceClientOptions, WebcamServiceClientOptions>,
   AssertOptionsMatch<MarketServiceClientOptions, WildfireServiceClientOptions>,
 ]>;
 

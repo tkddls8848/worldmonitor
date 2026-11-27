@@ -46,7 +46,7 @@ const REPO_ROOT = path.resolve(__dirname, '..');
  * green run means "no KNOWN direct-write idiom outside the legacy set", never
  * "a direct write is impossible". A local alias (`const el = this.content`)
  * still slips through. The list started at four idioms and missed
- * `MonitorPanel` and `PinnedWebcamsPanel` entirely, which is the argument for
+ * `MonitorPanel` entirely, which is the argument for
  * widening it whenever a new idiom appears rather than reading silence as
  * proof.
  *

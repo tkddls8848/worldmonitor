@@ -467,8 +467,6 @@
       "ddos": "DDoS",
       "anomalies": "Anomalies"
     },
-    "liveWebcams": "Webcams en direct",
-    "windyWebcams": "Webcam en direct Windy",
     "groceryBasket": "Indice d'épicerie",
     "groceryItem": "Article",
     "faoFoodPriceIndex": "Prix alimentaires",
@@ -863,23 +861,6 @@
       "showingMatches": "Affichage de {{count}} sur {{total}} correspondances",
       "match": "corresp.",
       "matches": "corresp."
-    },
-    "webcams": {
-      "regions": {
-        "all": "TOUS",
-        "mideast": "MOYEN-ORIENT",
-        "europe": "EUROPE",
-        "americas": "AMÉRIQUES",
-        "asia": "ASIE",
-        "space": "ESPACE"
-      },
-      "paused": "Webcams en pause",
-      "play": "Regarder en direct",
-      "previewStatus": "Prêt à lire",
-      "connecting": "Connexion…",
-      "unverified": "Impossible de confirmer que ce flux est en direct",
-      "offline": "{{city}} est actuellement hors ligne",
-      "noFeeds": "Aucune webcam en direct dans cette région pour le moment"
     },
     "regulation": {
       "timeline": "Chronologie",
@@ -1430,8 +1411,6 @@
       "analysisFrameworksFromAgentskills": "Depuis agentskills.io",
       "analysisFrameworksPasteJson": "Coller JSON",
       "analysisFrameworksSaveToLibrary": "Enregistrer dans la bibliothèque",
-      "streamAlwaysOnLabel": "Lecture automatique des webcams en direct",
-      "streamAlwaysOnDesc": "Lance les vidéos des webcams en direct dès qu'elles apparaissent à l'écran. Laissez cette option désactivée pour les charger uniquement quand vous les lancez vous-même.",
       "frameworkNote": "S'applique uniquement à l'analyse générée par le client",
       "loadingServerInsights": "Chargement des informations du serveur...",
       "usingCachedBrief": "Utilisation du résumé en cache...",
@@ -1464,7 +1443,7 @@
       "briefFreshness": "Généré il y a {{minutes}}m · source la plus récente datant de {{hours}}h",
       "briefStoryDetails": "Détails de l’article ({{count}})",
       "streamIdleStopLabel": "Arrêter la vidéo en direct en cas d'inactivité",
-      "streamIdleStopDesc": "Arrête Live News et Live Webcams après cette durée sans activité et affiche une notification dans le panneau.",
+      "streamIdleStopDesc": "Arrête Live News après cette durée sans activité et affiche une notification dans le panneau.",
       "streamIdleStopNever": "Jamais",
       "liveNewsAutoplayLabel": "Lecture automatique des actualités en direct",
       "liveNewsAutoplayDesc": "Lance la vidéo des actualités en direct, en sourdine, dès qu'elle apparaît à l'écran. Désactivez cette option pour charger la vidéo uniquement quand vous la lancez vous-même."
@@ -2288,9 +2267,6 @@
       "analysisDate": "Analyse OMC {{date}}",
       "indexNote": "Indice d'expédition par volume, moyenne janvier–mars 2025 = 100"
     },
-    "liveWebcams": {
-      "infoTooltip": "<strong>Webcams en direct</strong> Flux en direct depuis des lieux géopolitiquement significatifs dans le monde : zones de conflit, capitales, postes frontières et points de passage stratégiques. Flux provenant de YouTube et réseaux publics."
-    },
     "macroTiles": {
       "infoTooltip": "<strong>Macro indicators</strong> Indicateurs américains, de la zone euro et de la Chine en matière de prix, d'activité, de politique et de change. La Chine nécessite une couverture actuelle. Chaque tuile affiche sa source et sa date d'observation."
     },
@@ -2308,9 +2284,6 @@
     },
     "yieldCurve": {
       "infoTooltip": "<strong>Yield Curve &amp; Rates</strong> Courbe de rendement des bons du Trésor américains (2Y, 5Y, 10Y, 30Y) et spreads clés incluant l'indicateur d'inversion 10Y-2Y. Affiche également les taux de la zone euro (EURIBOR, ESTR). Historiquement, une courbe inversée précède les récessions. Source : Données économiques de la Réserve fédérale."
-    },
-    "pinnedWebcams": {
-      "pinFromMap": "Épinglez une webcam depuis la carte"
     },
     "breakthroughsTicker": {
       "noData": "Aucune percée scientifique pour le moment"

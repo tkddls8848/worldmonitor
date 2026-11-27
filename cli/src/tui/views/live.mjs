@@ -1,4 +1,4 @@
-// Live: the dashboard's news channels and webcams, played in the terminal
+// Live: the dashboard's news channels, played in the terminal
 // through mpv (kitty graphics or truecolor cells), in an mpv window, or in the
 // browser. Sources per channel come from the generated catalog; YouTube
 // channel entries resolve through the liveVideoResolved bootstrap key.
@@ -10,11 +10,10 @@ import { streamCandidates } from '../data/select.mjs';
 import { openExternal, playInTerminal, playInWindow } from '../video.mjs';
 import { PaneView, selectedItem } from './base.mjs';
 
-const WEBCAM_REGION_LABELS = { 'middle-east': 'Middle East', europe: 'Europe', americas: 'Americas', asia: 'Asia-Pacific', space: 'Space' };
 
 export class LiveView extends PaneView {
   constructor(app) {
-    super(app, { id: 'live', label: 'Live', paneIds: ['channels', 'webcams'], sources: ['liveVideoResolved'] });
+    super(app, { id: 'live', label: 'Live', paneIds: ['channels'], sources: ['liveVideoResolved'] });
     this.filter = 0; // index into filters()
     this.sourceIndex = 0;
     this.lastPlayed = null;
@@ -37,15 +36,7 @@ export class LiveView extends PaneView {
     return all.filter((c) => c.region === f.key);
   }
 
-  webcams() {
-    return (this.app.catalog.webcams || []).filter((w) => w.sources.length);
-  }
-
   current() {
-    if (this.focusedPane === 'webcams') {
-      const w = selectedItem(this.lists.webcams, this.webcams());
-      return w ? { kind: 'webcam', id: w.id, name: `${w.city} webcam`, sub: `${w.country} · ${WEBCAM_REGION_LABELS[w.region] || w.region}`, sources: w.sources } : null;
-    }
     const c = selectedItem(this.lists.channels, this.channels());
     return c ? { kind: 'channel', id: c.id, name: c.name, sub: `${c.handle || ''}${c.geo ? ` · available in ${c.geo.join(', ')}` : ''}`, sources: c.sources } : null;
   }
@@ -149,9 +140,7 @@ export class LiveView extends PaneView {
 
   render(ctx, r) {
     const [left, right] = splitH(r, ['44%', 'fill']);
-    const [channelsR, webcamsR] = splitV(left, ['60%', 'fill']);
-    this.renderChannels(ctx, channelsR);
-    this.renderWebcams(ctx, webcamsR);
+    this.renderChannels(ctx, left);
     const [detailR, historyR] = splitV(right, ['fill', Math.min(10, 3 + this.history.length)]);
     this.renderDetail(ctx, detailR);
     this.renderHistory(ctx, historyR);
@@ -187,29 +176,12 @@ export class LiveView extends PaneView {
     );
   }
 
-  renderWebcams(ctx, r) {
-    const { t } = ctx;
-    const inner = panel(ctx, r, { title: 'Live webcams', focused: this.isFocused('webcams'), onClick: () => this.focusPane('webcams') });
-    this.lists.webcams.draw(
-      ctx,
-      inner,
-      this.webcams(),
-      (w, _i, { width }) => [
-        { text: '◉ ', fg: t.accent },
-        { text: `${String(w.city).slice(0, 18).padEnd(18)} `, fg: t.text, attr: ATTR.BOLD },
-        { text: `${String(w.country).slice(0, 14).padEnd(14)} `, fg: t.dim },
-        { text: `${WEBCAM_REGION_LABELS[w.region] || w.region}`.slice(0, Math.max(0, width - 36)), fg: t.muted },
-      ],
-      this.listOpts('webcams', { onSelect: () => (this.sourceIndex = 0) }),
-    );
-  }
-
   renderDetail(ctx, r) {
     const { s, t } = ctx;
     const cur = this.current();
     const inner = panel(ctx, r, { title: 'Player', kind: 'double', badge: cur ? cur.kind.toUpperCase() : null });
     if (!cur) {
-      label(ctx, inner.x, inner.y, 'select a channel or webcam', { fg: t.dim });
+      label(ctx, inner.x, inner.y, 'select a channel', { fg: t.dim });
       return;
     }
     const player = this.app.player || {};

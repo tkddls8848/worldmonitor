@@ -464,8 +464,6 @@
       "ddos": "DDoS 攻击",
       "anomalies": "异常"
     },
-    "liveWebcams": "实时网络摄像头",
-    "windyWebcams": "Windy 实时网络摄像头",
     "groceryBasket": "食品杂货指数",
     "groceryItem": "商品",
     "faoFoodPriceIndex": "食品价格",
@@ -849,23 +847,6 @@
     }
   },
   "components": {
-    "webcams": {
-      "paused": "摄像头已暂停",
-      "regions": {
-        "all": "全部",
-        "mideast": "中东",
-        "europe": "欧洲",
-        "americas": "美洲",
-        "asia": "亚洲",
-        "space": "太空"
-      },
-      "play": "观看实时直播",
-      "previewStatus": "准备播放",
-      "connecting": "正在连接…",
-      "unverified": "无法确认此直播流是否实时",
-      "offline": "{{city}} 目前离线",
-      "noFeeds": "此地区目前没有实时摄像头"
-    },
     "positiveNewsFeed": {
       "noStories": "此类别暂无报道"
     },
@@ -1467,8 +1448,6 @@
       "badgeAnimDesc": "在面板标题中显示更新徽章动画",
       "headlineMemoryLabel": "标题记忆",
       "headlineMemoryDesc": "记住已阅标题以突出显示新内容",
-      "streamAlwaysOnLabel": "自动播放实时摄像头",
-      "streamAlwaysOnDesc": "直播摄像头视频出现在屏幕上时立即开始加载。保持关闭可仅在您手动启动时加载视频。",
       "analysisFrameworksLabel": "分析框架",
       "analysisFrameworksActivePerPanel": "每个面板激活",
       "analysisFrameworksSkillLibrary": "技能库",
@@ -1509,7 +1488,7 @@
       "briefStoryDetails": "报道详情 ({{count}})",
       "streamIdleStopLabel": "空闲时停止实时视频",
       "streamIdleStopNever": "从不",
-      "streamIdleStopDesc": "在此时间内无活动后停止实时新闻和实时网络摄像头，并在面板中显示通知。",
+      "streamIdleStopDesc": "在此时间内无活动后停止实时新闻，并在面板中显示通知。",
       "liveNewsAutoplayLabel": "自动播放实时新闻",
       "liveNewsAutoplayDesc": "实时新闻视频出现在屏幕上时自动开始播放，静音状态。关闭此选项可仅在您手动启动时加载视频。"
     },
@@ -2268,9 +2247,6 @@
       "analysisDate": "WTO分析 {{date}}",
       "indexNote": "货运指数（按体积），2025年1–3月平均值 = 100"
     },
-    "liveWebcams": {
-      "infoTooltip": "<strong>实时摄像头</strong> 来自全球地缘政治重要地点的直播：冲突区、首都、边境口岸和战略咽喉要道。流媒体来自YouTube和公共网络。"
-    },
     "macroTiles": {
       "infoTooltip": "<strong>宏观指标</strong>美国、欧元区和中国价格、活动、政策和货币指标。中国需要当前新闻报道。每个区块显示其数据来源和观测日期。"
     },
@@ -2288,9 +2264,6 @@
     },
     "yieldCurve": {
       "infoTooltip": "<strong>收益率曲线和利率</strong>美国国债收益率曲线（2年、5年、10年、30年）和关键利率差，包括10年-2年倒挂指标。还显示欧元区利率（EURIBOR、ESTR）。倒挂曲线在历史上先于经济衰退。数据来源：美联储经济数据。"
-    },
-    "pinnedWebcams": {
-      "pinFromMap": "从地图固定网络摄像头"
     },
     "breakthroughsTicker": {
       "noData": "暂无科学突破"

@@ -3,7 +3,6 @@ import { expect, test } from '@playwright/test';
 // The sidebar grid is repeat(auto-fill, minmax(270px, 1fr)). When it is too
 // narrow for the span a wide or resized panel asks for, CSS adds implicit
 // columns instead of clamping the span. At 1366px the sidebar (532px) fits one
-// column, and Live News and Live Webcams (span 2) added a second implicit one,
 // so every other panel was squeezed into 280px or 248px and several bodies
 // scrolled sideways. At 1440px (562px) two 270px columns fit, by design.
 // Chrome lists implicit tracks in the computed template, so the resize handle

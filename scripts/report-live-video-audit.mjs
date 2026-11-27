@@ -141,17 +141,6 @@ function findingRows(slot) {
 }
 
 /** Hotspot wall slots first, in grid priority order; everything else keeps the report's order. */
-function inAttentionOrder(slots, gridPriority) {
-  const hotspot = ({ slot }) => {
-    const index = slot.startsWith('webcams/') ? gridPriority.indexOf(slot.slice('webcams/'.length)) : -1;
-    return index < 0 ? Number.POSITIVE_INFINITY : index;
-  };
-  return slots
-    .map((slot, order) => ({ slot, order }))
-    .sort((a, b) => (hotspot(a.slot) - hotspot(b.slot)) || (a.order - b.order))
-    .map(({ slot }) => slot);
-}
-
 /** A table of at most `maxRows` rows; the rest are counted below it and listed in full in the run summary. */
 function table(header, rows, maxRows) {
   const more = Math.max(0, rows.length - maxRows);
@@ -173,10 +162,10 @@ function channelPageLines(resolution) {
   return lines;
 }
 
-export function renderAuditBody(report, { runUrl = '', canaries, gridPriority = [], maxRows = Number.POSITIVE_INFINITY }) {
+export function renderAuditBody(report, { runUrl = '', canaries, maxRows = Number.POSITIVE_INFINITY }) {
   const findings = report.slots.filter(isFinding);
-  const shown = inAttentionOrder(findings.filter((slot) => slot.shownByDefault), gridPriority);
-  const hidden = inAttentionOrder(findings.filter((slot) => !slot.shownByDefault), gridPriority);
+  const shown = findings.filter((slot) => slot.shownByDefault);
+  const hidden = findings.filter((slot) => !slot.shownByDefault);
   const unverifiable = report.slots.filter((slot) => slot.status === 'unverifiable-from-runner');
   const recheckSkipped = report.slots.flatMap((slot) => slot.attempts).filter((attempt) => attempt.evidence?.recheckSkipped === true).length;
   const lines = [
@@ -292,7 +281,7 @@ export async function publishAudit(report, {
   // Before anything else reads the report: a run that cannot publish fails fast.
   if (!repository) throw new Error('GITHUB_REPOSITORY is required to publish the live video audit');
   const canaries = confirmProbeWorks(report.canaries);
-  const rendering = { runUrl, canaries, gridPriority: catalog.gridPriority ?? [] };
+  const rendering = { runUrl, canaries };
   if (summaryPath) appendFileSync(summaryPath, `${renderAuditBody(report, rendering)}\n`);
   const body = issueBody(report, rendering);
 

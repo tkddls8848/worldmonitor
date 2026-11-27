@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// Publishes the video each catalog YouTube channel has live right now (#8545), so the Live News and Live Webcams
+// Publishes the video each catalog YouTube channel has live right now (#8545), so the Live News
 // players can try a fresh `watch?v=` id immediately before the channel entry that produced it.
 //
 // Each run reads every channel's public /live page through the Decodo proxy (scripts/lib/live-video-channel-live.mjs,

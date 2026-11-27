@@ -14,7 +14,7 @@
 // For each read-only tool advertised by tools/list on production:
 //   1. tools/call with the fixture arguments below (or {} when the tool has no
 //      required input). Arguments that depend on another tool's output (a
-//      forecast id, a webcam id) are derived from that tool's live result.
+//      forecast id) are derived from that tool's live result.
 //   2. The call must answer HTTP 200 within its deadline, carry no JSON-RPC
 //      error, not set result.isError, and return structuredContent that
 //      validates against the tool's own advertised outputSchema.
@@ -112,14 +112,6 @@ export function buildFixtures(now = new Date()) {
     prepare_travel_risk_assessment: { countries: [{ country_code: 'TH' }] },
     get_bilateral_tariff: { reporter: 'US', partner: 'CN', hs_code: '870380' },
     get_us_import_duty: { hs_code: '870380', partner: 'CN' },
-    find_webcams: { bound_w: 2.2, bound_s: 48.8, bound_e: 2.45, bound_n: 48.92, zoom: 12 },
-    get_webcam_media: {
-      after: 'find_webcams',
-      derive: (sc) => {
-        const id = firstString(unwrap(sc), ['webcams', 'cameras', 'items', 'results'], ['webcamId', 'id']);
-        return id ? { webcam_id: id } : null;
-      },
-    },
     // Only one ID/generation is needed for the case read. Full case files in
     // the default list can exceed the response budget and leave no IDs to chain.
     get_forecast_predictions: { limit: 1 },

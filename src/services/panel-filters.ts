@@ -1,6 +1,6 @@
 /**
  * A tab's per-panel filter choices (#10453, phase 2): the forecast region, the
- * webcam region, and any later panel choice an analyst makes. They are saved
+ * and any later panel choice an analyst makes. They are saved
  * with the tab and travel in a shared team dashboard's `panelFilters`.
  *
  * The bounds mirror convex/lib/teamDashboardLayout.ts (key shape, entry count,
@@ -77,7 +77,7 @@ export interface PanelFilterApplyPlan {
 /**
  * What to hand each mounted panel when a tab becomes active. A panel the tab
  * chose for gets that value. A panel the previous tab chose for and this tab
- * did not goes back to its default, so one tab's webcam region does not follow
+ * did not goes back to its default, so one tab's filter does not follow
  * the user into the next. A panel neither tab chose for is left alone, so a
  * region saved in this browser before tabs carried one is not wiped.
  */

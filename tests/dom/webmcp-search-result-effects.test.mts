@@ -247,12 +247,12 @@ describe('open_search_result evaluates cancellation per issued effect', () => {
 
   it('opens an enabled panel without a target-side signal', async () => {
     const { controller, closeForProgrammaticSelection, dispatcher } = createHarness(
-      [commandMatch('panel:live-webcams')],
-      { 'live-webcams': true },
+      [commandMatch('panel:live-news')],
+      { 'live-news': true },
     );
-    mountPanel('live-webcams');
+    mountPanel('live-news');
 
-    const response = await controller.search('webcam', 'panels', 10);
+    const response = await controller.search('panel', 'panels', 10);
     const issued = response.results[0];
     expect(issued).toMatchObject({
       type: 'command',
@@ -407,11 +407,11 @@ describe('open_search_result evaluates cancellation per issued effect', () => {
 
   it('blocks enabling a disabled panel without a target-side signal', async () => {
     const { controller, closeForProgrammaticSelection, dispatcher, enablePanel } = createHarness(
-      [commandMatch('panel:windy-webcams')],
-      { 'windy-webcams': false },
+      [commandMatch('panel:science')],
+      { 'science': false },
     );
 
-    const response = await controller.search('webcam', 'panels', 10);
+    const response = await controller.search('panel', 'panels', 10);
     expect(response.results[0]?.executable).toBe(false);
     await expect(controller.open(response.results[0]!.key, async () => {})).resolves.toStrictEqual(
       cancellationDenial,
@@ -425,15 +425,15 @@ describe('open_search_result evaluates cancellation per issued effect', () => {
   });
 
   it('denies an issued enabled panel after it is disabled without a target-side signal', async () => {
-    const enabledPanels = { 'live-webcams': true };
+    const enabledPanels = { 'live-news': true };
     const { controller, closeForProgrammaticSelection, dispatcher, enablePanel, panelSettings } =
-      createHarness([commandMatch('panel:live-webcams')], enabledPanels);
+      createHarness([commandMatch('panel:live-news')], enabledPanels);
 
-    const response = await controller.search('webcam', 'panels', 10);
+    const response = await controller.search('panel', 'panels', 10);
     expect(response.results[0]?.executable).toBe(true);
 
-    enabledPanels['live-webcams'] = false;
-    panelSettings['live-webcams']!.enabled = false;
+    enabledPanels['live-news'] = false;
+    panelSettings['live-news']!.enabled = false;
 
     await expect(controller.open(response.results[0]!.key, async () => {})).resolves.toStrictEqual(
       cancellationDenial,
@@ -447,16 +447,16 @@ describe('open_search_result evaluates cancellation per issued effect', () => {
   });
 
   it('keeps the bound persistent class when a disabled panel is later enabled', async () => {
-    const enabledPanels = { 'windy-webcams': false };
+    const enabledPanels = { 'science': false };
     const { controller, closeForProgrammaticSelection, dispatcher, enablePanel } = createHarness(
-      [commandMatch('panel:windy-webcams')],
+      [commandMatch('panel:science')],
       enabledPanels,
     );
 
-    const response = await controller.search('webcam', 'panels', 10);
+    const response = await controller.search('panel', 'panels', 10);
     expect(response.results[0]?.executable).toBe(false);
 
-    enabledPanels['windy-webcams'] = true;
+    enabledPanels['science'] = true;
 
     await expect(controller.open(response.results[0]!.key, async () => {})).resolves.toStrictEqual(
       cancellationDenial,

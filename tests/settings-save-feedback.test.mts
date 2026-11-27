@@ -216,14 +216,9 @@ describe('settings save feedback', () => {
       const { renderPreferenceSection } = await loadPreferencesModule();
       const { html } = renderPreferenceSection('video', {});
 
-      const autoplayAt = html.indexOf('us-live-streams-always-on');
-      const newsAutoplayAt = html.indexOf('us-live-news-autoplay');
-      assert.ok(newsAutoplayAt > -1 && newsAutoplayAt < autoplayAt, 'the Live News toggle renders before the webcam toggle');
       assert.match(html, /components\.insights\.liveNewsAutoplayLabel/);
       const selectOpen = '<select class="unified-settings-select" id="us-live-media-idle-stop" aria-labelledby="us-live-media-idle-stop-label">';
       const selectAt = html.indexOf(selectOpen);
-      assert.ok(autoplayAt > -1, 'autoplay toggle renders');
-      assert.ok(selectAt > autoplayAt, 'idle-stop select renders after the autoplay toggle');
       assert.match(html, /id="us-live-media-idle-stop-label">components\.insights\.streamIdleStopLabel</);
       assert.match(html, /components\.insights\.streamIdleStopDesc/);
 

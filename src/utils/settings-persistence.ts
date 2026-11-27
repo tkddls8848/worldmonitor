@@ -19,7 +19,6 @@ import {
   safeStorageSetChecked,
   safeStorageSnapshot,
 } from './safe-storage';
-import { PINNED_WEBCAMS_KEY, normalizePinnedWebcamsPreference } from '../../shared/pinned-webcams';
 
 const MAX_IMPORT_SIZE_BYTES = 5 * 1024 * 1024;
 
@@ -30,7 +29,6 @@ const SETTINGS_KEYS: readonly string[] = [
   'worldmonitor-active-channel',
   'worldmonitor-runtime-feature-toggles',
   'wm-live-streams-always-on',
-  'worldmonitor-webcam-prefs',
   'worldmonitor-disabled-feeds-schema',
   'map-height',
   'map-height-mode',
@@ -171,12 +169,8 @@ async function parseImportedEntries(parsed: unknown): Promise<Array<[string, str
   const entries: Array<[string, string]> = [];
   let decodedBytes = 0;
   const encoder = new TextEncoder();
-  for (const [key, value] of Object.entries(parsed.data)) {
+  for (const [key, stored] of Object.entries(parsed.data)) {
     if (!isSettingsKey(key)) continue;
-    // Pinned webcams accept any input shape here and are re-serialized through
-    // the shared normalizer, matching the browser-store write path; every
-    // other setting must already be a stored string.
-    const stored = key === PINNED_WEBCAMS_KEY ? normalizePinnedWebcamsPreference(value) : value;
     if (typeof stored !== 'string') {
       throw new Error(`Invalid setting: ${key} must be a string.`);
     }
@@ -230,7 +224,7 @@ export function exportSettings(): void {
   let variant = 'full';
   for (const [key, value] of snapshot.entries) {
     if (key === 'worldmonitor-variant' && value) variant = value;
-    if (isSettingsKey(key)) data[key] = key === PINNED_WEBCAMS_KEY ? normalizePinnedWebcamsPreference(value) : value;
+    if (isSettingsKey(key)) data[key] = value;
   }
 
   const exportData: ExportedSettings = {

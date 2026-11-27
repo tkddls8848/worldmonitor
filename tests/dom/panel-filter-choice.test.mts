@@ -6,7 +6,6 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ForecastPanel } from '@/components/ForecastPanel';
-import { LiveWebcamsPanel } from '@/components/LiveWebcamsPanel';
 import { Panel } from '@/components/Panel';
 import { PanelLayoutManager } from '@/app/panel-layout';
 
@@ -16,11 +15,6 @@ import { initTestI18n } from './helpers/i18n.mts';
 vi.mock('@/services/live-video/youtube-iframe-api', () => ({
   loadYouTubeIframeApi: () => Promise.resolve(createFakeYouTubeIframeApi().namespace),
 }));
-
-vi.mock('@/config/live-video-sources', async (importOriginal) => {
-  const { withFixtureWebcamCatalog } = await import('./helpers/webcam-catalog.mts');
-  return withFixtureWebcamCatalog(await importOriginal<typeof import('@/config/live-video-sources')>());
-});
 
 class FakeIntersectionObserver {
   constructor(readonly callback: IntersectionObserverCallback) {}
@@ -131,46 +125,5 @@ describe('ForecastPanel region choice', () => {
     panel.getElement().querySelector<HTMLElement>('[data-fc-region=""]')!.click();
     // All Regions is a choice the tab keeps ('' ), not an absent one.
     expect(seen).toHaveBeenLastCalledWith('');
-  });
-});
-
-describe('LiveWebcamsPanel region choice', () => {
-  it('declares a choice, null while on All', () => {
-    const panel = mount(new LiveWebcamsPanel());
-    expect(panel.hasFilterChoice()).toBe(true);
-    expect(panel.getFilterChoice()).toBeNull();
-  });
-
-  it('accepts a known region without reporting it back, and marks its button active', () => {
-    const panel = mount(new LiveWebcamsPanel());
-    const seen = vi.fn();
-    panel.onFilterChoiceChange(seen);
-    panel.setFilterChoice('europe');
-    expect(panel.getFilterChoice()).toBe('europe');
-    expect(seen).not.toHaveBeenCalled();
-    expect(panel.getElement().querySelector('.webcam-region-btn[data-region="europe"]')?.classList.contains('active')).toBe(true);
-  });
-
-  it('ignores a region it does not know, and "all" is the same as null', () => {
-    const panel = mount(new LiveWebcamsPanel());
-    panel.setFilterChoice('europe');
-    panel.setFilterChoice('atlantis');
-    expect(panel.getFilterChoice()).toBe('europe');
-    panel.setFilterChoice('all');
-    expect(panel.getFilterChoice()).toBeNull();
-    panel.setFilterChoice('asia');
-    panel.setFilterChoice(null);
-    expect(panel.getFilterChoice()).toBeNull();
-  });
-
-  it('reports a region the user picks', () => {
-    const panel = mount(new LiveWebcamsPanel());
-    const seen = vi.fn();
-    panel.onFilterChoiceChange(seen);
-    panel.getElement().querySelector<HTMLButtonElement>('.webcam-region-btn[data-region="asia"]')!.click();
-    expect(seen).toHaveBeenLastCalledWith('asia');
-    panel.getElement().querySelector<HTMLButtonElement>('.webcam-region-btn[data-region="all"]')!.click();
-    // All is a choice the tab keeps, not an absent one.
-    expect(seen).toHaveBeenLastCalledWith('all');
   });
 });

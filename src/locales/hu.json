@@ -530,8 +530,6 @@
     "techReadiness": "Technológiai felkészültségi index",
     "gccInvestments": "Golf Cooperation Council beruházások",
     "geoHubs": "Geopolitikai Központok",
-    "liveWebcams": "Élő Webkamerák",
-    "windyWebcams": "Windy Élő Webkamera",
     "gulfEconomies": "Öböl Gazdaságok",
     "groceryBasket": "Bevásárlókosár Index",
     "groceryItem": "Termék",
@@ -921,26 +919,6 @@
     }
   },
   "components": {
-    "webcams": {
-      "paused": "Webkamerák szüneteltetve",
-      "regions": {
-        "all": "ÖSSZES",
-        "mideast": "KÖZEL-KELET",
-        "europe": "EURÓPA",
-        "americas": "AMERIKA",
-        "asia": "ÁZSIA",
-        "space": "VILÁGŰR"
-      },
-      "play": "Nézd élőben",
-      "previewStatus": "Készen áll a lejátszásra",
-      "connecting": "Csatlakozás…",
-      "unverified": "Nem tudjuk megerősíteni, hogy ez az élő közvetítés",
-      "offline": "{{city}} jelenleg offline",
-      "noFeeds": "Ebben a régióban jelenleg nincsenek élő webkamerák"
-    },
-    "pinnedWebcams": {
-      "pinFromMap": "Rögzítsen egy webkamerát a térképről"
-    },
     "positiveNewsFeed": {
       "noStories": "Még nincsenek történetek ebben a kategóriában"
     },
@@ -1627,8 +1605,6 @@
       "analysisFrameworksFromAgentskills": "Az agentskills.io-ból",
       "analysisFrameworksPasteJson": "JSON beillesztése",
       "analysisFrameworksSaveToLibrary": "Mentés a könyvtárba",
-      "streamAlwaysOnLabel": "Élő webkamerák automatikus lejátszása",
-      "streamAlwaysOnDesc": "Az élő webkamera videók azonnal elindulnak, amikor megjelennek a képernyőn. Hagyja kikapcsolva ahhoz, hogy csak akkor töltődjenek be, amikor Ön elindítja őket.",
       "frameworkNote": "Csak az ügyfél által generált elemzésre vonatkozik",
       "loadingServerInsights": "Szerver insights betöltése...",
       "usingCachedBrief": "Gyorsítótározott összefoglalás használata...",
@@ -1660,7 +1636,7 @@
       "briefFreshness": "Generálva {{minutes}}m idővel ezelőtt · legfrissebb forrás {{hours}}ó régi",
       "briefStoryDetails": "A hír részletei ({{count}})",
       "streamIdleStopLabel": "Élő videó leállítása üresjárat során",
-      "streamIdleStopDesc": "Az Élő Hírek és Élő Webkamerák leállnak ennyi idő után inaktivitás esetén, és egy értesítés jelenik meg a panelen.",
+      "streamIdleStopDesc": "Az Élő Hírek leáll ennyi idő után inaktivitás esetén, és egy értesítés jelenik meg a panelen.",
       "streamIdleStopNever": "Soha",
       "liveNewsAutoplayLabel": "Élő hírek automatikus lejátszása",
       "liveNewsAutoplayDesc": "Az élő hírek videója néma hanggal elindul, amint megjelenik a képernyőn. Ezt kikapcsolva a videó csak akkor töltődik be, amikor Ön elindítja."
@@ -2561,9 +2537,6 @@
       "units": {
         "index": "index"
       }
-    },
-    "liveWebcams": {
-      "infoTooltip": "<strong>Live Webcams</strong> Élő kameranyitások geopolitikailag szignifikáns helyekről világszerte: konfliktuszónák, fővárosok, határátkelések és stratégiai szűk keresztmetszetek. Streamek YouTube-ból és közös hálózatokból."
     },
     "macroTiles": {
       "infoTooltip": "<strong>Makro mutatók</strong> Az Egyesült Államok, euróövezet és Kína árak, aktivitás, politika és valuta mutatók. Kína aktuális lefedettséget igényel. Minden csempe megjeleníti a forrást és megfigyelési dátumát."

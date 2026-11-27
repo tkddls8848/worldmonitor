@@ -253,8 +253,7 @@
                   "maritime-intelligence",
                   "natural-disasters",
                   "infrastructure-cascade",
-                  "maps-and-geocoding",
-                  "webcam-layer"
+                  "maps-and-geocoding"
                 ]
               },
               {
@@ -542,10 +541,6 @@
                   {
                     "group": "Imagery",
                     "openapi": "api/ImageryService.openapi.yaml"
-                  },
-                  {
-                    "group": "Webcams",
-                    "openapi": "api/WebcamService.openapi.yaml"
                   }
                 ]
               },
@@ -843,8 +838,7 @@
                   "zh/maritime-intelligence",
                   "zh/natural-disasters",
                   "zh/infrastructure-cascade",
-                  "zh/maps-and-geocoding",
-                  "zh/webcam-layer"
+                  "zh/maps-and-geocoding"
                 ]
               },
               {
@@ -1132,10 +1126,6 @@
                   {
                     "group": "影像",
                     "openapi": "api/ImageryService.openapi.yaml"
-                  },
-                  {
-                    "group": "网络摄像头",
-                    "openapi": "api/WebcamService.openapi.yaml"
                   }
                 ]
               },

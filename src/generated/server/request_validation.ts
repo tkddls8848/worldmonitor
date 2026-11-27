@@ -2,7 +2,7 @@
 // Source: proto/worldmonitor/**/*.proto buf.validate annotations.
 
 export const GENERATED_PROTO_VALIDATION_RULE_COUNT = 717;
-export const GENERATED_REQUEST_METHOD_COUNT = 187;
+export const GENERATED_REQUEST_METHOD_COUNT = 185;
 
 export const GENERATED_REQUEST_TYPES = {
   "analyzeStock": "worldmonitor.market.v1.AnalyzeStockRequest",
@@ -100,7 +100,6 @@ export const GENERATED_REQUEST_TYPES = {
   "getUSNIFleetReport": "worldmonitor.military.v1.GetUSNIFleetReportRequest",
   "getUsTreasuryParYieldCurve": "worldmonitor.economic.v1.GetUsTreasuryParYieldCurveRequest",
   "getVesselSnapshot": "worldmonitor.maritime.v1.GetVesselSnapshotRequest",
-  "getWebcamImage": "worldmonitor.webcam.v1.GetWebcamImageRequest",
   "getWingbitsLiveFlight": "worldmonitor.military.v1.GetWingbitsLiveFlightRequest",
   "getWorldCpiMonthly": "worldmonitor.economic.v1.GetWorldCpiMonthlyRequest",
   "getWorldOverviewSnapshot": "worldmonitor.world_overview.v1.GetWorldOverviewSnapshotRequest",
@@ -163,7 +162,6 @@ export const GENERATED_REQUEST_TYPES = {
   "listUcdpEvents": "worldmonitor.conflict.v1.ListUcdpEventsRequest",
   "listUnrestEvents": "worldmonitor.unrest.v1.ListUnrestEventsRequest",
   "listVulnerabilityRankings": "worldmonitor.supply_chain.v1.ListVulnerabilityRankingsRequest",
-  "listWebcams": "worldmonitor.webcam.v1.ListWebcamsRequest",
   "listWorldBankIndicators": "worldmonitor.economic.v1.ListWorldBankIndicatorsRequest",
   "lookupSanctionEntity": "worldmonitor.sanctions.v1.LookupSanctionEntityRequest",
   "recordBaselineSnapshot": "worldmonitor.infrastructure.v1.RecordBaselineSnapshotRequest",
@@ -3167,17 +3165,6 @@ export const GENERATED_MESSAGE_RULES = {
         "stringMaxBytes": 65536
       }
     }
-  },
-  "worldmonitor.webcam.v1.GetWebcamImageRequest": {
-    "fields": {
-      "webcamId": {
-        "kind": "string",
-        "stringMaxBytes": 65536
-      }
-    }
-  },
-  "worldmonitor.webcam.v1.ListWebcamsRequest": {
-    "fields": {}
   },
   "worldmonitor.wildfire.v1.ListFireDetectionsRequest": {
     "fields": {

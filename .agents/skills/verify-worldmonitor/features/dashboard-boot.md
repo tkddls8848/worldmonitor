@@ -28,7 +28,7 @@ Preconditions:
 - **Hydration.** The step waits for `html[data-wm-event-handlers-ready="true"]` then `html[data-wm-initial-data-ready="true"]`. Both markers exist only because the instance runs with `VITE_E2E=1`.
 - **Skeleton gone.** `.skeleton-shell` is absent from the DOM. Its presence means the bundle never took over.
 - **Map mounted.** `waitForMap()` resolves to `deckgl`, `globe`, or `svg`, and at least 5 `.layer-toggle[data-layer]` controls exist. The renderer name is logged in the transcript — record which one this run got.
-- **Panels populated.** `#panelsGrid .panel[data-panel]` has 3+ entries. A `full`-variant run on this checkout returns 40, starting `live-news, live-webcams, insights, threat-timeline, strategic-posture`.
+- **Panels populated.** `#panelsGrid .panel[data-panel]` has 3+ entries. A `full`-variant run on this checkout returns 40, starting `live-news, insights, threat-timeline, strategic-posture`.
 - **No broken panels.** No panel contains `.panel-error` or `.panel-unavailable`. The step logs the offenders by key rather than only failing.
 - **Proof.** `01-booted-dashboard.png` plus `transcript.txt` in the run's evidence directory show the header, map and grid together with the panel keys and renderer.
 

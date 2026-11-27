@@ -14,9 +14,9 @@ import {
 describe('live media controller', () => {
   afterEach(() => {
     stopLiveMediaPlayback('live-news', 'destroyed');
-    stopLiveMediaPlayback('live-webcams', 'destroyed');
+    stopLiveMediaPlayback('second-panel', 'destroyed');
     unregisterLiveMediaStarter('live-news');
-    unregisterLiveMediaStarter('live-webcams');
+    unregisterLiveMediaStarter('second-panel');
   });
 
   it('lets different panels play at the same time (no cross-panel eviction)', () => {
@@ -29,23 +29,23 @@ describe('live media controller', () => {
       (reason) => events.push(`stop:live-news:${reason}`),
     );
     requestLiveMediaPlayback(
-      'live-webcams',
+      'second-panel',
       'jerusalem',
-      () => events.push('start:live-webcams:jerusalem'),
-      (reason) => events.push(`stop:live-webcams:${reason}`),
+      () => events.push('start:second-panel:jerusalem'),
+      (reason) => events.push(`stop:second-panel:${reason}`),
     );
 
-    // Starting webcams must NOT stop live-news — explicitly played feeds coexist.
+    // Starting filterPanel must NOT stop live-news — explicitly played feeds coexist.
     assert.deepEqual(events, [
       'start:live-news:bbc-news',
-      'start:live-webcams:jerusalem',
+      'start:second-panel:jerusalem',
     ]);
     assert.deepEqual(getActiveLiveMedia('live-news'), {
       panelId: 'live-news',
       streamId: 'bbc-news',
     });
-    assert.deepEqual(getActiveLiveMedia('live-webcams'), {
-      panelId: 'live-webcams',
+    assert.deepEqual(getActiveLiveMedia('second-panel'), {
+      panelId: 'second-panel',
       streamId: 'jerusalem',
     });
   });
@@ -87,30 +87,30 @@ describe('live media controller', () => {
       (reason) => events.push(`stop:live-news:${reason}`),
     );
     requestLiveMediaPlayback(
-      'live-webcams',
+      'second-panel',
       'jerusalem',
-      () => events.push('start:live-webcams:jerusalem'),
-      (reason) => events.push(`stop:live-webcams:${reason}`),
+      () => events.push('start:second-panel:jerusalem'),
+      (reason) => events.push(`stop:second-panel:${reason}`),
     );
 
-    stopLiveMediaPlayback('live-webcams', 'user-paused');
-    assert.equal(getActiveLiveMedia('live-webcams'), null);
+    stopLiveMediaPlayback('second-panel', 'user-paused');
+    assert.equal(getActiveLiveMedia('second-panel'), null);
     assert.deepEqual(getActiveLiveMedia('live-news'), {
       panelId: 'live-news',
       streamId: 'sky-news',
     });
     assert.deepEqual(events, [
       'start:live-news:sky-news',
-      'start:live-webcams:jerusalem',
-      'stop:live-webcams:user-paused',
+      'start:second-panel:jerusalem',
+      'stop:second-panel:user-paused',
     ]);
 
     releaseLiveMediaPlayback('live-news', 'sky-news');
     assert.equal(getActiveLiveMedia('live-news'), null);
     assert.deepEqual(events, [
       'start:live-news:sky-news',
-      'start:live-webcams:jerusalem',
-      'stop:live-webcams:user-paused',
+      'start:second-panel:jerusalem',
+      'stop:second-panel:user-paused',
     ]);
   });
 
@@ -134,20 +134,20 @@ describe('live media controller', () => {
   it('playAllLiveMedia fires every registered starter (play-all cascade)', () => {
     const fired: string[] = [];
     registerLiveMediaStarter('live-news', () => fired.push('live-news'));
-    registerLiveMediaStarter('live-webcams', () => fired.push('live-webcams'));
+    registerLiveMediaStarter('second-panel', () => fired.push('second-panel'));
 
     playAllLiveMedia();
 
-    assert.deepEqual(fired.sort(), ['live-news', 'live-webcams']);
+    assert.deepEqual(fired.sort(), ['live-news', 'second-panel']);
   });
 
   it('unregistering a starter stops it from firing on the next cascade', () => {
     const fired: string[] = [];
-    const webcamStarter = () => fired.push('live-webcams');
+    const secondStarter = () => fired.push('second-panel');
     registerLiveMediaStarter('live-news', () => fired.push('live-news'));
-    registerLiveMediaStarter('live-webcams', webcamStarter);
+    registerLiveMediaStarter('second-panel', secondStarter);
 
-    unregisterLiveMediaStarter('live-webcams', webcamStarter);
+    unregisterLiveMediaStarter('second-panel', secondStarter);
     playAllLiveMedia();
 
     assert.deepEqual(fired, ['live-news']);
@@ -159,9 +159,9 @@ describe('live media controller', () => {
     const newStarter = () => fired.push('new');
 
     // Simulate recreate-then-destroy-old: new instance registers, old instance's destroy runs after.
-    registerLiveMediaStarter('live-webcams', oldStarter);
-    registerLiveMediaStarter('live-webcams', newStarter);
-    unregisterLiveMediaStarter('live-webcams', oldStarter); // stale ref — must be ignored
+    registerLiveMediaStarter('second-panel', oldStarter);
+    registerLiveMediaStarter('second-panel', newStarter);
+    unregisterLiveMediaStarter('second-panel', oldStarter); // stale ref — must be ignored
 
     playAllLiveMedia();
     assert.deepEqual(fired, ['new']);

@@ -39,7 +39,6 @@ WorldMonitor accumulates, curates, and caches real-time intelligence across 25+ 
 | `get_infrastructure_status` | Cloudflare Radar, submarine cables | Internet health, cable disruptions |
 | `get_supply_chain_data` | shipping stress, trade routes | Dry bulk shipping stress index, chokepoint pressure |
 | `get_positive_events` | positive geo-events bootstrap | Diplomatic, humanitarian, and development positive signals |
-| `get_webcams` | live webcam feeds | Active public webcam feed URLs by region |
 
 ## Success Criteria
 

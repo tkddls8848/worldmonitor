@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Generates cli/src/tui/data/catalog.generated.json: the data the terminal
 // dashboard needs that lives in browser-only TypeScript config or in public/
-// (live news channels, webcams, and a braille-ready world land bitmap).
+// (live news channels and a braille-ready world land bitmap).
 //
 //   npm run sync:tui-catalog            # rewrite the file
 //   npm run sync:tui-catalog:check      # exit 1 when the file is stale
@@ -13,8 +13,6 @@ import { fileURLToPath } from 'node:url';
 import { isMainModule } from './lib/main-module.mjs';
 import {
   LIVE_NEWS_SOURCES,
-  WEBCAM_GRID_PRIORITY,
-  WEBCAM_SOURCES,
 } from '../src/config/live-video-sources.ts';
 import {
   CRITICAL_MINERALS,
@@ -45,7 +43,6 @@ import { COMMODITY_MINERS } from '../src/config/commodity-miners.ts';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUTPUT = resolve(root, 'cli/src/tui/data/catalog.generated.json');
 const CHANNELS_TS = resolve(root, 'src/services/live-channels.ts');
-const WEBCAMS_TS = resolve(root, 'src/components/LiveWebcamsPanel.ts');
 const TOPO_JSON = resolve(root, 'public/data/countries-110m.json');
 const TOPO_50M_JSON = resolve(root, 'public/data/countries-50m.json');
 const UN_TO_ISO2 = resolve(root, 'shared/un-to-iso2.json');
@@ -132,20 +129,6 @@ export function buildChannels(channelsSource) {
     });
   }
   return { channels, regions, defaultChannelIds: defaults.map((d) => d.id) };
-}
-
-export function buildWebcams(webcamsSource) {
-  const feeds = parseObjectLiterals(sliceArray(webcamsSource, 'const WEBCAM_FEEDS'));
-  return {
-    webcams: feeds.map((f) => ({
-      id: f.id,
-      city: f.city,
-      country: f.country,
-      region: f.region,
-      sources: [...(WEBCAM_SOURCES[f.id] || [])],
-    })),
-    gridPriority: [...WEBCAM_GRID_PRIORITY],
-  };
 }
 
 // --- TopoJSON → land bitmap -------------------------------------------------
@@ -397,15 +380,13 @@ export function buildWorld(topo, unToIso2) {
   };
 }
 
-export function buildCatalog({ channelsSource, webcamsSource, topo, topo50m, unToIso2 }) {
+export function buildCatalog({ channelsSource, topo, topo50m, unToIso2 }) {
   const { channels, regions, defaultChannelIds } = buildChannels(channelsSource);
-  const { webcams, gridPriority } = buildWebcams(webcamsSource);
   const bitmap = rasterizeLand(topo);
   return {
     generatedFrom: [
       'src/config/live-video-sources.ts',
       'src/services/live-channels.ts',
-      'src/components/LiveWebcamsPanel.ts',
       'src/config/geo-map.ts, geo.ts, airports.ts, ports.ts, military-bases.ts, ai-datacenters.ts, irradiators.ts, trade-routes.ts, chokepoint-registry.ts, finance-geo.ts, tech-geo.ts, commodity-geo.ts, gulf-fdi.ts, ai-research-labs.ts, startup-ecosystems.ts, tech-companies.ts, commodity-miners.ts',
       'shared/pipelines-data.ts',
       'shared/un-to-iso2.json',
@@ -415,8 +396,6 @@ export function buildCatalog({ channelsSource, webcamsSource, topo, topo50m, unT
     channels,
     regions,
     defaultChannelIds,
-    webcams,
-    webcamGridPriority: gridPriority,
     map: { ...MAP, bits: packBitmap(bitmap) },
     layers: topo50m ? buildStaticLayers() : undefined,
     world: topo50m ? buildWorld(topo50m, unToIso2 || {}) : undefined,
@@ -436,7 +415,6 @@ export function main(argv = process.argv.slice(2)) {
   const check = argv.includes('--check');
   const catalog = buildCatalog({
     channelsSource: readFileSync(CHANNELS_TS, 'utf8'),
-    webcamsSource: readFileSync(WEBCAMS_TS, 'utf8'),
     topo: JSON.parse(readFileSync(TOPO_JSON, 'utf8')),
     topo50m: JSON.parse(readFileSync(TOPO_50M_JSON, 'utf8')),
     unToIso2: JSON.parse(readFileSync(UN_TO_ISO2, 'utf8')),
@@ -454,11 +432,11 @@ export function main(argv = process.argv.slice(2)) {
       process.stderr.write(`${rel} is stale. Run: npm run sync:tui-catalog\n`);
       return 1;
     }
-    process.stdout.write(`${rel} is up to date (${catalog.channels.length} channels, ${catalog.webcams.length} webcams)\n`);
+    process.stdout.write(`${rel} is up to date (${catalog.channels.length} channels)\n`);
     return 0;
   }
   writeFileSync(OUTPUT, next);
-  process.stdout.write(`wrote ${rel} (${catalog.channels.length} channels, ${catalog.webcams.length} webcams)\n`);
+  process.stdout.write(`wrote ${rel} (${catalog.channels.length} channels)\n`);
   return 0;
 }
 

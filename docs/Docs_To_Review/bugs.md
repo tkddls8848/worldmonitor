@@ -208,7 +208,7 @@ Add `desktop:package:macos:finance`, `desktop:package:windows:finance`, and thei
 | Field | Value |
 |---|---|
 | **Severity** | Medium |
-| **Affected** | `src/App.ts` (2 min), `src/components/LiveNewsPanel.ts` (5 min), `src/components/LiveWebcamsPanel.ts` (5 min) |
+| **Affected** | `src/App.ts` (2 min), `src/components/LiveNewsPanel.ts` (5 min) |
 | **Depends on** | — |
 
 **Description**

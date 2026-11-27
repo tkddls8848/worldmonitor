@@ -69,7 +69,7 @@ function hasTerminalMarker(rawSrc: string): boolean {
     // source for the literal "SIGTERM received" finds nothing even though the runtime output has
     // it. Source-level guards must match what is WRITTEN, not what is printed.
     /process\.on\(\s*['"`]SIGTERM['"`]/.test(src) ||
-    // Pre-existing bespoke markers (seed-digest-notifications, seed-webcams, seed-military-bases).
+    // Pre-existing bespoke markers (seed-digest-notifications, seed-military-bases).
     // Recognised because the diagnostic already knows them — but they are exactly the vocabulary
     // sprawl this test exists to stop growing. New entry points must use `=== Done`.
     /Cron run complete|Seeding complete|: done \(/.test(src)

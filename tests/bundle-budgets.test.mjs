@@ -226,7 +226,7 @@ describe('chunkNameFromFileName', () => {
     assert.equal(chunkNameFromFileName('main-DYSz1bMh.js'), 'main');
     assert.equal(chunkNameFromFileName('h3-js-a1B2c3D4.js'), 'h3-js');
     // Hashes are exactly 8 chars and may themselves contain '-'.
-    assert.equal(chunkNameFromFileName('_live-webcams-origin-BScNR-MD.js'), '_live-webcams-origin');
+    assert.equal(chunkNameFromFileName('_live-news-origin-BScNR-MD.js'), '_live-news-origin');
   });
 
   test('rejects non-chunk files', () => {

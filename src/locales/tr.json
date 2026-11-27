@@ -465,8 +465,6 @@
       "ddos": "DDoS",
       "anomalies": "Anomaliler"
     },
-    "liveWebcams": "Canlı Web Kameralar",
-    "windyWebcams": "Windy Canlı Web Kamera",
     "groceryBasket": "Bakkal Endeksi",
     "groceryItem": "Ürün",
     "faoFoodPriceIndex": "Gıda fiyatları",
@@ -852,23 +850,6 @@
     }
   },
   "components": {
-    "webcams": {
-      "paused": "Web kameralar duraklatıldı",
-      "regions": {
-        "all": "TUMU",
-        "mideast": "ORTA DOGU",
-        "europe": "AVRUPA",
-        "americas": "AMERIKA",
-        "asia": "ASYA",
-        "space": "UZAY"
-      },
-      "play": "Canlı izle",
-      "previewStatus": "Oynatılmaya hazır",
-      "connecting": "Bağlanıyor…",
-      "unverified": "Bu akışın canlı olduğu doğrulanamıyor",
-      "offline": "{{city}} şu anda çevrimdışı",
-      "noFeeds": "Bu bölgede şu anda canlı web kamerası yok"
-    },
     "positiveNewsFeed": {
       "noStories": "Bu kategoride henüz haber yok"
     },
@@ -1470,8 +1451,6 @@
       "badgeAnimDesc": "Panel başlıklarındaki güncelleme rozetlerini canlandır",
       "headlineMemoryLabel": "Başlık hafızası",
       "headlineMemoryDesc": "Yenileri vurgulamak için görülen başlıkları hatırla",
-      "streamAlwaysOnLabel": "Canlı web kameralarını otomatik oynat",
-      "streamAlwaysOnDesc": "Canlı web kamerası videolarını ekranda görüntülenir görüntülenmez başlatır. Videoları yalnızca siz başlattığınızda yüklemek için bunu kapalı tutun.",
       "analysisFrameworksLabel": "Analiz Çerçeveleri",
       "analysisFrameworksActivePerPanel": "Panel başına etkin",
       "analysisFrameworksSkillLibrary": "Beceri kütüphanesi",
@@ -1512,7 +1491,7 @@
       "briefFreshness": "{{minutes}}m önce oluşturuldu · en yeni kaynak {{hours}}s eski",
       "briefStoryDetails": "Haber ayrıntıları ({{count}})",
       "streamIdleStopLabel": "Hareketsizlik sırasında canlı videoyu durdur",
-      "streamIdleStopDesc": "Canlı Haber ve Canlı Web Kameralarını bu kadar süre etkinlik olmadan durdurur ve panelde bir bildirim gösterir.",
+      "streamIdleStopDesc": "Canlı Haberi bu kadar süre etkinlik olmadan durdurur ve panelde bir bildirim gösterir.",
       "streamIdleStopNever": "Asla",
       "liveNewsAutoplayLabel": "Canlı haberleri otomatik oynat",
       "liveNewsAutoplayDesc": "Canlı haber videosunu, sessiz olarak, ekranda görüntülenir görüntülenmez başlatır. Videoyu yalnızca siz başlattığınızda yüklemek için bunu kapatın."
@@ -2278,9 +2257,6 @@
       "analysisDate": "WTO analizi {{date}}",
       "indexNote": "Hacim bazında gemi yükü endeksi, Ocak–Mart 2025 ortalaması = 100"
     },
-    "liveWebcams": {
-      "infoTooltip": "<strong>Canlı Web Kameraları</strong> Dünya genelinde jeopolitik açıdan önemli konumlardan canlı yayınlar: çatışma bölgeleri, başkentler, sınır geçişleri ve stratejik darboğazlar. YouTube ve kamusal ağlardan akışlar."
-    },
     "macroTiles": {
       "infoTooltip": "<strong>Makro göstergeler</strong> ABD, euro alanı ve Çin fiyatları, aktivite, politika ve döviz göstergeleri. Çin mevcut haber kapsamı gerektirir. Her döşeme kaynağını ve gözlem tarihini gösterir."
     },
@@ -2298,9 +2274,6 @@
     },
     "yieldCurve": {
       "infoTooltip": "<strong>Getiri Eğrisi &amp; Oranlar</strong> ABD Hazine getiri eğrisi (2Y, 5Y, 10Y, 30Y) ve 10Y-2Y tersine dönme göstergesi dahil temel oran spreadleri. Ayrıca Euro alanı oranlarını gösterir (EURIBOR, ESTR). Tersine dönmüş bir eğri tarihsel olarak resesyondan önce gelir. Kaynak: Federal Rezerv Ekonomik Verileri."
-    },
-    "pinnedWebcams": {
-      "pinFromMap": "Haritadan bir webcam sabitle"
     },
     "breakthroughsTicker": {
       "noData": "Henüz bilim atılımı yok"

@@ -1148,7 +1148,6 @@ const LOGICAL_ENTRIES = [
 // drop them. The file is pinned but the line deliberately is not: a line pin
 // hard-fails the whole scan the moment an unrelated edit shifts it.
 const DYNAMIC_HOSTS = [
-  { host: 'webcams.windy.com', kind: 'structured', path: 'shared/pinned-webcams.ts' },
   { host: 'earth-search.aws.element84.com', kind: 'structured', path: 'server/worldmonitor/imagery/v1/search-imagery.ts' },
 ];
 
@@ -1210,7 +1209,6 @@ const EXCLUDED_HOSTS = new Set([
   'schemas.agentskills.io',
   'search.yahoo.com',
   'tiles.openfreemap.org',
-  'webcams.windy.com',
   'openstreetmap.org',
   'protomaps.com',
   // Video-page URLs and embeds are presentation transport, not ingested

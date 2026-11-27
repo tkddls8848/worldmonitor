@@ -463,8 +463,6 @@
       "ddos": "DDoS",
       "anomalies": "이상 현상"
     },
-    "liveWebcams": "라이브 웹캠",
-    "windyWebcams": "Windy 라이브 웹캠",
     "groceryBasket": "식료품 지수",
     "groceryItem": "품목",
     "faoFoodPriceIndex": "식품 가격",
@@ -849,23 +847,6 @@
     }
   },
   "components": {
-    "webcams": {
-      "paused": "웹캠 일시정지됨",
-      "regions": {
-        "all": "전체",
-        "mideast": "중동",
-        "europe": "유럽",
-        "americas": "미주",
-        "asia": "아시아",
-        "space": "우주"
-      },
-      "play": "실시간 보기",
-      "previewStatus": "재생 준비 완료",
-      "connecting": "연결 중…",
-      "unverified": "이 스트림이 실시간인지 확인할 수 없습니다",
-      "offline": "{{city}}는 현재 오프라인 상태입니다",
-      "noFeeds": "현재 이 지역의 라이브 웹캠이 없습니다"
-    },
     "positiveNewsFeed": {
       "noStories": "이 카테고리에 아직 기사가 없습니다"
     },
@@ -1296,7 +1277,6 @@
         "miningSites": "광산 시설",
         "processingPlants": "정제·가공 시설",
         "commodityPorts": "원자재 항만",
-        "webcams": "실시간 웹캠",
         "diseaseOutbreaks": "감염병 발생",
         "storageFacilities": "전략 저장 시설",
         "fuelShortages": "연료 부족 경보",
@@ -1476,8 +1456,6 @@
       "badgeAnimDesc": "패널 헤더의 업데이트 배지 애니메이션",
       "headlineMemoryLabel": "헤드라인 메모리",
       "headlineMemoryDesc": "본 헤드라인을 기억하여 새 기사 강조",
-      "streamAlwaysOnLabel": "라이브 웹캠 자동 재생",
-      "streamAlwaysOnDesc": "라이브 웹캠 영상이 화면에 나타나면 자동으로 시작됩니다. 직접 시작할 때만 로드하려면 이 옵션을 꺼두세요.",
       "analysisFrameworksLabel": "분석 프레임워크",
       "analysisFrameworksActivePerPanel": "패널당 활성",
       "analysisFrameworksSkillLibrary": "스킬 라이브러리",
@@ -1517,7 +1495,7 @@
       "briefFreshness": "{{minutes}}분 전 생성됨 · 최신 소스 {{hours}}시간 전",
       "briefStoryDetails": "기사 세부 정보 ({{count}})",
       "streamIdleStopLabel": "유휴 상태일 때 라이브 영상 중지",
-      "streamIdleStopDesc": "활동이 없는 상태가 이 시간 동안 지속되면 Live News와 Live Webcams을 중지하고 패널에 알림을 표시합니다.",
+      "streamIdleStopDesc": "활동이 없는 상태가 이 시간 동안 지속되면 Live News를 중지하고 패널에 알림을 표시합니다.",
       "streamIdleStopNever": "사용 안 함",
       "liveNewsAutoplayLabel": "라이브 뉴스 자동 재생",
       "liveNewsAutoplayDesc": "라이브 뉴스 영상이 화면에 나타나면 음소거 상태로 자동 재생됩니다. 직접 시작할 때만 영상을 로드하려면 이 옵션을 끄세요."
@@ -2277,9 +2255,6 @@
       "analysisDate": "WTO 분석 {{date}}",
       "indexNote": "부피 기준 해운 지수, 2025년 1~3월 평균 = 100"
     },
-    "liveWebcams": {
-      "infoTooltip": "<strong>실시간 웹캠</strong> 전 세계 지정학적으로 중요한 장소의 실시간 피드: 분쟁 지역, 수도, 국경 검문소, 전략적 병목지점. YouTube 및 공개 네트워크의 스트림."
-    },
     "macroTiles": {
       "infoTooltip": "<strong>거시 지표</strong> 미국, 유로존, 중국의 물가, 활동, 정책, 통화 지표. 중국은 최신 보도가 필요합니다. 각 타일은 출처와 관찰 날짜를 표시합니다."
     },
@@ -2297,9 +2272,6 @@
     },
     "yieldCurve": {
       "infoTooltip": "<strong>수익률 곡선 & 금리</strong> 미국 국고채 수익률 곡선(2년, 5년, 10년, 30년) 및 10년-2년 반전 지표를 포함한 주요 금리 스프레드. 유로존 금리(EURIBOR, ESTR)도 표시. 역전된 곡선은 역사적으로 경기 침체 선행. 출처: 연방준비제도 경제 데이터."
-    },
-    "pinnedWebcams": {
-      "pinFromMap": "지도에서 웹캠 고정"
     },
     "breakthroughsTicker": {
       "noData": "과학 돌파구 없음"
