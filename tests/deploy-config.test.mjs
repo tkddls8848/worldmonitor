@@ -258,7 +258,7 @@ describe('welcome landing page routing', () => {
     assert.equal(variantUrls.full, 'https://www.worldmonitor.app/dashboard');
 
     const nonFullUrls = Object.entries(variantUrls).filter(([variant]) => variant !== 'full');
-    assert.ok(nonFullUrls.length >= 5, 'expected non-full variant metadata entries');
+    assert.ok(nonFullUrls.length >= 4, 'expected non-full variant metadata entries');
     for (const [variant, url] of nonFullUrls) {
       assert.equal(
         new URL(url).pathname,

@@ -39,8 +39,6 @@ export const PANEL_SCOPE_BEHAVIOUR: Readonly<Record<string, PanelScopeBehaviour>
   'ucdp-events': 'filters', // UCDP Conflict Events
   'security-advisories': 'filters', // Security Advisories
   // Global by nature.
-  progress: 'global', // Human Progress
-  counters: 'global', // Live Counters
   renewable: 'global', // Renewable Energy
    // Global Giving
   'liquidity-shifts': 'global', // Liquidity Shifts
@@ -106,11 +104,6 @@ export const PANEL_SCOPE_BEHAVIOUR: Readonly<Record<string, PanelScopeBehaviour>
   climate: 'unsupported', // Climate Anomalies
   'reservoir-levels': 'filters', // Host or listed riparian country; neighbours optional
   'population-exposure': 'filters', // Source events filtered before location limits
-  'positive-feed': 'unsupported', // Good News Feed
-  spotlight: 'unsupported', // Today's Hero
-  breakthroughs: 'unsupported', // Breakthroughs
-  digest: 'unsupported', // 5 Good Things
-  species: 'unsupported', // Conservation Wins
   'live-news': 'unsupported', // Live News
   insights: 'unsupported', // AI Insights
   'commodity-news': 'unsupported', // Commodity News

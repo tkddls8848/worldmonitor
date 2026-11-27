@@ -1007,8 +1007,8 @@ describe('public OpenAPI dedupe (real bundle)', () => {
   });
 
   it('engages the generated scalar/date schemas', () => {
-    // The regenerated bundle has 51 repeated generated int64 schema uses.
-    assert.equal(int64Stats.replacedRefs, 51);
+    // The regenerated bundle has 50 repeated generated int64 schema uses.
+    assert.equal(int64Stats.replacedRefs, 50);
     // Described int64 fields (own comment + generated warning) keep their
     // comment beside the shared $ref; a regression to zero would silently give
     // back ~4 KB of the scanner budget.
@@ -1395,6 +1395,6 @@ describe('JSON-only description and parameter compaction', () => {
     assert.ok(defaultRequiredStats.dropped >= 200, `default required dropped: ${defaultRequiredStats.dropped}`);
     assert.ok(successDescriptionStats.shortened >= 200, `success descriptions shortened: ${successDescriptionStats.shortened}`);
     assert.equal(json.includes('"Successful response"'), false, 'no generated success description survives');
-    assert.ok(exampleListStats.trimmed >= 5, `example lists trimmed: ${exampleListStats.trimmed}`);
+    assert.ok(exampleListStats.trimmed >= 4, `example lists trimmed: ${exampleListStats.trimmed}`);
   });
 });

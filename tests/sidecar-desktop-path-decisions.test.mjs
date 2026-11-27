@@ -32,7 +32,7 @@ function serverFamilies() {
 
 it('every server route family has one local API entry', () => {
   const families = serverFamilies();
-  assert.ok(families.length >= 35);
+  assert.ok(families.length >= 33);
   assert.ok(families.some(f => f.key === 'v2/shipping'));
   for (const f of families) {
     assert.ok(f.bundled !== f.versioned, f.key);

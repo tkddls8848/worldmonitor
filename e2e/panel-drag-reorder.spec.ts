@@ -2,12 +2,13 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 
 const DASHBOARD_VIEWPORT = { width: 1700, height: 900 };
 
-async function loadHappyDashboard(page: Page): Promise<void> {
+async function loadEnergyDashboard(page: Page): Promise<void> {
   await page.setViewportSize(DASHBOARD_VIEWPORT);
   await page.addInitScript(() => {
     if (sessionStorage.getItem('__panel_drag_reorder_init_done')) return;
     localStorage.clear();
-    localStorage.setItem('worldmonitor-variant', 'happy');
+    localStorage.setItem('worldmonitor-variant', 'energy');
+    localStorage.setItem('worldmonitor-first-screen-mode', 'full');
     sessionStorage.setItem('__panel_drag_reorder_init_done', '1');
   });
   await page.goto('/', { waitUntil: 'domcontentloaded' });
@@ -147,7 +148,7 @@ async function storedBottomSet(page: Page): Promise<string[]> {
 
 test.describe('panel drag reorder semantics', () => {
   test('moves a panel after the indicated same-grid target instead of swapping', async ({ page }) => {
-    await loadHappyDashboard(page);
+    await loadEnergyDashboard(page);
     const before = await panelIds(page);
     const [first, second, third, fourth] = before;
     expect(first && second && third && fourth).toBeTruthy();
@@ -165,7 +166,7 @@ test.describe('panel drag reorder semantics', () => {
   });
 
   test('moves a panel before the indicated same-grid target', async ({ page }) => {
-    await loadHappyDashboard(page);
+    await loadEnergyDashboard(page);
     const before = await panelIds(page);
     const [first, second, third, fourth] = before;
     expect(first && second && third && fourth).toBeTruthy();
@@ -178,7 +179,7 @@ test.describe('panel drag reorder semantics', () => {
   });
 
   test('same-grid interior gap drops do not jump the panel to the end', async ({ page }) => {
-    await loadHappyDashboard(page);
+    await loadEnergyDashboard(page);
     const before = await panelIds(page);
     const [sourceId] = before;
     expect(sourceId).toBeTruthy();
@@ -192,7 +193,7 @@ test.describe('panel drag reorder semantics', () => {
   });
 
   test('moves a panel into empty bottom-grid space and restores it after reload', async ({ page }) => {
-    await loadHappyDashboard(page);
+    await loadEnergyDashboard(page);
     const [sourceId] = await panelIds(page);
     expect(sourceId).toBeTruthy();
 
@@ -213,7 +214,7 @@ test.describe('panel drag reorder semantics', () => {
   });
 
   test('sub-threshold mouse movement does not start a drag or persist order', async ({ page }) => {
-    await loadHappyDashboard(page);
+    await loadEnergyDashboard(page);
     const before = await panelIds(page);
     const [sourceId] = before;
     expect(sourceId).toBeTruthy();
@@ -226,7 +227,7 @@ test.describe('panel drag reorder semantics', () => {
   });
 
   test('Escape cancels an in-progress drag without persisting order', async ({ page }) => {
-    await loadHappyDashboard(page);
+    await loadEnergyDashboard(page);
     const before = await panelIds(page);
     const [sourceId, , , targetId] = before;
     expect(sourceId && targetId).toBeTruthy();

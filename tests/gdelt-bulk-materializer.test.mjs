@@ -255,7 +255,7 @@ describe('GDELT bulk derived products', () => {
     ]);
   });
 
-  it('derives unrest and positive geo events from the same records', () => {
+  it('derives unrest from protest reports', () => {
     const timestamp = '20260730120000';
     const protestRows = Array.from({ length: 5 }, (_, index) => gkgRow({
       id: `protest-${index}`,
@@ -264,18 +264,11 @@ describe('GDELT bulk derived products', () => {
       themes: 'PROTEST,1',
       tone: '-3,1,2,3',
     }));
-    const positiveRows = Array.from({ length: 3 }, (_, index) => gkgRow({
-      id: `positive-${index}`,
-      url: `https://health.example/positive-${index}`,
-      title: `Medical breakthrough ${index}`,
-      themes: 'MEDICAL,1',
-      tone: '4,1,2,3',
-    }));
 
     const result = materializeGdeltBulk({
       batches: [{
         timestamp,
-        records: parseGdeltGkgCsv([...protestRows, ...positiveRows].join('\n')),
+        records: parseGdeltGkgCsv(protestRows.join('\n')),
       }],
       previous: {},
       nowMs: Date.parse('2026-07-30T12:05:00Z'),
@@ -289,10 +282,6 @@ describe('GDELT bulk derived products', () => {
       Date.parse('2026-07-30T12:00:00Z'),
       'rolling evidence must retain source time instead of looking fresh on every publish',
     );
-    assert.equal(result.positive.events.length, 1);
-    assert.equal(result.positive.events[0].category, 'science-health');
-    assert.equal(result.positive.events[0].count, 3);
-    assert.equal(result.positive.events[0].timestamp, Date.parse('2026-07-30T12:00:00Z'));
   });
 
   it('merges prior articles and timeline buckets while pruning beyond the rolling windows', () => {

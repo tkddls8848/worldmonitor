@@ -35,7 +35,7 @@ test('dashboard names remain readable from tablet through desktop', async ({ pag
     const header = await page.locator('.header').evaluate(el => ({ width: el.clientWidth, content: el.scrollWidth }));
     expect(header.content).toBeLessThanOrEqual(header.width + 1);
     if (width <= 980) {
-      const last = switcher.locator('[data-variant="happy"]');
+      const last = switcher.locator('[data-variant="energy"]');
       await last.scrollIntoViewIfNeeded();
       await expect(last).toBeInViewport();
     }

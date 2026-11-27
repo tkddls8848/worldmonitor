@@ -1,21 +1,3 @@
-// Static checks pin GDELT breaker wiring and distinct names because the
-// service exposes no injectable fetch (#8690, section 2). This suite also runs
-// CircuitBreaker cooldown and cache-isolation tests, which do not exercise the
-// service's network path.
-//
-/**
- * Regression tests for split GDELT circuit breakers (PR #879).
- *
- * Root cause: two instances of the shared-breaker anti-pattern fixed in the same
- * audit pass that caught the World Bank breaker bug (PR #877):
- *
- * gdeltBreaker was shared between fetchGdeltArticles (military/conflict
- *      queries, 10-min cache) and fetchPositiveGdeltArticles (peace/humanitarian queries,
- *      different topic set). Failures in one function silenced the other, and the 10-min
- *      cache stored whichever query ran last, poisoning the other function's results.
- *      Fix: positiveGdeltBreaker — dedicated breaker for the positive sentiment path.
- */
-
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -25,75 +7,14 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
 
-const readSrc = (relPath) => readFileSync(resolve(root, relPath), 'utf-8');
-
-// ============================================================
-// 1. Static analysis: gdelt-intel.ts — split breakers per query type
-// ============================================================
-
-describe('gdelt-intel.ts — dedicated circuit breakers per GDELT query type', () => {
-  const src = readSrc('src/services/gdelt-intel.ts');
-
-  // Scoped function body slices
-  const posStart = src.indexOf('export async function fetchPositiveGdeltArticles');
-  assert.ok(posStart !== -1, 'fetchPositiveGdeltArticles not found in gdelt-intel.ts — was it renamed?');
-  const posBody = src.slice(posStart, src.indexOf('\nexport ', posStart + 1));
-  const regStart = src.indexOf('export async function fetchGdeltArticles');
-  assert.ok(regStart !== -1, 'fetchGdeltArticles not found in gdelt-intel.ts — was it renamed?');
-  const regBody = src.slice(regStart, src.indexOf('\nexport ', regStart + 1));
-
-  it('has a dedicated positiveGdeltBreaker separate from gdeltBreaker', () => {
-    assert.match(
-      src,
-      /\bpositiveGdeltBreaker\s*=\s*createCircuitBreaker/,
-      'positiveGdeltBreaker must be a separate createCircuitBreaker instance',
-    );
-  });
-
-  it('GDELT breakers have distinct names', () => {
-    assert.match(
-      src,
-      /GDELT Intelligence/,
-      'gdeltBreaker must have name "GDELT Intelligence"',
-    );
-    assert.match(
-      src,
-      /GDELT Positive/,
-      'positiveGdeltBreaker must have name "GDELT Positive"',
-    );
-  });
-
-  it('fetchGdeltArticles uses gdeltBreaker, NOT positiveGdeltBreaker', () => {
-    assert.match(
-      regBody,
-      /gdeltBreaker\.execute/,
-      'fetchGdeltArticles must use gdeltBreaker.execute',
-    );
-    assert.doesNotMatch(
-      regBody,
-      /positiveGdeltBreaker\.execute/,
-      'fetchGdeltArticles must NOT use positiveGdeltBreaker',
-    );
-  });
-
-  it('fetchPositiveGdeltArticles uses positiveGdeltBreaker, NOT gdeltBreaker', () => {
-    assert.match(
-      posBody,
-      /positiveGdeltBreaker\.execute/,
-      'fetchPositiveGdeltArticles must use positiveGdeltBreaker.execute',
-    );
-    // word-boundary prevents matching `positiveGdeltBreaker.execute`
-    assert.doesNotMatch(
-      posBody,
-      /\bgdeltBreaker\.execute/,
-      'fetchPositiveGdeltArticles must NOT use gdeltBreaker (only positiveGdeltBreaker)',
-    );
-  });
+it('uses the GDELT Intelligence circuit breaker for article requests', () => {
+  const src = readFileSync(resolve(root, 'src/services/gdelt-intel.ts'), 'utf8');
+  const start = src.indexOf('export async function fetchGdeltArticles');
+  assert.notEqual(start, -1);
+  const end = src.indexOf('\nexport ', start + 1);
+  assert.match(src.slice(start, end === -1 ? undefined : end), /gdeltBreaker\.execute/);
+  assert.match(src, /GDELT Intelligence/);
 });
-
-// ============================================================
-// 2. Behavioral: circuit breaker isolation
-// ============================================================
 
 describe('CircuitBreaker isolation — GDELT split breaker independence', () => {
   const CIRCUIT_BREAKER_URL = pathToFileURL(

@@ -195,7 +195,8 @@ test.describe('AI widget builder', () => {
       if (!sessionStorage.getItem('__widget_e2e_init__')) {
         localStorage.clear();
         sessionStorage.clear();
-        localStorage.setItem('worldmonitor-variant', 'happy');
+        localStorage.setItem('worldmonitor-variant', 'energy');
+        localStorage.setItem('worldmonitor-first-screen-mode', 'full');
         localStorage.setItem('worldmonitor-mission-preset-dismissed-v1', '1');
         localStorage.setItem('wm-widget-key', key);
         sessionStorage.setItem('__widget_e2e_init__', '1');
@@ -465,7 +466,8 @@ test.describe('AI widget builder — PRO tier', () => {
         if (!sessionStorage.getItem('__widget_pro_e2e_init__')) {
           localStorage.clear();
           sessionStorage.clear();
-          localStorage.setItem('worldmonitor-variant', 'happy');
+          localStorage.setItem('worldmonitor-variant', 'energy');
+          localStorage.setItem('worldmonitor-first-screen-mode', 'full');
           localStorage.setItem('wm-widget-key', wKey);
           localStorage.setItem('wm-pro-key', pKey);
           sessionStorage.setItem('__widget_pro_e2e_init__', '1');

@@ -2085,12 +2085,6 @@
     "language": "en",
     "ownershipClass": "nonprofit"
   },
-  "Human Progress": {
-    "country": "US",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "nonprofit"
-  },
   "Hurriyet": {
     "country": "TR",
     "audience": "domestic",
@@ -3780,12 +3774,6 @@
     "note": "Google News topic query aggregating many publishers; no single owner."
   },
   "SilverSeek": {
-    "country": "US",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "private"
-  },
-  "Singularity Hub": {
     "country": "US",
     "audience": "international",
     "language": "en",

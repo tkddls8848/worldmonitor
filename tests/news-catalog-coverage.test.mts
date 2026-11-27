@@ -187,7 +187,7 @@ describe('digests serve the categories that used to need per-feed browser fetche
     const trending = catalog.feeds.find(f => f.name === 'GitHub Trending') as { channelDated?: boolean; linkHosts?: string[] } | undefined;
     assert.equal(trending?.channelDated, true);
     assert.deepEqual(trending?.linkHosts, ['github.com']);
-    for (const name of ['FAS', 'New Scientist', 'Ransomware.live']) {
+    for (const name of ['FAS', 'Ransomware.live']) {
       const feed = catalog.feeds.find(f => f.name === name);
       assert.match(feed?.url ?? '', /^https:\/\/news\.google\.com\/rss\/search\?q=site:[^&]+\+when:\d+d&/,
         `${name} reads a dated Google News site: query`);

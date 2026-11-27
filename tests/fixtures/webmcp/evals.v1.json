@@ -1149,13 +1149,13 @@
       "id": "switch_monitor_ambiguous",
       "category": "dashboard_control",
       "promptKind": "ambiguous",
-      "prompt": "Take me to Good News.",
+      "prompt": "Take me to Energy.",
       "expectedPlans": [
         [
           {
             "tool": "switch_monitor",
             "arguments": {
-              "monitor": "happy"
+              "monitor": "energy"
             }
           }
         ]
@@ -1506,13 +1506,13 @@
       "id": "panel_enablement_direct",
       "category": "dashboard_control",
       "promptKind": "direct",
-      "prompt": "Enable the giving panel.",
+      "prompt": "Enable the renewable panel.",
       "expectedPlans": [
         [
           {
             "tool": "set_panel_enabled",
             "arguments": {
-              "panelId": "giving",
+              "panelId": "renewable",
               "enabled": true
             }
           }
@@ -1596,13 +1596,13 @@
       "id": "panel_move_direct",
       "category": "dashboard_control",
       "promptKind": "direct",
-      "prompt": "Move the giving panel to the first slot in the sidebar.",
+      "prompt": "Move the renewable panel to the first slot in the sidebar.",
       "expectedPlans": [
         [
           {
             "tool": "move_panel",
             "arguments": {
-              "panelId": "giving",
+              "panelId": "renewable",
               "region": "sidebar",
               "index": 0
             }
