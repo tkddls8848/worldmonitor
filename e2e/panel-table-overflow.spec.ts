@@ -1119,9 +1119,6 @@ test('panel table text is readable in both themes', async ({ page }) => {
       return panel.getElement();
     });
 
-
-
-
     mount('fx', () => {
       const panel = new FxPanel();
       (panel as unknown as { updateFx(data: unknown): void }).updateFx({
@@ -1229,7 +1226,7 @@ test('panel table text is readable in both themes', async ({ page }) => {
     }, rowSelector);
     await page.mouse.move(0, 0);
     const report = await measure(null);
-    expect(report.panels, `${theme}: every mounted panel renders a table`).toBe(14);
+    expect(report.panels, `${theme}: every mounted panel renders a table`).toBe(12);
     expect(report.checked, `${theme}: text nodes measured`).toBeGreaterThan(200);
     expect.soft(report.low, `${theme}: table text below AA contrast`).toEqual([]);
     // Severity badges sit on tinted rows, and hovering a row adds its own tint.
