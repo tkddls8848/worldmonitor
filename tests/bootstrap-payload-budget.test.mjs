@@ -74,7 +74,7 @@ test('production byte ledger accounts for retired tier members', () => {
 
   assert.equal(
     tierPayloadBytesFromLedger(CAPTURED_BASE_TIER_KEYS.fast),
-    PRODUCTION_CAPTURE.tiers.fast.decodedBytes - 14_881, // Removed values, keys, and JSON punctuation.
+    PRODUCTION_CAPTURE.tiers.fast.decodedBytes - 76_286, // Previously retired values (14,881) and provincial alerts (61,405), including keys and punctuation.
     `FAST ledger no longer reconstructs captured body ${PRODUCTION_CAPTURE.tiers.fast.sha256}`,
   );
   assert.equal(

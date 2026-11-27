@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { afterEach, describe, it } from 'node:test';
 
-import { saveTabsState, type TabsState } from '../src/services/tab-store.ts';
+import { loadTabsState, saveTabsState, type TabsState } from '../src/services/tab-store.ts';
 
 type GlobalSnapshot = { exists: boolean; value: unknown };
 
@@ -58,6 +58,28 @@ const sample: TabsState = {
 
 afterEach(() => {
   restoreGlobal('localStorage', localStorageSnapshot);
+});
+
+describe('loadTabsState', () => {
+  it('prunes the retired panel from a saved tab while keeping a custom widget', () => {
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      writable: true,
+      value: new MemoryStorage(),
+    });
+    const tab = sample.tabs[0]!;
+    const widget = { name: 'Custom widget', enabled: true, priority: 2 };
+    const settings = {
+      'cw-example': widget,
+      'toronto-safety': { name: 'Toronto Safety', enabled: true, priority: 2 },
+    };
+    const order = ['toronto-safety', 'cw-example'];
+    saveTabsState({ ...sample, tabs: [{ ...tab, panelSettings: settings, panelOrder: order, bottomSet: order }] });
+    assert.deepEqual(loadTabsState(), {
+      ...sample,
+      tabs: [{ ...tab, panelSettings: { 'cw-example': widget }, panelOrder: ['cw-example'], bottomSet: ['cw-example'] }],
+    });
+  });
 });
 
 describe('saveTabsState persist receipt', () => {

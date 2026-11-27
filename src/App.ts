@@ -18,6 +18,7 @@ import {
   getEffectivePanelConfig,
   getInitialPanelSettingsForVariant,
   restoreProGatedPanels,
+  TORONTO_SAFETY_PANEL_ID,
   userSetPanelEnabled,
 } from '@/config';
 import {
@@ -50,7 +51,7 @@ import {
   saveToStorage,
   showToast,
 } from '@/utils';
-import { clearPanelSpans } from '@/utils/panel-storage';
+import { clearPanelSpans, clearPanelSpanEntry, clearPanelColSpanEntry, loadPanelCollapsed, savePanelCollapsed } from '@/utils/panel-storage';
 import type { OrbitalShareLink } from '@/utils/urlState';
 import { scheduleOrbitalShareLink, takeOrbitalShareLink } from '@/app/orbital-share-link';
 import { connectOrbitalLookupMap } from '@/services/orbital/lookup-host';
@@ -996,36 +997,47 @@ export class App {
     // Drop saved entries for retired panels so Settings omits dead toggles.
     let droppedRetiredPanel = false;
     for (const key of Object.keys(panelSettings)) {
-      if (!key.startsWith('mcp-') && key !== 'social-velocity' && key !== 'wsb-ticker-scanner' ) continue;
+      if (!key.startsWith('mcp-') && key !== 'social-velocity' && key !== 'wsb-ticker-scanner'
+        && key !== TORONTO_SAFETY_PANEL_ID) continue;
       delete panelSettings[key];
       droppedRetiredPanel = true;
     }
     if (droppedRetiredPanel && storageAvailable) saveToStorage(STORAGE_KEYS.panels, panelSettings);
 
     if (storageAvailable) {
-      // One-time migration: prune removed panel keys from stored settings and order
-      const PANEL_PRUNE_KEY = 'worldmonitor-panel-prune-v3';
-      if (!localStorage.getItem(PANEL_PRUNE_KEY)) {
-        const validKeys = new Set(Object.keys(ALL_PANELS));
+      const PANEL_PRUNE_KEY = 'worldmonitor-panel-prune-v2';
+      const PANEL_RETIREMENT_KEY = 'worldmonitor-panel-retirement-v1';
+      const needsLegacyPrune = !localStorage.getItem(PANEL_PRUNE_KEY);
+      const needsPanelRetirement = !safeStorageGet(PANEL_RETIREMENT_KEY);
+      if (needsLegacyPrune) {
         let pruned = false;
         for (const key of Object.keys(panelSettings)) {
-          if (!validKeys.has(key)) {
+          if (!Object.prototype.hasOwnProperty.call(ALL_PANELS, key)) {
             delete panelSettings[key];
             pruned = true;
           }
         }
         if (pruned) saveToStorage(STORAGE_KEYS.panels, panelSettings);
+      }
+      if (needsLegacyPrune || needsPanelRetirement) {
         for (const orderKey of [PANEL_ORDER_KEY, PANEL_ORDER_KEY + '-bottom-set', PANEL_ORDER_KEY + '-bottom']) {
           try {
             const raw = localStorage.getItem(orderKey);
             if (!raw) continue;
             const arr = JSON.parse(raw);
             if (!Array.isArray(arr)) continue;
-            const filtered = arr.filter((k: string) => validKeys.has(k));
+            const filtered = arr.filter((k: string) =>
+              k !== TORONTO_SAFETY_PANEL_ID && (!needsLegacyPrune || Object.prototype.hasOwnProperty.call(ALL_PANELS, k)));
             if (filtered.length !== arr.length) localStorage.setItem(orderKey, JSON.stringify(filtered));
           } catch { localStorage.removeItem(orderKey); }
         }
-        localStorage.setItem(PANEL_PRUNE_KEY, 'done');
+        if (needsLegacyPrune) localStorage.setItem(PANEL_PRUNE_KEY, 'done');
+      }
+      if (needsPanelRetirement) {
+        clearPanelSpanEntry(TORONTO_SAFETY_PANEL_ID);
+        clearPanelColSpanEntry(TORONTO_SAFETY_PANEL_ID);
+        if (loadPanelCollapsed()[TORONTO_SAFETY_PANEL_ID]) savePanelCollapsed(TORONTO_SAFETY_PANEL_ID, false);
+        safeStorageSet(PANEL_RETIREMENT_KEY, 'done');
       }
 
       // One-time migration: clear stale panel ordering and sizing state

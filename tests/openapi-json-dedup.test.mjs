@@ -1007,8 +1007,8 @@ describe('public OpenAPI dedupe (real bundle)', () => {
   });
 
   it('engages the generated scalar/date schemas', () => {
-    // The regenerated bundle has 56 repeated generated int64 schema uses.
-    assert.equal(int64Stats.replacedRefs, 56);
+    // The regenerated bundle has 51 repeated generated int64 schema uses.
+    assert.equal(int64Stats.replacedRefs, 51);
     // Described int64 fields (own comment + generated warning) keep their
     // comment beside the shared $ref; a regression to zero would silently give
     // back ~4 KB of the scanner budget.

@@ -1,6 +1,6 @@
 import type { PanelConfig } from '@/types';
 import { SITE_VARIANT } from '@/config/variant';
-import { ALL_PANELS } from '@/config/panels';
+import { ALL_PANELS, TORONTO_SAFETY_PANEL_ID } from '@/config/panels';
 import { isDynamicPanel, resetMissionPresetState } from '@/services/mission-presets';
 import { safeStorageGet, safeStorageRemove, safeStorageSet } from '@/utils/safe-storage';
 import { normalizeScope, type TabScope } from '../../shared/tab-scope';
@@ -85,6 +85,9 @@ export function normalizeTabsState(parsed: unknown): TabsState | null {
     && Array.isArray(t.panelOrder) && Array.isArray(t.bottomSet));
   if (tabs.length === 0) return null;
   for (const tab of tabs) {
+    delete tab.panelSettings[TORONTO_SAFETY_PANEL_ID];
+    tab.panelOrder = tab.panelOrder.filter((key) => key !== TORONTO_SAFETY_PANEL_ID);
+    tab.bottomSet = tab.bottomSet.filter((key) => key !== TORONTO_SAFETY_PANEL_ID);
     const team = tab.team as unknown;
     if (team === undefined) continue;
     const ok = !!team && typeof team === 'object'
@@ -170,7 +173,8 @@ export function normalizeNewTabPanels(parsed: unknown): NewTabPanels | null {
   for (const entry of parsed) {
     if (!entry || typeof entry !== 'object') continue;
     const { key, on } = entry as Partial<NewTabPanelChoice>;
-    if (typeof key !== 'string' || key === '' || typeof on !== 'boolean' || seen.has(key)) continue;
+    if (typeof key !== 'string' || key === '' || key === TORONTO_SAFETY_PANEL_ID
+      || typeof on !== 'boolean' || seen.has(key)) continue;
     seen.add(key);
     out.push({ key, on });
   }

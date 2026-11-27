@@ -1084,6 +1084,8 @@ export function isPanelNativeToVariant(panelId: string, variant: string): boolea
 }
 
 /** All panels from all variants — canonical cross-variant registry. */
+export const TORONTO_SAFETY_PANEL_ID = 'toronto-safety';
+
 export const ALL_PANELS: Record<string, PanelConfig> = {
   ...HAPPY_PANELS,
   ...COMMODITY_PANELS,

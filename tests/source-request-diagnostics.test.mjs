@@ -34,7 +34,7 @@ test('logs safe rejection metadata and preserves response identity', async () =>
 test('preserves error identity, bounds native codes and ignores hostile headers', async () => {
   await capture(async logs => {
     const error = new TypeError('secret URL', { cause: Object.assign(new Error('secret credentials'), { code: 'ECONNRESET' }) });
-    await assert.rejects(withSourceRequestDiagnostics({ source: 'tps', stage: 'calls:ids' }, async () => { throw error; }), e => e === error);
+    await assert.rejects(withSourceRequestDiagnostics({ source: 'fixture', stage: 'calls:ids' }, async () => { throw error; }), e => e === error);
     assert.equal(logs[0].errorCode, 'ECONNRESET');
     assert.equal(logs[0].phase, 'fetch');
     assert.ok(!JSON.stringify(logs).includes('secret'));
@@ -59,13 +59,13 @@ test('native fetch correlates overlapping requests, body failure and header time
   try {
     await capture(async logs => {
       await Promise.all([
-        assert.rejects(withSourceRequestDiagnostics({ source: 'tps', stage: 'calls:ids' }, async observe => {
+        assert.rejects(withSourceRequestDiagnostics({ source: 'fixture', stage: 'calls:ids' }, async observe => {
           const response = await fetch(`${url}/headers`, { signal }); observe(response); return response.text();
         })),
-        assert.rejects(withSourceRequestDiagnostics({ source: 'tps', stage: 'calls:source' }, async observe => {
+        assert.rejects(withSourceRequestDiagnostics({ source: 'fixture', stage: 'calls:source' }, async observe => {
           const response = await fetch(`${url}/body`, { signal: AbortSignal.timeout(1200) }); observe(response); return response.text();
         })),
-        withSourceRequestDiagnostics({ source: 'tps', stage: 'calls:package' }, async observe => {
+        withSourceRequestDiagnostics({ source: 'fixture', stage: 'calls:package' }, async observe => {
           const response = await fetch(`${url}/ok`); observe(response); return response.text();
         }),
       ]);
@@ -164,7 +164,7 @@ test('NRCan direct body failures retain the original error and request diagnosti
 
 test('a header-write start does not claim a completed request transmission', async () => {
   await capture(async logs => {
-    await assert.rejects(withSourceRequestDiagnostics({ source: 'tps' }, async () => {
+    await assert.rejects(withSourceRequestDiagnostics({ source: 'fixture' }, async () => {
       const request = {};
       channel('undici:request:create').publish({ request });
       channel('undici:client:sendHeaders').publish({ request, socket: {} });

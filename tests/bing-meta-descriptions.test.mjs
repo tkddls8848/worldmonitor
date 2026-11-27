@@ -34,7 +34,7 @@ function descriptionFor(url) {
 }
 
 test('the surviving Bing export URLs have unique, complete 150–160 character descriptions', () => {
-  assert.equal(urls.length, 48);
+  assert.equal(urls.length, 47);
   assert.equal(new Set(urls).size, urls.length);
   const descriptions = new Set();
   for (const url of urls) {
