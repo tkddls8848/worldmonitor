@@ -261,8 +261,6 @@ export const DOCS_PAGE_DATES: Record<string, { datePublished: string; dateModifi
   "api-reference/tradeservice/getusimportduty": {"datePublished":"2026-02-27","dateModified":"2026-11-02"},
   "api-reference/tradeservice/listcomtradeflows": {"datePublished":"2026-02-27","dateModified":"2026-11-02"},
   "api-reference/unrestservice/listunrestevents": {"datePublished":"2026-02-20","dateModified":"2026-11-10"},
-  "api-reference/webcamservice/getwebcamimage": {"datePublished":"2026-03-14","dateModified":"2026-11-02"},
-  "api-reference/webcamservice/listwebcams": {"datePublished":"2026-03-14","dateModified":"2026-11-02"},
   "api-reference/wildfireservice/listfiredetections": {"datePublished":"2026-02-20","dateModified":"2026-10-08"},
   "api-scenarios": {"datePublished":"2026-04-19","dateModified":"2026-09-22"},
   "api-shipping-v2": {"datePublished":"2026-04-19","dateModified":"2026-11-13"},
