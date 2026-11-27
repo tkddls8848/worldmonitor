@@ -165,13 +165,6 @@ const EXPECTED_COMMODITY_DECK_LAYERS = [
   'economic-centers-layer',
 ];
 
-const EXPECTED_HAPPY_DECK_LAYERS = [
-  'positive-events-layer',
-  'kindness-layer',
-  'species-recovery-layer',
-  'renewable-installations-layer',
-];
-
 const waitForHarnessReady = async (
   page: import('@playwright/test').Page
 ): Promise<void> => {
@@ -229,8 +222,6 @@ test.describe('DeckGL map harness', () => {
       ? 'finance'
       : process.env.VITE_VARIANT === 'commodity'
       ? 'commodity'
-      : process.env.VITE_VARIANT === 'happy'
-      ? 'happy'
       : 'full';
     expect(runtimeVariant).toBe(expectedVariant);
   });
@@ -242,7 +233,7 @@ test.describe('DeckGL map harness', () => {
     const checked = page.locator('.deckgl-layer-toggles .layer-toggle input:checked');
     // The layers a page starts with are a baseline, not an increase.
     await expect(warning).toHaveCount(0);
-    // Variants with 13 or fewer picker layers (tech, happy) cannot pass the threshold.
+    // Variants with 13 or fewer picker layers cannot pass the threshold.
     if (await checked.count() <= 13) return;
 
     // Toggles are hidden in deterministic mode, so drive them from the page.
@@ -321,8 +312,6 @@ test.describe('DeckGL map harness', () => {
       ? EXPECTED_FINANCE_DECK_LAYERS
       : variant === 'commodity'
       ? EXPECTED_COMMODITY_DECK_LAYERS
-      : variant === 'happy'
-      ? EXPECTED_HAPPY_DECK_LAYERS
       : EXPECTED_FULL_DECK_LAYERS;
 
     await expect
@@ -558,8 +547,8 @@ test.describe('DeckGL map harness', () => {
       return w.__mapHarness?.variant ?? 'full';
     });
     test.skip(
-      variant === 'commodity' || variant === 'happy',
-      'Visual baselines are not recorded for commodity/happy variant scenes yet'
+      variant === 'commodity',
+      'Visual baselines are not recorded for commodity variant scenes yet'
     );
     // Energy currently reuses the shared "both" visual scenarios; until we
     // record Atlas-only golden scenes, compare those shared scenarios against

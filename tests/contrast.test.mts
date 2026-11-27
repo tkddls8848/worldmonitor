@@ -187,23 +187,6 @@ describe('billing tone contrast', () => {
     }
   });
 
-  for (const theme of [
-  ]) {
-    it(`${theme.name}: every billing tone clears 4.5:1 on --bg and --surface`, () => {
-      const bg = token(happyCss, theme.block, '--bg');
-      const surface = token(happyCss, theme.block, '--surface');
-      for (const tone of tones) {
-        const color = token(happyCss, theme.block, tone);
-        for (const base of [bg, surface]) {
-          const ratio = contrastRatio(color, base);
-          assert.ok(
-            ratio >= 4.5,
-            `${theme.name} ${tone} (${color}) on ${base} is ${ratio.toFixed(2)}:1, needs >= 4.5:1`,
-          );
-        }
-      }
-    });
-  }
 });
 
 /**
