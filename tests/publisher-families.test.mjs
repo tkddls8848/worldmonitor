@@ -118,16 +118,11 @@ describe('publisher-families map data', () => {
       bbc: 'feeds.bbci.co.uk for the English editions, bbc.com for Afrique/Mundo',
       dw: 'rss.dw.com feed subdomain alongside dw.com — one Deutsche Welle newsroom',
       bloomberg: 'bloomberg.com plus tier-only "Bloomberg" and a Google News keyword feed',
-      'hacker-news': 'hnrss.org plus news.ycombinator.com ("YC News" is the HN front page)',
       reuters: 'reuters.com plus tier-only "Reuters" and a Google News keyword feed',
       'the-verge': 'theverge.com plus tier-only podcast labels and a Google News shows feed',
-      'y-combinator': 'ycombinator.com plus a Google News keyword feed',
-      a16z: 'a16z.com / a16z.news plus Google News keyword feeds — no single host',
-      acquired: 'podcast, reached only through Google News keyword feeds',
       asharq: 'asharqbusiness.com and asharq.com — one newsroom, two properties',
       interfax: 'interfax.ru Russian feed and interfax.com English edition — one Interfax newsroom',
       ndtv: 'both labels arrive via feedburner, which identifies no publisher',
-      pivot: 'one show across a tier-only label and a megaphone.fm feed',
       'sightline-media': 'defensenews.com and militarytimes.com — two Sightline Media Group titles, one owner',
     };
 
@@ -251,10 +246,12 @@ describe('publisher-families map data', () => {
       }
       // These single-source families unify RSS labels with URL-only country
       // evidence. Without the mapping, the same publisher could corroborate itself.
-      if (familyId === 'deutschlandradio' || familyId === 'zdf') {
-        assert.equal(entry.labels.length, 1);
-        const domain = familyId === 'deutschlandradio' ? 'deutschlandfunk.de' : 'zdfheute.de';
-        assert.equal(publisherFamilyForDomain(domain), publisherFamilyFor(entry.labels[0]));
+      if (entry.labels.length === 1) {
+        const domains = PUBLISHER_FAMILY_DOMAIN_TABLE[familyId] ?? [];
+        assert.ok(domains.length, `${familyId}: a single label must normalize to a publisher domain`);
+        for (const domain of domains) {
+          assert.equal(publisherFamilyForDomain(domain), publisherFamilyFor(entry.labels[0]));
+        }
         continue;
       }
       assert.ok(

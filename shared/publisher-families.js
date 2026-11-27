@@ -50,12 +50,11 @@
  */
 const PUBLISHER_FAMILY_DATA = {
   'miit': { publisher: "MIIT (China)", labels: [] },
-  'a16z': { publisher: "Andreessen Horowitz", labels: ["a16z Blog", "a16z Insights", "a16z Podcast"] },
+  'a16z': { publisher: "Andreessen Horowitz", labels: ["a16z Podcast"] },
   'abc-news': { publisher: "ABC News", labels: [] },
-  'acquired': { publisher: "Acquired", labels: ["Acquired Episodes", "Acquired Podcast"] },
   'ap-news': { publisher: "Associated Press", labels: ["AP Mexico", "AP News"] },
   'ars-technica': { publisher: "Ars Technica", labels: [] },
-  'arxiv': { publisher: "arXiv", labels: ["ArXiv AI", "ArXiv ML"] },
+  'arxiv': { publisher: "arXiv", labels: ["ArXiv AI"] },
   'asharq': { publisher: "Asharq News", labels: ["Asharq Business", "Asharq News"] },
   'axios': { publisher: "Axios", labels: [] },
   'bbc': {
@@ -87,12 +86,11 @@ const PUBLISHER_FAMILY_DATA = {
       "Bloomberg Markets",
     ],
   },
-  'brookings': { publisher: "Brookings Institution", labels: ["Brookings", "Brookings Tech"] },
+  'brookings': { publisher: "Brookings Institution", labels: ["Brookings"] },
   'business-wire': { publisher: "Business Wire", labels: [] },
-  'cb-insights': { publisher: "CB Insights", labels: ["CB Insights", "CB Insights Unicorn"] },
-  'chatham-house': { publisher: "Chatham House", labels: ["Chatham House", "Chatham House Tech"] },
-  'cnbc': { publisher: "CNBC", labels: ["CNBC", "CNBC Commodities", "CNBC Markets", "CNBC Tech"] },
-  'csis': { publisher: "CSIS", labels: ["CSIS", "CSIS Tech"] },
+  'chatham-house': { publisher: "Chatham House", labels: ["Chatham House"] },
+  'cnbc': { publisher: "CNBC", labels: ["CNBC", "CNBC Commodities", "CNBC Markets"] },
+  'csis': { publisher: "CSIS", labels: ["CSIS"] },
   'die-zeit': { publisher: "Die Zeit", labels: [] },
   'deutschlandradio': { publisher: "Deutschlandradio", labels: ["Deutschlandfunk"] },
   'dw': { publisher: "Deutsche Welle", labels: ["DW News", "DW Turkish"] },
@@ -130,29 +128,26 @@ const PUBLISHER_FAMILY_DATA = {
       "Guardian World",
     ],
   },
-  'hacker-news': { publisher: "Hacker News", labels: ["Hacker News", "Show HN", "YC News"] },
   'hromadske': { publisher: "Hromadske", labels: ["Hromadske", "Hromadske EN"] },
   'infoq': { publisher: "InfoQ", labels: [] },
   'interfax': { publisher: "Interfax", labels: ["Interfax EN", "Interfax RU"] },
   'iea': { publisher: "International Energy Agency", labels: ["IEA Critical Minerals", "IEA News"] },
   'kitco': { publisher: "Kitco", labels: ["Kitco Gold", "Kitco News"] },
-  'marketwatch': { publisher: "MarketWatch", labels: ["MarketWatch", "MarketWatch Tech"] },
+  'marketwatch': { publisher: "MarketWatch", labels: ["MarketWatch"] },
   'mit-technology-review': {
     publisher: "MIT Technology Review",
     labels: [
       "MIT Tech Review",
-      "MIT Tech Review AI",
     ],
   },
   'nbc-news': { publisher: "NBC News", labels: [] },
   'ndtv': { publisher: "NDTV", labels: ["NDTV", "NDTV India"] },
-  'new-york-times': { publisher: "The New York Times", labels: ["Hard Fork (NYT)", "New York Times World"] },
+  'new-york-times': { publisher: "The New York Times", labels: ["New York Times World"] },
   'news24': { publisher: "News24", labels: [] },
-  'nikkei': { publisher: "Nikkei", labels: ["Nikkei Asia", "Nikkei Tech"] },
+  'nikkei': { publisher: "Nikkei", labels: ["Nikkei Asia"] },
   'nos': { publisher: "NOS Nieuws", labels: [] },
   'npr': { publisher: "NPR News", labels: [] },
-  'pivot': { publisher: "Pivot (Vox Media)", labels: ["Pivot (Vox)", "Pivot Podcast"] },
-  'politico': { publisher: "Politico", labels: ["Politico", "Politico Tech"] },
+  'politico': { publisher: "Politico", labels: ["Politico"] },
   'reuters': {
     publisher: "Reuters",
     labels: [
@@ -177,7 +172,6 @@ const PUBLISHER_FAMILY_DATA = {
     labels: [
       "Seeking Alpha",
       "Seeking Alpha Metals",
-      "Seeking Alpha Tech",
     ],
   },
   // Two titles, one owner: Sightline Media Group (owned by Regent) publishes
@@ -187,10 +181,7 @@ const PUBLISHER_FAMILY_DATA = {
   'techcrunch': {
     publisher: "TechCrunch",
     labels: [
-      "TechCrunch",
       "TechCrunch Layoffs",
-      "TechCrunch Startups",
-      "TechCrunch Venture",
     ],
   },
   'the-hacker-news': { publisher: "The Hacker News", labels: [] },
@@ -201,10 +192,9 @@ const PUBLISHER_FAMILY_DATA = {
       "The Verge",
       "The Verge AI",
       "The Vergecast",
-      "Verge Shows",
     ],
   },
-  'venturebeat': { publisher: "VentureBeat", labels: ["VentureBeat", "VentureBeat AI"] },
+  'venturebeat': { publisher: "VentureBeat", labels: ["VentureBeat AI"] },
   'white-house': { publisher: "The White House", labels: ["White House", "White House Actions"] },
   // #8398: the feed URL is a Dow Jones delivery host
   // (feeds.content.dowjones.io) but item links point at the publisher apex
@@ -222,7 +212,6 @@ const PUBLISHER_FAMILY_DATA = {
   // article host (www1.folha.uol.com.br), so the ingest gate needs the
   // folha.uol.com.br domain. Domain-only, exempted alongside 'wsj'.
   'folha': { publisher: "Folha de S.Paulo", labels: [] },
-  'y-combinator': { publisher: "Y Combinator", labels: ["YC Launches", "Y Combinator Blog"] },
   'yahoo-finance': { publisher: "Yahoo Finance", labels: ["Yahoo Finance", "Yahoo Finance Commodities"] },
   'zdf': { publisher: "ZDF", labels: ["ZDFheute"] },
 };
@@ -253,7 +242,6 @@ const PUBLISHER_FAMILY_DOMAINS = Object.freeze({
   'bloomberg': ['bloomberg.com'],
   'brookings': ['brookings.edu'],
   'business-wire': ['businesswire.com'],
-  'cb-insights': ['cbinsights.com'],
   'chatham-house': ['chathamhouse.org'],
   'cnbc': ['cnbc.com'],
   'csis': ['csis.org'],

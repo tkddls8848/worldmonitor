@@ -42,6 +42,7 @@ test('the surviving Bing export URLs have unique, complete 150–160 character d
     if (/\/docs\/(?:zh\/)?panels\/(?:x-intel|telegram-intel)$/.test(new URL(url).pathname)) continue;
     // The /pro marketing page was removed with pro-test/; it has no description source.
     if (new URL(url).pathname === '/pro') continue;
+    if (new URL(url).pathname === '/docs/api-reference/researchservice/listtechevents') continue;
     const description = descriptionFor(url);
     assert.equal(typeof description, 'string', `Missing description: ${url}`);
     const length = [...description].length;

@@ -478,19 +478,19 @@ describe('webmcp.ts: current API contract', () => {
     const tool = tools.find((candidate) => candidate.name === 'switch_monitor');
     assert.ok(tool);
     assert.deepEqual(tool.inputSchema.properties.monitor.enum, [
-      'full', 'tech', 'finance',  'commodity', 'energy',
+      'full', 'finance',  'commodity', 'energy',
     ]);
     assert.equal(tool.annotations.readOnlyHint, false);
 
     const signal = new AbortController().signal;
-    for (const monitor of ['full', 'tech', 'finance', 'commodity', 'energy', ]) {
+    for (const monitor of ['full', 'finance', 'commodity', 'energy', ]) {
       const result = await tool.execute({ monitor }, { signal });
       assert.equal(result.ok, true, monitor);
       assert.equal(result.destination, monitor, monitor);
       assert.equal(result.context.variant, monitor, monitor);
       assert.equal(result.navigation, monitor === 'full' ? 'none' : 'reload', monitor);
     }
-    assert.deepEqual(switches, ['full', 'tech', 'finance', 'commodity', 'energy', ]);
+    assert.deepEqual(switches, ['full', 'finance', 'commodity', 'energy', ]);
 
     const unknown = await tool.execute({ monitor: 'World' }, {});
     assert.deepEqual(
@@ -498,19 +498,19 @@ describe('webmcp.ts: current API contract', () => {
       { ok: false, status: 'invalid', reason: 'unknown_monitor' },
     );
     assert.equal(unknown.context.variant, 'full');
-    assert.equal(switches.length, 5);
+    assert.equal(switches.length, 4);
 
-    const extra = await tool.execute({ monitor: 'tech', url: 'https://example.invalid' }, {});
+    const extra = await tool.execute({ monitor: 'finance', url: 'https://example.invalid' }, {});
     assert.equal(extra.reason, 'malformed_arguments');
-    assert.equal(switches.length, 5);
+    assert.equal(switches.length, 4);
 
-    const unsupported = await tool.execute({ monitor: 'tech' }, {});
+    const unsupported = await tool.execute({ monitor: 'finance' }, {});
     assert.equal(
       unsupported.reason,
       'target_cancellation_unsupported',
       JSON.stringify(unsupported),
     );
-    assert.equal(switches.length, 5);
+    assert.equal(switches.length, 4);
   });
 
   it('opens settings and alerts without mutating their contents', async () => {
@@ -616,7 +616,7 @@ describe('webmcp.ts: current API contract', () => {
     );
 
     const applied = [];
-    const executeNavigation = async (context, monitor = 'tech') => {
+    const executeNavigation = async (context, monitor = 'finance') => {
       const tools = buildWebMcpTools(createBindings({
         switchMonitor: async (destination) => {
           applied.push(`switch:${destination}`);
@@ -670,8 +670,8 @@ describe('webmcp.ts: current API contract', () => {
         // Navigation envelopes stay at 1,500 even when the catalog ceiling is higher.
         assert.ok(JSON.stringify(result).length <= 1_500, context.variant);
       }
-      assert.equal(switched.destination, 'tech');
-      assert.equal(switched.context.variant, 'tech');
+      assert.equal(switched.destination, 'finance');
+      assert.equal(switched.context.variant, 'finance');
     }
     assert.equal(applied.length, contexts.length * 3);
   });
@@ -877,7 +877,6 @@ describe('webmcp.ts: current API contract', () => {
     ]);
     assert.deepEqual(list.inputSchema.properties.monitor.enum, [
       'world',
-      'tech',
       'finance',
       'commodity',
       'energy',
@@ -922,7 +921,7 @@ describe('webmcp.ts: current API contract', () => {
       ok: false,
       status: 'invalid',
       reason: 'invalid_monitor',
-      message: 'monitor must be one of: world, tech, finance, commodity, energy.',
+      message: 'monitor must be one of: world, finance, commodity, energy.',
     });
     assert.deepEqual(await list.execute({ renderer: 'deck' }), {
       ok: false,
@@ -1625,7 +1624,7 @@ describe('webmcp.ts: current API contract', () => {
     const validInputs = {
       openCountryBrief: { iso2: 'DE' },
       openSearch: {},
-      switch_monitor: { monitor: 'tech' },
+      switch_monitor: { monitor: 'finance' },
       open_settings: {},
       open_alerts: {},
       open_dashboard_panel: { panelId: 'markets' },

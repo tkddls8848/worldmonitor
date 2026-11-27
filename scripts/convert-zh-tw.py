@@ -108,13 +108,6 @@ PHRASE_OVERRIDES = {
 # Applied before PHRASE_OVERRIDES, so an entry can opt out of a global rule.
 # Keyed by catalogue name, then by dotted path (array elements as `key[0]`).
 KEY_OVERRIDES = {
-    "src": {
-        # "IN {{count}} DAYS". OpenCC keeps 后 because 天后 is a word in its own
-        # right (a deity, a diva) — here it is 天 + 后 meaning "days after".
-        "popups.techEvent.days.inDays": {
-            "天后": "天後",
-        },
-    },
 }
 
 # Longest first so a rule can never eat the prefix of a longer one.

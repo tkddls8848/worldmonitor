@@ -22,11 +22,11 @@ let cache: Map<string, unknown>;
 let reads: string[];
 let revoked: string[];
 
-// Two full/europe feeds, and a tech feed no full category places.
+// Two full/europe feeds, and a finance feed no full category places.
 const [EUROPE_A, EUROPE_B] = VARIANT_FEEDS.full!.europe!;
 const fullNames = new Set(Object.values(VARIANT_FEEDS.full!).flat().map(feed => feed.name));
-const TECH_ONLY = Object.values(VARIANT_FEEDS.tech!).flat().find(feed => !fullNames.has(feed.name))!;
-const techCategory = Object.entries(VARIANT_FEEDS.tech!).find(([, feeds]) => feeds.includes(TECH_ONLY))![0];
+const FINANCE_ONLY = Object.values(VARIANT_FEEDS.finance!).flat().find(feed => !fullNames.has(feed.name))!;
+const financeCategory = Object.entries(VARIANT_FEEDS.finance!).find(([, feeds]) => feeds.includes(FINANCE_ONLY))![0];
 
 let serial = 0;
 function feedRow(edition: string, feed: { name: string; url: string }, count: number, extra: Record<string, unknown> = {}) {
@@ -119,12 +119,12 @@ describe('ListSourceItems', () => {
   });
 
   it('reads each source from the first requested edition that places it in the category', async () => {
-    feedRow('tech', TECH_ONLY, 2);
+    feedRow('finance', FINANCE_ONLY, 2);
 
-    const { payload } = await request({ editions: ['full', 'tech'], category: techCategory, sources: [TECH_ONLY.name] });
+    const { payload } = await request({ editions: ['full', 'finance'], category: financeCategory, sources: [FINANCE_ONLY.name] });
 
-    assert.deepEqual(payload.sources.map(s => [s.state, s.edition]), [['found', 'tech']]);
-    assert.deepEqual(reads.filter(key => key.includes('rss:feed:')), [rssFeedCacheKey('tech', TECH_ONLY.url)]);
+    assert.deepEqual(payload.sources.map(s => [s.state, s.edition]), [['found', 'finance']]);
+    assert.deepEqual(reads.filter(key => key.includes('rss:feed:')), [rssFeedCacheKey('finance', FINANCE_ONLY.url)]);
   });
 
   it('reads only sources the requested language\'s digest fetches', async () => {

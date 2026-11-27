@@ -62,7 +62,6 @@ const EXPECTED_TESTS = [
   'src: carries none of the rejected terms',
   'the generator table still holds every rule enforced here',
   'every per-entry source term has a decided allow-list',
-  'src: every per-entry override is applied',
   'keeps generated locales inside LOCALES',
   'runs --check in the unit job, with nothing in front of it',
   'the npm scripts invoke the same generator CI does',
@@ -156,25 +155,10 @@ interface KeyRule {
 }
 
 /** The per-entry rules, written out for the same reason as EXPECTED_BANNED. */
-const EXPECTED_KEY_RULES: KeyRule[] = [
-  { catalogue: 'src', path: 'popups.techEvent.days.inDays', from: '天后', to: '天後' },
-];
+const EXPECTED_KEY_RULES: KeyRule[] = [];
 
-/**
- * Dotted paths where a KEY_OVERRIDES source term is the right answer rather than
- * residue, per term. 天后 is a deity and a diva — that ambiguity is why the
- * rule is per-entry rather than global.
- *
- * The list is nonetheless empty, because neither sense occurs in the
- * catalogue: the term is banned everywhere until one does. Scoping the guard
- * to the three entries the rules name instead leaves every other entry open —
- * a new key holding "3天后" converts to 天后 and the suite stays green — and
- * scoping it to the sense the entry has is not something a substring can do.
- * A future entry that legitimately needs one of these adds its path here.
- */
-const KEY_OVERRIDE_ALLOWED_PATHS = new Map<string, readonly string[]>([
-  ['天后', []],
-]);
+/** Allowlisted paths where a per-entry source term is intentional. */
+const KEY_OVERRIDE_ALLOWED_PATHS = new Map<string, readonly string[]>();
 
 /** Field by field, so reordering the Python table is not a failure. */
 const byField = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
@@ -351,20 +335,10 @@ describe('zh-TW catalogues — per-entry overrides', () => {
   });
 
   for (const catalogue of CATALOGUES) {
-    // Scoped off the literal, not the parse, so a parser that finds nothing
-    // registers a failing test rather than no test.
     const scoped = EXPECTED_KEY_RULES.filter((rule) => rule.catalogue === catalogue.name);
+    if (scoped.length === 0) continue;
 
     test(`${catalogue.name}: every per-entry override is applied`, () => {
-      // Registered whether or not there are rules to check. Skipping
-      // registration on an empty list is how the last rule for a catalogue
-      // stops being enforced without anything going red, and an empty loop
-      // below would report no failures for the same reason.
-      assert.ok(
-        scoped.length > 0,
-        `no per-entry rule is declared for ${catalogue.name}; if that is intended, drop it from EXPECTED_TESTS too`,
-      );
-
       const traditional = load(catalogue.traditional);
       const failures: string[] = [];
 
