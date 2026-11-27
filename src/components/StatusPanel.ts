@@ -26,7 +26,7 @@ const WORLD_FEEDS = new Set([
   'Cyber Threats', 'GPS Jam'
 ]);
 const WORLD_APIS = new Set([
-  'AISStream', 'GDELT Doc', 'EIA', 'USASpending', 'PizzINT', 'FIRMS',
+  'AISStream', 'GDELT Doc', 'EIA', 'PizzINT', 'FIRMS',
   'Global Procurement',
   'Cyber Threats API', 'BIS', 'WTO', 'SupplyChain', 'OFAC', 'Signal Aggregator'
 ]);

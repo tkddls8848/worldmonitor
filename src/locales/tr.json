@@ -458,8 +458,7 @@
     "climateNews": "İklim Haberleri",
     "fx": "Döviz kurları",
     "ukmtoIncidents": "UKMTO olayları",
-    "reservoirLevels": "Stratejik Su Seviyeleri",
-    "gridDisruptionClock": "ABD eyaletlerinde elektrik kesintisi saati"
+    "reservoirLevels": "Stratejik Su Seviyeleri"
   },
   "commands": {
     "prefixes": {
@@ -874,11 +873,8 @@
     "economic": {
       "indicators": "Gostergeler",
       "gov": "Hukumet",
-      "noSpending": "Son devlet ihaleleri yok",
-      "awards": "ihale",
       "noIndicatorData": "Henüz gösterge verisi yok - Federal Rezerv Ekonomik Verileri yükleniyor olabilir",
       "fredKeyMissing": "Federal Rezerv Ekonomik Verileri API anahtarı gerekli. Ekonomik göstergeleri etkinleştirmek için Ayarlar'da ekleyin.",
-      "in": "icinde",
       "centralBanks": "Merkez Bankaları",
       "laborMarket": "İşgücü Piyasası",
       "metroUnemployment": "Metropol İşsizliği",
@@ -898,7 +894,7 @@
         "watchDetail": "Pazar arası koşullar yakından izlenmelidir.",
         "steadyDetail": "Makro koşullar şimdilik istikrarlı."
       },
-      "infoTooltip": "<strong>Makro Stres</strong> Makro göstergeler, devlet harcamaları ve merkez bankası verileri:<ul><li><strong>Göstergeler</strong>: VIX, oranlar, getiri eğrisi, işgücü, enflasyon</li><li><strong>Gov</strong>: Son ABD hükümet sözleşmesi ödülleri</li><li><strong>Merkez Bankaları</strong>: Uluslararası Ödemeler Bankası politika oranları ve döviz kuru verileri</li></ul>"
+      "infoTooltip": "<strong>Makro Stres</strong><ul><li><strong>Göstergeler</strong>: VIX, oranlar, getiri eğrisi, işgücü, enflasyon</li><li><strong>Merkez Bankaları</strong>: Uluslararası Ödemeler Bankası politika oranları ve döviz kuru verileri</li></ul>"
     },
     "supplyChain": {
       "chokepoints": "Darboğazlar",
@@ -2866,57 +2862,6 @@
         "measured": "Ölçüm",
         "sparkline": "36 aylık su seviyesi"
       }
-    },
-    "gridDisruptionClock": {
-      "region": "Eyalet seçin",
-      "unknown": "Bilinmiyor",
-      "customers": "Bildirilen elektriksiz abone sayısı",
-      "lastCustomers": "Son bildirime göre elektriksiz aboneler",
-      "denominatorUnknown": "İzlenen toplam abone sayısı bilinmiyor",
-      "tracked": "{{amount}} abone izleniyor",
-      "dataAge": "Bildirimden bu yana",
-      "minutes": "{{amount}} dk.",
-      "hours": "{{amount}} sa.",
-      "warnings": "Uyarılar",
-      "recovery": "Bildirilen değişiklikler",
-      "decreased": "Bildirilen elektriksiz abone sayısı {{amount}} azaldı",
-      "increased": "Bildirilen elektriksiz abone sayısı {{amount}} arttı",
-      "unchanged": "Bildirilen sayı değişmedi",
-      "since": "şu zamandan bu yana",
-      "peakLoad": "Normal puant yükün %{{percent}} kadarı yeniden karşılanıyor",
-      "noComparison": "Karşılaştırılabilir kesinti sayıları bulunmuyor.",
-      "history": "Son elektriksiz abone sayıları ({{total}})",
-      "priorNotice": "Önceki uyarı",
-      "sources": "İzlenen uyarı kaynakları",
-      "operatorLink": "Şebeke duyuruları için başvurulacak kaynak",
-      "issued": "Yayımlanma",
-      "until": "bitiş",
-      "noActive": "İzlenen kaynaklarda geçerli bir uyarı yok.",
-      "unknownWarnings": "Şu anda bazı uyarı kaynaklarına ulaşılamıyor.",
-      "noObservation": "Güncel abone sayısı ve kapsama bilgisi alınamıyor.",
-      "loadError": "Elektrik kesintisi saati verileri alınamıyor.",
-      "retained": "Yenileme başarısız oldu. Alınan son rapor gösteriliyor.",
-      "phase": {
-        "unknown": "Etkisi bilinmiyor",
-        "monitoring": "İzlemede",
-        "watch": "Dikkat",
-        "disrupted": "Kesinti bildirildi",
-        "recovering": "Elektriğin yeniden verilmeye başlandığı bildirildi",
-        "restored": "Elektriğin geri geldiği bildirildi"
-      },
-      "kind": {
-        "grid": "Şebeke duyurusu",
-        "weather": "Hava durumu uyarısı",
-        "space-weather": "Uzay hava durumu"
-      },
-      "checks": {
-        "available": "Kontrol edildi",
-        "unavailable": "Ulaşılamıyor",
-        "not_monitored": "Doğrudan işletmeciden kontrol edin",
-        "stale": "Son kontrol güncelliğini yitirdi"
-      },
-      "warningAge": "Hâlen geçerli ilk uyarıdan bu yana",
-      "days": "{{amount}} gün"
     },
     "operationalWorksheet": {
       "day": "Day {{day}}",

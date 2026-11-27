@@ -46,10 +46,10 @@ const EXPECTED_VARIANT_DEFAULT_SNAPSHOTS: Record<DashboardVariant, {
   enabled: number;
   sha256: string;
 }> = {
-  full: { total: 98, enabled: 76, sha256: '55cd1af1624f0b4b0e58f5c94b03cfb469dabf25c5301b8d22c8d31f1973b13b' },
+  full: { total: 97, enabled: 76, sha256: 'a79827e5d00b9c0b7e642e775fbf02f98978fec977b0ef2a300b551a987ec5b8' },
   finance: { total: 49, enabled: 45, sha256: '52fd3ce7d841a2a573ba74ee2d9563f9bfab8ad90e8acf8357c971bda6771d69' },
   commodity: { total: 36, enabled: 33, sha256: 'cc9e0b178dec33dff354a1eea95b5b215302fc7ce685b3d92b82a356df6d6bee' },
-  energy: { total: 30, enabled: 27, sha256: '1a5271643c2a74fe662e011b23a170fe5458355da566bc061c25560216b45569' },
+  energy: { total: 29, enabled: 27, sha256: '8357481a08eab013dda9ed9e201f6eb69c7656c8ef080b7c432429251a7dd2c3' },
 };
 
 function makeContext(

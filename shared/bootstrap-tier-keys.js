@@ -23,7 +23,6 @@ export const BOOTSTRAP_CACHE_KEYS = Object.freeze({
   outages: 'infra:outages:v1',
   iodaOutages: 'infra:ioda-outages:v1',
   federalRegister: 'policy:federal-register:v1',
-  gridDisruptionClock: 'infra:grid-disruption-clock:v1',
   serviceStatuses: 'infra:service-statuses:v1',
   ddosAttacks: 'cf:radar:ddos:v1',
   trafficAnomalies: 'cf:radar:traffic-anomalies:v1',
@@ -79,7 +78,6 @@ export const BOOTSTRAP_CACHE_KEYS = Object.freeze({
   liveVideoResolved: 'live-video:resolved:v1',
   crossBorderArrivals: 'displacement:cross-border:v1',
   idmcIduDisplacement: 'displacement:idmc-idu:v1',
-  spending: 'economic:spending:v1',
   gdeltIntel: 'intelligence:gdelt-intel:v1',
   correlationCards: 'correlation:cards-bootstrap:v1',
   crossStraitActivity: 'military:cross-strait-activity-bootstrap:v1',
@@ -168,7 +166,7 @@ const SLOW_KEY_NAMES = new Set([
 const FAST_KEY_NAMES = new Set([
   'earthquakes', 'outages', 'serviceStatuses', 'ddosAttacks', 'trafficAnomalies', 'macroSignalsV2', 'chokepoints',
   'marketQuotes', 'commodityQuotes', 'riskScores', 'insights', 'predictions',
-  'iranEvents', 'temporalAnomalies', 'weatherAlerts', 'spending', 'theaterPosture', 'gdeltIntel',
+  'iranEvents', 'temporalAnomalies', 'weatherAlerts', 'theaterPosture', 'gdeltIntel',
   'shippingRates', 'shippingStress',
 ]);
 
@@ -179,7 +177,6 @@ const ON_DEMAND_KEY_NAMES = new Set([
   'krCustomsTrade',
   'krEcosMacro',
   'fundingStress',
-  'gridDisruptionClock',
   'ukmtoIncidents',
   'cyberThreats',
   'chinaPolicyEvents', 'chinaDecisionSignals',

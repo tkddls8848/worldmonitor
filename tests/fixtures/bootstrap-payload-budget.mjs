@@ -55,7 +55,6 @@ export const FAST_FIRST_PAINT_JUSTIFICATION = Object.freeze({
   iranEvents: 'Iran-attacks layer when the sunset gate is on.',
   temporalAnomalies: 'Consumed into the signal aggregator at startup.',
   weatherAlerts: 'Default-on weather map layer on full desktop and mobile.',
-  spending: 'Economic panel first-wave when the layer/panel is in view.',
   theaterPosture: 'Strategic-posture first-wave.',
   gdeltIntel: 'GDELT intel first-wave.',
   shippingRates: 'Supply-chain first-wave rates.',

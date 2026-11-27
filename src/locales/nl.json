@@ -81,8 +81,7 @@
     "climateNews": "Klimaatnieuws",
     "fx": "Wisselkoersen",
     "ukmtoIncidents": "UKMTO-incidenten",
-    "reservoirLevels": "Strategische waterstanden",
-    "gridDisruptionClock": "Klok voor stroomstoringen in Amerikaanse staten"
+    "reservoirLevels": "Strategische waterstanden"
   },
   "commands": {
     "prefixes": {
@@ -916,11 +915,8 @@
     },
     "economic": {
       "noIndicatorData": "Nog geen indicatorgegevens — Federal Reserve Economic Data wordt mogelijk geladen",
-      "in": "in",
       "indicators": "Indicatoren",
       "gov": "Regering",
-      "noSpending": "Geen recente overheidsprijzen",
-      "awards": "onderscheidingen",
       "centralBanks": "Centrale banken",
       "noBisData": "Gegevens Bank voor Internationale Betalingen tijdelijk onbeschikbaar — wordt opnieuw geprobeerd",
       "policyRate": "Beleidsrente",
@@ -941,7 +937,7 @@
         "watchDetail": "Cross-market-omstandigheden vereisen nauwere monitoring.",
         "steadyDetail": "Macro-omstandigheden zijn voorlopig stabiel."
       },
-      "infoTooltip": "<strong>Macro Stress</strong> Macro-indicatoren, overheidsuitgaven en centralebankengegevens:<ul><li><strong>Indicatoren</strong>: VIX, rentes, rentecurve, arbeidsmarkt, inflatie</li><li><strong>Gov</strong>: Recente aanbestedingen Amerikaanse regering</li><li><strong>Centrale banken</strong>: Bank voor Internationale Betalingen beleidstarieven en wisselkoersgegevens</li></ul>"
+      "infoTooltip": "<strong>Macro Stress</strong><ul><li><strong>Indicatoren</strong>: VIX, rentes, rentecurve, arbeidsmarkt, inflatie</li><li><strong>Centrale banken</strong>: Bank voor Internationale Betalingen beleidstarieven en wisselkoersgegevens</li></ul>"
     },
     "tradePolicy": {
       "tariffs": "Tarieven",
@@ -2489,57 +2485,6 @@
         "measured": "Gemeten",
         "sparkline": "Waterstand over 36 maanden"
       }
-    },
-    "gridDisruptionClock": {
-      "region": "Selecteer een staat",
-      "unknown": "Onbekend",
-      "customers": "Klanten zonder stroom volgens de meldingen",
-      "lastCustomers": "Klanten zonder stroom bij de laatste melding",
-      "denominatorUnknown": "Totaal aantal gevolgde klanten onbekend",
-      "tracked": "{{amount}} klanten gevolgd",
-      "dataAge": "Sinds de melding",
-      "minutes": "{{amount}} min",
-      "hours": "{{amount}} uur",
-      "warnings": "Waarschuwingen",
-      "recovery": "Gemelde veranderingen",
-      "decreased": "{{amount}} minder klanten zonder stroom gemeld",
-      "increased": "{{amount}} meer klanten zonder stroom gemeld",
-      "unchanged": "Gemeld aantal ongewijzigd",
-      "since": "sinds",
-      "peakLoad": "{{percent}}% van de gebruikelijke piekbelasting hersteld",
-      "noComparison": "Vergelijkbare storingscijfers ontbreken.",
-      "history": "Recente meldingen van klanten zonder stroom ({{total}})",
-      "priorNotice": "Eerder gemelde waarschuwing",
-      "sources": "Geraadpleegde waarschuwingsbronnen",
-      "operatorLink": "Raadpleeg voor netmeldingen",
-      "issued": "Uitgegeven",
-      "until": "vervalt",
-      "noActive": "Geen actieve waarschuwing in de gevolgde bronnen.",
-      "unknownWarnings": "Niet alle waarschuwingsbronnen zijn momenteel beschikbaar.",
-      "noObservation": "Het actuele aantal en de dekking zijn onbekend.",
-      "loadError": "Gegevens over stroomstoringen zijn niet beschikbaar.",
-      "retained": "Vernieuwen mislukt. De laatst ontvangen melding wordt getoond.",
-      "phase": {
-        "unknown": "Impact onbekend",
-        "monitoring": "Onder observatie",
-        "watch": "Verhoogde waakzaamheid",
-        "disrupted": "Stroomstoringen gemeld",
-        "recovering": "Herstel in gang gemeld",
-        "restored": "Stroomvoorziening hersteld volgens melding"
-      },
-      "kind": {
-        "grid": "Netmelding",
-        "weather": "Weerwaarschuwing",
-        "space-weather": "Ruimteweer"
-      },
-      "checks": {
-        "available": "Gecontroleerd",
-        "unavailable": "Niet beschikbaar",
-        "not_monitored": "Raadpleeg de netbeheerder",
-        "stale": "Laatste controle verouderd"
-      },
-      "warningAge": "Sinds de eerste nog geldige waarschuwing",
-      "days": "{{amount}} d"
     },
     "operationalWorksheet": {
       "day": "Day {{day}}",

@@ -1,5 +1,4 @@
-// Intel: GDELT topic feeds, security advisories, sanctions pressure,
-// and government spending.
+// Intel: GDELT topic feeds, security advisories, and sanctions pressure.
 import { ATTR } from '../term/screen.mjs';
 import { splitH, splitV } from '../ui/layout.mjs';
 import { bar, kv, panel, segments } from '../ui/widgets.mjs';
@@ -58,10 +57,9 @@ export class IntelView extends PaneView {
     const [topicsR, articlesR] = splitH(left, [16, 'fill']);
     this.renderTopics(ctx, topicsR);
     this.renderArticles(ctx, articlesR);
-    const [sanctionsR, advisoriesR, spendingR] = splitV(right, [9, '55%', 'fill']);
+    const [sanctionsR, advisoriesR] = splitV(right, [9, 'fill']);
     this.renderSanctions(ctx, sanctionsR);
     this.renderAdvisories(ctx, advisoriesR);
-    this.renderSpending(ctx, spendingR);
   }
 
   renderTopics(ctx, r) {
@@ -138,17 +136,4 @@ export class IntelView extends PaneView {
     );
   }
 
-  renderSpending(ctx, r) {
-    const { t } = ctx;
-    const sp = this.data.spending;
-    const inner = panel(ctx, r, { title: 'Government spending', right: sp ? `US awards ${sp.periodStart}→${sp.periodEnd} $${fmtNum(sp.totalAmount, 0)}` : '' });
-    const awards = (sp?.awards || []).slice(0, Math.max(0, inner.h));
-    for (const [index, award] of awards.entries()) {
-      segments(ctx, inner.x, inner.y + index, [
-        { text: `$${fmtNum(award.amount, 0)}`.padStart(9), fg: t.good },
-        { text: ` ${String(award.recipientName || '').slice(0, 28).padEnd(28)} `, fg: t.text },
-        { text: String(award.agency || '').slice(0, Math.max(0, inner.w - 40)), fg: t.dim },
-      ], inner.w, { bg: t.panel });
-    }
-  }
 }

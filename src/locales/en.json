@@ -545,8 +545,7 @@
     "climateNews": "Climate News",
     "fx": "Foreign exchange rates",
     "ukmtoIncidents": "UKMTO Incidents",
-    "reservoirLevels": "Strategic Water Levels",
-    "gridDisruptionClock": "US States Grid Disruption Clock"
+    "reservoirLevels": "Strategic Water Levels"
   },
   "panelVariants": {
     "finance": {
@@ -934,57 +933,6 @@
     }
   },
   "components": {
-    "gridDisruptionClock": {
-      "region": "Select state",
-      "unknown": "Unknown",
-      "customers": "Customers reported without power",
-      "lastCustomers": "Customers out at last report",
-      "denominatorUnknown": "Tracked customer total unknown",
-      "tracked": "{{amount}} customers tracked",
-      "dataAge": "Since report",
-      "warningAge": "Since first active warning",
-      "minutes": "{{amount}} min",
-      "hours": "{{amount}} h",
-      "days": "{{amount}} d",
-      "warnings": "Warnings",
-      "recovery": "Reported changes",
-      "decreased": "{{amount}} fewer reported out",
-      "increased": "{{amount}} more reported out",
-      "unchanged": "Reported count unchanged",
-      "since": "since",
-      "peakLoad": "{{percent}}% of normal peak load restored",
-      "noComparison": "Comparable outage counts unavailable.",
-      "history": "Recent outage counts ({{total}})",
-      "priorNotice": "Previously reported warning",
-      "sources": "Warning source coverage",
-      "operatorLink": "For grid notices, check",
-      "issued": "Issued",
-      "until": "expires",
-      "noActive": "No active warning in monitored sources.",
-      "unknownWarnings": "Current warning coverage is incomplete.",
-      "noObservation": "Current count and coverage unavailable.",
-      "loadError": "Grid disruption clock data is unavailable.",
-      "retained": "Refresh failed. Showing the last received report.",
-      "phase": {
-        "unknown": "Impact unknown",
-        "monitoring": "Monitoring",
-        "watch": "Watch",
-        "disrupted": "Outages reported",
-        "recovering": "Recovery reported",
-        "restored": "Restoration reported"
-      },
-      "kind": {
-        "grid": "Grid notice",
-        "weather": "Weather alert",
-        "space-weather": "Space weather"
-      },
-      "checks": {
-        "available": "Checked",
-        "unavailable": "Unavailable",
-        "not_monitored": "Check operator directly",
-        "stale": "Last check is stale"
-      }
-    },
     "airlineIntel": {
       "infoTooltip": "<strong>Airline Intelligence</strong> Real-time airline operational data: route suspensions, airspace closures, carrier advisories, and emergency diversions. Sourced from aviation authority NOTAMs and carrier bulletins.",
       "noOpsData": "No ops data — loading…",
@@ -1053,9 +1001,6 @@
       "metroUnemployment": "Metro Unemployment",
       "noIndicatorData": "No indicator data yet - Federal Reserve Economic Data may be loading",
       "fredKeyMissing": "Federal Reserve Economic Data API key required. Add it in Settings to enable economic indicators.",
-      "noSpending": "No recent government awards",
-      "awards": "awards",
-      "in": "in",
       "noBisData": "Bank for International Settlements data temporarily unavailable - will retry",
       "policyRate": "Policy Rate",
       "creditToGdp": "Credit relative to economic output",
@@ -1072,7 +1017,7 @@
         "watchDetail": "Cross-market conditions need closer monitoring.",
         "steadyDetail": "Macro conditions are stable for now."
       },
-      "infoTooltip": "<strong>Macro Stress</strong> Macro gauges, government spending, and central bank data:<ul><li><strong>Indicators</strong>: VIX, rates, yield curve, labor, inflation</li><li><strong>Gov</strong>: Recent US government contract awards</li><li><strong>Central Banks</strong>: Bank for International Settlements policy rates and exchange rate data</li></ul>"
+      "infoTooltip": "<strong>Macro Stress</strong><ul><li><strong>Indicators</strong>: VIX, rates, yield curve, labor, inflation</li><li><strong>Central Banks</strong>: Bank for International Settlements policy rates and exchange rate data</li></ul>"
     },
     "oilInventories": {
       "infoTooltip": "<strong>Oil inventories</strong> US commercial crude and strategic reserves, natural gas stocks, European gas storage, and oil stock cover. Sources include the US Energy Information Administration and International Energy Agency."

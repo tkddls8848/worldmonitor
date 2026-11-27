@@ -3,13 +3,11 @@ import type { FredSeries, BisData } from '@/services/economic';
 import { BLS_METRO_IDS } from '@/services/economic';
 import { t } from '@/services/i18n';
 import { escapeHtml, unsafeRawHtml } from '@/utils/sanitize';
-import type { SpendingSummary } from '@/services/usa-spending';
-import { formatAwardAmount, getAwardTypeIcon } from '@/services/usa-spending';
 import { getCSSColor } from '@/utils';
 import { sparkline } from '@/utils/sparkline';
 import type { GetEconomicStressResponse, EconomicStressComponent } from '@/generated/client/worldmonitor/economic/v1/service_client';
 
-type TabId = 'indicators' | 'spending' | 'centralBanks' | 'labor' | 'stress';
+type TabId = 'indicators' | 'centralBanks' | 'labor' | 'stress';
 
 function stressScoreColor(score: number): string {
   if (score < 20) return '#27ae60';
@@ -135,7 +133,6 @@ type FredLoadState = 'loading' | 'ok' | 'error' | 'retrying';
 export class EconomicPanel extends Panel {
   private fredData: FredSeries[] = [];
   private blsData: FredSeries[] = [];
-  private spendingData: SpendingSummary | null = null;
   private bisData: BisData | null = null;
   private stressData: GetEconomicStressResponse | null = null;
   private lastUpdate: Date | null = null;
@@ -181,11 +178,6 @@ export class EconomicPanel extends Panel {
     this.render();
   }
 
-  public updateSpending(data: SpendingSummary): void {
-    this.spendingData = data;
-    this.render();
-  }
-
   public updateBis(data: BisData): void {
     this.bisData = data;
     this.render();
@@ -210,7 +202,6 @@ export class EconomicPanel extends Panel {
   }
 
   private render(): void {
-    const hasSpending = this.spendingData && this.spendingData.awards?.length > 0;
     const hasBis = this.bisData && this.bisData.policyRates?.length > 0;
     const hasBls = this.blsData.length > 0;
 
@@ -219,11 +210,6 @@ export class EconomicPanel extends Panel {
         <button class="panel-tab ${this.activeTab === 'indicators' ? 'active' : ''}" data-tab="indicators">
           ${t('components.economic.indicators')}
         </button>
-        ${hasSpending ? `
-          <button class="panel-tab ${this.activeTab === 'spending' ? 'active' : ''}" data-tab="spending">
-            Recent awards
-          </button>
-        ` : ''}
         ${hasBis ? `
           <button class="panel-tab ${this.activeTab === 'centralBanks' ? 'active' : ''}" data-tab="centralBanks">
             ${t('components.economic.centralBanks')}
@@ -244,9 +230,6 @@ export class EconomicPanel extends Panel {
     switch (this.activeTab) {
       case 'indicators':
         contentHtml = this.renderIndicators();
-        break;
-      case 'spending':
-        contentHtml = this.renderSpending();
         break;
       case 'centralBanks':
         contentHtml = this.renderCentralBanks();
@@ -277,7 +260,6 @@ export class EconomicPanel extends Panel {
   private getSourceLabel(): string {
     switch (this.activeTab) {
       case 'indicators': return 'FRED';
-      case 'spending': return 'USASpending.gov';
       case 'centralBanks': return 'BIS';
       case 'labor': return 'BLS';
       case 'stress': return 'FRED';
@@ -346,36 +328,6 @@ export class EconomicPanel extends Panel {
             </div>
           `).join('')}
         </div>
-      </div>
-    `;
-  }
-
-  private renderSpending(): string {
-    if (!this.spendingData || !this.spendingData.awards?.length) {
-      return `<div class="economic-empty">${t('components.economic.noSpending')}</div>`;
-    }
-
-    const { awards, totalAmount, periodStart, periodEnd } = this.spendingData;
-
-    return `
-      <div class="spending-summary">
-        <div class="spending-total">
-          ${escapeHtml(formatAwardAmount(totalAmount))} ${t('components.economic.in')} ${escapeHtml(String(awards.length))} ${t('components.economic.awards')}
-          <span class="spending-period">${escapeHtml(periodStart)} / ${escapeHtml(periodEnd)}</span>
-        </div>
-      </div>
-      <div class="spending-list">
-        ${awards.slice(0, 8).map(award => `
-          <div class="spending-award">
-            <div class="award-header">
-              <span class="award-icon">${escapeHtml(getAwardTypeIcon(award.awardType))}</span>
-              <span class="award-amount">${escapeHtml(formatAwardAmount(award.amount))}</span>
-            </div>
-            <div class="award-recipient">${escapeHtml(award.recipientName)}</div>
-            <div class="award-agency">${escapeHtml(award.agency)}</div>
-            ${award.description ? `<div class="award-desc">${escapeHtml(award.description.slice(0, 100))}${award.description.length > 100 ? '...' : ''}</div>` : ''}
-          </div>
-        `).join('')}
       </div>
     `;
   }

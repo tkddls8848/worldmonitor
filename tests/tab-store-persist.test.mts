@@ -87,6 +87,7 @@ describe('loadTabsState', () => {
       'earnings-calendar': widget,
       ipo: widget,
       'material-events': widget,
+      'grid-disruption-clock': widget,
       'windy-webcams': widget,
       'live-youtube': widget,
       'pinned-webcams': widget,

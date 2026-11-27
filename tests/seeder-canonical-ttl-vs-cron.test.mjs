@@ -91,7 +91,6 @@ const KNOWN_VIOLATIONS = {
   'Chokepoint-Baselines:seed-chokepoint-baselines.mjs': '400d TTL vs 400d cron (1×) — annual; canonical should outlive 3 cycles',
 
   // ── Other ──
-  'USA-Spending:seed-usa-spending.mjs': '2h TTL vs 1h cron (2×) — borderline',
   'Displacement:seed-displacement-summary.mjs': '24h TTL vs 24h cron (1×)',
 };
 

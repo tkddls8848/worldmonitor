@@ -419,7 +419,6 @@ Macro, markets, and money — official statistics from central banks and statist
 | World Bank Open Data | Development indicators, renewable energy, technology readiness | [data.worldbank.org](https://data.worldbank.org) |
 | BIS Statistics | Central bank policy rates, REER, credit-to-GDP | [stats.bis.org](https://stats.bis.org) |
 | U.S. BLS | US labor statistics | [bls.gov/developers](https://www.bls.gov/developers) |
-| USA Spending | US federal spending and contracts | [api.usaspending.gov](https://api.usaspending.gov) |
 | Global procurement opportunities | US SAM.gov, EU TED, UK Contracts Finder, CanadaBuys, New Zealand GETS, and World Bank procurement notices | [Coverage and freshness](/global-procurement-intelligence) |
 | UN Comtrade | Global merchandise trade flows | [comtradeapi.un.org](https://comtradeapi.un.org) |
 | Moscow Exchange ISS | IMOEX closes for the Russian country stock index, keyless and 15-minute delayed; Yahoo stopped serving MOEX data after 2022 | [iss.moex.com](https://iss.moex.com) |
@@ -433,22 +432,6 @@ Deep dives: [Finance data](/finance-data) · [Premium finance](/premium-finance)
 ## Energy & Commodities
 
 Physical-economy fundamentals for the Energy and Commodity variants: storage, inventories, flows, and prices.
-
-<span id="grid-disruption-clock"></span>
-
-### US States Grid Disruption Clock
-
-The opt-in US States Grid Disruption Clock covers California, Tennessee, Texas, Florida, New York, and Washington. It shows current warnings, customers reported without electricity, and the change between comparable observations. State totals include only reporting providers. A missing state report is unavailable, not zero. The number of customers tracked within each state is unknown. A decrease is a net change in the reported total. It cannot identify individual restorations, prove a connection to a warning, or predict an outage duration.
-
-| Observation | Source and coverage |
-|---|---|
-| Customers without power | State aggregates from [MassOutage (massoutage.com)](https://massoutage.com/), refreshed by WorldMonitor every ten minutes. WorldMonitor calculates reported changes from stored snapshots. [Attribution and upstream terms](https://massoutage.com/terms) · [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
-| California grid notices | Active emergency notices for the California ISO operating footprint. [California ISO](https://www.caiso.com/emergency-notifications) |
-| Severe weather | Selected actual National Weather Service warnings in each state. The affected areas can cover only part of the state. [NWS](https://www.weather.gov/documentation/services-web-api) |
-| Tennessee grid notices | Consult [TVA releases](https://www.tva.com/news-media/releases/press-release-archive) for operator announcements. The clock monitors weather warnings automatically in Tennessee. |
-| Texas, Florida, New York, and Washington grid notices | Operator notices are not monitored. These states show reported outage totals and NWS warnings; an absence of weather warnings does not establish normal grid-operator conditions. |
-
-The clock retains up to 24 hours of observations. Missing, delayed, or stale outage reports interrupt the comparison. Earlier notices can remain visible after they drop out of the active list.
 
 Brent and WTI weekly EIA spot averages use the week-ending date. An observation becomes stale after the next week's scheduled EIA release plus a 24-hour grace for the daily cache refresh. The regular release is Wednesday at 10:30 ET; a US federal holiday on the Monday through Wednesday of that week moves it to Thursday at 12:00 ET, computed for any year. Two checked-in overrides record EIA's departures from that rule, including the December 29, 2025 release at 17:00 ET. All other weeks use the rule. Futures quotes use a 30-minute bound during trading. NYMEX daily breaks, weekends, and the checked-in CME energy holiday sessions for 2026–2027 extend that bound through 30 minutes after trading resumes. A quote already more than 30 minutes old at the halt remains stale. The CME table needs updates when CME revises its calendar; unlisted dates use regular hours, and exceptional closures are not detected automatically.
 

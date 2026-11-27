@@ -254,7 +254,6 @@ const BOOTSTRAP_KEYS = {
   ucdpEvents:        'conflict:ucdp-events:v1',
   ucdpEventsBootstrap: 'conflict:ucdp-events-bootstrap:v1',
   weatherAlerts:     'weather:alerts:v1',
-  spending:          'economic:spending:v1',
   gdeltIntel:        'intelligence:gdelt-intel:v1',
   correlationCards:   'correlation:cards-bootstrap:v1',
   crossStraitActivity: 'military:cross-strait-activity:v1',
@@ -387,7 +386,6 @@ const STANDALONE_KEYS = {
   // Seeded by seed-cross-border-arrivals (#9023); read by the displacement
   // panel and map layer through the on-demand bootstrap URL.
   crossBorderArrivals: BOOTSTRAP_CACHE_KEYS.crossBorderArrivals,
-  gridDisruptionClock: BOOTSTRAP_CACHE_KEYS.gridDisruptionClock,
   humanitarianSummary: 'conflict:humanitarian:v1',
   // #4920 completeness measurement (daily GH Actions publishers) — ops
   // keys: health-monitored but NOT bootstrap-hydrated into page loads.
@@ -745,16 +743,6 @@ const SEED_META = {
     activationKey: 'seed-activated:world-overview:snapshot',
     cutover: { mode: 'activation-marker', fromKey: null, issue: 9, activationKey: 'seed-activated:world-overview:snapshot' } },
   krEcosMacro: { key: 'seed-meta:kr:ecos-macro', maxStaleMin: 2880 },
-  gridDisruptionClock: {
-    key: 'seed-meta:infra:grid-disruption-clock',
-    maxStaleMin: 30,
-    activationKey: 'seed-activated:infra:grid-disruption-clock',
-    cutover: {
-      mode: 'activation-marker', fromKey: null,
-      issue: 10698,
-      activationKey: 'seed-activated:infra:grid-disruption-clock',
-    },
-  },
   ukmtoIncidents: {
     key: 'seed-meta:maritime:ukmto-incidents', maxStaleMin: 75,
     activationKey: 'seed-activated:maritime:ukmto-incidents',
@@ -1223,7 +1211,6 @@ const SEED_META = {
       activationKey: 'seed-activated:weather:imd-cyclone-marine:v2',
     },
   },
-  spending:         { key: 'seed-meta:economic:spending',          maxStaleMin: 120 },
   globalTenders:    { key: 'seed-meta:economic:global-tenders',   maxStaleMin: 180 },
   // Per-source tender health: the producer keeps a failed source's last-good
   // open tenders for 24h (TENDER_SOURCE_RETENTION_MS in scripts/_global-tenders.mjs),
@@ -2462,7 +2449,6 @@ const ON_DEMAND_KEYS = new Set([
   'gpr',
   'oecdCli',
   'worldRelationsAi',
-  'gridDisruptionClock',
   'foodPricesPihps', 'foodPricesPbs', 'foodPricesDa', 'foodPricesCbsl',
   'foodPricesSniim', 'foodPricesGiews', 'foodPricesOnagri',
   'foodPricesNabc',
@@ -2692,7 +2678,6 @@ const ACTIVATION_MARKERS = {
   gpr: SEED_META.gpr.activationKey,
   oecdCli: SEED_META.oecdCli.activationKey,
   worldRelationsAi: SEED_META.worldRelationsAi.activationKey,
-  gridDisruptionClock: SEED_META.gridDisruptionClock.activationKey,
   regionalEnergyPgcb: SEED_META.regionalEnergyPgcb.activationKey,
   regionalEnergyPetrobangla: SEED_META.regionalEnergyPetrobangla.activationKey,
   regionalEnergyNiso: SEED_META.regionalEnergyNiso.activationKey,

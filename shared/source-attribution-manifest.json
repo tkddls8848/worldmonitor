@@ -1220,15 +1220,10 @@
       "host": "api.usaspending.gov",
       "provider": "api.usaspending.gov",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this upstream API/dataset; verify before redistribution",
       "attribution": "Credit api.usaspending.gov and link to the original upstream API/dataset.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/seed-usa-spending.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "api.weather.gc.ca",
@@ -1255,9 +1250,6 @@
       "references": [
         {
           "path": "scripts/_weather-alert-select.mjs"
-        },
-        {
-          "path": "scripts/lib/grid-clock-sources.mjs"
         }
       ]
     },
@@ -6047,15 +6039,10 @@
       "host": "massoutage.com",
       "provider": "massoutage.com",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "MassOutage API and compilations CC BY 4.0. Upstream terms continue to apply.",
       "attribution": "Credit MassOutage (massoutage.com), link to the source and license, and identify the calculated change in state totals.",
-      "status": "reviewed",
-      "references": [
-        {
-          "path": "scripts/lib/grid-clock-sources.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "masterpl.hls.nhkworld.jp",
@@ -11091,15 +11078,10 @@
       "host": "www.caiso.com",
       "provider": "www.caiso.com",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this upstream API/dataset; verify before redistribution",
       "attribution": "Credit www.caiso.com and link to the original upstream API/dataset.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/lib/grid-clock-sources.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "www.caracaschronicles.com",
@@ -14433,9 +14415,6 @@
           "path": "scripts/lib/ecos-macro.mjs"
         },
         {
-          "path": "scripts/lib/grid-clock-sources.mjs"
-        },
-        {
           "path": "scripts/lib/internal-links.mjs"
         },
         {
@@ -14685,15 +14664,10 @@
       "host": "wwwmobile.caiso.com",
       "provider": "wwwmobile.caiso.com",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "California ISO public website terms. Use factual emergency notice types and times.",
       "attribution": "Credit California ISO and link to its emergency notifications.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/lib/grid-clock-sources.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "wwwnc.cdc.gov",

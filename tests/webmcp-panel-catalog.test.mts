@@ -84,7 +84,7 @@ describe('WebMCP dashboard panel catalog', () => {
     assert.ok(!uniqueIds.includes('regionalStartups'));
     assert.ok(uniqueIds.includes('gccNews'));
     assert.ok(disabledWorld.length > 0, 'World registry must include disabled panels');
-    assert.ok(disabledWorld.includes('grid-disruption-clock'));
+    assert.ok(disabledWorld.includes('science'));
     assert.ok(disabledWorld.every((panelId) => worldIds.includes(panelId)));
     assert.deepEqual([...uniqueIds], [...uniqueIds].sort((left, right) => left.localeCompare(right, 'en')));
   });

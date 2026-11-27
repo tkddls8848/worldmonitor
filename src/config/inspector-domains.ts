@@ -154,7 +154,6 @@ const MARKETS_ENERGY_KEYS = new Set<string>([
   'fuel-shortages',
   'energy-disruptions',
   'energy-risk-overview',
-  'grid-disruption-clock',
   'chokepoint-strip',
   'hormuz-tracker',
   'energy-crisis',

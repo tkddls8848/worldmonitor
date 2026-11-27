@@ -527,8 +527,7 @@
     "climateNews": "Klimatske Vijesti",
     "fx": "Tečajevi deviza",
     "ukmtoIncidents": "Incidenti UKMTO-a",
-    "reservoirLevels": "Strateški vodostaji",
-    "gridDisruptionClock": "Sat prekida opskrbe električnom energijom u saveznim državama SAD-a"
+    "reservoirLevels": "Strateški vodostaji"
   },
   "commands": {
     "prefixes": {
@@ -967,9 +966,6 @@
       "metroUnemployment": "Nezaposlenost po Većem Području",
       "noIndicatorData": "Nema podataka indikatori — Federal Reserve Economic Data se možda još učitava",
       "fredKeyMissing": "Potreban je API ključ Federal Reserve Economic Data. Dodajte ga u Postavkama kako biste omogućili gospodarske indikatore.",
-      "noSpending": "Nema nedavnih javnih ugovora",
-      "awards": "ugovori",
-      "in": "u",
       "noBisData": "Podaci Banke za međunarodne poravnane privremeno nisu dostupni — pokušat ćemo ponovno",
       "policyRate": "Stopa Politike",
       "creditToGdp": "Kredit u odnosu na gospodarsku proizvodnju",
@@ -986,7 +982,7 @@
         "watchDetail": "Uvjeti na tržištima trebaju bliže praćenje.",
         "steadyDetail": "Makro uvjeti su trenutno stabilni."
       },
-      "infoTooltip": "<strong>Makroekonomski stres</strong> Makroekonomski pokazatelji, državna potrošnja i podaci središnjih banaka:<ul><li><strong>Indikatori</strong>: VIX, kamatne stope, krivulja prinosa, tržište rada, inflacija</li><li><strong>Vlada</strong>: Nedavna dodjela ugovora američke vlade</li><li><strong>Središnje banke</strong>: Stope politike Banke za međunarodne poravnane i podaci tečaja</li></ul>"
+      "infoTooltip": "<strong>Makroekonomski stres</strong><ul><li><strong>Indikatori</strong>: VIX, kamatne stope, krivulja prinosa, tržište rada, inflacija</li><li><strong>Središnje banke</strong>: Stope politike Banke za međunarodne poravnane i podaci tečaja</li></ul>"
     },
     "oilInventories": {
       "infoTooltip": "<strong>Zalihe nafte</strong> Američke komercijalne rezerve sirove nafte i strateške rezerve, zalihe prirodnog plina, pohrana europskog plina i pokrivanje zaliha naftom. Izvori uključuju Administraciju za energetske informacije SAD-a i Međunarodnu energetsku agenciju."
@@ -2957,57 +2953,6 @@
         "measured": "Izmjereno",
         "sparkline": "Vodostaj kroz 36 mjeseci"
       }
-    },
-    "gridDisruptionClock": {
-      "region": "Odaberite saveznu državu",
-      "unknown": "Nepoznato",
-      "customers": "Korisnici bez struje prema prijavama",
-      "lastCustomers": "Korisnici bez struje prema posljednjem izvješću",
-      "denominatorUnknown": "Ukupan broj praćenih korisnika nije poznat",
-      "tracked": "Broj praćenih korisnika: {{amount}}",
-      "dataAge": "Od izvješća",
-      "minutes": "{{amount}} min.",
-      "hours": "{{amount}} h",
-      "warnings": "Upozorenja",
-      "recovery": "Prijavljene promjene",
-      "decreased": "Prema prijavama, broj korisnika bez struje smanjio se za {{amount}}",
-      "increased": "Prema prijavama, broj korisnika bez struje povećao se za {{amount}}",
-      "unchanged": "Prijavljeni broj nije se promijenio",
-      "since": "od",
-      "peakLoad": "Ponovno je pokriveno {{percent}} % uobičajenog vršnog opterećenja",
-      "noComparison": "Usporedivi podaci o broju korisnika bez struje nisu dostupni.",
-      "history": "Nedavni podaci o broju korisnika bez struje ({{total}})",
-      "priorNotice": "Prethodno objavljeno upozorenje",
-      "sources": "Obuhvat izvora upozorenja",
-      "operatorLink": "Za obavijesti o mreži pogledajte",
-      "issued": "Izdano",
-      "until": "vrijedi do",
-      "noActive": "U praćenim izvorima nema važećeg upozorenja.",
-      "unknownWarnings": "Trenutačni obuhvat upozorenja nije potpun.",
-      "noObservation": "Trenutačni broj i obuhvat nisu dostupni.",
-      "loadError": "Podaci o prekidima opskrbe električnom energijom nisu dostupni.",
-      "retained": "Ažuriranje nije uspjelo. Prikazuje se posljednje primljeno izvješće.",
-      "phase": {
-        "unknown": "Učinak nepoznat",
-        "monitoring": "Praćenje",
-        "watch": "Stanje pripravnosti",
-        "disrupted": "Prijavljeni prekidi",
-        "recovering": "Prijavljena obnova opskrbe u tijeku",
-        "restored": "Prijavljena ponovna uspostava opskrbe"
-      },
-      "kind": {
-        "grid": "Obavijest o elektroenergetskoj mreži",
-        "weather": "Vremensko upozorenje",
-        "space-weather": "Svemirsko vrijeme"
-      },
-      "checks": {
-        "available": "Provjereno",
-        "unavailable": "Nedostupno",
-        "not_monitored": "Provjerite izravno kod operatora",
-        "stale": "Posljednja provjera je zastarjela"
-      },
-      "warningAge": "Od prvog upozorenja koje još vrijedi",
-      "days": "{{amount}} d."
     },
     "export": {},
     "runtimeConfig": {},

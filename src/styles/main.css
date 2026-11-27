@@ -11726,27 +11726,6 @@ button.popup-link {
 }
 
 /* Government Spending */
-.spending-summary {
-  padding: 8px;
-  background: rgba(68, 255, 136, 0.05);
-  border-radius: 4px;
-  margin-bottom: 8px;
-}
-
-.spending-total {
-  font-size: calc(14px * var(--wm-panel-effective-scale, 1));
-  font-weight: 600;
-  color: var(--green-text, var(--green));
-}
-
-.spending-period {
-  display: block;
-  font-size: calc(9px * var(--wm-panel-effective-scale, 1));
-  color: var(--text-dim);
-  font-weight: 400;
-  margin-top: 2px;
-}
-
 .spending-list {
   display: flex;
   flex-direction: column;

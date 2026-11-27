@@ -103,7 +103,6 @@ const KNOWN_VIOLATIONS = new Set([
   'seed-portwatch-disruptions.mjs',
   'seed-portwatch.mjs',
   'seed-spr-policies.mjs',
-  'seed-usa-spending.mjs',
   'seed-weather-alerts.mjs',
   'seed-yield-curve-eu.mjs',
 ]);

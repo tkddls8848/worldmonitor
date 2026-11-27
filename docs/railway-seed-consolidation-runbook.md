@@ -978,7 +978,6 @@ contract needs to be made fully uniform beyond shared `runSeed` users.
 | # | Service Name | Service ID | Original Cron | Also in ais-relay? |
 |---|---|---|---|---|
 | 43 | seed-climate-news | `c4875401-90b5-4738-ba64-6f27496d41a0` | every 30min | Yes (child spawn) |
-| 44 | seed-usa-spending | `f420ca72-c41d-46aa-a151-0315ce45df2d` | hourly | Yes (Spending loop) |
 | 45 | seed-ucdp-events | `6bce510f-d3a9-4252-b896-45aef3521cac` | every 6h | Yes (UCDP loop) |
 | 46 | seed-wb-indicators | `ad9df8af-f27c-41db-a89d-f68f2fab2cf6` | daily | Yes (WB loop) |
 
@@ -1143,9 +1142,9 @@ any red check anywhere strands this service's builds.
 | **Watch paths** | See `scripts/railway-services.json` (exact runtime closure; run `node scripts/audit-railway-watch-paths.mjs`) |
 | **Replaces** | 2 services |
 | **Net savings** | 1 slot |
-| **Members** | CII Economic Stress (1h), Correlation (5min), Market-Alert-Ledger (5min), Cross-Source Signals (15min), US States Grid Disruption Clock (10min), Cross-Strait Activity (3h), China Decision Signals (15min), Regional Snapshots (6h), Tension Evidence (15min) |
+| **Members** | CII Economic Stress (1h), Correlation (5min), Market-Alert-Ledger (5min), Cross-Source Signals (15min), Cross-Strait Activity (3h), China Decision Signals (15min), Regional Snapshots (6h), Tension Evidence (15min) |
 | **Required env** | `JAPAN_MOD_PROXY_URL` or `PROXY_URL` (Cross-Strait Activity's Japan MOD exit; the section declares an any-of group, so either satisfies it and only an environment with neither fails as `CONFIG_ERROR`) |
-| **Note** | US States Grid Disruption Clock polls public outage and warning feeds. Cross-Strait Activity uses bounded MND/Japan MOD requests and a 3h freshness gate. China Decision Signals validates and republishes the public composition from its domain lanes. The bundle enforces a 570s wall-time admission budget so a non-fitting due section defers before Railway's 10-minute container limit. |
+| **Note** | Cross-Strait Activity uses bounded MND/Japan MOD requests and a 3h freshness gate. China Decision Signals validates and republishes the public composition from its domain lanes. The bundle enforces a 570s wall-time admission budget so a non-fitting due section defers before Railway's 10-minute container limit. |
 
 CII Economic Stress reads six existing Redis inputs within a 30s section budget.
 The currency member needs the cleaned `daily90` block from `seed-fx-yoy`, which
@@ -1394,7 +1393,7 @@ last-good observations with an unavailable source status.
 | **Watch paths** | `scripts/**`, `shared/**` |
 | **Replaces** | 4 services |
 | **Net savings** | 3 slots |
-| **Members** | Climate News (30min), USA Spending (hourly), Global Tenders (hourly), UCDP Events (6h), WB Indicators (daily) |
+| **Members** | Climate News (30min), Global Tenders (hourly), UCDP Events (6h), WB Indicators (daily) |
 | **Note** | Existing members are backups for ais-relay inline loops/child spawns; Global Tenders is hosted directly in this bundle. Each seed's freshness gate skips when the canonical data is already fresh. |
 
 The World Bank catalogue uses `IP.TMK.RSCT` and `IP.TMK.NRCT` for resident

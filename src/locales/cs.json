@@ -462,8 +462,7 @@
     "climateNews": "Zprávy o klimatu",
     "fx": "Kurzy zahraniční měny",
     "ukmtoIncidents": "Incidenty UKMTO",
-    "reservoirLevels": "Strategické vodní hladiny",
-    "gridDisruptionClock": "Časomíra výpadků elektřiny ve státech USA"
+    "reservoirLevels": "Strategické vodní hladiny"
   },
   "commands": {
     "prefixes": {
@@ -880,11 +879,8 @@
     "economic": {
       "indicators": "Ukazatele",
       "gov": "Vláda",
-      "noSpending": "Žádné nedávné vládní zakázky",
-      "awards": "zakázky",
       "noIndicatorData": "Zatím žádná data indikátoru – údaje Federálního rezervního systému se pravděpodobně načítají",
       "fredKeyMissing": "Je vyžadován klíč API Federal Reserve Economic Data. Přidejte jej v Nastavení, abyste povolili ekonomické indikátory.",
-      "in": "v",
       "centralBanks": "Centrální banky",
       "laborMarket": "Trh práce",
       "metroUnemployment": "Městská nezaměstnanost",
@@ -904,7 +900,7 @@
         "watchDetail": "Podmínky na trzích vyžadují pozornější sledování.",
         "steadyDetail": "Makroekonomické podmínky jsou nyní stabilní."
       },
-      "infoTooltip": "<strong>Makrostrukturální stres</strong> Makropodíly, vládní výdaje a údaje centrální banky:<ul><li><strong>Indikátory</strong>: VIX, sazby, výnosová křivka, práce, inflace</li><li><strong>Vláda</strong>: Nedávné přidělení vládních kontraktů USA</li><li><strong>Centrální banky</strong>: Údaje Banky pro mezinárodní vypořádání o sazbách měnové politiky a směnných kurzech</li></ul>"
+      "infoTooltip": "<strong>Makrostrukturální stres</strong><ul><li><strong>Indikátory</strong>: VIX, sazby, výnosová křivka, práce, inflace</li><li><strong>Centrální banky</strong>: Údaje Banky pro mezinárodní vypořádání o sazbách měnové politiky a směnných kurzech</li></ul>"
     },
     "supplyChain": {
       "chokepoints": "Úzká hrdla",
@@ -2908,57 +2904,6 @@
         "measured": "Měřeno",
         "sparkline": "Vodní hladina za 36 měsíců"
       }
-    },
-    "gridDisruptionClock": {
-      "region": "Vyberte stát",
-      "unknown": "Neznámý počet",
-      "customers": "Odběratelé bez elektřiny podle hlášení",
-      "lastCustomers": "Odběratelé bez elektřiny při posledním hlášení",
-      "denominatorUnknown": "Celkový počet sledovaných odběratelů není znám",
-      "tracked": "Počet sledovaných odběratelů: {{amount}}",
-      "dataAge": "Od hlášení",
-      "minutes": "{{amount}} min.",
-      "hours": "{{amount}} hod.",
-      "warnings": "Výstrahy",
-      "recovery": "Hlášené změny",
-      "decreased": "Hlášený počet odběratelů bez elektřiny klesl o {{amount}}",
-      "increased": "Hlášený počet odběratelů bez elektřiny vzrostl o {{amount}}",
-      "unchanged": "Hlášený počet se nezměnil",
-      "since": "od",
-      "peakLoad": "Obnoveno {{percent}} % běžného špičkového zatížení",
-      "noComparison": "Srovnatelné počty odběratelů bez elektřiny nejsou k dispozici.",
-      "history": "Poslední počty odběratelů bez elektřiny ({{total}})",
-      "priorNotice": "Dříve hlášená výstraha",
-      "sources": "Pokrytí zdrojů výstrah",
-      "operatorLink": "Oznámení o síti najdete u",
-      "issued": "Vydáno",
-      "until": "platí do",
-      "noActive": "Ve sledovaných zdrojích není žádná platná výstraha.",
-      "unknownWarnings": "Současné pokrytí výstrah není úplné.",
-      "noObservation": "Současný počet ani rozsah pokrytí nejsou k dispozici.",
-      "loadError": "Údaje o výpadcích elektřiny nejsou k dispozici.",
-      "retained": "Aktualizace se nezdařila. Zobrazuje se poslední přijaté hlášení.",
-      "phase": {
-        "unknown": "Dopad není znám",
-        "monitoring": "Sledování",
-        "watch": "Zvýšená pozornost",
-        "disrupted": "Hlášeny výpadky",
-        "recovering": "Hlášena probíhající obnova",
-        "restored": "Hlášeno obnovení dodávek"
-      },
-      "kind": {
-        "grid": "Oznámení o elektrizační soustavě",
-        "weather": "Meteorologická výstraha",
-        "space-weather": "Kosmické počasí"
-      },
-      "checks": {
-        "available": "Ověřeno",
-        "unavailable": "Nedostupné",
-        "not_monitored": "Ověřte přímo u provozovatele",
-        "stale": "Poslední kontrola již není aktuální"
-      },
-      "warningAge": "Od první dosud platné výstrahy",
-      "days": "{{amount}} d."
     },
     "operationalWorksheet": {
       "day": "Day {{day}}",

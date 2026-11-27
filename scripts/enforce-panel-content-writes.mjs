@@ -168,7 +168,7 @@ export const GUARD_EXEMPT_FILES = new Set(['src/components/Panel.ts']);
  * #6557. A renamed base class or a moved directory would otherwise silently
  * shrink the population to zero and let every assertion pass vacuously.
  */
-export const MIN_PANEL_SUBCLASS_FILES = 87;
+export const MIN_PANEL_SUBCLASS_FILES = 86;
 
 // `stripComments` and `collectTsFiles` moved to ./lib/source-scan.mjs in #7833.
 // The copy that lived here ran its block-comment regex over RAW source, so a

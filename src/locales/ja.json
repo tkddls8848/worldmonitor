@@ -456,8 +456,7 @@
     "climateNews": "気候ニュース",
     "fx": "外国為替レート",
     "ukmtoIncidents": "UKMTO事案",
-    "reservoirLevels": "戦略的水位",
-    "gridDisruptionClock": "米国各州の停電時計"
+    "reservoirLevels": "戦略的水位"
   },
   "commands": {
     "prefixes": {
@@ -871,11 +870,8 @@
     "economic": {
       "indicators": "指標",
       "gov": "政府",
-      "noSpending": "最近の政府支出なし",
-      "awards": "件の支出",
       "noIndicatorData": "インジケーターデータがまだありません - 米国連邦準備制度経済データが読み込み中の可能性があります",
       "fredKeyMissing": "米国連邦準備制度経済データAPIキーが必要です。設定に追加して経済インジケーターを有効にしてください。",
-      "in": "内",
       "centralBanks": "中央銀行",
       "laborMarket": "労働市場",
       "metroUnemployment": "都市圏失業率",
@@ -895,7 +891,7 @@
         "watchDetail": "市場間の状況をより注視する必要があります。",
         "steadyDetail": "マクロ環境は現在のところ安定しています。"
       },
-      "infoTooltip": "<strong>マクロ・ストレス</strong> マクロ指標、政府支出、中央銀行データ：<ul><li><strong>インジケーター</strong>：VIX、金利、イールドカーブ、労働、インフレ</li><li><strong>政府</strong>：最近の米国政府契約受託</li><li><strong>中央銀行</strong>：国際決済銀行の政策金利および為替レートデータ</li></ul>"
+      "infoTooltip": "<strong>マクロ・ストレス</strong><ul><li><strong>インジケーター</strong>：VIX、金利、イールドカーブ、労働、インフレ</li><li><strong>中央銀行</strong>：国際決済銀行の政策金利および為替レートデータ</li></ul>"
     },
     "supplyChain": {
       "chokepoints": "チョークポイント",
@@ -2845,57 +2841,6 @@
         "measured": "測定日",
         "sparkline": "36か月の水位"
       }
-    },
-    "gridDisruptionClock": {
-      "region": "州を選択",
-      "unknown": "不明",
-      "customers": "停電が報告された契約件数",
-      "lastCustomers": "前回報告時の停電契約件数",
-      "denominatorUnknown": "集計対象の総契約件数は不明",
-      "tracked": "集計対象の契約件数：{{amount}} 件",
-      "dataAge": "報告からの経過時間",
-      "minutes": "{{amount}} 分",
-      "hours": "{{amount}} 時間",
-      "warnings": "警報",
-      "recovery": "報告された変化",
-      "decreased": "報告された停電契約件数が {{amount}} 件減少",
-      "increased": "報告された停電契約件数が {{amount}} 件増加",
-      "unchanged": "報告された件数に変動なし",
-      "since": "比較時点",
-      "peakLoad": "通常のピーク負荷の {{percent}}% まで復旧",
-      "noComparison": "比較可能な停電件数はありません。",
-      "history": "直近の停電件数（記録数：{{total}}）",
-      "priorNotice": "以前に報告された警報",
-      "sources": "警報の情報源と確認状況",
-      "operatorLink": "電力網のお知らせはこちら：",
-      "issued": "発表",
-      "until": "有効期限",
-      "noActive": "確認対象の情報源に有効な警報はありません。",
-      "unknownWarnings": "現在、一部の警報情報を確認できていません。",
-      "noObservation": "現在の件数と集計範囲は不明です。",
-      "loadError": "停電時計のデータを取得できません。",
-      "retained": "更新できませんでした。最後に受信した報告を表示しています。",
-      "phase": {
-        "unknown": "影響不明",
-        "monitoring": "監視中",
-        "watch": "警戒",
-        "disrupted": "停電の報告あり",
-        "recovering": "復旧作業中との報告",
-        "restored": "復旧の報告あり"
-      },
-      "kind": {
-        "grid": "電力網のお知らせ",
-        "weather": "気象警報",
-        "space-weather": "宇宙天気"
-      },
-      "checks": {
-        "available": "確認済み",
-        "unavailable": "利用不可",
-        "not_monitored": "事業者の発表を直接確認",
-        "stale": "最終確認から時間が経過"
-      },
-      "warningAge": "現在有効な最初の警報からの経過時間",
-      "days": "{{amount}} 日"
     },
     "operationalWorksheet": {
       "day": "Day {{day}}",

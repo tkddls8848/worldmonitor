@@ -8,7 +8,7 @@ import { ViewportHydrationLedger } from '../src/app/viewport-hydration-ledger.ts
 // Scrolling the panel grid fires a viewport loadAllData() pass every frame.
 // Measured on a production build against live data: one scroll down and back
 // after every panel had loaded still fired 34 API requests (PizzINT x10,
-// temporal anomalies x10, ACLED, spending, CBR rates, forecasts, ...), and the
+// temporal anomalies x10, ACLED, CBR rates, forecasts, ...), and the
 // re-processing pushed scroll frames past 100 ms at 4x CPU throttling.
 // The ledger makes a viewport pass load only panels no pass has loaded yet.
 

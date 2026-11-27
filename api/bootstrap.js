@@ -65,10 +65,6 @@ const ON_DEMAND_CACHE_PROFILES = {
     browser: 'max-age=60, stale-while-revalidate=60, stale-if-error=300',
     cdn: 'public, s-maxage=600, stale-while-revalidate=60, stale-if-error=300',
   },
-  gridDisruptionClock: {
-    browser: 'max-age=60, stale-while-revalidate=60, stale-if-error=60',
-    cdn: 'public, s-maxage=300, stale-while-revalidate=60, stale-if-error=120',
-  },
   ukmtoIncidents: {
     browser: 'max-age=60, stale-while-revalidate=60, stale-if-error=60',
     cdn: 'public, s-maxage=60, stale-while-revalidate=60, stale-if-error=60',

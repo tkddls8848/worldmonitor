@@ -69,7 +69,6 @@ import {
   fetchPizzIntStatus,
   fetchGdeltTensions,
   fetchNaturalEvents,
-  fetchRecentAwards,
   fetchSanctionsPressure,
   fetchRadiationWatch,
 } from '@/services';
@@ -1085,7 +1084,6 @@ export class DataLoaderManager implements AppModule {
       if (SITE_VARIANT === 'full' && (this.viewportHydration.claim('pizzint') || !viewportOnly)) tasks.push({ name: 'pizzint', task: () => runGuarded('pizzint', () => this.loadPizzInt()) });
       if (shouldLoad('economic')) {
         tasks.push({ name: 'fred', task: () => runGuarded('fred', () => this.loadFredData()) });
-        tasks.push({ name: 'spending', task: () => runGuarded('spending', () => this.loadGovernmentSpending()) });
         tasks.push({ name: 'bis', task: () => runGuarded('bis', () => this.loadBisData()) });
         tasks.push({ name: 'bls', task: () => runGuarded('bls', () => this.loadBlsData()) });
       }
@@ -3696,24 +3694,6 @@ export class DataLoaderManager implements AppModule {
       this.callPanel('energy-complex', 'showError', undefined, () => void this.loadOilAnalytics());
       this.ctx.statusPanel?.updateApi('EIA', { status: 'error' });
       dataFreshness.recordError('oil', String(e));
-    }
-  }
-
-  async loadGovernmentSpending(): Promise<void> {
-    const economicPanel = this.ctx.panels['economic'] as EconomicPanel;
-    try {
-      const data = await fetchRecentAwards();
-      economicPanel?.updateSpending(data);
-      this.ctx.statusPanel?.updateApi('USASpending', { status: data.awards?.length > 0 ? 'ok' : 'error' });
-      if (data.awards?.length > 0) {
-        dataFreshness.recordUpdate('spending', data.awards.length);
-      } else {
-        dataFreshness.recordError('spending', 'No awards returned');
-      }
-    } catch (e) {
-      console.error('[App] Government spending failed:', e);
-      this.ctx.statusPanel?.updateApi('USASpending', { status: 'error' });
-      dataFreshness.recordError('spending', String(e));
     }
   }
 

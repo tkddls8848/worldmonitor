@@ -12,7 +12,7 @@ The inventory is **generated, not hand-written**: `scripts/source-attribution.mj
 ## Observed Source Inventory
 
 {/* BEGIN GENERATED SOURCE ATTRIBUTION */}
-This generated inventory covers **761 active source hosts** representing **741 active providers** (**361 structured/API**, **381 feed**, and **30 operational-status** hosts). It is derived from source declarations in `scripts/`, `server/`, `api/`, and `src/`. Each row shows the configured provider identity and where the source is referenced. Syndication transports such as FeedBurner and Google News remain listed as hosts and are not counted as publishers.
+This generated inventory covers **757 active source hosts** representing **737 active providers** (**357 structured/API**, **381 feed**, and **30 operational-status** hosts). It is derived from source declarations in `scripts/`, `server/`, `api/`, and `src/`. Each row shows the configured provider identity and where the source is referenced. Syndication transports such as FeedBurner and Google News remain listed as hosts and are not counted as publishers.
 
 | Provider | Observed surface |
 | --- | --- |
@@ -85,8 +85,8 @@ This generated inventory covers **761 active source hosts** representing **741 a
 | api.typesafe.ai (api.typesafe.ai) | structured — scripts/lib/internal-links.mjs |
 | api.tzevaadom.co.il (api.tzevaadom.co.il) | structured — scripts/personal-providers.cjs |
 | api.unhcr.org (api.unhcr.org) | structured — scripts/seed-displacement-summary.mjs |
-| api.usaspending.gov (api.usaspending.gov) | structured — scripts/seed-usa-spending.mjs |
-| api.weather.gov (api.weather.gov) | structured — scripts/_weather-alert-select.mjs, scripts/lib/grid-clock-sources.mjs |
+| api.usaspending.gov (api.usaspending.gov) | Excluded / candidate — No current fetch observed |
+| api.weather.gov (api.weather.gov) | structured — scripts/_weather-alert-select.mjs |
 | api.wto.org (api.wto.org) | structured — scripts/seed-supply-chain-trade.mjs, server/worldmonitor/trade/v1/_shared.ts |
 | apis.data.go.kr (apis.data.go.kr) | structured — scripts/seed-kr-customs-trade.mjs |
 | apnews.com (apnews.com) | feed — shared/news-catalog.json |
@@ -464,7 +464,7 @@ This generated inventory covers **761 active source hosts** representing **741 a
 | mapservices.weather.noaa.gov (mapservices.weather.noaa.gov) | structured — scripts/seed-natural-events.mjs |
 | markets.newyorkfed.org (markets.newyorkfed.org) | structured — scripts/_funding-stress.mjs |
 | marketwatch.com (marketwatch.com) | feed — shared/news-catalog.json |
-| massoutage.com (massoutage.com) | structured — scripts/lib/grid-clock-sources.mjs |
+| massoutage.com (massoutage.com) | Excluded / candidate — No current fetch observed |
 | masterpl.hls.nhkworld.jp (masterpl.hls.nhkworld.jp) | feed — src/config/live-video-sources.ts |
 | me.liveuamap.com (me.liveuamap.com) | structured — scripts/comparison-shortlist.mjs |
 | meduza.io (meduza.io) | feed — shared/news-catalog.json |
@@ -807,7 +807,7 @@ This generated inventory covers **761 active source hosts** representing **741 a
 | World Monitor hosted API (api.worldmonitor.app) | structured — scripts/openapi-inject-servers.mjs, scripts/validate-rss-feeds.mjs, scripts/validate-seed-migration.mjs, src/services/runtime.ts |
 | World Monitor proxy (proxy.worldmonitor.app) | structured — src/utils/proxy.ts |
 | World Monitor web app (worldmonitor.app) | structured — api/miit-news.js, api/reverse-geocode.js, scripts/_country-stock-index-moex.mjs, scripts/_upstash-rest.mjs, +26 more |
-| World Monitor web app (www.worldmonitor.app) | structured — api/_cors.js, api/not-found.ts, scripts/build-accuracy-page.mjs, scripts/build-open-data-chokepoints.mjs, +37 more |
+| World Monitor web app (www.worldmonitor.app) | structured — api/_cors.js, api/not-found.ts, scripts/build-accuracy-page.mjs, scripts/build-open-data-chokepoints.mjs, +36 more |
 | WorldMonitor test origin (worldmonitor.invalid) | structured — api/_md-url-twin.ts, src/shared/public-rpc-cache.ts, src/utils/dom-utils.ts |
 | worldmonitor.mintlify.dev (worldmonitor.mintlify.dev) | structured — src/config/docs-locale-seo.ts |
 | ws.cso.ie (ws.cso.ie) | structured — scripts/lib/food-prices-adapters/cso.mjs |
@@ -842,7 +842,7 @@ This generated inventory covers **761 active source hosts** representing **741 a
 | www.bloomberg.com (www.bloomberg.com) | feed — src/config/live-video-sources.ts |
 | www.brasilparalelo.com.br (www.brasilparalelo.com.br) | feed — shared/news-catalog.json |
 | www.cac.gov.cn (www.cac.gov.cn) | structured — scripts/china-policy/adapters.mjs |
-| www.caiso.com (www.caiso.com) | structured — scripts/lib/grid-clock-sources.mjs |
+| www.caiso.com (www.caiso.com) | Excluded / candidate — No current fetch observed |
 | www.carbonbrief.org (www.carbonbrief.org) | structured — scripts/seed-climate-news.mjs |
 | www.cbc.ca (www.cbc.ca) | feed — shared/news-catalog.json |
 | www.cbinsights.com (www.cbinsights.com) | Excluded / candidate — No current fetch observed |
@@ -1072,7 +1072,7 @@ This generated inventory covers **761 active source hosts** representing **741 a
 | www.zera.co.zw (www.zera.co.zw) | structured — scripts/lib/regional-fuel-feeds.mjs, scripts/shared/regional-energy-feeds.json |
 | www.zoomstatus.com (www.zoomstatus.com) | operational-status — server/worldmonitor/infrastructure/v1/list-service-statuses.ts |
 | www2.moeaea.gov.tw (www2.moeaea.gov.tw) | structured — scripts/seed-fuel-prices.mjs |
-| wwwmobile.caiso.com (wwwmobile.caiso.com) | structured — scripts/lib/grid-clock-sources.mjs |
+| wwwmobile.caiso.com (wwwmobile.caiso.com) | Excluded / candidate — No current fetch observed |
 | wwwnc.cdc.gov (wwwnc.cdc.gov) | structured — scripts/seed-security-advisories.mjs |
 | X API (api.x.com) | Excluded / candidate — No current fetch observed |
 | x.com (x.com) | structured — scripts/comparison-shortlist.mjs |

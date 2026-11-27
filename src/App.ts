@@ -80,7 +80,6 @@ import type { StorageFacilityMapPanel } from '@/components/StorageFacilityMapPan
 import type { FuelShortagePanel } from '@/components/FuelShortagePanel';
 import type { EnergyDisruptionsPanel } from '@/components/EnergyDisruptionsPanel';
 import type { EnergyRiskOverviewPanel } from '@/components/EnergyRiskOverviewPanel';
-import type { GridDisruptionClockPanel } from '@/components/GridDisruptionClockPanel';
 import type { ChokepointStripPanel } from '@/components/ChokepointStripPanel';
 import type { ClimateNewsPanel } from '@/components/ClimateNewsPanel';
 import type { ConsumerPricesPanel } from '@/components/ConsumerPricesPanel';
@@ -592,10 +591,6 @@ export class App {
       const panel = this.state.panels['energy-risk-overview'] as EnergyRiskOverviewPanel | undefined;
       if (panel) primeTask('energy-risk-overview', () => panel.fetchData());
     }
-    if (shouldPrime('grid-disruption-clock')) {
-      const panel = this.state.panels['grid-disruption-clock'] as GridDisruptionClockPanel | undefined;
-      if (panel) primeTask('grid-disruption-clock', () => panel.fetchData());
-    }
     if (shouldPrime('chokepoint-strip')) {
       // Without this primeTask entry the panel mounts via panel-layout.ts and
       // ENERGY_PANELS but its constructor only calls showLoading() — fetchData()
@@ -659,7 +654,6 @@ export class App {
     }
     if (shouldPrime('economic')) {
       primeTask('fred', () => this.dataLoader.loadFredData());
-      primeTask('spending', () => this.dataLoader.loadGovernmentSpending());
       primeTask('bis', () => this.dataLoader.loadBisData());
     }
     if (shouldPrime('global-procurement')) {
@@ -2890,8 +2884,7 @@ export class App {
         { name: 'pipelineRegistries', fn: () => this.dataLoader.loadPipelineRegistries({ refresh: true }), intervalMs: REFRESH_INTERVALS.pipelineStatus, condition: () => !!this.state.mapLayers.pipelines },
         { name: 'storageFacilities', fn: () => this.dataLoader.loadStorageFacilities({ refresh: true }), intervalMs: REFRESH_INTERVALS.storageFacilityMap, condition: () => !!this.state.mapLayers.storageFacilities },
         { name: 'fred', fn: () => this.dataLoader.loadFredData(), intervalMs: REFRESH_INTERVALS.fred, condition: () => this.isPanelNearViewport('economic') },
-        { name: 'spending', fn: () => this.dataLoader.loadGovernmentSpending(), intervalMs: REFRESH_INTERVALS.spending, condition: () => this.isPanelNearViewport('economic') },
-        { name: 'global-tenders', fn: () => this.dataLoader.loadGlobalTenders(), intervalMs: REFRESH_INTERVALS.spending, condition: () => this.isPanelNearViewport('global-procurement') },
+        { name: 'global-tenders', fn: () => this.dataLoader.loadGlobalTenders(), intervalMs: REFRESH_INTERVALS.globalTenders, condition: () => this.isPanelNearViewport('global-procurement') },
         { name: 'bis', fn: () => this.dataLoader.loadBisData(), intervalMs: REFRESH_INTERVALS.bis, condition: () => this.isPanelNearViewport('economic') },
         { name: 'oil', fn: () => this.dataLoader.loadOilAnalytics(), intervalMs: REFRESH_INTERVALS.oil, condition: () => this.isPanelNearViewport('energy-complex') },
         // inFlight key 'fires' matches the hydration loader and loadDataForLayer
@@ -3076,12 +3069,6 @@ export class App {
       () => this.isPanelNearViewport('energy-risk-overview')
     );
 
-    this.refreshScheduler.scheduleRefresh(
-      'grid-disruption-clock',
-      () => (this.state.panels['grid-disruption-clock'] as GridDisruptionClockPanel).fetchData(),
-      REFRESH_INTERVALS.gridDisruptionClock,
-      () => this.isPanelNearViewport('grid-disruption-clock'),
-    );
 
     this.refreshScheduler.scheduleRefresh(
       'chokepoint-strip',

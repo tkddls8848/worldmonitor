@@ -15,7 +15,6 @@ export type DataSourceId =
   | 'weather'
   | 'economic'
   | 'oil'
-  | 'spending'
   | 'firms'
   | 'acled_conflict'
   | 'ucdp'

@@ -33,7 +33,6 @@ export * from './geo-convergence';
 export * from './country-instability';
 export * from './infrastructure-cascade';
 export * from './data-freshness';
-export * from './usa-spending';
 export { generateSummary, translateText } from './summarization';
 export * from './cached-theater-posture';
 // trade: not re-exported (#4571) — eager service client; kept tree-shakeable out of main.js

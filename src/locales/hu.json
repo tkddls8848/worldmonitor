@@ -525,8 +525,7 @@
     "climateNews": "Klíma hírek",
     "fx": "Devizaárfolyamok",
     "ukmtoIncidents": "UKMTO-események",
-    "reservoirLevels": "Stratégiai vízszintek",
-    "gridDisruptionClock": "Áramkimaradások időmérője az USA államaiban"
+    "reservoirLevels": "Stratégiai vízszintek"
   },
   "commands": {
     "prefixes": {
@@ -961,9 +960,6 @@
       "metroUnemployment": "Nagyvárosi munkanélküliség",
       "noIndicatorData": "Még nincs mutató adat - a Federal Reserve Gazdasági Adatok betöltődnek",
       "fredKeyMissing": "Federal Reserve Gazdasági Adatok API-kulcs szükséges. Adja hozzá a Beállításokban az ekonomikai mutatók engedélyezéséhez.",
-      "noSpending": "Nincsenek közelmúltbeli kormányzati szerződések",
-      "awards": "szerződés",
-      "in": "itt:",
       "noBisData": "A Bank for International Settlements adatai átmenetileg nem érhetők el - majd megpróbálja újra",
       "policyRate": "Alapkamat",
       "creditToGdp": "Hitel a gazdasági kibocsátáshoz viszonyítva",
@@ -980,7 +976,7 @@
         "watchDetail": "A piacok közötti feltételek alaposabb nyomon követést igényelnek.",
         "steadyDetail": "A makrogazdasági feltételek most stabilak."
       },
-      "infoTooltip": "<strong>Makro Stressz</strong> Makro mérések, kormányzati kiadások és jegybanki adatok:<ul><li><strong>Mutatók</strong>: VIX, ráták, hozamgörbe, munkaerőpiac, infláció</li><li><strong>Kormányzat</strong>: Legutóbbi amerikai kormányzati szerződésmegbízások</li><li><strong>Jegybankok</strong>: Bank for International Settlements irányadó ráták és árfolyamadatok</li></ul>"
+      "infoTooltip": "<strong>Makro Stressz</strong><ul><li><strong>Mutatók</strong>: VIX, ráták, hozamgörbe, munkaerőpiac, infláció</li><li><strong>Jegybankok</strong>: Bank for International Settlements irányadó ráták és árfolyamadatok</li></ul>"
     },
     "oilInventories": {
       "infoTooltip": "<strong>Olajkészletek</strong> Amerikai kereskedelmi krudolaj és stratégiai készletek, gázkészletek, európai gáztárolás és olajtakarmány-fedezet. Az adatok az US Energy Information Administration és a Nemzetközi Energiaügynökség forrásaiból származnak."
@@ -2933,57 +2929,6 @@
         "measured": "Mérés ideje",
         "sparkline": "Vízszint 36 hónap alatt"
       }
-    },
-    "gridDisruptionClock": {
-      "region": "Válasszon tagállamot",
-      "unknown": "Ismeretlen",
-      "customers": "A jelentések szerint áram nélkül maradt fogyasztók",
-      "lastCustomers": "Áram nélkül maradt fogyasztók az utolsó jelentéskor",
-      "denominatorUnknown": "A megfigyelt fogyasztók teljes száma ismeretlen",
-      "tracked": "Megfigyelt fogyasztók száma: {{amount}}",
-      "dataAge": "A jelentés óta",
-      "minutes": "{{amount}} perc",
-      "hours": "{{amount}} óra",
-      "warnings": "Figyelmeztetések",
-      "recovery": "Jelentett változások",
-      "decreased": "A jelentett adatok szerint {{amount}} fogyasztóval kevesebb van áram nélkül",
-      "increased": "A jelentett adatok szerint {{amount}} fogyasztóval több van áram nélkül",
-      "unchanged": "A jelentett létszám változatlan",
-      "since": "ettől az időponttól",
-      "peakLoad": "A szokásos csúcsterhelés {{percent}}%-át ismét ki tudják szolgálni",
-      "noComparison": "Nincsenek összehasonlítható adatok az áram nélkül maradt fogyasztók számáról.",
-      "history": "Az áram nélkül maradt fogyasztók száma a legutóbbi jelentésekben ({{total}})",
-      "priorNotice": "Korábban kiadott figyelmeztetés",
-      "sources": "A figyelmeztetési források lefedettsége",
-      "operatorLink": "A hálózati közlemények itt érhetők el:",
-      "issued": "Kiadva",
-      "until": "érvényes eddig",
-      "noActive": "A figyelt forrásokban nincs érvényes figyelmeztetés.",
-      "unknownWarnings": "A figyelmeztetések lefedettsége jelenleg hiányos.",
-      "noObservation": "Az aktuális szám és a lefedettség nem ismert.",
-      "loadError": "Az áramkimaradásokról jelenleg nincsenek adatok.",
-      "retained": "A frissítés sikertelen. Az utolsó beérkezett jelentés látható.",
-      "phase": {
-        "unknown": "A hatás ismeretlen",
-        "monitoring": "Megfigyelés",
-        "watch": "Készenlét",
-        "disrupted": "Áramkimaradást jelentettek",
-        "recovering": "Folyamatban lévő helyreállítást jelentettek",
-        "restored": "Az ellátás helyreállítását jelentették"
-      },
-      "kind": {
-        "grid": "Hálózati közlemény",
-        "weather": "Időjárási riasztás",
-        "space-weather": "Űridőjárás"
-      },
-      "checks": {
-        "available": "Ellenőrizve",
-        "unavailable": "Nem érhető el",
-        "not_monitored": "Tájékozódjon közvetlenül a hálózatüzemeltetőnél",
-        "stale": "A legutóbbi ellenőrzés elavult"
-      },
-      "warningAge": "Az első, még érvényes figyelmeztetés óta",
-      "days": "{{amount}} nap"
     },
     "operationalWorksheet": {
       "day": "Day {{day}}",

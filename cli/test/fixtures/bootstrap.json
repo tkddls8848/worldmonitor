@@ -1450,50 +1450,6 @@
     }
    ]
   },
-  "spending": {
-   "awards": [
-    {
-     "id": "DEAC5207NA27344",
-     "recipientName": "LAWRENCE LIVERMORE NATIONAL SECURITY, LLC",
-     "amount": 41607031193.88,
-     "agency": "Department of Energy",
-     "description": "TAS::89 0240::TAS THIS PERFORMANCE-BASED MANAGEMENT CONTRACT (PBMC) IS FOR THE MANAGEMENT AND OPERATION OF THE LAWRENCE LIVERMORE NATIONAL LABORATORY (LLNL). THE CONTRACTOR SHALL, IN ACCORDANCE WITH T",
-     "startDate": "2007-05-09",
-     "awardType": "other"
-    },
-    {
-     "id": "DENA0002839",
-     "recipientName": "HONEYWELL FEDERAL MANUFACTURING & TECHNOLOGIES, LLC",
-     "amount": 17732163524.12,
-     "agency": "Department of Energy",
-     "description": "IGF::CL,CT::IGF MANAGEMENT AND OPERATION OF THE NATIONAL SECURITY CAMPUS -- CONTRACT NO. DE-NA0002839",
-     "startDate": "2015-07-09",
-     "awardType": "other"
-    },
-    {
-     "id": "DEAC0206CH11357",
-     "recipientName": "UCHICAGO ARGONNE, LLC",
-     "amount": 17695775611.67,
-     "agency": "Department of Energy",
-     "description": "PERFORMANCE-BASED CONTRACT FOR MANAGEMENT AND OPERATION OF ARGONNE NATIONAL LABORATORY",
-     "startDate": "2006-07-31",
-     "awardType": "other"
-    },
-    {
-     "id": "DENA0003624",
-     "recipientName": "MISSION SUPPORT & TEST SERVICES LLC",
-     "amount": 7708654017.32,
-     "agency": "Department of Energy",
-     "description": "IGF::CL,CT::IGF CONTRACT AWARD DE-NA0003624 TO THE MISSION SUPPORT AND TEST SERVICES LLC (MSTS) FOR THE MANAGEMENT AND OPERATION OF THE DEPARTMENT OF ENERGY NATIONAL NUCLEAR SECURITY ADMINISTRATION'S ",
-     "startDate": "2017-08-01",
-     "awardType": "other"
-    }
-   ],
-   "totalAmount": 95634190765.82997,
-   "periodStart": "2026-10-10",
-   "periodEnd": "2026-10-17",
-   "fetchedAt": 1792261861882
-  },
   "shippingRates": {
    "indices": [
     {
