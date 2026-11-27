@@ -96,6 +96,7 @@ const TIER_CDN_CACHE: Record<CacheTier, string | null> = {
 };
 
 const RPC_CACHE_TIER: Record<string, CacheTier> = {
+  '/api/world-overview/v1/get-impact-links': 'no-store',
   '/api/world-overview/v1/get-world-overview-snapshot': 'daily',
   // Server cache owns enrichment lifetime; provider disablement must be immediate.
   '/api/cyber/v1/get-network-info': 'no-store',

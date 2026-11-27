@@ -46,6 +46,7 @@ export const STANDALONE_INTERVAL_MIN = {
   'gpr': 360,
   'oecd-cli': 1440,
   'federal-register': 60,
+  'impact-links': 30,
   'dart-disclosures': 30,
   'ecos-macro': 720,
   'gpsjam': 360, 'eu-gas-flows': 360,
@@ -86,8 +87,8 @@ export const DEFAULT_COLLECTORS = [
   'bundle-macro', 'bundle-yield-curves', 'bundle-ecb-eu', 'bundle-imf-extended',
   'bundle-portwatch', 'bundle-portwatch-port-activity', 'bundle-regional-energy', 'bundle-country-reference', 'bundle-regional',
   'bundle-static-ref', 'bundle-static-ref-heavy',
-  ...Object.keys(STANDALONE_INTERVAL_MIN).filter((name) => !['news-threat-summary', 'weather-alerts', 'cyber-threats'].includes(name)),
-  'insights', 'world-relations-ai', 'forecasts', 'correlation', 'digest-notifications', 'world-overview',
+  ...Object.keys(STANDALONE_INTERVAL_MIN).filter((name) => !['news-threat-summary', 'weather-alerts', 'cyber-threats', 'impact-links'].includes(name)),
+  'insights', 'world-relations-ai', 'forecasts', 'correlation', 'digest-notifications', 'impact-links', 'world-overview',
 ];
 
 // The bulk pass can take longer than these cadences even on a healthy machine.

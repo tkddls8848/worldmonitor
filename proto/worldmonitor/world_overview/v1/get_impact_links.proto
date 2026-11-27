@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package worldmonitor.world_overview.v1;
+
+import "sebuf/http/annotations.proto";
+
+message GetImpactLinksRequest {
+  // sanctions, tariffs, conflict, tension, support, energy, or financial. Omit for all kinds.
+  string kind = 1 [(sebuf.http.query) = {name: "kind"}];
+  // ISO alpha-2 country. Matches either endpoint of a link.
+  string country = 2 [(sebuf.http.query) = {name: "country"}];
+  // 24h or 7d, using the last evidence date. Defaults to 7d.
+  string window = 3 [(sebuf.http.query) = {name: "window"}];
+  // Maximum number of links. Defaults to 100 and cannot exceed 500.
+  int32 limit = 4 [(sebuf.http.query) = {name: "limit"}];
+}
+
+message ImpactEvidence {
+  string source = 1;
+  string title = 2;
+  string url = 3;
+  int64 published_at = 4 [(sebuf.http.int64_encoding) = INT64_ENCODING_NUMBER];
+}
+
+message ImpactLink {
+  string id = 1;
+  string actor = 2;
+  string target = 3;
+  string kind = 4;
+  int32 magnitude = 5;
+  string direction = 6;
+  int64 first_seen = 7 [(sebuf.http.int64_encoding) = INT64_ENCODING_NUMBER];
+  int64 last_seen = 8 [(sebuf.http.int64_encoding) = INT64_ENCODING_NUMBER];
+  string trend = 9;
+  string headline = 10;
+  repeated ImpactEvidence evidence = 11;
+}
+
+message ImpactPressureTotals {
+  map<string, int32> incoming = 1;
+  map<string, int32> outgoing = 2;
+}
+
+message ImpactSummary {
+  // Up to seven new or rising links supported by evidence in the past 24 hours.
+  repeated ImpactLink today = 1;
+  // Pressure by country and kind, before the request's link limit is applied.
+  map<string, ImpactPressureTotals> by_country = 2;
+}
+
+message GetImpactLinksResponse {
+  // Generation time in epoch milliseconds. Zero indicates no snapshot.
+  int64 generated_at = 1 [(sebuf.http.int64_encoding) = INT64_ENCODING_NUMBER];
+  repeated ImpactLink links = 2;
+  ImpactSummary summary = 3;
+}

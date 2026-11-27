@@ -12,7 +12,7 @@ The inventory is **generated, not hand-written**: `scripts/source-attribution.mj
 ## Observed Source Inventory
 
 {/* BEGIN GENERATED SOURCE ATTRIBUTION */}
-This generated inventory covers **757 active source hosts** representing **737 active providers** (**357 structured/API**, **381 feed**, and **30 operational-status** hosts). It is derived from source declarations in `scripts/`, `server/`, `api/`, and `src/`. Each row shows the configured provider identity and where the source is referenced. Syndication transports such as FeedBurner and Google News remain listed as hosts and are not counted as publishers.
+This generated inventory covers **758 active source hosts** representing **738 active providers** (**358 structured/API**, **381 feed**, and **30 operational-status** hosts). It is derived from source declarations in `scripts/`, `server/`, `api/`, and `src/`. Each row shows the configured provider identity and where the source is referenced. Syndication transports such as FeedBurner and Google News remain listed as hosts and are not counted as publishers.
 
 | Provider | Observed surface |
 | --- | --- |
@@ -319,6 +319,7 @@ This generated inventory covers **757 active source hosts** representing **737 a
 | FINRA (feeds.finra.org) | structured — scripts/seed-regulatory-actions.mjs |
 | Fintraffic Digitraffic (not-currently-wired) | Excluded / candidate — No current fetch observed |
 | Firecrawl (api.firecrawl.dev) | structured — scripts/seed-grocery-basket.mjs |
+| fiscaldata.treasury.gov (fiscaldata.treasury.gov) | structured — scripts/seed-impact-links.mjs |
 | focustaiwan.tw (focustaiwan.tw) | feed — shared/news-catalog.json |
 | fonts.googleapis.com (fonts.googleapis.com) | Excluded / candidate — No current fetch observed |
 | foreignpolicy.com (foreignpolicy.com) | feed — shared/news-catalog.json |
@@ -618,7 +619,7 @@ This generated inventory covers **757 active source hosts** representing **737 a
 | sabconetanw.cdn.mangomolo.com (sabconetanw.cdn.mangomolo.com) | feed — src/config/live-video-sources.ts |
 | Safecast (api.safecast.org) | structured — scripts/seed-radiation-watch.mjs |
 | Sana'a Center (sanaacenter.org) | feed — shared/news-catalog.json |
-| sanctionslistservice.ofac.treas.gov (sanctionslistservice.ofac.treas.gov) | structured — scripts/seed-sanctions-pressure.mjs |
+| sanctionslistservice.ofac.treas.gov (sanctionslistservice.ofac.treas.gov) | structured — scripts/seed-impact-links.mjs, scripts/seed-sanctions-pressure.mjs |
 | sccd.royalnavy.mod.uk (sccd.royalnavy.mod.uk) | Excluded / candidate — No current fetch observed |
 | schema.org (schema.org) | structured — scripts/build-accuracy-page.mjs, scripts/build-use-cases.mjs, scripts/comparison-shortlist.mjs |
 | schemas.agentskills.io (schemas.agentskills.io) | Excluded / candidate — No current fetch observed |
@@ -770,7 +771,7 @@ This generated inventory covers **757 active source hosts** representing **737 a
 | unhcr.org (unhcr.org) | feed — shared/news-catalog.json |
 | United Nations Population Division (population.un.org) | structured — scripts/_demographics-capability-source.mjs |
 | unstats.un.org (unstats.un.org) | structured — scripts/build-un-m49-regions.mjs |
-| Uppsala Conflict Data Program (UCDP) (ucdp.uu.se) | structured — scripts/shared/ucdp-candidate.cjs |
+| Uppsala Conflict Data Program (UCDP) (ucdp.uu.se) | structured — scripts/seed-impact-links.mjs, scripts/shared/ucdp-candidate.cjs |
 | urlhaus-api.abuse.ch (urlhaus-api.abuse.ch) | structured — scripts/local/local-api-server.mjs, scripts/seed-cyber-threats.mjs |
 | USDA FAS PSD (api.fas.usda.gov) | structured — scripts/seed-food-stocks.mjs |
 | USDA FAS PSD (apps.fas.usda.gov) | Excluded / candidate — No current fetch observed |
@@ -968,7 +969,7 @@ This generated inventory covers **757 active source hosts** representing **737 a
 | www.ncei.noaa.gov (www.ncei.noaa.gov) | structured — scripts/seed-climate-ocean-ice.mjs |
 | www.netlifystatus.com (www.netlifystatus.com) | operational-status — server/worldmonitor/infrastructure/v1/list-service-statuses.ts |
 | www.newscientist.com (www.newscientist.com) | Excluded / candidate — No current fetch observed |
-| www.newyorkfed.org (www.newyorkfed.org) | structured — scripts/personal-collector-tasks.cjs |
+| www.newyorkfed.org (www.newyorkfed.org) | structured — scripts/personal-collector-tasks.cjs, scripts/seed-impact-links.mjs |
 | www.nfx.com (www.nfx.com) | Excluded / candidate — No current fetch observed |
 | www.niggrid.org (www.niggrid.org) | structured — scripts/shared/regional-energy-feeds.json |
 | www.northernminer.com (www.northernminer.com) | feed — shared/news-catalog.json |

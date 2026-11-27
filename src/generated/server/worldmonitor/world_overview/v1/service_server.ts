@@ -122,6 +122,50 @@ export interface InputStatus {
   asOf?: number;
 }
 
+export interface GetImpactLinksRequest {
+  kind: string;
+  country: string;
+  window: string;
+  limit: number;
+}
+
+export interface GetImpactLinksResponse {
+  generatedAt: number;
+  links: ImpactLink[];
+  summary?: ImpactSummary;
+}
+
+export interface ImpactLink {
+  id: string;
+  actor: string;
+  target: string;
+  kind: string;
+  magnitude: number;
+  direction: string;
+  firstSeen: number;
+  lastSeen: number;
+  trend: string;
+  headline: string;
+  evidence: ImpactEvidence[];
+}
+
+export interface ImpactEvidence {
+  source: string;
+  title: string;
+  url: string;
+  publishedAt: number;
+}
+
+export interface ImpactSummary {
+  today: ImpactLink[];
+  byCountry: Record<string, ImpactPressureTotals>;
+}
+
+export interface ImpactPressureTotals {
+  incoming: Record<string, number>;
+  outgoing: Record<string, number>;
+}
+
 export interface SetWorldOverviewMarkRequest {
   itemKind: string;
   itemKey: string;
@@ -192,6 +236,7 @@ export interface RouteDescriptor {
 
 export interface WorldOverviewServiceHandler {
   getWorldOverviewSnapshot(ctx: ServerContext, req: GetWorldOverviewSnapshotRequest): Promise<GetWorldOverviewSnapshotResponse>;
+  getImpactLinks(ctx: ServerContext, req: GetImpactLinksRequest): Promise<GetImpactLinksResponse>;
   setWorldOverviewMark(ctx: ServerContext, req: SetWorldOverviewMarkRequest): Promise<SetWorldOverviewMarkResponse>;
 }
 
@@ -226,6 +271,56 @@ export function createWorldOverviewServiceRoutes(
 
           const result = await handler.getWorldOverviewSnapshot(ctx, body);
           return new Response(JSON.stringify(result as GetWorldOverviewSnapshotResponse), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        } catch (err: unknown) {
+          if (err instanceof ValidationError) {
+            return new Response(JSON.stringify({ violations: err.violations }), {
+              status: 400,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+          if (options?.onError) {
+            return options.onError(err, req);
+          }
+          const message = "Internal server error";
+          return new Response(JSON.stringify({ message }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+      },
+    },
+    {
+      method: "GET",
+      path: "/api/world-overview/v1/get-impact-links",
+      handler: async (req: Request): Promise<Response> => {
+        try {
+          const pathParams: Record<string, string> = {};
+          const url = new URL(req.url, "http://localhost");
+          const params = url.searchParams;
+          const body: GetImpactLinksRequest = {
+            kind: params.get("kind") ?? "",
+            country: params.get("country") ?? "",
+            window: params.get("window") ?? "",
+            limit: Number(params.get("limit") ?? "0"),
+          };
+          if (options?.validateRequest) {
+            const bodyViolations = options.validateRequest("getImpactLinks", body);
+            if (bodyViolations) {
+              throw new ValidationError(bodyViolations);
+            }
+          }
+
+          const ctx: ServerContext = {
+            request: req,
+            pathParams,
+            headers: Object.fromEntries(req.headers.entries()),
+          };
+
+          const result = await handler.getImpactLinks(ctx, body);
+          return new Response(JSON.stringify(result as GetImpactLinksResponse), {
             status: 200,
             headers: { "Content-Type": "application/json" },
           });

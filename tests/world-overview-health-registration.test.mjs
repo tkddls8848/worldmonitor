@@ -24,6 +24,7 @@ const ROWS = [
   ['worldRelations', 'world-overview:relations:v1', 'seed-meta:world-overview:relations', 4320],
   ['worldPairTrends', 'gdelt:bulk:world-pair-trends:v1', 'seed-meta:gdelt:bulk:world-pair-trends', 240],
   ['worldRelationsAi', 'world-overview:ai:v1', 'seed-meta:world-overview:ai', 2160],
+  ['impactLinks', 'world:impact-links:v1', 'seed-meta:world:impact-links', 90],
 ];
 
 test('registers world overview probes as on-demand standalone keys with activation markers', () => {
@@ -33,7 +34,12 @@ test('registers world overview probes as on-demand standalone keys with activati
     assert.deepEqual(__testing__.SEED_META[name], { key: meta, maxStaleMin: minutes, activationKey,
       cutover: { mode: 'activation-marker', fromKey: null, issue: 9, activationKey } });
     assert.equal(__testing__.ACTIVATION_MARKERS[name], activationKey);
+    assert.equal(__testing__.ON_DEMAND_KEYS.has(name), true);
   }
+});
+
+test('accepts a published impact-links snapshot with zero observations', () => {
+  assert.equal(__testing__.ZERO_RECORD_DATA_OK_KEYS.has('impactLinks'), true);
 });
 
 test('stays pending before first publish and reports stale data after maxStaleMin', () => {

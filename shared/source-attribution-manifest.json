@@ -4255,6 +4255,20 @@
       "status": "excluded"
     },
     {
+      "host": "fiscaldata.treasury.gov",
+      "provider": "fiscaldata.treasury.gov",
+      "kind": "structured",
+      "observed": true,
+      "license": "Provider terms for this upstream API/dataset; verify before redistribution",
+      "attribution": "Credit fiscaldata.treasury.gov and link to the original upstream API/dataset.",
+      "status": "terms-review",
+      "references": [
+        {
+          "path": "scripts/seed-impact-links.mjs"
+        }
+      ]
+    },
+    {
       "host": "focustaiwan.tw",
       "provider": "focustaiwan.tw",
       "kind": "feed",
@@ -8193,6 +8207,9 @@
       "status": "terms-review",
       "references": [
         {
+          "path": "scripts/seed-impact-links.mjs"
+        },
+        {
           "path": "scripts/seed-sanctions-pressure.mjs"
         }
       ]
@@ -9867,6 +9884,9 @@
       "attribution": "Credit UCDP and cite the UCDP Candidate Events Dataset; link to https://ucdp.uu.se/downloads/.",
       "status": "reviewed",
       "references": [
+        {
+          "path": "scripts/seed-impact-links.mjs"
+        },
         {
           "path": "scripts/shared/ucdp-candidate.cjs"
         }
@@ -12989,6 +13009,9 @@
       "references": [
         {
           "path": "scripts/personal-collector-tasks.cjs"
+        },
+        {
+          "path": "scripts/seed-impact-links.mjs"
         }
       ]
     },

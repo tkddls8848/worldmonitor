@@ -122,6 +122,50 @@ export interface InputStatus {
   asOf?: number;
 }
 
+export interface GetImpactLinksRequest {
+  kind: string;
+  country: string;
+  window: string;
+  limit: number;
+}
+
+export interface GetImpactLinksResponse {
+  generatedAt: number;
+  links: ImpactLink[];
+  summary?: ImpactSummary;
+}
+
+export interface ImpactLink {
+  id: string;
+  actor: string;
+  target: string;
+  kind: string;
+  magnitude: number;
+  direction: string;
+  firstSeen: number;
+  lastSeen: number;
+  trend: string;
+  headline: string;
+  evidence: ImpactEvidence[];
+}
+
+export interface ImpactEvidence {
+  source: string;
+  title: string;
+  url: string;
+  publishedAt: number;
+}
+
+export interface ImpactSummary {
+  today: ImpactLink[];
+  byCountry: Record<string, ImpactPressureTotals>;
+}
+
+export interface ImpactPressureTotals {
+  incoming: Record<string, number>;
+  outgoing: Record<string, number>;
+}
+
 export interface SetWorldOverviewMarkRequest {
   itemKind: string;
   itemKey: string;
@@ -217,6 +261,34 @@ export class WorldOverviewServiceClient {
     }
 
     return await resp.json() as GetWorldOverviewSnapshotResponse;
+  }
+
+  async getImpactLinks(req: GetImpactLinksRequest, options?: WorldOverviewServiceCallOptions): Promise<GetImpactLinksResponse> {
+    let path = "/api/world-overview/v1/get-impact-links";
+    const params = new URLSearchParams();
+    if (req.kind != null && req.kind !== "") params.set("kind", String(req.kind));
+    if (req.country != null && req.country !== "") params.set("country", String(req.country));
+    if (req.window != null && req.window !== "") params.set("window", String(req.window));
+    if (req.limit != null && req.limit !== 0) params.set("limit", String(req.limit));
+    const url = this.baseURL + path + (params.toString() ? "?" + params.toString() : "");
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...this.defaultHeaders,
+      ...options?.headers,
+    };
+
+    const resp = await this.fetchFn(url, {
+      method: "GET",
+      headers,
+      signal: options?.signal,
+    });
+
+    if (!resp.ok) {
+      return this.handleError(resp);
+    }
+
+    return await resp.json() as GetImpactLinksResponse;
   }
 
   async setWorldOverviewMark(req: SetWorldOverviewMarkRequest, options?: WorldOverviewServiceCallOptions): Promise<SetWorldOverviewMarkResponse> {

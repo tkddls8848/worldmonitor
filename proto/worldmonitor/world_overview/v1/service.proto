@@ -3,6 +3,7 @@ syntax = "proto3";
 package worldmonitor.world_overview.v1;
 
 import "sebuf/http/annotations.proto";
+import "worldmonitor/world_overview/v1/get_impact_links.proto";
 import "worldmonitor/world_overview/v1/get_world_overview_snapshot.proto";
 import "worldmonitor/world_overview/v1/set_world_overview_mark.proto";
 
@@ -13,6 +14,11 @@ service WorldOverviewService {
   // GetWorldOverviewSnapshot returns today's snapshot or an archived date and the available archive dates. The response uses the fields defined by this RPC's protobuf response message.
   rpc GetWorldOverviewSnapshot(GetWorldOverviewSnapshotRequest) returns (GetWorldOverviewSnapshotResponse) {
     option (sebuf.http.config) = {path: "/get-world-overview-snapshot", method: HTTP_METHOD_GET};
+  }
+
+  // GetImpactLinks returns recent country impact links with dated citations, trend labels, and pressure totals filtered by kind, country, and time window.
+  rpc GetImpactLinks(GetImpactLinksRequest) returns (GetImpactLinksResponse) {
+    option (sebuf.http.config) = {path: "/get-impact-links", method: HTTP_METHOD_GET};
   }
 
   // SetWorldOverviewMark creates, undoes, or replaces a wrong-data mark. The response uses the fields defined by this RPC's protobuf response message.

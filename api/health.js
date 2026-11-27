@@ -345,6 +345,7 @@ const STANDALONE_KEYS = {
   sanctionsChanges: 'sanctions:changes:v1',
   worldRelationsAi: 'world-overview:ai:v1',
   worldRelations: 'world-overview:relations:v1',
+  impactLinks: 'world:impact-links:v1',
   // NVD CVE reference store for the CISA KEV subset (#6229). Seeded daily by
   // scripts/seed-cve-reference.mjs; no dashboard consumer yet, so it is
   // monitored here rather than bootstrap-tiered.
@@ -1678,6 +1679,11 @@ const SEED_META = {
     activationKey: 'seed-activated:world-overview:relations',
     cutover: { mode: 'activation-marker', fromKey: null, issue: 9, activationKey: 'seed-activated:world-overview:relations' },
   },
+  impactLinks: {
+    key: 'seed-meta:world:impact-links', maxStaleMin: 90,
+    activationKey: 'seed-activated:world:impact-links',
+    cutover: { mode: 'activation-marker', fromKey: null, issue: 9, activationKey: 'seed-activated:world:impact-links' },
+  },
   // IOM DTM operations (seed-dtm-displacement.mjs, daily health bundle, #9014).
   // 48h = two missed ticks; round age is checked by maxContentAgeMin.
   dtmDisplacement: {
@@ -2544,7 +2550,7 @@ const ON_DEMAND_KEYS = new Set([
   // Same bridge for the UNHCR cross-border movements (#9023).
   // Deploy-before-first-tick bridge for the weekly capital-flows seed (#9394).
   'capitalFlows',
-  'crossBorderArrivals', 'worldRelations', 'borderUk', 'borderCbp', 'borderFrontex', 'borderPanama',
+  'crossBorderArrivals', 'worldRelations', 'impactLinks', 'borderUk', 'borderCbp', 'borderFrontex', 'borderPanama',
   // Same deploy-before-first-tick bridge as cbrRates for the two Canada
   // Softening lifts once the durable activation marker exists.
   'bocValet',
@@ -2743,6 +2749,7 @@ const ACTIVATION_MARKERS = {
   // Written by scripts/seed-cross-border-arrivals.mjs in runSeed's afterPublish hook.
   crossBorderArrivals: SEED_META.crossBorderArrivals.activationKey,
   worldRelations: SEED_META.worldRelations.activationKey,
+  impactLinks: SEED_META.impactLinks.activationKey,
   borderUk: SEED_META.borderUk.activationKey,
   borderCbp: SEED_META.borderCbp.activationKey,
   borderFrontex: SEED_META.borderFrontex.activationKey,
@@ -3181,6 +3188,7 @@ const MISSING_DATA_IS_FAILURE_KEYS = new Set([
 // Keys where a present payload with meta recordCount=0 is valid, but the data
 // key itself must still exist. Do not use this set in the missing-key branch.
 const ZERO_RECORD_DATA_OK_KEYS = new Set([
+  'impactLinks',
   'ukmtoIncidents',
   ...EMPTY_DATA_OK_KEYS,
   'sanctionsChanges',

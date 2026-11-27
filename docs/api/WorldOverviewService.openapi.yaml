@@ -87,6 +87,101 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Error'
+    /api/world-overview/v1/get-impact-links:
+        get:
+            tags:
+                - WorldOverviewService
+            summary: GetImpactLinks
+            description: GetImpactLinks returns recent country impact links with dated citations, trend labels, and pressure totals filtered by kind, country, and time window.
+            operationId: GetImpactLinks
+            parameters:
+                - name: kind
+                  in: query
+                  description: sanctions, tariffs, conflict, tension, support, energy, or financial. Omit for all kinds.
+                  required: false
+                  example: "example"
+                  schema:
+                    type: string
+                - name: country
+                  in: query
+                  description: ISO alpha-2 country. Matches either endpoint of a link.
+                  required: false
+                  example: "US"
+                  schema:
+                    type: string
+                - name: window
+                  in: query
+                  description: 24h or 7d, using the last evidence date. Defaults to 7d.
+                  required: false
+                  example: "example"
+                  schema:
+                    type: string
+                - name: limit
+                  in: query
+                  description: Maximum number of links. Defaults to 100 and cannot exceed 500.
+                  required: false
+                  example: 25
+                  schema:
+                    type: integer
+                    format: int32
+                - name: jmespath
+                  in: query
+                  description: |-
+                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
+                  required: false
+                  example: "keys(@)"
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: Successful response
+                    content:
+                        application/json:
+                            example:
+                                "generatedAt": 1717200000000
+                                "links":
+                                    - "actor": "example"
+                                      "direction": "example"
+                                      "evidence":
+                                          - "publishedAt": 1717200000000
+                                            "source": "example"
+                                            "title": "example"
+                                            "url": "https://example.com/worldmonitor"
+                                      "firstSeen": 1
+                                      "headline": "example"
+                                "summary":
+                                    "byCountry":
+                                        "exampleKey":
+                                            "incoming":
+                                                "exampleKey": 1
+                                            "outgoing":
+                                                "exampleKey": 1
+                                    "today":
+                                        - "actor": "example"
+                                          "direction": "example"
+                                          "evidence":
+                                              - "publishedAt": 1717200000000
+                                                "source": "example"
+                                                "title": "example"
+                                                "url": "https://example.com/worldmonitor"
+                                          "firstSeen": 1
+                                          "headline": "example"
+                            schema:
+                                $ref: '#/components/schemas/GetImpactLinksResponse'
+                "400":
+                    description: Validation error
+                    content:
+                        application/json:
+                            schema:
+                                oneOf:
+                                    - $ref: '#/components/schemas/ValidationError'
+                                    - $ref: '#/components/schemas/JmespathProjectionError'
+                default:
+                    description: Error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
     /api/world-overview/v1/set-world-overview-mark:
         post:
             tags:
@@ -451,6 +546,128 @@ components:
                     type: integer
                     format: int64
                     description: 'Warning: Values > 2^53 may lose precision in JavaScript'
+        GetImpactLinksRequest:
+            type: object
+            properties:
+                kind:
+                    type: string
+                    description: sanctions, tariffs, conflict, tension, support, energy, or financial. Omit for all kinds.
+                country:
+                    type: string
+                    description: ISO alpha-2 country. Matches either endpoint of a link.
+                window:
+                    type: string
+                    description: 24h or 7d, using the last evidence date. Defaults to 7d.
+                limit:
+                    type: integer
+                    format: int32
+                    description: Maximum number of links. Defaults to 100 and cannot exceed 500.
+        GetImpactLinksResponse:
+            type: object
+            properties:
+                generatedAt:
+                    type: integer
+                    format: int64
+                    description: 'Generation time in epoch milliseconds. Zero indicates no snapshot.. Warning: Values > 2^53 may lose precision in JavaScript'
+                links:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/ImpactLink'
+                summary:
+                    $ref: '#/components/schemas/ImpactSummary'
+        ImpactLink:
+            type: object
+            properties:
+                id:
+                    type: string
+                actor:
+                    type: string
+                target:
+                    type: string
+                kind:
+                    type: string
+                magnitude:
+                    type: integer
+                    format: int32
+                direction:
+                    type: string
+                firstSeen:
+                    type: integer
+                    format: int64
+                    description: 'Warning: Values > 2^53 may lose precision in JavaScript'
+                lastSeen:
+                    type: integer
+                    format: int64
+                    description: 'Warning: Values > 2^53 may lose precision in JavaScript'
+                trend:
+                    type: string
+                headline:
+                    type: string
+                evidence:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/ImpactEvidence'
+        ImpactEvidence:
+            type: object
+            properties:
+                source:
+                    type: string
+                title:
+                    type: string
+                url:
+                    type: string
+                publishedAt:
+                    type: integer
+                    format: int64
+                    description: 'Warning: Values > 2^53 may lose precision in JavaScript'
+        ImpactSummary:
+            type: object
+            properties:
+                today:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/ImpactLink'
+                byCountry:
+                    type: object
+                    additionalProperties:
+                        $ref: '#/components/schemas/ImpactPressureTotals'
+                    description: Pressure by country and kind, before the request's link limit is applied.
+        ByCountryEntry:
+            type: object
+            properties:
+                key:
+                    type: string
+                value:
+                    $ref: '#/components/schemas/ImpactPressureTotals'
+        ImpactPressureTotals:
+            type: object
+            properties:
+                incoming:
+                    type: object
+                    additionalProperties:
+                        type: integer
+                        format: int32
+                outgoing:
+                    type: object
+                    additionalProperties:
+                        type: integer
+                        format: int32
+        IncomingEntry:
+            type: object
+            properties:
+                key:
+                    type: string
+                value:
+                    type: integer
+                    format: int32
+        OutgoingEntry:
+            type: object
+            properties:
+                key:
+                    type: string
+                value:
+                    type: integer
+                    format: int32
         SetWorldOverviewMarkRequest:
             type: object
             properties:

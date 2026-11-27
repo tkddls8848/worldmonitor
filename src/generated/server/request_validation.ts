@@ -2,7 +2,7 @@
 // Source: proto/worldmonitor/**/*.proto buf.validate annotations.
 
 export const GENERATED_PROTO_VALIDATION_RULE_COUNT = 686;
-export const GENERATED_REQUEST_METHOD_COUNT = 176;
+export const GENERATED_REQUEST_METHOD_COUNT = 177;
 
 export const GENERATED_REQUEST_TYPES = {
   "analyzeStock": "worldmonitor.market.v1.AnalyzeStockRequest",
@@ -58,6 +58,7 @@ export const GENERATED_REQUEST_TYPES = {
   "getGovernmentYieldCurve": "worldmonitor.economic.v1.GetGovernmentYieldCurveRequest",
   "getHumanitarianSummary": "worldmonitor.conflict.v1.GetHumanitarianSummaryRequest",
   "getHumanitarianSummaryBatch": "worldmonitor.conflict.v1.GetHumanitarianSummaryBatchRequest",
+  "getImpactLinks": "worldmonitor.world_overview.v1.GetImpactLinksRequest",
   "getIntelTimeline": "worldmonitor.intelligence.v1.GetIntelTimelineRequest",
   "getInternalDisplacement": "worldmonitor.displacement.v1.GetInternalDisplacementRequest",
   "getMineralProduction": "worldmonitor.supply_chain.v1.GetMineralProductionRequest",
@@ -3050,6 +3051,22 @@ export const GENERATED_MESSAGE_RULES = {
   "worldmonitor.wildfire.v1.ListFireDetectionsRequest": {
     "fields": {
       "cursor": {
+        "kind": "string",
+        "stringMaxBytes": 65536
+      }
+    }
+  },
+  "worldmonitor.world_overview.v1.GetImpactLinksRequest": {
+    "fields": {
+      "kind": {
+        "kind": "string",
+        "stringMaxBytes": 65536
+      },
+      "country": {
+        "kind": "string",
+        "stringMaxBytes": 65536
+      },
+      "window": {
         "kind": "string",
         "stringMaxBytes": 65536
       }

@@ -1,0 +1,298 @@
+{
+  "captureTime": 1795803018073,
+  "federalRegister": {
+    "items": [
+      {
+        "id": "2026-24233",
+        "title": "Antidumping or Countervailing Duty Investigations, Orders, or Reviews: Opportunity to Request Administrative Review and Join Annual Inquiry Service List; Note Regarding Format of Review Requests",
+        "date": "2026-11-30",
+        "type": "Notice",
+        "topic": "tariff",
+        "countries": [],
+        "url": "https://www.federalregister.gov/public-inspection/2026-24233/antidumping-or-countervailing-duty-investigations-orders-or-reviews-opportunity-to-request",
+        "filedAt": 1795787100000
+      },
+      {
+        "id": "2026-24231",
+        "title": "Proposed Modification of Section 301 Action: Brazil's Acts, Policies, and Practices Related to Digital Trade and Electronic Payment Services; Unfair, Preferential Tariffs; Anti-Corruption Enforcement; Intellectual Property Protection; Ethanol Market Access; and Illegal Deforestation",
+        "date": "2026-11-30",
+        "type": "Notice",
+        "topic": "tariff",
+        "countries": [
+          "BR"
+        ],
+        "url": "https://www.federalregister.gov/public-inspection/2026-24231/proposed-modification-of-section-301-action-brazils-acts-policies-and-practices-related-to-digital",
+        "filedAt": 1795787100000
+      },
+      {
+        "id": "2026-23999",
+        "title": "Additions to the Entity List",
+        "date": "2026-11-25",
+        "type": "Rule",
+        "topic": "export-control",
+        "countries": [
+          "MY",
+          "SG",
+          "TH",
+          "US"
+        ],
+        "url": "https://www.federalregister.gov/documents/2026/11/25/2026-23999/additions-to-the-entity-list"
+      },
+      {
+        "id": "2026-23961",
+        "title": "Notice of OFAC Sanctions Action",
+        "date": "2026-11-25",
+        "type": "Notice",
+        "topic": "sanctions",
+        "countries": [
+          "US"
+        ],
+        "url": "https://www.federalregister.gov/documents/2026/11/25/2026-23961/notice-of-ofac-sanctions-action"
+      },
+      {
+        "id": "2026-23197",
+        "title": "Publication of Iran-Related Web General Licenses EE and FF",
+        "date": "2026-11-13",
+        "type": "Rule",
+        "topic": "sanctions",
+        "countries": [
+          "IR"
+        ],
+        "url": "https://www.federalregister.gov/documents/2026/11/13/2026-23197/publication-of-iran-related-web-general-licenses-ee-and-ff"
+      }
+    ]
+  },
+  "sanctionsChanges": {
+    "events": [
+      {
+        "at": 1795471466122,
+        "effectiveAt": "1795392000000",
+        "op": "added",
+        "list": "SDN",
+        "id": "SDN:59185",
+        "cc": [
+          "AE"
+        ]
+      },
+      {
+        "at": 1795471466122,
+        "effectiveAt": "1795392000000",
+        "op": "added",
+        "list": "SDN",
+        "id": "SDN:59186",
+        "cc": [
+          "AE"
+        ]
+      }
+    ]
+  },
+  "ucdp": {
+    "events": [
+      {
+        "id": "647030",
+        "dateEnd": 1793372400000,
+        "country": "Ukraine",
+        "sideA": "Government of Russia (Soviet Union)",
+        "sideB": "Government of Ukraine",
+        "deathsBest": 2
+      }
+    ]
+  },
+  "relations": {
+    "status": "ok",
+    "relations": [
+      {
+        "id": "ai:tension:CN-US",
+        "from": "CN",
+        "to": "US",
+        "kind": "tension",
+        "directed": false,
+        "field": "finance",
+        "summaryKo": "미국 새 관세 발표에 중국과 일본이 항의",
+        "confidence": 0.5,
+        "sources": [
+          {
+            "url": "https://www.deutschlandfunk.de/wadephul-kritisiert-ankuendigung-neuer-us-zoelle-china-und-japan-protestieren-gegen-zollplaene-100.html",
+            "title": "Handelspolitik - Wadephul kritisiert Ankündigung neuer US-Zölle - China und Japan protestieren gegen Zollpläne",
+            "publisher": "Deutschlandfunk",
+            "publishedAt": 1795724625000
+          }
+        ]
+      },
+      {
+        "id": "ai:support:UA>US",
+        "from": "UA",
+        "to": "US",
+        "kind": "support",
+        "directed": true,
+        "field": "military",
+        "summaryKo": "우크라이나 러시아 전사자 추산치 제1차세계대전 이후 미국 전사자 총합 초과",
+        "confidence": 0.75,
+        "sources": [
+          {
+            "url": "https://www.militarytimes.com/flashpoints/ukraine/2026/11/25/estimates-of-russians-killed-in-ukraine-surpass-all-combined-us-war-deaths-since-wwi/",
+            "title": "Estimates of Russians killed in Ukraine surpass all combined US war deaths since WWI",
+            "publisher": "Military Times",
+            "publishedAt": 1795631232000
+          },
+          {
+            "url": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxQbkRwQzRfRy1uMTJtQ0daVXZiQmdicmRNWWdtSmNuS1ZHZTliWndFdVE2Y3RtRjJSempfMjJyWGNzcFBySFBHVXh1TXMzOXpUQzlQWlZJNGpMUXFCSS0xSDhCbkdNamN4aEJsNGRDLVRyV3R2aVhmS0pneURRaEVrM0pHeWtjZXNURUdiWFpoNTFLc0VLV1hSTVJ4QkhIdU1FbVFYLWt0dDfSAa4BQVVfeXFMTXFveElEWmRKTnJvczJCU09pTlg5SF9pZ0VrY2xUZmY4ckwwcWFKSVZHbTkyNGZWMWhCdl82bTYwaE84NkZGVFB3Sk5zQ3NUY29hUjA1blpIUHJfWjdOSWpCQU5paXM2V3pwUHl6clNqWnhaM0otdmpwczJaN0NMYTVQZGpOMGxwM2R0VE1tTkN6Vy1uSW9OOFNOcXRlczIwR25nN3lOYnMwZGs2R29n?oc=5",
+            "title": "US envoy Kushner warns against Ukraine war escalation - Al Arabiya English",
+            "publisher": "Al Arabiya",
+            "publishedAt": 1795644180000
+          }
+        ]
+      },
+      {
+        "id": "ai:alliance:CN-SY",
+        "from": "CN",
+        "to": "SY",
+        "kind": "alliance",
+        "directed": false,
+        "field": "geopolitics",
+        "summaryKo": "중국 억압이 시리아 내전에 영향을 미쳤다",
+        "confidence": 0.5,
+        "sources": [
+          {
+            "url": "https://news.google.com/rss/articles/CBMijwFBVV95cUxPSkNhWF8wT1Zxa0FsT1B1OGFLMVZTeHpOS3FlTm8wYWh1LWlOY0RkbGlzZHFLc2c2RjVzSFdNRUlfOXZ0V0l4VU9OcXdUQ0oyYWo0R2w4ZTlhcWVCV0M1LU5mci1kOEtrZVk1R3lHcnVpdS11VGd2VzFwQ3hqdHNrWXhuRWtwWlVDMktrdzhxZw?oc=5",
+            "title": "How Repression in China Shaped Syria’s Civil War - CSIS | Center for Strategic and International Studies",
+            "publisher": "CSIS",
+            "publishedAt": 1795527919000
+          }
+        ]
+      },
+      {
+        "id": "ai:alliance:IN-JP",
+        "from": "IN",
+        "to": "JP",
+        "kind": "alliance",
+        "directed": false,
+        "field": "military",
+        "summaryKo": "일본 인도 사거리 장거리 미사일 훈련 새 협정",
+        "confidence": 0.5,
+        "sources": [
+          {
+            "url": "https://www.defensenews.com/global/asia-pacific/2026/11/25/japan-to-use-indian-ranges-for-long-range-missile-training-under-new-pact/",
+            "title": "Japan to use Indian ranges for long-range missile training under new pact",
+            "publisher": "Defense News",
+            "publishedAt": 1795618469000
+          }
+        ]
+      }
+    ]
+  },
+  "energyNews": {
+    "items": [
+      {
+        "id": "oilprice-w750hj-1795768200000",
+        "title": "Iraq Delays Up to 30 Million Barrels of Crude Oil Shipments",
+        "url": "https://oilprice.com/Latest-Energy-News/World-News/Iraq-Delays-Up-to-30-Million-Barrels-of-Crude-Oil-Shipments.html",
+        "source": "OilPrice",
+        "publishedAt": 1795768200000,
+        "summary": "Iraq’s SOMO has delayed loadings of crude oil cargoes to the tune of between 20 and 30 million barrels, according to a Bloomberg report citing unnamed sources. The reason for the delays has not been established yet, but the cargoes were supposed to be loaded this month; now, only some of them will b"
+      }
+    ]
+  },
+  "auctions": {
+    "coupons": [
+      {
+        "cusip": "91282CRS2",
+        "term": "2-Year",
+        "at": 1795543200000,
+        "verdict": "weak",
+        "resultsFile": "R_20261124_4.pdf"
+      }
+    ]
+  },
+  "funding": {
+    "sofr": {
+      "rate": 3.95,
+      "changeBp": 1,
+      "date": "2026-11-25"
+    },
+    "effr": {
+      "rate": 3.88,
+      "changeBp": 0,
+      "date": "2026-11-25"
+    }
+  },
+  "disruptions": {
+    "events": {
+      "btc-fire-2008": {
+        "id": "btc-fire-2008",
+        "assetId": "btc",
+        "assetType": "pipeline",
+        "eventType": "mechanical",
+        "startAt": "2008-08-05T00:00:00Z",
+        "endAt": "2008-08-25T00:00:00Z",
+        "capacityOfflineBcmYr": 0,
+        "capacityOfflineMbd": 1,
+        "causeChain": [
+          "sabotage"
+        ],
+        "shortDescription": "BTC pipeline fire in Turkey; 20-day outage, claimed by PKK. Historical reference event.",
+        "sources": [
+          {
+            "authority": "BP",
+            "title": "BTC incident update",
+            "url": "https://www.bp.com/en/global/corporate/news-and-insights/",
+            "date": "2008-08-06",
+            "sourceType": "operator"
+          }
+        ],
+        "classifierVersion": "v1",
+        "classifierConfidence": 0.95,
+        "lastEvidenceUpdate": "2026-04-22T00:00:00Z",
+        "countries": [
+          "AZ",
+          "GE",
+          "TR"
+        ]
+      }
+    }
+  },
+  "shortages": {
+    "shortages": {
+      "pk-petrol-2026-q1": {
+        "id": "pk-petrol-2026-q1",
+        "country": "PK",
+        "product": "petrol",
+        "severity": "confirmed",
+        "firstSeen": "2026-01-12T00:00:00Z",
+        "lastConfirmed": "2026-04-15T00:00:00Z",
+        "resolvedAt": null,
+        "impactTypes": [
+          "stations_closed",
+          "rationing"
+        ],
+        "causeChain": [
+          "policy",
+          "logistics"
+        ],
+        "shortDescription": "Retail petrol shortages across Punjab and Sindh from LC-approval delays for imports.",
+        "evidence": {
+          "evidenceSources": [
+            {
+              "authority": "OGRA",
+              "title": "Retail supply advisory",
+              "url": "https://www.ogra.org.pk/",
+              "date": "2026-03-28",
+              "sourceType": "regulator"
+            },
+            {
+              "authority": "Reuters",
+              "title": "Pakistan fuel queues return",
+              "url": "https://www.reuters.com/world/asia-pacific/",
+              "date": "2026-03-10",
+              "sourceType": "press"
+            }
+          ],
+          "firstRegulatorConfirmation": "2026-03-28",
+          "classifierVersion": "v1",
+          "classifierConfidence": 0.88,
+          "lastEvidenceUpdate": "2026-04-15T00:00:00Z"
+        }
+      }
+    }
+  }
+}
