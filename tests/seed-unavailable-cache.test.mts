@@ -204,19 +204,19 @@ const requiredCases = [
   ['unrest/v1/list-unrest-events', 'unrest:events:v1', { events: [] }, 'events'],
   ['market/v1/get-sector-summary', 'market:sectors:v2', { sectors: [] }, 'sectors'],
   ['cyber/v1/list-cyber-threats', 'cyber:threats:v2', { threats: [] }, 'threats'],
-  ['climate/v1/list-climate-anomalies', 'climate:anomalies:v2', { anomalies: [] }, 'anomalies'],
   ['infrastructure/v1/list-internet-outages', 'infra:outages:v1', { outages: [] }, 'outages'],
 ] as const;
-function itRejectsRequiredSeedFailures(path: string, key: string, payload: unknown, assertRecovered: (body: unknown) => void) {
+function itRejectsRequiredSeedFailures(path: string, key: string, payload: unknown, assertRecovered: (body: unknown) => void, allowMiss = false) {
   for (const failure of ['miss', 'http-error', 'timeout', 'malformed', 'command-error', 'shape'] as const) {
     it(`${path} required seed rejects ${failure} and recovers with a healthy observation`, async () => {
       mode = failure === 'shape' ? 'hit' : failure;
       if (failure === 'shape') cache.set(key, {});
       const failed = await request(path);
-      assert.equal(failed.status, 503);
+      assert.equal(failed.status, allowMiss && failure === 'miss' ? 200 : 503);
       assert.equal(failed.headers.get('Cache-Control'), 'no-store');
       assert.equal(failed.headers.get('CDN-Cache-Control'), null);
       assert.equal(failed.headers.get('Vercel-CDN-Cache-Control'), null);
+      if (allowMiss && failure === 'miss') assert.deepEqual(await failed.json(), { anomalies: [] });
       mode = 'hit';
       cache.set(key, payload);
       const recovered = await request(path);
@@ -229,6 +229,11 @@ function itRejectsRequiredSeedFailures(path: string, key: string, payload: unkno
 for (const [path, key, payload, field] of requiredCases) {
   itRejectsRequiredSeedFailures(path, key, payload, body => assert.deepEqual((body as Record<string, unknown>)[field], payload[field]));
 }
+itRejectsRequiredSeedFailures(
+  'climate/v1/list-climate-anomalies', 'climate:anomalies:v2', { anomalies: [{ zone: 'Arctic' }] },
+  body => assert.deepEqual((body as { anomalies: { zone: string }[] }).anomalies.map(row => row.zone), ['Arctic']),
+  true,
+);
 
 // #8424: get-bls-series reads the canonical key api/health.js vouches for. The
 // per-series keys it used to read were overwritten by their own seed-meta record

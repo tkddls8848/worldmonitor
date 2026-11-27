@@ -138,6 +138,35 @@ test('the daily executable recovers transient source reads and bounds permanent 
   }
 });
 
+test('the daily executable retries a degraded CII response and publishes the recovered scores', () => {
+  const entry = new URL('../scripts/seed-country-history.mjs', import.meta.url);
+  const script = `
+    let warmups = 0;
+    const data = ${JSON.stringify(inputs())};
+    data.digest.generatedAt = new Date().toISOString();
+    globalThis.fetch = async (url, init) => {
+      if (new URL(url).pathname === '/api/intelligence/v1/get-risk-scores') {
+        const degraded = ++warmups < 3;
+        return Response.json({ degraded, ciiScores: data.risk.ciiScores.map(row => ({
+          ...row, computedAt: Date.now(),
+        })) });
+      }
+      const args = JSON.parse(init.body);
+      if (args[0] === 'MGET') return Response.json({ result: [null, JSON.stringify(data.digest)] });
+      if (args[0] !== 'EVAL' || warmups !== 3) throw new Error('published before CII recovered');
+      return Response.json({ result: args[2] - 3 });
+    };
+    process.argv[1] = ${JSON.stringify(fileURLToPath(entry))};
+    await import(${JSON.stringify(entry.href)});
+  `;
+  const result = spawnSync(process.execPath, ['--input-type=module', '--eval', script], {
+    encoding: 'utf8', timeout: 5000,
+    env: { ...process.env, NODE_ENV: 'test', NODE_TEST_CONTEXT: 'child-v8', WM_ALLOW_ENV_LOAD_IN_TESTS: '0', WM_SEED_RETRY_DELAY_MS: '0', UPSTASH_REDIS_REST_URL: 'https://fixture.invalid', UPSTASH_REDIS_REST_TOKEN: 'fixture' },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /published=196/);
+});
+
 test('publisher atomically replaces dates, trims retention and stamps health only on confirmed writes', async () => {
   const calls = [];
   const snapshots = composeCountrySnapshots(inputs());

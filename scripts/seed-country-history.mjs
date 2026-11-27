@@ -25,7 +25,7 @@ const words = text => String(text).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' '
 
 function usableRiskSnapshot(risk, now) {
   return Array.isArray(risk?.ciiScores) && risk.ciiScores.length > 0 && !risk.stale && !risk.degraded
-    && risk.ciiScores.every(row => validScore(row.combinedScore)
+    && risk.ciiScores.every(row => validScore(row?.combinedScore)
       && typeof row.methodologyVersion === 'string' && row.methodologyVersion
       && fresh(row.computedAt, now, 30 * 60000));
 }
@@ -104,14 +104,23 @@ async function main() {
   const apiFetch = wmApiFetch();
   const { risk, digest } = await readCountryHistorySources({
     url, token, now: sourceCheckAt,
-    warmRiskScores: async () => {
+    // Two retries span the RPC's three-second backoff after a rejected build.
+    warmRiskScores: () => withRetry(async () => {
       const response = await apiFetch(`${wmApiBase()}/api/intelligence/v1/get-risk-scores`, {
         headers: { Accept: 'application/json', 'User-Agent': 'WorldMonitor-Seed/1.0 (https://worldmonitor.app)' },
         signal: AbortSignal.timeout(60_000),
       });
-      if (!response.ok) throw new Error(`country history CII warmup HTTP ${response.status}`);
-      return response.json();
-    },
+      if (!response.ok) {
+        throw Object.assign(new Error(`country history CII warmup HTTP ${response.status}`), {
+          nonRetryable: response.status >= 400 && response.status < 500 && response.status !== 429,
+        });
+      }
+      const risk = await response.json();
+      if (!usableRiskSnapshot(risk, Date.now())) {
+        throw new Error(`country history CII warmup unusable (stale=${risk?.stale === true}, degraded=${risk?.degraded === true}, scores=${risk?.ciiScores?.length ?? 0})`);
+      }
+      return risk;
+    }, 2, 1200),
     warmNewsDigest: async () => {
       const response = await apiFetch(`${wmApiBase()}/api/news/v1/list-feed-digest?variant=full&lang=en`, {
         headers: { Accept: 'application/json', 'User-Agent': 'WorldMonitor-Seed/1.0 (https://worldmonitor.app)' },
