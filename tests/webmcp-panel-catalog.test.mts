@@ -80,7 +80,8 @@ describe('WebMCP dashboard panel catalog', () => {
 
     assert.equal(uniqueIds.length, Object.keys(ALL_PANELS).length);
     assert.equal(worldIds.length, VARIANT_DEFAULTS.full!.length);
-    assert.ok(uniqueIds.includes('regionalStartups'));
+    assert.ok(uniqueIds.includes('gccNews'));
+    assert.ok(!uniqueIds.includes('regionalStartups'));
     assert.ok(uniqueIds.includes('gccNews'));
     assert.ok(disabledWorld.length > 0, 'World registry must include disabled panels');
     assert.ok(disabledWorld.includes('grid-disruption-clock'));
@@ -111,18 +112,18 @@ describe('WebMCP dashboard panel catalog', () => {
     const live = liveState('full');
     const allPages = collectPages(live);
     const worldPages = collectPages(live, { variant: 'full' });
-    const techPages = collectPages(live, { variant: 'tech' });
+    const financePages = collectPages(live, { variant: 'finance' });
     const allIds = allPages.flatMap((page) => page.panels.map((panel) => panel.id));
     const worldIds = worldPages.flatMap((page) => page.panels.map((panel) => panel.id));
-    const techIds = techPages.flatMap((page) => page.panels.map((panel) => panel.id));
+    const financeIds = financePages.flatMap((page) => page.panels.map((panel) => panel.id));
 
     assert.deepEqual(allIds, [...getCanonicalDashboardPanelIds()]);
     assert.deepEqual(worldIds, [...getCanonicalDashboardPanelIds('full')]);
-    assert.deepEqual(techIds, [...getCanonicalDashboardPanelIds('tech')]);
-    assert.notDeepEqual(worldIds, techIds);
-    assert.ok(techIds.every((panelId) => allIds.includes(panelId)));
+    assert.deepEqual(financeIds, [...getCanonicalDashboardPanelIds('finance')]);
+    assert.notDeepEqual(worldIds, financeIds);
+    assert.ok(financeIds.every((panelId) => allIds.includes(panelId)));
     assert.equal(allPages[0]?.variant, 'full');
-    assert.equal(techPages[0]?.variant, 'full');
+    assert.equal(financePages[0]?.variant, 'full');
   });
 
   it('filters by category, enabled state, and availability', () => {
@@ -187,46 +188,46 @@ describe('WebMCP dashboard panel catalog', () => {
   });
 
   it('keeps variant availability and category assignment aligned with settings registries', () => {
-    const githubCategory = getDashboardPanelCategoryKey('github', 'tech');
-    const githubOnWorld = getDashboardPanelCategoryKey('github', 'full');
+    const gccCategory = getDashboardPanelCategoryKey('gccNews', 'finance');
+    const gccOnWorld = getDashboardPanelCategoryKey('gccNews', 'full');
     const live = liveState('full');
-    const github = collectPages(live)
+    const gcc = collectPages(live)
       .flatMap((page) => page.panels)
-      .find((panel) => panel.id === 'github');
+      .find((panel) => panel.id === 'gccNews');
 
-    assert.equal(githubCategory, 'techAi');
-    assert.equal(githubOnWorld, 'techAi');
-    assert.ok(github);
-    assert.deepEqual(github.variants, ['tech']);
-    assert.equal(github.category, 'techAi');
-    assert.ok(Object.keys(PANEL_CATEGORY_MAP).includes('techAi'));
+    assert.equal(gccCategory, 'gulfMena');
+    assert.equal(gccOnWorld, 'gulfMena');
+    assert.ok(gcc);
+    assert.deepEqual(gcc.variants, ['finance']);
+    assert.equal(gcc.category, 'gulfMena');
+    assert.ok(Object.keys(PANEL_CATEGORY_MAP).includes('gulfMena'));
   });
 
   it('classifies a filtered variant catalog with that variant\'s categories', () => {
     const live = liveState('full');
-    const techMarketIds = collectPages(live, { variant: 'tech', category: 'techMarkets' })
+    const financeMarketIds = collectPages(live, { variant: 'finance', category: 'finMarkets' })
       .flatMap((page) => page.panels.map((panel) => panel.id));
     const marketsOnWorld = collectPages(live, { variant: 'full' })
       .flatMap((page) => page.panels)
       .find((panel) => panel.id === 'markets');
-    const techMarkets = listDashboardPanelCatalog(live, {
-      variant: 'tech',
-      category: 'techMarkets',
+    const finMarkets = listDashboardPanelCatalog(live, {
+      variant: 'finance',
+      category: 'finMarkets',
       limit: 8,
     });
 
-    assert.ok(techMarketIds.includes('markets'));
-    assert.ok(techMarketIds.includes('finance'));
-    assert.ok(techMarketIds.includes('crypto'));
+    assert.ok(financeMarketIds.includes('markets'));
+    assert.ok(financeMarketIds.includes('markets-news'));
+    assert.ok(financeMarketIds.includes('analysis'));
     assert.deepEqual(
-      [...techMarketIds].sort((left, right) => left.localeCompare(right, 'en')),
-      [...(PANEL_CATEGORY_MAP.techMarkets?.panelKeys ?? [])]
-        .filter((panelId) => getCanonicalDashboardPanelIds('tech').includes(panelId))
+      [...financeMarketIds].sort((left, right) => left.localeCompare(right, 'en')),
+      [...(PANEL_CATEGORY_MAP.finMarkets?.panelKeys ?? [])]
+        .filter((panelId) => getCanonicalDashboardPanelIds('finance').includes(panelId))
         .sort((left, right) => left.localeCompare(right, 'en')),
     );
-    assert.ok(techMarkets.panels.every((panel) => panel.category === 'techMarkets'));
+    assert.ok(finMarkets.panels.every((panel) => panel.category === 'finMarkets'));
     assert.equal(marketsOnWorld?.category, 'marketsFinance');
-    assert.equal(techMarkets.variant, 'full');
+    assert.equal(finMarkets.variant, 'full');
   });
 
   it('rejects invalid filters and cursors with structured reasons', () => {

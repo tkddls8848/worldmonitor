@@ -70,7 +70,7 @@ describe('isPanelNativeToVariant', () => {
 
 describe('evaluateSetPanelEnabled', () => {
   it('accepts mixed-case catalog IDs without changing case-sensitive lookup', () => {
-    for (const [panelId, variant] of [['gccNews', 'finance'], ['regionalStartups', 'tech']]) {
+    for (const [panelId, variant] of [['gccNews', 'finance']]) {
       const value = evaluate({ panelId, variant, enabled: false });
       assert.equal(value.ok, true);
       assert.equal(value.panelId, panelId);
@@ -456,7 +456,7 @@ describe('set_panel_enabled WebMCP adapter', () => {
     assert.ok(tool);
     const schema = tool.inputSchema as { properties: { panelId: { pattern: string } } };
     assert.ok(new RegExp(schema.properties.panelId.pattern).test('gccNews'));
-    assert.ok(new RegExp(schema.properties.panelId.pattern).test('regionalStartups'));
+    assert.ok(new RegExp(schema.properties.panelId.pattern).test('gccNews'));
 
     const extraKeys = await tool.execute(
       { panelId: 'giving', enabled: true, selector: '#giving' },

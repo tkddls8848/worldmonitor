@@ -63,7 +63,7 @@ class MemoryStorage {
   }
 }
 
-const VARIANTS: MapVariant[] = ['full', 'tech', 'finance', 'commodity', 'energy', ];
+const VARIANTS: MapVariant[] = ['full', 'finance', 'commodity', 'energy', ];
 
 let originalLocalStorage: PropertyDescriptor | undefined;
 let originalWindow: PropertyDescriptor | undefined;
@@ -610,7 +610,6 @@ describe('mission preset definitions', () => {
         'energy-security',
         'osint-newsroom',
         'macro-market-watch',
-        'tech-ai-watch',
         'nq-day-trader',
         'country-watcher',
         'protective-travel',
@@ -623,8 +622,6 @@ describe('mission preset definitions', () => {
     assert.equal(getMissionPreset('osint-newsroom')?.shortLabel, 'News');
     assert.equal(getMissionPreset('macro-market-watch')?.label, 'Stock Geek');
     assert.equal(getMissionPreset('macro-market-watch')?.shortLabel, 'Stocks');
-    assert.equal(getMissionPreset('tech-ai-watch')?.label, 'Tech / AI Watcher');
-    assert.equal(getMissionPreset('tech-ai-watch')?.shortLabel, 'Tech');
   });
 
   it('uses known panel and layer keys without duplicate ids', () => {
@@ -680,13 +677,13 @@ describe('applyMissionPresetToState', () => {
 
   it('lists NQ Day Trader only on finance and rejects it on other variants', () => {
     const financeIds = getMissionPresetsForVariant('finance').map((preset) => preset.id);
-    assert.equal(financeIds.length, 8);
+    assert.equal(financeIds.length, 7);
     assert.ok(financeIds.includes('nq-day-trader'));
     for (const variant of VARIANTS.filter((item) => item !== 'finance')) {
       const ids = getMissionPresetsForVariant(variant).map((preset) => preset.id);
       // Protective Travel is offered on the full variant only (#10453).
-      const expected = variant === 'full' ? 8 : 7;
-      assert.equal(ids.length, expected, `${variant} should keep the seven shared missions${variant === 'full' ? ' plus Protective Travel' : ''}`);
+      const expected = variant === 'full' ? 7 : 6;
+      assert.equal(ids.length, expected, `${variant} should keep the six shared missions${variant === 'full' ? ' plus Protective Travel' : ''}`);
       assert.ok(!ids.includes('nq-day-trader'), `${variant} must not offer NQ Day Trader`);
     }
 
@@ -764,24 +761,7 @@ describe('applyMissionPresetToState', () => {
   });
 
   it('falls back to variant defaults when a preset has too few matching panels', () => {
-    const techApplied = applyMissionPresetToState(
-      'tech-ai-watch',
-      makePanelSettings('tech'),
-      DEFAULT_MAP_LAYERS,
-      'tech',
-    );
-    assert.deepEqual(techApplied.panelOrder.slice(0, 5), [
-      'live-news',
-      'insights',
-      'ai',
-      'tech',
-      'startups',
-    ]);
-    assert.equal(techApplied.mapLayers.datacenters, true);
-    assert.equal(techApplied.mapLayers.startupHubs, true);
-
     for (const [variant, presetId] of [
-      ['tech', 'energy-security'],
       ['commodity', 'osint-newsroom'],
       ['energy', 'osint-newsroom'],
     ] as const) {

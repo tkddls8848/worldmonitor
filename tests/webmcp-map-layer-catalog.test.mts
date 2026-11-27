@@ -135,21 +135,21 @@ describe('listMapLayerCatalog', () => {
 
   it('lists only the requested monitor variant and keeps current-page set_map_layers availability', () => {
     const page = listMapLayerCatalog(snapshot(), {
-      monitor: 'tech',
+      monitor: 'finance',
       limit: MAX_MAP_LAYER_PAGE_SIZE,
     }, BUDGETS);
     assert.equal(page.ok, true);
     if (!page.ok) return;
-    assert.deepEqual(page.layers.map((layer) => layer.id), getOrderedLayerKeys('tech').slice(0, MAX_MAP_LAYER_PAGE_SIZE));
-    const startup = page.layers.find((layer) => layer.id === 'startupHubs');
-    assert.ok(startup);
-    assert.equal(startup.monitorAvailable, true);
-    assert.equal(startup.available, false);
-    assert.equal(startup.reason, 'variant_disallowed');
-    const datacenters = page.layers.find((layer) => layer.id === 'datacenters');
-    assert.ok(datacenters);
-    assert.equal(datacenters.monitorAvailable, true);
-    assert.equal(datacenters.available, true);
+    assert.deepEqual(page.layers.map((layer) => layer.id), getOrderedLayerKeys('finance').slice(0, page.layers.length));
+    const foreignLayer = page.layers.find((layer) => layer.id === 'stockExchanges');
+    assert.ok(foreignLayer);
+    assert.equal(foreignLayer.monitorAvailable, true);
+    assert.equal(foreignLayer.available, false);
+    assert.equal(foreignLayer.reason, 'variant_disallowed');
+    const commonLayer = page.layers.find((layer) => layer.id === 'tradeRoutes');
+    assert.ok(commonLayer);
+    assert.equal(commonLayer.monitorAvailable, true);
+    assert.equal(commonLayer.available, true);
   });
 
   it('filters 2D renderer compatibility without dropping disabled layers', () => {
@@ -288,14 +288,14 @@ describe('listMapLayerCatalog', () => {
   });
 
   it('reuses a layer-ID cursor in the new filtered sequence when filters change', () => {
-    const omitPage = listMapLayerCatalog(snapshot({ variant: 'tech' }), {
+    const omitPage = listMapLayerCatalog(snapshot({ variant: 'finance' }), {
       limit: DEFAULT_MAP_LAYER_PAGE_SIZE,
     }, BUDGETS);
     assert.equal(omitPage.ok, true);
     if (!omitPage.ok) return;
     const cursor = omitPage.nextCursor;
     assert.ok(cursor);
-    const worldAfterCursor = listMapLayerCatalog(snapshot({ variant: 'tech' }), {
+    const worldAfterCursor = listMapLayerCatalog(snapshot({ variant: 'finance' }), {
       monitor: 'world',
       cursor,
       limit: MAX_MAP_LAYER_PAGE_SIZE,

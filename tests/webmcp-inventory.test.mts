@@ -334,7 +334,7 @@ const VALID_INPUTS: Record<string, Record<string, unknown>> = {
   get_dashboard_context: {},
   list_map_layers: {},
   list_dashboard_panels: {},
-  switch_monitor: { monitor: 'tech' },
+  switch_monitor: { monitor: 'finance' },
   open_settings: {},
   open_alerts: {},
   open_dashboard_panel: { panelId: 'markets' },
@@ -586,7 +586,6 @@ describe('WebMCP canonical inventories', () => {
     assert.deepEqual(Object.keys(WEBMCP_VARIANT_INVENTORIES), SITE_VARIANTS);
     const expectedConditional = {
       full: ['search_procurement'],
-      tech: ['search_procurement'],
       finance: ['search_procurement'],
       commodity: [],
       energy: [],

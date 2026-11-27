@@ -52,7 +52,7 @@ describe('getVariantPanelCategories', () => {
   it('unscoped categories (core) are available to every variant', () => {
     assert.equal(PANEL_CATEGORY_MAP['core']!.variants, undefined, 'core stays unscoped');
     const enabled = settings({ 'live-news': true });
-    for (const variant of ['full', 'tech', 'finance', 'commodity', 'energy', ]) {
+    for (const variant of ['full', 'finance', 'commodity', 'energy', ]) {
       const result = getVariantPanelCategories(enabled, variant);
       assert.ok(
         result.some((c) => c.key === 'core'),
@@ -68,7 +68,6 @@ describe('getVariantPanelCategories', () => {
   it('variant defaults yield the curated category set, free of duplicate labels', () => {
     const expected: Record<string, string[]> = {
       full: ['core', 'intelligence', 'correlation', 'regionalNews', 'marketsFinance', 'topical', 'dataTracking'],
-      tech: ['core', 'techAi', 'startupsVc', 'securityPolicy', 'techMarkets'],
       finance: ['core', 'finMarkets', 'fixedIncomeFx', 'finCommodities', 'cryptoDigital', 'centralBanksEcon', 'dealsInstitutional', 'gulfMena'],
       commodity: ['core', 'commodityPrices', 'miningIndustry', 'commodityEcon'],
       energy: ['core', 'marketsFinance', 'topical', 'dataTracking'],

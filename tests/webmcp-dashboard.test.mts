@@ -24,7 +24,7 @@ import {
 } from '../src/config/panels.ts';
 import type { MapLayers, PanelConfig } from '../src/types/index.ts';
 
-const VARIANTS = ['full', 'tech', 'finance', 'commodity',  'energy'] as const;
+const VARIANTS = ['full', 'finance', 'commodity',  'energy'] as const;
 
 it('keeps the advertised pre-ready invocation window at 30 seconds', () => {
   assert.equal(WEBMCP_UI_READY_TIMEOUT_MS, 30_000);
@@ -35,9 +35,8 @@ const EXPECTED_VARIANT_PANEL_SNAPSHOTS: Record<DashboardVariant, {
   enabledCount: number;
   enabledSha256: string;
 }> = {
-  full: { enabledCount: 81, enabledSha256: '7b5ba68016405456f64ca87913cf677e29a3c166436e2eeefa5542a460eda677' },
-  tech: { enabledCount: 37, enabledSha256: 'a5ffe823ca9b8bde138a082abd12a84920afabf97fb265a21dfb063bf3831f91' },
-  finance: { enabledCount: 58, enabledSha256: 'ff2d731c249dad59a8fca8c201b98901243b6ed836c332e29d09582a6573ab2e' },
+  full: { enabledCount: 81, enabledSha256: 'fe5e8e255c3db346ed0177a5adfc559fb00736a3576a013a0e298027278b66ce' },
+  finance: { enabledCount: 58, enabledSha256: '3d4696e8b66b80d1158c20e5919528faf5fdd8f5a87beb316086ea5e221a8677' },
   commodity: { enabledCount: 33, enabledSha256: 'b534510a2e814392e3966beb211e300e75a2b33f05c283613dd4f6cee50ddfe0' },
   energy: { enabledCount: 27, enabledSha256: '77471d0d0ab931e78065df61dfc0300c081e9fb57427975505d9e1c834617a12' },
 };
@@ -47,8 +46,7 @@ const EXPECTED_VARIANT_DEFAULT_SNAPSHOTS: Record<DashboardVariant, {
   enabled: number;
   sha256: string;
 }> = {
-  full: { total: 104, enabled: 81, sha256: 'a86ca40df6aa8cb0109a9da32d069006b85928c2ed28b351230f3655737d8b61' },
-  tech: { total: 39, enabled: 37, sha256: '8d0f8d1cab65f887cce17432f301a1f764dca7783b67799792147be8b8c94e3d' },
+  full: { total: 106, enabled: 81, sha256: '00fe286fbdc6a4669484edea89af7f5e354a4596785b5bbe2e371437512be985' },
   finance: { total: 66, enabled: 58, sha256: '0b4d8a0f5a0015dba3b82fbc2286f4a50f246dafca548eb970156136d8a02258' },
   commodity: { total: 36, enabled: 33, sha256: 'cc9e0b178dec33dff354a1eea95b5b215302fc7ce685b3d92b82a356df6d6bee' },
   energy: { total: 30, enabled: 27, sha256: '1a5271643c2a74fe662e011b23a170fe5458355da566bc061c25560216b45569' },
@@ -62,7 +60,6 @@ function makeContext(
     conflicts: true,
     weather: false,
     tradeRoutes: true,
-    startupHubs: false,
   } as unknown as MapLayers;
   return {
     isDestroyed: false,
@@ -118,7 +115,7 @@ function makeSettings(calls: string[] = []): UnifiedSettingsController {
 }
 
 describe('WebMCP live dashboard bindings', () => {
-  it('locks the canonical panel defaults for all five variants', () => {
+  it('locks the canonical panel defaults for all four variants', () => {
     assert.deepEqual(Object.keys(VARIANT_DEFAULTS).sort(), [...VARIANTS].sort());
 
     for (const variant of VARIANTS) {
@@ -170,7 +167,6 @@ describe('WebMCP live dashboard bindings', () => {
       conflicts: false,
       weather: true,
       tradeRoutes: false,
-      startupHubs: false,
     } as unknown as MapLayers;
     const ctx = makeContext({}, liveMapLayers);
 
@@ -298,11 +294,11 @@ describe('WebMCP live dashboard bindings', () => {
         isDeckGLActive: () => true,
       },
     });
-    const deckSnapshot = getWebMcpMapLayerCatalogSnapshot(deck, 'tech', true);
+    const deckSnapshot = getWebMcpMapLayerCatalogSnapshot(deck, 'finance', true);
     assert.equal(deckSnapshot.rendererKind, 'deck');
     assert.equal(deckSnapshot.deckGlActive, true);
     assert.equal(deckSnapshot.hasPremium, true);
-    assert.equal(deckSnapshot.variant, 'tech');
+    assert.equal(deckSnapshot.variant, 'finance');
 
     assert.throws(
       () => getWebMcpMapLayerCatalogSnapshot(makeContext({ map: null }), 'full', false),
@@ -883,13 +879,12 @@ describe('WebMCP live dashboard bindings', () => {
     assert.match(result.message, /at most 10 layers/);
   });
 
-  it('preserves per-target variant denials across all five variants', async () => {
+  it('preserves per-target variant denials across all four variants', async () => {
     const cases: Record<DashboardVariant, {
       allowed: keyof MapLayers;
       disallowed: keyof MapLayers;
     }> = {
-      full: { allowed: 'conflicts', disallowed: 'startupHubs' },
-      tech: { allowed: 'startupHubs', disallowed: 'conflicts' },
+      full: { allowed: 'conflicts', disallowed: 'stockExchanges' },
       finance: { allowed: 'tradeRoutes', disallowed: 'conflicts' },
       commodity: { allowed: 'tradeRoutes', disallowed: 'conflicts' },
       energy: { allowed: 'tradeRoutes', disallowed: 'conflicts' },
@@ -897,16 +892,7 @@ describe('WebMCP live dashboard bindings', () => {
 
     for (const variant of VARIANTS) {
       const { allowed, disallowed } = cases[variant];
-      // Happy's map layers are DeckGL-only; this test isolates variant policy
-      // from renderer policy by giving that variant its supported renderer.
-      const ctx = makeContext(variant === 'happy'
-        ? {
-            map: {
-              ...makeContext().map,
-              isDeckGLActive: () => true,
-            },
-          }
-        : {});
+      const ctx = makeContext();
       ctx.mapLayers[allowed] = false;
       ctx.mapLayers[disallowed] = false;
       const result = await applyWebMcpDashboardAction(
@@ -926,7 +912,7 @@ describe('WebMCP live dashboard bindings', () => {
   });
 
   it('switches every stable monitor key and overlays the destination on context', async () => {
-    assert.deepEqual([...SITE_VARIANTS], ['full', 'tech', 'finance',  'commodity', 'energy']);
+    assert.deepEqual([...SITE_VARIANTS], ['full', 'finance',  'commodity', 'energy']);
     const navigated: string[] = [];
     for (const monitor of SITE_VARIANTS) {
       const result = await applyWebMcpSwitchMonitor(
@@ -953,7 +939,7 @@ describe('WebMCP live dashboard bindings', () => {
     const result = await applyWebMcpSwitchMonitor(
       makeContext(),
       'full',
-      'tech',
+      'finance',
       async () => {
         navigated = true;
         return 'unavailable';
@@ -963,7 +949,7 @@ describe('WebMCP live dashboard bindings', () => {
     assert.equal(result.ok, false);
     assert.equal(result.status, 'denied');
     assert.equal(result.reason, 'unavailable');
-    assert.equal(result.destination, 'tech');
+    assert.equal(result.destination, 'finance');
     assert.equal(result.context.variant, 'full');
     assert.match(result.message, /not available/i);
     assert.equal(/user|email|plan|account/i.test(result.message), false);
@@ -973,13 +959,13 @@ describe('WebMCP live dashboard bindings', () => {
     const result = await applyWebMcpSwitchMonitor(
       makeContext(),
       'full',
-      'tech',
+      'finance',
       async () => 'blocked',
     );
     assert.equal(result.ok, false);
     assert.equal(result.status, 'denied');
     assert.equal(result.reason, 'unavailable');
-    assert.equal(result.destination, 'tech');
+    assert.equal(result.destination, 'finance');
     assert.match(result.message, /could not switch monitors/i);
     assert.equal(/user|email|plan|account/i.test(result.message), false);
   });
@@ -1047,7 +1033,7 @@ describe('WebMCP live dashboard bindings', () => {
     const destroyed = await applyWebMcpSwitchMonitor(
       makeContext({ isDestroyed: true }),
       'full',
-      'tech',
+      'finance',
       async () => {
         navigated = true;
         return 'reload';

@@ -32,7 +32,7 @@ import {
 } from '../src/services/webmcp.ts';
 import { withTimeout } from '../src/utils/with-timeout.ts';
 
-type Variant = 'full' | 'tech' | 'finance' | 'commodity' | 'energy';
+type Variant = 'full' | 'finance' | 'commodity' | 'energy';
 
 const managerSource = readFileSync(
   new URL('../src/app/search-manager.ts', import.meta.url),
@@ -1973,20 +1973,6 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
         },
       },
       {
-        label: 'tech event',
-        variant: 'tech',
-        match: resultMatch(
-          'techevent',
-          'event-1',
-          'Needle tech event',
-          { id: 'event-1', lat: 37.8, lng: -122.4 },
-        ),
-        verify: ({ calls }) => {
-          assert.ok(calls.layers.includes('techEvents'));
-          assert.deepEqual(calls.centers, [[37.8, -122.4, 5]]);
-        },
-      },
-      {
         label: 'command',
         match: commandMatch('time:7d', 'actions', 'Last seven days'),
         verify: ({ calls }) => assert.deepEqual(calls.timeRanges, ['7d']),
@@ -2294,20 +2280,18 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
     ), true);
   });
 
-  it('enforces the six-variant entity visibility matrix without leaking foreign domains', () => {
+  it('enforces the four-variant entity visibility matrix without leaking foreign domains', () => {
     const probes: Record<string, SearchResult> = {
       country: {
         type: 'country', id: 'US', title: 'United States', data: { code: 'US', name: 'United States' },
       },
       hotspot: { type: 'hotspot', id: 'hs', title: 'Hotspot', data: { id: 'hs' } },
       pipeline: { type: 'pipeline', id: 'pipe', title: 'Pipeline', data: { id: 'pipe' } },
-      techcompany: { type: 'techcompany', id: 'tech', title: 'Tech', data: { id: 'tech' } },
       exchange: { type: 'exchange', id: 'exchange', title: 'Exchange', data: { id: 'exchange' } },
       commodityhub: { type: 'commodityhub', id: 'hub', title: 'Hub', data: { id: 'hub' } },
     };
     const expected: Record<Variant, string[]> = {
       full: ['country', 'hotspot', 'pipeline'],
-      tech: ['country', 'techcompany'],
       finance: ['country', 'pipeline', 'exchange', 'commodityhub'],
       commodity: ['country', 'pipeline', 'commodityhub'],
       energy: ['country', 'pipeline', 'commodityhub'],
@@ -2324,7 +2308,7 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
   });
 
   it('registers commodity hubs through the shared variant-layer policy', () => {
-    const enabledVariants = (['full', 'tech', 'finance',  'commodity', 'energy'] as Variant[])
+    const enabledVariants = (['full', 'finance',  'commodity', 'energy'] as Variant[])
       .filter((variant) => getAllowedLayerKeys(variant).has('commodityHubs'));
     assert.deepEqual(enabledVariants, ['finance', 'commodity', 'energy']);
 
@@ -2370,7 +2354,7 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
     assert.ok(parent && ts.isIfStatement(parent));
     assert.match(parent.expression.getText(sourceFile), /\.has\('bases'\)/);
     assert.deepEqual(
-      (['full', 'tech', 'finance',  'commodity', 'energy'] as Variant[])
+      (['full', 'finance',  'commodity', 'energy'] as Variant[])
         .filter((variant) => getAllowedLayerKeys(variant).has('bases')),
       ['full'],
     );

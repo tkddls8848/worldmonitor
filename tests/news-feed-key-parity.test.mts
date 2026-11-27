@@ -38,11 +38,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // as deferred follow-ups (todos/257 item 9), not silent drift. Any
 // client key NOT in this allowlist must have a server match.
 const VARIANTS: Array<{ clientConst: string; serverKey: string; knownGapsClientOnly: string[] }> = [
-  {
-    clientConst: 'TECH_FEEDS',
-    serverKey: 'tech',
-    knownGapsClientOnly: [],
-  },
   { clientConst: 'FINANCE_FEEDS', serverKey: 'finance', knownGapsClientOnly: [] },
   { clientConst: 'COMMODITY_FEEDS', serverKey: 'commodity', knownGapsClientOnly: [] },
   // FULL_FEEDS / HAPPY_FEEDS / ENERGY_FEEDS aren't asserted yet —

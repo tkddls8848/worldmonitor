@@ -49,7 +49,6 @@ const DECLARED_GAPS = new Map();
 /** Variant -> the createLayerToggles list it actually uses. */
 const VARIANT_PICKER_LIST = {
   full: 'fullLayers',
-  tech: 'techLayers',
   finance: 'financeLayers',
   energy: 'energyLayers',
   commodity: 'commodityLayers',
@@ -58,7 +57,6 @@ const VARIANT_PICKER_LIST = {
 /** Variant -> the panels.ts default map-layer state it boots with. */
 const VARIANT_LAYER_STATE = {
   full: 'FULL_MAP_LAYERS',
-  tech: 'TECH_MAP_LAYERS',
   finance: 'FINANCE_MAP_LAYERS',
   energy: 'ENERGY_MAP_LAYERS',
   commodity: 'COMMODITY_MAP_LAYERS',

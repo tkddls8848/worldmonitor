@@ -275,11 +275,11 @@ describe('ListMediaPerspective', () => {
   });
 
   it('reads feeds that only a non-full variant lists', async () => {
-    assert.equal(feedVariants.get(feed('Tech in Asia').url), 'tech', 'fixture premise');
-    put('Tech in Asia', [article('Tech in Asia', 'Saudi Arabia funds a Singapore AI lab')]);
+    assert.equal(feedVariants.get(feed('Bloomberg Markets').url), 'finance', 'fixture premise');
+    put('Bloomberg Markets', [article('Bloomberg Markets', 'Saudi Arabia announces new oil export policy')]);
 
     const { payload } = await request({ subject_country: 'SA' });
-    assert.equal(group(payload, 'SG', 'international')!.headlines[0]!.outlet, 'Tech in Asia');
+    assert.equal(group(payload, 'US', 'international')!.headlines[0]!.outlet, 'Bloomberg Markets');
   });
 
   it('rejects invalid parameters', async () => {

@@ -276,7 +276,6 @@ const SPLIT_RISK_PANEL_IMPORTS: Array<[string, string, string]> = [
   ['fuel-prices', '@/components/FuelPricesPanel', 'FuelPricesPanel'],
   ['fao-food-price-index', '@/components/FaoFoodPriceIndexPanel', 'FaoFoodPriceIndexPanel'],
   ['climate-news', '@/components/ClimateNewsPanel', 'ClimateNewsPanel'],
-  ['events', '@/components/TechEventsPanel', 'TechEventsPanel'],
   ['macro-signals', '@/components/MacroSignalsPanel', 'MacroSignalsPanel'],
 ];
 

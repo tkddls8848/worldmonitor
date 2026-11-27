@@ -28,8 +28,6 @@ const auditedRules = [
   { file: 'src/styles/main.css', css: mainCss, selector: '.panel.flash-new::after' },
   { file: 'src/styles/main.css', css: mainCss, selector: '.tech-indicator-item' },
   { file: 'src/styles/main.css', css: mainCss, selector: '.tech-indicator-item::before' },
-  { file: 'src/styles/main.css', css: mainCss, selector: '.tech-event-marker.upcoming-soon' },
-  { file: 'src/styles/main.css', css: mainCss, selector: '.tech-event-marker.upcoming-soon::after' },
   { file: 'src/styles/main.css', css: mainCss, selector: '.intel-skeleton' },
   { file: 'src/styles/main.css', css: mainCss, selector: '.intel-skeleton::after' },
 ];
@@ -49,7 +47,6 @@ const expectedIssueKeyframes = new Set([
   'panel-flash',
   'tech-item-pulse',
   'tech-item-highlight-pulse',
-  'pulse-marker',
   'skeleton-shimmer',
 ]);
 
@@ -262,17 +259,7 @@ describe('issue 4538 composited animation invariants', () => {
     }
   });
 
-  it('keeps host transform-sensitive marker and skeleton animations on pseudo-elements', () => {
-    assert.equal(
-      animationNamesFromRule(ruleBlock(mainCss, '.tech-event-marker.upcoming-soon')).size,
-      0,
-      'pulse-marker would overwrite the map marker transform if applied to the marker host',
-    );
-    assert.ok(
-      animationNamesFromRule(ruleBlock(mainCss, '.tech-event-marker.upcoming-soon::after')).has('pulse-marker'),
-      'the upcoming marker ring should animate on the pseudo-element',
-    );
-
+  it('keeps host transform-sensitive skeleton animations on pseudo-elements', () => {
     assert.equal(
       animationNamesFromRule(ruleBlock(mainCss, '.intel-skeleton')).size,
       0,
