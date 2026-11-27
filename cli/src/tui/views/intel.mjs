@@ -1,8 +1,8 @@
 // Intel: GDELT topic feeds, security advisories, sanctions pressure,
-// government spending and tech events.
+// and government spending.
 import { ATTR } from '../term/screen.mjs';
 import { splitH, splitV } from '../ui/layout.mjs';
-import { bar, heading, kv, panel, segments } from '../ui/widgets.mjs';
+import { bar, kv, panel, segments } from '../ui/widgets.mjs';
 import { severityColor } from '../ui/theme.mjs';
 import { ageOf, fmtInt, fmtNum } from '../data/select.mjs';
 import { PaneView, selectedItem } from './base.mjs';
@@ -141,24 +141,14 @@ export class IntelView extends PaneView {
   renderSpending(ctx, r) {
     const { t } = ctx;
     const sp = this.data.spending;
-    const ev = this.data.techEvents?.events || [];
-    const inner2 = panel(ctx, r, { title: 'Spending & events', right: sp ? `US awards ${sp.periodStart}→${sp.periodEnd} $${fmtNum(sp.totalAmount, 0)}` : '' });
-    let y = inner2.y;
-    for (const a of (sp?.awards || []).slice(0, Math.max(0, Math.floor(inner2.h / 2)))) {
-      if (y >= inner2.y + inner2.h) break;
-      segments(ctx, inner2.x, y++, [
-        { text: `$${fmtNum(a.amount, 0)}`.padStart(9), fg: t.good },
-        { text: ` ${String(a.recipientName || '').slice(0, 28).padEnd(28)} `, fg: t.text },
-        { text: String(a.agency || '').slice(0, Math.max(0, inner2.w - 40)), fg: t.dim },
-      ], inner2.w, { bg: t.panel });
-    }
-    if (ev.length && y < inner2.y + inner2.h) heading(ctx, inner2.x, y++, 'upcoming tech events', inner2.w);
-    for (const e of ev.slice(0, Math.max(0, inner2.y + inner2.h - y))) {
-      segments(ctx, inner2.x, y++, [
-        { text: `${String(e.startDate || '').slice(0, 10)} `, fg: t.dim },
-        { text: `${String(e.title || '').slice(0, 30).padEnd(30)} `, fg: t.text },
-        { text: String(e.location || '').slice(0, Math.max(0, inner2.w - 43)), fg: t.dim },
-      ], inner2.w, { bg: t.panel });
+    const inner = panel(ctx, r, { title: 'Government spending', right: sp ? `US awards ${sp.periodStart}→${sp.periodEnd} $${fmtNum(sp.totalAmount, 0)}` : '' });
+    const awards = (sp?.awards || []).slice(0, Math.max(0, inner.h));
+    for (const [index, award] of awards.entries()) {
+      segments(ctx, inner.x, inner.y + index, [
+        { text: `$${fmtNum(award.amount, 0)}`.padStart(9), fg: t.good },
+        { text: ` ${String(award.recipientName || '').slice(0, 28).padEnd(28)} `, fg: t.text },
+        { text: String(award.agency || '').slice(0, Math.max(0, inner.w - 40)), fg: t.dim },
+      ], inner.w, { bg: t.panel });
     }
   }
 }

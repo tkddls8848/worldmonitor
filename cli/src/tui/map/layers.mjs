@@ -353,14 +353,6 @@ export const LAYERS = [
       return { id: `cyber:${c.id}`, name: `${enumLabel(c.type)}${c.malwareFamily ? ` · ${c.malwareFamily}` : ''}`, lat: p[0], lon: p[1], glyph: '¤', color: /CRITICAL|HIGH/.test(c.severity || '') ? t.accent2 : t.accent3, size: /CRITICAL/.test(c.severity || '') ? 1 : 0, ts: c.firstSeenAt, info: info([['Indicator', `${c.indicator} (${enumLabel(c.indicatorType)})`], ['Country', c.country], ['Severity', enumLabel(c.severity)], ['Malware', c.malwareFamily], ['Tags', c.tags], ['Source', enumLabel(c.source)], ['First seen', when(c.firstSeenAt, now)]]) };
     }).filter(Boolean),
   },
-  {
-    id: 'positive', group: 'civil', label: 'Positive events', glyph: '✿', kind: 'point', on: false, color: 'good',
-    build: ({ data, t, now }) => (data.positiveGeoEvents?.events || []).map((e, i) => {
-      const p = loc(e);
-      if (!p) return null;
-      return { id: `pos:${e.name}:${i}`, name: `${e.name}: ${e.count} ${String(e.category || '').replace(/-/g, ' ')}`, lat: p[0], lon: p[1], glyph: '✿', color: t.good, size: e.count >= 50 ? 2 : 1, ts: e.timestamp, info: info([['Category', String(e.category || '').replace(/-/g, ' ')], ['Count', e.count], ['Updated', when(e.timestamp, now)]]) };
-    }).filter(Boolean),
-  },
 
   // Ships & aircraft
   {
