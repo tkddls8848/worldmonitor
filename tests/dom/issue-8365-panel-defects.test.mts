@@ -39,7 +39,6 @@ vi.mock('@/services/generated-rpc-clients', async (importOriginal) => ({
   IntelligenceServiceClient: class { deductSituation = deductSituation; },
 }));
 
-import { etfNetFlowLabel } from '@/components/ETFFlowsPanel';
 import { fsiLabelDisplay } from '@/components/FSIPanel';
 import { EnergyCrisisPanel } from '@/components/EnergyCrisisPanel';
 import { LiveNewsPanel } from '@/components/LiveNewsPanel';
@@ -65,12 +64,6 @@ afterEach(() => {
 });
 
 describe('issue 8365 panel labels', () => {
-  it('labels a neutral ETF net flow as neutral', () => {
-    expect(etfNetFlowLabel('NEUTRAL')).toBe('NET NEUTRAL');
-    expect(etfNetFlowLabel('NET INFLOW')).toBe('NET INFLOW');
-    expect(etfNetFlowLabel('NET OUTFLOW')).toBe('NET OUTFLOW');
-  });
-
   it('translates the seeder High Stress bucket', () => {
     expect(fsiLabelDisplay('High Stress')).toBe('Severe Stress');
     expect(fsiLabelDisplay('Severe Stress')).toBe('Severe Stress');

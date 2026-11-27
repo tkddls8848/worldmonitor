@@ -1,5 +1,4 @@
 import type { Sector, Commodity, MarketSymbol } from '@/types';
-import cryptoConfig from '../../shared/crypto.json';
 import sectorConfig from '../../shared/sectors.json';
 import commodityConfig from '../../shared/commodities.json';
 import stocksConfig from '../../shared/stocks.json';
@@ -29,6 +28,3 @@ export const MARKET_SYMBOLS: MarketSymbol[] = stocksConfig.defaultSymbols.map((s
   if (!entry) throw new Error(`Default market symbol is missing from catalog: ${symbol}`);
   return entry;
 });
-
-export const CRYPTO_IDS = cryptoConfig.ids as readonly string[];
-export const CRYPTO_MAP: Record<string, { name: string; symbol: string }> = cryptoConfig.meta;

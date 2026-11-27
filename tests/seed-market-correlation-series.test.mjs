@@ -37,23 +37,23 @@ describe('market correlation series seeder', () => {
     const result = await fetchMarketCorrelationSeries({
       markets: [
         { symbol: '^GSPC', label: 'S&P 500' },
-        { symbol: 'BTC-USD', label: 'Bitcoin' },
+        { symbol: 'CL=F', label: 'WTI Crude' },
       ],
       now: () => new Date('2026-08-12T00:00:00.000Z'),
       fetchJson: async (_url, { label }) => {
         calls.push(label);
-        if (label === 'BTC-USD') throw new Error('secret upstream detail');
+        if (label === 'CL=F') throw new Error('secret upstream detail');
         return yahooFixture();
       },
       sleep: async () => {},
     });
 
-    assert.deepEqual(calls, ['^GSPC', 'BTC-USD']);
+    assert.deepEqual(calls, ['^GSPC', 'CL=F']);
     assert.equal(result.updatedAt, '2026-08-12T00:00:00.000Z');
     assert.equal(result.interval, '1h');
     assert.equal(result.range, '14d');
     assert.equal(result.series.length, 1);
-    assert.deepEqual(result.failures, [{ symbol: 'BTC-USD', reason: 'upstream-unavailable' }]);
+    assert.deepEqual(result.failures, [{ symbol: 'CL=F', reason: 'upstream-unavailable' }]);
     assert.equal(declareRecords(result), 1);
   });
 

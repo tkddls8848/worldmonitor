@@ -68,7 +68,7 @@ describe('getVariantPanelCategories', () => {
   it('variant defaults yield the curated category set, free of duplicate labels', () => {
     const expected: Record<string, string[]> = {
       full: ['core', 'intelligence', 'correlation', 'regionalNews', 'marketsFinance', 'topical', 'dataTracking'],
-      finance: ['core', 'finMarkets', 'fixedIncomeFx', 'finCommodities', 'cryptoDigital', 'centralBanksEcon', 'dealsInstitutional', 'gulfMena'],
+      finance: ['core', 'finMarkets', 'fixedIncomeFx', 'finCommodities', 'centralBanksEcon', 'dealsInstitutional', 'gulfMena'],
       commodity: ['core', 'commodityPrices', 'miningIndustry', 'commodityEcon'],
       energy: ['core', 'marketsFinance', 'topical', 'dataTracking'],
     };

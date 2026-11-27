@@ -340,7 +340,6 @@
     "sourceRegionMarkets": "Märkte & Analyse",
     "sourceRegionFixedIncomeFx": "Fixed Income & Devisenhandel",
     "sourceRegionCommodities": "Rohstoffe",
-    "sourceRegionCryptoDigital": "Krypto & Digital",
     "sourceRegionCentralBanks": "Zentralbanken & Wirtschaft",
     "sourceRegionDeals": "Deals & Unternehmen",
     "sourceRegionFinRegulation": "Finanzregulierung",
@@ -361,7 +360,6 @@
     "panelCatMarkets": "Märkte",
     "panelCatFixedIncomeFx": "Fixed Income & Devisenhandel",
     "panelCatCommodities": "Rohstoffe",
-    "panelCatCryptoDigital": "Krypto & Digital",
     "panelCatCentralBanks": "Zentralbanken & Wirtschaft",
     "panelCatDeals": "Deals & Institutionell",
     "panelCatGulfMena": "Golf & Nahost und Nordafrika",
@@ -407,15 +405,12 @@
     "tradePolicy": "Handelspolitik",
     "finance": "Finanzen",
     "tech": "Technologie",
-    "crypto": "Krypto",
     "heatmap": "Sektor-Heatmap",
     "ai": "AI & Machine Learning",
     "layoffs": "Entlassungs-Tracker",
     "monitors": "Meine Monitore",
     "satelliteFires": "Brände",
     "macroSignals": "Bitcoin-Marktbedingungen",
-    "etfFlows": "Bitcoin-Fonds-Kapitalströme",
-    "stablecoins": "Stablecoins",
     "deduction": "Lagebeurteilung",
     "ucdpEvents": "Bewaffnete Konfliktereignisse",
     "supplyChain": "Lieferkette",
@@ -1314,15 +1309,6 @@
       "skipToEnd": "Zum Ende springen",
       "storageUnavailable": "Die Wiedergabe ist nicht verfügbar, da dieser Browser die Website-Speicherung blockiert. Erlauben Sie Website-Daten für diese Website, um Snapshots zu speichern."
     },
-    "stablecoins": {
-      "pegHealth": "Peg-Stabilität",
-      "supplyVolume": "Angebot & Volumen",
-      "token": "Token",
-      "mcap": "Marktk.",
-      "vol24h": "Vol 24h",
-      "chg24h": "Änd 24h",
-      "infoTooltip": "<strong>Stablecoins</strong> Peg-Stabilität, Marktkapitalisierung und 24h-Volumen der wichtigsten USD-gebundenen Token (USDT, USDC, DAI, BUSD). Ein gebrochener Peg signalisiert systemisches Risiko."
-    },
     "status": {
       "updatedAt": "Aktualisiert {{time}}"
     },
@@ -1745,27 +1731,6 @@
       "liveNewsAutoplayLabel": "Live-News automatisch abspielen",
       "liveNewsAutoplayDesc": "Startet das Live-News-Video automatisch und stummgeschaltet, sobald es auf dem Bildschirm angezeigt wird. Deaktivieren Sie dies, um das Video nur zu laden, wenn Sie es selbst starten."
     },
-    "etfFlows": {
-      "previousColumns": "Vorherige Spalten",
-      "moreColumns": "Weitere Spalten",
-      "unavailable": "Daten zu börsengehandelten Fonds vorübergehend nicht verfügbar",
-      "rateLimited": "Daten zu börsengehandelten Fonds vorübergehend nicht verfügbar (Rate begrenzt) – Wiederversuch in Kürze",
-      "netFlow": "Netto-Mittelfluss",
-      "estFlow": "Gesch. Mittelfluss",
-      "totalVol": "Ges. Vol.",
-      "etfs": "Börsengehandelte Fonds",
-      "netInflow": "NETTO-ZUFLUSS",
-      "netOutflow": "NETTO-ABFLUSS",
-      "netNeutral": "NETTO-NEUTRAL",
-      "table": {
-        "ticker": "Ticker",
-        "issuer": "Emittent",
-        "estFlow": "Gesch. Mittelfluss",
-        "volume": "Volumen",
-        "change": "Änderung"
-      },
-      "infoTooltip": "<strong>Bitcoin-Fondsströme</strong> Verfolgt täglich geschätzte Fondsströme für US-Spot-Bitcoin-börsengehandelte Fonds:<ul><li>Zustrom-/Abstromrichtung und -größe</li><li>Volumen und Preisveränderung pro Fonds</li><li>Netto-Gesamtstrom über alle verfolgten Fonds</li></ul>"
-    },
     "macroSignals": {
       "overall": "Gesamt",
       "verdict": {
@@ -1775,12 +1740,7 @@
       "bullish": "{{count}}/{{total}} bullisch",
       "signals": {
         "liquidity": "Liquidität",
-        "flow": "Mittelfluss",
-        "regime": "Regime",
-        "btcTrend": "BTC-Trend",
-        "hashRate": "Hashrate",
-        "fearGreed": "Angst & Gier",
-        "momentum": "Momentum"
+        "regime": "Regime"
       },
       "infoTooltip": "<strong>Bitcoin-Marktbedingungen</strong> Composite-Signal-Dashboard für Bitcoin-Positionierung und Risikobereitschaft:<ul><li><strong>Liquidität</strong>: Netto-Fed-Liquiditätsproxy</li><li><strong>Strom</strong>: BTC vs. QQQ 5-Tages-Renditen</li><li><strong>Regime</strong>: QQQ vs. XLP-Rotation (Risk-on/off)</li><li><strong>BTC-Trend</strong>: Preis vs. SMA50/200, Mayer Multiple</li><li><strong>Hash-Rate</strong>: 30-Tage-Netzwerk-Hash-Veränderung</li><li><strong>Angst & Gier</strong>: Marktstimmungsindex</li></ul>Dieses Panel ist für Regime und Positionierung, nicht für breite Makrodaten."
     },
@@ -1964,23 +1924,11 @@
         "twentyDayTrend": "Aufschlag-Trend über 20 Handelstage"
       }
     },
-    "crypto": {
-      "infoTooltip": "<strong>Krypto</strong> Live-Kurse, 24h-Veränderungen und Volumen der wichtigsten Kryptowährungen. Daten von CoinGecko."
-    },
     "gulfEconomies": {
       "infoTooltip": "<strong>Golf-Volkswirtschaften</strong> Indizierte Aktienindizes des Golfs, Wechselkurse und Ölpreise für die Volkswirtschaften des Golfkooperationsrats (Saudi-Arabien, VAE, Kuwait, Katar, Bahrain, Oman)."
     },
     "groceryBasket": {
       "infoTooltip": "<strong>Lebensmittelindex</strong> Globaler Vergleich von Lebensmittelkorbpreisen in 24 Ländern – verfolgt die reale Verbraucherpreisinflation über den Schlagzeilenindex hinaus."
-    },
-    "defiTokens": {
-      "infoTooltip": "<strong>DeFi-Token</strong> Kurse und 24h-/7d-Entwicklung der wichtigsten Token dezentraler Finanzprotokolle – DEXes, Kreditplattformen und Yield-Protokolle."
-    },
-    "aiTokens": {
-      "infoTooltip": "<strong>KI-Token</strong> Kurse und 24h-/7d-Entwicklung von Token aus dem KI- und Machine-Learning-Sektor – Rechennetzwerke, dezentrale KI-Infrastruktur und Datenprotokolle."
-    },
-    "altTokens": {
-      "infoTooltip": "<strong>Alt-Token</strong> Kurse und 24h-/7d-Entwicklung alternativer und aufstrebender Krypto-Token außerhalb der großen Kapitalisierungsklassen."
     },
     "stockAnalysis": {
       "infoTooltip": "<strong>Premium-Aktienanalyse</strong> KI-gestützte Analyse für Aktien auf Ihrer Watchlist – Kauf-/Halte-/Verkaufssignale, Kursziele, wesentliche Risiken und Katalysatoren, täglich aktualisiert."
@@ -2364,7 +2312,6 @@
       "title": "24/7-Positionierung",
       "infoTooltip": "<strong>24/7-Positionierung</strong> Perpetual-Contract-Positionierungsstress von Hyperliquid. Rund um die Uhr gehandelt, zeigt, was sich aufbaut, wenn traditionelle Märkte geschlossen sind. Composite Score (0-100) aus Finanzierungssatz, Volumen, Open Interest und Spot-Perp-Basis. Grün = Longs überfüllt (bullische Neigung), Rot = Shorts überfüllt (bärische Neigung).",
       "commodities": "ROHSTOFFE",
-      "crypto": "KRYPTOWÄHRUNGEN",
       "fx": "Devisenkurse",
       "warmup": "Baselines werden erstellt. Volumen- und Open-Interest-Historie wird in der nächsten Stunde gefüllt.",
       "footer": "5 Min · Hyperliquid Perps · 24/7"
@@ -4108,11 +4055,9 @@
     "noDataAvailable": "Keine Daten verfügbar",
     "upstreamUnavailable": "Upstream-API nicht verfügbar – automatische Wiederholung",
     "loadingUcdpEvents": "Bewaffnete Konfliktereignisse werden geladen",
-    "loadingStablecoins": "Stablecoins laden...",
     "scanningThermalData": "Thermaldaten scannen",
     "calculatingExposure": "Exposition berechnen",
     "computingSignals": "Signale berechnen...",
-    "loadingEtfData": "Börsengehandelte Fondsdaten werden geladen...",
     "loadingDisplacement": "Vertreibungsdaten laden",
     "loadingClimateData": "Klimadaten laden",
     "failedTechReadiness": "Technologiebereitschaftsdaten vorübergehend nicht verfügbar",
@@ -4124,7 +4069,6 @@
     "failedMarketData": "Marktdaten vorübergehend nicht verfügbar",
     "failedSectorData": "Sektordaten vorübergehend nicht verfügbar",
     "failedCommodities": "Rohstoffdaten vorübergehend nicht verfügbar",
-    "failedCryptoData": "Kryptodaten vorübergehend nicht verfügbar",
     "rateLimitedMarket": "Marktdaten vorübergehend nicht verfügbar (Ratenbegrenzung) — wird in Kürze erneut versucht",
     "noNewsAvailable": "Keine Nachrichten verfügbar",
     "noActiveTechHubs": "Keine aktiven Technologie-Hubs",
@@ -4281,13 +4225,11 @@
     "preflightProRequired": "Pro-Abonnement erforderlich, um den Widget Builder zu verwenden. Upgrade zum Entsperren.",
     "examples": {
       "oilGold": "Zeige mir den heutigen Rohölpreis im Vergleich zu Gold",
-      "cryptoMovers": "Erstelle ein Widget für die Top-Krypto-Beweger der letzten 24 Stunden",
       "flightDelays": "Fasse die schlimmsten internationalen Flugverspätungen zusammen",
       "conflictHotspots": "Karte die neuesten UCDP-Konfliktherde mit kurzen Labels ein"
     },
     "proExamples": {
       "interactiveChart": "Interaktives Chart.js-Diagramm zum Vergleich von Öl- und Goldpreisen",
-      "sortableTable": "Sortierbare Krypto-Preistabelle mit Suchfilter",
       "animatedCounters": "Animierte Zähler für Schlüsselindikatoren der Wirtschaft",
       "tabbedComparison": "Tabbasierte Vergleich von Konfliktereignissen nach Region"
     }

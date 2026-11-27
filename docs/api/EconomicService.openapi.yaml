@@ -266,22 +266,10 @@ paths:
                             example:
                                 "bullishCount": 1
                                 "meta":
+                                    "qqqReturn5": 1.5
                                     "qqqSparkline":
                                         - 1.5
                                 "signals":
-                                    "fearGreed":
-                                        "history":
-                                            - "date": "2026-01-15"
-                                              "value": 1
-                                        "status": "example"
-                                        "value": 1
-                                    "flowStructure":
-                                        "btcReturn5": 1.5
-                                        "qqqReturn5": 1.5
-                                        "status": "example"
-                                    "hashRate":
-                                        "change30d": 1.5
-                                        "status": "example"
                                     "liquidity":
                                         "sparkline":
                                             - 1.5
@@ -2657,25 +2645,15 @@ components:
                         True when upstream data is unavailable (fallback result).
                          True when the upstream or seed-backed variant is unavailable; empty payload fields
                          are graceful degradation, not confirmed zero data.
-            description: GetMacroSignalsResponse contains the full macro signal dashboard with 7 signals and verdict.
+            description: GetMacroSignalsResponse contains the macro signal dashboard and verdict.
         MacroSignals:
             type: object
             properties:
                 liquidity:
                     $ref: '#/components/schemas/LiquiditySignal'
-                flowStructure:
-                    $ref: '#/components/schemas/FlowStructureSignal'
                 macroRegime:
                     $ref: '#/components/schemas/MacroRegimeSignal'
-                technicalTrend:
-                    $ref: '#/components/schemas/TechnicalTrendSignal'
-                hashRate:
-                    $ref: '#/components/schemas/HashRateSignal'
-                priceMomentum:
-                    $ref: '#/components/schemas/PriceMomentumSignal'
-                fearGreed:
-                    $ref: '#/components/schemas/FearGreedSignal'
-            description: MacroSignals contains all 7 individual signal computations.
+            description: MacroSignals contains currency liquidity and the equity market regime.
         LiquiditySignal:
             type: object
             properties:
@@ -2693,21 +2671,6 @@ components:
                         format: double
                         description: Last 30 JPY close prices.
             description: LiquiditySignal tracks JPY 30d rate of change as a liquidity proxy.
-        FlowStructureSignal:
-            type: object
-            properties:
-                status:
-                    type: string
-                    description: '"PASSIVE GAP", "ALIGNED", or "UNKNOWN".'
-                btcReturn5:
-                    type: number
-                    format: double
-                    description: BTC 5-day return percentage.
-                qqqReturn5:
-                    type: number
-                    format: double
-                    description: QQQ 5-day return percentage.
-            description: FlowStructureSignal compares BTC vs QQQ 5-day returns.
         MacroRegimeSignal:
             type: object
             properties:
@@ -2723,85 +2686,6 @@ components:
                     format: double
                     description: XLP 20d ROC percentage.
             description: MacroRegimeSignal compares QQQ vs XLP 20-day rate of change.
-        TechnicalTrendSignal:
-            type: object
-            properties:
-                status:
-                    type: string
-                    description: '"BULLISH", "BEARISH", "NEUTRAL", or "UNKNOWN".'
-                btcPrice:
-                    type: number
-                    format: double
-                    description: Current BTC price.
-                sma50:
-                    type: number
-                    format: double
-                    description: 50-day simple moving average.
-                sma200:
-                    type: number
-                    format: double
-                    description: 200-day simple moving average.
-                vwap30d:
-                    type: number
-                    format: double
-                    description: 30-day volume-weighted average price.
-                mayerMultiple:
-                    type: number
-                    format: double
-                    description: Mayer multiple (BTC price / SMA200).
-                sparkline:
-                    type: array
-                    items:
-                        type: number
-                        format: double
-                        description: Last 30 BTC close prices.
-            description: TechnicalTrendSignal evaluates BTC price vs moving averages and VWAP.
-        HashRateSignal:
-            type: object
-            properties:
-                status:
-                    type: string
-                    description: '"GROWING", "DECLINING", "STABLE", or "UNKNOWN".'
-                change30d:
-                    type: number
-                    format: double
-                    description: Hash rate change over 30 days as percentage.
-            description: HashRateSignal tracks Bitcoin hash rate momentum.
-        PriceMomentumSignal:
-            type: object
-            properties:
-                status:
-                    type: string
-                    description: '"STRONG", "MODERATE", "WEAK", or "UNKNOWN".'
-            description: PriceMomentumSignal uses the Mayer Multiple (price/SMA200) as a market-adaptive signal.
-        FearGreedSignal:
-            type: object
-            properties:
-                status:
-                    type: string
-                    description: Classification label (e.g., "Extreme Fear", "Greed").
-                value:
-                    type: integer
-                    format: int32
-                    description: Current index value (0-100).
-                history:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/FearGreedHistoryEntry'
-            description: FearGreedSignal tracks the Crypto Fear & Greed index.
-        FearGreedHistoryEntry:
-            type: object
-            properties:
-                value:
-                    type: integer
-                    maximum: 100
-                    minimum: 0
-                    format: int32
-                    description: Index value (0-100).
-                date:
-                    type: string
-                    description: Date string (YYYY-MM-DD).
-            description: FearGreedHistoryEntry is a single day's Fear & Greed index reading.
         MacroMeta:
             type: object
             properties:
@@ -2811,6 +2695,10 @@ components:
                         type: number
                         format: double
                         description: Last 30 QQQ close prices for sparkline.
+                qqqReturn5:
+                    type: number
+                    format: double
+                    description: QQQ five-day change, absent if unavailable.
             description: MacroMeta contains supplementary chart data.
         GetChinaMacroSnapshotRequest:
             type: object

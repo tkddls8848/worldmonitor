@@ -297,7 +297,7 @@ describe('Narrow layouts', () => {
     assert.deepEqual(cycle(), ['cii', 'ucdp', 'unrest']);
     show('markets');
     app.render();
-    assert.deepEqual(cycle(), ['crypto', 'quotes']);
+    assert.deepEqual(cycle(), ['quotes']);
   });
   it('moves focus off a pane that a resize hides', () => {
     const { app, show } = makeApp({ cols: 160, rows: 45 });

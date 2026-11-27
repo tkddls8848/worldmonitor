@@ -57,13 +57,11 @@
     "preflightProRequired": "Pro előfizetés szükséges a Widget Builder használatához. Frissítsen a feloldáshoz.",
     "examples": {
       "oilGold": "Mutasd meg a mai nyersolaj árát az aranyhoz képest",
-      "cryptoMovers": "Készíts widgetet az utolsó 24 óra legjobb kriptomozgásaihoz",
       "flightDelays": "Foglald össze a legrosszabb nemzetközi repülőjárat-késéseket most",
       "conflictHotspots": "Térképezd fel a legújabb UCDP konfliktushlópontokat rövid címkékkel"
     },
     "proExamples": {
       "interactiveChart": "Interaktív Chart.js diagram az olaj és arany árait összehasonlítva",
-      "sortableTable": "Rendezható kriptóár-táblázat keresési szűrővel",
       "animatedCounters": "Animált számlálók a legfontosabb gazdasági mutatókhoz",
       "tabbedComparison": "Tabulos összehasonlítás a konfliktusesemények régió szerinti csoportosításával"
     }
@@ -416,7 +414,6 @@
     "sourceRegionMarkets": "Piacok & Elemzés",
     "sourceRegionFixedIncomeFx": "Kötvények és devizaárfolyam",
     "sourceRegionCommodities": "Nyersanyagok",
-    "sourceRegionCryptoDigital": "Kriptovaluta & Digitális",
     "sourceRegionCentralBanks": "Központi bankok & Gazdaság",
     "sourceRegionDeals": "Szerződések & Vállalati ügyletek",
     "sourceRegionFinRegulation": "Pénzügyi szabályozás",
@@ -438,7 +435,6 @@
     "panelCatMarkets": "Piacok",
     "panelCatFixedIncomeFx": "Kötvények és devizaárfolyam",
     "panelCatCommodities": "Nyersanyagok",
-    "panelCatCryptoDigital": "Kriptovaluta & Digitális",
     "panelCatCentralBanks": "Központi bankok & Gazdaság",
     "panelCatDeals": "Szerződések & Intézmények",
     "panelCatGulfMena": "Öböl-térség, Közel-Kelet és Észak-Afrika",
@@ -483,15 +479,12 @@
     "supplyChain": "Ellátási Lánc",
     "finance": "Pénzügyi",
     "tech": "Technológia",
-    "crypto": "Kriptovaluta",
     "heatmap": "Szektoros Hőtérkép",
     "ai": "Mesterséges intelligencia és gépi tanulás",
     "layoffs": "Leépítések Nyomkövető",
     "monitors": "Saját Monitorok",
     "satelliteFires": "Tüzek",
     "macroSignals": "Bitcoin piaci viszonyok",
-    "etfFlows": "Bitcoin alap tőkeáramlása",
-    "stablecoins": "Stablecoinok",
     "deduction": "Helyzet leszámítása",
     "ucdpEvents": "Fegyveres konfliktusok",
     "displacement": "Menekültek és lakóhelyvesztés",
@@ -1139,15 +1132,6 @@
       "leanYes": "Inkább Igen",
       "leanNo": "Inkább Nem",
       "tossUp": "Bizonytalan"
-    },
-    "stablecoins": {
-      "pegHealth": "Rögzítés egészsége",
-      "supplyVolume": "Kínálat és volumen",
-      "token": "Token",
-      "mcap": "Piaci kapitalizáció",
-      "vol24h": "24 órás vol",
-      "chg24h": "24 órás változás",
-      "infoTooltip": "<strong>Stablecoins</strong> Rögzítés egészsége, piaci kapitalizáció és 24 órás volumen a főbb USD-rögzített tokenekhez (USDT, USDC, DAI, BUSD). A megtört rögzítés rendszerkockázatot jelez."
     },
     "marketImplications": {
       "infoTooltip": "<strong>AI piaci következmények</strong> LLM által generált kereskedési jelek az élő geopolitikai, nyersanyag és makro állapotból az egyes előrejelzési ciklus után.<ul><li><strong>Irány</strong>: LONG / SHORT / HEDGE</li><li><strong>Időkeret</strong>: 1W, 2W, 1M vagy 3M horizont</li><li><strong>Katalizátor</strong>: A jel mögötti kulcs katalizátor</li><li><strong>Kockázat</strong>: Figyelmeztetés vagy érvénytelenítési feltétel</li></ul><em>Csak tájékoztató célokra. Nem befektetési tanács.</em>",
@@ -1928,27 +1912,6 @@
     "prediction": {
       "infoTooltip": "<strong>Előrejelzési piacok</strong> Valódi pénzű előrejelzési piacok:<ul><li>Az árak a tömeg valószínűségi becsléseit tükrözik</li><li>Magasabb volumen = megbízhatóbb jel</li><li>Geopolitikai és aktuális események fókusza</li></ul>Források: Polymarket, Kalshi"
     },
-    "etfFlows": {
-      "previousColumns": "Előző oszlopok",
-      "moreColumns": "További oszlopok",
-      "unavailable": "Tőzsdén kereskedett alap adatai ideiglenesen nem érhetőek el",
-      "rateLimited": "Tőzsdén kereskedett alap adatai ideiglenesen nem érhetőek el (sebességkorlátozva) — hamarosan újrapróbálkozás",
-      "netFlow": "Nettó áramlás",
-      "estFlow": "Becsült áramlás",
-      "totalVol": "Összes kötet",
-      "etfs": "Tőzsdén kereskedett alapok",
-      "netInflow": "NETTÓ BEÁRAMLÁS",
-      "netOutflow": "NETTÓ KIÁRAMLÁS",
-      "netNeutral": "NETTÓ SEMLEGES",
-      "table": {
-        "ticker": "Szimbólum",
-        "issuer": "Kibocsátó",
-        "estFlow": "Becsült áramlás",
-        "volume": "Kötet",
-        "change": "Változás"
-      },
-      "infoTooltip": "<strong>Bitcoin alap folyamatok</strong> Nyomon követi az USA spot Bitcoin tőzsdén kereskedett alapok napi becsült alap folyamatait:<ul><li>Beáramlás/kiáramlás iránya és nagysága</li><li>Térfogat és ár változás alaponként</li><li>Nettó összesített folyamat az összes követett alap között</li></ul>"
-    },
     "macroSignals": {
       "overall": "Összesen",
       "verdict": {
@@ -1958,12 +1921,7 @@
       "bullish": "{{count}}/{{total}} bikás",
       "signals": {
         "liquidity": "Likviditás",
-        "flow": "Áramlás",
-        "regime": "Rendszer",
-        "btcTrend": "BTC trend",
-        "hashRate": "Hash ráta",
-        "momentum": "Lendület",
-        "fearGreed": "Félelem és mohóság"
+        "regime": "Rendszer"
       },
       "infoTooltip": "<strong>Bitcoin piaci feltételek</strong> Összetett jel-irányítópult Bitcoin pozicionáláshoz és kockázati étvágyhoz:<ul><li><strong>Likviditás</strong>: Nettó Fed likviditás proxy</li><li><strong>Folyamat</strong>: BTC vs QQQ 5 napos hozam</li><li><strong>Rezsim</strong>: QQQ vs XLP rotáció (kockázat-be/ki)</li><li><strong>BTC Trend</strong>: Ár vs SMA50/200, Mayer Multiple</li><li><strong>Hash ráta</strong>: 30 napos hálózat hash változás</li><li><strong>Félelem és Mohóság</strong>: Piaci érzelmek indexe</li></ul>Ez az panel a rezsimet és pozicionálást szolgálja, nem a széles makro adatokat."
     },
@@ -2099,18 +2057,6 @@
         },
         "twentyDayTrend": "Húsz kereskedési napos prémium trend"
       }
-    },
-    "crypto": {
-      "infoTooltip": "<strong>Kriptó</strong> Valós idejű árak, 24 órás változások és volumen a fő kriptovalutákra. Az adatokat a CoinGecko biztosítja."
-    },
-    "defiTokens": {
-      "infoTooltip": "<strong>DeFi Tokenek</strong> Árak és 24h/7d teljesítmény a fő decentralizált finanszírozási protokoll tokenekre — DEXek, kölcsönzési platformok és hozamprotokollok."
-    },
-    "aiTokens": {
-      "infoTooltip": "<strong>AI Tokenek</strong> Árak és 24h/7d teljesítmény AI és gépi tanulási szektortokenekre — számítási hálózatok, decentralizált AI infrastruktúra és adatprotokollok."
-    },
-    "altTokens": {
-      "infoTooltip": "<strong>Alt Tokenek</strong> Árak és 24h/7d teljesítmény alternatív és új kriptotokenekre a nagy kapitalizációs szinteken kívül."
     },
     "stockAnalysis": {
       "infoTooltip": "<strong>Premium Részvényelemzés</strong> AI-alapú elemzés a megfigyelési listájában szereplő részvényekre — vételi/tartási/eladási jelzések, árcelok, kulcsrisikók és katalizátorok napi frissítésekkel."
@@ -2285,7 +2231,6 @@
       "title": "24/7 pozicionálás",
       "infoTooltip": "<strong>24/7 Positioning</strong> Perpetual contract pozicionálási stressz a Hyperliquidtől. Nonstop kereskedelem, amely azt mutatja, mi épül fel, amikor a hagyományos piacok zárva vannak. Kompozit score (0-100) a finanszírozási rátából, volumból, nyitott kamatból és spot-perp bázisból. Zöld = long pozíciók túlzsúfoltak (bullish tendencia), piros = short pozíciók túlzsúfoltak (bearish tendencia).",
       "commodities": "ÁRUCIKKEK",
-      "crypto": "KRIPTÓ",
       "fx": "Devizapiac",
       "warmup": "Az alapértékek felépítése. A mennyiség és nyitott kamat története a következő órában feltöltődik.",
       "footer": "5 perc · Hyperliquid perps · 24/7"
@@ -4177,11 +4122,9 @@
     "noDataShort": "Nincs adat",
     "upstreamUnavailable": "A felsőbb szintű API nem érhető el — automatikus újrapróbálkozás",
     "loadingUcdpEvents": "Fegyveres konfliktus események betöltése",
-    "loadingStablecoins": "Stablecoinok betöltése...",
     "scanningThermalData": "Termikus adatok vizsgálata",
     "calculatingExposure": "Kitettség kiszámítása",
     "computingSignals": "Jelek feldolgozása...",
-    "loadingEtfData": "Tőzsdére jegyzett alap adatainak betöltése...",
     "loadingDisplacement": "Kitelepítési adatok betöltése",
     "loadingClimateData": "Éghajlati adatok betöltése",
     "failedTechReadiness": "A technológiai felkészültség adatai átmenetileg nem érhetők el",
@@ -4193,7 +4136,6 @@
     "failedMarketData": "A piaci adatok átmenetileg nem érhetők el",
     "failedSectorData": "A szektoros adatok átmenetileg nem érhetők el",
     "failedCommodities": "Az árucikkek adatai átmenetileg nem érhetők el",
-    "failedCryptoData": "A kriptoárú adatok átmenetileg nem érhetők el",
     "rateLimitedMarket": "A piaci adatok átmenetileg nem érhetők el (csökkentett sérülékeny) — hamarosan újra próbálunk",
     "noNewsAvailable": "Nincsenek elérhető hírek",
     "noActiveTechHubs": "Nincsenek aktív technológiai hubok",

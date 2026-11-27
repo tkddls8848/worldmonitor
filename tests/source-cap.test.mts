@@ -446,8 +446,6 @@ describe('selectSourcesUnderCap: duplicate source names across buckets (feeds.ts
     const feeds = {
       markets: F('Yahoo Finance', 'CNBC', 'AAPL News'),
       finance: F('Yahoo Finance', 'CNBC', 'MarketWatch', 'WSJ'),
-      crypto: F('CoinDesk', 'CoinTelegraph'),
-      etfflows: F('Yahoo Finance', 'BlackRock'),
       energy: F('OilPrice.com', 'Reuters Energy'),
     };
     const r = selectSourcesUnderCap(feeds, [], new Set(), 8);

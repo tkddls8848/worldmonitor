@@ -340,7 +340,6 @@
     "sourceRegionMarkets": "市场与分析",
     "sourceRegionFixedIncomeFx": "固定收益与外汇",
     "sourceRegionCommodities": "大宗商品",
-    "sourceRegionCryptoDigital": "加密与数字",
     "sourceRegionCentralBanks": "央行与经济",
     "sourceRegionDeals": "交易与企业",
     "sourceRegionFinRegulation": "金融监管",
@@ -361,7 +360,6 @@
     "panelCatMarkets": "市场",
     "panelCatFixedIncomeFx": "固定收益与外汇",
     "panelCatCommodities": "大宗商品",
-    "panelCatCryptoDigital": "加密与数字资产",
     "panelCatCentralBanks": "央行与经济",
     "panelCatDeals": "交易与机构",
     "panelCatGulfMena": "海湾与中东北非地区",
@@ -407,15 +405,12 @@
     "supplyChain": "供应链",
     "finance": "金融",
     "tech": "科技",
-    "crypto": "加密货币",
     "heatmap": "板块热力图",
     "ai": "AI与机器学习",
     "layoffs": "裁员追踪",
     "monitors": "我的监控",
     "satelliteFires": "火灾",
     "macroSignals": "比特币市场状况",
-    "etfFlows": "比特币基金流入流出",
-    "stablecoins": "稳定币",
     "deduction": "推断局势",
     "ucdpEvents": "UCDP冲突事件",
     "displacement": "难民与流离失所人口",
@@ -1011,15 +1006,6 @@
       "leanYes": "倾向支持",
       "leanNo": "倾向反对",
       "tossUp": "胜负难料"
-    },
-    "stablecoins": {
-      "pegHealth": "锚定健康度",
-      "supplyVolume": "供应量与交易量",
-      "token": "代币",
-      "mcap": "市值",
-      "vol24h": "24小时交易量",
-      "chg24h": "24小时变化",
-      "infoTooltip": "<strong>稳定币</strong> 主要美元锚定代币（USDT、USDC、DAI、BUSD）的锚定健康度、市值和 24 小时成交量。锚定脱钩预示系统性风险。"
     },
     "status": {
       "updatedAt": "更新于{{time}}"
@@ -1781,27 +1767,6 @@
     "prediction": {
       "infoTooltip": "<strong>预测市场</strong>真金白银的预测市场：<ul><li>价格反映群体概率估计</li><li>交易量越高 = 信号越可靠</li><li>聚焦地缘政治和时事</li></ul>来源：Polymarket (polymarket.com)"
     },
-    "etfFlows": {
-      "previousColumns": "前面的栏",
-      "moreColumns": "更多栏",
-      "unavailable": "交易所交易基金数据暂时不可用",
-      "rateLimited": "交易所交易基金数据暂时不可用（受速率限制）— 正在重试",
-      "netFlow": "净流量",
-      "estFlow": "预估流量",
-      "totalVol": "总成交量",
-      "etfs": "交易所交易基金",
-      "netInflow": "净流入",
-      "netOutflow": "净流出",
-      "netNeutral": "净中性",
-      "table": {
-        "ticker": "代码",
-        "issuer": "发行方",
-        "estFlow": "预估流量",
-        "volume": "成交量",
-        "change": "涨跌幅"
-      },
-      "infoTooltip": "<strong>比特币基金流量</strong> 追踪美国现货比特币交易所交易基金的日估算基金流量：<ul><li>流入/流出方向和幅度</li><li>各基金的成交量和价格变化</li><li>所有追踪基金的净累计流量</li></ul>"
-    },
     "macroSignals": {
       "overall": "综合",
       "verdict": {
@@ -1811,12 +1776,7 @@
       "bullish": "{{count}}/{{total}} 看涨",
       "signals": {
         "liquidity": "流动性",
-        "flow": "资金流",
-        "regime": "市场环境",
-        "btcTrend": "BTC趋势",
-        "hashRate": "算力",
-        "momentum": "动量",
-        "fearGreed": "恐惧 &amp; 贪婪"
+        "regime": "市场环境"
       },
       "infoTooltip": "<strong>比特币市场状况</strong> 比特币定位和风险偏好的综合信号面板：<ul><li><strong>流动性</strong>：联储流动性净值代理</li><li><strong>流量</strong>：BTC vs QQQ 5 日收益</li><li><strong>态势</strong>：QQQ vs XLP 轮转（风险偏好开启/关闭）</li><li><strong>BTC 趋势</strong>：价格 vs SMA50/200，Mayer 倍数</li><li><strong>哈希率</strong>：30 日网络哈希变化</li><li><strong>恐惧与贪婪</strong>：市场情绪指数</li></ul>此面板用于态势和定位，不是广泛宏观数据。"
     },
@@ -1959,23 +1919,11 @@
         "twentyDayTrend": "二十个交易日溢价趋势"
       }
     },
-    "crypto": {
-      "infoTooltip": "<strong>加密货币</strong> 主要加密货币的实时价格、24 小时涨跌和成交量。数据来自 CoinGecko。"
-    },
     "gulfEconomies": {
       "infoTooltip": "<strong>海湾经济体</strong>海湾合作委员会经济体（沙特阿拉伯、阿联酋、科威特、卡塔尔、巴林、阿曼）的股票指数、汇率和油价。"
     },
     "groceryBasket": {
       "infoTooltip": "<strong>杂货篮指数</strong>全球24个国家的杂货篮价格对比——跟踪超越头条消费者价格指数的真实消费品通胀。"
-    },
-    "defiTokens": {
-      "infoTooltip": "<strong>DeFi 代币</strong> 主要去中心化金融协议代币（DEX、借贷平台和收益协议）的价格及 24 小时/7 天表现。"
-    },
-    "aiTokens": {
-      "infoTooltip": "<strong>AI 代币</strong> 人工智能和机器学习板块代币（算力网络、去中心化 AI 基础设施和数据协议）的价格及 24 小时/7 天表现。"
-    },
-    "altTokens": {
-      "infoTooltip": "<strong>山寨代币</strong> 主流大市值之外的其他和新兴加密货币代币的价格及 24 小时/7 天表现。"
     },
     "stockAnalysis": {
       "infoTooltip": "<strong>高级股票分析</strong> 针对自选股列表的 AI 分析 — 买入/持有/卖出信号、目标价、主要风险和催化剂，每日更新。"
@@ -2353,7 +2301,6 @@
       "title": "24/7头寸",
       "infoTooltip": "<strong>24/7头寸</strong>来自Hyperliquid的永续合约头寸压力。全天交易，展示传统市场关闭时建仓的情况。综合得分(0-100)来自资金费率、交易量、未平仓合约和现货永续基差。绿色 = 多头拥挤(看涨倾向)，红色 = 空头拥挤(看跌倾向)。",
       "commodities": "商品",
-      "crypto": "加密货币",
       "fx": "外汇",
       "warmup": "正在建立基线。成交量和未平仓权益历史将在下一小时内填充。",
       "footer": "5分钟 · Hyperliquid永续合约 · 24/7"
@@ -4086,11 +4033,9 @@
     "noDataShort": "无数据",
     "upstreamUnavailable": "上游API不可用 — 将自动重试",
     "loadingUcdpEvents": "正在加载UCDP事件",
-    "loadingStablecoins": "正在加载稳定币...",
     "scanningThermalData": "正在扫描热数据",
     "calculatingExposure": "正在计算暴露量",
     "computingSignals": "正在计算信号...",
-    "loadingEtfData": "正在加载交易型开放式指数基金数据...",
     "loadingDisplacement": "正在加载流离失所数据",
     "loadingClimateData": "正在加载气候数据",
     "failedTechReadiness": "加载科技就绪数据失败",
@@ -4102,7 +4047,6 @@
     "failedMarketData": "加载市场数据失败",
     "failedSectorData": "加载板块数据失败",
     "failedCommodities": "加载大宗商品失败",
-    "failedCryptoData": "加载加密货币数据失败",
     "rateLimitedMarket": "市场数据暂时不可用（请求受限）— 即将自动重试",
     "noNewsAvailable": "无可用新闻",
     "noActiveTechHubs": "无活跃的科技中心",
@@ -4259,13 +4203,11 @@
     "preflightProRequired": "需要 Pro 订阅才能使用小部件生成器。升级以解锁。",
     "examples": {
       "oilGold": "显示今天的原油价格与黄金价格对比",
-      "cryptoMovers": "为过去 24 小时内涨跌幅最大的加密货币创建小部件",
       "flightDelays": "总结目前国际航班延误最严重的情况",
       "conflictHotspots": "标记最新 UCDP 冲突热点及简短标签"
     },
     "proExamples": {
       "interactiveChart": "交互式 Chart.js 图表，对比石油和黄金价格",
-      "sortableTable": "具有搜索筛选功能的可排序加密货币价格表",
       "animatedCounters": "主要经济指标的动画计数器",
       "tabbedComparison": "按地区分类的冲突事件选项卡式对比"
     }

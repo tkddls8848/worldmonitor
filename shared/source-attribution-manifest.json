@@ -485,15 +485,10 @@
       "host": "api.alternative.me",
       "provider": "Alternative.me Fear & Greed Index",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Alternative.me API terms; attribution and redistribution require review",
       "attribution": "Alternative.me Crypto Fear & Greed Index; link to the API response and methodology.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/seed-economy.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "api.anthropic.com",
@@ -588,35 +583,19 @@
       "host": "api.coingecko.com",
       "provider": "api.coingecko.com",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this upstream API/dataset; verify before redistribution",
       "attribution": "Credit api.coingecko.com and link to the original upstream API/dataset.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/personal-providers.cjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "api.coinpaprika.com",
       "provider": "CoinPaprika",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "CoinPaprika API terms",
       "attribution": "CoinPaprika; link to the market/API response.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/_seed-utils.mjs"
-        },
-        {
-          "path": "scripts/personal-providers.cjs"
-        },
-        {
-          "path": "server/worldmonitor/market/v1/_shared.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "api.data.apps.fao.org",
@@ -839,7 +818,7 @@
       "status": "terms-review",
       "references": [
         {
-          "path": "scripts/seed-hyperliquid-flow.mjs"
+          "path": "scripts/seed-perp-positioning.mjs"
         }
       ]
     },
@@ -1817,15 +1796,10 @@
       "host": "bitcoinmagazine.com",
       "provider": "bitcoinmagazine.com",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit bitcoinmagazine.com and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "bloomberg.com",
@@ -2286,15 +2260,10 @@
       "host": "cointelegraph.com",
       "provider": "cointelegraph.com",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit cointelegraph.com and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "collisionconf.com",
@@ -2480,15 +2449,10 @@
       "host": "cryptoslate.com",
       "provider": "cryptoslate.com",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit cryptoslate.com and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "csis.org",
@@ -3011,15 +2975,10 @@
       "host": "decrypt.co",
       "provider": "decrypt.co",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit decrypt.co and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "defense.gov",
@@ -3144,15 +3103,10 @@
       "host": "dlnews.com",
       "provider": "dlnews.com",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit dlnews.com and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "do.usembassy.gov",
@@ -6230,15 +6184,10 @@
       "host": "mempool.space",
       "provider": "mempool.space",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "mempool.space API terms; underlying Bitcoin data is public but endpoint terms apply",
       "attribution": "mempool.space; link to the mining/hashrate API response.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/seed-economy.mjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "mercadocentral.gob.ar",
@@ -6258,15 +6207,10 @@
       "host": "messari.io",
       "provider": "messari.io",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit messari.io and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "mexiconewsdaily.com",
@@ -7575,15 +7519,10 @@
       "host": "pro-api.coingecko.com",
       "provider": "pro-api.coingecko.com",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this upstream API/dataset; verify before redistribution",
       "attribution": "Credit pro-api.coingecko.com and link to the original upstream API/dataset.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "scripts/personal-providers.cjs"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "production.dataviz.cnn.io",
@@ -7791,9 +7730,6 @@
         },
         {
           "path": "scripts/seed-economy.mjs"
-        },
-        {
-          "path": "scripts/seed-etf-flows.mjs"
         },
         {
           "path": "scripts/seed-fear-greed.mjs"
@@ -9459,15 +9395,10 @@
       "host": "theblock.co",
       "provider": "theblock.co",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit theblock.co and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "thebulletin.org",
@@ -9501,15 +9432,10 @@
       "host": "thedefiant.io",
       "provider": "thedefiant.io",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit thedefiant.io and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "thediplomat.com",
@@ -10052,15 +9978,10 @@
       "host": "unchainedcrypto.com",
       "provider": "unchainedcrypto.com",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit unchainedcrypto.com and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "understandingwar.org",
@@ -10538,9 +10459,6 @@
           "path": "scripts/seed-five-factor-scorecard.mjs"
         },
         {
-          "path": "scripts/seed-hyperliquid-flow.mjs"
-        },
-        {
           "path": "scripts/seed-infra.mjs"
         },
         {
@@ -10548,6 +10466,9 @@
         },
         {
           "path": "scripts/seed-military-maritime-news.mjs"
+        },
+        {
+          "path": "scripts/seed-perp-positioning.mjs"
         },
         {
           "path": "scripts/seed-service-statuses.mjs"
@@ -10633,15 +10554,10 @@
       "host": "wublockchain.com",
       "provider": "wublockchain.com",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit wublockchain.com and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "www.14ymedio.com",
@@ -11500,15 +11416,10 @@
       "host": "www.coindesk.com",
       "provider": "www.coindesk.com",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit www.coindesk.com and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "www.comcom.govt.nz",

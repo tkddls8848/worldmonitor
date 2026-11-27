@@ -47,7 +47,7 @@ client = Client(api_key="wm_...")  # or set WORLDMONITOR_API_KEY
 client.list_tools()                # public — no key needed
 client.country_risk("IR")
 client.conflict_events(country="IR", limit=5)
-client.call_tool("get_market_data", asset_class="crypto")
+client.call_tool("get_market_data", asset_class="equity")
 ```
 
 ## Ruby
@@ -67,7 +67,7 @@ client.call_tool("get_market_data", asset_class: "crypto")
 client := worldmonitor.New("wm_...") // "" reads WORLDMONITOR_API_KEY
 tools, _ := client.ListTools(ctx)
 risk, _ := client.CountryRisk(ctx, "IR", nil)
-quotes, _ := client.CallTool(ctx, "get_market_data", worldmonitor.Args{"asset_class": "crypto"})
+quotes, _ := client.CallTool(ctx, "get_market_data", worldmonitor.Args{"asset_class": "equity"})
 ```
 
 ## JavaScript

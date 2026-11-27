@@ -342,7 +342,6 @@
     "sourceRegionMarkets": "Mercati e Analisi",
     "sourceRegionFixedIncomeFx": "Reddito fisso e foreign exchange",
     "sourceRegionCommodities": "Materie Prime",
-    "sourceRegionCryptoDigital": "Crypto e Digitale",
     "sourceRegionCentralBanks": "Banche Centrali ed Economia",
     "sourceRegionDeals": "Operazioni Societarie",
     "sourceRegionFinRegulation": "Regolamentazione Finanziaria",
@@ -363,7 +362,6 @@
     "panelCatMarkets": "Mercati",
     "panelCatFixedIncomeFx": "Reddito fisso e foreign exchange",
     "panelCatCommodities": "Materie Prime",
-    "panelCatCryptoDigital": "Crypto & Digitale",
     "panelCatCentralBanks": "Banche Centrali & Economia",
     "panelCatDeals": "Operazioni & Istituzionale",
     "panelCatGulfMena": "Golfo e Medio Oriente e Nord Africa",
@@ -409,15 +407,12 @@
     "tradePolicy": "Politica Commerciale",
     "finance": "Finanza",
     "tech": "Tecnologia",
-    "crypto": "Cripto",
     "heatmap": "Mappa termica del settore",
     "ai": "AI e machine learning",
     "layoffs": "Tracciamento licenziamenti",
     "monitors": "I miei monitor",
     "satelliteFires": "Incendi",
     "macroSignals": "Condizioni di mercato Bitcoin",
-    "etfFlows": "Flussi di fondi Bitcoin",
-    "stablecoins": "Stablecoin",
     "deduction": "Dedurre situazione",
     "ucdpEvents": "Eventi di conflitto UCDP",
     "supplyChain": "Catena di Approvvigionamento",
@@ -1317,15 +1312,6 @@
       "skipToEnd": "Vai alla fine",
       "storageUnavailable": "La riproduzione non è disponibile perché questo browser sta bloccando l'archiviazione del sito. Consenti i dati del sito per questo sito per iniziare a salvare gli snapshot."
     },
-    "stablecoins": {
-      "pegHealth": "Salute dell'ancoraggio",
-      "supplyVolume": "Offerta e volume",
-      "token": "Token",
-      "mcap": "Cap. mercato",
-      "vol24h": "Vol. 24h",
-      "chg24h": "Var. 24h",
-      "infoTooltip": "<strong>Stablecoins</strong> Salute dell'ancoraggio, capitalizzazione di mercato e volume 24h per i principali token indicizzati al dollaro (USDT, USDC, DAI, BUSD). Un ancoraggio rotto segnala un rischio sistemico."
-    },
     "status": {
       "updatedAt": "Aggiornato {{time}}"
     },
@@ -1750,27 +1736,6 @@
       "liveNewsAutoplayLabel": "Riproduzione automatica notizie in diretta",
       "liveNewsAutoplayDesc": "Avvia il video delle notizie in diretta, senza audio, non appena è visibile. Disattiva per caricare il video solo quando lo avvii manualmente."
     },
-    "etfFlows": {
-      "previousColumns": "Colonne precedenti",
-      "moreColumns": "Altre colonne",
-      "unavailable": "Dati dei fondi negoziati in borsa temporaneamente non disponibili",
-      "rateLimited": "Dati dei fondi negoziati in borsa temporaneamente non disponibili (limite di velocità raggiunto) — nuovo tentativo tra poco",
-      "netFlow": "Flusso netto",
-      "estFlow": "Flusso stimato",
-      "totalVol": "Vol. totale",
-      "etfs": "Fondi negoziati in borsa",
-      "netInflow": "AFFLUSSO NETTO",
-      "netOutflow": "DEFLUSSO NETTO",
-      "netNeutral": "NETTO NEUTRO",
-      "table": {
-        "ticker": "Simbolo",
-        "issuer": "Emittente",
-        "estFlow": "Flusso stimato",
-        "volume": "Volume",
-        "change": "Variazione"
-      },
-      "infoTooltip": "<strong>Flussi di fondi Bitcoin</strong> Traccia i flussi di fondi giornalieri stimati per i fondi spot Bitcoin negoziati in borsa negli USA:<ul><li>Direzione e grandezza dell'afflusso/deflusso</li><li>Volume e variazione di prezzo per fondo</li><li>Flusso netto aggregato su tutti i fondi tracciati</li></ul>"
-    },
     "macroSignals": {
       "overall": "Complessivo",
       "verdict": {
@@ -1780,12 +1745,7 @@
       "bullish": "{{count}}/{{total}} rialzisti",
       "signals": {
         "liquidity": "Liquidità",
-        "flow": "Flusso",
-        "regime": "Regime",
-        "btcTrend": "Trend BTC",
-        "hashRate": "Hash rate",
-        "fearGreed": "Fear &amp; Greed",
-        "momentum": "Momentum"
+        "regime": "Regime"
       },
       "infoTooltip": "<strong>Condizioni di mercato Bitcoin</strong> Dashboard di segnale composito per il posizionamento Bitcoin e l'appetito al rischio:<ul><li><strong>Liquidità</strong>: Proxy di liquidità netta della Federal Reserve</li><li><strong>Flusso</strong>: Rendimenti BTC vs QQQ a 5 giorni</li><li><strong>Regime</strong>: Rotazione QQQ vs XLP (risk-on/off)</li><li><strong>Trend BTC</strong>: Prezzo vs SMA50/200, Mayer Multiple</li><li><strong>Hash Rate</strong>: Variazione hash di rete a 30 giorni</li><li><strong>Paura e avidità</strong>: Indice di sentiment del mercato</li></ul>Questo panel è per il regime e il posizionamento, non per i dati macro ampi."
     },
@@ -1969,23 +1929,11 @@
         "twentyDayTrend": "Trend del premio su venti giorni di negoziazione"
       }
     },
-    "crypto": {
-      "infoTooltip": "<strong>Cripto</strong> Prezzi in tempo reale, variazioni 24h e volume delle principali criptovalute. Dati forniti da CoinGecko."
-    },
     "gulfEconomies": {
       "infoTooltip": "<strong>Gulf Economies</strong> Indici azionari del Golfo, tassi di cambio e prezzi del petrolio per le economie del Consiglio di Cooperazione del Golfo (Arabia Saudita, UAE, Kuwait, Qatar, Bahrein, Oman)."
     },
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Confronto dei prezzi del paniere alimentare globale in 24 paesi — traccia l'inflazione reale dei beni di consumo oltre l'indice dei prezzi al consumo ufficiale."
-    },
-    "defiTokens": {
-      "infoTooltip": "<strong>Token DeFi</strong> Prezzi e prestazioni 24h/7g per i principali token dei protocolli DeFi — DEX, piattaforme di prestito e protocolli di yield."
-    },
-    "aiTokens": {
-      "infoTooltip": "<strong>Token IA</strong> Prezzi e prestazioni 24h/7g per i token del settore intelligenza artificiale e machine learning — reti di calcolo, infrastrutture IA decentralizzate e protocolli dati."
-    },
-    "altTokens": {
-      "infoTooltip": "<strong>Token Alternativi</strong> Prezzi e prestazioni 24h/7g per token cripto alternativi ed emergenti al di fuori delle categorie a grande capitalizzazione."
     },
     "stockAnalysis": {
       "infoTooltip": "<strong>Analisi Azioni Premium</strong> Analisi basata sull'IA per le azioni nella tua watchlist — segnali di acquisto/tenere/vendita, obiettivi di prezzo, rischi chiave e catalizzatori aggiornati giornalmente."
@@ -2375,7 +2323,6 @@
       "title": "Posizionamento 24/7",
       "infoTooltip": "<strong>Posizionamento 24/7</strong> Stress del posizionamento su contratti perpetui da Hyperliquid. Negoziati continuamente, mostra cosa si sta costruendo quando i mercati tradizionali sono chiusi. Punteggio composito (0-100) da funding rate, volume, open interest e basis spot-perp. Verde = long affollati (inclinazione rialzista), rosso = short affollati (inclinazione ribassista).",
       "commodities": "MATERIE PRIME",
-      "crypto": "CRIPTO",
       "fx": "Valute estere",
       "warmup": "Creazione della base di riferimento. La cronologia del volume e degli Open interest si popola nel corso della prossima ora.",
       "footer": "5min · Perp Hyperliquid · 24/7"
@@ -4130,11 +4077,9 @@
     "noDataAvailable": "Nessun dato disponibile",
     "upstreamUnavailable": "API upstream non disponibile — riprova automatico",
     "loadingUcdpEvents": "Caricamento eventi UCDP",
-    "loadingStablecoins": "Caricamento stablecoin...",
     "scanningThermalData": "Scansione dati termici",
     "calculatingExposure": "Calcolo esposizione",
     "computingSignals": "Calcolo segnali...",
-    "loadingEtfData": "Caricamento dati exchange-traded fund in corso...",
     "loadingDisplacement": "Caricamento dati di sfollamento",
     "loadingClimateData": "Caricamento dati climatici",
     "failedTechReadiness": "Errore nel caricamento dei dati di preparazione tecnologica",
@@ -4146,7 +4091,6 @@
     "failedMarketData": "Errore nel caricamento dei dati di mercato",
     "failedSectorData": "Errore nel caricamento dei dati settoriali",
     "failedCommodities": "Errore nel caricamento delle materie prime",
-    "failedCryptoData": "Errore nel caricamento dei dati crypto",
     "rateLimitedMarket": "Dati di mercato temporaneamente non disponibili (limite di velocità) — nuovo tentativo a breve",
     "noNewsAvailable": "Nessuna notizia disponibile",
     "noActiveTechHubs": "Nessun hub tecnologico attivo",
@@ -4303,13 +4247,11 @@
     "preflightProRequired": "Sottoscrizione Pro richiesta per utilizzare il Widget Builder. Esegui l'upgrade per sbloccare.",
     "examples": {
       "oilGold": "Mostrami il prezzo del petrolio greggio odierno rispetto all'oro",
-      "cryptoMovers": "Crea un widget per i principali movimenti di criptovalute nelle ultime 24 ore",
       "flightDelays": "Riassumi i peggiori ritardi dei voli internazionali in questo momento",
       "conflictHotspots": "Mappa i più recenti hotspot di conflitto UCDP con etichette brevi"
     },
     "proExamples": {
       "interactiveChart": "Grafico interattivo Chart.js che confronta i prezzi del petrolio e dell'oro",
-      "sortableTable": "Tabella prezzi criptovalute ordinabile con filtro di ricerca",
       "animatedCounters": "Contatori animati per i principali indicatori economici",
       "tabbedComparison": "Confronto a schede degli eventi di conflitto per regione"
     }

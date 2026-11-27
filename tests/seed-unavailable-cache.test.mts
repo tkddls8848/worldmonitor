@@ -1,5 +1,4 @@
 import { listWorldBankIndicators } from '../server/worldmonitor/economic/v1/list-world-bank-indicators';
-import { listCryptoQuotes } from '../server/worldmonitor/market/v1/list-crypto-quotes';
 import { getPhysicalPremiums } from '../server/worldmonitor/market/v1/get-physical-premiums';
 import { createInfrastructureServiceRoutes } from '../src/generated/server/worldmonitor/infrastructure/v1/service_server';
 import { listInternetOutages } from '../server/worldmonitor/infrastructure/v1/list-internet-outages';
@@ -25,8 +24,6 @@ import { createMarketServiceRoutes } from '../src/generated/server/worldmonitor/
 import { createClimateServiceRoutes } from '../src/generated/server/worldmonitor/climate/v1/service_server';
 import { createEconomicServiceRoutes } from '../src/generated/server/worldmonitor/economic/v1/service_server';
 import { createIntelligenceServiceRoutes } from '../src/generated/server/worldmonitor/intelligence/v1/service_server';
-import { listCryptoSectors } from '../server/worldmonitor/market/v1/list-crypto-sectors';
-import { listEtfFlows } from '../server/worldmonitor/market/v1/list-etf-flows';
 import { listGulfQuotes } from '../server/worldmonitor/market/v1/list-gulf-quotes';
 import { getOilInventories } from '../server/worldmonitor/economic/v1/get-oil-inventories';
 import { getPizzintStatus } from '../server/worldmonitor/intelligence/v1/get-pizzint-status';
@@ -44,7 +41,7 @@ const gateway = createDomainGateway([
   ...createUnrestServiceRoutes({ listUnrestEvents } as never, serverOptions),
   ...createSeismologyServiceRoutes({ listEarthquakes } as never, serverOptions),
   ...createConflictServiceRoutes({ getHumanitarianSummary } as never, serverOptions),
-  ...createMarketServiceRoutes({ listCryptoQuotes, getPhysicalPremiums, getSectorSummary, listCryptoSectors, listEtfFlows, listGulfQuotes } as never, serverOptions),
+  ...createMarketServiceRoutes({ getPhysicalPremiums, getSectorSummary, listGulfQuotes } as never, serverOptions),
   ...createClimateServiceRoutes({ listClimateAnomalies } as never, serverOptions),
   ...createEconomicServiceRoutes({ listWorldBankIndicators, getBlsSeries, getOilInventories } as never, serverOptions),
   ...createIntelligenceServiceRoutes({ listCrossSourceSignals, listSatellites, listSecurityAdvisories, getPizzintStatus } as never, serverOptions),
@@ -94,8 +91,6 @@ function assertNoStore(response: Response) {
   assert.equal(response.headers.get('Vercel-CDN-Cache-Control'), null);
 }
 const cases = [
-  { path: 'market/v1/list-crypto-sectors', key: 'market:crypto-sectors:v1', payload: { sectors: [{ id: 'ai', name: 'AI', change: 1 }] }, field: 'sectors' },
-  { path: 'market/v1/list-etf-flows', key: 'market:etf-flows:v1', payload: { etfs: [], timestamp: '2026-09-01T00:00:00Z', rateLimited: false }, field: 'etfs' },
   { path: 'market/v1/list-gulf-quotes', key: 'market:gulf-quotes:v1', payload: { quotes: [], rateLimited: false }, field: 'quotes' },
   { path: 'economic/v1/get-oil-inventories', key: 'economic:crude-inventories:v1', payload: { weeks: [{ period: '2026-09-01', stocksMb: 440 }] }, field: 'crudeWeeks' },
   { path: 'intelligence/v1/get-pizzint-status', key: 'intelligence:pizzint:seed:v1', payload: { pizzint: { locations: [], defconLevel: 5 }, tensionPairs: [] }, field: 'tensionPairs' },
@@ -149,15 +144,6 @@ for (const entry of cases.filter(entry => entry.path.startsWith('market/') || en
     assertNoStore(await request(entry.path));
   });
 }
-it('preserves a valid empty crypto sector collection', async () => {
-  mode = 'hit';
-  cache.set('market:crypto-sectors:v1', { sectors: [] });
-  const response = await request('market/v1/list-crypto-sectors');
-  assert.equal(response.status, 200);
-  assert.match(response.headers.get('Cache-Control') ?? '', /^(?:private|public), max-age=\d+(?:,|$)/);
-  assert.deepEqual(await response.json(), { sectors: [] });
-});
-
 it('keeps a partial oil snapshot over a failed section read out of HTTP caches', async () => {
   // One errored section (SPR 503) with the other keys hitting must not look
   // like "SPR does not exist": the partial body carries a fresh updatedAt but
@@ -365,28 +351,6 @@ it('World Bank serves a seeded all snapshot when the live provider is 503', asyn
   assert.equal((await response.json()).data[0].countryCode, 'USA');
   assert.equal(writes, 0);
 });
-it('default crypto missing seed is degraded and no-store', async () => {
-  const response = await request('market/v1/list-crypto-quotes');
-  assertNoStore(response);
-  assert.equal((await response.json()).provider, 'degraded');
-});
-it('physical premiums Redis error is 503 and no-store', async () => {
-  mode = 'http-error';
-  process.env.WORLDMONITOR_VALID_KEYS = 'cache-contract-test-key';
-  const response = await gateway(new Request('https://worldmonitor.app/api/market/v1/get-physical-premiums?_debug=1', { headers: { Origin: 'https://worldmonitor.app', 'X-WorldMonitor-Key': 'cache-contract-test-key' } }));
-  assert.equal(response.status, 503);
-  assert.equal(response.headers.get('Cache-Control'), 'no-store');
-});
-
-it('default crypto preserves an explicitly empty seed as healthy', async () => {
-  mode = 'hit';
-  cache.set('market:crypto:v1', { quotes: [] });
-  const response = await request('market/v1/list-crypto-quotes');
-  assert.equal(response.status, 200);
-  assert.equal((await response.json()).provider, 'seed');
-  assert.notEqual(response.headers.get('Cache-Control'), 'no-store');
-});
-
 for (const [path] of requiredCases) {
   it(`${path} required seed rejects missing Redis credentials`, async () => {
     delete process.env.UPSTASH_REDIS_REST_TOKEN;

@@ -1095,7 +1095,7 @@ export async function assembleAnalystContext(
     forecasts: 'forecast:predictions:v2',
     stocks: 'market:stocks-bootstrap:v1',
     commodities: 'market:commodities-bootstrap:v1',
-    macroSignals: 'economic:macro-signals:v1',
+    macroSignals: 'economic:macro-signals:v2',
     predictions: 'prediction:markets-bootstrap:v1',
     energyExposure: 'energy:exposure:v1:index',
   };

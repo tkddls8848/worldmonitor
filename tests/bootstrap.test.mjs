@@ -286,7 +286,6 @@ describe('App bootstrap slow-tier lifecycle', () => {
 
 describe('Panel hydration consumers', () => {
   const panels = [
-    { name: 'ETFFlowsPanel', path: 'src/components/ETFFlowsPanel.ts', key: 'etfFlows' },
     { name: 'MacroSignalsPanel', path: 'src/components/MacroSignalsPanel.ts', key: 'macroSignals' },
     { name: 'ServiceStatusPanel (via infrastructure)', path: 'src/services/infrastructure/index.ts', key: 'serviceStatuses' },
     { name: 'Sectors (via data-loader)', path: 'src/app/data-loader.ts', key: 'sectors' },

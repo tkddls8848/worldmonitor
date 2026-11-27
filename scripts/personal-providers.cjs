@@ -307,7 +307,7 @@ const OREF_REDIS_KEY = `${RELAY_ENV_PREFIX}relay:oref:history:v1`;
 // boot seed, not the interval, is the de-facto scheduler. During a reboot storm
 // that means every upstream gets re-fetched on every boot (~8 min apart in the
 // wild, observed 2026-06-06) instead of on its interval, increasing abuse
-// and rate-limit risk for Yahoo, CoinGecko, UCDP,
+// and rate-limit risk for Yahoo and UCDP,
 // OpenSky, CelesTrak, USNI, etc.
 //
 // bootSeedDelayMs gates the immediate boot seed on the existing seed-meta age:
@@ -1132,111 +1132,6 @@ const UCDP_PAGE_SIZE = 1000;
 // The trailing window both writers fetch and aggregate. The CII's UCDP term
 // assumes exactly this window (CII_UCDP_WINDOW_DAYS; tests pin them together).
 const UCDP_TRAILING_WINDOW_MS = 365 * 24 * 60 * 60 * 1000;
-
-// Crypto Quotes — CoinGecko → CoinPaprika fallback
-const _cryptoCfg = requireShared('crypto.json');
-
-const CRYPTO_PAPRIKA_MAP = _cryptoCfg.coinpaprika;
-
- // 2h — 1h buffer over 5min cron cadence (was 1h = 55min buffer)
-
-// Shared CoinPaprika tickers fetcher — direct first, PROXY_URL fallback.
-// Cached per ticker for 5 min so crypto, stablecoins, sectors, and token panels
-// that run in the same cycle can share overlap without fetching the full catalog.
-const _paprikaTickerCache = new Map();
-
-const _PAPRIKA_CACHE_MS = 5 * 60 * 1000;
-
-const _PAPRIKA_FETCH_CONCURRENCY = 4;
-
-async function _fetchCoinPaprikaTickerById(id) {
-  const url = `https://api.coinpaprika.com/v1/tickers/${encodeURIComponent(id)}?quotes=USD`;
-  const direct = await cyberHttpGetJson(url, { Accept: 'application/json' }, 15000);
-  if (direct && typeof direct === 'object' && direct.id) return direct;
-
-  if (!PROXY_URL) throw new Error(`CoinPaprika ${id} direct failed and no PROXY_URL configured`);
-  const proxy = { ...parseProxyUrl(PROXY_URL), tls: true };
-  const resp = await fetchViaProxy(url, proxy);
-  if (!resp?.ok) throw new Error(`CoinPaprika ${id} proxy HTTP ${resp?.status || 'unavailable'}`);
-  const data = JSON.parse(resp.body);
-  if (!data || typeof data !== 'object' || !data.id) throw new Error(`CoinPaprika ${id} proxy returned invalid ticker`);
-  return data;
-}
-
-async function _fetchCoinPaprikaTickersById(paprikaIds) {
-  const ids = [...new Set(paprikaIds.filter(Boolean))];
-  if (ids.length === 0) return [];
-
-  const now = Date.now();
-  const tickers = [];
-  const misses = [];
-  for (const id of ids) {
-    const cached = _paprikaTickerCache.get(id);
-    if (cached && now - cached.cachedAt < _PAPRIKA_CACHE_MS) {
-      tickers.push(cached.ticker);
-    } else {
-      misses.push(id);
-    }
-  }
-
-  const results = await allSettledWithConcurrency(misses, _PAPRIKA_FETCH_CONCURRENCY, async (id) => {
-    const ticker = await _fetchCoinPaprikaTickerById(id);
-    _paprikaTickerCache.set(id, { ticker, cachedAt: Date.now() });
-    return ticker;
-  });
-
-  const failures = [];
-  for (let i = 0; i < results.length; i += 1) {
-    const result = results[i];
-    if (result.status === 'fulfilled') {
-      tickers.push(result.value);
-    } else {
-      failures.push(result.reason);
-      console.warn(`[CoinPaprika] Skipping ${misses[i]}: ${result.reason?.message || result.reason}`);
-    }
-  }
-
-  if (tickers.length === 0 && failures.length > 0) {
-    throw new Error(`All ${failures.length} CoinPaprika ticker request(s) failed`);
-  }
-
-  return tickers;
-}
-
-async function allSettledWithConcurrency(items, concurrency, mapper) {
-  const results = new Array(items.length);
-  let nextIndex = 0;
-  const workerCount = Math.min(Math.max(1, concurrency), items.length);
-  await Promise.all(Array.from({ length: workerCount }, async () => {
-    while (nextIndex < items.length) {
-      const index = nextIndex;
-      nextIndex += 1;
-      try {
-        results[index] = { status: 'fulfilled', value: await mapper(items[index], index) };
-      } catch (reason) {
-        results[index] = { status: 'rejected', reason };
-      }
-    }
-  }));
-  return results;
-}
-
-// CoinGecko's free Demo and paid Pro plans share the `CG-` key prefix but use
-// different hosts + auth headers (a Demo key on the Pro host 400s). Resolve the
-// tier explicitly by which env var is set — Pro wins, else Demo, else keyless.
-// Mirrors scripts/_seed-utils.mjs `coingeckoEndpoint()`; this relay is CommonJS
-// and cannot import the .mjs helper, so the logic is duplicated.
-function coingeckoEndpoint() {
-  const proKey = process.env.COINGECKO_API_KEY;
-  const demoKey = process.env.COINGECKO_DEMO_API_KEY;
-  const headers = { Accept: 'application/json' };
-  if (proKey) {
-    headers['x-cg-pro-api-key'] = proKey;
-    return { base: 'https://pro-api.coingecko.com/api/v3', headers };
-  }
-  if (demoKey) headers['x-cg-demo-api-key'] = demoKey;
-  return { base: 'https://api.coingecko.com/api/v3', headers };
-}
 
 function cyberHttpGetJson(url, reqHeaders, timeoutMs) {
   return new Promise((resolve) => {
@@ -4344,100 +4239,6 @@ function handleYahooChartRequest(req, res) {
 }
 
 // ── Crypto Quotes Gap Proxy ────────────────────────────────────────────
-// Resolves CoinGecko IDs on demand from the Railway egress IP (per-ID
-// CoinGecko -> CoinPaprika) for the edge handler's bounded gap path (#6306).
-// The edge handler serves seed hits from Redis and only sends cache-miss gap
-// ids here; this route performs the provider work and never writes Redis.
-const CRYPTO_QUOTES_MAX_IDS = 25;
-
-function handleCryptoQuotesRequest(req, res) {
-  const url = new URL(req.url, `http://localhost:${PORT}`);
-  const idsParam = url.searchParams.get('ids') || '';
-  const ids = [...new Set(idsParam.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean))];
-  if (ids.length === 0) {
-    return sendCompressed(req, res, 400, { 'Content-Type': 'application/json' },
-      JSON.stringify({ error: 'Missing ids parameter' }));
-  }
-  if (ids.length > CRYPTO_QUOTES_MAX_IDS) {
-    return sendCompressed(req, res, 400, { 'Content-Type': 'application/json' },
-      JSON.stringify({ error: `At most ${CRYPTO_QUOTES_MAX_IDS} ids per request` }));
-  }
-  const reverseMap = new Map(Object.entries(CRYPTO_PAPRIKA_MAP).map(([g, p]) => [p, g]));
-  const byGeckoId = new Map();
-  (async () => {
-    // CoinGecko first (matches edge fetchGapQuotes), then paprika for still-missing.
-    try {
-      const { base, headers } = coingeckoEndpoint();
-      const geckoUrl = `${base}/coins/markets?vs_currency=usd&ids=${encodeURIComponent(ids.join(','))}&order=market_cap_desc&sparkline=true&price_change_percentage=24h`;
-      const gecko = await cyberHttpGetJson(geckoUrl, headers, 15000);
-      if (Array.isArray(gecko)) {
-        for (const c of gecko) {
-          if (!c?.id) continue;
-          byGeckoId.set(c.id, {
-            id: c.id,
-            name: c.name,
-            symbol: (c.symbol || '').toLowerCase(),
-            quotes: { USD: { price: c.current_price || 0, percent_change_24h: c.price_change_percentage_24h || 0, percent_change_7d: c.price_change_percentage_7d_in_currency || 0 } },
-            sparkline_in_7d: c.sparkline_in_7d,
-          });
-        }
-      }
-    } catch (err) {
-      console.warn(`[Relay][CryptoQuotes] CoinGecko failed: ${err.message}`);
-    }
-
-    const stillMissing = ids.filter((id) => !byGeckoId.has(id));
-    if (stillMissing.length > 0) {
-      const paprikaIds = stillMissing.map((id) => CRYPTO_PAPRIKA_MAP[id]).filter(Boolean);
-      if (paprikaIds.length > 0) {
-        try {
-          const data = await _fetchCoinPaprikaTickersById(paprikaIds);
-          if (Array.isArray(data)) {
-            for (const row of data) {
-              const geckoId = reverseMap.get(row.id) || stillMissing.find((id) => CRYPTO_PAPRIKA_MAP[id] === row.id);
-              if (!geckoId || byGeckoId.has(geckoId)) continue;
-              byGeckoId.set(geckoId, row);
-            }
-          }
-        } catch (err) {
-          console.warn(`[Relay][CryptoQuotes] CoinPaprika failed: ${err.message}`);
-        }
-      }
-    }
-
-    if (byGeckoId.size === 0) {
-      return sendCompressed(req, res, 502, { 'Content-Type': 'application/json' },
-        JSON.stringify({ error: 'All crypto providers failed' }));
-    }
-
-    const quotes = [];
-    const unresolved = [];
-    for (const id of ids) {
-      const row = byGeckoId.get(id);
-      if (!row) { unresolved.push(id); continue; }
-      const prices = row.sparkline_in_7d?.price;
-      quotes.push({
-        id,
-        name: row.name || id,
-        symbol: (row.symbol || id).toUpperCase(),
-        price: row.quotes?.USD?.price || 0,
-        change: row.quotes?.USD?.percent_change_24h || 0,
-        change7d: row.quotes?.USD?.percent_change_7d || 0,
-        sparkline: prices && prices.length > 24 ? prices.slice(-48) : (prices || []),
-      });
-    }
-    return sendCompressed(req, res, 200, {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=30',
-      'X-Crypto-Source': 'relay',
-    }, JSON.stringify({ quotes, unresolved }));
-  })().catch((err) => {
-    console.warn(`[Relay][CryptoQuotes] error: ${err.message}`);
-    return sendCompressed(req, res, 502, { 'Content-Type': 'application/json' },
-      JSON.stringify({ error: 'Crypto quotes proxy error' }));
-  });
-}
-
 // ─────────────────────────────────────────────────────────────
 // NOTAM proxy — ICAO API times out from Vercel edge, relay proxies
 // ─────────────────────────────────────────────────────────────
@@ -5052,8 +4853,6 @@ async function handleProviderRequest(req, res) {
     return handlePolymarketRequest(req, res);
   } else if (pathname === '/yahoo-chart') {
     return handleYahooChartRequest(req, res);
-  } else if (pathname === '/crypto-quotes') {
-    return handleCryptoQuotesRequest(req, res);
   } else if (pathname === '/notam') {
     return handleNotamProxyRequest(req, res);
   } else if (pathname === '/google-flights/search') {

@@ -11,7 +11,7 @@ const _curlProxyAuth = resolveProxy();       // us.decodo.com  — curl for Yaho
 const KEYS = {
   energyPrices: 'economic:energy:v1:all',
   energyCapacity: 'economic:capacity:v1:COL,SUN,WND:20',
-  macroSignals: 'economic:macro-signals:v1',
+  macroSignals: 'economic:macro-signals:v2',
   crudeInventories: 'economic:crude-inventories:v1',
   natGasStorage: 'economic:nat-gas-storage:v1',
   spr: 'economic:spr:v1',
@@ -204,28 +204,11 @@ function extractClosePrices(chart) {
   return Array.isArray(closes) ? closes.filter((v) => v != null) : [];
 }
 
-function extractAlignedPriceVolume(chart) {
-  const result = chart?.chart?.result?.[0];
-  const closes = result?.indicators?.quote?.[0]?.close || [];
-  const volumes = result?.indicators?.quote?.[0]?.volume || [];
-  const aligned = [];
-  for (let i = 0; i < closes.length; i++) {
-    if (closes[i] != null && volumes[i] != null) aligned.push({ price: closes[i], volume: volumes[i] });
-  }
-  return aligned;
-}
-
 function rateOfChange(prices, days) {
   if (prices.length < days + 1) return null;
   const current = prices[prices.length - 1];
   const past = prices[prices.length - 1 - days];
   return past !== 0 ? ((current - past) / past) * 100 : null;
-}
-
-function smaCalc(prices, period) {
-  if (prices.length < period) return null;
-  const slice = prices.slice(-period);
-  return slice.reduce((s, v) => s + v, 0) / period;
 }
 
 async function fetchFinnhubCandles(endpoint, symbol) {
@@ -259,28 +242,14 @@ async function fetchMacroSignals(proxyAuth = null) {
   // Sequential Yahoo calls (150ms gaps like yahooGate); route through proxy to bypass Railway IP blocks
   const jpyChart = await fetchJsonSafe(`${yahooBase}/JPY=X?range=1y&interval=1d`, 8000, proxyAuth).catch(() => null);
   await sleep(150);
-  const btcChart = await fetchJsonSafe(`${yahooBase}/BTC-USD?range=1y&interval=1d`, 8000, proxyAuth).catch(() => null);
-  await sleep(150);
   const qqqChart = await fetchJsonSafe(`${yahooBase}/QQQ?range=1y&interval=1d`, 8000, proxyAuth).catch(() => null);
   await sleep(150);
   const xlpChart = await fetchJsonSafe(`${yahooBase}/XLP?range=1y&interval=1d`, 8000, proxyAuth).catch(() => null);
-
-  const [fearGreed, mempoolHash] = await Promise.allSettled([
-    fetchJsonSafe('https://api.alternative.me/fng/?limit=30&format=json'),
-    fetchJsonSafe('https://mempool.space/api/v1/mining/hashrate/1m'),
-  ]);
 
   let jpyPrices = jpyChart ? extractClosePrices(jpyChart) : [];
   if (jpyPrices.length === 0) {
     console.log('  JPY: Yahoo unavailable, falling back to FRED DEXJPUS');
     jpyPrices = await fetchFredJpyFallback();
-  }
-
-  let btcPrices = btcChart ? extractClosePrices(btcChart) : [];
-  const btcAligned = btcChart ? extractAlignedPriceVolume(btcChart) : [];
-  if (btcPrices.length === 0) {
-    console.log('  BTC: Yahoo unavailable, falling back to Finnhub crypto/candle');
-    btcPrices = await fetchFinnhubCandles('crypto/candle', 'BINANCE:BTCUSDT');
   }
 
   let qqqPrices = qqqChart ? extractClosePrices(qqqChart) : [];
@@ -298,78 +267,16 @@ async function fetchMacroSignals(proxyAuth = null) {
   const jpyRoc30 = rateOfChange(jpyPrices, 30);
   const liquidityStatus = jpyRoc30 !== null ? (jpyRoc30 < -2 ? 'SQUEEZE' : 'NORMAL') : 'UNKNOWN';
 
-  const btcReturn5 = rateOfChange(btcPrices, 5);
   const qqqReturn5 = rateOfChange(qqqPrices, 5);
-  let flowStatus = 'UNKNOWN';
-  if (btcReturn5 !== null && qqqReturn5 !== null) {
-    flowStatus = Math.abs(btcReturn5 - qqqReturn5) > 5 ? 'PASSIVE GAP' : 'ALIGNED';
-  }
 
   const qqqRoc20 = rateOfChange(qqqPrices, 20);
   const xlpRoc20 = rateOfChange(xlpPrices, 20);
   let regimeStatus = 'UNKNOWN';
   if (qqqRoc20 !== null && xlpRoc20 !== null) regimeStatus = qqqRoc20 > xlpRoc20 ? 'RISK-ON' : 'DEFENSIVE';
 
-  const btcSma50 = smaCalc(btcPrices, 50);
-  const btcSma200 = smaCalc(btcPrices, 200);
-  const btcCurrent = btcPrices.length > 0 ? btcPrices[btcPrices.length - 1] : null;
-
-  let btcVwap = null;
-  if (btcAligned.length >= 30) {
-    const last30 = btcAligned.slice(-30);
-    let sumPV = 0, sumV = 0;
-    for (const { price, volume } of last30) { sumPV += price * volume; sumV += volume; }
-    if (sumV > 0) btcVwap = +(sumPV / sumV).toFixed(0);
-  }
-
-  let trendStatus = 'UNKNOWN';
-  let mayerMultiple = null;
-  if (btcCurrent && btcSma50) {
-    const aboveSma = btcCurrent > btcSma50 * 1.02;
-    const belowSma = btcCurrent < btcSma50 * 0.98;
-    const aboveVwap = btcVwap ? btcCurrent > btcVwap : null;
-    if (aboveSma && aboveVwap !== false) trendStatus = 'BULLISH';
-    else if (belowSma && aboveVwap !== true) trendStatus = 'BEARISH';
-    else trendStatus = 'NEUTRAL';
-  }
-  if (btcCurrent && btcSma200) mayerMultiple = +(btcCurrent / btcSma200).toFixed(2);
-
-  let hashStatus = 'UNKNOWN', hashChange = null;
-  if (mempoolHash.status === 'fulfilled') {
-    const hr = mempoolHash.value?.hashrates || mempoolHash.value;
-    if (Array.isArray(hr) && hr.length >= 2) {
-      const recent = hr[hr.length - 1]?.avgHashrate || hr[hr.length - 1];
-      const older = hr[0]?.avgHashrate || hr[0];
-      if (recent && older && older > 0) {
-        hashChange = +((recent - older) / older * 100).toFixed(1);
-        hashStatus = hashChange > 3 ? 'GROWING' : hashChange < -3 ? 'DECLINING' : 'STABLE';
-      }
-    }
-  }
-
-  let momentumStatus = 'UNKNOWN';
-  if (mayerMultiple !== null) momentumStatus = mayerMultiple > 1.0 ? 'STRONG' : mayerMultiple > 0.8 ? 'MODERATE' : 'WEAK';
-
-  let fgValue, fgLabel = 'UNKNOWN', fgHistory = [];
-  if (fearGreed.status === 'fulfilled' && fearGreed.value?.data) {
-    const data = fearGreed.value.data;
-    fgValue = parseInt(data[0]?.value, 10);
-    if (!Number.isFinite(fgValue)) fgValue = undefined;
-    fgLabel = data[0]?.value_classification || 'UNKNOWN';
-    fgHistory = data.slice(0, 30).map((d) => ({
-      value: parseInt(d.value, 10),
-      date: new Date(parseInt(d.timestamp, 10) * 1000).toISOString().slice(0, 10),
-    })).reverse();
-  }
-
   const signalList = [
     { name: 'Liquidity', status: liquidityStatus, bullish: liquidityStatus === 'NORMAL' },
-    { name: 'Flow Structure', status: flowStatus, bullish: flowStatus === 'ALIGNED' },
     { name: 'Macro Regime', status: regimeStatus, bullish: regimeStatus === 'RISK-ON' },
-    { name: 'Technical Trend', status: trendStatus, bullish: trendStatus === 'BULLISH' },
-    { name: 'Hash Rate', status: hashStatus, bullish: hashStatus === 'GROWING' },
-    { name: 'Price Momentum', status: momentumStatus, bullish: momentumStatus === 'STRONG' },
-    { name: 'Fear & Greed', status: fgLabel, bullish: fgValue !== undefined && fgValue > 50 },
   ];
 
   let bullishCount = 0, totalCount = 0;
@@ -384,14 +291,9 @@ async function fetchMacroSignals(proxyAuth = null) {
     verdict, bullishCount, totalCount,
     signals: {
       liquidity: { status: liquidityStatus, value: jpyRoc30 !== null ? +jpyRoc30.toFixed(2) : undefined, sparkline: jpyPrices.slice(-30) },
-      flowStructure: { status: flowStatus, btcReturn5: btcReturn5 !== null ? +btcReturn5.toFixed(2) : undefined, qqqReturn5: qqqReturn5 !== null ? +qqqReturn5.toFixed(2) : undefined },
       macroRegime: { status: regimeStatus, qqqRoc20: qqqRoc20 !== null ? +qqqRoc20.toFixed(2) : undefined, xlpRoc20: xlpRoc20 !== null ? +xlpRoc20.toFixed(2) : undefined },
-      technicalTrend: { status: trendStatus, btcPrice: btcCurrent ?? undefined, sma50: btcSma50 ? +btcSma50.toFixed(0) : undefined, sma200: btcSma200 ? +btcSma200.toFixed(0) : undefined, vwap30d: btcVwap ?? undefined, mayerMultiple: mayerMultiple ?? undefined, sparkline: btcPrices.slice(-30) },
-      hashRate: { status: hashStatus, change30d: hashChange ?? undefined },
-      priceMomentum: { status: momentumStatus },
-      fearGreed: { status: fgLabel, value: fgValue, history: fgHistory },
     },
-    meta: { qqqSparkline: qqqPrices.slice(-30) },
+    meta: { qqqSparkline: qqqPrices.slice(-30), qqqReturn5: qqqReturn5 ?? undefined },
     unavailable: false,
   };
 }

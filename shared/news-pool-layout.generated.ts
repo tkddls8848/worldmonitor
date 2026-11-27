@@ -29,7 +29,6 @@ export const NEWS_POOL_LAYOUT: NewsPoolLayout = {
       "forex",
       "bonds",
       "commodities",
-      "crypto",
       "centralbanks",
       "economic",
       "ipo",
@@ -285,13 +284,6 @@ export const NEWS_POOL_LAYOUT: NewsPoolLayout = {
       "lang": "en",
       "contentLanguages": [
         "en"
-      ]
-    },
-    {
-      "edition": "finance",
-      "lang": "zh",
-      "contentLanguages": [
-        "zh"
       ]
     },
     {

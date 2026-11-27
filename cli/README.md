@@ -104,7 +104,7 @@ worldmonitor world                       # live global situation brief
 worldmonitor country IR                  # AI strategic brief for a country
 worldmonitor risk DE                      # country risk scores
 worldmonitor conflicts --country IR --limit 5
-worldmonitor markets --asset_class crypto
+worldmonitor markets --asset_class equity
 worldmonitor call get_cyber_threats --min_severity 7
 ```
 

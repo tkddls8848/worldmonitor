@@ -9,8 +9,6 @@
  */
 export const PRO_FRESH_CACHE_RPC_PATHS = new Set<string>([
   '/api/market/v1/list-market-quotes',
-  '/api/market/v1/list-crypto-quotes',
   '/api/market/v1/list-commodity-quotes',
-  '/api/market/v1/list-stablecoin-markets',
   '/api/market/v1/list-gulf-quotes',
 ]);

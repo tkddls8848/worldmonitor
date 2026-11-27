@@ -88,32 +88,11 @@ const TESTS = [
     field: 'quotes',
   },
   {
-    name: 'Crypto Quotes',
-    endpoint: '/api/market/v1/list-crypto-quotes',
-    validate: (d) => Array.isArray(d.quotes),
-    minRecords: 0,
-    field: 'quotes',
-  },
-  {
-    name: 'ETF Flows',
-    endpoint: '/api/market/v1/list-etf-flows',
-    validate: (d) => Array.isArray(d.etfs),
-    minRecords: 0,
-    field: 'etfs',
-  },
-  {
     name: 'Gulf Quotes',
     endpoint: '/api/market/v1/list-gulf-quotes',
     validate: (d) => Array.isArray(d.quotes),
     minRecords: 0,
     field: 'quotes',
-  },
-  {
-    name: 'Stablecoin Markets',
-    endpoint: '/api/market/v1/list-stablecoin-markets',
-    validate: (d) => Array.isArray(d.stablecoins),
-    minRecords: 0,
-    field: 'stablecoins',
   },
 
   // Phase 3 — Hybrid endpoints
@@ -280,10 +259,7 @@ async function main() {
       'climate:anomalies': 'Climate Anomalies',
       'unrest:events': 'Unrest Events',
       'cyber:threats': 'Cyber Threats',
-      'market:crypto': 'Crypto Quotes',
-      'market:etf-flows': 'ETF Flows',
       'market:gulf-quotes': 'Gulf Quotes',
-      'market:stablecoins': 'Stablecoin Markets',
       'natural:events': 'Natural Events',
       'displacement:summary': 'Displacement Summary',
     };

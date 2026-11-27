@@ -1,7 +1,7 @@
 import { Panel } from './Panel';
 import { t } from '@/services/i18n';
 import { sparklineSpanHtml } from './_sparkline-span';
-import type { MarketData, CryptoData, TokenData } from '@/types';
+import type { MarketData } from '@/types';
 import { formatPrice, formatChange, getChangeClass, getHeatmapClass } from '@/utils';
 import { escapeHtml, unsafeRawHtml } from '@/utils/sanitize';
 import { miniSparkline } from '@/utils/sparkline';
@@ -406,8 +406,8 @@ export interface CommoditiesTabSelectionResult {
 import type {
   GetPhysicalDivergenceIndexResponse,
   GetPhysicalPremiumsResponse,
-  GetHyperliquidFlowResponse,
-  HyperliquidAssetFlow,
+  GetPerpPositioningResponse,
+  PerpPositioningAsset,
   PhysicalDivergenceReading,
   PhysicalDivergenceState,
   PhysicalPremiumRegime,
@@ -522,16 +522,16 @@ function oiDelta1h(sparkOi: number[]): number | null {
  * same view model the RPC mapper produces. Bootstrap returns the raw Redis
  * blob (numeric fields), not the proto response (string-encoded numbers).
  */
-export function mapHyperliquidFlowSeed(raw: Record<string, unknown>): HyperliquidFlowView | null {
+export function mapPerpPositioningSeed(raw: Record<string, unknown>): PerpPositioningView | null {
   const assets = Array.isArray(raw.assets) ? (raw.assets as Array<Record<string, unknown>>) : null;
   if (!assets || assets.length === 0) return null;
-  const fxAssets: HyperliquidAssetView[] = [];
-  const commodityAssets: HyperliquidAssetView[] = [];
+  const fxAssets: PerpPositioningAssetView[] = [];
+  const commodityAssets: PerpPositioningAssetView[] = [];
   for (const a of assets) {
     const funding = typeof a.funding === 'number' && Number.isFinite(a.funding) ? a.funding : null;
     const sparkOi = Array.isArray(a.sparkOi) ? (a.sparkOi as number[]).filter((v) => Number.isFinite(v)) : [];
     const sparkScore = Array.isArray(a.sparkScore) ? (a.sparkScore as number[]).filter((v) => Number.isFinite(v)) : [];
-    const view: HyperliquidAssetView = {
+    const view: PerpPositioningAssetView = {
       symbol: String(a.symbol ?? ''),
       display: String(a.display ?? ''),
       group: String(a.group ?? ''),
@@ -554,11 +554,11 @@ export function mapHyperliquidFlowSeed(raw: Record<string, unknown>): Hyperliqui
   };
 }
 
-export function mapHyperliquidFlowResponse(resp: GetHyperliquidFlowResponse): HyperliquidFlowView {
-  const fxAssets: HyperliquidAssetView[] = [];
-  const commodityAssets: HyperliquidAssetView[] = [];
-  for (const a of resp.assets as HyperliquidAssetFlow[]) {
-    const view: HyperliquidAssetView = {
+export function mapPerpPositioningResponse(resp: GetPerpPositioningResponse): PerpPositioningView {
+  const fxAssets: PerpPositioningAssetView[] = [];
+  const commodityAssets: PerpPositioningAssetView[] = [];
+  for (const a of resp.assets as PerpPositioningAsset[]) {
+    const view: PerpPositioningAssetView = {
       symbol: a.symbol,
       display: a.display,
       group: a.group,
@@ -581,7 +581,7 @@ export function mapHyperliquidFlowResponse(resp: GetHyperliquidFlowResponse): Hy
   };
 }
 
-interface HyperliquidAssetView {
+interface PerpPositioningAssetView {
   symbol: string;
   display: string;
   group: string;
@@ -593,11 +593,11 @@ interface HyperliquidAssetView {
   sparkScore: number[];
 }
 
-interface HyperliquidFlowView {
+interface PerpPositioningView {
   ts: number;
   warmup: boolean;
-  fxAssets: HyperliquidAssetView[];
-  commodityAssets: HyperliquidAssetView[];
+  fxAssets: PerpPositioningAssetView[];
+  commodityAssets: PerpPositioningAssetView[];
   unavailable: boolean;
 }
 
@@ -929,115 +929,5 @@ export class CommoditiesPanel extends Panel {
       }).join('') + '</div>';
 
     this.setSafeContent(unsafeRawHtml(tabBar + grid, 'legacy Panel.setContent() migration'), this.revealActiveTab);
-  }
-}
-
-export class CryptoPanel extends Panel {
-  constructor() {
-    super({ id: 'crypto', title: t('panels.crypto'), infoTooltip: t('components.crypto.infoTooltip') });
-  }
-
-  public renderCrypto(data: CryptoData[]): void {
-    if (data.length === 0) {
-      this.showRetrying(t('common.failedCryptoData'));
-      return;
-    }
-
-    const html = data
-      .map(
-        (coin) => `
-      <div class="market-item">
-        <div class="market-info">
-          <span class="market-name">${escapeHtml(coin.name)}</span>
-          <span class="market-symbol">${escapeHtml(coin.symbol)}</span>
-        </div>
-        <div class="market-data">
-          ${miniSparkline(coin.sparkline, coin.change)}
-          <span class="market-price">${escapeHtml(Number.isFinite(coin.price) && Math.abs(coin.price) >= 1 ? `$${coin.price.toLocaleString()}` : formatPrice(coin.price))}</span>
-          <span class="market-change ${getChangeClass(coin.change)}">${formatChange(coin.change)}</span>
-        </div>
-      </div>
-    `
-      )
-      .join('');
-
-    this.setSafeContent(unsafeRawHtml(html, 'legacy Panel.setContent() migration'));
-  }
-}
-
-export class CryptoHeatmapPanel extends Panel {
-  constructor() {
-    super({ id: 'crypto-heatmap', title: 'Crypto Sectors' });
-  }
-
-  public renderSectors(data: Array<{ id: string; name: string; change: number }>): void {
-    if (data.length === 0) {
-      this.showRetrying(t('common.failedSectorData'));
-      return;
-    }
-
-    const html =
-      '<div class="heatmap">' +
-      data
-        .map((sector) => {
-          const change = sector.change ?? 0;
-          return `
-        <div class="heatmap-cell ${getHeatmapClass(change)}">
-          <div class="sector-name">${escapeHtml(sector.name)}</div>
-          <div class="sector-change ${getChangeClass(change)}">${formatChange(change)}</div>
-        </div>
-      `;
-        })
-        .join('') +
-      '</div>';
-
-    this.setSafeContent(unsafeRawHtml(html, 'legacy Panel.setContent() migration'));
-  }
-}
-
-export class TokenListPanel extends Panel {
-  public renderTokens(data: TokenData[]): void {
-    if (data.length === 0) {
-      this.showRetrying(t('common.failedCryptoData'));
-      return;
-    }
-
-    const rows = data
-      .map(
-        (tok) => `
-      <div class="market-item">
-        <div class="market-info">
-          <span class="market-name">${escapeHtml(tok.name)}</span>
-          <span class="market-symbol">${escapeHtml(tok.symbol)}</span>
-        </div>
-        <div class="market-data">
-          <span class="market-price">${escapeHtml(Number.isFinite(tok.price) && Math.abs(tok.price) >= 1 ? `$${tok.price.toLocaleString(undefined, { maximumFractionDigits: tok.price < 1 ? 6 : 2 })}` : formatPrice(tok.price))}</span>
-          <span class="market-change ${getChangeClass(tok.change24h)}">${formatChange(tok.change24h)}</span>
-          <span class="market-change market-change--7d ${getChangeClass(tok.change7d)}">${formatChange(tok.change7d)}W</span>
-        </div>
-      </div>
-    `
-      )
-      .join('');
-
-    this.setSafeContent(unsafeRawHtml(rows, 'legacy Panel.setContent() migration'));
-  }
-}
-
-export class DefiTokensPanel extends TokenListPanel {
-  constructor() {
-    super({ id: 'defi-tokens', title: 'DeFi Tokens', infoTooltip: t('components.defiTokens.infoTooltip') });
-  }
-}
-
-export class AiTokensPanel extends TokenListPanel {
-  constructor() {
-    super({ id: 'ai-tokens', title: 'AI Tokens', infoTooltip: t('components.aiTokens.infoTooltip') });
-  }
-}
-
-export class OtherTokensPanel extends TokenListPanel {
-  constructor() {
-    super({ id: 'other-tokens', title: 'Alt Tokens', infoTooltip: t('components.altTokens.infoTooltip') });
   }
 }

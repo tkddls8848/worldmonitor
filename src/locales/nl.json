@@ -3,7 +3,6 @@
     "liveNews": "Live nieuws",
     "markets": "Markten",
     "heatmap": "Sector-hittekaart",
-    "crypto": "Crypto",
     "strategicPosture": "Strategic Posture",
     "cii": "Country Instability Index",
     "status": "Systeemstatus",
@@ -26,7 +25,6 @@
     "latam": "Latijns-Amerika",
     "asia": "Azië-Pacific",
     "energy": "Energie en hulpbronnen",
-    "etfFlows": "Bitcoin-fondsen stromen",
     "economic": "Economische indicatoren",
     "tradePolicy": "Handelsbeleid",
     "macroSignals": "Bitcoin-marktomstandigheden",
@@ -35,7 +33,6 @@
     "regulation": "Dashboard voor AI-regulering",
     "finRegulation": "Financiële regelgeving",
     "serviceStatus": "Servicestatus",
-    "stablecoins": "Stabiele munten",
     "deduction": "Situatie afleiden",
     "techHubs": "Hottech-hubs",
     "techReadiness": "Tech Readiness-index",
@@ -761,15 +758,6 @@
         "5": "Normale activiteit"
       }
     },
-    "stablecoins": {
-      "pegHealth": "Peg-gezondheid",
-      "supplyVolume": "Aanbod & volume",
-      "token": "Token",
-      "mcap": "Marktk.",
-      "vol24h": "24u Vol",
-      "chg24h": "24u Wijz",
-      "infoTooltip": "<strong>Stablecoins</strong> Koppelingsgezondheid, marktkapitalisatie en 24-uursvolume van de belangrijkste aan de USD gekoppelde tokens (USDT, USDC, DAI, BUSD). Een losgeslagen koppeling wijst op systeemrisico."
-    },
     "status": {
       "updatedAt": "Bijgewerkt {{time}}"
     },
@@ -1319,27 +1307,6 @@
       "revokedCount": "Ingetrokken regelgeving ({{count}})",
       "lapsedCount": "Vervallen voorstellen ({{count}})"
     },
-    "etfFlows": {
-      "previousColumns": "Vorige kolommen",
-      "moreColumns": "Meer kolommen",
-      "unavailable": "exchangegenoteerde fondsengegevens tijdelijk niet beschikbaar",
-      "netFlow": "Netto stroom",
-      "estFlow": "Gesch. stroom",
-      "totalVol": "Totaal vol.",
-      "etfs": "Exchangegenoteerde fondsen",
-      "netInflow": "NETTO INSTROOM",
-      "netOutflow": "NETTO UITSTROOM",
-      "netNeutral": "NETTO NEUTRAAL",
-      "table": {
-        "ticker": "Ticker",
-        "issuer": "Uitgever",
-        "estFlow": "Gesch. stroom",
-        "volume": "Volume",
-        "change": "Wijziging"
-      },
-      "rateLimited": "exchangegenoteerde fondsengegevens tijdelijk niet beschikbaar (rate limited) — binnenkort opnieuw geprobeerd",
-      "infoTooltip": "<strong>Bitcoin-fondsenstromen</strong> Volgt dagelijkse geschatte fondsenstromen voor Amerikaanse spotbitcoin exchangegenoteerde fondsen:<ul><li>Instroomrichting/uitstroomrichting en omvang</li><li>Volume en prijsverandering per fonds</li><li>Netto geaggregeerde stroom over alle gevolgde fondsen</li></ul>"
-    },
     "macroSignals": {
       "overall": "Totaal",
       "verdict": {
@@ -1349,12 +1316,7 @@
       "bullish": "{{count}}/{{total}} positief",
       "signals": {
         "liquidity": "Liquiditeit",
-        "flow": "Stroom",
-        "regime": "Regime",
-        "btcTrend": "BTC-trend",
-        "hashRate": "Hashrate",
-        "fearGreed": "Fear &amp; Greed",
-        "momentum": "Momentum"
+        "regime": "Regime"
       },
       "infoTooltip": "<strong>Bitcoin-marktomstandigheden</strong> Composiet signaalenpaneel voor Bitcoin-positionering en risicoappetijt:<ul><li><strong>Liquiditeit</strong>: Netto Fed-liquiditeitsproxy</li><li><strong>Stroom</strong>: BTC vs QQQ 5-dagrendementen</li><li><strong>Regime</strong>: QQQ vs XLP rotatie (risk-on/off)</li><li><strong>BTC-trend</strong>: Prijs vs SMA50/200, Mayer Multiple</li><li><strong>Hash-snelheid</strong>: 30-daagse netwerkhashshijving</li><li><strong>Angst & Hebzucht</strong>: Marktsentimentindex</li></ul>Dit panel is voor regime en positionering, niet voor brede macrogegevens."
     },
@@ -1585,23 +1547,11 @@
         "twentyDayTrend": "Premiumtrend over twintig handelsdagen"
       }
     },
-    "crypto": {
-      "infoTooltip": "<strong>Crypto</strong> Live prijzen, 24-uursveranderingen en volume van de belangrijkste cryptovaluta. Gegevens van CoinGecko."
-    },
     "gulfEconomies": {
       "infoTooltip": "<strong>Gulf Economies</strong> Aandelen-indices, wisselkoersen en olieprijzen voor economieën van de Samenwerkingsraad van de Golf (Saoedi-Arabië, VAE, Koeweit, Qatar, Bahrein, Oman)."
     },
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Wereldwijd vergelijking van boodschappenprijzen in 24 landen — volgt inflatietrends van consumptiegoederen buiten de standaard consumentenprijsindex."
-    },
-    "defiTokens": {
-      "infoTooltip": "<strong>DeFi-tokens</strong> Prijzen en 24u/7d-prestaties van de belangrijkste tokens van gedecentraliseerde financiële protocollen — DEX'en, leenplatforms en rendementsprotocollen."
-    },
-    "aiTokens": {
-      "infoTooltip": "<strong>AI-tokens</strong> Prijzen en 24u/7d-prestaties van tokens uit de AI- en machine-learningsector — rekennetwerken, gedecentraliseerde AI-infrastructuur en dataprotocollen."
-    },
-    "altTokens": {
-      "infoTooltip": "<strong>Alt-tokens</strong> Prijzen en 24u/7d-prestaties van alternatieve en opkomende cryptotokens buiten de grootste marktkapitalisaties."
     },
     "stockAnalysis": {
       "infoTooltip": "<strong>Premium aandelenanalyse</strong> AI-analyse van aandelen in je volglijst — koop/houd/verkoopsignalen, koersdoelen, belangrijkste risico's en katalysatoren, dagelijks bijgewerkt."
@@ -1985,7 +1935,6 @@
       "title": "24/7 Positionering",
       "infoTooltip": "<strong>24/7 Positionering</strong> Perpetual contract positioneringsspanning van Hyperliquid. Handel rond de klok, toont wat zich opbouwt wanneer traditionele markten gesloten zijn. Compositescore (0-100) uit financieringspercentage, volume, openstaand belang en spot-perp basis. Groen = longs overbezet (bullish helling), rood = shorts overbezet (bearish helling).",
       "commodities": "GRONDSTOFFEN",
-      "crypto": "CRYPTO",
       "fx": "Valutahandel",
       "warmup": "Basiswaarden worden opgebouwd. Volume- en Open Interest-geschiedenis wordt in het volgende uur ingevuld.",
       "footer": "5 min · Hyperliquid-perps · 24/7"
@@ -3728,11 +3677,9 @@
     "noDataAvailable": "Geen gegevens beschikbaar",
     "upstreamUnavailable": "Upstream-API niet beschikbaar — automatisch opnieuw proberen",
     "loadingUcdpEvents": "UCDP-gebeurtenissen laden",
-    "loadingStablecoins": "Stablecoins laden...",
     "scanningThermalData": "Thermische gegevens scannen",
     "calculatingExposure": "Blootstelling berekenen",
     "computingSignals": "Signalen berekenen...",
-    "loadingEtfData": "Beursgenoteerde fondsengegevens laden...",
     "loadingDisplacement": "Verplaatsingsgegevens laden",
     "loadingClimateData": "Klimaatgegevens laden",
     "failedTechReadiness": "Fout bij laden technologische gereedheid",
@@ -3744,7 +3691,6 @@
     "failedMarketData": "Fout bij laden marktgegevens",
     "failedSectorData": "Fout bij laden sectorgegevens",
     "failedCommodities": "Fout bij laden grondstoffen",
-    "failedCryptoData": "Fout bij laden cryptogegevens",
     "noNewsAvailable": "Geen nieuws beschikbaar",
     "noActiveTechHubs": "Geen actieve technologiehubs",
     "noActiveGeoHubs": "Geen actieve geopolitieke hubs",
@@ -3816,7 +3762,6 @@
     "sourceRegionMarkets": "Markten & analyse",
     "sourceRegionFixedIncomeFx": "Fixed Income & Buitenlandse valuta",
     "sourceRegionCommodities": "Grondstoffen",
-    "sourceRegionCryptoDigital": "Crypto & digitaal",
     "sourceRegionCentralBanks": "Centrale banken & economie",
     "sourceRegionDeals": "Deals & bedrijven",
     "sourceRegionFinRegulation": "Financiële regelgeving",
@@ -3837,7 +3782,6 @@
     "panelCatMarkets": "Markten",
     "panelCatFixedIncomeFx": "Fixed Income & Buitenlandse valuta",
     "panelCatCommodities": "Grondstoffen",
-    "panelCatCryptoDigital": "Crypto & Digitaal",
     "panelCatCentralBanks": "Centrale Banken & Economie",
     "panelCatDeals": "Deals & Institutioneel",
     "panelCatGulfMena": "Golf & Midden-Oosten en Noord-Afrika",
@@ -4281,13 +4225,11 @@
     "preflightProRequired": "Pro-abonnement vereist om Widget Builder te gebruiken. Upgrade om toegang te krijgen.",
     "examples": {
       "oilGold": "Toon mij de prijs van ruwe olie versus goud vandaag",
-      "cryptoMovers": "Maak een widget voor de belangrijkste crypto-bewegingen in de laatste 24 uur",
       "flightDelays": "Samenvatting van de ergste internationale vliegvertragingen nu",
       "conflictHotspots": "Kaart de nieuwste UCDP-conflicthaarden in met korte labels"
     },
     "proExamples": {
       "interactiveChart": "Interactieve Chart.js-grafiek met vergelijking van olie- en goudprijzen",
-      "sortableTable": "Sorteerbare cryptoprijstabel met zoekfilter",
       "animatedCounters": "Geanimeerde tellers voor belangrijkste economische indicatoren",
       "tabbedComparison": "Tabblad-vergelijking van conflictgebeurtenissen per regio"
     }

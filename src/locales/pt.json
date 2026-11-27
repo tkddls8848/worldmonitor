@@ -3,7 +3,6 @@
     "liveNews": "Notícias ao vivo",
     "markets": "Mercados",
     "heatmap": "Mapa de calor do setor",
-    "crypto": "Criptografia",
     "strategicPosture": "Strategic Posture",
     "cii": "Country Instability Index",
     "status": "Status do sistema",
@@ -26,7 +25,6 @@
     "latam": "América latina",
     "asia": "Ásia-Pacífico",
     "energy": "Energia e Recursos",
-    "etfFlows": "Fluxos de fundos Bitcoin",
     "economic": "Indicadores Econômicos",
     "tradePolicy": "Política Comercial",
     "macroSignals": "Condições de mercado Bitcoin",
@@ -35,7 +33,6 @@
     "regulation": "Painel de regulamentação de IA",
     "finRegulation": "Regulamentação financeira",
     "serviceStatus": "Status do serviço",
-    "stablecoins": "Moedas estáveis",
     "deduction": "Deduzir situação",
     "techHubs": "Centros de tecnologia importantes",
     "techReadiness": "Índice de prontidão tecnológica",
@@ -762,15 +759,6 @@
         "5": "Atividade Normal"
       }
     },
-    "stablecoins": {
-      "pegHealth": "Saúde da Paridade",
-      "supplyVolume": "Oferta e Volume",
-      "token": "Token",
-      "mcap": "Cap. Merc.",
-      "vol24h": "Vol 24h",
-      "chg24h": "Var 24h",
-      "infoTooltip": "<strong>Stablecoins</strong> Saúde da paridade, capitalização e volume em 24h dos principais tokens atrelados ao USD (USDT, USDC, DAI, BUSD). A perda da paridade sinaliza risco sistêmico."
-    },
     "status": {
       "updatedAt": "Atualizado {{time}}"
     },
@@ -1322,27 +1310,6 @@
       "revokedCount": "Regulamentações revogadas ({{count}})",
       "lapsedCount": "Propostas arquivadas ({{count}})"
     },
-    "etfFlows": {
-      "previousColumns": "Colunas anteriores",
-      "moreColumns": "Mais colunas",
-      "unavailable": "dados de fundos negociados em bolsa temporariamente indisponíveis",
-      "netFlow": "Fluxo líquido",
-      "estFlow": "Fluxo est.",
-      "totalVol": "Vol. total",
-      "etfs": "Fundos negociados em bolsa",
-      "netInflow": "ENTRADA LÍQUIDA",
-      "netOutflow": "SAÍDA LÍQUIDA",
-      "netNeutral": "LÍQUIDO NEUTRO",
-      "table": {
-        "ticker": "Código",
-        "issuer": "Emissor",
-        "estFlow": "Fluxo est.",
-        "volume": "Volume",
-        "change": "Variação"
-      },
-      "rateLimited": "dados de fundos negociados em bolsa temporariamente indisponíveis (limite de taxa) — tentando novamente em breve",
-      "infoTooltip": "<strong>Fluxos de fundo Bitcoin</strong> Rastreia fluxos de fundo estimados diários para fundos negociados em bolsa Bitcoin spot dos EUA:<ul><li>Direção e magnitude de entrada/saída</li><li>Volume e mudança de preço por fundo</li><li>Fluxo agregado líquido em todos os fundos rastreados</li></ul>"
-    },
     "macroSignals": {
       "overall": "Geral",
       "verdict": {
@@ -1352,12 +1319,7 @@
       "bullish": "{{count}}/{{total}} otimistas",
       "signals": {
         "liquidity": "Liquidez",
-        "flow": "Fluxo",
-        "regime": "Regime",
-        "btcTrend": "Tendência do BTC",
-        "hashRate": "Taxa de hash",
-        "fearGreed": "Fear &amp; Greed",
-        "momentum": "Momento"
+        "regime": "Regime"
       },
       "infoTooltip": "<strong>Condições de mercado Bitcoin</strong> Dashboard de sinal composto para posicionamento Bitcoin e apetite por risco:<ul><li><strong>Liquidez</strong>: Proxy de liquidez líquida do Fed</li><li><strong>Flow</strong>: Retornos BTC vs QQQ 5 dias</li><li><strong>Regime</strong>: Rotação QQQ vs XLP (risk-on/off)</li><li><strong>BTC Trend</strong>: Preço vs SMA50/200, Mayer Multiple</li><li><strong>Hash Rate</strong>: Mudança de hash de rede 30 dias</li><li><strong>Fear & Greed</strong>: Índice de sentimento de mercado</li></ul>Este painel é para regime e posicionamento, não dados macro amplos."
     },
@@ -1588,23 +1550,11 @@
         "twentyDayTrend": "Tendência de prêmio de vinte dias úteis"
       }
     },
-    "crypto": {
-      "infoTooltip": "<strong>Cripto</strong> Preços ao vivo, variação em 24h e volume das principais criptomoedas. Dados da CoinGecko."
-    },
     "gulfEconomies": {
       "infoTooltip": "<strong>Gulf Economies</strong> Índices de ações do Golfo, taxas de câmbio e preços de petróleo para as economias do Conselho de Cooperação do Golfo (Arábia Saudita, EAU, Kuwait, Qatar, Bahrein, Omã)."
     },
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Comparação de preços da cesta de compras global em 24 países — monitora a inflação de bens de consumo do mundo real além do índice de preços ao consumidor divulgado."
-    },
-    "defiTokens": {
-      "infoTooltip": "<strong>Tokens DeFi</strong> Preços e desempenho em 24h/7d dos principais tokens de protocolos de finanças descentralizadas — DEXs, plataformas de empréstimo e protocolos de rendimento."
-    },
-    "aiTokens": {
-      "infoTooltip": "<strong>Tokens de IA</strong> Preços e desempenho em 24h/7d dos tokens do setor de IA e aprendizado de máquina — redes de computação, infraestrutura de IA descentralizada e protocolos de dados."
-    },
-    "altTokens": {
-      "infoTooltip": "<strong>Altcoins</strong> Preços e desempenho em 24h/7d de tokens cripto alternativos e emergentes fora das maiores capitalizações."
     },
     "stockAnalysis": {
       "infoTooltip": "<strong>Análise de ações Premium</strong> Análise com IA das ações da sua lista — sinais de compra/manutenção/venda, preços-alvo, principais riscos e catalisadores atualizados diariamente."
@@ -1994,7 +1944,6 @@
       "title": "Posicionamento 24/7",
       "infoTooltip": "<strong>24/7 Positioning</strong> Estresse de posicionamento de contrato perpétuo da Hyperliquid. Negociações 24 horas por dia, mostrando o que está se acumulando quando os mercados tradicionais estão fechados. Pontuação composta (0-100) a partir de taxa de financiamento, volume, interesse aberto e base spot-perp. Verde = compras concentradas (inclinação otimista), vermelho = vendas concentradas (inclinação pessimista).",
       "commodities": "COMMODITIES",
-      "crypto": "CRIPTO",
       "fx": "Câmbio",
       "warmup": "Construindo linhas de base. Histórico de volume e open interest será preenchido na próxima hora.",
       "footer": "5 min · perps Hyperliquid · 24/7"
@@ -3748,11 +3697,9 @@
     "noDataAvailable": "Nenhum dado disponível",
     "upstreamUnavailable": "API de origem indisponível — nova tentativa automática",
     "loadingUcdpEvents": "Carregando eventos UCDP",
-    "loadingStablecoins": "Carregando stablecoins...",
     "scanningThermalData": "Escaneando dados térmicos",
     "calculatingExposure": "Calculando exposição",
     "computingSignals": "Calculando sinais...",
-    "loadingEtfData": "Carregando dados de fundos negociados em bolsa...",
     "loadingDisplacement": "Carregando dados de deslocamento",
     "loadingClimateData": "Carregando dados climáticos",
     "failedTechReadiness": "Falha ao carregar dados de preparação tecnológica",
@@ -3764,7 +3711,6 @@
     "failedMarketData": "Falha ao carregar dados de mercado",
     "failedSectorData": "Falha ao carregar dados setoriais",
     "failedCommodities": "Falha ao carregar commodities",
-    "failedCryptoData": "Falha ao carregar dados de criptomoedas",
     "noNewsAvailable": "Nenhuma notícia disponível",
     "noActiveTechHubs": "Sem hubs tecnológicos ativos",
     "noActiveGeoHubs": "Sem hubs geopolíticos ativos",
@@ -3836,7 +3782,6 @@
     "sourceRegionMarkets": "Mercados e análise",
     "sourceRegionFixedIncomeFx": "Renda fixa e câmbio",
     "sourceRegionCommodities": "Commodities",
-    "sourceRegionCryptoDigital": "Cripto e digital",
     "sourceRegionCentralBanks": "Bancos centrais e economia",
     "sourceRegionDeals": "Negócios e empresas",
     "sourceRegionFinRegulation": "Regulação financeira",
@@ -3857,7 +3802,6 @@
     "panelCatMarkets": "Mercados",
     "panelCatFixedIncomeFx": "Renda fixa e câmbio",
     "panelCatCommodities": "Commodities",
-    "panelCatCryptoDigital": "Cripto & Digital",
     "panelCatCentralBanks": "Bancos Centrais & Economia",
     "panelCatDeals": "Negócios & Institucional",
     "panelCatGulfMena": "Golfo Pérsico e Oriente Médio e Norte da África",
@@ -4303,13 +4247,11 @@
     "preflightProRequired": "Assinatura Pro necessária para usar o Widget Builder. Faça upgrade para desbloquear.",
     "examples": {
       "oilGold": "Mostrar o preço do petróleo bruto versus ouro de hoje",
-      "cryptoMovers": "Criar um widget para os principais movimentadores de criptomoedas nas últimas 24 horas",
       "flightDelays": "Resumir os piores atrasos de voos internacionais agora",
       "conflictHotspots": "Mapear os últimos pontos quentes de conflito UCDP com rótulos curtos"
     },
     "proExamples": {
       "interactiveChart": "Gráfico interativo Chart.js comparando preços de petróleo e ouro",
-      "sortableTable": "Tabela de preços de criptomoedas ordenável com filtro de busca",
       "animatedCounters": "Contadores animados para indicadores econômicos principais",
       "tabbedComparison": "Comparação com abas de eventos de conflito por região"
     }

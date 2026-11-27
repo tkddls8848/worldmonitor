@@ -86,12 +86,7 @@ export interface GetMacroSignalsResponse {
 
 export interface MacroSignals {
   liquidity?: LiquiditySignal;
-  flowStructure?: FlowStructureSignal;
   macroRegime?: MacroRegimeSignal;
-  technicalTrend?: TechnicalTrendSignal;
-  hashRate?: HashRateSignal;
-  priceMomentum?: PriceMomentumSignal;
-  fearGreed?: FearGreedSignal;
 }
 
 export interface LiquiditySignal {
@@ -100,50 +95,15 @@ export interface LiquiditySignal {
   sparkline: number[];
 }
 
-export interface FlowStructureSignal {
-  status: string;
-  btcReturn5?: number;
-  qqqReturn5?: number;
-}
-
 export interface MacroRegimeSignal {
   status: string;
   qqqRoc20?: number;
   xlpRoc20?: number;
 }
 
-export interface TechnicalTrendSignal {
-  status: string;
-  btcPrice?: number;
-  sma50?: number;
-  sma200?: number;
-  vwap30d?: number;
-  mayerMultiple?: number;
-  sparkline: number[];
-}
-
-export interface HashRateSignal {
-  status: string;
-  change30d?: number;
-}
-
-export interface PriceMomentumSignal {
-  status: string;
-}
-
-export interface FearGreedSignal {
-  status: string;
-  value?: number;
-  history: FearGreedHistoryEntry[];
-}
-
-export interface FearGreedHistoryEntry {
-  value: number;
-  date: string;
-}
-
 export interface MacroMeta {
   qqqSparkline: number[];
+  qqqReturn5?: number;
 }
 
 export interface GetChinaMacroSnapshotRequest {

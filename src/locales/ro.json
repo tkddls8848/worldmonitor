@@ -344,7 +344,6 @@
     "sourceRegionMarkets": "Piețe și analize",
     "sourceRegionFixedIncomeFx": "Venit fix și curs de schimb",
     "sourceRegionCommodities": "Materii prime",
-    "sourceRegionCryptoDigital": "Cripto și digital",
     "sourceRegionCentralBanks": "Bănci Centrale și Economie",
     "sourceRegionDeals": "Oferte & Corporate",
     "sourceRegionFinRegulation": "Regulamentul financiar",
@@ -365,7 +364,6 @@
     "panelCatMarkets": "Piețe",
     "panelCatFixedIncomeFx": "Venit fix și curs de schimb",
     "panelCatCommodities": "Mărfuri",
-    "panelCatCryptoDigital": "Cripto și digital",
     "panelCatCentralBanks": "Bănci Centrale și Eco",
     "panelCatDeals": "Oferte și instituțional",
     "panelCatGulfMena": "Golful Persic și Orientul Mijlociu și Africa de Nord",
@@ -411,15 +409,12 @@
     "supplyChain": "Lanțul de aprovizionare",
     "finance": "Financiar",
     "tech": "Tehnologie",
-    "crypto": "Cripto",
     "heatmap": "Hartă termică sectorială",
     "ai": "IA și învățare automată",
     "layoffs": "Tracker concedieri",
     "monitors": "Monitoarele mele",
     "satelliteFires": "Incendii",
     "macroSignals": "Condiții de piață Bitcoin",
-    "etfFlows": "Fluxuri de fonduri Bitcoin",
-    "stablecoins": "Monede stabile",
     "deduction": "Deducție Situație",
     "ucdpEvents": "Evenimente de conflict armat",
     "displacement": "Refugiați și deplasări forțate",
@@ -1017,15 +1012,6 @@
       "leanYes": "Înclină spre DA",
       "leanNo": "Înclină spre NU",
       "tossUp": "Strâns"
-    },
-    "stablecoins": {
-      "pegHealth": "Sănătatea parității",
-      "supplyVolume": "Aprovizionare și volum",
-      "token": "Token",
-      "mcap": "MCap",
-      "vol24h": "Vol 24h",
-      "chg24h": "24h Modificare",
-      "infoTooltip": "<strong>Stablecoins</strong> Menținerea parității, capitalizarea și volumul pe 24h pentru principalele tokenuri legate de USD (USDT, USDC, DAI, BUSD). Pierderea parității semnalează risc sistemic."
     },
     "status": {
       "updatedAt": "Actualizat {{time}}"
@@ -1791,27 +1777,6 @@
     "prediction": {
       "infoTooltip": "<strong>Piețe de predicție</strong> Piețe de prognoză în bani reali:<ul><li>Prețurile reflectă estimările probabilității aglomerației</li><li>Volum mai mare = semnal mai fiabil</li><li>Concentrare geopolitică și evenimente curente</li></ul>Sursa: Polymarket (polymarket.com)"
     },
-    "etfFlows": {
-      "previousColumns": "Coloanele anterioare",
-      "moreColumns": "Mai multe coloane",
-      "unavailable": "datele fondurilor tranzacționate la bursă sunt temporar indisponibile",
-      "rateLimited": "datele fondurilor tranzacționate la bursă sunt temporar indisponibile (limita de rată) — se reîncearcă în curând",
-      "netFlow": "Flux net",
-      "estFlow": "EST. Flux",
-      "totalVol": "Vol total",
-      "etfs": "Fonduri tranzacționate la bursă",
-      "netInflow": "FLUX NET",
-      "netOutflow": "DEBIT NET",
-      "netNeutral": "NEUTRU NET",
-      "table": {
-        "ticker": "Simbol",
-        "issuer": "Emitent",
-        "estFlow": "EST. Flux",
-        "volume": "Volumul",
-        "change": "Schimbați"
-      },
-      "infoTooltip": "<strong>Fluxuri de fonduri Bitcoin</strong> Urmărește fluxurile zilnice estimate de fonduri pentru fondurile SUA spot Bitcoin tranzacționate la bursă:<ul><li>Direcția și magnitudinea intrării/ieșirii</li><li>Volum și modificare de preț pe fond</li><li>Flux net agregat pe toate fondurile urmărite</li></ul>"
-    },
     "macroSignals": {
       "overall": "În general",
       "verdict": {
@@ -1821,12 +1786,7 @@
       "bullish": "{{count}}/{{total}} optimist",
       "signals": {
         "liquidity": "Lichiditate",
-        "flow": "Flux",
-        "regime": "Regimul",
-        "btcTrend": "Trend BTC",
-        "hashRate": "Rata de hash",
-        "momentum": "Impuls",
-        "fearGreed": "Frica și Lăcomia"
+        "regime": "Regimul"
       },
       "infoTooltip": "<strong>Condiții de piață Bitcoin</strong> Tablou de bord al semnalului compozit pentru poziționarea Bitcoin și apetitul pentru risc:<ul><li><strong>Lichiditate</strong>: Proxy de lichiditate netă Fed</li><li><strong>Flux</strong>: Randamente BTC vs QQQ pe 5 zile</li><li><strong>Regim</strong>: Rotație QQQ vs XLP (risc pe/off)</li><li><strong>Tendință BTC</strong>: Preț vs SMA50/200, Mayer Multiple</li><li><strong>Rata de hash</strong>: Modificare hash pe rețea pe 30 de zile</li><li><strong>Frică și lăcomie</strong>: Indicele sentimentului pieței</li></ul>Acest panou este pentru regim și poziționare, nu pentru date macro generale."
     },
@@ -1969,23 +1929,11 @@
         "twentyDayTrend": "Tendința primei de pe o perioadă de douăzeci de zile de tranzacționare"
       }
     },
-    "crypto": {
-      "infoTooltip": "<strong>Cripto</strong> Prețuri în timp real, variația pe 24h și volumul principalelor criptomonede. Date de la CoinGecko."
-    },
     "gulfEconomies": {
       "infoTooltip": "<strong>Gulf Economies</strong> Indici bursieri din Golful Persic, cursuri de schimb și prețuri ale petrolului pentru economiile Consiliului de Cooperare din Golful Persic (Arabia Saudită, EAU, Kuweit, Qatar, Bahrain, Oman)."
     },
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Comparație globală a prețurilor coșului de alimente în 24 de țări — monitorizează inflația bunurilor de consum din lumea reală dincolo de indicele prețurilor de consum principal."
-    },
-    "defiTokens": {
-      "infoTooltip": "<strong>Tokenuri DeFi</strong> Prețuri și performanță pe 24h/7z pentru principalele tokenuri de finanțe descentralizate — DEX-uri, platforme de creditare și protocoale de randament."
-    },
-    "aiTokens": {
-      "infoTooltip": "<strong>Tokenuri AI</strong> Prețuri și performanță pe 24h/7z pentru tokenurile din sectorul AI și învățare automată — rețele de calcul, infrastructură AI descentralizată și protocoale de date."
-    },
-    "altTokens": {
-      "infoTooltip": "<strong>Tokenuri alternative</strong> Prețuri și performanță pe 24h/7z pentru criptomonede alternative și emergente din afara celor mai mari după capitalizare."
     },
     "stockAnalysis": {
       "infoTooltip": "<strong>Analiză premium a acțiunilor</strong> Analiză AI pentru acțiunile din lista dvs. de urmărire — semnale cumpără/păstrează/vinde, prețuri țintă, riscuri cheie și catalizatori. Actualizată zilnic."
@@ -2375,7 +2323,6 @@
       "title": "Poziționare 24/7",
       "infoTooltip": "<strong>24/7 Positioning</strong> Stres de poziționare a contractelor perpetue de la Hyperliquid. Tranzacții non-stop, arătând ce se construiește atunci când piețele tradiționale sunt închise. Scor compozit (0-100) din rata de finanțare, volum, interes deschis și bază spot-perp. Verde = longs aglomerate (tendință alcista), roșu = shorts aglomerate (tendință bearish).",
       "commodities": "MATERII PRIME",
-      "crypto": "CRIPTO",
       "fx": "Schimburi valutare",
       "warmup": "Construire baze. Istoricul volumului și open interest se completează în următoarea oră.",
       "footer": "5min · Hyperliquid perps · 24/7"
@@ -4130,11 +4077,9 @@
     "noDataShort": "Fără date",
     "upstreamUnavailable": "API-ul upstream indisponibil — va reîncerca automat",
     "loadingUcdpEvents": "Se încarcă evenimente de conflict armat",
-    "loadingStablecoins": "Se încarcă monede stabile...",
     "scanningThermalData": "Scanarea datelor termice",
     "calculatingExposure": "Calcularea expunerii",
     "computingSignals": "Semnale de calcul...",
-    "loadingEtfData": "Se încarcă datele fondurilor cotate la bursă...",
     "loadingDisplacement": "Se încarcă datele de deplasare",
     "loadingClimateData": "Se încarcă datele climatice",
     "failedTechReadiness": "Nu s-au încărcat datele de pregătire tehnică",
@@ -4146,7 +4091,6 @@
     "failedMarketData": "Nu s-au încărcat datele de piață",
     "failedSectorData": "Nu s-au încărcat datele sectorului",
     "failedCommodities": "Nu s-a putut încărca mărfurile",
-    "failedCryptoData": "Nu s-au încărcat datele cripto",
     "rateLimitedMarket": "Datele pieței sunt temporar indisponibile (rată limitată) — reîncercare în scurt timp",
     "noNewsAvailable": "Nu există știri disponibile",
     "noActiveTechHubs": "Nu există hub-uri tehnologice active",
@@ -4303,13 +4247,11 @@
     "preflightProRequired": "Abonamentul Pro este necesar pentru a utiliza Widget Builder. Faceți upgrade pentru a debloca.",
     "examples": {
       "oilGold": "Arătați-mi prețul atual al petrolului brut în comparație cu aurul",
-      "cryptoMovers": "Creați un widget pentru cei mai mari mișcători de criptomonede în ultimele 24 de ore",
       "flightDelays": "Rezumați cele mai grave întârzieri de zboruri internaționale chiar acum",
       "conflictHotspots": "Mapați cele mai recente puncte fierbinți de conflict UCDP cu etichete scurte"
     },
     "proExamples": {
       "interactiveChart": "Grafic interactiv Chart.js comparând prețurile petrolului și aurului",
-      "sortableTable": "Tabel de prețuri criptomonede sortabil cu filtru de căutare",
       "animatedCounters": "Contor animat pentru indicatorii economici cheie",
       "tabbedComparison": "Comparație cu file a evenimentelor de conflict după regiune"
     }

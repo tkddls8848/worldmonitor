@@ -121,12 +121,8 @@ export function quoteGroups(data) {
   return {
     indices: q('marketQuotes'),
     commodities: q('commodityQuotes'),
-    crypto: q('cryptoQuotes'),
     gulf: q('gulfQuotes'),
     sectors: q('sectors', 'sectors'),
-    defi: q('defiTokens', 'tokens'),
-    ai: q('aiTokens', 'tokens'),
-    other: q('otherTokens', 'tokens'),
   };
 }
 
@@ -173,13 +169,6 @@ export function tickerSegments(data, digest, t) {
   for (const q of (data.marketQuotes?.quotes || []).slice(0, 10)) {
     const ch = Number(q.change) || 0;
     segs.push({ text: `${q.display || q.symbol} `, fg: t.tickerText, attr: 1 });
-    segs.push({ text: `${fmtPrice(q.price)} `, fg: t.text });
-    segs.push({ text: `${ch > 0 ? '▲' : ch < 0 ? '▼' : '■'}${fmtPct(ch)}`, fg: ch > 0 ? t.good : ch < 0 ? t.bad : t.dim });
-    segs.push(sep);
-  }
-  for (const q of (data.cryptoQuotes?.quotes || []).slice(0, 4)) {
-    const ch = Number(q.change) || 0;
-    segs.push({ text: `${q.symbol} `, fg: t.tickerText, attr: 1 });
     segs.push({ text: `${fmtPrice(q.price)} `, fg: t.text });
     segs.push({ text: `${ch > 0 ? '▲' : ch < 0 ? '▼' : '■'}${fmtPct(ch)}`, fg: ch > 0 ? t.good : ch < 0 ? t.bad : t.dim });
     segs.push(sep);

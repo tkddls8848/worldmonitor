@@ -340,7 +340,6 @@
     "sourceRegionMarkets": "시장 & 분석",
     "sourceRegionFixedIncomeFx": "채권 & 외환",
     "sourceRegionCommodities": "원자재",
-    "sourceRegionCryptoDigital": "암호화폐 & 디지털",
     "sourceRegionCentralBanks": "중앙은행 & 경제",
     "sourceRegionDeals": "딜 & 기업",
     "sourceRegionFinRegulation": "금융 규제",
@@ -361,7 +360,6 @@
     "panelCatMarkets": "시장",
     "panelCatFixedIncomeFx": "채권 & 외환",
     "panelCatCommodities": "원자재",
-    "panelCatCryptoDigital": "암호화폐 & 디지털",
     "panelCatCentralBanks": "중앙은행 & 경제",
     "panelCatDeals": "딜 & 기관",
     "panelCatGulfMena": "걸프 & 중동·북아프리카",
@@ -407,15 +405,12 @@
     "supplyChain": "공급망",
     "finance": "금융",
     "tech": "기술",
-    "crypto": "암호화폐",
     "heatmap": "섹터 히트맵",
     "ai": "AI & 머신러닝",
     "layoffs": "해고 추적",
     "monitors": "내 모니터",
     "satelliteFires": "화재",
     "macroSignals": "비트코인 시장 상황",
-    "etfFlows": "비트코인 펀드 플로우",
-    "stablecoins": "스테이블코인",
     "deduction": "상황 추론",
     "ucdpEvents": "UCDP 분쟁 사건",
     "displacement": "난민 및 국내실향민",
@@ -1011,15 +1006,6 @@
       "leanYes": "예 우세",
       "leanNo": "아니오 우세",
       "tossUp": "박빙"
-    },
-    "stablecoins": {
-      "pegHealth": "페그 건전성",
-      "supplyVolume": "공급량 및 거래량",
-      "token": "토큰",
-      "mcap": "시가총액",
-      "vol24h": "24시간 거래량",
-      "chg24h": "24시간 변동",
-      "infoTooltip": "<strong>스테이블코인</strong> 주요 USD 연동 토큰(USDT, USDC, DAI, BUSD)의 페그 건전성, 시가총액, 24시간 거래량. 페그 이탈은 시스템 리스크 신호입니다."
     },
     "status": {
       "updatedAt": "{{time}}에 업데이트됨"
@@ -1789,27 +1775,6 @@
     "prediction": {
       "infoTooltip": "<strong>예측 시장</strong> 실제 자금 기반 예측 시장:<ul><li>가격은 군중의 확률 추정치를 반영</li><li>거래량이 높을수록 신뢰도가 높은 신호</li><li>지정학 및 시사 이벤트 중심</li></ul>출처: Polymarket (polymarket.com)"
     },
-    "etfFlows": {
-      "previousColumns": "이전 열",
-      "moreColumns": "추가 열",
-      "unavailable": "상장지수펀드 데이터 일시 이용 불가",
-      "rateLimited": "상장지수펀드 데이터 일시 이용 불가(속도 제한) — 잠시 후 재시도 중",
-      "netFlow": "순흐름",
-      "estFlow": "추정 흐름",
-      "totalVol": "총 거래량",
-      "etfs": "상장지수펀드",
-      "netInflow": "순유입",
-      "netOutflow": "순유출",
-      "netNeutral": "순중립",
-      "table": {
-        "ticker": "티커",
-        "issuer": "발행사",
-        "estFlow": "추정 흐름",
-        "volume": "거래량",
-        "change": "변동"
-      },
-      "infoTooltip": "<strong>Bitcoin 펀드 흐름</strong> 미국 현물 Bitcoin 상장지수펀드의 일일 추정 펀드 흐름 추적:<ul><li>유입/유출 방향 및 규모</li><li>펀드별 거래량 및 가격 변화</li><li>추적 중인 모든 펀드의 순 집계 흐름</li></ul>"
-    },
     "macroSignals": {
       "overall": "종합",
       "verdict": {
@@ -1819,12 +1784,7 @@
       "bullish": "{{count}}/{{total}} 강세",
       "signals": {
         "liquidity": "유동성",
-        "flow": "자금 흐름",
-        "regime": "체제",
-        "btcTrend": "BTC 추세",
-        "hashRate": "해시레이트",
-        "momentum": "모멘텀",
-        "fearGreed": "공포 & 탐욕"
+        "regime": "체제"
       },
       "infoTooltip": "<strong>Bitcoin 시장 상황</strong> Bitcoin 포지셔닝 및 위험 선호도를 위한 복합 신호 대시보드:<ul><li><strong>유동성</strong>: 순 연방준비제도 유동성 프록시</li><li><strong>흐름</strong>: BTC 대 QQQ 5일 수익률</li><li><strong>레짐</strong>: QQQ 대 XLP 로테이션(위험 추구/회피)</li><li><strong>BTC 추세</strong>: 가격 대 SMA50/200, Mayer Multiple</li><li><strong>해시율</strong>: 30일 네트워크 해시 변화</li><li><strong>공포 & 탐욕</strong>: 시장 심리 지수</li></ul>이 패널은 광범위한 거시 데이터가 아닌 레짐 및 포지셔닝용입니다."
     },
@@ -1967,23 +1927,11 @@
         "twentyDayTrend": "20거래일 프리미엄 추세"
       }
     },
-    "crypto": {
-      "infoTooltip": "<strong>암호화폐</strong> 주요 암호화폐의 실시간 가격, 24시간 변동, 거래량. 데이터 출처: CoinGecko."
-    },
     "gulfEconomies": {
       "infoTooltip": "<strong>걸프만 경제</strong> 걸프협력회의 경제(사우디아라비아, UAE, 쿠웨이트, 카타르, 바레인, 오만)의 주요 주식지수, 환율, 유가."
     },
     "groceryBasket": {
       "infoTooltip": "<strong>식료품 지수</strong> 24개국의 글로벌 식료품 바구니 가격 비교 — 소비자물가지수를 넘어 실제 소비자 물품 인플레이션을 추적."
-    },
-    "defiTokens": {
-      "infoTooltip": "<strong>DeFi 토큰</strong> 주요 탈중앙화 금융 프로토콜 토큰의 가격과 24시간/7일 성과 — DEX, 대출 플랫폼, 수익 프로토콜."
-    },
-    "aiTokens": {
-      "infoTooltip": "<strong>AI 토큰</strong> AI 및 머신러닝 분야 토큰의 가격과 24시간/7일 성과 — 컴퓨팅 네트워크, 탈중앙화 AI 인프라, 데이터 프로토콜."
-    },
-    "altTokens": {
-      "infoTooltip": "<strong>알트 토큰</strong> 대형 시가총액 등급 외 대체·신흥 암호화폐 토큰의 가격과 24시간/7일 성과."
     },
     "stockAnalysis": {
       "infoTooltip": "<strong>프리미엄 주식 분석</strong> 관심 종목에 대한 AI 분석 — 매수/보유/매도 신호, 목표가, 주요 리스크와 촉매를 매일 갱신합니다."
@@ -2361,7 +2309,6 @@
       "title": "24/7 포지셔닝",
       "infoTooltip": "<strong>24/7 포지셔닝</strong> Hyperliquid의 무기한 계약 포지셔닝 스트레스입니다. 전통 시장이 닫혀있을 때 무엇이 구축되고 있는지 보여주는 24시간 거래입니다. 펀딩 레이트, 거래량, 미결제약정 및 현물-선물 베이시스로부터의 복합 점수(0-100)입니다. 녹색 = 롱 혼잡(강세 기울기), 빨간색 = 숏 혼잡(약세 기울기)입니다.",
       "commodities": "상품",
-      "crypto": "암호화폐",
       "fx": "외환",
       "warmup": "기준선 구축 중. 거래량 및 미결제약정 이력이 다음 시간 동안 채워집니다.",
       "footer": "5분 · Hyperliquid 무기한 계약 · 24/7"
@@ -4094,11 +4041,9 @@
     "noDataShort": "데이터 없음",
     "upstreamUnavailable": "업스트림 API 이용 불가 — 자동으로 재시도합니다",
     "loadingUcdpEvents": "UCDP 사건 불러오는 중",
-    "loadingStablecoins": "스테이블코인 정보 불러오는 중...",
     "scanningThermalData": "열 데이터 스캔 중",
     "calculatingExposure": "노출도 계산 중",
     "computingSignals": "신호 연산 중...",
-    "loadingEtfData": "상장지수펀드 데이터 로드 중...",
     "loadingDisplacement": "실향민 정보 불러오는 중",
     "loadingClimateData": "기후 정보 불러오는 중",
     "failedTechReadiness": "기술 준비도 정보 로드 실패",
@@ -4110,7 +4055,6 @@
     "failedMarketData": "시장 데이터 로드 실패",
     "failedSectorData": "섹터 데이터 로드 실패",
     "failedCommodities": "원자재 로드 실패",
-    "failedCryptoData": "암호화폐 데이터 로드 실패",
     "rateLimitedMarket": "시장 데이터 일시적 이용 불가 (속도 제한) — 잠시 후 재시도합니다",
     "noNewsAvailable": "뉴스 없음",
     "noActiveTechHubs": "활성 기술 허브 없음",
@@ -4267,13 +4211,11 @@
     "preflightProRequired": "Pro 구독이 필요합니다. 업그레이드하여 Widget Builder를 사용하세요.",
     "examples": {
       "oilGold": "오늘의 원유 가격과 금 가격을 비교해 보세요",
-      "cryptoMovers": "지난 24시간 암호화폐 상위 변동 자산에 대한 위젯 생성",
       "flightDelays": "현재 국제 항공편 연착 현황 요약",
       "conflictHotspots": "최신 UCDP 분쟁 지역을 짧은 레이블과 함께 표시"
     },
     "proExamples": {
       "interactiveChart": "원유와 금 가격을 비교하는 대화형 Chart.js 차트",
-      "sortableTable": "검색 필터가 있는 정렬 가능한 암호화폐 가격 테이블",
       "animatedCounters": "주요 경제 지표를 위한 애니메이션 카운터",
       "tabbedComparison": "지역별 분쟁 이벤트 탭 비교"
     }

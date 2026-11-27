@@ -24,7 +24,6 @@ const HOUR = 60 * MIN;
 
 const STOCKS_KEY = 'market:stocks-bootstrap:v1';
 const COMMODITIES_KEY = 'market:commodities-bootstrap:v1';
-const CRYPTO_KEY = 'market:crypto:v1';
 const PREDICTIONS_KEY = 'prediction:markets-bootstrap:v1';
 const RUNTIME_MODE_KEY = 'correlation:runtime-mode:v1';
 
@@ -40,7 +39,7 @@ const LIVE_SNAPSHOT = {
   activity: {},
 };
 const OBSERVED_PREDICTIONS = { [FED_CUT_KEY]: 30, [`\u0000title:${FED_CUT.title}`]: 30 };
-const OBSERVED_MARKETS = { '^GSPC': 0.2, 'CL=F': 3.1, BTC: 0.5 };
+const OBSERVED_MARKETS = { '^GSPC': 0.2, 'CL=F': 3.1 };
 const CRUDE_ALERTS = ['flow_price_divergence:CL=F', 'silent_divergence:CL=F'];
 const crudeHeld = (sinceMs, untilMs = sinceMs) => ({ 'CL=F': [{ since: sinceMs, until: untilMs, types: ['flow_price_divergence', 'silent_divergence'] }] });
 const OBSERVED_SNAPSHOT = {
@@ -76,7 +75,6 @@ function rawInputs(overrides = {}) {
   return {
     [STOCKS_KEY]: envelope({ quotes: [{ symbol: '^GSPC', name: 'S&P 500', display: 'SPX', price: 5000, change: 0.2 }] }),
     [COMMODITIES_KEY]: envelope({ quotes: [{ symbol: 'CL=F', name: 'Crude Oil', display: 'WTI', price: 80, change: 3.1 }] }),
-    [CRYPTO_KEY]: envelope({ quotes: [{ name: 'Bitcoin', symbol: 'BTC', price: 60000, change: 0.5 }] }),
     [PREDICTIONS_KEY]: envelope({ geopolitical: [], tech: [], finance: [FED_CUT] }),
     [DIGEST_KEY]: digestOf(QUIET_NEWS),
     [RUNTIME_MODE_KEY]: { mode: 'exact' },
@@ -374,7 +372,6 @@ describe('buildTick runs the shared detectors under Node', () => {
     const inputs = (nowMs, yesPrice, fetchedAt, previous) => rawInputs({
       [STOCKS_KEY]: envelope({ quotes: [] }, nowMs),
       [COMMODITIES_KEY]: envelope({ quotes: [] }, nowMs),
-      [CRYPTO_KEY]: envelope({ quotes: [] }, nowMs),
       [PREDICTIONS_KEY]: envelope({ geopolitical: [], tech: [], finance: [{ ...FED_CUT, yesPrice }] }, fetchedAt),
       [DIGEST_KEY]: digestOf(QUIET_NEWS, nowMs),
       [SNAPSHOT_KEY]: previous ? envelope(previous.snapshot) : null,
@@ -509,7 +506,7 @@ describe('buildTick runs the shared detectors under Node', () => {
 
   it('summarizes the tick for the log line', async () => {
     const tick = await buildTick(rawInputs(), { nowMs: NOW, archive: EMPTY_ARCHIVE });
-    assert.deepEqual(tick.summary.inputs, { stocks: 1, commodities: 1, crypto: 1, predictions: 1, digestItems: 2, runtimeMode: 'exact' });
+    assert.deepEqual(tick.summary.inputs, { stocks: 1, commodities: 1, predictions: 1, digestItems: 2, runtimeMode: 'exact' });
     assert.deepEqual(tick.summary.emitted, { total: 3, byType: { prediction_leads_news: 1, silent_divergence: 1, flow_price_divergence: 1 }, gated: 0, held: 0 });
     assert.deepEqual(tick.summary.resolved, { hit: 0, miss: 0, void: 0, unproven: 0 });
     assert.equal(tick.summary.pending, 3);

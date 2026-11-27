@@ -459,7 +459,7 @@ export const ANALYSIS_TOOLS: ToolDef[] = [
                 properties: {
                   id: { type: 'string' },
                   entityId: { type: 'string', description: 'Entity registry id; ISO alpha-2 code for a country.' },
-                  entityType: { type: 'string', description: 'Registry entity type: company, index, commodity, crypto, sector, or country.' },
+                  entityType: { type: 'string', description: 'Registry entity type: company, index, commodity, sector, or country.' },
                   displayName: { type: 'string' },
                   newsMentions: { type: 'number', description: 'News story clusters that mention the entity.' },
                   newsVelocity: { type: 'number', description: 'newsMentions divided by 24, as mentions per hour.' },

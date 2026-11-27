@@ -22,7 +22,7 @@ test('mobile world view fits complete ticker items and keeps the date picker in 
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 
   const ticker = page.getByRole('region', { name: '시세 지표' });
-  const lastQuote = ticker.locator('[data-ticker="BTC-USD"]');
+  const lastQuote = ticker.locator('[data-ticker="KRW=X"]');
   await expect(lastQuote).toBeAttached();
   await expect(ticker).toHaveCSS('scrollbar-width', 'thin');
   expect(await ticker.evaluate((el) => el.clientWidth)).toBeGreaterThanOrEqual(360);

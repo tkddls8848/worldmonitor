@@ -86,8 +86,8 @@ describe('market service symbol casing', () => {
       const url = getRequestUrl(input);
       requests.push(url.searchParams.getAll('symbols'));
       return new Response(JSON.stringify(marketResponse([
-        quote('btc-usd', 101),
-        quote('BTC-USD', 202),
+        quote('aapl', 101),
+        quote('AAPL', 202),
       ])), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -97,18 +97,18 @@ describe('market service symbol casing', () => {
     try {
       const { fetchMultipleStocks } = await import(freshImportUrl(MARKET_SERVICE_URL));
       const result = await fetchMultipleStocks([
-        { symbol: ' btc-usd ', name: 'Lower BTC', display: 'btc lower' },
-        { symbol: 'BTC-USD', name: 'Upper BTC', display: 'BTC upper' },
+        { symbol: ' aapl ', name: 'Lower AAPL', display: 'aapl lower' },
+        { symbol: 'AAPL', name: 'Upper AAPL', display: 'BTC upper' },
       ]);
 
-      assert.deepEqual(requests[0], ['btc-usd', 'BTC-USD']);
+      assert.deepEqual(requests[0], ['aapl', 'AAPL']);
       assert.deepEqual(
         result.data.map((entry) => entry.symbol),
-        ['btc-usd', 'BTC-USD'],
+        ['aapl', 'AAPL'],
       );
       assert.deepEqual(
         result.data.map((entry) => entry.name),
-        ['Lower BTC', 'Upper BTC'],
+        ['Lower AAPL', 'Upper AAPL'],
       );
     } finally {
       globalThis.fetch = originalFetch;
@@ -129,7 +129,7 @@ describe('market service symbol casing', () => {
       fetchCount += 1;
       const url = getRequestUrl(input);
       const [symbol = ''] = url.searchParams.getAll('symbols');
-      const price = symbol === 'BTC-USD' ? 222 : 111;
+      const price = symbol === 'AAPL' ? 222 : 111;
       return new Response(JSON.stringify(marketResponse([quote(symbol, price)])), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -140,16 +140,16 @@ describe('market service symbol casing', () => {
       const { fetchMultipleStocks } = await import(freshImportUrl(MARKET_SERVICE_URL));
 
       const lower = await fetchMultipleStocks([
-        { symbol: 'btc-usd', name: 'Lower BTC', display: 'btc lower' },
+        { symbol: 'aapl', name: 'Lower AAPL', display: 'aapl lower' },
       ]);
       const upper = await fetchMultipleStocks([
-        { symbol: 'BTC-USD', name: 'Upper BTC', display: 'BTC upper' },
+        { symbol: 'AAPL', name: 'Upper AAPL', display: 'BTC upper' },
       ]);
 
       assert.equal(fetchCount, 2, 'case-distinct symbol sets must not share one cache entry');
-      assert.equal(lower.data[0]?.symbol, 'btc-usd');
-      assert.equal(upper.data[0]?.symbol, 'BTC-USD');
-      assert.equal(upper.data[0]?.name, 'Upper BTC');
+      assert.equal(lower.data[0]?.symbol, 'aapl');
+      assert.equal(upper.data[0]?.symbol, 'AAPL');
+      assert.equal(upper.data[0]?.name, 'Upper AAPL');
     } finally {
       globalThis.fetch = originalFetch;
       clearAllCircuitBreakers();
@@ -165,7 +165,7 @@ describe('market service symbol casing', () => {
     const originalFetch = globalThis.fetch;
 
     globalThis.fetch = async () => new Response(JSON.stringify(marketResponse([
-      quote('Btc-Usd', 101),
+      quote('Aapl', 101),
     ])), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
@@ -174,13 +174,13 @@ describe('market service symbol casing', () => {
     try {
       const { fetchMultipleStocks } = await import(freshImportUrl(MARKET_SERVICE_URL));
       const result = await fetchMultipleStocks([
-        { symbol: 'btc-usd', name: 'Lower BTC', display: 'btc lower' },
-        { symbol: 'BTC-USD', name: 'Upper BTC', display: 'BTC upper' },
+        { symbol: 'aapl', name: 'Lower AAPL', display: 'aapl lower' },
+        { symbol: 'AAPL', name: 'Upper AAPL', display: 'BTC upper' },
       ]);
 
-      assert.equal(result.data[0]?.symbol, 'Btc-Usd');
-      assert.equal(result.data[0]?.name, 'Lower BTC');
-      assert.equal(result.data[0]?.display, 'btc lower');
+      assert.equal(result.data[0]?.symbol, 'Aapl');
+      assert.equal(result.data[0]?.name, 'Lower AAPL');
+      assert.equal(result.data[0]?.display, 'aapl lower');
     } finally {
       globalThis.fetch = originalFetch;
       clearAllCircuitBreakers();

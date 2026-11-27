@@ -1,7 +1,7 @@
 // @ts-check
 /**
  * Shared Alpha Vantage fetch helpers for seed scripts.
- * Single implementation used by seed-market-quotes, seed-commodity-quotes, seed-etf-flows.
+ * Single implementation used by seed-market-quotes and seed-commodity-quotes.
  */
 
 import { CHROME_UA, sleep, roundSparkline } from './_seed-utils.mjs';

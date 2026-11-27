@@ -117,7 +117,7 @@ export function resolveNewsCategories(
  *    `panelSettings[key]` directly fetched 19 feeds per load with no panel to
  *    render them into (#5376).
  *  • A category whose NewsPanel was remapped to `${key}-news` because a data
- *    panel already occupied `key` (`markets`/`crypto`/`economic` in the full
+ *    panel already occupied `key` (`markets`/`economic` in the full
  *    variant) is registered under the remapped key, so enablement is read from
  *    the news panel's settings entry and never from the data panel's.
  *

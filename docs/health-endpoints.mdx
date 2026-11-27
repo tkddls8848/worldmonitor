@@ -45,8 +45,8 @@ The top-level `status` describes user-visible platform availability, not perfect
   "status": "HEALTHY | WARNING | DEGRADED | UNHEALTHY | REDIS_DOWN | REFRESH_PENDING",
   "dataStatus": "OK | DEGRADED | CRITICAL",
   "summary": {
-    "total": 389,
-    "ok": 384,
+    "total": 382,
+    "ok": 377,
     "warn": 0,
     "containedWarn": 0,
     "onDemandWarn": 5,
@@ -726,7 +726,7 @@ Selected thresholds from `SEED_META`:
 
 | Domain | Max Stale (min) | Notes |
 |--------|----------------|-------|
-| Market quotes, crypto, sectors, earthquakes, insights | 30 | High-frequency relay loops / critical event data |
+| Market quotes, sectors, earthquakes, insights | 30 | High-frequency relay loops / critical event data |
 | Military flights | 30 | Near-real-time tracking |
 | Predictions, flight delays (FAA) | 90 | Polymarket / airport snapshots |
 | Unrest | 120 | 45min cron, 2h grace |
@@ -889,7 +889,6 @@ The `comtrade:bilateral-hs4` seed also reports `coverage_partial` with `stale: f
 |--------|---------------|-------------------|
 | Predictions, military flights | 8 | 16 |
 | Market quotes, earthquakes, unrest | 15 | 30 |
-| ETF flows, stablecoins, chokepoints | 30 | 60 |
 | Service statuses, spending, wildfires, market implications | 60 | 120 |
 | Shipping rates, satellites | 90-120 | 180-240 |
 | GPS jamming, displacement | 360 | 720 |

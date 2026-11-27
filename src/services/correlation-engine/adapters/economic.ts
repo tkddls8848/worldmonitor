@@ -9,7 +9,7 @@ const WEIGHTS: Record<string, number> = {
 };
 
 const SANCTIONS_KEYWORDS = /\b(sanction|tariff|embargo|trade\s+war|ban|restrict|block|seize|freeze\s+assets|export\s+control|blacklist|decouple|decoupl|subsid|dumping|countervail|quota|levy|excise|retaliat|currency\s+manipulat|capital\s+controls|swift|cbdc|petrodollar|de-?dollar|opec|cartel|price\s+cap|oil|crude|commodity|shortage|stockpile|strategic\s+reserve|supply\s+chain|rare\s+earth|chip\s+ban|semiconductor|economic\s+warfare|financial\s+weapon)\b/i;
-const COMMODITY_SYMBOLS = new Set(['CL=F', 'GC=F', 'NG=F', 'SI=F', 'HG=F', 'ZW=F', 'BTC-USD', 'BZ=F', 'ETH-USD', 'KC=F', 'SB=F', 'CT=F', 'CC=F']);
+const COMMODITY_SYMBOLS = new Set(['CL=F', 'GC=F', 'NG=F', 'SI=F', 'HG=F', 'ZW=F', 'BZ=F', 'KC=F', 'SB=F', 'CT=F', 'CC=F']);
 const SIGNIFICANT_CHANGE_PCT = 1.5;
 
 export const economicAdapter: DomainAdapter = {
@@ -140,7 +140,7 @@ function extractMentionedEntities(labels: string[]): string {
 
 const GENERIC_ENTITY_KEYS = new Set([
   'sanctions', 'trade', 'tariff', 'commodity', 'currency', 'energy',
-  'embargo', 'semiconductor', 'crypto', 'inflation',
+  'embargo', 'semiconductor', 'inflation',
 ]);
 
 function displayEntity(key?: string): string {

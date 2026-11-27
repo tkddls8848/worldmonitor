@@ -26,8 +26,7 @@ export class OverviewView extends PaneView {
 
   marketRows() {
     const q = this.data.marketQuotes?.quotes || [];
-    const c = this.data.cryptoQuotes?.quotes || [];
-    return [...q.slice(0, 8), ...c.slice(0, 3)];
+    return q.slice(0, 8);
   }
 
   selectedUrl() {

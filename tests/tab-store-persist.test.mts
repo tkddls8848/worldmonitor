@@ -76,6 +76,8 @@ describe('loadTabsState', () => {
       'positive-feed': widget,
       startups: widget,
       events: widget,
+      crypto: widget,
+      'etf-flows': widget,
       'windy-webcams': widget,
       'live-youtube': widget,
       'pinned-webcams': widget,

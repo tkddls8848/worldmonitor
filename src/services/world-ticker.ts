@@ -1,7 +1,7 @@
 import type { TickerItem } from '@/types/world-overview';
 import { isTreasuryBenchmark, treasuryAuctionTitle, treasuryCalendarUrl, treasuryDemandLabel, treasuryResultsUrl, type TreasuryAuctions } from '@/services/treasury-auctions';
 
-type Instrument = { id: string; label: string; digits: number; unit?: string; aliases: string[]; source: 'marketQuotes' | 'commodityQuotes' | 'cryptoQuotes' | 'macroSignals' };
+type Instrument = { id: string; label: string; digits: number; unit?: string; aliases: string[]; source: 'marketQuotes' | 'commodityQuotes' | 'macroSignals' };
 const instruments: Instrument[] = [
   { id: '^TNX', label: '미 10년물 금리', digits: 2, unit: '%', aliases: ['^TNX', 'US10Y', 'DGS10', 'treasury10y', 'us10y'], source: 'macroSignals' },
   { id: '^GSPC', label: 'S&P 500', digits: 0, aliases: ['^GSPC', 'SPX', 'SP500'], source: 'marketQuotes' },
@@ -10,7 +10,6 @@ const instruments: Instrument[] = [
   { id: 'CL=F', label: 'WTI', digits: 2, unit: '$', aliases: ['CL=F', 'WTI'], source: 'commodityQuotes' },
   { id: 'GC=F', label: '금', digits: 2, unit: '$', aliases: ['GC=F', 'GOLD'], source: 'commodityQuotes' },
   { id: 'KRW=X', label: '원/달러', digits: 2, aliases: ['KRW=X', 'USD/KRW', 'USDKRW'], source: 'marketQuotes' },
-  { id: 'BTC-USD', label: '비트코인', digits: 0, unit: '$', aliases: ['BTC-USD', 'BTC'], source: 'cryptoQuotes' },
 ];
 type SourceKey = Instrument['source'];
 type TickerExtras = {
@@ -51,7 +50,7 @@ function numberFrom(row: Record<string, unknown> | undefined, keys: string[]): n
   }
   return null;
 }
-export function buildTickerItems(src: { marketQuotes?: unknown; commodityQuotes?: unknown; cryptoQuotes?: unknown; macroSignals?: unknown }, extras: TickerExtras = {}, language = 'en'): TickerItem[] {
+export function buildTickerItems(src: { marketQuotes?: unknown; commodityQuotes?: unknown; macroSignals?: unknown }, extras: TickerExtras = {}, language = 'en'): TickerItem[] {
   const all = src as Record<SourceKey, unknown>;
   const items: TickerItem[] = instruments.map((instrument) => {
     // A few feeds expose the Treasury yield as a market quote rather than a macro signal.
@@ -118,17 +117,15 @@ const TICKER_COMMODITIES = [
  * first screen must not read them directly.
  */
 export async function loadTickerItems(): Promise<TickerItem[]> {
-  const { fetchMultipleStocks, fetchCommodityQuotes, fetchCrypto } = await import('@/services/market');
-  const [stocks, commodities, crypto] = await Promise.allSettled([
+  const { fetchMultipleStocks, fetchCommodityQuotes } = await import('@/services/market');
+  const [stocks, commodities] = await Promise.allSettled([
     fetchMultipleStocks(TICKER_STOCKS),
     fetchCommodityQuotes(TICKER_COMMODITIES),
-    fetchCrypto(),
   ]);
   const stockRows = stocks.status === 'fulfilled' ? stocks.value.data : [];
   return buildTickerItems({
     marketQuotes: stockRows,
     macroSignals: stockRows,
     commodityQuotes: commodities.status === 'fulfilled' ? commodities.value.data : [],
-    cryptoQuotes: crypto.status === 'fulfilled' ? crypto.value : [],
   });
 }

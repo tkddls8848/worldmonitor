@@ -181,11 +181,11 @@ function computeDomesticFragility(countries, sources, drivers) {
 }
 
 function computeCapitalStress(countries, sources, drivers) {
-  // economic:macro-signals:v1 — seed-economy.mjs emits verdict: 'BUY' | 'CASH' | 'UNKNOWN'
+  // economic:macro-signals:v2 — seed-economy.mjs emits verdict: 'BUY' | 'CASH' | 'UNKNOWN'
   //   BUY  = bullish signals dominate (low stress)
   //   CASH = bearish, rotate to cash (high stress)
   //   UNKNOWN = missing/stale (treat as neutral)
-  const macro = sources['economic:macro-signals:v1'];
+  const macro = sources['economic:macro-signals:v2'];
   const verdict = String(macro?.verdict ?? '').toUpperCase();
   const cMacro = verdict === 'CASH' ? 1 : verdict === 'BUY' ? 0 : 0.5;
 

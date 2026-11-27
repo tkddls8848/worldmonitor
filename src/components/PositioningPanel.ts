@@ -1,4 +1,4 @@
-import type { HyperliquidAssetFlow } from '@/generated/client/worldmonitor/market/v1/service_client';
+import type { PerpPositioningAsset } from '@/generated/client/worldmonitor/market/v1/service_client';
 import { Panel } from './Panel';
 import { createLazyClient, getRpcBaseUrl, rpcFetch } from '@/services/rpc-client';
 import { MarketServiceClient } from '@/services/generated-rpc-clients';
@@ -22,7 +22,6 @@ interface AssetView {
 interface FlowSnapshot {
   warmup: boolean;
   commodityAssets: AssetView[];
-  cryptoAssets: AssetView[];
   fxAssets: AssetView[];
   unavailable: boolean;
 }
@@ -46,7 +45,7 @@ function parseFiniteNumber(v: string | number | undefined): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-function mapAsset(a: HyperliquidAssetFlow | Record<string, unknown>, fromSeed: boolean): AssetView {
+function mapAsset(a: PerpPositioningAsset | Record<string, unknown>, fromSeed: boolean): AssetView {
   const sparkOi = Array.isArray(a.sparkOi) ? (a.sparkOi as number[]).filter((v) => Number.isFinite(v)) : [];
   return {
     symbol: String(a.symbol ?? ''),
@@ -62,18 +61,16 @@ function mapAsset(a: HyperliquidAssetFlow | Record<string, unknown>, fromSeed: b
   };
 }
 
-function mapResponse(assets: Array<HyperliquidAssetFlow | Record<string, unknown>>, fromSeed: boolean): FlowSnapshot {
+function mapResponse(assets: Array<PerpPositioningAsset | Record<string, unknown>>, fromSeed: boolean): FlowSnapshot {
   const commodityAssets: AssetView[] = [];
-  const cryptoAssets: AssetView[] = [];
   const fxAssets: AssetView[] = [];
   for (const a of assets) {
     const view = mapAsset(a, fromSeed);
     const group = view.group;
     if (group === 'fx') fxAssets.push(view);
-    else if (group === 'crypto') cryptoAssets.push(view);
     else commodityAssets.push(view);
   }
-  return { warmup: false, commodityAssets, cryptoAssets, fxAssets, unavailable: false };
+  return { warmup: false, commodityAssets, fxAssets, unavailable: false };
 }
 
 function gaugeColor(score: number, funding: number | null): string {
@@ -147,11 +144,9 @@ function renderAssetCard(asset: AssetView, clickTarget: string | null): string {
   </div>`;
 }
 
-// Keys must match the seeded symbol field from seed-hyperliquid-flow.mjs,
+// Keys must match the seeded symbol field from seed-perp-positioning.mjs,
 // NOT display names. Commodity perps use xyz: prefixed Hyperliquid names.
 const CLICK_TARGETS: Record<string, string> = {
-  BTC: 'crypto', ETH: 'crypto', SOL: 'crypto',
-  PAXG: 'commodities',
   'xyz:CL': 'commodities', 'xyz:BRENTOIL': 'commodities',
   'xyz:GOLD': 'commodities', 'xyz:SILVER': 'commodities',
   'xyz:PLATINUM': 'commodities', 'xyz:PALLADIUM': 'commodities',
@@ -204,7 +199,7 @@ export class PositioningPanel extends Panel {
     this._loading = true;
     try {
       if (!this._flow) {
-        const hydrated = getHydratedData('hyperliquidFlow') as Record<string, unknown> | undefined;
+        const hydrated = getHydratedData('perpPositioning') as Record<string, unknown> | undefined;
         if (hydrated && !hydrated.unavailable && Array.isArray(hydrated.assets) && hydrated.assets.length > 0) {
           this._flow = {
             ...mapResponse(hydrated.assets as Array<Record<string, unknown>>, true),
@@ -215,14 +210,14 @@ export class PositioningPanel extends Panel {
       }
 
       const client = getMarketClient();
-      const resp = await client.getHyperliquidFlow({});
+      const resp = await client.getPerpPositioning({});
       if (resp.unavailable || !resp.assets || resp.assets.length === 0) {
         if (!this._flow) {
-          this._flow = { warmup: true, commodityAssets: [], cryptoAssets: [], fxAssets: [], unavailable: true };
+          this._flow = { warmup: true, commodityAssets: [], fxAssets: [], unavailable: true };
         }
       } else {
         this._flow = {
-          ...mapResponse(resp.assets as HyperliquidAssetFlow[], false),
+          ...mapResponse(resp.assets as PerpPositioningAsset[], false),
           warmup: Boolean(resp.warmup),
         };
       }
@@ -231,7 +226,7 @@ export class PositioningPanel extends Panel {
     } catch (err) {
       console.error('[PositioningPanel] RPC failed:', err instanceof Error ? err.message : err);
       if (!this._flow) {
-        this._flow = { warmup: true, commodityAssets: [], cryptoAssets: [], fxAssets: [], unavailable: true };
+        this._flow = { warmup: true, commodityAssets: [], fxAssets: [], unavailable: true };
       }
       this._render();
       return false;
@@ -259,7 +254,6 @@ export class PositioningPanel extends Panel {
     }
 
     sections.push(renderSection(t('components.positioning247.commodities'), this._flow.commodityAssets));
-    sections.push(renderSection(t('components.positioning247.crypto'), this._flow.cryptoAssets));
     sections.push(renderSection(t('components.positioning247.fx'), this._flow.fxAssets));
 
     sections.push(`<div class="pos-footer">${escapeHtml(t('components.positioning247.footer'))}</div>`);

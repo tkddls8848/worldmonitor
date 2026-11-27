@@ -87,7 +87,7 @@ describe('inspector-domains mapping and filtering', () => {
 
   it('filters panels accurately across tabs and Markets/News sub-filters', () => {
     const settings = makeSettings([
-      'insights', 'cii', 'gdelt-intel', 'markets', 'energy-complex', 'supply-chain', 'crypto',
+      'insights', 'cii', 'gdelt-intel', 'markets', 'energy-complex', 'supply-chain',
       'politics', 'ai', 'live-news', 'displacement', 'monitors',
     ]);
 
@@ -104,9 +104,7 @@ describe('inspector-domains mapping and filtering', () => {
     // Markets sub-filters
     assert.equal(isPanelVisibleInInspectorTab('markets', 'markets', { variant: 'full', panelSettings: settings, marketsSubFilter: 'equities' }), true);
     assert.equal(isPanelVisibleInInspectorTab('energy-complex', 'markets', { variant: 'full', panelSettings: settings, marketsSubFilter: 'energy' }), true);
-    assert.equal(isPanelVisibleInInspectorTab('energy-complex', 'markets', { variant: 'full', panelSettings: settings, marketsSubFilter: 'crypto' }), false);
     assert.equal(isPanelVisibleInInspectorTab('supply-chain', 'markets', { variant: 'full', panelSettings: settings, marketsSubFilter: 'supply' }), true);
-    assert.equal(isPanelVisibleInInspectorTab('crypto', 'markets', { variant: 'full', panelSettings: settings, marketsSubFilter: 'crypto' }), true);
 
     // News sub-filters
     assert.equal(isPanelVisibleInInspectorTab('politics', 'news', { variant: 'full', panelSettings: settings, newsSubFilter: 'regional' }), true);

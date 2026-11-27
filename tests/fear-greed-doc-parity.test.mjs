@@ -126,7 +126,6 @@ describe('Fear & Greed docs match seed-fear-greed source', () => {
     assert.match(source, /aaiBull == null \|\| aaiBear == null/);
     assert.match(source, /score = \(bullPercentile \* 0\.5\) \+ \(\(100 - bearPercentile\) \* 0\.5\);/);
     assert.match(source, /score = cnnFg;/);
-    assert.match(source, /score = cryptoFg;/);
     assert.match(source, /score = 50;/);
     assert.match(source, /aaiBull: aaiBull \?\? null, aaiBear: aaiBear \?\? null/);
     assert.match(doc, /AAII unavailable/);
@@ -134,8 +133,7 @@ describe('Fear & Greed docs match seed-fear-greed source', () => {
     assert.match(doc, /AAII_Bull_Percentile \* 0\.5/);
     assert.match(doc, /100 - AAII_Bear_Percentile\) \* 0\.5/);
     assert.match(doc, /aaiBull\/aaiBear as null, not 0/);
-    assert.match(doc, /crypto F&G from Redis as secondary signal/);
-    assert.match(doc, /neutral 50 if both are absent/);
+    assert.match(doc, /neutral 50 if CNN and AAII are unavailable/);
     assert.match(doc, /CNN unavailable but AAII available/);
     assert.match(doc, /AAII_Bull_Percentile \* 0\.5/);
     assert.match(doc, /AAII_Bear_Percentile\) \* 0\.5/);

@@ -24,7 +24,7 @@ export const STANDALONE_INTERVAL_MIN = {
   'weather-alerts': 15, 'cyber-threats': 120,
   'kr-customs-trade': 1440,
   'world-relations': 1440,
-  'market-quotes': 15, 'commodity-quotes': 15, 'crypto-sectors': 30, 'fear-greed': 240,
+  'market-quotes': 15, 'commodity-quotes': 15, 'fear-greed': 240,
   'shipping-stress': 15,
   'news-threat-summary': 15,
   'market-breadth': 1440, 'aaii-sentiment': 1440, 'cot': 1440, 'earnings-calendar': 360,

@@ -68,18 +68,6 @@ For commodity traders, World Monitor maps the **10 major commodity exchanges** (
 
 The Commodity Monitor variant (commodity.worldmonitor.app) goes deeper with mining company locations, pipeline infrastructure, and supply chain disruption alerts. For more on supply chain tracking, see [monitoring global supply chains and commodity disruptions](/blog/posts/monitor-global-supply-chains-and-commodity-disruptions/).
 
-## Crypto Intelligence
-
-The crypto panels provide institutional-grade monitoring:
-
-- **Stablecoin peg tracker:** USDT, USDC, DAI, FDUSD, and USDe with real-time deviation alerts
-- **BTC spot ETF flow tracker:** Daily inflows/outflows for IBIT, FBTC, GBTC, and 7 more funds
-- **Fear & Greed Index:** With 30-day history chart
-- **Bitcoin technical signals:** SMA50, SMA200, VWAP, and Mayer Multiple
-- **BTC hashrate** via mempool.space
-
-When USDT depegs by 0.3%, you know before most trading desks.
-
 ## Gulf FDI Investment Tracker
 
 A unique feature for emerging market investors: World Monitor maps **64 Gulf FDI investments** from Saudi Arabia and the UAE, color-coded by status (announced, in progress, completed). This covers the Vision 2030 and beyond, the largest sovereign investment programs in history.

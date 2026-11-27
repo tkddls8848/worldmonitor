@@ -2891,7 +2891,7 @@ export class PanelLayoutManager implements AppModule {
     this.observePanelForHydration(panel);
     if (config?.enabled) {
       this.scheduleHydrationForPanelElement(panel.getElement(), 'near');
-      // Deferred App-owned panels (Stablecoins, ETF flows, Gulf economies,
+      // Deferred App-owned panels (Gulf economies,
       // etc.) are absent when the scroll frame first scans state. Hand off
       // again after mounting so their panel-specific loader can run without a
       // second user scroll. App gates this callback until slow-tier readiness.
@@ -2980,11 +2980,6 @@ export class PanelLayoutManager implements AppModule {
     this.createNewsPanel('gov', 'panels.gov');
     this.createNewsPanel('intel', 'panels.intel');
 
-    this.lazyDefaultPanel('crypto', () => import('@/components/MarketPanel'), 'CryptoPanel');
-    this.lazyDefaultPanel('crypto-heatmap', () => import('@/components/MarketPanel'), 'CryptoHeatmapPanel');
-    this.lazyDefaultPanel('defi-tokens', () => import('@/components/MarketPanel'), 'DefiTokensPanel');
-    this.lazyDefaultPanel('ai-tokens', () => import('@/components/MarketPanel'), 'AiTokensPanel');
-    this.lazyDefaultPanel('other-tokens', () => import('@/components/MarketPanel'), 'OtherTokensPanel');
     this.createNewsPanel('middleeast', 'panels.middleeast');
     this.createNewsPanel('layoffs', 'panels.layoffs');
     this.createNewsPanel('ai', 'panels.ai');
@@ -3041,7 +3036,7 @@ export class PanelLayoutManager implements AppModule {
     // Every registration above has already run, so `isPanelKeyClaimed` is the
     // live answer to "does a data panel already own this feed-category key?" —
     // the fact the collision remap is derived from, instead of the hardcoded
-    // `markets`/`crypto`/`economic` set that silently omitted `commodities`
+    // `markets`/`economic` set that silently omitted `commodities`
     // (#5871). See src/app/news-panel-keys.ts.
     const newsPanelKeyLookups = newsPanelKeyLookupsFor({
       canonicalFeeds: CANONICAL_FEEDS,
@@ -3349,8 +3344,6 @@ export class PanelLayoutManager implements AppModule {
     this.lazyDefaultPanel('positioning-247', () => import('@/components/PositioningPanel'), 'PositioningPanel');
     this.lazyDefaultPanel('gold-intelligence', () => import('@/components/GoldIntelligencePanel'), 'GoldIntelligencePanel');
     this.lazyDefaultPanel('hormuz-tracker', () => import('@/components/HormuzPanel'), 'HormuzPanel');
-    this.lazyDefaultPanel('etf-flows', () => import('@/components/ETFFlowsPanel'), 'ETFFlowsPanel');
-    this.lazyDefaultPanel('stablecoins', () => import('@/components/StablecoinPanel'), 'StablecoinPanel');
 
     this.lazyDefaultPanel('insights', () => import('@/components/InsightsPanel'), 'InsightsPanel');
     if (isPanelInVariantDefaults('threat-timeline')) {

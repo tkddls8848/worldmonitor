@@ -3,7 +3,7 @@
 //   1. runSeed passes publishData (post-transform) to declareRecords. Seeders
 //      that author declareRecords against the pre-transform shape silently
 //      enter the RETRY path (count=0 with zeroIsValid=false), skipping the
-//      write. seed-token-panels hit this on all 3 token keys.
+//      write.
 //
 //   2. extraKeys whose key begins with `seed-meta:` must NEVER be enveloped —
 //      health/bundle-runner/legacy readers parse them as bare `{fetchedAt,
@@ -29,7 +29,7 @@ test('shouldEnvelopeKey: seed-meta:* keys must stay bare', () => {
 
 test('shouldEnvelopeKey: canonical data keys DO envelope', () => {
   assert.equal(shouldEnvelopeKey('economic:fsi-eu:v1'), true);
-  assert.equal(shouldEnvelopeKey('market:defi-tokens:v1'), true);
+  assert.equal(shouldEnvelopeKey('market:perp-positioning:v1'), true);
   assert.equal(shouldEnvelopeKey('climate:zone-normals:v1'), true);
 });
 
@@ -40,30 +40,6 @@ test('shouldEnvelopeKey: non-string / falsy → defensive false', () => {
 });
 
 // ─── Commit B: declareRecords must work on post-transform shape ──────────
-
-test('seed-token-panels: canonical declareRecords counts tokens on transformed shape', async () => {
-  const { declareRecords } = await import('../scripts/seed-token-panels.mjs');
-  // publishTransform = (data) => data.defi, so declareRecords receives the defi panel itself.
-  const transformedDefi = { tokens: [{ symbol: 'UNI' }, { symbol: 'AAVE' }], sparkline: [] };
-  assert.equal(declareRecords(transformedDefi), 2);
-});
-
-test('seed-token-panels: canonical declareRecords returns 0 when tokens missing', async () => {
-  const { declareRecords } = await import('../scripts/seed-token-panels.mjs');
-  assert.equal(declareRecords({}), 0);
-  assert.equal(declareRecords({ tokens: null }), 0);
-  assert.equal(declareRecords(null), 0);
-});
-
-test('seed-token-panels: per-extra-key declareRecords gets transformed AI/OTHER shape', async () => {
-  const { declareRecords } = await import('../scripts/seed-token-panels.mjs');
-  // After our fix, AI_KEY/OTHER_KEY extraKeys reuse canonical declareRecords.
-  // Each extra's transform returns data.ai or data.other — same {tokens, ...} shape.
-  const aiTransformed = { tokens: [{ symbol: 'FET' }, { symbol: 'AGIX' }, { symbol: 'OCEAN' }] };
-  const otherTransformed = { tokens: [{ symbol: 'DOGE' }] };
-  assert.equal(declareRecords(aiTransformed), 3, 'AI extra must count tokens correctly');
-  assert.equal(declareRecords(otherTransformed), 1, 'OTHER extra must count tokens correctly');
-});
 
 // ─── partial-fetch clobber guard (false-503 root cause) ──────────────────
 // CoinGecko's /coins/markets?ids= returns only the IDs it has data for. A
@@ -81,53 +57,12 @@ test('shouldSkipEmptyExtraKey: skips an opted-in extra key only when recordCount
   assert.equal(shouldSkipEmptyExtraKey(undefined, 0), false);
 });
 
-test('seed-token-panels: AI + Other extra keys opt into skipWhenEmpty', async () => {
-  const { TOKEN_PANEL_EXTRA_KEYS } = await import('../scripts/seed-token-panels.mjs');
-  assert.equal(TOKEN_PANEL_EXTRA_KEYS.length, 2);
-  for (const ek of TOKEN_PANEL_EXTRA_KEYS) {
-    assert.equal(ek.skipWhenEmpty, true, `${ek.key} must guard against empty-panel clobber`);
-  }
-});
-
-test('seed-token-panels: an empty AI panel from a partial fetch is skipped, not clobbered', async () => {
-  // End-to-end of the decision: empty transformed panel → declareRecords 0 →
-  // shouldSkipEmptyExtraKey true → runSeed skips the write (preserving last-good).
-  const { declareRecords, TOKEN_PANEL_EXTRA_KEYS } = await import('../scripts/seed-token-panels.mjs');
-  const { shouldSkipEmptyExtraKey } = await import('../scripts/_seed-utils.mjs');
-  const aiEk = TOKEN_PANEL_EXTRA_KEYS.find((ek) => ek.key === 'market:ai-tokens:v1');
-  const emptyAiPanel = aiEk.transform({ ai: { tokens: [] } }); // upstream dropped AI ids
-  assert.equal(declareRecords(emptyAiPanel), 0);
-  assert.equal(shouldSkipEmptyExtraKey(aiEk, declareRecords(emptyAiPanel)), true);
-  // A populated panel still writes.
-  const fullAiPanel = aiEk.transform({ ai: { tokens: [{ symbol: 'FET' }] } });
-  assert.equal(shouldSkipEmptyExtraKey(aiEk, declareRecords(fullAiPanel)), false);
-});
-
 // ─── validateFn also runs on post-transform shape ────────────────────────
 //
 // atomicPublish() calls validateFn(publishData). The imported validate() cases
 // below must accept the transformed panel and reject empty or zero-price data;
 // that production contract prevents a pre-transform shape check from silently
 // skipping the write.
-
-test('seed-token-panels: validate accepts transformed defi panel with priced tokens', async () => {
-  const { validate } = await import('../scripts/seed-token-panels.mjs');
-  const transformed = { tokens: [{ symbol: 'UNI', price: 12.3 }, { symbol: 'AAVE', price: 0 }] };
-  assert.equal(validate(transformed), true);
-});
-
-test('seed-token-panels: validate rejects transformed panel with zero-price tokens', async () => {
-  const { validate } = await import('../scripts/seed-token-panels.mjs');
-  const allZero = { tokens: [{ symbol: 'X', price: 0 }, { symbol: 'Y', price: 0 }] };
-  assert.equal(validate(allZero), false);
-});
-
-test('seed-token-panels: validate rejects empty/missing tokens', async () => {
-  const { validate } = await import('../scripts/seed-token-panels.mjs');
-  assert.equal(validate({ tokens: [] }), false);
-  assert.equal(validate({}), false);
-  assert.equal(validate(null), false);
-});
 
 // ─── Commit E: resolveRecordCount contract invariants ────────────────────
 

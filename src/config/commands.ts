@@ -136,7 +136,6 @@ export const COMMANDS: Command[] = [
   { id: 'panel:latest-brief', keywords: ['latest brief', 'daily brief', 'situation brief', 'world brief', 'brief'], label: 'Panel: Latest Brief', icon: '\u{1F4C4}', category: 'panels' },
   { id: 'panel:finance', keywords: ['financial', 'finance news', 'finance', 'markets'], label: 'Panel: Financial', icon: '\u{1F4B5}', category: 'panels' },
   { id: 'panel:tech', keywords: ['technology', 'tech news', 'tech', 'technology news'], label: 'Panel: Technology', icon: '\u{1F4BB}', category: 'panels' },
-  { id: 'panel:crypto', keywords: ['crypto', 'bitcoin', 'ethereum'], label: 'Panel: Crypto', icon: '\u20BF', category: 'panels' },
   { id: 'panel:stock-analysis', keywords: ['stock analysis', 'equity analysis', 'premium stocks'], label: 'Panel: Stock Analysis', icon: '\u{1F4C8}', category: 'panels' },
   { id: 'panel:stock-backtest', keywords: ['backtest', 'stock backtest', 'backtesting', 'strategy'], label: 'Panel: Stock Backtesting', icon: '\u{1F4C9}', category: 'panels' },
   { id: 'panel:daily-market-brief', keywords: ['daily brief', 'market brief', 'morning brief'], label: 'Panel: Daily Market Brief', icon: '\u{1F4CB}', category: 'panels' },
@@ -148,8 +147,6 @@ export const COMMANDS: Command[] = [
   { id: 'panel:aaii-sentiment', keywords: ['aaii', 'investor sentiment', 'bull bear', 'sentiment survey', 'aaii survey', 'contrarian'], label: 'Panel: AAII Investor Sentiment', icon: '\u{1F4CA}', category: 'panels' },
   { id: 'panel:market-breadth', keywords: ['breadth', 'market breadth', 'advance decline', 'above sma', 'stocks above moving average', '200 day', '50 day'], label: 'Panel: Market Breadth', icon: '\u{1F4CA}', category: 'panels' },
   { id: 'panel:hormuz-tracker', keywords: ['hormuz', 'strait of hormuz', 'shipping', 'crude oil', 'lng', 'fertilizer', 'tanker', 'wto'], label: 'Panel: Hormuz Trade Tracker', icon: '\u{1F6A2}', category: 'panels' },
-  { id: 'panel:etf-flows', keywords: ['etf', 'etf flows', 'fund flows'], label: 'Panel: BTC ETF Tracker', icon: '\u{1F4B9}', category: 'panels' },
-  { id: 'panel:stablecoins', keywords: ['stablecoins', 'usdt', 'usdc'], label: 'Panel: Stablecoins', icon: '\u{1FA99}', category: 'panels' },
   { id: 'panel:reservoir-levels', keywords: ['water levels', 'reservoirs', 'dams', 'lakes', 'hydropower', 'drought', 'gerd', 'mekong'], label: 'Panel: Strategic Water Levels', icon: '\u{1F4A7}', category: 'panels' },
   { id: 'panel:ukmto-incidents', keywords: ['ukmto', 'maritime', 'incidents'], label: 'Panel: UKMTO Incidents', icon: '⚓', category: 'panels' },
   { id: 'panel:monitors', keywords: ['monitors', 'my monitors', 'watchlist'], label: 'Panel: My Monitors', icon: '\u{1F4CB}', category: 'panels' },
@@ -214,11 +211,6 @@ export const COMMANDS: Command[] = [
   { id: 'panel:climate-news', keywords: ['climate news', 'climate headlines', 'environment news', 'climate intelligence', 'carbon brief', 'copernicus'], label: 'Panel: Climate News', icon: '\u{1F30D}', category: 'panels' },
   { id: 'panel:disease-outbreaks', keywords: ['disease outbreaks', 'outbreaks', 'who alerts', 'epidemic', 'health alerts', 'promed'], label: 'Panel: Disease Outbreaks', icon: '\u{1F9A0}', category: 'panels' },
 
-  // Crypto panels
-  { id: 'panel:crypto-heatmap', keywords: ['crypto sectors', 'crypto heatmap', 'altcoin sectors'], label: 'Panel: Crypto Sectors', icon: '\u{1F7E9}', category: 'panels' },
-  { id: 'panel:defi-tokens', keywords: ['defi', 'defi tokens', 'decentralized finance'], label: 'Panel: DeFi Tokens', icon: '\u{1FA99}', category: 'panels' },
-  { id: 'panel:ai-tokens', keywords: ['ai tokens', 'ai crypto', 'artificial intelligence tokens'], label: 'Panel: AI Tokens', icon: '\u{1F916}', category: 'panels' },
-  { id: 'panel:other-tokens', keywords: ['alt tokens', 'altcoins', 'other tokens', 'small cap crypto'], label: 'Panel: Alt Tokens', icon: '\u{1F4B9}', category: 'panels' },
 
   { id: 'panel:ipo', keywords: ['ipo', 'spac', 'earnings', 'mergers', 'acquisitions', 'm&a'], label: 'Panel: IPOs, Earnings & M&A', icon: '\u{1F4C4}', category: 'panels' },
   { id: 'panel:internet-disruptions', keywords: ['internet disruptions', 'outages', 'internet outage', 'connectivity'], label: 'Internet Disruptions', icon: '\u{1F310}', category: 'panels' },
@@ -239,7 +231,6 @@ export const COMMANDS: Command[] = [
   { id: 'panel:markets-news', keywords: ['markets news', 'financial news', 'wall street', 'stock news'], label: 'Markets News', icon: '\u{1F4F0}', category: 'panels' },
   { id: 'panel:economic-news', keywords: ['economic news', 'economy news', 'macro news', 'gdp news'], label: 'Economic News', icon: '\u{1F4F0}', category: 'panels' },
   { id: 'panel:commodities-news', keywords: ['commodities news', 'commodity markets news', 'raw materials news'], label: 'Commodities News', icon: '\u{1F4F0}', category: 'panels' },
-  { id: 'panel:crypto-news', keywords: ['crypto news', 'bitcoin news', 'blockchain news', 'defi news'], label: 'Crypto News', icon: '\u{1F4F0}', category: 'panels' },
   { id: 'panel:gccNews', keywords: ['gcc news', 'gulf news', 'saudi news', 'uae news', 'middle east business'], label: 'GCC Business News', icon: '\u{1F1F8}\u{1F1E6}', category: 'panels' },
 
   // Commodity variant panels

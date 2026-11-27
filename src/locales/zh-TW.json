@@ -340,7 +340,6 @@
     "sourceRegionMarkets": "市場與分析",
     "sourceRegionFixedIncomeFx": "固定收益與外匯",
     "sourceRegionCommodities": "大宗商品",
-    "sourceRegionCryptoDigital": "加密與數字",
     "sourceRegionCentralBanks": "央行與經濟",
     "sourceRegionDeals": "交易與企業",
     "sourceRegionFinRegulation": "金融監管",
@@ -361,7 +360,6 @@
     "panelCatMarkets": "市場",
     "panelCatFixedIncomeFx": "固定收益與外匯",
     "panelCatCommodities": "大宗商品",
-    "panelCatCryptoDigital": "加密與數字資產",
     "panelCatCentralBanks": "央行與經濟",
     "panelCatDeals": "交易與機構",
     "panelCatGulfMena": "海灣與中東北非地區",
@@ -407,15 +405,12 @@
     "supplyChain": "供應鏈",
     "finance": "金融",
     "tech": "科技",
-    "crypto": "加密貨幣",
     "heatmap": "板塊熱力圖",
     "ai": "AI與機器學習",
     "layoffs": "裁員追蹤",
     "monitors": "我的監控",
     "satelliteFires": "火災",
     "macroSignals": "比特幣市場狀況",
-    "etfFlows": "比特幣基金流入流出",
-    "stablecoins": "穩定幣",
     "deduction": "推斷局勢",
     "ucdpEvents": "UCDP衝突事件",
     "displacement": "難民與流離失所人口",
@@ -1011,15 +1006,6 @@
       "leanYes": "傾向支援",
       "leanNo": "傾向反對",
       "tossUp": "勝負難料"
-    },
-    "stablecoins": {
-      "pegHealth": "錨定健康度",
-      "supplyVolume": "供應量與交易量",
-      "token": "代幣",
-      "mcap": "市值",
-      "vol24h": "24小時交易量",
-      "chg24h": "24小時變化",
-      "infoTooltip": "<strong>穩定幣</strong> 主要美元錨定代幣（USDT、USDC、DAI、BUSD）的錨定健康度、市值和 24 小時成交量。錨定脫鉤預示系統性風險。"
     },
     "status": {
       "updatedAt": "更新於{{time}}"
@@ -1781,27 +1767,6 @@
     "prediction": {
       "infoTooltip": "<strong>預測市場</strong>真金白銀的預測市場：<ul><li>價格反映群體機率估計</li><li>交易量越高 = 訊號越可靠</li><li>聚焦地緣政治和時事</li></ul>來源：Polymarket (polymarket.com)"
     },
-    "etfFlows": {
-      "previousColumns": "前面的欄",
-      "moreColumns": "更多欄",
-      "unavailable": "交易所交易基金資料暫時不可用",
-      "rateLimited": "交易所交易基金資料暫時不可用（受速率限制）— 正在重試",
-      "netFlow": "淨流量",
-      "estFlow": "預估流量",
-      "totalVol": "總成交量",
-      "etfs": "交易所交易基金",
-      "netInflow": "淨流入",
-      "netOutflow": "淨流出",
-      "netNeutral": "淨中性",
-      "table": {
-        "ticker": "程式碼",
-        "issuer": "發行方",
-        "estFlow": "預估流量",
-        "volume": "成交量",
-        "change": "漲跌幅"
-      },
-      "infoTooltip": "<strong>比特幣基金流量</strong> 追蹤美國現貨比特幣交易所交易基金的日估算基金流量：<ul><li>流入/流出方向和幅度</li><li>各基金的成交量和價格變化</li><li>所有追蹤基金的淨累計流量</li></ul>"
-    },
     "macroSignals": {
       "overall": "綜合",
       "verdict": {
@@ -1811,12 +1776,7 @@
       "bullish": "{{count}}/{{total}} 看漲",
       "signals": {
         "liquidity": "流動性",
-        "flow": "資金流",
-        "regime": "市場環境",
-        "btcTrend": "BTC趨勢",
-        "hashRate": "算力",
-        "momentum": "動量",
-        "fearGreed": "恐懼 &amp; 貪婪"
+        "regime": "市場環境"
       },
       "infoTooltip": "<strong>比特幣市場狀況</strong> 比特幣定位和風險偏好的綜合訊號面板：<ul><li><strong>流動性</strong>：聯儲流動性淨值代理</li><li><strong>流量</strong>：BTC vs QQQ 5 日收益</li><li><strong>態勢</strong>：QQQ vs XLP 輪轉（風險偏好開啟/關閉）</li><li><strong>BTC 趨勢</strong>：價格 vs SMA50/200，Mayer 倍數</li><li><strong>雜湊率</strong>：30 日網路雜湊變化</li><li><strong>恐懼與貪婪</strong>：市場情緒指數</li></ul>此面板用於態勢和定位，不是廣泛宏觀資料。"
     },
@@ -1959,23 +1919,11 @@
         "twentyDayTrend": "二十個交易日溢價趨勢"
       }
     },
-    "crypto": {
-      "infoTooltip": "<strong>加密貨幣</strong> 主要加密貨幣的即時價格、24 小時漲跌和成交量。資料來自 CoinGecko。"
-    },
     "gulfEconomies": {
       "infoTooltip": "<strong>海灣經濟體</strong>海灣合作委員會經濟體（沙烏地阿拉伯、阿聯酋、科威特、卡達、巴林、阿曼）的股票指數、匯率和油價。"
     },
     "groceryBasket": {
       "infoTooltip": "<strong>雜貨籃指數</strong>全球24個國家的雜貨籃價格對比——跟蹤超越頭條消費者價格指數的真實消費品通脹。"
-    },
-    "defiTokens": {
-      "infoTooltip": "<strong>DeFi 代幣</strong> 主要去中心化金融協議代幣（DEX、借貸平臺和收益協議）的價格及 24 小時/7 天表現。"
-    },
-    "aiTokens": {
-      "infoTooltip": "<strong>AI 代幣</strong> 人工智慧和機器學習板塊代幣（算力網路、去中心化 AI 基礎設施和資料協議）的價格及 24 小時/7 天表現。"
-    },
-    "altTokens": {
-      "infoTooltip": "<strong>山寨代幣</strong> 主流大市值之外的其他和新興加密貨幣代幣的價格及 24 小時/7 天表現。"
     },
     "stockAnalysis": {
       "infoTooltip": "<strong>進階股票分析</strong> 針對自選股列表的 AI 分析 — 買入/持有/賣出訊號、目標價、主要風險和催化劑，每日更新。"
@@ -2353,7 +2301,6 @@
       "title": "24/7頭寸",
       "infoTooltip": "<strong>24/7頭寸</strong>來自Hyperliquid的永續合約頭寸壓力。全天交易，展示傳統市場關閉時建倉的情況。綜合得分(0-100)來自資金費率、交易量、未平倉合約和現貨永續基差。綠色 = 多頭擁擠(看漲傾向)，紅色 = 空頭擁擠(看跌傾向)。",
       "commodities": "商品",
-      "crypto": "加密貨幣",
       "fx": "外匯",
       "warmup": "正在建立基線。成交量和未平倉權益歷史將在下一小時內填充。",
       "footer": "5分鐘 · Hyperliquid永續合約 · 24/7"
@@ -4086,11 +4033,9 @@
     "noDataShort": "無資料",
     "upstreamUnavailable": "上游API不可用 — 將自動重試",
     "loadingUcdpEvents": "正在載入UCDP事件",
-    "loadingStablecoins": "正在載入穩定幣...",
     "scanningThermalData": "正在掃描熱資料",
     "calculatingExposure": "正在計算暴露量",
     "computingSignals": "正在計算訊號...",
-    "loadingEtfData": "正在載入交易型開放式指數基金資料...",
     "loadingDisplacement": "正在載入流離失所資料",
     "loadingClimateData": "正在載入氣候資料",
     "failedTechReadiness": "載入科技就緒資料失敗",
@@ -4102,7 +4047,6 @@
     "failedMarketData": "載入市場資料失敗",
     "failedSectorData": "載入板塊資料失敗",
     "failedCommodities": "載入大宗商品失敗",
-    "failedCryptoData": "載入加密貨幣資料失敗",
     "rateLimitedMarket": "市場資料暫時不可用（請求受限）— 即將自動重試",
     "noNewsAvailable": "無可用新聞",
     "noActiveTechHubs": "無活躍的科技中心",
@@ -4259,13 +4203,11 @@
     "preflightProRequired": "需要 Pro 訂閱才能使用小工具生成器。升級以解鎖。",
     "examples": {
       "oilGold": "顯示今天的原油價格與黃金價格對比",
-      "cryptoMovers": "為過去 24 小時內漲跌幅最大的加密貨幣建立小工具",
       "flightDelays": "總結目前國際航班延誤最嚴重的情況",
       "conflictHotspots": "標記最新 UCDP 衝突熱點及簡短標籤"
     },
     "proExamples": {
       "interactiveChart": "互動式 Chart.js 圖表，對比石油和黃金價格",
-      "sortableTable": "具有搜尋篩選功能的可排序加密貨幣價格表",
       "animatedCounters": "主要經濟指標的動畫計數器",
       "tabbedComparison": "按地區分類的衝突事件選項卡式對比"
     }

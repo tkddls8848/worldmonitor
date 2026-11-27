@@ -56,7 +56,6 @@ const FULL_PANELS: Record<string, PanelConfig> = {
   'china-activity-nowcast': { name: 'China Activity Nowcast', enabled: true, priority: 1 },
   finance: { name: 'Financial', enabled: true, priority: 1 },
   tech: { name: 'Technology', enabled: true, priority: 2 },
-  crypto: { name: 'Crypto', enabled: true, priority: 2 },
   heatmap: { name: 'Sector Heatmap', enabled: true, priority: 2 },
   ai: { name: 'AI/ML', enabled: true, priority: 2 },
   layoffs: { name: 'Layoffs Tracker', enabled: true, priority: 2 },
@@ -97,8 +96,6 @@ const FULL_PANELS: Record<string, PanelConfig> = {
   fx: { name: 'FX Rates', enabled: false, priority: 2 },
   'fuel-prices': { name: 'Fuel Prices', enabled: false, priority: 2 },
   'fao-food-price-index': { name: 'FAO Food Price Index', enabled: false, priority: 2 },
-  'etf-flows': { name: 'BTC ETF Tracker', enabled: true, priority: 2 },
-  stablecoins: { name: 'Stablecoins', enabled: true, priority: 2 },
   'ucdp-events': { name: 'UCDP Conflict Events', enabled: true, priority: 2 },
   'disease-outbreaks': { name: 'Disease Outbreaks', enabled: true, priority: 2 },
   displacement: { name: 'UNHCR Displacement', enabled: true, priority: 2 },
@@ -259,12 +256,6 @@ const FINANCE_PANELS: Record<string, PanelConfig> = {
   // (or via CMD+K). Codex P1.
   'pipeline-status': { name: 'Oil & Gas Pipeline Status', enabled: false, priority: 2 },
   'commodities-news': { name: 'Commodities News', enabled: true, priority: 2 },
-  crypto: { name: 'Crypto & Digital Assets', enabled: true, priority: 1 },
-  'crypto-news': { name: 'Crypto News', enabled: true, priority: 2 },
-  'crypto-heatmap': { name: 'Crypto Sectors', enabled: true, priority: 1 },
-  'defi-tokens': { name: 'DeFi Tokens', enabled: true, priority: 2 },
-  'ai-tokens': { name: 'AI Tokens', enabled: true, priority: 2 },
-  'other-tokens': { name: 'Alt Tokens', enabled: true, priority: 2 },
   centralbanks: { name: 'Central Bank Watch', enabled: true, priority: 1 },
   economic: { name: 'Macro Stress', enabled: true, priority: 1 },
   'global-procurement': { name: 'Global Procurement', enabled: true, priority: 1 },
@@ -296,8 +287,6 @@ const FINANCE_PANELS: Record<string, PanelConfig> = {
   'fin-regulation': { name: 'Financial Regulation', enabled: true, priority: 2 },
   institutional: { name: 'Hedge Funds & PE', enabled: true, priority: 2 },
   analysis: { name: 'Market Analysis', enabled: true, priority: 2 },
-  'etf-flows': { name: 'BTC ETF Tracker', enabled: true, priority: 2 },
-  stablecoins: { name: 'Stablecoins', enabled: true, priority: 2 },
   'gcc-investments': { name: 'GCC Investments', enabled: true, priority: 2 },
   gccNews: { name: 'GCC Business News', enabled: true, priority: 2 },
   'gulf-economies': { name: 'Gulf Economies', enabled: true, priority: 1 },
@@ -706,6 +695,14 @@ export function isPanelNativeToVariant(panelId: string, variant: string): boolea
 }
 
 export const RETIRED_PANEL_IDS: ReadonlySet<string> = new Set([
+  'crypto',
+  'etf-flows',
+  'stablecoins',
+  'crypto-news',
+  'crypto-heatmap',
+  'defi-tokens',
+  'ai-tokens',
+  'other-tokens',
   'startups',
   'vcblogs',
   'regionalStartups',
@@ -929,7 +926,7 @@ export const PANEL_CATEGORY_MAP: Record<string, { labelKey: string; panelKeys: s
   },
   marketsFinance: {
     labelKey: 'header.panelCatMarketsFinance',
-    panelKeys: ['commodities', 'energy-complex', 'energy-risk-overview', 'pipeline-status', 'storage-facility-map', 'renewable', 'oil-inventories', 'fuel-prices', 'chokepoint-strip', 'fuel-shortages', 'energy-disruptions', 'hormuz-tracker', 'energy-crisis', 'markets', 'stock-analysis', 'stock-backtest', 'daily-market-brief', 'economic', 'global-procurement', 'trade-policy', 'sanctions-pressure', 'supply-chain', 'china-corridors', 'china-activity-nowcast', 'finance', 'polymarket', 'macro-signals', 'gulf-economies', 'consumer-prices', 'etf-flows', 'stablecoins', 'crypto', 'heatmap', 'aaii-sentiment', 'cot-positioning', 'earnings-calendar', 'material-events', 'economic-calendar', 'fear-greed', 'fsi', 'macro-tiles', 'market-breadth', 'news-market-correlation', 'liquidity-shifts', 'national-debt', 'positioning-247', 'yield-curve', 'gold-intelligence', 'fx', 'market-implications'],
+    panelKeys: ['commodities', 'energy-complex', 'energy-risk-overview', 'pipeline-status', 'storage-facility-map', 'renewable', 'oil-inventories', 'fuel-prices', 'chokepoint-strip', 'fuel-shortages', 'energy-disruptions', 'hormuz-tracker', 'energy-crisis', 'markets', 'stock-analysis', 'stock-backtest', 'daily-market-brief', 'economic', 'global-procurement', 'trade-policy', 'sanctions-pressure', 'supply-chain', 'china-corridors', 'china-activity-nowcast', 'finance', 'polymarket', 'macro-signals', 'gulf-economies', 'consumer-prices', 'heatmap', 'aaii-sentiment', 'cot-positioning', 'earnings-calendar', 'material-events', 'economic-calendar', 'fear-greed', 'fsi', 'macro-tiles', 'market-breadth', 'news-market-correlation', 'liquidity-shifts', 'national-debt', 'positioning-247', 'yield-curve', 'gold-intelligence', 'fx', 'market-implications'],
     variants: ['full', 'energy'],
   },
   topical: {
@@ -946,7 +943,7 @@ export const PANEL_CATEGORY_MAP: Record<string, { labelKey: string; panelKeys: s
   // Finance variant
   finMarkets: {
     labelKey: 'header.panelCatMarkets',
-    panelKeys: ['markets', 'stock-analysis', 'stock-backtest', 'daily-market-brief', 'markets-news', 'heatmap', 'macro-signals', 'analysis', 'polymarket', 'nq-pulse', 'nq-catalysts', 'nq-news'],
+    panelKeys: ['fintech', 'markets', 'stock-analysis', 'stock-backtest', 'daily-market-brief', 'markets-news', 'heatmap', 'macro-signals', 'analysis', 'polymarket', 'nq-pulse', 'nq-catalysts', 'nq-news'],
     variants: ['finance'],
   },
   fixedIncomeFx: {
@@ -957,11 +954,6 @@ export const PANEL_CATEGORY_MAP: Record<string, { labelKey: string; panelKeys: s
   finCommodities: {
     labelKey: 'header.panelCatCommodities',
     panelKeys: ['commodities', 'energy-complex', 'commodities-news'],
-    variants: ['finance'],
-  },
-  cryptoDigital: {
-    labelKey: 'header.panelCatCryptoDigital',
-    panelKeys: ['crypto', 'crypto-heatmap', 'defi-tokens', 'ai-tokens', 'other-tokens', 'crypto-news', 'etf-flows', 'stablecoins', 'fintech'],
     variants: ['finance'],
   },
   centralBanksEcon: {

@@ -2,7 +2,7 @@
 //
 // Yahoo Finance throttles Railway egress IPs aggressively (429s). Existing
 // seeders had identical `fetchYahooWithRetry` blocks duplicated 4 times
-// (seed-commodity-quotes, seed-etf-flows, seed-gulf-quotes,
+// (seed-commodity-quotes, seed-gulf-quotes,
 // seed-market-quotes) with no proxy fallback. This helper consolidates
 // them and adds the proxy fallback.
 //

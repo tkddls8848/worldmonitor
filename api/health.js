@@ -232,7 +232,6 @@ const BOOTSTRAP_KEYS = {
   outages:           'infra:outages:v1',
   iodaOutages:       'infra:ioda-outages:v1',
   sectors:           'market:sectors:v2',
-  etfFlows:          'market:etf-flows:v1',
   climateAnomalies:  'climate:anomalies:v2',
   climateDisasters:  'climate:disasters:v1',
   co2Monitoring:     'climate:co2-monitoring:v1',
@@ -249,9 +248,7 @@ const BOOTSTRAP_KEYS = {
   flightDelays:      'aviation:delays-bootstrap:v2',
   newsInsights:      'news:insights:v1',
   predictionMarkets: 'prediction:markets-bootstrap:v1',
-  cryptoQuotes:      'market:crypto:v1',
   gulfQuotes:        'market:gulf-quotes:v1',
-  stablecoinMarkets: 'market:stablecoins:v1',
   unrestEvents:      'unrest:events:v1',
   iranEvents:        'conflict:iran-events:v1',
   ucdpEvents:        'conflict:ucdp-events:v1',
@@ -282,9 +279,6 @@ const BOOTSTRAP_KEYS = {
   fuelPrices:        'economic:fuel-prices:v1',
   faoFoodPriceIndex: 'economic:fao-ffpi:v1',
   nationalDebt:      'economic:national-debt:v1',
-  defiTokens:        'market:defi-tokens:v1',
-  aiTokens:          'market:ai-tokens:v1',
-  otherTokens:       'market:other-tokens:v1',
   fredBatch:         'economic:fred:v1:FEDFUNDS:0',
   ecbEstr:           'economic:fred:v1:ESTR:0',
   ecbEuribor3m:      'economic:fred:v1:EURIBOR3M:0',
@@ -302,7 +296,7 @@ const BOOTSTRAP_KEYS = {
   chinaPolicyEvents: 'china:policy-events:v1',
   chinaDecisionSignals: BOOTSTRAP_CACHE_KEYS.chinaDecisionSignals,
   cotPositioning:    'market:cot:v1',
-  hyperliquidFlow:   'market:hyperliquid:flow:v1',
+  hyperliquidFlow:   'market:perp-positioning:v1',
   crudeInventories:  'economic:crude-inventories:v1',
   natGasStorage:     'economic:nat-gas-storage:v1',
   spr:               'economic:spr:v1',
@@ -322,7 +316,6 @@ const BOOTSTRAP_KEYS = {
   electricityPrices:    'energy:electricity:v1:index',
   gasStorageCountries: 'energy:gas-storage:v1:_countries',
   aaiiSentiment:       'market:aaii-sentiment:v1',
-  cryptoSectors:       'market:crypto-sectors:v1',
   ddosAttacks:         'cf:radar:ddos:v1',
   economicStress:      'economic:stress-index:v1',
   trafficAnomalies:    'cf:radar:traffic-anomalies:v1',
@@ -402,7 +395,7 @@ const STANDALONE_KEYS = {
   newsFeedHealth:    'news:feed-health:v1',
   newsRecallBenchmark: 'news:recall-benchmark:v1',
   serviceStatuses:       'infra:service-statuses:v1',
-  macroSignals:          'economic:macro-signals:v1',
+  macroSignals:          'economic:macro-signals:v2',
   energyPrices:          'economic:energy:v1:all',
   bisPolicy:             'economic:bis:policy:v1',
   bisExchange:           'economic:bis:eer:v1',
@@ -873,10 +866,7 @@ const SEED_META = {
     activationKey: 'seed-activated:cyber:cve-reference',
     cutover: { mode: 'activation-marker', fromKey: null, issue: 6229, activationKey: 'seed-activated:cyber:cve-reference' },
   }, // daily NVD KEV sync; 2880 = 2x interval; KEV has held above 1,300 CVEs since 2024
-  cryptoQuotes:     { key: 'seed-meta:market:crypto',           maxStaleMin: 30 },
-  etfFlows:         { key: 'seed-meta:market:etf-flows',        maxStaleMin: 60 },
   gulfQuotes:       { key: 'seed-meta:market:gulf-quotes',      maxStaleMin: 30 },
-  stablecoinMarkets:{ key: 'seed-meta:market:stablecoins',      maxStaleMin: 60 },
   naturalEvents:    {
     key: 'seed-meta:natural:events',
     // Sole producer: the seed-natural-events Railway service, every 30 min.
@@ -1635,10 +1625,6 @@ const SEED_META = {
   consumerPricesSpread:     { key: 'seed-meta:consumer-prices:retailer-spread:ae:essentials-ae', maxStaleMin: 1500 },
   consumerPricesFreshness:  { key: 'seed-meta:consumer-prices:freshness:ae',    maxStaleMin: 1500 },
   consumerPricesCoverage:   { key: 'seed-meta:consumer-prices:coverage:ae',      maxStaleMin: 1500, minSuccessRate: 0.5, requireCoverage: true },
-  // defiTokens/aiTokens/otherTokens all share one seed run (seed-token-panels cron, every 30min)
-  defiTokens:        { key: 'seed-meta:market:token-panels', maxStaleMin: 90 },
-  aiTokens:          { key: 'seed-meta:market:token-panels', maxStaleMin: 90 },
-  otherTokens:       { key: 'seed-meta:market:token-panels', maxStaleMin: 90 },
   fredBatch:         { key: 'seed-meta:economic:fred:v1:FEDFUNDS:0', maxStaleMin: 1500 }, // daily cron
   fredRatesSeeder:   { key: 'seed-meta:economic:fred-rates', maxStaleMin: 180, minRecordCount: 24 }, // independent hourly FRED/rates seeder; publication accepts 18/24, but health requires full consumer coverage
   forecastFredWalcl:      { key: 'seed-meta:economic:fred:v1:WALCL:0',      maxStaleMin: 1500 },
@@ -1672,7 +1658,7 @@ const SEED_META = {
   earningsCalendar:  { key: 'seed-meta:market:earnings-calendar',     maxStaleMin: 1440 }, // 12h cron; 1440min = 24h = 2x interval
   econCalendar:      { key: 'seed-meta:economic:econ-calendar',       maxStaleMin: 1440 }, // 12h cron; 1440min = 24h = 2x interval
   cotPositioning:    { key: 'seed-meta:market:cot',                   maxStaleMin: 14400 }, // weekly CFTC release; 14400min = 10d = 1.4x interval (weekend + delay buffer)
-  hyperliquidFlow:   { key: 'seed-meta:market:hyperliquid-flow',      maxStaleMin: 30 }, // 5min cron (bundled in seed-bundle-market-backup); 30min = 6× interval. Was 15 (3× = gold-standard floor with zero safety margin) — same exposure as correlationCards. Pre-fix comment said "Railway cron" but it's bundle-driven, so subject to the 80% skip-gate that produced 9-19min jitter under load.
+  hyperliquidFlow:   { key: 'seed-meta:market:hyperliquid-flow', maxStaleMin: 30 }, // Commodity and FX positioning on Hyperliquid.
   crudeInventories:  { key: 'seed-meta:economic:crude-inventories',   maxStaleMin: 20160 }, // weekly EIA data; 20160min = 14 days = 2x weekly cadence
   natGasStorage:     { key: 'seed-meta:economic:nat-gas-storage',     maxStaleMin: 20160 }, // weekly EIA data; 20160min = 14 days = 2x weekly cadence
   spr:               { key: 'seed-meta:economic:spr',                 maxStaleMin: 20160 }, // weekly EIA data; 20160min = 14 days = 2x weekly cadence
@@ -2363,7 +2349,6 @@ const SEED_META = {
     cutover: { mode: 'activation-marker', fromKey: null, issue: 10051, activationKey: 'seed-activated:energy:regional-creg' } },
   regionalEnergyUrsea: { key: 'seed-meta:energy:regional-ursea', maxStaleMin: 2160, firstPublicationMaxWaitMin: 1440, maxContentAgeMin: 64800, activationKey: 'seed-activated:energy:regional-ursea',
     cutover: { mode: 'activation-marker', fromKey: null, issue: 10051, activationKey: 'seed-activated:energy:regional-ursea' } },
-  cryptoSectors:        { key: 'seed-meta:market:crypto-sectors',             maxStaleMin: 120 }, // relay loop every ~30min; 120min = 2h = 4x interval
   ddosAttacks:          { key: 'seed-meta:cf:radar:ddos',                    maxStaleMin: 60 }, // seed-internet-outages publishes the payload before advancing this clock; outages cron ~15min; 60 = 4x interval
   economicStress:       { key: 'seed-meta:economic:stress-index',            maxStaleMin: 180 }, // computed in seed-economy afterPublish; cron ~1h; 180min = 3x interval
   marketImplications:   {

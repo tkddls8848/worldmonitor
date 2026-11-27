@@ -149,21 +149,6 @@ async function readFred(seriesId) {
   } catch { return null; }
 }
 
-async function readMacroSignals() {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!url || !token) return null;
-  try {
-    const resp = await fetch(`${url}/get/${encodeURIComponent('economic:macro-signals:v1')}`, {
-      headers: { Authorization: `Bearer ${token}` },
-      signal: AbortSignal.timeout(5_000),
-    });
-    if (!resp.ok) return null;
-    const { result } = await resp.json();
-    return result ? unwrapEnvelope(JSON.parse(result)).data : null;
-  } catch { return null; }
-}
-
 // --- Math helpers ---
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 function sma(prices, period) {
@@ -219,7 +204,7 @@ function labelFromScore(s) {
 function scoreCategory(name, inputs) {
   switch(name) {
     case 'sentiment': {
-      const { cnnFg, aaiBull, aaiBear, cryptoFg } = inputs;
+      const { cnnFg, aaiBull, aaiBear } = inputs;
       const degraded = aaiBull == null || aaiBear == null;
       let score;
       if (!degraded) {
@@ -234,12 +219,10 @@ function scoreCategory(name, inputs) {
         }
       } else if (cnnFg != null) {
         score = cnnFg;
-      } else if (cryptoFg != null) {
-        score = cryptoFg;
       } else {
         score = 50;
       }
-      return { score: clamp(Math.round(score), 0, 100), degraded, inputs: { cnnFearGreed: cnnFg, aaiBull: aaiBull ?? null, aaiBear: aaiBear ?? null, cryptoFg } };
+      return { score: clamp(Math.round(score), 0, 100), degraded, inputs: { cnnFearGreed: cnnFg, aaiBull: aaiBull ?? null, aaiBear: aaiBear ?? null } };
     }
     case 'volatility': {
       const { vix, vix9d, vix3m } = inputs;
@@ -348,12 +331,11 @@ async function fetchAll() {
   const prevSnapshot = await readSeedSnapshot(FEAR_GREED_KEY).catch(() => null);
   const previousScore = prevSnapshot?.composite?.score ?? null;
 
-  const [yahooResults, cboeResult, cnnResult, aaiiResult, macroSignals, breadthResult] = await Promise.allSettled([
+  const [yahooResults, cboeResult, cnnResult, aaiiResult, breadthResult] = await Promise.allSettled([
     fetchAllYahoo(),
     fetchCBOE(),
     fetchCNN(),
     fetchAAII(),
-    readMacroSignals(),
     fetchPctAbove200d(),
   ]);
 
@@ -361,7 +343,6 @@ async function fetchAll() {
   const cboe = cboeResult.status === 'fulfilled' ? cboeResult.value : {};
   const cnn = cnnResult.status === 'fulfilled' ? cnnResult.value : null;
   const aaii = aaiiResult.status === 'fulfilled' ? aaiiResult.value : null;
-  const macro = macroSignals.status === 'fulfilled' ? macroSignals.value : null;
 
   // Source status summary — visible in Railway container logs
   const yahooCount = Object.values(yahoo).filter(Boolean).length;
@@ -399,10 +380,9 @@ async function fetchAll() {
   // Used for both breadth scoring and header display. Null → header shows N/A, breadth
   // defaults to neutral 50 (rspScore still captures RSP/SPY signal independently).
   const pctAbove200d = breadthResult.status === 'fulfilled' ? breadthResult.value : null;
-  const cryptoFg = macro?.fearGreed?.score ?? macro?.signals?.fearGreed?.value ?? null;
 
   const cats = {
-    sentiment: scoreCategory('sentiment', { cnnFg: cnn?.score ?? null, aaiBull: aaii?.bull ?? null, aaiBear: aaii?.bear ?? null, cryptoFg }),
+    sentiment: scoreCategory('sentiment', { cnnFg: cnn?.score ?? null, aaiBull: aaii?.bull ?? null, aaiBear: aaii?.bear ?? null }),
     volatility: scoreCategory('volatility', { vix: vixLive, vix9d: vix9dPrice, vix3m: vix3mPrice }),
     positioning: scoreCategory('positioning', { totalPc: cboe.totalPc, equityPc: cboe.equityPc, skew: skewPrice }),
     trend: scoreCategory('trend', { prices: gspc?.closes ?? [] }),

@@ -43,7 +43,6 @@ export const TOPIC_MAPPINGS = {
   'taiwan': ['taiwan', 'china'],
   'trump': ['trump', 'election', 'tariff'],
   'fed': ['fed', 'interest', 'inflation', 'recession'],
-  'bitcoin': ['crypto', 'bitcoin'],
   'recession': ['recession', 'fed', 'inflation'],
 };
 

@@ -4,11 +4,8 @@ package worldmonitor.market.v1;
 
 import "sebuf/http/annotations.proto";
 import "worldmonitor/market/v1/list_market_quotes.proto";
-import "worldmonitor/market/v1/list_crypto_quotes.proto";
 import "worldmonitor/market/v1/list_commodity_quotes.proto";
 import "worldmonitor/market/v1/get_sector_summary.proto";
-import "worldmonitor/market/v1/list_stablecoin_markets.proto";
-import "worldmonitor/market/v1/list_etf_flows.proto";
 import "worldmonitor/market/v1/get_country_stock_index.proto";
 import "worldmonitor/market/v1/get_price_history.proto";
 import "worldmonitor/market/v1/list_gulf_quotes.proto";
@@ -16,32 +13,23 @@ import "worldmonitor/market/v1/analyze_stock.proto";
 import "worldmonitor/market/v1/backtest_stock.proto";
 import "worldmonitor/market/v1/get_stock_analysis_history.proto";
 import "worldmonitor/market/v1/list_stored_stock_backtests.proto";
-import "worldmonitor/market/v1/list_crypto_sectors.proto";
-import "worldmonitor/market/v1/list_defi_tokens.proto";
-import "worldmonitor/market/v1/list_ai_tokens.proto";
-import "worldmonitor/market/v1/list_other_tokens.proto";
 import "worldmonitor/market/v1/get_fear_greed_index.proto";
 import "worldmonitor/market/v1/list_earnings_calendar.proto";
 import "worldmonitor/market/v1/get_cot_positioning.proto";
 import "worldmonitor/market/v1/get_insider_transactions.proto";
 import "worldmonitor/market/v1/get_market_breadth_history.proto";
 import "worldmonitor/market/v1/get_gold_intelligence.proto";
-import "worldmonitor/market/v1/get_hyperliquid_flow.proto";
+import "worldmonitor/market/v1/get_perp_positioning.proto";
 import "worldmonitor/market/v1/get_physical_premiums.proto";
 import "worldmonitor/market/v1/get_physical_divergence_index.proto";
 
-// MarketService provides APIs for financial market data from Finnhub, Yahoo Finance, and CoinGecko.
+// MarketService provides APIs for financial market data from Finnhub and Yahoo Finance.
 service MarketService {
   option (sebuf.http.service_config) = {base_path: "/api/market/v1"};
 
   // Retrieve stock and index quotes for requested symbols, with prices, price changes, display names, sparklines and snapshot metadata for market monitoring.
   rpc ListMarketQuotes(ListMarketQuotesRequest) returns (ListMarketQuotesResponse) {
     option (sebuf.http.config) = {path: "/list-market-quotes", method: HTTP_METHOD_GET};
-  }
-
-  // ListCryptoQuotes returns price and 24h change for major coins or up to 25 CoinGecko ids from CoinPaprika or CoinGecko; 7d change and sparkline need CoinGecko.
-  rpc ListCryptoQuotes(ListCryptoQuotesRequest) returns (ListCryptoQuotesResponse) {
-    option (sebuf.http.config) = {path: "/list-crypto-quotes", method: HTTP_METHOD_GET};
   }
 
   // ListCommodityQuotes retrieves commodity price quotes. Reads the seeded
@@ -66,16 +54,6 @@ service MarketService {
   // GetSectorSummary returns daily percent change for 12 US sector ETFs (XLK, XLF, XLE and peers, plus SMH) from Finnhub quotes with a Yahoo Finance fallback.
   rpc GetSectorSummary(GetSectorSummaryRequest) returns (GetSectorSummaryResponse) {
     option (sebuf.http.config) = {path: "/get-sector-summary", method: HTTP_METHOD_GET};
-  }
-
-  // ListStablecoinMarkets returns price, peg deviation and status, market cap and volume for USDT, USDC, DAI, FDUSD and USDe, or up to 25 CoinGecko ids.
-  rpc ListStablecoinMarkets(ListStablecoinMarketsRequest) returns (ListStablecoinMarketsResponse) {
-    option (sebuf.http.config) = {path: "/list-stablecoin-markets", method: HTTP_METHOD_GET};
-  }
-
-  // ListEtfFlows returns price, volume and a volume-based flow estimate for 10 US spot bitcoin ETFs such as IBIT, FBTC and GBTC, via Alpha Vantage or Yahoo.
-  rpc ListEtfFlows(ListEtfFlowsRequest) returns (ListEtfFlowsResponse) {
-    option (sebuf.http.config) = {path: "/list-etf-flows", method: HTTP_METHOD_GET};
   }
 
   // GetCountryStockIndex returns a country's main stock index by ISO 3166-1 alpha-2 code, with last close, weekly percent change and currency from Yahoo Finance.
@@ -113,26 +91,6 @@ service MarketService {
     option (sebuf.http.config) = {path: "/list-stored-stock-backtests", method: HTTP_METHOD_GET};
   }
 
-  // ListCryptoSectors returns the average 24h price change of the tokens with data in eight crypto sectors, such as Layer 1, DeFi, AI and Memes, from CoinGecko.
-  rpc ListCryptoSectors(ListCryptoSectorsRequest) returns (ListCryptoSectorsResponse) {
-    option (sebuf.http.config) = {path: "/list-crypto-sectors", method: HTTP_METHOD_GET};
-  }
-
-  // ListDefiTokens returns USD price with 24h and 7d change for DeFi tokens such as Aave, Uniswap, Pendle and Lido, from CoinGecko with CoinPaprika fallback.
-  rpc ListDefiTokens(ListDefiTokensRequest) returns (ListDefiTokensResponse) {
-    option (sebuf.http.config) = {path: "/list-defi-tokens", method: HTTP_METHOD_GET};
-  }
-
-  // ListAiTokens returns USD price with 24h and 7d change for AI crypto tokens such as Bittensor, Render and Fetch.ai, from CoinGecko with CoinPaprika fallback.
-  rpc ListAiTokens(ListAiTokensRequest) returns (ListAiTokensResponse) {
-    option (sebuf.http.config) = {path: "/list-ai-tokens", method: HTTP_METHOD_GET};
-  }
-
-  // ListOtherTokens returns USD price with 24h and 7d change for trending tokens such as Aptos, Sui, Celestia and Ondo, from CoinGecko with CoinPaprika fallback.
-  rpc ListOtherTokens(ListOtherTokensRequest) returns (ListOtherTokensResponse) {
-    option (sebuf.http.config) = {path: "/list-other-tokens", method: HTTP_METHOD_GET};
-  }
-
   // Review the composite Fear & Greed sentiment index with available survey, market breadth and component inputs, including degraded-data flags for market context.
   rpc GetFearGreedIndex(GetFearGreedIndexRequest) returns (GetFearGreedIndexResponse) {
     option (sebuf.http.config) = {path: "/get-fear-greed-index", method: HTTP_METHOD_GET};
@@ -163,8 +121,8 @@ service MarketService {
     option (sebuf.http.config) = {path: "/get-gold-intelligence", method: HTTP_METHOD_GET};
   }
 
-  // GetHyperliquidFlow returns funding, open interest, 24h volume, basis and flow scores for Hyperliquid perps on crypto, metals, oil, gas and FX, every 5 min.
-  rpc GetHyperliquidFlow(GetHyperliquidFlowRequest) returns (GetHyperliquidFlowResponse) {
-    option (sebuf.http.config) = {path: "/get-hyperliquid-flow", method: HTTP_METHOD_GET};
+  // GetPerpPositioning returns funding, open interest, 24h volume, basis and positioning scores for commodity and FX perpetual contracts.
+  rpc GetPerpPositioning(GetPerpPositioningRequest) returns (GetPerpPositioningResponse) {
+    option (sebuf.http.config) = {path: "/get-perp-positioning", method: HTTP_METHOD_GET};
   }
 }

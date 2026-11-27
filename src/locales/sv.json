@@ -3,7 +3,6 @@
     "liveNews": "Live Nyheter",
     "markets": "Marknader",
     "heatmap": "Sektor värmekarta",
-    "crypto": "Krypto",
     "strategicPosture": "Strategic Posture",
     "cii": "Country Instability Index",
     "status": "Systemstatus",
@@ -26,7 +25,6 @@
     "latam": "Latinamerika",
     "asia": "Asien-Stillahavsområdet",
     "energy": "Energi & resurser",
-    "etfFlows": "Bitcoinfondflöden",
     "economic": "Ekonomiska indikatorer",
     "tradePolicy": "Handelspolitik",
     "macroSignals": "Bitcoinmarknadsförhållanden",
@@ -35,7 +33,6 @@
     "regulation": "AI-regleringspanel",
     "finRegulation": "Finansiell reglering",
     "serviceStatus": "Servicestatus",
-    "stablecoins": "Stablecoins",
     "deduction": "Bedöm situation",
     "techHubs": "Teknikhubbar",
     "techReadiness": "Teknikberedskapsindex",
@@ -761,15 +758,6 @@
         "5": "Normal aktivitet"
       }
     },
-    "stablecoins": {
-      "pegHealth": "Peg-hälsa",
-      "supplyVolume": "Utbud & volym",
-      "token": "Token",
-      "mcap": "Börsv.",
-      "vol24h": "24t volym",
-      "chg24h": "24h Ändr",
-      "infoTooltip": "<strong>Stablecoins</strong> Kopplingens hälsa, börsvärde och 24-timmarsvolym för de största USD-kopplade tokens (USDT, USDC, DAI, BUSD). En bruten koppling signalerar systemrisk."
-    },
     "status": {
       "updatedAt": "Uppdaterad {{time}}"
     },
@@ -1319,27 +1307,6 @@
       "revokedCount": "Återkallade föreskrifter ({{count}})",
       "lapsedCount": "Förfallna förslag ({{count}})"
     },
-    "etfFlows": {
-      "previousColumns": "Föregående kolumner",
-      "moreColumns": "Fler kolumner",
-      "unavailable": "data för börshandlade fonder är tillfälligt otillgängligt",
-      "netFlow": "Nettoflöde",
-      "estFlow": "Ber. flöde",
-      "totalVol": "Total volym",
-      "etfs": "Börshandlade fonder",
-      "netInflow": "NETTOINFLÖDE",
-      "netOutflow": "NETTOUTFLÖDE",
-      "netNeutral": "NETTONEUTRALT",
-      "table": {
-        "ticker": "Kortnamn",
-        "issuer": "Utgivare",
-        "estFlow": "Ber. flöde",
-        "volume": "Volym",
-        "change": "Förändring"
-      },
-      "rateLimited": "data för börshandlade fonder är tillfälligt otillgängligt (hastighetsbegränsad) — försöker igen snart",
-      "infoTooltip": "<strong>Bitcoin-fondflöden</strong> Spårar dagliga estimerade fondflöden för amerikanska spotbitcoin-börshandlade fonder:<ul><li>Inflödes-/utflödesriktning och magnitud</li><li>Volym och prisförändring per fond</li><li>Nettosamlat flöde över alla spårade fonder</li></ul>"
-    },
     "macroSignals": {
       "overall": "Totalt",
       "verdict": {
@@ -1349,12 +1316,7 @@
       "bullish": "{{count}}/{{total}} hausse",
       "signals": {
         "liquidity": "Likviditet",
-        "flow": "Flöde",
-        "regime": "Regim",
-        "btcTrend": "BTC-trend",
-        "hashRate": "Hashhastighet",
-        "fearGreed": "Rädsla &amp; Girighet",
-        "momentum": "Momentum"
+        "regime": "Regim"
       },
       "infoTooltip": "<strong>Bitcoin-marknadsförhållanden</strong> Instrumentpanel för sammansatt signal för Bitcoin-positionering och riskaptit:<ul><li><strong>Likviditet</strong>: Proxy för netto Fed-likviditet</li><li><strong>Flöde</strong>: BTC vs QQQ 5-dagars avkastning</li><li><strong>Regim</strong>: QQQ vs XLP-rotation (risk på/av)</li><li><strong>BTC-trend</strong>: Pris vs SMA50/200, Mayer Multiple</li><li><strong>Hash Rate</strong>: 30-dagars nätverkshashförändring</li><li><strong>Rädsla &amp; girighet</strong>: Marknadsentimentindex</li></ul>Den här panelen är för regim och positionering, inte bred makrodata."
     },
@@ -1585,23 +1547,11 @@
         "twentyDayTrend": "Premietrendad över tjugo handelsdagar"
       }
     },
-    "crypto": {
-      "infoTooltip": "<strong>Krypto</strong> Livepriser, 24-timmarsförändringar och volym för de största kryptovalutorna. Data från CoinGecko."
-    },
     "gulfEconomies": {
       "infoTooltip": "<strong>Gulf Economies</strong> Gulfstaternas aktieindex, växelkurser och oljepriser för Gulfsamarbetsrådet (Saudiarabien, UAE, Kuwait, Qatar, Bahrain, Oman)."
     },
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Global jämförelse av matvarukorgar i 24 länder — spårar konsumentprisinflation baserat på verkliga varor, bortom övergripande konsumentprisindex."
-    },
-    "defiTokens": {
-      "infoTooltip": "<strong>DeFi-tokens</strong> Priser och 24h/7d-utveckling för de största tokens inom decentraliserad finans — DEX:er, utlåningsplattformar och avkastningsprotokoll."
-    },
-    "aiTokens": {
-      "infoTooltip": "<strong>AI-tokens</strong> Priser och 24h/7d-utveckling för tokens inom AI och maskininlärning — beräkningsnätverk, decentraliserad AI-infrastruktur och dataprotokoll."
-    },
-    "altTokens": {
-      "infoTooltip": "<strong>Alt-tokens</strong> Priser och 24h/7d-utveckling för alternativa och framväxande kryptotokens utanför de största börsvärdena."
     },
     "stockAnalysis": {
       "infoTooltip": "<strong>Premium aktieanalys</strong> AI-driven analys av aktierna på din bevakningslista — köp/behåll/sälj-signaler, riktkurser, huvudrisker och katalysatorer som uppdateras dagligen."
@@ -1985,7 +1935,6 @@
       "title": "24/7-positionering",
       "infoTooltip": "<strong>24/7-positionering</strong> Perpetual contract positioneringsstress från Hyperliquid. Handlas dygnet runt, visar vad som byggs när traditionella marknader är stängda. Sammansatt poäng (0-100) från finansieringshastighet, volym, öppen ränta och spot-perp-basis. Grönt = långa överbelastade (hausseartad lutning), rött = korta överbelastade (baisseartad lutning).",
       "commodities": "RÅVAROR",
-      "crypto": "KRYPTO",
       "fx": "Utländsk valuta",
       "warmup": "Bygger basliner. Volym- och öppet intressehistorik fylls på under nästa timme.",
       "footer": "5 min · Hyperliquid-perps · 24/7"
@@ -3728,11 +3677,9 @@
     "noDataAvailable": "Inga data tillgängliga",
     "upstreamUnavailable": "Uppströms-API ej tillgängligt — automatiskt nytt försök",
     "loadingUcdpEvents": "Laddar UCDP-händelser",
-    "loadingStablecoins": "Laddar stablecoins...",
     "scanningThermalData": "Skannar termiska data",
     "calculatingExposure": "Beräknar exponering",
     "computingSignals": "Beräknar signaler...",
-    "loadingEtfData": "Laddar data för börshandlade fonder...",
     "loadingDisplacement": "Laddar förflyttningsdata",
     "loadingClimateData": "Laddar klimatdata",
     "failedTechReadiness": "Kunde inte ladda teknologisk beredskap",
@@ -3744,7 +3691,6 @@
     "failedMarketData": "Kunde inte ladda marknadsdata",
     "failedSectorData": "Kunde inte ladda sektorsdata",
     "failedCommodities": "Kunde inte ladda råvaror",
-    "failedCryptoData": "Kunde inte ladda kryptodata",
     "noNewsAvailable": "Inga nyheter tillgängliga",
     "noActiveTechHubs": "Inga aktiva teknikhubbar",
     "noActiveGeoHubs": "Inga aktiva geopolitiska hubbar",
@@ -3816,7 +3762,6 @@
     "sourceRegionMarkets": "Marknader och analys",
     "sourceRegionFixedIncomeFx": "Räntebärande värdepapper och valutaväxling",
     "sourceRegionCommodities": "Råvaror",
-    "sourceRegionCryptoDigital": "Krypto och digitalt",
     "sourceRegionCentralBanks": "Centralbanker och ekonomi",
     "sourceRegionDeals": "Affärer och företag",
     "sourceRegionFinRegulation": "Finansiell reglering",
@@ -3837,7 +3782,6 @@
     "panelCatMarkets": "Marknader",
     "panelCatFixedIncomeFx": "Räntebärande värdepapper och valutaväxling",
     "panelCatCommodities": "Råvaror",
-    "panelCatCryptoDigital": "Krypto & Digitalt",
     "panelCatCentralBanks": "Centralbanker & Ekonomi",
     "panelCatDeals": "Affärer & Institutionellt",
     "panelCatGulfMena": "Golf och Mellanöstern och Nordafrika",
@@ -4281,13 +4225,11 @@
     "preflightProRequired": "Pro-prenumeration krävs för att använda Widget Builder. Uppgradera för att låsa upp.",
     "examples": {
       "oilGold": "Visa dagens råoljepris jämfört med guld",
-      "cryptoMovers": "Skapa en widget för de bästa kryptorörelserna under de senaste 24 timmarna",
       "flightDelays": "Sammanfatta de värsta internationella flygförseningarna just nu",
       "conflictHotspots": "Kartlägg de senaste UCDP-konfliktkärnorna med korta etiketter"
     },
     "proExamples": {
       "interactiveChart": "Interaktiv Chart.js-diagram som jämför olje- och guldpriser",
-      "sortableTable": "Sortbar kryptopristabll med sökfilter",
       "animatedCounters": "Animerade räknare för viktiga ekonomiska indikatorer",
       "tabbedComparison": "Tabbad jämförelse av konflikthändelser efter region"
     }

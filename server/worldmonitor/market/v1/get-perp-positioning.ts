@@ -1,12 +1,12 @@
 import type {
   ServerContext,
-  GetHyperliquidFlowRequest,
-  GetHyperliquidFlowResponse,
-  HyperliquidAssetFlow,
+  GetPerpPositioningRequest,
+  GetPerpPositioningResponse,
+  PerpPositioningAsset,
 } from '../../../../src/generated/server/worldmonitor/market/v1/service_server';
 import { getCachedJson } from '../../../_shared/redis';
 
-const SEED_CACHE_KEY = 'market:hyperliquid:flow:v1';
+const SEED_CACHE_KEY = 'market:perp-positioning:v1';
 
 interface SeededAsset {
   symbol?: string;
@@ -49,10 +49,10 @@ function arr(a: number[] | undefined): number[] {
   return Array.isArray(a) ? a.filter((v) => Number.isFinite(v)) : [];
 }
 
-export async function getHyperliquidFlow(
+export async function getPerpPositioning(
   _ctx: ServerContext,
-  _req: GetHyperliquidFlowRequest,
-): Promise<GetHyperliquidFlowResponse> {
+  _req: GetPerpPositioningRequest,
+): Promise<GetPerpPositioningResponse> {
   try {
     const raw = await getCachedJson(SEED_CACHE_KEY, true) as SeededSnapshot | null;
     if (!raw?.assets || raw.assets.length === 0) {
@@ -67,7 +67,7 @@ export async function getHyperliquidFlow(
         unavailable: true,
       };
     }
-    const assets: HyperliquidAssetFlow[] = raw.assets.map((a) => ({
+    const assets: PerpPositioningAsset[] = raw.assets.map((a) => ({
       symbol: String(a.symbol ?? ''),
       display: String(a.display ?? ''),
       assetClass: String(a.class ?? ''),
@@ -100,7 +100,7 @@ export async function getHyperliquidFlow(
       unavailable: false,
     };
   } catch (err) {
-    console.error('[getHyperliquidFlow] Redis read or parse failed:', err instanceof Error ? err.message : err);
+    console.error('[getPerpPositioning] Redis read or parse failed:', err instanceof Error ? err.message : err);
     return {
       ts: '0',
       fetchedAt: '',

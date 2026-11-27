@@ -43,7 +43,6 @@ const PUBLISHER_LINK_DOMAINS = {
   'bloomberg': ['bloomberg.com'],
   'brookings': ['brookings.edu'],
   'business-wire': ['businesswire.com'],
-  'cb-insights': ['cbinsights.com'],
   'chatham-house': ['chathamhouse.org'],
   'cnbc': ['cnbc.com'],
   'csis': ['csis.org'],

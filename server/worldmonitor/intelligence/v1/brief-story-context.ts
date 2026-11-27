@@ -74,7 +74,7 @@ export async function assembleBriefStoryContext(
     getCachedJson('forecast:predictions:v2', true),
     getCachedJson('market:stocks-bootstrap:v1', true),
     getCachedJson('market:commodities-bootstrap:v1', true),
-    getCachedJson('economic:macro-signals:v1', true),
+    getCachedJson('economic:macro-signals:v2', true),
     countryKey ? getCachedJson(countryKey, true) : Promise.resolve(null),
   ]);
 

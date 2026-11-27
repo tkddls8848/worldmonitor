@@ -39,8 +39,8 @@ export const VARIANT_META: { full: VariantMeta; [k: string]: VariantMeta } = {
   },
   finance: {
     title: 'Finance Monitor - Real-Time Markets & Trading Dashboard',
-    description: 'Real-time finance and trading dashboard tracking global markets, stock exchanges, central banks, commodities, forex, crypto, and economic indicators worldwide.',
-    keywords: 'finance dashboard, trading dashboard, stock market, forex, commodities, central banks, crypto, economic indicators, market news, financial centers, stock exchanges, bonds, derivatives, fintech, hedge funds, IPO tracker, market analysis',
+    description: 'Real-time finance and trading dashboard tracking global markets, stock exchanges, central banks, commodities and forex, and economic indicators worldwide.',
+    keywords: 'finance dashboard, trading dashboard, stock market, forex, commodities, central banks, economic indicators, market news, financial centers, stock exchanges, bonds, derivatives, fintech, hedge funds, IPO tracker, market analysis',
     url: 'https://finance.worldmonitor.app/dashboard',
     siteName: 'Finance Monitor',
     shortName: 'FinanceMonitor',
@@ -53,7 +53,6 @@ export const VARIANT_META: { full: VariantMeta; [k: string]: VariantMeta } = {
       'Central bank monitoring',
       'Commodity price tracking',
       'Forex & currency news',
-      'Crypto & digital assets',
       'Economic indicator alerts',
       'IPO & earnings tracking',
       'Financial center mapping',

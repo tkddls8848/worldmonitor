@@ -91,7 +91,7 @@ const BOOT_LINES = [
   'establishing uplink to api.worldmonitor.app',
   'minting anonymous session',
   'loading fast tier: quotes · seismic · insights · posture',
-  'loading slow tier: conflict · climate · crypto · macro',
+  'loading slow tier: conflict · climate · · macro',
   'loading news digest: 18 categories',
   'resolving live video channels',
   'calibrating braille projection',

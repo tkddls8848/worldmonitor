@@ -31,7 +31,6 @@ const INPUT_POLICIES = Object.freeze([
   { key: 'seismology:earthquakes:v1', arrayField: 'earthquakes', maxAgeMin: 30, allowLegacyArray: true },
   { key: 'market:stocks-bootstrap:v1', arrayField: 'quotes', maxAgeMin: 30 },
   { key: 'market:commodities-bootstrap:v1', arrayField: 'quotes', maxAgeMin: 30 },
-  { key: 'market:crypto:v1', arrayField: 'quotes', maxAgeMin: 30 },
   { key: 'news:insights:v1', arrayField: 'topStories', maxAgeMin: 30 },
 ]);
 
@@ -436,7 +435,7 @@ function generateEscalationTitle(cluster) {
 
 // ── Adapter: Economic ───────────────────────────────────────
 const SANCTIONS_KEYWORDS = /\b(sanction|tariff|embargo|trade\s+war|ban|restrict|block|seize|freeze\s+assets|export\s+control|blacklist|decouple|decoupl|subsid|dumping|countervail|quota|levy|excise|retaliat|currency\s+manipulat|capital\s+controls|swift|cbdc|petrodollar|de-?dollar|opec|cartel|price\s+cap|oil|crude|commodity|shortage|stockpile|strategic\s+reserve|supply\s+chain|rare\s+earth|chip\s+ban|semiconductor|economic\s+warfare|financial\s+weapon)\b/i;
-const COMMODITY_SYMBOLS = new Set(['CL=F', 'GC=F', 'NG=F', 'SI=F', 'HG=F', 'ZW=F', 'BTC-USD', 'BZ=F', 'ETH-USD', 'KC=F', 'SB=F', 'CT=F', 'CC=F']);
+const COMMODITY_SYMBOLS = new Set(['CL=F', 'GC=F', 'NG=F', 'SI=F', 'HG=F', 'ZW=F', 'BZ=F', 'KC=F', 'SB=F', 'CT=F', 'CC=F']);
 const SIGNIFICANT_CHANGE_PCT = 1.5;
 
 export function collectEconomicSignals(markets, newsClusters) {
@@ -482,7 +481,7 @@ export function collectEconomicSignals(markets, newsClusters) {
 const KNOWN_ENTITIES = /\b(Iran|Russia|China|North Korea|Venezuela|Cuba|Syria|Myanmar|Belarus|Turkey|Saudi|OPEC|EU|USA?|United States|India)\b(?![A-Za-z])/i;
 const GENERIC_ENTITY_KEYS = new Set([
   'sanctions', 'trade', 'tariff', 'commodity', 'currency', 'energy',
-  'embargo', 'semiconductor', 'crypto', 'inflation',
+  'embargo', 'semiconductor', 'inflation',
 ]);
 
 function generateEconomicTitle(cluster, entityKey) {
@@ -701,8 +700,8 @@ function clusterByEntity(signals) {
   ];
   const SINGLE_KEYS = new Set([
     'oil', 'gas', 'sanctions', 'trade', 'tariff', 'commodity', 'currency',
-    'energy', 'wheat', 'crude', 'gold', 'silver', 'copper', 'bitcoin',
-    'crypto', 'inflation', 'embargo', 'opec', 'semiconductor', 'dollar',
+    'energy', 'wheat', 'crude', 'gold', 'silver', 'copper',
+    'inflation', 'embargo', 'opec', 'semiconductor', 'dollar',
     'yuan', 'euro',
   ]);
   const tokenMap = new Map();
@@ -853,8 +852,7 @@ async function computeCorrelation() {
 
   const stockQuotes = data['market:stocks-bootstrap:v1']?.quotes ?? [];
   const commodityQuotes = data['market:commodities-bootstrap:v1']?.quotes ?? [];
-  const cryptoQuotes = data['market:crypto:v1']?.quotes ?? [];
-  const allMarkets = [...stockQuotes, ...commodityQuotes, ...cryptoQuotes];
+  const allMarkets = [...stockQuotes, ...commodityQuotes];
 
   const insights = data['news:insights:v1'];
   const newsClusters = (insights?.topStories ?? []).map(s => ({

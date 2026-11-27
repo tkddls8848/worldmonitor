@@ -18,7 +18,7 @@ function makePanelSettings(): Record<string, PanelConfig> {
     'latest-brief': { name: 'Latest Brief', enabled: true, priority: 1 },
     'gdelt-intel': { name: 'Live Intelligence', enabled: true, priority: 2 },
     politics: { name: 'World News', enabled: true, priority: 2 },
-    crypto: { name: 'Crypto', enabled: false, priority: 3 },
+    science: { name: "Science", enabled: false, priority: 3 },
   };
 }
 

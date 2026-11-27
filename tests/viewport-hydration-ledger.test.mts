@@ -52,13 +52,13 @@ describe('ViewportHydrationLedger', () => {
 
   it('treats a remounted panel instance as unloaded', () => {
     const ledger = new ViewportHydrationLedger();
-    const panels: Record<string, object> = { crypto: {} };
+    const panels: Record<string, object> = { markets: {} };
     ledger.beginPass(false);
-    ledger.markServed(panels, ['crypto']);
+    ledger.markServed(panels, ['markets']);
     assert.equal(ledger.collectUnserved(panels, () => true).size, 0);
 
-    panels.crypto = {};
-    assert.deepEqual([...ledger.collectUnserved(panels, () => true)], ['crypto']);
+    panels.markets = {};
+    assert.deepEqual([...ledger.collectUnserved(panels, () => true)], ['markets']);
   });
 
   it('keeps entries across passes with the same context', () => {

@@ -252,7 +252,7 @@ describe('executeBatch handler', () => {
       operations: [
         { id: 'to', path: '/api/market/v1/list-market-quotes' },
         { id: 'net', path: '/api/market/v1/get-fear-greed-index' },
-        { id: 'bad', path: '/api/market/v1/list-crypto-quotes' },
+        { id: 'bad', path: '/api/market/v1/list-commodity-quotes' },
       ],
     });
 

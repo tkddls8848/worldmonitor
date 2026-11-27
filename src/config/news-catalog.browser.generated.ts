@@ -1832,94 +1832,6 @@ export const BROWSER_NEWS_CATALOG: BrowserCatalog = {
           "url": "https://news.google.com/rss/search?q=(\"commodity+trading\"+OR+\"futures+market\"+OR+CME+OR+NYMEX+OR+COMEX)+when:2d&hl=en-US&gl=US&ceid=US:en"
         }
       ],
-      "crypto": [
-        {
-          "name": "CoinDesk",
-          "url": "https://www.coindesk.com/arc/outboundfeeds/rss/"
-        },
-        {
-          "name": "Cointelegraph",
-          "url": "https://cointelegraph.com/rss"
-        },
-        {
-          "name": "The Block",
-          "url": "https://news.google.com/rss/search?q=site:theblock.co+when:1d&hl=en-US&gl=US&ceid=US:en"
-        },
-        {
-          "name": "Crypto News",
-          "url": "https://news.google.com/rss/search?q=(bitcoin+OR+ethereum+OR+crypto+OR+\"digital+assets\")+when:1d&hl=en-US&gl=US&ceid=US:en"
-        },
-        {
-          "name": "DeFi News",
-          "url": "https://news.google.com/rss/search?q=(DeFi+OR+\"decentralized+finance\"+OR+DEX+OR+\"yield+farming\")+when:3d&hl=en-US&gl=US&ceid=US:en"
-        },
-        {
-          "name": "Decrypt",
-          "url": "https://decrypt.co/feed"
-        },
-        {
-          "name": "The Defiant",
-          "url": "https://thedefiant.io/feed"
-        },
-        {
-          "name": "Bitcoin Magazine",
-          "url": "https://bitcoinmagazine.com/feed"
-        },
-        {
-          "name": "DL News",
-          "url": "https://news.google.com/rss/search?q=site:dlnews.com+when:3d&hl=en-US&gl=US&ceid=US:en"
-        },
-        {
-          "name": "CryptoSlate",
-          "url": "https://cryptoslate.com/feed/"
-        },
-        {
-          "name": "Unchained",
-          "url": "https://unchainedcrypto.com/feed/"
-        },
-        {
-          "name": "Wu Blockchain",
-          "url": "https://news.google.com/rss/search?q=site:wublockchain.com+when:7d&hl=en-US&gl=US&ceid=US:en"
-        },
-        {
-          "name": "Messari",
-          "url": "https://news.google.com/rss/search?q=site:messari.io+when:3d&hl=en-US&gl=US&ceid=US:en"
-        },
-        {
-          "name": "Bloomberg Crypto",
-          "url": "https://news.google.com/rss/search?q=bloomberg+crypto+when:1d&hl=en-US&gl=US&ceid=US:en"
-        },
-        {
-          "name": "Chainwire",
-          "url": "https://chainwire.org/feed/"
-        },
-        {
-          "name": "Coinbase Blog",
-          "url": "https://news.google.com/rss/search?q=site%3Acoinbase.com%2Fblog%20when%3A7d&hl=en-US&gl=US&ceid=US:en"
-        },
-        {
-          "name": "Binance Announcements",
-          "url": "https://news.google.com/rss/search?q=site%3Abinance.com%2Fen%2Fsupport%2Fannouncement%20when%3A3d&hl=en-US&gl=US&ceid=US:en"
-        },
-        {
-          "name": "Jin10",
-          "url": "https://news.google.com/rss/search?q=site%3Ajin10.com%20when%3A1d&hl=zh-CN&gl=CN&ceid=CN:zh-Hans",
-          "lang": "zh",
-          "digestLang": "zh"
-        },
-        {
-          "name": "Reuters Crypto",
-          "url": "https://news.google.com/rss/search?q=reuters+crypto+when:1d&hl=en-US&gl=US&ceid=US:en"
-        },
-        {
-          "name": "NFT News",
-          "url": "https://news.google.com/rss/search?q=(NFT+OR+\"non-fungible\")+when:3d&hl=en-US&gl=US&ceid=US:en"
-        },
-        {
-          "name": "Stablecoin Policy",
-          "url": "https://news.google.com/rss/search?q=(stablecoin+regulation+OR+\"stablecoin+bill\")+when:7d&hl=en-US&gl=US&ceid=US:en"
-        }
-      ],
       "centralbanks": [
         {
           "name": "Federal Reserve",
@@ -2010,10 +1922,6 @@ export const BROWSER_NEWS_CATALOG: BrowserCatalog = {
         {
           "name": "Banking Rules",
           "url": "https://news.google.com/rss/search?q=(Basel%20OR%20%22capital%20requirements%22%20OR%20%22banking%20regulation%22)%20when%3A7d&hl=en-US&gl=US&ceid=US:en"
-        },
-        {
-          "name": "Crypto Regulation",
-          "url": "https://news.google.com/rss/search?q=(crypto+regulation+OR+\"digital+asset\"+regulation+OR+\"stablecoin\"+regulation)+when:7d&hl=en-US&gl=US&ceid=US:en"
         }
       ],
       "institutional": [
@@ -2719,7 +2627,6 @@ export const BROWSER_NEWS_CATALOG: BrowserCatalog = {
       "forex",
       "bonds",
       "commodities",
-      "crypto",
       "centralbanks",
       "economic",
       "ipo",

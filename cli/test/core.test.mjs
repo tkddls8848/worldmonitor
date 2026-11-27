@@ -123,10 +123,10 @@ describe('planRequest — generic MCP', () => {
   });
 
   it('builds a tools/call for an arbitrary tool', () => {
-    const plan = planRequest(parseArgs(['call', 'get_market_data', '--asset_class', 'crypto']));
+    const plan = planRequest(parseArgs(['call', 'get_market_data', '--asset_class', 'equity']));
     assert.deepEqual(rpcOf(plan).params, {
       name: 'get_market_data',
-      arguments: { asset_class: 'crypto' },
+      arguments: { asset_class: 'equity' },
     });
   });
 

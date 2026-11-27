@@ -1,15 +1,14 @@
-// Markets: indices and commodities with sparklines, crypto, sector heatmap,
-// and a macro strip (signals verdict, fear & greed, ETF flows, stablecoins).
+// Markets quotes, sector performance, and macro indicators.
 import { mix } from '../term/ansi.mjs';
 import { ATTR } from '../term/screen.mjs';
 import { rect, splitH, splitV } from '../ui/layout.mjs';
 import { gauge, heading, kv, label, panel, segments, sparkline } from '../ui/widgets.mjs';
-import { fmtNum, fmtPct, fmtPrice, quoteGroups } from '../data/select.mjs';
+import { fmtPct, fmtPrice, quoteGroups } from '../data/select.mjs';
 import { PaneView } from './base.mjs';
 
 export class MarketsView extends PaneView {
   constructor(app) {
-    super(app, { id: 'markets', label: 'Markets', paneIds: ['quotes', 'crypto'], sources: ['fast', 'slow'] });
+    super(app, { id: 'markets', label: 'Markets', paneIds: ['quotes'], sources: ['fast', 'slow'] });
   }
 
   quoteRows() {
@@ -20,28 +19,16 @@ export class MarketsView extends PaneView {
     return rows;
   }
 
-  cryptoRows() {
-    const g = quoteGroups(this.data);
-    const rows = [...g.crypto];
-    if (g.defi.length) rows.push({ header: 'DeFi' }, ...g.defi);
-    if (g.ai.length) rows.push({ header: 'AI tokens' }, ...g.ai);
-    if (g.other.length) rows.push({ header: 'Other' }, ...g.other);
-    return rows;
-  }
-
   render(ctx, r) {
     const wide = r.w >= 130;
     const [left, right] = splitH(r, [wide ? '46%' : '55%', 'fill']);
-    const [quotesR] = [left];
-    const [cryptoR, bottom] = splitV(right, ['52%', 'fill']);
-    const [sectorsR, macroR] = wide ? splitH(bottom, ['50%', 'fill']) : splitV(bottom, ['50%', 'fill']);
-    this.renderQuotes(ctx, quotesR, 'quotes', 'Markets', this.quoteRows());
-    this.renderQuotes(ctx, cryptoR, 'crypto', 'Crypto', this.cryptoRows(), { changeKey: 'change24h' });
+    const [sectorsR, macroR] = splitV(right, ['50%', 'fill']);
+    this.renderQuotes(ctx, left, 'quotes', 'Markets', this.quoteRows());
     this.renderSectors(ctx, sectorsR);
     this.renderMacro(ctx, macroR);
   }
 
-  renderQuotes(ctx, r, pane, title, rows, opts = {}) {
+  renderQuotes(ctx, r, pane, title, rows) {
     const { t } = ctx;
     const inner = panel(ctx, r, { title, focused: this.isFocused(pane), right: `${rows.filter((x) => !x.header).length} quotes`, onClick: () => this.focusPane(pane) });
     this.lists[pane].draw(
@@ -50,7 +37,7 @@ export class MarketsView extends PaneView {
       rows,
       (q, _i, { width, selected }) => {
         if (q.header) return [{ text: ` ${q.header.toUpperCase()}`, fg: t.accent, attr: ATTR.BOLD }];
-        const ch = Number(q.change ?? q[opts.changeKey || 'change']) || 0;
+        const ch = Number(q.change) || 0;
         const color = ch > 0 ? t.good : ch < 0 ? t.bad : t.dim;
         const nameW = Math.min(16, Math.max(8, Math.floor(width * 0.22)));
         const name = String(q.display || q.symbol || q.name || '').slice(0, nameW).padEnd(nameW);
@@ -104,8 +91,6 @@ export class MarketsView extends PaneView {
     const inner = panel(ctx, r, { title: 'Macro & flows' });
     const m = this.data.macroSignals;
     const fg = this.data.fearGreedIndex;
-    const etf = this.data.etfFlows;
-    const st = this.data.stablecoinMarkets;
     const es = this.data.economicStress;
     let y = inner.y;
     const line = (segs) => {
@@ -143,20 +128,6 @@ export class MarketsView extends PaneView {
       const score = Number(fg.composite.score) || 0;
       line([{ text: 'fear & greed  ', fg: t.dim }, { text: `${Math.round(score)} ${fg.composite.label || ''}`, fg: score < 40 ? t.bad : score > 60 ? t.good : t.warn, attr: ATTR.BOLD }]);
       if (y < inner.y + inner.h) gauge(ctx, inner.x, y++, Math.min(inner.w, 40), score / 100, { fg: score < 40 ? t.bad : score > 60 ? t.good : t.warn });
-    }
-    if (etf?.summary) {
-      const sum = etf.summary;
-      line([
-        { text: 'ETF flows     ', fg: t.dim },
-        { text: `${String(sum.netDirection || '').toUpperCase()} `, fg: /in/i.test(sum.netDirection) ? t.good : t.bad, attr: ATTR.BOLD },
-        { text: `est ${fmtNum(sum.totalEstFlow)} · ${sum.inflowCount ?? 0} in / ${sum.outflowCount ?? 0} out`, fg: t.text },
-      ]);
-    }
-    if (st?.summary) {
-      line([
-        { text: 'stablecoins   ', fg: t.dim },
-        { text: `${fmtNum(st.summary.totalMarketCap)} cap · ${st.summary.depeggedCount || 0} depegged · ${st.summary.healthStatus || ''}`, fg: st.summary.depeggedCount ? t.warn : t.text },
-      ]);
     }
     if (es) {
       line([{ text: 'econ stress   ', fg: t.dim }, { text: `${es.compositeScore} ${es.label || ''}`, fg: /low/i.test(es.label) ? t.good : /high/i.test(es.label) ? t.bad : t.warn, attr: ATTR.BOLD }]);

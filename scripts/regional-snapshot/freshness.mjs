@@ -36,7 +36,7 @@ export const FRESHNESS_REGISTRY = [
   { key: 'supply_chain:transit-summaries:v1',    maxAgeMin: 30,    feedsAxes: ['maritime_access'], metaKey: 'seed-meta:supply_chain:transit-summaries' },
   { key: 'intelligence:cross-source-signals:v1', maxAgeMin: 45,    feedsAxes: ['coercive_pressure', 'evidence'], metaKey: 'seed-meta:intelligence:cross-source-signals' },
   { key: 'relay:oref:history:v1',                maxAgeMin: 15,    feedsAxes: ['coercive_pressure', 'triggers'], metaKey: 'seed-meta:relay:oref:history' },
-  { key: 'economic:macro-signals:v1',            maxAgeMin: 60,    feedsAxes: ['capital_stress'] },
+  { key: 'economic:macro-signals:v2',            maxAgeMin: 60,    feedsAxes: ['capital_stress'] },
   { key: 'economic:national-debt:v1',            maxAgeMin: 86400, feedsAxes: ['capital_stress'], metaKey: 'seed-meta:economic:national-debt' }, // monthly seed (30d cron), 60d window absorbs one missed run — mirrors api/health.js nationalDebt. metaKey is the primary freshness source (payload's seededAt is also recognized by extractTimestamp as a fallback).
   { key: 'economic:stress-index:v1',             maxAgeMin: 120,   feedsAxes: ['capital_stress'] },
   { key: 'resilience:static:index:v1',           maxAgeMin: 576000, feedsAxes: ['energy_vulnerability'], metaKey: 'seed-meta:resilience:static' }, // annual static snapshot; country records behind this index are the audited import-dependency producer. The compute module reads the derived resilience:static:energy-import:v1 projection hydrated at snapshot load.

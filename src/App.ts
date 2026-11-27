@@ -63,9 +63,7 @@ import { initBreakingNewsAlerts, destroyBreakingNewsAlerts } from '@/services/br
 import { markLcpDebug } from '@/utils/lcp-debug';
 import { safeStorageGet, safeStorageSet } from '@/utils/safe-storage';
 import type { ServiceStatusPanel } from '@/components/ServiceStatusPanel';
-import type { StablecoinPanel } from '@/components/StablecoinPanel';
 import type { EnergyCrisisPanel } from '@/components/EnergyCrisisPanel';
-import type { ETFFlowsPanel } from '@/components/ETFFlowsPanel';
 import type { MacroSignalsPanel } from '@/components/MacroSignalsPanel';
 import type { FearGreedPanel } from '@/components/FearGreedPanel';
 import type { HormuzPanel } from '@/components/HormuzPanel';
@@ -543,14 +541,6 @@ export class App {
       const panel = this.state.panels['hormuz-tracker'] as HormuzPanel | undefined;
       if (panel) primeTask('hormuz-tracker', () => panel.fetchData());
     }
-    if (shouldPrime('etf-flows')) {
-      const panel = this.state.panels['etf-flows'] as ETFFlowsPanel | undefined;
-      if (panel) primeTask('etf-flows', () => panel.fetchData());
-    }
-    if (shouldPrime('stablecoins')) {
-      const panel = this.state.panels.stablecoins as StablecoinPanel | undefined;
-      if (panel) primeTask('stablecoins', () => panel.fetchData());
-    }
     if (shouldPrime('energy-crisis')) {
       const panel = this.state.panels['energy-crisis'] as EnergyCrisisPanel | undefined;
       if (panel) primeTask('energy-crisis', () => panel.fetchData());
@@ -684,7 +674,7 @@ export class App {
       const panel = this.state.panels['news-market-correlation'] as NewsMarketCorrelationPanel | undefined;
       if (panel) primeTask('news-market-correlation', () => panel.fetchData());
     }
-    if (shouldPrimeAny(['markets', 'heatmap', 'commodities', 'crypto', 'energy-complex'])) {
+    if (shouldPrimeAny(['markets', 'heatmap', 'commodities', 'energy-complex'])) {
       primeTask('markets', () => this.dataLoader.loadMarkets());
     }
     if (shouldPrime('polymarket')) {
@@ -2909,7 +2899,7 @@ export class App {
           name: 'markets',
           fn: () => this.dataLoader.loadMarkets(),
           intervalMs: REFRESH_INTERVALS.markets,
-          condition: () => this.isAnyPanelNearViewport(['markets', 'heatmap', 'commodities', 'crypto', 'crypto-heatmap', 'defi-tokens', 'ai-tokens', 'other-tokens']),
+          condition: () => this.isAnyPanelNearViewport(['markets', 'heatmap', 'commodities']),
         },
         {
           name: 'predictions',
@@ -2990,22 +2980,10 @@ export class App {
       () => this.isPanelNearViewport('service-status')
     );
     this.refreshScheduler.scheduleRefresh(
-      'stablecoins',
-      () => (this.state.panels.stablecoins as StablecoinPanel).fetchData(),
-      REFRESH_INTERVALS.stablecoins,
-      () => this.isPanelNearViewport('stablecoins')
-    );
-    this.refreshScheduler.scheduleRefresh(
       'energy-crisis',
       () => (this.state.panels['energy-crisis'] as EnergyCrisisPanel).fetchData(),
       REFRESH_INTERVALS.energyCrisis,
       () => this.isPanelNearViewport('energy-crisis')
-    );
-    this.refreshScheduler.scheduleRefresh(
-      'etf-flows',
-      () => (this.state.panels['etf-flows'] as ETFFlowsPanel).fetchData(),
-      REFRESH_INTERVALS.etfFlows,
-      () => this.isPanelNearViewport('etf-flows')
     );
     this.refreshScheduler.scheduleRefresh(
       'macro-signals',

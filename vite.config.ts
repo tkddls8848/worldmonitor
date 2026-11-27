@@ -78,7 +78,7 @@ const LAZY_HTML_PRELOAD_RE = new RegExp(
 const PANEL_CLUSTER: Record<string, PanelChunkName> = {
   // Markets / equities / crypto positioning
   AAIISentiment: 'panels-markets', CotPositioning: 'panels-markets',
-  ETFFlows: 'panels-markets', EarningsCalendar: 'panels-markets', MaterialEvents: 'panels-markets',
+  EarningsCalendar: 'panels-markets', MaterialEvents: 'panels-markets',
   EconomicCalendar: 'panels-markets', FearGreed: 'panels-markets',
   Fx: 'panels-markets',
   GoldIntelligence: 'panels-markets', LiquidityShifts: 'panels-markets',
@@ -86,7 +86,7 @@ const PANEL_CLUSTER: Record<string, PanelChunkName> = {
   MarketBreadth: 'panels-markets', MarketImplications: 'panels-markets',
   NewsMarketCorrelation: 'panels-markets',
   NqCatalysts: 'panels-markets', NqPulse: 'panels-markets',
-  Positioning: 'panels-markets', Stablecoin: 'panels-markets',
+  Positioning: 'panels-markets',
   StockAnalysis: 'panels-markets', StockBacktest: 'panels-markets',
   YieldCurve: 'panels-markets',
   // Energy / commodities / supply infra

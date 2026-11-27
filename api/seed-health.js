@@ -76,9 +76,7 @@ const SEED_DOMAINS = {
   // Phase 2 — Parameterized endpoints
   'unrest:events':            { key: 'seed-meta:unrest:events',            intervalMin: 15 },
   'cyber:threats':            { key: 'seed-meta:cyber:threats',            intervalMin: 240 },
-  'market:crypto':            { key: 'seed-meta:market:crypto',            intervalMin: 15 },
-  'market:hyperliquid-flow':  { key: 'seed-meta:market:hyperliquid-flow',  intervalMin: 5 }, // Railway cron 5min via seed-bundle-market-backup
-  'market:etf-flows':         { key: 'seed-meta:market:etf-flows',         intervalMin: 30 },
+  'market:perp-positioning':  { key: 'seed-meta:market:hyperliquid-flow',  intervalMin: 5 }, // Five-minute cadence via seed-bundle-market-backup
   // The bundle polls every 30min, but seed-health classifies at intervalMin*2.
   // Use half of /api/health's 180min alarm budget so both operator surfaces agree.
   'market:china-corporate-disclosures': { key: 'seed-meta:market:china-corporate-disclosures', intervalMin: 90 },
@@ -86,7 +84,6 @@ const SEED_DOMAINS = {
   // this member hourly, so 90min still tolerates one missed run.
   'market:china-stock-connect': { key: 'seed-meta:market:china-stock-connect', intervalMin: 90 },
   'market:gulf-quotes':       { key: 'seed-meta:market:gulf-quotes',       intervalMin: 15 },
-  'market:stablecoins':       { key: 'seed-meta:market:stablecoins',       intervalMin: 30 },
   'shared:fx-rates':          { key: 'seed-meta:shared:fx-rates',          intervalMin: 1800 }, // 60h staleness budget in api/health.js
   // Phase 3 — Hybrid endpoints
   'natural:events':           { key: 'seed-meta:natural:events',           intervalMin: 270 },

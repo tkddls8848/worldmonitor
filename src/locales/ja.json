@@ -340,7 +340,6 @@
     "sourceRegionMarkets": "市場・分析",
     "sourceRegionFixedIncomeFx": "固定収益・外国為替",
     "sourceRegionCommodities": "コモディティ",
-    "sourceRegionCryptoDigital": "暗号資産・デジタル",
     "sourceRegionCentralBanks": "中央銀行・経済",
     "sourceRegionDeals": "M&A・企業",
     "sourceRegionFinRegulation": "金融規制",
@@ -361,7 +360,6 @@
     "panelCatMarkets": "市場",
     "panelCatFixedIncomeFx": "固定収益・外国為替",
     "panelCatCommodities": "コモディティ",
-    "panelCatCryptoDigital": "暗号通貨・デジタル",
     "panelCatCentralBanks": "中央銀行・経済",
     "panelCatDeals": "ディール・機関投資",
     "panelCatGulfMena": "湾岸・中東北アフリカ",
@@ -407,15 +405,12 @@
     "supplyChain": "サプライチェーン",
     "finance": "金融",
     "tech": "テクノロジー",
-    "crypto": "暗号資産",
     "heatmap": "セクターヒートマップ",
     "ai": "AI・機械学習",
     "layoffs": "レイオフ追跡",
     "monitors": "マイモニター",
     "satelliteFires": "火災",
     "macroSignals": "ビットコイン市場動向",
-    "etfFlows": "ビットコイン投信フロー",
-    "stablecoins": "ステーブルコイン",
     "deduction": "状況推定",
     "ucdpEvents": "UCDP紛争イベント",
     "displacement": "難民と避難民",
@@ -1011,15 +1006,6 @@
       "leanYes": "やや Yes",
       "leanNo": "やや No",
       "tossUp": "五分五分"
-    },
-    "stablecoins": {
-      "pegHealth": "ペグ健全性",
-      "supplyVolume": "供給量 & 出来高",
-      "token": "トークン",
-      "mcap": "時価総額",
-      "vol24h": "24h出来高",
-      "chg24h": "24h変動",
-      "infoTooltip": "<strong>ステーブルコイン</strong> 主要な米ドル連動トークン（USDT、USDC、DAI、BUSD）のペッグの健全性、時価総額、24 時間出来高。ペッグ崩れはシステミックリスクの兆候です。"
     },
     "status": {
       "updatedAt": "{{time}}に更新"
@@ -1781,27 +1767,6 @@
     "prediction": {
       "infoTooltip": "<strong>予測市場</strong> リアルマネー予測市場:<ul><li>価格は群衆の確率推定を反映</li><li>取引量が多いほど信頼性の高いシグナル</li><li>地政学・時事問題に焦点</li></ul>ソース: Polymarket (polymarket.com)"
     },
-    "etfFlows": {
-      "previousColumns": "前の列",
-      "moreColumns": "他の列",
-      "unavailable": "上場投資信託データは一時的に利用できません",
-      "rateLimited": "上場投資信託データは一時的に利用できません(レート制限) — 間もなく再試行します",
-      "netFlow": "純フロー",
-      "estFlow": "推定フロー",
-      "totalVol": "総出来高",
-      "etfs": "上場投資信託",
-      "netInflow": "純流入",
-      "netOutflow": "純流出",
-      "netNeutral": "純中立",
-      "table": {
-        "ticker": "ティッカー",
-        "issuer": "発行体",
-        "estFlow": "推定フロー",
-        "volume": "出来高",
-        "change": "変動率"
-      },
-      "infoTooltip": "<strong>Bitcoin fund flows</strong> 米国現物Bitcoin上場投資信託の日次推定ファンドフローを追跡します:<ul><li>流入/流出方向および規模</li><li>ファンドあたりのボリュームおよび価格変動</li><li>追跡対象の全ファンド間のネット集計フロー</li></ul>"
-    },
     "macroSignals": {
       "overall": "総合",
       "verdict": {
@@ -1811,12 +1776,7 @@
       "bullish": "{{count}}/{{total}} 強気",
       "signals": {
         "liquidity": "流動性",
-        "flow": "フロー",
-        "regime": "市場環境",
-        "btcTrend": "BTCトレンド",
-        "hashRate": "ハッシュレート",
-        "momentum": "モメンタム",
-        "fearGreed": "恐怖 &amp; 貪欲"
+        "regime": "市場環境"
       },
       "infoTooltip": "<strong>Bitcoin market conditions</strong> Bitcoinポジショニングおよびリスク選好度のための複合シグナルダッシュボード:<ul><li><strong>Liquidity</strong>: ネットFED流動性プロキシ</li><li><strong>Flow</strong>: BTC vs QQQ 5日間リターン</li><li><strong>Regime</strong>: QQQ vs XLPローテーション(リスクオン/オフ)</li><li><strong>BTC Trend</strong>: 価格 vs SMA50/200、Mayer Multiple</li><li><strong>Hash Rate</strong>: 30日間ネットワークハッシュ変化</li><li><strong>Fear & Greed</strong>: 市場センチメント指数</li></ul>このパネルはレジームおよびポジショニング用であり、ブロード マクロデータ用ではありません。"
     },
@@ -1959,23 +1919,11 @@
         "twentyDayTrend": "20営業日プレミアムトレンド"
       }
     },
-    "crypto": {
-      "infoTooltip": "<strong>暗号資産</strong> 主要暗号資産のリアルタイム価格、24 時間変動、出来高。データ提供: CoinGecko。"
-    },
     "gulfEconomies": {
       "infoTooltip": "<strong>湾岸経済</strong> 湾岸協力会議加盟国（サウジアラビア、UAE、クウェート、カタール、バーレーン、オマーン）の株価指数、為替レート、石油価格。"
     },
     "groceryBasket": {
       "infoTooltip": "<strong>食料品指数</strong> 24カ国の食料品価格の世界的な比較 — 消費者物価指数を超える実際の消費者物価インフレを追跡。"
-    },
-    "defiTokens": {
-      "infoTooltip": "<strong>DeFi トークン</strong> 主要な分散型金融プロトコルトークンの価格と 24h/7d パフォーマンス — DEX、レンディング、イールドプロトコル。"
-    },
-    "aiTokens": {
-      "infoTooltip": "<strong>AI トークン</strong> AI・機械学習分野のトークンの価格と 24h/7d パフォーマンス — 計算ネットワーク、分散型 AI インフラ、データプロトコル。"
-    },
-    "altTokens": {
-      "infoTooltip": "<strong>アルトトークン</strong> 主要時価総額帯以外の代替・新興暗号資産トークンの価格と 24h/7d パフォーマンス。"
     },
     "stockAnalysis": {
       "infoTooltip": "<strong>プレミアム株式分析</strong> ウォッチリスト銘柄の AI 分析 — 買い/保有/売りシグナル、目標株価、主要リスク、カタリストを毎日更新。"
@@ -2353,7 +2301,6 @@
       "title": "24/7 ポジショニング",
       "infoTooltip": "<strong>24/7 ポジショニング</strong>Hyperliquidからの無期限契約ポジショニングストレス。24時間取引され、従来型市場がクローズしているときに何が構築されているかを示します。ファンディングレート、出来高、建玉、現物-永久先物ベーシスから算出した複合スコア (0-100)。緑 = ロング集中 (強気傾向)、赤 = ショート集中 (弱気傾向)。",
       "commodities": "商品",
-      "crypto": "暗号資産",
       "fx": "外国為替",
       "warmup": "ベースラインを構築中。出来高とオープンインタレストの履歴は今後1時間で表示されます。",
       "footer": "5分 · Hyperliquid永久先物 · 24/7"
@@ -4086,11 +4033,9 @@
     "noDataShort": "データなし",
     "upstreamUnavailable": "上流APIが利用不可 — 自動リトライ予定",
     "loadingUcdpEvents": "UCDPイベントを読み込み中",
-    "loadingStablecoins": "ステーブルコインを読み込み中...",
     "scanningThermalData": "熱データをスキャン中",
     "calculatingExposure": "露出度を計算中",
     "computingSignals": "シグナルを計算中...",
-    "loadingEtfData": "上場投資信託データを読み込み中...",
     "loadingDisplacement": "避難民データを読み込み中",
     "loadingClimateData": "気候データを読み込み中",
     "failedTechReadiness": "テック準備度データの読み込みに失敗",
@@ -4102,7 +4047,6 @@
     "failedMarketData": "市場データの読み込みに失敗",
     "failedSectorData": "セクターデータの読み込みに失敗",
     "failedCommodities": "コモディティの読み込みに失敗",
-    "failedCryptoData": "暗号資産データの読み込みに失敗",
     "rateLimitedMarket": "市場データが一時的に利用不可（レート制限中）— まもなく再試行します",
     "noNewsAvailable": "ニュースなし",
     "noActiveTechHubs": "アクティブなテックハブなし",
@@ -4259,13 +4203,11 @@
     "preflightProRequired": "Pro サブスクリプションが必要です。Widget Builder を使用するにはアップグレードしてください。",
     "examples": {
       "oilGold": "今日の原油価格と金の比較を表示",
-      "cryptoMovers": "過去 24 時間のトップ暗号資産変動ウィジェットを作成",
       "flightDelays": "現在の最悪の国際線遅延をまとめる",
       "conflictHotspots": "最新の UCDP 紛争ホットスポットを短いラベル付きでマップ表示"
     },
     "proExamples": {
       "interactiveChart": "原油と金の価格を比較するインタラクティブ Chart.js チャート",
-      "sortableTable": "検索フィルター付きの並び替え可能な暗号資産価格テーブル",
       "animatedCounters": "主要経済指標のアニメーション カウンター",
       "tabbedComparison": "地域別紛争イベントのタブ付き比較"
     }

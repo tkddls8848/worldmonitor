@@ -340,7 +340,6 @@
     "sourceRegionMarkets": "Thị trường & Phân tích",
     "sourceRegionFixedIncomeFx": "Thu nhập cố định và Ngoại hối",
     "sourceRegionCommodities": "Hàng hóa",
-    "sourceRegionCryptoDigital": "Tiền số & Kỹ thuật số",
     "sourceRegionCentralBanks": "Ngân hàng Trung ương & Kinh tế",
     "sourceRegionDeals": "Giao dịch & Doanh nghiệp",
     "sourceRegionFinRegulation": "Quản lý Tài chính",
@@ -361,7 +360,6 @@
     "panelCatMarkets": "Thị trường",
     "panelCatFixedIncomeFx": "Thu nhập cố định và Ngoại hối",
     "panelCatCommodities": "Hàng hóa",
-    "panelCatCryptoDigital": "Tiền mã hóa & Kỹ thuật số",
     "panelCatCentralBanks": "Ngân hàng Trung ương & Kinh tế",
     "panelCatDeals": "Giao dịch & Tổ chức",
     "panelCatGulfMena": "Vùng Vịnh và Trung Đông Bắc Phi",
@@ -407,15 +405,12 @@
     "supplyChain": "Chuỗi Cung ứng",
     "finance": "Tài chính",
     "tech": "Công nghệ",
-    "crypto": "Tiền mã hóa",
     "heatmap": "Bản đồ Nhiệt Ngành",
     "ai": "AI và machine learning",
     "layoffs": "Theo dõi Sa thải",
     "monitors": "Bộ theo dõi",
     "satelliteFires": "Cháy rừng",
     "macroSignals": "Điều kiện thị trường Bitcoin",
-    "etfFlows": "Luồng quỹ Bitcoin",
-    "stablecoins": "Stablecoin",
     "deduction": "Suy luận tình huống",
     "ucdpEvents": "Sự kiện Xung đột UCDP",
     "displacement": "Người tị nạn và các chuyển dời",
@@ -1011,15 +1006,6 @@
       "leanYes": "Nghiêng Có",
       "leanNo": "Nghiêng Không",
       "tossUp": "Ngang nhau"
-    },
-    "stablecoins": {
-      "pegHealth": "Sức khỏe Neo giá",
-      "supplyVolume": "Cung & Khối lượng",
-      "token": "Token",
-      "mcap": "Vốn hóa",
-      "vol24h": "KL 24h",
-      "chg24h": "Thay đổi 24h",
-      "infoTooltip": "<strong>Stablecoins</strong> Sức khỏe peg, vốn hóa thị trường và khối lượng 24h cho các token neo USD chính (USDT, USDC, DAI, BUSD). Peg bị vỡ tín hiệu rủi ro hệ thống."
     },
     "status": {
       "updatedAt": "Cập nhật {{time}}"
@@ -1781,27 +1767,6 @@
     "prediction": {
       "infoTooltip": "<strong>Thị trường Dự đoán</strong> Thị trường dự báo bằng tiền thật:<ul><li>Giá phản ánh ước tính xác suất của đám đông</li><li>Khối lượng cao hơn = tín hiệu đáng tin cậy hơn</li><li>Tập trung vào địa chính trị và sự kiện thời sự</li></ul>Nguồn: Polymarket (polymarket.com)"
     },
-    "etfFlows": {
-      "previousColumns": "Các cột trước",
-      "moreColumns": "Thêm cột",
-      "unavailable": "dữ liệu quỹ giao dịch trao đổi tạm thời không khả dụng",
-      "rateLimited": "dữ liệu quỹ giao dịch trao đổi tạm thời không khả dụng (giới hạn tốc độ) — thử lại trong giây lát",
-      "netFlow": "Dòng tiền Ròng",
-      "estFlow": "Dòng tiền Ước tính",
-      "totalVol": "Tổng KL",
-      "etfs": "Quỹ giao dịch trao đổi",
-      "netInflow": "DÒNG VÀO RÒNG",
-      "netOutflow": "DÒNG RA RÒNG",
-      "netNeutral": "DÒNG TRUNG LẬP",
-      "table": {
-        "ticker": "Mã",
-        "issuer": "Tổ chức Phát hành",
-        "estFlow": "Dòng tiền ƯT",
-        "volume": "Khối lượng",
-        "change": "Thay đổi"
-      },
-      "infoTooltip": "<strong>Bitcoin fund flows</strong> Theo dõi dòng chảy quỹ ước tính hàng ngày cho các quỹ Bitcoin spot Mỹ giao dịch trao đổi:<ul><li>Hướng và độ lớn của dòng chảy vào/ra</li><li>Khối lượng và thay đổi giá theo quỹ</li><li>Dòng chảy tổng hợp ròng trên tất cả các quỹ được theo dõi</li></ul>"
-    },
     "macroSignals": {
       "overall": "Tổng thể",
       "verdict": {
@@ -1811,12 +1776,7 @@
       "bullish": "{{count}}/{{total}} tích cực",
       "signals": {
         "liquidity": "Thanh khoản",
-        "flow": "Dòng tiền",
-        "regime": "Chế độ",
-        "btcTrend": "Xu hướng BTC",
-        "hashRate": "Tốc độ Hash",
-        "momentum": "Động lượng",
-        "fearGreed": "Sợ hãi & Tham lam"
+        "regime": "Chế độ"
       },
       "infoTooltip": "<strong>Bitcoin market conditions</strong> Bảng điều khiển tín hiệu tổng hợp cho định vị Bitcoin và sở thích rủi ro:<ul><li><strong>Liquidity</strong>: Proxy thannh khoản ròng Fed</li><li><strong>Flow</strong>: Lợi nhuận 5 ngày BTC so với QQQ</li><li><strong>Regime</strong>: Xoay vòng QQQ so với XLP (risk-on/off)</li><li><strong>BTC Trend</strong>: Giá so với SMA50/200, Mayer Multiple</li><li><strong>Hash Rate</strong>: Thay đổi hash mạng 30 ngày</li><li><strong>Fear & Greed</strong>: Chỉ số tâm lý thị trường</li></ul>Bảng điều khiển này dành cho định vị và chế độ, không phải dữ liệu vĩ mô rộng."
     },
@@ -1959,23 +1919,11 @@
         "twentyDayTrend": "Xu hướng phí bảo hiểm trong 20 ngày giao dịch"
       }
     },
-    "crypto": {
-      "infoTooltip": "<strong>Tiền số</strong> Giá trực tiếp, biến động 24h và khối lượng các tiền số chính. Dữ liệu từ CoinGecko."
-    },
     "gulfEconomies": {
       "infoTooltip": "<strong>Gulf Economies</strong> Chỉ số chứng khoán vùng Vịnh, tỷ giá hối đoái và giá dầu cho các nền kinh tế Hội đồng Hợp tác Vùng Vịnh (Ả Rập Xê Út, UAE, Kuwait, Qatar, Bahrain, Oman)."
     },
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> So sánh giá rổ hàng tạp hóa toàn cầu trên 24 quốc gia — theo dõi lạm phát hàng tiêu dùng thực tế vượt quá chỉ số giá tiêu dùng chính thức."
-    },
-    "defiTokens": {
-      "infoTooltip": "<strong>Token DeFi</strong> Giá và hiệu suất 24h/7d cho token các giao thức tài chính phi tập trung chính — sàn DEX, nền tảng cho vay và giao thức yield."
-    },
-    "aiTokens": {
-      "infoTooltip": "<strong>Token AI</strong> Giá và hiệu suất 24h/7d cho token ngành AI và học máy — mạng tính toán, hạ tầng AI phi tập trung và giao thức dữ liệu."
-    },
-    "altTokens": {
-      "infoTooltip": "<strong>Token Alt</strong> Giá và hiệu suất 24h/7d cho token thay thế và mới nổi ngoài nhóm vốn hóa lớn."
     },
     "stockAnalysis": {
       "infoTooltip": "<strong>Phân tích Cổ phiếu Premium</strong> Phân tích bằng AI cho cổ phiếu trong danh mục theo dõi — tín hiệu mua/giữ/bán, mục tiêu giá, rủi ro chính và chất xúc tác cập nhật hàng ngày."
@@ -2353,7 +2301,6 @@
       "title": "Định vị 24/7",
       "infoTooltip": "<strong>Định vị 24/7</strong> Căng thẳng định vị hợp đồng vĩnh viễn từ Hyperliquid. Giao dịch quanh đồng hồ, cho thấy những gì đang xây dựng khi các thị trường truyền thống đóng cửa. Điểm số tổng hợp (0-100) từ lãi suất tài trợ, khối lượng, lãi suất mở và cơ sở spot-perp. Xanh = longs tập trung (thiên về tăng giá), đỏ = shorts tập trung (thiên về giảm giá).",
       "commodities": "HÀNG HÓA",
-      "crypto": "TIỀN Mã HÓA",
       "fx": "Tỷ giá hối đoái",
       "warmup": "Đang xây dựng cơ sở dữ liệu. Lịch sử khối lượng và lãi suất mở sẽ được điền vào trong giờ tiếp theo.",
       "footer": "5 phút · Hyperliquid perps · 24/7"
@@ -4086,11 +4033,9 @@
     "noDataShort": "Không có dữ liệu",
     "upstreamUnavailable": "API nguồn không khả dụng — sẽ tự động thử lại",
     "loadingUcdpEvents": "Đang tải sự kiện UCDP",
-    "loadingStablecoins": "Đang tải stablecoin...",
     "scanningThermalData": "Đang quét dữ liệu nhiệt",
     "calculatingExposure": "Đang tính toán phơi nhiễm",
     "computingSignals": "Đang tính toán tín hiệu...",
-    "loadingEtfData": "Đang tải dữ liệu quỹ giao dịch trao đổi...",
     "loadingDisplacement": "Đang tải dữ liệu di dời",
     "loadingClimateData": "Đang tải dữ liệu khí hậu",
     "failedTechReadiness": "Không thể tải dữ liệu sẵn sàng công nghệ",
@@ -4102,7 +4047,6 @@
     "failedMarketData": "Không thể tải dữ liệu thị trường",
     "failedSectorData": "Không thể tải dữ liệu ngành",
     "failedCommodities": "Không thể tải dữ liệu hàng hóa",
-    "failedCryptoData": "Không thể tải dữ liệu tiền mã hóa",
     "rateLimitedMarket": "Dữ liệu thị trường tạm thời không khả dụng (bị giới hạn tốc độ) — đang thử lại",
     "noNewsAvailable": "Không có tin tức",
     "noActiveTechHubs": "Không có trung tâm công nghệ hoạt động",
@@ -4259,13 +4203,11 @@
     "preflightProRequired": "Yêu cầu gói Pro để sử dụng Widget Builder. Nâng cấp để mở khóa.",
     "examples": {
       "oilGold": "Hiển thị giá dầu thô so với vàng hôm nay",
-      "cryptoMovers": "Tạo widget cho những tiền điện tử tăng giảm hàng đầu trong 24 giờ qua",
       "flightDelays": "Tóm tắt các chuyến bay bị trễ quốc tế tệ nhất hiện nay",
       "conflictHotspots": "Xem bản đồ các điểm nóng xung đột UCDP mới nhất với nhãn ngắn"
     },
     "proExamples": {
       "interactiveChart": "Biểu đồ Chart.js tương tác so sánh giá dầu và vàng",
-      "sortableTable": "Bảng giá tiền điện tử có thể sắp xếp với bộ lọc tìm kiếm",
       "animatedCounters": "Bộ đếm động cho các chỉ số kinh tế chính",
       "tabbedComparison": "So sánh theo tab các sự kiện xung đột theo khu vực"
     }

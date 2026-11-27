@@ -16,7 +16,6 @@ Railway 定时服务持续用从外部 API 预计算的数据刷新 Redis 缓存
 | `seed-earthquakes` | USGS M4.5+ 与加拿大地震（NRCan）Atom | 5 分钟 | `seismology:earthquakes:v1` |
 | `seed-market-quotes` | Yahoo Finance（错峰批量） | 5 分钟 | `market:stocks-bootstrap:v1` |
 | `seed-commodity-quotes` | Yahoo Finance（WTI、Brent、金属） | 5 分钟 | `market:commodities-bootstrap:v1` |
-| `seed-crypto-quotes` | CoinGecko（BTC、ETH、SOL、XRP+） | 5 分钟 | `market:crypto:v1` |
 | `seed-cyber-threats` | Feodo、URLhaus、C2Intel、OTX、AbuseIPDB | 2 小时 | `cyber:threats-bootstrap:v2` |
 | `seed-internet-outages` | Cloudflare Radar | 5 分钟 | `infra:outages:v1` |
 | `seed-fire-detections` | NASA FIRMS VIIRS、CWFIS 全国在燃/计划火（CWFIF WFS）与 BC 当前火点（OpenMaps KML） | 10 分钟 | `wildfire:fires:v1` |
@@ -25,8 +24,6 @@ Railway 定时服务持续用从外部 API 预计算的数据刷新 Redis 缓存
 | `seed-aviation` | FAA + ICAO NOTAM | 10 分钟 | `aviation:delays-bootstrap:v2` |
 | `seed-insights` | LLM 世界简报 + 头条（先 Ollama，后 OpenRouter） | 10 分钟 | `news:insights:v1` |
 | `seed-prediction-markets` | Polymarket Gamma API | 10 分钟 | `prediction:markets-bootstrap:v1` |
-| `seed-etf-flows` | Yahoo Finance（IBIT、FBTC、GBTC+） | 15 分钟 | `market:etf-flows:v1` |
-| `seed-stablecoin-markets` | CoinGecko（USDT、USDC、DAI+） | 10 分钟 | `market:stablecoins:v1` |
 | `seed-gulf-quotes` | Yahoo Finance（Tadawul、DFM、ADX） | 10 分钟 | `market:gulf-quotes:v1` |
 | `seed-unrest-events` | ACLED 抗议 + GDELT | 45 分钟 | `unrest:events:v1` |
 | `seed-ucdp-events` | UCDP GED API | 6 小时 | `conflict:ucdp-events:v1` |

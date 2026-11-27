@@ -344,7 +344,6 @@
     "sourceRegionMarkets": "Trhy a analýzy",
     "sourceRegionFixedIncomeFx": "Dluhopisy a zahraniční měny",
     "sourceRegionCommodities": "Komodity",
-    "sourceRegionCryptoDigital": "Krypto a digitál",
     "sourceRegionCentralBanks": "Centrální banky a ekonomika",
     "sourceRegionDeals": "Transakce a korporace",
     "sourceRegionFinRegulation": "Finanční regulace",
@@ -365,7 +364,6 @@
     "panelCatMarkets": "Trhy",
     "panelCatFixedIncomeFx": "Dluhopisy a zahraniční měny",
     "panelCatCommodities": "Komodity",
-    "panelCatCryptoDigital": "Krypto a digitál",
     "panelCatCentralBanks": "Centrální banky a ekonomika",
     "panelCatDeals": "Transakce a instituce",
     "panelCatGulfMena": "Zatoka a Střední východ a Severní Afrika",
@@ -413,15 +411,12 @@
     "supplyChain": "Dodavatelský řetězec",
     "finance": "Finance",
     "tech": "Technologie",
-    "crypto": "Krypto",
     "heatmap": "Teplotní mapa sektorů",
     "ai": "AI a strojové učení",
     "layoffs": "Sledování propouštění",
     "monitors": "Moje monitory",
     "satelliteFires": "Požáry",
     "macroSignals": "Podmínky trhu Bitcoin",
-    "etfFlows": "Toky prostředků Bitcoin",
-    "stablecoins": "Stablecoiny",
     "deduction": "Dedukce situace",
     "ucdpEvents": "UCDP Konflikty",
     "displacement": "Uprchlíci a přesídlení",
@@ -1020,15 +1015,6 @@
       "leanYes": "Spíše ANO",
       "leanNo": "Spíše NE",
       "tossUp": "Vyrovnané"
-    },
-    "stablecoins": {
-      "pegHealth": "Zdraví vazby (Peg)",
-      "supplyVolume": "Nabídka a objem",
-      "token": "Token",
-      "mcap": "Trž. kap.",
-      "vol24h": "Obj. 24h",
-      "chg24h": "Změna 24h",
-      "infoTooltip": "<strong>Stablecoiny</strong> Stabilita navázání, tržní kapitalizace a objem za 24h hlavních tokenů navázaných na USD (USDT, USDC, DAI, BUSD). Ztráta navázání signalizuje systémové riziko."
     },
     "status": {
       "updatedAt": "Aktualizováno {{time}}"
@@ -1787,27 +1773,6 @@
     "prediction": {
       "infoTooltip": "<strong>Predikční trhy</strong> Trhy s reálnými penězi pro prognózy:<ul><li>Ceny odrážejí odhady pravděpodobnosti davu</li><li>Vyšší objem = spolehlivější signál</li><li>Zaměření na geopolitiku a aktuální dění</li></ul>Zdroj: Polymarket (polymarket.com)"
     },
-    "etfFlows": {
-      "previousColumns": "Předchozí sloupce",
-      "moreColumns": "Další sloupce",
-      "unavailable": "data fondů obchodovaných na burze dočasně nedostupná",
-      "rateLimited": "data fondů obchodovaných na burze dočasně nedostupná (omezení rychlosti) — opakuji za chvíli",
-      "netFlow": "Čistý tok",
-      "estFlow": "Odhad toku",
-      "totalVol": "Celk. objem",
-      "etfs": "Fondy obchodované na burze",
-      "netInflow": "ČISTÝ PŘÍLIV",
-      "netOutflow": "ČISTÝ ODLIV",
-      "netNeutral": "ČISTĚ NEUTRÁLNÍ",
-      "table": {
-        "ticker": "Symbol",
-        "issuer": "Vydavatel",
-        "estFlow": "Odhad toku",
-        "volume": "Objem",
-        "change": "Změna"
-      },
-      "infoTooltip": "<strong>Toky bitcoinových fondů</strong> Sleduje denní odhadované toky fondů pro americké spotové bitcoinové fondy obchodované na burze:<ul><li>Směr a velikost přílivu/odlivu</li><li>Objem a změna ceny na fond</li><li>Čisté celkové toky všech sledovaných fondů</li></ul>"
-    },
     "macroSignals": {
       "overall": "Celkově",
       "verdict": {
@@ -1817,12 +1782,7 @@
       "bullish": "{{count}}/{{total}} býčí",
       "signals": {
         "liquidity": "Likvidita",
-        "flow": "Tok",
-        "regime": "Režim",
-        "btcTrend": "Trend BTC",
-        "hashRate": "Hashrate",
-        "fearGreed": "Strach a chamtivost",
-        "momentum": "Momentum"
+        "regime": "Režim"
       },
       "infoTooltip": "<strong>Podmínky na trhu s bitcoinem</strong> Ovládací panel složeného signálu pro pozicování bitcoinu a chuť k riziku:<ul><li><strong>Likvidita</strong>: Proxy čisté likvidity Fedu</li><li><strong>Tok</strong>: Návratnost BTC vs QQQ za 5 dní</li><li><strong>Režim</strong>: Rotace QQQ vs XLP (na riziko/pryč od rizika)</li><li><strong>Trend BTC</strong>: Cena vs SMA50/200, Mayer Multiple</li><li><strong>Hash Rate</strong>: 30denní změna síťového hashe</li><li><strong>Strach a chamtivost</strong>: Index tržního sentimentu</li></ul>Tento panel je určen pro režim a pozicování, nikoli pro širší makrodata."
     },
@@ -1974,23 +1934,11 @@
         "twentyDayTrend": "Trend prémie za dvacet obchodních dní"
       }
     },
-    "crypto": {
-      "infoTooltip": "<strong>Krypto</strong> Živé ceny, změna za 24h a objem hlavních kryptoměn. Data z CoinGecko."
-    },
     "gulfEconomies": {
       "infoTooltip": "<strong>Gulf Economies</strong> Indexy akcií Perského zálivu, směnné kurzy měn a ceny ropy pro ekonomiky Rady pro spolupráci zemí Perského zálivu (Saúdská Arábie, SAE, Kuvajt, Katar, Bahrajn, Omán)."
     },
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Globální srovnání cen nákupního košíku potravin v 24 zemích — sleduje skutečnou inflaci spotřebitelských zboží mimo hlavní index spotřebitelských cen."
-    },
-    "defiTokens": {
-      "infoTooltip": "<strong>DeFi tokeny</strong> Ceny a výkonnost za 24h/7d předních tokenů decentralizovaných financí — DEXy, úvěrové platformy a výnosové protokoly."
-    },
-    "aiTokens": {
-      "infoTooltip": "<strong>AI tokeny</strong> Ceny a výkonnost za 24h/7d tokenů ze sektoru AI a strojového učení — výpočetní sítě, decentralizovaná AI infrastruktura a datové protokoly."
-    },
-    "altTokens": {
-      "infoTooltip": "<strong>Alternativní tokeny</strong> Ceny a výkonnost za 24h/7d alternativních a nových kryptoměn mimo ty největší podle kapitalizace."
     },
     "stockAnalysis": {
       "infoTooltip": "<strong>Prémiová analýza akcií</strong> AI analýza akcií ve vašem seznamu sledovaných — signály koupit/držet/prodat, cílové ceny, klíčová rizika a katalyzátory. Aktualizováno denně."
@@ -2386,7 +2334,6 @@
       "title": "Pozicování 24/7",
       "infoTooltip": "<strong>Pozicování 24/7</strong> Stres pozicování z perpetuálních kontraktů z Hyperliquid. Obchodování nepřetržitě ukazuje, co se buduje, když jsou tradiční trhy zavřené. Složené skóre (0-100) z sazby financování, objemu, otevřeného zájmu a spot-perp bází. Zelená = dlouhé pozice přeplnění (býčí sklon), červená = krátké pozice přeplnění (medvědí sklon).",
       "commodities": "KOMODITY",
-      "crypto": "KRYPTOMĚNY",
       "fx": "Devizové kurzy",
       "warmup": "Budování původních hodnot. Historie objem a otevřeného zájmu se naplní během příští hodiny.",
       "footer": "5min · Hyperliquid perps · 24/7"
@@ -4152,11 +4099,9 @@
     "noDataShort": "Žádná data",
     "upstreamUnavailable": "Zdrojové API nedostupné — zkusí to automaticky znovu",
     "loadingUcdpEvents": "Načítání událostí UCDP",
-    "loadingStablecoins": "Načítání stablecoinů...",
     "scanningThermalData": "Skenování tepelných dat",
     "calculatingExposure": "Výpočet expozice",
     "computingSignals": "Výpočet signálů...",
-    "loadingEtfData": "Načítání dat fondů obchodovaných na burzách...",
     "loadingDisplacement": "Načítání dat o vysídlení",
     "loadingClimateData": "Načítání dat o klimatu",
     "failedTechReadiness": "Nepodařilo se načíst data o tech připravenosti",
@@ -4168,7 +4113,6 @@
     "failedMarketData": "Nepodařilo se načíst tržní data",
     "failedSectorData": "Nepodařilo se načíst sektorová data",
     "failedCommodities": "Nepodařilo se načíst komodity",
-    "failedCryptoData": "Nepodařilo se načíst krypto data",
     "rateLimitedMarket": "Tržní data dočasně nedostupná (limit rychlosti) — zkusím to znovu krátce",
     "noNewsAvailable": "Nejsou k dispozici žádné zprávy",
     "noActiveTechHubs": "Žádná aktivní technologická centra",
@@ -4325,13 +4269,11 @@
     "preflightProRequired": "Pro předplatné je vyžadováno k používání Widget Builderu. Upgradujte pro odemknutí.",
     "examples": {
       "oilGold": "Zobrazit dnešní cenu surové ropy versus zlata",
-      "cryptoMovers": "Vytvořit widget pro top krytpoměny za posledních 24 hodin",
       "flightDelays": "Shrnout nejhorší mezinárodní zpoždění letů právě teď",
       "conflictHotspots": "Zmapovat nejnovější konfliktní horké body UCDP s krátkými popisy"
     },
     "proExamples": {
       "interactiveChart": "Interaktivní graf Chart.js porovnávající ceny ropy a zlata",
-      "sortableTable": "Seřaditelná tabulka cen kryptoměn s filtrem vyhledávání",
       "animatedCounters": "Animované čítače pro klíčové ekonomické ukazatele",
       "tabbedComparison": "Tabelované porovnání konfliktních událostí podle regionu"
     }

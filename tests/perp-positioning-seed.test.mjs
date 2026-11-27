@@ -24,10 +24,10 @@ import {
   indexBySymbol,
   buildSnapshot,
   validateFn,
-  runHyperliquidFlowSeed,
-} from '../scripts/seed-hyperliquid-flow.mjs';
+  runPerpPositioningSeed,
+} from '../scripts/seed-perp-positioning.mjs';
 
-const META_BTC = { symbol: 'BTC', class: 'crypto', display: 'BTC', group: 'crypto' };
+const META_GOLD = { symbol: 'xyz:GOLD', class: 'commodity', display: 'Gold', group: 'metals' };
 const META_OIL = { symbol: 'xyz:CL', class: 'commodity', display: 'WTI Crude', group: 'oil' };
 
 function makeUniverse(extra = []) {
@@ -51,10 +51,10 @@ describe('TTL constants', () => {
     assert.ok(CACHE_TTL_SECONDS >= 9 * 5 * 60, `expected >= 2700, got ${CACHE_TTL_SECONDS}`);
   });
   it('CANONICAL_KEY is the documented v1 key', () => {
-    assert.equal(CANONICAL_KEY, 'market:hyperliquid:flow:v1');
+    assert.equal(CANONICAL_KEY, 'market:perp-positioning:v1');
   });
   it('keeps baseline state longer than the live snapshot', () => {
-    assert.equal(BASELINE_KEY, 'market:hyperliquid:flow:baseline:v1');
+    assert.equal(BASELINE_KEY, 'market:perp-positioning:baseline:v1');
     assert.ok(BASELINE_TTL_SECONDS > CACHE_TTL_SECONDS);
     assert.ok(BASELINE_TTL_SECONDS >= 7 * 24 * 60 * 60);
   });
@@ -150,7 +150,7 @@ describe('computeAsset min-notional guard', () => {
 describe('computeAsset cold-start (no prev)', () => {
   it('zeros volumeScore and oiScore on first run', () => {
     const ctx = { funding: '0.0005', openInterest: '1000', markPx: '100', oraclePx: '100', dayNtlVlm: '5000000' };
-    const out = computeAsset(META_BTC, ctx, null, { coldStart: true });
+    const out = computeAsset(META_GOLD, ctx, null, { coldStart: true });
     assert.equal(out.oiScore, 0);
     assert.equal(out.volumeScore, 0);
     assert.ok(out.fundingScore > 0); // funding still computable
@@ -162,35 +162,35 @@ describe('warmup persists until baseline is usable (not just first poll)', () =>
   it('stays warmup=true after coldStart clears if volume baseline has <12 samples', () => {
     // Second poll: coldStart=false, but only 1 prior vol sample.
     const prev = {
-      symbol: 'BTC', openInterest: 1000,
+      symbol: 'xyz:GOLD', openInterest: 1000,
       sparkVol: [1_000_000],
       sparkFunding: [], sparkOi: [1000], sparkScore: [],
     };
     const ctx = { funding: '0.0005', openInterest: '1010', markPx: '100', oraclePx: '100', dayNtlVlm: '5000000' };
-    const out = computeAsset(META_BTC, ctx, prev, { coldStart: false });
+    const out = computeAsset(META_GOLD, ctx, prev, { coldStart: false });
     assert.equal(out.warmup, true, 'should stay warmup while baseline < 12 samples');
     assert.equal(out.volumeScore, 0, 'volume scoring must wait for baseline');
   });
 
   it('clears warmup=false once baseline has >=12 samples AND prior OI exists', () => {
     const prev = {
-      symbol: 'BTC', openInterest: 1000,
+      symbol: 'xyz:GOLD', openInterest: 1000,
       sparkVol: Array(12).fill(1_000_000),
       sparkFunding: [], sparkOi: Array(12).fill(1000), sparkScore: [],
     };
     const ctx = { funding: '0.0001', openInterest: '1010', markPx: '100', oraclePx: '100', dayNtlVlm: '1000000' };
-    const out = computeAsset(META_BTC, ctx, prev, { coldStart: false });
+    const out = computeAsset(META_GOLD, ctx, prev, { coldStart: false });
     assert.equal(out.warmup, false);
   });
 
   it('stays warmup=true when prior OI is missing even with full vol baseline', () => {
     const prev = {
-      symbol: 'BTC', openInterest: null,
+      symbol: 'xyz:GOLD', openInterest: null,
       sparkVol: Array(12).fill(1_000_000),
       sparkFunding: [], sparkOi: [], sparkScore: [],
     };
     const ctx = { funding: '0', openInterest: '1000', markPx: '100', oraclePx: '100', dayNtlVlm: '1000000' };
-    const out = computeAsset(META_BTC, ctx, prev, { coldStart: false });
+    const out = computeAsset(META_GOLD, ctx, prev, { coldStart: false });
     assert.equal(out.warmup, true);
     assert.equal(out.oiScore, 0);
   });
@@ -199,7 +199,7 @@ describe('warmup persists until baseline is usable (not just first poll)', () =>
 describe('computeAsset OI continuity', () => {
   it('keeps warmup active and resets OI history when current OI is invalid', () => {
     const prev = {
-      symbol: 'BTC', openInterest: 1000,
+      symbol: 'xyz:GOLD', openInterest: 1000,
       sparkVol: Array(12).fill(1_000_000),
       sparkFunding: [], sparkOi: Array(12).fill(1000), sparkScore: Array(12).fill(10),
     };
@@ -208,7 +208,7 @@ describe('computeAsset OI continuity', () => {
     };
 
     for (const invalidOi of [null, '', 'not-a-number', '0', '-1']) {
-      const out = computeAsset(META_BTC, { ...highRiskCtx, openInterest: invalidOi }, prev);
+      const out = computeAsset(META_GOLD, { ...highRiskCtx, openInterest: invalidOi }, prev);
       assert.ok(out.composite >= ALERT_THRESHOLD, `expected inspectable partial score for OI=${invalidOi}`);
       assert.equal(out.openInterest, null);
       assert.equal(out.oiScore, 0);
@@ -217,7 +217,7 @@ describe('computeAsset OI continuity', () => {
       assert.deepEqual(out.sparkScore, [out.composite]);
       assert.deepEqual(out.alerts, []);
 
-      const recovered = computeAsset(META_BTC, { ...highRiskCtx, openInterest: '1500' }, out);
+      const recovered = computeAsset(META_GOLD, { ...highRiskCtx, openInterest: '1500' }, out);
       assert.deepEqual(recovered.sparkOi, [1500]);
       assert.equal(recovered.warmup, true);
       assert.deepEqual(recovered.alerts, []);
@@ -226,11 +226,11 @@ describe('computeAsset OI continuity', () => {
 
   it('does not join a new OI window across a legacy invalid sample', () => {
     const prev = {
-      symbol: 'BTC', openInterest: 1000,
+      symbol: 'xyz:GOLD', openInterest: 1000,
       sparkVol: Array(12).fill(1_000_000),
       sparkFunding: [], sparkOi: [...Array(12).fill(1000), 0, 1000], sparkScore: [],
     };
-    const out = computeAsset(META_BTC, {
+    const out = computeAsset(META_GOLD, {
       funding: '0.002', openInterest: '1500', markPx: '105', oraclePx: '100', dayNtlVlm: '10000000',
     }, prev);
 
@@ -244,7 +244,7 @@ describe('computeAsset OI continuity', () => {
 describe('computeAsset volume continuity', () => {
   it('retains the prior volume window for null and blank notionals, but appends genuine zero', () => {
     const prev = {
-      symbol: 'BTC',
+      symbol: 'xyz:GOLD',
       openInterest: 1000,
       sparkVol: [1_000_000, 1_500_000],
       sparkFunding: [], sparkOi: [], sparkScore: [],
@@ -252,13 +252,13 @@ describe('computeAsset volume continuity', () => {
     const baseCtx = { funding: '0', openInterest: '1000', markPx: '100', oraclePx: '100' };
 
     for (const invalidNotional of [null, '', '   ']) {
-      const out = computeAsset(META_BTC, { ...baseCtx, dayNtlVlm: invalidNotional }, prev);
+      const out = computeAsset(META_GOLD, { ...baseCtx, dayNtlVlm: invalidNotional }, prev);
       assert.equal(out.dayNotional, null);
       assert.deepEqual(out.sparkVol, prev.sparkVol);
     }
 
     for (const validZero of [0, '0']) {
-      const out = computeAsset(META_BTC, { ...baseCtx, dayNtlVlm: validZero }, prev);
+      const out = computeAsset(META_GOLD, { ...baseCtx, dayNtlVlm: validZero }, prev);
       assert.equal(out.dayNotional, 0);
       assert.deepEqual(out.sparkVol, [...prev.sparkVol, 0]);
     }
@@ -278,12 +278,12 @@ describe('volume baseline uses the MOST RECENT window (slice(-12), not slice(0,1
       ...Array(12).fill(200_000),   // newest (baseline)
     ];
     const prev = {
-      symbol: 'BTC', openInterest: 1000,
+      symbol: 'xyz:GOLD', openInterest: 1000,
       sparkVol,
       sparkFunding: [], sparkOi: Array(12).fill(1000), sparkScore: [],
     };
     const ctx = { funding: '0', openInterest: '1010', markPx: '100', oraclePx: '100', dayNtlVlm: '2000000' };
-    const out = computeAsset(META_BTC, ctx, prev, { coldStart: false });
+    const out = computeAsset(META_GOLD, ctx, prev, { coldStart: false });
     // Recent-window baseline: 2M / 200k / 5 * 100 = 200 → clamp 100.
     assert.equal(out.volumeScore, 100, `expected volume baseline to track recent window, got score=${out.volumeScore}`);
   });
@@ -296,7 +296,7 @@ describe('validateUpstream (back-compat + merged shape)', () => {
   it('rejects missing universe', () => {
     assert.throws(() => validateUpstream([{}, []]), /universe/);
   });
-  it('rejects too-small default universe', () => {
+  it('rejects a truncated exchange universe', () => {
     const small = Array.from({ length: 10 }, (_, i) => ({ name: `X${i}` }));
     assert.throws(() => validateUpstream([{ universe: small }, makeAssetCtxs(small)]), /suspiciously small/);
   });
@@ -335,49 +335,23 @@ describe('validateDexPayload — xyz dex has lower floor than default', () => {
   });
 });
 
-describe('fetchAllMetaAndCtxs — dual-dex fetch and merge', () => {
-  it('merges default and xyz responses into one {universe, assetCtxs}', async () => {
-    const defaultUniverse = [
-      ...Array.from({ length: 50 }, (_, i) => ({ name: `D${i}` })),
-      { name: 'BTC' }, { name: 'ETH' }, { name: 'SOL' }, { name: 'PAXG' },
-    ];
-    const xyzUniverse = [
-      ...Array.from({ length: 30 }, (_, i) => ({ name: `xyz:Z${i}` })),
-      { name: 'xyz:CL' }, { name: 'xyz:BRENTOIL' }, { name: 'xyz:GOLD' },
-      { name: 'xyz:SILVER' }, { name: 'xyz:EUR' }, { name: 'xyz:JPY' },
-    ];
-    const fakeFetch = async (_url, opts) => {
-      const body = JSON.parse(opts.body);
-      const isXyz = body.dex === 'xyz';
-      const universe = isXyz ? xyzUniverse : defaultUniverse;
-      const payload = [{ universe }, makeAssetCtxs(universe)];
-      return {
-        ok: true,
-        headers: { get: () => 'application/json' },
-        json: async () => payload,
-      };
-    };
-    const merged = await fetchAllMetaAndCtxs(fakeFetch);
-    const merged_names = merged.universe.map((u) => u.name);
-    assert.ok(merged_names.includes('BTC'), 'merged should include default-dex BTC');
-    assert.ok(merged_names.includes('xyz:CL'), 'merged should include xyz-dex xyz:CL');
-    assert.equal(merged.universe.length, defaultUniverse.length + xyzUniverse.length);
-    assert.equal(merged.assetCtxs.length, defaultUniverse.length + xyzUniverse.length);
+describe('fetchAllMetaAndCtxs', () => {
+  it('polls only the commodity and FX market and publishes only configured contracts', async () => {
+    const universe = makeUniverse([{ name: 'BTC' }, { name: 'PAXG' }]);
+    const upstream = await fetchAllMetaAndCtxs(async (_url, options) => {
+      assert.deepEqual(JSON.parse(options.body), { type: 'metaAndAssetCtxs', dex: 'xyz' });
+      return Response.json([{ universe }, makeAssetCtxs(universe)]);
+    });
+    const snapshot = buildSnapshot(upstream, null);
+    assert.deepEqual(snapshot.assets.map(asset => asset.symbol), ASSETS.map(asset => asset.symbol));
+    assert.ok(snapshot.assets.some(asset => asset.group === 'fx'));
+    assert.ok(snapshot.assets.some(asset => asset.group === 'oil'));
   });
 
-  it('propagates validation errors from either dex', async () => {
-    const fakeFetch = async (_url, opts) => {
-      const body = JSON.parse(opts.body);
-      const isXyz = body.dex === 'xyz';
-      // Return too-small universe on xyz side to trigger its floor check.
-      if (isXyz) {
-        const u = [{ name: 'xyz:CL' }];
-        return { ok: true, headers: { get: () => 'application/json' }, json: async () => [{ universe: u }, makeAssetCtxs(u)] };
-      }
-      const u = Array.from({ length: 60 }, (_, i) => ({ name: `D${i}` }));
-      return { ok: true, headers: { get: () => 'application/json' }, json: async () => [{ universe: u }, makeAssetCtxs(u)] };
-    };
-    await assert.rejects(() => fetchAllMetaAndCtxs(fakeFetch), /xyz universe suspiciously small/);
+  it('propagates errors from a truncated exchange universe', async () => {
+    const universe = [{ name: 'xyz:CL' }];
+    const fetchStub = async () => Response.json([{ universe }, makeAssetCtxs(universe)]);
+    await assert.rejects(() => fetchAllMetaAndCtxs(fetchStub), /xyz universe suspiciously small/);
   });
 });
 
@@ -394,12 +368,12 @@ describe('buildSnapshot — first run', () => {
 
 describe('buildSnapshot — missing-symbol carry-forward', () => {
   it('carries forward a stale entry when whitelisted symbol absent from upstream', () => {
-    const u = makeUniverse().filter((m) => m.name !== 'BTC');
+    const u = makeUniverse().filter((m) => m.name !== 'xyz:GOLD');
     const ctxs = makeAssetCtxs(u);
     const prevSnap = {
       ts: 1_700_000_000_000 - 5 * 60_000, // 5min ago
       assets: [{
-        symbol: 'BTC', display: 'BTC', class: 'crypto', group: 'crypto',
+        symbol: 'xyz:GOLD', display: 'Gold', class: 'commodity', group: 'metals',
         funding: 0.0001, openInterest: 1000, markPx: 65000, oraclePx: 65000, dayNotional: 1e9,
         fundingScore: 10, volumeScore: 0, oiScore: 0, basisScore: 0, composite: 3,
         sparkFunding: [0.0001], sparkOi: [1000], sparkScore: [3], sparkVol: [1e9],
@@ -407,25 +381,25 @@ describe('buildSnapshot — missing-symbol carry-forward', () => {
       }],
     };
     const snap = buildSnapshot([{ universe: u }, ctxs], prevSnap, { now: 1_700_000_000_000 });
-    const btc = snap.assets.find((a) => a.symbol === 'BTC');
-    assert.ok(btc, 'BTC should still appear');
-    assert.equal(btc.stale, true);
-    assert.equal(btc.missingPolls, 1);
-    assert.equal(btc.warmup, true);
-    assert.deepEqual(btc.sparkOi, []);
-    assert.deepEqual(btc.sparkScore, []);
-    assert.equal(btc.oiScore, 0);
-    assert.deepEqual(btc.alerts, []);
-    assert.deepEqual(btc.sparkVol, [1e9]);
+    const gold = snap.assets.find((a) => a.symbol === 'xyz:GOLD');
+    assert.ok(gold, 'BTC should still appear');
+    assert.equal(gold.stale, true);
+    assert.equal(gold.missingPolls, 1);
+    assert.equal(gold.warmup, true);
+    assert.deepEqual(gold.sparkOi, []);
+    assert.deepEqual(gold.sparkScore, []);
+    assert.equal(gold.oiScore, 0);
+    assert.deepEqual(gold.alerts, []);
+    assert.deepEqual(gold.sparkVol, [1e9]);
   });
 
   it('drops a symbol after STALE_SYMBOL_DROP_AFTER_POLLS consecutive misses', () => {
-    const u = makeUniverse().filter((m) => m.name !== 'BTC');
+    const u = makeUniverse().filter((m) => m.name !== 'xyz:GOLD');
     const ctxs = makeAssetCtxs(u);
     const prevSnap = {
       ts: 1_700_000_000_000 - 5 * 60_000,
       assets: [{
-        symbol: 'BTC', display: 'BTC', class: 'crypto', group: 'crypto',
+        symbol: 'xyz:GOLD', display: 'Gold', class: 'commodity', group: 'metals',
         funding: 0, openInterest: 1000, markPx: 0, oraclePx: 0, dayNotional: 0,
         fundingScore: 0, volumeScore: 0, oiScore: 0, basisScore: 0, composite: 0,
         sparkFunding: [], sparkOi: [], sparkScore: [], sparkVol: [],
@@ -435,7 +409,7 @@ describe('buildSnapshot — missing-symbol carry-forward', () => {
       }],
     };
     const snap = buildSnapshot([{ universe: u }, ctxs], prevSnap, { now: 1_700_000_000_000 });
-    assert.equal(snap.assets.find((a) => a.symbol === 'BTC'), undefined);
+    assert.equal(snap.assets.find((a) => a.symbol === 'xyz:GOLD'), undefined);
   });
 });
 
@@ -443,12 +417,12 @@ describe('buildSnapshot — post-outage baseline recovery', () => {
   it('retains volume history but suppresses misleading OI delta after a long gap', () => {
     const u = makeUniverse();
     const ctxs = makeAssetCtxs(u, {
-      BTC: { funding: '0.002', openInterest: '2000', markPx: '105', oraclePx: '100', dayNtlVlm: '10000000' },
+      'xyz:GOLD': { funding: '0.002', openInterest: '2000', markPx: '105', oraclePx: '100', dayNtlVlm: '10000000' },
     });
     const prevSnap = {
       ts: 1_700_000_000_000 - 60 * 60_000, // 1h ago — way past 900s threshold
       assets: [{
-        symbol: 'BTC',
+        symbol: 'xyz:GOLD',
         openInterest: 1000,
         sparkOi: Array(60).fill(1000),
         sparkScore: Array(60).fill(10),
@@ -456,23 +430,23 @@ describe('buildSnapshot — post-outage baseline recovery', () => {
       }],
     };
     const snap = buildSnapshot([{ universe: u }, ctxs], prevSnap, { now: 1_700_000_000_000 });
-    const btc = snap.assets.find((a) => a.symbol === 'BTC');
-    assert.equal(btc.warmup, true);
+    const gold = snap.assets.find((a) => a.symbol === 'xyz:GOLD');
+    assert.equal(gold.warmup, true);
     assert.equal(snap.warmup, true);
-    assert.equal(btc.oiScore, 0); // a one-hour move must not be labeled a 5m delta
-    assert.deepEqual(btc.sparkOi, [2000]); // old, time-less samples must not cross the gap
-    assert.deepEqual(btc.sparkScore, [btc.composite]);
-    assert.ok(btc.volumeScore > 0); // durable rolling baseline remains usable
-    assert.ok(btc.composite >= ALERT_THRESHOLD); // partial score remains inspectable
-    assert.deepEqual(btc.alerts, []); // but incomplete four-component scores must not alert
+    assert.equal(gold.oiScore, 0); // a one-hour move must not be labeled a 5m delta
+    assert.deepEqual(gold.sparkOi, [2000]); // old, time-less samples must not cross the gap
+    assert.deepEqual(gold.sparkScore, [gold.composite]);
+    assert.ok(gold.volumeScore > 0); // durable rolling baseline remains usable
+    assert.ok(gold.composite >= ALERT_THRESHOLD); // partial score remains inspectable
+    assert.deepEqual(gold.alerts, []); // but incomplete four-component scores must not alert
   });
 
   it('keeps OI warmup until 13 post-gap samples form a real one-hour window', () => {
     const ctx = {
       funding: '0.002', openInterest: '2000', markPx: '105', oraclePx: '100', dayNtlVlm: '10000000',
     };
-    let asset = computeAsset(META_BTC, ctx, {
-      symbol: 'BTC',
+    let asset = computeAsset(META_GOLD, ctx, {
+      symbol: 'xyz:GOLD',
       openInterest: 1000,
       sparkOi: Array(60).fill(1000),
       sparkScore: Array(60).fill(10),
@@ -482,13 +456,13 @@ describe('buildSnapshot — post-outage baseline recovery', () => {
     assert.equal(asset.sparkOi.length, 1);
     assert.equal(asset.warmup, true);
     for (let i = 1; i < 12; i++) {
-      asset = computeAsset(META_BTC, ctx, asset);
+      asset = computeAsset(META_GOLD, ctx, asset);
     }
     assert.equal(asset.sparkOi.length, 12);
     assert.equal(asset.warmup, true);
     assert.deepEqual(asset.alerts, []);
 
-    asset = computeAsset(META_BTC, { ...ctx, openInterest: '2500' }, asset);
+    asset = computeAsset(META_GOLD, { ...ctx, openInterest: '2500' }, asset);
     assert.equal(asset.sparkOi.length, 13);
     assert.equal(asset.warmup, false);
     assert.ok(asset.alerts.some((alert) => alert.includes('HIGH RISK')));
@@ -496,11 +470,11 @@ describe('buildSnapshot — post-outage baseline recovery', () => {
 
   it('breaks OI continuity across one missing asset poll at a healthy snapshot cadence', () => {
     const now = 1_700_000_000_000;
-    const missingBtcUniverse = makeUniverse().filter((entry) => entry.name !== 'BTC');
+    const missingGoldUniverse = makeUniverse().filter((entry) => entry.name !== 'xyz:GOLD');
     const prevSnap = {
       ts: now - 5 * 60_000,
       assets: [{
-        symbol: 'BTC', display: 'BTC', class: 'crypto', group: 'crypto',
+        symbol: 'xyz:GOLD', display: 'Gold', class: 'commodity', group: 'metals',
         openInterest: 1000, composite: 90, oiScore: 100,
         sparkOi: Array(60).fill(1000), sparkScore: Array(60).fill(90),
         sparkVol: Array(12).fill(1e6), alerts: ['HIGH RISK 90/100'],
@@ -508,31 +482,31 @@ describe('buildSnapshot — post-outage baseline recovery', () => {
       }],
     };
     const staleSnap = buildSnapshot(
-      [{ universe: missingBtcUniverse }, makeAssetCtxs(missingBtcUniverse)],
+      [{ universe: missingGoldUniverse }, makeAssetCtxs(missingGoldUniverse)],
       prevSnap,
       { now },
     );
-    const staleBtc = staleSnap.assets.find((asset) => asset.symbol === 'BTC');
-    assert.equal(staleBtc.stale, true);
-    assert.equal(staleBtc.missingPolls, 1);
-    assert.equal(staleBtc.warmup, true);
-    assert.deepEqual(staleBtc.sparkOi, []);
-    assert.deepEqual(staleBtc.sparkScore, []);
-    assert.deepEqual(staleBtc.alerts, []);
-    assert.equal(staleBtc.sparkVol.length, 12);
+    const staleGold = staleSnap.assets.find((asset) => asset.symbol === 'xyz:GOLD');
+    assert.equal(staleGold.stale, true);
+    assert.equal(staleGold.missingPolls, 1);
+    assert.equal(staleGold.warmup, true);
+    assert.deepEqual(staleGold.sparkOi, []);
+    assert.deepEqual(staleGold.sparkScore, []);
+    assert.deepEqual(staleGold.alerts, []);
+    assert.equal(staleGold.sparkVol.length, 12);
 
     const recoveredUniverse = makeUniverse();
     const recoveredSnap = buildSnapshot(
       [{ universe: recoveredUniverse }, makeAssetCtxs(recoveredUniverse, {
-        BTC: { funding: '0', openInterest: '2000', markPx: '100', oraclePx: '100', dayNtlVlm: '1000000' },
+        'xyz:GOLD': { funding: '0', openInterest: '2000', markPx: '100', oraclePx: '100', dayNtlVlm: '1000000' },
       })],
       staleSnap,
       { now: now + 5 * 60_000 },
     );
-    const recoveredBtc = recoveredSnap.assets.find((asset) => asset.symbol === 'BTC');
-    assert.deepEqual(recoveredBtc.sparkOi, [2000]);
-    assert.equal(recoveredBtc.warmup, true);
-    assert.equal(recoveredBtc.oiScore, 0);
+    const recoveredGold = recoveredSnap.assets.find((asset) => asset.symbol === 'xyz:GOLD');
+    assert.deepEqual(recoveredGold.sparkOi, [2000]);
+    assert.equal(recoveredGold.warmup, true);
+    assert.equal(recoveredGold.oiScore, 0);
   });
 });
 
@@ -540,21 +514,21 @@ describe('sparkline arrays', () => {
   it('cap at SPARK_MAX samples', () => {
     const u = makeUniverse();
     const ctxs = makeAssetCtxs(u, {
-      BTC: { funding: '0.0001', openInterest: '1000', markPx: '0', oraclePx: '0', dayNtlVlm: '0' },
+      'xyz:GOLD': { funding: '0.0001', openInterest: '1000', markPx: '0', oraclePx: '0', dayNtlVlm: '0' },
     });
     const longArr = Array.from({ length: SPARK_MAX + 30 }, (_, i) => i);
     const prevSnap = {
       ts: 1_700_000_000_000 - 5 * 60_000,
       assets: [{
-        symbol: 'BTC', sparkFunding: longArr, sparkOi: longArr, sparkScore: longArr, sparkVol: longArr,
+        symbol: 'xyz:GOLD', sparkFunding: longArr, sparkOi: longArr, sparkScore: longArr, sparkVol: longArr,
         openInterest: 1000,
       }],
     };
     const snap = buildSnapshot([{ universe: u }, ctxs], prevSnap, { now: 1_700_000_000_000 });
-    const btc = snap.assets.find((a) => a.symbol === 'BTC');
-    assert.ok(btc.sparkFunding.length <= SPARK_MAX);
-    assert.ok(btc.sparkOi.length <= SPARK_MAX);
-    assert.ok(btc.sparkScore.length <= SPARK_MAX);
+    const gold = snap.assets.find((a) => a.symbol === 'xyz:GOLD');
+    assert.ok(gold.sparkFunding.length <= SPARK_MAX);
+    assert.ok(gold.sparkOi.length <= SPARK_MAX);
+    assert.ok(gold.sparkScore.length <= SPARK_MAX);
   });
 });
 
@@ -562,20 +536,20 @@ describe('validateFn (runSeed gate)', () => {
   it('rejects empty / fewer than 12 assets', () => {
     assert.equal(validateFn(null), false);
     assert.equal(validateFn({ assets: [] }), false);
-    assert.equal(validateFn({ assets: Array(11).fill({}) }), false);
+    assert.equal(validateFn({ assets: Array(ASSETS.length - 3).fill({}) }), false);
   });
   it('accepts >=12 assets', () => {
-    assert.equal(validateFn({ assets: Array(12).fill({}) }), true);
+    assert.equal(validateFn({ assets: Array(ASSETS.length - 2).fill({}) }), true);
   });
 });
 
-describe('runHyperliquidFlowSeed lifecycle', () => {
+describe('runPerpPositioningSeed lifecycle', () => {
   const upstream = () => {
     const universe = makeUniverse();
     return {
       universe,
       assetCtxs: makeAssetCtxs(universe, {
-        BTC: { funding: '0', openInterest: '1000', markPx: '100', oraclePx: '100', dayNtlVlm: '1000000' },
+        'xyz:GOLD': { funding: '0', openInterest: '1000', markPx: '100', oraclePx: '100', dayNtlVlm: '1000000' },
       }),
     };
   };
@@ -585,7 +559,7 @@ describe('runHyperliquidFlowSeed lifecycle', () => {
     const baseline = {
       ts: 1_700_000_000_000 - 5 * 60_000,
       assets: [{
-        symbol: 'BTC', openInterest: 1000,
+        symbol: 'xyz:GOLD', openInterest: 1000,
         sparkOi: Array(12).fill(1000), sparkVol: Array(12).fill(1e6),
       }],
     };
@@ -613,7 +587,7 @@ describe('runHyperliquidFlowSeed lifecycle', () => {
       return data;
     };
 
-    const result = await runHyperliquidFlowSeed({
+    const result = await runPerpPositioningSeed({
       runSeedImpl,
       readSeedSnapshotImpl,
       writeExtraKeyWithMetaImpl,
@@ -635,21 +609,21 @@ describe('runHyperliquidFlowSeed lifecycle', () => {
     assert.equal(writes.length, 1);
     assert.equal(writes[0][0], BASELINE_KEY);
     assert.equal(writes[0][2], BASELINE_TTL_SECONDS);
-    assert.equal(writes[0][4], 'seed-meta:market:hyperliquid-flow-baseline');
+    assert.equal(writes[0][4], 'seed-meta:market:perp-positioning-baseline');
   });
 
   it('prefers a valid canonical snapshot without reading the baseline', async () => {
     const canonical = {
       ts: Date.now() - 5 * 60_000,
       assets: [{
-        symbol: 'BTC', openInterest: 900,
+        symbol: 'xyz:GOLD', openInterest: 900,
         sparkOi: Array(12).fill(900), sparkVol: Array(12).fill(1e6),
       }],
     };
     const reads = [];
     const runSeedImpl = async (_domain, _resource, _key, fetchFn) => fetchFn();
 
-    const result = await runHyperliquidFlowSeed({
+    const result = await runPerpPositioningSeed({
       runSeedImpl,
       readSeedSnapshotImpl: async (key, options) => {
         reads.push(key);
@@ -662,10 +636,10 @@ describe('runHyperliquidFlowSeed lifecycle', () => {
       fetchAllMetaAndCtxsImpl: upstream,
     });
 
-    const btc = result.assets.find((asset) => asset.symbol === 'BTC');
+    const gold = result.assets.find((asset) => asset.symbol === 'xyz:GOLD');
     assert.deepEqual(reads, [CANONICAL_KEY]);
-    assert.deepEqual(btc.sparkOi, [...canonical.assets[0].sparkOi, 1000]);
-    assert.equal(btc.oiScore > 0, true);
+    assert.deepEqual(gold.sparkOi, [...canonical.assets[0].sparkOi, 1000]);
+    assert.equal(gold.oiScore > 0, true);
   });
 
   it('propagates a baseline read error after an explicit canonical miss without fetching or publishing', async () => {
@@ -675,7 +649,7 @@ describe('runHyperliquidFlowSeed lifecycle', () => {
     let wrote = false;
     const runSeedImpl = async (_domain, _resource, _key, fetchFn) => fetchFn();
 
-    await assert.rejects(() => runHyperliquidFlowSeed({
+    await assert.rejects(() => runPerpPositioningSeed({
       runSeedImpl,
       readSeedSnapshotImpl: async (key, options) => {
         reads.push(key);
@@ -703,7 +677,7 @@ describe('runHyperliquidFlowSeed lifecycle', () => {
     let wrote = false;
     const runSeedImpl = async (_domain, _resource, _key, fetchFn) => fetchFn();
 
-    await assert.rejects(() => runHyperliquidFlowSeed({
+    await assert.rejects(() => runPerpPositioningSeed({
       runSeedImpl,
       readSeedSnapshotImpl: async (key, options) => {
         assert.equal(key, CANONICAL_KEY);
@@ -731,7 +705,7 @@ describe('runHyperliquidFlowSeed lifecycle', () => {
       throw validationError; // models runSeed rejecting before afterPublish
     };
 
-    await assert.rejects(() => runHyperliquidFlowSeed({
+    await assert.rejects(() => runPerpPositioningSeed({
       runSeedImpl,
       readSeedSnapshotImpl: async () => null,
       fetchAllMetaAndCtxsImpl: upstream,
@@ -749,7 +723,7 @@ describe('runHyperliquidFlowSeed lifecycle', () => {
       await options.afterPublish(snapshot, { canonicalKey: CANONICAL_KEY });
     };
 
-    await assert.rejects(() => runHyperliquidFlowSeed({
+    await assert.rejects(() => runPerpPositioningSeed({
       runSeedImpl,
       readSeedSnapshotImpl: async () => null,
       fetchAllMetaAndCtxsImpl: upstream,
@@ -762,7 +736,7 @@ describe('alert threshold', () => {
   it('emits HIGH RISK alert at composite >= 60', () => {
     // Funding=100% × 0.30 + Basis=100% × 0.20 = 50; bump volume to push >60
     const prev = {
-      symbol: 'BTC',
+      symbol: 'xyz:GOLD',
       sparkVol: Array(12).fill(1_000_000),
       sparkFunding: [], sparkOi: Array(12).fill(1000), sparkScore: [],
       openInterest: 1000,
@@ -773,7 +747,7 @@ describe('alert threshold', () => {
       markPx: '105', oraclePx: '100', // basis 5% = threshold → 100
       dayNtlVlm: '10000000', // 10× avg → 200/5 → clamped 100
     };
-    const out = computeAsset(META_BTC, ctx, prev);
+    const out = computeAsset(META_GOLD, ctx, prev);
     assert.ok(out.composite >= ALERT_THRESHOLD, `composite=${out.composite}`);
     assert.ok(out.alerts.some((a) => a.includes('HIGH RISK')));
   });

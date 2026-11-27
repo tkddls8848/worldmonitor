@@ -252,22 +252,6 @@ export interface MarketData {
   sparklineStartAt?: number;
 }
 
-export interface CryptoData {
-  name: string;
-  symbol: string;
-  price: number;
-  change: number;
-  sparkline?: number[];
-}
-
-export interface TokenData {
-  name: string;
-  symbol: string;
-  price: number;
-  change24h: number;
-  change7d: number;
-}
-
 export type EscalationTrend = 'escalating' | 'stable' | 'de-escalating';
 
 export interface DynamicEscalationScore {

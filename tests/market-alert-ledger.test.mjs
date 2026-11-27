@@ -161,7 +161,6 @@ describe('ingestSignals', () => {
   });
 
   it('resolves a market symbol to its registry entity through an alias and keeps null when none exists', () => {
-    assert.deepEqual(entityForMarket({ symbol: 'BTC', name: 'Bitcoin' }), { kind: 'market', symbol: 'BTC', name: 'Bitcoin', entityId: 'bitcoin' });
     assert.deepEqual(entityForMarket(WHEAT), { kind: 'market', symbol: 'ZW=F', name: 'Wheat', entityId: null });
   });
 
@@ -533,7 +532,7 @@ describe('entityForPrediction', () => {
   it('derives only keywords present in the question', () => {
     assert.deepEqual(entityForPrediction(RATE_CUT).relatedTopics, ['fed']);
     assert.deepEqual(entityForPrediction({ title: 'Will Iran strike Israel by June?' }).relatedTopics, ['iran', 'israel']);
-    assert.deepEqual(entityForPrediction({ title: 'Will Bitcoin exceed $100k?' }).relatedTopics, ['bitcoin']);
+    assert.deepEqual(entityForPrediction({ title: 'Will oil exceed $100?' }).relatedTopics, ['oil']);
   });
 });
 
@@ -903,7 +902,7 @@ describe('buildScorecard', () => {
   });
 
   it('docs/signal-intelligence.mdx quotes both rules verbatim', () => {
-    const lines = readFileSync(new URL('../docs/signal-intelligence.mdx', import.meta.url), 'utf8').split('\n');
+    const lines = readFileSync(new URL('../docs/signal-intelligence.mdx', import.meta.url), 'utf8').split(/\r?\n/);
     const quote = lines.find((line) => line.startsWith('> An emission resolves HIT'));
     assert.equal(quote, `> ${MARKET_ALERT_RESOLUTION_RULE} ${MARKET_ALERT_BASE_RATE_RULE}`);
   });

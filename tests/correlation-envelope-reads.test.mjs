@@ -90,12 +90,6 @@ const ENVELOPED_KEYS = [
     payload: { quotes: [{ symbol: 'CL=F', changePercent: -4.2 }] },
   },
   {
-    key: 'market:crypto:v1',
-    field: 'quotes',
-    writer: 'scripts/seed-crypto-quotes.mjs',
-    payload: { quotes: [{ symbol: 'BTC-USD', changePercent: 6.8 }] },
-  },
-  {
     key: 'news:insights:v1',
     field: 'topStories',
     writer: 'scripts/seed-insights.mjs',
@@ -144,7 +138,6 @@ describe('fetchInputData envelope handling', () => {
       'seismology:earthquakes:v1',
       'market:stocks-bootstrap:v1',
       'market:commodities-bootstrap:v1',
-      'market:crypto:v1',
       'news:insights:v1',
     ]);
   });
@@ -224,7 +217,6 @@ describe('fetchInputData envelope handling', () => {
       'seismology:earthquakes:v1': JSON.stringify(seedEnvelope(accepted)),
       'market:stocks-bootstrap:v1': JSON.stringify(seedEnvelope({ quotes: {} })),
       'market:commodities-bootstrap:v1': JSON.stringify(seedEnvelope(42)),
-      'market:crypto:v1': JSON.stringify(seedEnvelope({ quotes: [null] })),
       'news:insights:v1': JSON.stringify(seedEnvelope({ topStories: {} })),
     });
 
@@ -241,21 +233,21 @@ describe('fetchInputData envelope handling', () => {
       'seismology:earthquakes:v1': '{"earthquakes":[',
       'market:stocks-bootstrap:v1': JSON.stringify(seedEnvelope({ quotes: { sentinel } })),
     }, {
-      'market:crypto:v1': { error: pipelineError },
+      'market:commodities-bootstrap:v1': { error: pipelineError },
     });
 
     const warnings = [];
     console.warn.mock.mockImplementation((...args) => warnings.push(args));
     const data = await fetchInputData();
     assert.deepEqual(data['unrest:events:v1'], { events: [{ id: 'valid' }] });
-    assert.equal('market:crypto:v1' in data, false);
+    assert.equal('market:commodities-bootstrap:v1' in data, false);
 
     assert.equal(warnings.length, 1);
     assert.equal(warnings[0][0], '  [Correlation] discarded Redis inputs');
     assert.deepEqual(warnings[0][1].byReason, {
       invalid_shape: 1,
       malformed_json: 1,
-      missing: 4,
+      missing: 3,
       null_payload: 1,
       pipeline_error: 1,
     });
@@ -391,7 +383,7 @@ describe('fetchInputData freshness gate', () => {
       assert.equal(warnings.length, 1);
       assert.deepEqual(warnings[0][1].byReason, {
         invalid_fetched_at: 1,
-        missing: 8,
+        missing: 7,
       });
       assert.equal(JSON.stringify(warnings).includes(String(value)), false);
     });

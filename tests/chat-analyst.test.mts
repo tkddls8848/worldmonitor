@@ -1556,7 +1556,7 @@ function poisonedPayloads(): Record<string, unknown> {
     },
     'market:stocks-bootstrap:v1': { quotes: [{ symbol: `SPY${FORGED_BULLET}`, price: 500, changePercent: 1.2 }] },
     'market:commodities-bootstrap:v1': { quotes: [{ symbol: `CL=F${FORGED_BULLET}`, price: 80, changePercent: -0.5 }] },
-    'economic:macro-signals:v1': {
+    'economic:macro-signals:v2': {
       verdict: `RISK-OFF${FORGED_SECTION}`,
       activeSignals: [{ name: `Curve inversion${FORGED_BULLET}` }],
     },

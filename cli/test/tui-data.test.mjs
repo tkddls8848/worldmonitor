@@ -242,7 +242,7 @@ describe('selectors', () => {
   });
   it('groups quotes and builds map blips and ticker segments', () => {
     const g = quoteGroups(bootstrap.data);
-    assert.ok(g.indices.length && g.crypto.length && g.sectors.length);
+    assert.ok(g.indices.length && g.sectors.length);
     const blips = mapBlips(bootstrap.data, t);
     assert.ok(blips.length > 0);
     assert.ok(blips.every((b) => Number.isFinite(b.lat) && Number.isFinite(b.lon)));
@@ -405,7 +405,7 @@ describe('web command', () => {
       }, 5);
       return child;
     };
-    const code = await runWeb({ options: { port: 5173 }, stdout: () => {}, open: (u) => opened.push(u), spawnImpl, cwd: HERE });
+    const code = await runWeb({ options: { port: 5173 }, stdout: () => {}, open: (u) => opened.push(u), spawnImpl, cwd: HERE, platform: 'linux' });
     assert.equal(code, 0);
     assert.deepEqual(opened, ['http://localhost:5173/']);
     assert.deepEqual(spawned.args.slice(0, 3), ['run', 'dev', '--']);

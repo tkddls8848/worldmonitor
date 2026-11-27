@@ -137,14 +137,9 @@ import { publicRpcFetch } from '@/services/public-rpc-fetch';
 import type { ListFeedDigestResponse } from '@/generated/client/worldmonitor/news/v1/service_client';
 import type { GetSectorSummaryResponse, ListMarketQuotesResponse, ListCommodityQuotesResponse } from '@/generated/client/worldmonitor/market/v1/service_client';
 import type {
-  AiTokensPanel,
   CommoditiesPanel,
-  CryptoHeatmapPanel,
-  CryptoPanel,
-  DefiTokensPanel,
   HeatmapPanel,
   MarketPanel,
-  OtherTokensPanel,
   SectorValuation,
 } from '@/components/MarketPanel';
 import type { ChinaCorporateDisclosureSnapshot } from '@/components/market-disclosures';
@@ -1103,7 +1098,7 @@ export class DataLoaderManager implements AppModule {
     }
 
     {
-      if (shouldLoadAny(['markets', 'heatmap', 'commodities', 'crypto', 'energy-complex', 'crypto-heatmap', 'defi-tokens', 'ai-tokens', 'other-tokens'])) {
+      if (shouldLoadAny(['markets', 'heatmap', 'commodities', 'energy-complex'])) {
         tasks.push({ name: 'markets', task: () => runGuarded('markets', () => this.loadMarkets()) });
       }
       if (shouldLoad('stock-analysis')) {
@@ -2300,8 +2295,7 @@ export class DataLoaderManager implements AppModule {
   async loadMarkets(): Promise<void> {
     const generation = this.marketLoadGuard.begin();
     const isCurrent = () => this.marketLoadGuard.isCurrent(generation);
-    // Method-scoped so all of loadMarkets' try blocks (stocks/sectors/commodities +
-    // crypto/defi/ai/other) see these; market is dynamic-imported off eager main.js (#4571).
+    // Keep market service imports off the eager dashboard bundle.
     // Guarded: loadMarkets must not reject (the init() watchlist handler calls it
     // unguarded), so a chunk-load failure skips this cycle like the per-block catches do.
     let marketMod: typeof import('@/services/market');
@@ -2309,27 +2303,20 @@ export class DataLoaderManager implements AppModule {
       marketMod = await import('@/services/market');
     } catch (e) {
       // Persistent failure mode: a stale-deploy chunk 404 would otherwise skip the
-      // whole markets/crypto/commodities cycle with no signal. Log so it's traceable,
+      // whole market cycle with no signal. Log so it's traceable,
       // and mirror the downstream failure states before returning.
       console.warn('[DataLoader] market chunk load failed', e);
       if (isCurrent()) {
         this.ctx.statusPanel?.updateApi('Finnhub', { status: 'error' });
-        this.ctx.statusPanel?.updateApi('CoinGecko', { status: 'error' });
         (this.ctx.panels['markets'] as MarketPanel | undefined)?.showRetrying(t('common.failedMarketData'));
         (this.ctx.panels['heatmap'] as HeatmapPanel | undefined)?.showRetrying(t('common.failedSectorData'));
         (this.ctx.panels['commodities'] as CommoditiesPanel | undefined)?.showRetrying(t('common.failedCommodities'));
         (this.ctx.panels['energy-complex'] as EnergyComplexPanel | undefined)?.showRetrying(t('common.failedCommodities'));
-        (this.ctx.panels['crypto'] as CryptoPanel | undefined)?.showRetrying(t('common.failedCryptoData'));
-        (this.ctx.panels['crypto-heatmap'] as CryptoHeatmapPanel | undefined)?.showRetrying(t('common.failedCryptoData'));
-        (this.ctx.panels['defi-tokens'] as DefiTokensPanel | undefined)?.showRetrying(t('common.failedCryptoData'));
-        (this.ctx.panels['ai-tokens'] as AiTokensPanel | undefined)?.showRetrying(t('common.failedCryptoData'));
-        (this.ctx.panels['other-tokens'] as OtherTokensPanel | undefined)?.showRetrying(t('common.failedCryptoData'));
       }
       return;
     }
     const {
       fetchMultipleStocks, fetchCommodityQuotes, fetchPhysicalDivergence, fetchPhysicalPremiums, fetchSectors, warmCommodityCache, warmSectorCache,
-      fetchCrypto, fetchCryptoSectors, fetchDefiTokens, fetchAiTokens, fetchOtherTokens,
     } = marketMod;
     try {
       const customEntries = getMarketWatchlistEntries();
@@ -2580,40 +2567,6 @@ export class DataLoaderManager implements AppModule {
       if (isCurrent()) this.ctx.statusPanel?.updateApi('Finnhub', { status: 'error' });
     }
 
-    try {
-      const cryptoPanel = this.ctx.panels['crypto'] as CryptoPanel | undefined;
-      const crypto = await fetchCrypto();
-      cryptoPanel?.renderCrypto(crypto);
-      this.ctx.statusPanel?.updateApi('CoinGecko', { status: crypto.length > 0 ? 'ok' : 'error' });
-    } catch {
-      this.ctx.statusPanel?.updateApi('CoinGecko', { status: 'error' });
-    }
-
-    const cryptoHeatmapPanel = this.ctx.panels['crypto-heatmap'] as CryptoHeatmapPanel | undefined;
-    const defiPanel = this.ctx.panels['defi-tokens'] as DefiTokensPanel | undefined;
-    const aiPanel = this.ctx.panels['ai-tokens'] as AiTokensPanel | undefined;
-    const otherPanel = this.ctx.panels['other-tokens'] as OtherTokensPanel | undefined;
-
-    if (cryptoHeatmapPanel || defiPanel || aiPanel || otherPanel) {
-      try {
-        const [sectors, defi, ai, other] = await Promise.all([
-          cryptoHeatmapPanel ? fetchCryptoSectors() : Promise.resolve([]),
-          defiPanel ? fetchDefiTokens() : Promise.resolve([]),
-          aiPanel ? fetchAiTokens() : Promise.resolve([]),
-          otherPanel ? fetchOtherTokens() : Promise.resolve([]),
-        ]);
-        cryptoHeatmapPanel?.renderSectors(sectors);
-        defiPanel?.renderTokens(defi);
-        aiPanel?.renderTokens(ai);
-        otherPanel?.renderTokens(other);
-      } catch (err) {
-        console.warn('[DataLoader] Token panel load failed:', err);
-        cryptoHeatmapPanel?.showRetrying(t('common.failedCryptoData'));
-        defiPanel?.showRetrying(t('common.failedCryptoData'));
-        aiPanel?.showRetrying(t('common.failedCryptoData'));
-        otherPanel?.showRetrying(t('common.failedCryptoData'));
-      }
-    }
   }
 
   async loadPhysicalPremiumComparison(signal?: AbortSignal): Promise<void> {

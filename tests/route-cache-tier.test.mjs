@@ -102,9 +102,7 @@ describe('RPC_CACHE_TIER route parity', () => {
   it('keeps Pro-fresh market routes on the ordinary shared default', () => {
     for (const path of [
       '/api/market/v1/list-market-quotes',
-      '/api/market/v1/list-crypto-quotes',
       '/api/market/v1/list-commodity-quotes',
-      '/api/market/v1/list-stablecoin-markets',
       '/api/market/v1/list-gulf-quotes',
     ]) {
       assert.equal(

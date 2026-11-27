@@ -28,25 +28,6 @@ export interface MarketQuoteUnavailable {
   reason: MarketQuoteUnavailableReason;
 }
 
-export interface ListCryptoQuotesRequest {
-  ids: string[];
-}
-
-export interface ListCryptoQuotesResponse {
-  quotes: CryptoQuote[];
-  unresolvedIds: string[];
-  provider: string;
-}
-
-export interface CryptoQuote {
-  name: string;
-  symbol: string;
-  price: number;
-  change: number;
-  sparkline: number[];
-  change7d: number;
-}
-
 export interface ListCommodityQuotesRequest {
   symbols: string[];
 }
@@ -178,76 +159,6 @@ export interface SectorPerformance {
   symbol: string;
   name: string;
   change: number;
-}
-
-export interface ListStablecoinMarketsRequest {
-  coins: string[];
-}
-
-export interface ListStablecoinMarketsResponse {
-  timestamp: string;
-  summary?: StablecoinSummary;
-  stablecoins: Stablecoin[];
-  unresolved: UnresolvedStablecoin[];
-  dataStatus: string;
-}
-
-export interface StablecoinSummary {
-  totalMarketCap: number;
-  totalVolume24h: number;
-  coinCount: number;
-  depeggedCount: number;
-  healthStatus: string;
-}
-
-export interface Stablecoin {
-  id: string;
-  symbol: string;
-  name: string;
-  price: number;
-  deviation: number;
-  pegStatus: string;
-  marketCap: number;
-  volume24h: number;
-  change24h: number;
-  change7d: number;
-  image: string;
-}
-
-export interface UnresolvedStablecoin {
-  id: string;
-  reason: string;
-}
-
-export interface ListEtfFlowsRequest {
-}
-
-export interface ListEtfFlowsResponse {
-  timestamp: string;
-  summary?: EtfFlowsSummary;
-  etfs: EtfFlow[];
-  rateLimited: boolean;
-}
-
-export interface EtfFlowsSummary {
-  etfCount: number;
-  totalVolume: number;
-  totalEstFlow: number;
-  netDirection: string;
-  inflowCount: number;
-  outflowCount: number;
-}
-
-export interface EtfFlow {
-  ticker: string;
-  issuer: string;
-  price: number;
-  priceChange: number;
-  volume: number;
-  avgVolume: number;
-  volumeRatio: number;
-  direction: string;
-  estFlow: number;
 }
 
 export interface GetCountryStockIndexRequest {
@@ -506,40 +417,6 @@ export interface ListStoredStockBacktestsResponse {
   items: BacktestStockResponse[];
 }
 
-export interface ListCryptoSectorsRequest {
-}
-
-export interface ListCryptoSectorsResponse {
-  sectors: CryptoSector[];
-}
-
-export interface CryptoSector {
-  id: string;
-  name: string;
-  change: number;
-}
-
-export interface ListDefiTokensRequest {
-}
-
-export interface ListDefiTokensResponse {
-  tokens: CryptoQuote[];
-}
-
-export interface ListAiTokensRequest {
-}
-
-export interface ListAiTokensResponse {
-  tokens: CryptoQuote[];
-}
-
-export interface ListOtherTokensRequest {
-}
-
-export interface ListOtherTokensResponse {
-  tokens: CryptoQuote[];
-}
-
 export interface GetFearGreedIndexRequest {
 }
 
@@ -795,19 +672,19 @@ export interface GoldCbMover {
   deltaTonnes12m: number;
 }
 
-export interface GetHyperliquidFlowRequest {
+export interface GetPerpPositioningRequest {
 }
 
-export interface GetHyperliquidFlowResponse {
+export interface GetPerpPositioningResponse {
   ts: string;
   fetchedAt: string;
   warmup: boolean;
   assetCount: number;
-  assets: HyperliquidAssetFlow[];
+  assets: PerpPositioningAsset[];
   unavailable: boolean;
 }
 
-export interface HyperliquidAssetFlow {
+export interface PerpPositioningAsset {
   symbol: string;
   display: string;
   assetClass: string;
@@ -915,31 +792,6 @@ export class MarketServiceClient {
     return await resp.json() as ListMarketQuotesResponse;
   }
 
-  async listCryptoQuotes(req: ListCryptoQuotesRequest, options?: MarketServiceCallOptions): Promise<ListCryptoQuotesResponse> {
-    let path = "/api/market/v1/list-crypto-quotes";
-    const params = new URLSearchParams();
-    if (req.ids && req.ids.length > 0) req.ids.forEach(v => params.append("ids", v));
-    const url = this.baseURL + path + (params.toString() ? "?" + params.toString() : "");
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...this.defaultHeaders,
-      ...options?.headers,
-    };
-
-    const resp = await this.fetchFn(url, {
-      method: "GET",
-      headers,
-      signal: options?.signal,
-    });
-
-    if (!resp.ok) {
-      return this.handleError(resp);
-    }
-
-    return await resp.json() as ListCryptoQuotesResponse;
-  }
-
   async listCommodityQuotes(req: ListCommodityQuotesRequest, options?: MarketServiceCallOptions): Promise<ListCommodityQuotesResponse> {
     let path = "/api/market/v1/list-commodity-quotes";
     const params = new URLSearchParams();
@@ -1038,54 +890,6 @@ export class MarketServiceClient {
     }
 
     return await resp.json() as GetSectorSummaryResponse;
-  }
-
-  async listStablecoinMarkets(req: ListStablecoinMarketsRequest, options?: MarketServiceCallOptions): Promise<ListStablecoinMarketsResponse> {
-    let path = "/api/market/v1/list-stablecoin-markets";
-    const params = new URLSearchParams();
-    if (req.coins && req.coins.length > 0) req.coins.forEach(v => params.append("coins", v));
-    const url = this.baseURL + path + (params.toString() ? "?" + params.toString() : "");
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...this.defaultHeaders,
-      ...options?.headers,
-    };
-
-    const resp = await this.fetchFn(url, {
-      method: "GET",
-      headers,
-      signal: options?.signal,
-    });
-
-    if (!resp.ok) {
-      return this.handleError(resp);
-    }
-
-    return await resp.json() as ListStablecoinMarketsResponse;
-  }
-
-  async listEtfFlows(_req: ListEtfFlowsRequest, options?: MarketServiceCallOptions): Promise<ListEtfFlowsResponse> {
-    let path = "/api/market/v1/list-etf-flows";
-    const url = this.baseURL + path;
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...this.defaultHeaders,
-      ...options?.headers,
-    };
-
-    const resp = await this.fetchFn(url, {
-      method: "GET",
-      headers,
-      signal: options?.signal,
-    });
-
-    if (!resp.ok) {
-      return this.handleError(resp);
-    }
-
-    return await resp.json() as ListEtfFlowsResponse;
   }
 
   async getCountryStockIndex(req: GetCountryStockIndexRequest, options?: MarketServiceCallOptions): Promise<GetCountryStockIndexResponse> {
@@ -1269,98 +1073,6 @@ export class MarketServiceClient {
     return await resp.json() as ListStoredStockBacktestsResponse;
   }
 
-  async listCryptoSectors(_req: ListCryptoSectorsRequest, options?: MarketServiceCallOptions): Promise<ListCryptoSectorsResponse> {
-    let path = "/api/market/v1/list-crypto-sectors";
-    const url = this.baseURL + path;
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...this.defaultHeaders,
-      ...options?.headers,
-    };
-
-    const resp = await this.fetchFn(url, {
-      method: "GET",
-      headers,
-      signal: options?.signal,
-    });
-
-    if (!resp.ok) {
-      return this.handleError(resp);
-    }
-
-    return await resp.json() as ListCryptoSectorsResponse;
-  }
-
-  async listDefiTokens(_req: ListDefiTokensRequest, options?: MarketServiceCallOptions): Promise<ListDefiTokensResponse> {
-    let path = "/api/market/v1/list-defi-tokens";
-    const url = this.baseURL + path;
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...this.defaultHeaders,
-      ...options?.headers,
-    };
-
-    const resp = await this.fetchFn(url, {
-      method: "GET",
-      headers,
-      signal: options?.signal,
-    });
-
-    if (!resp.ok) {
-      return this.handleError(resp);
-    }
-
-    return await resp.json() as ListDefiTokensResponse;
-  }
-
-  async listAiTokens(_req: ListAiTokensRequest, options?: MarketServiceCallOptions): Promise<ListAiTokensResponse> {
-    let path = "/api/market/v1/list-ai-tokens";
-    const url = this.baseURL + path;
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...this.defaultHeaders,
-      ...options?.headers,
-    };
-
-    const resp = await this.fetchFn(url, {
-      method: "GET",
-      headers,
-      signal: options?.signal,
-    });
-
-    if (!resp.ok) {
-      return this.handleError(resp);
-    }
-
-    return await resp.json() as ListAiTokensResponse;
-  }
-
-  async listOtherTokens(_req: ListOtherTokensRequest, options?: MarketServiceCallOptions): Promise<ListOtherTokensResponse> {
-    let path = "/api/market/v1/list-other-tokens";
-    const url = this.baseURL + path;
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...this.defaultHeaders,
-      ...options?.headers,
-    };
-
-    const resp = await this.fetchFn(url, {
-      method: "GET",
-      headers,
-      signal: options?.signal,
-    });
-
-    if (!resp.ok) {
-      return this.handleError(resp);
-    }
-
-    return await resp.json() as ListOtherTokensResponse;
-  }
-
   async getFearGreedIndex(_req: GetFearGreedIndexRequest, options?: MarketServiceCallOptions): Promise<GetFearGreedIndexResponse> {
     let path = "/api/market/v1/get-fear-greed-index";
     const url = this.baseURL + path;
@@ -1504,8 +1216,8 @@ export class MarketServiceClient {
     return await resp.json() as GetGoldIntelligenceResponse;
   }
 
-  async getHyperliquidFlow(_req: GetHyperliquidFlowRequest, options?: MarketServiceCallOptions): Promise<GetHyperliquidFlowResponse> {
-    let path = "/api/market/v1/get-hyperliquid-flow";
+  async getPerpPositioning(_req: GetPerpPositioningRequest, options?: MarketServiceCallOptions): Promise<GetPerpPositioningResponse> {
+    let path = "/api/market/v1/get-perp-positioning";
     const url = this.baseURL + path;
 
     const headers: Record<string, string> = {
@@ -1524,7 +1236,7 @@ export class MarketServiceClient {
       return this.handleError(resp);
     }
 
-    return await resp.json() as GetHyperliquidFlowResponse;
+    return await resp.json() as GetPerpPositioningResponse;
   }
 
   private async handleError(resp: Response): Promise<never> {

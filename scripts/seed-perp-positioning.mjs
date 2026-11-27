@@ -8,15 +8,17 @@
  * basis) per asset, and publishes a self-contained snapshot — current metrics
  * plus short per-asset sparkline arrays for funding, OI and score.
  *
- * Used as a leading indicator for commodities / crypto / FX in CommoditiesPanel.
+ * Used as a leading indicator for commodities and FX in the positioning and commodities panels.
  */
 
 import { loadEnvFile, runSeed, readSeedSnapshot, writeExtraKeyWithMeta } from './_seed-utils.mjs';
 
 loadEnvFile(import.meta.url);
 
-export const CANONICAL_KEY = 'market:hyperliquid:flow:v1';
-export const BASELINE_KEY = 'market:hyperliquid:flow:baseline:v1';
+export const CANONICAL_KEY = 'market:perp-positioning:v1';
+export const BASELINE_KEY = 'market:perp-positioning:baseline:v1';
+// Preserve the running health probe's seed metadata across the payload cutover.
+const HEALTH_RESOURCE = 'hyperliquid-flow';
 export const CACHE_TTL_SECONDS = 2700; // 9× cron cadence (5 min); honest grace window
 export const BASELINE_TTL_SECONDS = 604800; // 7d — baseline state survives live-key expiry/redeploy gaps
 export const SPARK_MAX = 60;             // 5h @ 5min
@@ -30,10 +32,6 @@ export const MAX_UPSTREAM_UNIVERSE = 2000;     // defensive cap; Hyperliquid has
 // Hardcoded symbol whitelist — never iterate the full universe.
 // `class`: scoring threshold class. `display`: UI label. `group`: panel section.
 export const ASSETS = [
-  { symbol: 'BTC',           class: 'crypto',    display: 'BTC',           group: 'crypto' },
-  { symbol: 'ETH',           class: 'crypto',    display: 'ETH',           group: 'crypto' },
-  { symbol: 'SOL',           class: 'crypto',    display: 'SOL',           group: 'crypto' },
-  { symbol: 'PAXG',          class: 'commodity', display: 'PAXG (gold)',   group: 'metals' },
   { symbol: 'xyz:CL',        class: 'commodity', display: 'WTI Crude',     group: 'oil' },
   { symbol: 'xyz:BRENTOIL',  class: 'commodity', display: 'Brent Crude',   group: 'oil' },
   { symbol: 'xyz:GOLD',      class: 'commodity', display: 'Gold',          group: 'metals' },
@@ -50,7 +48,6 @@ export const ASSETS = [
 export const WEIGHTS = { funding: 0.30, volume: 0.25, oi: 0.25, basis: 0.20 };
 
 export const THRESHOLDS = {
-  crypto:    { funding: 0.001,  volume: 5.0, oi: 0.20, basis: 0.05 },
   commodity: { funding: 0.0005, volume: 3.0, oi: 0.15, basis: 0.03 },
 };
 
@@ -123,7 +120,7 @@ function trailingValidOiSamples(values) {
  * first poll after cold start. Without this, the "warming up" badge flips to false
  * while the score is still missing comparable baseline history.
  *
- * @param {{ symbol: string; display: string; class: 'crypto'|'commodity'; group: string }} meta
+ * @param {{ symbol: string; display: string; class: 'commodity'; group: string }} meta
  * @param {Record<string, unknown>} ctx
  * @param {any} prevAsset
  * @param {{ coldStart?: boolean; suppressOiDelta?: boolean }} [opts]
@@ -245,10 +242,7 @@ function shiftAndAppend(prev, value) {
 
 // ── Hyperliquid client ────────────────────────────────────────────────────────
 
-// Minimum universe size expected per dex. Default perps have ~200; xyz builder
-// dex has ~60. Each threshold is half the observed size so we still reject
-// genuinely broken payloads without false-positives on a thinner dex.
-const MIN_UNIVERSE_DEFAULT = 50;
+// Reject truncated exchange snapshots.
 const MIN_UNIVERSE_XYZ = 30;
 
 /**
@@ -276,25 +270,10 @@ export async function fetchHyperliquidMetaAndCtxs(dex = undefined, fetchImpl = f
   return resp.json();
 }
 
-/**
- * Fetch both the default perp dex (BTC/ETH/SOL/PAXG...) and the xyz builder
- * dex (commodities + FX perps) in parallel, validate each payload, and merge
- * into a single `{universe, assetCtxs}`.
- *
- * xyz: asset names already carry the `xyz:` prefix in their universe entries,
- * so no rewriting is needed — just concatenate.
- */
+/** Fetch the exchange's commodity and FX contract market. */
 export async function fetchAllMetaAndCtxs(fetchImpl = fetch) {
-  const [defaultRaw, xyzRaw] = await Promise.all([
-    fetchHyperliquidMetaAndCtxs(undefined, fetchImpl),
-    fetchHyperliquidMetaAndCtxs('xyz', fetchImpl),
-  ]);
-  const def = validateDexPayload(defaultRaw, 'default', MIN_UNIVERSE_DEFAULT);
-  const xyz = validateDexPayload(xyzRaw, 'xyz', MIN_UNIVERSE_XYZ);
-  return {
-    universe: [...def.universe, ...xyz.universe],
-    assetCtxs: [...def.assetCtxs, ...xyz.assetCtxs],
-  };
+  const raw = await fetchHyperliquidMetaAndCtxs('xyz', fetchImpl);
+  return validateDexPayload(raw, 'xyz', MIN_UNIVERSE_XYZ);
 }
 
 /**
@@ -333,17 +312,14 @@ export function validateDexPayload(raw, dexLabel, minUniverse) {
 }
 
 /**
- * Back-compat wrapper used by buildSnapshot. Accepts either a single-dex raw
- * `[meta, assetCtxs]` tuple (tests) or the merged `{universe, assetCtxs}` shape
- * produced by fetchAllMetaAndCtxs. Returns the merged shape.
+ * Accepts a validated snapshot or a raw exchange tuple.
  */
 export function validateUpstream(raw) {
   // Merged shape from fetchAllMetaAndCtxs: already validated per-dex.
   if (raw && !Array.isArray(raw) && Array.isArray(raw.universe) && Array.isArray(raw.assetCtxs)) {
     return { universe: raw.universe, assetCtxs: raw.assetCtxs };
   }
-  // Single-dex tuple (legacy / tests): validate as default dex.
-  return validateDexPayload(raw, 'default', MIN_UNIVERSE_DEFAULT);
+  return validateDexPayload(raw, 'xyz', MIN_UNIVERSE_XYZ);
 }
 
 export function indexBySymbol({ universe, assetCtxs }) {
@@ -436,7 +412,7 @@ export function buildSnapshot(upstream, prevSnapshot, opts = {}) {
 }
 
 export function validateFn(snapshot) {
-  return !!snapshot && Array.isArray(snapshot.assets) && snapshot.assets.length >= 12;
+  return !!snapshot && Array.isArray(snapshot.assets) && snapshot.assets.length >= ASSETS.length - 2;
 }
 
 export function declareRecords(data) {
@@ -459,7 +435,7 @@ export function declareRecords(data) {
  *   fetchAllMetaAndCtxsImpl?: typeof fetchAllMetaAndCtxs;
  * }} [deps]
  */
-export async function runHyperliquidFlowSeed(deps = {}) {
+export async function runPerpPositioningSeed(deps = {}) {
   const {
     readSeedSnapshotImpl = readSeedSnapshot,
     writeExtraKeyWithMetaImpl = writeExtraKeyWithMeta,
@@ -471,8 +447,6 @@ export async function runHyperliquidFlowSeed(deps = {}) {
     const prevSnapshot = canonicalSnapshot
       ?? await readSeedSnapshotImpl(BASELINE_KEY, { strict: true });
 
-    // Commodity + FX perps live on the xyz builder dex, NOT the default dex.
-    // Must fetch both and merge before scoring (see fetchAllMetaAndCtxs).
     const upstream = await fetchAllMetaAndCtxsImpl();
     return buildSnapshot(upstream, prevSnapshot);
   };
@@ -493,7 +467,7 @@ export async function runHyperliquidFlowSeed(deps = {}) {
         snapshot,
         BASELINE_TTL_SECONDS,
         snapshot.assets.length,
-        'seed-meta:market:hyperliquid-flow-baseline',
+        'seed-meta:market:perp-positioning-baseline',
       );
       if (wroteMeta !== true) {
         throw new Error('Hyperliquid baseline seed-meta write failed');
@@ -502,20 +476,20 @@ export async function runHyperliquidFlowSeed(deps = {}) {
   };
 
   if (deps.runSeedImpl) {
-    return deps.runSeedImpl('market', 'hyperliquid-flow', CANONICAL_KEY, fetchSnapshot, seedOptions);
+    return deps.runSeedImpl('market', HEALTH_RESOURCE, CANONICAL_KEY, fetchSnapshot, seedOptions);
   }
-  return runSeed('market', 'hyperliquid-flow', CANONICAL_KEY, fetchSnapshot, seedOptions);
+  return runSeed('market', HEALTH_RESOURCE, CANONICAL_KEY, fetchSnapshot, seedOptions);
 }
 
 // ── Entry point ──────────────────────────────────────────────────────────────
 
-const isMain = process.argv[1]?.endsWith('seed-hyperliquid-flow.mjs');
+const isMain = process.argv[1]?.endsWith('seed-perp-positioning.mjs');
 if (isMain) {
   // The live key has an intentionally short TTL so consumers cannot mistake an
   // abandoned feed for current data. Baseline state has a separate, longer TTL:
   // losing the live key during a deploy/outage must not erase accumulated
   // samples and force every asset back through warmup.
-  await runHyperliquidFlowSeed().catch((err) => {
+  await runPerpPositioningSeed().catch((err) => {
     const cause = err.cause ? ` (cause: ${err.cause.message || err.cause.code || err.cause})` : '';
     console.error('FATAL:', (err.message || err) + cause);
     process.exit(1);

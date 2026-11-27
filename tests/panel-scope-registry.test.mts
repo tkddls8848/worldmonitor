@@ -34,7 +34,7 @@ describe('PANEL_SCOPE_BEHAVIOUR', () => {
   });
 
   it('marks markets and prices global, and the Phase 1 panels as filtering', () => {
-    for (const key of ['markets', 'commodities', 'crypto', 'fear-greed', 'yield-curve']) {
+    for (const key of ['markets', 'commodities', 'fear-greed', 'yield-curve']) {
       assert.equal(getPanelScopeBehaviour(key), 'global', key);
     }
     for (const key of ['politics', 'security-advisories', 'ucdp-events', 'airline-intel']) {

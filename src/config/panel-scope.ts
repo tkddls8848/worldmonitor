@@ -11,7 +11,7 @@
  *                does not yet override `Panel.applyScope` is labelled "Not
  *                filtered" at runtime, so a declaration can never get ahead
  *                of the code (see `PanelLayoutManager.applyScopeToPanel`).
- *   global       global by nature (markets, prices, indices, crypto, macro,
+ *   global       global by nature (markets, prices, indices, macro,
  *                funding): unchanged and labelled "Not filtered".
  *   unsupported  could follow a country but does not yet: unchanged and
  *                labelled "Not filtered".
@@ -59,20 +59,13 @@ export const PANEL_SCOPE_BEHAVIOUR: Readonly<Record<string, PanelScopeBehaviour>
   polymarket: 'global', // Predictions
   'world-clock': 'global', // World Clock
    // Accelerators & Demo Days
-  crypto: 'global', // Crypto
   ipo: 'global', // IPOs, Earnings & M&A
   'service-status': 'global', // Service Status
-  'etf-flows': 'global', // BTC ETF Tracker
-  stablecoins: 'global', // Stablecoins
   'stock-analysis': 'global', // Stock Analysis
   'stock-backtest': 'global', // Backtesting
   'daily-market-brief': 'global', // Daily Market Brief
   fx: 'global', // FX Rates
   bonds: 'global', // Fixed Income
-  'crypto-heatmap': 'global', // Crypto Sectors
-  'defi-tokens': 'global', // DeFi Tokens
-  'ai-tokens': 'global', // AI Tokens
-  'other-tokens': 'global', // Alt Tokens
   'macro-tiles': 'global', // Macro Indicators
   'fear-greed': 'global', // Fear & Greed
   'aaii-sentiment': 'global', // AAII Sentiment
@@ -134,7 +127,6 @@ export const PANEL_SCOPE_BEHAVIOUR: Readonly<Record<string, PanelScopeBehaviour>
   'markets-news': 'unsupported', // Markets News
   forex: 'unsupported', // Forex & Currencies
   'commodities-news': 'unsupported', // Commodities News
-  'crypto-news': 'unsupported', // Crypto News
   centralbanks: 'unsupported', // Central Bank Watch
   'economic-news': 'unsupported', // Economic News
   fintech: 'unsupported', // Fintech & Trading Tech

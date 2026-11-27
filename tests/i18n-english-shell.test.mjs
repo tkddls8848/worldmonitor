@@ -217,7 +217,6 @@ describe('English i18n shell split', () => {
     );
 
     const requiredPaths = [
-      'components.etfFlows.netNeutral',
       'shell',
       'header',
       'panels',

@@ -81,7 +81,6 @@ const PUBLISHER_FAMILY_DATA = {
     labels: [
       "Bloomberg",
       "Bloomberg Commodities",
-      "Bloomberg Crypto",
       "Bloomberg Energy",
       "Bloomberg Markets",
     ],
@@ -155,7 +154,6 @@ const PUBLISHER_FAMILY_DATA = {
       "Reuters Asia",
       "Reuters Business",
       "Reuters Commodities",
-      "Reuters Crypto",
       "Reuters Energy",
       "Reuters India",
       "Reuters LatAm",

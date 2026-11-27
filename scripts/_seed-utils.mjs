@@ -42,87 +42,6 @@ const __seed_dirname = dirname(fileURLToPath(import.meta.url));
 export { CHROME_UA, MAX_PAYLOAD_BYTES };
 
 /**
- * Resolve the CoinGecko base URL + auth header for the configured key tier.
- *
- * CoinGecko's free **Demo** plan and paid **Pro** plan share the `CG-` key
- * prefix but use *different* hosts and auth headers — a Demo key sent to the
- * Pro host fails with `HTTP 400` (error 10011: "change your root URL from
- * pro-api.coingecko.com to api.coingecko.com"), and a Pro key on the public
- * host is unauthenticated. The key string alone can't tell the tiers apart,
- * so the tier is selected explicitly by which env var is set:
- *
- *   - `COINGECKO_API_KEY`      → Pro    (pro-api.coingecko.com, x-cg-pro-api-key)
- *   - `COINGECKO_DEMO_API_KEY` → Demo   (api.coingecko.com,     x-cg-demo-api-key)
- *   - neither                  → keyless public endpoint (shared IP, 429-prone)
- *
- * Pro takes precedence so existing Pro deployments are unaffected.
- *
- * @param {Record<string, string>} [extraHeaders] merged into the returned headers
- * @returns {{ baseUrl: string, headers: Record<string, string>, tier: 'pro' | 'demo' | 'keyless' }}
- */
-export function coingeckoEndpoint(extraHeaders = {}) {
-  const proKey = process.env.COINGECKO_API_KEY;
-  const demoKey = process.env.COINGECKO_DEMO_API_KEY;
-  const headers = { Accept: 'application/json', 'User-Agent': CHROME_UA, ...extraHeaders };
-  if (proKey) {
-    headers['x-cg-pro-api-key'] = proKey;
-    return { baseUrl: 'https://pro-api.coingecko.com/api/v3', headers, tier: 'pro' };
-  }
-  if (demoKey) {
-    headers['x-cg-demo-api-key'] = demoKey;
-    return { baseUrl: 'https://api.coingecko.com/api/v3', headers, tier: 'demo' };
-  }
-  return { baseUrl: 'https://api.coingecko.com/api/v3', headers, tier: 'keyless' };
-}
-
-/**
- * Fetch a CoinGecko URL, retrying 429s only while the whole phase still fits
- * `budgetMs`.
- *
- * The budget is a ceiling on the phase, in-flight request included: before
- * each backoff sleep the next attempt's full request timeout is charged
- * alongside the sleep, and the loop gives up when they would not fit. A seeder
- * run as a bundle section can therefore size `budgetMs` so its CoinPaprika
- * fallback still fits the section's timeoutMs (tests/seed-fetch-budget.test.mjs
- * gates that arithmetic). Retrying by attempt count instead let identical
- * copies of this loop sleep 150s into a 120s section (2026-04-14, 2026-09-20).
- *
- * @param {string} url
- * @param {{ headers?: Record<string, string>, requestTimeoutMs: number, budgetMs: number, fetchFn?: typeof fetch, sleepFn?: (ms: number) => Promise<void>, now?: () => number }} options
- * @returns {Promise<Response>} the first OK response; any non-429 error status throws
- */
-export async function fetchCoinGeckoWithRetryBudget(url, {
-  headers = { Accept: 'application/json', 'User-Agent': CHROME_UA },
-  requestTimeoutMs,
-  budgetMs,
-  fetchFn = fetch,
-  sleepFn = sleep,
-  now = Date.now,
-}) {
-  // An undefined budget would compare NaN and retry forever, which is the
-  // failure this helper exists to rule out.
-  for (const [name, value] of Object.entries({ requestTimeoutMs, budgetMs })) {
-    if (!Number.isFinite(value) || value <= 0) throw new TypeError(`fetchCoinGeckoWithRetryBudget: ${name} must be a positive number, got ${value}`);
-  }
-  const startedAt = now();
-  for (let attempt = 1; ; attempt++) {
-    const resp = await fetchFn(url, { headers, signal: AbortSignal.timeout(requestTimeoutMs) });
-    if (resp.status === 429) {
-      const elapsed = now() - startedAt;
-      const wait = Math.min(5_000 * 2 ** (attempt - 1), 60_000);
-      if (elapsed + wait + requestTimeoutMs > budgetMs) {
-        throw new Error(`CoinGecko rate limit exceeded after ${attempt} attempt(s) in ${Math.round(elapsed / 1000)}s (${budgetMs / 1000}s retry budget)`);
-      }
-      console.warn(`  CoinGecko 429 — waiting ${wait / 1000}s (attempt ${attempt}, ${Math.round(elapsed / 1000)}s of ${budgetMs / 1000}s budget)`);
-      await sleepFn(wait);
-      continue;
-    }
-    if (!resp.ok) throw new Error(`CoinGecko HTTP ${resp.status}`);
-    return resp;
-  }
-}
-
-/**
  * Unwrap fetch / network errors so log lines surface the actual cause
  * (DNS / TCP reset / TLS abort) instead of undici's bare "fetch failed".
  * Pulls `err.cause.code` (preferred — `ENOTFOUND`, `ECONNRESET`, etc.),
@@ -140,53 +59,6 @@ export function describeErr(err) {
   const cause = err.cause;
   const causeCode = cause?.code || cause?.errno || cause?.message || (typeof cause === 'string' ? cause : null);
   return causeCode ? `${err.message} (cause: ${causeCode})` : (err.message || String(err));
-}
-
-/**
- * Fetch only configured CoinPaprika ticker IDs instead of the full /tickers
- * catalog. The catalog endpoint currently returns 13k+ records; seeders only
- * need a small mapped subset, so per-ID reads avoid Edge/cron memory and
- * latency spikes while preserving the same ticker shape.
- *
- * @param {string[]} paprikaIds CoinPaprika ids, e.g. btc-bitcoin
- * @param {{ fetchFn?: typeof fetch, headers?: Record<string, string>, timeoutMs?: number }} [options]
- * @returns {Promise<object[]>}
- */
-export async function fetchCoinPaprikaTickersById(paprikaIds, options = {}) {
-  const ids = [...new Set(paprikaIds.filter(Boolean))];
-  if (ids.length === 0) return [];
-
-  const fetchFn = options.fetchFn || fetch;
-  const headers = { Accept: 'application/json', 'User-Agent': CHROME_UA, ...(options.headers || {}) };
-  const timeoutMs = options.timeoutMs || 15_000;
-  const concurrency = Math.max(1, Math.min(Number(options.concurrency || 4), ids.length));
-
-  const results = await allSettledWithConcurrency(ids, concurrency, async (id) => {
-    const resp = await fetchFn(`https://api.coinpaprika.com/v1/tickers/${encodeURIComponent(id)}?quotes=USD`, {
-      headers,
-      signal: AbortSignal.timeout(timeoutMs),
-    });
-    if (!resp.ok) throw new Error(`CoinPaprika ${id} HTTP ${resp.status}`);
-    return resp.json();
-  });
-
-  const tickers = [];
-  const failures = [];
-  for (let i = 0; i < results.length; i += 1) {
-    const result = results[i];
-    if (result.status === 'fulfilled') {
-      tickers.push(result.value);
-    } else {
-      failures.push(result.reason);
-      console.warn(`[CoinPaprika] Skipping ${ids[i]}: ${describeErr(result.reason)}`);
-    }
-  }
-
-  if (tickers.length === 0 && failures.length > 0) {
-    throw new Error(`All ${failures.length} CoinPaprika ticker request(s) failed`);
-  }
-
-  return tickers;
 }
 
 export async function allSettledWithConcurrency(items, concurrency, mapper) {
@@ -2387,7 +2259,7 @@ export function computeRecordCount({ opts = {}, data, payloadBytes = 0, topicArt
       ?? data?.predictions?.length
       ?? data?.events?.length ?? data?.earthquakes?.length ?? data?.outages?.length
       ?? data?.fireDetections?.length ?? data?.anomalies?.length ?? data?.threats?.length
-      ?? data?.quotes?.length ?? data?.stablecoins?.length
+      ?? data?.quotes?.length
       ?? data?.cables?.length);
   if (detectedFromShape != null) return detectedFromShape;
   if (payloadBytes > 0) {

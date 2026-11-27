@@ -1,6 +1,6 @@
 /**
  * RPC: getMacroSignals -- reads seeded macro signal data from Railway seed cache.
- * All external Yahoo Finance/Alternative.me/Mempool calls happen in seed-economy.mjs on Railway.
+ * All external Yahoo Finance and FRED calls happen in seed-economy.mjs on Railway.
  */
 
 import type {
@@ -11,7 +11,7 @@ import type {
 
 import { getCachedJson } from '../../../_shared/redis';
 
-const SEED_CACHE_KEY = 'economic:macro-signals:v1';
+const SEED_CACHE_KEY = 'economic:macro-signals:v2';
 
 function buildFallbackResult(): GetMacroSignalsResponse {
   return {
@@ -21,12 +21,7 @@ function buildFallbackResult(): GetMacroSignalsResponse {
     totalCount: 0,
     signals: {
       liquidity: { status: 'UNKNOWN', sparkline: [] },
-      flowStructure: { status: 'UNKNOWN' },
       macroRegime: { status: 'UNKNOWN' },
-      technicalTrend: { status: 'UNKNOWN', sparkline: [] },
-      hashRate: { status: 'UNKNOWN' },
-      priceMomentum: { status: 'UNKNOWN' },
-      fearGreed: { status: 'UNKNOWN', history: [] },
     },
     meta: { qqqSparkline: [] },
     unavailable: true,

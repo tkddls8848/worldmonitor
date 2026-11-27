@@ -4,13 +4,13 @@ package worldmonitor.market.v1;
 
 import "sebuf/http/annotations.proto";
 
-message GetHyperliquidFlowRequest {}
+message GetPerpPositioningRequest {}
 
-message HyperliquidAssetFlow {
+message PerpPositioningAsset {
   string symbol = 1;
   string display = 2;
-  string asset_class = 3;     // "crypto" or "commodity"
-  string group = 4;           // "crypto" / "oil" / "metals" / "industrial" / "gas" / "fx"
+  string asset_class = 3;     // "commodity" for the tracked instruments.
+  string group = 4;           // "oil" / "metals" / "industrial" / "gas" / "fx"
   // Raw metrics (nullable as strings to preserve precision; "" = unavailable)
   string funding = 5;         // hourly funding rate
   string open_interest = 6;
@@ -35,12 +35,12 @@ message HyperliquidAssetFlow {
   repeated string alerts = 22;
 }
 
-message GetHyperliquidFlowResponse {
+message GetPerpPositioningResponse {
   int64 ts = 1;               // snapshot timestamp (epoch ms)
   string fetched_at = 2;      // ISO-8601 of `ts`
   bool warmup = 3;             // true while any asset is in warmup state
   int32 asset_count = 4;
-  repeated HyperliquidAssetFlow assets = 5;
+  repeated PerpPositioningAsset assets = 5;
   // True when the upstream or seed-backed variant is unavailable; empty payload fields
   // are graceful degradation, not confirmed zero data.
   bool unavailable = 6;

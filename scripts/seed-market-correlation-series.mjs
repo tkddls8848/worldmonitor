@@ -12,8 +12,6 @@ const YAHOO_DELAY_MS = 150;
 export const MARKET_CORRELATION_SERIES = Object.freeze([
   { symbol: '^GSPC', label: 'S&P 500' },
   { symbol: '^IXIC', label: 'Nasdaq Composite' },
-  { symbol: 'BTC-USD', label: 'Bitcoin' },
-  { symbol: 'ETH-USD', label: 'Ethereum' },
   { symbol: 'GC=F', label: 'Gold' },
   { symbol: 'CL=F', label: 'WTI Crude' },
 ]);

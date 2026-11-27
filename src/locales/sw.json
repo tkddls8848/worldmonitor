@@ -57,13 +57,11 @@
     "preflightProRequired": "Usajili wa Pro unahitajika ili kutumia Kiunda Wijeti. Boresha ili kufungua.",
     "examples": {
       "oilGold": "Nionyeshe bei ya mafuta ghafi ya leo dhidi ya dhahabu",
-      "cryptoMovers": "Unda wijeti ya wahamishaji bora wa crypto katika saa 24 zilizopita",
       "flightDelays": "Fanya muhtasari wa ucheleweshaji mbaya zaidi wa ndege za kimataifa hivi sasa",
       "conflictHotspots": "Ramani ya maeneo maarufu ya mizozo ya UCDP yenye lebo fupi"
     },
     "proExamples": {
       "interactiveChart": "Chati inayoingiliana ya Chart.js inayolinganisha bei ya mafuta na dhahabu",
-      "sortableTable": "Jedwali la bei ya crypto linaloweza kupangwa na kichujio cha utafutaji",
       "animatedCounters": "Kaunta zilizohuishwa za viashirio muhimu vya kiuchumi",
       "tabbedComparison": "Ulinganisho wa kichupo wa matukio ya migogoro kwa eneo"
     }
@@ -417,7 +415,6 @@
     "sourceRegionMarkets": "Masoko na Uchambuzi",
     "sourceRegionFixedIncomeFx": "Mapato Yakini na Ubadilishaji wa fedha za kigeni",
     "sourceRegionCommodities": "Bidhaa",
-    "sourceRegionCryptoDigital": "Crypto & Dijitali",
     "sourceRegionCentralBanks": "Benki Kuu na Uchumi",
     "sourceRegionDeals": "Mikataba na Biashara",
     "sourceRegionFinRegulation": "Udhibiti wa Fedha",
@@ -439,7 +436,6 @@
     "panelCatMarkets": "Masoko",
     "panelCatFixedIncomeFx": "Mapato Yakini na Ubadilishaji wa fedha za kigeni",
     "panelCatCommodities": "Bidhaa",
-    "panelCatCryptoDigital": "Crypto & Dijitali",
     "panelCatCentralBanks": "Benki Kuu na Uchumi",
     "panelCatDeals": "Mikataba na Taasisi",
     "panelCatGulfMena": "Ghuba, Mashariki ya Kati na Afrika Kaskazini",
@@ -483,15 +479,12 @@
     "supplyChain": "Mnyororo wa Ugavi",
     "finance": "Kifedha",
     "tech": "Teknolojia",
-    "crypto": "Kripto",
     "heatmap": "Ramani ya joto ya Sekta",
     "ai": "AI na kujifunza kwa mashine",
     "layoffs": "Tracker ya Kuachishwa kazi",
     "monitors": "Wachunguzi Wangu",
     "satelliteFires": "Moto",
     "macroSignals": "Hali ya soko la Bitcoin",
-    "etfFlows": "Mtiririko wa fedha wa Bitcoin",
-    "stablecoins": "Stablecoins",
     "deduction": "Kata Hali",
     "ucdpEvents": "Matukio ya Migogoro ya Silaha",
     "displacement": "Wakimbizi na uhama",
@@ -1139,15 +1132,6 @@
       "leanYes": "Konda Ndiyo",
       "leanNo": "Inaelekea HAPANA",
       "tossUp": "Kutupa-juu"
-    },
-    "stablecoins": {
-      "pegHealth": "Afya ya Peg",
-      "supplyVolume": "Ugavi & Kiasi",
-      "token": "Ishara",
-      "mcap": "Thamani ya soko",
-      "vol24h": "Kiasi 24h",
-      "chg24h": "Mabadiliko 24h",
-      "infoTooltip": "<strong>Stablecoins</strong> Afya ya kigingi, kiwango cha juu cha soko, na ujazo wa saa 24 kwa tokeni kuu za USD-pegged (USDT, USDC, DAI, BUSD). Kigingi kilichovunjika kinaashiria hatari ya kimfumo."
     },
     "marketImplications": {
       "infoTooltip": "<strong>Athari za Soko la AI</strong> Ishara za biashara zinazozalishwa na LLM zinazotokana na hali ya jiografia, bidhaa, na hali ya jumla baada ya kila mzunguko wa utabiri.<ul><li><strong>Mwelekeo</strong>: NDEFU / MFUPI / HEDGE</li><li><strong>Muda wa Muda</strong>: 1W, 2M, 2W, au 3M, upeo wa macho</li><li><strong>Dereva</strong>: Kichocheo kikuu nyuma ya mawimbi</li><li><strong>Hatari</strong>: Pango au hali ya kubatilisha</li></ul><em>Kwa madhumuni ya habari pekee. Si ushauri wa uwekezaji.</em>",
@@ -1931,27 +1915,6 @@
     "prediction": {
       "infoTooltip": "<strong>Masoko ya Utabiri</strong> Masoko ya utabiri wa pesa halisi:<ul><li>Bei zinaonyesha makadirio ya uwezekano wa umati</li><li>Kiasi cha juu = ishara ya kuaminika zaidi</li><li>Lengo la matukio ya jiografia na ya sasa</li></ul>Vyanzo: Polymarket, Kalshi"
     },
-    "etfFlows": {
-      "previousColumns": "Safu wima zilizotangulia",
-      "moreColumns": "Safu wima zaidi",
-      "unavailable": "Data ya mifuko inayouzwa kwenye soko la hisa haipatikani kwa sasa",
-      "rateLimited": "Data ya mifuko inayouzwa kwenye soko la hisa haipatikani kwa sasa (kikomo cha maombi) — tutajaribu tena hivi karibuni",
-      "netFlow": "Mtiririko wa Wavu",
-      "estFlow": "Est. Mtiririko",
-      "totalVol": "Jumla ya Vol",
-      "etfs": "Mifuko inayouzwa kwenye soko la hisa",
-      "netInflow": "NET",
-      "netOutflow": "MTIRIRIKO HALISI WA NJE",
-      "netNeutral": "MTIRIRIKO SAWA",
-      "table": {
-        "ticker": "Ticker",
-        "issuer": "Mtoaji",
-        "estFlow": "Est. Mtiririko",
-        "volume": "Kiasi",
-        "change": "Badilika"
-      },
-      "infoTooltip": "<strong>Mtiririko wa fedha za Bitcoin</strong> Ufuataji wa mtiririko wa fedha unaokadiriwa kila siku kwa fedha za Bitcoin za mahali pa US:<ul><li>Mwelekeo na ukubwa wa mtiririko wa ndani/nje</li><li>Kiasi na mabadiliko ya bei kwa kila fedha</li><li>Mtiririko wa jumla wa matanzi katika fedha zote zinazofuatwa</li></ul>"
-    },
     "macroSignals": {
       "overall": "Kwa ujumla",
       "verdict": {
@@ -1961,12 +1924,7 @@
       "bullish": "{{count}}/{{total}} boresha",
       "signals": {
         "liquidity": "Ukwasi",
-        "flow": "Mtiririko",
-        "regime": "Utawala",
-        "btcTrend": "Mwenendo wa BTC",
-        "hashRate": "Kiwango cha Hash",
-        "momentum": "Kasi",
-        "fearGreed": "Hofu & Uchoyo"
+        "regime": "Utawala"
       },
       "infoTooltip": "<strong>Hali ya soko la Bitcoin</strong> Dashibodi la ishara ya jumla kwa Bitcoin ukweli na matarajio ya hatari:<ul><li><strong>Umeme</strong>: Mtanzi wa likiditi ya Fed</li><li><strong>Mtiririko</strong>: Kurudi kwa BTC vs QQQ kwa siku 5</li><li><strong>Muundo</strong>: Zamu ya QQQ vs XLP (hatari-wazi/imara)</li><li><strong>Mwenendo wa BTC</strong>: Bei vs SMA50/200, Mayer Multiple</li><li><strong>Kiwango cha Hash</strong>: Mabadiliko ya hash ya mtandao ya siku 30</li><li><strong>Hofu & Tamaa</strong>: Fahirisi ya hamu ya soko</li></ul>Jukwaa hili ni kwa muundo na ukweli, si data pana ya makroeconomia."
     },
@@ -2102,18 +2060,6 @@
         },
         "twentyDayTrend": "Mwenendo wa ziada wa siku ishirini za biashara"
       }
-    },
-    "crypto": {
-      "infoTooltip": "<strong>Crypto</strong> Bei za moja kwa moja, mabadiliko ya saa 24, na sauti ya sarafu kuu za cryptocurrency. Data imechukuliwa kutoka CoinGecko."
-    },
-    "defiTokens": {
-      "infoTooltip": "<strong>Tokeni za DeFi</strong> Bei na utendaji wa saa 24/7d kwa tokeni kuu za itifaki ya fedha zilizogatuliwa — DEX, mifumo ya ukopeshaji na itifaki za mavuno."
-    },
-    "aiTokens": {
-      "infoTooltip": "<strong>Tokeni za AI</strong> Bei na utendakazi wa saa 24/7d kwa AI na tokeni za sekta ya kujifunza mashine — kokotoa mitandao, miundombinu ya AI iliyogatuliwa, na itifaki za data."
-    },
-    "altTokens": {
-      "infoTooltip": "<strong>Tokeni za Alt</strong> Bei na utendakazi wa 24h/7d kwa tokeni mbadala na zinazojitokeza za crypto nje ya viwango vya juu."
     },
     "stockAnalysis": {
       "infoTooltip": "<strong>Uchanganuzi wa Malipo ya Hisa</strong> Uchambuzi unaoendeshwa na AI wa hisa katika orodha yako ya kutazama — nunua/shikilia/uza mawimbi, malengo ya bei, hatari kuu na vichochezi husasishwa kila siku."
@@ -2288,7 +2234,6 @@
       "title": "24/7 Nafasi",
       "infoTooltip": "<strong>24/7 Positioning</strong> Mkazo wa kudumu wa nafasi ya mkataba kutoka kwa Hyperliquid. Hufanya biashara usiku na mchana, kuonyesha nini kinajengwa wakati masoko ya kitamaduni yamefungwa. Alama za mchanganyiko (0-100) kutoka kwa kiwango cha ufadhili, kiasi, riba ya wazi, na msingi wa doa. Kijani = ndefu iliyosongamana (bullish konda), nyekundu = kaptula iliyojaa (bearish konda).",
       "commodities": "BIDHAA",
-      "crypto": "KRIPTO",
       "fx": "Kubadilishana kwa fedha za nje",
       "warmup": "Kujenga msingi. Historia ya Kiasi na Ufikiaji Wazi inajazwa katika saa inayofuata.",
       "footer": "Dakika 5 · Perps zenye maji mengi · 24/7"
@@ -4177,11 +4122,9 @@
     "noDataShort": "Hakuna data",
     "upstreamUnavailable": "API ya Upstream haipatikani - itajaribu tena kiotomatiki",
     "loadingUcdpEvents": "Inapakia matukio ya migogoro ya silaha",
-    "loadingStablecoins": "Inapakia stablecoins...",
     "scanningThermalData": "Inachanganua data ya joto",
     "calculatingExposure": "Kuhesabu mfiduo",
     "computingSignals": "Inaweka ishara...",
-    "loadingEtfData": "Inapakua data ya kola zinazofanikiana...",
     "loadingDisplacement": "Inapakia data ya uhamishaji",
     "loadingClimateData": "Inapakia data ya hali ya hewa",
     "failedTechReadiness": "Data ya utayari wa teknolojia haipatikani kwa sasa",
@@ -4193,7 +4136,6 @@
     "failedMarketData": "Data ya soko haipatikani kwa sasa",
     "failedSectorData": "Data ya sekta haipatikani kwa muda",
     "failedCommodities": "Data ya bidhaa haipatikani kwa sasa",
-    "failedCryptoData": "Data ya Crypto haipatikani kwa sasa",
     "rateLimitedMarket": "Data ya soko haipatikani kwa muda (idadi imepunguzwa) - inajaribu tena baada ya muda mfupi",
     "noNewsAvailable": "Hakuna habari inayopatikana",
     "noActiveTechHubs": "Hakuna vituo vya teknolojia vinavyotumika",

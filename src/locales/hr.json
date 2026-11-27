@@ -57,13 +57,11 @@
     "preflightProRequired": "Pro pretplata je obavezna za korištenje Widget Builder-a. Nadogradi se kako bi otključao funkcionalnost.",
     "examples": {
       "oilGold": "Prikaži mi cijenu sirove nafte naspram zlata za danas",
-      "cryptoMovers": "Kreiraj widget za najbolje kriptovalutne pokrete u zadnjih 24 sata",
       "flightDelays": "Sažmi najgore međunarodne kašnjenja letova upravo sada",
       "conflictHotspots": "Mapira najnovije UCDP konfliktne žarišne točke s kratkim oznakama"
     },
     "proExamples": {
       "interactiveChart": "Interaktivni Chart.js grafikon koji uspoređuje cijene nafte i zlata",
-      "sortableTable": "Sortabilna tablica cijena kriptovaluta s filterom pretrage",
       "animatedCounters": "Animirani brojači za ključne ekonomske pokazatelje",
       "tabbedComparison": "Usporedba konfliktnih događaja po regijama u karticama"
     }
@@ -418,7 +416,6 @@
     "sourceRegionMarkets": "Tržišta & Analiza",
     "sourceRegionFixedIncomeFx": "Fiksni dohodak i devizni tečaj",
     "sourceRegionCommodities": "Robe",
-    "sourceRegionCryptoDigital": "Kripto & Digitalno",
     "sourceRegionCentralBanks": "Središnje banke & Ekonomija",
     "sourceRegionDeals": "Dogovori & Korporativno",
     "sourceRegionFinRegulation": "Financijska regulacija",
@@ -440,7 +437,6 @@
     "panelCatMarkets": "Tržišta",
     "panelCatFixedIncomeFx": "Fiksni dohodak i devizni tečaj",
     "panelCatCommodities": "Robe",
-    "panelCatCryptoDigital": "Kripto & Digitalno",
     "panelCatCentralBanks": "Središnje banke & Ekonomija",
     "panelCatDeals": "Dogovori & Institucije",
     "panelCatGulfMena": "Perzijski zaljev i Bliski istok i Sjeverna afrika",
@@ -485,15 +481,12 @@
     "supplyChain": "Opskrbni lanac",
     "finance": "Financije",
     "tech": "Tehnologija",
-    "crypto": "Kripto",
     "heatmap": "Sektorska toplinska karta",
     "ai": "UI i strojno učenje",
     "layoffs": "Praćenje otkaza",
     "monitors": "Moji monitori",
     "satelliteFires": "Požari",
     "macroSignals": "Uvjeti tržišta Bitcoina",
-    "etfFlows": "Tokovi Bitcoin fondova",
-    "stablecoins": "Stablecoini",
     "deduction": "Odbitna Situacija",
     "ucdpEvents": "Događaji Oružanih Sukoba",
     "displacement": "Izbjeglice i raseljeni",
@@ -1145,15 +1138,6 @@
       "leanYes": "Blago da",
       "leanNo": "Blago ne",
       "tossUp": "Neizvjesno"
-    },
-    "stablecoins": {
-      "pegHealth": "Zdravlje veza",
-      "supplyVolume": "Ponuda i volumen",
-      "token": "Token",
-      "mcap": "Tržišna vrijednost",
-      "vol24h": "Volumen 24h",
-      "chg24h": "Promjena 24h",
-      "infoTooltip": "<strong>Stablecoini</strong> Zdravlje veza, tržišna vrijednost i volumen za 24h za glavne tokene vezane uz USD (USDT, USDC, DAI, BUSD). Pokidana veza signalizira sustavni rizik."
     },
     "marketImplications": {
       "infoTooltip": "<strong>AI implikacije na tržištu</strong> LLM-generirani trgovinski signali izvedeni iz živog geopolitičkog, commodityja i makro stanja nakon svakog ciklusa prognoziranja.<ul><li><strong>Smjer</strong>: LONG / SHORT / HEDGE</li><li><strong>Vremenski okvir</strong>: 1T, 2T, 1M ili 3M horizont</li><li><strong>Pokretač</strong>: Ključni katalizator iza signala</li><li><strong>Rizik</strong>: Napomena ili uvjet poništavanja</li></ul><em>Samo u informativne svrhe. Nije investicijski savjet.</em>",
@@ -1937,27 +1921,6 @@
     "prediction": {
       "infoTooltip": "<strong>Tržišta predviđanja</strong> Tržišta za predviđanja s pravim novcem:<ul><li>Cijene odražavaju procjene vjerojatnosti publike</li><li>Veći volumen = pouzdaniji signal</li><li>Fokus na geopolitičke i trenutne događaje</li></ul>Izvori: Polymarket, Kalshi"
     },
-    "etfFlows": {
-      "previousColumns": "Prethodni stupci",
-      "moreColumns": "Više stupaca",
-      "unavailable": "podaci o fondovima namijenjenim razmjeni privremeno недostupни",
-      "rateLimited": "podaci o fondovima namijenjenim razmjeni privremeno недostupni (ograničena brzina) — ponovni pokušaj uskoro",
-      "netFlow": "Neto tok",
-      "estFlow": "Proc. tok",
-      "totalVol": "Ukupni vol",
-      "etfs": "Fondovi namijenjeni razmjeni",
-      "netInflow": "NETO PRILIV",
-      "netOutflow": "NETO ODLIV",
-      "netNeutral": "NETO NEUTRALNO",
-      "table": {
-        "ticker": "Oznaka",
-        "issuer": "Izdavač",
-        "estFlow": "Proc. tok",
-        "volume": "Volumen",
-        "change": "Promjena"
-      },
-      "infoTooltip": "<strong>Tokovi Bitcoin fondova</strong> Prati dnevne procijenjene tokove fondova za US spot Bitcoin fondove namijenjene razmjeni:<ul><li>Smjer i veličina utoka/odtoka</li><li>Volumen i promjena cijene po fondu</li><li>Neto agregirani tok u svim praćenim fondovima</li></ul>"
-    },
     "macroSignals": {
       "overall": "Ukupno",
       "verdict": {
@@ -1967,12 +1930,7 @@
       "bullish": "{{count}}/{{total}} bikovski",
       "signals": {
         "liquidity": "Likvidnost",
-        "flow": "Tok",
-        "regime": "Režim",
-        "btcTrend": "BTC trend",
-        "hashRate": "Hash brzina",
-        "momentum": "Zamah",
-        "fearGreed": "Strah i pohlepa"
+        "regime": "Režim"
       },
       "infoTooltip": "<strong>Uvjeti Bitcoin tržišta</strong> Ploča s kompozitnim signalom za pozicioniranje Bitcoina i apetit za rizik:<ul><li><strong>Likvidnost</strong>: Proxy neto Fed likvidnosti</li><li><strong>Tok</strong>: BTC vs QQQ 5-dnevni povrati</li><li><strong>Režim</strong>: QQQ vs XLP rotacija (risk-on/off)</li><li><strong>BTC trend</strong>: Cijena vs SMA50/200, Mayerov višekratnik</li><li><strong>Brzina heša</strong>: 30-dnevna promjena mrežne brzine heša</li><li><strong>Strah i pohlepa</strong>: Indeks sentimenta tržišta</li></ul>Ova ploča je za režim i pozicioniranje, ne za općenite makro podatke."
     },
@@ -2108,18 +2066,6 @@
         },
         "twentyDayTrend": "Trend premije za dvadeset trgovačkih dana"
       }
-    },
-    "crypto": {
-      "infoTooltip": "<strong>Kriptovalute</strong> Životijedne cijene, 24h promjene i volumen za glavne kriptovalute. Podaci su preuzeti s CoinGecka."
-    },
-    "defiTokens": {
-      "infoTooltip": "<strong>DeFi tokeni</strong> Cijene i 24h/7d izvedba za glavne tokene decentraliziranih financijskih protokola — DEXes, platforme za kreditiranje i yield protokole."
-    },
-    "aiTokens": {
-      "infoTooltip": "<strong>AI tokeni</strong> Cijene i 24h/7d izvedba za tokene AI i sektora strojnog učenja — računalne mreže, decentraliziranu AI infrastrukturu i protokole za podatke."
-    },
-    "altTokens": {
-      "infoTooltip": "<strong>Alt tokeni</strong> Cijene i 24h/7d izvedba za alternativne i nove kriptovalutne tokene izvan glavnih stupnjeva kapitalizacije."
     },
     "stockAnalysis": {
       "infoTooltip": "<strong>Premijska analiza dionica</strong> AI-pokrenuta analiza za dionice na vašoj listi praćenja — signali kupnje/držanja/prodaje, ciljne cijene, ključni rizici i katalizatori ažurirani dnevno."
@@ -2294,7 +2240,6 @@
       "title": "24/7 Pozicioniranje",
       "infoTooltip": "<strong>24/7 Pozicioniranje</strong> Stres pozicioniranja perpetualnih ugovora od Hyperliquida. Trgovanje tijekom cijelog dana, prikazujući što se gradi kada su tradicionalna tržišta zatvorena. Kompozitni rezultat (0-100) od stope financiranja, volumena, otvorenih pozicija i spot-perp baze. Zeleno = dugi poziciji skupljeni (bullish nagib), crveno = kratki poziciji skupljeni (bearish nagib).",
       "commodities": "ROBE",
-      "crypto": "KRIPTO",
       "fx": "Devizni tečaj",
       "warmup": "Uspostavljanje baznih vrijednosti. Historija volumena i otvorenih pozicija će se popuniti u sljedećem satu.",
       "footer": "5min · Hyperliquid perps · 24/7"
@@ -4209,11 +4154,9 @@
     "noDataShort": "Nema podataka",
     "upstreamUnavailable": "Upstream API nedostupan — automatski pokušaj ponovno",
     "loadingUcdpEvents": "Učitavanje događaja oružanih sukoba",
-    "loadingStablecoins": "Učitavanje stablecoina...",
     "scanningThermalData": "Skeniranje termijskih podataka",
     "calculatingExposure": "Izračunavanje izloženosti",
     "computingSignals": "Izračunavanje signala...",
-    "loadingEtfData": "Učitavanje podataka o fondovima za trgovanje na burzi...",
     "loadingDisplacement": "Učitavanje podataka o raseljenim osobama",
     "loadingClimateData": "Učitavanje klimatskih podataka",
     "failedTechReadiness": "Podaci o tehnološkoj spremnosti privremeno nedostupni",
@@ -4225,7 +4168,6 @@
     "failedMarketData": "Tržišni podaci privremeno nisu dostupni",
     "failedSectorData": "Podaci sektora privremeno nisu dostupni",
     "failedCommodities": "Podaci roba privremeno nisu dostupni",
-    "failedCryptoData": "Podaci o kriptovalutama privremeno nisu dostupni",
     "rateLimitedMarket": "Tržišni podaci privremeno nisu dostupni (ograničena brzina) — pokušaj brzo",
     "noNewsAvailable": "Nema dostupnih vijesti",
     "noActiveTechHubs": "Nema aktivnih tehnoloških čvorišta",

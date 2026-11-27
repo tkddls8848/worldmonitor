@@ -28,25 +28,6 @@ export interface MarketQuoteUnavailable {
   reason: MarketQuoteUnavailableReason;
 }
 
-export interface ListCryptoQuotesRequest {
-  ids: string[];
-}
-
-export interface ListCryptoQuotesResponse {
-  quotes: CryptoQuote[];
-  unresolvedIds: string[];
-  provider: string;
-}
-
-export interface CryptoQuote {
-  name: string;
-  symbol: string;
-  price: number;
-  change: number;
-  sparkline: number[];
-  change7d: number;
-}
-
 export interface ListCommodityQuotesRequest {
   symbols: string[];
 }
@@ -178,76 +159,6 @@ export interface SectorPerformance {
   symbol: string;
   name: string;
   change: number;
-}
-
-export interface ListStablecoinMarketsRequest {
-  coins: string[];
-}
-
-export interface ListStablecoinMarketsResponse {
-  timestamp: string;
-  summary?: StablecoinSummary;
-  stablecoins: Stablecoin[];
-  unresolved: UnresolvedStablecoin[];
-  dataStatus: string;
-}
-
-export interface StablecoinSummary {
-  totalMarketCap: number;
-  totalVolume24h: number;
-  coinCount: number;
-  depeggedCount: number;
-  healthStatus: string;
-}
-
-export interface Stablecoin {
-  id: string;
-  symbol: string;
-  name: string;
-  price: number;
-  deviation: number;
-  pegStatus: string;
-  marketCap: number;
-  volume24h: number;
-  change24h: number;
-  change7d: number;
-  image: string;
-}
-
-export interface UnresolvedStablecoin {
-  id: string;
-  reason: string;
-}
-
-export interface ListEtfFlowsRequest {
-}
-
-export interface ListEtfFlowsResponse {
-  timestamp: string;
-  summary?: EtfFlowsSummary;
-  etfs: EtfFlow[];
-  rateLimited: boolean;
-}
-
-export interface EtfFlowsSummary {
-  etfCount: number;
-  totalVolume: number;
-  totalEstFlow: number;
-  netDirection: string;
-  inflowCount: number;
-  outflowCount: number;
-}
-
-export interface EtfFlow {
-  ticker: string;
-  issuer: string;
-  price: number;
-  priceChange: number;
-  volume: number;
-  avgVolume: number;
-  volumeRatio: number;
-  direction: string;
-  estFlow: number;
 }
 
 export interface GetCountryStockIndexRequest {
@@ -506,40 +417,6 @@ export interface ListStoredStockBacktestsResponse {
   items: BacktestStockResponse[];
 }
 
-export interface ListCryptoSectorsRequest {
-}
-
-export interface ListCryptoSectorsResponse {
-  sectors: CryptoSector[];
-}
-
-export interface CryptoSector {
-  id: string;
-  name: string;
-  change: number;
-}
-
-export interface ListDefiTokensRequest {
-}
-
-export interface ListDefiTokensResponse {
-  tokens: CryptoQuote[];
-}
-
-export interface ListAiTokensRequest {
-}
-
-export interface ListAiTokensResponse {
-  tokens: CryptoQuote[];
-}
-
-export interface ListOtherTokensRequest {
-}
-
-export interface ListOtherTokensResponse {
-  tokens: CryptoQuote[];
-}
-
 export interface GetFearGreedIndexRequest {
 }
 
@@ -795,19 +672,19 @@ export interface GoldCbMover {
   deltaTonnes12m: number;
 }
 
-export interface GetHyperliquidFlowRequest {
+export interface GetPerpPositioningRequest {
 }
 
-export interface GetHyperliquidFlowResponse {
+export interface GetPerpPositioningResponse {
   ts: string;
   fetchedAt: string;
   warmup: boolean;
   assetCount: number;
-  assets: HyperliquidAssetFlow[];
+  assets: PerpPositioningAsset[];
   unavailable: boolean;
 }
 
-export interface HyperliquidAssetFlow {
+export interface PerpPositioningAsset {
   symbol: string;
   display: string;
   assetClass: string;
@@ -888,13 +765,10 @@ export interface RouteDescriptor {
 
 export interface MarketServiceHandler {
   listMarketQuotes(ctx: ServerContext, req: ListMarketQuotesRequest): Promise<ListMarketQuotesResponse>;
-  listCryptoQuotes(ctx: ServerContext, req: ListCryptoQuotesRequest): Promise<ListCryptoQuotesResponse>;
   listCommodityQuotes(ctx: ServerContext, req: ListCommodityQuotesRequest): Promise<ListCommodityQuotesResponse>;
   getPhysicalPremiums(ctx: ServerContext, req: GetPhysicalPremiumsRequest): Promise<GetPhysicalPremiumsResponse>;
   getPhysicalDivergenceIndex(ctx: ServerContext, req: GetPhysicalDivergenceIndexRequest): Promise<GetPhysicalDivergenceIndexResponse>;
   getSectorSummary(ctx: ServerContext, req: GetSectorSummaryRequest): Promise<GetSectorSummaryResponse>;
-  listStablecoinMarkets(ctx: ServerContext, req: ListStablecoinMarketsRequest): Promise<ListStablecoinMarketsResponse>;
-  listEtfFlows(ctx: ServerContext, req: ListEtfFlowsRequest): Promise<ListEtfFlowsResponse>;
   getCountryStockIndex(ctx: ServerContext, req: GetCountryStockIndexRequest): Promise<GetCountryStockIndexResponse>;
   getPriceHistory(ctx: ServerContext, req: GetPriceHistoryRequest): Promise<GetPriceHistoryResponse>;
   listGulfQuotes(ctx: ServerContext, req: ListGulfQuotesRequest): Promise<ListGulfQuotesResponse>;
@@ -902,17 +776,13 @@ export interface MarketServiceHandler {
   getStockAnalysisHistory(ctx: ServerContext, req: GetStockAnalysisHistoryRequest): Promise<GetStockAnalysisHistoryResponse>;
   backtestStock(ctx: ServerContext, req: BacktestStockRequest): Promise<BacktestStockResponse>;
   listStoredStockBacktests(ctx: ServerContext, req: ListStoredStockBacktestsRequest): Promise<ListStoredStockBacktestsResponse>;
-  listCryptoSectors(ctx: ServerContext, req: ListCryptoSectorsRequest): Promise<ListCryptoSectorsResponse>;
-  listDefiTokens(ctx: ServerContext, req: ListDefiTokensRequest): Promise<ListDefiTokensResponse>;
-  listAiTokens(ctx: ServerContext, req: ListAiTokensRequest): Promise<ListAiTokensResponse>;
-  listOtherTokens(ctx: ServerContext, req: ListOtherTokensRequest): Promise<ListOtherTokensResponse>;
   getFearGreedIndex(ctx: ServerContext, req: GetFearGreedIndexRequest): Promise<GetFearGreedIndexResponse>;
   listEarningsCalendar(ctx: ServerContext, req: ListEarningsCalendarRequest): Promise<ListEarningsCalendarResponse>;
   getCotPositioning(ctx: ServerContext, req: GetCotPositioningRequest): Promise<GetCotPositioningResponse>;
   getInsiderTransactions(ctx: ServerContext, req: GetInsiderTransactionsRequest): Promise<GetInsiderTransactionsResponse>;
   getMarketBreadthHistory(ctx: ServerContext, req: GetMarketBreadthHistoryRequest): Promise<GetMarketBreadthHistoryResponse>;
   getGoldIntelligence(ctx: ServerContext, req: GetGoldIntelligenceRequest): Promise<GetGoldIntelligenceResponse>;
-  getHyperliquidFlow(ctx: ServerContext, req: GetHyperliquidFlowRequest): Promise<GetHyperliquidFlowResponse>;
+  getPerpPositioning(ctx: ServerContext, req: GetPerpPositioningRequest): Promise<GetPerpPositioningResponse>;
 }
 
 export function createMarketServiceRoutes(
@@ -946,53 +816,6 @@ export function createMarketServiceRoutes(
 
           const result = await handler.listMarketQuotes(ctx, body);
           return new Response(JSON.stringify(result as ListMarketQuotesResponse), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (err: unknown) {
-          if (err instanceof ValidationError) {
-            return new Response(JSON.stringify({ violations: err.violations }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-          if (options?.onError) {
-            return options.onError(err, req);
-          }
-          const message = "Internal server error";
-          return new Response(JSON.stringify({ message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      },
-    },
-    {
-      method: "GET",
-      path: "/api/market/v1/list-crypto-quotes",
-      handler: async (req: Request): Promise<Response> => {
-        try {
-          const pathParams: Record<string, string> = {};
-          const url = new URL(req.url, "http://localhost");
-          const params = url.searchParams;
-          const body: ListCryptoQuotesRequest = {
-            ids: params.getAll("ids"),
-          };
-          if (options?.validateRequest) {
-            const bodyViolations = options.validateRequest("listCryptoQuotes", body);
-            if (bodyViolations) {
-              throw new ValidationError(bodyViolations);
-            }
-          }
-
-          const ctx: ServerContext = {
-            request: req,
-            pathParams,
-            headers: Object.fromEntries(req.headers.entries()),
-          };
-
-          const result = await handler.listCryptoQuotes(ctx, body);
-          return new Response(JSON.stringify(result as ListCryptoQuotesResponse), {
             status: 200,
             headers: { "Content-Type": "application/json" },
           });
@@ -1181,90 +1004,6 @@ export function createMarketServiceRoutes(
 
           const result = await handler.getSectorSummary(ctx, body);
           return new Response(JSON.stringify(result as GetSectorSummaryResponse), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (err: unknown) {
-          if (err instanceof ValidationError) {
-            return new Response(JSON.stringify({ violations: err.violations }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-          if (options?.onError) {
-            return options.onError(err, req);
-          }
-          const message = "Internal server error";
-          return new Response(JSON.stringify({ message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      },
-    },
-    {
-      method: "GET",
-      path: "/api/market/v1/list-stablecoin-markets",
-      handler: async (req: Request): Promise<Response> => {
-        try {
-          const pathParams: Record<string, string> = {};
-          const url = new URL(req.url, "http://localhost");
-          const params = url.searchParams;
-          const body: ListStablecoinMarketsRequest = {
-            coins: params.getAll("coins"),
-          };
-          if (options?.validateRequest) {
-            const bodyViolations = options.validateRequest("listStablecoinMarkets", body);
-            if (bodyViolations) {
-              throw new ValidationError(bodyViolations);
-            }
-          }
-
-          const ctx: ServerContext = {
-            request: req,
-            pathParams,
-            headers: Object.fromEntries(req.headers.entries()),
-          };
-
-          const result = await handler.listStablecoinMarkets(ctx, body);
-          return new Response(JSON.stringify(result as ListStablecoinMarketsResponse), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (err: unknown) {
-          if (err instanceof ValidationError) {
-            return new Response(JSON.stringify({ violations: err.violations }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-          if (options?.onError) {
-            return options.onError(err, req);
-          }
-          const message = "Internal server error";
-          return new Response(JSON.stringify({ message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      },
-    },
-    {
-      method: "GET",
-      path: "/api/market/v1/list-etf-flows",
-      handler: async (req: Request): Promise<Response> => {
-        try {
-          const pathParams: Record<string, string> = {};
-          const body = {} as ListEtfFlowsRequest;
-
-          const ctx: ServerContext = {
-            request: req,
-            pathParams,
-            headers: Object.fromEntries(req.headers.entries()),
-          };
-
-          const result = await handler.listEtfFlows(ctx, body);
-          return new Response(JSON.stringify(result as ListEtfFlowsResponse), {
             status: 200,
             headers: { "Content-Type": "application/json" },
           });
@@ -1615,154 +1354,6 @@ export function createMarketServiceRoutes(
     },
     {
       method: "GET",
-      path: "/api/market/v1/list-crypto-sectors",
-      handler: async (req: Request): Promise<Response> => {
-        try {
-          const pathParams: Record<string, string> = {};
-          const body = {} as ListCryptoSectorsRequest;
-
-          const ctx: ServerContext = {
-            request: req,
-            pathParams,
-            headers: Object.fromEntries(req.headers.entries()),
-          };
-
-          const result = await handler.listCryptoSectors(ctx, body);
-          return new Response(JSON.stringify(result as ListCryptoSectorsResponse), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (err: unknown) {
-          if (err instanceof ValidationError) {
-            return new Response(JSON.stringify({ violations: err.violations }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-          if (options?.onError) {
-            return options.onError(err, req);
-          }
-          const message = "Internal server error";
-          return new Response(JSON.stringify({ message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      },
-    },
-    {
-      method: "GET",
-      path: "/api/market/v1/list-defi-tokens",
-      handler: async (req: Request): Promise<Response> => {
-        try {
-          const pathParams: Record<string, string> = {};
-          const body = {} as ListDefiTokensRequest;
-
-          const ctx: ServerContext = {
-            request: req,
-            pathParams,
-            headers: Object.fromEntries(req.headers.entries()),
-          };
-
-          const result = await handler.listDefiTokens(ctx, body);
-          return new Response(JSON.stringify(result as ListDefiTokensResponse), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (err: unknown) {
-          if (err instanceof ValidationError) {
-            return new Response(JSON.stringify({ violations: err.violations }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-          if (options?.onError) {
-            return options.onError(err, req);
-          }
-          const message = "Internal server error";
-          return new Response(JSON.stringify({ message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      },
-    },
-    {
-      method: "GET",
-      path: "/api/market/v1/list-ai-tokens",
-      handler: async (req: Request): Promise<Response> => {
-        try {
-          const pathParams: Record<string, string> = {};
-          const body = {} as ListAiTokensRequest;
-
-          const ctx: ServerContext = {
-            request: req,
-            pathParams,
-            headers: Object.fromEntries(req.headers.entries()),
-          };
-
-          const result = await handler.listAiTokens(ctx, body);
-          return new Response(JSON.stringify(result as ListAiTokensResponse), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (err: unknown) {
-          if (err instanceof ValidationError) {
-            return new Response(JSON.stringify({ violations: err.violations }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-          if (options?.onError) {
-            return options.onError(err, req);
-          }
-          const message = "Internal server error";
-          return new Response(JSON.stringify({ message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      },
-    },
-    {
-      method: "GET",
-      path: "/api/market/v1/list-other-tokens",
-      handler: async (req: Request): Promise<Response> => {
-        try {
-          const pathParams: Record<string, string> = {};
-          const body = {} as ListOtherTokensRequest;
-
-          const ctx: ServerContext = {
-            request: req,
-            pathParams,
-            headers: Object.fromEntries(req.headers.entries()),
-          };
-
-          const result = await handler.listOtherTokens(ctx, body);
-          return new Response(JSON.stringify(result as ListOtherTokensResponse), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (err: unknown) {
-          if (err instanceof ValidationError) {
-            return new Response(JSON.stringify({ violations: err.violations }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-          if (options?.onError) {
-            return options.onError(err, req);
-          }
-          const message = "Internal server error";
-          return new Response(JSON.stringify({ message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      },
-    },
-    {
-      method: "GET",
       path: "/api/market/v1/get-fear-greed-index",
       handler: async (req: Request): Promise<Response> => {
         try {
@@ -2006,11 +1597,11 @@ export function createMarketServiceRoutes(
     },
     {
       method: "GET",
-      path: "/api/market/v1/get-hyperliquid-flow",
+      path: "/api/market/v1/get-perp-positioning",
       handler: async (req: Request): Promise<Response> => {
         try {
           const pathParams: Record<string, string> = {};
-          const body = {} as GetHyperliquidFlowRequest;
+          const body = {} as GetPerpPositioningRequest;
 
           const ctx: ServerContext = {
             request: req,
@@ -2018,8 +1609,8 @@ export function createMarketServiceRoutes(
             headers: Object.fromEntries(req.headers.entries()),
           };
 
-          const result = await handler.getHyperliquidFlow(ctx, body);
-          return new Response(JSON.stringify(result as GetHyperliquidFlowResponse), {
+          const result = await handler.getPerpPositioning(ctx, body);
+          return new Response(JSON.stringify(result as GetPerpPositioningResponse), {
             status: 200,
             headers: { "Content-Type": "application/json" },
           });

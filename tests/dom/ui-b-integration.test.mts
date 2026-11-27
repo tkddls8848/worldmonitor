@@ -386,7 +386,7 @@ describe('Option B integration: real PanelLayoutManager reveal, tray race, botto
       insights: { name: 'AI Insights', enabled: true, priority: 1 },
       'gdelt-intel': { name: 'Live Intelligence', enabled: true, priority: 2 },
       'supply-chain': { name: 'Supply Chain', enabled: true, priority: 2 },
-      crypto: { name: 'Crypto', enabled: false, priority: 3 },
+      science: { name: "Science", enabled: false, priority: 3 },
     };
     const gdelt = makeFakePanel('gdelt-intel');
     const supply = makeFakePanel('supply-chain');
@@ -412,7 +412,7 @@ describe('Option B integration: real PanelLayoutManager reveal, tray race, botto
     expect(deniedMissing.reason).toBe('panel_not_live');
     expect(mgrAny.inspectorShell!.getActiveTab()).toBe('overview');
 
-    const deniedDisabled = syncResult(applyAgentBusAction(ctx, { type: 'open_panel', panelId: 'crypto' }));
+    const deniedDisabled = syncResult(applyAgentBusAction(ctx, { type: 'open_panel', panelId: 'science' }));
     expect(deniedDisabled.ok).toBe(false);
     expect(deniedDisabled.reason).toBe('panel_disabled');
     expect(mgrAny.inspectorShell!.getActiveTab()).toBe('overview');

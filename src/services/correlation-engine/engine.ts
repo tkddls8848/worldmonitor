@@ -180,7 +180,7 @@ export class CorrelationEngine {
     ];
     const SINGLE_KEYS = new Set([
       'oil', 'gas', 'sanctions', 'trade', 'tariff', 'commodity', 'currency',
-      'energy', 'wheat', 'crude', 'gold', 'silver', 'copper', 'bitcoin',
+      'energy', 'wheat', 'crude', 'gold', 'silver', 'copper',
       'crypto', 'inflation', 'embargo', 'opec', 'semiconductor', 'dollar',
       'yuan', 'euro',
     ]);

@@ -26,7 +26,6 @@
         "forex",
         "bonds",
         "commodities",
-        "crypto",
         "centralbanks",
         "economic",
         "ipo",
@@ -84,7 +83,6 @@
         "forex",
         "bonds",
         "commodities",
-        "crypto",
         "centralbanks",
         "economic",
         "ipo",
@@ -2657,12 +2655,6 @@
           "category": "finance",
           "serverOrder": 10,
           "browserOrder": 10
-        },
-        {
-          "edition": "finance",
-          "category": "crypto",
-          "serverOrder": 4,
-          "browserOrder": 14
         }
       ]
     },
@@ -2675,12 +2667,6 @@
           "category": "finance",
           "serverOrder": 11,
           "browserOrder": 11
-        },
-        {
-          "edition": "finance",
-          "category": "crypto",
-          "serverOrder": 5,
-          "browserOrder": 15
         }
       ]
     },
@@ -2693,12 +2679,6 @@
           "category": "finance",
           "serverOrder": 12,
           "browserOrder": 12
-        },
-        {
-          "edition": "finance",
-          "category": "crypto",
-          "serverOrder": 6,
-          "browserOrder": 16
         }
       ]
     },
@@ -2712,12 +2692,6 @@
           "category": "finance",
           "serverOrder": 13,
           "browserOrder": 13
-        },
-        {
-          "edition": "finance",
-          "category": "crypto",
-          "serverOrder": 7,
-          "browserOrder": 17
         }
       ]
     },
@@ -4586,205 +4560,6 @@
       ]
     },
     {
-      "name": "CoinDesk",
-      "url": "https://www.coindesk.com/arc/outboundfeeds/rss/",
-      "placements": [
-        {
-          "edition": "finance",
-          "category": "crypto",
-          "serverOrder": 0,
-          "browserOrder": 0
-        }
-      ]
-    },
-    {
-      "name": "Cointelegraph",
-      "url": "https://cointelegraph.com/rss",
-      "placements": [
-        {
-          "edition": "finance",
-          "category": "crypto",
-          "serverOrder": 1,
-          "browserOrder": 1
-        }
-      ]
-    },
-    {
-      "name": "The Block",
-      "url": "https://news.google.com/rss/search?q=site:theblock.co+when:1d&hl=en-US&gl=US&ceid=US:en",
-      "placements": [
-        {
-          "edition": "finance",
-          "category": "crypto",
-          "serverOrder": 2,
-          "browserOrder": 2
-        }
-      ]
-    },
-    {
-      "name": "Decrypt",
-      "url": "https://decrypt.co/feed",
-      "placements": [
-        {
-          "edition": "finance",
-          "category": "crypto",
-          "serverOrder": 3,
-          "browserOrder": 5
-        }
-      ]
-    },
-    {
-      "name": "The Defiant",
-      "url": "https://thedefiant.io/feed",
-      "notes": [
-        "Blockworks REMOVED in parity with src/config/feeds.ts (PR #3715 review). blockworks.co/feed is Cloudflare-blocked from both Vercel edge AND Railway egress, AND Google News returns 0 items for site:blockworks.co. The Block (above) covers the same institutional-crypto territory; no coverage lost.",
-        "Blockworks REMOVED (PR #3715 review): blockworks.co/feed is Cloudflare-blocked from both Vercel edge AND Railway egress, AND Google News returns 0 items for site:blockworks.co at every probed time window (publisher likely blocks Googlebot on the same wholesale tier — so the Google News fallback we tried first is a silent placeholder). The Block (above) covers the same institutional-crypto territory; no coverage lost. Also removed from the server feeds (_feeds.ts) for parity."
-      ],
-      "placements": [
-        {
-          "edition": "finance",
-          "category": "crypto",
-          "serverOrder": 8,
-          "browserOrder": 6
-        }
-      ]
-    },
-    {
-      "name": "Bitcoin Magazine",
-      "url": "https://bitcoinmagazine.com/feed",
-      "placements": [
-        {
-          "edition": "finance",
-          "category": "crypto",
-          "serverOrder": 9,
-          "browserOrder": 7
-        }
-      ]
-    },
-    {
-      "name": "DL News",
-      "url": "https://news.google.com/rss/search?q=site:dlnews.com+when:3d&hl=en-US&gl=US&ceid=US:en",
-      "placements": [
-        {
-          "edition": "finance",
-          "category": "crypto",
-          "serverOrder": 10,
-          "browserOrder": 8
-        }
-      ]
-    },
-    {
-      "name": "CryptoSlate",
-      "url": "https://cryptoslate.com/feed/",
-      "placements": [
-        {
-          "edition": "finance",
-          "category": "crypto",
-          "serverOrder": 11,
-          "browserOrder": 9
-        }
-      ]
-    },
-    {
-      "name": "Unchained",
-      "url": "https://unchainedcrypto.com/feed/",
-      "placements": [
-        {
-          "edition": "finance",
-          "category": "crypto",
-          "serverOrder": 12,
-          "browserOrder": 10
-        }
-      ]
-    },
-    {
-      "name": "DeFi News",
-      "url": "https://news.google.com/rss/search?q=(DeFi+OR+\"decentralized+finance\")+when:3d&hl=en-US&gl=US&ceid=US:en",
-      "browser": {
-        "url": "https://news.google.com/rss/search?q=(DeFi+OR+\"decentralized+finance\"+OR+DEX+OR+\"yield+farming\")+when:3d&hl=en-US&gl=US&ceid=US:en"
-      },
-      "placements": [
-        {
-          "edition": "finance",
-          "category": "crypto",
-          "serverOrder": 13,
-          "browserOrder": 4
-        }
-      ]
-    },
-    {
-      "name": "Bloomberg Crypto",
-      "url": "https://news.google.com/rss/search?q=bloomberg+crypto+when:1d&hl=en-US&gl=US&ceid=US:en",
-      "placements": [
-        {
-          "edition": "finance",
-          "category": "crypto",
-          "serverOrder": 14,
-          "browserOrder": 13
-        }
-      ]
-    },
-    {
-      "name": "Reuters Crypto",
-      "url": "https://news.google.com/rss/search?q=reuters+crypto+when:1d&hl=en-US&gl=US&ceid=US:en",
-      "placements": [
-        {
-          "edition": "finance",
-          "category": "crypto",
-          "serverOrder": 15,
-          "browserOrder": 18
-        }
-      ]
-    },
-    {
-      "name": "Wu Blockchain",
-      "url": "https://news.google.com/rss/search?q=site:wublockchain.com+when:7d&hl=en-US&gl=US&ceid=US:en",
-      "placements": [
-        {
-          "edition": "finance",
-          "category": "crypto",
-          "serverOrder": 16,
-          "browserOrder": 11
-        }
-      ]
-    },
-    {
-      "name": "Messari",
-      "url": "https://news.google.com/rss/search?q=site:messari.io+when:3d&hl=en-US&gl=US&ceid=US:en",
-      "placements": [
-        {
-          "edition": "finance",
-          "category": "crypto",
-          "serverOrder": 17,
-          "browserOrder": 12
-        }
-      ]
-    },
-    {
-      "name": "NFT News",
-      "url": "https://news.google.com/rss/search?q=(NFT+OR+\"non-fungible\")+when:3d&hl=en-US&gl=US&ceid=US:en",
-      "placements": [
-        {
-          "edition": "finance",
-          "category": "crypto",
-          "serverOrder": 18,
-          "browserOrder": 19
-        }
-      ]
-    },
-    {
-      "name": "Stablecoin Policy",
-      "url": "https://news.google.com/rss/search?q=(stablecoin+regulation+OR+\"stablecoin+bill\")+when:7d&hl=en-US&gl=US&ceid=US:en",
-      "placements": [
-        {
-          "edition": "finance",
-          "category": "crypto",
-          "serverOrder": 19,
-          "browserOrder": 20
-        }
-      ]
-    },
-    {
       "name": "PBoC Watch",
       "url": "https://news.google.com/rss/search?q=(%22People's%20Bank%20of%20China%22%20OR%20PBoC%20OR%20PBOC)%20when%3A7d&hl=en-US&gl=US&ceid=US:en",
       "placements": [
@@ -4898,21 +4673,6 @@
           "category": "fin-regulation",
           "serverOrder": 2,
           "browserOrder": 2
-        }
-      ]
-    },
-    {
-      "name": "Crypto Regulation",
-      "url": "https://news.google.com/rss/search?q=(crypto%20regulation%20OR%20%22digital%20asset%22%20regulation%20OR%20stablecoin%20regulation)%20when%3A7d&hl=en-US&gl=US&ceid=US:en",
-      "browser": {
-        "url": "https://news.google.com/rss/search?q=(crypto+regulation+OR+\"digital+asset\"+regulation+OR+\"stablecoin\"+regulation)+when:7d&hl=en-US&gl=US&ceid=US:en"
-      },
-      "placements": [
-        {
-          "edition": "finance",
-          "category": "fin-regulation",
-          "serverOrder": 3,
-          "browserOrder": 3
         }
       ]
     },
@@ -6951,18 +6711,6 @@
           "edition": "full",
           "category": "commodities",
           "serverOrder": 3
-        }
-      ]
-    },
-    {
-      "name": "Crypto News",
-      "url": "https://news.google.com/rss/search?q=(bitcoin+OR+ethereum+OR+crypto+OR+\"digital+assets\")+when:1d&hl=en-US&gl=US&ceid=US:en",
-      "placements": [
-        {
-          "edition": "finance",
-          "category": "crypto",
-          "browserOrder": 3,
-          "serverOrder": 20
         }
       ]
     },

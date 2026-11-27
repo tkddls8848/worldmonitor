@@ -508,34 +508,6 @@ export const ENTITY_REGISTRY = [
   },
 
   // ============================================================================
-  // CRYPTO (IDs match CRYPTO_IDS in markets.ts)
-  // ============================================================================
-  {
-    id: 'bitcoin',
-    type: 'crypto',
-    name: 'Bitcoin',
-    aliases: ['bitcoin', 'btc', 'satoshi'],
-    keywords: ['cryptocurrency', 'blockchain', 'digital currency', 'halving', 'btc mining'],
-    related: ['ethereum', 'solana'],
-  },
-  {
-    id: 'ethereum',
-    type: 'crypto',
-    name: 'Ethereum',
-    aliases: ['ethereum', 'eth', 'ether', 'vitalik'],
-    keywords: ['smart contract', 'defi', 'nft', 'blockchain', 'eth gas'],
-    related: ['bitcoin', 'solana'],
-  },
-  {
-    id: 'solana',
-    type: 'crypto',
-    name: 'Solana',
-    aliases: ['solana', 'sol token'],
-    keywords: ['blockchain', 'defi', 'nft', 'solana network'],
-    related: ['bitcoin', 'ethereum'],
-  },
-
-  // ============================================================================
   // KEY COUNTRIES (for geopolitical correlation)
   // ============================================================================
   {

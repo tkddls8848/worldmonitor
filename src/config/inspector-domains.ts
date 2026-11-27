@@ -2,7 +2,7 @@ import type { PanelConfig } from '@/types';
 
 export type InspectorTabId = 'overview' | 'security' | 'markets' | 'news' | 'all';
 
-export type MarketsSubFilter = 'all' | 'equities' | 'energy' | 'supply' | 'crypto';
+export type MarketsSubFilter = 'all' | 'equities' | 'energy' | 'supply';
 export type NewsSubFilter = 'all' | 'regional' | 'topical' | 'tracking';
 
 export interface InspectorTabDef {
@@ -25,7 +25,6 @@ export const MARKETS_SUB_FILTERS: ReadonlyArray<{ readonly id: MarketsSubFilter;
   { id: 'equities', labelKo: '증시·거시', labelEn: 'Macro & Stocks' },
   { id: 'energy', labelKo: '에너지·원자재', labelEn: 'Energy & Oil' },
   { id: 'supply', labelKo: '공급망·무역', labelEn: 'Supply & Trade' },
-  { id: 'crypto', labelKo: '암호화폐', labelEn: 'Crypto' },
 ];
 
 export const NEWS_SUB_FILTERS: ReadonlyArray<{ readonly id: NewsSubFilter; readonly labelKo: string; readonly labelEn: string }> = [
@@ -187,16 +186,6 @@ const MARKETS_SUPPLY_KEYS = new Set<string>([
   'global-procurement',
 ]);
 
-const MARKETS_CRYPTO_KEYS = new Set<string>([
-  'crypto',
-  'crypto-news',
-  'crypto-heatmap',
-  'defi-tokens',
-  'ai-tokens',
-  'other-tokens',
-  'etf-flows',
-  'stablecoins',
-]);
 
 const NEWS_REGIONAL_KEYS = new Set<string>([
   'politics',
@@ -244,7 +233,6 @@ export function getMarketsSubFilterForPanel(panelId: string): MarketsSubFilter |
   if (MARKETS_EQUITIES_KEYS.has(panelId)) return 'equities';
   if (MARKETS_ENERGY_KEYS.has(panelId)) return 'energy';
   if (MARKETS_SUPPLY_KEYS.has(panelId)) return 'supply';
-  if (MARKETS_CRYPTO_KEYS.has(panelId)) return 'crypto';
   return null;
 }
 

@@ -239,7 +239,7 @@ const baseSources = () => ({
       { id: 's1', type: 'COERCIVE', theater: 'Middle East', severity: 'HIGH', severityScore: 75 },
     ],
   },
-  'economic:macro-signals:v1': { verdict: 'NEUTRAL' },
+  'economic:macro-signals:v2': { verdict: 'NEUTRAL' },
 });
 
 describe('computeBalanceVector', () => {
@@ -1046,7 +1046,7 @@ describe('writer-side XSS hardening (issue #3730)', () => {
         },
       ],
     },
-    'economic:macro-signals:v1': { verdict: `CASH${XSS}` },
+    'economic:macro-signals:v2': { verdict: `CASH${XSS}` },
     'economic:stress-index:v1': { compositeScore: 80, label: `RISKY${XSS}` },
   });
 

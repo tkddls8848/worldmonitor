@@ -71,7 +71,7 @@ from worldmonitor_sdk import Client
 client = Client(api_key="wm_...")  # or set WORLDMONITOR_API_KEY
 client.list_tools()                # public — no key needed
 client.country_risk("IR")
-client.call_tool("get_market_data", asset_class="crypto")
+client.call_tool("get_market_data", asset_class="equity")
 ```
 
 Get an API key at https://www.worldmonitor.app/pro. The full per-language guide — Ruby, Go, JavaScript, and Rust examples included — is at https://www.worldmonitor.app/docs/sdks.

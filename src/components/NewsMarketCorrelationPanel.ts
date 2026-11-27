@@ -15,8 +15,6 @@ import { escapeHtml, unsafeRawHtml } from '@/utils/sanitize';
 const MARKET_OPTIONS = [
   { symbol: '^GSPC', label: 'S&P 500' },
   { symbol: '^IXIC', label: 'Nasdaq Composite' },
-  { symbol: 'BTC-USD', label: 'Bitcoin' },
-  { symbol: 'ETH-USD', label: 'Ethereum' },
   { symbol: 'GC=F', label: 'Gold' },
   { symbol: 'CL=F', label: 'WTI Crude' },
 ] as const;

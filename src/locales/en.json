@@ -77,13 +77,11 @@
     "preflightProRequired": "Pro subscription required to use the Widget Builder. Upgrade to unlock.",
     "examples": {
       "oilGold": "Show me today's crude oil price versus gold",
-      "cryptoMovers": "Create a widget for the top crypto movers in the last 24 hours",
       "flightDelays": "Summarize the worst international flight delays right now",
       "conflictHotspots": "Map the latest UCDP conflict hotspots with short labels"
     },
     "proExamples": {
       "interactiveChart": "Interactive Chart.js chart comparing oil and gold prices",
-      "sortableTable": "Sortable crypto price table with search filter",
       "animatedCounters": "Animated counters for key economic indicators",
       "tabbedComparison": "Tabbed comparison of conflict events by region"
     }
@@ -437,7 +435,6 @@
     "sourceRegionMarkets": "Markets & Analysis",
     "sourceRegionFixedIncomeFx": "Fixed Income & Foreign exchange",
     "sourceRegionCommodities": "Commodities",
-    "sourceRegionCryptoDigital": "Crypto & Digital",
     "sourceRegionCentralBanks": "Central Banks & Economy",
     "sourceRegionDeals": "Deals & Corporate",
     "sourceRegionFinRegulation": "Financial Regulation",
@@ -459,7 +456,6 @@
     "panelCatMarkets": "Markets",
     "panelCatFixedIncomeFx": "Fixed Income & Foreign exchange",
     "panelCatCommodities": "Commodities",
-    "panelCatCryptoDigital": "Crypto & Digital",
     "panelCatCentralBanks": "Central Banks & Econ",
     "panelCatDeals": "Deals & Institutional",
     "panelCatGulfMena": "Gulf & Middle East and North Africa",
@@ -503,15 +499,12 @@
     "supplyChain": "Supply Chain",
     "finance": "Financial",
     "tech": "Technology",
-    "crypto": "Crypto",
     "heatmap": "Sector Heatmap",
     "ai": "AI & machine learning",
     "layoffs": "Layoffs Tracker",
     "monitors": "My Monitors",
     "satelliteFires": "Fires",
     "macroSignals": "Bitcoin market conditions",
-    "etfFlows": "Bitcoin fund flows",
-    "stablecoins": "Stablecoins",
     "deduction": "Deduct Situation",
     "ucdpEvents": "Armed Conflict Events",
     "displacement": "Refugees and displacement",
@@ -1231,15 +1224,6 @@
       "leanYes": "Lean Yes",
       "leanNo": "Lean No",
       "tossUp": "Toss-up"
-    },
-    "stablecoins": {
-      "pegHealth": "Peg Health",
-      "supplyVolume": "Supply & Volume",
-      "token": "Token",
-      "mcap": "MCap",
-      "vol24h": "24h Vol",
-      "chg24h": "24h Chg",
-      "infoTooltip": "<strong>Stablecoins</strong> Peg health, market cap, and 24h volume for major USD-pegged tokens (USDT, USDC, DAI, BUSD). A broken peg signals systemic risk."
     },
     "marketImplications": {
       "infoTooltip": "<strong>AI Market Implications</strong> LLM-generated trade signals derived from live geopolitical, commodity, and macro state after each forecast cycle.<ul><li><strong>Direction</strong>: LONG / SHORT / HEDGE</li><li><strong>Timeframe</strong>: 1W, 2W, 1M, or 3M horizon</li><li><strong>Driver</strong>: Key catalyst behind the signal</li><li><strong>Risk</strong>: Caveat or invalidation condition</li></ul><em>For informational purposes only. Not investment advice.</em>",
@@ -2045,27 +2029,6 @@
     "prediction": {
       "infoTooltip": "<strong>Prediction Markets</strong> Real-money forecasting markets:<ul><li>Prices reflect crowd probability estimates</li><li>Higher volume = more reliable signal</li><li>Geopolitical and current events focus</li></ul>Sources: Polymarket, Kalshi"
     },
-    "etfFlows": {
-      "previousColumns": "Previous columns",
-      "moreColumns": "More columns",
-      "unavailable": "exchange-traded fund data temporarily unavailable",
-      "rateLimited": "exchange-traded fund data temporarily unavailable (rate limited) — retrying shortly",
-      "netFlow": "Net Flow",
-      "estFlow": "Est. Flow",
-      "totalVol": "Total Vol",
-      "etfs": "Exchange-traded funds",
-      "netInflow": "NET INFLOW",
-      "netOutflow": "NET OUTFLOW",
-      "netNeutral": "NET NEUTRAL",
-      "table": {
-        "ticker": "Ticker",
-        "issuer": "Issuer",
-        "estFlow": "Est. Flow",
-        "volume": "Volume",
-        "change": "Change"
-      },
-      "infoTooltip": "<strong>Bitcoin fund flows</strong> Tracks daily estimated fund flows for US spot Bitcoin exchange-traded funds:<ul><li>Inflow/outflow direction and magnitude</li><li>Volume and price change per fund</li><li>Net aggregate flow across all tracked funds</li></ul>"
-    },
     "macroSignals": {
       "overall": "Overall",
       "verdict": {
@@ -2075,12 +2038,7 @@
       "bullish": "{{count}}/{{total}} bullish",
       "signals": {
         "liquidity": "Liquidity",
-        "flow": "Flow",
-        "regime": "Regime",
-        "btcTrend": "BTC Trend",
-        "hashRate": "Hash Rate",
-        "momentum": "Momentum",
-        "fearGreed": "Fear & Greed"
+        "regime": "Regime"
       },
       "infoTooltip": "<strong>Bitcoin market conditions</strong> Composite signal dashboard for Bitcoin positioning and risk appetite:<ul><li><strong>Liquidity</strong>: Net Fed liquidity proxy</li><li><strong>Flow</strong>: BTC vs QQQ 5-day returns</li><li><strong>Regime</strong>: QQQ vs XLP rotation (risk-on/off)</li><li><strong>BTC Trend</strong>: Price vs SMA50/200, Mayer Multiple</li><li><strong>Hash Rate</strong>: 30-day network hash change</li><li><strong>Fear & Greed</strong>: Market sentiment index</li></ul>This panel is for regime and positioning, not broad macro data."
     },
@@ -2216,18 +2174,6 @@
         "gold": "Gold",
         "silver": "Silver"
       }
-    },
-    "crypto": {
-      "infoTooltip": "<strong>Crypto</strong> Live prices, 24h changes, and volume for major cryptocurrencies. Data sourced from CoinGecko."
-    },
-    "defiTokens": {
-      "infoTooltip": "<strong>DeFi Tokens</strong> Prices and 24h/7d performance for major decentralized finance protocol tokens — DEXes, lending platforms, and yield protocols."
-    },
-    "aiTokens": {
-      "infoTooltip": "<strong>AI Tokens</strong> Prices and 24h/7d performance for AI and machine learning sector tokens — compute networks, decentralized AI infrastructure, and data protocols."
-    },
-    "altTokens": {
-      "infoTooltip": "<strong>Alt Tokens</strong> Prices and 24h/7d performance for alternative and emerging crypto tokens outside the major-cap tiers."
     },
     "stockAnalysis": {
       "infoTooltip": "<strong>Premium Stock Analysis</strong> AI-powered analysis for stocks in your watchlist — buy/hold/sell signals, price targets, key risks, and catalysts updated daily."
@@ -2410,7 +2356,6 @@
       "title": "24/7 Positioning",
       "infoTooltip": "<strong>24/7 Positioning</strong> Perpetual contract positioning stress from Hyperliquid. Trades around the clock, showing what's building when traditional markets are closed. Composite score (0-100) from funding rate, volume, open interest, and spot-perp basis. Green = longs crowded (bullish lean), red = shorts crowded (bearish lean).",
       "commodities": "COMMODITIES",
-      "crypto": "CRYPTO",
       "fx": "Foreign exchange",
       "warmup": "Building baselines. Volume and Open interest history populates over the next hour.",
       "footer": "5min · Hyperliquid perps · 24/7"
@@ -4245,11 +4190,9 @@
     "noDataShort": "No data",
     "upstreamUnavailable": "Upstream API unavailable — will retry automatically",
     "loadingUcdpEvents": "Loading armed conflict events",
-    "loadingStablecoins": "Loading stablecoins...",
     "scanningThermalData": "Scanning thermal data",
     "calculatingExposure": "Calculating exposure",
     "computingSignals": "Computing signals...",
-    "loadingEtfData": "Loading exchange-traded fund data...",
     "loadingDisplacement": "Loading displacement data",
     "loadingClimateData": "Loading climate data",
     "failedTechReadiness": "Tech readiness data temporarily unavailable",
@@ -4261,7 +4204,6 @@
     "failedMarketData": "Market data temporarily unavailable",
     "failedSectorData": "Sector data temporarily unavailable",
     "failedCommodities": "Commodities data temporarily unavailable",
-    "failedCryptoData": "Crypto data temporarily unavailable",
     "rateLimitedMarket": "Market data temporarily unavailable (rate limited) — retrying shortly",
     "noNewsAvailable": "No news available",
     "noActiveTechHubs": "No active tech hubs",

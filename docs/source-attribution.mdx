@@ -12,7 +12,7 @@ The inventory is **generated, not hand-written**: `scripts/source-attribution.mj
 ## Observed Source Inventory
 
 {/* BEGIN GENERATED SOURCE ATTRIBUTION */}
-This generated inventory covers **780 active source hosts** representing **760 active providers** (**366 structured/API**, **395 feed**, and **30 operational-status** hosts). It is derived from source declarations in `scripts/`, `server/`, `api/`, and `src/`. Each row shows the configured provider identity and where the source is referenced. Syndication transports such as FeedBurner and Google News remain listed as hosts and are not counted as publishers.
+This generated inventory covers **764 active source hosts** representing **744 active providers** (**361 structured/API**, **384 feed**, and **30 operational-status** hosts). It is derived from source declarations in `scripts/`, `server/`, `api/`, and `src/`. Each row shows the configured provider identity and where the source is referenced. Syndication transports such as FeedBurner and Google News remain listed as hosts and are not counted as publishers.
 
 | Provider | Observed surface |
 | --- | --- |
@@ -42,7 +42,7 @@ This generated inventory covers **780 active source hosts** representing **760 a
 | airplanes.live (api.airplanes.live) | structured — scripts/seed-military-flights.mjs, src/components/MapPopup.ts |
 | Al Jazeera (aljazeera.com) | feed — shared/news-catalog.json |
 | Al Jazeera (www.aljazeera.com) | feed — shared/news-catalog.json |
-| Alternative.me Fear & Greed Index (api.alternative.me) | structured — scripts/seed-economy.mjs |
+| Alternative.me Fear & Greed Index (api.alternative.me) | Excluded / candidate — No current fetch observed |
 | Alwihda Info (www.alwihdainfo.com) | feed — shared/news-catalog.json |
 | amdlive-ch01-ctnd-com.akamaized.net (amdlive-ch01-ctnd-com.akamaized.net) | feed — src/config/live-video-sources.ts |
 | amg00106-france24-france24-samsunguk-qvpp8.amagi.tv (amg00106-france24-france24-samsunguk-qvpp8.amagi.tv) | feed — src/config/live-video-sources.ts |
@@ -57,7 +57,7 @@ This generated inventory covers **780 active source hosts** representing **760 a
 | api.axios.com (api.axios.com) | feed — shared/news-catalog.json |
 | api.cammesa.com (api.cammesa.com) | structured — scripts/_regional-energy-source.mjs, scripts/shared/regional-energy-feeds.json |
 | api.cloudflare.com (api.cloudflare.com) | structured — scripts/_kv-storage.mjs, scripts/_r2-storage.mjs, scripts/local/local-api-server.mjs, scripts/seed-internet-outages.mjs, +1 more |
-| api.coingecko.com (api.coingecko.com) | structured — scripts/personal-providers.cjs |
+| api.coingecko.com (api.coingecko.com) | Excluded / candidate — No current fetch observed |
 | api.data.gov.my (api.data.gov.my) | structured — scripts/_dosm-product-demand.mjs, scripts/backfill-fuel-prices-prev.mjs, scripts/seed-fuel-prices.mjs |
 | api.datos.gob.mx (api.datos.gob.mx) | structured — scripts/backfill-fuel-prices-prev.mjs |
 | api.eia.gov (api.eia.gov) | structured — scripts/backfill-fuel-prices-prev.mjs, scripts/local/local-api-server.mjs, scripts/seed-economy.mjs, scripts/seed-eia-petroleum.mjs, +3 more |
@@ -125,7 +125,7 @@ This generated inventory covers **780 active source hosts** representing **760 a
 | bihus.info (bihus.info) | feed — shared/news-catalog.json |
 | Binance (binance.com) | feed — shared/news-catalog.json |
 | bitbucket.status.atlassian.com (bitbucket.status.atlassian.com) | operational-status — server/worldmonitor/infrastructure/v1/list-service-statuses.ts |
-| bitcoinmagazine.com (bitcoinmagazine.com) | feed — shared/news-catalog.json |
+| bitcoinmagazine.com (bitcoinmagazine.com) | Excluded / candidate — No current fetch observed |
 | bloomberg.com (bloomberg.com) | feed — shared/news-catalog.json |
 | bothsidesofthetable.com (bothsidesofthetable.com) | Excluded / candidate — No current fetch observed |
 | Brave Search API (api.search.brave.com) | structured — server/worldmonitor/market/v1/stock-news-search.ts |
@@ -170,8 +170,8 @@ This generated inventory covers **780 active source hosts** representing **760 a
 | cnn.gr (cnn.gr) | feed — shared/news-catalog.json |
 | co.usembassy.gov (co.usembassy.gov) | structured — scripts/seed-security-advisories.mjs |
 | Coinbase (coinbase.com) | feed — shared/news-catalog.json |
-| CoinPaprika (api.coinpaprika.com) | structured — scripts/_seed-utils.mjs, scripts/personal-providers.cjs, server/worldmonitor/market/v1/_shared.ts |
-| cointelegraph.com (cointelegraph.com) | feed — shared/news-catalog.json |
+| CoinPaprika (api.coinpaprika.com) | Excluded / candidate — No current fetch observed |
+| cointelegraph.com (cointelegraph.com) | Excluded / candidate — No current fetch observed |
 | collisionconf.com (collisionconf.com) | Excluded / candidate — No current fetch observed |
 | commodity.worldmonitor.app (commodity.worldmonitor.app) | structured — src/app/panel-layout.ts, src/config/variant-meta.ts |
 | comtradeapi.un.org (comtradeapi.un.org) | structured — scripts/seed-comtrade-bilateral-hs4.mjs, scripts/seed-oil-trade-series.mjs, scripts/seed-recovery-import-hhi.mjs, scripts/seed-supply-vulnerability.mjs, +2 more |
@@ -184,7 +184,7 @@ This generated inventory covers **780 active source hosts** representing **760 a
 | cp24.com (cp24.com) | feed — shared/news-catalog.json |
 | creativecommons.org (creativecommons.org) | structured — scripts/build-open-data-chokepoints.mjs, server/worldmonitor/displacement/v1/cross-border-data.ts, src/components/UkmtoIncidentsPanel.ts |
 | creg.gov.co (creg.gov.co) | structured — scripts/lib/regional-fuel-feeds.mjs, scripts/shared/regional-energy-feeds.json |
-| cryptoslate.com (cryptoslate.com) | feed — shared/news-catalog.json |
+| cryptoslate.com (cryptoslate.com) | Excluded / candidate — No current fetch observed |
 | csis.org (csis.org) | feed — shared/news-catalog.json |
 | ctvnews.ca (ctvnews.ca) | feed — shared/news-catalog.json |
 | cursor.com (cursor.com) | structured — src/config/mcp-agent-clients.ts |
@@ -214,7 +214,7 @@ This generated inventory covers **780 active source hosts** representing **760 a
 | datosabiertos.dgcp.gob.do (datosabiertos.dgcp.gob.do) | structured — scripts/_global-tender-feeds.mjs |
 | de.euronews.com (de.euronews.com) | feed — shared/news-catalog.json |
 | de.usembassy.gov (de.usembassy.gov) | structured — scripts/seed-security-advisories.mjs |
-| decrypt.co (decrypt.co) | feed — shared/news-catalog.json |
+| decrypt.co (decrypt.co) | Excluded / candidate — No current fetch observed |
 | defense.gov (defense.gov) | Excluded / candidate — No current fetch observed |
 | dev.events (dev.events) | Excluded / candidate — No current fetch observed |
 | dev.to (dev.to) | Excluded / candidate — No current fetch observed |
@@ -226,7 +226,7 @@ This generated inventory covers **780 active source hosts** representing **760 a
 | discord.gg (discord.gg) | Excluded / candidate — No current fetch observed |
 | discordstatus.com (discordstatus.com) | operational-status — server/worldmonitor/infrastructure/v1/list-service-statuses.ts |
 | disrupt-africa.com (disrupt-africa.com) | Excluded / candidate — No current fetch observed |
-| dlnews.com (dlnews.com) | feed — shared/news-catalog.json |
+| dlnews.com (dlnews.com) | Excluded / candidate — No current fetch observed |
 | do.usembassy.gov (do.usembassy.gov) | structured — scripts/seed-security-advisories.mjs |
 | Docker Redis REST proxy (redis-rest) | structured — scripts/local/local-api-server.mjs |
 | doe.gov.ph (d24qbtp4vooyzi.cloudfront.net) | structured — scripts/lib/regional-fuel-feeds.mjs |
@@ -372,7 +372,7 @@ This generated inventory covers **780 active source hosts** representing **760 a
 | hub.arcgis.com (hub.arcgis.com) | structured — scripts/seed-portwatch.mjs |
 | humanprogress.org (humanprogress.org) | Excluded / candidate — No current fetch observed |
 | hvg.hu (hvg.hu) | feed — shared/news-catalog.json |
-| Hyperliquid (api.hyperliquid.xyz) | structured — scripts/seed-hyperliquid-flow.mjs |
+| Hyperliquid (api.hyperliquid.xyz) | structured — scripts/seed-perp-positioning.mjs |
 | i24newshebrew-cdn.encoders.immergo.tv (i24newshebrew-cdn.encoders.immergo.tv) | feed — src/config/live-video-sources.ts |
 | iccc.gov.pg (iccc.gov.pg) | structured — scripts/lib/regional-energy-feeds.mjs, scripts/shared/regional-energy-feeds.json |
 | ici.radio-canada.ca (ici.radio-canada.ca) | feed — shared/news-catalog.json |
@@ -470,9 +470,9 @@ This generated inventory covers **780 active source hosts** representing **760 a
 | meduza.io (meduza.io) | feed — shared/news-catalog.json |
 | mei.edu (mei.edu) | feed — shared/news-catalog.json |
 | mem.gob.gt (mem.gob.gt) | structured — scripts/shared/regional-energy-feeds.json |
-| mempool.space (mempool.space) | structured — scripts/seed-economy.mjs |
+| mempool.space (mempool.space) | Excluded / candidate — No current fetch observed |
 | mercadocentral.gob.ar (mercadocentral.gob.ar) | structured — scripts/lib/food-prices-adapters/mcba.mjs |
-| messari.io (messari.io) | feed — shared/news-catalog.json |
+| messari.io (messari.io) | Excluded / candidate — No current fetch observed |
 | mexiconewsdaily.com (mexiconewsdaily.com) | feed — shared/news-catalog.json |
 | Microsoft Planetary Computer (planetarycomputer.microsoft.com) | structured — scripts/_orbital-change.mjs, scripts/_orbital-sites.mjs, src/services/orbital/archive-stac.ts, src/services/orbital/crop-url.ts |
 | Middle East Eye (middleeasteye.net) | feed — shared/news-catalog.json |
@@ -569,7 +569,7 @@ This generated inventory covers **780 active source hosts** representing **760 a
 | PR Newswire (prnewswire.com) | feed — shared/news-catalog.json |
 | pravda.com.ua (pravda.com.ua) | feed — shared/news-catalog.json |
 | precios.maga.gob.gt (precios.maga.gob.gt) | structured — scripts/lib/food-prices-adapters/maga.mjs |
-| pro-api.coingecko.com (pro-api.coingecko.com) | structured — scripts/personal-providers.cjs |
+| pro-api.coingecko.com (pro-api.coingecko.com) | Excluded / candidate — No current fetch observed |
 | production.dataviz.cnn.io (production.dataviz.cnn.io) | structured — scripts/seed-fear-greed.mjs |
 | protomaps.com (protomaps.com) | structured — src/config/basemap-styles.ts |
 | protothema.gr (protothema.gr) | feed — shared/news-catalog.json |
@@ -581,7 +581,7 @@ This generated inventory covers **780 active source hosts** representing **760 a
 | PURL namespace (purl.org) | Excluded / candidate — No current fetch observed |
 | qevdnlpgjxpwusesmtpx.supabase.co (qevdnlpgjxpwusesmtpx.supabase.co) | structured — scripts/fetch-pizzint-bases.mjs |
 | query.sse.com.cn (query.sse.com.cn) | structured — scripts/china-corporate-disclosures/adapters.mjs |
-| query1.finance.yahoo.com (query1.finance.yahoo.com) | structured — scripts/_seed-utils.mjs, scripts/_yahoo-fetch.mjs, scripts/_yahoo-sector-valuations.cjs, scripts/personal-collector-tasks.cjs, +12 more |
+| query1.finance.yahoo.com (query1.finance.yahoo.com) | structured — scripts/_seed-utils.mjs, scripts/_yahoo-fetch.mjs, scripts/_yahoo-sector-valuations.cjs, scripts/personal-collector-tasks.cjs, +11 more |
 | radar.cloudflare.com (radar.cloudflare.com) | Excluded / candidate — No current fetch observed |
 | Radio Ndeke Luka (www.radiondekeluka.org) | feed — shared/news-catalog.json |
 | railway.instatus.com (railway.instatus.com) | operational-status — server/worldmonitor/infrastructure/v1/list-service-statuses.ts |
@@ -720,9 +720,9 @@ This generated inventory covers **780 active source hosts** representing **760 a
 | The Telegraph (www.telegraph.co.uk) | feed — shared/news-catalog.json |
 | The Washington Post (washingtonpost.com) | feed — shared/news-catalog.json |
 | thebetterindia.com (thebetterindia.com) | Excluded / candidate — No current fetch observed |
-| theblock.co (theblock.co) | feed — shared/news-catalog.json |
+| theblock.co (theblock.co) | Excluded / candidate — No current fetch observed |
 | thebulletin.org (thebulletin.org) | feed — shared/news-catalog.json |
-| thedefiant.io (thedefiant.io) | feed — shared/news-catalog.json |
+| thedefiant.io (thedefiant.io) | Excluded / candidate — No current fetch observed |
 | thediplomat.com (thediplomat.com) | feed — shared/news-catalog.json |
 | thedocs.worldbank.org (thedocs.worldbank.org) | structured — scripts/seed-pink-sheet.mjs |
 | thehill.com (thehill.com) | feed — shared/news-catalog.json |
@@ -764,7 +764,7 @@ This generated inventory covers **780 active source hosts** representing **760 a
 | ukrinform.net (ukrinform.net) | feed — shared/news-catalog.json |
 | ukrinform.ua (ukrinform.ua) | feed — shared/news-catalog.json |
 | UN Security Council (scsanctions.un.org) | structured — scripts/_world-sanctions.mjs |
-| unchainedcrypto.com (unchainedcrypto.com) | feed — shared/news-catalog.json |
+| unchainedcrypto.com (unchainedcrypto.com) | Excluded / candidate — No current fetch observed |
 | understandingwar.org (understandingwar.org) | feed — shared/news-catalog.json |
 | UNDP Human Development Report (hdr.undp.org) | Excluded / candidate — No current fetch observed |
 | unhcr.org (unhcr.org) | feed — shared/news-catalog.json |
@@ -811,7 +811,7 @@ This generated inventory covers **780 active source hosts** representing **760 a
 | WorldMonitor test origin (worldmonitor.invalid) | structured — api/_md-url-twin.ts, src/shared/public-rpc-cache.ts, src/utils/dom-utils.ts |
 | worldmonitor.mintlify.dev (worldmonitor.mintlify.dev) | structured — src/config/docs-locale-seo.ts |
 | ws.cso.ie (ws.cso.ie) | structured — scripts/lib/food-prices-adapters/cso.mjs |
-| wublockchain.com (wublockchain.com) | feed — shared/news-catalog.json |
+| wublockchain.com (wublockchain.com) | Excluded / candidate — No current fetch observed |
 | www.a16z.news (www.a16z.news) | Excluded / candidate — No current fetch observed |
 | www.aaii.com (www.aaii.com) | structured — scripts/seed-aaii-sentiment.mjs, scripts/seed-fear-greed.mjs |
 | www.aajtak.in (www.aajtak.in) | feed — shared/news-catalog.json |
@@ -862,7 +862,7 @@ This generated inventory covers **780 active source hosts** representing **760 a
 | www.cnbc.com (www.cnbc.com) | feed — shared/news-catalog.json |
 | www.cnn.gr (www.cnn.gr) | Excluded / candidate — No current fetch observed |
 | www.coes.org.pe (www.coes.org.pe) | structured — scripts/lib/regional-energy-feeds.mjs, scripts/shared/regional-energy-feeds.json |
-| www.coindesk.com (www.coindesk.com) | feed — shared/news-catalog.json |
+| www.coindesk.com (www.coindesk.com) | Excluded / candidate — No current fetch observed |
 | www.comcom.govt.nz (www.comcom.govt.nz) | structured — scripts/seed-fuel-prices.mjs |
 | www.contractsfinder.service.gov.uk (www.contractsfinder.service.gov.uk) | structured — scripts/seed-global-tenders.mjs |
 | www.corriere.it (www.corriere.it) | Excluded / candidate — No current fetch observed |

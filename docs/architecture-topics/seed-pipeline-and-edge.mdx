@@ -17,7 +17,6 @@ Railway cron services continuously refresh the Redis cache with pre-computed dat
 | `seed-earthquakes` | USGS M4.5+ and Earthquakes Canada (NRCan) Atom | 5 min | `seismology:earthquakes:v1` |
 | `seed-market-quotes` | Yahoo Finance (staggered batches) | 5 min | `market:stocks-bootstrap:v1` |
 | `seed-commodity-quotes` | Yahoo Finance (WTI, Brent, metals) | 5 min | `market:commodities-bootstrap:v1` |
-| `seed-crypto-quotes` | CoinGecko (BTC, ETH, SOL, XRP+) | 5 min | `market:crypto:v1` |
 | `seed-cyber-threats` | Feodo, URLhaus, C2Intel, OTX, AbuseIPDB | 2 hours | `cyber:threats-bootstrap:v2` |
 | `seed-internet-outages` | Cloudflare Radar | 5 min | `infra:outages:v1` |
 | `seed-fire-detections` | NASA FIRMS VIIRS, CWFIS national active/prescribed fires (CWFIF WFS), and BC Wildfire current fire points (OpenMaps KML) | 10 min | `wildfire:fires:v1` |
@@ -26,8 +25,6 @@ Railway cron services continuously refresh the Redis cache with pre-computed dat
 | `seed-aviation` | FAA + ICAO NOTAM | 10 min | `aviation:delays-bootstrap:v2` |
 | `seed-insights` | LLM world brief + top stories (Ollama, then OpenRouter) | 10 min | `news:insights:v1` |
 | `seed-prediction-markets` | Polymarket Gamma API | 10 min | `prediction:markets-bootstrap:v1` |
-| `seed-etf-flows` | Yahoo Finance (IBIT, FBTC, GBTC+) | 15 min | `market:etf-flows:v1` |
-| `seed-stablecoin-markets` | CoinGecko (USDT, USDC, DAI+) | 10 min | `market:stablecoins:v1` |
 | `seed-gulf-quotes` | Yahoo Finance (Tadawul, DFM, ADX) | 10 min | `market:gulf-quotes:v1` |
 | `seed-unrest-events` | ACLED protests + GDELT | 45 min | `unrest:events:v1` |
 | `seed-ucdp-events` | UCDP GED API | 6 hours | `conflict:ucdp-events:v1` |

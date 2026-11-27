@@ -1,15 +1,14 @@
 /**
  * Unified market service module -- replaces legacy service:
- *   - src/services/markets.ts (Finnhub + Yahoo + CoinGecko)
+ *   - src/services/markets.ts (Finnhub and Yahoo Finance)
  *
  * All data now flows through the MarketServiceClient RPCs.
  */
 
 import { getRpcBaseUrl } from '@/services/rpc-client';
-import type { ListMarketQuotesResponse, ListCommodityQuotesResponse, GetPhysicalDivergenceIndexResponse, GetPhysicalPremiumsResponse, GetSectorSummaryResponse, ListCryptoQuotesResponse, ListCryptoSectorsResponse, CryptoSector, ListDefiTokensResponse, ListAiTokensResponse, ListOtherTokensResponse, MarketQuote as ProtoMarketQuote, MarketQuoteUnavailable, CryptoQuote as ProtoCryptoQuote } from '@/generated/client/worldmonitor/market/v1/service_client';
-import type { MarketData, CryptoData, TokenData } from '@/types';
+import type { ListMarketQuotesResponse, ListCommodityQuotesResponse, GetPhysicalDivergenceIndexResponse, GetPhysicalPremiumsResponse, GetSectorSummaryResponse, MarketQuote as ProtoMarketQuote, MarketQuoteUnavailable } from '@/generated/client/worldmonitor/market/v1/service_client';
+import type { MarketData } from '@/types';
 import { createCircuitBreaker } from '@/utils/circuit-breaker';
-import { getHydratedData } from '@/services/bootstrap';
 import { MarketServiceClient } from '@/services/generated-rpc-clients';
 import { combineAbortSignals, createTimeoutSignal } from '@/services/timeout-signal';
 
@@ -21,25 +20,11 @@ const stockBreaker = createCircuitBreaker<ListMarketQuotesResponse>({ name: 'Mar
 const commodityBreaker = createCircuitBreaker<ListCommodityQuotesResponse>({ name: 'Commodity Quotes', cacheTtlMs: MARKET_QUOTES_CACHE_TTL_MS, persistCache: true });
 const physicalPremiumBreaker = createCircuitBreaker<GetPhysicalPremiumsResponse>({ name: 'Physical Premiums', cacheTtlMs: 0 });
 const sectorBreaker = createCircuitBreaker<GetSectorSummaryResponse>({ name: 'Sector Summary v2', cacheTtlMs: MARKET_QUOTES_CACHE_TTL_MS, persistCache: true });
-const cryptoBreaker = createCircuitBreaker<ListCryptoQuotesResponse>({ name: 'Crypto Quotes', persistCache: true });
-const cryptoSectorsBreaker = createCircuitBreaker<ListCryptoSectorsResponse>({ name: 'Crypto Sectors', persistCache: true });
-const defiBreaker = createCircuitBreaker<ListDefiTokensResponse>({ name: 'DeFi Tokens', persistCache: true });
-const aiBreaker = createCircuitBreaker<ListAiTokensResponse>({ name: 'AI Tokens', persistCache: true });
-const otherBreaker = createCircuitBreaker<ListOtherTokensResponse>({ name: 'Other Tokens', persistCache: true });
 
 const emptyStockFallback: ListMarketQuotesResponse = { quotes: [], finnhubSkipped: false, skipReason: '', rateLimited: false, unavailableSymbols: [], asOf: '' };
 const emptyCommodityFallback: ListCommodityQuotesResponse = { quotes: [] };
 const emptyPhysicalPremiumFallback: GetPhysicalPremiumsResponse = { premiums: [] };
 const emptySectorFallback: GetSectorSummaryResponse = { sectors: [] };
-const EMPTY_CRYPTO_FALLBACK: ListCryptoQuotesResponse = {
-  quotes: [],
-  unresolvedIds: [],
-  provider: 'degraded',
-};
-const emptyCryptoSectorsFallback: ListCryptoSectorsResponse = { sectors: [] };
-const emptyDefiTokensFallback: ListDefiTokensResponse = { tokens: [] };
-const emptyAiTokensFallback: ListAiTokensResponse = { tokens: [] };
-const emptyOtherTokensFallback: ListOtherTokensResponse = { tokens: [] };
 
 // ---- Proto -> legacy adapters ----
 
@@ -50,16 +35,6 @@ function toMarketData(proto: ProtoMarketQuote, meta?: { name?: string; display?:
     display: meta?.display || proto.display || proto.symbol,
     price: proto.price != null ? proto.price : null,
     change: proto.change ?? null,
-    sparkline: proto.sparkline.length > 0 ? proto.sparkline : undefined,
-  };
-}
-
-function toCryptoData(proto: ProtoCryptoQuote): CryptoData {
-  return {
-    name: proto.name,
-    symbol: proto.symbol,
-    price: proto.price,
-    change: proto.change,
     sparkline: proto.sparkline.length > 0 ? proto.sparkline : undefined,
   };
 }
@@ -102,8 +77,8 @@ export async function fetchMultipleStocks(
   const symbolMetaMap = new Map<string, { symbol: string; name: string; display: string }>();
   // Case-insensitive fallback: maps UPPER(symbol) → first requested candidate.
   // "First wins" is intentional — assumes case-variants are the same instrument
-  // (e.g. btc-usd / BTC-USD both refer to the same asset). When the backend
-  // normalizes casing (e.g. returns "Btc-Usd"), we still recover metadata
+  // (e.g. aapl / AAPL both refer to the same asset). When the backend
+  // normalizes casing (e.g. returns "Aapl"), we still recover metadata
   // rather than silently dropping it as the old null-sentinel approach did.
   const uppercaseMetaMap = new Map<string, { symbol: string; name: string; display: string }>();
   for (const s of symbols) {
@@ -285,121 +260,3 @@ export async function fetchSectors(): Promise<GetSectorSummaryResponse> {
 // ========================================================================
 // Crypto -- replaces fetchCrypto
 // ========================================================================
-
-let lastSuccessfulCrypto: CryptoData[] = [];
-
-export async function fetchCrypto(): Promise<CryptoData[]> {
-  const hydrated = getHydratedData('cryptoQuotes') as ListCryptoQuotesResponse | undefined;
-  if (hydrated?.quotes?.length) {
-    const mapped = hydrated.quotes.map(toCryptoData).filter(c => c.price > 0);
-    if (mapped.length > 0) { lastSuccessfulCrypto = mapped; return mapped; }
-  }
-
-  const resp = await cryptoBreaker.execute(async () => {
-    return client.listCryptoQuotes({ ids: [] }); // empty = all defaults
-  }, EMPTY_CRYPTO_FALLBACK);
-
-  const results = resp.quotes
-    .map(toCryptoData)
-    .filter(c => c.price > 0);
-
-  if (results.length > 0) {
-    lastSuccessfulCrypto = results;
-    return results;
-  }
-
-  return lastSuccessfulCrypto;
-}
-
-// ========================================================================
-// Crypto Sectors
-// ========================================================================
-
-let lastSuccessfulSectors: CryptoSector[] = [];
-
-export async function fetchCryptoSectors(): Promise<CryptoSector[]> {
-  const hydrated = getHydratedData('cryptoSectors') as ListCryptoSectorsResponse | undefined;
-  if (hydrated?.sectors?.length) {
-    lastSuccessfulSectors = hydrated.sectors;
-    return hydrated.sectors;
-  }
-
-  const resp = await cryptoSectorsBreaker.execute(async () => {
-    return client.listCryptoSectors({});
-  }, emptyCryptoSectorsFallback);
-
-  if (resp.sectors.length > 0) {
-    lastSuccessfulSectors = resp.sectors;
-    return resp.sectors;
-  }
-  return lastSuccessfulSectors;
-}
-
-// ========================================================================
-// Token Panels (DeFi, AI, Other)
-// ========================================================================
-
-function toTokenData(q: ProtoCryptoQuote): TokenData {
-  // Bootstrap hydration delivers the raw seed shape ({change24h}) while the RPC
-  // handler normalises to the proto field name ({change}).  Handle both.
-  const raw = q as unknown as { change?: number; change24h?: number };
-  return {
-    name: q.name,
-    symbol: q.symbol,
-    price: q.price ?? 0,
-    change24h: (raw.change ?? raw.change24h) ?? 0,
-    change7d: q.change7d ?? 0,
-  };
-}
-
-let lastSuccessfulDefi: TokenData[] = [];
-let lastSuccessfulAi: TokenData[] = [];
-let lastSuccessfulOther: TokenData[] = [];
-
-export async function fetchDefiTokens(): Promise<TokenData[]> {
-  const hydrated = getHydratedData('defiTokens') as ListDefiTokensResponse | undefined;
-  if (hydrated?.tokens?.length) {
-    const mapped = hydrated.tokens.map(toTokenData).filter(t => t.price > 0);
-    if (mapped.length > 0) { lastSuccessfulDefi = mapped; return mapped; }
-  }
-
-  const resp = await defiBreaker.execute(async () => {
-    return client.listDefiTokens({});
-  }, emptyDefiTokensFallback);
-
-  const results = resp.tokens.map(toTokenData).filter(t => t.price > 0);
-  if (results.length > 0) { lastSuccessfulDefi = results; return results; }
-  return lastSuccessfulDefi;
-}
-
-export async function fetchAiTokens(): Promise<TokenData[]> {
-  const hydrated = getHydratedData('aiTokens') as ListAiTokensResponse | undefined;
-  if (hydrated?.tokens?.length) {
-    const mapped = hydrated.tokens.map(toTokenData).filter(t => t.price > 0);
-    if (mapped.length > 0) { lastSuccessfulAi = mapped; return mapped; }
-  }
-
-  const resp = await aiBreaker.execute(async () => {
-    return client.listAiTokens({});
-  }, emptyAiTokensFallback);
-
-  const results = resp.tokens.map(toTokenData).filter(t => t.price > 0);
-  if (results.length > 0) { lastSuccessfulAi = results; return results; }
-  return lastSuccessfulAi;
-}
-
-export async function fetchOtherTokens(): Promise<TokenData[]> {
-  const hydrated = getHydratedData('otherTokens') as ListOtherTokensResponse | undefined;
-  if (hydrated?.tokens?.length) {
-    const mapped = hydrated.tokens.map(toTokenData).filter(t => t.price > 0);
-    if (mapped.length > 0) { lastSuccessfulOther = mapped; return mapped; }
-  }
-
-  const resp = await otherBreaker.execute(async () => {
-    return client.listOtherTokens({});
-  }, emptyOtherTokensFallback);
-
-  const results = resp.tokens.map(toTokenData).filter(t => t.price > 0);
-  if (results.length > 0) { lastSuccessfulOther = results; return results; }
-  return lastSuccessfulOther;
-}

@@ -53,7 +53,6 @@
     "sourceRegionMarkets": "Markets & Analysis",
     "sourceRegionFixedIncomeFx": "Fixed Income & Foreign exchange",
     "sourceRegionCommodities": "Commodities",
-    "sourceRegionCryptoDigital": "Crypto & Digital",
     "sourceRegionCentralBanks": "Central Banks & Economy",
     "sourceRegionDeals": "Deals & Corporate",
     "sourceRegionFinRegulation": "Financial Regulation",
@@ -75,7 +74,6 @@
     "panelCatMarkets": "Markets",
     "panelCatFixedIncomeFx": "Fixed Income & Foreign exchange",
     "panelCatCommodities": "Commodities",
-    "panelCatCryptoDigital": "Crypto & Digital",
     "panelCatCentralBanks": "Central Banks & Econ",
     "panelCatDeals": "Deals & Institutional",
     "panelCatGulfMena": "Gulf & Middle East and North Africa",
@@ -119,15 +117,12 @@
     "supplyChain": "Supply Chain",
     "finance": "Financial",
     "tech": "Technology",
-    "crypto": "Crypto",
     "heatmap": "Sector Heatmap",
     "ai": "AI & machine learning",
     "layoffs": "Layoffs Tracker",
     "monitors": "My Monitors",
     "satelliteFires": "Fires",
     "macroSignals": "Bitcoin market conditions",
-    "etfFlows": "Bitcoin fund flows",
-    "stablecoins": "Stablecoins",
     "deduction": "Deduct Situation",
     "ucdpEvents": "Armed Conflict Events",
     "displacement": "Refugees and displacement",
@@ -183,11 +178,9 @@
     "noDataShort": "No data",
     "upstreamUnavailable": "Upstream API unavailable — will retry automatically",
     "loadingUcdpEvents": "Loading armed conflict events",
-    "loadingStablecoins": "Loading stablecoins...",
     "scanningThermalData": "Scanning thermal data",
     "calculatingExposure": "Calculating exposure",
     "computingSignals": "Computing signals...",
-    "loadingEtfData": "Loading exchange-traded fund data...",
     "loadingDisplacement": "Loading displacement data",
     "loadingClimateData": "Loading climate data",
     "failedTechReadiness": "Tech readiness data temporarily unavailable",
@@ -199,7 +192,6 @@
     "failedMarketData": "Market data temporarily unavailable",
     "failedSectorData": "Sector data temporarily unavailable",
     "failedCommodities": "Commodities data temporarily unavailable",
-    "failedCryptoData": "Crypto data temporarily unavailable",
     "rateLimitedMarket": "Market data temporarily unavailable (rate limited) — retrying shortly",
     "noNewsAvailable": "No news available",
     "noActiveTechHubs": "No active tech hubs",
@@ -335,13 +327,11 @@
     "preflightProRequired": "Pro subscription required to use the Widget Builder. Upgrade to unlock.",
     "examples": {
       "oilGold": "Show me today's crude oil price versus gold",
-      "cryptoMovers": "Create a widget for the top crypto movers in the last 24 hours",
       "flightDelays": "Summarize the worst international flight delays right now",
       "conflictHotspots": "Map the latest UCDP conflict hotspots with short labels"
     },
     "proExamples": {
       "interactiveChart": "Interactive Chart.js chart comparing oil and gold prices",
-      "sortableTable": "Sortable crypto price table with search filter",
       "animatedCounters": "Animated counters for key economic indicators",
       "tabbedComparison": "Tabbed comparison of conflict events by region"
     }
@@ -492,14 +482,8 @@
       "importSuccess": "Imported {{count}} settings",
       "importFailed": "Failed to import settings"
     },
-    "aiTokens": {
-      "infoTooltip": "<strong>AI Tokens</strong> Prices and 24h/7d performance for AI and machine learning sector tokens — compute networks, decentralized AI infrastructure, and data protocols."
-    },
     "airlineIntel": {
       "infoTooltip": "<strong>Airline Intelligence</strong> Real-time airline operational data: route suspensions, airspace closures, carrier advisories, and emergency diversions. Sourced from aviation authority NOTAMs and carrier bulletins."
-    },
-    "altTokens": {
-      "infoTooltip": "<strong>Alt Tokens</strong> Prices and 24h/7d performance for alternative and emerging crypto tokens outside the major-cap tiers."
     },
     "fx": {
       "infoTooltip": "<strong>Currency rates</strong> Stress ranks 45 currencies by their largest decline over 24 months, with the 12-month change. Spot rates use separate US dollar and euro bases. Russian ruble rates are rubles per unit. Sources include Yahoo Finance, the European Central Bank and Bank of Russia."
@@ -535,14 +519,8 @@
     "cotPositioning": {
       "infoTooltip": "<strong>Futures positioning</strong> Weekly net positions for commercial traders, large speculators and small traders across commodity and financial futures. Source is the Commodity Futures Trading Commission Commitments of Traders report, published on Fridays."
     },
-    "crypto": {
-      "infoTooltip": "<strong>Crypto</strong> Live prices, 24h changes, and volume for major cryptocurrencies. Data sourced from CoinGecko."
-    },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>Daily Market Brief</strong> AI-generated daily summary of global market conditions, key macro trends, and sector-level signals — refreshes each trading day."
-    },
-    "defiTokens": {
-      "infoTooltip": "<strong>DeFi Tokens</strong> Prices and 24h/7d performance for major decentralized finance protocol tokens — DEXes, lending platforms, and yield protocols."
     },
     "disasterCorrelation": {
       "infoTooltip": "<strong>Disaster Cascade</strong> Detects converging natural disaster and infrastructure signals:<ul><li>Correlates earthquakes, wildfires, floods, and weather extremes</li><li>Tracks cascading effects on infrastructure and supply chains</li><li>Highlights regions with compounding disaster risk</li></ul>Click a card to zoom to the affected region."
@@ -582,10 +560,6 @@
     },
     "escalationCorrelation": {
       "infoTooltip": "<strong>Escalation Monitor</strong> Detects converging geopolitical signals:<ul><li>Correlates military movements, conflict events, and news spikes</li><li>Scores convergence zones by severity (critical/high/medium/low)</li><li>Tracks escalation or de-escalation trends over time</li></ul>Click a card to zoom to the region on the map."
-    },
-    "etfFlows": {
-      "netNeutral": "NET NEUTRAL",
-      "infoTooltip": "<strong>Bitcoin fund flows</strong> Tracks daily estimated fund flows for US spot Bitcoin exchange-traded funds:<ul><li>Inflow/outflow direction and magnitude</li><li>Volume and price change per fund</li><li>Net aggregate flow across all tracked funds</li></ul>"
     },
     "faoFoodPriceIndex": {
       "infoTooltip": "<strong>FAO Food Price Index</strong> The UN Food and Agriculture Organization's Food Price Index tracks international export prices for a basket of food commodities (Cereals, Dairy, Meat, Oils, Sugar), base 2014-2016=100. Updated monthly on the first Friday of each month."
@@ -702,9 +676,6 @@
     },
     "serviceStatus": {
       "infoTooltip": "<strong>Service Status</strong> Live operational status of major cloud platforms, financial infrastructure, and critical internet services. Sourced from official status pages (AWS, Azure, GCP, Cloudflare, exchanges). Incidents may indicate broader disruption events."
-    },
-    "stablecoins": {
-      "infoTooltip": "<strong>Stablecoins</strong> Peg health, market cap, and 24h volume for major USD-pegged tokens (USDT, USDC, DAI, BUSD). A broken peg signals systemic risk."
     },
     "stockAnalysis": {
       "infoTooltip": "<strong>Premium Stock Analysis</strong> AI-powered analysis for stocks in your watchlist — buy/hold/sell signals, price targets, key risks, and catalysts updated daily."

@@ -342,7 +342,6 @@
     "sourceRegionMarkets": "Пазари & Анализ",
     "sourceRegionFixedIncomeFx": "Облигации и валутен курс",
     "sourceRegionCommodities": "Стоки",
-    "sourceRegionCryptoDigital": "Крипто & Дигитално",
     "sourceRegionCentralBanks": "Централни банки & икономика",
     "sourceRegionDeals": "Сделки & Корпоративни",
     "sourceRegionFinRegulation": "Финансова регулация",
@@ -363,7 +362,6 @@
     "panelCatMarkets": "Пазари",
     "panelCatFixedIncomeFx": "Облигации и валутен курс",
     "panelCatCommodities": "Стоки",
-    "panelCatCryptoDigital": "Крипто & Дигитално",
     "panelCatCentralBanks": "Централни банки & икономика",
     "panelCatDeals": "Сделки & Институционални",
     "panelCatGulfMena": "Персийския залив и Средния Изток и Север Африка",
@@ -409,15 +407,12 @@
     "supplyChain": "Веригата на доставки",
     "finance": "Финансови",
     "tech": "Технология",
-    "crypto": "Крипто",
     "heatmap": "Топлинна карта на сектора",
     "ai": "AI и машинно обучение",
     "layoffs": "Проследяване на съкращенията",
     "monitors": "Мои монитори",
     "satelliteFires": "Пожари",
     "macroSignals": "Условия на пазара на Bitcoin",
-    "etfFlows": "Потоци на Bitcoin фондове",
-    "stablecoins": "Стабилни монети",
     "deduction": "Ситуация на дедукция",
     "ucdpEvents": "События от въоръжени конфликти",
     "displacement": "Бежанци и преместване",
@@ -1014,15 +1009,6 @@
       "leanYes": "Клони към ДА",
       "leanNo": "Клони към НЕ",
       "tossUp": "Изравнено"
-    },
-    "stablecoins": {
-      "pegHealth": "Здравина на пега",
-      "supplyVolume": "Предложение & обем",
-      "token": "Жетон",
-      "mcap": "MCap",
-      "vol24h": "24h обем",
-      "chg24h": "24h промяна",
-      "infoTooltip": "<strong>Стейбълкойни</strong> Стабилност на привързването, пазарна капитализация и обем за 24ч на основните токени, привързани към USD (USDT, USDC, DAI, BUSD). Отклонението от паритета сигнализира системен риск."
     },
     "status": {
       "updatedAt": "Актуализиран {{time}}"
@@ -1786,27 +1772,6 @@
     "prediction": {
       "infoTooltip": "<strong>Пазари на предвиждане</strong> Пазари за предвиждане с реални пари:<ul><li>Цените отразяват оценките на вероятността на публиката</li><li>По-висок обем = по-надежден сигнал</li><li>Фокус върху геополитични и текущи събития</li></ul>Източник: Polymarket (polymarket.com)"
     },
-    "etfFlows": {
-      "previousColumns": "Предишни колони",
-      "moreColumns": "Още колони",
-      "unavailable": "Данни на борсово търгуваните фондове временно недостъпни",
-      "rateLimited": "Данни на борсово търгуваните фондове временно недостъпни (ограничение на курса) — повтаряне в скоро време",
-      "netFlow": "Нетен поток",
-      "estFlow": "Преценен поток",
-      "totalVol": "Общо обем",
-      "etfs": "Борсово търгувани фондове",
-      "netInflow": "НЕТЕН ПРИЛИВАНЕ",
-      "netOutflow": "НЕТЕН ОТЛИВАНЕ",
-      "netNeutral": "НЕТО НЕУТРАЛНО",
-      "table": {
-        "ticker": "Тикер",
-        "issuer": "Издател",
-        "estFlow": "Преценен поток",
-        "volume": "Обем",
-        "change": "Промяна"
-      },
-      "infoTooltip": "<strong>Потоци на Bitcoin фондове</strong> Проследява дневни преценени потоци на фондове за САЩ спот Bitcoin борсово търгувани фондове:<ul><li>Посока и магнитуд на прилив/отлив</li><li>Обем и промяна на цена на фонд</li><li>Нетен съкупен поток във всички проследявани фондове</li></ul>"
-    },
     "macroSignals": {
       "overall": "Целом",
       "verdict": {
@@ -1816,12 +1781,7 @@
       "bullish": "{{count}}/{{total}} бичи",
       "signals": {
         "liquidity": "Ликвидност",
-        "flow": "Поток",
-        "regime": "Режим",
-        "btcTrend": "BTC тенденция",
-        "hashRate": "Хеш скорост",
-        "momentum": "Импулс",
-        "fearGreed": "Страх & хищност"
+        "regime": "Режим"
       },
       "infoTooltip": "<strong>Условия на пазара на Bitcoin</strong> Композитен панел за позициониране на Bitcoin и апетит към риск:<ul><li><strong>Ликвидност</strong>: Прокси на нетна ликвидност на ФЕД</li><li><strong>Поток</strong>: BTC срещу QQQ 5-дневни връщания</li><li><strong>Режим</strong>: QQQ срещу XLP ротация (риск-включен/изключен)</li><li><strong>BTC тенденция</strong>: Цена срещу SMA50/200, Mayer Multiple</li><li><strong>Хеш курс</strong>: 30-дневна промяна на мрежовия хеш</li><li><strong>Страх и алчност</strong>: Индекс на пазарния сентимент</li></ul>Този панел е за режим и позициониране, не за широки макро данни."
     },
@@ -1964,23 +1924,11 @@
         "twentyDayTrend": "Тенденция на премията за двадесет търговски дни"
       }
     },
-    "crypto": {
-      "infoTooltip": "<strong>Крипто</strong> Цени на живо, промяна за 24ч и обем на основните криптовалути. Данни от CoinGecko."
-    },
     "gulfEconomies": {
       "infoTooltip": "<strong>Gulf Economies</strong> Индекси на акции на Персийския залив, валутни курсове и цени на петрола за икономиките на Съвета за сътрудничество на страните от Персийския залив (Саудитска Арабия, ОАЕ, Кувейт, Катар, Бахрейн, Оман)."
     },
     "groceryBasket": {
       "infoTooltip": "<strong>Grocery Index</strong> Глобално сравнение на цените на хранителния кош в 24 страни — проследява инфлацията на потребителските стоки в реалния свят, надвишаваща основния индекс на потребителските цени."
-    },
-    "defiTokens": {
-      "infoTooltip": "<strong>DeFi токени</strong> Цени и представяне за 24ч/7д на водещи токени на децентрализираните финанси — DEX, платформи за заеми и протоколи за доходност."
-    },
-    "aiTokens": {
-      "infoTooltip": "<strong>AI токени</strong> Цени и представяне за 24ч/7д на токени от сектора AI и машинно обучение — изчислителни мрежи, децентрализирана AI инфраструктура и протоколи за данни."
-    },
-    "altTokens": {
-      "infoTooltip": "<strong>Алтернативни токени</strong> Цени и представяне за 24ч/7д на алтернативни и нови криптовалути извън водещите по капитализация."
     },
     "stockAnalysis": {
       "infoTooltip": "<strong>Премиум анализ на акции</strong> AI анализ на акциите в списъка ви за наблюдение — сигнали купи/задръж/продай, целеви цени, ключови рискове и катализатори. Обновява се ежедневно."
@@ -2364,7 +2312,6 @@
       "title": "24/7 позициониране",
       "infoTooltip": "<strong>24/7 позициониране</strong> Стрес от позициониране на перпетуални контракти от Hyperliquid. Търговия денонощно, показвайки какво се натрупва когато традиционните пазари са затворени. Композитна оценка (0-100) от норма на финансиране, обем, отворен интерес и спот-перп базис. Зелено = лози натъпкани (бичи наклон), червено = къси натъпкани (мечи наклон).",
       "commodities": "СТОКИ",
-      "crypto": "КРИПТО",
       "fx": "Чужд обмен",
       "warmup": "Изграждане на базални линии. Историята на обема и отворената позиция се попълва през следващия час.",
       "footer": "5мин · Hyperliquid перпс · 24/7"
@@ -4108,11 +4055,9 @@
     "noDataShort": "Няма данни",
     "upstreamUnavailable": "Upstream API недостъпен — ще опита отново автоматично",
     "loadingUcdpEvents": "Зареждане на събития на въоръжени конфликти",
-    "loadingStablecoins": "Зареждане на стабилни монети...",
     "scanningThermalData": "Сканиране на термични данни",
     "calculatingExposure": "Изчисляване на експозиция",
     "computingSignals": "Изчисляване на сигнали...",
-    "loadingEtfData": "Зареждане на данни за ETF...",
     "loadingDisplacement": "Зареждане на преместване данни",
     "loadingClimateData": "Зареждане на климат данни",
     "failedTechReadiness": "Неуспешно зареждане на технологична готовност данни",
@@ -4124,7 +4069,6 @@
     "failedMarketData": "Неуспешно зареждане на пазара данни",
     "failedSectorData": "Неуспешно зареждане на сектор данни",
     "failedCommodities": "Неуспешно зареждане на стоки",
-    "failedCryptoData": "Неуспешно зареждане на крипто данни",
     "rateLimitedMarket": "Пазара данни временно недостъпни (ограничена скорост) — опитване в скоро време",
     "noNewsAvailable": "Няма налични новини",
     "noActiveTechHubs": "Няма активни технологични центрове",
@@ -4281,13 +4225,11 @@
     "preflightProRequired": "Wymagana subskrypcja Pro, aby korzystać z Widget Builder. Uaktualnij, aby odblokować.",
     "examples": {
       "oilGold": "Pokaż mi dzisiejszą cenę ropy naftowej w stosunku do złota",
-      "cryptoMovers": "Utwórz widżet dla największych zmian kryptowalut w ostatnich 24 godzinach",
       "flightDelays": "Podsumuj najgorsze międzynarodowe opóźnienia lotów teraz",
       "conflictHotspots": "Mapuj najnowsze punkty zapalne konfliktów UCDP z krótkimi etykietami"
     },
     "proExamples": {
       "interactiveChart": "Interaktywny wykres Chart.js porównujący ceny ropy i złota",
-      "sortableTable": "Sortowalna tabela cen kryptowalut z filtrem wyszukiwania",
       "animatedCounters": "Animowane liczniki dla kluczowych wskaźników ekonomicznych",
       "tabbedComparison": "Tabbowe porównanie zdarzeń konfliktowych według regionów"
     }

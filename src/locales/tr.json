@@ -342,7 +342,6 @@
     "sourceRegionMarkets": "Piyasalar ve Analiz",
     "sourceRegionFixedIncomeFx": "Sabit gelir ve Döviz",
     "sourceRegionCommodities": "Emtialar",
-    "sourceRegionCryptoDigital": "Kripto ve Dijital",
     "sourceRegionCentralBanks": "Merkez Bankaları ve Ekonomi",
     "sourceRegionDeals": "Anlaşmalar ve Şirketler",
     "sourceRegionFinRegulation": "Finansal Düzenleme",
@@ -363,7 +362,6 @@
     "panelCatMarkets": "Piyasalar",
     "panelCatFixedIncomeFx": "Sabit gelir ve Döviz",
     "panelCatCommodities": "Emtialar",
-    "panelCatCryptoDigital": "Kripto & Dijital",
     "panelCatCentralBanks": "Merkez Bankaları & Ekonomi",
     "panelCatDeals": "Anlaşmalar & Kurumsal",
     "panelCatGulfMena": "Körfez ve Orta Doğu ile Kuzey Afrika",
@@ -409,15 +407,12 @@
     "supplyChain": "Tedarik Zinciri",
     "finance": "Finansal",
     "tech": "Teknoloji",
-    "crypto": "Kripto",
     "heatmap": "Sektor Isi Haritasi",
     "ai": "YZ ve makine öğrenmesi",
     "layoffs": "Isten Cikarma Takibi",
     "monitors": "Takiplerim",
     "satelliteFires": "Yanginlar",
     "macroSignals": "Bitcoin piyasa koşulları",
-    "etfFlows": "Bitcoin fonu akışları",
-    "stablecoins": "Stablecoin'ler",
     "deduction": "Durum çıkarımı",
     "ucdpEvents": "UCDP Catisma Olaylari",
     "displacement": "Mülteciler ve yerinden edilmiş",
@@ -1014,15 +1009,6 @@
       "leanYes": "Evet'e yakın",
       "leanNo": "Hayır'a yakın",
       "tossUp": "Başa baş"
-    },
-    "stablecoins": {
-      "pegHealth": "Parite Sagligi",
-      "supplyVolume": "Arz ve Hacim",
-      "token": "Token",
-      "mcap": "P.Deg.",
-      "vol24h": "24sa Hacim",
-      "chg24h": "24sa Deg.",
-      "infoTooltip": "<strong>Stablecoinler</strong> Başlıca USD'ye sabitlenmiş tokenların (USDT, USDC, DAI, BUSD) sabitleme sağlığı, piyasa değeri ve 24 saatlik hacmi. Sabitlemenin bozulması sistemik riske işaret eder."
     },
     "status": {
       "updatedAt": "{{time}} guncellendi"
@@ -1786,27 +1772,6 @@
     "prediction": {
       "infoTooltip": "<strong>Tahmin Piyasalari</strong> Gercek parali tahmin piyasalari:<ul><li>Fiyatlar kalabalik olasilik tahminlerini yansitir</li><li>Yuksek hacim = daha guvenilir sinyal</li><li>Jeopolitik ve guncel olaylara odakli</li></ul>Kaynak: Polymarket (polymarket.com)"
     },
-    "etfFlows": {
-      "previousColumns": "Önceki sütunlar",
-      "moreColumns": "Diğer sütunlar",
-      "unavailable": "borsada işlem gören fon verileri geçici olarak kullanılamıyor",
-      "rateLimited": "borsada işlem gören fon verileri geçici olarak kullanılamıyor (oran sınırlı) — kısa süre içinde yeniden deneniyor",
-      "netFlow": "Net Akis",
-      "estFlow": "Tahmini Akis",
-      "totalVol": "Toplam Hacim",
-      "etfs": "Borsada işlem gören fonlar",
-      "netInflow": "NET GIRIS",
-      "netOutflow": "NET CIKIS",
-      "netNeutral": "NET NÖTR",
-      "table": {
-        "ticker": "Sembol",
-        "issuer": "Ihraccci",
-        "estFlow": "Tahmini Akis",
-        "volume": "Hacim",
-        "change": "Degisim"
-      },
-      "infoTooltip": "<strong>Bitcoin fon akışları</strong> ABD spot Bitcoin borsada işlem gören fonlar için günlük tahmini fon akışlarını takip eder:<ul><li>Giriş/çıkış yönü ve büyüklüğü</li><li>Fon başına hacim ve fiyat değişimi</li><li>Tüm izlenen fonlar arasında net toplam akış</li></ul>"
-    },
     "macroSignals": {
       "overall": "Genel",
       "verdict": {
@@ -1816,12 +1781,7 @@
       "bullish": "{{count}}/{{total}} yukselis yonlu",
       "signals": {
         "liquidity": "Likidite",
-        "flow": "Akis",
-        "regime": "Rejim",
-        "btcTrend": "BTC Egilimi",
-        "hashRate": "Hash Oranı",
-        "momentum": "Momentum",
-        "fearGreed": "Korku &amp; Acgozluluk"
+        "regime": "Rejim"
       },
       "infoTooltip": "<strong>Bitcoin pazar koşulları</strong> Bitcoin konumlandırması ve risk iştahı için bileşik sinyal panosu:<ul><li><strong>Likidite</strong>: Net Fed likidite proxy'si</li><li><strong>Akış</strong>: BTC vs QQQ 5 günlük getirileri</li><li><strong>Rejim</strong>: QQQ vs XLP rotasyonu (risk açık/kapalı)</li><li><strong>BTC Trendi</strong>: Fiyat vs SMA50/200, Mayer Katı</li><li><strong>Hash Oranı</strong>: 30 günlük ağ hash değişimi</li><li><strong>Korku ve Açgözlülük</strong>: Pazar duyarlılığı endeksi</li></ul>Bu panel geniş makro veriler değil, rejim ve konumlandırma içindir."
     },
@@ -1964,23 +1924,11 @@
         "twentyDayTrend": "Yirmi işlem günü prim trendi"
       }
     },
-    "crypto": {
-      "infoTooltip": "<strong>Kripto</strong> Başlıca kripto paraların canlı fiyatları, 24 saatlik değişimleri ve hacimleri. Veriler CoinGecko'dan alınır."
-    },
     "gulfEconomies": {
       "infoTooltip": "<strong>Golf Ekonomileri</strong> Körfez hisse senedi endeksleri, döviz kurları ve Körfez İşbirliği Konseyi ekonomileri (Suudi Arabistan, BAE, Kuveyt, Katar, Bahreyn, Umman) için petrol fiyatları."
     },
     "groceryBasket": {
       "infoTooltip": "<strong>Bakkal Endeksi</strong> 24 ülke arasında küresel bakkal sepeti fiyat karşılaştırması — manşet tüketici fiyat endeksinin ötesinde gerçek dünya tüketici malları enflasyonunu izler."
-    },
-    "defiTokens": {
-      "infoTooltip": "<strong>DeFi Tokenları</strong> Başlıca merkeziyetsiz finans protokol tokenlarının fiyatları ve 24s/7g performansı — DEX'ler, borç verme platformları ve getiri protokolleri."
-    },
-    "aiTokens": {
-      "infoTooltip": "<strong>Yapay Zekâ Tokenları</strong> Yapay zekâ ve makine öğrenimi sektörü tokenlarının fiyatları ve 24s/7g performansı — hesaplama ağları, merkeziyetsiz yapay zekâ altyapısı ve veri protokolleri."
-    },
-    "altTokens": {
-      "infoTooltip": "<strong>Altcoinler</strong> Büyük piyasa değeri katmanları dışındaki alternatif ve yükselen kripto tokenlarının fiyatları ve 24s/7g performansı."
     },
     "stockAnalysis": {
       "infoTooltip": "<strong>Premium Hisse Analizi</strong> İzleme listenizdeki hisseler için yapay zekâ destekli analiz — al/tut/sat sinyalleri, hedef fiyatlar, temel riskler ve katalizörler her gün güncellenir."
@@ -2364,7 +2312,6 @@
       "title": "24/7 Konumlandırma",
       "infoTooltip": "<strong>24/7 Konumlandırma</strong> Hyperliquid'den Perpetual kontrat konumlandırması stresi. Saatler boyunca işlem yaparak, geleneksel piyasalar kapalı olduğunda neler oluştuğunu gösterir. Finansman oranı, hacim, açık faiz ve spot-perp spread'inden oluşan bileşik skor (0-100). Yeşil = longlar kalabalık (boğa eğilimi), kırmızı = shortlar kalabalık (ayı eğilimi).",
       "commodities": "EMTIA",
-      "crypto": "KRİPTO",
       "fx": "Döviz",
       "warmup": "Taban değerler oluşturuluyor. Hacim ve Açık faiz geçmişi sonraki saatte doldurulacak.",
       "footer": "5dk · Hyperliquid perps · 24/7"
@@ -4108,11 +4055,9 @@
     "noDataShort": "Veri yok",
     "upstreamUnavailable": "Ust kaynak API'si kullanilamiyor — otomatik yeniden denenecek",
     "loadingUcdpEvents": "UCDP olaylari yukleniyor",
-    "loadingStablecoins": "Stablecoin'ler yukleniyor...",
     "scanningThermalData": "Termal veriler taraniyor",
     "calculatingExposure": "Maruziyet hesaplaniyor",
     "computingSignals": "Sinyaller hesaplaniyor...",
-    "loadingEtfData": "Borsa yatırım fonu verileri yükleniyor...",
     "loadingDisplacement": "Yerinden edilme verileri yukleniyor",
     "loadingClimateData": "Iklim verileri yukleniyor",
     "failedTechReadiness": "Teknoloji hazirlik verileri yuklenemedi",
@@ -4124,7 +4069,6 @@
     "failedMarketData": "Piyasa verileri yuklenemedi",
     "failedSectorData": "Sektor verileri yuklenemedi",
     "failedCommodities": "Emtia verileri yuklenemedi",
-    "failedCryptoData": "Kripto verileri yuklenemedi",
     "rateLimitedMarket": "Piyasa verileri geçici olarak kullanılamıyor (hız sınırlaması) — kısa süre içinde yeniden denenecek",
     "noNewsAvailable": "Haber mevcut degil",
     "noActiveTechHubs": "Aktif teknoloji merkezi yok",
@@ -4281,13 +4225,11 @@
     "preflightProRequired": "Pro aboneliği Widget Builder'ı kullanmak için gereklidir. Kilidini açmak için yükselt.",
     "examples": {
       "oilGold": "Bugünün ham petrol fiyatını altınla karşılaştır",
-      "cryptoMovers": "Son 24 saatte en çok hareket eden kripto varlıklar için widget oluştur",
       "flightDelays": "Şu anda en kötü uluslararası uçuş gecikmelerini özetle",
       "conflictHotspots": "En son UCDP çatışma bölgelerini kısa etiketlerle haritala"
     },
     "proExamples": {
       "interactiveChart": "Petrol ve altın fiyatlarını karşılaştıran etkileşimli Chart.js grafiği",
-      "sortableTable": "Arama filtresine sahip sıralanabilir kripto fiyat tablosu",
       "animatedCounters": "Kilit ekonomik göstergeler için animasyonlu sayaçlar",
       "tabbedComparison": "Çatışma olaylarının bölgeye göre sekmeli karşılaştırması"
     }

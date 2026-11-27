@@ -22,7 +22,7 @@ import { buildScenarioSets } from '../scripts/regional-snapshot/scenario-builder
 const XSS_KEY = 'intelligence:cross-source-signals:v1';
 const FORECAST_KEY = 'forecast:predictions:v2';
 const DEBT_KEY = 'economic:national-debt:v1';
-const MACRO_KEY = 'economic:macro-signals:v1';
+const MACRO_KEY = 'economic:macro-signals:v2';
 const CHOKEPOINT_KEY = 'supply_chain:chokepoints:v4';
 const TRANSIT_KEY = 'supply_chain:transit-summaries:v1';
 

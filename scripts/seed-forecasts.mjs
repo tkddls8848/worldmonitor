@@ -277,9 +277,6 @@ const MARKET_INPUT_KEYS = {
   commodities: 'market:commodities-bootstrap:v1',
   sectors: 'market:sectors:v2',
   gulfQuotes: 'market:gulf-quotes:v1',
-  etfFlows: 'market:etf-flows:v1',
-  crypto: 'market:crypto:v1',
-  stablecoins: 'market:stablecoins:v1',
   bisExchange: 'economic:bis:eer:v1',
   bisPolicy: 'economic:bis:policy:v1',
   shippingRates: 'supply_chain:shipping:v2',
@@ -366,9 +363,6 @@ function buildForecastInputFeedDefinitions() {
     { key: MARKET_INPUT_KEYS.commodities, label: 'market:commodities', countRecords: (value) => extractQuoteItems(value).length },
     { key: MARKET_INPUT_KEYS.sectors, label: 'market:sectors', countRecords: (value) => extractSectorItems(value).length },
     { key: MARKET_INPUT_KEYS.gulfQuotes, label: 'market:gulfQuotes', countRecords: (value) => extractQuoteItems(value).length },
-    { key: MARKET_INPUT_KEYS.etfFlows, label: 'market:etfFlows', countRecords: (value) => extractEtfItems(value).length },
-    { key: MARKET_INPUT_KEYS.crypto, label: 'market:crypto', countRecords: (value) => extractQuoteItems(value).length },
-    { key: MARKET_INPUT_KEYS.stablecoins, label: 'market:stablecoins', countRecords: (value) => countArrayField(value, 'stablecoins') },
     { key: MARKET_INPUT_KEYS.bisExchange, label: 'market:bisExchange', countRecords: (value) => extractRateItems(value).length },
     { key: MARKET_INPUT_KEYS.bisPolicy, label: 'market:bisPolicy', countRecords: (value) => extractRateItems(value).length },
     { key: MARKET_INPUT_KEYS.shippingRates, label: 'market:shippingRates', countRecords: (value) => extractShippingIndices(value).length },
@@ -491,24 +485,16 @@ const MARKET_BUCKET_CONFIG = [
     },
     edgeWeight: 0.78,
   },
-  {
-    id: 'crypto_stablecoins',
-    label: 'Crypto and Stablecoins',
-    signalTypes: ['risk_off_rotation', 'fx_stress', 'liquidity_expansion', 'liquidity_withdrawal'],
-    signalWeights: { risk_off_rotation: 0.74, fx_stress: 0.84, liquidity_expansion: 0.86, liquidity_withdrawal: 0.8 },
-    edgeWeight: 0.62,
-  },
 ];
 
 const CORE_MARKET_BUCKET_IDS = ['energy', 'freight', 'sovereign_risk', 'rates_inflation', 'fx_stress'];
 const MARKET_BUCKET_COVERAGE_KEYS = {
   energy: ['commodities', 'gulfQuotes', 'fredSeries'],
   freight: ['shippingRates', 'commodities', 'correlationCards'],
-  sovereign_risk: ['bisExchange', 'bisPolicy', 'fredSeries', 'correlationCards', 'etfFlows'],
+  sovereign_risk: ['bisExchange', 'bisPolicy', 'fredSeries', 'correlationCards'],
   rates_inflation: ['fredSeries', 'bisPolicy', 'commodities'],
   fx_stress: ['bisExchange', 'bisPolicy', 'fredSeries'],
   semis: ['stocks', 'sectors', 'correlationCards'],
-  crypto_stablecoins: ['crypto', 'stablecoins', 'etfFlows'],
   defense: ['sectors', 'stocks', 'correlationCards'],
 };
 const MARKET_BUCKET_CRITICAL_SIGNAL_TYPES = {
@@ -518,7 +504,6 @@ const MARKET_BUCKET_CRITICAL_SIGNAL_TYPES = {
   rates_inflation: ['policy_rate_pressure', 'inflation_impulse', 'shipping_cost_shock', 'energy_supply_shock', 'gas_supply_stress', 'commodity_repricing'],
   fx_stress: ['fx_stress', 'sovereign_stress', 'policy_rate_pressure'],
   semis: ['infrastructure_capacity_loss', 'shipping_cost_shock'],
-  crypto_stablecoins: ['sovereign_stress', 'fx_stress', 'liquidity_withdrawal'],
   defense: ['defense_repricing', 'security_escalation', 'sovereign_stress'],
 };
 const MARKET_BUCKET_NEIGHBORS = {
@@ -528,7 +513,6 @@ const MARKET_BUCKET_NEIGHBORS = {
   rates_inflation: ['fx_stress', 'sovereign_risk'],
   fx_stress: ['sovereign_risk', 'rates_inflation'],
   semis: ['freight', 'fx_stress'],
-  crypto_stablecoins: ['fx_stress', 'sovereign_risk'],
   defense: ['sovereign_risk'],
 };
 const MARKET_BUCKET_REPORTABLE_SCORE_FLOORS = {
@@ -538,7 +522,6 @@ const MARKET_BUCKET_REPORTABLE_SCORE_FLOORS = {
   rates_inflation: 0.48,
   fx_stress: 0.48,
   semis: 0.52,
-  crypto_stablecoins: 0.55,
   defense: 0.62,
 };
 const MARKET_BUCKET_ALLOWED_CHANNELS = {
@@ -548,7 +531,6 @@ const MARKET_BUCKET_ALLOWED_CHANNELS = {
   fx_stress: ['fx_stress', 'risk_off_rotation', 'sovereign_stress', 'policy_rate_pressure', 'volatility_shock'],
   rates_inflation: ['policy_rate_pressure', 'inflation_impulse', 'energy_supply_shock', 'shipping_cost_shock', 'yield_curve_stress', 'liquidity_withdrawal', 'oil_macro_shock', 'global_crude_spread_stress', 'gas_supply_stress', 'commodity_repricing'],
   semis: ['cyber_cost_repricing', 'infrastructure_capacity_loss', 'shipping_cost_shock'],
-  crypto_stablecoins: ['fx_stress', 'risk_off_rotation', 'liquidity_withdrawal', 'sovereign_stress'],
   defense: ['defense_repricing', 'security_escalation'],
 };
 // Flat set of all valid signal types across all market buckets.
@@ -593,7 +575,6 @@ const MARKET_BUCKET_ADJACENT_CHANNELS = {
   fx_stress: ['fx_stress', 'risk_off_rotation', 'sovereign_stress', 'policy_rate_pressure', 'volatility_shock'],
   rates_inflation: ['policy_rate_pressure', 'inflation_impulse', 'energy_supply_shock', 'shipping_cost_shock', 'yield_curve_stress', 'liquidity_withdrawal', 'oil_macro_shock', 'global_crude_spread_stress', 'gas_supply_stress', 'commodity_repricing'],
   semis: ['cyber_cost_repricing', 'infrastructure_capacity_loss', 'shipping_cost_shock'],
-  crypto_stablecoins: ['fx_stress', 'risk_off_rotation', 'liquidity_withdrawal', 'sovereign_stress'],
   defense: ['defense_repricing', 'security_escalation'],
 };
 const MARKET_BUCKET_SIMULATION_BIAS = {
@@ -603,7 +584,6 @@ const MARKET_BUCKET_SIMULATION_BIAS = {
   rates_inflation: { confirmation: 0.16, pressure: 0.1, edge: 0.08, contradiction: 0.16 },
   fx_stress: { confirmation: 0.15, pressure: 0.09, edge: 0.08, contradiction: 0.14 },
   semis: { confirmation: 0.13, pressure: 0.08, edge: 0.09, contradiction: 0.12 },
-  crypto_stablecoins: { confirmation: 0.11, pressure: 0.07, edge: 0.08, contradiction: 0.12 },
   defense: { confirmation: 0.08, pressure: 0.04, edge: 0.05, contradiction: 0.1 },
 };
 const MARKET_BUCKET_STATE_CALIBRATION = {
@@ -613,7 +593,6 @@ const MARKET_BUCKET_STATE_CALIBRATION = {
   rates_inflation: { edgeLift: 0.06, macroLift: 0.12, confidenceLift: 0.05 },
   fx_stress: { edgeLift: 0.05, macroLift: 0.1, confidenceLift: 0.04 },
   semis: { edgeLift: 0.04, macroLift: 0.04, confidenceLift: 0.02 },
-  crypto_stablecoins: { edgeLift: 0.03, macroLift: 0.05, confidenceLift: 0.02 },
   defense: { edgeLift: -0.03, macroLift: 0, confidenceLift: -0.03, dampener: 0.12 },
 };
 
@@ -762,7 +741,7 @@ const IMPACT_VARIABLE_REGISTRY = {
   risk_off_rotation: {
     category: 'credit',
     allowedChannels: ['risk_off_rotation', 'safe_haven_bid', 'volatility_shock', 'sovereign_stress'],
-    targetBuckets: ['sovereign_risk', 'fx_stress', 'crypto_stablecoins'],
+    targetBuckets: ['sovereign_risk', 'fx_stress'],
     orderAllowed: ['second_order', 'third_order'],
     defaultDomains: ['market'],
   },
@@ -967,9 +946,6 @@ async function readInputKeys() {
     commodityQuotes: parsedByKey[MARKET_INPUT_KEYS.commodities],
     sectorSummary: parsedByKey[MARKET_INPUT_KEYS.sectors],
     gulfQuotes: parsedByKey[MARKET_INPUT_KEYS.gulfQuotes],
-    etfFlows: parsedByKey[MARKET_INPUT_KEYS.etfFlows],
-    cryptoQuotes: parsedByKey[MARKET_INPUT_KEYS.crypto],
-    stablecoinMarkets: parsedByKey[MARKET_INPUT_KEYS.stablecoins],
     bisExchangeRates: parsedByKey[MARKET_INPUT_KEYS.bisExchange],
     bisPolicyRates: parsedByKey[MARKET_INPUT_KEYS.bisPolicy],
     shippingRates: parsedByKey[MARKET_INPUT_KEYS.shippingRates],
@@ -10294,9 +10270,6 @@ function buildWorldSignals(inputs, predictions = [], _situationClusters = []) {
   const marketQuotes = extractQuoteItems(inputs?.marketQuotes);
   const sectorItems = extractSectorItems(inputs?.sectorSummary);
   const gulfQuotes = extractQuoteItems(inputs?.gulfQuotes);
-  const etfItems = extractEtfItems(inputs?.etfFlows);
-  const cryptoQuotes = extractQuoteItems(inputs?.cryptoQuotes);
-  const stablecoins = Array.isArray(inputs?.stablecoinMarkets?.stablecoins) ? inputs.stablecoinMarkets.stablecoins : [];
   const bisExchange = extractRateItems(inputs?.bisExchangeRates);
   const bisPolicy = extractRateItems(inputs?.bisPolicyRates);
   const correlationCards = extractCorrelationCards(inputs?.correlationCards);
@@ -10467,52 +10440,6 @@ function buildWorldSignals(inputs, predictions = [], _situationClusters = []) {
         ],
       }));
     }
-  }
-
-  const totalEtfFlow = Number(inputs?.etfFlows?.summary?.totalEstFlow || 0);
-  if (Math.abs(totalEtfFlow) > 100_000_000) {
-    signals.push(buildWorldSignal('risk_off_rotation', 'etf_flows', totalEtfFlow > 0 ? 'ETF inflow impulse' : 'ETF outflow impulse', {
-      sourceKey: 'market:etf-flows:v1',
-      region: 'Global',
-      strength: normalize(Math.abs(totalEtfFlow), 100_000_000, 1_000_000_000),
-      confidence: 0.56,
-      domains: ['market'],
-      supportingEvidence: [`Net estimated ETF flow ${Math.round(totalEtfFlow / 1_000_000)}m`],
-    }));
-  }
-  if (etfItems.filter((item) => item.direction === 'outflow').length >= 5) {
-    signals.push(buildWorldSignal('risk_off_rotation', 'etf_flows', 'ETF outflow breadth', {
-      sourceKey: 'market:etf-flows:v1',
-      region: 'Global',
-      strength: normalize(etfItems.filter((item) => item.direction === 'outflow').length, 4, 10),
-      confidence: 0.54,
-      domains: ['market', 'crypto'],
-      supportingEvidence: ['Broad ETF outflow bias across tracked products'],
-    }));
-  }
-
-  const cryptoWeakness = cryptoQuotes.filter((item) => Number(item.change || 0) <= -3.5).length;
-  if (cryptoWeakness >= 2) {
-    signals.push(buildWorldSignal('risk_off_rotation', 'crypto_quotes', 'Crypto risk reduction', {
-      sourceKey: 'market:crypto:v1',
-      region: 'Global',
-      strength: normalize(cryptoWeakness, 2, 6),
-      confidence: 0.52,
-      domains: ['market', 'cyber'],
-      supportingEvidence: [`${cryptoWeakness} tracked crypto assets fell more than 3.5%`],
-    }));
-  }
-
-  if (stablecoins.some((coin) => Number(coin.deviation || 0) >= 0.5 || /warning|depegged/i.test(coin.pegStatus || ''))) {
-    const stressed = stablecoins.filter((coin) => Number(coin.deviation || 0) >= 0.5 || /warning|depegged/i.test(coin.pegStatus || ''));
-    signals.push(buildWorldSignal('fx_stress', 'stablecoins', 'Stablecoin peg stress', {
-      sourceKey: 'market:stablecoins:v1',
-      region: 'Global',
-      strength: normalize(Math.max(...stressed.map((coin) => Number(coin.deviation || 0))), 0.5, 3),
-      confidence: 0.62,
-      domains: ['market', 'cyber'],
-      supportingEvidence: stressed.slice(0, 2).map((coin) => `${coin.symbol} deviation ${coin.deviation}%`),
-    }));
   }
 
   for (const rate of bisExchange) {
@@ -10835,7 +10762,6 @@ function inferSituationMarketBuckets(situation) {
   }
   if (domains.includes('cyber')) {
     buckets.add('semis');
-    buckets.add('crypto_stablecoins');
   }
   if (domains.includes('infrastructure')) {
     buckets.add('rates_inflation');
@@ -11143,9 +11069,6 @@ function summarizeMarketInputCoverage(inputs = {}) {
     commodities: extractQuoteItems(inputs.commodityQuotes).length,
     sectors: extractSectorItems(inputs.sectorSummary).length,
     gulfQuotes: extractQuoteItems(inputs.gulfQuotes).length,
-    etfFlows: extractEtfItems(inputs.etfFlows).length,
-    crypto: extractQuoteItems(inputs.cryptoQuotes).length,
-    stablecoins: Array.isArray(inputs?.stablecoinMarkets?.stablecoins) ? inputs.stablecoinMarkets.stablecoins.length : 0,
     bisExchange: extractRateItems(inputs.bisExchangeRates).length,
     bisPolicy: extractRateItems(inputs.bisPolicyRates).length,
     shippingRates: extractShippingIndices(inputs.shippingRates).length,
@@ -12106,7 +12029,6 @@ const BUCKET_KEYWORDS = {
   fx_stress: ['currency', 'fx', 'exchange rate', 'dollar', 'dolar', 'devaluat'],
   rates_inflation: ['inflation', 'interest rate', 'rate', 'price spike', 'cost push'],
   semis: ['semiconductor', 'chip', 'semi', 'tech', 'cyber'],
-  crypto_stablecoins: ['crypto', 'bitcoin', 'stablecoin', 'digital asset'],
   defense: ['defense', 'military', 'arms', 'weapon', 'nato'],
 };
 
@@ -17499,7 +17421,6 @@ const ALLOWED_INSTRUMENTS = {
     'NVDA', 'MSFT', 'AAPL', 'GOOGL', 'META', 'AMZN', 'TSLA', 'JPM', 'BAC', 'XOM', 'CVX', 'RTX', 'LMT', 'NOC'],
   commodities: ['CL', 'BZ', 'NG', 'GC', 'SI', 'HG', 'ALI', 'ZW', 'ZC', 'ZS', 'KC', 'CT', 'SB', 'CC'],
   forex: ['DXY', 'EURUSD', 'USDJPY', 'GBPUSD', 'USDCNY', 'USDCHF', 'AUDUSD', 'USDTRY', 'USDRUB'],
-  crypto: ['BTC', 'ETH', 'SOL', 'BNB'],
   rates: ['US10Y', 'US2Y', 'US30Y', 'DE10Y', 'JP10Y'],
 };
 
@@ -17507,7 +17428,6 @@ const ALL_ALLOWED_TICKERS = new Set([
   ...ALLOWED_INSTRUMENTS.equities,
   ...ALLOWED_INSTRUMENTS.commodities,
   ...ALLOWED_INSTRUMENTS.forex,
-  ...ALLOWED_INSTRUMENTS.crypto,
   ...ALLOWED_INSTRUMENTS.rates,
 ]);
 
@@ -17578,7 +17498,6 @@ function buildMarketImplicationsContext(inputs) {
   }
 
   // ETF flows — sector rotation signal
-  const etfItems = extractEtfItems(inputs.etfFlows);
   if (etfItems.length > 0) {
     const sorted = [...etfItems].sort((a, b) => Math.abs(b.flowPct ?? b.changePct ?? 0) - Math.abs(a.flowPct ?? a.changePct ?? 0));
     const top = sorted.slice(0, 6).map(e => {
@@ -18098,7 +18017,7 @@ async function buildAndSeedMarketImplications(inputs) {
   }
 
   // Extend the curated static allowlist with tradeable equity symbols from Redis.
-  // ALL_ALLOWED_TICKERS is always preserved (ETFs, defense, commodities, forex, rates, crypto).
+  // ALL_ALLOWED_TICKERS is always preserved (ETFs, defense, commodities, forex, rates).
   // The live set adds stocks we have live price data for (e.g. NFLX, WMT) that are not in
   // the static list, but only after stripping non-tradeable entries: index symbols (^GSPC,
   // ^DJI) and foreign-exchange suffixes (RELIANCE.NS) are in the bootstrap for display only

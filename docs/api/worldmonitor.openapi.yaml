@@ -3560,22 +3560,10 @@ paths:
                             example:
                                 "bullishCount": 1
                                 "meta":
+                                    "qqqReturn5": 1.5
                                     "qqqSparkline":
                                         - 1.5
                                 "signals":
-                                    "fearGreed":
-                                        "history":
-                                            - "date": "2026-01-15"
-                                              "value": 1
-                                        "status": "example"
-                                        "value": 1
-                                    "flowStructure":
-                                        "btcReturn5": 1.5
-                                        "qqqReturn5": 1.5
-                                        "status": "example"
-                                    "hashRate":
-                                        "change30d": 1.5
-                                        "status": "example"
                                     "liquidity":
                                         "sparkline":
                                             - 1.5
@@ -9461,70 +9449,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Error'
-    /api/market/v1/list-crypto-quotes:
-        get:
-            tags:
-                - MarketService
-            summary: ListCryptoQuotes
-            description: ListCryptoQuotes returns price and 24h change for major coins or up to 25 CoinGecko ids from CoinPaprika or CoinGecko; 7d change and sparkline need CoinGecko.
-            operationId: ListCryptoQuotes
-            parameters:
-                - name: ids
-                  in: query
-                  description: |-
-                    Cryptocurrency IDs to retrieve (CoinGecko IDs). Empty returns the default
-                     crypto set. At most 25 IDs are accepted; the handler resolves them
-                     seed-first and fetches the remainder (gap) from the upstream provider.
-                  required: false
-                  style: form
-                  explode: true
-                  example:
-                      - "example"
-                  schema:
-                    type: array
-                    items:
-                        type: string
-                - name: jmespath
-                  in: query
-                  description: |-
-                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
-                  required: false
-                  example: "keys(@)"
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: Successful response
-                    content:
-                        application/json:
-                            example:
-                                "provider": "worldmonitor"
-                                "quotes":
-                                    - "change": 1.5
-                                      "change7d": 1.5
-                                      "name": "WorldMonitor Analyst"
-                                      "price": 75.25
-                                      "sparkline":
-                                          - 1.5
-                                      "symbol": "AAPL"
-                                "unresolvedIds":
-                                    - "example"
-                            schema:
-                                $ref: '#/components/schemas/worldmonitor_market_v1_ListCryptoQuotesResponse'
-                "400":
-                    description: Validation error
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/ValidationError'
-                                    - $ref: '#/components/schemas/JmespathProjectionError'
-                default:
-                    description: Error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Error'
     /api/market/v1/list-commodity-quotes:
         get:
             tags:
@@ -9782,139 +9706,6 @@ paths:
                                       "symbol": "AAPL"
                             schema:
                                 $ref: '#/components/schemas/worldmonitor_market_v1_GetSectorSummaryResponse'
-                "400":
-                    description: Validation error
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/ValidationError'
-                                    - $ref: '#/components/schemas/JmespathProjectionError'
-                default:
-                    description: Error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Error'
-    /api/market/v1/list-stablecoin-markets:
-        get:
-            tags:
-                - MarketService
-            summary: ListStablecoinMarkets
-            description: ListStablecoinMarkets returns price, peg deviation and status, market cap and volume for USDT, USDC, DAI, FDUSD and USDe, or up to 25 CoinGecko ids.
-            operationId: ListStablecoinMarkets
-            parameters:
-                - name: coins
-                  in: query
-                  description: |-
-                    CoinGecko IDs to retrieve (e.g. "tether,usd-coin"). Empty returns defaults.
-
-                     Repeated (`?coins=tether&coins=dai`) and comma-joined
-                     (`?coins=tether,dai`) forms are equivalent. IDs are trimmed, lowercased,
-                     and de-duplicated; the request is capped at 25 IDs. An ID that is not
-                     shaped like a CoinGecko ID, that overflows the cap, or that no provider
-                     can resolve is reported in `unresolved` rather than dropped.
-
-                     The empty (default) request is served from the seeded snapshot alone and
-                     never reaches an upstream provider. Naming IDs explicitly opts into a
-                     bounded, cached provider lookup for any ID the snapshot does not carry.
-                  required: false
-                  style: form
-                  explode: true
-                  example:
-                      - "example"
-                  schema:
-                    type: array
-                    items:
-                        type: string
-                - name: jmespath
-                  in: query
-                  description: |-
-                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
-                  required: false
-                  example: "keys(@)"
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: Successful response
-                    content:
-                        application/json:
-                            example:
-                                "dataStatus": "example"
-                                "stablecoins":
-                                    - "change24h": 1.5
-                                      "change7d": 1.5
-                                      "deviation": 1.5
-                                      "id": "example-id"
-                                      "image": "example"
-                                      "marketCap": 1.5
-                                      "symbol": "AAPL"
-                                "summary":
-                                    "coinCount": 1
-                                    "depeggedCount": 1
-                                    "healthStatus": "example"
-                                    "totalMarketCap": 1
-                                    "totalVolume24h": 1
-                                "timestamp": "2026-01-15T12:00:00Z"
-                                "unresolved":
-                                    - "id": "example-id"
-                                      "reason": "example"
-                            schema:
-                                $ref: '#/components/schemas/worldmonitor_market_v1_ListStablecoinMarketsResponse'
-                "400":
-                    description: Validation error
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/ValidationError'
-                                    - $ref: '#/components/schemas/JmespathProjectionError'
-                default:
-                    description: Error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Error'
-    /api/market/v1/list-etf-flows:
-        get:
-            tags:
-                - MarketService
-            summary: ListEtfFlows
-            description: ListEtfFlows returns price, volume and a volume-based flow estimate for 10 US spot bitcoin ETFs such as IBIT, FBTC and GBTC, via Alpha Vantage or Yahoo.
-            operationId: ListEtfFlows
-            parameters:
-                - name: jmespath
-                  in: query
-                  description: |-
-                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
-                  required: false
-                  example: "keys(@)"
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: Successful response
-                    content:
-                        application/json:
-                            example:
-                                "etfs":
-                                    - "avgVolume": 1
-                                      "direction": "example"
-                                      "estFlow": 1
-                                      "issuer": "example"
-                                      "price": 75.25
-                                      "ticker": "AAPL"
-                                "rateLimited": true
-                                "summary":
-                                    "etfCount": 1
-                                    "inflowCount": 1
-                                    "netDirection": "example"
-                                    "outflowCount": 1
-                                    "totalEstFlow": 1
-                                "timestamp": "2026-01-15T12:00:00Z"
-                            schema:
-                                $ref: '#/components/schemas/worldmonitor_market_v1_ListEtfFlowsResponse'
                 "400":
                     description: Validation error
                     content:
@@ -10430,186 +10221,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Error'
-    /api/market/v1/list-crypto-sectors:
-        get:
-            tags:
-                - MarketService
-            summary: ListCryptoSectors
-            description: ListCryptoSectors returns the average 24h price change of the tokens with data in eight crypto sectors, such as Layer 1, DeFi, AI and Memes, from CoinGecko.
-            operationId: ListCryptoSectors
-            parameters:
-                - name: jmespath
-                  in: query
-                  description: |-
-                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
-                  required: false
-                  example: "keys(@)"
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: Successful response
-                    content:
-                        application/json:
-                            example:
-                                "sectors":
-                                    - "change": 1.5
-                                      "id": "example-id"
-                                      "name": "WorldMonitor Analyst"
-                            schema:
-                                $ref: '#/components/schemas/worldmonitor_market_v1_ListCryptoSectorsResponse'
-                "400":
-                    description: Validation error
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/ValidationError'
-                                    - $ref: '#/components/schemas/JmespathProjectionError'
-                default:
-                    description: Error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Error'
-    /api/market/v1/list-defi-tokens:
-        get:
-            tags:
-                - MarketService
-            summary: ListDefiTokens
-            description: ListDefiTokens returns USD price with 24h and 7d change for DeFi tokens such as Aave, Uniswap, Pendle and Lido, from CoinGecko with CoinPaprika fallback.
-            operationId: ListDefiTokens
-            parameters:
-                - name: jmespath
-                  in: query
-                  description: |-
-                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
-                  required: false
-                  example: "keys(@)"
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: Successful response
-                    content:
-                        application/json:
-                            example:
-                                "tokens":
-                                    - "change": 1.5
-                                      "change7d": 1.5
-                                      "name": "WorldMonitor Analyst"
-                                      "price": 75.25
-                                      "sparkline":
-                                          - 1.5
-                                      "symbol": "AAPL"
-                            schema:
-                                $ref: '#/components/schemas/worldmonitor_market_v1_ListDefiTokensResponse'
-                "400":
-                    description: Validation error
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/ValidationError'
-                                    - $ref: '#/components/schemas/JmespathProjectionError'
-                default:
-                    description: Error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Error'
-    /api/market/v1/list-ai-tokens:
-        get:
-            tags:
-                - MarketService
-            summary: ListAiTokens
-            description: ListAiTokens returns USD price with 24h and 7d change for AI crypto tokens such as Bittensor, Render and Fetch.ai, from CoinGecko with CoinPaprika fallback.
-            operationId: ListAiTokens
-            parameters:
-                - name: jmespath
-                  in: query
-                  description: |-
-                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
-                  required: false
-                  example: "keys(@)"
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: Successful response
-                    content:
-                        application/json:
-                            example:
-                                "tokens":
-                                    - "change": 1.5
-                                      "change7d": 1.5
-                                      "name": "WorldMonitor Analyst"
-                                      "price": 75.25
-                                      "sparkline":
-                                          - 1.5
-                                      "symbol": "AAPL"
-                            schema:
-                                $ref: '#/components/schemas/worldmonitor_market_v1_ListAiTokensResponse'
-                "400":
-                    description: Validation error
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/ValidationError'
-                                    - $ref: '#/components/schemas/JmespathProjectionError'
-                default:
-                    description: Error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Error'
-    /api/market/v1/list-other-tokens:
-        get:
-            tags:
-                - MarketService
-            summary: ListOtherTokens
-            description: ListOtherTokens returns USD price with 24h and 7d change for trending tokens such as Aptos, Sui, Celestia and Ondo, from CoinGecko with CoinPaprika fallback.
-            operationId: ListOtherTokens
-            parameters:
-                - name: jmespath
-                  in: query
-                  description: |-
-                    Optional JMESPath expression applied server-side to project or reduce the JSON response before it is returned (mirrors the MCP jmespath argument). Invalid expressions, expressions larger than 1024 UTF-8 bytes, or projections that exceed the 256 KB output cap return HTTP 400 with a {_jmespath_error, original_keys} envelope. Grammar and worked examples: https://www.worldmonitor.app/docs/mcp-jmespath.
-                  required: false
-                  example: "keys(@)"
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: Successful response
-                    content:
-                        application/json:
-                            example:
-                                "tokens":
-                                    - "change": 1.5
-                                      "change7d": 1.5
-                                      "name": "WorldMonitor Analyst"
-                                      "price": 75.25
-                                      "sparkline":
-                                          - 1.5
-                                      "symbol": "AAPL"
-                            schema:
-                                $ref: '#/components/schemas/worldmonitor_market_v1_ListOtherTokensResponse'
-                "400":
-                    description: Validation error
-                    content:
-                        application/json:
-                            schema:
-                                oneOf:
-                                    - $ref: '#/components/schemas/ValidationError'
-                                    - $ref: '#/components/schemas/JmespathProjectionError'
-                default:
-                    description: Error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Error'
     /api/market/v1/get-fear-greed-index:
         get:
             tags:
@@ -10928,13 +10539,13 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Error'
-    /api/market/v1/get-hyperliquid-flow:
+    /api/market/v1/get-perp-positioning:
         get:
             tags:
                 - MarketService
-            summary: GetHyperliquidFlow
-            description: GetHyperliquidFlow returns funding, open interest, 24h volume, basis and flow scores for Hyperliquid perps on crypto, metals, oil, gas and FX, every 5 min.
-            operationId: GetHyperliquidFlow
+            summary: GetPerpPositioning
+            description: GetPerpPositioning returns funding, open interest, 24h volume, basis and positioning scores for commodity and FX perpetual contracts.
+            operationId: GetPerpPositioning
             parameters:
                 - name: jmespath
                   in: query
@@ -10962,7 +10573,7 @@ paths:
                                 "ts": "1717200000000"
                                 "unavailable": false
                             schema:
-                                $ref: '#/components/schemas/worldmonitor_market_v1_GetHyperliquidFlowResponse'
+                                $ref: '#/components/schemas/worldmonitor_market_v1_GetPerpPositioningResponse'
                 "400":
                     description: Validation error
                     content:
@@ -23698,25 +23309,15 @@ components:
                         True when upstream data is unavailable (fallback result).
                          True when the upstream or seed-backed variant is unavailable; empty payload fields
                          are graceful degradation, not confirmed zero data.
-            description: GetMacroSignalsResponse contains the full macro signal dashboard with 7 signals and verdict.
+            description: GetMacroSignalsResponse contains the macro signal dashboard and verdict.
         worldmonitor_economic_v1_MacroSignals:
             type: object
             properties:
                 liquidity:
                     $ref: '#/components/schemas/worldmonitor_economic_v1_LiquiditySignal'
-                flowStructure:
-                    $ref: '#/components/schemas/worldmonitor_economic_v1_FlowStructureSignal'
                 macroRegime:
                     $ref: '#/components/schemas/worldmonitor_economic_v1_MacroRegimeSignal'
-                technicalTrend:
-                    $ref: '#/components/schemas/worldmonitor_economic_v1_TechnicalTrendSignal'
-                hashRate:
-                    $ref: '#/components/schemas/worldmonitor_economic_v1_HashRateSignal'
-                priceMomentum:
-                    $ref: '#/components/schemas/worldmonitor_economic_v1_PriceMomentumSignal'
-                fearGreed:
-                    $ref: '#/components/schemas/worldmonitor_economic_v1_FearGreedSignal'
-            description: MacroSignals contains all 7 individual signal computations.
+            description: MacroSignals contains currency liquidity and the equity market regime.
         worldmonitor_economic_v1_LiquiditySignal:
             type: object
             properties:
@@ -23734,21 +23335,6 @@ components:
                         format: double
                         description: Last 30 JPY close prices.
             description: LiquiditySignal tracks JPY 30d rate of change as a liquidity proxy.
-        worldmonitor_economic_v1_FlowStructureSignal:
-            type: object
-            properties:
-                status:
-                    type: string
-                    description: '"PASSIVE GAP", "ALIGNED", or "UNKNOWN".'
-                btcReturn5:
-                    type: number
-                    format: double
-                    description: BTC 5-day return percentage.
-                qqqReturn5:
-                    type: number
-                    format: double
-                    description: QQQ 5-day return percentage.
-            description: FlowStructureSignal compares BTC vs QQQ 5-day returns.
         worldmonitor_economic_v1_MacroRegimeSignal:
             type: object
             properties:
@@ -23764,85 +23350,6 @@ components:
                     format: double
                     description: XLP 20d ROC percentage.
             description: MacroRegimeSignal compares QQQ vs XLP 20-day rate of change.
-        worldmonitor_economic_v1_TechnicalTrendSignal:
-            type: object
-            properties:
-                status:
-                    type: string
-                    description: '"BULLISH", "BEARISH", "NEUTRAL", or "UNKNOWN".'
-                btcPrice:
-                    type: number
-                    format: double
-                    description: Current BTC price.
-                sma50:
-                    type: number
-                    format: double
-                    description: 50-day simple moving average.
-                sma200:
-                    type: number
-                    format: double
-                    description: 200-day simple moving average.
-                vwap30d:
-                    type: number
-                    format: double
-                    description: 30-day volume-weighted average price.
-                mayerMultiple:
-                    type: number
-                    format: double
-                    description: Mayer multiple (BTC price / SMA200).
-                sparkline:
-                    type: array
-                    items:
-                        type: number
-                        format: double
-                        description: Last 30 BTC close prices.
-            description: TechnicalTrendSignal evaluates BTC price vs moving averages and VWAP.
-        worldmonitor_economic_v1_HashRateSignal:
-            type: object
-            properties:
-                status:
-                    type: string
-                    description: '"GROWING", "DECLINING", "STABLE", or "UNKNOWN".'
-                change30d:
-                    type: number
-                    format: double
-                    description: Hash rate change over 30 days as percentage.
-            description: HashRateSignal tracks Bitcoin hash rate momentum.
-        worldmonitor_economic_v1_PriceMomentumSignal:
-            type: object
-            properties:
-                status:
-                    type: string
-                    description: '"STRONG", "MODERATE", "WEAK", or "UNKNOWN".'
-            description: PriceMomentumSignal uses the Mayer Multiple (price/SMA200) as a market-adaptive signal.
-        worldmonitor_economic_v1_FearGreedSignal:
-            type: object
-            properties:
-                status:
-                    type: string
-                    description: Classification label (e.g., "Extreme Fear", "Greed").
-                value:
-                    type: integer
-                    format: int32
-                    description: Current index value (0-100).
-                history:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/worldmonitor_economic_v1_FearGreedHistoryEntry'
-            description: FearGreedSignal tracks the Crypto Fear & Greed index.
-        worldmonitor_economic_v1_FearGreedHistoryEntry:
-            type: object
-            properties:
-                value:
-                    type: integer
-                    maximum: 100
-                    minimum: 0
-                    format: int32
-                    description: Index value (0-100).
-                date:
-                    type: string
-                    description: Date string (YYYY-MM-DD).
-            description: FearGreedHistoryEntry is a single day's Fear & Greed index reading.
         worldmonitor_economic_v1_MacroMeta:
             type: object
             properties:
@@ -23852,6 +23359,10 @@ components:
                         type: number
                         format: double
                         description: Last 30 QQQ close prices for sparkline.
+                qqqReturn5:
+                    type: number
+                    format: double
+                    description: QQQ five-day change, absent if unavailable.
             description: MacroMeta contains supplementary chart data.
         worldmonitor_economic_v1_GetChinaMacroSnapshotRequest:
             type: object
@@ -32413,72 +31924,6 @@ components:
             required:
                 - symbol
             description: MarketQuoteUnavailable reports a requested symbol that produced no quote.
-        worldmonitor_market_v1_ListCryptoQuotesRequest:
-            type: object
-            properties:
-                ids:
-                    type: array
-                    items:
-                        type: string
-                        maxItems: 25
-                        description: |-
-                            Cryptocurrency IDs to retrieve (CoinGecko IDs). Empty returns the default
-                             crypto set. At most 25 IDs are accepted; the handler resolves them
-                             seed-first and fetches the remainder (gap) from the upstream provider.
-                    maxItems: 25
-            description: ListCryptoQuotesRequest specifies which cryptocurrencies to retrieve.
-        worldmonitor_market_v1_ListCryptoQuotesResponse:
-            type: object
-            properties:
-                quotes:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/worldmonitor_market_v1_CryptoQuote'
-                unresolvedIds:
-                    type: array
-                    items:
-                        type: string
-                        description: |-
-                            CoinGecko IDs that were requested but could not be resolved from the seed
-                             or the upstream provider. Omitted IDs are never silently dropped.
-                provider:
-                    type: string
-                    description: |-
-                        Data source for this response: "seed" (default set/seed hits only),
-                         "upstream" (at least one gap ID fetched from the provider), "mixed"
-                         (seed hits plus fetched gaps), or "degraded" (a gap fetch failed).
-            description: ListCryptoQuotesResponse contains cryptocurrency quotes.
-        worldmonitor_market_v1_CryptoQuote:
-            type: object
-            properties:
-                name:
-                    type: string
-                    description: Cryptocurrency name (e.g., "Bitcoin").
-                symbol:
-                    type: string
-                    minLength: 1
-                    description: Ticker symbol (e.g., "BTC").
-                price:
-                    type: number
-                    format: double
-                    description: Current price in USD.
-                change:
-                    type: number
-                    format: double
-                    description: 24-hour percentage change.
-                sparkline:
-                    type: array
-                    items:
-                        type: number
-                        format: double
-                        description: Sparkline data points (recent price history).
-                change7d:
-                    type: number
-                    format: double
-                    description: 7-day percentage change.
-            required:
-                - symbol
-            description: CryptoQuote represents a cryptocurrency quote from CoinGecko.
         worldmonitor_market_v1_ListCommodityQuotesRequest:
             type: object
             properties:
@@ -32864,226 +32309,6 @@ components:
             required:
                 - symbol
             description: SectorPerformance represents performance data for a market sector.
-        worldmonitor_market_v1_ListStablecoinMarketsRequest:
-            type: object
-            properties:
-                coins:
-                    type: array
-                    items:
-                        type: string
-                        description: |-
-                            CoinGecko IDs to retrieve (e.g. "tether,usd-coin"). Empty returns defaults.
-
-                             Repeated (`?coins=tether&coins=dai`) and comma-joined
-                             (`?coins=tether,dai`) forms are equivalent. IDs are trimmed, lowercased,
-                             and de-duplicated; the request is capped at 25 IDs. An ID that is not
-                             shaped like a CoinGecko ID, that overflows the cap, or that no provider
-                             can resolve is reported in `unresolved` rather than dropped.
-
-                             The empty (default) request is served from the seeded snapshot alone and
-                             never reaches an upstream provider. Naming IDs explicitly opts into a
-                             bounded, cached provider lookup for any ID the snapshot does not carry.
-            description: ListStablecoinMarketsRequest specifies which stablecoins to retrieve.
-        worldmonitor_market_v1_ListStablecoinMarketsResponse:
-            type: object
-            properties:
-                timestamp:
-                    type: string
-                    description: Timestamp of the data fetch (ISO 8601).
-                summary:
-                    $ref: '#/components/schemas/worldmonitor_market_v1_StablecoinSummary'
-                stablecoins:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/worldmonitor_market_v1_Stablecoin'
-                unresolved:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/worldmonitor_market_v1_UnresolvedStablecoin'
-                dataStatus:
-                    type: string
-                    description: |-
-                        Coverage of THIS response, distinct from `summary.health_status` (which
-                         reports peg health, not data availability):
-                           "OK"          — every requested coin was returned.
-                           "PARTIAL"     — at least one coin returned, at least one unresolved.
-                           "UNAVAILABLE" — no coin data available.
-            description: ListStablecoinMarketsResponse contains stablecoin market data.
-        worldmonitor_market_v1_StablecoinSummary:
-            type: object
-            properties:
-                totalMarketCap:
-                    type: number
-                    format: double
-                    description: Total market cap across all queried stablecoins.
-                totalVolume24h:
-                    type: number
-                    format: double
-                    description: Total 24h volume across all queried stablecoins.
-                coinCount:
-                    type: integer
-                    format: int32
-                    description: Number of stablecoins returned.
-                depeggedCount:
-                    type: integer
-                    format: int32
-                    description: Number of stablecoins in DEPEGGED state.
-                healthStatus:
-                    type: string
-                    description: 'Overall health: "HEALTHY", "CAUTION", or "WARNING".'
-            description: StablecoinSummary contains aggregate stablecoin market stats.
-        worldmonitor_market_v1_Stablecoin:
-            type: object
-            properties:
-                id:
-                    type: string
-                    minLength: 1
-                    description: CoinGecko ID.
-                symbol:
-                    type: string
-                    minLength: 1
-                    description: Ticker symbol (e.g. "USDT").
-                name:
-                    type: string
-                    description: Human-readable name.
-                price:
-                    type: number
-                    minimum: 0
-                    format: double
-                    description: Current price in USD.
-                deviation:
-                    type: number
-                    format: double
-                    description: Deviation from $1.00 peg, as a percentage.
-                pegStatus:
-                    type: string
-                    description: 'Peg status: "ON PEG", "SLIGHT DEPEG", or "DEPEGGED".'
-                marketCap:
-                    type: number
-                    format: double
-                    description: Market capitalization in USD.
-                volume24h:
-                    type: number
-                    format: double
-                    description: 24-hour trading volume in USD.
-                change24h:
-                    type: number
-                    format: double
-                    description: 24-hour price change percentage.
-                change7d:
-                    type: number
-                    format: double
-                    description: 7-day price change percentage.
-                image:
-                    type: string
-                    description: Coin image URL.
-            required:
-                - id
-                - symbol
-            description: Stablecoin represents a single stablecoin with peg health data.
-        worldmonitor_market_v1_UnresolvedStablecoin:
-            type: object
-            properties:
-                id:
-                    type: string
-                    description: |-
-                        The requested ID, after trimming and lowercasing. Malformed IDs are
-                         reported as sent (normalized and truncated) so the caller can spot the typo.
-                reason:
-                    type: string
-                    description: |-
-                        Bounded vocabulary — anything outside this list is a contract violation:
-                           "INVALID_ID"     — not shaped like a CoinGecko ID.
-                           "OVER_CAP"       — beyond the per-request ID cap; never looked up.
-                           "NOT_FOUND"      — the provider answered, and has no such coin.
-                           "PROVIDER_ERROR" — the lookup failed, so the ID is unknown, not absent.
-            description: UnresolvedStablecoin explains why a requested ID is absent from the response.
-        worldmonitor_market_v1_ListEtfFlowsRequest:
-            type: object
-            description: ListEtfFlowsRequest is empty; the handler uses a fixed list of BTC spot ETFs.
-        worldmonitor_market_v1_ListEtfFlowsResponse:
-            type: object
-            properties:
-                timestamp:
-                    type: string
-                    description: Timestamp of the data fetch (ISO 8601).
-                summary:
-                    $ref: '#/components/schemas/worldmonitor_market_v1_EtfFlowsSummary'
-                etfs:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/worldmonitor_market_v1_EtfFlow'
-                rateLimited:
-                    type: boolean
-                    description: True when the upstream API rate-limited the request.
-            description: ListEtfFlowsResponse contains BTC spot ETF flow data.
-        worldmonitor_market_v1_EtfFlowsSummary:
-            type: object
-            properties:
-                etfCount:
-                    type: integer
-                    format: int32
-                    description: Number of ETFs with data.
-                totalVolume:
-                    type: integer
-                    format: int64
-                    description: 'Total volume across all ETFs.. Warning: Values > 2^53 may lose precision in JavaScript'
-                totalEstFlow:
-                    type: integer
-                    format: int64
-                    description: 'Total estimated flow across all ETFs.. Warning: Values > 2^53 may lose precision in JavaScript'
-                netDirection:
-                    type: string
-                    description: 'Net direction: "NET INFLOW", "NET OUTFLOW", or "NEUTRAL".'
-                inflowCount:
-                    type: integer
-                    format: int32
-                    description: Number of ETFs with inflow.
-                outflowCount:
-                    type: integer
-                    format: int32
-                    description: Number of ETFs with outflow.
-            description: EtfFlowsSummary contains aggregate ETF flow stats.
-        worldmonitor_market_v1_EtfFlow:
-            type: object
-            properties:
-                ticker:
-                    type: string
-                    minLength: 1
-                    description: Ticker symbol (e.g. "IBIT").
-                issuer:
-                    type: string
-                    description: Fund issuer (e.g. "BlackRock").
-                price:
-                    type: number
-                    format: double
-                    description: Latest closing price.
-                priceChange:
-                    type: number
-                    format: double
-                    description: Day-over-day price change percentage.
-                volume:
-                    type: integer
-                    format: int64
-                    description: 'Latest daily volume.. Warning: Values > 2^53 may lose precision in JavaScript'
-                avgVolume:
-                    type: integer
-                    format: int64
-                    description: 'Average volume over prior days.. Warning: Values > 2^53 may lose precision in JavaScript'
-                volumeRatio:
-                    type: number
-                    format: double
-                    description: Volume ratio (latest / average).
-                direction:
-                    type: string
-                    description: 'Flow direction: "inflow", "outflow", or "neutral".'
-                estFlow:
-                    type: integer
-                    format: int64
-                    description: 'Estimated dollar flow magnitude.. Warning: Values > 2^53 may lose precision in JavaScript'
-            required:
-                - ticker
-            description: EtfFlow represents a single ETF with estimated flow data.
         worldmonitor_market_v1_GetCountryStockIndexRequest:
             type: object
             properties:
@@ -33827,64 +33052,6 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/worldmonitor_market_v1_BacktestStockResponse'
-        worldmonitor_market_v1_ListCryptoSectorsRequest:
-            type: object
-            description: ListCryptoSectorsRequest retrieves crypto sector performance.
-        worldmonitor_market_v1_ListCryptoSectorsResponse:
-            type: object
-            properties:
-                sectors:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/worldmonitor_market_v1_CryptoSector'
-            description: ListCryptoSectorsResponse contains crypto sector performance data.
-        worldmonitor_market_v1_CryptoSector:
-            type: object
-            properties:
-                id:
-                    type: string
-                    description: Sector identifier.
-                name:
-                    type: string
-                    description: Sector display name.
-                change:
-                    type: number
-                    format: double
-                    description: Average 24h percentage change across sector tokens.
-            description: CryptoSector represents performance data for a crypto market sector.
-        worldmonitor_market_v1_ListDefiTokensRequest:
-            type: object
-            description: ListDefiTokensRequest retrieves DeFi token prices.
-        worldmonitor_market_v1_ListDefiTokensResponse:
-            type: object
-            properties:
-                tokens:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/worldmonitor_market_v1_CryptoQuote'
-            description: ListDefiTokensResponse contains DeFi token price data.
-        worldmonitor_market_v1_ListAiTokensRequest:
-            type: object
-            description: ListAiTokensRequest retrieves AI crypto token prices.
-        worldmonitor_market_v1_ListAiTokensResponse:
-            type: object
-            properties:
-                tokens:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/worldmonitor_market_v1_CryptoQuote'
-            description: ListAiTokensResponse contains AI token price data.
-        worldmonitor_market_v1_ListOtherTokensRequest:
-            type: object
-            description: ListOtherTokensRequest retrieves other/trending crypto token prices.
-        worldmonitor_market_v1_ListOtherTokensResponse:
-            type: object
-            properties:
-                tokens:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/worldmonitor_market_v1_CryptoQuote'
-            description: ListOtherTokensResponse contains other token price data.
         worldmonitor_market_v1_GetFearGreedIndexRequest:
             type: object
         worldmonitor_market_v1_GetFearGreedIndexResponse:
@@ -34466,9 +33633,9 @@ components:
                 deltaTonnes12m:
                     type: number
                     format: double
-        worldmonitor_market_v1_GetHyperliquidFlowRequest:
+        worldmonitor_market_v1_GetPerpPositioningRequest:
             type: object
-        worldmonitor_market_v1_GetHyperliquidFlowResponse:
+        worldmonitor_market_v1_GetPerpPositioningResponse:
             type: object
             properties:
                 ts:
@@ -34484,13 +33651,13 @@ components:
                 assets:
                     type: array
                     items:
-                        $ref: '#/components/schemas/worldmonitor_market_v1_HyperliquidAssetFlow'
+                        $ref: '#/components/schemas/worldmonitor_market_v1_PerpPositioningAsset'
                 unavailable:
                     type: boolean
                     description: |-
                         True when the upstream or seed-backed variant is unavailable; empty payload fields
                          are graceful degradation, not confirmed zero data.
-        worldmonitor_market_v1_HyperliquidAssetFlow:
+        worldmonitor_market_v1_PerpPositioningAsset:
             type: object
             properties:
                 symbol:

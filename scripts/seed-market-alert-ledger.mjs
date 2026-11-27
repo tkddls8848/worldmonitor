@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Market-alert ledger seeder (#8867). Runs the dashboard's four market-alert
- * detectors server-side over the seeded quotes (stocks, commodities, crypto)
+ * detectors server-side over the seeded quotes (stocks and commodities)
  * and the English digest, keeps every emission in a persistent six-hour-window
  * ledger, resolves closed windows against the digest archive under the
  * pre-registered rule, and publishes a rolling 30-day scorecard. Section of
@@ -46,12 +46,11 @@ export { MARKET_ALERT_LEDGER_KEY, MARKET_ALERT_WINDOW_MS };
 export const SNAPSHOT_KEY = MARKET_ALERT_SNAPSHOT_KEY;
 export const STOCKS_KEY = 'market:stocks-bootstrap:v1';
 export const COMMODITIES_KEY = 'market:commodities-bootstrap:v1';
-export const CRYPTO_KEY = 'market:crypto:v1';
 export const PREDICTIONS_KEY = 'prediction:markets-bootstrap:v1';
 export const DIGEST_KEY = 'news:digest:v1:full:en';
 export const ACCUMULATOR_KEY = 'digest:accumulator:v1:full:en';
 export const READ_KEYS = [
-  STOCKS_KEY, COMMODITIES_KEY, CRYPTO_KEY, PREDICTIONS_KEY, DIGEST_KEY,
+  STOCKS_KEY, COMMODITIES_KEY, PREDICTIONS_KEY, DIGEST_KEY,
   CORRELATION_RUNTIME_MODE_KEY, MARKET_ALERT_LEDGER_KEY, MARKET_ALERT_SNAPSHOT_KEY, MARKET_ALERT_SCORECARD_KEY,
 ];
 
@@ -254,7 +253,6 @@ export async function buildTick(raw, { nowMs = Date.now(), archive }) {
   const discarded = [];
   const stocks = freshPayload(raw, STOCKS_KEY, MARKET_MAX_AGE_MS, nowMs, discarded);
   const commodities = freshPayload(raw, COMMODITIES_KEY, MARKET_MAX_AGE_MS, nowMs, discarded);
-  const crypto = freshPayload(raw, CRYPTO_KEY, MARKET_MAX_AGE_MS, nowMs, discarded);
   const predictionsPayload = freshPayload(raw, PREDICTIONS_KEY, PREDICTION_MAX_AGE_MS, nowMs, discarded);
   const digest = freshPayload(raw, DIGEST_KEY, DIGEST_MAX_AGE_MS, nowMs, discarded, digestTimestamp);
   const runtimeMode = resolveCorrelationRuntimeMode(raw[CORRELATION_RUNTIME_MODE_KEY]);
@@ -262,7 +260,7 @@ export async function buildTick(raw, { nowMs = Date.now(), archive }) {
   const baseline = liveBaseline(previousSnapshot, nowMs);
   const predictionsFetchedAt = predictionsPayload?.fetchedAt ?? null;
 
-  const markets = mapMarkets([stocks?.data, commodities?.data, crypto?.data]);
+  const markets = mapMarkets([stocks?.data, commodities?.data]);
   const predictions = predictionsPayload ? mapPredictions(predictionsPayload.data) : [];
   const items = digest ? digestNewsItems(digest.data) : [];
   const observed = (emitted, activity) => snapshotOf({ nowMs, predictions, predictionsFetchedAt, markets, emitted, activity });
@@ -301,7 +299,6 @@ export async function buildTick(raw, { nowMs = Date.now(), archive }) {
       inputs: {
         stocks: stocks?.data.quotes?.length ?? 0,
         commodities: commodities?.data.quotes?.length ?? 0,
-        crypto: crypto?.data.quotes?.length ?? 0,
         predictions: predictions.length,
         digestItems: items.length,
         runtimeMode,
@@ -323,7 +320,7 @@ export function formatSummary(summary) {
   const { inputs, emitted, resolved } = summary;
   const byType = Object.entries(emitted.byType).map(([type, count]) => `${type}:${count}`).join(',') || 'none';
   const discarded = summary.discarded.map(({ key, reason }) => `${key}=${reason}`).join(',') || 'none';
-  return `  [market-alert-ledger] inputs stocks=${inputs.stocks} commodities=${inputs.commodities} crypto=${inputs.crypto} `
+  return `  [market-alert-ledger] inputs stocks=${inputs.stocks} commodities=${inputs.commodities} `
     + `predictions=${inputs.predictions} digestItems=${inputs.digestItems} mode=${inputs.runtimeMode} discarded=${discarded} | `
     + `emitted=${emitted.total} (${byType}) gated=${emitted.gated} held=${emitted.held} new=${summary.created} re-emitted=${summary.updated} | `
     + `resolved hit=${resolved.hit} miss=${resolved.miss} void=${resolved.void} unproven=${resolved.unproven}`

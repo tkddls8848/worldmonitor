@@ -4,7 +4,7 @@
  * `commodities-news` shipped enabled by default on the finance variant
  * (`FINANCE_PANELS`) and inside the `finCommodities` mission preset, but the
  * CANONICAL_FEEDS pass in panel-layout only remapped a colliding feed category
- * to `${key}-news` for a hardcoded `markets`/`crypto`/`economic` set. The
+ * to `${key}-news` for a hardcoded `markets`/`economic` set. The
  * `commodities` key is BOTH a FINANCE_FEEDS category and the key CommoditiesPanel
  * registers under, so the NewsPanel asked for `commodities`, the dedup guard
  * dropped it, and no panel was ever created. Users got a "Commodities News"
@@ -429,7 +429,7 @@ describe('news panel key reachability (#5871)', () => {
     // Spot-check both sides of the collision this file exists for, so a parser
     // that silently stopped seeing FINANCE_* fails here rather than vacuously
     // passing the reachability assertion with an empty work-list.
-    for (const key of ['commodities', 'markets', 'crypto', 'economic', 'supply-chain', 'live-news']) {
+    for (const key of ['commodities', 'markets', 'economic', 'supply-chain', 'live-news']) {
       assert.ok(feedCategories.has(key), `expected '${key}' among feed categories`);
     }
     for (const key of ['commodities', 'commodities-news', 'markets', 'markets-news', 'climate-news']) {
@@ -491,9 +491,9 @@ describe('news panel key reachability (#5871)', () => {
     );
   });
 
-  it('keeps the pre-existing markets/crypto/economic remaps intact', () => {
+  it('keeps the pre-existing markets/economic remaps intact', () => {
     const created = replayNewsPanelPass();
-    for (const base of ['markets', 'crypto', 'economic']) {
+    for (const base of ['markets', 'economic']) {
       assert.equal(created.get(`${base}-news`), base, `expected ${base} → ${base}-news`);
       assert.equal(created.has(base), false, `NewsPanel must not claim the '${base}' data-panel key`);
     }
