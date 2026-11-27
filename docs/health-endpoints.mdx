@@ -45,8 +45,8 @@ The top-level `status` describes user-visible platform availability, not perfect
   "status": "HEALTHY | WARNING | DEGRADED | UNHEALTHY | REDIS_DOWN | REFRESH_PENDING",
   "dataStatus": "OK | DEGRADED | CRITICAL",
   "summary": {
-    "total": 407,
-    "ok": 402,
+    "total": 396,
+    "ok": 391,
     "warn": 0,
     "containedWarn": 0,
     "onDemandWarn": 5,
@@ -107,12 +107,6 @@ Failed refreshes retain only validated open Contracts Finder records less than 1
 `globalTendersContractsFinder` keeps `SEED_ERROR`, the warning count, source error, attempt time, success time, and consecutive failure count visible. Availability can contain the first failed refresh only after reading and checking its records in the canonical tender snapshot. `containmentUntil` is the earliest of 90 minutes after the first failure, 180 minutes after source success, or a retained tender's closing time. The second failed refresh, missing or unreadable canonical data, malformed records, inconsistent metadata, or an expired deadline cannot qualify. Full and compact verdict caches expire at the same deadline; this does not change other sources' health policy.
 
 A failed refresh after a verified empty success can also qualify. The producer records `confirmedEmpty` only when the prior canonical envelope has an explicit zero source count, no source rows, and recent source success evidence. Health requires matching canonical and seed metadata, a fresh usable aggregate, and the same first-failure limits. Its deadline also includes aggregate freshness. Zero records without this proof, or records removed by expiry or validation, cannot qualify. The source remains `error` with `SEED_ERROR`; containment does not report a successful refresh.
-
-### BC active evacuation lists
-
-`canadaAlertsBcSource` uses successful active-list ingestion with a 45-minute freshness budget. BC orders remain active until their status changes or they are removed. Their event modification age is not an expiry rule. See [BC evacuation guidance](https://www2.gov.bc.ca/gov/content/safety/wildfire-status/partners/evacuation).
-
-The seeder validates every page before it replaces the snapshot. A verified empty list is valid. Malformed or failed responses retain the previous snapshot and success time. Event `updatedAt`, `publishedAt`, and `onset` retain the publisher's dates. The old three-day content-age fields disappear after the first successful v2 publication. Existing missing-data, source-failure, and stale-ingestion checks still apply.
 
 ### Bundle tick heartbeats
 
@@ -735,7 +729,6 @@ Selected thresholds from `SEED_META`:
 | Market quotes, crypto, sectors, earthquakes, insights | 30 | High-frequency relay loops / critical event data |
 | Military flights | 30 | Near-real-time tracking |
 | Predictions, flight delays (FAA) | 90 | Polymarket / airport snapshots |
-| Toronto TPS live calls | 90 | 30-minute bundle member, 90-minute seed and content budgets, three-hour cache lifetime |
 | Unrest | 120 | 45min cron, 2h grace |
 | Cyber threats | 240 | APT data updated less frequently |
 | Wildfires | 360 | FIRMS NRT accumulates over hours |

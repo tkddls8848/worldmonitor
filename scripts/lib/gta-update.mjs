@@ -7,8 +7,7 @@
  * ID contracts are locked here; the production writer stays disabled until
  * upstream provenance and the remaining product activation gates are accepted.
  *
- * Do not geocode location strings. Do not fold into canadaAlerts /
- * canadaRoads / weather / news / official live-CAD (#6682).
+ * Do not geocode location strings or merge this data with weather, news, or official dispatch (#6682).
  */
 
 import { CHROME_UA } from '../_seed-utils.mjs';

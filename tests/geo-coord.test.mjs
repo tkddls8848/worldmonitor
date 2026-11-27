@@ -5,7 +5,6 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { finiteLat, finiteLon, lonLatPair } from '../scripts/lib/geo-coord.mjs';
-import { normalize511Record } from '../scripts/lib/provincial-511.mjs';
 import { weatherAlertNotifyLocation } from '../scripts/_weather-alert-select.mjs';
 
 // Every one of these is Number()-coercible to 0, and 0,0 is the Gulf of Guinea.
@@ -45,23 +44,6 @@ test('a pair is rejected when either axis is unusable', () => {
     assert.equal(lonLatPair([value, 43.5]), null);
     assert.equal(lonLatPair([-79.5, value]), null);
   }
-});
-
-test('provincial 511 falls back to the encoded path when direct coordinates are junk', () => {
-  for (const value of MISSING) {
-    const record = normalize511Record(
-      { Id: 'coord', Latitude: value, Longitude: value },
-      { kind: 'event', jurisdiction: 'ON' },
-    );
-    assert.equal(record.lat, null);
-    assert.equal(record.lon, null);
-    assert.equal(record.centroid, null);
-  }
-  const zero = normalize511Record(
-    { Id: 'coord', Latitude: 0, Longitude: 0 },
-    { kind: 'event', jurisdiction: 'ON' },
-  );
-  assert.deepEqual(zero.centroid, [0, 0]);
 });
 
 test('a webhook ring with a null vertex is withheld from the geometry payload', () => {

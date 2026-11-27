@@ -71,15 +71,6 @@ export const ATTRIBUTION_RIDER_NOTICE =
   'The values in `data` are derived from the sources listed here. Redistribution requires this attribution block to travel with them.';
 
 /**
- * REST parity map: request pathname → the same class of extraction expression
- * a tool declares via `_attribution`.
- *
- * Keyed on the path rather than the tool because the REST shapes are not the
- * MCP shapes: `/api/safety/v1/get-toronto-safety` serves BOTH Toronto datasets
- * from one flat response (no MCP tool serves them), and `get_imd_cyclone_marine` has no REST path at all
- * (`_apiPaths: []`).
- */
-/**
  * The Copernicus credit rides with every NO2 activity projection, on REST and
  * through the get_no2_activity tool, whose _execute keeps these top-level
  * fields verbatim.
@@ -89,10 +80,6 @@ export const NO2_ATTRIBUTION_EXPRESSION = '{attribution: attribution, generatedA
 export const REST_ATTRIBUTION_EXPRESSIONS: Readonly<Record<string, string>> = {
   '/api/economic/v1/get-no2-activity': NO2_ATTRIBUTION_EXPRESSION,
   '/api/displacement/v1/get-cross-border-movements': 'movements[].{source: source, sourceUrl: sourceUrl, license: license, licenseUrl: licenseUrl, notice: notice}',
-  // Flat response, one dataset per request (`?dataset=`), with the licence
-  // assertion at the top level — see queryTorontoSafety's return shape.
-  '/api/safety/v1/get-toronto-safety':
-    '{attribution: attribution, source: source, sourceUrl: sourceUrl, fetchedAt: fetchedAt}',
 };
 
 /**

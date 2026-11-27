@@ -3796,80 +3796,11 @@ td.fx-inverse {
   outline-offset: 1px;
 }
 
-.toronto-safety-panel .empty-state,
 .regulation-panel .empty-state {
   padding: 24px 12px;
   font-size: calc(11px * var(--wm-panel-effective-scale, 1));
   color: var(--text-dim);
   text-align: center;
-}
-
-/* ----------------------------------------------------------
-   Toronto Safety Panel
-   Rows follow the Security Advisories card.
-   ---------------------------------------------------------- */
-.toronto-safety-panel > .empty-state {
-  padding: 8px 10px 0;
-  text-align: left;
-}
-
-.toronto-safety-panel .toronto-safety-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 8px;
-}
-
-.toronto-safety-panel .intel-item {
-  padding: 8px;
-  border-radius: 4px;
-  border: 0 solid var(--border);
-  border-inline-start-width: 3px;
-  background: var(--overlay-subtle);
-  overflow-wrap: anywhere;
-}
-
-.toronto-safety-panel .intel-item-title {
-  font-size: calc(11px * var(--wm-panel-effective-scale, 1));
-  font-weight: 600;
-  line-height: 1.35;
-  color: var(--text);
-}
-
-.toronto-safety-panel .intel-item-meta {
-  margin-top: 2px;
-  font-size: calc(10px * var(--wm-panel-effective-scale, 1));
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.toronto-safety-panel .intel-item-summary {
-  margin-top: 2px;
-  font-size: calc(11px * var(--wm-panel-effective-scale, 1));
-  line-height: 1.35;
-  color: var(--text-dim);
-}
-
-.toronto-safety-panel .panel-source {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin: 0 8px;
-  padding: 6px 0 8px;
-  border-top: 1px solid var(--border-subtle);
-  font-size: calc(9px * var(--wm-panel-effective-scale, 1));
-  line-height: 1.4;
-  color: var(--text-muted);
-}
-
-.toronto-safety-panel .panel-source a {
-  color: var(--text-dim);
-  text-decoration: none;
-}
-
-.toronto-safety-panel .panel-source a:hover {
-  color: var(--accent);
-  text-decoration: underline;
 }
 
 /* ----------------------------------------------------------

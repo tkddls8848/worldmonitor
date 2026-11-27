@@ -5,7 +5,7 @@
  * LOCKED DISABLED. Parser + fixtures live in scripts/lib/gta-update.mjs.
  * Reuse permission is held. This file keeps the separate upstream-provenance,
  * activation-gate, and writer-off contract visible,
- * but it must not call runSeed, join seed-bundle-canada, register a Railway
+ * but it must not call runSeed, register a Railway
  * cron, or serve rows through MCP.
  *
  * Usage (will refuse to publish):
@@ -25,7 +25,7 @@ export { GTA_FIRE_KEY, GTA_POLICE_KEY, GTA_UPDATE_WRITER_ENABLED };
 if (process.argv[1]?.endsWith('seed-gta-update.mjs')) {
   console.warn(
     `[GTA Update] writer disabled (${GTA_UPDATE_RIGHTS_STATUS}). `
-    + 'No Redis publish, no Railway cron, no seed-bundle-canada membership. '
+    + 'No Redis publish, no Railway cron. '
     + GTA_UPDATE_ACTIVATION_BLOCKER,
   );
   try {

@@ -11,11 +11,7 @@
 // nobody re-fetched. Nothing pages, because health probes Redis directly and
 // never sees the cached copy the browser got.
 //
-// So: for every on-demand key whose seeder declares a freshness budget in
-// api/health.js SEED_META, the CDN shield must not exceed that budget. #6763
-// found bcOpen511 already violating it (90-minute budget, 120-minute shield)
-// and would have added canadaRoads and albertaRoads (45-minute budget) to the
-// list by moving them off the fast tier.
+// The CDN shield must fit each seed freshness budget declared in api/health.js.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -106,9 +102,7 @@ function completeCacheServingWindowSeconds(header: string, shared: boolean): num
 test('SEED_META budgets are actually readable, or this whole suite is vacuous', () => {
   // Without this, a rename in api/health.js would turn every budget into null
   // and the guard below would pass by having nothing to check.
-  assert.equal(healthMaxStaleMin('imdCycloneMarine'), 45, 'plain digits');
-  // A nested cutover block sits between the key and its closing brace.
-  assert.equal(healthMaxStaleMin('canadaAlerts'), 45, 'budget declared before a nested cutover');
+  assert.equal(healthMaxStaleMin('imdCycloneMarine'), 45, 'plain digits before a nested cutover');
   // The three shapes that defeat a `\d+` read. Each of these was reported as a
   // violation by the first version of this guard: 2_160 read as 2, and
   // 60 * 24 * 14 read as 60.

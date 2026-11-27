@@ -20,10 +20,6 @@ import {
 } from './_bootstrap-tier-keys.js';
 import { compactNaturalEventsDashboardPayload } from './_natural-events-dashboard.js';
 import { compactWildfireDashboardPayload } from './_wildfire-dashboard.js';
-import {
-  canadaAlertsCutoverFallbackValue,
-  extraCanadaAlertsCutoverReadKeys,
-} from './_canada-alerts-cutover.js';
 
 export const config = { runtime: 'edge' };
 
@@ -37,19 +33,10 @@ const { cacheKeys: BOOTSTRAP_CACHE_KEYS } = resolveBootstrapRegistry({
 const SLOW_KEYS = new Set(bootstrapTierKeyNames('slow', { iranEventsEnabled: IRAN_EVENTS_ENABLED }));
 const FAST_KEYS = new Set(bootstrapTierKeyNames('fast', { iranEventsEnabled: IRAN_EVENTS_ENABLED }));
 
-// Temporary #6659 cutover fallback. Keep the new multi-province aggregate
-// authoritative, but let bootstrap clients use the Alberta sibling first and
-// the abandoned legacy key second until alerts:canada:v1 has been published
-// in every environment.
 // R4 (#6654) fields that must never appear in a bootstrap-tier payload.
 // `text` is the X post body: the first-party panel may render it (via
 // /api/x-feed), but alerts, MCP, and embed/OEM partners get derived facts plus
 // a permalink only. `pollState` is seed-internal cursor state.
-
-function bootstrapRedisReadKeys(keys) {
-  const extra = extraCanadaAlertsCutoverReadKeys(keys, BOOTSTRAP_CACHE_KEYS.canadaAlerts);
-  return extra.length > 0 ? [...keys, ...extra] : keys;
-}
 
 // No public/s-maxage: CF (in front of api.worldmonitor.app) ignores Vary: Origin and would
 // pin ACAO: worldmonitor.app on cached responses, breaking CORS for preview deployments.
@@ -102,17 +89,6 @@ const ON_DEMAND_CACHE_PROFILES = {
   // outliving a complete seed interval; per-group stale/unavailable states
   // remain part of the payload contract.
   chinaDecisionSignals: {
-    browser: 'max-age=60, stale-while-revalidate=120, stale-if-error=900',
-    cdn: 'public, s-maxage=900, stale-while-revalidate=120, stale-if-error=900',
-  },
-  canadaRoads: {
-    browser: 'max-age=60, stale-while-revalidate=120, stale-if-error=900',
-    cdn: 'public, s-maxage=900, stale-while-revalidate=120, stale-if-error=900',
-  },
-  // The canadaAlerts union rebuilds on a 15min tick against a 45min health
-  // budget. It left the fast tier with its dashboard map layer, so it needs
-  // its own profile instead of the default 2h shield.
-  canadaAlerts: {
     browser: 'max-age=60, stale-while-revalidate=120, stale-if-error=900',
     cdn: 'public, s-maxage=900, stale-while-revalidate=120, stale-if-error=900',
   },
@@ -343,7 +319,7 @@ export default async function handler(req, _ctx) {
 
   let cached;
   try {
-    cached = await getCachedJsonBatch(bootstrapRedisReadKeys(keys));
+    cached = await getCachedJsonBatch(keys);
   } catch {
     const isPublic = isPublicBootstrapKind(auth.kind);
     if (isPublic) {
@@ -367,10 +343,7 @@ export default async function handler(req, _ctx) {
   const data = {};
   const missing = [];
   for (let i = 0; i < names.length; i++) {
-    const raw = keys[i] === BOOTSTRAP_CACHE_KEYS.canadaAlerts
-      && !cached.has(BOOTSTRAP_CACHE_KEYS.canadaAlerts)
-      ? canadaAlertsCutoverFallbackValue(cached)
-      : cached.get(keys[i]);
+    const raw = cached.get(keys[i]);
     const val = raw === undefined ? undefined : validateImfDataset(names[i], raw);
     if (val !== undefined) {
       data[names[i]] = sanitizeBootstrapValue(names[i], val);

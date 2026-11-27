@@ -77,23 +77,22 @@ test('several fast/slow keys are served together; on-demand keys still go one at
   assert.deepEqual(reads.toSorted(), [BOOTSTRAP_CACHE_KEYS.insights, BOOTSTRAP_CACHE_KEYS.wildfires].toSorted());
 
   reads.length = 0;
-  const onDemand = await request('?keys=insights&keys=canadaRoads');
+  const onDemand = await request('?keys=insights&keys=marketCorrelationSeries');
   assert.equal(onDemand.status, 400);
   assert.deepEqual(reads, []);
-  assert.equal((await request('?keys=canadaRoads')).status, 200);
+  assert.equal((await request('?keys=marketCorrelationSeries')).status, 200);
 });
 
-test('RPC, public bootstrap and publisher apply the same transforms and cutover fallback', async t => {
+test('RPC, public bootstrap and publisher apply the same transforms', async t => {
   const { request, values } = await setup(t);
   const fixtures = {
     forecasts: { forecasts: [], enrichmentMeta: { internal: 'fixture' } },
     wildfires: { fireDetections: Array.from({ length: 501 }, (_, i) => ({ id: String(i) })) },
     naturalEvents: { events: [{ id: 'storm', conePolygon: [{ points: Array.from({ length: 401 }, (_, i) => ({ lon: Math.cos(i * Math.PI / 200), lat: Math.sin(i * Math.PI / 200) })) }] }] },
     chokepoints: { chokepoints: [{ transitSummary: { riskSummary: 'internal', riskReportAction: 'internal', count: 2 } }] },
-    canadaAlerts: { alerts: [{ id: 'fallback' }] },
   };
   for (const [name, value] of Object.entries(fixtures)) {
-    values.set(name === 'canadaAlerts' ? 'alerts:canada:alberta-aea:v1' : BOOTSTRAP_CACHE_KEYS[name], value);
+    values.set(BOOTSTRAP_CACHE_KEYS[name], value);
   }
   for (const name of Object.keys(fixtures)) {
     const response = await request('?keys=' + name);
@@ -108,7 +107,6 @@ test('RPC, public bootstrap and publisher apply the same transforms and cutover 
     if (name === 'forecasts') assert.equal('enrichmentMeta' in actual, false);
     if (name === 'wildfires') assert.equal(actual.fireDetections.length, 500);
     if (name === 'chokepoints') assert.equal(actual.chokepoints[0].transitSummary.riskSummary, '');
-    if (name === 'canadaAlerts') assert.deepEqual(actual, fixtures.canadaAlerts);
   }
 });
 

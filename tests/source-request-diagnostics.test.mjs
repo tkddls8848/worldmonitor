@@ -147,25 +147,6 @@ test('NRCan distinguishes a CONNECT rejection from an origin response', async ()
   });
 });
 
-test('TPS adapter preserves timeout budget and reports the native cause', async t => {
-  const { fetchTpsCallsAttended } = await import('../scripts/lib/tps-open-data.mjs');
-  const timeout = AbortSignal.timeout;
-  const budgets = [];
-  t.mock.method(AbortSignal, 'timeout', ms => { budgets.push(ms); return timeout(ms); });
-  await capture(async logs => {
-    const result = await fetchTpsCallsAttended({ fetchImpl: async (_url, options) => {
-      assert.equal(options.redirect, 'error');
-      throw Object.assign(new Error('secret'), { name: 'TimeoutError', cause: { code: 'UND_ERR_CONNECT_TIMEOUT' } });
-    } });
-    assert.equal(result.ok, false);
-    assert.equal(result.reason, 'timeout:calls:package');
-    assert.deepEqual(budgets, [30000]);
-    assert.equal(logs[0].errorCode, 'UND_ERR_CONNECT_TIMEOUT');
-    assert.equal(logs[0].stage, 'calls:package');
-    assert.ok(!JSON.stringify(logs).includes('secret'));
-  });
-});
-
 test('NRCan direct body failures retain the original error and request diagnostics', async () => {
   const { fetchApprovedAtom, NRCAN_ATOM_URL } = await import('../scripts/seismology/nrcan-atom.mjs');
   await capture(async logs => {

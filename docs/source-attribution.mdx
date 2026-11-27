@@ -12,7 +12,7 @@ The inventory is **generated, not hand-written**: `scripts/source-attribution.mj
 ## Observed Source Inventory
 
 {/* BEGIN GENERATED SOURCE ATTRIBUTION */}
-This generated inventory covers **872 active source hosts** representing **851 active providers** (**385 structured/API**, **470 feed**, and **30 operational-status** hosts). It is derived from source declarations in `scripts/`, `server/`, `api/`, and `src/`. Each row shows the configured provider identity and where the source is referenced. Syndication transports such as FeedBurner and Google News remain listed as hosts and are not counted as publishers.
+This generated inventory covers **857 active source hosts** representing **839 active providers** (**370 structured/API**, **470 feed**, and **30 operational-status** hosts). It is derived from source declarations in `scripts/`, `server/`, `api/`, and `src/`. Each row shows the configured provider identity and where the source is referenced. Syndication transports such as FeedBurner and Google News remain listed as hosts and are not counted as publishers.
 
 | Provider | Observed surface |
 | --- | --- |
@@ -42,8 +42,6 @@ This generated inventory covers **872 active source hosts** representing **851 a
 | airplanes.live (api.airplanes.live) | structured — scripts/seed-military-flights.mjs, src/components/MapPopup.ts |
 | Al Jazeera (aljazeera.com) | feed — shared/news-catalog.json |
 | Al Jazeera (www.aljazeera.com) | feed — shared/news-catalog.json |
-| Alberta 511 (511.alberta.ca) | structured — scripts/lib/provincial-511.mjs |
-| Alberta Emergency Alert (www.alberta.ca) | structured — scripts/lib/alberta-emergency-alert.mjs, scripts/source-attribution.mjs |
 | Alternative.me Fear & Greed Index (api.alternative.me) | structured — scripts/seed-economy.mjs |
 | Alwihda Info (www.alwihdainfo.com) | feed — shared/news-catalog.json |
 | amdlive-ch01-ctnd-com.akamaized.net (amdlive-ch01-ctnd-com.akamaized.net) | feed — src/config/live-video-sources.ts |
@@ -112,8 +110,6 @@ This generated inventory covers **872 active source hosts** representing **851 a
 | AyiboPost (ayibopost.com) | feed — shared/news-catalog.json |
 | azertag.az (azertag.az) | feed — shared/news-catalog.json |
 | azure.status.microsoft (azure.status.microsoft) | operational-status — server/worldmonitor/infrastructure/v1/list-service-statuses.ts |
-| B.C. Evacuation Orders and Alerts (catalogue.data.gov.bc.ca) | structured — scripts/lib/bc-emergency-info.mjs |
-| B.C. Evacuation Orders and Alerts (services6.arcgis.com) | structured — scripts/lib/bc-emergency-info.mjs |
 | balkaninsight.com (balkaninsight.com) | feed — shared/news-catalog.json |
 | bangkokpost.com (bangkokpost.com) | feed — shared/news-catalog.json |
 | Bank of Canada (www.bankofcanada.ca) | structured — scripts/lib/boc-valet.mjs, scripts/seed-yield-curve-ca.mjs |
@@ -162,9 +158,6 @@ This generated inventory covers **872 active source hosts** representing **851 a
 | ChatGPT link (chatgpt.com) | Excluded / candidate — No current fetch observed |
 | chathamhouse.org (chathamhouse.org) | feed — shared/news-catalog.json |
 | citinewsroom.com (citinewsroom.com) | feed — shared/news-catalog.json |
-| City of Toronto Open Data (ckan0.cf.opendata.inter.prod-toronto.ca) | structured — scripts/lib/tps-open-data.mjs |
-| City of Toronto Open Data (open.toronto.ca) | structured — scripts/lib/tps-open-data.mjs |
-| City of Toronto Open Data (secure.toronto.ca) | Excluded / candidate — No current fetch observed |
 | civil.ge (civil.ge) | feed — shared/news-catalog.json |
 | Claude link (claude.ai) | structured — src/config/mcp-agent-clients.ts |
 | Clerk identity service (api.clerk.com) | Excluded / candidate — No current fetch observed |
@@ -468,7 +461,6 @@ This generated inventory covers **872 active source hosts** representing **851 a
 | Mada Masr (madamasr.com) | feed — shared/news-catalog.json |
 | madr.gov.dz (madr.gov.dz) | structured — scripts/lib/food-prices-adapters/madr.mjs |
 | makstat.stat.gov.mk (makstat.stat.gov.mk) | structured — scripts/lib/food-prices-adapters/makstat.mjs |
-| Manitoba 511 (www.manitoba511.ca) | structured — scripts/lib/provincial-511.mjs |
 | maps.worldmonitor.app (maps.worldmonitor.app) | structured — src/services/country-geometry.ts |
 | mapservices.weather.noaa.gov (mapservices.weather.noaa.gov) | structured — scripts/seed-natural-events.mjs |
 | markets.newyorkfed.org (markets.newyorkfed.org) | structured — scripts/_funding-stress.mjs |
@@ -543,9 +535,7 @@ This generated inventory covers **872 active source hosts** representing **851 a
 | OKO.press (oko.press) | feed — shared/news-catalog.json |
 | onemileatatime.com (onemileatatime.com) | structured — scripts/seed-aviation.mjs, server/worldmonitor/aviation/v1/list-aviation-news.ts |
 | Onet (wiadomosci.onet.pl) | feed — shared/news-catalog.json |
-| Ontario 511 (511on.ca) | structured — scripts/lib/provincial-511.mjs |
 | open-meteo.caseyjhand.com (open-meteo.caseyjhand.com) | Excluded / candidate — No current fetch observed |
-| open.alberta.ca (open.alberta.ca) | Excluded / candidate — No current fetch observed |
 | open.iub.gov.lv (open.iub.gov.lv) | structured — scripts/_global-tender-feeds.mjs |
 | opendap.earthdata.nasa.gov (opendap.earthdata.nasa.gov) | structured — scripts/seed-no2-activity.mjs |
 | openrouter.ai (openrouter.ai) | structured — scripts/eval-classify-labels.mjs, scripts/lib/brief-dedup-consts.mjs, scripts/local/local-api-server.mjs, scripts/regional-snapshot/weekly-brief.mjs |
@@ -630,7 +620,6 @@ This generated inventory covers **872 active source hosts** representing **851 a
 | Safecast (api.safecast.org) | structured — scripts/seed-radiation-watch.mjs |
 | Sana'a Center (sanaacenter.org) | feed — shared/news-catalog.json |
 | sanctionslistservice.ofac.treas.gov (sanctionslistservice.ofac.treas.gov) | structured — scripts/seed-sanctions-pressure.mjs |
-| SaskAlert (emergencyalert.saskatchewan.ca) | structured — scripts/lib/saskalert.mjs, scripts/source-attribution.mjs |
 | sccd.royalnavy.mod.uk (sccd.royalnavy.mod.uk) | Excluded / candidate — No current fetch observed |
 | schema.org (schema.org) | structured — scripts/build-accuracy-page.mjs, scripts/build-use-cases.mjs, scripts/comparison-shortlist.mjs |
 | schemas.agentskills.io (schemas.agentskills.io) | Excluded / candidate — No current fetch observed |
@@ -755,11 +744,6 @@ This generated inventory covers **872 active source hosts** representing **851 a
 | Times of Israel (timesofisrael.com) | feed — shared/news-catalog.json |
 | timesca.com (timesca.com) | feed — shared/news-catalog.json |
 | tools.cdc.gov (tools.cdc.gov) | structured — scripts/seed-disease-outbreaks.mjs |
-| Toronto Fire Services (www.toronto.ca) | structured — scripts/lib/toronto-official-cad.mjs |
-| Toronto Police Service (services.arcgis.com) | structured — scripts/lib/toronto-official-cad.mjs, scripts/lib/tps-open-data.mjs |
-| Toronto Police Service Open Data (data.tps.ca) | structured — scripts/lib/tps-open-data.mjs |
-| Toronto Police Service Open Data (www.tps.ca) | structured — scripts/lib/tps-open-data.mjs |
-| Toronto Transit Commission (TTC) GTFS-RT (gtfsrt.ttc.ca) | structured — scripts/seed-ttc-alerts.mjs |
 | TradingView (scanner.tradingview.com) | structured — scripts/_sp500-breadth.mjs |
 | travel.state.gov (travel.state.gov) | structured — scripts/seed-security-advisories.mjs |
 | Travelpayouts flight-price data (api.travelpayouts.com) | structured — server/worldmonitor/aviation/v1/_providers/travelpayouts_data.ts |
@@ -794,7 +778,6 @@ This generated inventory covers **872 active source hosts** representing **851 a
 | USGS ScienceBase (Mineral Commodity Summaries) (www.sciencebase.gov) | structured — scripts/seed-mineral-production.mjs, scripts/seed-supply-vulnerability.mjs |
 | vancouversun.com (vancouversun.com) | feed — shared/news-catalog.json |
 | venturebeat.com (venturebeat.com) | feed — shared/news-catalog.json |
-| VIA Rail Tracker (unofficial) (tsimobile.viarail.ca) | structured — scripts/viarail-live.mjs |
 | viewfromthewing.com (viewfromthewing.com) | structured — scripts/seed-aviation.mjs, server/worldmonitor/aviation/v1/list-aviation-news.ts |
 | Vision of Humanity / Global Peace Index (www.visionofhumanity.org) | Excluded / candidate — No current fetch observed |
 | vn.usembassy.gov (vn.usembassy.gov) | structured — scripts/seed-security-advisories.mjs |

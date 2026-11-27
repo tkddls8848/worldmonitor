@@ -49,11 +49,6 @@ const PENDING_CONSUMERS = new Set([
       // listEnergyDisruptions() on drawer open — no getHydratedData()
       // call site. Classifier extends this post-launch.
       'energyDisruptions',
-      // The dashboard Canada roads and alerts map layers were removed. The
-      // terminal dashboard (cli/src/tui) still reads canadaRoads and
-      // canadaAlerts through the per-key URL, and the widget agent may request
-      // Ontario roads remain available to the terminal consumer.
-      'canadaRoads', 'canadaAlerts',
 ]);
 
 describe('Bootstrap cache key registry', () => {

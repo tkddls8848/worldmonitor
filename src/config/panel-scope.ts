@@ -187,7 +187,6 @@ export const PANEL_SCOPE_BEHAVIOUR: Readonly<Record<string, PanelScopeBehaviour>
   displacement: 'filters', // UNHCR Displacement
   'ukmto-incidents': 'unsupported', // UKMTO Incidents
   'climate-news': 'unsupported', // Climate News
-  'toronto-safety': 'unsupported', // Toronto Safety
   'radiation-watch': 'filters', // Radiation Watch
   'thermal-escalation': 'unsupported', // Thermal Escalation
   'oref-sirens': 'unsupported', // X News Accounts

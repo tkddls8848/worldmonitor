@@ -93,15 +93,15 @@ test('a section without a completion key still reads the canonical clock alone (
   const reads = [];
   const publishedAt = Date.now();
   const freshness = await readSectionFreshness({
-    canonicalKey: 'infra:ontario-511:v1',
-    seedMetaKey: 'infra:ontario-511',
+    canonicalKey: 'test:canonical:v1',
+    seedMetaKey: 'test:canonical',
   }, async (key) => {
     reads.push(key);
-    if (key === 'infra:ontario-511:v1') return { _seed: { fetchedAt: publishedAt }, data: {} };
+    if (key === 'test:canonical:v1') return { _seed: { fetchedAt: publishedAt }, data: {} };
     return null;
   });
   assert.deepEqual(freshness, { fetchedAt: publishedAt });
-  assert.deepEqual(reads, ['infra:ontario-511:v1']);
+  assert.deepEqual(reads, ['test:canonical:v1']);
 });
 
 test('runSeed extraKeys discovery handles shorthand, named objects, and spreads', () => {

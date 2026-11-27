@@ -1004,7 +1004,7 @@ export class App {
 
     if (storageAvailable) {
       // One-time migration: prune removed panel keys from stored settings and order
-      const PANEL_PRUNE_KEY = 'worldmonitor-panel-prune-v2';
+      const PANEL_PRUNE_KEY = 'worldmonitor-panel-prune-v3';
       if (!localStorage.getItem(PANEL_PRUNE_KEY)) {
         const validKeys = new Set(Object.keys(ALL_PANELS));
         let pruned = false;

@@ -391,7 +391,6 @@ const HOST_ORIGINS = Object.freeze({
   'schema.org': 'US',
   'seekingalpha.com': 'US',
   'serpapi.com': 'US',
-  'services.arcgis.com': 'CA',
   'services7.arcgis.com': 'US',
   'services9.arcgis.com': 'US',
   'simpleflying.com': 'GB',

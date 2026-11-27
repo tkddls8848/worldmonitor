@@ -2,7 +2,7 @@
 // Source: proto/worldmonitor/**/*.proto buf.validate annotations.
 
 export const GENERATED_PROTO_VALIDATION_RULE_COUNT = 717;
-export const GENERATED_REQUEST_METHOD_COUNT = 188;
+export const GENERATED_REQUEST_METHOD_COUNT = 187;
 
 export const GENERATED_REQUEST_TYPES = {
   "analyzeStock": "worldmonitor.market.v1.AnalyzeStockRequest",
@@ -91,7 +91,6 @@ export const GENERATED_REQUEST_TYPES = {
   "getTariffTrends": "worldmonitor.trade.v1.GetTariffTrendsRequest",
   "getTemporalBaseline": "worldmonitor.infrastructure.v1.GetTemporalBaselineRequest",
   "getTheaterPosture": "worldmonitor.military.v1.GetTheaterPostureRequest",
-  "getTorontoSafety": "worldmonitor.safety.v1.GetTorontoSafetyRequest",
   "getTradeBarriers": "worldmonitor.trade.v1.GetTradeBarriersRequest",
   "getTradeFlows": "worldmonitor.trade.v1.GetTradeFlowsRequest",
   "getTradeRestrictions": "worldmonitor.trade.v1.GetTradeRestrictionsRequest",
@@ -2527,26 +2526,6 @@ export const GENERATED_MESSAGE_RULES = {
         "stringMaxBytes": 65536
       },
       "period": {
-        "kind": "string",
-        "stringMaxBytes": 65536
-      }
-    }
-  },
-  "worldmonitor.safety.v1.GetTorontoSafetyRequest": {
-    "fields": {
-      "dataset": {
-        "kind": "string",
-        "stringMaxBytes": 65536
-      },
-      "division": {
-        "kind": "string",
-        "stringMaxBytes": 65536
-      },
-      "neighbourhood": {
-        "kind": "string",
-        "stringMaxBytes": 65536
-      },
-      "offence": {
         "kind": "string",
         "stringMaxBytes": 65536
       }

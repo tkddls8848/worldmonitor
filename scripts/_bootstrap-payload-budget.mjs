@@ -34,7 +34,7 @@ export const CAPTURED_BASE_TIER_KEYS = Object.freeze({
     'earthquakes', 'outages', 'serviceStatuses', 'ddosAttacks', 'trafficAnomalies',
     'marketQuotes', 'commodityQuotes', 'macroSignals', 'shippingRates', 'chokepoints',
     'positiveGeoEvents', 'theaterPosture', 'riskScores', 'flightDelays', 'insights',
-    'predictions', 'temporalAnomalies', 'weatherAlerts', 'canadaAlerts', 'spending',
+    'predictions', 'temporalAnomalies', 'weatherAlerts', 'spending',
     'gdeltIntel', 'correlationCards', 'forecasts', 'shippingStress',
   ]),
   slow: Object.freeze([
@@ -77,7 +77,6 @@ export const CAPTURED_KEY_DECODED_BYTES = Object.freeze({
   predictions: 24_493,
   temporalAnomalies: 98,
   weatherAlerts: 52_633,
-  canadaAlerts: 61_389,
   spending: 4_762,
   gdeltIntel: 24_612,
   correlationCards: 87_842,

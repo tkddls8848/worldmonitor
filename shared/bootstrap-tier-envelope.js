@@ -4,7 +4,7 @@
  * `schemaVersion` is the Worker serving contract. The publisher (Railway) and
  * the api-cors-preflight Worker deploy independently, so Stage 2 must not
  * serve a legacy `{ tier, generatedAt, payload }` envelope written before the
- * publisher mirrored origin's canadaAlerts cutover (#7291). Unversioned or
+ * publisher and origin aligned their payloads (#7291). Unversioned or
  * mismatched envelopes fall through to origin.
  *
  * Version 2 excludes premium market implications from public tiers. Reject

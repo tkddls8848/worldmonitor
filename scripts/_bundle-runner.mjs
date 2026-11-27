@@ -484,7 +484,7 @@ function spawnSeed(scriptPath, { timeoutMs, label, bundleStartedAtMs, completion
  */
 /**
  * Env var carrying the per-member kill switch for a bundle, e.g.
- * WM_BUNDLE_CANADA_DISABLED_MEMBERS. Per bundle, so disabling a member of one
+ * WM_BUNDLE_MACRO_DISABLED_MEMBERS. Per bundle, so disabling a member of one
  * cannot silently disable a same-named member of another.
  */
 export function bundleDisableEnvVar(label) {

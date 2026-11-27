@@ -1,8 +1,8 @@
 /**
  * Every class these panels emit must have a rule scoped under a panel root.
  *
- * The Toronto Safety and AI Regulation panels
- * shipped markup whose classes appeared in no stylesheet, so each panel
+ * The AI Regulation panel shipped markup whose classes appeared in no stylesheet,
+ * so the panel
  * rendered as raw stacked text with no padding. The Hormuz commodity
  * dependency list put a country and its context in two bare spans, which ran
  * together as "DjiboutiSoybeans"; the rest of that panel is styled inline, so
@@ -31,7 +31,6 @@ import { readFileSync, readdirSync } from 'node:fs';
 const srcDir = new URL('../src/', import.meta.url);
 
 const PANELS = {
-  'components/TorontoSafetyPanel.ts': { roots: ['toronto-safety-panel'], samples: ['intel-item'] },
   'components/RegulationPanel.ts': {
     roots: ['regulation-panel'],
     samples: ['timeline-item'],

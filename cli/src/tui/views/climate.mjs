@@ -8,7 +8,7 @@ import { PaneView, selectedItem } from './base.mjs';
 
 export class ClimateView extends PaneView {
   constructor(app) {
-    super(app, { id: 'climate', label: 'Climate', paneIds: ['quakes', 'hazards', 'weather', 'anomalies'], sources: ['fast', 'slow', 'canadaAlerts'] });
+    super(app, { id: 'climate', label: 'Climate', paneIds: ['quakes', 'hazards', 'weather', 'anomalies'], sources: ['fast', 'slow'] });
   }
 
   quakes() {
@@ -116,7 +116,7 @@ export class ClimateView extends PaneView {
 
   renderWeather(ctx, r) {
     const { t } = ctx;
-    const alerts = [...(this.data.weatherAlerts?.alerts || []), ...(this.data.canadaAlerts?.alerts || []).map((a) => ({ ...a, headline: a.headline || a.event, countryCode: 'CA' }))];
+    const alerts = this.data.weatherAlerts?.alerts || [];
     const inner = panel(ctx, r, { title: 'Weather alerts', focused: this.isFocused('weather'), right: `${alerts.length}`, onClick: () => this.focusPane('weather') });
     this.lists.weather.draw(
       ctx,

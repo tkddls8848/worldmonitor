@@ -21,7 +21,6 @@ import type { RadiationServiceClientOptions } from '@/generated/client/worldmoni
 import type { ResearchServiceClientOptions } from '@/generated/client/worldmonitor/research/v1/service_client';
 import type { ScorecardServiceClientOptions } from '@/generated/client/worldmonitor/scorecard/v1/service_client';
 import type { SanctionsServiceClientOptions } from '@/generated/client/worldmonitor/sanctions/v1/service_client';
-import type { SafetyServiceClientOptions } from '@/generated/client/worldmonitor/safety/v1/service_client';
 import type { ScenarioServiceClientOptions } from '@/generated/client/worldmonitor/scenario/v1/service_client';
 import type { SeismologyServiceClientOptions } from '@/generated/client/worldmonitor/seismology/v1/service_client';
 import type { SupplyChainServiceClientOptions } from '@/generated/client/worldmonitor/supply_chain/v1/service_client';
@@ -72,7 +71,6 @@ export type LazyRpcClientOptionsDriftChecks = AssertAllOptionsMatch<[
   AssertOptionsMatch<MarketServiceClientOptions, ResearchServiceClientOptions>,
   AssertOptionsMatch<MarketServiceClientOptions, ScorecardServiceClientOptions>,
   AssertOptionsMatch<MarketServiceClientOptions, SanctionsServiceClientOptions>,
-  AssertOptionsMatch<MarketServiceClientOptions, SafetyServiceClientOptions>,
   AssertOptionsMatch<MarketServiceClientOptions, ScenarioServiceClientOptions>,
   AssertOptionsMatch<MarketServiceClientOptions, SeismologyServiceClientOptions>,
   AssertOptionsMatch<MarketServiceClientOptions, SupplyChainServiceClientOptions>,

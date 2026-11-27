@@ -360,8 +360,6 @@ test('the issue audit providers are represented by named attribution rows', () =
     'ReliefWeb (UN OCHA)',
     'NSIDC',
     'Fintraffic Digitraffic',
-    'Toronto Police Service',
-    'Toronto Police Service Open Data',
     'GTA Update',
   ]) {
     assert.ok(names.has(provider), `missing named provider row: ${provider}`);
@@ -394,71 +392,6 @@ test('NBS saved-response extraction records permission without live catalog acti
   assert.equal(entry.catalogActive, false);
   assert.equal(activeSourceAttributionEntries(manifest).some((row) => row.host === entry.host), false);
   assert.equal(rawManifestActiveEntries(manifest).some((row) => row.host === entry.host), false);
-});
-
-test('TPS MCI records the exact OGL-Ontario licence before reviewed', () => {
-  const inventory = scanUpstreamHosts(rootDir);
-  const manifest = loadManifest(rootDir);
-  for (const host of ['data.tps.ca', 'www.tps.ca']) {
-    assert.ok(inventory.some((entry) => entry.host === host), `${host} must be observed`);
-    const entry = [...manifest.entries, ...manifest.logicalEntries].find((row) => row.host === host);
-    assert.ok(entry, `${host} must have a generated attribution row`);
-    assert.equal(entry.status, 'reviewed');
-    assert.equal(entry.provider, 'Toronto Police Service Open Data');
-    assert.match(entry.license, /Open Government Licence - Ontario/);
-    assert.match(entry.attribution, /Contains information licensed under the Open Government Licence - Ontario/);
-    assert.match(entry.license, /0a239a5563a344a3bbf8452504ed8d68/);
-    assert.doesNotMatch(entry.license, /46c7581a136445c78831acb657a4fb0d/);
-    assert.doesNotMatch(entry.license, /C4S_Public_NoGO/);
-    assert.doesNotMatch(entry.license, /privacy-filtered public live/);
-  }
-});
-
-test('current TPS Calls CKAN hosts record the unresolved package licence', () => {
-  const inventory = scanUpstreamHosts(rootDir);
-  const manifest = loadManifest(rootDir);
-  for (const host of ['ckan0.cf.opendata.inter.prod-toronto.ca', 'open.toronto.ca']) {
-    assert.ok(inventory.some((entry) => entry.host === host), `${host} must be observed`);
-    const entry = [...manifest.entries, ...manifest.logicalEntries].find((row) => row.host === host);
-    assert.ok(entry, `${host} must have a generated attribution row`);
-    assert.equal(entry.status, 'terms-review');
-    assert.equal(entry.provider, 'City of Toronto Open Data');
-    assert.match(entry.license, /license_id=notspecified/);
-    assert.match(entry.license, /bfffadee-e6e5-4404-8455-e67e9ea11ba7/);
-    assert.match(entry.attribution, /Calls for Service Attended/);
-    assert.doesNotMatch(entry.attribution, /Open Government Licence/);
-  }
-});
-
-test('C4S CAD and TPS Open Data stay distinct catalog identities on the shared ArcGIS host', () => {
-  const inventory = scanUpstreamHosts(rootDir);
-  const manifest = loadManifest(rootDir);
-  assert.ok(inventory.some((entry) => entry.host === 'services.arcgis.com'), 'services.arcgis.com must be observed');
-  const cad = [...manifest.entries, ...manifest.logicalEntries].find((row) => row.host === 'services.arcgis.com');
-  assert.ok(cad, 'services.arcgis.com must have a generated attribution row');
-  assert.equal(cad.status, 'reviewed');
-  assert.equal(cad.provider, 'Toronto Police Service');
-  assert.match(cad.license, /C4S_Public_NoGO/);
-  assert.match(cad.license, /Not Major Crime Indicators \/ YTD/);
-  assert.match(cad.attribution, /Toronto Police Service, Calls for Service/);
-  assert.doesNotMatch(cad.license, /0a239a5563a344a3bbf8452504ed8d68/);
-  assert.doesNotMatch(cad.license, /46c7581a136445c78831acb657a4fb0d/);
-  assert.doesNotMatch(cad.license, /deliberately offset/);
-  assert.doesNotMatch(cad.provider, /Open Data/);
-
-  const names = catalogProviderIdentities(manifest);
-  assert.ok(names.has('Toronto Police Service'), 'C4S must remain a live catalog identity');
-  assert.ok(names.has('Toronto Police Service Open Data'), 'Open Data must remain a live catalog identity');
-  assert.equal(
-    PROVIDER_IDENTITY_GROUPS['tps-open-data'].memberHosts.includes('services.arcgis.com'),
-    false,
-    'the Open Data identity group must not absorb the C4S ArcGIS host',
-  );
-  assert.deepEqual([...PROVIDER_IDENTITY_GROUPS['tps-open-data'].memberHosts].sort(), ['data.tps.ca', 'www.tps.ca']);
-  assert.deepEqual(
-    [...PROVIDER_IDENTITY_GROUPS['city-of-toronto-open-data'].memberHosts].sort(),
-    ['ckan0.cf.opendata.inter.prod-toronto.ca', 'open.toronto.ca', 'secure.toronto.ca'],
-  );
 });
 
 test('uppercase URL constants are included in the upstream inventory', () => {

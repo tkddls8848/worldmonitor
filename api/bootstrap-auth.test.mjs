@@ -666,67 +666,16 @@ test('public on-demand URL keeps ONE contract even when credentials are attached
   });
 });
 
-test('every Canada road key serves anonymously with a shield sized to its publisher', async () => {
-  // #6763 moved canadaRoads off the fast tier so it stops
-  // riding a payload every visitor downloads. A TIERED key is rejected on this
-  // URL — the next test proves tiered keys such as wildfires draw a 401 — so the
-  // move only works if these same requests now qualify. Asserted through the
-  // handler rather than by reading the registry: the registry is what the tier
-  // move edits, so checking it against itself would pass either way.
-  //
-  // The s-maxage values are the second half of the move. Without a profile
-  // these inherit the slow 7200 s shield, which outlives the 45-minute
-  // freshness budgets api/health.js declares for them.
-  const expected = {
-    canadaRoads: 900,   // seed-provincial-511, 15min member interval
-  };
-  await withMockedBootstrapAuth({
-    entitlement: null,
-    bootstrapPipelineBody: presentOnDemandPipelineBody(),
-  }, async () => {
-    for (const [key, sMaxAge] of Object.entries(expected)) {
-      const resp = await handler(makePublicOnDemandRequest(key));
-      assert.equal(resp.status, 200, `keys=${key} must serve without credentials`);
-      assertSharedCacheHeaders(resp);
-      assertPublicCorsHeaders(resp);
-      assert.match(
-        resp.headers.get('cdn-cache-control') || '',
-        new RegExp(`s-maxage=${sMaxAge}\\b`),
-        `keys=${key} must be CDN-shielded for ${sMaxAge}s`,
-      );
-    }
-  });
-});
-
-// canadaAlerts left the fast tier with its dashboard map layer. Its per-key URL
-// also reads the two cutover fallback keys, so the pipeline answers three GETs.
-test('canadaAlerts serves anonymously with a 15-minute shield', async () => {
-  await withMockedBootstrapAuth({
-    entitlement: null,
-    bootstrapPipelineBody: [
-      { result: JSON.stringify({ alerts: [] }) },
-      { result: null },
-      { result: null },
-    ],
-  }, async () => {
-    const resp = await handler(makePublicOnDemandRequest('canadaAlerts'));
-    assert.equal(resp.status, 200, 'keys=canadaAlerts must serve without credentials');
-    assertSharedCacheHeaders(resp);
-    assertPublicCorsHeaders(resp);
-    assert.match(resp.headers.get('cdn-cache-control') || '', /s-maxage=900\b/);
-  });
-});
-
 test('a public on-demand miss is no-store so a recovered seeder is not hidden', async () => {
   // Default mock is Redis GET -> null, so the key is in `missing`. Caching that
   // 200 at the publisher interval would pin an empty body until the shield
   // expired, and health (which reads Redis) would never page.
   await withMockedBootstrapAuth({ entitlement: null }, async () => {
-    const resp = await handler(makePublicOnDemandRequest('canadaRoads'));
+    const resp = await handler(makePublicOnDemandRequest('marketCorrelationSeries'));
     const body = await resp.json();
 
     assert.equal(resp.status, 200);
-    assert.deepEqual(body, { data: {}, missing: ['canadaRoads'] });
+    assert.deepEqual(body, { data: {}, missing: ['marketCorrelationSeries'] });
     assert.equal(resp.headers.get('cache-control'), 'no-store');
     assertNonSharedCacheHeaders(resp);
     assertPublicCorsHeaders(resp);

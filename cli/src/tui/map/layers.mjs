@@ -302,23 +302,6 @@ export const LAYERS = [
     }).filter(Boolean),
   },
   {
-    id: 'canadaAlerts', group: 'hazards', label: 'Canada emergency alerts', glyph: '⚠', kind: 'point', on: true, color: 'bad', sources: ['canadaAlerts'],
-    build: ({ data, t, now }) => (data.canadaAlerts?.alerts || []).map((a) => {
-      const p = loc(a);
-      if (!p) return null;
-      return { id: `ca:${a.id}`, name: `${a.province}: ${a.headline || a.event}`, lat: p[0], lon: p[1], glyph: '⚠', color: severityColor(t, a.severity), size: 2, ts: a.updatedAt, info: info([['Event', a.event], ['Severity', a.severity], ['Area', a.areaDesc], ['Onset', a.onset], ['Expires', a.expires], ['Source', a.source], ['Updated', when(a.updatedAt, now)], ['Details', a.description && a.description.slice(0, 400)]]), url: a.url };
-    }).filter(Boolean),
-  },
-  {
-    id: 'canadaRoads', group: 'hazards', label: 'Canada road incidents', glyph: '▬', kind: 'point', on: false, color: 'warn', sources: ['canadaRoads'],
-    build: ({ data, t }) => (data.canadaRoads?.records || []).map((r) => {
-      const p = loc(r);
-      if (!p) return null;
-      const line = Array.isArray(r.path) && r.path.length > 1 ? r.path.map((q) => (Array.isArray(q) ? q : [q.lon ?? q.lng, q.lat])) : null;
-      return { id: `road:${r.id}`, name: `${r.roadwayName || r.headline || 'road'}: ${r.eventType || r.kind}`, lat: p[0], lon: p[1], points: line, glyph: '▬', color: r.isFullClosure ? t.bad : severityColor(t, r.severity), size: r.isFullClosure ? 2 : 0, info: info([['Jurisdiction', r.jurisdiction], ['Type', r.eventType], ['Severity', r.severity], ['Closure', r.isFullClosure ? 'full closure' : r.lanesAffected], ['Headline', r.headline], ['Details', r.description && r.description.slice(0, 300)], ['Source', r.source]]) };
-    }).filter(Boolean),
-  },
-  {
     id: 'climate', group: 'hazards', label: 'Climate anomalies', glyph: '≈', kind: 'point', on: false, color: 'info',
     build: ({ data, t }) => (data.climateAnomalies?.anomalies || []).map((a, i) => {
       const p = loc(a);

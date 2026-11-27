@@ -1084,11 +1084,11 @@ test('a contained warning keeps availability HEALTHY but reports dataStatus DEGR
     status: 'HEALTHY',
     summary: { total: 100, ok: 99, warn: 1, containedWarn: 1, onDemandWarn: 0, crit: 0 },
     checkedAt: new Date(0).toISOString(),
-    checks: { ttcAlerts: { status: 'STALE_SEED', records: 68, seedAgeMin: 160, maxStaleMin: 30 } },
+    checks: { fixtureSource: { status: 'STALE_SEED', records: 68, seedAgeMin: 160, maxStaleMin: 30 } },
   }, true);
   assert.equal(body.status, 'HEALTHY');
   assert.equal(body.dataStatus, 'DEGRADED');
-  assert.equal(body.problems.ttcAlerts.status, 'STALE_SEED');
+  assert.equal(body.problems.fixtureSource.status, 'STALE_SEED');
 });
 
 test('pendingIncidentKeys and nextAlertedIncidents keep only accepted, still-active incidents', () => {

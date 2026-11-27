@@ -277,7 +277,6 @@ const NEWS_TRACKING_KEYS = new Set<string>([
   'world-clock',
   'tech-readiness',
   'ukmto-incidents',
-  'toronto-safety',
   'giving',
   'internet-disruptions',
   'service-status',

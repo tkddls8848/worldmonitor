@@ -83,7 +83,7 @@ export const DEFAULT_COLLECTORS = [
   'unrest-events', 'military-flights', 'conflict-intel', 'prediction-markets', 'service-statuses',
   'bundle-market-backup', 'bundle-relay-backup', 'bundle-climate', 'bundle-health',
   'bundle-energy-sources', 'bundle-derived-signals',
-  'bundle-macro', 'bundle-yield-curves', 'bundle-ecb-eu', 'bundle-imf-extended', 'bundle-canada',
+  'bundle-macro', 'bundle-yield-curves', 'bundle-ecb-eu', 'bundle-imf-extended',
   'bundle-portwatch', 'bundle-portwatch-port-activity', 'bundle-regional-energy', 'bundle-country-reference', 'bundle-regional',
   'bundle-static-ref', 'bundle-static-ref-heavy',
   ...Object.keys(STANDALONE_INTERVAL_MIN).filter((name) => !['news-threat-summary', 'weather-alerts', 'cyber-threats'].includes(name)),

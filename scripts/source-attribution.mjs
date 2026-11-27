@@ -170,12 +170,6 @@ export const PROVIDER_IDENTITY_GROUPS = Object.freeze({
     reason: 'The BBC feed host and BBC language-edition host belong to one publisher identity.',
     reviewReference: 'Issue #7000 source-catalog publisher identity review',
   }),
-  'bc-evacuation-orders-alerts': Object.freeze({
-    provider: 'B.C. Evacuation Orders and Alerts',
-    memberHosts: Object.freeze(['catalogue.data.gov.bc.ca', 'services6.arcgis.com']),
-    reason: 'The B.C. catalogue record supplies the licence for the ArcGIS evacuation dataset.',
-    reviewReference: 'Issue #6659 source-rights probe',
-  }),
   faostat: Object.freeze({
     provider: 'FAOSTAT',
     memberHosts: Object.freeze(['api.data.apps.fao.org', 'data.apps.fao.org', 'fenixservices.fao.org']),
@@ -214,18 +208,6 @@ export const PROVIDER_IDENTITY_GROUPS = Object.freeze({
     memberHosts: Object.freeze(['ourworldindata.org', 'owid-public.owid.io']),
     reason: 'The public data host and dataset landing host belong to one Our World in Data provider identity.',
     reviewReference: 'PR #6250',
-  }),
-  'tps-open-data': Object.freeze({
-    provider: 'Toronto Police Service Open Data',
-    memberHosts: Object.freeze(['data.tps.ca', 'www.tps.ca']),
-    reason: 'The TPS Open Data landing page and Public Safety Data Portal licence the Major Crime Indicators dataset. They are not the live C4S CAD identity or the current City of Toronto Calls package.',
-    reviewReference: 'Issue #7012 and PR #7576 follow-up',
-  }),
-  'city-of-toronto-open-data': Object.freeze({
-    provider: 'City of Toronto Open Data',
-    memberHosts: Object.freeze(['ckan0.cf.opendata.inter.prod-toronto.ca', 'open.toronto.ca', 'secure.toronto.ca']),
-    reason: 'The public catalog, CKAN API, and CART data host belong to one City of Toronto Open Data identity.',
-    reviewReference: 'Issue #7036 and PR #7576 source migration',
   }),
   wingbits: Object.freeze({
     provider: 'wingbits.com',
@@ -530,82 +512,11 @@ const PROVIDER_OVERRIDES = {
     attribution: 'People’s Bank of China, republished by Shanghai Financial Portal. Link to the dated https://jrj.sh.gov.cn/SCGK194/ report.',
     status: 'reviewed',
   },
-  '511on.ca': {
-    provider: 'Ontario 511',
-    license: 'Ontario 511 API terms; Government of Ontario data; attribution required',
-    attribution: 'Ontario 511 (Ministry of Transportation). https://511on.ca/',
-    status: 'terms-review',
-  },
-  '511.alberta.ca': {
-    provider: 'Alberta 511',
-    license: 'Alberta 511 terms (https://511.alberta.ca/about/about): non-commercial/educational reproduction allowed; commercial reproduction needs written permission from Alberta Transportation and Economic Corridors. https://511.alberta.ca/help/terms returned 404.',
-    attribution: 'Alberta 511 (Alberta Transportation and Economic Corridors). https://511.alberta.ca/',
-    status: 'terms-review',
-  },
-  'www.manitoba511.ca': {
-    provider: 'Manitoba 511',
-    license: 'Contains information from the Government of Manitoba, licensed under the OpenMB Information and Data Use License (Manitoba.ca/OpenMB). Manitoba 511 developer copy permits creating traffic apps; no separate developer access agreement is published.',
-    attribution: 'Manitoba 511 (Government of Manitoba). Contains information from the Government of Manitoba, licensed under the OpenMB Information and Data Use License. https://www.manitoba511.ca/',
-    status: 'terms-review',
-  },
-  'secure.toronto.ca': {
-    provider: 'City of Toronto Open Data',
-    identityGroup: 'city-of-toronto-open-data',
-    license: 'CKAN package_show for road-restrictions: license_id=notspecified, license_title="License not specified" (https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/package_show?id=road-restrictions). Portal dataset page chrome links OGL-Toronto but is not data-bound to this dataset.',
-    attribution: 'City of Toronto, Road Restrictions. https://open.toronto.ca/dataset/road-restrictions/',
-    status: 'terms-review',
-  },
-  'ckan0.cf.opendata.inter.prod-toronto.ca': {
-    provider: 'City of Toronto Open Data',
-    identityGroup: 'city-of-toronto-open-data',
-    license: 'CKAN package_show for police-annual-statistical-report-calls-for-service-attended (package id bfffadee-e6e5-4404-8455-e67e9ea11ba7) returned license_id=notspecified, license_title="License not specified", and isopen=false on 2026-09-03. The portal dataset page displays Open Government Licence - Toronto, but that claim is not data-bound to the CKAN package metadata.',
-    attribution: 'Toronto Police Service, Calls for Service Attended, via City of Toronto Open Data. https://open.toronto.ca/dataset/police-annual-statistical-report-calls-for-service-attended/',
-    status: 'terms-review',
-  },
-  'open.toronto.ca': {
-    provider: 'City of Toronto Open Data',
-    identityGroup: 'city-of-toronto-open-data',
-    license: 'CKAN package_show for police-annual-statistical-report-calls-for-service-attended (package id bfffadee-e6e5-4404-8455-e67e9ea11ba7) returned license_id=notspecified, license_title="License not specified", and isopen=false on 2026-09-03. The portal dataset page displays Open Government Licence - Toronto, but that claim is not data-bound to the CKAN package metadata.',
-    attribution: 'Toronto Police Service, Calls for Service Attended, via City of Toronto Open Data. https://open.toronto.ca/dataset/police-annual-statistical-report-calls-for-service-attended/',
-    status: 'terms-review',
-  },
-  'www.toronto.ca': {
-    provider: 'Toronto Fire Services',
-    license: 'Direct permission: World Monitor\'s owner confirmed on 2026-08-21 that World Monitor holds redistribution and public-display rights for the Toronto Fire Services live CAD XML. This does not claim that the feed is licensed under the City of Toronto Open Government Licence: no data-bound CKAN package was found for toronto-fire-active-incidents or livecad.xml. City of Toronto copyright and the source-specific permission still apply. Not the historical fire-incidents CKAN datasets.',
-    attribution: 'Toronto Fire Services, Active Incidents (CAD). https://www.toronto.ca/community-people/public-safety-alerts/alerts-notifications/toronto-fire-active-incidents/',
-    status: 'reviewed',
-  },
   'api.open511.gov.bc.ca': {
     provider: 'BC Open511',
     license: 'Open Government Licence - British Columbia (OGL-BC). Confirmed on https://api.open511.gov.bc.ca/help. API Terms of Use for OGL-BC information also apply.',
     attribution: 'DriveBC Open511 (Province of British Columbia). Licensed under OGL-BC. https://api.open511.gov.bc.ca/help',
     status: 'reviewed',
-  },
-  'catalogue.data.gov.bc.ca': {
-    provider: 'B.C. Evacuation Orders and Alerts',
-    identityGroup: 'bc-evacuation-orders-alerts',
-    license: 'Open Government Licence - British Columbia (OGL-BC). The B.C. Data Catalogue record 7efd46d0-b5d3-4dff-af80-d376c42aec33 explicitly assigns OGL-BC to this ArcGIS layer.',
-    attribution: 'Contains information licensed under the Open Government Licence - British Columbia. https://catalogue.data.gov.bc.ca/dataset/7efd46d0-b5d3-4dff-af80-d376c42aec33',
-    status: 'reviewed',
-  },
-  'services6.arcgis.com': {
-    provider: 'B.C. Evacuation Orders and Alerts',
-    identityGroup: 'bc-evacuation-orders-alerts',
-    license: 'Open Government Licence - British Columbia (OGL-BC). The B.C. Data Catalogue record 7efd46d0-b5d3-4dff-af80-d376c42aec33 explicitly assigns OGL-BC to this ArcGIS layer.',
-    attribution: 'Contains information licensed under the Open Government Licence - British Columbia. https://catalogue.data.gov.bc.ca/dataset/7efd46d0-b5d3-4dff-af80-d376c42aec33',
-    status: 'reviewed',
-  },
-  'www.alberta.ca': {
-    provider: 'Alberta Emergency Alert',
-    license: 'Alberta.ca terms of use. Open Government Licence - Alberta exists on the open.alberta.ca licence page but is not bound to the AEA Atom feed on a live dataset page (the alberta-emergency-alert.aspx page has no OGL statement).',
-    attribution: 'Alberta Emergency Alert, Government of Alberta. https://www.alberta.ca/alberta-emergency-alert.aspx',
-    status: 'terms-review',
-  },
-  'emergencyalert.saskatchewan.ca': {
-    provider: 'SaskAlert',
-    license: 'Public SaskAlert mobile JSON at /sapublic/feed.json plus same-host CAP 1.2 JSON details. Government of Saskatchewan website terms exclude some connected subsites; this host is the official public alert feed authorized for canadaAlerts ingest under #6659. Not Pelmorex LMD.',
-    attribution: 'SaskAlert, Government of Saskatchewan. https://emergencyalert.saskatchewan.ca/',
-    status: 'terms-review',
   },
   'api.elections.kalshi.com': {
     provider: 'Kalshi',
@@ -770,32 +681,6 @@ const PROVIDER_OVERRIDES = {
     attribution: 'GTA Update (unofficial third-party TPS/TFS dispatch mirror; not official, not verified, entertainment-only per publisher). Used with permission. Production disabled pending upstream provenance and product activation. https://gtaupdate.com/about.php',
     status: 'reviewed',
     catalogActive: false,
-  },
-  'www.tps.ca': {
-    provider: 'Toronto Police Service Open Data',
-    identityGroup: 'tps-open-data',
-    license: 'Custom licence based on the Open Government Licence - Ontario. The Major Crime Indicators FeatureServer (serviceItemId 0a239a5563a344a3bbf8452504ed8d68) requires: "Contains information licensed under the Open Government Licence - Ontario." Credit Toronto Police Service without crests, logos, flags, or official marks. No TPS endorsement. Locations are deliberately offset; do not present them as precise addresses. Do not merge or link the data with other databases for the purpose of identifying a person, business, or organization. Do not fill privacy exclusions from GTA Update, news, radio, or another source. Evidence: https://www.tps.ca/data-maps/open-data/ and the item-level FeatureServer description on https://data.tps.ca/.',
-    attribution: 'Contains information licensed under the Open Government Licence - Ontario. Toronto Police Service Open Data (https://www.tps.ca/data-maps/open-data/, https://data.tps.ca/). Coordinates are approximate offset intersection nodes. No TPS endorsement.',
-    status: 'reviewed',
-  },
-  'data.tps.ca': {
-    provider: 'Toronto Police Service Open Data',
-    identityGroup: 'tps-open-data',
-    license: 'Custom licence based on the Open Government Licence - Ontario. The Major Crime Indicators FeatureServer (serviceItemId 0a239a5563a344a3bbf8452504ed8d68) requires: "Contains information licensed under the Open Government Licence - Ontario." Credit Toronto Police Service without crests, logos, flags, or official marks. No TPS endorsement. Locations are deliberately offset; do not present them as precise addresses. Do not merge or link the data with other databases for the purpose of identifying a person, business, or organization. Do not fill privacy exclusions from GTA Update, news, radio, or another source. Evidence: https://www.tps.ca/data-maps/open-data/ and the item-level FeatureServer description on https://data.tps.ca/.',
-    attribution: 'Contains information licensed under the Open Government Licence - Ontario. Toronto Police Service Open Data (https://www.tps.ca/data-maps/open-data/, https://data.tps.ca/). Coordinates are approximate offset intersection nodes. No TPS endorsement.',
-    status: 'reviewed',
-  },
-  'services.arcgis.com': {
-    provider: 'Toronto Police Service',
-    license: 'Open Government Licence – Ontario as published on the TPS Calls for Service Experience item a22f5295933e48a5b0a4c90cd3c4cae1 (licenseInfo), plus TPS Public Safety Data Portal terms on that item: no identification of individuals, no TPS marks. Layer C4S_Public_NoGO is the privacy-filtered public Calls-for-Service map (refresh ~20 min). Not Major Crime Indicators / YTD.',
-    attribution: 'Toronto Police Service, Calls for Service. Contains information licensed under the Open Government Licence – Ontario.',
-    status: 'reviewed',
-  },
-  'gtfsrt.ttc.ca': {
-    provider: 'Toronto Transit Commission (TTC) GTFS-RT',
-    license: 'CKAN package_show for ttc-gtfs-realtime-gtfs-rt: license_id=notspecified, isopen=false (https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/package_show?id=ttc-gtfs-realtime-gtfs-rt). Portal dataset page chrome links OGL-Toronto but is not data-bound to this dataset.',
-    attribution: 'Toronto Transit Commission GTFS-RT service alerts. https://gtfsrt.ttc.ca and https://open.toronto.ca/dataset/ttc-gtfs-realtime-gtfs-rt/. Portal HTML cites OGL-Toronto; CKAN does not.',
-    status: 'terms-review',
   },
   'www.tenders.gov.au': {
     provider: 'AusTender',
@@ -1182,12 +1067,6 @@ const PROVIDER_OVERRIDES = {
     attribution: 'Excluded from the provider count: standards reference, not an ingested source.',
     status: 'excluded',
   },
-  'tsimobile.viarail.ca': {
-    provider: 'VIA Rail Tracker (unofficial)',
-    license: 'VIA Rail Site Terms prohibit commercial use of the Site (https://www.viarail.ca/en/terms-and-conditions). Developer Resources publish GTFS only under Open Government Licence – Canada v2 (https://www.viarail.ca/en/developer-resources); that OGL grant does not cover tsimobile.viarail.ca unofficial live JSON. Terms require review.',
-    attribution: 'VIA Rail Canada; unofficial live train JSON at tsimobile.viarail.ca. Not the Developer Resources GTFS feed; OGL does not apply to this host. Best-effort only.',
-    status: 'terms-review',
-  },
   'feeds.feedburner.com': { role: 'transport' },
   'news.google.com': { role: 'transport' },
 };
@@ -1197,7 +1076,8 @@ const PROVIDER_OVERRIDES = {
 // a provider-bearing override a separate, explicit lifecycle event instead of
 // something `--write` can silently normalize into the manifest.
 export const PROVIDER_IDENTITY_REVIEW = Object.freeze({
-  sha256: '3a2ed5f190ad40768e16ae2cfa4bfde424726237f8d87283084611c4a312cd31',
+  sha256: '71c90495ed69a49b935dedbd0b5a390c131ddc33ba27bd65224d47de183fa5b4',
+  // 2026-11-27: remove the provider identities exclusive to the retired Canadian local-data bundle.
   // 2026-11-22: identify the OpenDART API and DART viewer as distinct
   // Financial Supervisory Service disclosure endpoints; reuse terms remain under review.
   // 2026-11-22: add UCDP's bulk Candidate CSV downloads under CC BY 4.0.

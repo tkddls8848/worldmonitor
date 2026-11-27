@@ -213,7 +213,6 @@ export const DOCS_PAGE_DATES: Record<string, { datePublished: string; dateModifi
   "api-reference/researchservice/listhackernewsitems": {"datePublished":"2026-02-20","dateModified":"2026-11-02"},
   "api-reference/researchservice/listtechevents": {"datePublished":"2026-02-20","dateModified":"2026-11-02"},
   "api-reference/researchservice/listtrendingrepos": {"datePublished":"2026-02-20","dateModified":"2026-11-02"},
-  "api-reference/safetyservice/gettorontosafety": {"datePublished":"2026-04-23","dateModified":"2026-11-13"},
   "api-reference/sanctionsservice/listsanctionspressure": {"datePublished":"2026-03-17","dateModified":"2026-11-11"},
   "api-reference/sanctionsservice/lookupsanctionentity": {"datePublished":"2026-03-17","dateModified":"2026-11-11"},
   "api-reference/scenarioservice/getscenariostatus": {"datePublished":"2026-04-23","dateModified":"2026-11-13"},

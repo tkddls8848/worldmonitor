@@ -8,8 +8,6 @@ import {
 import { BOOTSTRAP_CACHE_KEYS, BOOTSTRAP_TIERS } from '../../../_shared/cache-keys';
 // @ts-expect-error — Edge-safe JS helper
 import { sanitizeBootstrapValue } from '../../../../api/_bootstrap-public-payload.js';
-// @ts-expect-error — Edge-safe JS helper
-import { extraCanadaAlertsCutoverReadKeys, canadaAlertsCutoverFallbackValue } from '../../../../api/_canada-alerts-cutover.js';
 // @ts-expect-error — Edge-safe JS helper, shared with api/bootstrap.js
 import { validateImfDataset } from '../../../../api/_imf-dataset.js';
 import { getCachedJsonBatch } from '../../../_shared/redis';
@@ -64,18 +62,15 @@ export const getBootstrapData: InfrastructureServiceHandler['getBootstrapData'] 
   const names = Object.keys(registry);
   const cacheKeys = Object.values(registry);
 
-  const readKeys = [...cacheKeys, ...extraCanadaAlertsCutoverReadKeys(cacheKeys, BOOTSTRAP_CACHE_KEYS.canadaAlerts)];
   try {
-    const cached = await getCachedJsonBatch(readKeys, true);
+    const cached = await getCachedJsonBatch(cacheKeys, true);
     const data: Record<string, string> = {};
     const missing: string[] = [];
 
     for (let i = 0; i < names.length; i += 1) {
       const keyName = names[i]!;
       const cacheKey = cacheKeys[i]!;
-      const raw = keyName === 'canadaAlerts' && !cached.has(cacheKey)
-        ? canadaAlertsCutoverFallbackValue(cached)
-        : cached.get(cacheKey);
+      const raw = cached.get(cacheKey);
       // Same gate as api/bootstrap.js: a malformed IMF dataset is `missing`,
       // malformed country rows are dropped. Non-IMF keys pass through.
       const value = raw === undefined ? undefined : validateImfDataset(keyName, raw);

@@ -22,7 +22,6 @@ import { redisPipeline, applyRedisKeyPrefix, getRedisCredentials, readExistsFlag
 import { isAppOwnedRedisKey } from './_redis-key-ownership.js';
 import { CII_RISK_SCORE_CACHE_KEYS } from './_cii-risk-cache-keys.js';
 import { BOOTSTRAP_CACHE_KEYS } from './_bootstrap-tier-keys.js';
-import { CANADA_ALERTS_CUTOVER_FALLBACK_KEYS } from './_canada-alerts-cutover.js';
 import {
   projectChinaDecisionGroupDiagnostics,
 } from './_china-decision-health.js';
@@ -260,8 +259,6 @@ const BOOTSTRAP_KEYS = {
   ucdpEvents:        'conflict:ucdp-events:v1',
   ucdpEventsBootstrap: 'conflict:ucdp-events-bootstrap:v1',
   weatherAlerts:     'weather:alerts:v1',
-  canadaRoads:       'infra:ontario-511:v1',
-  canadaAlerts:      'alerts:canada:v1',
   spending:          'economic:spending:v1',
   techEvents:        'research:tech-events-bootstrap:v1',
   gdeltIntel:        'intelligence:gdelt-intel:v1',
@@ -334,10 +331,6 @@ const BOOTSTRAP_KEYS = {
   trafficAnomalies:    'cf:radar:traffic-anomalies:v1',
 };
 
-// Temporary #6659 cutover fallback. Public bootstrap serves the Alberta
-// sibling first, then the abandoned legacy key, only while the Canada
-// aggregate is cleanly absent. Include both fallback keys in the same health
-// sweep so the canadaAlerts probe grades the data clients actually receive.
 const STANDALONE_KEYS = {
   worldOverview: BOOTSTRAP_CACHE_KEYS.worldOverview,
   federalRegister: BOOTSTRAP_CACHE_KEYS.federalRegister,
@@ -406,9 +399,6 @@ const STANDALONE_KEYS = {
   // panel and map layer through the on-demand bootstrap URL.
   crossBorderArrivals: BOOTSTRAP_CACHE_KEYS.crossBorderArrivals,
   gridDisruptionClock: BOOTSTRAP_CACHE_KEYS.gridDisruptionClock,
-  canadaAlertsAbSource: 'alerts:canada:alberta-aea:v1',
-  canadaAlertsBcSource: 'alerts:canada:bc-evacuation:v1',
-  canadaAlertsSkSource: 'alerts:canada:saskalert:v1',
   humanitarianSummary: 'conflict:humanitarian:v1',
   // #4920 completeness measurement (daily GH Actions publishers) — ops
   // keys: health-monitored but NOT bootstrap-hydrated into page loads.
@@ -743,22 +733,6 @@ const STANDALONE_KEYS = {
   intelHistoryIngestConflictAcled:    'intel-history:ingest-health:conflict:acled-intel:v1',
   intelHistoryIngestMilitaryCrossStrait: 'intel-history:ingest-health:military:cross-strait-activity:v1',
   intelHistoryIngestEnergyIntelligence:  'intel-history:ingest-health:energy:intelligence:v1',
-  // VIA Rail Tracker unofficial live JSON (#6615). No dashboard consumer.
-  viarailLive:           'transit:viarail:live',
-  // #7012 TPS Open Data — retrospective MCI + annual Calls Attended. Not live
-  // CAD, not bootstrap. Seeded by seed-bundle-canada at a 6h member interval
-  // since #7036: "on-demand" had no invoker, so the 24h canonical TTL emptied
-  // both keys a day after each hand run while seed-meta still read `ok`.
-  tpsMci: 'safety:toronto:tps-mci:v1',
-  tpsCallsAttended: 'safety:toronto:tps-calls-attended:v1',
-  // Seeded and health-monitored; no transit panel yet (#6623).
-  ttcAlerts: 'transit:ttc:alerts:v1',
-  // Official Toronto Fire Services live CAD (#6682). Own key; not folded into
-  // canadaAlerts / canadaRoads. No map panel yet.
-  torontoTfs: 'safety:toronto-tfs:v1',
-  // Official TPS public-safety calls for service (#6682). Own key; not folded
-  // into canadaAlerts / canadaRoads. No map panel yet.
-  torontoTps: 'safety:toronto-tps:v1',
 };
 
 const FIVE_FACTOR_SCORECARD_READ_MODEL_KEY = 'scorecard:five-factor:v1:read-model';
@@ -1269,78 +1243,6 @@ const SEED_META = {
       fromKey: null,
       issue: 7005,
       activationKey: 'seed-activated:weather:imd-cyclone-marine:v2',
-    },
-  },
-  canadaRoads:      {
-    key: 'seed-meta:infra:ontario-511',
-    maxStaleMin: 45, // seed-provincial-511 cron */15; 45 = 3× interval
-    cutover: {
-      mode: 'expiring-ack',
-      fromKey: null,
-      issue: 6608,
-      status: 'EMPTY',
-    },
-  },
-  canadaAlerts:     {
-    key: 'seed-meta:alerts:canada-union',
-    maxStaleMin: 45, // union rebuilds on the */15 Alberta tick; 45 = 3× interval
-    cutover: {
-      mode: 'expiring-ack',
-      fromKey: 'seed-meta:alerts:alberta-aea',
-      issue: 6659,
-      status: 'EMPTY',
-    },
-  },
-  canadaAlertsAbSource: {
-    key: 'seed-meta:alerts:alberta-aea',
-    maxStaleMin: 45, // seed-alberta-emergency-alert cron */15; 45 = 3× interval
-    cutover: { mode: 'expiring-ack', fromKey: null, issue: 6659, status: 'EMPTY' },
-  },
-  // Event modification dates do not expire BC orders; fetchedAt ages active-list verification.
-  canadaAlertsBcSource: {
-    key: 'seed-meta:alerts:bc-emergency-info',
-    maxStaleMin: 45,
-    cutover: { mode: 'expiring-ack', fromKey: null, issue: 6659, status: 'EMPTY' },
-  },
-  canadaAlertsSkSource: {
-    key: 'seed-meta:alerts:saskalert',
-    maxStaleMin: 45,
-    cutover: { mode: 'expiring-ack', fromKey: null, issue: 6659, status: 'STALE_SEED' },
-  },
-  // seed-meta is `seed-meta:${domain}:${resource}` from runSeed('transit', 'ttc-alerts'),
-  // so the key takes a HYPHEN — it is NOT the canonical transit:ttc:alerts:v1 with
-  // :v1 stripped. The colon form probed a key the seeder never writes, which reads
-  // absent forever no matter how healthy the seeder is.
-  ttcAlerts:        { key: 'seed-meta:transit:ttc-alerts',         maxStaleMin: 30, cutover: { mode: 'expiring-ack', fromKey: null, issue: 6623, status: 'EMPTY' } }, // 5min bundle member; 30 = 6× interval. Empty until first Railway tick is an expiring acknowledgement, not a crit.
-  // #7012/#7036 TPS Open Data, now seed-bundle-canada members at a 6h interval;
-  // 1080 = 3× interval (the 3× member-interval sizing rule). The old
-  // 14d was sized for a manual writer and would have hidden a stopped bundle
-  // for two weeks — the opposite of what a scheduled publisher needs. Content
-  // age stays governed separately by the adapter's maxContentAgeMin, so this
-  // bound is about the seeder running, not about upstream refreshing. GTA
-  // Update is intentionally absent: its writer is disabled pending the rights gate.
-  tpsMci:           { key: 'seed-meta:safety:tps-mci',             maxStaleMin: 1080, cutover: { mode: 'expiring-ack', fromKey: null, issue: 7035, status: 'EMPTY' } },
-  tpsCallsAttended: { key: 'seed-meta:safety:tps-calls-attended',  maxStaleMin: 1080, cutover: { mode: 'expiring-ack', fromKey: null, issue: 7036, status: 'EMPTY' } },
-  torontoTfs: {
-    key: 'seed-meta:safety:toronto-tfs',
-    maxStaleMin: 15, // TFS live CAD refreshes every ~5min; 15 = 3× interval
-    activationKey: 'seed-activated:safety:toronto-tfs',
-    cutover: {
-      mode: 'activation-marker',
-      fromKey: null,
-      issue: 7037,
-      activationKey: 'seed-activated:safety:toronto-tfs',
-    },
-  },
-  torontoTps: {
-    key: 'seed-meta:safety:toronto-tps',
-    maxStaleMin: 90,
-    activationKey: 'seed-activated:safety:toronto-tps',
-    cutover: {
-      mode: 'activation-marker',
-      fromKey: null,
-      issue: 7038,
-      activationKey: 'seed-activated:safety:toronto-tps',
     },
   },
   spending:         { key: 'seed-meta:economic:spending',          maxStaleMin: 120 },
@@ -2532,20 +2434,6 @@ const SEED_META = {
   intelHistoryIngestConflictAcled:       { key: 'seed-meta:intel-history:conflict:acled-intel',            maxStaleMin: 38 },  // mirrors acledIntel
   intelHistoryIngestMilitaryCrossStrait: { key: 'seed-meta:intel-history:military:cross-strait-activity',  maxStaleMin: 720 }, // mirrors crossStraitActivity
   intelHistoryIngestEnergyIntelligence:  { key: 'seed-meta:intel-history:energy:intelligence',             maxStaleMin: 720 }, // mirrors energyIntelligence
-  // Unofficial tsimobile.viarail.ca JSON. The source needs no credentials, so
-  // fetch/shape failures write sourceState stale and surface as SEED_ERROR when
-  // no last-good value exists. 15min cron; 45 = 3x cadence. EMPTY_DATA_OK makes
-  // a pre-first-publish absence STALE_SEED (warn), not EMPTY (crit).
-  viarailLive: {
-    key: 'seed-meta:transit:viarail-live',
-    maxStaleMin: 45,
-    cutover: {
-      mode: 'expiring-ack',
-      fromKey: null,
-      issue: 6615,
-      status: 'STALE_SEED',
-    },
-  },
 };
 
 // consumer-prices-core publishes coverage for every currently enabled market.
@@ -2741,11 +2629,6 @@ const ON_DEMAND_KEYS = new Set([
   'worldCpiImf',
   'worldCpiEurostat',
   'worldCpiAbs',
-  // Scheduled Toronto CAD producer deployment bridges. Each seeder writes a
-  // permanent marker after its first successful canonical publish; health is
-  // strict from that point onward.
-  'torontoTfs',
-  'torontoTps',
   // Scheduled country-index projection. The marker is written only after the
   // projection and its seed metadata publish successfully.
   'predictionCountryMarkets',
@@ -2834,10 +2717,6 @@ const ON_DEMAND_KEYS = new Set([
   'intelHistoryIngestConflictAcled',
   'intelHistoryIngestMilitaryCrossStrait',
   'intelHistoryIngestEnergyIntelligence',
-  // #7012 TPS Open Data is on-demand. Absence before the first explicit fetch
-  // is pending, not CRIT. GTA Update is not registered: writer disabled.
-  'tpsMci',
-  'tpsCallsAttended',
   'forecastProbabilityTrail',
   'forecastArchive',
 ]);
@@ -2984,8 +2863,6 @@ const ACTIVATION_MARKERS = {
   foodPricesCsblv: SEED_META.foodPricesCsblv.activationKey,
   foodPricesMakstat: SEED_META.foodPricesMakstat.activationKey,
 
-  torontoTfs: SEED_META.torontoTfs.activationKey,
-  torontoTps: SEED_META.torontoTps.activationKey,
   predictionCountryMarkets: SEED_META.predictionCountryMarkets.activationKey,
   cveReference: SEED_META.cveReference.activationKey,
   // Written by scripts/seed-gdelt-bulk-materializer.mjs after the per-country
@@ -3314,7 +3191,7 @@ function applyStaleContentGrace(checks, graceEvidenceByName, deadlines, now) {
 }
 
 const EMPTY_DATA_OK_KEYS = new Set([
-  'notamClosures', 'faaDelays', 'gpsjam', 'positiveGeoEvents', 'weatherAlerts', 'imdCycloneMarine', 'canadaRoads', 'canadaAlerts', 'canadaAlertsAbSource', 'canadaAlertsBcSource', 'canadaAlertsSkSource',
+  'notamClosures', 'faaDelays', 'gpsjam', 'positiveGeoEvents', 'weatherAlerts', 'imdCycloneMarine',
   'earningsCalendar', 'econCalendar', 'cotPositioning',
   'usniFleet', // usniFleetStale covers the fallback; relay outages → WARN not CRIT
   'newsThreatSummary', // a quiet classify cycle writes `byCountry: {}` (0 records); MISSING_DATA_IS_FAILURE_KEYS makes a payload missing beside fresh seed-meta critical (expiry after the 2h TTL reads STALE_SEED, since seed-meta is stale by then)
@@ -3324,7 +3201,6 @@ const EMPTY_DATA_OK_KEYS = new Set([
   'forecastFunnel', // #5233 funnel guardrail is a new afterPublish side-write; before the first seed-forecasts run ships it the key is absent — tolerate as STALE_SEED (warn), not EMPTY (crit). Its producer never writes status:'error': a collapsed funnel is informational (#8990), so only freshness can degrade this check.
   'forecastCalibrationMap', // #7070 map; absent until the daily resolver first writes it, and seed-forecasts publishes raw while it is absent. A dead resolver still alarms through forecastResolutions/forecastScorecard.
   'marketAlertLedger', 'marketAlertScorecard', // #8867: an empty ledger means no market alert has fired yet, and the scorecard then carries four zero rows; a dead seeder still alarms through the 30-minute seed-meta gate.
-  'viarailLive', // unofficial optional VIA Rail live JSON (#6615); unconfigured / 404 is STALE_SEED then NOT_CONFIGURED, never EMPTY/crit
   // Venues closed or not yet reporting: the relay advances seed-meta only when
   // BestTime answers every venue cleanly with no usable live reading, for up to 24h
   // after the last live one. Provider errors, a dead loop, or a longer silence
@@ -3360,19 +3236,6 @@ const MISSING_DATA_IS_FAILURE_KEYS = new Set([
   'forecastsBootstrap',
   'positiveGeoEvents',
   'crossStraitActivityBootstrap',
-  // The Canada road seeders publish an explicit {records: []} envelope on every
-  // successful tick (zeroIsValid -> contractState OK_ZERO -> canonical written),
-  // so they never refresh metadata alone. Without this, an expired or evicted
-  // canonical key alongside a still-refreshing seed-meta classified OK: the map
-  // layer goes blank and nothing pages. Same reasoning as `outages`.
-  'canadaRoads',
-  // Same contract, and the highest-stakes member of it: the provincial union
-  // writes {alerts: []} when all configured sources are quiet. Reading
-  // OK while an EMERGENCY ALERT payload has vanished is the worst failure in this set.
-  'canadaAlerts',
-  'canadaAlertsAbSource',
-  'canadaAlertsBcSource',
-  'canadaAlertsSkSource',
   // The relay classify loop writes the summary on every cycle that reached a
   // digest (`byCountry: {}` when quiet) and advances seed-meta only after that
   // write lands, so fresh metadata beside a missing payload is an expiry or a
@@ -3396,11 +3259,6 @@ const ZERO_RECORD_DATA_OK_KEYS = new Set([
   'strikePressure',
   // A current List query can validly return no Posts. The relay still writes
   // the canonical snapshot, so a missing xFeed key remains a hard failure.
-  // Both Toronto CAD sources publish an explicit {records:[]} envelope on a
-  // quiet tick. Keep zero valid without softening a missing payload after each
-  // activation marker exists.
-  'torontoTfs',
-  'torontoTps',
   // The relay publishes the dark-ship envelope with zeroOk — zero dark ships
   // is a legitimate peaceful state, not a failed publish. A MISSING key still
   // reads EMPTY (absence is not peaceful).
@@ -3446,10 +3304,6 @@ const ZERO_RECORD_DATA_OK_KEYS = new Set([
   // A completed surge calculation can legitimately contain no surge events;
   // the canonical snapshot must still exist and remain fresh.
   'militarySurges',
-  // TTC GTFS-RT service alerts: a quiet window can validly contain zero
-  // disruptions. The seeder always publishes {alerts:[]}, so a missing
-  // canonical key is still EMPTY (crit).
-  'ttcAlerts',
 ]);
 
 // Cascade groups: if any key in the group has data, all empty siblings are OK.
@@ -3499,31 +3353,6 @@ function dataLenCommand(redisKey) {
 
 function keyHasData(redisKey, len) {
   return LIST_DATA_KEYS.has(redisKey) ? len > 0 : strlenIsData(len);
-}
-
-function applyCanadaAlertsDataPresenceFallback(keyStrens, keyErrors) {
-  const primaryKey = BOOTSTRAP_KEYS.canadaAlerts;
-  if (keyErrors.has(primaryKey) || keyHasData(primaryKey, keyStrens.get(primaryKey) ?? 0)) {
-    return false;
-  }
-  for (const fallbackKey of CANADA_ALERTS_CUTOVER_FALLBACK_KEYS) {
-    if (keyErrors.has(fallbackKey)) continue;
-    const fallbackLength = keyStrens.get(fallbackKey) ?? 0;
-    if (keyHasData(fallbackKey, fallbackLength)) {
-      keyStrens.set(primaryKey, fallbackLength);
-      return true;
-    }
-  }
-  return false;
-}
-
-function applyCanadaAlertsSeedMetaFallback(keyMetaValues, keyMetaErrors, usedFallback) {
-  if (!usedFallback) return;
-  const unionMetaKey = SEED_META.canadaAlerts.key;
-  const albertaMetaKey = SEED_META.canadaAlertsAbSource.key;
-  if (keyMetaErrors.has(albertaMetaKey)) return;
-  const albertaMeta = keyMetaValues.get(albertaMetaKey);
-  if (albertaMeta != null) keyMetaValues.set(unionMetaKey, albertaMeta);
 }
 
 const TRADE_FLOW_DOMINANT_FAILURE_MODES = new Set([
@@ -5691,9 +5520,6 @@ export async function handleHealth(req, ctx, options = {}) {
     ...Object.values(BOOTSTRAP_KEYS),
     ...Object.values(STANDALONE_KEYS),
   ];
-  for (const key of CANADA_ALERTS_CUTOVER_FALLBACK_KEYS) {
-    if (!allDataKeys.includes(key)) allDataKeys.push(key);
-  }
   if (!allDataKeys.includes(CONTRACTS_FINDER_CANONICAL_KEY)) allDataKeys.push(CONTRACTS_FINDER_CANONICAL_KEY);
   const allMetaKeys = Object.values(SEED_META).map(s => s.key);
   const activationEntries = Object.entries(ACTIVATION_MARKERS);
@@ -5791,7 +5617,6 @@ export async function handleHealth(req, ctx, options = {}) {
     if (r?.error) keyErrors.set(allDataKeys[i], r.error);
     keyStrens.set(allDataKeys[i], r?.result ?? 0);
   }
-  const usedCanadaAlertsFallback = applyCanadaAlertsDataPresenceFallback(keyStrens, keyErrors);
   // keyMetaValues: parsed seed-meta objects (GET, small payloads)
   // keyMetaErrors: per-command errors so a single GET failure surfaces as
   // REDIS_PARTIAL instead of silently degrading to STALE_SEED.
@@ -5802,7 +5627,6 @@ export async function handleHealth(req, ctx, options = {}) {
     if (r?.error) keyMetaErrors.set(allMetaKeys[i], r.error);
     keyMetaValues.set(allMetaKeys[i], r?.result ?? null);
   }
-  applyCanadaAlertsSeedMetaFallback(keyMetaValues, keyMetaErrors, usedCanadaAlertsFallback);
   // Stale-content evidence for every registered source, read once off the same
   // seed-meta the classifier will use. The Redis claim that turns this into a
   // published deadline happens AFTER classification (see below), so it can be
@@ -6256,9 +6080,6 @@ export const __testing__ = {
   // at module scope by design — this is the test-only escape hatch.
   BOOTSTRAP_KEYS,
   STANDALONE_KEYS,
-  CANADA_ALERTS_CUTOVER_FALLBACK_KEYS,
-  applyCanadaAlertsDataPresenceFallback,
-  applyCanadaAlertsSeedMetaFallback,
   SEED_META,
   EMPTY_DATA_OK_KEYS,
   MISSING_DATA_IS_FAILURE_KEYS,

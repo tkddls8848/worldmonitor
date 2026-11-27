@@ -122,12 +122,7 @@ Three things worth knowing:
   (which then appears under `data`). On REST, where a bad expression is an HTTP
   400 that serves no data, there is nothing to accompany and no rider.
 
-The tools and endpoints that carry a rider today: `get_imd_cyclone_marine` and
-and `GET /api/safety/v1/get-toronto-safety`. The retired Toronto tools
-(`get_toronto_reported_occurrences`, `get_toronto_calls_attended`) are off
-`tools/list` but stay callable, and keep their rider. The list is derived from the tool
-schemas rather than hand-maintained — a tool that grows a licence field without
-declaring its attribution extraction fails the build.
+The tool schemas determine which responses carry a rider. The build requires an attribution extraction expression for tools that expose a licence field.
 
 ## The twelve examples
 

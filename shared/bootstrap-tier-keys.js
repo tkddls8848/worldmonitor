@@ -89,8 +89,6 @@ export const BOOTSTRAP_CACHE_KEYS = Object.freeze({
   liveVideoResolved: 'live-video:resolved:v1',
   crossBorderArrivals: 'displacement:cross-border:v1',
   idmcIduDisplacement: 'displacement:idmc-idu:v1',
-  canadaRoads: 'infra:ontario-511:v1',
-  canadaAlerts: 'alerts:canada:v1',
   spending: 'economic:spending:v1',
   techEvents: 'research:tech-events-bootstrap:v1',
   gdeltIntel: 'intelligence:gdelt-intel:v1',
@@ -236,13 +234,6 @@ const ON_DEMAND_KEY_NAMES = new Set([
   // string and gets registered as a duplicate key.
   'fxYoy', 'sharedFxRates',
   'marketCorrelationSeries',
-  // Province road feeds and province-owned emergency alerts. The dashboard
-  // map layers that read them were removed; the terminal dashboard (cli/)
-  // still reads canadaRoads and canadaAlerts through the per-key URL, and
-  // the widget agent may request canadaAlerts. Alberta and Manitoba come from
-  // the same Provincial-511 seeder as canadaRoads. None of them rides a tier.
-  'canadaRoads',
-  'canadaAlerts',
   // IMD cyclone/port/coastal/marine products (#7005). On-demand: the weather
   // and natural layers fetch this key only when those layers are on, so it
   // never rides a payload every visitor downloads.
