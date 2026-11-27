@@ -576,17 +576,19 @@ for (const mobile of [false, true]) {
 
 test('English panel picker names financial and regional topics in plain language', async ({ page, countryBrief }, testInfo) => {
   void countryBrief;
+  await page.addInitScript(() => {
+    localStorage.setItem('worldmonitor-first-screen-mode', '"full"');
+    localStorage.setItem('wm-locale-explicit', 'en');
+  });
   await page.goto('/dashboard');
   await page.locator('#unifiedSettingsBtn').click();
   await page.locator('[data-settings-nav="panels"]').click();
   const panels = page.locator('#usPanelToggles');
   await expect(panels).toBeVisible();
-  await expect(panels).toContainText('Bitcoin fund flows');
-  await expect(panels).toContainText('Venture capital insights');
+  await expect(panels).toContainText('Foreign exchange rates');
   await expect(panels).toContainText('Gulf Cooperation Council investments');
-  await expect(panels).not.toContainText(/BTC ETF Tracker|Funding & VC/);
-  await page.getByPlaceholder('Filter panels...').fill('Bitcoin');
-  await expect(panels.getByText('Bitcoin fund flows', { exact: true })).toBeVisible();
+  await page.getByPlaceholder('Filter panels...').fill('Foreign exchange');
+  await expect(panels.getByText('Foreign exchange rates', { exact: true })).toBeVisible();
   const path = testInfo.outputPath('english-panel-labels.png');
   await page.screenshot({ path });
   await testInfo.attach('English panel names', { path, contentType: 'image/png' });

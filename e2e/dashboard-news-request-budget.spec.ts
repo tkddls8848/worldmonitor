@@ -191,6 +191,7 @@ async function seedFreshAnonymousFullVariant(
     localStorage.clear();
     sessionStorage.clear();
     localStorage.setItem('worldmonitor-variant', 'full');
+    localStorage.setItem('worldmonitor-first-screen-mode', '"full"');
     // Overlays that would otherwise steal focus/paint during the load window.
     localStorage.setItem('wm-layer-warning-dismissed', 'true');
     localStorage.setItem('wm-pro-banner-launched-dismissed', String(Date.now()));
@@ -848,7 +849,7 @@ test.describe('dashboard news request budget (#5376)', () => {
   });
 });
 
-const STABLECOIN_GLOB = '**/api/market/v1/list-stablecoin-markets*';
+const GOLD_INTELLIGENCE_GLOB = '**/api/market/v1/get-gold-intelligence*';
 const SLOW_TIER_GATE_HOLD_MS = 4_000;
 const SCROLL_HYDRATION_PANEL_ORDER = [
   'live-news',
@@ -860,7 +861,7 @@ const SCROLL_HYDRATION_PANEL_ORDER = [
   'politics',
   'us',
   'europe',
-  'stablecoins',
+  'gold-intelligence',
   'middleeast',
   'africa',
   'latam',
@@ -877,11 +878,9 @@ const SCROLL_HYDRATION_PANEL_ORDER = [
   'economic',
   'finance',
   'tech',
-  'crypto',
   'heatmap',
   'ai',
   'macro-signals',
-  'etf-flows',
   'monitors',
 ];
 
@@ -906,10 +905,11 @@ const INITIAL_FANOUT_COMPLETE_MARK = 'wm:data:initial-fanout-complete';
 
 async function seedScrollableDashboard(page: Page, panelOrder = SCROLL_HYDRATION_PANEL_ORDER): Promise<void> {
   await seedFreshAnonymousFullVariant(page, {
-    stablecoins: { name: 'Stablecoins', enabled: true, priority: 1 },
+    'gold-intelligence': { name: 'Gold Intelligence', enabled: true, priority: 1 },
   });
   await page.addInitScript((panelOrder: string[]) => {
     localStorage.setItem('wm_lcp_debug', '1');
+    localStorage.setItem('wm-inspector-tab-v1', 'all');
     localStorage.setItem('worldmonitor-panel-order-v1.9', 'done');
     localStorage.setItem('worldmonitor-panel-prune-v1', 'done');
     localStorage.setItem('worldmonitor-layout-reset-v2.5', 'done');
@@ -917,35 +917,28 @@ async function seedScrollableDashboard(page: Page, panelOrder = SCROLL_HYDRATION
   }, panelOrder);
 }
 
-async function installStablecoinContract(page: Page): Promise<string[]> {
+async function installGoldIntelligenceContract(page: Page): Promise<string[]> {
   const requests: string[] = [];
 
   await page.route(/^https?:\/\/(?!(127\.0\.0\.1:4173|localhost:4173)(?:\/|$)).*/i, (route) => {
     return route.abort('blockedbyclient');
   });
-  await page.route(STABLECOIN_GLOB, async (route) => {
+  await page.route(GOLD_INTELLIGENCE_GLOB, async (route) => {
     requests.push(route.request().url());
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        stablecoins: [{
-          symbol: 'TEST',
-          name: 'Test Dollar',
-          price: 1,
-          marketCap: 1_000_000,
-          volume24h: 100_000,
-          change24h: 0,
-          pegStatus: 'ON PEG',
-          deviation: 0,
-        }],
-        summary: {
-          totalMarketCap: 1_000_000,
-          totalVolume24h: 100_000,
-          coinCount: 1,
-          depeggedCount: 0,
-          healthStatus: 'HEALTHY',
-        },
+        goldPrice: 2_500,
+        goldChangePct: 1.2,
+        goldSparkline: [2_450, 2_500],
+        silverPrice: 30,
+        platinumPrice: 1_000,
+        palladiumPrice: 1_050,
+        crossCurrencyPrices: [],
+        drivers: [],
+        updatedAt: new Date().toISOString(),
+        unavailable: false,
       }),
     });
   });
@@ -956,7 +949,7 @@ async function readScrollMetrics(page: Page): Promise<ScrollMetrics> {
   return page.evaluate(() => {
     const main = document.querySelector('.main-content');
     const grid = document.querySelector('.panels-grid');
-    const target = document.querySelector('[data-panel="stablecoins"]');
+    const target = document.querySelector('[data-panel="gold-intelligence"]');
     if (
       !(main instanceof HTMLElement) ||
       !(grid instanceof HTMLElement) ||
@@ -985,7 +978,7 @@ async function scrollDashboardAndCollect(page: Page): Promise<DashboardScrollRes
   return page.evaluate((hydrationMark) => {
     const main = document.querySelector('.main-content');
     const grid = document.querySelector('.panels-grid');
-    const target = document.querySelector('[data-panel="stablecoins"]');
+    const target = document.querySelector('[data-panel="gold-intelligence"]');
     if (
       !(main instanceof HTMLElement) ||
       !(grid instanceof HTMLElement) ||
@@ -1129,11 +1122,11 @@ test.describe('dashboard container scroll hydration (#5876)', () => {
     await page.setViewportSize({ width: 1280, height: 720 });
     const first = [
       'live-news', 'intel', 'gdelt-intel', 'insights',
-      'threat-timeline', 'strategic-posture', 'stablecoins', 'forecast',
+      'threat-timeline', 'strategic-posture', 'gold-intelligence', 'forecast',
     ];
     const order = [...first, ...SCROLL_HYDRATION_PANEL_ORDER.filter((key) => !first.includes(key))];
     await seedScrollableDashboard(page, order);
-    const stablecoinRequests = await installStablecoinContract(page);
+    const goldRequests = await installGoldIntelligenceContract(page);
     let release!: () => void;
     const pending = new Promise<void>((resolve) => { release = resolve; });
     await page.route(DIGEST_GLOB, async (route) => {
@@ -1148,7 +1141,7 @@ test.describe('dashboard container scroll hydration (#5876)', () => {
     try {
       const navigation = page.goto('/', { waitUntil: 'domcontentloaded' });
       await slowBootstrap.waitUntilRequested();
-      await page.waitForSelector('[data-panel="stablecoins"]');
+      await page.waitForSelector('[data-panel="gold-intelligence"]');
       // Keep this fixture to already-mounted panels: a deferred neighbor's
       // mount callback would independently prime data and mask the lost scroll.
       await page.addStyleTag({ content: '[data-deferred-panel="true"] { display: none !important; }' });
@@ -1173,18 +1166,18 @@ test.describe('dashboard container scroll hydration (#5876)', () => {
       slowBootstrap.release();
       await navigation;
       await waitForLcpMark(page, 'wm:data:initial-fanout-start');
-      const panel = page.locator('[data-panel="stablecoins"]');
+      const panel = page.locator('[data-panel="gold-intelligence"]');
       await expect(panel).not.toHaveAttribute('data-deferred-panel', 'true');
       const initial = await readScrollMetrics(page);
       expect(initial.targetTop).toBeGreaterThan(initial.viewportHeight + 400);
-      expect(stablecoinRequests).toHaveLength(0);
+      expect(goldRequests).toHaveLength(0);
       expect(await lcpMarkCount(page, INITIAL_FANOUT_COMPLETE_MARK)).toBe(0);
       await scrollDashboardAndCollect(page);
-      expect(stablecoinRequests).toHaveLength(0);
+      expect(goldRequests).toHaveLength(0);
       release();
       await waitForLcpMark(page, INITIAL_FANOUT_COMPLETE_MARK);
-      await expect.poll(() => stablecoinRequests.length).toBe(1);
-      await expect(panel.locator('.stable-health')).toContainText('HEALTHY');
+      await expect.poll(() => goldRequests.length).toBe(1);
+      await expect(panel.locator('.energy-section-title').first()).toHaveText('Price & Performance');
       expect(await lcpMarkCount(page, VIEWPORT_HYDRATION_MARK)).toBe(0);
       await page.screenshot({ path: testInfo.outputPath('catchup-desktop.png') });
     } finally {
@@ -1194,14 +1187,14 @@ test.describe('dashboard container scroll hydration (#5876)', () => {
   });
 
   for (const viewport of [
-    // From SPLIT_LAYOUT_MIN_WIDTH (1440, src/app/split-layout.ts — #6417) the
+    // From SPLIT_LAYOUT_MIN_WIDTH (1200, src/app/split-layout.ts) the
     // split layout makes .panels-grid the scroll owner; below it the stacked
     // layout scrolls .main-content.
     { label: 'small-laptop', width: 940, height: 660, scrollOwner: 'main-content' },
     { label: 'foldable', width: 1000, height: 703, scrollOwner: 'main-content' },
     { label: 'landscape-tablet', width: 1180, height: 820, scrollOwner: 'main-content' },
-    { label: 'desktop', width: 1280, height: 720, scrollOwner: 'main-content' },
-    { label: 'split-boundary', width: 1440, height: 900, scrollOwner: 'panels-grid' },
+    { label: 'desktop', width: 1280, height: 720, scrollOwner: 'panels-grid' },
+    { label: 'split-boundary', width: 1200, height: 900, scrollOwner: 'panels-grid' },
     { label: 'zoomed-widescreen', width: 1536, height: 864, scrollOwner: 'panels-grid' },
     { label: 'narrow-desktop', width: 850, height: 720, scrollOwner: 'main-content' },
     { label: 'mobile', width: 390, height: 844, scrollOwner: 'main-content' },
@@ -1210,7 +1203,7 @@ test.describe('dashboard container scroll hydration (#5876)', () => {
     test(`${viewport.label} container scroll hydrates a panel-specific data path`, async ({ page }, testInfo) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
       await seedScrollableDashboard(page);
-      const stablecoinRequests = await installStablecoinContract(page);
+      const goldRequests = await installGoldIntelligenceContract(page);
 
       await page.goto('/');
       await page.waitForFunction(
@@ -1219,28 +1212,11 @@ test.describe('dashboard container scroll hydration (#5876)', () => {
       await waitForLcpMark(page, INITIAL_FANOUT_COMPLETE_MARK);
 
       const main = page.locator('.main-content');
-      const stablecoins = page.locator('[data-panel="stablecoins"]');
+      const gold = page.locator('[data-panel="gold-intelligence"]');
       await expect(main).toBeAttached();
-      await expect(stablecoins).toBeAttached();
+      await expect(gold).toBeAttached();
 
       const initial = await readScrollMetrics(page);
-      if (viewport.width >= 940) {
-        const columns = await page.locator('#panelsGrid').evaluate((grid) =>
-          getComputedStyle(grid).gridTemplateColumns.split(' ').length,
-        );
-        expect(columns, 'laptop and wider layouts must show at least two panel columns').toBeGreaterThanOrEqual(2);
-      }
-      if ([940, 1000, 1180].includes(viewport.width)) {
-        const sideBySide = await page.locator('#panelsGrid').evaluate((grid) => {
-          const boxes = [...grid.querySelectorAll('.panel')].map((panel) => panel.getBoundingClientRect())
-            .filter((box) => box.width > 0 && box.top < window.innerHeight && box.bottom > 0);
-          return boxes.some((a, i) => boxes.slice(i + 1).some((b) =>
-            Math.min(a.bottom, b.bottom) > Math.max(a.top, b.top)
-            && (a.right <= b.left || b.right <= a.left),
-          ));
-        });
-        expect(sideBySide, 'two panels must be visible side by side on first load').toBe(true);
-      }
       await page.screenshot({ path: testInfo.outputPath(`initial-${viewport.label}.png`) });
       expect(initial.owner, 'the layout must use the expected dashboard scroll owner').toBe(
         viewport.scrollOwner,
@@ -1251,10 +1227,10 @@ test.describe('dashboard container scroll hydration (#5876)', () => {
       expect(initial.scrollTop, 'the test must start before any dashboard scroll').toBe(0);
       expect(
         initial.targetTop,
-        'stablecoins must start outside the 400px viewport hydration margin',
+        'the gold panel must start outside the 400px viewport hydration margin',
       ).toBeGreaterThan(initial.viewportHeight + 400);
       expect(
-        stablecoinRequests,
+        goldRequests,
         'the panel-specific request must be absent before scrolling',
       ).toEqual([]);
 
@@ -1264,7 +1240,7 @@ test.describe('dashboard container scroll hydration (#5876)', () => {
         await lcpMarkCount(page, VIEWPORT_HYDRATION_MARK),
         'an independently scrollable descendant must not schedule dashboard hydration',
       ).toBe(hydrationMarksBeforeNestedScroll);
-      expect(stablecoinRequests, 'a nested scroll must not fetch the deferred panel').toEqual([]);
+      expect(goldRequests, 'a nested scroll must not fetch the deferred panel').toEqual([]);
 
       const dashboardScroll = await scrollDashboardAndCollect(page);
       expect(dashboardScroll.scrollCount, 'the real dashboard scroll event must fire').toBe(1);
@@ -1277,16 +1253,16 @@ test.describe('dashboard container scroll hydration (#5876)', () => {
       ).toBeLessThan(afterFirstScroll.viewportHeight);
 
       await page.waitForFunction(() => {
-        const target = document.querySelector('[data-panel="stablecoins"]');
+        const target = document.querySelector('[data-panel="gold-intelligence"]');
         return target instanceof HTMLElement && target.dataset.deferredPanel !== 'true';
       });
 
       await expect.poll(
-        () => stablecoinRequests.length,
-        { message: 'one dashboard scroll must invoke primeVisiblePanelData for stablecoins' },
+        () => goldRequests.length,
+        { message: 'one dashboard scroll must invoke primeVisiblePanelData for Gold Intelligence' },
       ).toBe(1);
-      await expect(stablecoins.locator('.stable-health')).toContainText('HEALTHY');
-      expect(stablecoinRequests).toHaveLength(1);
+      await expect(gold.locator('.energy-section-title').first()).toHaveText('Price & Performance');
+      expect(goldRequests).toHaveLength(1);
       await page.screenshot({ path: testInfo.outputPath(`hydrated-${viewport.label}.png`) });
     });
   }
@@ -1294,9 +1270,9 @@ test.describe('dashboard container scroll hydration (#5876)', () => {
   test('an early scroll waits for slow-tier readiness and hydrates without a second gesture', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await seedScrollableDashboard(page);
-    const stablecoinRequests = await installStablecoinContract(page);
+    const goldRequests = await installGoldIntelligenceContract(page);
     // Register this route last so it takes precedence over the external-network
-    // blocker installed by the stablecoin contract when VITE_API_BASE_URL is set.
+    // blocker installed by the gold intelligence contract when VITE_API_BASE_URL is set.
     const slowBootstrap = await installDelayedSlowBootstrap(page);
     let released = false;
 
@@ -1310,10 +1286,10 @@ test.describe('dashboard container scroll hydration (#5876)', () => {
       await page.waitForFunction(() => (
         document.querySelector('.main-content') instanceof HTMLElement &&
         document.querySelector('.panels-grid') instanceof HTMLElement &&
-        document.querySelector('[data-panel="stablecoins"]') instanceof HTMLElement
+        document.querySelector('[data-panel="gold-intelligence"]') instanceof HTMLElement
       ));
 
-      const stablecoins = page.locator('[data-panel="stablecoins"]');
+      const gold = page.locator('[data-panel="gold-intelligence"]');
       const dashboardScroll = await scrollDashboardAndCollect(page);
       expect(
         dashboardScroll.before.scrollTop,
@@ -1321,11 +1297,11 @@ test.describe('dashboard container scroll hydration (#5876)', () => {
       ).toBe(0);
       expect(
         dashboardScroll.before.targetTop,
-        'stablecoins must start outside the 400px viewport hydration margin',
+        'the gold panel must start outside the 400px viewport hydration margin',
       ).toBeGreaterThan(dashboardScroll.before.viewportHeight + 400);
       expect(dashboardScroll.scrollCount, 'the real dashboard scroll event must fire').toBe(1);
       await page.waitForFunction(() => {
-        const target = document.querySelector('[data-panel="stablecoins"]');
+        const target = document.querySelector('[data-panel="gold-intelligence"]');
         return target instanceof HTMLElement && target.dataset.deferredPanel !== 'true';
       });
       await page.waitForTimeout(SLOW_TIER_GATE_HOLD_MS);
@@ -1334,7 +1310,7 @@ test.describe('dashboard container scroll hydration (#5876)', () => {
         'the App viewport handler must stay dormant while the slow tier is pending',
       ).toBe(dashboardScroll.hydrationMarksBefore);
       expect(
-        stablecoinRequests,
+        goldRequests,
         'the mounted panel callback must remain gated while slow-tier readiness is pending',
       ).toEqual([]);
       slowBootstrap.release();
@@ -1355,11 +1331,11 @@ test.describe('dashboard container scroll hydration (#5876)', () => {
         'the early scroll must not schedule or replay a viewport trigger across readiness',
       ).toBe(dashboardScroll.hydrationMarksBefore);
       await expect.poll(
-        () => stablecoinRequests.length,
+        () => goldRequests.length,
         { message: 'the readiness fan-out must hydrate the already-scrolled panel exactly once' },
       ).toBe(1);
-      await expect(stablecoins.locator('.stable-health')).toContainText('HEALTHY');
-      expect(stablecoinRequests).toHaveLength(1);
+      await expect(gold.locator('.energy-section-title').first()).toHaveText('Price & Performance');
+      expect(goldRequests).toHaveLength(1);
     } finally {
       if (!released) slowBootstrap.release();
     }

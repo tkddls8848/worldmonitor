@@ -290,7 +290,7 @@ describe('i18n — widgets section completeness', () => {
   });
 
   it('prompt examples are defined and non-empty', () => {
-    const exampleKeys = ['oilGold', 'cryptoMovers', 'flightDelays', 'conflictHotspots'];
+    const exampleKeys = ['oilGold', 'flightDelays', 'conflictHotspots'];
     for (const key of exampleKeys) {
       assert.ok(
         typeof en.widgets.examples[key] === 'string' && en.widgets.examples[key].length > 0,
@@ -1026,8 +1026,8 @@ describe('PRO widget — i18n keys and CSS', () => {
     });
   }
 
-  it('widgets.proExamples has all 4 example keys', () => {
-    const exKeys = ['interactiveChart', 'sortableTable', 'animatedCounters', 'tabbedComparison'];
+  it('widgets.proExamples has all interactive example keys', () => {
+    const exKeys = ['interactiveChart', 'animatedCounters', 'tabbedComparison'];
     for (const key of exKeys) {
       assert.ok(
         en.widgets?.proExamples?.[key] && en.widgets.proExamples[key].length > 0,

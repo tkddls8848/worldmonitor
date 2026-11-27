@@ -3,12 +3,12 @@
  *
  * A feed-category key is not automatically free to use as a panel key. Several
  * categories share a name with a DATA panel registered earlier in the same pass
- * — `markets` (MarketPanel), `commodities` (CommoditiesPanel), `crypto`
- * (CryptoPanel), `economic` (EconomicPanel), `supply-chain` (SupplyChainPanel).
+ * — `markets` (MarketPanel), `commodities` (CommoditiesPanel), `economic`
+ * (EconomicPanel), `supply-chain` (SupplyChainPanel).
  * The registration dedup guard makes the second claim on a key a silent no-op,
  * so a NewsPanel asking for the colliding key is simply never created. It has to
  * take `${key}-news` instead — which is exactly what the `markets-news` /
- * `crypto-news` / `economic-news` / `commodities-news` entries in the panel
+ * `economic-news` / `commodities-news` entries in the panel
  * catalog are for.
  *
  * That collision used to be an enumerated set in panel-layout

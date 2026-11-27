@@ -39,13 +39,10 @@ const DIRECT_PACK = {
   GlobeNewswire: { category: 'finance', financeCategory: 'markets', url: 'https://www.globenewswire.com/RssFeed/subjectcode/22/feedTitle/GlobeNewswire' },
   'Business Wire': { category: 'finance', financeCategory: 'markets', url: 'https://feed.businesswire.com/rss/home/?rss=G1QFDERJXkJeGVtRWA==' },
   'U.S. Trade Representative': { category: 'gov', url: 'https://ustr.gov/rss.xml' },
-  Chainwire: { category: 'finance', financeCategory: 'crypto', url: 'https://chainwire.org/feed/' },
   'Interfax RU': { category: 'europe', url: 'https://www.interfax.ru/rss.asp', lang: 'ru' },
   'Interfax EN': { category: 'europe', url: 'https://news.google.com/rss/search?q=site%3Ainterfax.com%20when%3A7d&hl=en-US&gl=US&ceid=US:en' },
   'PR Newswire': { category: 'finance', financeCategory: 'markets', url: 'https://news.google.com/rss/search?q=site%3Aprnewswire.com%20when%3A1d&hl=en-US&gl=US&ceid=US:en' },
-  'Coinbase Blog': { category: 'finance', financeCategory: 'crypto', url: 'https://news.google.com/rss/search?q=site%3Acoinbase.com%2Fblog%20when%3A7d&hl=en-US&gl=US&ceid=US:en' },
-  'Binance Announcements': { category: 'finance', financeCategory: 'crypto', url: 'https://news.google.com/rss/search?q=site%3Abinance.com%2Fen%2Fsupport%2Fannouncement%20when%3A3d&hl=en-US&gl=US&ceid=US:en' },
-  Jin10: { category: 'finance', financeCategory: 'crypto', url: 'https://news.google.com/rss/search?q=site%3Ajin10.com%20when%3A1d&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', lang: 'zh' },
+  Jin10: { category: 'finance', financeCategory: 'markets', url: 'https://news.google.com/rss/search?q=site%3Ajin10.com%20when%3A1d&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', lang: 'zh' },
 } as const;
 
 const DIRECT_FETCH_HOSTS = [
@@ -60,7 +57,6 @@ const DIRECT_FETCH_HOSTS = [
   'www.globenewswire.com',
   'feed.businesswire.com',
   'ustr.gov',
-  'chainwire.org',
   'www.interfax.ru',
 ] as const;
 
@@ -68,7 +64,7 @@ const LICENSED_DIRECT_HOSTS = DIRECT_FETCH_HOSTS.filter(
   (host) => host !== 'feeds.businessinsider.com' && host !== 'feeds.cms.handelsblatt.com',
 );
 
-const SITE_SCOPED_PUBLISHER_HOSTS = ['interfax.com', 'prnewswire.com', 'coinbase.com', 'binance.com', 'jin10.com'] as const;
+const SITE_SCOPED_PUBLISHER_HOSTS = ['interfax.com', 'prnewswire.com', 'jin10.com'] as const;
 
 let client: ClientFeedsModule;
 let server: ServerFeedsModule;
@@ -149,7 +145,7 @@ describe('direct licensed news feed pack', () => {
       assert.ok(client.SOURCE_TYPES[name], `${name} missing reviewed source type`);
       assert.ok(client.SOURCE_PROPAGANDA_RISK[name], `${name} missing reviewed risk`);
     }
-    for (const name of ['GlobeNewswire', 'Business Wire', 'PR Newswire', 'Chainwire']) {
+    for (const name of ['GlobeNewswire', 'Business Wire', 'PR Newswire']) {
       assert.equal(client.SOURCE_TYPES[name], 'other', `${name} must not claim independent wire status`);
     }
     assert.equal(publisherFamilyFor('Interfax EN'), publisherFamilyFor('Interfax RU'));

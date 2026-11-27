@@ -286,7 +286,7 @@ describe('App bootstrap slow-tier lifecycle', () => {
 
 describe('Panel hydration consumers', () => {
   const panels = [
-    { name: 'MacroSignalsPanel', path: 'src/components/MacroSignalsPanel.ts', key: 'macroSignals' },
+    { name: 'MacroSignalsPanel', path: 'src/components/MacroSignalsPanel.ts', key: 'macroSignalsV2' },
     { name: 'ServiceStatusPanel (via infrastructure)', path: 'src/services/infrastructure/index.ts', key: 'serviceStatuses' },
     { name: 'Sectors (via data-loader)', path: 'src/app/data-loader.ts', key: 'sectors' },
   ];

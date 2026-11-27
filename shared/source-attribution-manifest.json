@@ -1768,15 +1768,10 @@
       "host": "binance.com",
       "provider": "Binance",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Licensed publisher content; redistribution governed by the World Monitor agreement",
       "attribution": "Credit Binance and link to the original item.",
-      "status": "reviewed",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "bitbucket.status.atlassian.com",
@@ -2039,15 +2034,10 @@
       "host": "chainwire.org",
       "provider": "Chainwire",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Licensed publisher content; redistribution governed by the World Monitor agreement",
       "attribution": "Credit Chainwire and link to the original item.",
-      "status": "reviewed",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "challenges.cloudflare.com",
@@ -2246,15 +2236,10 @@
       "host": "coinbase.com",
       "provider": "Coinbase",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Licensed publisher content; redistribution governed by the World Monitor agreement",
       "attribution": "Credit Coinbase and link to the original item.",
-      "status": "reviewed",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "cointelegraph.com",

@@ -150,37 +150,6 @@ curl -s https://worldmonitor.app/mcp \
 
 </CodeGroup>
 
-### `get_research_signals`
-
-技术和研究事件信号：来自精选研究源的新兴技术事件引导数据。
-
-**参数（工具特定）：**
-
-| 名称 | 类型 | 描述 |
-|------|------|-------------|
-| `type` | string: conference / earnings / ipo / other | 筛选为一种技术事件类型。 |
-| `source` | string | 筛选为一个来源源（例如 "techmeme"、"dev.events"、"curated"）。 |
-| `limit` | number | 将事件列表限制为最多这么多项（默认 30，传 0 表示不限）。 |
-
-- **API 端点：** `GET /api/research/v1/list-tech-events`
-- **类型：** 缓存读取 — 来自 Redis 引导缓存的亚秒级响应。
-- **新鲜度预算：** 标记 `stale: true` 前最多 **8 小时**（由 seeder cron 的预期间隔设定）。
-
-<CodeGroup>
-
-```bash curl
-curl -s https://worldmonitor.app/mcp \
-  -H "X-WorldMonitor-Key: $WM_KEY" \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "jsonrpc":"2.0","id":1,
-    "method":"tools/call",
-    "params":{"name":"get_research_signals","arguments":{}}
-  }'
-```
-
-</CodeGroup>
-
 ### `get_health_signals`
 
 活跃疾病暴发（WHO/ECDC 等）。用于健康风险筛选。

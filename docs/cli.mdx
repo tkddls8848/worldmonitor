@@ -66,7 +66,7 @@ Ergonomic shortcuts over the highest-traffic tools. Positional arguments (like a
 | `world` | `get_world_brief` | Live global situation brief |
 | `country <ISO>` | `get_country_brief` | AI strategic brief (ISO 3166-1 alpha-2) |
 | `risk <ISO>` | `get_country_risk` | Country risk and instability scores |
-| `markets` | `get_market_data` | Equities, commodities, crypto, FX |
+| `markets` | `get_market_data` | Equities, commodities and FX |
 | `conflicts` | `get_conflict_events` | `--country`, `--min_fatalities`, `--limit` |
 | `cyber` | `get_cyber_threats` | `--min_severity`, `--threat_type`, `--country` |
 | `news` | `get_news_intelligence` | `--topic`, `--country`, `--alerts_only` |
@@ -78,7 +78,7 @@ Ergonomic shortcuts over the highest-traffic tools. Positional arguments (like a
 ```sh
 worldmonitor country IR                              # AI strategic brief
 worldmonitor conflicts --country IR --limit 5        # recent conflict events
-worldmonitor markets --asset_class equity            # crypto quotes
+worldmonitor markets --asset_class equity            # equity quotes
 ```
 
 ## Any tool, any argument

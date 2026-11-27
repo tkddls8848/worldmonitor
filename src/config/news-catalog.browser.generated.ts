@@ -1007,18 +1007,6 @@ export const BROWSER_NEWS_CATALOG: BrowserCatalog = {
           "url": "https://news.google.com/rss/search?q=site%3Aprnewswire.com%20when%3A1d&hl=en-US&gl=US&ceid=US:en"
         },
         {
-          "name": "Chainwire",
-          "url": "https://chainwire.org/feed/"
-        },
-        {
-          "name": "Coinbase Blog",
-          "url": "https://news.google.com/rss/search?q=site%3Acoinbase.com%2Fblog%20when%3A7d&hl=en-US&gl=US&ceid=US:en"
-        },
-        {
-          "name": "Binance Announcements",
-          "url": "https://news.google.com/rss/search?q=site%3Abinance.com%2Fen%2Fsupport%2Fannouncement%20when%3A3d&hl=en-US&gl=US&ceid=US:en"
-        },
-        {
           "name": "Jin10",
           "url": "https://news.google.com/rss/search?q=site%3Ajin10.com%20when%3A1d&hl=zh-CN&gl=CN&ceid=CN:zh-Hans",
           "lang": "zh",
@@ -1784,6 +1772,12 @@ export const BROWSER_NEWS_CATALOG: BrowserCatalog = {
         {
           "name": "PR Newswire",
           "url": "https://news.google.com/rss/search?q=site%3Aprnewswire.com%20when%3A1d&hl=en-US&gl=US&ceid=US:en"
+        },
+        {
+          "name": "Jin10",
+          "url": "https://news.google.com/rss/search?q=site%3Ajin10.com%20when%3A1d&hl=zh-CN&gl=CN&ceid=CN:zh-Hans",
+          "lang": "zh",
+          "digestLang": "zh"
         }
       ],
       "forex": [

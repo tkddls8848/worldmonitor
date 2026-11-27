@@ -30,7 +30,7 @@ export const BOOTSTRAP_CACHE_KEYS = Object.freeze({
   marketQuotes: 'market:stocks-bootstrap:v1',
   commodityQuotes: 'market:commodities-bootstrap:v1',
   sectors: 'market:sectors:v2',
-  macroSignals: 'economic:macro-signals:v2',
+  macroSignalsV2: 'economic:macro-signals:v2',
   bisPolicy: 'economic:bis:policy:v1',
   bisExchange: 'economic:bis:eer:v1',
   bisCredit: 'economic:bis:credit:v1',
@@ -168,7 +168,7 @@ const SLOW_KEY_NAMES = new Set([
 ]);
 
 const FAST_KEY_NAMES = new Set([
-  'earthquakes', 'outages', 'serviceStatuses', 'ddosAttacks', 'trafficAnomalies', 'macroSignals', 'chokepoints',
+  'earthquakes', 'outages', 'serviceStatuses', 'ddosAttacks', 'trafficAnomalies', 'macroSignalsV2', 'chokepoints',
   'marketQuotes', 'commodityQuotes', 'riskScores', 'insights', 'predictions',
   'iranEvents', 'temporalAnomalies', 'weatherAlerts', 'spending', 'theaterPosture', 'gdeltIntel',
   'shippingRates', 'shippingStress',

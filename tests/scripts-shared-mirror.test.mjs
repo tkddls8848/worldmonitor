@@ -31,10 +31,6 @@ const MIRRORED_FILES = [
   'physical-divergence-staleness.js',
   'physical-divergence-staleness.d.ts',
   'compare-and-delete-script.cjs',
-  'stablecoin-classifier.cjs',
-  // The classifier's default thresholds come from its SIBLING stablecoins.json
-  // (both homes), so a drift in the JSON mirror silently changes classification.
-  'stablecoins.json',
   'story-identity.js',
   'un-to-iso2.json',
   'world-bank-rpc-cache.js',

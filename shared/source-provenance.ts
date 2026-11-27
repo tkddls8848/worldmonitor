@@ -126,10 +126,9 @@ export const SOURCE_TYPES: Record<string, SourceType> = {
   'CNBC': 'market', 'MarketWatch': 'market', 'Yahoo Finance': 'market',
   'Financial Times': 'market',
   'Fox Business': 'market', 'Business Insider': 'market', 'Jin10': 'market',
-  'Coinbase Blog': 'market', 'Binance Announcements': 'market',
   // Press-release distribution is publisher-submitted content. Do not label
   // these feeds as independent wire reporting.
-  'GlobeNewswire': 'other', 'Business Wire': 'other', 'PR Newswire': 'other', 'Chainwire': 'other',
+  'GlobeNewswire': 'other', 'Business Wire': 'other', 'PR Newswire': 'other',
   'Shanghai Stock Exchange': 'market', 'Shenzhen Stock Exchange': 'market',
 
   // Tech
@@ -397,9 +396,6 @@ export const SOURCE_PROPAGANDA_RISK: Record<string, SourceRiskProfile> = {
   'GlobeNewswire': { risk: 'medium', note: 'Publisher-submitted press releases; not independent reporting' },
   'Business Wire': { risk: 'medium', note: 'Publisher-submitted press releases; not independent reporting' },
   'PR Newswire': { risk: 'medium', note: 'Publisher-submitted press releases; not independent reporting' },
-  'Chainwire': { risk: 'medium', note: 'Paid crypto press-release distribution; not independent reporting' },
-  'Coinbase Blog': { risk: 'medium', note: 'Coinbase first-party company publication; treat statements as issuer claims' },
-  'Binance Announcements': { risk: 'medium', note: 'Binance first-party announcement channel; treat statements as issuer claims' },
   'Jin10': { risk: 'medium', note: 'Chinese financial-news and market-data publisher; limited English editorial transparency' },
   // Independent RU exile press — not state media; eligible for EN defaults (#5950)
   'Meduza': { risk: 'low', knownBiases: ['Anti-Kremlin'], note: 'Independent Russian exile outlet (Riga); English + Russian RSS' },

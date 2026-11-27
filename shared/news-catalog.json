@@ -2647,42 +2647,6 @@
       ]
     },
     {
-      "name": "Chainwire",
-      "url": "https://chainwire.org/feed/",
-      "placements": [
-        {
-          "edition": "full",
-          "category": "finance",
-          "serverOrder": 10,
-          "browserOrder": 10
-        }
-      ]
-    },
-    {
-      "name": "Coinbase Blog",
-      "url": "https://news.google.com/rss/search?q=site%3Acoinbase.com%2Fblog%20when%3A7d&hl=en-US&gl=US&ceid=US:en",
-      "placements": [
-        {
-          "edition": "full",
-          "category": "finance",
-          "serverOrder": 11,
-          "browserOrder": 11
-        }
-      ]
-    },
-    {
-      "name": "Binance Announcements",
-      "url": "https://news.google.com/rss/search?q=site%3Abinance.com%2Fen%2Fsupport%2Fannouncement%20when%3A3d&hl=en-US&gl=US&ceid=US:en",
-      "placements": [
-        {
-          "edition": "full",
-          "category": "finance",
-          "serverOrder": 12,
-          "browserOrder": 12
-        }
-      ]
-    },
-    {
       "name": "Jin10",
       "url": "https://news.google.com/rss/search?q=site%3Ajin10.com%20when%3A1d&hl=zh-CN&gl=CN&ceid=CN:zh-Hans",
       "lang": "zh",
@@ -2690,8 +2654,14 @@
         {
           "edition": "full",
           "category": "finance",
-          "serverOrder": 13,
-          "browserOrder": 13
+          "serverOrder": 10,
+          "browserOrder": 10
+        },
+        {
+          "edition": "finance",
+          "category": "markets",
+          "serverOrder": 12,
+          "browserOrder": 12
         }
       ]
     },

@@ -89,7 +89,7 @@ export class MarketsView extends PaneView {
   renderMacro(ctx, r) {
     const { s, t } = ctx;
     const inner = panel(ctx, r, { title: 'Macro & flows' });
-    const m = this.data.macroSignals;
+    const m = this.data.macroSignalsV2;
     const fg = this.data.fearGreedIndex;
     const es = this.data.economicStress;
     let y = inner.y;

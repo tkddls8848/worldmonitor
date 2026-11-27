@@ -287,6 +287,13 @@ export const NEWS_POOL_LAYOUT: NewsPoolLayout = {
       ]
     },
     {
+      "edition": "finance",
+      "lang": "zh",
+      "contentLanguages": [
+        "zh"
+      ]
+    },
+    {
       "edition": "commodity",
       "lang": "en",
       "contentLanguages": [

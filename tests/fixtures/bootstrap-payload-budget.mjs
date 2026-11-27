@@ -8,6 +8,7 @@
  * must not become CI pass/fail (#7045 KTD7, #7288).
  */
 import {
+  BOOTSTRAP_KEY_BUDGET_BYTES,
   BOOTSTRAP_PAYLOAD_BUDGET_MANIFEST,
   CAPTURED_BASE_TIER_KEYS,
   CAPTURED_KEY_DECODED_BYTES,
@@ -46,7 +47,7 @@ export const FAST_FIRST_PAINT_JUSTIFICATION = Object.freeze({
   trafficAnomalies: 'Loaded with the default-on outages wave.',
   marketQuotes: 'Default markets panel data; retained once the 20% target is met to avoid a new startup request.',
   commodityQuotes: 'Default commodities and energy tapes; retained once the 20% target is met to avoid a new startup request.',
-  macroSignals: 'Immediate macro tiles on finance/full first paint.',
+  macroSignalsV2: 'Immediate macro tiles on finance/full first paint.',
   chokepoints: 'Chokepoint strip and default supply-chain map markers.',
   riskScores: 'CII / strategic-risk first-wave scores.',
   insights: 'Insights / threat-timeline first-wave cards.',
@@ -202,7 +203,7 @@ export function bootstrapPayloadBudgetViolations(tier, ledger) {
   }
 
   for (const [key, bytes] of Object.entries(ledger.keyBytes)) {
-    const capturedBytes = CAPTURED_KEY_DECODED_BYTES[key];
+    const capturedBytes = BOOTSTRAP_KEY_BUDGET_BYTES[key];
     if (!Number.isInteger(capturedBytes)) continue;
     const materialGrowth = materialGrowthAllowanceBytes(capturedBytes, budget);
     if (bytes <= capturedBytes + materialGrowth) continue;
@@ -244,7 +245,7 @@ export function buildBootstrapPayloadBudgetCandidate(tier, keys, representativeL
     }
   }
 
-  const keyBytes = Object.fromEntries(keys.map((key) => [key, CAPTURED_KEY_DECODED_BYTES[key]]));
+  const keyBytes = Object.fromEntries(keys.map((key) => [key, BOOTSTRAP_KEY_BUDGET_BYTES[key]]));
   for (const [key, baselineBytes] of Object.entries(baseline.keyBytes)) {
     if (!Object.hasOwn(keyBytes, key)) continue;
     keyBytes[key] += Math.max(0, measuredKeyBytes[key] - baselineBytes);
@@ -260,7 +261,7 @@ export function buildBootstrapPayloadBudgetCandidate(tier, keys, representativeL
 export function tierPayloadBytesFromLedger(keys) {
   let bytes = Buffer.byteLength('{"data":{', 'utf8');
   keys.forEach((key, index) => {
-    const valueBytes = CAPTURED_KEY_DECODED_BYTES[key];
+    const valueBytes = BOOTSTRAP_KEY_BUDGET_BYTES[key];
     if (!Number.isInteger(valueBytes) || valueBytes < 0) {
       throw new Error(`No production byte evidence for bootstrap key: ${key}`);
     }

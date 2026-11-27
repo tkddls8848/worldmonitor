@@ -10111,10 +10111,6 @@ function extractSectorItems(payload) {
   return Array.isArray(payload?.sectors) ? payload.sectors : [];
 }
 
-function extractEtfItems(payload) {
-  return Array.isArray(payload?.etfs) ? payload.etfs : [];
-}
-
 function extractRateItems(payload) {
   if (Array.isArray(payload?.rates)) return payload.rates;
   if (Array.isArray(payload?.policy?.rates)) return payload.policy.rates;
@@ -17495,16 +17491,6 @@ function buildMarketImplicationsContext(inputs) {
   if (Array.isArray(sectors) && sectors.length > 0) {
     const top = sectors.slice(0, 8).map(s => `${s.name}: ${s.change != null ? (s.change >= 0 ? '+' : '') + s.change.toFixed(2) + '%' : 'N/A'}`);
     parts.push(`[SECTORS]\n${top.join('\n')}`);
-  }
-
-  // ETF flows — sector rotation signal
-  if (etfItems.length > 0) {
-    const sorted = [...etfItems].sort((a, b) => Math.abs(b.flowPct ?? b.changePct ?? 0) - Math.abs(a.flowPct ?? a.changePct ?? 0));
-    const top = sorted.slice(0, 6).map(e => {
-      const flow = e.flowPct ?? e.changePct;
-      return `${e.name || e.symbol}: ${flow != null ? (flow >= 0 ? '+' : '') + flow.toFixed(1) + '% flow' : 'N/A'}`;
-    });
-    parts.push(`[ETF FLOWS]\n${top.join('\n')}`);
   }
 
   // Central bank policy rates — essential for forex/rates cards

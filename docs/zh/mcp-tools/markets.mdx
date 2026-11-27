@@ -20,14 +20,14 @@ description: "World Monitor MCP 工具参考：行情、黄金、股票与公司
 
 | 名称 | 类型 | 描述 |
 |------|------|-------------|
-| `symbols` | `array<string>` | 要保留的代码，例如 ["AAPL","GC=F","BTC"]。不区分大小写；匹配股票/大宗商品/加密货币/海湾报价、实物溢价与背离别名、板块 ETF 和 ETF 资金流代码。省略则返回完整快照。 |
-| `asset_class` | `array<string: equity / commodity / crypto / sectors / etf / gulf / sentiment>` | 将响应限制为一个或多个资产类别。省略则返回全部。 |
-| `limit` | number | 将每个类别的报价列表（股票/大宗商品/加密货币/海湾/板块/ETF 资金流）限制为最多这么多项（默认 30，传 0 表示不限）。 |
+| `symbols` | `array<string>` | 要保留的代码，例如 ["AAPL","GC=F"]。不区分大小写，匹配股票、大宗商品和海湾市场报价、实物溢价与背离别名及板块 ETF。省略则返回完整快照。 |
+| `asset_class` | `array<string: equity / commodity / sectors / gulf / sentiment>` | 将响应限制为一个或多个资产类别。省略则返回全部。 |
+| `limit` | number | 将每个类别的报价列表限制为最多这么多项（默认 30，传 0 表示不限）。 |
 | `refresh` | boolean | 默认为 false，复用付费市场面板。true 开始一次新的额度分配，必须提供 `request_id`。刷新时省略 `panel_request`。 |
 | `request_id` | string (UUID) | 固定的刷新 ID。同一 UUID 的重试复用额度与原始到期时间。UUID 字母大小写不改变其身份。 |
 | `panel_request` | string | 服务器签发的市场凭据，用于有界的精选数据读取。API 套餐不接受付费面板凭据。 |
 
-- **API 端点：** `GET /api/market/v1/get-fear-greed-index`, `GET /api/market/v1/get-physical-divergence-index`, `GET /api/market/v1/get-physical-premiums`, `GET /api/market/v1/get-sector-summary`, `GET /api/market/v1/list-commodity-quotes`, `GET /api/market/v1/list-crypto-quotes`, `GET /api/market/v1/list-etf-flows`, `GET /api/market/v1/list-gulf-quotes`, `GET /api/market/v1/list-market-quotes`
+- **API 端点：** `GET /api/market/v1/get-fear-greed-index`, `GET /api/market/v1/get-physical-divergence-index`, `GET /api/market/v1/get-physical-premiums`, `GET /api/market/v1/get-sector-summary`, `GET /api/market/v1/list-commodity-quotes`, `GET /api/market/v1/list-gulf-quotes`, `GET /api/market/v1/list-market-quotes`
 - **类型：** 缓存读取 — 来自 Redis 引导缓存的亚秒级响应。
 - **付费面板计量：** Pro 与 Pro Business 首次打开市场面板扣一次额度。五分钟复用窗口内的精选筛选和重复打开复用同一份分配。响应中的 `panelRequest.token` 可作为 `panel_request` 用于到期前的授权读取。新的刷新 UUID 扣一次新额度。API 套餐仍按工具权重计费，免费账户仍使用每日免费额度。
 - **数据范围：** 筛选仅选择已有的种子报价。面板凭据和刷新均不会读取任意代码、账户自选列表或新提供方数据。有效凭据允许重试不可用或陈旧的结果。上游故障不会退还首次分配的额度。

@@ -460,13 +460,6 @@
     "language": "de",
     "ownershipClass": "private"
   },
-  "Binance Announcements": {
-    "country": "INTL",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "private",
-    "note": "First-party Binance channel; Binance has no single home jurisdiction."
-  },
   "Blockchain Finance": {
     "country": "INTL",
     "audience": "international",
@@ -624,12 +617,6 @@
     "language": "en",
     "ownershipClass": "state"
   },
-  "Chainwire": {
-    "country": "US",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "private"
-  },
   "Channels TV": {
     "country": "NG",
     "audience": "domestic",
@@ -742,12 +729,6 @@
     "language": "en",
     "ownershipClass": "unreviewed",
     "note": "Google News topic query aggregating many publishers; no single owner."
-  },
-  "Coinbase Blog": {
-    "country": "US",
-    "audience": "international",
-    "language": "en",
-    "ownershipClass": "private"
   },
   "Commodity Futures": {
     "country": "INTL",

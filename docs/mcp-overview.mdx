@@ -331,7 +331,7 @@ Free-text substring filters and ISO-only fields retain their existing contracts.
 
 | Tool | Description |
 |------|-------------|
-| `get_market_data` | Equity quotes, commodity prices (incl. gold GC=F), crypto, FX, sector performance and valuation coverage, ETF flows, Gulf markets. Sector coverage separates write age from completeness and exposes bounded unavailable/last-good/direct-proxy diagnostics. |
+| `get_market_data` | Equity quotes, commodity prices (incl. gold GC=F), FX, sector performance and valuation coverage, Gulf markets. Sector coverage separates write age from completeness and exposes bounded unavailable/last-good/direct-proxy diagnostics. |
 | `get_economic_data` | Fed Funds, economic calendar, fuel prices, ECB FX, EU yield curve, earnings, COT, energy storage, BIS DSR + property prices. |
 | `get_country_macro` | Per-country macro indicators by `dataset`: IMF WEO inflation, current account, GDP/capita, unemployment and trade (~210 countries), plus Eurostat house prices, quarterly government debt and industrial production for EU members and the EA20/EU27_2020 aggregates. |
 | `get_prediction_markets` | Prediction markets with current probabilities: geopolitical/elections, tagged tech (AI/crypto/science), finance/economics or untagged fallback. |
@@ -422,7 +422,6 @@ Every record's `title`, `summary` and `sourceUrl` are verbatim third-party feed 
 | `get_reservoir_levels` | ICESat-2 lidar water levels for 50 strategic reservoirs and lakes, metres above the EGM2008 geoid; status, change windows, seasonal anomaly, optional 36-month series. |
 | `get_imd_cyclone_marine` | Bounded IMD sea-area and coastal marine bulletins with storm warnings and port signals. Cyclone track, wind, and cone are API-only and disabled. Always read `coverageState`; disabled or degraded is not an all-clear. |
 | `get_radiation_data` | Global radiation monitoring station readings + anomaly flags. |
-| `get_research_signals` | Emerging technology events from curated research feeds. |
 
 ### Health
 
@@ -471,14 +470,14 @@ That output includes covered, excluded, and total operation counts. Treat the co
 
 Reverse lookup workflow:
 
-1. Copy the exact method and path from the OpenAPI page, for example `GET /api/research/v1/list-tech-events`.
+1. Copy the exact method and path from the OpenAPI page, for example `GET /api/climate/v1/list-climate-anomalies`.
 2. Search this table. If the route appears, call the listed MCP tool.
 3. If it does not appear, the REST route is not exposed through MCP as an API-equivalent path. A cache-only MCP tool may still return related domain data, but it is not claiming that REST route.
 4. For code-level verification, search `_apiPaths` in `api/mcp/registry/cache-tools.ts` and `api/mcp/registry/rpc-tools.ts`; the parity test explains intentional REST-only exclusions.
 
 | MCP tool | API endpoints served |
 |----------|---------------------|
-| `get_market_data` | `GET /api/market/v1/get-fear-greed-index`<br/>`GET /api/market/v1/get-physical-divergence-index`<br/>`GET /api/market/v1/get-physical-premiums`<br/>`GET /api/market/v1/get-sector-summary`<br/>`GET /api/market/v1/list-commodity-quotes`<br/>`GET /api/market/v1/list-crypto-quotes`<br/>`GET /api/market/v1/list-etf-flows`<br/>`GET /api/market/v1/list-gulf-quotes`<br/>`GET /api/market/v1/list-market-quotes` |
+| `get_market_data` | `GET /api/market/v1/get-fear-greed-index`<br/>`GET /api/market/v1/get-physical-divergence-index`<br/>`GET /api/market/v1/get-physical-premiums`<br/>`GET /api/market/v1/get-sector-summary`<br/>`GET /api/market/v1/list-commodity-quotes`<br/>`GET /api/market/v1/list-gulf-quotes`<br/>`GET /api/market/v1/list-market-quotes` |
 | `get_economic_data` | `GET /api/economic/v1/get-ecb-fx-rates`<br/>`GET /api/economic/v1/get-economic-calendar`<br/>`GET /api/economic/v1/get-eu-yield-curve`<br/>`GET /api/economic/v1/list-fuel-prices`<br/>`GET /api/market/v1/get-cot-positioning`<br/>`GET /api/market/v1/list-earnings-calendar` |
 | `get_price_and_debt_indicators` | `GET /api/economic/v1/get-fao-food-price-index`<br/>`GET /api/economic/v1/get-national-debt` |
 | `get_wto_trade_flows` | `GET /api/trade/v1/get-trade-flows` |
@@ -511,7 +510,6 @@ Reverse lookup workflow:
 | `get_military_posture` | `GET /api/military/v1/get-theater-posture` |
 | `get_displacement_data` | `GET /api/displacement/v1/get-displacement-summary` |
 | `get_sanctions_data` | `GET /api/sanctions/v1/list-sanctions-pressure`<br/>`GET /api/sanctions/v1/lookup-sanction-entity` |
-| `get_research_signals` | `GET /api/research/v1/list-tech-events` |
 | `get_prediction_markets` | `GET /api/prediction/v1/list-prediction-markets` |
 | `get_forecast_predictions` | `GET /api/forecast/v1/get-forecasts` |
 | `get_forecast_case` | `GET /api/forecast/v1/get-forecasts` |
@@ -536,7 +534,7 @@ In this table, `covered` means a tool declares the exact operation in `_apiPaths
 - **`llm-passthrough`** — direct per-call LLM work that needs a purpose-built cost/threat model before MCP exposure.
 - **`fetch-on-miss`** — may call paid or rate-limited upstreams when cache is cold, or accepts high-cardinality identifiers that are not cache-bundle friendly. Exclusion reasons must include one enforced secondary signal: `high-cardinality-input`, `paid-upstream`, or `llm-cost`. Examples: `GET /api/conflict/v1/list-acled-events`, `GET /api/infrastructure/v1/list-service-statuses`, `GET /api/supply-chain/v1/get-critical-minerals`.
 - **`admin`** — internal-only operations behind an explicit admin boundary, such as an admin key, internal-only middleware, or cron-only path.
-- **`manual-mapping`** — parameterized cache keys or inline Redis/Convex handlers need human triage. Examples: `GET /api/research/v1/list-arxiv-papers`, `GET /api/research/v1/list-trending-repos`, and `GET /api/research/v1/list-hackernews-items`; `get_research_signals` declares only `GET /api/research/v1/list-tech-events`.
+- **`manual-mapping`** — parameterized cache keys or inline Redis/Convex handlers need human triage. Examples: `GET /api/research/v1/list-arxiv-papers`, `GET /api/research/v1/list-trending-repos`, and `GET /api/research/v1/list-hackernews-items`.
 - **`deferred-to-future-tool`** — pure reads whose cache keys are not yet exposed by an MCP bundle. Example: `GET /api/cyber/v1/list-cyber-threats` is slated for a future expanded-domain tool rather than claimed by today's cache-backed `get_cyber_threats`.
 
 Current follow-up trackers:
@@ -603,7 +601,7 @@ The server supports [MCP Apps](https://modelcontextprotocol.io/extensions/apps/b
 | `ui://worldmonitor/country-risk-v3.html` | `get_country_risk` | CII score, unrest/conflict/security/news component breakdown, travel-advisory level, and OFAC sanctions exposure. |
 | `ui://worldmonitor/world-brief-v2.html` | `get_world_brief` | The precomputed, citation-grounded global intelligence brief as readable paragraphs, plus grounding headlines and source articles. |
 | `ui://worldmonitor/country-brief-v3.html` | `get_country_brief` | The AI-synthesised per-country brief as paragraphs, with the analytical framework lens and grounding sources. |
-| `ui://worldmonitor/market-radar-v3.html` | `get_market_data` | Fear & Greed plus all loaded equity, commodity, crypto, Gulf and sector quotes, asset names and expandable intraday charts. |
+| `ui://worldmonitor/market-radar-v3.html` | `get_market_data` | Fear & Greed plus all loaded equity, commodity, Gulf and sector quotes, asset names and expandable intraday charts. |
 | `ui://worldmonitor/chokepoint-monitor-v2.html` | `get_chokepoint_status` | Per-chokepoint rolling transit summaries (today's count, week-over-week change, tanker split) with a risk-level badge. |
 | `ui://worldmonitor/news-intelligence-v3.html` | `get_news_intelligence` | AI-classified top stories with category, alert flag, country, and source. |
 | `ui://worldmonitor/conflict-events-v2.html` | `get_conflict_events` | Active armed-conflict events (belligerents, violence type, country, fatalities, date) from the UCDP feed. |

@@ -182,38 +182,6 @@ curl -s https://worldmonitor.app/mcp \
 
 </CodeGroup>
 
-### `get_research_signals`
-
-Return the seeded technology and research event list: upcoming and recent conferences, earnings dates, IPOs and other tech events from curated feeds such as Techmeme and dev.events, each with type, source, dates and link. Flagged stale after 8 hours. Calendar-style event signals only; no papers, patents or funding data. Seeded-cache read with no live fetch: weight 1 on API plans, included in the signed-in free allowance.
-
-**Parameters (tool-specific):**
-
-| Name | Type | Description |
-|------|------|-------------|
-| `type` | string: conference / earnings / ipo / other | Event kind to keep: conference, earnings (company earnings dates), ipo (listing dates) or other. |
-| `source` | string | Feed the event came from, matched exactly, ignoring case: "techmeme", "dev.events" or "curated". |
-| `limit` | number | Cap the event list to at most this many items (default 30, pass 0 for no cap). |
-
-- **API endpoints:** `GET /api/research/v1/list-tech-events`
-- **Access:** `free-account` — callable by any signed-in account; free accounts spend the daily free allowance, Pro calls spend the daily quota. Accepts the universal `summary` argument.
-- **Kind:** cache read — sub-second response from Redis bootstrap cache.
-- **Freshness budget:** up to **8 h** before `stale: true` is flagged (set by the seeder cron's expected interval).
-
-<CodeGroup>
-
-```bash curl
-curl -s https://worldmonitor.app/mcp \
-  -H "X-WorldMonitor-Key: $WM_KEY" \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "jsonrpc":"2.0","id":1,
-    "method":"tools/call",
-    "params":{"name":"get_research_signals","arguments":{}}
-  }'
-```
-
-</CodeGroup>
-
 ### `get_health_signals`
 
 Active disease outbreaks (WHO/ECDC etc.). For health-risk screening.

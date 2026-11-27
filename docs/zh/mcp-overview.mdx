@@ -359,7 +359,6 @@ npx @modelcontextprotocol/inspector https://worldmonitor.app/mcp
 | `get_climate_data` | 相对 WMO 常态的气温/降水异常、GDACS/FIRMS 警报、Mauna Loa CO2、海冰、海洋热含量。 |
 | `get_reservoir_levels` | 50 座战略水库和湖泊的 ICESat-2 激光雷达水位(相对 EGM2008 大地水准面的米数);状态、变化窗口、季节距平,可选 36 个月序列。 |
 | `get_radiation_data` | 全球辐射监测站读数 + 异常标记。 |
-| `get_research_signals` | 来自精选研究源的新兴技术事件。 |
 
 ### 健康
 
@@ -401,14 +400,14 @@ npx @modelcontextprotocol/inspector https://worldmonitor.app/mcp
 
 反向查询工作流：
 
-1. 从 OpenAPI 页面复制确切的方法和路径，例如 `GET /api/research/v1/list-tech-events`。
+1. 从 OpenAPI 页面复制确切的方法和路径，例如 `GET /api/climate/v1/list-climate-anomalies`。
 2. 搜索此表。如果该路由出现，则调用所列的 MCP 工具。
 3. 如果它未出现，则该 REST 路由未作为 API 等价路径通过 MCP 暴露。仅缓存的 MCP 工具可能仍返回相关领域数据，但它并不声称覆盖该 REST 路由。
 4. 如需代码级验证，请在 `api/mcp/registry/cache-tools.ts` 和 `api/mcp/registry/rpc-tools.ts` 中搜索 `_apiPaths`；parity 测试会解释有意的仅限 REST 排除项。
 
 | MCP 工具 | 服务的 API 端点 |
 |----------|---------------------|
-| `get_market_data` | `GET /api/market/v1/get-fear-greed-index`<br/>`GET /api/market/v1/get-physical-divergence-index`<br/>`GET /api/market/v1/get-physical-premiums`<br/>`GET /api/market/v1/get-sector-summary`<br/>`GET /api/market/v1/list-commodity-quotes`<br/>`GET /api/market/v1/list-crypto-quotes`<br/>`GET /api/market/v1/list-etf-flows`<br/>`GET /api/market/v1/list-gulf-quotes`<br/>`GET /api/market/v1/list-market-quotes` |
+| `get_market_data` | `GET /api/market/v1/get-fear-greed-index`<br/>`GET /api/market/v1/get-physical-divergence-index`<br/>`GET /api/market/v1/get-physical-premiums`<br/>`GET /api/market/v1/get-sector-summary`<br/>`GET /api/market/v1/list-commodity-quotes`<br/>`GET /api/market/v1/list-gulf-quotes`<br/>`GET /api/market/v1/list-market-quotes` |
 | `get_economic_data` | `GET /api/economic/v1/get-ecb-fx-rates`<br/>`GET /api/economic/v1/get-economic-calendar`<br/>`GET /api/economic/v1/get-eu-yield-curve`<br/>`GET /api/economic/v1/list-fuel-prices`<br/>`GET /api/market/v1/get-cot-positioning`<br/>`GET /api/market/v1/list-earnings-calendar` |
 | `get_price_and_debt_indicators` | `GET /api/economic/v1/get-fao-food-price-index`<br/>`GET /api/economic/v1/get-national-debt` |
 | `get_wto_trade_flows` | `GET /api/trade/v1/get-trade-flows` |
@@ -441,7 +440,6 @@ npx @modelcontextprotocol/inspector https://worldmonitor.app/mcp
 | `get_military_posture` | `GET /api/military/v1/get-theater-posture` |
 | `get_displacement_data` | `GET /api/displacement/v1/get-displacement-summary` |
 | `get_sanctions_data` | `GET /api/sanctions/v1/list-sanctions-pressure`<br/>`GET /api/sanctions/v1/lookup-sanction-entity` |
-| `get_research_signals` | `GET /api/research/v1/list-tech-events` |
 | `get_prediction_markets` | `GET /api/prediction/v1/list-prediction-markets` |
 | `get_forecast_predictions` | `GET /api/forecast/v1/get-forecasts` |
 | `get_forecast_case` | `GET /api/forecast/v1/get-forecasts` |
@@ -465,7 +463,7 @@ npx @modelcontextprotocol/inspector https://worldmonitor.app/mcp
 - **`llm-passthrough`** —— 每次调用直接进行的 LLM 工作，在通过 MCP 暴露之前需要专门设计的成本/威胁模型。
 - **`fetch-on-miss`** —— 在缓存为冷时可能调用付费或受限流的上游，或接受不适合缓存打包的高基数标识符。排除原因必须包含一个强制的次要信号：`high-cardinality-input`、`paid-upstream` 或 `llm-cost`。示例：`GET /api/conflict/v1/list-acled-events`、`GET /api/infrastructure/v1/list-service-statuses`、`GET /api/supply-chain/v1/get-critical-minerals`。
 - **`admin`** —— 位于明确管理员边界之后的仅限内部操作，例如管理员 key、仅限内部的中间件或仅限 cron 的路径。
-- **`manual-mapping`** —— 参数化的缓存 key 或内联的 Redis/Convex handler 需要人工分诊。示例：`GET /api/research/v1/list-arxiv-papers`、`GET /api/research/v1/list-trending-repos` 以及 `GET /api/research/v1/list-hackernews-items`；`get_research_signals` 仅声明 `GET /api/research/v1/list-tech-events`。
+- **`manual-mapping`** —— 参数化的缓存 key 或内联的 Redis/Convex handler 需要人工分诊。示例：`GET /api/research/v1/list-arxiv-papers`、`GET /api/research/v1/list-trending-repos` 以及 `GET /api/research/v1/list-hackernews-items`。
 - **`deferred-to-future-tool`** —— 其缓存 key 尚未被某个 MCP bundle 暴露的纯读取。示例：`GET /api/cyber/v1/list-cyber-threats` 计划用于未来的扩展领域工具，而非由如今缓存支撑的 `get_cyber_threats` 认领。
 
 当前的后续跟踪项：

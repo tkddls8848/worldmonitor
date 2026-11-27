@@ -75,7 +75,7 @@ curl -X POST https://api.worldmonitor.app/api/batch/v1/execute \
 | `GET /api/cyber/v1/list-cyber-threats` | 暂为 REST 专有。`get_cyber_threats` 是一个缓存支撑的 MCP 工具，未声明 REST 路径。 |
 | `GET /api/infrastructure/v1/list-service-statuses` | REST 专有。`get_infrastructure_status` 仅声明 `list-internet-outages`。 |
 | `GET /api/supply-chain/v1/get-critical-minerals` | REST 专有。`get_supply_chain_data` 仅声明运输压力与海关收入。 |
-| `GET /api/research/v1/list-arxiv-papers`、`GET /api/research/v1/list-trending-repos`、`GET /api/research/v1/list-hackernews-items` | REST 专有。`get_research_signals` 仅声明 `list-tech-events`。 |
+| `GET /api/research/v1/list-arxiv-papers`、`GET /api/research/v1/list-trending-repos`、`GET /api/research/v1/list-hackernews-items` | REST 专有。 |
 | `GET /api/aviation/v1/list-airport-delays` | REST 专有。MCP 航空覆盖通过 `get_airspace`、航班搜索工具以及缓存支撑的 `get_aviation_status` 提供，而非这些路由。 |
 
 请始终对照[打包的 OpenAPI 规范](https://www.worldmonitor.app/openapi.yaml)交叉验证 REST 路径名、参数与响应结构，并对照 [MCP API 覆盖](/zh/mcp-overview#api-覆盖)验证 MCP 暴露情况。

@@ -476,7 +476,7 @@ test('shared-style table headers line up with their cells in RTL', async ({ brow
   }
 });
 
-// FX, ETF flows and the watchlist render outside the fixture dashboard, so
+// FX and the watchlist render outside the fixture dashboard, so
 // they mount in the runtime harness with injected data. Their cells carry
 // gain/loss classes, accent columns and dimmed reference values.
 test('harness-mounted shared-style tables keep the shared header and their cell colours', async ({ page }) => {
@@ -487,7 +487,6 @@ test('harness-mounted shared-style tables keep the shared header and their cell 
     await initI18n();
     const { Panel } = await import('/src/components/Panel.ts');
     const { FxPanel } = await import('/src/components/FxPanel.ts');
-    const { ETFFlowsPanel } = await import('/src/components/ETFFlowsPanel.ts');
     const { WatchlistTableView } = await import('/src/components/WatchlistTableView.ts');
 
     document.getElementById('runtime-harness')?.remove();
@@ -510,20 +509,6 @@ test('harness-mounted shared-style tables keep the shared header and their cell 
     grid.appendChild(fx.getElement());
     (window as unknown as { fxProbe: unknown }).fxProbe = fx;
 
-    const etf = new ETFFlowsPanel();
-    const etfInternals = etf as unknown as { data: unknown; loading: boolean; renderPanel(): void };
-    etfInternals.loading = false;
-    etfInternals.data = {
-      timestamp: '2026-11-04T00:00:00Z', rateLimited: false,
-      summary: { etfCount: 2, totalVolume: 2.1e9, totalEstFlow: 3.4e8, netDirection: 'NET_INFLOW', inflowCount: 1, outflowCount: 1 },
-      etfs: [
-        { ticker: 'IBIT', issuer: 'BlackRock', price: 61.2, priceChange: 1.84, volume: 1.4e9, avgVolume: 1.1e9, volumeRatio: 1.3, direction: 'inflow', estFlow: 4.1e8 },
-        { ticker: 'GBTC', issuer: 'Grayscale', price: 78.5, priceChange: -0.92, volume: 7e8, avgVolume: 8e8, volumeRatio: 0.9, direction: 'outflow', estFlow: -7e7 },
-      ],
-    };
-    etfInternals.renderPanel();
-    grid.appendChild(etf.getElement());
-
     const watch = new Panel({ id: 'probe-watchlist', title: 'Watchlist' });
     const view = new WatchlistTableView<{ symbol: string; change: number }>({
       columns: [
@@ -545,7 +530,6 @@ test('harness-mounted shared-style tables keep the shared header and their cell 
     { name: 'fx stress', root: '.panel[data-panel="fx"]', tab: 'stress' },
     { name: 'fx spot', root: '.panel[data-panel="fx"]', tab: 'spot' },
     { name: 'fx rub', root: '.panel[data-panel="fx"]', tab: 'rub' },
-    { name: 'etf-flows', root: '.panel[data-panel="etf-flows"]' },
     { name: 'watchlist', root: '.panel[data-panel="probe-watchlist"]' },
   ];
   let headerColour = '';

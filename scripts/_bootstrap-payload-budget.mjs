@@ -150,6 +150,14 @@ export const CAPTURED_KEY_DECODED_BYTES = Object.freeze({
   breadthHistory: 8_059,
 });
 
+// Both renamed datasets serve a subset of the captured fields or rows.
+// Use their predecessor sizes as conservative ceilings for the active keys.
+export const BOOTSTRAP_KEY_BUDGET_BYTES = Object.freeze({
+  ...CAPTURED_KEY_DECODED_BYTES,
+  macroSignalsV2: CAPTURED_KEY_DECODED_BYTES.macroSignals,
+  perpPositioning: CAPTURED_KEY_DECODED_BYTES.hyperliquidFlow,
+});
+
 // Absolute final ceilings are the required reductions applied to the complete
 // capture, not to a hand-picked subset: FAST <= 80%, SLOW <= 75% of base.
 export const FINAL_TIER_DECODED_BYTE_CEILINGS = Object.freeze({
@@ -263,7 +271,7 @@ export function evaluatePublishedBootstrapVolume(tier, ledger) {
       throw new TypeError('Published volume evaluation requires integer valueBytes per key');
     }
 
-    const capturedBytes = CAPTURED_KEY_DECODED_BYTES[key];
+    const capturedBytes = BOOTSTRAP_KEY_BUDGET_BYTES[key];
     if (!Number.isInteger(capturedBytes)) {
       if (!isFeatureGatedUncapturedKey(tier, key)) {
         alerts.push({ kind: 'unmeasured-key', tier, key, bytes: valueBytes });

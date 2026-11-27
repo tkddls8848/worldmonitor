@@ -341,7 +341,7 @@ describe('health sweep classifies the temporal producer keys into the preview na
     assert.ok(sweepKeys.has(`${PREFIX}seed-meta:intelligence:risk-scores`), 'risk-scores stamp must be prefixed');
     assert.ok(sweepKeys.has(`${PREFIX}seed-meta:cable-health`), 'cable-health stamp must be prefixed');
     // Seeder-owned fleet keys: raw, or every preview would classify nothing.
-    assert.ok(sweepKeys.has('seed-meta:market:crypto'), 'seeder seed-meta must stay raw');
+    assert.ok(sweepKeys.has('seed-meta:market:stocks'), 'seeder seed-meta must stay raw');
     assert.ok(sweepKeys.has('seed-activated:prediction:markets-country-index'), 'activation markers must stay raw');
     assert.ok(sweepKeys.has('market:stocks-bootstrap:v1'), 'bootstrap data keys must stay raw');
   });

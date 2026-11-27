@@ -434,11 +434,11 @@
     }
    ]
   },
-  "macroSignals": {
+  "macroSignalsV2": {
    "timestamp": "2026-10-17T19:15:07.176Z",
-   "verdict": "BUY",
-   "bullishCount": 4,
-   "totalCount": 7,
+   "verdict": "CASH",
+   "bullishCount": 1,
+   "totalCount": 2,
    "signals": {
     "liquidity": {
      "status": "NORMAL",
@@ -450,58 +450,10 @@
       154.48199462890625
      ]
     },
-    "flowStructure": {
-     "status": "PASSIVE GAP",
-     "btcReturn5": -0.42,
-     "qqqReturn5": -5.52
-    },
     "macroRegime": {
      "status": "DEFENSIVE",
      "qqqRoc20": -1.61,
      "xlpRoc20": 5.82
-    },
-    "technicalTrend": {
-     "status": "NEUTRAL",
-     "btcPrice": 81417.609375,
-     "sma50": 81324,
-     "sma200": 72426,
-     "vwap30d": 83619,
-     "mayerMultiple": 1.12,
-     "sparkline": [
-      80901.4609375,
-      81233.6796875,
-      81142.609375,
-      86602.9140625
-     ]
-    },
-    "hashRate": {
-     "status": "GROWING",
-     "change30d": 12.7
-    },
-    "priceMomentum": {
-     "status": "STRONG"
-    },
-    "fearGreed": {
-     "status": "Greed",
-     "value": 55,
-     "history": [
-      {
-       "value": 56,
-       "date": "2026-09-18"
-      },
-      {
-       "value": 71,
-       "date": "2026-09-19"
-      },
-      {
-       "value": 71,
-       "date": "2026-09-20"
-      },
-      {
-       "value": 70,
-       "date": "2026-09-21"
-      }
-     ]
     }
    },
    "meta": {
@@ -510,7 +462,8 @@
      718.3599853515625,
      716.3099975585938,
      708.6900024414062
-    ]
+    ],
+    "qqqReturn5": -5.52
    },
    "unavailable": false
   },
@@ -1945,64 +1898,6 @@
     }
    }
   },
-  "etfFlows": {
-   "timestamp": "2026-10-17T19:22:13.510Z",
-   "summary": {
-    "etfCount": 10,
-    "totalVolume": 55059800,
-    "totalEstFlow": -257619158,
-    "netDirection": "NET OUTFLOW",
-    "inflowCount": 0,
-    "outflowCount": 10
-   },
-   "etfs": [
-    {
-     "ticker": "IBIT",
-     "issuer": "BlackRock",
-     "price": 46.15,
-     "priceChange": -0.94,
-     "volume": 45430300,
-     "avgVolume": 32348225,
-     "volumeRatio": 1.4,
-     "direction": "outflow",
-     "estFlow": -209660841
-    },
-    {
-     "ticker": "FBTC",
-     "issuer": "Fidelity",
-     "price": 70.85,
-     "priceChange": -0.98,
-     "volume": 3016700,
-     "avgVolume": 2376150,
-     "volumeRatio": 1.27,
-     "direction": "outflow",
-     "estFlow": -21373319
-    },
-    {
-     "ticker": "ARKB",
-     "issuer": "ARK/21Shares",
-     "price": 27,
-     "priceChange": -0.99,
-     "volume": 2189400,
-     "avgVolume": 1007175,
-     "volumeRatio": 2.17,
-     "direction": "outflow",
-     "estFlow": -5911380
-    },
-    {
-     "ticker": "BITB",
-     "issuer": "Bitwise",
-     "price": 44.2,
-     "priceChange": -1.03,
-     "volume": 1244100,
-     "avgVolume": 624175,
-     "volumeRatio": 1.99,
-     "direction": "outflow",
-     "estFlow": -5498922
-    }
-   ],
-   "rateLimited": false
-  },
   "wildfires": {
    "fireDetections": [
     {
@@ -2529,58 +2424,6 @@
     ]
    }
   },
-  "cryptoQuotes": {
-   "quotes": [
-    {
-     "name": "Bitcoin",
-     "symbol": "BTC",
-     "price": 81450,
-     "change": 0.12077,
-     "sparkline": [
-      82336.72255617275,
-      82308.82928743072,
-      82012.69918474372,
-      82350.6277249649
-     ]
-    },
-    {
-     "name": "Ethereum",
-     "symbol": "ETH",
-     "price": 2414.14,
-     "change": 0.08338,
-     "sparkline": [
-      2449.0541701613374,
-      2451.19989268422,
-      2451.3556587107414,
-      2459.2626150419533
-     ]
-    },
-    {
-     "name": "BNB",
-     "symbol": "BNB",
-     "price": 714.68,
-     "change": -0.91216,
-     "sparkline": [
-      733.5669442367847,
-      732.35948211664,
-      729.8948298713157,
-      730.9215910747366
-     ]
-    },
-    {
-     "name": "Solana",
-     "symbol": "SOL",
-     "price": 103.89,
-     "change": 0.69165,
-     "sparkline": [
-      105.87551350364635,
-      105.91909861558756,
-      105.53507985524777,
-      105.95785404808703
-     ]
-    }
-   ]
-  },
   "defiTokens": {
    "tokens": [
     {
@@ -2677,70 +2520,6 @@
     }
    ],
    "rateLimited": false
-  },
-  "stablecoinMarkets": {
-   "timestamp": "2026-10-17T19:22:13.827Z",
-   "summary": {
-    "totalMarketCap": 265558589687,
-    "totalVolume24h": 39177848510,
-    "coinCount": 5,
-    "depeggedCount": 0,
-    "healthStatus": "HEALTHY"
-   },
-   "stablecoins": [
-    {
-     "id": "tether",
-     "symbol": "USDT",
-     "name": "Tether",
-     "price": 0.999048,
-     "deviation": 0.095,
-     "pegStatus": "ON PEG",
-     "marketCap": 183488081278,
-     "volume24h": 29678880586,
-     "change24h": -0.00426,
-     "change7d": -0.0096,
-     "image": "https://coin-images.coingecko.com/coins/images/325/large/Tether.png?1696501661"
-    },
-    {
-     "id": "usd-coin",
-     "symbol": "USDC",
-     "name": "USDC",
-     "price": 0.999775,
-     "deviation": 0.023,
-     "pegStatus": "ON PEG",
-     "marketCap": 72531936017,
-     "volume24h": 9214799588,
-     "change24h": -0.00397,
-     "change7d": 0.0014,
-     "image": "https://coin-images.coingecko.com/coins/images/6319/large/USDC.png?1769615602"
-    },
-    {
-     "id": "ethena-usde",
-     "symbol": "USDE",
-     "name": "Ethena USDe",
-     "price": 0.999355,
-     "deviation": 0.065,
-     "pegStatus": "ON PEG",
-     "marketCap": 4682728927,
-     "volume24h": 31941058,
-     "change24h": 0.00188,
-     "change7d": 0.0014,
-     "image": "https://coin-images.coingecko.com/coins/images/33613/large/usde.png?1733810059"
-    },
-    {
-     "id": "dai",
-     "symbol": "DAI",
-     "name": "Dai",
-     "price": 1,
-     "deviation": 0,
-     "pegStatus": "ON PEG",
-     "marketCap": 4540775527,
-     "volume24h": 209511837,
-     "change24h": -0.02779,
-     "change7d": 0.0056,
-     "image": "https://coin-images.coingecko.com/coins/images/9956/large/Badge_Dai.png?1696509996"
-    }
-   ]
   },
   "unrestEvents": {
    "events": [
@@ -3348,60 +3127,6 @@
     }
    },
    "totalEvents": 2306
-  },
-  "techEvents": {
-   "success": true,
-   "count": 130,
-   "conferenceCount": 120,
-   "mappableCount": 0,
-   "lastUpdated": "2026-10-17T16:01:46.682Z",
-   "events": [
-    {
-     "id": "tFxamRECVYR3GaKxog19rg@techmeme.com",
-     "title": "LA Tech Week",
-     "type": "conference",
-     "location": "Los Angeles",
-     "startDate": "2026-10-12",
-     "endDate": "2026-10-19",
-     "url": "https://www.techmeme.com/r2/www.tech-week.com_-uhGXsgo2.htm?ca",
-     "source": "techmeme",
-     "description": ""
-    },
-    {
-     "id": "bHrZ6AAqxwKj0hob5SafJw@techmeme.com",
-     "title": "MIT AI Conference",
-     "type": "conference",
-     "location": "Mountain View, CA",
-     "startDate": "2026-10-17",
-     "endDate": "2026-10-18",
-     "url": "https://www.techmeme.com/r2/www.mitaiconference.org_-vurmHQvm.",
-     "source": "techmeme",
-     "description": ""
-    },
-    {
-     "id": "xrLCsllrAm4JOsRCVWajzZQ@techmeme.com",
-     "title": "Money20/20 USA",
-     "type": "conference",
-     "location": "Las Vegas",
-     "startDate": "2026-10-18",
-     "endDate": "2026-10-22",
-     "url": "https://www.techmeme.com/r2/us.money2020.com_-Pz7uc4gf.htm?cal",
-     "source": "techmeme",
-     "description": ""
-    },
-    {
-     "id": "FmXd94xRP7UbyyrzBPhxSg@techmeme.com",
-     "title": "Cloudflare Connect 2026: The Agentic Conference",
-     "type": "conference",
-     "location": "San Francisco",
-     "startDate": "2026-10-19",
-     "endDate": "2026-10-22",
-     "url": "https://www.techmeme.com/r2/www.techmeme.com_cfc26e.htm-RfNBqp",
-     "source": "techmeme",
-     "description": ""
-    }
-   ],
-   "error": ""
   },
   "securityAdvisories": {
    "advisories": [
