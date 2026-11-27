@@ -76,18 +76,15 @@ const LAZY_HTML_PRELOAD_RE = new RegExp(
 // clusters. New panel files must be assigned here before the build can split
 // them; otherwise they would silently fall back into an eager catch-all chunk.
 const PANEL_CLUSTER: Record<string, PanelChunkName> = {
-  // Markets / equities / crypto positioning
-  AAIISentiment: 'panels-markets', CotPositioning: 'panels-markets',
-  EarningsCalendar: 'panels-markets', MaterialEvents: 'panels-markets',
+  // Markets / equities / positioning
+  CotPositioning: 'panels-markets',
   EconomicCalendar: 'panels-markets', FearGreed: 'panels-markets',
   Fx: 'panels-markets',
   GoldIntelligence: 'panels-markets', LiquidityShifts: 'panels-markets',
   MacroSignals: 'panels-markets', Market: 'panels-markets',
   MarketBreadth: 'panels-markets', MarketImplications: 'panels-markets',
   NewsMarketCorrelation: 'panels-markets',
-  NqCatalysts: 'panels-markets', NqPulse: 'panels-markets',
   Positioning: 'panels-markets',
-  StockAnalysis: 'panels-markets', StockBacktest: 'panels-markets',
   YieldCurve: 'panels-markets',
   // Energy / commodities / supply infra
   ChokepointStrip: 'panels-energy', EnergyComplex: 'panels-energy',

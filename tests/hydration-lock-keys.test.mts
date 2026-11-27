@@ -57,21 +57,4 @@ describe('hydration lock keys (#6770)', () => {
     );
   });
 
-  it('locks the stock refreshes under the same inFlight key the loader uses', () => {
-    // loadStockAnalysis / loadStockBacktest have no internal guard, so a boot
-    // hydration and a refresh tick must share an inFlight key or they double-
-    // fetch during the overlap window. The panel/viewport key stays kebab.
-    assert.match(dataLoader, /runGuarded\(\s*'stockAnalysis'/, 'hydration locks stockAnalysis');
-    assert.match(dataLoader, /runGuarded\(\s*'stockBacktest'/, 'hydration locks stockBacktest');
-    assert.match(
-      app,
-      /'stockAnalysis',\s*\n\s*\(\) => this\.dataLoader\.loadStockAnalysis\(\)/,
-      'refresh for loadStockAnalysis must lock the same camelCase key the loader uses',
-    );
-    assert.match(
-      app,
-      /'stockBacktest',\s*\n\s*\(\) => this\.dataLoader\.loadStockBacktest\(\)/,
-      'refresh for loadStockBacktest must lock the same camelCase key the loader uses',
-    );
-  });
 });

@@ -35,8 +35,8 @@ const EXPECTED_VARIANT_PANEL_SNAPSHOTS: Record<DashboardVariant, {
   enabledCount: number;
   enabledSha256: string;
 }> = {
-  full: { enabledCount: 78, enabledSha256: 'af8941af2a0496cb8bb157a336359aa8b3fe5927b037cfcf270e1f3f27587792' },
-  finance: { enabledCount: 50, enabledSha256: '1beb0b9afdbd97c7c623a3c0bdc188f51be834dead4a3b576eb22ad0f0fa5172' },
+  full: { enabledCount: 76, enabledSha256: 'f0f594597a4118f6318b97fd17266b0c214ff4a044c3c23d146be6ef38d10a7f' },
+  finance: { enabledCount: 45, enabledSha256: '5a7805cea835e04c8adb32d207f1d8850274c3d99446556e2b98d0e41cee7a20' },
   commodity: { enabledCount: 33, enabledSha256: 'b534510a2e814392e3966beb211e300e75a2b33f05c283613dd4f6cee50ddfe0' },
   energy: { enabledCount: 27, enabledSha256: '77471d0d0ab931e78065df61dfc0300c081e9fb57427975505d9e1c834617a12' },
 };
@@ -46,8 +46,8 @@ const EXPECTED_VARIANT_DEFAULT_SNAPSHOTS: Record<DashboardVariant, {
   enabled: number;
   sha256: string;
 }> = {
-  full: { total: 103, enabled: 78, sha256: '632f2c6f4f11f3cd202d864368079286c9efa67cf898a0a7d1b5a93ed9a7a565' },
-  finance: { total: 58, enabled: 50, sha256: 'ba9aaf4659ac4a111ccb6326c3b17d239fcb138a0b295fb54122d27cfbbb24fe' },
+  full: { total: 98, enabled: 76, sha256: '55cd1af1624f0b4b0e58f5c94b03cfb469dabf25c5301b8d22c8d31f1973b13b' },
+  finance: { total: 49, enabled: 45, sha256: '52fd3ce7d841a2a573ba74ee2d9563f9bfab8ad90e8acf8357c971bda6771d69' },
   commodity: { total: 36, enabled: 33, sha256: 'cc9e0b178dec33dff354a1eea95b5b215302fc7ce685b3d92b82a356df6d6bee' },
   energy: { total: 30, enabled: 27, sha256: '1a5271643c2a74fe662e011b23a170fe5458355da566bc061c25560216b45569' },
 };

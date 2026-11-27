@@ -132,7 +132,6 @@
     "orefSirens": "Israel Sirens",
     "regulation": "AI Regulation Dashboard",
     "finRegulation": "Financial Regulation",
-    "ipo": "Public listings & shell-company mergers",
     "serviceStatus": "Service Status",
     "internetDisruptions": "Internet Disruptions",
     "internetDisruptionsTabs": {
@@ -533,10 +532,6 @@
     "displacement": {
       "infoTooltip": "<strong>Displacement</strong> Refugees, asylum seekers and people displaced within their country. Origin and host views show where people flee from and to. Crisis badges mark over one million displaced; high marks over 500,000. Annual UN Refugee Agency data, CC BY 4.0 license."
     },
-    "earningsCalendar": {
-      "infoTooltip": "<strong>Earnings Calendar</strong> Upcoming and recent earnings releases for major public companies. Shows earnings per share estimates vs actuals, revenue, and beat/miss classification. Source: financial data providers.",
-      "title": "Earnings Calendar"
-    },
     "economic": {
       "infoTooltip": "<strong>Macro Stress</strong> Macro gauges, government spending, and central bank data:<ul><li><strong>Indicators</strong>: VIX, rates, yield curve, labor, inflation</li><li><strong>Gov</strong>: Recent US government contract awards</li><li><strong>Central Banks</strong>: Bank for International Settlements policy rates and exchange rate data</li></ul>"
     },
@@ -676,12 +671,6 @@
     },
     "serviceStatus": {
       "infoTooltip": "<strong>Service Status</strong> Live operational status of major cloud platforms, financial infrastructure, and critical internet services. Sourced from official status pages (AWS, Azure, GCP, Cloudflare, exchanges). Incidents may indicate broader disruption events."
-    },
-    "stockAnalysis": {
-      "infoTooltip": "<strong>Premium Stock Analysis</strong> AI-powered analysis for stocks in your watchlist — buy/hold/sell signals, price targets, key risks, and catalysts updated daily."
-    },
-    "stockBacktest": {
-      "infoTooltip": "<strong>Premium Backtesting</strong> Historical performance backtests for stocks in your watchlist — past returns, max drawdown, and volatility metrics."
     },
     "strategicPosture": {
       "infoTooltip": "<strong>Methodology</strong><p>Aggregates military aircraft and naval vessels by theater.</p><ul><li><strong>Normal:</strong> Baseline activity</li><li><strong>Elevated:</strong> Above threshold (50+ aircraft)</li><li><strong>Critical:</strong> High concentration (100+ aircraft)</li></ul><p><strong>Strike Capable:</strong> Tankers + Airborne early warning + Fighters present in sufficient numbers for sustained operations.</p>"
