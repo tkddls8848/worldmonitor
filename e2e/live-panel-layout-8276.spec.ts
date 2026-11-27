@@ -225,8 +225,10 @@ test('collapsing user-resized Live News releases its grid rows (#10185)', async 
 
     await page.reload({ waitUntil: 'domcontentloaded' });
     await expect(panel).toHaveClass(/panel-collapsed/, { timeout: 60_000 });
-    await panel.scrollIntoViewIfNeeded();
-    await expect(panel).not.toHaveClass(/panel-deferred-shell/);
+    await expect.poll(() => panel.evaluate(element => {
+      element.scrollIntoView({ block: 'nearest' });
+      return !element.classList.contains('panel-deferred-shell');
+    }), { timeout: 30_000 }).toBe(true);
     await expect.poll(() => footprint(id)).toMatchObject({ span: 'span 1' });
 
     await toggle.click();
