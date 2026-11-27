@@ -71,7 +71,6 @@ import { dataFreshness } from '@/services/data-freshness';
 import { mlWorker } from '@/services/ml-worker';
 import { t } from '@/services/i18n';
 import { getPanelDisplayName } from '@/services/panel-display-name';
-import { TvModeController } from '@/services/tv-mode';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 import { declareOverlay } from '@/utils/open-modal';
 import { escapeHtml } from '@/utils/sanitize';
@@ -218,7 +217,6 @@ class LazyUnifiedSettings implements UnifiedSettingsController {
   }
 }
 
-
 export interface EventHandlerCallbacks {
   openSearch: (options?: { toggle?: boolean; replaceOverlayId?: OverlayId; historyPending?: boolean }) => void;
   updateSearchIndex: () => void;
@@ -329,7 +327,6 @@ export class EventHandlerManager implements AppModule {
     this.setupEventListeners();
     this.mobilePrimaryNav.init();
     this.setupIdleDetection();
-    this.setupTvMode();
   }
 
   private performUndo(): void {
@@ -385,47 +382,7 @@ export class EventHandlerManager implements AppModule {
     );
   }
 
-  private setupTvMode(): void {
-    if (SITE_VARIANT !== 'happy') return;
 
-    const tvBtn = document.getElementById('tvModeBtn');
-    const tvExitBtn = document.getElementById('tvExitBtn');
-    if (tvBtn) {
-      tvBtn.addEventListener('click', () => this.toggleTvMode());
-    }
-    if (tvExitBtn) {
-      tvExitBtn.addEventListener('click', () => this.toggleTvMode());
-    }
-    // Keyboard shortcut: Shift+T
-    this.boundTvKeydownHandler = (e: KeyboardEvent) => {
-      if (e.shiftKey && e.key === 'T' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        const active = document.activeElement;
-        if (active?.tagName !== 'INPUT' && active?.tagName !== 'TEXTAREA') {
-          e.preventDefault();
-          this.toggleTvMode();
-        }
-      }
-    };
-    document.addEventListener('keydown', this.boundTvKeydownHandler);
-  }
-
-  private toggleTvMode(): void {
-    const panelKeys = Object.keys(this.ctx.panelSettings).filter(
-      key => this.ctx.panelSettings[key]?.enabled !== false
-    );
-    if (!this.ctx.tvMode) {
-      this.ctx.tvMode = new TvModeController({
-        panelKeys,
-        onPanelChange: () => {
-          document.getElementById('tvModeBtn')?.classList.toggle('active', this.ctx.tvMode?.active ?? false);
-        }
-      });
-    } else {
-      this.ctx.tvMode.updatePanelKeys(panelKeys);
-    }
-    this.ctx.tvMode.toggle();
-    document.getElementById('tvModeBtn')?.classList.toggle('active', this.ctx.tvMode.active);
-  }
 
   destroy(): void {
     this.closeEmbedDialog();
@@ -560,8 +517,6 @@ export class EventHandlerManager implements AppModule {
       window.clearTimeout(this.missionDataRefreshTimer);
       this.missionDataRefreshTimer = null;
     }
-    this.ctx.tvMode?.destroy();
-    this.ctx.tvMode = null;
     this.ctx.unifiedSettings?.destroy();
     this.ctx.unifiedSettings = null;
     overlayHistory.reset();
@@ -909,7 +864,6 @@ export class EventHandlerManager implements AppModule {
       { key: 'finance', icon: '📈', label: t('header.finance') },
       { key: 'commodity', icon: '⛏️', label: t('header.commodity') },
       { key: 'energy', icon: '⚡', label: t('header.energy') },
-      { key: 'happy', icon: '☀️', label: t('personalChrome.goodNews') },
     ];
     const variantPillsHtml = variantChoices.map((v) => `
       <button type="button" class="mission-variant-pill${v.key === SITE_VARIANT ? ' active' : ''}" data-popover-variant="${v.key}" aria-pressed="${v.key === SITE_VARIANT ? 'true' : 'false'}">
@@ -1838,7 +1792,6 @@ export class EventHandlerManager implements AppModule {
       mount.appendChild(this.ctx.pizzintIndicator.getElement());
     }
   }
-
 
   setupExportPanel(): void {
     const getExportData = () => {

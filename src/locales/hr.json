@@ -448,8 +448,6 @@
     "panelCatCommodityPrices": "Cijene i tržišta",
     "panelCatMining": "Rudarstvo i opskrbni lanac",
     "panelCatCommodityEcon": "Ekonomija i trgovina",
-    "panelCatHappyNews": "Dobre vijesti",
-    "panelCatHappyPlanet": "Planet i pomoć",
     "embed": "Ugradi"
   },
   "panels": {
@@ -499,7 +497,6 @@
     "stablecoins": "Stablecoini",
     "deduction": "Odbitna Situacija",
     "ucdpEvents": "Događaji Oružanih Sukoba",
-    "giving": "Globalno Davanje",
     "displacement": "Izbjeglice i raseljeni",
     "climate": "Klimatske Anomalije",
     "populationExposure": "Izloženost Stanovništva",
@@ -925,12 +922,6 @@
     }
   },
   "components": {
-    "positiveNewsFeed": {
-      "noStories": "Nema članka u ovoj kategoriji"
-    },
-    "breakthroughsTicker": {
-      "noData": "Nema znanstvenih proboja"
-    },
     "airlineIntel": {
       "infoTooltip": "<strong>Obavještajni sustav zrakoplovnih linija</strong> Podaci o realnom vremenu operativnog rada zrakoplovnih linija: suspenzija ruta, zatvaranja zračnog prostora, savjetodavne informacije za prijevoznike i hitne rute. Izvor: NOTAM od zrakoplovnih vlasti i bilteni prijevoznika.",
       "noOpsData": "Nema operativnih podataka — učitavanje…",
@@ -945,15 +936,6 @@
       "nonstop": "direktno",
       "roundTrip": "Povratni let",
       "tripDays": "Dani putovanja"
-    },
-    "goodThingsDigest": {
-      "noStories": "Nema dostupnih priča",
-      "summarizing": "Sažimanje…"
-    },
-    "progressCharts": {
-      "noData": "Nema dostupnih podataka o napretku",
-      "fallbackBadge": "Prikazujem statičke fallback podatke — live serija nije dostupna",
-      "fallbackTooltip": "Live World Bank seed nije dostupan. Ovi grafikoni su prikazani iz snimljene kopije koja je zadnja verificirana u veljači 2026."
     },
     "monitor": {
       "placeholder": "Ključne riječi (odvojene zarezom)",
@@ -1419,10 +1401,6 @@
         "iranAttacks": "Napadi na Bliskom istoku",
         "gpsJamming": "Smetnje navigaciji",
         "ciiChoropleth": "Nestabilnost države",
-        "positiveEvents": "Pozitivni Događaji",
-        "kindness": "Čini Ljubaznosti",
-        "happiness": "Svjetsko Blagostanje",
-        "speciesRecovery": "Oporavak vrsta",
         "renewableInstallations": "Čista energija",
         "notamAirspace": "NOTAM ograničenja zračnog prostora",
         "no2Activity": "Industrijska aktivnost",
@@ -1842,53 +1820,6 @@
       "deathsCount": "{{count}} preminulih",
       "moreNotShown": "{{count}} više događaja nije prikazano",
       "infoTooltip": "<strong>Događaji oružanih sukoba</strong> Podaci o sukobima na razini događaja od Uppsalskog sveučilišta (UCDP).<ul><li><strong>Državni konflikt</strong>: Vlada protiv skupine pripadnika bune</li><li><strong>Nedržavni</strong>: Oružana grupa protiv oružane grupe</li><li><strong>Jednostrani</strong>: Nasilje prema civilnom stanovništvu</li></ul>Broj preminulih prikazan kao najbolja procjena (nisko-visoki raspon). Duplikati iz ACLED-a se automatski filtriraju."
-    },
-    "giving": {
-      "activityIndex": "Indeks aktivnosti",
-      "trend": "Trend",
-      "estDailyFlow": "Proc. dnevni tok",
-      "cryptoDaily": "Kripto dnevno",
-      "tabs": {
-        "platforms": "Platforme",
-        "categories": "Kategorije",
-        "crypto": "Kripto",
-        "institutional": "Institucijski"
-      },
-      "platform": "Platforma",
-      "dailyVol": "Dnevni vol.",
-      "velocity": "Brzina",
-      "freshness": "Podaci",
-      "category": "Kategorija",
-      "share": "Udio",
-      "trending": "TREND",
-      "dailyInflow": "Dnevni priliv",
-      "wallets": "Novčanici",
-      "ofTotal": "% od ukupno",
-      "topReceivers": "Glavni primatelji",
-      "oecdOda": "Službena razvojna pomoć Organizacije za gospodarsku suradnju i razvoj",
-      "cafIndex": "CAF Indeks",
-      "candidGrants": "Candid Grantovi",
-      "dataLag": "Vremenski zamak podataka",
-      "infoTooltip": "<strong>Globalni indeks aktivnosti davanja</strong> Kompozitni indeks koji prati osobnu dobrotvornu davanja na platformama za skupljanje sredstava i kripto novčanike.<ul><li><strong>Platforme</strong>: GoFundMe, GlobalGiving, JustGiving uzorci kampanja</li><li><strong>Kripto</strong>: Prilivi na lancu dobrotvornih novčanika (Endaoment, Giving Block)</li><li><strong>Institucionalno</strong>: OECD ODA, CAF World Giving Index, Candid grantovi</li></ul>Indeks je smjerodavan (ne točan iznos u dolarima). Kombinira uzorkovanje u vremenu stvarnom s objavljenim godišnjim izvještajima.",
-      "benchmarkTitle": "Globalne referentne vrijednosti davanja",
-      "benchmarkInfoTooltip": "<strong>Globalne referentne vrijednosti davanja</strong> Objavljeni zahtjevi platformi i institucija s izvornim razdobljima i statusom provjere. Godišnje cifre su procjene, a ne aktivnost u stvarnom vremenu.",
-      "status": {
-        "published": "Objavljene referentne vrijednosti s verificiranim izvornim pokrićem.",
-        "partial": "Objavljene referentne vrijednosti s djelomičnim izvornim pokrićem.",
-        "legacy": "Stara snimka; pojedinosti izvora nisu dostupne.",
-        "cached": "Prikazuje se snimka iz predmemorije; osvježavanje nije dostupno."
-      },
-      "trackedAnnualized": "Praćena davanja platforme — godišnja procjena",
-      "annualizedDaily": "Dnevna godišnja procjena",
-      "atLeast": "Najmanje",
-      "about": "Otprilike",
-      "sourceNotVerified": "Izvor nije verificiran",
-      "reportedCumulative": "Prijavljeni kumulativni ukupan iznos",
-      "sourcePeriod": "{{source}} · {{period}}",
-      "benchmark": "Objavljena referentna vrijednost",
-      "sourcesMethodology": "Izvori i metodologija",
-      "methodologyIntro": "U naslov ulaze samo verificirani godišnji ili opravdano anualizirani zahtjevi platformi. Kumulativne i institucionalne cifre ostaju zasebni kontekst.",
-      "partialEstimate": "Djelomično verificirana procjena"
     },
     "displacement": {
       "refugees": "Izbjeglice",
@@ -2411,9 +2342,6 @@
     "goldIntelligence": {
       "infoTooltip": "<strong>Monitoring zlata</strong> Cijene zlata u nekoliko valuta, omjeri zlato/srebro i zlato/platina, te pozicije upravljanih novaca u futures ugovorima. Izvori uključuju Yahoo Finance i Komisiju za trgovinu roba futures."
     },
-    "counters": {
-      "infoTooltip": "<strong>Live Brojači</strong> Brojači u realnom vremenu sa ekstrapolacijom za globalne metrike: vojni rashodi, prirodne katastrofe, teret bolesti i drugo. Brojevi su statističke procjene temeljene na godišnjim stopama podataka."
-    },
     "diseaseOutbreaks": {
       "infoTooltip": "<strong>Izbijanja bolesti</strong> Aktivne upozore o izbijanju od WHO, ProMED i zdravstvenih ministarstava. Prati potvrđena izbijanja, zahvaćene regije, brojeve slučajeva i razine prijetnje. Ažurirano kada se objave novi izvještaji.",
       "methodologyNote": "Razine Alert / Warning / Watch dolaze iz uredničkog klasifikatora ključnih riječi — pogledajte /docs/methodology/disease-alert-level za tablicu ključnih riječi i ograničenja.",
@@ -2560,9 +2488,6 @@
     },
     "renewable": {
       "infoTooltip": "<strong>Obnovljiva energija</strong> Udio proizvodnje električne energije iz obnovljivih izvora po regiji i godini, te instalirani kapacitet SAD-a za solarnu energiju, vjetar i ugljen (MW). Izvori: Svjetska banka (EG.ELC.RNEW.ZS) i Američka administracija za energetske informacije."
-    },
-    "conservationWins": {
-      "infoTooltip": "<strong>Conservation Wins</strong> Pozitivne vijesti o zaštiti: oporavci populacija vrsta, kameni mnogih oporavka staništa i nastojanja de-extincije. Iz IUCN, WWF i publikacija konzervacijskih istraživanja."
     },
     "worldClock": {
       "infoTooltip": "<strong>World Clock</strong> Živoa lokalno vrijeme i status tržišne sesije za glavne svjetske financijske centre. Pokazuje status otvoreno/zatvoreno za NYSE, LSE, TSE, SGX i druge burze."
@@ -4382,7 +4307,6 @@
     "calculatingExposure": "Izračunavanje izloženosti",
     "computingSignals": "Izračunavanje signala...",
     "loadingEtfData": "Učitavanje podataka o fondovima za trgovanje na burzi...",
-    "loadingGiving": "Učitavanje globalne donacije",
     "loadingDisplacement": "Učitavanje podataka o raseljenim osobama",
     "loadingClimateData": "Učitavanje klimatskih podataka",
     "failedTechReadiness": "Podaci o tehnološkoj spremnosti privremeno nedostupni",
@@ -4907,9 +4831,6 @@
       "map": "Energetski atlas",
       "liveNews": "Energetske vijesti",
       "insights": "AI uvidi o energiji"
-    },
-    "happy": {
-      "map": "Mapa dobrih vijesti"
     }
   },
   "pwaInstall": {
@@ -5650,7 +5571,6 @@
   },
   "personalChrome": {
     "timeRange": "TIME RANGE",
-    "goodNews": "Good News",
     "mission": "Mission",
     "activeMission": "Mission: {{name}}"
   }

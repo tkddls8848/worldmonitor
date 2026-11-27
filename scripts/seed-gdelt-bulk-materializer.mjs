@@ -61,8 +61,6 @@ export {
   GDELT_BULK_UNREST_KEY,
   GDELT_BULK_ARTICLES_KEY,
   GDELT_BULK_COUNTRY_ARTICLES_KEY,
-  POSITIVE_EVENTS_RPC_KEY,
-  POSITIVE_EVENTS_BOOTSTRAP_KEY,
 } from './_gdelt-bulk-contract.mjs';
 import {
   GDELT_INTEL_KEY,
@@ -71,8 +69,6 @@ import {
   GDELT_BULK_UNREST_KEY,
   GDELT_BULK_ARTICLES_KEY,
   GDELT_BULK_COUNTRY_ARTICLES_KEY,
-  POSITIVE_EVENTS_RPC_KEY,
-  POSITIVE_EVENTS_BOOTSTRAP_KEY,
 } from './_gdelt-bulk-contract.mjs';
 
 loadEnvFile(import.meta.url);
@@ -116,20 +112,12 @@ export const COUNTRY_EVENTS_META_KEY = 'seed-meta:gdelt:bulk:country-events';
 export const COUNTRY_EVENTS_ACTIVATION_KEY = 'seed-activated:gdelt:bulk:country-events';
 const CONFLICT_TTL = 6 * 60 * 60;
 const UNREST_TTL = 4.5 * 60 * 60;
-// 3h, NOT 45min: api/health.js gates positiveGeoEvents at maxStaleMin 60 AND
-// treats a missing payload as a hard failure, so a TTL under that window makes a
-// merely-late materializer page as EMPTY/crit before STALE_SEED can warn — the
-// #5309 ACLED_TTL zero-headroom class. The old warm relay masked this with a
-// 5-min in-process retry loop; a single-shot 15-min cron has no such cover, and
-// a skipped tick must degrade to a warning, not a page (#5863 review).
-const POSITIVE_TTL = 3 * 60 * 60;
 const ARTICLES_TTL = 2 * 86_400;
 // The per-country index (#7748) is read by a weekly freeze; two days, like the
 // reference articles, so a materializer that stops surfaces as
 // `seed-unavailable` on the search route within two days instead of serving
 // a week-old index as current.
 const COUNTRY_ARTICLES_TTL = ARTICLES_TTL;
-const POSITIVE_EVENTS_META_KEY = 'seed-meta:positive-events:geo';
 // The index has no dashboard consumer — only the search route's country form
 // and the weekly freeze read it — so it is a standalone health dataset
 // (AGENTS.md): published with its own seed-meta record and gated in
@@ -784,7 +772,6 @@ export async function fetchMaterializedGdelt(deps = {}) {
     _countryEvents: { ...countryEvents, ...summarizeCountryEvents(countryEvents, nowMs), updatedAt: nowMs },
     _timelines: materialized.timelines,
     _unrest: materialized.unrest,
-    _positive: materialized.positive,
     _reference: materialized.reference,
     _countryIndex: materialized.countryIndex,
     _conflict: conflictPayload,
@@ -919,24 +906,6 @@ export async function afterPublish(data, _meta, deps = {}) {
         COUNTRY_ARTICLES_META_KEY,
       ),
     },
-    {
-      label: POSITIVE_EVENTS_META_KEY,
-      run: () => _writeExtraKeyWithMeta(
-        POSITIVE_EVENTS_RPC_KEY,
-        data._positive,
-        POSITIVE_TTL,
-        data._positive.events.length,
-        POSITIVE_EVENTS_META_KEY,
-      ),
-    },
-    {
-      label: POSITIVE_EVENTS_BOOTSTRAP_KEY,
-      run: () => _writeExtraKey(
-        POSITIVE_EVENTS_BOOTSTRAP_KEY,
-        data._positive,
-        POSITIVE_TTL,
-      ),
-    },
   );
   const settled = await Promise.allSettled(
     outputOperations.map(({ run }) => Promise.resolve().then(run)),
@@ -1032,9 +1001,6 @@ export const RUN_SEED_OPTS = {
     { key: GDELT_BULK_ARTICLES_KEY, ttlSeconds: ARTICLES_TTL },
     { key: GDELT_BULK_COUNTRY_ARTICLES_KEY, ttlSeconds: COUNTRY_ARTICLES_TTL },
     { key: COUNTRY_ARTICLES_META_KEY, ttlSeconds: TIMELINE_TTL },
-    { key: POSITIVE_EVENTS_RPC_KEY, ttlSeconds: POSITIVE_TTL },
-    { key: POSITIVE_EVENTS_BOOTSTRAP_KEY, ttlSeconds: POSITIVE_TTL },
-    { key: POSITIVE_EVENTS_META_KEY, ttlSeconds: TIMELINE_TTL },
     { key: GDELT_BULK_STATE_KEY, ttlSeconds: STATE_TTL },
   ],
 };

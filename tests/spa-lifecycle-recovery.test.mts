@@ -142,7 +142,7 @@ describe('SPA lifecycle recovery contracts', () => {
         .map(firstStringArg)
         .filter((value): value is string => value !== null),
     );
-    const requiredColdFailPanels = ['climate', 'displacement', 'giving', 'ucdp-events'];
+    const requiredColdFailPanels = ['climate', 'displacement', 'ucdp-events'];
     const missing = requiredColdFailPanels.filter(panel => !coldFailPanels.has(panel));
     assert.deepEqual(
       missing,
@@ -167,7 +167,6 @@ describe('SPA lifecycle recovery contracts', () => {
 
   it('cold-failure panels expose loaded-data state to preserve warm retained views', () => {
     for (const [rel, className] of [
-      ['src/components/GivingPanel.ts', 'GivingPanel'],
       ['src/components/UcdpEventsPanel.ts', 'UcdpEventsPanel'],
       ['src/components/DisplacementPanel.ts', 'DisplacementPanel'],
       ['src/components/ClimateAnomalyPanel.ts', 'ClimateAnomalyPanel'],

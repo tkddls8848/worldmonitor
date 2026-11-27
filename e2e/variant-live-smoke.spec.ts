@@ -6,7 +6,7 @@ import {
   type ApiDiagnostic,
 } from './variant-live-smoke-response-capture';
 
-type VariantName = 'full' | 'tech' | 'finance' | 'commodity' | 'energy' | 'happy';
+type VariantName = 'full' | 'tech' | 'finance' | 'commodity' | 'energy';
 
 type PanelDiagnostic = {
   id: string;
@@ -21,7 +21,6 @@ const EXPECTED_BOOT_PANELS: Record<VariantName, string[]> = {
   finance: ['live-news', 'insights', 'markets'],
   commodity: ['live-news', 'insights', 'commodity-news', 'markets'],
   energy: ['chokepoint-strip', 'pipeline-status', 'live-news'],
-  happy: ['positive-feed', 'progress', 'counters'],
 };
 
 const AUTH_OR_PREMIUM_401_PREFIXES = [
@@ -46,8 +45,7 @@ const normalizeVariant = (variant: string | undefined): VariantName => {
     variant === 'tech' ||
     variant === 'finance' ||
     variant === 'commodity' ||
-    variant === 'energy' ||
-    variant === 'happy'
+    variant === 'energy'
   ) {
     return variant;
   }

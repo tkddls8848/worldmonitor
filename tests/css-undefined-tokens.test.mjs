@@ -44,9 +44,9 @@ const INLINE_TOKENS = {
 /** Standalone pages: sheet -> the other sheets its entry point loads (see src/*-main.ts). */
 const STANDALONE = {
   'styles/plugin.css': ['styles/base-layer.css'],
-  'styles/embed.css': ['styles/base-layer.css', 'styles/happy-theme.css'],
+  'styles/embed.css': ['styles/base-layer.css'],
 };
-const VARIANT_ONLY = new Set(['styles/happy-theme.css']);
+const VARIANT_ONLY = new Set();
 
 function filesEndingWith(dir, ext) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {

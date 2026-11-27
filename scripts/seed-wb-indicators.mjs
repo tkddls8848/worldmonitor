@@ -24,7 +24,6 @@ import {
 
 
 const BOOTSTRAP_KEY = 'economic:worldbank-techreadiness:v1';
-const PROGRESS_KEY = 'economic:worldbank-progress:v1';
 const RENEWABLE_KEY = 'economic:worldbank-renewable:v1';
 const TTL_SECONDS = 7 * 24 * 3600; // 7 days — WB data is annual
 const MAX_RETRIES = 3;
@@ -213,48 +212,6 @@ async function fetchWbIndicator(indicatorId, dateRange) {
 }
 
 // ---------------------------------------------------------------------------
-// Progress indicators (Human Progress panel)
-// ---------------------------------------------------------------------------
-
-const PROGRESS_INDICATORS = [
-  { id: 'lifeExpectancy', code: 'SP.DYN.LE00.IN', years: 65, invertTrend: false },
-  { id: 'literacy',       code: 'SE.ADT.LITR.ZS', years: 55, invertTrend: false },
-  { id: 'childMortality', code: 'SH.DYN.MORT',    years: 65, invertTrend: true },
-  { id: 'poverty',        code: 'SI.POV.DDAY',    years: 45, invertTrend: true },
-];
-
-async function fetchProgressData() {
-  const currentYear = new Date().getFullYear();
-  const results = [];
-
-  for (const ind of PROGRESS_INDICATORS) {
-    const startYear = currentYear - ind.years;
-    const dateRange = `${startYear}:${currentYear}`;
-    console.log(`  Progress: ${ind.code} (${dateRange})`);
-
-    const url = `https://api.worldbank.org/v2/country/1W/indicator/${ind.code}?format=json&date=${dateRange}&per_page=1000`;
-    const raw = await fetchWithRetry(url);
-
-    if (!Array.isArray(raw) || raw.length < 2 || !Array.isArray(raw[1])) {
-      console.warn(`    → No data for ${ind.code}`);
-      results.push({ id: ind.id, code: ind.code, data: [], invertTrend: ind.invertTrend });
-      continue;
-    }
-
-    const data = raw[1]
-      .filter(e => e.value !== null && e.value !== undefined)
-      .map(e => ({ year: parseInt(e.date, 10), value: e.value }))
-      .filter(d => !Number.isNaN(d.year))
-      .sort((a, b) => a.year - b.year);
-
-    console.log(`    → ${data.length} data points`);
-    results.push({ id: ind.id, code: ind.code, data, invertTrend: ind.invertTrend });
-  }
-
-  return results;
-}
-
-// ---------------------------------------------------------------------------
 // Renewable energy (EG.ELC.RNEW.ZS) for world + regions
 // ---------------------------------------------------------------------------
 
@@ -344,7 +301,6 @@ async function main() {
   }
 
   const fullKey = `${prefix}${BOOTSTRAP_KEY}`;
-  const progressKey = `${prefix}${PROGRESS_KEY}`;
   const renewableKey = `${prefix}${RENEWABLE_KEY}`;
 
   console.log('=== World Bank Indicators Seed ===');
@@ -352,7 +308,7 @@ async function main() {
   console.log(`  Prefix:       ${prefix || '(none — production)'}`);
   console.log(`  Redis URL:    ${redisUrl}`);
   console.log(`  Redis Token:  ${maskToken(redisToken)}`);
-  console.log(`  Keys: ${fullKey}, ${progressKey}, ${renewableKey}, plus ${WORLD_BANK_CATALOGUE_INDICATORS.length} RPC catalogue snapshots`);
+  console.log(`  Keys: ${fullKey}, ${renewableKey}, plus ${WORLD_BANK_CATALOGUE_INDICATORS.length} RPC catalogue snapshots`);
   console.log(`  TTL:          ${TTL_SECONDS}s (7 days)`);
   console.log();
 
@@ -381,12 +337,6 @@ async function main() {
   const ranked = rankings.filter(entry => entry.rank !== null);
   console.log(`  → ${ranked.length}/${rankings.length} countries ranked`);
   console.log(`  Top 5: ${ranked.slice(0, 5).map(r => `${r.rank}. ${r.countryName} (${r.score})`).join(', ')}\n`);
-
-  // ── 2. Progress indicators ──
-  console.log('── Progress Indicators ──');
-  const progressData = await fetchProgressData();
-  const progressWithData = progressData.filter(p => p.data.length > 0);
-  console.log(`  → ${progressWithData.length}/${progressData.length} indicators with data\n`);
 
   // ── 3. Renewable energy ──
   console.log('── Renewable Energy ──');
@@ -427,8 +377,6 @@ async function main() {
         const extendPipeline = [
           ['EXPIRE', fullKey, String(TTL_SECONDS)],
           ['EXPIRE', `seed-meta:${BOOTSTRAP_KEY}`, String(TTL_SECONDS + 3600)],
-          ['EXPIRE', progressKey, String(TTL_SECONDS)],
-          ['EXPIRE', `seed-meta:${PROGRESS_KEY}`, String(TTL_SECONDS + 3600)],
           ['EXPIRE', renewableKey, String(TTL_SECONDS)],
           ['EXPIRE', `seed-meta:${RENEWABLE_KEY}`, String(TTL_SECONDS + 3600)],
         ];
@@ -447,10 +395,6 @@ async function main() {
     ['SET', fullKey, JSON.stringify(rankings), 'EX', String(TTL_SECONDS)],
     ['SET', `seed-meta:${BOOTSTRAP_KEY}`, JSON.stringify({ fetchedAt: Date.now(), recordCount: rankings.length }), 'EX', metaTtl],
   ];
-  if (progressWithData.length > 0) {
-    pipeline.push(['SET', progressKey, JSON.stringify(progressData), 'EX', String(TTL_SECONDS)]);
-    pipeline.push(['SET', `seed-meta:${PROGRESS_KEY}`, JSON.stringify({ fetchedAt: Date.now(), recordCount: progressWithData.length }), 'EX', metaTtl]);
-  }
   if (renewableData.historicalData.length > 0) {
     pipeline.push(['SET', renewableKey, JSON.stringify(renewableData), 'EX', String(TTL_SECONDS)]);
     pipeline.push(['SET', `seed-meta:${RENEWABLE_KEY}`, JSON.stringify({ fetchedAt: Date.now(), recordCount: renewableData.historicalData.length }), 'EX', metaTtl]);
@@ -486,7 +430,6 @@ async function main() {
   console.log('Verifying...');
   const verifyResp = await redisPipeline(redisUrl, redisToken, [
     ['GET', fullKey],
-    ['GET', progressKey],
     ['GET', renewableKey],
   ]);
 
@@ -497,11 +440,7 @@ async function main() {
   console.log(`  ✓ techReadiness: ${parsedRankings.length} rankings`);
 
   if (verifyResp[1]?.result) {
-    const p = JSON.parse(verifyResp[1].result);
-    console.log(`  ✓ progressData: ${p.length} indicators`);
-  }
-  if (verifyResp[2]?.result) {
-    const r = JSON.parse(verifyResp[2].result);
+    const r = JSON.parse(verifyResp[1].result);
     console.log(`  ✓ renewableEnergy: ${r.regions?.length || 0} regions, global=${r.globalPercentage}%`);
   }
 

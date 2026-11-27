@@ -103,7 +103,6 @@ import {
   type StockAnalysisHistory,
 } from '@/services/stock-analysis-history';
 import { checkBatchForBreakingAlerts, dispatchOrefBreakingAlert } from '@/services/breaking-news-alerts';
-import { displayPubDateMs, effectivePubDateMs } from '@/services/feed-date';
 import { mlWorker } from '@/services/ml-worker';
 import { clusterNewsHybrid, clusterNewsWithWorkerFallback } from '@/services/clustering';
 import { ingestProtests, ingestFlights, ingestVessels, ingestEarthquakes, detectGeoConvergence, geoConvergenceToSignal } from '@/services/geo-convergence';
@@ -170,21 +169,11 @@ import type { DiseaseOutbreaksPanel } from '@/components/DiseaseOutbreaksPanel';
 import type { AAIISentimentPanel } from '@/components/AAIISentimentPanel';
 import type { MarketBreadthPanel } from '@/components/MarketBreadthPanel';
 import type { SatelliteFiresPanel } from '@/components/SatelliteFiresPanel';
-import { classifyNewsItem } from '@/services/positive-classifier';
-import { fetchGivingSummary } from '@/services/giving';
-import { fetchProgressData } from '@/services/progress-data';
-import { fetchConservationWins } from '@/services/conservation-data';
 // #4571: renewable-energy-data (+ its transitive economic edge) dynamic-imported
 // inside loadRenewableData so it doesn't parse/execute at boot — the renewable
 // panel is below-fold and its load is viewport-gated (shouldLoad('renewable')).
-import { checkMilestones } from '@/services/celebration';
-import { fetchHappinessScores } from '@/services/happiness-data';
 import { fetchRenewableInstallations } from '@/services/renewable-installations';
-import { filterBySentiment } from '@/services/sentiment-gate';
-import { fetchAllPositiveTopicIntelligence } from '@/services/gdelt-intel';
-import { fetchPositiveGeoEvents, geocodePositiveNewsItems, type PositiveGeoEvent } from '@/services/positive-events-geo';
-import type { HappyContentCategory } from '@/services/positive-classifier';
-import { fetchKindnessData } from '@/services/kindness-data';
+import { effectivePubDateMs } from '@/services/feed-date';
 import { getPersistentCache, setPersistentCache } from '@/services/persistent-cache';
 import { getActiveFrameworkForPanel, subscribeFrameworkChange } from '@/services/analysis-framework-store';
 import type {
@@ -248,7 +237,6 @@ export async function loadPhysicalPremiumComparisonIfNeeded(
   await loadPhysicalPremiumComparison(panel, isCurrent, fetchPremiums, fetchDivergence);
   return true;
 }
-
 
 interface SelectedNewsDigest {
   digest: ListFeedDigestResponse;
@@ -1115,8 +1103,7 @@ export class DataLoaderManager implements AppModule {
       tasks.push({ name: 'news', task: () => this.newsHydrationTask(forceAll) });
     }
 
-    // Happy variant only loads news data -- skip all geopolitical/financial/military data
-    if (SITE_VARIANT !== 'happy') {
+    {
       if (shouldLoadAny(['markets', 'heatmap', 'commodities', 'crypto', 'energy-complex', 'crypto-heatmap', 'defi-tokens', 'ai-tokens', 'other-tokens'])) {
         tasks.push({ name: 'markets', task: () => runGuarded('markets', () => this.loadMarkets()) });
       }
@@ -1170,37 +1157,15 @@ export class DataLoaderManager implements AppModule {
       }
     }
 
-    // Progress charts data (happy variant only)
-    if (SITE_VARIANT === 'happy') {
-      if (shouldLoad('progress')) {
-        tasks.push({
-          name: 'progress',
-          task: () => runGuarded('progress', () => this.loadProgressData()),
-        });
-      }
-      if (shouldLoad('species')) {
-        tasks.push({
-          name: 'species',
-          task: () => runGuarded('species', () => this.loadSpeciesData()),
-        });
-      }
-      tasks.push({
-        name: 'happinessMap',
-        task: () => runGuarded('happinessMap', async () => {
-          const data = await fetchHappinessScores();
-          this.ctx.map?.setHappinessScores(data);
-        }),
-      });
+    if (this.ctx.mapLayers.renewableInstallations) {
       tasks.push({
         name: 'renewableMap',
         task: () => runGuarded('renewableMap', async () => {
-          const installations = await fetchRenewableInstallations();
-          this.ctx.map?.setRenewableInstallations(installations);
+          this.ctx.map?.setRenewableInstallations(await fetchRenewableInstallations());
         }),
       });
     }
 
-    // Renewable panel is shared by happy and energy variants.
     if (shouldLoad('renewable')) {
       tasks.push({
         name: 'renewable',
@@ -1208,26 +1173,6 @@ export class DataLoaderManager implements AppModule {
       });
     }
 
-    if (shouldLoad('giving')) {
-      tasks.push({
-        name: 'giving',
-        task: () => runGuarded('giving', async () => {
-          const givingResult = await fetchGivingSummary();
-          if (!givingResult.ok) {
-            dataFreshness.recordError('giving', 'Giving data unavailable (retaining prior state)');
-            this.showColdLoadError('giving');
-            return;
-          }
-          const data = givingResult.data;
-          this.callPanel('giving', 'setData', data);
-          if (givingResult.state === 'cached-refresh-unavailable') {
-            dataFreshness.recordError('giving', `Giving refresh unavailable (${givingResult.refreshFailure ?? 'unknown'})`);
-          } else if (data.platforms.length > 0) {
-            dataFreshness.recordUpdate('giving', data.platforms.length);
-          }
-        }),
-      });
-    }
 
     if (SITE_VARIANT === 'full' && runOncePerViewport('cii-refresh', ['cii', 'strategic-risk'])) {
       try {
@@ -1259,27 +1204,27 @@ export class DataLoaderManager implements AppModule {
     if (this.ctx.mapLayers.natural) tasks.push({ name: 'natural', task: () => runGuarded('natural', () => this.loadNatural()) });
     if (this.ctx.mapLayers.diseaseOutbreaks || shouldLoad('disease-outbreaks')) tasks.push({ name: 'diseaseOutbreaks', task: () => runGuarded('diseaseOutbreaks', () => this.loadDiseaseOutbreaks()) });
     if (shouldLoad('economic')) tasks.push({ name: 'economicStress', task: () => runGuarded('economicStress', () => this.loadEconomicStress()) });
-    if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.weather) tasks.push({ name: 'weather', task: () => runGuarded('weather', () => this.loadWeatherAlerts()) });
-    if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.pipelines) tasks.push({ name: 'pipelineRegistries', task: () => runGuarded('pipelineRegistries', () => this.loadPipelineRegistries()) });
-    if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.storageFacilities) tasks.push({ name: 'storageFacilities', task: () => runGuarded('storageFacilities', () => this.loadStorageFacilities()) });
-    if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.ais) tasks.push({ name: 'ais', task: () => runGuarded('ais', () => this.loadAisSignals()) });
+    if (this.ctx.mapLayers.weather) tasks.push({ name: 'weather', task: () => runGuarded('weather', () => this.loadWeatherAlerts()) });
+    if (this.ctx.mapLayers.pipelines) tasks.push({ name: 'pipelineRegistries', task: () => runGuarded('pipelineRegistries', () => this.loadPipelineRegistries()) });
+    if (this.ctx.mapLayers.storageFacilities) tasks.push({ name: 'storageFacilities', task: () => runGuarded('storageFacilities', () => this.loadStorageFacilities()) });
+    if (this.ctx.mapLayers.ais) tasks.push({ name: 'ais', task: () => runGuarded('ais', () => this.loadAisSignals()) });
     if ((SITE_VARIANT === 'full' && this.ctx.mapLayers.ais) || (this.ctx.panelSettings['ukmto-incidents']?.enabled && shouldLoad('ukmto-incidents'))) {
       tasks.push({ name: 'ukmtoIncidents', task: () => runGuarded('ukmtoIncidents', () => this.loadUkmtoIncidents()) });
     }
-    if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.cables) tasks.push({ name: 'cables', task: () => runGuarded('cables', () => this.loadCableActivity()) });
-    if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.cables) tasks.push({ name: 'cableHealth', task: () => runGuarded('cableHealth', () => this.loadCableHealth()) });
-    if (SITE_VARIANT !== 'happy' && this.ctx.mapLayers.flights) tasks.push({ name: 'flights', task: () => runGuarded('flights', () => this.loadFlightDelays()) });
-    if (SITE_VARIANT !== 'happy' && CYBER_LAYER_ENABLED && this.ctx.mapLayers.cyberThreats) tasks.push({ name: 'cyberThreats', task: () => runGuarded('cyberThreats', () => this.loadCyberThreats()) });
-    if (IRAN_ATTACKS_ENABLED && SITE_VARIANT !== 'happy' && (this.ctx.mapLayers.iranAttacks || shouldLoadAny(['cii', 'strategic-risk', 'strategic-posture']))) tasks.push({ name: 'iranAttacks', task: () => runGuarded('iranAttacks', () => this.loadIranEvents()) });
-    if (SITE_VARIANT !== 'happy' && (this.ctx.mapLayers.techEvents || SITE_VARIANT === 'tech')) tasks.push({ name: 'techEvents', task: () => runGuarded('techEvents', () => this.loadTechEvents()) });
-    if (SITE_VARIANT !== 'happy' && (shouldLoad('sanctions-pressure') || this.ctx.mapLayers.sanctions)) {
+    if (this.ctx.mapLayers.cables) tasks.push({ name: 'cables', task: () => runGuarded('cables', () => this.loadCableActivity()) });
+    if (this.ctx.mapLayers.cables) tasks.push({ name: 'cableHealth', task: () => runGuarded('cableHealth', () => this.loadCableHealth()) });
+    if (this.ctx.mapLayers.flights) tasks.push({ name: 'flights', task: () => runGuarded('flights', () => this.loadFlightDelays()) });
+    if (CYBER_LAYER_ENABLED && this.ctx.mapLayers.cyberThreats) tasks.push({ name: 'cyberThreats', task: () => runGuarded('cyberThreats', () => this.loadCyberThreats()) });
+    if (IRAN_ATTACKS_ENABLED && (this.ctx.mapLayers.iranAttacks || shouldLoadAny(['cii', 'strategic-risk', 'strategic-posture']))) tasks.push({ name: 'iranAttacks', task: () => runGuarded('iranAttacks', () => this.loadIranEvents()) });
+    if ((this.ctx.mapLayers.techEvents || SITE_VARIANT === 'tech')) tasks.push({ name: 'techEvents', task: () => runGuarded('techEvents', () => this.loadTechEvents()) });
+    if ((shouldLoad('sanctions-pressure') || this.ctx.mapLayers.sanctions)) {
       tasks.push({ name: 'sanctions', task: () => runGuarded('sanctions', () => this.loadSanctionsPressure()) });
     }
     if (this.ctx.mapLayers.no2Activity) tasks.push({ name: 'no2Activity', task: () => runGuarded('no2Activity', () => this.loadNo2Activity()) });
     if (this.ctx.mapLayers.reservoirLevels || (this.ctx.panelSettings['reservoir-levels']?.enabled && shouldLoad('reservoir-levels'))) {
       tasks.push({ name: 'reservoirLevels', task: () => runGuarded('reservoirLevels', () => this.loadReservoirLevels()) });
     }
-    if (SITE_VARIANT !== 'happy' && shouldLoad('radiation-watch')) {
+    if (shouldLoad('radiation-watch')) {
       // Only the Radiation Watch panel reads this; the map layer was removed.
       // `name` stays 'radiation' for hydration tiering (#6770).
       tasks.push({ name: 'radiation', task: () => runGuarded('radiation', () => this.loadRadiationWatch()) });
@@ -1292,10 +1237,10 @@ export class DataLoaderManager implements AppModule {
     if ((isPanelInVariantDefaults('tech-readiness') || this.ctx.panelSettings?.['tech-readiness']?.enabled === true) && shouldLoad('tech-readiness')) {
       tasks.push({ name: 'techReadiness', task: () => runGuarded('techReadiness', () => (this.ctx.panels['tech-readiness'] as TechReadinessPanel)?.refresh()) });
     }
-    if (SITE_VARIANT !== 'happy' && shouldLoad('thermal-escalation')) {
+    if (shouldLoad('thermal-escalation')) {
       tasks.push({ name: 'thermalEscalation', task: () => runGuarded('thermalEscalation', () => this.loadThermalEscalations()) });
     }
-    if (SITE_VARIANT !== 'happy' && shouldLoad('cross-source-signals')) {
+    if (shouldLoad('cross-source-signals')) {
       tasks.push({ name: 'crossSourceSignals', task: () => runGuarded('crossSourceSignals', () => this.loadCrossSourceSignals()) });
     }
 
@@ -1377,12 +1322,6 @@ export class DataLoaderManager implements AppModule {
           await this.loadTechEvents();
           console.log('[loadDataForLayer] techEvents loaded');
           break;
-        case 'positiveEvents':
-          await this.loadPositiveEvents();
-          break;
-        case 'kindness':
-          this.loadKindnessData();
-          break;
         case 'iranAttacks':
           await this.loadIranEvents();
           break;
@@ -1403,6 +1342,9 @@ export class DataLoaderManager implements AppModule {
           break;
         case 'reservoirLevels':
           await this.loadReservoirLevels();
+          break;
+        case 'renewableInstallations':
+          this.ctx.map?.setRenewableInstallations(await fetchRenewableInstallations());
           break;
       }
     } finally {
@@ -2030,11 +1972,6 @@ export class DataLoaderManager implements AppModule {
 
   async loadNews(options: { onFirstPaint?: () => void } = {}): Promise<void> {
     const generation = this.beginNewsLoad();
-    // Reset happy variant accumulator for fresh pipeline run
-    if (SITE_VARIANT === 'happy') {
-      this.ctx.happyAllItems = [];
-    }
-
     // Fire digest fetch early, but do not let a slow digest stall the category
     // first paint. Fast digests still take the optimized digest-backed path.
     const digestPromise = this.tryFetchDigest().catch((error) => {
@@ -2107,14 +2044,6 @@ export class DataLoaderManager implements AppModule {
     const collectedNews: NewsItem[] = [];
     for (const { key } of categories) {
       const items = categoryItemsByKey.get(key) ?? [];
-      // Tag items with content categories for happy variant
-      if (SITE_VARIANT === 'happy') {
-        for (const item of items) {
-          item.happyCategory = classifyNewsItem(item.source, item.title);
-        }
-        // Accumulate curated items for the positive news pipeline
-        this.ctx.happyAllItems = this.ctx.happyAllItems.concat(items);
-      }
       collectedNews.push(...items);
     }
 
@@ -2215,14 +2144,6 @@ export class DataLoaderManager implements AppModule {
       }
     }
 
-    // Happy variant: run multi-stage positive news pipeline + map layers
-    if (SITE_VARIANT === 'happy') {
-      await this.loadHappySupplementaryAndRender();
-      await Promise.allSettled([
-        this.ctx.mapLayers.positiveEvents ? this.loadPositiveEvents() : Promise.resolve(),
-        this.ctx.mapLayers.kindness ? Promise.resolve(this.loadKindnessData()) : Promise.resolve(),
-      ]);
-    }
   }
 
   async loadStockAnalysis(): Promise<void> {
@@ -3559,7 +3480,6 @@ export class DataLoaderManager implements AppModule {
       }
     })());
 
-
     await Promise.allSettled(tasks);
 
     try {
@@ -3856,7 +3776,6 @@ export class DataLoaderManager implements AppModule {
       dataFreshness.recordError('gdelt_doc', String(error));
     }
   }
-
 
   async loadFlightDelays(): Promise<void> {
     try {
@@ -4621,155 +4540,17 @@ export class DataLoaderManager implements AppModule {
   // synthesized `Date.now()` stamps would fraudulently claim freshness
   // for the 24h gate window. Pre-v2 entries are left to TTL out (no
   // explicit invalidation needed).
-  private static readonly HAPPY_ITEMS_CACHE_KEY = 'happy-all-items:v2';
 
-  async hydrateHappyPanelsFromCache(): Promise<void> {
-    try {
-      type CachedItem = Omit<NewsItem, 'pubDate'> & { pubDate?: number };
-      const entry = await getPersistentCache<CachedItem[]>(DataLoaderManager.HAPPY_ITEMS_CACHE_KEY);
-      if (!entry || !entry.data || entry.data.length === 0) return;
-      if (Date.now() - entry.updatedAt > 24 * 60 * 60 * 1000) return;
 
-      const items: NewsItem[] = entry.data.map(item => ({
-        ...item,
-        pubDate: new Date(displayPubDateMs(item)),
-      }));
 
-      const scienceSources = ['GNN Science', 'ScienceDaily', 'Nature News', 'Live Science', 'New Scientist', 'Singularity Hub', 'Human Progress', 'Greater Good (Berkeley)'];
-      this.callPanel('breakthroughs', 'setItems',
-        items.filter(item => scienceSources.includes(item.source) || item.happyCategory === 'science-health')
-      );
-      this.callPanel('spotlight', 'setHeroStory',
-        items.filter(item => item.happyCategory === 'humanity-kindness')
-          .sort((a, b) => effectivePubDateMs(b) - effectivePubDateMs(a))[0]
-      );
-      this.callPanel('digest', 'setStories',
-        [...items].sort((a, b) => effectivePubDateMs(b) - effectivePubDateMs(a)).slice(0, 5)
-      );
-      this.callPanel('positive-feed', 'renderPositiveNews', items);
-    } catch (err) {
-      console.warn('[App] Happy panel cache hydration failed:', err);
-    }
-  }
 
-  private async loadHappySupplementaryAndRender(): Promise<void> {
-    const curated = [...this.ctx.happyAllItems];
-    this.callPanel('positive-feed', 'renderPositiveNews', curated);
 
-    let supplementary: NewsItem[] = [];
-    try {
-      const gdeltTopics = await fetchAllPositiveTopicIntelligence();
-      const gdeltItems: NewsItem[] = gdeltTopics.flatMap(topic =>
-        topic.articles.map(article => ({
-          source: 'GDELT',
-          title: article.title,
-          link: article.url,
-          pubDate: article.date ? new Date(article.date) : new Date(),
-          isAlert: false,
-          imageUrl: article.image || undefined,
-          happyCategory: classifyNewsItem('GDELT', article.title),
-        }))
-      );
 
-      supplementary = await filterBySentiment(gdeltItems);
-    } catch (err) {
-      console.warn('[App] Happy supplementary pipeline failed, using curated only:', err);
-    }
-
-    if (supplementary.length > 0) {
-      const merged = [...curated, ...supplementary];
-      merged.sort((a, b) => effectivePubDateMs(b) - effectivePubDateMs(a));
-      this.callPanel('positive-feed', 'renderPositiveNews', merged);
-    }
-
-    const scienceSources = ['GNN Science', 'ScienceDaily', 'Nature News', 'Live Science', 'New Scientist', 'Singularity Hub', 'Human Progress', 'Greater Good (Berkeley)'];
-    const scienceItems = this.ctx.happyAllItems.filter(item =>
-      scienceSources.includes(item.source) || item.happyCategory === 'science-health'
-    );
-    this.callPanel('breakthroughs', 'setItems', scienceItems);
-
-    const heroItem = this.ctx.happyAllItems
-      .filter(item => item.happyCategory === 'humanity-kindness')
-      .sort((a, b) => effectivePubDateMs(b) - effectivePubDateMs(a))[0];
-    this.callPanel('spotlight', 'setHeroStory', heroItem);
-
-    const digestItems = [...this.ctx.happyAllItems]
-      .sort((a, b) => effectivePubDateMs(b) - effectivePubDateMs(a))
-      .slice(0, 5);
-    this.callPanel('digest', 'setStories', digestItems);
-
-    setPersistentCache(
-      DataLoaderManager.HAPPY_ITEMS_CACHE_KEY,
-      this.ctx.happyAllItems.map(item => ({
-        ...item,
-        pubDate: displayPubDateMs(item),
-      }))
-    ).catch(() => {});
-  }
-
-  private async loadPositiveEvents(): Promise<void> {
-    const hydrated = getHydratedData('positiveGeoEvents') as { events?: Array<{ latitude: number; longitude: number; name: string; category: string; count: number; timestamp: number }> } | undefined;
-    let gdeltEvents: PositiveGeoEvent[];
-    if (hydrated?.events?.length) {
-      gdeltEvents = hydrated.events.map(e => ({
-        lat: e.latitude, lon: e.longitude, name: e.name,
-        category: (e.category || 'humanity-kindness') as HappyContentCategory,
-        count: e.count, timestamp: e.timestamp,
-      }));
-    } else {
-      gdeltEvents = await fetchPositiveGeoEvents();
-    }
-    const rssEvents = geocodePositiveNewsItems(
-      this.ctx.happyAllItems.map(item => ({
-        title: item.title,
-        category: item.happyCategory,
-      }))
-    );
-    const seen = new Set<string>();
-    const merged = [...gdeltEvents, ...rssEvents].filter(e => {
-      if (seen.has(e.name)) return false;
-      seen.add(e.name);
-      return true;
-    });
-    this.ctx.map?.setPositiveEvents(merged);
-  }
-
-  private loadKindnessData(): void {
-    const kindnessItems = fetchKindnessData(
-      this.ctx.happyAllItems.map(item => ({
-        title: item.title,
-        happyCategory: item.happyCategory,
-      }))
-    );
-    this.ctx.map?.setKindnessData(kindnessItems);
-  }
-
-  private async loadProgressData(): Promise<void> {
-    const result = await fetchProgressData();
-    this.callPanel('progress', 'setData', result);
-  }
-
-  private async loadSpeciesData(): Promise<void> {
-    const species = await fetchConservationWins();
-    this.callPanel('species', 'setData', species);
-    this.ctx.map?.setSpeciesRecoveryZones(species);
-    if (SITE_VARIANT === 'happy' && species.length > 0) {
-      checkMilestones({
-        speciesRecoveries: species.map(s => ({ name: s.commonName, status: s.recoveryStatus })),
-        newSpeciesCount: species.length,
-      });
-    }
-  }
 
   private async loadRenewableData(): Promise<void> {
     const { fetchRenewableEnergyData, fetchEnergyCapacity } = await import('@/services/renewable-energy-data');
     const result = await fetchRenewableEnergyData();
     this.callPanel('renewable', 'setData', result);
-    if (SITE_VARIANT === 'happy' && result.state === 'live' && result.data?.globalPercentage) {
-      checkMilestones({
-        renewablePercent: result.data.globalPercentage,
-      });
-    }
     try {
       const capacity = await fetchEnergyCapacity();
       this.callPanel('renewable', 'setCapacityData', capacity);

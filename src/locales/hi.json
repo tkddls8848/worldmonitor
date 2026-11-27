@@ -446,8 +446,6 @@
     "panelCatCommodityPrices": "कीमतें और बाजार",
     "panelCatMining": "खनन और सप्लाई चेन",
     "panelCatCommodityEcon": "अर्थव्यवस्था और व्यापार",
-    "panelCatHappyNews": "अच्छी खबरें",
-    "panelCatHappyPlanet": "प्लैनेट और दान",
     "embed": "एम्बेड"
   },
   "panels": {
@@ -497,7 +495,6 @@
     "stablecoins": "स्थिर कॉइन्स",
     "deduction": "स्थिति का निष्कर्ष",
     "ucdpEvents": "सशस्त्र संघर्ष की घटनाएं",
-    "giving": "वैश्विक दान",
     "displacement": "शरणार्थी और विस्थापन",
     "climate": "जलवायु असामान्यताएं",
     "populationExposure": "आबादी की संभावना",
@@ -919,12 +916,6 @@
     }
   },
   "components": {
-    "positiveNewsFeed": {
-      "noStories": "इस श्रेणी में अभी कोई खबर नहीं"
-    },
-    "breakthroughsTicker": {
-      "noData": "अभी तक कोई वैज्ञानिक सफलता नहीं"
-    },
     "airlineIntel": {
       "infoTooltip": "<strong>एयरलाइन इंटेलिजेंस</strong> रियल-टाइम एयरलाइन परिचालन डेटा: रूट निलंबन, हवाई क्षेत्र बंद, कैरियर सलाह, और आपातकालीन रूट परिवर्तन। स्रोत: विमानन प्राधिकरण NOTAMs और कैरियर बुलेटिन्स।",
       "noOpsData": "कोई परिचालन डेटा नहीं — लोड हो रहा है…",
@@ -939,15 +930,6 @@
       "nonstop": "नॉनस्टॉप",
       "roundTrip": "राउंड ट्रिप",
       "tripDays": "यात्रा के दिन"
-    },
-    "goodThingsDigest": {
-      "noStories": "कोई खबर उपलब्ध नहीं",
-      "summarizing": "सारांश बना रहे हैं…"
-    },
-    "progressCharts": {
-      "noData": "कोई प्रगति डेटा उपलब्ध नहीं",
-      "fallbackBadge": "स्थिर डेटा दिखाया जा रहा है — लाइव सीरीज उपलब्ध नहीं",
-      "fallbackTooltip": "लाइव वर्ल्ड बैंक बीज डेटा उपलब्ध नहीं था। ये चार्ट फरवरी 2026 के अंतिम सत्यापन से हार्डकोडेड स्नैपशॉट से बनाए गए हैं।"
     },
     "monitor": {
       "placeholder": "किवर्ड (कॉमा से अलग)",
@@ -1412,10 +1394,6 @@
         "iranAttacks": "मध्य पूर्व हमले",
         "gpsJamming": "नेविगेशन व्यवधान",
         "ciiChoropleth": "देश अस्थिरता",
-        "positiveEvents": "सकारात्मक घटनाएं",
-        "kindness": "दयालुता के कार्य",
-        "happiness": "विश्व खुशी",
-        "speciesRecovery": "प्रजाति पुनर्प्राप्ति",
         "renewableInstallations": "स्वच्छ ऊर्जा",
         "notamAirspace": "NOTAM हवाई क्षेत्र प्रतिबंध",
         "no2Activity": "औद्योगिक गतिविधि",
@@ -1833,53 +1811,6 @@
       "deathsCount": "{{count}} मृत्यु",
       "moreNotShown": "{{count}} और घटनाएं दिखाई नहीं गईं",
       "infoTooltip": "<strong>सशस्त्र संघर्ष घटनाएं</strong> Uppsala विश्विद्यालय से घटना-स्तरीय संघर्ष डेटा (UCDP)।<ul><li><strong>राज्य आधारित</strong>: सरकार बनाम विद्रोही समूह</li><li><strong>गैर-राज्य</strong>: सशस्त्र समूह बनाम सशस्त्र समूह</li><li><strong>एकतरफा</strong>: नागरिकों पर हिंसा</li></ul>मृत्यु का अनुमानित आंकड़ा (न्यूनतम-उच्चतम सीमा)। ACLED डुप्लिकेट्स स्वचालित रूप से हटाए गए।"
-    },
-    "giving": {
-      "activityIndex": "गतिविधि सूचकांक",
-      "trend": "रुझान",
-      "estDailyFlow": "अनुमानित दैनिक प्रवाह",
-      "cryptoDaily": "क्रिप्टो दैनिक",
-      "tabs": {
-        "platforms": "प्लेटफ़ॉर्म",
-        "categories": "श्रेणियाँ",
-        "crypto": "क्रिप्टो",
-        "institutional": "संस्थागत"
-      },
-      "platform": "प्लेटफ़ॉर्म",
-      "dailyVol": "दैनिक वॉल्यूम",
-      "velocity": "गति",
-      "freshness": "डेटा",
-      "category": "श्रेणी",
-      "share": "शेयर",
-      "trending": "रुझान में",
-      "dailyInflow": "24 घंटे इनफ्लो",
-      "wallets": "वॉलेट",
-      "ofTotal": "कुल का %",
-      "topReceivers": "शीर्ष प्राप्तकर्ता",
-      "oecdOda": "आर्थिक सहयोग और विकास संगठन आधिकारिक विकास सहायता",
-      "cafIndex": "CAF इंडेक्स",
-      "candidGrants": "कैंडिड ग्रांट्स",
-      "dataLag": "डेटा विलंब",
-      "infoTooltip": "<strong>वैश्विक दान गतिविधि सूचकांक</strong> व्यक्तिगत दान को ट्रैक करने वाला संयोजित सूचकांक क्राउडफंडिंग प्लेटफॉर्म और क्रिप्टो वॉलेट्स से।<ul><li><strong>प्लेटफ़ॉर्म</strong>: GoFundMe, GlobalGiving, JustGiving नमूना</li><li><strong>क्रिप्टो</strong>: ऑन-चेन चैरिटी वॉलेट इनफ्लो (Endaoment, Giving Block)</li><li><strong>संस्थागत</strong>: OECD ODA, CAF वर्ल्ड गिविंग इंडेक्स, कैंडिड ग्रांट्स</li></ul>सूचकांक दिशात्मक है (सटीक राशि नहीं)। लाइव नमूना और वार्षिक रिपोर्ट मिलाकर।",
-      "benchmarkTitle": "वैश्विक दान बेंचमार्क",
-      "benchmarkInfoTooltip": "<strong>वैश्विक दान बेंचमार्क</strong> स्रोत अवधि और सत्यापन स्थिति के साथ प्रकाशित प्लेटफ़ॉर्म और संस्थागत दावे। वार्षिक आंकड़े अनुमान हैं, वास्तविक गतिविधि नहीं।",
-      "status": {
-        "published": "सत्यापित स्रोत कवरेज के साथ प्रकाशित बेंचमार्क।",
-        "partial": "आंशिक स्रोत कवरेज के साथ प्रकाशित बेंचमार्क।",
-        "legacy": "पुराना स्नैपशॉट; स्रोत विवरण उपलब्ध नहीं है।",
-        "cached": "कैश्ड स्नैपशॉट दिखाया जा रहा है; रीफ्रेश उपलब्ध नहीं।"
-      },
-      "trackedAnnualized": "ट्रैक किया गया प्लेटफ़ॉर्म दान — वार्षिक अनुमान",
-      "annualizedDaily": "दैनिक वार्षिक अनुमान",
-      "atLeast": "कम से कम",
-      "about": "लगभग",
-      "sourceNotVerified": "स्रोत सत्यापित नहीं",
-      "reportedCumulative": "रिपोर्ट किया गया संचयी कुल",
-      "sourcePeriod": "{{source}} · {{period}}",
-      "benchmark": "प्रकाशित बेंचमार्क",
-      "sourcesMethodology": "स्रोत और पद्धति",
-      "methodologyIntro": "केवल सत्यापित वार्षिक या उचित रूप से वार्षिकीकृत प्लेटफ़ॉर्म दावे शीर्षक में शामिल होते हैं। संचयी और संस्थागत आंकड़े अलग संदर्भ में रहते हैं।",
-      "partialEstimate": "आंशिक रूप से सत्यापित अनुमान"
     },
     "displacement": {
       "refugees": "शरणार्थी",
@@ -2402,9 +2333,6 @@
     "goldIntelligence": {
       "infoTooltip": "<strong>Gold intelligence</strong> कई मुद्राओं में सोने की कीमतें, gold/silver और gold/platinum अनुपात, और managed-money futures positions। स्रोतों में Yahoo Finance और Commodity Futures Trading Commission शामिल हैं।"
     },
-    "counters": {
-      "infoTooltip": "<strong>लाइव काउंटर्स</strong> वैश्विक सूचकांकों के रियल-टाइम अनुमानित काउंटर्स: सैन्य खर्च, प्राकृतिक आपदाएं, रोग बोझ, आदि। आंकड़े वार्षिक डेटा दर पर आधारित सांख्यिकीय अनुमान हैं।"
-    },
     "diseaseOutbreaks": {
       "infoTooltip": "<strong>रोग प्रकोप</strong> WHO, ProMED, और स्वास्थ्य मंत्रालयों से सक्रिय प्रकोप अलर्ट। पुष्टि किए गए प्रकोप, प्रभावित क्षेत्र, मामलों की संख्या, और खतरे के स्तर को ट्रैक करता है। नए रिपोर्ट के साथ अपडेट।",
       "methodologyNote": "अलर्ट / चेतावनी / निगरानी स्तर एक संपादकीय कीवर्ड वर्गीकारक से आते हैं — /docs/methodology/disease-alert-level देखें।",
@@ -2546,9 +2474,6 @@
     },
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> क्षेत्र और वर्ष के अनुसार नवीकरणीय स्रोतों से electricity generation का share, साथ ही solar, wind और coal के लिए US installed capacity (MW)। स्रोत: World Bank (EG.ELC.RNEW.ZS) और US Energy Information Administration।"
-    },
-    "conservationWins": {
-      "infoTooltip": "<strong>संरक्षण सफलताएं</strong> सकारात्मक संरक्षण समाचार: प्रजाति आबादी की पुनर्प्राप्ति, आवास पुनर्स्थापना मील के पत्थर, और विलुप्ति रद्द प्रयास। स्रोत: IUCN, WWF, और संरक्षण अनुसंधान प्रकाशन।"
     },
     "worldClock": {
       "infoTooltip": "<strong>विश्व घड़ी</strong> प्रमुख वैश्विक वित्तीय केंद्रों के स्थानीय समय और बाज़ार सत्र की स्थिति लाइव। NYSE, LSE, TSE, SGX, और अन्य एक्सचेंज खुले/बंद स्थितियां दिखाता है।"
@@ -4350,7 +4275,6 @@
     "calculatingExposure": "एक्सपोजर कैलकुलेट कर रहे हैं",
     "computingSignals": "सिग्नल निकाल रहे हैं...",
     "loadingEtfData": "एक्सचेंज-ट्रेडेड फंड डेटा लोड हो रहा है...",
-    "loadingGiving": "वैश्विक दान डेटा लोड कर रहे हैं",
     "loadingDisplacement": "विकलांगता डेटा लोड कर रहे हैं",
     "loadingClimateData": "जलवायु डेटा लोड हो रहा है",
     "failedTechReadiness": "तकनीकी तैयारी डेटा फिलहाल उपलब्ध नहीं",
@@ -4875,9 +4799,6 @@
       "map": "ऊर्जा एटलस मानचित्र",
       "liveNews": "ऊर्जा समाचार",
       "insights": "AI ऊर्जा अंतर्दृष्टि"
-    },
-    "happy": {
-      "map": "सकारात्मक समाचार मानचित्र"
     }
   },
   "pwaInstall": {
@@ -5606,7 +5527,6 @@
   },
   "personalChrome": {
     "timeRange": "TIME RANGE",
-    "goodNews": "Good News",
     "mission": "Mission",
     "activeMission": "Mission: {{name}}"
   }

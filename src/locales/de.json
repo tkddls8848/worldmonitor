@@ -377,8 +377,6 @@
     "panelCatCommodityPrices": "Preise & Märkte",
     "panelCatMining": "Bergbau & Lieferkette",
     "panelCatCommodityEcon": "Wirtschaft & Handel",
-    "panelCatHappyNews": "Gute Nachrichten",
-    "panelCatHappyPlanet": "Planet & Spenden",
     "embed": "Einbetten"
   },
   "panels": {
@@ -421,7 +419,6 @@
     "stablecoins": "Stablecoins",
     "deduction": "Lagebeurteilung",
     "ucdpEvents": "Bewaffnete Konfliktereignisse",
-    "giving": "Globale Spenden",
     "supplyChain": "Lieferkette",
     "displacement": "Flüchtlinge und Vertriebene",
     "climate": "Klima-Anomalien",
@@ -1110,10 +1107,6 @@
         "iranAttacks": "Angriffe im Nahen Osten",
         "gpsJamming": "Navigationsstörung",
         "ciiChoropleth": "Landinstabilität",
-        "positiveEvents": "Positive Ereignisse",
-        "kindness": "Gute Taten",
-        "happiness": "Weltglücksindex",
-        "speciesRecovery": "Artenerholung",
         "renewableInstallations": "Saubere Energie",
         "notamAirspace": "NOTAM-Luftraumbeschränkungen",
         "no2Activity": "Industrielle Aktivität",
@@ -1549,53 +1542,6 @@
       "possibleExplosions": "{{count}} mögliche Explosion(en) erkannt",
       "explosionTooltip": "Thermische Signatur vereinbar mit Explosion (Feuer-Strahlungsleistung >80 MW, Helligkeit >380 K)"
     },
-    "giving": {
-      "activityIndex": "Aktivitätsindex",
-      "trend": "Trend",
-      "estDailyFlow": "Gesch. Tagesvolumen",
-      "cryptoDaily": "Krypto täglich",
-      "tabs": {
-        "platforms": "Plattformen",
-        "categories": "Kategorien",
-        "crypto": "Krypto",
-        "institutional": "Institutionell"
-      },
-      "platform": "Plattform",
-      "dailyVol": "Tagesvolumen",
-      "velocity": "Geschwindigkeit",
-      "freshness": "Daten",
-      "category": "Kategorie",
-      "share": "Anteil",
-      "trending": "TREND",
-      "dailyInflow": "24h Zufluss",
-      "wallets": "Wallets",
-      "ofTotal": "% des Gesamtbetrags",
-      "topReceivers": "Top-Empfänger",
-      "oecdOda": "Offizielle Entwicklungshilfe der Organisation für wirtschaftliche Zusammenarbeit und Entwicklung",
-      "cafIndex": "CAF-Index",
-      "candidGrants": "Candid-Zuschüsse",
-      "dataLag": "Datenverzögerung",
-      "infoTooltip": "<strong>Globale Spendenreferenzen</strong> Veröffentlichte Angaben von Plattformen und Institutionen mit Bezugszeitraum und Verifikationsstatus. Annualisierte Zahlen sind Schätzungen, keine Live-Aktivität.",
-      "benchmarkTitle": "Globale Spendenreferenzen",
-      "benchmarkInfoTooltip": "<strong>Globale Spendenreferenzen</strong> Veröffentlichte Plattform- und Institutionsangaben mit Quellzeiträumen und Verifizierungsstatus. Annualisierte Zahlen sind Schätzungen, keine Live-Aktivität.",
-      "status": {
-        "published": "Veröffentlichte Referenzen mit verifizierter Quellenabdeckung.",
-        "partial": "Veröffentlichte Referenzen mit teilweiser Quellenabdeckung.",
-        "legacy": "Legacy-Snapshot; Quellendetails nicht verfügbar.",
-        "cached": "Zeigt einen zwischengespeicherten Snapshot; Aktualisierung nicht verfügbar."
-      },
-      "trackedAnnualized": "Verfolgte Plattformspenden — annualisierte Schätzung",
-      "annualizedDaily": "Annualisierte Tagesschätzung",
-      "atLeast": "Mindestens",
-      "about": "Etwa",
-      "sourceNotVerified": "Quelle nicht verifiziert",
-      "reportedCumulative": "Gemeldete kumulative Summe",
-      "sourcePeriod": "{{source}} · {{period}}",
-      "benchmark": "Veröffentlichte Referenz",
-      "sourcesMethodology": "Quellen & Methodik",
-      "methodologyIntro": "Nur verifizierte jährliche oder vertretbar annualisierte Plattformangaben fließen in die Headline ein. Kumulative und institutionelle Zahlen bleiben separater Kontext.",
-      "partialEstimate": "Teilweise verifizierte Schätzung"
-    },
     "displacement": {
       "refugees": "Flüchtlinge",
       "asylumSeekers": "Asylbewerber",
@@ -2011,18 +1957,6 @@
       "hideMap": "Karte ausblenden",
       "clearTrails": "Spuren löschen"
     },
-    "positiveNewsFeed": {
-      "noStories": "Noch keine Beiträge in dieser Kategorie"
-    },
-    "goodThingsDigest": {
-      "noStories": "Keine Beiträge verfügbar",
-      "summarizing": "Zusammenfassung wird erstellt…"
-    },
-    "progressCharts": {
-      "noData": "Keine Fortschrittsdaten verfügbar",
-      "fallbackBadge": "Zeige statische Fallback-Daten – Live-Serien nicht verfügbar",
-      "fallbackTooltip": "Die Live-Seed-Daten der Weltbank konnten nicht erreicht werden. Diese Diagramme werden aus einem hartcodierten Snapshot wiedergegeben, der zuletzt im Februar 2026 verifiziert wurde."
-    },
     "settings": {
       "exportSettings": "Einstellungen exportieren",
       "importSettings": "Einstellungen importieren",
@@ -2120,9 +2054,6 @@
     },
     "cotPositioning": {
       "infoTooltip": "<strong>Futures-Positionierung</strong> Wöchentliche Nettopositionen für kommerzielle Händler, große Spekulanten und kleine Händler in Rohstoff- und Finanz-Futures. Quelle: Commitments of Traders-Report der Commodity Futures Trading Commission, veröffentlicht am Freitag."
-    },
-    "counters": {
-      "infoTooltip": "<strong>Live-Zähler</strong> Extrapolierte Echtzeit-Zähler für globale Metriken: Militärausgaben, Naturkatastrophen, Krankheitslast und mehr. Zahlen sind statistische Schätzungen basierend auf jährlichen Datenraten."
     },
     "diseaseOutbreaks": {
       "infoTooltip": "<strong>Krankheitsausbrüche</strong> Aktive Ausbruchswarnungen von WHO, ProMED und Gesundheitsministerien. Verfolgt bestätigte Ausbrüche, betroffene Regionen, Fallzahlen und Bedrohungsstufen. Aktualisiert bei Veröffentlichung neuer Berichte.",
@@ -2266,17 +2197,11 @@
     "renewable": {
       "infoTooltip": "<strong>Erneuerbare Energien</strong> Anteil der Stromerzeugung aus erneuerbaren Energien nach Region und Jahr sowie US-Installationskapazität für Solar-, Wind- und Kohleenergie (MW). Quellen: Weltbank (EG.ELC.RNEW.ZS) und US Energy Information Administration."
     },
-    "conservationWins": {
-      "infoTooltip": "<strong>Naturschutzerfolge</strong> Positive Naturschutznachrichten: Erholung von Artenpopulationen, Meilensteine bei der Wiederherstellung von Lebensräumen und De-Extinktions-Bemühungen. Quelle: IUCN, WWF und Naturschutzforschungspublikationen."
-    },
     "worldClock": {
       "infoTooltip": "<strong>Weltuhr</strong> Echtzeit-Ortszeiten und Marktsitzungsstatus für große globale Finanzzentren. Zeigt Offen/Geschlossen-Status für NYSE, LSE, TSE, SGX und andere Börsen."
     },
     "yieldCurve": {
       "infoTooltip": "<strong>Zinskurve &amp; Zinssätze</strong> US-Treasury-Zinskurve (2Y, 5Y, 10Y, 30Y) und wichtige Zinsaufschläge einschließlich des 10Y-2Y-Inversions-Indikators. Zeigt auch Euroraum-Zinssätze (EURIBOR, ESTR). Eine invertierte Kurve geht historisch Rezessionen voraus. Quelle: Federal Reserve Economic Data."
-    },
-    "breakthroughsTicker": {
-      "noData": "Noch keine wissenschaftlichen Durchbrüche"
     },
     "oilInventories": {
       "infoTooltip": "<strong>Ölbestände</strong> US-Rohöl und strategische Reserven im Handelsverkehr, Erdgasbestände, europäische Gasspeicher und Ölbestandsdeckung. Quellen sind die US Energy Information Administration und die International Energy Agency."
@@ -4281,7 +4206,6 @@
     "calculatingExposure": "Exposition berechnen",
     "computingSignals": "Signale berechnen...",
     "loadingEtfData": "Börsengehandelte Fondsdaten werden geladen...",
-    "loadingGiving": "Globale Spendendaten werden geladen",
     "loadingDisplacement": "Vertreibungsdaten laden",
     "loadingClimateData": "Klimadaten laden",
     "failedTechReadiness": "Technologiebereitschaftsdaten vorübergehend nicht verfügbar",
@@ -4875,9 +4799,6 @@
       "map": "Energieatlas-Karte",
       "liveNews": "Energie-Schlagzeilen",
       "insights": "KI-Energieeinblicke"
-    },
-    "happy": {
-      "map": "Karte der guten Nachrichten"
     }
   },
   "pwaInstall": {
@@ -5606,7 +5527,6 @@
   },
   "personalChrome": {
     "timeRange": "ZEITRAUM",
-    "goodNews": "Gute Nachrichten",
     "mission": "Auftrag",
     "activeMission": "Auftrag: {{name}}"
   }

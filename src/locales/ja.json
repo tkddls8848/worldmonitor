@@ -375,8 +375,6 @@
     "panelCatCommodityPrices": "価格・市場",
     "panelCatMining": "採掘・サプライチェーン",
     "panelCatCommodityEcon": "経済・貿易",
-    "panelCatHappyNews": "ニュース",
-    "panelCatHappyPlanet": "地球・社会貢献",
     "embed": "埋め込む"
   },
   "panels": {
@@ -421,7 +419,6 @@
     "stablecoins": "ステーブルコイン",
     "deduction": "状況推定",
     "ucdpEvents": "UCDP紛争イベント",
-    "giving": "グローバル寄付",
     "displacement": "難民と避難民",
     "climate": "気候異常",
     "populationExposure": "人口露出度",
@@ -847,18 +844,6 @@
     }
   },
   "components": {
-    "positiveNewsFeed": {
-      "noStories": "このカテゴリにはまだ記事がありません"
-    },
-    "goodThingsDigest": {
-      "noStories": "記事がありません",
-      "summarizing": "要約中…"
-    },
-    "progressCharts": {
-      "noData": "進捗データがありません",
-      "fallbackBadge": "静的フォールバックデータを表示中 — ライブシリーズは利用できません",
-      "fallbackTooltip": "ライブ World Bank シードに到達できませんでした。これらのチャートは 2026 年 2 月に最後に検証されたハードコードされたスナップショットからレンダリングされています。"
-    },
     "monitor": {
       "placeholder": "キーワード（カンマ区切り）",
       "add": "+ モニター追加",
@@ -1264,10 +1249,6 @@
         "iranAttacks": "中東での攻撃",
         "gpsJamming": "航法干渉",
         "ciiChoropleth": "国不安定性指数",
-        "positiveEvents": "ポジティブな出来事",
-        "kindness": "善意の行動",
-        "happiness": "世界幸福度",
-        "speciesRecovery": "種の回復",
         "renewableInstallations": "クリーンエネルギー",
         "notamAirspace": "NOTAM飛行制限空域",
         "no2Activity": "産業活動",
@@ -1684,53 +1665,6 @@
       "moreNotShown": "他{{count}}件のイベントは非表示",
       "infoTooltip": "<strong>UCDP地理参照イベント</strong> ウプサラ大学によるイベントレベルの紛争データ。<ul><li><strong>国家間</strong>: 政府対反政府勢力</li><li><strong>非国家間</strong>: 武装グループ対武装グループ</li><li><strong>一方的暴力</strong>: 市民に対する暴力</li></ul>死者数は最良推定値（低-高範囲）で表示。ACLEDの重複は自動的に除外。"
     },
-    "giving": {
-      "activityIndex": "アクティビティ指数",
-      "trend": "トレンド",
-      "estDailyFlow": "推定日次フロー",
-      "cryptoDaily": "暗号資産日次",
-      "tabs": {
-        "platforms": "プラットフォーム",
-        "categories": "カテゴリ",
-        "crypto": "暗号資産",
-        "institutional": "機関"
-      },
-      "platform": "プラットフォーム",
-      "dailyVol": "日次取引量",
-      "velocity": "速度",
-      "freshness": "データ",
-      "category": "カテゴリ",
-      "share": "シェア",
-      "trending": "トレンド",
-      "dailyInflow": "24時間流入額",
-      "wallets": "ウォレット",
-      "ofTotal": "総計比率",
-      "topReceivers": "トップ受取者",
-      "oecdOda": "経済協力開発機構公的開発援助",
-      "cafIndex": "CAF指数",
-      "candidGrants": "Candid助成金",
-      "dataLag": "データ遅延",
-      "infoTooltip": "<strong>グローバル寄付アクティビティ指数</strong> クラウドファンディングプラットフォームと暗号資産ウォレットを通じた個人寄付を追跡する複合指数。<ul><li><strong>プラットフォーム</strong>: GoFundMe、GlobalGiving、JustGivingのキャンペーンサンプリング</li><li><strong>暗号資産</strong>: オンチェーンの慈善ウォレット流入（Endaoment、Giving Block）</li><li><strong>機関</strong>: OECD ODA、CAF World Giving Index、Candid助成金</li></ul>指数は方向性を示すもので、正確な金額ではありません。ライブサンプリングと公表年次報告書を組み合わせています。",
-      "benchmarkTitle": "グローバル寄付ベンチマーク",
-      "benchmarkInfoTooltip": "<strong>グローバル寄付ベンチマーク</strong> ソース期間と検証状況を含む公開済みプラットフォームおよび機関の主張。年換算数値は推定値であり、リアルタイムの活動ではありません。",
-      "status": {
-        "published": "検証済みソースカバレッジの公開済みベンチマーク。",
-        "partial": "部分的なソースカバレッジの公開済みベンチマーク。",
-        "legacy": "レガシースナップショット；ソースの詳細は利用できません。",
-        "cached": "キャッシュスナップショットを表示中；更新は利用できません。"
-      },
-      "trackedAnnualized": "追跡済みプラットフォーム寄付 — 年換算推定",
-      "annualizedDaily": "日次年換算推定",
-      "atLeast": "少なくとも",
-      "about": "約",
-      "sourceNotVerified": "ソース未検証",
-      "reportedCumulative": "報告済み累積合計",
-      "sourcePeriod": "{{source}} · {{period}}",
-      "benchmark": "公開済みベンチマーク",
-      "sourcesMethodology": "ソースと方法論",
-      "methodologyIntro": "検証済みの年次または正当に年換算されたプラットフォームの主張のみが見出しに含まれます。累積および機関数値は別途コンテキストとして残ります。",
-      "partialEstimate": "部分的に検証済みの推定"
-    },
     "displacement": {
       "refugees": "難民",
       "asylumSeekers": "庇護申請者",
@@ -2116,9 +2050,6 @@
     "cotPositioning": {
       "infoTooltip": "<strong>先物ポジショニング</strong> 商品先物および金融先物における商業トレーダー、大規模投機家、小規模トレーダーの週単位のネットポジション。出典は商品先物取引委員会（CFTC）の「Commitments of Traders」レポート（金曜日公表）。"
     },
-    "counters": {
-      "infoTooltip": "<strong>ライブカウンター</strong> グローバル指標のリアルタイム推定カウンター：軍事費、自然災害、疾病負担など。数値は年間データレートに基づく統計的推定値。"
-    },
     "diseaseOutbreaks": {
       "infoTooltip": "<strong>感染症アウトブレイク</strong> WHO、ProMED、各国保健省からのアクティブな発生警報。確認済みの発生、影響地域、症例数、脅威レベルを追跡。新しい報告の発表時に更新。",
       "title": "感染症の発生",
@@ -2256,17 +2187,11 @@
     "renewable": {
       "infoTooltip": "<strong>再生可能エネルギー</strong> 地域および年別の再生可能エネルギーからの発電シェア、および米国の太陽光、風力、石炭の設置済み容量（MW）。出典：世界銀行（EG.ELC.RNEW.ZS）およびUS Energy Information Administration。"
     },
-    "conservationWins": {
-      "infoTooltip": "<strong>保全の成果</strong> ポジティブな保全ニュース：種の個体数回復、生息地復元のマイルストーン、脱絶滅の取り組み。ソース：IUCN、WWFおよび保全研究出版物。"
-    },
     "worldClock": {
       "infoTooltip": "<strong>世界時計</strong> 主要グローバル金融センターのリアルタイム現地時間とマーケットセッションステータス。NYSE、LSE、TSE、SGXなどの取引所のオープン/クローズ状況を表示。"
     },
     "yieldCurve": {
       "infoTooltip": "<strong>イールドカーブ & レート</strong> 米国債利回り曲線（2年、5年、10年、30年）および主要金利スプレッド（10年-2年逆転インジケータを含む）。ユーロ圏レート（EURIBOR、ESTR）も表示。逆転曲線は歴史的に景気後退に先行します。出典：連邦準備制度経済データ。"
-    },
-    "breakthroughsTicker": {
-      "noData": "科学的ブレークスルーはまだありません"
     },
     "oilInventories": {
       "infoTooltip": "<strong>石油在庫</strong> 米国商業用原油・戦略的備蓄、天然ガス在庫、ヨーロッパガス貯蔵、石油在庫カバー。出典は米国エネルギー情報局と国際エネルギー機関。"
@@ -4259,7 +4184,6 @@
     "calculatingExposure": "露出度を計算中",
     "computingSignals": "シグナルを計算中...",
     "loadingEtfData": "上場投資信託データを読み込み中...",
-    "loadingGiving": "世界の寄付データを読み込み中",
     "loadingDisplacement": "避難民データを読み込み中",
     "loadingClimateData": "気候データを読み込み中",
     "failedTechReadiness": "テック準備度データの読み込みに失敗",
@@ -4853,9 +4777,6 @@
       "map": "エネルギーアトラスマップ",
       "liveNews": "エネルギーヘッドライン",
       "insights": "AIエネルギーインサイト"
-    },
-    "happy": {
-      "map": "グッドニュースマップ"
     }
   },
   "pwaInstall": {
@@ -5573,7 +5494,6 @@
   },
   "personalChrome": {
     "timeRange": "TIME RANGE",
-    "goodNews": "Good News",
     "mission": "Mission",
     "activeMission": "Mission: {{name}}"
   }

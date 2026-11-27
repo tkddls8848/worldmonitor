@@ -60,13 +60,6 @@
         "analysis",
         "gccNews"
       ],
-      "happy": [
-        "positive",
-        "science",
-        "nature",
-        "inspiring",
-        "community"
-      ],
       "commodity": [
         "commodity-news",
         "gold-silver",
@@ -161,13 +154,6 @@
         "commodity-regulation",
         "markets",
         "finance"
-      ],
-      "happy": [
-        "positive",
-        "science",
-        "nature",
-        "inspiring",
-        "community"
       ],
       "energy": [
         "live-news",
@@ -4613,12 +4599,6 @@
           "category": "science",
           "serverOrder": 1,
           "browserOrder": 1
-        },
-        {
-          "edition": "happy",
-          "category": "science",
-          "serverOrder": 1,
-          "browserOrder": 2
         }
       ]
     },
@@ -4655,12 +4635,6 @@
           "category": "science",
           "serverOrder": 4,
           "browserOrder": 4
-        },
-        {
-          "edition": "happy",
-          "category": "science",
-          "serverOrder": 0,
-          "browserOrder": 1
         }
       ]
     },
@@ -6483,150 +6457,6 @@
           "category": "markets",
           "serverOrder": 3,
           "browserOrder": 3
-        }
-      ]
-    },
-    {
-      "name": "Good News Network",
-      "url": "https://www.goodnewsnetwork.org/feed/",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "positive",
-          "serverOrder": 0,
-          "browserOrder": 0
-        }
-      ]
-    },
-    {
-      "name": "Positive.News",
-      "url": "https://www.positive.news/feed/",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "positive",
-          "serverOrder": 1,
-          "browserOrder": 1
-        }
-      ]
-    },
-    {
-      "name": "Reasons to be Cheerful",
-      "url": "https://reasonstobecheerful.world/feed/",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "positive",
-          "serverOrder": 2,
-          "browserOrder": 2
-        }
-      ]
-    },
-    {
-      "name": "Optimist Daily",
-      "url": "https://www.optimistdaily.com/feed/",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "positive",
-          "serverOrder": 3,
-          "browserOrder": 3
-        }
-      ]
-    },
-    {
-      "name": "Singularity Hub",
-      "url": "https://singularityhub.com/feed/",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "science",
-          "serverOrder": 2,
-          "browserOrder": 5
-        }
-      ]
-    },
-    {
-      "name": "Human Progress",
-      "url": "https://humanprogress.org/feed/",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "science",
-          "serverOrder": 3,
-          "browserOrder": 6
-        }
-      ]
-    },
-    {
-      "name": "Mongabay",
-      "url": "https://news.mongabay.com/feed/",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "nature",
-          "serverOrder": 0,
-          "browserOrder": 2
-        }
-      ]
-    },
-    {
-      "name": "Conservation Optimism",
-      "url": "https://conservationoptimism.org/feed/",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "nature",
-          "serverOrder": 1,
-          "browserOrder": 3
-        }
-      ]
-    },
-    {
-      "name": "GNN Heroes",
-      "url": "https://www.goodnewsnetwork.org/category/news/inspiring/feed/",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "inspiring",
-          "serverOrder": 0,
-          "browserOrder": 0
-        }
-      ]
-    },
-    {
-      "name": "GNN Health",
-      "url": "https://www.goodnewsnetwork.org/category/news/health/feed/",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "inspiring",
-          "serverOrder": 1,
-          "browserOrder": 1
-        }
-      ]
-    },
-    {
-      "name": "Yes! Magazine",
-      "url": "https://www.yesmagazine.org/feed",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "community",
-          "serverOrder": 0,
-          "browserOrder": 1
-        }
-      ]
-    },
-    {
-      "name": "Shareable",
-      "url": "https://www.shareable.net/feed/",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "community",
-          "serverOrder": 1,
-          "browserOrder": 0
         }
       ]
     },
@@ -9125,162 +8955,6 @@
         {
           "edition": "finance",
           "category": "ipo",
-          "browserOrder": 2,
-          "serverOrder": 2
-        }
-      ]
-    },
-    {
-      "name": "Upworthy",
-      "url": "https://www.upworthy.com/feed/",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "positive",
-          "browserOrder": 4,
-          "serverOrder": 9
-        }
-      ]
-    },
-    {
-      "name": "DailyGood",
-      "url": "https://www.dailygood.org/feed",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "positive",
-          "browserOrder": 5,
-          "serverOrder": 4
-        }
-      ]
-    },
-    {
-      "name": "Good Good Good",
-      "url": "https://www.goodgoodgood.co/articles/rss.xml",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "positive",
-          "browserOrder": 6,
-          "serverOrder": 6
-        }
-      ]
-    },
-    {
-      "name": "GOOD Magazine",
-      "url": "https://www.good.is/feed/",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "positive",
-          "browserOrder": 7,
-          "serverOrder": 5
-        }
-      ]
-    },
-    {
-      "name": "Sunny Skyz",
-      "url": "https://www.sunnyskyz.com/rss_tebow.php",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "positive",
-          "browserOrder": 8,
-          "serverOrder": 7
-        }
-      ]
-    },
-    {
-      "name": "The Better India",
-      "url": "https://thebetterindia.com/feed/",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "positive",
-          "browserOrder": 9,
-          "serverOrder": 8
-        }
-      ]
-    },
-    {
-      "name": "GNN Science",
-      "url": "https://www.goodnewsnetwork.org/category/news/science/feed/",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "science",
-          "browserOrder": 0,
-          "serverOrder": 4
-        }
-      ]
-    },
-    {
-      "name": "Live Science",
-      "url": "https://www.livescience.com/feeds.xml",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "science",
-          "browserOrder": 3,
-          "serverOrder": 6
-        }
-      ]
-    },
-    {
-      "name": "New Scientist",
-      "url": "https://news.google.com/rss/search?q=site:newscientist.com+when:3d&hl=en-US&gl=US&ceid=US:en",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "science",
-          "browserOrder": 4,
-          "serverOrder": 7
-        }
-      ]
-    },
-    {
-      "name": "Greater Good (Berkeley)",
-      "url": "https://greatergood.berkeley.edu/site/rss/articles",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "science",
-          "browserOrder": 7,
-          "serverOrder": 5
-        }
-      ]
-    },
-    {
-      "name": "GNN Animals",
-      "url": "https://www.goodnewsnetwork.org/category/news/animals/feed/",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "nature",
-          "browserOrder": 0,
-          "serverOrder": 2
-        }
-      ]
-    },
-    {
-      "name": "GNN Earth",
-      "url": "https://www.goodnewsnetwork.org/category/news/earth/feed/",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "nature",
-          "browserOrder": 1,
-          "serverOrder": 3
-        }
-      ]
-    },
-    {
-      "name": "GNN Heroes Spotlight",
-      "url": "https://www.goodnewsnetwork.org/category/news/heroes/feed/",
-      "placements": [
-        {
-          "edition": "happy",
-          "category": "inspiring",
           "browserOrder": 2,
           "serverOrder": 2
         }

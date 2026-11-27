@@ -60,7 +60,7 @@ describe('reported landing-page SEO metadata', () => {
 
   it('keeps full and variant dashboard descriptions bounded and synchronized', () => {
     const indexHtml = source('index.html');
-    const variants = ['full', 'tech', 'finance', 'commodity', 'happy', 'energy'];
+    const variants = ['full', 'tech', 'finance', 'commodity',  'energy'];
 
     for (const variant of variants) {
       assertDescription(`${variant} variant`, VARIANT_META[variant].description);

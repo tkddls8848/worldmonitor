@@ -392,7 +392,6 @@ PROTO_INPUTS=(
   scripts/scorecard/v1/_source-registry.mts
   scripts/scorecard/v1/_types.mts
   scripts/shared/geography.js
-  scripts/shared/giving-published-estimate-claims.json
   scripts/shared/iso2-to-region.json
   server/_shared/bounded-jmespath.ts
   server/_shared/bounded-json.ts

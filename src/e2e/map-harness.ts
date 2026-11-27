@@ -23,10 +23,7 @@ import {
 import { STARTUP_HUBS, ACCELERATORS, TECH_HQS, CLOUD_REGIONS } from '../config/tech-geo';
 import { AI_DATA_CENTERS } from '../config/ai-datacenters';
 import { UNDERSEA_CABLES, NUCLEAR_FACILITIES, ECONOMIC_CENTERS, CRITICAL_MINERALS } from '../config/geo-map';
-import type { PositiveGeoEvent } from '../services/positive-events-geo';
-import type { KindnessPoint } from '../services/kindness-data';
 import type { PassTrack, TrackPoint } from '../services/orbital/track-geometry';
-import type { SpeciesRecovery } from '../services/conservation-data';
 import type { RenewableInstallation } from '../services/renewable-installations';
 import type {
   AisDensityZone,
@@ -57,7 +54,7 @@ import type { WeatherAlert } from '../services/weather';
 import { CHINA_LOGISTICS_CORRIDORS } from '../../shared/china-logistics-corridors';
 
 type Scenario = 'alpha' | 'beta';
-type HarnessVariant = 'full' | 'tech' | 'finance' | 'commodity' | 'energy' | 'happy';
+type HarnessVariant = 'full' | 'tech' | 'finance' | 'commodity' | 'energy';
 type HarnessLayerKey = keyof MapLayers;
 type PulseProtestScenario =
   | 'none'
@@ -238,7 +235,6 @@ app.style.margin = '0 auto';
 const allLayersEnabled: MapLayers = {
   gpsJamming: true,
 
-
   conflicts: true,
   bases: true,
   cables: true,
@@ -272,10 +268,6 @@ const allLayersEnabled: MapLayers = {
   centralBanks: true,
   commodityHubs: true,
   gulfInvestments: true,
-  positiveEvents: true,
-  kindness: true,
-  happiness: false,
-  speciesRecovery: false,
   renewableInstallations: false,
   tradeRoutes: true,
   iranAttacks: false,
@@ -291,7 +283,6 @@ const allLayersEnabled: MapLayers = {
 
 const allLayersDisabled: MapLayers = {
   gpsJamming: false,
-
 
   conflicts: false,
   bases: false,
@@ -326,10 +317,6 @@ const allLayersDisabled: MapLayers = {
   centralBanks: false,
   commodityHubs: false,
   gulfInvestments: false,
-  positiveEvents: false,
-  kindness: false,
-  happiness: false,
-  speciesRecovery: false,
   renewableInstallations: false,
   tradeRoutes: false,
   iranAttacks: false,
@@ -376,53 +363,8 @@ const SEEDED_LIVE_TANKERS: LiveTankerFixture[] = [
   },
 ];
 
-const SEEDED_POSITIVE_EVENTS: PositiveGeoEvent[] = [
-  {
-    lat: 37.77,
-    lon: -122.42,
-    name: 'Harness breakthrough expands clean water access',
-    category: 'humanity-kindness',
-    count: 12,
-    timestamp: Date.now(),
-  },
-];
 
-const SEEDED_KINDNESS_POINTS: KindnessPoint[] = [
-  {
-    lat: 51.5,
-    lon: -0.12,
-    name: 'Harness community aid network',
-    description: 'Local volunteers coordinated emergency support.',
-    intensity: 0.9,
-    type: 'real',
-    timestamp: Date.now(),
-  },
-];
 
-const SEEDED_SPECIES_RECOVERY: SpeciesRecovery[] = [
-  {
-    id: 'e2e-species-recovery',
-    commonName: 'Harness Falcon',
-    scientificName: 'Falco harnessus',
-    photoUrl: 'https://example.com/falcon.jpg',
-    iucnCategory: 'Least Concern',
-    populationTrend: 'increasing',
-    recoveryStatus: 'recovering',
-    populationData: [
-      { year: 2015, value: 120 },
-      { year: 2025, value: 420 },
-    ],
-    summaryText: 'Harness conservation recovery fixture.',
-    source: 'e2e',
-    region: 'Harness Reserve',
-    lastUpdated: '2026-02-01',
-    recoveryZone: {
-      name: 'Harness Reserve',
-      lat: -1.29,
-      lon: 36.82,
-    },
-  },
-];
 
 const SEEDED_RENEWABLE_INSTALLATIONS: RenewableInstallation[] = [
   {
@@ -478,18 +420,11 @@ const energyAllLayersEnabled: MapLayers = {
   liveTankers: true,
 };
 
-const happyAllLayersEnabled: MapLayers = {
-  ...allLayersEnabled,
-  speciesRecovery: true,
-  renewableInstallations: true,
-};
 
 const seededAllLayers: MapLayers = isEnergyHarnessVariant
   ? energyAllLayersEnabled
   : SITE_VARIANT === 'commodity'
   ? commodityAllLayersEnabled
-  : SITE_VARIANT === 'happy'
-  ? happyAllLayersEnabled
   : allLayersEnabled;
 
 const initialLayers: MapLayers = {
@@ -936,9 +871,6 @@ const seededCameras = {
   fires: toCamera(-60.1, -5.4, 5.0),
   techEvents: toCamera(-122.42, 37.77, 5.2),
   news: toCamera(2.35, 48.85, 5.0),
-  positiveEvents: toCamera(-122.42, 37.77, 5.2),
-  kindness: toCamera(-0.12, 51.5, 5.2),
-  speciesRecovery: toCamera(36.82, -1.29, 5.2),
   renewableInstallations: toCamera(-117.2, 34.05, 5.2),
   diseaseOutbreaks: toCamera(36.82, -1.29, 5.2),
 };
@@ -1256,38 +1188,6 @@ const VISUAL_SCENARIOS: VisualScenario[] = [
     expectedSelectors: [],
   },
   {
-    id: 'positive-events-z5',
-    variant: 'happy',
-    enabledLayers: ['positiveEvents'],
-    camera: seededCameras.positiveEvents,
-    expectedDeckLayers: ['positive-events-layer'],
-    expectedSelectors: [],
-  },
-  {
-    id: 'kindness-z5',
-    variant: 'happy',
-    enabledLayers: ['kindness'],
-    camera: seededCameras.kindness,
-    expectedDeckLayers: ['kindness-layer'],
-    expectedSelectors: [],
-  },
-  {
-    id: 'species-recovery-z5',
-    variant: 'happy',
-    enabledLayers: ['speciesRecovery'],
-    camera: seededCameras.speciesRecovery,
-    expectedDeckLayers: ['species-recovery-layer'],
-    expectedSelectors: [],
-  },
-  {
-    id: 'renewable-installations-z5',
-    variant: 'happy',
-    enabledLayers: ['renewableInstallations'],
-    camera: seededCameras.renewableInstallations,
-    expectedDeckLayers: ['renewable-installations-layer'],
-    expectedSelectors: [],
-  },
-  {
     id: 'disease-outbreaks-z5',
     variant: 'full',
     enabledLayers: ['diseaseOutbreaks'],
@@ -1314,8 +1214,6 @@ const currentHarnessVariant: HarnessVariant = SITE_VARIANT === 'tech'
   ? 'finance'
   : SITE_VARIANT === 'commodity'
   ? 'commodity'
-  : SITE_VARIANT === 'happy'
-  ? 'happy'
   : 'full';
 
 const buildProtests = (scenario: Scenario): SocialUnrestEvent[] => {
@@ -1703,9 +1601,6 @@ const seedAllDynamicData = (): void => {
   map.setNaturalEvents(naturalEvents);
   map.setClimateAnomalies(climateAnomalies);
   map.setDiseaseOutbreaks(SEEDED_DISEASE_OUTBREAKS);
-  map.setPositiveEvents(SEEDED_POSITIVE_EVENTS);
-  map.setKindnessData(SEEDED_KINDNESS_POINTS);
-  map.setSpeciesRecoveryZones(SEEDED_SPECIES_RECOVERY);
   map.setRenewableInstallations(SEEDED_RENEWABLE_INSTALLATIONS);
   map.setFires([
     {

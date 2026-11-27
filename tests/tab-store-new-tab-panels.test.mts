@@ -81,8 +81,8 @@ describe('saveNewTabPanels then buildNewTabPanels', () => {
     const live = liveSettings();
     const saved = clone(defaultTab(live));
     saved.panelSettings['live-news']!.enabled = false;
-    saved.panelSettings['positive-feed']!.enabled = true;
-    const savedOrder = ['positive-feed', 'insights', 'map', 'live-news'];
+    saved.panelSettings['grocery-basket']!.enabled = true;
+    const savedOrder = ['grocery-basket', 'insights', 'map', 'live-news'];
     saved.panelOrder = savedOrder;
 
     assert.deepEqual(saveNewTabPanels(saved), { persisted: true });
@@ -90,8 +90,8 @@ describe('saveNewTabPanels then buildNewTabPanels', () => {
 
     const built = buildNewTabPanels(live);
     assert.equal(built.panelSettings['live-news']!.enabled, false);
-    assert.equal(built.panelSettings['positive-feed']!.enabled, true);
-    assert.deepEqual(built.panelOrder.slice(0, 3), ['positive-feed', 'insights', 'live-news']);
+    assert.equal(built.panelSettings['grocery-basket']!.enabled, true);
+    assert.deepEqual(built.panelOrder.slice(0, 3), ['grocery-basket', 'insights', 'live-news']);
     assert.equal(built.panelOrder.includes('map'), false);
   });
 
@@ -156,14 +156,14 @@ describe('saveNewTabPanels then buildNewTabPanels', () => {
     const saved = clone(defaultTab(live));
     for (const key of Object.keys(saved.panelSettings)) saved.panelSettings[key]!.enabled = false;
     delete saved.panelSettings['live-news'];
-    delete saved.panelSettings['positive-feed'];
+    delete saved.panelSettings['grocery-basket'];
     saved.panelOrder = saved.panelOrder.filter((key) => key !== 'live-news');
     saveNewTabPanels(saved);
 
     const built = buildNewTabPanels(live);
     assert.equal(built.panelSettings.insights!.enabled, false);
     assert.equal(built.panelSettings['live-news']!.enabled, true);
-    assert.equal(built.panelSettings['positive-feed']!.enabled, false);
+    assert.equal(built.panelSettings['grocery-basket']!.enabled, false);
   });
 
   it('hides the map in new tabs when it was hidden on the saved tab', () => {

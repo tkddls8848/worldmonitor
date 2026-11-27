@@ -164,7 +164,6 @@ const RPC_CACHE_TIER: Record<string, CacheTier> = {
   '/api/economic/v1/get-energy-prices': 'static',
   '/api/research/v1/list-arxiv-papers': 'static',
   '/api/research/v1/list-trending-repos': 'static',
-  '/api/giving/v1/get-giving-summary': 'static',
   '/api/intelligence/v1/get-country-intel-brief': 'static',
   // The canonical Railway projection refreshes every 15 minutes. Keep the
   // public composition route's Vercel TTL (10m on fast) inside that cadence so
@@ -243,7 +242,6 @@ const RPC_CACHE_TIER: Record<string, CacheTier> = {
   '/api/intelligence/v1/classify-event': 'static',
   '/api/intelligence/v1/search-gdelt-documents': 'slow',
   '/api/infrastructure/v1/get-cable-health': 'slow',
-  '/api/positive-events/v1/list-positive-geo-events': 'slow',
 
   '/api/military/v1/list-military-bases': 'daily',
   '/api/economic/v1/get-macro-signals': 'medium',

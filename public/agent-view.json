@@ -140,7 +140,6 @@
     "tech": "https://tech.worldmonitor.app/dashboard",
     "finance": "https://finance.worldmonitor.app/dashboard",
     "commodities": "https://commodity.worldmonitor.app/dashboard",
-    "positiveNews": "https://happy.worldmonitor.app/dashboard",
     "energy": "https://energy.worldmonitor.app/dashboard"
   }
 }

@@ -48,7 +48,6 @@ export const FAST_FIRST_PAINT_JUSTIFICATION = Object.freeze({
   commodityQuotes: 'Default commodities and energy tapes; retained once the 20% target is met to avoid a new startup request.',
   macroSignals: 'Immediate macro tiles on finance/full first paint.',
   chokepoints: 'Chokepoint strip and default supply-chain map markers.',
-  positiveGeoEvents: 'Happy/full positive-events first wave.',
   riskScores: 'CII / strategic-risk first-wave scores.',
   insights: 'Insights / threat-timeline first-wave cards.',
   predictions: 'Polymarket first-wave when the panel is in view.',

@@ -32,10 +32,9 @@ const DEFERRED_TABLE_CHUNKS = ['tech-geo-data', 'airports-data', 'ai-datacenters
 // the subtree (and zod) into main — collapsing this chunk and failing the guard.
 const DEFERRED_AGENT_BUS_CHUNKS = ['agent-bus-actions'];
 // npm libs only needed by opt-in/non-boot features, lazy-loaded off the eager entry:
-//   confetti.module — canvas-confetti, loaded on the first milestone celebration
 // (satellite.es went away with the 3D globe's live satellite layer.)
 // Re-adding a static `import` would re-eagerise it into main and fail this.
-const DEFERRED_NPM_LIB_CHUNKS = ['confetti.module'];
+const DEFERRED_NPM_LIB_CHUNKS = [];
 // Widget HTML sanitization is needed only after a custom-widget action. Keep it
 // out of the dashboard's static graph; otherwise its shared dependencies rejoin
 // the post-hydration long-task wave. (The checkout catalog chunk is retired.)
@@ -67,7 +66,6 @@ const DEFERRED_RPC_CLIENT_CHUNKS = [
   'rpc-client-displacement-v1',
   'rpc-client-economic-v1',
   'rpc-client-forecast-v1',
-  'rpc-client-giving-v1',
   'rpc-client-health-v1',
   'rpc-client-infrastructure-v1',
   'rpc-client-intelligence-v1',
@@ -77,7 +75,6 @@ const DEFERRED_RPC_CLIENT_CHUNKS = [
   'rpc-client-natural-v1',
   'rpc-client-news-v1',
   'rpc-client-orbital-v1',
-  'rpc-client-positive-events-v1',
   'rpc-client-prediction-v1',
   'rpc-client-radiation-v1',
   'rpc-client-research-v1',

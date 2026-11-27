@@ -24,7 +24,7 @@ export type DataSourceId =
   | 'unhcr'
   | 'climate'
   | 'worldpop'
-  | 'giving'
+
   | 'bis'
   | 'bls'
   | 'wto_trade'
@@ -38,13 +38,6 @@ export type DataSourceId =
 // AppContext lives in src/app/app-context.ts because it references
 // components, services, and utils (top-level aggregate type).
 
-export type HappyContentCategory =
-  | 'science-health'
-  | 'nature-wildlife'
-  | 'humanity-kindness'
-  | 'innovation-tech'
-  | 'climate-wins'
-  | 'culture-community';
 
 export interface TechHQ {
   id: string;
@@ -102,7 +95,6 @@ export interface StoryMeta {
   phase: StoryPhase;
 }
 
-
 export interface NewsLocationMarker {
   lat: number;
   lon: number;
@@ -147,7 +139,6 @@ export interface NewsItem {
   lon?: number;
   locationName?: string;
   lang?: string;
-  happyCategory?: HappyContentCategory;
   imageUrl?: string;
   importanceScore?: number;
   /**
@@ -415,7 +406,6 @@ export interface ConflictZone {
   peaceAgreements?: string[];
   totalFatalities?: string;
 }
-
 
 // UCDP Georeferenced Events
 export type UcdpEventType = 'state-based' | 'non-state' | 'one-sided';
@@ -739,11 +729,6 @@ export interface MapLayers {
   commodityHubs: boolean;
   // Gulf FDI layers
   gulfInvestments: boolean;
-  // Happy variant layers
-  positiveEvents: boolean;
-  kindness: boolean;
-  happiness: boolean;
-  speciesRecovery: boolean;
   renewableInstallations: boolean;
   // Trade route layers
   tradeRoutes: boolean;

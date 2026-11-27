@@ -265,16 +265,12 @@ export class SearchManager implements AppModule {
   private setupSearchModal(): void {
     const searchOptions = SITE_VARIANT === 'tech'
       ? { placeholder: t('modals.search.placeholderTech') }
-      : SITE_VARIANT === 'happy'
-        ? { placeholder: 'Search or type a command...' }
-        : SITE_VARIANT === 'finance'
+      : SITE_VARIANT === 'finance'
           ? { placeholder: t('modals.search.placeholderFinance') }
           : { placeholder: t('modals.search.placeholder') };
     this.ctx.searchModal = new SearchModal(this.ctx.container, searchOptions);
 
-    if (SITE_VARIANT === 'happy') {
-      // Happy variant: no geopolitical/military/infrastructure sources
-    } else if (SITE_VARIANT === 'tech') {
+    if (SITE_VARIANT === 'tech') {
       this.ctx.searchModal.registerSource('techcompany', TECH_COMPANIES.map(c => ({
         id: c.id,
         title: c.name,

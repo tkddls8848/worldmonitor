@@ -375,8 +375,6 @@
     "panelCatCommodityPrices": "价格与市场",
     "panelCatMining": "采矿与供应链",
     "panelCatCommodityEcon": "经济与贸易",
-    "panelCatHappyNews": "好消息",
-    "panelCatHappyPlanet": "地球与慈善",
     "embed": "嵌入"
   },
   "panels": {
@@ -421,7 +419,6 @@
     "stablecoins": "稳定币",
     "deduction": "推断局势",
     "ucdpEvents": "UCDP冲突事件",
-    "giving": "全球捐赠",
     "displacement": "难民与流离失所人口",
     "climate": "气候异常",
     "populationExposure": "人口暴露",
@@ -847,18 +844,6 @@
     }
   },
   "components": {
-    "positiveNewsFeed": {
-      "noStories": "此类别暂无报道"
-    },
-    "goodThingsDigest": {
-      "noStories": "暂无报道",
-      "summarizing": "摘要生成中…"
-    },
-    "progressCharts": {
-      "noData": "暂无进展数据",
-      "fallbackBadge": "显示静态备用数据 — 实时数据系列不可用",
-      "fallbackTooltip": "无法连接到实时世界银行数据源。这些图表是从上次验证于 2026 年 2 月的硬编码快照生成的。"
-    },
     "monitor": {
       "placeholder": "关键词（逗号分隔）",
       "add": "+ 添加监控",
@@ -1264,10 +1249,6 @@
         "iranAttacks": "中东袭击",
         "gpsJamming": "导航干扰",
         "ciiChoropleth": "国家不稳定性",
-        "positiveEvents": "正面事件",
-        "kindness": "善举",
-        "happiness": "世界幸福度",
-        "speciesRecovery": "物种恢复",
         "renewableInstallations": "清洁能源",
         "notamAirspace": "NOTAM 空域限制",
         "no2Activity": "工业活动",
@@ -1684,53 +1665,6 @@
       "moreNotShown": "还有{{count}}个事件未显示",
       "infoTooltip": "<strong>UCDP地理参考事件</strong>来自乌普萨拉大学的事件级冲突数据。<ul><li><strong>国家冲突</strong>：政府与反政府武装</li><li><strong>非国家冲突</strong>：武装团体之间</li><li><strong>单方暴力</strong>：针对平民的暴力</li></ul>死亡人数显示为最佳估计（低-高范围）。ACLED重复数据已自动过滤。"
     },
-    "giving": {
-      "activityIndex": "活动指数",
-      "trend": "趋势",
-      "estDailyFlow": "估计日流量",
-      "cryptoDaily": "加密日报",
-      "tabs": {
-        "platforms": "平台",
-        "categories": "类别",
-        "crypto": "加密",
-        "institutional": "机构"
-      },
-      "platform": "平台",
-      "dailyVol": "日成交量",
-      "velocity": "增速",
-      "freshness": "数据",
-      "category": "类别",
-      "share": "份额",
-      "trending": "趋势",
-      "dailyInflow": "24小时流入",
-      "wallets": "钱包",
-      "ofTotal": "占总计",
-      "topReceivers": "主要受益方",
-      "oecdOda": "经济合作与发展组织官方发展援助",
-      "cafIndex": "CAF指数",
-      "candidGrants": "Candid拨款",
-      "dataLag": "数据延迟",
-      "infoTooltip": "<strong>全球捐赠活动指数</strong> 跟踪众筹平台和加密钱包个人捐赠的综合指数。<ul><li><strong>平台</strong>：GoFundMe、GlobalGiving、JustGiving活动抽样</li><li><strong>加密</strong>：链上慈善钱包流入（Endaoment、Giving Block）</li><li><strong>机构</strong>：OECD ODA、CAF世界捐赠指数、Candid拨款</li></ul>指数为方向性指标，非精确金额。结合实时抽样与已发布年度报告。",
-      "benchmarkTitle": "全球捐赠基准",
-      "benchmarkInfoTooltip": "<strong>全球捐赠基准</strong> 已发布的平台和机构声明，包含来源期间和验证状态。年化数字为估算值，非实时活动。",
-      "status": {
-        "published": "已发布基准，来源覆盖已验证。",
-        "partial": "已发布基准，来源覆盖部分验证。",
-        "legacy": "历史快照；来源详情不可用。",
-        "cached": "显示缓存快照；刷新不可用。"
-      },
-      "trackedAnnualized": "已追踪平台捐赠 — 年化估算",
-      "annualizedDaily": "日度年化估算",
-      "atLeast": "至少",
-      "about": "约",
-      "sourceNotVerified": "来源未验证",
-      "reportedCumulative": "已报告累计总额",
-      "sourcePeriod": "{{source}} · {{period}}",
-      "benchmark": "已发布基准",
-      "sourcesMethodology": "来源与方法论",
-      "methodologyIntro": "仅经过验证的年度或可辩护年化平台声明才进入标题。累计和机构数字保持独立背景。",
-      "partialEstimate": "部分验证估算"
-    },
     "displacement": {
       "refugees": "难民",
       "asylumSeekers": "寻求庇护者",
@@ -2116,9 +2050,6 @@
     "cotPositioning": {
       "infoTooltip": "<strong>期货定位</strong>商业交易者、大型投机者和小型交易者在商品及金融期货中的周度净头寸。数据来源是商品期货交易委员会交易者承诺报告，每周五发布。"
     },
-    "counters": {
-      "infoTooltip": "<strong>实时计数器</strong> 全球指标的实时推算计数器：军费开支、自然灾害、疾病负担等。数字为基于年度数据率的统计估算值。"
-    },
     "diseaseOutbreaks": {
       "infoTooltip": "<strong>疾病暴发</strong> 来自WHO、ProMED和卫生部门的活跃暴发警报。追踪已确认的暴发、受影响地区、病例数和威胁级别。新报告发布时更新。",
       "title": "疾病爆发",
@@ -2256,17 +2187,11 @@
     "renewable": {
       "infoTooltip": "<strong>可再生能源</strong>各地区和年份可再生能源发电份额，以及美国太阳能、风能和煤炭的安装容量（兆瓦）。数据来源：世界银行（EG.ELC.RNEW.ZS）和美国能源信息署。"
     },
-    "conservationWins": {
-      "infoTooltip": "<strong>保育成就</strong> 正面的保育新闻：物种种群恢复、栖息地修复里程碑和反灭绝努力。来源：IUCN、WWF和保育研究出版物。"
-    },
     "worldClock": {
       "infoTooltip": "<strong>世界时钟</strong> 主要全球金融中心的实时当地时间和市场交易时段状态。显示NYSE、LSE、TSE、SGX等交易所的开盘/收盘状态。"
     },
     "yieldCurve": {
       "infoTooltip": "<strong>收益率曲线和利率</strong>美国国债收益率曲线（2年、5年、10年、30年）和关键利率差，包括10年-2年倒挂指标。还显示欧元区利率（EURIBOR、ESTR）。倒挂曲线在历史上先于经济衰退。数据来源：美联储经济数据。"
-    },
-    "breakthroughsTicker": {
-      "noData": "暂无科学突破"
     },
     "oilInventories": {
       "infoTooltip": "<strong>石油库存</strong> 美国商业原油和战略储备、天然气库存、欧洲天然气储存和石油库存覆盖。数据来源包括美国能源信息署和国际能源署。"
@@ -4259,7 +4184,6 @@
     "calculatingExposure": "正在计算暴露量",
     "computingSignals": "正在计算信号...",
     "loadingEtfData": "正在加载交易型开放式指数基金数据...",
-    "loadingGiving": "正在加载全球捐赠数据",
     "loadingDisplacement": "正在加载流离失所数据",
     "loadingClimateData": "正在加载气候数据",
     "failedTechReadiness": "加载科技就绪数据失败",
@@ -4853,9 +4777,6 @@
       "map": "能源地图",
       "liveNews": "能源头条",
       "insights": "AI能源洞察"
-    },
-    "happy": {
-      "map": "好消息地图"
     }
   },
   "pwaInstall": {
@@ -5573,7 +5494,6 @@
   },
   "personalChrome": {
     "timeRange": "TIME RANGE",
-    "goodNews": "Good News",
     "mission": "Mission",
     "activeMission": "Mission: {{name}}"
   }

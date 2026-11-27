@@ -12,7 +12,7 @@ function sanitizeVideoId(value) {
 
 const ALLOWED_ORIGINS = [
   // App hosts only: clerk and abacus are vendor CNAMEs, not trusted parents.
-  /^https:\/\/(www\.|app\.|api\.|tech\.|finance\.|commodity\.|happy\.|energy\.)?worldmonitor\.app$/,
+  /^https:\/\/(www\.|app\.|api\.|tech\.|finance\.|commodity\.|energy\.)?worldmonitor\.app$/,
   /^https?:\/\/localhost(:\d+)?$/,
   /^https?:\/\/127\.0\.0\.1(:\d+)?$/,
   /^tauri:\/\/localhost$/,

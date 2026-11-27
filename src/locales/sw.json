@@ -446,9 +446,7 @@
     "panelCatGulfMena": "Ghuba, Mashariki ya Kati na Afrika Kaskazini",
     "panelCatCommodityPrices": "Bei na Masoko",
     "panelCatMining": "Mnyororo wa Uchimbaji na Ugavi",
-    "panelCatCommodityEcon": "Uchumi na Biashara",
-    "panelCatHappyNews": "Habari Njema",
-    "panelCatHappyPlanet": "Sayari & Kutoa"
+    "panelCatCommodityEcon": "Uchumi na Biashara"
   },
   "panels": {
     "liveNews": "Habari za Moja kwa Moja",
@@ -497,7 +495,6 @@
     "stablecoins": "Stablecoins",
     "deduction": "Kata Hali",
     "ucdpEvents": "Matukio ya Migogoro ya Silaha",
-    "giving": "Utoaji wa Kimataifa",
     "displacement": "Wakimbizi na uhama",
     "climate": "Matatizo ya Hali ya Hewa",
     "populationExposure": "Mfiduo wa Idadi ya Watu",
@@ -919,12 +916,6 @@
     }
   },
   "components": {
-    "positiveNewsFeed": {
-      "noStories": "Bado hakuna hadithi katika kategoria hii"
-    },
-    "breakthroughsTicker": {
-      "noData": "Bado hakuna mafanikio ya sayansi"
-    },
     "airlineIntel": {
       "infoTooltip": "<strong>Airline Intelligence</strong> Data ya uendeshaji wa shirika la ndege katika wakati halisi: kusimamishwa kwa njia, kufungwa kwa anga, ushauri wa watoa huduma na uchepushaji wa dharura. Imetolewa kutoka NOTAM za mamlaka ya usafiri wa anga na taarifa za mtoa huduma.",
       "noOpsData": "Hakuna data ya huduma - inapakia...",
@@ -939,15 +930,6 @@
       "nonstop": "bila kukoma",
       "roundTrip": "Safari ya kwenda na kurudi",
       "tripDays": "Siku za safari"
-    },
-    "goodThingsDigest": {
-      "noStories": "Hakuna hadithi zinazopatikana",
-      "summarizing": "Inafupisha..."
-    },
-    "progressCharts": {
-      "noData": "Hakuna data ya maendeleo inayopatikana",
-      "fallbackBadge": "Inaonyesha data mbadala tuli - mfululizo wa moja kwa moja haupatikani",
-      "fallbackTooltip": "Mbegu hai ya Benki ya Dunia haikuweza kufikiwa. Chati hizi zinaonyeshwa kutoka kwa muhtasari wa msimbo gumu uliothibitishwa mara ya mwisho Februari 2026."
     },
     "monitor": {
       "placeholder": "Maneno muhimu (koma yametenganishwa)",
@@ -1412,10 +1394,6 @@
         "iranAttacks": "Mashambulizi ya Mashariki ya Kati",
         "gpsJamming": "Mgogoliko wa usambazaji",
         "ciiChoropleth": "Kulegeza kwa nchi",
-        "positiveEvents": "Matukio Chanya",
-        "kindness": "Matendo ya Fadhili",
-        "happiness": "Furaha ya Dunia",
-        "speciesRecovery": "Urejeshaji wa Aina",
         "renewableInstallations": "Nishati Safi",
         "notamAirspace": "Vikwazo vya Anga la NOTAM",
         "no2Activity": "Shughuli za viwanda",
@@ -1833,53 +1811,6 @@
       "deathsCount": "{{count}} vifo",
       "moreNotShown": "Matukio {{count}} zaidi hayajaonyeshwa",
       "infoTooltip": "<strong>Matukio ya Migogoro ya Silaha</strong> Data ya migogoro kwa kiwango cha tukio kutoka Chuo Kikuu cha Uppsala (UCDP).<ul><li><strong>Ya serikali</strong>: Serikali dhidi ya kundi la waasi</li><li><strong>Yasiyo ya serikali</strong>: Kundi la silaha dhidi ya kundi la silaha</li><li><strong>Ya upande mmoja</strong>: Vurugu dhidi ya raia</li></ul>Vifo vinaonyeshwa kama makadirio bora (masafa ya chini-juu). Nakala za ACLED huchujwa kiotomatiki."
-    },
-    "giving": {
-      "activityIndex": "Kielezo cha Shughuli",
-      "trend": "Mwenendo",
-      "estDailyFlow": "Est. Mtiririko wa Kila Siku",
-      "cryptoDaily": "Kripto kila siku",
-      "tabs": {
-        "platforms": "Majukwaa",
-        "categories": "Kategoria",
-        "crypto": "Kripto",
-        "institutional": "Taasisi"
-      },
-      "platform": "Jukwaa",
-      "dailyVol": "Kila siku Vol.",
-      "velocity": "Kasi",
-      "freshness": "Data",
-      "category": "Kategoria",
-      "share": "Shiriki",
-      "trending": "MWENENDO",
-      "dailyInflow": "24h Uingiaji",
-      "wallets": "Pochi",
-      "ofTotal": "% ya Jumla",
-      "topReceivers": "Wapokeaji wa Juu",
-      "oecdOda": "Msaada wa maendeleo ya rasmi wa Shirikisho la Nchi za Kiuchumi na Ushirikiano",
-      "cafIndex": "Fahirisi za CAF",
-      "candidGrants": "Ruzuku Candid",
-      "dataLag": "Kuchelewa kwa Data",
-      "infoTooltip": "<strong>Viwango vya Utoaji wa Kimataifa</strong> Madai yaliyochapishwa ya majukwaa na taasisi pamoja na vipindi vya vyanzo na hali ya uthibitishaji. Takwimu za kila mwaka ni makadirio, si shughuli za moja kwa moja.",
-      "benchmarkTitle": "Vipimo vya Utoaji Duniani",
-      "benchmarkInfoTooltip": "<strong>Vipimo vya Utoaji Duniani</strong> Madai ya majukwaa na taasisi yaliyochapishwa pamoja na vipindi vya vyanzo na hali ya uthibitisho. Takwimu za mwaka ni makadirio, si shughuli za moja kwa moja.",
-      "status": {
-        "published": "Vipimo vilivyochapishwa vyenye vyanzo vilivyothibitishwa.",
-        "partial": "Vipimo vilivyochapishwa vyenye vyanzo vilivyothibitishwa kwa sehemu.",
-        "legacy": "Nakala ya zamani; maelezo ya chanzo hayapatikani.",
-        "cached": "Inaonyesha nakala iliyohifadhiwa; kuonyesha upya hakupatikani."
-      },
-      "trackedAnnualized": "Utoaji wa majukwaa yanayofuatiliwa — makadirio ya mwaka",
-      "annualizedDaily": "Makadirio ya kila siku kwa mwaka",
-      "atLeast": "Angalau",
-      "about": "Kuhusu",
-      "sourceNotVerified": "Chanzo hakijathibitishwa",
-      "partialEstimate": "Makadirio yaliyothibitishwa kwa sehemu",
-      "reportedCumulative": "Jumla iliyoripotiwa ya limbikizo",
-      "sourcePeriod": "{{source}} · {{period}}",
-      "benchmark": "Kipimo kilichochapishwa",
-      "sourcesMethodology": "Vyanzo na mbinu",
-      "methodologyIntro": "Madai ya majukwaa ya kila mwaka yaliyothibitishwa au yaliyokadiriwa kwa mwaka kwa msingi thabiti pekee ndiyo huingia kwenye kichwa. Takwimu za jumla na za taasisi hubaki kama muktadha tofauti."
     },
     "displacement": {
       "refugees": "Wakimbizi",
@@ -2405,9 +2336,6 @@
     "goldIntelligence": {
       "infoTooltip": "<strong>Gold intelligence</strong> Bei za dhahabu katika fedha kadhaa, uwiano wa dhahabu/fedha na dhahabu/platinum, na maamuzi ya sehemu halisi ya fedha inayodhibitiwa. Vyanzo vinajumuisha Yahoo Finance na Commodity Futures Trading Commission."
     },
-    "counters": {
-      "infoTooltip": "<strong>Vihesabu vya Moja kwa Moja</strong> Kaunta za wakati halisi zilizoongezwa kwa vipimo vya kimataifa: matumizi ya kijeshi, majanga ya asili, mzigo wa magonjwa na zaidi. Takwimu ni makadirio ya takwimu kulingana na viwango vya data vya kila mwaka."
-    },
     "diseaseOutbreaks": {
       "infoTooltip": "<strong>Milipuko ya Magonjwa</strong> Arifa zinazoendelea za kuzuka kutoka kwa WHO, ProMED, na wizara za afya. Hufuatilia milipuko iliyothibitishwa, maeneo yaliyoathiriwa, idadi ya kesi na viwango vya tishio. Inasasishwa kadri ripoti mpya zinavyochapishwa.",
       "methodologyNote": "Arifa / Onyo / Viwango vya saa hutoka kwa kiainisha nenomsingi la uhariri - tazama /docs/methodology/disease-alert-level kwa jedwali la manenomsingi na vikwazo.",
@@ -2549,9 +2477,6 @@
     },
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Sehemu ya kuzalisha umeme kutoka kwa nishati inayoweza kubalika kwa eneo na mwaka, pamoja na uwezo uliowekwa wa Wamarekani kwa jua, upepo, na kola (MW). Vyanzo: World Bank (EG.ELC.RNEW.ZS) na US Energy Information Administration."
-    },
-    "conservationWins": {
-      "infoTooltip": "<strong>Uhifadhi Washinda</strong> Habari chanya za uhifadhi: ongezeko la idadi ya spishi, hatua muhimu za kurejesha makazi, na juhudi za kutoweka. Imetolewa kutoka kwa IUCN, WWF, na machapisho ya utafiti wa uhifadhi."
     },
     "worldClock": {
       "infoTooltip": "<strong>Saa ya Dunia</strong> Saa za moja kwa moja za ndani na hali ya kipindi cha soko kwa vituo vikuu vya kifedha duniani. Inaonyesha hali ya wazi/iliyofungwa ya NYSE, LSE, TSE, SGX, na ubadilishanaji mwingine."
@@ -4350,7 +4275,6 @@
     "calculatingExposure": "Kuhesabu mfiduo",
     "computingSignals": "Inaweka ishara...",
     "loadingEtfData": "Inapakua data ya kola zinazofanikiana...",
-    "loadingGiving": "Inapakia data ya utoaji wa kimataifa",
     "loadingDisplacement": "Inapakia data ya uhamishaji",
     "loadingClimateData": "Inapakia data ya hali ya hewa",
     "failedTechReadiness": "Data ya utayari wa teknolojia haipatikani kwa sasa",
@@ -4875,9 +4799,6 @@
       "map": "Ramani ya Nishati",
       "liveNews": "Habari za Nishati",
       "insights": "Maarifa ya AI ya Nishati"
-    },
-    "happy": {
-      "map": "Ramani ya Habari Nzuri"
     }
   },
   "pwaInstall": {
@@ -5606,7 +5527,6 @@
   },
   "personalChrome": {
     "timeRange": "TIME RANGE",
-    "goodNews": "Good News",
     "mission": "Mission",
     "activeMission": "Mission: {{name}}"
   }

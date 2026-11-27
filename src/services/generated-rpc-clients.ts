@@ -6,7 +6,6 @@ import type { CyberServiceClient as CyberServiceClientInstance } from '@/generat
 import type { DisplacementServiceClient as DisplacementServiceClientInstance } from '@/generated/client/worldmonitor/displacement/v1/service_client';
 import type { EconomicServiceClient as EconomicServiceClientInstance } from '@/generated/client/worldmonitor/economic/v1/service_client';
 import type { ForecastServiceClient as ForecastServiceClientInstance } from '@/generated/client/worldmonitor/forecast/v1/service_client';
-import type { GivingServiceClient as GivingServiceClientInstance } from '@/generated/client/worldmonitor/giving/v1/service_client';
 import type { HealthServiceClient as HealthServiceClientInstance } from '@/generated/client/worldmonitor/health/v1/service_client';
 import type { InfrastructureServiceClient as InfrastructureServiceClientInstance } from '@/generated/client/worldmonitor/infrastructure/v1/service_client';
 import type { IntelligenceServiceClient as IntelligenceServiceClientInstance } from '@/generated/client/worldmonitor/intelligence/v1/service_client';
@@ -15,7 +14,6 @@ import type { MarketServiceClient as MarketServiceClientInstance } from '@/gener
 import type { MilitaryServiceClient as MilitaryServiceClientInstance } from '@/generated/client/worldmonitor/military/v1/service_client';
 import type { NaturalServiceClient as NaturalServiceClientInstance } from '@/generated/client/worldmonitor/natural/v1/service_client';
 import type { NewsServiceClient as NewsServiceClientInstance } from '@/generated/client/worldmonitor/news/v1/service_client';
-import type { PositiveEventsServiceClient as PositiveEventsServiceClientInstance } from '@/generated/client/worldmonitor/positive_events/v1/service_client';
 import type { PredictionServiceClient as PredictionServiceClientInstance } from '@/generated/client/worldmonitor/prediction/v1/service_client';
 import type { RadiationServiceClient as RadiationServiceClientInstance } from '@/generated/client/worldmonitor/radiation/v1/service_client';
 import type { ResearchServiceClient as ResearchServiceClientInstance } from '@/generated/client/worldmonitor/research/v1/service_client';
@@ -133,10 +131,6 @@ export const ForecastServiceClient = createLazyRpcClientConstructor<ForecastServ
   return module.ForecastServiceClient;
 });
 
-export const GivingServiceClient = createLazyRpcClientConstructor<GivingServiceClientInstance>(async () => {
-  const module = await import('@/generated/client/worldmonitor/giving/v1/service_client');
-  return module.GivingServiceClient;
-});
 
 export const HealthServiceClient = createLazyRpcClientConstructor<HealthServiceClientInstance>(async () => {
   const module = await import('@/generated/client/worldmonitor/health/v1/service_client');
@@ -176,11 +170,6 @@ export const NaturalServiceClient = createLazyRpcClientConstructor<NaturalServic
 export const NewsServiceClient = createLazyRpcClientConstructor<NewsServiceClientInstance>(async () => {
   const module = await import('@/generated/client/worldmonitor/news/v1/service_client');
   return module.NewsServiceClient;
-});
-
-export const PositiveEventsServiceClient = createLazyRpcClientConstructor<PositiveEventsServiceClientInstance>(async () => {
-  const module = await import('@/generated/client/worldmonitor/positive_events/v1/service_client');
-  return module.PositiveEventsServiceClient;
 });
 
 export const PredictionServiceClient = createLazyRpcClientConstructor<PredictionServiceClientInstance>(async () => {

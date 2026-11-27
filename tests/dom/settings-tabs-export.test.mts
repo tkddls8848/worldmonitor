@@ -160,7 +160,7 @@ describe('new tabs from saved panels', () => {
   beforeEach(() => {
     const harness = manager as unknown as Record<string, unknown>;
     harness.applyTabPanelState = vi.fn();
-    manager.ctx.panelSettings = live({ 'live-news': { enabled: false }, 'positive-feed': { enabled: true } });
+    manager.ctx.panelSettings = live({ 'live-news': { enabled: false }, 'grocery-basket': { enabled: true } });
   });
 
   it("starts the next tab with this tab's shown and hidden panels", () => {
@@ -170,7 +170,7 @@ describe('new tabs from saved panels', () => {
     const created = newestStoredTab();
     expect(created.id).not.toBe('tab-a-1');
     expect(created.panelSettings['live-news']!.enabled).toBe(false);
-    expect(created.panelSettings['positive-feed']!.enabled).toBe(true);
+    expect(created.panelSettings['grocery-basket']!.enabled).toBe(true);
     expect(button('.dashboard-tab-add').title).toBe('New tab (starts with the panels you saved)');
   });
 
@@ -178,7 +178,7 @@ describe('new tabs from saved panels', () => {
     manager.ctx.panelSettings['live-news']!.enabled = true;
     manager.ctx.panelSettings.insights!.enabled = false;
     const grid = document.getElementById('panelsGrid')!;
-    grid.replaceChildren(...['positive-feed', 'insights', 'live-news'].map((key) => {
+    grid.replaceChildren(...['grocery-basket', 'insights', 'live-news'].map((key) => {
       const el = document.createElement('div');
       el.dataset.panel = key;
       return el;
@@ -190,7 +190,7 @@ describe('new tabs from saved panels', () => {
     const created = newestStoredTab();
     expect(created.panelSettings['live-news']!.enabled).toBe(true);
     expect(created.panelSettings.insights!.enabled).toBe(false);
-    expect(created.panelOrder.slice(0, 3)).toEqual(['positive-feed', 'insights', 'live-news']);
+    expect(created.panelOrder.slice(0, 3)).toEqual(['grocery-basket', 'insights', 'live-news']);
   });
 
   it('never clamps a new tab: every saved panel stays on', () => {
@@ -213,7 +213,7 @@ describe('new tabs from saved panels', () => {
 
     expect(localStorage.getItem(newTabPanelsKey)).toBeNull();
     expect(newestStoredTab().panelSettings['live-news']!.enabled).toBe(true);
-    expect(newestStoredTab().panelSettings['positive-feed']!.enabled).toBe(false);
+    expect(newestStoredTab().panelSettings['grocery-basket']!.enabled).toBe(false);
   });
 
   it('round-trips the saved panels through a settings backup', async () => {
@@ -226,7 +226,7 @@ describe('new tabs from saved panels', () => {
     addTab();
 
     expect(newestStoredTab().panelSettings['live-news']!.enabled).toBe(false);
-    expect(newestStoredTab().panelSettings['positive-feed']!.enabled).toBe(true);
+    expect(newestStoredTab().panelSettings['grocery-basket']!.enabled).toBe(true);
   });
 
   it('skips a malformed saved-panels value on import and keeps the rest', async () => {

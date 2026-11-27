@@ -178,9 +178,7 @@ const INITIAL_OVERVIEW_PANELS: Readonly<Record<string, readonly string[]>> = {
   finance: ['insights', 'markets', 'heatmap', 'macro-signals', 'fear-greed', 'daily-market-brief', 'latest-brief'],
   commodity: ['insights', 'commodities', 'energy-complex', 'gold-intelligence', 'supply-chain', 'markets', 'latest-brief'],
   energy: ['energy-risk-overview', 'chokepoint-strip', 'insights', 'energy-complex', 'oil-inventories', 'hormuz-tracker', 'latest-brief'],
-  happy: ['positive-feed', 'progress', 'counters', 'spotlight', 'breakthroughs', 'digest'],
 };
-
 
 export const VARIANT_SWITCHER_DASHBOARD_URLS = {
   full: 'https://www.worldmonitor.app/dashboard',
@@ -188,7 +186,6 @@ export const VARIANT_SWITCHER_DASHBOARD_URLS = {
   finance: 'https://finance.worldmonitor.app/dashboard',
   commodity: 'https://commodity.worldmonitor.app/dashboard',
   energy: 'https://energy.worldmonitor.app/dashboard',
-  happy: 'https://happy.worldmonitor.app/dashboard',
 } as const;
 
 export function variantSwitcherHref(
@@ -628,23 +625,6 @@ export class PanelLayoutManager implements AppModule {
     this.focusBar = null;
     this.unregisterExportFlush?.();
     this.unregisterExportFlush = null;
-    // Clean up happy variant panels
-    destroyOnce(this.ctx.tvMode);
-    this.ctx.tvMode = null;
-    destroyOnce(this.ctx.countersPanel);
-    this.ctx.countersPanel = null;
-    destroyOnce(this.ctx.progressPanel);
-    this.ctx.progressPanel = null;
-    destroyOnce(this.ctx.breakthroughsPanel);
-    this.ctx.breakthroughsPanel = null;
-    destroyOnce(this.ctx.heroPanel);
-    this.ctx.heroPanel = null;
-    destroyOnce(this.ctx.digestPanel);
-    this.ctx.digestPanel = null;
-    destroyOnce(this.ctx.speciesPanel);
-    this.ctx.speciesPanel = null;
-    destroyOnce(this.ctx.positivePanel);
-    this.ctx.positivePanel = null;
     destroyOnce(this.ctx.renewablePanel);
     this.ctx.renewablePanel = null;
 
@@ -765,8 +745,7 @@ export class PanelLayoutManager implements AppModule {
             <a href="${vHref('tech')}" class="variant-option ${SITE_VARIANT === 'tech' ? 'active' : ''}" data-variant="tech" ${vTarget('tech')}><span class="variant-icon">💻</span><span class="variant-label">${t('header.tech')}</span></a>
             <a href="${vHref('finance')}" class="variant-option ${SITE_VARIANT === 'finance' ? 'active' : ''}" data-variant="finance" ${vTarget('finance')}><span class="variant-icon">📈</span><span class="variant-label">${t('header.finance')}</span></a>
             <a href="${vHref('commodity')}" class="variant-option ${SITE_VARIANT === 'commodity' ? 'active' : ''}" data-variant="commodity" ${vTarget('commodity')}><span class="variant-icon">⛏️</span><span class="variant-label">${t('header.commodity')}</span></a>
-            <a href="${vHref('energy')}" class="variant-option ${SITE_VARIANT === 'energy' ? 'active' : ''}" data-variant="energy" ${vTarget('energy')}><span class="variant-icon">⚡</span><span class="variant-label">${t('header.energy')}</span></a>
-            <a href="${vHref('happy')}" class="variant-option ${SITE_VARIANT === 'happy' ? 'active' : ''}" data-variant="happy" ${vTarget('happy')}><span class="variant-icon">☀️</span><span class="variant-label">${escapeHtml(t('personalChrome.goodNews'))}</span></a>`;
+            <a href="${vHref('energy')}" class="variant-option ${SITE_VARIANT === 'energy' ? 'active' : ''}" data-variant="energy" ${vTarget('energy')}><span class="variant-icon">⚡</span><span class="variant-label">${t('header.energy')}</span></a>`;
       })()}</div>
           <span class="logo">WORLD MONITOR</span><span class="logo-mobile">World Monitor</span>${BETA_MODE ? '<span class="beta-badge">BETA</span>' : ''}
           <button class="mobile-settings-btn" id="mobileSettingsBtn" title="${t('header.settings')}" aria-label="${t('header.settings')}">
@@ -841,7 +820,6 @@ export class PanelLayoutManager implements AppModule {
               </button>
             </div>
           </div>
-          ${SITE_VARIANT === 'happy' ? `<button class="tv-mode-btn" id="tvModeBtn" title="TV Mode (Shift+T)" aria-label="TV Mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></button>` : ''}
           <span id="unifiedSettingsMount"></span>
         </div>
       </div>
@@ -861,7 +839,6 @@ export class PanelLayoutManager implements AppModule {
           { key: 'finance', icon: '📈', label: t('header.finance') },
           { key: 'commodity', icon: '⛏️', label: t('header.commodity') },
           { key: 'energy', icon: '⚡', label: t('header.energy') },
-          { key: 'happy', icon: '☀️', label: t('personalChrome.goodNews') },
         ];
         return variants.map(v =>
           `<button class="mobile-menu-item mobile-menu-variant ${v.key === SITE_VARIANT ? 'active' : ''}" data-variant="${v.key}">
@@ -948,7 +925,6 @@ export class PanelLayoutManager implements AppModule {
             </div>
           </div>
           <div class="map-container" id="mapContainer"></div>
-          ${SITE_VARIANT === 'happy' ? '<button class="tv-exit-btn" id="tvExitBtn">Exit TV Mode</button>' : ''}
           <div class="map-resize-handle" id="mapResizeHandle"></div>
           <div class="map-bottom-grid" id="mapBottomGrid"></div>
         </div>
@@ -3134,7 +3110,6 @@ export class PanelLayoutManager implements AppModule {
     this.lazyDefaultPanel('cascade', () => import('@/components/CascadePanel'), 'CascadePanel');
     this.lazyDefaultPanel('satellite-fires', () => import('@/components/SatelliteFiresPanel'), 'SatelliteFiresPanel');
 
-
     // Correlation engine panels
     this.lazyImportedPanel('military-correlation', () => import('@/components/MilitaryCorrelationPanel'), 'MilitaryCorrelationPanel', (MilitaryCorrelationPanel) => {
       const p = new MilitaryCorrelationPanel();
@@ -3323,7 +3298,6 @@ export class PanelLayoutManager implements AppModule {
       return new LiveNewsPanel();
     });
 
-
     this.lazyPanel('events', () =>
       this.importPanel(
         'events',
@@ -3408,67 +3382,11 @@ export class PanelLayoutManager implements AppModule {
     this.lazyDefaultPanel('etf-flows', () => import('@/components/ETFFlowsPanel'), 'ETFFlowsPanel');
     this.lazyDefaultPanel('stablecoins', () => import('@/components/StablecoinPanel'), 'StablecoinPanel');
 
-
     this.lazyDefaultPanel('insights', () => import('@/components/InsightsPanel'), 'InsightsPanel');
     if (isPanelInVariantDefaults('threat-timeline')) {
       this.lazyDefaultPanel('threat-timeline', () => import('@/components/ThreatTimelinePanel'), 'ThreatTimelinePanel');
     }
 
-    // Global Giving panel (all variants)
-    this.lazyDefaultPanel('giving', () => import('@/components/GivingPanel'), 'GivingPanel');
-
-    // Happy variant panels (lazy-loaded — only relevant for happy variant)
-    if (SITE_VARIANT === 'happy') {
-      this.lazyImportedPanel('positive-feed', () => import('@/components/PositiveNewsFeedPanel'), 'PositiveNewsFeedPanel', (PositiveNewsFeedPanel) => {
-        const p = new PositiveNewsFeedPanel();
-        this.ctx.positivePanel = p;
-        return p;
-      });
-
-      this.lazyImportedPanel('counters', () => import('@/components/CountersPanel'), 'CountersPanel', (CountersPanel) => {
-        const p = new CountersPanel();
-        p.startTicking();
-        this.ctx.countersPanel = p;
-        return p;
-      });
-
-      this.lazyImportedPanel('progress', () => import('@/components/ProgressChartsPanel'), 'ProgressChartsPanel', (ProgressChartsPanel) => {
-        const p = new ProgressChartsPanel();
-        this.ctx.progressPanel = p;
-        return p;
-      });
-
-      this.lazyImportedPanel('breakthroughs', () => import('@/components/BreakthroughsTickerPanel'), 'BreakthroughsTickerPanel', (BreakthroughsTickerPanel) => {
-        const p = new BreakthroughsTickerPanel();
-        this.ctx.breakthroughsPanel = p;
-        return p;
-      });
-
-      this.lazyImportedPanel('spotlight', () => import('@/components/HeroSpotlightPanel'), 'HeroSpotlightPanel', (HeroSpotlightPanel) => {
-        const p = new HeroSpotlightPanel();
-        p.onLocationRequest = (lat: number, lon: number) => {
-          this.ctx.map?.setCenter(lat, lon, 4);
-          this.ctx.map?.flashLocation(lat, lon, 3000);
-        };
-        this.ctx.heroPanel = p;
-        return p;
-      });
-
-      this.lazyImportedPanel('digest', () => import('@/components/GoodThingsDigestPanel'), 'GoodThingsDigestPanel', (GoodThingsDigestPanel) => {
-        const p = new GoodThingsDigestPanel();
-        this.ctx.digestPanel = p;
-        return p;
-      });
-
-      this.lazyImportedPanel('species', () => import('@/components/SpeciesComebackPanel'), 'SpeciesComebackPanel', (SpeciesComebackPanel) => {
-        const p = new SpeciesComebackPanel();
-        this.ctx.speciesPanel = p;
-        return p;
-      });
-
-    }
-
-    // Renewable Energy is shared by happy and energy variants.
     if (this.shouldCreatePanel('renewable')) {
       this.lazyImportedPanel('renewable', () => import('@/components/RenewableEnergyPanel'), 'RenewableEnergyPanel', (RenewableEnergyPanel) => {
         const p = new RenewableEnergyPanel();
@@ -3507,7 +3425,7 @@ export class PanelLayoutManager implements AppModule {
     let allOrder: string[];
 
     if (hasSavedOrder) {
-      const valid = savedOrder.filter(k => activePanelKeys.includes(k) && (SITE_VARIANT !== 'happy' || k !== 'monitors'));
+      const valid = savedOrder.filter(k => activePanelKeys.includes(k) && (true));
       const missing = activePanelKeys.filter(k => !valid.includes(k));
 
       missing.forEach(k => {
@@ -3522,7 +3440,7 @@ export class PanelLayoutManager implements AppModule {
         if (!inserted) valid.push(k);
       });
 
-      if (SITE_VARIANT !== 'happy' && !valid.includes('monitors')) valid.push('monitors');
+      if (!valid.includes('monitors')) valid.push('monitors');
       allOrder = valid;
     } else {
       allOrder = [...defaultOrder];
@@ -3637,7 +3555,6 @@ export class PanelLayoutManager implements AppModule {
       layers: this.ctx.mapLayers,
       timeRange: '7d',
     });
-
 
     this.ctx.map.initEscalationGetters();
     this.ctx.currentTimeRange = this.ctx.map.getTimeRange();
@@ -4145,12 +4062,12 @@ export class PanelLayoutManager implements AppModule {
       dragStarted = false;
       startX = e.clientX;
       startY = e.clientY;
-      
+
       // Calculate offset within the element for smooth dragging
       const rect = el.getBoundingClientRect();
       dragOffsetX = e.clientX - rect.left;
       dragOffsetY = e.clientY - rect.top;
-      
+
       e.preventDefault();
     };
 
@@ -4165,12 +4082,12 @@ export class PanelLayoutManager implements AppModule {
       ghost.style.opacity = '0.8';
       ghost.style.boxShadow = '0 10px 40px rgba(0, 0, 0, 0.3)';
       ghost.style.transform = 'scale(1.02)';
-      
+
       // Copy dimensions from original
       const rect = el.getBoundingClientRect();
       ghost.style.width = rect.width + 'px';
       ghost.style.height = rect.height + 'px';
-      
+
       document.body.appendChild(ghost);
       return ghost;
     };
@@ -4353,7 +4270,7 @@ export class PanelLayoutManager implements AppModule {
         const dy = Math.abs(e.clientY - startY);
         if (dx < DRAG_THRESHOLD && dy < DRAG_THRESHOLD) return;
         dragStarted = true;
-        
+
         // Initialize drag visualization
         document.body.classList.add('panel-drag-active');
         el.classList.add('dragging-source');
@@ -4423,12 +4340,12 @@ export class PanelLayoutManager implements AppModule {
       if (!isDragging) return;
       isDragging = false;
       if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
-      
+
       if (dragStarted) {
         // Find final drop position using most recent cursor coords
         const dropPos = findDropPosition(lastX, lastY);
         const moved = dropPos ? commitDrop(dropPos, lastX, lastY) : false;
-        
+
         // Clean up drag visualization (panel-drag-active is cleared unconditionally below)
         el.classList.remove('dragging-source');
         if (ghostEl) {
@@ -4447,7 +4364,7 @@ export class PanelLayoutManager implements AppModule {
           lastTargetPanel.classList.remove('panel-drop-target');
           lastTargetPanel = null;
         }
-        
+
         if (moved) {
           this.bottomSetMemory.delete(key);
           this.savePanelOrder();

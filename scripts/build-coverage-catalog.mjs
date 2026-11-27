@@ -31,7 +31,6 @@ const VARIANTS = Object.freeze([
   { id: 'finance', name: 'Finance Monitor', host: 'finance.worldmonitor.app' },
   { id: 'commodity', name: 'Commodity Monitor', host: 'commodity.worldmonitor.app' },
   { id: 'energy', name: 'Energy Monitor', host: 'energy.worldmonitor.app' },
-  { id: 'happy', name: 'Happy Monitor', host: 'happy.worldmonitor.app' },
 ]);
 const VARIANT_IDS = VARIANTS.map((variant) => variant.id);
 const VARIANT_NAME = new Map(VARIANTS.map((variant) => [variant.id, variant.name]));

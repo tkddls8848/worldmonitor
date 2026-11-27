@@ -41,23 +41,8 @@ describe('GDELT request cache identity through the real breaker', () => {
     expect(search).toHaveBeenCalledTimes(4);
   });
 
-  it('separates positive query dimensions and delimiter-bearing tuples', async () => {
-    const { fetchPositiveGdeltArticles: fetch } = await import('@/services/gdelt-intel');
-    const tuples = [
-      ['a:b', 'c', 'ToneDesc', 15, '72h'], ['a', 'b:c', 'ToneDesc', 15, '72h'],
-      ['a:b', 'c', 'DateDesc', 15, '72h'], ['a:b', 'c', 'ToneDesc', 20, '72h'],
-      ['a:b', 'c', 'ToneDesc', 15, '24h'],
-    ] as const;
-    const titles = [];
-    for (const [query, tone, sort, limit, timespan] of tuples) titles.push((await fetch(query, tone, sort, limit, timespan))[0]?.title);
-    expect(new Set(titles).size).toBe(tuples.length);
-    expect((await fetch(...tuples[0]))[0]?.title).toBe(titles[0]);
-    expect(search).toHaveBeenCalledTimes(tuples.length);
-  });
-
-  it.each(['normal', 'positive'])('does not retain error bodies for %s queries', async (kind) => {
-    const service = await import('@/services/gdelt-intel');
-    const fetch = kind === 'normal' ? service.fetchGdeltArticles : service.fetchPositiveGdeltArticles;
+  it('does not retain error bodies', async () => {
+    const { fetchGdeltArticles: fetch } = await import('@/services/gdelt-intel');
     search.mockResolvedValueOnce({ articles: [], query: 'military', error: 'seed-unavailable' });
     // Unavailable with no last-good articles is an error, not a confirmed empty result.
     await expect(fetch('military')).rejects.toThrow(/unavailable/);
@@ -65,10 +50,9 @@ describe('GDELT request cache identity through the real breaker', () => {
     expect(search).toHaveBeenCalledTimes(2);
   });
 
-  it.each(['normal', 'positive'])('does not retain rejected requests or cooldown fallbacks for %s queries', async (kind) => {
+  it('does not retain rejected requests or cooldown fallbacks', async () => {
     vi.useFakeTimers();
-    const service = await import('@/services/gdelt-intel');
-    const fetch = kind === 'normal' ? service.fetchGdeltArticles : service.fetchPositiveGdeltArticles;
+    const { fetchGdeltArticles: fetch } = await import('@/services/gdelt-intel');
     search.mockRejectedValueOnce(new Error('offline'));
     await expect(fetch('retry')).rejects.toThrow(/unavailable/);
     expect(await fetch('retry')).toHaveLength(1);

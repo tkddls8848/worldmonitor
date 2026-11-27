@@ -67,47 +67,11 @@ export const GDELT_BULK_TOPICS = Object.freeze([
 ]);
 
 const UNREST_THEMES = new Set(['PROTEST', 'STRIKE', 'VIOLENT_UNREST']);
-const POSITIVE_THEMES = new Set([
-  'SOC_INNOVATION',
-  'EDUCATION',
-  'MEDICAL',
-  'TOURISM',
-  'WB_1765_CULTURE_HERITAGE_AND_SUSTAINABLE_TOURISM',
-  'PEACEKEEPING',
-]);
 
 export function isGdeltGeoMaterializationRecord(record) {
   if (!Array.isArray(record?.themes) || !Array.isArray(record?.locations)) return false;
-  if (record.themes.some((theme) => UNREST_THEMES.has(theme))) return true;
-  return record.tone > 2 && record.themes.some((theme) => POSITIVE_THEMES.has(theme));
+  return record.themes.some((theme) => UNREST_THEMES.has(theme));
 }
-
-// Keep in sync with CATEGORY_KEYWORDS in src/services/positive-classifier.ts —
-// the two lists have ALREADY diverged (the TS copy carries extra terms such as
-// 'therapy', 'cancer', 'disease', 'reef'), so identical source text can be
-// labelled differently by the producer and the client classifier (#5864).
-const POSITIVE_CATEGORY_KEYWORDS = [
-  ['clinical trial', 'science-health'], ['study finds', 'science-health'],
-  ['researchers', 'science-health'], ['scientists', 'science-health'],
-  ['breakthrough', 'science-health'], ['discovery', 'science-health'],
-  ['cure', 'science-health'], ['vaccine', 'science-health'],
-  ['treatment', 'science-health'], ['medical', 'science-health'],
-  ['endangered species', 'nature-wildlife'], ['conservation', 'nature-wildlife'],
-  ['wildlife', 'nature-wildlife'], ['species', 'nature-wildlife'],
-  ['marine', 'nature-wildlife'], ['forest', 'nature-wildlife'],
-  ['renewable', 'climate-wins'], ['solar', 'climate-wins'],
-  ['wind energy', 'climate-wins'], ['electric vehicle', 'climate-wins'],
-  ['emissions', 'climate-wins'], ['carbon', 'climate-wins'],
-  ['clean energy', 'climate-wins'], ['climate', 'climate-wins'],
-  ['robot', 'innovation-tech'], ['technology', 'innovation-tech'],
-  ['startup', 'innovation-tech'], ['innovation', 'innovation-tech'],
-  ['artificial intelligence', 'innovation-tech'],
-  ['volunteer', 'humanity-kindness'], ['donated', 'humanity-kindness'],
-  ['charity', 'humanity-kindness'], ['rescued', 'humanity-kindness'],
-  ['hero', 'humanity-kindness'], ['kindness', 'humanity-kindness'],
-  [' art ', 'culture-community'], ['music', 'culture-community'],
-  ['festival', 'culture-community'], ['education', 'culture-community'],
-];
 
 function boundedPositiveInteger(value, label, max) {
   const parsed = Number(value);
@@ -565,15 +529,7 @@ function timelineSeriesFetchedAt(current, previous, merged, series) {
   return newestTimelinePointDate(merged);
 }
 
-function classifyPositiveName(name) {
-  const lower = ` ${name.toLowerCase()} `;
-  for (const [keyword, category] of POSITIVE_CATEGORY_KEYWORDS) {
-    if (lower.includes(keyword)) return category;
-  }
-  return 'humanity-kindness';
-}
-
-function aggregateGeo(records, { minimumCount, predicate, positive = false }) {
+function aggregateGeo(records, { minimumCount, predicate }) {
   const buckets = new Map();
   const seenUrlLocations = new Set();
   for (const record of records.filter(predicate)) {
@@ -601,17 +557,6 @@ function aggregateGeo(records, { minimumCount, predicate, positive = false }) {
     const occurredAt = Math.max(
       ...bucket.records.map((record) => Date.parse(record.date)).filter(Number.isFinite),
     );
-    if (positive) {
-      const label = `${bucket.records[0].title} ${bucket.name}`;
-      return [{
-        latitude: bucket.latitude,
-        longitude: bucket.longitude,
-        name: bucket.name.slice(0, 200),
-        category: classifyPositiveName(label),
-        count,
-        timestamp: occurredAt,
-      }];
-    }
     const country = bucket.name.split(',').at(-1)?.trim() || bucket.name;
     const worstTone = Math.min(...bucket.records.map((record) => record.tone));
     return [{
@@ -735,12 +680,6 @@ export function materializeGdeltBulk({
     minimumCount: 5,
     predicate: (record) => record.themes.some((theme) => UNREST_THEMES.has(theme)),
   });
-  const positive = aggregateGeo(geoSourceRecords, {
-    minimumCount: 3,
-    predicate: (record) =>
-      record.tone > 2 && record.themes.some((theme) => POSITIVE_THEMES.has(theme)),
-    positive: true,
-  });
   const cursor = safeBatches.map((batch) => batch.timestamp).sort().at(-1) || '';
   const referenceArticles = mergeArticles(
     allRecords,
@@ -759,7 +698,6 @@ export function materializeGdeltBulk({
     intel: { topics, fetchedAt: new Date(nowMs).toISOString() },
     timelines,
     unrest: { events: unrest, fetchedAt: nowMs },
-    positive: { events: positive, fetchedAt: nowMs },
     reference: { articles: referenceArticles, fetchedAt: nowMs },
     countryIndex,
   };

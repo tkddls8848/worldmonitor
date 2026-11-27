@@ -83,33 +83,3 @@ curl -s https://worldmonitor.app/mcp \
 ```
 
 </CodeGroup>
-
-### `get_positive_events`
-
-返回缓存的正面新闻地点地图：每个条目是一个地点（name、latitude、longitude），附带提及该地点的正面基调 GDELT 批量报道计数、按报道关键词分类的类别（science-health、nature-wildlife、climate-wins、innovation-tech、humanity-kindness、culture-community）以及最新报道的时间戳。这是地点聚合桶而非单条新闻：没有标题、正文或来源 URL，且一个桶至少需要 3 条报道才会出现。由 GDELT 批量源写入种子，1 小时后标记为过期。缓存读取，无实时抓取：API 套餐权重 1，包含在已登录免费额度内。category 选择六个类别之一；limit 限制列表长度（默认 30，0 表示不限）。
-
-**参数（工具特定）：**
-
-| 名称 | 类型 | 描述 |
-|------|------|-------------|
-| `category` | string: science-health / nature-wildlife / climate-wins / innovation-tech / humanity-kindness / culture-community | 筛选为一个积极事件类别。 |
-| `limit` | number | 将事件列表限制为最多这么多项（默认 30，传 0 表示不限）。 |
-
-- **API 端点：** `GET /api/positive-events/v1/list-positive-geo-events`
-- **类型：** 缓存读取 — 来自 Redis 引导缓存的亚秒级响应。
-- **新鲜度预算：** 标记 `stale: true` 前最多 **1 小时**（由 seeder cron 的预期间隔设定）。
-
-<CodeGroup>
-
-```bash curl
-curl -s https://worldmonitor.app/mcp \
-  -H "X-WorldMonitor-Key: $WM_KEY" \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "jsonrpc":"2.0","id":1,
-    "method":"tools/call",
-    "params":{"name":"get_positive_events","arguments":{}}
-  }'
-```
-
-</CodeGroup>

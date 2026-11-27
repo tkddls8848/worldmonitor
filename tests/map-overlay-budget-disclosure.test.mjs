@@ -51,7 +51,6 @@ const VARIANT_PICKER_LIST = {
   full: 'fullLayers',
   tech: 'techLayers',
   finance: 'financeLayers',
-  happy: 'happyLayers',
   energy: 'energyLayers',
   commodity: 'commodityLayers',
 };
@@ -61,7 +60,6 @@ const VARIANT_LAYER_STATE = {
   full: 'FULL_MAP_LAYERS',
   tech: 'TECH_MAP_LAYERS',
   finance: 'FINANCE_MAP_LAYERS',
-  happy: 'HAPPY_MAP_LAYERS',
   energy: 'ENERGY_MAP_LAYERS',
   commodity: 'COMMODITY_MAP_LAYERS',
 };

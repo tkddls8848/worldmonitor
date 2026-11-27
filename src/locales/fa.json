@@ -446,9 +446,7 @@
     "panelCatGulfMena": "خلیج و خاورمیانه و شمال افریقا",
     "panelCatCommodityPrices": "قیمت‌ها و بازارها",
     "panelCatMining": "معدن و زنجیره تأمین",
-    "panelCatCommodityEcon": "اقتصاد و تجارت",
-    "panelCatHappyNews": "اخبار خوب",
-    "panelCatHappyPlanet": "سیاره و نیکوکاری"
+    "panelCatCommodityEcon": "اقتصاد و تجارت"
   },
   "panels": {
     "liveNews": "اخبار زنده",
@@ -497,7 +495,6 @@
     "stablecoins": "استیبل‌کوین‌ها",
     "deduction": "استنتاج وضعیت",
     "ucdpEvents": "رویدادهای درگیری مسلحانه",
-    "giving": "نیکوکاری جهانی",
     "displacement": "پناهندگان و آوارگی",
     "climate": "ناهنجاری‌های اقلیمی",
     "populationExposure": "جمعیت در معرض",
@@ -919,12 +916,6 @@
     }
   },
   "components": {
-    "positiveNewsFeed": {
-      "noStories": "هنوز خبری در این دسته وجود ندارد"
-    },
-    "breakthroughsTicker": {
-      "noData": "هنوز دستاورد علمی‌ای ثبت نشده"
-    },
     "airlineIntel": {
       "infoTooltip": "<strong>اطلاعات خطوط هوایی</strong> داده‌های عملیاتی لحظه‌ای خطوط هوایی: تعلیق مسیرها، بسته شدن حریم هوایی، اطلاعیه‌های شرکت‌های هواپیمایی و تغییر مسیرهای اضطراری. برگرفته از NOTAMهای مراجع هوانوردی و بولتن‌های شرکت‌های هواپیمایی.",
       "noOpsData": "داده عملیاتی نیست — در حال بارگذاری…",
@@ -939,15 +930,6 @@
       "nonstop": "بدون توقف",
       "roundTrip": "رفت و برگشت",
       "tripDays": "روزهای سفر"
-    },
-    "goodThingsDigest": {
-      "noStories": "خبری در دسترس نیست",
-      "summarizing": "در حال خلاصه‌سازی…"
-    },
-    "progressCharts": {
-      "noData": "داده پیشرفتی در دسترس نیست",
-      "fallbackBadge": "نمایش داده‌های پشتیبان ثابت — سری زنده در دسترس نیست",
-      "fallbackTooltip": "منبع زنده World Bank در دسترس نبود. این نمودارها از یک نسخه ثابت که آخرین بار در Feb 2026 بررسی شده رسم شده‌اند."
     },
     "monitor": {
       "placeholder": "کلیدواژه‌ها (با کاما جدا کنید)",
@@ -1412,10 +1394,6 @@
         "iranAttacks": "حملات خاورمیانه",
         "gpsJamming": "تداخل ناوبری",
         "ciiChoropleth": "بی‌ثباتی کشور",
-        "positiveEvents": "رویدادهای مثبت",
-        "kindness": "اعمال نیک",
-        "happiness": "شادی جهانی",
-        "speciesRecovery": "بازیابی گونه‌ها",
         "renewableInstallations": "انرژی پاک",
         "notamAirspace": "محدودیت‌های فضای هوایی NOTAM",
         "no2Activity": "فعالیت صنعتی",
@@ -1833,53 +1811,6 @@
       "deathsCount": "{{count}} کشته",
       "moreNotShown": "{{count}} رویداد دیگر نمایش داده نشده",
       "infoTooltip": "<strong>رویدادهای درگیری مسلحانه</strong> داده‌های درگیری در سطح رویداد از دانشگاه اوپسالا (UCDP).<ul><li><strong>دولتی</strong>: دولت در برابر گروه شورشی</li><li><strong>غیردولتی</strong>: گروه مسلح در برابر گروه مسلح</li><li><strong>یک‌طرفه</strong>: خشونت علیه غیرنظامیان</li></ul>شمار کشته‌ها بهترین برآورد است (بازه کم-زیاد). موارد تکراری ACLED به‌طور خودکار حذف می‌شوند."
-    },
-    "giving": {
-      "activityIndex": "شاخص فعالیت",
-      "trend": "روند",
-      "estDailyFlow": "جریان روزانه برآوردی",
-      "cryptoDaily": "رمزارز روزانه",
-      "tabs": {
-        "platforms": "پلتفرم‌ها",
-        "categories": "دسته‌ها",
-        "crypto": "رمزارز",
-        "institutional": "نهادی"
-      },
-      "platform": "پلتفرم",
-      "dailyVol": "حجم روزانه",
-      "velocity": "سرعت",
-      "freshness": "داده",
-      "category": "دسته",
-      "share": "سهم",
-      "trending": "روند",
-      "dailyInflow": "ورودی ۲۴ساعته",
-      "wallets": "کیف‌پول‌ها",
-      "ofTotal": "% از کل",
-      "topReceivers": "بیشترین دریافت‌کنندگان",
-      "oecdOda": "کمک‌های رسمی توسعه‌ای سازمان همکاری اقتصادی و توسعه",
-      "cafIndex": "شاخص CAF",
-      "candidGrants": "کمک‌های Candid",
-      "dataLag": "تأخیر داده",
-      "infoTooltip": "<strong>Global Giving Activity Index</strong> Composite index tracking personal giving across crowdfunding platforms and crypto wallets.<ul><li><strong>Platforms</strong>: GoFundMe, GlobalGiving, JustGiving campaign sampling</li><li><strong>Crypto</strong>: On-chain charity wallet inflows (Endaoment, Giving Block)</li><li><strong>Institutional</strong>: OECD ODA, CAF World Giving Index, Candid grants</li></ul>Index is directional (not exact dollar amounts). Combines live sampling with published annual reports.",
-      "benchmarkTitle": "معیارهای جهانی کمک‌رسانی",
-      "benchmarkInfoTooltip": "<strong>معیارهای جهانی کمک‌رسانی</strong> ادعاهای منتشرشده پلتفرم‌ها و نهادها با دوره‌های منبع و وضعیت تأیید. اعداد سالانه تخمین هستند، نه فعالیت زنده.",
-      "status": {
-        "published": "معیارهای منتشرشده با پوشش منبع تأییدشده.",
-        "partial": "معیارهای منتشرشده با پوشش منبع جزئی.",
-        "legacy": "عکس‌فوری قدیمی؛ جزئیات منبع در دسترس نیست.",
-        "cached": "نمایش عکس‌فوری ذخیره‌شده؛ بازخوانی در دسترس نیست."
-      },
-      "trackedAnnualized": "کمک‌های ردیابی‌شده پلتفرم — برآورد سالانه",
-      "annualizedDaily": "برآورد روزانه سالانه",
-      "atLeast": "حداقل",
-      "about": "تقریباً",
-      "sourceNotVerified": "منبع تأیید نشده",
-      "reportedCumulative": "مجموع تجمعی گزارش‌شده",
-      "sourcePeriod": "{{source}} · {{period}}",
-      "benchmark": "معیار منتشرشده",
-      "sourcesMethodology": "منابع و روش‌شناسی",
-      "methodologyIntro": "تنها ادعاهای سالانه تأییدشده یا سالانه‌شده به‌شکل قابل‌دفاع وارد تیتر می‌شوند. اعداد تجمعی و نهادی به‌عنوان زمینه جداگانه باقی می‌مانند.",
-      "partialEstimate": "برآورد تأییدشده جزئی"
     },
     "displacement": {
       "refugees": "پناهندگان",
@@ -2405,9 +2336,6 @@
     "goldIntelligence": {
       "infoTooltip": "<strong>اطلاعات طلا</strong> قیمت‌های طلا در چندین ارز، نسبت‌های طلا/نقره و طلا/پلاتین، و موضع‌گیری صندوق‌های مدیریت‌شده قراردادهای آتی. منابع شامل Yahoo Finance و کمیسیون تجارت آتی کالاها می‌باشند."
     },
-    "counters": {
-      "infoTooltip": "<strong>شمارنده‌های زنده</strong> شمارنده‌های برون‌یابی‌شده لحظه‌ای برای شاخص‌های جهانی: هزینه‌های نظامی، بلایای طبیعی، بار بیماری و موارد دیگر. ارقام برآوردهای آماری بر پایه نرخ‌های سالانه داده‌ها هستند."
-    },
     "diseaseOutbreaks": {
       "infoTooltip": "<strong>شیوع بیماری‌ها</strong> هشدارهای فعال شیوع از WHO، ProMED و وزارتخانه‌های بهداشت. شیوع‌های تأییدشده، مناطق متأثر، شمار موارد و سطح تهدید را ردیابی می‌کند. با انتشار گزارش‌های جدید به‌روز می‌شود.",
       "methodologyNote": "سطوح هشدار / اخطار / مراقبت از یک طبقه‌بند کلیدواژه‌ای ویراستاری می‌آیند — جدول کلیدواژه‌ها و محدودیت‌ها را در /docs/methodology/disease-alert-level ببینید.",
@@ -2549,9 +2477,6 @@
     },
     "renewable": {
       "infoTooltip": "<strong>انرژی تجدیدپذیر</strong> سهم تولید الکتریسیته از انرژی‌های تجدیدپذیر بر اساس منطقه و سال، به‌علاوه ظرفیت نصب‌شده ایالات متحده برای انرژی خورشیدی، باد، و زغال (مگاوات). منابع: بانک جهانی (EG.ELC.RNEW.ZS) و ایالات متحده ادارة اطلاعات انرژی."
-    },
-    "conservationWins": {
-      "infoTooltip": "<strong>دستاوردهای حفاظت</strong> اخبار مثبت حفاظت از طبیعت: بازیابی جمعیت گونه‌ها، نقاط عطف احیای زیستگاه و تلاش‌های احیای گونه‌های منقرض. برگرفته از IUCN، WWF و نشریات پژوهشی حفاظت."
     },
     "worldClock": {
       "infoTooltip": "<strong>ساعت جهانی</strong> ساعت محلی زنده و وضعیت جلسات معاملاتی مراکز مالی اصلی جهان. وضعیت باز/بسته NYSE، LSE، TSE، SGX و دیگر بورس‌ها را نشان می‌دهد."
@@ -4350,7 +4275,6 @@
     "calculatingExposure": "در حال محاسبه میزان مواجهه",
     "computingSignals": "در حال محاسبه سیگنال‌ها...",
     "loadingEtfData": "در حال بارگذاری داده‌های صندوق‌های قابل معاملات...",
-    "loadingGiving": "در حال بارگذاری داده‌های کمک‌های جهانی",
     "loadingDisplacement": "در حال بارگذاری داده‌های آوارگی",
     "loadingClimateData": "در حال بارگذاری داده‌های اقلیمی",
     "failedTechReadiness": "داده‌های آمادگی فناوری موقتاً در دسترس نیست",
@@ -4875,9 +4799,6 @@
       "map": "نقشه انرژی",
       "liveNews": "تیتر‌های انرژی",
       "insights": "بینش‌های انرژی با هوش مصنوعی"
-    },
-    "happy": {
-      "map": "نقشه اخبار خوب"
     }
   },
   "pwaInstall": {
@@ -5606,7 +5527,6 @@
   },
   "personalChrome": {
     "timeRange": "TIME RANGE",
-    "goodNews": "Good News",
     "mission": "Mission",
     "activeMission": "Mission: {{name}}"
   }

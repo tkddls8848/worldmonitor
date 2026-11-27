@@ -77,13 +77,6 @@ export const NEWS_POOL_LAYOUT: NewsPoolLayout = {
       "markets",
       "finance"
     ],
-    "happy": [
-      "positive",
-      "science",
-      "nature",
-      "inspiring",
-      "community"
-    ],
     "energy": [
       "live-news",
       "energy",
@@ -333,13 +326,6 @@ export const NEWS_POOL_LAYOUT: NewsPoolLayout = {
     },
     {
       "edition": "commodity",
-      "lang": "en",
-      "contentLanguages": [
-        "en"
-      ]
-    },
-    {
-      "edition": "happy",
       "lang": "en",
       "contentLanguages": [
         "en"

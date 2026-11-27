@@ -2,12 +2,12 @@ import { expect, it, vi } from 'vitest';
 
 vi.mock('@/config', async (importOriginal) => ({
   ...await importOriginal<typeof import('@/config')>(),
-  SITE_VARIANT: 'happy',
+  SITE_VARIANT: 'finance',
 }));
 
 import { App } from '@/App';
 
-it('refreshes an enabled UKMTO panel on Happy and stops when disabled', () => {
+it('refreshes an enabled UKMTO panel on Finance and stops when disabled', () => {
   type Registration = { fn: () => unknown; intervalMs: number; condition?: () => boolean };
   const registrations = new Map<string, Registration>();
   const record = (name: string, fn: () => unknown, intervalMs: number, condition?: () => boolean) => {

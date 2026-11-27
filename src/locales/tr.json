@@ -377,8 +377,6 @@
     "panelCatCommodityPrices": "Fiyatlar & Piyasalar",
     "panelCatMining": "Madencilik & Tedarik Zinciri",
     "panelCatCommodityEcon": "Ekonomi & Ticaret",
-    "panelCatHappyNews": "İyi Haberler",
-    "panelCatHappyPlanet": "Gezegen & Hayırseverlik",
     "embed": "Göm"
   },
   "panels": {
@@ -423,7 +421,6 @@
     "stablecoins": "Stablecoin'ler",
     "deduction": "Durum çıkarımı",
     "ucdpEvents": "UCDP Catisma Olaylari",
-    "giving": "Küresel Bağış",
     "displacement": "Mülteciler ve yerinden edilmiş",
     "climate": "Iklim Anomalileri",
     "populationExposure": "Nufus Maruziyeti",
@@ -850,18 +847,6 @@
     }
   },
   "components": {
-    "positiveNewsFeed": {
-      "noStories": "Bu kategoride henüz haber yok"
-    },
-    "goodThingsDigest": {
-      "noStories": "Mevcut haber yok",
-      "summarizing": "Özetleniyor…"
-    },
-    "progressCharts": {
-      "noData": "İlerleme verisi mevcut değil",
-      "fallbackBadge": "Statik yedek veriler gösteriliyor — canlı seri kullanılamıyor",
-      "fallbackTooltip": "Canlı World Bank tohumu erişilemedi. Bu grafikler Şub 2026'da son olarak doğrulanan sabit kodlu bir anlık görüntüden oluşturulmuştur."
-    },
     "monitor": {
       "placeholder": "Anahtar kelimeler (virgul ile ayirin)",
       "add": "+ Takip Ekle",
@@ -1267,10 +1252,6 @@
         "iranAttacks": "Orta Doğu Saldırıları",
         "gpsJamming": "Navigasyon müdahalesi",
         "ciiChoropleth": "Ülke istikrarsızlığı",
-        "positiveEvents": "Olumlu Olaylar",
-        "kindness": "İyilik Eylemleri",
-        "happiness": "Dünya Mutluluğu",
-        "speciesRecovery": "Tür Kurtarma",
         "renewableInstallations": "Temiz Enerji",
         "notamAirspace": "NOTAM Hava Sahasına İlişkin Kısıtlamalar",
         "no2Activity": "Sanayi faaliyeti",
@@ -1689,53 +1670,6 @@
       "moreNotShown": "{{count}} daha fazla olay gosterilmiyor",
       "infoTooltip": "<strong>UCDP Cografi Referansli Olaylar</strong> Uppsala Universitesi'nden olay bazli catisma verileri.<ul><li><strong>Devlet Tabanli</strong>: Hukumet - isyancilar arasi</li><li><strong>Devlet Disi</strong>: Silahli grup - silahli grup arasi</li><li><strong>Tek Tarafli</strong>: Sivillere yonelik siddet</li></ul>Olumler en iyi tahmin (dusuk-yuksek aralik) olarak gosterilir. ACLED tekrarlari otomatik filtrelenir."
     },
-    "giving": {
-      "activityIndex": "Faaliyet Endeksi",
-      "trend": "Eğilim",
-      "estDailyFlow": "Tahmini Günlük Akış",
-      "cryptoDaily": "Günlük Kripto",
-      "tabs": {
-        "platforms": "Platformlar",
-        "categories": "Kategoriler",
-        "crypto": "Kripto",
-        "institutional": "Kurumsal"
-      },
-      "platform": "Platform",
-      "dailyVol": "Günlük Hacim",
-      "velocity": "Hız",
-      "freshness": "Veri",
-      "category": "Kategori",
-      "share": "Pay",
-      "trending": "TREND",
-      "dailyInflow": "24 Saatlik Giriş",
-      "wallets": "Cüzdanlar",
-      "ofTotal": "Toplamın %'si",
-      "topReceivers": "En Büyük Alıcılar",
-      "oecdOda": "Ekonomik İşbirliği ve Kalkınma Örgütü resmî kalkınma yardımı",
-      "cafIndex": "CAF Endeksi",
-      "candidGrants": "Candid Hibeleri",
-      "dataLag": "Veri Gecikmesi",
-      "infoTooltip": "<strong>Küresel Bağış Faaliyet Endeksi</strong> Kitlesel fonlama platformları ve kripto cüzdanları üzerinden kişisel bağışları izleyen bileşik endeks.<ul><li><strong>Platformlar</strong>: GoFundMe, GlobalGiving, JustGiving kampanya örneklemesi</li><li><strong>Kripto</strong>: Zincir üzeri hayır kurumu cüzdan girişleri (Endaoment, Giving Block)</li><li><strong>Kurumsal</strong>: OECD ODA, CAF Dünya Bağış Endeksi, Candid hibeleri</li></ul>Endeks yönsel bir göstergedir (kesin dolar tutarları değildir). Canlı örnekleme ile yayımlanan yıllık raporları birleştirir.",
-      "benchmarkTitle": "Küresel Bağış Referansları",
-      "benchmarkInfoTooltip": "<strong>Küresel Bağış Referansları</strong> Kaynak dönemleri ve doğrulama durumuyla yayımlanan platform ve kurum iddiaları. Yıllıklaştırılmış rakamlar tahmindir, gerçek zamanlı aktivite değildir.",
-      "status": {
-        "published": "Doğrulanmış kaynak kapsamıyla yayımlanmış referanslar.",
-        "partial": "Kısmi kaynak kapsamıyla yayımlanmış referanslar.",
-        "legacy": "Eski anlık görüntü; kaynak ayrıntıları kullanılamıyor.",
-        "cached": "Önbelleğe alınmış anlık görüntü gösteriliyor; yenileme kullanılamıyor."
-      },
-      "trackedAnnualized": "Takip edilen platform bağışları — yıllıklaştırılmış tahmin",
-      "annualizedDaily": "Günlük yıllıklaştırılmış tahmin",
-      "atLeast": "En az",
-      "about": "Yaklaşık",
-      "sourceNotVerified": "Kaynak doğrulanmadı",
-      "reportedCumulative": "Bildirilen kümülatif toplam",
-      "sourcePeriod": "{{source}} · {{period}}",
-      "benchmark": "Yayımlanmış referans",
-      "sourcesMethodology": "Kaynaklar ve metodoloji",
-      "methodologyIntro": "Yalnızca doğrulanmış yıllık veya savunulabilir biçimde yıllıklaştırılmış platform iddiaları başlığa girer. Kümülatif ve kurumsal rakamlar ayrı bağlam olarak kalır.",
-      "partialEstimate": "Kısmen doğrulanmış tahmin"
-    },
     "displacement": {
       "refugees": "Multeciler",
       "asylumSeekers": "Siginmacilar",
@@ -2121,9 +2055,6 @@
     "cotPositioning": {
       "infoTooltip": "<strong>Vadeli işlem konumlandırması</strong> Emtia ve finansal vadeli işlemler üzerinde ticari tüccarlar, büyük spekülatörler ve küçük tüccarlar için haftalık net pozisyonlar. Kaynak, Cuma günü yayınlanan Commodity Futures Trading Commission Traders Taahhütleri raporudur."
     },
-    "counters": {
-      "infoTooltip": "<strong>Canlı Sayaçlar</strong> Küresel metrikler için gerçek zamanlı ekstrapolasyon sayaçları: askeri harcamalar, doğal afetler, hastalık yükü ve daha fazlası. Rakamlar yıllık veri oranlarına dayalı istatistiksel tahminlerdir."
-    },
     "diseaseOutbreaks": {
       "infoTooltip": "<strong>Hastalık Salgınları</strong> WHO, ProMED ve sağlık bakanlıklarından aktif salgın uyarıları. Doğrulanmış salgınları, etkilenen bölgeleri, vaka sayılarını ve tehdit seviyelerini izler. Yeni raporlar yayımlandığında güncellenir.",
       "title": "Hastalık Salgınları",
@@ -2266,17 +2197,11 @@
     "renewable": {
       "infoTooltip": "<strong>Yenilenebilir Enerji</strong> Bölge ve yıla göre yenilenebilir kaynaklardan elektrik üretimi payı, artı ABD güneş, rüzgar ve kömür için kurulu kapasitesi (MW). Kaynaklar: Dünya Bankası (EG.ELC.RNEW.ZS) ve ABD Enerji Bilgi İdaresi."
     },
-    "conservationWins": {
-      "infoTooltip": "<strong>Koruma Başarıları</strong> Olumlu doğa koruma haberleri: tür popülasyon toparlanmaları, habitat restorasyon kilometre taşları ve de-ekstinksiyon çabaları. Kaynak: IUCN, WWF ve koruma araştırma yayınları."
-    },
     "worldClock": {
       "infoTooltip": "<strong>Dünya Saati</strong> Başlıca küresel finans merkezleri için gerçek zamanlı yerel saatler ve piyasa oturum durumu. NYSE, LSE, TSE, SGX ve diğer borsalar için açık/kapalı durumunu gösterir."
     },
     "yieldCurve": {
       "infoTooltip": "<strong>Getiri Eğrisi &amp; Oranlar</strong> ABD Hazine getiri eğrisi (2Y, 5Y, 10Y, 30Y) ve 10Y-2Y tersine dönme göstergesi dahil temel oran spreadleri. Ayrıca Euro alanı oranlarını gösterir (EURIBOR, ESTR). Tersine dönmüş bir eğri tarihsel olarak resesyondan önce gelir. Kaynak: Federal Rezerv Ekonomik Verileri."
-    },
-    "breakthroughsTicker": {
-      "noData": "Henüz bilim atılımı yok"
     },
     "oilInventories": {
       "infoTooltip": "<strong>Petrol stokları</strong> ABD ticari ham petrol ve stratejik rezervler, doğal gaz stokları, Avrupa gaz depolaması ve petrol stok kapsama oranı. Kaynaklar ABD Enerji Bilgi İdaresi ve Uluslararası Enerji Ajansi'dır."
@@ -4281,7 +4206,6 @@
     "calculatingExposure": "Maruziyet hesaplaniyor",
     "computingSignals": "Sinyaller hesaplaniyor...",
     "loadingEtfData": "Borsa yatırım fonu verileri yükleniyor...",
-    "loadingGiving": "Küresel bağış verileri yükleniyor",
     "loadingDisplacement": "Yerinden edilme verileri yukleniyor",
     "loadingClimateData": "Iklim verileri yukleniyor",
     "failedTechReadiness": "Teknoloji hazirlik verileri yuklenemedi",
@@ -4875,9 +4799,6 @@
       "map": "Enerji Atlas Haritası",
       "liveNews": "Enerji Başlıkları",
       "insights": "Yapay Zeka Enerji İçgörüleri"
-    },
-    "happy": {
-      "map": "İyi Haberler Haritası"
     }
   },
   "pwaInstall": {
@@ -5606,7 +5527,6 @@
   },
   "personalChrome": {
     "timeRange": "TIME RANGE",
-    "goodNews": "Good News",
     "mission": "Mission",
     "activeMission": "Mission: {{name}}"
   }

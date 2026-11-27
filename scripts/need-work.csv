@@ -10,7 +10,6 @@
 140,full,latam,Proceso,DEAD,,HTTP 404,https://www.proceso.com.mx/feed/,"https://news.google.com/rss/search?q=site:proceso.com.mx+when:1d&hl=es-419&gl=MX&ceid=MX:es-419",Direct 404; Google News 100 items
 141,full,latam,Milenio,DEAD,,HTTP 404,https://www.milenio.com/rss,"https://news.google.com/rss/search?q=site:milenio.com+when:1d&hl=es-419&gl=MX&ceid=MX:es-419",All direct paths 404; Google News 100 items
 161,full,asia,Bangkok Post,DEAD,,HTTP 451,https://www.bangkokpost.com/rss,"https://news.google.com/rss/search?q=site:bangkokpost.com+when:1d&hl=en-US&gl=US&ceid=US:en",Geo-blocked 451; Google News 42 items
-377,happy,science,ScienceDaily,DEAD,,Timeout,https://www.sciencedaily.com/rss/top.xml,https://www.sciencedaily.com/rss/all.xml,top.xml empty; all.xml has 40 items verified
 402,intel,inspiring,RAND,DEAD,,HTTP 404,https://www.rand.org/rss/all.xml,"https://news.google.com/rss/search?q=site:rand.org+when:7d&hl=en-US&gl=US&ceid=US:en",Direct 403; Google News 50 items
 406,intel,inspiring,NTI,DEAD,,HTTP 403,https://www.nti.org/rss/,"https://news.google.com/rss/search?q=site:nti.org+when:30d&hl=en-US&gl=US&ceid=US:en",Direct feed empty; Google News 30d window 27 items
 415,intel,inspiring,Bellingcat,DEAD,,fetch failed,https://www.bellingcat.com/feed/,"https://news.google.com/rss/search?q=site:bellingcat.com+when:30d&hl=en-US&gl=US&ceid=US:en",SSL handshake fails; Google News 30d 19 items (low pub freq)
@@ -31,8 +30,6 @@
 306,tech,podcasts,20VC Episodes,EMPTY,,No dates found,"https://news.google.com/rss/search?q=""20+Minute+VC""+Harry+Stebbings+when:14d&hl=en-US&gl=US&ceid=US:en",https://rss.libsyn.com/shows/61840/destinations/240976.xml,Official podcast RSS via Apple; 1423 episodes current
 310,tech,podcasts,Pivot Podcast,EMPTY,,No dates found,"https://news.google.com/rss/search?q=""Pivot+podcast""+(Kara+Swisher+OR+Scott+Galloway)+when:14d&hl=en-US&gl=US&ceid=US:en",https://feeds.megaphone.fm/pivot,Megaphone RSS; 750 episodes current
 315,tech,podcasts,Startup Podcasts,EMPTY,,No dates found,"https://news.google.com/rss/search?q=(""Masters+of+Scale""+OR+""The+Pitch+podcast""+OR+""startup+podcast"")+episode+when:14d&hl=en-US&gl=US&ceid=US:en",https://rss.art19.com/masters-of-scale,"Masters of Scale RSS 670 eps; ""The Pitch"" feeds 404 — drop it"
-379,happy,science,Live Science,EMPTY,,No dates found,https://www.livescience.com/feeds/all,https://www.livescience.com/feeds.xml,/feeds/all redirects to /feeds.xml; 20+ items current
-383,happy,science,Greater Good (Berkeley),EMPTY,,No dates found,https://greatergood.berkeley.edu/rss,https://greatergood.berkeley.edu/site/rss/articles,/rss is 404; correct path /site/rss/articles 50 items; uses dc:date
 398,intel,inspiring,CSIS,EMPTY,,No dates found,https://www.csis.org/analysis?type=analysis,"https://news.google.com/rss/search?q=site:csis.org&hl=en&gl=US&ceid=US:en",Not an RSS URL (HTML); all RSS paths 403; Google News 100 items
 403,intel,inspiring,Brookings,EMPTY,,No dates found,https://www.brookings.edu/feed/,"https://news.google.com/rss/search?q=site:brookings.edu&hl=en&gl=US&ceid=US:en",WordPress feed bot-blocked; Google News 100 items
 404,intel,inspiring,Carnegie,EMPTY,,No dates found,https://carnegieendowment.org/rss/,"https://news.google.com/rss/search?q=site:carnegieendowment.org&hl=en&gl=US&ceid=US:en",Next.js site returns HTML for RSS paths; Google News 100 items

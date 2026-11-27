@@ -466,9 +466,7 @@
     "panelCatGulfMena": "Gulf & Middle East and North Africa",
     "panelCatCommodityPrices": "Prices & Markets",
     "panelCatMining": "Mining & Supply Chain",
-    "panelCatCommodityEcon": "Economy & Trade",
-    "panelCatHappyNews": "Good News",
-    "panelCatHappyPlanet": "Planet & Giving"
+    "panelCatCommodityEcon": "Economy & Trade"
   },
   "panels": {
     "liveNews": "Live News",
@@ -517,7 +515,6 @@
     "stablecoins": "Stablecoins",
     "deduction": "Deduct Situation",
     "ucdpEvents": "Armed Conflict Events",
-    "giving": "Global Giving",
     "displacement": "Refugees and displacement",
     "climate": "Climate Anomalies",
     "populationExposure": "Population Exposure",
@@ -593,9 +590,6 @@
       "map": "Energy Atlas Map",
       "liveNews": "Energy Headlines",
       "insights": "AI Energy Insights"
-    },
-    "happy": {
-      "map": "Good News Map"
     }
   },
   "commands": {
@@ -1014,12 +1008,6 @@
         "stale": "Last check is stale"
       }
     },
-    "positiveNewsFeed": {
-      "noStories": "No stories in this category yet"
-    },
-    "breakthroughsTicker": {
-      "noData": "No science breakthroughs yet"
-    },
     "airlineIntel": {
       "infoTooltip": "<strong>Airline Intelligence</strong> Real-time airline operational data: route suspensions, airspace closures, carrier advisories, and emergency diversions. Sourced from aviation authority NOTAMs and carrier bulletins.",
       "noOpsData": "No ops data — loading…",
@@ -1034,15 +1022,6 @@
       "nonstop": "nonstop",
       "roundTrip": "Round-trip",
       "tripDays": "Trip days"
-    },
-    "goodThingsDigest": {
-      "noStories": "No stories available",
-      "summarizing": "Summarizing…"
-    },
-    "progressCharts": {
-      "noData": "No progress data available",
-      "fallbackBadge": "Showing static fallback data — live series unavailable",
-      "fallbackTooltip": "The live World Bank seed could not be reached. These charts are rendered from a hardcoded snapshot last verified Feb 2026."
     },
     "monitor": {
       "placeholder": "Keywords (comma separated)",
@@ -1521,10 +1500,6 @@
         "iranAttacks": "Middle East Strikes",
         "gpsJamming": "Navigation Interference",
         "ciiChoropleth": "Country Instability",
-        "positiveEvents": "Positive Events",
-        "kindness": "Acts of Kindness",
-        "happiness": "World Happiness",
-        "speciesRecovery": "Species Recovery",
         "renewableInstallations": "Clean Energy",
         "notamAirspace": "NOTAM Airspace Restrictions",
         "no2Activity": "Industrial Activity",
@@ -1928,53 +1903,6 @@
       "deathsCount": "{{count}} deaths",
       "moreNotShown": "{{count}} more events not shown",
       "infoTooltip": "<strong>Armed Conflict Events</strong> Event-level conflict data from Uppsala University (UCDP).<ul><li><strong>State-Based</strong>: Government vs rebel group</li><li><strong>Non-State</strong>: Armed group vs armed group</li><li><strong>One-Sided</strong>: Violence against civilians</li></ul>Deaths shown as best estimate (low-high range). ACLED duplicates are filtered out automatically."
-    },
-    "giving": {
-      "benchmarkTitle": "Global Giving Benchmarks",
-      "benchmarkInfoTooltip": "<strong>Global Giving Benchmarks</strong> Published platform and institutional claims with source periods and verification status. Annualized figures are estimates, not live activity.",
-      "status": {
-        "published": "Published benchmarks with verified source coverage.",
-        "partial": "Published benchmarks with partial source coverage.",
-        "legacy": "Legacy snapshot; source details are unavailable.",
-        "cached": "Showing a cached snapshot; refresh unavailable."
-      },
-      "trackedAnnualized": "Tracked platform giving — annualized estimate",
-      "annualizedDaily": "Annualized daily estimate",
-      "atLeast": "At least",
-      "about": "About",
-      "sourceNotVerified": "Source not verified",
-      "partialEstimate": "Partially verified estimate",
-      "reportedCumulative": "Reported cumulative total",
-      "sourcePeriod": "{{source}} · {{period}}",
-      "benchmark": "Published benchmark",
-      "sourcesMethodology": "Sources & methodology",
-      "methodologyIntro": "Only verified annual or defensibly annualized platform claims enter the headline. Cumulative and institutional figures remain separate context.",
-      "activityIndex": "Activity Index",
-      "trend": "Trend",
-      "estDailyFlow": "Est. Daily Flow",
-      "cryptoDaily": "Crypto Daily",
-      "tabs": {
-        "platforms": "Platforms",
-        "categories": "Categories",
-        "crypto": "Crypto",
-        "institutional": "Institutional"
-      },
-      "platform": "Platform",
-      "dailyVol": "Daily Vol.",
-      "velocity": "Velocity",
-      "freshness": "Data",
-      "category": "Category",
-      "share": "Share",
-      "trending": "TREND",
-      "dailyInflow": "24h Inflow",
-      "wallets": "Wallets",
-      "ofTotal": "% of Total",
-      "topReceivers": "Top Receivers",
-      "oecdOda": "Organisation for Economic Co-operation and Development official development assistance",
-      "cafIndex": "CAF Index",
-      "candidGrants": "Candid Grants",
-      "dataLag": "Data Lag",
-      "infoTooltip": "<strong>Global Giving Benchmarks</strong> Published platform and institutional claims with source periods and verification status. Annualized figures are estimates, not live activity."
     },
     "displacement": {
       "refugees": "Refugees",
@@ -2530,9 +2458,6 @@
     "goldIntelligence": {
       "infoTooltip": "<strong>Gold intelligence</strong> Gold prices in several currencies, gold/silver and gold/platinum ratios, and managed-money futures positions. Sources include Yahoo Finance and the Commodity Futures Trading Commission."
     },
-    "counters": {
-      "infoTooltip": "<strong>Live Counters</strong> Real-time extrapolated counters for global metrics: military spending, natural disasters, disease burden, and more. Figures are statistical estimates based on annual data rates."
-    },
     "diseaseOutbreaks": {
       "infoTooltip": "<strong>Disease Outbreaks</strong> Active outbreak alerts from WHO, ProMED, and health ministries. Tracks confirmed outbreaks, affected regions, case counts, and threat levels. Updated as new reports are published.",
       "methodologyNote": "Alert / Warning / Watch levels come from an editorial keyword classifier — see /docs/methodology/disease-alert-level for the keyword table and limitations.",
@@ -2674,9 +2599,6 @@
     },
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Share of electricity generation from renewables by region and year, plus US installed capacity for solar, wind, and coal (MW). Sources: World Bank (EG.ELC.RNEW.ZS) and US Energy Information Administration."
-    },
-    "conservationWins": {
-      "infoTooltip": "<strong>Conservation Wins</strong> Positive conservation news: species population recoveries, habitat restoration milestones, and de-extinction efforts. Sourced from IUCN, WWF, and conservation research publications."
     },
     "worldClock": {
       "infoTooltip": "<strong>World Clock</strong> Live local times and market session status for major global financial centers. Shows open/closed status for NYSE, LSE, TSE, SGX, and other exchanges."
@@ -4421,7 +4343,6 @@
     "calculatingExposure": "Calculating exposure",
     "computingSignals": "Computing signals...",
     "loadingEtfData": "Loading exchange-traded fund data...",
-    "loadingGiving": "Loading global giving data",
     "loadingDisplacement": "Loading displacement data",
     "loadingClimateData": "Loading climate data",
     "failedTechReadiness": "Tech readiness data temporarily unavailable",
@@ -5605,7 +5526,6 @@
   },
   "personalChrome": {
     "timeRange": "TIME RANGE",
-    "goodNews": "Good News",
     "mission": "Mission",
     "activeMission": "Mission: {{name}}"
   }

@@ -11,13 +11,13 @@ type OverlaySnapshot = {
 
 type VisualScenarioSummary = {
   id: string;
-  variant: 'both' | 'full' | 'tech' | 'finance' | 'commodity' | 'energy' | 'happy';
+  variant: 'both' | 'full' | 'tech' | 'finance' | 'commodity' | 'energy';
 };
 
 type HarnessWindow = Window & {
   __mapHarness?: {
     ready: boolean;
-    variant: 'full' | 'tech' | 'finance' | 'commodity' | 'energy' | 'happy';
+    variant: 'full' | 'tech' | 'finance' | 'commodity' | 'energy';
     seedAllDynamicData: () => void;
     setProtestsScenario: (scenario: 'alpha' | 'beta') => void;
     setPulseProtestsScenario: (

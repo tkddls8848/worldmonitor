@@ -66,7 +66,6 @@
     "climate": "Anomalias Climáticas",
     "securityAdvisories": "Alertas de Segurança",
     "orefSirens": "Sirenes em Israel",
-    "giving": "Doações Globais",
     "supplyChain": "Cadeia de Suprimentos",
     "gulfEconomies": "Economias do Golfo",
     "gulfIndices": "Índices do Golfo",
@@ -552,10 +551,6 @@
         "gpsJamming": "Interferência de navegação",
         "iranAttacks": "Ataques no Oriente Médio",
         "ciiChoropleth": "Instabilidade do país",
-        "positiveEvents": "Eventos positivos",
-        "kindness": "Atos de bondade",
-        "happiness": "Felicidade mundial",
-        "speciesRecovery": "Recuperação de espécies",
         "renewableInstallations": "Energia limpa",
         "notamAirspace": "Restrições de Espaço Aéreo NOTAM",
         "no2Activity": "Atividade industrial",
@@ -1540,53 +1535,6 @@
       "alertsRegion": "Alertas de notícias urgentes",
       "viewPanel": "Ver painel relacionado"
     },
-    "giving": {
-      "activityIndex": "Índice de Atividade",
-      "cafIndex": "Índice CAF",
-      "candidGrants": "Subsídios Candid",
-      "category": "Categoria",
-      "cryptoDaily": "Crypto diário",
-      "dailyInflow": "Entrada 24h",
-      "dailyVol": "Vol. diário",
-      "dataLag": "Atraso dos dados",
-      "estDailyFlow": "Fluxo diário est.",
-      "freshness": "Dados",
-      "infoTooltip": "<strong>Índice de Atividade de Doações Globais</strong> Índice composto que acompanha doações pessoais em plataformas de financiamento coletivo e carteiras cripto.<ul><li><strong>Plataformas</strong>: amostragem de campanhas GoFundMe, GlobalGiving, JustGiving</li><li><strong>Crypto</strong>: entradas on-chain em carteiras de caridade (Endaoment, Giving Block)</li><li><strong>Institucional</strong>: APD da OCDE, Índice Mundial de Doações CAF, subsídios Candid</li></ul>O índice é direcional (não valores exatos). Combina amostragem ao vivo com relatórios anuais publicados.",
-      "oecdOda": "Assistência oficial ao desenvolvimento da Organização para a Cooperação e Desenvolvimento Econômico",
-      "ofTotal": "% do total",
-      "platform": "Plataforma",
-      "share": "Participação",
-      "tabs": {
-        "categories": "Categorias",
-        "crypto": "Cripto",
-        "institutional": "Institucional",
-        "platforms": "Plataformas"
-      },
-      "topReceivers": "Principais receptores",
-      "trend": "Tendência",
-      "trending": "TENDÊNCIA",
-      "velocity": "Velocidade",
-      "wallets": "Carteiras",
-      "benchmarkTitle": "Referências globais de doações",
-      "benchmarkInfoTooltip": "<strong>Referências globais de doações</strong> Declarações publicadas de plataformas e instituições com períodos de fonte e estado de verificação. Os valores anualizados são estimativas, não atividade em tempo real.",
-      "status": {
-        "published": "Referências publicadas com cobertura de fonte verificada.",
-        "partial": "Referências publicadas com cobertura de fonte parcial.",
-        "legacy": "Instantâneo legado; detalhes da fonte indisponíveis.",
-        "cached": "A mostrar um instantâneo em cache; atualização indisponível."
-      },
-      "trackedAnnualized": "Doações de plataforma rastreadas — estimativa anualizada",
-      "annualizedDaily": "Estimativa diária anualizada",
-      "atLeast": "Pelo menos",
-      "about": "Aproximadamente",
-      "sourceNotVerified": "Fonte não verificada",
-      "reportedCumulative": "Total cumulativo reportado",
-      "sourcePeriod": "{{source}} · {{period}}",
-      "benchmark": "Referência publicada",
-      "sourcesMethodology": "Fontes e metodologia",
-      "methodologyIntro": "Apenas declarações anuais verificadas ou anualizadas de forma defensável entram no título. Os valores cumulativos e institucionais permanecem como contexto separado.",
-      "partialEstimate": "Estimativa parcialmente verificada"
-    },
     "supplyChain": {
       "chokepoints": "Pontos de estrangulamento",
       "disruption": "Interrupção",
@@ -1626,18 +1574,6 @@
       "partialTransitCoverage": "Dados de trânsito indisponíveis para {{names}}",
       "oilPipelinesUnavailable": "Dados de oleoduto indisponíveis",
       "gasPipelinesUnavailable": "Dados de gasoduto indisponíveis"
-    },
-    "positiveNewsFeed": {
-      "noStories": "Ainda não há histórias nesta categoria"
-    },
-    "goodThingsDigest": {
-      "noStories": "Nenhuma história disponível",
-      "summarizing": "A resumir…"
-    },
-    "progressCharts": {
-      "noData": "Nenhum dado de progresso disponível",
-      "fallbackBadge": "Exibindo dados de fallback estático — série em tempo real indisponível",
-      "fallbackTooltip": "Não foi possível acessar a seed do Banco Mundial em tempo real. Estes gráficos são renderizados a partir de um snapshot codificado verificado pela última vez em fevereiro de 2026."
     },
     "settings": {
       "exportSettings": "Exportar definições",
@@ -1741,9 +1677,6 @@
     },
     "cotPositioning": {
       "infoTooltip": "<strong>Futures positioning</strong> Posições líquidas semanais para operadores comerciais, grandes especuladores e pequenos operadores em futuros de commodities e financeiros. A fonte é o relatório Commitments of Traders da Commodity Futures Trading Commission, publicado às sextas-feiras."
-    },
-    "counters": {
-      "infoTooltip": "<strong>Contadores em direto</strong> Contadores extrapolados em tempo real para métricas globais: despesas militares, desastres naturais, carga de doenças e mais. Os números são estimativas estatísticas baseadas em taxas de dados anuais."
     },
     "diseaseOutbreaks": {
       "infoTooltip": "<strong>Surtos de doenças</strong> Alertas ativos de surtos da WHO, ProMED e ministérios da saúde. Rastreia surtos confirmados, regiões afetadas, contagens de casos e níveis de ameaça. Atualizado quando novos relatórios são publicados.",
@@ -1892,17 +1825,11 @@
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Participação da geração de eletricidade a partir de fontes renováveis por região e ano, além da capacidade instalada dos EUA para solar, vento e carvão (MW). Fontes: Banco Mundial (EG.ELC.RNEW.ZS) e Administração de Informações de Energia dos EUA."
     },
-    "conservationWins": {
-      "infoTooltip": "<strong>Conquistas da conservação</strong> Notícias positivas de conservação: recuperação de populações de espécies, marcos de restauração de habitats e esforços de des-extinção. Fonte: IUCN, WWF e publicações de investigação em conservação."
-    },
     "worldClock": {
       "infoTooltip": "<strong>Relógio mundial</strong> Horas locais em tempo real e estado das sessões de mercado para os principais centros financeiros globais. Mostra estado aberto/fechado para NYSE, LSE, TSE, SGX e outras bolsas."
     },
     "yieldCurve": {
       "infoTooltip": "<strong>Yield Curve &amp; Rates</strong> Curva de rendimento do Tesouro dos EUA (2Y, 5Y, 10Y, 30Y) e spreads de taxas-chave incluindo o indicador de inversão 10Y-2Y. Também mostra taxas da zona do euro (EURIBOR, ESTR). Uma curva invertida historicamente precede recessões. Fonte: Federal Reserve Economic Data."
-    },
-    "breakthroughsTicker": {
-      "noData": "Nenhuma descoberta científica ainda"
     },
     "oilInventories": {
       "infoTooltip": "<strong>Estoques de petróleo</strong> Reservas comerciais de óleo cru e estratégicas dos EUA, estoques de gás natural, armazenamento de gás europeu e cobertura de estoque de óleo. As fontes incluem a Administração de Informações de Energia dos EUA e Agência Internacional de Energia."
@@ -3958,7 +3885,6 @@
     "retry": "Tentar novamente",
     "refresh": "Atualizar",
     "all": "Todos",
-    "loadingGiving": "Carregando dados de doações...",
     "rateLimitedMarket": "Dados de mercado temporariamente limitados — tentando novamente automaticamente",
     "cancel": "Cancelar",
     "dismiss": "Dispensar"
@@ -4039,8 +3965,6 @@
     "panelCatCommodityPrices": "Preços & Mercados",
     "panelCatMining": "Mineração & Cadeia de Suprimentos",
     "panelCatCommodityEcon": "Economia & Comércio",
-    "panelCatHappyNews": "Boas Notícias",
-    "panelCatHappyPlanet": "Planeta & Doações",
     "embed": "Incorporar"
   },
   "countryBrief": {
@@ -4897,9 +4821,6 @@
       "map": "Mapa Atlas de Energia",
       "liveNews": "Manchetes de Energia",
       "insights": "Insights de Energia com IA"
-    },
-    "happy": {
-      "map": "Mapa de Boas Notícias"
     }
   },
   "pwaInstall": {
@@ -5639,7 +5560,6 @@
   },
   "personalChrome": {
     "timeRange": "TIME RANGE",
-    "goodNews": "Good News",
     "mission": "Mission",
     "activeMission": "Mission: {{name}}"
   }

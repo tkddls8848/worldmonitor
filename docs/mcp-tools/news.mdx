@@ -66,8 +66,8 @@ Current topic clusters computed over the live headline digest with the same Jacc
 | `min_sources` | integer | Only return clusters carrying at least this many **distinct outlets** (1-10) — real corroboration, not one outlet filing twice. Defaults to 1. |
 | `variant` | `string: full / tech` | Which headline digest to cluster. Defaults to `full`; use `tech` for the Tech dashboard categories. |
 | `languages` | string[] | Content languages to read (ISO 639-1), up to 8: `en`, `ar`, `bg`, `cs`, `da`, `de`, `el`, `es`, `fa`, `fr`, `hi`, `hr`, `hu`, `it`, `ja`, `ko`, `nl`, `no`, `pl`, `ro`, `ru`, `sv`, `tr`, `uk`, `vi`, `zh`. Defaults to `["en"]`. Each item's language is its outlet's content language. Titles stay untranslated. |
-| `editions` | string[] | Digest editions to read: `full`, `tech`, `finance`, `commodity`, `happy`, `energy`. Defaults to `["full"]`. `variant` is the same as one edition; passing both with different values is an `error`. |
-| `category` | string (enum) | Restrict clustering to one category of the selected editions (case-sensitive). `full`: `politics`, `us`, `europe`, `middleeast`, `tech`, `ai`, `finance`, `commodities`, `gov`, `africa`, `latam`, `asia`, `energy`, `thinktanks`, `crisis`, `layoffs`, `science`, `intel`. `tech`: `tech`, `ai`, `startups`, `vcblogs`, `regionalStartups`, `unicorns`, `accelerators`, `security`, `policy`, `github`, `funding`, `cloud`, `layoffs`, `finance`, `dev`, `ipo`, `producthunt`, `hardware`, `outages`, `thinktanks`, `podcasts`. `finance`: `markets`, `forex`, `bonds`, `commodities`, `crypto`, `centralbanks`, `economic`, `ipo`, `derivatives`, `fintech`, `fin-regulation`, `institutional`, `analysis`, `gccNews`, `nq-news`. `commodity`: `commodity-news`, `gold-silver`, `energy`, `mining-news`, `critical-minerals`, `base-metals`, `mining-companies`, `supply-chain`, `commodity-regulation`, `markets`, `finance`. `happy`: `positive`, `science`, `nature`, `inspiring`, `community`. `energy`: `live-news`, `energy`, `supply-chain`. Echoed as `category` in the result (`null` when omitted). An unknown value yields `headlineCount: 0` and a `note` listing categories present in the current digest. |
+| `editions` | string[] | Digest editions to read: `full`, `tech`, `finance`, `commodity`, `energy`. Defaults to `["full"]`. `variant` is the same as one edition; passing both with different values is an `error`. |
+| `category` | string (enum) | Restrict clustering to one category of the selected editions (case-sensitive). `full`: `politics`, `us`, `europe`, `middleeast`, `tech`, `ai`, `finance`, `commodities`, `gov`, `africa`, `latam`, `asia`, `energy`, `thinktanks`, `crisis`, `layoffs`, `science`, `intel`. `tech`: `tech`, `ai`, `startups`, `vcblogs`, `regionalStartups`, `unicorns`, `accelerators`, `security`, `policy`, `github`, `funding`, `cloud`, `layoffs`, `finance`, `dev`, `ipo`, `producthunt`, `hardware`, `outages`, `thinktanks`, `podcasts`. `finance`: `markets`, `forex`, `bonds`, `commodities`, `crypto`, `centralbanks`, `economic`, `ipo`, `derivatives`, `fintech`, `fin-regulation`, `institutional`, `analysis`, `gccNews`, `nq-news`. `commodity`: `commodity-news`, `gold-silver`, `energy`, `mining-news`, `critical-minerals`, `base-metals`, `mining-companies`, `supply-chain`, `commodity-regulation`, `markets`, `finance`. `energy`: `live-news`, `energy`, `supply-chain`. Echoed as `category` in the result (`null` when omitted). An unknown value yields `headlineCount: 0` and a `note` listing categories present in the current digest. |
 | `query` | string | Keep only clusters whose primary headline or any member headline contains this text (case-insensitive substring). Member headlines are matched too, because the primary is recency-picked — the searched term often sits on a sibling headline. Filters the LIVE digest window only, not a historical index. Applied before `limit`, so a capped list is drawn from the matches. |
 
 - **Corroboration:** every cluster carries `corroboration` as `{ state, publishers }`. `state` is `corroborated` (two or more publisher families, not all tier 4), `single-publisher`, `tier4-only` (two or more families, every one a declared tier-4 aggregator or blog) or `unknown`; `publishers` counts distinct publisher families and is `null` when `state` is `unknown`. The News panel, map popups and digests show the same verdict for the story. Real-time alerts carry only the story's publisher count, so they report `single-publisher` or `corroborated` and never `tier4-only`. It describes coverage, not accuracy: no state says a claim is true or false. The `publishers` roster beside it names each publisher with its declared tier.
@@ -117,34 +117,3 @@ Coverage comes from WorldMonitor's cached feeds (up to 96 hours) and is mostly E
 - **Access:** `subscription` — requires a Pro subscription.
 - **Kind:** RPC tool with an 8-second downstream timeout over cached feeds; no fetch from publishers and no request-time LLM call. Large outputs keep every group and trim headlines inside each; compare `headlines` with `headlineCount` to see what was left out.
 - **Spoken mode:** `response_mode: "spoken"` returns 2-3 sentences: headlines and outlets over the window split into the country's own press, its foreign-facing media and outside coverage, the labelled stance counts, and the most recent headline. `state: "partial"` adds a caveat; `"unavailable"` says so. Citations are the most recent headlines with outlet, URL and time.
-
-### `get_positive_events`
-
-Return the seeded map of positive-news locations: each entry is a place (name, latitude, longitude) with the count of positive-toned GDELT bulk reports that mention it, a category classified from report keywords (science-health, nature-wildlife, climate-wins, innovation-tech, humanity-kindness, culture-community) and the timestamp of the latest report. Location buckets, not individual stories: there are no titles, article text or source URLs, and a bucket needs at least 3 reports before it appears. Seeded from the GDELT bulk feed and flagged stale after 1 h. Seeded-cache read with no live fetch: weight 1 on API plans, included in the signed-in free allowance.
-
-**Parameters (tool-specific):**
-
-| Name | Type | Description |
-|------|------|-------------|
-| `category` | string: science-health / nature-wildlife / climate-wins / innovation-tech / humanity-kindness / culture-community | Keyword-classified theme of the location bucket to keep (e.g. climate-wins for renewable-energy and emissions reports; humanity-kindness for volunteering, charity and rescues, and for reports no keyword matches). Omit for every category. |
-| `limit` | number | Maximum location buckets to return. Omitted keeps 30; 0 keeps every bucket. |
-
-- **API endpoints:** `GET /api/positive-events/v1/list-positive-geo-events`
-- **Access:** `free-account` — callable by any signed-in account; free accounts spend the daily free allowance, Pro calls spend the daily quota. Accepts the universal `summary` argument.
-- **Kind:** cache read — sub-second response from Redis bootstrap cache.
-- **Freshness budget:** up to **1 h** before `stale: true` is flagged (set by the seeder cron's expected interval).
-
-<CodeGroup>
-
-```bash curl
-curl -s https://worldmonitor.app/mcp \
-  -H "X-WorldMonitor-Key: $WM_KEY" \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "jsonrpc":"2.0","id":1,
-    "method":"tools/call",
-    "params":{"name":"get_positive_events","arguments":{}}
-  }'
-```
-
-</CodeGroup>

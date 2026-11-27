@@ -10,7 +10,6 @@ const TRUSTED_RETURN_URL_ORIGINS = [
   'https://tech.worldmonitor.app',
   'https://finance.worldmonitor.app',
   'https://commodity.worldmonitor.app',
-  'https://happy.worldmonitor.app',
   'https://energy.worldmonitor.app',
 ];
 

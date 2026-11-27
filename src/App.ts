@@ -20,7 +20,6 @@ import {
   restoreProGatedPanels,
   isRetiredPanel,
   RETIRED_PANEL_IDS,
-  userSetPanelEnabled,
 } from '@/config';
 import {
   sanitizeLayersForVariant,
@@ -924,28 +923,6 @@ export class App {
         localStorage.setItem(UNIFIED_MIGRATION_KEY, 'done');
       }
 
-      // One-time migration: fix happy variant sessions that got cross-variant panels enabled
-      // (regression from #1911 unified panel registry which failed to disable non-variant panels on variant switch)
-      const HAPPY_PANEL_FIX_KEY = 'worldmonitor-happy-panel-fix-v1';
-      if (SITE_VARIANT === 'happy' && !localStorage.getItem(HAPPY_PANEL_FIX_KEY)) {
-        const happyKeys = new Set(VARIANT_DEFAULTS['happy'] ?? []);
-        let fixed = false;
-        for (const key of Object.keys(panelSettings)) {
-          const config = panelSettings[key];
-          if (
-            !happyKeys.has(key)
-            && !isDynamicPanel(key)
-            && config
-            && (config.enabled || config.proGated)
-          ) {
-            userSetPanelEnabled(config, false);
-            fixed = true;
-          }
-        }
-        if (fixed) saveToStorage(STORAGE_KEYS.panels, panelSettings);
-        localStorage.setItem(HAPPY_PANEL_FIX_KEY, 'done');
-      }
-
       console.log('[App] Loaded panel settings from storage:', Object.entries(panelSettings).filter(([_, v]) => !v.enabled).map(([k]) => k));
 
       // One-time migration: reorder panels for existing users (v1.9 panel layout)
@@ -1318,16 +1295,7 @@ export class App {
       correlationEngine: null,
       countryBriefPage: null,
       countryTimeline: null,
-      positivePanel: null,
-      countersPanel: null,
-      progressPanel: null,
-      breakthroughsPanel: null,
-      heroPanel: null,
-      digestPanel: null,
-      speciesPanel: null,
       renewablePanel: null,
-      tvMode: null,
-      happyAllItems: [],
       isDestroyed: false,
       isPlaybackMode: false,
       isIdle: false,
@@ -2343,11 +2311,6 @@ export class App {
       map.setCenter(mobileGeoCoords.lat, mobileGeoCoords.lon, 6);
     });
 
-    // Happy variant: pre-populate panels from persistent cache for instant render
-    if (SITE_VARIANT === 'happy') {
-      await this.dataLoader.hydrateHappyPanelsFromCache();
-    }
-
     // Phase 2: Shared UI components
     if (!this.state.isMobile) {
       void this.initFindingsBadge();
@@ -2964,8 +2927,7 @@ export class App {
       () => this.state.mapLayers.reservoirLevels === true || this.state.panelSettings['reservoir-levels']?.enabled === true,
     );
 
-    // Other geopolitical, financial and military refreshes exclude Happy.
-    if (SITE_VARIANT !== 'happy') {
+    {
       this.refreshScheduler.registerAll([
         {
           name: 'markets',
@@ -3107,7 +3069,7 @@ export class App {
     );
 
     // Server-side temporal anomalies (news + satellite_fires)
-    if (SITE_VARIANT !== 'happy') {
+    {
       this.refreshScheduler.scheduleRefresh('temporalBaseline', () => this.dataLoader.refreshTemporalBaseline(), REFRESH_INTERVALS.temporalBaseline, () => this.shouldRefreshIntelligence());
     }
 
@@ -3142,7 +3104,6 @@ export class App {
       REFRESH_INTERVALS.groceryBasket,
       () => this.isPanelNearViewport('grocery-basket')
     );
-
 
     this.refreshScheduler.scheduleRefresh(
       'fuel-prices',

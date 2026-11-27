@@ -88,15 +88,15 @@ beforeEach(() => {
 });
 
 describe('energy variant renewable panel', () => {
-  it('is enabled in the energy and happy initial settings', () => {
-    for (const variant of ['energy', 'happy']) {
+  it('is enabled in the energy initial settings', () => {
+    for (const variant of ['energy', ]) {
       const settings = getInitialPanelSettingsForVariant(variant);
       expect(settings.renewable, variant).toMatchObject({ name: 'Renewable Energy', enabled: true });
       expect(hasPanelSettingEntry(settings, 'renewable'), variant).toBe(true);
     }
   });
 
-  it('runs its hydration callback under the energy variant alongside the non-happy loaders', async () => {
+  it('runs its hydration callback under the energy variant alongside the other loaders', async () => {
     const { names, renewablePanel } = await scheduledTasks(getInitialPanelSettingsForVariant('energy'));
     expect(names).toContain('renewable');
     expect(names).toContain('markets');

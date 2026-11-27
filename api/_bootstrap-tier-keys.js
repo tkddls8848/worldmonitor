@@ -54,7 +54,6 @@ export const BOOTSTRAP_CACHE_KEYS = Object.freeze({
   shippingRates: 'supply_chain:shipping:v2',
   chokepoints: 'supply_chain:chokepoints:v4',
   minerals: 'supply_chain:minerals:v2',
-  giving: 'giving:summary:v2',
   climateAnomalies: 'climate:anomalies:v2',
   climateDisasters: 'climate:disasters:v1',
   co2Monitoring: 'climate:co2-monitoring:v1',
@@ -66,9 +65,7 @@ export const BOOTSTRAP_CACHE_KEYS = Object.freeze({
   wildfires: 'wildfire:fires-bootstrap:v1',
   cyberThreats: 'cyber:threats-bootstrap:v2',
   techReadiness: 'economic:worldbank-techreadiness:v1',
-  progressData: 'economic:worldbank-progress:v1',
   renewableEnergy: 'economic:worldbank-renewable:v1',
-  positiveGeoEvents: 'positive_events:geo-bootstrap:v1',
   theaterPosture: 'theater_posture:sebuf:stale:v1',
   riskScores: 'risk:scores:sebuf:stale:v14',
   naturalEvents: 'natural:events:v1',
@@ -147,11 +144,11 @@ export const BOOTSTRAP_CACHE_KEYS = Object.freeze({
 });
 
 const SLOW_KEY_NAMES = new Set([
-  'bisPolicy', 'bisExchange', 'bisCredit', 'chinaMacro', 'chinaReleaseCalendar', 'chinaCorporateDisclosures', 'minerals', 'giving',
+  'bisPolicy', 'bisExchange', 'bisCredit', 'chinaMacro', 'chinaReleaseCalendar', 'chinaCorporateDisclosures', 'minerals',
   'sectors', 'etfFlows', 'wildfires', 'climateAnomalies', 'climateDisasters', 'co2Monitoring', 'oceanIce', 'climateNews',
   'radiationWatch', 'thermalEscalation', 'crossSourceSignals',
   'crossStraitActivity',
-  'techReadiness', 'progressData', 'renewableEnergy',
+  'techReadiness', 'renewableEnergy',
   'naturalEvents',
   'cryptoQuotes', 'cryptoSectors', 'defiTokens', 'aiTokens', 'otherTokens',
   'gulfQuotes', 'stablecoinMarkets', 'unrestEvents', 'ucdpEvents',
@@ -185,7 +182,7 @@ const SLOW_KEY_NAMES = new Set([
 
 const FAST_KEY_NAMES = new Set([
   'earthquakes', 'outages', 'serviceStatuses', 'ddosAttacks', 'trafficAnomalies', 'macroSignals', 'chokepoints',
-  'marketQuotes', 'commodityQuotes', 'positiveGeoEvents', 'riskScores', 'insights', 'predictions',
+  'marketQuotes', 'commodityQuotes', 'riskScores', 'insights', 'predictions',
   'iranEvents', 'temporalAnomalies', 'weatherAlerts', 'spending', 'theaterPosture', 'gdeltIntel',
   'shippingRates', 'shippingStress',
 ]);

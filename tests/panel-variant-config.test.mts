@@ -18,13 +18,6 @@ function src(relPath: string): string {
 }
 
 describe('variant panel config resolution', () => {
-  it('prefers the happy variant config over a duplicate full panel key', () => {
-    const giving = getEffectivePanelConfig('giving', 'happy');
-
-    assert.equal(giving.name, 'Global Giving');
-    assert.equal(giving.enabled, true);
-    assert.equal(giving.priority, 1);
-  });
 
   it('preserves commodity and energy labels for shared supply-chain panels', () => {
     assert.equal(

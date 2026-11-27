@@ -379,8 +379,6 @@
     "panelCatCommodityPrices": "Prix & Marchés",
     "panelCatMining": "Exploitation & Chaîne d'approvisionnement",
     "panelCatCommodityEcon": "Économie & Commerce",
-    "panelCatHappyNews": "Bonnes Nouvelles",
-    "panelCatHappyPlanet": "Planète & Solidarité",
     "embed": "Intégrer"
   },
   "panels": {
@@ -450,7 +448,6 @@
     "geoHubs": "Centres géopolitiques",
     "securityAdvisories": "Avis de Sécurité",
     "orefSirens": "Sirènes en Israël",
-    "giving": "Dons mondiaux",
     "supplyChain": "Chaîne d'approvisionnement",
     "gulfEconomies": "Économies du Golfe",
     "gulfIndices": "Indices du Golfe",
@@ -1218,10 +1215,6 @@
         "gpsJamming": "Perturbation de la navigation",
         "iranAttacks": "Frappes au Moyen-Orient",
         "ciiChoropleth": "Instabilité des pays",
-        "positiveEvents": "Événements positifs",
-        "kindness": "Actes de bonté",
-        "happiness": "Bonheur mondial",
-        "speciesRecovery": "Rétablissement des espèces",
         "renewableInstallations": "Énergie propre",
         "notamAirspace": "Restrictions d'espace aérien NOTAM",
         "no2Activity": "Activité industrielle",
@@ -1933,53 +1926,6 @@
       "alertsRegion": "Alertes de dernière minute",
       "viewPanel": "Voir le panneau associé"
     },
-    "giving": {
-      "activityIndex": "Indice d'activité",
-      "cafIndex": "Indice CAF",
-      "candidGrants": "Subventions Candid",
-      "category": "Catégorie",
-      "cryptoDaily": "Crypto quotidien",
-      "dailyInflow": "Flux entrant 24h",
-      "dailyVol": "Vol. quotidien",
-      "dataLag": "Délai des données",
-      "estDailyFlow": "Flux quotidien est.",
-      "freshness": "Données",
-      "infoTooltip": "<strong>Indice d'activité des dons mondiaux</strong> Indice composite suivant les dons personnels via les plateformes de financement participatif et les portefeuilles crypto.<ul><li><strong>Plateformes</strong> : échantillonnage de campagnes GoFundMe, GlobalGiving, JustGiving</li><li><strong>Crypto</strong> : flux entrants des portefeuilles caritatifs on-chain (Endaoment, Giving Block)</li><li><strong>Institutionnel</strong> : APD de l'OCDE, indice mondial CAF des dons, subventions Candid</li></ul>L'indice est directionnel (pas des montants exacts). Combine l'échantillonnage en direct avec les rapports annuels publiés.",
-      "oecdOda": "Aide publique au développement de l'Organisation de coopération et de développement économiques",
-      "ofTotal": "% du total",
-      "platform": "Plateforme",
-      "share": "Part",
-      "tabs": {
-        "categories": "Catégories",
-        "crypto": "Crypto",
-        "institutional": "Institutionnel",
-        "platforms": "Plateformes"
-      },
-      "topReceivers": "Principaux bénéficiaires",
-      "trend": "Tendance",
-      "trending": "TENDANCE",
-      "velocity": "Vélocité",
-      "wallets": "Portefeuilles",
-      "benchmarkTitle": "Références mondiales de dons",
-      "benchmarkInfoTooltip": "<strong>Références mondiales de dons</strong> Déclarations publiées de plateformes et d'institutions avec périodes sources et statut de vérification. Les chiffres annualisés sont des estimations, pas une activité en direct.",
-      "status": {
-        "published": "Références publiées avec couverture source vérifiée.",
-        "partial": "Références publiées avec couverture source partielle.",
-        "legacy": "Instantané hérité ; détails de la source indisponibles.",
-        "cached": "Affichage d'un instantané en cache ; actualisation indisponible."
-      },
-      "trackedAnnualized": "Dons de plateforme suivis — estimation annualisée",
-      "annualizedDaily": "Estimation journalière annualisée",
-      "atLeast": "Au moins",
-      "about": "Environ",
-      "sourceNotVerified": "Source non vérifiée",
-      "reportedCumulative": "Total cumulatif déclaré",
-      "sourcePeriod": "{{source}} · {{period}}",
-      "benchmark": "Référence publiée",
-      "sourcesMethodology": "Sources et méthodologie",
-      "methodologyIntro": "Seules les déclarations annuelles vérifiées ou annualisées de manière défendable entrent dans le titre. Les chiffres cumulatifs et institutionnels restent un contexte séparé.",
-      "partialEstimate": "Estimation partiellement vérifiée"
-    },
     "supplyChain": {
       "chokepoints": "Points d'étranglement",
       "disruption": "Perturbation",
@@ -2019,18 +1965,6 @@
       "partialTransitCoverage": "Données de transit indisponibles : {{names}}",
       "oilPipelinesUnavailable": "Données des oléoducs indisponibles",
       "gasPipelinesUnavailable": "Données des gazoducs indisponibles"
-    },
-    "positiveNewsFeed": {
-      "noStories": "Aucune histoire dans cette catégorie pour le moment"
-    },
-    "goodThingsDigest": {
-      "noStories": "Aucune histoire disponible",
-      "summarizing": "Résumé en cours…"
-    },
-    "progressCharts": {
-      "noData": "Aucune donnée de progrès disponible",
-      "fallbackBadge": "Affichage des données de secours statiques — série en direct indisponible",
-      "fallbackTooltip": "La graine World Bank en direct n'a pas pu être atteinte. Ces graphiques sont rendus à partir d'un instantané codé en dur vérifié pour la dernière fois en février 2026."
     },
     "map": {
       "showMap": "Afficher la carte",
@@ -2125,9 +2059,6 @@
     },
     "cotPositioning": {
       "infoTooltip": "<strong>Futures positioning</strong> Positions nettes hebdomadaires des négociants commerciaux, des grands spéculateurs et des petits négociants sur les contrats à terme sur matières premières et financiers. La source est le rapport Commitments of Traders de la Commission de la Commodity Futures Trading, publié le vendredi."
-    },
-    "counters": {
-      "infoTooltip": "<strong>Compteurs en direct</strong> Compteurs extrapolés en temps réel pour des métriques mondiales : dépenses militaires, catastrophes naturelles, charge de morbidité et plus. Les chiffres sont des estimations statistiques basées sur les taux de données annuels."
     },
     "diseaseOutbreaks": {
       "infoTooltip": "<strong>Épidémies</strong> Alertes d'épidémies actives de l'OMS, ProMED et ministères de la santé. Suit les épidémies confirmées, régions touchées, nombre de cas et niveaux de menace. Mis à jour lors de la publication de nouveaux rapports.",
@@ -2276,17 +2207,11 @@
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Part de la génération d'électricité à partir d'énergies renouvelables par région et année, plus la capacité installée aux États-Unis pour le solaire, l'éolien et le charbon (MW). Sources : Banque mondiale (EG.ELC.RNEW.ZS) et Administration de l'information sur l'énergie des États-Unis."
     },
-    "conservationWins": {
-      "infoTooltip": "<strong>Victoires de conservation</strong> Nouvelles positives de conservation : récupération de populations d'espèces, jalons de restauration d'habitats et efforts de dé-extinction. Source : IUCN, WWF et publications de recherche en conservation."
-    },
     "worldClock": {
       "infoTooltip": "<strong>Horloge mondiale</strong> Heures locales en temps réel et statut des sessions de marché pour les principaux centres financiers mondiaux. Affiche le statut ouvert/fermé pour NYSE, LSE, TSE, SGX et d'autres bourses."
     },
     "yieldCurve": {
       "infoTooltip": "<strong>Yield Curve &amp; Rates</strong> Courbe de rendement des bons du Trésor américains (2Y, 5Y, 10Y, 30Y) et spreads clés incluant l'indicateur d'inversion 10Y-2Y. Affiche également les taux de la zone euro (EURIBOR, ESTR). Historiquement, une courbe inversée précède les récessions. Source : Données économiques de la Réserve fédérale."
-    },
-    "breakthroughsTicker": {
-      "noData": "Aucune percée scientifique pour le moment"
     },
     "oilInventories": {
       "infoTooltip": "<strong>Stocks de pétrole</strong> Stocks de brut commercial et réserves stratégiques américains, stocks de gaz naturel, stockage de gaz européen et couverture de stock pétrolier. Les sources incluent l'Administration américaine de l'information sur l'énergie et l'Agence internationale de l'énergie."
@@ -4342,7 +4267,6 @@
     "retry": "Réessayer",
     "refresh": "Actualiser",
     "all": "Tous",
-    "loadingGiving": "Chargement des données de dons...",
     "rateLimitedMarket": "Données de marché temporairement limitées — nouvelle tentative automatique",
     "cancel": "Annuler",
     "dismiss": "Ignorer"
@@ -4897,9 +4821,6 @@
       "map": "Carte Atlas de l'énergie",
       "liveNews": "Titres de l'énergie",
       "insights": "Insights IA sur l'énergie"
-    },
-    "happy": {
-      "map": "Carte des bonnes nouvelles"
     }
   },
   "pwaInstall": {
@@ -5639,7 +5560,6 @@
   },
   "personalChrome": {
     "timeRange": "TIME RANGE",
-    "goodNews": "Good News",
     "mission": "Mission",
     "activeMission": "Mission: {{name}}"
   }

@@ -160,11 +160,7 @@ import {
 } from '@/services/hotspot-escalation';
 import { getCachedCountryScoreValue } from '@/services/cached-risk-scores';
 import { getAlertsNearLocation } from '@/services/geo-convergence';
-import type { PositiveGeoEvent } from '@/services/positive-events-geo';
-import type { KindnessPoint } from '@/services/kindness-data';
-import type { HappinessData } from '@/services/happiness-data';
 import type { RenewableInstallation } from '@/services/renewable-installations';
-import type { SpeciesRecovery } from '@/services/conservation-data';
 import {
   canonicalizeCountryCode,
   getCountriesGeoJson,
@@ -301,10 +297,6 @@ const DECK_FRAME_WAKE_EVENTS = ['render', 'movestart', 'mousemove', 'mousedown',
 type ViewportMovementEventData = {
   worldMonitorViewportGeneration?: unknown;
 };
-
-const HAPPY_DARK_STYLE = '/map-styles/happy-dark.json';
-const HAPPY_LIGHT_STYLE = '/map-styles/happy-light.json';
-const isHappyVariant = SITE_VARIANT === 'happy';
 
 // Zoom thresholds for layer visibility and labels (matches old Map.ts)
 // Zoom-dependent layer visibility and labels
@@ -754,14 +746,8 @@ export class DeckGLMap {
   private scenarioState: ScenarioVisualState | null = null;
   private selectedChinaCorridorOverlay: ChinaCorridorOverlayProjection | null = null;
   private affectedIso2Set: Set<string> = new Set();
-  private positiveEvents: PositiveGeoEvent[] = [];
-  private kindnessPoints: KindnessPoint[] = [];
 
   // Phase 8 overlay data
-  private happinessScores: Map<string, number> = new Map();
-  private happinessYear = 0;
-  private happinessSource = '';
-  private speciesRecoveryZones: Array<SpeciesRecovery & { recoveryZone: { name: string; lat: number; lon: number } }> = [];
   private renewableInstallations: RenewableInstallation[] = [];
   private countriesGeoJsonData: FeatureCollection<Geometry> | null = null;
   private worldOverviewMode = false;
@@ -944,7 +930,6 @@ export class DeckGLMap {
   private styleLoadTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private tileMonitorGeneration = 0;
 
-
   private layerCache: Map<string, Layer> = new Map();
   private lastZoomThreshold = 0;
   private protestSC: Supercluster | null = null;
@@ -1042,10 +1027,7 @@ export class DeckGLMap {
     this.popup = new MapPopup(container);
 
     this.handleThemeChange = () => {
-      if (isHappyVariant) {
-        void this.switchBasemap();
-        return;
-      }
+
       const provider = getMapProvider();
       const mapTheme = getMapTheme(provider);
       const paintTheme = isLightMapTheme(mapTheme) ? 'light' as const : 'dark' as const;
@@ -1074,7 +1056,7 @@ export class DeckGLMap {
       this.startWeatherRadar();
     }
     // Kick off lazy APT load if cyberThreats is already on at init (e.g. from URL/localStorage)
-    if (this.state.layers.cyberThreats && SITE_VARIANT !== 'tech' && SITE_VARIANT !== 'happy') {
+    if (this.state.layers.cyberThreats && SITE_VARIANT !== 'tech') {
       this.loadAptGroups();
     }
   }
@@ -1178,9 +1160,7 @@ export class DeckGLMap {
 
     const attribution = document.createElement('div');
     attribution.className = 'map-attribution';
-    setTrustedHtml(attribution, trustedHtml(isHappyVariant
-      ? '© <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'
-      : '© <a href="https://protomaps.com" target="_blank" rel="noopener">Protomaps</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>', "legacy direct innerHTML migration"));
+    setTrustedHtml(attribution, trustedHtml('© <a href="https://protomaps.com" target="_blank" rel="noopener">Protomaps</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>', "legacy direct innerHTML migration"));
     wrapper.appendChild(attribution);
 
     this.container.appendChild(wrapper);
@@ -1214,7 +1194,7 @@ export class DeckGLMap {
     if (this.destroyed) return;
 
     const preset = VIEW_PRESETS[this.state.view];
-    if (!isHappyVariant && typeof primaryStyle === 'string' && !primaryStyle.includes('pmtiles')) {
+    if (typeof primaryStyle === 'string' && !primaryStyle.includes('pmtiles')) {
       this.usedFallbackStyle = true;
       const attr = this.container.querySelector('.map-attribution');
       if (attr) setTrustedHtml(attr, trustedHtml('© <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>', "legacy direct innerHTML migration"));
@@ -1533,13 +1513,6 @@ export class DeckGLMap {
   }
 
   private async resolveInitialBasemapStyle(): Promise<{ mapTheme: string; style: StyleSpecification | string }> {
-    if (isHappyVariant) {
-      const mapTheme = getCurrentTheme();
-      return {
-        mapTheme,
-        style: mapTheme === 'light' ? HAPPY_LIGHT_STYLE : HAPPY_DARK_STYLE,
-      };
-    }
 
     for (let attempt = 0; attempt < 10; attempt++) {
       const provider = getMapProvider();
@@ -2039,8 +2012,6 @@ export class DeckGLMap {
   }
 
 
-
-
   private isLayerVisible(layerKey: keyof MapLayers): boolean {
     const threshold = LAYER_ZOOM_THRESHOLDS[layerKey];
     if (!threshold) return true;
@@ -2066,11 +2037,9 @@ export class DeckGLMap {
     // freshness at write time. PR #3593: production saw 50 valid records
     // cached but 0 rendered because the newest CDC item was 11d old.
     const filteredDiseaseOutbreaks = mapLayers.diseaseOutbreaks ? this.diseaseOutbreaks : [];
-    const filteredPositiveEvents = mapLayers.positiveEvents ? this.filterByTimeCached(this.positiveEvents, (e) => e.timestamp) : [];
     const filteredIranEvents = mapLayers.iranAttacks ? this.filterByTimeCached(this.iranEvents, (e) => e.timestamp) : [];
     const filteredFirmsFireData = mapLayers.fires ? this.filterByTimeCached(this.firmsFireData, (d) => d.acq_date) : [];
     const filteredTrafficAnomalies = mapLayers.outages ? this.filterByTimeCached(this.trafficAnomalies, (a) => a.startDate) : [];
-    const filteredKindnessPoints = mapLayers.kindness ? this.filterByTimeCached(this.kindnessPoints, (p) => p.timestamp) : [];
     const filteredWeatherAlerts = mapLayers.weather ? this.filterByTimeCached(this.weatherAlerts, (alert) => alert.onset) : [];
     const filteredOutages = mapLayers.outages ? this.filterByTimeCached(this.outages, (outage) => outage.pubDate) : [];
     const filteredCableAdvisories = mapLayers.cables ? this.filterByTimeCached(this.cableAdvisories, (advisory) => advisory.reported) : [];
@@ -2156,7 +2125,6 @@ export class DeckGLMap {
         this.resolveHeavyData('conflict', () => this.buildConflictZoneGeoJson(), deferHeavy, this.emptyHeavyData),
       ));
     }
-
 
     // Military bases layer — hidden at low zoom (E: progressive disclosure) + clusters
     if (mapLayers.bases && this.isLayerVisible('bases')) {
@@ -2387,7 +2355,7 @@ export class DeckGLMap {
     }
 
     // APT Groups layer — loaded lazily when cyberThreats layer is enabled
-    if (mapLayers.cyberThreats && SITE_VARIANT !== 'tech' && SITE_VARIANT !== 'happy' && this.aptGroups.length > 0 && !this.aptGroupsLayerFailed) {
+    if (mapLayers.cyberThreats && SITE_VARIANT !== 'tech' && this.aptGroups.length > 0 && !this.aptGroupsLayerFailed) {
       layers.push(this.createAPTGroupsLayer());
     }
 
@@ -2464,21 +2432,6 @@ export class DeckGLMap {
       layers.push(this.createGulfInvestmentsLayer());
     }
 
-    // Positive events layer (happy variant)
-    if (mapLayers.positiveEvents && filteredPositiveEvents.length > 0) {
-      layers.push(...this.createPositiveEventsLayers(filteredPositiveEvents));
-    }
-
-    // Kindness layer (happy variant -- green baseline pulses + real kindness events)
-    if (mapLayers.kindness && filteredKindnessPoints.length > 0) {
-      layers.push(...this.createKindnessLayers(filteredKindnessPoints));
-    }
-
-    // Phase 8: Happiness choropleth (rendered below point markers)
-    if (mapLayers.happiness) {
-      const choropleth = this.createHappinessChoroplethLayer();
-      if (choropleth) layers.push(choropleth);
-    }
     // CII choropleth (country instability heat-map)
     if (mapLayers.ciiChoropleth) {
       const ciiLayer = this.createCIIChoroplethLayer();
@@ -2494,9 +2447,6 @@ export class DeckGLMap {
     const scenarioHeat = this.scenarioState ? this.createScenarioHeatLayer() : null;
     if (scenarioHeat) layers.push(scenarioHeat);
     // Phase 8: Species recovery zones
-    if (mapLayers.speciesRecovery && this.speciesRecoveryZones.length > 0) {
-      layers.push(this.createSpeciesRecoveryLayer());
-    }
     // Phase 8: Renewable energy installations
     if (mapLayers.renewableInstallations && this.renewableInstallations.length > 0) {
       layers.push(this.createRenewableInstallationsLayer());
@@ -3237,7 +3187,6 @@ export class DeckGLMap {
     return layer;
   }
 
-
   private getBasesData(): MilitaryBaseEnriched[] {
     if (this.serverBasesLoaded) return this.serverBases;
     const bases = getCachedMilitaryBases() as MilitaryBaseEnriched[];
@@ -3510,7 +3459,6 @@ export class DeckGLMap {
   private createEmptyGhost(id: string): ScatterplotLayer {
     return new ScatterplotLayer({ id: `${id}-ghost`, data: [], getPosition: () => [0, 0], visible: false });
   }
-
 
   private createDatacentersLayer(): IconLayer {
     const highlightedDC = this.highlightedAssets.datacenter;
@@ -4706,9 +4654,7 @@ export class DeckGLMap {
   private needsPulseAnimation(now = Date.now()): boolean {
     return this.hasRecentNews(now)
       || this.hasRecentRiot(now)
-      || this.hotspots.some(h => h.hasBreaking)
-      || this.positiveEvents.some(e => e.count > 10)
-      || this.kindnessPoints.some(p => p.type === 'real');
+      || this.hotspots.some(h => h.hasBreaking);
   }
 
   private syncPulseAnimation(now = Date.now()): void {
@@ -4825,125 +4771,8 @@ export class DeckGLMap {
     return layers;
   }
 
-  private createPositiveEventsLayers(items: PositiveGeoEvent[]): Layer[] {
-    const layers: Layer[] = [];
 
-    const getCategoryColor = (category: string): [number, number, number, number] => {
-      switch (category) {
-        case 'nature-wildlife':
-        case 'humanity-kindness':
-          return [34, 197, 94, 200]; // green
-        case 'science-health':
-        case 'innovation-tech':
-        case 'climate-wins':
-          return [234, 179, 8, 200]; // gold
-        case 'culture-community':
-          return [139, 92, 246, 200]; // purple
-        default:
-          return [34, 197, 94, 200]; // green default
-      }
-    };
 
-    // Dot layer (tooltip on hover via getTooltip)
-    layers.push(new ScatterplotLayer({
-      id: 'positive-events-layer',
-      data: items,
-      getPosition: (d: PositiveGeoEvent) => [d.lon, d.lat],
-      getRadius: 12000,
-      getFillColor: (d: PositiveGeoEvent) => getCategoryColor(d.category),
-      radiusMinPixels: 5,
-      radiusMaxPixels: 10,
-      pickable: true,
-    }));
-
-    // Gentle pulse ring for significant events (count > 8)
-    const significantEvents = items.filter(e => e.count > 8);
-    if (significantEvents.length > 0) {
-      const pulse = 1.0 + 0.4 * (0.5 + 0.5 * Math.sin((this.pulseTime || Date.now()) / 800));
-      layers.push(new ScatterplotLayer({
-        id: 'positive-events-pulse',
-        data: significantEvents,
-        getPosition: (d: PositiveGeoEvent) => [d.lon, d.lat],
-        getRadius: 15000,
-        radiusScale: pulse,
-        radiusMinPixels: 8,
-        radiusMaxPixels: 24,
-        stroked: true,
-        filled: false,
-        getLineColor: (d: PositiveGeoEvent) => getCategoryColor(d.category),
-        lineWidthMinPixels: 1.5,
-        pickable: false,
-        updateTriggers: { radiusScale: this.pulseTime },
-      }));
-    }
-
-    return layers;
-  }
-
-  private createKindnessLayers(items: KindnessPoint[]): Layer[] {
-    const layers: Layer[] = [];
-    if (items.length === 0) return layers;
-
-    // Dot layer (tooltip on hover via getTooltip)
-    layers.push(new ScatterplotLayer<KindnessPoint>({
-      id: 'kindness-layer',
-      data: items,
-      getPosition: (d: KindnessPoint) => [d.lon, d.lat],
-      getRadius: 12000,
-      getFillColor: [74, 222, 128, 200] as [number, number, number, number],
-      radiusMinPixels: 5,
-      radiusMaxPixels: 10,
-      pickable: true,
-    }));
-
-    // Pulse for real events
-    const pulse = 1.0 + 0.4 * (0.5 + 0.5 * Math.sin((this.pulseTime || Date.now()) / 800));
-    layers.push(new ScatterplotLayer<KindnessPoint>({
-      id: 'kindness-pulse',
-      data: items,
-      getPosition: (d: KindnessPoint) => [d.lon, d.lat],
-      getRadius: 14000,
-      radiusScale: pulse,
-      radiusMinPixels: 6,
-      radiusMaxPixels: 18,
-      stroked: true,
-      filled: false,
-      getLineColor: [74, 222, 128, 80] as [number, number, number, number],
-      lineWidthMinPixels: 1,
-      pickable: false,
-      updateTriggers: { radiusScale: this.pulseTime },
-    }));
-
-    return layers;
-  }
-
-  private createHappinessChoroplethLayer(): GeoJsonLayer | null {
-    if (!this.countriesGeoJsonData || this.happinessScores.size === 0) return null;
-    const scores = this.happinessScores;
-    return new GeoJsonLayer({
-      id: 'happiness-choropleth-layer',
-      data: this.getCulledCountriesGeoJson() ?? this.countriesGeoJsonData,
-      filled: true,
-      stroked: true,
-      getFillColor: (feature: { properties?: Record<string, unknown> }) => {
-        const code = feature.properties?.['ISO3166-1-Alpha-2'] as string | undefined;
-        const score = code ? scores.get(code) : undefined;
-        if (score == null) return [0, 0, 0, 0] as [number, number, number, number];
-        const t = score / 10;
-        return [
-          Math.round(40 + (1 - t) * 180),
-          Math.round(180 + t * 60),
-          Math.round(40 + (1 - t) * 100),
-          140,
-        ] as [number, number, number, number];
-      },
-      getLineColor: [100, 100, 100, 60] as [number, number, number, number],
-      getLineWidth: 1,
-      lineWidthMinPixels: 0.5,
-      pickable: true,
-      updateTriggers: { getFillColor: [scores.size] },
-    });
-  }
 
   private static readonly CII_LEVEL_HEX: Record<string, string> = {
     critical: '#b91c1c', high: '#dc2626', elevated: '#f59e0b', normal: '#eab308', low: '#22c55e',
@@ -5052,21 +4881,6 @@ export class DeckGLMap {
     });
   }
 
-  private createSpeciesRecoveryLayer(): ScatterplotLayer {
-    return new ScatterplotLayer({
-      id: 'species-recovery-layer',
-      data: this.speciesRecoveryZones,
-      getPosition: (d: (typeof this.speciesRecoveryZones)[number]) => [d.recoveryZone.lon, d.recoveryZone.lat],
-      getRadius: 50000,
-      radiusMinPixels: 8,
-      radiusMaxPixels: 25,
-      getFillColor: [74, 222, 128, 120] as [number, number, number, number],
-      stroked: true,
-      getLineColor: [74, 222, 128, 200] as [number, number, number, number],
-      lineWidthMinPixels: 1.5,
-      pickable: true,
-    });
-  }
 
   private createRenewableInstallationsLayer(): ScatterplotLayer {
     const typeColors: Record<string, [number, number, number, number]> = {
@@ -5350,20 +5164,6 @@ export class DeckGLMap {
         const coverage = corroborationLabelHtml(obj.corroboration);
         return { html: `<div class="deckgl-tooltip"><strong>📰 ${t('components.deckgl.tooltip.news')}</strong><br/>${text(obj.title?.slice(0, 80) || '')}${coverage ? `<br/>${coverage}` : ''}</div>` };
       }
-      case 'positive-events-layer': {
-        const catLabel = obj.category ? obj.category.replace(/-/g, ' & ') : 'Positive Event';
-        const countInfo = obj.count > 1 ? `<br/><span style="opacity:.7">${numericLabel(obj.count)} sources reporting</span>` : '';
-        return { html: `<div class="deckgl-tooltip"><strong>${text(obj.name)}</strong><br/><span style="text-transform:capitalize">${text(catLabel)}</span>${countInfo}</div>` };
-      }
-      case 'kindness-layer':
-        return { html: `<div class="deckgl-tooltip"><strong>${text(obj.name)}</strong></div>` };
-      case 'happiness-choropleth-layer': {
-        const hcName = obj.properties?.name ?? 'Unknown';
-        const hcCode = obj.properties?.['ISO3166-1-Alpha-2'];
-        const hcScore = hcCode ? this.happinessScores.get(hcCode as string) : undefined;
-        const hcScoreStr = hcScore != null ? numericLabel(hcScore, 1) : 'No data';
-        return { html: `<div class="deckgl-tooltip"><strong>${text(hcName)}</strong><br/>Happiness: ${hcScoreStr}/10${hcScore != null ? `<br/><span style="opacity:.7">${text(this.happinessSource)} (${numericLabel(this.happinessYear, 0)})</span>` : ''}</div>` };
-      }
       case 'cii-choropleth-layer': {
         const ciiName = obj.properties?.name ?? 'Unknown';
         const ciiCode = obj.properties?.['ISO3166-1-Alpha-2'];
@@ -5371,9 +5171,6 @@ export class DeckGLMap {
         if (!ciiEntry) return { html: `<div class="deckgl-tooltip"><strong>${text(ciiName)}</strong><br/><span style="opacity:.7">No country instability data</span></div>` };
         const levelColor = DeckGLMap.CII_LEVEL_HEX[ciiEntry.level] ?? '#888';
         return { html: `<div class="deckgl-tooltip"><strong>${text(ciiName)}</strong><br/>Country instability: <span style="color:${levelColor};font-weight:600">${numericLabel(ciiEntry.score)}/100</span><br/><span style="text-transform:capitalize;opacity:.7">${text(ciiEntry.level)}</span></div>` };
-      }
-      case 'species-recovery-layer': {
-        return { html: `<div class="deckgl-tooltip"><strong>${text(obj.commonName)}</strong><br/>${text(obj.recoveryZone?.name ?? obj.region)}<br/><span style="opacity:.7">Status: ${text(obj.recoveryStatus)}</span></div>` };
       }
       case 'renewable-installations-layer': {
         const riTypeLabel = obj.type ? String(obj.type).charAt(0).toUpperCase() + String(obj.type).slice(1) : 'Renewable';
@@ -5404,7 +5201,6 @@ export class DeckGLMap {
   private static readonly CHOROPLETH_LAYER_IDS = new Set([
     'cii-choropleth-layer',
     'world-overview-fill',
-    'happiness-choropleth-layer',
     'no2-activity-countries',
   ]);
 
@@ -6249,16 +6045,7 @@ export class DeckGLMap {
           { shape: shapes.circle('rgb(230, 126, 34)'), label: t('components.deckgl.legend.diseaseWarning'), layerKey: 'diseaseOutbreaks' },
           { shape: shapes.circle('rgb(241, 196, 15)'), label: t('components.deckgl.legend.diseaseWatch'), layerKey: 'diseaseOutbreaks' },
         ]
-        : SITE_VARIANT === 'happy'
-          ? [
-            { shape: shapes.circle('rgb(34, 197, 94)'), label: 'Positive Event', layerKey: 'positiveEvents' },
-            { shape: shapes.circle('rgb(234, 179, 8)'), label: 'Breakthrough', layerKey: 'positiveEvents' },
-            { shape: shapes.square('rgb(34, 180, 100)'), label: 'Happy Country', layerKey: 'happiness' },
-            { shape: shapes.circle('rgb(231, 76, 60)'), label: t('components.deckgl.legend.diseaseAlert'), layerKey: 'diseaseOutbreaks' },
-            { shape: shapes.circle('rgb(230, 126, 34)'), label: t('components.deckgl.legend.diseaseWarning'), layerKey: 'diseaseOutbreaks' },
-            { shape: shapes.circle('rgb(241, 196, 15)'), label: t('components.deckgl.legend.diseaseWatch'), layerKey: 'diseaseOutbreaks' },
-          ]
-          : SITE_VARIANT === 'commodity'
+        : SITE_VARIANT === 'commodity'
             ? [
               { shape: shapes.circle('rgb(255, 150, 50)'), label: t('components.deckgl.legend.pipeline'), layerKey: 'pipelines' },
               { shape: shapes.circle('rgb(231, 76, 60)'), label: t('components.deckgl.legend.diseaseAlert'), layerKey: 'diseaseOutbreaks' },
@@ -6711,7 +6498,6 @@ export class DeckGLMap {
     };
     this.worldPulseRaf = requestAnimationFrame(tick);
   }
-
 
   private scheduleWorldTactical(): void {
     if (this.worldTacticalReady || this.worldTacticalIdle !== null) return;
@@ -7689,17 +7475,7 @@ export class DeckGLMap {
     this.syncPulseAnimation(now);
   }
 
-  public setPositiveEvents(events: PositiveGeoEvent[]): void {
-    this.positiveEvents = events;
-    this.syncPulseAnimation();
-    this.render();
-  }
 
-  public setKindnessData(points: KindnessPoint[]): void {
-    this.kindnessPoints = points;
-    this.syncPulseAnimation();
-    this.render();
-  }
 
   public setChokepointData(data: GetChokepointStatusResponse | null): void {
     this.popup.setChokepointData(data);
@@ -8042,12 +7818,6 @@ export class DeckGLMap {
     });
   }
 
-  public setHappinessScores(data: HappinessData): void {
-    this.happinessScores = data.scores;
-    this.happinessYear = data.year;
-    this.happinessSource = data.source;
-    this.render();
-  }
 
   public setCIIScores(scores: Array<{ code: string; score: number; level: string }>): void {
     this.ciiScoresMap = new Map(scores.map(s => [s.code, { score: s.score, level: s.level }]));
@@ -8072,13 +7842,6 @@ export class DeckGLMap {
     this.render();
   }
 
-  public setSpeciesRecoveryZones(species: SpeciesRecovery[]): void {
-    this.speciesRecoveryZones = species.filter(
-      (s): s is SpeciesRecovery & { recoveryZone: { name: string; lat: number; lon: number } } =>
-        s.recoveryZone != null
-    );
-    this.render();
-  }
 
   public setRenewableInstallations(installations: RenewableInstallation[]): void {
     this.renewableInstallations = installations;
@@ -8868,9 +8631,7 @@ export class DeckGLMap {
     const seq = ++this.basemapSwitchSeq;
     const provider = getMapProvider();
     const mapTheme = getMapTheme(provider);
-    const style = isHappyVariant
-      ? (getCurrentTheme() === 'light' ? HAPPY_LIGHT_STYLE : HAPPY_DARK_STYLE)
-      : (this.usedFallbackStyle && provider === 'auto')
+    const style = (this.usedFallbackStyle && provider === 'auto')
         ? (isLightMapTheme(mapTheme) ? FALLBACK_LIGHT_STYLE : FALLBACK_DARK_STYLE)
         : await getStyleForProvider(provider, mapTheme);
     if (this.maplibreMap !== map || seq !== this.basemapSwitchSeq) return;
@@ -8879,14 +8640,14 @@ export class DeckGLMap {
     map.setStyle(style, { diff: false });
     map.once('style.load', () => {
       localizeMapLabels(this.maplibreMap);
-      improveBasemapLabels(this.maplibreMap, isLightMapTheme(isHappyVariant ? getCurrentTheme() : mapTheme));
+      improveBasemapLabels(this.maplibreMap, isLightMapTheme(mapTheme));
       this.loadCountryBoundaries();
       if (this.radarActive) this.applyRadarLayer();
       const paintTheme = isLightMapTheme(mapTheme) ? 'light' as const : 'dark' as const;
       this.updateCountryLayerPaint(paintTheme);
       this.render();
     });
-    if (!isHappyVariant && provider !== 'openfreemap' && !this.usedFallbackStyle) {
+    if (provider !== 'openfreemap' && !this.usedFallbackStyle) {
       this.monitorTileLoading(mapTheme);
     }
   }
@@ -9031,7 +8792,6 @@ export class DeckGLMap {
       this.aircraftFetchTimer = null;
     }
     this.stopLiveTankersLoop();
-
 
     this.layerCache.clear();
     this.activeNuclearFacilities = null;

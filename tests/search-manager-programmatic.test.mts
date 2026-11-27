@@ -32,7 +32,7 @@ import {
 } from '../src/services/webmcp.ts';
 import { withTimeout } from '../src/utils/with-timeout.ts';
 
-type Variant = 'full' | 'tech' | 'finance' | 'happy' | 'commodity' | 'energy';
+type Variant = 'full' | 'tech' | 'finance' | 'commodity' | 'energy';
 
 const managerSource = readFileSync(
   new URL('../src/app/search-manager.ts', import.meta.url),
@@ -2309,7 +2309,6 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
       full: ['country', 'hotspot', 'pipeline'],
       tech: ['country', 'techcompany'],
       finance: ['country', 'pipeline', 'exchange', 'commodityhub'],
-      happy: ['country'],
       commodity: ['country', 'pipeline', 'commodityhub'],
       energy: ['country', 'pipeline', 'commodityhub'],
     };
@@ -2325,7 +2324,7 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
   });
 
   it('registers commodity hubs through the shared variant-layer policy', () => {
-    const enabledVariants = (['full', 'tech', 'finance', 'happy', 'commodity', 'energy'] as Variant[])
+    const enabledVariants = (['full', 'tech', 'finance',  'commodity', 'energy'] as Variant[])
       .filter((variant) => getAllowedLayerKeys(variant).has('commodityHubs'));
     assert.deepEqual(enabledVariants, ['finance', 'commodity', 'energy']);
 
@@ -2371,7 +2370,7 @@ describe('SearchManager programmatic dashboard search (#6212)', () => {
     assert.ok(parent && ts.isIfStatement(parent));
     assert.match(parent.expression.getText(sourceFile), /\.has\('bases'\)/);
     assert.deepEqual(
-      (['full', 'tech', 'finance', 'happy', 'commodity', 'energy'] as Variant[])
+      (['full', 'tech', 'finance',  'commodity', 'energy'] as Variant[])
         .filter((variant) => getAllowedLayerKeys(variant).has('bases')),
       ['full'],
     );

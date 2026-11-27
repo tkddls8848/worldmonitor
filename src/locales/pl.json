@@ -381,8 +381,6 @@
     "panelCatCommodityPrices": "Ceny i Rynki",
     "panelCatMining": "Górnictwo i Łańcuch Dostaw",
     "panelCatCommodityEcon": "Gospodarka i Handel",
-    "panelCatHappyNews": "Dobre Wiadomości",
-    "panelCatHappyPlanet": "Planeta i Filantropia",
     "embed": "Osadź"
   },
   "panels": {
@@ -452,7 +450,6 @@
     "geoHubs": "Geopolitical Hotspots",
     "securityAdvisories": "Ostrzeżenia Bezpieczeństwa",
     "orefSirens": "Syreny w Izraelu",
-    "giving": "Globalna Dobroczynność",
     "supplyChain": "Łańcuch Dostaw",
     "gulfEconomies": "Gospodarka Zatoki",
     "gulfIndices": "Indeksy Zatoki",
@@ -1062,10 +1059,6 @@
         "gpsJamming": "Zakłócenia nawigacyjne",
         "iranAttacks": "Ataki na Bliskim Wschodzie",
         "ciiChoropleth": "Niestabilność kraju",
-        "positiveEvents": "Pozytywne wydarzenia",
-        "kindness": "Akty dobroci",
-        "happiness": "Szczęście na świecie",
-        "speciesRecovery": "Ochrona gatunków",
         "renewableInstallations": "Czysta energia",
         "notamAirspace": "Ograniczenia przestrzeni powietrznej NOTAM",
         "no2Activity": "Aktywność przemysłowa",
@@ -1929,53 +1922,6 @@
       "alertsRegion": "Alerty pilnych wiadomości",
       "viewPanel": "Zobacz powiązany panel"
     },
-    "giving": {
-      "activityIndex": "Indeks aktywności",
-      "cafIndex": "Indeks CAF",
-      "candidGrants": "Granty Candid",
-      "category": "Kategoria",
-      "cryptoDaily": "Krypto dziennie",
-      "dailyInflow": "Wpływ 24h",
-      "dailyVol": "Dz. wolumen",
-      "dataLag": "Opóźnienie danych",
-      "estDailyFlow": "Szan. dzienny przepływ",
-      "freshness": "Dane",
-      "infoTooltip": "<strong>Globalny indeks aktywności dobroczynnej</strong> Złożony indeks śledzący darowizny osobiste na platformach crowdfundingowych i portfelach kryptowalut.<ul><li><strong>Platformy</strong>: GoFundMe, GlobalGiving, JustGiving — próbkowanie kampanii</li><li><strong>Krypto</strong>: Wpływy do portfeli charytatywnych on-chain (Endaoment, Giving Block)</li><li><strong>Instytucjonalny</strong>: OECD ODA, CAF World Giving Index, granty Candid</li></ul>Indeks jest kierunkowy (nie dokładne kwoty). Łączy próbkowanie na żywo z publikowanymi raportami rocznymi.",
-      "oecdOda": "Oficjalna pomoc na rozwój Organizacji Współpracy Gospodarczej i Rozwoju",
-      "ofTotal": "% całości",
-      "platform": "Platforma",
-      "share": "Udział",
-      "tabs": {
-        "categories": "Kategorie",
-        "crypto": "Krypto",
-        "institutional": "Instytucjonalny",
-        "platforms": "Platformy"
-      },
-      "topReceivers": "Najwięksi odbiorcy",
-      "trend": "Trend",
-      "trending": "TREND",
-      "velocity": "Prędkość",
-      "wallets": "Portfele",
-      "benchmarkTitle": "Globalne punkty odniesienia dla darowizn",
-      "benchmarkInfoTooltip": "<strong>Globalne punkty odniesienia dla darowizn</strong> Opublikowane twierdzenia platform i instytucji z okresami źródeł i statusem weryfikacji. Dane w ujęciu rocznym są szacunkami, a nie aktywnością na żywo.",
-      "status": {
-        "published": "Opublikowane punkty odniesienia z zweryfikowanym pokryciem źródeł.",
-        "partial": "Opublikowane punkty odniesienia z częściowym pokryciem źródeł.",
-        "legacy": "Stara migawka; szczegóły źródła niedostępne.",
-        "cached": "Wyświetlanie migawki z pamięci podręcznej; odświeżanie niedostępne."
-      },
-      "trackedAnnualized": "Śledzone darowizny platformy — szacunek roczny",
-      "annualizedDaily": "Dzienny szacunek roczny",
-      "atLeast": "Co najmniej",
-      "about": "Około",
-      "sourceNotVerified": "Źródło niezweryfikowane",
-      "reportedCumulative": "Zgłoszona suma skumulowana",
-      "sourcePeriod": "{{source}} · {{period}}",
-      "benchmark": "Opublikowany punkt odniesienia",
-      "sourcesMethodology": "Źródła i metodologia",
-      "methodologyIntro": "Do nagłówka trafiają tylko zweryfikowane roczne lub dające się obronić zannualizowane twierdzenia platform. Dane skumulowane i instytucjonalne pozostają oddzielnym kontekstem.",
-      "partialEstimate": "Częściowo zweryfikowany szacunek"
-    },
     "supplyChain": {
       "chokepoints": "Wąskie gardła",
       "disruption": "Zakłócenie",
@@ -2015,18 +1961,6 @@
       "partialTransitCoverage": "Dane tranzytu niedostępne: {{names}}",
       "oilPipelinesUnavailable": "Dane dotyczące rurociągów naftowych są niedostępne",
       "gasPipelinesUnavailable": "Dane dotyczące rurociągów gazowych są niedostępne"
-    },
-    "positiveNewsFeed": {
-      "noStories": "Brak artykułów w tej kategorii"
-    },
-    "goodThingsDigest": {
-      "noStories": "Brak dostępnych artykułów",
-      "summarizing": "Podsumowywanie…"
-    },
-    "progressCharts": {
-      "noData": "Brak danych o postępach",
-      "fallbackBadge": "Wyświetlanie statycznych danych zastępczych — seria transmisji na żywo niedostępna",
-      "fallbackTooltip": "Nie można było połączyć się ze światowym zasobem siewnika Banku Światowego. Te wykresy są renderowane z zakodowanej migawki ostatnio zweryfikowanej w lutym 2026 r."
     },
     "settings": {
       "exportSettings": "Eksportuj ustawienia",
@@ -2130,9 +2064,6 @@
     },
     "cotPositioning": {
       "infoTooltip": "<strong>Futures positioning</strong> Tygodniowe pozycje netto dla handlowców komercyjnych, dużych spekulantów i małych handlowców na rynkach towarowych i finansowych. Źródło: raport Commitments of Traders Commodity Futures Trading Commission, publikowany w piątki."
-    },
-    "counters": {
-      "infoTooltip": "<strong>Liczniki na żywo</strong> Ekstrapolowane liczniki w czasie rzeczywistym dla globalnych wskaźników: wydatki wojskowe, klęski żywiołowe, obciążenie chorobami i więcej. Liczby to statystyczne szacunki oparte na rocznych stawkach danych."
     },
     "diseaseOutbreaks": {
       "infoTooltip": "<strong>Ogniska chorób</strong> Aktywne alerty o ogniskach od WHO, ProMED i ministerstw zdrowia. Śledzi potwierdzone ogniska, dotknięte regiony, liczbę przypadków i poziomy zagrożenia. Aktualizowane przy publikacji nowych raportów.",
@@ -2286,17 +2217,11 @@
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Udział energii elektrycznej z odnawialnych źródeł energii według regionu i roku, plus zainstalowana pojemność USA dla energii słonecznej, wiatru i węgla (MW). Źródła: Bank Światowy (EG.ELC.RNEW.ZS) i US Energy Information Administration."
     },
-    "conservationWins": {
-      "infoTooltip": "<strong>Sukcesy ochrony przyrody</strong> Pozytywne wiadomości o ochronie przyrody: odbudowa populacji gatunków, kamienie milowe odtwarzania siedlisk i wysiłki de-ekstynkcji. Źródło: IUCN, WWF i publikacje badań nad ochroną przyrody."
-    },
     "worldClock": {
       "infoTooltip": "<strong>Zegar światowy</strong> Czas lokalny w czasie rzeczywistym i status sesji rynkowych dla głównych globalnych centrów finansowych. Pokazuje status otwarty/zamknięty dla NYSE, LSE, TSE, SGX i innych giełd."
     },
     "yieldCurve": {
       "infoTooltip": "<strong>Yield Curve &amp; Rates</strong> Krzywa rentowności obligacji skarbowych USA (2Y, 5Y, 10Y, 30Y) i kluczowe spready stóp procentowych, w tym wskaźnik inwersji 10Y-2Y. Wyświetla również stopy strefy euro (EURIBOR, ESTR). Odwrócona krzywa historycznie poprzedza recesje. Źródło: Federal Reserve Economic Data."
-    },
-    "breakthroughsTicker": {
-      "noData": "Brak przełomów naukowych"
     },
     "oilInventories": {
       "infoTooltip": "<strong>Zapasy ropy</strong> Komercyjne zapasy ropy i rezerwy strategiczne USA, zapasy gazu ziemnego, magazynowanie gazu europejskiego i pokrycie zapasów ropy. Źródła obejmują US Energy Information Administration i International Energy Agency."
@@ -4364,7 +4289,6 @@
     "retry": "Ponów",
     "refresh": "Odśwież",
     "all": "Wszystkie",
-    "loadingGiving": "Ładowanie danych o globalnej dobroczynności",
     "rateLimitedMarket": "Dane rynkowe tymczasowo niedostępne (limit zapytań) — ponowna próba wkrótce",
     "cancel": "Anuluj",
     "dismiss": "Odrzuć"
@@ -4919,9 +4843,6 @@
       "map": "Atlas Energii",
       "liveNews": "Nagłówki Energetyczne",
       "insights": "Spostrzeżenia AI o energii"
-    },
-    "happy": {
-      "map": "Mapa Dobrych Wiadomości"
     }
   },
   "pwaInstall": {
@@ -5672,7 +5593,6 @@
   },
   "personalChrome": {
     "timeRange": "TIME RANGE",
-    "goodNews": "Good News",
     "mission": "Mission",
     "activeMission": "Mission: {{name}}"
   }

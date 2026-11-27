@@ -47,7 +47,7 @@ const SETTINGS_KEYS: readonly string[] = [
 // other workspace (#9372).
 type TabStoreKeyFamily = 'worldmonitor-tabs-v1' | 'worldmonitor-new-tab-panels-v1';
 const TAB_STORE_KEY_RE =
-  /^(worldmonitor-tabs-v1|worldmonitor-new-tab-panels-v1):(?:full|tech|finance|commodity|energy|happy)$/;
+  /^(worldmonitor-tabs-v1|worldmonitor-new-tab-panels-v1):(?:full|tech|finance|commodity|energy)$/;
 
 function tabStoreKeyFamily(key: string): TabStoreKeyFamily | null {
   return (TAB_STORE_KEY_RE.exec(key)?.[1] as TabStoreKeyFamily | undefined) ?? null;
@@ -55,7 +55,7 @@ function tabStoreKeyFamily(key: string): TabStoreKeyFamily | null {
 
 function isSettingsKey(key: string): boolean {
   return SETTINGS_KEYS.includes(key)
-    || /^(?:worldmonitor-panels|worldmonitor-layers|worldmonitor-disabled-feeds)-(?:full|tech|finance|commodity|energy|happy)$/.test(key)
+    || /^(?:worldmonitor-panels|worldmonitor-layers|worldmonitor-disabled-feeds)-(?:full|tech|finance|commodity|energy)$/.test(key)
     || tabStoreKeyFamily(key) !== null;
 }
 

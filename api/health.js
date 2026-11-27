@@ -243,9 +243,7 @@ const BOOTSTRAP_KEYS = {
   commodityQuotes:   'market:commodities-bootstrap:v1',
   cyberThreats:      'cyber:threats-bootstrap:v2',
   techReadiness:     'economic:worldbank-techreadiness:v1',
-  progressData:      'economic:worldbank-progress:v1',
   renewableEnergy:   'economic:worldbank-renewable:v1',
-  positiveGeoEvents: 'positive_events:geo-bootstrap:v1',
   riskScores:        CII_RISK_SCORE_CACHE_KEYS.stale,
   naturalEvents:     'natural:events:v1',
   flightDelays:      'aviation:delays-bootstrap:v2',
@@ -446,7 +444,6 @@ const STANDALONE_KEYS = {
   chokepoints:           'supply_chain:chokepoints:v4',
   minerals:              'supply_chain:minerals:v2',
   mineralProduction:     'supply-chain:mineral-production:v1',
-  giving:                'giving:summary:v2',
   gpsjam:                'intelligence:gpsjam:v2',
   // Corporate intelligence (issue #5695): SEC ticker→CIK registry + 8-K
   // material-events stream. Health-monitored, not bootstrap-hydrated.
@@ -466,7 +463,6 @@ const STANDALONE_KEYS = {
   notamClosures:         'aviation:notam:closures:v2',
   notamAirspace:         'aviation:notam:airspace:v1',
   notamNmsClosures:      'aviation:notam:nms:closures:v1',
-  positiveEventsLive:    'positive-events:geo:v1',
   cableHealth:           'cable-health-v1',
   submarineCables:       'infrastructure:submarine-cables:v1',
   cyberThreatsRpc:       'cyber:threats:v2',
@@ -1133,12 +1129,10 @@ const SEED_META = {
   fatfListing:      { key: 'seed-meta:economic:fatf-listing',     maxStaleMin: 60480 }, // FATF plenary 3×/year; 42d threshold = >1 plenary cycle (catches missed-update if cron silently fails)
   shippingRates:    { key: 'seed-meta:supply_chain:shipping',     maxStaleMin: 1140 },
   chokepoints:      { key: 'seed-meta:supply_chain:chokepoints',  maxStaleMin: 60, minRecordCount: 13 }, // 13 canonical chokepoints; get-chokepoint-status writes covered-count → < 13 = upstream partial (portwatch/ArcGIS dropped some)
-  // minerals + giving: on-demand cachedFetchJson only, no seed-meta writer — freshness checked via TTL
   // bisExchange + bisCredit: extras written by same BIS script via writeExtraKey, no dedicated seed-meta
   fxYoy:            { key: 'seed-meta:economic:fx-yoy',           maxStaleMin: 1500 }, // daily cron; 25h tolerance + 1h drift
   sharedFxRates:    { key: 'seed-meta:shared:fx-rates',           maxStaleMin: 3600 }, // daily seed; 60h tolerance covers a missed 25h cache refresh
   gpsjam:           { key: 'seed-meta:intelligence:gpsjam',       maxStaleMin: 1440 }, // Wingbits API (scripts/fetch-gpsjam.mjs); 1440min = 24h tolerance gives operator headroom to handle upstream outages and monthly quota exhaustion (HTTP 402 observed 2026-04-29) without dashboard noise. Seeder catch-block extends TTL on fail without refreshing fetchedAt, so STALE_SEED via age is the only alarm path.
-  positiveGeoEvents:{ key: 'seed-meta:positive-events:geo',       maxStaleMin: 60 },
   riskScores:       { key: 'seed-meta:intelligence:risk-scores',  maxStaleMin: 30, minRecordCount: 2 }, // CII warm-ping every 8min; recordCount is realtime signal-density coverage for score-relevant conflict (ACLED or UCDP) and news families, not raw feed availability; quiet-but-fresh feeds may warn COVERAGE_PARTIAL. Per-input availability (seed-meta `inputs`) is graded by composeRiskScoresInputHealth.
   ciiEconomicStress: {
     key: 'seed-meta:intelligence:cii-economic-stress', maxStaleMin: 180,
@@ -1477,7 +1471,6 @@ const SEED_META = {
   forecastFunnel:      { key: 'seed-meta:forecast:funnel:health:v1', maxStaleMin: 180 }, // funnel-diversity guardrail (#5233); written by seed-forecasts afterPublish each hourly run (3× cadence). A collapsed funnel (too few domains / mostly synthetic) is recorded as information and never sets status:'error' (#8990)
   sectors:          { key: 'seed-meta:market:sectors',             maxStaleMin: 30 },
   techReadiness:    { key: 'seed-meta:economic:worldbank-techreadiness:v1', maxStaleMin: 10080 },
-  progressData:     { key: 'seed-meta:economic:worldbank-progress:v1',     maxStaleMin: 10080 },
   renewableEnergy:  { key: 'seed-meta:economic:worldbank-renewable:v1',    maxStaleMin: 10080 },
   // #6987: faaDelays used to have no entry here, on the grounds that it "shares
   // flightDelays's meta key". That sharing WAS the bug — it leaked FAA's
@@ -2663,13 +2656,13 @@ const ON_DEMAND_KEYS = new Set([
   'supplyVulnerability',
   'supplyChokepointDependencies',
   'riskScoresLive',
-  'usniFleetStale', 'positiveEventsLive',
+  'usniFleetStale',
   'bisPolicy', 'bisExchange', 'bisCredit',
   // bisDsr/bisPropertyResidential/bisPropertyCommercial have dedicated SEED_META
   // entries (seed-bis-extended.mjs), so they are not on-demand.
   // shippingRates is a scheduled 6h producer and FAST bootstrap key;
   // absence must be EMPTY/CRIT rather than on-demand.
-  'macroSignals', 'chokepoints', 'minerals', 'giving',
+  'macroSignals', 'chokepoints', 'minerals',
   'cyberThreatsRpc', 'militaryBases', 'displacement',
   // militaryBases keeps the existing standalone pointer check. Its seed-meta
   // supplies strict freshness and integrity verdicts once that pointer exists;
@@ -3189,7 +3182,7 @@ function applyStaleContentGrace(checks, graceEvidenceByName, deadlines, now) {
 }
 
 const EMPTY_DATA_OK_KEYS = new Set([
-  'notamClosures', 'faaDelays', 'gpsjam', 'positiveGeoEvents', 'weatherAlerts', 'imdCycloneMarine',
+  'notamClosures', 'faaDelays', 'gpsjam', 'weatherAlerts', 'imdCycloneMarine',
   'earningsCalendar', 'econCalendar', 'cotPositioning',
   'usniFleet', // usniFleetStale covers the fallback; relay outages → WARN not CRIT
   'newsThreatSummary', // a quiet classify cycle writes `byCountry: {}` (0 records); MISSING_DATA_IS_FAILURE_KEYS makes a payload missing beside fresh seed-meta critical (expiry after the 2h TTL reads STALE_SEED, since seed-meta is stale by then)
@@ -3232,7 +3225,6 @@ const MISSING_DATA_IS_FAILURE_KEYS = new Set([
   'ucdpEventsBootstrap',
   'wildfiresBootstrap',
   'forecastsBootstrap',
-  'positiveGeoEvents',
   'crossStraitActivityBootstrap',
   // The relay classify loop writes the summary on every cycle that reached a
   // digest (`byCountry: {}` when quiet) and advances seed-meta only after that

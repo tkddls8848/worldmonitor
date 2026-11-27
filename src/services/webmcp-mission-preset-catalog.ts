@@ -217,7 +217,7 @@ export function listMissionPresetCatalog(
   if (!isSiteVariant(live.variant)) {
     throw new MissionPresetCatalogError(
       'invalid_variant',
-      'variant must be one of: full, tech, finance, commodity, energy, happy.',
+      'variant must be one of: full, tech, finance, commodity, energy.',
     );
   }
   if (query.available !== undefined && typeof query.available !== 'boolean') {

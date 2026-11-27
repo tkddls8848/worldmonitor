@@ -588,7 +588,6 @@ describe('WebMCP canonical inventories', () => {
       full: ['search_procurement'],
       tech: ['search_procurement'],
       finance: ['search_procurement'],
-      happy: [],
       commodity: [],
       energy: [],
     };

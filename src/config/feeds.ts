@@ -96,8 +96,6 @@ const TECH_FEEDS: Record<string, Feed[]> = browserFeeds('tech');
 // Finance/Trading variant feeds (all free RSS / Google News proxies)
 const FINANCE_FEEDS: Record<string, Feed[]> = browserFeeds('finance');
 
-const HAPPY_FEEDS: Record<string, Feed[]> = browserFeeds('happy');
-
 // Commodity variant feeds
 const COMMODITY_FEEDS: Record<string, Feed[]> = browserFeeds('commodity');
 
@@ -112,11 +110,9 @@ export const FEEDS = SITE_VARIANT === 'tech'
   ? TECH_FEEDS
   : SITE_VARIANT === 'finance'
     ? FINANCE_FEEDS
-    : SITE_VARIANT === 'happy'
-      ? HAPPY_FEEDS
-      : SITE_VARIANT === 'commodity'
+    : SITE_VARIANT === 'commodity'
         ? COMMODITY_FEEDS
-        : SITE_VARIANT === 'energy'
+      : SITE_VARIANT === 'energy'
           ? ENERGY_FEEDS
           : FULL_FEEDS;
 
@@ -137,7 +133,6 @@ export const CANONICAL_FEEDS: Record<string, Feed[]> = mergeCanonicalFeeds([
   FINANCE_FEEDS,
   COMMODITY_FEEDS,
   ENERGY_FEEDS,
-  HAPPY_FEEDS,
   ON_DEMAND_FEEDS,
 ]);
 

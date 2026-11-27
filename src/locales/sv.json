@@ -66,7 +66,6 @@
     "climate": "Klimatanomalier",
     "securityAdvisories": "Säkerhetsvarningar",
     "orefSirens": "Israeliska sirener",
-    "giving": "Global Givmildhet",
     "supplyChain": "Försörjningskedja",
     "gulfEconomies": "Gulfekonomierna",
     "gulfIndices": "Gulfindex",
@@ -551,10 +550,6 @@
         "gpsJamming": "Navigeringsstörning",
         "iranAttacks": "Attacker i Mellanöstern",
         "ciiChoropleth": "Landinstabilitet",
-        "positiveEvents": "Positiva händelser",
-        "kindness": "Godhjärtade handlingar",
-        "happiness": "Världslycka",
-        "speciesRecovery": "Artåterhämtning",
         "renewableInstallations": "Ren energi",
         "notamAirspace": "NOTAM-luftrumsbegränsningar",
         "no2Activity": "Industriell aktivitet",
@@ -1537,53 +1532,6 @@
       "alertsRegion": "Varningar om senaste nytt",
       "viewPanel": "Visa relaterad panel"
     },
-    "giving": {
-      "activityIndex": "Aktivitetsindex",
-      "cafIndex": "CAF-index",
-      "candidGrants": "Candid-bidrag",
-      "category": "Kategori",
-      "cryptoDaily": "Krypto dagligen",
-      "dailyInflow": "24h inflöde",
-      "dailyVol": "Daglig vol.",
-      "dataLag": "Datafördröjning",
-      "estDailyFlow": "Ber. dagligt flöde",
-      "freshness": "Data",
-      "infoTooltip": "<strong>Globalt givmildhetsaktivitetsindex</strong> Sammansatt index som spårar personlig givmildhet via crowdfundingplattformar och kryptoplånböcker.<ul><li><strong>Plattformar</strong>: GoFundMe, GlobalGiving, JustGiving kampanjurval</li><li><strong>Krypto</strong>: On-chain inbetalningar till välgörenhetsplånböcker (Endaoment, Giving Block)</li><li><strong>Institutionell</strong>: OECD ODA, CAF World Giving Index, Candid-bidrag</li></ul>Indexet är riktningsvisande (inte exakta belopp). Kombinerar live-urval med publicerade årsrapporter.",
-      "oecdOda": "OECD:s officiella utvecklingsbistånd",
-      "ofTotal": "% av totalt",
-      "platform": "Plattform",
-      "share": "Andel",
-      "tabs": {
-        "categories": "Kategorier",
-        "crypto": "Krypto",
-        "institutional": "Institutionell",
-        "platforms": "Plattformar"
-      },
-      "topReceivers": "Största mottagare",
-      "trend": "Trend",
-      "trending": "TREND",
-      "velocity": "Hastighet",
-      "wallets": "Plånböcker",
-      "benchmarkTitle": "Globala givande-riktmärken",
-      "benchmarkInfoTooltip": "<strong>Globala givande-riktmärken</strong> Publicerade plattforms- och institutionsanspråk med källperioder och verifieringsstatus. Annualiserade siffror är uppskattningar, inte liveaktivitet.",
-      "status": {
-        "published": "Publicerade riktmärken med verifierad källtäckning.",
-        "partial": "Publicerade riktmärken med partiell källtäckning.",
-        "legacy": "Äldre ögonblicksbild; källdetaljer ej tillgängliga.",
-        "cached": "Visar cachad ögonblicksbild; uppdatering ej tillgänglig."
-      },
-      "trackedAnnualized": "Spårade plattformsdonationer — annualiserad uppskattning",
-      "annualizedDaily": "Daglig annualiserad uppskattning",
-      "atLeast": "Minst",
-      "about": "Ungefär",
-      "sourceNotVerified": "Källa ej verifierad",
-      "reportedCumulative": "Rapporterad kumulativ summa",
-      "sourcePeriod": "{{source}} · {{period}}",
-      "benchmark": "Publicerat riktmärke",
-      "sourcesMethodology": "Källor och metodologi",
-      "methodologyIntro": "Endast verifierade årliga eller försvarbart annualiserade plattformsanspråk ingår i rubriken. Kumulativa och institutionella siffror förblir separat sammanhang.",
-      "partialEstimate": "Delvis verifierad uppskattning"
-    },
     "supplyChain": {
       "chokepoints": "Flaskhalsar",
       "disruption": "Störning",
@@ -1623,18 +1571,6 @@
       "partialTransitCoverage": "Transitdata otillgänglig: {{names}}",
       "oilPipelinesUnavailable": "Data om oljeledningar är inte tillgängliga",
       "gasPipelinesUnavailable": "Data om gasledningar är inte tillgängliga"
-    },
-    "positiveNewsFeed": {
-      "noStories": "Inga berättelser i denna kategori ännu"
-    },
-    "goodThingsDigest": {
-      "noStories": "Inga berättelser tillgängliga",
-      "summarizing": "Sammanfattar…"
-    },
-    "progressCharts": {
-      "noData": "Inga framstegsdata tillgängliga",
-      "fallbackBadge": "Visar statiska reservdata — liveserier är inte tillgängliga",
-      "fallbackTooltip": "Live-anslutningen till World Bank-källan kunde inte upprättas. Dessa diagram återges från en hårdkodad ögonblicksbild som senast verifierades i februari 2026."
     },
     "settings": {
       "exportSettings": "Exportera inställningar",
@@ -1738,9 +1674,6 @@
     },
     "cotPositioning": {
       "infoTooltip": "<strong>Futures-positionering</strong> Veckovisa nettopositoner för kommersiella handlare, stora spekulanter och små handlare över råvaru- och finansfutures. Källan är Commodity Futures Trading Commission Commitments of Traders-rapport, publicerad på fredagar."
-    },
-    "counters": {
-      "infoTooltip": "<strong>Liveräknare</strong> Extrapolerade realtidsräknare för globala mätvärden: militärutgifter, naturkatastrofer, sjukdomsbörda med mera. Siffrorna är statistiska uppskattningar baserade på årliga datahastigheter."
     },
     "diseaseOutbreaks": {
       "infoTooltip": "<strong>Sjukdomsutbrott</strong> Aktiva utbrottsvarningar från WHO, ProMED och hälsoministerier. Spårar bekräftade utbrott, drabbade regioner, fallantal och hotnivåer. Uppdateras vid publicering av nya rapporter.",
@@ -1884,17 +1817,11 @@
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Andel elproduktion från förnybar energi efter region och år, plus USA installerad kapacitet för sol, vind och kol (MW). Källor: World Bank (EG.ELC.RNEW.ZS) och US Energy Information Administration."
     },
-    "conservationWins": {
-      "infoTooltip": "<strong>Bevarandesegrar</strong> Positiva naturvårdsnyheter: återhämtning av artpopulationer, milstolpar i habitatåterställning och de-extinktionsinsatser. Källa: IUCN, WWF och publikationer inom naturvårdsforskning."
-    },
     "worldClock": {
       "infoTooltip": "<strong>Världsklocka</strong> Lokaltider i realtid och marknadssessionstatus för stora globala finanscentra. Visar öppet/stängt-status för NYSE, LSE, TSE, SGX och andra börser."
     },
     "yieldCurve": {
       "infoTooltip": "<strong>Yield Curve &amp; Rates</strong> US Treasury avkastningskurva (2Y, 5Y, 10Y, 30Y) och nyckelräntespreadar inklusive 10Y-2Y-inversionsindikatorn. Visar också euroområdets räntor (EURIBOR, ESTR). En inverterad kurva föregick historiskt lågkonjunkturer. Källa: Federal Reserve Economic Data."
-    },
-    "breakthroughsTicker": {
-      "noData": "Inga vetenskapliga genombrott ännu"
     },
     "oilInventories": {
       "infoTooltip": "<strong>Oljebehållningar</strong> Amerikanska kommersiella råolje- och strategiska reserver, naturgaslager, europeisk gaslagerkapacitet och oljebehållningsperiod. Källorna omfattar US Energy Information Administration och International Energy Agency."
@@ -3938,7 +3865,6 @@
     "retry": "Försök igen",
     "refresh": "Uppdatera",
     "all": "Alla",
-    "loadingGiving": "Laddar global givmildhetsdata",
     "rateLimitedMarket": "Marknadsdata tillfälligt otillgänglig (hastighetsbegränsad) — försöker igen snart",
     "cancel": "Avbryt",
     "dismiss": "Stäng"
@@ -4019,8 +3945,6 @@
     "panelCatCommodityPrices": "Priser & Marknader",
     "panelCatMining": "Gruvdrift & Försörjningskedja",
     "panelCatCommodityEcon": "Ekonomi & Handel",
-    "panelCatHappyNews": "Goda Nyheter",
-    "panelCatHappyPlanet": "Planet & Välgörenhet",
     "embed": "Bädda in"
   },
   "countryBrief": {
@@ -4875,9 +4799,6 @@
       "map": "Energiatlas-karta",
       "liveNews": "Energinyheter",
       "insights": "AI-energiinsikter"
-    },
-    "happy": {
-      "map": "Karta över goda nyheter"
     }
   },
   "pwaInstall": {
@@ -5606,7 +5527,6 @@
   },
   "personalChrome": {
     "timeRange": "TIME RANGE",
-    "goodNews": "Good News",
     "mission": "Mission",
     "activeMission": "Mission: {{name}}"
   }

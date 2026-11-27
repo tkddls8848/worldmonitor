@@ -46,7 +46,6 @@ export * from './StablecoinPanel';
 export * from './UcdpEventsPanel';
 export * from './DailyMarketBriefPanel';
 export * from './MarketImplicationsPanel';
-export * from './GivingPanel';
 export * from './DisplacementPanel';
 export * from './ClimateAnomalyPanel';
 export * from './PopulationExposurePanel';

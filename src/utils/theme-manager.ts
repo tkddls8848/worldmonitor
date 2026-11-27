@@ -6,14 +6,14 @@ export type ThemePreference = 'auto' | 'dark' | 'light';
 const STORAGE_KEY = 'worldmonitor-theme';
 const DEFAULT_THEME: Theme = 'dark';
 
-function resolveThemeColor(theme: Theme, variant: string | undefined): string {
-  if (theme === 'dark') return variant === 'happy' ? '#1A2332' : '#0a0f0a';
-  return variant === 'happy' ? '#FAFAF5' : '#f8f9fa';
+function resolveThemeColor(theme: Theme): string {
+  if (theme === 'dark') return '#0a0f0a';
+  return '#f8f9fa';
 }
 
-function updateThemeMetaColor(theme: Theme, variant = document.documentElement.dataset.variant): void {
+function updateThemeMetaColor(theme: Theme): void {
   const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-  if (meta) meta.content = resolveThemeColor(theme, variant);
+  if (meta) meta.content = resolveThemeColor(theme);
 }
 
 export function getThemePreference(): ThemePreference {
@@ -90,7 +90,6 @@ function applyTheme(theme: Theme): void {
  * This is a safety net for cases where the inline script didn't run.
  */
 export function applyStoredTheme(): void {
-  const variant = document.documentElement.dataset.variant;
 
   // Check raw localStorage to distinguish "no preference" from "explicitly chose dark"
   let raw: string | null = null;
@@ -104,15 +103,14 @@ export function applyStoredTheme(): void {
     effective = raw as Theme;
   } else {
     // No stored preference: match index.html prepaint and stored `'auto'`.
-    // Happy stays light; every other variant follows prefers-color-scheme
     // instead of snapping first-visit light OS users back to DEFAULT_THEME (dark).
-    effective = variant === 'happy' ? 'light' : resolveAutoTheme();
+    effective = resolveAutoTheme();
   }
 
   // No stored preference reads as Auto in settings, so it follows the system
-  // theme too, except on Happy, which stays light.
-  const followsSystem = raw === 'auto' || (!hasExplicitPreference && variant !== 'happy');
+  // theme too.
+  const followsSystem = raw === 'auto' || (!hasExplicitPreference);
   updateAutoListener(followsSystem ? 'auto' : effective);
   document.documentElement.dataset.theme = effective;
-  updateThemeMetaColor(effective, variant);
+  updateThemeMetaColor(effective);
 }

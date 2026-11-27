@@ -41,7 +41,7 @@ World Monitor currently maintains:
 - The Tier-1 country registry in the high-frequency Country [Instability Index](/blog/posts/country-instability-index-methodology-explained/)
 - Stock exchanges and central-bank or supranational institutions in the generated market catalog
 - Interface languages, including right-to-left Arabic
-- Dashboard variants (registry keys): `full`, `tech`, `finance`, `commodity`, `happy`, and `energy`
+- Dashboard variants (registry keys): `full`, `tech`, `finance`, `commodity`, and `energy`
 
 These counts are generated from the repository rather than estimated in editorial copy. The current plans, limits, and capability summary are also published in [machine-readable pricing](https://www.worldmonitor.app/pricing.md).
 

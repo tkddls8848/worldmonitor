@@ -375,8 +375,6 @@
     "panelCatCommodityPrices": "Giá & Thị trường",
     "panelCatMining": "Khai thác & Chuỗi cung ứng",
     "panelCatCommodityEcon": "Kinh tế & Thương mại",
-    "panelCatHappyNews": "Tin tốt",
-    "panelCatHappyPlanet": "Hành tinh & Trao tặng",
     "embed": "Nhúng"
   },
   "panels": {
@@ -421,7 +419,6 @@
     "stablecoins": "Stablecoin",
     "deduction": "Suy luận tình huống",
     "ucdpEvents": "Sự kiện Xung đột UCDP",
-    "giving": "Từ thiện Toàn cầu",
     "displacement": "Người tị nạn và các chuyển dời",
     "climate": "Bất thường Khí hậu",
     "populationExposure": "Dân số bị Ảnh hưởng",
@@ -847,18 +844,6 @@
     }
   },
   "components": {
-    "positiveNewsFeed": {
-      "noStories": "Chưa có bài viết trong danh mục này"
-    },
-    "goodThingsDigest": {
-      "noStories": "Không có bài viết",
-      "summarizing": "Đang tóm tắt…"
-    },
-    "progressCharts": {
-      "noData": "Không có dữ liệu tiến độ",
-      "fallbackBadge": "Hiển thị dữ liệu dự phòng tĩnh — chuỗi trực tiếp không có sẵn",
-      "fallbackTooltip": "Không thể kết nối tới nguồn World Bank trực tiếp. Các biểu đồ này được hiển thị từ một bản chụp được mã hóa cứng đã xác minh lần cuối vào tháng 2 năm 2026."
-    },
     "monitor": {
       "placeholder": "Từ khóa (phân cách bằng dấu phẩy)",
       "add": "+ Thêm Bộ theo dõi",
@@ -1264,10 +1249,6 @@
         "iranAttacks": "Tấn công ở Trung Đông",
         "gpsJamming": "Gây nhiễu dẫn hướng",
         "ciiChoropleth": "Bất ổn định đất nước",
-        "positiveEvents": "Sự kiện tích cực",
-        "kindness": "Hành động tử tế",
-        "happiness": "Hạnh phúc thế giới",
-        "speciesRecovery": "Phục hồi loài",
         "renewableInstallations": "Năng lượng sạch",
         "notamAirspace": "Hạn chế không phận NOTAM",
         "no2Activity": "Hoạt động công nghiệp",
@@ -1684,53 +1665,6 @@
       "moreNotShown": "{{count}} sự kiện khác không hiển thị",
       "infoTooltip": "<strong>Sự kiện Định vị UCDP</strong> Dữ liệu xung đột cấp sự kiện từ Đại học Uppsala.<ul><li><strong>Nhà nước</strong>: Chính phủ đối đầu nhóm nổi dậy</li><li><strong>Phi Nhà nước</strong>: Nhóm vũ trang đối đầu nhóm vũ trang</li><li><strong>Một chiều</strong>: Bạo lực nhắm vào thường dân</li></ul>Thương vong hiển thị ước tính tốt nhất (khoảng thấp-cao). Trùng lặp ACLED được lọc tự động."
     },
-    "giving": {
-      "activityIndex": "Chỉ số Hoạt động",
-      "trend": "Xu hướng",
-      "estDailyFlow": "Dòng tiền ước tính/ngày",
-      "cryptoDaily": "Crypto hàng ngày",
-      "tabs": {
-        "platforms": "Nền tảng",
-        "categories": "Danh mục",
-        "crypto": "Tiền số",
-        "institutional": "Tổ chức"
-      },
-      "platform": "Nền tảng",
-      "dailyVol": "KL hàng ngày",
-      "velocity": "Tốc độ",
-      "freshness": "Dữ liệu",
-      "category": "Danh mục",
-      "share": "Tỷ lệ",
-      "trending": "XU HƯỚNG",
-      "dailyInflow": "Dòng vào 24h",
-      "wallets": "Ví",
-      "ofTotal": "% tổng",
-      "topReceivers": "Người nhận hàng đầu",
-      "oecdOda": "Hỗ trợ phát triển chính thức của Tổ chức Hợp tác và Phát triển Kinh tế",
-      "cafIndex": "Chỉ số CAF",
-      "candidGrants": "Tài trợ Candid",
-      "dataLag": "Độ trễ Dữ liệu",
-      "infoTooltip": "<strong>Chỉ số Hoạt động Từ thiện Toàn cầu</strong> Chỉ số tổng hợp theo dõi quyên góp cá nhân qua nền tảng gây quỹ cộng đồng và ví tiền mã hóa.<ul><li><strong>Nền tảng</strong>: GoFundMe, GlobalGiving, JustGiving lấy mẫu chiến dịch</li><li><strong>Crypto</strong>: Dòng tiền vào ví từ thiện on-chain (Endaoment, Giving Block)</li><li><strong>Tổ chức</strong>: OECD ODA, CAF World Giving Index, tài trợ Candid</li></ul>Chỉ số mang tính định hướng (không phải số tiền chính xác). Kết hợp lấy mẫu trực tiếp với báo cáo thường niên đã công bố.",
-      "benchmarkTitle": "Điểm chuẩn từ thiện toàn cầu",
-      "benchmarkInfoTooltip": "<strong>Điểm chuẩn từ thiện toàn cầu</strong> Tuyên bố đã xuất bản của nền tảng và tổ chức với giai đoạn nguồn và trạng thái xác minh. Các con số hàng năm là ước tính, không phải hoạt động trực tiếp.",
-      "status": {
-        "published": "Điểm chuẩn đã xuất bản với phạm vi nguồn đã xác minh.",
-        "partial": "Điểm chuẩn đã xuất bản với phạm vi nguồn một phần.",
-        "legacy": "Ảnh chụp nhanh cũ; chi tiết nguồn không có sẵn.",
-        "cached": "Đang hiển thị ảnh chụp nhanh được lưu vào bộ nhớ đệm; không thể làm mới."
-      },
-      "trackedAnnualized": "Từ thiện nền tảng được theo dõi — ước tính hàng năm",
-      "annualizedDaily": "Ước tính hàng ngày hàng năm",
-      "atLeast": "Ít nhất",
-      "about": "Khoảng",
-      "sourceNotVerified": "Nguồn chưa được xác minh",
-      "reportedCumulative": "Tổng cộng dồn được báo cáo",
-      "sourcePeriod": "{{source}} · {{period}}",
-      "benchmark": "Điểm chuẩn đã xuất bản",
-      "sourcesMethodology": "Nguồn và phương pháp",
-      "methodologyIntro": "Chỉ các tuyên bố nền tảng hàng năm được xác minh hoặc hàng năm có thể bảo vệ được mới vào tiêu đề. Các con số tích lũy và tổ chức vẫn là bối cảnh riêng biệt.",
-      "partialEstimate": "Ước tính được xác minh một phần"
-    },
     "displacement": {
       "refugees": "Người tị nạn",
       "asylumSeekers": "Người xin Tị nạn",
@@ -2116,9 +2050,6 @@
     "cotPositioning": {
       "infoTooltip": "<strong>Futures positioning</strong> Vị thế ròng hàng tuần cho các nhà giao dịch thương mại, nhà đầu cơ lớn và nhà đầu cơ nhỏ trên các hợp đồng tương lai hàng hóa và tài chính. Nguồn là báo cáo Commitments of Traders từ Ủy ban Thương mại Hợp đồng Tương lai, được công bố vào các ngày thứ Sáu."
     },
-    "counters": {
-      "infoTooltip": "<strong>Bộ đếm trực tiếp</strong> Bộ đếm ngoại suy thời gian thực cho các chỉ số toàn cầu: chi tiêu quân sự, thiên tai, gánh nặng bệnh tật và nhiều hơn nữa. Các con số là ước tính thống kê dựa trên tỷ lệ dữ liệu hàng năm."
-    },
     "diseaseOutbreaks": {
       "infoTooltip": "<strong>Dịch bệnh bùng phát</strong> Cảnh báo dịch bệnh đang hoạt động từ WHO, ProMED và các bộ y tế. Theo dõi các đợt bùng phát đã xác nhận, vùng bị ảnh hưởng, số ca và mức độ đe dọa. Cập nhật khi có báo cáo mới.",
       "title": "Bùng Phát Dịch Bệnh",
@@ -2256,17 +2187,11 @@
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Tỷ lệ sinh điện từ năng lượng tái tạo theo khu vực và năm, cộng với công suất lắp đặt của Mỹ cho năng lượng mặt trời, gió và than (MW). Nguồn: World Bank (EG.ELC.RNEW.ZS) và Cơ quan Thông tin Năng lượng Mỹ."
     },
-    "conservationWins": {
-      "infoTooltip": "<strong>Thành tựu bảo tồn</strong> Tin tức tích cực về bảo tồn: phục hồi quần thể loài, cột mốc phục hồi môi trường sống và nỗ lực phục hồi loài tuyệt chủng. Nguồn: IUCN, WWF và các ấn phẩm nghiên cứu bảo tồn."
-    },
     "worldClock": {
       "infoTooltip": "<strong>Đồng hồ thế giới</strong> Giờ địa phương thời gian thực và trạng thái phiên thị trường cho các trung tâm tài chính toàn cầu chính. Hiển thị trạng thái mở/đóng cho NYSE, LSE, TSE, SGX và các sàn giao dịch khác."
     },
     "yieldCurve": {
       "infoTooltip": "<strong>Yield Curve &amp; Rates</strong> Đường cong lợi suất Kho bạc Mỹ (2Y, 5Y, 10Y, 30Y) và các mức chênh lệch lãi suất chính bao gồm chỉ báo đảo ngược 10Y-2Y. Cũng hiển thị lãi suất khu vực euro (EURIBOR, ESTR). Một đường cong đảo ngược có lịch sử trước những đợt suy thoái. Nguồn: Dữ liệu Kinh tế Cục Dự trữ Liên bang."
-    },
-    "breakthroughsTicker": {
-      "noData": "Chưa có bước đột phá khoa học nào"
     },
     "oilInventories": {
       "infoTooltip": "<strong>Hàng tồn kho dầu</strong> Dầu thô thương mại và dự trữ chiến lược Hoa Kỳ, hàng tồn kho khí tự nhiên, bộ chứa khí Châu Âu và độ bao phủ hàng tồn kho dầu. Các nguồn bao gồm Cục Thông tin Năng lượng Hoa Kỳ và Cơ quan Năng lượng Quốc tế."
@@ -4259,7 +4184,6 @@
     "calculatingExposure": "Đang tính toán phơi nhiễm",
     "computingSignals": "Đang tính toán tín hiệu...",
     "loadingEtfData": "Đang tải dữ liệu quỹ giao dịch trao đổi...",
-    "loadingGiving": "Đang tải dữ liệu từ thiện toàn cầu",
     "loadingDisplacement": "Đang tải dữ liệu di dời",
     "loadingClimateData": "Đang tải dữ liệu khí hậu",
     "failedTechReadiness": "Không thể tải dữ liệu sẵn sàng công nghệ",
@@ -4853,9 +4777,6 @@
       "map": "Bản đồ Năng lượng",
       "liveNews": "Tin tức Năng lượng",
       "insights": "Thông tin Năng lượng AI"
-    },
-    "happy": {
-      "map": "Bản đồ Tin tức Tích cực"
     }
   },
   "pwaInstall": {
@@ -5573,7 +5494,6 @@
   },
   "personalChrome": {
     "timeRange": "TIME RANGE",
-    "goodNews": "Good News",
     "mission": "Mission",
     "activeMission": "Mission: {{name}}"
   }

@@ -101,7 +101,6 @@ const FULL_PANELS: Record<string, PanelConfig> = {
   stablecoins: { name: 'Stablecoins', enabled: true, priority: 2 },
   'ucdp-events': { name: 'UCDP Conflict Events', enabled: true, priority: 2 },
   'disease-outbreaks': { name: 'Disease Outbreaks', enabled: true, priority: 2 },
-  giving: { name: 'Global Giving', enabled: false, priority: 2 },
   displacement: { name: 'UNHCR Displacement', enabled: true, priority: 2 },
   'ukmto-incidents': { name: 'UKMTO Incidents', enabled: false, priority: 2 },
   climate: { name: 'Climate Anomalies', enabled: true, priority: 2 },
@@ -129,7 +128,6 @@ const FULL_MAP_LAYERS: MapLayers = {
   aircraftEmergencies: false,
   iranAttacks: IRAN_ATTACKS_ENABLED,
   gpsJamming: false,
-
 
   conflicts: true,
   bases: false,
@@ -171,11 +169,6 @@ const FULL_MAP_LAYERS: MapLayers = {
   centralBanks: false,
   commodityHubs: false,
   gulfInvestments: false,
-  // Happy variant layers
-  positiveEvents: false,
-  kindness: false,
-  happiness: false,
-  speciesRecovery: false,
   renewableInstallations: false,
   tradeRoutes: false,
   ciiChoropleth: false,
@@ -190,7 +183,6 @@ const FULL_MOBILE_MAP_LAYERS: MapLayers = {
   aircraftEmergencies: false,
   iranAttacks: IRAN_ATTACKS_ENABLED,
   gpsJamming: false,
-
 
   conflicts: true,
   bases: false,
@@ -232,11 +224,6 @@ const FULL_MOBILE_MAP_LAYERS: MapLayers = {
   centralBanks: false,
   commodityHubs: false,
   gulfInvestments: false,
-  // Happy variant layers
-  positiveEvents: false,
-  kindness: false,
-  happiness: false,
-  speciesRecovery: false,
   renewableInstallations: false,
   tradeRoutes: false,
   ciiChoropleth: false,
@@ -295,7 +282,6 @@ const TECH_PANELS: Record<string, PanelConfig> = {
 const TECH_MAP_LAYERS: MapLayers = {
   gpsJamming: false,
 
-
   conflicts: false,
   bases: false,
   cables: true,
@@ -332,11 +318,6 @@ const TECH_MAP_LAYERS: MapLayers = {
   centralBanks: false,
   commodityHubs: false,
   gulfInvestments: false,
-  // Happy variant layers
-  positiveEvents: false,
-  kindness: false,
-  happiness: false,
-  speciesRecovery: false,
   renewableInstallations: false,
   tradeRoutes: false,
   iranAttacks: false,
@@ -350,7 +331,6 @@ const TECH_MAP_LAYERS: MapLayers = {
 
 const TECH_MOBILE_MAP_LAYERS: MapLayers = {
   gpsJamming: false,
-
 
   conflicts: false,
   bases: false,
@@ -388,11 +368,6 @@ const TECH_MOBILE_MAP_LAYERS: MapLayers = {
   centralBanks: false,
   commodityHubs: false,
   gulfInvestments: false,
-  // Happy variant layers
-  positiveEvents: false,
-  kindness: false,
-  happiness: false,
-  speciesRecovery: false,
   renewableInstallations: false,
   tradeRoutes: false,
   iranAttacks: false,
@@ -487,7 +462,6 @@ const FINANCE_PANELS: Record<string, PanelConfig> = {
 const FINANCE_MAP_LAYERS: MapLayers = {
   gpsJamming: false,
 
-
   conflicts: false,
   bases: false,
   cables: true,
@@ -524,11 +498,6 @@ const FINANCE_MAP_LAYERS: MapLayers = {
   centralBanks: true,
   commodityHubs: false,
   gulfInvestments: false,
-  // Happy variant layers
-  positiveEvents: false,
-  kindness: false,
-  happiness: false,
-  speciesRecovery: false,
   renewableInstallations: false,
   tradeRoutes: true,
   iranAttacks: false,
@@ -542,7 +511,6 @@ const FINANCE_MAP_LAYERS: MapLayers = {
 
 const FINANCE_MOBILE_MAP_LAYERS: MapLayers = {
   gpsJamming: false,
-
 
   conflicts: false,
   bases: false,
@@ -580,11 +548,6 @@ const FINANCE_MOBILE_MAP_LAYERS: MapLayers = {
   centralBanks: true,
   commodityHubs: false,
   gulfInvestments: false,
-  // Happy variant layers
-  positiveEvents: false,
-  kindness: false,
-  happiness: false,
-  speciesRecovery: false,
   renewableInstallations: false,
   tradeRoutes: false,
   iranAttacks: false,
@@ -599,130 +562,7 @@ const FINANCE_MOBILE_MAP_LAYERS: MapLayers = {
 // ============================================
 // HAPPY VARIANT (Good News & Progress)
 // ============================================
-const HAPPY_PANELS: Record<string, PanelConfig> = {
-  map: { name: 'Good News Map', enabled: true, priority: 1 },
-  'positive-feed': { name: 'Good News Feed', enabled: true, priority: 1 },
-  progress: { name: 'Human Progress', enabled: true, priority: 1 },
-  counters: { name: 'Live Counters', enabled: true, priority: 1 },
-  spotlight: { name: "Today's Hero", enabled: true, priority: 1 },
-  breakthroughs: { name: 'Breakthroughs', enabled: true, priority: 1 },
-  digest: { name: '5 Good Things', enabled: true, priority: 1 },
-  species: { name: 'Conservation Wins', enabled: true, priority: 1 },
-  renewable: { name: 'Renewable Energy', enabled: true, priority: 1 },
-  giving: { name: 'Global Giving', enabled: true, priority: 1 },
-};
 
-const HAPPY_MAP_LAYERS: MapLayers = {
-  gpsJamming: false,
-
-
-  conflicts: false,
-  bases: false,
-  cables: false,
-  pipelines: false,
-  hotspots: false,
-  ais: false,
-  nuclear: false,
-  sanctions: false,
-  weather: false,
-  economic: false,
-  waterways: false,
-  outages: false,
-  cyberThreats: false,
-  datacenters: false,
-  protests: false,
-  flights: false,
-  military: false,
-  natural: false,
-  minerals: false,
-  fires: false,
-  // Data source layers
-  ucdpEvents: false,
-  displacement: false,
-  climate: false,
-  // Tech layers (disabled)
-  startupHubs: false,
-  cloudRegions: false,
-  accelerators: false,
-  techHQs: false,
-  techEvents: false,
-  // Finance layers (disabled)
-  stockExchanges: false,
-  financialCenters: false,
-  centralBanks: false,
-  commodityHubs: false,
-  gulfInvestments: false,
-  // Happy variant layers
-  positiveEvents: true,
-  kindness: true,
-  happiness: true,
-  speciesRecovery: true,
-  renewableInstallations: true,
-  tradeRoutes: false,
-  iranAttacks: false,
-  ciiChoropleth: false,
-  // Commodity layers (disabled)
-  miningSites: false,
-  processingPlants: false,
-  commodityPorts: false,
-  diseaseOutbreaks: false,
-};
-
-const HAPPY_MOBILE_MAP_LAYERS: MapLayers = {
-  gpsJamming: false,
-
-
-  conflicts: false,
-  bases: false,
-  cables: false,
-  pipelines: false,
-  hotspots: false,
-  ais: false,
-  nuclear: false,
-  sanctions: false,
-  weather: false,
-  economic: false,
-  waterways: false,
-  outages: false,
-  cyberThreats: false,
-  datacenters: false,
-  protests: false,
-  flights: false,
-  military: false,
-  natural: false,
-  minerals: false,
-  fires: false,
-  // Data source layers
-  ucdpEvents: false,
-  displacement: false,
-  climate: false,
-  // Tech layers (disabled)
-  startupHubs: false,
-  cloudRegions: false,
-  accelerators: false,
-  techHQs: false,
-  techEvents: false,
-  // Finance layers (disabled)
-  stockExchanges: false,
-  financialCenters: false,
-  centralBanks: false,
-  commodityHubs: false,
-  gulfInvestments: false,
-  // Happy variant layers
-  positiveEvents: true,
-  kindness: true,
-  happiness: true,
-  speciesRecovery: true,
-  renewableInstallations: true,
-  tradeRoutes: false,
-  iranAttacks: false,
-  ciiChoropleth: false,
-  // Commodity layers (disabled)
-  miningSites: false,
-  processingPlants: false,
-  commodityPorts: false,
-  diseaseOutbreaks: false,
-};
 
 // ============================================
 // COMMODITY VARIANT (Mining, Metals, Energy)
@@ -773,7 +613,6 @@ const COMMODITY_PANELS: Record<string, PanelConfig> = {
 const COMMODITY_MAP_LAYERS: MapLayers = {
   gpsJamming: false,
 
-
   conflicts: false,
   bases: false,
   cables: false,
@@ -810,11 +649,6 @@ const COMMODITY_MAP_LAYERS: MapLayers = {
   centralBanks: false,
   commodityHubs: true,
   gulfInvestments: false,
-  // Happy variant layers (disabled)
-  positiveEvents: false,
-  kindness: false,
-  happiness: false,
-  speciesRecovery: false,
   renewableInstallations: false,
   tradeRoutes: true,
   iranAttacks: false,
@@ -828,7 +662,6 @@ const COMMODITY_MAP_LAYERS: MapLayers = {
 
 const COMMODITY_MOBILE_MAP_LAYERS: MapLayers = {
   gpsJamming: false,
-
 
   conflicts: false,
   bases: false,
@@ -866,11 +699,6 @@ const COMMODITY_MOBILE_MAP_LAYERS: MapLayers = {
   centralBanks: false,
   commodityHubs: true,
   gulfInvestments: false,
-  // Happy variant layers (disabled)
-  positiveEvents: false,
-  kindness: false,
-  happiness: false,
-  speciesRecovery: false,
   renewableInstallations: false,
   tradeRoutes: false,
   iranAttacks: false,
@@ -965,11 +793,6 @@ const ENERGY_MAP_LAYERS: MapLayers = {
   centralBanks: false,
   commodityHubs: true,
   gulfInvestments: false,
-  // Happy variant layers (disabled)
-  positiveEvents: false,
-  kindness: false,
-  happiness: false,
-  speciesRecovery: false,
   renewableInstallations: false,
   tradeRoutes: true,
   iranAttacks: false,
@@ -1020,10 +843,6 @@ const ENERGY_MOBILE_MAP_LAYERS: MapLayers = {
   centralBanks: false,
   commodityHubs: false,
   gulfInvestments: false,
-  positiveEvents: false,
-  kindness: false,
-  happiness: false,
-  speciesRecovery: false,
   renewableInstallations: false,
   tradeRoutes: false,
   iranAttacks: false,
@@ -1042,7 +861,7 @@ const ENERGY_MOBILE_MAP_LAYERS: MapLayers = {
 // UNIFIED PANEL REGISTRY
 // ============================================
 
-type PanelVariant = 'full' | 'tech' | 'finance' | 'commodity' | 'energy' | 'happy';
+type PanelVariant = 'full' | 'tech' | 'finance' | 'commodity' | 'energy';
 
 const VARIANT_PANEL_CONFIGS: Record<PanelVariant, Record<string, PanelConfig>> = {
   full: FULL_PANELS,
@@ -1050,7 +869,6 @@ const VARIANT_PANEL_CONFIGS: Record<PanelVariant, Record<string, PanelConfig>> =
   finance: FINANCE_PANELS,
   commodity: COMMODITY_PANELS,
   energy: ENERGY_PANELS,
-  happy: HAPPY_PANELS,
 };
 
 function getVariantPanelConfigs(variant: string): Record<string, PanelConfig> | undefined {
@@ -1066,6 +884,14 @@ export function isPanelNativeToVariant(panelId: string, variant: string): boolea
 }
 
 export const RETIRED_PANEL_IDS: ReadonlySet<string> = new Set([
+  'positive-feed',
+  'progress',
+  'counters',
+  'spotlight',
+  'breakthroughs',
+  'digest',
+  'species',
+  'giving',
   'toronto-safety',
   'live-webcams',
   'windy-webcams',
@@ -1077,10 +903,8 @@ export function isRetiredPanel(panelId: string): boolean {
   return RETIRED_PANEL_IDS.has(panelId);
 }
 
-
 /** All panels from all variants — canonical cross-variant registry. */
 export const ALL_PANELS: Record<string, PanelConfig> = {
-  ...HAPPY_PANELS,
   ...COMMODITY_PANELS,
   ...ENERGY_PANELS,
   ...TECH_PANELS,
@@ -1095,7 +919,6 @@ export const VARIANT_DEFAULTS: Record<string, string[]> = {
   finance:   Object.keys(VARIANT_PANEL_CONFIGS.finance),
   commodity: Object.keys(VARIANT_PANEL_CONFIGS.commodity),
   energy:    Object.keys(VARIANT_PANEL_CONFIGS.energy),
-  happy:     Object.keys(VARIANT_PANEL_CONFIGS.happy),
 };
 
 /**
@@ -1122,9 +945,6 @@ export const VARIANT_PANEL_OVERRIDES: Partial<Record<string, Partial<Record<stri
     map:         { name: 'Energy Atlas Map' },
     'live-news': { name: 'Energy Headlines' },
     insights:    { name: 'AI Energy Insights' },
-  },
-  happy: {
-    map:         { name: 'Good News Map' },
   },
 };
 
@@ -1216,9 +1036,7 @@ export const DEFAULT_PANELS: Record<string, PanelConfig> = Object.fromEntries(
   )
 );
 
-export const DEFAULT_MAP_LAYERS = SITE_VARIANT === 'happy'
-  ? HAPPY_MAP_LAYERS
-  : SITE_VARIANT === 'tech'
+export const DEFAULT_MAP_LAYERS = SITE_VARIANT === 'tech'
     ? TECH_MAP_LAYERS
     : SITE_VARIANT === 'finance'
       ? FINANCE_MAP_LAYERS
@@ -1228,9 +1046,7 @@ export const DEFAULT_MAP_LAYERS = SITE_VARIANT === 'happy'
           ? ENERGY_MAP_LAYERS
           : FULL_MAP_LAYERS;
 
-export const MOBILE_DEFAULT_MAP_LAYERS = SITE_VARIANT === 'happy'
-  ? HAPPY_MOBILE_MAP_LAYERS
-  : SITE_VARIANT === 'tech'
+export const MOBILE_DEFAULT_MAP_LAYERS = SITE_VARIANT === 'tech'
     ? TECH_MOBILE_MAP_LAYERS
     : SITE_VARIANT === 'finance'
       ? FINANCE_MOBILE_MAP_LAYERS
@@ -1286,7 +1102,7 @@ export const PANEL_CATEGORY_MAP: Record<string, { labelKey: string; panelKeys: s
   },
   marketsFinance: {
     labelKey: 'header.panelCatMarketsFinance',
-    panelKeys: ['commodities', 'energy-complex', 'energy-risk-overview', 'pipeline-status', 'storage-facility-map', 'oil-inventories', 'fuel-prices', 'chokepoint-strip', 'fuel-shortages', 'energy-disruptions', 'hormuz-tracker', 'energy-crisis', 'markets', 'stock-analysis', 'stock-backtest', 'daily-market-brief', 'economic', 'global-procurement', 'trade-policy', 'sanctions-pressure', 'supply-chain', 'china-corridors', 'china-activity-nowcast', 'finance', 'polymarket', 'macro-signals', 'gulf-economies', 'consumer-prices', 'etf-flows', 'stablecoins', 'crypto', 'heatmap', 'aaii-sentiment', 'cot-positioning', 'earnings-calendar', 'material-events', 'economic-calendar', 'fear-greed', 'fsi', 'macro-tiles', 'market-breadth', 'news-market-correlation', 'liquidity-shifts', 'national-debt', 'positioning-247', 'yield-curve', 'gold-intelligence', 'fx', 'market-implications'],
+    panelKeys: ['commodities', 'energy-complex', 'energy-risk-overview', 'pipeline-status', 'storage-facility-map', 'renewable', 'oil-inventories', 'fuel-prices', 'chokepoint-strip', 'fuel-shortages', 'energy-disruptions', 'hormuz-tracker', 'energy-crisis', 'markets', 'stock-analysis', 'stock-backtest', 'daily-market-brief', 'economic', 'global-procurement', 'trade-policy', 'sanctions-pressure', 'supply-chain', 'china-corridors', 'china-activity-nowcast', 'finance', 'polymarket', 'macro-signals', 'gulf-economies', 'consumer-prices', 'etf-flows', 'stablecoins', 'crypto', 'heatmap', 'aaii-sentiment', 'cot-positioning', 'earnings-calendar', 'material-events', 'economic-calendar', 'fear-greed', 'fsi', 'macro-tiles', 'market-breadth', 'news-market-correlation', 'liquidity-shifts', 'national-debt', 'positioning-247', 'yield-curve', 'gold-intelligence', 'fx', 'market-implications'],
     variants: ['full', 'energy'],
   },
   topical: {
@@ -1296,7 +1112,7 @@ export const PANEL_CATEGORY_MAP: Record<string, { labelKey: string; panelKeys: s
   },
   dataTracking: {
     labelKey: 'header.panelCatDataTracking',
-    panelKeys: ['monitors', 'ukmto-incidents', 'satellite-fires', 'ucdp-events', 'displacement', 'climate', 'reservoir-levels', 'climate-news', 'population-exposure', 'security-advisories', 'radiation-watch', 'grid-disruption-clock', 'oref-sirens', 'airline-intel', 'world-clock', 'tech-readiness', 'disease-outbreaks', 'fao-food-price-index', 'grocery-basket', 'giving'],
+    panelKeys: ['monitors', 'ukmto-incidents', 'satellite-fires', 'ucdp-events', 'displacement', 'climate', 'reservoir-levels', 'climate-news', 'population-exposure', 'security-advisories', 'radiation-watch', 'grid-disruption-clock', 'oref-sirens', 'airline-intel', 'world-clock', 'tech-readiness', 'disease-outbreaks', 'fao-food-price-index', 'grocery-basket'],
     variants: ['full', 'energy'],
   },
 
@@ -1376,17 +1192,6 @@ export const PANEL_CATEGORY_MAP: Record<string, { labelKey: string; panelKeys: s
     variants: ['commodity'],
   },
 
-  // Happy variant
-  happyNews: {
-    labelKey: 'header.panelCatHappyNews',
-    panelKeys: ['positive-feed', 'progress', 'counters', 'spotlight', 'breakthroughs', 'digest'],
-    variants: ['happy'],
-  },
-  happyPlanet: {
-    labelKey: 'header.panelCatHappyPlanet',
-    panelKeys: ['species', 'renewable', 'giving'],
-    variants: ['happy'],
-  },
 };
 
 export interface VariantPanelCategory {

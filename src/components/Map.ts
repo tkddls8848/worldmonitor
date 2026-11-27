@@ -101,7 +101,6 @@ import {
 } from './map-interaction-guard';
 import { resolveClusterGlContext } from './map-cluster-gl';
 
-
 export type TimeRange = '1h' | '6h' | '24h' | '48h' | '7d' | 'all';
 export type MapView = 'global' | 'america' | 'mena' | 'eu' | 'asia' | 'latam' | 'africa' | 'oceania';
 
@@ -422,7 +421,7 @@ export class MapComponent {
     window.addEventListener('theme-changed', this.handleThemeChange);
 
     // Kick off lazy APT load if cyberThreats is already on at init (e.g. from URL/localStorage)
-    if (this.state.layers.cyberThreats && SITE_VARIANT !== 'tech' && SITE_VARIANT !== 'happy') {
+    if (this.state.layers.cyberThreats && SITE_VARIANT !== 'tech') {
       this.loadAptGroups();
     }
   }
@@ -650,7 +649,6 @@ export class MapComponent {
   }
 
 
-
   private getLayerControlLabel(layer: keyof MapLayers): string {
     if (layer === 'sanctions') return t('components.deckgl.layerHelp.labels.sanctions');
 
@@ -696,9 +694,6 @@ export class MapComponent {
       'sanctions', 'economic', 'waterways',               // geopolitical/economic
       'natural', 'weather',                               // natural events
     ];
-    const happyLayers: (keyof MapLayers)[] = [
-      'positiveEvents', 'kindness', 'happiness', 'speciesRecovery', 'renewableInstallations',
-    ];
     // Energy variant — SVG/mobile fallback. Only include keys that actually render
     // in this file (commodityPorts/climate/tradeRoutes do not,
     // so they're omitted). Mirrors VARIANT_LAYER_ORDER.energy in
@@ -737,7 +732,6 @@ export class MapComponent {
     // cannot expose a toggle whose layer has no SVG paint path.
     const layers = (SITE_VARIANT === 'tech' ? techLayers
                  : SITE_VARIANT === 'finance' ? financeLayers
-                 : SITE_VARIANT === 'happy' ? happyLayers
                  : SITE_VARIANT === 'energy' ? energyLayers
                  : SITE_VARIANT === 'commodity' ? commodityLayers
                  : fullLayers).filter((key) => !isSunsetLayer(key) && isLayerExecutable(key, 'svg'));
@@ -1047,11 +1041,6 @@ export class MapComponent {
         <div class="map-legend-item"><span class="legend-dot" style="background:#f59e0b"></span>${escapeHtml(t('components.deckgl.layers.cloudRegions').toUpperCase())}</div>
         <div class="map-legend-item"><span class="map-legend-icon" style="color:#a855f7">📅</span>${escapeHtml(t('components.deckgl.layers.techEvents').toUpperCase())}</div>
         <div class="map-legend-item"><span class="map-legend-icon" style="color:#4ecdc4">💾</span>${escapeHtml(t('components.deckgl.layers.aiDataCenters').toUpperCase())}</div>
-      `, "legacy direct innerHTML migration"));
-    } else if (SITE_VARIANT === 'happy') {
-      // Happy variant legend — natural events only
-      setTrustedHtml(legend, trustedHtml(`
-        <div class="map-legend-item"><span class="map-legend-icon earthquake">●</span>${escapeHtml(t('components.deckgl.layers.naturalEvents').toUpperCase())}</div>
       `, "legacy direct innerHTML migration"));
     } else {
       // Geopolitical variant legend
@@ -1785,7 +1774,6 @@ export class MapComponent {
       }
     });
   }
-
 
   private updateCountryFills(): void {
     if (!this.baseLayerGroup || !this.countryFeatures) return;
@@ -4956,7 +4944,6 @@ export class MapComponent {
       node.setAttribute('cy', String(xy[1]));
     }
   }
-
 
   /**
    * Outline the dashboard focus (#10453): chosen countries with a solid

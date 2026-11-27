@@ -58,7 +58,6 @@
  *   - GdeltIntelPanel: `fetchGdeltArticles` returns [] on `resp.error` and
  *     `fetchTopicTimeline` has a bare `catch { return null }`, so
  *     `loadActiveTopic`'s catch never runs and `showError` at :93 is unreachable.
- *   - GivingPanel: no caller ever passes an `onRetry` (see its case below).
  * Their cases reach the error state by injecting the private field or forcing a
  * mock rejection — states production cannot currently produce. They pin the
  * contract for the day those paths are made reachable; they are not evidence a
@@ -72,13 +71,9 @@ import { initTestI18n } from './helpers/i18n.mts';
 const {
   mockFetchTopicIntelligence,
   mockFetchTopicTimeline,
-  mockRenderGivingPanelContent,
-  mockAvailableGivingTabs,
 } = vi.hoisted(() => ({
   mockFetchTopicIntelligence: vi.fn(),
   mockFetchTopicTimeline: vi.fn(),
-  mockRenderGivingPanelContent: vi.fn(),
-  mockAvailableGivingTabs: vi.fn(),
 }));
 
 vi.mock('@/services/gdelt-intel', async (importOriginal) => ({
@@ -87,13 +82,8 @@ vi.mock('@/services/gdelt-intel', async (importOriginal) => ({
   fetchTopicTimeline: mockFetchTopicTimeline,
 }));
 
-vi.mock('@/components/giving-renderer', () => ({
-  availableGivingTabs: mockAvailableGivingTabs,
-  renderGivingPanelContent: mockRenderGivingPanelContent,
-}));
 
 import { GdeltIntelPanel } from '@/components/GdeltIntelPanel';
-import { GivingPanel } from '@/components/GivingPanel';
 import { ServiceStatusPanel } from '@/components/ServiceStatusPanel';
 import { TechEventsPanel } from '@/components/TechEventsPanel';
 
@@ -281,39 +271,6 @@ describe('GdeltIntelPanel', () => {
   });
 });
 
-describe('GivingPanel', () => {
-  /**
-   * Latent, not live: `data-loader.showColdLoadError` reaches this panel as a
-   * bare `callPanel('giving', 'showError')` with no retry callback, and the
-   * panel never calls `setRetryCallback` — so today `showError` skips the
-   * countdown block entirely and nothing latches. This case drives the public
-   * `showError(msg, onRetry)` overload to pin the contract for the day a retry
-   * callback IS wired in, which is the only reason `setData` needs the full
-   * `clearErrorState()` rather than a chip reset.
-   */
-  it('clears the countdown and backoff when a summary renders', async () => {
-    mockAvailableGivingTabs.mockReturnValue(['platforms']);
-    mockRenderGivingPanelContent.mockReturnValue('<div class="giving-body"></div>');
-
-    const panel = new GivingPanel();
-    mount(panel);
-
-    await expectRecoveryClearsRetryState(
-      panel,
-      () => {
-        panel.showError('boom', () => {});
-      },
-      () => {
-        panel.setData({
-          materializedAt: new Date(Date.now() - 60_000).toISOString(),
-          platforms: [{ platform: 'Platform 1' }],
-        } as unknown as Parameters<GivingPanel['setData']>[0]);
-      },
-    );
-
-    panel.destroy();
-  });
-});
 
 /**
  * The inverse half of #6577, and the reason none of the five edits above may be

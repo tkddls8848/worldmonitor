@@ -19,7 +19,7 @@ import { join } from 'node:path';
 export const UMAMI_SCRIPT_TAG =
   '<script async defer src="https://abacus.worldmonitor.app/script.js" '
   + 'data-website-id="e8800335-c853-46a8-8497-c993ed2f58bc" '
-  + 'data-domains="worldmonitor.app,www.worldmonitor.app,tech.worldmonitor.app,finance.worldmonitor.app,commodity.worldmonitor.app,happy.worldmonitor.app" '
+  + 'data-domains="worldmonitor.app,www.worldmonitor.app,tech.worldmonitor.app,finance.worldmonitor.app,commodity.worldmonitor.app" '
   + 'nonce="wm-static-bootstrap"></script>';
 
 const DATASET_LICENSE = {

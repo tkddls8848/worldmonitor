@@ -229,7 +229,7 @@ describe('listMapLayerCatalog', () => {
 
   it('rejects a cursor that is not in the current filtered page sequence', () => {
     const result = listMapLayerCatalog(snapshot(), {
-      monitor: 'happy',
+      monitor: 'energy',
       cursor: 'conflicts',
       limit: 2,
     }, BUDGETS);

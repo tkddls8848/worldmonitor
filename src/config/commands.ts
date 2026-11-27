@@ -169,7 +169,6 @@ export const COMMANDS: Command[] = [
   { id: 'panel:satellite-fires', keywords: ['fires', 'satellite fires', 'wildfires', 'fire detections'], label: 'Panel: Fires', icon: '\u{1F525}', category: 'panels' },
   { id: 'panel:gulf-economies', keywords: ['gulf', 'gulf economies', 'gcc', 'saudi', 'uae'], label: 'Panel: Gulf Economies', icon: '\u{1F3D7}\uFE0F', category: 'panels' },
   { id: 'panel:gcc-investments', keywords: ['gcc investments', 'gcc funds', 'gulf investments', 'sovereign wealth'], label: 'Panel: GCC Investments', icon: '\u{1F4B0}', category: 'panels' },
-  { id: 'panel:giving', keywords: ['giving', 'philanthropy', 'awards', 'donations'], label: 'Panel: Global Giving', icon: '\u{1F49D}', category: 'panels' },
   { id: 'panel:ucdp-events', keywords: ['ucdp', 'armed conflict', 'conflict events', 'war data'], label: 'Panel: UCDP Conflict Events', icon: '\u2694\uFE0F', category: 'panels' },
   { id: 'panel:displacement', keywords: ['displacement', 'refugees', 'unhcr', 'idp'], label: 'Panel: UNHCR Displacement', icon: '\u{1F3C3}', category: 'panels' },
   { id: 'panel:climate', keywords: ['climate', 'climate anomalies', 'temperature', 'weather patterns'], label: 'Panel: Climate Anomalies', icon: '\u{1F321}\uFE0F', category: 'panels' },
@@ -266,14 +265,6 @@ export const COMMANDS: Command[] = [
   { id: 'panel:critical-minerals', keywords: ['critical minerals', 'rare earth', 'lithium', 'cobalt', 'strategic minerals'], label: 'Critical Minerals', icon: '\u{1F48E}', category: 'panels' },
   { id: 'panel:commodity-regulation', keywords: ['commodity regulation', 'mining regulation', 'resource policy'], label: 'Regulation & Policy', icon: '\u{1F4DC}', category: 'panels' },
 
-  // Positive / happy panels
-  { id: 'panel:positive-feed', keywords: ['good news', 'positive news', 'optimistic', 'uplifting'], label: 'Panel: Good News Feed', icon: '\u{1F33F}', category: 'panels' },
-  { id: 'panel:breakthroughs', keywords: ['breakthroughs', 'science breakthroughs', 'discoveries'], label: 'Panel: Breakthroughs', icon: '\u{1F9EC}', category: 'panels' },
-  { id: 'panel:progress', keywords: ['human progress', 'progress', 'global progress'], label: 'Panel: Human Progress', icon: '\u{1F4C8}', category: 'panels' },
-  { id: 'panel:counters', keywords: ['live counters', 'counters', 'real time counters'], label: 'Panel: Live Counters', icon: '\u{1F522}', category: 'panels' },
-  { id: 'panel:spotlight', keywords: ['spotlight', 'hero', 'today hero', 'inspiring'], label: "Panel: Today's Hero", icon: '\u2B50', category: 'panels' },
-  { id: 'panel:digest', keywords: ['digest', '5 good things', 'good things', 'daily digest'], label: 'Panel: 5 Good Things', icon: '\u{1F4F0}', category: 'panels' },
-  { id: 'panel:species', keywords: ['conservation', 'wildlife', 'endangered species', 'conservation wins'], label: 'Panel: Conservation Wins', icon: '\u{1F43C}', category: 'panels' },
   { id: 'panel:renewable', keywords: ['renewable energy', 'solar', 'wind energy', 'green energy'], label: 'Panel: Renewable Energy', icon: '\u2600\uFE0F', category: 'panels' },
 
   // View / settings

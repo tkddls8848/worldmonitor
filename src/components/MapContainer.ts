@@ -45,10 +45,6 @@ import type { CrossBorderData, DisplacementEventsData, DisplacementFlow, Interna
 import type { Earthquake } from '@/services/earthquakes';
 import type { ClimateAnomaly } from '@/services/climate';
 import type { WeatherAlert } from '@/services/weather';
-import type { PositiveGeoEvent } from '@/services/positive-events-geo';
-import type { KindnessPoint } from '@/services/kindness-data';
-import type { HappinessData } from '@/services/happiness-data';
-import type { SpeciesRecovery } from '@/services/conservation-data';
 import type { RenewableInstallation } from '@/services/renewable-installations';
 import type { GpsJamHex } from '@/services/gps-interference';
 import type { IranEvent } from '@/services/conflict';
@@ -272,13 +268,9 @@ export class MapContainer {
   private cachedCyberThreats: CyberThreat[] | null = null;
   private cachedIranEvents: IranEvent[] | null = null;
   private cachedNewsLocations: NewsLocationMarker[] | null = null;
-  private cachedPositiveEvents: PositiveGeoEvent[] | null = null;
-  private cachedKindnessData: KindnessPoint[] | null = null;
-  private cachedHappinessScores: HappinessData | null = null;
   private cachedCIIScores: CIIScore[] | null = null;
   private cachedNo2Activity: No2ActivitySnapshot | null = null;
   private cachedReservoirLevels: ReservoirLevel[] | null = null;
-  private cachedSpeciesRecovery: SpeciesRecovery[] | null = null;
   private cachedRenewableInstallations: RenewableInstallation[] | null = null;
   private cachedHotspotActivity: NewsItem[] | null = null;
   private cachedEscalationFlights: MilitaryFlight[] | null = null;
@@ -770,13 +762,9 @@ export class MapContainer {
     if (this.cachedCyberThreats) this.setCyberThreats(this.cachedCyberThreats);
     if (this.cachedIranEvents) this.setIranEvents(this.cachedIranEvents);
     if (this.cachedNewsLocations) this.setNewsLocations(this.cachedNewsLocations);
-    if (this.cachedPositiveEvents) this.setPositiveEvents(this.cachedPositiveEvents);
-    if (this.cachedKindnessData) this.setKindnessData(this.cachedKindnessData);
-    if (this.cachedHappinessScores) this.setHappinessScores(this.cachedHappinessScores);
     if (this.cachedCIIScores) this.setCIIScores(this.cachedCIIScores);
     if (this.cachedNo2Activity) this.setNo2Activity(this.cachedNo2Activity);
     if (this.cachedReservoirLevels) this.setReservoirLevels(this.cachedReservoirLevels);
-    if (this.cachedSpeciesRecovery) this.setSpeciesRecoveryZones(this.cachedSpeciesRecovery);
     if (this.cachedRenewableInstallations) this.setRenewableInstallations(this.cachedRenewableInstallations);
     if (this.cachedHotspotActivity) this.updateHotspotActivity(this.cachedHotspotActivity);
     if (this.cachedEscalationFlights && this.cachedEscalationVessels) this.updateMilitaryForEscalation(this.cachedEscalationFlights, this.cachedEscalationVessels);
@@ -1289,29 +1277,8 @@ export class MapContainer {
     }
   }
 
-  public setPositiveEvents(events: PositiveGeoEvent[]): void {
-    this.cachedPositiveEvents = events;
-    if (this.useDeckGL) {
-      this.deckGLMap?.setPositiveEvents(events);
-    }
-    // SVG map does not support positive events layer
-  }
 
-  public setKindnessData(points: KindnessPoint[]): void {
-    this.cachedKindnessData = points;
-    if (this.useDeckGL) {
-      this.deckGLMap?.setKindnessData(points);
-    }
-    // SVG map does not support kindness layer
-  }
 
-  public setHappinessScores(data: HappinessData): void {
-    this.cachedHappinessScores = data;
-    if (this.useDeckGL) {
-      this.deckGLMap?.setHappinessScores(data);
-    }
-    // SVG map does not support choropleth overlay
-  }
 
   public setChokepointData(data: GetChokepointStatusResponse | null): void {
     this.cachedChokepointData = data;
@@ -1378,13 +1345,6 @@ export class MapContainer {
     if (this.useDeckGL) this.deckGLMap?.setNo2Activity(snapshot);
   }
 
-  public setSpeciesRecoveryZones(species: SpeciesRecovery[]): void {
-    this.cachedSpeciesRecovery = species;
-    if (this.useDeckGL) {
-      this.deckGLMap?.setSpeciesRecoveryZones(species);
-    }
-    // SVG map does not support species recovery layer
-  }
 
   public setRenewableInstallations(installations: RenewableInstallation[]): void {
     this.cachedRenewableInstallations = installations;
@@ -1954,11 +1914,7 @@ export class MapContainer {
     this.cachedCyberThreats = null;
     this.cachedIranEvents = null;
     this.cachedNewsLocations = null;
-    this.cachedPositiveEvents = null;
-    this.cachedKindnessData = null;
-    this.cachedHappinessScores = null;
     this.cachedCIIScores = null;
-    this.cachedSpeciesRecovery = null;
     this.cachedRenewableInstallations = null;
     this.cachedHotspotActivity = null;
     this.cachedEscalationFlights = null;

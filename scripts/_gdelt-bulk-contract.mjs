@@ -12,5 +12,3 @@ export const GDELT_BULK_ARTICLES_KEY = 'gdelt:bulk:articles:v1';
 // server/worldmonitor/intelligence/v1/search-gdelt-documents.ts for the
 // `country:<ISO2>` query form. Keep the literal in that handler in sync.
 export const GDELT_BULK_COUNTRY_ARTICLES_KEY = 'gdelt:bulk:country-articles:v1';
-export const POSITIVE_EVENTS_RPC_KEY = 'positive-events:geo:v1';
-export const POSITIVE_EVENTS_BOOTSTRAP_KEY = 'positive_events:geo-bootstrap:v1';

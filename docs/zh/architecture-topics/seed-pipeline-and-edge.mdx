@@ -84,14 +84,12 @@ World Monitor 使用 Vercel Edge Functions 作为轻量 API 层，分为两代�
 
 ### 单一部署变体合并
 
-所有六个仪表盘变体（World Monitor、Tech Monitor、Finance Monitor、Commodity Monitor、Happy Monitor、Energy Monitor）从**单一 Vercel 部署**提供服务。变体在运行时通过主机名检测确定：
 
 | 主机名 | 变体 |
 | --- | --- |
 | `tech.worldmonitor.app` | `tech` |
 | `finance.worldmonitor.app` | `finance` |
 | `commodity.worldmonitor.app` | `commodity` |
-| `happy.worldmonitor.app` | `happy` |
 | `energy.worldmonitor.app` | `energy` |
 | `worldmonitor.app`（默认） | `full` |
 

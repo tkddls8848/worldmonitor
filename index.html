@@ -236,7 +236,7 @@
 
     <!-- Theme: apply stored preference before first paint to prevent FOUC. -->
     <script data-wm-map-prepaint>(function(){var mapCollapsed=false;try{mapCollapsed=localStorage.getItem('mobile-map-collapsed')==='true';}catch(e){}if(mapCollapsed)document.documentElement.classList.add('wm-map-collapsed');else document.documentElement.classList.remove('wm-map-collapsed');})()</script>
-    <script data-wm-prepaint>(function(){try{var h=location.hostname;var v;if(h.startsWith('happy.'))v='happy';else if(h.startsWith('tech.'))v='tech';else if(h.startsWith('finance.'))v='finance';else if(h.startsWith('commodity.'))v='commodity';else if(h.startsWith('energy.'))v='energy';if(!v&&(h==='localhost'||h==='127.0.0.1'||'__TAURI_INTERNALS__' in window))v=localStorage.getItem('worldmonitor-variant');if(v)document.documentElement.dataset.variant=v;else document.documentElement.removeAttribute('data-variant');var t=localStorage.getItem('worldmonitor-theme');if(t==='dark'||t==='light'){document.documentElement.dataset.theme=t;}else if(v==='happy'){document.documentElement.dataset.theme='light';}else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches){document.documentElement.dataset.theme='light';}var mapCollapsed=localStorage.getItem('mobile-map-collapsed')==='true';if(mapCollapsed)document.documentElement.classList.add('wm-map-collapsed');}catch(e){}document.documentElement.classList.add('no-transition');document.documentElement.classList.add('js');})()</script>
+    <script data-wm-prepaint>(function(){try{var h=location.hostname;var v;if(h.startsWith('tech.'))v='tech';else if(h.startsWith('finance.'))v='finance';else if(h.startsWith('commodity.'))v='commodity';else if(h.startsWith('energy.'))v='energy';if(!v&&(h==='localhost'||h==='127.0.0.1'||'__TAURI_INTERNALS__' in window))v=localStorage.getItem('worldmonitor-variant');if(v&&!['full','tech','finance','commodity','energy'].includes(v))v=null;if(v)document.documentElement.dataset.variant=v;else document.documentElement.removeAttribute('data-variant');var t=localStorage.getItem('worldmonitor-theme');if(t==='dark'||t==='light'){document.documentElement.dataset.theme=t;}else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches){document.documentElement.dataset.theme='light';}var mapCollapsed=localStorage.getItem('mobile-map-collapsed')==='true';if(mapCollapsed)document.documentElement.classList.add('wm-map-collapsed');}catch(e){}document.documentElement.classList.add('no-transition');document.documentElement.classList.add('js');})()</script>
     <!-- Critical CSS: inline skeleton visible before JS boots -->
     <style>
       :root{--dashboard-panel-row-min:200px;--dashboard-panel-row-max:380px;--dashboard-grid-gap:4px;--dashboard-first-grid-reservation:calc(var(--dashboard-panel-row-min) + var(--dashboard-panel-row-min) + var(--dashboard-grid-gap))}
@@ -326,64 +326,7 @@
       [data-theme="light"] .skeleton-panel-metric span{color:#4b5563}
       [data-theme="light"] .skeleton-line{background:linear-gradient(90deg,rgba(0,0,0,.04) 25%,rgba(0,0,0,.08) 50%,rgba(0,0,0,.04) 75%);background-size:200% 100%;animation:skel-shimmer 1.5s infinite}
 
-      /* ---------- skeleton shell (happy variant — light) ---------- */
-      [data-variant="happy"] .skeleton-shell{background:#FAFAF5;font-family:'Nunito',system-ui,sans-serif}
-      [data-variant="happy"] .skeleton-header{background:#FFFFFF;border-bottom-color:#DDD9CF}
-      [data-variant="happy"] .skeleton-brand{color:#24301f}
-      [data-variant="happy"] .skeleton-brand-mark{border-color:#6B8F5E;color:#6B8F5E}
-      [data-variant="happy"] .skeleton-kicker{color:#64705d}
-      [data-variant="happy"] .skeleton-chip{color:#3f4f36;background:#F2EFE8;border-color:#DDD9CF;border-radius:8px}
-      [data-variant="happy"] .skeleton-chip.live{color:#2f612e;background:#eef6e9;border-color:#b9cda8}
-      [data-variant="happy"] .skeleton-pill{background:#F2EFE8;border-radius:8px}
-      [data-variant="happy"] .skeleton-dot{background:#6B8F5E}
-      [data-variant="happy"] .skeleton-tabs{background:#FFFFFF;border-bottom-color:#DDD9CF}
-      [data-variant="happy"] .skeleton-main{background:#FAFAF5}
-      [data-variant="happy"] .skeleton-map{border-color:#DDD9CF;background:#D4E6EC;border-radius:14px}
-      [data-variant="happy"] .skeleton-map-bar{background:#FFFFFF;border-bottom-color:#DDD9CF}
-      [data-variant="happy"] .skeleton-section-label{color:#24301f}
-      [data-variant="happy"] .skeleton-section-note{color:#64705d}
-      [data-variant="happy"] .skeleton-map-body::after{background:radial-gradient(ellipse 60% 50% at 50% 50%,#B9CDA8 0%,#D4E6EC 100%);opacity:.3}
-      [data-variant="happy"] .skeleton-map-content{border-color:rgba(107,143,94,.24);background:rgba(255,255,255,.84);box-shadow:0 18px 60px rgba(61,80,50,.12);border-radius:12px}
-      [data-variant="happy"] .skeleton-map-eyebrow{color:#4f7f3f}
-      [data-variant="happy"] .skeleton-map-title{color:#24301f}
-      [data-variant="happy"] .skeleton-map-copy{color:#3f4f36}
-      [data-variant="happy"] .skeleton-panel{background:#FFFFFF;border-color:#DDD9CF;border-radius:14px}
-      [data-variant="happy"] .skeleton-panel-header{border-bottom-color:#EBE8E0}
-      [data-variant="happy"] .skeleton-panel-title{color:#24301f}
-      [data-variant="happy"] .skeleton-panel-kicker{color:#4f7f3f}
-      [data-variant="happy"] .skeleton-panel-copy{color:#3f4f36}
-      [data-variant="happy"] .skeleton-panel-metric{color:#24301f}
-      [data-variant="happy"] .skeleton-panel-metric span{color:#64705d}
-      [data-variant="happy"] .skeleton-line{background:linear-gradient(90deg,rgba(107,143,94,.06) 25%,rgba(107,143,94,.12) 50%,rgba(107,143,94,.06) 75%);background-size:200% 100%;animation:skel-shimmer 1.5s infinite}
 
-      /* ---------- skeleton shell (happy variant — dark) ---------- */
-      [data-variant="happy"][data-theme="dark"] .skeleton-shell{background:#1A2332}
-      [data-variant="happy"][data-theme="dark"] .skeleton-header{background:#222E3E;border-bottom-color:#344050}
-      [data-variant="happy"][data-theme="dark"] .skeleton-brand{color:#F7FAF3}
-      [data-variant="happy"][data-theme="dark"] .skeleton-kicker{color:#B9C4B0}
-      [data-variant="happy"][data-theme="dark"] .skeleton-chip{color:#E7EDE0;background:#2A3848;border-color:#344050}
-      [data-variant="happy"][data-theme="dark"] .skeleton-chip.live{color:#C9F2B8;background:#243A2D;border-color:#456449}
-      [data-variant="happy"][data-theme="dark"] .skeleton-pill{background:#2A3848}
-      [data-variant="happy"][data-theme="dark"] .skeleton-dot{background:#8BAF7A}
-      [data-variant="happy"][data-theme="dark"] .skeleton-tabs{background:#222E3E;border-bottom-color:#344050}
-      [data-variant="happy"][data-theme="dark"] .skeleton-main{background:#1A2332}
-      [data-variant="happy"][data-theme="dark"] .skeleton-map{border-color:#344050;background:#16202E}
-      [data-variant="happy"][data-theme="dark"] .skeleton-map-bar{background:#222E3E;border-bottom-color:#344050}
-      [data-variant="happy"][data-theme="dark"] .skeleton-section-label{color:#F7FAF3}
-      [data-variant="happy"][data-theme="dark"] .skeleton-section-note{color:#B9C4B0}
-      [data-variant="happy"][data-theme="dark"] .skeleton-map-body::after{background:radial-gradient(ellipse 60% 50% at 50% 50%,#2D4035 0%,#16202E 100%);opacity:.3}
-      [data-variant="happy"][data-theme="dark"] .skeleton-map-content{border-color:rgba(139,175,122,.24);background:rgba(24,33,45,.82);box-shadow:0 18px 60px rgba(0,0,0,.24)}
-      [data-variant="happy"][data-theme="dark"] .skeleton-map-eyebrow{color:#C9F2B8}
-      [data-variant="happy"][data-theme="dark"] .skeleton-map-title{color:#F7FAF3}
-      [data-variant="happy"][data-theme="dark"] .skeleton-map-copy{color:#E7EDE0}
-      [data-variant="happy"][data-theme="dark"] .skeleton-panel{background:#222E3E;border-color:#344050}
-      [data-variant="happy"][data-theme="dark"] .skeleton-panel-header{border-bottom-color:#283545}
-      [data-variant="happy"][data-theme="dark"] .skeleton-panel-title{color:#F7FAF3}
-      [data-variant="happy"][data-theme="dark"] .skeleton-panel-kicker{color:#C9F2B8}
-      [data-variant="happy"][data-theme="dark"] .skeleton-panel-copy{color:#E7EDE0}
-      [data-variant="happy"][data-theme="dark"] .skeleton-panel-metric{color:#F7FAF3}
-      [data-variant="happy"][data-theme="dark"] .skeleton-panel-metric span{color:#B9C4B0}
-      [data-variant="happy"][data-theme="dark"] .skeleton-line{background:linear-gradient(90deg,rgba(139,175,122,.05) 25%,rgba(139,175,122,.10) 50%,rgba(139,175,122,.05) 75%);background-size:200% 100%;animation:skel-shimmer 1.5s infinite}
 
       @media (max-width:768px){
         .skeleton-header{height:45px;padding:6px 10px;gap:8px}
@@ -439,7 +382,7 @@
       <p>On the map you can follow conflict zones and protest activity alongside earthquake and wildfire alerts, power-outage clusters, and strategic infrastructure such as military bases, nuclear facilities, and subsea cables. Aviation layers surface military and commercial flights; maritime layers track ships through chokepoints and high-risk waters. Country deep-dives open instability scores and source-backed context for more than 190 states without leaving the dashboard.</p>
       <p>Market and prediction panels sit beside the geospatial view so price moves, central-bank signals, commodities, and prediction-market odds can be read against the same map context that shows tankers, jets, and crisis corridors. Government-spending and macro indicators help separate noise from policy-relevant shifts. The goal is not another news feed — it is a continuously updating OSINT workbench with auditable upstream sources.</p>
       <p>Reference surfaces outside the live map keep the same evidence standard: country intelligence pages, maritime chokepoint briefs, crisis trackers, live tools, research reports, and an audited source catalog. Agents and developers can also use the MCP server and REST API documented on the site. World Monitor is open source and free to start; Pro unlocks deeper analysis without hiding the core map. Specialized sibling monitors focus on tech, finance, commodities, energy infrastructure, and constructive global progress; this full dashboard remains the canonical geopolitics and multi-domain intelligence surface at www.worldmonitor.app/dashboard for humans and crawlers alike.</p>
-      <p>If you need a single citeable URL for multi-domain situation awareness — conflicts, markets, flights, ships, infrastructure, and climate hazards together — use this full dashboard rather than a specialized sibling. That separation is intentional: tech, finance, commodity, energy, and happy monitors carry their own summaries so crawlers do not treat six shells as near-duplicates.</p>
+      <p>If you need a single citeable URL for multi-domain situation awareness — conflicts, markets, flights, ships, infrastructure, and climate hazards together — use this full dashboard rather than a specialized sibling. That separation is intentional: tech, finance, commodity, and energy monitors carry their own summaries so crawlers do not treat five shells as near-duplicates.</p>
     </section>
     <noscript>
       <main id="dashboard-noscript" class="dashboard-noscript">
@@ -448,7 +391,7 @@
         <p>On the map you can follow conflict zones and protest activity alongside earthquake and wildfire alerts, power-outage clusters, and strategic infrastructure such as military bases, nuclear facilities, and subsea cables. Aviation layers surface military and commercial flights; maritime layers track ships through chokepoints and high-risk waters. Country deep-dives open instability scores and source-backed context for more than 190 states without leaving the dashboard.</p>
         <p>Market and prediction panels sit beside the geospatial view so price moves, central-bank signals, commodities, and prediction-market odds can be read against the same map context that shows tankers, jets, and crisis corridors. Government-spending and macro indicators help separate noise from policy-relevant shifts. The goal is not another news feed — it is a continuously updating OSINT workbench with auditable upstream sources.</p>
         <p>Reference surfaces outside the live map keep the same evidence standard: country intelligence pages, maritime chokepoint briefs, crisis trackers, live tools, research reports, and an audited source catalog. Agents and developers can also use the MCP server and REST API documented on the site. World Monitor is open source and free to start; Pro unlocks deeper analysis without hiding the core map. Specialized sibling monitors focus on tech, finance, commodities, energy infrastructure, and constructive global progress; this full dashboard remains the canonical geopolitics and multi-domain intelligence surface at www.worldmonitor.app/dashboard for humans and crawlers alike.</p>
-        <p>If you need a single citeable URL for multi-domain situation awareness — conflicts, markets, flights, ships, infrastructure, and climate hazards together — use this full dashboard rather than a specialized sibling. That separation is intentional: tech, finance, commodity, energy, and happy monitors carry their own summaries so crawlers do not treat six shells as near-duplicates.</p>
+        <p>If you need a single citeable URL for multi-domain situation awareness — conflicts, markets, flights, ships, infrastructure, and climate hazards together — use this full dashboard rather than a specialized sibling. That separation is intentional: tech, finance, commodity, and energy monitors carry their own summaries so crawlers do not treat five shells as near-duplicates.</p>
         <p>Visit the <a href="/" >World Monitor homepage</a> for the platform overview, or use the indexable reference pages below without enabling JavaScript.</p>
         <nav aria-label="World Monitor references">
           <ul>

@@ -82,14 +82,6 @@ export const OVERVIEW_DEFAULT_PANELS: Readonly<Record<string, readonly string[]>
     'hormuz-tracker',
     'latest-brief',
   ],
-  happy: [
-    'positive-feed',
-    'progress',
-    'counters',
-    'spotlight',
-    'breakthroughs',
-    'digest',
-  ],
 };
 
 /** Panels hosted in the bottom slide-up media & assistant tray for 1-click access without cluttering the first screen. */
@@ -253,13 +245,6 @@ const NEWS_TOPICAL_KEYS = new Set<string>([
   'producthunt',
   'events',
   'tech-hubs',
-  'positive-feed',
-  'progress',
-  'counters',
-  'spotlight',
-  'breakthroughs',
-  'digest',
-  'species',
 ]);
 
 const NEWS_TRACKING_KEYS = new Set<string>([
@@ -275,7 +260,6 @@ const NEWS_TRACKING_KEYS = new Set<string>([
   'world-clock',
   'tech-readiness',
   'ukmto-incidents',
-  'giving',
   'internet-disruptions',
   'service-status',
 ]);

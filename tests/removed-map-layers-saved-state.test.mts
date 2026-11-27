@@ -25,7 +25,7 @@ const REMOVED_LAYERS = [
   'irradiators',
 ] as const;
 
-const VARIANTS: MapVariant[] = ['full', 'tech', 'finance', 'happy', 'commodity', 'energy'];
+const VARIANTS: MapVariant[] = ['full', 'tech', 'finance',  'commodity', 'energy'];
 
 function staleSavedBlob(): MapLayers {
   const blob: Record<string, boolean> = { ...DEFAULT_MAP_LAYERS, conflicts: true };

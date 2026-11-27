@@ -66,7 +66,6 @@
     "climate": "Klimaatafwijkingen",
     "securityAdvisories": "Veiligheidsadviezen",
     "orefSirens": "Sirenes in Israël",
-    "giving": "Mondiale donaties",
     "supplyChain": "Toeleveringsketen",
     "gulfEconomies": "Golfeconomieën",
     "gulfIndices": "Golfindices",
@@ -551,10 +550,6 @@
         "gpsJamming": "Navigatieinterferentie",
         "iranAttacks": "Aanvallen in het Midden-Oosten",
         "ciiChoropleth": "Landinestabiliteit",
-        "positiveEvents": "Positieve gebeurtenissen",
-        "kindness": "Daden van goedheid",
-        "happiness": "Wereldgeluk",
-        "speciesRecovery": "Soortenherstel",
         "renewableInstallations": "Schone energie",
         "notamAirspace": "NOTAM-luchtruimbeperkingen",
         "no2Activity": "Industriële activiteit",
@@ -1537,53 +1532,6 @@
       "alertsRegion": "Breaking-nieuwswaarschuwingen",
       "viewPanel": "Gerelateerd paneel bekijken"
     },
-    "giving": {
-      "activityIndex": "Activiteitsindex",
-      "cafIndex": "CAF-index",
-      "candidGrants": "Candid-subsidies",
-      "category": "Categorie",
-      "cryptoDaily": "Crypto dagelijks",
-      "dailyInflow": "24u instroom",
-      "dailyVol": "Dagelijks vol.",
-      "dataLag": "Gegevensvertraging",
-      "estDailyFlow": "Gesch. dagelijkse stroom",
-      "freshness": "Gegevens",
-      "infoTooltip": "<strong>Mondiale donatieactiviteitsindex</strong> Samengestelde index die persoonlijke donaties volgt via crowdfundingplatforms en crypto-wallets.<ul><li><strong>Platforms</strong>: steekproef van GoFundMe-, GlobalGiving-, JustGiving-campagnes</li><li><strong>Crypto</strong>: on-chain instroom naar liefdadigheidwallets (Endaoment, Giving Block)</li><li><strong>Institutioneel</strong>: OESO-ODA, CAF World Giving Index, Candid-subsidies</li></ul>Index is richtinggevend (geen exacte bedragen). Combineert live steekproeven met gepubliceerde jaarverslagen.",
-      "oecdOda": "Organisatie voor Economische Samenwerking en Ontwikkeling officiële ontwikkelingshulp",
-      "ofTotal": "% van totaal",
-      "platform": "Platform",
-      "share": "Aandeel",
-      "tabs": {
-        "categories": "Categorieën",
-        "crypto": "Crypto",
-        "institutional": "Institutioneel",
-        "platforms": "Platforms"
-      },
-      "topReceivers": "Topontvangers",
-      "trend": "Trend",
-      "trending": "TREND",
-      "velocity": "Snelheid",
-      "wallets": "Wallets",
-      "benchmarkTitle": "Wereldwijde schenkingsbenchmarks",
-      "benchmarkInfoTooltip": "<strong>Wereldwijde schenkingsbenchmarks</strong> Gepubliceerde platform- en institutionele claims met bronperioden en verificatiestatus. Geannualiseerde cijfers zijn schattingen, geen live-activiteit.",
-      "status": {
-        "published": "Gepubliceerde benchmarks met geverifieerde brondekking.",
-        "partial": "Gepubliceerde benchmarks met gedeeltelijke brondekking.",
-        "legacy": "Oude momentopname; brondetails niet beschikbaar.",
-        "cached": "Gecachede momentopname tonen; vernieuwen niet beschikbaar."
-      },
-      "trackedAnnualized": "Bijgehouden platformschenkingen — geannualiseerde schatting",
-      "annualizedDaily": "Dagelijkse geannualiseerde schatting",
-      "atLeast": "Minstens",
-      "about": "Ongeveer",
-      "sourceNotVerified": "Bron niet geverifieerd",
-      "reportedCumulative": "Gerapporteerd cumulatief totaal",
-      "sourcePeriod": "{{source}} · {{period}}",
-      "benchmark": "Gepubliceerde benchmark",
-      "sourcesMethodology": "Bronnen en methodologie",
-      "methodologyIntro": "Alleen geverifieerde jaarlijkse of verdedigbaar geannualiseerde platformclaims komen in de kop. Cumulatieve en institutionele cijfers blijven afzonderlijke context.",
-      "partialEstimate": "Gedeeltelijk geverifieerde schatting"
-    },
     "supplyChain": {
       "chokepoints": "Knelpunten",
       "disruption": "Verstoring",
@@ -1623,18 +1571,6 @@
       "partialTransitCoverage": "{{names}} transitgegevens niet beschikbaar",
       "oilPipelinesUnavailable": "Oliepijplijngegevens niet beschikbaar",
       "gasPipelinesUnavailable": "Gaspijplijngegevens niet beschikbaar"
-    },
-    "positiveNewsFeed": {
-      "noStories": "Nog geen verhalen in deze categorie"
-    },
-    "goodThingsDigest": {
-      "noStories": "Geen verhalen beschikbaar",
-      "summarizing": "Samenvatten…"
-    },
-    "progressCharts": {
-      "noData": "Geen voortgangsgegevens beschikbaar",
-      "fallbackBadge": "Statische fallback-gegevens worden weergegeven — live-reeks niet beschikbaar",
-      "fallbackTooltip": "Het live World Bank-zaad kon niet worden bereikt. Deze grafieken worden weergegeven op basis van een hardcoded snapshot die voor het laatst is geverifieerd in februari 2026."
     },
     "settings": {
       "exportSettings": "Instellingen exporteren",
@@ -1738,9 +1674,6 @@
     },
     "cotPositioning": {
       "infoTooltip": "<strong>Futures positioning</strong> Wekelijkse nettoposities voor commerciële handelaren, grote speculanten en kleine handelaren in grondstof- en financiële futures. Bron: Commitments of Traders-rapport van de Commodity Futures Trading Commission, gepubliceerd op vrijdagen."
-    },
-    "counters": {
-      "infoTooltip": "<strong>Live tellers</strong> Geëxtrapoleerde realtimetellers voor mondiale statistieken: militaire uitgaven, natuurrampen, ziektelast en meer. Cijfers zijn statistische schattingen op basis van jaarlijkse datacijfers."
     },
     "diseaseOutbreaks": {
       "infoTooltip": "<strong>Ziekte-uitbraken</strong> Actieve uitbraakwaarschuwingen van WHO, ProMED en ministeries van gezondheid. Volgt bevestigde uitbraken, getroffen regio's, aantallen gevallen en dreigingsniveaus. Wordt bijgewerkt bij publicatie van nieuwe rapporten.",
@@ -1884,17 +1817,11 @@
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Aandeel hernieuwbare energie in elektriciteitsproductie per regio en jaar, plus US-installaties voor zonne-, wind- en kolenenergie (MW). Bronnen: World Bank (EG.ELC.RNEW.ZS) en US Energy Information Administration."
     },
-    "conservationWins": {
-      "infoTooltip": "<strong>Natuurbehoudssuccessen</strong> Positief natuurbehoudsnieuws: herstel van dierenpopulaties, mijlpalen in habitatherstel en de-extinctie-inspanningen. Bron: IUCN, WWF en natuurbehoudsonderzoekspublicaties."
-    },
     "worldClock": {
       "infoTooltip": "<strong>Wereldklok</strong> Live lokale tijden en marktconsultstatus voor grote mondiale financiële centra. Toont open/gesloten status voor NYSE, LSE, TSE, SGX en andere beurzen."
     },
     "yieldCurve": {
       "infoTooltip": "<strong>Yield Curve &amp; Rates</strong> US Treasury yield curve (2Y, 5Y, 10Y, 30Y) en belangrijke spread-indicatoren inclusief de 10Y-2Y inversie-indicator. Toont ook eurozone-rente (EURIBOR, ESTR). Een geïnverteerde curve voorafgaat historisch gezien aan recessies. Bron: Federal Reserve Economic Data."
-    },
-    "breakthroughsTicker": {
-      "noData": "Nog geen wetenschappelijke doorbraken"
     },
     "oilInventories": {
       "infoTooltip": "<strong>Olievoorraden</strong> Amerikaanse commerciële ruwe olie en strategische reserves, aardgasvoorraden, Europese gasopslag en olievoorraaddekking. Bronnen omvatten het US Energy Information Administration en het International Energy Agency."
@@ -3938,7 +3865,6 @@
     "retry": "Opnieuw proberen",
     "refresh": "Verversen",
     "all": "Alle",
-    "loadingGiving": "Donatiegegevens laden...",
     "rateLimitedMarket": "Marktgegevens tijdelijk beperkt — automatisch opnieuw proberen",
     "cancel": "Annuleren",
     "dismiss": "Sluiten"
@@ -4019,8 +3945,6 @@
     "panelCatCommodityPrices": "Prijzen & Markten",
     "panelCatMining": "Mijnbouw & Supply Chain",
     "panelCatCommodityEcon": "Economie & Handel",
-    "panelCatHappyNews": "Goed Nieuws",
-    "panelCatHappyPlanet": "Planeet & Geven",
     "embed": "Insluiten"
   },
   "countryBrief": {
@@ -4875,9 +4799,6 @@
       "map": "Energieatlas-kaart",
       "liveNews": "Energiekoppen",
       "insights": "AI-energieinzichten"
-    },
-    "happy": {
-      "map": "Goed nieuws-kaart"
     }
   },
   "pwaInstall": {
@@ -5606,7 +5527,6 @@
   },
   "personalChrome": {
     "timeRange": "TIME RANGE",
-    "goodNews": "Good News",
     "mission": "Mission",
     "activeMission": "Mission: {{name}}"
   }

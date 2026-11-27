@@ -93,7 +93,7 @@ async function expectPopulatedEnergyMapLayers(page: Page): Promise<void> {
 }
 
 test.describe('bootstrap request budget (#7046)', () => {
-  for (const variant of ['full', 'happy'] as const) {
+  for (const variant of ['full', ] as const) {
     test(`${variant} startup makes no energy registry requests`, async ({ page }) => {
       const log = await installBootstrapAccounting(page);
       await seedAnonymousDashboard(page, variant);

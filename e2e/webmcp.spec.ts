@@ -54,7 +54,6 @@ const PRODUCTION_DASHBOARDS = [
   { origin: 'https://tech.worldmonitor.app', variant: 'tech' },
   { origin: 'https://finance.worldmonitor.app', variant: 'finance' },
   { origin: 'https://commodity.worldmonitor.app', variant: 'commodity' },
-  { origin: 'https://happy.worldmonitor.app', variant: 'happy' },
   { origin: 'https://energy.worldmonitor.app', variant: 'energy' },
 ] as const;
 

@@ -375,8 +375,6 @@
     "panelCatCommodityPrices": "가격 & 시장",
     "panelCatMining": "채굴 & 공급망",
     "panelCatCommodityEcon": "경제 & 무역",
-    "panelCatHappyNews": "좋은 소식",
-    "panelCatHappyPlanet": "지구 & 기부",
     "embed": "삽입"
   },
   "panels": {
@@ -421,7 +419,6 @@
     "stablecoins": "스테이블코인",
     "deduction": "상황 추론",
     "ucdpEvents": "UCDP 분쟁 사건",
-    "giving": "글로벌 기부",
     "displacement": "난민 및 국내실향민",
     "climate": "기후 이상",
     "populationExposure": "인구 노출",
@@ -847,18 +844,6 @@
     }
   },
   "components": {
-    "positiveNewsFeed": {
-      "noStories": "이 카테고리에 아직 기사가 없습니다"
-    },
-    "goodThingsDigest": {
-      "noStories": "기사가 없습니다",
-      "summarizing": "요약 중…"
-    },
-    "progressCharts": {
-      "noData": "진행 데이터가 없습니다",
-      "fallbackBadge": "정적 폴백 데이터를 표시 중 — 실시간 시리즈 불가",
-      "fallbackTooltip": "World Bank 실시간 시드에 연결할 수 없습니다. 이 차트는 2026년 2월에 마지막으로 확인된 하드코딩된 스냅샷에서 렌더링되었습니다."
-    },
     "monitor": {
       "placeholder": "키워드 (쉼표로 구분)",
       "add": "+ 모니터 추가",
@@ -1264,10 +1249,6 @@
         "iranAttacks": "중동 공격",
         "gpsJamming": "항법 간섭",
         "ciiChoropleth": "국가 불안정성",
-        "positiveEvents": "긍정적 사건",
-        "kindness": "선행",
-        "happiness": "세계 행복도",
-        "speciesRecovery": "종 복원",
         "renewableInstallations": "클린 에너지",
         "notamAirspace": "NOTAM 공역 제한",
         "no2Activity": "산업 활동",
@@ -1692,53 +1673,6 @@
       "moreNotShown": "{{count}}건의 추가 사건 미표시",
       "infoTooltip": "<strong>UCDP 지리참조 사건</strong> 웁살라 대학교의 사건 수준 분쟁 데이터.<ul><li><strong>국가 기반</strong>: 정부 대 반군</li><li><strong>비국가</strong>: 무장 단체 대 무장 단체</li><li><strong>일방적</strong>: 민간인 대상 폭력</li></ul>사망자는 최선 추정치(하한-상한 범위)로 표시. ACLED 중복은 자동으로 필터링됩니다."
     },
-    "giving": {
-      "activityIndex": "활동 지수",
-      "trend": "추세",
-      "estDailyFlow": "일일 추정 흐름",
-      "cryptoDaily": "암호화폐 일일",
-      "tabs": {
-        "platforms": "플랫폼",
-        "categories": "카테고리",
-        "crypto": "암호화폐",
-        "institutional": "기관"
-      },
-      "platform": "플랫폼",
-      "dailyVol": "일일 거래량",
-      "velocity": "속도",
-      "freshness": "데이터",
-      "category": "카테고리",
-      "share": "비율",
-      "trending": "추세",
-      "dailyInflow": "24시간 유입",
-      "wallets": "지갑",
-      "ofTotal": "전체 비율",
-      "topReceivers": "상위 수혜자",
-      "oecdOda": "경제협력개발기구 공적개발원조",
-      "cafIndex": "CAF 지수",
-      "candidGrants": "Candid 보조금",
-      "dataLag": "데이터 지연",
-      "infoTooltip": "<strong>글로벌 기부 활동 지수</strong> 크라우드펀딩 플랫폼 및 암호화폐 지갑을 통한 개인 기부를 추적하는 종합 지수.<ul><li><strong>플랫폼</strong>: GoFundMe, GlobalGiving, JustGiving 캠페인 샘플링</li><li><strong>암호화폐</strong>: 온체인 자선 지갑 유입 (Endaoment, Giving Block)</li><li><strong>기관</strong>: OECD ODA, CAF 세계 기부 지수, Candid 보조금</li></ul>지수는 방향성 지표입니다 (정확한 금액 아님). 실시간 샘플링과 연간 보고서를 결합합니다.",
-      "benchmarkTitle": "글로벌 기부 벤치마크",
-      "benchmarkInfoTooltip": "<strong>글로벌 기부 벤치마크</strong> 출처 기간 및 검증 상태와 함께 게시된 플랫폼 및 기관 주장. 연환산 수치는 추정값이며 실시간 활동이 아닙니다.",
-      "status": {
-        "published": "검증된 출처 범위의 게시된 벤치마크.",
-        "partial": "부분적인 출처 범위의 게시된 벤치마크.",
-        "legacy": "레거시 스냅샷; 출처 세부 정보를 사용할 수 없습니다.",
-        "cached": "캐시된 스냅샷 표시 중; 새로 고침 불가."
-      },
-      "trackedAnnualized": "추적된 플랫폼 기부 — 연환산 추정",
-      "annualizedDaily": "일별 연환산 추정",
-      "atLeast": "최소",
-      "about": "약",
-      "sourceNotVerified": "출처 미검증",
-      "reportedCumulative": "보고된 누적 합계",
-      "sourcePeriod": "{{source}} · {{period}}",
-      "benchmark": "게시된 벤치마크",
-      "sourcesMethodology": "출처 및 방법론",
-      "methodologyIntro": "검증된 연간 또는 방어 가능하게 연환산된 플랫폼 주장만 헤드라인에 포함됩니다. 누적 및 기관 수치는 별도의 맥락으로 남습니다.",
-      "partialEstimate": "부분적으로 검증된 추정"
-    },
     "displacement": {
       "refugees": "난민",
       "asylumSeekers": "망명 신청자",
@@ -2124,9 +2058,6 @@
     "cotPositioning": {
       "infoTooltip": "<strong>선물 포지셔닝</strong> 상품 및 금융 선물 전반에서 상용 거래자, 대규모 투기자, 소규모 거래자의 주간 순 포지션. 출처는 상품 선물 거래 위원회 거래자 약정 보고서(금요일 발행)."
     },
-    "counters": {
-      "infoTooltip": "<strong>실시간 카운터</strong> 글로벌 지표의 실시간 추정 카운터: 군사비, 자연재해, 질병 부담 등. 수치는 연간 데이터 비율에 기반한 통계적 추정치."
-    },
     "diseaseOutbreaks": {
       "infoTooltip": "<strong>질병 발생</strong> WHO, ProMED 및 보건부의 활성 발생 경보. 확인된 발생, 영향 지역, 사례 수, 위협 수준을 추적. 새 보고서 발표 시 업데이트.",
       "title": "질병 발생",
@@ -2264,17 +2195,11 @@
     "renewable": {
       "infoTooltip": "<strong>재생 에너지</strong> 지역 및 연도별 재생 에너지 발전 점유율, 미국의 태양광, 풍력, 석탄 설치 용량(MW). 출처: 세계은행(EG.ELC.RNEW.ZS) 및 미국 에너지정보청."
     },
-    "conservationWins": {
-      "infoTooltip": "<strong>보전 성과</strong> 긍정적 보전 뉴스: 종 개체수 회복, 서식지 복원 이정표, 탈멸종 노력. 출처: IUCN, WWF 및 보전 연구 간행물."
-    },
     "worldClock": {
       "infoTooltip": "<strong>세계 시계</strong> 주요 글로벌 금융 센터의 실시간 현지 시간 및 마켓 세션 상태. NYSE, LSE, TSE, SGX 등 거래소의 개장/폐장 상태 표시."
     },
     "yieldCurve": {
       "infoTooltip": "<strong>수익률 곡선 & 금리</strong> 미국 국고채 수익률 곡선(2년, 5년, 10년, 30년) 및 10년-2년 반전 지표를 포함한 주요 금리 스프레드. 유로존 금리(EURIBOR, ESTR)도 표시. 역전된 곡선은 역사적으로 경기 침체 선행. 출처: 연방준비제도 경제 데이터."
-    },
-    "breakthroughsTicker": {
-      "noData": "과학 돌파구 없음"
     },
     "oilInventories": {
       "infoTooltip": "<strong>석유 재고</strong> 미국 상업용 원유 및 전략 비축유, 천연가스 재고, 유럽 가스 저장소, 석유 재고 커버. 미국 에너지정보청 및 국제에너지기구 데이터 포함."
@@ -4267,7 +4192,6 @@
     "calculatingExposure": "노출도 계산 중",
     "computingSignals": "신호 연산 중...",
     "loadingEtfData": "상장지수펀드 데이터 로드 중...",
-    "loadingGiving": "글로벌 원조 정보 불러오는 중",
     "loadingDisplacement": "실향민 정보 불러오는 중",
     "loadingClimateData": "기후 정보 불러오는 중",
     "failedTechReadiness": "기술 준비도 정보 로드 실패",
@@ -4861,9 +4785,6 @@
       "map": "에너지 지도",
       "liveNews": "에너지 헤드라인",
       "insights": "AI 에너지 인사이트"
-    },
-    "happy": {
-      "map": "긍정 뉴스 지도"
     }
   },
   "pwaInstall": {
@@ -5581,7 +5502,6 @@
   },
   "personalChrome": {
     "timeRange": "시간 범위",
-    "goodNews": "좋은 소식",
     "mission": "관심 주제",
     "activeMission": "관심 주제: {{name}}"
   }

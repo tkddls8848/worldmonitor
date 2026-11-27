@@ -17,7 +17,6 @@ export const MCP_PRODUCTION_ALIAS_LABELS = [
   'tech',
   'finance',
   'commodity',
-  'happy',
   'energy',
 ] as const;
 

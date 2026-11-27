@@ -7,7 +7,6 @@ import type { CyberServiceClientOptions } from '@/generated/client/worldmonitor/
 import type { DisplacementServiceClientOptions } from '@/generated/client/worldmonitor/displacement/v1/service_client';
 import type { EconomicServiceClientOptions } from '@/generated/client/worldmonitor/economic/v1/service_client';
 import type { ForecastServiceClientOptions } from '@/generated/client/worldmonitor/forecast/v1/service_client';
-import type { GivingServiceClientOptions } from '@/generated/client/worldmonitor/giving/v1/service_client';
 import type { HealthServiceClientOptions } from '@/generated/client/worldmonitor/health/v1/service_client';
 import type { InfrastructureServiceClientOptions } from '@/generated/client/worldmonitor/infrastructure/v1/service_client';
 import type { IntelligenceServiceClientOptions } from '@/generated/client/worldmonitor/intelligence/v1/service_client';
@@ -15,7 +14,6 @@ import type { MaritimeServiceClientOptions } from '@/generated/client/worldmonit
 import type { MilitaryServiceClientOptions } from '@/generated/client/worldmonitor/military/v1/service_client';
 import type { NaturalServiceClientOptions } from '@/generated/client/worldmonitor/natural/v1/service_client';
 import type { NewsServiceClientOptions } from '@/generated/client/worldmonitor/news/v1/service_client';
-import type { PositiveEventsServiceClientOptions } from '@/generated/client/worldmonitor/positive_events/v1/service_client';
 import type { PredictionServiceClientOptions } from '@/generated/client/worldmonitor/prediction/v1/service_client';
 import type { RadiationServiceClientOptions } from '@/generated/client/worldmonitor/radiation/v1/service_client';
 import type { ResearchServiceClientOptions } from '@/generated/client/worldmonitor/research/v1/service_client';
@@ -56,7 +54,6 @@ export type LazyRpcClientOptionsDriftChecks = AssertAllOptionsMatch<[
   AssertOptionsMatch<MarketServiceClientOptions, DisplacementServiceClientOptions>,
   AssertOptionsMatch<MarketServiceClientOptions, EconomicServiceClientOptions>,
   AssertOptionsMatch<MarketServiceClientOptions, ForecastServiceClientOptions>,
-  AssertOptionsMatch<MarketServiceClientOptions, GivingServiceClientOptions>,
   AssertOptionsMatch<MarketServiceClientOptions, HealthServiceClientOptions>,
   AssertOptionsMatch<MarketServiceClientOptions, InfrastructureServiceClientOptions>,
   AssertOptionsMatch<MarketServiceClientOptions, IntelligenceServiceClientOptions>,
@@ -64,7 +61,6 @@ export type LazyRpcClientOptionsDriftChecks = AssertAllOptionsMatch<[
   AssertOptionsMatch<MarketServiceClientOptions, MilitaryServiceClientOptions>,
   AssertOptionsMatch<MarketServiceClientOptions, NaturalServiceClientOptions>,
   AssertOptionsMatch<MarketServiceClientOptions, NewsServiceClientOptions>,
-  AssertOptionsMatch<MarketServiceClientOptions, PositiveEventsServiceClientOptions>,
   AssertOptionsMatch<MarketServiceClientOptions, PredictionServiceClientOptions>,
   AssertOptionsMatch<MarketServiceClientOptions, RadiationServiceClientOptions>,
   AssertOptionsMatch<MarketServiceClientOptions, ResearchServiceClientOptions>,

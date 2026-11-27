@@ -21,8 +21,6 @@ const {
   GDELT_BULK_UNREST_KEY,
   GDELT_INTEL_KEY,
   gdeltBulkContentMeta,
-  POSITIVE_EVENTS_BOOTSTRAP_KEY,
-  POSITIVE_EVENTS_RPC_KEY,
   RUN_SEED_OPTS,
 } = await import('../scripts/seed-gdelt-bulk-materializer.mjs');
 const { __testing__: { classifyKey } } = await import('../api/health.js');
@@ -340,7 +338,6 @@ function publicationData() {
     _conflict: { events: [{ id: 'c1' }] },
     _worldPairs: { trends: Object.fromEntries(Array.from({ length: 435 }, (_, i) => [`pair-${i}`, {}])), hours: {} },
     _unrest: { events: [{ id: 'u1' }] },
-    _positive: { events: [{ name: 'p1' }] },
     _reference: { articles: [{ title: 'r1' }] },
     _countryIndex: { byCountry: { PW: [{ title: 'Palau signs maritime pact' }] }, fetchedAt: '2026-07-30T12:05:00.000Z' },
     _state: { cursor: { gkg: '20260730120000', export: '20260730120000' } },
@@ -869,8 +866,6 @@ describe('seed-gdelt-bulk-materializer publication cohort', () => {
       GDELT_BULK_UNREST_KEY,
       GDELT_BULK_ARTICLES_KEY,
       GDELT_BULK_COUNTRY_ARTICLES_KEY,
-      POSITIVE_EVENTS_RPC_KEY,
-      POSITIVE_EVENTS_BOOTSTRAP_KEY,
       GDELT_BULK_STATE_KEY,
     ]) {
       assert.ok(writes.some((write) => write.key === key), `missing write for ${key}`);
@@ -891,10 +886,6 @@ describe('seed-gdelt-bulk-materializer publication cohort', () => {
     assert.equal(countryIndexWrite.args[2], 2 * 86_400);
     assert.equal(countryIndexWrite.args[3], 1, 'recordCount is the row total across countries');
     assert.equal(countryIndexWrite.args[4], COUNTRY_ARTICLES_META_KEY);
-    assert.equal(
-      writes.find(({ key }) => key === POSITIVE_EVENTS_RPC_KEY).type,
-      'meta',
-    );
     assert.equal(
       writes.find(({ key }) => key === 'gdelt:intel:tone:military').value.fetchedAt,
       data._timelines.military.toneFetchedAt,
@@ -960,9 +951,6 @@ describe('seed-gdelt-bulk-materializer publication cohort', () => {
       { key: GDELT_BULK_ARTICLES_KEY, ttlSeconds: 2 * 86_400 },
       { key: GDELT_BULK_COUNTRY_ARTICLES_KEY, ttlSeconds: 2 * 86_400 },
       { key: COUNTRY_ARTICLES_META_KEY, ttlSeconds: 7 * 86_400 },
-      { key: POSITIVE_EVENTS_RPC_KEY, ttlSeconds: 3 * 60 * 60 },
-      { key: POSITIVE_EVENTS_BOOTSTRAP_KEY, ttlSeconds: 3 * 60 * 60 },
-      { key: 'seed-meta:positive-events:geo', ttlSeconds: 7 * 86_400 },
       { key: GDELT_BULK_STATE_KEY, ttlSeconds: 14 * 86_400 },
     ];
     assert.deepEqual(RUN_SEED_OPTS.preserveKeyTtls, expected);
@@ -1171,22 +1159,6 @@ describe('gdelt materializer freshness constants stay in lockstep (#5864)', () =
     assert.equal(countryIndexRecordCount(null), 0);
   });
 
-  it('every published product outlives the staleness budget that gates it', () => {
-    // A TTL at or under its gate expires the payload before the staleness warn
-    // can fire, paging EMPTY/crit for a merely-late tick (#5309 / #5864).
-    const ttlByKey = new Map(
-      RUN_SEED_OPTS.preserveKeyTtls.map(({ key, ttlSeconds }) => [key, ttlSeconds]),
-    );
-    const positiveTtl = ttlByKey.get(POSITIVE_EVENTS_BOOTSTRAP_KEY);
-    assert.ok(positiveTtl, 'the bootstrap key must carry a preserved TTL');
-    const healthSrc = read('../api/health.js');
-    const gate = healthSrc.match(/positiveGeoEvents:\s*\{[^}]*maxStaleMin:\s*(\d+)/);
-    assert.ok(gate, 'api/health.js must gate positiveGeoEvents');
-    assert.ok(
-      positiveTtl > Number(gate[1]) * 60,
-      `positive-events TTL ${positiveTtl}s must outlive its ${gate[1]}min health gate`,
-    );
-  });
 });
 
 describe('dyad health activation', () => {

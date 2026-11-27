@@ -381,8 +381,6 @@
     "panelCatCommodityPrices": "Ceny a trhy",
     "panelCatMining": "Těžba a dodavatelský řetězec",
     "panelCatCommodityEcon": "Ekonomika a obchod",
-    "panelCatHappyNews": "Dobré zprávy",
-    "panelCatHappyPlanet": "Planeta a dárcovství",
     "embed": "Vložit"
   },
   "panels": {
@@ -427,7 +425,6 @@
     "stablecoins": "Stablecoiny",
     "deduction": "Dedukce situace",
     "ucdpEvents": "UCDP Konflikty",
-    "giving": "Globální dárcovství",
     "displacement": "Uprchlíci a přesídlení",
     "climate": "Klimatické anomálie",
     "populationExposure": "Expozice obyvatelstva",
@@ -1261,10 +1258,6 @@
         "iranAttacks": "Útoky na Blízkém východě",
         "gpsJamming": "Rušení navigace",
         "ciiChoropleth": "Nestabilita zemí",
-        "positiveEvents": "Pozitivní události",
-        "kindness": "Skutky laskavosti",
-        "happiness": "Světové štěstí",
-        "speciesRecovery": "Obnova druhů",
         "renewableInstallations": "Čistá energie",
         "notamAirspace": "Omezení vzdušného prostoru NOTAM",
         "no2Activity": "Průmyslová aktivita",
@@ -1678,53 +1671,6 @@
       "moreNotShown": "Nezobrazeno dalších událostí: {{count}}",
       "infoTooltip": "<strong>Georeferencované události UCDP</strong> Údaje o konfliktech na úrovni událostí z Uppsalské univerzity.<ul><li><strong>Státní</strong>: Vláda vs povstalecká skupina</li><li><strong>Nestátní</strong>: Ozbrojená skupina vs ozbrojená skupina</li><li><strong>Jednostranné</strong>: Násilí vůči civilistům</li></ul>Úmrtí zobrazena jako nejlepší odhad (rozmezí minimum-maximum). Duplikáty ACLED jsou automaticky odfiltrovány."
     },
-    "giving": {
-      "activityIndex": "Index aktivity",
-      "trend": "Trend",
-      "estDailyFlow": "Odhad. denní tok",
-      "cryptoDaily": "Krypto denně",
-      "tabs": {
-        "platforms": "Platformy",
-        "categories": "Kategorie",
-        "crypto": "Krypto",
-        "institutional": "Institucionální"
-      },
-      "platform": "Platforma",
-      "dailyVol": "Denní obj.",
-      "velocity": "Rychlost",
-      "freshness": "Data",
-      "category": "Kategorie",
-      "share": "Podíl",
-      "trending": "TREND",
-      "dailyInflow": "Příliv za 24h",
-      "wallets": "Peněženky",
-      "ofTotal": "% z celku",
-      "topReceivers": "Největší příjemci",
-      "oecdOda": "Oficiální rozvojová asistence Organizace pro hospodářskou spolupráci a rozvoj",
-      "cafIndex": "Index CAF",
-      "candidGrants": "Granty Candid",
-      "dataLag": "Zpoždění dat",
-      "infoTooltip": "<strong>Index globální dárcovské aktivity</strong> Kompozitní index sledující osobní dárcovství napříč crowdfundingovými platformami a krypto peněženkami.<ul><li><strong>Platformy</strong>: Vzorkování kampaní GoFundMe, GlobalGiving, JustGiving</li><li><strong>Krypto</strong>: Příliv do on-chain charitativních peněženek (Endaoment, Giving Block)</li><li><strong>Institucionální</strong>: OECD ODA, CAF World Giving Index, granty Candid</li></ul>Index je orientační (ne přesné částky v dolarech). Kombinuje živé vzorkování s publikovanými výročními zprávami.",
-      "benchmarkTitle": "Globální srovnávací hodnoty darování",
-      "benchmarkInfoTooltip": "<strong>Globální srovnávací hodnoty darování</strong> Zveřejněná tvrzení platforem a institucí se zdrojovými obdobími a stavem ověření. Anualizované hodnoty jsou odhady, nikoli aktivita v reálném čase.",
-      "status": {
-        "published": "Zveřejněné srovnávací hodnoty s ověřeným pokrytím zdrojů.",
-        "partial": "Zveřejněné srovnávací hodnoty s částečným pokrytím zdrojů.",
-        "legacy": "Starý snímek; podrobnosti zdroje nejsou k dispozici.",
-        "cached": "Zobrazení snímku z mezipaměti; obnovení není k dispozici."
-      },
-      "trackedAnnualized": "Sledované dary platformy — anualizovaný odhad",
-      "annualizedDaily": "Denní anualizovaný odhad",
-      "atLeast": "Nejméně",
-      "about": "Přibližně",
-      "sourceNotVerified": "Zdroj neověřen",
-      "reportedCumulative": "Hlášený kumulativní součet",
-      "sourcePeriod": "{{source}} · {{period}}",
-      "benchmark": "Zveřejněná srovnávací hodnota",
-      "sourcesMethodology": "Zdroje a metodologie",
-      "methodologyIntro": "Do titulku vstupují pouze ověřená roční nebo obhajitelně anualizovaná tvrzení platforem. Kumulativní a institucionální hodnoty zůstávají samostatným kontextem.",
-      "partialEstimate": "Částečně ověřený odhad"
-    },
     "displacement": {
       "refugees": "Uprchlíci",
       "asylumSeekers": "Žadatelé o azyl",
@@ -2021,18 +1967,6 @@
       "hideMap": "Skrýt mapu",
       "clearTrails": "Vymazat stopy"
     },
-    "positiveNewsFeed": {
-      "noStories": "V této kategorii zatím nejsou žádné příběhy"
-    },
-    "goodThingsDigest": {
-      "noStories": "Žádné příběhy k dispozici",
-      "summarizing": "Shrnutí se vytváří…"
-    },
-    "progressCharts": {
-      "noData": "Žádná data o pokroku",
-      "fallbackBadge": "Zobrazuji statická záložní data — živý přenos není dostupný",
-      "fallbackTooltip": "Nelze dosáhnout živého zdroje Světové banky. Tyto grafy jsou vykresleny ze zaznamenaného snímku naposledy ověřeného v únoru 2026."
-    },
     "settings": {
       "exportSettings": "Exportovat nastavení",
       "importSettings": "Importovat nastavení",
@@ -2130,9 +2064,6 @@
     },
     "cotPositioning": {
       "infoTooltip": "<strong>Futures positioning</strong> Týdenní čisté pozice komerčních obchodníků, velkých spekulantů a malých obchodníků v komoditních a finančních futures. Zdroj: Commitments of Traders zpráva od Commodity Futures Trading Commission, zveřejněna v pátek."
-    },
-    "counters": {
-      "infoTooltip": "<strong>Živé počítadla</strong> Extrapolovaná počítadla v reálném čase pro globální metriky: vojenské výdaje, přírodní katastrofy, zátěž nemocemi a další. Čísla jsou statistické odhady založené na ročních datových sazbách."
     },
     "diseaseOutbreaks": {
       "infoTooltip": "<strong>Epidemická ohniska</strong> Aktivní upozornění na ohniska od WHO, ProMED a ministerstev zdravotnictví. Sleduje potvrzená ohniska, zasažené regiony, počty případů a úrovně hrozby. Aktualizováno při publikaci nových zpráv.",
@@ -2286,17 +2217,11 @@
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Podíl elektřiny z obnovitelných zdrojů dle regionu a roku, plus nainstalovaná kapacita v USA pro slunečníenergie, větrnou energii a uhlí (MW). Zdroje: Světová banka (EG.ELC.RNEW.ZS) a US Energy Information Administration."
     },
-    "conservationWins": {
-      "infoTooltip": "<strong>Úspěchy v ochraně přírody</strong> Pozitivní zprávy o ochraně přírody: obnova populací druhů, milníky v obnově biotopů a snahy o de-extinkci. Zdroj: IUCN, WWF a publikace výzkumu v oblasti ochrany."
-    },
     "worldClock": {
       "infoTooltip": "<strong>Světové hodiny</strong> Místní čas v reálném čase a stav tržních seancí pro hlavní globální finanční centra. Zobrazuje stav otevřeno/zavřeno pro NYSE, LSE, TSE, SGX a další burzy."
     },
     "yieldCurve": {
       "infoTooltip": "<strong>Yield Curve &amp; Rates</strong> Křivka výnosů amerických státních dluhopisů (2Y, 5Y, 10Y, 30Y) a klíčové rozpětí sazeb včetně indikátoru inverze 10Y-2Y. Také zobrazuje sazby eurozóny (EURIBOR, ESTR). Invertovaná křivka historicky předchází recesím. Zdroj: Federal Reserve Economic Data."
-    },
-    "breakthroughsTicker": {
-      "noData": "Zatím žádné vědecké objevy"
     },
     "oilInventories": {
       "infoTooltip": "<strong>Zásoby ropy</strong> Americké komerční zásyby surové ropy a strategické rezervy, zásoby zemního plynu, skladování evropského plynu a pokrytí zásob ropy. Zdroje zahrnují US Energy Information Administration a Mezinárodní energetickou agenturu."
@@ -4325,7 +4250,6 @@
     "calculatingExposure": "Výpočet expozice",
     "computingSignals": "Výpočet signálů...",
     "loadingEtfData": "Načítání dat fondů obchodovaných na burzách...",
-    "loadingGiving": "Načítání dat o globálním dárcovství",
     "loadingDisplacement": "Načítání dat o vysídlení",
     "loadingClimateData": "Načítání dat o klimatu",
     "failedTechReadiness": "Nepodařilo se načíst data o tech připravenosti",
@@ -4919,9 +4843,6 @@
       "map": "Mapa energetiky",
       "liveNews": "Zprávy z energetiky",
       "insights": "AI postřehy o energetice"
-    },
-    "happy": {
-      "map": "Mapa dobrých zpráv"
     }
   },
   "pwaInstall": {
@@ -5672,7 +5593,6 @@
   },
   "personalChrome": {
     "timeRange": "TIME RANGE",
-    "goodNews": "Good News",
     "mission": "Mission",
     "activeMission": "Mission: {{name}}"
   }

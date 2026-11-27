@@ -42,7 +42,7 @@ export const PANEL_SCOPE_BEHAVIOUR: Readonly<Record<string, PanelScopeBehaviour>
   progress: 'global', // Human Progress
   counters: 'global', // Live Counters
   renewable: 'global', // Renewable Energy
-  giving: 'global', // Global Giving
+   // Global Giving
   'liquidity-shifts': 'global', // Liquidity Shifts
   'news-market-correlation': 'global', // News ↔ Markets
   'positioning-247': 'global', // 24/7 Positioning

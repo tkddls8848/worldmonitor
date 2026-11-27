@@ -379,8 +379,6 @@
     "panelCatCommodityPrices": "Prețuri și piețe",
     "panelCatMining": "Minerit și lanț de aprovizionare",
     "panelCatCommodityEcon": "Economie și comerț",
-    "panelCatHappyNews": "Știri bune",
-    "panelCatHappyPlanet": "Planetă și donații",
     "embed": "Încorporează"
   },
   "panels": {
@@ -425,7 +423,6 @@
     "stablecoins": "Monede stabile",
     "deduction": "Deducție Situație",
     "ucdpEvents": "Evenimente de conflict armat",
-    "giving": "Donații Globale",
     "displacement": "Refugiați și deplasări forțate",
     "climate": "Anomalii climatice",
     "populationExposure": "Expunerea populației",
@@ -853,18 +850,6 @@
     }
   },
   "components": {
-    "positiveNewsFeed": {
-      "noStories": "Încă nu există povești în această categorie"
-    },
-    "goodThingsDigest": {
-      "noStories": "Nu există povești disponibile",
-      "summarizing": "Rezumat..."
-    },
-    "progressCharts": {
-      "noData": "Nu sunt disponibile date despre progres",
-      "fallbackBadge": "Se afișează date statice de rezervă — seria live nu este disponibilă",
-      "fallbackTooltip": "Live World Bank seed nu a putut fi accesat. Aceste grafice sunt renderizate dintr-un snapshot codificat verificat ultima dată februarie 2026."
-    },
     "monitor": {
       "placeholder": "Cuvinte cheie (separate prin virgulă)",
       "add": "+ Adăugați monitor",
@@ -1270,10 +1255,6 @@
         "iranAttacks": "Atacuri în Orientul Mijlociu",
         "gpsJamming": "Interferență navigație",
         "ciiChoropleth": "Instabilitate țară",
-        "positiveEvents": "Evenimente pozitive",
-        "kindness": "Acte de bunătate",
-        "happiness": "Fericirea mondială",
-        "speciesRecovery": "Recuperarea speciilor",
         "renewableInstallations": "Energie curată",
         "notamAirspace": "Restricții de spațiu aerian NOTAM",
         "no2Activity": "Activitate industrială",
@@ -1694,53 +1675,6 @@
       "moreNotShown": "{{count}} mai multe evenimente nu sunt afișate",
       "infoTooltip": "<strong>Evenimente de conflict armat</strong> Date despre conflict la nivel de eveniment de la Universitatea Uppsala (UCDP).<ul><li><strong>De stat</strong>: Guvern vs grup rebel</li><li><strong>Non-statal</strong>: Grup armat vs grup armat</li><li><strong>Unilateral</strong>: Violența împotriva civililor este cea mai bună estimare (scăzut). Dublatele ACLED sunt filtrate automat."
     },
-    "giving": {
-      "activityIndex": "Index de activitate",
-      "trend": "Tendinţă",
-      "estDailyFlow": "EST. Flux zilnic",
-      "cryptoDaily": "Cripto zilnic",
-      "tabs": {
-        "platforms": "Platforme",
-        "categories": "Categorii",
-        "crypto": "Cripto",
-        "institutional": "Instituţional"
-      },
-      "platform": "Platformă",
-      "dailyVol": "Vol. zilnic",
-      "velocity": "Viteză",
-      "freshness": "Date",
-      "category": "Categorie",
-      "share": "Distribuie",
-      "trending": "TENDINŢĂ",
-      "dailyInflow": "Flux de 24 de ore",
-      "wallets": "Portofele",
-      "ofTotal": "% din total",
-      "topReceivers": "Principalii beneficiari",
-      "oecdOda": "Asistență oficială pentru dezvoltare Organizația pentru Cooperare și Dezvoltare Economică",
-      "cafIndex": "Indicele CAF",
-      "candidGrants": "Granturi Candid",
-      "dataLag": "Întârziere date",
-      "infoTooltip": "<strong>Indexul activității globale de donații</strong> Index compozit care urmărește donațiile personale pe platformele de crowdfunding și portofelele cripto.<ul><li><strong>Platforme</strong>: eșantionarea campaniilor GoFundMe, GlobalGiving, JustGiving</li><li><strong>Crypto</strong>: fluxuri de portofel de caritate în lanț, fluxuri de portofel de caritate GivingEnda Bloc)</li><li><strong>Instituțional</strong>: ODA OECD, CAF World Giving Index, Granturi Candid</li></ul>Indexul este direcțional (nu sume exacte în dolari). Combină eșantionarea în direct cu rapoartele anuale publicate.",
-      "benchmarkTitle": "Repere globale pentru donații",
-      "benchmarkInfoTooltip": "<strong>Repere globale pentru donații</strong> Afirmații publicate ale platformelor și instituțiilor cu perioade sursă și status de verificare. Cifrele anuale sunt estimări, nu activitate în timp real.",
-      "status": {
-        "published": "Repere publicate cu acoperire sursă verificată.",
-        "partial": "Repere publicate cu acoperire sursă parțială.",
-        "legacy": "Instantaneu vechi; detaliile sursei sunt indisponibile.",
-        "cached": "Se afișează un instantaneu din cache; reîmprospătarea este indisponibilă."
-      },
-      "trackedAnnualized": "Donații platformă urmărite — estimare anuală",
-      "annualizedDaily": "Estimare zilnică anualizată",
-      "atLeast": "Cel puțin",
-      "about": "Aproximativ",
-      "sourceNotVerified": "Sursă neverificată",
-      "reportedCumulative": "Total cumulativ raportat",
-      "sourcePeriod": "{{source}} · {{period}}",
-      "benchmark": "Reper publicat",
-      "sourcesMethodology": "Surse și metodologie",
-      "methodologyIntro": "Numai afirmațiile anuale verificate sau anualizate în mod defensibil intră în titlu. Cifrele cumulative și instituționale rămân context separat.",
-      "partialEstimate": "Estimare parțial verificată"
-    },
     "displacement": {
       "refugees": "Refugiati",
       "asylumSeekers": "Solicitanții de azil",
@@ -2126,9 +2060,6 @@
     "cotPositioning": {
       "infoTooltip": "<strong>Futures positioning</strong> Poziții nete săptămânale pentru comercianți comerciali, speculatori mari și comercianți mici în futures pe mărfuri și futures financiare. Sursa este raportul Commitments of Traders al Comisiei pentru Comerțul cu Futures pe Mărfuri, publicat vineri."
     },
-    "counters": {
-      "infoTooltip": "<strong>Contoare în direct</strong> Contoare extrapolate în timp real pentru indicatori globali: cheltuieli militare, dezastre naturale, povara bolilor și altele. Cifrele sunt estimări statistice bazate pe ratele anuale ale datelor."
-    },
     "diseaseOutbreaks": {
       "infoTooltip": "<strong>Focare de boli</strong> Alerte active de focare de la WHO, ProMED și ministere ale sănătății. Urmărește focare confirmate, regiuni afectate, număr de cazuri și niveluri de amenințare. Actualizat la publicarea rapoartelor noi.",
       "title": "Focare de Boli",
@@ -2276,17 +2207,11 @@
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Ponderea generării de electricitate din surse regenerabile pe regiune și an, plus capacitate instalată în SUA pentru energie solară, vânt și cărbune (MW). Surse: Banca Mondială (EG.ELC.RNEW.ZS) și Administrația pentru Informații Energetice a SUA."
     },
-    "conservationWins": {
-      "infoTooltip": "<strong>Realizări în conservare</strong> Știri pozitive despre conservare: recuperarea populațiilor de specii, repere în restaurarea habitatelor și eforturi de de-extincție. Sursă: IUCN, WWF și publicații de cercetare în conservare."
-    },
     "worldClock": {
       "infoTooltip": "<strong>Ceas mondial</strong> Ore locale în timp real și starea sesiunilor de piață pentru principalele centre financiare globale. Afișează starea deschis/închis pentru NYSE, LSE, TSE, SGX și alte burse."
     },
     "yieldCurve": {
       "infoTooltip": "<strong>Yield Curve &amp; Rates</strong> Curba randamentului obligațiunilor de trezorerie americane (2Y, 5Y, 10Y, 30Y) și spread-uri ale ratelor cheie inclusiv indicatorul de inversare 10Y-2Y. De asemenea, arată ratele zonei euro (EURIBOR, ESTR). O curbă inversată a precedat istoric recesiunile. Sursă: Federal Reserve Economic Data."
-    },
-    "breakthroughsTicker": {
-      "noData": "Nicio descoperire științifică încă"
     },
     "oilInventories": {
       "infoTooltip": "<strong>Stocuri de petrol</strong> Rezerve crude comerciale și strategice SUA, stocuri de gaze naturale, depozitare de gaze în Europa și acoperire de stocuri de petrol. Sursele includ US Energy Information Administration și International Energy Agency."
@@ -4303,7 +4228,6 @@
     "calculatingExposure": "Calcularea expunerii",
     "computingSignals": "Semnale de calcul...",
     "loadingEtfData": "Se încarcă datele fondurilor cotate la bursă...",
-    "loadingGiving": "Se încarcă date globale",
     "loadingDisplacement": "Se încarcă datele de deplasare",
     "loadingClimateData": "Se încarcă datele climatice",
     "failedTechReadiness": "Nu s-au încărcat datele de pregătire tehnică",
@@ -4897,9 +4821,6 @@
       "map": "Atlasul Energetic",
       "liveNews": "Titluri Energetice",
       "insights": "Insight-uri AI pentru Energie"
-    },
-    "happy": {
-      "map": "Harta Știrilor Bune"
     }
   },
   "pwaInstall": {
@@ -5639,7 +5560,6 @@
   },
   "personalChrome": {
     "timeRange": "TIME RANGE",
-    "goodNews": "Good News",
     "mission": "Mission",
     "activeMission": "Mission: {{name}}"
   }

@@ -132,7 +132,6 @@ export function getIntelTopics(): IntelTopic[] {
 
 const getClient = createLazyClient(() => new IntelligenceServiceClient(getRpcBaseUrl(), { fetch: (...args) => globalThis.fetch(...args) }));
 const gdeltBreaker = createCircuitBreaker<SearchGdeltDocumentsResponse>({ name: 'GDELT Intelligence', cacheTtlMs: 10 * 60 * 1000, persistCache: true });
-const positiveGdeltBreaker = createCircuitBreaker<SearchGdeltDocumentsResponse>({ name: 'GDELT Positive', cacheTtlMs: 10 * 60 * 1000, persistCache: true });
 
 const emptyGdeltFallback: SearchGdeltDocumentsResponse = { articles: [], query: '', error: 'request-unavailable' };
 
@@ -314,51 +313,4 @@ export function extractDomain(url: string): string {
   } catch {
     return '';
   }
-}
-
-// ---- Positive GDELT queries (Happy variant) ----
-
-export async function fetchPositiveGdeltArticles(
-  query: string,
-  toneFilter = 'tone>5',
-  sort = 'ToneDesc',
-  maxrecords = 15,
-  timespan = '72h',
-): Promise<GdeltArticle[]> {
-  const cacheKey = JSON.stringify([query, maxrecords, timespan, toneFilter, sort]);
-  const cached = articleCache.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.articles;
-  }
-
-  const resp = await positiveGdeltBreaker.execute(async () => validatedGdeltResponse(await getClient().searchGdeltDocuments({
-    query,
-    maxRecords: maxrecords,
-    timespan,
-    toneFilter,
-    sort,
-  })), emptyGdeltFallback, { cacheKey, shouldCache: (response) => !response.error, maxServeAgeMs: STALE_MAX });
-
-  if (resp.error) {
-    console.warn(`[GDELT-Intel] Positive RPC error: ${resp.error}`);
-    return staleOrUnavailable(cached);
-  }
-
-  const articles: GdeltArticle[] = (resp.articles || []).map(toGdeltArticle);
-  articleCache.set(cacheKey, { articles, timestamp: Date.now() });
-  return articles;
-}
-
-export async function fetchPositiveTopicIntelligence(topic: IntelTopic): Promise<TopicIntelligence> {
-  const articles = await fetchPositiveGdeltArticles(topic.query);
-  return { topic, articles, fetchedAt: new Date() };
-}
-
-export async function fetchAllPositiveTopicIntelligence(): Promise<TopicIntelligence[]> {
-  const results = await Promise.allSettled(
-    POSITIVE_GDELT_TOPICS.map(topic => fetchPositiveTopicIntelligence(topic))
-  );
-  return results
-    .filter((r): r is PromiseFulfilledResult<TopicIntelligence> => r.status === 'fulfilled')
-    .map(r => r.value);
 }

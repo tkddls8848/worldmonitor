@@ -2205,7 +2205,7 @@ export function buildWebMcpTools(
         properties: {
           panelId: {
             type: 'string',
-            description: 'Dashboard panel ID, such as "markets" or "giving".',
+            description: 'Dashboard panel ID, such as "markets" or "renewable".',
             minLength: 1,
             maxLength: 96,
             pattern: SET_PANEL_ENABLED_ID_PATTERN.source,

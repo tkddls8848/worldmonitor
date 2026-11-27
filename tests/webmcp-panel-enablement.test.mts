@@ -61,11 +61,10 @@ function evaluate(overrides: {
 describe('isPanelNativeToVariant', () => {
   it('treats catalog keys as native only to the monitors that define them', () => {
     assert.equal(isPanelNativeToVariant('markets', 'full'), true);
-    assert.equal(isPanelNativeToVariant('markets', 'happy'), false);
-    assert.equal(isPanelNativeToVariant('positive-feed', 'happy'), true);
-    assert.equal(isPanelNativeToVariant('positive-feed', 'full'), false);
-    assert.equal(isPanelNativeToVariant('giving', 'full'), true);
-    assert.equal(Object.prototype.hasOwnProperty.call(ALL_PANELS, 'positive-feed'), true);
+    assert.equal(isPanelNativeToVariant('nq-pulse', 'finance'), true);
+    assert.equal(isPanelNativeToVariant('nq-pulse', 'full'), false);
+    assert.equal(isPanelNativeToVariant('giving', 'full'), false);
+    assert.equal(Object.prototype.hasOwnProperty.call(ALL_PANELS, 'nq-pulse'), true);
   });
 });
 
@@ -130,13 +129,13 @@ describe('evaluateSetPanelEnabled', () => {
 
   it('no-ops a cross-variant panel that is already in the requested state', () => {
     const panelSettings = cloneSettings('full');
-    panelSettings['positive-feed'] = {
-      ...panelSettings['positive-feed']!,
+    panelSettings['nq-pulse'] = {
+      ...panelSettings['nq-pulse']!,
       enabled: true,
     };
     const result = evaluate({
       panelSettings,
-      panelId: 'positive-feed',
+      panelId: 'nq-pulse',
       enabled: true,
     });
     assert.equal(result.ok, true);
@@ -147,7 +146,7 @@ describe('evaluateSetPanelEnabled', () => {
   it('refuses to enable a panel that is not native to the current monitor', () => {
     const full = evaluate({
       variant: 'full',
-      panelId: 'positive-feed',
+      panelId: 'nq-pulse',
       enabled: true,
     });
     assert.equal(full.ok, false);
@@ -156,24 +155,24 @@ describe('evaluateSetPanelEnabled', () => {
     assert.equal(full.changed, false);
     assert.equal(full.effectiveEnabled, false);
 
-    const happy = evaluate({
-      variant: 'happy',
+    const energy = evaluate({
+      variant: 'energy',
       panelId: 'markets',
       enabled: true,
     });
-    assert.equal(happy.reason, 'panel_incompatible');
-    assert.equal(happy.effectiveEnabled, false);
+    assert.equal(energy.reason, 'panel_incompatible');
+    assert.equal(energy.effectiveEnabled, false);
   });
 
   it('allows disabling a non-native panel that is currently enabled', () => {
-    const panelSettings = cloneSettings('happy');
+    const panelSettings = cloneSettings('energy');
     panelSettings.markets = {
       name: 'Markets',
       enabled: true,
       priority: 1,
     };
     const result = evaluate({
-      variant: 'happy',
+      variant: 'energy',
       panelSettings,
       panelId: 'markets',
       enabled: false,
@@ -561,7 +560,7 @@ describe('set_panel_enabled WebMCP adapter', () => {
     assert.equal((unknown as { reason?: string }).reason, 'unknown_panel');
     assert.equal(events.at(-1)?.data?.reason, 'validation');
 
-    const incompatible = await tool.execute({ panelId: 'positive-feed', enabled: true }, signal);
+    const incompatible = await tool.execute({ panelId: 'nq-pulse', enabled: true }, signal);
     assert.equal((incompatible as { reason?: string }).reason, 'panel_incompatible');
     assert.equal(events.at(-1)?.data?.reason, 'unavailable');
   });

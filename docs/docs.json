@@ -556,14 +556,6 @@
                     "openapi": "api/ResearchService.openapi.yaml"
                   },
                   {
-                    "group": "Positive Events",
-                    "openapi": "api/PositiveEventsService.openapi.yaml"
-                  },
-                  {
-                    "group": "Giving",
-                    "openapi": "api/GivingService.openapi.yaml"
-                  },
-                  {
                     "group": "Batch",
                     "openapi": "api/BatchService.openapi.yaml"
                   }
@@ -1139,14 +1131,6 @@
                   {
                     "group": "研究",
                     "openapi": "api/ResearchService.openapi.yaml"
-                  },
-                  {
-                    "group": "正面事件",
-                    "openapi": "api/PositiveEventsService.openapi.yaml"
-                  },
-                  {
-                    "group": "捐赠",
-                    "openapi": "api/GivingService.openapi.yaml"
                   },
                   {
                     "group": "批量",

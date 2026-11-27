@@ -446,8 +446,6 @@
     "panelCatCommodityPrices": "Árak & Piacok",
     "panelCatMining": "Bányászat & Ellátási Lánc",
     "panelCatCommodityEcon": "Gazdaság & Kereskedelem",
-    "panelCatHappyNews": "Jó Hírek",
-    "panelCatHappyPlanet": "Bolygó & Adományozás",
     "embed": "Beágyazás"
   },
   "panels": {
@@ -497,7 +495,6 @@
     "stablecoins": "Stablecoinok",
     "deduction": "Helyzet leszámítása",
     "ucdpEvents": "Fegyveres konfliktusok",
-    "giving": "Globális Adományozás",
     "displacement": "Menekültek és lakóhelyvesztés",
     "climate": "Klímaanoláliák",
     "populationExposure": "Népesség kitettség",
@@ -919,12 +916,6 @@
     }
   },
   "components": {
-    "positiveNewsFeed": {
-      "noStories": "Még nincsenek történetek ebben a kategóriában"
-    },
-    "breakthroughsTicker": {
-      "noData": "Még nincsenek tudományos áttörések"
-    },
     "airlineIntel": {
       "infoTooltip": "<strong>Légitársasági értesítések</strong> Valós idejű légitársasági operatív adatok: útvonalszüneteltetések, légtérzárások, légitársaság figyelmeztetések és vészhelyzetből eredő eltérítések. Forrás: repülésügyi hatóságok NOTAM-ja és légitársaság-közlemények.",
       "noOpsData": "Nincs operatív adat — betöltés…",
@@ -939,15 +930,6 @@
       "nonstop": "közvetlen",
       "roundTrip": "Oda-vissza",
       "tripDays": "Utazás napjai"
-    },
-    "goodThingsDigest": {
-      "noStories": "Nincsenek elérhető történetek",
-      "summarizing": "Összegzés…"
-    },
-    "progressCharts": {
-      "noData": "Nincsenek elérhető előrehaladási adatok",
-      "fallbackBadge": "Statikus tartalék adatok jelennek meg — élő sorozat nem érhető el",
-      "fallbackTooltip": "Az élő World Bank adatforrás nem érhető el. Ezek a grafikonok egy 2026. február óta ellenőrzött hardcoded pillanatképből vannak megjelenítve."
     },
     "monitor": {
       "placeholder": "Kulcsszavak (vesszővel elválasztva)",
@@ -1412,10 +1394,6 @@
         "iranAttacks": "Közel-keleti csapások",
         "gpsJamming": "Navigációs zavarok",
         "ciiChoropleth": "Ország instabilitása",
-        "positiveEvents": "Pozitív események",
-        "kindness": "Kedvességi cselekmények",
-        "happiness": "Világboldogság",
-        "speciesRecovery": "Fajmegmentés",
         "renewableInstallations": "Tiszta energia",
         "notamAirspace": "NOTAM légtéri korlátozások",
         "no2Activity": "Ipari aktivitás",
@@ -1833,53 +1811,6 @@
       "deathsCount": "{{count}} halott",
       "moreNotShown": "{{count}} további esemény nem jelenik meg",
       "infoTooltip": "<strong>Fegyveres konfliktusok eseményei</strong> Eseményszintű konfliktusadatok az Uppsala Egyetemtől (UCDP).<ul><li><strong>Állami szintű</strong>: Kormány vs lázadó csoport</li><li><strong>Nem-állami</strong>: Fegyveres csoport vs fegyveres csoport</li><li><strong>Egyoldalú</strong>: Erőszak a polgárokkal szemben</li></ul>A halálozások legjobb becslésként jelennek meg (alacsony-magas tartomány). Az ACLED duplikátumok automatikusan szűrve vannak."
-    },
-    "giving": {
-      "activityIndex": "Aktivitásindex",
-      "trend": "Trend",
-      "estDailyFlow": "Becsült napi áramlás",
-      "cryptoDaily": "Kripto napi",
-      "tabs": {
-        "platforms": "Platformok",
-        "categories": "Kategóriák",
-        "crypto": "Kripto",
-        "institutional": "Intézményi"
-      },
-      "platform": "Platform",
-      "dailyVol": "Napi térfogat",
-      "velocity": "Sebesség",
-      "freshness": "Adatok",
-      "category": "Kategória",
-      "share": "Arány",
-      "trending": "TREND",
-      "dailyInflow": "24 órás beáramlás",
-      "wallets": "Tárcák",
-      "ofTotal": "Az összes %-a",
-      "topReceivers": "Legjobb címzettek",
-      "oecdOda": "OECD Gazdasági Együttműködési és Fejlesztési Szervezet fejlesztési segélye",
-      "cafIndex": "CAF-index",
-      "candidGrants": "Candid Grants",
-      "dataLag": "Adatforgalom",
-      "infoTooltip": "<strong>Global Giving Activity Index</strong> Összetett index, amely a személyes adományozást követi nyomauxiliar platformokon és kriptopénz pénztárcákon.<ul><li><strong>Platformok</strong>: GoFundMe, GlobalGiving, JustGiving kampánymintavételezés</li><li><strong>Kriptó</strong>: On-chain jótékonysági pénztárca beáramlása (Endaoment, Giving Block)</li><li><strong>Intézményi</strong>: OECD ODA, CAF World Giving Index, Candid grants</li></ul>Az index irányjellegű (nem pontos dollárösszegek). Élő mintavételezést egyesít a megjelent éves jelentésekkel.",
-      "benchmarkTitle": "Globális adományozási referenciák",
-      "benchmarkInfoTooltip": "<strong>Globális adományozási referenciák</strong> Közzétett platform és intézményi igények forrásidőszakokkal és ellenőrzési státusszal. Az éves számadatok becslések, nem valós idejű tevékenység.",
-      "status": {
-        "published": "Közzétett referenciák ellenőrzött forráslefedetséggel.",
-        "partial": "Közzétett referenciák részleges forráslefedetséggel.",
-        "legacy": "Régi pillanatkép; forrás részletei nem elérhetők.",
-        "cached": "Gyorsítótárazott pillanatkép megjelenítése; frissítés nem elérhető."
-      },
-      "trackedAnnualized": "Nyomon követett platform adományok — éves becslés",
-      "annualizedDaily": "Napi éves becslés",
-      "atLeast": "Legalább",
-      "about": "Körülbelül",
-      "sourceNotVerified": "Forrás nem ellenőrzött",
-      "reportedCumulative": "Jelentett kumulatív összeg",
-      "sourcePeriod": "{{source}} · {{period}}",
-      "benchmark": "Közzétett referencia",
-      "sourcesMethodology": "Források és módszertan",
-      "methodologyIntro": "Csak ellenőrzött éves vagy védhető módon évesített platform igények kerülnek a főcímbe. A kumulatív és intézményi számadatok külön kontextusként maradnak.",
-      "partialEstimate": "Részlegesen ellenőrzött becslés"
     },
     "displacement": {
       "refugees": "Menekültek",
@@ -2402,9 +2333,6 @@
     "goldIntelligence": {
       "infoTooltip": "<strong>Arany intelligence</strong> Aranyárak számos valutában, arany/ezüst és arany/platina arányok, valamint felügyelt pénzforgalomhoz kötött futures pozíciók. A források között szerepel a Yahoo Finance és a Commodity Futures Trading Commission."
     },
-    "counters": {
-      "infoTooltip": "<strong>Live Counters</strong> Valós idejű extrapolált számlálók globális metrikákhoz: katonai kiadások, természeti katasztrófák, betegségteher és egyéb. Az adatok statisztikai becslések az éves adatráták alapján."
-    },
     "diseaseOutbreaks": {
       "infoTooltip": "<strong>Disease Outbreaks</strong> Aktív kitörés-riasztások a WHO-tól, a ProMED-tól és az egészségügyi minisztériumoktól. Az erősített kitöréseket, érintett régiókat, esetek számát és veszélyszinteket nyomon követi. Frissítve az új jelentések közzétételekor.",
       "methodologyNote": "Az Alert / Warning / Watch szintek egy szerkesztői kulcsszó-osztályozóból származnak — lásd /docs/methodology/disease-alert-level a kulcsszó táblázathoz és korlátozásokhoz.",
@@ -2546,9 +2474,6 @@
     },
     "renewable": {
       "infoTooltip": "<strong>Megújuló energia</strong> A megújuló forrásokból származó villamos energia részesedése régió és év szerint, valamint az Egyesült Államok telepített kapacitása a napelemes, szél és szén energiához (MW). Források: Világbank (EG.ELC.RNEW.ZS) és az Egyesült Államok Energiainformációs Adminisztrációja."
-    },
-    "conservationWins": {
-      "infoTooltip": "<strong>Conservation Wins</strong> Pozitív természetvédelmi hírek: fajpopulációs helyreállítások, élőhelyek restaurálási mérföldköveinek és de-extinkciós erőfeszítések. Forrás: IUCN, WWF és természetvédelmi kutatási publikációk."
     },
     "worldClock": {
       "infoTooltip": "<strong>World Clock</strong> Élő helyi idők és piaci ülésállapot a nagy globális pénzügyi központok számára. Megjeleníti a NYSE, LSE, TSE, SGX és egyéb tőzsdék nyitott/zárva állapotát."
@@ -4350,7 +4275,6 @@
     "calculatingExposure": "Kitettség kiszámítása",
     "computingSignals": "Jelek feldolgozása...",
     "loadingEtfData": "Tőzsdére jegyzett alap adatainak betöltése...",
-    "loadingGiving": "Globális adományozási adatok betöltése",
     "loadingDisplacement": "Kitelepítési adatok betöltése",
     "loadingClimateData": "Éghajlati adatok betöltése",
     "failedTechReadiness": "A technológiai felkészültség adatai átmenetileg nem érhetők el",
@@ -4875,9 +4799,6 @@
       "map": "Energia Atlasz Térképe",
       "liveNews": "Energia Hírek",
       "insights": "AI Energia Elemzések"
-    },
-    "happy": {
-      "map": "Jó Hírek Térképe"
     }
   },
   "pwaInstall": {
@@ -5606,7 +5527,6 @@
   },
   "personalChrome": {
     "timeRange": "TIME RANGE",
-    "goodNews": "Good News",
     "mission": "Mission",
     "activeMission": "Mission: {{name}}"
   }

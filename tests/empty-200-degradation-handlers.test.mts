@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 
 import { listClimateNews } from '../server/worldmonitor/climate/v1/list-climate-news.ts';
 import { getDisplacementSummary } from '../server/worldmonitor/displacement/v1/get-displacement-summary.ts';
-import { getGivingSummary } from '../server/worldmonitor/giving/v1/get-giving-summary.ts';
 import { getVesselSnapshot } from '../server/worldmonitor/maritime/v1/get-vessel-snapshot.ts';
 import { listNaturalEvents } from '../server/worldmonitor/natural/v1/list-natural-events.ts';
 import { listPredictionMarkets } from '../server/worldmonitor/prediction/v1/list-prediction-markets.ts';
@@ -103,61 +102,6 @@ describe('empty 200 degraded handler responses', () => {
     assert.equal(response.summary?.topFlows.length, 0);
   });
 
-  it('keeps published-estimate giving summaries marked available', async () => {
-    const response = await getGivingSummary({} as never, {
-      platformLimit: 2,
-      categoryLimit: 2,
-    });
-
-    assert.equal(response.dataAvailable, true);
-    assert.ok(response.fetchedAt > 0);
-    assert.ok(response.summary);
-    assert.equal(response.summary.platforms.length, 2);
-    assert.equal(response.summary.categories.length, 2);
-    assert.equal(response.summary.dataMode, 'partial_estimate');
-    assert.equal(response.summary.activityIndexAvailable, false);
-    assert.equal(response.summary.trendAvailable, false);
-    assert.ok(response.summary.provenance.length > 0);
-  });
-
-  it('keeps Giving unavailable when the v2 cache has a negative sentinel', async () => {
-    process.env.UPSTASH_REDIS_REST_URL = 'https://fake-upstash.example';
-    process.env.UPSTASH_REDIS_REST_TOKEN = 'fake-token';
-    let requestedUrl = '';
-    globalThis.fetch = async (input) => {
-      requestedUrl = String(input);
-      return new Response(JSON.stringify({ result: JSON.stringify('__WM_NEG__') }), { status: 200 });
-    };
-
-    const response = await getGivingSummary({} as never, { platformLimit: 0, categoryLimit: 0 });
-
-    assert.equal(response.dataAvailable, false);
-    assert.equal(response.fetchedAt, 0);
-    assert.equal(response.summary, undefined);
-    assert.match(requestedUrl, /giving%3Asummary%3Av2/);
-  });
-
-  it('keeps Giving unavailable when a cached response has no summary', async () => {
-    process.env.UPSTASH_REDIS_REST_URL = 'https://fake-upstash.example';
-    process.env.UPSTASH_REDIS_REST_TOKEN = 'fake-token';
-    globalThis.fetch = async () => new Response(JSON.stringify({
-      result: JSON.stringify({ fetchedAt: 1717200000000, dataAvailable: true }),
-    }), { status: 200 });
-
-    const response = await getGivingSummary({} as never, { platformLimit: 0, categoryLimit: 0 });
-
-    assert.equal(response.dataAvailable, false);
-    assert.equal(response.fetchedAt, 0);
-    assert.equal(response.summary, undefined);
-  });
-
-  it('keeps Giving unavailable when response projection throws', async () => {
-    const response = await getGivingSummary({} as never, undefined as never);
-
-    assert.equal(response.dataAvailable, false);
-    assert.equal(response.fetchedAt, 0);
-    assert.equal(response.summary, undefined);
-  });
 
   it('marks chokepoint cache and upstream misses with the documented empty fetchedAt sentinel', async () => {
     globalThis.fetch = async () => new Response('upstream unavailable', { status: 503 });

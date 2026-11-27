@@ -109,7 +109,7 @@ type AnonymousDashboardSeedOptions = {
 
 export async function seedAnonymousDashboard(
   page: Page,
-  variant: 'full' | 'happy' | 'energy',
+  variant: 'full' | 'energy',
   options: AnonymousDashboardSeedOptions = {},
 ): Promise<void> {
   await page.addInitScript(({ selectedVariant, seedOptions }) => {

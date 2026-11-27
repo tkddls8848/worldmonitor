@@ -111,31 +111,15 @@ describe('webmcp mission preset catalog', () => {
     assert.equal(getMissionPresetsForVariant('full').some((preset) => preset.id === 'protective-travel'), true);
   });
 
-  it('marks monitor-incompatible presets with a stable reason', () => {
-    const result = listMissionPresetCatalog(live({ variant: 'happy' }));
-    const crisis = result.presets.find((preset) => preset.id === 'crisis-desk');
-    assert.ok(crisis);
-    assert.equal(crisis.monitorCompatible, false);
-    assert.equal(crisis.available, false);
-    assert.equal(crisis.unavailableReason, 'preset_incompatible');
-    assert.equal(crisis.panelCount, 0);
-    assert.equal(crisis.layerCount, 0);
-    assert.equal('view' in crisis, false);
-    assert.equal('timeRange' in crisis, false);
-
-    const goodNews = result.presets.find((preset) => preset.id === 'good-news-explorer');
-    assert.ok(goodNews);
-    assert.equal(goodNews.monitorCompatible, true);
-    assert.equal(goodNews.available, true);
-    assert.equal(goodNews.unavailableReason, undefined);
-    assert.equal(goodNews.view, 'global');
-    assert.equal(goodNews.timeRange, '7d');
+  it('excludes presets reserved for a different monitor', () => {
+    const result = listMissionPresetCatalog(live({ variant: 'finance' }));
+    assert.ok(!result.presets.some((preset) => preset.id === 'protective-travel'));
 
     const countryWatcher = result.presets.find((preset) => preset.id === 'country-watcher');
     assert.ok(countryWatcher);
     assert.equal(countryWatcher.monitorCompatible, true);
     assert.equal(countryWatcher.available, true);
-    assert.equal(countryWatcher.panelCount, 6);
+    assert.equal(countryWatcher.panelCount, 4);
   });
 
   it('reports entitlement denials without leaking premium payloads', () => {
@@ -176,11 +160,11 @@ describe('webmcp mission preset catalog', () => {
   });
 
   it('filters available=true to eligible presets only', () => {
-    const result = listMissionPresetCatalog(live({ variant: 'happy' }), { available: true });
+    const result = listMissionPresetCatalog(live({ variant: 'finance' }), { available: true });
     assert.ok(result.presets.every((preset) => preset.available));
-    assert.ok(result.presets.some((preset) => preset.id === 'good-news-explorer'));
+    assert.ok(result.presets.some((preset) => preset.id === 'nq-day-trader'));
     assert.ok(result.presets.some((preset) => preset.id === 'country-watcher'));
-    assert.ok(!result.presets.some((preset) => preset.id === 'crisis-desk'));
+    assert.ok(!result.presets.some((preset) => preset.id === 'protective-travel'));
   });
 
   it('evaluates compatibility for every bundled preset on every monitor', () => {

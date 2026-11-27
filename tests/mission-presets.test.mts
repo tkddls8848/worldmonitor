@@ -63,7 +63,7 @@ class MemoryStorage {
   }
 }
 
-const VARIANTS: MapVariant[] = ['full', 'tech', 'finance', 'commodity', 'energy', 'happy'];
+const VARIANTS: MapVariant[] = ['full', 'tech', 'finance', 'commodity', 'energy', ];
 
 let originalLocalStorage: PropertyDescriptor | undefined;
 let originalWindow: PropertyDescriptor | undefined;
@@ -611,7 +611,6 @@ describe('mission preset definitions', () => {
         'osint-newsroom',
         'macro-market-watch',
         'tech-ai-watch',
-        'good-news-explorer',
         'nq-day-trader',
         'country-watcher',
         'protective-travel',
@@ -626,8 +625,6 @@ describe('mission preset definitions', () => {
     assert.equal(getMissionPreset('macro-market-watch')?.shortLabel, 'Stocks');
     assert.equal(getMissionPreset('tech-ai-watch')?.label, 'Tech / AI Watcher');
     assert.equal(getMissionPreset('tech-ai-watch')?.shortLabel, 'Tech');
-    assert.equal(getMissionPreset('good-news-explorer')?.label, 'Good News Explorer');
-    assert.equal(getMissionPreset('good-news-explorer')?.shortLabel, 'Good');
   });
 
   it('uses known panel and layer keys without duplicate ids', () => {
@@ -683,13 +680,13 @@ describe('applyMissionPresetToState', () => {
 
   it('lists NQ Day Trader only on finance and rejects it on other variants', () => {
     const financeIds = getMissionPresetsForVariant('finance').map((preset) => preset.id);
-    assert.equal(financeIds.length, 9);
+    assert.equal(financeIds.length, 8);
     assert.ok(financeIds.includes('nq-day-trader'));
     for (const variant of VARIANTS.filter((item) => item !== 'finance')) {
       const ids = getMissionPresetsForVariant(variant).map((preset) => preset.id);
       // Protective Travel is offered on the full variant only (#10453).
-      const expected = variant === 'full' ? 9 : 8;
-      assert.equal(ids.length, expected, `${variant} should keep the eight shared missions${variant === 'full' ? ' plus Protective Travel' : ''}`);
+      const expected = variant === 'full' ? 8 : 7;
+      assert.equal(ids.length, expected, `${variant} should keep the seven shared missions${variant === 'full' ? ' plus Protective Travel' : ''}`);
       assert.ok(!ids.includes('nq-day-trader'), `${variant} must not offer NQ Day Trader`);
     }
 
@@ -767,58 +764,6 @@ describe('applyMissionPresetToState', () => {
   });
 
   it('falls back to variant defaults when a preset has too few matching panels', () => {
-    for (const preset of MISSION_PRESETS.filter((preset) => (
-      preset.id !== 'good-news-explorer'
-      && preset.id !== 'country-watcher'
-      && isMissionPresetAvailableForVariant(preset, 'happy')
-    ))) {
-      const applied = applyMissionPresetToState(
-        preset.id,
-        makePanelSettings('happy'),
-        DEFAULT_MAP_LAYERS,
-        'happy',
-      );
-      assert.deepEqual(
-        enabledWorkspacePanelKeys(applied.panelSettings),
-        defaultWorkspacePanelKeys('happy'),
-        `happy/${preset.id} should fall back to happy defaults`,
-      );
-    }
-
-    const happyApplied = applyMissionPresetToState(
-      'good-news-explorer',
-      makePanelSettings('happy'),
-      DEFAULT_MAP_LAYERS,
-      'happy',
-    );
-    assert.deepEqual(happyApplied.panelOrder.slice(0, 4), [
-      'positive-feed',
-      'progress',
-      'counters',
-      'spotlight',
-    ]);
-    assert.equal(happyApplied.mapLayers.positiveEvents, true);
-    assert.equal(happyApplied.mapLayers.speciesRecovery, true);
-
-    const happyCountryWatcher = applyMissionPresetToState(
-      'country-watcher',
-      makePanelSettings('happy'),
-      DEFAULT_MAP_LAYERS,
-      'happy',
-    );
-    assert.deepEqual(happyCountryWatcher.panelOrder, [
-      'positive-feed',
-      'progress',
-      'spotlight',
-      'species',
-      'renewable',
-    ]);
-    assert.notDeepEqual(
-      enabledWorkspacePanelKeys(happyCountryWatcher.panelSettings),
-      defaultWorkspacePanelKeys('happy'),
-    );
-    assert.equal(happyCountryWatcher.mapLayers.happiness, true);
-
     const techApplied = applyMissionPresetToState(
       'tech-ai-watch',
       makePanelSettings('tech'),
@@ -1187,7 +1132,6 @@ function createMissionHarness(options: {
     authModal: null,
     authHeaderWidget: null,
     tvMode: null,
-    happyAllItems: [],
     isDestroyed: false,
     isPlaybackMode: false,
     isIdle: false,

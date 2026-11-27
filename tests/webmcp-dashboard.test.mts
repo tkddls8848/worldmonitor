@@ -24,7 +24,7 @@ import {
 } from '../src/config/panels.ts';
 import type { MapLayers, PanelConfig } from '../src/types/index.ts';
 
-const VARIANTS = ['full', 'tech', 'finance', 'commodity', 'happy', 'energy'] as const;
+const VARIANTS = ['full', 'tech', 'finance', 'commodity',  'energy'] as const;
 
 it('keeps the advertised pre-ready invocation window at 30 seconds', () => {
   assert.equal(WEBMCP_UI_READY_TIMEOUT_MS, 30_000);
@@ -39,8 +39,7 @@ const EXPECTED_VARIANT_PANEL_SNAPSHOTS: Record<DashboardVariant, {
   tech: { enabledCount: 37, enabledSha256: 'a5ffe823ca9b8bde138a082abd12a84920afabf97fb265a21dfb063bf3831f91' },
   finance: { enabledCount: 58, enabledSha256: 'ff2d731c249dad59a8fca8c201b98901243b6ed836c332e29d09582a6573ab2e' },
   commodity: { enabledCount: 33, enabledSha256: 'b534510a2e814392e3966beb211e300e75a2b33f05c283613dd4f6cee50ddfe0' },
-  happy: { enabledCount: 10, enabledSha256: 'f62bbf19c2f7ca75fefeb12a7ba32da991a72f494f91e6d310910d5b7a0468ad' },
-  energy: { enabledCount: 27, enabledSha256: '9883327d2f1e0547b4111b469e21960954664f886aace434760d519e8bee3ed6' },
+  energy: { enabledCount: 27, enabledSha256: '77471d0d0ab931e78065df61dfc0300c081e9fb57427975505d9e1c834617a12' },
 };
 
 const EXPECTED_VARIANT_DEFAULT_SNAPSHOTS: Record<DashboardVariant, {
@@ -48,11 +47,10 @@ const EXPECTED_VARIANT_DEFAULT_SNAPSHOTS: Record<DashboardVariant, {
   enabled: number;
   sha256: string;
 }> = {
-  full: { total: 105, enabled: 81, sha256: '7325a47e1e2f8b136d9b4a1cabac09b924d3a56fe505b02f71977132ea124320' },
+  full: { total: 104, enabled: 81, sha256: 'a86ca40df6aa8cb0109a9da32d069006b85928c2ed28b351230f3655737d8b61' },
   tech: { total: 39, enabled: 37, sha256: '8d0f8d1cab65f887cce17432f301a1f764dca7783b67799792147be8b8c94e3d' },
   finance: { total: 66, enabled: 58, sha256: '0b4d8a0f5a0015dba3b82fbc2286f4a50f246dafca548eb970156136d8a02258' },
   commodity: { total: 36, enabled: 33, sha256: 'cc9e0b178dec33dff354a1eea95b5b215302fc7ce685b3d92b82a356df6d6bee' },
-  happy: { total: 10, enabled: 10, sha256: '197a73a578d8734d49e844e0a83b89204d5a6fc6b973b1ed698272d846a2c308' },
   energy: { total: 30, enabled: 27, sha256: '1a5271643c2a74fe662e011b23a170fe5458355da566bc061c25560216b45569' },
 };
 
@@ -65,7 +63,6 @@ function makeContext(
     weather: false,
     tradeRoutes: true,
     startupHubs: false,
-    positiveEvents: false,
   } as unknown as MapLayers;
   return {
     isDestroyed: false,
@@ -121,7 +118,7 @@ function makeSettings(calls: string[] = []): UnifiedSettingsController {
 }
 
 describe('WebMCP live dashboard bindings', () => {
-  it('locks the canonical panel defaults for all six variants', () => {
+  it('locks the canonical panel defaults for all five variants', () => {
     assert.deepEqual(Object.keys(VARIANT_DEFAULTS).sort(), [...VARIANTS].sort());
 
     for (const variant of VARIANTS) {
@@ -886,7 +883,7 @@ describe('WebMCP live dashboard bindings', () => {
     assert.match(result.message, /at most 10 layers/);
   });
 
-  it('preserves per-target variant denials across all six variants', async () => {
+  it('preserves per-target variant denials across all five variants', async () => {
     const cases: Record<DashboardVariant, {
       allowed: keyof MapLayers;
       disallowed: keyof MapLayers;
@@ -895,7 +892,6 @@ describe('WebMCP live dashboard bindings', () => {
       tech: { allowed: 'startupHubs', disallowed: 'conflicts' },
       finance: { allowed: 'tradeRoutes', disallowed: 'conflicts' },
       commodity: { allowed: 'tradeRoutes', disallowed: 'conflicts' },
-      happy: { allowed: 'positiveEvents', disallowed: 'conflicts' },
       energy: { allowed: 'tradeRoutes', disallowed: 'conflicts' },
     };
 
@@ -930,7 +926,7 @@ describe('WebMCP live dashboard bindings', () => {
   });
 
   it('switches every stable monitor key and overlays the destination on context', async () => {
-    assert.deepEqual([...SITE_VARIANTS], ['full', 'tech', 'finance', 'happy', 'commodity', 'energy']);
+    assert.deepEqual([...SITE_VARIANTS], ['full', 'tech', 'finance',  'commodity', 'energy']);
     const navigated: string[] = [];
     for (const monitor of SITE_VARIANTS) {
       const result = await applyWebMcpSwitchMonitor(

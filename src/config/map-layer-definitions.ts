@@ -8,8 +8,7 @@ import type { MapLayers } from '@/types';
  * picker, dispatcher, and shell stay in lockstep.
  */
 export type RendererKind = 'svg' | 'deck';
-export type MapVariant = 'full' | 'tech' | 'finance' | 'happy' | 'commodity' | 'energy';
-
+export type MapVariant = 'full' | 'tech' | 'finance' | 'commodity' | 'energy';
 
 export interface LayerDefinition {
   key: keyof MapLayers;
@@ -94,10 +93,6 @@ export const LAYER_REGISTRY: Record<keyof MapLayers, LayerDefinition> = {
   centralBanks:             def('centralBanks',             '&#127974;', 'centralBanks',             'Central Banks', ['svg', 'deck']),
   commodityHubs:            def('commodityHubs',            '&#128230;', 'commodityHubs',            'Commodity Hubs', ['svg', 'deck']),
   gulfInvestments:          def('gulfInvestments',          '&#127760;', 'gulfInvestments',          'GCC Investments', ['deck']),
-  positiveEvents:           def('positiveEvents',           '&#127775;', 'positiveEvents',           'Positive Events', ['deck']),
-  kindness:                 def('kindness',                 '&#128154;', 'kindness',                 'Acts of Kindness', ['deck']),
-  happiness:                def('happiness',                '&#128522;', 'happiness',                'World Happiness', ['deck']),
-  speciesRecovery:          def('speciesRecovery',          '&#128062;', 'speciesRecovery',          'Species Recovery', ['deck']),
   renewableInstallations:   def('renewableInstallations',   '&#9889;',   'renewableInstallations',   'Clean Energy', ['deck']),
   miningSites:              def('miningSites',              '&#128301;', 'miningSites',              'Mining Sites', ['deck']),
   processingPlants:         def('processingPlants',         '&#127981;', 'processingPlants',         'Processing Plants', ['deck']),
@@ -169,10 +164,6 @@ const VARIANT_LAYER_ORDER: Record<MapVariant, Array<keyof MapLayers>> = {
     'outages', 'weather', 'economic', 'waterways',
     'natural', 'cyberThreats', 'sanctions',
   ],
-  happy: [
-    'positiveEvents', 'kindness', 'happiness',
-    'speciesRecovery', 'renewableInstallations',
-  ],
   commodity: [
     'miningSites', 'processingPlants', 'commodityPorts', 'commodityHubs',
     'minerals', 'pipelines', 'waterways', 'tradeRoutes',
@@ -182,7 +173,7 @@ const VARIANT_LAYER_ORDER: Record<MapVariant, Array<keyof MapLayers>> = {
   energy: [
     // Core energy infrastructure — mirror of ENERGY_MAP_LAYERS in panels.ts
     'pipelines', 'storageFacilities', 'fuelShortages', 'waterways', 'commodityPorts', 'commodityHubs',
-    'ais', 'liveTankers', 'tradeRoutes', 'minerals',
+    'ais', 'liveTankers', 'tradeRoutes', 'minerals', 'renewableInstallations',
     // Energy-adjacent context
     'sanctions', 'fires', 'climate', 'reservoirLevels', 'weather', 'outages', 'natural',
   ],
@@ -348,7 +339,7 @@ export const LAYER_SYNONYMS: Record<string, Array<keyof MapLayers>> = {
   energy: ['pipelines', 'renewableInstallations'],
   solar: ['renewableInstallations'],
   wind: ['renewableInstallations'],
-  green: ['renewableInstallations', 'speciesRecovery'],
+  green: ['renewableInstallations'],
   money: ['economic', 'financialCenters', 'stockExchanges'],
   bank: ['centralBanks', 'financialCenters'],
   stock: ['stockExchanges'],
@@ -362,10 +353,9 @@ export const LAYER_SYNONYMS: Record<string, Array<keyof MapLayers>> = {
   mineral: ['minerals', 'miningSites'],
   mining: ['miningSites'],
   port: ['commodityPorts'],
-  happy: ['happiness', 'kindness', 'positiveEvents'],
-  good: ['positiveEvents', 'kindness'],
-  animal: ['speciesRecovery'],
-  wildlife: ['speciesRecovery'],
+  good: [ ],
+  animal: [],
+  wildlife: [],
   gulf: ['gulfInvestments'],
   gcc: ['gulfInvestments'],
   sanction: ['sanctions'],
@@ -462,7 +452,7 @@ export const MAP_LAYER_GROUPS: readonly MapLayerGroupDef[] = [
     id: 'overlays',
     labelKo: '국가 지표 · 오버레이',
     labelEn: 'Indicators & Overlays',
-    keys: ['ciiChoropleth', 'positiveEvents', 'kindness', 'happiness', 'speciesRecovery', 'renewableInstallations'],
+    keys: ['ciiChoropleth', 'renewableInstallations'],
   },
 ] as const;
 

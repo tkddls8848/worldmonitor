@@ -359,7 +359,6 @@ describe('every published MCP endpoint is the canonical one (#9722)', () => {
     const planted = [
       'https://www.worldmonitor.app/mcp',
       'https://api.worldmonitor.app/mcp',
-      'https://happy.worldmonitor.app/mcp?x=1',
       'https://worldmonitor.app/api/mcp',
       'https://www.worldmonitor.app/api/mcp',
       'https://worldmonitor.app/mcp/',

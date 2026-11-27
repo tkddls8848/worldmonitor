@@ -26,7 +26,6 @@ const sheets = {
   'components/ukmto-incidents.css': read(new URL('../src/components/ukmto-incidents.css', import.meta.url)),
 };
 const main = sheets['styles/main.css'];
-const happy = read(new URL('happy-theme.css', stylesDir));
 
 const SEMANTIC = ['red', 'green', 'yellow', 'semantic-critical', 'semantic-high', 'semantic-elevated',
   'semantic-positive', 'semantic-low', 'status-live', 'status-cached', 'status-unavailable'];
@@ -197,10 +196,4 @@ describe('light-theme semantic text', () => {
     for (const name of SEMANTIC) assert.equal(reset[`--${name}-text`], 'initial', `--${name}-text is not reset`);
   });
 
-  it('the happy variant keeps its own palette in light', () => {
-    const happyLight = block(happy, ':root[data-variant="happy"], :root[data-variant="happy"][data-theme="light"]');
-    for (const name of SEMANTIC) {
-      assert.equal(happyLight[`--${name}-text`], 'initial', `happy light does not reset --${name}-text`);
-    }
-  });
 });

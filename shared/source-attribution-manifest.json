@@ -2394,15 +2394,10 @@
       "host": "conservationoptimism.org",
       "provider": "conservationoptimism.org",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit conservationoptimism.org and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "contxto.com",
@@ -4831,15 +4826,10 @@
       "host": "greatergood.berkeley.edu",
       "provider": "greatergood.berkeley.edu",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit greatergood.berkeley.edu and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "gtaupdate.com",
@@ -4916,15 +4906,10 @@
       "host": "happy.worldmonitor.app",
       "provider": "happy.worldmonitor.app",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: first-party, control-plane, UI, or rendering transport",
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "src/config/variant-meta.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "havanatimes.org",
@@ -5085,15 +5070,10 @@
       "host": "humanprogress.org",
       "provider": "humanprogress.org",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit humanprogress.org and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "hvg.hu",
@@ -6772,15 +6752,10 @@
       "host": "news.mongabay.com",
       "provider": "news.mongabay.com",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit news.mongabay.com and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "news.sky.com",
@@ -6859,15 +6834,10 @@
       "host": "newscientist.com",
       "provider": "newscientist.com",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit newscientist.com and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "newsfeed.zeit.de",
@@ -7885,15 +7855,10 @@
       "host": "purl.org",
       "provider": "PURL namespace",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: schema/namespace reference",
       "attribution": "Excluded from the provider count: namespace reference, not an ingested source.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "src/services/rss.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "qevdnlpgjxpwusesmtpx.supabase.co",
@@ -8101,15 +8066,10 @@
       "host": "reasonstobecheerful.world",
       "provider": "reasonstobecheerful.world",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit reasonstobecheerful.world and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "redis-rest",
@@ -8655,15 +8615,10 @@
       "host": "search.yahoo.com",
       "provider": "search.yahoo.com",
       "kind": "structured",
-      "observed": true,
+      "observed": false,
       "license": "Excluded: first-party, control-plane, UI, or rendering transport",
       "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
-      "status": "excluded",
-      "references": [
-        {
-          "path": "src/services/rss.ts"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "searchadvisor.naver.com",
@@ -8899,15 +8854,10 @@
       "host": "singularityhub.com",
       "provider": "singularityhub.com",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit singularityhub.com and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "skai-live.siliconweb.com",
@@ -9708,15 +9658,10 @@
       "host": "thebetterindia.com",
       "provider": "thebetterindia.com",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit thebetterindia.com and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "theblock.co",
@@ -11895,15 +11840,10 @@
       "host": "www.dailygood.org",
       "provider": "www.dailygood.org",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit www.dailygood.org and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "www.dailysabah.com",
@@ -12619,43 +12559,28 @@
       "host": "www.good.is",
       "provider": "www.good.is",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit www.good.is and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "www.goodgoodgood.co",
       "provider": "www.goodgoodgood.co",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit www.goodgoodgood.co and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "www.goodnewsnetwork.org",
       "provider": "www.goodnewsnetwork.org",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit www.goodnewsnetwork.org and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "www.google.com",
@@ -13141,15 +13066,10 @@
       "host": "www.livescience.com",
       "provider": "www.livescience.com",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit www.livescience.com and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "www.lrt.lt",
@@ -13606,15 +13526,10 @@
       "host": "www.optimistdaily.com",
       "provider": "www.optimistdaily.com",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit www.optimistdaily.com and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "www.oref.org.il",
@@ -13721,15 +13636,10 @@
       "host": "www.positive.news",
       "provider": "www.positive.news",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit www.positive.news and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "www.premiumtimesng.com",
@@ -14130,15 +14040,10 @@
       "host": "www.shareable.net",
       "provider": "www.shareable.net",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit www.shareable.net and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "www.silverseek.com",
@@ -14285,15 +14190,10 @@
       "host": "www.sunnyskyz.com",
       "provider": "www.sunnyskyz.com",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit www.sunnyskyz.com and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "www.svd.se",
@@ -14691,15 +14591,10 @@
       "host": "www.upworthy.com",
       "provider": "www.upworthy.com",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit www.upworthy.com and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "www.vanguardngr.com",
@@ -15045,15 +14940,10 @@
       "host": "www.yesmagazine.org",
       "provider": "www.yesmagazine.org",
       "kind": "feed",
-      "observed": true,
+      "observed": false,
       "license": "Provider terms for this feed publisher; verify before redistribution",
       "attribution": "Credit www.yesmagazine.org and link to the original feed publisher.",
-      "status": "terms-review",
-      "references": [
-        {
-          "path": "shared/news-catalog.json"
-        }
-      ]
+      "status": "excluded"
     },
     {
       "host": "www.ynetnews.com",
