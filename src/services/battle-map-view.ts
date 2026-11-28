@@ -30,6 +30,7 @@ export function impactCountry(code: string): string {
 
 export function impactHeadline(link: ImpactLink): string {
   if (!isImpactKind(link.kind)) return '';
+  if (link.evidence.some((evidence) => evidence.aiExtracted && evidence.aiSummary === link.headline)) return link.headline;
   const label = IMPACT_STYLES[link.kind].detail;
   return `${impactCountry(link.actor)} ${link.undirected ? '—' : '→'} ${impactCountry(link.target)} · ${label}`;
 }

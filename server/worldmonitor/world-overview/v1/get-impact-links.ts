@@ -21,8 +21,8 @@ export async function getImpactLinks(
   if (kind && !IMPACT_KINDS.some((value) => value === kind)) {
     throw new ValidationError([{ field: 'kind', description: 'Use a supported impact kind.' }]);
   }
-  if (country && !isAssignedCountryCode(country)) {
-    throw new ValidationError([{ field: 'country', description: 'Use an assigned ISO alpha-2 country code.' }]);
+  if (country && country !== 'EU' && !isAssignedCountryCode(country)) {
+    throw new ValidationError([{ field: 'country', description: 'Use an assigned ISO alpha-2 country code or EU.' }]);
   }
   if (window !== '24h' && window !== '7d') {
     throw new ValidationError([{ field: 'window', description: 'Use 24h or 7d.' }]);

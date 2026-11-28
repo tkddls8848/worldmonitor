@@ -27,6 +27,9 @@ import iso3ToIso2 from '../shared/iso3-to-iso2.json' with { type: 'json' };
 import { IMPACT_DAY_MS as DAY, IMPACT_LINKS_KEY, summarizeImpactLinks, UCDP_WINDOW_DAYS } from '../shared/impact-links.ts';
 import { loadEnvFile, readCanonicalValue, runSeed } from './_seed-utils.mjs';
 import { markActivated } from './_world-overview-io.mjs';
+import { NEWS_EVENTS_KEY } from './_news-events.mjs';
+import { readNewsEventRevocations } from './seed-news-events.mjs';
+import { detectSyndication } from '../shared/syndication.js';
 
 const KEYS = {
   federalRegister: 'policy:federal-register:v1',
@@ -38,6 +41,7 @@ const KEYS = {
   shortages: 'energy:fuel-shortages:v1',
   auctions: 'markets:treasury-auctions:v1',
   funding: 'markets:funding-stress:v1',
+  newsEvents: NEWS_EVENTS_KEY,
 };
 const COUNTRIES = new Set([...Object.values(iso3ToIso2), 'BQ', 'BV', 'CC', 'CX', 'GF', 'GP', 'MQ', 'RE', 'SJ', 'TK', 'YT']);
 const BLOCS = new Set(['EU', 'UN', 'NATO']);
@@ -131,8 +135,15 @@ function conflict(payload, add) {
     const b = state(row.sideB);
     const actor = (a === target && b) || (b === target && a) || target;
     const points = 10 + Math.min(15, 4 * Math.log2(1 + Math.max(0, Number(row.deathsBest) || 0)));
+    const time = timestamp(row.dateEnd);
+    if (!Number.isSafeInteger(time) || time <= 0 || time > 8.64e15) continue;
+    const place = KO.of(target) + (row.locationName ? ` ${text(row.locationName, 72)}` : '');
+    const sides = [[a, row.sideA], [b, row.sideB]].map(([code, name]) => code ? `${KO.of(code)} 정부` : text(name, 65))
+      .filter(Boolean).join(' · ');
+    const date = new Date(time).toISOString().slice(0, 10);
+    const deaths = Number.isFinite(row.deathsBest) ? `사망 추정 ${row.deathsBest}명` : '';
     add('conflict', actor, target, points, {
-      source: 'UCDP', title: `Recorded armed conflict event in ${target} (UCDP ${row.id})`,
+      source: 'UCDP', title: [`${place} 무력 충돌`, sides, date, deaths, `(UCDP ${row.id})`].filter(Boolean).join(' · '),
       url: 'https://ucdp.uu.se/downloads/', publishedAt: row.dateEnd,
     }, { eventId: row.id });
   }
@@ -245,7 +256,31 @@ function financial(inputs, add) {
 }
 
 /** Build a rolling read model. UCDP uses its latest available reporting window. */
-export function buildImpactLinks(inputs, now, previous = []) {
+function newsEvidence(payload, revoked, now, add) {
+  const claims = new Map();
+  for (const event of rows(payload?.events)) {
+    if (!event?.item || !within(event.item.publishedAt, now) || revoked.has(event.item.url)
+      || !Object.hasOwn(LABELS, event.kind) || ![1, 2, 3, 4, 5].includes(event.severity)
+      || typeof event.summary !== 'string' || event.actor === event.target
+      || !['directed', 'mutual'].includes(event.direction)) continue;
+    const claim = event.summary.normalize('NFKC').replace(/[^\p{L}\p{N}]/gu, '');
+    const day = Math.floor(event.item.publishedAt / DAY);
+    const key = JSON.stringify([event.kind, event.actor, event.target, event.direction, day, claim]);
+    if (!claims.has(key)) claims.set(key, []);
+    claims.get(key).push(event);
+  }
+  for (const events of claims.values()) {
+    const { familyOf, publishers } = detectSyndication(events.map((event) => event.item));
+    for (const event of events) {
+      add(event.kind, event.actor, event.target, 3 + event.severity * 2, event.item, {
+        aiSummary: event.summary, eventId: event.id, undirected: event.direction === 'mutual',
+        singleSource: publishers < 2, publisherFamily: familyOf(event.item),
+      });
+    }
+  }
+}
+
+export function buildImpactLinks(inputs, now, previous = [], revoked = new Set()) {
   const observations = new Map();
   let ucdpAsOf = 0;
   for (const event of rows(inputs.ucdp?.events)) {
@@ -260,18 +295,19 @@ export function buildImpactLinks(inputs, now, previous = []) {
   }
   function add(kind, from, to, points, raw, options = {}) {
     let actor = BLOCS.has(from) ? from : country(from);
-    let target = country(to);
+    let target = to === 'EU' ? to : country(to);
     const publishedAt = timestamp(raw.publishedAt);
     const source = text(raw.source, 100);
     const title = text(raw.title);
     const url = safeUrl(raw.url);
-    const inWindow = kind === 'conflict'
+    const ai = Boolean(options.aiSummary);
+    const inWindow = kind === 'conflict' && !ai
       ? ucdpAsOf && Number.isSafeInteger(publishedAt) && publishedAt > ucdpAsOf - UCDP_WINDOW_DAYS * DAY && publishedAt <= ucdpAsOf
       : within(publishedAt, now);
     if (!actor || !target || !source || !title || !url || !inWindow) return;
     const diplomatic = kind === 'tension' || kind === 'support';
-    let undirected = false;
-    if (diplomatic) {
+    let undirected = options.undirected === true;
+    if (diplomatic && !ai) {
       if (!COUNTRIES.has(actor) || actor === target) return;
       const relation = classifyRelationEvidence(kind, actor, target, title);
       if (!relation) return;
@@ -284,14 +320,19 @@ export function buildImpactLinks(inputs, now, previous = []) {
     const existing = observations.get(key);
     if (options.keepEarliest && existing && existing.evidence.publishedAt < publishedAt) return;
     observations.set(key, {
-      id, actor, target, undirected, kind, points: diplomatic ? DIPLOMATIC_POINTS : points, eventId,
-      evidence: { source, title, url, publishedAt },
+      id, actor, target, undirected, kind, points: diplomatic && !ai ? DIPLOMATIC_POINTS : points, eventId,
+      publisherFamily: options.publisherFamily,
+      evidence: {
+        source, title, url, publishedAt,
+        ...(ai ? { aiExtracted: true, aiSummary: options.aiSummary, singleSource: options.singleSource } : {}),
+      },
     });
   }
 
   // Carry citations across rotations of the existing daily relation/news cells.
   for (const row of rows(previous)) {
     if (Object.hasOwn(LABELS, row?.kind) && typeof row.eventId === 'string' && row.evidence && Number.isFinite(row.points)) {
+      if (row.evidence.aiExtracted) continue;
       // The sanctions change ledger already covers the lookback and may revise a batch.
       if (row.kind === 'sanctions' && row.evidence.source !== 'Federal Register' && Array.isArray(inputs.sanctionsChanges?.events)) continue;
       if (row.kind === 'conflict' && Array.isArray(inputs.ucdp?.events)) continue;
@@ -304,6 +345,7 @@ export function buildImpactLinks(inputs, now, previous = []) {
   relations(inputs.relations, add);
   energy(inputs, add, now);
   financial(inputs, add);
+  newsEvidence(inputs.newsEvents, revoked, now, add);
 
   const groups = new Map();
   for (const row of observations.values()) {
@@ -319,9 +361,17 @@ export function buildImpactLinks(inputs, now, previous = []) {
     let points = 0;
     let recent = 0;
     let prior = 0;
+    const countedNews = new Set();
+    const deterministicUrls = new Set(group.filter(({ evidence }) => !evidence.aiExtracted).map(({ evidence }) => evidence.url));
     for (const row of group) {
       const age = now - row.evidence.publishedAt;
-      const weightAge = kind === 'conflict' ? (ucdpAsOf - row.evidence.publishedAt) / (2 * UCDP_WINDOW_DAYS * DAY) : age / (14 * DAY);
+      if (row.evidence.aiExtracted) {
+        const publisherDay = `${row.publisherFamily || row.evidence.source}|${Math.floor(row.evidence.publishedAt / DAY)}`;
+        if (deterministicUrls.has(row.evidence.url) || countedNews.has(publisherDay)) continue;
+        countedNews.add(publisherDay);
+      }
+      const weightAge = row.evidence.source === 'UCDP'
+        ? (ucdpAsOf - row.evidence.publishedAt) / (2 * UCDP_WINDOW_DAYS * DAY) : age / (14 * DAY);
       points += row.points * (1 - weightAge);
       if (age <= DAY) recent += row.points;
       else if (age <= 7 * DAY) prior += row.points;
@@ -330,20 +380,27 @@ export function buildImpactLinks(inputs, now, previous = []) {
     const trend = !prior ? (recent ? 'new' : 'steady') : recent > baseline * 1.25 ? 'rising' : recent < baseline * 0.75 ? 'falling' : 'steady';
     const magnitude = Math.min(100, Math.round(points));
     const lastSeen = latest.evidence.publishedAt;
-    const evidence = [...new Map(group.map(({ evidence }) => [`${kind === 'conflict' ? evidence.title : evidence.url}|${evidence.publishedAt}`, evidence])).values()].slice(0, 5);
+    const unique = new Map();
+    for (const { evidence, eventId } of group) {
+      const key = evidence.source === 'UCDP' ? `ucdp:${eventId}` : evidence.url;
+      const prior = unique.get(key);
+      if (!prior || (evidence.aiExtracted && !prior.aiExtracted)) unique.set(key, evidence);
+    }
+    const evidence = [...unique.values()].slice(0, 5);
     if (latest.actor === latest.target) {
       countryEvents.push({ id: `country:${kind}:${latest.target}`, country: latest.target, kind, magnitude, lastSeen, eventCount: group.length, evidence });
       continue;
     }
     const directions = new Map(group.filter((row) => !row.undirected).map((row) => [row.actor, row]));
-    const undirected = directions.size !== 1;
+    const undirected = directions.size !== 1 || (latest.evidence.aiExtracted === true && latest.undirected);
     const [orientation] = directions.values();
     const [actor, target] = undirected ? [latest.actor, latest.target].sort() : [orientation.actor, orientation.target];
     const label = `${BLOCS.has(actor) ? actor : KO.of(actor)} ${undirected ? '·' : '→'} ${KO.of(target)}`;
     links.push({
       id: `${kind}:${actor}:${target}`, actor, target, undirected, kind, magnitude,
       direction: kind === 'support' ? 'support' : 'pressure',
-      firstSeen: group.at(-1).evidence.publishedAt, lastSeen, trend, headline: `${label} ${LABELS[kind]}`, evidence,
+      firstSeen: group.at(-1).evidence.publishedAt, lastSeen, trend,
+      headline: latest.evidence.aiSummary || `${label} ${LABELS[kind]}`, evidence,
     });
   }
   const bySignificance = (a, b) => b.magnitude - a.magnitude || b.lastSeen - a.lastSeen || a.id.localeCompare(b.id, 'en');
@@ -353,8 +410,8 @@ export function buildImpactLinks(inputs, now, previous = []) {
     id,
     status: inputs[id] == null || (id === 'relations' && inputs[id].status !== 'ok') || (id === 'ucdp' && !ucdpAsOf)
       ? 'missing'
-      : id === 'ucdp' && !within(ucdpAsOf, now) ? 'delayed' : 'available',
-    dataAsOf: id === 'ucdp' ? ucdpAsOf : 0,
+      : (id === 'ucdp' && !within(ucdpAsOf, now)) || (id === 'newsEvents' && inputs[id].status !== 'ok') ? 'delayed' : 'available',
+    dataAsOf: id === 'ucdp' ? ucdpAsOf : id === 'newsEvents' ? inputs[id]?.lastSuccessAt ?? 0 : 0,
   }));
   return { generatedAt: now, links, countryEvents, summary: summarizeImpactLinks(links, now), sources, observations: [...observations.values()] };
 }
@@ -365,7 +422,13 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     const fetched = await Promise.all(Object.entries(KEYS).map(async ([name, key]) => [name, await readCanonicalValue(key, { strict: true })]));
     if (!fetched.some(([, value]) => value != null)) throw new Error('No impact-link inputs in the personal store');
     const previous = await readCanonicalValue(IMPACT_LINKS_KEY, { strict: true });
-    return buildImpactLinks(Object.fromEntries(fetched), Date.now(), previous?.observations);
+    const inputs = Object.fromEntries(fetched);
+    const revoked = inputs.newsEvents ? await readNewsEventRevocations().catch(() => {
+      console.warn('Cannot read digest revocations; omitting extracted news evidence');
+      inputs.newsEvents = null;
+      return new Set();
+    }) : new Set();
+    return buildImpactLinks(inputs, Date.now(), previous?.observations, revoked);
   }, {
     ttlSeconds: 10_800,
     declareRecords: (data) => data.links.length + data.countryEvents.length,

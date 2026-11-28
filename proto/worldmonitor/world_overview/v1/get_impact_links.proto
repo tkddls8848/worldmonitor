@@ -7,7 +7,7 @@ import "sebuf/http/annotations.proto";
 message GetImpactLinksRequest {
   // sanctions, tariffs, conflict, tension, support, energy, or financial. Omit for all kinds.
   string kind = 1 [(sebuf.http.query) = {name: "kind"}];
-  // ISO alpha-2 country. Matches either link endpoint and scopes country events.
+  // ISO alpha-2 country (or EU). Matches either link endpoint and scopes country events.
   string country = 2 [(sebuf.http.query) = {name: "country"}];
   // 24h or 7d, using the last evidence date. Defaults to 7d, which includes
   // the latest available 30-day UCDP reporting window for conflict links.
@@ -21,6 +21,11 @@ message ImpactEvidence {
   string title = 2;
   string url = 3;
   int64 published_at = 4 [(sebuf.http.int64_encoding) = INT64_ENCODING_NUMBER];
+  // The original article title and URL are retained when evidence is extracted from news.
+  optional bool ai_extracted = 5;
+  optional string ai_summary = 6;
+  // No independent publisher in the digest corroborated this extracted action.
+  optional bool single_source = 7;
 }
 
 message ImpactLink {

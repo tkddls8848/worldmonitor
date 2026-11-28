@@ -16040,7 +16040,7 @@ paths:
                     type: string
                 - name: country
                   in: query
-                  description: ISO alpha-2 country. Matches either link endpoint and scopes country events.
+                  description: ISO alpha-2 country (or EU). Matches either link endpoint and scopes country events.
                   required: false
                   example: "US"
                   schema:
@@ -16080,10 +16080,11 @@ paths:
                                     - "country": "US"
                                       "eventCount": 1
                                       "evidence":
-                                          - "publishedAt": 1717200000000
+                                          - "aiExtracted": true
+                                            "aiSummary": "Example WorldMonitor observation."
+                                            "publishedAt": 1717200000000
+                                            "singleSource": true
                                             "source": "example"
-                                            "title": "example"
-                                            "url": "https://example.com/worldmonitor"
                                       "id": "example-id"
                                       "kind": "example"
                                 "generatedAt": 1717200000000
@@ -16091,10 +16092,11 @@ paths:
                                     - "actor": "example"
                                       "direction": "example"
                                       "evidence":
-                                          - "publishedAt": 1717200000000
+                                          - "aiExtracted": true
+                                            "aiSummary": "Example WorldMonitor observation."
+                                            "publishedAt": 1717200000000
+                                            "singleSource": true
                                             "source": "example"
-                                            "title": "example"
-                                            "url": "https://example.com/worldmonitor"
                                       "firstSeen": 1
                                       "headline": "example"
                                 "sources":
@@ -16112,10 +16114,11 @@ paths:
                                         - "actor": "example"
                                           "direction": "example"
                                           "evidence":
-                                              - "publishedAt": 1717200000000
+                                              - "aiExtracted": true
+                                                "aiSummary": "Example WorldMonitor observation."
+                                                "publishedAt": 1717200000000
+                                                "singleSource": true
                                                 "source": "example"
-                                                "title": "example"
-                                                "url": "https://example.com/worldmonitor"
                                           "firstSeen": 1
                                           "headline": "example"
                             schema:
@@ -40959,7 +40962,7 @@ components:
                     description: sanctions, tariffs, conflict, tension, support, energy, or financial. Omit for all kinds.
                 country:
                     type: string
-                    description: ISO alpha-2 country. Matches either link endpoint and scopes country events.
+                    description: ISO alpha-2 country (or EU). Matches either link endpoint and scopes country events.
                 window:
                     type: string
                     description: |-
@@ -41040,6 +41043,14 @@ components:
                     type: integer
                     format: int64
                     description: 'Warning: Values > 2^53 may lose precision in JavaScript'
+                aiExtracted:
+                    type: boolean
+                    description: The original article title and URL are retained when evidence is extracted from news.
+                aiSummary:
+                    type: string
+                singleSource:
+                    type: boolean
+                    description: No independent publisher in the digest corroborated this extracted action.
         worldmonitor_world_overview_v1_ImpactSummary:
             type: object
             properties:

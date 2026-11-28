@@ -27,6 +27,7 @@ export const STANDALONE_INTERVAL_MIN = {
   'market-quotes': 15, 'commodity-quotes': 15, 'fear-greed': 240,
   'shipping-stress': 15,
   'news-threat-summary': 15,
+  'news-events': 30,
   'market-breadth': 1440, 'cot': 1440, 'earnings-calendar': 360,
   'economic-calendar': 360, 'economy': 45, 'fred-rates': 60, 'fx-rates': 1440, 'fx-yoy': 480,
   'fuel-prices': 1440, 'electricity-prices': 360, 'ember-electricity': 1440, 'energy-spine': 1440,
@@ -80,20 +81,20 @@ const SCRIPT_ALIASES = { gpsjam: 'fetch-gpsjam.mjs' };
 // brief and decides on its own whether to regenerate the prose this pass.
 
 export const DEFAULT_COLLECTORS = [
-  'news-threat-summary', 'earthquakes', 'natural-events', 'weather-alerts', 'internet-outages', 'cyber-threats',
+  'news-threat-summary', 'news-events', 'earthquakes', 'natural-events', 'weather-alerts', 'internet-outages', 'cyber-threats',
   'unrest-events', 'military-flights', 'conflict-intel', 'prediction-markets', 'service-statuses',
   'bundle-market-backup', 'bundle-relay-backup', 'bundle-climate', 'bundle-health',
   'bundle-energy-sources', 'bundle-derived-signals',
   'bundle-macro', 'bundle-yield-curves', 'bundle-ecb-eu', 'bundle-imf-extended',
   'bundle-portwatch', 'bundle-portwatch-port-activity', 'bundle-regional-energy', 'bundle-country-reference', 'bundle-regional',
   'bundle-static-ref', 'bundle-static-ref-heavy',
-  ...Object.keys(STANDALONE_INTERVAL_MIN).filter((name) => !['news-threat-summary', 'weather-alerts', 'cyber-threats', 'impact-links'].includes(name)),
+  ...Object.keys(STANDALONE_INTERVAL_MIN).filter((name) => !['news-threat-summary', 'news-events', 'weather-alerts', 'cyber-threats', 'impact-links'].includes(name)),
   'insights', 'world-relations-ai', 'forecasts', 'correlation', 'digest-notifications', 'impact-links', 'world-overview',
 ];
 
 // The bulk pass can take longer than these cadences even on a healthy machine.
 const FAST_WATCH_GROUPS = [
-  { names: ['news-threat-summary'], every: STANDALONE_INTERVAL_MIN['news-threat-summary'] },
+  { names: ['news-threat-summary', 'news-events'], every: STANDALONE_INTERVAL_MIN['news-threat-summary'] },
   { names: ['shipping-stress'], every: STANDALONE_INTERVAL_MIN['shipping-stress'] },
   { names: ['transit-summaries'], every: STANDALONE_INTERVAL_MIN['transit-summaries'] },
   // The ticker's quotes expire after 30 minutes, less than one bulk pass can take.

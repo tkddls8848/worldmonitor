@@ -563,7 +563,8 @@ async function callLLM(headline, options = {}) {
   // exactly as before. Transport failures still advance immediately — withRetry
   // already covers transient ones, and a provider that is genuinely down should
   // not be asked twice.
-  const queue = [...LLM_PROVIDERS];
+  const queue = LLM_PROVIDERS.filter((provider) => !options.freeOnly
+    || (provider.name.startsWith('openrouter-free') && provider.model.endsWith(':free')));
   const resampled = new Set();
   while (queue.length > 0) {
     const provider = queue.shift();
@@ -572,6 +573,7 @@ async function callLLM(headline, options = {}) {
 
     const apiUrl = provider.apiUrlFn ? provider.apiUrlFn(envVal) : provider.apiUrl;
     const model = typeof provider.model === 'function' ? provider.model() : provider.model;
+    if (options.skipModel?.(model)) continue;
     // Captured per attempt, BEFORE the request: a correction collected during
     // this attempt's rejection belongs to the NEXT request.
     const effectiveUserPrompt = gateFeedbackNote ? `${userPrompt}\n\n${gateFeedbackNote}` : userPrompt;
@@ -579,6 +581,9 @@ async function callLLM(headline, options = {}) {
       const resp = await withRetry(async () => {
         const usable = usableBudgetMs();
         if (usable <= 0) throw createLlmBudgetError('insights llm budget exhausted');
+        if (options.reserveAttempt && !(await options.reserveAttempt(model))) {
+          throw createLlmBudgetError('caller attempt budget exhausted');
+        }
         const response = await insightsFetch(apiUrl, {
           method: 'POST',
           headers: provider.headers(envVal),
@@ -595,6 +600,7 @@ async function callLLM(headline, options = {}) {
           signal: AbortSignal.timeout(Math.max(1, Math.min(provider.timeout, usable))),
         });
         if (!response.ok) {
+          options.onAttemptResult?.({ model, status: response.status });
           // #6110: `usableBudgetMs()` is a real remaining wall clock, so pass it
           // as `remainingBudgetMs` — a hint longer than that (a daily-quota
           // 429 can ask for ~20 minutes) makes the error nonRetryable and we fall
@@ -609,6 +615,12 @@ async function callLLM(headline, options = {}) {
       }, provider.maxRetries ?? INSIGHTS_LLM_MAX_RETRIES, retryDelayMs);
 
       const json = await resp.json();
+      options.onAttemptResult?.({
+        model,
+        status: resp.status,
+        promptTokens: json.usage?.prompt_tokens,
+        completionTokens: json.usage?.completion_tokens,
+      });
       const rawText = json.choices?.[0]?.message?.content?.trim();
       if (!rawText) {
         console.warn(`  ${provider.name}: empty response`);
@@ -621,7 +633,7 @@ async function callLLM(headline, options = {}) {
         .replace(/<think>[\s\S]*/gi, '')
         .trim();
 
-      if (text.length < 20) {
+      if (text.length < (options.freeOnly ? 2 : 20)) {
         console.warn(`  ${provider.name}: output too short (${text.length} chars)`);
         continue;
       }
@@ -639,6 +651,7 @@ async function callLLM(headline, options = {}) {
           console.warn(`  ${provider.name}: output acceptor threw (${acceptErr.message})`);
         }
         if (!accepted) {
+          if (options.freeOnly) continue;
           if (!faulted) console.warn(`  ${provider.name}: output rejected by caller gates`);
           if (faulted) { if (!firstFaulted) firstFaulted = candidate; }
           else if (!firstRejected) firstRejected = candidate;

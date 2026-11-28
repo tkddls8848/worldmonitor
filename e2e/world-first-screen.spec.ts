@@ -52,8 +52,12 @@ async function openBattleFixture(page: Page): Promise<void> {
     trend: age < 24 ? 'new' : 'steady', firstSeen: now - age * 3_600_000, lastSeen: now - age * 3_600_000,
     evidence: [{ source: 'Fixture authority', title: 'Verifiable original headline', url: 'https://example.com/evidence', publishedAt: now - age * 3_600_000 }],
   });
+  const korea = link('JP', 'KR', 'sanctions', 8, 85);
+  const headline = '일본이 한국에 수출 제한을 발표했다';
   const links = [
-    link('CA', 'US', 'tariffs', 1, 92), link('JP', 'KR', 'sanctions', 8, 85), link('RU', 'UA', 'conflict', 528, 100),
+    link('CA', 'US', 'tariffs', 1, 92),
+    { ...korea, headline, evidence: [{ ...korea.evidence[0]!, aiExtracted: true, aiSummary: headline, singleSource: true }] },
+    link('RU', 'UA', 'conflict', 528, 100),
     { ...link('CA', 'UA', 'support', 48, 80), direction: 'support', undirected: true },
   ];
   await page.route('**/api/**', (route) => route.fulfill({ json: {} }));
@@ -135,6 +139,11 @@ for (const renderer of ['svg', 'deckgl'] as const) {
       const selectedArc = page.locator(`.bm-arc[data-link-id="${id}"]`);
       await expect(selectedArc).toHaveAttribute('opacity', '1');
       await expect(evidence.getByRole('link', { name: 'Verifiable original headline' })).toBeVisible();
+      if (id === 'sanctions:JP:KR') {
+        await expect(chip).toContainText('일본이 한국에 수출 제한을 발표했다');
+        await expect(evidence.locator('.bm-source-label')).toContainText('AI 추출 · 단일 출처');
+        await expect(evidence.getByRole('link', { name: 'Verifiable original headline' })).toHaveAttribute('href', 'https://example.com/evidence');
+      }
       await expect.poll(() => selectedArc.locator('.bm-arc-core').evaluate((element: SVGPathElement) => {
         if (!element.hasAttribute('d')) return false;
         const viewport = element.ownerSVGElement!.getBoundingClientRect();

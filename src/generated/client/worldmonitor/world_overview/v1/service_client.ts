@@ -157,6 +157,9 @@ export interface ImpactEvidence {
   title: string;
   url: string;
   publishedAt: number;
+  aiExtracted?: boolean;
+  aiSummary?: string;
+  singleSource?: boolean;
 }
 
 export interface ImpactSummary {

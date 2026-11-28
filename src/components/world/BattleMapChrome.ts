@@ -282,8 +282,10 @@ export class BattleEvidenceDrawer {
     endpoints.append(endpoint(link.actor));
     endpoints.append(battleNode('span', '', link.undirected ? '—' : '→'), endpoint(link.target));
     content.append(endpoints, battleNode('p', 'bm-evidence-metrics', `강도 ${link.magnitude}/100 · 자료 기준 ${impactDate(link.lastSeen)}`));
-    if (link.kind === 'conflict') content.append(battleNode('p', 'bm-evidence-note', 'UCDP 사건 기록입니다. 국가 간 선은 두 당사자와 사건 발생국의 관계를 나타냅니다.'));
-    if (link.headline && /[가-힣]/.test(link.headline)) content.append(battleNode('p', 'bm-evidence-note', link.headline));
+    if (link.evidence.some((evidence) => evidence.source === 'UCDP')) content.append(battleNode('p', 'bm-evidence-note', 'UCDP 국가 간 선은 두 당사자와 사건 발생국의 관계를 나타냅니다.'));
+    if (link.headline && /[가-힣]/.test(link.headline) && !link.evidence.some((evidence) => evidence.aiSummary === link.headline)) {
+      content.append(battleNode('p', 'bm-evidence-note', link.headline));
+    }
     if (bundle.length > 1) {
       const siblings = battleNode('div', 'bm-evidence-tabs');
       for (const candidate of bundle) {
@@ -323,7 +325,9 @@ export class BattleEvidenceDrawer {
     const list = battleNode('ul', 'bm-evidence-list');
     for (const evidence of entries) {
       const item = battleNode('li', '');
-      item.append(battleNode('small', 'bm-source-label', `${evidence.source} · ${impactDate(evidence.publishedAt)}`));
+      const ai = evidence.aiExtracted ? ` · AI 추출${evidence.singleSource ? ' · 단일 출처' : ''}` : '';
+      item.append(battleNode('small', 'bm-source-label', `${evidence.source} · ${impactDate(evidence.publishedAt)}${ai}`));
+      if (evidence.aiSummary) item.append(battleNode('span', '', evidence.aiSummary));
       const url = this.safeUrl(evidence.url);
       if (url) {
         const anchor = battleNode('a', '', evidence.title);
