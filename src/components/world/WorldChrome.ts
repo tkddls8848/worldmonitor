@@ -266,7 +266,7 @@ export class WorldBottomShelf {
   private range = el('input', 'wfs-date-range');
   private dateInput = el('input', 'wfs-date-input');
   private dateLabel = el('output', 'wfs-current-date');
-  constructor(private callbacks: { onFieldsChange?(fields: WorldField[]): void; onDateChange(date: string): void }, battle?: { filters: HTMLElement; windows: HTMLElement }) {
+  constructor(private callbacks: { onFieldsChange?(fields: WorldField[]): void; onDateChange(date: string): void }, battle?: { shelf: HTMLElement; windows: HTMLElement }) {
     installStyle();
     this.element = el('footer', 'bottom-shelf');
     this.play.type = 'button';
@@ -280,7 +280,7 @@ export class WorldBottomShelf {
       if (this.dates.includes(this.dateInput.value)) this.select(this.dateInput.value);
       else this.dateInput.value = this.current;
     });
-    if (battle) this.element.append(battle.filters, battle.windows, this.timeline);
+    if (battle) this.element.append(battle.shelf, battle.windows, this.timeline);
     else {
       this.element.append(this.fieldBar, this.timeline);
       this.renderFields();

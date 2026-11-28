@@ -409,6 +409,7 @@ export class MapContainer {
     this.rendererReady = true;
     this.rendererDemandRequested = false;
     this.releaseRendererDemand = null;
+    if (this.worldOverviewMode && this.useDeckGL) this.deckGLMap?.resetWorldView();
     // Replay viewport commands before resolving readiness so callers waiting to
     // observe settlement attach to the transition that was actually started.
     this.replayPendingViewportActions();
@@ -955,9 +956,11 @@ export class MapContainer {
   }
 
   public setWorldOverviewMode(on: boolean): void {
+    const enteringWorld = on && !this.worldOverviewMode;
     this.worldOverviewMode = on;
     this.deckGLMap?.setWorldOverviewMode(on);
     this.svgMap?.setWorldOverview(on ? this.worldOverviewView : null);
+    if (enteringWorld && (this.isMobile || this.rendererReady)) this.resetWorldView();
   }
 
   public setWorldOverview(view: WorldMapView | null): void {
@@ -1034,7 +1037,6 @@ export class MapContainer {
 
   public resetWorldView(): void {
     if (this.useDeckGL) this.deckGLMap?.resetWorldView();
-    else if (this.isMobile) this.setCenter(22, 38, 1.65);
     else this.setView('global', 1);
   }
 

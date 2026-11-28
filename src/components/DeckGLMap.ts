@@ -6121,7 +6121,13 @@ export class DeckGLMap {
   }
 
   public resetWorldView(): void {
-    this.setView('global', VIEW_PRESETS.global.zoom);
+    this.state.view = 'global';
+    // Include the Antarctic coast even when the single-world camera is
+    // constrained by the width of a widescreen viewport.
+    this.fitFocusBounds({
+      west: -179.9, east: 179.9, south: -76, north: 70,
+      lonSpan: 359.8, latSpan: 146, center: { lon: 0, lat: -3 },
+    }, VIEW_PRESETS.global.zoom, { left: 0, right: 0, top: 8, bottom: 8 }, 0);
   }
 
   public getTimeRange(): TimeRange {

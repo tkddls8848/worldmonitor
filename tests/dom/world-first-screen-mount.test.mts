@@ -149,7 +149,7 @@ describe('mountWorldFirstScreen', () => {
       const evidence = slots.stage.querySelector('.bm-link-drawer')!;
       expect(evidence.getAttribute('data-state')).toBe('open');
       expect(evidence.querySelector('a')?.textContent).toBe('Official tariff determination');
-      expect(map.focusWorldEvidence).toHaveBeenCalledWith([-100, 40], [128, 37], expect.any(Object));
+      expect(map.focusWorldEvidence).toHaveBeenCalledWith([-100, 40], [126.98, 37.57], expect.any(Object));
       evidence.querySelectorAll<HTMLButtonElement>('.bm-endpoints button')[1]!.click();
       expect(map.endWorldEvidenceFocus).toHaveBeenCalled();
       expect(slots.stage.querySelector('[data-section="impact"]')?.textContent).toContain('수신 1');
@@ -168,6 +168,38 @@ describe('mountWorldFirstScreen', () => {
       mounted.destroy();
     }
   });
+  it('keeps Korean endpoint labels and remembers the domestic marker toggle across mounts', async () => {
+    const key = 'worldmonitor-battle-domestic-events';
+    localStorage.removeItem(key);
+    const at = Date.now();
+    const impact = { id: 'tariffs:US:KR', actor: 'US', target: 'KR', kind: 'tariffs', direction: 'pressure', lastSeen: at, magnitude: 50, evidence: [] };
+    mocks.load.mockResolvedValue({ snapshot, archivedDates: [] });
+    mocks.impacts.mockResolvedValue({
+      links: [impact], summary: { today: [impact] }, sources: [],
+      countryEvents: ['conflict', 'energy', 'financial'].map((kind) =>
+        ({ id: kind, country: 'KR', kind, lastSeen: at, magnitude: 25, eventCount: 1 })),
+    });
+    try {
+      for (const expected of [false, true]) {
+        const { slots, ctx } = setup();
+        const mounted = mountWorldFirstScreen(ctx, slots, { openFullView() {}, openCountryBrief() {} });
+        try {
+          const button = slots.shelf.querySelector<HTMLButtonElement>('.bm-domestic-toggle')!;
+          await vi.waitFor(() => expect(slots.stage.querySelector('.bm-story-label')?.textContent).toBe('미국 → 한국 관세'));
+          expect([...slots.stage.querySelectorAll('.bm-country-label')].map((label) => label.textContent)).toEqual(['한국', '미국']);
+          expect(button.getAttribute('aria-pressed')).toBe(String(expected));
+          expect(slots.stage.querySelectorAll('.bm-country-event')).toHaveLength(expected ? 3 : 0);
+          button.click();
+          expect(slots.stage.querySelectorAll('.bm-country-event')).toHaveLength(expected ? 0 : 3);
+          expect(localStorage.getItem(key)).toBe(String(!expected));
+        } finally {
+          mounted.destroy();
+        }
+      }
+    } finally {
+      localStorage.removeItem(key);
+    }
+  });
   it('keeps the existing view on errors and shows an error banner', async () => {
     mocks.load.mockResolvedValueOnce({ snapshot, archivedDates: [] }).mockRejectedValueOnce(new Error('offline')); const { slots, map, ctx } = setup();
     const mounted = mountWorldFirstScreen(ctx, slots, { openFullView() {}, openCountryBrief() {} });
@@ -184,7 +216,7 @@ describe('mountWorldFirstScreen', () => {
     await vi.waitFor(() => expect(slots.shelf.querySelector('[data-date-step="-1"]')).toBeTruthy());
     const filter = slots.shelf.querySelector<HTMLButtonElement>('.bm-filters [data-kind="conflict"]')!;
     filter.click();
-    expect(filter.getAttribute('aria-pressed')).toBe('false');
+    expect(filter.getAttribute('aria-pressed')).toBe('true');
     window.dispatchEvent(new CustomEvent('wm:world:country-click', { detail: { code: 'JP' } })); expect(slots.stage.querySelector('.wfs-country-drawer')?.getAttribute('data-state')).toBe('open');
     slots.shelf.querySelector<HTMLButtonElement>('[data-date-step="-1"]')!.click(); await vi.waitFor(() => expect(mocks.load).toHaveBeenCalledWith('2026-11-21'));
     await vi.waitFor(() => expect(slots.stage.querySelector('.bm-status')?.getAttribute('data-state')).toBe('archive'));

@@ -7,7 +7,7 @@ import { renderCoordAxes } from '@/components/world/WorldCoordAxes';
 import { preloadCountryGeometry } from '@/services/country-geometry';
 import { loadWorldOverview, setWorldMark } from '@/services/world-overview';
 import { buildCountryDrawerData, buildWorldMapView, countryName, endpointCoord } from '@/services/world-overview-view';
-import { buildBattleView, buildCountryEventMarkers, filterImpactWindow, type ImpactWindow, pressureLevel } from '@/services/battle-map-view';
+import { battleCountryLabels, battleEndpoint, buildBattleView, buildCountryEventMarkers, filterImpactWindow, type ImpactWindow, pressureLevel } from '@/services/battle-map-view';
 import { loadImpactLinks, type CountryImpactEvent, type GetImpactLinksResponse, type ImpactLink } from '@/services/impact-links';
 import { IMPACT_KINDS, isImpactKind, type ImpactKind } from '@/config/battle-map';
 import { buildSupplementalTickerItems, loadTickerItems } from '@/services/world-ticker';
@@ -23,6 +23,7 @@ import type { IodaOutage } from '@/services/internet-outages-ioda';
 import { loadEuGasFlows } from '@/services/eu-gas-flows';
 import type { EuGasFlows } from '@/services/eu-gas-flows';
 import { getCurrentTheme, setTheme } from '@/utils/theme-manager';
+import { safeStorageGet, safeStorageSet } from '@/utils/safe-storage';
 import { kstDate } from '../../shared/world-overview.js';
 import type { CountryDrawerData, FederalRegisterDocument, WorldMapView, WorldMarkRequest } from '@/types/world-overview';
 import type { BreakingAlert } from '@/services/breaking-news-alerts';
@@ -70,7 +71,11 @@ export function mountWorldFirstScreen(
   let linkListOpen = false;
   let frontOnly = false;
   let impactWindow: ImpactWindow = '7d';
-  let activeKinds = new Set(IMPACT_KINDS);
+  const activeKinds = new Set<ImpactKind>();
+  const domesticKey = 'worldmonitor-battle-domestic-events';
+  let domestic = safeStorageGet(domesticKey) === 'true';
+  let previewedLink: ImpactLink | null = null;
+  let previewAdded = false;
   let impactData: GetImpactLinksResponse | null = null;
   let impactLoading = false;
   let impactError = false;
@@ -112,16 +117,22 @@ export function mountWorldFirstScreen(
       if (selectedLink?.id === link.id) clearSelection();
       else openLink(link, trigger);
     },
+    previewLink,
     locate: locateAlert,
     toggleLog: () => {
       if (!logOpen) clearSelection(false);
       setLogOpen(!logOpen);
     },
     chooseKind: toggleKind,
-    allKinds: () => { activeKinds = new Set(IMPACT_KINDS); frontOnly = false; applyFilters(); },
+    allKinds: () => { activeKinds.clear(); frontOnly = false; applyFilters(); },
     showList: showLinkList,
     setWindow: changeWindow,
     setCii: (enabled) => { cii = enabled; makeView(); },
+    toggleDomestic: () => {
+      domestic = !domestic;
+      safeStorageSet(domesticKey, String(domestic));
+      makeView();
+    },
     focusFront: () => { frontOnly = !frontOnly; applyFilters(); },
     retry: () => { void refreshImpact(); },
   });
@@ -198,18 +209,40 @@ export function mountWorldFirstScreen(
   slots.shelf.append(shelf.element);
   slots.stage.append(overlay.element, chrome.legend, zoom.element, status.element, chrome.status, drawer.element, evidence.element);
 
+  function renderImpactOverlay(extra?: (typeof battle.arcs)[number]): void {
+    const anchors = snapshot?.anchors ?? {};
+    const arcs = extra ? [...battle.arcs, extra] : battle.arcs;
+    const eventMarkers = domestic ? buildCountryEventMarkers(countryEvents, anchors) : [];
+    overlay.setView(arcs, battleCountryLabels(arcs, anchors), battle.crests, eventMarkers, !activeKinds.size && !frontOnly && !selectedIso2, {
+      selectLink: (arc) => openLink(arc.link, findImpactTrigger(arc.link.id)),
+      selectCountry,
+      selectEvent: openCountryEvent,
+    });
+    chrome.setLegend(cii || archive, arcs, eventMarkers.map(({ event }) => event), impactData?.sources?.find((source) => source.id === 'ucdp')?.dataAsOf ?? 0);
+  }
+
+  function previewLink(link: ImpactLink | null): void {
+    if (previewedLink?.id === link?.id) return;
+    previewedLink = link;
+    const extra = link && !battle.arcs.some((arc) => arc.link.id === link.id)
+      ? buildBattleView([], snapshot?.anchors ?? {}, Date.now(), null, link).arcs[0] : undefined;
+    if (extra || previewAdded) renderImpactOverlay(extra);
+    previewAdded = Boolean(extra);
+    overlay.highlight(link && (extra || battle.arcs.some((arc) => arc.link.id === link.id)) ? link.id : null);
+  }
+
   function makeView(): void {
     const now = Date.now();
     const anchors = snapshot?.anchors ?? {};
     const windowLinks = archive ? [] : filterImpactWindow(impactData?.links ?? [], impactWindow, now);
     countryEvents = archive ? [] : filterImpactWindow(impactData?.countryEvents ?? [], impactWindow, now);
-    filteredLinks = windowLinks.filter((link) => isImpactKind(link.kind) && activeKinds.has(link.kind));
-    battle = buildBattleView(filteredLinks, anchors, now, selectedIso2, selectedLink);
+    filteredLinks = windowLinks.filter((link) => isImpactKind(link.kind) && (!activeKinds.size || activeKinds.has(link.kind)));
+    battle = buildBattleView(filteredLinks, anchors, now, selectedIso2, selectedLink, activeKinds.size > 0);
     const fronts = battle.fronts.length;
     if (frontOnly) {
       const frontCodes = new Set(battle.fronts);
       filteredLinks = filteredLinks.filter((link) => frontCodes.has(link.target));
-      battle = buildBattleView(filteredLinks, anchors, now, selectedIso2, selectedLink);
+      battle = buildBattleView(filteredLinks, anchors, now, selectedIso2, selectedLink, true);
     }
     const fillCii = cii || archive;
     const selected = selectedIso2 ?? selectedLink?.target ?? selectedEvent?.country ?? selectedAlert?.countryCode ?? null;
@@ -226,14 +259,11 @@ export function mountWorldFirstScreen(
     currentView = { date: snapshot?.date ?? '', countries, pressure: !fillCii, lines: [], blocOutlines: [], selectedIso2: selected,
       relatedIso2: battle.related, hotspots: [] };
     map.setWorldOverview(currentView);
-    const eventMarkers = buildCountryEventMarkers(countryEvents, anchors);
-    overlay.setView(battle.arcs, battle.crests, eventMarkers, {
-      selectLink: (arc) => openLink(arc.link, findImpactTrigger(arc.link.id)),
-      selectCountry,
-      selectEvent: openCountryEvent,
-    });
-    chrome.setLegend(fillCii, battle.arcs, eventMarkers.map(({ event }) => event), impactData?.sources?.find((source) => source.id === 'ucdp')?.dataAsOf ?? 0);
-    chrome.setFilters(activeKinds, windowLinks, impactWindow, battle.arcs.length, fronts, now);
+    previewedLink = null;
+    previewAdded = false;
+    renderImpactOverlay();
+    overlay.highlight(null);
+    chrome.setFilters(activeKinds, windowLinks, impactWindow, battle.arcs.length, fronts, frontOnly, domestic, now);
     chrome.setSources(archive ? [] : impactData?.sources ?? [], impactData?.generatedAt ?? 0);
     const state = archive ? 'archive' : impactError ? 'error' : !impactData && impactLoading ? 'loading'
       : !impactData?.links.length && !impactData?.countryEvents?.length ? 'empty' : !filteredLinks.length ? 'filtered' : 'ok';
@@ -327,8 +357,8 @@ export function mountWorldFirstScreen(
     const bundle = filteredLinks.filter((candidate) => candidate.actor === link.actor && candidate.target === link.target);
     evidence.showLink(link, bundle, (candidate) => openLink(candidate));
     finishEvidenceOpen();
-    const from = endpointCoord(link.actor, snapshot?.anchors ?? {});
-    const to = endpointCoord(link.target, snapshot?.anchors ?? {});
+    const from = battleEndpoint(link.actor, snapshot?.anchors ?? {});
+    const to = battleEndpoint(link.target, snapshot?.anchors ?? {});
     if (from && to) map.focusWorldEvidence(from, to, evidence.element.getBoundingClientRect());
   }
 
@@ -381,11 +411,12 @@ export function mountWorldFirstScreen(
   }
 
   function renderToday(): void {
+    previewLink(null);
     const now = Date.now();
     const latestAlert = breakingAlerts[breakingAlerts.length - 1];
     const alert = !archive && latestAlert && latestAlert.timestamp.getTime() >= now - 86_400_000 ? latestAlert : undefined;
     const today = archive ? [] : (impactData?.summary?.today ?? []).filter((link) =>
-      link.lastSeen >= now - 86_400_000 && isImpactKind(link.kind) && activeKinds.has(link.kind)).slice(0, alert ? 6 : 7);
+      link.lastSeen >= now - 86_400_000 && isImpactKind(link.kind) && (!activeKinds.size || activeKinds.has(link.kind))).slice(0, alert ? 6 : 7);
     chrome.setToday(today, alert, selectedLink?.id, now, archive ? '보관 날짜 보기'
       : impactLoading && !impactData ? '집계 불러오는 중' : '최근 24시간의 신규·급등 영향선 없음');
   }

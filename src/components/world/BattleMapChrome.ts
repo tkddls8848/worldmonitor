@@ -36,18 +36,20 @@ const SOURCE_LABELS: Record<string, string> = {
 
 export class BattleMapChrome {
   readonly strip = battleNode('section', 'dispatch-bar bm-strip');
-  readonly filters = battleNode('div', 'bm-filters');
+  readonly shelf = battleNode('div', 'bm-impact-controls');
   readonly windows = battleNode('div', 'bm-windows');
   readonly legend = battleNode('aside', 'atlas-key-plate bm-key-plate');
   readonly status = battleNode('section', 'bm-status');
   readonly counters = battleNode('div', 'bm-counts');
   readonly sources = battleNode('details', 'bm-sources');
   readonly logToggle: HTMLButtonElement;
+  private readonly filters = battleNode('div', 'bm-filters');
   private readonly chips = battleNode('div', 'bm-strip-chips');
   private readonly title = battleNode('strong', 'bm-strip-title', '오늘의 전황');
   private readonly filterButtons = new Map<ImpactKind, HTMLButtonElement>();
   private readonly all: HTMLButtonElement;
   private readonly list: HTMLButtonElement;
+  private readonly domestic: HTMLButtonElement;
   private readonly timeButtons = new Map<ImpactWindow, HTMLButtonElement>();
   private readonly scale = battleNode('div', 'wfs-cii-scale');
   private readonly keys = battleNode('div', 'bm-line-legend');
@@ -63,6 +65,7 @@ export class BattleMapChrome {
 
   constructor(private readonly actions: {
     selectLink(link: ImpactLink, trigger: HTMLElement | SVGElement): void;
+    previewLink(link: ImpactLink | null): void;
     locate(alert: BreakingAlert, trigger: HTMLElement): void;
     toggleLog(): void;
     chooseKind(kind: ImpactKind): void;
@@ -70,6 +73,7 @@ export class BattleMapChrome {
     showList(trigger: HTMLElement): void;
     setWindow(window: ImpactWindow): void;
     setCii(enabled: boolean): void;
+    toggleDomestic(): void;
     focusFront(): void;
     retry(): void;
   }) {
@@ -85,8 +89,11 @@ export class BattleMapChrome {
     this.logToggle.id = 'logToggleBtn';
     this.strip.append(this.title, this.chips, prev, next, this.logToggle);
     this.filters.setAttribute('aria-label', '영향선 유형');
-    this.all = battleButton('전체', actions.allKinds);
-    this.filters.append(this.all);
+    this.all = battleButton('주요 영향선', actions.allKinds);
+    this.all.title = '주요 국제 영향선으로 돌아가기';
+    this.domestic = battleButton('국내 사건', actions.toggleDomestic);
+    this.domestic.classList.add('bm-domestic-toggle');
+    this.filters.append(this.all, this.domestic);
     for (const kind of IMPACT_KINDS) {
       const button = battleButton(IMPACT_STYLES[kind].label, () => actions.chooseKind(kind));
       button.dataset.kind = kind;
@@ -96,7 +103,7 @@ export class BattleMapChrome {
     }
     this.list = battleButton('영향선 목록', () => actions.showList(this.list));
     this.list.classList.add('bm-list-toggle');
-    this.filters.append(this.list);
+    this.shelf.append(this.filters, this.list);
     for (const window of ['24h', '7d'] as const) {
       const button = battleButton(window.toUpperCase(), () => actions.setWindow(window));
       this.timeButtons.set(window, button);
@@ -118,7 +125,8 @@ export class BattleMapChrome {
     this.status.hidden = true;
     this.pressureCount = battleButton('압박 0', actions.allKinds);
     this.surgeCount = battleButton('급등 0', () => actions.setWindow('24h'));
-    this.frontCount = battleButton('전선 0', actions.focusFront, 'bm-button bm-front-count');
+    this.frontCount = battleButton('고압 국가', actions.focusFront, 'bm-button bm-front-count');
+    this.frontCount.title = '수신 압박도 60 이상인 국가로 향하는 영향선';
     this.counters.append(this.pressureCount, this.surgeCount, this.frontCount);
     this.sources.hidden = true;
   }
@@ -131,6 +139,9 @@ export class BattleMapChrome {
   setToday(today: ImpactLink[], alert: BreakingAlert | undefined, selected: string | undefined, asOf: number, message: string): void {
     this.title.textContent = `오늘의 전황 ${today.length + Number(Boolean(alert))}`;
     const row: HTMLElement[] = [];
+    let hovered: ImpactLink | null = null;
+    let focused: ImpactLink | null = null;
+    const preview = () => this.actions.previewLink(hovered ?? focused);
     if (alert) {
       const chip = battleButton(`● 속보 · ${alert.headline}`, () => this.actions.locate(alert, chip), 'bm-button bm-chip bm-breaking');
       chip.title = alert.headline;
@@ -144,6 +155,10 @@ export class BattleMapChrome {
       chip.dataset.impactId = link.id;
       chip.setAttribute('aria-pressed', String(link.id === selected));
       chip.title = title;
+      chip.addEventListener('pointerenter', () => { hovered = link; preview(); });
+      chip.addEventListener('pointerleave', () => { hovered = null; preview(); });
+      chip.addEventListener('focus', () => { focused = link; preview(); });
+      chip.addEventListener('blur', () => { focused = null; preview(); });
       chip.append(battleNode('span', 'bm-chip-label', title));
       if (trend) {
         const badge = battleNode('small', 'bm-trend', trend);
@@ -158,12 +173,13 @@ export class BattleMapChrome {
     this.chips.scrollLeft = scroll;
   }
 
-  setFilters(active: ReadonlySet<ImpactKind>, links: ImpactLink[], window: ImpactWindow, displayed: number, fronts: number, asOf: number): void {
+  setFilters(active: ReadonlySet<ImpactKind>, links: ImpactLink[], window: ImpactWindow, displayed: number, fronts: number,
+    frontOnly: boolean, domestic: boolean, asOf: number): void {
     const counts: Record<string, number> = {};
     for (const { kind } of links) counts[kind] = (counts[kind] ?? 0) + 1;
-    const visible = links.filter((link) => isImpactKind(link.kind) && active.has(link.kind));
-    this.all.textContent = `전체 ${links.length}`;
-    this.all.setAttribute('aria-pressed', String(active.size === IMPACT_KINDS.length));
+    const visible = links.filter((link) => isImpactKind(link.kind) && (!active.size || active.has(link.kind)));
+    this.all.setAttribute('aria-pressed', String(!active.size && !frontOnly));
+    this.domestic.setAttribute('aria-pressed', String(domestic));
     for (const [kind, button] of this.filterButtons) {
       button.textContent = `${IMPACT_STYLES[kind].label} ${counts[kind] ?? 0}`;
       button.setAttribute('aria-pressed', String(active.has(kind)));
@@ -171,8 +187,9 @@ export class BattleMapChrome {
     for (const [key, button] of this.timeButtons) button.setAttribute('aria-pressed', String(window === key));
     this.pressureCount.textContent = `압박 ${visible.filter((link) => link.direction === 'pressure').length}`;
     this.surgeCount.textContent = `급등 ${visible.filter((link) => impactTrend(link, asOf) === '급등').length}`;
-    this.frontCount.textContent = `전선 ${fronts}`;
-    this.frontCount.disabled = !fronts;
+    this.frontCount.textContent = `고압 국가 ${fronts}`;
+    this.frontCount.hidden = !fronts && !frontOnly;
+    this.frontCount.setAttribute('aria-pressed', String(frontOnly));
     const hidden = Math.max(0, visible.length - displayed);
     this.list.textContent = hidden ? `목록 +${hidden}` : '영향선 목록';
     this.list.disabled = !visible.length;
@@ -181,13 +198,14 @@ export class BattleMapChrome {
   setLegend(cii: boolean, arcs: BattleArc[], events: CountryImpactEvent[], ucdpAsOf: number): void {
     this.pressure.setAttribute('aria-pressed', String(!cii));
     this.cii.setAttribute('aria-pressed', String(cii));
-    const levels = cii ? ['평온', '관심', '주의', '경계', '고위험'] : ['평온', '저압', '경계', '집중', '포화'];
+    const levels = cii ? ['평온', '관심', '주의', '경계', '고위험'] : ['없음', '낮음', '경계', '집중', '포화'];
     const palette = cii ? WORLD_FILL_COLORS : PRESSURE_FILL;
     this.conflictDate.hidden = !ucdpAsOf || !(arcs.some((arc) => arc.kind === 'conflict') || events.some((event) => event.kind === 'conflict'));
     this.conflictDate.textContent = this.conflictDate.hidden ? '' : `UCDP 자료 기준 ${impactDate(ucdpAsOf)}`;
     this.scale.replaceChildren(...levels.map((label, index) => {
       const chip = battleNode('span', 'wfs-cii-step', label);
       chip.dataset.level = String(index);
+      if (!cii) chip.title = ['0', '1–34', '35–59', '60–79', '80–100'][index]!;
       for (const theme of ['light', 'dark'] as const) chip.style.setProperty(`--wfs-swatch-${theme}`, `rgb(${palette[theme][index as FillLevel]!.slice(0, 3).join(' ')})`);
       return chip;
     }));

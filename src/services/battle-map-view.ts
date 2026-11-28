@@ -13,12 +13,13 @@ export interface BattleArc {
   to: Coordinate;
   opacity: number;
   level: number;
-  bundle: ImpactLink[];
   emphasized: boolean;
   animated: boolean;
 }
-export interface BattleCrest { code: string; at: Coordinate; count: number; label: boolean; dimmed: boolean }
+export interface BattleCrest { code: string; at: Coordinate; count: number; dimmed: boolean }
 export interface BattleEventMarker { event: CountryImpactEvent; at: Coordinate; offset: number }
+export interface BattleCountryLabel { code: string; at: Coordinate }
+const BATTLE_STORY_LIMIT = 6;
 
 export function impactDate(at: number): string {
   return new Date(at).toISOString().slice(5, 10);
@@ -26,6 +27,27 @@ export function impactDate(at: number): string {
 
 export function impactCountry(code: string): string {
   return { EU: '유럽연합', UN: '유엔', NATO: '북대서양조약기구' }[code] ?? countryName(code, 'ko');
+}
+
+const BATTLE_CAPITALS: Record<string, Coordinate> = { RU: [37.62, 55.75], KR: [126.98, 37.57] };
+
+export function battleEndpoint(code: string, anchors: Record<string, Coordinate>): Coordinate | null {
+  return BATTLE_CAPITALS[code] ?? endpointCoord(code, anchors);
+}
+
+export function battleStoryLabel(link: ImpactLink, kind: ImpactKind): string {
+  const name = (code: string) => code === 'KR' ? '한국' : impactCountry(code);
+  return `${name(link.actor)} ${link.undirected ? '—' : '→'} ${name(link.target)} ${IMPACT_STYLES[kind].label}`;
+}
+
+export function battleCountryLabels(arcs: readonly BattleArc[], anchors: Record<string, Coordinate>): BattleCountryLabel[] {
+  const korea = battleEndpoint('KR', anchors);
+  const labels = new Map<string, Coordinate>(korea ? [['KR', korea]] : []);
+  for (const { link, from, to } of [...arcs].reverse()) {
+    labels.set(link.actor, from);
+    labels.set(link.target, to);
+  }
+  return [...labels].map(([code, at]) => ({ code, at }));
 }
 
 export function impactHeadline(link: ImpactLink): string {
@@ -54,7 +76,7 @@ export function impactTrend(link: ImpactLink, asOf: number): string {
 }
 
 export function pressureLevel(score: number): FillLevel {
-  return score >= 80 ? 4 : score >= 60 ? 3 : score >= 35 ? 2 : score >= 15 ? 1 : 0;
+  return score >= 80 ? 4 : score >= 60 ? 3 : score >= 35 ? 2 : score > 0 ? 1 : 0;
 }
 
 export function filterImpactWindow<T extends { kind: string; lastSeen: number }>(items: readonly T[], window: ImpactWindow, asOf: number): T[] {
@@ -79,15 +101,15 @@ export function buildBattleView(
   asOf: number,
   selectedCountry: string | null,
   selectedLink: ImpactLink | null,
+  expanded = false,
 ) {
   const score = (link: ImpactLink) => link.magnitude * impactFreshness(link.lastSeen, asOf);
   const pressure: Record<string, number> = {};
   const outgoing = new Map<string, { score: number; count: number }>();
-  const byPair = new Map<string, ImpactLink[]>();
   const related = new Set<string>();
   const coords = new Map<string, Coordinate | null>();
   const locate = (code: string) => {
-    if (!coords.has(code)) coords.set(code, endpointCoord(code, anchors));
+    if (!coords.has(code)) coords.set(code, battleEndpoint(code, anchors));
     return coords.get(code);
   };
 
@@ -103,10 +125,6 @@ export function buildBattleView(
     }
     if (selectedCountry === link.actor) related.add(link.target);
     if (selectedCountry === link.target) related.add(link.actor);
-    const key = `${link.actor}:${link.target}`;
-    const group = byPair.get(key) ?? [];
-    group.push(link);
-    byPair.set(key, group);
   }
   for (const code of Object.keys(pressure)) pressure[code] = Math.min(100, Math.round(pressure[code]!));
   if (selectedLink) {
@@ -115,37 +133,51 @@ export function buildBattleView(
   }
 
   const emphasized = (link: ImpactLink) => selectedLink
-    ? link.actor === selectedLink.actor && link.target === selectedLink.target
+    ? link.id === selectedLink.id
     : link.actor === selectedCountry || link.target === selectedCountry;
   const ranked = [...links].sort((a, b) => Number(emphasized(b)) - Number(emphasized(a)) || score(b) - score(a) || b.lastSeen - a.lastSeen);
-  // Give each available kind a representative before filling the wide view by score.
-  const byKind = new Map<string, ImpactLink>();
-  for (const link of ranked) if (!byKind.has(link.kind)) byKind.set(link.kind, link);
-  const candidates = selectedCountry || selectedLink ? ranked : [...byKind.values(), ...ranked];
-  if (selectedLink) candidates.unshift(selectedLink);
+  const drawable = ranked.filter((link) => isImpactKind(link.kind) && link.actor !== link.target && locate(link.actor) && locate(link.target));
+  const pairKey = (link: ImpactLink) => [link.actor, link.target].sort().join(':');
+  const curated = !expanded && !selectedCountry;
+  const korea = drawable.find((link) => link.actor === 'KR' || link.target === 'KR');
+  const candidates = selectedLink ? [selectedLink] : [];
+  if (curated) {
+    if (korea && !candidates.some((link) => pairKey(link) === pairKey(korea))) candidates.push(korea);
+    const pairs = new Set(candidates.map(pairKey));
+    const kinds = new Set(candidates.map(({ kind }) => kind));
+    for (const link of drawable) {
+      const pair = pairKey(link);
+      if (pairs.has(pair) || kinds.has(link.kind)) continue;
+      candidates.push(link);
+      pairs.add(pair);
+      kinds.add(link.kind);
+    }
+  }
+  candidates.push(...drawable);
   const arcs: BattleArc[] = [];
   const drawn = new Set<string>();
   let motion = 0;
   for (const link of candidates) {
-    if (arcs.length >= (selectedCountry ? 24 : 14)) break;
+    if (arcs.length >= (curated ? BATTLE_STORY_LIMIT : 24)) break;
     const from = locate(link.actor);
     const to = locate(link.target);
-    const pair = `${link.actor}:${link.target}`;
-    const key = selectedCountry ? link.id : pair;
+    const key = curated ? pairKey(link) : link.id;
     if (!isImpactKind(link.kind) || !from || !to || drawn.has(key)) continue;
     drawn.add(key);
     const age = asOf - link.lastSeen;
     const animated = !link.undirected && motion < 8 && age <= DAY && link.magnitude >= (age <= DAY / 4 ? 50 : 70);
     if (animated) motion++;
+    const freshness = impactFreshness(link.lastSeen, asOf);
     arcs.push({ link, kind: link.kind, from, to, opacity: emphasized(link) ? 1
-      : selectedCountry || selectedLink ? 0.17 : impactFreshness(link.lastSeen, asOf),
+      : selectedCountry || selectedLink ? 0.17 : curated ? 0.35 + 0.65 * freshness : freshness,
     level: link.magnitude >= 85 ? 3 : link.magnitude >= 65 ? 2 : link.magnitude >= 35 ? 1 : 0,
-    bundle: byPair.get(pair) ?? [link], emphasized: emphasized(link), animated });
+    emphasized: emphasized(link), animated });
   }
-  const crests = [...outgoing].sort(([, a], [, b]) => b.score - a.score).flatMap(([code, total], index): BattleCrest[] => {
+  const visibleActors = new Set(arcs.map(({ link }) => link.actor));
+  const crests = [...outgoing].sort(([, a], [, b]) => b.score - a.score).flatMap(([code, total]): BattleCrest[] => {
     const at = locate(code);
-    return at && (total.count >= 2 || total.score >= 40)
-      ? [{ code, at, count: total.count, label: index < 6, dimmed: Boolean((selectedCountry || selectedLink) && code !== selectedCountry && !related.has(code)) }]
+    return at && visibleActors.has(code) && (total.count >= 2 || total.score >= 40)
+      ? [{ code, at, count: total.count, dimmed: Boolean((selectedCountry || selectedLink) && code !== selectedCountry && !related.has(code)) }]
       : [];
   });
   const fronts = Object.entries(pressure).filter(([, value]) => value >= 60).sort(([, a], [, b]) => b - a).map(([code]) => code);
