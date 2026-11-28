@@ -593,7 +593,7 @@ export class MapContainer {
       isMobile: this.isMobile,
       onProjectionChange: () => this.worldProjectionChanged?.(),
     });
-    this.svgMap.setWorldOverview(this.worldOverviewMode ? this.worldOverviewView : null);
+    if (this.worldOverviewMode && this.worldOverviewView) this.svgMap.setWorldOverview(this.worldOverviewView);
     this.rehydrateActiveMap();
     this.markRendererReady(token);
     markLcpDebug('wm:map:svg-ready');
@@ -992,7 +992,8 @@ export class MapContainer {
 
   public resetWorldView(): void {
     if (this.useDeckGL) this.deckGLMap?.resetWorldView();
-    else this.setView('global', 1.15);
+    else if (this.isMobile) this.setCenter(22, 38, 1.65);
+    else this.setView('global', 1);
   }
 
   private drawLayers(layers: MapLayers): void {

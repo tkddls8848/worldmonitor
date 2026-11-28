@@ -3498,12 +3498,13 @@ export class PanelLayoutManager implements AppModule {
     const mapContainer = document.getElementById('mapContainer') as HTMLElement;
     markLcpDebug('wm:map:container-construct');
     this.ctx.map = new MapContainer(mapContainer, {
-      zoom: this.ctx.isMobile ? (this.worldMode ? 1.15 : 2.5) : 1.0,
+      zoom: this.ctx.isMobile && !this.worldMode ? 2.5 : 1.0,
       pan: { x: 0, y: 0 },
       view: this.ctx.isMobile && !this.worldMode ? this.ctx.resolvedLocation : 'global',
       layers: this.ctx.mapLayers,
       timeRange: '7d',
     });
+    if (this.worldMode && this.ctx.isMobile) this.ctx.map.resetWorldView();
 
     this.ctx.map.initEscalationGetters();
     this.ctx.currentTimeRange = this.ctx.map.getTimeRange();

@@ -20,13 +20,29 @@ const BOWS = [0.14, 0.18, 0.21, 0.24];
 export function battleCurve(source: Point, target: Point, level: number, offset: number, domestic: boolean) {
   const dx = target.x - source.x;
   const dy = target.y - source.y;
-  if (domestic) return { d: `M${source.x - 5},${source.y}c-26,-34 29,-37 10,0`, x: target.x + 5, y: target.y, angle: 117, mx: source.x + 2, my: source.y - 26 };
+  if (domestic) return {
+    d: `M${source.x - 5},${source.y}c-26,-34 29,-37 10,0`,
+    hit: `M${source.x - 12},${source.y - 14}c-5,-19 27,-21 21,0`,
+    x: target.x + 5, y: target.y, angle: 117, mx: source.x + 2, my: source.y - 26,
+  };
   // Always bow to the left of travel, opening opposed arcs in opposite directions.
   const bow = BOWS[level]! + offset;
   const cx = (source.x + target.x) / 2 + dy * bow;
   const cy = (source.y + target.y) / 2 - dx * bow;
+  // Keep the transparent hit stroke away from endpoints. A thick stroke
+  // reaching a small country can intercept every click on its polygon.
+  const t = Math.min(0.3, 14 / Math.max(1, Math.hypot(dx, dy)));
+  const at = (start: number, control: number, end: number, fraction: number) =>
+    (1 - fraction) ** 2 * start + 2 * (1 - fraction) * fraction * control + fraction ** 2 * end;
+  const sx = at(source.x, cx, target.x, t);
+  const sy = at(source.y, cy, target.y, t);
+  const ex = at(source.x, cx, target.x, 1 - t);
+  const ey = at(source.y, cy, target.y, 1 - t);
+  const hx = sx + (1 - 2 * t) * ((1 - t) * (cx - source.x) + t * (target.x - cx));
+  const hy = sy + (1 - 2 * t) * ((1 - t) * (cy - source.y) + t * (target.y - cy));
   return {
     d: `M${source.x},${source.y}Q${cx},${cy} ${target.x},${target.y}`,
+    hit: `M${sx},${sy}Q${hx},${hy} ${ex},${ey}`,
     x: target.x, y: target.y,
     angle: Math.atan2(target.y - cy, target.x - cx) * 180 / Math.PI,
     mx: (source.x + 2 * cx + target.x) / 4, my: (source.y + 2 * cy + target.y) / 4,
@@ -56,7 +72,7 @@ export class BattleMapOverlay {
       const title = svg('title');
       title.textContent = `${impactHeadline(link)} · 강도 ${link.magnitude} · 자료 기준 ${impactDate(link.lastSeen)} · 근거 ${link.evidence.length}건`;
       const width = WIDTHS[arc.level]! + (arc.emphasized ? 0.8 : 0);
-      const hit = svg('path', { class: 'bm-arc-hit', 'stroke-width': Math.max(14, width + 8) });
+      const hit = svg('path', { class: 'bm-arc-hit', 'stroke-width': Math.max(10, width + 6) });
       const casing = svg('path', { class: 'bm-arc-casing', 'stroke-width': width + 2.4 });
       const core = svg('path', { class: 'bm-arc-core', 'stroke-width': width, 'stroke-dasharray': IMPACT_STYLES[kind].dash || 'none' });
       const tracer = arc.animated ? svg('path', { class: 'bm-arc-tracer', pathLength: 100, 'stroke-width': width + 1 }) : null;
@@ -82,7 +98,8 @@ export class BattleMapOverlay {
           from.x += Math.round((mapWidth / 2 - from.x) / worldWidth) * worldWidth;
         }
         const curve = battleCurve(from, to, arc.level, (index % 4) * 0.08, link.actor === link.target);
-        for (const path of [hit, casing, core, tracer]) path?.setAttribute('d', curve.d);
+        hit.setAttribute('d', curve.hit);
+        for (const path of [casing, core, tracer]) path?.setAttribute('d', curve.d);
         const scale = 0.85 + arc.level * 0.15;
         mark.setAttribute('transform', `translate(${curve.x} ${curve.y}) rotate(${curve.angle}) scale(${scale}) translate(-10 -6)`);
         bundle?.setAttribute('transform', `translate(${curve.mx} ${curve.my})`);

@@ -736,7 +736,6 @@ export class DeckGLMap {
   private renewableInstallations: RenewableInstallation[] = [];
   private countriesGeoJsonData: FeatureCollection<Geometry> | null = null;
   private worldOverviewMode = false;
-  private worldBasemapHooked = false;
   private worldHiddenBasemapLayers: string[] | null = null;
   private worldOverviewView: WorldMapView | null = null;
   private worldPulseRaf: number | null = null;
@@ -1206,6 +1205,7 @@ export class DeckGLMap {
       touchPitch: false,
     });
     disableMapRotation(this.maplibreMap);
+    this.watchWorldBasemap(this.maplibreMap);
 
     const reportFatalBasemapFailure = (error: unknown, center = this.getCenter()): void => {
       const message = error instanceof Error ? error.message : String(error);
@@ -1275,6 +1275,7 @@ export class DeckGLMap {
           touchPitch: false,
         });
         disableMapRotation(this.maplibreMap);
+        this.watchWorldBasemap(this.maplibreMap);
       } catch (error) {
         // MapLibre throws GPUInitializationError synchronously when WebGL2 is
         // gone (lost context, software renderer revoked, etc.). Catch it so it
@@ -5996,21 +5997,22 @@ export class DeckGLMap {
    * the country-* layers that carry hover and click hit-testing. Restored when
    * the full view returns; re-applied after a style reload (theme switch).
    */
-  private syncWorldBasemap(): void {
+  private watchWorldBasemap(map: maplibregl.Map): void {
+    this.worldHiddenBasemapLayers = null;
+    map.on('style.load', () => {
+      if (map !== this.maplibreMap) return;
+      this.worldHiddenBasemapLayers = null;
+      this.syncWorldBasemap(true);
+    });
+    map.on('load', () => { if (map === this.maplibreMap) this.syncWorldBasemap(true); });
+  }
+
+  private syncWorldBasemap(styleReady = false): void {
     const map = this.maplibreMap;
     if (!map) return;
-    if (!this.worldBasemapHooked) {
-      this.worldBasemapHooked = true;
-      map.on('style.load', () => {
-        this.worldHiddenBasemapLayers = null;
-        this.syncWorldBasemap();
-      });
-    }
-    if (!map.isStyleLoaded()) {
-      // Style still loading (first boot): try again once the map settles.
-      map.once('idle', () => this.syncWorldBasemap());
-      return;
-    }
+    // `isStyleLoaded` also waits for basemap sources. The style-load event
+    // can replace those layers before tile requests finish or fail.
+    if (!styleReady && !this.worldHiddenBasemapLayers && !map.isStyleLoaded()) return;
     if (this.worldOverviewMode) {
       const background = 'world-overview-ocean';
       const ocean = getCurrentTheme() === 'dark' ? '#0b0e0d' : '#dce5e4';

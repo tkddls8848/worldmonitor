@@ -155,13 +155,13 @@
 }
 #worldFirstScreen.battle-map .svg-mode :is(#mapOverlays, .map-dynamic, .map-cluster-canvas, .map-controls, .layer-toggles, .map-legend, .time-slider) {
   display: none !important;
+  visibility: hidden !important;
 }
 #worldFirstScreen.battle-map .svg-mode .map-base > rect { fill: var(--bg-ocean); }
-#worldFirstScreen.battle-map .svg-mode .map-base > line,
+#worldFirstScreen.battle-map .svg-mode .map-base > .grid line,
 #worldFirstScreen.battle-map .svg-mode .graticule { stroke: var(--bg-graticule); }
 #worldFirstScreen.battle-map .svg-mode .country:hover { stroke: var(--land-hover-stroke, var(--accent)); stroke-width: 1.5px; }
-.battle-map .atlas-key-plate.bm-key-plate,
-:root[data-theme="dark"] .battle-map .atlas-key-plate.bm-key-plate { top: auto; bottom: 12px; width: 248px; }
+#worldFirstScreen.battle-map .wfs-slot-stage .atlas-key-plate.bm-key-plate { top: auto; bottom: 12px; width: 248px; }
 .bm-legend-toggle { display: none; }
 .bm-key-title { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; }
 .bm-key-title strong { margin-right: auto; }
@@ -213,8 +213,7 @@
 .bm-impact-row { border-left: 3px solid var(--bm-kind, var(--accent)); text-align: start; white-space: normal; }
 
 @media (max-width: 1440px) {
-  .battle-map .atlas-key-plate.bm-key-plate,
-  :root[data-theme="dark"] .battle-map .atlas-key-plate.bm-key-plate { width: 228px; }
+  #worldFirstScreen.battle-map .wfs-slot-stage .atlas-key-plate.bm-key-plate { width: 228px; }
   .battle-map .wfs-country-drawer { width: 378px; }
 }
 @media (max-width: 768px) {
@@ -245,8 +244,7 @@
   .battle-map .wfs-timeline { grid-column: 2; min-width: 0; gap: 3px; height: 100%; }
   .battle-map .wfs-timelapse { font-size: 9px; padding: 0 3px; }
   .battle-map .wfs-date-input { width: 98px; }
-  .battle-map .atlas-key-plate.bm-key-plate,
-  :root[data-theme="dark"] .battle-map .atlas-key-plate.bm-key-plate {
+  #worldFirstScreen.battle-map .wfs-slot-stage .atlas-key-plate.bm-key-plate {
     inset: 8px auto auto 8px;
     width: auto;
     padding: 0;
