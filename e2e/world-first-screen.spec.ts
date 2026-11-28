@@ -136,6 +136,7 @@ for (const renderer of ['svg', 'deckgl'] as const) {
       await expect(selectedArc).toHaveAttribute('opacity', '1');
       await expect(evidence.getByRole('link', { name: 'Verifiable original headline' })).toBeVisible();
       await expect.poll(() => selectedArc.locator('.bm-arc-core').evaluate((element: SVGPathElement) => {
+        if (!element.hasAttribute('d')) return false;
         const viewport = element.ownerSVGElement!.getBoundingClientRect();
         const drawer = document.querySelector('.bm-link-drawer[data-state="open"]')!.getBoundingClientRect();
         return [0, element.getTotalLength()].every((distance) => {

@@ -78,6 +78,23 @@ test('revalidates retained citations and excludes companies, nationals, and unsu
   assert.deepEqual(reciprocal.summary.byCountry, {});
 });
 
+test('requires state-to-state support rather than aid to local groups mentioned in the headline', () => {
+  const support = (title: string, index: number) => ({
+    from: 'JP', to: 'US', kind: 'support',
+    sources: [{ title, publisher: 'Test Wire', url: `https://example.test/${index}`, publishedAt: now - DAY / 2 }],
+  });
+  const valid = 'US pledges military aid to Japan under new agreement';
+  const relations = { status: 'ok', relations: [
+    support(valid, 1),
+    support('US sends aid to Japan earthquake victims', 2),
+    support('US approves funding support for Japan’s semiconductor makers', 3),
+    support('US sends no financial aid to Japan', 4),
+  ] };
+  const { links } = buildImpactLinks({ relations }, now);
+  assert.deepEqual(links.map(({ id, undirected }) => [id, undirected]), [['support:US:JP', false]]);
+  assert.deepEqual(links[0].evidence.map(({ title }) => title), [valid]);
+});
+
 test('keeps domestic incidents and financial or energy shocks out of both links and pressure totals', () => {
   assert.ok(snapshot.links.every((link) => link.actor !== link.target));
   assert.match(eventsById['country:energy:IQ'].evidence[0].title, /Iraq Delays/);

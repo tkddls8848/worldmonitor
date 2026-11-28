@@ -7155,7 +7155,7 @@ export class DeckGLMap {
     if (!track && !this.orbitalTarget) this.orbitalFramedPastEdge = false;
     const shapes = track ? continuousTrack(track, this.orbitalAroundLon(track)) : null;
     const past = this.orbitalFramedPastEdge || !!shapes && [shapes.path, ...shapes.footprint].some((line) => line.some(([lon]) => beyond(lon)));
-    this.maplibreMap?.setRenderWorldCopies(past || this.worldEvidenceFraming);
+    this.maplibreMap?.setRenderWorldCopies(past || this.worldEvidenceFraming === true);
   }
 
   public setWorldEvidenceFraming(active: boolean): void {

@@ -159,6 +159,8 @@ function classifyRelationEvidence(kind, first, second, rawTitle) {
   const [a, b] = pair.map(statePattern);
   const starts = (pattern) => new RegExp(`^${pattern}`, 'iu').test(title);
   const subject = (state) => `(?:the )?${state}(?:['’]s (?:government|foreign ministry))?`;
+  const aid = '(?:(?:new|additional|emergency|military|economic|financial|humanitarian|diplomatic) )*';
+  const recipientEnd = '(?:$|(?=[,;:]| (?:[-–—] |as\\b|after\\b|amid\\b|under\\b|following\\b|in response to\\b)))';
   for (const [actor, target, x, y] of [[pair[0], pair[1], a, b], [pair[1], pair[0], b, a]]) {
     const from = subject(x);
     const to = subject(y);
@@ -167,7 +169,7 @@ function classifyRelationEvidence(kind, first, second, rawTitle) {
       || starts(`${from} (?:summons|expels) (?:the )?${to}['’]s (?:ambassador|envoy|diplomats?)\\b`)
       || starts(`${from} (?:announces|lodges|files) (?:a )?(?:formal |diplomatic )?protest (?:with ${to}\\b|after ${to} (?:denies|refuses|rejects)\\b)`)
     )) return { actor, target };
-    if (kind === 'support' && starts(`${from} (?:provides|sends|pledges|approves|delivers) (?:[\\w$€.,-]+ ){0,8}(?:aid|assistance|support) (?:to|for) ${to}\\b`)) {
+    if (kind === 'support' && starts(`${from} (?:provides|sends|pledges|approves|delivers) ${aid}(?:aid|assistance|support) (?:to|for) ${to}${recipientEnd}`)) {
       return { actor, target };
     }
   }
