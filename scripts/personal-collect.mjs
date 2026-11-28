@@ -96,6 +96,8 @@ const FAST_WATCH_GROUPS = [
   { names: ['news-threat-summary'], every: STANDALONE_INTERVAL_MIN['news-threat-summary'] },
   { names: ['shipping-stress'], every: STANDALONE_INTERVAL_MIN['shipping-stress'] },
   { names: ['transit-summaries'], every: STANDALONE_INTERVAL_MIN['transit-summaries'] },
+  // Rebuild from published inputs even while the bulk pass is waiting on providers.
+  { names: ['impact-links'], every: STANDALONE_INTERVAL_MIN['impact-links'] },
 ];
 
 export function collectorWatchGroups(selected, watchMinutes, force) {
