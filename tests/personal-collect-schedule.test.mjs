@@ -23,13 +23,14 @@ test('every bundle is collected', () => {
 });
 
 test('watch keeps time-sensitive collectors on their own cadence during a slow bulk pass', () => {
-  const [news, shipping, transit, impact, bulk] = collectorWatchGroups(DEFAULT_COLLECTORS, 15, false);
+  const [news, shipping, transit, quotes, impact, bulk] = collectorWatchGroups(DEFAULT_COLLECTORS, 15, false);
   assert.deepEqual(news, { names: ['news-threat-summary'], every: 15, force: true, fixedCadence: true });
   assert.deepEqual(shipping, { names: ['shipping-stress'], every: 15, force: true, fixedCadence: true });
   assert.deepEqual(transit, { names: ['transit-summaries'], every: 10, force: true, fixedCadence: true });
+  assert.deepEqual(quotes, { names: ['market-quotes', 'commodity-quotes'], every: 15, force: true, fixedCadence: true });
   assert.deepEqual(impact, { names: ['impact-links'], every: 30, force: true, fixedCadence: true });
   assert.equal(bulk.names.at(-1), 'world-overview');
-  const scheduled = [news, shipping, transit, impact, bulk].flatMap((group) => group.names);
+  const scheduled = [news, shipping, transit, quotes, impact, bulk].flatMap((group) => group.names);
   assert.equal(scheduled.length, DEFAULT_COLLECTORS.length);
   assert.deepEqual(new Set(scheduled), new Set(DEFAULT_COLLECTORS));
   assert.deepEqual(collectorWatchGroups(['hormuz'], 7, true), [{ names: ['hormuz'], every: 7, force: true }]);
