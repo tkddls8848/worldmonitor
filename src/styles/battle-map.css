@@ -216,8 +216,9 @@
   visibility: hidden !important;
 }
 #worldFirstScreen.battle-map .svg-mode .map-base > rect { fill: var(--bg-ocean); }
-#worldFirstScreen.battle-map .svg-mode .map-base > .grid line,
-#worldFirstScreen.battle-map .svg-mode .graticule { stroke: var(--bg-graticule); }
+#worldFirstScreen.battle-map .svg-mode .map-svg { overflow: visible; }
+/* A wrap swaps the atlas origin by one world. Interpolating that transform would pan the long way round. */
+#worldFirstScreen.battle-map .svg-mode .map-wrapper { transition: none; }
 #worldFirstScreen.battle-map .svg-mode .country:hover { stroke: var(--land-hover-stroke, var(--accent)); stroke-width: 1.5px; }
 #worldFirstScreen.battle-map .wfs-slot-stage .atlas-key-plate.bm-key-plate { top: auto; bottom: 12px; width: 248px; }
 .bm-legend-toggle { display: none; }

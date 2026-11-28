@@ -54,6 +54,7 @@ import type { DiseaseOutbreakItem } from '@/services/disease-outbreaks';
 import type { GetChokepointStatusResponse } from '@/services/supply-chain';
 import type { ChinaCorridorControlTower } from '../../shared/china-corridor-control-towers';
 import { projectChinaCorridorOverlay } from './map/china-corridor-overlay';
+import { nearestWorldCopy } from './map/world-copies';
 import { AircraftEmergencyLayer } from './AircraftEmergencyLayer';
 import { NotamAirspaceLayer } from './NotamAirspaceLayer';
 import type { NotamAirspaceRestriction } from '@/services/notam-airspace';
@@ -991,13 +992,19 @@ export class MapContainer {
       left: area.left - box.left + padding, right: box.right - area.right + padding,
       top: area.top - box.top + padding, bottom: box.bottom - area.bottom + padding,
     };
-    if ([from, to].every(([lon, lat]) => {
-      const point = project(lat, lon);
-      return point && point.x >= margin.left && point.x <= box.width - margin.right
-        && point.y >= margin.top && point.y <= box.height - margin.bottom;
-    })) return;
-    const west = Math.min(from[0], to[0]);
-    const east = Math.max(from[0], to[0]);
+    const source = project(from[1], from[0]);
+    const target = project(to[1], to[0]);
+    const period = Math.abs((project(0, 180)?.x ?? 0) - (project(0, -180)?.x ?? 0));
+    if (source && target) {
+      target.x = nearestWorldCopy(target.x, source.x, period);
+      const midpoint = (source.x + target.x) / 2;
+      const dx = nearestWorldCopy(midpoint, (margin.left + box.width - margin.right) / 2, period) - midpoint;
+      if ([source, target].every(({ x, y }) => x + dx >= margin.left && x + dx <= box.width - margin.right
+        && y >= margin.top && y <= box.height - margin.bottom)) return;
+    }
+    const targetLon = nearestWorldCopy(to[0], from[0], 360);
+    const west = Math.min(from[0], targetLon);
+    const east = Math.max(from[0], targetLon);
     const south = Math.max(-85, Math.min(from[1], to[1]));
     const north = Math.min(85, Math.max(from[1], to[1]));
     const fit: FocusFitBounds = {

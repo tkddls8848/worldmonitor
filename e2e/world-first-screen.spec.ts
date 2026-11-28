@@ -34,7 +34,7 @@ test('mobile world view fits complete ticker items and keeps the date picker in 
   await expect(page.locator('.wfs-date-input')).toBeInViewport({ ratio: 0.99 });
 });
 
-async function openBattleFixture(page: Page): Promise<void> {
+async function openBattleFixture(page: Page, seam = false): Promise<void> {
   await seedAnonymousDashboard(page, 'full');
   await page.addInitScript(() => {
     localStorage.setItem('worldmonitor-first-screen-mode', '"world"');
@@ -55,19 +55,22 @@ async function openBattleFixture(page: Page): Promise<void> {
   const korea = link('JP', 'KR', 'sanctions', 8, 85);
   const headline = '일본이 한국에 수출 제한을 발표했다';
   const extra = link('CA', 'US', 'tension', 2, 30);
-  const links = [
+  const today = [
+    ...(seam ? [link('US', 'JP', 'tariffs', 1, 94)] : []),
     link('CA', 'US', 'tariffs', 1, 92),
     { ...korea, headline, evidence: [{ ...korea.evidence[0]!, aiExtracted: true, aiSummary: headline, singleSource: true }] },
-    link('RU', 'UA', 'conflict', 528, 100),
-    { ...link('CA', 'UA', 'support', 48, 80), direction: 'support', undirected: true },
     extra,
   ];
+  const conflict = link('RU', 'UA', 'conflict', 528, 100);
+  const links = [...today, conflict, { ...link('CA', 'UA', 'support', 48, 80), direction: 'support', undirected: true }];
   await page.route('**/api/**', (route) => route.fulfill({ json: {} }));
+  await page.route(/\/api\/market\/v1\/list-(market|commodity)-quotes\?/, (route) => route.fulfill({ json: { quotes: [] } }));
+  await page.route('**/country-boundary-overrides.geojson', (route) => route.fulfill({ json: { type: 'FeatureCollection', features: [] } }));
   await page.route('**/api/world-overview/v1/get-impact-links?*', (route) => route.fulfill({ json: {
-    generatedAt: now, links, summary: { today: [...links.slice(0, 2), extra], byCountry: {} },
-    sources: [{ id: 'ucdp', status: 'delayed', dataAsOf: links[2]!.lastSeen }],
+    generatedAt: now, links, summary: { today, byCountry: {} },
+    sources: [{ id: 'ucdp', status: 'delayed', dataAsOf: conflict.lastSeen }],
     countryEvents: [{ id: 'country:conflict:KR', country: 'KR', kind: 'conflict', eventCount: 7,
-      magnitude: 48, lastSeen: links[2]!.lastSeen, evidence: links[2]!.evidence }],
+      magnitude: 48, lastSeen: conflict.lastSeen, evidence: conflict.evidence }],
   } }));
   await page.route('**/api/bootstrap?*', (route) => {
     const data = new URL(route.request().url()).searchParams.get('keys') === 'worldOverview' ? { worldOverview: snapshot } : {};
@@ -129,7 +132,7 @@ for (const renderer of ['svg', 'deckgl'] as const) {
     await page.locator('.bm-list-toggle').click();
     await expect(page.locator('.bm-link-drawer [data-impact-id="tension:CA:US"]')).toBeVisible();
     await page.keyboard.press('Escape');
-    const domestic = page.locator('.bm-country-event');
+    const domestic = page.locator('.bm-country-event[tabindex="0"]');
     const domesticToggle = page.getByRole('button', { name: '국내 사건', exact: true });
     await expect(domestic).toHaveCount(0);
     await domesticToggle.click();
@@ -144,16 +147,15 @@ for (const renderer of ['svg', 'deckgl'] as const) {
     await expect(page.locator('.bm-arc')).toHaveCount(1);
     await expect(page.locator('.bm-arc[data-kind="conflict"]')).toHaveCount(1);
     await page.getByRole('button', { name: '주요 영향선', exact: true }).click();
-    const arc = page.locator('.bm-arc[data-kind="tariffs"]');
+    const arc = page.locator('.bm-arc[data-kind="tariffs"][tabindex="0"]');
     await expect(arc.locator('.bm-arc-core')).toHaveAttribute('d', /^M.*Q/);
     await expect(arc.locator('.bm-arc-core')).toHaveAttribute('stroke-dasharray', '4 3 9 3');
     await expect(arc.locator('.bm-arc-tracer')).toBeHidden();
     await expect(page.locator('.bm-arc[data-kind="conflict"]')).toHaveCSS('opacity', '0.558');
 
     const point = await arc.locator('path.bm-arc-hit').evaluate((path: SVGPathElement) => {
-      const bounds = path.ownerSVGElement!.getBoundingClientRect();
-      const location = path.getPointAtLength(path.getTotalLength() * 0.55);
-      return { x: bounds.left + location.x, y: bounds.top + location.y };
+      const point = path.getPointAtLength(path.getTotalLength() * 0.55).matrixTransform(path.getScreenCTM()!);
+      return { x: point.x, y: point.y };
     });
     await page.mouse.click(point.x, point.y);
     const evidence = page.locator('.bm-link-drawer');
@@ -166,7 +168,7 @@ for (const renderer of ['svg', 'deckgl'] as const) {
       await page.getByRole('button', { name: '확대', exact: true }).click();
       await chip.click();
       await expect(chip).toHaveAttribute('aria-pressed', 'true');
-      const selectedArc = page.locator(`.bm-arc[data-link-id="${id}"]`);
+      const selectedArc = page.locator(`.bm-arc[data-link-id="${id}"][tabindex="0"]`);
       await expect(selectedArc).toHaveAttribute('opacity', '1');
       await expect(evidence.getByRole('link', { name: 'Verifiable original headline' })).toBeVisible();
       if (id === 'sanctions:JP:KR') {
@@ -179,9 +181,7 @@ for (const renderer of ['svg', 'deckgl'] as const) {
         const viewport = element.ownerSVGElement!.getBoundingClientRect();
         const drawer = document.querySelector('.bm-link-drawer[data-state="open"]')!.getBoundingClientRect();
         return [0, element.getTotalLength()].every((distance) => {
-          const point = element.getPointAtLength(distance);
-          const x = point.x + viewport.left;
-          const y = point.y + viewport.top;
+          const { x, y } = element.getPointAtLength(distance).matrixTransform(element.getScreenCTM()!);
           return x >= viewport.left && x <= viewport.right && y >= viewport.top && y <= viewport.bottom
             && (x <= drawer.left || x >= drawer.right || y <= drawer.top || y >= drawer.bottom);
         });
@@ -205,4 +205,130 @@ for (const renderer of ['svg', 'deckgl'] as const) {
     await legend.getByRole('button', { name: 'CII', exact: true }).click();
     await expect(legend.locator('[data-level="4"]')).toHaveCSS('background-color', 'rgb(200, 46, 67)');
   });
+}
+
+for (const renderer of ['svg', 'deckgl'] as const) {
+  for (const viewport of [{ width: 1600, height: 900 }, { width: 390, height: 844 }]) {
+    test(`Battle Map repeats the atlas across the seam in ${renderer} at ${viewport.width}px`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await page.addInitScript((renderer) => {
+        if (renderer === 'svg') {
+          const getContext = HTMLCanvasElement.prototype.getContext;
+          HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, options?: unknown) {
+            return type.startsWith('webgl') ? null : Reflect.apply(getContext, this, [type, options]);
+          } as typeof getContext;
+        } else {
+          const getExtension = WebGL2RenderingContext.prototype.getExtension;
+          WebGL2RenderingContext.prototype.getExtension = function (this: WebGL2RenderingContext, name: string) {
+            return name === 'WEBGL_debug_renderer_info' ? null : Reflect.apply(getExtension, this, [name]);
+          };
+        }
+      }, renderer);
+      await page.route('**/src/components/MapContainer.ts*', async (route) => {
+        const response = await route.fetch();
+        await route.fulfill({ response, body: (await response.text()).replace('this.isMobile = isMobileDevice();', renderer === 'deckgl' ? 'this.isMobile = false;' : '$&') + `
+          const setMode = MapContainer.prototype.setWorldOverviewMode;
+          MapContainer.prototype.setWorldOverviewMode = function (on) {
+            window.__seamMap = this;
+            return setMode.call(this, on);
+          };
+        ` });
+      });
+      const errors: string[] = [];
+      page.on('pageerror', (error) => errors.push(error.message));
+      page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
+      await openBattleFixture(page, true);
+      const map = page.locator(`#mapContainer.${renderer}-mode`);
+      await expect(map).toHaveAttribute('data-world-legend', /\bfill\b/);
+      const jump = async (lon: number, zoom: number) => page.evaluate(({ lon, zoom }) => {
+        const { __seamMap: map } = window as unknown as {
+          __seamMap: {
+            deckGLMap?: {
+              maplibreMap: { jumpTo(options: { center: [number, number]; zoom: number }): void };
+              deckOverlay: { pickObject(options: { x: number; y: number; layerIds: string[] }): { object?: { properties: Record<string, string> } } | null };
+            };
+            setCenter(lat: number, lon: number, zoom: number, options: { instant: boolean }): number;
+            worldProjector(): (lat: number, lon: number) => { x: number; y: number };
+          };
+        };
+        const deck = map.deckGLMap;
+        if (deck) deck.maplibreMap.jumpTo({ center: [lon, 44], zoom });
+        else map.setCenter(44, lon, zoom, { instant: true });
+        return new Promise<[{ x: number; y: number; hit: string }[], number]>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => {
+          const project = map.worldProjector();
+          const rect = document.querySelector('#mapContainer')!.getBoundingClientRect();
+          const period = Math.abs(project(0, 180).x - project(0, -180).x);
+          const points = [[65, 167], [64, -153]].map(([lat, lng]) => {
+            const { x, y } = project(lat!, lng!);
+            const visibleX = x + Math.round((rect.width / 2 - x) / period) * period;
+            const client = { x: rect.left + visibleX, y: rect.top + y };
+            const hit = deck
+              ? deck.deckOverlay.pickObject({ x: visibleX, y, layerIds: ['world-overview-fill'] })?.object?.properties['ISO3166-1-Alpha-2'] ?? ''
+              : document.elementFromPoint(client.x, client.y)?.matches('.country, .map-atlas-copy') ? 'land' : '';
+            return { ...client, hit };
+          });
+          resolve([points, period]);
+        })));
+      }, { lon, zoom });
+      const expected = renderer === 'deckgl' ? ['RU', 'US'] : ['land', 'land'];
+      const pacificArc = page.locator('.bm-arc[data-link-id="tariffs:US:JP"][tabindex="0"] .bm-arc-core');
+      await expect(pacificArc).toHaveAttribute('d', /^M.*Q/);
+      for (const lon of [178, -178, 898, -898]) {
+        for (const zoom of [1, 2]) {
+          const [points, period] = await jump(lon, zoom);
+          expect(points.map(({ hit }) => hit), `longitude ${lon}, zoom ${zoom}`).toEqual(expected);
+          const span = await pacificArc.evaluate((path: SVGPathElement) =>
+            Math.abs(path.getPointAtLength(0).x - path.getPointAtLength(path.getTotalLength()).x));
+          expect(span).toBeCloseTo(period * 123 / 360, 1);
+          if (zoom === 1 && Math.abs(lon) === 178 && process.env.WM_SEAM_SCREENSHOTS) {
+            await page.screenshot({ path: `${process.env.WM_SEAM_SCREENSHOTS}-${renderer}-${viewport.width}-${lon}.png` });
+          }
+        }
+      }
+
+      if (renderer === 'deckgl' && viewport.width === 1600) {
+        // At this zoom the same markers and arrows must be visible in several worlds at once.
+        await jump(178, 0);
+        await page.locator('.bm-domestic-toggle').click();
+        const repeated = page.locator('.bm-arc[data-link-id="tariffs:US:JP"]');
+        await expect.poll(() => repeated.locator('.bm-arc-arrow').count()).toBeGreaterThan(1);
+        await expect.poll(() => page.locator('.bm-country-event').count()).toBeGreaterThan(1);
+        await expect.poll(() => page.locator('.bm-country-label[data-country="JP"][visibility="visible"]').count()).toBeGreaterThan(1);
+        await expect.poll(() => page.locator('.bm-story-label[data-story-for="tariffs:US:JP"][visibility="visible"]').count()).toBeGreaterThan(1);
+      }
+
+      for (const [lon, index, country] of [[178, 1, 'US'], [-178, 0, 'RU']] as const) {
+        const [points] = await jump(lon, 2);
+        const { x, y } = points[index]!;
+        await page.mouse.move(x, y);
+        if (renderer === 'deckgl') {
+          // MapLibre's hit-test tiles can finish loading after the atlas draw.
+          await expect.poll(async () => {
+            await page.mouse.move(x + 1, y);
+            await page.mouse.move(x, y);
+            return page.evaluate(() => (window as unknown as {
+              __seamMap: { deckGLMap: { hoveredCountryIso2: string | null } };
+            }).__seamMap.deckGLMap.hoveredCountryIso2);
+          }).toBe(country);
+        } else {
+          await expect(map.locator(`.country[data-country-id="${country === 'US' ? '840' : '643'}"]`)).toHaveCSS('stroke-width', '1.5px');
+        }
+        await page.mouse.click(x, y);
+        const drawer = page.locator('.wfs-country-drawer:not(.bm-link-drawer)[data-state="open"]');
+        await expect(drawer.locator('.wfs-country-drawer__iso')).toHaveText(country);
+        await drawer.locator('[data-action="close"]').click();
+      }
+      expect(errors).toEqual([]);
+
+      await page.locator('.wfs-full-view').click();
+      await expect(map).not.toHaveAttribute('data-world-legend', /\bfill\b/);
+      await expect(map.locator('.map-atlas-copy')).toHaveCount(0);
+      if (renderer === 'deckgl') {
+        expect(await page.evaluate(() => (window as unknown as {
+          __seamMap: { deckGLMap: { maplibreMap: { getRenderWorldCopies(): boolean } } };
+        }).__seamMap.deckGLMap.maplibreMap.getRenderWorldCopies())).toBe(false);
+      }
+    });
+  }
 }

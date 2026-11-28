@@ -102,6 +102,7 @@ import { PRESSURE_FILL, PRESSURE_RIM, PRESSURE_RIM_WIDTH } from '@/config/battle
 import { WORLD_FILL_COLORS, WORLD_LAND_STROKE } from '@/config/world-overview-palette';
 import type { WorldMapView } from '@/types/world-overview';
 import { getCurrentTheme } from '@/utils/theme-manager';
+import { nearestWorldCopy, visibleWorldCopies } from './map/world-copies';
 
 export type TimeRange = '1h' | '6h' | '24h' | '48h' | '7d' | 'all';
 export type MapView = 'global' | 'america' | 'mena' | 'eu' | 'asia' | 'latam' | 'africa' | 'oceania';
@@ -149,6 +150,12 @@ const RENDERABLE_AI_DATA_CENTERS = AI_DATA_CENTERS.filter(
  * the counterpart of FOCUS_FIT_MAX_ZOOM for the MapLibre map.
  */
 const SVG_FOCUS_MAX_ZOOM = 6;
+const SVG_LATITUDE_SPAN = 128;
+let svgAtlasId = 0;
+
+function svgWorldWidth(width: number, height: number): number {
+  return Math.min(width, height * 360 / SVG_LATITUDE_SPAN);
+}
 
 type OrbitalLabelSide = 'right' | 'left' | 'below';
 
@@ -218,6 +225,10 @@ export class MapComponent {
   private pendingFocusFit: { fit: FocusFitBounds; maxZoom: number; inset?: FocusFitInset } | null = null;
   private isResizing = false;
   private baseLayerGroup: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
+  private readonly atlasId = `wm-svg-atlas-${++svgAtlasId}`;
+  private atlasLayerGroup: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
+  private atlasCopiesKey = '';
+  private hoveredAtlasCountry: SVGPathElement | null = null;
   private dynamicLayerGroup: d3.Selection<SVGGElement, unknown, null, undefined> | null = null;
   private baseRendered = false;
   private baseWidth = 0;
@@ -1237,19 +1248,7 @@ export class MapComponent {
       if (!this.onCountryClick) return;
       if (performance.now() - lastDragEndTime < 300) return;
       if (shouldSuppressCountryClick(countryClickGesture)) return;
-      const containerRect = this.container.getBoundingClientRect();
-      const zoom = this.state.zoom;
-      const width = this.container.clientWidth;
-      const height = this.container.clientHeight;
-      const centerOffsetX = (width / 2) * (1 - zoom);
-      const centerOffsetY = (height / 2) * (1 - zoom);
-      const tx = centerOffsetX + this.state.pan.x * zoom;
-      const ty = centerOffsetY + this.state.pan.y * zoom;
-      const rawX = (e.clientX - containerRect.left - tx) / zoom;
-      const rawY = (e.clientY - containerRect.top - ty) / zoom;
-      const projection = this.getProjection(width, height);
-      if (!projection.invert) return;
-      const coords = projection.invert([rawX, rawY]);
+      const coords = this.coordinatesAtPointer(e);
       if (!coords) return;
       const [lon, lat] = coords;
       const hit = getCountryAtCoordinates(lat, lon);
@@ -1258,7 +1257,41 @@ export class MapComponent {
       }
     }, { signal });
 
+    this.container.addEventListener('pointermove', (e) => {
+      if (!this.worldOverviewView) return;
+      // SVG <use> retargets pointer events to the copy. Resolve the shared
+      // country path with the same inverse projection used for clicks.
+      const copy = e.target instanceof Element && e.target.matches('.map-atlas-copy');
+      const coords = copy && !e.buttons ? this.coordinatesAtPointer(e) : null;
+      const hit = coords ? getCountryAtCoordinates(coords[1], coords[0]) : null;
+      const id = hit && iso2ToUnCode(hit.code);
+      const path = id ? this.atlasLayerGroup?.node()?.querySelector<SVGPathElement>(`[data-country-id="${id}"]`) : null;
+      this.setAtlasHover(path ?? null);
+    }, { signal });
+    this.container.addEventListener('pointerleave', () => this.setAtlasHover(null), { signal });
+
     this.container.style.cursor = 'grab';
+  }
+
+  private coordinatesAtPointer(event: MouseEvent): [number, number] | null {
+    const { left, top } = this.container.getBoundingClientRect();
+    const { clientWidth: width, clientHeight: height } = this.container;
+    if (!width || !height) return null;
+    const { zoom, pan } = this.state;
+    const x = (event.clientX - left - width / 2) / zoom + width / 2 - pan.x;
+    const y = (event.clientY - top - height / 2) / zoom + height / 2 - pan.y;
+    const worldX = this.worldOverviewView ? nearestWorldCopy(x, width / 2, svgWorldWidth(width, height)) : x;
+    return this.getProjection(width, height).invert?.([worldX, y]) ?? null;
+  }
+
+  private setAtlasHover(path: SVGPathElement | null): void {
+    if (path === this.hoveredAtlasCountry) return;
+    this.hoveredAtlasCountry?.style.removeProperty('stroke');
+    this.hoveredAtlasCountry?.style.removeProperty('stroke-width');
+    this.hoveredAtlasCountry = path;
+    if (!path) return;
+    path.style.stroke = 'var(--land-hover-stroke, var(--accent))';
+    path.style.strokeWidth = '1.5px';
   }
 
   private async loadMapData(attempt = 0): Promise<void> {
@@ -1437,18 +1470,18 @@ export class MapComponent {
         .attr('height', height * 3)
         .attr('fill', getCSSColor('--map-bg'));
 
-      // Grid
-      this.renderGrid(this.baseLayerGroup, width, height);
-
       // Setup projection for base elements
       const baseProjection = this.getProjection(width, height);
       const basePath = d3.geoPath().projection(baseProjection);
 
-      // Graticule
-      this.renderGraticule(this.baseLayerGroup, basePath);
-
-      // Countries
-      this.renderCountries(this.baseLayerGroup, basePath);
+      // Keep geographic paths together so SVG copies share their geometry and styles.
+      this.atlasLayerGroup = this.baseLayerGroup.append('g').attr('id', this.atlasId);
+      this.atlasCopiesKey = '';
+      this.setAtlasHover(null);
+      this.renderGrid(this.atlasLayerGroup, width, height);
+      this.renderGraticule(this.atlasLayerGroup, basePath);
+      this.renderCountries(this.atlasLayerGroup, basePath);
+      this.updateCountryFills();
       this.applyFocusOutline();
       this.baseRendered = true;
     }
@@ -1542,29 +1575,29 @@ export class MapComponent {
     group: d3.Selection<SVGGElement, unknown, null, undefined>,
     width: number,
     height: number,
-    yStart = 0
   ): void {
+    const period = svgWorldWidth(width, height);
+    const left = (width - period) / 2;
+    const right = left + period;
     const gridGroup = group.append('g').attr('class', 'grid');
 
-    for (let x = 0; x < width; x += 20) {
+    for (let x = left; x < right; x += 20) {
       gridGroup
         .append('line')
         .attr('x1', x)
-        .attr('y1', yStart)
+        .attr('y1', 0)
         .attr('x2', x)
-        .attr('y2', yStart + height)
-        .attr('stroke', getCSSColor('--map-grid'))
+        .attr('y2', height)
         .attr('stroke-width', 0.5);
     }
 
-    for (let y = yStart; y < yStart + height; y += 20) {
+    for (let y = 0; y < height; y += 20) {
       gridGroup
         .append('line')
-        .attr('x1', 0)
+        .attr('x1', left)
         .attr('y1', y)
-        .attr('x2', width)
+        .attr('x2', right)
         .attr('y2', y)
-        .attr('stroke', getCSSColor('--map-grid'))
         .attr('stroke-width', 0.5);
     }
   }
@@ -1574,13 +1607,10 @@ export class MapComponent {
     // Shows Greenland/Iceland while trimming extreme polar regions
     const LAT_NORTH = 72;  // Includes Greenland (extends to ~83°N but 72 shows most)
     const LAT_SOUTH = -56; // Just below Tierra del Fuego
-    const LAT_RANGE = LAT_NORTH - LAT_SOUTH; // 128°
     const LAT_CENTER = (LAT_NORTH + LAT_SOUTH) / 2; // 8°N
 
     // Scale to fit: 360° longitude in width, 128° latitude in height
-    const scaleForWidth = width / (2 * Math.PI);
-    const scaleForHeight = height / (LAT_RANGE * Math.PI / 180);
-    const scale = Math.min(scaleForWidth, scaleForHeight);
+    const scale = svgWorldWidth(width, height) / (2 * Math.PI);
 
     return d3
       .geoEquirectangular()
@@ -1616,6 +1646,7 @@ export class MapComponent {
       .enter()
       .append('path')
       .attr('class', 'country')
+      .attr('data-country-id', (feature) => feature.id == null ? null : String(feature.id).padStart(3, '0'))
       .attr('d', path as unknown as string)
       .attr('fill', getCSSColor('--map-country'))
       .attr('stroke', getCSSColor('--map-stroke'))
@@ -1728,6 +1759,8 @@ export class MapComponent {
   private updateCountryFills(): void {
     if (!this.baseLayerGroup || !this.countryFeatures) return;
     const view = this.worldOverviewView;
+    this.atlasLayerGroup?.select('.grid').attr('stroke', view ? 'var(--bg-graticule)' : getCSSColor('--map-grid'));
+    this.atlasLayerGroup?.select('.graticule').attr('stroke', view ? 'var(--bg-graticule)' : getCSSColor('--map-stroke'));
     if (view) {
       const theme = getCurrentTheme() === 'dark' ? 'dark' : 'light';
       const numericToIso2 = new Map(Object.keys(view.countries).map((code) => [iso2ToUnCode(code), code]));
@@ -4219,7 +4252,9 @@ export class MapComponent {
     const maxPanX = (width / 2) * Math.max(1, zoom * 0.8);
     const maxPanY = (height / 2) * Math.max(1, zoom * 0.8);
 
-    this.state.pan.x = Math.max(-maxPanX, Math.min(maxPanX, this.state.pan.x));
+    this.state.pan.x = this.worldOverviewView
+      ? nearestWorldCopy(this.state.pan.x, 0, svgWorldWidth(width, height))
+      : Math.max(-maxPanX, Math.min(maxPanX, this.state.pan.x));
     this.state.pan.y = Math.max(-maxPanY, Math.min(maxPanY, this.state.pan.y));
   }
 
@@ -4237,6 +4272,7 @@ export class MapComponent {
     const ty = centerOffsetY + this.state.pan.y * zoom;
 
     this.wrapper.style.transform = `translate(${tx}px, ${ty}px) scale(${zoom})`;
+    this.syncWorldCopies(width, height, tx, zoom);
 
     // Set CSS variable for counter-scaling labels/markers
     // Labels: max 1.5x scale, so counter-scale = min(1.5, zoom) / zoom
@@ -4268,6 +4304,25 @@ export class MapComponent {
     } else if (overlayBudgetViewportChanged) {
       this.scheduleOverlayBudgetReplan();
     }
+  }
+
+  private syncWorldCopies(width: number, height: number, tx: number, zoom: number): void {
+    if (!this.atlasLayerGroup) return;
+    const period = svgWorldWidth(width, height);
+    const left = tx + (width - period) * zoom / 2;
+    const copies = this.worldOverviewView
+      ? visibleWorldCopies(left, left + period * zoom, width, period * zoom).filter((copy) => copy !== 0)
+      : [];
+    const key = copies.length ? `${period}:${copies.join(',')}` : '';
+    if (key === this.atlasCopiesKey) return;
+    this.atlasCopiesKey = key;
+    this.baseLayerGroup?.selectAll<SVGUseElement, number>('.map-atlas-copy')
+      .data(copies, (copy) => copy)
+      .join('use')
+      .attr('class', 'map-atlas-copy')
+      .attr('aria-hidden', 'true')
+      .attr('href', `#${this.atlasId}`)
+      .attr('x', (copy) => copy * period);
   }
 
   /**
@@ -4653,7 +4708,7 @@ export class MapComponent {
   }
 
   private applyFocusOutline(): void {
-    const group = this.baseLayerGroup;
+    const group = this.atlasLayerGroup ?? this.baseLayerGroup;
     if (!group) return;
     const focus = this.focusOutline;
     const countries = group.selectAll<SVGPathElement, Feature<Geometry>>('.country');
@@ -4693,9 +4748,8 @@ export class MapComponent {
   }
 
   /**
-   * Frame the focus's chosen countries. `fit.east` may be unwrapped past 180;
-   * this flat map has one world copy, so a dateline-crossing union centres on
-   * the arc's midpoint and shows the part of it on this side of the edge.
+   * Frame the focus's chosen countries. The Battle Map can show a continuous
+   * interval across the dateline; Full View fits the single-world extent.
    */
   /** `inset` is the part of the map left uncovered by overlays: its size, and its centre's offset from the map's. */
   public fitFocusBounds(fit: FocusFitBounds, maxZoom = SVG_FOCUS_MAX_ZOOM, inset?: FocusFitInset): void {
@@ -4868,9 +4922,14 @@ export class MapComponent {
   }
 
   public setWorldOverview(view: WorldMapView | null): void {
+    const changed = Boolean(this.worldOverviewView) !== Boolean(view);
     this.worldOverviewView = view;
-    if (!view) delete this.container.dataset.worldLegend;
+    if (!view) {
+      delete this.container.dataset.worldLegend;
+      this.setAtlasHover(null);
+    }
     this.updateCountryFills();
+    if (changed) this.applyTransform();
   }
 
   public setLayers(layers: MapLayers): void {

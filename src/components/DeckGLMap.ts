@@ -7,7 +7,6 @@ import { createTimeoutSignal } from '@/services/timeout-signal';
  * Mobile devices gracefully degrade to the D3/SVG-based Map component
  */
 import { MapLibreOverlay } from '@deck.gl/maplibre';
-import { MapView as DeckViewport } from '@deck.gl/core';
 import type { Layer, LayersList, PickingInfo } from '@deck.gl/core';
 import { GeoJsonLayer, ScatterplotLayer, PathLayer, IconLayer, TextLayer, PolygonLayer } from '@deck.gl/layers';
 import type { IconLayerProps } from '@deck.gl/layers';
@@ -246,7 +245,6 @@ const VIEW_PRESETS: Record<DeckMapView, { longitude: number; latitude: number; z
   africa: { longitude: 20, latitude: 5, zoom: 3 },
   oceania: { longitude: 135, latitude: -25, zoom: 3.5 },
 };
-const WORLD_OVERVIEW_VIEWPORT = new DeckViewport({ id: 'maplibre', repeat: false });
 
 const VIEWPORT_MOVEMENT_EVENT_KEY = 'worldMonitorViewportGeneration';
 
@@ -1197,7 +1195,7 @@ export class DeckGLMap {
       // mount, so seeding from this.state.zoom here only undershoots the preset
       // on the default desktop view.
       zoom: preset.zoom,
-      renderWorldCopies: false,
+      renderWorldCopies: this.worldOverviewMode,
       attributionControl: false,
       interactive: true,
       canvasContextAttributes: { powerPreference: 'high-performance' },
@@ -1267,7 +1265,7 @@ export class DeckGLMap {
           style: fallback,
           center: center ? [center.lon, center.lat] : [preset.longitude, preset.latitude],
           zoom: this.state.zoom,
-          renderWorldCopies: false,
+          renderWorldCopies: this.worldOverviewMode,
           attributionControl: false,
           interactive: true,
           canvasContextAttributes: { powerPreference: 'high-performance' },
@@ -1474,16 +1472,7 @@ export class DeckGLMap {
         this.deckLoopRecovery(error);
       },
     };
-    const overlay = new MapLibreOverlay(overlayProps);
-    if (this.worldOverviewMode) this.setWorldOverviewViewport(overlay);
-    return overlay;
-  }
-
-  private setWorldOverviewViewport(overlay: MapLibreOverlay): void {
-    // MapLibreOverlay forwards custom views, but its DeckProps type defaults views to null.
-    const withViews = overlay as MapLibreOverlay & { setProps(props: { views?: DeckViewport }): void };
-    this.deckFrameProvider.wake();
-    withViews.setProps({ views: this.worldOverviewMode ? WORLD_OVERVIEW_VIEWPORT : undefined });
+    return new MapLibreOverlay(overlayProps);
   }
 
   private restartDeck(error: Error): void {
@@ -2909,10 +2898,8 @@ export class DeckGLMap {
       return this.conflictZoneGeoJson;
     }
 
-    // getBounds() lng stays in the zone-data lng range only because both map
-    // inits set renderWorldCopies: false — off-copy zones genuinely aren't drawn,
-    // so culling them is correct. Flipping that flag would need the cull to
-    // handle wrapped longitudes (#4561 review P3-a).
+    // These layers are built for the Full View, where the ordinary camera
+    // stays inside one world (#4561 review P3-a).
     const viewport: BBox = [
       mapBounds.getWest(), mapBounds.getSouth(), mapBounds.getEast(), mapBounds.getNorth(),
     ];
@@ -6002,7 +5989,6 @@ export class DeckGLMap {
       this.setWorldEvidenceFraming(false);
     }
     this.syncOrbitalWorldCopies();
-    if (this.deckOverlay) this.setWorldOverviewViewport(this.deckOverlay);
     this.syncWorldBasemap();
     this.syncWorldPulse();
     this.render();
@@ -7173,8 +7159,7 @@ export class DeckGLMap {
     if (!track && !this.orbitalTarget) this.orbitalFramedPastEdge = false;
     const shapes = track ? continuousTrack(track, this.orbitalAroundLon(track)) : null;
     const past = this.orbitalFramedPastEdge || !!shapes && [shapes.path, ...shapes.footprint].some((line) => line.some(([lon]) => beyond(lon)));
-    // Allow the Battle Map camera to fit both polar coasts on wide screens.
-    // Its Deck viewport still renders one copy of the land.
+    // MapLibreOverlay uses this flag for deck.gl's viewport copies as well.
     this.maplibreMap?.setRenderWorldCopies(past || this.worldOverviewMode || this.worldEvidenceFraming === true);
   }
 
@@ -7362,8 +7347,8 @@ export class DeckGLMap {
   }
 
   /**
-   * Fit the view to a set of [lon, lat] positions. Both map initializers set
-   * `renderWorldCopies: false`, so the camera is held inside one world: a lane
+   * Fit the Full View to a set of [lon, lat] positions. Its ordinary camera
+   * is held inside one world: a lane
    * across the antimeridian (US to Korea) cannot be framed the short way
    * round, and bounds shifted past 180° are clamped to a view that drops one
    * end. Plain -180..180 bounds keep both ends on screen.

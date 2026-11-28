@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import { battleCountryLabels, battleEndpoint, battleStoryLabel, buildBattleView, buildCountryEventMarkers, impactFreshness, impactTrend, filterImpactWindow, pressureLevel } from '../src/services/battle-map-view';
 import type { ImpactLink } from '../src/services/impact-links';
 import { battleCurve } from '../src/components/world/BattleMapOverlay';
+import { nearestWorldCopy, visibleWorldCopies } from '../src/components/map/world-copies';
 import { IMPACT_DAY_MS as DAY } from '../shared/impact-links';
 
 const now = Date.parse('2026-11-28T00:00:00Z');
@@ -84,4 +85,19 @@ test('curves reciprocal links away from each other and ends each arrow at its ta
   assert.ok(reverse.pointAt(0.5).y > from.y + 8);
   assert.deepEqual([forward.x, forward.y], [to.x, to.y]);
   assert.deepEqual([reverse.x, reverse.y], [from.x, from.y]);
+});
+
+test('finds only the copies that overlap the viewport, even several worlds from the origin', () => {
+  assert.deepEqual(visibleWorldCopies(-180, 180, 360, 360), [0, 1]);
+  assert.deepEqual(visibleWorldCopies(0, 360, 360, 360), [0]);
+  assert.deepEqual(visibleWorldCopies(-900, -540, 360, 360), [2, 3]);
+  assert.deepEqual(visibleWorldCopies(540, 900, 360, 360), [-2, -1]);
+  assert.deepEqual(visibleWorldCopies(100, 120, 1000, 360), [0, 1, 2]);
+});
+
+test('keeps both directions of a Pacific impact arc on the short side of the world', () => {
+  for (const offset of [-1080, 0, 1080]) {
+    assert.equal(nearestWorldCopy(-100, 137 + offset, 360), 260 + offset);
+    assert.equal(nearestWorldCopy(137, -100 + offset, 360), -223 + offset);
+  }
 });
