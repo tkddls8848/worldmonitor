@@ -52,11 +52,16 @@ async function openBattleFixture(page: Page): Promise<void> {
     trend: age < 24 ? 'new' : 'steady', firstSeen: now - age * 3_600_000, lastSeen: now - age * 3_600_000,
     evidence: [{ source: 'Fixture authority', title: 'Verifiable original headline', url: 'https://example.com/evidence', publishedAt: now - age * 3_600_000 }],
   });
-  const links = [link('CA', 'US', 'tariffs', 1, 92), link('JP', 'KR', 'sanctions', 8, 85), link('RU', 'UA', 'conflict', 528, 100)];
+  const links = [
+    link('CA', 'US', 'tariffs', 1, 92), link('JP', 'KR', 'sanctions', 8, 85), link('RU', 'UA', 'conflict', 528, 100),
+    { ...link('CA', 'UA', 'support', 48, 80), direction: 'support', undirected: true },
+  ];
   await page.route('**/api/**', (route) => route.fulfill({ json: {} }));
   await page.route('**/api/world-overview/v1/get-impact-links?*', (route) => route.fulfill({ json: {
     generatedAt: now, links, summary: { today: links.slice(0, 2), byCountry: {} },
     sources: [{ id: 'ucdp', status: 'delayed', dataAsOf: links[2]!.lastSeen }],
+    countryEvents: [{ id: 'country:conflict:KR', country: 'KR', kind: 'conflict', eventCount: 7,
+      magnitude: 48, lastSeen: links[2]!.lastSeen, evidence: links[2]!.evidence }],
   } }));
   await page.route('**/api/bootstrap?*', (route) => {
     const data = new URL(route.request().url()).searchParams.get('keys') === 'worldOverview' ? { worldOverview: snapshot } : {};
@@ -94,7 +99,17 @@ for (const renderer of ['svg', 'deckgl'] as const) {
     const legend = page.locator('.bm-key-plate');
     await expect(legend.locator('.wfs-cii-scale')).toBeVisible();
     await expect(legend.locator('[data-level="4"]')).toHaveCSS('background-color', 'rgb(166, 34, 54)');
-    await expect(legend.locator('.bm-line-key')).toHaveText(['충돌', '제재', '관세']);
+    await expect(legend.locator('.bm-line-key')).toHaveText(['충돌', '제재', '관세', '지지 (양자)']);
+    await expect(page.locator('.bm-arc[data-undirected="true"] .bm-arc-arrow')).toHaveCount(0);
+    if (renderer === 'deckgl') expect(await map.evaluate((el) => getComputedStyle(el, '::after').content)).toBe('none');
+    const domestic = page.locator('.bm-country-event');
+    await expect(domestic).toHaveAttribute('aria-label', /국내 무력 사건 · 7건/);
+    const conflictFilter = page.locator('.bm-filters button[data-kind="conflict"]');
+    await expect(conflictFilter).toHaveText('충돌 1');
+    await conflictFilter.click();
+    await expect(domestic).toBeVisible();
+    await expect(page.locator('.bm-arc[data-kind="conflict"]')).toHaveCount(0);
+    await conflictFilter.click();
     const arc = page.locator('.bm-arc[data-kind="tariffs"]');
     await expect(arc.locator('.bm-arc-core')).toHaveAttribute('d', /^M.*Q/);
     await expect(arc.locator('.bm-arc-core')).toHaveAttribute('stroke-dasharray', '4 3 9 3');
@@ -111,12 +126,33 @@ for (const renderer of ['svg', 'deckgl'] as const) {
     await expect(evidence).toHaveAttribute('data-state', 'open');
     await expect(evidence.getByRole('link', { name: 'Verifiable original headline' })).toHaveAttribute('href', 'https://example.com/evidence');
     await page.keyboard.press('Escape');
-    await page.locator('.bm-strip').getByRole('button', { name: /일본 → 대한민국/ }).click();
+    for (const id of ['tariffs:CA:US', 'sanctions:JP:KR']) {
+      if (await evidence.getAttribute('data-state') === 'open') await page.keyboard.press('Escape');
+      const chip = page.locator(`.bm-strip [data-impact-id="${id}"]`);
+      await page.getByRole('button', { name: '확대', exact: true }).click();
+      await chip.click();
+      await expect(chip).toHaveAttribute('aria-pressed', 'true');
+      const selectedArc = page.locator(`.bm-arc[data-link-id="${id}"]`);
+      await expect(selectedArc).toHaveAttribute('opacity', '1');
+      await expect(evidence.getByRole('link', { name: 'Verifiable original headline' })).toBeVisible();
+      await expect.poll(() => selectedArc.locator('.bm-arc-core').evaluate((element: SVGPathElement) => {
+        const viewport = element.ownerSVGElement!.getBoundingClientRect();
+        const drawer = document.querySelector('.bm-link-drawer[data-state="open"]')!.getBoundingClientRect();
+        return [0, element.getTotalLength()].every((distance) => {
+          const point = element.getPointAtLength(distance);
+          const x = point.x + viewport.left;
+          const y = point.y + viewport.top;
+          return x >= viewport.left && x <= viewport.right && y >= viewport.top && y <= viewport.bottom
+            && (x <= drawer.left || x >= drawer.right || y <= drawer.top || y >= drawer.bottom);
+        });
+      })).toBe(true);
+    }
     await evidence.getByRole('button', { name: '대한민국' }).click();
     const brief = page.locator('.wfs-country-drawer:not(.bm-link-drawer)');
     await expect(brief).toHaveAttribute('data-state', 'open');
     await expect(brief.locator('[data-section="impact"]')).toContainText('수신 1');
     await expect(brief.locator('[data-section="korea-economy"]')).toBeAttached();
+    await expect(brief.locator('[data-section="country-events"]')).toContainText('국내 무력 사건 · 7건');
     await brief.getByRole('button', { name: '국가 상세 닫기' }).click();
 
     await page.getByRole('button', { name: '24H', exact: true }).click();
@@ -126,7 +162,7 @@ for (const renderer of ['svg', 'deckgl'] as const) {
     await page.locator('.bm-filters button[data-kind="tariffs"]').click();
     await expect(page.locator('.bm-status')).toHaveAttribute('data-state', 'filtered');
     await page.getByRole('button', { name: '7D로 확장' }).click();
-    await expect(legend.locator('.bm-line-key')).toHaveText(['충돌']);
+    await expect(legend.locator('.bm-line-key')).toHaveText(['충돌', '지지 (양자)']);
     await legend.getByRole('button', { name: 'CII', exact: true }).click();
     await expect(legend.locator('[data-level="4"]')).toHaveCSS('background-color', 'rgb(200, 46, 67)');
   });

@@ -3,8 +3,9 @@ import { AI_DISCLAIMER_KO, KIND_LABEL_KO, TREND_LABEL_KO } from '../../../shared
 import { federalRegisterLabel } from '@/services/federal-register';
 import { federalRegisterPrePublicationLabel } from './WorldOps';
 import { renderGlobalGauges } from './WorldGlobalGauges';
-import type { ImpactLink } from '@/services/impact-links';
-import { impactRow } from './BattleMapChrome';
+import type { CountryImpactEvent, ImpactLink } from '@/services/impact-links';
+import { countryEventLabel, countryEventValue, impactDate } from '@/services/battle-map-view';
+import { battleButton, impactRow } from './BattleMapChrome';
 import type { CountryDrawerData, DrawerRelation, FederalRegisterDocument, SourceLink, WorldMarkRequest } from '../../types/world-overview';
 
 type RelationFilter = 'all' | 'worsening' | 'easing';
@@ -17,6 +18,7 @@ export interface WorldCountryDrawerOptions {
   onMark: (req: WorldMarkRequest) => Promise<void>;
   onOpenFullPanels: (iso2: string) => void;
   onImpact?: (link: ImpactLink, trigger: HTMLElement) => void;
+  onCountryEvent?: (event: CountryImpactEvent, trigger: HTMLElement) => void;
 }
 
 const make = <K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, text?: string): HTMLElementTagNameMap[K] => {
@@ -77,7 +79,7 @@ export class WorldCountryDrawer {
   private readonly options: WorldCountryDrawerOptions;
   private data: CountryDrawerData | null = null;
   private filter: RelationFilter = 'all';
-  private impactFilter: 'incoming' | 'outgoing' | 'all' = 'all';
+  private impactFilter: 'incoming' | 'outgoing' | 'bilateral' | 'all' = 'all';
   private readonly onKeyDown = (event: KeyboardEvent): void => {
     if (event.key === 'Escape' && this.isOpen()) {
       event.stopPropagation();
@@ -143,6 +145,20 @@ export class WorldCountryDrawer {
       content.append(indicators);
     }
     content.append(this.renderNotice(data), this.renderIssues(data), data.impact ? this.renderImpact(data.impact) : this.renderRelations(data), this.renderOutages(data));
+    if (data.countryEvents?.length) {
+      const section = this.section('country-events', '국내 사건');
+      const list = make('div', 'bm-evidence-list');
+      for (const event of data.countryEvents) {
+        const row = battleButton(`${countryEventLabel(event)} · ${countryEventValue(event)} · 자료 기준 ${impactDate(event.lastSeen)}`,
+          () => this.options.onCountryEvent?.(event, row), 'bm-button bm-impact-row');
+        row.dataset.kind = event.kind;
+        list.append(row);
+      }
+      section.append(list);
+      const impact = content.querySelector('[data-section="impact"]');
+      if (impact) impact.after(section);
+      else content.append(section);
+    }
     if (data.federalRegister?.length) content.append(this.renderFederalRegister(data.federalRegister));
     if (data.iso2 === 'KR') content.append(this.renderKorea(data));
     content.append(this.renderSources(data), this.renderFooter(data));
@@ -208,7 +224,7 @@ export class WorldCountryDrawer {
   private renderImpact(impact: NonNullable<CountryDrawerData['impact']>): HTMLElement {
     const section = this.section('impact', '영향선');
     const tabs = make('div', 'bm-evidence-tabs');
-    for (const [key, label] of [['incoming', `수신 ${impact.incoming.length}`], ['outgoing', `발신 ${impact.outgoing.length}`], ['all', '전체']] as const) {
+    for (const [key, label] of [['incoming', `수신 ${impact.incoming.length}`], ['outgoing', `발신 ${impact.outgoing.length}`], ['bilateral', `양자 ${impact.bilateral.length}`], ['all', '전체']] as const) {
       const button = make('button', 'bm-button', label);
       button.type = 'button';
       button.setAttribute('aria-pressed', String(this.impactFilter === key));
@@ -220,7 +236,7 @@ export class WorldCountryDrawer {
       });
       tabs.append(button);
     }
-    const links = this.impactFilter === 'all' ? [...impact.incoming, ...impact.outgoing] : impact[this.impactFilter];
+    const links = this.impactFilter === 'all' ? [...impact.incoming, ...impact.outgoing, ...impact.bilateral] : impact[this.impactFilter];
     const list = make('div', 'bm-evidence-list');
     for (const link of links) {
       const row = impactRow(link, () => this.options.onImpact?.(link, row));

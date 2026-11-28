@@ -1,7 +1,7 @@
-import { IMPACT_KINDS, IMPACT_STYLES, PRESSURE_FILL, isImpactKind, type ImpactKind } from '@/config/battle-map';
+import { COUNTRY_EVENT_LABELS, IMPACT_KINDS, IMPACT_STYLES, PRESSURE_FILL, isImpactKind, type ImpactKind } from '@/config/battle-map';
 import { WORLD_FILL_COLORS } from '@/config/world-overview-palette';
-import { impactCountry, impactDate, impactHeadline, impactTrend, type ImpactWindow } from '@/services/battle-map-view';
-import type { GetImpactLinksResponse, ImpactLink } from '@/services/impact-links';
+import { countryEventLabel, countryEventValue, impactCountry, impactDate, impactHeadline, impactTrend, type BattleArc, type ImpactWindow } from '@/services/battle-map-view';
+import type { CountryImpactEvent, GetImpactLinksResponse, ImpactEvidence, ImpactLink } from '@/services/impact-links';
 import type { BreakingAlert } from '@/services/breaking-news-alerts';
 import type { FillLevel } from '@/types/world-overview';
 import { impactMark, svg } from './BattleMapOverlay';
@@ -52,6 +52,7 @@ export class BattleMapChrome {
   private readonly scale = battleNode('div', 'wfs-cii-scale');
   private readonly keys = battleNode('div', 'bm-line-legend');
   private readonly conflictDate = battleNode('p', 'bm-key-note');
+  private readonly eventKeys = battleNode('div', 'bm-line-legend bm-country-event-legend');
   private readonly legendContent = battleNode('div', 'bm-key-content');
   private readonly pressure: HTMLButtonElement;
   private readonly cii: HTMLButtonElement;
@@ -62,7 +63,7 @@ export class BattleMapChrome {
 
   constructor(private readonly actions: {
     selectLink(link: ImpactLink, trigger: HTMLElement | SVGElement): void;
-    locate(alert: BreakingAlert): void;
+    locate(alert: BreakingAlert, trigger: HTMLElement): void;
     toggleLog(): void;
     chooseKind(kind: ImpactKind): void;
     allKinds(): void;
@@ -111,7 +112,7 @@ export class BattleMapChrome {
     this.cii = battleButton('CII', () => actions.setCii(true));
     const keyTitle = battleNode('div', 'bm-key-title');
     keyTitle.append(battleNode('strong', '', '전황 범례'), this.pressure, this.cii);
-    this.legendContent.append(keyTitle, this.scale, battleNode('p', 'bm-key-note', '◇ 발신 거점 · 굵기 = 강도 · 투명도 = 경과 시간'), this.keys, this.conflictDate);
+    this.legendContent.append(keyTitle, this.scale, battleNode('p', 'bm-key-note', '◇ 발신 거점 · 굵기 = 강도 · 투명도 = 경과 시간'), this.keys, this.eventKeys, this.conflictDate);
     this.legend.append(this.legendToggle, this.legendContent);
     this.status.setAttribute('role', 'status');
     this.status.hidden = true;
@@ -131,7 +132,7 @@ export class BattleMapChrome {
     this.title.textContent = `오늘의 전황 ${today.length + Number(Boolean(alert))}`;
     const row: HTMLElement[] = [];
     if (alert) {
-      const chip = battleButton(`● 속보 · ${alert.headline}`, () => this.actions.locate(alert), 'bm-button bm-chip bm-breaking');
+      const chip = battleButton(`● 속보 · ${alert.headline}`, () => this.actions.locate(alert, chip), 'bm-button bm-chip bm-breaking');
       chip.title = alert.headline;
       row.push(chip);
     }
@@ -177,12 +178,12 @@ export class BattleMapChrome {
     this.list.disabled = !visible.length;
   }
 
-  setLegend(cii: boolean, kinds: ImpactKind[], ucdpAsOf: number): void {
+  setLegend(cii: boolean, arcs: BattleArc[], events: CountryImpactEvent[], ucdpAsOf: number): void {
     this.pressure.setAttribute('aria-pressed', String(!cii));
     this.cii.setAttribute('aria-pressed', String(cii));
     const levels = cii ? ['평온', '관심', '주의', '경계', '고위험'] : ['평온', '저압', '경계', '집중', '포화'];
     const palette = cii ? WORLD_FILL_COLORS : PRESSURE_FILL;
-    this.conflictDate.hidden = !ucdpAsOf || !kinds.includes('conflict');
+    this.conflictDate.hidden = !ucdpAsOf || !(arcs.some((arc) => arc.kind === 'conflict') || events.some((event) => event.kind === 'conflict'));
     this.conflictDate.textContent = this.conflictDate.hidden ? '' : `UCDP 자료 기준 ${impactDate(ucdpAsOf)}`;
     this.scale.replaceChildren(...levels.map((label, index) => {
       const chip = battleNode('span', 'wfs-cii-step', label);
@@ -190,17 +191,27 @@ export class BattleMapChrome {
       for (const theme of ['light', 'dark'] as const) chip.style.setProperty(`--wfs-swatch-${theme}`, `rgb(${palette[theme][index as FillLevel]!.slice(0, 3).join(' ')})`);
       return chip;
     }));
-    this.keys.replaceChildren(...IMPACT_KINDS.filter((kind) => kinds.includes(kind)).map((kind) => {
-      const key = battleNode('span', 'bm-line-key', IMPACT_STYLES[kind].label);
+    const samples = IMPACT_KINDS.flatMap((kind) => [...new Set(arcs.filter((arc) => arc.kind === kind).map((arc) => arc.link.undirected === true))]
+      .map((undirected) => ({ kind, undirected })));
+    this.keys.replaceChildren(...samples.map(({ kind, undirected }) => {
+      const key = battleNode('span', 'bm-line-key', IMPACT_STYLES[kind].label + (undirected ? ' (양자)' : ''));
       key.dataset.kind = kind;
       const icon = svg('svg', { width: 30, height: 12, 'aria-hidden': 'true' });
-      icon.append(svg('path', { d: 'M1 6H23', stroke: 'currentColor', 'stroke-width': 2, 'stroke-dasharray': IMPACT_STYLES[kind].dash || 'none' }));
-      const mark = impactMark(kind);
-      mark.setAttribute('transform', 'translate(19 0)');
-      icon.append(mark);
+      icon.append(svg('path', { d: undirected ? 'M1 6H28' : 'M1 6H23', stroke: 'currentColor', 'stroke-width': 2, 'stroke-dasharray': IMPACT_STYLES[kind].dash || 'none' }));
+      if (!undirected) {
+        const mark = impactMark(kind);
+        mark.setAttribute('transform', 'translate(19 0)');
+        icon.append(mark);
+      }
       key.prepend(icon);
       return key;
     }));
+    this.eventKeys.replaceChildren(...IMPACT_KINDS.filter((kind) => events.some((event) => event.kind === kind))
+      .map((kind) => {
+        const key = battleNode('span', 'bm-event-key', COUNTRY_EVENT_LABELS[kind]);
+        key.dataset.kind = kind;
+        return key;
+      }));
   }
 
   setSources(sources: GetImpactLinksResponse['sources'], asOf: number): void {
@@ -241,6 +252,7 @@ export class BattleEvidenceDrawer {
   }
 
   private show(title: string, label: string): HTMLElement {
+    this.element.setAttribute('aria-label', label);
     this.element.dataset.state = 'open';
     this.element.setAttribute('aria-hidden', 'false');
     this.element.inert = false;
@@ -268,7 +280,7 @@ export class BattleEvidenceDrawer {
     const endpoint = (code: string) => ['EU', 'UN', 'NATO'].includes(code)
       ? battleNode('span', '', impactCountry(code)) : battleButton(impactCountry(code), () => this.country(code));
     endpoints.append(endpoint(link.actor));
-    if (link.target !== link.actor) endpoints.append(battleNode('span', '', '→'), endpoint(link.target));
+    endpoints.append(battleNode('span', '', link.undirected ? '—' : '→'), endpoint(link.target));
     content.append(endpoints, battleNode('p', 'bm-evidence-metrics', `강도 ${link.magnitude}/100 · 자료 기준 ${impactDate(link.lastSeen)}`));
     if (link.kind === 'conflict') content.append(battleNode('p', 'bm-evidence-note', 'UCDP 사건 기록입니다. 국가 간 선은 두 당사자와 사건 발생국의 관계를 나타냅니다.'));
     if (link.headline && /[가-힣]/.test(link.headline)) content.append(battleNode('p', 'bm-evidence-note', link.headline));
@@ -282,8 +294,34 @@ export class BattleEvidenceDrawer {
       }
       content.append(siblings);
     }
+    this.appendEvidence(content, link.evidence);
+  }
+
+  showCountryEvent(event: CountryImpactEvent): void {
+    const content = this.show(countryEventLabel(event), '국내 사건 근거');
+    const endpoints = battleNode('div', 'bm-endpoints');
+    endpoints.append(battleButton(impactCountry(event.country), () => this.country(event.country)));
+    content.append(endpoints, battleNode('p', 'bm-evidence-metrics', `${countryEventValue(event)} · 자료 기준 ${impactDate(event.lastSeen)}`));
+    if (event.kind === 'conflict') content.append(battleNode('p', 'bm-evidence-note', 'UCDP가 기록한 사건을 발생국별로 집계했습니다.'));
+    this.appendEvidence(content, event.evidence);
+  }
+
+  showBreaking(alert: BreakingAlert, located: boolean): void {
+    const content = this.show('속보', '속보 근거');
+    if (alert.countryCode) {
+      const endpoints = battleNode('div', 'bm-endpoints');
+      endpoints.append(battleButton(impactCountry(alert.countryCode), () => this.country(alert.countryCode!)));
+      content.append(endpoints);
+    }
+    if (!located) content.append(battleNode('p', 'bm-evidence-note', '지도 위치 정보 없음'));
+    this.appendEvidence(content, [{
+      source: alert.source, title: alert.headline, url: alert.link ?? '', publishedAt: alert.timestamp.getTime(),
+    }]);
+  }
+
+  private appendEvidence(content: HTMLElement, entries: ImpactEvidence[]): void {
     const list = battleNode('ul', 'bm-evidence-list');
-    for (const evidence of link.evidence) {
+    for (const evidence of entries) {
       const item = battleNode('li', '');
       item.append(battleNode('small', 'bm-source-label', `${evidence.source} · ${impactDate(evidence.publishedAt)}`));
       const url = this.safeUrl(evidence.url);
@@ -296,7 +334,7 @@ export class BattleEvidenceDrawer {
       } else item.append(battleNode('span', '', evidence.title));
       list.append(item);
     }
-    content.append(battleNode('h3', '', `출처별 근거 ${link.evidence.length}건`), list);
+    content.append(battleNode('h3', '', `출처별 근거 ${entries.length}건`), list);
   }
 
   hide(): void {

@@ -1,14 +1,14 @@
 import type { AppContext } from '@/app/app-context';
 import { WorldMasthead, WorldZoomControls, WorldBottomShelf, WorldStatusBanner } from '@/components/world/WorldChrome';
-import { BattleEvidenceDrawer, BattleMapChrome, battleButton } from '@/components/world/BattleMapChrome';
+import { BattleEvidenceDrawer, BattleMapChrome, battleButton, battleNode } from '@/components/world/BattleMapChrome';
 import { BattleMapOverlay } from '@/components/world/BattleMapOverlay';
 import { WorldCountryDrawer } from '@/components/world/WorldCountryDrawer';
 import { renderCoordAxes } from '@/components/world/WorldCoordAxes';
 import { preloadCountryGeometry } from '@/services/country-geometry';
 import { loadWorldOverview, setWorldMark } from '@/services/world-overview';
 import { buildCountryDrawerData, buildWorldMapView, countryName, endpointCoord } from '@/services/world-overview-view';
-import { buildBattleView, filterImpactWindow, type ImpactWindow, pressureLevel } from '@/services/battle-map-view';
-import { loadImpactLinks, type GetImpactLinksResponse, type ImpactLink } from '@/services/impact-links';
+import { buildBattleView, buildCountryEventMarkers, filterImpactWindow, type ImpactWindow, pressureLevel } from '@/services/battle-map-view';
+import { loadImpactLinks, type CountryImpactEvent, type GetImpactLinksResponse, type ImpactLink } from '@/services/impact-links';
 import { IMPACT_KINDS, isImpactKind, type ImpactKind } from '@/config/battle-map';
 import { buildSupplementalTickerItems, loadTickerItems } from '@/services/world-ticker';
 import { loadFundingStress } from '@/services/funding-stress';
@@ -60,6 +60,8 @@ export function mountWorldFirstScreen(
   let currentView: WorldMapView | null = null;
   let selectedIso2: string | null = null;
   let selectedLink: ImpactLink | null = null;
+  let selectedEvent: CountryImpactEvent | null = null;
+  let selectedAlert: BreakingAlert | null = null;
   let returnCountry: string | null = null;
   let selectionTrigger: HTMLElement | SVGElement | null = null;
   let archive = false;
@@ -74,6 +76,7 @@ export function mountWorldFirstScreen(
   let impactError = false;
   let battle = buildBattleView([], {}, 0, null, null);
   let filteredLinks: ImpactLink[] = [];
+  let countryEvents: CountryImpactEvent[] = [];
   let lastLoadedAt = 0;
   let loadGeneration = 0;
   let destroyed = false;
@@ -127,11 +130,13 @@ export function mountWorldFirstScreen(
   const eventLog = new WorldEventLog({ onSelectCountry: selectCountry });
   const telemetry = document.createElement('div');
   telemetry.className = 'ops-telemetry-bar';
-  const gauges = document.createElement('section');
-  gauges.className = 'wfs-global-gauges';
-  gauges.hidden = true;
-  gauges.tabIndex = 0;
-  telemetry.append(clocks.element, gauges, chrome.counters, chrome.sources);
+  const gaugeInline = battleNode('div', 'bm-gauges-inline');
+  const gaugeDetails = battleNode('details', 'bm-gauges');
+  const gaugeSummary = battleNode('summary', '', '지표');
+  const gauges = battleNode('section', 'bm-gauges-popup');
+  gaugeDetails.hidden = true;
+  gaugeDetails.append(gaugeSummary, gauges);
+  telemetry.append(clocks.element, gaugeInline, gaugeDetails, chrome.counters, chrome.sources);
   slots.telemetry.append(telemetry);
   const threatMount = masthead.element.querySelector<HTMLElement>('[data-slot="threat"]');
   threatMount?.append(threat.element);
@@ -181,6 +186,7 @@ export function mountWorldFirstScreen(
     onMark: markItem,
     onOpenFullPanels: (iso2) => hooks.openCountryBrief(iso2),
     onImpact: (link, trigger) => openLink(link, trigger, true),
+    onCountryEvent: (event, trigger) => openCountryEvent(event, trigger, true),
   });
   const evidence = new BattleEvidenceDrawer(() => clearSelection(), selectCountry);
   const overlay = new BattleMapOverlay(() => map.worldProjector());
@@ -196,6 +202,7 @@ export function mountWorldFirstScreen(
     const now = Date.now();
     const anchors = snapshot?.anchors ?? {};
     const windowLinks = archive ? [] : filterImpactWindow(impactData?.links ?? [], impactWindow, now);
+    countryEvents = archive ? [] : filterImpactWindow(impactData?.countryEvents ?? [], impactWindow, now);
     filteredLinks = windowLinks.filter((link) => isImpactKind(link.kind) && activeKinds.has(link.kind));
     battle = buildBattleView(filteredLinks, anchors, now, selectedIso2, selectedLink);
     const fronts = battle.fronts.length;
@@ -205,7 +212,7 @@ export function mountWorldFirstScreen(
       battle = buildBattleView(filteredLinks, anchors, now, selectedIso2, selectedLink);
     }
     const fillCii = cii || archive;
-    const selected = selectedIso2 ?? selectedLink?.target ?? null;
+    const selected = selectedIso2 ?? selectedLink?.target ?? selectedEvent?.country ?? selectedAlert?.countryCode ?? null;
     const overview = snapshot && fillCii ? buildWorldMapView(snapshot, ['military'], selected) : null;
     const countries: WorldMapView['countries'] = fillCii ? overview?.countries ?? {} : {};
     if (!fillCii) {
@@ -219,12 +226,17 @@ export function mountWorldFirstScreen(
     currentView = { date: snapshot?.date ?? '', countries, pressure: !fillCii, lines: [], blocOutlines: [], selectedIso2: selected,
       relatedIso2: battle.related, hotspots: [] };
     map.setWorldOverview(currentView);
-    overlay.setView(battle.arcs, battle.crests, (arc) => openLink(arc.link, findImpactTrigger(arc.link.id)), selectCountry);
-    chrome.setLegend(fillCii, battle.arcs.map((arc) => arc.kind), impactData?.sources?.find((source) => source.id === 'ucdp')?.dataAsOf ?? 0);
+    const eventMarkers = buildCountryEventMarkers(countryEvents, anchors);
+    overlay.setView(battle.arcs, battle.crests, eventMarkers, {
+      selectLink: (arc) => openLink(arc.link, findImpactTrigger(arc.link.id)),
+      selectCountry,
+      selectEvent: openCountryEvent,
+    });
+    chrome.setLegend(fillCii, battle.arcs, eventMarkers.map(({ event }) => event), impactData?.sources?.find((source) => source.id === 'ucdp')?.dataAsOf ?? 0);
     chrome.setFilters(activeKinds, windowLinks, impactWindow, battle.arcs.length, fronts, now);
     chrome.setSources(archive ? [] : impactData?.sources ?? [], impactData?.generatedAt ?? 0);
     const state = archive ? 'archive' : impactError ? 'error' : !impactData && impactLoading ? 'loading'
-      : !impactData?.links.length ? 'empty' : !filteredLinks.length ? 'filtered' : 'ok';
+      : !impactData?.links.length && !impactData?.countryEvents?.length ? 'empty' : !filteredLinks.length ? 'filtered' : 'ok';
     chrome.setStatus(state, impactWindow);
     renderToday();
   }
@@ -242,10 +254,12 @@ export function mountWorldFirstScreen(
       federalRegister: federalRegister.filter((item) => selectedIso2 && item.countries.includes(selectedIso2)).slice(0, 5),
       indicators: globalIndicators ? globalIndicatorGauges(globalIndicators, getCurrentLanguage(), code) : [],
       ...(code === 'KR' ? { korea: { asOf: krEcos?.asOf ?? 0, indicators: krEcos?.indicators ?? [], trade: krTrade, disclosures: krDisclosures } } : {}),
+      countryEvents: countryEvents.filter((event) => event.country === code),
       ...(!archive ? { impact: {
         incomingScore: battle.pressure[code] ?? 0,
-        incoming: battle.ranked.filter((link) => link.target === code),
-        outgoing: battle.ranked.filter((link) => link.actor === code && link.target !== code),
+        incoming: battle.ranked.filter((link) => !link.undirected && link.target === code),
+        outgoing: battle.ranked.filter((link) => !link.undirected && link.actor === code),
+        bilateral: battle.ranked.filter((link) => link.undirected && (link.actor === code || link.target === code)),
       } } : {}) };
     if (drawer.isOpen()) drawer.update(data); else drawer.open(data);
   }
@@ -254,8 +268,11 @@ export function mountWorldFirstScreen(
     const normalized = iso2.trim().toUpperCase();
     if (!/^[A-Z]{2}$/.test(normalized)) return;
     selectedLink = null;
+    selectedEvent = null;
+    selectedAlert = null;
     returnCountry = null;
     linkListOpen = false;
+    map.endWorldEvidenceFocus();
     evidence.hide();
     setLogOpen(false);
     if (selectedIso2 !== normalized) drawer.close(false);
@@ -266,30 +283,35 @@ export function mountWorldFirstScreen(
   }
 
   function clearSelection(restoreFocus = true): void {
-    if (!selectedIso2 && !selectedLink && !linkListOpen) return;
+    if (!selectedIso2 && !selectedLink && !selectedEvent && !selectedAlert && !linkListOpen) return;
     const previousLink = selectedLink;
+    const previousEvent = selectedEvent;
     const trigger = selectionTrigger;
     const back = returnCountry;
     selectedIso2 = null;
     selectedLink = null;
+    selectedEvent = null;
+    selectedAlert = null;
     returnCountry = null;
     selectionTrigger = null;
     linkListOpen = false;
     drawer.close(false);
+    map.endWorldEvidenceFocus();
     evidence.hide();
     if (restoreFocus && back) {
       selectCountry(back);
-      drawer.element.querySelector<HTMLElement>('[data-section="impact"] button')?.focus();
+      drawer.element.querySelector<HTMLElement>(previousEvent ? '[data-section="country-events"] button' : '[data-section="impact"] button')?.focus();
       return;
     }
     makeView();
-    if (restoreFocus) (trigger?.isConnected ? trigger : findImpactTrigger(previousLink?.id))?.focus();
+    if (restoreFocus) (trigger?.isConnected ? trigger : findImpactTrigger(previousLink?.id ?? previousEvent?.id)
+      ?? (trigger?.classList.contains('bm-breaking') ? chrome.strip.querySelector<HTMLElement>('.bm-breaking') : null))?.focus();
   }
 
   function findImpactTrigger(id: string | undefined): HTMLElement | SVGElement | null {
     if (!id) return null;
-    return [...slots.root.querySelectorAll<HTMLElement | SVGElement>('[data-impact-id], [data-link-id]')]
-      .find((node) => node.dataset.impactId === id || node.dataset.linkId === id) ?? null;
+    return [...slots.root.querySelectorAll<HTMLElement | SVGElement>('[data-impact-id], [data-link-id], [data-event-id]')]
+      .find((node) => node.dataset.impactId === id || node.dataset.linkId === id || node.dataset.eventId === id) ?? null;
   }
 
   function openLink(link: ImpactLink, trigger: HTMLElement | SVGElement | null = null, fromCountry = false): void {
@@ -297,20 +319,38 @@ export function mountWorldFirstScreen(
     if (trigger) selectionTrigger = trigger;
     selectedIso2 = null;
     selectedLink = link;
+    selectedEvent = null;
+    selectedAlert = null;
     drawer.close(false);
     setLogOpen(false);
     makeView();
     const bundle = filteredLinks.filter((candidate) => candidate.actor === link.actor && candidate.target === link.target);
     evidence.showLink(link, bundle, (candidate) => openLink(candidate));
+    finishEvidenceOpen();
+    const from = endpointCoord(link.actor, snapshot?.anchors ?? {});
+    const to = endpointCoord(link.target, snapshot?.anchors ?? {});
+    if (from && to) map.focusWorldEvidence(from, to, evidence.element.getBoundingClientRect());
+  }
+
+  function openCountryEvent(event: CountryImpactEvent, trigger: HTMLElement | SVGElement, fromCountry = false): void {
+    returnCountry = fromCountry ? selectedIso2 : null;
+    selectionTrigger = trigger;
+    selectedIso2 = null;
+    selectedLink = null;
+    selectedAlert = null;
+    selectedEvent = event;
+    drawer.close(false);
+    setLogOpen(false);
+    makeView();
+    evidence.showCountryEvent(event);
+    finishEvidenceOpen();
+    const at = endpointCoord(event.country, snapshot?.anchors ?? {});
+    if (at) map.focusWorldEvidence(at, at, evidence.element.getBoundingClientRect());
+  }
+
+  function finishEvidenceOpen(): void {
     if (returnCountry) evidence.element.querySelector('header')?.append(battleButton(`← ${countryName(returnCountry, 'ko')} 브리핑`, () => clearSelection()));
     evidence.element.querySelector<HTMLButtonElement>('header button')?.focus({ preventScroll: true });
-    const project = map.worldProjector();
-    const coords = [endpointCoord(link.actor, snapshot?.anchors ?? {}), endpointCoord(link.target, snapshot?.anchors ?? {})];
-    const points = coords.map((coord) => coord && project?.(coord[1], coord[0]));
-    if (points.some((point) => point && (point.x < 0 || point.x > slots.stage.clientWidth || point.y < 0 || point.y > slots.stage.clientHeight))) {
-      // Refit the world when a selected route is outside the current viewport.
-      map.resetWorldView();
-    }
   }
 
   function showLinkList(trigger: HTMLElement): void {
@@ -336,6 +376,7 @@ export function mountWorldFirstScreen(
 
   function changeWindow(window: ImpactWindow): void {
     impactWindow = window;
+    if (selectedEvent && !filterImpactWindow([selectedEvent], window, Date.now()).length) clearSelection(false);
     applyFilters();
   }
 
@@ -430,14 +471,20 @@ export function mountWorldFirstScreen(
     }
   }
 
-  function locateAlert(alert: BreakingAlert): void {
+  function locateAlert(alert: BreakingAlert, trigger: HTMLElement): void {
+    clearSelection(false);
+    setLogOpen(false);
+    selectedAlert = alert;
+    selectionTrigger = trigger;
     const coords = alert as BreakingAlert & { lat?: number; lon?: number; latitude?: number; longitude?: number; coordinates?: [number, number] };
     const lat = coords.lat ?? coords.latitude ?? (Array.isArray(coords.coordinates) ? coords.coordinates[1] : undefined);
     const lon = coords.lon ?? coords.longitude ?? (Array.isArray(coords.coordinates) ? coords.coordinates[0] : undefined);
-    if (typeof lat === 'number' && typeof lon === 'number' && Number.isFinite(lat) && Number.isFinite(lon)) map.setCenter(lat, lon, 4);
-    else if (alert.countryCode) map.fitCountry(alert.countryCode);
-    if (alert.countryCode) selectCountry(alert.countryCode);
-    else if (!Number.isFinite(lat) || !Number.isFinite(lon)) setLogOpen(true);
+    const at: [number, number] | null = typeof lat === 'number' && typeof lon === 'number' && Number.isFinite(lat) && Number.isFinite(lon)
+      ? [lon, lat] : alert.countryCode ? endpointCoord(alert.countryCode, snapshot?.anchors ?? {}) : null;
+    makeView();
+    evidence.showBreaking(alert, at !== null);
+    finishEvidenceOpen();
+    if (at) map.focusWorldEvidence(at, at, evidence.element.getBoundingClientRect());
   }
 
   const onCountryClick = (event: Event): void => {
@@ -451,7 +498,7 @@ export function mountWorldFirstScreen(
     if (!worldShown || event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey
       || (event.target instanceof HTMLElement && event.target.closest('input, select, textarea, [contenteditable="true"]'))) return;
     if (event.key === 'Escape') {
-      if (selectedLink || linkListOpen) clearSelection();
+      if (selectedLink || selectedEvent || selectedAlert || linkListOpen) clearSelection();
       else if (logOpen) { setLogOpen(false); chrome.logToggle.focus(); }
       else if (chrome.legend.dataset.open === 'true') chrome.legend.querySelector<HTMLButtonElement>('.bm-legend-toggle')?.click();
       return;
@@ -478,7 +525,16 @@ export function mountWorldFirstScreen(
     if (destroyed) return;
     globalIndicators = data;
     const language = getCurrentLanguage();
-    renderGlobalGauges(gauges, globalIndicatorGauges(data, language), language === 'ko' ? '글로벌 지표' : 'Global gauges');
+    const values = globalIndicatorGauges(data, language);
+    renderGlobalGauges(gauges, values, '글로벌 지표');
+    gaugeDetails.hidden = values.length === 0;
+    gaugeSummary.textContent = `지표 ${values.length}`;
+    const shortLabels: Record<string, string> = { cli: 'CLI', gpr: 'GPR', cofer: 'USD', 'pink-energy': '에너지', 'pink-food': '식품' };
+    gaugeInline.replaceChildren(...values.map((gauge) => {
+      const compact = battleNode('span', 'bm-gauge-inline', `${shortLabels[gauge.id] ?? gauge.label} ${gauge.value.split(' · ')[gauge.id === 'cli' ? 1 : 0] ?? gauge.value}`);
+      compact.title = `${gauge.label} ${gauge.value} · ${gauge.period}`;
+      return compact;
+    }));
     refreshOps();
     if (selectedIso2) updateDrawer();
   }

@@ -1,5 +1,5 @@
-import { isImpactKind, IMPACT_STYLES, type ImpactKind } from '@/config/battle-map';
-import type { ImpactLink } from '@/services/impact-links';
+import { COUNTRY_EVENT_LABELS, isImpactKind, IMPACT_STYLES, type ImpactKind } from '@/config/battle-map';
+import type { CountryImpactEvent, ImpactLink } from '@/services/impact-links';
 import { countryName, endpointCoord } from '@/services/world-overview-view';
 import type { FillLevel } from '@/types/world-overview';
 import { IMPACT_DAY_MS as DAY } from '../../shared/impact-links';
@@ -18,6 +18,7 @@ export interface BattleArc {
   animated: boolean;
 }
 export interface BattleCrest { code: string; at: Coordinate; count: number; label: boolean; dimmed: boolean }
+export interface BattleEventMarker { event: CountryImpactEvent; at: Coordinate; offset: number }
 
 export function impactDate(at: number): string {
   return new Date(at).toISOString().slice(5, 10);
@@ -30,8 +31,15 @@ export function impactCountry(code: string): string {
 export function impactHeadline(link: ImpactLink): string {
   if (!isImpactKind(link.kind)) return '';
   const label = IMPACT_STYLES[link.kind].detail;
-  if (link.actor === link.target) return `${impactCountry(link.target)} · ${label}`;
-  return `${impactCountry(link.actor)} → ${impactCountry(link.target)} · ${label}`;
+  return `${impactCountry(link.actor)} ${link.undirected ? '—' : '→'} ${impactCountry(link.target)} · ${label}`;
+}
+
+export function countryEventLabel(event: CountryImpactEvent): string {
+  return isImpactKind(event.kind) ? COUNTRY_EVENT_LABELS[event.kind] ?? IMPACT_STYLES[event.kind].detail : '국내 사건';
+}
+
+export function countryEventValue(event: CountryImpactEvent): string {
+  return event.kind === 'conflict' ? `${event.eventCount}건` : `강도 ${event.magnitude}/100`;
 }
 
 export function impactFreshness(lastSeen: number, asOf: number): number {
@@ -48,9 +56,20 @@ export function pressureLevel(score: number): FillLevel {
   return score >= 80 ? 4 : score >= 60 ? 3 : score >= 35 ? 2 : score >= 15 ? 1 : 0;
 }
 
-export function filterImpactWindow(links: readonly ImpactLink[], window: ImpactWindow, asOf: number): ImpactLink[] {
+export function filterImpactWindow<T extends { kind: string; lastSeen: number }>(items: readonly T[], window: ImpactWindow, asOf: number): T[] {
   const since = asOf - (window === '24h' ? 1 : 7) * DAY;
-  return links.filter((link) => isImpactKind(link.kind) && (link.lastSeen >= since || (window === '7d' && link.kind === 'conflict')));
+  return items.filter((item) => isImpactKind(item.kind) && (item.lastSeen >= since || (window === '7d' && item.kind === 'conflict')));
+}
+
+export function buildCountryEventMarkers(events: readonly CountryImpactEvent[], anchors: Record<string, Coordinate>): BattleEventMarker[] {
+  const offsets = new Map<string, number>();
+  return events.flatMap((event) => {
+    const at = endpointCoord(event.country, anchors);
+    if (!at) return [];
+    const index = offsets.get(event.country) ?? 0;
+    offsets.set(event.country, index + 1);
+    return [{ event, at, offset: index * 13 }];
+  });
 }
 
 export function buildBattleView(
@@ -72,7 +91,7 @@ export function buildBattleView(
   };
 
   for (const link of links) {
-    if (link.direction === 'pressure') {
+    if (link.direction === 'pressure' && !link.undirected) {
       pressure[link.target] = (pressure[link.target] ?? 0) + score(link);
       if (link.actor !== link.target && !['EU', 'UN', 'NATO'].includes(link.actor)) {
         const total = outgoing.get(link.actor) ?? { score: 0, count: 0 };
@@ -98,8 +117,7 @@ export function buildBattleView(
     ? link.actor === selectedLink.actor && link.target === selectedLink.target
     : link.actor === selectedCountry || link.target === selectedCountry;
   const ranked = [...links].sort((a, b) => Number(emphasized(b)) - Number(emphasized(a)) || score(b) - score(a) || b.lastSeen - a.lastSeen);
-  // Give each available kind a representative before filling the wide view
-  // by score. One delayed source can produce dozens of high-count domestic links.
+  // Give each available kind a representative before filling the wide view by score.
   const byKind = new Map<string, ImpactLink>();
   for (const link of ranked) if (!byKind.has(link.kind)) byKind.set(link.kind, link);
   const candidates = selectedCountry || selectedLink ? ranked : [...byKind.values(), ...ranked];
@@ -107,7 +125,6 @@ export function buildBattleView(
   const arcs: BattleArc[] = [];
   const drawn = new Set<string>();
   let motion = 0;
-  let domestic = 0;
   for (const link of candidates) {
     if (arcs.length >= (selectedCountry ? 24 : 14)) break;
     const from = locate(link.actor);
@@ -115,13 +132,9 @@ export function buildBattleView(
     const pair = `${link.actor}:${link.target}`;
     const key = selectedCountry ? link.id : pair;
     if (!isImpactKind(link.kind) || !from || !to || drawn.has(key)) continue;
-    if (link.actor === link.target && !selectedCountry && !selectedLink && byKind.size > 1) {
-      if (domestic >= 4) continue;
-      domestic++;
-    }
     drawn.add(key);
     const age = asOf - link.lastSeen;
-    const animated = motion < 8 && age <= DAY && link.magnitude >= (age <= DAY / 4 ? 50 : 70);
+    const animated = !link.undirected && motion < 8 && age <= DAY && link.magnitude >= (age <= DAY / 4 ? 50 : 70);
     if (animated) motion++;
     arcs.push({ link, kind: link.kind, from, to, opacity: emphasized(link) ? 1
       : selectedCountry || selectedLink ? 0.17 : impactFreshness(link.lastSeen, asOf),

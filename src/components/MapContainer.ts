@@ -975,6 +975,48 @@ export class MapContainer {
     return this.svgMap?.screenProjector() ?? null;
   }
 
+  /** Keep both endpoints visible in the space left by the evidence drawer. */
+  public focusWorldEvidence(from: [number, number], to: [number, number], drawer: DOMRect): void {
+    const box = this.container.getBoundingClientRect();
+    const area = visibleMapArea(box, [drawer]);
+    const width = area.right - area.left;
+    const height = area.bottom - area.top;
+    const project = this.worldProjector();
+    if (!project || width < 60 || height < 45) return;
+    const padding = height < 110 ? 10 : 22;
+    const margin = {
+      left: area.left - box.left + padding, right: box.right - area.right + padding,
+      top: area.top - box.top + padding, bottom: box.bottom - area.bottom + padding,
+    };
+    if ([from, to].every(([lon, lat]) => {
+      const point = project(lat, lon);
+      return point && point.x >= margin.left && point.x <= box.width - margin.right
+        && point.y >= margin.top && point.y <= box.height - margin.bottom;
+    })) return;
+    const west = Math.min(from[0], to[0]);
+    const east = Math.max(from[0], to[0]);
+    const south = Math.max(-85, Math.min(from[1], to[1]));
+    const north = Math.min(85, Math.max(from[1], to[1]));
+    const fit: FocusFitBounds = {
+      west, east, south, north, lonSpan: east - west, latSpan: north - south,
+      center: { lon: (west + east) / 2, lat: (south + north) / 2 },
+    };
+    if (this.useDeckGL) {
+      this.deckGLMap?.setWorldEvidenceFraming(true);
+      this.deckGLMap?.fitFocusBounds(fit, 4.5, margin, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600);
+    } else {
+      this.svgMap?.fitFocusBounds(fit, 5, {
+        width, height,
+        x: (area.left + area.right - box.left - box.right) / 2,
+        y: (area.top + area.bottom - box.top - box.bottom) / 2,
+      });
+    }
+  }
+
+  public endWorldEvidenceFocus(): void {
+    this.deckGLMap?.setWorldEvidenceFraming(false);
+  }
+
   public onWorldLineClicked(cb: (lineId: string) => void): void {
     this.worldLineClickCallback = cb;
     this.deckGLMap?.onWorldLineClicked(cb);

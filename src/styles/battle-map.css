@@ -60,26 +60,53 @@
   border-bottom: 1px solid var(--border);
   background: var(--surface);
 }
-.battle-map .wfs-slot-telemetry .ops-telemetry-bar,
-:root:not([data-theme="dark"]) .battle-map .wfs-slot-telemetry:has(.wfs-global-gauges:not([hidden])) .ops-telemetry-bar {
+.battle-map .wfs-slot-telemetry .ops-telemetry-bar {
   display: flex;
   align-items: center;
   height: 100%;
   gap: 10px;
 }
-.battle-map .wfs-slot-telemetry .wfs-global-gauges:not([hidden]) {
-  display: flex;
-  flex: 1 1 auto;
-  overflow: auto hidden;
-  min-width: 0;
-  min-height: 0;
-  height: 22px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  scrollbar-width: thin;
+.bm-gauges-inline { display: flex; align-items: center; gap: 5px; }
+.bm-gauge-inline {
+  padding: 2px 5px;
+  border-left: 1px solid var(--border);
+  color: var(--text-secondary);
+  font: 10px var(--font-mono);
+  white-space: nowrap;
 }
+.bm-gauges { flex: 0 0 auto; position: relative; }
+.bm-gauges[hidden] { display: none; }
+.bm-gauges summary {
+  padding: 2px 5px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--surface-paper);
+  font-size: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.bm-gauges-popup:not([hidden]) {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  display: grid;
+  min-width: min(320px, calc(100vw - 16px));
+  max-width: calc(100vw - 16px);
+  margin-top: 4px;
+  padding: 5px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-paper);
+  box-shadow: 0 4px 20px #0003;
+}
+.bm-gauges-popup .wfs-ticker-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 3px 8px;
+  padding: 5px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.bm-gauges-popup .wfs-ticker-item > :last-child { grid-column: 1 / -1; }
 .battle-map .wfs-ops-clocks { flex: 0 0 auto; color: var(--text-secondary); }
 .bm-counts { display: flex; flex: 0 0 auto; gap: 3px; margin-left: auto; font-size: 10px; }
 .bm-counts .bm-button { padding: 2px 4px; }
@@ -139,6 +166,7 @@
 .battle-map .wfs-timelapse { min-width: 0; }
 
 .bm-map-overlay { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; overflow: hidden; pointer-events: none; }
+.battle-map .map-container.deckgl-mode::after { content: none; }
 .bm-arc { color: var(--bm-kind); }
 .bm-arc-hit, .bm-arc-casing, .bm-arc-core, .bm-arc-tracer { fill: none; }
 .bm-arc-hit { stroke: transparent; pointer-events: stroke; cursor: pointer; }
@@ -157,10 +185,15 @@
 }
 @keyframes bm-travel { to { stroke-dashoffset: -100; } }
 .bm-crest { color: var(--accent-text); }
+.bm-country-event { color: var(--bm-kind, var(--accent)); cursor: pointer; }
+.bm-country-event circle { fill: currentColor; stroke: var(--bm-casing); stroke-width: 1.2; }
+.bm-country-event .bm-country-event-hit { fill: transparent; stroke: none; pointer-events: all; }
+.bm-country-event:is(:hover, :focus-visible) circle:not(.bm-country-event-hit) { stroke: var(--text-primary); }
+.bm-country-event text { pointer-events: visiblePainted; }
 .bm-crest path { stroke: currentColor; stroke-width: 1.2; fill: var(--bm-casing); pointer-events: visiblePainted; cursor: pointer; }
 .bm-bundle { pointer-events: visiblePainted; cursor: pointer; }
 .bm-bundle rect { fill: var(--surface-paper); stroke: currentColor; stroke-width: 1; }
-.bm-crest text, .bm-bundle text {
+.bm-crest text, .bm-bundle text, .bm-country-event text {
   fill: currentColor;
   font: 700 10px var(--font-mono);
   paint-order: stroke;
@@ -193,6 +226,9 @@
 .bm-line-legend:not(:empty) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px 8px; margin-top: 6px; }
 .bm-line-key { display: flex; align-items: center; gap: 4px; font-size: 10px; }
 .bm-line-key svg { color: var(--bm-kind); overflow: visible; }
+.bm-country-event-legend { padding-top: 5px; border-top: 1px solid var(--border); }
+.bm-event-key { font-size: 9px; white-space: nowrap; }
+.bm-event-key::before { content: '●'; color: var(--bm-kind, var(--accent)); margin-right: 4px; }
 .bm-status {
   position: absolute;
   z-index: 4;
@@ -225,10 +261,17 @@
 .bm-evidence-list a { color: var(--accent-text); }
 .bm-source-label { color: var(--text-secondary); }
 .bm-impact-row { border-left: 3px solid var(--bm-kind, var(--accent)); text-align: start; white-space: normal; }
+.wfs-country-drawer.bm-link-drawer { transform: none; }
 
 @media (max-width: 1440px) {
   #worldFirstScreen.battle-map .wfs-slot-stage .atlas-key-plate.bm-key-plate { width: 228px; }
   .battle-map .wfs-country-drawer { width: 378px; }
+}
+@media (max-width: 1250px) {
+  .bm-gauge-inline:nth-child(n+3) { display: none; }
+}
+@media (max-width: 1080px) {
+  .bm-gauges-inline { display: none; }
 }
 @media (max-width: 768px) {
   .wfs-root.battle-map,
@@ -236,10 +279,11 @@
   .battle-map .masthead-bar { grid-template-rows: 36px 26px; }
   .battle-map .wfs-slot-telemetry,
   :root[data-theme="dark"] .battle-map .wfs-slot-telemetry { padding: 0 6px; overflow: visible; }
-  .battle-map .wfs-slot-telemetry .ops-telemetry-bar,
-  :root:not([data-theme="dark"]) .battle-map .wfs-slot-telemetry:has(.wfs-global-gauges:not([hidden])) .ops-telemetry-bar { gap: 5px; }
+  .battle-map .wfs-slot-telemetry .ops-telemetry-bar { gap: 4px; }
   .battle-map .wfs-ops-clocks { gap: 5px; }
-  .bm-counts .bm-front-count { display: none; }
+  .bm-gauges { position: static; }
+  .bm-gauges-popup { right: 8px; }
+  .bm-counts { font-size: 9px; }
   .bm-sources { font-size: 9px; }
   .bm-strip-title { font-size: 10px; }
   .bm-strip-step { display: none; }

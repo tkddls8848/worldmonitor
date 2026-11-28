@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { buildBattleView, impactFreshness, impactTrend, filterImpactWindow, pressureLevel } from '../src/services/battle-map-view';
+import { buildBattleView, buildCountryEventMarkers, impactFreshness, impactTrend, filterImpactWindow, pressureLevel } from '../src/services/battle-map-view';
 import type { ImpactLink } from '../src/services/impact-links';
 import { IMPACT_DAY_MS as DAY } from '../shared/impact-links';
 
 const now = Date.parse('2026-11-28T00:00:00Z');
 const link = (id: string, patch: Partial<ImpactLink> = {}): ImpactLink => ({
   id, actor: 'US', target: 'KR', kind: 'tariffs', direction: 'pressure', magnitude: 56, trend: 'new',
-  firstSeen: now, lastSeen: now, headline: '', evidence: [], ...patch,
+  firstSeen: now, lastSeen: now, headline: '', undirected: false, evidence: [], ...patch,
 });
 const anchors: Record<string, [number, number]> = { US: [-100, 40], KR: [128, 37], UA: [31, 48] };
 
@@ -22,19 +22,24 @@ test('ages a delayed conflict by the dated evidence and excludes it from 24h and
 test('bundles related lines and preserves every link in the ranked list and pressure score', () => {
   const tariffs = link('tariffs');
   const conflict = link('conflict', { kind: 'conflict', magnitude: 100, lastSeen: now - 22 * DAY });
-  const support = link('support', { kind: 'support', direction: 'support', actor: 'KR', target: 'UA' });
-  const domestic = link('financial', { actor: 'KR', kind: 'financial', magnitude: 5 });
-  const view = buildBattleView([tariffs, conflict, support, domestic], anchors, now, null, null);
+  const support = link('support', { kind: 'support', direction: 'support', actor: 'KR', target: 'UA', undirected: true, magnitude: 85 });
+  const tension = link('tension', { kind: 'tension', actor: 'UA', undirected: true, magnitude: 85 });
+  const view = buildBattleView([tariffs, conflict, support, tension], anchors, now, null, null);
   assert.equal(view.arcs.length, 3);
   assert.deepEqual(view.arcs.find((arc) => arc.link === tariffs)?.bundle, [tariffs, conflict]);
   assert.equal(view.ranked.length, 4);
-  assert.equal(view.pressure.KR, 93);
+  assert.equal(view.pressure.KR, 88);
   assert.equal(pressureLevel(view.pressure.KR), 4);
   assert.equal(view.pressure.UA, undefined);
   assert.deepEqual(view.crests.map(({ code, count }) => [code, count]), [['US', 2]]);
-  const selected = buildBattleView([tariffs, conflict, support, domestic], anchors, now, 'KR', null);
+  assert.equal(view.arcs.find((arc) => arc.link === support)?.animated, false);
+  const selected = buildBattleView([tariffs, conflict, support, tension], anchors, now, 'KR', null);
   assert.equal(selected.arcs.length, 4);
   assert.ok(selected.arcs.every((arc) => arc.opacity === 1));
+  assert.deepEqual(buildCountryEventMarkers([
+    { id: 'country:conflict:KR', country: 'KR', kind: 'conflict', magnitude: 30, lastSeen: now, eventCount: 3, evidence: [] },
+    { id: 'country:energy:KR', country: 'KR', kind: 'energy', magnitude: 10, lastSeen: now, eventCount: 1, evidence: [] },
+  ], anchors).map(({ at, offset }) => [at, offset]), [[anchors.KR, 0], [anchors.KR, 13]]);
 });
 
 test('keeps the initial map readable and promotes a selected link beyond the map cap', () => {

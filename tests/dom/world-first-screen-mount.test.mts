@@ -33,7 +33,8 @@ vi.mock('@/services/country-geometry', async (importOriginal) => ({
 }));
 import { mountWorldFirstScreen, type WorldFirstScreenSlots } from '../../src/app/world-first-screen';
 
-const snapshot = { date: '2026-11-22', availableDates: ['2026-11-21', '2026-11-22'], countries: {}, relations: [], anchors: {}, blocs: [], ai: { status: 'ok' }, generatedAt: 1 } as never;
+const snapshot = { date: '2026-11-22', availableDates: ['2026-11-21', '2026-11-22'], countries: {}, relations: [],
+  anchors: { US: [-100, 40], KR: [128, 37] }, blocs: [], ai: { status: 'ok' }, generatedAt: 1 } as never;
 function setup() {
   const root = document.createElement('div');
   const createSlot = (key: keyof Omit<WorldFirstScreenSlots, 'root'>) => {
@@ -50,14 +51,15 @@ function setup() {
     stage: createSlot('stage'),
     shelf: createSlot('shelf'),
   };
-  const map = { setWorldOverviewMode: vi.fn(), setWorldOverview: vi.fn(), onWorldProjectionChanged: vi.fn(), worldProjector: () => null, zoomBy: vi.fn(), resetWorldView: vi.fn(), setCenter: vi.fn() };
+  const map = { setWorldOverviewMode: vi.fn(), setWorldOverview: vi.fn(), onWorldProjectionChanged: vi.fn(),
+    worldProjector: () => null, zoomBy: vi.fn(), resetWorldView: vi.fn(), focusWorldEvidence: vi.fn(), endWorldEvidenceFocus: vi.fn() };
   document.body.append(root);
   const ctx = { map } as never;
   return { root, slots, map, ctx };
 }
 afterEach(() => { document.body.replaceChildren(); vi.clearAllMocks(); vi.useRealTimers(); mocks.data = {}; });
 beforeEach(() => {
-  mocks.impacts.mockResolvedValue({ generatedAt: 0, links: [], summary: { today: [], byCountry: {} }, sources: [] });
+  mocks.impacts.mockResolvedValue({ generatedAt: 0, links: [], summary: { today: [], byCountry: {} }, sources: [], countryEvents: [] });
   mocks.stress.mockResolvedValue(null); mocks.auctions.mockResolvedValue(null); mocks.outages.mockResolvedValue([]);
   mocks.ecos.mockResolvedValue(null); mocks.trade.mockResolvedValue(null); mocks.dart.mockResolvedValue([]); mocks.federalRegister.mockResolvedValue([]);
 });
@@ -131,8 +133,9 @@ describe('mountWorldFirstScreen', () => {
     mocks.impacts.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce({
       generatedAt: at + 1, links: [link, delayed], summary: { today: [link, delayed], byCountry: {} },
       sources: [{ id: 'ucdp', status: 'delayed', dataAsOf: delayed.lastSeen }],
+      countryEvents: [{ id: 'country:conflict:KR', country: 'KR', kind: 'conflict', eventCount: 11, magnitude: 42, lastSeen: at, evidence: link.evidence }],
     });
-    const { slots, ctx } = setup();
+    const { slots, ctx, map } = setup();
     const mounted = mountWorldFirstScreen(ctx, slots, { openFullView() {}, openCountryBrief() {} });
     try {
       const status = slots.stage.querySelector('.bm-status')!;
@@ -146,9 +149,16 @@ describe('mountWorldFirstScreen', () => {
       const evidence = slots.stage.querySelector('.bm-link-drawer')!;
       expect(evidence.getAttribute('data-state')).toBe('open');
       expect(evidence.querySelector('a')?.textContent).toBe('Official tariff determination');
+      expect(map.focusWorldEvidence).toHaveBeenCalledWith([-100, 40], [128, 37], expect.any(Object));
       evidence.querySelectorAll<HTMLButtonElement>('.bm-endpoints button')[1]!.click();
+      expect(map.endWorldEvidenceFocus).toHaveBeenCalled();
       expect(slots.stage.querySelector('[data-section="impact"]')?.textContent).toContain('수신 1');
       expect(slots.stage.querySelector('[data-section="korea-economy"]')).not.toBeNull();
+      expect(slots.stage.querySelector('[data-section="country-events"]')?.textContent).toContain('국내 무력 사건 · 11건');
+      slots.stage.querySelector<HTMLButtonElement>('[data-section="country-events"] button')!.click();
+      expect(evidence.getAttribute('aria-label')).toBe('국내 사건 근거');
+      expect(evidence.querySelector('a')?.textContent).toBe('Official tariff determination');
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
       slots.stage.querySelector<HTMLButtonElement>('[data-section="impact"] [data-impact-id]')!.click();
       expect(evidence.textContent).toContain('대한민국 브리핑');
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
@@ -194,6 +204,9 @@ describe('mountWorldFirstScreen', () => {
     document.dispatchEvent(new CustomEvent('wm:breaking-news', { detail: alert }));
     expect(slots.stage.querySelector('.wfs-ops-event-title')?.textContent).toBe('긴급 속보');
     expect(slots.dispatch.querySelector('.bm-breaking')?.textContent).toContain('긴급 속보');
+    slots.dispatch.querySelector<HTMLButtonElement>('.bm-breaking')!.click();
+    expect(slots.stage.querySelector('.bm-link-drawer')?.getAttribute('aria-label')).toBe('속보 근거');
+    expect(slots.stage.querySelector('.bm-link-drawer')?.textContent).toContain('긴급 속보');
     mounted.onLeave();
     mounted.destroy();
     expect(vi.getTimerCount()).toBe(0);

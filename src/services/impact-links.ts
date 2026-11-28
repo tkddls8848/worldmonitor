@@ -3,7 +3,7 @@ import type { IMPACT_KINDS } from '../../shared/impact-links';
 import { WorldOverviewServiceClient } from '@/services/generated-rpc-clients';
 import { getRpcBaseUrl } from '@/services/rpc-client';
 
-export type { GetImpactLinksResponse, ImpactLink } from '@/generated/client/worldmonitor/world_overview/v1/service_client';
+export type { CountryImpactEvent, GetImpactLinksResponse, ImpactEvidence, ImpactLink } from '@/generated/client/worldmonitor/world_overview/v1/service_client';
 
 export interface ImpactLinksFilters {
   kind?: typeof IMPACT_KINDS[number];

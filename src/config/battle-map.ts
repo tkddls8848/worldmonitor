@@ -14,6 +14,11 @@ export const IMPACT_STYLES = {
   support: { label: '지지', detail: '외교 지지·동맹', dash: '', end: 'M0 6a3 3 0 1 1 6 0a3 3 0 1 1-6 0 M7 2L12 6L7 10Z', filled: true },
 } satisfies Record<ImpactKind, { label: string; detail: string; dash: string; end: string; filled: boolean }>;
 export const IMPACT_KINDS = Object.keys(IMPACT_STYLES) as ImpactKind[];
+export const COUNTRY_EVENT_LABELS: Partial<Record<ImpactKind, string>> = {
+  conflict: '국내 무력 사건',
+  energy: '국내 에너지 충격',
+  financial: '국내 금융 스트레스',
+};
 
 export function isImpactKind(value: string): value is ImpactKind {
   return Object.prototype.hasOwnProperty.call(IMPACT_STYLES, value);

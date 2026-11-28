@@ -726,6 +726,7 @@ export class DeckGLMap {
   private orbitalTrackMarker: TrackPoint | null = null;
   private orbitalTarget: OrbitalTarget | null = null;
   private orbitalFramedPastEdge = false;
+  private worldEvidenceFraming = false;
   /** The layer list last handed to deck.gl, so the replay marker can move without a full rebuild. */
   private committedLayers: LayersList | null = null;
   private scenarioState: ScenarioVisualState | null = null;
@@ -5985,7 +5986,10 @@ export class DeckGLMap {
   public setWorldOverviewMode(on: boolean): void {
     if (this.worldOverviewMode === on) return;
     this.worldOverviewMode = on;
-    if (!on) delete this.container.dataset.worldLegend;
+    if (!on) {
+      delete this.container.dataset.worldLegend;
+      this.setWorldEvidenceFraming(false);
+    }
     this.syncWorldBasemap();
     this.syncWorldPulse();
     this.render();
@@ -7151,7 +7155,15 @@ export class DeckGLMap {
     if (!track && !this.orbitalTarget) this.orbitalFramedPastEdge = false;
     const shapes = track ? continuousTrack(track, this.orbitalAroundLon(track)) : null;
     const past = this.orbitalFramedPastEdge || !!shapes && [shapes.path, ...shapes.footprint].some((line) => line.some(([lon]) => beyond(lon)));
-    this.maplibreMap?.setRenderWorldCopies(past);
+    this.maplibreMap?.setRenderWorldCopies(past || this.worldEvidenceFraming);
+  }
+
+  public setWorldEvidenceFraming(active: boolean): void {
+    if (this.worldEvidenceFraming === active) return;
+    this.worldEvidenceFraming = active;
+    // A drawer offset can put the edge of the map outside the main world.
+    // Keep the requested camera center instead of clamping it behind the drawer.
+    this.syncOrbitalWorldCopies();
   }
 
   /** Moves the replay to a moment by swapping only the replay layers into the layers already committed to deck.gl. */
@@ -8167,12 +8179,12 @@ export class DeckGLMap {
    * Pacific. `maxZoom` is FOCUS_FIT_MAX_ZOOM from that module, passed in so
    * this chunk does not import it statically.
    */
-  public fitFocusBounds(fit: FocusFitBounds, maxZoom: number): void {
+  public fitFocusBounds(fit: FocusFitBounds, maxZoom: number, padding?: { top: number; right: number; bottom: number; left: number }, duration = 800): void {
     const map = this.maplibreMap;
     if (!map) return;
     const camera = map.cameraForBounds(
       [[fit.west, fit.south], [fit.east, fit.north]],
-      { padding: focusFitPadding(this.container), maxZoom },
+      { padding: padding ?? focusFitPadding(this.container), maxZoom },
     );
     const center = camera?.center ? lngLatOf(camera.center) : null;
     if (!center) return;
@@ -8184,7 +8196,7 @@ export class DeckGLMap {
     map.flyTo({
       center: [lon, center.lat],
       zoom,
-      duration: 800,
+      duration,
     }, { [VIEWPORT_MOVEMENT_EVENT_KEY]: viewportMovementGeneration });
     this.onStateChange?.(this.getState());
   }
