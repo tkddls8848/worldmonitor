@@ -7,7 +7,7 @@ const source = ts.createSourceFile('DeckGLMap.ts', readFileSync(
   new URL('../src/components/DeckGLMap.ts', import.meta.url), 'utf8',
 ), ts.ScriptTarget.Latest, true);
 const declaration = source.statements.find(node => ts.isClassDeclaration(node) && node.name?.text === 'DeckGLMap');
-const methods = ['initMapLibre', 'getCenter', 'destroy'];
+const methods = ['initMapLibre', 'watchWorldBasemap', 'getCenter', 'destroy'];
 const body = declaration.members.filter(node => methods.includes(node.name?.getText(source)))
   .map(node => node.getText(source)).join('\n');
 const javascript = ts.transpileModule(`class Harness { ${body} }`, {

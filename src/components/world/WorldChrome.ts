@@ -4,7 +4,6 @@ import { WORLD_BLOC_COLORS, WORLD_FILL_COLORS, WORLD_HOTSPOT_COLORS, WORLD_UNRES
 import { FIELD_LABEL_KO, KIND_LABEL_KO, WORLD_FIELDS } from '../../../shared/world-overview.js';
 import css from '@/styles/world-first-screen.css?inline';
 import battleCss from '@/styles/battle-map.css?inline';
-import { IMPACT_STYLES } from '@/config/battle-map';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 
 let styleInstalled = false;
@@ -12,9 +11,7 @@ function installStyle(): void {
   if (styleInstalled || typeof document === 'undefined') return;
   const style = document.createElement('style');
   style.dataset.wfsStyles = 'true';
-  const kindColors = (theme: 'dark' | 'light') => Object.entries(IMPACT_STYLES)
-    .map(([kind, value]) => `--bm-kind-${kind}:${value[theme]};`).join('');
-  style.textContent = css + battleCss + `.battle-map{${kindColors('light')}}:root[data-theme="dark"] .battle-map{${kindColors('dark')}}`;
+  style.textContent = css + battleCss;
   document.head.append(style);
   styleInstalled = true;
 }

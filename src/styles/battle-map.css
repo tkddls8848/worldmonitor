@@ -5,6 +5,13 @@
 }
 .battle-map {
   --bm-casing: #f8f9f6;
+  --bm-kind-conflict: #be123c;
+  --bm-kind-sanctions: #b45309;
+  --bm-kind-tariffs: #0369a1;
+  --bm-kind-energy: #4d7c0f;
+  --bm-kind-tension: #be185d;
+  --bm-kind-financial: #6d28d9;
+  --bm-kind-support: #0f766e;
   --bm-trend-bg: #fee2e2;
   --bm-trend-fg: #991b1b;
   --bm-surge-bg: #fef3c7;
@@ -12,6 +19,13 @@
 }
 :root[data-theme="dark"] .battle-map {
   --bm-casing: #0b0e0d;
+  --bm-kind-conflict: #f43f5e;
+  --bm-kind-sanctions: #f59e0b;
+  --bm-kind-tariffs: #38bdf8;
+  --bm-kind-energy: #a3e635;
+  --bm-kind-tension: #f472b6;
+  --bm-kind-financial: #a78bfa;
+  --bm-kind-support: #2dd4bf;
   --bm-trend-bg: #411d27;
   --bm-trend-fg: #fda4af;
   --bm-surge-bg: #3c2e12;
