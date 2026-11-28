@@ -9,7 +9,8 @@ message GetImpactLinksRequest {
   string kind = 1 [(sebuf.http.query) = {name: "kind"}];
   // ISO alpha-2 country. Matches either endpoint of a link.
   string country = 2 [(sebuf.http.query) = {name: "country"}];
-  // 24h or 7d, using the last evidence date. Defaults to 7d.
+  // 24h or 7d, using the last evidence date. Defaults to 7d, which includes
+  // the latest available 30-day UCDP reporting window for conflict links.
   string window = 3 [(sebuf.http.query) = {name: "window"}];
   // Maximum number of links. Defaults to 100 and cannot exceed 500.
   int32 limit = 4 [(sebuf.http.query) = {name: "limit"}];
@@ -53,4 +54,13 @@ message GetImpactLinksResponse {
   int64 generated_at = 1 [(sebuf.http.int64_encoding) = INT64_ENCODING_NUMBER];
   repeated ImpactLink links = 2;
   ImpactSummary summary = 3;
+  repeated ImpactSourceStatus sources = 4;
+}
+
+message ImpactSourceStatus {
+  string id = 1;
+  // available, delayed, or missing.
+  string status = 2;
+  // Latest known data date in epoch milliseconds, or zero when unavailable.
+  int64 data_as_of = 3 [(sebuf.http.int64_encoding) = INT64_ENCODING_NUMBER];
 }

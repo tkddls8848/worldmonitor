@@ -21,14 +21,22 @@ test('derives sanctions and tariffs from dated official records with known count
 });
 
 test('uses the UCDP event date and the other state relative to the affected country', () => {
-  assert.ok(!snapshot.links.some((link) => link.kind === 'conflict'));
   const event = fixture.ucdp.events[0];
+  const delayed = byId['conflict:RU:UA'];
+  assert.equal(delayed.lastSeen, event.dateEnd);
+  assert.equal(delayed.trend, 'steady');
+  assert.ok(!snapshot.summary.today.some((link) => link.kind === 'conflict'));
+  assert.deepEqual(snapshot.sources.find((source) => source.id === 'ucdp'), { id: 'ucdp', status: 'delayed', dataAsOf: event.dateEnd });
   const { links: [link] } = buildImpactLinks({ ucdp: fixture.ucdp }, event.dateEnd + DAY);
   assert.equal(link.id, 'conflict:RU:UA');
   assert.equal(link.lastSeen, event.dateEnd);
   assert.match(link.evidence[0].title, /UCDP 647030/);
-  assert.equal(link.magnitude, Math.round((10 + 4 * Math.log2(3)) * (13 / 14)));
+  assert.equal(link.magnitude, Math.round(10 + 4 * Math.log2(3)));
   assert.equal(link.trend, 'new');
+  const { observations } = buildImpactLinks({
+    ucdp: { events: [event, { ...event, id: '123', dateEnd: event.dateEnd - 29 * DAY }, { ...event, id: '124', dateEnd: event.dateEnd - 31 * DAY }] },
+  }, now);
+  assert.deepEqual(observations.map((row) => row.eventId), [event.id, '123']);
 });
 
 test('requires citations for tension and support and represents bilateral evidence in both directions', () => {
@@ -112,8 +120,11 @@ test('RPC filters by kind, either country endpoint and age before applying limit
   assert.equal(result.summary?.byCountry.CN.incoming.tension, byId['tension:US:CN'].magnitude);
   assert.ok(!Object.hasOwn(result, 'observations'));
   assert.deepEqual(await getImpactLinks(ctx, defaults, async () => null), {
-    generatedAt: 0, links: [], summary: { today: [], byCountry: {} },
+    generatedAt: 0, links: [], summary: { today: [], byCountry: {} }, sources: [],
   });
+  const conflict = (window: string) => getImpactLinks(ctx, { ...defaults, kind: 'conflict', window }, async () => snapshot);
+  assert.equal((await conflict('7d')).links[0]?.id, 'conflict:RU:UA');
+  assert.deepEqual((await conflict('24h')).links, []);
   for (const filter of [{ kind: 'other' }, { country: 'ZZ' }, { window: '30d' }, { limit: 501 }, { limit: 1.2 }]) {
     await assert.rejects(getImpactLinks(ctx, { ...defaults, ...filter }, async () => assert.fail('invalid requests must be rejected before Redis')));
   }

@@ -1,5 +1,6 @@
 export const IMPACT_LINKS_KEY = 'world:impact-links:v1';
 export const IMPACT_DAY_MS = 86_400_000;
+export const UCDP_WINDOW_DAYS = 30;
 export const IMPACT_KINDS = ['sanctions', 'tariffs', 'conflict', 'tension', 'support', 'energy', 'financial'] as const;
 
 type PressureLink = {
@@ -24,8 +25,11 @@ export function summarizeImpactLinks<T extends PressureLink>(links: readonly T[]
   };
 
   for (const link of links) {
-    if (today.length < 7 && link.lastSeen >= asOf - IMPACT_DAY_MS && ['new', 'rising'].includes(link.trend)) {
-      today.push(link);
+    if (link.lastSeen >= asOf - IMPACT_DAY_MS && ['new', 'rising'].includes(link.trend)) {
+      if (today.length < 7) today.push(link);
+      else if ((link.target === 'KR' || link.actor === 'KR') && !today.some((item) => item.target === 'KR' || item.actor === 'KR')) {
+        today[today.length - 1] = link;
+      }
     }
     if (link.direction !== 'pressure') continue;
     add(totals(link.target).incoming, link.kind, link.magnitude);

@@ -133,6 +133,7 @@ export interface GetImpactLinksResponse {
   generatedAt: number;
   links: ImpactLink[];
   summary?: ImpactSummary;
+  sources: ImpactSourceStatus[];
 }
 
 export interface ImpactLink {
@@ -164,6 +165,12 @@ export interface ImpactSummary {
 export interface ImpactPressureTotals {
   incoming: Record<string, number>;
   outgoing: Record<string, number>;
+}
+
+export interface ImpactSourceStatus {
+  id: string;
+  status: string;
+  dataAsOf: number;
 }
 
 export interface SetWorldOverviewMarkRequest {

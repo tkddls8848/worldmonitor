@@ -111,7 +111,9 @@ paths:
                     type: string
                 - name: window
                   in: query
-                  description: 24h or 7d, using the last evidence date. Defaults to 7d.
+                  description: |-
+                    24h or 7d, using the last evidence date. Defaults to 7d, which includes
+                     the latest available 30-day UCDP reporting window for conflict links.
                   required: false
                   example: "example"
                   schema:
@@ -149,6 +151,10 @@ paths:
                                             "url": "https://example.com/worldmonitor"
                                       "firstSeen": 1
                                       "headline": "example"
+                                "sources":
+                                    - "dataAsOf": 1
+                                      "id": "example-id"
+                                      "status": "example"
                                 "summary":
                                     "byCountry":
                                         "exampleKey":
@@ -557,7 +563,9 @@ components:
                     description: ISO alpha-2 country. Matches either endpoint of a link.
                 window:
                     type: string
-                    description: 24h or 7d, using the last evidence date. Defaults to 7d.
+                    description: |-
+                        24h or 7d, using the last evidence date. Defaults to 7d, which includes
+                         the latest available 30-day UCDP reporting window for conflict links.
                 limit:
                     type: integer
                     format: int32
@@ -575,6 +583,10 @@ components:
                         $ref: '#/components/schemas/ImpactLink'
                 summary:
                     $ref: '#/components/schemas/ImpactSummary'
+                sources:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/ImpactSourceStatus'
         ImpactLink:
             type: object
             properties:
@@ -668,6 +680,18 @@ components:
                 value:
                     type: integer
                     format: int32
+        ImpactSourceStatus:
+            type: object
+            properties:
+                id:
+                    type: string
+                status:
+                    type: string
+                    description: available, delayed, or missing.
+                dataAsOf:
+                    type: integer
+                    format: int64
+                    description: 'Latest known data date in epoch milliseconds, or zero when unavailable.. Warning: Values > 2^53 may lose precision in JavaScript'
         SetWorldOverviewMarkRequest:
             type: object
             properties:

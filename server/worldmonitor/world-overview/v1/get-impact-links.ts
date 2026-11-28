@@ -33,15 +33,16 @@ export async function getImpactLinks(
 
   const data = await readSnapshot(IMPACT_LINKS_KEY) as GetImpactLinksResponse | null;
   if (!data || !Number.isSafeInteger(data.generatedAt) || !Array.isArray(data.links)) {
-    return { generatedAt: 0, links: [], summary: { today: [], byCountry: {} } };
+    return { generatedAt: 0, links: [], summary: { today: [], byCountry: {} }, sources: [] };
   }
   const since = data.generatedAt - (window === '24h' ? 1 : 7) * IMPACT_DAY_MS;
-  const links = data.links.filter((link) => link.lastSeen >= since
+  const links = data.links.filter((link) => (link.lastSeen >= since || (window === '7d' && link.kind === 'conflict'))
     && (!kind || link.kind === kind)
     && (!country || link.actor === country || link.target === country));
   return {
     generatedAt: data.generatedAt,
     links: links.slice(0, req.limit || 100),
     summary: summarizeImpactLinks(links, data.generatedAt),
+    sources: data.sources ?? [],
   };
 }

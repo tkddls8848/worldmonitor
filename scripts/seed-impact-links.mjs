@@ -24,7 +24,7 @@
 import { pathToFileURL } from 'node:url';
 import countryNames from '../shared/country-name-to-iso2.cjs';
 import iso3ToIso2 from '../shared/iso3-to-iso2.json' with { type: 'json' };
-import { IMPACT_DAY_MS as DAY, IMPACT_LINKS_KEY, summarizeImpactLinks } from '../shared/impact-links.ts';
+import { IMPACT_DAY_MS as DAY, IMPACT_LINKS_KEY, summarizeImpactLinks, UCDP_WINDOW_DAYS } from '../shared/impact-links.ts';
 import { loadEnvFile, readCanonicalValue, runSeed } from './_seed-utils.mjs';
 import { markActivated } from './_world-overview-io.mjs';
 
@@ -117,9 +117,9 @@ function sanctionsChanges(payload, add, now) {
   }
 }
 
-function conflict(payload, add, now) {
+function conflict(payload, add) {
   for (const row of rows(payload?.events)) {
-    if (!within(row?.dateEnd, now) || !/^\d+$/.test(row.id)) continue;
+    if (!/^\d+$/.test(row?.id)) continue;
     const target = country(row.country);
     if (!target) continue;
     // Side order does not name the aggressor. Use the other state only when both
@@ -199,9 +199,20 @@ function financial(inputs, add) {
   });
 }
 
-/** Reduce stored source snapshots to a rolling, reproducible seven-day read model. */
+/** Build a rolling read model. UCDP uses its latest available reporting window. */
 export function buildImpactLinks(inputs, now, previous = []) {
   const observations = new Map();
+  let ucdpAsOf = 0;
+  for (const event of rows(inputs.ucdp?.events)) {
+    if (Number.isSafeInteger(event?.dateEnd) && event.dateEnd <= now) ucdpAsOf = Math.max(ucdpAsOf, event.dateEnd);
+  }
+  if (!Array.isArray(inputs.ucdp?.events)) {
+    for (const row of rows(previous)) {
+      if (row?.kind === 'conflict' && row.evidence?.source === 'UCDP' && row.evidence.publishedAt <= now) {
+        ucdpAsOf = Math.max(ucdpAsOf, row.evidence.publishedAt);
+      }
+    }
+  }
   function add(kind, from, to, points, raw, options = {}) {
     const actor = BLOCS.has(from) ? from : country(from);
     const target = country(to);
@@ -209,7 +220,10 @@ export function buildImpactLinks(inputs, now, previous = []) {
     const source = text(raw.source, 100);
     const title = text(raw.title);
     const url = safeUrl(raw.url);
-    if (!actor || !target || !source || !title || !url || !within(publishedAt, now)) return;
+    const inWindow = kind === 'conflict'
+      ? ucdpAsOf && Number.isSafeInteger(publishedAt) && publishedAt > ucdpAsOf - UCDP_WINDOW_DAYS * DAY && publishedAt <= ucdpAsOf
+      : within(publishedAt, now);
+    if (!actor || !target || !source || !title || !url || !inWindow) return;
     const id = `${kind}:${actor}:${target}`;
     const eventId = text(options.eventId, 128);
     const key = eventId ? `${id}|event|${eventId}` : `${id}|${url}|${publishedAt}`;
@@ -226,12 +240,13 @@ export function buildImpactLinks(inputs, now, previous = []) {
     if (Object.hasOwn(LABELS, row?.kind) && typeof row.eventId === 'string' && row.evidence && Number.isFinite(row.points)) {
       // The sanctions change ledger already covers the lookback and may revise a batch.
       if (row.kind === 'sanctions' && row.evidence.source !== 'Federal Register' && Array.isArray(inputs.sanctionsChanges?.events)) continue;
+      if (row.kind === 'conflict' && Array.isArray(inputs.ucdp?.events)) continue;
       add(row.kind, row.actor, row.target, row.points, row.evidence, row);
     }
   }
   federalRegister(inputs.federalRegister, add);
   sanctionsChanges(inputs.sanctionsChanges, add, now);
-  conflict(inputs.ucdp, add, now);
+  conflict(inputs.ucdp, add);
   relations(inputs.relations, add);
   energy(inputs, add, now);
   financial(inputs, add);
@@ -250,12 +265,13 @@ export function buildImpactLinks(inputs, now, previous = []) {
     let prior = 0;
     for (const row of group) {
       const age = now - row.evidence.publishedAt;
-      points += row.points * (1 - age / (14 * DAY));
+      const weightAge = kind === 'conflict' ? (ucdpAsOf - row.evidence.publishedAt) / (2 * UCDP_WINDOW_DAYS * DAY) : age / (14 * DAY);
+      points += row.points * (1 - weightAge);
       if (age <= DAY) recent += row.points;
-      else prior += row.points;
+      else if (age <= 7 * DAY) prior += row.points;
     }
     const baseline = prior / 6;
-    const trend = !prior ? 'new' : recent > baseline * 1.25 ? 'rising' : recent < baseline * 0.75 ? 'falling' : 'steady';
+    const trend = !prior ? (recent ? 'new' : 'steady') : recent > baseline * 1.25 ? 'rising' : recent < baseline * 0.75 ? 'falling' : 'steady';
     const label = actor === target ? KO.of(target) : `${BLOCS.has(actor) ? actor : KO.of(actor)} → ${KO.of(target)}`;
     return {
       id, actor, target, kind, magnitude: Math.min(100, Math.round(points)),
@@ -266,7 +282,14 @@ export function buildImpactLinks(inputs, now, previous = []) {
     };
   });
   links.sort((a, b) => b.magnitude - a.magnitude || b.lastSeen - a.lastSeen || a.id.localeCompare(b.id, 'en'));
-  return { generatedAt: now, links, summary: summarizeImpactLinks(links, now), observations: [...observations.values()] };
+  const sources = Object.keys(KEYS).map((id) => ({
+    id,
+    status: inputs[id] == null || (id === 'relations' && inputs[id].status !== 'ok') || (id === 'ucdp' && !ucdpAsOf)
+      ? 'missing'
+      : id === 'ucdp' && !within(ucdpAsOf, now) ? 'delayed' : 'available',
+    dataAsOf: id === 'ucdp' ? ucdpAsOf : 0,
+  }));
+  return { generatedAt: now, links, summary: summarizeImpactLinks(links, now), sources, observations: [...observations.values()] };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
