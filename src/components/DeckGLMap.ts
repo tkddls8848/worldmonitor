@@ -7,6 +7,7 @@ import { createTimeoutSignal } from '@/services/timeout-signal';
  * Mobile devices gracefully degrade to the D3/SVG-based Map component
  */
 import { MapLibreOverlay } from '@deck.gl/maplibre';
+import { MapView as DeckViewport } from '@deck.gl/core';
 import type { Layer, LayersList, PickingInfo } from '@deck.gl/core';
 import { GeoJsonLayer, ScatterplotLayer, PathLayer, IconLayer, TextLayer, PolygonLayer } from '@deck.gl/layers';
 import type { IconLayerProps } from '@deck.gl/layers';
@@ -245,6 +246,7 @@ const VIEW_PRESETS: Record<DeckMapView, { longitude: number; latitude: number; z
   africa: { longitude: 20, latitude: 5, zoom: 3 },
   oceania: { longitude: 135, latitude: -25, zoom: 3.5 },
 };
+const WORLD_OVERVIEW_VIEWPORT = new DeckViewport({ id: 'maplibre', repeat: false });
 
 const VIEWPORT_MOVEMENT_EVENT_KEY = 'worldMonitorViewportGeneration';
 
@@ -5753,7 +5755,9 @@ export class DeckGLMap {
       layerCount = built.length;
       this.deckFrameProvider.wake();
       this.committedLayers = built;
-      this.deckOverlay?.setProps({ layers: built });
+      // MapLibreOverlay forwards custom views, but its DeckProps type defaults views to null.
+      const overlayProps = { layers: built, views: this.worldOverviewMode ? WORLD_OVERVIEW_VIEWPORT : undefined };
+      this.deckOverlay?.setProps(overlayProps as { layers: LayersList });
       if (this.worldOverviewMode) {
         const ids = built.map(deckLayerId);
         const legend = [
@@ -5990,6 +5994,7 @@ export class DeckGLMap {
       delete this.container.dataset.worldLegend;
       this.setWorldEvidenceFraming(false);
     }
+    this.syncOrbitalWorldCopies();
     this.syncWorldBasemap();
     this.syncWorldPulse();
     this.render();
@@ -6122,11 +6127,10 @@ export class DeckGLMap {
 
   public resetWorldView(): void {
     this.state.view = 'global';
-    // Include the Antarctic coast even when the single-world camera is
-    // constrained by the width of a widescreen viewport.
+    this.syncOrbitalWorldCopies();
     this.fitFocusBounds({
-      west: -179.9, east: 179.9, south: -76, north: 70,
-      lonSpan: 359.8, latSpan: 146, center: { lon: 0, lat: -3 },
+      west: -179.9, east: 179.9, south: -72, north: 78,
+      lonSpan: 359.8, latSpan: 150, center: { lon: 0, lat: 3 },
     }, VIEW_PRESETS.global.zoom, { left: 0, right: 0, top: 8, bottom: 8 }, 0);
   }
 
@@ -7161,7 +7165,9 @@ export class DeckGLMap {
     if (!track && !this.orbitalTarget) this.orbitalFramedPastEdge = false;
     const shapes = track ? continuousTrack(track, this.orbitalAroundLon(track)) : null;
     const past = this.orbitalFramedPastEdge || !!shapes && [shapes.path, ...shapes.footprint].some((line) => line.some(([lon]) => beyond(lon)));
-    this.maplibreMap?.setRenderWorldCopies(past || this.worldEvidenceFraming === true);
+    // Allow the Battle Map camera to fit both polar coasts on wide screens.
+    // Its Deck viewport still renders one copy of the land.
+    this.maplibreMap?.setRenderWorldCopies(past || this.worldOverviewMode || this.worldEvidenceFraming === true);
   }
 
   public setWorldEvidenceFraming(active: boolean): void {
