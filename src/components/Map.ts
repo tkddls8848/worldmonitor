@@ -1275,8 +1275,8 @@ export class MapComponent {
 
   private coordinatesAtPointer(event: MouseEvent): [number, number] | null {
     const { left, top } = this.container.getBoundingClientRect();
-    const { clientWidth: width, clientHeight: height } = this.container;
-    if (!width || !height) return null;
+    const width = this.container.clientWidth;
+    const height = this.container.clientHeight;
     const { zoom, pan } = this.state;
     const x = (event.clientX - left - width / 2) / zoom + width / 2 - pan.x;
     const y = (event.clientY - top - height / 2) / zoom + height / 2 - pan.y;
