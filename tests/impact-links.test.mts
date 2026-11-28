@@ -12,6 +12,7 @@ import { loadImpactLinks } from '../src/services/impact-links';
 const now = fixture.captureTime;
 const snapshot = buildImpactLinks(fixture, now);
 const byId = Object.fromEntries(snapshot.links.map((link) => [link.id, link]));
+const eventsById = Object.fromEntries(snapshot.countryEvents.map((event) => [event.id, event]));
 
 test('derives sanctions and tariffs from dated official records with known country associations', () => {
   assert.equal(byId['sanctions:US:MY'].evidence[0].title, 'Additions to the Entity List');
@@ -39,28 +40,64 @@ test('uses the UCDP event date and the other state relative to the affected coun
   assert.deepEqual(observations.map((row) => row.eventId), [event.id, '123']);
 });
 
-test('requires citations for tension and support and represents bilateral evidence in both directions', () => {
+test('derives direction from the cited action and preserves a single bilateral pact', () => {
   assert.equal(byId['tension:CN:US'].direction, 'pressure');
-  assert.equal(byId['tension:US:CN'].evidence[0].source, 'Deutschlandfunk');
+  assert.equal(byId['tension:CN:US'].undirected, false);
+  assert.equal(byId['tension:CN:US'].evidence[0].source, 'Deutschlandfunk');
+  assert.ok(!byId['tension:US:CN']);
   assert.equal(byId['support:IN:JP'].direction, 'support');
-  assert.deepEqual(byId['support:JP:IN'].evidence, byId['support:IN:JP'].evidence);
+  assert.equal(byId['support:IN:JP'].undirected, true);
+  assert.ok(!byId['support:JP:IN']);
   assert.ok(!byId['support:CN:SY']);
   assert.ok(!byId['support:UA:US']);
 });
 
-test('treats measured domestic energy and financial pressure as incoming only', () => {
-  assert.match(byId['energy:IQ:IQ'].evidence[0].title, /Iraq Delays/);
-  assert.ok(!byId['energy:PK:PK']);
-  assert.match(byId['financial:US:US'].evidence[0].url, /R_20261124_4\.pdf$/);
-  assert.equal(snapshot.summary.byCountry.IQ.incoming.energy, byId['energy:IQ:IQ'].magnitude);
-  assert.deepEqual(snapshot.summary.byCountry.IQ.outgoing, {});
+test('revalidates retained citations and excludes companies, nationals, and unsupported actors', () => {
+  const evidence = (title: string, index: number) => ({ title, publisher: 'Test Wire', url: `https://example.test/${index}`, publishedAt: now - DAY / 2 });
+  const candidate = (from: string, to: string, title: string, index: number) => ({
+    from, to, kind: 'tension', directed: false, confidence: 0.9, sources: [evidence(title, index)],
+  });
+  const valid = 'Mexico announces diplomatic protest after US denies extradition of former TV host';
+  const relations = { status: 'ok', relations: [
+    candidate('US', 'MX', valid, 1), candidate('MX', 'US', valid, 1),
+    candidate('BR', 'US', "Brazil's Embraer criticizes new US tariffs, warns of air travel inflation", 2),
+    candidate('NG', 'RU', 'Threatened by Wagner, this Nigerian journalist uncovered Russia’s war machine in Africa', 3),
+    candidate('CN', 'US', 'China warns US companies against new restrictions', 4),
+    candidate('KP', 'RU', 'Ukraine says North Korea temporarily halted missile shipments to Russia following diplomatic tensions', 5),
+  ] };
+  const retained = { actor: 'NG', target: 'RU', kind: 'tension', eventId: '', points: 10,
+    evidence: { ...evidence(relations.relations[3]!.sources[0]!.title, 3), source: 'Test Wire' } };
+  const result = buildImpactLinks({ relations }, now, [retained]);
+  assert.deepEqual(result.links.map(({ id }) => id), ['tension:MX:US']);
+  assert.equal(result.observations.length, 1);
+  assert.equal(result.links[0].evidence[0].title, valid);
+  const reply = candidate('US', 'MX', 'US warns Mexico against retaliatory measures', 6);
+  const reciprocal = buildImpactLinks({ relations: { ...relations, relations: [...relations.relations, reply] } }, now);
+  assert.equal(reciprocal.links.length, 1);
+  assert.equal(reciprocal.links[0].undirected, true);
+  assert.deepEqual(reciprocal.summary.byCountry, {});
+});
+
+test('keeps domestic incidents and financial or energy shocks out of both links and pressure totals', () => {
+  assert.ok(snapshot.links.every((link) => link.actor !== link.target));
+  assert.match(eventsById['country:energy:IQ'].evidence[0].title, /Iraq Delays/);
+  assert.ok(!eventsById['country:energy:PK']);
+  assert.match(eventsById['country:financial:US'].evidence[0].url, /R_20261124_4\.pdf$/);
+  assert.equal(snapshot.summary.byCountry.IQ, undefined);
   assert.equal(snapshot.summary.byCountry.US.outgoing.financial, undefined);
   const stressed = structuredClone(fixture.funding);
   stressed.sofr.rate = stressed.effr.rate + 0.4;
-  const { links: [funding] } = buildImpactLinks({ funding: stressed }, now);
-  assert.equal(funding.id, 'financial:US:US');
+  const { countryEvents: [funding] } = buildImpactLinks({ funding: stressed }, now);
+  assert.equal(funding.id, 'country:financial:US');
   assert.match(funding.evidence[0].title, /40 bp/);
   assert.equal(funding.evidence[0].publishedAt, Date.parse(stressed.sofr.date));
+  const event = { ...fixture.ucdp.events[0]!, country: 'Haiti', sideA: 'Government of Haiti', sideB: 'Viv Ansanm' };
+  const domestic = buildImpactLinks({ ucdp: { events: [event, { ...event, id: '1' }] } }, now);
+  assert.deepEqual(domestic.links, []);
+  assert.deepEqual(domestic.summary.today, []);
+  assert.equal(domestic.countryEvents[0].country, 'HT');
+  assert.equal(domestic.countryEvents[0].eventCount, 2);
+  assert.equal(domestic.countryEvents[0].evidence.length, 2);
 });
 
 test('deduplicates rolling observations, computes 24h vs 6d trend and drops expired evidence', () => {
@@ -116,15 +153,23 @@ test('RPC filters by kind, either country endpoint and age before applying limit
     return snapshot;
   });
   assert.deepEqual(result.links.map(({ id }) => id), ['tension:CN:US']);
-  assert.deepEqual(result.summary?.today.map(({ id }) => id), ['tension:CN:US', 'tension:US:CN']);
-  assert.equal(result.summary?.byCountry.CN.incoming.tension, byId['tension:US:CN'].magnitude);
+  assert.deepEqual(result.summary?.today.map(({ id }) => id), ['tension:CN:US']);
+  assert.equal(result.summary?.byCountry.CN.outgoing.tension, byId['tension:CN:US'].magnitude);
   assert.ok(!Object.hasOwn(result, 'observations'));
   assert.deepEqual(await getImpactLinks(ctx, defaults, async () => null), {
-    generatedAt: 0, links: [], summary: { today: [], byCountry: {} }, sources: [],
+    generatedAt: 0, links: [], summary: { today: [], byCountry: {} }, sources: [], countryEvents: [],
   });
   const conflict = (window: string) => getImpactLinks(ctx, { ...defaults, kind: 'conflict', window }, async () => snapshot);
   assert.equal((await conflict('7d')).links[0]?.id, 'conflict:RU:UA');
   assert.deepEqual((await conflict('24h')).links, []);
+  const iq = await getImpactLinks(ctx, { ...defaults, kind: 'conflict', country: 'IQ' }, async () => snapshot);
+  assert.deepEqual(iq.links, []);
+  assert.deepEqual(iq.countryEvents.map((event) => event.id), ['country:energy:IQ']);
+  const { countryEvents: _, ...old } = snapshot;
+  const legacy = await getImpactLinks(ctx, defaults, async () => ({
+    ...old, links: [...old.links, { ...old.links[0], actor: 'NG', target: 'NG' }],
+  }));
+  assert.ok(legacy.links.every((link) => link.actor !== link.target && !['tension', 'support'].includes(link.kind)));
   for (const filter of [{ kind: 'other' }, { country: 'ZZ' }, { window: '30d' }, { limit: 501 }, { limit: 1.2 }]) {
     await assert.rejects(getImpactLinks(ctx, { ...defaults, ...filter }, async () => assert.fail('invalid requests must be rejected before Redis')));
   }
@@ -145,7 +190,8 @@ test('browser service encodes filters through the generated GET route', async (t
     return route.handler(new Request(url, init));
   });
   const filtered = await loadImpactLinks({ kind: 'energy', country: ' iq ', window: '24h', limit: 1 });
-  assert.deepEqual(filtered.links.map(({ id }) => id), ['energy:IQ:IQ']);
+  assert.deepEqual(filtered.links, []);
+  assert.deepEqual(filtered.countryEvents.map(({ id }) => id), ['country:energy:IQ']);
   await loadImpactLinks();
   assert.deepEqual(urls, [
     '/api/world-overview/v1/get-impact-links?kind=energy&country=IQ&window=24h&limit=1',

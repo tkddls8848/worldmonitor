@@ -134,6 +134,7 @@ export interface GetImpactLinksResponse {
   links: ImpactLink[];
   summary?: ImpactSummary;
   sources: ImpactSourceStatus[];
+  countryEvents: CountryImpactEvent[];
 }
 
 export interface ImpactLink {
@@ -148,6 +149,7 @@ export interface ImpactLink {
   trend: string;
   headline: string;
   evidence: ImpactEvidence[];
+  undirected: boolean;
 }
 
 export interface ImpactEvidence {
@@ -171,6 +173,16 @@ export interface ImpactSourceStatus {
   id: string;
   status: string;
   dataAsOf: number;
+}
+
+export interface CountryImpactEvent {
+  id: string;
+  country: string;
+  kind: string;
+  magnitude: number;
+  lastSeen: number;
+  eventCount: number;
+  evidence: ImpactEvidence[];
 }
 
 export interface SetWorldOverviewMarkRequest {

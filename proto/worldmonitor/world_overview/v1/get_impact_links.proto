@@ -7,7 +7,7 @@ import "sebuf/http/annotations.proto";
 message GetImpactLinksRequest {
   // sanctions, tariffs, conflict, tension, support, energy, or financial. Omit for all kinds.
   string kind = 1 [(sebuf.http.query) = {name: "kind"}];
-  // ISO alpha-2 country. Matches either endpoint of a link.
+  // ISO alpha-2 country. Matches either link endpoint and scopes country events.
   string country = 2 [(sebuf.http.query) = {name: "country"}];
   // 24h or 7d, using the last evidence date. Defaults to 7d, which includes
   // the latest available 30-day UCDP reporting window for conflict links.
@@ -35,6 +35,19 @@ message ImpactLink {
   string trend = 9;
   string headline = 10;
   repeated ImpactEvidence evidence = 11;
+  // True when the evidence establishes a bilateral relation without one direction.
+  // In this case actor and target are the two endpoints in canonical order.
+  bool undirected = 12;
+}
+
+message CountryImpactEvent {
+  string id = 1;
+  string country = 2;
+  string kind = 3;
+  int32 magnitude = 4;
+  int64 last_seen = 5 [(sebuf.http.int64_encoding) = INT64_ENCODING_NUMBER];
+  int32 event_count = 6;
+  repeated ImpactEvidence evidence = 7;
 }
 
 message ImpactPressureTotals {
@@ -55,6 +68,8 @@ message GetImpactLinksResponse {
   repeated ImpactLink links = 2;
   ImpactSummary summary = 3;
   repeated ImpactSourceStatus sources = 4;
+  // Country-level events scoped by country and window, independent of link kind and limit.
+  repeated CountryImpactEvent country_events = 5;
 }
 
 message ImpactSourceStatus {

@@ -16040,7 +16040,7 @@ paths:
                     type: string
                 - name: country
                   in: query
-                  description: ISO alpha-2 country. Matches either endpoint of a link.
+                  description: ISO alpha-2 country. Matches either link endpoint and scopes country events.
                   required: false
                   example: "US"
                   schema:
@@ -16076,6 +16076,16 @@ paths:
                     content:
                         application/json:
                             example:
+                                "countryEvents":
+                                    - "country": "US"
+                                      "eventCount": 1
+                                      "evidence":
+                                          - "publishedAt": 1717200000000
+                                            "source": "example"
+                                            "title": "example"
+                                            "url": "https://example.com/worldmonitor"
+                                      "id": "example-id"
+                                      "kind": "example"
                                 "generatedAt": 1717200000000
                                 "links":
                                     - "actor": "example"
@@ -40949,7 +40959,7 @@ components:
                     description: sanctions, tariffs, conflict, tension, support, energy, or financial. Omit for all kinds.
                 country:
                     type: string
-                    description: ISO alpha-2 country. Matches either endpoint of a link.
+                    description: ISO alpha-2 country. Matches either link endpoint and scopes country events.
                 window:
                     type: string
                     description: |-
@@ -40976,6 +40986,10 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/worldmonitor_world_overview_v1_ImpactSourceStatus'
+                countryEvents:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/worldmonitor_world_overview_v1_CountryImpactEvent'
         worldmonitor_world_overview_v1_ImpactLink:
             type: object
             properties:
@@ -41008,6 +41022,11 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/worldmonitor_world_overview_v1_ImpactEvidence'
+                undirected:
+                    type: boolean
+                    description: |-
+                        True when the evidence establishes a bilateral relation without one direction.
+                         In this case actor and target are the two endpoints in canonical order.
         worldmonitor_world_overview_v1_ImpactEvidence:
             type: object
             properties:
@@ -41081,6 +41100,29 @@ components:
                     type: integer
                     format: int64
                     description: 'Latest known data date in epoch milliseconds, or zero when unavailable.. Warning: Values > 2^53 may lose precision in JavaScript'
+        worldmonitor_world_overview_v1_CountryImpactEvent:
+            type: object
+            properties:
+                id:
+                    type: string
+                country:
+                    type: string
+                kind:
+                    type: string
+                magnitude:
+                    type: integer
+                    format: int32
+                lastSeen:
+                    type: integer
+                    format: int64
+                    description: 'Warning: Values > 2^53 may lose precision in JavaScript'
+                eventCount:
+                    type: integer
+                    format: int32
+                evidence:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/worldmonitor_world_overview_v1_ImpactEvidence'
         worldmonitor_world_overview_v1_SetWorldOverviewMarkRequest:
             type: object
             properties:

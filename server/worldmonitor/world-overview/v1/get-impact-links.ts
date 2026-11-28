@@ -33,10 +33,14 @@ export async function getImpactLinks(
 
   const data = await readSnapshot(IMPACT_LINKS_KEY) as GetImpactLinksResponse | null;
   if (!data || !Number.isSafeInteger(data.generatedAt) || !Array.isArray(data.links)) {
-    return { generatedAt: 0, links: [], summary: { today: [], byCountry: {} }, sources: [] };
+    return { generatedAt: 0, links: [], summary: { today: [], byCountry: {} }, sources: [], countryEvents: [] };
   }
   const since = data.generatedAt - (window === '24h' ? 1 : 7) * IMPACT_DAY_MS;
-  const links = data.links.filter((link) => (link.lastSeen >= since || (window === '7d' && link.kind === 'conflict'))
+  const inWindow = (item: { lastSeen: number; kind: string }) => item.lastSeen >= since || (window === '7d' && item.kind === 'conflict');
+  // A pre-upgrade cache may contain loops and mirrored, unvalidated relations.
+  const currentSchema = Array.isArray(data.countryEvents);
+  const links = data.links.filter((link) => link.actor !== link.target && inWindow(link)
+    && (currentSchema || !['tension', 'support'].includes(link.kind))
     && (!kind || link.kind === kind)
     && (!country || link.actor === country || link.target === country));
   return {
@@ -44,5 +48,6 @@ export async function getImpactLinks(
     links: links.slice(0, req.limit || 100),
     summary: summarizeImpactLinks(links, data.generatedAt),
     sources: data.sources ?? [],
+    countryEvents: currentSchema ? data.countryEvents.filter((event) => inWindow(event) && (!country || event.country === country)) : [],
   };
 }

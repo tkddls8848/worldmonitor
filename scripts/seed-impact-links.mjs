@@ -12,8 +12,8 @@
  * financial  | markets:treasury-auctions:v1, markets:funding-stress:v1 | CII score caches and military CII absent. CII priors and economic stress are contextual. China decision signals had no recent explicit stress or bilateral measures.
  *
  * Per-evidence points (heuristic significance, not measured impact): sanctions 8–18,
- * tariffs 5–12, conflict 10–25 by reported fatalities, tension 8–16 by confidence,
- * support 8–16 by confidence, energy 10–18 by evidence and severity, financial
+ * tariffs 5–12, conflict 10–25 by reported fatalities, tension and support 12
+ * per attributable citation, energy 10–18 by evidence and severity, financial
  * 12 for weak auctions or 12–24 for funding spreads. Same-list sanctions additions
  * count once per target and effective day. Publications without a known release
  * time are bucketed at UTC midnight. Weight decays linearly to 50% at age 7d.
@@ -42,6 +42,8 @@ const KEYS = {
 const COUNTRIES = new Set([...Object.values(iso3ToIso2), 'BQ', 'BV', 'CC', 'CX', 'GF', 'GP', 'MQ', 'RE', 'SJ', 'TK', 'YT']);
 const BLOCS = new Set(['EU', 'UN', 'NATO']);
 const KO = new Intl.DisplayNames('ko', { type: 'region' });
+const EN = new Intl.DisplayNames('en', { type: 'region' });
+const DIPLOMATIC_POINTS = 12;
 const LABELS = {
   sanctions: '제재·수출 통제', tariffs: '관세·무역 조치', conflict: '무력 분쟁',
   tension: '외교 긴장', support: '동맹·지원', energy: '에너지 공급 차질', financial: '금융 스트레스',
@@ -136,23 +138,64 @@ function conflict(payload, add) {
   }
 }
 
+const STATE_NAMES = {
+  US: ['US', 'U.S.', 'United States', 'United States of America'],
+  GB: ['UK', 'U.K.', 'United Kingdom', 'Britain'],
+  CN: ['China', 'People’s Republic of China'],
+  KP: ['North Korea', 'DPRK'],
+  KR: ['South Korea', 'Republic of Korea'],
+};
+
+function statePattern(code) {
+  return `(?:${(STATE_NAMES[code] ?? [EN.of(code)]).map((name) => name.replace(/[.*+?^\${}()|[\]\\]/g, '\\$&')).join('|')})`;
+}
+
+// Match only constructions with states as the actors in a diplomatic act.
+// Mentioning both states, a national of either state, or a company's criticism
+// does not establish a government action or a bilateral relation.
+function classifyRelationEvidence(kind, first, second, rawTitle) {
+  const title = text(rawTitle).normalize('NFKC').replace(/[\s\u200b\u200c\u200d]+/g, ' ');
+  const pair = [first, second].sort();
+  const [a, b] = pair.map(statePattern);
+  const starts = (pattern) => new RegExp(`^${pattern}`, 'iu').test(title);
+  const subject = (state) => `(?:the )?${state}(?:['’]s (?:government|foreign ministry))?`;
+  for (const [actor, target, x, y] of [[pair[0], pair[1], a, b], [pair[1], pair[0], b, a]]) {
+    const from = subject(x);
+    const to = subject(y);
+    if (kind === 'tension' && (
+      starts(`${from} (?:warns|condemns|sanctions|denounces) ${to}(?:$|(?=[,;:]| (?:[-–—] |against\\b|over\\b|about\\b|after\\b|of\\b|(?:not )?to\\b)))`)
+      || starts(`${from} (?:summons|expels) (?:the )?${to}['’]s (?:ambassador|envoy|diplomats?)\\b`)
+      || starts(`${from} (?:announces|lodges|files) (?:a )?(?:formal |diplomatic )?protest (?:with ${to}\\b|after ${to} (?:denies|refuses|rejects)\\b)`)
+    )) return { actor, target };
+    if (kind === 'support' && starts(`${from} (?:provides|sends|pledges|approves|delivers) (?:[\\w$€.,-]+ ){0,8}(?:aid|assistance|support) (?:to|for) ${to}\\b`)) {
+      return { actor, target };
+    }
+  }
+  // The German wire construction explicitly names the US tariff plans
+  // and the two governments that protested those same plans.
+  if (kind === 'tension' && pair[1] === 'US' && ['CN', 'JP'].includes(pair[0])
+    && /\bUS-Zölle\s*[-–—]\s*China und Japan protestieren gegen Zollpläne\s*$/iu.test(title)) {
+    return { actor: pair[0], target: 'US' };
+  }
+  const joint = `(?:${subject(a)} and ${subject(b)}|${subject(b)} and ${subject(a)})`;
+  if ((kind === 'tension' && starts(`${joint} (?:exchange diplomatic protests|trade official accusations)\\b`))
+    || (kind === 'support' && (starts(`${joint} (?:sign|ratify|agree to) (?:a |an )?(?:new )?(?:bilateral |defen[cs]e |military |mutual (?:aid|defen[cs]e) )+(?:agreement|pact|treaty)\\b`)
+      || (pair[0] === 'IN' && pair[1] === 'JP' && /^Japan to use Indian (?:military )?ranges for [\w -]+(?:training|exercises) under (?:a )?new (?:defen[cs]e )?pact\b/iu.test(title))))) {
+    return { actor: pair[0], target: pair[1], undirected: true };
+  }
+  return null;
+}
+
 function relations(payload, add) {
   if (payload?.status !== 'ok') return;
   for (const row of rows(payload.relations)) {
-    if (!['tension', 'support', 'alliance'].includes(row?.kind) || !Number.isFinite(row.confidence) || row.confidence < 0.5) continue;
+    if (!['tension', 'support', 'alliance'].includes(row?.kind)) continue;
     const kind = row.kind === 'tension' ? 'tension' : 'support';
     for (const citation of rows(row.sources)) {
-      const title = text(citation?.title);
-      // A stored candidate still needs a citation that supports the classification.
-      if (row.kind === 'alliance' && !/\b(?:new (?:pact|agreement)|sign(?:s|ed)?\b.{0,80}\b(?:pact|agreement|treaty))\b/i.test(title)) continue;
-      if (row.kind === 'support' && (!row.directed || !/\b(?:provides?|sends?|pledges?|approves?|delivers?)\b.{0,90}\b(?:aid|support|assistance)\b/i.test(title))) continue;
-      if (row.kind === 'tension' && !/\b(?:protest\w*|warn\w*|accus\w*|denounc\w*|condemn\w*|tensions?|dispute\w*|summons?|expels?|threat\w*)\b/i.test(title)) continue;
-      const evidence = { source: citation.publisher, title, url: citation.url, publishedAt: citation.publishedAt };
-      const options = { headline: /[가-힣]/.test(row.summaryKo) ? row.summaryKo : '' };
-      const points = 16 * Math.min(1, row.confidence);
-      add(kind, row.from, row.to, points, evidence, options);
-      // Mirror mutual relations when the source names two countries.
-      if (!row.directed) add(kind, row.to, row.from, points, evidence, options);
+      if (!citation) continue;
+      add(kind, row.from, row.to, DIPLOMATIC_POINTS, {
+        source: citation.publisher, title: citation.title, url: citation.url, publishedAt: citation.publishedAt,
+      });
     }
   }
 }
@@ -214,8 +257,8 @@ export function buildImpactLinks(inputs, now, previous = []) {
     }
   }
   function add(kind, from, to, points, raw, options = {}) {
-    const actor = BLOCS.has(from) ? from : country(from);
-    const target = country(to);
+    let actor = BLOCS.has(from) ? from : country(from);
+    let target = country(to);
     const publishedAt = timestamp(raw.publishedAt);
     const source = text(raw.source, 100);
     const title = text(raw.title);
@@ -224,13 +267,22 @@ export function buildImpactLinks(inputs, now, previous = []) {
       ? ucdpAsOf && Number.isSafeInteger(publishedAt) && publishedAt > ucdpAsOf - UCDP_WINDOW_DAYS * DAY && publishedAt <= ucdpAsOf
       : within(publishedAt, now);
     if (!actor || !target || !source || !title || !url || !inWindow) return;
-    const id = `${kind}:${actor}:${target}`;
+    const diplomatic = kind === 'tension' || kind === 'support';
+    let undirected = false;
+    if (diplomatic) {
+      if (!COUNTRIES.has(actor) || actor === target) return;
+      const relation = classifyRelationEvidence(kind, actor, target, title);
+      if (!relation) return;
+      ({ actor, target } = relation);
+      undirected = relation.undirected === true;
+    }
+    const id = diplomatic ? `${kind}:${[actor, target].sort().join(':')}` : `${kind}:${actor}:${target}`;
     const eventId = text(options.eventId, 128);
     const key = eventId ? `${id}|event|${eventId}` : `${id}|${url}|${publishedAt}`;
     const existing = observations.get(key);
     if (options.keepEarliest && existing && existing.evidence.publishedAt < publishedAt) return;
     observations.set(key, {
-      id, actor, target, kind, points, eventId, headline: text(options.headline, 100),
+      id, actor, target, undirected, kind, points: diplomatic ? DIPLOMATIC_POINTS : points, eventId,
       evidence: { source, title, url, publishedAt },
     });
   }
@@ -256,10 +308,12 @@ export function buildImpactLinks(inputs, now, previous = []) {
     if (!groups.has(row.id)) groups.set(row.id, []);
     groups.get(row.id).push(row);
   }
-  const links = [...groups.values()].map((group) => {
+  const links = [];
+  const countryEvents = [];
+  for (const group of groups.values()) {
     group.sort((a, b) => b.evidence.publishedAt - a.evidence.publishedAt || a.evidence.url.localeCompare(b.evidence.url, 'en'));
     const [latest] = group;
-    const { id, actor, target, kind } = latest;
+    const { id, kind } = latest;
     let points = 0;
     let recent = 0;
     let prior = 0;
@@ -272,16 +326,27 @@ export function buildImpactLinks(inputs, now, previous = []) {
     }
     const baseline = prior / 6;
     const trend = !prior ? (recent ? 'new' : 'steady') : recent > baseline * 1.25 ? 'rising' : recent < baseline * 0.75 ? 'falling' : 'steady';
-    const label = actor === target ? KO.of(target) : `${BLOCS.has(actor) ? actor : KO.of(actor)} → ${KO.of(target)}`;
-    return {
-      id, actor, target, kind, magnitude: Math.min(100, Math.round(points)),
+    const magnitude = Math.min(100, Math.round(points));
+    const lastSeen = latest.evidence.publishedAt;
+    const evidence = [...new Map(group.map(({ evidence }) => [`${kind === 'conflict' ? evidence.title : evidence.url}|${evidence.publishedAt}`, evidence])).values()].slice(0, 5);
+    if (latest.actor === latest.target) {
+      countryEvents.push({ id: `country:${kind}:${latest.target}`, country: latest.target, kind, magnitude, lastSeen, eventCount: group.length, evidence });
+      continue;
+    }
+    const directions = new Map(group.filter((row) => !row.undirected).map((row) => [row.actor, row]));
+    const undirected = directions.size !== 1;
+    const [orientation] = directions.values();
+    const [actor, target] = undirected ? [latest.actor, latest.target].sort() : [orientation.actor, orientation.target];
+    const label = `${BLOCS.has(actor) ? actor : KO.of(actor)} ${undirected ? '·' : '→'} ${KO.of(target)}`;
+    links.push({
+      id: `${kind}:${actor}:${target}`, actor, target, undirected, kind, magnitude,
       direction: kind === 'support' ? 'support' : 'pressure',
-      firstSeen: group.at(-1).evidence.publishedAt, lastSeen: latest.evidence.publishedAt,
-      trend, headline: latest.headline || `${label} ${LABELS[kind]}`,
-      evidence: [...new Map(group.map(({ evidence }) => [`${evidence.url}|${evidence.publishedAt}`, evidence])).values()].slice(0, 5),
-    };
-  });
-  links.sort((a, b) => b.magnitude - a.magnitude || b.lastSeen - a.lastSeen || a.id.localeCompare(b.id, 'en'));
+      firstSeen: group.at(-1).evidence.publishedAt, lastSeen, trend, headline: `${label} ${LABELS[kind]}`, evidence,
+    });
+  }
+  const bySignificance = (a, b) => b.magnitude - a.magnitude || b.lastSeen - a.lastSeen || a.id.localeCompare(b.id, 'en');
+  links.sort(bySignificance);
+  countryEvents.sort(bySignificance);
   const sources = Object.keys(KEYS).map((id) => ({
     id,
     status: inputs[id] == null || (id === 'relations' && inputs[id].status !== 'ok') || (id === 'ucdp' && !ucdpAsOf)
@@ -289,7 +354,7 @@ export function buildImpactLinks(inputs, now, previous = []) {
       : id === 'ucdp' && !within(ucdpAsOf, now) ? 'delayed' : 'available',
     dataAsOf: id === 'ucdp' ? ucdpAsOf : 0,
   }));
-  return { generatedAt: now, links, summary: summarizeImpactLinks(links, now), sources, observations: [...observations.values()] };
+  return { generatedAt: now, links, countryEvents, summary: summarizeImpactLinks(links, now), sources, observations: [...observations.values()] };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
@@ -301,9 +366,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     return buildImpactLinks(Object.fromEntries(fetched), Date.now(), previous?.observations);
   }, {
     ttlSeconds: 10_800,
-    declareRecords: (data) => data.links.length,
-    schemaVersion: 1,
-    sourceVersion: 'impact-links-v1',
+    declareRecords: (data) => data.links.length + data.countryEvents.length,
+    schemaVersion: 2,
+    sourceVersion: 'impact-links-v2',
     maxStaleMin: 90,
     zeroIsValid: true,
     afterFreshness: () => markActivated('seed-activated:world:impact-links'),
