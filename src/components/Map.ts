@@ -98,6 +98,10 @@ import {
   updateCountryClickGestureDrag,
 } from './map-interaction-guard';
 import { resolveClusterGlContext } from './map-cluster-gl';
+import { PRESSURE_FILL, PRESSURE_RIM, PRESSURE_RIM_WIDTH } from '@/config/battle-map';
+import { WORLD_FILL_COLORS, WORLD_LAND_STROKE } from '@/config/world-overview-palette';
+import type { WorldMapView } from '@/types/world-overview';
+import { getCurrentTheme } from '@/utils/theme-manager';
 
 export type TimeRange = '1h' | '6h' | '24h' | '48h' | '7d' | 'all';
 export type MapView = 'global' | 'america' | 'mena' | 'eu' | 'asia' | 'latam' | 'africa' | 'oceania';
@@ -112,6 +116,7 @@ export interface MapState {
 
 export interface MapComponentOptions {
   chrome?: boolean;
+  onProjectionChange?: () => void;
   isMobile?: boolean;
   /** App-owned entitlement guard; omitted for the public embed renderer. */
   canToggleLayer?: (layer: keyof MapLayers, currentlyEnabled: boolean | undefined) => boolean;
@@ -196,6 +201,8 @@ export class MapComponent {
   private layerExplanationOutsideClickHandler: ((event: MouseEvent) => void) | null = null;
   private worldData: WorldTopology | null = null;
   private countryFeatures: Feature<Geometry>[] | null = null;
+  private worldOverviewView: WorldMapView | null = null;
+  private readonly onProjectionChange?: () => void;
   /**
    * Dashboard focus outline (#10453), as UN M49 codes: the world topology
    * keys its country features by M49, not ISO2.
@@ -350,6 +357,7 @@ export class MapComponent {
     this.hotspots = [...INTEL_HOTSPOTS];
     const chrome = options.chrome ?? true;
     this.isMobile = options.isMobile ?? false;
+    this.onProjectionChange = options.onProjectionChange;
     this.canToggleLayer = options.canToggleLayer ?? (() => true);
     this.mobileLabelVisibilityArmed = !this.isMobile;
 
@@ -1719,6 +1727,28 @@ export class MapComponent {
 
   private updateCountryFills(): void {
     if (!this.baseLayerGroup || !this.countryFeatures) return;
+    const view = this.worldOverviewView;
+    if (view) {
+      const theme = getCurrentTheme() === 'dark' ? 'dark' : 'light';
+      const numericToIso2 = new Map(Object.keys(view.countries).map((code) => [iso2ToUnCode(code), code]));
+      const related = new Set([view.selectedIso2, ...view.relatedIso2]);
+      const css = (color: readonly number[]) => `rgb(${color.slice(0, 3).join(' ')})`;
+      this.baseLayerGroup.selectAll<SVGPathElement, Feature>('.country').each(function (feature) {
+        const code = numericToIso2.get(String(feature.id).padStart(3, '0'));
+        const level = (code && view.countries[code]?.level) || 0;
+        const fill = (view.pressure ? PRESSURE_FILL : WORLD_FILL_COLORS)[theme][level]!;
+        const stroke = view.pressure ? PRESSURE_RIM[theme][level]! : WORLD_LAND_STROKE[theme];
+        const selected = Boolean(code && code === view.selectedIso2);
+        d3.select(this)
+          .attr('fill', css(fill))
+          .attr('stroke', css(stroke))
+          .attr('stroke-width', selected ? 2.5 : view.pressure ? PRESSURE_RIM_WIDTH[level]! : 0.7)
+          .attr('opacity', view.selectedIso2 && (!code || !related.has(code)) ? 0.36 : 1)
+          .attr('vector-effect', 'non-scaling-stroke');
+      });
+      this.container.dataset.worldLegend = 'fill';
+      return;
+    }
 
     const sanctionColors: Record<string, string> = {
       severe: 'rgba(255, 0, 0, 0.35)',
@@ -1730,6 +1760,7 @@ export class MapComponent {
 
     this.baseLayerGroup.selectAll('.country').each(function (datum) {
       const el = d3.select(this);
+      el.attr('stroke', getCSSColor('--map-stroke')).attr('stroke-width', 0.7).attr('opacity', null).attr('vector-effect', null);
       const id = datum as { id?: number };
       if (!useSanctions) {
         el.attr('fill', defaultFill);
@@ -4231,6 +4262,7 @@ export class MapComponent {
     if (this.shouldUpdateLabelVisibility()) this.updateLabelVisibility(zoom);
     const zoomVisibilityChanged = this.updateZoomLayerVisibility();
     this.emitStateChange();
+    if (this.worldOverviewView) this.onProjectionChange?.();
     if (rebuildOnZoomVisibilityChange && zoomVisibilityChanged) {
       this.scheduleRender();
     } else if (overlayBudgetViewportChanged) {
@@ -4818,16 +4850,27 @@ export class MapComponent {
 
   /** Where (lat, lon) is drawn in client coordinates, through the same translate and scale applyTransform() sets. */
   public projectToClient(lat: number, lon: number): { x: number; y: number } | null {
+    const point = this.screenProjector()?.(lat, lon);
+    if (!point) return null;
+    const rect = this.container.getBoundingClientRect();
+    return { x: rect.left + point.x, y: rect.top + point.y };
+  }
+
+  public screenProjector(): ((lat: number, lon: number) => { x: number; y: number } | null) | null {
     const { width, height } = this.readContainerSize();
     if (width === 0 || height === 0) return null;
-    const pos = this.getProjection(width, height)([lon, lat]);
-    if (!pos) return null;
+    const projection = this.getProjection(width, height);
     const { zoom, pan } = this.state;
-    const rect = this.container.getBoundingClientRect();
-    return {
-      x: rect.left + (width / 2) * (1 - zoom) + (pan.x + pos[0]) * zoom,
-      y: rect.top + (height / 2) * (1 - zoom) + (pan.y + pos[1]) * zoom,
+    return (lat, lon) => {
+      const pos = projection([lon, lat]);
+      return pos && { x: (width / 2) * (1 - zoom) + (pan.x + pos[0]) * zoom, y: (height / 2) * (1 - zoom) + (pan.y + pos[1]) * zoom };
     };
+  }
+
+  public setWorldOverview(view: WorldMapView | null): void {
+    this.worldOverviewView = view;
+    if (!view) delete this.container.dataset.worldLegend;
+    this.updateCountryFills();
   }
 
   public setLayers(layers: MapLayers): void {

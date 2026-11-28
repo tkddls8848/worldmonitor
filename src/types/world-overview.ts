@@ -2,6 +2,7 @@
 // Data shapes come from shared/world-overview.d.ts; these are what the map and the
 // first-screen components render.
 import type { GlobalIndicatorGauge } from './global-indicators';
+import type { ImpactLink } from '@/generated/client/worldmonitor/world_overview/v1/service_client';
 import type {
   WorldField,
   RelationKind,
@@ -61,6 +62,7 @@ export interface WorldMapView {
   relatedIso2: string[];
   /** Ops room: conflict hotspots to mark on the map (at most 5); empty when the military field is off. */
   hotspots: MapHotspot[];
+  pressure?: boolean;
 }
 
 export interface TickerItem {
@@ -139,6 +141,7 @@ export interface CountryDrawerData {
   korea?: KoreaDrawerData;
   federalRegister?: FederalRegisterDocument[];
   indicators?: GlobalIndicatorGauge[];
+  impact?: { incomingScore: number; incoming: ImpactLink[]; outgoing: ImpactLink[] };
 }
 
 export type WorldMarkRequest =

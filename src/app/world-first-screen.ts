@@ -1,10 +1,15 @@
 import type { AppContext } from '@/app/app-context';
-import { WorldMasthead, WorldDispatchBar, WorldKeyPlate, WorldZoomControls, WorldBottomShelf, WorldStatusBanner } from '@/components/world/WorldChrome';
+import { WorldMasthead, WorldZoomControls, WorldBottomShelf, WorldStatusBanner } from '@/components/world/WorldChrome';
+import { BattleEvidenceDrawer, BattleMapChrome, battleButton } from '@/components/world/BattleMapChrome';
+import { BattleMapOverlay } from '@/components/world/BattleMapOverlay';
 import { WorldCountryDrawer } from '@/components/world/WorldCountryDrawer';
 import { renderCoordAxes } from '@/components/world/WorldCoordAxes';
 import { preloadCountryGeometry } from '@/services/country-geometry';
 import { loadWorldOverview, setWorldMark } from '@/services/world-overview';
-import { buildCountryDrawerData, buildWorldMapView } from '@/services/world-overview-view';
+import { buildCountryDrawerData, buildWorldMapView, countryName, endpointCoord } from '@/services/world-overview-view';
+import { buildBattleView, filterImpactWindow, type ImpactWindow, pressureLevel } from '@/services/battle-map-view';
+import { loadImpactLinks, type GetImpactLinksResponse, type ImpactLink } from '@/services/impact-links';
+import { IMPACT_KINDS, isImpactKind, type ImpactKind } from '@/config/battle-map';
 import { buildSupplementalTickerItems, loadTickerItems } from '@/services/world-ticker';
 import { loadFundingStress } from '@/services/funding-stress';
 import type { FundingStress } from '@/services/funding-stress';
@@ -17,15 +22,12 @@ import { loadFederalRegister } from '@/services/federal-register';
 import type { IodaOutage } from '@/services/internet-outages-ioda';
 import { loadEuGasFlows } from '@/services/eu-gas-flows';
 import type { EuGasFlows } from '@/services/eu-gas-flows';
-import { getWorldFields, setWorldFields } from '@/services/world-first-screen-prefs';
 import { getCurrentTheme, setTheme } from '@/utils/theme-manager';
 import { kstDate } from '../../shared/world-overview.js';
-import type { CountryDrawerData, FederalRegisterDocument, WorldField, WorldMapView, WorldMarkRequest } from '@/types/world-overview';
+import type { CountryDrawerData, FederalRegisterDocument, WorldMapView, WorldMarkRequest } from '@/types/world-overview';
 import type { BreakingAlert } from '@/services/breaking-news-alerts';
-import { WorldClockStrip, WorldEventLog, WorldOpsCounters, WorldThreatBadge } from '@/components/world/WorldOps';
+import { WorldClockStrip, WorldEventLog, WorldThreatBadge } from '@/components/world/WorldOps';
 import { buildOpsEvents, computeOpsMetrics } from '@/services/world-ops';
-import type { OpsCounters } from '@/types/world-overview';
-import { WORLD_FIELDS } from '../../shared/world-overview.js';
 import { loadKrEcosMacro } from '@/services/kr-ecos';
 import type { KrEcosMacro } from '@/services/kr-ecos';
 import { loadKrCustomsTrade } from '@/services/kr-customs-trade';
@@ -36,7 +38,7 @@ import type { KrDartDisclosure } from '@/services/kr-dart';
 export interface WorldFirstScreenSlots {
   root: HTMLElement;
   masthead: HTMLElement;
-  /** Ops room row 2 (clocks + counters); 26px in the dark theme, collapsed in the light theme until styled. */
+  /** Clocks, gauges, and Battle Map counters. */
   telemetry: HTMLElement;
   dispatch: HTMLElement;
   stage: HTMLElement;
@@ -54,10 +56,24 @@ export function mountWorldFirstScreen(
 ): { destroy(): void; onEnter(): void; onLeave(): void } {
   if (!ctx.map) throw new Error('MapContainer must exist before mounting the world first screen');
   const map = ctx.map!;
-  let fields = getWorldFields();
   let snapshot: WorldSnapshot | null = null;
   let currentView: WorldMapView | null = null;
   let selectedIso2: string | null = null;
+  let selectedLink: ImpactLink | null = null;
+  let returnCountry: string | null = null;
+  let selectionTrigger: HTMLElement | SVGElement | null = null;
+  let archive = false;
+  let latestDate = '';
+  let cii = false;
+  let linkListOpen = false;
+  let frontOnly = false;
+  let impactWindow: ImpactWindow = '7d';
+  let activeKinds = new Set(IMPACT_KINDS);
+  let impactData: GetImpactLinksResponse | null = null;
+  let impactLoading = false;
+  let impactError = false;
+  let battle = buildBattleView([], {}, 0, null, null);
+  let filteredLinks: ImpactLink[] = [];
   let lastLoadedAt = 0;
   let loadGeneration = 0;
   let destroyed = false;
@@ -76,7 +92,7 @@ export function mountWorldFirstScreen(
   let worldShown = true;
   const breakingAlerts: BreakingAlert[] = [];
 
-  slots.root.classList.add('wfs-root');
+  slots.root.classList.add('wfs-root', 'battle-map');
   map.setWorldOverviewMode(true);
 
   const masthead = new WorldMasthead({
@@ -87,37 +103,48 @@ export function mountWorldFirstScreen(
       window.dispatchEvent(new CustomEvent('wm:reveal-panel', { detail: { panelId: 'markets' } }));
     },
   });
-  let logOpen = window.innerWidth > 1440;
-  const dispatch = new WorldDispatchBar({ onLocate: locateAlert, onToggleLog: () => setLogOpen(!logOpen) });
+  let logOpen = false;
+  const chrome = new BattleMapChrome({
+    selectLink: (link, trigger) => {
+      if (selectedLink?.id === link.id) clearSelection();
+      else openLink(link, trigger);
+    },
+    locate: locateAlert,
+    toggleLog: () => {
+      if (!logOpen) clearSelection(false);
+      setLogOpen(!logOpen);
+    },
+    chooseKind: toggleKind,
+    allKinds: () => { activeKinds = new Set(IMPACT_KINDS); frontOnly = false; applyFilters(); },
+    showList: showLinkList,
+    setWindow: changeWindow,
+    setCii: (enabled) => { cii = enabled; makeView(); },
+    focusFront: () => { frontOnly = !frontOnly; applyFilters(); },
+    retry: () => { void refreshImpact(); },
+  });
   const threat = new WorldThreatBadge();
   const clocks = new WorldClockStrip();
-  let activeCounter: keyof OpsCounters | null = null;
-  const counterFields: Record<keyof OpsCounters, WorldField[]> = {
-    wars: ['military'], highConflicts: ['military'], worsening: ['geopolitics'],
-    sanctionPairs: ['finance'], aiRelations: [...WORLD_FIELDS], breaking24h: [...WORLD_FIELDS],
-    outages: [...WORLD_FIELDS],
-  };
-  const counters = new WorldOpsCounters((key, button) => {
-    activeCounter = activeCounter === key ? null : key;
-    counters.setActive(activeCounter);
-    updateFields(activeCounter ? counterFields[activeCounter] : [...WORLD_FIELDS]);
-    button.blur();
-  });
   const eventLog = new WorldEventLog({ onSelectCountry: selectCountry });
   const telemetry = document.createElement('div');
   telemetry.className = 'ops-telemetry-bar';
-  telemetry.append(clocks.element, counters.element);
   const gauges = document.createElement('section');
   gauges.className = 'wfs-global-gauges';
   gauges.hidden = true;
-  slots.telemetry.append(telemetry, gauges);
+  gauges.tabIndex = 0;
+  telemetry.append(clocks.element, gauges, chrome.counters, chrome.sources);
+  slots.telemetry.append(telemetry);
   const threatMount = masthead.element.querySelector<HTMLElement>('[data-slot="threat"]');
   threatMount?.append(threat.element);
   slots.stage.append(eventLog.element);
+  const logHeader = document.createElement('header');
+  logHeader.className = 'bm-log-header';
+  logHeader.append(document.createTextNode('이벤트 로그'), battleButton('닫기', () => { setLogOpen(false); chrome.logToggle.focus(); }));
+  eventLog.element.prepend(logHeader);
   function setLogOpen(open: boolean): void {
     logOpen = open;
     eventLog.element.dataset.collapsed = String(!open);
-    dispatch.setLogState(open, eventLog.element.querySelectorAll('.wfs-ops-event').length);
+    eventLog.element.inert = !open;
+    chrome.setLog(open, eventLog.element.querySelectorAll('.wfs-ops-event').length);
   }
   setLogOpen(logOpen);
   clocks.start();
@@ -127,7 +154,6 @@ export function mountWorldFirstScreen(
     if (snapshot) {
       const metrics = computeOpsMetrics(snapshot, breakingAlerts.map((alert) => alert.timestamp.getTime()), now, outages);
       threat.setMetrics(metrics);
-      counters.setCounters(metrics.counters);
     }
     const language = getCurrentLanguage();
     const events = buildOpsEvents(snapshot, breakingAlerts, now, {
@@ -135,7 +161,7 @@ export function mountWorldFirstScreen(
       indicatorEvents: globalIndicators ? globalIndicatorEvents(globalIndicators, language, now) : [],
     });
     eventLog.setEvents(events);
-    dispatch.setLogState(logOpen, events.length);
+    chrome.setLog(logOpen, events.length);
   }
   const onBreakingAlert = (event: Event): void => {
     const alert = (event as CustomEvent<BreakingAlert>).detail;
@@ -143,66 +169,209 @@ export function mountWorldFirstScreen(
     breakingAlerts.push(alert);
     if (breakingAlerts.length > 50) breakingAlerts.splice(0, breakingAlerts.length - 50);
     refreshOps();
+    renderToday();
   };
   document.addEventListener('wm:breaking-news', onBreakingAlert);
-  const keyPlate = new WorldKeyPlate();
   const status = new WorldStatusBanner();
   const zoom = new WorldZoomControls({ onZoomIn: () => map.zoomBy(+1), onZoomOut: () => map.zoomBy(-1), onReset: () => map.resetWorldView() });
-  const shelf = new WorldBottomShelf({ onFieldsChange: updateFields, onDateChange: (date) => { void loadDate(date); } });
+  const shelf = new WorldBottomShelf({ onDateChange: (date) => { void loadDate(date); } }, chrome);
   const drawer = new WorldCountryDrawer({
     onClose: clearSelection,
     onSelectCountry: selectCountry,
     onMark: markItem,
     onOpenFullPanels: (iso2) => hooks.openCountryBrief(iso2),
+    onImpact: (link, trigger) => openLink(link, trigger, true),
   });
+  const evidence = new BattleEvidenceDrawer(() => clearSelection(), selectCountry);
+  const overlay = new BattleMapOverlay(() => map.worldProjector());
+  map.onWorldProjectionChanged(() => overlay.reproject());
   const removeCoordAxes = renderCoordAxes(slots.stage);
 
   slots.masthead.append(masthead.element);
-  slots.dispatch.append(dispatch.element);
+  slots.dispatch.append(chrome.strip);
   slots.shelf.append(shelf.element);
-  slots.stage.append(keyPlate.element, zoom.element, status.element, drawer.element);
-  shelf.setFields(fields);
+  slots.stage.append(overlay.element, chrome.legend, zoom.element, status.element, chrome.status, drawer.element, evidence.element);
 
   function makeView(): void {
-    if (!snapshot) return;
-    currentView = buildWorldMapView(snapshot, fields, selectedIso2);
+    const now = Date.now();
+    const anchors = snapshot?.anchors ?? {};
+    const windowLinks = archive ? [] : filterImpactWindow(impactData?.links ?? [], impactWindow, now);
+    filteredLinks = windowLinks.filter((link) => isImpactKind(link.kind) && activeKinds.has(link.kind));
+    battle = buildBattleView(filteredLinks, anchors, now, selectedIso2, selectedLink);
+    const fronts = battle.fronts.length;
+    if (frontOnly) {
+      const frontCodes = new Set(battle.fronts);
+      filteredLinks = filteredLinks.filter((link) => frontCodes.has(link.target));
+      battle = buildBattleView(filteredLinks, anchors, now, selectedIso2, selectedLink);
+    }
+    const fillCii = cii || archive;
+    const selected = selectedIso2 ?? selectedLink?.target ?? null;
+    const overview = snapshot && fillCii ? buildWorldMapView(snapshot, ['military'], selected) : null;
+    const countries: WorldMapView['countries'] = fillCii ? overview?.countries ?? {} : {};
+    if (!fillCii) {
+      for (const [code, score] of Object.entries(battle.pressure)) {
+        countries[code] = { iso2: code, level: pressureLevel(score), unrestOutline: false, blocIds: [] };
+      }
+    }
+    for (const code of [...battle.related, selected]) {
+      if (code) countries[code] ??= { iso2: code, level: 0, unrestOutline: false, blocIds: [] };
+    }
+    currentView = { date: snapshot?.date ?? '', countries, pressure: !fillCii, lines: [], blocOutlines: [], selectedIso2: selected,
+      relatedIso2: battle.related, hotspots: [] };
     map.setWorldOverview(currentView);
-    keyPlate.setView(fields.includes('military'), currentView.lines.map((line) => line.kind));
+    overlay.setView(battle.arcs, battle.crests, (arc) => openLink(arc.link, findImpactTrigger(arc.link.id)), selectCountry);
+    chrome.setLegend(fillCii, battle.arcs.map((arc) => arc.kind), impactData?.sources?.find((source) => source.id === 'ucdp')?.dataAsOf ?? 0);
+    chrome.setFilters(activeKinds, windowLinks, impactWindow, battle.arcs.length, fronts, now);
+    chrome.setSources(archive ? [] : impactData?.sources ?? [], impactData?.generatedAt ?? 0);
+    const state = archive ? 'archive' : impactError ? 'error' : !impactData && impactLoading ? 'loading'
+      : !impactData?.links.length ? 'empty' : !filteredLinks.length ? 'filtered' : 'ok';
+    chrome.setStatus(state, impactWindow);
+    renderToday();
   }
 
   function updateDrawer(): void {
-    if (!snapshot || !selectedIso2) return;
-    const data: CountryDrawerData = { ...buildCountryDrawerData(snapshot, selectedIso2, kstDate(Date.now())), outages: outages
+    const code = selectedIso2;
+    if (!code) return;
+    const base = snapshot ? buildCountryDrawerData(snapshot, code, kstDate(Date.now())) : {
+      iso2: code, nameKo: countryName(code, 'ko'), nameEn: countryName(code, 'en'), ciiScore: null,
+      level: null, conflictLevel: null, updatedAt: 0, issue: null, relations: [], blocs: [], aiStatus: 'missing' as const, isToday: false,
+    };
+    const data: CountryDrawerData = { ...base, outages: outages
       .filter((outage) => outage.iso2 === selectedIso2 && (outage.end === null || outage.end >= Date.now() - 6 * 60 * 60 * 1000))
       .map(({ id, start, end, severity, signals, url }) => ({ id, start, end, severity, signals, url })),
       federalRegister: federalRegister.filter((item) => selectedIso2 && item.countries.includes(selectedIso2)).slice(0, 5),
-      indicators: globalIndicators ? globalIndicatorGauges(globalIndicators, getCurrentLanguage(), selectedIso2) : [],
-      ...(selectedIso2 === 'KR' ? { korea: { asOf: krEcos?.asOf ?? 0, indicators: krEcos?.indicators ?? [], trade: krTrade, disclosures: krDisclosures } } : {}) };
+      indicators: globalIndicators ? globalIndicatorGauges(globalIndicators, getCurrentLanguage(), code) : [],
+      ...(code === 'KR' ? { korea: { asOf: krEcos?.asOf ?? 0, indicators: krEcos?.indicators ?? [], trade: krTrade, disclosures: krDisclosures } } : {}),
+      ...(!archive ? { impact: {
+        incomingScore: battle.pressure[code] ?? 0,
+        incoming: battle.ranked.filter((link) => link.target === code),
+        outgoing: battle.ranked.filter((link) => link.actor === code && link.target !== code),
+      } } : {}) };
     if (drawer.isOpen()) drawer.update(data); else drawer.open(data);
   }
 
   function selectCountry(iso2: string): void {
     const normalized = iso2.trim().toUpperCase();
-    if (!normalized || !snapshot) return;
+    if (!/^[A-Z]{2}$/.test(normalized)) return;
+    selectedLink = null;
+    returnCountry = null;
+    linkListOpen = false;
+    evidence.hide();
+    setLogOpen(false);
+    if (selectedIso2 !== normalized) drawer.close(false);
     selectedIso2 = normalized;
     makeView();
     updateDrawer();
+    drawer.element.querySelector<HTMLElement>('[data-action="close"]')?.focus({ preventScroll: true });
   }
 
-  function clearSelection(): void {
-    if (selectedIso2 === null) return;
+  function clearSelection(restoreFocus = true): void {
+    if (!selectedIso2 && !selectedLink && !linkListOpen) return;
+    const previousLink = selectedLink;
+    const trigger = selectionTrigger;
+    const back = returnCountry;
     selectedIso2 = null;
+    selectedLink = null;
+    returnCountry = null;
+    selectionTrigger = null;
+    linkListOpen = false;
+    drawer.close(false);
+    evidence.hide();
+    if (restoreFocus && back) {
+      selectCountry(back);
+      drawer.element.querySelector<HTMLElement>('[data-section="impact"] button')?.focus();
+      return;
+    }
     makeView();
+    if (restoreFocus) (trigger?.isConnected ? trigger : findImpactTrigger(previousLink?.id))?.focus();
   }
 
-  function updateFields(next: WorldField[]): void {
-    fields = next;
-    setWorldFields(fields);
-    shelf.setFields(fields);
+  function findImpactTrigger(id: string | undefined): HTMLElement | SVGElement | null {
+    if (!id) return null;
+    return [...slots.root.querySelectorAll<HTMLElement | SVGElement>('[data-impact-id], [data-link-id]')]
+      .find((node) => node.dataset.impactId === id || node.dataset.linkId === id) ?? null;
+  }
+
+  function openLink(link: ImpactLink, trigger: HTMLElement | SVGElement | null = null, fromCountry = false): void {
+    if (fromCountry) returnCountry = selectedIso2;
+    if (trigger) selectionTrigger = trigger;
+    selectedIso2 = null;
+    selectedLink = link;
+    drawer.close(false);
+    setLogOpen(false);
     makeView();
+    const bundle = filteredLinks.filter((candidate) => candidate.actor === link.actor && candidate.target === link.target);
+    evidence.showLink(link, bundle, (candidate) => openLink(candidate));
+    if (returnCountry) evidence.element.querySelector('header')?.append(battleButton(`← ${countryName(returnCountry, 'ko')} 브리핑`, () => clearSelection()));
+    evidence.element.querySelector<HTMLButtonElement>('header button')?.focus({ preventScroll: true });
+    const project = map.worldProjector();
+    const coords = [endpointCoord(link.actor, snapshot?.anchors ?? {}), endpointCoord(link.target, snapshot?.anchors ?? {})];
+    const points = coords.map((coord) => coord && project?.(coord[1], coord[0]));
+    if (points.some((point) => point && (point.x < 0 || point.x > slots.stage.clientWidth || point.y < 0 || point.y > slots.stage.clientHeight))) {
+      // Refit the world when a selected route is outside the current viewport.
+      map.resetWorldView();
+    }
+  }
+
+  function showLinkList(trigger: HTMLElement): void {
+    clearSelection(false);
+    setLogOpen(false);
+    selectionTrigger = trigger;
+    linkListOpen = true;
+    evidence.showList(battle.ranked, (link) => openLink(link));
+    evidence.element.querySelector<HTMLButtonElement>('header button')?.focus();
+  }
+
+  function applyFilters(): void {
+    if (selectedLink || linkListOpen) clearSelection(false);
+    else makeView();
+    if (selectedIso2) updateDrawer();
+  }
+
+  function toggleKind(kind: ImpactKind): void {
+    if (activeKinds.has(kind)) activeKinds.delete(kind);
+    else activeKinds.add(kind);
+    applyFilters();
+  }
+
+  function changeWindow(window: ImpactWindow): void {
+    impactWindow = window;
+    applyFilters();
+  }
+
+  function renderToday(): void {
+    const now = Date.now();
+    const latestAlert = breakingAlerts[breakingAlerts.length - 1];
+    const alert = !archive && latestAlert && latestAlert.timestamp.getTime() >= now - 86_400_000 ? latestAlert : undefined;
+    const today = archive ? [] : (impactData?.summary?.today ?? []).filter((link) =>
+      link.lastSeen >= now - 86_400_000 && isImpactKind(link.kind) && activeKinds.has(link.kind)).slice(0, alert ? 6 : 7);
+    chrome.setToday(today, alert, selectedLink?.id, now, archive ? '보관 날짜 보기'
+      : impactLoading && !impactData ? '집계 불러오는 중' : '최근 24시간의 신규·급등 영향선 없음');
+  }
+
+  async function refreshImpact(): Promise<void> {
+    if (destroyed || !worldShown || impactLoading) return;
+    impactLoading = true;
+    if (!impactData) makeView();
+    try {
+      const result = await loadImpactLinks({ window: '7d', limit: 500 });
+      if (destroyed) return;
+      if (!Array.isArray(result.links)) throw new Error('Invalid impact-links response');
+      impactData = result;
+      impactError = false;
+    } catch {
+      impactError = true;
+    } finally {
+      impactLoading = false;
+      if (!destroyed && worldShown) {
+        makeView();
+        if (selectedIso2) updateDrawer();
+      }
+    }
   }
 
   async function loadDate(date: string): Promise<void> {
+    if (date === latestDate) { await loadToday(); return; }
     const generation = ++loadGeneration;
     status.setState('loading');
     try {
@@ -210,6 +379,8 @@ export function mountWorldFirstScreen(
       if (destroyed || generation !== loadGeneration) return;
       if (!result.snapshot) { status.setState('empty'); return; }
       snapshot = result.snapshot;
+      archive = true;
+      clearSelection(false);
       refreshOps();
       lastLoadedAt = Date.now();
       shelf.setDates(mergeDates(result.snapshot.availableDates, result.archivedDates), result.snapshot.date);
@@ -233,6 +404,8 @@ export function mountWorldFirstScreen(
       if (destroyed || generation !== loadGeneration) return;
       if (!result.snapshot) { status.setState('empty'); return; }
       snapshot = result.snapshot;
+      archive = false;
+      latestDate = result.snapshot.date;
       refreshOps();
       lastLoadedAt = Date.now();
       shelf.setDates(mergeDates(result.snapshot.availableDates, result.archivedDates), result.snapshot.date);
@@ -262,6 +435,9 @@ export function mountWorldFirstScreen(
     const lat = coords.lat ?? coords.latitude ?? (Array.isArray(coords.coordinates) ? coords.coordinates[1] : undefined);
     const lon = coords.lon ?? coords.longitude ?? (Array.isArray(coords.coordinates) ? coords.coordinates[0] : undefined);
     if (typeof lat === 'number' && typeof lon === 'number' && Number.isFinite(lat) && Number.isFinite(lon)) map.setCenter(lat, lon, 4);
+    else if (alert.countryCode) map.fitCountry(alert.countryCode);
+    if (alert.countryCode) selectCountry(alert.countryCode);
+    else if (!Number.isFinite(lat) || !Number.isFinite(lon)) setLogOpen(true);
   }
 
   const onCountryClick = (event: Event): void => {
@@ -271,10 +447,20 @@ export function mountWorldFirstScreen(
   const onThemeChanged = (): void => { if (currentView) map.setWorldOverview(currentView); };
   window.addEventListener('wm:world:country-click', onCountryClick);
   window.addEventListener('theme-changed', onThemeChanged);
-  map.onWorldLineClicked((lineId) => {
-    const line = snapshot?.relations.find((candidate) => candidate.id === lineId);
-    if (line) selectCountry(line.from);
-  });
+  const onKeyDown = (event: KeyboardEvent): void => {
+    if (!worldShown || event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey
+      || (event.target instanceof HTMLElement && event.target.closest('input, select, textarea, [contenteditable="true"]'))) return;
+    if (event.key === 'Escape') {
+      if (selectedLink || linkListOpen) clearSelection();
+      else if (logOpen) { setLogOpen(false); chrome.logToggle.focus(); }
+      else if (chrome.legend.dataset.open === 'true') chrome.legend.querySelector<HTMLButtonElement>('.bm-legend-toggle')?.click();
+      return;
+    }
+    if (event.key.toLowerCase() === 't') changeWindow(impactWindow === '7d' ? '24h' : '7d');
+    const kind = IMPACT_KINDS[Number(event.key) - 1];
+    if (kind) toggleKind(kind);
+  };
+  document.addEventListener('keydown', onKeyDown);
 
   const tickerRefresh = (): void => {
     if (destroyed) return;
@@ -324,12 +510,14 @@ export function mountWorldFirstScreen(
     extrasTimer = setInterval(() => {
       void refreshIndicators();
       void refreshExtras();
+      void refreshImpact();
     }, RELOAD_AFTER_MS);
   }
   tickerRefresh();
   let tickerTimer: ReturnType<typeof setInterval> | null = setInterval(tickerRefresh, TICKER_REFRESH_MS);
 
   void loadToday();
+  void refreshImpact();
   void refreshIndicators();
   startExtrasTimer();
   // Line endpoints resolve from country geometry; redraw once it is loaded.
@@ -341,17 +529,19 @@ export function mountWorldFirstScreen(
       loadGeneration++;
       window.removeEventListener('wm:world:country-click', onCountryClick);
       document.removeEventListener('wm:breaking-news', onBreakingAlert);
+      document.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('theme-changed', onThemeChanged);
-      map.onWorldLineClicked(() => {});
+      map.onWorldProjectionChanged(null);
       if (tickerTimer !== null) clearInterval(tickerTimer);
       tickerTimer = null;
       if (extrasTimer !== null) clearInterval(extrasTimer);
       extrasTimer = null;
-      clocks.destroy(); eventLog.destroy(); counters.element.remove(); threat.element.remove(); telemetry.remove(); gauges.remove();
+      clocks.destroy(); eventLog.destroy(); threat.element.remove(); telemetry.remove();
       removeCoordAxes();
-      masthead.destroy(); dispatch.destroy(); shelf.destroy(); drawer.destroy();
-      keyPlate.element.remove(); zoom.element.remove(); status.element.remove();
-      slots.root.classList.remove('wfs-root');
+      masthead.destroy(); chrome.strip.remove(); shelf.destroy(); drawer.destroy();
+      chrome.legend.remove(); chrome.status.remove(); evidence.element.remove(); overlay.destroy();
+      zoom.element.remove(); status.element.remove();
+      slots.root.classList.remove('wfs-root', 'battle-map');
     },
     onEnter(): void {
       if (destroyed) return;
@@ -363,8 +553,9 @@ export function mountWorldFirstScreen(
         void refreshIndicators();
         void refreshExtras();
       }
-      if (currentView) map.setWorldOverview(currentView);
-      if (Date.now() - lastLoadedAt > RELOAD_AFTER_MS) void loadToday();
+      makeView();
+      if (!archive && Date.now() - lastLoadedAt > RELOAD_AFTER_MS) void loadToday();
+      if (Date.now() - (impactData?.generatedAt ?? 0) > RELOAD_AFTER_MS) void refreshImpact();
     },
     onLeave(): void {
       worldShown = false;

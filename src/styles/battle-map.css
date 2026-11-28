@@ -1,0 +1,271 @@
+.wfs-root.battle-map,
+:root[data-theme="dark"] .wfs-root.battle-map {
+  grid-template-rows: 38px 24px 36px minmax(0, 1fr) 44px;
+  --ops-log-width: 280px;
+}
+.battle-map {
+  --bm-casing: #f8f9f6;
+  --bm-trend-bg: #fee2e2;
+  --bm-trend-fg: #991b1b;
+  --bm-surge-bg: #fef3c7;
+  --bm-surge-fg: #92400e;
+}
+:root[data-theme="dark"] .battle-map {
+  --bm-casing: #0b0e0d;
+  --bm-trend-bg: #411d27;
+  --bm-trend-fg: #fda4af;
+  --bm-surge-bg: #3c2e12;
+  --bm-surge-fg: #fcd34d;
+}
+.battle-map [data-kind="conflict"] { --bm-kind: var(--bm-kind-conflict); }
+.battle-map [data-kind="sanctions"] { --bm-kind: var(--bm-kind-sanctions); }
+.battle-map [data-kind="tariffs"] { --bm-kind: var(--bm-kind-tariffs); }
+.battle-map [data-kind="energy"] { --bm-kind: var(--bm-kind-energy); }
+.battle-map [data-kind="tension"] { --bm-kind: var(--bm-kind-tension); }
+.battle-map [data-kind="financial"] { --bm-kind: var(--bm-kind-financial); }
+.battle-map [data-kind="support"] { --bm-kind: var(--bm-kind-support); }
+.bm-button {
+  padding: 3px 7px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--surface-paper);
+  color: var(--text-primary);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.bm-button:not(:disabled):hover { background: var(--surface-hover); }
+.bm-button[aria-pressed="true"] { border-color: var(--bm-kind, var(--accent)); background: var(--accent-soft); }
+.bm-button:disabled { opacity: 0.55; cursor: default; }
+.battle-map .wfs-slot-telemetry,
+:root[data-theme="dark"] .battle-map .wfs-slot-telemetry {
+  display: block;
+  position: relative;
+  z-index: 32;
+  overflow: visible;
+  padding-inline: 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.battle-map .wfs-slot-telemetry .ops-telemetry-bar,
+:root:not([data-theme="dark"]) .battle-map .wfs-slot-telemetry:has(.wfs-global-gauges:not([hidden])) .ops-telemetry-bar {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  gap: 10px;
+}
+.battle-map .wfs-slot-telemetry .wfs-global-gauges:not([hidden]) {
+  display: flex;
+  flex: 1 1 auto;
+  overflow: auto hidden;
+  min-width: 0;
+  min-height: 0;
+  height: 22px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  scrollbar-width: thin;
+}
+.battle-map .wfs-ops-clocks { flex: 0 0 auto; color: var(--text-secondary); }
+.bm-counts { display: flex; flex: 0 0 auto; gap: 3px; margin-left: auto; font-size: 10px; }
+.bm-counts .bm-button { padding: 2px 4px; }
+.bm-sources { position: relative; flex: 0 0 auto; color: var(--warn); font-size: 10px; }
+.bm-sources summary { padding: 2px 4px; cursor: pointer; white-space: nowrap; }
+.bm-source-list {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: max-content;
+  max-width: 280px;
+  margin: 4px 0 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-paper);
+  color: var(--text-primary);
+  list-style: none;
+  line-height: 1.8;
+}
+.battle-map .bm-strip { min-width: 0; height: 100%; gap: 5px; background: var(--surface-subtle); }
+.bm-strip-title { flex: 0 0 auto; padding-right: 4px; font-size: 11px; white-space: nowrap; }
+.bm-strip-chips {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  gap: 5px;
+  overflow: auto hidden;
+  align-items: center;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+.bm-chip {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 6px;
+  height: 26px;
+  max-width: min(268px, 68vw);
+  border-left: 3px solid var(--bm-kind, var(--error));
+  scroll-snap-align: start;
+  text-align: start;
+}
+.bm-chip-label { overflow: hidden; text-overflow: ellipsis; }
+.bm-breaking { overflow: hidden; text-overflow: ellipsis; display: block; }
+.bm-trend { padding: 2px 3px; color: var(--bm-trend-fg); background: var(--bm-trend-bg); }
+.bm-trend[data-trend="rising"] { color: var(--bm-surge-fg); background: var(--bm-surge-bg); }
+.bm-empty-strip { padding-left: 5px; color: var(--text-secondary); white-space: nowrap; font-size: 11px; }
+.bm-strip .wfs-log-toggle { flex: 0 0 auto; padding-inline: 6px; font-size: 11px; }
+.battle-map .bottom-shelf,
+:root[data-theme="dark"] .battle-map .bottom-shelf { height: 44px; min-height: 0; gap: 8px; padding: 0 12px; }
+.bm-filters, .bm-windows { display: flex; align-items: center; gap: 4px; }
+.bm-filters { min-width: 0; overflow: auto hidden; scrollbar-width: thin; flex: 1 1 auto; }
+.bm-filters button[data-kind] { box-shadow: inset 0 -2px 0 var(--bm-kind); }
+.bm-filters .bm-list-toggle { margin-left: auto; }
+.battle-map .wfs-timeline { flex: 0 1 auto; padding: 0; }
+.battle-map .wfs-date-range { max-width: 120px; }
+.battle-map .wfs-timelapse { min-width: 0; }
+
+.bm-map-overlay { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; overflow: hidden; pointer-events: none; }
+.bm-arc { color: var(--bm-kind); }
+.bm-arc-hit, .bm-arc-casing, .bm-arc-core, .bm-arc-tracer { fill: none; }
+.bm-arc-hit { stroke: transparent; pointer-events: stroke; cursor: pointer; }
+.bm-arc-casing { stroke: var(--bm-casing); opacity: 0.86; }
+.bm-arc-core { stroke: currentColor; }
+.bm-arc:is(:hover, :focus-visible) { opacity: 1; }
+.bm-arc:is(:hover, :focus-visible) .bm-arc-core { filter: brightness(1.22); }
+.bm-arc:focus-visible { outline: none; }
+.bm-arc:focus-visible .bm-arc-casing { stroke: var(--text-primary); }
+.bm-arc-tracer {
+  stroke: currentColor;
+  stroke-dasharray: 2 98;
+  stroke-linecap: round;
+  animation: bm-travel 2.8s linear infinite;
+  filter: brightness(1.45);
+}
+@keyframes bm-travel { to { stroke-dashoffset: -100; } }
+.bm-crest { color: var(--accent-text); }
+.bm-crest path { stroke: currentColor; stroke-width: 1.2; fill: var(--bm-casing); pointer-events: visiblePainted; cursor: pointer; }
+.bm-bundle { pointer-events: visiblePainted; cursor: pointer; }
+.bm-bundle rect { fill: var(--surface-paper); stroke: currentColor; stroke-width: 1; }
+.bm-crest text, .bm-bundle text {
+  fill: currentColor;
+  font: 700 10px var(--font-mono);
+  paint-order: stroke;
+  stroke: var(--bm-casing);
+  stroke-width: 3px;
+}
+#worldFirstScreen.battle-map .svg-mode :is(#mapOverlays, .map-dynamic, .map-cluster-canvas, .map-controls, .layer-toggles, .map-legend, .time-slider) {
+  display: none !important;
+}
+#worldFirstScreen.battle-map .svg-mode .map-base > rect { fill: var(--bg-ocean); }
+#worldFirstScreen.battle-map .svg-mode .map-base > line,
+#worldFirstScreen.battle-map .svg-mode .graticule { stroke: var(--bg-graticule); }
+#worldFirstScreen.battle-map .svg-mode .country:hover { stroke: var(--land-hover-stroke, var(--accent)); stroke-width: 1.5px; }
+.battle-map .atlas-key-plate.bm-key-plate,
+:root[data-theme="dark"] .battle-map .atlas-key-plate.bm-key-plate { top: auto; bottom: 12px; width: 248px; }
+.bm-legend-toggle { display: none; }
+.bm-key-title { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; }
+.bm-key-title strong { margin-right: auto; }
+.bm-key-title button { font-size: 10px; }
+.wfs-slot-stage:has(#mapContainer[data-world-legend~="fill"]) .bm-key-plate .wfs-cii-scale {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 2px;
+}
+.bm-key-plate .wfs-cii-step { height: 18px; font-size: 9px; }
+.bm-key-plate .wfs-cii-step[data-level="3"] { color: #151513; }
+:root[data-theme="dark"] .bm-key-plate .wfs-cii-step[data-level="3"] { color: white; }
+.bm-key-note { font-size: 9px; margin: 6px 0 0; color: var(--text-secondary); }
+.bm-key-note[hidden] { display: none; }
+.bm-line-legend:not(:empty) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px 8px; margin-top: 6px; }
+.bm-line-key { display: flex; align-items: center; gap: 4px; font-size: 10px; }
+.bm-line-key svg { color: var(--bm-kind); overflow: visible; }
+.bm-status {
+  position: absolute;
+  z-index: 4;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 20px);
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-paper);
+  box-shadow: 0 2px 12px #0002;
+  color: var(--text-primary);
+  font-size: 11px;
+}
+.bm-status[hidden], .bm-sources[hidden] { display: none; }
+.bm-status .bm-button { margin-left: 5px; }
+.bm-status[data-state="error"] { border-left: 3px solid var(--error); }
+.battle-map:has(.bm-status[data-state="error"]) .bm-map-overlay { opacity: 0.72; }
+.bm-log-header { display: flex; align-items: center; justify-content: space-between; padding: 8px; border-bottom: 1px solid var(--border); font-weight: 700; }
+.bm-evidence-content > :is(h3, p, .bm-evidence-list, .bm-endpoints, .bm-evidence-tabs) { margin: 12px 16px; }
+.bm-evidence-content h2 { margin: 0; font-size: 19px; }
+.bm-evidence-content h3 { font-size: 12px; }
+.bm-endpoints, .bm-evidence-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.bm-evidence-metrics { font-weight: 700; }
+.bm-evidence-note { color: var(--text-secondary); line-height: 1.5; overflow-wrap: anywhere; }
+.bm-evidence-list { display: grid; gap: 5px; padding: 0; list-style: none; }
+.bm-evidence-tabs + .bm-evidence-list { margin-top: 8px; }
+.bm-evidence-list li { display: grid; gap: 4px; padding: 8px; border: 1px solid var(--border); overflow-wrap: anywhere; }
+.bm-evidence-list a { color: var(--accent-text); }
+.bm-source-label { color: var(--text-secondary); }
+.bm-impact-row { border-left: 3px solid var(--bm-kind, var(--accent)); text-align: start; white-space: normal; }
+
+@media (max-width: 1440px) {
+  .battle-map .atlas-key-plate.bm-key-plate,
+  :root[data-theme="dark"] .battle-map .atlas-key-plate.bm-key-plate { width: 228px; }
+  .battle-map .wfs-country-drawer { width: 378px; }
+}
+@media (max-width: 768px) {
+  .wfs-root.battle-map,
+  :root[data-theme="dark"] .wfs-root.battle-map { grid-template-rows: 62px 24px 42px minmax(0, 1fr) 76px; }
+  .battle-map .masthead-bar { grid-template-rows: 36px 26px; }
+  .battle-map .wfs-slot-telemetry,
+  :root[data-theme="dark"] .battle-map .wfs-slot-telemetry { padding: 0 6px; overflow: visible; }
+  .battle-map .wfs-slot-telemetry .ops-telemetry-bar,
+  :root:not([data-theme="dark"]) .battle-map .wfs-slot-telemetry:has(.wfs-global-gauges:not([hidden])) .ops-telemetry-bar { gap: 5px; }
+  .battle-map .wfs-ops-clocks { gap: 5px; }
+  .bm-counts .bm-front-count { display: none; }
+  .bm-sources { font-size: 9px; }
+  .bm-strip-title { font-size: 10px; }
+  .bm-strip-step { display: none; }
+  .bm-chip { height: 30px; max-width: min(210px, 56vw); }
+  .battle-map .bottom-shelf,
+  :root[data-theme="dark"] .battle-map .bottom-shelf {
+    display: grid;
+    grid-template: 38px 38px / auto minmax(0, 1fr);
+    align-items: center;
+    height: 76px;
+    gap: 0 5px;
+    padding: 0 8px;
+  }
+  .bm-filters { grid-column: 1 / -1; height: 100%; }
+  .bm-windows { grid-column: 1; }
+  .battle-map .wfs-timeline { grid-column: 2; min-width: 0; gap: 3px; height: 100%; }
+  .battle-map .wfs-timelapse { font-size: 9px; padding: 0 3px; }
+  .battle-map .wfs-date-input { width: 98px; }
+  .battle-map .atlas-key-plate.bm-key-plate,
+  :root[data-theme="dark"] .battle-map .atlas-key-plate.bm-key-plate {
+    inset: 8px auto auto 8px;
+    width: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  .bm-legend-toggle { display: block; }
+  .bm-key-content { display: none; }
+  .bm-key-plate[data-open="true"] .bm-key-content {
+    display: block;
+    width: min(280px, 76vw);
+    margin-top: 4px;
+    padding: 8px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface-paper);
+  }
+  .battle-map .wfs-country-drawer { max-width: none; height: min(66vh, 100%) !important; }
+  .battle-map .wfs-ops-event-log { height: min(56vh, 100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bm-arc-tracer { display: none; animation: none; }
+}

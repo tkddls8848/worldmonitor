@@ -210,6 +210,7 @@ export class MapContainer {
   private escalationGettersRequested = false;
   private worldOverviewMode = false;
   private worldOverviewView: WorldMapView | null = null;
+  private worldProjectionChanged: (() => void) | null = null;
   private worldLineClickCallback: ((lineId: string) => void) | null = null;
 
   // ─── Callback cache (survives map mode switches) ───────────────────────────
@@ -411,6 +412,7 @@ export class MapContainer {
     // Replay viewport commands before resolving readiness so callers waiting to
     // observe settlement attach to the transition that was actually started.
     this.replayPendingViewportActions();
+    if (this.worldOverviewMode) this.worldProjectionChanged?.();
     this.replayPendingChokepointOpen();
     this.replayPendingReservoirOpen();
     const waiters = Array.from(this.rendererReadyWaiters);
@@ -589,7 +591,9 @@ export class MapContainer {
     this.svgMap = new MapComponent(this.container, this.initialState, {
       chrome: this.chrome,
       isMobile: this.isMobile,
+      onProjectionChange: () => this.worldProjectionChanged?.(),
     });
+    this.svgMap.setWorldOverview(this.worldOverviewMode ? this.worldOverviewView : null);
     this.rehydrateActiveMap();
     this.markRendererReady(token);
     markLcpDebug('wm:map:svg-ready');
@@ -647,6 +651,7 @@ export class MapContainer {
         view: this.initialState.view as DeckMapView,
       }, {
         chrome: this.chrome,
+        onProjectionChange: () => this.worldProjectionChanged?.(),
         // Mid-session MapLibre rebuilds (fallback basemap after WebGL loss)
         // can throw GPUInitializationError outside whenReady(); degrade to SVG.
         onFatalError: (error) => this.handleDeckGLRuntimeFailure(token, error),
@@ -952,11 +957,22 @@ export class MapContainer {
   public setWorldOverviewMode(on: boolean): void {
     this.worldOverviewMode = on;
     this.deckGLMap?.setWorldOverviewMode(on);
+    this.svgMap?.setWorldOverview(on ? this.worldOverviewView : null);
   }
 
   public setWorldOverview(view: WorldMapView | null): void {
     this.worldOverviewView = view;
     this.deckGLMap?.setWorldOverview(view);
+    this.svgMap?.setWorldOverview(this.worldOverviewMode ? view : null);
+  }
+
+  public onWorldProjectionChanged(callback: (() => void) | null): void {
+    this.worldProjectionChanged = callback;
+  }
+
+  public worldProjector(): ((lat: number, lon: number) => { x: number; y: number } | null) | null {
+    if (this.deckGLMap) return (lat, lon) => this.deckGLMap?.projectToScreen(lat, lon) ?? null;
+    return this.svgMap?.screenProjector() ?? null;
   }
 
   public onWorldLineClicked(cb: (lineId: string) => void): void {
@@ -976,7 +992,7 @@ export class MapContainer {
 
   public resetWorldView(): void {
     if (this.useDeckGL) this.deckGLMap?.resetWorldView();
-    else this.setView('global', 1.6);
+    else this.setView('global', 1.15);
   }
 
   private drawLayers(layers: MapLayers): void {

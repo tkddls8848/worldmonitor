@@ -2,6 +2,7 @@ import { GeoJsonLayer, PathLayer, ScatterplotLayer, TextLayer } from '@deck.gl/l
 import type { Layer } from '@deck.gl/core';
 import type { FeatureCollection, Geometry } from 'geojson';
 import type { MapHotspot, WorldMapView, WorldLineView, ThemeName } from '@/types/world-overview';
+import { PRESSURE_FILL, PRESSURE_RIM, PRESSURE_RIM_WIDTH } from '@/config/battle-map';
 import {
   ALLIANCE_EXTRA_WIDTH, WORLD_ARC_CASING, WORLD_BLOC_COLORS, WORLD_DIM_OPACITY,
   WORLD_FILL_COLORS, WORLD_LAND_STROKE, WORLD_LAND_STROKE_WIDTH, WORLD_RELATION_COLORS,
@@ -158,13 +159,18 @@ export function buildWorldOverviewLayers(
       const country = view.countries[iso2(feature)];
       const level = country?.level ?? 0;
       const dim = selected && iso2(feature) !== selected && !related.has(iso2(feature)) ? WORLD_DIM_OPACITY : 1;
-      const color = WORLD_FILL_COLORS[theme][level];
+      const color = (view.pressure ? PRESSURE_FILL : WORLD_FILL_COLORS)[theme][level]!;
       return [color[0], color[1], color[2], Math.round(color[3] * dim)];
     },
-    getLineColor: WORLD_LAND_STROKE[theme],
-    getLineWidth: (feature) => iso2(feature) === selected ? WORLD_LAND_STROKE_WIDTH.selected : iso2(feature) === hoverIso2 ? WORLD_LAND_STROKE_WIDTH.hover : WORLD_LAND_STROKE_WIDTH.base,
+    getLineColor: (feature) => {
+      const code = iso2(feature);
+      if (code === selected || code === hoverIso2) return WORLD_TARGET_COLOR[theme];
+      return view.pressure ? PRESSURE_RIM[theme][view.countries[code]?.level ?? 0]! : WORLD_LAND_STROKE[theme];
+    },
+    getLineWidth: (feature) => iso2(feature) === selected ? WORLD_LAND_STROKE_WIDTH.selected : iso2(feature) === hoverIso2 ? WORLD_LAND_STROKE_WIDTH.hover
+      : view.pressure ? PRESSURE_RIM_WIDTH[view.countries[iso2(feature)]?.level ?? 0]! : WORLD_LAND_STROKE_WIDTH.base,
     lineWidthUnits: 'pixels', lineWidthMinPixels: 0.5,
-    updateTriggers: { getFillColor: [view, theme], getLineColor: [selected, hoverIso2], getLineWidth: [selected, hoverIso2] },
+    updateTriggers: { getFillColor: [view, theme], getLineColor: [view, theme, selected, hoverIso2], getLineWidth: [view, selected, hoverIso2] },
   })];
 
   if (tactical && theme === 'dark') {

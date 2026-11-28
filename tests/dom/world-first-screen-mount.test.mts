@@ -2,10 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import i18next from 'i18next';
 import { initTestI18n } from './helpers/i18n.mts';
 
-const mocks = vi.hoisted(() => ({ load: vi.fn(), mark: vi.fn(), stress: vi.fn(), auctions: vi.fn(), outages: vi.fn(), ecos: vi.fn(), trade: vi.fn(), dart: vi.fn(), federalRegister: vi.fn(), fields: ['military', 'geopolitics'] as string[], setFields: vi.fn(), data: {} as Record<string, unknown> }));
+const mocks = vi.hoisted(() => ({ load: vi.fn(), impacts: vi.fn(), mark: vi.fn(), stress: vi.fn(), auctions: vi.fn(), outages: vi.fn(), ecos: vi.fn(), trade: vi.fn(), dart: vi.fn(), federalRegister: vi.fn(), data: {} as Record<string, unknown> }));
 vi.mock('@/services/world-overview', () => ({ loadWorldOverview: mocks.load, setWorldMark: mocks.mark }));
-vi.mock('@/services/world-overview-view', () => ({ buildWorldMapView: vi.fn((_s, _f, selected) => ({ date: '2026-11-22', countries: {}, lines: [], blocOutlines: [], selectedIso2: selected, relatedIso2: [] })), buildCountryDrawerData: vi.fn((_s, iso2) => ({ iso2, nameKo: iso2, nameEn: iso2, level: null, conflictLevel: null, ciiScore: null, updatedAt: 1, issue: null, relations: [], blocs: [], isToday: true, aiStatus: 'ok' })) }));
-vi.mock('@/services/world-first-screen-prefs', () => ({ getWorldFields: () => [...mocks.fields], setWorldFields: mocks.setFields }));
+vi.mock('@/services/world-overview-view', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/services/world-overview-view')>(),
+  buildCountryDrawerData: vi.fn((_s, iso2) => ({ iso2, nameKo: iso2, nameEn: iso2, level: null, conflictLevel: null, ciiScore: null, updatedAt: 1, issue: null, relations: [], blocs: [], isToday: true, aiStatus: 'ok' })),
+}));
+vi.mock('@/services/impact-links', () => ({ loadImpactLinks: mocks.impacts }));
 vi.mock('@/services/world-ticker', async (importOriginal) => ({
   ...await importOriginal<typeof import('@/services/world-ticker')>(),
   loadTickerItems: vi.fn(() => Promise.resolve([])),
@@ -24,7 +27,10 @@ vi.mock('@/services/federal-register', async (importOriginal) => ({
   ...await importOriginal<typeof import('@/services/federal-register')>(),
   loadFederalRegister: mocks.federalRegister,
 }));
-vi.mock('@/services/country-geometry', () => ({ preloadCountryGeometry: vi.fn(() => new Promise(() => { /* geometry never needed here */ })) }));
+vi.mock('@/services/country-geometry', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/services/country-geometry')>(),
+  preloadCountryGeometry: vi.fn(() => new Promise(() => { /* geometry never needed here */ })),
+}));
 import { mountWorldFirstScreen, type WorldFirstScreenSlots } from '../../src/app/world-first-screen';
 
 const snapshot = { date: '2026-11-22', availableDates: ['2026-11-21', '2026-11-22'], countries: {}, relations: [], anchors: {}, blocs: [], ai: { status: 'ok' }, generatedAt: 1 } as never;
@@ -44,13 +50,17 @@ function setup() {
     stage: createSlot('stage'),
     shelf: createSlot('shelf'),
   };
-  const map = { setWorldOverviewMode: vi.fn(), setWorldOverview: vi.fn(), onWorldLineClicked: vi.fn(), zoomBy: vi.fn(), resetWorldView: vi.fn(), setCenter: vi.fn() };
+  const map = { setWorldOverviewMode: vi.fn(), setWorldOverview: vi.fn(), onWorldProjectionChanged: vi.fn(), worldProjector: () => null, zoomBy: vi.fn(), resetWorldView: vi.fn(), setCenter: vi.fn() };
   document.body.append(root);
   const ctx = { map } as never;
   return { root, slots, map, ctx };
 }
-afterEach(() => { document.body.replaceChildren(); vi.clearAllMocks(); mocks.fields = ['military', 'geopolitics']; mocks.data = {}; mocks.stress.mockResolvedValue(null); mocks.outages.mockResolvedValue([]); mocks.ecos.mockResolvedValue(null); mocks.trade.mockResolvedValue(null); mocks.dart.mockResolvedValue([]); });
-beforeEach(() => { mocks.stress.mockResolvedValue(null); mocks.auctions.mockResolvedValue(null); mocks.outages.mockResolvedValue([]); mocks.ecos.mockResolvedValue(null); mocks.trade.mockResolvedValue(null); mocks.dart.mockResolvedValue([]); mocks.federalRegister.mockResolvedValue([]); });
+afterEach(() => { document.body.replaceChildren(); vi.clearAllMocks(); vi.useRealTimers(); mocks.data = {}; });
+beforeEach(() => {
+  mocks.impacts.mockResolvedValue({ generatedAt: 0, links: [], summary: { today: [], byCountry: {} }, sources: [] });
+  mocks.stress.mockResolvedValue(null); mocks.auctions.mockResolvedValue(null); mocks.outages.mockResolvedValue([]);
+  mocks.ecos.mockResolvedValue(null); mocks.trade.mockResolvedValue(null); mocks.dart.mockResolvedValue([]); mocks.federalRegister.mockResolvedValue([]);
+});
 
 describe('mountWorldFirstScreen', () => {
   it('renders available gauges while the world snapshot and supplemental data are pending', async () => {
@@ -103,16 +113,55 @@ describe('mountWorldFirstScreen', () => {
     const mounted = mountWorldFirstScreen(ctx, slots, { openFullView() {}, openCountryBrief() {} }); await vi.waitFor(() => expect(slots.stage.querySelector('.wfs-status-banner')?.getAttribute('data-state')).toBe('empty'));
     expect(slots.masthead.querySelector('[data-threat="0"]')).not.toBeNull();
     expect(slots.telemetry.querySelector('.wfs-ops-clocks')).not.toBeNull();
-    expect(slots.telemetry.querySelectorAll('.wfs-ops-counter-btn')).toHaveLength(6);
+    expect(slots.telemetry.querySelectorAll('.bm-counts button')).toHaveLength(3);
     expect(slots.stage.querySelector('.coord-axis-top')).not.toBeNull();
-    expect(slots.stage.querySelector('.wfs-ops-event-log')?.getAttribute('data-collapsed')).toBe(String(window.innerWidth <= 1440));
+    expect(slots.stage.querySelector('.wfs-ops-event-log')?.getAttribute('data-collapsed')).toBe('true');
     expect(slots.masthead.children.length).toBeGreaterThan(0); expect(slots.dispatch.children.length).toBeGreaterThan(0); expect(slots.shelf.children.length).toBeGreaterThan(0); expect(map.setWorldOverviewMode).toHaveBeenCalledWith(true); mounted.destroy();
     expect(slots.stage.querySelector('.coord-axis-top')).toBeNull();
+  });
+  it('recovers from a failed impact request and connects dated evidence to the country brief', async () => {
+    const at = Date.now() - 3_600_000;
+    const link = {
+      id: 'tariffs:US:KR', actor: 'US', target: 'KR', kind: 'tariffs', magnitude: 73, direction: 'pressure',
+      firstSeen: at, lastSeen: at, trend: 'new', headline: '',
+      evidence: [{ title: 'Official tariff determination', publishedAt: at, source: 'Federal Register', url: 'https://example.com/order' }],
+    };
+    const delayed = { ...link, id: 'conflict:RU:UA', actor: 'RU', target: 'UA', kind: 'conflict', lastSeen: at - 22 * 86_400_000 };
+    mocks.load.mockResolvedValue({ snapshot, archivedDates: [] });
+    mocks.impacts.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce({
+      generatedAt: at + 1, links: [link, delayed], summary: { today: [link, delayed], byCountry: {} },
+      sources: [{ id: 'ucdp', status: 'delayed', dataAsOf: delayed.lastSeen }],
+    });
+    const { slots, ctx } = setup();
+    const mounted = mountWorldFirstScreen(ctx, slots, { openFullView() {}, openCountryBrief() {} });
+    try {
+      const status = slots.stage.querySelector('.bm-status')!;
+      await vi.waitFor(() => expect(status.getAttribute('data-state')).toBe('error'));
+      status.querySelector('button')!.click();
+      const chip = () => slots.dispatch.querySelector<HTMLButtonElement>('.bm-chip');
+      await vi.waitFor(() => expect(chip()?.textContent).toContain('미국 → 대한민국'));
+      expect(slots.dispatch.querySelectorAll('.bm-chip')).toHaveLength(1);
+      expect(slots.telemetry.querySelector('.bm-sources')?.textContent).toContain('출처 지연 1/1');
+      chip()!.click();
+      const evidence = slots.stage.querySelector('.bm-link-drawer')!;
+      expect(evidence.getAttribute('data-state')).toBe('open');
+      expect(evidence.querySelector('a')?.textContent).toBe('Official tariff determination');
+      evidence.querySelectorAll<HTMLButtonElement>('.bm-endpoints button')[1]!.click();
+      expect(slots.stage.querySelector('[data-section="impact"]')?.textContent).toContain('수신 1');
+      expect(slots.stage.querySelector('[data-section="korea-economy"]')).not.toBeNull();
+      slots.stage.querySelector<HTMLButtonElement>('[data-section="impact"] [data-impact-id]')!.click();
+      expect(evidence.textContent).toContain('대한민국 브리핑');
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      expect(evidence.getAttribute('data-state')).toBe('closed');
+      expect(slots.stage.querySelector('.wfs-country-drawer:not(.bm-link-drawer)')?.getAttribute('data-state')).toBe('open');
+    } finally {
+      mounted.destroy();
+    }
   });
   it('keeps the existing view on errors and shows an error banner', async () => {
     mocks.load.mockResolvedValueOnce({ snapshot, archivedDates: [] }).mockRejectedValueOnce(new Error('offline')); const { slots, map, ctx } = setup();
     const mounted = mountWorldFirstScreen(ctx, slots, { openFullView() {}, openCountryBrief() {} });
-    await vi.waitFor(() => expect(map.setWorldOverview).toHaveBeenCalled());
+    await vi.waitFor(() => expect(slots.shelf.querySelector('[data-date-step="-1"]')).toBeTruthy());
     const calls = map.setWorldOverview.mock.calls;
     const previous = calls[calls.length - 1]?.[0];
     slots.shelf.querySelector<HTMLButtonElement>('[data-date-step="-1"]')!.click();
@@ -120,11 +169,15 @@ describe('mountWorldFirstScreen', () => {
     expect(calls[calls.length - 1]?.[0]).toBe(previous);
     mounted.destroy();
   });
-  it('persists field changes, opens country drawer, loads dates, and removes listeners', async () => {
-    mocks.load.mockResolvedValue({ snapshot, archivedDates: [] }); const { slots, map, ctx } = setup(); const mounted = mountWorldFirstScreen(ctx, slots, { openFullView() {}, openCountryBrief() {} });
-    await vi.waitFor(() => expect(map.setWorldOverview).toHaveBeenCalled()); slots.shelf.querySelector<HTMLButtonElement>('[data-field="diplomacy"]')!.click(); expect(mocks.setFields).toHaveBeenCalled(); expect(map.setWorldOverview).toHaveBeenCalledTimes(2);
+  it('changes impact kinds, opens country drawer, loads archived dates, and removes listeners', async () => {
+    mocks.load.mockResolvedValue({ snapshot, archivedDates: [] }); const { slots, ctx } = setup(); const mounted = mountWorldFirstScreen(ctx, slots, { openFullView() {}, openCountryBrief() {} });
+    await vi.waitFor(() => expect(slots.shelf.querySelector('[data-date-step="-1"]')).toBeTruthy());
+    const filter = slots.shelf.querySelector<HTMLButtonElement>('.bm-filters [data-kind="conflict"]')!;
+    filter.click();
+    expect(filter.getAttribute('aria-pressed')).toBe('false');
     window.dispatchEvent(new CustomEvent('wm:world:country-click', { detail: { code: 'JP' } })); expect(slots.stage.querySelector('.wfs-country-drawer')?.getAttribute('data-state')).toBe('open');
     slots.shelf.querySelector<HTMLButtonElement>('[data-date-step="-1"]')!.click(); await vi.waitFor(() => expect(mocks.load).toHaveBeenCalledWith('2026-11-21'));
+    await vi.waitFor(() => expect(slots.stage.querySelector('.bm-status')?.getAttribute('data-state')).toBe('archive'));
     mounted.destroy(); window.dispatchEvent(new CustomEvent('wm:world:country-click', { detail: { code: 'KR' } })); expect(slots.stage.querySelector('.wfs-country-drawer')).toBeNull();
   });
   it('wires counter filters, log toggle, breaking alerts, and lifecycle timers', async () => {
@@ -132,15 +185,15 @@ describe('mountWorldFirstScreen', () => {
     mocks.load.mockResolvedValue({ snapshot, archivedDates: [] });
     const { slots, ctx } = setup();
     const mounted = mountWorldFirstScreen(ctx, slots, { openFullView() {}, openCountryBrief() {} });
-    await vi.waitFor(() => expect(slots.telemetry.querySelector('.wfs-ops-counters')).not.toBeNull());
-    slots.telemetry.querySelector<HTMLButtonElement>('[data-counter="wars"]')!.click();
-    expect(slots.telemetry.querySelector('[data-counter="wars"]')?.classList.contains('is-active')).toBe(true);
-    expect(mocks.setFields).toHaveBeenCalledWith(['military']);
+    await vi.waitFor(() => expect(slots.telemetry.querySelector('.bm-counts')).not.toBeNull());
+    slots.telemetry.querySelectorAll<HTMLButtonElement>('.bm-counts button')[1]?.click();
+    expect(slots.shelf.querySelector('.bm-windows [aria-pressed="true"]')?.textContent).toBe('24H');
     slots.dispatch.querySelector<HTMLButtonElement>('#logToggleBtn')!.click();
     expect(slots.stage.querySelector('.wfs-ops-event-log')?.getAttribute('data-collapsed')).toBe('false');
     const alert = { id: 'alert-1', headline: '긴급 속보', source: '테스트', threatLevel: 'critical', timestamp: new Date(), origin: 'rss_alert', countryCode: 'KR', corroboration: {} };
     document.dispatchEvent(new CustomEvent('wm:breaking-news', { detail: alert }));
     expect(slots.stage.querySelector('.wfs-ops-event-title')?.textContent).toBe('긴급 속보');
+    expect(slots.dispatch.querySelector('.bm-breaking')?.textContent).toContain('긴급 속보');
     mounted.onLeave();
     mounted.destroy();
     expect(vi.getTimerCount()).toBe(0);

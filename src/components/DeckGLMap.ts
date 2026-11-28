@@ -219,6 +219,7 @@ interface DeckMapState {
 
 interface DeckGLMapOptions {
   chrome?: boolean;
+  onProjectionChange?: () => void;
   mapLibreWorkerUrl?: string;
   /**
    * Fired when MapLibre cannot be (re)constructed after the initial ready
@@ -910,6 +911,7 @@ export class DeckGLMap {
   private readonly chrome: boolean;
   private readonly mapLibreWorkerUrl: string | undefined;
   private readonly onFatalError: ((error: unknown) => void) | null;
+  private readonly onProjectionChange?: () => void;
   private initPromise: Promise<void> = Promise.resolve();
   private styleLoadTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private tileMonitorGeneration = 0;
@@ -984,6 +986,7 @@ export class DeckGLMap {
     this.chrome = options.chrome ?? true;
     this.mapLibreWorkerUrl = options.mapLibreWorkerUrl;
     this.onFatalError = options.onFatalError ?? null;
+    this.onProjectionChange = options.onProjectionChange;
     this.state = {
       ...initialState,
       pan: { ...initialState.pan },
@@ -1413,6 +1416,7 @@ export class DeckGLMap {
     });
 
     this.maplibreMap.on('move', () => {
+      if (this.worldOverviewMode) this.onProjectionChange?.();
       if (this.moveTimeoutId) clearTimeout(this.moveTimeoutId);
       this.moveTimeoutId = setTimeout(() => {
         this.lastSCZoom = -1;
@@ -5988,7 +5992,7 @@ export class DeckGLMap {
 
   /**
    * The first screen draws its own atlas: hide the basemap style's layers
-   * (water, labels, roads) so the stage's ocean colour shows through, keeping
+   * (water, labels, roads) and paint the atlas ocean, keeping
    * the country-* layers that carry hover and click hit-testing. Restored when
    * the full view returns; re-applied after a style reload (theme switch).
    */
@@ -6008,16 +6012,24 @@ export class DeckGLMap {
       return;
     }
     if (this.worldOverviewMode) {
+      const background = 'world-overview-ocean';
+      const ocean = getCurrentTheme() === 'dark' ? '#0b0e0d' : '#dce5e4';
+      if (!map.getLayer(background)) {
+        map.addLayer({ id: background, type: 'background', paint: { 'background-color': ocean } }, map.getStyle()?.layers[0]?.id);
+      } else if (map.getPaintProperty(background, 'background-color') !== ocean) {
+        map.setPaintProperty(background, 'background-color', ocean);
+      }
       if (this.worldHiddenBasemapLayers) return;
       const hidden: string[] = [];
       for (const layer of map.getStyle()?.layers ?? []) {
-        if (layer.id.startsWith('country-')) continue;
+        if (layer.id === background || layer.id.startsWith('country-')) continue;
         if (map.getLayoutProperty(layer.id, 'visibility') === 'none') continue;
         map.setLayoutProperty(layer.id, 'visibility', 'none');
         hidden.push(layer.id);
       }
       this.worldHiddenBasemapLayers = hidden;
     } else if (this.worldHiddenBasemapLayers) {
+      if (map.getLayer('world-overview-ocean')) map.removeLayer('world-overview-ocean');
       for (const id of this.worldHiddenBasemapLayers) {
         if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'visible');
       }
@@ -6027,6 +6039,7 @@ export class DeckGLMap {
 
   public setWorldOverview(view: WorldMapView | null): void {
     this.worldOverviewView = view;
+    if (this.worldOverviewMode) this.syncWorldBasemap();
     this.syncWorldPulse();
     this.render();
   }
@@ -7653,7 +7666,7 @@ export class DeckGLMap {
   }
 
   // Project lat/lon to screen coordinates without moving the map
-  private projectToScreen(lat: number, lon: number): { x: number; y: number } | null {
+  public projectToScreen(lat: number, lon: number): { x: number; y: number } | null {
     if (!this.maplibreMap) return null;
     const point = this.maplibreMap.project([lon, lat]);
     return { x: point.x, y: point.y };

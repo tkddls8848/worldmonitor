@@ -3,6 +3,8 @@ import type { FillLevel, RelationKind, TickerItem, WorldField, WorldLoadState } 
 import { WORLD_BLOC_COLORS, WORLD_FILL_COLORS, WORLD_HOTSPOT_COLORS, WORLD_UNREST_OUTLINE } from '@/config/world-overview-palette';
 import { FIELD_LABEL_KO, KIND_LABEL_KO, WORLD_FIELDS } from '../../../shared/world-overview.js';
 import css from '@/styles/world-first-screen.css?inline';
+import battleCss from '@/styles/battle-map.css?inline';
+import { IMPACT_STYLES } from '@/config/battle-map';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 
 let styleInstalled = false;
@@ -10,7 +12,9 @@ function installStyle(): void {
   if (styleInstalled || typeof document === 'undefined') return;
   const style = document.createElement('style');
   style.dataset.wfsStyles = 'true';
-  style.textContent = css;
+  const kindColors = (theme: 'dark' | 'light') => Object.entries(IMPACT_STYLES)
+    .map(([kind, value]) => `--bm-kind-${kind}:${value[theme]};`).join('');
+  style.textContent = css + battleCss + `.battle-map{${kindColors('light')}}:root[data-theme="dark"] .battle-map{${kindColors('dark')}}`;
   document.head.append(style);
   styleInstalled = true;
 }
@@ -41,6 +45,11 @@ export class WorldMasthead {
     this.ticker.tabIndex = 0;
     this.ticker.setAttribute('role', 'region');
     this.ticker.setAttribute('aria-label', '시세 지표');
+    this.ticker.addEventListener('focusin', (event) => {
+      if (event.target instanceof HTMLElement && event.target.dataset.ticker) {
+        event.target.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+      }
+    });
     const brand = el('div', 'wfs-brand');
     brand.append(el('strong', '', 'WorldMonitor'), el('span', '', 'GLOBAL INTELLIGENCE'));
     const threatMount = el('div', 'wfs-threat-mount');
@@ -56,6 +65,10 @@ export class WorldMasthead {
     this.element.append(brand, threatMount, this.ticker, theme, full);
   }
   setTickerItems(items: TickerItem[]): void {
+    const focused = document.activeElement;
+    const focusId = focused instanceof HTMLElement && this.ticker.contains(focused) ? focused.dataset.ticker : undefined;
+    const scrollLeft = this.ticker.scrollLeft;
+    let nextFocus: HTMLElement | null = null;
     this.ticker.replaceChildren();
     if (!items.length) {
       this.ticker.append(el('span', 'wfs-empty', '표시할 시세 지표가 없습니다'));
@@ -65,6 +78,7 @@ export class WorldMasthead {
       const control = item.url ? el('a', 'wfs-ticker-item') : el('button', 'wfs-ticker-item');
       const display = item.displayValue ?? (item.value === null ? '—' : `${item.value.toFixed(item.digits)}${item.unit ?? ''}`);
       control.dataset.ticker = item.id;
+      if (focusId === item.id) nextFocus = control;
       if (control instanceof HTMLAnchorElement && item.url) {
         control.href = item.url;
         control.target = '_blank';
@@ -88,6 +102,8 @@ export class WorldMasthead {
       } else control.append(label, value);
       this.ticker.append(control);
     }
+    this.ticker.scrollLeft = scrollLeft;
+    nextFocus?.focus();
   }
   destroy(): void {
     this.element.remove();
@@ -253,7 +269,7 @@ export class WorldBottomShelf {
   private range = el('input', 'wfs-date-range');
   private dateInput = el('input', 'wfs-date-input');
   private dateLabel = el('output', 'wfs-current-date');
-  constructor(private callbacks: { onFieldsChange(fields: WorldField[]): void; onDateChange(date: string): void }) {
+  constructor(private callbacks: { onFieldsChange?(fields: WorldField[]): void; onDateChange(date: string): void }, battle?: { filters: HTMLElement; windows: HTMLElement }) {
     installStyle();
     this.element = el('footer', 'bottom-shelf');
     this.play.type = 'button';
@@ -267,8 +283,11 @@ export class WorldBottomShelf {
       if (this.dates.includes(this.dateInput.value)) this.select(this.dateInput.value);
       else this.dateInput.value = this.current;
     });
-    this.element.append(this.fieldBar, this.timeline);
-    this.renderFields();
+    if (battle) this.element.append(battle.filters, battle.windows, this.timeline);
+    else {
+      this.element.append(this.fieldBar, this.timeline);
+      this.renderFields();
+    }
   }
   setFields(fields: readonly WorldField[]): void {
     this.fields = [...fields];
@@ -284,14 +303,14 @@ export class WorldBottomShelf {
       b.addEventListener('click', () => {
         this.fields = this.fields.includes(field) ? this.fields.filter((f) => f !== field) : [...this.fields, field];
         this.renderFields();
-        this.callbacks.onFieldsChange([...this.fields]);
+        this.callbacks.onFieldsChange?.([...this.fields]);
       });
       this.fieldBar.append(b);
     }
   }
   setDates(available: string[], current: string): void {
-    this.stop();
     this.dates = [...new Set(available)].sort();
+    if (current !== this.current || !this.dates.includes(current)) this.stop();
     this.current = this.dates.includes(current) ? current : (this.dates[this.dates.length - 1] ?? '');
     this.renderDates();
   }

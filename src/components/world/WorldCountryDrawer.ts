@@ -3,6 +3,8 @@ import { AI_DISCLAIMER_KO, KIND_LABEL_KO, TREND_LABEL_KO } from '../../../shared
 import { federalRegisterLabel } from '@/services/federal-register';
 import { federalRegisterPrePublicationLabel } from './WorldOps';
 import { renderGlobalGauges } from './WorldGlobalGauges';
+import type { ImpactLink } from '@/services/impact-links';
+import { impactRow } from './BattleMapChrome';
 import type { CountryDrawerData, DrawerRelation, FederalRegisterDocument, SourceLink, WorldMarkRequest } from '../../types/world-overview';
 
 type RelationFilter = 'all' | 'worsening' | 'easing';
@@ -14,6 +16,7 @@ export interface WorldCountryDrawerOptions {
   onSelectCountry: (iso2: string) => void;
   onMark: (req: WorldMarkRequest) => Promise<void>;
   onOpenFullPanels: (iso2: string) => void;
+  onImpact?: (link: ImpactLink, trigger: HTMLElement) => void;
 }
 
 const make = <K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, text?: string): HTMLElementTagNameMap[K] => {
@@ -74,6 +77,7 @@ export class WorldCountryDrawer {
   private readonly options: WorldCountryDrawerOptions;
   private data: CountryDrawerData | null = null;
   private filter: RelationFilter = 'all';
+  private impactFilter: 'incoming' | 'outgoing' | 'all' = 'all';
   private readonly onKeyDown = (event: KeyboardEvent): void => {
     if (event.key === 'Escape' && this.isOpen()) {
       event.stopPropagation();
@@ -87,15 +91,18 @@ export class WorldCountryDrawer {
     this.element.dataset.state = 'closed';
     this.element.setAttribute('aria-label', '국가 상세');
     this.element.setAttribute('aria-hidden', 'true');
+    this.element.inert = true;
     document.addEventListener('keydown', this.onKeyDown);
   }
 
   open(data: CountryDrawerData): void {
     this.data = data;
     this.filter = 'all';
+    this.impactFilter = 'all';
     this.render();
     this.element.dataset.state = 'open';
     this.element.setAttribute('aria-hidden', 'false');
+    this.element.inert = false;
   }
 
   update(data: CountryDrawerData): void {
@@ -106,11 +113,12 @@ export class WorldCountryDrawer {
     this.element.setAttribute('aria-hidden', wasOpen ? 'false' : 'true');
   }
 
-  close(): void {
+  close(notify = true): void {
     if (!this.isOpen()) return;
     this.element.dataset.state = 'closed';
     this.element.setAttribute('aria-hidden', 'true');
-    this.options.onClose();
+    this.element.inert = true;
+    if (notify) this.options.onClose();
   }
 
   isOpen(): boolean {
@@ -134,7 +142,7 @@ export class WorldCountryDrawer {
       renderGlobalGauges(indicators, data.indicators, 'CLI / GPR');
       content.append(indicators);
     }
-    content.append(this.renderNotice(data), this.renderIssues(data), this.renderRelations(data), this.renderOutages(data));
+    content.append(this.renderNotice(data), this.renderIssues(data), data.impact ? this.renderImpact(data.impact) : this.renderRelations(data), this.renderOutages(data));
     if (data.federalRegister?.length) content.append(this.renderFederalRegister(data.federalRegister));
     if (data.iso2 === 'KR') content.append(this.renderKorea(data));
     content.append(this.renderSources(data), this.renderFooter(data));
@@ -144,7 +152,8 @@ export class WorldCountryDrawer {
   private renderHeader(data: CountryDrawerData): HTMLElement {
     const section = make('header', 'wfs-country-drawer__header');
     section.dataset.section = 'header';
-    section.append(make('p', 'wfs-country-drawer__kicker', `OPS BRIEF // ${data.iso2} // CII-${data.ciiScore === null ? '—' : Math.round(data.ciiScore)}`));
+    const impact = data.impact ? ` · 압박 ${data.impact.incomingScore} · 발신 ${data.impact.outgoing.length}` : '';
+    section.append(make('p', 'wfs-country-drawer__kicker', `OPS BRIEF // ${data.iso2} // CII-${data.ciiScore === null ? '—' : Math.round(data.ciiScore)}${impact}`));
     const titleRow = make('div', 'wfs-country-drawer__title-row');
     const identity = make('div', 'wfs-country-drawer__identity');
     const code = make('span', 'wfs-country-drawer__iso num', data.iso2);
@@ -193,6 +202,32 @@ export class WorldCountryDrawer {
     section.append(summary
       ? make('p', 'wfs-country-drawer__issue-summary', summary)
       : make('p', 'wfs-country-drawer__empty', '등록된 핵심 이슈가 없습니다.'));
+    return section;
+  }
+
+  private renderImpact(impact: NonNullable<CountryDrawerData['impact']>): HTMLElement {
+    const section = this.section('impact', '영향선');
+    const tabs = make('div', 'bm-evidence-tabs');
+    for (const [key, label] of [['incoming', `수신 ${impact.incoming.length}`], ['outgoing', `발신 ${impact.outgoing.length}`], ['all', '전체']] as const) {
+      const button = make('button', 'bm-button', label);
+      button.type = 'button';
+      button.setAttribute('aria-pressed', String(this.impactFilter === key));
+      button.addEventListener('click', () => {
+        this.impactFilter = key;
+        const next = this.renderImpact(impact);
+        section.replaceWith(next);
+        next.querySelector<HTMLButtonElement>('[aria-pressed="true"]')?.focus();
+      });
+      tabs.append(button);
+    }
+    const links = this.impactFilter === 'all' ? [...impact.incoming, ...impact.outgoing] : impact[this.impactFilter];
+    const list = make('div', 'bm-evidence-list');
+    for (const link of links) {
+      const row = impactRow(link, () => this.options.onImpact?.(link, row));
+      list.append(row);
+    }
+    if (!links.length) list.append(make('p', 'wfs-country-drawer__empty', '선택한 시간창에 표시할 영향선이 없습니다.'));
+    section.append(tabs, list);
     return section;
   }
 

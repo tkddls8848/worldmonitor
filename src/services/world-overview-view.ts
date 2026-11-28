@@ -16,9 +16,14 @@ export function fillLevelFor(fill: CountryFill): FillLevel {
 function isWorsening(trend: TrendState | null): boolean { return trend === 'rising' || trend === 'surging'; }
 function isEasing(trend: TrendState | null): boolean { return trend === 'easing'; }
 function trendOf(line: RelationLine): TrendState | null { return line.trend?.state ?? null; }
-function countryName(iso2: string, locale: 'ko' | 'en'): string {
+const regionNames = {
+  ko: new Intl.DisplayNames(['ko'], { type: 'region' }),
+  en: new Intl.DisplayNames(['en'], { type: 'region' }),
+};
+
+export function countryName(iso2: string, locale: 'ko' | 'en'): string {
   try {
-    const names = new Intl.DisplayNames([locale], { type: 'region' });
+    const names = regionNames[locale];
     const name = names.of(iso2.toUpperCase());
     const unknown = names.of('ZZ');
     return !name || name === unknown ? iso2 : name;

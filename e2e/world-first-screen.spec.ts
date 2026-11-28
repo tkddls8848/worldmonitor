@@ -34,30 +34,32 @@ test('mobile world view fits complete ticker items and keeps the date picker in 
   await expect(page.locator('.wfs-date-input')).toBeInViewport({ ratio: 0.99 });
 });
 
-async function openWorldLegendFixture(page: Page): Promise<void> {
+async function openBattleFixture(page: Page): Promise<void> {
   await seedAnonymousDashboard(page, 'full');
   await page.addInitScript(() => {
     localStorage.setItem('worldmonitor-first-screen-mode', '"world"');
     localStorage.setItem('wm-locale-explicit', 'ko');
     localStorage.setItem('worldmonitor-theme', 'dark');
   });
-  const date = '2026-11-26';
+  const now = Date.now();
+  const date = new Date(now).toISOString().slice(0, 10);
   const snapshot = {
-    schemaVersion: 1,
-    date,
-    availableDates: [date],
-    countries: { UA: { level: 'war' } },
-    anchors: { UA: [31, 49], US: [-100, 38], CA: [-106, 56] },
-    relations: [
-      { id: 'support-fixture', origin: 'fixed', kind: 'support', field: 'military', from: 'CA', to: 'UA', score: 90 },
-      { id: 'tension-fixture', origin: 'fixed', kind: 'tension', field: 'geopolitics', from: 'US', to: 'UA', score: 80 },
-    ],
+    schemaVersion: 1, date, availableDates: [date], countries: { KR: { level: 'high' } },
+    anchors: { KR: [128, 37], JP: [137, 36], UA: [31, 49], RU: [70, 58], CA: [-106, 56], US: [-100, 39] },
   };
+  const link = (actor: string, target: string, kind: string, age: number, magnitude: number) => ({
+    id: `${kind}:${actor}:${target}`, actor, target, kind, direction: 'pressure', magnitude,
+    trend: age < 24 ? 'new' : 'steady', firstSeen: now - age * 3_600_000, lastSeen: now - age * 3_600_000,
+    evidence: [{ source: 'Fixture authority', title: 'Verifiable original headline', url: 'https://example.com/evidence', publishedAt: now - age * 3_600_000 }],
+  });
+  const links = [link('CA', 'US', 'tariffs', 1, 92), link('JP', 'KR', 'sanctions', 8, 85), link('RU', 'UA', 'conflict', 528, 100)];
   await page.route('**/api/**', (route) => route.fulfill({ json: {} }));
+  await page.route('**/api/world-overview/v1/get-impact-links?*', (route) => route.fulfill({ json: {
+    generatedAt: now, links, summary: { today: links.slice(0, 2), byCountry: {} },
+    sources: [{ id: 'ucdp', status: 'delayed', dataAsOf: links[2]!.lastSeen }],
+  } }));
   await page.route('**/api/bootstrap?*', (route) => {
-    const data = new URL(route.request().url()).searchParams.get('keys') === 'worldOverview'
-      ? { worldOverview: snapshot }
-      : {};
+    const data = new URL(route.request().url()).searchParams.get('keys') === 'worldOverview' ? { worldOverview: snapshot } : {};
     return route.fulfill({ json: { data, missing: [] } });
   });
   await page.route('https://tiles.openfreemap.org/styles/**', (route) =>
@@ -65,50 +67,66 @@ async function openWorldLegendFixture(page: Page): Promise<void> {
   await page.goto('/dashboard');
 }
 
-test('SVG legend describes visible overlays and leaves the Layers control clickable', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await page.addInitScript(() => {
-    const getContext = HTMLCanvasElement.prototype.getContext;
-    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, options?: unknown) {
-      return type.startsWith('webgl') ? null : Reflect.apply(getContext, this, [type, options]);
-    } as typeof getContext;
-  });
-  await openWorldLegendFixture(page);
-  const map = page.locator('#mapContainer.svg-mode');
-  await expect(map.locator('.waterway-diamond').first()).toBeVisible();
-  const legend = page.locator('.atlas-key-plate');
-  await expect(legend.locator('.wfs-cii-scale')).toBeHidden();
-  await expect(legend.locator('.wfs-line-legend')).toBeHidden();
-  await expect(legend.locator('[data-marker="waterway"]')).toBeVisible();
-  await expect(legend.locator('[data-marker="conflict"]')).toBeVisible();
-  const layers = map.locator('.layer-toggles .map-control-disclosure');
-  const legendBox = await legend.boundingBox();
-  const layersBox = await layers.boundingBox();
-  expect(legendBox!.y + legendBox!.height).toBeLessThan(layersBox!.y);
-  await layers.click();
-  await expect(layers).toHaveAttribute('aria-expanded', 'true');
-});
+for (const renderer of ['svg', 'deckgl'] as const) {
+  test(`Battle Map draws the same pressure and impact key in ${renderer}`, async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    if (renderer === 'svg') {
+      await page.addInitScript(() => {
+        const getContext = HTMLCanvasElement.prototype.getContext;
+        HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, options?: unknown) {
+          return type.startsWith('webgl') ? null : Reflect.apply(getContext, this, [type, options]);
+        } as typeof getContext;
+      });
+    } else {
+      await page.addInitScript(() => {
+        // Allow headless software GL while keeping the real WebGL renderer.
+        const getExtension = WebGL2RenderingContext.prototype.getExtension;
+        WebGL2RenderingContext.prototype.getExtension = function (this: WebGL2RenderingContext, name: string) {
+          return name === 'WEBGL_debug_renderer_info' ? null : Reflect.apply(getExtension, this, [name]);
+        };
+      });
+    }
+    await openBattleFixture(page);
+    const map = page.locator(`#mapContainer.${renderer}-mode`);
+    await expect(map).toHaveAttribute('data-world-legend', /\bfill\b/);
+    const legend = page.locator('.bm-key-plate');
+    await expect(legend.locator('.wfs-cii-scale')).toBeVisible();
+    await expect(legend.locator('[data-level="4"]')).toHaveCSS('background-color', 'rgb(166, 34, 54)');
+    await expect(legend.locator('.bm-line-key')).toHaveText(['충돌', '제재', '관세']);
+    const arc = page.locator('.bm-arc[data-kind="tariffs"]');
+    await expect(arc.locator('.bm-arc-core')).toHaveAttribute('d', /^M.*Q/);
+    await expect(arc.locator('.bm-arc-core')).toHaveAttribute('stroke-dasharray', '4 3 9 3');
+    await expect(arc.locator('.bm-arc-tracer')).toBeHidden();
+    await expect(page.locator('.bm-arc[data-kind="conflict"]')).toHaveAttribute('opacity', '0.32');
 
-test('legend matches DeckGL fills, relation kinds, and hotspot rings that reach the map', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await page.addInitScript(() => {
-    // Keep real WebGL2 and allow its software implementation in the test browser.
-    const getExtension = WebGL2RenderingContext.prototype.getExtension;
-    WebGL2RenderingContext.prototype.getExtension = function (this: WebGL2RenderingContext, name: string) {
-      return name === 'WEBGL_debug_renderer_info' ? null : Reflect.apply(getExtension, this, [name]);
-    };
+    const point = await arc.locator('path.bm-arc-hit').evaluate((path: SVGPathElement) => {
+      const bounds = path.ownerSVGElement!.getBoundingClientRect();
+      const location = path.getPointAtLength(path.getTotalLength() * 0.55);
+      return { x: bounds.left + location.x, y: bounds.top + location.y };
+    });
+    await page.mouse.click(point.x, point.y);
+    const evidence = page.locator('.bm-link-drawer');
+    await expect(evidence).toHaveAttribute('data-state', 'open');
+    await expect(evidence.getByRole('link', { name: 'Verifiable original headline' })).toHaveAttribute('href', 'https://example.com/evidence');
+    await page.keyboard.press('Escape');
+    await page.locator('.bm-strip').getByRole('button', { name: /일본 → 대한민국/ }).click();
+    await evidence.getByRole('button', { name: '대한민국' }).click();
+    const brief = page.locator('.wfs-country-drawer:not(.bm-link-drawer)');
+    await expect(brief).toHaveAttribute('data-state', 'open');
+    await expect(brief.locator('[data-section="impact"]')).toContainText('수신 1');
+    await expect(brief.locator('[data-section="korea-economy"]')).toBeAttached();
+    await brief.getByRole('button', { name: '국가 상세 닫기' }).click();
+
+    await page.getByRole('button', { name: '24H', exact: true }).click();
+    await expect(page.locator('.bm-arc[data-kind="conflict"]')).toHaveCount(0);
+    await expect(legend.locator('.bm-line-key')).toHaveText(['제재', '관세']);
+    await page.locator('.bm-filters button[data-kind="sanctions"]').click();
+    await page.locator('.bm-filters button[data-kind="tariffs"]').click();
+    await expect(page.locator('.bm-status')).toHaveAttribute('data-state', 'filtered');
+    await page.getByRole('button', { name: '7D로 확장' }).click();
+    await expect(legend.locator('.bm-line-key')).toHaveText(['충돌']);
+    await legend.getByRole('button', { name: 'CII', exact: true }).click();
+    await expect(legend.locator('[data-level="4"]')).toHaveCSS('background-color', 'rgb(200, 46, 67)');
   });
-  await openWorldLegendFixture(page);
-  const map = page.locator('#mapContainer.deckgl-mode');
-  await expect(map).toHaveAttribute('data-world-legend', /\bhotspots\b/);
-  const legend = page.locator('.atlas-key-plate');
-  await expect(legend.locator('.wfs-cii-scale')).toBeVisible();
-  await expect(legend.locator('[data-level="4"]')).toHaveCSS('background-color', 'rgb(200, 46, 67)');
-  await expect(legend.locator('.wfs-line-key')).toHaveText(['지원', '긴장']);
-  await expect(legend.locator('[data-marker="hotspot-ring"]')).toBeVisible();
-  await expect(legend.locator('[data-marker="waterway"]')).toBeHidden();
-  await page.locator('.domain-tab[data-field="military"]').click();
-  await expect(legend.locator('.wfs-cii-scale')).toBeHidden();
-  await expect(legend.locator('.wfs-line-key')).toHaveText(['긴장']);
-  await expect(legend.locator('[data-marker="hotspot-ring"]')).toBeHidden();
-});
+}
