@@ -90,6 +90,7 @@ for (const renderer of ['svg', 'deckgl'] as const) {
     await openBattleFixture(page);
     const map = page.locator(`#mapContainer.${renderer}-mode`);
     await expect(map).toHaveAttribute('data-world-legend', /\bfill\b/);
+    if (renderer === 'svg') await expect(map.locator('.layer-toggles')).toBeHidden();
     const legend = page.locator('.bm-key-plate');
     await expect(legend.locator('.wfs-cii-scale')).toBeVisible();
     await expect(legend.locator('[data-level="4"]')).toHaveCSS('background-color', 'rgb(166, 34, 54)');

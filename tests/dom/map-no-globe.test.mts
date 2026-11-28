@@ -310,6 +310,7 @@ describe('flat map interaction', () => {
       // A pmtiles style keeps the primary basemap, so a fetch failure can fall back.
       resolveInitialBasemapStyle: async () => ({ mapTheme: 'dark', style: 'pmtiles://example.test/style.json' }),
       getCenter: () => null,
+      watchWorldBasemap: () => {},
       attachMapLibreInteractionHandlers: () => {},
       detachMapLibreInteractionHandlers: () => {},
     };

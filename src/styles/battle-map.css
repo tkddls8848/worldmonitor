@@ -230,6 +230,7 @@
   .bm-strip-title { font-size: 10px; }
   .bm-strip-step { display: none; }
   .bm-chip { height: 30px; max-width: min(210px, 56vw); }
+  .bm-arc-hit { stroke-width: 6px; }
   .battle-map .bottom-shelf,
   :root[data-theme="dark"] .battle-map .bottom-shelf {
     display: grid;
