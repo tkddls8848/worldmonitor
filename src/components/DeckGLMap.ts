@@ -1474,7 +1474,16 @@ export class DeckGLMap {
         this.deckLoopRecovery(error);
       },
     };
-    return new MapLibreOverlay(overlayProps);
+    const overlay = new MapLibreOverlay(overlayProps);
+    if (this.worldOverviewMode) this.setWorldOverviewViewport(overlay);
+    return overlay;
+  }
+
+  private setWorldOverviewViewport(overlay: MapLibreOverlay): void {
+    // MapLibreOverlay forwards custom views, but its DeckProps type defaults views to null.
+    const withViews = overlay as MapLibreOverlay & { setProps(props: { views?: DeckViewport }): void };
+    this.deckFrameProvider.wake();
+    withViews.setProps({ views: this.worldOverviewMode ? WORLD_OVERVIEW_VIEWPORT : undefined });
   }
 
   private restartDeck(error: Error): void {
@@ -5755,9 +5764,7 @@ export class DeckGLMap {
       layerCount = built.length;
       this.deckFrameProvider.wake();
       this.committedLayers = built;
-      // MapLibreOverlay forwards custom views, but its DeckProps type defaults views to null.
-      const overlayProps = { layers: built, views: this.worldOverviewMode ? WORLD_OVERVIEW_VIEWPORT : undefined };
-      this.deckOverlay?.setProps(overlayProps as { layers: LayersList });
+      this.deckOverlay?.setProps({ layers: built });
       if (this.worldOverviewMode) {
         const ids = built.map(deckLayerId);
         const legend = [
@@ -5995,6 +6002,7 @@ export class DeckGLMap {
       this.setWorldEvidenceFraming(false);
     }
     this.syncOrbitalWorldCopies();
+    if (this.deckOverlay) this.setWorldOverviewViewport(this.deckOverlay);
     this.syncWorldBasemap();
     this.syncWorldPulse();
     this.render();
